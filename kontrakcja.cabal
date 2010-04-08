@@ -1,0 +1,48 @@
+Name: kontrakcja
+Version: 1.0
+Author: Gracjan Polak
+Copyright: 2010
+Stability: Experimental
+Category: Web
+Synopsis: Ultimate signing solution
+Description:
+        Sign documents online
+Cabal-version: >= 1.4.0.0
+Build-type: Simple
+Data-files:
+        public/theme/style.css
+        public/theme/images/date.gif
+        public/theme/images/ql_rss.gif
+        public/theme/images/header_loop.gif
+        public/theme/images/blockquote.gif
+        public/theme/images/menu_hili.gif
+        public/theme/images/grunge.gif
+        public/theme/images/entrymeta.gif
+        public/theme/images/logo.gif
+        public/theme/images/peel.gif
+        public/theme/images/menu_hover.gif
+        public/theme/readme.txt
+
+Executable kontrakcja-server
+ hs-source-dirs: src
+
+ -- GHC-Options: -Wall -Wwarn -fno-warn-name-shadowing -fno-warn-missing-signatures 
+ -- GHC-Options: -fwarn-tabs -fno-warn-unused-binds -fno-warn-orphans -fno-warn-unused-imports
+ GHC-Options: -fwarn-tabs
+ if !os(windows)
+   -- don't do threaded on Windows because it uses blocking listen and accept
+   GHC-Options: -threaded
+ Build-depends: happstack-state, happstack-server, hslogger, mtl, time, time-extras
+ Build-depends: hsx, hsp, happstack, utf8-string
+ Build-depends: happstack-data, extensible-exceptions, happstack-ixset, containers, happstack-util
+ Build-Depends: base >= 4 && < 5, syb
+ Build-Depends: syb-with-class, binary, old-locale
+ Build-Depends: network, HTTP, data-object-json, bytestring, curl, data-object
+ Main-Is: Main.hs
+
+
+ Extensions: TemplateHaskell, TypeFamilies, DeriveDataTypeable,
+             FlexibleInstances, MultiParamTypeClasses, FlexibleContexts,
+             UndecidableInstances, TypeOperators, TypeSynonymInstances,
+             GeneralizedNewtypeDeriving, NamedFieldPuns
+   

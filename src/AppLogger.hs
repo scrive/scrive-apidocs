@@ -1,0 +1,38 @@
+module AppLogger (setupLogger, shutdownLogger) where
+
+import System.Log.Logger
+    ( Priority(..)
+    , rootLoggerName
+    , setLevel
+    , setHandlers
+    , updateGlobalLogger
+    )
+import System.Log.Handler.Simple (fileHandler, streamHandler, GenericHandler)
+import System.IO (stdout,Handle)
+
+setupLogger = do
+    appLog <- fileHandler "app.log" INFO
+    accessLog <- fileHandler "access.log" INFO
+    stdoutLog <- streamHandler stdout NOTICE
+
+    -- Root Log
+    updateGlobalLogger
+        rootLoggerName
+        (setLevel DEBUG . setHandlers [appLog])
+
+    -- Access Log
+    updateGlobalLogger
+        "Happstack.Server.AccessLog.Combined"
+        (setLevel INFO . setHandlers [accessLog])
+
+    -- Server Log
+    updateGlobalLogger
+        "Happstack.Server"
+        (setLevel NOTICE . setHandlers [stdoutLog])
+
+shutdownLogger = do
+    let removeAllHandlers = (setHandlers ([] :: [GenericHandler Handle]))
+    updateGlobalLogger rootLoggerName removeAllHandlers
+    updateGlobalLogger "Happstack.Server.AccessLog.Combined" removeAllHandlers
+    updateGlobalLogger "Happstack.Server" removeAllHandlers
+
