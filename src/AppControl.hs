@@ -39,6 +39,7 @@ appHandler = do
     , dir "sign" (withUser maybeuser (DocControl.handleSign hostpart))
     , dir "issue" (withUser maybeuser (DocControl.handleIssue hostpart))
     , fileServe [] "public"
+    , webHSP (pageFromBody maybeuser hostpart kontrakcja (errorReport maybeuser rq))
     ]
     
   

@@ -2,7 +2,7 @@
 {-# OPTIONS_GHC -F -pgmFtrhsx #-}
 module AppView where
 
-import HSP
+import HSP hiding (Request)
 import System.Locale (defaultTimeLocale)
 import Control.Monad.Trans (MonadIO,liftIO,lift)
 import Happstack.Server (Response)
@@ -14,11 +14,30 @@ import Control.Monad
 import Data.Object.Json as Json
 import Data.Object as Json
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BSCL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.UTF8 as BSC
 import User
 import Network.HTTP (urlEncode)
 import Data.Time
+
+instance (XMLGenerator m) => (EmbedAsChild m 
+                              User) where
+  asChild user = <% BS.toString (fullname user) ++ " <" ++ 
+                 BS.toString (email user) ++ ">"  %>	
+
+instance (XMLGenerator m) => (EmbedAsChild m 
+                              Request) where
+  asChild rq = <% <code>
+                  <% show (rqMethod rq) %> <% rqUri rq ++ rqQuery rq %><br/>
+                  <% map asChild1 (rqInputs rq) %>
+                 </code> %>
+    where asChild1 (name,input) = <% <span><% name %>: <% input %><br/></span> %>
+
+instance (XMLGenerator m) => (EmbedAsChild m 
+                              Input) where
+  asChild (Input _value (Just filename) _contentType) = <% "File " ++ show filename %>
+  asChild (Input value _maybefilename _contentType) = <% show (concatMap BSC.toString (BSCL.toChunks value)) %>
 
 instance (XMLGenerator m) => (EmbedAsChild m 
                               (Json.JsonScalar)) where
@@ -74,6 +93,20 @@ welcomeBody _serverurl =
     <input type="submit" name="Upload"/>
    </form>
   </div>
+
+errorReport :: (XMLGenerator m) => Maybe User -> Request -> XMLGenT m (HSX.XML m)
+errorReport maybeuser request = 
+  <div>
+   <p>An error occured. It's not you, it's us. We will take care about the problem
+   as soon as possible. Meanwhile please go to <a href="/">the very beginning</a>.</p>
+   <hr/>
+   <p>Information useful to developers:</p>
+   <% case maybeuser of
+           Just user -> <p>Logged in as: <% user %></p>
+           Nothing -> <p>Not logged in</p>
+   %>
+   <p><% request %></p>
+  </div>  
 
 {-
 
