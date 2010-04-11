@@ -20,30 +20,28 @@ $(deriveAll [''Eq, ''Ord, ''Default]
   [d|
       data Document = Document
           { documentid     :: DocumentID
+          , title          :: String
           , author         :: Author
           , signatories    :: [Signatory]  
           , files          :: [BSC.ByteString]
-          , final          :: Bool
-          }
-      data Document1 = Document1
-          { documentid1     :: DocumentID
-          , author1         :: Author
-          , signatories1    :: [Signatory]  
-          , files1          :: [BSC.ByteString]
+          , status         :: DocumentStatus
           }
       newtype Author = Author UserID
       newtype DocumentID = DocumentID Int
+      newtype EmailCookie = EmailCookie Int
       
       data Signatory = Signatory UserID
-                     | EmailOnly String
-      newtype Signatory1 = Signatory1 UserID
+                     | EmailOnly String (Either EmailCookie UserID) 
+
+      data DocumentStatus = Preparation | ReadyToSign | Signed | Postponed
    |])
 
 deriving instance Show Document
+deriving instance Show DocumentStatus
 deriving instance Show Author
 instance Show Signatory where
     showsPrec prec (Signatory userid) = showsPrec prec userid
-    showsPrec prec (EmailOnly email) = (++) email
+    showsPrec prec (EmailOnly email _) = (++) email
 
 instance Show DocumentID where
     showsPrec prec (DocumentID val) = showsPrec prec val
@@ -63,23 +61,15 @@ instance Version Author
 
 $(deriveSerialize ''Signatory)
 instance Version Signatory where
-    mode = extension 1 (Proxy :: Proxy Signatory1)
-
-instance Migrate Signatory1 Signatory where
-    migrate (Signatory1 sig) = Signatory sig
-
-$(deriveSerialize ''Signatory1)
-instance Version Signatory1
 
 $(deriveSerialize ''Document)
 instance Version Document where
-    mode = extension 1 (Proxy :: Proxy Document1)
 
-instance Migrate Document1 Document where
-    migrate (Document1 a b c d) = Document a b c d False
+$(deriveSerialize ''DocumentStatus)
+instance Version DocumentStatus where
 
-$(deriveSerialize ''Document1)
-instance Version Document1
+$(deriveSerialize ''EmailCookie)
+instance Version EmailCookie where
 
 $(inferIxSet "Documents" ''Document 'noCalcs [''DocumentID, ''Author, ''Signatory])
 
@@ -106,7 +96,7 @@ getDocumentsBySignatory userid = do
 newDocument :: UserID -> BSC.ByteString -> Update Documents ()
 newDocument userid title = do
   docid <- DocumentID <$> getRandomR (0,maxBound)
-  modify $ insert (Document docid (Author userid) [] [title] False)
+  modify $ insert (Document docid (BSC.toString title) (Author userid) [] [title] Preparation)
 
 
 updateDocumentSignatories :: Document -> [Signatory] -> Update Documents Document
@@ -117,17 +107,17 @@ updateDocumentSignatories document signatories = do
 
 markDocumentAsFinal :: Document -> Update Documents Document
 markDocumentAsFinal document = do
-  let doc2 = document { final = True }
+  let doc2 = document { status = ReadyToSign }
   modify (updateIx (documentid doc2) doc2)
   return doc2
 
-signDocument :: DocumentID -> UserID -> String -> Update Documents (Maybe Document)
-signDocument documentid userid emailaddress = do
+signDocument :: DocumentID -> UserID -> String -> EmailCookie -> Update Documents (Maybe Document)
+signDocument documentid userid emailaddress emailcookie = do
   documents <- ask
   let Just document = getOne (documents @= documentid)
       signeddocument = document { signatories = newsignatories }
       newsignatories = map maybesign (signatories document)
-      maybesign (EmailOnly x) | x == emailaddress = Signatory userid
+      maybesign (EmailOnly x (Left cookie)) | x == emailaddress && cookie==emailcookie = Signatory userid
       maybesign x = x
   modify (updateIx documentid signeddocument)
   return (Just signeddocument)

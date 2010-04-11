@@ -23,7 +23,7 @@ handleSign hostpart user = path (handleSignShow hostpart user) `mplus` do
     webHSP (pageFromBody (Just user) hostpart kontrakcja (listDocuments documents))
 
 handleSignShow hostpart user documentid = do
-  Just document <- selectFormAction [("sign",update $ SignDocument documentid (userid user) "email")] `mplus`
+  Just document <- selectFormAction [("sign",update $ SignDocument documentid (userid user) "email" (EmailCookie 1))] `mplus`
                                           (query $ GetDocumentByDocumentID documentid)
                        
   webHSP (pageFromBody (Just user) hostpart kontrakcja (showDocumentForSign document))
@@ -48,7 +48,7 @@ updateDocument :: Document -> ServerPartT IO Document
 updateDocument document = do
   Just signatories <- getDataFn $ look "signatories"
   let sign = words signatories
-  doc2 <- update $ UpdateDocumentSignatories document (map EmailOnly sign)
+  doc2 <- update $ UpdateDocumentSignatories document (map (\x -> EmailOnly x (Left (EmailCookie 1))) sign)
   maybefinal <- getDataFn $ look "final"
   if isJust maybefinal
      then

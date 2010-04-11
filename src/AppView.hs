@@ -98,7 +98,7 @@ errorReport :: (XMLGenerator m) => Maybe User -> Request -> XMLGenT m (HSX.XML m
 errorReport maybeuser request = 
   <div>
    <p>An error occured. It's not you, it's us. We will take care about the problem
-   as soon as possible. Meanwhile please go to <a href="/">the very beginning</a>.</p>
+   as soon as possible. Meanwhile please <a href="/">go to the very beginning</a>.</p>
    <hr/>
    <p>Information useful to developers:</p>
    <% case maybeuser of
@@ -195,9 +195,12 @@ pageFromBody maybeuser hostpart title body =
        <div class="sbar_section">
          <ul>
       	  <li class="cat-item cat-item-1">
-           <% maybeSignInLink maybeuser "Issue" hostpart "/issue" %>
+           <% maybeSignInLink maybeuser "Begin" hostpart "/" %>
           </li>
       	  <li class="cat-item cat-item-2">
+           <% maybeSignInLink maybeuser "Issue" hostpart "/issue" %>
+          </li>
+      	  <li class="cat-item cat-item-3">
            <% maybeSignInLink maybeuser "Sign" hostpart "/sign" %>
           </li>
          </ul>
@@ -206,12 +209,12 @@ pageFromBody maybeuser hostpart title body =
 
       <div class="wrap">
        <div class="innercont_main">
-
+        {- 
         <div class="post">
          <div class="posttop">
          </div>
         </div>
-
+        -} 
         <% body %>
        </div>
       </div>

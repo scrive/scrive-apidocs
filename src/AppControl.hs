@@ -33,7 +33,6 @@ appHandler = do
   
   msum
     [ nullDir >> webHSP (pageFromBody maybeuser hostpart kontrakcja (welcomeBody hostpart))
-    , dir "rpxsignin" (handleRPXLogin hostpart)
     , dir "sign" (withUser maybeuser (DocControl.handleSign hostpart))
     , dir "issue" (withUser maybeuser (DocControl.handleIssue hostpart))
     , dir "logout" (handleLogout)
@@ -48,47 +47,3 @@ handleLogout = do
   seeOther "/" response
     
   
-handleRPXLogin :: String -> ServerPartT IO Response
-handleRPXLogin hostpart = do
-    Just token <- getDataFn (look "token") 
-
-    let req = "https://rpxnow.com/api/v2/auth_info" ++ 
-              "?apiKey=03bbfc36d54e523b2602af0f95aa173fb96caed9" ++
-              "&token=" ++ token
-              
-    {-
-       FIXME: Get the certificate of that server and import it
-       to private repository.
-    -}
-        
-    (_code,rpxdata) <- liftIO $ 
-                      Curl.curlGetString req [Curl.CurlFollowLocation True
-                                             ,Curl.CurlSSLVerifyPeer False] 
-
-    {-
-       FIXME: Take care of the situation when not all data is available
-    -}
-    
-    let Just json = Json.decode (BSL.fromString rpxdata) 
-        Just jsonMapping = fromMapping json 
-        Just profileMapping = lookupMapping (BSC.fromString "profile") jsonMapping
-        Just (Json.JsonString verifiedEmail) = lookupScalar (BSC.fromString "verifiedEmail") profileMapping
-        Just (Json.JsonString identifier) = lookupScalar (BSC.fromString "identifier") profileMapping
-        Just nameMapping = lookupMapping (BSC.fromString "name") profileMapping
-        Just (Json.JsonString formatted) = lookupScalar (BSC.fromString "formatted") nameMapping
-        
-    maybeuser <- query $ FindUserByExternalUserID (ExternalUserID identifier)
-    
-    user <- case maybeuser of
-      Just (user@User{userid}) -> do 
-        sessionid <- update $ NewSession userid
-        startSession sessionid
-        return user
-      Nothing -> do
-        user@User{userid} <- update $ AddUser (ExternalUserID identifier) (formatted) (verifiedEmail)
-        sessionid <- update $ NewSession userid
-        startSession sessionid
-        return user
-    
-    webHSP (pageFromBody (Just user) hostpart kontrakcja (handleRPXLoginView json))
-    

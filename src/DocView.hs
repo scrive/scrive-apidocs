@@ -28,7 +28,13 @@ instance (XMLGenerator m) => (EmbedAsChild m (Document, Bool)) where
         <%
            <tr class=(if alt then "alt" else "")>
             <td>
-             <a href=("/issue/" ++ show (documentid entry))><% show entry %></a>
+             <a href=("/issue/" ++ show (documentid entry))><% show (title entry) %></a>
+            </td>
+            <td>
+             2010-01-01 12:43
+            </td>
+            <td>
+             <% show (status entry) %>
             </td>
            </tr>
         %>
@@ -77,7 +83,7 @@ showDocument document =
     </table> 
     <br/>
     <% 
-        if final document
+        if status document == ReadyToSign
            then <span/>
            else <span><input type="submit" value="Update"/>
                  <input type="submit" name="final" value="Make it final"/></span>
