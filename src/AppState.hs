@@ -6,7 +6,6 @@
 module AppState where
 import Happstack.Data
 import Happstack.State
-import GuestBook
 import User
 import Session
 import Data.Data

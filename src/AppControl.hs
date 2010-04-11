@@ -21,6 +21,7 @@ import qualified Data.Object.Json as Json
 import qualified Network.Curl as Curl
 import qualified DocView as DocView
 import qualified DocControl as DocControl
+import Happstack.Server.SimpleHTTP (seeOther)
 
 appHandler :: ServerPartT IO Response
 appHandler = do
@@ -38,9 +39,16 @@ appHandler = do
     , dir "rpxsignin" (handleRPXLogin hostpart)
     , dir "sign" (withUser maybeuser (DocControl.handleSign hostpart))
     , dir "issue" (withUser maybeuser (DocControl.handleIssue hostpart))
+    , dir "logout" (handleLogout)
     , fileServe [] "public"
     , webHSP (pageFromBody maybeuser hostpart kontrakcja (errorReport maybeuser rq))
     ]
+    
+handleLogout :: ServerPartT IO Response
+handleLogout = do
+  endSession
+  response <- webHSP (seeOtherXML "/")
+  seeOther "/" response
     
   
 handleRPXLogin :: String -> ServerPartT IO Response

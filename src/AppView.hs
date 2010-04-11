@@ -175,7 +175,7 @@ pageFromBody maybeuser hostpart title body =
        <div class="peel">
           <%
               case maybeuser of
-                   Just (User{fullname}) -> <span><%  "Welcome " ++ (BSC.toString fullname) %></span>
+                   Just (User{fullname}) -> <span><a href="/account"><% BSC.toString fullname %></a> | <a href="/logout">Logout</a></span>
                    Nothing ->  <a class="rpxnow" onclick="return false;"
                                   href=("https://kontrakcja.rpxnow.com/openid/v2/signin?token_url=" ++ 
                                         urlEncode (hostpart ++ "/rpxsignin"))>Sign in here</a> 
@@ -266,3 +266,7 @@ pageFromBody maybeuser hostpart title body =
         <div class="finalfooter">Theme : <a href="http://www.dezinerfolio.com/2007/10/10/just-another-wodpress-theme" title="sIMPRESS v2 theme">sIMPRESS v2</a> by <a href="http://dezinerfolio.com" title="Dezinerfolio">Dezinerfolio</a></div>
       </div>
 -}
+
+seeOtherXML :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
+seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
+

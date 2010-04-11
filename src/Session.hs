@@ -18,6 +18,7 @@ module Session
     , withMSessionData
     , withMSessionDataSP
     , startSession  
+    , endSession
     )
     where
 
@@ -30,7 +31,7 @@ import Data.Maybe (isNothing)
 import Happstack.Data (Default, deriveAll, gFind')
 import Happstack.Data.IxSet
 import Happstack.Data.IxSet (IxSet(..), Indexable(..), (@=), delete, getOne, inferIxSet, noCalcs, updateIx)
-import Happstack.Server (ServerMonad, withDataFn, readCookieValue,addCookie,FilterMonad(..),Response)
+import Happstack.Server (ServerMonad, withDataFn, readCookieValue,addCookie,FilterMonad(..),Response,expireCookie)
 import Happstack.Server.Cookie (Cookie,mkCookie)
 import Happstack.Server.HTTP.Types ()
 import Happstack.State (Serialize, Version, Query, Update, deriveSerialize, getRandomR, mkMethods, query)
@@ -135,6 +136,9 @@ startSession :: (FilterMonad Response m,ServerMonad m) => SessionId -> m ()
 startSession sessionid = do
   let cookie = mkCookie "sessionId" (show sessionid)
   addCookie (60*60) cookie
+
+endSession :: (FilterMonad Response m,ServerMonad m) => m ()
+endSession = expireCookie "sessionId"
 
 withSessionId :: (MonadPlus m, ServerMonad m) => (SessionId -> m a) -> m a
 withSessionId = withDataFn (readCookieValue "sessionId")
