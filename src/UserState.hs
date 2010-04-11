@@ -39,7 +39,7 @@ maybeModify f =
 $(deriveAll [''Show, ''Eq, ''Ord, ''Default]
   [d|
    
-      newtype UserID = UserID Integer
+      newtype UserID = UserID Int
       newtype ExternalUserID = ExternalUserID ByteString                  
                        
       data User = User
@@ -75,7 +75,7 @@ findUserByUserID userid = do
 
 addUser :: ExternalUserID -> ByteString -> ByteString -> Update Users User
 addUser externaluserid fullname email = do
-    do userid <- UserID <$> getRandom
+    do userid <- UserID <$> getRandomR (0,maxBound)
        let user = (User userid [externaluserid] fullname email)
        r <- testAndInsert (isNothing . getOne . (@= userid)) user
        if r

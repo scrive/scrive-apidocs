@@ -40,7 +40,6 @@ Executable kontrakcja-server
  Build-Depends: network, HTTP, data-object-json, bytestring, curl, data-object
  Main-Is: Main.hs
 
-
  Extensions: TemplateHaskell, TypeFamilies, DeriveDataTypeable,
              FlexibleInstances, MultiParamTypeClasses, FlexibleContexts,
              UndecidableInstances, TypeOperators, TypeSynonymInstances,

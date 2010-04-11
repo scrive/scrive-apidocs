@@ -19,20 +19,20 @@ import Happstack.Util.Common
 $(deriveAll [''Eq, ''Ord, ''Default]
   [d|
       data Document = Document
-          { documentid     :: DocumentID -- this will be time soon
+          { documentid     :: DocumentID
           , author         :: Author
           , signatories    :: [Signatory]  
           , files          :: [BSC.ByteString]
           , final          :: Bool
           }
       data Document1 = Document1
-          { documentid1     :: DocumentID -- this will be time soon
+          { documentid1     :: DocumentID
           , author1         :: Author
           , signatories1    :: [Signatory]  
           , files1          :: [BSC.ByteString]
           }
       newtype Author = Author UserID
-      newtype DocumentID = DocumentID Integer
+      newtype DocumentID = DocumentID Int
       
       data Signatory = Signatory UserID
                      | EmailOnly String
@@ -105,7 +105,7 @@ getDocumentsBySignatory userid = do
 
 newDocument :: UserID -> BSC.ByteString -> Update Documents ()
 newDocument userid title = do
-  docid <- DocumentID <$> getRandom
+  docid <- DocumentID <$> getRandomR (0,maxBound)
   modify $ insert (Document docid (Author userid) [] [title] False)
 
 
@@ -121,6 +121,19 @@ markDocumentAsFinal document = do
   modify (updateIx (documentid doc2) doc2)
   return doc2
 
+signDocument :: DocumentID -> UserID -> String -> Update Documents (Maybe Document)
+signDocument documentid userid emailaddress = do
+  documents <- ask
+  let Just document = getOne (documents @= documentid)
+      signeddocument = document { signatories = newsignatories }
+      newsignatories = map maybesign (signatories document)
+      maybesign (EmailOnly x) | x == emailaddress = Signatory userid
+      maybesign x = x
+  modify (updateIx documentid signeddocument)
+  return (Just signeddocument)
+  
+  
+
 
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocumentsByAuthor
@@ -128,7 +141,9 @@ $(mkMethods ''Documents [ 'getDocumentsByAuthor
                         , 'newDocument
                         , 'getDocumentByDocumentID
                         , 'updateDocumentSignatories
-                        , 'markDocumentAsFinal])
+                        , 'markDocumentAsFinal
+                        , 'signDocument
+                        ])
 
 
 

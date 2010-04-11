@@ -16,13 +16,16 @@ import Control.Monad
 import HSP
 import Data.Maybe
 import Control.Monad.Trans
+import Misc
 
 handleSign hostpart user = path (handleSignShow hostpart user) `mplus` do
     documents <- query $ GetDocumentsBySignatory (userid user) 
     webHSP (pageFromBody (Just user) hostpart kontrakcja (listDocuments documents))
 
 handleSignShow hostpart user documentid = do
-  Just document <- query $ GetDocumentByDocumentID documentid
+  Just document <- selectFormAction [("sign",update $ SignDocument documentid (userid user) "email")] `mplus`
+                                          (query $ GetDocumentByDocumentID documentid)
+                       
   webHSP (pageFromBody (Just user) hostpart kontrakcja (showDocumentForSign document))
 
 handleIssue hostpart user = 

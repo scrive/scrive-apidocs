@@ -33,7 +33,7 @@ import Happstack.Data.IxSet (IxSet(..), Indexable(..), (@=), delete, getOne, inf
 import Happstack.Server (ServerMonad, withDataFn, readCookieValue,addCookie,FilterMonad(..),Response)
 import Happstack.Server.Cookie (Cookie,mkCookie)
 import Happstack.Server.HTTP.Types ()
-import Happstack.State (Serialize, Version, Query, Update, deriveSerialize, getRandom, mkMethods, query)
+import Happstack.State (Serialize, Version, Query, Update, deriveSerialize, getRandomR, mkMethods, query)
 import qualified Control.Applicative as Applicative
 import qualified Data.Set as Set
 
@@ -115,7 +115,7 @@ delSession sessionId =
 -- returns: the SessionId
 newSession :: (Data a, Serialize a, Ord a) => a -> Update (Sessions a) SessionId
 newSession sessData =
-    do sessId <- SessionId <$> getRandom
+    do sessId <- SessionId <$> getRandomR (0,1000000000)
        let session = (Session sessId sessData)
        r <- testAndInsert (isNothing . getOne . (@= sessId)) session
        if r

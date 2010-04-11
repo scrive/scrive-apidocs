@@ -93,8 +93,9 @@ main = do
 
                   -- start the http server
                   Exception.bracket 
-                           (do socket <- listenOn (port (httpConf appConf))
-                               forkIO $ simpleHTTPWithSocket socket (httpConf appConf) appHandler)
+                           (do -- socket <- listenOn (port (httpConf appConf))
+                               -- forkIO $ simpleHTTPWithSocket socket (httpConf appConf) appHandler
+                             forkIO $ simpleHTTP (httpConf appConf) appHandler)
                            (killThread) $ \_ -> Exception.bracket
                                         -- checkpoint the state once a day
                                         (forkIO $ cron (60*60*24) (createCheckpoint control))
