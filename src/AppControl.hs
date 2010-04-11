@@ -29,13 +29,10 @@ appHandler = do
   let Just host = getHeader "host" rq
   let hostpart = "http://" ++ BSC.toString host
   
-  maybeuser <- withMSessionDataSP $ \maybeuserid -> do 
-    case maybeuserid of
-      Just userid -> query $ FindUserByUserID userid
-      Nothing -> return Nothing
+  maybeuser <- userLogin
   
   msum
-    [ methodM GET >> webHSP (pageFromBody maybeuser hostpart kontrakcja (welcomeBody hostpart))
+    [ nullDir >> webHSP (pageFromBody maybeuser hostpart kontrakcja (welcomeBody hostpart))
     , dir "rpxsignin" (handleRPXLogin hostpart)
     , dir "sign" (withUser maybeuser (DocControl.handleSign hostpart))
     , dir "issue" (withUser maybeuser (DocControl.handleIssue hostpart))

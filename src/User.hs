@@ -5,6 +5,7 @@ module User
     , module UserView
     , withUser
     , maybeSignInLink
+    , userLogin
     )
     where
 
@@ -60,57 +61,67 @@ seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
 
 -}
 withUser :: Maybe User -> (User -> ServerPartT IO Response) -> ServerPartT IO Response
-withUser (Just user) action = do
-    action user
-withUser Nothing action = doUserLogin action `mplus` provideRPXNowLink `mplus` error "was here"
+withUser (Just user) action = action user
+withUser Nothing action = msum
+                          [ methodOnly GET >> provideRPXNowLink
+                             -- FIXME: you seem to be doing method POST while not logged in and requesting login at the same time
+                             -- this is not going to work right now, stop it!
+                            ]
 
-doUserLogin action = do
+userLogin :: ServerPartT IO (Maybe User)
+userLogin = do
+  maybeuser <- withMSessionDataSP $ \maybeuserid -> do 
+    case maybeuserid of
+      Just userid -> query $ FindUserByUserID userid
+      Nothing -> return Nothing
+  case maybeuser of
+    Just user -> return maybeuser
+    Nothing -> userLogin1
+
+userLogin1 :: ServerPartT IO (Maybe User)
+userLogin1 = do
     maybetoken <- getDataFn (look "token") 
-    guard (isJust maybetoken)
+    case maybetoken of
+      Nothing -> return Nothing
+      Just token -> do
 
-    let Just token = maybetoken
-
-    let req = "https://rpxnow.com/api/v2/auth_info" ++ 
-              "?apiKey=03bbfc36d54e523b2602af0f95aa173fb96caed9" ++
-              "&token=" ++ token
+              let req = "https://rpxnow.com/api/v2/auth_info" ++ 
+                        "?apiKey=03bbfc36d54e523b2602af0f95aa173fb96caed9" ++
+                                                                               "&token=" ++ token
               
-    {-
-       FIXME: Get the certificate of that server and import it
-       to private repository.
-    -}
+              {-
+                FIXME: Get the certificate of that server and import it
+                to private repository.
+               -}
         
-    (_code,rpxdata) <- liftIO $ 
-                      Curl.curlGetString req [Curl.CurlFollowLocation True
-                                             ,Curl.CurlSSLVerifyPeer False] 
+              (_code,rpxdata) <- liftIO $ 
+                                 Curl.curlGetString req [Curl.CurlFollowLocation True
+                                                        ,Curl.CurlSSLVerifyPeer False] 
 
-    {-
-       FIXME: Take care of the situation when not all data is available
-    -}
+                    {-
+                      FIXME: Take care of the situation when not all data is available
+                     -}
     
-    let Just json = Json.decode (BSL.fromString rpxdata) 
-        Just jsonMapping = fromMapping json 
-        Just profileMapping = lookupMapping (BSC.fromString "profile") jsonMapping
-        Just (Json.JsonString verifiedEmail) = lookupScalar (BSC.fromString "verifiedEmail") profileMapping
-        Just (Json.JsonString identifier) = lookupScalar (BSC.fromString "identifier") profileMapping
-        Just nameMapping = lookupMapping (BSC.fromString "name") profileMapping
-        Just (Json.JsonString formatted) = lookupScalar (BSC.fromString "formatted") nameMapping
+              let Just json = Json.decode (BSL.fromString rpxdata) 
+                  Just jsonMapping = fromMapping json 
+                  Just profileMapping = lookupMapping (BSC.fromString "profile") jsonMapping
+                  Just (Json.JsonString verifiedEmail) = lookupScalar (BSC.fromString "verifiedEmail") profileMapping
+                  Just (Json.JsonString identifier) = lookupScalar (BSC.fromString "identifier") profileMapping
+                  Just nameMapping = lookupMapping (BSC.fromString "name") profileMapping
+                  Just (Json.JsonString formatted) = lookupScalar (BSC.fromString "formatted") nameMapping
         
-    maybeuser <- query $ FindUserByExternalUserID (ExternalUserID identifier)
+              maybeuser <- query $ FindUserByExternalUserID (ExternalUserID identifier)
     
-    user <- case maybeuser of
-      Just (user@User{userid}) -> do 
-        sessionid <- update $ NewSession userid
-        startSession sessionid
-        return user
-      Nothing -> do
-        user@User{userid} <- update $ AddUser (ExternalUserID identifier) (formatted) (verifiedEmail)
-        sessionid <- update $ NewSession userid
-        startSession sessionid
-        return user
-    
-    action user
+              user <- case maybeuser of
+                        Just user -> return user
+                        Nothing -> do
+                          user <- update $ AddUser (ExternalUserID identifier) (formatted) (verifiedEmail)
+                          return user
+              sessionid <- update $ NewSession (userid user)
+              startSession sessionid
+              return (Just user)
 
-
+provideRPXNowLink :: ServerPartT IO Response
 provideRPXNowLink = do -- FIXME it was guarded by method GET but it didn't help
     rq <- askRq
     let Just host = getHeader "host" rq
