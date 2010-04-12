@@ -18,22 +18,31 @@ import Data.Maybe
 import Control.Monad.Trans
 import Misc
 
+handleSign
+  :: (MonadIO m, MonadPlus m, ServerMonad m) =>
+     String -> User -> m Response
 handleSign hostpart user = path (handleSignShow hostpart user) `mplus` do
     documents <- query $ GetDocumentsBySignatory (userid user) 
     webHSP (pageFromBody (Just user) hostpart kontrakcja (listDocuments documents))
 
+handleSignShow
+  :: (ServerMonad m, MonadPlus m, MonadIO m) =>
+     String -> User -> DocumentID -> m Response
 handleSignShow hostpart user documentid = do
   Just document <- selectFormAction [("sign",update $ SignDocument documentid (userid user) "email" (EmailCookie 1))] `mplus`
                                           (query $ GetDocumentByDocumentID documentid)
                        
   webHSP (pageFromBody (Just user) hostpart kontrakcja (showDocumentForSign document))
 
+handleIssue :: String -> User -> ServerPartT IO Response
 handleIssue hostpart user = 
     msum [ path (handleIssueShow hostpart user)
          , methodM GET >> handleIssueGet hostpart user
          , methodM POST >> handleIssuePost hostpart user
          ]
 
+handleIssueShow
+  :: String -> User -> DocumentID -> ServerPartT IO Response
 handleIssueShow hostpart user documentid = do
   Just document <- query $ GetDocumentByDocumentID documentid
   msum 
@@ -65,6 +74,7 @@ updateDocument document = do
              
     
 
+handleIssueGet :: (MonadIO m) => String -> User -> m Response
 handleIssueGet hostpart user = do
     documents <- query $ GetDocumentsByAuthor (userid user) 
     webHSP (pageFromBody (Just user) hostpart kontrakcja (listDocuments documents))
@@ -73,6 +83,8 @@ handleIssueGet hostpart user = do
  FIXME: we get POST request either because we upload file
  or because we log in. How to know which is which?
 -}
+handleIssuePost
+  :: (ServerMonad m, MonadIO m) => String -> User -> m Response
 handleIssuePost hostpart user = do
   maybeupload <- getDataFn (lookInput "doc")
   case maybeupload of

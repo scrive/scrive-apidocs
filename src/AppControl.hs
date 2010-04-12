@@ -46,4 +46,3 @@ handleLogout = do
   response <- webHSP (seeOtherXML "/")
   seeOther "/" response
     
-  

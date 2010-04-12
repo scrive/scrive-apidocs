@@ -133,6 +133,9 @@ provideRPXNowLink = do -- FIXME it was guarded by method GET but it didn't help
     v <- webHSP $ seeOtherXML url
     seeOther url (v)
 
+maybeSignInLink
+  :: (EmbedAsChild m c, EmbedAsAttr m (Attr [Char] [Char])) =>
+     Maybe t -> c -> [Char] -> [Char] -> XMLGenT m (HSX.XML m)
 maybeSignInLink Nothing title base url = do
     -- FIXME: this is very simple url handling....
     let fullurl = base ++ url

@@ -28,6 +28,7 @@ selectFormAction ((button,action):rest) = do
      then action
      else selectFormAction rest
 
+guardFormAction :: (ServerMonad m, MonadPlus m) => String -> m ()
 guardFormAction button = do
   maybepressed <- getDataFn (look button)
   guard (isJust maybepressed)

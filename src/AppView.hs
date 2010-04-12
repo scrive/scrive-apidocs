@@ -69,9 +69,11 @@ instance (XMLGenerator m) => (EmbedAsChild m
      <span><% val %></span>
     %>
 
+kontrakcja :: [Char]
 kontrakcja = "Skriva på"
 
 -- small letter ascii only version on app name
+kontrakcjaAscii :: [Char]
 kontrakcjaAscii = "skriva"
 
 

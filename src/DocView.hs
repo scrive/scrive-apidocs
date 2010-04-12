@@ -51,12 +51,21 @@ seeOtherXML :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
 -}
 
+listDocuments :: (EmbedAsChild m c) => c -> GenChildList m
 listDocuments documents = asChild documents
 
+showFile
+  :: (EmbedAsChild m String) =>
+     BSC.ByteString -> XMLGenT m (HSX.XML m)
 showFile file = <li><% BSC.toString file %></li>
 
+showSignatory
+  :: (EmbedAsChild m String, Show a) => a -> XMLGenT m (HSX.XML m)
 showSignatory sig = <li><% show sig %></li>
 
+showDocument
+  :: (EmbedAsChild m [Char], EmbedAsAttr m (Attr [Char] [Char])) =>
+     Document -> XMLGenT m (HSX.XML m)
 showDocument document =
    <form method="post"> 
     <table>
@@ -90,6 +99,9 @@ showDocument document =
      %>
    </form>
 
+showDocumentForSign
+  :: (EmbedAsAttr m (Attr [Char] [Char])) =>
+     t -> XMLGenT m (HSX.XML m)
 showDocumentForSign document =
    <form method="post"> 
       <img src="/theme/images/kontrakt.jpg" width="300"/>
