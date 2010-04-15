@@ -1,3 +1,4 @@
+{-# LANGUAGE ForeignFunctionInterface #-}
 
 module DocControl where
 import DocView
@@ -17,6 +18,9 @@ import HSP
 import Data.Maybe
 import Control.Monad.Trans
 import Misc
+import Foreign.C.Types
+import Foreign.Ptr
+import Foreign.C.String
 
 handleSign
   :: (MonadIO m, MonadPlus m, ServerMonad m) =>
@@ -70,8 +74,19 @@ updateDocument document = do
      writeemail doc2 email = do
          (_,content) <- liftIO $ evalHSP Nothing 
                         (mailToPerson email "John Doe" "The Important Document" (documentid doc2))
-         writeFile ("Email-" ++ email ++ ".html") $ renderAsHTML content
+         let filename = "Email-" ++ email ++ ".html"
+         writeFile filename $ renderAsHTML content
+         openDocument filename
+         
+         
+openDocument :: String -> IO ()
+openDocument filename = do
+  withCString filename $ \filename -> do
+                          withCString "open" $ \open -> do
+                                        shellExecute nullPtr open filename nullPtr nullPtr 1
              
+foreign import stdcall "ShellExecuteA" shellExecute :: Ptr () -> Ptr CChar -> Ptr CChar -> Ptr () -> Ptr () -> CInt -> IO ()
+
     
 
 handleIssueGet :: (MonadIO m) => String -> User -> m Response

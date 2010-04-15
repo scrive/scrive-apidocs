@@ -105,7 +105,7 @@ userLogin1 = do
               let Just json = Json.decode (BSL.fromString rpxdata) 
                   Just jsonMapping = fromMapping json 
                   Just profileMapping = lookupMapping (BSC.fromString "profile") jsonMapping
-                  Just (Json.JsonString verifiedEmail) = lookupScalar (BSC.fromString "verifiedEmail") profileMapping
+                  -- Json.JsonString verifiedEmail = maybe id (Json.JsonString (BSC.fromString "")) $ lookupScalar (BSC.fromString "verifiedEmail") profileMapping
                   Just (Json.JsonString identifier) = lookupScalar (BSC.fromString "identifier") profileMapping
                   Just nameMapping = lookupMapping (BSC.fromString "name") profileMapping
                   Just (Json.JsonString formatted) = lookupScalar (BSC.fromString "formatted") nameMapping
@@ -115,7 +115,7 @@ userLogin1 = do
               user <- case maybeuser of
                         Just user -> return user
                         Nothing -> do
-                          user <- update $ AddUser (ExternalUserID identifier) (formatted) (verifiedEmail)
+                          user <- update $ AddUser (ExternalUserID identifier) (formatted) (BSC.fromString "")
                           return user
               sessionid <- update $ NewSession (userid user)
               startSession sessionid
