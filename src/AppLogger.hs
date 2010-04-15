@@ -1,4 +1,4 @@
-module AppLogger (setupLogger, shutdownLogger) where
+module AppLogger (setupLogger, withLogger, teardownLogger) where
 
 import System.Log.Logger
     ( Priority(..)
@@ -7,8 +7,17 @@ import System.Log.Logger
     , setHandlers
     , updateGlobalLogger
     )
+import Control.Exception.Extensible (bracket)
+import System.Log.Handler (close)
 import System.Log.Handler.Simple (fileHandler, streamHandler, GenericHandler)
 import System.IO (stdout,Handle)
+
+-- | Opaque type covering all information needed to teardown the logger.
+data LoggerHandle = LoggerHandle { 
+      rootLogHandler   :: GenericHandler Handle
+    , accessLogHandler :: GenericHandler Handle
+    , serverLogHandler :: GenericHandler Handle
+    }
 
 setupLogger = do
     appLog <- fileHandler "app.log" INFO
@@ -29,10 +38,20 @@ setupLogger = do
     updateGlobalLogger
         "Happstack.Server"
         (setLevel NOTICE . setHandlers [stdoutLog])
+    return $ LoggerHandle appLog accessLog stdoutLog
 
-shutdownLogger = do
-    let removeAllHandlers = (setHandlers ([] :: [GenericHandler Handle]))
-    updateGlobalLogger rootLoggerName removeAllHandlers
-    updateGlobalLogger "Happstack.Server.AccessLog.Combined" removeAllHandlers
-    updateGlobalLogger "Happstack.Server" removeAllHandlers
+-- | Tear down the application logger; i.e. close all associated log handlers.
+teardownLogger :: LoggerHandle -> IO ()
+teardownLogger handle = do
+    close $ serverLogHandler handle
+    close $ accessLogHandler handle
+    close $ rootLogHandler   handle
 
+-- | Bracket an IO action which denotes the whole scope where the loggers of
+-- the application are needed to installed. Sets them up before running the action
+-- and tears them down afterwards. Even in case of an exception. 
+withLogger :: IO a -> IO a
+withLogger = bracket setupLogger teardownLogger . const
+
+  
+  

@@ -15,6 +15,7 @@ import qualified Data.ByteString.UTF8 as BSC
 import Control.Applicative ((<$>))
 import Happstack.Server.SimpleHTTP
 import Happstack.Util.Common
+import Debug.Trace
 
 $(deriveAll [''Eq, ''Ord, ''Default]
   [d|
@@ -22,26 +23,39 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           { documentid     :: DocumentID
           , title          :: String
           , author         :: Author
-          , signatories    :: [Signatory]  
+          , signatorylinks :: [SignatoryLink]  
           , files          :: [BSC.ByteString]
           , status         :: DocumentStatus
           }
       newtype Author = Author UserID
       newtype DocumentID = DocumentID Int
       newtype EmailCookie = EmailCookie Int
+      newtype SignatoryLinkID = SignatoryLinkID Int
+
+      data SignatoryLink = SignatoryLink 
+          { signatorylinkid :: SignatoryLinkID
+          , signatoryemail :: String
+          , maybesignatory :: Maybe Signatory
+          , signed :: Bool
+          }
       
       data Signatory = Signatory UserID
-                     | EmailOnly String (Either EmailCookie UserID) 
 
       data DocumentStatus = Preparation | ReadyToSign | Signed | Postponed
    |])
+
+instance Show SignatoryLinkID where
+    showsPrec prec (SignatoryLinkID x) = showsPrec prec x
+
+instance Show SignatoryLink where
+    showsPrec prec (SignatoryLink _ email Nothing False) = (++) email
+    showsPrec prec (SignatoryLink _ email _ True) = (++) $ "Signed by " ++ email
 
 deriving instance Show Document
 deriving instance Show DocumentStatus
 deriving instance Show Author
 instance Show Signatory where
     showsPrec prec (Signatory userid) = showsPrec prec userid
-    showsPrec prec (EmailOnly email _) = (++) email
 
 instance Show DocumentID where
     showsPrec prec (DocumentID val) = showsPrec prec val
@@ -50,8 +64,21 @@ instance Read DocumentID where
     readsPrec prec = let makeDocumentID (i,v) = (DocumentID i,v) 
                      in map makeDocumentID . readsPrec prec 
 
+instance Read SignatoryLinkID where
+    readsPrec prec = let make (i,v) = (SignatoryLinkID i,v) 
+                     in map make . readsPrec prec 
+
 instance FromReqURI DocumentID where
     fromReqURI = readM
+
+instance FromReqURI SignatoryLinkID where
+    fromReqURI = readM
+
+$(deriveSerialize ''SignatoryLink)
+instance Version SignatoryLink
+
+$(deriveSerialize ''SignatoryLinkID)
+instance Version SignatoryLinkID
 
 $(deriveSerialize ''DocumentID)
 instance Version DocumentID
@@ -99,11 +126,18 @@ newDocument userid title = do
   modify $ insert (Document docid (BSC.toString title) (Author userid) [] [title] Preparation)
 
 
-updateDocumentSignatories :: Document -> [Signatory] -> Update Documents Document
-updateDocumentSignatories document signatories = do
-  let doc2 = document { signatories = signatories }
+updateDocumentSignatories :: Document -> [String] -> Update Documents Document
+updateDocumentSignatories document signatoryemails = do
+  signatorylinks <- mapM mm signatoryemails
+  let doc2 = document { signatorylinks = signatorylinks }
   modify (updateIx (documentid doc2) doc2)
   return doc2
+  where mm email = do
+          x <- do r <- getRandomR (0,maxBound)
+                  trace ("new random signatory " ++ email ++ " " ++ show r) $
+                     return (SignatoryLinkID r)
+
+          return $ SignatoryLink x email Nothing False
 
 markDocumentAsFinal :: Document -> Update Documents Document
 markDocumentAsFinal document = do
@@ -111,14 +145,17 @@ markDocumentAsFinal document = do
   modify (updateIx (documentid doc2) doc2)
   return doc2
 
-signDocument :: DocumentID -> UserID -> String -> EmailCookie -> Update Documents (Maybe Document)
-signDocument documentid userid emailaddress emailcookie = do
+signDocument :: DocumentID -> UserID -> SignatoryLinkID -> Update Documents (Maybe Document)
+signDocument documentid userid signatorylinkid1 = do
   documents <- ask
   let Just document = getOne (documents @= documentid)
-      signeddocument = document { signatories = newsignatories }
-      newsignatories = map maybesign (signatories document)
-      maybesign (EmailOnly x (Left cookie)) | x == emailaddress && cookie==emailcookie = Signatory userid
-      maybesign x = x
+      signeddocument = trace (show $ signatorylinks document) $
+                       document { signatorylinks = newsignatorylinks }
+      newsignatorylinks = map maybesign (signatorylinks document)
+      maybesign x@(SignatoryLink {signatorylinkid} ) 
+          | signatorylinkid == signatorylinkid1 = trace "signatory found" $
+              x { signed = True, maybesignatory = Just (Signatory userid) }
+      maybesign x = trace (show (signatorylinkid1, signatorylinkid x)) $ x
   modify (updateIx documentid signeddocument)
   return (Just signeddocument)
   

@@ -21,22 +21,28 @@ import Misc
 import Foreign.C.Types
 import Foreign.Ptr
 import Foreign.C.String
+import Debug.Trace
 
 handleSign
   :: (MonadIO m, MonadPlus m, ServerMonad m) =>
      String -> User -> m Response
-handleSign hostpart user = path (handleSignShow hostpart user) `mplus` do
+handleSign hostpart user = path (\documentid -> path $ handleSignShow hostpart user documentid) `mplus` do
     documents <- query $ GetDocumentsBySignatory (userid user) 
     webHSP (pageFromBody (Just user) hostpart kontrakcja (listDocuments documents))
 
 handleSignShow
   :: (ServerMonad m, MonadPlus m, MonadIO m) =>
-     String -> User -> DocumentID -> m Response
-handleSignShow hostpart user documentid = do
-  Just document <- selectFormAction [("sign",update $ SignDocument documentid (userid user) "email" (EmailCookie 1))] `mplus`
-                                          (query $ GetDocumentByDocumentID documentid)
+     String -> User -> DocumentID -> SignatoryLinkID -> m Response
+handleSignShow hostpart user documentid signatorylinkid1 = do
+  Just document <- selectFormAction 
+                   [("sign",update $ SignDocument documentid (userid user) signatorylinkid1)] 
+                   `mplus`
+                   (query $ GetDocumentByDocumentID documentid)
                        
-  webHSP (pageFromBody (Just user) hostpart kontrakcja (showDocumentForSign document))
+  let wassigned = any f (signatorylinks document)
+      f (SignatoryLink {signatorylinkid,signed}) = 
+          signed && signatorylinkid == signatorylinkid1
+  webHSP (pageFromBody (Just user) hostpart kontrakcja (showDocumentForSign document wassigned))
 
 handleIssue :: String -> User -> ServerPartT IO Response
 handleIssue hostpart user = 
@@ -61,7 +67,8 @@ updateDocument :: Document -> ServerPartT IO Document
 updateDocument document = do
   Just signatories <- getDataFn $ look "signatories"
   let sign = words signatories
-  doc2 <- update $ UpdateDocumentSignatories document (map (\x -> EmailOnly x (Left (EmailCookie 1))) sign)
+  doc2 <- trace "update document signatories" $
+          update $ UpdateDocumentSignatories document sign
   maybefinal <- getDataFn $ look "final"
   if isJust maybefinal
      then
@@ -69,11 +76,14 @@ updateDocument document = do
      else return doc2
   where
      finalize sign doc2 = do
-         liftIO $ mapM_ (writeemail doc2) sign
-         update $ MarkDocumentAsFinal document
-     writeemail doc2 email = do
+         liftIO $ mapM_ (writeemail doc2) (signatorylinks doc2)
+         update $ MarkDocumentAsFinal doc2
+     writeemail doc2 (SignatoryLink linkid email maybeuser _) = do
          (_,content) <- liftIO $ evalHSP Nothing 
-                        (mailToPerson email "John Doe" "The Important Document" (documentid doc2))
+                        (mailToPerson email "John Doe" 
+                                          (title doc2) 
+                                          (documentid doc2)
+                                          linkid)
          let filename = "Email-" ++ email ++ ".html"
          writeFile filename $ renderAsHTML content
          openDocument filename

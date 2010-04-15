@@ -1,3 +1,4 @@
+{-# LANGUAGE IncoherentInstances #-}
 {-# OPTIONS_GHC -F -pgmFtrhsx #-}
 
 module DocView where
@@ -90,7 +91,7 @@ showDocument document =
        <hr/>
        <div>List of signatories:<br/>
         <textarea name="signatories">
-         <% intersperse "\n" $ map show (signatories document) %>
+         <% intersperse "\n" $ map show (signatorylinks document) %>
         </textarea>
        </div>
       </td>
@@ -127,13 +128,17 @@ showDocument document =
    </form>
 
 showDocumentForSign
-  :: (EmbedAsAttr m (Attr [Char] [Char])) =>
-     t -> XMLGenT m (HSX.XML m)
-showDocumentForSign document =
+  :: (XMLGenerator m) =>
+     t -> Bool -> XMLGenT m (HSX.XML m)
+showDocumentForSign document wassigned=
    <form method="post"> 
       <img src="/theme/images/kontrakt.jpg" width="300"/>
       <br/>
-      <input type="submit" name="sign" value="Sign!"/>
+      <%
+        if wassigned 
+           then <span>You have already signed this document!</span>
+           else <input type="submit" name="sign" value="Sign!"/>
+      %>
    </form>
 
 
@@ -142,16 +147,19 @@ mailToPerson :: (XMLGenerator m)
              -> String
              -> String
              -> DocumentID
+             -> SignatoryLinkID
              -> XMLGenT m (HSX.XML m)
-mailToPerson emailaddress personname documenttitle documentid = 
+mailToPerson emailaddress personname documenttitle documentid signaturelinkid = 
+    let link = "http://localhost:8000/sign/" ++ show documentid ++ "/" ++ show signaturelinkid
+    in 
     <html>
      <head>
      </head>
      <body>
       <h1>Welcome <% personname %></h1>
-      <p><a href=("http://localhost:8000/sign/" ++ show documentid)><% documenttitle %></a></p>
+      <p><a href=link><% documenttitle %></a></p>
       <p>Document is ready! To review and sign click this link:</p>
-      <p><% "http://localhost:8000/sign/" ++ show documentid</a></p>
+      <p><% link %></p>
       <p><small>Powered by Skriva Pa</small></p>
      </body>
     </html>

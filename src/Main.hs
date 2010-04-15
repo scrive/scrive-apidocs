@@ -25,7 +25,7 @@ import System.Environment (getArgs)
 import System.Log.Logger (Priority(..), logM)
 import System.Exit (exitFailure)
 import System.Console.GetOpt
-import AppLogger (setupLogger,shutdownLogger)
+import AppLogger (withLogger)
 import AppState (AppState(..))
 import AppControl (appHandler)
 import qualified System.Mem (performGC)
@@ -63,7 +63,7 @@ listenOn port = do
             return sock
         )
 
-main = do
+main = withLogger $ do
   -- progname effects where state is stored and what the logfile is named
   let progName = "kontrakcja"
 
@@ -74,13 +74,7 @@ main = do
                    exitFailure
     (Right f) -> return (f $ defaultConf progName)
   
-  withCurlDo $ Exception.bracket
-      (setupLogger)
-      (\() -> do
-                logM "Happstack.Server" NOTICE "Shutdown logger" 
-                shutdownLogger
-                System.Mem.performGC)
-      (\() ->
+  withCurlDo $ 
           Exception.bracket
               -- start the state system
               (startSystemState' (store appConf) stateProxy)
@@ -105,7 +99,7 @@ main = do
                                           waitForTermination
                                           logM "Happstack.Server" NOTICE "Termination request received" 
 
-                  return ()))
+                  return ())
 
 data AppConf
     = AppConf { httpConf :: Conf
