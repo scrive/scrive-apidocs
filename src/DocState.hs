@@ -16,6 +16,7 @@ import Control.Applicative ((<$>))
 import Happstack.Server.SimpleHTTP
 import Happstack.Util.Common
 import Debug.Trace
+import Misc
 
 $(deriveAll [''Eq, ''Ord, ''Default]
   [d|
@@ -122,7 +123,8 @@ getDocumentsBySignatory userid = do
 
 newDocument :: UserID -> BSC.ByteString -> Update Documents ()
 newDocument userid title = do
-  docid <- DocumentID <$> getRandomR (0,maxBound)
+  documents <- ask
+  docid <- getUnique documents DocumentID
   modify $ insert (Document docid (BSC.toString title) (Author userid) [] [title] Preparation)
 
 
@@ -134,8 +136,7 @@ updateDocumentSignatories document signatoryemails = do
   return doc2
   where mm email = do
           x <- do r <- getRandomR (0,maxBound)
-                  trace ("new random signatory " ++ email ++ " " ++ show r) $
-                     return (SignatoryLinkID r)
+                  return (SignatoryLinkID r)
 
           return $ SignatoryLink x email Nothing False
 

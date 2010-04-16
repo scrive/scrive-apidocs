@@ -1,5 +1,3 @@
-{-# LANGUAGE ForeignFunctionInterface #-}
-
 module DocControl where
 import DocView
 import DocState
@@ -14,19 +12,25 @@ import qualified Data.ByteString as BSC
 import qualified Data.ByteString.Lazy.UTF8 as BSCL
 import qualified Data.ByteString.Lazy as BSCL
 import Control.Monad
+import Control.Monad.Reader
 import HSP
 import Data.Maybe
 import Control.Monad.Trans
 import Misc
-import Foreign.C.Types
-import Foreign.Ptr
-import Foreign.C.String
 import Debug.Trace
+
+o :: ((t -> t3) -> t4)
+     -> ((t1 -> t2) -> t3)
+     -> (t -> t1 -> t2)
+     -> t4
+o path1 path2 rest = path1 (\a -> path2 (\b -> rest a b))
 
 handleSign
   :: (MonadIO m, MonadPlus m, ServerMonad m) =>
      String -> User -> m Response
-handleSign hostpart user = path (\documentid -> path $ handleSignShow hostpart user documentid) `mplus` do
+handleSign hostpart user = 
+    -- path (\documentid -> path $ handleSignShow hostpart user documentid) `mplus` do
+    (path `o` path) (handleSignShow hostpart user) `mplus` do
     documents <- query $ GetDocumentsBySignatory (userid user) 
     webHSP (pageFromBody (Just user) hostpart kontrakcja (listDocuments documents))
 
@@ -63,10 +67,20 @@ handleIssueShow hostpart user documentid = do
          webHSP (pageFromBody (Just user) hostpart kontrakcja (showDocument doc2))
      ]
 
+-- | Useful inside the RqData monad.  Gets the named input parameter (either
+-- from a POST or a GET)
+lookInputList :: String -> RqData [BSCL.ByteString]
+lookInputList name
+    = do inputs <- asks fst
+         let isname (xname,(Input value _ _)) | xname == name = [value]
+             isname _ = []
+         return [value | k <- inputs, value <- isname k]
+
 updateDocument :: Document -> ServerPartT IO Document  
 updateDocument document = do
-  Just signatories <- getDataFn $ look "signatories"
-  let sign = words signatories
+  Just signatoriesinputs <- getDataFn $ lookInputList "signatoryemail"
+  let signatories = map BSCL.toString signatoriesinputs
+  let sign = signatories
   doc2 <- trace "update document signatories" $
           update $ UpdateDocumentSignatories document sign
   maybefinal <- getDataFn $ look "final"
@@ -89,14 +103,6 @@ updateDocument document = do
          openDocument filename
          
          
-openDocument :: String -> IO ()
-openDocument filename = do
-  withCString filename $ \filename -> do
-                          withCString "open" $ \open -> do
-                                        shellExecute nullPtr open filename nullPtr nullPtr 1
-             
-foreign import stdcall "ShellExecuteA" shellExecute :: Ptr () -> Ptr CChar -> Ptr CChar -> Ptr () -> Ptr () -> CInt -> IO ()
-
     
 
 handleIssueGet :: (MonadIO m) => String -> User -> m Response

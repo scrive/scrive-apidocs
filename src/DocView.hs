@@ -26,7 +26,7 @@ dateStr ct =
 
 instance (XMLGenerator m) => (EmbedAsChild m (Document, Bool)) where
     asChild (entry, alt) = 
-        <%
+          <%
            <tr class=(if alt then "alt" else "")>
             <td>
              <a href=("/issue/" ++ show (documentid entry))><% show (title entry) %></a>
@@ -38,7 +38,7 @@ instance (XMLGenerator m) => (EmbedAsChild m (Document, Bool)) where
              <% show (status entry) %>
             </td>
            </tr>
-        %>
+          %>
 
 instance (XMLGenerator m) => (EmbedAsChild m [Document]) where
     asChild (entries) = 
@@ -78,21 +78,10 @@ showDocument document =
        </div>
       </td>
       <td>
-       <div>Status: preparation</div> 
-       <hr/>
-       <div id="leftColumn">
-                        Drag and drop to place whre it should be:<br/>
-			<div class="dragableBox" id="box1">SIGNATURE</div>
-
-			<div class="dragableBox" id="box2">INITIALS</div>
-		</div>
-       <hr/>
-       <div><p>Author: <% show $ author document %></p></div>
-       <hr/>
        <div>List of signatories:<br/>
-        <textarea name="signatories">
-         <% intersperse "\n" $ map show (signatorylinks document) %>
-        </textarea>
+        <ol id="signatorylist">
+         <a onclick="signatoryadd()" href="#">Add signatory</a>
+        </ol>
        </div>
       </td>
      </tr>
@@ -105,25 +94,8 @@ showDocument document =
                  <input type="submit" name="final" value="Make it final"/></span>
      %>
 
-     <script type="text/javascript" src="/js/drag-drop-custom.js"></script>
- <script type="text/javascript">
- function dropItems(idOfDraggedItem,targetId,x,y)
- {
-	var targetObj = document.getElementById(targetId);
-	var sourceObj = document.getElementById(idOfDraggedItem);
-		
-        var html = targetObj.innerHTML;
-	if(html.length!=0)html = html + '&lt;br&gt;';
-	html = html + 'Item "' + document.getElementById(idOfDraggedItem).innerHTML + '" dropped';
-	targetObj.innerHTML = html;
- }
-
- var dragDropObj = new DHTMLgoodies_dragDrop();
- dragDropObj.addSource('box1',true);
- dragDropObj.addSource('box2',true);
- dragDropObj.addTarget('dropBox','dropItems');
- dragDropObj.init();
- </script>
+     <script type="text/javascript" src="/js/drag-drop-custom.js"/>
+     <script type="text/javascript" src="/js/document-edit.js"/>
 
    </form>
 

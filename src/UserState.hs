@@ -13,6 +13,7 @@ import Happstack.Data.IxSet as IxSet
 import Control.Applicative((<$>))
 import Data.Data(Data(..))
 import Data.Maybe(isNothing)
+import Misc
 
 -- |perform insert only if test is True
 testAndInsert :: (Indexable a b,
@@ -75,13 +76,11 @@ findUserByUserID userid = do
 
 addUser :: ExternalUserID -> ByteString -> ByteString -> Update Users User
 addUser externaluserid fullname email = do
-    do userid <- UserID <$> getRandomR (0,maxBound)
-       let user = (User userid [externaluserid] fullname email)
-       r <- testAndInsert (isNothing . getOne . (@= userid)) user
-       if r
-          then return user
-          else addUser externaluserid fullname email
-  
+  users <- get
+  userid <- getUnique users UserID
+  let user = (User userid [externaluserid] fullname email)
+  put (insert user users)
+  return user
 
 instance Component Users where
   type Dependencies Users = End

@@ -346,4 +346,9 @@ blockquote {
 .accesskey
 { 
   text-decoration: underline; 
-  }
+}
+
+.dragableBox {
+   color: blue;
+   border: 1px solid black;
+}
