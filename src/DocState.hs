@@ -17,6 +17,8 @@ import Happstack.Server.SimpleHTTP
 import Happstack.Util.Common
 import Debug.Trace
 import Misc
+import Control.Monad
+
 
 $(deriveAll [''Eq, ''Ord, ''Default]
   [d|
@@ -35,9 +37,10 @@ $(deriveAll [''Eq, ''Ord, ''Default]
 
       data SignatoryLink = SignatoryLink 
           { signatorylinkid :: SignatoryLinkID
-          , signatoryemail :: String
-          , maybesignatory :: Maybe Signatory
-          , signed :: Bool
+          , signatoryname   :: String 
+          , signatoryemail  :: String
+          , maybesignatory  :: Maybe Signatory
+          , signed          :: Bool
           }
       
       data Signatory = Signatory UserID
@@ -49,8 +52,10 @@ instance Show SignatoryLinkID where
     showsPrec prec (SignatoryLinkID x) = showsPrec prec x
 
 instance Show SignatoryLink where
-    showsPrec prec (SignatoryLink _ email Nothing False) = (++) email
-    showsPrec prec (SignatoryLink _ email _ True) = (++) $ "Signed by " ++ email
+    showsPrec prec (SignatoryLink _ name email Nothing False) = 
+        (++) (name ++ " <" ++ email ++ ">")
+    showsPrec prec (SignatoryLink _ name email _ True) = 
+        (++) $ "Signed by " ++ (name ++ " <" ++ email ++ ">")
 
 deriving instance Show Document
 deriving instance Show DocumentStatus
@@ -128,17 +133,17 @@ newDocument userid title = do
   modify $ insert (Document docid (BSC.toString title) (Author userid) [] [title] Preparation)
 
 
-updateDocumentSignatories :: Document -> [String] -> Update Documents Document
-updateDocumentSignatories document signatoryemails = do
-  signatorylinks <- mapM mm signatoryemails
+updateDocumentSignatories :: Document -> [String] -> [String] -> Update Documents Document
+updateDocumentSignatories document signatorynames signatoryemails = do
+  signatorylinks <- zipWithM mm signatorynames signatoryemails
   let doc2 = document { signatorylinks = signatorylinks }
   modify (updateIx (documentid doc2) doc2)
   return doc2
-  where mm email = do
+  where mm name email = do
           x <- do r <- getRandomR (0,maxBound)
                   return (SignatoryLinkID r)
 
-          return $ SignatoryLink x email Nothing False
+          return $ SignatoryLink x name email Nothing False
 
 markDocumentAsFinal :: Document -> Update Documents Document
 markDocumentAsFinal document = do

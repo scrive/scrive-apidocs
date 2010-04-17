@@ -78,23 +78,23 @@ lookInputList name
 
 updateDocument :: Document -> ServerPartT IO Document  
 updateDocument document = do
-  Just signatoriesinputs <- getDataFn $ lookInputList "signatoryemail"
+  Just signatoriesinputs <- getDataFn $ lookInputList "signatoryname"
   let signatories = map BSCL.toString signatoriesinputs
-  let sign = signatories
-  doc2 <- trace "update document signatories" $
-          update $ UpdateDocumentSignatories document sign
+  Just signatoriesemailsx <- getDataFn $ lookInputList "signatoryemail"
+  let signatoriesemails = map BSCL.toString signatoriesemailsx
+  doc2 <- update $ UpdateDocumentSignatories document signatories signatoriesemails
   maybefinal <- getDataFn $ look "final"
   if isJust maybefinal
      then
-          finalize sign doc2
+          finalize doc2
      else return doc2
   where
-     finalize sign doc2 = do
+     finalize doc2 = do
          liftIO $ mapM_ (writeemail doc2) (signatorylinks doc2)
          update $ MarkDocumentAsFinal doc2
-     writeemail doc2 (SignatoryLink linkid email maybeuser _) = do
+     writeemail doc2 (SignatoryLink linkid name email maybeuser _) = do
          (_,content) <- liftIO $ evalHSP Nothing 
-                        (mailToPerson email "John Doe" 
+                        (mailToPerson email name 
                                           (title doc2) 
                                           (documentid doc2)
                                           linkid)

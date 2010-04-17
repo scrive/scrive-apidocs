@@ -1,4 +1,22 @@
 
+// make IE work also...
+if (document.getElementsByClassName == undefined) {
+	document.getElementsByClassName = function(className)
+	{
+		var hasClassName = new RegExp("(?:^|\\s)" + className + "(?:$|\\s)");
+		var allElements = document.getElementsByTagName("*");
+		var results = [];
+
+		var element;
+		for (var i = 0; (element = allElements[i]) != null; i++) {
+			var elementClass = element.className;
+			if (elementClass && elementClass.indexOf(className) != -1 && hasClassName.test(elementClass))
+				results.push(element);
+		}
+
+		return results;
+	}
+}
 
 var dragDropObj = new DHTMLgoodies_dragDrop();
 
@@ -48,5 +66,10 @@ function dropItems(sourceObj,targetObj,x,y)
  {
         alert(sourceObj + targetObj);
  }
+ var elems = document.getElementsByClassName("dragableBox");
+ for (var i = 0; elems[i] != null; i++) {
+      dragDropObj.addSourceNode(elems[i],true);
+ }
+
  dragDropObj.addTarget('dropBox','dropItems');
  dragDropObj.init();

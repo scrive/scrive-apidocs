@@ -64,6 +64,17 @@ showSignatory
   :: (EmbedAsChild m String, Show a) => a -> XMLGenT m (HSX.XML m)
 showSignatory sig = <li><% show sig %></li>
 
+
+showSignatoryEntry (SignatoryLink{signatoryname,signatoryemail}) = 
+    <% <li>
+      <input name="signatoryname" type="text" value=signatoryname/><br/>
+      <input name="signatoryemail" type="text" value=signatoryemail/><br/>
+      <div class="dragableBox">SIGNATURE</div>
+      <a onclick="signatoryremove(this)" href="#">Remove</a>
+      </li>
+    %>
+
+
 showDocument
   :: (EmbedAsChild m [Char], EmbedAsAttr m (Attr [Char] [Char])) =>
      Document -> XMLGenT m (HSX.XML m)
@@ -80,8 +91,9 @@ showDocument document =
       <td>
        <div>List of signatories:<br/>
         <ol id="signatorylist">
-         <a onclick="signatoryadd()" href="#">Add signatory</a>
+         <% map showSignatoryEntry (signatorylinks document) %>
         </ol>
+        <a onclick="signatoryadd()" href="#">Add signatory</a>
        </div>
       </td>
      </tr>
