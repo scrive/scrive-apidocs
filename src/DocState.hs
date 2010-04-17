@@ -140,9 +140,7 @@ updateDocumentSignatories document signatorynames signatoryemails = do
   modify (updateIx (documentid doc2) doc2)
   return doc2
   where mm name email = do
-          x <- do r <- getRandomR (0,maxBound)
-                  return (SignatoryLinkID r)
-
+          x <- getUnique signatorylinks SignatoryLinkID
           return $ SignatoryLink x name email Nothing False
 
 markDocumentAsFinal :: Document -> Update Documents Document

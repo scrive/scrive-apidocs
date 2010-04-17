@@ -8,6 +8,7 @@ import DocState
 import HSP
 import qualified Data.ByteString.UTF8 as BSC
 import qualified HSX.XMLGenerator as HSX (XML)
+import qualified HSX.XMLGenerator
 
 -- * Convenience Functions
 
@@ -65,8 +66,13 @@ showSignatory
 showSignatory sig = <li><% show sig %></li>
 
 
+showSignatoryEntry
+  :: (HSX.XMLGenerator.EmbedAsAttr
+        m (HSX.XMLGenerator.Attr [Char] [Char]),
+      HSX.XMLGenerator.EmbedAsChild m [Char]) =>
+     DocState.SignatoryLink -> HSX.XMLGenerator.GenChildList m
 showSignatoryEntry (SignatoryLink{signatoryname,signatoryemail}) = 
-    <% <li>
+    <% <li> 
       <input name="signatoryname" type="text" value=signatoryname/><br/>
       <input name="signatoryemail" type="text" value=signatoryemail/><br/>
       <div class="dragableBox">SIGNATURE</div>
