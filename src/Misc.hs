@@ -90,8 +90,3 @@ openDocument filename = do
                                         shellExecute nullPtr open filename nullPtr nullPtr 1
              
 foreign import stdcall "ShellExecuteA" shellExecute :: Ptr () -> Ptr CChar -> Ptr CChar -> Ptr () -> Ptr () -> CInt -> IO ()
-
-
-
-
-
