@@ -11,6 +11,10 @@ import qualified HSX.XMLGenerator as HSX (XML)
 import qualified HSX.XMLGenerator
 import User
 
+jquery :: (XMLGenerator m) => [XMLGenT m (HSX.XML m)] 
+jquery = [<script src="/js/jquery-1.4.2.min.js"/>,
+          <script src="/js/jquery-ui-1.8.custom.min.js"/>]
+
 -- * Convenience Functions
 
 {-
@@ -93,12 +97,12 @@ fff file =
      Document -> XMLGenT m (HSX.XML m)
 -}
 showDocument
-  :: (EmbedAsAttr m (Attr [Char] [Char]),
-      EmbedAsAttr m (Attr [Char] BS.ByteString),
-      EmbedAsChild m [Char]) =>
+  :: (XMLGenerator m,
+      EmbedAsAttr m (Attr [Char] BS.ByteString)) =>
      Document -> XMLGenT m (HSX.XMLGenerator.XML m)
 showDocument document =
    <form method="post"> 
+         <% jquery %>
     <table>
      <tr>
       <td><div id="dropBox">
