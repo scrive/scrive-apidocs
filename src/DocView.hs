@@ -130,7 +130,6 @@ showDocument document =
                  <input type="submit" name="final" value="Make it final"/></span>
      %>
 
-     <script type="text/javascript" src="/js/drag-drop-custom.js"/>
      <script type="text/javascript" src="/js/document-edit.js"/>
 
    </form>

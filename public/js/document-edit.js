@@ -18,25 +18,39 @@ if (document.getElementsByClassName == undefined) {
 	}
 }
 
-var dragDropObj = new DHTMLgoodies_dragDrop();
+function addDraggableOverChildren(elem)
+{
+    var db = $(elem).find(".dragableBox");
+
+    db.draggable({
+     helper: "clone",
+     opacity: 0.5,
+     revert: "invalid"
+    });
+}
 
 function signatoryadd()
 {
-    var signatorylist = document.getElementById( "signatorylist" );
-    var li = document.createElement('li');
-    // FIXME: synchronize this with the Haskell version inside
-    li.innerHTML = "<input name='signatoryname' class='signatoryname' type='text'><br>" +
+    var signatorylist = $( "#signatorylist" );
+    signatorylist.append(
+        "<li><input name='signatoryname' class='signatoryname' type='text'><br>" +
         "<input name='signatoryemail' class='signatoryemail' type='text'><br>" +
         "<div class='dragableBox'>SIGNATURE</div>" +
-        "<a onclick='signatoryremove(this)' href='#'>Remove</a>";
-    signatorylist.appendChild(li);
+        "<a onclick='signatoryremove(this)' href='#'>Remove</a>" +
+        "</li>");
+    var li = signatorylist.children("li:last");
+    var rnd = Math.round(Math.random() * 10000000);
+    var cls = "uuu-" + rnd;
+    alert(cls);
+    li.find(".dragableBox").addClass(cls);
+    var nameinput = li.find("input.signatoryname");
+    nameinput.bind( "change keyup",
+                    function() {
+                         var db = $("." + cls);
+                         db.html($(this).val());
+                         });
 
-    var db = $(li).find(".dragableBox");
-    db.each( function(idx,elem) { dragDropObj.addSourceNode(elem,true); });
-    var nameinput = $(li).find("input.signatoryname");
-
-    // var emailinput = $(li).find("input.signatoryemail");
-    nameinput.bind( "change keyup", function() { db.html($(this).val()); } );
+    addDraggableOverChildren(li);
 }
 
 function getNodeIndex(node)
@@ -63,14 +77,15 @@ function signatoryremove(node)
     sgn.parent.removeChild(sgn);
 }
 
-function dropItems(sourceObj,targetObj,x,y)
-{
-    alert(sourceObj + targetObj);
-}
-var elems = document.getElementsByClassName("dragableBox");
-for (var i = 0; elems[i] != null; i++) {
-    dragDropObj.addSourceNode(elems[i],true);
-}
+addDraggableOverChildren("body");
 
-dragDropObj.addTarget('dropBox','dropItems');
-dragDropObj.init();
+$("#dropBox").droppable({
+  tolerance: "fit",
+  drop: function (event,ui) {
+     var x = ui.draggable.clone(false);
+     $(this).append(x);
+     x.css("position","absolute");
+     x.offset(ui.offset);
+     return true;
+     }
+});
