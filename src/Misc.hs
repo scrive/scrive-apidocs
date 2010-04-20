@@ -9,9 +9,10 @@ import Happstack.Server hiding (simpleHTTP)
 import Happstack.Server.HSP.HTML (webHSP)
 import Happstack.State (update,query,getRandomR)
 import Network.HTTP (getRequest, getResponseBody, simpleHTTP)
-import qualified Data.ByteString as BSC
+import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL
-import qualified Data.ByteString.UTF8 as BSC
+import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Object.Json as Json
 import qualified Network.Curl as Curl
 import Data.Maybe
@@ -19,6 +20,8 @@ import Happstack.Data.IxSet as IxSet
 import Foreign.C.Types
 import Foreign.Ptr
 import Foreign.C.String
+import HSX.XMLGenerator
+import HSP
 
 {-
 
@@ -38,6 +41,26 @@ guardFormAction :: (ServerMonad m, MonadPlus m) => String -> m ()
 guardFormAction button = do
   maybepressed <- getDataFn (look button)
   guard (isJust maybepressed)
+
+instance (EmbedAsChild m String) => (EmbedAsChild m BSL.ByteString) where
+    asChild string = asChild (BSL.toString string)
+
+instance (EmbedAsChild m String) => (EmbedAsChild m BS.ByteString) where
+    asChild string = asChild (BS.toString string)
+
+instance (EmbedAsAttr m String) => (EmbedAsAttr m BSL.ByteString) where
+    asAttr string = asAttr (BSL.toString string)
+
+instance (EmbedAsAttr m String) => (EmbedAsAttr m BS.ByteString) where
+    asAttr string = asAttr (BS.toString string)
+
+instance Monad m => IsAttrValue m BS.ByteString where
+    toAttrValue = toAttrValue . BS.toString
+
+instance Monad m => IsAttrValue m BSL.ByteString where
+    toAttrValue = toAttrValue . BSL.toString
+
+concatChunks = BS.concat . BSL.toChunks
 
 {-
 getUnique
