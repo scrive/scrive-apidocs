@@ -25,18 +25,18 @@ function signatoryadd()
     var signatorylist = document.getElementById( "signatorylist" );
     var li = document.createElement('li');
     // FIXME: synchronize this with the Haskell version inside
-    li.innerHTML = "<input name='signatoryname' type='text'><br>" +
-        "<input name='signatoryemail' type='text'><br>" +
+    li.innerHTML = "<input name='signatoryname' class='signatoryname' type='text'><br>" +
+        "<input name='signatoryemail' class='signatoryemail' type='text'><br>" +
         "<div class='dragableBox'>SIGNATURE</div>" +
         "<a onclick='signatoryremove(this)' href='#'>Remove</a>";
     signatorylist.appendChild(li);
 
-    var db = li.getElementsByTagName("div")[0];
-    dragDropObj.addSourceNode(db,true);
-    var nameinput = li.getElementsByTagName("input")[0];
-    var emailinput = li.getElementsByTagName("input")[1];
-    nameinput.onchange = function() { db.innerHTML = nameinput.value; }
-    nameinput.onkeyup = function() { db.innerHTML = nameinput.value; }
+    var db = $(li).find(".dragableBox");
+    db.each( function(idx,elem) { dragDropObj.addSourceNode(elem,true); });
+    var nameinput = $(li).find("input.signatoryname");
+
+    // var emailinput = $(li).find("input.signatoryemail");
+    nameinput.bind( "change keyup", function() { db.html($(this).val()); } );
 }
 
 function getNodeIndex(node)
