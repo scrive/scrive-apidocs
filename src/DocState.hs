@@ -11,39 +11,46 @@ import Control.Monad.Reader (ask)
 import Control.Monad.State (modify)
 import UserState
 import Happstack.Data.IxSet
-import qualified Data.ByteString.UTF8 as BSC
+import qualified Data.ByteString.UTF8 as BS
 import Control.Applicative ((<$>))
 import Happstack.Server.SimpleHTTP
 import Happstack.Util.Common
 import Debug.Trace
 import Misc
 import Control.Monad
+import Data.List (find)
 
 
 $(deriveAll [''Eq, ''Ord, ''Default]
   [d|
       data Document = Document
           { documentid     :: DocumentID
-          , title          :: String
+          , title          :: BS.ByteString
           , author         :: Author
           , signatorylinks :: [SignatoryLink]  
-          , files          :: [BSC.ByteString]
+          , files          :: [File]
           , status         :: DocumentStatus
           }
       newtype Author = Author UserID
       newtype DocumentID = DocumentID Int
-      newtype EmailCookie = EmailCookie Int
       newtype SignatoryLinkID = SignatoryLinkID Int
+      newtype FileID = FileID Int
 
       data SignatoryLink = SignatoryLink 
           { signatorylinkid :: SignatoryLinkID
-          , signatoryname   :: String 
-          , signatoryemail  :: String
+          , signatoryname   :: BS.ByteString 
+          , signatoryemail  :: BS.ByteString
           , maybesignatory  :: Maybe Signatory
           , signed          :: Bool
           }
       
       data Signatory = Signatory UserID
+      data File = File 
+          { fileid       :: FileID
+          , filename     :: BS.ByteString
+          , filepdf      :: BS.ByteString 
+          , filejpgpages :: [BS.ByteString]
+          }
 
       data DocumentStatus = Preparation | ReadyToSign | Signed | Postponed
    |])
@@ -53,9 +60,9 @@ instance Show SignatoryLinkID where
 
 instance Show SignatoryLink where
     showsPrec prec (SignatoryLink _ name email Nothing False) = 
-        (++) (name ++ " <" ++ email ++ ">")
+        (++) (BS.toString name ++ " <" ++ BS.toString email ++ ">")
     showsPrec prec (SignatoryLink _ name email _ True) = 
-        (++) $ "Signed by " ++ (name ++ " <" ++ email ++ ">")
+        (++) $ "Signed by " ++ (BS.toString name ++ " <" ++ BS.toString email ++ ">")
 
 deriving instance Show Document
 deriving instance Show DocumentStatus
@@ -74,10 +81,23 @@ instance Read SignatoryLinkID where
     readsPrec prec = let make (i,v) = (SignatoryLinkID i,v) 
                      in map make . readsPrec prec 
 
+instance Show File where
+    showsPrec prec file = (++) (BS.toString (filename file))
+
+instance Show FileID where
+    showsPrec prec (FileID val) = showsPrec prec val
+
+instance Read FileID where
+    readsPrec prec = let make (i,v) = (FileID i,v) 
+                     in map make . readsPrec prec 
+
 instance FromReqURI DocumentID where
     fromReqURI = readM
 
 instance FromReqURI SignatoryLinkID where
+    fromReqURI = readM
+
+instance FromReqURI FileID where
     fromReqURI = readM
 
 $(deriveSerialize ''SignatoryLink)
@@ -101,10 +121,14 @@ instance Version Document where
 $(deriveSerialize ''DocumentStatus)
 instance Version DocumentStatus where
 
-$(deriveSerialize ''EmailCookie)
-instance Version EmailCookie where
+$(deriveSerialize ''File)
+instance Version File where
 
-$(inferIxSet "Documents" ''Document 'noCalcs [''DocumentID, ''Author, ''Signatory])
+$(deriveSerialize ''FileID)
+instance Version FileID where
+
+
+$(inferIxSet "Documents" ''Document 'noCalcs [''DocumentID, ''Author, ''Signatory, ''SignatoryLinkID, ''FileID])
 
 instance Component Documents where
   type Dependencies Documents = End
@@ -126,21 +150,24 @@ getDocumentsBySignatory userid = do
     documents <- ask
     return $ toList (documents @= Signatory userid)
 
-newDocument :: UserID -> BSC.ByteString -> Update Documents ()
-newDocument userid title = do
+newDocument :: UserID -> BS.ByteString -> File -> Update Documents ()
+newDocument userid title file = do
   documents <- ask
   docid <- getUnique documents DocumentID
-  modify $ insert (Document docid (BSC.toString title) (Author userid) [] [title] Preparation)
+  fileid <- getUnique documents FileID
+  let nfile = file {fileid = fileid}
+  modify $ insert (Document docid title (Author userid) [] [nfile] Preparation)
 
 
-updateDocumentSignatories :: Document -> [String] -> [String] -> Update Documents Document
+updateDocumentSignatories :: Document -> [BS.ByteString] -> [BS.ByteString] -> Update Documents Document
 updateDocumentSignatories document signatorynames signatoryemails = do
   signatorylinks <- zipWithM mm signatorynames signatoryemails
   let doc2 = document { signatorylinks = signatorylinks }
   modify (updateIx (documentid doc2) doc2)
   return doc2
   where mm name email = do
-          x <- getUnique signatorylinks SignatoryLinkID
+          sg <- ask
+          x <- getUnique sg SignatoryLinkID
           return $ SignatoryLink x name email Nothing False
 
 markDocumentAsFinal :: Document -> Update Documents Document
@@ -153,16 +180,25 @@ signDocument :: DocumentID -> UserID -> SignatoryLinkID -> Update Documents (May
 signDocument documentid userid signatorylinkid1 = do
   documents <- ask
   let Just document = getOne (documents @= documentid)
-      signeddocument = trace (show $ signatorylinks document) $
-                       document { signatorylinks = newsignatorylinks }
+      signeddocument = document { signatorylinks = newsignatorylinks }
       newsignatorylinks = map maybesign (signatorylinks document)
       maybesign x@(SignatoryLink {signatorylinkid} ) 
-          | signatorylinkid == signatorylinkid1 = trace "signatory found" $
+          | signatorylinkid == signatorylinkid1 = 
               x { signed = True, maybesignatory = Just (Signatory userid) }
-      maybesign x = trace (show (signatorylinkid1, signatorylinkid x)) $ x
+      maybesign x = x
   modify (updateIx documentid signeddocument)
   return (Just signeddocument)
   
+
+getFilePageJpg :: FileID -> Int -> Query Documents (Maybe BS.ByteString)
+getFilePageJpg xfileid pageno = do
+  documents <- ask
+  return $ do -- maybe monad!
+    document <- getOne (documents @= xfileid)
+    nfile <- find (\f -> fileid f == xfileid) (files document)
+    let jpgs = filejpgpages nfile
+    jpg <- return (jpgs!!(pageno-1))
+    return jpg
   
 
 
@@ -174,6 +210,7 @@ $(mkMethods ''Documents [ 'getDocumentsByAuthor
                         , 'updateDocumentSignatories
                         , 'markDocumentAsFinal
                         , 'signDocument
+                        , 'getFilePageJpg
                         ])
 
 

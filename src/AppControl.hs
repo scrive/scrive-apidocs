@@ -22,6 +22,7 @@ import qualified Network.Curl as Curl
 import qualified DocView as DocView
 import qualified DocControl as DocControl
 import Happstack.Server.SimpleHTTP (seeOther)
+import Control.Monad.Reader
 
 appHandler :: ServerPartT IO Response
 appHandler = do
@@ -30,14 +31,16 @@ appHandler = do
   let hostpart = "http://" ++ BSC.toString host
   
   maybeuser <- userLogin
+  let ctx = Context maybeuser hostpart
   
   msum
-    [ nullDir >> webHSP (pageFromBody maybeuser hostpart kontrakcja (welcomeBody hostpart))
-    , dir "sign" (withUser maybeuser (DocControl.handleSign hostpart))
-    , dir "issue" (withUser maybeuser (DocControl.handleIssue hostpart))
+    [ nullDir >> webHSP (pageFromBody ctx kontrakcja (welcomeBody ctx))
+    , dir "sign" (withUser maybeuser (DocControl.handleSign ctx))
+    , dir "issue" (withUser maybeuser (DocControl.handleIssue ctx))
+    , dir "pages" $ path $ \fileid -> DocControl.showPage ctx fileid 1
     , dir "logout" (handleLogout)
     , fileServe [] "public"
-    , webHSP (pageFromBody maybeuser hostpart kontrakcja (errorReport maybeuser rq))
+    , webHSP (pageFromBody ctx kontrakcja (errorReport ctx rq))
     ]
     
 handleLogout :: ServerPartT IO Response

@@ -6,6 +6,7 @@ module User
     , withUser
     , maybeSignInLink
     , userLogin
+    , Context(..)
     )
     where
 
@@ -39,6 +40,9 @@ import Happstack.State (update,query)
 seeOtherXML :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
 
+data Context = Context (Maybe User) String
+
+
 
 {-
  We need pleasant user experience here. Therefore:
@@ -60,11 +64,12 @@ seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
  - otherwise just redirect back to proper place
 
 -}
-withUser :: Maybe User -> (User -> ServerPartT IO Response) -> ServerPartT IO Response
-withUser (Just user) action = action user
+withUser :: Maybe User -> ServerPartT IO Response -> ServerPartT IO Response
+withUser (Just user) action = action
 withUser Nothing action = msum
                           [ methodOnly GET >> provideRPXNowLink
-                             -- FIXME: you seem to be doing method POST while not logged in and requesting login at the same time
+                             -- FIXME: you seem to be doing method POST while 
+                             -- not logged in and requesting login at the same time
                              -- this is not going to work right now, stop it!
                             ]
 
@@ -134,14 +139,15 @@ provideRPXNowLink = do -- FIXME it was guarded by method GET but it didn't help
     seeOther url (v)
 
 maybeSignInLink
-  :: (EmbedAsChild m c, EmbedAsAttr m (Attr [Char] [Char])) =>
-     Maybe t -> c -> [Char] -> [Char] -> XMLGenT m (HSX.XML m)
-maybeSignInLink Nothing title base url = do
+  :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] [Char])) =>
+     Context -> String -> String -> XMLGenT m (HSX.XML m)
+maybeSignInLink (Context Nothing base) title url = do
     -- FIXME: this is very simple url handling....
     let fullurl = base ++ url
     <a class="rpxnow" onclick="return false;"
        href=("https://kontrakcja.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode fullurl)><% title %></a> 
-maybeSignInLink _ title base url = do
+maybeSignInLink (Context (Just _) base) title url = do
     let fullurl = base ++ url
     <a href=fullurl><% title %></a> 
+
 

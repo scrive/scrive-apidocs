@@ -85,8 +85,8 @@ handleRPXLoginView json =
       <% json %>
     </p>
 
-welcomeBody :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
-welcomeBody _serverurl = 
+welcomeBody :: (XMLGenerator m) => Context -> XMLGenT m (HSX.XML m)
+welcomeBody (Context (Just _) hostpart) = 
   <div style="align: center">
    <img src="/theme/images/skriva.jpg" height="40"/>
    <br/> 
@@ -96,8 +96,15 @@ welcomeBody _serverurl =
    </form>
   </div>
 
-errorReport :: (XMLGenerator m) => Maybe User -> Request -> XMLGenT m (HSX.XML m)
-errorReport maybeuser request = 
+welcomeBody ctx@(Context Nothing hostpart) = 
+  <div style="align: center">
+   <img src="/theme/images/skriva.jpg" height="40"/>
+   <br/>
+   <p><% maybeSignInLink ctx "Sign in here" "/" %></p>
+  </div>
+
+errorReport :: (XMLGenerator m) => Context -> Request -> XMLGenT m (HSX.XML m)
+errorReport (Context maybeuser _) request = 
   <div>
    <p>An error occured. It's not you, it's us. We will take care about the problem
    as soon as possible. Meanwhile please <a href="/">go to the very beginning</a>.</p>
@@ -159,11 +166,11 @@ dateStr ct =
 
 -- * Main Implementation
 
-renderFromBody :: (MonadIO m, EmbedAsChild (HSPT' IO) xml) => Maybe User -> String -> String -> xml -> m Response
-renderFromBody maybeuser hostpart title = webHSP . pageFromBody maybeuser hostpart title
+renderFromBody :: (MonadIO m, EmbedAsChild (HSPT' IO) xml) => Context -> String -> xml -> m Response
+renderFromBody ctx title = webHSP . pageFromBody ctx title
 
-pageFromBody :: (EmbedAsChild (HSPT' IO) xml) => Maybe User -> String -> String -> xml -> HSP XML
-pageFromBody maybeuser hostpart title body =
+pageFromBody :: (EmbedAsChild (HSPT' IO) xml) => Context -> String -> xml -> HSP XML
+pageFromBody ctx@(Context maybeuser hostpart) title body =
     withMetaData html4Strict $
     <html>
      <head>
@@ -180,7 +187,7 @@ pageFromBody maybeuser hostpart title body =
                    Just (User{fullname}) -> <span><a href="/account"><% BSC.toString fullname %></a> | <a href="/logout">Logout</a></span>
                    Nothing ->  <a class="rpxnow" onclick="return false;"
                                   href=("https://kontrakcja.rpxnow.com/openid/v2/signin?token_url=" ++ 
-                                        urlEncode (hostpart ++ "/rpxsignin"))>Sign in here</a> 
+                                        urlEncode (hostpart ++ "/"))>Sign in here</a> 
 
 
           %>
@@ -197,13 +204,13 @@ pageFromBody maybeuser hostpart title body =
        <div class="sbar_section">
          <ul>
       	  <li class="cat-item cat-item-1">
-           <% maybeSignInLink maybeuser "Begin" hostpart "/" %>
+           <% maybeSignInLink ctx "Begin" "/" %>
           </li>
       	  <li class="cat-item cat-item-2">
-           <% maybeSignInLink maybeuser "Issue" hostpart "/issue" %>
+           <% maybeSignInLink ctx "Issue" "/issue" %>
           </li>
       	  <li class="cat-item cat-item-3">
-           <% maybeSignInLink maybeuser "Sign" hostpart "/sign" %>
+           <% maybeSignInLink ctx "Sign" "/sign" %>
           </li>
          </ul>
        </div>

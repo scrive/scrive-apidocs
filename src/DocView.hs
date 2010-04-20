@@ -6,9 +6,10 @@ import AppView
 import Data.List
 import DocState
 import HSP
-import qualified Data.ByteString.UTF8 as BSC
+import qualified Data.ByteString.UTF8 as BS
 import qualified HSX.XMLGenerator as HSX (XML)
 import qualified HSX.XMLGenerator
+import User
 
 -- * Convenience Functions
 
@@ -58,19 +59,21 @@ listDocuments documents = asChild documents
 
 showFile
   :: (EmbedAsChild m String) =>
-     BSC.ByteString -> XMLGenT m (HSX.XML m)
-showFile file = <li><% BSC.toString file %></li>
+     File -> XMLGenT m (HSX.XML m)
+showFile file = <li><% show file %></li>
 
 showSignatory
   :: (EmbedAsChild m String, Show a) => a -> XMLGenT m (HSX.XML m)
 showSignatory sig = <li><% show sig %></li>
 
 
+{-
 showSignatoryEntry
   :: (HSX.XMLGenerator.EmbedAsAttr
         m (HSX.XMLGenerator.Attr [Char] [Char]),
       HSX.XMLGenerator.EmbedAsChild m [Char]) =>
      DocState.SignatoryLink -> HSX.XMLGenerator.GenChildList m
+-}
 showSignatoryEntry (SignatoryLink{signatoryname,signatoryemail}) = 
     <% <li> 
       <input name="signatoryname" type="text" value=signatoryname/><br/>
@@ -81,14 +84,25 @@ showSignatoryEntry (SignatoryLink{signatoryname,signatoryemail}) =
     %>
 
 
-showDocument
+fff file = 
+   <img src=link width="300"/>
+   where link = "/pages/" ++ show (fileid file)
+
+{- showDocument
   :: (EmbedAsChild m [Char], EmbedAsAttr m (Attr [Char] [Char])) =>
      Document -> XMLGenT m (HSX.XML m)
+-}
+showDocument
+  :: (EmbedAsAttr m (Attr [Char] [Char]),
+      EmbedAsAttr m (Attr [Char] BS.ByteString),
+      EmbedAsChild m [Char]) =>
+     Document -> XMLGenT m (HSX.XMLGenerator.XML m)
 showDocument document =
    <form method="post"> 
     <table>
      <tr>
-      <td><div id="dropBox"><img src="/theme/images/kontrakt.jpg" width="300"/>
+      <td><div id="dropBox">
+        <% map fff (files document) %>
        <ol>
         <% map showFile (files document) %>
        </ol>
@@ -133,14 +147,17 @@ showDocumentForSign document wassigned=
 
 
 mailToPerson :: (XMLGenerator m) 
-                => String 
-             -> String
-             -> String
+                => Context
+             -> BS.ByteString
+             -> BS.ByteString
+             -> BS.ByteString
              -> DocumentID
              -> SignatoryLinkID
              -> XMLGenT m (HSX.XML m)
-mailToPerson emailaddress personname documenttitle documentid signaturelinkid = 
-    let link = "http://localhost:8000/sign/" ++ show documentid ++ "/" ++ show signaturelinkid
+mailToPerson (Context (Just user) hostpart) emailaddress personname 
+             documenttitle documentid signaturelinkid = 
+    let link = hostpart ++ "/sign/" ++ show documentid ++ "/" ++ show signaturelinkid
+        creatorname = BS.toString $ fullname user
     in 
     <html>
      <head>
@@ -148,7 +165,8 @@ mailToPerson emailaddress personname documenttitle documentid signaturelinkid =
      <body>
       <h1>Welcome <% personname %></h1>
       <p><a href=link><% documenttitle %></a></p>
-      <p>Document is ready! To review and sign click this link:</p>
+      <p><% creatorname %> prepared documents you should see! 
+           To review and sign them click link below:</p>
       <p><% link %></p>
       <p><small>Powered by Skriva Pa</small></p>
      </body>
