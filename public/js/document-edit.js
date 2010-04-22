@@ -1,30 +1,11 @@
 
-// make IE work also...
-if (document.getElementsByClassName == undefined) {
-    document.getElementsByClassName = function(className)
-	{
-            var hasClassName = new RegExp("(?:^|\\s)" + className + "(?:$|\\s)");
-            var allElements = document.getElementsByTagName("*");
-            var results = [];
-
-            var element;
-            for (var i = 0; (element = allElements[i]) != null; i++) {
-                var elementClass = element.className;
-                if (elementClass && elementClass.indexOf(className) != -1 && hasClassName.test(elementClass))
-                    results.push(element);
-            }
-
-            return results;
-	}
-}
-
 function addDraggableOverChildren(elem)
 {
     var db = $(elem).find(".dragableBox");
 
     db.draggable({
      helper: "clone",
-     opacity: 0.5,
+     opacity: 0.8,
      revert: "invalid"
     });
 }
@@ -41,8 +22,8 @@ function signatoryadd()
     var li = signatorylist.children("li:last");
     var rnd = Math.round(Math.random() * 10000000);
     var cls = "uuu-" + rnd;
-    alert(cls);
     li.find(".dragableBox").addClass(cls);
+    li.data("draggableBoxClass",cls);
     var nameinput = li.find("input.signatoryname");
     nameinput.bind( "change keyup",
                     function() {
@@ -51,41 +32,31 @@ function signatoryadd()
                          });
 
     addDraggableOverChildren(li);
-}
-
-function getNodeIndex(node)
-{
-    var prev = null;
-    var index = 0;
-    while(true) {
-        prev = node.previousElementSibling;
-        if( prev==null ) break;
-        index = index + 1;
-        node = prev;
-    }
-    return index;
+    return false;
 }
 
 function signatoryremove(node)
 {
-    var li = node.parentNode;
-    var index = getNodeIndex(li);
-    li.parentNode.removeChild(li);
-
-    var signatureBox = document.getElementById("signatureBox");
-    var sgn = signatureBox.children[index];
-    sgn.parent.removeChild(sgn);
+  var li = $(node).parent();
+  var cls = li.data("draggableBoxClass");
+  var db = $("." + cls);
+  li.fadeOut('slow',function() { $(this).remove(); });
+  db.fadeOut('slow',function() { $(this).remove(); });
+  return false;
 }
 
 addDraggableOverChildren("body");
 
 $("#dropBox").droppable({
-  tolerance: "fit",
-  drop: function (event,ui) {
-     var x = ui.draggable.clone(false);
-     $(this).append(x);
-     x.css("position","absolute");
-     x.offset(ui.offset);
-     return true;
-     }
-});
+        tolerance: "fit",
+            drop: function (event,ui) {
+            var x = ui.draggable.clone(false);
+            $(this).append(x);
+            x.css("position","absolute");
+            x.offset(ui.offset);
+            // to make it not copy the object many times
+            x.draggable({scope: "somethingelse"});
+            x.append("<input type='hidden' value='1,1' name='position'>");
+            return true;
+        }
+    });

@@ -126,8 +126,11 @@ showDocument document =
     <% 
         if status document == ReadyToSign
            then <span/>
-           else <span><input type="submit" value="Update"/>
-                 <input type="submit" name="final" value="Make it final"/></span>
+           else <span>
+                 <input type="submit" value="Update"/>
+                 <input type="submit" name="final" value="Make it final"/>
+                 <input type="submit" name="showvars" value="Show vars"/>
+                </span>
      %>
 
      <script type="text/javascript" src="/js/document-edit.js"/>

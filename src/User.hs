@@ -75,9 +75,12 @@ withUser Nothing action = msum
 
 userLogin :: ServerPartT IO (Maybe User)
 userLogin = do
-  maybeuser <- withMSessionDataSP $ \maybeuserid -> do 
+  maybeuser <- withMSessionDataSP2 $ \maybeuserid -> do 
     case maybeuserid of
-      Just userid -> query $ FindUserByUserID userid
+      Just (sid,userid) -> do
+                       -- prolong session
+                       startSession sid
+                       query $ FindUserByUserID userid
       Nothing -> return Nothing
   case maybeuser of
     Just user -> return maybeuser
@@ -92,7 +95,7 @@ userLogin1 = do
 
               let req = "https://rpxnow.com/api/v2/auth_info" ++ 
                         "?apiKey=03bbfc36d54e523b2602af0f95aa173fb96caed9" ++
-                                                                               "&token=" ++ token
+                        "&token=" ++ token
               
               {-
                 FIXME: Get the certificate of that server and import it

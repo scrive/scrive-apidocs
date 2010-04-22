@@ -81,6 +81,8 @@ updateDocument ctx document = do
   let signatoriesemails = map concatChunks signatoriesemailsx
   doc2 <- update $ UpdateDocumentSignatories document signatories signatoriesemails
   maybefinal <- getDataFn $ look "final"
+  maybeshowvars <- getDataFn $ look "showvars"
+  when (isJust maybeshowvars) $ mzero
   if isJust maybefinal
      then
           finalize doc2

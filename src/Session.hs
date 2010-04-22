@@ -17,6 +17,7 @@ module Session
     , withMSessionId
     , withMSessionData
     , withMSessionDataSP
+    , withMSessionDataSP2
     , startSession  
     , endSession
     )
@@ -186,6 +187,19 @@ withMSessionDataSP :: (Ord a, Serialize a, Data a, MonadIO m, ServerMonad m, Mon
 withMSessionDataSP f =
     withMSessionId (\sID -> withMSessionDataSP' sID f)
 
+
+withMSessionDataSP2' :: (Ord a, Serialize a, Data a, MonadIO m) => Maybe SessionId -> (Maybe (SessionId,a) -> m r) -> m r
+withMSessionDataSP2' Nothing f = f Nothing
+withMSessionDataSP2' (Just sID) f =
+    do mSessionData <- query . GetSession $ sID
+       case mSessionData of
+         Nothing -> f Nothing
+         (Just (Session _ sessionData)) ->
+             f (Just (sID,sessionData))
+
+withMSessionDataSP2 :: (Ord a, Serialize a, Data a, MonadIO m, ServerMonad m, MonadPlus m) => (Maybe (SessionId,a) -> m r) -> m r
+withMSessionDataSP2 f =
+    withMSessionId (\sID -> withMSessionDataSP2' sID f)
 
 -- * Simple Applicative and Alternative instances for RqData via ReaderT
 instance (Monad m) => Applicative (ReaderT r m) where
