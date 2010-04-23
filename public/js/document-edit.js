@@ -1,7 +1,16 @@
 
+function getUniqueId()
+{
+    var rnd = Math.round(Math.random() * 1000000000);
+    while($("#" + rnd).length  >0) {
+        rnd = Math.round(Math.random() * 1000000000);
+    }
+    return rnd;
+}
+
 function addDraggableOverChildren(elem)
 {
-    var db = $(elem).find(".dragableBox");
+    var db = $(elem).find(".draggableBox");
 
     db.draggable({
      helper: "clone",
@@ -16,13 +25,14 @@ function signatoryadd()
     signatorylist.append(
         "<li><input name='signatoryname' class='signatoryname' type='text'><br>" +
         "<input name='signatoryemail' class='signatoryemail' type='text'><br>" +
-        "<div class='dragableBox'>SIGNATURE</div>" +
+        "<div class='draggableBox'>SIGNATURE</div>" +
         "<a onclick='signatoryremove(this)' href='#'>Remove</a>" +
         "</li>");
     var li = signatorylist.children("li:last");
-    var rnd = Math.round(Math.random() * 10000000);
-    var cls = "uuu-" + rnd;
-    li.find(".dragableBox").addClass(cls);
+    var newid = getUniqueId();
+    li.attr("id",newid);
+    var cls = "uuu-" + newid;
+    li.find(".draggableBox").addClass(cls);
     li.data("draggableBoxClass",cls);
     var nameinput = li.find("input.signatoryname");
     nameinput.bind( "change keyup",

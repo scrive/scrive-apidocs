@@ -82,7 +82,7 @@ showSignatoryEntry (SignatoryLink{signatoryname,signatoryemail}) =
     <% <li> 
       <input name="signatoryname" type="text" value=signatoryname/><br/>
       <input name="signatoryemail" type="text" value=signatoryemail/><br/>
-      <div class="dragableBox">SIGNATURE</div>
+      <div class="draggableBox">SIGNATURE</div>
       <a onclick="signatoryremove(this)" href="#">Remove</a>
       </li>
     %>

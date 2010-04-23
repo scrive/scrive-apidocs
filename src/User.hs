@@ -21,16 +21,15 @@ import Happstack.Server.SimpleHTTP
 import qualified HSX.XMLGenerator as HSX (XML)
 import HSP
 import Network.HTTP (urlEncode)
-import qualified Data.ByteString.UTF8 as BSC
+import qualified Data.ByteString.UTF8 as BS
 import qualified Network.Curl as Curl
 import Control.Monad
 import Data.Maybe
 import Control.Monad.Reader (ask)
 import Control.Monad.Trans(liftIO, MonadIO,lift)
 import Data.Object
-import qualified Data.ByteString as BSC
+import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL
-import qualified Data.ByteString.UTF8 as BSC
 import qualified Data.Object.Json as Json
 import Happstack.Data.IxSet ((@=),getOne)
 import Happstack.Server hiding (simpleHTTP)
@@ -84,7 +83,7 @@ userLogin = do
       Nothing -> return Nothing
   case maybeuser of
     Just user -> return maybeuser
-    Nothing -> userLogin1
+    Nothing -> userLogin2
 
 userLogin1 :: ServerPartT IO (Maybe User)
 userLogin1 = do
@@ -112,18 +111,18 @@ userLogin1 = do
     
               let Just json = Json.decode (BSL.fromString rpxdata) 
                   Just jsonMapping = fromMapping json 
-                  Just profileMapping = lookupMapping (BSC.fromString "profile") jsonMapping
-                  -- Json.JsonString verifiedEmail = maybe id (Json.JsonString (BSC.fromString "")) $ lookupScalar (BSC.fromString "verifiedEmail") profileMapping
-                  Just (Json.JsonString identifier) = lookupScalar (BSC.fromString "identifier") profileMapping
-                  Just nameMapping = lookupMapping (BSC.fromString "name") profileMapping
-                  Just (Json.JsonString formatted) = lookupScalar (BSC.fromString "formatted") nameMapping
+                  Just profileMapping = lookupMapping (BS.fromString "profile") jsonMapping
+                  -- Json.JsonString verifiedEmail = maybe id (Json.JsonString (BS.fromString "")) $ lookupScalar (BS.fromString "verifiedEmail") profileMapping
+                  Just (Json.JsonString identifier) = lookupScalar (BS.fromString "identifier") profileMapping
+                  Just nameMapping = lookupMapping (BS.fromString "name") profileMapping
+                  Just (Json.JsonString formatted) = lookupScalar (BS.fromString "formatted") nameMapping
         
               maybeuser <- query $ FindUserByExternalUserID (ExternalUserID identifier)
     
               user <- case maybeuser of
                         Just user -> return user
                         Nothing -> do
-                          user <- update $ AddUser (ExternalUserID identifier) (formatted) (BSC.fromString "")
+                          user <- update $ AddUser (ExternalUserID identifier) (formatted) (BS.fromString "")
                           return user
               sessionid <- update $ NewSession (userid user)
               startSession sessionid
@@ -136,7 +135,7 @@ provideRPXNowLink = do -- FIXME it was guarded by method GET but it didn't help
     {-
       FIXME: watch out for protocol here
     -}
-    let serverurl = "http://" ++ BSC.toString host ++ rqUri rq
+    let serverurl = "http://" ++ BS.toString host ++ rqUri rq
     let url = "https://kontrakcja.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode serverurl
     v <- webHSP $ seeOtherXML url
     seeOther url (v)
@@ -152,5 +151,32 @@ maybeSignInLink (Context Nothing base) title url = do
 maybeSignInLink (Context (Just _) base) title url = do
     let fullurl = base ++ url
     <a href=fullurl><% title %></a> 
+
+
+userLogin2 :: ServerPartT IO (Maybe User)
+userLogin2 = do
+  let identifier = BS.fromString "auser"
+  let formatted =  BS.fromString "Emica Zaboo"
+  maybeuser <- query $ FindUserByExternalUserID 
+               (ExternalUserID identifier)
+    
+  user <- case maybeuser of
+            Just user -> return user
+            Nothing -> do
+               user <- update $ AddUser (ExternalUserID identifier) (formatted) (BS.fromString "")
+               return user
+  sessionid <- update $ NewSession (userid user)
+  startSession sessionid
+  return (Just user)
+
+
+
+
+
+
+
+
+
+
 
 

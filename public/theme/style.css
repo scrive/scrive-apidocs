@@ -348,7 +348,9 @@ blockquote {
   text-decoration: underline; 
 }
 
-.dragableBox {
+.draggableBox {
    color: blue;
    border: 1px solid black;
+   font-family:"Sagoe Script", Pristrina, Papyrus, Mistral, "Lucida Handwriting", "Freestyle Script", Vivaldi, Arial, Helvetica, sans-serif;
+   font-weight:bold;
 }
