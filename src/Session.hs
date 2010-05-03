@@ -70,17 +70,19 @@ insertIfNew k v m =
       (Just _, _) -> return m
 -}
 
-
--- | Takes the intersection of the two IxSets
-difference :: (Ord a, Data a, Indexable a b) => IxSet a -> IxSet a -> IxSet a
-difference x1 x2 = fromSet $ Set.difference (toSet x1) (toSet x2)
-
 class (Ord s, Serialize s, Data s, Default s) => SessionData s
 
-$( deriveAll [''Ord, ''Eq, ''Read, ''Show, ''Default, ''Num]
+$( deriveAll [''Ord, ''Eq, ''Default, ''Num]
    [d|
        newtype SessionId = SessionId Integer
     |])
+
+instance Show SessionId where
+    showsPrec prec (SessionId v) = showsPrec prec v
+
+instance Read SessionId where
+    readsPrec prec string = 
+        [(SessionId k,v) | (k,v) <- readsPrec prec string]
 
 $( deriveAll [''Ord, ''Eq, ''Read, ''Show, ''Default]
    [d|

@@ -19,7 +19,8 @@ import Debug.Trace
 import Misc
 import Control.Monad
 import Data.List (find)
-
+import MinutesTime
+import Control.Monad.Trans
 
 $(deriveAll [''Eq, ''Ord, ''Default]
   [d|
@@ -30,6 +31,8 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , signatorylinks :: [SignatoryLink]  
           , files          :: [File]
           , status         :: DocumentStatus
+          , documentctime  :: MinutesTime
+          , documentmtime  :: MinutesTime
           }
       newtype Author = Author UserID
       newtype DocumentID = DocumentID Int
@@ -41,9 +44,12 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , signatoryname   :: BS.ByteString 
           , signatoryemail  :: BS.ByteString
           , maybesignatory  :: Maybe Signatory
-          , signed          :: Bool
+          , maybesigninfo   :: Maybe SignInfo
           }
-      
+      data SignInfo = SignInfo
+          { signtime :: MinutesTime
+            -- some authorization info probably
+          }
       data Signatory = Signatory UserID
       data File = File 
           { fileid       :: FileID
@@ -59,10 +65,10 @@ instance Show SignatoryLinkID where
     showsPrec prec (SignatoryLinkID x) = showsPrec prec x
 
 instance Show SignatoryLink where
-    showsPrec prec (SignatoryLink _ name email Nothing False) = 
+    showsPrec prec (SignatoryLink _ name email Nothing Nothing) = 
         (++) (BS.toString name ++ " <" ++ BS.toString email ++ ">")
-    showsPrec prec (SignatoryLink _ name email _ True) = 
-        (++) $ "Signed by " ++ (BS.toString name ++ " <" ++ BS.toString email ++ ">")
+    showsPrec prec (SignatoryLink _ name email _ (Just signinfo)) = 
+        (++) $ "Signed by " ++ (BS.toString name ++ " <" ++ BS.toString email ++ "> on " ++ show (signtime signinfo))
 
 deriving instance Show Document
 deriving instance Show DocumentStatus
@@ -99,6 +105,9 @@ instance FromReqURI SignatoryLinkID where
 
 instance FromReqURI FileID where
     fromReqURI = readM
+
+$(deriveSerialize ''SignInfo)
+instance Version SignInfo
 
 $(deriveSerialize ''SignatoryLink)
 instance Version SignatoryLink
@@ -150,13 +159,16 @@ getDocumentsBySignatory userid = do
     documents <- ask
     return $ toList (documents @= Signatory userid)
 
-newDocument :: UserID -> BS.ByteString -> File -> Update Documents ()
-newDocument userid title file = do
+newDocument :: UserID -> BS.ByteString -> File 
+            -> MinutesTime -> Update Documents ()
+newDocument userid title file ctime = do
   documents <- ask
   docid <- getUnique documents DocumentID
   fileid <- getUnique documents FileID
   let nfile = file {fileid = fileid}
-  modify $ insert (Document docid title (Author userid) [] [nfile] Preparation)
+  let doc = Document docid title (Author userid) [] [nfile]
+            Preparation ctime ctime
+  modify $ insert doc
 
 
 updateDocumentSignatories :: Document -> [BS.ByteString] -> [BS.ByteString] -> Update Documents Document
@@ -168,7 +180,7 @@ updateDocumentSignatories document signatorynames signatoryemails = do
   where mm name email = do
           sg <- ask
           x <- getUnique sg SignatoryLinkID
-          return $ SignatoryLink x name email Nothing False
+          return $ SignatoryLink x name email Nothing Nothing
 
 markDocumentAsFinal :: Document -> Update Documents Document
 markDocumentAsFinal document = do
@@ -176,15 +188,18 @@ markDocumentAsFinal document = do
   modify (updateIx (documentid doc2) doc2)
   return doc2
 
-signDocument :: DocumentID -> UserID -> SignatoryLinkID -> Update Documents (Maybe Document)
-signDocument documentid userid signatorylinkid1 = do
+signDocument :: DocumentID -> UserID -> SignatoryLinkID 
+             -> MinutesTime -> Update Documents (Maybe Document)
+signDocument documentid userid signatorylinkid1 time = do
   documents <- ask
   let Just document = getOne (documents @= documentid)
       signeddocument = document { signatorylinks = newsignatorylinks }
       newsignatorylinks = map maybesign (signatorylinks document)
       maybesign x@(SignatoryLink {signatorylinkid} ) 
           | signatorylinkid == signatorylinkid1 = 
-              x { signed = True, maybesignatory = Just (Signatory userid) }
+              x { maybesigninfo = Just (SignInfo time)
+                , maybesignatory = Just (Signatory userid) 
+                }
       maybesign x = x
   modify (updateIx documentid signeddocument)
   return (Just signeddocument)

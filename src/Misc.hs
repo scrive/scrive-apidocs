@@ -30,6 +30,7 @@ Dump bin for things that do not fit anywhere else
 -}
 
 selectFormAction :: (MonadPlus m,ServerMonad m) => [(String,m a)] -> m a
+
 selectFormAction [] = mzero
 selectFormAction ((button,action):rest) = do
   maybepressed <- getDataFn (look button)
@@ -43,16 +44,16 @@ guardFormAction button = do
   guard (isJust maybepressed)
 
 instance (EmbedAsChild m String) => (EmbedAsChild m BSL.ByteString) where
-    asChild string = asChild (BSL.toString string)
+    asChild = asChild . BSL.toString
 
 instance (EmbedAsChild m String) => (EmbedAsChild m BS.ByteString) where
-    asChild string = asChild (BS.toString string)
+    asChild = asChild . BS.toString
 
 instance (EmbedAsAttr m String) => (EmbedAsAttr m BSL.ByteString) where
-    asAttr string = asAttr (BSL.toString string)
+    asAttr = asAttr . BSL.toString
 
 instance (EmbedAsAttr m String) => (EmbedAsAttr m BS.ByteString) where
-    asAttr string = asAttr (BS.toString string)
+    asAttr = asAttr . BS.toString
 
 instance Monad m => IsAttrValue m BS.ByteString where
     toAttrValue = toAttrValue . BS.toString

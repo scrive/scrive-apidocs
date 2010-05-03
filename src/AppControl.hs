@@ -37,7 +37,7 @@ appHandler = do
     [ nullDir >> webHSP (pageFromBody ctx kontrakcja (welcomeBody ctx))
     , dir "sign" (withUser maybeuser (DocControl.handleSign ctx))
     , dir "issue" (withUser maybeuser (DocControl.handleIssue ctx))
-    , dir "pages" $ path $ \fileid -> DocControl.showPage ctx fileid 1
+    , dir "pages" $ path $ \fileid -> path $ \pageno -> DocControl.showPage ctx fileid pageno
     , dir "logout" (handleLogout)
     , fileServe [] "public"
     , webHSP (pageFromBody ctx kontrakcja (errorReport ctx rq))

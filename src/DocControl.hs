@@ -22,6 +22,8 @@ import User
 import System.Cmd
 import System.Directory
 import qualified Data.Map as M
+import Data.List
+import MinutesTime
 
 handleSign
   :: (MonadIO m, MonadPlus m, ServerMonad m) =>
@@ -35,14 +37,15 @@ handleSignShow
   :: (ServerMonad m, MonadPlus m, MonadIO m) =>
      Context -> DocumentID -> SignatoryLinkID -> m Response
 handleSignShow ctx@(Context (Just user) hostpart) documentid signatorylinkid1 = do
+  time <- liftIO $ getMinutesTime
   Just document <- selectFormAction 
-                   [("sign",update $ SignDocument documentid (userid user) signatorylinkid1)] 
+                   [("sign", update $ SignDocument documentid (userid user) signatorylinkid1 time)] 
                    `mplus`
                    (query $ GetDocumentByDocumentID documentid)
                        
   let wassigned = any f (signatorylinks document)
-      f (SignatoryLink {signatorylinkid,signed}) = 
-          signed && signatorylinkid == signatorylinkid1
+      f (SignatoryLink {signatorylinkid,maybesigninfo}) = 
+          isJust maybesigninfo && signatorylinkid == signatorylinkid1
   webHSP (pageFromBody ctx kontrakcja (showDocumentForSign document wassigned))
 
 handleIssue :: Context -> ServerPartT IO Response
@@ -110,11 +113,36 @@ handleIssueGet ctx@(Context (Just user) hostpart) = do
     webHSP (pageFromBody ctx kontrakcja (listDocuments documents))
 
 convertPdfToJpgPages content = do
-    createDirectoryIfMissing False "Tmp"
-    BSL.writeFile "Tmp/source.pdf" content
-    system "\"c:\\Program Files\\gs\\gs8.60\\bin\\gswin32c.exe\" -sDEVICE=jpeg -sOutputFile=Tmp/output-%d.jpg -dSAFER -dBATCH -dNOPAUSE -dTextAlphaBits=4 Tmp/source.pdf"
-    x <- BS.readFile "Tmp/output-1.jpg"
-    return [x]
+  tmppath <- getTemporaryDirectory
+  allfiles <- getDirectoryContents tmppath
+  mapM_ (\file -> 
+             when (".jpg" `isSuffixOf` file) (removeFile (tmppath ++ "/" ++ file))) 
+                               allfiles
+  let sourcepath = tmppath ++ "/source.pdf"
+  BSL.writeFile sourcepath content
+  -- system "\"c:\\Program Files\\gs\\gs8.60\\bin\\gswin32c.exe\" -sDEVICE=jpeg -sOutputFile=Tmp/output-%d.jpg -dSAFER -dBATCH -dNOPAUSE -dTextAlphaBits=4 Tmp/source.pdf"
+  rawSystem "c:\\Program Files\\gs\\gs8.60\\bin\\gswin32c.exe" 
+                [ "-sDEVICE=jpeg" 
+                , "-sOutputFile=" ++ tmppath ++ "/output-%d.jpg"
+                , "-dSAFER"
+                , "-dBATCH"
+                , "-dNOPAUSE"
+                , "-dTextAlphaBits=4"
+                , sourcepath
+                ]
+  let pathofx x = tmppath ++ "/output-" ++ show x ++ ".jpg"
+  let exists1 x = doesFileExist (pathofx x)
+  let w (x:xs) = do
+        g <- exists1 x 
+        if g 
+         then do
+          h <- w xs
+          return (x:h)
+         else return []
+                  
+  listofpages <- w [1..]
+  x <- mapM (\x -> BS.readFile (pathofx x)) listofpages
+  return x
        
 
 handleDocumentUpload (Input content (Just uploadfilename) contentType) pages = do
@@ -125,10 +153,6 @@ handleDocumentUpload (Input content (Just uploadfilename) contentType) pages = d
           , filejpgpages = pages
           }
 
-{-
- FIXME: we get POST request either because we upload file
- or because we log in. How to know which is which?
--}
 handleIssuePost
   :: (ServerMonad m, MonadIO m) => Context -> m Response
 handleIssuePost ctx@(Context (Just user) hostpart) = do
@@ -138,7 +162,8 @@ handleIssuePost ctx@(Context (Just user) hostpart) = do
         do 
           pages <- liftIO $ convertPdfToJpgPages content
           file <- handleDocumentUpload input pages
-          update $ NewDocument (userid user) (BS.fromString filename) file
+          ctime <- liftIO $ getMinutesTime
+          update $ NewDocument (userid user) (BS.fromString filename) file ctime
     _ -> return ()
   handleIssueGet ctx
 

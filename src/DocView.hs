@@ -38,7 +38,7 @@ instance (XMLGenerator m) => (EmbedAsChild m (Document, Bool)) where
              <a href=("/issue/" ++ show (documentid entry))><% show (title entry) %></a>
             </td>
             <td>
-             2010-01-01 12:43
+             <% show $ documentmtime entry %>
             </td>
             <td>
              <% show (status entry) %>
@@ -89,8 +89,8 @@ showSignatoryEntry (SignatoryLink{signatoryname,signatoryemail}) =
 
 
 fff file = 
-   <img src=link width="300"/>
-   where link = "/pages/" ++ show (fileid file)
+   [ <img src=("/pages/" ++ show (fileid file) ++ "/" ++ show pageno) width="300"/> |
+     pageno <- [1..(length (filejpgpages file))]]
 
 {- showDocument
   :: (EmbedAsChild m [Char], EmbedAsAttr m (Attr [Char] [Char])) =>
