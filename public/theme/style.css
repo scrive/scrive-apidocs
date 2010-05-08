@@ -354,3 +354,8 @@ blockquote {
    font-family:"Sagoe Script", Pristrina, Papyrus, Mistral, "Lucida Handwriting", "Freestyle Script", Vivaldi, Arial, Helvetica, sans-serif;
    font-weight:bold;
 }
+
+#dropBox {
+   overflow: auto;
+   height: 400px;
+}

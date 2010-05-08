@@ -24,6 +24,7 @@ import System.Directory
 import qualified Data.Map as M
 import Data.List
 import MinutesTime
+import Control.Concurrent
 
 handleSign
   :: (MonadIO m, MonadPlus m, ServerMonad m) =>
@@ -120,7 +121,8 @@ convertPdfToJpgPages content = do
                                allfiles
   let sourcepath = tmppath ++ "/source.pdf"
   BSL.writeFile sourcepath content
-  -- system "\"c:\\Program Files\\gs\\gs8.60\\bin\\gswin32c.exe\" -sDEVICE=jpeg -sOutputFile=Tmp/output-%d.jpg -dSAFER -dBATCH -dNOPAUSE -dTextAlphaBits=4 Tmp/source.pdf"
+
+  putStrLn $ "Wrote " ++ sourcepath
   rawSystem "c:\\Program Files\\gs\\gs8.60\\bin\\gswin32c.exe" 
                 [ "-sDEVICE=jpeg" 
                 , "-sOutputFile=" ++ tmppath ++ "/output-%d.jpg"
@@ -145,13 +147,15 @@ convertPdfToJpgPages content = do
   return x
        
 
-handleDocumentUpload (Input content (Just uploadfilename) contentType) pages = do
-  return $ File 
-          { fileid = error "put it here later"
-          , filename = BS.fromString uploadfilename
-          , filepdf = concatChunks content
-          , filejpgpages = pages
-          }
+forkedHandleDocumentUpload docid content filename = do
+    putStrLn "forkedHandleDocumentUpload"
+    forkIO $ do
+      jpgpages <- liftIO $ convertPdfToJpgPages content
+      let filename2 = BS.fromString filename
+      let contentx = concatChunks content
+      -- FIXME: take care of case when it does not parse
+      putStrLn "Attaching files to document"
+      update $ AttachFile docid filename2 contentx jpgpages
 
 handleIssuePost
   :: (ServerMonad m, MonadIO m) => Context -> m Response
@@ -160,10 +164,10 @@ handleIssuePost ctx@(Context (Just user) hostpart) = do
   case maybeupload of
     Just input@(Input content (Just filename) _contentType) -> 
         do 
-          pages <- liftIO $ convertPdfToJpgPages content
-          file <- handleDocumentUpload input pages
           ctime <- liftIO $ getMinutesTime
-          update $ NewDocument (userid user) (BS.fromString filename) file ctime
+          doc <- update $ NewDocument (userid user) (BS.fromString filename) ctime
+          liftIO $ forkedHandleDocumentUpload (documentid doc) content filename
+          return ()
     _ -> return ()
   handleIssueGet ctx
 
@@ -174,7 +178,5 @@ showPage ctx fileid pageno = do
   case maybecontents of
     Nothing -> mzero
     Just contents -> do
-      -- setHeaderM "content-type" "image/jpg"
-      --trace "was here" $ return (toResponse contents)
       let res = Response 200 M.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
       return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/jpeg") res

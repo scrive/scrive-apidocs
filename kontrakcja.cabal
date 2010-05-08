@@ -36,7 +36,7 @@ Executable kontrakcja-server
  Build-depends: hsx, hsp, happstack, utf8-string
  Build-depends: happstack-data, extensible-exceptions, happstack-ixset, containers, happstack-util, directory, process
  Build-Depends: base >= 4 && < 5, syb
- Build-Depends: syb-with-class, binary, old-locale
+ Build-Depends: syb-with-class, binary, old-locale, old-time
  Build-Depends: network, HTTP, data-object-json, bytestring, curl, data-object
  Main-Is: Main.hs
 

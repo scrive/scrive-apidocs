@@ -159,17 +159,33 @@ getDocumentsBySignatory userid = do
     documents <- ask
     return $ toList (documents @= Signatory userid)
 
-newDocument :: UserID -> BS.ByteString -> File 
-            -> MinutesTime -> Update Documents ()
-newDocument userid title file ctime = do
+newDocument :: UserID -> BS.ByteString
+            -> MinutesTime -> Update Documents Document
+newDocument userid title ctime = do
   documents <- ask
   docid <- getUnique documents DocumentID
-  fileid <- getUnique documents FileID
-  let nfile = file {fileid = fileid}
-  let doc = Document docid title (Author userid) [] [nfile]
+  let doc = Document docid title (Author userid) [] []
             Preparation ctime ctime
   modify $ insert doc
+  return doc
 
+attachFile :: DocumentID -> BS.ByteString -> BS.ByteString 
+           -> [BS.ByteString] -> Update Documents ()
+attachFile documentid filename1 content jpgpages = do
+  trace "attachFile begin" $ return ()
+  documents <- ask
+  let Just document = getOne (documents @= documentid)
+  fileid2 <- getUnique documents FileID
+  let nfile = File { fileid = fileid2
+                   , filejpgpages = jpgpages
+                   , filename = filename1
+                   , filepdf = content
+                   }
+  trace ("attachFile fileid = " ++ show (fileid nfile)) $ return ()
+  -- FIXME: update change time here
+  let document2 = document { files = files document ++ [nfile] }
+  modify $ updateIx documentid document2
+  trace "attachFile end" $ return ()
 
 updateDocumentSignatories :: Document -> [BS.ByteString] -> [BS.ByteString] -> Update Documents Document
 updateDocumentSignatories document signatorynames signatoryemails = do
@@ -226,6 +242,7 @@ $(mkMethods ''Documents [ 'getDocumentsByAuthor
                         , 'markDocumentAsFinal
                         , 'signDocument
                         , 'getFilePageJpg
+                        , 'attachFile
                         ])
 
 
