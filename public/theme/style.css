@@ -355,7 +355,13 @@ blockquote {
    font-weight:bold;
 }
 
-#dropBox {
+#documentBox {
    overflow: auto;
    height: 400px;
+   width: 350px;
+}
+
+#documentBox img {
+   width: 300px;
+   align: center;
 }

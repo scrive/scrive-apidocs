@@ -88,9 +88,14 @@ showSignatoryEntry (SignatoryLink{signatoryname,signatoryemail}) =
     %>
 
 
-fff file = 
+showFileImages file = 
    [ <img src=("/pages/" ++ show (fileid file) ++ "/" ++ show pageno) width="300"/> |
      pageno <- [1..(length (filejpgpages file))]]
+
+showDocumentBox document = 
+    <div id="documentBox">
+        <% map showFileImages (files document) %>
+    </div>
 
 {- showDocument
   :: (EmbedAsChild m [Char], EmbedAsAttr m (Attr [Char] [Char])) =>
@@ -105,12 +110,8 @@ showDocument document =
          <% jquery %>
     <table>
      <tr>
-      <td><div id="dropBox">
-        <% map fff (files document) %>
-       <ol>
-        <% map showFile (files document) %>
-       </ol>
-       </div>
+      <td>
+       <% showDocumentBox document %>
       </td>
       <td>
        <div>List of signatories:<br/>
@@ -139,10 +140,10 @@ showDocument document =
 
 showDocumentForSign
   :: (XMLGenerator m) =>
-     t -> Bool -> XMLGenT m (HSX.XML m)
-showDocumentForSign document wassigned=
+     Document -> Bool -> XMLGenT m (HSX.XML m)
+showDocumentForSign document wassigned =
    <form method="post"> 
-      <img src="/theme/images/kontrakt.jpg" width="300"/>
+      <% showDocumentBox document %>
       <br/>
       <%
         if wassigned 
