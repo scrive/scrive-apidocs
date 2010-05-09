@@ -78,16 +78,22 @@ showSignatoryEntry
       HSX.XMLGenerator.EmbedAsChild m [Char]) =>
      DocState.SignatoryLink -> HSX.XMLGenerator.GenChildList m
 -}
-showSignatoryEntry (SignatoryLink{signatoryname,signatoryemail}) = 
+showSignatoryEntryForEdit (SignatoryLink{signatoryname,signatoryemail}) = 
     <% <li> 
       <input name="signatoryname" type="text" value=signatoryname/><br/>
       <input name="signatoryemail" type="text" value=signatoryemail/><br/>
-      <div class="draggableBox">SIGNATURE</div>
       <a onclick="signatoryremove(this)" href="#">Remove</a>
       </li>
     %>
 
+showSignatoryEntryStatus (SignatoryLink{signatoryname,signatoryemail}) = 
+    <% <li> 
+        <% signatoryname %>
+       
+      </li>
+    %>
 
+ -- FIXME: add info about date viewed, date signed, send reminder, change email
 showFileImages file = 
    [ <img src=("/pages/" ++ show (fileid file) ++ "/" ++ show pageno) width="300"/> |
      pageno <- [1..(length (filejpgpages file))]]
@@ -115,10 +121,20 @@ showDocument document =
       </td>
       <td>
        <div>List of signatories:<br/>
-        <ol id="signatorylist">
-         <% map showSignatoryEntry (signatorylinks document) %>
-        </ol>
-        <a onclick="signatoryadd()" href="#">Add signatory</a>
+
+        <% if status document == Preparation
+           then <span>
+              <ol id="signatorylist">
+               <% map showSignatoryEntryForEdit (signatorylinks document) %>
+              </ol>
+              <a onclick="signatoryadd()" href="#">Add signatory</a>
+             </span>
+           else
+              <ol id="signatorylist">
+               <% map showSignatoryEntryStatus (signatorylinks document) %>
+              </ol>
+                           
+         %>
        </div>
       </td>
      </tr>
@@ -130,7 +146,6 @@ showDocument document =
            else <span>
                  <input type="submit" value="Update"/>
                  <input type="submit" name="final" value="Make it final"/>
-                 <input type="submit" name="showvars" value="Show vars"/>
                 </span>
      %>
 
