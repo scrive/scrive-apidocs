@@ -42,7 +42,7 @@ handleSignShow ctx@(Context (Just user) hostpart) documentid signatorylinkid1 = 
   Just document <- selectFormAction 
                    [("sign", update $ SignDocument documentid (userid user) signatorylinkid1 time)] 
                    `mplus`
-                   (query $ GetDocumentByDocumentID documentid)
+                   (update $ MarkDocumentSeen documentid (userid user) signatorylinkid1 time)
                        
   let wassigned = any f (signatorylinks document)
       f (SignatoryLink {signatorylinkid,maybesigninfo}) = 
@@ -95,7 +95,7 @@ updateDocument ctx document = do
      finalize doc2 = do
          liftIO $ mapM_ (writeemail doc2) (signatorylinks doc2)
          update $ MarkDocumentAsFinal doc2
-     writeemail doc2 (SignatoryLink linkid name email maybeuser _) = do
+     writeemail doc2 (SignatoryLink linkid name email maybeuser _ _) = do
          (_,content) <- liftIO $ evalHSP Nothing 
                         (mailToPerson ctx email name 
                                           (title doc2) 
@@ -122,7 +122,6 @@ convertPdfToJpgPages content = do
   let sourcepath = tmppath ++ "/source.pdf"
   BSL.writeFile sourcepath content
 
-  putStrLn $ "Wrote " ++ sourcepath
   rawSystem "c:\\Program Files\\gs\\gs8.60\\bin\\gswin32c.exe" 
                 [ "-sDEVICE=jpeg" 
                 , "-sOutputFile=" ++ tmppath ++ "/output-%d.jpg"
@@ -148,7 +147,6 @@ convertPdfToJpgPages content = do
        
 
 forkedHandleDocumentUpload docid content filename = do
-    putStrLn "forkedHandleDocumentUpload"
     forkIO $ do
       jpgpages <- liftIO $ convertPdfToJpgPages content
       let filename2 = BS.fromString filename

@@ -86,9 +86,12 @@ showSignatoryEntryForEdit (SignatoryLink{signatoryname,signatoryemail}) =
       </li>
     %>
 
-showSignatoryEntryStatus (SignatoryLink{signatoryname,signatoryemail}) = 
+showSignatoryEntryStatus (SignatoryLink{signatoryname,signatoryemail,maybeseentime}) = 
     <% <li> 
-        <% signatoryname %>
+        <% case maybeseentime of
+             Just time -> BS.toString signatoryname ++ " last " ++ show time 
+             Nothing -> BS.toString signatoryname
+        %>
        
       </li>
     %>

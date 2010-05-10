@@ -45,6 +45,7 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , signatoryemail  :: BS.ByteString
           , maybesignatory  :: Maybe Signatory
           , maybesigninfo   :: Maybe SignInfo
+          , maybeseentime   :: Maybe MinutesTime
           }
       data SignInfo = SignInfo
           { signtime :: MinutesTime
@@ -65,9 +66,11 @@ instance Show SignatoryLinkID where
     showsPrec prec (SignatoryLinkID x) = showsPrec prec x
 
 instance Show SignatoryLink where
-    showsPrec prec (SignatoryLink _ name email Nothing Nothing) = 
-        (++) (BS.toString name ++ " <" ++ BS.toString email ++ ">")
-    showsPrec prec (SignatoryLink _ name email _ (Just signinfo)) = 
+    showsPrec prec (SignatoryLink _ name email Nothing Nothing Nothing) = 
+        (++) (BS.toString name ++ " <" ++ BS.toString email ++ "> never seen")
+    showsPrec prec (SignatoryLink _ name email Nothing Nothing (Just time)) = 
+        (++) (BS.toString name ++ " <" ++ BS.toString email ++ "> seen " ++ show time)
+    showsPrec prec (SignatoryLink _ name email _ (Just signinfo) _) = 
         (++) $ "Signed by " ++ (BS.toString name ++ " <" ++ BS.toString email ++ "> on " ++ show (signtime signinfo))
 
 deriving instance Show Document
@@ -196,7 +199,7 @@ updateDocumentSignatories document signatorynames signatoryemails = do
   where mm name email = do
           sg <- ask
           x <- getUnique sg SignatoryLinkID
-          return $ SignatoryLink x name email Nothing Nothing
+          return $ SignatoryLink x name email Nothing Nothing Nothing
 
 markDocumentAsFinal :: Document -> Update Documents Document
 markDocumentAsFinal document = do
@@ -230,6 +233,22 @@ getFilePageJpg xfileid pageno = do
     let jpgs = filejpgpages nfile
     jpg <- return (jpgs!!(pageno-1))
     return jpg
+
+markDocumentSeen :: DocumentID -> UserID -> SignatoryLinkID 
+                 -> MinutesTime -> Update Documents (Maybe Document)
+markDocumentSeen documentid userid signatorylinkid1 time = do
+  documents <- ask
+  case getOne (documents @= documentid) of
+    Nothing -> return Nothing
+    Just document -> do
+      let document' = document { signatorylinks = s }
+          s = map c (signatorylinks document)
+          c l@(SignatoryLink {signatorylinkid})
+            | signatorylinkid == signatorylinkid1 = 
+              l { maybeseentime = Just time }
+            | otherwise = l
+      modify (updateIx documentid document')
+      return (Just document)
   
 
 
@@ -243,6 +262,7 @@ $(mkMethods ''Documents [ 'getDocumentsByAuthor
                         , 'signDocument
                         , 'getFilePageJpg
                         , 'attachFile
+                        , 'markDocumentSeen
                         ])
 
 
