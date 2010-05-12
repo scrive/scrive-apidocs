@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 module DocControl where
 import DocView
 import DocState
@@ -113,6 +115,13 @@ handleIssueGet ctx@(Context (Just user) hostpart) = do
     documents <- query $ GetDocumentsByAuthor (userid user) 
     webHSP (pageFromBody ctx kontrakcja (listDocuments documents))
 
+gs :: String
+#ifdef WINDOWS
+gs = "c:\\Program Files\\gs\\gs8.60\\bin\\gswin32c.exe" 
+#else
+gs = "gs"
+#endif
+
 convertPdfToJpgPages content = do
   tmppath <- getTemporaryDirectory
   allfiles <- getDirectoryContents tmppath
@@ -122,7 +131,7 @@ convertPdfToJpgPages content = do
   let sourcepath = tmppath ++ "/source.pdf"
   BSL.writeFile sourcepath content
 
-  rawSystem "c:\\Program Files\\gs\\gs8.60\\bin\\gswin32c.exe" 
+  rawSystem gs
                 [ "-sDEVICE=jpeg" 
                 , "-sOutputFile=" ++ tmppath ++ "/output-%d.jpg"
                 , "-dSAFER"

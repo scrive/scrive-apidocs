@@ -1,4 +1,4 @@
-{-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE ForeignFunctionInterface, CPP #-}
 
 
 module Misc where
@@ -84,6 +84,7 @@ getUnique ixset constr = do
      else getUnique ixset constr
 
 
+#ifdef WINDOWS
 openDocument :: String -> IO ()
 openDocument filename = do
   withCString filename $ \filename -> do
@@ -91,3 +92,8 @@ openDocument filename = do
                                         shellExecute nullPtr open filename nullPtr nullPtr 1
              
 foreign import stdcall "ShellExecuteA" shellExecute :: Ptr () -> Ptr CChar -> Ptr CChar -> Ptr () -> Ptr () -> CInt -> IO ()
+#else
+-- just do nothing on unix
+openDocument :: String -> IO ()
+openDocument filename = return ()
+#endif

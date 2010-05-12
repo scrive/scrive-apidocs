@@ -83,7 +83,7 @@ userLogin = do
       Nothing -> return Nothing
   case maybeuser of
     Just user -> return maybeuser
-    Nothing -> userLogin2
+    Nothing -> userLogin1
 
 userLogin1 :: ServerPartT IO (Maybe User)
 userLogin1 = do
