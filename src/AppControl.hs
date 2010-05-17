@@ -1,4 +1,6 @@
-{-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, NamedFieldPuns #-}
+{-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, 
+             NamedFieldPuns, ScopedTypeVariables 
+ #-}
 module AppControl (appHandler) where
 
 import AppState
@@ -7,7 +9,7 @@ import Control.Monad(msum,liftM)
 import Control.Monad.Reader (ask)
 import Control.Monad.Trans(liftIO, MonadIO,lift)
 import Data.Object
-import Happstack.Data.IxSet ((@=),getOne)
+import Happstack.Data.IxSet ((@=),getOne,size)
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.Server.HSP.HTML (webHSP)
 import Happstack.State (update,query)
@@ -23,6 +25,8 @@ import qualified DocView as DocView
 import qualified DocControl as DocControl
 import Happstack.Server.SimpleHTTP (seeOther)
 import Control.Monad.Reader
+import DocState
+import UserState
 
 appHandler :: ServerPartT IO Response
 appHandler = do
@@ -33,13 +37,17 @@ appHandler = do
   maybeuser <- userLogin
   let ctx = Context maybeuser hostpart
   
-  msum
+  msum $
     [ nullDir >> webHSP (pageFromBody ctx kontrakcja (welcomeBody ctx))
     , dir "sign" (withUser maybeuser (DocControl.handleSign ctx))
     , dir "issue" (withUser maybeuser (DocControl.handleIssue ctx))
     , dir "pages" $ path $ \fileid -> path $ \pageno -> DocControl.showPage ctx fileid pageno
-    , dir "logout" (handleLogout)
-    , fileServe [] "public"
+    , dir "logout" (handleLogout)]
+    ++ (if isSuperUser maybeuser then 
+            [ dir "stats" $ statsPage
+            ]
+       else [])
+    ++ [ fileServe [] "public"
     , webHSP (pageFromBody ctx kontrakcja (errorReport ctx rq))
     ]
     
@@ -48,4 +56,11 @@ handleLogout = do
   endSession
   response <- webHSP (seeOtherXML "/")
   seeOther "/" response
+    
+
+statsPage :: ServerPartT IO Response
+statsPage = do
+  ndocuments <- query $ GetDocumentStats
+  nusers <- query $ GetUserStats
+  webHSP (statsPageView nusers ndocuments)
     

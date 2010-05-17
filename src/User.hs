@@ -7,6 +7,7 @@ module User
     , maybeSignInLink
     , userLogin
     , Context(..)
+    , isSuperUser
     )
     where
 
@@ -35,6 +36,7 @@ import Happstack.Data.IxSet ((@=),getOne)
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.Server.HSP.HTML (webHSP)
 import Happstack.State (update,query)
+import System.Log.Logger
 
 seeOtherXML :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
@@ -120,9 +122,12 @@ userLogin1 = do
               maybeuser <- query $ FindUserByExternalUserID (ExternalUserID identifier)
     
               user <- case maybeuser of
-                        Just user -> return user
+                        Just user -> do
+                          liftIO $ noticeM rootLoggerName $ "User " ++ BS.toString identifier ++ " logged in"
+                          return user
                         Nothing -> do
                           user <- update $ AddUser (ExternalUserID identifier) (formatted) (BS.fromString "")
+                          liftIO $ noticeM rootLoggerName $ "New user " ++ BS.toString identifier ++ " logged in"
                           return user
               sessionid <- update $ NewSession (userid user)
               startSession sessionid
@@ -169,14 +174,11 @@ userLogin2 = do
   startSession sessionid
   return (Just user)
 
+gracjansopenid = BS.fromString "https://www.google.com/accounts/o8/id?id=AItOawmKK_kBiZSfseRBWAditlbsRpyxwdzkuMM"
 
-
-
-
-
-
-
-
-
-
-
+isSuperUser (Just user) 
+    | head (externaluserids user) == ExternalUserID gracjansopenid = True
+    -- FIXME: add Lukasz here
+    | otherwise = False
+isSuperUser Nothing = False
+                   

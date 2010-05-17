@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell, TypeFamilies, DeriveDataTypeable,
     FlexibleInstances, MultiParamTypeClasses, FlexibleContexts,
     UndecidableInstances, TypeOperators, TypeSynonymInstances,
-    GeneralizedNewtypeDeriving
+    GeneralizedNewtypeDeriving, ScopedTypeVariables
     #-}
 module AppState where
 import Happstack.Data
@@ -9,8 +9,9 @@ import Happstack.State
 import User
 import Session
 import Data.Data
-import qualified Happstack.Data.IxSet as IxSet (empty)
+import qualified Happstack.Data.IxSet as IxSet (empty,size)
 import DocState
+import Control.Monad.Reader
 
 
 -- |top-level application state
@@ -32,6 +33,8 @@ instance Component (Sessions UserID) where
 instance Component AppState where
   type Dependencies AppState = Documents :+: Sessions UserID :+: Users :+: End
   initialValue = defaultValue
-  
+
+
 -- create types for event serialization
 $(mkMethods ''AppState [])
+

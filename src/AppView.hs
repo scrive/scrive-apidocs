@@ -1,4 +1,5 @@
-{-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, NamedFieldPuns #-}
+{-# LANGUAGE FlexibleContexts, FlexibleInstances, 
+             MultiParamTypeClasses, NamedFieldPuns #-}
 {-# OPTIONS_GHC -F -pgmFtrhsx #-}
 module AppView where
 
@@ -282,3 +283,20 @@ pageFromBody ctx@(Context maybeuser hostpart) title body =
 seeOtherXML :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
 
+
+statsPageView :: Int -> Int -> HSP XML
+statsPageView nusers ndocuments =
+    withMetaData html4Strict $
+    <html>
+     <head>
+      <title>Stats page</title>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+     </head>
+     <body>
+      <h1>Stats page</h1>
+      <table>
+       <tr><td>Users</td><td><% show nusers %></td></tr>
+       <tr><td>Documents</td><td><% show ndocuments %></td></tr>
+      </table>
+     </body>
+    </html>

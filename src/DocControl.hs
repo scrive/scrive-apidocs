@@ -27,6 +27,7 @@ import qualified Data.Map as M
 import Data.List
 import MinutesTime
 import Control.Concurrent
+import SendMail
 
 handleSign
   :: (MonadIO m, MonadPlus m, ServerMonad m) =>
@@ -103,9 +104,8 @@ updateDocument ctx document = do
                                           (title doc2) 
                                           (documentid doc2)
                                           linkid)
-         let filename = "Email-" ++ BS.toString email ++ ".html"
-         writeFile filename $ renderAsHTML content
-         openDocument filename
+         sendMail name email (BS.fromString "Documents to sign") 
+                  (BS.fromString (renderAsHTML content))
          
          
     

@@ -251,6 +251,11 @@ markDocumentSeen documentid userid signatorylinkid1 time = do
       return (Just document)
   
 
+getDocumentStats :: Query Documents Int
+getDocumentStats = do
+  documents <- ask 
+  return (size documents)
+
 
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocumentsByAuthor
@@ -263,6 +268,7 @@ $(mkMethods ''Documents [ 'getDocumentsByAuthor
                         , 'getFilePageJpg
                         , 'attachFile
                         , 'markDocumentSeen
+                        , 'getDocumentStats
                         ])
 
 

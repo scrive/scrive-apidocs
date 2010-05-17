@@ -14,6 +14,7 @@ import Control.Applicative((<$>))
 import Data.Data(Data(..))
 import Data.Maybe(isNothing)
 import Misc
+import Control.Monad
 
 -- |perform insert only if test is True
 testAndInsert :: (Indexable a b,
@@ -82,10 +83,16 @@ addUser externaluserid fullname email = do
   put (insert user users)
   return user
 
+getUserStats :: Query Users Int
+getUserStats = do
+  users <- ask
+  return (size users)
+
 instance Component Users where
   type Dependencies Users = End
   initialValue = IxSet.empty
   
 -- create types for event serialization
-$(mkMethods ''Users ['findUserByUserID, 'findUserByExternalUserID, 'addUser])
+$(mkMethods ''Users ['findUserByUserID, 'findUserByExternalUserID, 
+                     'addUser, 'getUserStats])
 
