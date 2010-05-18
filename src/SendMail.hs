@@ -30,7 +30,7 @@ import System.Directory
 sendMail :: BS.ByteString -- ^ full name
          -> BS.ByteString -- ^ email address
          -> BS.ByteString -- ^ title
-         -> BS.ByteString -- ^ plaintext contents
+         -> BS.ByteString -- ^ html contents
          -- more arguments follow
          -> IO ()
 #ifdef WINDOWS
@@ -45,8 +45,14 @@ sendMail fullname email title content = do
   (Just handle_in,_,_,handle_process) <-
       createProcess (proc "sendmail" ["-i", mailto ]) { std_in = CreatePipe }
   -- FIXME: encoding issues
-  hPutStr handle_in ("Subject: " ++ BS.toString title ++
-                        "\n\n" ++ BS.toString content)
+  let header = 
+          "Subject: " ++ BS.toString title ++ "\n" ++
+          "From: skrivaPa <info@skrivapa.se>\n" ++
+          "MIME-Version: 1.0\n" ++
+          "Content-type: text/html; charset=utf-8\n" ++
+          "\n"
+  BS.hPutStr handle_in (BS.fromString header)
+  BS.hPutStr handle_in content
   hClose handle_in
   waitForProcess handle_process
   return ()
