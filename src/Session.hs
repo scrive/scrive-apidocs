@@ -32,8 +32,8 @@ import Data.Maybe (isNothing)
 import Happstack.Data (Default, deriveAll, gFind')
 import Happstack.Data.IxSet
 import Happstack.Data.IxSet (IxSet(..), Indexable(..), (@=), delete, getOne, inferIxSet, noCalcs, updateIx)
-import Happstack.Server (ServerMonad, withDataFn, readCookieValue,addCookie,FilterMonad(..),Response,expireCookie)
-import Happstack.Server.Cookie (Cookie,mkCookie)
+import Happstack.Server (ServerMonad, withDataFn, readCookieValue,addCookie,FilterMonad(..),Response,expireCookie,setHeaderM)
+import Happstack.Server.Cookie (Cookie,mkCookie,mkCookieHeader)
 import Happstack.Server.HTTP.Types ()
 import Happstack.State (Serialize, Version, Query, Update, deriveSerialize, getRandomR, mkMethods, query)
 import qualified Control.Applicative as Applicative
@@ -141,7 +141,11 @@ startSession sessionid = do
   addCookie (60*60) cookie
 
 endSession :: (FilterMonad Response m,ServerMonad m) => m ()
-endSession = expireCookie "sessionId"
+--endSession = expireCookie "sessionId"
+endSession = do
+  let cookie = mkCookie "sessionId" ""
+  -- FIXME: this will remove all cookies, which is bad probably
+  setHeaderM "Set-Cookie" (mkCookieHeader 0 cookie)
 
 withSessionId :: (MonadPlus m, ServerMonad m) => (SessionId -> m a) -> m a
 withSessionId = withDataFn (readCookieValue "sessionId")

@@ -284,8 +284,12 @@ seeOtherXML :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
 
 
-statsPageView :: Int -> Int -> HSP XML
-statsPageView nusers ndocuments =
+showUserOption :: (XMLGenerator m) => User -> XMLGenT m (HSX.XML m)
+showUserOption user = let un (ExternalUserID x) = BS.toString x in
+    <option value=(show $ userid user) title=(un $ head $ externaluserids user)><% fullname user %> <% email user %></option>
+ 
+statsPageView :: Int -> Int -> [User] -> HSP XML
+statsPageView nusers ndocuments users =
     withMetaData html4Strict $
     <html>
      <head>
@@ -298,5 +302,13 @@ statsPageView nusers ndocuments =
        <tr><td>Users</td><td><% show nusers %></td></tr>
        <tr><td>Documents</td><td><% show ndocuments %></td></tr>
       </table>
+      <br/>
+      <form method="post" action="/become">
+       Become user: 
+       <select name="user">
+        <% map showUserOption users %>
+       </select>
+       <input type="submit" value="Become"/>
+      </form>
      </body>
     </html>

@@ -1,20 +1,21 @@
 {-# LANGUAGE TemplateHaskell, TypeFamilies, DeriveDataTypeable,
     FlexibleInstances, MultiParamTypeClasses, FlexibleContexts,
-    UndecidableInstances, TypeSynonymInstances
-    #-}
+    UndecidableInstances, TypeSynonymInstances #-}
 module UserState where
 import Happstack.Data
 import Happstack.State
 import Control.Monad.Reader (ask)
 import Control.Monad.State (modify,MonadState(..))
 import Happstack.State.ClockTime
-import Data.ByteString
+import qualified Data.ByteString.UTF8 as BS
 import Happstack.Data.IxSet as IxSet
 import Control.Applicative((<$>))
 import Data.Data(Data(..))
 import Data.Maybe(isNothing)
 import Misc
 import Control.Monad
+import Happstack.Server.SimpleHTTP
+import Happstack.Util.Common
 
 -- |perform insert only if test is True
 testAndInsert :: (Indexable a b,
@@ -38,17 +39,17 @@ maybeModify f =
              do put state' 
                 return True
 
-$(deriveAll [''Show, ''Eq, ''Ord, ''Default]
+$(deriveAll [''Eq, ''Ord, ''Default]
   [d|
    
       newtype UserID = UserID Int
-      newtype ExternalUserID = ExternalUserID ByteString                  
+      newtype ExternalUserID = ExternalUserID BS.ByteString                  
                        
       data User = User
           { userid          :: UserID
           , externaluserids :: [ExternalUserID]
-          , fullname        :: ByteString
-          , email           :: ByteString
+          , fullname        :: BS.ByteString
+          , email           :: BS.ByteString
           }
 
    |])
@@ -64,6 +65,22 @@ instance Version UserID
 $(deriveSerialize ''ExternalUserID)
 instance Version ExternalUserID
 
+instance Show ExternalUserID where
+    showsPrec prec (ExternalUserID val) = showsPrec prec val
+
+instance Read ExternalUserID where
+    readsPrec prec = let make (i,v) = (ExternalUserID i,v) 
+                     in map make . readsPrec prec 
+
+instance Show UserID where
+    showsPrec prec (UserID val) = showsPrec prec val
+
+instance Read UserID where
+    readsPrec prec = let make (i,v) = (UserID i,v) 
+                     in map make . readsPrec prec 
+
+instance FromReqURI UserID where
+    fromReqURI = readM
 
 findUserByExternalUserID :: ExternalUserID -> Query Users (Maybe User)
 findUserByExternalUserID externaluserid = do
@@ -75,7 +92,8 @@ findUserByUserID userid = do
   users <- ask
   return $ getOne (users @= userid)
 
-addUser :: ExternalUserID -> ByteString -> ByteString -> Update Users User
+addUser :: ExternalUserID -> BS.ByteString 
+        -> BS.ByteString -> Update Users User
 addUser externaluserid fullname email = do
   users <- get
   userid <- getUnique users UserID
@@ -88,11 +106,18 @@ getUserStats = do
   users <- ask
   return (size users)
 
+
+getAllUsers :: Query Users [User]
+getAllUsers = do
+  users <- ask
+  return (toList users)
+
+
 instance Component Users where
   type Dependencies Users = End
   initialValue = IxSet.empty
   
 -- create types for event serialization
 $(mkMethods ''Users ['findUserByUserID, 'findUserByExternalUserID, 
-                     'addUser, 'getUserStats])
+                     'addUser, 'getUserStats, 'getAllUsers])
 

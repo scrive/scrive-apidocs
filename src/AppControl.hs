@@ -27,6 +27,7 @@ import Happstack.Server.SimpleHTTP (seeOther)
 import Control.Monad.Reader
 import DocState
 import UserState
+import Happstack.Util.Common
 
 appHandler :: ServerPartT IO Response
 appHandler = do
@@ -45,6 +46,7 @@ appHandler = do
     , dir "logout" (handleLogout)]
     ++ (if isSuperUser maybeuser then 
             [ dir "stats" $ statsPage
+            , dir "become" $ handleBecome
             ]
        else [])
     ++ [ fileServe [] "public"
@@ -61,6 +63,15 @@ handleLogout = do
 statsPage :: ServerPartT IO Response
 statsPage = do
   ndocuments <- query $ GetDocumentStats
-  nusers <- query $ GetUserStats
-  webHSP (statsPageView nusers ndocuments)
+  allusers <- query $ GetAllUsers
+  webHSP (statsPageView (length allusers) ndocuments allusers)
     
+
+handleBecome :: ServerPartT IO Response
+handleBecome = do
+  Just (userid :: UserID) <- getDataFn $ (look "user" >>= readM)
+  sessionid <- update $ NewSession userid
+  setHeaderM "Set-Cookie" ""
+  startSession sessionid
+  response <- webHSP (seeOtherXML "/")
+  seeOther "/" response
