@@ -365,3 +365,17 @@ blockquote {
    width: 300px;
    align: center;
 }
+
+inputx {
+   background-color: blue;
+   //text-color: blue;
+   //font-color: blue;
+   color: white;
+}
+
+.bigbutton {
+   background-color: blue;
+   color: white;
+   text-transform: uppercase;
+   height: 130%;
+}

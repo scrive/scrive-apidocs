@@ -97,3 +97,4 @@ foreign import stdcall "ShellExecuteA" shellExecute :: Ptr () -> Ptr CChar -> Pt
 openDocument :: String -> IO ()
 openDocument filename = return ()
 #endif
+

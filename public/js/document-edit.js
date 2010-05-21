@@ -22,12 +22,20 @@ function addDraggableOverChildren(elem)
 function signatoryadd()
 {
     var signatorylist = $( "#signatorylist" );
-    signatorylist.append(
-        "<li><input name='signatoryname' class='signatoryname' type='text'><br>" +
-        "<input name='signatoryemail' class='signatoryemail' type='text'><br>" +
-        "<div class='draggableBox'>SIGNATURE</div>" +
-        "<a onclick='signatoryremove(this)' href='#'>Remove</a>" +
-        "</li>");
+    var li = $("#signatory_template").clone();
+    signatorylist.append(li);
+    /*
+      '<li>' +
+      '<label>Full name:</label><br>' + 
+      '<input name="signatoryname" type="text" value=""><br>' +
+      '<label>Company:</label><br>' +
+      '<input name="signatorycompany" type="text" value=""><br>' +
+      '<label>Email:</label><br>' +
+      '<input name="signatoryemail" type="text" value=""><br>' +
+      '<a onclick="signatoryremove(this)" href="#">Remove</a>' +
+      '</li>');
+    */
+    /*
     var li = signatorylist.children("li:last");
     var newid = getUniqueId();
     li.attr("id",newid);
@@ -42,6 +50,7 @@ function signatoryadd()
                          });
 
     addDraggableOverChildren(li);
+    */
     return false;
 }
 

@@ -40,12 +40,13 @@ $(deriveAll [''Eq, ''Ord, ''Default]
       newtype FileID = FileID Int
 
       data SignatoryLink = SignatoryLink 
-          { signatorylinkid :: SignatoryLinkID
-          , signatoryname   :: BS.ByteString 
-          , signatoryemail  :: BS.ByteString
-          , maybesignatory  :: Maybe Signatory
-          , maybesigninfo   :: Maybe SignInfo
-          , maybeseentime   :: Maybe MinutesTime
+          { signatorylinkid    :: SignatoryLinkID
+          , signatoryname      :: BS.ByteString 
+          , signatorycompany   :: BS.ByteString 
+          , signatoryemail     :: BS.ByteString
+          , maybesignatory     :: Maybe Signatory
+          , maybesigninfo      :: Maybe SignInfo
+          , maybeseentime      :: Maybe MinutesTime
           }
       data SignInfo = SignInfo
           { signtime :: MinutesTime
@@ -66,11 +67,11 @@ instance Show SignatoryLinkID where
     showsPrec prec (SignatoryLinkID x) = showsPrec prec x
 
 instance Show SignatoryLink where
-    showsPrec prec (SignatoryLink _ name email Nothing Nothing Nothing) = 
+    showsPrec prec (SignatoryLink _ name company email Nothing Nothing Nothing) = 
         (++) (BS.toString name ++ " <" ++ BS.toString email ++ "> never seen")
-    showsPrec prec (SignatoryLink _ name email Nothing Nothing (Just time)) = 
+    showsPrec prec (SignatoryLink _ name company email Nothing Nothing (Just time)) = 
         (++) (BS.toString name ++ " <" ++ BS.toString email ++ "> seen " ++ show time)
-    showsPrec prec (SignatoryLink _ name email _ (Just signinfo) _) = 
+    showsPrec prec (SignatoryLink _ name company email _ (Just signinfo) _) = 
         (++) $ "Signed by " ++ (BS.toString name ++ " <" ++ BS.toString email ++ "> on " ++ show (signtime signinfo))
 
 deriving instance Show Document
@@ -190,16 +191,17 @@ attachFile documentid filename1 content jpgpages = do
   modify $ updateIx documentid document2
   -- trace "attachFile end" $ return ()
 
-updateDocumentSignatories :: Document -> [BS.ByteString] -> [BS.ByteString] -> Update Documents Document
-updateDocumentSignatories document signatorynames signatoryemails = do
-  signatorylinks <- zipWithM mm signatorynames signatoryemails
+updateDocumentSignatories :: Document -> [BS.ByteString] -> [BS.ByteString] 
+                          -> [BS.ByteString] -> Update Documents Document
+updateDocumentSignatories document signatorynames signatorycompanies signatoryemails = do
+  signatorylinks <- sequence $ zipWith3 mm signatorynames signatorycompanies signatoryemails
   let doc2 = document { signatorylinks = signatorylinks }
   modify (updateIx (documentid doc2) doc2)
   return doc2
-  where mm name email = do
+  where mm name company email = do
           sg <- ask
           x <- getUnique sg SignatoryLinkID
-          return $ SignatoryLink x name email Nothing Nothing Nothing
+          return $ SignatoryLink x name company email Nothing Nothing Nothing
 
 markDocumentAsFinal :: Document -> Update Documents Document
 markDocumentAsFinal document = do

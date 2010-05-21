@@ -82,11 +82,13 @@ lookInputList name
 
 updateDocument :: Context -> Document -> ServerPartT IO Document  
 updateDocument ctx document = do
-  Just signatoriesinputs <- getDataFn $ lookInputList "signatoryname"
-  let signatories = map concatChunks signatoriesinputs
+  Just signatoriesnames <- getDataFn $ lookInputList "signatoryname"
+  let signatories = map concatChunks signatoriesnames
+  Just signatoriescompaniesx <- getDataFn $ lookInputList "signatorycompany"
+  let signatoriescompanies = map concatChunks signatoriescompaniesx
   Just signatoriesemailsx <- getDataFn $ lookInputList "signatoryemail"
   let signatoriesemails = map concatChunks signatoriesemailsx
-  doc2 <- update $ UpdateDocumentSignatories document signatories signatoriesemails
+  doc2 <- update $ UpdateDocumentSignatories document signatories signatoriescompanies signatoriesemails
   maybefinal <- getDataFn $ look "final"
   maybeshowvars <- getDataFn $ look "showvars"
   when (isJust maybeshowvars) $ mzero
@@ -98,7 +100,7 @@ updateDocument ctx document = do
      finalize doc2 = do
          liftIO $ mapM_ (writeemail doc2) (signatorylinks doc2)
          update $ MarkDocumentAsFinal doc2
-     writeemail doc2 (SignatoryLink linkid name email maybeuser _ _) = do
+     writeemail doc2 (SignatoryLink linkid name company email maybeuser _ _) = do
          (_,content) <- liftIO $ evalHSP Nothing 
                         (mailToPerson ctx email name 
                                           (title doc2) 

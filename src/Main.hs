@@ -74,9 +74,8 @@ main = withLogger $ do
                    exitFailure
     (Right f) -> return (f $ defaultConf progName)
   
-  withCurlDo $ 
-          Exception.bracket
-              -- start the state system
+  withCurlDo $ Exception.bracket
+                 -- start the state system
               (startSystemState' (store appConf) stateProxy)
               (\control -> do
                   logM "Happstack.Server" NOTICE "Creating checkpoint before exit" 
@@ -92,6 +91,7 @@ main = withLogger $ do
                              forkIO $ simpleHTTP (httpConf appConf) appHandler)
                            (killThread) $ \_ -> Exception.bracket
                                         -- checkpoint the state once a day
+                                        -- FIXME: make it checkpoint always at the same time
                                         (forkIO $ cron (60*60*24) (createCheckpoint control))
                                         (killThread) $ \_ -> do
 

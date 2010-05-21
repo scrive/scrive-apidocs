@@ -78,23 +78,29 @@ showSignatoryEntry
       HSX.XMLGenerator.EmbedAsChild m [Char]) =>
      DocState.SignatoryLink -> HSX.XMLGenerator.GenChildList m
 -}
-showSignatoryEntryForEdit (SignatoryLink{signatoryname,signatoryemail}) = 
-    <% <li> 
+showSignatoryEntryForEdit (SignatoryLink{signatoryname,signatorycompany,signatoryemail}) = 
+    showSignatoryEntryForEdit2 "" (BS.toString signatoryname) (BS.toString signatorycompany) 
+                                   (BS.toString signatoryemail)
+
+showSignatoryEntryForEdit2 :: (XMLGenerator m) => String -> String -> String -> String -> XMLGenT m (HSX.XML m)
+showSignatoryEntryForEdit2 idx signatoryname signatorycompany signatoryemail = 
+    <li id=idx>
+      <label>Full name:</label><br/> 
       <input name="signatoryname" type="text" value=signatoryname/><br/>
+      <label>Company:</label><br/>
+      <input name="signatorycompany" type="text" value=signatorycompany/><br/>
+      <label>Email:</label><br/>
       <input name="signatoryemail" type="text" value=signatoryemail/><br/>
       <a onclick="signatoryremove(this)" href="#">Remove</a>
-      </li>
-    %>
+    </li>
 
 showSignatoryEntryStatus (SignatoryLink{signatoryname,signatoryemail,maybeseentime}) = 
-    <% <li> 
+    <li> 
         <% case maybeseentime of
              Just time -> BS.toString signatoryname ++ " last " ++ show time 
              Nothing -> BS.toString signatoryname
         %>
-       
-      </li>
-    %>
+    </li>
 
  -- FIXME: add info about date viewed, date signed, send reminder, change email
 showFileImages file = 
@@ -115,6 +121,7 @@ showDocument
       EmbedAsAttr m (Attr [Char] BS.ByteString)) =>
      Document -> XMLGenT m (HSX.XMLGenerator.XML m)
 showDocument document =
+   <span> <span style="display: none"><% showSignatoryEntryForEdit2 "signatory_template" "" "" "" %></span>
    <form method="post"> 
          <% jquery %>
     <table>
@@ -123,6 +130,8 @@ showDocument document =
        <% showDocumentBox document %>
       </td>
       <td>
+       Title:
+       <% title document %><br/>
        <div>List of signatories:<br/>
 
         <% if status document == Preparation
@@ -148,17 +157,18 @@ showDocument document =
            then <span/>
            else <span>
                  <input type="submit" value="Update"/>
-                 <input type="submit" name="final" value="Make it final"/>
+                 <input class="bigbutton" type="submit" name="final" value="Make it final"/>
                 </span>
      %>
 
      <script type="text/javascript" src="/js/document-edit.js"/>
 
    </form>
+   </span>
 
-showDocumentForSign
-  :: (XMLGenerator m) =>
-     Document -> Bool -> XMLGenT m (HSX.XML m)
+
+showDocumentForSign :: (XMLGenerator m) =>
+                       Document -> Bool -> XMLGenT m (HSX.XML m)
 showDocumentForSign document wassigned =
    <form method="post"> 
       <% showDocumentBox document %>
