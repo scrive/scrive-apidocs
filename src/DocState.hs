@@ -236,8 +236,12 @@ updateDocumentSignatories :: Document -> [BS.ByteString] -> [BS.ByteString]
 updateDocumentSignatories document signatorynames signatorycompanies signatoryemails = do
   signatorylinks <- sequence $ zipWith3 mm signatorynames signatorycompanies signatoryemails
   let doc2 = document { signatorylinks = signatorylinks }
-  modify (updateIx (documentid doc2) doc2)
-  return doc2
+  if status document == Preparation
+     then do
+       modify (updateIx (documentid doc2) doc2)
+       return doc2
+     else
+         return document
   where mm name company email = do
           sg <- ask
           x <- getUnique sg SignatoryLinkID

@@ -149,8 +149,10 @@ handleIssueShow ctx@(Context (Just user) hostpart) documentid = do
   msum [ methodM GET >> webHSP (pageFromBody ctx kontrakcja (showDocument document))
        , do
            methodM POST
-           doc2 <- updateDocument ctx document 
-           webHSP (pageFromBody ctx kontrakcja (showDocument doc2))
+           doc2 <- updateDocument ctx document
+           let link = hostpart ++ "/issue/" ++ show documentid
+           response <- webHSP (seeOtherXML link)
+           seeOther link response
        ]
 
 -- | Useful inside the RqData monad.  Gets the named input parameter
