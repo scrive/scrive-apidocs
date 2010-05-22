@@ -29,6 +29,52 @@ import MinutesTime
 import Control.Concurrent
 import SendMail
 
+{-
+  Document state transitions are described in DocState.
+
+  Here are all actions associated with transitions.
+
+-}
+
+doctransPreparation2ReadyToSign :: Context -> Document -> IO ()
+doctransPreparation2ReadyToSign ctx doc = do
+  -- FIXME: check if the status was really changed
+  update $ UpdateDocumentStatus doc ReadyToSign
+  liftIO $ sendInvitationEmails ctx doc
+  return ()
+
+doctransReadyToSign2Closed :: Context -> Document -> IO ()
+doctransReadyToSign2Closed ctx doc = do
+  update $ UpdateDocumentStatus doc Closed
+  return ()
+
+doctransReadyToSign2Canceled :: Context -> Document -> IO ()
+doctransReadyToSign2Canceled ctx doc = do
+  update $ UpdateDocumentStatus doc Canceled
+  return ()
+
+doctransReadyToSign2Timedout :: Context -> Document -> IO ()
+doctransReadyToSign2Timedout ctx doc = do
+  update $ UpdateDocumentStatus doc Timedout
+  return ()
+
+sendInvitationEmails :: Context -> Document -> IO ()
+sendInvitationEmails ctx document = do
+  let signlinks = signatorylinks document
+  forM_ signlinks (sendInvitationEmail1 ctx document)
+
+sendInvitationEmail1 :: Context -> Document -> SignatoryLink -> IO ()
+sendInvitationEmail1 ctx document signlink = do
+  let SignatoryLink{ signatorylinkid
+                   , signatoryname
+                   , signatorycompany
+                   , signatoryemail } = signlink
+      Document{title,documentid} = document
+  content <- invitationMail ctx signatoryemail signatoryname
+             title documentid signatorylinkid
+
+  sendMail signatoryname signatoryemail title content
+  
 handleSign
   :: (MonadIO m, MonadPlus m, ServerMonad m) =>
      Context -> m Response
@@ -40,7 +86,8 @@ handleSign ctx@(Context (Just user) hostpart) =
 handleSignShow
   :: (ServerMonad m, MonadPlus m, MonadIO m) =>
      Context -> DocumentID -> SignatoryLinkID -> m Response
-handleSignShow ctx@(Context (Just user) hostpart) documentid signatorylinkid1 = do
+handleSignShow ctx@(Context (Just user) hostpart) documentid 
+               signatorylinkid1 = do
   time <- liftIO $ getMinutesTime
   Just document <- selectFormAction 
                    [("sign", update $ SignDocument documentid (userid user) signatorylinkid1 time)] 
@@ -71,8 +118,8 @@ handleIssueShow ctx@(Context (Just user) hostpart) documentid = do
          webHSP (pageFromBody ctx kontrakcja (showDocument doc2))
      ]
 
--- | Useful inside the RqData monad.  Gets the named input parameter (either
--- from a POST or a GET)
+-- | Useful inside the RqData monad.  Gets the named input parameter
+-- (either from a POST or a GET)
 lookInputList :: String -> RqData [BSL.ByteString]
 lookInputList name
     = do inputs <- asks fst
@@ -80,34 +127,27 @@ lookInputList name
              isname _ = []
          return [value | k <- inputs, value <- isname k]
 
+getAndConcat :: String -> ServerPartT IO [BS.ByteString]
+getAndConcat field = do
+  Just values <- getDataFn $ lookInputList field
+  return $ map concatChunks values
+
 updateDocument :: Context -> Document -> ServerPartT IO Document  
 updateDocument ctx document = do
-  Just signatoriesnames <- getDataFn $ lookInputList "signatoryname"
-  let signatories = map concatChunks signatoriesnames
-  Just signatoriescompaniesx <- getDataFn $ lookInputList "signatorycompany"
-  let signatoriescompanies = map concatChunks signatoriescompaniesx
-  Just signatoriesemailsx <- getDataFn $ lookInputList "signatoryemail"
-  let signatoriesemails = map concatChunks signatoriesemailsx
-  doc2 <- update $ UpdateDocumentSignatories document signatories signatoriescompanies signatoriesemails
+  signatories <- getAndConcat "signatoryname"
+  signatoriescompanies <- getAndConcat "signatorycompany"
+  signatoriesemails <- getAndConcat "signatoryemail"
+
+  doc2 <- update $ UpdateDocumentSignatories document 
+          signatories signatoriescompanies signatoriesemails
   maybefinal <- getDataFn $ look "final"
   maybeshowvars <- getDataFn $ look "showvars"
   when (isJust maybeshowvars) $ mzero
   if isJust maybefinal
-     then
-          finalize doc2
+     then do
+          liftIO $ doctransPreparation2ReadyToSign ctx doc2
+          return doc2
      else return doc2
-  where
-     finalize doc2 = do
-         liftIO $ mapM_ (writeemail doc2) (signatorylinks doc2)
-         update $ MarkDocumentAsFinal doc2
-     writeemail doc2 (SignatoryLink linkid name company email maybeuser _ _) = do
-         (_,content) <- liftIO $ evalHSP Nothing 
-                        (mailToPerson ctx email name 
-                                          (title doc2) 
-                                          (documentid doc2)
-                                          linkid)
-         sendMail name email (BS.fromString "Documents to sign") 
-                  (BS.fromString (renderAsHTML content))
          
          
     
@@ -127,21 +167,21 @@ gs = "gs"
 convertPdfToJpgPages content = do
   tmppath <- getTemporaryDirectory
   allfiles <- getDirectoryContents tmppath
-  mapM_ (\file -> 
-             when (".jpg" `isSuffixOf` file) (removeFile (tmppath ++ "/" ++ file))) 
-                               allfiles
+  forM_ allfiles $ \file -> 
+      when (".jpg" `isSuffixOf` file) 
+               (removeFile (tmppath ++ "/" ++ file))
+
   let sourcepath = tmppath ++ "/source.pdf"
   BSL.writeFile sourcepath content
 
-  rawSystem gs
-                [ "-sDEVICE=jpeg" 
-                , "-sOutputFile=" ++ tmppath ++ "/output-%d.jpg"
-                , "-dSAFER"
-                , "-dBATCH"
-                , "-dNOPAUSE"
-                , "-dTextAlphaBits=4"
-                , sourcepath
-                ]
+  rawSystem gs [ "-sDEVICE=jpeg" 
+               , "-sOutputFile=" ++ tmppath ++ "/output-%d.jpg"
+               , "-dSAFER"
+               , "-dBATCH"
+               , "-dNOPAUSE"
+               , "-dTextAlphaBits=4"
+               , sourcepath
+               ]
   let pathofx x = tmppath ++ "/output-" ++ show x ++ ".jpg"
   let exists1 x = doesFileExist (pathofx x)
   let w (x:xs) = do
@@ -163,7 +203,6 @@ forkedHandleDocumentUpload docid content filename = do
       let filename2 = BS.fromString filename
       let contentx = concatChunks content
       -- FIXME: take care of case when it does not parse
-      putStrLn "Attaching files to document"
       update $ AttachFile docid filename2 contentx jpgpages
 
 handleIssuePost

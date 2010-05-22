@@ -1,8 +1,7 @@
 {-# LANGUAGE TemplateHaskell, TypeFamilies, DeriveDataTypeable,
     FlexibleInstances, MultiParamTypeClasses, FlexibleContexts,
     UndecidableInstances, TypeOperators, TypeSynonymInstances,
-    GeneralizedNewtypeDeriving, StandaloneDeriving, NamedFieldPuns
-    #-}
+    GeneralizedNewtypeDeriving, StandaloneDeriving, NamedFieldPuns #-}
 
 module DocState where
 import Happstack.Data
@@ -25,14 +24,14 @@ import Control.Monad.Trans
 $(deriveAll [''Eq, ''Ord, ''Default]
   [d|
       data Document = Document
-          { documentid     :: DocumentID
-          , title          :: BS.ByteString
-          , author         :: Author
-          , signatorylinks :: [SignatoryLink]  
-          , files          :: [File]
-          , status         :: DocumentStatus
-          , documentctime  :: MinutesTime
-          , documentmtime  :: MinutesTime
+          { documentid       :: DocumentID
+          , title            :: BS.ByteString
+          , author           :: Author
+          , signatorylinks   :: [SignatoryLink]  
+          , files            :: [File]
+          , status           :: DocumentStatus
+          , documentctime    :: MinutesTime
+          , documentmtime    :: MinutesTime
           }
       newtype Author = Author UserID
       newtype DocumentID = DocumentID Int
@@ -59,8 +58,47 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , filepdf      :: BS.ByteString 
           , filejpgpages :: [BS.ByteString]
           }
+      {-
+         Document start in Preparation state.
 
-      data DocumentStatus = Preparation | ReadyToSign | Signed | Postponed
+         * Preparation: can add/remove signatories, edit document,
+           edit dates and times. Nobody else can see the document.
+           Goes to ReadyToSign or Canceled state.
+         * ReadyToSign: people can sign document. When last person
+           has signed, goes to Closed state. When owner cancels document
+           goes to Canceled state. When time is up, goes to Timedout
+           state.
+         * Closed: everybody signed. This is final state.
+         * Canceled: this can be final state or we can go back to 
+           Preparation.
+         * Timedout: this works as autocancel and has exactly same 
+           properties. Can go to Preparation.
+
+         Transitions:
+         * Preparation to ReadyToSign: invitations are sent.
+         * ReadyToSign to Closed: info about closed deal is sent to
+           everybody involved.
+         * ReadyToSign/Preparation to Cancel: mail about cancel to 
+           all who have signed it already is sent. 
+         * ReadyToSign/Preparation to Timedout: mail about timeout to 
+           all who have signed it already is sent.
+
+         Allowed actions:
+         * Preparation: change document, change title, add/rem signatories
+         * ReadyToSign: change email of a signatory
+         * Closed: nothing
+         * Canceled: edit back to Preparation
+         * Timedout: edit back to Preparation
+        
+         Archived bit:
+         * This bit just moves document out of main view.
+       -}
+
+      data DocumentStatus = Preparation 
+                          | ReadyToSign  
+                          | Closed 
+                          | Canceled 
+                          | Timedout
    |])
 
 instance Show SignatoryLinkID where
@@ -141,7 +179,13 @@ $(deriveSerialize ''FileID)
 instance Version FileID where
 
 
-$(inferIxSet "Documents" ''Document 'noCalcs [''DocumentID, ''Author, ''Signatory, ''SignatoryLinkID, ''FileID])
+$(inferIxSet "Documents" ''Document 'noCalcs 
+                 [ ''DocumentID
+                 , ''Author
+                 , ''Signatory
+                 , ''SignatoryLinkID
+                 , ''FileID
+                 ])
 
 instance Component Documents where
   type Dependencies Documents = End
@@ -176,7 +220,6 @@ newDocument userid title ctime = do
 attachFile :: DocumentID -> BS.ByteString -> BS.ByteString 
            -> [BS.ByteString] -> Update Documents ()
 attachFile documentid filename1 content jpgpages = do
-  -- trace "attachFile begin" $ return ()
   documents <- ask
   let Just document = getOne (documents @= documentid)
   fileid2 <- getUnique documents FileID
@@ -185,11 +228,8 @@ attachFile documentid filename1 content jpgpages = do
                    , filename = filename1
                    , filepdf = content
                    }
-  -- trace ("attachFile fileid = " ++ show (fileid nfile)) $ return ()
-  -- FIXME: update change time here
   let document2 = document { files = files document ++ [nfile] }
   modify $ updateIx documentid document2
-  -- trace "attachFile end" $ return ()
 
 updateDocumentSignatories :: Document -> [BS.ByteString] -> [BS.ByteString] 
                           -> [BS.ByteString] -> Update Documents Document
@@ -203,11 +243,29 @@ updateDocumentSignatories document signatorynames signatorycompanies signatoryem
           x <- getUnique sg SignatoryLinkID
           return $ SignatoryLink x name company email Nothing Nothing Nothing
 
-markDocumentAsFinal :: Document -> Update Documents Document
-markDocumentAsFinal document = do
-  let doc2 = document { status = ReadyToSign }
-  modify (updateIx (documentid doc2) doc2)
-  return doc2
+updateDocumentStatus :: Document 
+                     -> DocumentStatus 
+                     -> Update Documents Document
+updateDocumentStatus document newstatus = do
+  -- check if document status change is a legal transition
+  let legal = (status document,newstatus) `elem`
+              [ (Preparation,ReadyToSign)
+              , (ReadyToSign,Canceled)
+              , (ReadyToSign,Timedout)
+              , (ReadyToSign,Closed)
+              , (Canceled,Preparation)
+              , (Timedout,Preparation)
+              ]
+
+  let newdoc = document { status = newstatus }
+  if legal 
+     then do
+       modify (updateIx (documentid newdoc) newdoc)
+       return newdoc
+     else do
+       -- FIXME: throw some error? log it somewhere?
+       return document
+  
 
 signDocument :: DocumentID -> UserID -> SignatoryLinkID 
              -> MinutesTime -> Update Documents (Maybe Document)
@@ -265,7 +323,7 @@ $(mkMethods ''Documents [ 'getDocumentsByAuthor
                         , 'newDocument
                         , 'getDocumentByDocumentID
                         , 'updateDocumentSignatories
-                        , 'markDocumentAsFinal
+                        , 'updateDocumentStatus
                         , 'signDocument
                         , 'getFilePageJpg
                         , 'attachFile

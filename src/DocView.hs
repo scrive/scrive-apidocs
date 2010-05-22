@@ -181,16 +181,18 @@ showDocumentForSign document wassigned =
    </form>
 
 
-mailToPerson :: (XMLGenerator m) 
-                => Context
-             -> BS.ByteString
-             -> BS.ByteString
-             -> BS.ByteString
-             -> DocumentID
-             -> SignatoryLinkID
-             -> XMLGenT m (HSX.XML m)
-mailToPerson (Context (Just user) hostpart) emailaddress personname 
-             documenttitle documentid signaturelinkid = 
+invitationMailXml :: (XMLGenerator m) 
+                     => Context
+                  -> BS.ByteString
+                  -> BS.ByteString
+                  -> BS.ByteString
+                  -> DocumentID
+                  -> SignatoryLinkID
+                  -> XMLGenT m (HSX.XML m)
+invitationMailXml (Context (Just user) hostpart) 
+                  emailaddress personname 
+                  documenttitle documentid 
+                  signaturelinkid = 
     let link = hostpart ++ "/sign/" ++ show documentid ++ "/" ++ show signaturelinkid
         creatorname = BS.toString $ fullname user
     in 
@@ -206,3 +208,19 @@ mailToPerson (Context (Just user) hostpart) emailaddress personname
       <p><small>Powered by Skriva Pa</small></p>
      </body>
     </html>
+
+invitationMail :: Context
+               -> BS.ByteString
+               -> BS.ByteString
+               -> BS.ByteString
+               -> DocumentID
+               -> SignatoryLinkID
+               -> IO BS.ByteString
+invitationMail ctx emailaddress personname 
+               documenttitle documentid signaturelinkid = do
+                 let xml = invitationMailXml ctx emailaddress personname 
+                           documenttitle documentid signaturelinkid
+                           -- FIXME: first part of tuple is Maybe Metadata
+                           -- potentially important
+                 (_,content) <- evalHSP Nothing xml
+                 return (BS.fromString (renderAsHTML content))
