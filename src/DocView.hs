@@ -10,6 +10,7 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified HSX.XMLGenerator as HSX (XML)
 import qualified HSX.XMLGenerator
 import User
+import Control.Monad
 
 jquery :: (XMLGenerator m) => [XMLGenT m (HSX.XML m)] 
 jquery = [<script src="/js/jquery-1.4.2.min.js"/>,
@@ -126,15 +127,13 @@ showDocument
       EmbedAsAttr m (Attr [Char] BS.ByteString)) =>
      Document -> XMLGenT m (HSX.XMLGenerator.XML m)
 showDocument document =
-   <span> <span style="display: none"><% showSignatoryEntryForEdit2 "signatory_template" "" "" "" %></span>
-   <form method="post"> 
-         <% jquery %>
-    <table>
-     <tr>
-      <td>
-       <% showDocumentBox document %>
-      </td>
-      <td>
+   let helper = jquery ++ [ <span style="display: none">
+                   <% showSignatoryEntryForEdit2 "signatory_template" "" "" "" %>
+                  </span>
+                , <script type="text/javascript" src="/js/document-edit.js"/>
+                ]
+   in showDocumentPageHelper document helper
+      <div>
        Title:
        <% title document %><br/>
        <div>List of signatories:<br/>
@@ -152,38 +151,44 @@ showDocument document =
               </ol>
                            
          %>
+         <hr/>
+         <% 
+           if (status document==Preparation) 
+              then <span>
+                    <input class="bigbutton" type="submit" name="final" value="Sign and invite"/>
+                    <br/>
+                    <input class="button" type="submit" name="save" value="Save for later"/>
+                   </span>
+              else <span/>
+          %>
        </div>
+      </div>
+
+showDocumentPageHelper document helpers content =
+   <div class="centerdiv" style="width: 650px"> <% helpers %>
+   <form method="post"> 
+    <table>
+     <tr>
+      <td>
+       <% showDocumentBox document %>
+      </td>
+      <td> 
+       <% content %>
       </td>
      </tr>
     </table> 
-    <br/>
-    <% 
-        if status document == ReadyToSign
-           then <span/>
-           else <span>
-                 <input type="submit" value="Update"/>
-                 <input class="bigbutton" type="submit" name="final" value="Make it final"/>
-                </span>
-     %>
-
-     <script type="text/javascript" src="/js/document-edit.js"/>
-
    </form>
-   </span>
+   </div>
 
 
 showDocumentForSign :: (XMLGenerator m) =>
                        Document -> Bool -> XMLGenT m (HSX.XML m)
 showDocumentForSign document wassigned =
-   <form method="post"> 
-      <% showDocumentBox document %>
-      <br/>
-      <%
+   showDocumentPageHelper document "" $
         if wassigned 
            then <span>You have already signed this document!</span>
-           else <input type="submit" name="sign" value="Sign!"/>
-      %>
-   </form>
+           else <input class="button" type="submit" name="sign" value="Sign!"/>
+
 
 
 invitationMailXml :: (XMLGenerator m) 

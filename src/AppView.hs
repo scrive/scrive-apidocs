@@ -71,7 +71,7 @@ instance (XMLGenerator m) => (EmbedAsChild m
     %>
 
 kontrakcja :: [Char]
-kontrakcja = "Skriva på"
+kontrakcja = "skrivaPå"
 
 -- small letter ascii only version on app name
 kontrakcjaAscii :: [Char]
@@ -88,20 +88,43 @@ handleRPXLoginView json =
 
 welcomeBody :: (XMLGenerator m) => Context -> XMLGenT m (HSX.XML m)
 welcomeBody (Context (Just _) hostpart) = 
-  <div style="align: center">
-   <img src="/theme/images/skriva.jpg" height="40"/>
+  <div class="centerdiv" style="width: 300px">
+   <img src="/theme/images/logolarge.png"/>
    <br/> 
    <form action="/issue" method="post" enctype="multipart/form-data">
+    <span class="small">Choose a document to upload:</span><br/>
     <input type="file" name="doc"/>
-    <input type="submit" name="Upload"/>
+    <input class="button" type="submit" value="New"/>
    </form>
+   <hr/>
+
+   <p class="headline">Welcome to skrivaPå!</p>
+
+   <p class="para">We are currently testing our online signature solution
+      only with selected customers.</p>
   </div>
 
 welcomeBody ctx@(Context Nothing hostpart) = 
-  <div style="align: center">
-   <img src="/theme/images/skriva.jpg" height="40"/>
-   <br/>
-   <p><% maybeSignInLink ctx "Sign in here" "/" %></p>
+  <div class="centerdiv" style="width: 280px"> 
+   <img src="/theme/images/logolarge.png"/><br/>
+   <hr/>
+   <p class="headline" style="font-size: 200%; text-align: center">
+      <% maybeSignInLink ctx "Sign in here" "/" %>
+   </p>
+
+{-
+   <span class="small">Choose a document to upload:</span><br/>
+   <input type="upload"><input type="submit" value="New">
+-}   
+
+   <hr/>
+
+   <p class="headline">Welcome to skrivaPå!</p>
+
+   <p class="para">We are currently testing our online signature solution
+     with selected customers.  If you would like to be an early
+     tester <a href="apply">please apply here</a>. If you have an account
+     press the button to start.</p>
   </div>
 
 errorReport :: (XMLGenerator m) => Context -> Request -> XMLGenT m (HSX.XML m)
@@ -180,6 +203,31 @@ pageFromBody ctx@(Context maybeuser hostpart) title body =
       <link rel="stylesheet" type="text/css" href="/theme/style.css" media="screen" />
      </head>
      <body>
+      <table cellpadding="0" cellspacing="0" border="0" width="100%">
+       <tr class="toprow"> {- skrivaPa logo and contact about -}
+        <td align="left">
+         <img src="/theme/images/logosmall.png" height="40"/>
+        </td>
+        <td align="right">
+         <span class="contactabout"><a href="Contact">Contact</a> | <a href="About">About</a></span>
+        </td>
+       </tr>
+       <tr class="toprow"> {- new, documents, account, etc -}
+        <td colspan="2" align="center">
+         <span class="topnavi"><% maybeSignInLink ctx "New" "/" %></span>
+         <span class="topnavi selected"><% maybeSignInLink ctx "Documents" "/issue" %></span>
+         <span class="topnavi">Account</span>
+        </td>
+       </tr>
+       <tr id="main"> {- main content -}
+        <td colspan="2">
+          <% body %>
+        </td>
+       </tr>
+       {- should be the bottom line here, will see how to do this -}
+      </table>
+
+{-
        <div id="header">
        <div class="grunge"></div>
        <div class="peel">
@@ -236,7 +284,7 @@ pageFromBody ctx@(Context maybeuser hostpart) title body =
           <a href="/blog" title="Lukas Duczko">Blog</a>
         </div>
       </div>
-
+-}
       <script type="text/javascript">
        var rpxJsHost = (("https:" == document.location.protocol) ? "https://" : "http://static.");
        document.write(unescape("%3Cscript src='" + rpxJsHost +
@@ -249,36 +297,6 @@ pageFromBody ctx@(Context maybeuser hostpart) title body =
      </body>
     </html>
 
-{-
-          <div class="date">14<div>Feb</div></div>
-          <h1 class="posttitle">Kontrakcja</h1>
-          <div class="storycontent">
-           <p>
-              Welcome! You need to enter you Google login and password to use our
-              services. Please do it here:
-           </p>
-
-           <form action="/login" method="post" enctype="multipart/form-data;charset=UTF-8" accept-charset="UTF-8">
-            <p>
-             <label for="email">Google mail</label>
-             <input type="text" name="email" id="email" tabindex="1" accesskey="M" />
-            </p>
-            <p>
-             <label for="password">Password</label>
-             <input type="password" name="password" id="password" tabindex="2" accesskey="P" />
-            </p>
-            <p>
-             <input type="submit" tabindex="3" accesskey="L" value="Login" />
-            </p>
-           </form>
-          </div>
--}
-
-{-
-      <div class="footer">
-        <div class="finalfooter">Theme : <a href="http://www.dezinerfolio.com/2007/10/10/just-another-wodpress-theme" title="sIMPRESS v2 theme">sIMPRESS v2</a> by <a href="http://dezinerfolio.com" title="Dezinerfolio">Dezinerfolio</a></div>
-      </div>
--}
 
 seeOtherXML :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
@@ -308,7 +326,7 @@ statsPageView nusers ndocuments users =
        <select name="user">
         <% map showUserOption users %>
        </select>
-       <input type="submit" value="Become"/>
+       <input class="button" type="submit" value="Become"/>
       </form>
      </body>
     </html>
