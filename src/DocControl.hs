@@ -46,6 +46,7 @@ doctransPreparation2ReadyToSign ctx doc = do
 doctransReadyToSign2Closed :: Context -> Document -> IO ()
 doctransReadyToSign2Closed ctx doc = do
   update $ UpdateDocumentStatus doc Closed
+  liftIO $ sendClosedEmails ctx doc
   return ()
 
 doctransReadyToSign2Canceled :: Context -> Document -> IO ()
@@ -74,30 +75,65 @@ sendInvitationEmail1 ctx document signlink = do
              title documentid signatorylinkid
 
   sendMail signatoryname signatoryemail title content
+
+sendClosedEmails :: Context -> Document -> IO ()
+sendClosedEmails ctx document = do
+  let signlinks = signatorylinks document
+  forM_ signlinks (sendClosedEmail1 ctx document)
+
+sendClosedEmail1 :: Context -> Document -> SignatoryLink -> IO ()
+sendClosedEmail1 ctx document signlink = do
+  let SignatoryLink{ signatorylinkid
+                   , signatoryname
+                   , signatorycompany
+                   , signatoryemail } = signlink
+      Document{title,documentid} = document
+  content <- closedMail ctx signatoryemail signatoryname
+             title documentid signatorylinkid
+
+  sendMail signatoryname signatoryemail title content
   
 handleSign
-  :: (MonadIO m, MonadPlus m, ServerMonad m) =>
+  :: (MonadIO m, MonadPlus m, ServerMonad m, FilterMonad Response m) =>
      Context -> m Response
 handleSign ctx@(Context (Just user) hostpart) = 
     path (\documentid -> path $ handleSignShow ctx documentid) `mplus` do
     documents <- query $ GetDocumentsBySignatory (userid user) 
     webHSP (pageFromBody ctx kontrakcja (listDocuments documents))
 
-handleSignShow
-  :: (ServerMonad m, MonadPlus m, MonadIO m) =>
-     Context -> DocumentID -> SignatoryLinkID -> m Response
-handleSignShow ctx@(Context (Just user) hostpart) documentid 
+signDoc :: (ServerMonad m, MonadPlus m, MonadIO m, FilterMonad Response m) =>
+           Context -> DocumentID -> SignatoryLinkID -> m Response
+
+signDoc ctx@(Context (Just user@User{userid}) hostpart) documentid 
                signatorylinkid1 = do
   time <- liftIO $ getMinutesTime
-  Just document <- selectFormAction 
-                   [("sign", update $ SignDocument documentid (userid user) signatorylinkid1 time)] 
-                   `mplus`
-                   (update $ MarkDocumentSeen documentid (userid user) signatorylinkid1 time)
+  maybepressed <- getDataFn (look "sign")
+  when (not (isJust maybepressed)) mzero -- quit here
+  
+  Just document <- update $ SignDocument documentid userid signatorylinkid1 time
+  let isallsigned = all f (signatorylinks document)
+      f (SignatoryLink {maybesigninfo}) = isJust maybesigninfo
+  when isallsigned (liftIO $ doctransReadyToSign2Closed ctx document)
+  let link = mkSignDocLink hostpart documentid signatorylinkid1
+  response <- webHSP (seeOtherXML link)
+  seeOther link response
+
+handleSignShow
+  :: (ServerMonad m, MonadPlus m, MonadIO m,FilterMonad Response m) =>
+     Context -> DocumentID -> SignatoryLinkID -> m Response
+handleSignShow ctx@(Context (Just user@User{userid}) hostpart) documentid 
+               signatorylinkid1 = do
+  time <- liftIO $ getMinutesTime
+
+  msum [ signDoc ctx documentid signatorylinkid1
+       , do 
+          Just document <- update $ MarkDocumentSeen documentid userid signatorylinkid1 time
                        
-  let wassigned = any f (signatorylinks document)
-      f (SignatoryLink {signatorylinkid,maybesigninfo}) = 
-          isJust maybesigninfo && signatorylinkid == signatorylinkid1
-  webHSP (pageFromBody ctx kontrakcja (showDocumentForSign document wassigned))
+          let wassigned = any f (signatorylinks document)
+              f (SignatoryLink {signatorylinkid,maybesigninfo}) = 
+                  isJust maybesigninfo && signatorylinkid == signatorylinkid1
+          webHSP (pageFromBody ctx kontrakcja (showDocumentForSign document wassigned))
+       ]
 
 handleIssue :: Context -> ServerPartT IO Response
 handleIssue ctx@(Context (Just user) hostpart) = 
@@ -110,13 +146,12 @@ handleIssueShow
   :: Context -> DocumentID -> ServerPartT IO Response
 handleIssueShow ctx@(Context (Just user) hostpart) documentid = do
   Just document <- query $ GetDocumentByDocumentID documentid
-  msum 
-     [ methodM GET >> webHSP (pageFromBody ctx kontrakcja (showDocument document))
-     , do
-         methodM POST
-         doc2 <- updateDocument ctx document 
-         webHSP (pageFromBody ctx kontrakcja (showDocument doc2))
-     ]
+  msum [ methodM GET >> webHSP (pageFromBody ctx kontrakcja (showDocument document))
+       , do
+           methodM POST
+           doc2 <- updateDocument ctx document 
+           webHSP (pageFromBody ctx kontrakcja (showDocument doc2))
+       ]
 
 -- | Useful inside the RqData monad.  Gets the named input parameter
 -- (either from a POST or a GET)

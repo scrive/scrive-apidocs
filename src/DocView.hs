@@ -15,6 +15,11 @@ jquery :: (XMLGenerator m) => [XMLGenT m (HSX.XML m)]
 jquery = [<script src="/js/jquery-1.4.2.min.js"/>,
           <script src="/js/jquery-ui-1.8.custom.min.js"/>]
 
+
+mkSignDocLink :: String -> DocumentID -> SignatoryLinkID -> String
+mkSignDocLink hostpart documentid signaturelinkid =
+    hostpart ++ "/sign/" ++ show documentid ++ "/" ++ show signaturelinkid
+
 -- * Convenience Functions
 
 {-
@@ -219,6 +224,47 @@ invitationMail :: Context
 invitationMail ctx emailaddress personname 
                documenttitle documentid signaturelinkid = do
                  let xml = invitationMailXml ctx emailaddress personname 
+                           documenttitle documentid signaturelinkid
+                           -- FIXME: first part of tuple is Maybe Metadata
+                           -- potentially important
+                 (_,content) <- evalHSP Nothing xml
+                 return (BS.fromString (renderAsHTML content))
+
+closedMailXml :: (XMLGenerator m) 
+                     => Context
+                  -> BS.ByteString
+                  -> BS.ByteString
+                  -> BS.ByteString
+                  -> DocumentID
+                  -> SignatoryLinkID
+                  -> XMLGenT m (HSX.XML m)
+closedMailXml (Context (Just user) hostpart) 
+                  emailaddress personname 
+                  documenttitle documentid 
+                  signaturelinkid = 
+    let link = hostpart ++ "/sign/" ++ show documentid ++ "/" ++ show signaturelinkid
+        creatorname = BS.toString $ fullname user
+    in 
+    <html>
+     <head>
+     </head>
+     <body>
+      <h1>Welcome <% personname %></h1>
+      <p>Document <a href=link><% documenttitle %></a> has been signed by everybody involved! It is legally binding now.</p>
+      <p><small>Powered by Skriva Pa</small></p>
+     </body>
+    </html>
+
+closedMail :: Context
+           -> BS.ByteString
+           -> BS.ByteString
+           -> BS.ByteString
+           -> DocumentID
+           -> SignatoryLinkID
+           -> IO BS.ByteString
+closedMail ctx emailaddress personname 
+               documenttitle documentid signaturelinkid = do
+                 let xml = closedMailXml ctx emailaddress personname 
                            documenttitle documentid signaturelinkid
                            -- FIXME: first part of tuple is Maybe Metadata
                            -- potentially important
