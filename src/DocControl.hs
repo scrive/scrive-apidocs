@@ -264,4 +264,8 @@ showPage ctx fileid pageno = do
     Nothing -> mzero
     Just contents -> do
       let res = Response 200 M.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
-      return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/jpeg") res
+      let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/jpeg") res
+      let minutes = MinutesTime 0 -- FIXME: get correct time
+      let modtime = toUTCTime minutes
+      rq <- askRq                 -- FIXME: what?
+      return $ ifModifiedSince modtime rq res2

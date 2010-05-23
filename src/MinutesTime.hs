@@ -37,3 +37,5 @@ getMinutesTime = do
   return (MinutesTime (fromIntegral $ (secs `div` 60)))
 
   
+toUTCTime (MinutesTime time) = 
+    System.Time.toUTCTime (TOD (fromIntegral time * 60) 0)
