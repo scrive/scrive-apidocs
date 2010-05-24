@@ -6,7 +6,7 @@ import System.Environment
 import Data.Maybe
 import Data.Time.Clock
 import qualified Data.ByteString.Char8 as BS
-
+import Control.Monad.State.Strict
 
 listPageRefIDSFromPages :: Document -> RefID -> [RefID]
 listPageRefIDSFromPages document pagesrefid =
@@ -25,28 +25,39 @@ listPageRefIDs document catalogrefid =
         Just (Ref pagesrefid) = Prelude.lookup (BS.pack "Pages") catalog
     in listPageRefIDSFromPages document pagesrefid
 
-placeSealOnPageRefID :: RefID -> Document -> Document
-placeSealOnPageRefID pagerefid document = 
+placeSealOnPageRefID :: RefID -> RefID -> Document -> Document
+placeSealOnPageRefID sealrefid pagerefid document = 
     let
-        Just (Indir pagedict pagestrem) = PdfModel.lookup pagerefid document
-        newpagedict = pagedict `ext` [(BS.pack "GP",Boolean True)]
+        Just (Indir (Dict pagedict) pagestrem) = 
+            PdfModel.lookup pagerefid document
+        Just contentvalue = Prelude.lookup (BS.pack "Contents") pagedict
+        contentlist = case contentvalue of
+                        Ref{} -> [contentvalue]
+                        Array arr -> arr
+        -- FIXME: add "q " at the beginning and " Q " at the end
+        newcontentarray = Array (contentlist ++ [Ref sealrefid])
+        pagedict2 = filter (not . (==) (BS.pack "Contents") . fst) pagedict
+        newpagedict = Dict pagedict2 `ext` [(BS.pack "Contents",newcontentarray)]
         newpage = (Indir newpagedict pagestrem)
         newdocument = setIndirF pagerefid newpage document
     in newdocument
 
-placeSeals :: Document -> Document
-placeSeals document =
+placeSeals :: RefID -> Document -> Document
+placeSeals sealrefid document =
     let
         firstBody = head (documentBodies document)
         trailer = bodyTrailer firstBody
         Just (Ref root) = Prelude.lookup (BS.pack "Root") trailer
         pages = listPageRefIDs document root
-        newdocument = foldr placeSealOnPageRefID document pages
+        newdocument = foldr (placeSealOnPageRefID sealrefid) document pages
     in newdocument
 
 process sourceFileName destinationFileName = do
     Just doc <- PdfModel.parseFile sourceFileName
-    let doc2 = placeSeals doc
+    Just seal <- PdfModel.parseFile "seal.pdf"
+    let ([newcontentrefid],doc1) = 
+            runState (importObjects seal [refid 8 0]) doc
+    let doc2 = placeSeals newcontentrefid doc1
     putStrLn "Writting file..."
     writeFileX destinationFileName doc2
     return ()
