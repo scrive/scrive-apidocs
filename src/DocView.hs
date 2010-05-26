@@ -41,7 +41,7 @@ instance (XMLGenerator m) => (EmbedAsChild m (Document, Bool)) where
           <%
            <tr class=(if alt then "alt" else "")>
             <td>
-             <a href=("/issue/" ++ show (documentid entry))><% show (title entry) %></a>
+             <a href=("/issue/" ++ show (documentid entry))><% title entry %></a>
             </td>
             <td>
              <% show $ documentmtime entry %>
@@ -55,7 +55,7 @@ instance (XMLGenerator m) => (EmbedAsChild m (Document, Bool)) where
 instance (XMLGenerator m) => (EmbedAsChild m [Document]) where
     asChild (entries) = 
         <% 
-         <table class="commentlist">
+         <table class="commentlist" width="100%">
            <% zip entries (cycle [False,True]) %>
          </table>
         %>
@@ -64,8 +64,40 @@ seeOtherXML :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
 -}
 
-listDocuments :: (EmbedAsChild m c) => c -> GenChildList m
-listDocuments documents = asChild documents
+concatSignatories siglinks = 
+    concat $ intersperse ", " $ map (BS.toString . signatoryname) siglinks 
+
+oneDocumentRow document = 
+    let link = "/issue/" ++ show (documentid document)
+        mk x = <a href=link><% x %></a>
+    in
+    <tr>
+     <td class="tdleft">
+      <input type="checkbox"/>
+     </td>
+     <td><% mk $ concatSignatories (signatorylinks document) %></td>
+     <td>skrivaPå</td>
+     <td><% mk $ title document %></td>
+     <td><% mk $ show (status document) %></td>
+     <td class="tdright">*</td>
+    </tr>
+
+
+listDocuments :: (XMLGenerator m) => [Document] -> XMLGenT m (HSX.XML m)
+listDocuments documents = 
+    <div class="centerdiv" style="width: 90%">
+     <table class="doctable" cellspacing="0">
+      <thead>
+       <tr><td>All</td><td>Signatories</td><td>Company</td><td>Document</td><td>Status</td><td>*</td></tr>
+      </thead>
+      <tfoot>
+       <tr><td colspan="6">Foot</td></tr>
+      </tfoot>
+      <tbody>
+       <% map oneDocumentRow documents %>
+      </tbody>
+     </table>
+    </div>
 
 showFile
   :: (EmbedAsChild m String) =>

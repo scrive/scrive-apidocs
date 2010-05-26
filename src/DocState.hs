@@ -21,18 +21,9 @@ import Data.List (find)
 import MinutesTime
 import Control.Monad.Trans
 
+
 $(deriveAll [''Eq, ''Ord, ''Default]
   [d|
-      data Document = Document
-          { documentid       :: DocumentID
-          , title            :: BS.ByteString
-          , author           :: Author
-          , signatorylinks   :: [SignatoryLink]  
-          , files            :: [File]
-          , status           :: DocumentStatus
-          , documentctime    :: MinutesTime
-          , documentmtime    :: MinutesTime
-          }
       newtype Author = Author UserID
       newtype DocumentID = DocumentID Int
       newtype SignatoryLinkID = SignatoryLinkID Int
@@ -99,7 +90,32 @@ $(deriveAll [''Eq, ''Ord, ''Default]
                           | Closed 
                           | Canceled 
                           | Timedout
+           
    |])
+
+$(deriveAll [''Default]
+  [d|
+      data Document = Document
+          { documentid       :: DocumentID
+          , title            :: BS.ByteString
+          , author           :: Author
+          , signatorylinks   :: [SignatoryLink]  
+          , files            :: [File]
+          , status           :: DocumentStatus
+          , documentctime    :: MinutesTime
+          , documentmtime    :: MinutesTime
+          }
+   |])
+
+instance Eq Document where
+    a == b = documentid a == documentid b
+
+instance Ord Document where
+    compare a b | documentid a == documentid b = EQ
+                | otherwise = compare (documentmtime b,title a,documentid a) 
+                                      (documentmtime a,title b,documentid b)
+                              -- see above: we use reverse time here!
+
 
 instance Show SignatoryLinkID where
     showsPrec prec (SignatoryLinkID x) = showsPrec prec x

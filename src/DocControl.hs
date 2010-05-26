@@ -242,6 +242,13 @@ forkedHandleDocumentUpload docid content filename = do
       -- FIXME: take care of case when it does not parse
       update $ AttachFile docid filename2 contentx jpgpages
 
+
+basename :: String -> String
+basename filename = 
+    case span (\x -> x/='\\' || x/='/') filename of
+      (_,(_:rest)) -> basename rest
+      _ -> fst (span ((/=) '.') filename) -- FIXME: tak care of many dots in file name
+
 handleIssuePost
   :: (ServerMonad m, MonadIO m) => Context -> m Response
 handleIssuePost ctx@(Context (Just user) hostpart) = do
@@ -250,7 +257,8 @@ handleIssuePost ctx@(Context (Just user) hostpart) = do
     Just input@(Input content (Just filename) _contentType) -> 
         do 
           ctime <- liftIO $ getMinutesTime
-          doc <- update $ NewDocument (userid user) (BS.fromString filename) ctime
+          let title = BS.fromString (basename filename) 
+          doc <- update $ NewDocument (userid user) title ctime
           liftIO $ forkedHandleDocumentUpload (documentid doc) content filename
           return ()
     _ -> return ()

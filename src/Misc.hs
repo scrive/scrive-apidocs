@@ -1,4 +1,4 @@
-{-# LANGUAGE ForeignFunctionInterface, CPP #-}
+{-# LANGUAGE ForeignFunctionInterface, CPP, ScopedTypeVariables #-}
 
 
 module Misc where
@@ -22,6 +22,9 @@ import Foreign.Ptr
 import Foreign.C.String
 import HSX.XMLGenerator
 import HSP
+import Control.Monad.State.Strict
+import Control.Monad.Error
+import Data.Monoid
 
 {-
 
@@ -97,4 +100,78 @@ foreign import stdcall "ShellExecuteA" shellExecute :: Ptr () -> Ptr CChar -> Pt
 openDocument :: String -> IO ()
 openDocument filename = return ()
 #endif
+
+{-
+newtype ConfigT m a = ConfigT { runConfigT :: ReaderT Config m a }
+    deriving (Functor, Applicative, Alternative, MonadPlus, Monad, MonadIO, MonadTrans)
+
+mapConfigT :: (m a -> n b) -> ConfigT m a -> ConfigT n b
+mapConfigT f (ConfigT r) = ConfigT (mapReaderT f r)
+
+class MonadConfig m where
+    askConfig   :: m Config
+    localConfig :: (Config -> Config) -> m a -> m a
+
+instance (Monad m) => MonadConfig (ConfigT m) where
+    askConfig                 = ConfigT ask
+    localConfig f (ConfigT r) = ConfigT (local f r)
+
+instance (Monad m, MonadConfig m) => MonadConfig (URLT url m) where
+    askConfig     = lift askConfig
+    localConfig f = mapURLT (localConfig f)
+
+instance (Monad m, MonadConfig m) => MonadConfig (ServerPartT m) where
+    askConfig     = lift askConfig
+    localConfig f = mapServerPartT (localConfig f)
+
+instance (Monad m, MonadConfig m) => MonadConfig (XMLGenT m) where
+    askConfig                 = lift askConfig
+    localConfig f (XMLGenT m) = XMLGenT (localConfig f m)
+-}
+
+{-
+unpackErrorT:: (Monad m, Show e) => UnWebT (ErrorT e m) a -> UnWebT m a
+unpackErrorT et = do
+      eitherV <- runErrorT et
+      case eitherV of
+          Left e -> Just (Left e
+                           , Set $ Dual $ Endo $ \r -> r{rsCode = 500})
+          Right x -> x
+-}
+
+unpackErrorT:: (Monad m, Show e) => UnWebT (ErrorT e m) a -> UnWebT m a
+unpackErrorT handler = do
+      eitherV <- runErrorT handler
+      return $ case eitherV of
+          Left err -> Just ( Left (toResponse ("Catastrophic failure " ++ show err))
+                           , Set $ Dual $ Endo $ \r -> r{rsCode = 500})
+          Right x -> x
+
+
+mapUnWebT :: (Functor m) => (a -> b) -> UnWebT m a -> UnWebT m b
+mapUnWebT f x = fmap (fmap (mapFst (fmap f))) x
+            where
+              mapFst f (a,b) = (f a,b)
+{-
+toIO :: forall s m a. (Monad m) => s -> ServerPartT (StateT s m) a -> ServerPartT m (a,s)
+toIO state = mapServerPartT f
+    where
+      f :: UnWebT (StateT s m) a -> UnWebT m (a,s)
+      f m = runStateT m state
+-}
+
+toIO :: forall s m a . (Monad m) => s -> ServerPartT (StateT s m) a -> ServerPartT m a
+toIO state = mapServerPartT f
+    where
+      f :: StateT s m (Maybe (Either Response a, FilterFun Response)) -> m (Maybe (Either Response a, FilterFun Response))
+      f m = evalStateT m state
+
+toIO2 :: forall s m a. (Monad m, Functor m) => s -> ServerPartT (StateT s m) a -> ServerPartT m (a, s)
+toIO2 state = mapServerPartT evalStateT'
+    where
+      evalStateT' :: UnWebT (StateT s m) a -> UnWebT m (a, s)
+      evalStateT' unwebt =
+          do (m, s) <- runStateT unwebt state
+             return $ fmap (mapFst (fmap (\a -> (a, s)))) m
+      mapFst f (a,b) = (f a,b)
 
