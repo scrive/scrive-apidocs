@@ -24,6 +24,7 @@ function signatoryadd()
     var signatorylist = $( "#signatorylist" );
     var li = $("#signatory_template").clone();
     signatorylist.append(li);
+    li.slideDown();
     /*
       '<li>' +
       '<label>Full name:</label><br>' + 

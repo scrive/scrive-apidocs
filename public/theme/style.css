@@ -162,3 +162,8 @@ body {
   border-width: 1px;
   border-color: gray;
 }
+
+.docview td
+{
+  vertical-align:top;
+}

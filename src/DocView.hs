@@ -132,11 +132,15 @@ showSignatoryEntryForEdit2 idx signatoryname signatorycompany signatoryemail =
       <a onclick="signatoryremove(this)" href="#">Remove</a>
     </li>
 
-showSignatoryEntryStatus (SignatoryLink{signatoryname,signatoryemail,maybeseentime}) = 
+showSignatoryEntryStatus :: (XMLGenerator m) => SignatoryLink -> XMLGenT m (HSX.XML m)
+showSignatoryEntryStatus (SignatoryLink{signatoryname,signatoryemail,maybeseentime,maybesigninfo}) = 
     <li> 
-        <% case maybeseentime of
-             Just time -> BS.toString signatoryname ++ " last " ++ show time 
-             Nothing -> BS.toString signatoryname
+        <b><% signatoryname %></b><br/>
+        <% case maybesigninfo of
+             Just (SignInfo{signtime}) -> "signed " ++ show signtime 
+             Nothing -> case maybeseentime of
+                          Just time -> "has last seen document " ++ show time
+                          Nothing -> "has never seen this document"
         %>
     </li>
 
@@ -166,8 +170,7 @@ showDocument document =
                 ]
    in showDocumentPageHelper document helper
       <div>
-       Title:
-       <% title document %><br/>
+       <p class="headline"><% title document %></p>
        <div>List of signatories:<br/>
 
         <% if status document == Preparation
@@ -199,7 +202,7 @@ showDocument document =
 showDocumentPageHelper document helpers content =
    <div class="centerdiv" style="width: 650px"> <% helpers %>
    <form method="post"> 
-    <table>
+    <table class="docview">
      <tr>
       <td>
        <% showDocumentBox document %>

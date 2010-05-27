@@ -43,12 +43,6 @@ $(deriveAll [''Eq, ''Ord, ''Default]
             -- some authorization info probably
           }
       data Signatory = Signatory UserID
-      data File = File 
-          { fileid       :: FileID
-          , filename     :: BS.ByteString
-          , filepdf      :: BS.ByteString 
-          , filejpgpages :: [BS.ByteString]
-          }
       {-
          Document start in Preparation state.
 
@@ -105,6 +99,12 @@ $(deriveAll [''Default]
           , documentctime    :: MinutesTime
           , documentmtime    :: MinutesTime
           }
+      data File = File 
+          { fileid       :: FileID
+          , filename     :: BS.ByteString
+          , filepdf      :: BS.ByteString 
+          , filejpgpages :: [BS.ByteString]
+          }
    |])
 
 instance Eq Document where
@@ -116,6 +116,13 @@ instance Ord Document where
                                       (documentmtime a,title b,documentid b)
                               -- see above: we use reverse time here!
 
+instance Eq File where
+    a == b = fileid a == fileid b
+
+instance Ord File where
+    compare a b | fileid a == fileid b = EQ
+                | otherwise = compare (fileid a,filename a) 
+                                      (fileid b,filename b)
 
 instance Show SignatoryLinkID where
     showsPrec prec (SignatoryLinkID x) = showsPrec prec x
