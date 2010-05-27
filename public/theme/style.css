@@ -1,4 +1,11 @@
 
+.bodycolorbg {
+  background-color: #fafafa;
+}
+
+.bodycolorfg {
+  background-color: #fafafa;
+}
 
 body {
   font-family: Verdana, serif;
@@ -8,7 +15,7 @@ body {
 }
 
 .toprow {
-  background: #fafafa url(images/gradient.png) repeat-y top center;
+  background: #fafafa url(images/gradient.png) repeat-y bottom center;
   color: #fafafa;
 }
 

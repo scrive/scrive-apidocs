@@ -13,7 +13,7 @@ import User
 import Control.Monad
 
 jquery :: (XMLGenerator m) => [XMLGenT m (HSX.XML m)] 
-jquery = [<script src="/js/jquery-1.4.2.min.js"/>,
+jquery = [<script src="/js/jquery-1.4.2.min.js" zonk="öåä">öåä</script>,
           <script src="/js/jquery-ui-1.8.custom.min.js"/>]
 
 
@@ -76,7 +76,7 @@ oneDocumentRow document =
       <input type="checkbox"/>
      </td>
      <td><% mk $ concatSignatories (signatorylinks document) %></td>
-     <td>skrivaPĂĽ</td>
+     <td>skrivaPå</td>
      <td><% mk $ title document %></td>
      <td><% mk $ show (status document) %></td>
      <td class="tdright">*</td>

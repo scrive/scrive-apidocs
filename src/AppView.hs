@@ -193,6 +193,31 @@ dateStr ct =
 renderFromBody :: (MonadIO m, EmbedAsChild (HSPT' IO) xml) => Context -> String -> xml -> m Response
 renderFromBody ctx title = webHSP . pageFromBody ctx title
 
+topnavi :: (XMLGenerator m) => Bool -> Context -> String -> String -> XMLGenT m (HSX.XML m)
+topnavi True ctx title link = 
+    <table cellpadding="0" cellspacing="0" border="0">
+     <tr>
+      <td style="width: 10px; height: 10px; background: url(/theme/images/circle_tl.png);"></td>
+      <td class="bodycolorbg"></td>
+      <td style="width: 10px; height: 10px; background: url(/theme/images/circle_tr.png);"></td>
+     </tr>
+     <tr class="bodycolorbg">
+      <td></td><td class="topnavi selected"><% maybeSignInLink ctx title link %></td><td></td>
+     </tr>
+    </table>
+
+topnavi False ctx title link = 
+    <table cellpadding="0" cellspacing="0" border="0">
+     <tr>
+      <td style="width: 10px; height: 10px;"></td>
+      <td></td>
+      <td style="width: 10px; height: 10px;"></td>
+     </tr>
+     <tr>
+      <td></td><td  class="topnavi"><% maybeSignInLink ctx title link %></td><td></td>
+     </tr>
+    </table>
+
 pageFromBody :: (EmbedAsChild (HSPT' IO) xml) => Context -> String -> xml -> HSP XML
 pageFromBody ctx@(Context maybeuser hostpart) title body =
     withMetaData html4Strict $
@@ -209,14 +234,18 @@ pageFromBody ctx@(Context maybeuser hostpart) title body =
          <img src="/theme/images/logosmall.png" height="40"/>
         </td>
         <td align="right">
-         <span class="contactabout"><a href="Contact">Contact</a> | <a href="About">About</a></span>
+         <span class="contactabout"><a href="About">About</a></span>
         </td>
        </tr>
        <tr class="toprow"> {- new, documents, account, etc -}
         <td colspan="2" align="center">
-         <span class="topnavi"><% maybeSignInLink ctx "New" "/" %></span>
-         <span class="topnavi selected"><% maybeSignInLink ctx "Documents" "/issue" %></span>
-         <span class="topnavi">Account</span>
+         <table cellpadding="0" cellspacing="0" border="0">
+         <tr>
+         <td><% topnavi False ctx "New" "/" %></td>
+         <td><% topnavi True ctx "Documents" "/issue" %></td>
+         <td><% topnavi False ctx "Account" "/account" %></td>
+         </tr>
+         </table>
         </td>
        </tr>
        <tr id="main"> {- main content -}
