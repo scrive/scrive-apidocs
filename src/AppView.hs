@@ -92,16 +92,15 @@ welcomeBody (Context (Just _) hostpart) =
    <img src="/theme/images/logolarge.png"/>
    <br/> 
    <form action="/issue" method="post" enctype="multipart/form-data">
-    <span class="small">Choose a document to upload:</span><br/>
+    <span class="small">Ladda upp dokument</span><br/>
     <input type="file" name="doc"/>
-    <input class="button" type="submit" value="New"/>
+    <input class="button" type="submit" value="Skapa"/>
    </form>
    <hr/>
 
-   <p class="headline">Welcome to skrivaPå!</p>
+   <p class="headline">Välkommen till skrivaPå!</p>
 
-   <p class="para">We are currently testing our online signature solution
-      only with selected customers.</p>
+   <p class="para">För tillfället testar vi vår online signaturlösning med utvalda kunder. Om du vill bli en tidig testkund, vänligen <a href="mailto:lukas@skrivapa.se">skicka ett mail</a>. Om du redan har ett konto klicka nedan för att börja.</p>
   </div>
 
 welcomeBody ctx@(Context Nothing hostpart) = 
@@ -119,19 +118,15 @@ welcomeBody ctx@(Context Nothing hostpart) =
 
    <hr/>
 
-   <p class="headline">Welcome to skrivaPå!</p>
+   <p class="headline">Välkommen till skrivaPå!</p>
 
-   <p class="para">We are currently testing our online signature solution
-     with selected customers.  If you would like to be an early
-     tester <a href="apply">please apply here</a>. If you have an account
-     press the button to start.</p>
+   <p class="para">För tillfället testar vi vår online signaturlösning med utvalda kunder. Om du vill bli en tidig testkund, vänligen <a href="mailto:lukas@skrivapa.se">skicka ett mail</a>. Om du redan har ett konto klicka nedan för att börja.</p>
   </div>
 
 errorReport :: (XMLGenerator m) => Context -> Request -> XMLGenT m (HSX.XML m)
 errorReport (Context maybeuser _) request = 
   <div>
-   <p>An error occured. It's not you, it's us. We will take care about the problem
-   as soon as possible. Meanwhile please <a href="/">go to the very beginning</a>.</p>
+   <p>Ett fel har uppstått. Det beror inte på dig. Det beror på oss. Vi tar hand om problemet så snart vi kan så snälla ha tålamod med oss. Tills vi fixat problemet, vänligen försök igen genom att börja om från <a href="/">startsidan</a>.</p>
    <hr/>
    <p>Information useful to developers:</p>
    <% case maybeuser of
@@ -234,16 +229,16 @@ pageFromBody ctx@(Context maybeuser hostpart) title body =
          <img src="/theme/images/logosmall.png" height="40"/>
         </td>
         <td align="right">
-         <span class="contactabout"><a href="About">About</a></span>
+         <span class="contactabout"><a href="About">Om oss</a></span>
         </td>
        </tr>
        <tr class="toprow"> {- new, documents, account, etc -}
         <td colspan="2" align="center">
          <table cellpadding="0" cellspacing="0" border="0">
          <tr>
-         <td><% topnavi False ctx "New" "/" %></td>
-         <td><% topnavi True ctx "Documents" "/issue" %></td>
-         <td><% topnavi False ctx "Account" "/account" %></td>
+         <td><% topnavi False ctx "Skapa" "/" %></td>
+         <td><% topnavi True ctx "Dokument" "/issue" %></td>
+         <td><% topnavi False ctx "Konto" "/account" %></td>
          </tr>
          </table>
         </td>

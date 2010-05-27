@@ -88,7 +88,14 @@ listDocuments documents =
     <div class="centerdiv" style="width: 90%">
      <table class="doctable" cellspacing="0">
       <thead>
-       <tr><td>All</td><td>Signatories</td><td>Company</td><td>Document</td><td>Status</td><td>*</td></tr>
+       <tr>
+        <td>Alla</td>
+        <td>Personer</td>
+        <td>Företag</td>
+        <td>Dokument</td>
+        <td>Status</td>
+        <td>*</td>
+       </tr>
       </thead>
       <tfoot>
        <tr><td colspan="6">Foot</td></tr>
@@ -123,13 +130,15 @@ showSignatoryEntryForEdit (SignatoryLink{signatoryname,signatorycompany,signator
 showSignatoryEntryForEdit2 :: (XMLGenerator m) => String -> String -> String -> String -> XMLGenT m (HSX.XML m)
 showSignatoryEntryForEdit2 idx signatoryname signatorycompany signatoryemail = 
     <li id=idx>
-      <label>Full name:</label><br/> 
+      <label>För- och efternamn:</label><br/> 
       <input name="signatoryname" type="text" value=signatoryname/><br/>
-      <label>Company:</label><br/>
+      <label>Företag:</label><br/>
       <input name="signatorycompany" type="text" value=signatorycompany/><br/>
       <label>Email:</label><br/>
       <input name="signatoryemail" type="text" value=signatoryemail/><br/>
-      <a onclick="signatoryremove(this)" href="#">Remove</a>
+      <a onclick="signatoryremove(this)" href="#">Ta bort</a>
+      {- days to sign:
+         Antal dagar att skriva på -}
     </li>
 
 showSignatoryEntryStatus :: (XMLGenerator m) => SignatoryLink -> XMLGenT m (HSX.XML m)
@@ -137,10 +146,10 @@ showSignatoryEntryStatus (SignatoryLink{signatoryname,signatoryemail,maybeseenti
     <li> 
         <b><% signatoryname %></b><br/>
         <% case maybesigninfo of
-             Just (SignInfo{signtime}) -> "signed " ++ show signtime 
+             Just (SignInfo{signtime}) -> "Signerat " ++ show signtime 
              Nothing -> case maybeseentime of
-                          Just time -> "has last seen document " ++ show time
-                          Nothing -> "has never seen this document"
+                          Just time -> "Har öppnat dokumentet " ++ show time
+                          Nothing -> "Har inte öppnat dokumentet"
         %>
     </li>
 
@@ -171,14 +180,14 @@ showDocument document =
    in showDocumentPageHelper document helper
       <div>
        <p class="headline"><% title document %></p>
-       <div>List of signatories:<br/>
+       <div>Personer:<br/>
 
         <% if status document == Preparation
            then <span>
               <ol id="signatorylist">
                <% map showSignatoryEntryForEdit (signatorylinks document) %>
               </ol>
-              <a onclick="signatoryadd()" href="#">Add signatory</a>
+              <a onclick="signatoryadd()" href="#">Skapa inbjudan</a>
              </span>
            else
               <ol id="signatorylist">
@@ -190,9 +199,9 @@ showDocument document =
          <% 
            if (status document==Preparation) 
               then <span>
-                    <input class="bigbutton" type="submit" name="final" value="Sign and invite"/>
+                    <input class="bigbutton" type="submit" name="final" value="Skriv på och bjud in"/>
                     <br/>
-                    <input class="button" type="submit" name="save" value="Save for later"/>
+                    <input class="button" type="submit" name="save" value="Spara till senare"/>
                    </span>
               else <span/>
           %>
@@ -221,12 +230,13 @@ showDocumentForSign :: (XMLGenerator m) =>
 showDocumentForSign document wassigned =
    showDocumentPageHelper document "" $
         if wassigned 
-           then <span>You have already signed this document!</span>
-           else <input class="button" type="submit" name="sign" value="Sign!"/>
+           then <span>Du har redan skrivit på!</span>
+           else <input class="button" type="submit" name="sign" value="Skriv på!"/>
 
 poweredBySkrivaPaPara :: (XMLGenerator m) => XMLGenT m (HSX.XML m)
 poweredBySkrivaPaPara = 
     <p>
+     Med vänliga hälsningar<br/>
      <small>Powered by <a href="http://skrivapa.se/">skrivaPå</a></small>
     </p>
 
@@ -250,10 +260,9 @@ invitationMailXml (Context (Just user) hostpart)
      <head>
      </head>
      <body>
-      <h1>Welcome <% personname %></h1>
-      <p><a href=link><% documenttitle %></a></p>
-      <p><% creatorname %> prepared documents you should see! 
-           To review and sign them click link below:</p>
+      <p>Hej <% personname %>,</p>
+      <p></p>
+      <p><% creatorname %> har bjudit in dig att skriva på avtalet <a href=link><% documenttitle %></a>. Klicka på länken för att läsa igenom och skriva på.</p>
       <p><% link %></p>
       <% poweredBySkrivaPaPara %>
      </body>
@@ -294,8 +303,11 @@ closedMailXml (Context (Just user) hostpart)
      <head>
      </head>
      <body>
-      <h1>Welcome <% personname %></h1>
-      <p>Document <a href=link><% documenttitle %></a> has been signed by everybody involved! It is legally binding now.</p>
+      <p>Hej <% personname %>,</p>
+      <p>Avtalet <a href=link><% documenttitle %></a> har signerats av alla parter. Avtalet är nu lagligt bindande. Vi har låst dokumentet så att det inte kan ändras och för att markera detta har vi stämplat det med vårt sigill.</p>
+      
+      <p>Dokumentet bifogas med detta mail. Om du har ett konto hittar du avtalet i ditt konto under "Dokument". Om du inte har ett konto kan du spara dokumentet genom att <a href=link>klicka här</a>.</p>
+     
       <% poweredBySkrivaPaPara %>
      </body>
     </html>

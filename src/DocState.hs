@@ -80,10 +80,11 @@ $(deriveAll [''Eq, ''Ord, ''Default]
        -}
 
       data DocumentStatus = Preparation 
-                          | ReadyToSign  
+                          | ReadyToSign -- Pending  
                           | Closed 
                           | Canceled 
                           | Timedout
+                          | Rejected
            
    |])
 
