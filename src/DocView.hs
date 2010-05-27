@@ -76,7 +76,7 @@ oneDocumentRow document =
       <input type="checkbox"/>
      </td>
      <td><% mk $ concatSignatories (signatorylinks document) %></td>
-     <td>skrivaPå</td>
+     <td>skrivaPĂĽ</td>
      <td><% mk $ title document %></td>
      <td><% mk $ show (status document) %></td>
      <td class="tdright">*</td>
@@ -221,6 +221,11 @@ showDocumentForSign document wassigned =
            then <span>You have already signed this document!</span>
            else <input class="button" type="submit" name="sign" value="Sign!"/>
 
+poweredBySkrivaPaPara :: (XMLGenerator m) => XMLGenT m (HSX.XML m)
+poweredBySkrivaPaPara = 
+    <p>
+     <small>Powered by <a href="http://skrivapa.se/">skrivaPå</a></small>
+    </p>
 
 
 invitationMailXml :: (XMLGenerator m) 
@@ -247,7 +252,7 @@ invitationMailXml (Context (Just user) hostpart)
       <p><% creatorname %> prepared documents you should see! 
            To review and sign them click link below:</p>
       <p><% link %></p>
-      <p><small>Powered by Skriva Pa</small></p>
+      <% poweredBySkrivaPaPara %>
      </body>
     </html>
 
@@ -288,7 +293,7 @@ closedMailXml (Context (Just user) hostpart)
      <body>
       <h1>Welcome <% personname %></h1>
       <p>Document <a href=link><% documenttitle %></a> has been signed by everybody involved! It is legally binding now.</p>
-      <p><small>Powered by Skriva Pa</small></p>
+      <% poweredBySkrivaPaPara %>
      </body>
     </html>
 

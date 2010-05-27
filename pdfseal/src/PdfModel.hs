@@ -29,7 +29,7 @@ import Matrix
 import qualified ReadP as P
 import qualified Data.IntSet as IntSet
 import Control.Parallel.Strategies
-import qualified Char
+import qualified Data.Char as Char
 import qualified Prelude
 
 import System.IO.MMap
