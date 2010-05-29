@@ -475,12 +475,14 @@ lookup refid (Document _ bodies) = msum (map check bodies)
 --            -> (Int,Map.Map Int (Int,Int))
 --            -> (Int,Entry)                  -- (objno,entry)
 --            -> IO () -- (Maybe (Int,(Int,Int)))   -- objno,gener,offset
-writeObject write tell (lastlength,objnooffsetmap) ((objno,UsedEntry gener (Indir text stream))) = do
+writeObject write tell (lastlength,objnooffsetmap) ((objno1,UsedEntry gener (Indir text stream))) = do
     pos <- tell
-    write (BSC.pack (show objno ++ " " ++ show gener ++ " obj\n"))
+    -- print (pos,objno,gener)
+    write (BSC.pack (show objno1 ++ " " ++ show gener ++ " obj\n"))
     case text of
-        Number x -> do -- oh my simplification
-            write (BSC.pack (show lastlength))
+        Number x -> case IntMap.lookup objno1 lastlength of
+                      Just v -> write (BSC.pack (show v))
+                      Nothing -> write (BSC.pack (show x))
         _ -> do
             mapM_ write (BSL.toChunks (Bin.toLazyByteString (binarize text)))
             return ()
@@ -491,10 +493,14 @@ writeObject write tell (lastlength,objnooffsetmap) ((objno,UsedEntry gener (Indi
             mapM_ write (BSL.toChunks x)
             e <- tell
             write $ BSC.pack "\nendstream"
-            return (e-b)
-        _ -> return 0
+            let l = (e-b)
+            let Dict dictdata = text
+            case Prelude.lookup (BSC.pack "Length") dictdata of
+              Just (Ref r) -> return (IntMap.insert (objno r) l lastlength)
+              _ -> return lastlength
+        _ -> return lastlength
     write $ BSC.pack "\nendobj\n"
-    let newobjnoffsetmap = IntMap.insert objno pos objnooffsetmap
+    let newobjnoffsetmap = IntMap.insert objno1 pos objnooffsetmap
     return (newlastlength,newobjnoffsetmap)
 
 writeObject write tell x ((objno,_)) = return x
@@ -528,7 +534,7 @@ writeBody   :: (BS.ByteString -> IO ())     -- write action
             -> Body                         -- (objno,entry)
             -> IO (Int,Int)
 writeBody write tell (highest,prevoffset) (Body trailer objects) = do
-    (_,r) <- foldM (writeObject write tell) (0,IntMap.empty) (IntMap.toList objects)
+    (_,r) <- foldM (writeObject write tell) (IntMap.empty,IntMap.empty) (IntMap.toList objects)
     v <- tell
     write $ BSC.pack "xref\n"
 
@@ -556,7 +562,8 @@ writeDocument write tell (Document version bodies) = do
 writeFileX file document = do
     bracket (openBinaryFile file WriteMode)
             (hClose)
-            (\handle -> writeDocument (BS.hPutStr handle) (liftM fromIntegral $ hTell handle) document)
+            (\handle -> writeDocument (\x -> BS.hPutStr handle x >> hFlush handle) 
+                        (liftM fromIntegral $ hTell handle) document)
 
 importObjects :: Document -> [RefID] -> State Document [RefID]
 importObjects doc refids = do
@@ -1031,6 +1038,7 @@ isdelim x =
 iseol :: Word8 -> Bool
 iseol 0x0A = True
 iseol 0x0D = True
+iseol _ = False
 
 isregular :: Word8 -> Bool
 isregular x = not (isdelim x || isspace x)

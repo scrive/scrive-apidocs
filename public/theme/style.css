@@ -14,9 +14,52 @@ body {
   font-size: x-small;
 }
 
-.toprow {
+#headerContainer
+{
   background: #fafafa url(images/gradient.png) repeat-y bottom center;
   color: #fafafa;
+}
+
+#headerContainer img
+{
+  // float: left;
+}
+
+#nav
+{
+  // float:right;
+  height:25px;
+  padding:1px 13px 0 0;
+}
+#nav ul {
+  display:inline;
+  list-style:none outside none;
+  margin:0;
+  padding:0;
+}
+#nav li {
+  float:left;
+  margin-left:1px;
+}
+#nav li a {
+  background:url("images/nav_bg.gif") no-repeat scroll right top transparent;
+  float:left;
+  padding-right:13px;
+  text-decoration:none;
+}
+#nav li a:hover, #nav .active {
+  background:url("images/nav_bg.gif") no-repeat scroll right bottom transparent;
+}
+#nav li a span {
+  background:url("images/nav_bg.gif") no-repeat scroll left top transparent;
+  color:#FFFFFF;
+  cursor:pointer;
+  display:block;
+  font-size:13px;
+  height:24px;
+  line-height:24px;
+  padding:0 0 0 13px;
+  text-decoration:none;
 }
 
 .para {
@@ -57,6 +100,11 @@ body {
   color: #ff972d; 
   font-weight: bold;
   font-size: 130%;
+}
+
+.contactabout
+{
+  //float: right;
 }
 
 .contactabout, .contactabout a {

@@ -223,92 +223,24 @@ pageFromBody ctx@(Context maybeuser hostpart) title body =
       <link rel="stylesheet" type="text/css" href="/theme/style.css" media="screen" />
      </head>
      <body>
-      <table cellpadding="0" cellspacing="0" border="0" width="100%">
-       <tr class="toprow"> {- skrivaPa logo and contact about -}
-        <td align="left">
-         <img src="/theme/images/logosmall.png" height="40"/>
-        </td>
-        <td align="right">
-         <span class="contactabout"><a href="About">Om oss</a></span>
-        </td>
-       </tr>
-       <tr class="toprow"> {- new, documents, account, etc -}
-        <td colspan="2" align="center">
-         <table cellpadding="0" cellspacing="0" border="0">
-         <tr>
-         <td><% topnavi False ctx "Skapa" "/" %></td>
-         <td><% topnavi True ctx "Dokument" "/issue" %></td>
-         <td><% topnavi False ctx "Konto" "/account" %></td>
-         </tr>
-         </table>
-        </td>
-       </tr>
-       <tr id="main"> {- main content -}
-        <td colspan="2">
-          <% body %>
-        </td>
-       </tr>
-       {- should be the bottom line here, will see how to do this -}
-      </table>
+      <div id="headerContainer">
+         <div><img src="/theme/images/logosmall.png" height="40"/></div>
+         <div class="contactabout"><a href="About">Om oss</a></div>
 
-{-
-       <div id="header">
-       <div class="grunge"></div>
-       <div class="peel">
-          <%
-              case maybeuser of
-                   Just (User{fullname}) -> <span><a href="/account"><% BSC.toString fullname %></a> | <a href="/logout">Logout</a></span>
-                   Nothing ->  <a class="rpxnow" onclick="return false;"
-                                  href=("https://kontrakcja.rpxnow.com/openid/v2/signin?token_url=" ++ 
-                                        urlEncode (hostpart ++ "/"))>Sign in here</a> 
-
-
-          %>
-       </div>
-       <div class="topnavi">
-        <ul>
-         <li class="current_page_item"><a href="/" title=kontrakcja><% kontrakcja %></a></li>
-        </ul>
-       </div>
-      </div>
-
-
-      <div class="side1">
-       <div class="sbar_section">
-         <ul>
-      	  <li class="cat-item cat-item-1">
-           <% maybeSignInLink ctx "Begin" "/" %>
-          </li>
-      	  <li class="cat-item cat-item-2">
-           <% maybeSignInLink ctx "Issue" "/issue" %>
-          </li>
-      	  <li class="cat-item cat-item-3">
-           <% maybeSignInLink ctx "Sign" "/sign" %>
-          </li>
-         </ul>
-       </div>
-      </div>
-
-      <div class="wrap">
-       <div class="innercont_main">
-        {- 
-        <div class="post">
-         <div class="posttop">
+         <div id="nav">
+          <ul>
+           <li><% topnavi False ctx "Skapa" "/" %></li>
+           <li><% topnavi True ctx "Dokument" "/issue" %></li>
+           <li><% topnavi False ctx "Konto" "/account" %></li>
+          </ul>
          </div>
-        </div>
-        -} 
-        <% body %>
-       </div>
       </div>
-           
-      <div class="footer">
-        <div class="finalfooter">
-          <a href="/aboutus">About Us</a> | 
-          <a href="/privacypolicy">Privacy Policy</a> | 
-          <a href="/blog" title="Lukas Duczko">Blog</a>
-        </div>
+      <div id="mainContainer">
+          <% body %>
       </div>
--}
+      <div id="footerContainer">
+      </div>
+
       <script type="text/javascript">
        var rpxJsHost = (("https:" == document.location.protocol) ? "https://" : "http://static.");
        document.write(unescape("%3Cscript src='" + rpxJsHost +
