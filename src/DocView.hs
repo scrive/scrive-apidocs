@@ -85,7 +85,8 @@ oneDocumentRow document =
 
 listDocuments :: (XMLGenerator m) => [Document] -> XMLGenT m (HSX.XML m)
 listDocuments documents = 
-    <div class="centerdiv" style="width: 90%">
+    <div>
+     <br/>
      <table class="doctable" cellspacing="0">
       <thead>
        <tr>
@@ -104,7 +105,7 @@ listDocuments documents =
        <% map oneDocumentRow documents %>
       </tbody>
      </table>
-    </div>
+   </div>
 
 showFile
   :: (EmbedAsChild m String) =>

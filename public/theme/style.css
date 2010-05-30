@@ -16,8 +16,22 @@ body {
 
 #headerContainer
 {
-  background: #fafafa url(images/gradient.png) repeat-y bottom center;
+  background: #fafafa url(images/gradientextent.png) repeat-x bottom center;
   color: #fafafa;
+}
+
+#headerContainer div
+{
+  background: url(images/gradient.png) no-repeat bottom center;
+  color: #fafafa;
+  text-align: center;
+}
+
+#headerContainer div div
+{
+  background: none;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 #headerContainer img
@@ -30,6 +44,12 @@ body {
   // float:right;
   height:25px;
   padding:1px 13px 0 0;
+  text-align: center;
+
+  // centering, temporary 
+  margin-left:auto;
+  margin-right:auto;
+  width:400px;
 }
 #nav ul {
   display:inline;
@@ -165,6 +185,8 @@ body {
   background-color: #EAEAEA;
   padding: 10px; 
   width: 800px;
+  margin-left: auto;
+  margin-right: auto;
 }
  
 .doctable td
