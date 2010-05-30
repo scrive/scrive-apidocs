@@ -28,6 +28,9 @@ import Data.List
 import MinutesTime
 import Control.Concurrent
 import SendMail
+import System.Process
+import System.IO
+import Seal
 
 {-
   Document state transitions are described in DocState.
@@ -46,7 +49,9 @@ doctransPreparation2ReadyToSign ctx doc = do
 doctransReadyToSign2Closed :: Context -> Document -> IO ()
 doctransReadyToSign2Closed ctx doc = do
   update $ UpdateDocumentStatus doc Closed
-  liftIO $ sendClosedEmails ctx doc
+  liftIO $ forkIO $ do
+    mapM_ forkedSealFile (files doc) 
+    sendClosedEmails ctx doc
   return ()
 
 doctransReadyToSign2Canceled :: Context -> Document -> IO ()
@@ -241,6 +246,36 @@ forkedHandleDocumentUpload docid content filename = do
       let contentx = concatChunks content
       -- FIXME: take care of case when it does not parse
       update $ AttachFile docid filename2 contentx jpgpages
+
+
+sealFile :: BS.ByteString -> Int -> [()] -> IO BS.ByteString
+sealFile content docid persons = do
+  tmppath <- getTemporaryDirectory
+  let tmpin = tmppath ++ "/in_" ++ show docid ++ ".pdf"
+  let tmpout = tmppath ++ "/out_" ++ show docid ++ ".pdf"
+  BS.writeFile tmpin content
+  let sealproc = (proc "dist/build/pdfseal/pdfseal" []) {std_in = CreatePipe}
+  (Just inx, _, _, sealProcHandle) <- createProcess sealproc
+  let config = SealSpec 
+            { sealInput = tmpin
+            , sealOutput = tmpout
+            , sealDocumentNumber = docid
+            , sealPersons = []
+            }
+  hPutStr inx (show config)
+  hClose inx
+  
+  waitForProcess sealProcHandle
+  newcontent <- BS.readFile tmpout
+  -- FIXME: delete old files
+  return newcontent
+  
+
+forkedSealFile (file@File {fileid,filename,filepdf,filejpgpages}) = do
+      newfilepdf <- sealFile filepdf 1345646 []
+      newfilejpegpages <- convertPdfToJpgPages (BSL.fromChunks [newfilepdf])
+      let newfile = file {filepdf = newfilepdf, filejpgpages = newfilejpegpages}
+      update $ ReplaceFile newfile
 
 
 basename :: String -> String

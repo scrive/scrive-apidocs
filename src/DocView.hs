@@ -210,7 +210,9 @@ showDocument document =
       </div>
 
 showDocumentPageHelper document helpers content =
-   <div class="centerdiv" style="width: 650px"> <% helpers %>
+   <div> 
+   <br/>
+   <% helpers %>
    <form method="post"> 
     <table class="docview">
      <tr>
@@ -259,6 +261,7 @@ invitationMailXml (Context (Just user) hostpart)
     in 
     <html>
      <head>
+      <http-meta http-equiv="content-type" content="text/html; charset=utf-8"/>
      </head>
      <body>
       <p>Hej <% personname %>,</p>
@@ -302,6 +305,7 @@ closedMailXml (Context (Just user) hostpart)
     in 
     <html>
      <head>
+      <http-meta http-equiv="content-type" content="text/html; charset=utf-8"/>
      </head>
      <body>
       <p>Hej <% personname %>,</p>

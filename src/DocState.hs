@@ -345,6 +345,14 @@ getDocumentStats = do
   return (size documents)
 
 
+replaceFile :: File -> Update Documents ()
+replaceFile file@File{fileid} = do
+  documents <- ask
+  let Just doc = getOne (documents @= fileid)
+  let newdoc = doc {files = [file]} -- FIXME: care about many files here
+  modify (updateIx fileid newdoc)
+
+
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocumentsByAuthor
                         , 'getDocumentsBySignatory
@@ -357,6 +365,7 @@ $(mkMethods ''Documents [ 'getDocumentsByAuthor
                         , 'attachFile
                         , 'markDocumentSeen
                         , 'getDocumentStats
+                        , 'replaceFile
                         ])
 
 
