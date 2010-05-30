@@ -94,7 +94,7 @@ welcomeBody (Context (Just _) hostpart) =
    <form action="/issue" method="post" enctype="multipart/form-data">
     <span class="small">Ladda upp dokument</span><br/>
     <input type="file" name="doc"/>
-    <input class="button" type="submit" value="Skapa"/>
+    <input class="bigbutton" type="submit" value="Skapa"/>
    </form>
    <hr/>
 

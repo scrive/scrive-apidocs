@@ -151,6 +151,7 @@ body {
    font-family: Verdana;
    font-weight: bold;
    font-size: xx-small;
+   border: none;
 }
 
 .bigbutton {
@@ -162,6 +163,7 @@ body {
    font-size: x-small;
    height: 3em;
    width: 100%;
+   border: none;
 }
 
 #documentBox {
