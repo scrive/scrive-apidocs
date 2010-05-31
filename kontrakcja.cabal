@@ -24,7 +24,7 @@ Data-files:
         public/theme/readme.txt
 
 Executable pdfseal
-  hs-source-dirs: pdfseal/src
+  hs-source-dirs: pdfseal/src src
   -- .hs or .lhs file containing the Main module.
   Main-is: SealMain.hs
   
