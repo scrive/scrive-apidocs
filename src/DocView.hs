@@ -178,9 +178,8 @@ showDocument document =
                   </span>
                 , <script type="text/javascript" src="/js/document-edit.js"/>
                 ]
-   in showDocumentPageHelper document helper
+   in showDocumentPageHelper document helper (title document)  
       <div>
-       <p class="headline"><% title document %></p>
        <div>Personer:<br/>
 
         <% if status document == Preparation
@@ -209,7 +208,7 @@ showDocument document =
        </div>
       </div>
 
-showDocumentPageHelper document helpers content =
+showDocumentPageHelper document helpers title content =
    <div> 
    <br/>
    <% helpers %>
@@ -217,9 +216,11 @@ showDocumentPageHelper document helpers content =
     <table class="docview">
      <tr>
       <td>
+   
        <% showDocumentBox document %>
       </td>
       <td> 
+       <p class="headline"><% title %></p>
        <% content %>
       </td>
      </tr>
@@ -231,7 +232,7 @@ showDocumentPageHelper document helpers content =
 showDocumentForSign :: (XMLGenerator m) =>
                        Document -> Bool -> XMLGenT m (HSX.XML m)
 showDocumentForSign document wassigned =
-   showDocumentPageHelper document "" $
+   showDocumentPageHelper document (title document) "" $
         if wassigned 
            then <span>Du har redan skrivit på!</span>
            else <input class="button" type="submit" name="sign" value="Skriv på!"/>
