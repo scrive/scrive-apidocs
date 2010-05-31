@@ -25,6 +25,8 @@ import HSP
 import Control.Monad.State.Strict
 import Control.Monad.Error
 import Data.Monoid
+import Data.List
+import Data.Char
 
 {-
 
@@ -175,3 +177,13 @@ toIO2 state = mapServerPartT evalStateT'
              return $ fmap (mapFst (fmap (\a -> (a, s)))) m
       mapFst f (a,b) = (f a,b)
 
+
+-- this is cheating
+-- FIXME: font encoding
+winAnsiChars = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~?€\201‚ƒ„…†‡ˆ‰Š‹Œ\215Ž\217\220‘’“”•–—˜™š›œ\235žŸ ¡¢£¤¥¦§¨©ª«¬?®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ"
+
+unicodeToWinAnsi x = 
+    case findIndex (==x) winAnsiChars of
+      Just i -> chr (i + 33)
+      Nothing -> x
+      

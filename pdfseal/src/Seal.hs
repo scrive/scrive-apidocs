@@ -10,6 +10,7 @@ import qualified Data.ByteString.Lazy.Char8 as BSL
 import Control.Monad.State.Strict
 import qualified Data.Map as Map
 import qualified Data.Char as Char
+import Misc
 
 data SealPerson = 
     SealPerson { sealPerson :: String
@@ -232,6 +233,7 @@ process (SealSpec
     return ()
 
 
+{-
 unicodeToWinAnsi 'ö' = Char.chr 0o366 
 unicodeToWinAnsi 'å' = Char.chr 0o345
 unicodeToWinAnsi 'ä' = Char.chr 0o344
@@ -239,3 +241,4 @@ unicodeToWinAnsi 'Ö' = Char.chr 0o326
 unicodeToWinAnsi 'Å' = Char.chr 0o305
 unicodeToWinAnsi 'Ä' = Char.chr 0o304
 unicodeToWinAnsi x = x
+-}

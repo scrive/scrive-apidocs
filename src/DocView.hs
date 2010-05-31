@@ -262,7 +262,7 @@ invitationMailXml (Context (Just user) hostpart)
     in 
     <html>
      <head>
-      <http-meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+      <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
      </head>
      <body>
       <p>Hej <% personname %>,</p>
@@ -306,7 +306,7 @@ closedMailXml (Context (Just user) hostpart)
     in 
     <html>
      <head>
-      <http-meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+      <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
      </head>
      <body>
       <p>Hej <% personname %>,</p>
