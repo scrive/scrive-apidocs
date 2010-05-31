@@ -239,6 +239,7 @@ pageFromBody ctx@(Context maybeuser hostpart) title body =
          </div>
         </div>
       </div>
+      <br/> {- the navi things are float: left, this clears the flow -}
       <div id="mainContainer">
           <% body %>
       </div>
