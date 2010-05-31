@@ -42,7 +42,10 @@ appHandler = do
     [ nullDir >> webHSP (pageFromBody ctx kontrakcja (welcomeBody ctx))
     , dir "sign" (withUser maybeuser (DocControl.handleSign ctx))
     , dir "issue" (withUser maybeuser (DocControl.handleIssue ctx))
-    , dir "pages" $ path $ \fileid -> path $ \pageno -> DocControl.showPage ctx fileid pageno
+    , dir "pages" $ path $ \fileid -> path $ \pageno -> 
+                                      do
+                                        modminutes <- query $ FileModTime fileid
+                                        DocControl.showPage ctx modminutes fileid pageno
     , dir "logout" (handleLogout)]
     ++ (if isSuperUser maybeuser then 
             [ dir "stats" $ statsPage

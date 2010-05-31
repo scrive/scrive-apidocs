@@ -352,6 +352,12 @@ replaceFile file@File{fileid} = do
   let newdoc = doc {files = [file]} -- FIXME: care about many files here
   modify (updateIx fileid newdoc)
 
+fileModTime :: FileID -> Query Documents MinutesTime
+fileModTime fileid = do
+  documents <- ask
+  let Just doc = getOne (documents @= fileid)
+  return (documentmtime doc)
+
 
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocumentsByAuthor
@@ -366,6 +372,7 @@ $(mkMethods ''Documents [ 'getDocumentsByAuthor
                         , 'markDocumentSeen
                         , 'getDocumentStats
                         , 'replaceFile
+                        , 'fileModTime
                         ])
 
 

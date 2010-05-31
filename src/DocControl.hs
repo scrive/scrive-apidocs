@@ -300,15 +300,14 @@ handleIssuePost ctx@(Context (Just user) hostpart) = do
   handleIssueGet ctx
 
 
-showPage :: Context -> FileID -> Int -> ServerPartT IO Response
-showPage ctx fileid pageno = do
+showPage :: Context -> MinutesTime -> FileID -> Int -> ServerPartT IO Response
+showPage ctx modminutes fileid pageno = do
   maybecontents <- query $ GetFilePageJpg fileid pageno
   case maybecontents of
     Nothing -> mzero
     Just contents -> do
       let res = Response 200 M.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
       let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/jpeg") res
-      let minutes = MinutesTime 0 -- FIXME: get correct time
-      let modtime = toUTCTime minutes
+      let modtime = toUTCTime modminutes
       rq <- askRq                 -- FIXME: what?
       return $ ifModifiedSince modtime rq res2
