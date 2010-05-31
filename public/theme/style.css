@@ -110,13 +110,13 @@ body {
   background-color:  #fafafa;
 }
 
-#main a {
+#mainContainer a {
   color: #007cac;
   font-weight: bold;
   text-decoration: none;
 }
 
-#main .headline {
+#mainContainer .headline {
   color: #ff972d; 
   font-weight: bold;
   font-size: 130%;
@@ -245,4 +245,10 @@ body {
 .docview td
 {
   vertical-align:top;
+}
+
+.docview 
+{
+  margin-left:auto;
+  margin-right:auto
 }

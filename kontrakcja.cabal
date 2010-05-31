@@ -26,7 +26,7 @@ Data-files:
 Executable pdfseal
   hs-source-dirs: pdfseal/src
   -- .hs or .lhs file containing the Main module.
-  Main-is: Main.hs
+  Main-is: SealMain.hs
   
   -- Packages needed in order to build this package.
   Build-depends: base, mmap==0.5.*, parallel, array
@@ -37,7 +37,7 @@ Executable pdfseal
    
 
 Executable kontrakcja-server
- hs-source-dirs: src
+ hs-source-dirs: src pdfseal/src
 
  -- GHC-Options: -Wall -Wwarn -fno-warn-name-shadowing -fno-warn-missing-signatures 
  -- GHC-Options: -fwarn-tabs -fno-warn-unused-binds -fno-warn-orphans -fno-warn-unused-imports
