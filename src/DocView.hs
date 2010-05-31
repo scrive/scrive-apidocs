@@ -232,7 +232,7 @@ showDocumentPageHelper document helpers title content =
 showDocumentForSign :: (XMLGenerator m) =>
                        Document -> Bool -> XMLGenT m (HSX.XML m)
 showDocumentForSign document wassigned =
-   showDocumentPageHelper document (title document) "" $
+   showDocumentPageHelper document "" (title document) $
         if wassigned 
            then <span>Du har redan skrivit på!</span>
            else <input class="button" type="submit" name="sign" value="Skriv på!"/>

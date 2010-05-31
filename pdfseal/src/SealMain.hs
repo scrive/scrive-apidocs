@@ -18,7 +18,7 @@ ex1 = SealSpec
     , sealOutput = "1_sealed.pdf"
     , sealDocumentNumber = 1234567
     , sealPersons = 
-        [ SealPerson "Lukas Duczko" "CEO skrivaPa, Stockholm, 2010-05-31"
+        [ SealPerson "Lukas Duczko öåä ÖÅÄ" "CEO skrivaPa, Stockholm, 2010-05-31"
         , SealPerson "Gracjan Polak" "CTO skrivaPa, Stockholm, 2010-05-31"
         , SealPerson "Gracjan 2 Polak" "CTO skrivaPa, Stockholm, 2010-05-31"
         , SealPerson "Gracjan 3 Polak" "CTO skrivaPa, Stockholm, 2010-05-31"

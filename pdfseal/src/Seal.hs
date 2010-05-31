@@ -9,6 +9,7 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import Control.Monad.State.Strict
 import qualified Data.Map as Map
+import qualified Data.Char as Char
 
 data SealPerson = 
     SealPerson { sealPerson :: String
@@ -189,7 +190,7 @@ process (SealSpec
                           [a] <- importObjects seal [sealpage1] 
                           [b] <- importObjects pagin [paginpage1]
                           return [a,b] ) doc
-        pagintext =
+        pagintext = -- BS.pack $
               "BT " ++
               "0.863 0.43 0.152 0.004 k " ++
               "/SkrivaPaGS1 gs " ++
@@ -198,10 +199,11 @@ process (SealSpec
               -- "( )Tj " ++
               "6 0 0 6 189.562 19.251 Tm " ++
               "[(A)60(vt)60(al N)20(r " ++ show sealDocumentNumber ++ ")]TJ " ++
-              "6 0 0 6 349.562 19.251 Tm " ++
-              "[(s)20(kriv)55(aP)70(\345 F\366)30(r)15(s)20(egl)-20(a)65(t)]TJ " ++
+              "6 0 0 6 340.562 19.251 Tm " ++
+              "[(s)20(kriv)55(aP)70(\\345 F\\366)30(r)15(s)20(egl)-20(a)65(t)]TJ " ++
               "ET "
-        sealtext = movemtx ++
+        sealtext = --BS.pack $ 
+            movemtx ++
             "BT " ++
             "0.855 0.422 0.152 0.004 k " ++
             "/SkrivaPaGS1 gs " ++
@@ -216,9 +218,9 @@ process (SealSpec
             "ET "
         seal1text (SealPerson {sealPerson,sealPersonSmall})=
             "/SkrivaPaT1_0 10 Tf " ++
-            "[(" ++ sealPerson ++ ")] TJ " ++
+            "[(" ++ map unicodeToWinAnsi sealPerson ++ ")] TJ " ++
             "/SkrivaPaT1_0 6 Tf " ++
-            "[(" ++ sealPersonSmall ++ ")] TJ " ++
+            "[(" ++ map unicodeToWinAnsi sealPersonSmall ++ ")] TJ " ++
             "T* "
         movemtx = if length sealPersons>2
                   then "1 0 0 1 0 " ++ show ((length sealPersons-2)*15) ++ " cm "
@@ -230,3 +232,10 @@ process (SealSpec
     return ()
 
 
+unicodeToWinAnsi 'ö' = Char.chr 0o366 
+unicodeToWinAnsi 'å' = Char.chr 0o345
+unicodeToWinAnsi 'ä' = Char.chr 0o344
+unicodeToWinAnsi 'Ö' = Char.chr 0o326
+unicodeToWinAnsi 'Å' = Char.chr 0o305
+unicodeToWinAnsi 'Ä' = Char.chr 0o304
+unicodeToWinAnsi x = x
