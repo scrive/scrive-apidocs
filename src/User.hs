@@ -5,6 +5,7 @@ module User
     , module UserView
     , withUser
     , maybeSignInLink
+    , maybeSignInLink2
     , userLogin
     , Context(..)
     , isSuperUser
@@ -144,10 +145,11 @@ provideRPXNowLink = do -- FIXME it was guarded by method GET but it didn't help
     let url = "https://kontrakcja.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode serverurl
     v <- webHSP $ seeOtherXML url
     seeOther url (v)
-
+{-
 maybeSignInLink
   :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] [Char])) =>
-     Context -> String -> String -> XMLGenT m (HSX.XML m)
+     Context -> XMLGenT m (HSX.XML m) -> String -> XMLGenT m (HSX.XML m)
+-}
 maybeSignInLink (Context Nothing base) title url = do
     -- FIXME: this is very simple url handling....
     let fullurl = base ++ url
@@ -156,6 +158,15 @@ maybeSignInLink (Context Nothing base) title url = do
 maybeSignInLink (Context (Just _) base) title url = do
     let fullurl = base ++ url
     <a href=fullurl><% title %></a> 
+
+maybeSignInLink2 (Context Nothing base) title url class1 = do
+    -- FIXME: this is very simple url handling....
+    let fullurl = base ++ url
+    <a class="rpxnow" onclick="return false;" class=class1
+       href=("https://kontrakcja.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode fullurl)><% title %></a> 
+maybeSignInLink2 (Context (Just _) base) title url class1 = do
+    let fullurl = base ++ url
+    <a href=fullurl class=class1><% title %></a> 
 
 
 userLogin2 :: ServerPartT IO (Maybe User)

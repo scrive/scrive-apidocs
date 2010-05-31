@@ -190,28 +190,11 @@ renderFromBody ctx title = webHSP . pageFromBody ctx title
 
 topnavi :: (XMLGenerator m) => Bool -> Context -> String -> String -> XMLGenT m (HSX.XML m)
 topnavi True ctx title link = 
-    <table cellpadding="0" cellspacing="0" border="0">
-     <tr>
-      <td style="width: 10px; height: 10px; background: url(/theme/images/circle_tl.png);"></td>
-      <td class="bodycolorbg"></td>
-      <td style="width: 10px; height: 10px; background: url(/theme/images/circle_tr.png);"></td>
-     </tr>
-     <tr class="bodycolorbg">
-      <td></td><td class="topnavi selected"><% maybeSignInLink ctx title link %></td><td></td>
-     </tr>
-    </table>
+    -- FIXME: add active attribute here
+    maybeSignInLink2 ctx <span><% title %></span> link "active"
 
 topnavi False ctx title link = 
-    <table cellpadding="0" cellspacing="0" border="0">
-     <tr>
-      <td style="width: 10px; height: 10px;"></td>
-      <td></td>
-      <td style="width: 10px; height: 10px;"></td>
-     </tr>
-     <tr>
-      <td></td><td  class="topnavi"><% maybeSignInLink ctx title link %></td><td></td>
-     </tr>
-    </table>
+    maybeSignInLink2 ctx <span><% title %></span> link ""
 
 pageFromBody :: (EmbedAsChild (HSPT' IO) xml) => Context -> String -> xml -> HSP XML
 pageFromBody ctx@(Context maybeuser hostpart) title body =
@@ -224,12 +207,9 @@ pageFromBody ctx@(Context maybeuser hostpart) title body =
      </head>
      <body>
       <div id="headerContainer">
-        <div>
-         <div>
-          <img src="/theme/images/logosmall.png" height="40"/>
-          <span class="contactabout"><a href="About">Om oss</a></span>
-         </div>
-
+        <img class="logosmall"src="/theme/images/logosmall.png" height="40"/>
+        <span class="contactabout"><a href="About">Om oss</a></span>
+        <div id="headerContainer2">
          <div id="nav">
           <ul>
            <li><% topnavi False ctx "Skapa" "/" %></li>
