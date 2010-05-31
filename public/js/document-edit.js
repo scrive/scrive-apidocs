@@ -25,33 +25,6 @@ function signatoryadd()
     var li = $("#signatory_template").clone();
     signatorylist.append(li);
     li.slideDown();
-    /*
-      '<li>' +
-      '<label>Full name:</label><br>' + 
-      '<input name="signatoryname" type="text" value=""><br>' +
-      '<label>Company:</label><br>' +
-      '<input name="signatorycompany" type="text" value=""><br>' +
-      '<label>Email:</label><br>' +
-      '<input name="signatoryemail" type="text" value=""><br>' +
-      '<a onclick="signatoryremove(this)" href="#">Remove</a>' +
-      '</li>');
-    */
-    /*
-    var li = signatorylist.children("li:last");
-    var newid = getUniqueId();
-    li.attr("id",newid);
-    var cls = "uuu-" + newid;
-    li.find(".draggableBox").addClass(cls);
-    li.data("draggableBoxClass",cls);
-    var nameinput = li.find("input.signatoryname");
-    nameinput.bind( "change keyup",
-                    function() {
-                         var db = $("." + cls);
-                         db.html($(this).val());
-                         });
-
-    addDraggableOverChildren(li);
-    */
     return false;
 }
 
@@ -64,19 +37,54 @@ function signatoryremove(node)
   db.fadeOut('slow',function() { $(this).remove(); });
   return false;
 }
+ 
+$(document).ready( function () {
 
-addDraggableOverChildren("body");
+ $("#dialog-confirm-signinvite").hide();
+ $("#dialog-confirm-sign").hide();
+ $("#signinvite").click(function() {
+         $("#dialog-confirm-signinvite").dialog({
+                 resizable: false,
+                     height: 340,
+                     width: 350,
+                     modal: true,
+                     buttons: {
+                     'Bekräfta': function() {
+                         // FIXME: should have 'final' here but I don't know how to put in
+                         // in succesful set of the form
+                         document.form['final2'].value = 'something';
+                         $("#form").submit();
+                     },
+                         'Avbryt': function() {
+                             $(this).dialog('close');
+                         }
+                 }
+             });
 
-$("#dropBox").droppable({
-        tolerance: "fit",
-            drop: function (event,ui) {
-            var x = ui.draggable.clone(false);
-            $(this).append(x);
-            x.css("position","absolute");
-            x.offset(ui.offset);
-            // to make it not copy the object many times
-            x.draggable({scope: "somethingelse"});
-            x.append("<input type='hidden' value='1,1' name='position'>");
-            return true;
-        }
+         return false;});
+
+ $("#sign").click(function() {
+         $("#dialog-confirm-sign").dialog({
+                 resizable: false,
+                     height: 140,
+                     width: 350,
+                     modal: true,
+                     buttons: {
+                     'Bekräfta': function() {
+                         // FIXME: should have 'final' here but I don't know how to put in
+                         // in succesful set of the form
+                         document.form['sign2'].value = 'something';
+                         $("#form").submit();
+                     },
+                         'Avbryt': function() {
+                             $(this).dialog('close');
+                         }
+                 }
+             });
+         
+         return false;});
+
     });
+
+
+

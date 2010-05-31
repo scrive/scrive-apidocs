@@ -131,11 +131,11 @@ showSignatoryEntryForEdit (SignatoryLink{signatoryname,signatorycompany,signator
 showSignatoryEntryForEdit2 :: (XMLGenerator m) => String -> String -> String -> String -> XMLGenT m (HSX.XML m)
 showSignatoryEntryForEdit2 idx signatoryname signatorycompany signatoryemail = 
     <li id=idx>
-      <label>För- och efternamn:</label><br/> 
+      <label>Namn på den du vill skriva avtal med</label><br/> 
       <input name="signatoryname" type="text" value=signatoryname/><br/>
-      <label>Företag:</label><br/>
+      <label>Företag</label><br/>
       <input name="signatorycompany" type="text" value=signatorycompany/><br/>
-      <label>Email:</label><br/>
+      <label>Personens email</label><br/>
       <input name="signatoryemail" type="text" value=signatoryemail/><br/>
       <a onclick="signatoryremove(this)" href="#">Ta bort</a>
       {- days to sign:
@@ -178,7 +178,7 @@ showDocument document =
                   </span>
                 , <script type="text/javascript" src="/js/document-edit.js"/>
                 ]
-   in showDocumentPageHelper document helper (title document)  
+   in showDocumentPageHelper ("/issue/" ++ show (documentid document)) document helper (title document)  
       <div>
        <div>Personer:<br/>
 
@@ -199,7 +199,8 @@ showDocument document =
          <% 
            if (status document==Preparation) 
               then <span>
-                    <input class="bigbutton" type="submit" name="final" value="Skriv på och bjud in"/>
+                    <input class="bigbutton" type="submit" name="final" value="Skriv på och bjud in" id="signinvite"/>
+                    <input type="hidden" name="final2" value=""/>
                     <br/>
                     <input class="button" type="submit" name="save" value="Spara till senare"/>
                    </span>
@@ -208,11 +209,11 @@ showDocument document =
        </div>
       </div>
 
-showDocumentPageHelper document helpers title content =
+showDocumentPageHelper action document helpers title content =
    <div> 
    <br/>
    <% helpers %>
-   <form method="post"> 
+   <form method="post" id="form" name="form" action=action> 
     <table class="docview">
      <tr>
       <td>
@@ -226,16 +227,59 @@ showDocumentPageHelper document helpers title content =
      </tr>
     </table> 
    </form>
+   <div id="dialog-confirm-signinvite" title="BEKRÄFTA">
+	<p> När du bekräftat avtalet kommer en automatisk inbjudan att skickas till "Mr X". 
+            Avtalet blir juridiskt bindande när båda parter undertecknat och det är först då vi tar betalt. 
+            Vi fakturerar månadsvis. Era fakturauppgifter:</p>
+
+            <div class="inlinebox">
+            Referens: ”Name of author” <br/>
+            Företag: ”Name of company” <br/>
+            Org nr: ”Company reg nr” <br/>
+            Adress: ”Company adress” <br/>
+            Pris: ”20 SEK exkl moms” <br/>
+            </div>
+
+        <p>Är du säker på att du vill underteckna avtalet?</p>
+
+{- <span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>
+             These items will be permanently deleted and cannot be recovered. Are you sure?
+-}
+   </div>
+   <div id="dialog-confirm-sign" title="BEKRÄFTA">
+        <p>Är du säker på att du vill underteckna avtalet?</p>
+
+{- <span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>
+             These items will be permanently deleted and cannot be recovered. Are you sure?
+-}
+   </div>
+
    </div>
 
 
 showDocumentForSign :: (XMLGenerator m) =>
-                       Document -> Bool -> XMLGenT m (HSX.XML m)
-showDocumentForSign document wassigned =
-   showDocumentPageHelper document "" (title document) $
+                       String -> Document -> Bool -> XMLGenT m (HSX.XML m)
+showDocumentForSign action document wassigned =
+   let helper = jquery ++ [ <script type="text/javascript" src="/js/document-edit.js"/>
+                          ]
+       authorname = "XX"
+       invitedname = "YY"
+   in showDocumentPageHelper action document helper (title document) $
         if wassigned 
            then <span>Du har redan skrivit på!</span>
-           else <input class="button" type="submit" name="sign" value="Skriv på!"/>
+           else <span>
+                {- <p>Hej ”name of invited”</p> -}
+
+                <p>Genom skrivaPå kan du underteckna juridiskt bindande avtal online. Avtalet på vänster sida är avtalet <% title document %> som <% authorname %> har bjudit in dig att underteckna. Du zoomar in genom att klicka på förstoringsglaset. Du undertecknar genom att klicka ”Underteckna” nedan. </p>
+
+                <p>Det är olagligt att underteckna i annans namn och vi anmäler alla misstänkta fall av urkundsförfalskning. Därför ska du under inga som helst omständigheter underteckna om du inte är <% invitedname %>.</p>
+
+{- Avvisa - gray FIXME -}
+                <p>Klicka här om du vill veta mer om skrivaPå innan du undertecknar.</p>
+
+                   <input type="hidden" name="sign2" value=""/>
+                   <input class="button" type="submit" name="sign" value="Underteckna" id="sign"/>
+                </span>
 
 poweredBySkrivaPaPara :: (XMLGenerator m) => XMLGenT m (HSX.XML m)
 poweredBySkrivaPaPara = 

@@ -112,8 +112,8 @@ signDoc :: (ServerMonad m, MonadPlus m, MonadIO m, FilterMonad Response m) =>
 signDoc ctx@(Context (Just user@User{userid}) hostpart) documentid 
                signatorylinkid1 = do
   time <- liftIO $ getMinutesTime
-  maybepressed <- getDataFn (look "sign")
-  when (not (isJust maybepressed)) mzero -- quit here
+  maybepressed <- getDataFn (look "sign" `mplus` look "sign2" `mplus` return "")
+  when (Prelude.null (fromJust maybepressed)) mzero -- quit here
   
   Just document <- update $ SignDocument documentid userid signatorylinkid1 time
   let isallsigned = all f (signatorylinks document)
@@ -137,7 +137,7 @@ handleSignShow ctx@(Context (Just user@User{userid}) hostpart) documentid
           let wassigned = any f (signatorylinks document)
               f (SignatoryLink {signatorylinkid,maybesigninfo}) = 
                   isJust maybesigninfo && signatorylinkid == signatorylinkid1
-          webHSP (pageFromBody ctx kontrakcja (showDocumentForSign document wassigned))
+          webHSP (pageFromBody ctx kontrakcja (showDocumentForSign ("/sign/" ++ show documentid ++ "/" ++ show signatorylinkid1) document wassigned))
        ]
 
 handleIssue :: Context -> ServerPartT IO Response
@@ -176,16 +176,18 @@ getAndConcat field = do
 
 updateDocument :: Context -> Document -> ServerPartT IO Document  
 updateDocument ctx document = do
+  liftIO $ print "zonk"
   signatories <- getAndConcat "signatoryname"
   signatoriescompanies <- getAndConcat "signatorycompany"
   signatoriesemails <- getAndConcat "signatoryemail"
 
   doc2 <- update $ UpdateDocumentSignatories document 
           signatories signatoriescompanies signatoriesemails
-  maybefinal <- getDataFn $ look "final"
+  final <- getDataFn $ (look "final" `mplus` look "final2" `mplus` return "")
   maybeshowvars <- getDataFn $ look "showvars"
   when (isJust maybeshowvars) $ mzero
-  if isJust maybefinal
+  liftIO $ print final
+  if not (Data.List.null (fromJust final))
      then do
           liftIO $ doctransPreparation2ReadyToSign ctx doc2
           return doc2
