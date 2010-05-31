@@ -157,9 +157,31 @@ body {
    text-transform: uppercase;
    background-color: #005794;
    font-family: Verdana;
-   font-weight: bold;
-   font-size: xx-small;
    border: none;
+   text-align: center;
+   vertical-align: center;
+   margin: 6px;
+   padding: 0px 7px;
+
+   font-size: xx-small;
+   font-weight: bold;
+   height: 20px;
+}
+
+.secbutton {
+   color: white;
+   text-transform: uppercase;
+   background-color: gray;
+   font-family: Verdana;
+   border: none;
+   text-align: center;
+   vertical-align: center;
+   margin: 6px;
+   padding: 0px 7px;
+
+   font-size: xx-small;
+   font-weight: bold;
+   height: 20px;
 }
 
 .bigbutton {
@@ -167,11 +189,16 @@ body {
    text-transform: uppercase;
    background-color: #005794;
    font-family: Verdana;
-   font-weight: bold;
-   font-size: x-small;
-   height: 3em;
-   width: 100%;
    border: none;
+   text-align: center;
+   vertical-align: center;
+   margin: 6px;
+   padding: 0px 7px;
+
+   font-size: x-small;
+   font-weight: bold;
+   height: 35px;
+   width: 185px;
 }
 
 #documentBox {

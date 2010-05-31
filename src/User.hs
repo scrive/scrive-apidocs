@@ -1,8 +1,6 @@
 {-# OPTIONS_GHC -F -pgmFtrhsx #-}
 module User 
-    ( module UserControl
-    , module UserState
-    , module UserView
+    ( module UserState
     , withUser
     , maybeSignInLink
     , maybeSignInLink2
@@ -12,9 +10,7 @@ module User
     )
     where
 
-import UserControl
 import UserState
-import UserView
 import Session
 import Happstack.Server
 import Happstack.Server.HStringTemplate (webST)

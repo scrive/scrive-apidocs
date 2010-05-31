@@ -28,6 +28,7 @@ import Control.Monad.Reader
 import DocState
 import UserState
 import Happstack.Util.Common
+import UserControl
 
 appHandler :: ServerPartT IO Response
 appHandler = do
@@ -39,13 +40,14 @@ appHandler = do
   let ctx = Context maybeuser hostpart
   
   msum $
-    [ nullDir >> webHSP (pageFromBody ctx kontrakcja (welcomeBody ctx))
+    [ nullDir >> webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx))
     , dir "sign" (withUser maybeuser (DocControl.handleSign ctx))
     , dir "issue" (withUser maybeuser (DocControl.handleIssue ctx))
     , dir "pages" $ path $ \fileid -> path $ \pageno -> 
                                       do
                                         modminutes <- query $ FileModTime fileid
                                         DocControl.showPage ctx modminutes fileid pageno
+    , dir "account" (withUser maybeuser (UserControl.handleUser ctx))
     , dir "logout" (handleLogout)]
     ++ (if isSuperUser maybeuser then 
             [ dir "stats" $ statsPage
@@ -53,7 +55,7 @@ appHandler = do
             ]
        else [])
     ++ [ fileServe [] "public"
-    , webHSP (pageFromBody ctx kontrakcja (errorReport ctx rq))
+    , webHSP (pageFromBody ctx TopNone kontrakcja (errorReport ctx rq))
     ]
     
 handleLogout :: ServerPartT IO Response

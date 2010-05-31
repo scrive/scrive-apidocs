@@ -20,11 +20,20 @@ import qualified Data.ByteString.UTF8 as BSC
 import Network.HTTP (urlEncode)
 import Data.Time
 import UserState
+import Misc
+import AppView
+import User
 
-showUser user = 
-    <div>
-     <h1>Settings</h1>
-     <p>Your name: <% BSC.toString (fullname user) %></p>
-     <p>Your email address: <% BSC.toString (email user) %></p>
+showUser ctx@(Context (Just user) _) = 
+    webHSP $ pageFromBody ctx TopAccount kontrakcja $ 
+    <div class="doctable">
+     <h1>Welcome <% fullname user %></h1>
+      <div class="inlinebox">
+       <p>Your name: <% fullname user %></p>
+       <p>Your email address: <% email user %></p>
+       <p>Företagsnamn: <% usercompanyname user %></p>
+       <p>Organisationsnummer: <% usercompanynumber user %></p>
+       <p>Faktureringsadress: <% userinvoiceaddress user %></p>
+      </div>
     </div>
   

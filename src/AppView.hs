@@ -22,6 +22,10 @@ import User
 import Network.HTTP (urlEncode)
 import Data.Time
 
+
+data TopMenu = TopNew | TopDocument | TopAccount | TopNone
+             deriving (Eq,Ord)
+
 instance (XMLGenerator m) => (EmbedAsChild m 
                               User) where
   asChild user = <% BS.toString (fullname user) ++ " <" ++ 
@@ -94,7 +98,7 @@ welcomeBody (Context (Just _) hostpart) =
    <form action="/issue" method="post" enctype="multipart/form-data">
     <span class="small">Ladda upp dokument</span><br/>
     <input type="file" name="doc"/>
-    <input class="bigbutton" type="submit" value="Skapa"/>
+    <input class="button" type="submit" value="Skapa"/>
    </form>
    <hr/>
 
@@ -185,8 +189,8 @@ dateStr ct =
 
 -- * Main Implementation
 
-renderFromBody :: (MonadIO m, EmbedAsChild (HSPT' IO) xml) => Context -> String -> xml -> m Response
-renderFromBody ctx title = webHSP . pageFromBody ctx title
+renderFromBody :: (MonadIO m, EmbedAsChild (HSPT' IO) xml) => Context -> TopMenu -> String -> xml -> m Response
+renderFromBody ctx topmenu title = webHSP . pageFromBody ctx topmenu title
 
 topnavi :: (XMLGenerator m) => Bool -> Context -> String -> String -> XMLGenT m (HSX.XML m)
 topnavi True ctx title link = 
@@ -196,8 +200,8 @@ topnavi True ctx title link =
 topnavi False ctx title link = 
     maybeSignInLink2 ctx <span><% title %></span> link ""
 
-pageFromBody :: (EmbedAsChild (HSPT' IO) xml) => Context -> String -> xml -> HSP XML
-pageFromBody ctx@(Context maybeuser hostpart) title body =
+pageFromBody :: (EmbedAsChild (HSPT' IO) xml) => Context -> TopMenu -> String -> xml -> HSP XML
+pageFromBody ctx@(Context maybeuser hostpart) topMenu title body =
     withMetaData html4Strict $
     <html>
      <head>
@@ -213,9 +217,9 @@ pageFromBody ctx@(Context maybeuser hostpart) title body =
         <div id="headerContainer2">
          <div id="nav">
           <ul>
-           <li><% topnavi False ctx "Skapa" "/" %></li>
-           <li><% topnavi True ctx "Dokument" "/issue" %></li>
-           <li><% topnavi False ctx "Konto" "/account" %></li>
+           <li><% topnavi (topMenu== TopNew) ctx "Skapa" "/" %></li>
+           <li><% topnavi (topMenu== TopDocument) ctx "Dokument" "/issue" %></li>
+           <li><% topnavi (topMenu== TopAccount) ctx "Konto" "/account" %></li>
           </ul>
          </div>
         </div>
@@ -281,7 +285,8 @@ statsPageView nusers ndocuments users =
        <select name="user">
         <% map showUserOption users %>
        </select>
-       <input class="button" type="submit" value="Become"/>
+       <input class="secbutton" type="submit" value="Become"/>
       </form>
      </body>
     </html>
+

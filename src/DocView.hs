@@ -202,7 +202,7 @@ showDocument document =
                     <input class="bigbutton" type="submit" name="final" value="Skriv på och bjud in" id="signinvite"/>
                     <input type="hidden" name="final2" value=""/>
                     <br/>
-                    <input class="button" type="submit" name="save" value="Spara till senare"/>
+                    <input class="secbutton" type="submit" name="save" value="Spara till senare"/>
                    </span>
               else <span/>
           %>
@@ -278,7 +278,7 @@ showDocumentForSign action document wassigned =
                 <p>Klicka här om du vill veta mer om skrivaPå innan du undertecknar.</p>
 
                    <input type="hidden" name="sign2" value=""/>
-                   <input class="button" type="submit" name="sign" value="Underteckna" id="sign"/>
+                   <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign"/>
                 </span>
 
 poweredBySkrivaPaPara :: (XMLGenerator m) => XMLGenT m (HSX.XML m)

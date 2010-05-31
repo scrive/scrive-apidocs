@@ -104,7 +104,7 @@ handleSign
 handleSign ctx@(Context (Just user) hostpart) = 
     path (\documentid -> path $ handleSignShow ctx documentid) `mplus` do
     documents <- query $ GetDocumentsBySignatory (userid user) 
-    webHSP (pageFromBody ctx kontrakcja (listDocuments documents))
+    webHSP (pageFromBody ctx TopNone kontrakcja (listDocuments documents))
 
 signDoc :: (ServerMonad m, MonadPlus m, MonadIO m, FilterMonad Response m) =>
            Context -> DocumentID -> SignatoryLinkID -> m Response
@@ -137,7 +137,7 @@ handleSignShow ctx@(Context (Just user@User{userid}) hostpart) documentid
           let wassigned = any f (signatorylinks document)
               f (SignatoryLink {signatorylinkid,maybesigninfo}) = 
                   isJust maybesigninfo && signatorylinkid == signatorylinkid1
-          webHSP (pageFromBody ctx kontrakcja (showDocumentForSign ("/sign/" ++ show documentid ++ "/" ++ show signatorylinkid1) document wassigned))
+          webHSP (pageFromBody ctx TopNone kontrakcja (showDocumentForSign ("/sign/" ++ show documentid ++ "/" ++ show signatorylinkid1) document wassigned))
        ]
 
 handleIssue :: Context -> ServerPartT IO Response
@@ -151,7 +151,7 @@ handleIssueShow
   :: Context -> DocumentID -> ServerPartT IO Response
 handleIssueShow ctx@(Context (Just user) hostpart) documentid = do
   Just document <- query $ GetDocumentByDocumentID documentid
-  msum [ methodM GET >> webHSP (pageFromBody ctx kontrakcja (showDocument document))
+  msum [ methodM GET >> webHSP (pageFromBody ctx TopDocument kontrakcja (showDocument document))
        , do
            methodM POST
            doc2 <- updateDocument ctx document
@@ -199,7 +199,7 @@ updateDocument ctx document = do
 handleIssueGet :: (MonadIO m) => Context -> m Response
 handleIssueGet ctx@(Context (Just user) hostpart) = do
     documents <- query $ GetDocumentsByAuthor (userid user) 
-    webHSP (pageFromBody ctx kontrakcja (listDocuments documents))
+    webHSP (pageFromBody ctx TopDocument kontrakcja (listDocuments documents))
 
 gs :: String
 #ifdef WINDOWS
