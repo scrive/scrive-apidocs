@@ -221,7 +221,9 @@ showDocumentPageHelper action document helpers title content =
        <% showDocumentBox document %>
       </td>
       <td> 
-       <p class="headline"><% title %></p>
+       <p class="headline"><% title %> 
+           <a href=("/issue/" ++ show (documentid document) ++ "/" ++ BS.toString title ++ ".pdf") target="_blank"> (Open as PDF)</a>
+       </p>
        <% content %>
       </td>
      </tr>

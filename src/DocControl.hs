@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP, ScopedTypeVariables #-}
 
 module DocControl where
 import DocView
@@ -49,8 +49,9 @@ doctransPreparation2ReadyToSign ctx doc = do
 doctransReadyToSign2Closed :: Context -> Document -> IO ()
 doctransReadyToSign2Closed ctx doc = do
   update $ UpdateDocumentStatus doc Closed
+  Just user <- query $ FindUserByUserID (unAuthor (author doc))
   liftIO $ forkIO $ do
-    mapM_ forkedSealFile (files doc) 
+    sealDocument user doc
     sendClosedEmails ctx doc
   return ()
 
@@ -158,6 +159,15 @@ handleIssueShow ctx@(Context (Just user) hostpart) documentid = do
            let link = hostpart ++ "/issue/" ++ show documentid
            response <- webHSP (seeOtherXML link)
            seeOther link response
+       , path $ \(_title::String) -> methodM GET >> do
+           let file = head (files document)
+           let contents = filepdf file
+           let res = Response 200 M.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
+           let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
+           -- let modtime = toUTCTime modminutes
+           -- rq <- askRq                 -- FIXME: what?
+           -- return $ ifModifiedSince modtime rq res2
+           return res2
        ]
 
 -- | Useful inside the RqData monad.  Gets the named input parameter
@@ -250,34 +260,41 @@ forkedHandleDocumentUpload docid content filename = do
       update $ AttachFile docid filename2 contentx jpgpages
 
 
-sealFile :: BS.ByteString -> Int -> [()] -> IO BS.ByteString
-sealFile content docid persons = do
+personsFromDocument document = 
+    let
+        -- FIXME: add the issuer here
+        links = signatorylinks document
+        x (SignatoryLink{signatoryname,signatorycompany}) = SealPerson (BS.toString signatoryname) (BS.toString signatorycompany)
+    in map x links
+
+sealDocument :: User -> Document -> IO ()
+sealDocument author@(User {fullname,usercompanyname}) document = do
+  let (file@File {fileid,filename,filepdf,filejpgpages}) = head $ files document
+  let docid = unDocumentID (documentid document)
+  let persons = SealPerson (BS.toString fullname) (BS.toString usercompanyname) : personsFromDocument document
   tmppath <- getTemporaryDirectory
   let tmpin = tmppath ++ "/in_" ++ show docid ++ ".pdf"
   let tmpout = tmppath ++ "/out_" ++ show docid ++ ".pdf"
-  BS.writeFile tmpin content
+  BS.writeFile tmpin filepdf
   let sealproc = (proc "dist/build/pdfseal/pdfseal" []) {std_in = CreatePipe}
   (Just inx, _, _, sealProcHandle) <- createProcess sealproc
   let config = SealSpec 
             { sealInput = tmpin
             , sealOutput = tmpout
             , sealDocumentNumber = docid
-            , sealPersons = []
+            , sealPersons = persons
             }
   hPutStr inx (show config)
   hClose inx
   
   waitForProcess sealProcHandle
-  newcontent <- BS.readFile tmpout
+  newfilepdf <- BS.readFile tmpout
   -- FIXME: delete old files
-  return newcontent
+  newfilejpegpages <- convertPdfToJpgPages (BSL.fromChunks [newfilepdf])
+  let newfile = file {filepdf = newfilepdf, filejpgpages = newfilejpegpages}
+  update $ ReplaceFile newfile
+  return ()
   
-
-forkedSealFile (file@File {fileid,filename,filepdf,filejpgpages}) = do
-      newfilepdf <- sealFile filepdf 1345646 []
-      newfilejpegpages <- convertPdfToJpgPages (BSL.fromChunks [newfilepdf])
-      let newfile = file {filepdf = newfilepdf, filejpgpages = newfilejpegpages}
-      update $ ReplaceFile newfile
 
 
 basename :: String -> String

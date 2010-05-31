@@ -24,8 +24,8 @@ import Control.Monad.Trans
 
 $(deriveAll [''Eq, ''Ord, ''Default]
   [d|
-      newtype Author = Author UserID
-      newtype DocumentID = DocumentID Int
+      newtype Author = Author { unAuthor :: UserID }
+      newtype DocumentID = DocumentID { unDocumentID :: Int }
       newtype SignatoryLinkID = SignatoryLinkID Int
       newtype FileID = FileID Int
 
