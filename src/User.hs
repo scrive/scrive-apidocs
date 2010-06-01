@@ -152,8 +152,7 @@ maybeSignInLink (Context Nothing base) title url = do
     <a class="rpxnow" onclick="return false;"
        href=("https://kontrakcja.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode fullurl)><% title %></a> 
 maybeSignInLink (Context (Just _) base) title url = do
-    let fullurl = base ++ url
-    <a href=fullurl><% title %></a> 
+    <a href=url><% title %></a> 
 
 maybeSignInLink2 (Context Nothing base) title url class1 = do
     -- FIXME: this is very simple url handling....
@@ -161,8 +160,7 @@ maybeSignInLink2 (Context Nothing base) title url class1 = do
     <a class=("rpxnow " ++ class1) onclick="return false;" class=class1
        href=("https://kontrakcja.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode fullurl)><% title %></a> 
 maybeSignInLink2 (Context (Just _) base) title url class1 = do
-    let fullurl = base ++ url
-    <a href=fullurl class=class1><% title %></a> 
+    <a href=url class=class1><% title %></a> 
 
 
 userLogin2 :: ServerPartT IO (Maybe User)
