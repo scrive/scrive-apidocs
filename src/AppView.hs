@@ -21,6 +21,12 @@ import qualified Data.ByteString.UTF8 as BSC
 import User
 import Network.HTTP (urlEncode)
 import Data.Time
+import qualified Data.Map as Map
+
+instance (XMLGenerator m) => (EmbedAsChild m 
+                              HeaderPair) where
+  asChild (HeaderPair name value) = <% <p> <% BS.toString name ++ ": " ++ 
+                 show value  %> </p> %>	
 
 
 data TopMenu = TopNew | TopDocument | TopAccount | TopNone
@@ -138,6 +144,10 @@ errorReport (Context maybeuser _) request =
            Nothing -> <p>Not logged in</p>
    %>
    <p><% request %></p>
+   <p>HTTP Headers:</p>
+   <p><% Map.elems (rqHeaders request) %></p> 
+   <p>HTTP Cookies:</p>
+   <p><% map show $ rqCookies request %></p> 
   </div>  
 
 {-
