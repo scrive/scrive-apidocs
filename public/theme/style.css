@@ -42,7 +42,7 @@ body {
   padding: 50px 40px 0 0;
   text-align: center;
 
-  width: 400px !important;
+  width: 340px !important;
 }
 
 #nav ul {
@@ -202,6 +202,8 @@ body {
    vertical-align: center;
    margin: 6px;
    padding: 0px 7px;
+   display: block;
+   margin-left: auto;
 
    font-size: xx-small;
    font-weight: bold;
@@ -218,6 +220,8 @@ body {
    vertical-align: center;
    margin: 6px;
    padding: 0px 7px;
+   display: block;
+   margin-left: auto;
 
    font-size: xx-small;
    font-weight: bold;
@@ -234,6 +238,8 @@ body {
    vertical-align: center;
    margin: 6px;
    padding: 0px 7px;
+   display: block;
+   margin-left: auto;
 
    font-size: x-small;
    font-weight: bold;
