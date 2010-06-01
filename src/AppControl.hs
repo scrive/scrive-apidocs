@@ -29,12 +29,14 @@ import DocState
 import UserState
 import Happstack.Util.Common
 import UserControl
+import Data.Maybe
 
 appHandler :: ServerPartT IO Response
 appHandler = do
   rq <- askRq
   let Just host = getHeader "host" rq
-  let hostpart = "http://" ++ BSC.toString host
+  let hostpart = "http://" ++ (BSC.toString $
+                 fromJust (getHeader "host2" rq `mplus` getHeader "host" rq))
   
   maybeuser <- userLogin
   let ctx = Context maybeuser hostpart
