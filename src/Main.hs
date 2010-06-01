@@ -70,7 +70,7 @@ main = withLogger $ do
   args <- getArgs
 
   appConf <- case parseConfig args of
-    (Left e) -> do logM progName ERROR (unlines e)
+    (Left e) -> do logM "Happstack.Server" ERROR (unlines e)
                    exitFailure
     (Right f) -> return (f $ defaultConf progName)
   
