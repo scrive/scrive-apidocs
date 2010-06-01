@@ -58,28 +58,68 @@ body {
 #nav li a {
   //background: url("/theme/images/ButtonTOP.png") no-repeat scroll right top transparent;
   float: left;
-  padding-right: 13px;
+  //padding-right: 13px;
   text-decoration: none;
 }
+
+/*
 #nav li a:hover, #nav .active, #nav .active span, #nav li a:hover span {
-  background:url("/theme/images/ButtonTOP.png") no-repeat scroll right bottom transparent;
+  background: #fcfcfc url("/theme/images/ButtonTOP.png") no-repeat scroll right bottom transparent;
   color: #9fb3b5;
   font-size: 22px;
 }
+*/
 #nav li a span {
   //background: url("/theme/images/ButtonTOP.png") no-repeat scroll left top transparent;
   //color: #FFFFFF;
   cursor: pointer;
-  display: block;
-  font-size: 18px;
-  height: 40px;
+  //display: block;
+  font-size: 14px;
+  //height: 40px;
   line-height: 40px;
-  padding: 0 0 0 13px;
+  //padding: 0 0 0 13px;
+  padding-bottom: 10px; 
   text-decoration: none;
   text-transform: uppercase;
-  font-weight: bold;
-  color: #fafafa;
+  //font-weight: bold;
+  color: #ffffff;
 }
+
+#nav .activeleft
+{
+  padding-left: 20px;
+  //background: url("/theme/images/ButtonTOP.png") no-repeat scroll left top transparent;
+}
+#nav .activeright
+{
+  padding-right: 20px;
+  //background: url("/theme/images/ButtonTOP.png") no-repeat scroll right top transparent;
+}
+#nav .activemid
+{
+  //background: #fcfcfc;
+  //color: #969696;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+#nav .inactiveleft
+{
+  padding-left: 20px;
+}
+#nav .inactiveright
+{
+  padding-right: 20px;
+}
+#nav .inactivemid
+{
+}
+
+#nav .inactivemid:hover
+{
+  font-size: 110%;
+}
+
 
 .para {
   text-align: justify;

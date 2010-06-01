@@ -158,7 +158,7 @@ maybeSignInLink (Context (Just _) base) title url = do
 maybeSignInLink2 (Context Nothing base) title url class1 = do
     -- FIXME: this is very simple url handling....
     let fullurl = base ++ url
-    <a class="rpxnow" onclick="return false;" class=class1
+    <a class=("rpxnow " ++ class1) onclick="return false;" class=class1
        href=("https://kontrakcja.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode fullurl)><% title %></a> 
 maybeSignInLink2 (Context (Just _) base) title url class1 = do
     let fullurl = base ++ url
