@@ -24,7 +24,8 @@ function signatoryadd()
     var signatorylist = $( "#signatorylist" );
     var li = $("#signatory_template").clone();
     signatorylist.append(li);
-    li.slideDown();
+    li.hide();
+    li.slideDown("slow");
     return false;
 }
 
@@ -33,7 +34,7 @@ function signatoryremove(node)
   var li = $(node).parent();
   var cls = li.data("draggableBoxClass");
   var db = $("." + cls);
-  li.fadeOut('slow',function() { $(this).remove(); });
+  li.slideUp('slow',function() { $(this).remove(); });
   db.fadeOut('slow',function() { $(this).remove(); });
   return false;
 }

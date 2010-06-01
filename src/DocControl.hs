@@ -156,7 +156,7 @@ handleIssueShow ctx@(Context (Just user) hostpart) documentid = do
        , do
            methodM POST
            doc2 <- updateDocument ctx document
-           let link = hostpart ++ "/issue/" ++ show documentid
+           let link = hostpart ++ "/issue" -- ++ show documentid
            response <- webHSP (seeOtherXML link)
            seeOther link response
        , path $ \(_title::String) -> methodM GET >> do
@@ -186,7 +186,6 @@ getAndConcat field = do
 
 updateDocument :: Context -> Document -> ServerPartT IO Document  
 updateDocument ctx document = do
-  liftIO $ print "zonk"
   signatories <- getAndConcat "signatoryname"
   signatoriescompanies <- getAndConcat "signatorycompany"
   signatoriesemails <- getAndConcat "signatoryemail"
@@ -196,7 +195,6 @@ updateDocument ctx document = do
   final <- getDataFn $ (look "final" `mplus` look "final2" `mplus` return "")
   maybeshowvars <- getDataFn $ look "showvars"
   when (isJust maybeshowvars) $ mzero
-  liftIO $ print final
   if not (Data.List.null (fromJust final))
      then do
           liftIO $ doctransPreparation2ReadyToSign ctx doc2
@@ -304,7 +302,7 @@ basename filename =
       _ -> fst (span ((/=) '.') filename) -- FIXME: tak care of many dots in file name
 
 handleIssuePost
-  :: (ServerMonad m, MonadIO m) => Context -> m Response
+  :: (ServerMonad m, MonadIO m,FilterMonad Response m) => Context -> m Response
 handleIssuePost ctx@(Context (Just user) hostpart) = do
   maybeupload <- getDataFn (lookInput "doc")
   case maybeupload of
@@ -314,9 +312,13 @@ handleIssuePost ctx@(Context (Just user) hostpart) = do
           let title = BS.fromString (basename filename) 
           doc <- update $ NewDocument (userid user) title ctime
           liftIO $ forkedHandleDocumentUpload (documentid doc) content filename
-          return ()
-    _ -> return ()
-  handleIssueGet ctx
+          let link = hostpart ++ "/issue/" ++ show (documentid doc)
+          response <- webHSP (seeOtherXML link)
+          seeOther link response
+    _ -> do
+      let link = hostpart ++ "/issue"
+      response <- webHSP (seeOtherXML link)
+      seeOther link response
 
 
 showPage :: Context -> MinutesTime -> FileID -> Int -> ServerPartT IO Response

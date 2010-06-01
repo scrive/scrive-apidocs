@@ -7,6 +7,7 @@ import Data.List
 import DocState
 import HSP
 import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString as BS
 import qualified HSX.XMLGenerator as HSX (XML)
 import qualified HSX.XMLGenerator
 import User
@@ -137,7 +138,7 @@ showSignatoryEntryForEdit2 idx signatoryname signatorycompany signatoryemail =
       <input name="signatorycompany" type="text" value=signatorycompany/><br/>
       <label>Personens email</label><br/>
       <input name="signatoryemail" type="text" value=signatoryemail/><br/>
-      <a onclick="signatoryremove(this)" href="#">Ta bort</a>
+      <a onclick="return signatoryremove(this);" href="#">Ta bort</a>
       {- days to sign:
          Antal dagar att skriva på -}
     </li>
@@ -164,6 +165,16 @@ showDocumentBox document =
         <% map showFileImages (files document) %>
     </div>
 
+
+emptyLink = SignatoryLink 
+          { signatorylinkid = SignatoryLinkID 0
+          , signatoryname = BS.empty
+          , signatorycompany = BS.empty
+          , signatoryemail = BS.empty
+          , maybesignatory = Nothing
+          , maybesigninfo  = Nothing
+          , maybeseentime  = Nothing
+          }
 {- showDocument
   :: (EmbedAsChild m [Char], EmbedAsAttr m (Attr [Char] [Char])) =>
      Document -> XMLGenT m (HSX.XML m)
@@ -185,9 +196,10 @@ showDocument document =
         <% if status document == Preparation
            then <span>
               <ol id="signatorylist">
-               <% map showSignatoryEntryForEdit (signatorylinks document) %>
+               <% map showSignatoryEntryForEdit (if null (signatorylinks document)
+                                                 then [emptyLink] else signatorylinks document) %>
               </ol>
-              <a onclick="signatoryadd()" href="#">Skapa inbjudan</a>
+              <a onclick="return signatoryadd();" href="#">Skapa inbjudan</a>
              </span>
            else
               <ol id="signatorylist">

@@ -223,7 +223,12 @@ pageFromBody ctx@(Context maybeuser hostpart) topMenu title body =
      <body>
       <div id="headerContainer">
         <img class="logosmall"src="/theme/images/logosmall.png" height="40"/>
-        <span class="contactabout"><a href="About">Om oss</a></span>
+        <span class="contactabout">
+         <%
+           case maybeuser of
+             Just _ -> <a href="/logout">Logout</a>
+             Nothing -> maybeSignInLink ctx "Login" "/"
+         %> | <a href="about">Om oss</a></span>
         <div id="headerContainer2">
          <div id="nav">
           <ul>
@@ -242,8 +247,8 @@ pageFromBody ctx@(Context maybeuser hostpart) topMenu title body =
       </div>
 
       <script type="text/javascript">
-       var rpxJsHost = (("https:" == document.location.protocol) ? "https://" : "http://static.");
-       document.write(unescape("%3Cscript src='" + rpxJsHost +
+         var rpxJsHost = (("https:" == document.location.protocol) ? "https://" : "http://static.");
+         document.write(unescape("%3Cscript src='" + rpxJsHost +
                "rpxnow.com/js/lib/rpx.js' type='text/javascript'%3E%3C/script%3E"));
       </script>
       <script type="text/javascript">
