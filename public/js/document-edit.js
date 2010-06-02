@@ -47,12 +47,10 @@ function makeDocumentAjax()
                                $('#documentBox').html(data);
                            },
                                error: function () {
-                               // FIXME: add small delay here
-                               //$.delay(1000)makeDocumentAjax();
+                               var that = this;
                                $(document).delay(1000).queue(function() {
-                                       //alert('Animation complete.');
                                        $(this).dequeue();
-                                       makeDocumentAjax();
+                                       $.ajax(that);
                                    });
                            }});
 }
