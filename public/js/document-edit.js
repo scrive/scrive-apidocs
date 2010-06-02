@@ -39,6 +39,24 @@ function signatoryremove(node)
   return false;
 }
  
+function makeDocumentAjax()
+{
+   $.ajax(
+                       { url: "/pagesofdoc/" + documentid,
+                               success: function(data) {
+                               $('#documentBox').html(data);
+                           },
+                               error: function () {
+                               // FIXME: add small delay here
+                               //$.delay(1000)makeDocumentAjax();
+                               $(document).delay(1000).queue(function() {
+                                       //alert('Animation complete.');
+                                       $(this).dequeue();
+                                       makeDocumentAjax();
+                                   });
+                           }});
+}
+
 $(document).ready( function () {
 
  $("#dialog-confirm-signinvite").hide();
@@ -84,7 +102,17 @@ $(document).ready( function () {
              });
          
          return false;});
+ /*
+ $("#footerContainer").ajaxStart( function() { alert("Ajax start");});
+ $("#footerContainer").ajaxStop( function() { alert("Ajax stop");});
+ $("#footerContainer").ajaxSuccess( function() { alert("Ajax success");});
+ $("#footerContainer").ajaxError( function() { alert("Ajax error");});
+ $("#footerContainer").ajaxSend( function() { alert("Ajax send");});
+ $("#footerContainer").ajaxComplete( function() { alert("Ajax complete");});
+ */
 
+ //$("#documentBox").load("/pages/" + fileid + "/xml");
+ makeDocumentAjax();
     });
 
 

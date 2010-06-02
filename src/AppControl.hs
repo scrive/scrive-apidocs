@@ -48,10 +48,21 @@ appHandler = do
     [ nullDir >> webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx))
     , dir "sign" (withUser maybeuser (DocControl.handleSign ctx))
     , dir "issue" (withUser maybeuser (DocControl.handleIssue ctx))
-    , dir "pages" $ path $ \fileid -> path $ \pageno -> 
-                                      do
-                                        modminutes <- query $ FileModTime fileid
-                                        DocControl.showPage ctx modminutes fileid pageno
+    , dir "pages" $ path $ \fileid -> 
+        msum [ path $ \pageno -> do
+                 modminutes <- query $ FileModTime fileid
+                 DocControl.showPage ctx modminutes fileid pageno
+             ]
+    , dir "pagesofdoc" $ path $ \docid -> do
+                 maybedoc <- query $ GetDocumentByDocumentID docid
+                 case maybedoc of
+                   Just doc -> case files doc of
+                                 [] -> notFound (toResponse "temporary unavailable (document has no files)")
+                                 f -> webHSP (DocView.showFilesImages2 f)
+                   Nothing -> -- why this should ever happen?
+                              -- we end up here after document view page is completed
+                              -- should have the document there too in the database
+                               notFound (toResponse "temporary unavailable (document not found)")
     , dir "account" (withUser maybeuser (UserControl.handleUser ctx))
     , dir "logout" (handleLogout)]
     ++ (if isSuperUser maybeuser then 

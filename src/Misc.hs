@@ -187,3 +187,6 @@ unicodeToWinAnsi x =
       Just i -> chr (i + 33)
       Nothing -> x
       
+
+safehead s [] = error s
+safehead _ (x:_) = x

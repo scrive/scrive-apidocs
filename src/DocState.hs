@@ -358,6 +358,12 @@ fileModTime fileid = do
   let Just doc = getOne (documents @= fileid)
   return (documentmtime doc)
 
+fileByFileID :: FileID -> Query Documents (Maybe File)
+fileByFileID fileid = do
+  documents <- ask
+  case getOne (documents @= fileid) of
+    Just doc -> return (Just $ safehead "fileByFileID" $ files doc)
+    Nothing -> return Nothing
 
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocumentsByAuthor
@@ -373,6 +379,7 @@ $(mkMethods ''Documents [ 'getDocumentsByAuthor
                         , 'getDocumentStats
                         , 'replaceFile
                         , 'fileModTime
+                        , 'fileByFileID
                         ])
 
 

@@ -160,7 +160,7 @@ handleIssueShow ctx@(Context (Just user) hostpart) documentid = do
            response <- webHSP (seeOtherXML link)
            seeOther link response
        , path $ \(_title::String) -> methodM GET >> do
-           let file = head (files document)
+           let file = safehead "handleIssueShow" (files document)
            let contents = filepdf file
            let res = Response 200 M.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
            let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
@@ -216,6 +216,7 @@ gs = "c:\\Program Files\\gs\\gs8.60\\bin\\gswin32c.exe"
 gs = "gs"
 #endif
 
+convertPdfToJpgPages :: BS.ByteString ->IO [BS.ByteString]
 convertPdfToJpgPages content = do
   tmppath <- getTemporaryDirectory
   allfiles <- getDirectoryContents tmppath
@@ -224,7 +225,7 @@ convertPdfToJpgPages content = do
                (removeFile (tmppath ++ "/" ++ file))
 
   let sourcepath = tmppath ++ "/source.pdf"
-  BSL.writeFile sourcepath content
+  BS.writeFile sourcepath content
 
   rawSystem gs [ "-sDEVICE=jpeg" 
                , "-sOutputFile=" ++ tmppath ++ "/output-%d.jpg"
@@ -249,13 +250,11 @@ convertPdfToJpgPages content = do
   return x
        
 
-forkedHandleDocumentUpload docid content filename = do
-    forkIO $ do
-      jpgpages <- liftIO $ convertPdfToJpgPages content
-      let filename2 = BS.fromString filename
-      let contentx = concatChunks content
-      -- FIXME: take care of case when it does not parse
-      update $ AttachFile docid filename2 contentx jpgpages
+handleDocumentUploadX docid content filename = do
+  jpgpages <- convertPdfToJpgPages content
+  let filename2 = BS.fromString filename
+  -- FIXME: take care of case when it does not parse
+  update $ AttachFile docid filename2 content jpgpages
 
 
 personsFromDocument document = 
@@ -267,7 +266,7 @@ personsFromDocument document =
 
 sealDocument :: User -> Document -> IO ()
 sealDocument author@(User {fullname,usercompanyname}) document = do
-  let (file@File {fileid,filename,filepdf,filejpgpages}) = head $ files document
+  let (file@File {fileid,filename,filepdf,filejpgpages}) = safehead "sealDocument" $ files document
   let docid = unDocumentID (documentid document)
   let persons = SealPerson (BS.toString fullname) (BS.toString usercompanyname) : personsFromDocument document
   tmppath <- getTemporaryDirectory
@@ -288,7 +287,7 @@ sealDocument author@(User {fullname,usercompanyname}) document = do
   waitForProcess sealProcHandle
   newfilepdf <- BS.readFile tmpout
   -- FIXME: delete old files
-  newfilejpegpages <- convertPdfToJpgPages (BSL.fromChunks [newfilepdf])
+  newfilejpegpages <- convertPdfToJpgPages newfilepdf
   let newfile = file {filepdf = newfilepdf, filejpgpages = newfilejpegpages}
   update $ ReplaceFile newfile
   return ()
@@ -311,7 +310,7 @@ handleIssuePost ctx@(Context (Just user) hostpart) = do
           ctime <- liftIO $ getMinutesTime
           let title = BS.fromString (basename filename) 
           doc <- update $ NewDocument (userid user) title ctime
-          liftIO $ forkedHandleDocumentUpload (documentid doc) content filename
+          liftIO $ forkIO $ handleDocumentUploadX (documentid doc) (concatChunks content) filename
           let link = hostpart ++ "/issue/" ++ show (documentid doc)
           response <- webHSP (seeOtherXML link)
           seeOther link response

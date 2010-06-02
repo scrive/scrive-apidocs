@@ -212,9 +212,9 @@ process (SealSpec
             "8 0 0 8 62.707 71.735 Tm " ++
             "[(A) 60 (vt) 60 (al N) 20 (r ) 0 (" ++ show sealDocumentNumber ++ ")] TJ " ++
             "7.9999 0 0 8 62.707 49.762 Tm " ++
-            "[(S) 20 (i) 10 (gna) 65 (tu) 20 (r:)] TJ " ++
+            "[(Undertecknat:)] TJ " ++
             "15 TL " ++
-            "1 0 0 1 110.2 49.762 Tm " ++
+            "1 0 0 1 130.2 49.762 Tm " ++
             concatMap seal1text sealPersons ++
             "ET "
         seal1text (SealPerson {sealPerson,sealPersonSmall})=

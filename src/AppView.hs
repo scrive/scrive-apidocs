@@ -22,6 +22,7 @@ import User
 import Network.HTTP (urlEncode)
 import Data.Time
 import qualified Data.Map as Map
+import Misc
 
 instance (XMLGenerator m) => (EmbedAsChild m 
                               HeaderPair) where
@@ -278,7 +279,7 @@ seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
 
 showUserOption :: (XMLGenerator m) => User -> XMLGenT m (HSX.XML m)
 showUserOption user = let un (ExternalUserID x) = BS.toString x in
-    <option value=(show $ userid user) title=(un $ head $ externaluserids user)><% fullname user %> <% email user %></option>
+    <option value=(show $ userid user) title=(un $ safehead "showUserOption" $ externaluserids user)><% fullname user %> <% email user %></option>
  
 statsPageView :: Int -> Int -> [User] -> HSP XML
 statsPageView nusers ndocuments users =

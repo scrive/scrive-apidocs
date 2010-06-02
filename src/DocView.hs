@@ -160,9 +160,12 @@ showFileImages file =
    [ <img src=("/pages/" ++ show (fileid file) ++ "/" ++ show pageno) width="300"/> |
      pageno <- [1..(length (filejpgpages file))]]
 
+showFilesImages2 files = <xml><% concatMap showFileImages files %></xml> 
+
 showDocumentBox document = 
     <div id="documentBox">
-        <% map showFileImages (files document) %>
+        {- <% map showFileImages (files document) %> -}
+        Preparing document...
     </div>
 
 
@@ -184,9 +187,12 @@ showDocument
       EmbedAsAttr m (Attr [Char] BS.ByteString)) =>
      Document -> XMLGenT m (HSX.XMLGenerator.XML m)
 showDocument document =
-   let helper = jquery ++ [ <span style="display: none">
+   let helper = jquery ++ 
+                [ <span style="display: none">
                    <% showSignatoryEntryForEdit2 "signatory_template" "" "" "" %>
                   </span>
+                , <script> var documentid = <% show $ documentid document %>; 
+                  </script>
                 , <script type="text/javascript" src="/js/document-edit.js"/>
                 ]
    in showDocumentPageHelper ("/issue/" ++ show (documentid document)) document helper (title document)  
