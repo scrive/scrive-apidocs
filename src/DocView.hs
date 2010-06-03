@@ -185,8 +185,8 @@ emptyLink = SignatoryLink
 showDocument
   :: (XMLGenerator m,
       EmbedAsAttr m (Attr [Char] BS.ByteString)) =>
-     User -> Document -> XMLGenT m (HSX.XMLGenerator.XML m)
-showDocument user document =
+     User -> Document -> Bool -> XMLGenT m (HSX.XMLGenerator.XML m)
+showDocument user document issuedone =
    let helper = jquery ++ 
                 [ <span style="display: none">
                    <% showSignatoryEntryForEdit2 "signatory_template" "" "" "" %>
@@ -209,8 +209,14 @@ showDocument user document =
              These items will be permanently deleted and cannot be recovered. Are you sure?
 -}
           </div>
+
+                  <div id="dialog-confirm-signinvite-done" title="Avtal undertecknat!">
+	        <p> Du har undertecknat avtalet och en inbjudan har nu skickats till <span id="mrx">"Mr X"</span>.</p>
+
+          </div>
         </span>
                 , <script> var documentid = <% show $ documentid document %>; 
+                           var issuedone = <% if issuedone then "true" else "false" %>;
                   </script>
                 , <script type="text/javascript" src="/js/document-edit.js"/>
                 ]

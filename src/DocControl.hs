@@ -157,11 +157,15 @@ handleIssueShow
   :: Context -> DocumentID -> ServerPartT IO Response
 handleIssueShow ctx@(Context (Just user) hostpart) documentid = do
   Just (document::Document) <- query (GetDocumentByDocumentID documentid)
-  msum [ methodM GET >> webHSP (pageFromBody ctx TopDocument kontrakcja (showDocument user document))
+  msum [ do
+           methodM GET 
+           maybeissuedone <- getDataFn (look "issuedone")
+           let issuedone = isJust maybeissuedone
+           webHSP (pageFromBody ctx TopDocument kontrakcja (showDocument user document issuedone))
        , do
            methodM POST
            doc2 <- updateDocument ctx document
-           let link = hostpart ++ "/issue" -- ++ show documentid
+           let link = hostpart ++ "/issue/" ++ show documentid ++ "?issuedone"
            response <- webHSP (seeOtherXML link)
            seeOther link response
        , path $ \(_title::String) -> methodM GET >> do

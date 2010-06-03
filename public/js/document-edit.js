@@ -119,6 +119,23 @@ $(document).ready( function () {
 
  //$("#documentBox").load("/pages/" + fileid + "/xml");
  makeDocumentAjax();
+ if( issuedone ) {
+       $("#dialog-confirm-signinvite-done").dialog({
+                 resizable: false,
+                     height: 140,
+                     width: 350,
+                     modal: true,
+                     buttons: {
+                     'Skapa ett nytt avtal': function() {
+
+                         document.location.href = "/"; 
+                     },
+                         'Avbryt': function() {
+                             $(this).dialog('close');
+                         }
+                 }
+             });
+ }
     });
 
 
