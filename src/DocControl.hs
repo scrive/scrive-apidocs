@@ -138,7 +138,12 @@ handleSignShow ctx@(Context (Just user@User{userid}) hostpart) documentid
           let wassigned = any f (signatorylinks document)
               f (SignatoryLink {signatorylinkid,maybesigninfo}) = 
                   isJust maybesigninfo && signatorylinkid == signatorylinkid1
-          webHSP (pageFromBody ctx TopNone kontrakcja (showDocumentForSign ("/sign/" ++ show documentid ++ "/" ++ show signatorylinkid1) document wassigned))
+              authoruserid = unAuthor $ author document
+          Just author <- query $ FindUserByUserID authoruserid
+          let authorname = fullname author
+              invitedname = signatoryname $ head $ filter (\x -> signatorylinkid x == signatorylinkid1) 
+                            (signatorylinks document)
+          webHSP (pageFromBody ctx TopNone kontrakcja (showDocumentForSign ("/sign/" ++ show documentid ++ "/" ++ show signatorylinkid1) document authorname invitedname wassigned))
        ]
 
 handleIssue :: Context -> ServerPartT IO Response
@@ -151,8 +156,8 @@ handleIssue ctx@(Context (Just user) hostpart) =
 handleIssueShow
   :: Context -> DocumentID -> ServerPartT IO Response
 handleIssueShow ctx@(Context (Just user) hostpart) documentid = do
-  Just document <- query $ GetDocumentByDocumentID documentid
-  msum [ methodM GET >> webHSP (pageFromBody ctx TopDocument kontrakcja (showDocument document))
+  Just (document::Document) <- query (GetDocumentByDocumentID documentid)
+  msum [ methodM GET >> webHSP (pageFromBody ctx TopDocument kontrakcja (showDocument user document))
        , do
            methodM POST
            doc2 <- updateDocument ctx document

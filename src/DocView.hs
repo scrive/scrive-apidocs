@@ -185,12 +185,31 @@ emptyLink = SignatoryLink
 showDocument
   :: (XMLGenerator m,
       EmbedAsAttr m (Attr [Char] BS.ByteString)) =>
-     Document -> XMLGenT m (HSX.XMLGenerator.XML m)
-showDocument document =
+     User -> Document -> XMLGenT m (HSX.XMLGenerator.XML m)
+showDocument user document =
    let helper = jquery ++ 
                 [ <span style="display: none">
                    <% showSignatoryEntryForEdit2 "signatory_template" "" "" "" %>
-                  </span>
+                  <div id="dialog-confirm-signinvite" title="BEKRÄFTA">
+	        <p> När du bekräftat avtalet kommer en automatisk inbjudan att skickas till <span id="mrx">"Mr X"</span>. 
+            Avtalet blir juridiskt bindande när båda parter undertecknat och det är först då vi tar betalt. 
+            Vi fakturerar månadsvis. Era fakturauppgifter:</p>
+
+            <div class="inlinebox">
+            Referens: <% fullname user %> <br/>
+            Företag: <% usercompanyname user %> <br/>
+            Org nr: <% usercompanynumber user %> <br/>
+            Adress: <% userinvoiceaddress user %> <br/>
+            Pris: ”20 SEK exkl moms” <br/>
+            </div>
+
+           <p>Är du säker på att du vill underteckna avtalet?</p>
+
+{- <span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>
+             These items will be permanently deleted and cannot be recovered. Are you sure?
+-}
+          </div>
+        </span>
                 , <script> var documentid = <% show $ documentid document %>; 
                   </script>
                 , <script type="text/javascript" src="/js/document-edit.js"/>
@@ -247,25 +266,6 @@ showDocumentPageHelper action document helpers title content =
      </tr>
     </table> 
    </form>
-   <div id="dialog-confirm-signinvite" title="BEKRÄFTA">
-	<p> När du bekräftat avtalet kommer en automatisk inbjudan att skickas till "Mr X". 
-            Avtalet blir juridiskt bindande när båda parter undertecknat och det är först då vi tar betalt. 
-            Vi fakturerar månadsvis. Era fakturauppgifter:</p>
-
-            <div class="inlinebox">
-            Referens: ”Name of author” <br/>
-            Företag: ”Name of company” <br/>
-            Org nr: ”Company reg nr” <br/>
-            Adress: ”Company adress” <br/>
-            Pris: ”20 SEK exkl moms” <br/>
-            </div>
-
-        <p>Är du säker på att du vill underteckna avtalet?</p>
-
-{- <span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>
-             These items will be permanently deleted and cannot be recovered. Are you sure?
--}
-   </div>
    <div id="dialog-confirm-sign" title="BEKRÄFTA">
         <p>Är du säker på att du vill underteckna avtalet?</p>
 
@@ -278,17 +278,17 @@ showDocumentPageHelper action document helpers title content =
 
 
 showDocumentForSign :: (XMLGenerator m) =>
-                       String -> Document -> Bool -> XMLGenT m (HSX.XML m)
-showDocumentForSign action document wassigned =
+                       String -> Document -> BS.ByteString -> BS.ByteString -> Bool -> XMLGenT m (HSX.XML m)
+showDocumentForSign action document authorname invitedname wassigned =
    let helper = jquery ++ [ <script type="text/javascript" src="/js/document-edit.js"/>
+                , <script> var documentid = <% show $ documentid document %>; 
+                  </script>
                           ]
-       authorname = "XX"
-       invitedname = "YY"
    in showDocumentPageHelper action document helper (title document) $
         if wassigned 
            then <span>Du har redan skrivit på!</span>
            else <span>
-                {- <p>Hej ”name of invited”</p> -}
+                <p>Hej <% invitedname %></p>
 
                 <p>Genom skrivaPå kan du underteckna juridiskt bindande avtal online. Avtalet på vänster sida är avtalet <% title document %> som <% authorname %> har bjudit in dig att underteckna. Du zoomar in genom att klicka på förstoringsglaset. Du undertecknar genom att klicka ”Underteckna” nedan. </p>
 

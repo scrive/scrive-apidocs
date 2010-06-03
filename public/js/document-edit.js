@@ -60,6 +60,14 @@ $(document).ready( function () {
  $("#dialog-confirm-signinvite").hide();
  $("#dialog-confirm-sign").hide();
  $("#signinvite").click(function() {
+         var mrxs = $("form input[name='signatoryname']");
+         var tot = "";
+         mrxs.each(function(index) {
+                 if( tot!="" ) tot += ", ";
+                 tot += $(this).val();
+             });
+         $("#mrx").text(tot);
+
          $("#dialog-confirm-signinvite").dialog({
                  resizable: false,
                      height: 340,
