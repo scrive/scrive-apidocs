@@ -71,6 +71,14 @@ concatSignatories siglinks =
 oneDocumentRow document = 
     let link = "/issue/" ++ show (documentid document)
         mk x = <a href=link><% x %></a>
+        statusimg = "/theme/images/" ++
+                    case status document of
+                      Preparation -> "status_template.png"
+                      ReadyToSign  -> "status_pending.png"
+                      Closed -> "status_signed.png"
+                      Canceled -> "status_rejected.png"
+                      Timedout -> "status_timeout.png"
+                      Rejected -> "status_rejected.png"
     in
     <tr>
      <td class="tdleft">
@@ -80,7 +88,7 @@ oneDocumentRow document =
      <td>skrivaPå</td>
      <td><% mk $ title document %></td>
      <td><% mk $ show (status document) %></td>
-     <td class="tdright">*</td>
+     <td class="tdright"><img width="17" height="17" src=statusimg/></td>
     </tr>
 
 
