@@ -206,10 +206,12 @@ renderFromBody ctx topmenu title = webHSP . pageFromBody ctx topmenu title
 topnavi :: (XMLGenerator m) => Bool -> Context -> String -> String -> XMLGenT m (HSX.XML m)
 topnavi True ctx title link = 
     -- FIXME: add active attribute here
-    maybeSignInLink2 ctx <span><span class="activeleft"/><span class="activemid"><% title %></span><span class="activeright"/></span> link "active"
+    --maybeSignInLink2 ctx <span><span class="activeleft"/><span class="activemid"><% title %></span><span class="activeright"/></span> link "active"
+    maybeSignInLink2 ctx title link "active"
 
 topnavi False ctx title link = 
-    maybeSignInLink2 ctx <span><span class="inactiveleft"/><span class="inactivemid"><% title %></span><span class="inactiveright"/></span> link ""
+    --maybeSignInLink2 ctx <span><span class="inactiveleft"/><span class="inactivemid"><% title %></span><span class="inactiveright"/></span> link ""
+    maybeSignInLink2 ctx title link ""
 
 pageFromBody :: (EmbedAsChild (HSPT' IO) xml) => Context -> TopMenu -> String -> xml -> HSP XML
 pageFromBody ctx@(Context maybeuser hostpart) topMenu title body =
