@@ -73,7 +73,7 @@ oneDocumentRow document =
         mk x = <a href=link><% x %></a>
         statusimg = "/theme/images/" ++
                     case status document of
-                      Preparation -> "status_template.png"
+                      Preparation -> "status_draft.png"
                       ReadyToSign  -> "status_pending.png"
                       Closed -> "status_signed.png"
                       Canceled -> "status_rejected.png"
@@ -87,7 +87,8 @@ oneDocumentRow document =
      <td><% mk $ concatSignatories (signatorylinks document) %></td>
      <td>skrivaPå</td>
      <td><% mk $ title document %></td>
-     <td><% mk $ show (status document) %></td>
+     <td>Senaste handelse</td>
+     <td>15</td>
      <td class="tdright"><img width="17" height="17" src=statusimg/></td>
     </tr>
 
@@ -102,9 +103,10 @@ listDocuments documents =
         <td>Alla</td>
         <td>Personer</td>
         <td>Företag</td>
-        <td>Dokument</td>
-        <td>Status</td>
-        <td>*</td>
+        <td>Avtal</td>
+        <td>Senaste handelse</td>
+        <td>Dagar kvar</td>
+        <td></td>
        </tr>
       </thead>
       <tfoot>
@@ -140,11 +142,11 @@ showSignatoryEntryForEdit (SignatoryLink{signatoryname,signatorycompany,signator
 showSignatoryEntryForEdit2 :: (XMLGenerator m) => String -> String -> String -> String -> XMLGenT m (HSX.XML m)
 showSignatoryEntryForEdit2 idx signatoryname signatorycompany signatoryemail = 
     <li id=idx>
-      <label>Namn på den du vill skriva avtal med</label><br/> 
+      <label>Namn på avtalspart</label><br/> 
       <input name="signatoryname" type="text" value=signatoryname/><br/>
-      <label>Företag</label><br/>
+      <label>Titel, företag</label><br/>
       <input name="signatorycompany" type="text" value=signatorycompany/><br/>
-      <label>Personens email</label><br/>
+      <label>Personens e-mail</label><br/>
       <input name="signatoryemail" type="text" value=signatoryemail/><br/>
       <a onclick="return signatoryremove(this);" href="#">Ta bort</a>
       {- days to sign:
@@ -156,7 +158,7 @@ showSignatoryEntryStatus (SignatoryLink{signatoryname,signatoryemail,maybeseenti
     <li> 
         <b><% signatoryname %></b><br/>
         <% case maybesigninfo of
-             Just (SignInfo{signtime}) -> "Signerat " ++ show signtime 
+             Just (SignInfo{signtime}) -> "Undertecknat " ++ show signtime 
              Nothing -> case maybeseentime of
                           Just time -> "Har öppnat dokumentet " ++ show time
                           Nothing -> "Har inte öppnat dokumentet"
@@ -173,8 +175,17 @@ showFilesImages2 files = <xml><% concatMap showFileImages files %></xml>
 showDocumentBox document = 
     <div id="documentBox">
         {- <% map showFileImages (files document) %> -}
-        Preparing document...
+        Förbereder avtal...
     </div>
+
+{-
+
+   Document is invalid
+   Fel filformat
+   Vi beklagar, fel filformat
+
+   mp3 -- we cannot do anything with this document
+-}
 
 
 emptyLink = SignatoryLink 
@@ -198,9 +209,14 @@ showDocument user document issuedone =
    let helper = jquery ++ 
                 [ <span style="display: none">
                    <% showSignatoryEntryForEdit2 "signatory_template" "" "" "" %>
-                  <div id="dialog-confirm-signinvite" title="BEKRÄFTA">
-	        <p> När du bekräftat avtalet kommer en automatisk inbjudan att skickas till <span id="mrx">"Mr X"</span>. 
-            Avtalet blir juridiskt bindande när båda parter undertecknat och det är först då vi tar betalt. 
+                  <div id="dialog-confirm-signinvite" title="Underteckna">
+	        
+            <p> När du bekräftar avtalet kommer en automatisk inbjudan att skickas till 
+                <strong><span id="mrx">"Mr X"</span></strong>. 
+             <strong>Avtalet blir juridiskt bindande när alla parter undertecknat.</strong>
+            </p>
+            
+            <p>Det är först då vi tar betalt. 
             Vi fakturerar månadsvis. Era fakturauppgifter:</p>
 
             <div class="inlinebox">
@@ -218,7 +234,7 @@ showDocument user document issuedone =
 -}
           </div>
 
-                  <div id="dialog-confirm-signinvite-done" title="Avtal undertecknat!">
+                <div id="dialog-confirm-signinvite-done" title="Avtal undertecknat!">
 	        <p> Du har undertecknat avtalet och en inbjudan har nu skickats till <span id="mrx">"Mr X"</span>.</p>
 
           </div>
@@ -228,7 +244,7 @@ showDocument user document issuedone =
                   </script>
                 , <script type="text/javascript" src="/js/document-edit.js"/>
                 ]
-   in showDocumentPageHelper ("/issue/" ++ show (documentid document)) document helper (title document)  
+   in showDocumentPageHelper ("/issue/" ++ show (documentid document)) document helper (BS.fromString $ "Avtal: " ++ BS.toString (title document))  
       <div>
        <div>Personer:<br/>
 
@@ -238,7 +254,7 @@ showDocument user document issuedone =
                <% map showSignatoryEntryForEdit (if null (signatorylinks document)
                                                  then [emptyLink] else signatorylinks document) %>
               </ol>
-              <a onclick="return signatoryadd();" href="#">Skapa inbjudan</a>
+              <a onclick="signatoryadd(); return false;" href="#">Skapa inbjudan</a>
              </span>
            else
               <ol id="signatorylist">
@@ -250,7 +266,7 @@ showDocument user document issuedone =
          <% 
            if (status document==Preparation) 
               then <span>
-                    <input class="bigbutton" type="submit" name="final" value="Skriv på och bjud in" id="signinvite"/>
+                    <input class="bigbutton" type="submit" name="final" value="Underteckna" id="signinvite"/>
                     <input type="hidden" name="final2" value=""/>
                     <br/>
                     <input class="secbutton" type="submit" name="save" value="Spara till senare"/>
@@ -272,20 +288,22 @@ showDocumentPageHelper action document helpers title content =
        <% showDocumentBox document %>
       </td>
       <td> 
-       <p class="headline"><% title %> 
-           <a href=("/issue/" ++ show (documentid document) ++ "/" ++ BS.toString title ++ ".pdf") target="_blank"> (Open as PDF)</a>
+       <p class="headline"><% title %><br/> 
+           <small><a href=("/issue/" ++ show (documentid document) ++ "/" ++ BS.toString title ++ ".pdf") target="_blank">Open as PDF</a></small>
        </p>
        <% content %>
       </td>
      </tr>
     </table> 
    </form>
-   <div id="dialog-confirm-sign" title="BEKRÄFTA">
+   <div id="dialog-confirm-sign" title="Underteckna">
+
+
+        <p><strong>Avtalet blir juridiskt bindande när alla parter undertecknat.</strong>
+        Då får du ett e-mail med det färdig avtalet.</p>
+        
         <p>Är du säker på att du vill underteckna avtalet?</p>
 
-{- <span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>
-             These items will be permanently deleted and cannot be recovered. Are you sure?
--}
    </div>
 
    </div>
@@ -298,18 +316,19 @@ showDocumentForSign action document authorname invitedname wassigned =
                 , <script> var documentid = <% show $ documentid document %>; 
                   </script>
                           ]
-   in showDocumentPageHelper action document helper (title document) $
+   in showDocumentPageHelper action document helper (BS.fromString $ "Avtal: " ++ BS.toString(title document)) $
         if wassigned 
            then <span>Du har redan skrivit på!</span>
            else <span>
-                <p>Hej <% invitedname %></p>
+                
+                <p>Välkommen <% invitedname %>,</p>
 
-                <p>Genom skrivaPå kan du underteckna juridiskt bindande avtal online. Avtalet på vänster sida är avtalet <% title document %> som <% authorname %> har bjudit in dig att underteckna. Du zoomar in genom att klicka på förstoringsglaset. Du undertecknar genom att klicka ”Underteckna” nedan. </p>
+                <p>Genom skrivaPå kan du underteckna juridiskt bindande avtal online. På vänster sida har du avtalet <strong><% title document %></strong> som <strong><% authorname %></strong> har bjudit in dig att underteckna.</p>
 
-                <p>Det är olagligt att underteckna i annans namn och vi anmäler alla misstänkta fall av urkundsförfalskning. Därför ska du under inga som helst omständigheter underteckna om du inte är <% invitedname %>.</p>
+                <p>Om du inte är <strong><% invitedname %></strong> klicka av "avvisa".</p>
 
 {- Avvisa - gray FIXME -}
-                <p>Klicka här om du vill veta mer om skrivaPå innan du undertecknar.</p>
+                <p>Jag vill veta mer <a href="/about" target="_blank">om skrivaPå</a>.</p>
 
                    <input type="hidden" name="sign2" value=""/>
                    <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign"/>
@@ -318,7 +337,7 @@ showDocumentForSign action document authorname invitedname wassigned =
 poweredBySkrivaPaPara :: (XMLGenerator m) => XMLGenT m (HSX.XML m)
 poweredBySkrivaPaPara = 
     <p>
-     Med vänliga hälsningar<br/>
+      {- Med vänliga hälsningar<br/> -}
      <small>Powered by <a href="http://skrivapa.se/">skrivaPå</a></small>
     </p>
 
@@ -345,8 +364,8 @@ invitationMailXml (Context (Just user) hostpart)
      <body>
       <p>Hej <% personname %>,</p>
       <p></p>
-      <p><% creatorname %> har bjudit in dig att skriva på avtalet <a href=link><% documenttitle %></a>. Klicka på länken för att läsa igenom och skriva på.</p>
-      <p><% link %></p>
+      <p><strong><% creatorname %></strong> har bjudit in dig att skriva på avtalet <strong><% documenttitle %></strong>. Klicka på länken för att läsa igenom och skriva på.</p>
+      <p><a href=link><% link %></a></p>
       <% poweredBySkrivaPaPara %>
      </body>
     </html>
@@ -388,9 +407,11 @@ closedMailXml (Context (Just user) hostpart)
      </head>
      <body>
       <p>Hej <% personname %>,</p>
-      <p>Avtalet <a href=link><% documenttitle %></a> har signerats av alla parter. Avtalet är nu lagligt bindande. Vi har låst dokumentet så att det inte kan ändras och för att markera detta har vi stämplat det med vårt sigill.</p>
+      <p>Avtalet <strong><% documenttitle %></strong> har undertecknats av alla parter. Avtalet är nu lagligt bindande.</p>
       
-      <p>Dokumentet bifogas med detta mail. Om du har ett konto hittar du avtalet i ditt konto under "Dokument". Om du inte har ett konto kan du spara dokumentet genom att <a href=link>klicka här</a>.</p>
+      <p>Det färdig avtalet bifogas nedan. Om du har ett konto hos skrivaPå hittar du avtalet under "Avtal". Om du inte har ett konto kan du spara avtalet genom att klicka på länken:</p>
+
+      <p><a href=link><% link %></a></p>
      
       <% poweredBySkrivaPaPara %>
      </body>

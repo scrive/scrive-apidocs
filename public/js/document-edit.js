@@ -74,7 +74,7 @@ $(document).ready( function () {
                      width: 350,
                      modal: true,
                      buttons: {
-                     'Bekräfta': function() {
+                     'Underteckna': function() {
                          // FIXME: should have 'final' here but I don't know how to put in
                          // in succesful set of the form
                          document.form['final2'].value = 'something';
@@ -95,7 +95,7 @@ $(document).ready( function () {
                      width: 350,
                      modal: true,
                      buttons: {
-                     'Bekräfta': function() {
+                     'Underteckna': function() {
                          // FIXME: should have 'final' here but I don't know how to put in
                          // in succesful set of the form
                          document.form['sign2'].value = 'something';

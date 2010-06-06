@@ -34,12 +34,9 @@ import Data.Maybe
 appHandler :: ServerPartT IO Response
 appHandler = do
   rq <- askRq
-  let Just host = getHeader "host" rq
-  let hostpart = 
-          if host == BSC.fromString "127.0.0.1:8000" 
-          -- don't know how to get around nginx not passing Host header
-          then "http://skrivapa.se" 
-          else "http://" ++ BSC.toString host
+  let host = maybe "skrivapa.se" BSC.toString $ getHeader "host" rq
+  let scheme = maybe "http" BSC.toString $ getHeader "scheme" rq
+  let hostpart =  scheme ++ "://" ++ host
   
   maybeuser <- userLogin
   let ctx = Context maybeuser hostpart

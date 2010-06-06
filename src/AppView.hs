@@ -97,6 +97,52 @@ handleRPXLoginView json =
       <% json %>
     </p>
 
+{-
+loginBox =
+   <div>
+    <div id="login">
+     <form action="/tutorial/actions/login" method="post">
+      <table>
+	<tr>
+          <td>Email:</td> 
+          <td><input type="textfield" name="username"/></td> 
+        </tr>
+	<tr> 
+          <td>Password:</td> 
+          <td><input type="password" name="password"/></td> 
+        </tr>
+	<tr> 
+          <td><input type="submit" name="create" value="Login"/></td>
+          <td><a href="#" onClick="$('#login').hide(); $('#register').show(); return false;">register</a></td>
+	</tr>
+      </table>
+    </form>
+    </div>
+    <div id="register">
+     <form action="/tutorial/actions/newuser" method="post">
+      <table>
+ 	<tr>
+          <td>Email:</td>
+          <td><input type="textfield" name="username"/></td>
+        </tr>
+	<tr>
+          <td>Password:</td>
+          <td><input type="password" name="password"/></td>
+        </tr>
+	<tr>
+          <td>Verify Password:</td>
+          <td><input type="password" name="password2"/></td>
+        </tr>
+	<tr>
+          <td><input type="submit" name="create" value="Create Account"/></td>
+          <td><a href="#" onClick="$('#register').hide(); $('#login').show(); return false;">login</a></td>
+        </tr>
+      </table>
+     </form>
+    </div>
+   </div>
+-}
+
 welcomeBody :: (XMLGenerator m) => Context -> XMLGenT m (HSX.XML m)
 welcomeBody (Context (Just _) hostpart) = 
   <div class="centerdiv" style="width: 300px">
@@ -111,16 +157,19 @@ welcomeBody (Context (Just _) hostpart) =
 
    <p class="headline">Välkommen till skrivaPå!</p>
 
-   <p class="para">För tillfället testar vi vår online signaturlösning med utvalda kunder. Om du vill bli en tidig testkund, vänligen <a href="mailto:lukas@skrivapa.se">skicka ett mail</a>. Om du redan har ett konto klicka nedan för att börja.</p>
+   <p class="para">För tillfället testar vi vår online signaturlösning med utvalda kunder. Om du vill bli en tidig testkund, vänligen skicka <a href="mailto:lukas@skrivapa.se">ett mail till skrivaPå</a>. Om du redan har ett konto klicka nedan för att börja.</p>
   </div>
+
 
 welcomeBody ctx@(Context Nothing hostpart) = 
   <div class="centerdiv" style="width: 280px"> 
-   <img src="/theme/images/logolarge.png"/><br/>
-   <hr/>
-   <p class="headline" style="font-size: 200%; text-align: center">
+   <div style="text-align: center">
+    <img src="/theme/images/logolarge.png"/><br/>
+    <hr/>
+    <p class="headline" style="font-size: 200%; text-align: center">
       <% maybeSignInLink ctx "Sign in here" "/" %>
-   </p>
+    </p>
+   </div>
 
 {-
    <span class="small">Choose a document to upload:</span><br/>
@@ -137,7 +186,7 @@ welcomeBody ctx@(Context Nothing hostpart) =
 errorReport :: (XMLGenerator m) => Context -> Request -> XMLGenT m (HSX.XML m)
 errorReport (Context maybeuser _) request = 
   <div>
-   <p>Ett fel har uppstått. Det beror inte på dig. Det beror på oss. Vi tar hand om problemet så snart vi kan så snälla ha tålamod med oss. Tills vi fixat problemet, vänligen försök igen genom att börja om från <a href="/">startsidan</a>.</p>
+   <p>Ett fel har uppstått. Det beror inte på dig. Det beror på oss. Vi tar hand om problemet så snart vi kan. Tills vi fixat problemet, vänligen försök igen genom att börja om från <a href="/">startsidan</a>.</p>
    <hr/>
    <p>Information useful to developers:</p>
    <% case maybeuser of
@@ -231,12 +280,12 @@ pageFromBody ctx@(Context maybeuser hostpart) topMenu title body =
            case maybeuser of
              Just _ -> <a href="/logout">Logout</a>
              Nothing -> maybeSignInLink ctx "Login" "/"
-         %> | <a href="about">Om oss</a></span>
+         %> | <a href="about">Om skrivaPå</a></span>
         <div id="headerContainer2">
          <div id="nav">
           <ul>
            <li><% topnavi (topMenu== TopNew) ctx "Skapa" "/" %></li>
-           <li><% topnavi (topMenu== TopDocument) ctx "Dokument" "/issue" %></li>
+           <li><% topnavi (topMenu== TopDocument) ctx "Avtal" "/issue" %></li>
            <li><% topnavi (topMenu== TopAccount) ctx "Konto" "/account" %></li>
           </ul>
          </div>
