@@ -39,31 +39,29 @@ import Seal
 
 -}
 
-doctransPreparation2ReadyToSign :: Context -> Document -> IO ()
+doctransPreparation2ReadyToSign :: Context -> Document -> IO Document
 doctransPreparation2ReadyToSign ctx doc = do
   -- FIXME: check if the status was really changed
-  update $ UpdateDocumentStatus doc ReadyToSign
+  newdoc <- update $ UpdateDocumentStatus doc ReadyToSign
   liftIO $ sendInvitationEmails ctx doc
-  return ()
+  return newdoc
 
-doctransReadyToSign2Closed :: Context -> Document -> IO ()
+doctransReadyToSign2Closed :: Context -> Document -> IO Document
 doctransReadyToSign2Closed ctx doc = do
-  update $ UpdateDocumentStatus doc Closed
+  newdoc <- update $ UpdateDocumentStatus doc Closed
   Just user <- query $ FindUserByUserID (unAuthor (author doc))
   liftIO $ forkIO $ do
     sealDocument user doc
     sendClosedEmails ctx doc
-  return ()
+  return newdoc
 
-doctransReadyToSign2Canceled :: Context -> Document -> IO ()
+doctransReadyToSign2Canceled :: Context -> Document -> IO Document
 doctransReadyToSign2Canceled ctx doc = do
   update $ UpdateDocumentStatus doc Canceled
-  return ()
 
-doctransReadyToSign2Timedout :: Context -> Document -> IO ()
+doctransReadyToSign2Timedout :: Context -> Document -> IO Document
 doctransReadyToSign2Timedout ctx doc = do
   update $ UpdateDocumentStatus doc Timedout
-  return ()
 
 sendInvitationEmails :: Context -> Document -> IO ()
 sendInvitationEmails ctx document = do
@@ -119,7 +117,7 @@ signDoc ctx@(Context (Just user@User{userid}) hostpart) documentid
   Just document <- update $ SignDocument documentid userid signatorylinkid1 time
   let isallsigned = all f (signatorylinks document)
       f (SignatoryLink {maybesigninfo}) = isJust maybesigninfo
-  when isallsigned (liftIO $ doctransReadyToSign2Closed ctx document)
+  when isallsigned ((liftIO $ doctransReadyToSign2Closed ctx document) >> return ())
   let link = mkSignDocLink hostpart documentid signatorylinkid1
   response <- webHSP (seeOtherXML link)
   seeOther link response
@@ -165,7 +163,12 @@ handleIssueShow ctx@(Context (Just user) hostpart) documentid = do
        , do
            methodM POST
            doc2 <- updateDocument ctx document
-           let link = hostpart ++ "/issue/" ++ show documentid ++ "?issuedone"
+           liftIO $ print (status document, status doc2)
+           let link = 
+                   if status doc2 == ReadyToSign &&
+                      status document /= ReadyToSign 
+                   then hostpart ++ "/issue/" ++ show documentid ++ "?issuedone"
+                   else hostpart ++ "/issue/" ++ show documentid
            response <- webHSP (seeOtherXML link)
            seeOther link response
        , path $ \(_title::String) -> methodM GET >> do
@@ -206,8 +209,8 @@ updateDocument ctx document = do
   when (isJust maybeshowvars) $ mzero
   if not (Data.List.null (fromJust final))
      then do
-          liftIO $ doctransPreparation2ReadyToSign ctx doc2
-          return doc2
+          doc3 <- liftIO $ doctransPreparation2ReadyToSign ctx doc2
+          return doc3
      else return doc2
          
          

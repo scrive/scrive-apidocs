@@ -84,12 +84,12 @@ oneDocumentRow document =
      <td class="tdleft">
       <input type="checkbox"/>
      </td>
+     <td><img width="17" height="17" src=statusimg/></td>
      <td><% mk $ concatSignatories (signatorylinks document) %></td>
-     <td>skrivaPå</td>
      <td><% mk $ title document %></td>
-     <td>Senaste handelse</td>
-     <td>15</td>
-     <td class="tdright"><img width="17" height="17" src=statusimg/></td>
+     <td class="tdright"><% show $ documentmtime document %></td>
+     {- <td>15</td> -}
+     {- <td class="tdright">15</td> -}
     </tr>
 
 
@@ -98,15 +98,19 @@ listDocuments documents =
     <div>
      <br/>
      <table class="doctable" cellspacing="0">
+      <col class="tdleft"/>
+      <col/>
+      <col/>
+      <col/>
+      <col class="tdright"/>
       <thead>
        <tr>
         <td>Alla</td>
+        <td></td> {- status icon -}
         <td>Personer</td>
-        <td>Företag</td>
         <td>Avtal</td>
         <td>Senaste handelse</td>
-        <td>Dagar kvar</td>
-        <td></td>
+        {- <td>Dagar kvar</td> -}
        </tr>
       </thead>
       <tfoot>

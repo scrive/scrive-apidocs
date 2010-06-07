@@ -193,7 +193,7 @@ body {
   color: #606060;
   text-decoration: none;
   text-transform: uppercase;
-  font-size: small;
+  font-size: xx-small;
 }
 
 .centerdiv {
@@ -295,7 +295,7 @@ body {
 .doctable thead tr td,
 .doctable thead tr
 {
-  padding: 3px 10px 3px 10px;
+  padding: 3px 0px;
   border-style: none none solid none;
   border-width: 1px;
   border-color: gray;
@@ -306,12 +306,27 @@ body {
   border-style: none none none solid; 
   border-width: 1px;
   border-color: gray;
+  //width: 1px; // minimum
+  overflow: hidden;
 }
+
+.doctable col.tdleft
+{
+  width: 11px; // minimum
+}
+
+.doctable col.tdright
+{
+  width: 10em; // minimum
+}
+
 .doctable .tdright
 {
   border-style: none solid none none; 
   border-width: 1px;
   border-color: gray;
+  //width: 10em;
+  overflow: hidden;
 }
 
 .doctable thead

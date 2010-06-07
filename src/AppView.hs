@@ -146,18 +146,23 @@ loginBox =
 welcomeBody :: (XMLGenerator m) => Context -> XMLGenT m (HSX.XML m)
 welcomeBody (Context (Just _) hostpart) = 
   <div class="centerdiv" style="width: 300px">
-   <img src="/theme/images/logolarge.png"/>
+   {- <img src="/theme/images/logolarge.png"/>
    <br/> 
+    -}
+   <p class="headline">Välkommen till skrivaPå!</p>
+
    <form action="/issue" method="post" enctype="multipart/form-data">
     <span class="small">Ladda upp dokument</span><br/>
-    <input type="file" name="doc"/>
+    <input type="file" name="doc" accept="application/pdf"/>
     <input class="button" type="submit" value="Skapa"/>
    </form>
    <hr/>
 
-   <p class="headline">Välkommen till skrivaPå!</p>
+   {- <p class="headline">Välkommen till skrivaPå!</p> -}
 
-   <p class="para">För tillfället testar vi vår online signaturlösning med utvalda kunder. Om du vill bli en tidig testkund, vänligen skicka <a href="mailto:lukas@skrivapa.se">ett mail till skrivaPå</a>. Om du redan har ett konto klicka nedan för att börja.</p>
+   {- <p class="para">För tillfället testar vi vår online signaturlösning med utvalda kunder. Om du vill bli en tidig testkund, vänligen skicka <a href="mailto:lukas@skrivapa.se">ett mail till skrivaPå</a>. Om du redan har ett konto klicka nedan för att börja.</p>
+   -}
+
   </div>
 
 
@@ -170,11 +175,6 @@ welcomeBody ctx@(Context Nothing hostpart) =
       <% maybeSignInLink ctx "Sign in here" "/" %>
     </p>
    </div>
-
-{-
-   <span class="small">Choose a document to upload:</span><br/>
-   <input type="upload"><input type="submit" value="New">
--}   
 
    <hr/>
 
