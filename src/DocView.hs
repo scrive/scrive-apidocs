@@ -303,8 +303,7 @@ showDocumentPageHelper action document helpers title content =
    <div id="dialog-confirm-sign" title="Underteckna">
 
 
-        <p><strong>Avtalet blir juridiskt bindande när alla parter undertecknat.</strong>
-        Då får du ett e-mail med det färdig avtalet.</p>
+        <p><strong>Avtalet blir juridiskt bindande när alla parter undertecknat</strong>. Då får du ett e-mail med det färdig avtalet.</p>
         
         <p>Är du säker på att du vill underteckna avtalet?</p>
 

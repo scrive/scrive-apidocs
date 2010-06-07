@@ -91,7 +91,7 @@ $(document).ready( function () {
  $("#sign").click(function() {
          $("#dialog-confirm-sign").dialog({
                  resizable: false,
-                     height: 140,
+                     height: 280,
                      width: 350,
                      modal: true,
                      buttons: {
@@ -122,7 +122,7 @@ $(document).ready( function () {
  if( issuedone ) {
        $("#dialog-confirm-signinvite-done").dialog({
                  resizable: false,
-                     height: 140,
+                     height: 240,
                      width: 350,
                      modal: true,
                      buttons: {

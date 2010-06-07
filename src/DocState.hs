@@ -345,12 +345,13 @@ getDocumentStats = do
   return (size documents)
 
 
-replaceFile :: File -> Update Documents ()
+replaceFile :: File -> Update Documents Document
 replaceFile file@File{fileid} = do
   documents <- ask
   let Just doc = getOne (documents @= fileid)
   let newdoc = doc {files = [file]} -- FIXME: care about many files here
   modify (updateIx fileid newdoc)
+  return newdoc
 
 fileModTime :: FileID -> Query Documents MinutesTime
 fileModTime fileid = do

@@ -51,8 +51,8 @@ doctransReadyToSign2Closed ctx doc = do
   newdoc <- update $ UpdateDocumentStatus doc Closed
   Just user <- query $ FindUserByUserID (unAuthor (author doc))
   liftIO $ forkIO $ do
-    sealDocument user doc
-    sendClosedEmails ctx doc
+    newdoc <- sealDocument user doc
+    sendClosedEmails ctx newdoc
   return newdoc
 
 doctransReadyToSign2Canceled :: Context -> Document -> IO Document
@@ -78,7 +78,7 @@ sendInvitationEmail1 ctx document signlink = do
   content <- invitationMail ctx signatoryemail signatoryname
              title documentid signatorylinkid
 
-  sendMail signatoryname signatoryemail title content
+  sendMail signatoryname signatoryemail title content (filepdf $ head $ files document)
 
 sendClosedEmails :: Context -> Document -> IO ()
 sendClosedEmails ctx document = do
@@ -94,8 +94,8 @@ sendClosedEmail1 ctx document signlink = do
       Document{title,documentid} = document
   content <- closedMail ctx signatoryemail signatoryname
              title documentid signatorylinkid
-
-  sendMail signatoryname signatoryemail title content
+  let attachmentcontent = filepdf $ head $ files document
+  sendMail signatoryname signatoryemail title content attachmentcontent
   
 handleSign
   :: (MonadIO m, MonadPlus m, ServerMonad m, FilterMonad Response m) =>
@@ -276,7 +276,7 @@ personsFromDocument document =
         x (SignatoryLink{signatoryname,signatorycompany}) = SealPerson (BS.toString signatoryname) (BS.toString signatorycompany)
     in map x links
 
-sealDocument :: User -> Document -> IO ()
+sealDocument :: User -> Document -> IO Document
 sealDocument author@(User {fullname,usercompanyname}) document = do
   let (file@File {fileid,filename,filepdf,filejpgpages}) = safehead "sealDocument" $ files document
   let docid = unDocumentID (documentid document)
@@ -302,7 +302,6 @@ sealDocument author@(User {fullname,usercompanyname}) document = do
   newfilejpegpages <- convertPdfToJpgPages newfilepdf
   let newfile = file {filepdf = newfilepdf, filejpgpages = newfilejpegpages}
   update $ ReplaceFile newfile
-  return ()
   
 
 
