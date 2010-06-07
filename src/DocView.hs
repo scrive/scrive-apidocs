@@ -239,7 +239,8 @@ showDocument user document issuedone =
           </div>
 
                 <div id="dialog-confirm-signinvite-done" title="Avtal undertecknat!">
-	        <p> Du har undertecknat avtalet och en inbjudan har nu skickats till <span id="mrx">"Mr X"</span>.</p>
+	        <p> Du har undertecknat avtalet och en inbjudan har nu skickats till 
+                        <span id="mrx"><% concatSignatories (signatorylinks document) %></span>.</p>
 
           </div>
         </span>
