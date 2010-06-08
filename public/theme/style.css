@@ -373,3 +373,14 @@ body {
   margin-right: auto;
   background-color: #FCFCFC;
 }
+
+.flashmsgbox
+{
+    //background-color:green;
+    position:absolute;
+    height:30%;
+    left:30%;
+    right:30%;
+    top:10%;
+    padding:1em;
+}

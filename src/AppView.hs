@@ -279,7 +279,7 @@ pageFromBody :: (EmbedAsChild (HSPT' IO) xml)
              -> String 
              -> xml 
              -> HSP XML
-pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart}) topMenu title body =
+pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages}) topMenu title body =
     withMetaData html4Strict $
     <html>
      <head>
@@ -287,8 +287,18 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart}) topMenu title body =
       <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
       <link rel="stylesheet" type="text/css" href="/theme/style.css" media="screen" />
       <link rel="stylesheet" type="text/css" href="/css/ui-lightness/jquery-ui-1.8.custom.css" media="screen" />
+      <script src="/js/jquery-1.4.2.min.js"/>
+      <script src="/js/jquery-ui-1.8.custom.min.js"/>
+      <script src="/js/global.js"/>
      </head>
      <body>
+      <%
+       case ctxflashmessages of
+         [] -> <% () %>
+         _ -> <% <div class="flashmsgbox">
+               <% ctxflashmessages %>
+              </div> %>
+       %>
       <div id="headerContainer">
         <img class="logosmall"src="/theme/images/logosmall.png" height="40"/>
         <span class="contactabout">

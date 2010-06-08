@@ -13,9 +13,6 @@ import qualified HSX.XMLGenerator
 import User
 import Control.Monad
 
-jquery :: (XMLGenerator m) => [XMLGenT m (HSX.XML m)] 
-jquery = [<script src="/js/jquery-1.4.2.min.js" zonk="öåä">öåä</script>,
-          <script src="/js/jquery-ui-1.8.custom.min.js"/>]
 
 
 mkSignDocLink :: String -> DocumentID -> SignatoryLinkID -> String
@@ -210,8 +207,7 @@ showDocument
       EmbedAsAttr m (Attr [Char] BS.ByteString)) =>
      User -> Document -> Bool -> XMLGenT m (HSX.XMLGenerator.XML m)
 showDocument user document issuedone =
-   let helper = jquery ++ 
-                [ <span style="display: none">
+   let helper = [ <span style="display: none">
                    <% showSignatoryEntryForEdit2 "signatory_template" "" "" "" %>
                   <div id="dialog-confirm-signinvite" title="Underteckna">
 	        
@@ -316,10 +312,10 @@ showDocumentPageHelper action document helpers title content =
 showDocumentForSign :: (XMLGenerator m) =>
                        String -> Document -> BS.ByteString -> BS.ByteString -> Bool -> XMLGenT m (HSX.XML m)
 showDocumentForSign action document authorname invitedname wassigned =
-   let helper = jquery ++ [ <script type="text/javascript" src="/js/document-edit.js"/>
+   let helper = [ <script type="text/javascript" src="/js/document-edit.js"/>
                 , <script> var documentid = <% show $ documentid document %>; 
                   </script>
-                          ]
+                ]
    in showDocumentPageHelper action document helper (BS.fromString $ "Avtal: " ++ BS.toString(title document)) $
         if wassigned 
            then <span>Du har redan skrivit på!</span>

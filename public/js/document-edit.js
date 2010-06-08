@@ -1,13 +1,3 @@
-
-function getUniqueId()
-{
-    var rnd = Math.round(Math.random() * 1000000000);
-    while($("#" + rnd).length  >0) {
-        rnd = Math.round(Math.random() * 1000000000);
-    }
-    return rnd;
-}
-
 function addDraggableOverChildren(elem)
 {
     var db = $(elem).find(".draggableBox");
@@ -41,25 +31,24 @@ function signatoryremove(node)
  
 function makeDocumentAjax()
 {
-   $.ajax(
-                       { url: "/pagesofdoc/" + documentid,
-                               success: function(data) {
-                               $('#documentBox').html(data);
-                           },
-                               error: function () {
-                               var that = this;
-                               $(document).delay(1000).queue(function() {
-                                       $(this).dequeue();
-                                       $.ajax(that);
-                                   });
-                           }});
+   $.ajax({ url: "/pagesofdoc/" + documentid,
+            success: function(data) {
+                         $('#documentBox').html(data);
+                     },
+            error: function () {
+                       var that = this;
+                       $(document).delay(1000).queue(function() {
+                                                         $(this).dequeue();
+                                                         $.ajax(that);
+                                                     });
+                   }
+         });
 }
 
 $(document).ready( function () {
-
- $("#dialog-confirm-signinvite").hide();
- $("#dialog-confirm-sign").hide();
- $("#signinvite").click(function() {
+    $("#dialog-confirm-signinvite").hide();
+    $("#dialog-confirm-sign").hide();
+    $("#signinvite").click(function() {
          var mrxs = $("form input[name='signatoryname']");
          var tot = "";
          mrxs.each(function(index) {
@@ -88,7 +77,7 @@ $(document).ready( function () {
 
          return false;});
 
- $("#sign").click(function() {
+    $("#sign").click(function() {
          $("#dialog-confirm-sign").dialog({
                  resizable: false,
                      height: 280,
@@ -107,7 +96,9 @@ $(document).ready( function () {
                  }
              });
          
-         return false;});
+         return false;
+    });
+
  /*
  $("#footerContainer").ajaxStart( function() { alert("Ajax start");});
  $("#footerContainer").ajaxStop( function() { alert("Ajax stop");});
@@ -117,9 +108,8 @@ $(document).ready( function () {
  $("#footerContainer").ajaxComplete( function() { alert("Ajax complete");});
  */
 
- //$("#documentBox").load("/pages/" + fileid + "/xml");
- makeDocumentAjax();
- if( issuedone ) {
+    makeDocumentAjax();
+    if( issuedone ) {
        $("#dialog-confirm-signinvite-done").dialog({
                  resizable: false,
                      height: 240,
@@ -127,16 +117,13 @@ $(document).ready( function () {
                      modal: true,
                      buttons: {
                      'Skapa ett nytt avtal': function() {
-
-                         document.location.href = "/"; 
-                     },
-                         'Avbryt': function() {
+                             document.location.href = "/"; 
+                         },
+                     'Avbryt': function() {
                              $(this).dialog('close');
                          }
-                 }
-             });
- }
-    });
-
-
+                     }
+                 });
+    }
+});
 
