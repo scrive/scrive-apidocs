@@ -39,10 +39,13 @@ appHandler = do
   let hostpart =  scheme ++ "://" ++ host
   
   maybeuser <- userLogin
+  flashmessages <- case maybeuser of
+                     Just (User{userid}) -> liftIO $ update $ GetUserFlashMessages userid
+                     Nothing -> return []
   let ctx = Context 
             { ctxmaybeuser = maybeuser
             , ctxhostpart = hostpart
-            , ctxflashmessages = []
+            , ctxflashmessages = flashmessages              
             }
   
   msum $

@@ -12,6 +12,34 @@ import qualified HSX.XMLGenerator as HSX (XML)
 import qualified HSX.XMLGenerator
 import User
 import Control.Monad
+import Control.Monad.Identity
+import Control.Monad.Trans
+
+webHSP1' :: (MonadIO m) => Maybe XMLMetaData -> HSP XML -> m (Maybe XMLMetaData, XML)
+webHSP1' metadata hsp = liftIO (evalHSP metadata hsp)
+
+webHSP1 :: (MonadIO m) => HSP XML -> m (Maybe XMLMetaData, XML)
+webHSP1 hsp = webHSP1' Nothing hsp
+
+
+xxx (Just (XMLMetaData (showDt, dt) _ pr), xml) = 
+        BS.fromString ((if showDt then (dt ++) else id) (pr xml))
+xxx (Nothing, xml) =
+        BS.fromString (renderAsHTML xml)
+
+
+documentIssuedFlashMessage :: (MonadIO m) => Document -> m FlashMessage
+documentIssuedFlashMessage document = liftM (FlashMessage . xxx) $ webHSP1
+    <div>
+     Du har undertecknat avtalet och en inbjudan har nu skickats till 
+     <span id="mrx"><% concatSignatories (signatorylinks document) %></span>.
+    </div>
+
+documentSavedForLaterFlashMessage :: (MonadIO m) => Document -> m FlashMessage
+documentSavedForLaterFlashMessage document = liftM (FlashMessage . xxx) $ webHSP1
+    <div>
+     Du har sparat documentet.
+    </div>
 
 
 

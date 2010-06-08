@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, FlexibleInstances, 
+{-# LANGUAGE FlexibleContexts, FlexibleInstances, IncoherentInstances,
              MultiParamTypeClasses, NamedFieldPuns #-}
 {-# OPTIONS_GHC -F -pgmFtrhsx #-}
 module AppView where
@@ -11,6 +11,7 @@ import Happstack.Server.HStringTemplate (webST)
 import Happstack.Server.HSP.HTML (webHSP)
 import Happstack.Server.SimpleHTTP
 import qualified HSX.XMLGenerator as HSX (XML)
+import qualified HSX.XMLGenerator
 import Control.Monad
 import Data.Object.Json as Json
 import Data.Object as Json
@@ -23,6 +24,7 @@ import Network.HTTP (urlEncode)
 import Data.Time
 import qualified Data.Map as Map
 import Misc
+import HSP.XML
 
 instance (XMLGenerator m) => 
     (EmbedAsChild m HeaderPair) where
@@ -61,6 +63,13 @@ instance (XMLGenerator m) =>
 s (k, v) = <li><% BS.toString k %>: <% v %></li>
 
 y v = <li><% v %></li>
+
+
+
+instance (HSX.XMLGenerator.EmbedAsChild m HSP.XML.XML) => 
+    (EmbedAsChild m FlashMessage) where
+  asChild (FlashMessage msg) = <% cdata $ BSC.toString msg %> -- <span class="flashmsg"> <% msg %> </span> %>
+
 
 instance (XMLGenerator m) => 
     (EmbedAsChild m (Json.Object BS.ByteString Json.JsonScalar)) where
@@ -296,7 +305,7 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages}) topMenu t
        case ctxflashmessages of
          [] -> <% () %>
          _ -> <% <div class="flashmsgbox">
-               <% ctxflashmessages %>
+               <% ctxflashmessages  %>
               </div> %>
        %>
       <div id="headerContainer">

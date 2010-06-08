@@ -45,15 +45,27 @@ $(deriveAll [''Eq, ''Ord, ''Default]
    
       newtype UserID = UserID Int
       newtype ExternalUserID = ExternalUserID BS.ByteString                  
+      newtype FlashMessage = FlashMessage BS.ByteString
                        
       data User = User
-          { userid          :: UserID
-          , externaluserids :: [ExternalUserID]
-          , fullname        :: BS.ByteString
-          , email           :: BS.ByteString
-          , usercompanyname :: BS.ByteString
-          , usercompanynumber :: BS.ByteString
+          { userid             :: UserID
+          , externaluserids    :: [ExternalUserID]
+          , fullname           :: BS.ByteString
+          , email              :: BS.ByteString
+          , usercompanyname    :: BS.ByteString
+          , usercompanynumber  :: BS.ByteString
           , userinvoiceaddress :: BS.ByteString
+          , userflashmessages :: [FlashMessage]
+          }
+
+      data User1 = User1
+          { userid1             :: UserID
+          , externaluserids1    :: [ExternalUserID]
+          , fullname1           :: BS.ByteString
+          , email1              :: BS.ByteString
+          , usercompanyname1    :: BS.ByteString
+          , usercompanynumber1  :: BS.ByteString
+          , userinvoiceaddress1 :: BS.ByteString
           }
 
       data User0 = User0
@@ -65,20 +77,40 @@ $(deriveAll [''Eq, ''Ord, ''Default]
 
    |])
 
-instance Migrate User0 User where
+instance Migrate User0 User1 where
     migrate (User0
              { userid0
              , externaluserids0
              , fullname0
              , email0
+             }) = User1
+                { userid1 = userid0
+                , externaluserids1 = externaluserids0
+                , fullname1 = fullname0
+                , email1 = email0
+                , usercompanyname1 = BS.empty
+                , usercompanynumber1 = BS.empty
+                , userinvoiceaddress1 = BS.empty
+                }
+
+instance Migrate User1 User where
+    migrate (User1
+             { userid1
+             , externaluserids1
+             , fullname1
+             , email1
+             , usercompanyname1
+             , usercompanynumber1
+             , userinvoiceaddress1
              }) = User
-                { userid = userid0
-                , externaluserids = externaluserids0
-                , fullname = fullname0
-                , email = email0
-                , usercompanyname = BS.empty
-                , usercompanynumber = BS.empty
-                , userinvoiceaddress = BS.empty
+                { userid = userid1
+                , externaluserids = externaluserids1
+                , fullname = fullname1
+                , email = email1
+                , usercompanyname = usercompanyname1
+                , usercompanynumber = usercompanynumber1
+                , userinvoiceaddress = userinvoiceaddress1
+                , userflashmessages = []
                 }
 
 
@@ -88,10 +120,16 @@ $(inferIxSet "Users" ''User 'noCalcs [''UserID, ''ExternalUserID])
 $(deriveSerialize ''User0)
 instance Version User0
 
-$(deriveSerialize ''User)
-instance Version User where
+$(deriveSerialize ''User1)
+instance Version User1 where
     mode = extension 1 (Proxy :: Proxy User0)
 
+$(deriveSerialize ''User)
+instance Version User where
+    mode = extension 2 (Proxy :: Proxy User1)
+
+$(deriveSerialize ''FlashMessage)
+instance Version FlashMessage
 
 $(deriveSerialize ''UserID)
 instance Version UserID
@@ -138,6 +176,7 @@ addUser externaluserid fullname email = do
                    , usercompanyname = BS.empty
                    , usercompanynumber = BS.empty
                    , userinvoiceaddress = BS.empty
+                   , userflashmessages = []
                    })
   put (insert user users)
   return user
@@ -153,12 +192,37 @@ getAllUsers = do
   users <- ask
   return (toList users)
 
+getUserFlashMessages :: UserID -> Update Users [FlashMessage]
+getUserFlashMessages userid = do
+  users <- ask
+  case getOne (users @= userid) of
+    Nothing -> return []
+    Just (user@User{ userflashmessages }) -> 
+        do
+          modify (updateIx userid (user { userflashmessages = []})) 
+          return userflashmessages
+
+addUserFlashMessage :: UserID -> FlashMessage -> Update Users ()
+addUserFlashMessage userid msg= do
+  users <- ask
+  case getOne (users @= userid) of
+    Nothing -> return ()
+    Just (user@User{ userflashmessages }) -> 
+        do
+          modify (updateIx userid (user { userflashmessages = msg : userflashmessages })) 
+          return ()
 
 instance Component Users where
   type Dependencies Users = End
   initialValue = IxSet.empty
   
 -- create types for event serialization
-$(mkMethods ''Users ['findUserByUserID, 'findUserByExternalUserID, 
-                     'addUser, 'getUserStats, 'getAllUsers])
+$(mkMethods ''Users [ 'findUserByUserID
+                    , 'findUserByExternalUserID
+                    , 'addUser
+                    , 'getUserStats
+                    , 'getAllUsers
+                    , 'getUserFlashMessages
+                    , 'addUserFlashMessage
+                    ])
 

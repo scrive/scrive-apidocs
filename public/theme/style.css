@@ -376,11 +376,13 @@ body {
 
 .flashmsgbox
 {
-    //background-color:green;
-    position:absolute;
-    height:30%;
-    left:30%;
-    right:30%;
-    top:10%;
-    padding:1em;
+background-color:lightgray;
+border:1px solid gray;
+// height:60%;
+left:20%;
+padding:1em;
+position:absolute;
+right:20%;
+top:100px;
+font-size: 200%;
 }

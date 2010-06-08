@@ -153,7 +153,7 @@ handleIssue ctx@(Context {ctxmaybeuser = Just user, ctxhostpart}) =
 
 handleIssueShow
   :: Context -> DocumentID -> ServerPartT IO Response
-handleIssueShow ctx@(Context {ctxmaybeuser = Just user, ctxhostpart}) documentid = do
+handleIssueShow ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) documentid = do
   Just (document::Document) <- query (GetDocumentByDocumentID documentid)
   msum [ do
            methodM GET 
@@ -163,12 +163,23 @@ handleIssueShow ctx@(Context {ctxmaybeuser = Just user, ctxhostpart}) documentid
        , do
            methodM POST
            doc2 <- updateDocument ctx document
-           liftIO $ print (status document, status doc2)
+           {-
            let link = 
                    if status doc2 == ReadyToSign &&
                       status document /= ReadyToSign 
                    then ctxhostpart ++ "/issue/" ++ show documentid ++ "?issuedone"
                    else ctxhostpart ++ "/issue/" ++ show documentid
+           -}
+           let link = ctxhostpart ++ "/issue/" ++ show documentid
+           
+           flashmsg <- if (status doc2 == ReadyToSign &&
+                                  status document /= ReadyToSign) 
+                       then
+                           documentIssuedFlashMessage doc2
+                       else 
+                           documentSavedForLaterFlashMessage doc2
+
+           liftIO $ update $ AddUserFlashMessage userid flashmsg
            response <- webHSP (seeOtherXML link)
            seeOther link response
        , path $ \(_title::String) -> methodM GET >> do

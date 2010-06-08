@@ -41,7 +41,7 @@ seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
 data Context = Context 
     { ctxmaybeuser :: Maybe User
     , ctxhostpart  :: String
-    , ctxflashmessages :: [String]
+    , ctxflashmessages :: [FlashMessage]
     }
 
 
