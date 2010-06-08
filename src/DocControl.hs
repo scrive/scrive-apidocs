@@ -100,7 +100,7 @@ sendClosedEmail1 ctx document signlink = do
 handleSign
   :: (MonadIO m, MonadPlus m, ServerMonad m, FilterMonad Response m) =>
      Context -> m Response
-handleSign ctx@(Context (Just user) hostpart) = 
+handleSign ctx@(Context {ctxmaybeuser = Just user, ctxhostpart}) = 
     path (\documentid -> path $ handleSignShow ctx documentid) `mplus` do
     documents <- query $ GetDocumentsBySignatory (userid user) 
     webHSP (pageFromBody ctx TopNone kontrakcja (listDocuments documents))
@@ -108,7 +108,7 @@ handleSign ctx@(Context (Just user) hostpart) =
 signDoc :: (ServerMonad m, MonadPlus m, MonadIO m, FilterMonad Response m) =>
            Context -> DocumentID -> SignatoryLinkID -> m Response
 
-signDoc ctx@(Context (Just user@User{userid}) hostpart) documentid 
+signDoc ctx@(Context {ctxmaybeuser = Just user@User{userid}, ctxhostpart}) documentid 
                signatorylinkid1 = do
   time <- liftIO $ getMinutesTime
   maybepressed <- getDataFn (look "sign" `mplus` look "sign2" `mplus` return "")
@@ -118,14 +118,14 @@ signDoc ctx@(Context (Just user@User{userid}) hostpart) documentid
   let isallsigned = all f (signatorylinks document)
       f (SignatoryLink {maybesigninfo}) = isJust maybesigninfo
   when isallsigned ((liftIO $ doctransReadyToSign2Closed ctx document) >> return ())
-  let link = mkSignDocLink hostpart documentid signatorylinkid1
+  let link = mkSignDocLink ctxhostpart documentid signatorylinkid1
   response <- webHSP (seeOtherXML link)
   seeOther link response
 
 handleSignShow
   :: (ServerMonad m, MonadPlus m, MonadIO m,FilterMonad Response m) =>
      Context -> DocumentID -> SignatoryLinkID -> m Response
-handleSignShow ctx@(Context (Just user@User{userid}) hostpart) documentid 
+handleSignShow ctx@(Context {ctxmaybeuser = Just user@User{userid}, ctxhostpart}) documentid 
                signatorylinkid1 = do
   time <- liftIO $ getMinutesTime
 
@@ -145,7 +145,7 @@ handleSignShow ctx@(Context (Just user@User{userid}) hostpart) documentid
        ]
 
 handleIssue :: Context -> ServerPartT IO Response
-handleIssue ctx@(Context (Just user) hostpart) = 
+handleIssue ctx@(Context {ctxmaybeuser = Just user, ctxhostpart}) = 
     msum [ path (handleIssueShow ctx)
          , methodM GET >> handleIssueGet ctx
          , methodM POST >> handleIssuePost ctx
@@ -153,7 +153,7 @@ handleIssue ctx@(Context (Just user) hostpart) =
 
 handleIssueShow
   :: Context -> DocumentID -> ServerPartT IO Response
-handleIssueShow ctx@(Context (Just user) hostpart) documentid = do
+handleIssueShow ctx@(Context {ctxmaybeuser = Just user, ctxhostpart}) documentid = do
   Just (document::Document) <- query (GetDocumentByDocumentID documentid)
   msum [ do
            methodM GET 
@@ -167,8 +167,8 @@ handleIssueShow ctx@(Context (Just user) hostpart) documentid = do
            let link = 
                    if status doc2 == ReadyToSign &&
                       status document /= ReadyToSign 
-                   then hostpart ++ "/issue/" ++ show documentid ++ "?issuedone"
-                   else hostpart ++ "/issue/" ++ show documentid
+                   then ctxhostpart ++ "/issue/" ++ show documentid ++ "?issuedone"
+                   else ctxhostpart ++ "/issue/" ++ show documentid
            response <- webHSP (seeOtherXML link)
            seeOther link response
        , path $ \(_title::String) -> methodM GET >> do
@@ -217,7 +217,7 @@ updateDocument ctx document = do
     
 
 handleIssueGet :: (MonadIO m) => Context -> m Response
-handleIssueGet ctx@(Context (Just user) hostpart) = do
+handleIssueGet ctx@(Context {ctxmaybeuser = Just user, ctxhostpart}) = do
     documents <- query $ GetDocumentsByAuthor (userid user) 
     webHSP (pageFromBody ctx TopDocument kontrakcja (listDocuments documents))
 
@@ -313,7 +313,7 @@ basename filename =
 
 handleIssuePost
   :: (ServerMonad m, MonadIO m,FilterMonad Response m) => Context -> m Response
-handleIssuePost ctx@(Context (Just user) hostpart) = do
+handleIssuePost ctx@(Context { ctxmaybeuser = Just user, ctxhostpart}) = do
   maybeupload <- getDataFn (lookInput "doc")
   case maybeupload of
     Just input@(Input content (Just filename) _contentType) -> 
@@ -322,11 +322,11 @@ handleIssuePost ctx@(Context (Just user) hostpart) = do
           let title = BS.fromString (basename filename) 
           doc <- update $ NewDocument (userid user) title ctime
           liftIO $ forkIO $ handleDocumentUploadX (documentid doc) (concatChunks content) filename
-          let link = hostpart ++ "/issue/" ++ show (documentid doc)
+          let link = ctxhostpart ++ "/issue/" ++ show (documentid doc)
           response <- webHSP (seeOtherXML link)
           seeOther link response
     _ -> do
-      let link = hostpart ++ "/issue"
+      let link = ctxhostpart ++ "/issue"
       response <- webHSP (seeOtherXML link)
       seeOther link response
 

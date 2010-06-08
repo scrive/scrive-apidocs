@@ -39,7 +39,11 @@ appHandler = do
   let hostpart =  scheme ++ "://" ++ host
   
   maybeuser <- userLogin
-  let ctx = Context maybeuser hostpart
+  let ctx = Context 
+            { ctxmaybeuser = maybeuser
+            , ctxhostpart = hostpart
+            , ctxflashmessages = []
+            }
   
   msum $
     [ nullDir >> webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx))

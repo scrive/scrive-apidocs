@@ -24,7 +24,7 @@ import Misc
 import AppView
 import User
 
-showUser ctx@(Context (Just user) _) = 
+showUser ctx@(Context {ctxmaybeuser = Just user}) = 
     webHSP $ pageFromBody ctx TopAccount kontrakcja $ 
     <div class="doctable">
      <h1>Välkommen <% fullname user %></h1>

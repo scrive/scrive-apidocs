@@ -354,11 +354,11 @@ invitationMailXml :: (XMLGenerator m)
                   -> DocumentID
                   -> SignatoryLinkID
                   -> XMLGenT m (HSX.XML m)
-invitationMailXml (Context (Just user) hostpart) 
+invitationMailXml (Context {ctxmaybeuser = Just user, ctxhostpart}) 
                   emailaddress personname 
                   documenttitle documentid 
                   signaturelinkid = 
-    let link = hostpart ++ "/sign/" ++ show documentid ++ "/" ++ show signaturelinkid
+    let link = ctxhostpart ++ "/sign/" ++ show documentid ++ "/" ++ show signaturelinkid
         creatorname = BS.toString $ fullname user
     in 
     <html>
@@ -398,11 +398,11 @@ closedMailXml :: (XMLGenerator m)
                   -> DocumentID
                   -> SignatoryLinkID
                   -> XMLGenT m (HSX.XML m)
-closedMailXml (Context (Just user) hostpart) 
+closedMailXml (Context {ctxmaybeuser = Just user, ctxhostpart}) 
                   emailaddress personname 
                   documenttitle documentid 
                   signaturelinkid = 
-    let link = hostpart ++ "/sign/" ++ show documentid ++ "/" ++ show signaturelinkid
+    let link = ctxhostpart ++ "/sign/" ++ show documentid ++ "/" ++ show signaturelinkid
         creatorname = BS.toString $ fullname user
     in 
     <html>

@@ -24,8 +24,8 @@ import Data.Time
 import qualified Data.Map as Map
 import Misc
 
-instance (XMLGenerator m) => (EmbedAsChild m 
-                              HeaderPair) where
+instance (XMLGenerator m) => 
+    (EmbedAsChild m HeaderPair) where
   asChild (HeaderPair name value) = <% <p> <% BS.toString name ++ ": " ++ 
                  show value  %> </p> %>	
 
@@ -33,26 +33,26 @@ instance (XMLGenerator m) => (EmbedAsChild m
 data TopMenu = TopNew | TopDocument | TopAccount | TopNone
              deriving (Eq,Ord)
 
-instance (XMLGenerator m) => (EmbedAsChild m 
-                              User) where
+instance (XMLGenerator m) => 
+    (EmbedAsChild m User) where
   asChild user = <% BS.toString (fullname user) ++ " <" ++ 
                  BS.toString (email user) ++ ">"  %>	
 
-instance (XMLGenerator m) => (EmbedAsChild m 
-                              Request) where
+instance (XMLGenerator m) => 
+    (EmbedAsChild m Request) where
   asChild rq = <% <code>
                   <% show (rqMethod rq) %> <% rqUri rq ++ rqQuery rq %><br/>
                   <% map asChild1 (rqInputs rq) %>
                  </code> %>
     where asChild1 (name,input) = <% <span><% name %>: <% input %><br/></span> %>
 
-instance (XMLGenerator m) => (EmbedAsChild m 
-                              Input) where
+instance (XMLGenerator m) => 
+    (EmbedAsChild m Input) where
   asChild (Input _value (Just filename) _contentType) = <% "File " ++ show filename %>
   asChild (Input value _maybefilename _contentType) = <% show (concatMap BSC.toString (BSCL.toChunks value)) %>
 
-instance (XMLGenerator m) => (EmbedAsChild m 
-                              (Json.JsonScalar)) where
+instance (XMLGenerator m) => 
+    (EmbedAsChild m Json.JsonScalar) where
   asChild (JsonString x) = <% BS.toString x %>	
   asChild (JsonNumber x) = <% show x %>	
   asChild (JsonBoolean x) = <% show x %>
@@ -62,8 +62,8 @@ s (k, v) = <li><% BS.toString k %>: <% v %></li>
 
 y v = <li><% v %></li>
 
-instance (XMLGenerator m) => (EmbedAsChild m 
-                              (Json.Object BS.ByteString Json.JsonScalar)) where
+instance (XMLGenerator m) => 
+    (EmbedAsChild m (Json.Object BS.ByteString Json.JsonScalar)) where
   asChild (Json.Mapping xs) =
     <%
       <ul>
@@ -89,8 +89,9 @@ kontrakcjaAscii :: [Char]
 kontrakcjaAscii = "skriva"
 
 
-handleRPXLoginView :: (XMLGenerator m) => Json.JsonObject
-                      -> XMLGenT m (HSX.XML m)
+handleRPXLoginView :: (XMLGenerator m) 
+                      => Json.JsonObject
+                   -> XMLGenT m (HSX.XML m)
 handleRPXLoginView json =
     <p>
       Welcome! This is what we know about you:
@@ -143,8 +144,10 @@ loginBox =
    </div>
 -}
 
-welcomeBody :: (XMLGenerator m) => Context -> XMLGenT m (HSX.XML m)
-welcomeBody (Context (Just _) hostpart) = 
+welcomeBody :: (XMLGenerator m) 
+               => Context 
+            -> XMLGenT m (HSX.XML m)
+welcomeBody (Context {ctxmaybeuser = Just _, ctxhostpart}) = 
   <div class="centerdiv" style="width: 300px">
    {- <img src="/theme/images/logolarge.png"/>
    <br/> 
@@ -166,7 +169,7 @@ welcomeBody (Context (Just _) hostpart) =
   </div>
 
 
-welcomeBody ctx@(Context Nothing hostpart) = 
+welcomeBody ctx@(Context {ctxmaybeuser = Nothing}) = 
   <div class="centerdiv" style="width: 280px"> 
    <div style="text-align: center">
     <img src="/theme/images/logolarge.png"/><br/>
@@ -183,13 +186,16 @@ welcomeBody ctx@(Context Nothing hostpart) =
    <p class="para">För tillfället testar vi vår online signaturlösning med utvalda kunder. Om du vill bli en tidig testkund, vänligen <a href="mailto:lukas@skrivapa.se">skicka ett mail</a>. Om du redan har ett konto klicka nedan för att börja.</p>
   </div>
 
-errorReport :: (XMLGenerator m) => Context -> Request -> XMLGenT m (HSX.XML m)
-errorReport (Context maybeuser _) request = 
+errorReport :: (XMLGenerator m) 
+               => Context 
+            -> Request 
+            -> XMLGenT m (HSX.XML m)
+errorReport (Context {ctxmaybeuser}) request = 
   <div>
    <p>Ett fel har uppstått. Det beror inte på dig. Det beror på oss. Vi tar hand om problemet så snart vi kan. Tills vi fixat problemet, vänligen försök igen genom att börja om från <a href="/">startsidan</a>.</p>
    <hr/>
    <p>Information useful to developers:</p>
-   <% case maybeuser of
+   <% case ctxmaybeuser of
            Just user -> <p>Logged in as: <% user %></p>
            Nothing -> <p>Not logged in</p>
    %>
@@ -249,7 +255,12 @@ dateStr ct =
 
 -- * Main Implementation
 
-renderFromBody :: (MonadIO m, EmbedAsChild (HSPT' IO) xml) => Context -> TopMenu -> String -> xml -> m Response
+renderFromBody :: (MonadIO m, EmbedAsChild (HSPT' IO) xml) 
+                  => Context 
+               -> TopMenu 
+               -> String 
+               -> xml 
+               -> m Response
 renderFromBody ctx topmenu title = webHSP . pageFromBody ctx topmenu title
 
 topnavi :: (XMLGenerator m) => Bool -> Context -> String -> String -> XMLGenT m (HSX.XML m)
@@ -262,8 +273,13 @@ topnavi False ctx title link =
     --maybeSignInLink2 ctx <span><span class="inactiveleft"/><span class="inactivemid"><% title %></span><span class="inactiveright"/></span> link ""
     maybeSignInLink2 ctx title link ""
 
-pageFromBody :: (EmbedAsChild (HSPT' IO) xml) => Context -> TopMenu -> String -> xml -> HSP XML
-pageFromBody ctx@(Context maybeuser hostpart) topMenu title body =
+pageFromBody :: (EmbedAsChild (HSPT' IO) xml) 
+                => Context 
+             -> TopMenu 
+             -> String 
+             -> xml 
+             -> HSP XML
+pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart}) topMenu title body =
     withMetaData html4Strict $
     <html>
      <head>
@@ -277,7 +293,7 @@ pageFromBody ctx@(Context maybeuser hostpart) topMenu title body =
         <img class="logosmall"src="/theme/images/logosmall.png" height="40"/>
         <span class="contactabout">
          <%
-           case maybeuser of
+           case ctxmaybeuser of
              Just _ -> <a href="/logout">Logout</a>
              Nothing -> maybeSignInLink ctx "Login" "/"
          %> | <a href="about">Om skrivaPå</a></span>

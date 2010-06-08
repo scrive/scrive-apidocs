@@ -38,7 +38,11 @@ import System.Log.Logger
 seeOtherXML :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
 
-data Context = Context (Maybe User) String
+data Context = Context 
+    { ctxmaybeuser :: Maybe User
+    , ctxhostpart  :: String
+    , ctxflashmessages :: [String]
+    }
 
 
 
@@ -146,20 +150,20 @@ maybeSignInLink
   :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] [Char])) =>
      Context -> XMLGenT m (HSX.XML m) -> String -> XMLGenT m (HSX.XML m)
 -}
-maybeSignInLink (Context Nothing base) title url = do
+maybeSignInLink (Context {ctxmaybeuser = Nothing, ctxhostpart}) title url = do
     -- FIXME: this is very simple url handling....
-    let fullurl = base ++ url
+    let fullurl = ctxhostpart ++ url
     <a class="rpxnow" onclick="return false;"
        href=("https://kontrakcja.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode fullurl)><% title %></a> 
-maybeSignInLink (Context (Just _) base) title url = do
+maybeSignInLink (Context {}) title url = do
     <a href=url><% title %></a> 
 
-maybeSignInLink2 (Context Nothing base) title url class1 = do
+maybeSignInLink2 (Context {ctxmaybeuser = Nothing, ctxhostpart}) title url class1 = do
     -- FIXME: this is very simple url handling....
-    let fullurl = base ++ url
+    let fullurl = ctxhostpart ++ url
     <a class=("rpxnow " ++ class1) onclick="return false;" class=class1
        href=("https://kontrakcja.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode fullurl)><% title %></a> 
-maybeSignInLink2 (Context (Just _) base) title url class1 = do
+maybeSignInLink2 (Context {}) title url class1 = do
     <a href=url class=class1><% title %></a> 
 
 
