@@ -29,6 +29,13 @@ instance Show MinutesTime where
         in (++) $ formatCalendarTime defaultTimeLocale 
                "%Y-%m-%d %H:%M" calendartime
 
+showDateOnly (MinutesTime mins) = 
+        let clocktime = TOD (fromIntegral mins*60) 0
+            -- FIXME: use TimeZone of user
+            calendartime = unsafePerformIO $ toCalendarTime clocktime
+        in formatCalendarTime defaultTimeLocale 
+               "%Y-%m-%d" calendartime
+
 instance Version MinutesTime
 $(deriveSerialize ''MinutesTime)
 

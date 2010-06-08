@@ -282,16 +282,20 @@ handleDocumentUploadX docid content filename = do
 
 personsFromDocument document = 
     let
-        -- FIXME: add the issuer here
         links = signatorylinks document
-        x (SignatoryLink{signatoryname,signatorycompany}) = SealPerson (BS.toString signatoryname) (BS.toString signatorycompany)
+        x (SignatoryLink{signatoryname,signatorycompany,maybesigninfo = Just (SignInfo { signtime })})
+            | BS.null signatorycompany =
+                SealPerson (BS.toString signatoryname ++ ", ") (showDateOnly signtime)
+            | otherwise =
+                SealPerson (BS.toString signatoryname ++ ", ") 
+                               (BS.toString signatorycompany ++ ", " ++ showDateOnly signtime)
     in map x links
 
 sealDocument :: User -> Document -> IO Document
 sealDocument author@(User {fullname,usercompanyname}) document = do
   let (file@File {fileid,filename,filepdf,filejpgpages}) = safehead "sealDocument" $ files document
   let docid = unDocumentID (documentid document)
-  let persons = SealPerson (BS.toString fullname) (BS.toString usercompanyname) : personsFromDocument document
+  let persons = SealPerson (BS.toString fullname ++ ", ") (BS.toString usercompanyname) : personsFromDocument document
   tmppath <- getTemporaryDirectory
   let tmpin = tmppath ++ "/in_" ++ show docid ++ ".pdf"
   let tmpout = tmppath ++ "/out_" ++ show docid ++ ".pdf"

@@ -40,8 +40,9 @@ BT
 ET
 -}
 
-lastPageSealFileName = "files/seal.pdf"
-paginationSealFileName = "files/pagination.pdf"
+--lastPageSealFileName = "files/seal.pdf"
+--paginationSealFileName = "files/pagination.pdf"
+sealFileName = "files/seal2.pdf"
 
 listPageRefIDSFromPages :: Document -> RefID -> [RefID]
 listPageRefIDSFromPages document pagesrefid =
@@ -182,27 +183,30 @@ process (SealSpec
     , sealDocumentNumber
     , sealPersons}) = do
     Just doc <- PdfModel.parseFile sealInput
-    Just pagin <- PdfModel.parseFile paginationSealFileName
-    Just seal <- PdfModel.parseFile lastPageSealFileName 
-    let sealpage1 = head $ listPageRefIDs seal
-    let paginpage1 = head $ listPageRefIDs pagin
+    --Just pagin <- PdfModel.parseFile paginationSealFileName
+    --Just seal <- PdfModel.parseFile lastPageSealFileName 
+    Just seal <- PdfModel.parseFile sealFileName 
+    --let sealpage1 = head $ listPageRefIDs seal
+    --let paginpage1 = head $ listPageRefIDs pagin
+    let [paginpage1, sealpage1] = listPageRefIDs seal
     let ([newsealcontents,newpagincontents],doc1) = 
             runState (do
-                          [a] <- importObjects seal [sealpage1] 
-                          [b] <- importObjects pagin [paginpage1]
-                          return [a,b] ) doc
+                          --[a] <- importObjects seal [sealpage1] 
+                          --[b] <- importObjects pagin [paginpage1]
+                          [a,b] <- importObjects seal [paginpage1,sealpage1]
+                          return [b,a] ) doc
         pagintext = -- BS.pack $
-              "BT " ++
-              "0.863 0.43 0.152 0.004 k " ++
-              "/SkrivaPaGS1 gs " ++
-              "/SkrivaPaT1_0 1 Tf " ++
-              -- "6.3716 0 0 6.4351 187.6509 19.251 Tm " ++
-              -- "( )Tj " ++
-              "6 0 0 6 189.562 19.251 Tm " ++
-              "[(A)60(vt)60(al N)20(r " ++ show sealDocumentNumber ++ ")]TJ " ++
-              "6 0 0 6 340.562 19.251 Tm " ++
-              "[(s)20(kriv)55(aP)70(\\345 F\\366)30(r)15(s)20(egl)-20(a)65(t)]TJ " ++
-              "ET "
+                    "BT " ++
+                    "0.863 0.43 0.152 0.004 k " ++
+                    "/SkrivaPaGS1 gs " ++
+                    "/SkrivaPaT1_0 1 Tf " ++
+                    "6.3716 0 0 6.4351 207.7495 19.957 Tm " ++
+                    "( )Tj " ++
+                    "5.9408 0 0 6 209.6606 19.957 Tm " ++
+                    "[(A)60(vt)60(al N)20(r " ++ show sealDocumentNumber ++ ")]TJ " ++
+                    "5.9408 0 0 6 360 19.957 Tm " ++
+                    "[(s)20(kriv)55(aP)70(\\345)]TJ " ++
+                    "ET "
         sealtext = --BS.pack $ 
             movemtx ++
             "BT " ++
@@ -211,10 +215,10 @@ process (SealSpec
             "/SkrivaPaT1_0 1 Tf " ++
             "8 0 0 8 62.707 71.735 Tm " ++
             "[(A) 60 (vt) 60 (al N) 20 (r ) 0 (" ++ show sealDocumentNumber ++ ")] TJ " ++
-            "7.9999 0 0 8 62.707 49.762 Tm " ++
-            "[(Undertecknat:)] TJ " ++
+            "7.9999 0 0 8 62.9619 49.7622 Tm " ++
+            "[(U)40(nd)10(e)20(r)38(teckna)65(t)5(:)]TJ " ++
             "15 TL " ++
-            "1 0 0 1 130.2 49.762 Tm " ++
+            "1 0 0 1 137.4512 49.7856 Tm " ++
             concatMap seal1text sealPersons ++
             "ET "
         seal1text (SealPerson {sealPerson,sealPersonSmall})=
@@ -233,12 +237,3 @@ process (SealSpec
     return ()
 
 
-{-
-unicodeToWinAnsi 'ö' = Char.chr 0o366 
-unicodeToWinAnsi 'å' = Char.chr 0o345
-unicodeToWinAnsi 'ä' = Char.chr 0o344
-unicodeToWinAnsi 'Ö' = Char.chr 0o326
-unicodeToWinAnsi 'Å' = Char.chr 0o305
-unicodeToWinAnsi 'Ä' = Char.chr 0o304
-unicodeToWinAnsi x = x
--}
