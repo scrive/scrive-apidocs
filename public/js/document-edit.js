@@ -28,22 +28,6 @@ function signatoryremove(node)
   db.fadeOut('slow',function() { $(this).remove(); });
   return false;
 }
- 
-function makeDocumentAjax()
-{
-   $.ajax({ url: "/pagesofdoc/" + documentid,
-            success: function(data) {
-                         $('#documentBox').html(data);
-                     },
-            error: function () {
-                       var that = this;
-                       $(document).delay(1000).queue(function() {
-                                                         $(this).dequeue();
-                                                         $.ajax(that);
-                                                     });
-                   }
-         });
-}
 
 $(document).ready( function () {
     $("#dialog-confirm-signinvite").hide();
@@ -108,7 +92,6 @@ $(document).ready( function () {
  $("#footerContainer").ajaxComplete( function() { alert("Ajax complete");});
  */
 
-    makeDocumentAjax();
     if( issuedone ) {
        $("#dialog-confirm-signinvite-done").dialog({
                  resizable: false,

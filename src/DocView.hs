@@ -42,7 +42,18 @@ documentSavedForLaterFlashMessage document = liftM (FlashMessage . xxx) $ webHSP
     </div>
 
 
+documentSignedFlashMessage :: (MonadIO m) => Document -> m FlashMessage
+documentSignedFlashMessage document = liftM (FlashMessage . xxx) $ webHSP1
+    <div>
+     Du har undertecknat avtalet!
+    </div>
 
+documentClosedFlashMessage :: (MonadIO m) => Document -> m FlashMessage
+documentClosedFlashMessage document = liftM (FlashMessage . xxx) $ webHSP1
+    <div>
+     Du har undertecknat avtalet! Avtalet är undertecknat av alla partner nu!
+    </div>
+  
 mkSignDocLink :: String -> DocumentID -> SignatoryLinkID -> String
 mkSignDocLink hostpart documentid signaturelinkid =
     hostpart ++ "/sign/" ++ show documentid ++ "/" ++ show signaturelinkid

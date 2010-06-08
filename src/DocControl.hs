@@ -48,7 +48,8 @@ doctransPreparation2ReadyToSign ctx doc = do
 
 doctransReadyToSign2Closed :: Context -> Document -> IO Document
 doctransReadyToSign2Closed ctx doc = do
-  newdoc <- update $ UpdateDocumentStatus doc Closed
+  update $ UpdateDocumentStatus doc Closed
+  newdoc <- update $ RemoveFileFromDoc (documentid doc)
   Just user <- query $ FindUserByUserID (unAuthor (author doc))
   liftIO $ forkIO $ do
     newdoc <- sealDocument user doc
@@ -107,7 +108,6 @@ handleSign ctx@(Context {ctxmaybeuser = Just user, ctxhostpart}) =
 
 signDoc :: (ServerMonad m, MonadPlus m, MonadIO m, FilterMonad Response m) =>
            Context -> DocumentID -> SignatoryLinkID -> m Response
-
 signDoc ctx@(Context {ctxmaybeuser = Just user@User{userid}, ctxhostpart}) documentid 
                signatorylinkid1 = do
   time <- liftIO $ getMinutesTime
@@ -118,6 +118,13 @@ signDoc ctx@(Context {ctxmaybeuser = Just user@User{userid}, ctxhostpart}) docum
   let isallsigned = all f (signatorylinks document)
       f (SignatoryLink {maybesigninfo}) = isJust maybesigninfo
   when isallsigned ((liftIO $ doctransReadyToSign2Closed ctx document) >> return ())
+  flashmsg <- if isallsigned 
+              then
+                  documentClosedFlashMessage document
+              else 
+                  documentSignedFlashMessage document
+  liftIO $ update $ AddUserFlashMessage userid flashmsg
+
   let link = mkSignDocLink ctxhostpart documentid signatorylinkid1
   response <- webHSP (seeOtherXML link)
   seeOther link response
@@ -308,6 +315,7 @@ sealDocument author@(User {fullname,usercompanyname}) document = do
             , sealDocumentNumber = docid
             , sealPersons = persons
             }
+  print config
   hPutStr inx (show config)
   hClose inx
   
@@ -316,7 +324,7 @@ sealDocument author@(User {fullname,usercompanyname}) document = do
   -- FIXME: delete old files
   newfilejpegpages <- convertPdfToJpgPages newfilepdf
   let newfile = file {filepdf = newfilepdf, filejpgpages = newfilejpegpages}
-  update $ ReplaceFile newfile
+  update $ ReplaceFile document newfile
   
 
 

@@ -345,12 +345,20 @@ getDocumentStats = do
   return (size documents)
 
 
-replaceFile :: File -> Update Documents Document
-replaceFile file@File{fileid} = do
+replaceFile :: Document -> File -> Update Documents Document
+replaceFile (Document{documentid}) file = do
   documents <- ask
-  let Just doc = getOne (documents @= fileid)
+  let Just doc = getOne (documents @= documentid)
   let newdoc = doc {files = [file]} -- FIXME: care about many files here
-  modify (updateIx fileid newdoc)
+  modify (updateIx documentid newdoc)
+  return newdoc
+
+removeFileFromDoc :: DocumentID -> Update Documents Document
+removeFileFromDoc documentid = do
+  documents <- ask
+  let Just doc = getOne (documents @= documentid)
+  let newdoc = doc {files = []} -- FIXME: care about many files here
+  modify (updateIx documentid newdoc)
   return newdoc
 
 fileModTime :: FileID -> Query Documents MinutesTime
@@ -381,6 +389,7 @@ $(mkMethods ''Documents [ 'getDocumentsByAuthor
                         , 'replaceFile
                         , 'fileModTime
                         , 'fileByFileID
+                        , 'removeFileFromDoc
                         ])
 
 
