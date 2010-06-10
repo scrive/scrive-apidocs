@@ -50,7 +50,7 @@ appHandler = do
   
   msum $
     [ nullDir >> webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx))
-    , dir "sign" (withUser maybeuser (DocControl.handleSign ctx))
+    , dir "sign" $ DocControl.handleSign ctx
     , dir "issue" (withUser maybeuser (DocControl.handleIssue ctx))
     , dir "pages" $ path $ \fileid -> 
         msum [ path $ \pageno -> do

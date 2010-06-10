@@ -41,7 +41,6 @@ documentSavedForLaterFlashMessage document = liftM (FlashMessage . xxx) $ webHSP
      Du har sparat documentet.
     </div>
 
-
 documentSignedFlashMessage :: (MonadIO m) => Document -> m FlashMessage
 documentSignedFlashMessage document = liftM (FlashMessage . xxx) $ webHSP1
     <div>

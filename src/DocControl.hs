@@ -99,12 +99,11 @@ sendClosedEmail1 ctx document signlink = do
   sendMail signatoryname signatoryemail title content attachmentcontent
   
 handleSign
-  :: (MonadIO m, MonadPlus m, ServerMonad m, FilterMonad Response m) =>
-     Context -> m Response
-handleSign ctx@(Context {ctxmaybeuser = Just user, ctxhostpart}) = 
-    path (\documentid -> path $ handleSignShow ctx documentid) `mplus` do
-    documents <- query $ GetDocumentsBySignatory (userid user) 
-    webHSP (pageFromBody ctx TopNone kontrakcja (listDocuments documents))
+  :: Context -> ServerPartT IO Response
+handleSign ctx@(Context {ctxmaybeuser, ctxhostpart}) = 
+    path (\documentid -> path $ handleSignShow ctx documentid) `mplus` (withUser ctxmaybeuser $ do
+    documents <- query $ GetDocumentsBySignatory (userid $ fromJust ctxmaybeuser) 
+    webHSP (pageFromBody ctx TopNone kontrakcja (listDocuments documents)))
 
 signDoc :: (ServerMonad m, MonadPlus m, MonadIO m, FilterMonad Response m) =>
            Context -> DocumentID -> SignatoryLinkID -> m Response
@@ -132,13 +131,13 @@ signDoc ctx@(Context {ctxmaybeuser = Just user@User{userid}, ctxhostpart}) docum
 handleSignShow
   :: (ServerMonad m, MonadPlus m, MonadIO m,FilterMonad Response m) =>
      Context -> DocumentID -> SignatoryLinkID -> m Response
-handleSignShow ctx@(Context {ctxmaybeuser = Just user@User{userid}, ctxhostpart}) documentid 
+handleSignShow ctx@(Context {ctxmaybeuser, ctxhostpart}) documentid 
                signatorylinkid1 = do
   time <- liftIO $ getMinutesTime
 
   msum [ signDoc ctx documentid signatorylinkid1
        , do 
-          Just document <- update $ MarkDocumentSeen documentid userid signatorylinkid1 time
+          Just document <- update $ MarkDocumentSeen documentid signatorylinkid1 time
                        
           let wassigned = any f (signatorylinks document)
               f (SignatoryLink {signatorylinkid,maybesigninfo}) = 

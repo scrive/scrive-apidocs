@@ -322,9 +322,9 @@ getFilePageJpg xfileid pageno = do
     jpg <- return (jpgs!!(pageno-1))
     return jpg
 
-markDocumentSeen :: DocumentID -> UserID -> SignatoryLinkID 
+markDocumentSeen :: DocumentID -> SignatoryLinkID 
                  -> MinutesTime -> Update Documents (Maybe Document)
-markDocumentSeen documentid userid signatorylinkid1 time = do
+markDocumentSeen documentid signatorylinkid1 time = do
   documents <- ask
   case getOne (documents @= documentid) of
     Nothing -> return Nothing
