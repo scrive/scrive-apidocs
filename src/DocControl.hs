@@ -105,32 +105,43 @@ handleSign ctx@(Context {ctxmaybeuser, ctxhostpart}) =
     documents <- query $ GetDocumentsBySignatory (userid $ fromJust ctxmaybeuser) 
     webHSP (pageFromBody ctx TopNone kontrakcja (listDocuments documents)))
 
-signDoc :: (ServerMonad m, MonadPlus m, MonadIO m, FilterMonad Response m) =>
-           Context -> DocumentID -> SignatoryLinkID -> m Response
-signDoc ctx@(Context {ctxmaybeuser = Just user@User{userid}, ctxhostpart}) documentid 
+signDoc :: Context -> DocumentID -> SignatoryLinkID -> ServerPartT IO  Response
+signDoc ctx@(Context {ctxmaybeuser, ctxhostpart}) documentid 
                signatorylinkid1 = do
   time <- liftIO $ getMinutesTime
   maybepressed <- getDataFn (look "sign" `mplus` look "sign2" `mplus` return "")
   when (Prelude.null (fromJust maybepressed)) mzero -- quit here
   
-  Just document <- update $ SignDocument documentid userid signatorylinkid1 time
+  Just document <- update $ SignDocument documentid signatorylinkid1 time
   let isallsigned = all f (signatorylinks document)
       f (SignatoryLink {maybesigninfo}) = isJust maybesigninfo
   when isallsigned ((liftIO $ doctransReadyToSign2Closed ctx document) >> return ())
-  flashmsg <- if isallsigned 
-              then
-                  documentClosedFlashMessage document
-              else 
-                  documentSignedFlashMessage document
-  liftIO $ update $ AddUserFlashMessage userid flashmsg
 
-  let link = mkSignDocLink ctxhostpart documentid signatorylinkid1
+  -- let link = mkSignDocLink ctxhostpart documentid signatorylinkid1
+  let link = "/landpage/signed/" ++ show documentid ++ "/" ++ show signatorylinkid1
   response <- webHSP (seeOtherXML link)
   seeOther link response
 
+landpageSignInvite ctx documentid = do
+  Just document <- query $ GetDocumentByDocumentID documentid
+  webHSP $ pageFromBody ctx TopNone kontrakcja $ landpageSignInviteView ctx document
+
+landpageSigned ctx documentid signatorylinkid = do
+  Just document <- query $ GetDocumentByDocumentID documentid
+  webHSP $ pageFromBody ctx TopNone kontrakcja $ landpageSignedView ctx document signatorylinkid
+
+landpageSignedSave ctx documentid signatorylinkid = do
+  Just document <- query $ GetDocumentByDocumentID documentid
+  webHSP $ pageFromBody ctx TopNone kontrakcja $ landpageLoginForSaveView ctx document signatorylinkid
+
+landpageSaved (ctx@Context { ctxmaybeuser = Just user }) documentid signatorylinkid = do
+  Just document <- query $ GetDocumentByDocumentID documentid
+  Just document2 <- update $ SaveDocumentForSignedUser documentid (userid user) signatorylinkid
+  webHSP $ pageFromBody ctx TopNone kontrakcja $ landpageDocumentSavedView ctx document signatorylinkid
+
+
 handleSignShow
-  :: (ServerMonad m, MonadPlus m, MonadIO m,FilterMonad Response m) =>
-     Context -> DocumentID -> SignatoryLinkID -> m Response
+  :: Context -> DocumentID -> SignatoryLinkID -> ServerPartT IO Response
 handleSignShow ctx@(Context {ctxmaybeuser, ctxhostpart}) documentid 
                signatorylinkid1 = do
   time <- liftIO $ getMinutesTime
@@ -176,18 +187,22 @@ handleIssueShow ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpa
                    then ctxhostpart ++ "/issue/" ++ show documentid ++ "?issuedone"
                    else ctxhostpart ++ "/issue/" ++ show documentid
            -}
-           let link = ctxhostpart ++ "/issue/" ++ show documentid
            
-           flashmsg <- if (status doc2 == ReadyToSign &&
-                                  status document /= ReadyToSign) 
-                       then
-                           documentIssuedFlashMessage doc2
-                       else 
-                           documentSavedForLaterFlashMessage doc2
+           if (status doc2 == ReadyToSign &&
+               status document /= ReadyToSign) 
+             then do
+              let link = "/landpage/signinvite/" ++ show documentid
+              flashmsg <- documentSavedForLaterFlashMessage doc2
+              liftIO $ update $ AddUserFlashMessage userid flashmsg
+              response <- webHSP (seeOtherXML link)
+              seeOther link response
+            else do 
+             let link = ctxhostpart ++ "/issue"
+             flashmsg <- documentSavedForLaterFlashMessage doc2
+             liftIO $ update $ AddUserFlashMessage userid flashmsg
+             response <- webHSP (seeOtherXML link)
+             seeOther link response
 
-           liftIO $ update $ AddUserFlashMessage userid flashmsg
-           response <- webHSP (seeOtherXML link)
-           seeOther link response
        , path $ \(_title::String) -> methodM GET >> do
            let file = safehead "handleIssueShow" (files document)
            let contents = filepdf file

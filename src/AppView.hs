@@ -157,7 +157,7 @@ welcomeBody :: (XMLGenerator m)
                => Context 
             -> XMLGenT m (HSX.XML m)
 welcomeBody (Context {ctxmaybeuser = Just _, ctxhostpart}) = 
-  <div class="centerdiv" style="width: 300px">
+  <div class="centerdivnarrow">
    {- <img src="/theme/images/logolarge.png"/>
    <br/> 
     -}

@@ -57,6 +57,16 @@ appHandler = do
                  modminutes <- query $ FileModTime fileid
                  DocControl.showPage ctx modminutes fileid pageno
              ]
+    , dir "landpage" $ 
+          msum [ dir "signinvite" $ path $ \documentid -> DocControl.landpageSignInvite ctx documentid
+               , dir "signed" $ path $ \documentid -> path $ \signatorylinkid ->
+                                                      DocControl.landpageSigned ctx documentid signatorylinkid
+               , dir "signedsave" $ path $ \documentid -> path $ \signatorylinkid ->
+                                                      DocControl.landpageSignedSave ctx documentid signatorylinkid
+               , dir "saved" $ withUser maybeuser $ path $ \documentid -> path $ \signatorylinkid ->
+                                                      DocControl.landpageSaved ctx documentid signatorylinkid
+               ]
+          
     , dir "pagesofdoc" $ path $ \docid -> do
                  maybedoc <- query $ GetDocumentByDocumentID docid
                  case maybedoc of
@@ -77,7 +87,7 @@ appHandler = do
     ++ [ fileServe [] "public"
     , webHSP (pageFromBody ctx TopNone kontrakcja (errorReport ctx rq))
     ]
-    
+
 handleLogout :: ServerPartT IO Response
 handleLogout = do
   endSession

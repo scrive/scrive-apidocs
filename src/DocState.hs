@@ -295,9 +295,9 @@ updateDocumentStatus document newstatus = do
        return document
   
 
-signDocument :: DocumentID -> UserID -> SignatoryLinkID 
+signDocument :: DocumentID -> SignatoryLinkID 
              -> MinutesTime -> Update Documents (Maybe Document)
-signDocument documentid userid signatorylinkid1 time = do
+signDocument documentid signatorylinkid1 time = do
   documents <- ask
   let Just document = getOne (documents @= documentid)
       signeddocument = document { signatorylinks = newsignatorylinks }
@@ -305,7 +305,6 @@ signDocument documentid userid signatorylinkid1 time = do
       maybesign x@(SignatoryLink {signatorylinkid} ) 
           | signatorylinkid == signatorylinkid1 = 
               x { maybesigninfo = Just (SignInfo time)
-                , maybesignatory = Just (Signatory userid) 
                 }
       maybesign x = x
   modify (updateIx documentid signeddocument)
@@ -374,6 +373,24 @@ fileByFileID fileid = do
     Just doc -> return (Just $ safehead "fileByFileID" $ files doc)
     Nothing -> return Nothing
 
+
+saveDocumentForSignedUser :: DocumentID -> UserID -> SignatoryLinkID -> Update Documents (Maybe Document)
+saveDocumentForSignedUser documentid userid signatorylinkid1 = do
+  documents <- ask
+  case getOne (documents @= documentid) of
+    Nothing -> return Nothing
+    Just document -> do
+      let signeddocument = document { signatorylinks = newsignatorylinks }
+          newsignatorylinks = map maybesign (signatorylinks document)
+          maybesign x@(SignatoryLink {signatorylinkid} ) 
+            | signatorylinkid == signatorylinkid1 = 
+              x { maybesignatory = Just (Signatory userid)
+                }
+          maybesign x = x
+      modify (updateIx documentid signeddocument)
+      return (Just signeddocument)
+      
+
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocumentsByAuthor
                         , 'getDocumentsBySignatory
@@ -390,6 +407,7 @@ $(mkMethods ''Documents [ 'getDocumentsByAuthor
                         , 'fileModTime
                         , 'fileByFileID
                         , 'removeFileFromDoc
+                        , 'saveDocumentForSignedUser
                         ])
 
 

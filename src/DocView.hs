@@ -22,10 +22,69 @@ webHSP1 :: (MonadIO m) => HSP XML -> m (Maybe XMLMetaData, XML)
 webHSP1 hsp = webHSP1' Nothing hsp
 
 
+landpageSignInviteView :: (XMLGenerator m) => Context -> Document -> XMLGenT m (HSX.XML m)
+landpageSignInviteView ctx document =
+    <div class="centerdivnarrow">
+     Du har undertecknat avtalet och en inbjudan har nu skickats till 
+     <span id="mrx"><% concatSignatories (signatorylinks document) %></span>.
+
+     <p><a class="bigbutton" href="/">Skapa ett nytt avtal</a></p>
+     <p><a class="secbutton" href="/issue">Avsluta</a></p>
+    </div>
+
+landpageSignedView :: (XMLGenerator m) => Context -> Document -> SignatoryLinkID -> XMLGenT m (HSX.XML m)
+landpageSignedView ctx document signatorylinkid =
+    <div class="centerdivnarrow">
+      Avtalet <strong><% title document %></strong> är färdigställt! 
+
+      <p>Alla parter har undertecknat avtalet och du har fått en låst PDF kopia av avtalet i din inkorg. Vi rekommenderar att du sparar avtalet online via vår tjänst. Då kommer du ha tillgång till avtalet oavsett vad som händer med breven i din inkorg. Det kostar ingenting och är du snabb tar det endast ca 15-60 sekunder att spara avtalet.</p>
+
+     <a class="bigbutton" href=("/landpage/signedsave/" ++ (show $ documentid document) ++ "/" ++ show signatorylinkid)>Spara avtal</a>
+     <a class="secbutton" href=("/sign/" ++ (show $ documentid document) ++ "/" ++ show signatorylinkid)>Nej tack, jag är klar</a>
+    </div>
+
+landpageLoginForSaveView :: (XMLGenerator m) => Context -> Document -> SignatoryLinkID -> XMLGenT m (HSX.XML m)
+landpageLoginForSaveView ctx document signatorylinkid =
+    let loginlink = maybeSignInLink2 ctx "Login"
+                    ("/landpage/saved/" ++ (show $ documentid document) ++ "/" ++ show signatorylinkid) 
+                    "bigbutton" in
+    <div class="centerdivnarrow">
+        <a class="headline">Login</a>
+        <p>För att du ska kunna komma åt ditt avtal i framtiden skapar vi ett konto till dig.</p>
+
+        <p>Vår filosofi är att göra det så enkelt som möjligt för våra kunder. Därför använder vi openID som inloggningsmetod. Då behöver du inte krångla med att komma ihåg ytterligare ett användarnamn och en till kod. Välj den tjänst du vill använda för att logga in hos oss i framtiden.</p>
+
+        <p><% loginlink %></p>
+       </div>
+
+landpageDocumentSavedView :: (XMLGenerator m) => Context -> Document -> SignatoryLinkID -> XMLGenT m (HSX.XML m)
+landpageDocumentSavedView (ctx@Context { ctxmaybeuser = Just user }) signatorylinkid document = 
+    <div class="centerdivnarrow">
+     <p class="headline">Välkommen <% fullname user %>!</p>
+
+     <p>Ditt dokument är nu sparat. Du finner dokumentet under Avtal.</p>
+ 
+     <p>Vi hoppas att du är nöjd med vår tjänst hittills och att du är nyfiken på att själv använda skrivaPå för att skriva dina avtal. Därför erbjuder vi dig som ny kund möjligheten att testa tjänsten genom tre fria avtal. Dina fria avtal förbrukas endast då ett avtal undertecknats av alla parter.</p>
+
+     <p>Börja redan nu! Ladda upp ditt avtal genom att klicka nedan.</p>
+     <a class="bigbutton" href="/">Starta</a> {- FIXME: move upload stuff here also -}
+    </div>
+
+welcomeEmail :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
+welcomeEmail fullname =
+    <div>
+      <p>Hej <% fullname %>,</p>
+      <p>Tack för att du har skapat ett konto hos oss! Vi hoppas att du kommer att bli nöjd med våra tjänster.</p>
+      <p>Jag heter Lukas Duczko och är VD på skrivaPå och det här mailet är skickat direkt från min mailadress. Tveka inte att höra av dig med åsikter, feedback eller bara en enkel hälsning.</p>
+      <p>MVH<br/>
+         /Lukas Duczko och team skrivaPå
+      </p>
+    </div>
 xxx (Just (XMLMetaData (showDt, dt) _ pr), xml) = 
         BS.fromString ((if showDt then (dt ++) else id) (pr xml))
 xxx (Nothing, xml) =
         BS.fromString (renderAsHTML xml)
+
 
 
 documentIssuedFlashMessage :: (MonadIO m) => Document -> m FlashMessage
@@ -59,7 +118,7 @@ mkSignDocLink hostpart documentid signaturelinkid =
 
 -- * Convenience Functions
 
-{-
+{-1
 dateStr :: ClockTime -> String
 dateStr ct =
   formatCalendarTime

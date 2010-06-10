@@ -201,12 +201,22 @@ body {
   margin-right: auto;
 }
 
+.centerdivnarrow {
+  margin-left: auto; 
+  margin-right: auto;
+  width: 300px;
+}
+
 .small {
   font-size: small;
 }
 
-.button {
+a.button {
    color: white;
+}
+
+.button {
+   color: white !important;
    text-transform: uppercase;
    background-color: #005794;
    font-family: Verdana;
@@ -221,10 +231,15 @@ body {
    font-size: xx-small;
    font-weight: bold;
    height: 20px;
+   line-height: 20px;
+}
+
+a.secbutton {
+   color: white;
 }
 
 .secbutton {
-   color: white;
+   color: white !important;
    text-transform: uppercase;
    background-color: gray;
    font-family: Verdana;
@@ -239,10 +254,15 @@ body {
    font-size: xx-small;
    font-weight: bold;
    height: 20px;
+   line-height: 20px;
+}
+
+a.bigbutton {
+   color: white;
 }
 
 .bigbutton {
-   color: white;
+   color: white !important;
    text-transform: uppercase;
    background-color: #005794;
    font-family: Verdana;
@@ -257,6 +277,7 @@ body {
    font-size: x-small;
    font-weight: bold;
    height: 35px;
+   line-height: 35px;
    width: 185px;
 }
 
