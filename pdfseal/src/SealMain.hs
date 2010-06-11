@@ -16,16 +16,11 @@ import qualified Data.Map as Map
 ex1 = SealSpec 
     { sealInput = "1.pdf"
     , sealOutput = "1_sealed.pdf"
-    , sealDocumentNumber = 1234567
+    , sealDocumentNumber = 1234
     , sealPersons = 
         [ SealPerson "Lukas Duczko öåä ÖÅÄ" "CEO skrivaPa, Stockholm, 2010-05-31"
         , SealPerson "Gracjan Polak" "CTO skrivaPa, Stockholm, 2010-05-31"
-        , SealPerson "Gracjan 2 Polak" "CTO skrivaPa, Stockholm, 2010-05-31"
-        , SealPerson "Gracjan 3 Polak" "CTO skrivaPa, Stockholm, 2010-05-31"
-        , SealPerson "Gracjan 4 Polak" "CTO skrivaPa, Stockholm, 2010-05-31"
-        , SealPerson "Gracjan 5 Polak" "CTO skrivaPa, Stockholm, 2010-05-31"
-        , SealPerson "Gracjan 6 Polak" "CTO skrivaPa, Stockholm, 2010-05-31"
-        , SealPerson "Gracjan 7 Polak" "CTO skrivaPa, Stockholm, 2010-05-31"
+        , SealPerson "Gracjan 2 Wolak" "CTO skrivaPa, Stockholm, 2010-05-31"
         ]
     }
 

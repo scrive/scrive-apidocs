@@ -143,7 +143,9 @@ instance Show Signatory where
     showsPrec prec (Signatory userid) = showsPrec prec userid
 
 instance Show DocumentID where
-    showsPrec prec (DocumentID val) = showsPrec prec val
+    showsPrec prec (DocumentID val) = 
+        -- let s = show val in (++) (take (10-length s) "000000000" ++ s)
+         showsPrec prec val
 
 instance Read DocumentID where
     readsPrec prec = let makeDocumentID (i,v) = (DocumentID i,v) 

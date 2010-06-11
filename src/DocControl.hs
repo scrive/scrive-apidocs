@@ -192,8 +192,6 @@ handleIssueShow ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpa
                status document /= ReadyToSign) 
              then do
               let link = "/landpage/signinvite/" ++ show documentid
-              flashmsg <- documentSavedForLaterFlashMessage doc2
-              liftIO $ update $ AddUserFlashMessage userid flashmsg
               response <- webHSP (seeOtherXML link)
               seeOther link response
             else do 

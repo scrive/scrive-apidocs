@@ -25,8 +25,10 @@ webHSP1 hsp = webHSP1' Nothing hsp
 landpageSignInviteView :: (XMLGenerator m) => Context -> Document -> XMLGenT m (HSX.XML m)
 landpageSignInviteView ctx document =
     <div class="centerdivnarrow">
-     Du har undertecknat avtalet och en inbjudan har nu skickats till 
-     <span id="mrx"><% concatSignatories (signatorylinks document) %></span>.
+     <p class="headline">Avtal undertecknat!</p>
+     
+     <p>Du har undertecknat avtalet och en inbjudan har nu skickats till 
+     <span id="mrx"><% concatSignatories (signatorylinks document) %></span>.</p>
 
      <p><a class="bigbutton" href="/">Skapa ett nytt avtal</a></p>
      <p><a class="secbutton" href="/issue">Avsluta</a></p>
@@ -35,7 +37,7 @@ landpageSignInviteView ctx document =
 landpageSignedView :: (XMLGenerator m) => Context -> Document -> SignatoryLinkID -> XMLGenT m (HSX.XML m)
 landpageSignedView ctx document signatorylinkid =
     <div class="centerdivnarrow">
-      Avtalet <strong><% title document %></strong> är färdigställt! 
+      <p class="headline">Avtalet <strong><% title document %></strong> är färdigställt!</p>
 
       <p>Alla parter har undertecknat avtalet och du har fått en låst PDF kopia av avtalet i din inkorg. Vi rekommenderar att du sparar avtalet online via vår tjänst. Då kommer du ha tillgång till avtalet oavsett vad som händer med breven i din inkorg. Det kostar ingenting och är du snabb tar det endast ca 15-60 sekunder att spara avtalet.</p>
 
