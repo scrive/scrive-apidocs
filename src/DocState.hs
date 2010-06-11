@@ -228,6 +228,11 @@ getDocumentsByAuthor userid = do
     documents <- ask
     return $ toList (documents @= Author userid)
 
+getDocumentsByUser :: UserID -> Query Documents [Document]
+getDocumentsByUser userid = do
+    documents <- ask
+    return $ toList (documents @= Author userid ||| documents @= Signatory userid)
+
 getDocumentsBySignatory :: UserID -> Query Documents [Document]
 getDocumentsBySignatory userid = do
     documents <- ask
@@ -410,6 +415,7 @@ $(mkMethods ''Documents [ 'getDocumentsByAuthor
                         , 'fileByFileID
                         , 'removeFileFromDoc
                         , 'saveDocumentForSignedUser
+                        , 'getDocumentsByUser
                         ])
 
 

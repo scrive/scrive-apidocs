@@ -194,11 +194,11 @@ listDocuments documents =
     <div>
      <br/>
      <table class="doctable" cellspacing="0">
-      <col class="tdleft"/>
       <col/>
       <col/>
       <col/>
-      <col class="tdright"/>
+      <col/>
+      <col/>
       <thead>
        <tr>
         <td>Alla</td>
@@ -210,7 +210,15 @@ listDocuments documents =
        </tr>
       </thead>
       <tfoot>
-       <tr><td colspan="6">Foot</td></tr>
+       <tr>
+        <td colspan="6" style="text-align: right; overflow: hidden;">
+          <img src="/theme/images/status_draft.png"/>Draft
+          <img src="/theme/images/status_pending.png"/>Pending
+          <img src="/theme/images/status_signed.png"/>Signed
+          <img src="/theme/images/status_rejected.png"/>Canceled
+          <img src="/theme/images/status_timeout.png"/>Timed out
+         </td>
+       </tr>
       </tfoot>
       <tbody>
        <% map oneDocumentRow documents %>

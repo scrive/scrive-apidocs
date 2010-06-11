@@ -248,7 +248,7 @@ updateDocument ctx document = do
 
 handleIssueGet :: (MonadIO m) => Context -> m Response
 handleIssueGet ctx@(Context {ctxmaybeuser = Just user, ctxhostpart}) = do
-    documents <- query $ GetDocumentsByAuthor (userid user) 
+    documents <- query $ GetDocumentsByUser (userid user) 
     webHSP (pageFromBody ctx TopDocument kontrakcja (listDocuments documents))
 
 gs :: String
