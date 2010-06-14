@@ -68,7 +68,7 @@ type Kontra a = ServerPartT (StateT Context IO) a
  - otherwise just redirect back to proper place
 
 -}
-withUser :: Maybe User -> ServerPartT IO Response -> ServerPartT IO Response
+withUser :: (MonadIO m) => Maybe User -> ServerPartT m Response -> ServerPartT m Response
 withUser (Just user) action = action
 withUser Nothing action = msum
                           [ methodOnly GET >> provideRPXNowLink
@@ -77,7 +77,7 @@ withUser Nothing action = msum
                              -- this is not going to work right now, stop it!
                             ]
 
-userLogin :: ServerPartT IO (Maybe User)
+userLogin :: (MonadIO m) => ServerPartT m (Maybe User)
 userLogin = do
   maybeuser <- withMSessionDataSP2 $ \maybeuserid -> do 
     case maybeuserid of
@@ -90,7 +90,7 @@ userLogin = do
     Just user -> return maybeuser
     Nothing -> userLogin1
 
-userLogin1 :: ServerPartT IO (Maybe User)
+userLogin1 :: (MonadIO m) => ServerPartT m (Maybe User)
 userLogin1 = do
     maybetoken <- getDataFn (look "token") 
     case maybetoken of
@@ -136,7 +136,7 @@ userLogin1 = do
               startSession sessionid
               return (Just user)
 
-provideRPXNowLink :: ServerPartT IO Response
+provideRPXNowLink :: (MonadIO m) => ServerPartT m Response
 provideRPXNowLink = do -- FIXME it was guarded by method GET but it didn't help
     rq <- askRq
     let Just host = getHeader "host" rq
@@ -169,7 +169,7 @@ maybeSignInLink2 (Context {}) title url class1 = do
     <a href=url class=class1><% title %></a> 
 
 
-userLogin2 :: ServerPartT IO (Maybe User)
+userLogin2 :: (MonadIO m) => ServerPartT m (Maybe User)
 userLogin2 = do
   let identifier = BS.fromString "auser"
   let formatted =  BS.fromString "Emica Zaboo"

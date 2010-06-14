@@ -43,17 +43,17 @@ appHandler = do
   flashmessages <- case maybeuser of
                      Just (User{userid}) -> liftIO $ update $ GetUserFlashMessages userid
                      Nothing -> return []
-  let ctx = Context 
+  let 
+   ctx = Context
             { ctxmaybeuser = maybeuser
             , ctxhostpart = hostpart
             , ctxflashmessages = flashmessages              
             }
-  
-  msum $
+   (routes :: [ServerPartT IO Response]) =
     [ nullDir >> webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx))
-    , dir "sign" $ DocControl.handleSign ctx
-    , dir "issue" (withUser maybeuser (DocControl.handleIssue ctx))
-    , dir "pages" $ path $ \fileid -> 
+    , toIO ctx $ dir "sign" $ DocControl.handleSign ctx
+    , toIO ctx $ dir "issue" (withUser maybeuser (DocControl.handleIssue ctx))
+    , toIO ctx $ dir "pages" $ path $ \fileid -> 
         msum [ path $ \pageno -> do
                  modminutes <- query $ FileModTime fileid
                  DocControl.showPage ctx modminutes fileid pageno
@@ -78,8 +78,9 @@ appHandler = do
                               -- we end up here after document view page is completed
                               -- should have the document there too in the database
                                notFound (toResponse "temporary unavailable (document not found)")
-    , dir "account" (withUser maybeuser (UserControl.handleUser ctx))
-    , dir "logout" (handleLogout)]
+    , toIO ctx $ dir "account" (withUser maybeuser (UserControl.handleUser ctx))
+    , toIO ctx $ dir "logout" (handleLogout)
+    ]
     ++ (if isSuperUser maybeuser then 
             [ toIO ctx $ dir "stats" $ statsPage
             , toIO ctx $ dir "become" $ handleBecome
@@ -88,8 +89,10 @@ appHandler = do
     ++ [ fileServe [] "public"
     , webHSP (pageFromBody ctx TopNone kontrakcja (errorReport ctx rq))
     ]
+  msum routes
 
-handleLogout :: ServerPartT IO Response
+
+handleLogout :: Kontra Response
 handleLogout = do
   endSession
   response <- webHSP (seeOtherXML "/")

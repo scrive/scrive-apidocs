@@ -99,13 +99,13 @@ sendClosedEmail1 ctx document signlink = do
   sendMail signatoryname signatoryemail title content attachmentcontent
   
 handleSign
-  :: Context -> ServerPartT IO Response
+  :: Context -> Kontra Response
 handleSign ctx@(Context {ctxmaybeuser, ctxhostpart}) = 
     path (\documentid -> path $ handleSignShow ctx documentid) `mplus` (withUser ctxmaybeuser $ do
     documents <- query $ GetDocumentsBySignatory (userid $ fromJust ctxmaybeuser) 
     webHSP (pageFromBody ctx TopNone kontrakcja (listDocuments documents)))
 
-signDoc :: Context -> DocumentID -> SignatoryLinkID -> ServerPartT IO  Response
+signDoc :: Context -> DocumentID -> SignatoryLinkID -> Kontra  Response
 signDoc ctx@(Context {ctxmaybeuser, ctxhostpart}) documentid 
                signatorylinkid1 = do
   time <- liftIO $ getMinutesTime
@@ -141,7 +141,7 @@ landpageSaved (ctx@Context { ctxmaybeuser = Just user }) documentid signatorylin
 
 
 handleSignShow
-  :: Context -> DocumentID -> SignatoryLinkID -> ServerPartT IO Response
+  :: Context -> DocumentID -> SignatoryLinkID -> Kontra Response
 handleSignShow ctx@(Context {ctxmaybeuser, ctxhostpart}) documentid 
                signatorylinkid1 = do
   time <- liftIO $ getMinutesTime
@@ -161,7 +161,7 @@ handleSignShow ctx@(Context {ctxmaybeuser, ctxhostpart}) documentid
           webHSP (pageFromBody ctx TopNone kontrakcja (showDocumentForSign ("/sign/" ++ show documentid ++ "/" ++ show signatorylinkid1) document authorname invitedname wassigned))
        ]
 
-handleIssue :: Context -> ServerPartT IO Response
+handleIssue :: Context -> Kontra Response
 handleIssue ctx@(Context {ctxmaybeuser = Just user, ctxhostpart}) = 
     msum [ path (handleIssueShow ctx)
          , methodM GET >> handleIssueGet ctx
@@ -169,7 +169,7 @@ handleIssue ctx@(Context {ctxmaybeuser = Just user, ctxhostpart}) =
          ]
 
 handleIssueShow
-  :: Context -> DocumentID -> ServerPartT IO Response
+  :: Context -> DocumentID -> Kontra Response
 handleIssueShow ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) documentid = do
   Just (document::Document) <- query (GetDocumentByDocumentID documentid)
   msum [ do
@@ -221,12 +221,12 @@ lookInputList name
              isname _ = []
          return [value | k <- inputs, value <- isname k]
 
-getAndConcat :: String -> ServerPartT IO [BS.ByteString]
+getAndConcat :: String -> Kontra [BS.ByteString]
 getAndConcat field = do
   Just values <- getDataFn $ lookInputList field
   return $ map concatChunks values
 
-updateDocument :: Context -> Document -> ServerPartT IO Document  
+updateDocument :: Context -> Document -> Kontra Document  
 updateDocument ctx document = do
   signatories <- getAndConcat "signatoryname"
   signatoriescompanies <- getAndConcat "signatorycompany"
@@ -366,7 +366,7 @@ handleIssuePost ctx@(Context { ctxmaybeuser = Just user, ctxhostpart}) = do
       seeOther link response
 
 
-showPage :: Context -> MinutesTime -> FileID -> Int -> ServerPartT IO Response
+showPage :: Context -> MinutesTime -> FileID -> Int -> Kontra Response
 showPage ctx modminutes fileid pageno = do
   maybecontents <- query $ GetFilePageJpg fileid pageno
   case maybecontents of
