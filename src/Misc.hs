@@ -22,7 +22,7 @@ import Foreign.Ptr
 import Foreign.C.String
 import HSX.XMLGenerator
 import HSP
-import Control.Monad.State.Strict
+import Control.Monad.State
 import Control.Monad.Error
 import Data.Monoid
 import Data.List

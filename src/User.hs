@@ -7,6 +7,7 @@ module User
     , userLogin
     , Context(..)
     , isSuperUser
+    , Kontra(..)
     )
     where
 
@@ -34,6 +35,7 @@ import Happstack.Server hiding (simpleHTTP)
 import Happstack.Server.HSP.HTML (webHSP)
 import Happstack.State (update,query)
 import System.Log.Logger
+import Control.Monad.State
 
 seeOtherXML :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
@@ -44,7 +46,7 @@ data Context = Context
     , ctxflashmessages :: [FlashMessage]
     }
 
-
+type Kontra a = ServerPartT (StateT Context IO) a
 
 {-
  We need pleasant user experience here. Therefore:

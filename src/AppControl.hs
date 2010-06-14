@@ -30,6 +30,7 @@ import UserState
 import Happstack.Util.Common
 import UserControl
 import Data.Maybe
+import Misc
 
 appHandler :: ServerPartT IO Response
 appHandler = do
@@ -80,8 +81,8 @@ appHandler = do
     , dir "account" (withUser maybeuser (UserControl.handleUser ctx))
     , dir "logout" (handleLogout)]
     ++ (if isSuperUser maybeuser then 
-            [ dir "stats" $ statsPage
-            , dir "become" $ handleBecome
+            [ toIO ctx $ dir "stats" $ statsPage
+            , toIO ctx $ dir "become" $ handleBecome
             ]
        else [])
     ++ [ fileServe [] "public"
@@ -95,14 +96,14 @@ handleLogout = do
   seeOther "/" response
     
 
-statsPage :: ServerPartT IO Response
+statsPage :: Kontra Response
 statsPage = do
   ndocuments <- query $ GetDocumentStats
   allusers <- query $ GetAllUsers
   webHSP (statsPageView (length allusers) ndocuments allusers)
     
 
-handleBecome :: ServerPartT IO Response
+handleBecome :: Kontra Response
 handleBecome = do
   Just (userid :: UserID) <- getDataFn $ (look "user" >>= readM)
   sessionid <- update $ NewSession userid
