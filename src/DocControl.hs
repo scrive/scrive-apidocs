@@ -124,20 +124,20 @@ signDoc ctx@(Context {ctxmaybeuser, ctxhostpart}) documentid
 
 landpageSignInvite ctx documentid = do
   Just document <- query $ GetDocumentByDocumentID documentid
-  webHSP $ pageFromBody ctx TopNone kontrakcja $ landpageSignInviteView ctx document
+  webHSP $ pageFromBody ctx TopEmpty kontrakcja $ landpageSignInviteView ctx document
 
 landpageSigned ctx documentid signatorylinkid = do
   Just document <- query $ GetDocumentByDocumentID documentid
-  webHSP $ pageFromBody ctx TopNone kontrakcja $ landpageSignedView ctx document signatorylinkid
+  webHSP $ pageFromBody ctx TopEmpty kontrakcja $ landpageSignedView ctx document signatorylinkid
 
 landpageSignedSave ctx documentid signatorylinkid = do
   Just document <- query $ GetDocumentByDocumentID documentid
-  webHSP $ pageFromBody ctx TopNone kontrakcja $ landpageLoginForSaveView ctx document signatorylinkid
+  webHSP $ pageFromBody ctx TopEmpty kontrakcja $ landpageLoginForSaveView ctx document signatorylinkid
 
 landpageSaved (ctx@Context { ctxmaybeuser = Just user }) documentid signatorylinkid = do
   Just document <- query $ GetDocumentByDocumentID documentid
   Just document2 <- update $ SaveDocumentForSignedUser documentid (userid user) signatorylinkid
-  webHSP $ pageFromBody ctx TopNone kontrakcja $ landpageDocumentSavedView ctx document signatorylinkid
+  webHSP $ pageFromBody ctx TopDocument kontrakcja $ landpageDocumentSavedView ctx document signatorylinkid
 
 
 handleSignShow

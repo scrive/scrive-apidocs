@@ -32,7 +32,7 @@ instance (XMLGenerator m) =>
                  show value  %> </p> %>	
 
 
-data TopMenu = TopNew | TopDocument | TopAccount | TopNone
+data TopMenu = TopNew | TopDocument | TopAccount | TopNone | TopEmpty
              deriving (Eq,Ord)
 
 instance (XMLGenerator m) => 
@@ -308,7 +308,7 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages}) topMenu t
                <% ctxflashmessages  %>
               </div> %>
        %>
-      <div id="headerContainer">
+      <div id="headerContainer" class=(if topMenu==TopEmpty then "topempty" else "")>
         <img class="logosmall"src="/theme/images/logosmall.png" height="40"/>
         <span class="contactabout">
          <%

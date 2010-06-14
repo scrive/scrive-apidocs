@@ -22,6 +22,21 @@ body {
   height: 90px;
 }
 
+#headerContainer.topempty
+{
+  background: #fafafa;
+}
+
+#headerContainer.topempty #headerContainer2
+{
+  background: #fafafa;
+}
+
+#headerContainer.topempty #nav
+{
+  display: none;
+}
+
 #headerContainer2
 {
   background: url(images/gradient.png) no-repeat bottom center;
