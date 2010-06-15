@@ -18,27 +18,7 @@ import Control.Monad
 import Happstack.Server.SimpleHTTP
 import Happstack.Util.Common
 
--- |perform insert only if test is True
-testAndInsert :: (Indexable a b,
-                  Ord a,
-                  Data a,
-                  MonadState (IxSet a) m) =>
-                 (IxSet a -> Bool) -> a -> m Bool
-testAndInsert test a =
-    maybeModify $ \ixset ->
-        if test ixset
-          then Just (insert a ixset)
-          else Nothing
 
--- this should be sent upstream to mtl
-maybeModify :: (MonadState s m) => (s -> Maybe s) -> m Bool
-maybeModify f =
-    do state <- get
-       case f state of
-         Nothing -> return False
-         (Just state') -> 
-             do put state' 
-                return True
 
 $(deriveAll [''Eq, ''Ord, ''Default]
   [d|
@@ -49,13 +29,13 @@ $(deriveAll [''Eq, ''Ord, ''Default]
                        
       data User = User
           { userid             :: UserID
-          , externaluserids    :: [ExternalUserID]
-          , fullname           :: BS.ByteString
-          , email              :: BS.ByteString
+          , userexternalids    :: [ExternalUserID]
+          , userfullname       :: BS.ByteString
+          , useremail          :: BS.ByteString
           , usercompanyname    :: BS.ByteString
           , usercompanynumber  :: BS.ByteString
           , userinvoiceaddress :: BS.ByteString
-          , userflashmessages :: [FlashMessage]
+          , userflashmessages  :: [FlashMessage]
           }
 
       data User1 = User1
@@ -104,9 +84,9 @@ instance Migrate User1 User where
              , userinvoiceaddress1
              }) = User
                 { userid = userid1
-                , externaluserids = externaluserids1
-                , fullname = fullname1
-                , email = email1
+                , userexternalids = externaluserids1
+                , userfullname = fullname1
+                , useremail = email1
                 , usercompanyname = usercompanyname1
                 , usercompanynumber = usercompanynumber1
                 , userinvoiceaddress = userinvoiceaddress1
@@ -170,9 +150,9 @@ addUser externaluserid fullname email = do
   users <- get
   userid <- getUnique users UserID
   let user = (User { userid = userid
-                   , externaluserids = [externaluserid]
-                   , fullname = fullname
-                   , email = email
+                   , userexternalids = [externaluserid]
+                   , userfullname = fullname
+                   , useremail = email
                    , usercompanyname = BS.empty
                    , usercompanynumber = BS.empty
                    , userinvoiceaddress = BS.empty

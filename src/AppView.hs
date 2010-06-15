@@ -37,8 +37,8 @@ data TopMenu = TopNew | TopDocument | TopAccount | TopNone | TopEmpty
 
 instance (XMLGenerator m) => 
     (EmbedAsChild m User) where
-  asChild user = <% BS.toString (fullname user) ++ " <" ++ 
-                 BS.toString (email user) ++ ">"  %>	
+  asChild user = <% BS.toString (userfullname user) ++ " <" ++ 
+                 BS.toString (useremail user) ++ ">"  %>	
 
 instance (XMLGenerator m) => 
     (EmbedAsChild m Request) where
@@ -107,8 +107,7 @@ handleRPXLoginView json =
       <% json %>
     </p>
 
-{-
-loginBox =
+loginBox x =
    <div>
     <div id="login">
      <form action="/tutorial/actions/login" method="post">
@@ -151,7 +150,6 @@ loginBox =
      </form>
     </div>
    </div>
--}
 
 welcomeBody :: (XMLGenerator m) 
                => Context 
@@ -184,7 +182,8 @@ welcomeBody ctx@(Context {ctxmaybeuser = Nothing}) =
     <img src="/theme/images/logolarge.png"/><br/>
     <hr/>
     <p class="headline" style="font-size: 200%; text-align: center">
-      <% maybeSignInLink ctx "Sign in here" "/" %>
+      {- <% maybeSignInLink ctx "Sign in here" "/" %> -}
+      <% loginBox "dd" %>
     </p>
    </div>
 
@@ -331,6 +330,8 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages}) topMenu t
           <% body %>
       </div>
       <div id="footerContainer">
+       <div id="footerContainer2">
+       </div>
       </div>
 
       <script type="text/javascript">
@@ -365,7 +366,9 @@ seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
 
 showUserOption :: (XMLGenerator m) => User -> XMLGenT m (HSX.XML m)
 showUserOption user = let un (ExternalUserID x) = BS.toString x in
-    <option value=(show $ userid user) title=(un $ safehead "showUserOption" $ externaluserids user)><% fullname user %> <% email user %></option>
+    <option value=(show $ userid user) title=(un $ safehead "showUserOption" $ userexternalids user)>
+          <% userfullname user %> <% useremail user %>
+    </option>
  
 statsPageView :: Int -> Int -> [User] -> HSP XML
 statsPageView nusers ndocuments users =

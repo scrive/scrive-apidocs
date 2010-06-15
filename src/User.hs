@@ -36,14 +36,16 @@ import Happstack.Server.HSP.HTML (webHSP)
 import Happstack.State (update,query)
 import System.Log.Logger
 import Control.Monad.State
+import MinutesTime
 
 seeOtherXML :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
 
 data Context = Context 
-    { ctxmaybeuser :: Maybe User
-    , ctxhostpart  :: String
+    { ctxmaybeuser     :: Maybe User
+    , ctxhostpart      :: String
     , ctxflashmessages :: [FlashMessage]
+    , ctxtime          :: MinutesTime
     }
 
 type Kontra a = ServerPartT (StateT Context IO) a
@@ -117,7 +119,9 @@ userLogin1 = do
               let Just json = Json.decode (BSL.fromString rpxdata) 
                   Just jsonMapping = fromMapping json 
                   Just profileMapping = lookupMapping (BS.fromString "profile") jsonMapping
-                  -- Json.JsonString verifiedEmail = maybe id (Json.JsonString (BS.fromString "")) $ lookupScalar (BS.fromString "verifiedEmail") profileMapping
+                  verifiedEmail = maybe BS.empty unJsonString $ 
+                                  lookupScalar (BS.fromString "verifiedEmail") profileMapping
+                  unJsonString (Json.JsonString x) = x
                   Just (Json.JsonString identifier) = lookupScalar (BS.fromString "identifier") profileMapping
                   Just nameMapping = lookupMapping (BS.fromString "name") profileMapping
                   Just (Json.JsonString formatted) = lookupScalar (BS.fromString "formatted") nameMapping
@@ -127,9 +131,11 @@ userLogin1 = do
               user <- case maybeuser of
                         Just user -> do
                           liftIO $ noticeM rootLoggerName $ "User " ++ BS.toString identifier ++ " logged in"
+                          --when (BS.null (useremail user) && not (BS.null verifiedEmail)) $ do
+                                       
                           return user
                         Nothing -> do
-                          user <- update $ AddUser (ExternalUserID identifier) (formatted) (BS.fromString "")
+                          user <- update $ AddUser (ExternalUserID identifier) (formatted) verifiedEmail
                           liftIO $ noticeM rootLoggerName $ "New user " ++ BS.toString identifier ++ " logged in"
                           return user
               sessionid <- update $ NewSession (userid user)
@@ -191,8 +197,8 @@ gracjansopenid = BS.fromString "https://www.google.com/accounts/o8/id?id=AItOawm
 lukasopenid = BS.fromString "https://www.google.com/accounts/o8/id?id=AItOawlNiCZ_LzlrZ7bgA2Yix_L3XP8-pt_cUR4"
 
 isSuperUser (Just user) 
-    | head (externaluserids user) == ExternalUserID gracjansopenid = True
-    | head (externaluserids user) == ExternalUserID lukasopenid = True
+    | head (userexternalids user) == ExternalUserID gracjansopenid = True
+    | head (userexternalids user) == ExternalUserID lukasopenid = True
     -- FIXME: add Lukasz here
     | otherwise = False
 isSuperUser Nothing = False

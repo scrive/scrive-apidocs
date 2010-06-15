@@ -31,6 +31,7 @@ import Happstack.Util.Common
 import UserControl
 import Data.Maybe
 import Misc
+import MinutesTime
 
 appHandler :: ServerPartT IO Response
 appHandler = do
@@ -43,11 +44,13 @@ appHandler = do
   flashmessages <- case maybeuser of
                      Just (User{userid}) -> liftIO $ update $ GetUserFlashMessages userid
                      Nothing -> return []
+  minutestime <- liftIO $ getMinutesTime
   let 
    ctx = Context
             { ctxmaybeuser = maybeuser
             , ctxhostpart = hostpart
             , ctxflashmessages = flashmessages              
+            , ctxtime = minutestime
             }
    (routes :: [ServerPartT IO Response]) =
     [ nullDir >> webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx))

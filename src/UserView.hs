@@ -27,10 +27,10 @@ import User
 showUser ctx@(Context {ctxmaybeuser = Just user}) = 
     webHSP $ pageFromBody ctx TopAccount kontrakcja $ 
     <div class="doctable">
-     <h1>Välkommen <% fullname user %></h1>
+     <h1>Välkommen <% userfullname user %></h1>
       <div class="inlinebox">
-       <p>Namn: <% fullname user %></p>
-       <p>E-mail: <% email user %></p>
+       <p>Namn: <% userfullname user %></p>
+       <p>E-mail: <% useremail user %></p>
        <p>Företagsnamn: <% usercompanyname user %></p>
        <p>Organisationsnummer: <% usercompanynumber user %></p>
        <p>Faktureringsadress: <% userinvoiceaddress user %></p>

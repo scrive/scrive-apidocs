@@ -422,3 +422,20 @@ right:20%;
 top:100px;
 font-size: 200%;
 }
+
+#footerContainer
+{
+  background: url(images/gradientbottomextent.png) repeat-x bottom center;
+
+  height:36px;
+  position:absolute;
+  bottom:0;
+  left:0;
+  right:0;
+}
+
+#footerContainer2
+{
+  background:url(images/gradientbottom.png) no-repeat bottom center;
+  height: 36px;
+}

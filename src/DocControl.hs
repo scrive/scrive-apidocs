@@ -36,7 +36,6 @@ import Seal
   Document state transitions are described in DocState.
 
   Here are all actions associated with transitions.
-
 -}
 
 doctransPreparation2ReadyToSign :: Context -> Document -> IO Document
@@ -106,13 +105,12 @@ handleSign ctx@(Context {ctxmaybeuser, ctxhostpart}) =
     webHSP (pageFromBody ctx TopNone kontrakcja (listDocuments documents)))
 
 signDoc :: Context -> DocumentID -> SignatoryLinkID -> Kontra  Response
-signDoc ctx@(Context {ctxmaybeuser, ctxhostpart}) documentid 
+signDoc ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) documentid 
                signatorylinkid1 = do
-  time <- liftIO $ getMinutesTime
   maybepressed <- getDataFn (look "sign" `mplus` look "sign2" `mplus` return "")
   when (Prelude.null (fromJust maybepressed)) mzero -- quit here
   
-  Just document <- update $ SignDocument documentid signatorylinkid1 time
+  Just document <- update $ SignDocument documentid signatorylinkid1 ctxtime
   let isallsigned = all f (signatorylinks document)
       f (SignatoryLink {maybesigninfo}) = isJust maybesigninfo
   when isallsigned ((liftIO $ doctransReadyToSign2Closed ctx document) >> return ())
@@ -124,7 +122,7 @@ signDoc ctx@(Context {ctxmaybeuser, ctxhostpart}) documentid
 
 landpageSignInvite ctx documentid = do
   Just document <- query $ GetDocumentByDocumentID documentid
-  webHSP $ pageFromBody ctx TopEmpty kontrakcja $ landpageSignInviteView ctx document
+  webHSP $ pageFromBody ctx TopNone kontrakcja $ landpageSignInviteView ctx document
 
 landpageSigned ctx documentid signatorylinkid = do
   Just document <- query $ GetDocumentByDocumentID documentid
@@ -142,20 +140,18 @@ landpageSaved (ctx@Context { ctxmaybeuser = Just user }) documentid signatorylin
 
 handleSignShow
   :: Context -> DocumentID -> SignatoryLinkID -> Kontra Response
-handleSignShow ctx@(Context {ctxmaybeuser, ctxhostpart}) documentid 
+handleSignShow ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) documentid 
                signatorylinkid1 = do
-  time <- liftIO $ getMinutesTime
-
   msum [ signDoc ctx documentid signatorylinkid1
        , do 
-          Just document <- update $ MarkDocumentSeen documentid signatorylinkid1 time
+          Just document <- update $ MarkDocumentSeen documentid signatorylinkid1 ctxtime
                        
           let wassigned = any f (signatorylinks document)
               f (SignatoryLink {signatorylinkid,maybesigninfo}) = 
                   isJust maybesigninfo && signatorylinkid == signatorylinkid1
               authoruserid = unAuthor $ author document
           Just author <- query $ FindUserByUserID authoruserid
-          let authorname = fullname author
+          let authorname = userfullname author
               invitedname = signatoryname $ head $ filter (\x -> signatorylinkid x == signatorylinkid1) 
                             (signatorylinks document)
           webHSP (pageFromBody ctx TopNone kontrakcja (showDocumentForSign ("/sign/" ++ show documentid ++ "/" ++ show signatorylinkid1) document authorname invitedname wassigned))
@@ -180,13 +176,6 @@ handleIssueShow ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpa
        , do
            methodM POST
            doc2 <- updateDocument ctx document
-           {-
-           let link = 
-                   if status doc2 == ReadyToSign &&
-                      status document /= ReadyToSign 
-                   then ctxhostpart ++ "/issue/" ++ show documentid ++ "?issuedone"
-                   else ctxhostpart ++ "/issue/" ++ show documentid
-           -}
            
            if (status doc2 == ReadyToSign &&
                status document /= ReadyToSign) 
@@ -206,9 +195,6 @@ handleIssueShow ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpa
            let contents = filepdf file
            let res = Response 200 M.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
            let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
-           -- let modtime = toUTCTime modminutes
-           -- rq <- askRq                 -- FIXME: what?
-           -- return $ ifModifiedSince modtime rq res2
            return res2
        ]
 
@@ -242,8 +228,6 @@ updateDocument ctx document = do
           doc3 <- liftIO $ doctransPreparation2ReadyToSign ctx doc2
           return doc3
      else return doc2
-         
-         
     
 
 handleIssueGet :: (MonadIO m) => Context -> m Response
@@ -311,10 +295,10 @@ personsFromDocument document =
     in map x links
 
 sealDocument :: User -> Document -> IO Document
-sealDocument author@(User {fullname,usercompanyname}) document = do
+sealDocument author@(User {userfullname,usercompanyname}) document = do
   let (file@File {fileid,filename,filepdf,filejpgpages}) = safehead "sealDocument" $ files document
   let docid = unDocumentID (documentid document)
-  let persons = SealPerson (BS.toString fullname ++ ", ") (BS.toString usercompanyname) : personsFromDocument document
+  let persons = SealPerson (BS.toString userfullname ++ ", ") (BS.toString usercompanyname) : personsFromDocument document
   tmppath <- getTemporaryDirectory
   let tmpin = tmppath ++ "/in_" ++ show docid ++ ".pdf"
   let tmpout = tmppath ++ "/out_" ++ show docid ++ ".pdf"
@@ -348,14 +332,13 @@ basename filename =
 
 handleIssuePost
   :: (ServerMonad m, MonadIO m,FilterMonad Response m) => Context -> m Response
-handleIssuePost ctx@(Context { ctxmaybeuser = Just user, ctxhostpart}) = do
+handleIssuePost ctx@(Context { ctxmaybeuser = Just user, ctxhostpart, ctxtime }) = do
   maybeupload <- getDataFn (lookInput "doc")
   case maybeupload of
     Just input@(Input content (Just filename) _contentType) -> 
         do 
-          ctime <- liftIO $ getMinutesTime
           let title = BS.fromString (basename filename) 
-          doc <- update $ NewDocument (userid user) title ctime
+          doc <- update $ NewDocument (userid user) title ctxtime
           liftIO $ forkIO $ handleDocumentUploadX (documentid doc) (concatChunks content) filename
           let link = ctxhostpart ++ "/issue/" ++ show (documentid doc)
           response <- webHSP (seeOtherXML link)

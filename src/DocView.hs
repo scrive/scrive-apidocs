@@ -62,7 +62,7 @@ landpageLoginForSaveView ctx document signatorylinkid =
 landpageDocumentSavedView :: (XMLGenerator m) => Context -> Document -> SignatoryLinkID -> XMLGenT m (HSX.XML m)
 landpageDocumentSavedView (ctx@Context { ctxmaybeuser = Just user }) signatorylinkid document = 
     <div class="centerdivnarrow">
-     <p class="headline">Välkommen <% fullname user %>!</p>
+     <p class="headline">Välkommen <% userfullname user %>!</p>
 
      <p>Ditt dokument är nu sparat. Du finner dokumentet under Avtal.</p>
  
@@ -212,11 +212,12 @@ listDocuments documents =
       <tfoot>
        <tr>
         <td colspan="6" style="text-align: right; overflow: hidden;">
-          <img src="/theme/images/status_draft.png"/>Draft
-          <img src="/theme/images/status_pending.png"/>Pending
-          <img src="/theme/images/status_signed.png"/>Signed
-          <img src="/theme/images/status_rejected.png"/>Canceled
-          <img src="/theme/images/status_timeout.png"/>Timed out
+          <img src="/theme/images/status_draft.png"/> Utkast
+          <img src="/theme/images/status_rejected.png"/> Avbrutet
+          <img src="/theme/images/status_timeout.png"/> Time Out
+          <img src="/theme/images/status_pending.png"/> Väntar
+          <img src="/theme/images/status_viewed.png"/> Granskat
+          <img src="/theme/images/status_signed.png"/> Undertecknat
          </td>
        </tr>
       </tfoot>
@@ -327,7 +328,7 @@ showDocument user document issuedone =
             Vi fakturerar månadsvis. Era fakturauppgifter:</p>
 
             <div class="inlinebox">
-            Referens: <% fullname user %> <br/>
+            Referens: <% userfullname user %> <br/>
             Företag: <% usercompanyname user %> <br/>
             Org nr: <% usercompanynumber user %> <br/>
             Adress: <% userinvoiceaddress user %> <br/>
@@ -362,7 +363,7 @@ showDocument user document issuedone =
                <% map showSignatoryEntryForEdit (if null (signatorylinks document)
                                                  then [emptyLink] else signatorylinks document) %>
               </ol>
-              <a onclick="signatoryadd(); return false;" href="#">Skapa inbjudan</a>
+              <a onclick="signatoryadd(); return false;" href="#">Lägg till fler</a>
              </span>
            else
               <ol id="signatorylist">
@@ -462,7 +463,7 @@ invitationMailXml (Context {ctxmaybeuser = Just user, ctxhostpart})
                   documenttitle documentid 
                   signaturelinkid = 
     let link = ctxhostpart ++ "/sign/" ++ show documentid ++ "/" ++ show signaturelinkid
-        creatorname = BS.toString $ fullname user
+        creatorname = BS.toString $ userfullname user
     in 
     <html>
      <head>
@@ -506,7 +507,7 @@ closedMailXml (Context {ctxmaybeuser = Just user, ctxhostpart})
                   documenttitle documentid 
                   signaturelinkid = 
     let link = ctxhostpart ++ "/sign/" ++ show documentid ++ "/" ++ show signaturelinkid
-        creatorname = BS.toString $ fullname user
+        creatorname = BS.toString $ userfullname user
     in 
     <html>
      <head>
