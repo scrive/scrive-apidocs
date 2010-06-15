@@ -502,12 +502,11 @@ closedMailXml :: (XMLGenerator m)
                   -> DocumentID
                   -> SignatoryLinkID
                   -> XMLGenT m (HSX.XML m)
-closedMailXml (Context {ctxmaybeuser = Just user, ctxhostpart}) 
-                  emailaddress personname 
-                  documenttitle documentid 
-                  signaturelinkid = 
+closedMailXml (Context {ctxhostpart}) 
+              emailaddress personname 
+              documenttitle documentid 
+              signaturelinkid = 
     let link = ctxhostpart ++ "/sign/" ++ show documentid ++ "/" ++ show signaturelinkid
-        creatorname = BS.toString $ userfullname user
     in 
     <html>
      <head>
@@ -536,6 +535,50 @@ closedMail ctx emailaddress personname
                documenttitle documentid signaturelinkid = do
                  let xml = closedMailXml ctx emailaddress personname 
                            documenttitle documentid signaturelinkid
+                           -- FIXME: first part of tuple is Maybe Metadata
+                           -- potentially important
+                 (_,content) <- evalHSP Nothing xml
+                 return (BS.fromString (renderAsHTML content))
+
+closedMailAuthorXml :: (XMLGenerator m) 
+                     => Context
+                  -> BS.ByteString
+                  -> BS.ByteString
+                  -> BS.ByteString
+                  -> DocumentID
+                  -> XMLGenT m (HSX.XML m)
+closedMailAuthorXml (Context {ctxhostpart}) 
+                  emailaddress personname 
+                  documenttitle documentid = 
+    let link = ctxhostpart ++ "/issue/" ++ show documentid
+    in 
+    <html>
+     <head>
+      <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+     </head>
+     <body>
+      <p>Hej <% personname %>,</p>
+      <p>Avtalet <strong><% documenttitle %></strong> har undertecknats av alla parter. 
+         Avtalet är nu lagligt bindande.</p>
+      
+      <p>Det färdig avtalet bifogas nedan. Hos SkrivaPå hittar du avtalet under "Avtal". </p>
+
+      <p><a href=link><% link %></a></p>
+     
+      <% poweredBySkrivaPaPara %>
+     </body>
+    </html>
+
+closedMailAuthor :: Context
+           -> BS.ByteString
+           -> BS.ByteString
+           -> BS.ByteString
+           -> DocumentID
+           -> IO BS.ByteString
+closedMailAuthor ctx emailaddress personname 
+               documenttitle documentid = do
+                 let xml = closedMailAuthorXml ctx emailaddress personname 
+                           documenttitle documentid
                            -- FIXME: first part of tuple is Maybe Metadata
                            -- potentially important
                  (_,content) <- evalHSP Nothing xml

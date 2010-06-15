@@ -134,13 +134,13 @@ instance Read UserID where
 instance FromReqURI UserID where
     fromReqURI = readM
 
-findUserByExternalUserID :: ExternalUserID -> Query Users (Maybe User)
-findUserByExternalUserID externaluserid = do
+getUserByExternalUserID :: ExternalUserID -> Query Users (Maybe User)
+getUserByExternalUserID externaluserid = do
   users <- ask
   return $ getOne (users @= externaluserid)
     
-findUserByUserID :: UserID -> Query Users (Maybe User)
-findUserByUserID userid = do
+getUserByUserID :: UserID -> Query Users (Maybe User)
+getUserByUserID userid = do
   users <- ask
   return $ getOne (users @= userid)
 
@@ -197,8 +197,8 @@ instance Component Users where
   initialValue = IxSet.empty
   
 -- create types for event serialization
-$(mkMethods ''Users [ 'findUserByUserID
-                    , 'findUserByExternalUserID
+$(mkMethods ''Users [ 'getUserByUserID
+                    , 'getUserByExternalUserID
                     , 'addUser
                     , 'getUserStats
                     , 'getAllUsers

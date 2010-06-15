@@ -86,7 +86,7 @@ userLogin = do
       Just (sid,userid) -> do
                        -- prolong session
                        startSession sid
-                       query $ FindUserByUserID userid
+                       query $ GetUserByUserID userid
       Nothing -> return Nothing
   case maybeuser of
     Just user -> return maybeuser
@@ -126,7 +126,7 @@ userLogin1 = do
                   Just nameMapping = lookupMapping (BS.fromString "name") profileMapping
                   Just (Json.JsonString formatted) = lookupScalar (BS.fromString "formatted") nameMapping
         
-              maybeuser <- query $ FindUserByExternalUserID (ExternalUserID identifier)
+              maybeuser <- query $ GetUserByExternalUserID (ExternalUserID identifier)
     
               user <- case maybeuser of
                         Just user -> do
@@ -179,7 +179,7 @@ userLogin2 :: (MonadIO m) => ServerPartT m (Maybe User)
 userLogin2 = do
   let identifier = BS.fromString "auser"
   let formatted =  BS.fromString "Emica Zaboo"
-  maybeuser <- query $ FindUserByExternalUserID 
+  maybeuser <- query $ GetUserByExternalUserID 
                (ExternalUserID identifier)
     
   user <- case maybeuser of

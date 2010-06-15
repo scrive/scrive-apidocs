@@ -49,7 +49,7 @@ doctransReadyToSign2Closed :: Context -> Document -> IO Document
 doctransReadyToSign2Closed ctx doc = do
   update $ UpdateDocumentStatus doc Closed
   newdoc <- update $ RemoveFileFromDoc (documentid doc)
-  Just user <- query $ FindUserByUserID (unAuthor (author doc))
+  Just user <- query $ GetUserByUserID (unAuthor (author doc))
   liftIO $ forkIO $ do
     newdoc <- sealDocument user doc
     sendClosedEmails ctx newdoc
@@ -84,6 +84,7 @@ sendClosedEmails :: Context -> Document -> IO ()
 sendClosedEmails ctx document = do
   let signlinks = signatorylinks document
   forM_ signlinks (sendClosedEmail1 ctx document)
+  sendClosedAuthorEmail ctx document
 
 sendClosedEmail1 :: Context -> Document -> SignatoryLink -> IO ()
 sendClosedEmail1 ctx document signlink = do
@@ -96,9 +97,18 @@ sendClosedEmail1 ctx document signlink = do
              title documentid signatorylinkid
   let attachmentcontent = filepdf $ head $ files document
   sendMail signatoryname signatoryemail title content attachmentcontent
+
+sendClosedAuthorEmail :: Context -> Document -> IO ()
+sendClosedAuthorEmail ctx document = do
+  let authorid = unAuthor $ author document
+  Just authoruser <- query $ GetUserByUserID authorid
+  content <- closedMailAuthor ctx (useremail authoruser) (userfullname authoruser)
+             (title document) (documentid document) 
+  let attachmentcontent = filepdf $ head $ files document
+  sendMail (userfullname authoruser) (useremail authoruser) (title document) content attachmentcontent
   
-handleSign
-  :: Context -> Kontra Response
+  
+handleSign :: Context -> Kontra Response
 handleSign ctx@(Context {ctxmaybeuser, ctxhostpart}) = 
     path (\documentid -> path $ handleSignShow ctx documentid) `mplus` (withUser ctxmaybeuser $ do
     documents <- query $ GetDocumentsBySignatory (userid $ fromJust ctxmaybeuser) 
@@ -150,7 +160,7 @@ handleSignShow ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) documentid
               f (SignatoryLink {signatorylinkid,maybesigninfo}) = 
                   isJust maybesigninfo && signatorylinkid == signatorylinkid1
               authoruserid = unAuthor $ author document
-          Just author <- query $ FindUserByUserID authoruserid
+          Just author <- query $ GetUserByUserID authoruserid
           let authorname = userfullname author
               invitedname = signatoryname $ head $ filter (\x -> signatorylinkid x == signatorylinkid1) 
                             (signatorylinks document)
