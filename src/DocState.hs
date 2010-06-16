@@ -80,7 +80,7 @@ $(deriveAll [''Eq, ''Ord, ''Default]
        -}
 
       data DocumentStatus = Preparation 
-                          | ReadyToSign -- Pending  
+                          | Pending  
                           | Closed 
                           | Canceled 
                           | Timedout
@@ -92,11 +92,11 @@ $(deriveAll [''Default]
   [d|
       data Document = Document
           { documentid       :: DocumentID
-          , title            :: BS.ByteString
-          , author           :: Author
-          , signatorylinks   :: [SignatoryLink]  
-          , files            :: [File]
-          , status           :: DocumentStatus
+          , documenttitle            :: BS.ByteString
+          , documentauthor           :: Author
+          , documentsignatorylinks   :: [SignatoryLink]  
+          , documentfiles            :: [File]
+          , documentstatus           :: DocumentStatus
           , documentctime    :: MinutesTime
           , documentmtime    :: MinutesTime
           }
@@ -113,8 +113,8 @@ instance Eq Document where
 
 instance Ord Document where
     compare a b | documentid a == documentid b = EQ
-                | otherwise = compare (documentmtime b,title a,documentid a) 
-                                      (documentmtime a,title b,documentid b)
+                | otherwise = compare (documentmtime b,documenttitle a,documentid a) 
+                                      (documentmtime a,documenttitle b,documentid b)
                               -- see above: we use reverse time here!
 
 instance Eq File where
@@ -259,15 +259,15 @@ attachFile documentid filename1 content jpgpages = do
                    , filename = filename1
                    , filepdf = content
                    }
-  let document2 = document { files = files document ++ [nfile] }
+  let document2 = document { documentfiles = documentfiles document ++ [nfile] }
   modify $ updateIx documentid document2
 
 updateDocumentSignatories :: Document -> [BS.ByteString] -> [BS.ByteString] 
                           -> [BS.ByteString] -> Update Documents Document
 updateDocumentSignatories document signatorynames signatorycompanies signatoryemails = do
   signatorylinks <- sequence $ zipWith3 mm signatorynames signatorycompanies signatoryemails
-  let doc2 = document { signatorylinks = signatorylinks }
-  if status document == Preparation
+  let doc2 = document { documentsignatorylinks = signatorylinks }
+  if documentstatus document == Preparation
      then do
        modify (updateIx (documentid doc2) doc2)
        return doc2
@@ -283,16 +283,16 @@ updateDocumentStatus :: Document
                      -> Update Documents Document
 updateDocumentStatus document newstatus = do
   -- check if document status change is a legal transition
-  let legal = (status document,newstatus) `elem`
-              [ (Preparation,ReadyToSign)
-              , (ReadyToSign,Canceled)
-              , (ReadyToSign,Timedout)
-              , (ReadyToSign,Closed)
+  let legal = (documentstatus document,newstatus) `elem`
+              [ (Preparation,Pending)
+              , (Pending,Canceled)
+              , (Pending,Timedout)
+              , (Pending,Closed)
               , (Canceled,Preparation)
               , (Timedout,Preparation)
               ]
 
-  let newdoc = document { status = newstatus }
+  let newdoc = document { documentstatus = newstatus }
   if legal 
      then do
        modify (updateIx (documentid newdoc) newdoc)
@@ -307,8 +307,8 @@ signDocument :: DocumentID -> SignatoryLinkID
 signDocument documentid signatorylinkid1 time = do
   documents <- ask
   let Just document = getOne (documents @= documentid)
-      signeddocument = document { signatorylinks = newsignatorylinks }
-      newsignatorylinks = map maybesign (signatorylinks document)
+      signeddocument = document { documentsignatorylinks = newsignatorylinks }
+      newsignatorylinks = map maybesign (documentsignatorylinks document)
       maybesign x@(SignatoryLink {signatorylinkid} ) 
           | signatorylinkid == signatorylinkid1 = 
               x { maybesigninfo = Just (SignInfo time)
@@ -323,7 +323,7 @@ getFilePageJpg xfileid pageno = do
   documents <- ask
   return $ do -- maybe monad!
     document <- getOne (documents @= xfileid)
-    nfile <- find (\f -> fileid f == xfileid) (files document)
+    nfile <- find (\f -> fileid f == xfileid) (documentfiles document)
     let jpgs = filejpgpages nfile
     jpg <- return (jpgs!!(pageno-1))
     return jpg
@@ -335,8 +335,8 @@ markDocumentSeen documentid signatorylinkid1 time = do
   case getOne (documents @= documentid) of
     Nothing -> return Nothing
     Just document -> do
-      let document' = document { signatorylinks = s }
-          s = map c (signatorylinks document)
+      let document' = document { documentsignatorylinks = s }
+          s = map c (documentsignatorylinks document)
           c l@(SignatoryLink {signatorylinkid})
             | signatorylinkid == signatorylinkid1 = 
               l { maybeseentime = Just time }
@@ -355,7 +355,7 @@ replaceFile :: Document -> File -> Update Documents Document
 replaceFile (Document{documentid}) file = do
   documents <- ask
   let Just doc = getOne (documents @= documentid)
-  let newdoc = doc {files = [file]} -- FIXME: care about many files here
+  let newdoc = doc {documentfiles = [file]} -- FIXME: care about many files here
   modify (updateIx documentid newdoc)
   return newdoc
 
@@ -363,7 +363,7 @@ removeFileFromDoc :: DocumentID -> Update Documents Document
 removeFileFromDoc documentid = do
   documents <- ask
   let Just doc = getOne (documents @= documentid)
-  let newdoc = doc {files = []} -- FIXME: care about many files here
+  let newdoc = doc {documentfiles = []} -- FIXME: care about many files here
   modify (updateIx documentid newdoc)
   return newdoc
 
@@ -377,7 +377,7 @@ fileByFileID :: FileID -> Query Documents (Maybe File)
 fileByFileID fileid = do
   documents <- ask
   case getOne (documents @= fileid) of
-    Just doc -> return (Just $ safehead "fileByFileID" $ files doc)
+    Just doc -> return (Just $ safehead "fileByFileID" $ documentfiles doc)
     Nothing -> return Nothing
 
 
@@ -387,8 +387,8 @@ saveDocumentForSignedUser documentid userid signatorylinkid1 = do
   case getOne (documents @= documentid) of
     Nothing -> return Nothing
     Just document -> do
-      let signeddocument = document { signatorylinks = newsignatorylinks }
-          newsignatorylinks = map maybesign (signatorylinks document)
+      let signeddocument = document { documentsignatorylinks = newsignatorylinks }
+          newsignatorylinks = map maybesign (documentsignatorylinks document)
           maybesign x@(SignatoryLink {signatorylinkid} ) 
             | signatorylinkid == signatorylinkid1 = 
               x { maybesignatory = Just (Signatory userid)

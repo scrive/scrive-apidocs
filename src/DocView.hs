@@ -28,7 +28,7 @@ landpageSignInviteView ctx document =
      <p class="headline">Avtal undertecknat!</p>
      
      <p>Du har undertecknat avtalet och en inbjudan har nu skickats till 
-     <span id="mrx"><% concatSignatories (signatorylinks document) %></span>.</p>
+     <span id="mrx"><% concatSignatories (documentsignatorylinks document) %></span>.</p>
 
      <p><a class="bigbutton" href="/">Skapa ett nytt avtal</a></p>
      <p><a class="secbutton" href="/issue">Avsluta</a></p>
@@ -37,7 +37,7 @@ landpageSignInviteView ctx document =
 landpageSignedView :: (XMLGenerator m) => Context -> Document -> SignatoryLinkID -> XMLGenT m (HSX.XML m)
 landpageSignedView ctx document signatorylinkid =
     <div class="centerdivnarrow">
-      <p class="headline">Avtalet <strong><% title document %></strong> är färdigställt!</p>
+      <p class="headline">Avtalet <strong><% documenttitle document %></strong> är färdigställt!</p>
 
       <p>Alla parter har undertecknat avtalet och du har fått en låst PDF kopia av avtalet i din inkorg. Vi rekommenderar att du sparar avtalet online via vår tjänst. Då kommer du ha tillgång till avtalet oavsett vad som händer med breven i din inkorg. Det kostar ingenting och är du snabb tar det endast ca 15-60 sekunder att spara avtalet.</p>
 
@@ -93,7 +93,7 @@ documentIssuedFlashMessage :: (MonadIO m) => Document -> m FlashMessage
 documentIssuedFlashMessage document = liftM (FlashMessage . xxx) $ webHSP1
     <div>
      Du har undertecknat avtalet och en inbjudan har nu skickats till 
-     <span id="mrx"><% concatSignatories (signatorylinks document) %></span>.
+     <span id="mrx"><% concatSignatories (documentsignatorylinks document) %></span>.
     </div>
 
 documentSavedForLaterFlashMessage :: (MonadIO m) => Document -> m FlashMessage
@@ -138,13 +138,13 @@ instance (XMLGenerator m) => (EmbedAsChild m (Document, Bool)) where
           <%
            <tr class=(if alt then "alt" else "")>
             <td>
-             <a href=("/issue/" ++ show (documentid entry))><% title entry %></a>
+             <a href=("/issue/" ++ show (documentid entry))><% documenttitle entry %></a>
             </td>
             <td>
              <% show $ documentmtime entry %>
             </td>
             <td>
-             <% show (status entry) %>
+             <% show (documentstatus entry) %>
             </td>
            </tr>
           %>
@@ -168,9 +168,9 @@ oneDocumentRow document =
     let link = "/issue/" ++ show (documentid document)
         mk x = <a href=link><% x %></a>
         statusimg = "/theme/images/" ++
-                    case status document of
+                    case documentstatus document of
                       Preparation -> "status_draft.png"
-                      ReadyToSign  -> "status_pending.png"
+                      Pending  -> "status_pending.png"
                       Closed -> "status_signed.png"
                       Canceled -> "status_rejected.png"
                       Timedout -> "status_timeout.png"
@@ -181,8 +181,8 @@ oneDocumentRow document =
       <input type="checkbox"/>
      </td>
      <td><img width="17" height="17" src=statusimg/></td>
-     <td><% mk $ concatSignatories (signatorylinks document) %></td>
-     <td><% mk $ title document %></td>
+     <td><% mk $ concatSignatories (documentsignatorylinks document) %></td>
+     <td><% mk $ documenttitle document %></td>
      <td class="tdright"><% show $ documentmtime document %></td>
      {- <td>15</td> -}
      {- <td class="tdright">15</td> -}
@@ -344,7 +344,7 @@ showDocument user document issuedone =
 
                 <div id="dialog-confirm-signinvite-done" title="Avtal undertecknat!">
 	        <p> Du har undertecknat avtalet och en inbjudan har nu skickats till 
-                        <span id="mrx"><% concatSignatories (signatorylinks document) %></span>.</p>
+                        <span id="mrx"><% concatSignatories (documentsignatorylinks document) %></span>.</p>
 
           </div>
         </span>
@@ -353,27 +353,27 @@ showDocument user document issuedone =
                   </script>
                 , <script type="text/javascript" src="/js/document-edit.js"/>
                 ]
-   in showDocumentPageHelper ("/issue/" ++ show (documentid document)) document helper (BS.fromString $ "Avtal: " ++ BS.toString (title document))  
+   in showDocumentPageHelper ("/issue/" ++ show (documentid document)) document helper (BS.fromString $ "Avtal: " ++ BS.toString (documenttitle document))  
       <div>
        <div>Personer:<br/>
 
-        <% if status document == Preparation
+        <% if documentstatus document == Preparation
            then <span>
               <ol id="signatorylist">
-               <% map showSignatoryEntryForEdit (if null (signatorylinks document)
-                                                 then [emptyLink] else signatorylinks document) %>
+               <% map showSignatoryEntryForEdit (if null (documentsignatorylinks document)
+                                                 then [emptyLink] else documentsignatorylinks document) %>
               </ol>
               <a onclick="signatoryadd(); return false;" href="#">Lägg till fler</a>
              </span>
            else
               <ol id="signatorylist">
-               <% map showSignatoryEntryStatus (signatorylinks document) %>
+               <% map showSignatoryEntryStatus (documentsignatorylinks document) %>
               </ol>
                            
          %>
          <hr/>
          <% 
-           if (status document==Preparation) 
+           if (documentstatus document==Preparation) 
               then <span>
                     <input class="bigbutton" type="submit" name="final" value="Underteckna" id="signinvite"/>
                     <input type="hidden" name="final2" value=""/>
@@ -424,14 +424,14 @@ showDocumentForSign action document authorname invitedname wassigned =
                 , <script> var documentid = <% show $ documentid document %>; 
                   </script>
                 ]
-   in showDocumentPageHelper action document helper (BS.fromString $ "Avtal: " ++ BS.toString(title document)) $
+   in showDocumentPageHelper action document helper (BS.fromString $ "Avtal: " ++ BS.toString(documenttitle document)) $
         if wassigned 
            then <span>Du har redan skrivit på!</span>
            else <span>
                 
                 <p>Välkommen <% invitedname %>,</p>
 
-                <p>Genom skrivaPå kan du underteckna juridiskt bindande avtal online. På vänster sida har du avtalet <strong><% title document %></strong> som <strong><% authorname %></strong> har bjudit in dig att underteckna.</p>
+                <p>Genom skrivaPå kan du underteckna juridiskt bindande avtal online. På vänster sida har du avtalet <strong><% documenttitle document %></strong> som <strong><% authorname %></strong> har bjudit in dig att underteckna.</p>
 
                 <p>Om du inte är <strong><% invitedname %></strong> klicka av "avvisa".</p>
 

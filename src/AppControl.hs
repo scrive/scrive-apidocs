@@ -74,7 +74,7 @@ appHandler = do
     , dir "pagesofdoc" $ path $ \docid -> do
                  maybedoc <- query $ GetDocumentByDocumentID docid
                  case maybedoc of
-                   Just doc -> case files doc of
+                   Just doc -> case documentfiles doc of
                                  [] -> notFound (toResponse "temporary unavailable (document has no files)")
                                  f -> webHSP (DocView.showFilesImages2 f)
                    Nothing -> -- why this should ever happen?

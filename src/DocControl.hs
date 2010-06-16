@@ -38,34 +38,34 @@ import Seal
   Here are all actions associated with transitions.
 -}
 
-doctransPreparation2ReadyToSign :: Context -> Document -> IO Document
-doctransPreparation2ReadyToSign ctx doc = do
+doctransPreparation2Pending :: Context -> Document -> IO Document
+doctransPreparation2Pending ctx doc = do
   -- FIXME: check if the status was really changed
-  newdoc <- update $ UpdateDocumentStatus doc ReadyToSign
+  newdoc <- update $ UpdateDocumentStatus doc Pending
   liftIO $ sendInvitationEmails ctx doc
   return newdoc
 
-doctransReadyToSign2Closed :: Context -> Document -> IO Document
-doctransReadyToSign2Closed ctx doc = do
+doctransPending2Closed :: Context -> Document -> IO Document
+doctransPending2Closed ctx doc = do
   update $ UpdateDocumentStatus doc Closed
   newdoc <- update $ RemoveFileFromDoc (documentid doc)
-  Just user <- query $ GetUserByUserID (unAuthor (author doc))
+  Just user <- query $ GetUserByUserID (unAuthor (documentauthor doc))
   liftIO $ forkIO $ do
     newdoc <- sealDocument user doc
     sendClosedEmails ctx newdoc
   return newdoc
 
-doctransReadyToSign2Canceled :: Context -> Document -> IO Document
-doctransReadyToSign2Canceled ctx doc = do
+doctransPending2Canceled :: Context -> Document -> IO Document
+doctransPending2Canceled ctx doc = do
   update $ UpdateDocumentStatus doc Canceled
 
-doctransReadyToSign2Timedout :: Context -> Document -> IO Document
-doctransReadyToSign2Timedout ctx doc = do
+doctransPending2Timedout :: Context -> Document -> IO Document
+doctransPending2Timedout ctx doc = do
   update $ UpdateDocumentStatus doc Timedout
 
 sendInvitationEmails :: Context -> Document -> IO ()
 sendInvitationEmails ctx document = do
-  let signlinks = signatorylinks document
+  let signlinks = documentsignatorylinks document
   forM_ signlinks (sendInvitationEmail1 ctx document)
 
 sendInvitationEmail1 :: Context -> Document -> SignatoryLink -> IO ()
@@ -74,15 +74,15 @@ sendInvitationEmail1 ctx document signlink = do
                    , signatoryname
                    , signatorycompany
                    , signatoryemail } = signlink
-      Document{title,documentid} = document
+      Document{documenttitle,documentid} = document
   content <- invitationMail ctx signatoryemail signatoryname
-             title documentid signatorylinkid
+             documenttitle documentid signatorylinkid
 
-  sendMail signatoryname signatoryemail title content (filepdf $ head $ files document)
+  sendMail signatoryname signatoryemail documenttitle content (filepdf $ head $ documentfiles document)
 
 sendClosedEmails :: Context -> Document -> IO ()
 sendClosedEmails ctx document = do
-  let signlinks = signatorylinks document
+  let signlinks = documentsignatorylinks document
   forM_ signlinks (sendClosedEmail1 ctx document)
   sendClosedAuthorEmail ctx document
 
@@ -92,20 +92,20 @@ sendClosedEmail1 ctx document signlink = do
                    , signatoryname
                    , signatorycompany
                    , signatoryemail } = signlink
-      Document{title,documentid} = document
+      Document{documenttitle,documentid} = document
   content <- closedMail ctx signatoryemail signatoryname
-             title documentid signatorylinkid
-  let attachmentcontent = filepdf $ head $ files document
-  sendMail signatoryname signatoryemail title content attachmentcontent
+             documenttitle documentid signatorylinkid
+  let attachmentcontent = filepdf $ head $ documentfiles document
+  sendMail signatoryname signatoryemail documenttitle content attachmentcontent
 
 sendClosedAuthorEmail :: Context -> Document -> IO ()
 sendClosedAuthorEmail ctx document = do
-  let authorid = unAuthor $ author document
+  let authorid = unAuthor $ documentauthor document
   Just authoruser <- query $ GetUserByUserID authorid
   content <- closedMailAuthor ctx (useremail authoruser) (userfullname authoruser)
-             (title document) (documentid document) 
-  let attachmentcontent = filepdf $ head $ files document
-  sendMail (userfullname authoruser) (useremail authoruser) (title document) content attachmentcontent
+             (documenttitle document) (documentid document) 
+  let attachmentcontent = filepdf $ head $ documentfiles document
+  sendMail (userfullname authoruser) (useremail authoruser) (documenttitle document) content attachmentcontent
   
   
 handleSign :: Context -> Kontra Response
@@ -121,9 +121,9 @@ signDoc ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) documentid
   when (Prelude.null (fromJust maybepressed)) mzero -- quit here
   
   Just document <- update $ SignDocument documentid signatorylinkid1 ctxtime
-  let isallsigned = all f (signatorylinks document)
+  let isallsigned = all f (documentsignatorylinks document)
       f (SignatoryLink {maybesigninfo}) = isJust maybesigninfo
-  when isallsigned ((liftIO $ doctransReadyToSign2Closed ctx document) >> return ())
+  when isallsigned ((liftIO $ doctransPending2Closed ctx document) >> return ())
 
   -- let link = mkSignDocLink ctxhostpart documentid signatorylinkid1
   let link = "/landpage/signed/" ++ show documentid ++ "/" ++ show signatorylinkid1
@@ -156,14 +156,14 @@ handleSignShow ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) documentid
        , do 
           Just document <- update $ MarkDocumentSeen documentid signatorylinkid1 ctxtime
                        
-          let wassigned = any f (signatorylinks document)
+          let wassigned = any f (documentsignatorylinks document)
               f (SignatoryLink {signatorylinkid,maybesigninfo}) = 
                   isJust maybesigninfo && signatorylinkid == signatorylinkid1
-              authoruserid = unAuthor $ author document
+              authoruserid = unAuthor $ documentauthor document
           Just author <- query $ GetUserByUserID authoruserid
           let authorname = userfullname author
               invitedname = signatoryname $ head $ filter (\x -> signatorylinkid x == signatorylinkid1) 
-                            (signatorylinks document)
+                            (documentsignatorylinks document)
           webHSP (pageFromBody ctx TopNone kontrakcja (showDocumentForSign ("/sign/" ++ show documentid ++ "/" ++ show signatorylinkid1) document authorname invitedname wassigned))
        ]
 
@@ -187,8 +187,8 @@ handleIssueShow ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpa
            methodM POST
            doc2 <- updateDocument ctx document
            
-           if (status doc2 == ReadyToSign &&
-               status document /= ReadyToSign) 
+           if (documentstatus doc2 == Pending &&
+               documentstatus document /= Pending) 
              then do
               let link = "/landpage/signinvite/" ++ show documentid
               response <- webHSP (seeOtherXML link)
@@ -201,7 +201,7 @@ handleIssueShow ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpa
              seeOther link response
 
        , path $ \(_title::String) -> methodM GET >> do
-           let file = safehead "handleIssueShow" (files document)
+           let file = safehead "handleIssueShow" (documentfiles document)
            let contents = filepdf file
            let res = Response 200 M.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
            let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
@@ -235,7 +235,7 @@ updateDocument ctx document = do
   when (isJust maybeshowvars) $ mzero
   if not (Data.List.null (fromJust final))
      then do
-          doc3 <- liftIO $ doctransPreparation2ReadyToSign ctx doc2
+          doc3 <- liftIO $ doctransPreparation2Pending ctx doc2
           return doc3
      else return doc2
     
@@ -295,7 +295,7 @@ handleDocumentUploadX docid content filename = do
 
 personsFromDocument document = 
     let
-        links = signatorylinks document
+        links = documentsignatorylinks document
         x (SignatoryLink{signatoryname,signatorycompany,maybesigninfo = Just (SignInfo { signtime })})
             | BS.null signatorycompany =
                 SealPerson (BS.toString signatoryname ++ ", ") (showDateOnly signtime)
@@ -306,7 +306,7 @@ personsFromDocument document =
 
 sealDocument :: User -> Document -> IO Document
 sealDocument author@(User {userfullname,usercompanyname}) document = do
-  let (file@File {fileid,filename,filepdf,filejpgpages}) = safehead "sealDocument" $ files document
+  let (file@File {fileid,filename,filepdf,filejpgpages}) = safehead "sealDocument" $ documentfiles document
   let docid = unDocumentID (documentid document)
   let persons = SealPerson (BS.toString userfullname ++ ", ") (BS.toString usercompanyname) : personsFromDocument document
   tmppath <- getTemporaryDirectory
