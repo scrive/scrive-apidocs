@@ -30,7 +30,7 @@ showUser ctx@(Context {ctxmaybeuser = Just user}) =
      <h1>Välkommen <% userfullname user %></h1>
       <div class="inlinebox">
        <p>Namn: <% userfullname user %></p>
-       <p>E-mail: <% useremail user %></p>
+       <p>E-mail: <% unEmail $ useremail user %></p>
        <p>Företagsnamn: <% usercompanyname user %></p>
        <p>Organisationsnummer: <% usercompanynumber user %></p>
        <p>Faktureringsadress: <% userinvoiceaddress user %></p>

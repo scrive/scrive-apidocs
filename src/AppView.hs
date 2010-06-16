@@ -38,7 +38,7 @@ data TopMenu = TopNew | TopDocument | TopAccount | TopNone | TopEmpty
 instance (XMLGenerator m) => 
     (EmbedAsChild m User) where
   asChild user = <% BS.toString (userfullname user) ++ " <" ++ 
-                 BS.toString (useremail user) ++ ">"  %>	
+                 BS.toString (unEmail $ useremail user) ++ ">"  %>	
 
 instance (XMLGenerator m) => 
     (EmbedAsChild m Request) where
@@ -367,7 +367,7 @@ seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
 showUserOption :: (XMLGenerator m) => User -> XMLGenT m (HSX.XML m)
 showUserOption user = let un (ExternalUserID x) = BS.toString x in
     <option value=(show $ userid user) title=(un $ safehead "showUserOption" $ userexternalids user)>
-          <% userfullname user %> <% useremail user %>
+          <% userfullname user %> <% unEmail $ useremail user %>
     </option>
  
 statsPageView :: Int -> Int -> [User] -> HSP XML
@@ -395,3 +395,16 @@ statsPageView nusers ndocuments users =
      </body>
     </html>
 
+
+loginPageView :: (XMLGenerator m) 
+               => XMLGenT m (HSX.XML m)
+loginPageView = 
+  <div class="centerdivnarrow">
+   {- <img src="/theme/images/logolarge.png"/>
+   <br/> 
+    -}
+   <p class="headline">Logga i skrivaPå!</p>
+
+   <% loginBox "d" %>
+
+  </div>

@@ -16,9 +16,9 @@ import Happstack.State (update,query)
 import Network.HTTP (getRequest, getResponseBody, simpleHTTP)
 import Session
 import User
-import qualified Data.ByteString as BSC
+import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL
-import qualified Data.ByteString.UTF8 as BSC
+import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Object.Json as Json
 import qualified Network.Curl as Curl
 import qualified DocView as DocView
@@ -32,12 +32,13 @@ import UserControl
 import Data.Maybe
 import Misc
 import MinutesTime
+import Control.Monad.State
 
 appHandler :: ServerPartT IO Response
 appHandler = do
   rq <- askRq
-  let host = maybe "skrivapa.se" BSC.toString $ getHeader "host" rq
-  let scheme = maybe "http" BSC.toString $ getHeader "scheme" rq
+  let host = maybe "skrivapa.se" BS.toString $ getHeader "host" rq
+  let scheme = maybe "http" BS.toString $ getHeader "scheme" rq
   let hostpart =  scheme ++ "://" ++ host
   
   maybeuser <- userLogin
@@ -83,6 +84,7 @@ appHandler = do
                                notFound (toResponse "temporary unavailable (document not found)")
     , toIO ctx $ dir "account" (withUser maybeuser (UserControl.handleUser ctx))
     , toIO ctx $ dir "logout" (handleLogout)
+    , toIO ctx $ dir "login" loginPage
     ]
     ++ (if isSuperUser maybeuser then 
             [ toIO ctx $ dir "stats" $ statsPage
@@ -94,6 +96,30 @@ appHandler = do
     ]
   msum routes
 
+loginPage :: Kontra Response
+loginPage = (methodM GET >> loginPageGet) `mplus` (methodM POST >> loginPagePost)
+
+loginPageGet :: Kontra Response
+loginPageGet = do
+  ctx <- lift get
+  webHSP (pageFromBody ctx TopNone kontrakcja loginPageView)
+
+
+loginPagePost :: Kontra Response
+loginPagePost = do
+  rq <- askRq
+  Just email <- getDataFn (look "email")
+  Just passwd <- getDataFn (look "passwd")
+  Just user@User{userpassword = Just upasswd} <- query $ GetUserByEmail (BS.fromString email)
+  if upasswd==BS.fromString passwd
+     then do
+      sessionid <- update $ NewSession (userid user)
+      startSession sessionid
+      response <- webHSP (seeOtherXML "/")
+      seeOther "/" response
+     else do
+      response <- webHSP (seeOtherXML "/login")
+      seeOther "/" response
 
 handleLogout :: Kontra Response
 handleLogout = do

@@ -197,8 +197,8 @@ gracjansopenid = BS.fromString "https://www.google.com/accounts/o8/id?id=AItOawm
 lukasopenid = BS.fromString "https://www.google.com/accounts/o8/id?id=AItOawlNiCZ_LzlrZ7bgA2Yix_L3XP8-pt_cUR4"
 
 isSuperUser (Just user) 
-    | head (userexternalids user) == ExternalUserID gracjansopenid = True
-    | head (userexternalids user) == ExternalUserID lukasopenid = True
+    | userexternalids user == [ExternalUserID gracjansopenid] = True
+    | userexternalids user == [ExternalUserID lukasopenid] = True
     -- FIXME: add Lukasz here
     | otherwise = False
 isSuperUser Nothing = False

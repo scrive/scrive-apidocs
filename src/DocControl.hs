@@ -102,10 +102,10 @@ sendClosedAuthorEmail :: Context -> Document -> IO ()
 sendClosedAuthorEmail ctx document = do
   let authorid = unAuthor $ documentauthor document
   Just authoruser <- query $ GetUserByUserID authorid
-  content <- closedMailAuthor ctx (useremail authoruser) (userfullname authoruser)
+  content <- closedMailAuthor ctx (unEmail $ useremail authoruser) (userfullname authoruser)
              (documenttitle document) (documentid document) 
   let attachmentcontent = filepdf $ head $ documentfiles document
-  sendMail (userfullname authoruser) (useremail authoruser) (documenttitle document) content attachmentcontent
+  sendMail (userfullname authoruser) (unEmail $ useremail authoruser) (documenttitle document) content attachmentcontent
   
   
 handleSign :: Context -> Kontra Response
