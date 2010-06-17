@@ -41,11 +41,6 @@ import qualified Data.Set as Set
 
 
 -- |perform insert only if test is True
-testAndInsert :: (Indexable a,
-                  Ord a,
-                  Data a,
-                  MonadState (IxSet a) m) =>
-                 (IxSet a -> Bool) -> a -> m Bool
 testAndInsert test a =
     maybeModify $ \ixset ->
         if test ixset
