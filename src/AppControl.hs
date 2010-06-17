@@ -113,7 +113,7 @@ loginPagePost :: Kontra Response
 loginPagePost = do
   rq <- askRq
   Just email <- getDataFn (look "email")
-  Just passwd <- getDataFn (look "passwd")
+  Just passwd <- getDataFn (look "password")
   Just user@User{userpassword = Just upasswd} <- query $ GetUserByEmail (BS.fromString email)
   if upasswd==BS.fromString passwd
      then do
@@ -123,7 +123,7 @@ loginPagePost = do
       seeOther "/" response
      else do
       response <- webHSP (seeOtherXML "/login")
-      seeOther "/" response
+      seeOther "/login" response
 
 handleLogout :: Kontra Response
 handleLogout = do
@@ -156,7 +156,8 @@ handleCreateUser = do
   user <- update $ AddUser (ExternalUserID BS.empty) (BS.fromString fullname) (BS.fromString email)
   let passwd = "GH45T7hjK"
   update $ SetUserPassword user (BS.fromString passwd)
-  content <- liftIO $ passwordChangeMail (BS.fromString fullname) (BS.fromString email) (BS.fromString passwd)
+  content <- liftIO $ passwordChangeMail (BS.fromString email) (BS.fromString fullname) 
+             (BS.fromString passwd)
   liftIO $ sendMail (BS.fromString fullname) (BS.fromString email) 
                (BS.fromString "SkrivaPa new password") content BS.empty
   -- FIXME: where to redirect?

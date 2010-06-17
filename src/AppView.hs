@@ -110,29 +110,29 @@ handleRPXLoginView json =
 loginBox x =
    <div>
     <div id="login">
-     <form action="/tutorial/actions/login" method="post">
+     <form action="/login" method="post">
       <table>
 	<tr>
           <td>Email:</td> 
-          <td><input type="textfield" name="username"/></td> 
+          <td><input type="textfield" name="email"/></td> 
         </tr>
 	<tr> 
           <td>Password:</td> 
           <td><input type="password" name="password"/></td> 
         </tr>
 	<tr> 
-          <td><input type="submit" name="create" value="Login"/></td>
+          <td><input type="submit" name="login" value="Login"/></td>
           <td><a href="#" onClick="$('#login').hide(); $('#register').show(); return false;">register</a></td>
 	</tr>
       </table>
     </form>
     </div>
-    <div id="register">
+    <div id="register" style="display: none;">
      <form action="/tutorial/actions/newuser" method="post">
       <table>
  	<tr>
           <td>Email:</td>
-          <td><input type="textfield" name="username"/></td>
+          <td><input type="textfield" name="email"/></td>
         </tr>
 	<tr>
           <td>Password:</td>
@@ -392,6 +392,14 @@ statsPageView nusers ndocuments users =
        </select>
        <input class="secbutton" type="submit" value="Become"/>
       </form>
+      <br/>
+      <form method="post" action="/createuser">
+       Create user:<br/> 
+       Full name: <input type="textfield" name="fullname"/><br/>
+       Email address: <input type="textfield" name="email"/><br/>
+       <input class="secbutton" type="submit" value="Create"/>
+      </form>
+ 
      </body>
     </html>
 
