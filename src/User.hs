@@ -8,6 +8,7 @@ module User
     , Context(..)
     , isSuperUser
     , Kontra(..)
+    , rpxSignInLink
     )
     where
 
@@ -153,24 +154,35 @@ provideRPXNowLink = do -- FIXME it was guarded by method GET but it didn't help
     let url = "https://kontrakcja.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode serverurl
     v <- webHSP $ seeOtherXML url
     seeOther url (v)
+
+rpxSignInLink (Context {ctxhostpart}) title url = do
+    -- FIXME: this is very simple url handling....
+    let fullurl = ctxhostpart ++ url
+    <a class="rpxnow" onclick="return false;"
+       href=("https://kontrakcja.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode fullurl)><% title %></a> 
+
 {-
 maybeSignInLink
   :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] [Char])) =>
      Context -> XMLGenT m (HSX.XML m) -> String -> XMLGenT m (HSX.XML m)
 -}
+{-
 maybeSignInLink (Context {ctxmaybeuser = Nothing, ctxhostpart}) title url = do
     -- FIXME: this is very simple url handling....
     let fullurl = ctxhostpart ++ url
     <a class="rpxnow" onclick="return false;"
        href=("https://kontrakcja.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode fullurl)><% title %></a> 
+-}
 maybeSignInLink (Context {}) title url = do
     <a href=url><% title %></a> 
 
+{-
 maybeSignInLink2 (Context {ctxmaybeuser = Nothing, ctxhostpart}) title url class1 = do
     -- FIXME: this is very simple url handling....
     let fullurl = ctxhostpart ++ url
     <a class=("rpxnow " ++ class1) onclick="return false;" class=class1
        href=("https://kontrakcja.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode fullurl)><% title %></a> 
+-}
 maybeSignInLink2 (Context {}) title url class1 = do
     <a href=url class=class1><% title %></a> 
 

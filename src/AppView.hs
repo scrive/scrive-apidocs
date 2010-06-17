@@ -107,7 +107,7 @@ handleRPXLoginView json =
       <% json %>
     </p>
 
-loginBox x =
+loginBox ctx =
    <div>
     <div id="login">
      <form action="/login" method="post">
@@ -122,11 +122,15 @@ loginBox x =
         </tr>
 	<tr> 
           <td><input type="submit" name="login" value="Login"/></td>
-          <td><a href="#" onClick="$('#login').hide(); $('#register').show(); return false;">register</a></td>
+          <td>
+            {- <a href="#" onClick="$('#login').hide(); $('#register').show(); return false;">register</a> -}
+           <% rpxSignInLink ctx "Sign in with OpenID" "/" %>
+          </td>
 	</tr>
       </table>
     </form>
     </div>
+    {-
     <div id="register" style="display: none;">
      <form action="/tutorial/actions/newuser" method="post">
       <table>
@@ -149,6 +153,7 @@ loginBox x =
       </table>
      </form>
     </div>
+    -}
    </div>
 
 welcomeBody :: (XMLGenerator m) 
@@ -182,9 +187,8 @@ welcomeBody ctx@(Context {ctxmaybeuser = Nothing}) =
     <img src="/theme/images/logolarge.png"/><br/>
     <hr/>
     <p class="headline" style="font-size: 200%; text-align: center">
-      {- <% maybeSignInLink ctx "Sign in here" "/" %> -}
-      <% loginBox "dd" %>
     </p>
+      <% loginBox ctx %>
    </div>
 
    <hr/>
@@ -313,7 +317,7 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages}) topMenu t
          <%
            case ctxmaybeuser of
              Just _ -> <a href="/logout">Logout</a>
-             Nothing -> maybeSignInLink ctx "Login" "/"
+             Nothing -> rpxSignInLink ctx "Login" "/"
          %> | <a href="about">Om skrivaPå</a></span>
         <div id="headerContainer2">
          <div id="nav">
@@ -405,15 +409,15 @@ statsPageView nusers ndocuments users =
 
 
 loginPageView :: (XMLGenerator m) 
-               => XMLGenT m (HSX.XML m)
-loginPageView = 
+               => Context -> XMLGenT m (HSX.XML m)
+loginPageView ctx = 
   <div class="centerdivnarrow">
    {- <img src="/theme/images/logolarge.png"/>
    <br/> 
     -}
    <p class="headline">Logga i skrivaPå!</p>
 
-   <% loginBox "d" %>
+   <% loginBox ctx %>
 
   </div>
 

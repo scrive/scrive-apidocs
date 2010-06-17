@@ -106,7 +106,7 @@ loginPage = (methodM GET >> loginPageGet) `mplus` (methodM POST >> loginPagePost
 loginPageGet :: Kontra Response
 loginPageGet = do
   ctx <- lift get
-  webHSP (pageFromBody ctx TopNone kontrakcja loginPageView)
+  webHSP (pageFromBody ctx TopNone kontrakcja (loginPageView ctx))
 
 
 loginPagePost :: Kontra Response
