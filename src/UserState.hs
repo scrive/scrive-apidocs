@@ -241,6 +241,13 @@ addUserFlashMessage userid msg= do
           modify (updateIx userid (user { userflashmessages = msg : userflashmessages })) 
           return ()
 
+setUserPassword :: User -> BS.ByteString -> Update Users ()
+setUserPassword user@User{userid} newpassword = do
+  users <- ask
+  modify (updateIx userid (user { userpassword = Just newpassword })) 
+  return ()
+  
+
 instance Component Users where
   type Dependencies Users = End
   initialValue = IxSet.empty
@@ -254,5 +261,6 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'getUserFlashMessages
                     , 'addUserFlashMessage
                     , 'getUserByEmail
+                    , 'setUserPassword
                     ])
 

@@ -1,5 +1,5 @@
-{-# LANGUAGE CPP #-}
-{-# OPTIONS_GHC -fglasgow-exts -funbox-strict-fields -fbang-patterns #-}
+{-# LANGUAGE CPP, BangPatterns #-}
+{-# OPTIONS_GHC -fglasgow-exts -funbox-strict-fields #-}
 
 module PdfModel where
 import Prelude hiding (String)

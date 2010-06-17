@@ -33,6 +33,9 @@ import Data.Maybe
 import Misc
 import MinutesTime
 import Control.Monad.State
+import DocView
+import SendMail
+
 
 appHandler :: ServerPartT IO Response
 appHandler = do
@@ -89,6 +92,7 @@ appHandler = do
     ++ (if isSuperUser maybeuser then 
             [ toIO ctx $ dir "stats" $ statsPage
             , toIO ctx $ dir "become" $ handleBecome
+            , toIO ctx $ dir "createuser" $ handleCreateUser
             ]
        else [])
     ++ [ fileServe [] "public"
@@ -143,3 +147,19 @@ handleBecome = do
   startSession sessionid
   response <- webHSP (seeOtherXML "/")
   seeOther "/" response
+
+
+handleCreateUser :: Kontra Response
+handleCreateUser = do
+  Just email <- getDataFn $ (look "email")
+  Just fullname <- getDataFn $ (look "fullname")
+  user <- update $ AddUser (ExternalUserID BS.empty) (BS.fromString fullname) (BS.fromString email)
+  let passwd = "GH45T7hjK"
+  update $ SetUserPassword user (BS.fromString passwd)
+  content <- liftIO $ passwordChangeMail (BS.fromString fullname) (BS.fromString email) (BS.fromString passwd)
+  liftIO $ sendMail (BS.fromString fullname) (BS.fromString email) 
+               (BS.fromString "SkrivaPa new password") content BS.empty
+  -- FIXME: where to redirect?
+  response <- webHSP (seeOtherXML "/")
+  seeOther "/" response
+  

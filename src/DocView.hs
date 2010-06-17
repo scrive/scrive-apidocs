@@ -442,12 +442,6 @@ showDocumentForSign action document authorname invitedname wassigned =
                    <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign"/>
                 </span>
 
-poweredBySkrivaPaPara :: (XMLGenerator m) => XMLGenT m (HSX.XML m)
-poweredBySkrivaPaPara = 
-    <p>
-      {- Med vänliga hälsningar<br/> -}
-     <small>Powered by <a href="http://skrivapa.se/">skrivaPå</a></small>
-    </p>
 
 
 invitationMailXml :: (XMLGenerator m) 
@@ -579,6 +573,43 @@ closedMailAuthor ctx emailaddress personname
                documenttitle documentid = do
                  let xml = closedMailAuthorXml ctx emailaddress personname 
                            documenttitle documentid
+                           -- FIXME: first part of tuple is Maybe Metadata
+                           -- potentially important
+                 (_,content) <- evalHSP Nothing xml
+                 return (BS.fromString (renderAsHTML content))
+
+poweredBySkrivaPaPara :: (XMLGenerator m) => XMLGenT m (HSX.XML m)
+poweredBySkrivaPaPara = 
+    <p>
+      {- Med vänliga hälsningar<br/> -}
+     <small>Powered by <a href="http://skrivapa.se/">skrivaPå</a></small>
+    </p>
+
+passwordChangeMailXml :: (XMLGenerator m) 
+                     => BS.ByteString
+                  -> BS.ByteString
+                  -> BS.ByteString
+                  -> XMLGenT m (HSX.XML m)
+passwordChangeMailXml emailaddress personname newpassword = 
+    <html>
+     <head>
+      <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+     </head>
+     <body>
+      <p>Hej <% personname %>,</p>
+      <p>Your password is now:</p>
+      <p>Email: <% emailaddress %></p>
+      <p>Password: <% newpassword %></p>
+      <% poweredBySkrivaPaPara %>
+     </body>
+    </html>
+
+passwordChangeMail :: BS.ByteString
+               -> BS.ByteString
+               -> BS.ByteString
+               -> IO BS.ByteString
+passwordChangeMail emailaddress personname newpassword = do
+                 let xml = passwordChangeMailXml emailaddress personname newpassword
                            -- FIXME: first part of tuple is Maybe Metadata
                            -- potentially important
                  (_,content) <- evalHSP Nothing xml

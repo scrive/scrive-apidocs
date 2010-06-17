@@ -39,8 +39,9 @@ import Happstack.State (Serialize, Version, Query, Update, deriveSerialize, getR
 import qualified Control.Applicative as Applicative
 import qualified Data.Set as Set
 
+
 -- |perform insert only if test is True
-testAndInsert :: (Indexable a b,
+testAndInsert :: (Indexable a,
                   Ord a,
                   Data a,
                   MonadState (IxSet a) m) =>
