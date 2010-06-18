@@ -317,15 +317,19 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages}) topMenu t
          <%
            case ctxmaybeuser of
              Just _ -> <a href="/logout">Logout</a>
-             Nothing -> rpxSignInLink ctx "Login" "/"
+             Nothing -> <a href="/login">Login</a> {- rpxSignInLink ctx "Login" "/" -}
          %> | <a href="about">Om skrivaPå</a></span>
         <div id="headerContainer2">
          <div id="nav">
-          <ul>
-           <li><% topnavi (topMenu== TopNew) ctx "Skapa" "/" %></li>
-           <li><% topnavi (topMenu== TopDocument) ctx "Avtal" "/issue" %></li>
-           <li><% topnavi (topMenu== TopAccount) ctx "Konto" "/account" %></li>
-          </ul>
+          <% case ctxmaybeuser of 
+               Just _ ->
+                 <ul>
+                   <li><% topnavi (topMenu== TopNew) ctx "Skapa" "/" %></li>
+                   <li><% topnavi (topMenu== TopDocument) ctx "Avtal" "/issue" %></li>
+                   <li><% topnavi (topMenu== TopAccount) ctx "Konto" "/account" %></li>
+                 </ul>
+               _ -> <span/>
+           %>
          </div>
         </div>
       </div>
@@ -391,17 +395,33 @@ statsPageView nusers ndocuments users =
       <br/>
       <form method="post" action="/become">
        Become user: 
-       <select name="user">
-        <% map showUserOption users %>
-       </select>
-       <input class="secbutton" type="submit" value="Become"/>
+       <table>
+        <tr>
+         <td>
+          <select name="user">
+            <% map showUserOption users %>
+          </select>
+         </td>
+         <td>
+          <input class="secbutton" type="submit" value="Become"/>
+         </td>
+        </tr>
+       </table>
       </form>
       <br/>
       <form method="post" action="/createuser">
        Create user:<br/> 
-       Full name: <input type="textfield" name="fullname"/><br/>
-       Email address: <input type="textfield" name="email"/><br/>
-       <input class="secbutton" type="submit" value="Create"/>
+       <table>
+        <tr>
+         <td>Full name:</td>
+         <td><input type="textfield" name="fullname"/></td>
+        </tr>
+        <tr>
+         <td>Email address:</td>
+         <td><input type="textfield" name="email"/></td>
+        </tr>
+       </table><br/>
+       <input class="secbutton" type="submit" value="Create user"/>
       </form>
  
      </body>

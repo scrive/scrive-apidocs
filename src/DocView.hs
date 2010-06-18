@@ -597,9 +597,18 @@ passwordChangeMailXml emailaddress personname newpassword =
      </head>
      <body>
       <p>Hej <% personname %>,</p>
-      <p>Your password is now:</p>
-      <p>Email: <% emailaddress %></p>
-      <p>Password: <% newpassword %></p>
+      <p>A SkrivaPå account was created for you. 
+         Your details are are follows:</p>
+      <p>Full name: <% personname %><br/>
+         Email: <% emailaddress %><br/>
+         Password: <% newpassword %><br/>
+      </p>
+      <p>
+      You may use your account right away, just login:
+      </p>
+      <p>
+      http://skrivapa.se/login
+      </p>
       <% poweredBySkrivaPaPara %>
      </body>
     </html>

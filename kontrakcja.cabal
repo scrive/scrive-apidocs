@@ -48,7 +48,7 @@ Executable kontrakcja-server
  if os(windows)
    cpp-options: -DWINDOWS
  Build-depends: happstack-state, happstack-server, hslogger, mtl, time, time-extras
- Build-depends: hsx, hsp, happstack, utf8-string
+ Build-depends: hsx, hsp, happstack, utf8-string, random
  Build-depends: happstack-data, extensible-exceptions, happstack-ixset, containers, happstack-util, directory, process
  Build-Depends: base >= 4 && < 5, syb, dataenc
  Build-Depends: syb-with-class, binary, old-locale, old-time
@@ -60,3 +60,4 @@ Executable kontrakcja-server
              UndecidableInstances, TypeOperators, TypeSynonymInstances,
              GeneralizedNewtypeDeriving, NamedFieldPuns
    
+

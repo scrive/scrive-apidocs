@@ -206,7 +206,7 @@ addUser externaluserid fullname email = do
                    , userflashmessages = []
                    , userpassword = Nothing
                    })
-  put (insert user users)
+  modify (updateIx (Email email) user)
   return user
 
 getUserStats :: Query Users Int

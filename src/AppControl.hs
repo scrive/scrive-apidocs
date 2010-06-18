@@ -35,7 +35,7 @@ import MinutesTime
 import Control.Monad.State
 import DocView
 import SendMail
-
+import System.Random
 
 appHandler :: ServerPartT IO Response
 appHandler = do
@@ -154,13 +154,15 @@ handleCreateUser = do
   Just email <- getDataFn $ (look "email")
   Just fullname <- getDataFn $ (look "fullname")
   user <- update $ AddUser (ExternalUserID BS.empty) (BS.fromString fullname) (BS.fromString email)
-  let passwd = "GH45T7hjK"
+  let letters =['a'..'z'] ++ ['0'..'9'] ++ ['A'..'Z']
+  indexes <- liftIO $ replicateM 8 (randomRIO (0,length letters))
+  let passwd = map (letters!!) indexes
   update $ SetUserPassword user (BS.fromString passwd)
   content <- liftIO $ passwordChangeMail (BS.fromString email) (BS.fromString fullname) 
              (BS.fromString passwd)
   liftIO $ sendMail (BS.fromString fullname) (BS.fromString email) 
                (BS.fromString "SkrivaPa new password") content BS.empty
   -- FIXME: where to redirect?
-  response <- webHSP (seeOtherXML "/")
-  seeOther "/" response
+  response <- webHSP (seeOtherXML "/stats")
+  seeOther "/stats" response
   
