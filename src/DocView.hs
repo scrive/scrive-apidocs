@@ -324,6 +324,7 @@ showDocument user document issuedone =
              <strong>Avtalet blir juridiskt bindande när alla parter undertecknat.</strong>
             </p>
             
+            {-
             <p>Det är först då vi tar betalt. 
             Vi fakturerar månadsvis. Era fakturauppgifter:</p>
 
@@ -334,6 +335,7 @@ showDocument user document issuedone =
             Adress: <% userinvoiceaddress user %> <br/>
             Pris: ”20 SEK exkl moms” <br/>
             </div>
+            -}
 
            <p>Är du säker på att du vill underteckna avtalet?</p>
 
@@ -398,7 +400,7 @@ showDocumentPageHelper action document helpers title content =
       </td>
       <td> 
        <p class="headline"><% title %><br/> 
-           <small><a href=("/issue/" ++ show (documentid document) ++ "/" ++ BS.toString title ++ ".pdf") target="_blank">Open as PDF</a></small>
+           <small><a href=("/issue/" ++ show (documentid document) ++ "/" ++ BS.toString title ++ ".pdf") target="_blank">Öppna som PDF</a></small>
        </p>
        <% content %>
       </td>
@@ -433,13 +435,16 @@ showDocumentForSign action document authorname invitedname wassigned =
 
                 <p>Genom skrivaPå kan du underteckna juridiskt bindande avtal online. På vänster sida har du avtalet <strong><% documenttitle document %></strong> som <strong><% authorname %></strong> har bjudit in dig att underteckna.</p>
 
-                <p>Om du inte är <strong><% invitedname %></strong> klicka av "avvisa".</p>
+                 {-
+                <p>Om du inte är <strong><% invitedname %></strong> ber vi dig att avvisa avtalet.</p>
+                 -}
 
 {- Avvisa - gray FIXME -}
-                <p>Jag vill veta mer <a href="/about" target="_blank">om skrivaPå</a>.</p>
 
                    <input type="hidden" name="sign2" value=""/>
                    <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign"/>
+                 <p>Jag vill veta mer <a href="/about" target="_blank">om skrivaPå</a>.
+                 </p>
                 </span>
 
 
@@ -466,7 +471,7 @@ invitationMailXml (Context {ctxmaybeuser = Just user, ctxhostpart})
      <body>
       <p>Hej <% personname %>,</p>
       <p></p>
-      <p><strong><% creatorname %></strong> har bjudit in dig att skriva på avtalet <strong><% documenttitle %></strong>. Klicka på länken för att läsa igenom och skriva på.</p>
+      <p><strong><% creatorname %></strong> har bjudit in dig att skriva på avtalet <strong><% documenttitle %></strong>. Klicka på länken nedan för att öppna avtalet. Du undertecknar genom att bekräfta avtalet i nästa steg.</p>
       <p><a href=link><% link %></a></p>
       <% poweredBySkrivaPaPara %>
      </body>
@@ -597,19 +602,20 @@ passwordChangeMailXml emailaddress personname newpassword =
      </head>
      <body>
       <p>Hej <% personname %>,</p>
-      <p>A SkrivaPå account was created for you. 
-         Your details are are follows:</p>
-      <p>Full name: <% personname %><br/>
-         Email: <% emailaddress %><br/>
-         Password: <% newpassword %><br/>
-      </p>
-      <p>
-      You may use your account right away, just login:
+
+      <p>Jag heter Lukas Duczko och är VD på SkrivaPå. Tack för att du har skapat ett konto hos oss. Vi hoppas att du kommer att bli nöjd med våra tjänster. Tveka inte att höra av dig med åsikter, feedback eller bara en enkel hälsning. Din åsikt är värdefull.</p>
+
+      <p>Dina användaruppgifter på SkrivaPå</p>
+      <p>Användarnamn: <% emailaddress %><br/>
+         Lösenord: <% newpassword %><br/>
       </p>
       <p>
       http://skrivapa.se/login
       </p>
-      <% poweredBySkrivaPaPara %>
+
+      <p>MVH<br/>
+         /Lukas Duczko och team SkrivaPå
+      </p>
      </body>
     </html>
 
