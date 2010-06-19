@@ -46,3 +46,4 @@ getMinutesTime = do
   
 toUTCTime (MinutesTime time) = 
     System.Time.toUTCTime (TOD (fromIntegral time * 60) 0)
+

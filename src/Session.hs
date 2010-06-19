@@ -31,11 +31,14 @@ import Data.Generics
 import Data.Maybe (isNothing)
 import Happstack.Data (Default, deriveAll, gFind')
 import Happstack.Data.IxSet
-import Happstack.Data.IxSet (IxSet(..), Indexable(..), (@=), delete, getOne, inferIxSet, noCalcs, updateIx)
-import Happstack.Server (ServerMonad, withDataFn, readCookieValue,addCookie,FilterMonad(..),Response,expireCookie,setHeaderM)
+import Happstack.Data.IxSet (IxSet(..), Indexable(..), (@=), delete, getOne, 
+                             inferIxSet, noCalcs, updateIx)
+import Happstack.Server (ServerMonad, withDataFn, readCookieValue,addCookie,FilterMonad(..),
+                         Response,expireCookie,setHeaderM)
 import Happstack.Server.Cookie (Cookie,mkCookie,mkCookieHeader)
 import Happstack.Server.HTTP.Types ()
-import Happstack.State (Serialize, Version, Query, Update, deriveSerialize, getRandomR, mkMethods, query)
+import Happstack.State (Serialize, Version, Query, Update, deriveSerialize, getRandomR, 
+                        mkMethods, query)
 import qualified Control.Applicative as Applicative
 import qualified Data.Set as Set
 

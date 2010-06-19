@@ -78,7 +78,8 @@ sendInvitationEmail1 ctx document signlink = do
   content <- invitationMail ctx signatoryemail signatoryname
              documenttitle documentid signatorylinkid
 
-  sendMail signatoryname signatoryemail documenttitle content (filepdf $ head $ documentfiles document)
+  sendMail signatoryname signatoryemail documenttitle content 
+           (filepdf $ head $ documentfiles document)
 
 sendClosedEmails :: Context -> Document -> IO ()
 sendClosedEmails ctx document = do
@@ -105,7 +106,8 @@ sendClosedAuthorEmail ctx document = do
   content <- closedMailAuthor ctx (unEmail $ useremail authoruser) (userfullname authoruser)
              (documenttitle document) (documentid document) 
   let attachmentcontent = filepdf $ head $ documentfiles document
-  sendMail (userfullname authoruser) (unEmail $ useremail authoruser) (documenttitle document) content attachmentcontent
+  sendMail (userfullname authoruser) (unEmail $ useremail authoruser) 
+           (documenttitle document) content attachmentcontent
   
   
 handleSign :: Context -> Kontra Response
@@ -125,7 +127,6 @@ signDoc ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) documentid
       f (SignatoryLink {maybesigninfo}) = isJust maybesigninfo
   when isallsigned ((liftIO $ doctransPending2Closed ctx document) >> return ())
 
-  -- let link = mkSignDocLink ctxhostpart documentid signatorylinkid1
   let link = "/landpage/signed/" ++ show documentid ++ "/" ++ show signatorylinkid1
   response <- webHSP (seeOtherXML link)
   seeOther link response
@@ -164,7 +165,9 @@ handleSignShow ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) documentid
           let authorname = userfullname author
               invitedname = signatoryname $ head $ filter (\x -> signatorylinkid x == signatorylinkid1) 
                             (documentsignatorylinks document)
-          webHSP (pageFromBody ctx TopNone kontrakcja (showDocumentForSign ("/sign/" ++ show documentid ++ "/" ++ show signatorylinkid1) document authorname invitedname wassigned))
+          webHSP (pageFromBody ctx TopNone kontrakcja 
+                 (showDocumentForSign ("/sign/" ++ show documentid ++ "/" ++ show signatorylinkid1) 
+                       document authorname invitedname wassigned))
        ]
 
 handleIssue :: Context -> Kontra Response
@@ -174,8 +177,7 @@ handleIssue ctx@(Context {ctxmaybeuser = Just user, ctxhostpart}) =
          , methodM POST >> handleIssuePost ctx
          ]
 
-handleIssueShow
-  :: Context -> DocumentID -> Kontra Response
+handleIssueShow :: Context -> DocumentID -> Kontra Response
 handleIssueShow ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) documentid = do
   Just (document::Document) <- query (GetDocumentByDocumentID documentid)
   msum [ do
@@ -306,9 +308,11 @@ personsFromDocument document =
 
 sealDocument :: User -> Document -> IO Document
 sealDocument author@(User {userfullname,usercompanyname}) document = do
-  let (file@File {fileid,filename,filepdf,filejpgpages}) = safehead "sealDocument" $ documentfiles document
+  let (file@File {fileid,filename,filepdf,filejpgpages}) = 
+           safehead "sealDocument" $ documentfiles document
   let docid = unDocumentID (documentid document)
-  let persons = SealPerson (BS.toString userfullname ++ ", ") (BS.toString usercompanyname) : personsFromDocument document
+  let persons = SealPerson (BS.toString userfullname ++ ", ") 
+                (BS.toString usercompanyname) : personsFromDocument document
   tmppath <- getTemporaryDirectory
   let tmpin = tmppath ++ "/in_" ++ show docid ++ ".pdf"
   let tmpout = tmppath ++ "/out_" ++ show docid ++ ".pdf"

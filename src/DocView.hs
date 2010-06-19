@@ -118,20 +118,6 @@ mkSignDocLink :: String -> DocumentID -> SignatoryLinkID -> String
 mkSignDocLink hostpart documentid signaturelinkid =
     hostpart ++ "/sign/" ++ show documentid ++ "/" ++ show signaturelinkid
 
--- * Convenience Functions
-
-{-1
-dateStr :: ClockTime -> String
-dateStr ct =
-  formatCalendarTime
-    defaultTimeLocale
-    "%a, %B %d, %Y at %H:%M:%S (UTC)"
-    (toUTCTime ct)
--}
-
--- dateStr1 _ = "Today"
-
--- * Main Implementation
 
 instance (XMLGenerator m) => (EmbedAsChild m (Document, Bool)) where
     asChild (entry, alt) = 
@@ -156,10 +142,6 @@ instance (XMLGenerator m) => (EmbedAsChild m [Document]) where
            <% zip entries (cycle [False,True]) %>
          </table>
         %>
-{-
-seeOtherXML :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
-seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
--}
 
 concatSignatories siglinks = 
     concat $ intersperse ", " $ map (BS.toString . signatoryname) siglinks 
@@ -184,8 +166,6 @@ oneDocumentRow document =
      <td><% mk $ concatSignatories (documentsignatorylinks document) %></td>
      <td><% mk $ documenttitle document %></td>
      <td class="tdright"><% show $ documentmtime document %></td>
-     {- <td>15</td> -}
-     {- <td class="tdright">15</td> -}
     </tr>
 
 
@@ -237,18 +217,14 @@ showSignatory
 showSignatory sig = <li><% show sig %></li>
 
 
-{-
-showSignatoryEntry
-  :: (HSX.XMLGenerator.EmbedAsAttr
-        m (HSX.XMLGenerator.Attr [Char] [Char]),
-      HSX.XMLGenerator.EmbedAsChild m [Char]) =>
-     DocState.SignatoryLink -> HSX.XMLGenerator.GenChildList m
--}
+
+showSignatoryEntryForEdit :: (XMLGenerator m) => DocState.SignatoryLink -> XMLGenT m (HSX.XML m)
 showSignatoryEntryForEdit (SignatoryLink{signatoryname,signatorycompany,signatoryemail}) = 
     showSignatoryEntryForEdit2 "" (BS.toString signatoryname) (BS.toString signatorycompany) 
                                    (BS.toString signatoryemail)
 
-showSignatoryEntryForEdit2 :: (XMLGenerator m) => String -> String -> String -> String -> XMLGenT m (HSX.XML m)
+showSignatoryEntryForEdit2 :: (XMLGenerator m) => String -> String -> String 
+                           -> String -> XMLGenT m (HSX.XML m)
 showSignatoryEntryForEdit2 idx signatoryname signatorycompany signatoryemail = 
     <li id=idx>
       <label>Namn på avtalspart</label><br/> 
@@ -339,9 +315,6 @@ showDocument user document issuedone =
 
            <p>Är du säker på att du vill underteckna avtalet?</p>
 
-{- <span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>
-             These items will be permanently deleted and cannot be recovered. Are you sure?
--}
           </div>
 
                 <div id="dialog-confirm-signinvite-done" title="Avtal undertecknat!">
@@ -355,7 +328,8 @@ showDocument user document issuedone =
                   </script>
                 , <script type="text/javascript" src="/js/document-edit.js"/>
                 ]
-   in showDocumentPageHelper ("/issue/" ++ show (documentid document)) document helper (BS.fromString $ "Avtal: " ++ BS.toString (documenttitle document))  
+   in showDocumentPageHelper ("/issue/" ++ show (documentid document)) document helper 
+           (BS.fromString $ "Avtal: " ++ BS.toString (documenttitle document))  
       <div>
        <div>Personer:<br/>
 
@@ -410,7 +384,8 @@ showDocumentPageHelper action document helpers title content =
    <div id="dialog-confirm-sign" title="Underteckna">
 
 
-        <p><strong>Avtalet blir juridiskt bindande när alla parter undertecknat</strong>. Då får du ett e-mail med det färdig avtalet.</p>
+        <p><strong>Avtalet blir juridiskt bindande när alla parter undertecknat</strong>. 
+           Då får du ett e-mail med det färdig avtalet.</p>
         
         <p>Är du säker på att du vill underteckna avtalet?</p>
 
@@ -420,26 +395,31 @@ showDocumentPageHelper action document helpers title content =
 
 
 showDocumentForSign :: (XMLGenerator m) =>
-                       String -> Document -> BS.ByteString -> BS.ByteString -> Bool -> XMLGenT m (HSX.XML m)
+                       String -> Document -> BS.ByteString -> BS.ByteString -> Bool 
+                    -> XMLGenT m (HSX.XML m)
 showDocumentForSign action document authorname invitedname wassigned =
    let helper = [ <script type="text/javascript" src="/js/document-edit.js"/>
                 , <script> var documentid = <% show $ documentid document %>; 
                   </script>
                 ]
-   in showDocumentPageHelper action document helper (BS.fromString $ "Avtal: " ++ BS.toString(documenttitle document)) $
+   in showDocumentPageHelper action document helper 
+              (BS.fromString $ "Avtal: " ++ BS.toString(documenttitle document)) $
         if wassigned 
            then <span>Du har redan skrivit på!</span>
            else <span>
                 
                 <p>Välkommen <% invitedname %>,</p>
 
-                <p>Genom skrivaPå kan du underteckna juridiskt bindande avtal online. På vänster sida har du avtalet <strong><% documenttitle document %></strong> som <strong><% authorname %></strong> har bjudit in dig att underteckna.</p>
+                <p>Genom skrivaPå kan du underteckna juridiskt bindande avtal online. 
+                   På vänster sida har du avtalet <strong><% documenttitle document %></strong> 
+                   som <strong><% authorname %></strong> har bjudit in dig att underteckna.
+                </p>
 
                  {-
                 <p>Om du inte är <strong><% invitedname %></strong> ber vi dig att avvisa avtalet.</p>
                  -}
 
-{- Avvisa - gray FIXME -}
+                 {- Avvisa - gray FIXME -}
 
                    <input type="hidden" name="sign2" value=""/>
                    <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign"/>
@@ -450,7 +430,7 @@ showDocumentForSign action document authorname invitedname wassigned =
 
 
 invitationMailXml :: (XMLGenerator m) 
-                     => Context
+                  => Context
                   -> BS.ByteString
                   -> BS.ByteString
                   -> BS.ByteString
@@ -471,7 +451,9 @@ invitationMailXml (Context {ctxmaybeuser = Just user, ctxhostpart})
      <body>
       <p>Hej <% personname %>,</p>
       <p></p>
-      <p><strong><% creatorname %></strong> har bjudit in dig att skriva på avtalet <strong><% documenttitle %></strong>. Klicka på länken nedan för att öppna avtalet. Du undertecknar genom att bekräfta avtalet i nästa steg.</p>
+      <p><strong><% creatorname %></strong> har bjudit in dig att skriva på avtalet 
+         <strong><% documenttitle %></strong>. Klicka på länken nedan för att öppna avtalet. 
+         Du undertecknar genom att bekräfta avtalet i nästa steg.</p>
       <p><a href=link><% link %></a></p>
       <% poweredBySkrivaPaPara %>
      </body>
@@ -494,7 +476,7 @@ invitationMail ctx emailaddress personname
                  return (BS.fromString (renderAsHTML content))
 
 closedMailXml :: (XMLGenerator m) 
-                     => Context
+                  => Context
                   -> BS.ByteString
                   -> BS.ByteString
                   -> BS.ByteString
@@ -513,9 +495,11 @@ closedMailXml (Context {ctxhostpart})
      </head>
      <body>
       <p>Hej <% personname %>,</p>
-      <p>Avtalet <strong><% documenttitle %></strong> har undertecknats av alla parter. Avtalet är nu lagligt bindande.</p>
+      <p>Avtalet <strong><% documenttitle %></strong> har undertecknats av alla parter. 
+         Avtalet är nu lagligt bindande.</p>
       
-      <p>Det färdig avtalet bifogas nedan. Om du har ett konto hos skrivaPå hittar du avtalet under "Avtal". Om du inte har ett konto kan du spara avtalet genom att klicka på länken:</p>
+      <p>Det färdig avtalet bifogas nedan. Om du har ett konto hos skrivaPå hittar du avtalet 
+         under "Avtal". Om du inte har ett konto kan du spara avtalet genom att klicka på länken:</p>
 
       <p><a href=link><% link %></a></p>
      
@@ -603,7 +587,9 @@ passwordChangeMailXml emailaddress personname newpassword =
      <body>
       <p>Hej <% personname %>,</p>
 
-      <p>Jag heter Lukas Duczko och är VD på SkrivaPå. Tack för att du har skapat ett konto hos oss. Vi hoppas att du kommer att bli nöjd med våra tjänster. Tveka inte att höra av dig med åsikter, feedback eller bara en enkel hälsning. Din åsikt är värdefull.</p>
+      <p>Jag heter Lukas Duczko och är VD på SkrivaPå. Tack för att du har skapat ett konto hos oss. 
+         Vi hoppas att du kommer att bli nöjd med våra tjänster. Tveka inte att höra av dig med 
+         åsikter, feedback eller bara en enkel hälsning. Din åsikt är värdefull.</p>
 
       <p>Dina användaruppgifter på SkrivaPå</p>
       <p>Användarnamn: <% emailaddress %><br/>
@@ -620,9 +606,9 @@ passwordChangeMailXml emailaddress personname newpassword =
     </html>
 
 passwordChangeMail :: BS.ByteString
-               -> BS.ByteString
-               -> BS.ByteString
-               -> IO BS.ByteString
+                   -> BS.ByteString
+                   -> BS.ByteString
+                   -> IO BS.ByteString
 passwordChangeMail emailaddress personname newpassword = do
                  let xml = passwordChangeMailXml emailaddress personname newpassword
                            -- FIXME: first part of tuple is Maybe Metadata

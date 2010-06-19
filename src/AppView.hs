@@ -26,8 +26,7 @@ import qualified Data.Map as Map
 import Misc
 import HSP.XML
 
-instance (XMLGenerator m) => 
-    (EmbedAsChild m HeaderPair) where
+instance (XMLGenerator m) => (EmbedAsChild m HeaderPair) where
   asChild (HeaderPair name value) = <% <p> <% BS.toString name ++ ": " ++ 
                  show value  %> </p> %>	
 
@@ -35,26 +34,25 @@ instance (XMLGenerator m) =>
 data TopMenu = TopNew | TopDocument | TopAccount | TopNone | TopEmpty
              deriving (Eq,Ord)
 
-instance (XMLGenerator m) => 
-    (EmbedAsChild m User) where
+instance (XMLGenerator m) => (EmbedAsChild m User) where
   asChild user = <% BS.toString (userfullname user) ++ " <" ++ 
                  BS.toString (unEmail $ useremail user) ++ ">"  %>	
 
-instance (XMLGenerator m) => 
-    (EmbedAsChild m Request) where
+instance (XMLGenerator m) => (EmbedAsChild m Request) where
   asChild rq = <% <code>
                   <% show (rqMethod rq) %> <% rqUri rq ++ rqQuery rq %><br/>
                   <% map asChild1 (rqInputs rq) %>
                  </code> %>
-    where asChild1 (name,input) = <% <span><% name %>: <% input %><br/></span> %>
+    where asChild1 (name,input) = 
+              <% <span><% name %>: <% input %><br/></span> %>
 
-instance (XMLGenerator m) => 
-    (EmbedAsChild m Input) where
-  asChild (Input _value (Just filename) _contentType) = <% "File " ++ show filename %>
-  asChild (Input value _maybefilename _contentType) = <% show (concatMap BSC.toString (BSCL.toChunks value)) %>
+instance (XMLGenerator m) => (EmbedAsChild m Input) where
+  asChild (Input _value (Just filename) _contentType) = 
+       <% "File " ++ show filename %>
+  asChild (Input value _maybefilename _contentType) = 
+       <% show (concatMap BSC.toString (BSCL.toChunks value)) %>
 
-instance (XMLGenerator m) => 
-    (EmbedAsChild m Json.JsonScalar) where
+instance (XMLGenerator m) => (EmbedAsChild m Json.JsonScalar) where
   asChild (JsonString x) = <% BS.toString x %>	
   asChild (JsonNumber x) = <% show x %>	
   asChild (JsonBoolean x) = <% show x %>
@@ -66,9 +64,9 @@ y v = <li><% v %></li>
 
 
 
-instance (HSX.XMLGenerator.EmbedAsChild m HSP.XML.XML) => 
-    (EmbedAsChild m FlashMessage) where
-  asChild (FlashMessage msg) = <% cdata $ BSC.toString msg %> -- <span class="flashmsg"> <% msg %> </span> %>
+instance (EmbedAsChild m HSP.XML.XML) => (EmbedAsChild m FlashMessage) where
+  asChild (FlashMessage msg) = 
+      <% cdata $ BSC.toString msg %>
 
 
 instance (XMLGenerator m) => 
@@ -99,7 +97,7 @@ kontrakcjaAscii = "skriva"
 
 
 handleRPXLoginView :: (XMLGenerator m) 
-                      => Json.JsonObject
+                   => Json.JsonObject
                    -> XMLGenT m (HSX.XML m)
 handleRPXLoginView json =
     <p>
@@ -157,13 +155,10 @@ loginBox ctx =
    </div>
 
 welcomeBody :: (XMLGenerator m) 
-               => Context 
+            => Context 
             -> XMLGenT m (HSX.XML m)
 welcomeBody (Context {ctxmaybeuser = Just _, ctxhostpart}) = 
   <div class="centerdivnarrow">
-   {- <img src="/theme/images/logolarge.png"/>
-   <br/> 
-    -}
    <p class="headline">Välkommen till skrivaPå!</p>
 
    <form action="/issue" method="post" enctype="multipart/form-data">
@@ -172,12 +167,6 @@ welcomeBody (Context {ctxmaybeuser = Just _, ctxhostpart}) =
     <input class="button" type="submit" value="Skapa"/>
    </form>
    <hr/>
-
-   {- <p class="headline">Välkommen till skrivaPå!</p> -}
-
-   {- <p class="para">För tillfället testar vi vår online signaturlösning med utvalda kunder. Om du vill bli en tidig testkund, vänligen skicka <a href="mailto:lukas@skrivapa.se">ett mail till skrivaPå</a>. Om du redan har ett konto klicka nedan för att börja.</p>
-   -}
-
   </div>
 
 
@@ -195,16 +184,21 @@ welcomeBody ctx@(Context {ctxmaybeuser = Nothing}) =
 
    <p class="headline">Välkommen till skrivaPå!</p>
 
-   <p class="para">För tillfället testar vi vår online signaturlösning med utvalda kunder. Om du vill bli en tidig testkund, vänligen <a href="mailto:lukas@skrivapa.se">skicka ett mail</a>. Om du redan har ett konto klicka nedan för att börja.</p>
+   <p class="para">För tillfället testar vi vår online signaturlösning med 
+      utvalda kunder. Om du vill bli en tidig testkund, vänligen 
+      <a href="mailto:lukas@skrivapa.se">skicka ett mail</a>. Om du redan 
+      har ett konto klicka nedan för att börja.</p>
   </div>
 
 errorReport :: (XMLGenerator m) 
-               => Context 
+            => Context 
             -> Request 
             -> XMLGenT m (HSX.XML m)
 errorReport (Context {ctxmaybeuser}) request = 
   <div>
-   <p>Ett fel har uppstått. Det beror inte på dig. Det beror på oss. Vi tar hand om problemet så snart vi kan. Tills vi fixat problemet, vänligen försök igen genom att börja om från <a href="/">startsidan</a>.</p>
+   <p>Ett fel har uppstått. Det beror inte på dig. Det beror på oss. Vi tar 
+      hand om problemet så snart vi kan. Tills vi fixat problemet, vänligen 
+      försök igen genom att börja om från <a href="/">startsidan</a>.</p>
    <hr/>
    <p>Information useful to developers:</p>
    <% case ctxmaybeuser of
@@ -219,7 +213,6 @@ errorReport (Context {ctxmaybeuser}) request =
   </div>  
 
 {-
-
    <p>
      <iframe src=("http://" ++ kontrakcjaAscii ++ 
                   ".rpxnow.com/openid/embed?token_url=" ++ serverurl ++ "rpxsignin")
@@ -268,30 +261,29 @@ dateStr ct =
 -- * Main Implementation
 
 renderFromBody :: (MonadIO m, EmbedAsChild (HSPT' IO) xml) 
-                  => Context 
+               => Context 
                -> TopMenu 
                -> String 
                -> xml 
                -> m Response
 renderFromBody ctx topmenu title = webHSP . pageFromBody ctx topmenu title
 
-topnavi :: (XMLGenerator m) => Bool -> Context -> String -> String -> XMLGenT m (HSX.XML m)
+topnavi :: (XMLGenerator m) => Bool -> Context -> String 
+        -> String -> XMLGenT m (HSX.XML m)
 topnavi True ctx title link = 
-    -- FIXME: add active attribute here
-    --maybeSignInLink2 ctx <span><span class="activeleft"/><span class="activemid"><% title %></span><span class="activeright"/></span> link "active"
     maybeSignInLink2 ctx title link "active"
 
 topnavi False ctx title link = 
-    --maybeSignInLink2 ctx <span><span class="inactiveleft"/><span class="inactivemid"><% title %></span><span class="inactiveright"/></span> link ""
     maybeSignInLink2 ctx title link ""
 
 pageFromBody :: (EmbedAsChild (HSPT' IO) xml) 
-                => Context 
+             => Context 
              -> TopMenu 
              -> String 
              -> xml 
              -> HSP XML
-pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages}) topMenu title body =
+pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages}) 
+             topMenu title body =
     withMetaData html4Strict $
     <html>
      <head>
@@ -317,7 +309,7 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages}) topMenu t
          <%
            case ctxmaybeuser of
              Just _ -> <a href="/logout">Logout</a>
-             Nothing -> <a href="/login">Login</a> {- rpxSignInLink ctx "Login" "/" -}
+             Nothing -> <a href="/login">Login</a>
          %> | <a href="about">Om skrivaPå</a></span>
         <div id="headerContainer2">
          <div id="nav">
@@ -432,9 +424,7 @@ loginPageView :: (XMLGenerator m)
                => Context -> XMLGenT m (HSX.XML m)
 loginPageView ctx = 
   <div class="centerdivnarrow">
-   {- <img src="/theme/images/logolarge.png"/>
-   <br/> 
-    -}
+
    <p class="headline">Logga i skrivaPå!</p>
 
    <% loginBox ctx %>

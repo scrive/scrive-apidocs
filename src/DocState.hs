@@ -381,7 +381,8 @@ fileByFileID fileid = do
     Nothing -> return Nothing
 
 
-saveDocumentForSignedUser :: DocumentID -> UserID -> SignatoryLinkID -> Update Documents (Maybe Document)
+saveDocumentForSignedUser :: DocumentID -> UserID -> SignatoryLinkID 
+                          -> Update Documents (Maybe Document)
 saveDocumentForSignedUser documentid userid signatorylinkid1 = do
   documents <- ask
   case getOne (documents @= documentid) of

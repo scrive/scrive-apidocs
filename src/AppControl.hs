@@ -46,7 +46,8 @@ appHandler = do
   
   maybeuser <- userLogin
   flashmessages <- case maybeuser of
-                     Just (User{userid}) -> liftIO $ update $ GetUserFlashMessages userid
+                     Just (User{userid}) -> 
+                         liftIO $ update $ GetUserFlashMessages userid
                      Nothing -> return []
   minutestime <- liftIO $ getMinutesTime
   let 
@@ -66,13 +67,16 @@ appHandler = do
                  DocControl.showPage ctx modminutes fileid pageno
              ]
     , dir "landpage" $ 
-          msum [ dir "signinvite" $ path $ \documentid -> DocControl.landpageSignInvite ctx documentid
+          msum [ dir "signinvite" $ path $ \documentid -> 
+                     DocControl.landpageSignInvite ctx documentid
                , dir "signed" $ path $ \documentid -> path $ \signatorylinkid ->
-                                                      DocControl.landpageSigned ctx documentid signatorylinkid
-               , dir "signedsave" $ path $ \documentid -> path $ \signatorylinkid ->
-                                                      DocControl.landpageSignedSave ctx documentid signatorylinkid
-               , dir "saved" $ withUser maybeuser $ path $ \documentid -> path $ \signatorylinkid ->
-                                                      DocControl.landpageSaved ctx documentid signatorylinkid
+                     DocControl.landpageSigned ctx documentid signatorylinkid
+               , dir "signedsave" $ path $ \documentid -> 
+                     path $ \signatorylinkid ->
+                     DocControl.landpageSignedSave ctx documentid signatorylinkid
+               , dir "saved" $ withUser maybeuser $ path $ \documentid -> 
+                     path $ \signatorylinkid ->
+                     DocControl.landpageSaved ctx documentid signatorylinkid
                ]
           
     , dir "pagesofdoc" $ path $ \docid -> do
@@ -101,7 +105,8 @@ appHandler = do
   msum routes
 
 loginPage :: Kontra Response
-loginPage = (methodM GET >> loginPageGet) `mplus` (methodM POST >> loginPagePost)
+loginPage = (methodM GET >> loginPageGet) `mplus` 
+            (methodM POST >> loginPagePost)
 
 loginPageGet :: Kontra Response
 loginPageGet = do
