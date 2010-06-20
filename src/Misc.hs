@@ -192,3 +192,8 @@ safehead s [] = error s
 safehead _ (x:_) = x
 
 
+getDataFnM fun = do
+  m <- getDataFn fun
+  case m of
+    Just x -> return x
+    Nothing -> mzero

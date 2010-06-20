@@ -26,8 +26,8 @@ $(deriveAll [''Eq, ''Ord, ''Default]
   [d|
       newtype Author = Author { unAuthor :: UserID }
       newtype DocumentID = DocumentID { unDocumentID :: Int }
-      newtype SignatoryLinkID = SignatoryLinkID Int
-      newtype FileID = FileID Int
+      newtype SignatoryLinkID = SignatoryLinkID { unSignatoryLinkID :: Int }
+      newtype FileID = FileID { unFileID :: Int }
 
       data SignatoryLink = SignatoryLink 
           { signatorylinkid    :: SignatoryLinkID
@@ -42,14 +42,14 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           { signtime :: MinutesTime
             -- some authorization info probably
           }
-      data Signatory = Signatory UserID
+      newtype Signatory = Signatory { unSignatory :: UserID }
       {-
          Document start in Preparation state.
 
          * Preparation: can add/remove signatories, edit document,
            edit dates and times. Nobody else can see the document.
            Goes to ReadyToSign or Canceled state.
-         * ReadyToSign: people can sign document. When last person
+         * Pending: people can sign document. When last person
            has signed, goes to Closed state. When owner cancels document
            goes to Canceled state. When time is up, goes to Timedout
            state.
@@ -85,20 +85,34 @@ $(deriveAll [''Eq, ''Ord, ''Default]
                           | Canceled 
                           | Timedout
                           | Rejected
+
+      data ChargeMode = ChargeInitialFree   -- initial 5 documents are free
+                      | ChargeNormal        -- value times number of people involved
            
    |])
 
 $(deriveAll [''Default]
   [d|
+      data Document0 = Document0
+          { documentid0               :: DocumentID
+          , documenttitle0            :: BS.ByteString
+          , documentauthor0           :: Author
+          , documentsignatorylinks0   :: [SignatoryLink]  
+          , documentfiles0            :: [File]
+          , documentstatus0           :: DocumentStatus
+          , documentctime0            :: MinutesTime
+          , documentmtime0            :: MinutesTime
+          }
       data Document = Document
-          { documentid       :: DocumentID
+          { documentid               :: DocumentID
           , documenttitle            :: BS.ByteString
           , documentauthor           :: Author
           , documentsignatorylinks   :: [SignatoryLink]  
           , documentfiles            :: [File]
           , documentstatus           :: DocumentStatus
-          , documentctime    :: MinutesTime
-          , documentmtime    :: MinutesTime
+          , documentctime            :: MinutesTime
+          , documentmtime            :: MinutesTime
+          , documentchargemode       :: ChargeMode
           }
       data File = File 
           { fileid       :: FileID
@@ -115,6 +129,15 @@ instance Ord Document where
     compare a b | documentid a == documentid b = EQ
                 | otherwise = compare (documentmtime b,documenttitle a,documentid a) 
                                       (documentmtime a,documenttitle b,documentid b)
+                              -- see above: we use reverse time here!
+
+instance Eq Document0 where
+    a == b = documentid0 a == documentid0 b
+
+instance Ord Document0 where
+    compare a b | documentid0 a == documentid0 b = EQ
+                | otherwise = compare (documentmtime0 b,documenttitle0 a,documentid0 a) 
+                                      (documentmtime0 a,documenttitle0 b,documentid0 b)
                               -- see above: we use reverse time here!
 
 instance Eq File where
@@ -138,6 +161,7 @@ instance Show SignatoryLink where
 
 deriving instance Show Document
 deriving instance Show DocumentStatus
+deriving instance Show ChargeMode
 deriving instance Show Author
 instance Show Signatory where
     showsPrec prec (Signatory userid) = showsPrec prec userid
@@ -192,11 +216,42 @@ instance Version Author
 $(deriveSerialize ''Signatory)
 instance Version Signatory where
 
+$(deriveSerialize ''Document0)
+instance Version Document0 where
+
 $(deriveSerialize ''Document)
 instance Version Document where
+    mode = extension 1 (Proxy :: Proxy Document0)
+
+instance Migrate Document0 Document where
+      migrate (Document0
+          { documentid0
+          , documenttitle0
+          , documentauthor0
+          , documentsignatorylinks0
+          , documentfiles0
+          , documentstatus0
+          , documentctime0
+          , documentmtime0
+          }) = Document
+          { documentid = documentid0
+          , documenttitle = documenttitle0
+          , documentauthor = documentauthor0
+          , documentsignatorylinks = documentsignatorylinks0
+          , documentfiles = documentfiles0
+          , documentstatus = documentstatus0
+          , documentctime = documentctime0
+          , documentmtime = documentmtime0
+          , documentchargemode = ChargeInitialFree
+          }
+
 
 $(deriveSerialize ''DocumentStatus)
 instance Version DocumentStatus where
+
+
+$(deriveSerialize ''ChargeMode)
+instance Version ChargeMode where
 
 $(deriveSerialize ''File)
 instance Version File where
@@ -244,7 +299,7 @@ newDocument userid title ctime = do
   documents <- ask
   docid <- getUnique documents DocumentID
   let doc = Document docid title (Author userid) [] []
-            Preparation ctime ctime
+            Preparation ctime ctime ChargeInitialFree
   modify $ insert doc
   return doc
 

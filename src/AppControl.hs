@@ -117,8 +117,8 @@ loginPageGet = do
 loginPagePost :: Kontra Response
 loginPagePost = do
   rq <- askRq
-  Just email <- getDataFn (look "email")
-  Just passwd <- getDataFn (look "password")
+  email <- getDataFnM (look "email")
+  passwd <- getDataFnM (look "password")
   Just user@User{userpassword = Just upasswd} <- query $ GetUserByEmail (BS.fromString email)
   if upasswd==BS.fromString passwd
      then do
