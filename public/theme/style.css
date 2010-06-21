@@ -192,8 +192,8 @@ body {
 .logosmall
 {
   position: absolute;
-  top: 10px;
-  left: 10px;
+  top: 0px;
+  left: 0px;
 }
 
 .contactabout
@@ -205,7 +205,7 @@ body {
 
 .contactabout, .contactabout a {
   text-align: right;
-  color: #606060;
+  color: #FFFFFF;
   text-decoration: none;
   text-transform: uppercase;
   font-size: xx-small;
@@ -423,6 +423,7 @@ top:100px;
 font-size: 200%;
 }
 
+/*
 #footerContainer
 {
   background: url(images/gradientbottomextent.png) repeat-x bottom center;
@@ -438,4 +439,12 @@ font-size: 200%;
 {
   background:url(images/gradientbottom.png) no-repeat bottom center;
   height: 36px;
+}
+*/
+
+#signatorylist
+{
+  height:230px;
+  overflow:auto;
+  padding:0 0 0 20px;
 }

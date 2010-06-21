@@ -293,13 +293,16 @@ getDocumentsBySignatory userid = do
     documents <- ask
     return $ toList (documents @= Signatory userid)
 
-newDocument :: UserID -> BS.ByteString
-            -> MinutesTime -> Update Documents Document
-newDocument userid title ctime = do
+newDocument :: UserID 
+            -> BS.ByteString
+            -> MinutesTime 
+            -> Bool -- is free?
+            -> Update Documents Document
+newDocument userid title ctime isfree = do
   documents <- ask
   docid <- getUnique documents DocumentID
   let doc = Document docid title (Author userid) [] []
-            Preparation ctime ctime ChargeInitialFree
+            Preparation ctime ctime (if isfree then ChargeInitialFree else ChargeNormal)
   modify $ insert doc
   return doc
 
@@ -452,7 +455,12 @@ saveDocumentForSignedUser documentid userid signatorylinkid1 = do
           maybesign x = x
       modify (updateIx documentid signeddocument)
       return (Just signeddocument)
-      
+
+getNumberOfDocumentsOfUser :: User -> Query Documents Int
+getNumberOfDocumentsOfUser user = do
+  documents <- ask
+  let numdoc = size (documents @= Author (userid user))
+  return numdoc
 
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocumentsByAuthor
@@ -472,6 +480,7 @@ $(mkMethods ''Documents [ 'getDocumentsByAuthor
                         , 'removeFileFromDoc
                         , 'saveDocumentForSignedUser
                         , 'getDocumentsByUser
+                        , 'getNumberOfDocumentsOfUser
                         ])
 
 

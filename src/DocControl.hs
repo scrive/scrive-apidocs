@@ -131,26 +131,21 @@ signDoc ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) documentid
   response <- webHSP (seeOtherXML link)
   seeOther link response
 
-landpageSignInvite ctx documentid = do
-  Just document <- query $ GetDocumentByDocumentID documentid
+landpageSignInvite ctx document = do
   webHSP $ pageFromBody ctx TopNone kontrakcja $ landpageSignInviteView ctx document
 
-landpageSigned ctx documentid signatorylinkid = do
-  Just document <- query $ GetDocumentByDocumentID documentid
+landpageSigned ctx document signatorylinkid = do
   webHSP $ pageFromBody ctx TopEmpty kontrakcja $ landpageSignedView ctx document signatorylinkid
 
-landpageSignedSave ctx documentid signatorylinkid = do
-  Just document <- query $ GetDocumentByDocumentID documentid
+landpageSignedSave ctx document signatorylinkid = do
   webHSP $ pageFromBody ctx TopEmpty kontrakcja $ landpageLoginForSaveView ctx document signatorylinkid
 
-landpageSaved (ctx@Context { ctxmaybeuser = Just user }) documentid signatorylinkid = do
-  Just document <- query $ GetDocumentByDocumentID documentid
-  Just document2 <- update $ SaveDocumentForSignedUser documentid (userid user) signatorylinkid
+landpageSaved (ctx@Context { ctxmaybeuser = Just user }) document signatorylinkid = do
+  Just document2 <- update $ SaveDocumentForSignedUser (documentid document) (userid user) signatorylinkid
   webHSP $ pageFromBody ctx TopDocument kontrakcja $ landpageDocumentSavedView ctx document signatorylinkid
 
 
-handleSignShow
-  :: Context -> DocumentID -> SignatoryLinkID -> Kontra Response
+handleSignShow :: Context -> DocumentID -> SignatoryLinkID -> Kontra Response
 handleSignShow ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) documentid 
                signatorylinkid1 = do
   msum [ signDoc ctx documentid signatorylinkid1
@@ -172,19 +167,26 @@ handleSignShow ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) documentid
 
 handleIssue :: Context -> Kontra Response
 handleIssue ctx@(Context {ctxmaybeuser = Just user, ctxhostpart}) = 
-    msum [ path (handleIssueShow ctx)
+    msum [ pathdb GetDocumentByDocumentID (handleIssueShow ctx)
          , methodM GET >> handleIssueGet ctx
          , methodM POST >> handleIssuePost ctx
          ]
 
-handleIssueShow :: Context -> DocumentID -> Kontra Response
-handleIssueShow ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) documentid = do
-  Just (document::Document) <- query (GetDocumentByDocumentID documentid)
+freeLeftForUser :: User -> Kontra Int
+freeLeftForUser user = do
+  numdoc <- query $ GetNumberOfDocumentsOfUser user
+  let freeleft = if numdoc >= 5 then 0 else 5 - numdoc
+  return freeleft
+
+handleIssueShow :: Context -> Document -> Kontra Response
+handleIssueShow ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) document = do
   msum [ do
            methodM GET 
            maybeissuedone <- getDataFn (look "issuedone")
            let issuedone = isJust maybeissuedone
-           webHSP (pageFromBody ctx TopDocument kontrakcja (showDocument user document issuedone))
+           freeleft <- freeLeftForUser user
+           webHSP (pageFromBody ctx TopDocument kontrakcja 
+                                    (showDocument user document issuedone freeleft))
        , do
            methodM POST
            doc2 <- updateDocument ctx document
@@ -344,15 +346,15 @@ basename filename =
       (_,(_:rest)) -> basename rest
       _ -> fst (span ((/=) '.') filename) -- FIXME: tak care of many dots in file name
 
-handleIssuePost
-  :: (ServerMonad m, MonadIO m,FilterMonad Response m) => Context -> m Response
+handleIssuePost :: Context -> Kontra Response
 handleIssuePost ctx@(Context { ctxmaybeuser = Just user, ctxhostpart, ctxtime }) = do
   maybeupload <- getDataFn (lookInput "doc")
   case maybeupload of
     Just input@(Input content (Just filename) _contentType) -> 
         do 
           let title = BS.fromString (basename filename) 
-          doc <- update $ NewDocument (userid user) title ctxtime
+          freeleft <- freeLeftForUser user
+          doc <- update $ NewDocument (userid user) title ctxtime (freeleft>0)
           liftIO $ forkIO $ handleDocumentUploadX (documentid doc) (concatChunks content) filename
           let link = ctxhostpart ++ "/issue/" ++ show (documentid doc)
           response <- webHSP (seeOtherXML link)

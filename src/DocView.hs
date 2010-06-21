@@ -282,15 +282,14 @@ emptyLink = SignatoryLink
           , maybesigninfo  = Nothing
           , maybeseentime  = Nothing
           }
-{- showDocument
-  :: (EmbedAsChild m [Char], EmbedAsAttr m (Attr [Char] [Char])) =>
-     Document -> XMLGenT m (HSX.XML m)
--}
-showDocument
-  :: (XMLGenerator m,
-      EmbedAsAttr m (Attr [Char] BS.ByteString)) =>
-     User -> Document -> Bool -> XMLGenT m (HSX.XMLGenerator.XML m)
-showDocument user document issuedone =
+
+showDocument :: (XMLGenerator m) 
+             => User 
+             -> Document 
+             -> Bool 
+             -> Int                -- free documents left
+             -> XMLGenT m (HSX.XMLGenerator.XML m)
+showDocument user document issuedone freeleft =
    let helper = [ <span style="display: none">
                    <% showSignatoryEntryForEdit2 "signatory_template" "" "" "" %>
                   <div id="dialog-confirm-signinvite" title="Underteckna">
@@ -331,23 +330,39 @@ showDocument user document issuedone =
    in showDocumentPageHelper ("/issue/" ++ show (documentid document)) document helper 
            (BS.fromString $ "Avtal: " ++ BS.toString (documenttitle document))  
       <div>
-       <div>Personer:<br/>
+       <div><strong>1. Personer</strong>
 
         <% if documentstatus document == Preparation
-           then <span>
+           then 
+             <div>
               <ol id="signatorylist">
                <% map showSignatoryEntryForEdit (if null (documentsignatorylinks document)
-                                                 then [emptyLink] else documentsignatorylinks document) %>
+                                                 then [emptyLink] 
+                                                 else documentsignatorylinks document) %>
               </ol>
               <a onclick="signatoryadd(); return false;" href="#">Lägg till fler</a>
-             </span>
+             </div>
            else
+             <div>
               <ol id="signatorylist">
                <% map showSignatoryEntryStatus (documentsignatorylinks document) %>
               </ol>
-                           
+             </div>              
          %>
          <hr/>
+
+         <strong>2. Pris</strong><br/>
+         Pris: 20kr exkl moms<br/>
+         Betalningssätt: 
+         <% if documentchargemode document == ChargeInitialFree
+                then <% show freeleft ++ " fria avtal kvar" %>
+                else <% "Faktura" %>
+         {- Namnteckning: [Enkel, 10 kr/st] -}
+         {- Antal: ”2st” -}
+         %><br/>
+         OBS! Du betalar endast när alla parter undertecknat.
+         <hr/>
+         <strong>3. Avtal</strong><br/>
          <% 
            if (documentstatus document==Preparation) 
               then <span>

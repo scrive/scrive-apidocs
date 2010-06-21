@@ -197,3 +197,10 @@ getDataFnM fun = do
   case m of
     Just x -> return x
     Nothing -> mzero
+
+
+pathdb get action = path $ \id -> do
+    m <- query $ get id
+    case m of
+        Nothing -> mzero
+        Just obj -> action obj

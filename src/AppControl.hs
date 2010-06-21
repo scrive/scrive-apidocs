@@ -37,6 +37,7 @@ import DocView
 import SendMail
 import System.Random
 
+
 appHandler :: ServerPartT IO Response
 appHandler = do
   rq <- askRq
@@ -67,28 +68,22 @@ appHandler = do
                  DocControl.showPage ctx modminutes fileid pageno
              ]
     , dir "landpage" $ 
-          msum [ dir "signinvite" $ path $ \documentid -> 
-                     DocControl.landpageSignInvite ctx documentid
-               , dir "signed" $ path $ \documentid -> path $ \signatorylinkid ->
-                     DocControl.landpageSigned ctx documentid signatorylinkid
-               , dir "signedsave" $ path $ \documentid -> 
+          msum [ dir "signinvite" $ pathdb GetDocumentByDocumentID $ \document -> 
+                     DocControl.landpageSignInvite ctx document
+               , dir "signed" $ pathdb GetDocumentByDocumentID $ \document -> path $ \signatorylinkid ->
+                     DocControl.landpageSigned ctx document signatorylinkid
+               , dir "signedsave" $ pathdb GetDocumentByDocumentID $ \document -> 
                      path $ \signatorylinkid ->
-                     DocControl.landpageSignedSave ctx documentid signatorylinkid
-               , dir "saved" $ withUser maybeuser $ path $ \documentid -> 
+                     DocControl.landpageSignedSave ctx document signatorylinkid
+               , dir "saved" $ withUser maybeuser $ pathdb GetDocumentByDocumentID $ \document -> 
                      path $ \signatorylinkid ->
-                     DocControl.landpageSaved ctx documentid signatorylinkid
+                     DocControl.landpageSaved ctx document signatorylinkid
                ]
           
-    , dir "pagesofdoc" $ path $ \docid -> do
-                 maybedoc <- query $ GetDocumentByDocumentID docid
-                 case maybedoc of
-                   Just doc -> case documentfiles doc of
-                                 [] -> notFound (toResponse "temporary unavailable (document has no files)")
-                                 f -> webHSP (DocView.showFilesImages2 f)
-                   Nothing -> -- why this should ever happen?
-                              -- we end up here after document view page is completed
-                              -- should have the document there too in the database
-                               notFound (toResponse "temporary unavailable (document not found)")
+    , dir "pagesofdoc" $ pathdb GetDocumentByDocumentID $ \doc -> do
+          case documentfiles doc of
+              [] -> notFound (toResponse "temporary unavailable (document has no files)")
+              f -> webHSP (DocView.showFilesImages2 f)
     , toIO ctx $ dir "account" (withUser maybeuser (UserControl.handleUser ctx))
     , toIO ctx $ dir "logout" (handleLogout)
     , toIO ctx $ dir "login" loginPage

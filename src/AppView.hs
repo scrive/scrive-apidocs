@@ -304,7 +304,7 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
               </div> %>
        %>
       <div id="headerContainer" class=(if topMenu==TopEmpty then "topempty" else "")>
-        <img class="logosmall"src="/theme/images/logosmall.png" height="40"/>
+        <img class="logosmall"src="/theme/images/logosmall.png"/>
         <span class="contactabout">
          <%
            case ctxmaybeuser of
