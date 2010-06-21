@@ -194,7 +194,7 @@ handleIssueShow ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpa
            if (documentstatus doc2 == Pending &&
                documentstatus document /= Pending) 
              then do
-              let link = "/landpage/signinvite/" ++ show documentid
+              let link = "/landpage/signinvite/" ++ show (documentid document)
               response <- webHSP (seeOtherXML link)
               seeOther link response
             else do 
