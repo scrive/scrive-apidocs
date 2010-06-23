@@ -14,6 +14,7 @@ import User
 import Control.Monad
 import Control.Monad.Identity
 import Control.Monad.Trans
+import KontraLink
 
 webHSP1' :: (MonadIO m) => Maybe XMLMetaData -> HSP XML -> m (Maybe XMLMetaData, XML)
 webHSP1' metadata hsp = liftIO (evalHSP metadata hsp)
@@ -45,10 +46,10 @@ landpageSignedView ctx document signatorylinkid =
      <a class="secbutton" href=("/sign/" ++ (show $ documentid document) ++ "/" ++ show signatorylinkid)>Nej tack, jag är klar</a>
     </div>
 
-landpageLoginForSaveView :: (XMLGenerator m) => Context -> Document -> SignatoryLinkID -> XMLGenT m (HSX.XML m)
+landpageLoginForSaveView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
+                         => Context -> Document -> SignatoryLinkID -> XMLGenT m (HSX.XML m)
 landpageLoginForSaveView ctx document signatorylinkid =
-    let loginlink = maybeSignInLink2 ctx "Login"
-                    ("/landpage/saved/" ++ (show $ documentid document) ++ "/" ++ show signatorylinkid) 
+    let loginlink = maybeSignInLink2 ctx "Login" (LinkLandpageSaved document signatorylinkid) 
                     "bigbutton" in
     <div class="centerdivnarrow">
         <a class="headline">Login</a>
@@ -366,6 +367,7 @@ showDocument user document issuedone freeleft =
          <% 
            if (documentstatus document==Preparation) 
               then <span>
+                    Dagar kvar: <input type="text" name="daystosign" value=(documentdaystosign document)/><br/>
                     <input class="bigbutton" type="submit" name="final" value="Underteckna" id="signinvite"/>
                     <input type="hidden" name="final2" value=""/>
                     <br/>

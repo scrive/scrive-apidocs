@@ -38,6 +38,7 @@ import Happstack.State (update,query)
 import System.Log.Logger
 import Control.Monad.State
 import MinutesTime
+import KontraLink
 
 seeOtherXML :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
@@ -166,6 +167,9 @@ maybeSignInLink
   :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] [Char])) =>
      Context -> XMLGenT m (HSX.XML m) -> String -> XMLGenT m (HSX.XML m)
 -}
+
+maybeSignInLink :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) => Context -> String 
+                -> KontraLink -> XMLGenT m (HSX.XML m)
 {-
 maybeSignInLink (Context {ctxmaybeuser = Nothing, ctxhostpart}) title url = do
     -- FIXME: this is very simple url handling....
@@ -183,6 +187,8 @@ maybeSignInLink2 (Context {ctxmaybeuser = Nothing, ctxhostpart}) title url class
     <a class=("rpxnow " ++ class1) onclick="return false;" class=class1
        href=("https://kontrakcja.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode fullurl)><% title %></a> 
 -}
+maybeSignInLink2 :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) => Context -> String 
+                 -> KontraLink -> String -> XMLGenT m (HSX.XML m)
 maybeSignInLink2 (Context {}) title url class1 = do
     <a href=url class=class1><% title %></a> 
 

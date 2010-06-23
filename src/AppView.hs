@@ -25,10 +25,14 @@ import Data.Time
 import qualified Data.Map as Map
 import Misc
 import HSP.XML
+import KontraLink
 
 instance (XMLGenerator m) => (EmbedAsChild m HeaderPair) where
-  asChild (HeaderPair name value) = <% <p> <% BS.toString name ++ ": " ++ 
-                 show value  %> </p> %>	
+  asChild (HeaderPair name value) = 
+     <% <p> 
+         <% BS.toString name ++ ": " ++ show value  %> 
+        </p> 
+      %>	
 
 
 data TopMenu = TopNew | TopDocument | TopAccount | TopNone | TopEmpty
@@ -108,7 +112,7 @@ handleRPXLoginView json =
 loginBox ctx =
    <div>
     <div id="login">
-     <form action="/login" method="post">
+     <form action=LinkLogin method="post">
       <table>
 	<tr>
           <td>Email:</td> 
@@ -154,14 +158,14 @@ loginBox ctx =
     -}
    </div>
 
-welcomeBody :: (XMLGenerator m) 
+welcomeBody :: (XMLGenerator m, EmbedAsAttr m (Attr [Char] KontraLink)) 
             => Context 
             -> XMLGenT m (HSX.XML m)
 welcomeBody (Context {ctxmaybeuser = Just _, ctxhostpart}) = 
   <div class="centerdivnarrow">
    <p class="headline">Välkommen till skrivaPå!</p>
 
-   <form action="/issue" method="post" enctype="multipart/form-data">
+   <form action=LinkIssue method="post" enctype="multipart/form-data">
     <span class="small">Ladda upp dokument</span><br/>
     <input type="file" name="doc" accept="application/pdf"/>
     <input class="button" type="submit" value="Skapa"/>
@@ -190,7 +194,7 @@ welcomeBody ctx@(Context {ctxmaybeuser = Nothing}) =
       har ett konto klicka nedan för att börja.</p>
   </div>
 
-errorReport :: (XMLGenerator m) 
+errorReport :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
             => Context 
             -> Request 
             -> XMLGenT m (HSX.XML m)
@@ -268,8 +272,8 @@ renderFromBody :: (MonadIO m, EmbedAsChild (HSPT' IO) xml)
                -> m Response
 renderFromBody ctx topmenu title = webHSP . pageFromBody ctx topmenu title
 
-topnavi :: (XMLGenerator m) => Bool -> Context -> String 
-        -> String -> XMLGenT m (HSX.XML m)
+topnavi :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) => Bool -> Context -> String 
+        -> KontraLink -> XMLGenT m (HSX.XML m)
 topnavi True ctx title link = 
     maybeSignInLink2 ctx title link "active"
 
@@ -310,15 +314,15 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
            case ctxmaybeuser of
              Just _ -> <a href="/logout">Logout</a>
              Nothing -> <a href="/login">Login</a>
-         %> | <a href="about">Om skrivaPå</a></span>
+         %> | <a href=LinkAbout>Om skrivaPå</a></span>
         <div id="headerContainer2">
          <div id="nav">
           <% case ctxmaybeuser of 
                Just _ ->
                  <ul>
-                   <li><% topnavi (topMenu== TopNew) ctx "Skapa" "/" %></li>
-                   <li><% topnavi (topMenu== TopDocument) ctx "Avtal" "/issue" %></li>
-                   <li><% topnavi (topMenu== TopAccount) ctx "Konto" "/account" %></li>
+                   <li><% topnavi (topMenu== TopNew) ctx "Skapa" LinkMain %></li>
+                   <li><% topnavi (topMenu== TopDocument) ctx "Avtal" LinkIssue %></li>
+                   <li><% topnavi (topMenu== TopAccount) ctx "Konto" LinkAccount %></li>
                  </ul>
                _ -> <span/>
            %>
@@ -420,7 +424,7 @@ statsPageView nusers ndocuments users =
     </html>
 
 
-loginPageView :: (XMLGenerator m) 
+loginPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
                => Context -> XMLGenT m (HSX.XML m)
 loginPageView ctx = 
   <div class="centerdivnarrow">

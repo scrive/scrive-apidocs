@@ -2,7 +2,7 @@
 
 module DocControl where
 import DocView
-import DocState
+import DocState hiding (updateDocument)
 import Happstack.Data.IxSet 
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.Server.HSP.HTML (webHSP)
@@ -31,6 +31,7 @@ import SendMail
 import System.Process
 import System.IO
 import Seal
+import Happstack.Util.Common
 
 {-
   Document state transitions are described in DocState.
@@ -39,9 +40,11 @@ import Seal
 -}
 
 doctransPreparation2Pending :: Context -> Document -> IO Document
-doctransPreparation2Pending ctx doc = do
+doctransPreparation2Pending ctx@Context{ctxtime = MinutesTime m } doc = do
   -- FIXME: check if the status was really changed
   newdoc <- update $ UpdateDocumentStatus doc Pending
+  let timeout = TimeoutTime (MinutesTime (m + documentdaystosign doc * 24 * 60))
+  newdoc2 <- update $ SetDocumentTimeoutTime newdoc timeout
   liftIO $ sendInvitationEmails ctx doc
   return newdoc
 
@@ -231,9 +234,16 @@ updateDocument ctx document = do
   signatories <- getAndConcat "signatoryname"
   signatoriescompanies <- getAndConcat "signatorycompany"
   signatoriesemails <- getAndConcat "signatoryemail"
+  daystosignstring <- getDataFnM (look "daystosign")
+  daystosign <- readM daystosignstring
 
-  doc2 <- update $ UpdateDocumentSignatories document 
+  -- FIXME: tell the user what happened!
+  when (daystosign<1 || daystosign>99) mzero
+  
+  doc2 <- update $ UpdateDocument document 
           signatories signatoriescompanies signatoriesemails
+          daystosign
+
   final <- getDataFn $ (look "final" `mplus` look "final2" `mplus` return "")
   maybeshowvars <- getDataFn $ look "showvars"
   when (isJust maybeshowvars) $ mzero

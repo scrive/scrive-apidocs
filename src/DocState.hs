@@ -28,6 +28,7 @@ $(deriveAll [''Eq, ''Ord, ''Default]
       newtype DocumentID = DocumentID { unDocumentID :: Int }
       newtype SignatoryLinkID = SignatoryLinkID { unSignatoryLinkID :: Int }
       newtype FileID = FileID { unFileID :: Int }
+      newtype TimeoutTime = TimeoutTime { unTimeoutTime :: MinutesTime }
 
       data SignatoryLink = SignatoryLink 
           { signatorylinkid    :: SignatoryLinkID
@@ -103,6 +104,17 @@ $(deriveAll [''Default]
           , documentctime0            :: MinutesTime
           , documentmtime0            :: MinutesTime
           }
+      data Document1 = Document1
+          { documentid1               :: DocumentID
+          , documenttitle1            :: BS.ByteString
+          , documentauthor1           :: Author
+          , documentsignatorylinks1   :: [SignatoryLink]  
+          , documentfiles1            :: [File]
+          , documentstatus1           :: DocumentStatus
+          , documentctime1            :: MinutesTime
+          , documentmtime1            :: MinutesTime
+          , documentchargemode1       :: ChargeMode
+          }
       data Document = Document
           { documentid               :: DocumentID
           , documenttitle            :: BS.ByteString
@@ -113,6 +125,10 @@ $(deriveAll [''Default]
           , documentctime            :: MinutesTime
           , documentmtime            :: MinutesTime
           , documentchargemode       :: ChargeMode
+          , documentdaystosign       :: Int
+          , documenttimeouttime      :: Maybe TimeoutTime
+
+          -- we really should keep history here so we know what happened
           }
       data File = File 
           { fileid       :: FileID
@@ -120,6 +136,7 @@ $(deriveAll [''Default]
           , filepdf      :: BS.ByteString 
           , filejpgpages :: [BS.ByteString]
           }
+
    |])
 
 instance Eq Document where
@@ -138,6 +155,15 @@ instance Ord Document0 where
     compare a b | documentid0 a == documentid0 b = EQ
                 | otherwise = compare (documentmtime0 b,documenttitle0 a,documentid0 a) 
                                       (documentmtime0 a,documenttitle0 b,documentid0 b)
+                              -- see above: we use reverse time here!
+
+instance Eq Document1 where
+    a == b = documentid1 a == documentid1 b
+
+instance Ord Document1 where
+    compare a b | documentid1 a == documentid1 b = EQ
+                | otherwise = compare (documentmtime1 b,documenttitle1 a,documentid1 a) 
+                                      (documentmtime1 a,documenttitle1 b,documentid1 b)
                               -- see above: we use reverse time here!
 
 instance Eq File where
@@ -163,6 +189,8 @@ deriving instance Show Document
 deriving instance Show DocumentStatus
 deriving instance Show ChargeMode
 deriving instance Show Author
+deriving instance Show TimeoutTime
+
 instance Show Signatory where
     showsPrec prec (Signatory userid) = showsPrec prec userid
 
@@ -210,6 +238,9 @@ instance Version SignatoryLinkID
 $(deriveSerialize ''DocumentID)
 instance Version DocumentID
 
+$(deriveSerialize ''TimeoutTime)
+instance Version TimeoutTime
+
 $(deriveSerialize ''Author)
 instance Version Author
 
@@ -219,11 +250,15 @@ instance Version Signatory where
 $(deriveSerialize ''Document0)
 instance Version Document0 where
 
-$(deriveSerialize ''Document)
-instance Version Document where
+$(deriveSerialize ''Document1)
+instance Version Document1 where
     mode = extension 1 (Proxy :: Proxy Document0)
 
-instance Migrate Document0 Document where
+$(deriveSerialize ''Document)
+instance Version Document where
+    mode = extension 2 (Proxy :: Proxy Document1)
+
+instance Migrate Document0 Document1 where
       migrate (Document0
           { documentid0
           , documenttitle0
@@ -233,16 +268,43 @@ instance Migrate Document0 Document where
           , documentstatus0
           , documentctime0
           , documentmtime0
+          }) = Document1
+          { documentid1 = documentid0
+          , documenttitle1 = documenttitle0
+          , documentauthor1 = documentauthor0
+          , documentsignatorylinks1 = documentsignatorylinks0
+          , documentfiles1 = documentfiles0
+          , documentstatus1 = documentstatus0
+          , documentctime1 = documentctime0
+          , documentmtime1 = documentmtime0
+          , documentchargemode1 = ChargeInitialFree
+          }
+
+instance Migrate Document1 Document where
+      migrate (Document1
+          { documentid1
+          , documenttitle1
+          , documentauthor1
+          , documentsignatorylinks1
+          , documentfiles1
+          , documentstatus1
+          , documentctime1
+          , documentmtime1
+          , documentchargemode1
           }) = Document
-          { documentid = documentid0
-          , documenttitle = documenttitle0
-          , documentauthor = documentauthor0
-          , documentsignatorylinks = documentsignatorylinks0
-          , documentfiles = documentfiles0
-          , documentstatus = documentstatus0
-          , documentctime = documentctime0
-          , documentmtime = documentmtime0
-          , documentchargemode = ChargeInitialFree
+          { documentid = documentid1
+          , documenttitle = documenttitle1
+          , documentauthor = documentauthor1
+          , documentsignatorylinks = documentsignatorylinks1
+          , documentfiles = documentfiles1
+          , documentstatus = documentstatus1
+          , documentctime = documentctime1
+          , documentmtime = documentmtime1
+          , documentchargemode = documentchargemode1
+          , documentdaystosign = 30
+          , documenttimeouttime = Nothing
+
+          -- we really should keep history here so we know what happened
           }
 
 
@@ -266,6 +328,7 @@ $(inferIxSet "Documents" ''Document 'noCalcs
                  , ''Signatory
                  , ''SignatoryLinkID
                  , ''FileID
+                 , ''TimeoutTime
                  ])
 
 instance Component Documents where
@@ -303,6 +366,7 @@ newDocument userid title ctime isfree = do
   docid <- getUnique documents DocumentID
   let doc = Document docid title (Author userid) [] []
             Preparation ctime ctime (if isfree then ChargeInitialFree else ChargeNormal)
+            30 Nothing
   modify $ insert doc
   return doc
 
@@ -320,11 +384,15 @@ attachFile documentid filename1 content jpgpages = do
   let document2 = document { documentfiles = documentfiles document ++ [nfile] }
   modify $ updateIx documentid document2
 
-updateDocumentSignatories :: Document -> [BS.ByteString] -> [BS.ByteString] 
-                          -> [BS.ByteString] -> Update Documents Document
-updateDocumentSignatories document signatorynames signatorycompanies signatoryemails = do
+updateDocument :: Document 
+               -> [BS.ByteString] 
+               -> [BS.ByteString] 
+               -> [BS.ByteString] 
+               -> Int
+               -> Update Documents Document
+updateDocument document signatorynames signatorycompanies signatoryemails daystosign = do
   signatorylinks <- sequence $ zipWith3 mm signatorynames signatorycompanies signatoryemails
-  let doc2 = document { documentsignatorylinks = signatorylinks }
+  let doc2 = document { documentsignatorylinks = signatorylinks, documentdaystosign = daystosign }
   if documentstatus document == Preparation
      then do
        modify (updateIx (documentid doc2) doc2)
@@ -339,8 +407,10 @@ updateDocumentSignatories document signatorynames signatorycompanies signatoryem
 updateDocumentStatus :: Document 
                      -> DocumentStatus 
                      -> Update Documents Document
-updateDocumentStatus document newstatus = do
+updateDocumentStatus document1 newstatus = do
   -- check if document status change is a legal transition
+  documents <- ask
+  let Just document = getOne (documents @= documentid document1)
   let legal = (documentstatus document,newstatus) `elem`
               [ (Preparation,Pending)
               , (Pending,Canceled)
@@ -462,12 +532,21 @@ getNumberOfDocumentsOfUser user = do
   let numdoc = size (documents @= Author (userid user))
   return numdoc
 
+setDocumentTimeoutTime :: Document -> TimeoutTime -> Update Documents Document
+setDocumentTimeoutTime document1 timeouttime = do
+  -- check if document status change is a legal transition
+  documents <- ask
+  let Just document = getOne (documents @= documentid document1)
+  let newdoc = document { documenttimeouttime = Just timeouttime }
+  modify (updateIx (documentid newdoc) newdoc)
+  return newdoc
+ 
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocumentsByAuthor
                         , 'getDocumentsBySignatory
                         , 'newDocument
                         , 'getDocumentByDocumentID
-                        , 'updateDocumentSignatories
+                        , 'updateDocument
                         , 'updateDocumentStatus
                         , 'signDocument
                         , 'getFilePageJpg
@@ -481,6 +560,7 @@ $(mkMethods ''Documents [ 'getDocumentsByAuthor
                         , 'saveDocumentForSignedUser
                         , 'getDocumentsByUser
                         , 'getNumberOfDocumentsOfUser
+                        , 'setDocumentTimeoutTime
                         ])
 
 
