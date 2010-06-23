@@ -384,15 +384,19 @@ attachFile documentid filename1 content jpgpages = do
   let document2 = document { documentfiles = documentfiles document ++ [nfile] }
   modify $ updateIx documentid document2
 
-updateDocument :: Document 
+updateDocument :: MinutesTime
+               -> Document 
                -> [BS.ByteString] 
                -> [BS.ByteString] 
                -> [BS.ByteString] 
                -> Int
                -> Update Documents Document
-updateDocument document signatorynames signatorycompanies signatoryemails daystosign = do
+updateDocument time document signatorynames signatorycompanies signatoryemails daystosign = do
   signatorylinks <- sequence $ zipWith3 mm signatorynames signatorycompanies signatoryemails
-  let doc2 = document { documentsignatorylinks = signatorylinks, documentdaystosign = daystosign }
+  let doc2 = document { documentsignatorylinks = signatorylinks
+                      , documentdaystosign = daystosign 
+                      , documentmtime = time
+                      }
   if documentstatus document == Preparation
      then do
        modify (updateIx (documentid doc2) doc2)
@@ -404,10 +408,11 @@ updateDocument document signatorynames signatorycompanies signatoryemails daysto
           x <- getUnique sg SignatoryLinkID
           return $ SignatoryLink x name company email Nothing Nothing Nothing
 
-updateDocumentStatus :: Document 
+updateDocumentStatus :: MinutesTime
+                     -> Document 
                      -> DocumentStatus 
                      -> Update Documents Document
-updateDocumentStatus document1 newstatus = do
+updateDocumentStatus time document1 newstatus = do
   -- check if document status change is a legal transition
   documents <- ask
   let Just document = getOne (documents @= documentid document1)
@@ -420,7 +425,9 @@ updateDocumentStatus document1 newstatus = do
               , (Timedout,Preparation)
               ]
 
-  let newdoc = document { documentstatus = newstatus }
+  let newdoc = document { documentstatus = newstatus
+                        , documentmtime = time
+                        }
   if legal 
      then do
        modify (updateIx (documentid newdoc) newdoc)

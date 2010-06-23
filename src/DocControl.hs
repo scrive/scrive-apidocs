@@ -32,6 +32,7 @@ import System.Process
 import System.IO
 import Seal
 import Happstack.Util.Common
+import KontraLink
 
 {-
   Document state transitions are described in DocState.
@@ -42,15 +43,15 @@ import Happstack.Util.Common
 doctransPreparation2Pending :: Context -> Document -> IO Document
 doctransPreparation2Pending ctx@Context{ctxtime = MinutesTime m } doc = do
   -- FIXME: check if the status was really changed
-  newdoc <- update $ UpdateDocumentStatus doc Pending
+  newdoc <- update $ UpdateDocumentStatus (ctxtime ctx) doc Pending
   let timeout = TimeoutTime (MinutesTime (m + documentdaystosign doc * 24 * 60))
   newdoc2 <- update $ SetDocumentTimeoutTime newdoc timeout
   liftIO $ sendInvitationEmails ctx doc
   return newdoc
 
 doctransPending2Closed :: Context -> Document -> IO Document
-doctransPending2Closed ctx doc = do
-  update $ UpdateDocumentStatus doc Closed
+doctransPending2Closed ctx@Context{ctxtime} doc = do
+  update $ UpdateDocumentStatus ctxtime doc Closed
   newdoc <- update $ RemoveFileFromDoc (documentid doc)
   Just user <- query $ GetUserByUserID (unAuthor (documentauthor doc))
   liftIO $ forkIO $ do
@@ -59,12 +60,12 @@ doctransPending2Closed ctx doc = do
   return newdoc
 
 doctransPending2Canceled :: Context -> Document -> IO Document
-doctransPending2Canceled ctx doc = do
-  update $ UpdateDocumentStatus doc Canceled
+doctransPending2Canceled ctx@Context{ctxtime} doc = do
+  update $ UpdateDocumentStatus ctxtime doc Canceled
 
 doctransPending2Timedout :: Context -> Document -> IO Document
-doctransPending2Timedout ctx doc = do
-  update $ UpdateDocumentStatus doc Timedout
+doctransPending2Timedout ctx@Context{ctxtime} doc = do
+  update $ UpdateDocumentStatus ctxtime doc Timedout
 
 sendInvitationEmails :: Context -> Document -> IO ()
 sendInvitationEmails ctx document = do
@@ -164,7 +165,7 @@ handleSignShow ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) documentid
               invitedname = signatoryname $ head $ filter (\x -> signatorylinkid x == signatorylinkid1) 
                             (documentsignatorylinks document)
           webHSP (pageFromBody ctx TopNone kontrakcja 
-                 (showDocumentForSign ("/sign/" ++ show documentid ++ "/" ++ show signatorylinkid1) 
+                 (showDocumentForSign (LinkSignDoc document signatorylinkid1) 
                        document authorname invitedname wassigned))
        ]
 
@@ -230,7 +231,7 @@ getAndConcat field = do
   return $ map concatChunks values
 
 updateDocument :: Context -> Document -> Kontra Document  
-updateDocument ctx document = do
+updateDocument ctx@Context{ctxtime} document = do
   signatories <- getAndConcat "signatoryname"
   signatoriescompanies <- getAndConcat "signatorycompany"
   signatoriesemails <- getAndConcat "signatoryemail"
@@ -240,7 +241,7 @@ updateDocument ctx document = do
   -- FIXME: tell the user what happened!
   when (daystosign<1 || daystosign>99) mzero
   
-  doc2 <- update $ UpdateDocument document 
+  doc2 <- update $ UpdateDocument ctxtime document 
           signatories signatoriescompanies signatoriesemails
           daystosign
 

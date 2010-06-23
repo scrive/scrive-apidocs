@@ -166,7 +166,13 @@ oneDocumentRow document =
      <td><img width="17" height="17" src=statusimg/></td>
      <td><% mk $ concatSignatories (documentsignatorylinks document) %></td>
      <td><% mk $ documenttitle document %></td>
-     <td class="tdright"><% show $ documentmtime document %></td>
+     <td><% mk $ case documenttimeouttime document of
+                   Nothing -> "-"
+                   -- FIXME: show days to sign, not the final date
+                   Just (TimeoutTime x) -> show x
+          %>
+     </td>
+     <td class="tdright"><% mk $ show $ documentmtime document %></td>
     </tr>
 
 
@@ -186,8 +192,8 @@ listDocuments documents =
         <td></td> {- status icon -}
         <td>Personer</td>
         <td>Avtal</td>
+        <td>Dagar kvar</td>
         <td>Senaste handelse</td>
-        {- <td>Dagar kvar</td> -}
        </tr>
       </thead>
       <tfoot>
@@ -284,7 +290,7 @@ emptyLink = SignatoryLink
           , maybeseentime  = Nothing
           }
 
-showDocument :: (XMLGenerator m) 
+showDocument :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
              => User 
              -> Document 
              -> Bool 
@@ -328,7 +334,7 @@ showDocument user document issuedone freeleft =
                   </script>
                 , <script type="text/javascript" src="/js/document-edit.js"/>
                 ]
-   in showDocumentPageHelper ("/issue/" ++ show (documentid document)) document helper 
+   in showDocumentPageHelper (LinkIssueDoc document) document helper 
            (BS.fromString $ "Avtal: " ++ BS.toString (documenttitle document))  
       <div>
        <div><strong>1. Personer</strong>
@@ -378,6 +384,16 @@ showDocument user document issuedone freeleft =
        </div>
       </div>
 
+showDocumentPageHelper
+    :: (XMLGenerator m, HSX.XMLGenerator.EmbedAsChild m c,
+                     EmbedAsAttr m (Attr [Char] KontraLink),
+                     HSX.XMLGenerator.EmbedAsChild m d) =>
+     KontraLink
+     -> DocState.Document
+     -> c
+     -> BS.ByteString
+     -> d
+     -> XMLGenT m (HSX.XML m)
 showDocumentPageHelper action document helpers title content =
    <div> 
    <br/>
@@ -411,8 +427,8 @@ showDocumentPageHelper action document helpers title content =
    </div>
 
 
-showDocumentForSign :: (XMLGenerator m) =>
-                       String -> Document -> BS.ByteString -> BS.ByteString -> Bool 
+showDocumentForSign :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) =>
+                       KontraLink -> Document -> BS.ByteString -> BS.ByteString -> Bool 
                     -> XMLGenT m (HSX.XML m)
 showDocumentForSign action document authorname invitedname wassigned =
    let helper = [ <script type="text/javascript" src="/js/document-edit.js"/>

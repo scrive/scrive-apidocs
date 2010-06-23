@@ -27,6 +27,8 @@ data KontraLink
     | LinkMain
     | LinkAccount
     | LinkLandpageSaved Document SignatoryLinkID
+    | LinkSignDoc Document SignatoryLinkID
+    | LinkIssueDoc Document
 
 instance Show KontraLink where
     showsPrec _ LinkAbout = (++) "/about"
@@ -36,6 +38,10 @@ instance Show KontraLink where
     showsPrec _ LinkAccount = (++) "/account"
     showsPrec _ (LinkLandpageSaved document signatorylinkid) = 
         (++) $ "/landpage/signed/" ++ show (documentid document) ++ "/" ++ show signatorylinkid
+    showsPrec _ (LinkIssueDoc document) = 
+        (++) $ "/issue/" ++ show (documentid document)
+    showsPrec _ (LinkSignDoc document signatorylinkid) = 
+        (++) $ "/sign/" ++ show (documentid document) ++ "/" ++ show signatorylinkid
 
 {-
 instance (EmbedAsAttr m String) => (EmbedAsAttr m KontraLink) where
