@@ -23,17 +23,34 @@ import UserState
 import Misc
 import AppView
 import User
+import KontraLink
 
 showUser ctx@(Context {ctxmaybeuser = Just user}) = 
     webHSP $ pageFromBody ctx TopAccount kontrakcja $ 
     <div class="doctable">
      <h1>Välkommen <% userfullname user %></h1>
       <div class="inlinebox">
-       <p>Namn: <% userfullname user %></p>
-       <p>E-mail: <% unEmail $ useremail user %></p>
-       <p>Företagsnamn: <% usercompanyname user %></p>
-       <p>Organisationsnummer: <% usercompanynumber user %></p>
-       <p>Faktureringsadress: <% userinvoiceaddress user %></p>
-      </div>
+       <form action=LinkAccount method="post">
+        <table>
+         <tr><td>Namn:</td>
+             <td><input type="text" name="fullname" value=(userfullname user)/></td>
+         </tr>
+         <tr><td>E-mail:</td>
+             <td><input type="text" name="email" value=(unEmail $ useremail user)/></td>
+         </tr>
+         <tr><td>Företagsnamn:</td>
+             <td><input type="text" name="companyname" value=(usercompanyname user)/></td>
+         </tr>
+         <tr><td>Organisationsnummer:</td>
+             <td><input type="text" name="companynumber" value=(usercompanynumber user)/></td>
+         </tr>
+         <tr><td>Faktureringsadress:</td>
+             <td><input type="text" name="invoiceaddress" value=(userinvoiceaddress user)/></td>
+         </tr>
+       </table>
+       <br/>
+       <input class="button" type="submit" value="Change details"/>
+      </form>
+     </div>
     </div>
   

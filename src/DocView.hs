@@ -16,14 +16,20 @@ import Control.Monad.Identity
 import Control.Monad.Trans
 import KontraLink
 
-webHSP1' :: (MonadIO m) => Maybe XMLMetaData -> HSP XML -> m (Maybe XMLMetaData, XML)
+webHSP1' :: (MonadIO m) => 
+            Maybe XMLMetaData -> 
+            HSP XML -> 
+            m (Maybe XMLMetaData, XML)
 webHSP1' metadata hsp = liftIO (evalHSP metadata hsp)
 
 webHSP1 :: (MonadIO m) => HSP XML -> m (Maybe XMLMetaData, XML)
 webHSP1 hsp = webHSP1' Nothing hsp
 
 
-landpageSignInviteView :: (XMLGenerator m) => Context -> Document -> XMLGenT m (HSX.XML m)
+landpageSignInviteView :: (XMLGenerator m) => 
+                          Context -> 
+                          Document -> 
+                          XMLGenT m (HSX.XML m)
 landpageSignInviteView ctx document =
     <div class="centerdivnarrow">
      <p class="headline">Avtal undertecknat!</p>
@@ -35,7 +41,11 @@ landpageSignInviteView ctx document =
      <p><a class="secbutton" href="/issue">Avsluta</a></p>
     </div>
 
-landpageSignedView :: (XMLGenerator m) => Context -> Document -> SignatoryLinkID -> XMLGenT m (HSX.XML m)
+landpageSignedView :: (XMLGenerator m) => 
+                      Context -> 
+                      Document -> 
+                      SignatoryLinkID -> 
+                      XMLGenT m (HSX.XML m)
 landpageSignedView ctx document signatorylinkid =
     <div class="centerdivnarrow">
       <p class="headline">Avtalet <strong><% documenttitle document %></strong> är färdigställt!</p>
@@ -373,7 +383,7 @@ showDocument user document issuedone freeleft =
          <% 
            if (documentstatus document==Preparation) 
               then <span>
-                    Dagar kvar: <input type="text" name="daystosign" value=(documentdaystosign document)/><br/>
+                    Dagar kvar: <input type="text" name="daystosign" value=(documentdaystosign document) maxlength="2" size="2"/><br/>
                     <input class="bigbutton" type="submit" name="final" value="Underteckna" id="signinvite"/>
                     <input type="hidden" name="final2" value=""/>
                     <br/>

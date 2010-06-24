@@ -246,6 +246,22 @@ setUserPassword user@User{userid} newpassword = do
   users <- ask
   modify (updateIx userid (user { userpassword = Just newpassword })) 
   return ()
+
+setUserDetails :: User -> BS.ByteString -> BS.ByteString 
+               -> BS.ByteString -> BS.ByteString 
+               -> Update Users User
+setUserDetails user1 fullname companyname companynumber invoiceaddress = do
+  users <- ask
+  let Just user = getOne (users @= userid user1)
+  let newuser = user { userfullname = fullname
+                     , usercompanyname = companyname
+                     , usercompanynumber = companynumber
+                     , userinvoiceaddress = invoiceaddress
+                     }
+  modify (updateIx (userid user) newuser)
+  return newuser
+  
+
   
 
 instance Component Users where
@@ -262,5 +278,6 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'addUserFlashMessage
                     , 'getUserByEmail
                     , 'setUserPassword
+                    , 'setUserDetails
                     ])
 
