@@ -11,6 +11,7 @@ import Control.Monad.State (modify)
 import UserState
 import Happstack.Data.IxSet
 import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString as BS
 import Control.Applicative ((<$>))
 import Happstack.Server.SimpleHTTP
 import Happstack.Util.Common
@@ -20,6 +21,7 @@ import Control.Monad
 import Data.List (find)
 import MinutesTime
 import Control.Monad.Trans
+import Data.List (zipWith4)
 
 
 $(deriveAll [''Eq, ''Ord, ''Default]
@@ -30,11 +32,24 @@ $(deriveAll [''Eq, ''Ord, ''Default]
       newtype FileID = FileID { unFileID :: Int }
       newtype TimeoutTime = TimeoutTime { unTimeoutTime :: MinutesTime }
 
+      data SignatoryDetails = SignatoryDetails 
+          { signatoryname      :: BS.ByteString 
+          , signatorycompany   :: BS.ByteString
+          , signatorynumber    :: BS.ByteString 
+          , signatoryemail     :: BS.ByteString
+          }
+      data SignatoryLink0 = SignatoryLink0 
+          { signatorylinkid0    :: SignatoryLinkID
+          , signatoryname0      :: BS.ByteString 
+          , signatorycompany0   :: BS.ByteString 
+          , signatoryemail0     :: BS.ByteString
+          , maybesignatory0     :: Maybe Signatory
+          , maybesigninfo0      :: Maybe SignInfo
+          , maybeseentime0      :: Maybe MinutesTime
+          }
       data SignatoryLink = SignatoryLink 
           { signatorylinkid    :: SignatoryLinkID
-          , signatoryname      :: BS.ByteString 
-          , signatorycompany   :: BS.ByteString 
-          , signatoryemail     :: BS.ByteString
+          , signatorydetails   :: SignatoryDetails
           , maybesignatory     :: Maybe Signatory
           , maybesigninfo      :: Maybe SignInfo
           , maybeseentime      :: Maybe MinutesTime
@@ -176,7 +191,7 @@ instance Ord File where
 
 instance Show SignatoryLinkID where
     showsPrec prec (SignatoryLinkID x) = showsPrec prec x
-
+{-
 instance Show SignatoryLink where
     showsPrec prec (SignatoryLink _ name company email Nothing Nothing Nothing) = 
         (++) (BS.toString name ++ " <" ++ BS.toString email ++ "> never seen")
@@ -184,12 +199,17 @@ instance Show SignatoryLink where
         (++) (BS.toString name ++ " <" ++ BS.toString email ++ "> seen " ++ show time)
     showsPrec prec (SignatoryLink _ name company email _ (Just signinfo) _) = 
         (++) $ "Signed by " ++ (BS.toString name ++ " <" ++ BS.toString email ++ "> on " ++ show (signtime signinfo))
+-}
 
 deriving instance Show Document
 deriving instance Show DocumentStatus
 deriving instance Show ChargeMode
 deriving instance Show Author
 deriving instance Show TimeoutTime
+deriving instance Show SignatoryLink
+deriving instance Show SignatoryLink0
+deriving instance Show SignInfo
+deriving instance Show SignatoryDetails
 
 instance Show Signatory where
     showsPrec prec (Signatory userid) = showsPrec prec userid
@@ -229,8 +249,37 @@ instance FromReqURI FileID where
 $(deriveSerialize ''SignInfo)
 instance Version SignInfo
 
+$(deriveSerialize ''SignatoryDetails)
+instance Version SignatoryDetails
+
+$(deriveSerialize ''SignatoryLink0)
+instance Version SignatoryLink0
+
 $(deriveSerialize ''SignatoryLink)
-instance Version SignatoryLink
+instance Version SignatoryLink where
+    mode = extension 1 (Proxy :: Proxy SignatoryLink0)
+
+instance Migrate SignatoryLink0 SignatoryLink where
+    migrate (SignatoryLink0 
+          { signatorylinkid0
+          , signatoryname0
+          , signatorycompany0
+          , signatoryemail0
+          , maybesignatory0
+          , maybesigninfo0
+          , maybeseentime0
+          }) = SignatoryLink 
+          { signatorylinkid = signatorylinkid0
+          , signatorydetails = SignatoryDetails 
+                               { signatoryname = signatoryname0
+                               , signatorycompany = signatorycompany0
+                               , signatorynumber = BS.empty
+                               , signatoryemail = signatoryemail0
+                               }
+          , maybesignatory = maybesignatory0
+          , maybesigninfo = maybesigninfo0
+          , maybeseentime = maybeseentime0
+          }
 
 $(deriveSerialize ''SignatoryLinkID)
 instance Version SignatoryLinkID
@@ -389,10 +438,11 @@ updateDocument :: MinutesTime
                -> [BS.ByteString] 
                -> [BS.ByteString] 
                -> [BS.ByteString] 
+               -> [BS.ByteString] 
                -> Int
                -> Update Documents Document
-updateDocument time document signatorynames signatorycompanies signatoryemails daystosign = do
-  signatorylinks <- sequence $ zipWith3 mm signatorynames signatorycompanies signatoryemails
+updateDocument time document signatorynames signatorycompanies signatorynumbers signatoryemails daystosign = do
+  signatorylinks <- sequence $ zipWith4 mm signatorynames signatorycompanies signatorynumbers signatoryemails
   let doc2 = document { documentsignatorylinks = signatorylinks
                       , documentdaystosign = daystosign 
                       , documentmtime = time
@@ -403,10 +453,11 @@ updateDocument time document signatorynames signatorycompanies signatoryemails d
        return doc2
      else
          return document
-  where mm name company email = do
+  where mm name company number email = do
           sg <- ask
           x <- getUnique sg SignatoryLinkID
-          return $ SignatoryLink x name company email Nothing Nothing Nothing
+          let details = SignatoryDetails name company number email
+          return $ SignatoryLink x details Nothing Nothing Nothing
 
 updateDocumentStatus :: MinutesTime
                      -> Document 

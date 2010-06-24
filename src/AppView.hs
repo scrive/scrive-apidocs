@@ -93,7 +93,7 @@ instance (XMLGenerator m) =>
     %>
 
 kontrakcja :: [Char]
-kontrakcja = "skrivaPå"
+kontrakcja = "SkrivaPå"
 
 -- small letter ascii only version on app name
 kontrakcjaAscii :: [Char]
@@ -163,7 +163,7 @@ welcomeBody :: (XMLGenerator m, EmbedAsAttr m (Attr [Char] KontraLink))
             -> XMLGenT m (HSX.XML m)
 welcomeBody (Context {ctxmaybeuser = Just _, ctxhostpart}) = 
   <div class="centerdivnarrow">
-   <p class="headline">Välkommen till skrivaPå!</p>
+   <p class="headline">Välkommen till SkrivaPå!</p>
 
    <form action=LinkIssue method="post" enctype="multipart/form-data">
     <span class="small">Ladda upp dokument</span><br/>
@@ -186,7 +186,7 @@ welcomeBody ctx@(Context {ctxmaybeuser = Nothing}) =
 
    <hr/>
 
-   <p class="headline">Välkommen till skrivaPå!</p>
+   <p class="headline">Välkommen till SkrivaPå!</p>
 
    <p class="para">För tillfället testar vi vår online signaturlösning med 
       utvalda kunder. Om du vill bli en tidig testkund, vänligen 
@@ -314,7 +314,7 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
            case ctxmaybeuser of
              Just _ -> <a href="/logout">Logout</a>
              Nothing -> <a href="/login">Login</a>
-         %> | <a href=LinkAbout>Om skrivaPå</a></span>
+         %> | <a href=LinkAbout>Om SkrivaPå</a></span>
         <div id="headerContainer2">
          <div id="nav">
           <% case ctxmaybeuser of 
@@ -429,7 +429,7 @@ loginPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink))
 loginPageView ctx = 
   <div class="centerdivnarrow">
 
-   <p class="headline">Logga i skrivaPå!</p>
+   <p class="headline">Logga i SkrivaPå!</p>
 
    <% loginBox ctx %>
 

@@ -35,7 +35,7 @@ landpageSignInviteView ctx document =
      <p class="headline">Avtal undertecknat!</p>
      
      <p>Du har undertecknat avtalet och en inbjudan har nu skickats till 
-     <span id="mrx"><% concatSignatories (documentsignatorylinks document) %></span>.</p>
+     <span id="mrx"><% concatSignatories (map signatorydetails $ documentsignatorylinks document) %></span>.</p>
 
      <p><a class="bigbutton" href="/">Skapa ett nytt avtal</a></p>
      <p><a class="secbutton" href="/issue">Avsluta</a></p>
@@ -77,7 +77,7 @@ landpageDocumentSavedView (ctx@Context { ctxmaybeuser = Just user }) signatoryli
 
      <p>Ditt dokument är nu sparat. Du finner dokumentet under Avtal.</p>
  
-     <p>Vi hoppas att du är nöjd med vår tjänst hittills och att du är nyfiken på att själv använda skrivaPå för att skriva dina avtal. Därför erbjuder vi dig som ny kund möjligheten att testa tjänsten genom tre fria avtal. Dina fria avtal förbrukas endast då ett avtal undertecknats av alla parter.</p>
+     <p>Vi hoppas att du är nöjd med vår tjänst hittills och att du är nyfiken på att själv använda SkrivaPå för att skriva dina avtal. Därför erbjuder vi dig som ny kund möjligheten att testa tjänsten genom tre fria avtal. Dina fria avtal förbrukas endast då ett avtal undertecknats av alla parter.</p>
 
      <p>Börja redan nu! Ladda upp ditt avtal genom att klicka nedan.</p>
      <a class="bigbutton" href="/">Starta</a> {- FIXME: move upload stuff here also -}
@@ -88,9 +88,9 @@ welcomeEmail fullname =
     <div>
       <p>Hej <% fullname %>,</p>
       <p>Tack för att du har skapat ett konto hos oss! Vi hoppas att du kommer att bli nöjd med våra tjänster.</p>
-      <p>Jag heter Lukas Duczko och är VD på skrivaPå och det här mailet är skickat direkt från min mailadress. Tveka inte att höra av dig med åsikter, feedback eller bara en enkel hälsning.</p>
+      <p>Jag heter Lukas Duczko och är VD på SkrivaPå och det här mailet är skickat direkt från min mailadress. Tveka inte att höra av dig med åsikter, feedback eller bara en enkel hälsning.</p>
       <p>MVH<br/>
-         /Lukas Duczko och team skrivaPå
+         /Lukas Duczko och team SkrivaPå
       </p>
     </div>
 xxx (Just (XMLMetaData (showDt, dt) _ pr), xml) = 
@@ -104,7 +104,7 @@ documentIssuedFlashMessage :: (MonadIO m) => Document -> m FlashMessage
 documentIssuedFlashMessage document = liftM (FlashMessage . xxx) $ webHSP1
     <div>
      Du har undertecknat avtalet och en inbjudan har nu skickats till 
-     <span id="mrx"><% concatSignatories (documentsignatorylinks document) %></span>.
+     <span id="mrx"><% concatSignatories (map signatorydetails $ documentsignatorylinks document) %></span>.
     </div>
 
 documentSavedForLaterFlashMessage :: (MonadIO m) => Document -> m FlashMessage
@@ -154,6 +154,7 @@ instance (XMLGenerator m) => (EmbedAsChild m [Document]) where
          </table>
         %>
 
+concatSignatories :: [SignatoryDetails] -> String
 concatSignatories siglinks = 
     concat $ intersperse ", " $ map (BS.toString . signatoryname) siglinks 
 
@@ -174,7 +175,7 @@ oneDocumentRow document =
       <input type="checkbox"/>
      </td>
      <td><img width="17" height="17" src=statusimg/></td>
-     <td><% mk $ concatSignatories (documentsignatorylinks document) %></td>
+     <td><% mk $ concatSignatories (map signatorydetails $ documentsignatorylinks document) %></td>
      <td><% mk $ documenttitle document %></td>
      <td><% mk $ case documenttimeouttime document of
                    Nothing -> "-"
@@ -235,19 +236,23 @@ showSignatory sig = <li><% show sig %></li>
 
 
 
-showSignatoryEntryForEdit :: (XMLGenerator m) => DocState.SignatoryLink -> XMLGenT m (HSX.XML m)
-showSignatoryEntryForEdit (SignatoryLink{signatoryname,signatorycompany,signatoryemail}) = 
-    showSignatoryEntryForEdit2 "" (BS.toString signatoryname) (BS.toString signatorycompany) 
+showSignatoryEntryForEdit :: (XMLGenerator m) => DocState.SignatoryDetails -> XMLGenT m (HSX.XML m)
+showSignatoryEntryForEdit (SignatoryDetails{signatoryname,signatorycompany,signatorynumber, signatoryemail}) = 
+    showSignatoryEntryForEdit2 "" (BS.toString signatoryname) 
+                                   (BS.toString signatorycompany) 
+                                   (BS.toString signatorynumber) 
                                    (BS.toString signatoryemail)
 
-showSignatoryEntryForEdit2 :: (XMLGenerator m) => String -> String -> String 
+showSignatoryEntryForEdit2 :: (XMLGenerator m) => String -> String -> String -> String
                            -> String -> XMLGenT m (HSX.XML m)
-showSignatoryEntryForEdit2 idx signatoryname signatorycompany signatoryemail = 
+showSignatoryEntryForEdit2 idx signatoryname signatorycompany signatorynumber signatoryemail = 
     <li id=idx>
       <label>Namn på avtalspart</label><br/> 
       <input name="signatoryname" type="text" value=signatoryname/><br/>
       <label>Titel, företag</label><br/>
       <input name="signatorycompany" type="text" value=signatorycompany/><br/>
+      <label>Orgnr/Persnr</label><br/>
+      <input name="signatorynumber" type="text" value=signatorynumber/><br/>
       <label>Personens e-mail</label><br/>
       <input name="signatoryemail" type="text" value=signatoryemail/><br/>
       <a onclick="return signatoryremove(this);" href="#">Ta bort</a>
@@ -256,7 +261,8 @@ showSignatoryEntryForEdit2 idx signatoryname signatorycompany signatoryemail =
     </li>
 
 showSignatoryEntryStatus :: (XMLGenerator m) => SignatoryLink -> XMLGenT m (HSX.XML m)
-showSignatoryEntryStatus (SignatoryLink{signatoryname,signatoryemail,maybeseentime,maybesigninfo}) = 
+showSignatoryEntryStatus (SignatoryLink{signatorydetails = SignatoryDetails{signatoryname,signatoryemail}
+                                       ,maybeseentime,maybesigninfo}) = 
     <li> 
         <b><% signatoryname %></b><br/>
         <% case maybesigninfo of
@@ -290,14 +296,11 @@ showDocumentBox document =
 -}
 
 
-emptyLink = SignatoryLink 
-          { signatorylinkid = SignatoryLinkID 0
-          , signatoryname = BS.empty
+emptyDetails = SignatoryDetails 
+          { signatoryname = BS.empty
           , signatorycompany = BS.empty
+          , signatorynumber = BS.empty
           , signatoryemail = BS.empty
-          , maybesignatory = Nothing
-          , maybesigninfo  = Nothing
-          , maybeseentime  = Nothing
           }
 
 showDocument :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
@@ -308,7 +311,7 @@ showDocument :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink))
              -> XMLGenT m (HSX.XMLGenerator.XML m)
 showDocument user document issuedone freeleft =
    let helper = [ <span style="display: none">
-                   <% showSignatoryEntryForEdit2 "signatory_template" "" "" "" %>
+                   <% showSignatoryEntryForEdit2 "signatory_template" "" "" "" "" %>
                   <div id="dialog-confirm-signinvite" title="Underteckna">
 	        
             <p> När du bekräftar avtalet kommer en automatisk inbjudan att skickas till 
@@ -335,7 +338,7 @@ showDocument user document issuedone freeleft =
 
                 <div id="dialog-confirm-signinvite-done" title="Avtal undertecknat!">
 	        <p> Du har undertecknat avtalet och en inbjudan har nu skickats till 
-                        <span id="mrx"><% concatSignatories (documentsignatorylinks document) %></span>.</p>
+                        <span id="mrx"><% concatSignatories (map signatorydetails $ documentsignatorylinks document) %></span>.</p>
 
           </div>
         </span>
@@ -354,8 +357,8 @@ showDocument user document issuedone freeleft =
              <div>
               <ol id="signatorylist">
                <% map showSignatoryEntryForEdit (if null (documentsignatorylinks document)
-                                                 then [emptyLink] 
-                                                 else documentsignatorylinks document) %>
+                                                 then [emptyDetails] 
+                                                 else map signatorydetails $ documentsignatorylinks document) %>
               </ol>
               <a onclick="signatoryadd(); return false;" href="#">Lägg till fler</a>
              </div>
@@ -372,7 +375,7 @@ showDocument user document issuedone freeleft =
          Pris: 20kr exkl moms<br/>
          Betalningssätt: 
          <% if documentchargemode document == ChargeInitialFree
-                then <% show freeleft ++ " fria avtal kvar" %>
+                then <% show (freeleft+1) ++ " fria avtal kvar" %>
                 else <% "Faktura" %>
          {- Namnteckning: [Enkel, 10 kr/st] -}
          {- Antal: ”2st” -}
@@ -428,7 +431,7 @@ showDocumentPageHelper action document helpers title content =
 
 
         <p><strong>Avtalet blir juridiskt bindande när alla parter undertecknat</strong>. 
-           Då får du ett e-mail med det färdig avtalet.</p>
+           Då får du ett e-mail med det färdiga avtalet.</p>
         
         <p>Är du säker på att du vill underteckna avtalet?</p>
 
@@ -453,7 +456,7 @@ showDocumentForSign action document authorname invitedname wassigned =
                 
                 <p>Välkommen <% invitedname %>,</p>
 
-                <p>Genom skrivaPå kan du underteckna juridiskt bindande avtal online. 
+                <p>Genom SkrivaPå kan du underteckna juridiskt bindande avtal online. 
                    På vänster sida har du avtalet <strong><% documenttitle document %></strong> 
                    som <strong><% authorname %></strong> har bjudit in dig att underteckna.
                 </p>
@@ -466,7 +469,7 @@ showDocumentForSign action document authorname invitedname wassigned =
 
                    <input type="hidden" name="sign2" value=""/>
                    <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign"/>
-                 <p>Jag vill veta mer <a href="/about" target="_blank">om skrivaPå</a>.
+                 <p>Jag vill veta mer <a href="/about" target="_blank">om SkrivaPå</a>.
                  </p>
                 </span>
 
@@ -541,7 +544,7 @@ closedMailXml (Context {ctxhostpart})
       <p>Avtalet <strong><% documenttitle %></strong> har undertecknats av alla parter. 
          Avtalet är nu lagligt bindande.</p>
       
-      <p>Det färdig avtalet bifogas nedan. Om du har ett konto hos skrivaPå hittar du avtalet 
+      <p>Det färdiga avtalet bifogas nedan. Om du har ett konto hos SkrivaPå hittar du avtalet 
          under "Avtal". Om du inte har ett konto kan du spara avtalet genom att klicka på länken:</p>
 
       <p><a href=link><% link %></a></p>
@@ -587,7 +590,7 @@ closedMailAuthorXml (Context {ctxhostpart})
       <p>Avtalet <strong><% documenttitle %></strong> har undertecknats av alla parter. 
          Avtalet är nu lagligt bindande.</p>
       
-      <p>Det färdig avtalet bifogas nedan. Hos SkrivaPå hittar du avtalet under "Avtal". </p>
+      <p>Det färdiga avtalet bifogas nedan. Hos SkrivaPå hittar du avtalet under "Avtal". </p>
 
       <p><a href=link><% link %></a></p>
      
@@ -614,7 +617,7 @@ poweredBySkrivaPaPara :: (XMLGenerator m) => XMLGenT m (HSX.XML m)
 poweredBySkrivaPaPara = 
     <p>
       {- Med vänliga hälsningar<br/> -}
-     <small>Powered by <a href="http://skrivapa.se/">skrivaPå</a></small>
+     <small>Powered by <a href="http://skrivapa.se/">SkrivaPå</a></small>
     </p>
 
 passwordChangeMailXml :: (XMLGenerator m) 

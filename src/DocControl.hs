@@ -75,9 +75,9 @@ sendInvitationEmails ctx document = do
 sendInvitationEmail1 :: Context -> Document -> SignatoryLink -> IO ()
 sendInvitationEmail1 ctx document signlink = do
   let SignatoryLink{ signatorylinkid
-                   , signatoryname
-                   , signatorycompany
-                   , signatoryemail } = signlink
+                   , signatorydetails = SignatoryDetails { signatoryname
+                                                         , signatorycompany
+                                                         , signatoryemail }} = signlink
       Document{documenttitle,documentid} = document
   content <- invitationMail ctx signatoryemail signatoryname
              documenttitle documentid signatorylinkid
@@ -94,9 +94,9 @@ sendClosedEmails ctx document = do
 sendClosedEmail1 :: Context -> Document -> SignatoryLink -> IO ()
 sendClosedEmail1 ctx document signlink = do
   let SignatoryLink{ signatorylinkid
-                   , signatoryname
-                   , signatorycompany
-                   , signatoryemail } = signlink
+                   , signatorydetails = SignatoryDetails {signatoryname
+                                                         , signatorycompany
+                                                         , signatoryemail }} = signlink
       Document{documenttitle,documentid} = document
   content <- closedMail ctx signatoryemail signatoryname
              documenttitle documentid signatorylinkid
@@ -162,7 +162,7 @@ handleSignShow ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) documentid
               authoruserid = unAuthor $ documentauthor document
           Just author <- query $ GetUserByUserID authoruserid
           let authorname = userfullname author
-              invitedname = signatoryname $ head $ filter (\x -> signatorylinkid x == signatorylinkid1) 
+              invitedname = signatoryname $ signatorydetails $ head $ filter (\x -> signatorylinkid x == signatorylinkid1) 
                             (documentsignatorylinks document)
           webHSP (pageFromBody ctx TopNone kontrakcja 
                  (showDocumentForSign (LinkSignDoc document signatorylinkid1) 
@@ -234,6 +234,7 @@ updateDocument :: Context -> Document -> Kontra Document
 updateDocument ctx@Context{ctxtime} document = do
   signatories <- getAndConcat "signatoryname"
   signatoriescompanies <- getAndConcat "signatorycompany"
+  signatoriesnumbers <- getAndConcat "signatorynumber"
   signatoriesemails <- getAndConcat "signatoryemail"
   daystosignstring <- getDataFnM (look "daystosign")
   daystosign <- readM daystosignstring
@@ -242,7 +243,7 @@ updateDocument ctx@Context{ctxtime} document = do
   when (daystosign<1 || daystosign>99) mzero
   
   doc2 <- update $ UpdateDocument ctxtime document 
-          signatories signatoriescompanies signatoriesemails
+          signatories signatoriescompanies signatoriesnumbers signatoriesemails
           daystosign
 
   final <- getDataFn $ (look "final" `mplus` look "final2" `mplus` return "")
@@ -308,24 +309,31 @@ handleDocumentUploadX docid content filename = do
   update $ AttachFile docid filename2 content jpgpages
 
 
+personsFromDocument :: Document -> [SealPerson]
 personsFromDocument document = 
     let
         links = documentsignatorylinks document
-        x (SignatoryLink{signatoryname,signatorycompany,maybesigninfo = Just (SignInfo { signtime })})
-            | BS.null signatorycompany =
-                SealPerson (BS.toString signatoryname ++ ", ") (showDateOnly signtime)
-            | otherwise =
+        x (SignatoryLink{ signatorydetails = SignatoryDetails{ signatoryname
+                                                             , signatorycompany
+                                                             , signatorynumber 
+                                                             }
+                        , maybesigninfo = Just (SignInfo { signtime })})
+             =
                 SealPerson (BS.toString signatoryname ++ ", ") 
-                               (BS.toString signatorycompany ++ ", " ++ showDateOnly signtime)
+                               ((concat $ intersperse ", " [ BS.toString signatorycompany
+                                                           , BS.toString signatorynumber
+                                                           ]) ++ "  |  " ++ showDateOnly signtime)
+
     in map x links
 
 sealDocument :: User -> Document -> IO Document
-sealDocument author@(User {userfullname,usercompanyname}) document = do
+sealDocument author@(User {userfullname,usercompanyname,usercompanynumber}) document = do
   let (file@File {fileid,filename,filepdf,filejpgpages}) = 
            safehead "sealDocument" $ documentfiles document
   let docid = unDocumentID (documentid document)
   let persons = SealPerson (BS.toString userfullname ++ ", ") 
-                (BS.toString usercompanyname) : personsFromDocument document
+                (concat $ intersperse ", " [BS.toString usercompanyname, BS.toString usercompanynumber])
+                : personsFromDocument document
   tmppath <- getTemporaryDirectory
   let tmpin = tmppath ++ "/in_" ++ show docid ++ ".pdf"
   let tmpout = tmppath ++ "/out_" ++ show docid ++ ".pdf"
