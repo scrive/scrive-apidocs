@@ -167,7 +167,7 @@ welcomeBody (Context {ctxmaybeuser = Just _, ctxhostpart}) =
 
    <form action=LinkIssue method="post" enctype="multipart/form-data">
     <span class="small">Ladda upp dokument</span><br/>
-    <input type="file" name="doc" accept="application/pdf"/>
+    <input class="multi" maxlength="1" type="file" name="doc" accept="pdf"/>
     <input class="button" type="submit" value="Skapa"/>
    </form>
    <hr/>
@@ -297,6 +297,7 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
       <link rel="stylesheet" type="text/css" href="/css/ui-lightness/jquery-ui-1.8.custom.css" media="screen" />
       <script src="/js/jquery-1.4.2.min.js"/>
       <script src="/js/jquery-ui-1.8.custom.min.js"/>
+      <script src="/js/jquery.MultiFile.js"/>
       <script src="/js/global.js"/>
      </head>
      <body>

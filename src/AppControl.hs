@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, 
              NamedFieldPuns, ScopedTypeVariables 
  #-}
-module AppControl (appHandler) where
+module AppControl (appHandler, handleRoutes) where
 
 import AppState
 import AppView
@@ -38,6 +38,45 @@ import SendMail
 import System.Random
 
 
+handleRoutes ctx@Context{ctxmaybeuser} = msum $
+    [ nullDir >> webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx))
+    , toIO ctx $ dir "sign" $ DocControl.handleSign ctx
+    , toIO ctx $ dir "issue" (withUser ctxmaybeuser (DocControl.handleIssue ctx))
+    , toIO ctx $ dir "pages" $ path $ \fileid -> 
+        msum [ path $ \pageno -> do
+                 modminutes <- query $ FileModTime fileid
+                 DocControl.showPage ctx modminutes fileid pageno
+             ]
+    , dir "landpage" $ 
+          msum [ dir "signinvite" $ pathdb GetDocumentByDocumentID $ \document -> 
+                     DocControl.landpageSignInvite ctx document
+               , dir "signed" $ pathdb GetDocumentByDocumentID $ \document -> path $ \signatorylinkid ->
+                     DocControl.landpageSigned ctx document signatorylinkid
+               , dir "signedsave" $ pathdb GetDocumentByDocumentID $ \document -> 
+                     path $ \signatorylinkid ->
+                     DocControl.landpageSignedSave ctx document signatorylinkid
+               , dir "saved" $ withUser ctxmaybeuser $ pathdb GetDocumentByDocumentID $ \document -> 
+                     path $ \signatorylinkid ->
+                     DocControl.landpageSaved ctx document signatorylinkid
+               ]
+          
+    , dir "pagesofdoc" $ pathdb GetDocumentByDocumentID $ \doc -> do
+          case documentfiles doc of
+              [] -> notFound (toResponse "temporary unavailable (document has no files)")
+              f -> webHSP (DocView.showFilesImages2 f)
+    , toIO ctx $ dir "account" (withUser ctxmaybeuser (UserControl.handleUser ctx))
+    , toIO ctx $ dir "logout" (handleLogout)
+    , toIO ctx $ dir "login" loginPage
+    ]
+    ++ (if isSuperUser ctxmaybeuser then 
+            [ toIO ctx $ dir "stats" $ statsPage
+            , toIO ctx $ dir "become" $ handleBecome
+            , toIO ctx $ dir "createuser" $ handleCreateUser
+            ]
+       else [])
+    ++ [ fileServe [] "public"] 
+
+
 appHandler :: ServerPartT IO Response
 appHandler = do
   rq <- askRq
@@ -58,46 +97,8 @@ appHandler = do
             , ctxflashmessages = flashmessages              
             , ctxtime = minutestime
             }
-   (routes :: [ServerPartT IO Response]) =
-    [ nullDir >> webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx))
-    , toIO ctx $ dir "sign" $ DocControl.handleSign ctx
-    , toIO ctx $ dir "issue" (withUser maybeuser (DocControl.handleIssue ctx))
-    , toIO ctx $ dir "pages" $ path $ \fileid -> 
-        msum [ path $ \pageno -> do
-                 modminutes <- query $ FileModTime fileid
-                 DocControl.showPage ctx modminutes fileid pageno
-             ]
-    , dir "landpage" $ 
-          msum [ dir "signinvite" $ pathdb GetDocumentByDocumentID $ \document -> 
-                     DocControl.landpageSignInvite ctx document
-               , dir "signed" $ pathdb GetDocumentByDocumentID $ \document -> path $ \signatorylinkid ->
-                     DocControl.landpageSigned ctx document signatorylinkid
-               , dir "signedsave" $ pathdb GetDocumentByDocumentID $ \document -> 
-                     path $ \signatorylinkid ->
-                     DocControl.landpageSignedSave ctx document signatorylinkid
-               , dir "saved" $ withUser maybeuser $ pathdb GetDocumentByDocumentID $ \document -> 
-                     path $ \signatorylinkid ->
-                     DocControl.landpageSaved ctx document signatorylinkid
-               ]
-          
-    , dir "pagesofdoc" $ pathdb GetDocumentByDocumentID $ \doc -> do
-          case documentfiles doc of
-              [] -> notFound (toResponse "temporary unavailable (document has no files)")
-              f -> webHSP (DocView.showFilesImages2 f)
-    , toIO ctx $ dir "account" (withUser maybeuser (UserControl.handleUser ctx))
-    , toIO ctx $ dir "logout" (handleLogout)
-    , toIO ctx $ dir "login" loginPage
-    ]
-    ++ (if isSuperUser maybeuser then 
-            [ toIO ctx $ dir "stats" $ statsPage
-            , toIO ctx $ dir "become" $ handleBecome
-            , toIO ctx $ dir "createuser" $ handleCreateUser
-            ]
-       else [])
-    ++ [ fileServe [] "public"
-    , webHSP (pageFromBody ctx TopNone kontrakcja (errorReport ctx rq))
-    ]
-  msum routes
+  handleRoutes ctx `mplus`
+     webHSP (pageFromBody ctx TopNone kontrakcja (errorReport ctx rq))
 
 loginPage :: Kontra Response
 loginPage = (methodM GET >> loginPageGet) `mplus` 

@@ -37,9 +37,24 @@ import Network.Socket hiding ( accept, socketPort, recvFrom, sendTo )
 import qualified Network.Socket as Socket ( accept )
 import qualified Control.Exception as Exception
 import Network.Curl
-
+import Happstack.State.Saver
 import Session
 import Happstack.State (update)
+
+startTestSystemState' :: (Component st, Methods st) => Proxy st -> IO (MVar TxControl)
+startTestSystemState' proxy = do
+  runTxSystem NullSaver proxy
+
+runTest :: IO () -> IO ()
+runTest test = do
+  Exception.bracket
+               -- start the state system
+              (startTestSystemState' stateProxy)
+              (\control -> do
+                  shutdownSystem control)
+              (\control -> do
+                 test)
+
 
 stateProxy :: Proxy AppState
 stateProxy = Proxy
