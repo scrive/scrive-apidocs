@@ -11,6 +11,7 @@ import AppView
 import UserState
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.Lazy as BSL
 import Control.Monad
@@ -371,7 +372,10 @@ handleIssuePost ctx@(Context { ctxmaybeuser = Just user, ctxhostpart, ctxtime })
   case maybeupload of
     Just input@(Input content (Just filename) _contentType) -> 
         do 
-          let title = BS.fromString (basename filename) 
+          -- FIXME: here we have encoding issue
+          -- Happstack gives use String done by BS.unpack, so BS.pack it here
+          -- in our case it should be utf-8 as this is what we use everywhere
+          let title = BSC.pack (basename filename) 
           freeleft <- freeLeftForUser user
           doc <- update $ NewDocument (userid user) title ctxtime (freeleft>0)
           liftIO $ forkIO $ handleDocumentUploadX (documentid doc) (concatChunks content) filename

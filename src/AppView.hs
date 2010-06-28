@@ -123,7 +123,7 @@ loginBox ctx =
           <td><input type="password" name="password"/></td> 
         </tr>
 	<tr> 
-          <td><input type="submit" name="login" value="Login"/></td>
+          <td><input class="button" type="submit" name="login" value="Login"/></td>
           <td>
             {- <a href="#" onClick="$('#login').hide(); $('#register').show(); return false;">register</a> -}
            <% rpxSignInLink ctx "Sign in with OpenID" "/" %>

@@ -220,7 +220,7 @@ listDocuments documents =
        </tr>
       </tfoot>
       <tbody>
-       <% map oneDocumentRow documents %>
+       <% map oneDocumentRow (filter (not . documentdeleted) documents) %>
       </tbody>
      </table>
    </div>

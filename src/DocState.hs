@@ -130,6 +130,21 @@ $(deriveAll [''Default]
           , documentmtime1            :: MinutesTime
           , documentchargemode1       :: ChargeMode
           }
+      data Document2 = Document2
+          { documentid2               :: DocumentID
+          , documenttitle2            :: BS.ByteString
+          , documentauthor2           :: Author
+          , documentsignatorylinks2   :: [SignatoryLink]  
+          , documentfiles2            :: [File]
+          , documentstatus2           :: DocumentStatus
+          , documentctime2            :: MinutesTime
+          , documentmtime2            :: MinutesTime
+          , documentchargemode2       :: ChargeMode
+          , documentdaystosign2       :: Int
+          , documenttimeouttime2      :: Maybe TimeoutTime
+
+          -- we really should keep history here so we know what happened
+          }
       data Document = Document
           { documentid               :: DocumentID
           , documenttitle            :: BS.ByteString
@@ -142,6 +157,7 @@ $(deriveAll [''Default]
           , documentchargemode       :: ChargeMode
           , documentdaystosign       :: Int
           , documenttimeouttime      :: Maybe TimeoutTime
+          , documentdeleted          :: Bool -- should not appear in list
 
           -- we really should keep history here so we know what happened
           }
@@ -179,6 +195,15 @@ instance Ord Document1 where
     compare a b | documentid1 a == documentid1 b = EQ
                 | otherwise = compare (documentmtime1 b,documenttitle1 a,documentid1 a) 
                                       (documentmtime1 a,documenttitle1 b,documentid1 b)
+                              -- see above: we use reverse time here!
+
+instance Eq Document2 where
+    a == b = documentid2 a == documentid2 b
+
+instance Ord Document2 where
+    compare a b | documentid2 a == documentid2 b = EQ
+                | otherwise = compare (documentmtime2 b,documenttitle2 a,documentid2 a) 
+                                      (documentmtime2 a,documenttitle2 b,documentid2 b)
                               -- see above: we use reverse time here!
 
 instance Eq File where
@@ -303,9 +328,13 @@ $(deriveSerialize ''Document1)
 instance Version Document1 where
     mode = extension 1 (Proxy :: Proxy Document0)
 
+$(deriveSerialize ''Document2)
+instance Version Document2 where
+    mode = extension 2 (Proxy :: Proxy Document1)
+
 $(deriveSerialize ''Document)
 instance Version Document where
-    mode = extension 2 (Proxy :: Proxy Document1)
+    mode = extension 3 (Proxy :: Proxy Document2)
 
 instance Migrate Document0 Document1 where
       migrate (Document0
@@ -329,7 +358,7 @@ instance Migrate Document0 Document1 where
           , documentchargemode1 = ChargeInitialFree
           }
 
-instance Migrate Document1 Document where
+instance Migrate Document1 Document2 where
       migrate (Document1
           { documentid1
           , documenttitle1
@@ -340,20 +369,46 @@ instance Migrate Document1 Document where
           , documentctime1
           , documentmtime1
           , documentchargemode1
+          }) = Document2
+          { documentid2 = documentid1
+          , documenttitle2 = documenttitle1
+          , documentauthor2 = documentauthor1
+          , documentsignatorylinks2 = documentsignatorylinks1
+          , documentfiles2 = documentfiles1
+          , documentstatus2 = documentstatus1
+          , documentctime2 = documentctime1
+          , documentmtime2 = documentmtime1
+          , documentchargemode2 = documentchargemode1
+          , documentdaystosign2 = 30
+          , documenttimeouttime2 = Nothing
+          }
+
+instance Migrate Document2 Document where
+      migrate (Document2 
+          { documentid2
+          , documenttitle2
+          , documentauthor2
+          , documentsignatorylinks2
+          , documentfiles2
+          , documentstatus2
+          , documentctime2
+          , documentmtime2
+          , documentchargemode2
+          , documentdaystosign2
+          , documenttimeouttime2
           }) = Document
-          { documentid = documentid1
-          , documenttitle = documenttitle1
-          , documentauthor = documentauthor1
-          , documentsignatorylinks = documentsignatorylinks1
-          , documentfiles = documentfiles1
-          , documentstatus = documentstatus1
-          , documentctime = documentctime1
-          , documentmtime = documentmtime1
-          , documentchargemode = documentchargemode1
+          { documentid = documentid2
+          , documenttitle = documenttitle2
+          , documentauthor = documentauthor2
+          , documentsignatorylinks = documentsignatorylinks2
+          , documentfiles = documentfiles2
+          , documentstatus = documentstatus2
+          , documentctime = documentctime2
+          , documentmtime = documentmtime2
+          , documentchargemode = documentchargemode2
           , documentdaystosign = 30
           , documenttimeouttime = Nothing
-
-          -- we really should keep history here so we know what happened
+          , documentdeleted = False
           }
 
 
@@ -415,7 +470,7 @@ newDocument userid title ctime isfree = do
   docid <- getUnique documents DocumentID
   let doc = Document docid title (Author userid) [] []
             Preparation ctime ctime (if isfree then ChargeInitialFree else ChargeNormal)
-            30 Nothing
+            30 Nothing False
   modify $ insert doc
   return doc
 
