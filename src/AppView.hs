@@ -313,8 +313,8 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
         <span class="contactabout">
          <%
            case ctxmaybeuser of
-             Just _ -> <a href="/logout">Logga in</a>
-             Nothing -> <a href="/login">Logga ut</a>
+             Just _ -> <a href="/logout">Logga ut</a>
+             Nothing -> <a href="/login">Logga in</a>
          %> | <a href=LinkAbout>Om SkrivaPå</a></span>
         <div id="headerContainer2">
          <div id="nav">

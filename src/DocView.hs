@@ -267,7 +267,7 @@ showSignatoryEntryStatus (SignatoryLink{signatorydetails = SignatoryDetails{sign
         <b><% signatoryname %></b><br/>
         <% case maybesigninfo of
              Just (SignInfo{signtime}) -> "Undertecknat " ++ show signtime 
-             Nothing -> case maybeseentime of
+            Nothing -> case maybeseentime of
                           Just time -> "Har öppnat dokumentet " ++ show time
                           Nothing -> "Har inte öppnat dokumentet"
         %>
@@ -283,7 +283,7 @@ showFilesImages2 files = <span><% concatMap showFileImages files %></span>
 showDocumentBox document = 
     <div id="documentBox">
         {- <% map showFileImages (files document) %> -}
-        Förbereder avtal...
+        <div style="margin-eft: auto; margin-right: auto; margin-top: 50px;">Förbereder avtal...</div>
     </div>
 
 {-
