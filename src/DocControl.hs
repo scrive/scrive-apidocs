@@ -379,7 +379,7 @@ handleIssuePost ctx@(Context { ctxmaybeuser = Just user, ctxhostpart, ctxtime })
           -- in our case it should be utf-8 as this is what we use everywhere
           let title = BSC.pack (basename filename) 
           freeleft <- freeLeftForUser user
-          doc <- update $ NewDocument (userid user) title ctxtime (freeleft>0)
+          doc <- update $ NewDocument user title ctxtime (freeleft>0)
           liftIO $ forkIO $ handleDocumentUploadX (documentid doc) (concatChunks content) filename
           let link = ctxhostpart ++ "/issue/" ++ show (documentid doc)
           response <- webHSP (seeOtherXML link)

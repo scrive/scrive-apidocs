@@ -32,6 +32,7 @@ $(deriveAll [''Eq, ''Ord, ''Default]
       newtype FileID = FileID { unFileID :: Int }
       newtype TimeoutTime = TimeoutTime { unTimeoutTime :: MinutesTime }
 
+
       data SignatoryDetails = SignatoryDetails 
           { signatoryname      :: BS.ByteString 
           , signatorycompany   :: BS.ByteString
@@ -104,7 +105,8 @@ $(deriveAll [''Eq, ''Ord, ''Default]
 
       data ChargeMode = ChargeInitialFree   -- initial 5 documents are free
                       | ChargeNormal        -- value times number of people involved
-           
+
+      data DocumentHistoryEntry = DocumentHistoryCreated
    |])
 
 $(deriveAll [''Default]
@@ -158,6 +160,9 @@ $(deriveAll [''Default]
           , documentdaystosign       :: Int
           , documenttimeouttime      :: Maybe TimeoutTime
           , documentdeleted          :: Bool -- should not appear in list
+          , documentauthordetails    :: SignatoryDetails
+          , documentmaybesigninfo    :: Maybe SignInfo      -- about the author signed the document
+          , documenthistory          :: [DocumentHistoryEntry]
 
           -- we really should keep history here so we know what happened
           }
@@ -235,6 +240,7 @@ deriving instance Show SignatoryLink
 deriving instance Show SignatoryLink0
 deriving instance Show SignInfo
 deriving instance Show SignatoryDetails
+deriving instance Show DocumentHistoryEntry
 
 instance Show Signatory where
     showsPrec prec (Signatory userid) = showsPrec prec userid
@@ -320,6 +326,9 @@ instance Version Author
 
 $(deriveSerialize ''Signatory)
 instance Version Signatory where
+
+$(deriveSerialize ''DocumentHistoryEntry)
+instance Version DocumentHistoryEntry
 
 $(deriveSerialize ''Document0)
 instance Version Document0 where
@@ -409,6 +418,9 @@ instance Migrate Document2 Document where
           , documentdaystosign = 30
           , documenttimeouttime = Nothing
           , documentdeleted = False
+          , documentauthordetails = SignatoryDetails BS.empty BS.empty BS.empty BS.empty
+          , documentmaybesigninfo = Nothing
+          , documenthistory = []
           }
 
 
@@ -460,17 +472,38 @@ getDocumentsBySignatory userid = do
     documents <- ask
     return $ toList (documents @= Signatory userid)
 
-newDocument :: UserID 
+newDocument :: User
             -> BS.ByteString
             -> MinutesTime 
             -> Bool -- is free?
             -> Update Documents Document
-newDocument userid title ctime isfree = do
+newDocument user@User{userid,userfullname,usercompanyname,usercompanynumber,useremail} title ctime isfree = do
   documents <- ask
   docid <- getUnique documents DocumentID
-  let doc = Document docid title (Author userid) [] []
-            Preparation ctime ctime (if isfree then ChargeInitialFree else ChargeNormal)
-            30 Nothing False
+  let doc = Document
+          { documentid = docid
+          , documenttitle = title
+          , documentauthor = Author userid
+          , documentsignatorylinks = []
+          , documentfiles = []
+          , documentstatus = Preparation
+          , documentctime = ctime
+          , documentmtime = ctime
+          , documentchargemode = if isfree then ChargeInitialFree else ChargeNormal
+          , documentdaystosign = 30
+          , documenttimeouttime = Nothing
+          , documentdeleted = False
+          , documentauthordetails = details
+          , documentmaybesigninfo = Nothing
+          , documenthistory = []
+          }
+      details = SignatoryDetails  
+                { signatoryname = userfullname
+                , signatorycompany = usercompanyname
+                , signatorynumber = usercompanynumber
+                , signatoryemail = unEmail $ useremail
+                }
+
   modify $ insert doc
   return doc
 
