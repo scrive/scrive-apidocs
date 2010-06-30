@@ -115,18 +115,18 @@ loginBox ctx =
      <form action=LinkLogin method="post">
       <table>
 	<tr>
-          <td>Email:</td> 
-          <td><input type="textfield" name="email"/></td> 
+          <td>E-mail:</td> 
+          <td><input type="textfield" name="email" size="22"/></td> 
         </tr>
 	<tr> 
-          <td>Password:</td> 
-          <td><input type="password" name="password"/></td> 
+          <td>Lösenord:</td> 
+          <td><input type="password" name="password" size="22"/></td> 
         </tr>
 	<tr> 
-          <td><input class="button" type="submit" name="login" value="Login"/></td>
+          <td><input class="button" type="submit" name="login" value="Logga in"/></td>
           <td>
             {- <a href="#" onClick="$('#login').hide(); $('#register').show(); return false;">register</a> -}
-           <% rpxSignInLink ctx "Sign in with OpenID" "/" %>
+           <% rpxSignInLink ctx "Logga in med OpenID" "/" %>
           </td>
 	</tr>
       </table>
@@ -168,7 +168,7 @@ welcomeBody (Context {ctxmaybeuser = Just _, ctxhostpart}) =
    <form action=LinkIssue method="post" enctype="multipart/form-data">
     <span class="small">Ladda upp dokument</span><br/>
     <input class="multi" maxlength="1" type="file" name="doc" accept="pdf"/>
-    <input class="button" type="submit" value="Skapa"/>
+    <input class="bigbutton" type="submit" value="Skapa"/>
    </form>
    <hr/>
   </div>
@@ -191,7 +191,7 @@ welcomeBody ctx@(Context {ctxmaybeuser = Nothing}) =
    <p class="para">För tillfället testar vi vår online signaturlösning med 
       utvalda kunder. Om du vill bli en tidig testkund, vänligen 
       <a href="mailto:lukas@skrivapa.se">skicka ett mail</a>. Om du redan 
-      har ett konto klicka nedan för att börja.</p>
+      har ett konto logga in för att börja.</p>
   </div>
 
 errorReport :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
@@ -308,13 +308,13 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
                <% ctxflashmessages  %>
               </div> %>
        %>
-      <div id="headerContainer" class=(if topMenu==TopEmpty then "topempty" else "")>
+      <div id="headerContainer">
         <img class="logosmall"src="/theme/images/logosmall.png"/>
         <span class="contactabout">
          <%
            case ctxmaybeuser of
-             Just _ -> <a href="/logout">Logout</a>
-             Nothing -> <a href="/login">Login</a>
+             Just _ -> <a href="/logout">Logga in</a>
+             Nothing -> <a href="/login">Logga ut</a>
          %> | <a href=LinkAbout>Om SkrivaPå</a></span>
         <div id="headerContainer2">
          <div id="nav">
@@ -430,7 +430,7 @@ loginPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink))
 loginPageView ctx = 
   <div class="centerdivnarrow">
 
-   <p class="headline">Logga i SkrivaPå!</p>
+   <p class="headline">Logga in SkrivaPå!</p>
 
    <% loginBox ctx %>
 

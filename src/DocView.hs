@@ -278,7 +278,7 @@ showFileImages file =
    [ <img src=("/pages/" ++ show (fileid file) ++ "/" ++ show pageno) width="300"/> |
      pageno <- [1..(length (filejpgpages file))]]
 
-showFilesImages2 files = <xml><% concatMap showFileImages files %></xml> 
+showFilesImages2 files = <span><% concatMap showFileImages files %></span> 
 
 showDocumentBox document = 
     <div id="documentBox">
@@ -451,13 +451,13 @@ showDocumentForSign action document authorname invitedname wassigned =
    in showDocumentPageHelper action document helper 
               (BS.fromString $ "Avtal: " ++ BS.toString(documenttitle document)) $
         if wassigned 
-           then <span>Du har redan skrivit på!</span>
+           then <span>Du har redan undertecknat!</span>
            else <span>
                 
                 <p>Välkommen <% invitedname %>,</p>
 
                 <p>Genom SkrivaPå kan du underteckna juridiskt bindande avtal online. 
-                   På vänster sida har du avtalet <strong><% documenttitle document %></strong> 
+                   På vänster sida har du avtalet <strong><% documenttitle document %> </strong> 
                    som <strong><% authorname %></strong> har bjudit in dig att underteckna.
                 </p>
 

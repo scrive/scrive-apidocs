@@ -16,16 +16,16 @@ $(document).ready( function () {
     });
     $.ajax({ url: "/pagesofdoc/" + documentid,
             success: function(data) {
-                         $('#documentBox').html(data);
-                     },
+                $('#documentBox').html(data);
+            },
             error: function () {
-                       var that = this;
-                       $(document).delay(1000).queue(function() {
-                                                         $(this).dequeue();
-                                                         $.ajax(that);
-                                                     });
-                   }
-         });
+                var that = this;
+                $(document).delay(1000).queue(function() {
+                        $(this).dequeue();
+                        $.ajax(that);
+                    });
+            }
+        });
 });
 
 

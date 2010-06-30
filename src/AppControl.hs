@@ -97,8 +97,9 @@ appHandler = do
             , ctxflashmessages = flashmessages              
             , ctxtime = minutestime
             }
-  handleRoutes ctx `mplus`
-     webHSP (pageFromBody ctx TopNone kontrakcja (errorReport ctx rq))
+  handleRoutes ctx `mplus` do
+     response <- webHSP (pageFromBody ctx TopNone kontrakcja (errorReport ctx rq))
+     setRsCode 404 response
 
 loginPage :: Kontra Response
 loginPage = (methodM GET >> loginPageGet) `mplus` 

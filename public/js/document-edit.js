@@ -92,6 +92,7 @@ $(document).ready( function () {
  $("#footerContainer").ajaxComplete( function() { alert("Ajax complete");});
  */
 
+    /*
     if( issuedone ) {
        $("#dialog-confirm-signinvite-done").dialog({
                  resizable: false,
@@ -108,5 +109,6 @@ $(document).ready( function () {
                      }
                  });
     }
+    */
 });
 

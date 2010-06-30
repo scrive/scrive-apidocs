@@ -56,7 +56,7 @@ doctransPending2Closed ctx@Context{ctxtime} doc = do
   newdoc <- update $ RemoveFileFromDoc (documentid doc)
   Just user <- query $ GetUserByUserID (unAuthor (documentauthor doc))
   liftIO $ forkIO $ do
-    newdoc <- sealDocument user doc
+    newdoc <- sealDocument ctxtime user doc
     sendClosedEmails ctx newdoc
   return newdoc
 
@@ -310,6 +310,12 @@ handleDocumentUploadX docid content filename = do
   update $ AttachFile docid filename2 content jpgpages
 
 
+sealLine :: BS.ByteString -> [BS.ByteString] -> MinutesTime -> SealPerson
+sealLine fullname details signtime =
+    SealPerson (BS.toString fullname ++ ", ") 
+                   ((concat $ intersperse ", " (map BS.toString (filter (not . BS.null) details))) ++ 
+                                "  |  " ++ showDateOnly signtime)
+
 personsFromDocument :: Document -> [SealPerson]
 personsFromDocument document = 
     let
@@ -319,21 +325,17 @@ personsFromDocument document =
                                                              , signatorynumber 
                                                              }
                         , maybesigninfo = Just (SignInfo { signtime })})
-             =
-                SealPerson (BS.toString signatoryname ++ ", ") 
-                               ((concat $ intersperse ", " [ BS.toString signatorycompany
-                                                           , BS.toString signatorynumber
-                                                           ]) ++ "  |  " ++ showDateOnly signtime)
+             = sealLine signatoryname [signatorycompany, signatorynumber] signtime
 
     in map x links
 
-sealDocument :: User -> Document -> IO Document
-sealDocument author@(User {userfullname,usercompanyname,usercompanynumber}) document = do
+sealDocument :: MinutesTime -> User -> Document -> IO Document
+sealDocument signtime author@(User {userfullname,usercompanyname,usercompanynumber}) document = do
   let (file@File {fileid,filename,filepdf,filejpgpages}) = 
            safehead "sealDocument" $ documentfiles document
   let docid = unDocumentID (documentid document)
-  let persons = SealPerson (BS.toString userfullname ++ ", ") 
-                (concat $ intersperse ", " [BS.toString usercompanyname, BS.toString usercompanynumber])
+  -- FIXME: use the time when author clicked sign
+  let persons = sealLine userfullname [usercompanyname, usercompanynumber] signtime
                 : personsFromDocument document
   tmppath <- getTemporaryDirectory
   let tmpin = tmppath ++ "/in_" ++ show docid ++ ".pdf"
