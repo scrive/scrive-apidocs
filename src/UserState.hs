@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell, TypeFamilies, DeriveDataTypeable,
     FlexibleInstances, MultiParamTypeClasses, FlexibleContexts,
-    UndecidableInstances, TypeSynonymInstances #-}
+    UndecidableInstances, TypeSynonymInstances, StandaloneDeriving #-}
 module UserState where
 import Happstack.Data
 import Happstack.State
