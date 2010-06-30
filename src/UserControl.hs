@@ -11,6 +11,7 @@ import Happstack.State (update,query)
 import Control.Monad
 import User
 import AppView
+import Control.Monad.Trans
 
 
 handleUser ctx = 
@@ -19,6 +20,7 @@ handleUser ctx =
     , methodM POST >> handleUserPost ctx
     ]
 
+g :: String -> Kontra BS.ByteString 
 g name = do
   m <- getDataFn (look name)
   case m of
@@ -31,7 +33,7 @@ handleUserPost ctx@Context{ctxmaybeuser = Just user} = do
   companyname <- g "companyname"
   companynumber <- g "companynumber"
   invoiceaddress <- g "invoiceaddress"
-  update $ SetUserDetails user fullname companyname companynumber invoiceaddress
+  newuser <- update $ SetUserDetails user email fullname companyname companynumber invoiceaddress
   -- FIME: add flash-message here
   let link = show LinkAccount
   response <- webHSP (seeOtherXML link)

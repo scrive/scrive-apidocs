@@ -70,6 +70,10 @@ $(deriveAll [''Eq, ''Ord, ''Default]
 
    |])
 
+deriving instance Show User
+deriving instance Show Email
+deriving instance Show FlashMessage
+
 instance Migrate User0 User1 where
     migrate (User0
              { userid0
@@ -247,16 +251,21 @@ setUserPassword user@User{userid} newpassword = do
   modify (updateIx userid (user { userpassword = Just newpassword })) 
   return ()
 
-setUserDetails :: User -> BS.ByteString -> BS.ByteString 
-               -> BS.ByteString -> BS.ByteString 
+setUserDetails :: User 
+               -> BS.ByteString
+               -> BS.ByteString 
+               -> BS.ByteString 
+               -> BS.ByteString 
+               -> BS.ByteString 
                -> Update Users User
-setUserDetails user1 fullname companyname companynumber invoiceaddress = do
+setUserDetails user1 email fullname companyname companynumber invoiceaddress = do
   users <- ask
   let Just user = getOne (users @= userid user1)
   let newuser = user { userfullname = fullname
                      , usercompanyname = companyname
                      , usercompanynumber = companynumber
                      , userinvoiceaddress = invoiceaddress
+                     , useremail = Email email
                      }
   modify (updateIx (userid user) newuser)
   return newuser

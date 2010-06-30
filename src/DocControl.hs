@@ -330,11 +330,15 @@ personsFromDocument document =
     in map x links
 
 sealDocument :: MinutesTime -> User -> Document -> IO Document
-sealDocument signtime author@(User {userfullname,usercompanyname,usercompanynumber}) document = do
+sealDocument signtime1 author@(User {userfullname,usercompanyname,usercompanynumber}) document = do
   let (file@File {fileid,filename,filepdf,filejpgpages}) = 
            safehead "sealDocument" $ documentfiles document
   let docid = unDocumentID (documentid document)
+
   -- FIXME: use the time when author clicked sign
+  let signtime = case documentmaybesigninfo document of
+                   Nothing -> signtime1
+                   Just (SignInfo t) -> t
   let persons = sealLine userfullname [usercompanyname, usercompanynumber] signtime
                 : personsFromDocument document
   tmppath <- getTemporaryDirectory

@@ -221,15 +221,6 @@ instance Ord File where
 
 instance Show SignatoryLinkID where
     showsPrec prec (SignatoryLinkID x) = showsPrec prec x
-{-
-instance Show SignatoryLink where
-    showsPrec prec (SignatoryLink _ name company email Nothing Nothing Nothing) = 
-        (++) (BS.toString name ++ " <" ++ BS.toString email ++ "> never seen")
-    showsPrec prec (SignatoryLink _ name company email Nothing Nothing (Just time)) = 
-        (++) (BS.toString name ++ " <" ++ BS.toString email ++ "> seen " ++ show time)
-    showsPrec prec (SignatoryLink _ name company email _ (Just signinfo) _) = 
-        (++) $ "Signed by " ++ (BS.toString name ++ " <" ++ BS.toString email ++ "> on " ++ show (signtime signinfo))
--}
 
 deriving instance Show Document
 deriving instance Show DocumentStatus
@@ -566,6 +557,9 @@ updateDocumentStatus time document1 newstatus = do
 
   let newdoc = document { documentstatus = newstatus
                         , documentmtime = time
+                        , documentmaybesigninfo = case newstatus of
+                                                    Pending -> Just (SignInfo time)
+                                                    _ -> Nothing
                         }
   if legal 
      then do
