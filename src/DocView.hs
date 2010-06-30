@@ -267,7 +267,7 @@ showSignatoryEntryStatus (SignatoryLink{signatorydetails = SignatoryDetails{sign
         <b><% signatoryname %></b><br/>
         <% case maybesigninfo of
              Just (SignInfo{signtime}) -> "Undertecknat " ++ show signtime 
-            Nothing -> case maybeseentime of
+             Nothing -> case maybeseentime of
                           Just time -> "Har öppnat dokumentet " ++ show time
                           Nothing -> "Har inte öppnat dokumentet"
         %>
@@ -283,7 +283,7 @@ showFilesImages2 files = <span><% concatMap showFileImages files %></span>
 showDocumentBox document = 
     <div id="documentBox">
         {- <% map showFileImages (files document) %> -}
-        <div style="margin-eft: auto; margin-right: auto; margin-top: 50px;">Förbereder avtal...</div>
+        <div style="margin-left: auto; margin-right: auto; margin-top: 50px;">Förbereder avtal...</div>
     </div>
 
 {-
@@ -474,6 +474,14 @@ showDocumentForSign action document authorname invitedname wassigned =
                 </span>
 
 
+renderHSPToByteString xml = do
+  (meta,content) <- evalHSP Nothing xml
+  return $ case meta of
+             Just (XMLMetaData (showDt, dt) _ pr) -> 
+                     BS.fromString ((if showDt then (dt ++) else id) (pr content))
+             Nothing -> BS.fromString (renderAsHTML content)
+
+
 
 invitationMailXml :: (XMLGenerator m) 
                   => Context
@@ -518,8 +526,7 @@ invitationMail ctx emailaddress personname
                            documenttitle documentid signaturelinkid
                            -- FIXME: first part of tuple is Maybe Metadata
                            -- potentially important
-                 (_,content) <- evalHSP Nothing xml
-                 return (BS.fromString (renderAsHTML content))
+                 renderHSPToByteString xml
 
 closedMailXml :: (XMLGenerator m) 
                   => Context
@@ -566,8 +573,7 @@ closedMail ctx emailaddress personname
                            documenttitle documentid signaturelinkid
                            -- FIXME: first part of tuple is Maybe Metadata
                            -- potentially important
-                 (_,content) <- evalHSP Nothing xml
-                 return (BS.fromString (renderAsHTML content))
+                 renderHSPToByteString xml
 
 closedMailAuthorXml :: (XMLGenerator m) 
                      => Context
@@ -610,8 +616,7 @@ closedMailAuthor ctx emailaddress personname
                            documenttitle documentid
                            -- FIXME: first part of tuple is Maybe Metadata
                            -- potentially important
-                 (_,content) <- evalHSP Nothing xml
-                 return (BS.fromString (renderAsHTML content))
+                 renderHSPToByteString xml
 
 poweredBySkrivaPaPara :: (XMLGenerator m) => XMLGenT m (HSX.XML m)
 poweredBySkrivaPaPara = 
@@ -659,5 +664,4 @@ passwordChangeMail emailaddress personname newpassword = do
                  let xml = passwordChangeMailXml emailaddress personname newpassword
                            -- FIXME: first part of tuple is Maybe Metadata
                            -- potentially important
-                 (_,content) <- evalHSP Nothing xml
-                 return (BS.fromString (renderAsHTML content))
+                 renderHSPToByteString xml
