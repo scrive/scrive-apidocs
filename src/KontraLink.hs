@@ -29,6 +29,7 @@ data KontraLink
     | LinkLandpageSaved Document SignatoryLinkID
     | LinkSignDoc Document SignatoryLinkID
     | LinkIssueDoc Document
+    | LinkIssueDocPDF Document {- Which file? -}
 
 instance Show KontraLink where
     showsPrec _ LinkAbout = (++) "/about"
@@ -40,6 +41,8 @@ instance Show KontraLink where
         (++) $ "/landpage/signed/" ++ show (documentid document) ++ "/" ++ show signatorylinkid
     showsPrec _ (LinkIssueDoc document) = 
         (++) $ "/issue/" ++ show (documentid document)
+    showsPrec _ (LinkIssueDocPDF document) = 
+        (++) $ "/issue/" ++ show (documentid document) ++ "/" ++ BS.toString documenttitle ++ ".pdf"
     showsPrec _ (LinkSignDoc document signatorylinkid) = 
         (++) $ "/sign/" ++ show (documentid document) ++ "/" ++ show signatorylinkid
 

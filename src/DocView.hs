@@ -415,12 +415,11 @@ showDocumentPageHelper action document helpers title content =
     <table class="docview">
      <tr>
       <td>
-   
        <% showDocumentBox document %>
       </td>
       <td> 
        <p class="headline"><% title %><br/> 
-           <small><a href=("/issue/" ++ show (documentid document) ++ "/" ++ BS.toString title ++ ".pdf") target="_blank">Öppna som PDF</a></small>
+           <small><a href=(LinkIssueDocPDF document) target="_blank">Öppna som PDF</a></small>
        </p>
        <% content %>
       </td>
@@ -428,7 +427,6 @@ showDocumentPageHelper action document helpers title content =
     </table> 
    </form>
    <div id="dialog-confirm-sign" title="Underteckna">
-
 
         <p><strong>Avtalet blir juridiskt bindande när alla parter undertecknat</strong>. 
            Då får du ett e-mail med det färdiga avtalet.</p>
@@ -524,8 +522,6 @@ invitationMail ctx emailaddress personname
                documenttitle documentid signaturelinkid = do
                  let xml = invitationMailXml ctx emailaddress personname 
                            documenttitle documentid signaturelinkid
-                           -- FIXME: first part of tuple is Maybe Metadata
-                           -- potentially important
                  renderHSPToByteString xml
 
 closedMailXml :: (XMLGenerator m) 
@@ -571,8 +567,6 @@ closedMail ctx emailaddress personname
                documenttitle documentid signaturelinkid = do
                  let xml = closedMailXml ctx emailaddress personname 
                            documenttitle documentid signaturelinkid
-                           -- FIXME: first part of tuple is Maybe Metadata
-                           -- potentially important
                  renderHSPToByteString xml
 
 closedMailAuthorXml :: (XMLGenerator m) 
@@ -610,12 +604,9 @@ closedMailAuthor :: Context
            -> BS.ByteString
            -> DocumentID
            -> IO BS.ByteString
-closedMailAuthor ctx emailaddress personname 
-               documenttitle documentid = do
+closedMailAuthor ctx emailaddress personname documenttitle documentid = do
                  let xml = closedMailAuthorXml ctx emailaddress personname 
                            documenttitle documentid
-                           -- FIXME: first part of tuple is Maybe Metadata
-                           -- potentially important
                  renderHSPToByteString xml
 
 poweredBySkrivaPaPara :: (XMLGenerator m) => XMLGenT m (HSX.XML m)
@@ -662,6 +653,4 @@ passwordChangeMail :: BS.ByteString
                    -> IO BS.ByteString
 passwordChangeMail emailaddress personname newpassword = do
                  let xml = passwordChangeMailXml emailaddress personname newpassword
-                           -- FIXME: first part of tuple is Maybe Metadata
-                           -- potentially important
                  renderHSPToByteString xml
