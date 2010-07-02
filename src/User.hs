@@ -142,6 +142,10 @@ userLogin1 = do
                           return user
               sessionid <- update $ NewSession (userid user)
               startSession sessionid
+              rq <- askRq
+              let link = rqUri rq
+              response <- webHSP (seeOtherXML link)
+              finishWith (redirect 303 link response)
               return (Just user)
 
 provideRPXNowLink :: (MonadIO m) => ServerPartT m Response
