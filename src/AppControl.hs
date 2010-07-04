@@ -37,7 +37,7 @@ import DocView
 import SendMail
 import System.Random
 import System.Process
-
+import System.IO
 
 handleRoutes ctx@Context{ctxmaybeuser} = msum $
     [ nullDir >> webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx))
