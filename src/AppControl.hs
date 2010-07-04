@@ -36,6 +36,7 @@ import Control.Monad.State
 import DocView
 import SendMail
 import System.Random
+import System.Process
 
 
 handleRoutes ctx@Context{ctxmaybeuser} = msum $
@@ -138,7 +139,7 @@ handleLogout = do
 read_df = do
   (_,Just handle_out,_,handle_process) <-
       createProcess (proc "df" []) { std_out = CreatePipe }
-  s <- BS.hGetStr handle_out
+  s <- BS.hGetContents handle_out
   hClose handle_out
   waitForProcess handle_process
   return s
