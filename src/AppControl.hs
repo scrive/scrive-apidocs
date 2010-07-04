@@ -151,7 +151,7 @@ statsPage = do
   ndocuments <- query $ GetDocumentStats
   allusers <- query $ GetAllUsers
 #ifndef WINDOWS
-  df <- read_df
+  df <- liftIO read_df
 #else
   let df = BS.empty
 #endif
