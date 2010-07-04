@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, 
-             NamedFieldPuns, ScopedTypeVariables 
+             NamedFieldPuns, ScopedTypeVariables, CPP
  #-}
 module AppControl (appHandler, handleRoutes) where
 
@@ -134,11 +134,27 @@ handleLogout = do
   seeOther "/" response
     
 
+#ifndef WINDOWS
+read_df = do
+  (_,Just handle_out,_,handle_process) <-
+      createProcess (proc "df" []) { std_out = CreatePipe }
+  s <- BS.hGetStr handle_out
+  hClose handle_out
+  waitForProcess handle_process
+  return s
+#endif
+
+
 statsPage :: Kontra Response
 statsPage = do
   ndocuments <- query $ GetDocumentStats
   allusers <- query $ GetAllUsers
-  webHSP (statsPageView (length allusers) ndocuments allusers)
+#ifndef WINDOWS
+  df <- read_df
+#else
+  let df = BS.empty
+#endif
+  webHSP (statsPageView (length allusers) ndocuments allusers df)
     
 
 handleBecome :: Kontra Response

@@ -42,7 +42,7 @@ instance Show KontraLink where
     showsPrec _ (LinkIssueDoc document) = 
         (++) $ "/issue/" ++ show (documentid document)
     showsPrec _ (LinkIssueDocPDF document) = 
-        (++) $ "/issue/" ++ show (documentid document) ++ "/" ++ BS.toString documenttitle ++ ".pdf"
+        (++) $ "/issue/" ++ show (documentid document) ++ "/" ++ BS.toString (documenttitle document) ++ ".pdf"
     showsPrec _ (LinkSignDoc document signatorylinkid) = 
         (++) $ "/sign/" ++ show (documentid document) ++ "/" ++ show signatorylinkid
 

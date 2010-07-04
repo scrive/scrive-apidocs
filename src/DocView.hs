@@ -16,6 +16,9 @@ import Control.Monad.Identity
 import Control.Monad.Trans
 import KontraLink
 
+instance Monad m => IsAttrValue m DocumentID where
+    toAttrValue = toAttrValue . show
+
 webHSP1' :: (MonadIO m) => 
             Maybe XMLMetaData -> 
             HSP XML -> 
@@ -158,11 +161,14 @@ concatSignatories :: [SignatoryDetails] -> String
 concatSignatories siglinks = 
     concat $ intersperse ", " $ map (BS.toString . signatoryname) siglinks 
 
-oneDocumentRow document = 
-    let link = "/issue/" ++ show (documentid document)
+oneDocumentRow document@Document{ documentid, documentsignatorylinks
+                                , documentstatus, documenttitle
+                                , documenttimeouttime
+                                , documentmtime }  = 
+    let link = LinkIssueDoc document
         mk x = <a href=link><% x %></a>
         statusimg = "/theme/images/" ++
-                    case documentstatus document of
+                    case documentstatus of
                       Preparation -> "status_draft.png"
                       Pending  -> "status_pending.png"
                       Closed -> "status_signed.png"
@@ -172,26 +178,30 @@ oneDocumentRow document =
     in
     <tr>
      <td class="tdleft">
-      <input type="checkbox"/>
+      <input type="checkbox" name="doccheck" value=documentid/>
      </td>
      <td><img width="17" height="17" src=statusimg/></td>
-     <td><% mk $ concatSignatories (map signatorydetails $ documentsignatorylinks document) %></td>
-     <td><% mk $ documenttitle document %></td>
-     <td><% mk $ case documenttimeouttime document of
+     <td><% mk $ concatSignatories (map signatorydetails documentsignatorylinks) %></td>
+     <td><% mk $ documenttitle %></td>
+     <td><% mk $ case documenttimeouttime of
                    Nothing -> "-"
                    -- FIXME: show days to sign, not the final date
                    Just (TimeoutTime x) -> show x
           %>
      </td>
-     <td class="tdright"><% mk $ show $ documentmtime document %></td>
+     <td><% mk $ show $ documentmtime %></td>
+     <td class="tdright"></td>
     </tr>
 
 
-listDocuments :: (XMLGenerator m) => [Document] -> XMLGenT m (HSX.XML m)
+listDocuments :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink),
+                      EmbedAsAttr m (Attr [Char] DocumentID)) => [Document] -> XMLGenT m (HSX.XML m)
 listDocuments documents = 
     <div>
      <br/>
+     <form method="post" action=LinkIssue>
      <table class="doctable" cellspacing="0">
+      <col/>
       <col/>
       <col/>
       <col/>
@@ -199,17 +209,19 @@ listDocuments documents =
       <col/>
       <thead>
        <tr>
-        <td>Alla</td>
+        <td><a href="#" id="all">Alla</a></td>
         <td></td> {- status icon -}
         <td>Personer</td>
         <td>Avtal</td>
         <td>Dagar kvar</td>
         <td>Senaste handelse</td>
+        <td></td>
        </tr>
       </thead>
       <tfoot>
        <tr>
-        <td colspan="6" style="text-align: right; overflow: hidden;">
+        <td colspan="7" style="text-align: right; overflow: hidden;">
+          <input type="submit" class="button" name="archive" value="Archive selected"/>
           <img src="/theme/images/status_draft.png"/> Utkast
           <img src="/theme/images/status_rejected.png"/> Avbrutet
           <img src="/theme/images/status_timeout.png"/> Time Out
@@ -223,6 +235,7 @@ listDocuments documents =
        <% map oneDocumentRow (filter (not . documentdeleted) documents) %>
       </tbody>
      </table>
+     </form>
    </div>
 
 showFile
@@ -236,14 +249,18 @@ showSignatory sig = <li><% show sig %></li>
 
 
 
-showSignatoryEntryForEdit :: (XMLGenerator m) => DocState.SignatoryDetails -> XMLGenT m (HSX.XML m)
+showSignatoryEntryForEdit :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink),
+                              EmbedAsAttr m (Attr [Char] DocumentID)) 
+                          => DocState.SignatoryDetails -> XMLGenT m (HSX.XML m)
 showSignatoryEntryForEdit (SignatoryDetails{signatoryname,signatorycompany,signatorynumber, signatoryemail}) = 
     showSignatoryEntryForEdit2 "" (BS.toString signatoryname) 
                                    (BS.toString signatorycompany) 
                                    (BS.toString signatorynumber) 
                                    (BS.toString signatoryemail)
 
-showSignatoryEntryForEdit2 :: (XMLGenerator m) => String -> String -> String -> String
+showSignatoryEntryForEdit2 :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink),
+                               EmbedAsAttr m (Attr [Char] DocumentID)) 
+                           => String -> String -> String -> String
                            -> String -> XMLGenT m (HSX.XML m)
 showSignatoryEntryForEdit2 idx signatoryname signatorycompany signatorynumber signatoryemail = 
     <li id=idx>
@@ -303,7 +320,7 @@ emptyDetails = SignatoryDetails
           , signatoryemail = BS.empty
           }
 
-showDocument :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
+showDocument :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink),EmbedAsAttr m (Attr [Char] DocumentID)) 
              => User 
              -> Document 
              -> Bool 

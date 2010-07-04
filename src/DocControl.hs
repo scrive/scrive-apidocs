@@ -373,25 +373,33 @@ basename filename =
       _ -> fst (span ((/=) '.') filename) -- FIXME: tak care of many dots in file name
 
 handleIssuePost :: Context -> Kontra Response
-handleIssuePost ctx@(Context { ctxmaybeuser = Just user, ctxhostpart, ctxtime }) = do
-  maybeupload <- getDataFn (lookInput "doc")
-  case maybeupload of
-    Just input@(Input content (Just filename) _contentType) -> 
-        do 
-          -- FIXME: here we have encoding issue
-          -- Happstack gives use String done by BS.unpack, so BS.pack it here
-          -- in our case it should be utf-8 as this is what we use everywhere
-          let title = BSC.pack (basename filename) 
-          freeleft <- freeLeftForUser user
-          doc <- update $ NewDocument user title ctxtime (freeleft>0)
-          liftIO $ forkIO $ handleDocumentUploadX (documentid doc) (concatChunks content) filename
-          let link = ctxhostpart ++ "/issue/" ++ show (documentid doc)
-          response <- webHSP (seeOtherXML link)
-          seeOther link response
-    _ -> do
-      let link = ctxhostpart ++ "/issue"
-      response <- webHSP (seeOtherXML link)
-      seeOther link response
+handleIssuePost ctx = handleIssueNewDocument ctx `mplus` handleIssueArchive ctx
+
+handleIssueNewDocument :: Context -> Kontra Response
+handleIssueNewDocument ctx@(Context { ctxmaybeuser = Just user, ctxhostpart, ctxtime }) = do
+    input@(Input content (Just filename) _contentType) <- getDataFnM (lookInput "doc")
+    -- FIXME: here we have encoding issue
+    -- Happstack gives use String done by BS.unpack, so BS.pack it here
+    -- in our case it should be utf-8 as this is what we use everywhere
+    let title = BSC.pack (basename filename) 
+    freeleft <- freeLeftForUser user
+    doc <- update $ NewDocument user title ctxtime (freeleft>0)
+    liftIO $ forkIO $ handleDocumentUploadX (documentid doc) (concatChunks content) filename
+    let link = ctxhostpart ++ "/issue/" ++ show (documentid doc)
+    response <- webHSP (seeOtherXML link)
+    seeOther link response
+
+
+handleIssueArchive :: Context -> Kontra Response
+handleIssueArchive ctx@(Context { ctxmaybeuser = Just user, ctxhostpart, ctxtime }) = do
+    something <- getDataFnM (lookInput "archive")
+    idstrings <- getDataFnM (lookInputList "doccheck")
+    let Just ids = sequence $ map (readM . BSL.toString) idstrings
+    update $ ArchiveDocuments ids
+
+    let link = "/issue"
+    response <- webHSP (seeOtherXML link)
+    seeOther link response
 
 
 showPage :: Context -> MinutesTime -> FileID -> Int -> Kontra Response

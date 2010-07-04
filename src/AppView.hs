@@ -375,8 +375,8 @@ showUserOption user = let un (ExternalUserID x) = BS.toString x in
           <% userfullname user %> <% unEmail $ useremail user %>
     </option>
  
-statsPageView :: Int -> Int -> [User] -> HSP XML
-statsPageView nusers ndocuments users =
+statsPageView :: Int -> Int -> [User] -> BS.ByteString -> HSP XML
+statsPageView nusers ndocuments users df =
     withMetaData html4Strict $
     <html>
      <head>
@@ -420,7 +420,9 @@ statsPageView nusers ndocuments users =
        </table><br/>
        <input class="secbutton" type="submit" value="Create user"/>
       </form>
- 
+      <br/>
+      Disk status:<br/>
+      <pre><% df %></pre>
      </body>
     </html>
 

@@ -475,10 +475,10 @@
 		// STRING: collection lets you show messages in different languages
 		STRING: {
 			remove: 'x',
-			denied: 'You cannot select a $ext file.\nOnly PDF documents are supported...',
+			denied: 'Du kan inte välja en $ext-fil. Bara PDF-dokument kan behandlas.',
 			file:' $file',
-			selected: 'File selected: $file',
-			duplicate: 'This file has already been selected:\n$file'
+			selected: 'Väld fil: $file',
+			duplicate: 'Den här filen är redan väld: $file'
 		},
 		
 		// name of methods that should be automcatically intercepted so the plugin can disable

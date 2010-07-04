@@ -243,6 +243,7 @@ a.button {
    padding: 0px 7px;
    display: block;
    margin-left: auto;
+   display: inline;
 
    font-size: xx-small;
    font-weight: bold;
@@ -272,6 +273,7 @@ a.secbutton {
    font-weight: bold;
    height: 20px;
    line-height: 20px;
+   width: 120px;
 }
 
 a.bigbutton {
@@ -296,7 +298,7 @@ a.bigbutton {
    font-weight: bold;
    height: 35px;
    line-height: 35px;
-   width: 185px;
+   width: 180px;
 }
 
 #documentBox {
@@ -345,7 +347,7 @@ a.bigbutton {
   border-style: none none none solid; 
   border-width: 1px;
   border-color: gray;
-  //width: 1px; // minimum
+  width: 11px;
   overflow: hidden;
 }
 
@@ -356,7 +358,7 @@ a.bigbutton {
 
 .doctable col.tdright
 {
-  width: 10em; // minimum
+  width: 11px;
 }
 
 .doctable .tdright
@@ -364,7 +366,7 @@ a.bigbutton {
   border-style: none solid none none; 
   border-width: 1px;
   border-color: gray;
-  //width: 10em;
+  width: 11px;
   overflow: hidden;
 }
 
@@ -418,12 +420,14 @@ a.bigbutton {
 background-color:lightgray;
 border:1px solid gray;
 // height:60%;
-left:20%;
+left:40%;
 padding:1em;
 position:absolute;
-right:20%;
-top:100px;
-font-size: 200%;
+right:40%;
+top: -4px;
+-moz-border-radius: 4px 4px 4px 4px;
+
+//font-size: 200%;
 }
 
 /*

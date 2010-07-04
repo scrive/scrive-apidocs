@@ -680,6 +680,15 @@ setDocumentTimeoutTime document1 timeouttime = do
   let newdoc = document { documenttimeouttime = Just timeouttime }
   modify (updateIx (documentid newdoc) newdoc)
   return newdoc
+
+archiveDocuments :: [DocumentID] -> Update Documents ()
+archiveDocuments docidlist = do
+  -- FIXME: can use a fold here
+  forM_ docidlist $ \docid -> do
+      modify $ \documents -> case getOne (documents @= docid) of
+                               Just doc -> updateIx docid (doc { documentdeleted = True }) documents
+                               Nothing -> documents
+      
  
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocumentsByAuthor
@@ -701,6 +710,7 @@ $(mkMethods ''Documents [ 'getDocumentsByAuthor
                         , 'getDocumentsByUser
                         , 'getNumberOfDocumentsOfUser
                         , 'setDocumentTimeoutTime
+                        , 'archiveDocuments
                         ])
 
 
