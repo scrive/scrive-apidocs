@@ -205,7 +205,7 @@ process (SealSpec
                     "5.9408 0 0 6 267 19.957 Tm " ++
                     "[(A)60(vt)60(al N)20(r " ++ sealNumberText ++ ")]TJ " ++
                     "5.9408 0 0 6 360 19.957 Tm " ++
-                    "[(s)20(kriv)55(aP)70(\\345)]TJ " ++
+                    "[(S)20(kriv)55(aP)70(\\345)]TJ " ++
                     "ET "
         sealtext = --BS.pack $ 
             movemtx ++

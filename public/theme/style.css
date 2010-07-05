@@ -231,7 +231,11 @@ a.button {
 }
 
 .button {
-   -moz-border-radius:4px 4px 4px 4px;
+-moz-border-radius: 4px;
+-webkit-border-radius: 4px;
+-khtml-border-radius: 4px;
+border-radius: 4px;
+
    color: white !important;
    text-transform: uppercase;
    background-color: #005794;
@@ -256,7 +260,10 @@ a.secbutton {
 }
 
 .secbutton {
-   -moz-border-radius:4px 4px 4px 4px;
+-moz-border-radius: 4px;
+-webkit-border-radius: 4px;
+-khtml-border-radius: 4px;
+border-radius: 4px;
    color: white !important;
    text-transform: uppercase;
    background-color: gray;
@@ -281,7 +288,11 @@ a.bigbutton {
 }
 
 .bigbutton {
-   -moz-border-radius:4px 4px 4px 4px;
+-moz-border-radius: 4px;
+-webkit-border-radius: 4px;
+-khtml-border-radius: 4px;
+border-radius: 4px;
+
    color: white !important;
    text-transform: uppercase;
    background-color: #005794;
@@ -313,6 +324,12 @@ a.bigbutton {
    align: center;
    margin: 6px;
    border: 1px solid black;
+}
+
+#persons
+{
+  overflow: auto;
+  height: 230px;
 }
 
 .doctable {
@@ -425,7 +442,10 @@ padding:1em;
 position:absolute;
 right:40%;
 top: -4px;
--moz-border-radius: 4px 4px 4px 4px;
+-moz-border-radius: 4px;
+-webkit-border-radius: 4px;
+-khtml-border-radius: 4px;
+border-radius: 4px;
 
 //font-size: 200%;
 }
@@ -451,7 +471,22 @@ top: -4px;
 
 #signatorylist
 {
-  height:200px;
-  overflow:auto;
+  //height:200px;
+  //overflow:auto;
   padding:0 0 0 20px;
+}
+
+div.floatleft
+{
+  float: left;
+}
+
+div.floatright
+{
+  float: right;
+}
+
+div.clearboth
+{
+  clear: both;
 }

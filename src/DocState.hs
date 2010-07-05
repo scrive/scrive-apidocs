@@ -513,17 +513,16 @@ attachFile documentid filename1 content jpgpages = do
   modify $ updateIx documentid document2
 
 updateDocument :: MinutesTime
-               -> Document 
-               -> [BS.ByteString] 
-               -> [BS.ByteString] 
-               -> [BS.ByteString] 
-               -> [BS.ByteString] 
+               -> Document
+               -> SignatoryDetails  
+               -> [SignatoryDetails]
                -> Int
                -> Update Documents Document
-updateDocument time document signatorynames signatorycompanies signatorynumbers signatoryemails daystosign = do
-  signatorylinks <- sequence $ zipWith4 mm signatorynames signatorycompanies signatorynumbers signatoryemails
+updateDocument time document authordetails signatories daystosign = do
+  signatorylinks <- sequence $ map mm signatories
   let doc2 = document { documentsignatorylinks = signatorylinks
                       , documentdaystosign = daystosign 
+                      , documentauthordetails = authordetails
                       , documentmtime = time
                       }
   if documentstatus document == Preparation
@@ -532,10 +531,9 @@ updateDocument time document signatorynames signatorycompanies signatorynumbers 
        return doc2
      else
          return document
-  where mm name company number email = do
+  where mm details = do
           sg <- ask
           x <- getUnique sg SignatoryLinkID
-          let details = SignatoryDetails name company number email
           return $ SignatoryLink x details Nothing Nothing Nothing
 
 updateDocumentStatus :: MinutesTime

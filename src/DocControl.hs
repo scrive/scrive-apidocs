@@ -81,7 +81,7 @@ sendInvitationEmail1 ctx document signlink = do
                                                          , signatoryemail }} = signlink
       Document{documenttitle,documentid} = document
   content <- invitationMail ctx signatoryemail signatoryname
-             documenttitle documentid signatorylinkid
+             document signatorylinkid
 
   sendMail signatoryname signatoryemail documenttitle content 
            (filepdf $ head $ documentfiles document)
@@ -162,7 +162,7 @@ handleSignShow ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) documentid
                   isJust maybesigninfo && signatorylinkid == signatorylinkid1
               authoruserid = unAuthor $ documentauthor document
           Just author <- query $ GetUserByUserID authoruserid
-          let authorname = userfullname author
+          let authorname = signatoryname $ documentauthordetails document
               invitedname = signatoryname $ signatorydetails $ head $ filter (\x -> signatorylinkid x == signatorylinkid1) 
                             (documentsignatorylinks document)
           webHSP (pageFromBody ctx TopNone kontrakcja 
@@ -233,19 +233,28 @@ getAndConcat field = do
 
 updateDocument :: Context -> Document -> Kontra Document  
 updateDocument ctx@Context{ctxtime} document = do
-  signatories <- getAndConcat "signatoryname"
+  signatoriesnames <- getAndConcat "signatoryname"
   signatoriescompanies <- getAndConcat "signatorycompany"
   signatoriesnumbers <- getAndConcat "signatorynumber"
   signatoriesemails <- getAndConcat "signatoryemail"
   daystosignstring <- getDataFnM (look "daystosign")
   daystosign <- readM daystosignstring
+  authorname <- getDataFnM (look "authorname")
+  authorcompany <- getDataFnM (look "authorcompany")
+  authornumber <- getDataFnM (look "authornumber")
+  authoremail <- getDataFnM (look "authoremail")
+
+  let signatories = zipWith4 SignatoryDetails signatoriesnames signatoriescompanies signatoriesnumbers signatoriesemails
+  let authordetails = SignatoryDetails (BS.fromString authorname) 
+                                       (BS.fromString authorcompany) 
+                                       (BS.fromString authornumber) 
+                                       (BS.fromString authoremail)
 
   -- FIXME: tell the user what happened!
   when (daystosign<1 || daystosign>99) mzero
   
   doc2 <- update $ UpdateDocument ctxtime document 
-          signatories signatoriescompanies signatoriesnumbers signatoriesemails
-          daystosign
+          authordetails signatories daystosign
 
   final <- getDataFn $ (look "final" `mplus` look "final2" `mplus` return "")
   maybeshowvars <- getDataFn $ look "showvars"
@@ -339,8 +348,13 @@ sealDocument signtime1 author@(User {userfullname,usercompanyname,usercompanynum
   let signtime = case documentmaybesigninfo document of
                    Nothing -> signtime1
                    Just (SignInfo t) -> t
-  let persons = sealLine userfullname [usercompanyname, usercompanynumber] signtime
-                : personsFromDocument document
+  let authordetails = documentauthordetails document
+  let authorline = if authordetails == emptyDetails 
+                   then sealLine userfullname [usercompanyname, usercompanynumber] signtime
+                   else sealLine (signatoryname authordetails)
+                            [signatorycompany authordetails, signatorynumber authordetails] signtime
+
+  let persons = authorline : personsFromDocument document
   tmppath <- getTemporaryDirectory
   let tmpin = tmppath ++ "/in_" ++ show docid ++ ".pdf"
   let tmpout = tmppath ++ "/out_" ++ show docid ++ ".pdf"

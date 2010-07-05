@@ -221,13 +221,18 @@ listDocuments documents =
       <tfoot>
        <tr>
         <td colspan="7" style="text-align: right; overflow: hidden;">
-          <input type="submit" class="button" name="archive" value="Archive selected"/>
-          <img src="/theme/images/status_draft.png"/> Utkast
-          <img src="/theme/images/status_rejected.png"/> Avbrutet
-          <img src="/theme/images/status_timeout.png"/> Time Out
-          <img src="/theme/images/status_pending.png"/> Väntar
-          <img src="/theme/images/status_viewed.png"/> Granskat
-          <img src="/theme/images/status_signed.png"/> Undertecknat
+          <div class="floatleft">
+           <input type="submit" class="button" name="archive" value="Archive selected"/>
+          </div>
+          <div class="floatright">
+           <img src="/theme/images/status_draft.png"/> Utkast
+           <img src="/theme/images/status_rejected.png"/> Avbrutet
+           <img src="/theme/images/status_timeout.png"/> Time Out
+           <img src="/theme/images/status_pending.png"/> Väntar
+           <img src="/theme/images/status_viewed.png"/> Granskat
+           <img src="/theme/images/status_signed.png"/> Undertecknat
+          </div>
+          <div class="clearboth"/>
          </td>
        </tr>
       </tfoot>
@@ -320,7 +325,10 @@ emptyDetails = SignatoryDetails
           , signatoryemail = BS.empty
           }
 
-showDocument :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink),EmbedAsAttr m (Attr [Char] DocumentID)) 
+showDocument :: (XMLGenerator m,
+                 EmbedAsAttr m (Attr [Char] KontraLink),
+                 EmbedAsAttr m (Attr [Char] DocumentID),
+                 EmbedAsAttr m (Attr [Char] BS.ByteString)) 
              => User 
              -> Document 
              -> Bool 
@@ -371,7 +379,16 @@ showDocument user document issuedone freeleft =
 
         <% if documentstatus document == Preparation
            then 
-             <div>
+             <div id="persons">
+              <label>Ditt namn</label><br/> 
+              <input name="authorname" type="text" value=(signatoryname $ documentauthordetails document)/><br/>
+              <label>Titel, företag</label><br/>
+              <input name="authorcompany" type="text" value=(signatorycompany $ documentauthordetails document)/><br/>
+              <label>Ditt Orgnr/Persnr</label><br/>
+              <input name="authornumber" type="text" value=(signatorynumber $ documentauthordetails document)/><br/>
+              <label>Din e-mail</label><br/>
+              <input name="authoremail" type="text" value=(signatoryemail $ documentauthordetails document)/><br/>
+
               <ol id="signatorylist">
                <% map showSignatoryEntryForEdit (if null (documentsignatorylinks document)
                                                  then [emptyDetails] 
@@ -415,9 +432,11 @@ showDocument user document issuedone freeleft =
       </div>
 
 showDocumentPageHelper
-    :: (XMLGenerator m, HSX.XMLGenerator.EmbedAsChild m c,
-                     EmbedAsAttr m (Attr [Char] KontraLink),
-                     HSX.XMLGenerator.EmbedAsChild m d) =>
+    :: (XMLGenerator m, 
+        HSX.XMLGenerator.EmbedAsChild m c,
+        EmbedAsAttr m (Attr [Char] KontraLink),
+        HSX.XMLGenerator.EmbedAsChild m d,
+        EmbedAsAttr m (Attr [Char] BS.ByteString)) =>
      KontraLink
      -> DocState.Document
      -> c
@@ -426,9 +445,10 @@ showDocumentPageHelper
      -> XMLGenT m (HSX.XML m)
 showDocumentPageHelper action document helpers title content =
    <div> 
-   <br/>
-   <% helpers %>
-   <form method="post" id="form" name="form" action=action> 
+    <div style="display: none">
+     <% helpers %>
+    </div>
+ 
     <table class="docview">
      <tr>
       <td>
@@ -438,31 +458,31 @@ showDocumentPageHelper action document helpers title content =
        <p class="headline"><% title %><br/> 
            <small><a href=(LinkIssueDocPDF document) target="_blank">Öppna som PDF</a></small>
        </p>
-       <% content %>
+       <form method="post" id="form" name="form" action=action> 
+        <% content %>
+       </form>
       </td>
      </tr>
     </table> 
-   </form>
-   <div id="dialog-confirm-sign" title="Underteckna">
-
-        <p><strong>Avtalet blir juridiskt bindande när alla parter undertecknat</strong>. 
-           Då får du ett e-mail med det färdiga avtalet.</p>
-        
-        <p>Är du säker på att du vill underteckna avtalet?</p>
-
-   </div>
-
    </div>
 
 
-showDocumentForSign :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) =>
+showDocumentForSign :: (XMLGenerator m,
+                        EmbedAsAttr m (Attr [Char] KontraLink),
+                        EmbedAsAttr m (Attr [Char] BS.ByteString)) =>
                        KontraLink -> Document -> BS.ByteString -> BS.ByteString -> Bool 
                     -> XMLGenT m (HSX.XML m)
 showDocumentForSign action document authorname invitedname wassigned =
    let helper = [ <script type="text/javascript" src="/js/document-edit.js"/>
                 , <script> var documentid = <% show $ documentid document %>; 
                   </script>
+                , <div id="dialog-confirm-sign" title="Underteckna">
+                   <p><strong>Avtalet blir juridiskt bindande när alla parter undertecknat</strong>. 
+                      Då får du ett e-mail med det färdiga avtalet.</p>
+                   <p>Är du säker på att du vill underteckna avtalet?</p>
+                  </div>
                 ]
+
    in showDocumentPageHelper action document helper 
               (BS.fromString $ "Avtal: " ++ BS.toString(documenttitle document)) $
         if wassigned 
@@ -502,16 +522,15 @@ invitationMailXml :: (XMLGenerator m)
                   => Context
                   -> BS.ByteString
                   -> BS.ByteString
-                  -> BS.ByteString
-                  -> DocumentID
+                  -> Document
                   -> SignatoryLinkID
                   -> XMLGenT m (HSX.XML m)
 invitationMailXml (Context {ctxmaybeuser = Just user, ctxhostpart}) 
                   emailaddress personname 
-                  documenttitle documentid 
+                  document@Document{documenttitle,documentid} 
                   signaturelinkid = 
     let link = ctxhostpart ++ "/sign/" ++ show documentid ++ "/" ++ show signaturelinkid
-        creatorname = BS.toString $ userfullname user
+        creatorname = signatoryname (documentauthordetails document)
     in 
     <html>
      <head>
@@ -531,14 +550,13 @@ invitationMailXml (Context {ctxmaybeuser = Just user, ctxhostpart})
 invitationMail :: Context
                -> BS.ByteString
                -> BS.ByteString
-               -> BS.ByteString
-               -> DocumentID
+               -> Document
                -> SignatoryLinkID
                -> IO BS.ByteString
 invitationMail ctx emailaddress personname 
-               documenttitle documentid signaturelinkid = do
+               document signaturelinkid = do
                  let xml = invitationMailXml ctx emailaddress personname 
-                           documenttitle documentid signaturelinkid
+                           document signaturelinkid
                  renderHSPToByteString xml
 
 closedMailXml :: (XMLGenerator m) 
