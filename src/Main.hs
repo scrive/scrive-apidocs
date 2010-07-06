@@ -83,6 +83,7 @@ main = withLogger $ do
   let progName = "kontrakcja"
 
   args <- getArgs
+  logM "Happstack.Server" NOTICE (show args)
 
   appConf <- case parseConfig args of
     (Left e) -> do logM "Happstack.Server" ERROR (unlines e)
@@ -91,7 +92,8 @@ main = withLogger $ do
   
   withCurlDo $ Exception.bracket
                  -- start the state system
-              (startSystemState' (store appConf) stateProxy)
+              (logM "Happstack.Server" NOTICE ("Using store " ++ store appConf) >>
+               startSystemState' (store appConf) stateProxy)
               (\control -> do
                   logM "Happstack.Server" NOTICE "Creating checkpoint before exit" 
                   createCheckpoint control

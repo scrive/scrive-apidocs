@@ -53,22 +53,23 @@ sendMail fullnameemails title content attachmentcontent = do
   let filename = tmp ++ "/Email-" ++ BS.toString (snd (head fullnameemails)) ++ ".eml"
   handle_in <- openBinaryFile filename WriteMode 
 #else
-  let rcpt = concatMap (\x -> ["--mail-rcpt", x]) mailtos
+  let rcpt = concatMap (\(_,x) -> ["--mail-rcpt", "<" ++ BS.toString x ++ ">"]) fullnameemails
 
   (Just handle_in,_,_,handle_process) <-
       -- createProcess (proc "sendmail" (["-i"] ++ mailtos)) { std_in = CreatePipe }
-      createProcess (proc "./curl") ([ "--user"
-                                     , "skrivapa.info@gmail.com:lp09ikol"
-                                     , "smtp://smtp.gmail.com:587"
-                                     , "-k", "--ssl"
-                                     , "--mail-from"
-                                     , "SkrivaPa <skrivapa.info@gmail.com>"
-                                     ] ++ rcpt)
+      createProcess (proc "./curl" ([ "--user"
+                                    , "skrivapa.info@gmail.com:lp09ikol"
+                                    , "smtp://smtp.gmail.com:587"
+                                    , "-k", "--ssl" -- , "-v", "-v"
+                                    , "--mail-from"
+                                    , "<skrivapa.info@gmail.com>"
+                                    ] ++ rcpt)) { std_in = CreatePipe}
 #endif
   -- FIXME: encoding issues
   let boundary = "skrivapa-mail-12-337331046" 
   let header = 
           "Subject: " ++ BS.toString title ++ "\r\n" ++
+          "To: " ++ concat (intersperse ", " mailtos) ++ "\r\n" ++
           "From: SkrivaPa <info@skrivapa.se>\r\n" ++
           "MIME-Version: 1.0\r\n" ++
           "Content-Type: multipart/mixed; boundary=" ++ boundary ++ "\r\n" ++
@@ -81,7 +82,7 @@ sendMail fullnameemails title content attachmentcontent = do
           "Content-Type: application/pdf; name=\"" ++ BS.toString title ++ ".pdf\"\r\n" ++
           "Content-Transfer-Encoding: base64\r\n" ++
           "\r\n"
-  let footer = "\r\n--" ++ boundary ++ "--\r\n"
+  let footer = "\r\n--" ++ boundary ++ "--\r\n.\r\n"
   BS.hPutStr handle_in (BS.fromString header)
   BS.hPutStr handle_in (BS.fromString header1)
   BS.hPutStr handle_in content
