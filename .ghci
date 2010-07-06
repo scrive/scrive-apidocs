@@ -1,0 +1,19 @@
+:set -DMIN_VERSION_template_haskell(a,b,c)=1 
+:set -isrc -ipdfseal/src
+:set -DWINDOWS
+:set -XTemplateHaskell
+:set -XTypeFamilies
+:set -XDeriveDataTypeable
+:set -XFlexibleInstances
+:set -XMultiParamTypeClasses
+:set -XFlexibleContexts
+:set -XUndecidableInstances
+:set -XTypeOperators
+:set -XTypeSynonymInstances
+:set -XGeneralizedNewtypeDeriving
+:set -XStandaloneDeriving
+:set -XNamedFieldPuns
+:def rr (\_ -> return ":reload\n:main")
+:def dellocal (\_ -> return ":!del /s /q _local")
+:def rr1 (\_ -> return ":reload\n:dellocal\n:main")
+:l Main
