@@ -60,7 +60,7 @@ sendMail fullnameemails title content attachmentcontent = do
       createProcess (proc "./curl") ([ "--user"
                                      , "skrivapa.info@gmail.com:lp09ikol"
                                      , "smtp://smtp.gmail.com:587"
-                                     , "-k", "--ssl",
+                                     , "-k", "--ssl"
                                      , "--mail-from"
                                      , "SkrivaPa <skrivapa.info@gmail.com>"
                                      ] ++ rcpt)
