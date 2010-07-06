@@ -53,8 +53,17 @@ sendMail fullnameemails title content attachmentcontent = do
   let filename = tmp ++ "/Email-" ++ BS.toString (snd (head fullnameemails)) ++ ".eml"
   handle_in <- openBinaryFile filename WriteMode 
 #else
+  let rcpt = concatMap (\x -> ["--mail-rcpt", x]) mailtos
+
   (Just handle_in,_,_,handle_process) <-
-      createProcess (proc "sendmail" (["-i"] ++ mailtos)) { std_in = CreatePipe }
+      -- createProcess (proc "sendmail" (["-i"] ++ mailtos)) { std_in = CreatePipe }
+      createProcess (proc "./curl") ([ "--user"
+                                     , "skrivapa.info@gmail.com:lp09ikol"
+                                     , "smtp://smtp.gmail.com:587"
+                                     , "-k", "--ssl",
+                                     , "--mail-from"
+                                     , "SkrivaPa <skrivapa.info@gmail.com>"
+                                     ] ++ rcpt)
 #endif
   -- FIXME: encoding issues
   let boundary = "skrivapa-mail-12-337331046" 
