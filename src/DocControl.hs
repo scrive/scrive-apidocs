@@ -83,7 +83,7 @@ sendInvitationEmail1 ctx document signlink = do
   content <- invitationMail ctx signatoryemail signatoryname
              document signatorylinkid
 
-  sendMail signatoryname signatoryemail documenttitle content 
+  sendMail [(signatoryname,signatoryemail)] documenttitle content 
            (filepdf $ head $ documentfiles document)
 
 sendClosedEmails :: Context -> Document -> IO ()
@@ -102,7 +102,7 @@ sendClosedEmail1 ctx document signlink = do
   content <- closedMail ctx signatoryemail signatoryname
              documenttitle documentid signatorylinkid
   let attachmentcontent = filepdf $ head $ documentfiles document
-  sendMail signatoryname signatoryemail documenttitle content attachmentcontent
+  sendMail [(signatoryname,signatoryemail)] documenttitle content attachmentcontent
 
 sendClosedAuthorEmail :: Context -> Document -> IO ()
 sendClosedAuthorEmail ctx document = do
@@ -111,13 +111,14 @@ sendClosedAuthorEmail ctx document = do
   content <- closedMailAuthor ctx (unEmail $ useremail authoruser) (userfullname authoruser)
              (documenttitle document) (documentid document) 
   let attachmentcontent = filepdf $ head $ documentfiles document
-  let authorname = if BS.null (signatoryname $ documentauthordetails document)
-                   then userfullname authoruser
-                   else (signatoryname $ documentauthordetails document)
-  let authoremail = if BS.null (signatoryemail $ documentauthordetails document)
-                    then unEmail $ useremail authoruser
-                    else (signatoryemail $ documentauthordetails document)
-  sendMail authorname authoremail
+  let email2 = signatoryemail $ documentauthordetails document
+      email1 = unEmail $ useremail authoruser
+      em = if email2/=BS.empty && email2/=email1
+           then [(name2,email2)]
+           else []
+      name1 = userfullname authoruser
+      name2 = signatoryname $ documentauthordetails document
+  sendMail ([(name1,email1)] ++ em)
            (documenttitle document) content attachmentcontent
   
   

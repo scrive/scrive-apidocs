@@ -37,30 +37,30 @@ import System.Log.Logger
 import Happstack.Util.LogFormat
 import Data.Time.Clock
 
-sendMail :: BS.ByteString -- ^ full name
-         -> BS.ByteString -- ^ email address
+sendMail :: [(BS.ByteString,BS.ByteString)] -- ^ fullname + email address pairs
          -> BS.ByteString -- ^ title
          -> BS.ByteString -- ^ html contents
          -> BS.ByteString -- ^ attached pdf contents
          -- more arguments follow
          -> IO ()
-sendMail fullname email title content attachmentcontent = do
+sendMail fullnameemails title content attachmentcontent = do
   tm <- getCurrentTime
-  let mailto = BS.toString fullname ++ " <" ++ BS.toString email ++ ">"
-  logM "Kontrakcja.Mail" NOTICE $ formatTimeCombined tm ++ " " ++ mailto 
+  let mailtos = map fmt fullnameemails 
+      fmt (fullname,email) = BS.toString fullname ++ " <" ++ BS.toString email ++ ">"
+  logM "Kontrakcja.Mail" NOTICE $ formatTimeCombined tm ++ " " ++ concat (intersperse ", " mailtos)
 #ifdef WINDOWS
   tmp <- getTemporaryDirectory
-  let filename = tmp ++ "/Email-" ++ BS.toString email ++ ".eml"
+  let filename = tmp ++ "/Email-" ++ BS.toString (snd (head fullnameemails)) ++ ".eml"
   handle_in <- openBinaryFile filename WriteMode 
 #else
   (Just handle_in,_,_,handle_process) <-
-      createProcess (proc "sendmail" ["-i", mailto ]) { std_in = CreatePipe }
+      createProcess (proc "sendmail" (["-i"] ++ mailtos)) { std_in = CreatePipe }
 #endif
   -- FIXME: encoding issues
   let boundary = "skrivapa-mail-12-337331046" 
   let header = 
           "Subject: " ++ BS.toString title ++ "\r\n" ++
-          "From: skrivaPa <info@skrivapa.se>\r\n" ++
+          "From: SkrivaPa <info@skrivapa.se>\r\n" ++
           "MIME-Version: 1.0\r\n" ++
           "Content-Type: multipart/mixed; boundary=" ++ boundary ++ "\r\n" ++
           "\r\n"

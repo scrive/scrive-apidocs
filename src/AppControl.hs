@@ -179,7 +179,7 @@ handleCreateUser = do
   update $ SetUserPassword user (BS.fromString passwd)
   content <- liftIO $ passwordChangeMail (BS.fromString email) (BS.fromString fullname) 
              (BS.fromString passwd)
-  liftIO $ sendMail (BS.fromString fullname) (BS.fromString email) 
+  liftIO $ sendMail [(BS.fromString fullname,BS.fromString email)]
                (BS.fromString "SkrivaPa new password") content BS.empty
   -- FIXME: where to redirect?
   response <- webHSP (seeOtherXML "/stats")
