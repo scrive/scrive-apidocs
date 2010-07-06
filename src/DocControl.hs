@@ -111,7 +111,13 @@ sendClosedAuthorEmail ctx document = do
   content <- closedMailAuthor ctx (unEmail $ useremail authoruser) (userfullname authoruser)
              (documenttitle document) (documentid document) 
   let attachmentcontent = filepdf $ head $ documentfiles document
-  sendMail (userfullname authoruser) (unEmail $ useremail authoruser) 
+  let authorname = if BS.null (signatoryname $ documentauthordetails document)
+                   then userfullname authoruser
+                   else (signatoryname $ documentauthordetails document)
+  let authoremail = if BS.null (signatoryemail $ documentauthordetails document)
+                    then unEmail $ useremail authoruser
+                    else (signatoryemail $ documentauthordetails document)
+  sendMail authorname authoremail
            (documenttitle document) content attachmentcontent
   
   
