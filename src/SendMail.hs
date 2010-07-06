@@ -33,6 +33,9 @@ import Data.Int
 import Data.Char (chr,ord)
 import Codec.Binary.Base64
 import Data.List
+import System.Log.Logger
+import Happstack.Util.LogFormat
+import Data.Time.Clock
 
 sendMail :: BS.ByteString -- ^ full name
          -> BS.ByteString -- ^ email address
@@ -42,7 +45,9 @@ sendMail :: BS.ByteString -- ^ full name
          -- more arguments follow
          -> IO ()
 sendMail fullname email title content attachmentcontent = do
+  tm <- getCurrentTime
   let mailto = BS.toString fullname ++ " <" ++ BS.toString email ++ ">"
+  logM "Kontrakcja.Mail" NOTICE $ formatTimeCombined tm ++ " " ++ mailto 
 #ifdef WINDOWS
   tmp <- getTemporaryDirectory
   let filename = tmp ++ "/Email-" ++ BS.toString email ++ ".eml"
