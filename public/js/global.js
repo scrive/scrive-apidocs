@@ -18,7 +18,7 @@ $(document).ready( function () {
             var c = $('input:checkbox[name="doccheck"]');
             c.attr("checked", !c.attr("checked"));
     });
-    if( typeof(window.documentid)!= "undefined" ) {
+    if(typeof(window.documentid)!= "undefined" ) {
         $.ajax({ url: "/pagesofdoc/" + documentid,
             success: function(data) {
                 $('#documentBox').html(data);

@@ -297,7 +297,7 @@ showSignatoryEntryStatus (SignatoryLink{signatorydetails = SignatoryDetails{sign
 
  -- FIXME: add info about date viewed, date signed, send reminder, change email
 showFileImages file = 
-   [ <img src=("/pages/" ++ show (fileid file) ++ "/" ++ show pageno) width="300"/> |
+   [ <img class="pagejpg" src=("/pages/" ++ show (fileid file) ++ "/" ++ show pageno) width="300"/> |
      pageno <- [1..(length (filejpgpages file))]]
 
 showFilesImages2 files = <span><% concatMap showFileImages files %></span> 
@@ -305,7 +305,9 @@ showFilesImages2 files = <span><% concatMap showFileImages files %></span>
 showDocumentBox document = 
     <div id="documentBox">
         {- <% map showFileImages (files document) %> -}
-        <div style="margin-left: auto; margin-right: auto; margin-top: 50px;">Förbereder avtal...</div>
+        <div class="pagejpga4 pagejpg">
+         <img class="waiting" src="/theme/images/wait30trans.gif"/>
+        </div>
     </div>
 
 {-
