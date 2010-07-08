@@ -58,11 +58,11 @@ sendMail fullnameemails title content attachmentcontent = do
   (Just handle_in,_,_,handle_process) <-
       -- createProcess (proc "sendmail" (["-i"] ++ mailtos)) { std_in = CreatePipe }
       createProcess (proc "./curl" ([ "--user"
-                                    , "skrivapa.info@gmail.com:lp09ikol"
+                                    , "info@skrivapa.se:kontrakcja"
                                     , "smtp://smtp.gmail.com:587"
                                     , "-k", "--ssl" -- , "-v", "-v"
                                     , "--mail-from"
-                                    , "<skrivapa.info@gmail.com>"
+                                    , "<info@skrivapa.se>"
                                     ] ++ rcpt)) { std_in = CreatePipe}
 #endif
   -- FIXME: encoding issues
