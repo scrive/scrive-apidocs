@@ -160,7 +160,7 @@ statsPage = do
 
 handleBecome :: Kontra Response
 handleBecome = do
-  Just (userid :: UserID) <- getDataFn $ (look "user" >>= readM)
+  (userid :: UserID) <- getDataFnM $ (look "user" >>= readM)
   sessionid <- update $ NewSession userid
   setHeaderM "Set-Cookie" ""
   startSession sessionid
@@ -170,8 +170,8 @@ handleBecome = do
 
 handleCreateUser :: Kontra Response
 handleCreateUser = do
-  Just email <- getDataFn $ (look "email")
-  Just fullname <- getDataFn $ (look "fullname")
+  email <- getDataFnM $ (look "email")
+  fullname <- getDataFnM $ (look "fullname")
   user <- update $ AddUser (ExternalUserID BS.empty) (BS.fromString fullname) (BS.fromString email)
   let letters =['a'..'z'] ++ ['0'..'9'] ++ ['A'..'Z']
   indexes <- liftIO $ replicateM 8 (randomRIO (0,length letters))

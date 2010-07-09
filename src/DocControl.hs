@@ -131,8 +131,7 @@ handleSign ctx@(Context {ctxmaybeuser, ctxhostpart}) =
 signDoc :: Context -> DocumentID -> SignatoryLinkID -> Kontra  Response
 signDoc ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) documentid 
                signatorylinkid1 = do
-  maybepressed <- getDataFn (look "sign" `mplus` look "sign2" `mplus` return "")
-  when (Prelude.null (fromJust maybepressed)) mzero -- quit here
+  getDataFnM (look "sign" `mplus` look "sign2")
   
   Just document <- update $ SignDocument documentid signatorylinkid1 ctxtime
   let isallsigned = all f (documentsignatorylinks document)
@@ -194,11 +193,9 @@ handleIssueShow :: Context -> Document -> Kontra Response
 handleIssueShow ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) document = do
   msum [ do
            methodM GET 
-           maybeissuedone <- getDataFn (look "issuedone")
-           let issuedone = isJust maybeissuedone
            freeleft <- freeLeftForUser user
            webHSP (pageFromBody ctx TopDocument kontrakcja 
-                                    (showDocument user document issuedone freeleft))
+                                    (showDocument user document False freeleft))
        , do
            methodM POST
            doc2 <- updateDocument ctx document
@@ -228,14 +225,19 @@ handleIssueShow ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpa
 -- (either from a POST or a GET)
 lookInputList :: String -> RqData [BSL.ByteString]
 lookInputList name
-    = do inputs <- asks fst
+    = do 
+#if MIN_VERSION_happstack_server(0,5,1)
+         inputs <- asks (\(a,b,c) -> a ++ b)
+#else
+         inputs <- asks fst
+#endif
          let isname (xname,(Input value _ _)) | xname == name = [value]
              isname _ = []
          return [value | k <- inputs, value <- isname k]
 
 getAndConcat :: String -> Kontra [BS.ByteString]
 getAndConcat field = do
-  Just values <- getDataFn $ lookInputList field
+  values <- getDataFnM $ lookInputList field
   return $ map concatChunks values
 
 updateDocument :: Context -> Document -> Kontra Document  
@@ -262,15 +264,12 @@ updateDocument ctx@Context{ctxtime} document = do
   
   doc2 <- update $ UpdateDocument ctxtime document 
           authordetails signatories daystosign
-
-  final <- getDataFn $ (look "final" `mplus` look "final2" `mplus` return "")
-  maybeshowvars <- getDataFn $ look "showvars"
-  when (isJust maybeshowvars) $ mzero
-  if not (Data.List.null (fromJust final))
-     then do
-          doc3 <- liftIO $ doctransPreparation2Pending ctx doc2
-          return doc3
-     else return doc2
+  
+  msum 
+     [ do getDataFnM (look "final" `mplus` look "final2")
+          liftIO $ doctransPreparation2Pending ctx doc2
+     , return doc2
+     ]
     
 
 handleIssueGet :: (MonadIO m) => Context -> m Response

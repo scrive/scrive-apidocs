@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -F -pgmFtrhsx #-}
 module User 
     ( module UserState
@@ -97,9 +98,15 @@ userLogin = do
 userLogin1 :: (MonadIO m) => ServerPartT m (Maybe User)
 userLogin1 = do
     maybetoken <- getDataFn (look "token") 
+#if MIN_VERSION_happstack_server(0,5,1)
+    case maybetoken of
+      Left _ -> return Nothing
+      Right token -> do
+#else
     case maybetoken of
       Nothing -> return Nothing
       Just token -> do
+#endif
 
               let req = "https://rpxnow.com/api/v2/auth_info" ++ 
                         "?apiKey=03bbfc36d54e523b2602af0f95aa173fb96caed9" ++
@@ -224,4 +231,6 @@ isSuperUser (Just user)
     -- FIXME: add Lukasz here
     | otherwise = False
 isSuperUser Nothing = False
+
+
                    

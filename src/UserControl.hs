@@ -12,6 +12,7 @@ import Control.Monad
 import User
 import AppView
 import Control.Monad.Trans
+import Misc
 
 
 handleUser ctx = 
@@ -22,10 +23,8 @@ handleUser ctx =
 
 g :: String -> Kontra BS.ByteString 
 g name = do
-  m <- getDataFn (look name)
-  case m of
-    Nothing -> mzero -- finishWith undefined -- ("expected " ++ name)
-    Just k -> return (BS.fromString k)
+  k <- getDataFnM (look name)
+  return (BS.fromString k)
 
 handleUserPost ctx@Context{ctxmaybeuser = Just user} = do
   fullname <- g "fullname"

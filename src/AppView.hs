@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts, FlexibleInstances, IncoherentInstances,
-             MultiParamTypeClasses, NamedFieldPuns #-}
+             MultiParamTypeClasses, NamedFieldPuns, CPP #-}
 {-# OPTIONS_GHC -F -pgmFtrhsx #-}
 module AppView where
 
@@ -41,6 +41,10 @@ data TopMenu = TopNew | TopDocument | TopAccount | TopNone | TopEmpty
 instance (XMLGenerator m) => (EmbedAsChild m User) where
   asChild user = <% BS.toString (userfullname user) ++ " <" ++ 
                  BS.toString (unEmail $ useremail user) ++ ">"  %>	
+
+#if MIN_VERSION_happstack_server(0,5,1)
+rqInputs rq = rqInputsQuery rq ++ rqInputsBody rq
+#endif
 
 instance (XMLGenerator m) => (EmbedAsChild m Request) where
   asChild rq = <% <code>

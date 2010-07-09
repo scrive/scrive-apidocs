@@ -16,6 +16,7 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Object.Json as Json
 import qualified Network.Curl as Curl
 import Data.Maybe
+import Data.Either
 import Happstack.Data.IxSet as IxSet
 import Foreign.C.Types
 import Foreign.Ptr
@@ -39,14 +40,22 @@ selectFormAction :: (MonadPlus m,ServerMonad m) => [(String,m a)] -> m a
 selectFormAction [] = mzero
 selectFormAction ((button,action):rest) = do
   maybepressed <- getDataFn (look button)
+#if MIN_VERSION_happstack_server(0,5,1)
+  either (\_ -> selectFormAction rest) (\_ -> action) maybepressed
+#else
   if isJust maybepressed
      then action
      else selectFormAction rest
+#endif
 
 guardFormAction :: (ServerMonad m, MonadPlus m) => String -> m ()
 guardFormAction button = do
   maybepressed <- getDataFn (look button)
+#if MIN_VERSION_happstack_server(0,5,1)
+  either (\_ -> mzero) (\_ -> return ()) maybepressed
+#else
   guard (isJust maybepressed)
+#endif
 
 instance (EmbedAsChild m String) => (EmbedAsChild m BSL.ByteString) where
     asChild = asChild . BSL.toString
@@ -194,9 +203,13 @@ safehead _ (x:_) = x
 
 getDataFnM fun = do
   m <- getDataFn fun
+#if MIN_VERSION_happstack_server(0,5,1)
+  either (\_ -> mzero) (return) m
+#else
   case m of
     Just x -> return x
     Nothing -> mzero
+#endif
 
 
 pathdb get action = path $ \id -> do
