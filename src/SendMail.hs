@@ -37,15 +37,18 @@ import System.Log.Logger
 import Happstack.Util.LogFormat
 import Data.Time.Clock
 
-sendMail :: [(BS.ByteString,BS.ByteString)] -- ^ fullname + email address pairs
-         -> BS.ByteString -- ^ title
+type Email = BS.ByteString
+type Fullname = BS.ByteString
+sendMail :: BS.ByteString -- ^ title
+         -> [(Fullname,Email)] -- ^ fullname + email address pairs
          -> BS.ByteString -- ^ html contents
-         -> BS.ByteString -- ^ attached pdf contents
+         -> [(BS.ByteString,BS.ByteString)] -- ^ filename + file contents 
          -- more arguments follow
          -> IO ()
 sendMail fullnameemails title content attachmentcontent = do
   tm <- getCurrentTime
   let mailtos = map fmt fullnameemails 
+      -- ("Gracjan Polak","gracjan@skrivapa.se") => "Gracjan Polak <gracjan@skrivapa.se>"
       fmt (fullname,email) = BS.toString fullname ++ " <" ++ BS.toString email ++ ">"
   logM "Kontrakcja.Mail" NOTICE $ formatTimeCombined tm ++ " " ++ concat (intersperse ", " mailtos)
 #ifdef WINDOWS
