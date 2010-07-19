@@ -37,6 +37,7 @@ import System.Log.Logger
 import Happstack.Util.LogFormat
 import Data.Time.Clock
 
+{-
 type Email = BS.ByteString
 type Fullname = BS.ByteString
 sendMail :: BS.ByteString -- ^ title
@@ -45,6 +46,7 @@ sendMail :: BS.ByteString -- ^ title
          -> [(BS.ByteString,BS.ByteString)] -- ^ filename + file contents 
          -- more arguments follow
          -> IO ()
+-}
 sendMail fullnameemails title content attachmentcontent = do
   tm <- getCurrentTime
   let mailtos = map fmt fullnameemails 
@@ -62,7 +64,7 @@ sendMail fullnameemails title content attachmentcontent = do
       -- createProcess (proc "sendmail" (["-i"] ++ mailtos)) { std_in = CreatePipe }
       createProcess (proc "./curl" ([ "--user"
                                     , "info@skrivapa.se:kontrakcja"
-                                    , "smtp://smtp.gmail.com:587"
+                                     , "smtp://smtp.gmail.com:587"
                                     , "-k", "--ssl" -- , "-v", "-v"
                                     , "--mail-from"
                                     , "<info@skrivapa.se>"
