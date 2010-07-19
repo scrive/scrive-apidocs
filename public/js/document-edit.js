@@ -14,6 +14,7 @@ function signatoryadd()
     var signatorylist = $( "#signatorylist" );
     var li = $("#signatory_template").clone();
     signatorylist.append(li);
+    enableInfoText(li);
     li.hide();
     li.slideDown("slow");
     return false;
@@ -33,6 +34,7 @@ $(document).ready( function () {
     $("#dialog-confirm-signinvite").hide();
     $("#dialog-confirm-sign").hide();
     $("#signinvite").click(function() {
+         var button = $(this);
          var mrxs = $("form input[name='signatoryname']");
          var tot = "";
          mrxs.each(function(index) {
@@ -48,10 +50,10 @@ $(document).ready( function () {
                      modal: true,
                      buttons: {
                      'Underteckna': function() {
-                         // FIXME: should have 'final' here but I don't know how to put in
-                         // in succesful set of the form
-                         document.form['final2'].value = 'something';
-                         $("#form").submit();
+                         var form = $("#form");
+                         var name = button.attr("name");
+                         form.append("<input type='hidden' name='" + name + "' value='automatic'>");
+                         form.submit();
                      },
                          'Avbryt': function() {
                              $(this).dialog('close');
@@ -62,6 +64,7 @@ $(document).ready( function () {
          return false;});
 
     $("#sign").click(function() {
+         var button = $(this);
          $("#dialog-confirm-sign").dialog({
                  resizable: false,
                      height: 280,
@@ -69,10 +72,10 @@ $(document).ready( function () {
                      modal: true,
                      buttons: {
                      'Underteckna': function() {
-                         // FIXME: should have 'final' here but I don't know how to put in
-                         // in succesful set of the form
-                         document.form['sign2'].value = 'something';
-                         $("#form").submit();
+                         var form = $("#form");
+                         var name = button.attr("name");
+                         form.append("<input type='hidden' name='" + name + "' value='automatic'>");
+                         form.submit();
                      },
                          'Avbryt': function() {
                              $(this).dialog('close');
@@ -92,23 +95,5 @@ $(document).ready( function () {
  $("#footerContainer").ajaxComplete( function() { alert("Ajax complete");});
  */
 
-    /*
-    if( issuedone ) {
-       $("#dialog-confirm-signinvite-done").dialog({
-                 resizable: false,
-                     height: 240,
-                     width: 350,
-                     modal: true,
-                     buttons: {
-                     'Skapa ett nytt avtal': function() {
-                             document.location.href = "/"; 
-                         },
-                     'Avbryt': function() {
-                             $(this).dialog('close');
-                         }
-                     }
-                 });
-    }
-    */
 });
 
