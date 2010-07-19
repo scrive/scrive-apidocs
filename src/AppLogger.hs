@@ -9,8 +9,8 @@ import System.Log.Logger
     )
 import Control.Exception.Extensible (bracket)
 import System.Log.Handler (close)
-import System.Log.Handler.Simple (fileHandler, streamHandler, GenericHandler)
-import System.IO (stdout,Handle)
+import System.Log.Handler.Simple (fileHandler, streamHandler, GenericHandler(..))
+import System.IO (stdout,Handle,hSetEncoding,utf8,hClose)
 
 -- | Opaque type covering all information needed to teardown the logger.
 data LoggerHandle = LoggerHandle { 
@@ -20,11 +20,16 @@ data LoggerHandle = LoggerHandle {
     , mailLogHandler   :: GenericHandler Handle
     }
 
+
 setupLogger = do
     appLog <- fileHandler "app.log" INFO
     accessLog <- fileHandler "access.log" INFO
     mailLog <- fileHandler "mail.log" INFO
     stdoutLog <- streamHandler stdout NOTICE
+
+    hSetEncoding (privData appLog) utf8
+    hSetEncoding (privData accessLog) utf8
+    hSetEncoding (privData mailLog) utf8
 
     -- Root Log
     updateGlobalLogger
