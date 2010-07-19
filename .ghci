@@ -1,5 +1,11 @@
-:set -DMIN_VERSION_template_haskell(a,b,c)=1 
-:set -DMIN_VERSION_happstack_server(a,b,c)=1 
+:set -DMIN_VERSION_template_haskell(a,b,c)=1
+:set -DMIN_VERSION_happstack_server(a,b,c)=0
+:set -package happstack-0.5.0.2 
+:set -package happstack-ixset-0.5.0.2
+:set -package happstack-state-0.5.0.2
+:set -package happstack-util-0.5.0.2
+:set -package happstack-data-0.5.0.2
+:set -package happstack-server-0.5.0.2
 :set -isrc -ipdfseal/src
 :set -DWINDOWS
 :set -XTemplateHaskell

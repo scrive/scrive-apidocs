@@ -222,7 +222,7 @@ listDocuments documents =
        <tr>
         <td colspan="7" style="text-align: right; overflow: hidden;">
           <div class="floatleft">
-           <input type="submit" class="button" name="archive" value="Archive selected"/>
+           <input type="submit" class="button" name="archive" value="Radera"/>
           </div>
           <div class="floatright">
            <img src="/theme/images/status_draft.png"/> Utkast
@@ -269,14 +269,18 @@ showSignatoryEntryForEdit2 :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraL
                            -> String -> XMLGenT m (HSX.XML m)
 showSignatoryEntryForEdit2 idx signatoryname signatorycompany signatorynumber signatoryemail = 
     <li id=idx>
-      <label>Namn på avtalspart</label><br/> 
-      <input name="signatoryname" type="text" value=signatoryname/><br/>
-      <label>Titel, företag</label><br/>
-      <input name="signatorycompany" type="text" value=signatorycompany/><br/>
-      <label>Orgnr/Persnr</label><br/>
-      <input name="signatorynumber" type="text" value=signatorynumber/><br/>
-      <label>Personens e-mail</label><br/>
-      <input name="signatoryemail" type="text" value=signatoryemail/><br/>
+      {- <label>Namn på avtalspart</label><br/> -}
+      <input name="signatoryname" type="text" value=signatoryname
+             infotext="Namn på avtalspart"/><br/>
+      {- <label>Titel, företag</label><br/> -}
+      <input name="signatorycompany" type="text" value=signatorycompany
+             infotext="Titel, företag"/><br/>
+      {- <label>Orgnr/Persnr</label><br/> -}
+      <input name="signatorynumber" type="text" value=signatorynumber
+             infotext="Orgnr/Persnr"/><br/>
+      {- <label>Personens e-mail</label><br/> -}
+      <input name="signatoryemail" type="text" value=signatoryemail
+             infotext="Personens e-mail"/><br/>
       <a onclick="return signatoryremove(this);" href="#">Ta bort</a>
       {- days to sign:
          Antal dagar att skriva på -}
@@ -382,14 +386,18 @@ showDocument user document issuedone freeleft =
         <% if documentstatus document == Preparation
            then 
              <div id="persons">
-              <label>Ditt namn</label><br/> 
-              <input name="authorname" type="text" value=(signatoryname $ documentauthordetails document)/><br/>
-              <label>Titel, företag</label><br/>
-              <input name="authorcompany" type="text" value=(signatorycompany $ documentauthordetails document)/><br/>
-              <label>Ditt Orgnr/Persnr</label><br/>
-              <input name="authornumber" type="text" value=(signatorynumber $ documentauthordetails document)/><br/>
-              <label>Din e-mail</label><br/>
-              <input name="authoremail" type="text" value=(signatoryemail $ documentauthordetails document)/><br/>
+              {- <label>Ditt namn</label><br/> -}
+              <input name="authorname" type="text" value=(signatoryname $ documentauthordetails document)
+                     infotext="Ditt namn"/><br/>
+              {- <label>Titel, företag</label><br/> -}
+              <input name="authorcompany" type="text" value=(signatorycompany $ documentauthordetails document)
+                     infotext="Titel, företag"/><br/>
+              {- <label>Ditt Orgnr/Persnr</label><br/> -}
+              <input name="authornumber" type="text" value=(signatorynumber $ documentauthordetails document)
+                     infotext="Ditt Orgnr/Persnr"/><br/>
+              {- <label>Din e-mail</label><br/> -}
+              <input name="authoremail" type="text" value=(signatoryemail $ documentauthordetails document)
+                     infotext="Din e-mail"/><br/>
 
               <ol id="signatorylist">
                <% map showSignatoryEntryForEdit (if null (documentsignatorylinks document)
@@ -424,7 +432,6 @@ showDocument user document issuedone freeleft =
               then <span>
                     Dagar kvar: <input type="text" name="daystosign" value=(documentdaystosign document) maxlength="2" size="2"/><br/>
                     <input class="bigbutton" type="submit" name="final" value="Underteckna" id="signinvite"/>
-                    <input type="hidden" name="final2" value=""/>
                     <br/>
                     <input class="secbutton" type="submit" name="save" value="Spara till senare"/>
                    </span>
@@ -504,7 +511,6 @@ showDocumentForSign action document authorname invitedname wassigned =
 
                  {- Avvisa - gray FIXME -}
 
-                   <input type="hidden" name="sign2" value=""/>
                    <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign"/>
                  <p>Jag vill veta mer <a href="/about" target="_blank">om SkrivaPå</a>.
                  </p>

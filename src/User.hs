@@ -109,7 +109,7 @@ userLogin1 = do
 #endif
 
               let req = "https://rpxnow.com/api/v2/auth_info" ++ 
-                        "?apiKey=03bbfc36d54e523b2602af0f95aa173fb96caed9" ++
+                        "?apiKey=a348dd93f1d78ae11c443574d73d974299007c00" ++
                         "&token=" ++ token
               
               {-
@@ -163,7 +163,7 @@ provideRPXNowLink = do -- FIXME it was guarded by method GET but it didn't help
       FIXME: watch out for protocol here
     -}
     let serverurl = "http://" ++ BS.toString host ++ rqUri rq
-    let url = "https://kontrakcja.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode serverurl
+    let url = "https://skrivapa.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode serverurl
     v <- webHSP $ seeOtherXML url
     seeOther url (v)
 
@@ -171,7 +171,7 @@ rpxSignInLink (Context {ctxhostpart}) title url = do
     -- FIXME: this is very simple url handling....
     let fullurl = ctxhostpart ++ url
     <a class="rpxnow" onclick="return false;"
-       href=("https://kontrakcja.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode fullurl)><% title %></a> 
+       href=("https://skrivapa.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode fullurl)><% title %></a> 
 
 {-
 maybeSignInLink
@@ -186,7 +186,7 @@ maybeSignInLink (Context {ctxmaybeuser = Nothing, ctxhostpart}) title url = do
     -- FIXME: this is very simple url handling....
     let fullurl = ctxhostpart ++ url
     <a class="rpxnow" onclick="return false;"
-       href=("https://kontrakcja.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode fullurl)><% title %></a> 
+       href=("https://skrivapa.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode fullurl)><% title %></a> 
 -}
 maybeSignInLink (Context {}) title url = do
     <a href=url><% title %></a> 
@@ -196,7 +196,7 @@ maybeSignInLink2 (Context {ctxmaybeuser = Nothing, ctxhostpart}) title url class
     -- FIXME: this is very simple url handling....
     let fullurl = ctxhostpart ++ url
     <a class=("rpxnow " ++ class1) onclick="return false;" class=class1
-       href=("https://kontrakcja.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode fullurl)><% title %></a> 
+       href=("https://skrivapa.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode fullurl)><% title %></a> 
 -}
 maybeSignInLink2 :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) => Context -> String 
                  -> KontraLink -> String -> XMLGenT m (HSX.XML m)
@@ -231,6 +231,3 @@ isSuperUser (Just user)
     -- FIXME: add Lukasz here
     | otherwise = False
 isSuperUser Nothing = False
-
-
-                   

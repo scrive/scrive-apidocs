@@ -131,7 +131,7 @@ handleSign ctx@(Context {ctxmaybeuser, ctxhostpart}) =
 signDoc :: Context -> DocumentID -> SignatoryLinkID -> Kontra  Response
 signDoc ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) documentid 
                signatorylinkid1 = do
-  getDataFnM (look "sign" `mplus` look "sign2")
+  getDataFnM (look "sign")
   
   Just document <- update $ SignDocument documentid signatorylinkid1 ctxtime
   let isallsigned = all f (documentsignatorylinks document)
@@ -264,9 +264,9 @@ updateDocument ctx@Context{ctxtime} document = do
   
   doc2 <- update $ UpdateDocument ctxtime document 
           authordetails signatories daystosign
-  
+
   msum 
-     [ do getDataFnM (look "final" `mplus` look "final2")
+     [ do getDataFnM (look "final")
           liftIO $ doctransPreparation2Pending ctx doc2
      , return doc2
      ]
@@ -301,6 +301,7 @@ convertPdfToJpgPages content = do
                , "-dBATCH"
                , "-dNOPAUSE"
                , "-dTextAlphaBits=4"
+               , "-r144"
                , sourcepath
                ]
   let pathofx x = tmppath ++ "/output-" ++ show x ++ ".jpg"
