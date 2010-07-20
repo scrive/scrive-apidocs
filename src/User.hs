@@ -109,7 +109,7 @@ userLogin1 = do
 #endif
 
               let req = "https://rpxnow.com/api/v2/auth_info" ++ 
-                        "?apiKey=a348dd93f1d78ae11c443574d73d974299007c00" ++
+                        "?apiKey=03bbfc36d54e523b2602af0f95aa173fb96caed9" ++ -- a348dd93f1d78ae11c443574d73d974299007c00" ++
                         "&token=" ++ token
               
               {-
@@ -163,7 +163,7 @@ provideRPXNowLink = do -- FIXME it was guarded by method GET but it didn't help
       FIXME: watch out for protocol here
     -}
     let serverurl = "http://" ++ BS.toString host ++ rqUri rq
-    let url = "https://skrivapa.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode serverurl
+    let url = "https://kontrakcja.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode serverurl
     v <- webHSP $ seeOtherXML url
     seeOther url (v)
 
@@ -171,7 +171,7 @@ rpxSignInLink (Context {ctxhostpart}) title url = do
     -- FIXME: this is very simple url handling....
     let fullurl = ctxhostpart ++ url
     <a class="rpxnow" onclick="return false;"
-       href=("https://skrivapa.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode fullurl)><% title %></a> 
+       href=("https://kontrakcja.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode fullurl)><% title %></a> 
 
 {-
 maybeSignInLink
@@ -226,8 +226,8 @@ gracjansopenid = BS.fromString "https://www.google.com/accounts/o8/id?id=AItOawm
 lukasopenid = BS.fromString "https://www.google.com/accounts/o8/id?id=AItOawlNiCZ_LzlrZ7bgA2Yix_L3XP8-pt_cUR4"
 
 isSuperUser (Just user) 
+    -- rpxnow changes ID depending from on application
     | userexternalids user == [ExternalUserID gracjansopenid] = True
     | userexternalids user == [ExternalUserID lukasopenid] = True
-    -- FIXME: add Lukasz here
     | otherwise = False
 isSuperUser Nothing = False

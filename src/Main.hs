@@ -83,7 +83,6 @@ main = withLogger $ do
   let progName = "kontrakcja"
 
   args <- getArgs
-  logM "Happstack.Server" NOTICE (show args)
 
   appConf <- case parseConfig args of
     (Left e) -> do logM "Happstack.Server" ERROR (unlines e)

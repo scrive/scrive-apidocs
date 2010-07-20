@@ -24,7 +24,7 @@ $(deriveAll [''Eq, ''Ord, ''Default]
   [d|
    
       newtype UserID = UserID Int
-      newtype ExternalUserID = ExternalUserID BS.ByteString                  
+      newtype ExternalUserID = ExternalUserID { unExternalUserID :: BS.ByteString }
       newtype FlashMessage = FlashMessage BS.ByteString
       newtype Email = Email { unEmail :: BS.ByteString }
                        

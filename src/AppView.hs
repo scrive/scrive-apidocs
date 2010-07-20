@@ -210,7 +210,7 @@ errorReport (Context {ctxmaybeuser}) request =
    <hr/>
    <p>Information useful to developers:</p>
    <% case ctxmaybeuser of
-           Just user -> <p>Logged in as: <% user %></p>
+           Just user -> <p>Logged in as: <% user %> (<% map unExternalUserID (userexternalids user) %>)</p>
            Nothing -> <p>Not logged in</p>
    %>
    <p><% request %></p>
