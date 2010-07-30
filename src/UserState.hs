@@ -17,7 +17,7 @@ import Misc
 import Control.Monad
 import Happstack.Server.SimpleHTTP
 import Happstack.Util.Common
-
+import Data.List
 
 
 $(deriveAll [''Eq, ''Ord, ''Default]
@@ -222,7 +222,9 @@ getUserStats = do
 getAllUsers :: Query Users [User]
 getAllUsers = do
   users <- ask
-  return (toList users)
+  let usersSorted = sortBy compareuserfullname (toList users)
+      compareuserfullname a b = compare (userfullname a) (userfullname b)
+  return usersSorted
 
 getUserFlashMessages :: UserID -> Update Users [FlashMessage]
 getUserFlashMessages userid = do
