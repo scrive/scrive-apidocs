@@ -125,7 +125,7 @@ userLogin1 = do
                       FIXME: Take care of the situation when not all data is available
                      -}
     
-              let Just json = Json.decode (BSL.fromString rpxdata) 
+              let Just json = Json.decode (BS.fromString rpxdata) 
                   Just jsonMapping = fromMapping json 
                   Just profileMapping = lookupMapping (BS.fromString "profile") jsonMapping
                   verifiedEmail = maybe BS.empty unJsonString $ 
