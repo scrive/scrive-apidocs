@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, 
              NamedFieldPuns, ScopedTypeVariables, CPP
  #-}
-module AppControl (appHandler, handleRoutes) where
+module AppControl  where
 
 import AppState
 import AppView
@@ -39,6 +39,7 @@ import System.Random
 import System.Process
 import System.IO
 import System.Directory
+import Data.List
 
 handleRoutes ctx@Context{ctxmaybeuser} = msum $
     [ nullDir >> webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx))
@@ -75,6 +76,7 @@ handleRoutes ctx@Context{ctxmaybeuser} = msum $
             , toIO ctx $ dir "become" $ handleBecome
             , toIO ctx $ dir "createuser" $ handleCreateUser
             , toIO ctx $ dir "db" $ msum [ methodM GET >> indexDB
+                                         , dir "cleanup" $ databaseCleanup
                                          , fileServe [] "_local/kontrakcja_state"
                                          ]
             ]
@@ -196,3 +198,25 @@ indexDB :: Kontra Response
 indexDB = do
   contents <- liftIO $ getDirectoryContents "_local/kontrakcja_state"
   webHSP (AppView.databaseContents contents)
+
+databaseCleanupWorker :: IO [FilePath]
+databaseCleanupWorker = do
+  contents <- getDirectoryContents "_local/kontrakcja_state"
+  let checkpoints = filter ("checkpoints-" `isPrefixOf`) contents
+  let events = filter ("events-" `isPrefixOf`) contents
+  let lastcheckpoint = last (sort checkpoints)
+  let cutoffevent = "events-" ++ drop 12 lastcheckpoint
+  let eventsToRemove = filter (< cutoffevent) events 
+  let checkpointsToRemove = filter (< lastcheckpoint) checkpoints
+  -- print (eventsToRemove)
+  -- print (checkpointsToRemove)
+  mapM_ (\x -> removeFile ("_local/kontrakcja_state/" ++ x)) (eventsToRemove ++ checkpointsToRemove)
+  getDirectoryContents "_local/kontrakcja_state"
+
+databaseCleanup :: Kontra Response
+databaseCleanup = do
+  -- dangerous, cleanup all old files, where old means chechpoints but the last one
+  -- and all events that have numbers less than last checkpoint
+  contents <- liftIO databaseCleanupWorker
+  webHSP (AppView.databaseContents contents)
+  
