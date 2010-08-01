@@ -26,6 +26,7 @@ import qualified Data.Map as Map
 import Misc
 import HSP.XML
 import KontraLink
+import System.Directory
 
 instance (XMLGenerator m) => (EmbedAsChild m HeaderPair) where
   asChild (HeaderPair name value) = 
@@ -443,3 +444,28 @@ loginPageView ctx =
   </div>
 
 
+developmentWrapper :: (EmbedAsChild (HSPT' IO) body) 
+                   => String 
+                   -> body 
+                   -> HSP XML
+developmentWrapper title body =
+    withMetaData html4Strict $
+    <html>
+     <head>
+      <title><% title %></title>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+     </head>
+     <body>
+      <% body %>
+     </body>
+    </html>
+
+databaseContents :: [String] -> HSP XML
+databaseContents contents = developmentWrapper "All database files" 
+  <div>
+     <h1>All database files</h1>
+     <ul>
+      <% map showOneFile contents %>
+     </ul>
+  </div>
+  where showOneFile file = <li><a href=file><% file %></a></li>

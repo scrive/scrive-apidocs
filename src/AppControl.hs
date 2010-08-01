@@ -38,6 +38,7 @@ import SendMail
 import System.Random
 import System.Process
 import System.IO
+import System.Directory
 
 handleRoutes ctx@Context{ctxmaybeuser} = msum $
     [ nullDir >> webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx))
@@ -73,6 +74,9 @@ handleRoutes ctx@Context{ctxmaybeuser} = msum $
             [ toIO ctx $ dir "stats" $ statsPage
             , toIO ctx $ dir "become" $ handleBecome
             , toIO ctx $ dir "createuser" $ handleCreateUser
+            , toIO ctx $ dir "db" $ msum [ methodM GET >> indexDB
+                                         , fileServe [] "_local/kontrakcja_state"
+                                         ]
             ]
        else [])
     ++ [ fileServe [] "public"] 
@@ -185,3 +189,10 @@ handleCreateUser = do
   response <- webHSP (seeOtherXML "/stats")
   seeOther "/stats" response
   
+handleDownloadDatabase :: Kontra Response
+handleDownloadDatabase = do fail "nothing"
+  
+indexDB :: Kontra Response
+indexDB = do
+  contents <- liftIO $ getDirectoryContents "_local/kontrakcja_state"
+  webHSP (AppView.databaseContents contents)
