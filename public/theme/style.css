@@ -253,6 +253,7 @@ a.button {
     font-weight: bold;
     height: 20px;
     line-height: 20px;
+    white-space:nowrap;
 }
 
 a.secbutton {
@@ -281,6 +282,7 @@ a.secbutton {
     height: 20px;
     line-height: 20px;
     width: 120px;
+    white-space:nowrap;
 }
 
 a.bigbutton {
@@ -310,17 +312,18 @@ a.bigbutton {
     height: 35px;
     line-height: 35px;
     width: 180px;
+    white-space:nowrap;
 }
 
 #documentBox {
     overflow: auto;
     height: 540px;
-    width: 800px;
+    width: 785px;
     background-color: #999;
 }
 
 .pagejpg {
-    width: 770px;
+    width: 755px;
     align: center;
     margin: 6px;
     border: 1px solid black;
@@ -329,8 +332,8 @@ a.bigbutton {
 
 .pagejpga4
 {
-    height: 990px;
-    width: 770px;
+    height: 970px;
+    width: 755px;
 }
 
 img.waiting
@@ -435,7 +438,7 @@ img.waiting
 {
     margin-left: auto;
     margin-right: auto;
-    width: 900px;
+    width: 1000px;
 }
 
 .inlinebox

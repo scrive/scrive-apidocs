@@ -459,10 +459,12 @@ showDocumentPageHelper action document helpers title content =
     </div>
  
     <table class="docview">
+     <col/> <col width="25px"/> <col/>
      <tr>
       <td>
        <% showDocumentBox document %>
       </td>
+      <td/>
       <td> 
        <p class="headline"><% title %><br/> 
            <small><a href=(LinkIssueDocPDF document) target="_blank">Öppna som PDF</a></small>
