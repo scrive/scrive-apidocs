@@ -44,6 +44,11 @@ function disableInfoText(where)
     inputs.focus();
 }
 
+function resizeToWindow()
+{
+    $("#mainContainer").height( $(this).height() - 130 );
+}
+
 $(document).ready( function () {
     $('.flashmsgbox').delay(5000).fadeOut();
     $('.flashmsgbox').click( function() { 
@@ -68,7 +73,6 @@ $(document).ready( function () {
             }
         });
     }
+    $(window).resize(resizeToWindow);
+    $(window).resize();
 });
-
-
-
