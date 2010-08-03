@@ -52,6 +52,8 @@ Executable kontrakcja-server
  Build-Depends: base >= 4 && < 5, syb, dataenc
  Build-Depends: syb-with-class, binary, old-locale, old-time
  Build-Depends: network, HTTP, data-object-json, bytestring, curl, data-object
+ Build-Depends: HaXml == 1.13.*
+ Build-Depends: parallel == 2.2.*
  Main-Is: Main.hs
 
  Extensions: TemplateHaskell, TypeFamilies, DeriveDataTypeable,
