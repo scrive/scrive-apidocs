@@ -38,7 +38,8 @@ landpageSignInviteView ctx document =
      <p class="headline">Avtal undertecknat!</p>
      
      <p>Du har undertecknat avtalet och en inbjudan har nu skickats till 
-     <span id="mrx"><% concatSignatories (map signatorydetails $ documentsignatorylinks document) %></span>.</p>
+      <strong><span id="mrx"><% concatSignatories (map signatorydetails $ documentsignatorylinks document) %></span></strong>.
+     </p>
 
      <p><a class="bigbutton" href="/">Skapa ett nytt avtal</a></p>
      <p><a class="secbutton" href="/issue">Avsluta</a></p>
@@ -53,7 +54,7 @@ landpageSignedView ctx document signatorylinkid =
     <div class="centerdivnarrow">
       <p class="headline">Avtalet <strong><% documenttitle document %></strong> är färdigställt!</p>
 
-      <p>Alla parter har undertecknat avtalet och du har fått en låst PDF kopia av avtalet i din inkorg. Vi rekommenderar att du sparar avtalet online via vår tjänst. Då kommer du ha tillgång till avtalet oavsett vad som händer med breven i din inkorg. Det kostar ingenting och är du snabb tar det endast ca 15-60 sekunder att spara avtalet.</p>
+      <p>Alla parter har undertecknat avtalet och du har fått en PDF kopia av avtalet i din inkorg. Vi rekommenderar att du sparar avtalet online via vår tjänst. Då kommer du ha tillgång till avtalet oavsett vad som händer med breven i din inkorg. Det kostar ingenting och är du snabb tar det endast ca 60 sekunder att spara avtalet.</p>
 
      <a class="bigbutton" href=("/landpage/signedsave/" ++ (show $ documentid document) ++ "/" ++ show signatorylinkid)>Spara avtal</a>
      <a class="secbutton" href=("/sign/" ++ (show $ documentid document) ++ "/" ++ show signatorylinkid)>Nej tack, jag är klar</a>
@@ -68,7 +69,7 @@ landpageLoginForSaveView ctx document signatorylinkid =
         <a class="headline">Login</a>
         <p>För att du ska kunna komma åt ditt avtal i framtiden skapar vi ett konto till dig.</p>
 
-        <p>Vår filosofi är att göra det så enkelt som möjligt för våra kunder. Därför använder vi openID som inloggningsmetod. Då behöver du inte krångla med att komma ihåg ytterligare ett användarnamn och en till kod. Välj den tjänst du vill använda för att logga in hos oss i framtiden.</p>
+        <p>Vår filosofi är att göra det så enkelt som möjligt för våra kunder. Därför använder vi OpenID som inloggningsmetod. Då behöver du inte krångla med att komma ihåg ytterligare ett användarnamn och en till kod. Välj den tjänst du vill använda för att logga in hos oss i framtiden.</p>
 
         <p><% loginlink %></p>
        </div>
@@ -89,7 +90,7 @@ landpageDocumentSavedView (ctx@Context { ctxmaybeuser = Just user }) signatoryli
 welcomeEmail :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 welcomeEmail fullname =
     <div>
-      <p>Hej <% fullname %>,</p>
+      <p>Hej <strong><% fullname %></strong>,</p>
       <p>Tack för att du har skapat ett konto hos oss! Vi hoppas att du kommer att bli nöjd med våra tjänster.</p>
       <p>Jag heter Lukas Duczko och är VD på SkrivaPå och det här mailet är skickat direkt från min mailadress. Tveka inte att höra av dig med åsikter, feedback eller bara en enkel hälsning.</p>
       <p>MVH<br/>
@@ -107,7 +108,7 @@ documentIssuedFlashMessage :: (MonadIO m) => Document -> m FlashMessage
 documentIssuedFlashMessage document = liftM (FlashMessage . xxx) $ webHSP1
     <div>
      Du har undertecknat avtalet och en inbjudan har nu skickats till 
-     <span id="mrx"><% concatSignatories (map signatorydetails $ documentsignatorylinks document) %></span>.
+     <strong><span id="mrx"><% concatSignatories (map signatorydetails $ documentsignatorylinks document) %></span></strong>.
     </div>
 
 documentSavedForLaterFlashMessage :: (MonadIO m) => Document -> m FlashMessage
@@ -213,7 +214,7 @@ listDocuments documents =
         <td></td> {- status icon -}
         <td>Personer</td>
         <td>Avtal</td>
-        <td>Dagar kvar</td>
+        <td>Förfallodatum</td>
         <td>Senaste handelse</td>
         <td></td>
        </tr>
@@ -227,7 +228,7 @@ listDocuments documents =
           <div class="floatright">
            <img src="/theme/images/status_draft.png"/> Utkast
            <img src="/theme/images/status_rejected.png"/> Avbrutet
-           <img src="/theme/images/status_timeout.png"/> Time Out
+           <img src="/theme/images/status_timeout.png"/> Förfallet
            <img src="/theme/images/status_pending.png"/> Väntar
            <img src="/theme/images/status_viewed.png"/> Granskat
            <img src="/theme/images/status_signed.png"/> Undertecknat
@@ -369,7 +370,7 @@ showDocument user document issuedone freeleft =
 
                 <div id="dialog-confirm-signinvite-done" title="Avtal undertecknat!">
 	        <p> Du har undertecknat avtalet och en inbjudan har nu skickats till 
-                        <span id="mrx"><% concatSignatories (map signatorydetails $ documentsignatorylinks document) %></span>.</p>
+                        <strong><span id="mrx"><% concatSignatories (map signatorydetails $ documentsignatorylinks document) %></span></strong>.</p>
 
           </div>
         </span>
@@ -416,15 +417,7 @@ showDocument user document issuedone freeleft =
          <hr/>
 
          <strong>2. Pris</strong><br/>
-         Pris: 20kr exkl moms<br/>
-         Betalningssätt: 
-         <% if documentchargemode document == ChargeInitialFree
-                then <% show (freeleft+1) ++ " fria avtal kvar" %>
-                else <% "Faktura" %>
-         {- Namnteckning: [Enkel, 10 kr/st] -}
-         {- Antal: ”2st” -}
-         %><br/>
-         OBS! Du betalar endast när alla parter undertecknat.
+         20kr exkl moms<br/>
          <hr/>
          <strong>3. Avtal</strong><br/>
          <% 
@@ -541,7 +534,7 @@ invitationMailXml (Context {ctxmaybeuser = Just user, ctxhostpart})
       <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
      </head>
      <body>
-      <p>Hej <% personname %>,</p>
+      <p>Hej <strong><% personname %></strong>,</p>
       <p></p>
       <p><strong><% creatorname %></strong> har bjudit in dig att skriva på avtalet 
          <strong><% documenttitle %></strong>. Klicka på länken nedan för att öppna avtalet. 
@@ -582,7 +575,7 @@ closedMailXml (Context {ctxhostpart})
       <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
      </head>
      <body>
-      <p>Hej <% personname %>,</p>
+      <p>Hej <strong><% personname %></strong>,</p>
       <p>Avtalet <strong><% documenttitle %></strong> har undertecknats av alla parter. 
          Avtalet är nu lagligt bindande.</p>
       
@@ -625,7 +618,7 @@ closedMailAuthorXml (Context {ctxhostpart})
       <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
      </head>
      <body>
-      <p>Hej <% personname %>,</p>
+      <p>Hej <strong><% personname %></strong>,</p>
       <p>Avtalet <strong><% documenttitle %></strong> har undertecknats av alla parter. 
          Avtalet är nu lagligt bindande.</p>
       
@@ -651,8 +644,7 @@ closedMailAuthor ctx emailaddress personname documenttitle documentid = do
 poweredBySkrivaPaPara :: (XMLGenerator m) => XMLGenT m (HSX.XML m)
 poweredBySkrivaPaPara = 
     <p>
-      {- Med vänliga hälsningar<br/> -}
-     <small>Powered by <a href="http://skrivapa.se/">SkrivaPå</a></small>
+     <small>MVH<br/><a href="http://skrivapa.se/">SkrivaPå</a></small>
     </p>
 
 passwordChangeMailXml :: (XMLGenerator m) 
@@ -666,7 +658,7 @@ passwordChangeMailXml emailaddress personname newpassword =
       <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
      </head>
      <body>
-      <p>Hej <% personname %>,</p>
+      <p>Hej <strong><% personname %></strong>,</p>
 
       <p>Jag heter Lukas Duczko och är VD på SkrivaPå. Tack för att du har skapat ett konto hos oss. 
          Vi hoppas att du kommer att bli nöjd med våra tjänster. Tveka inte att höra av dig med 
