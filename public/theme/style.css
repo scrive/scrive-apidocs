@@ -317,8 +317,9 @@ a.bigbutton {
 
 #documentBox {
     overflow: auto;
-    height: 540px;
-    width: 785px;
+    //height: 540px;
+    height: 100%;
+    width: 788px;
     background-color: #999;
 }
 
@@ -429,17 +430,29 @@ img.waiting
     border-color: gray;
 }
 
-.docview td
-{
-    vertical-align:top;
-}
-
 .docview 
 {
     margin-left: auto;
     margin-right: auto;
     width: 1000px;
+    height: 100%;
 }
+
+.docviewleft
+{
+    float: left;
+    height: 100%;
+    overflow: auto;
+}
+
+.docviewright
+{
+    float: right;
+    height: 100%;
+    max-width: 190px;
+    overflow: auto;
+}
+
 
 .inlinebox
 {

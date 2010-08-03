@@ -453,29 +453,23 @@ showDocumentPageHelper
      -> d
      -> XMLGenT m (HSX.XML m)
 showDocumentPageHelper action document helpers title content =
-   <div> 
-    <div style="display: none">
-     <% helpers %>
-    </div>
- 
-    <table class="docview">
-     <col/> <col width="25px"/> <col/>
-     <tr>
-      <td>
-       <% showDocumentBox document %>
-      </td>
-      <td/>
-      <td> 
-       <p class="headline"><% title %><br/> 
-           <small><a href=(LinkIssueDocPDF document) target="_blank">Öppna som PDF</a></small>
-       </p>
-       <form method="post" id="form" name="form" action=action> 
-        <% content %>
-       </form>
-      </td>
-     </tr>
-    </table> 
-   </div>
+    <div class="docview">
+     <div style="display: none">
+      <% helpers %>
+     </div>
+     <div class="docviewleft">
+      <% showDocumentBox document %>
+     </div>
+     <div class="docviewright"> 
+      <p class="headline"><% title %><br/> 
+          <small><a href=(LinkIssueDocPDF document) target="_blank">Öppna som PDF</a></small>
+      </p>
+      <form method="post" id="form" name="form" action=action> 
+       <% content %>
+      </form>
+     </div>
+     <div class="clearboth"/>
+    </div> 
 
 
 showDocumentForSign :: (XMLGenerator m,
