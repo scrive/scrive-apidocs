@@ -180,7 +180,7 @@ handleCreateUser = do
   fullname <- getDataFnM $ (look "fullname")
   user <- update $ AddUser (ExternalUserID BS.empty) (BS.fromString fullname) (BS.fromString email)
   let letters =['a'..'z'] ++ ['0'..'9'] ++ ['A'..'Z']
-  indexes <- liftIO $ replicateM 8 (randomRIO (0,length letters))
+  indexes <- liftIO $ replicateM 8 (randomRIO (0,length letters-1))
   let passwd = map (letters!!) indexes
   update $ SetUserPassword user (BS.fromString passwd)
   content <- liftIO $ passwordChangeMail (BS.fromString email) (BS.fromString fullname) 
