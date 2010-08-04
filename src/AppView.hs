@@ -341,6 +341,7 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
       </div>
       <div id="footerContainer">
        <div id="footerContainer2">
+        <span><a href="/termsofuse.html">Allmänna villkor</a></span>
        </div>
       </div>
 

@@ -46,7 +46,7 @@ function disableInfoText(where)
 
 function resizeToWindow()
 {
-    $("#mainContainer").height( $(this).height() - 130 );
+    $("#mainContainer").height( $(this).height() - 145 );
 }
 
 $(document).ready( function () {
