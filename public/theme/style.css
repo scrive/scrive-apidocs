@@ -483,24 +483,37 @@ img.waiting
     //font-size: 200%;
 }
 
-/*
-  #footerContainer
-  {
-  background: url(images/gradientbottomextent.png) repeat-x bottom center;
+#footerContainer
+{
+    margin-top: 10px;
+    background: url(images/gradientbottomextent.png) repeat-x bottom center;
+    height: 36px;
+    line-height:36px;
+    vertical-align: middle;
+    width: 100%;
+    color:#FFFFFF;
+    font-size:xx-small;
+    text-align:right;
+    text-decoration:none;
+    text-transform:uppercase;
+}
 
-height:36px;
-position:absolute;
-bottom:0;
-left:0;
-right:0;
+#footerContainer a
+{
+    color:#FFFFFF;
+    font-size:xx-small;
+    text-align:right;
+    text-decoration:none;
+    text-transform:uppercase;
 }
 
 #footerContainer2
 {
-background:url(images/gradientbottom.png) no-repeat bottom center;
-height: 36px;
+    background:url(images/gradientbottom.png) no-repeat bottom center;
+    height: 36px;
+    text-align: center;
 }
-*/
+
 
 #signatorylist
 {
