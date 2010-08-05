@@ -298,12 +298,14 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
      <head>
       <title><% title %></title>
       <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-      <link rel="stylesheet" type="text/css" href="/theme/style.css" media="screen" />
-      <link rel="stylesheet" type="text/css" href="/css/ui-lightness/jquery-ui-1.8.custom.css" media="screen" />
-      <script src="/js/jquery-1.4.2.min.js"/>
-      <script src="/js/jquery-ui-1.8.custom.min.js"/>
+      {- <script src="/js/jquery-1.4.2.min.js"/> -}
+      <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"/>
+      <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/jquery-ui.min.js"/>
+      {- <script src="/js/jquery-ui-1.8.custom.min.js"/> -}
       <script src="/js/jquery.MultiFile.js"/>
       <script src="/js/global.js"/>
+      <link rel="stylesheet" type="text/css" href="/theme/style.css" media="screen" />
+      <link rel="stylesheet" type="text/css" href="/css/ui-lightness/jquery-ui-1.8.custom.css" media="screen" />
      </head>
      <body>
       <%
@@ -334,8 +336,8 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
            %>
          </div>
         </div>
+        <div class="clearboth"/>
       </div>
-      <br/> {- the navi things are float: left, this clears the flow -}
       <div id="mainContainer">
           <% body %>
       </div>
@@ -355,7 +357,6 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
         RPXNOW.language_preference = 'en';
       </script>
       <script type="text/javascript">
-
         var _gaq = _gaq || [];
         _gaq.push(['_setAccount', 'UA-6387711-9']);
         _gaq.push(['_trackPageview']);
