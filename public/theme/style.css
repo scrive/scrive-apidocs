@@ -177,6 +177,11 @@ body {
     background-color:  #fafafa;
 }
 
+#mainContainer {
+    padding-top: 1px; // neutralize margins
+    padding-bottom: 1px;
+}
+
 #mainContainer a {
     color: #007cac;
     font-weight: bold;
