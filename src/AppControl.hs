@@ -218,5 +218,5 @@ databaseCleanup = do
   -- dangerous, cleanup all old files, where old means chechpoints but the last one
   -- and all events that have numbers less than last checkpoint
   contents <- liftIO databaseCleanupWorker
-  webHSP (AppView.databaseContents contents)
+  webHSP (AppView.databaseContents (sort contents))
   
