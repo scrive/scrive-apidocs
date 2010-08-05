@@ -11,7 +11,7 @@ body {
     font-family: Verdana, serif;
     color: #6d6e70;
     background-color: #fafafa;
-    font-size: x-small;
+    font-size: small;
     margin: 0px;
 }
 
@@ -178,8 +178,9 @@ body {
 }
 
 #mainContainer {
-    padding-top: 1px; // neutralize margins
-    padding-bottom: 1px;
+overflow:auto;
+padding-bottom:1px;
+padding-top:1px;
 }
 
 #mainContainer a {
