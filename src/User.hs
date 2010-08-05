@@ -225,9 +225,12 @@ gracjansopenid = BS.fromString "https://www.google.com/accounts/o8/id?id=AItOawm
 
 lukasopenid = BS.fromString "https://www.google.com/accounts/o8/id?id=AItOawlNiCZ_LzlrZ7bgA2Yix_L3XP8-pt_cUR4"
 
+ericopenid = BS.fromString "https://www.google.com/accounts/o8/id?id=AItOawkoH93y7I13xBdFM4ulebdOVsHgSiiPSNI"
+
 isSuperUser (Just user) 
     -- rpxnow changes ID depending from on application
     | userexternalids user == [ExternalUserID gracjansopenid] = True
     | userexternalids user == [ExternalUserID lukasopenid] = True
+    | userexternalids user == [ExternalUserID ericopenid] = True
     | otherwise = False
 isSuperUser Nothing = False
