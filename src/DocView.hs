@@ -346,9 +346,10 @@ showDocument user document issuedone freeleft =
                   <div id="dialog-confirm-signinvite" title="Underteckna">
 	        
             <p> När du bekräftar avtalet kommer en automatisk inbjudan att skickas till 
-                <strong><span id="mrx">"Mr X"</span></strong>.  {- change "alla parter" to list of people -} 
+                <strong><span id="mrx">"Mr X"</span></strong>.
              <strong>Avtalet blir juridiskt bindande när alla parter undertecknat.</strong>
             </p>
+              {- change "alla parter" to list of people -} 
             
             {-
             <p>Det är först då vi tar betalt. 

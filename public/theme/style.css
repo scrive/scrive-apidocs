@@ -485,7 +485,7 @@ img.waiting
 
 #footerContainer
 {
-    margin-top: 10px;
+    //margin-top: 10px;
     background: url(images/gradientbottomextent.png) repeat-x bottom center;
     height: 36px;
     line-height:36px;
