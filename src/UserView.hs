@@ -36,7 +36,7 @@ showUser ctx@(Context {ctxmaybeuser = Just user}) =
              <td><input type="text" name="fullname" value=(userfullname user)/></td>
          </tr>
          <tr><td>E-mail:</td>
-             <td><input type="text" name="email" value=(unEmail $ useremail user)/></td>
+             <td><% unEmail $ useremail user %></td>
          </tr>
          <tr><td>Företagsnamn:</td>
              <td><input type="text" name="companyname" value=(usercompanyname user)/></td>
