@@ -30,14 +30,25 @@ $(deriveAll [''Eq, ''Ord, ''Default]
                        
       data User = User
           { userid             :: UserID
-          , userexternalids    :: [ExternalUserID]
           , userfullname       :: BS.ByteString
           , useremail          :: Email
           , usercompanyname    :: BS.ByteString
           , usercompanynumber  :: BS.ByteString
           , userinvoiceaddress :: BS.ByteString
           , userflashmessages  :: [FlashMessage]
-          , userpassword       :: Maybe BS.ByteString
+          , userpassword       :: BS.ByteString
+          }
+
+      data User3 = User3
+          { userid3             :: UserID
+          , userexternalids3    :: [ExternalUserID]
+          , userfullname3       :: BS.ByteString
+          , useremail3          :: Email
+          , usercompanyname3    :: BS.ByteString
+          , usercompanynumber3  :: BS.ByteString
+          , userinvoiceaddress3 :: BS.ByteString
+          , userflashmessages3  :: [FlashMessage]
+          , userpassword3       :: Maybe BS.ByteString
           }
 
       data User2 = User2
@@ -110,7 +121,7 @@ instance Migrate User1 User2 where
                 , userflashmessages2 = []
                 }
 
-instance Migrate User2 User where
+instance Migrate User2 User3 where
     migrate (User2
                 { userid2
                 , userexternalids2
@@ -120,21 +131,42 @@ instance Migrate User2 User where
                 , usercompanynumber2
                 , userinvoiceaddress2
                 , userflashmessages2
-                }) = User
-                { userid = userid2
-                , userexternalids = userexternalids2
-                , userfullname = userfullname2
-                , useremail = Email useremail2
-                , usercompanyname = usercompanyname2
-                , usercompanynumber = usercompanynumber2
-                , userinvoiceaddress = userinvoiceaddress2
-                , userflashmessages = userflashmessages2
-                , userpassword = Nothing
+                }) = User3
+                { userid3 = userid2
+                , userexternalids3 = userexternalids2
+                , userfullname3 = userfullname2
+                , useremail3 = Email useremail2
+                , usercompanyname3 = usercompanyname2
+                , usercompanynumber3 = usercompanynumber2
+                , userinvoiceaddress3 = userinvoiceaddress2
+                , userflashmessages3 = userflashmessages2
+                , userpassword3 = Nothing
                 }
 
+instance Migrate User3 User where
+    migrate (User3
+          { userid3
+          , userexternalids3
+          , userfullname3
+          , useremail3
+          , usercompanyname3
+          , usercompanynumber3
+          , userinvoiceaddress3
+          , userflashmessages3
+          , userpassword3
+          }) = User
+          { userid = userid3
+          , userfullname = userfullname3
+          , useremail = useremail3
+          , usercompanyname = usercompanyname3
+          , usercompanynumber = usercompanynumber3
+          , userinvoiceaddress = userinvoiceaddress3
+          , userflashmessages = userflashmessages3
+          , userpassword = maybe (BS.empty) (id) userpassword3
+          }
 
 
-$(inferIxSet "Users" ''User 'noCalcs [''UserID, ''ExternalUserID, ''Email])
+$(inferIxSet "Users" ''User 'noCalcs [''UserID, ''Email])
 
 $(deriveSerialize ''User0)
 instance Version User0
@@ -147,9 +179,13 @@ $(deriveSerialize ''User2)
 instance Version User2 where
     mode = extension 2 (Proxy :: Proxy User1)
 
+$(deriveSerialize ''User3)
+instance Version User3 where
+    mode = extension 3 (Proxy :: Proxy User2)
+
 $(deriveSerialize ''User)
 instance Version User where
-    mode = extension 3 (Proxy :: Proxy User2)
+    mode = extension 4 (Proxy :: Proxy User3)
 
 $(deriveSerialize ''FlashMessage)
 instance Version FlashMessage
@@ -180,35 +216,30 @@ instance Read UserID where
 instance FromReqURI UserID where
     fromReqURI = readM
 
-getUserByExternalUserID :: ExternalUserID -> Query Users (Maybe User)
-getUserByExternalUserID externaluserid = do
+getUserByEmail :: Email -> Query Users (Maybe User)
+getUserByEmail email = do
   users <- ask
-  return $ getOne (users @= externaluserid)
+  return $ getOne (users @= email)
     
 getUserByUserID :: UserID -> Query Users (Maybe User)
 getUserByUserID userid = do
   users <- ask
   return $ getOne (users @= userid)
 
-getUserByEmail :: BS.ByteString -> Query Users (Maybe User)
-getUserByEmail email = do
-  users <- ask
-  return $ getOne (users @= Email email)
-
-addUser :: ExternalUserID -> BS.ByteString 
-        -> BS.ByteString -> Update Users User
-addUser externaluserid fullname email = do
+addUser :: BS.ByteString 
+        -> BS.ByteString 
+        -> Update Users User
+addUser fullname email = do
   users <- get
   userid <- getUnique users UserID
   let user = (User { userid = userid
-                   , userexternalids = [externaluserid]
                    , userfullname = fullname
                    , useremail = Email email
                    , usercompanyname = BS.empty
                    , usercompanynumber = BS.empty
                    , userinvoiceaddress = BS.empty
                    , userflashmessages = []
-                   , userpassword = Nothing
+                   , userpassword = BS.empty
                    })
   modify (updateIx (Email email) user)
   return user
@@ -250,7 +281,7 @@ addUserFlashMessage userid msg= do
 setUserPassword :: User -> BS.ByteString -> Update Users ()
 setUserPassword user@User{userid} newpassword = do
   users <- ask
-  modify (updateIx userid (user { userpassword = Just newpassword })) 
+  modify (updateIx userid (user { userpassword = newpassword })) 
   return ()
 
 setUserDetails :: User 
@@ -258,16 +289,14 @@ setUserDetails :: User
                -> BS.ByteString 
                -> BS.ByteString 
                -> BS.ByteString 
-               -> BS.ByteString 
                -> Update Users User
-setUserDetails user1 email fullname companyname companynumber invoiceaddress = do
+setUserDetails user1 fullname companyname companynumber invoiceaddress = do
   users <- ask
   let Just user = getOne (users @= userid user1)
   let newuser = user { userfullname = fullname
                      , usercompanyname = companyname
                      , usercompanynumber = companynumber
                      , userinvoiceaddress = invoiceaddress
-                     , useremail = Email email
                      }
   modify (updateIx (userid user) newuser)
   return newuser
@@ -281,13 +310,12 @@ instance Component Users where
   
 -- create types for event serialization
 $(mkMethods ''Users [ 'getUserByUserID
-                    , 'getUserByExternalUserID
+                    , 'getUserByEmail
                     , 'addUser
                     , 'getUserStats
                     , 'getAllUsers
                     , 'getUserFlashMessages
                     , 'addUserFlashMessage
-                    , 'getUserByEmail
                     , 'setUserPassword
                     , 'setUserDetails
                     ])

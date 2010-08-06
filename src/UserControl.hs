@@ -28,11 +28,10 @@ g name = do
 
 handleUserPost ctx@Context{ctxmaybeuser = Just user} = do
   fullname <- g "fullname"
-  email <- g "email"
   companyname <- g "companyname"
   companynumber <- g "companynumber"
   invoiceaddress <- g "invoiceaddress"
-  newuser <- update $ SetUserDetails user email fullname companyname companynumber invoiceaddress
+  newuser <- update $ SetUserDetails user fullname companyname companynumber invoiceaddress
   -- FIME: add flash-message here
   let link = show LinkAccount
   response <- webHSP (seeOtherXML link)

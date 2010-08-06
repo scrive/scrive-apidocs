@@ -135,7 +135,9 @@ userLogin1 = do
                   Just nameMapping = lookupMapping (BS.fromString "name") profileMapping
                   Just (Json.JsonString formatted) = lookupScalar (BS.fromString "formatted") nameMapping
         
-              maybeuser <- query $ GetUserByExternalUserID (ExternalUserID identifier)
+              when (verifiedEmail==BS.empty) mzero
+
+              maybeuser <- query $ GetUserByEmail (Email verifiedEmail)
     
               user <- case maybeuser of
                         Just user -> do
@@ -144,8 +146,8 @@ userLogin1 = do
                                        
                           return user
                         Nothing -> do
-                          user <- update $ AddUser (ExternalUserID identifier) (formatted) verifiedEmail
-                          liftIO $ noticeM rootLoggerName $ "New user " ++ BS.toString identifier ++ " logged in"
+                          user <- update $ AddUser formatted verifiedEmail
+                          liftIO $ noticeM rootLoggerName $ "New user " ++ BS.toString verifiedEmail ++ " logged in"
                           return user
               sessionid <- update $ NewSession (userid user)
               startSession sessionid
@@ -204,6 +206,7 @@ maybeSignInLink2 (Context {}) title url class1 = do
     <a href=url class=class1><% title %></a> 
 
 
+{- 
 userLogin2 :: (MonadIO m) => ServerPartT m (Maybe User)
 userLogin2 = do
   let identifier = BS.fromString "auser"
@@ -220,10 +223,7 @@ userLogin2 = do
   startSession sessionid
 
   return (Just user)
-
-gracjansopenid = BS.fromString "https://www.google.com/accounts/o8/id?id=AItOawmKK_kBiZSfseRBWAditlbsRpyxwdzkuMM"
-
-lukasopenid = BS.fromString "https://www.google.com/accounts/o8/id?id=AItOawlNiCZ_LzlrZ7bgA2Yix_L3XP8-pt_cUR4"
+-}
 
 ericopenid = BS.fromString "https://www.google.com/accounts/o8/id?id=AItOawkoH93y7I13xBdFM4ulebdOVsHgSiiPSNI"
 
@@ -231,6 +231,5 @@ isSuperUser (Just user)
     -- rpxnow changes ID depending from on application
     | userexternalids user == [ExternalUserID gracjansopenid] = True
     | userexternalids user == [ExternalUserID lukasopenid] = True
-    | userexternalids user == [ExternalUserID ericopenid] = True
     | otherwise = False
 isSuperUser Nothing = False

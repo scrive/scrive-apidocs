@@ -211,7 +211,7 @@ errorReport (Context {ctxmaybeuser}) request =
    <hr/>
    <p>Information useful to developers:</p>
    <% case ctxmaybeuser of
-           Just user -> <p>Logged in as: <% user %> (<% map unExternalUserID (userexternalids user) %>)</p>
+           Just user -> <p>Logged in as: <% user %></p>
            Nothing -> <p>Not logged in</p>
    %>
    <p><% request %></p>
@@ -376,9 +376,10 @@ seeOtherXML :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
 
 
-showUserOption :: (XMLGenerator m) => User -> XMLGenT m (HSX.XML m)
-showUserOption user = let un (ExternalUserID x) = BS.toString x in
-    <option value=(show $ userid user) title=(un $ safehead "showUserOption" $ userexternalids user)>
+showUserOption :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] BSC.ByteString)) 
+                  => User -> XMLGenT m (HSX.XML m)
+showUserOption user =
+    <option value=(show $ userid user) title=(unEmail $ useremail user)>
           <% userfullname user %> <% unEmail $ useremail user %>
     </option>
  

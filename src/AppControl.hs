@@ -123,8 +123,9 @@ loginPagePost = do
   rq <- askRq
   email <- getDataFnM (look "email")
   passwd <- getDataFnM (look "password")
-  Just user@User{userpassword = Just upasswd} <- query $ GetUserByEmail (BS.fromString email)
-  if upasswd==BS.fromString passwd
+  Just user@User{userpassword} <- query $ GetUserByEmail (Email $ BS.fromString email)
+  -- FIXME: add password hashig here
+  if userpassword==BS.fromString passwd
      then do
       sessionid <- update $ NewSession (userid user)
       startSession sessionid
@@ -178,7 +179,7 @@ handleCreateUser :: Kontra Response
 handleCreateUser = do
   email <- getDataFnM $ (look "email")
   fullname <- getDataFnM $ (look "fullname")
-  user <- update $ AddUser (ExternalUserID BS.empty) (BS.fromString fullname) (BS.fromString email)
+  user <- update $ AddUser (BS.fromString fullname) (BS.fromString email)
   let letters =['a'..'z'] ++ ['0'..'9'] ++ ['A'..'Z']
   indexes <- liftIO $ replicateM 8 (randomRIO (0,length letters-1))
   let passwd = map (letters!!) indexes
