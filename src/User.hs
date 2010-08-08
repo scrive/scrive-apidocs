@@ -109,7 +109,8 @@ userLogin1 = do
 #endif
 
               let req = "https://rpxnow.com/api/v2/auth_info" ++ 
-                        "?apiKey=03bbfc36d54e523b2602af0f95aa173fb96caed9" ++ -- a348dd93f1d78ae11c443574d73d974299007c00" ++
+                        "?apiKey=03bbfc36d54e523b2602af0f95aa173fb96caed9" ++
+                        -- a348dd93f1d78ae11c443574d73d974299007c00" ++
                         "&token=" ++ token
               
               {-
@@ -172,8 +173,7 @@ provideRPXNowLink = do -- FIXME it was guarded by method GET but it didn't help
 rpxSignInLink (Context {ctxhostpart}) title url = do
     -- FIXME: this is very simple url handling....
     let fullurl = ctxhostpart ++ url
-    <a class="rpxnow" onclick="return false;"
-       href=("https://kontrakcja.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode fullurl)><% title %></a> 
+    <a class="rpxnow"href=("https://kontrakcja.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode fullurl)><% title %></a> 
 
 {-
 maybeSignInLink

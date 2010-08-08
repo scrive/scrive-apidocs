@@ -51,6 +51,7 @@ showUser ctx@(Context {ctxmaybeuser = Just user}) =
        <br/>
        <input class="button" type="submit" value="Change details"/>
       </form>
+      <a href="/account/subaccount">Subaccounts</a>
      </div>
     </div>
   
