@@ -90,10 +90,12 @@ welcomeEmail :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 welcomeEmail fullname =
     <div>
       <p>Hej <strong><% fullname %></strong>,</p>
-      <p>Tack för att du har skapat ett konto hos oss! Vi hoppas att du kommer att bli nöjd med våra tjänster.</p>
-      <p>Jag heter Lukas Duczko och är VD på SkrivaPå och det här mailet är skickat direkt från min mailadress. Tveka inte att höra av dig med åsikter, feedback eller bara en enkel hälsning.</p>
+      
+      <p>Jag heter <strong>Lukas Duczko</strong> och är VD på <strong>SkrivaPå</strong>. Tack för att du har skapat ett konto hos oss. Vi hoppas att du
+kommer att bli nöjd med våra tjänster. Tveka inte att höra av dig med åsikter,
+feedback eller bara en enkel hälsning. Din åsikt är värdefull.</p>
       <p>MVH<br/>
-         /Lukas Duczko och team SkrivaPå
+         <strong>Lukas Duczko</strong> och team <a href="http://skrivapa.se/">SkrivaPå</a>
       </p>
     </div>
 xxx (Just (XMLMetaData (showDt, dt) _ pr), xml) = 
@@ -536,9 +538,8 @@ invitationMailXml (Context {ctxmaybeuser = Just user, ctxhostpart})
      <body>
       <p>Hej <strong><% personname %></strong>,</p>
       <p></p>
-      <p><strong><% creatorname %></strong> har bjudit in dig att skriva på avtalet 
-         <strong><% documenttitle %></strong>. Klicka på länken nedan för att öppna avtalet. 
-         Du undertecknar genom att bekräfta avtalet i nästa steg.</p>
+      <p><strong><% creatorname %></strong> har bjudit in dig att underteckna på dokumentet 
+         <strong><% documenttitle %></strong>. Klicka på länken nedan för att granska dokumentet online. Du undertecknar genom att bekräfta avtalet i nästa steg.</p>
       <p><a href=link><% link %></a></p>
       <% poweredBySkrivaPaPara %>
      </body>
@@ -576,11 +577,9 @@ closedMailXml (Context {ctxhostpart})
      </head>
      <body> {- change "alla parter" to list of people -}
       <p>Hej <strong><% personname %></strong>,</p>
-      <p>Avtalet <strong><% documenttitle %></strong> har undertecknats av alla parter. 
-         Avtalet är nu lagligt bindande.</p>
-      
-      <p>Det färdiga avtalet bifogas nedan. Om du har ett konto hos SkrivaPå hittar du avtalet 
-         under "Avtal". Om du inte har ett konto kan du spara avtalet genom att klicka på länken:</p>
+      <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats av alla parter och avtalet är nu lagligt bindande. Nedan bifogas en direktlänk till det färdigställda dokumentet och en PDF-kopia.</p>
+
+      <p>Om du har ett SkrivaPå-konto med denna mailadress så har avtalet sparats automatiskt på detta konto. Om du inte har ett konto eller om detta är en annan mailadress än den som är registrerad hos oss, kan du spara avtalet genom att klicka på länken: </p>
 
       <p><a href=link><% link %></a></p>
      
@@ -619,11 +618,8 @@ closedMailAuthorXml (Context {ctxhostpart})
      </head>
      <body>  {- change "alla parter" to list of people -}
       <p>Hej <strong><% personname %></strong>,</p>
-      <p>Avtalet <strong><% documenttitle %></strong> har undertecknats av alla parter. 
-         Avtalet är nu lagligt bindande.</p>
+      <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats av alla parter och avtalet är nu lagligt bindande. Nedan bifogas en direktlänk till det färdigställda dokumentet och en PDF-kopia.</p>
       
-      <p>Det färdiga avtalet bifogas nedan. Hos SkrivaPå hittar du avtalet under "Avtal". </p>
-
       <p><a href=link><% link %></a></p>
      
       <% poweredBySkrivaPaPara %>
@@ -665,15 +661,15 @@ passwordChangeMailXml emailaddress personname newpassword =
          åsikter, feedback eller bara en enkel hälsning. Din åsikt är värdefull.</p>
 
       <p>Dina användaruppgifter på SkrivaPå</p>
-      <p>Användarnamn: <% emailaddress %><br/>
-         Lösenord: <% newpassword %><br/>
+      <p>Användarnamn: <span style="color: orange; text-weight: bold"><% emailaddress %></span><br/>
+         Lösenord: <span style="color: orange; text-weight: bold"><% newpassword %></span><br/>
       </p>
       <p>
       http://skrivapa.se/login
       </p>
 
       <p>MVH<br/>
-         /Lukas Duczko och team SkrivaPå
+         /Lukas Duczko och team <a href="http://skrivapa.se/">SkrivaPå</a>.
       </p>
      </body>
     </html>
