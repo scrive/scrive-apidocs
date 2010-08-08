@@ -15,10 +15,14 @@ import Control.Monad.Trans
 import Misc
 
 
+handleUser :: Context -> Kontra Response
 handleUser ctx = 
     msum 
     [ methodM GET >> showUser ctx
     , methodM POST >> handleUserPost ctx
+    , dir "subaccount" $ msum [ methodM GET  >> handleGetSubaccount ctx 
+                              , methodM POST >> handlePostSubaccount ctx
+                              ]
     ]
 
 g :: String -> Kontra BS.ByteString 
@@ -26,6 +30,7 @@ g name = do
   k <- getDataFnM (look name)
   return (BS.fromString k)
 
+handleUserPost :: Context -> Kontra Response
 handleUserPost ctx@Context{ctxmaybeuser = Just user} = do
   fullname <- g "fullname"
   companyname <- g "companyname"
@@ -38,4 +43,10 @@ handleUserPost ctx@Context{ctxmaybeuser = Just user} = do
   seeOther link response
 
 
-  
+handleGetSubaccount :: Context -> Kontra Response
+handleGetSubaccount ctx = do
+  error "uuuh"
+
+handlePostSubaccount :: Context -> Kontra Response
+handlePostSubaccount ctx = do
+  error "uuhh"

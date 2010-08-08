@@ -29,14 +29,17 @@ $(deriveAll [''Eq, ''Ord, ''Default]
       newtype Email = Email { unEmail :: BS.ByteString }
                        
       data User = User
-          { userid             :: UserID
-          , userfullname       :: BS.ByteString
-          , useremail          :: Email
-          , usercompanyname    :: BS.ByteString
-          , usercompanynumber  :: BS.ByteString
-          , userinvoiceaddress :: BS.ByteString
-          , userflashmessages  :: [FlashMessage]
-          , userpassword       :: BS.ByteString
+          { userid                 :: UserID
+          , userfullname           :: BS.ByteString
+          , useremail              :: Email
+          , usercompanyname        :: BS.ByteString
+          , usercompanynumber      :: BS.ByteString
+          , userinvoiceaddress     :: BS.ByteString
+          , userflashmessages      :: [FlashMessage]
+          , userpassword           :: BS.ByteString
+          , usersupervisor         :: Maybe UserID
+          , usercanhavesubaccounts :: Bool
+          , useraccountsuspended   :: Bool
           }
 
       data User3 = User3
@@ -163,6 +166,9 @@ instance Migrate User3 User where
           , userinvoiceaddress = userinvoiceaddress3
           , userflashmessages = userflashmessages3
           , userpassword = maybe (BS.empty) (id) userpassword3
+          , usersupervisor = Nothing
+          , usercanhavesubaccounts = True
+          , useraccountsuspended = False -- should probably have a reason and time here
           }
 
 
@@ -240,6 +246,9 @@ addUser fullname email = do
                    , userinvoiceaddress = BS.empty
                    , userflashmessages = []
                    , userpassword = BS.empty
+                   , usersupervisor = Nothing
+                   , usercanhavesubaccounts = True
+                   , useraccountsuspended = False
                    })
   modify (updateIx (Email email) user)
   return user

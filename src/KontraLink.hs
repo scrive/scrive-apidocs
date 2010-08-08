@@ -38,7 +38,7 @@ instance Show KontraLink where
     showsPrec _ LinkMain = (++) "/"
     showsPrec _ LinkAccount = (++) "/account"
     showsPrec _ (LinkLandpageSaved document signatorylinkid) = 
-        (++) $ "/landpage/signed/" ++ show (documentid document) ++ "/" ++ show signatorylinkid
+        (++) $ "/landpage/saved/" ++ show (documentid document) ++ "/" ++ show signatorylinkid
     showsPrec _ (LinkIssueDoc document) = 
         (++) $ "/issue/" ++ show (documentid document)
     showsPrec _ (LinkIssueDocPDF document) = 
