@@ -179,17 +179,9 @@ handleBecome = do
 
 handleCreateUser :: Kontra Response
 handleCreateUser = do
-  email <- getDataFnM $ (look "email")
-  fullname <- getDataFnM $ (look "fullname")
-  user <- update $ AddUser (BS.fromString fullname) (BS.fromString email)
-  let letters =['a'..'z'] ++ ['0'..'9'] ++ ['A'..'Z']
-  indexes <- liftIO $ replicateM 8 (randomRIO (0,length letters))
-  let passwd = map (letters!!) indexes
-  update $ SetUserPassword user (BS.fromString passwd)
-  content <- liftIO $ passwordChangeMail (BS.fromString email) (BS.fromString fullname) 
-             (BS.fromString passwd)
-  liftIO $ sendMail [(BS.fromString fullname,BS.fromString email)]
-               (BS.fromString "SkrivaPa new password") content BS.empty
+  email <- g "email"
+  fullname <- g "fullname"
+  liftIO $ createUser fullname email Nothing
   -- FIXME: where to redirect?
   response <- webHSP (seeOtherXML "/stats")
   seeOther "/stats" response
