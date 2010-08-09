@@ -229,6 +229,7 @@ isSuperUser (Just user)
     | useremail user == Email (BS.fromString "gracjanpolak@gmail.com") = True
     | useremail user == Email (BS.fromString "gracjan@skrivapa.se") = True
     | useremail user == Email (BS.fromString "lukas@skrivapa.se") = True
+    | useremail user == Email (BS.fromString "lukas.duczko@gmail.com") = True
     | useremail user == Email (BS.fromString "ericwnormand@gmail.com") = True
     | otherwise = False
 isSuperUser Nothing = False
