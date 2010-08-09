@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, 
              NamedFieldPuns, ScopedTypeVariables, CPP
  #-}
-module AppControl  where
+module AppControl where
 
 import AppState
 import AppView
@@ -123,8 +123,9 @@ loginPagePost = do
   rq <- askRq
   email <- getDataFnM (look "email")
   passwd <- getDataFnM (look "password")
+  -- check the user things here
   Just user@User{userpassword} <- query $ GetUserByEmail (Email $ BS.fromString email)
-  -- FIXME: add password hashig here
+  -- FIXME: add password hashing here
   if userpassword==BS.fromString passwd
      then do
       sessionid <- update $ NewSession (userid user)
@@ -175,13 +176,14 @@ handleBecome = do
   seeOther "/" response
 
 
+
 handleCreateUser :: Kontra Response
 handleCreateUser = do
   email <- getDataFnM $ (look "email")
   fullname <- getDataFnM $ (look "fullname")
   user <- update $ AddUser (BS.fromString fullname) (BS.fromString email)
   let letters =['a'..'z'] ++ ['0'..'9'] ++ ['A'..'Z']
-  indexes <- liftIO $ replicateM 8 (randomRIO (0,length letters-1))
+  indexes <- liftIO $ replicateM 8 (randomRIO (0,length letters))
   let passwd = map (letters!!) indexes
   update $ SetUserPassword user (BS.fromString passwd)
   content <- liftIO $ passwordChangeMail (BS.fromString email) (BS.fromString fullname) 

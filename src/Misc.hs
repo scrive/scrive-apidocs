@@ -217,3 +217,16 @@ pathdb get action = path $ \id -> do
     case m of
         Nothing -> mzero
         Just obj -> action obj
+
+-- g :: String -> Kontra BS.ByteString 
+g name = do
+  k <- getDataFnM (look name)
+  return (BS.fromString k)
+
+renderHSPToByteString xml = do
+  (meta,content) <- evalHSP Nothing xml
+  return $ case meta of
+             Just (XMLMetaData (showDt, dt) _ pr) -> 
+                     BS.fromString ((if showDt then (dt ++) else id) (pr content))
+             Nothing -> BS.fromString (renderAsHTML content)
+

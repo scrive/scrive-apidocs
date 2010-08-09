@@ -25,6 +25,16 @@ import AppView
 import User
 import KontraLink
 
+instance (EmbedAsChild m BS.ByteString) => (EmbedAsChild m Email) where
+    asChild = asChild . unEmail
+
+instance Monad m => IsAttrValue m Email where
+    toAttrValue = toAttrValue . unEmail
+
+instance Monad m => IsAttrValue m UserID where
+    toAttrValue = toAttrValue . show
+
+
 showUser ctx@(Context {ctxmaybeuser = Just user}) = 
     webHSP $ pageFromBody ctx TopAccount kontrakcja $ 
     <div class="doctable">
@@ -51,7 +61,126 @@ showUser ctx@(Context {ctxmaybeuser = Just user}) =
        <br/>
        <input class="button" type="submit" value="Change details"/>
       </form>
-      <a href="/account/subaccount">Subaccounts</a>
+      <a href=LinkSubaccount>Subaccounts</a>
      </div>
     </div>
   
+
+oneRow user@User{ userfullname, useremail, userid }  = 
+    let link = "nothing to see here"
+        statusimg = ""
+    in
+    <tr>
+     <td class="tdleft">
+      <input type="checkbox" name="usercheck" value=userid/>
+     </td>
+     <td><img width="17" height="17" src=statusimg/></td>
+     <td><% userfullname %></td>
+     <td><% useremail %></td>
+     <td> - </td>
+     <td class="tdright"></td>
+    </tr>
+
+
+viewSubaccounts :: Context -> [User] -> Kontra Response
+viewSubaccounts ctx@(Context {ctxmaybeuser = Just user}) subusers = 
+    webHSP $ pageFromBody ctx TopAccount kontrakcja $ 
+    <form method="post" action= LinkSubaccount>
+     <h1>Subaccounts</h1>
+     <table class="doctable" cellspacing="0">
+      <col/>
+      <col/>
+      <col/>
+      <col/>
+      <col/>
+      <thead>
+       <tr>
+        <td><a href="#" id="all">Alla</a></td>
+        <td></td> {- status icon -}
+        <td>Namn</td>
+        <td>E-mail</td>
+        <td>Other possible data goes here</td>
+        <td></td>
+       </tr>
+      </thead>
+      <tfoot>
+       <tr>
+        <td colspan="6" style="text-align: right; overflow: hidden;">
+          <span> Footer </span>
+          {-
+          <div class="floatleft">
+           <input type="submit" class="button" name="archive" value="Radera"/>
+          </div>
+          <div class="floatright">
+           <img src="/theme/images/status_draft.png"/> Utkast
+           <img src="/theme/images/status_rejected.png"/> Avbrutet
+           <img src="/theme/images/status_timeout.png"/> Förfallet
+           <img src="/theme/images/status_pending.png"/> Väntar
+           <img src="/theme/images/status_viewed.png"/> Granskat
+           <img src="/theme/images/status_signed.png"/> Undertecknat
+          </div>
+          <div class="clearboth"/>
+          -}
+         </td>
+       </tr>
+      </tfoot>
+     
+      <tbody>
+       <% map oneRow subusers %>
+      </tbody>
+     </table><br/>
+      <table>
+	<tr> 
+          <td>Namn:</td> 
+          <td><input type="textfield" name="fullname"/></td> 
+        </tr>
+	<tr>
+          <td>E-mail:</td> 
+          <td><input type="textfield" name="email"/></td> 
+        </tr>
+	<tr> 
+          <td><input class="button" type="submit" name="create" value="Skapa ny"/></td>
+          <td></td>
+	</tr>
+      </table>
+    </form>
+  
+
+passwordChangeMailXml :: (XMLGenerator m) 
+                     => BS.ByteString
+                  -> BS.ByteString
+                  -> BS.ByteString
+                  -> XMLGenT m (HSX.XML m)
+passwordChangeMailXml emailaddress personname newpassword = 
+    <html>
+     <head>
+      <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+     </head>
+     <body>
+      <p>Hej <strong><% personname %></strong>,</p>
+
+      <p>Jag heter Lukas Duczko och är VD på SkrivaPå. Tack för att du har skapat ett konto hos oss. 
+         Vi hoppas att du kommer att bli nöjd med våra tjänster. Tveka inte att höra av dig med 
+         åsikter, feedback eller bara en enkel hälsning. Din åsikt är värdefull.</p>
+
+      <p>Dina användaruppgifter på SkrivaPå</p>
+      <p>Användarnamn: <span style="color: orange; text-weight: bold"><% emailaddress %></span><br/>
+         Lösenord: <span style="color: orange; text-weight: bold"><% newpassword %></span><br/>
+      </p>
+      <p>
+      http://skrivapa.se/login
+      </p>
+
+      <p>MVH<br/>
+         /Lukas Duczko och team <a href="http://skrivapa.se/">SkrivaPå</a>.
+      </p>
+     </body>
+    </html>
+
+passwordChangeMail :: BS.ByteString
+                   -> BS.ByteString
+                   -> BS.ByteString
+                   -> IO BS.ByteString
+passwordChangeMail emailaddress personname newpassword = do
+                 let xml = passwordChangeMailXml emailaddress personname newpassword
+                 renderHSPToByteString xml

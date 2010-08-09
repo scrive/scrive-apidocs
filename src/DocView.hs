@@ -15,6 +15,7 @@ import Control.Monad
 import Control.Monad.Identity
 import Control.Monad.Trans
 import KontraLink
+import Misc
 
 instance Monad m => IsAttrValue m DocumentID where
     toAttrValue = toAttrValue . show
@@ -199,8 +200,6 @@ oneDocumentRow document@Document{ documentid, documentsignatorylinks
 listDocuments :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink),
                       EmbedAsAttr m (Attr [Char] DocumentID)) => [Document] -> XMLGenT m (HSX.XML m)
 listDocuments documents = 
-    <div>
-     <br/>
      <form method="post" action=LinkIssue>
      <table class="doctable" cellspacing="0">
       <col/>
@@ -243,7 +242,6 @@ listDocuments documents =
       </tbody>
      </table>
      </form>
-   </div>
 
 showFile
   :: (EmbedAsChild m String) =>
@@ -508,13 +506,6 @@ showDocumentForSign action document authorname invitedname wassigned =
                 </span>
 
 
-renderHSPToByteString xml = do
-  (meta,content) <- evalHSP Nothing xml
-  return $ case meta of
-             Just (XMLMetaData (showDt, dt) _ pr) -> 
-                     BS.fromString ((if showDt then (dt ++) else id) (pr content))
-             Nothing -> BS.fromString (renderAsHTML content)
-
 
 
 invitationMailXml :: (XMLGenerator m) 
@@ -643,41 +634,3 @@ poweredBySkrivaPaPara =
      <small>MVH<br/><a href="http://skrivapa.se/">SkrivaPå</a></small>
     </p>
 
-passwordChangeMailXml :: (XMLGenerator m) 
-                     => BS.ByteString
-                  -> BS.ByteString
-                  -> BS.ByteString
-                  -> XMLGenT m (HSX.XML m)
-passwordChangeMailXml emailaddress personname newpassword = 
-    <html>
-     <head>
-      <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-     </head>
-     <body>
-      <p>Hej <strong><% personname %></strong>,</p>
-
-      <p>Jag heter Lukas Duczko och är VD på SkrivaPå. Tack för att du har skapat ett konto hos oss. 
-         Vi hoppas att du kommer att bli nöjd med våra tjänster. Tveka inte att höra av dig med 
-         åsikter, feedback eller bara en enkel hälsning. Din åsikt är värdefull.</p>
-
-      <p>Dina användaruppgifter på SkrivaPå</p>
-      <p>Användarnamn: <span style="color: orange; text-weight: bold"><% emailaddress %></span><br/>
-         Lösenord: <span style="color: orange; text-weight: bold"><% newpassword %></span><br/>
-      </p>
-      <p>
-      http://skrivapa.se/login
-      </p>
-
-      <p>MVH<br/>
-         /Lukas Duczko och team <a href="http://skrivapa.se/">SkrivaPå</a>.
-      </p>
-     </body>
-    </html>
-
-passwordChangeMail :: BS.ByteString
-                   -> BS.ByteString
-                   -> BS.ByteString
-                   -> IO BS.ByteString
-passwordChangeMail emailaddress personname newpassword = do
-                 let xml = passwordChangeMailXml emailaddress personname newpassword
-                 renderHSPToByteString xml

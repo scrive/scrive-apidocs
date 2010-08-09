@@ -30,6 +30,7 @@ data KontraLink
     | LinkSignDoc Document SignatoryLinkID
     | LinkIssueDoc Document
     | LinkIssueDocPDF Document {- Which file? -}
+    | LinkSubaccount
 
 instance Show KontraLink where
     showsPrec _ LinkAbout = (++) "/about"
@@ -37,6 +38,7 @@ instance Show KontraLink where
     showsPrec _ LinkIssue = (++) "/issue"
     showsPrec _ LinkMain = (++) "/"
     showsPrec _ LinkAccount = (++) "/account"
+    showsPrec _ LinkSubaccount = (++) "/account/subaccount"
     showsPrec _ (LinkLandpageSaved document signatorylinkid) = 
         (++) $ "/landpage/saved/" ++ show (documentid document) ++ "/" ++ show signatorylinkid
     showsPrec _ (LinkIssueDoc document) = 
