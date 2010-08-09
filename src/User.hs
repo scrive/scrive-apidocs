@@ -225,11 +225,10 @@ userLogin2 = do
   return (Just user)
 -}
 
-ericopenid = BS.fromString "https://www.google.com/accounts/o8/id?id=AItOawkoH93y7I13xBdFM4ulebdOVsHgSiiPSNI"
-
 isSuperUser (Just user) 
-    -- rpxnow changes ID depending from on application
-    | userexternalids user == [ExternalUserID gracjansopenid] = True
-    | userexternalids user == [ExternalUserID lukasopenid] = True
+    | useremail user == Email (BS.fromString "gracjanpolak@gmail.com") = True
+    | useremail user == Email (BS.fromString "gracjan@skrivapa.se") = True
+    | useremail user == Email (BS.fromString "lukas@skrivapa.se") = True
+    | useremail user == Email (BS.fromString "ericwnormand@gmail.com") = True
     | otherwise = False
 isSuperUser Nothing = False

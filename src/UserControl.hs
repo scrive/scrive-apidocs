@@ -59,7 +59,7 @@ handlePostSubaccount ctx@Context { ctxmaybeuser = Just (User { userid })} = do
 createUser :: BS.ByteString -> BS.ByteString -> Maybe UserID -> IO User
 createUser fullname email maybesupervisor = do
   let letters =['a'..'z'] ++ ['0'..'9'] ++ ['A'..'Z']
-  indexes <- liftIO $ replicateM 8 (randomRIO (0,length letters))
+  indexes <- liftIO $ replicateM 8 (randomRIO (0,length letters-1))
   let passwd = BS.fromString $ map (letters!!) indexes
   user <- update $ AddUser fullname email passwd maybesupervisor
   content <- liftIO $ passwordChangeMail email fullname passwd
