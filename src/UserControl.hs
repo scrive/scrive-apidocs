@@ -3,6 +3,7 @@ module UserControl where
 import UserState
 import UserView
 import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString as BS
 import KontraLink
 import Happstack.Data.IxSet 
 import Happstack.Server hiding (simpleHTTP)
@@ -13,7 +14,8 @@ import User
 import AppView
 import Control.Monad.Trans
 import Misc
-
+import SendMail
+import System.Random
 
 handleUser :: Context -> Kontra Response
 handleUser ctx = 
@@ -25,10 +27,6 @@ handleUser ctx =
                               ]
     ]
 
-g :: String -> Kontra BS.ByteString 
-g name = do
-  k <- getDataFnM (look name)
-  return (BS.fromString k)
 
 handleUserPost :: Context -> Kontra Response
 handleUserPost ctx@Context{ctxmaybeuser = Just user} = do
@@ -44,9 +42,28 @@ handleUserPost ctx@Context{ctxmaybeuser = Just user} = do
 
 
 handleGetSubaccount :: Context -> Kontra Response
-handleGetSubaccount ctx = do
-  error "uuuh"
+handleGetSubaccount ctx@Context { ctxmaybeuser = Just user@User { userid } }  = do
+  subaccounts <- query $ GetUserSubaccounts userid
+  viewSubaccounts ctx subaccounts
 
 handlePostSubaccount :: Context -> Kontra Response
-handlePostSubaccount ctx = do
-  error "uuhh"
+handlePostSubaccount ctx@Context { ctxmaybeuser = Just (User { userid })} = do
+  create <- g "create"   -- check if we are in proper action
+  fullname <- g "fullname"
+  email <- g "email"
+  user <- liftIO $ createUser fullname email (Just userid)
+  let link = show LinkSubaccount
+  response <- webHSP (seeOtherXML link)
+  seeOther link response
+
+createUser :: BS.ByteString -> BS.ByteString -> Maybe UserID -> IO User
+createUser fullname email maybesupervisor = do
+  let letters =['a'..'z'] ++ ['0'..'9'] ++ ['A'..'Z']
+  indexes <- liftIO $ replicateM 8 (randomRIO (0,length letters))
+  let passwd = BS.fromString $ map (letters!!) indexes
+  user <- update $ AddUser fullname email passwd maybesupervisor
+  content <- liftIO $ passwordChangeMail email fullname passwd
+  liftIO $ sendMail [(fullname, email)]
+               (BS.fromString "Välkommen!") content BS.empty
+  return user
+

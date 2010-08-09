@@ -121,11 +121,11 @@ loginBox ctx =
       <table>
 	<tr>
           <td>E-mail:</td> 
-          <td><input type="textfield" name="email" size="22"/></td> 
+          <td><input type="textfield" name="email"/></td> 
         </tr>
 	<tr> 
           <td>Lösenord:</td> 
-          <td><input type="password" name="password" size="22"/></td> 
+          <td><input type="password" name="password"/></td> 
         </tr>
 	<tr> 
           <td><input class="button" type="submit" name="login" value="Logga in"/></td>

@@ -147,7 +147,7 @@ userLogin1 = do
                                        
                           return user
                         Nothing -> do
-                          user <- update $ AddUser formatted verifiedEmail
+                          user <- update $ AddUser formatted verifiedEmail BS.empty Nothing
                           liftIO $ noticeM rootLoggerName $ "New user " ++ BS.toString verifiedEmail ++ " logged in"
                           return user
               sessionid <- update $ NewSession (userid user)

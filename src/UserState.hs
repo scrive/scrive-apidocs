@@ -23,10 +23,11 @@ import Data.List
 $(deriveAll [''Eq, ''Ord, ''Default]
   [d|
    
-      newtype UserID = UserID Int
+      newtype UserID = UserID { unUserID :: Int }
       newtype ExternalUserID = ExternalUserID { unExternalUserID :: BS.ByteString }
       newtype FlashMessage = FlashMessage BS.ByteString
       newtype Email = Email { unEmail :: BS.ByteString }
+      newtype SupervisorID = SupervisorID { unSupervisorID :: Int }
                        
       data User = User
           { userid                 :: UserID
@@ -37,7 +38,7 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , userinvoiceaddress     :: BS.ByteString
           , userflashmessages      :: [FlashMessage]
           , userpassword           :: BS.ByteString
-          , usersupervisor         :: Maybe UserID
+          , usersupervisor         :: Maybe SupervisorID
           , usercanhavesubaccounts :: Bool
           , useraccountsuspended   :: Bool
           }
@@ -172,7 +173,7 @@ instance Migrate User3 User where
           }
 
 
-$(inferIxSet "Users" ''User 'noCalcs [''UserID, ''Email])
+$(inferIxSet "Users" ''User 'noCalcs [''UserID, ''Email, ''SupervisorID])
 
 $(deriveSerialize ''User0)
 instance Version User0
@@ -202,6 +203,9 @@ instance Version Email
 $(deriveSerialize ''UserID)
 instance Version UserID
 
+$(deriveSerialize ''SupervisorID)
+instance Version SupervisorID
+
 $(deriveSerialize ''ExternalUserID)
 instance Version ExternalUserID
 
@@ -222,6 +226,16 @@ instance Read UserID where
 instance FromReqURI UserID where
     fromReqURI = readM
 
+instance Show SupervisorID where
+    showsPrec prec (SupervisorID val) = showsPrec prec val
+
+instance Read SupervisorID where
+    readsPrec prec = let make (i,v) = (SupervisorID i,v) 
+                     in map make . readsPrec prec 
+
+instance FromReqURI SupervisorID where
+    fromReqURI = readM
+
 getUserByEmail :: Email -> Query Users (Maybe User)
 getUserByEmail email = do
   users <- ask
@@ -232,11 +246,21 @@ getUserByUserID userid = do
   users <- ask
   return $ getOne (users @= userid)
 
+getUserSubaccounts :: UserID -> Query Users [User]
+getUserSubaccounts userid = do
+  users <- ask
+  return $ toList (users @= SupervisorID (unUserID userid))
+
 addUser :: BS.ByteString 
         -> BS.ByteString 
+        -> BS.ByteString 
+        -> Maybe UserID
         -> Update Users User
-addUser fullname email = do
+addUser fullname email passwd maybesupervisor = do
   users <- get
+  when (IxSet.size (users @= Email email) /= 0)
+     (error "user with same email address exists")
+          
   userid <- getUnique users UserID
   let user = (User { userid = userid
                    , userfullname = fullname
@@ -245,8 +269,8 @@ addUser fullname email = do
                    , usercompanynumber = BS.empty
                    , userinvoiceaddress = BS.empty
                    , userflashmessages = []
-                   , userpassword = BS.empty
-                   , usersupervisor = Nothing
+                   , userpassword = passwd
+                   , usersupervisor = fmap (SupervisorID . unUserID) maybesupervisor
                    , usercanhavesubaccounts = True
                    , useraccountsuspended = False
                    })
@@ -327,5 +351,6 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'addUserFlashMessage
                     , 'setUserPassword
                     , 'setUserDetails
+                    , 'getUserSubaccounts
                     ])
 
