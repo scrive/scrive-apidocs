@@ -514,12 +514,13 @@ invitationMailXml :: (XMLGenerator m)
                   -> BS.ByteString
                   -> Document
                   -> SignatoryLinkID
+                  -> MagicHash
                   -> XMLGenT m (HSX.XML m)
 invitationMailXml (Context {ctxmaybeuser = Just user, ctxhostpart}) 
                   emailaddress personname 
                   document@Document{documenttitle,documentid} 
-                  signaturelinkid = 
-    let link = ctxhostpart ++ "/sign/" ++ show documentid ++ "/" ++ show signaturelinkid
+                  signaturelinkid magichash = 
+    let link = ctxhostpart ++ show (LinkSignDoc document signaturelinkid magichash)
         creatorname = signatoryname (documentauthordetails document)
     in 
     <html>
@@ -541,11 +542,12 @@ invitationMail :: Context
                -> BS.ByteString
                -> Document
                -> SignatoryLinkID
+               -> MagicHash
                -> IO BS.ByteString
 invitationMail ctx emailaddress personname 
-               document signaturelinkid = do
+               document signaturelinkid magichash = do
                  let xml = invitationMailXml ctx emailaddress personname 
-                           document signaturelinkid
+                           document signaturelinkid magichash
                  renderHSPToByteString xml
 
 closedMailXml :: (XMLGenerator m) 
