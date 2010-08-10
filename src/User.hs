@@ -119,36 +119,43 @@ userLogin1 = do
                -}
         
               (_code,rpxdata) <- liftIO $ 
-                                 Curl.curlGetString req [Curl.CurlFollowLocation True
-                                                        ,Curl.CurlSSLVerifyPeer False] 
+                                 Curl.curlGetString_ req [ Curl.CurlFollowLocation True
+                                                         , Curl.CurlSSLVerifyPeer False
+                                                         ] 
 
-                    {-
-                      FIXME: Take care of the situation when not all data is available
-                     -}
-    
-              let Just json = Json.decode (BS.fromString rpxdata) 
-                  Just jsonMapping = fromMapping json 
-                  Just profileMapping = lookupMapping (BS.fromString "profile") jsonMapping
-                  verifiedEmail = maybe BS.empty unJsonString $ 
-                                  lookupScalar (BS.fromString "verifiedEmail") profileMapping
-                  unJsonString (Json.JsonString x) = x
-                  Just (Json.JsonString identifier) = lookupScalar (BS.fromString "identifier") profileMapping
-                  Just nameMapping = lookupMapping (BS.fromString "name") profileMapping
-                  Just (Json.JsonString formatted) = lookupScalar (BS.fromString "formatted") nameMapping
-        
-              when (verifiedEmail==BS.empty) mzero
+              liftIO $ noticeM rootLoggerName $ "RPXNow: " ++ BS.toString rpxdata
+
+              let unJsonString (Json.JsonString x) = x
+              let maybeProfileMapping = do
+                    json <- Json.decode rpxdata
+                    jsonMapping <- fromMapping json 
+                    lookupMapping (BS.fromString "profile") jsonMapping
+              let maybeVerifiedEmail = do
+                    profileMapping <- maybeProfileMapping
+                    verifiedEmail <- lookupScalar (BS.fromString "verifiedEmail") profileMapping
+                    return (unJsonString verifiedEmail)
+              let maybeNameFormatted = do
+                    profileMapping <- maybeProfileMapping
+                    nameMapping <- lookupMapping (BS.fromString "name") profileMapping
+                    nameFormatted <- lookupScalar (BS.fromString "formatted") nameMapping
+                    return (unJsonString nameFormatted)
+              let verifiedEmail = maybe BS.empty id maybeVerifiedEmail
+              let nameFormatted = maybe BS.empty id maybeNameFormatted
+
+              when (verifiedEmail==BS.empty) $
+                   error "SkrivaPa requires verifiedEmail in your OpenID login data, we cannot work without one"
 
               maybeuser <- query $ GetUserByEmail (Email verifiedEmail)
     
               user <- case maybeuser of
                         Just user -> do
-                          liftIO $ noticeM rootLoggerName $ "User " ++ BS.toString identifier ++ " logged in"
-                          --when (BS.null (useremail user) && not (BS.null verifiedEmail)) $ do
-                                       
+                          liftIO $ noticeM rootLoggerName $ "User: " ++ BS.toString nameFormatted ++ " <" ++ 
+                                 BS.toString verifiedEmail ++ "> logged in"
                           return user
                         Nothing -> do
-                          user <- update $ AddUser formatted verifiedEmail BS.empty Nothing
-                          liftIO $ noticeM rootLoggerName $ "New user " ++ BS.toString verifiedEmail ++ " logged in"
+                          user <- update $ AddUser nameFormatted verifiedEmail BS.empty Nothing
+                          liftIO $ noticeM rootLoggerName $ "User: " ++ BS.toString nameFormatted ++ " <" ++ 
+                                 BS.toString verifiedEmail ++ "> logged in (new)"
                           return user
               sessionid <- update $ NewSession (userid user)
               startSession sessionid
