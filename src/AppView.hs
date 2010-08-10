@@ -171,7 +171,7 @@ welcomeBody (Context {ctxmaybeuser = Just _, ctxhostpart}) =
    <p class="headline">Välkommen till SkrivaPå!</p>
 
    <form action=LinkIssue method="post" enctype="multipart/form-data">
-    <span class="small">Ladda upp dokument</span><br/>
+    <span class="small">Ladda upp dokumentet som PDF</span><br/>
     <input class="multi" maxlength="1" type="file" name="doc" accept="pdf"/>
     <input class="bigbutton" type="submit" value="Skapa"/>
    </form>
@@ -328,8 +328,8 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
           <% case ctxmaybeuser of 
                Just _ ->
                  <ul>
-                   <li><% topnavi (topMenu== TopNew) ctx "Skapa" LinkMain %></li>
-                   <li><% topnavi (topMenu== TopDocument) ctx "Avtal" LinkIssue %></li>
+                   <li><% topnavi (topMenu== TopNew) ctx "Skapa avtal" LinkMain %></li>
+                   <li><% topnavi (topMenu== TopDocument) ctx "Arkiv" LinkIssue %></li>
                    <li><% topnavi (topMenu== TopAccount) ctx "Konto" LinkAccount %></li>
                  </ul>
                _ -> <span/>
