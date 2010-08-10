@@ -351,7 +351,8 @@ showDocument user document issuedone freeleft =
                    <% showSignatoryEntryForEdit2 "signatory_template" "" "" "" "" %>
                   <div id="dialog-confirm-signinvite" title="Underteckna">
 	        
-            <p> När du bekräftar avtalet kommer en automatisk inbjudan att skickas till 
+            <p>När du bekräftar avtalet <strong><% documenttitle document %></strong>
+               kommer en automatisk inbjudan att skickas till 
                 <strong><span id="mrx">"Mr X"</span></strong>.
              <strong>Avtalet blir juridiskt bindande när alla parter undertecknat.</strong>
             </p>
@@ -429,7 +430,7 @@ showDocument user document issuedone freeleft =
          <% 
            if (documentstatus document==Preparation) 
               then <span>
-                    Dagar kvar: <input type="text" name="daystosign" value=(documentdaystosign document) maxlength="2" size="2"/><br/>
+                    Undertecknas inom <input type="text" name="daystosign" value=(documentdaystosign document) maxlength="2" size="2"/> dagar<br/>
                     <input class="bigbutton" type="submit" name="final" value="Underteckna" id="signinvite"/>
                     <br/>
                     <input class="secbutton" type="submit" name="save" value="Spara till senare"/>
