@@ -78,10 +78,12 @@ sendInvitationEmail1 ctx document signlink = do
   let SignatoryLink{ signatorylinkid
                    , signatorydetails = SignatoryDetails { signatoryname
                                                          , signatorycompany
-                                                         , signatoryemail }} = signlink
+                                                         , signatoryemail
+                                                         }
+                   , signatorymagichash } = signlink
       Document{documenttitle,documentid} = document
   content <- invitationMail ctx signatoryemail signatoryname
-             document signatorylinkid
+             document signatorylinkid signatorymagichash
 
   sendMail [(signatoryname,signatoryemail)] documenttitle content 
            (filepdf $ head $ documentfiles document)
@@ -124,9 +126,14 @@ sendClosedAuthorEmail ctx document = do
   
 handleSign :: Context -> Kontra Response
 handleSign ctx@(Context {ctxmaybeuser, ctxhostpart}) = 
-    path (\documentid -> path $ handleSignShow ctx documentid) `mplus` (withUser ctxmaybeuser $ do
-    documents <- query $ GetDocumentsBySignatory (userid $ fromJust ctxmaybeuser) 
-    webHSP (pageFromBody ctx TopNone kontrakcja (listDocuments documents)))
+    msum [ path $ \documentid -> 
+               path $ \signatoryid -> 
+                   path $ \magichash -> 
+                       handleSignShow ctx documentid signatoryid magichash
+         , withUser ctxmaybeuser $ do
+             documents <- query $ GetDocumentsBySignatory (userid $ fromJust ctxmaybeuser) 
+             webHSP (pageFromBody ctx TopNone kontrakcja (listDocuments documents))
+         ]
 
 signDoc :: Context -> DocumentID -> SignatoryLinkID -> Kontra  Response
 signDoc ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) documentid 
@@ -156,23 +163,31 @@ landpageSaved (ctx@Context { ctxmaybeuser = Just user }) document signatorylinki
   webHSP $ pageFromBody ctx TopDocument kontrakcja $ landpageDocumentSavedView ctx document signatorylinkid
 
 
-handleSignShow :: Context -> DocumentID -> SignatoryLinkID -> Kontra Response
-handleSignShow ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) documentid 
-               signatorylinkid1 = do
+handleSignShow :: Context -> DocumentID -> SignatoryLinkID -> MagicHash -> Kontra Response
+handleSignShow ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime})
+               documentid 
+               signatorylinkid1
+               magichash1 = do
   msum [ signDoc ctx documentid signatorylinkid1
        , do 
-          Just document <- update $ MarkDocumentSeen documentid signatorylinkid1 ctxtime
-                       
-          let wassigned = any f (documentsignatorylinks document)
-              f (SignatoryLink {signatorylinkid,maybesigninfo}) = 
-                  isJust maybesigninfo && signatorylinkid == signatorylinkid1
+           -- FIXME: this is so wrong on so many different levels...
+          mdocument <- update $ MarkDocumentSeen documentid signatorylinkid1 ctxtime
+          document <- maybe mzero return mdocument
+             
+          let invitedlinks = filter (\x -> signatorylinkid x == signatorylinkid1
+                                     && signatorymagichash x == magichash1)
+                              (documentsignatorylinks document)
+          invitedlink <- case invitedlinks of
+                           [invitedlink] -> return invitedlink
+                           _ -> mzero
+          let wassigned = f invitedlink
+              f (SignatoryLink {maybesigninfo}) = isJust maybesigninfo 
               authoruserid = unAuthor $ documentauthor document
           Just author <- query $ GetUserByUserID authoruserid
           let authorname = signatoryname $ documentauthordetails document
-              invitedname = signatoryname $ signatorydetails $ head $ filter (\x -> signatorylinkid x == signatorylinkid1) 
-                            (documentsignatorylinks document)
+              invitedname = signatoryname $ signatorydetails $ invitedlink 
           webHSP (pageFromBody ctx TopNone kontrakcja 
-                 (showDocumentForSign (LinkSignDoc document signatorylinkid1) 
+                 (showDocumentForSign (LinkSignDoc document signatorylinkid1 magichash1) 
                        document authorname invitedname wassigned))
        ]
 
@@ -274,8 +289,8 @@ updateDocument ctx@Context{ctxtime} document = do
 
 handleIssueGet :: (MonadIO m) => Context -> m Response
 handleIssueGet ctx@(Context {ctxmaybeuser = Just user, ctxhostpart}) = do
-    documents <- query $ GetDocumentsByUser (userid user) 
-    webHSP (pageFromBody ctx TopDocument kontrakcja (listDocuments documents))
+  documents <- query $ GetDocumentsByUser (userid user) 
+  webHSP (pageFromBody ctx TopDocument kontrakcja (listDocuments documents))
 
 gs :: String
 #ifdef WINDOWS

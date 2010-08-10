@@ -22,6 +22,7 @@ import Data.List (find)
 import MinutesTime
 import Control.Monad.Trans
 import Data.List (zipWith4)
+import System.Random
 
 
 $(deriveAll [''Eq, ''Ord, ''Default]
@@ -34,10 +35,10 @@ $(deriveAll [''Eq, ''Ord, ''Default]
 
 
       data SignatoryDetails = SignatoryDetails 
-          { signatoryname      :: BS.ByteString 
-          , signatorycompany   :: BS.ByteString
-          , signatorynumber    :: BS.ByteString 
-          , signatoryemail     :: BS.ByteString
+          { signatoryname      :: BS.ByteString  -- "Gracjan Polak" 
+          , signatorycompany   :: BS.ByteString  -- SkrivaPå
+          , signatorynumber    :: BS.ByteString  -- 123456789
+          , signatoryemail     :: BS.ByteString  -- "gracjanpolak@skrivapa.se"
           }
       data SignatoryLink0 = SignatoryLink0 
           { signatorylinkid0    :: SignatoryLinkID
@@ -48,9 +49,17 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , maybesigninfo0      :: Maybe SignInfo
           , maybeseentime0      :: Maybe MinutesTime
           }
+      data SignatoryLink1 = SignatoryLink1 
+          { signatorylinkid1    :: SignatoryLinkID
+          , signatorydetails1   :: SignatoryDetails
+          , maybesignatory1     :: Maybe Signatory
+          , maybesigninfo1      :: Maybe SignInfo
+          , maybeseentime1      :: Maybe MinutesTime
+          }
       data SignatoryLink = SignatoryLink 
           { signatorylinkid    :: SignatoryLinkID
           , signatorydetails   :: SignatoryDetails
+          , signatorymagichash :: MagicHash
           , maybesignatory     :: Maybe Signatory
           , maybesigninfo      :: Maybe SignInfo
           , maybeseentime      :: Maybe MinutesTime
@@ -229,6 +238,7 @@ deriving instance Show Author
 deriving instance Show TimeoutTime
 deriving instance Show SignatoryLink
 deriving instance Show SignatoryLink0
+deriving instance Show SignatoryLink1
 deriving instance Show SignInfo
 deriving instance Show SignatoryDetails
 deriving instance Show DocumentHistoryEntry
@@ -277,11 +287,15 @@ instance Version SignatoryDetails
 $(deriveSerialize ''SignatoryLink0)
 instance Version SignatoryLink0
 
-$(deriveSerialize ''SignatoryLink)
-instance Version SignatoryLink where
+$(deriveSerialize ''SignatoryLink1)
+instance Version SignatoryLink1 where
     mode = extension 1 (Proxy :: Proxy SignatoryLink0)
 
-instance Migrate SignatoryLink0 SignatoryLink where
+$(deriveSerialize ''SignatoryLink)
+instance Version SignatoryLink where
+    mode = extension 2 (Proxy :: Proxy SignatoryLink1)
+
+instance Migrate SignatoryLink0 SignatoryLink1 where
     migrate (SignatoryLink0 
           { signatorylinkid0
           , signatoryname0
@@ -290,18 +304,37 @@ instance Migrate SignatoryLink0 SignatoryLink where
           , maybesignatory0
           , maybesigninfo0
           , maybeseentime0
-          }) = SignatoryLink 
-          { signatorylinkid = signatorylinkid0
-          , signatorydetails = SignatoryDetails 
+          }) = SignatoryLink1 
+          { signatorylinkid1 = signatorylinkid0
+          , signatorydetails1 = SignatoryDetails 
                                { signatoryname = signatoryname0
                                , signatorycompany = signatorycompany0
                                , signatorynumber = BS.empty
                                , signatoryemail = signatoryemail0
                                }
-          , maybesignatory = maybesignatory0
-          , maybesigninfo = maybesigninfo0
-          , maybeseentime = maybeseentime0
+          , maybesignatory1 = maybesignatory0
+          , maybesigninfo1 = maybesigninfo0
+          , maybeseentime1 = maybeseentime0
           }
+
+instance Migrate SignatoryLink1 SignatoryLink where
+    migrate (SignatoryLink1 
+             { signatorylinkid1
+             , signatorydetails1
+             , maybesignatory1
+             , maybesigninfo1
+             , maybeseentime1
+             }) = SignatoryLink 
+                { signatorylinkid = signatorylinkid1
+                , signatorydetails = signatorydetails1
+                , maybesignatory = maybesignatory1
+                , maybesigninfo = maybesigninfo1
+                , maybeseentime = maybeseentime1
+                , signatorymagichash = MagicHash $ 
+                                       fromIntegral (unSignatoryLinkID signatorylinkid1) + 
+                                                        0xcde156781937458e37
+                } 
+
 
 $(deriveSerialize ''SignatoryLinkID)
 instance Version SignatoryLinkID
@@ -534,7 +567,15 @@ updateDocument time document authordetails signatories daystosign = do
   where mm details = do
           sg <- ask
           x <- getUnique sg SignatoryLinkID
-          return $ SignatoryLink x details Nothing Nothing Nothing
+          magichash <- getRandom
+          return $ SignatoryLink 
+                     { signatorylinkid = x
+                     , signatorydetails = details
+                     , signatorymagichash  = magichash
+                     , maybesignatory = Nothing
+                     , maybesigninfo  = Nothing
+                     , maybeseentime  = Nothing
+                     }
 
 updateDocumentStatus :: MinutesTime
                      -> Document 

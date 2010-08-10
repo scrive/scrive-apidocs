@@ -28,6 +28,15 @@ import Control.Monad.Error
 import Data.Monoid
 import Data.List
 import Data.Char
+import Data.Word
+import System.Random
+import Data.Typeable
+import Numeric -- use new module
+import Happstack.State
+import Happstack.Server.SimpleHTTP
+import Happstack.Util.Common
+import Data.Data
+import Happstack.Data
 
 {-
 
@@ -229,4 +238,29 @@ renderHSPToByteString xml = do
              Just (XMLMetaData (showDt, dt) _ pr) -> 
                      BS.fromString ((if showDt then (dt ++) else id) (pr content))
              Nothing -> BS.fromString (renderAsHTML content)
+
+
+$(deriveAll [''Eq, ''Ord, ''Default]
+  [d| newtype MagicHash = MagicHash { unMagicHash :: Word64 }
+  |])
+
+deriving instance Random MagicHash -- use Word64 size
+
+deriving instance Serialize MagicHash
+
+instance Version MagicHash -- make it primitive
+
+instance Show MagicHash where
+    -- FIXME: should be probably zero padded
+    showsPrec prec (MagicHash x) = showHex x
+    
+
+instance Read MagicHash where
+    readsPrec prec = let make (i,v) = (MagicHash i,v) 
+                     in map make . readHex
+
+
+instance FromReqURI MagicHash where
+    fromReqURI = readM
+ 
 

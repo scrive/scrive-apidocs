@@ -19,6 +19,7 @@ import qualified Data.Object.Json as Json
 import System.Log.Logger
 import Control.Monad.State
 import MinutesTime
+import Misc
 
 data KontraLink
     = LinkAbout
@@ -27,7 +28,7 @@ data KontraLink
     | LinkMain
     | LinkAccount
     | LinkLandpageSaved Document SignatoryLinkID
-    | LinkSignDoc Document SignatoryLinkID
+    | LinkSignDoc Document SignatoryLinkID MagicHash
     | LinkIssueDoc Document
     | LinkIssueDocPDF Document {- Which file? -}
     | LinkSubaccount
@@ -45,8 +46,8 @@ instance Show KontraLink where
         (++) $ "/issue/" ++ show (documentid document)
     showsPrec _ (LinkIssueDocPDF document) = 
         (++) $ "/issue/" ++ show (documentid document) ++ "/" ++ BS.toString (documenttitle document) ++ ".pdf"
-    showsPrec _ (LinkSignDoc document signatorylinkid) = 
-        (++) $ "/sign/" ++ show (documentid document) ++ "/" ++ show signatorylinkid
+    showsPrec _ (LinkSignDoc document signatorylinkid magichash) = 
+        (++) $ "/sign/" ++ show (documentid document) ++ "/" ++ show signatorylinkid ++ "/" ++ show magichash
 
 {-
 instance (EmbedAsAttr m String) => (EmbedAsAttr m KontraLink) where
