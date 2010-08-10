@@ -286,11 +286,17 @@ showSignatoryEntryForEdit2 idx signatoryname signatorycompany signatorynumber si
          Antal dagar att skriva på -}
     </li>
 
-showSignatoryEntryStatus :: (XMLGenerator m) => SignatoryLink -> XMLGenT m (HSX.XML m)
-showSignatoryEntryStatus (SignatoryLink{signatorydetails = SignatoryDetails{signatoryname,signatoryemail}
-                                       ,maybeseentime,maybesigninfo}) = 
-    <li> 
-        <b><% signatoryname %></b><br/>
+showSignatoryEntryStatus :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
+                            => Document -> SignatoryLink -> XMLGenT m (HSX.XML m)
+showSignatoryEntryStatus document (SignatoryLink{ signatorydetails = SignatoryDetails{ signatoryname
+                                                                            , signatoryemail
+                                                                            }
+                                       , signatorylinkid
+                                       , maybeseentime
+                                       , maybesigninfo
+                                       }) = 
+    <li> {- Sänd inbjudan igen, Sänd email-bekräftelse igen -}
+        <b><% signatoryname %></b> <a href=(LinkResendEmail document signatorylinkid)>Sänd inbjudan igen</a><br/>
         <% case maybesigninfo of
              Just (SignInfo{signtime}) -> "Undertecknat " ++ show signtime 
              Nothing -> case maybeseentime of
@@ -410,7 +416,7 @@ showDocument user document issuedone freeleft =
            else
              <div>
               <ol id="signatorylist">
-               <% map showSignatoryEntryStatus (documentsignatorylinks document) %>
+               <% map (showSignatoryEntryStatus document) (documentsignatorylinks document) %>
               </ol>
              </div>              
          %>

@@ -32,6 +32,7 @@ data KontraLink
     | LinkIssueDoc Document
     | LinkIssueDocPDF Document {- Which file? -}
     | LinkSubaccount
+    | LinkResendEmail Document SignatoryLinkID
 
 instance Show KontraLink where
     showsPrec _ LinkAbout = (++) "/about"
@@ -48,6 +49,8 @@ instance Show KontraLink where
         (++) $ "/issue/" ++ show (documentid document) ++ "/" ++ BS.toString (documenttitle document) ++ ".pdf"
     showsPrec _ (LinkSignDoc document signatorylinkid magichash) = 
         (++) $ "/sign/" ++ show (documentid document) ++ "/" ++ show signatorylinkid ++ "/" ++ show magichash
+    showsPrec _ (LinkResendEmail document signatorylinkid) = 
+        (++) $ "/resendemail/" ++ show (documentid document) ++ "/" ++ show signatorylinkid
 
 {-
 instance (EmbedAsAttr m String) => (EmbedAsAttr m KontraLink) where
