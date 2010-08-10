@@ -40,6 +40,8 @@ import System.Process
 import System.IO
 import System.Directory
 import Data.List
+import KontraLink
+import Control.Concurrent
 
 handleRoutes ctx@Context{ctxmaybeuser} = msum $
     [ nullDir >> webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx))
@@ -67,6 +69,10 @@ handleRoutes ctx@Context{ctxmaybeuser} = msum $
           case documentfiles doc of
               [] -> notFound (toResponse "temporary unavailable (document has no files)")
               f -> webHSP (DocView.showFilesImages2 f)
+    , toIO ctx $ dir "resendemail" $ 
+           pathdb GetDocumentByDocumentID $ \document -> 
+               path $ \signatorylinkid -> 
+                   resendEmail ctx document signatorylinkid
     , toIO ctx $ dir "account" (withUser ctxmaybeuser (UserControl.handleUser ctx))
     , toIO ctx $ dir "logout" (handleLogout)
     , toIO ctx $ dir "login" loginPage
@@ -215,3 +221,11 @@ databaseCleanup = do
   contents <- liftIO databaseCleanupWorker
   webHSP (AppView.databaseContents (sort contents))
   
+resendEmail :: Context -> Document -> SignatoryLinkID -> Kontra Response
+resendEmail ctx document@Document{documentsignatorylinks} signatorylinkid1 = do
+  let [invitedlink] = filter (\x -> signatorylinkid x == signatorylinkid1) documentsignatorylinks
+  liftIO $ forkIO $ DocControl.sendInvitationEmail1 ctx document invitedlink
+  let link = LinkIssueDoc document
+  response <- webHSP (seeOtherXML (show link))
+  seeOther (show link) response
+
