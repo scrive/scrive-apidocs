@@ -317,12 +317,12 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
        %>
       <div id="headerContainer">
         <img class="logosmall"src="/theme/images/logosmall.png"/>
-        <span class="contactabout">
+        <span class="contactabout">Tel: 0704560404 | <a href="mailto:info@skrivapa.se">Support</a> |
          <%
            case ctxmaybeuser of
              Just _ -> <a href="/logout">Logga ut</a>
              Nothing -> <a href="/login">Logga in</a>
-         %> | <a href=LinkAbout>Om SkrivaPå</a></span>
+         %></span>
         <div id="headerContainer2">
          <div id="nav">
           <% case ctxmaybeuser of 
@@ -344,6 +344,7 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
       <div id="footerContainer">
        <div id="footerContainer2">
         <span><a href="/termsofuse.html">Allmänna villkor</a></span>
+          {-  | <a href=LinkAbout>Om SkrivaPå</a> -}
        </div>
       </div>
 
