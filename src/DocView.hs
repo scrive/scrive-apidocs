@@ -417,15 +417,12 @@ showDocument user document issuedone freeleft =
               </ol>
              </div>              
          %>
-         <hr/>
-
-         <strong>2. Pris</strong><br/>
-         20kr exkl moms<br/>
-         <hr/>
-         <strong>3. Avtal</strong><br/>
          <% 
            if (documentstatus document==Preparation) 
               then <span>
+                    <hr/>
+
+                    <strong>2. Avtal</strong><br/>
                     Undertecknas inom <input type="text" name="daystosign" value=(documentdaystosign document) maxlength="2" size="2"/> dagar<br/>
                     <input class="bigbutton" type="submit" name="final" value="Underteckna" id="signinvite"/>
                     <br/>
@@ -579,7 +576,7 @@ closedMailXml (Context {ctxhostpart})
       <p>Hej <strong><% personname %></strong>,</p>
       <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats av alla parter och avtalet är nu juridiskt bindande. Nedan bifogas en direktlänk till det färdigställda dokumentet och en PDF-kopia.</p>
 
-      <p>Om du har ett SkrivaPå-konto med denna mailadress så har avtalet sparats automatiskt på detta konto. Om du inte har ett konto eller om detta är en annan mailadress än den som är registrerad hos oss, kan du spara avtalet genom att klicka på länken: </p>
+      <p>Om du har ett SkrivaPå-konto med denna mailadress så har avtalet sparats automatiskt på detta konto. Om du inte har ett konto eller om detta är en annan mailadress än den som är registrerad hos oss så kan du spara avtalet genom att klicka på länken nedan.</p>
 
       <p><a href=link><% link %></a></p>
      
