@@ -24,6 +24,7 @@ import Misc
 import AppView
 import User
 import KontraLink
+import DocView
 
 instance (EmbedAsChild m BS.ByteString) => (EmbedAsChild m Email) where
     asChild = asChild . unEmail
@@ -182,5 +183,49 @@ passwordChangeMail :: BS.ByteString
                    -> BS.ByteString
                    -> IO BS.ByteString
 passwordChangeMail emailaddress personname newpassword = do
-                 let xml = passwordChangeMailXml emailaddress personname newpassword
-                 renderHSPToByteString xml
+  let xml = passwordChangeMailXml emailaddress personname newpassword
+  renderHSPToByteString xml
+
+
+
+
+inviteSubaccountMailXml :: (XMLGenerator m) 
+                      => BS.ByteString
+                      -> BS.ByteString
+                      -> BS.ByteString
+                      -> BS.ByteString
+                      -> BS.ByteString
+                      -> XMLGenT m (HSX.XML m)
+inviteSubaccountMailXml supervisorname companyname emailaddress personname newpassword = 
+    <html>
+     <head>
+      <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+     </head>
+     <body>
+      <p>Hej <strong><% personname %></strong>,</p>
+
+      <p><strong><% supervisorname %></strong> har bjudit in dig att öppna ett konto på SkrivaPå genom vilket du kan
+         skriva avtal för <strong><% companyname %></strong>. Observera att detta konto inte är
+         avsett för privat bruk.</p>
+
+      <p>Användarnamn: <span style="color: orange; text-weight: bold"><% emailaddress %></span><br/>
+         Lösenord: <span style="color: orange; text-weight: bold"><% newpassword %></span><br/>
+      </p>
+
+      <p>
+      <a href="http://skrivapa.se/login">http://skrivapa.se/login</a>
+      </p>
+
+      <% poweredBySkrivaPaPara %> 
+     </body>
+    </html>
+
+inviteSubaccountMail :: BS.ByteString
+                     -> BS.ByteString
+                     -> BS.ByteString
+                     -> BS.ByteString
+                     -> BS.ByteString
+                     -> IO BS.ByteString
+inviteSubaccountMail supervisorname companyname emailaddress personname newpassword = do
+  let xml = inviteSubaccountMailXml supervisorname companyname emailaddress personname newpassword
+  renderHSPToByteString xml
