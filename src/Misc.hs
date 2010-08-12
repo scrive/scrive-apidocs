@@ -1,4 +1,4 @@
-{-# LANGUAGE ForeignFunctionInterface, CPP, ScopedTypeVariables #-}
+{-# LANGUAGE ForeignFunctionInterface, CPP, ScopedTypeVariables, StandaloneDeriving  #-}
 
 
 module Misc where
