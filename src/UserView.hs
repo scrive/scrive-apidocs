@@ -162,14 +162,13 @@ passwordChangeMailXml emailaddress personname newpassword =
 
       <p>Jag heter Lukas Duczko och är VD på SkrivaPå. Tack för att du har skapat ett konto hos oss. 
          Vi hoppas att du kommer att bli nöjd med våra tjänster. Tveka inte att höra av dig med 
-         åsikter, feedback eller bara en enkel hälsning. Din åsikt är värdefull.</p>
+         åsikter eller bara en enkel hälsning. Din åsikt är värdefull.</p>
 
-      <p>Dina användaruppgifter på SkrivaPå</p>
       <p>Användarnamn: <span style="color: orange; text-weight: bold"><% emailaddress %></span><br/>
          Lösenord: <span style="color: orange; text-weight: bold"><% newpassword %></span><br/>
       </p>
       <p>
-      http://skrivapa.se/login
+      <a href="http://skrivapa.se/login">http://skrivapa.se/login</a>
       </p>
 
       <p>MVH<br/>
