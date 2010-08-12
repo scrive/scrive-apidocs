@@ -47,22 +47,25 @@ handleGetSubaccount ctx@Context { ctxmaybeuser = Just user@User { userid } }  = 
   viewSubaccounts ctx subaccounts
 
 handlePostSubaccount :: Context -> Kontra Response
-handlePostSubaccount ctx@Context { ctxmaybeuser = Just (User { userid })} = do
+handlePostSubaccount ctx@Context { ctxmaybeuser = Just (user@User { userid })} = do
   create <- g "create"   -- check if we are in proper action
   fullname <- g "fullname"
   email <- g "email"
-  user <- liftIO $ createUser fullname email (Just userid)
+  user <- liftIO $ createUser fullname email (Just user)
   let link = show LinkSubaccount
   response <- webHSP (seeOtherXML link)
   seeOther link response
 
-createUser :: BS.ByteString -> BS.ByteString -> Maybe UserID -> IO User
+createUser :: BS.ByteString -> BS.ByteString -> Maybe User -> IO User
 createUser fullname email maybesupervisor = do
   let letters =['a'..'z'] ++ ['0'..'9'] ++ ['A'..'Z']
   indexes <- liftIO $ replicateM 8 (randomRIO (0,length letters-1))
   let passwd = BS.fromString $ map (letters!!) indexes
-  user <- update $ AddUser fullname email passwd maybesupervisor
-  content <- liftIO $ passwordChangeMail email fullname passwd
+  user <- update $ AddUser fullname email passwd (fmap userid maybesupervisor)
+  content <- case maybesupervisor of
+    Nothing -> liftIO $ passwordChangeMail email fullname passwd
+    Just supervisor -> liftIO $ inviteSubaccountMail (userfullname supervisor) (usercompanyname supervisor)
+                       email fullname passwd
   liftIO $ sendMail [(fullname, email)]
                (BS.fromString "Välkommen!") content BS.empty
   return user
