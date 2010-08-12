@@ -400,7 +400,7 @@ statsPageView nusers ndocuments users df =
       </table>
       <br/>
       <form method="post" action="/become">
-       Become user: 
+       Monitor user: 
        <table>
         <tr>
          <td>
@@ -409,7 +409,7 @@ statsPageView nusers ndocuments users df =
           </select>
          </td>
          <td>
-          <input class="secbutton" type="submit" value="Become"/>
+          <input class="secbutton" type="submit" value="Go"/>
          </td>
         </tr>
        </table>
