@@ -204,7 +204,7 @@ handleDownloadDatabase = do fail "nothing"
 indexDB :: Kontra Response
 indexDB = do
   contents <- liftIO $ getDirectoryContents "_local/kontrakcja_state"
-  webHSP (AppView.databaseContents contents)
+  webHSP (AppView.databaseContents (sort contents))
 
 databaseCleanupWorker :: IO [FilePath]
 databaseCleanupWorker = do
