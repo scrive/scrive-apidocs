@@ -138,7 +138,7 @@ loginPagePost = do
   -- check the user things here
   Just user@User{userpassword} <- query $ GetUserByEmail (Email $ BS.fromString email)
   -- FIXME: add password hashing here
-  if userpassword==BS.fromString passwd
+  if userpassword==BS.fromString passwd && passwd/=""
      then do
       sessionid <- update $ NewSession (userid user)
       startSession sessionid
