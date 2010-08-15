@@ -34,6 +34,8 @@ import System.IO
 import Seal
 import Happstack.Util.Common
 import KontraLink
+import System.Exit
+import qualified Data.Set as Set
 
 {-
   Document state transitions are described in DocState.
@@ -299,47 +301,85 @@ gs = "c:\\Program Files\\gs\\gs8.60\\bin\\gswin32c.exe"
 gs = "gs"
 #endif
 
-convertPdfToJpgPages :: BS.ByteString ->IO [BS.ByteString]
-convertPdfToJpgPages content = do
-  tmppath <- getTemporaryDirectory
-  allfiles <- getDirectoryContents tmppath
-  forM_ allfiles $ \file -> 
-      when (".jpg" `isSuffixOf` file) 
-               (removeFile (tmppath ++ "/" ++ file))
-
+convertPdfToJpgPages :: FileID ->BS.ByteString ->IO JpegPages
+convertPdfToJpgPages fileid content = do
+  tmppath1 <- getTemporaryDirectory
+  let tmppath = tmppath1 ++ "/" ++ show fileid
+  createDirectoryIfMissing True tmppath
   let sourcepath = tmppath ++ "/source.pdf"
   BS.writeFile sourcepath content
 
-  rawSystem gs [ "-sDEVICE=jpeg" 
-               , "-sOutputFile=" ++ tmppath ++ "/output-%d.jpg"
-               , "-dSAFER"
-               , "-dBATCH"
-               , "-dNOPAUSE"
-               , "-dTextAlphaBits=4"
-               , "-r144"
-               , sourcepath
-               ]
-  let pathofx x = tmppath ++ "/output-" ++ show x ++ ".jpg"
-  let exists1 x = doesFileExist (pathofx x)
-  let w (x:xs) = do
-        g <- exists1 x 
-        if g 
-         then do
-          h <- w xs
-          return (x:h)
-         else return []
-                  
-  listofpages <- w [1..]
-  x <- mapM (\x -> BS.readFile (pathofx x)) listofpages
-  return x
+  let gsproc = (proc gs [ "-sDEVICE=jpeg" 
+                        , "-sOutputFile=" ++ tmppath ++ "/output-%d.jpg"
+                        , "-dSAFER"
+                        , "-dBATCH"
+                        , "-dNOPAUSE"
+                        , "-dTextAlphaBits=4"
+                        , "-r144"
+                        , sourcepath
+                        ]) { std_out = CreatePipe
+                           , std_err = CreatePipe
+                           }
+  (_, Just outhandle, Just errhandle, gsProcHandle) <- createProcess gsproc
+  errcontent <- BS.hGetContents errhandle
+  outcontent <- BS.hGetContents outhandle
+                 
+  exitcode <- waitForProcess gsProcHandle
+
+  result <- case exitcode of
+    ExitFailure _ -> return $ JpegPagesError (errcontent `BS.append` outcontent)
+    ExitSuccess -> do
+                  let pathofx x = tmppath ++ "/output-" ++ show x ++ ".jpg"
+                  let exists1 x = doesFileExist (pathofx x)
+                  let w (x:xs) = do
+                                 g <- exists1 x 
+                                 if g 
+                                  then do
+                                   h <- w xs
+                                   return (x:h)
+                                  else return []
+
+                  listofpages <- w [1..]
+                  x <- mapM (\x -> BS.readFile (pathofx x)) listofpages
+                  return (JpegPages x)
+  -- remove the directory with all the files now
+  -- everything as been collected, process has ended, we are done!
+  -- removeDirectoryRecursive tmppath
+  return result
        
 
-handleDocumentUploadX docid content filename = do
-  jpgpages <- convertPdfToJpgPages content
-  let filename2 = BS.fromString filename
-  -- FIXME: take care of case when it does not parse
-  update $ AttachFile docid filename2 content jpgpages
+maybeScheduleRendering :: MVar (Set.Set FileID) -> DocumentID -> File -> IO Bool
+maybeScheduleRendering mvar 
+                       documentid 
+                       (file@File { filejpgpages = JpegPagesPending
+                                  , fileid
+                                  , filepdf 
+                                  }) = do
+  modifyMVar mvar $ \setoffilesrenderednow ->
+      if Set.member fileid setoffilesrenderednow
+         then return (setoffilesrenderednow, True)
+         else do
+           forkIO $ do
+                -- putStrLn $ "Rendering " ++ show fileid
+                -- FIXME: handle exceptions gracefully
+                jpegpages <- convertPdfToJpgPages fileid filepdf
+                update $ ReplaceFile documentid (file { filejpgpages = jpegpages })
+                modifyMVar_ mvar (\setoffilesrenderednow -> return (Set.delete fileid setoffilesrenderednow))
+           return (Set.insert fileid setoffilesrenderednow, True)
+maybeScheduleRendering _ _ _ = return False
 
+handlePageOfDocument mvar document@Document {documentfiles,documentid} =
+    case documentfiles of
+      [] -> notFound (toResponse "temporary unavailable (document has no files)")
+      f -> do
+        b <- mapM (\file -> liftIO $ maybeScheduleRendering mvar documentid file) f
+        if any id b
+           then notFound (toResponse "temporary unavailable (document has files pending for process)")
+           else webHSP (DocView.showFilesImages2 f)
+    
+handleDocumentUpload :: DocumentID -> BS.ByteString -> BS.ByteString -> IO ()
+handleDocumentUpload docid content filename = do
+  update $ AttachFile docid filename content
 
 sealLine :: BS.ByteString -> [BS.ByteString] -> MinutesTime -> SealPerson
 sealLine fullname details signtime =
@@ -389,16 +429,14 @@ sealDocument signtime1 author@(User {userfullname,usercompanyname,usercompanynum
             , sealDocumentNumber = docid
             , sealPersons = persons
             }
-  print config
+  -- print config
   hPutStr inx (show config)
   hClose inx
   
   waitForProcess sealProcHandle
   newfilepdf <- BS.readFile tmpout
-  -- FIXME: delete old files
-  newfilejpegpages <- convertPdfToJpgPages newfilepdf
-  let newfile = file {filepdf = newfilepdf, filejpgpages = newfilejpegpages}
-  update $ ReplaceFile document newfile
+  let newfile = file {filepdf = newfilepdf, filejpgpages = JpegPagesPending}
+  update $ ReplaceFile (documentid document) newfile
   
 
 
@@ -420,7 +458,7 @@ handleIssueNewDocument ctx@(Context { ctxmaybeuser = Just user, ctxhostpart, ctx
     let title = BSC.pack (basename filename) 
     freeleft <- freeLeftForUser user
     doc <- update $ NewDocument user title ctxtime (freeleft>0)
-    liftIO $ forkIO $ handleDocumentUploadX (documentid doc) (concatChunks content) filename
+    liftIO $ forkIO $ handleDocumentUpload (documentid doc) (concatChunks content) title
     let link = ctxhostpart ++ "/issue/" ++ show (documentid doc)
     response <- webHSP (seeOtherXML link)
     seeOther link response

@@ -9,7 +9,7 @@ import Happstack.State
 import Control.Monad.Reader (ask)
 import Control.Monad.State (modify)
 import UserState
-import Happstack.Data.IxSet
+import Happstack.Data.IxSet as IxSet
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import Control.Applicative ((<$>))
@@ -179,8 +179,18 @@ $(deriveAll [''Default]
           { fileid       :: FileID
           , filename     :: BS.ByteString
           , filepdf      :: BS.ByteString 
-          , filejpgpages :: [BS.ByteString]
+          , filejpgpages :: JpegPages
           }
+      data File0 = File0 
+          { fileid0       :: FileID
+          , filename0     :: BS.ByteString
+          , filepdf0      :: BS.ByteString 
+          , filejpgpages0 :: [BS.ByteString]
+          }
+
+      data JpegPages = JpegPagesPending
+                     | JpegPages [BS.ByteString]    -- FIXME: add width and height to each one
+                     | JpegPagesError BS.ByteString -- normalization error with whole log from normalizer
 
    |])
 
@@ -457,6 +467,27 @@ instance Version ChargeMode where
 
 $(deriveSerialize ''File)
 instance Version File where
+    mode = extension 1 (Proxy :: Proxy File0)
+
+$(deriveSerialize ''File0)
+instance Version File0 where
+
+instance Migrate File0 File where
+    migrate (File0 
+             { fileid0
+             , filename0
+             , filepdf0
+             , filejpgpages0
+             }) = File 
+                { fileid = fileid0
+                , filename = filename0
+                , filepdf = filepdf0
+                , filejpgpages = JpegPages filejpgpages0
+                }
+
+
+$(deriveSerialize ''JpegPages)
+instance Version JpegPages where
 
 $(deriveSerialize ''FileID)
 instance Version FileID where
@@ -531,14 +562,16 @@ newDocument user@User{userid,userfullname,usercompanyname,usercompanynumber,user
   modify $ insert doc
   return doc
 
-attachFile :: DocumentID -> BS.ByteString -> BS.ByteString 
-           -> [BS.ByteString] -> Update Documents ()
-attachFile documentid filename1 content jpgpages = do
+attachFile :: DocumentID 
+           -> BS.ByteString 
+           -> BS.ByteString 
+           -> Update Documents ()
+attachFile documentid filename1 content = do
   documents <- ask
   let Just document = getOne (documents @= documentid)
   fileid2 <- getUnique documents FileID
   let nfile = File { fileid = fileid2
-                   , filejpgpages = jpgpages
+                   , filejpgpages = JpegPagesPending
                    , filename = filename1
                    , filepdf = content
                    }
@@ -631,7 +664,7 @@ getFilePageJpg xfileid pageno = do
   return $ do -- maybe monad!
     document <- getOne (documents @= xfileid)
     nfile <- find (\f -> fileid f == xfileid) (documentfiles document)
-    let jpgs = filejpgpages nfile
+    JpegPages jpgs <- return $ filejpgpages nfile
     jpg <- return (jpgs!!(pageno-1))
     return jpg
 
@@ -658,8 +691,8 @@ getDocumentStats = do
   return (size documents)
 
 
-replaceFile :: Document -> File -> Update Documents Document
-replaceFile (Document{documentid}) file = do
+replaceFile :: DocumentID -> File -> Update Documents Document
+replaceFile documentid file = do
   documents <- ask
   let Just doc = getOne (documents @= documentid)
   let newdoc = doc {documentfiles = [file]} -- FIXME: care about many files here
@@ -728,6 +761,14 @@ archiveDocuments docidlist = do
                                Just doc -> updateIx docid (doc { documentdeleted = True }) documents
                                Nothing -> documents
       
+fixRemoveImages :: Update Documents ()
+fixRemoveImages = do
+  -- FIXME: oh boy, this is so absolutely ugly!
+  let fixImagesInOneDocument (document@Document {documentfiles}) =
+                                  document {documentfiles = map fixOneFile documentfiles}
+      fixOneFile file = file { filejpgpages = JpegPagesPending }
+  modify (\documents -> IxSet.fromList (map fixImagesInOneDocument (IxSet.toList documents)))
+  return ()
  
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocumentsByAuthor
@@ -750,6 +791,7 @@ $(mkMethods ''Documents [ 'getDocumentsByAuthor
                         , 'getNumberOfDocumentsOfUser
                         , 'setDocumentTimeoutTime
                         , 'archiveDocuments
+                        , 'fixRemoveImages
                         ])
 
 

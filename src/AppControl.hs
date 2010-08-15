@@ -42,8 +42,10 @@ import System.Directory
 import Data.List
 import KontraLink
 import Control.Concurrent
+import qualified Data.Set as Set
+import System.IO.Unsafe
 
-handleRoutes ctx@Context{ctxmaybeuser} = msum $
+handleRoutes ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} = msum $
     [ nullDir >> webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx))
     , toIO ctx $ dir "sign" $ DocControl.handleSign ctx
     , toIO ctx $ dir "issue" (withUser ctxmaybeuser (DocControl.handleIssue ctx))
@@ -65,10 +67,8 @@ handleRoutes ctx@Context{ctxmaybeuser} = msum $
                      DocControl.landpageSaved ctx document signatorylinkid
                ]
           
-    , dir "pagesofdoc" $ pathdb GetDocumentByDocumentID $ \doc -> do
-          case documentfiles doc of
-              [] -> notFound (toResponse "temporary unavailable (document has no files)")
-              f -> webHSP (DocView.showFilesImages2 f)
+    , dir "pagesofdoc" $ pathdb GetDocumentByDocumentID $ \document -> 
+        DocControl.handlePageOfDocument ctxnormalizeddocuments document
     , toIO ctx $ dir "resendemail" $ 
            pathdb GetDocumentByDocumentID $ \document -> 
                path $ \signatorylinkid -> 
@@ -83,12 +83,16 @@ handleRoutes ctx@Context{ctxmaybeuser} = msum $
             , toIO ctx $ dir "createuser" $ handleCreateUser
             , toIO ctx $ dir "db" $ msum [ methodM GET >> indexDB
                                          , dir "cleanup" $ databaseCleanup
+                                         , dir "removeimages" $ databaseRemoveImages
                                          , fileServe [] "_local/kontrakcja_state"
                                          ]
             ]
        else [])
     ++ [ fileServe [] "public"] 
 
+-- uh uh, how to do that in correct way?
+normalizeddocuments :: MVar (Set.Set FileID)
+normalizeddocuments = unsafePerformIO $ newMVar (Set.empty)
 
 appHandler :: ServerPartT IO Response
 appHandler = do
@@ -103,12 +107,14 @@ appHandler = do
                          liftIO $ update $ GetUserFlashMessages userid
                      Nothing -> return []
   minutestime <- liftIO $ getMinutesTime
+  
   let 
    ctx = Context
             { ctxmaybeuser = maybeuser
             , ctxhostpart = hostpart
             , ctxflashmessages = flashmessages              
             , ctxtime = minutestime
+            , ctxnormalizeddocuments = normalizeddocuments
             }
   handleRoutes ctx `mplus` do
      response <- webHSP (pageFromBody ctx TopNone kontrakcja (errorReport ctx rq))
@@ -147,7 +153,7 @@ handleLogout = do
   endSession
   response <- webHSP (seeOtherXML "/")
   seeOther "/" response
-    
+
 
 #ifndef WINDOWS
 read_df = do
@@ -220,6 +226,15 @@ databaseCleanup = do
   -- and all events that have numbers less than last checkpoint
   contents <- liftIO databaseCleanupWorker
   webHSP (AppView.databaseContents (sort contents))
+
+databaseRemoveImages :: Kontra Response
+databaseRemoveImages = do
+  update $ FixRemoveImages
+  let link = "/db/"
+  response <- webHSP (seeOtherXML (show link))
+  seeOther (show link) response
+  
+  
   
 resendEmail :: Context -> Document -> SignatoryLinkID -> Kontra Response
 resendEmail ctx document@Document{documentsignatorylinks} signatorylinkid1 = do
