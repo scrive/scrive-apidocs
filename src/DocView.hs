@@ -305,19 +305,27 @@ showSignatoryEntryStatus document (SignatoryLink{ signatorydetails = SignatoryDe
         %>
     </li>
 
- -- FIXME: add info about date viewed, date signed, send reminder, change email
-showFileImages file = 
-   [ <img class="pagejpg" src=("/pages/" ++ show (fileid file) ++ "/" ++ show pageno) width="300"/> |
-     pageno <- [1..(length (filejpgpages file))]]
+showFileImages file@File { fileid, filejpgpages = JpegPages jpgpages } = 
+   [ <img class="pagejpg" src=("/pages/" ++ show fileid ++ "/" ++ show pageno) width="300"/> |
+     pageno <- [1..(length jpgpages)]]
+showFileImages file@File { fileid, filejpgpages = JpegPagesPending } = 
+   [ <div class="pagejpga4 pagejpg">
+      <img class="waiting" src="/theme/images/wait30trans.gif"/>
+     </div> ]
+showFileImages file@File { fileid, filejpgpages = JpegPagesError normalizelog } = 
+   [ <div class="pagejpga4 pagejpg">
+      <% normalizelog %>
+     </div> ]
+
+
 
 showFilesImages2 files = <span><% concatMap showFileImages files %></span> 
 
 showDocumentBox document = 
     <div id="documentBox">
-        {- <% map showFileImages (files document) %> -}
-        <div class="pagejpga4 pagejpg">
-         <img class="waiting" src="/theme/images/wait30trans.gif"/>
-        </div>
+     <div class="pagejpga4 pagejpg">
+      <img class="waiting" src="/theme/images/wait30trans.gif"/>
+     </div>
     </div>
 
 {-
@@ -567,6 +575,7 @@ closedMailXml (Context {ctxhostpart})
               documenttitle documentid 
               signaturelinkid = 
     let link = ctxhostpart ++ "/sign/" ++ show documentid ++ "/" ++ show signaturelinkid
+        -- FIXME: fix the link with magichash
     in 
     <html>
      <head>

@@ -40,15 +40,20 @@ import System.Log.Logger
 import Control.Monad.State
 import MinutesTime
 import KontraLink
+import DocState
+import qualified Data.Set as Set
+import Control.Concurrent.MVar
+
 
 seeOtherXML :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
 
 data Context = Context 
-    { ctxmaybeuser     :: Maybe User
-    , ctxhostpart      :: String
-    , ctxflashmessages :: [FlashMessage]
-    , ctxtime          :: MinutesTime
+    { ctxmaybeuser           :: Maybe User
+    , ctxhostpart            :: String
+    , ctxflashmessages       :: [FlashMessage]
+    , ctxtime                :: MinutesTime
+    , ctxnormalizeddocuments :: MVar (Set.Set FileID)
     }
 
 type Kontra a = ServerPartT (StateT Context IO) a
