@@ -64,13 +64,13 @@ sendMail fullnameemails title content attachmentcontent = do
       -- createProcess (proc "sendmail" (["-i"] ++ mailtos)) { std_in = CreatePipe }
       createProcess (proc "./curl" ([ "--user"
                                     , "info@skrivapa.se:kontrakcja"
-                                     , "smtp://smtp.gmail.com:587"
+                                    , "smtp://smtp.gmail.com:587"
                                     , "-k", "--ssl" -- , "-v", "-v"
                                     , "--mail-from"
                                     , "<info@skrivapa.se>"
                                     ] ++ rcpt)) { std_in = CreatePipe}
 #endif
-  -- FIXME: encoding issues
+  -- FIXME: add =?UTF8?B= everywhere it is needed here
   let boundary = "skrivapa-mail-12-337331046" 
   let header = 
           "Subject: " ++ BS.toString title ++ "\r\n" ++
