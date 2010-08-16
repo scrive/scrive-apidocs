@@ -353,12 +353,6 @@ img.waiting
     position: relative;
 }
 
-#persons
-{
-    overflow: auto;
-    height: 230px;
-}
-
 .doctable {
     border-collapse:collapse;
     border-color: gray;
@@ -520,13 +514,12 @@ img.waiting
     text-align: center;
 }
 
-
+/*
 #signatorylist
 {
-    //height:200px;
-  //overflow:auto;
   padding:0 0 0 20px;
 }
+*/
 
 div.floatleft
 {
