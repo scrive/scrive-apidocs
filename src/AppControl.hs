@@ -45,11 +45,11 @@ import Control.Concurrent
 import qualified Data.Set as Set
 import System.IO.Unsafe
 
-handleRoutes ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} = msum $
+handleRoutes ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} = toIO ctx $ msum $
     [ nullDir >> webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx))
-    , toIO ctx $ dir "sign" $ DocControl.handleSign ctx
-    , toIO ctx $ dir "issue" (withUser ctxmaybeuser (DocControl.handleIssue ctx))
-    , toIO ctx $ dir "pages" $ path $ \fileid -> 
+    , dir "sign" $ DocControl.handleSign ctx
+    , dir "issue" (withUser ctxmaybeuser (DocControl.handleIssue ctx))
+    , dir "pages" $ path $ \fileid -> 
         msum [ path $ \pageno -> do
                  modminutes <- query $ FileModTime fileid
                  DocControl.showPage ctx modminutes fileid pageno
@@ -69,19 +69,19 @@ handleRoutes ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} = msum $
           
     , dir "pagesofdoc" $ pathdb GetDocumentByDocumentID $ \document -> 
         DocControl.handlePageOfDocument ctxnormalizeddocuments document
-    , toIO ctx $ dir "resendemail" $ 
+    , dir "resendemail" $ 
            pathdb GetDocumentByDocumentID $ \document -> 
                path $ \signatorylinkid -> 
                    resendEmail ctx document signatorylinkid
-    , toIO ctx $ dir "account" (withUser ctxmaybeuser (UserControl.handleUser ctx))
-    , toIO ctx $ dir "logout" (handleLogout)
-    , toIO ctx $ dir "login" loginPage
+    , dir "account" (withUser ctxmaybeuser (UserControl.handleUser ctx))
+    , dir "logout" (handleLogout)
+    , dir "login" loginPage
     ]
     ++ (if isSuperUser ctxmaybeuser then 
-            [ toIO ctx $ dir "stats" $ statsPage
-            , toIO ctx $ dir "become" $ handleBecome
-            , toIO ctx $ dir "createuser" $ handleCreateUser
-            , toIO ctx $ dir "db" $ msum [ methodM GET >> indexDB
+            [ dir "stats" $ statsPage
+            , dir "become" $ handleBecome
+            , dir "createuser" $ handleCreateUser
+            , dir "db" $ msum [ methodM GET >> indexDB
                                          , dir "cleanup" $ databaseCleanup
                                          , dir "removeimages" $ databaseRemoveImages
                                          , fileServe [] "_local/kontrakcja_state"
