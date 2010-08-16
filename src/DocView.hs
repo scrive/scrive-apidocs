@@ -530,10 +530,10 @@ invitationMailXml :: (XMLGenerator m)
                   -> XMLGenT m (HSX.XML m)
 invitationMailXml (Context {ctxmaybeuser = Just user, ctxhostpart}) 
                   emailaddress personname 
-                  document@Document{documenttitle,documentid} 
+                  document@Document{documenttitle,documentid,documenttimeouttime,documentauthordetails} 
                   signaturelinkid magichash = 
     let link = ctxhostpart ++ show (LinkSignDoc document signaturelinkid magichash)
-        creatorname = signatoryname (documentauthordetails document)
+        creatorname = signatoryname documentauthordetails
     in 
     <html>
      <head>
@@ -541,9 +541,16 @@ invitationMailXml (Context {ctxmaybeuser = Just user, ctxhostpart})
      </head>
      <body>
       <p>Hej <strong><% personname %></strong>,</p>
-      <p></p>
-      <p><strong><% creatorname %></strong> har bjudit in dig att underteckna på dokumentet 
-         <strong><% documenttitle %></strong>. Klicka på länken nedan för att granska dokumentet online. Du undertecknar genom att bekräfta avtalet i nästa steg.</p>
+
+      <p><strong><% creatorname %></strong> har bjudit in dig att underteckna dokumentet 
+         <strong><% documenttitle %></strong>. 
+         Klicka på länken nedan för att granska dokumentet online. 
+         Du undertecknar genom att bekräfta avtalet i nästa steg.
+         <% case documenttimeouttime of
+              Just time -> "Avtalet kan undertecknas senast " ++ show time ++ "."
+              Nothing -> ""
+          %></p>
+
       <p><a href=link><% link %></a></p>
       <% poweredBySkrivaPaPara %>
      </body>
@@ -566,16 +573,15 @@ closedMailXml :: (XMLGenerator m)
                   => Context
                   -> BS.ByteString
                   -> BS.ByteString
-                  -> BS.ByteString
-                  -> DocumentID
+                  -> Document
                   -> SignatoryLinkID
+                  -> MagicHash
                   -> XMLGenT m (HSX.XML m)
 closedMailXml (Context {ctxhostpart}) 
               emailaddress personname 
-              documenttitle documentid 
-              signaturelinkid = 
-    let link = ctxhostpart ++ "/sign/" ++ show documentid ++ "/" ++ show signaturelinkid
-        -- FIXME: fix the link with magichash
+              document@Document{documenttitle,documentid} 
+              signaturelinkid magichash = 
+    let link = ctxhostpart ++ show (LinkSignDoc document signaturelinkid magichash)
     in 
     <html>
      <head>
@@ -583,9 +589,13 @@ closedMailXml (Context {ctxhostpart})
      </head>
      <body> {- change "alla parter" to list of people -}
       <p>Hej <strong><% personname %></strong>,</p>
-      <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats av alla parter och avtalet är nu juridiskt bindande. Nedan bifogas en direktlänk till det färdigställda dokumentet och en PDF-kopia.</p>
+      <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats av alla parter 
+         och avtalet är nu juridiskt bindande. Nedan bifogas en direktlänk till det
+         färdigställda dokumentet och en PDF-kopia.</p>
 
-      <p>Om du har ett SkrivaPå-konto med denna mailadress så har avtalet sparats automatiskt på detta konto. Om du inte har ett konto eller om detta är en annan mailadress än den som är registrerad hos oss så kan du spara avtalet genom att klicka på länken nedan.</p>
+      <p>Om du har ett SkrivaPå-konto med denna mailadress så har avtalet sparats automatiskt
+         på detta konto. Om du inte har ett konto eller om detta är en annan mailadress än den som
+         är registrerad hos oss så kan du spara avtalet genom att klicka på länken nedan.</p>
 
       <p><a href=link><% link %></a></p>
      
@@ -596,27 +606,26 @@ closedMailXml (Context {ctxhostpart})
 closedMail :: Context
            -> BS.ByteString
            -> BS.ByteString
-           -> BS.ByteString
-           -> DocumentID
+           -> Document
            -> SignatoryLinkID
+           -> MagicHash
            -> IO BS.ByteString
 closedMail ctx emailaddress personname 
-               documenttitle documentid signaturelinkid = do
+               document signaturelinkid magichash = do
                  let xml = closedMailXml ctx emailaddress personname 
-                           documenttitle documentid signaturelinkid
+                           document signaturelinkid magichash
                  renderHSPToByteString xml
 
 closedMailAuthorXml :: (XMLGenerator m) 
-                     => Context
-                  -> BS.ByteString
-                  -> BS.ByteString
-                  -> BS.ByteString
-                  -> DocumentID
-                  -> XMLGenT m (HSX.XML m)
+                    => Context
+                    -> BS.ByteString
+                    -> BS.ByteString
+                    -> Document
+                    -> XMLGenT m (HSX.XML m)
 closedMailAuthorXml (Context {ctxhostpart}) 
                   emailaddress personname 
-                  documenttitle documentid = 
-    let link = ctxhostpart ++ "/issue/" ++ show documentid
+                  document@Document{documenttitle,documentid} = 
+    let link = ctxhostpart ++ show (LinkIssueDoc document)
     in 
     <html>
      <head>
@@ -624,7 +633,9 @@ closedMailAuthorXml (Context {ctxhostpart})
      </head>
      <body>  {- change "alla parter" to list of people -}
       <p>Hej <strong><% personname %></strong>,</p>
-      <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats av alla parter och avtalet är nu juridiskt bindande. Nedan bifogas en direktlänk till det färdigställda dokumentet och en PDF-kopia.</p>
+      <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats av alla parter 
+         och avtalet är nu juridiskt bindande. Nedan bifogas en direktlänk till det
+         färdigställda dokumentet och en PDF-kopia.</p>
       
       <p><a href=link><% link %></a></p>
      
@@ -635,12 +646,11 @@ closedMailAuthorXml (Context {ctxhostpart})
 closedMailAuthor :: Context
            -> BS.ByteString
            -> BS.ByteString
-           -> BS.ByteString
-           -> DocumentID
+           -> Document
            -> IO BS.ByteString
-closedMailAuthor ctx emailaddress personname documenttitle documentid = do
+closedMailAuthor ctx emailaddress personname document = do
                  let xml = closedMailAuthorXml ctx emailaddress personname 
-                           documenttitle documentid
+                           document
                  renderHSPToByteString xml
 
 poweredBySkrivaPaPara :: (XMLGenerator m) => XMLGenT m (HSX.XML m)
