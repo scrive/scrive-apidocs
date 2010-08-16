@@ -49,6 +49,28 @@ function resizeToWindow()
     $("#mainContainer").height( $(this).height() - $('#headerContainer').height() - $('#footerContainer').height() - 2 );
 }
 
+function signatoryadd()
+{
+    var signatorylist = $( "#signatorylist" );
+    var sig = $("#signatory_template").clone();
+    signatorylist.append(sig);
+    enableInfoText(sig);
+    sig.hide();
+    sig.slideDown("slow");
+    return false;
+}
+
+function signatoryremove(node)
+{
+  var sig = $(node).parent();
+  var cls = sig.data("draggableBoxClass");
+  var db = $("." + cls);
+  sig.slideUp('slow',function() { $(this).remove(); });
+  db.fadeOut('slow',function() { $(this).remove(); });
+  return false;
+}
+
+
 $(document).ready( function () {
     $('.flashmsgbox').delay(5000).fadeOut();
     $('.flashmsgbox').click( function() { 
@@ -73,6 +95,60 @@ $(document).ready( function () {
             }
         });
     }
+    $("#dialog-confirm-signinvite").hide();
+    $("#dialog-confirm-sign").hide();
+    $("#signinvite").click(function() {
+         var button = $(this);
+         var mrxs = $("form input[name='signatoryname']");
+         var tot = "";
+         mrxs.each(function(index) {
+                 if( tot!="" ) tot += ", ";
+                 tot += $(this).val();
+             });
+         $("#mrx").text(tot);
+
+         $("#dialog-confirm-signinvite").dialog({
+                 resizable: false,
+                     height: 340,
+                     width: 350,
+                     modal: true,
+                     buttons: {
+                     'Underteckna': function() {
+                         var form = $("#form");
+                         var name = button.attr("name");
+                         form.append("<input type='hidden' name='" + name + "' value='automatic'>");
+                         form.submit();
+                     },
+                         'Avbryt': function() {
+                             $(this).dialog('close');
+                         }
+                 }
+             });
+
+         return false;});
+
+    $("#sign").click(function() {
+         var button = $(this);
+         $("#dialog-confirm-sign").dialog({
+                 resizable: false,
+                     height: 280,
+                     width: 350,
+                     modal: true,
+                     buttons: {
+                     'Underteckna': function() {
+                         var form = $("#form");
+                         var name = button.attr("name");
+                         form.append("<input type='hidden' name='" + name + "' value='automatic'>");
+                         form.submit();
+                     },
+                         'Avbryt': function() {
+                             $(this).dialog('close');
+                         }
+                 }
+             });
+         
+         return false;
+    });
     $(window).resize(resizeToWindow);
     $(window).resize();
 });

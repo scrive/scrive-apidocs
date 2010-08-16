@@ -268,23 +268,17 @@ showSignatoryEntryForEdit2 :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraL
                            => String -> String -> String -> String
                            -> String -> XMLGenT m (HSX.XML m)
 showSignatoryEntryForEdit2 idx signatoryname signatorycompany signatorynumber signatoryemail = 
-    <li id=idx>
-      {- <label>Namn på avtalspart</label><br/> -}
+    <div id=idx>
       <input name="signatoryname" type="text" value=signatoryname
              infotext="Namn på avtalspart"/><br/>
-      {- <label>Titel, företag</label><br/> -}
       <input name="signatorycompany" type="text" value=signatorycompany
              infotext="Titel, företag"/><br/>
-      {- <label>Orgnr/Persnr</label><br/> -}
       <input name="signatorynumber" type="text" value=signatorynumber
              infotext="Orgnr/Persnr"/><br/>
-      {- <label>Personens e-mail</label><br/> -}
       <input name="signatoryemail" type="text" value=signatoryemail
              infotext="Personens e-mail"/><br/>
       <a onclick="return signatoryremove(this);" href="#">Ta bort</a>
-      {- days to sign:
-         Antal dagar att skriva på -}
-    </li>
+    </div>
 
 showSignatoryEntryStatus :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
                             => Document -> SignatoryLink -> XMLGenT m (HSX.XML m)
@@ -295,7 +289,7 @@ showSignatoryEntryStatus document (SignatoryLink{ signatorydetails = SignatoryDe
                                        , maybeseentime
                                        , maybesigninfo
                                        }) = 
-    <li> {- Sänd inbjudan igen, Sänd email-bekräftelse igen -}
+    <div> {- Sänd inbjudan igen, Sänd email-bekräftelse igen -}
         <b><% signatoryname %></b> <a href=(LinkResendEmail document signatorylinkid)>Sänd inbjudan igen</a><br/>
         <% case maybesigninfo of
              Just (SignInfo{signtime}) -> "Undertecknat " ++ show signtime 
@@ -303,7 +297,7 @@ showSignatoryEntryStatus document (SignatoryLink{ signatorydetails = SignatoryDe
                           Just time -> "Har öppnat dokumentet " ++ show time
                           Nothing -> "Har inte öppnat dokumentet"
         %>
-    </li>
+    </div>
 
 showFileImages file@File { fileid, filejpgpages = JpegPages jpgpages } = 
    [ <img class="pagejpg" src=("/pages/" ++ show fileid ++ "/" ++ show pageno) width="300"/> |
@@ -354,90 +348,72 @@ showDocument :: (XMLGenerator m,
              -> Bool 
              -> Int                -- free documents left
              -> XMLGenT m (HSX.XMLGenerator.XML m)
-showDocument user document issuedone freeleft =
-   let helper = [ <span style="display: none">
-                   <% showSignatoryEntryForEdit2 "signatory_template" "" "" "" "" %>
-                  
-           <div id="dialog-confirm-signinvite" title="Underteckna">
-            <p>Är du säker på att du vill underteckna dokumentet 
-               <strong><% documenttitle document %></strong>?</p>
-            <p>När du bekräftat kommer en automatisk inbjudan att skickas till 
-                <strong><span id="mrx">"Mr X"</span></strong> med e-post.
-                Avtalet blir juridiskt bindande när alla parter undertecknat.
-            </p>
-              {- change "alla parter" to list of people -} 
-            
-            {-
-            <p>Det är först då vi tar betalt. 
-            Vi fakturerar månadsvis. Era fakturauppgifter:</p>
+showDocument user 
+             document@Document{ documentsignatorylinks
+                              , documentauthordetails
+                              , documenttitle
+                              , documentid
+                              , documentstatus
+                              , documentdaystosign
+                              } 
+             issuedone 
+             freeleft =
+   let helper = [ showSignatoryEntryForEdit2 "signatory_template" "" "" "" ""
+                , <div id="dialog-confirm-signinvite" title="Underteckna">
+                    <p>Är du säker på att du vill underteckna dokumentet 
+                       <strong><% documenttitle %></strong>?</p>
+                    <p>När du bekräftat kommer en automatisk inbjudan att skickas till 
+                       <strong><span id="mrx">"Mr X"</span></strong> med e-post.
+                       Avtalet blir juridiskt bindande när alla parter undertecknat.</p>
+                       {- change "alla parter" to list of people -} 
+                   </div>
 
-            <div class="inlinebox">
-            Referens: <% userfullname user %> <br/>
-            Företag: <% usercompanyname user %> <br/>
-            Org nr: <% usercompanynumber user %> <br/>
-            Adress: <% userinvoiceaddress user %> <br/>
-            Pris: ”20 SEK exkl moms” <br/>
-            </div>
-            -}
-          </div>
-          <div id="dialog-confirm-signinvite-done" title="Dokumentet undertecknat!">
-	    <p>Du har undertecknat avtalet och en inbjudan har nu skickats till 
-               <strong><span id="mrx"><% concatSignatories (map signatorydetails $ documentsignatorylinks document) %></span></strong>.</p>
-          </div>
-        </span>
-                , <script> var documentid = <% show $ documentid document %>; 
+                , <div id="dialog-confirm-signinvite-done" title="Dokumentet undertecknat!">
+	            <p>Du har undertecknat avtalet och en inbjudan har nu skickats till 
+                    <strong><span id="mrx"><% concatSignatories (map signatorydetails $ documentsignatorylinks) %></span></strong>.</p>
+                   </div>
+                , <script> var documentid = <% show $ documentid %>; 
                            var issuedone = <% if issuedone then "true" else "false" %>;
                   </script>
                 , <script type="text/javascript" src="/js/document-edit.js"/>
                 ]
    in showDocumentPageHelper (LinkIssueDoc document) document helper 
-           (BS.fromString $ "Avtal: " ++ BS.toString (documenttitle document))  
+           (BS.fromString $ "Avtal: " ++ BS.toString documenttitle)  
       <div>
        <div><strong>1. Personer</strong>
 
-        <% if documentstatus document == Preparation
+        <% if documentstatus == Preparation
            then 
-             <div id="persons">
-              {- <label>Ditt namn</label><br/> -}
-              <input name="authorname" type="text" value=(signatoryname $ documentauthordetails document)
+             <div>
+              <input name="authorname" type="text" value=(signatoryname documentauthordetails)
                      infotext="Ditt namn"/><br/>
-              {- <label>Titel, företag</label><br/> -}
-              <input name="authorcompany" type="text" value=(signatorycompany $ documentauthordetails document)
+              <input name="authorcompany" type="text" value=(signatorycompany documentauthordetails)
                      infotext="Titel, företag"/><br/>
-              {- <label>Ditt Orgnr/Persnr</label><br/> -}
-              <input name="authornumber" type="text" value=(signatorynumber $ documentauthordetails document)
+              <input name="authornumber" type="text" value=(signatorynumber documentauthordetails)
                      infotext="Ditt Orgnr/Persnr"/><br/>
-              {- <label>Din e-mail</label><br/> -}
-              <input name="authoremail" type="text" value=(signatoryemail $ documentauthordetails document)
+              <input name="authoremail" type="text" value=(signatoryemail documentauthordetails)
                      infotext="Din e-mail"/><br/>
 
-              <ol id="signatorylist">
-               <% map showSignatoryEntryForEdit (if null (documentsignatorylinks document)
+              <div id="signatorylist">
+               <% map showSignatoryEntryForEdit (if null documentsignatorylinks
                                                  then [emptyDetails] 
-                                                 else map signatorydetails $ documentsignatorylinks document) %>
-              </ol>
+                                                 else map signatorydetails documentsignatorylinks) %>
+              </div>
               <a onclick="signatoryadd(); return false;" href="#">Lägg till fler</a>
+
+              <hr/>
+
+              <strong>2. Avtal</strong><br/>
+              Undertecknas inom <input type="text" name="daystosign" value=documentdaystosign maxlength="2" size="2"/> dagar<br/>
+              <input class="bigbutton" type="submit" name="final" value="Underteckna" id="signinvite"/>
+              <br/>
+              <input class="secbutton" type="submit" name="save" value="Spara till senare"/>
              </div>
            else
-             <div>
-              <ol id="signatorylist">
-               <% map (showSignatoryEntryStatus document) (documentsignatorylinks document) %>
-              </ol>
-             </div>              
+              <div id="signatorylist">
+               <% map (showSignatoryEntryStatus document) documentsignatorylinks %>
+              </div>
          %>
-         <% 
-           if (documentstatus document==Preparation) 
-              then <span>
-                    <hr/>
-
-                    <strong>2. Avtal</strong><br/>
-                    Undertecknas inom <input type="text" name="daystosign" value=(documentdaystosign document) maxlength="2" size="2"/> dagar<br/>
-                    <input class="bigbutton" type="submit" name="final" value="Underteckna" id="signinvite"/>
-                    <br/>
-                    <input class="secbutton" type="submit" name="save" value="Spara till senare"/>
-                   </span>
-              else <span/>
-          %>
        </div>
       </div>
 
