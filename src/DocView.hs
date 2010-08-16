@@ -533,22 +533,24 @@ htmlHeadBodyWrap title content =
      </body>
     </html>
 
+htmlHeadBodyWrapIO title content = do
+  let xml = htmlHeadBodyWrap title content
+  renderHSPToByteString xml
 
-invitationMailXml :: (XMLGenerator m) 
-                  => Context
-                  -> BS.ByteString
-                  -> BS.ByteString
-                  -> Document
-                  -> SignatoryLinkID
-                  -> MagicHash
-                  -> XMLGenT m (HSX.XML m)
-invitationMailXml (Context {ctxmaybeuser = Just user, ctxhostpart}) 
+invitationMail :: Context
+               -> BS.ByteString
+               -> BS.ByteString
+               -> Document
+               -> SignatoryLinkID
+               -> MagicHash
+               -> IO BS.ByteString
+invitationMail (Context {ctxmaybeuser = Just user, ctxhostpart}) 
                   emailaddress personname 
                   document@Document{documenttitle,documentid,documenttimeouttime,documentauthordetails} 
                   signaturelinkid magichash = 
     let link = ctxhostpart ++ show (LinkSignDoc document signaturelinkid magichash)
         creatorname = signatoryname documentauthordetails
-    in htmlHeadBodyWrap documenttitle
+    in htmlHeadBodyWrapIO documenttitle
      <span>
       <p>Hej <strong><% personname %></strong>,</p>
 
@@ -565,33 +567,19 @@ invitationMailXml (Context {ctxmaybeuser = Just user, ctxhostpart})
       <% poweredBySkrivaPaPara %>
      </span>
 
-invitationMail :: Context
-               -> BS.ByteString
-               -> BS.ByteString
-               -> Document
-               -> SignatoryLinkID
-               -> MagicHash
-               -> IO BS.ByteString
-invitationMail ctx emailaddress personname 
-               document signaturelinkid magichash = do
-                 let xml = invitationMailXml ctx emailaddress personname 
-                           document signaturelinkid magichash
-                 renderHSPToByteString xml
-
-closedMailXml :: (XMLGenerator m) 
-                  => Context
-                  -> BS.ByteString
-                  -> BS.ByteString
-                  -> Document
-                  -> SignatoryLinkID
-                  -> MagicHash
-                  -> XMLGenT m (HSX.XML m)
-closedMailXml (Context {ctxhostpart}) 
+closedMail :: Context
+           -> BS.ByteString
+           -> BS.ByteString
+           -> Document
+           -> SignatoryLinkID
+           -> MagicHash
+           -> IO BS.ByteString
+closedMail (Context {ctxhostpart}) 
               emailaddress personname 
               document@Document{documenttitle,documentid} 
               signaturelinkid magichash = 
     let link = ctxhostpart ++ show (LinkSignDoc document signaturelinkid magichash)
-    in htmlHeadBodyWrap documenttitle 
+    in htmlHeadBodyWrapIO documenttitle 
      <span>
       {- change "alla parter" to list of people -}
       <p>Hej <strong><% personname %></strong>,</p>
@@ -608,30 +596,17 @@ closedMailXml (Context {ctxhostpart})
       <% poweredBySkrivaPaPara %>
      </span>
 
-closedMail :: Context
-           -> BS.ByteString
-           -> BS.ByteString
-           -> Document
-           -> SignatoryLinkID
-           -> MagicHash
-           -> IO BS.ByteString
-closedMail ctx emailaddress personname 
-               document signaturelinkid magichash = do
-                 let xml = closedMailXml ctx emailaddress personname 
-                           document signaturelinkid magichash
-                 renderHSPToByteString xml
 
-closedMailAuthorXml :: (XMLGenerator m) 
-                    => Context
-                    -> BS.ByteString
-                    -> BS.ByteString
-                    -> Document
-                    -> XMLGenT m (HSX.XML m)
-closedMailAuthorXml (Context {ctxhostpart}) 
+closedMailAuthor :: Context
+                 -> BS.ByteString
+                 -> BS.ByteString
+                 -> Document
+                 -> IO BS.ByteString
+closedMailAuthor (Context {ctxhostpart}) 
                   emailaddress personname 
                   document@Document{documenttitle,documentid} = 
     let link = ctxhostpart ++ show (LinkIssueDoc document)
-    in htmlHeadBodyWrap documenttitle
+    in htmlHeadBodyWrapIO documenttitle
         <span>
          {- change "alla parter" to list of people -}
          <p>Hej <strong><% personname %></strong>,</p>
@@ -644,15 +619,6 @@ closedMailAuthorXml (Context {ctxhostpart})
          <% poweredBySkrivaPaPara %>
         </span>
 
-closedMailAuthor :: Context
-           -> BS.ByteString
-           -> BS.ByteString
-           -> Document
-           -> IO BS.ByteString
-closedMailAuthor ctx emailaddress personname document = do
-                 let xml = closedMailAuthorXml ctx emailaddress personname 
-                           document
-                 renderHSPToByteString xml
 
 poweredBySkrivaPaPara :: (XMLGenerator m) => XMLGenT m (HSX.XML m)
 poweredBySkrivaPaPara = 
