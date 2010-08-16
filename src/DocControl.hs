@@ -49,8 +49,8 @@ doctransPreparation2Pending ctx@Context{ctxtime = MinutesTime m } doc = do
   newdoc <- update $ UpdateDocumentStatus (ctxtime ctx) doc Pending
   let timeout = TimeoutTime (MinutesTime (m + documentdaystosign doc * 24 * 60))
   newdoc2 <- update $ SetDocumentTimeoutTime newdoc timeout
-  liftIO $ sendInvitationEmails ctx doc
-  return newdoc
+  liftIO $ sendInvitationEmails ctx newdoc2
+  return newdoc2
 
 doctransPending2Closed :: Context -> Document -> IO Document
 doctransPending2Closed ctx@Context{ctxtime} doc = do

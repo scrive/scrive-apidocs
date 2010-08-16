@@ -245,7 +245,10 @@ deriving instance Show Document
 deriving instance Show DocumentStatus
 deriving instance Show ChargeMode
 deriving instance Show Author
-deriving instance Show TimeoutTime
+
+instance Show TimeoutTime where
+    showsPrec prec = showsPrec prec . unTimeoutTime
+
 deriving instance Show SignatoryLink
 deriving instance Show SignatoryLink0
 deriving instance Show SignatoryLink1
