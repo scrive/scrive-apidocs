@@ -237,11 +237,14 @@ userLogin2 = do
   return (Just user)
 -}
 
-isSuperUser (Just user) 
-    | useremail user == Email (BS.fromString "gracjanpolak@gmail.com") = True
-    | useremail user == Email (BS.fromString "gracjan@skrivapa.se") = True
-    | useremail user == Email (BS.fromString "lukas@skrivapa.se") = True
-    | useremail user == Email (BS.fromString "lukas.duczko@gmail.com") = True
-    | useremail user == Email (BS.fromString "ericwnormand@gmail.com") = True
-    | otherwise = False
-isSuperUser Nothing = False
+admins = map (Email . BS.fromString)
+         [ "gracjanpolak@gmail.com"
+         , "gracjan@skrivapa.se"
+         , "lukas@skrivapa.se"
+         , "lukas.duczko@gmail.com"
+         , "ericwnormand@gmail.com"
+         , "adin.hjertberg@gmail.com"
+         ]
+
+isSuperUser (Just user@User{useremail}) = useremail `elem` admins 
+isSuperUser _ = False
