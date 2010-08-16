@@ -148,16 +148,13 @@ viewSubaccounts ctx@(Context {ctxmaybeuser = Just user}) subusers =
   
 
 passwordChangeMailXml :: (XMLGenerator m) 
-                     => BS.ByteString
-                  -> BS.ByteString
-                  -> BS.ByteString
-                  -> XMLGenT m (HSX.XML m)
+                      => BS.ByteString
+                      -> BS.ByteString
+                      -> BS.ByteString
+                      -> XMLGenT m (HSX.XML m)
 passwordChangeMailXml emailaddress personname newpassword = 
-    <html>
-     <head>
-      <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-     </head>
-     <body>
+   htmlHeadBodyWrap ""
+    <span>
       <p>Hej <strong><% personname %></strong>,</p>
 
       <p>Jag heter Lukas Duczko och är VD på SkrivaPå. Tack för att du har skapat ett konto hos oss. 
@@ -171,11 +168,9 @@ passwordChangeMailXml emailaddress personname newpassword =
       <a href="http://skrivapa.se/login">http://skrivapa.se/login</a>
       </p>
 
-      <p>MVH<br/>
-         /Lukas Duczko och team <a href="http://skrivapa.se/">SkrivaPå</a>.
+      <p>MVH<br/>/Lukas Duczko och team <a href="http://skrivapa.se/">SkrivaPå</a>.
       </p>
-     </body>
-    </html>
+     </span>
 
 passwordChangeMail :: BS.ByteString
                    -> BS.ByteString
@@ -196,11 +191,8 @@ inviteSubaccountMailXml :: (XMLGenerator m)
                       -> BS.ByteString
                       -> XMLGenT m (HSX.XML m)
 inviteSubaccountMailXml supervisorname companyname emailaddress personname newpassword = 
-    <html>
-     <head>
-      <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-     </head>
-     <body>
+    htmlHeadBodyWrap ""
+     <span>
       <p>Hej <strong><% personname %></strong>,</p>
 
       <p><strong><% supervisorname %></strong> har bjudit in dig att öppna ett konto på SkrivaPå genom vilket du kan
@@ -216,8 +208,7 @@ inviteSubaccountMailXml supervisorname companyname emailaddress personname newpa
       </p>
 
       <% poweredBySkrivaPaPara %> 
-     </body>
-    </html>
+     </span>
 
 inviteSubaccountMail :: BS.ByteString
                      -> BS.ByteString

@@ -518,6 +518,20 @@ showDocumentForSign action document authorname invitedname wassigned =
                 </span>
 
 
+htmlHeadBodyWrap :: (XMLGenerator m,EmbedAsChild m a {- ,EmbedAsChild m b -})
+                 => a
+                 -> XMLGenT m (HSX.XMLGenerator.XML m) --b
+                 -> XMLGenT m (HSX.XMLGenerator.XML m)
+htmlHeadBodyWrap title content =     
+    <html>
+     <head>
+      <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+      <title><% title %></title>
+     </head>
+     <body>
+      <% content %>
+     </body>
+    </html>
 
 
 invitationMailXml :: (XMLGenerator m) 
@@ -534,12 +548,8 @@ invitationMailXml (Context {ctxmaybeuser = Just user, ctxhostpart})
                   signaturelinkid magichash = 
     let link = ctxhostpart ++ show (LinkSignDoc document signaturelinkid magichash)
         creatorname = signatoryname documentauthordetails
-    in 
-    <html>
-     <head>
-      <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-     </head>
-     <body>
+    in htmlHeadBodyWrap documenttitle
+     <span>
       <p>Hej <strong><% personname %></strong>,</p>
 
       <p><strong><% creatorname %></strong> har bjudit in dig att underteckna dokumentet 
@@ -553,8 +563,7 @@ invitationMailXml (Context {ctxmaybeuser = Just user, ctxhostpart})
 
       <p><a href=link><% link %></a></p>
       <% poweredBySkrivaPaPara %>
-     </body>
-    </html>
+     </span>
 
 invitationMail :: Context
                -> BS.ByteString
@@ -582,12 +591,9 @@ closedMailXml (Context {ctxhostpart})
               document@Document{documenttitle,documentid} 
               signaturelinkid magichash = 
     let link = ctxhostpart ++ show (LinkSignDoc document signaturelinkid magichash)
-    in 
-    <html>
-     <head>
-      <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-     </head>
-     <body> {- change "alla parter" to list of people -}
+    in htmlHeadBodyWrap documenttitle 
+     <span>
+      {- change "alla parter" to list of people -}
       <p>Hej <strong><% personname %></strong>,</p>
       <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats av alla parter 
          och avtalet är nu juridiskt bindande. Nedan bifogas en direktlänk till det
@@ -600,8 +606,7 @@ closedMailXml (Context {ctxhostpart})
       <p><a href=link><% link %></a></p>
      
       <% poweredBySkrivaPaPara %>
-     </body>
-    </html>
+     </span>
 
 closedMail :: Context
            -> BS.ByteString
@@ -626,22 +631,18 @@ closedMailAuthorXml (Context {ctxhostpart})
                   emailaddress personname 
                   document@Document{documenttitle,documentid} = 
     let link = ctxhostpart ++ show (LinkIssueDoc document)
-    in 
-    <html>
-     <head>
-      <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-     </head>
-     <body>  {- change "alla parter" to list of people -}
-      <p>Hej <strong><% personname %></strong>,</p>
-      <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats av alla parter 
-         och avtalet är nu juridiskt bindande. Nedan bifogas en direktlänk till det
-         färdigställda dokumentet och en PDF-kopia.</p>
+    in htmlHeadBodyWrap documenttitle
+        <span>
+         {- change "alla parter" to list of people -}
+         <p>Hej <strong><% personname %></strong>,</p>
+         <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats av alla parter 
+            och avtalet är nu juridiskt bindande. Nedan bifogas en direktlänk till det
+            färdigställda dokumentet och en PDF-kopia.</p>
       
-      <p><a href=link><% link %></a></p>
+         <p><a href=link><% link %></a></p>
      
-      <% poweredBySkrivaPaPara %>
-     </body>
-    </html>
+         <% poweredBySkrivaPaPara %>
+        </span>
 
 closedMailAuthor :: Context
            -> BS.ByteString
@@ -656,6 +657,7 @@ closedMailAuthor ctx emailaddress personname document = do
 poweredBySkrivaPaPara :: (XMLGenerator m) => XMLGenT m (HSX.XML m)
 poweredBySkrivaPaPara = 
     <p>
-     <small>MVH<br/><a href="http://skrivapa.se/">SkrivaPå</a></small>
+     <small>MVH<br/>
+     <a href="http://skrivapa.se/">SkrivaPå</a></small>
     </p>
 
