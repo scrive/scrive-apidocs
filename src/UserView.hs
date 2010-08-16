@@ -147,13 +147,12 @@ viewSubaccounts ctx@(Context {ctxmaybeuser = Just user}) subusers =
     </form>
   
 
-passwordChangeMailXml :: (XMLGenerator m) 
-                      => BS.ByteString
-                      -> BS.ByteString
-                      -> BS.ByteString
-                      -> XMLGenT m (HSX.XML m)
-passwordChangeMailXml emailaddress personname newpassword = 
-   htmlHeadBodyWrap ""
+passwordChangeMail :: BS.ByteString
+                   -> BS.ByteString
+                   -> BS.ByteString
+                   -> IO BS.ByteString
+passwordChangeMail emailaddress personname newpassword = 
+   htmlHeadBodyWrapIO ""
     <span>
       <p>Hej <strong><% personname %></strong>,</p>
 
@@ -172,26 +171,16 @@ passwordChangeMailXml emailaddress personname newpassword =
       </p>
      </span>
 
-passwordChangeMail :: BS.ByteString
-                   -> BS.ByteString
-                   -> BS.ByteString
-                   -> IO BS.ByteString
-passwordChangeMail emailaddress personname newpassword = do
-  let xml = passwordChangeMailXml emailaddress personname newpassword
-  renderHSPToByteString xml
 
 
-
-
-inviteSubaccountMailXml :: (XMLGenerator m) 
-                      => BS.ByteString
-                      -> BS.ByteString
-                      -> BS.ByteString
-                      -> BS.ByteString
-                      -> BS.ByteString
-                      -> XMLGenT m (HSX.XML m)
-inviteSubaccountMailXml supervisorname companyname emailaddress personname newpassword = 
-    htmlHeadBodyWrap ""
+inviteSubaccountMail :: BS.ByteString
+                     -> BS.ByteString
+                     -> BS.ByteString
+                     -> BS.ByteString
+                     -> BS.ByteString
+                     -> IO BS.ByteString
+inviteSubaccountMail supervisorname companyname emailaddress personname newpassword = 
+    htmlHeadBodyWrapIO ""
      <span>
       <p>Hej <strong><% personname %></strong>,</p>
 
@@ -210,12 +199,3 @@ inviteSubaccountMailXml supervisorname companyname emailaddress personname newpa
       <% poweredBySkrivaPaPara %> 
      </span>
 
-inviteSubaccountMail :: BS.ByteString
-                     -> BS.ByteString
-                     -> BS.ByteString
-                     -> BS.ByteString
-                     -> BS.ByteString
-                     -> IO BS.ByteString
-inviteSubaccountMail supervisorname companyname emailaddress personname newpassword = do
-  let xml = inviteSubaccountMailXml supervisorname companyname emailaddress personname newpassword
-  renderHSPToByteString xml
