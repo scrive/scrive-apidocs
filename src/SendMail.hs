@@ -31,11 +31,21 @@ import Data.Array
 import Data.Bits
 import Data.Int
 import Data.Char (chr,ord)
-import Codec.Binary.Base64
+import qualified Codec.Binary.Base64 as Base64
+import qualified Codec.Binary.QuotedPrintable as QuotedPrintable
 import Data.List
 import System.Log.Logger
 import Happstack.Util.LogFormat
 import Data.Time.Clock
+
+-- from simple utf-8 to =?UTF-8?Q?zzzzzzz?=
+-- FIXME: should do better job at checking if encoding should be applied or not
+mailEncode :: BS.ByteString -> String
+mailEncode source = 
+    "=?UTF-8?Q?" ++ QuotedPrintable.encode (BS.unpack source) ++ "?="
+
+mailEncode1 :: String -> String
+mailEncode1 source = mailEncode (BS.fromString source)
 
 {-
 type Email = BS.ByteString
@@ -51,7 +61,7 @@ sendMail fullnameemails title content attachmentcontent = do
   tm <- getCurrentTime
   let mailtos = map fmt fullnameemails 
       -- ("Gracjan Polak","gracjan@skrivapa.se") => "Gracjan Polak <gracjan@skrivapa.se>"
-      fmt (fullname,email) = BS.toString fullname ++ " <" ++ BS.toString email ++ ">"
+      fmt (fullname,email) = mailEncode fullname ++ " <" ++ BS.toString email ++ ">"
   logM "Kontrakcja.Mail" NOTICE $ formatTimeCombined tm ++ " " ++ concat (intersperse ", " mailtos)
 #ifdef WINDOWS
   tmp <- getTemporaryDirectory
@@ -73,9 +83,10 @@ sendMail fullnameemails title content attachmentcontent = do
   -- FIXME: add =?UTF8?B= everywhere it is needed here
   let boundary = "skrivapa-mail-12-337331046" 
   let header = 
-          "Subject: " ++ BS.toString title ++ "\r\n" ++
+          -- FIXME: encoded word should not be longer than 75 bytes including everything
+          "Subject: " ++ mailEncode title ++ "\r\n" ++
           "To: " ++ concat (intersperse ", " mailtos) ++ "\r\n" ++
-          "From: SkrivaPa <info@skrivapa.se>\r\n" ++
+          "From: " ++ mailEncode1 "SkrivaPå" ++ " <info@skrivapa.se>\r\n" ++
           "MIME-Version: 1.0\r\n" ++
           "Content-Type: multipart/mixed; boundary=" ++ boundary ++ "\r\n" ++
           "\r\n"
@@ -93,7 +104,7 @@ sendMail fullnameemails title content attachmentcontent = do
   BS.hPutStr handle_in content
   when (not (BS.null attachmentcontent)) $ do
     BS.hPutStr handle_in (BS.fromString header2)
-    BS.hPutStr handle_in (BSC.pack $ concat $ intersperse "\r\n" $ chop 72 $ encode $ BS.unpack attachmentcontent)
+    BS.hPutStr handle_in (BSC.pack $ concat $ intersperse "\r\n" $ Base64.chop 72 $ Base64.encode $ BS.unpack attachmentcontent)
   BS.hPutStr handle_in (BS.fromString footer)
   
   hFlush handle_in
