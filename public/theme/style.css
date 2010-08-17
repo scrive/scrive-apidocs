@@ -434,7 +434,7 @@ img.waiting
 {
     margin-left: auto;
     margin-right: auto;
-    width: 1000px;
+    width: 1010px;
     height: 100%;
 }
 
@@ -449,7 +449,7 @@ img.waiting
 {
     float: right;
     height: 100%;
-    max-width: 190px;
+    max-width: 200px;
     overflow: auto;
 }
 

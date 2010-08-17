@@ -380,11 +380,12 @@ showDocument user
    in showDocumentPageHelper (LinkIssueDoc document) document helper 
            (BS.fromString $ "Avtal: " ++ BS.toString documenttitle)  
       <div>
-       <div><strong>1. Personer</strong>
+       <div>
 
         <% if documentstatus == Preparation
            then 
-             <div>
+             <span>
+              <strong>1. Dina uppgifter</strong>
               <input name="authorname" type="text" value=(signatoryname documentauthordetails)
                      infotext="Ditt namn"/><br/>
               <input name="authorcompany" type="text" value=(signatorycompany documentauthordetails)
@@ -394,6 +395,7 @@ showDocument user
               <input name="authoremail" type="text" value=(signatoryemail documentauthordetails)
                      infotext="Din e-mail"/><br/>
 
+              <strong>2. Din motpart</strong>
               <div id="signatorylist">
                <% map showSignatoryEntryForEdit (if null documentsignatorylinks
                                                  then [emptyDetails] 
@@ -403,12 +405,12 @@ showDocument user
 
               <hr/>
 
-              <strong>2. Avtal</strong><br/>
+              <strong>3. Avtal</strong><br/>
               Undertecknas inom <input type="text" name="daystosign" value=documentdaystosign maxlength="2" size="2"/> dagar<br/>
               <input class="bigbutton" type="submit" name="final" value="Underteckna" id="signinvite"/>
               <br/>
               <input class="secbutton" type="submit" name="save" value="Spara till senare"/>
-             </div>
+             </span>
            else
               <div id="signatorylist">
                <% map (showSignatoryEntryStatus document) documentsignatorylinks %>
