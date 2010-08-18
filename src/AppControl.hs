@@ -79,13 +79,19 @@ handleRoutes ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} = toIO ctx $ msum 
     ]
     ++ (if isSuperUser ctxmaybeuser then 
             [ dir "stats" $ statsPage
-            , dir "become" $ handleBecome
             , dir "createuser" $ handleCreateUser
-            , dir "db" $ msum [ methodM GET >> indexDB
-                                         , dir "cleanup" $ databaseCleanup
-                                         , dir "removeimages" $ databaseRemoveImages
-                                         , fileServe [] "_local/kontrakcja_state"
-                                         ]
+            , dir "adminonly" $ msum 
+                      [ methodM GET >> AppControl.showAdminOnly
+                      , dir "db" $ msum [ methodM GET >> indexDB
+                                        , fileServe [] "_local/kontrakcja_state"
+                                        ]
+                      , dir "cleanup" $ methodM POST >> databaseCleanup
+                      , dir "removeimages" $ methodM POST >> databaseRemoveImages
+                      , dir "become" $ methodM POST >> handleBecome
+                      , dir "takeoverdocuments" $ methodM POST >> handleTakeOverDocuments
+                      , dir "deleteaccount" $ methodM POST >> handleDeleteAccount
+                      , dir "alluserstable" $ methodM GET >> handleAllUsersTable
+                      ]
             ]
        else [])
     ++ [ fileServe [] "public"] 
@@ -230,9 +236,9 @@ databaseCleanup = do
 databaseRemoveImages :: Kontra Response
 databaseRemoveImages = do
   update $ FixRemoveImages
-  let link = "/db/"
-  response <- webHSP (seeOtherXML (show link))
-  seeOther (show link) response
+  let link = "/adminonly/"
+  response <- webHSP (seeOtherXML link)
+  seeOther link response
   
   
   
@@ -243,4 +249,62 @@ resendEmail ctx document@Document{documentsignatorylinks} signatorylinkid1 = do
   let link = LinkIssueDoc document
   response <- webHSP (seeOtherXML (show link))
   seeOther (show link) response
+
+showAdminOnly :: Kontra Response
+showAdminOnly = do
+  ctx@Context { ctxflashmessages} <- lift get
+  users <- query $ GetAllUsers
+  webHSP (AppView.showAdminOnly users ctxflashmessages)
+  
+
+handleTakeOverDocuments :: Kontra Response
+handleTakeOverDocuments = do
+  ctx@Context{ctxmaybeuser = Just ctxuser} <- lift $ get
+  (srcuserid :: UserID) <- getDataFnM $ (look "user" >>= readM)
+  Just srcuser <- query $ GetUserByUserID srcuserid
+  
+  update $ FragileTakeOverDocuments (userid ctxuser) srcuserid
+  addFlash $ BS.fromString $ "Took over all documents of '" ++ BS.toString (userfullname srcuser) ++ "'. His account is now empty and can be deleted if you wish so. Show some mercy, though."
+  let link = "/adminonly/"
+  response <- webHSP (seeOtherXML link)
+  seeOther link response
+    
+
+             
+addFlash :: BS.ByteString -> Kontra ()
+addFlash msg = do
+  ctx <- lift $ get
+  case ctxmaybeuser ctx of
+    Just user -> update $ AddUserFlashMessage (userid user) (FlashMessage msg)
+    Nothing -> return ()
+  
+
+
+handleDeleteAccount :: Kontra Response
+handleDeleteAccount = do
+  (userid :: UserID) <- getDataFnM $ (look "user" >>= readM)
+  Just user <- query $ GetUserByUserID userid
+  documents <- query $ GetDocumentsByAuthor userid
+  if null documents
+     then do
+       update $ FragileDeleteUser userid
+       addFlash (BS.fromString ("User deleted. You will not see '" ++ BS.toString (userfullname user) ++ "' here anymore"))
+     else do
+       addFlash (BS.fromString ("I cannot delete user. '" ++ BS.toString (userfullname user) ++ "' still has " ++ show (length documents) ++ " documents as author. Take over his documents, then try to delete the account again."))
+  
+  let link = "/adminonly/"
+  response <- webHSP (seeOtherXML link)
+  seeOther link response
+
+handleAllUsersTable :: Kontra Response
+handleAllUsersTable = do
+  users <- query $ GetAllUsers
+  let queryNumberOfDocuments user = do
+                        documents <- query $ GetDocumentsByAuthor (userid user)
+                        return (user,length documents)
+                        
+  users2 <- mapM queryNumberOfDocuments users
+
+  webHSP $ pageAllUsersTable users2
+
 

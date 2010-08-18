@@ -12,12 +12,13 @@ import qualified Data.ByteString as BS
 import Happstack.Data.IxSet as IxSet
 import Control.Applicative((<$>))
 import Data.Data(Data(..))
-import Data.Maybe(isNothing)
+import Data.Maybe(isNothing,isJust)
 import Misc
 import Control.Monad
 import Happstack.Server.SimpleHTTP
 import Happstack.Util.Common
 import Data.List
+import qualified Data.Set as Set
 
 
 $(deriveAll [''Eq, ''Ord, ''Default]
@@ -246,10 +247,10 @@ getUserByUserID userid = do
   users <- ask
   return $ getOne (users @= userid)
 
-getUserSubaccounts :: UserID -> Query Users [User]
+getUserSubaccounts :: UserID -> Query Users (Set.Set User)
 getUserSubaccounts userid = do
   users <- ask
-  return $ toList (users @= SupervisorID (unUserID userid))
+  return $ toSet (users @= SupervisorID (unUserID userid))
 
 addUser :: BS.ByteString 
         -> BS.ByteString 
@@ -335,6 +336,13 @@ setUserDetails user1 fullname companyname companynumber invoiceaddress = do
   return newuser
   
 
+fragileDeleteUser :: UserID -> Update Users (Maybe User)
+fragileDeleteUser userid = do
+  users <- ask
+  let maybeuser = getOne (users @= userid)
+  when (isJust maybeuser) $
+       modify (deleteIx userid)
+  return maybeuser
   
 
 instance Component Users where
@@ -352,5 +360,8 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'setUserPassword
                     , 'setUserDetails
                     , 'getUserSubaccounts
+
+                      -- the below should be only used carefully and by admins
+                    , 'fragileDeleteUser
                     ])
 
