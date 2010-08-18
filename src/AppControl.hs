@@ -164,7 +164,7 @@ handleLogout = do
 #ifndef WINDOWS
 read_df = do
   (_,Just handle_out,_,handle_process) <-
-      createProcess (proc "df" []) { std_out = CreatePipe }
+      createProcess (proc "df" []) { std_out = CreatePipe, env = Just [("LANG","C")] }
   s <- BS.hGetContents handle_out
   hClose handle_out
   waitForProcess handle_process
@@ -221,8 +221,6 @@ databaseCleanupWorker = do
   let cutoffevent = "events-" ++ drop 12 lastcheckpoint
   let eventsToRemove = filter (< cutoffevent) events 
   let checkpointsToRemove = filter (< lastcheckpoint) checkpoints
-  -- print (eventsToRemove)
-  -- print (checkpointsToRemove)
   mapM_ (\x -> removeFile ("_local/kontrakcja_state/" ++ x)) (eventsToRemove ++ checkpointsToRemove)
   getDirectoryContents "_local/kontrakcja_state"
 
