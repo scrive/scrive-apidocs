@@ -16,6 +16,7 @@ import Control.Monad.Trans
 import Misc
 import SendMail
 import System.Random
+import qualified Data.Set as Set
 
 handleUser :: Context -> Kontra Response
 handleUser ctx = 
@@ -44,7 +45,7 @@ handleUserPost ctx@Context{ctxmaybeuser = Just user} = do
 handleGetSubaccount :: Context -> Kontra Response
 handleGetSubaccount ctx@Context { ctxmaybeuser = Just user@User { userid } }  = do
   subaccounts <- query $ GetUserSubaccounts userid
-  viewSubaccounts ctx subaccounts
+  viewSubaccounts ctx (Set.toList subaccounts)
 
 handlePostSubaccount :: Context -> Kontra Response
 handlePostSubaccount ctx@Context { ctxmaybeuser = Just (user@User { userid })} = do

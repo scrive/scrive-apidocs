@@ -6,6 +6,7 @@ module AppView where
 import HSP hiding (Request)
 import System.Locale (defaultTimeLocale)
 import Control.Monad.Trans (MonadIO,liftIO,lift)
+import Control.Monad.State (get)
 import Happstack.Server (Response)
 import Happstack.Server.HStringTemplate (webST)
 import Happstack.Server.HSP.HTML (webHSP)
@@ -27,6 +28,7 @@ import Misc
 import HSP.XML
 import KontraLink
 import System.Directory
+import Happstack.State (update,query)
 
 instance (XMLGenerator m) => (EmbedAsChild m HeaderPair) where
   asChild (HeaderPair name value) = 
@@ -285,6 +287,20 @@ topnavi True ctx title link =
 topnavi False ctx title link = 
     maybeSignInLink2 ctx title link ""
 
+globalScriptsAndStyles = 
+      [ <link rel="stylesheet" type="text/css" href="/theme/style.css" media="screen" />
+      {-
+      <link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/ui-lightness/jquery-ui.css" media="screen" />
+      <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"/>
+      <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/jquery-ui.min.js"/>
+      -}
+      , <script src="/js/jquery-1.4.2.min.js"/>
+      , <script src="/js/jquery-ui-1.8.custom.min.js"/>
+
+      , <script src="/js/jquery.MultiFile.js"/>
+      , <script src="/js/global.js"/>
+      ]
+
 pageFromBody :: (EmbedAsChild (HSPT' IO) xml) 
              => Context 
              -> TopMenu 
@@ -298,21 +314,14 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
      <head>
       <title><% title %></title>
       <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-      <link rel="stylesheet" type="text/css" href="/theme/style.css" media="screen" />
-      <link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/ui-lightness/jquery-ui.css" media="screen" />
-      {- <script src="/js/jquery-1.4.2.min.js"/> -}
-      <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"/>
-      <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/jquery-ui.min.js"/>
-      {- <script src="/js/jquery-ui-1.8.custom.min.js"/> -}
-      <script src="/js/jquery.MultiFile.js"/>
-      <script src="/js/global.js"/>
+      <% globalScriptsAndStyles %>
      </head>
      <body>
       <%
        case ctxflashmessages of
          [] -> <% () %>
          _ -> <% <div class="flashmsgbox">
-               <% ctxflashmessages  %>
+               <% ctxflashmessages %>
               </div> %>
        %>
       <div id="headerContainer">
@@ -386,34 +395,13 @@ showUserOption user =
  
 statsPageView :: Int -> Int -> [User] -> BS.ByteString -> HSP XML
 statsPageView nusers ndocuments users df =
-    withMetaData html4Strict $
-    <html>
-     <head>
-      <title>Stats page</title>
-      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-     </head>
-     <body>
+    developmentWrapper "Stats page" []
+     <div>
       <h1>Stats page</h1>
       <table>
        <tr><td>Users</td><td><% show nusers %></td></tr>
        <tr><td>Documents</td><td><% show ndocuments %></td></tr>
       </table>
-      <br/>
-      <form method="post" action="/become">
-       Monitor user: 
-       <table>
-        <tr>
-         <td>
-          <select name="user">
-            <% map showUserOption users %>
-          </select>
-         </td>
-         <td>
-          <input class="secbutton" type="submit" value="Go"/>
-         </td>
-        </tr>
-       </table>
-      </form>
       <br/>
       <form method="post" action="/createuser">
        Create user:<br/> 
@@ -427,13 +415,12 @@ statsPageView nusers ndocuments users df =
          <td><input type="textfield" name="email"/></td>
         </tr>
        </table><br/>
-       <input class="secbutton" type="submit" value="Create user"/>
+       <input type="submit" value="Create user"/>
       </form>
       <br/>
       Disk status:<br/>
       <pre><% df %></pre>
-     </body>
-    </html>
+     </div>
 
 
 loginPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
@@ -450,22 +437,34 @@ loginPageView ctx =
 
 developmentWrapper :: (EmbedAsChild (HSPT' IO) body) 
                    => String 
+                   -> [FlashMessage]
                    -> body 
                    -> HSP XML
-developmentWrapper title body =
+developmentWrapper title ctxflashmessages body =
     withMetaData html4Strict $
     <html>
      <head>
       <title><% title %></title>
       <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+      <% globalScriptsAndStyles %>
      </head>
      <body>
+       <%
+         -- (lift get) >>= \(Context {ctxflashmessages}) -> 
+           case ctxflashmessages of
+             [] -> <% () %>
+             _ -> <% 
+                   <div class="flashmsgbox">
+                     <% ctxflashmessages %>
+                   </div> 
+                   %>
+       %>
       <% body %>
      </body>
     </html>
 
 databaseContents :: [String] -> HSP XML
-databaseContents contents = developmentWrapper "All database files" 
+databaseContents contents = developmentWrapper "All database files" []
   <div>
      <h1>All database files</h1>
      <ul>
@@ -473,3 +472,78 @@ databaseContents contents = developmentWrapper "All database files"
      </ul>
   </div>
   where showOneFile file = <li><a href=file><% file %></a></li>
+
+
+showUserSelect users = 
+  <select name="user">
+    <option value="" title="-- select user --">
+      <% "-- select user --" %>
+    </option>
+    <% map showUserOption users %>
+  </select>
+  
+showAdminOnly users ctxflashmessages =
+    developmentWrapper "SkrivaPa admin only page" ctxflashmessages
+    <div>
+     <h3>Database files</h3>
+     <a href="/adminonly/db/">Show list of database files</a><br/>
+     <form method="post" action="/adminonly/cleanup">
+     Database incrementally stores backups of itself. Old copies aren't useful in normal situations,
+     just in case of failure. It is good to remove old files from time to time.<br/>
+     <input type="submit" value="Cleanup"/><br/>
+     </form>
+     <form method="post" action="/adminonly/removeimages">
+     Database stores quite a lot of temporary data to be a bit faster. That data needs to be cleaned on regular basis. 
+     It will be automatic soon, but right now you have to click the button below once a week or so.<br/>
+     <input type="submit" value="Remove jpegs"/><br/>
+     </form>
+     <h3>Users</h3>
+      <form method="post" action="/adminonly/become">
+       Here you can see the world in the same way as a user sees them. You cannot do any 
+       actions on behalf of that user though: 
+       <table>
+        <tr>
+         <td>
+          <% showUserSelect users %>
+         </td>
+         <td>
+          <input type="submit" value="Monitor user"/>
+         </td>
+        </tr>
+       </table>
+      </form>
+      <br/>
+      <form method="post" action="/adminonly/takeoverdocuments">
+       Here you can take over documents from other account. This action reassigns all documents of the user you 
+       select to your own accout. Watch out, this operation cannot be reversed! This should probably be moved
+       to all accounts when people whould like to merge accounts. As a password you need to user the other account
+       password or 'skrivapaadmin' when you are SkrivaPa administrator.
+       <br/> 
+          User: <% showUserSelect users %><br/>
+          Password: <input type="password" name="password"/><br/>
+          <input type="submit" value="Take over documents from account"/>
+      </form>
+      <br/>
+      <form method="post" action="/adminonly/deleteaccount">
+       Here you can remove an account from the system. For safety reasons you can remove only accounts that
+       have no documents in them (use Take over documents above to free accounts). This action cannot be reversed
+       so beware!
+       <br/> 
+          User: <% showUserSelect users %><br/>
+          <input type="submit" value="Annihilate account"/>
+      </form>
+    </div>
+
+
+userInfo (user,docs) = <tr><td><% userfullname user %></td><td><% unEmail $ useremail user %></td><td><% show docs %></td></tr>
+
+pageAllUsersTable :: [(User,Int)] -> HSP XML
+pageAllUsersTable users =
+    developmentWrapper "Alla SkrivaPå anwender" []
+     <div>
+      <h1>Alla SkrivaPå anwender</h1>
+      <table>
+       <thead><td>Username</td><td>Email</td><td>Docs</td></thead>
+       <% map userInfo users %>
+      </table>
+     </div>

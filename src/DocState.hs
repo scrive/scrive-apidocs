@@ -772,7 +772,17 @@ fixRemoveImages = do
       fixOneFile file = file { filejpgpages = JpegPagesPending }
   modify (\documents -> IxSet.fromList (map fixImagesInOneDocument (IxSet.toList documents)))
   return ()
- 
+
+
+fragileTakeOverDocuments :: UserID -> UserID -> Update Documents ()
+fragileTakeOverDocuments destuserid srcuserid = do
+  documents <- ask
+  let hisdocuments = documents @= Author srcuserid
+      takeover document = modify $ updateIx (documentid document) (document { documentauthor = Author destuserid })
+  mapM_ takeover (IxSet.toList hisdocuments)
+  return ()
+
+
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocumentsByAuthor
                         , 'getDocumentsBySignatory
@@ -794,7 +804,10 @@ $(mkMethods ''Documents [ 'getDocumentsByAuthor
                         , 'getNumberOfDocumentsOfUser
                         , 'setDocumentTimeoutTime
                         , 'archiveDocuments
+
+                          -- admin only area follows
                         , 'fixRemoveImages
+                        , 'fragileTakeOverDocuments
                         ])
 
 
