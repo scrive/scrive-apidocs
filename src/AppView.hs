@@ -498,8 +498,9 @@ showAdminOnly users ctxflashmessages =
      <input type="submit" value="Remove jpegs"/><br/>
      </form>
      <h3>Users</h3>
+      You can see <a href="/adminonly/alluserstable">big table of all users</a>.<br/>
       <form method="post" action="/adminonly/become">
-       Here you can see the world in the same way as a user sees them. You cannot do any 
+       Here you can see the world in the same way as a user sees it. You cannot do any 
        actions on behalf of that user though: 
        <table>
         <tr>
