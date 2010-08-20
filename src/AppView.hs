@@ -289,14 +289,13 @@ topnavi False ctx title link =
 
 globalScriptsAndStyles = 
       [ <link rel="stylesheet" type="text/css" href="/theme/style.css" media="screen" />
-      {-
-      <link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/ui-lightness/jquery-ui.css" media="screen" />
-      <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"/>
-      <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/jquery-ui.min.js"/>
-      -}
+      , <link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/ui-lightness/jquery-ui.css" media="screen" />
+      , <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"/>
+      , <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/jquery-ui.min.js"/>
+      {- Local versions of the same, but locally
       , <script src="/js/jquery-1.4.2.min.js"/>
       , <script src="/js/jquery-ui-1.8.custom.min.js"/>
-
+      -}
       , <script src="/js/jquery.MultiFile.js"/>
       , <script src="/js/global.js"/>
       ]
