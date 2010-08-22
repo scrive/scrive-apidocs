@@ -142,9 +142,10 @@ loginPagePost = do
   email <- getDataFnM (look "email")
   passwd <- getDataFnM (look "password")
   -- check the user things here
-  Just user@User{userpassword} <- query $ GetUserByEmail (Email $ BS.fromString email)
+  maybeuser <- query $ GetUserByEmail (Email $ BS.fromString email)
+  let Just user@User{userpassword} = maybeuser
   -- FIXME: add password hashing here
-  if userpassword==BS.fromString passwd && passwd/=""
+  if isJust maybeuser && (userpassword==BS.fromString passwd && passwd/="")
      then do
       sessionid <- update $ NewSession (userid user)
       startSession sessionid
