@@ -11,8 +11,8 @@ identity  = Matrix 1 0 0 1 0 0
 scaling x y = Matrix x 0 0 y 0 0
 offset x y = Matrix 1 0 0 1 x y
 rotation r = Matrix a b (-b) a 0 0
-    where a = sin r
-          b = cos r
+    where a = cos r
+          b = sin r
 
 matrix a b c d e f = Matrix a b c d e f
 
