@@ -13,6 +13,17 @@ import Control.Monad.State.Strict
 import qualified Data.Map as Map
 
 
+exrotate = SealSpec 
+    { sealInput = "16pages.pdf"
+    , sealOutput = "16pages_sealed.pdf"
+    , sealDocumentNumber = 1234
+    , sealPersons = 
+        [ SealPerson "Lukas Duczko öåä ÖÅÄ" "CEO skrivaPa, Stockholm, 2010-05-31"
+        , SealPerson "Gracjan Polak" "CTO skrivaPa, Stockholm, 2010-05-31"
+        , SealPerson "Gracjan 2 Wolak" "CTO skrivaPa, Stockholm, 2010-05-31"
+        ]
+    }
+
 ex1 = SealSpec 
     { sealInput = "1.pdf"
     , sealOutput = "1_sealed.pdf"

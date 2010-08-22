@@ -124,10 +124,18 @@ placeSealOnPageRefID sealrefid sealtext pagerefid document =
 
         ([q,qQ], docx) = flip runState document $ do
             q <- addStream (Dict []) $ BSL.pack "q "
-            qQ <- addStream (Dict []) $ BSL.pack ( " Q " ++ sealtext)
+            qQ <- addStream (Dict []) $ BSL.pack ( " Q " ++ rotationtext ++ " " ++ sealtext)
             return [q,qQ]
 
         sealpagecontents = contentsValueListFromPageID document sealrefid
+
+        rotatekey = Prelude.lookup (BS.pack "Rotate") pagedict
+
+        rotationtext = case rotatekey of -- 595 842
+                         Just (Number 90) -> "0 1 -1 0 595 0 cm"
+                         Just (Number 180) -> "-1 0 0 -1 595 842 cm"
+                         Just (Number 270) -> "0 -1 1 0 0 842 cm"
+                         _ -> ""
 
         sealresdict = getResDict document sealrefid
         pageresdict = getResDict document pagerefid
