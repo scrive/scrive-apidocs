@@ -12,17 +12,33 @@ import qualified Data.ByteString.Lazy.Char8 as BSL
 import Control.Monad.State.Strict
 import qualified Data.Map as Map
 
-
 exrotate = SealSpec 
-    { sealInput = "16pages.pdf"
-    , sealOutput = "16pages_sealed.pdf"
-    , sealDocumentNumber = 1234
-    , sealPersons = 
-        [ SealPerson "Lukas Duczko öåä ÖÅÄ" "CEO skrivaPa, Stockholm, 2010-05-31"
-        , SealPerson "Gracjan Polak" "CTO skrivaPa, Stockholm, 2010-05-31"
-        , SealPerson "Gracjan 2 Wolak" "CTO skrivaPa, Stockholm, 2010-05-31"
+    { input = "16pages.pdf"
+    , output = "16pages_sealed.pdf"
+    , documentNumber = "0000001234"
+    , persons = 
+        [ Person 
+          { fullname = "Lukas Duczko öåä ÖÅÄ"
+          , email = "lukas@duczko.se"
+          , company = "CEO, SkrivaPa"
+          , number = "123456-4567"
+          }
         ]
+    , initials = "GP, LD"
+      , history = [ HistEntry { histdate = "2010-06-01 13:34"
+                              , histcomment = "I was here and mucked around with PDFs"
+                              }
+                  , HistEntry { histdate = "Year later"
+                              , histcomment = "Still mucking around with PDFs"
+                              }
+                  , HistEntry { histdate = "10 years later"
+                              , histcomment = "Really soon now"
+                              }
+                  ]
     }
+
+
+{-
 
 ex1 = SealSpec 
     { sealInput = "1.pdf"
@@ -66,6 +82,7 @@ ex_10_1 = SealSpec
         , SealPerson "Gracjan 7 Polak" "CTO skrivaPa, Stockholm, 2010-05-31"
         ]
     } 
+-}
 
 main = do
     inp <- getContents

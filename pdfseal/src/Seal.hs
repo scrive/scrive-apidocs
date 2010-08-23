@@ -12,17 +12,27 @@ import qualified Data.Map as Map
 import qualified Data.Char as Char
 import Misc
 
-data SealPerson = 
-    SealPerson { sealPerson :: String
-               , sealPersonSmall :: String
-               }
+data Person = 
+    Person { fullname :: String
+           , company :: String
+           , number :: String
+           , email :: String
+           }
     deriving (Eq,Ord,Show,Read)
 
 data SealSpec = SealSpec 
-    { sealInput :: String
-    , sealOutput :: String
-    , sealDocumentNumber :: Int
-    , sealPersons :: [SealPerson]
+    { input :: String
+    , output :: String
+    , documentNumber :: String
+    , persons :: [Person]
+    , history :: [HistEntry]
+    , initials :: String
+    }
+    deriving (Eq,Ord,Show,Read)
+
+data HistEntry = HistEntry
+    { histdate :: String
+    , histcomment :: String
     }
     deriving (Eq,Ord,Show,Read)
 
@@ -184,7 +194,7 @@ contentsValueListFromPageID document pagerefid =
         unRefID (Ref r) = r
     in contentlist
 
-pagintext contractnumber initials = 
+pagintext (SealSpec{documentNumber,initials}) = 
  "BT " ++
  "0.546 0.469 0.454 0.113 k " ++
  "/TT0 1 Tf " ++
@@ -199,10 +209,10 @@ pagintext contractnumber initials =
  "6 0 0 6 185.1362 10.8433 Tm " ++
  "(OK.NR. )Tj " ++
  "8 0 0 8 207.4722 10.8433 Tm " ++
- "(" ++ contractnumber ++ ")Tj " ++
+ "(" ++ documentNumber ++ ")Tj " ++
  "ET "
 
-signatorybox fullname company number email = 
+signatorybox (Person {fullname,company,number,email}) = 
  "BT " ++
  "0.806 0.719 0.51 0.504 k " ++
  "/TT1 1 Tf " ++
@@ -220,20 +230,22 @@ signatorybox fullname company number email =
  "ET " ++ 
  "0.039 0.024 0.02 0 k " ++
  "566.479 678.209 -537.601 3.841 re " ++
- "f "
+ "f " ++
+ "1 0 0 1 0 -47 cm "
 
-logentry date what = 
+
+logentry (HistEntry {histdate,histcomment}) = 
  "BT " ++
  "/TT0 1 Tf " ++
  "0.591 0.507 0.502 0.19 k " ++
  "12 0 0 12 54.1978 520.8887 Tm " ++
- "(" ++ date ++ ")Tj " ++
+ "(" ++ histdate ++ ")Tj " ++
  "12 0 0 12 231.1978 520.8887 Tm " ++
- "(" ++ what ++ ")Tj " ++
- "ET "
+ "(" ++ histcomment ++ ")Tj " ++
+ "ET 1 0 0 1 0 -20 cm "
 
 
-lastpage contractnumber = 
+lastpage (SealSpec {documentNumber,persons,history}) = 
  "0.081 0.058 0.068 0 k " ++
  "/GS0 gs " ++
  "581.839 14.37 -567.36 813.12 re " ++
@@ -257,7 +269,7 @@ lastpage contractnumber =
  "(Undertecknat av)Tj " ++
  "0.546 0.469 0.454 0.113 k " ++
  "0 1.812 TD " ++
- "[(Dok.nr)55(. " ++ contractnumber ++ ")]TJ " ++
+ "[(Dok.nr)55(. " ++ documentNumber ++ ")]TJ " ++
  "ET " ++
 
  "BT " ++
@@ -290,14 +302,7 @@ lastpage contractnumber =
 
 
  -- every signatory on its own line, repeated every 64 pixels down
- "q " ++ 
- signatorybox "Gracjan Polak" "SkrivaPa" "806012-3456" "my@email.com" ++
- "1 0 0 1 0 -47 cm " ++
- signatorybox "Gracjan Polak" "SkrivaPa" "806012-3456" "my@email.com" ++
- "1 0 0 1 0 -47 cm " ++
- signatorybox "Gracjan Polak" "SkrivaPa" "806012-3456" "my@email.com" ++
- "1 0 0 1 0 -47 cm " ++
-
+ "q " ++ concatMap signatorybox persons ++
  "1 0 0 1 0 141 cm " ++ -- compensate for 3 signatures
  
 
@@ -327,7 +332,7 @@ lastpage contractnumber =
  "f " ++
 
  -- logentry
- logentry "2010-10-10 13:44" "Gracjan was here and made a signature" ++
+ concatMap logentry history ++
 
  "Q " ++
 
@@ -355,21 +360,19 @@ lastpage contractnumber =
  "Q" 
  -}
 
-process (SealSpec 
-    { sealInput
-    , sealOutput
-    , sealDocumentNumber
-    , sealPersons}) = do
-    Just doc <- PdfModel.parseFile sealInput
+process (sealSpec@SealSpec 
+    { input
+    , output
+    , documentNumber
+    , persons}) = do
+    Just doc <- PdfModel.parseFile input
     Just seal <- PdfModel.parseFile sealFileName 
     let [paginpage1, sealpage1] = listPageRefIDs seal
-    let sealNumberText = let s = show sealDocumentNumber
-         in take (10-length s) "0000000000" ++ s 
     let ([newsealcontents,newpagincontents],doc1) = 
             runState (do
                           [a,b] <- importObjects seal [paginpage1,sealpage1]
                           return [b,a] ) doc
-        pagintext1 = pagintext sealNumberText ""
+        pagintext1 = pagintext sealSpec
         {-
         sealtext = --BS.pack $ 
             movemtx ++
@@ -395,11 +398,11 @@ process (SealSpec
                   then "1 0 0 1 0 " ++ show ((length sealPersons-2)*15) ++ " cm "
                   else ""
         -}
-        sealtext = lastpage sealNumberText
+        sealtext = lastpage sealSpec
 
 
     let doc2 = placeSeals newsealcontents sealtext newpagincontents pagintext1 doc1
-    writeFileX sealOutput doc2
+    writeFileX output doc2
     return ()
 
 
