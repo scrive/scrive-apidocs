@@ -38,7 +38,7 @@ landpageSignInviteView ctx document =
     <div class="centerdivnarrow">
      <p class="headline">Dokumentet <strong><% documenttitle document %></strong> undertecknat!</p>
      
-     <p>En inbjudan har nu skickats till 
+     <p>En inbjudan till avtalet har nu skickats till 
       <strong><span id="mrx"><% concatSignatories (map signatorydetails $ documentsignatorylinks document) %></span></strong>.
      </p>
 
@@ -364,7 +364,7 @@ showDocument user
                        <strong><% documenttitle %></strong>?</p>
                     <p>När du bekräftat kommer en automatisk inbjudan att skickas till 
                        <strong><span id="mrx">"Mr X"</span></strong> med e-post.
-                       Avtalet blir juridiskt bindande när alla parter undertecknat.</p>
+                       Avtalet blir <strong>juridiskt bindande</strong> när alla parter undertecknat.</p>
                        {- change "alla parter" to list of people -} 
                    </div>
 
@@ -409,7 +409,7 @@ showDocument user
               Undertecknas inom <input type="text" name="daystosign" value=documentdaystosign maxlength="2" size="2"/> dagar<br/>
               <input class="bigbutton" type="submit" name="final" value="Underteckna" id="signinvite"/>
               <br/>
-              <input class="secbutton" type="submit" name="save" value="Spara till senare"/>
+              <input class="secbutton" type="submit" name="save" value="Spara som utkast"/>
              </span>
            else
               <div id="signatorylist">
@@ -464,7 +464,7 @@ showDocumentForSign action document authorname invitedname wassigned =
                    {- change "alla parter" to list of people -}
                    <p>Är du säker på att du vill underteckna dokumentet 
                      <strong><% documenttitle document %></strong>?</p>
-                   <p>När alla parter undertecknat blir avtalet juridiskt bindande och du får det 
+                   <p>När alla parter undertecknat blir avtalet <strong>juridiskt bindande</strong> och du får det 
                       färdigställda dokumentet via e-post. Efter att du undertecknat får du även 
                       möjlighet att spara dokumentet online via SkrivaPå.
                    </p>
@@ -479,9 +479,9 @@ showDocumentForSign action document authorname invitedname wassigned =
                 
                  <p>Välkommen <strong><% invitedname %></strong>,</p>
  
-                 <p>På vänster sida har du dokumentet <strong><% documenttitle document %></strong> 
-                    som <strong><% authorname %></strong> har bjudit in dig att underteckna.
-                    Genom att underteckna ingår du ett juridiskt bindande avtal. 
+                 <p>På vänster sida har du dokumentet <strong><% documenttitle document %></strong> som <strong><% authorname %></strong> har 
+                    bjudit in dig att underteckna.
+                    Genom att underteckna ingår du ett <strong>juridiskt bindande</strong> avtal. 
                     Vill du underteckna? 
                  </p>
 
@@ -533,15 +533,18 @@ invitationMail (Context {ctxmaybeuser = Just user, ctxhostpart})
       <p>Hej <strong><% personname %></strong>,</p>
 
       <p><strong><% creatorname %></strong> har bjudit in dig att underteckna dokumentet 
-         <strong><% documenttitle %></strong>. 
-         Klicka på länken nedan för att granska dokumentet online. 
-         Du undertecknar genom att bekräfta avtalet i nästa steg.
-         <% case documenttimeouttime of
-              Just time -> "Avtalet kan undertecknas senast " ++ show time ++ "."
-              Nothing -> ""
-          %></p>
+         <strong><% documenttitle %></strong>. Så här går du vidare:</p> 
 
-      <p><a href=link><% link %></a></p>
+      <p>1. Klicka på länken<br/>
+         <a href=link><% link %></a><br/>
+         2. Granska dokumentet online<br/>
+         3. Underteckna<br/>
+      </p>
+         <% case documenttimeouttime of
+              Just time -> <p>Dokumentet kan undertecknas senast <% show time %>.</p>
+              Nothing -> <span/>
+          %>
+
       <% poweredBySkrivaPaPara %>
      </span>
 
@@ -564,10 +567,6 @@ closedMail (Context {ctxhostpart})
       <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats av alla parter 
          och avtalet är nu juridiskt bindande. Nedan bifogas en direktlänk till det
          färdigställda dokumentet och en PDF-kopia.</p>
-
-      <p>Om du har ett SkrivaPå-konto med denna mailadress så har avtalet sparats automatiskt
-         på detta konto. Om du inte har ett konto eller om detta är en annan mailadress än den som
-         är registrerad hos oss så kan du spara avtalet genom att klicka på länken nedan.</p>
 
       <p><a href=link><% link %></a></p>
      
@@ -601,7 +600,7 @@ closedMailAuthor (Context {ctxhostpart})
 poweredBySkrivaPaPara :: (XMLGenerator m) => XMLGenT m (HSX.XML m)
 poweredBySkrivaPaPara = 
     <p>
-     <small>MVH<br/>
+     <small>Med vänliga hälsningar<br/>
      <a href="http://skrivapa.se/">SkrivaPå</a></small>
     </p>
 
