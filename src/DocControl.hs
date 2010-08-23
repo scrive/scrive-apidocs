@@ -31,7 +31,7 @@ import Control.Concurrent
 import SendMail
 import System.Process
 import System.IO
-import Seal
+import Seal as Seal
 import Happstack.Util.Common
 import KontraLink
 import System.Exit
@@ -87,7 +87,7 @@ sendInvitationEmail1 ctx document signlink = do
   content <- invitationMail ctx signatoryemail signatoryname
              document signatorylinkid signatorymagichash
 
-  sendMail [(signatoryname,signatoryemail)] documenttitle content 
+  sendMail [(signatoryname,signatoryemail)] documenttitle content
            (filepdf $ head $ documentfiles document)
 
 sendClosedEmails :: Context -> Document -> IO ()
@@ -382,27 +382,28 @@ handleDocumentUpload :: DocumentID -> BS.ByteString -> BS.ByteString -> IO ()
 handleDocumentUpload docid content filename = do
   update $ AttachFile docid filename content
 
-sealLine :: BS.ByteString -> [BS.ByteString] -> MinutesTime -> SealPerson
-sealLine fullname details signtime =
-    SealPerson (BS.toString fullname ++ ", ") 
-                   ((concat $ intersperse ", " (map BS.toString (filter (not . BS.null) details))) ++ 
-                                "  |  " ++ showDateOnly signtime)
+sealLine :: SignatoryDetails -> MinutesTime -> Seal.Person
+sealLine details signtime =
+    Seal.Person { Seal.fullname = BS.toString $ signatoryname details 
+                , Seal.company = BS.toString $ signatorycompany details
+                , Seal.email = BS.toString $ signatoryemail details
+                , Seal.number = BS.toString $ signatorynumber details
+                }
+                --   ((concat $ intersperse ", " (map BS.toString (filter (not . BS.null) details))) ++ 
+                --                "  |  " ++ showDateOnly signtime)
 
-personsFromDocument :: Document -> [SealPerson]
+personsFromDocument :: Document -> [Seal.Person]
 personsFromDocument document = 
     let
         links = documentsignatorylinks document
-        x (SignatoryLink{ signatorydetails = SignatoryDetails{ signatoryname
-                                                             , signatorycompany
-                                                             , signatorynumber 
-                                                             }
+        x (SignatoryLink{ signatorydetails
                         , maybesigninfo = Just (SignInfo { signtime })})
-             = sealLine signatoryname [signatorycompany, signatorynumber] signtime
+             = sealLine signatorydetails signtime
 
     in map x links
 
 sealDocument :: MinutesTime -> User -> Document -> IO Document
-sealDocument signtime1 author@(User {userfullname,usercompanyname,usercompanynumber}) document = do
+sealDocument signtime1 author@(User {userfullname,usercompanyname,usercompanynumber,useremail}) document = do
   let (file@File {fileid,filename,filepdf,filejpgpages}) = 
            safehead "sealDocument" $ documentfiles document
   let docid = unDocumentID (documentid document)
@@ -413,9 +414,14 @@ sealDocument signtime1 author@(User {userfullname,usercompanyname,usercompanynum
                    Just (SignInfo t) -> t
   let authordetails = documentauthordetails document
   let authorline = if authordetails == emptyDetails 
-                   then sealLine userfullname [usercompanyname, usercompanynumber] signtime
-                   else sealLine (signatoryname authordetails)
-                            [signatorycompany authordetails, signatorynumber authordetails] signtime
+                   then sealLine authordetails signtime
+                   else sealLine (SignatoryDetails 
+                                  { signatoryname = userfullname
+                                  , signatorycompany = usercompanyname
+                                  , signatorynumber = usercompanynumber
+                                  , signatoryemail = unEmail $ useremail
+                                  }) signtime
+
 
   let persons = authorline : personsFromDocument document
   tmppath <- getTemporaryDirectory
@@ -424,13 +430,15 @@ sealDocument signtime1 author@(User {userfullname,usercompanyname,usercompanynum
   BS.writeFile tmpin filepdf
   let sealproc = (proc "dist/build/pdfseal/pdfseal" []) {std_in = CreatePipe}
   (Just inx, _, _, sealProcHandle) <- createProcess sealproc
-  let config = SealSpec 
-            { sealInput = tmpin
-            , sealOutput = tmpout
-            , sealDocumentNumber = docid
-            , sealPersons = persons
+  let config = Seal.SealSpec 
+            { input = tmpin
+            , output = tmpout
+            , documentNumber = show docid -- FIXME: padding with zeros
+            , persons = persons
+            , history = []
+            , initials = ""
             }
-  -- print config
+
   hPutStr inx (show config)
   hClose inx
   
