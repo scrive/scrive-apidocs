@@ -413,7 +413,7 @@ sealDocument signtime1 author@(User {userfullname,usercompanyname,usercompanynum
                    Nothing -> signtime1
                    Just (SignInfo t) -> t
   let authordetails = documentauthordetails document
-  let authorline = if authordetails == emptyDetails 
+  let authorline = if authordetails /= emptyDetails 
                    then sealLine authordetails signtime
                    else sealLine (SignatoryDetails 
                                   { signatoryname = userfullname
@@ -431,13 +431,23 @@ sealDocument signtime1 author@(User {userfullname,usercompanyname,usercompanynum
   let sealproc = (proc "dist/build/pdfseal/pdfseal" []) {std_in = CreatePipe}
   (Just inx, _, _, sealProcHandle) <- createProcess sealproc
   let paddeddocid = reverse $ take 10 $ (reverse ("0000000000" ++ show docid))
+  let initials = concatComma (map initialsOfPerson persons)
+      initialsOfPerson (Person {fullname}) = map head (words fullname)
+      makeHistoryEntry (Person {fullname}) = 
+          HistEntry
+          { histdate = show signtime
+          , histcomment = fullname ++ " signed document"
+          }
+      concatComma = concat . intersperse ", "
+      history = map makeHistoryEntry persons
+      
   let config = Seal.SealSpec 
             { input = tmpin
             , output = tmpout
             , documentNumber = paddeddocid
             , persons = persons
-            , history = []
-            , initials = ""
+            , history = history
+            , initials = initials
             }
 
   hPutStr inx (show config)
