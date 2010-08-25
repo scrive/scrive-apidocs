@@ -477,7 +477,8 @@ lookup refid (Document _ bodies) = msum (map check bodies)
 --            -> IO () -- (Maybe (Int,(Int,Int)))   -- objno,gener,offset
 writeObject write tell (lastlength,objnooffsetmap) ((objno1,UsedEntry gener (Indir text stream))) = do
     pos <- tell
-    -- print (pos,objno,gener)
+    -- print (pos,objno1,gener)
+    -- print text
     write (BSC.pack (show objno1 ++ " " ++ show gener ++ " obj\n"))
     case text of
         Number x -> case IntMap.lookup objno1 lastlength of

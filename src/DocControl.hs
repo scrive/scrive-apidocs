@@ -430,10 +430,11 @@ sealDocument signtime1 author@(User {userfullname,usercompanyname,usercompanynum
   BS.writeFile tmpin filepdf
   let sealproc = (proc "dist/build/pdfseal/pdfseal" []) {std_in = CreatePipe}
   (Just inx, _, _, sealProcHandle) <- createProcess sealproc
+  let paddeddocid = reverse $ take 10 $ (reverse ("0000000000" ++ show docid))
   let config = Seal.SealSpec 
             { input = tmpin
             , output = tmpout
-            , documentNumber = show docid -- FIXME: padding with zeros
+            , documentNumber = paddeddocid
             , persons = persons
             , history = []
             , initials = ""
