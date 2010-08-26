@@ -248,16 +248,16 @@ signatorybox (Person {fullname,company,number,email}) =
  "0.806 0.719 0.51 0.504 k " ++
  "/TT1 1 Tf " ++
  "12 0 0 12 46.5522 707.3906 Tm " ++
- "(" ++ fullname ++ ")Tj " ++
+ "(" ++ map unicodeToWinAnsi fullname ++ ")Tj " ++
  "/TT0 1 Tf " ++
  "0 -1.2 TD " ++
- "(" ++ company ++ ")Tj " ++
+ "(" ++ map unicodeToWinAnsi company ++ ")Tj " ++
  "/TT2 1 Tf " ++
  "12 0 0 12 " ++ show (rightmargin - orgnroffset) ++ " 707.3906 Tm " ++
- "(Org.Nr. " ++ number ++ ")Tj " ++
+ "(Org.Nr. " ++ map unicodeToWinAnsi number ++ ")Tj " ++
  "0.863 0.43 0.152 0.004 k " ++ 
  "12 0 0 12 " ++ show (rightmargin - emailoffset) ++ " 692.9906 Tm " ++
- "(" ++ email ++ ")Tj " ++
+ "(" ++ map unicodeToWinAnsi email ++ ")Tj " ++
  "ET " ++ 
  "0.039 0.024 0.02 0 k " ++
  "566.479 678.209 -537.601 3.841 re " ++
@@ -270,9 +270,9 @@ logentry (HistEntry {histdate,histcomment}) =
  "/TT0 1 Tf " ++
  "0.591 0.507 0.502 0.19 k " ++
  "12 0 0 12 54.1978 520.8887 Tm " ++
- "(" ++ histdate ++ ")Tj " ++
+ "(" ++ map unicodeToWinAnsi histdate ++ ")Tj " ++
  "12 0 0 12 231.1978 520.8887 Tm " ++
- "(" ++ histcomment ++ ")Tj " ++
+ "(" ++ map unicodeToWinAnsi histcomment ++ ")Tj " ++
  "ET 1 0 0 1 0 -20 cm "
 
 
@@ -300,7 +300,7 @@ lastpage (SealSpec {documentNumber,persons,history}) =
 
  "0.546 0.469 0.454 0.113 k " ++
  "17 0 0 17 39.8198 766.9555 Tm " ++
- "[(Dok.nr)55(. " ++ documentNumber ++ ")]TJ " ++
+ "[(Dok.nr)55(. " ++ map unicodeToWinAnsi documentNumber ++ ")]TJ " ++
 
  "0.806 0.719 0.51 0.504 k " ++
  "17 0 0 17 39.8198 736.3555 Tm " ++
