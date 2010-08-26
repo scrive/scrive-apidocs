@@ -472,16 +472,23 @@ handleIssuePost ctx = handleIssueNewDocument ctx `mplus` handleIssueArchive ctx
 handleIssueNewDocument :: Context -> Kontra Response
 handleIssueNewDocument ctx@(Context { ctxmaybeuser = Just user, ctxhostpart, ctxtime }) = do
     input@(Input content (Just filename) _contentType) <- getDataFnM (lookInput "doc")
-    -- FIXME: here we have encoding issue
-    -- Happstack gives use String done by BS.unpack, so BS.pack it here
-    -- in our case it should be utf-8 as this is what we use everywhere
-    let title = BSC.pack (basename filename) 
-    freeleft <- freeLeftForUser user
-    doc <- update $ NewDocument user title ctxtime (freeleft>0)
-    liftIO $ forkIO $ handleDocumentUpload (documentid doc) (concatChunks content) title
-    let link = ctxhostpart ++ "/issue/" ++ show (documentid doc)
-    response <- webHSP (seeOtherXML link)
-    seeOther link response
+    -- see if we have empty input, then there was no file selected
+    if BSL.null content
+       then do
+         let link = ctxhostpart ++ "/"
+         response <- webHSP (seeOtherXML link)
+         seeOther link response
+        else do
+          -- FIXME: here we have encoding issue
+          -- Happstack gives use String done by BS.unpack, so BS.pack it here
+          -- in our case it should be utf-8 as this is what we use everywhere
+          let title = BSC.pack (basename filename) 
+          freeleft <- freeLeftForUser user
+          doc <- update $ NewDocument user title ctxtime (freeleft>0)
+          liftIO $ forkIO $ handleDocumentUpload (documentid doc) (concatChunks content) title
+          let link = ctxhostpart ++ "/issue/" ++ show (documentid doc)
+          response <- webHSP (seeOtherXML link)
+          seeOther link response
 
 
 handleIssueArchive :: Context -> Kontra Response
