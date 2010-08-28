@@ -166,7 +166,10 @@ oneDocumentRow document@Document{ documentid, documentsignatorylinks
      <td><% mk $ case documenttimeouttime of
                    Nothing -> "-"
                    -- FIXME: show days to sign, not the final date
-                   Just (TimeoutTime x) -> show x
+                   Just (TimeoutTime x) -> 
+                       if documentstatus==Pending || documentstatus==Timedout  
+                       then show x
+                       else "-"
           %>
      </td>
      <td><% mk $ show $ documentmtime %></td>
