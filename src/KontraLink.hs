@@ -37,18 +37,18 @@ data KontraLink
 instance Show KontraLink where
     showsPrec _ LinkAbout = (++) "/about"
     showsPrec _ LinkLogin = (++) "/login"
-    showsPrec _ LinkIssue = (++) "/issue"
+    showsPrec _ LinkIssue = (++) "/d"
     showsPrec _ LinkMain = (++) "/"
     showsPrec _ LinkAccount = (++) "/account"
     showsPrec _ LinkSubaccount = (++) "/account/subaccount"
     showsPrec _ (LinkLandpageSaved document signatorylinkid) = 
         (++) $ "/landpage/saved/" ++ show (documentid document) ++ "/" ++ show signatorylinkid
     showsPrec _ (LinkIssueDoc document) = 
-        (++) $ "/issue/" ++ show (documentid document)
+        (++) $ "/d/" ++ show (documentid document)
     showsPrec _ (LinkIssueDocPDF document) = 
-        (++) $ "/issue/" ++ show (documentid document) ++ "/" ++ BS.toString (documenttitle document) ++ ".pdf"
+        (++) $ "/d/" ++ show (documentid document) ++ "/" ++ BS.toString (documenttitle document) ++ ".pdf"
     showsPrec _ (LinkSignDoc document signatorylinkid magichash) = 
-        (++) $ "/sign/" ++ show (documentid document) ++ "/" ++ show signatorylinkid ++ "/" ++ show magichash
+        (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show signatorylinkid ++ "/" ++ show magichash
     showsPrec _ (LinkResendEmail document signatorylinkid) = 
         (++) $ "/resendemail/" ++ show (documentid document) ++ "/" ++ show signatorylinkid
 

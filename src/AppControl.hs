@@ -47,8 +47,10 @@ import System.IO.Unsafe
 
 handleRoutes ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} = toIO ctx $ msum $
     [ nullDir >> webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx))
-    , dir "sign" $ DocControl.handleSign ctx
-    , dir "issue" (withUser ctxmaybeuser (DocControl.handleIssue ctx))
+    , dir "s" $ DocControl.handleSign ctx
+    , {- old -} dir "sign" $ DocControl.handleSign ctx
+    , dir "d" $ withUser ctxmaybeuser (DocControl.handleIssue ctx)
+    , {- old -} dir "issue" $ withUser ctxmaybeuser (DocControl.handleIssue ctx)
     , dir "pages" $ path $ \fileid -> 
         msum [ path $ \pageno -> do
                  modminutes <- query $ FileModTime fileid

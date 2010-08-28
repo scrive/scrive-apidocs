@@ -99,6 +99,8 @@ feedback eller bara en enkel hälsning. Din åsikt är värdefull.</p>
          <strong>Lukas Duczko</strong> och team <a href="http://skrivapa.se/">SkrivaPå</a>
       </p>
     </div>
+
+
 xxx (Just (XMLMetaData (showDt, dt) _ pr), xml) = 
         BS.fromString ((if showDt then (dt ++) else id) (pr xml))
 xxx (Nothing, xml) =
@@ -131,34 +133,10 @@ documentClosedFlashMessage document = liftM (FlashMessage . xxx) $ webHSP1
      Du har undertecknat avtalet! Avtalet är undertecknat av alla partner nu!
     </div>
   
-mkSignDocLink :: String -> DocumentID -> SignatoryLinkID -> String
+mkSignDocLink :: String -> Document -> SignatoryLinkID -> String
 mkSignDocLink hostpart documentid signaturelinkid =
-    hostpart ++ "/sign/" ++ show documentid ++ "/" ++ show signaturelinkid
+    hostpart ++ show (LinkSignDoc documentid signaturelinkid)
 
-
-instance (XMLGenerator m) => (EmbedAsChild m (Document, Bool)) where
-    asChild (entry, alt) = 
-          <%
-           <tr class=(if alt then "alt" else "")>
-            <td>
-             <a href=("/issue/" ++ show (documentid entry))><% documenttitle entry %></a>
-            </td>
-            <td>
-             <% show $ documentmtime entry %>
-            </td>
-            <td>
-             <% show (documentstatus entry) %>
-            </td>
-           </tr>
-          %>
-
-instance (XMLGenerator m) => (EmbedAsChild m [Document]) where
-    asChild (entries) = 
-        <% 
-         <table class="commentlist" width="100%">
-           <% zip entries (cycle [False,True]) %>
-         </table>
-        %>
 
 concatSignatories :: [SignatoryDetails] -> String
 concatSignatories siglinks = 
