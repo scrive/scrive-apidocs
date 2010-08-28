@@ -76,16 +76,16 @@ sendInvitationEmails ctx document = do
   forM_ signlinks (sendInvitationEmail1 ctx document)
 
 sendInvitationEmail1 :: Context -> Document -> SignatoryLink -> IO ()
-sendInvitationEmail1 ctx document signlink = do
+sendInvitationEmail1 ctx document signatorylink = do
   let SignatoryLink{ signatorylinkid
                    , signatorydetails = SignatoryDetails { signatoryname
                                                          , signatorycompany
                                                          , signatoryemail
                                                          }
-                   , signatorymagichash } = signlink
+                   , signatorymagichash } = signatorylink
       Document{documenttitle,documentid} = document
   content <- invitationMail ctx signatoryemail signatoryname
-             document signatorylinkid signatorymagichash
+             document signatorylink signatorymagichash
 
   sendMail [(signatoryname,signatoryemail)] documenttitle content
            (filepdf $ head $ documentfiles document)
@@ -97,15 +97,15 @@ sendClosedEmails ctx document = do
   sendClosedAuthorEmail ctx document
 
 sendClosedEmail1 :: Context -> Document -> SignatoryLink -> IO ()
-sendClosedEmail1 ctx document signlink = do
+sendClosedEmail1 ctx document signatorylink = do
   let SignatoryLink{ signatorylinkid
                    , signatorymagichash
                    , signatorydetails = SignatoryDetails { signatoryname
                                                          , signatorycompany
-                                                         , signatoryemail }} = signlink
+                                                         , signatoryemail }} = signatorylink
       Document{documenttitle,documentid} = document
   content <- closedMail ctx signatoryemail signatoryname
-             document signatorylinkid signatorymagichash
+             document signatorylink signatorymagichash
   let attachmentcontent = filepdf $ head $ documentfiles document
   sendMail [(signatoryname,signatoryemail)] documenttitle content attachmentcontent
 
@@ -152,18 +152,32 @@ signDoc ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) documentid
   response <- webHSP (seeOtherXML link)
   seeOther link response
 
+signatoryLinkFromDocumentByID document@Document{documentsignatorylinks} linkid = do
+    let invitedlinks = filter (\x -> signatorylinkid x == linkid
+                               {- && signatorymagichash x == magichash1 -})
+                              documentsignatorylinks
+    case invitedlinks of
+      [invitedlink] -> return invitedlink
+      _ -> mzero
+    
+
 landpageSignInvite ctx document = do
   webHSP $ pageFromBody ctx TopNone kontrakcja $ landpageSignInviteView ctx document
 
 landpageSigned ctx document signatorylinkid = do
-  webHSP $ pageFromBody ctx TopEmpty kontrakcja $ landpageSignedView ctx document signatorylinkid
+  signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
+  webHSP $ pageFromBody ctx TopEmpty kontrakcja $ landpageSignedView ctx document signatorylink
 
 landpageSignedSave ctx document signatorylinkid = do
-  webHSP $ pageFromBody ctx TopEmpty kontrakcja $ landpageLoginForSaveView ctx document signatorylinkid
+  signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
+  webHSP $ pageFromBody ctx TopEmpty kontrakcja $ landpageLoginForSaveView ctx document signatorylink
 
-landpageSaved (ctx@Context { ctxmaybeuser = Just user }) document signatorylinkid = do
-  Just document2 <- update $ SaveDocumentForSignedUser (documentid document) (userid user) signatorylinkid
-  webHSP $ pageFromBody ctx TopDocument kontrakcja $ landpageDocumentSavedView ctx document signatorylinkid
+landpageSaved (ctx@Context { ctxmaybeuser = Just user@User{userid} }) 
+              document@Document{documentid}
+              signatorylinkid = do
+  Just document2 <- update $ SaveDocumentForSignedUser documentid userid signatorylinkid
+  signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
+  webHSP $ pageFromBody ctx TopDocument kontrakcja $ landpageDocumentSavedView ctx document signatorylink
 
 
 handleSignShow :: Context -> DocumentID -> SignatoryLinkID -> MagicHash -> Kontra Response
@@ -190,7 +204,7 @@ handleSignShow ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime})
           let authorname = signatoryname $ documentauthordetails document
               invitedname = signatoryname $ signatorydetails $ invitedlink 
           webHSP (pageFromBody ctx TopNone kontrakcja 
-                 (showDocumentForSign (LinkSignDoc document signatorylinkid1 magichash1) 
+                 (showDocumentForSign (LinkSignDoc document invitedlink magichash1) 
                        document authorname invitedname wassigned))
        ]
 
