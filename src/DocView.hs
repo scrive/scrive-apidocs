@@ -34,12 +34,14 @@ landpageSignInviteView :: (XMLGenerator m) =>
                           Context -> 
                           Document -> 
                           XMLGenT m (HSX.XML m)
-landpageSignInviteView ctx document =
+landpageSignInviteView ctx document@Document{ documenttitle
+                                            , documentsignatorylinks
+                                            } =
     <div class="centerdivnarrow">
-     <p class="headline">Dokumentet <strong><% documenttitle document %></strong> undertecknat!</p>
+     <p class="headline">Dokumentet <strong><% documenttitle %></strong> undertecknat!</p>
      
      <p>En inbjudan till avtalet har nu skickats till 
-      <strong><span id="mrx"><% concatSignatories (map signatorydetails $ documentsignatorylinks document) %></span></strong>.
+      <strong><span id="mrx"><% concatSignatories (map signatorydetails documentsignatorylinks) %></span></strong>.
      </p>
 
      <p><a class="bigbutton" href="/">Skapa ett nytt avtal</a></p>
@@ -50,15 +52,15 @@ landpageSignedView :: (XMLGenerator m) =>
                       Document -> 
                       SignatoryLinkID -> 
                       XMLGenT m (HSX.XML m)
-landpageSignedView ctx document signatorylinkid =
+landpageSignedView ctx document@Document{documenttitle,documentid} signatorylinkid =
     <div class="centerdivnarrow">
-      <p class="headline">Dokumentet <strong><% documenttitle document %></strong> är färdigställt!</p>
+      <p class="headline">Dokumentet <strong><% documenttitle %></strong> är färdigställt!</p>
       {- change "alla parter" to list of people -}
       <p>Alla parter har undertecknat avtalet och du har fått en PDF kopia av dokumentet i din inkorg.
          Vi rekommenderar att du sparar dokumentet online via vår tjänst. Det kostar ingenting och tar   
          inte mer än en minut.</p>
-     <a class="bigbutton" href=("/landpage/signedsave/" ++ (show $ documentid document) ++ 
-                                "/" ++ show signatorylinkid)>Spara</a>
+      <a class="bigbutton" href=("/landpage/signedsave/" ++ (show documentid) ++ 
+                                 "/" ++ show signatorylinkid)>Spara</a>
     </div>
 
 landpageLoginForSaveView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
@@ -80,7 +82,10 @@ landpageDocumentSavedView (ctx@Context { ctxmaybeuser = Just user }) signatoryli
 
      <p>Ditt dokument är nu sparat. Du finner dokumentet under Avtal.</p>
  
-     <p>Vi hoppas att du är nöjd med vår tjänst hittills och att du är nyfiken på att själv använda SkrivaPå för att skriva dina avtal. Därför erbjuder vi dig som ny kund möjligheten att testa tjänsten genom tre fria avtal. Dina fria avtal förbrukas endast då ett avtal undertecknats av alla parter.</p>
+     <p>Vi hoppas att du är nöjd med vår tjänst hittills och att du är nyfiken på att själv använda 
+        SkrivaPå för att skriva dina avtal. Därför erbjuder vi dig som ny kund möjligheten att testa 
+        tjänsten genom tre fria avtal. Dina fria avtal förbrukas endast då ett avtal undertecknats av 
+        alla parter.</p>
       {- change "alla parter" to list of people -}
 
      <p>Börja redan nu! Ladda upp ditt avtal genom att klicka nedan.</p>
@@ -92,43 +97,37 @@ welcomeEmail fullname =
     <div>
       <p>Hej <strong><% fullname %></strong>,</p>
       
-      <p>Jag heter <strong>Lukas Duczko</strong> och är VD på <strong>SkrivaPå</strong>. Tack för att du har skapat ett konto hos oss. Vi hoppas att du
-kommer att bli nöjd med våra tjänster. Tveka inte att höra av dig med åsikter,
-feedback eller bara en enkel hälsning. Din åsikt är värdefull.</p>
+      <p>Jag heter <strong>Lukas Duczko</strong> och är VD på <strong>SkrivaPå</strong>. Tack för att 
+      du har skapat ett konto hos oss. Vi hoppas att du kommer att bli nöjd med våra tjänster. Tveka 
+      inte att höra av dig med åsikter, feedback eller bara en enkel hälsning. Din åsikt är värdefull.</p>
       <p>MVH<br/>
          <strong>Lukas Duczko</strong> och team <a href="http://skrivapa.se/">SkrivaPå</a>
       </p>
     </div>
 
 
-xxx (Just (XMLMetaData (showDt, dt) _ pr), xml) = 
-        BS.fromString ((if showDt then (dt ++) else id) (pr xml))
-xxx (Nothing, xml) =
-        BS.fromString (renderAsHTML xml)
-
-
 
 documentIssuedFlashMessage :: (MonadIO m) => Document -> m FlashMessage
-documentIssuedFlashMessage document = liftM (FlashMessage . xxx) $ webHSP1
+documentIssuedFlashMessage document = liftM (FlashMessage . renderXMLAsBSHTML) $ webHSP1
     <div>
      Du har undertecknat avtalet och en inbjudan har nu skickats till 
      <strong><span id="mrx"><% concatSignatories (map signatorydetails $ documentsignatorylinks document) %></span></strong>.
     </div>
 
 documentSavedForLaterFlashMessage :: (MonadIO m) => Document -> m FlashMessage
-documentSavedForLaterFlashMessage document = liftM (FlashMessage . xxx) $ webHSP1
+documentSavedForLaterFlashMessage document = liftM (FlashMessage . renderXMLAsBSHTML) $ webHSP1
     <div>
      Du har sparat documentet.
     </div>
 
 documentSignedFlashMessage :: (MonadIO m) => Document -> m FlashMessage
-documentSignedFlashMessage document = liftM (FlashMessage . xxx) $ webHSP1
+documentSignedFlashMessage document = liftM (FlashMessage . renderXMLAsBSHTML) $ webHSP1
     <div>
      Du har undertecknat avtalet!
     </div>
 
 documentClosedFlashMessage :: (MonadIO m) => Document -> m FlashMessage
-documentClosedFlashMessage document = liftM (FlashMessage . xxx) $ webHSP1
+documentClosedFlashMessage document = liftM (FlashMessage . renderXMLAsBSHTML) $ webHSP1
     <div>  {- change "alla parter" to list of people -}
      Du har undertecknat avtalet! Avtalet är undertecknat av alla partner nu!
     </div>
