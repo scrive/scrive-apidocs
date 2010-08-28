@@ -27,12 +27,13 @@ data KontraLink
     | LinkIssue
     | LinkMain
     | LinkAccount
-    | LinkLandpageSaved Document SignatoryLinkID
-    | LinkSignDoc Document SignatoryLinkID MagicHash
+    | LinkLandpageSaved Document SignatoryLink
+    | LinkSignDoc Document SignatoryLink MagicHash
     | LinkIssueDoc Document
     | LinkIssueDocPDF Document {- Which file? -}
     | LinkSubaccount
-    | LinkResendEmail Document SignatoryLinkID
+    | LinkResendEmail Document SignatoryLink
+    
 
 instance Show KontraLink where
     showsPrec _ LinkAbout = (++) "/about"

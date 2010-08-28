@@ -47,26 +47,26 @@ landpageSignInviteView ctx document@Document{ documenttitle
      <p><a class="bigbutton" href="/">Skapa ett nytt avtal</a></p>
     </div>
 
-landpageSignedView :: (XMLGenerator m) => 
+
+landpageSignedView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) => 
                       Context -> 
                       Document -> 
-                      SignatoryLinkID -> 
+                      SignatoryLink -> 
                       XMLGenT m (HSX.XML m)
-landpageSignedView ctx document@Document{documenttitle,documentid} signatorylinkid =
+landpageSignedView ctx document@Document{documenttitle} signatorylink =
     <div class="centerdivnarrow">
       <p class="headline">Dokumentet <strong><% documenttitle %></strong> är färdigställt!</p>
       {- change "alla parter" to list of people -}
       <p>Alla parter har undertecknat avtalet och du har fått en PDF kopia av dokumentet i din inkorg.
          Vi rekommenderar att du sparar dokumentet online via vår tjänst. Det kostar ingenting och tar   
          inte mer än en minut.</p>
-      <a class="bigbutton" href=("/landpage/signedsave/" ++ (show documentid) ++ 
-                                 "/" ++ show signatorylinkid)>Spara</a>
+      <a class="bigbutton" href=(LinkLandpageSaved document signatorylink)>Spara</a>
     </div>
 
 landpageLoginForSaveView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
-                         => Context -> Document -> SignatoryLinkID -> XMLGenT m (HSX.XML m)
-landpageLoginForSaveView ctx document signatorylinkid =
-    let loginlink = maybeSignInLink2 ctx "Login" (LinkLandpageSaved document signatorylinkid) 
+                         => Context -> Document -> SignatoryLink -> XMLGenT m (HSX.XML m)
+landpageLoginForSaveView ctx document signatorylink =
+    let loginlink = maybeSignInLink2 ctx "Login" (LinkLandpageSaved document signatorylink) 
                     "bigbutton" in
     <div class="centerdivnarrow">
         <a class="headline">Login</a>
@@ -75,8 +75,8 @@ landpageLoginForSaveView ctx document signatorylinkid =
         <p><% loginlink %></p>
        </div>
 
-landpageDocumentSavedView :: (XMLGenerator m) => Context -> Document -> SignatoryLinkID -> XMLGenT m (HSX.XML m)
-landpageDocumentSavedView (ctx@Context { ctxmaybeuser = Just user }) signatorylinkid document = 
+landpageDocumentSavedView :: (XMLGenerator m) => Context -> Document -> SignatoryLink -> XMLGenT m (HSX.XML m)
+landpageDocumentSavedView (ctx@Context { ctxmaybeuser = Just user }) signatorylink document = 
     <div class="centerdivnarrow">
      <p class="headline">Välkommen <strong><% userfullname user %></strong>!</p>
 
@@ -132,9 +132,9 @@ documentClosedFlashMessage document = liftM (FlashMessage . renderXMLAsBSHTML) $
      Du har undertecknat avtalet! Avtalet är undertecknat av alla partner nu!
     </div>
   
-mkSignDocLink :: String -> Document -> SignatoryLinkID -> String
-mkSignDocLink hostpart documentid signaturelinkid =
-    hostpart ++ show (LinkSignDoc documentid signaturelinkid)
+mkSignDocLink :: String -> Document -> SignatoryLink -> String
+mkSignDocLink hostpart documentid signaturelink =
+    hostpart ++ show (LinkSignDoc documentid signaturelink)
 
 
 concatSignatories :: [SignatoryDetails] -> String
@@ -262,15 +262,15 @@ showSignatoryEntryForEdit2 idx signatoryname signatorycompany signatorynumber si
 
 showSignatoryEntryStatus :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
                             => Document -> SignatoryLink -> XMLGenT m (HSX.XML m)
-showSignatoryEntryStatus document (SignatoryLink{ signatorydetails = SignatoryDetails{ signatoryname
-                                                                            , signatoryemail
-                                                                            }
-                                       , signatorylinkid
-                                       , maybeseentime
-                                       , maybesigninfo
-                                       }) = 
+showSignatoryEntryStatus document (signatorylink@SignatoryLink{ signatorydetails = SignatoryDetails{ signatoryname
+                                                                                                   , signatoryemail
+                                                                                                   }
+                                                              , signatorylinkid
+                                                              , maybeseentime
+                                                              , maybesigninfo
+                                                              }) = 
     <div> {- Sänd inbjudan igen, Sänd email-bekräftelse igen -}
-        <b><% signatoryname %></b> <a href=(LinkResendEmail document signatorylinkid)>Sänd inbjudan igen</a><br/>
+        <b><% signatoryname %></b> <a href=(LinkResendEmail document signatorylink)>Sänd inbjudan igen</a><br/>
         <% case maybesigninfo of
              Just (SignInfo{signtime}) -> "Undertecknat " ++ show signtime 
              Nothing -> case maybeseentime of
@@ -499,14 +499,14 @@ invitationMail :: Context
                -> BS.ByteString
                -> BS.ByteString
                -> Document
-               -> SignatoryLinkID
+               -> SignatoryLink
                -> MagicHash
                -> IO BS.ByteString
 invitationMail (Context {ctxmaybeuser = Just user, ctxhostpart}) 
                   emailaddress personname 
                   document@Document{documenttitle,documentid,documenttimeouttime,documentauthordetails} 
-                  signaturelinkid magichash = 
-    let link = ctxhostpart ++ show (LinkSignDoc document signaturelinkid magichash)
+                  signaturelink magichash = 
+    let link = ctxhostpart ++ show (LinkSignDoc document signaturelink magichash)
         creatorname = signatoryname documentauthordetails
     in htmlHeadBodyWrapIO documenttitle
      <span>
@@ -532,14 +532,14 @@ closedMail :: Context
            -> BS.ByteString
            -> BS.ByteString
            -> Document
-           -> SignatoryLinkID
+           -> SignatoryLink
            -> MagicHash
            -> IO BS.ByteString
 closedMail (Context {ctxhostpart}) 
               emailaddress personname 
               document@Document{documenttitle,documentid} 
-              signaturelinkid magichash = 
-    let link = ctxhostpart ++ show (LinkSignDoc document signaturelinkid magichash)
+              signaturelink magichash = 
+    let link = ctxhostpart ++ show (LinkSignDoc document signaturelink magichash)
     in htmlHeadBodyWrapIO documenttitle 
      <span>
       {- change "alla parter" to list of people -}
