@@ -225,7 +225,7 @@ handleIssueShow ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpa
               response <- webHSP (seeOtherXML link)
               seeOther link response
             else do 
-             let link = ctxhostpart ++ "/issue"
+             let link = ctxhostpart ++ show LinkIssue
              flashmsg <- documentSavedForLaterFlashMessage doc2
              liftIO $ update $ AddUserFlashMessage userid flashmsg
              response <- webHSP (seeOtherXML link)
@@ -486,7 +486,7 @@ handleIssueNewDocument ctx@(Context { ctxmaybeuser = Just user, ctxhostpart, ctx
           freeleft <- freeLeftForUser user
           doc <- update $ NewDocument user title ctxtime (freeleft>0)
           liftIO $ forkIO $ handleDocumentUpload (documentid doc) (concatChunks content) title
-          let link = ctxhostpart ++ "/issue/" ++ show (documentid doc)
+          let link = ctxhostpart ++ show (LinkIssueDoc doc)
           response <- webHSP (seeOtherXML link)
           seeOther link response
 
@@ -498,9 +498,9 @@ handleIssueArchive ctx@(Context { ctxmaybeuser = Just user, ctxhostpart, ctxtime
     let Just ids = sequence $ map (readM . BSL.toString) idstrings
     update $ ArchiveDocuments ids
 
-    let link = "/issue"
-    response <- webHSP (seeOtherXML link)
-    seeOther link response
+    let link = LinkIssue
+    response <- webHSP (seeOtherXML $ show link)
+    seeOther (show link) response
 
 
 showPage :: Context -> MinutesTime -> FileID -> Int -> Kontra Response
