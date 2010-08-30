@@ -36,6 +36,7 @@ import Happstack.Util.Common
 import KontraLink
 import System.Exit
 import qualified Data.Set as Set
+import UserControl
 
 {-
   Document state transitions are described in DocState.
@@ -166,11 +167,26 @@ landpageSignInvite ctx document = do
 
 landpageSigned ctx document signatorylinkid = do
   signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
-  webHSP $ pageFromBody ctx TopEmpty kontrakcja $ landpageSignedView ctx document signatorylink
+  maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
+  webHSP $ pageFromBody ctx TopEmpty kontrakcja $ landpageSignedView ctx document signatorylink (isJust maybeuser)
 
+{-
+ Here we need to save the document either under existing account or create a new account
+ send invitation email and put the document in that account
+-}
 landpageSignedSave ctx document signatorylinkid = do
   signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
-  webHSP $ pageFromBody ctx TopEmpty kontrakcja $ landpageLoginForSaveView ctx document signatorylink
+  let details = signatorydetails signatorylink
+  maybeuser <- query $ GetUserByEmail (Email $ signatoryemail details)
+  user <- case maybeuser of
+            Nothing -> do -- create a new user
+              let fullname = signatoryname details
+              let email = signatoryemail details
+              user <- liftIO $ createUser fullname email Nothing
+              return user
+            Just user -> return user
+  Just document2 <- update $ SaveDocumentForSignedUser (documentid document) (userid user) signatorylinkid
+  webHSP $ pageFromBody ctx TopEmpty kontrakcja $ landpageLoginForSaveView ctx document2 signatorylink
 
 landpageSaved (ctx@Context { ctxmaybeuser = Just user@User{userid} }) 
               document@Document{documentid}
