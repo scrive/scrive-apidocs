@@ -27,7 +27,7 @@ Executable pdfseal
   hs-source-dirs: pdfseal/src src
   -- .hs or .lhs file containing the Main module.
   Main-is: SealMain.hs
-  
+
   -- Packages needed in order to build this package.
   Build-depends: base, mmap==0.5.*, parallel, array
   Build-Depends: HPDF
@@ -35,7 +35,7 @@ Executable pdfseal
              FlexibleInstances, MultiParamTypeClasses, FlexibleContexts,
              UndecidableInstances, TypeOperators, TypeSynonymInstances,
              GeneralizedNewtypeDeriving, NamedFieldPuns
-   
+
 
 Executable kontrakcja-server
  hs-source-dirs: src pdfseal/src
@@ -61,5 +61,31 @@ Executable kontrakcja-server
              FlexibleInstances, MultiParamTypeClasses, FlexibleContexts,
              UndecidableInstances, TypeOperators, TypeSynonymInstances,
              GeneralizedNewtypeDeriving, NamedFieldPuns
-   
 
+Executable kontrakcja-test
+ hs-source-dirs: test/src src pdfseal/src
+
+ GHC-Options: -fwarn-tabs
+ if !os(windows)
+   -- don't do threaded on Windows because it uses blocking listen and accept
+   GHC-Options: -threaded
+ if os(windows)
+   cpp-options: -DWINDOWS
+ Build-depends: test-framework, test-framework-hunit, test-framework-quickcheck
+ Build-depends: HUnit, QuickCheck
+ Build-depends: filepath
+ Build-depends: happstack-state, happstack-server, hslogger, mtl, time, time-extras
+ Build-depends: hsx, hsp, happstack, utf8-string, random
+ Build-depends: happstack-data, extensible-exceptions, happstack-ixset, containers
+ Build-depends: happstack-util, directory, process
+ Build-Depends: base >= 4 && < 5, syb, dataenc
+ Build-Depends: syb-with-class, binary, old-locale, old-time
+ Build-Depends: network, HTTP, data-object-json, bytestring, curl, data-object
+ Build-Depends: HaXml == 1.13.*
+ Build-Depends: parallel == 2.2.*
+ Main-is: TestMain.hs
+
+ Extensions: TemplateHaskell, TypeFamilies, DeriveDataTypeable,
+             FlexibleInstances, MultiParamTypeClasses, FlexibleContexts,
+             UndecidableInstances, TypeOperators, TypeSynonymInstances,
+             GeneralizedNewtypeDeriving, NamedFieldPuns
