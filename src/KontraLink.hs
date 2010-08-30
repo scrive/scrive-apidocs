@@ -42,16 +42,16 @@ instance Show KontraLink where
     showsPrec _ LinkMain = (++) "/"
     showsPrec _ LinkAccount = (++) "/account"
     showsPrec _ LinkSubaccount = (++) "/account/subaccount"
-    showsPrec _ (LinkLandpageSaved document signatorylinkid) = 
-        (++) $ "/landpage/saved/" ++ show (documentid document) ++ "/" ++ show signatorylinkid
+    showsPrec _ (LinkLandpageSaved document signatorylink) = 
+        (++) $ "/landpage/signedsave/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink)
     showsPrec _ (LinkIssueDoc document) = 
         (++) $ "/d/" ++ show (documentid document)
     showsPrec _ (LinkIssueDocPDF document) = 
         (++) $ "/d/" ++ show (documentid document) ++ "/" ++ BS.toString (documenttitle document) ++ ".pdf"
-    showsPrec _ (LinkSignDoc document signatorylinkid magichash) = 
-        (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show signatorylinkid ++ "/" ++ show magichash
-    showsPrec _ (LinkResendEmail document signatorylinkid) = 
-        (++) $ "/resendemail/" ++ show (documentid document) ++ "/" ++ show signatorylinkid
+    showsPrec _ (LinkSignDoc document signatorylink magichash) = 
+        (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++ "/" ++ show magichash
+    showsPrec _ (LinkResendEmail document signatorylink) = 
+        (++) $ "/resendemail/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink)
 
 {-
 instance (EmbedAsAttr m String) => (EmbedAsAttr m KontraLink) where

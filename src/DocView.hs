@@ -48,39 +48,72 @@ landpageSignInviteView ctx document@Document{ documenttitle
     </div>
 
 
+{-
+
+Variables:
+1. all signed?
+2. has account already?
+3. is logged in as the account?
+
+Let as skip 3 for now.
+-}
+
+willCreateAccountForYou False = <span/>
+willCreateAccountForYou True = 
+     <p>
+       Since you don't have an account at SkrivaPa we can create one for you. You will be able to see all documents
+       you have signed with our service and track progress. Det kostar ingenting och 
+       tar inte mer än en minut.
+     </p>
+
 landpageSignedView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) => 
                       Context -> 
                       Document -> 
                       SignatoryLink -> 
+                      Bool ->
                       XMLGenT m (HSX.XML m)
-landpageSignedView ctx document@Document{documenttitle} signatorylink =
+landpageSignedView ctx document@Document{documenttitle,documentstatus} signatorylink hasaccount 
+    | documentstatus == Closed =
     <div class="centerdivnarrow">
       <p class="headline">Dokumentet <strong><% documenttitle %></strong> är färdigställt!</p>
       {- change "alla parter" to list of people -}
       <p>Alla parter har undertecknat avtalet och du har fått en PDF kopia av dokumentet i din inkorg.
-         Vi rekommenderar att du sparar dokumentet online via vår tjänst. Det kostar ingenting och tar   
-         inte mer än en minut.</p>
+         Vi rekommenderar att du sparar dokumentet online via vår tjänst.</p>
+      <% willCreateAccountForYou (not hasaccount) %>
+      <a class="bigbutton" href=(LinkLandpageSaved document signatorylink)>Spara</a>
+    </div>
+
+landpageSignedView ctx document@Document{documenttitle} signatorylink hasaccount =
+    <div class="centerdivnarrow">
+      <p class="headline">Dokumentet <strong><% documenttitle %></strong> är färdigställt!</p>
+      {- change "alla parter" to list of people -}
+      <p>We are waiting for everybody to sign, then you will receive en PDF kopia av dokumentet i din inkorg.
+         Meanwhile vi rekommenderar att du sparar dokumentet online via vår tjänst to track progress. </p>
+      <% willCreateAccountForYou (not hasaccount) %>
       <a class="bigbutton" href=(LinkLandpageSaved document signatorylink)>Spara</a>
     </div>
 
 landpageLoginForSaveView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
                          => Context -> Document -> SignatoryLink -> XMLGenT m (HSX.XML m)
 landpageLoginForSaveView ctx document signatorylink =
-    let loginlink = maybeSignInLink2 ctx "Login" (LinkLandpageSaved document signatorylink) 
+    {- let loginlink = maybeSignInLink2 ctx "Login" (LinkLandpageSaved document signatorylink) 
                     "bigbutton" in
+     -}
     <div class="centerdivnarrow">
-        <a class="headline">Login</a>
-        <p>För att du ska kunna komma åt ditt avtal i framtiden skapar vi ett konto till dig.</p>
+     <a class="headline">Login</a>
+     <p>Ditt dokument är nu sparat. Du finner dokumentet under Avtal when you log in.</p>
+        {- <p>För att du ska kunna komma åt ditt avtal i framtiden skapar vi ett konto till dig.</p>
+         -}
+     <% loginBox ctx %>
+    </div>
 
-        <p><% loginlink %></p>
-       </div>
 
 landpageDocumentSavedView :: (XMLGenerator m) => Context -> Document -> SignatoryLink -> XMLGenT m (HSX.XML m)
 landpageDocumentSavedView (ctx@Context { ctxmaybeuser = Just user }) signatorylink document = 
     <div class="centerdivnarrow">
      <p class="headline">Välkommen <strong><% userfullname user %></strong>!</p>
 
-     <p>Ditt dokument är nu sparat. Du finner dokumentet under Avtal.</p>
+     <p>Ditt dokument är nu sparat. Du finner dokumentet under Avtal when you log in.</p>
  
      <p>Vi hoppas att du är nöjd med vår tjänst hittills och att du är nyfiken på att själv använda 
         SkrivaPå för att skriva dina avtal. Därför erbjuder vi dig som ny kund möjligheten att testa 
