@@ -28,7 +28,7 @@ data KontraLink
     | LinkMain
     | LinkAccount
     | LinkLandpageSaved Document SignatoryLink
-    | LinkSignDoc Document SignatoryLink MagicHash
+    | LinkSignDoc Document SignatoryLink
     | LinkIssueDoc Document
     | LinkIssueDocPDF Document {- Which file? -}
     | LinkSubaccount
@@ -48,8 +48,9 @@ instance Show KontraLink where
         (++) $ "/d/" ++ show (documentid document)
     showsPrec _ (LinkIssueDocPDF document) = 
         (++) $ "/d/" ++ show (documentid document) ++ "/" ++ BS.toString (documenttitle document) ++ ".pdf"
-    showsPrec _ (LinkSignDoc document signatorylink magichash) = 
-        (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++ "/" ++ show magichash
+    showsPrec _ (LinkSignDoc document signatorylink) = 
+        (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++ 
+                 "/" ++ show (signatorymagichash signatorylink)
     showsPrec _ (LinkResendEmail document signatorylink) = 
         (++) $ "/resendemail/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink)
 

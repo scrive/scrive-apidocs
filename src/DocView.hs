@@ -174,11 +174,18 @@ concatSignatories :: [SignatoryDetails] -> String
 concatSignatories siglinks = 
     concat $ intersperse ", " $ map (BS.toString . signatoryname) siglinks 
 
-oneDocumentRow document@Document{ documentid, documentsignatorylinks
-                                , documentstatus, documenttitle
+oneDocumentRow userid document@Document{ documentid
+                                , documentsignatorylinks
+                                , documentstatus
+                                , documenttitle
                                 , documenttimeouttime
-                                , documentmtime }  = 
-    let link = LinkIssueDoc document
+                                , documentmtime
+                                , documentauthor
+                                }  = 
+    let link = if unAuthor documentauthor==userid
+               then LinkIssueDoc document
+               else LinkSignDoc document signatorylink
+        [signatorylink] = filter (\x -> maybesignatory x == Just (Signatory userid)) documentsignatorylinks
         mk x = <a href=link><% x %></a>
         statusimg = "/theme/images/" ++
                     case documentstatus of
@@ -211,8 +218,11 @@ oneDocumentRow document@Document{ documentid, documentsignatorylinks
 
 
 listDocuments :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink),
-                      EmbedAsAttr m (Attr [Char] DocumentID)) => [Document] -> XMLGenT m (HSX.XML m)
-listDocuments documents = 
+                      EmbedAsAttr m (Attr [Char] DocumentID)) 
+              => UserID
+              -> [Document] 
+              -> XMLGenT m (HSX.XML m)
+listDocuments userid documents = 
      <form method="post" action=LinkIssue>
      <table class="doctable" cellspacing="0">
       <col/>
@@ -251,7 +261,7 @@ listDocuments documents =
        </tr>
       </tfoot>
       <tbody>
-       <% map oneDocumentRow (filter (not . documentdeleted) documents) %>
+       <% map (oneDocumentRow userid) (filter (not . documentdeleted) documents) %>
       </tbody>
      </table>
      </form>
@@ -539,7 +549,7 @@ invitationMail (Context {ctxmaybeuser = Just user, ctxhostpart})
                   emailaddress personname 
                   document@Document{documenttitle,documentid,documenttimeouttime,documentauthordetails} 
                   signaturelink magichash = 
-    let link = ctxhostpart ++ show (LinkSignDoc document signaturelink magichash)
+    let link = ctxhostpart ++ show (LinkSignDoc document signaturelink)
         creatorname = signatoryname documentauthordetails
     in htmlHeadBodyWrapIO documenttitle
      <span>
@@ -572,7 +582,7 @@ closedMail (Context {ctxhostpart})
               emailaddress personname 
               document@Document{documenttitle,documentid} 
               signaturelink magichash = 
-    let link = ctxhostpart ++ show (LinkSignDoc document signaturelink magichash)
+    let link = ctxhostpart ++ show (LinkSignDoc document signaturelink)
     in htmlHeadBodyWrapIO documenttitle 
      <span>
       {- change "alla parter" to list of people -}
