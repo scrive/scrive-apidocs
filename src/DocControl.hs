@@ -135,8 +135,9 @@ handleSign ctx@(Context {ctxmaybeuser, ctxhostpart}) =
                    path $ \magichash -> 
                        handleSignShow ctx documentid signatoryid magichash
          , withUser ctxmaybeuser $ do
-             documents <- query $ GetDocumentsBySignatory (userid $ fromJust ctxmaybeuser) 
-             webHSP (pageFromBody ctx TopNone kontrakcja (listDocuments documents))
+             let u = userid $ fromJust ctxmaybeuser
+             documents <- query $ GetDocumentsBySignatory u
+             webHSP (pageFromBody ctx TopNone kontrakcja (listDocuments u documents))
          ]
 
 signDoc :: Context -> DocumentID -> SignatoryLinkID -> Kontra  Response
@@ -220,7 +221,7 @@ handleSignShow ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime})
           let authorname = signatoryname $ documentauthordetails document
               invitedname = signatoryname $ signatorydetails $ invitedlink 
           webHSP (pageFromBody ctx TopNone kontrakcja 
-                 (showDocumentForSign (LinkSignDoc document invitedlink magichash1) 
+                 (showDocumentForSign (LinkSignDoc document invitedlink) 
                        document authorname invitedname wassigned))
        ]
 
@@ -238,22 +239,28 @@ freeLeftForUser user = do
   return freeleft
 
 handleIssueShow :: Context -> Document -> Kontra Response
-handleIssueShow ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) document = do
+handleIssueShow ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) 
+                document@Document{ documentauthor
+                                 , documentid
+                                 } = do
   msum [ do
            methodM GET 
            freeleft <- freeLeftForUser user
+           when (userid/=unAuthor documentauthor) mzero
            webHSP (pageFromBody ctx TopDocument kontrakcja 
                                     (showDocument user document False freeleft))
        , do
            methodM POST
+           when (userid/=unAuthor documentauthor) mzero
            doc2 <- updateDocument ctx document
            
            if (documentstatus doc2 == Pending &&
                documentstatus document /= Pending) 
              then do
-              let link = "/landpage/signinvite/" ++ show (documentid document)
-              response <- webHSP (seeOtherXML link)
-              seeOther link response
+               -- FIXME: create KontraLink
+               let link = "/landpage/signinvite/" ++ show documentid
+               response <- webHSP (seeOtherXML link)
+               seeOther link response
             else do 
              let link = ctxhostpart ++ show LinkIssue
              flashmsg <- documentSavedForLaterFlashMessage doc2
@@ -262,6 +269,7 @@ handleIssueShow ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpa
              seeOther link response
 
        , path $ \(_title::String) -> methodM GET >> do
+           when (userid/=unAuthor documentauthor) mzero
            let file = safehead "handleIssueShow" (documentfiles document)
            let contents = filepdf file
            let res = Response 200 M.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
@@ -323,7 +331,7 @@ updateDocument ctx@Context{ctxtime} document = do
 handleIssueGet :: (MonadIO m) => Context -> m Response
 handleIssueGet ctx@(Context {ctxmaybeuser = Just user, ctxhostpart}) = do
   documents <- query $ GetDocumentsByUser (userid user) 
-  webHSP (pageFromBody ctx TopDocument kontrakcja (listDocuments documents))
+  webHSP (pageFromBody ctx TopDocument kontrakcja (listDocuments (userid user) documents))
 
 gs :: String
 #ifdef WINDOWS
