@@ -49,6 +49,44 @@ exrotate = SealSpec
                   ]
     }
 
+nda = SealSpec 
+    { input = "nda.pdf"
+    , output = "nda_sealed.pdf"
+    , documentNumber = "0000001234"
+    , persons = 
+        [ Person 
+          { fullname = "Lukas Duczko"
+          , email = "lukas@duczko.se"
+          , company = "CEO, SkrivaPå"
+          , number = "123456-4567"
+          }
+        , Person 
+          { fullname = "Lukas Duczko"
+          , email = "lukas@duczko.se"
+          , company = "CEO, SkrivaPå"
+          , number = "123456-4567"
+          }
+        , Person 
+          { fullname = "Lukas Duczko"
+          , email = "lukas@duczko.se"
+          , company = "CEO, SkrivaPå"
+          , number = "123456-4567"
+          }
+        
+        ]
+    , initials = "LD, LD"
+      , history = [ HistEntry { histdate = "2010-09-01 13:34"
+                              , histcomment = "I was here and mucked around with PDFs"
+                              }
+                  , HistEntry { histdate = "One year later"
+                              , histcomment = "Still mucking around with PDFs some more"
+                              }
+                  , HistEntry { histdate = "10 years later"
+                              , histcomment = "Really soon now öåä ÖÅÄ. Swedish works."
+                              }
+                  ]
+    }
+
 
 {-
 

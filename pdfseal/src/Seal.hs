@@ -240,38 +240,37 @@ pagintext (SealSpec{documentNumber,initials}) =
 
 signatorybox (Person {fullname,company,number,email}) = 
  let
-    orgnroffset = textWidth (PDFFont Helvetica_Oblique 12) (toPDFString $ "Org.Nr. " ++ number)
-    emailoffset = textWidth (PDFFont Helvetica_Oblique 12) (toPDFString email)
+    orgnroffset = textWidth (PDFFont Helvetica 10) (toPDFString $ "Org.nr. " ++ number)
+    emailoffset = textWidth (PDFFont Helvetica_Oblique 10) (toPDFString email)
     rightmargin = 595 - 46.5522
  in
  "BT " ++
  "0.806 0.719 0.51 0.504 k " ++
  "/TT1 1 Tf " ++
- "12 0 0 12 46.5522 707.3906 Tm " ++
+ "10 0 0 10 46.5522 707.3906 Tm " ++
  "(" ++ map unicodeToWinAnsi fullname ++ ")Tj " ++
  "/TT0 1 Tf " ++
- "0 -1.2 TD " ++
+ "10 0 0 10 46.5522 695.9906 Tm " ++
  "(" ++ map unicodeToWinAnsi company ++ ")Tj " ++
+ "10 0 0 10 " ++ show (rightmargin - orgnroffset) ++ " 707.3906 Tm " ++
+ "(Org.nr. " ++ map unicodeToWinAnsi number ++ ")Tj " ++
  "/TT2 1 Tf " ++
- "12 0 0 12 " ++ show (rightmargin - orgnroffset) ++ " 707.3906 Tm " ++
- "(Org.Nr. " ++ map unicodeToWinAnsi number ++ ")Tj " ++
- "0.863 0.43 0.152 0.004 k " ++ 
- "12 0 0 12 " ++ show (rightmargin - emailoffset) ++ " 692.9906 Tm " ++
+ "10 0 0 10 " ++ show (rightmargin - emailoffset) ++ " 695.9906 Tm " ++
  "(" ++ map unicodeToWinAnsi email ++ ")Tj " ++
  "ET " ++ 
- "0.039 0.024 0.02 0 k " ++
- "566.479 678.209 -537.601 3.841 re " ++
- "f " ++
- "1 0 0 1 0 -47 cm "
+ -- "0.039 0.024 0.02 0 k " ++
+ -- "566.479 678.209 -537.601 3.841 re " ++
+ -- "f " ++
+ "1 0 0 1 0 -42 cm "
 
 
 logentry (HistEntry {histdate,histcomment}) = 
  "BT " ++
  "/TT0 1 Tf " ++
  "0.591 0.507 0.502 0.19 k " ++
- "12 0 0 12 54.1978 520.8887 Tm " ++
+ "10 0 0 10 54.1978 520.8887 Tm " ++
  "(" ++ map unicodeToWinAnsi histdate ++ ")Tj " ++
- "12 0 0 12 231.1978 520.8887 Tm " ++
+ "10 0 0 10 231.1978 520.8887 Tm " ++
  "(" ++ map unicodeToWinAnsi histcomment ++ ")Tj " ++
  "ET 1 0 0 1 0 -20 cm "
 
@@ -286,37 +285,28 @@ lastpage (SealSpec {documentNumber,persons,history}) =
  "f " ++
  "0.039 0.024 0.02 0 k " ++
  "566.479 731.97 -537.601 20.16 re " ++
- "f " ++
- "566.479 759.33 -537.601 54.72 re " ++
- "f " ++
+ "S " ++
+ -- "566.479 759.33 -537.601 54.72 re " ++
+ -- "f " ++
 
 
  "BT " ++
  "/TT0 1 Tf " ++
 
  "0.806 0.719 0.51 0.504 k " ++
- "23 0 0 23 39.8198 787.9463 Tm " ++
+ "21 0 0 21 39.8198 787.9463 Tm " ++
  "(Certifikat)Tj " ++
 
  "0.546 0.469 0.454 0.113 k " ++
- "17 0 0 17 39.8198 766.9555 Tm " ++
+ "12 0 0 12 39.8198 766.9555 Tm " ++
  "[(Dok.nr)55(. " ++ map unicodeToWinAnsi documentNumber ++ ")]TJ " ++
 
  "0.806 0.719 0.51 0.504 k " ++
- "17 0 0 17 39.8198 736.3555 Tm " ++
+ "12 0 0 12 39.8198 736.3555 Tm " ++
  "(Undertecknat av)Tj " ++
  "ET " ++
 
- "BT " ++
- "0.785 0.699 0.48 0.535 k " ++
- "/T1_0 1 Tf " ++
- "0.01 Tc -0.01 Tw 28.2709 0 0 28.2709 386.4658 779.1211 Tm " ++
- "[(S)20(kriv)55(aP)70(\\345)]TJ " ++
- "ET " ++
-
-
-
-
+ {-
  "q " ++
  "0 841.89 595.28 -841.89 re " ++
  "W n " ++
@@ -325,59 +315,56 @@ lastpage (SealSpec {documentNumber,persons,history}) =
  "0 Tc 0 Tw /Fm0 Do " ++
  "Q " ++
  "Q " ++
-
-
- {- nice shadows between lines 
- "0.039 0.024 0.02 0 k " ++
- "566.479 678.209 -537.601 3.841 re " ++
- "f " ++
- "566.479 631.17 -537.601 3.84 re " ++
- "f " ++
  -}
 
 
  -- every signatory on its own line, repeated every 64 pixels down
  "q " ++ concatMap signatorybox persons ++
- "1 0 0 1 0 141 cm " ++ -- compensate for 3 signatures
+ "1 0 0 1 0 126 cm " ++ -- compensate for 3 signatures
  
 
  -- Datum and Handelse
  "0.039 0.024 0.02 0 k " ++
  "566.479 540.93 -537.601 20.16 re " ++
- "f " ++
+ "S " ++
  "566.479 566.85 -537.601 20.16 re " ++
- "f " ++
+ "S " ++
 
  "BT " ++
  "0.784 0.698 0.475 0.533 k " ++
  "/TT0 1 Tf " ++
  "0 Tc 0 Tw " ++
- "16 0 0 16 39.8198 571.4502 Tm " ++
+ "11 0 0 11 39.8198 571.4502 Tm " ++
  "[(T)37(idst\\344mplar)]TJ " ++
- "13 0 0 13 50.4092 546.3926 Tm " ++
+ "11 0 0 11 50.4092 546.3926 Tm " ++
  "(Datum)Tj " ++
- "13 0 0 13 231.1978 546.3926 Tm " ++
+ "11 0 0 11 231.1978 546.3926 Tm " ++
  "(H\\344ndelse)Tj " ++
-
- "0.039 0.024 0.02 0 k " ++
- "571.856 24.7 -548.354 64.55 re " ++
- "f " ++
 
  -- logentry
  concatMap logentry history ++
 
  "Q " ++
 
+ -- "0.039 0.024 0.02 0 k " ++
+ -- "571.856 24.7 -548.354 64.55 re " ++
+ -- "f " ++
+
  "BT " ++
  "0.625 0.537 0.53 0.257 k " ++
  "/TT0 1 Tf " ++
- "12 0 0 12 39.8198 69.2334 Tm " ++
+ "9 0 0 9 39.8198 74.2334 Tm " ++
  "1.2 TL " ++
- "[(Detta certifikat \\344r utf\\344rdat av SkrivaP\\345 CPM )55(AB och styrker viktig information om)]TJ " ++
- "T* " ++ 
- "(avtalet, avtalsparter och avtalsprocessen.  )Tj " ++
+ -- "[(Detta certifikat \\344r utf\\344rdat av SkrivaP\\345 CPM )55(AB och styrker viktig information om)]TJ " ++
+ -- "T* " ++ 
+ -- "(avtalet, avtalsparter och avtalsprocessen.  )Tj " ++
+ "[(Detta verifikat är utfärdat av SkrivaPå CM AB och styrker att dokument nummer " ++ documentNumber ++ " har undertecknats)]TJ " ++
+ "T* " ++
+ "[(av avtalsparterna och är juridiskt bindande. Kursiverad information är säkert verifierad genom vår tjänst.)]TJ " ++
+ "T* " ++
+ "[(Kontrollera dokumentet mot vår databas genom följande länk: http://skrivapa.se/d/" ++ documentNumber ++ ".)]TJ " ++
  "0.546 0.469 0.454 0.113 k " ++
- "13 0 0 13 46.5522 34.5469 Tm " ++
+ "10 0 0 10 46.5522 31.5469 Tm " ++
  "(Sida 1 av 1)Tj " ++
  "ET " ++ rightcornerseal
 

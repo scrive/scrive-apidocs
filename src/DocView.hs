@@ -58,12 +58,25 @@ Variables:
 Let as skip 3 for now.
 -}
 
+
+{-
+
+   Fulldoc + account
+   Halfdoc + account
+   Fulldoc + no account
+   Halfdoc + no account
+
+-}
+
 willCreateAccountForYou False = <span/>
 willCreateAccountForYou True = 
      <p>
-       Since you don't have an account at SkrivaPa we can create one for you. You will be able to see all documents
-       you have signed with our service and track progress. Det kostar ingenting och 
-       tar inte mer än en minut.
+       Du har nu möjlighet att utan avgift spara dokumentet så att det blir tillgängligt för 
+       dig via vår tjänst. Då kommer du även i framtiden kunna övervaka avtalet och verifiera 
+       avtalet mot vår databas. Du får också tillgång till vår smidiga arkiveringstjänst.
+       Detta erbjudande gäller endast nu och kostar ingenting (ordinarie engångsavgift för 
+       verifiering utan konto på tjänsten är 200kr/avtal). När du klickat på spara kommer vi att 
+       skicka inloggningsuppgifterna till din inkorg.
      </p>
 
 landpageSignedView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) => 
@@ -75,20 +88,22 @@ landpageSignedView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) =>
 landpageSignedView ctx document@Document{documenttitle,documentstatus} signatorylink hasaccount 
     | documentstatus == Closed =
     <div class="centerdivnarrow">
-      <p class="headline">Dokumentet <strong><% documenttitle %></strong> är färdigställt!</p>
+      <p class="headline">Vänligen läs noga</p>
       {- change "alla parter" to list of people -}
-      <p>Alla parter har undertecknat avtalet och du har fått en PDF kopia av dokumentet i din inkorg.
-         Vi rekommenderar att du sparar dokumentet online via vår tjänst.</p>
+      <p>Du har nu undertecknat avtalet <strong><% documenttitle %></strong>. I och med detta 
+         har samtliga parter undertecknat avtalet och en PDF-kopia av avtalet har skickats till 
+         din inkorg.</p>
       <% willCreateAccountForYou (not hasaccount) %>
       <a class="bigbutton" href=(LinkLandpageSaved document signatorylink)>Spara</a>
     </div>
 
 landpageSignedView ctx document@Document{documenttitle} signatorylink hasaccount =
     <div class="centerdivnarrow">
-      <p class="headline">Dokumentet <strong><% documenttitle %></strong> är färdigställt!</p>
+      <p class="headline">Vänligen läs noga</p>
       {- change "alla parter" to list of people -}
-      <p>We are waiting for everybody to sign, then you will receive en PDF kopia av dokumentet i din inkorg.
-         Meanwhile vi rekommenderar att du sparar dokumentet online via vår tjänst to track progress. </p>
+      <p>Du har nu undertecknat avtalet ”name of doc”. Vi väntar på att samtliga parter ska 
+         underteckna avtalet. När sista personen undertecknat kommer du att få en PDF-kopia av 
+         det färdigställda dokumentet skickat till din inkorg.</p>
       <% willCreateAccountForYou (not hasaccount) %>
       <a class="bigbutton" href=(LinkLandpageSaved document signatorylink)>Spara</a>
     </div>
