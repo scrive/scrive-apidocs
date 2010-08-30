@@ -474,7 +474,7 @@ sealDocument signtime1 author@(User {userfullname,usercompanyname,usercompanynum
       makeHistoryEntry (Person {fullname}) = 
           HistEntry
           { histdate = show signtime
-          , histcomment = fullname ++ " signed document"
+          , histcomment = fullname ++ " undertecknat documentet"
           }
       concatComma = concat . intersperse ", "
       history = map makeHistoryEntry persons
