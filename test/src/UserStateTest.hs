@@ -16,7 +16,7 @@ import qualified Data.ByteString as BS
 import Data.Maybe
 import Data.Either
 import System.IO.Error
-
+import qualified Data.Set as Set
 
 userStateTests :: [Test]
 userStateTests = [testGroup "getUserByEmail" 
@@ -80,9 +80,9 @@ test_getUserSubaccounts_returnsTheRightUsers = withTestState $ do
     user0 <- update $ AddUser (BS.fromString "Emily Green") (BS.fromString "emily@green.com") BS.empty (Just (UserID 100))
     user1 <- update $ AddUser (BS.fromString "Bob Blue") (BS.fromString "bob@blue.com") BS.empty (Just (UserID 100))
     queriedSubAccounts <- query $ GetUserSubaccounts (UserID 100)
-    assertEqual "For GetUserSubaccounts result" 2 (length queriedSubAccounts)
-    assert $ user0 `elem` queriedSubAccounts
-    assert $ user1 `elem` queriedSubAccounts
+    assertEqual "For GetUserSubaccounts result" 2 (Set.size queriedSubAccounts)
+    assert $ user0 `Set.member` queriedSubAccounts
+    assert $ user1 `Set.member` queriedSubAccounts
 
 test_getUserStats_returnsTheUserCount = withTestState $ do
     user0 <- update $ AddUser (BS.fromString "Emily Green") (BS.fromString "emily@green.com") BS.empty Nothing
