@@ -325,7 +325,7 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
        %>
       <div id="headerContainer">
         <img class="logosmall"src="/theme/images/logosmall.png"/>
-        <span class="contactabout">Tel: 0704560404 | <a href="mailto:info@skrivapa.se">Support</a> |
+        <span class="contactabout">Tel: 08-559 22 545 | <a href="mailto:info@skrivapa.se">Support</a> |
          <%
            case ctxmaybeuser of
              Just _ -> <a href="/logout">Logga ut</a>
