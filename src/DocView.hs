@@ -211,9 +211,9 @@ oneDocumentRow userid document@Document{ documentid
                       Timedout -> "status_timeout.png"
                       Rejected -> "status_rejected.png"
     in
-    <tr>
+    <tr class="ui-state-default">
      <td class="tdleft">
-      <input type="checkbox" name="doccheck" value=documentid/>
+      <input type="checkbox" name="doccheck" value=documentid class="check" />
      </td>
      <td><img width="17" height="17" src=statusimg/></td>
      <td><% mk $ concatSignatories (map signatorydetails documentsignatorylinks) %></td>
@@ -239,6 +239,45 @@ listDocuments :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink),
               -> XMLGenT m (HSX.XML m)
 listDocuments userid documents = 
      <form method="post" action=LinkIssue>
+
+     <style type="text/css">
+	#selectable .ui-selecting { background: #FECA40; }
+	#selectable .ui-selected { background: #F39814; color: white; }
+	</style>
+	<script type="text/javascript">
+	$(function() {
+                // TODO: Shift-clicking should select a range
+                $("#selectable" ).selectable({
+		   unselected: function(event, ui) {
+	             $(ui.unselected).find(".check").attr("checked", false);
+		   },
+
+	           selected: function(event, ui) {
+	               $(ui.selected).find(".check").attr("checked", true);
+	           }});
+
+                $(".check:checked").parents("tr").addClass("ui-selected");
+
+	        $(".check").click(
+	          function() {
+	               if($(this).attr("checked") == true) {
+                         $(this).parents("tr").addClass("ui-selected");
+	               } else {
+                         $(this).parents("tr").removeClass("ui-selected");
+                       }});
+                $('#all').click(function() {
+                  // TODO: This function, as well as the all function
+	          // in the global file have inconsistent functionality
+	          var c = $('.check');
+                  if(!c.attr("checked")) {
+                    $(c).parents("tr").removeClass("ui-selected");
+                  } else {
+                    $(c).parents("tr").addClass("ui-selected");
+                  }                  
+	        }); 
+	});
+	</script>
+
      <table class="doctable" cellspacing="0">
       <col/>
       <col/>
@@ -275,7 +314,7 @@ listDocuments userid documents =
          </td>
        </tr>
       </tfoot>
-      <tbody>
+      <tbody id="selectable">
        <% map (oneDocumentRow userid) (filter (not . documentdeleted) documents) %>
       </tbody>
      </table>
