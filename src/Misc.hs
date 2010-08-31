@@ -14,7 +14,6 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Object.Json as Json
-import qualified Network.Curl as Curl
 import Data.Maybe
 import Data.Either
 import Happstack.Data.IxSet as IxSet

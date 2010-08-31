@@ -16,7 +16,6 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Char8 as BSC
 
 import qualified Data.Object.Json as Json
-import qualified Network.Curl as Curl
 import Data.Maybe
 import Foreign.C.Types
 import Foreign.Ptr

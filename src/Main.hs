@@ -36,7 +36,6 @@ import Network (PortID(..))
 import Network.Socket hiding ( accept, socketPort, recvFrom, sendTo )
 import qualified Network.Socket as Socket ( accept )
 import qualified Control.Exception as Exception
-import Network.Curl
 import Happstack.State.Saver
 import Session
 import Happstack.State (update)
@@ -89,7 +88,7 @@ main = withLogger $ do
                    exitFailure
     (Right f) -> return (f $ defaultConf progName)
   
-  withCurlDo $ Exception.bracket
+  Exception.bracket
                  -- start the state system
               (logM "Happstack.Server" NOTICE ("Using store " ++ store appConf) >>
                startSystemState' (store appConf) stateProxy)
