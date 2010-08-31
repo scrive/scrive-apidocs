@@ -23,7 +23,6 @@ import qualified HSX.XMLGenerator as HSX (XML)
 import HSP
 import Network.HTTP (urlEncode)
 import qualified Data.ByteString.UTF8 as BS
-import qualified Network.Curl as Curl
 import Control.Monad
 import Data.Maybe
 import Control.Monad.Reader (ask)
@@ -43,6 +42,7 @@ import KontraLink
 import DocState
 import qualified Data.Set as Set
 import Control.Concurrent.MVar
+import System.Process
 
 
 seeOtherXML :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
@@ -118,16 +118,18 @@ userLogin1 = do
                         -- a348dd93f1d78ae11c443574d73d974299007c00" ++
                         "&token=" ++ token
               
-              {-
-                FIXME: Get the certificate of that server and import it
-                to private repository.
-               -}
-        
-              (_code,rpxdata) <- liftIO $ 
-                                 Curl.curlGetString_ req [ Curl.CurlFollowLocation True
-                                                         , Curl.CurlSSLVerifyPeer False
-                                                         ] 
-
+              let curlproc = CreateProcess { std_out = CreatePipe
+                                           , std_err = CreatePipe
+                                           , std_in = Inherit
+                                           , cwd = Nothing
+                                           , cmdspec = RawCommand "curl" [ "-q", "-k", req ]
+                                           , close_fds = True
+                                           , env = Nothing
+                                           }
+              (_, Just outhandle, Just errhandle, curlProcHandle) <- liftIO $ createProcess curlproc
+              errcontent <- liftIO $ BS.hGetContents errhandle
+              rpxdata <- liftIO $ BS.hGetContents outhandle
+              
               liftIO $ noticeM rootLoggerName $ "RPXNow: " ++ BS.toString rpxdata
 
               let unJsonString (Json.JsonString x) = x
@@ -147,8 +149,10 @@ userLogin1 = do
               let verifiedEmail = maybe BS.empty id maybeVerifiedEmail
               let nameFormatted = maybe BS.empty id maybeNameFormatted
 
-              when (verifiedEmail==BS.empty) $
-                   error "SkrivaPa requires verifiedEmail in your OpenID login data, we cannot work without one"
+              when (verifiedEmail==BS.empty) $ do
+                liftIO $ BS.putStrLn rpxdata
+                error "SkrivaPa requires verifiedEmail in your OpenID login data, we cannot work without one"
+                         
 
               maybeuser <- query $ GetUserByEmail (Email verifiedEmail)
     

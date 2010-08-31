@@ -20,7 +20,6 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Object.Json as Json
-import qualified Network.Curl as Curl
 import qualified DocView as DocView
 import qualified DocControl as DocControl
 import Happstack.Server.SimpleHTTP (seeOther)
