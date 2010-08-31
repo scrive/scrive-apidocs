@@ -248,6 +248,8 @@ listDocuments userid documents =
 	$(function() {
                 // TODO: Shift-clicking should select a range
                 $("#selectable" ).selectable({
+		   cancel: 'a',
+
 		   unselected: function(event, ui) {
 	             $(ui.unselected).find(".check").attr("checked", false);
 		   },
