@@ -267,11 +267,13 @@ listDocuments userid documents =
 	               } else {
                          $(this).parents("tr").removeClass("ui-selected");
                        }});
+
                 $('#all').click(function() {
-                  // TODO: This function, as well as the all function
-	          // in the global file have inconsistent functionality
 	          var c = $('.check');
-                  if(!c.attr("checked")) {
+		  var acc = true;
+	          c.each(function(i, val) { acc = acc && $(val).attr("checked");});
+                  
+                  if(!acc) {
                     $(c).parents("tr").removeClass("ui-selected");
                   } else {
                     $(c).parents("tr").addClass("ui-selected");

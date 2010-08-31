@@ -78,7 +78,9 @@ $(document).ready( function () {
     });
     $('#all').click(function() {
             var c = $('input:checkbox[name="doccheck"]');
-            c.attr("checked", !c.attr("checked"));
+            var acc = true;
+            c.each(function(i, val) { acc = acc && $(val).attr("checked");});
+            c.attr("checked", !acc);
     });
     enableInfoText();
     if(typeof(window.documentid)!= "undefined" ) {
