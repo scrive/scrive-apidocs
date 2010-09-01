@@ -156,23 +156,23 @@ userLogin1 = do
 
               maybeuser <- query $ GetUserByEmail (Email verifiedEmail)
     
-              user <- case maybeuser of
-                        Just user -> do
-                          liftIO $ noticeM rootLoggerName $ "User: " ++ BS.toString nameFormatted ++ " <" ++ 
-                                 BS.toString verifiedEmail ++ "> logged in"
-                          return user
-                        Nothing -> do
-                          user <- update $ AddUser nameFormatted verifiedEmail BS.empty Nothing
-                          liftIO $ noticeM rootLoggerName $ "User: " ++ BS.toString nameFormatted ++ " <" ++ 
-                                 BS.toString verifiedEmail ++ "> logged in (new)"
-                          return user
-              sessionid <- update $ NewSession (userid user)
-              startSession sessionid
-              rq <- askRq
-              let link = rqUri rq
-              response <- webHSP (seeOtherXML link)
-              finishWith (redirect 303 link response)
-              return (Just user)
+              case maybeuser of
+                Just user -> do
+                  liftIO $ noticeM rootLoggerName $ "User: " ++ BS.toString nameFormatted ++ " <" ++ 
+                         BS.toString verifiedEmail ++ "> logged in"
+                  sessionid <- update $ NewSession (userid user)
+                  startSession sessionid
+                  rq <- askRq
+                  let link = rqUri rq
+                  response <- webHSP (seeOtherXML link)
+                  finishWith (redirect 303 link response)
+                  return (Just user)
+
+                Nothing -> do
+                  let link = "/login"
+                  response <- webHSP $ seeOtherXML link
+                  finishWith (redirect 303 link response)
+                  return Nothing
 
 provideRPXNowLink :: (MonadIO m) => ServerPartT m Response
 provideRPXNowLink = do -- FIXME it was guarded by method GET but it didn't help
