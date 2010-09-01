@@ -129,6 +129,14 @@ loginBox ctx =
           <td>Lösenord:</td> 
           <td><input type="password" name="password"/></td> 
         </tr>
+    <tr>
+          <td>
+          </td>
+          <td>
+            <input type="checkbox" id="remember_me" name="remember_me"/>
+            <label for="remember_me">Remember Me</label>
+          </td>
+    </tr>
 	<tr> 
           <td><input class="button" type="submit" name="login" value="Logga in"/></td>
           <td>

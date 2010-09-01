@@ -26,6 +26,7 @@ import Happstack.Server.SimpleHTTP (seeOther)
 import Control.Monad.Reader
 import DocState
 import UserState
+import UserView
 import Happstack.Util.Common
 import UserControl
 import Data.Maybe
@@ -140,14 +141,22 @@ loginPageGet = do
 loginPagePost :: Kontra Response
 loginPagePost = do
   rq <- askRq
-  email <- getDataFnM (look "email")
-  passwd <- getDataFnM (look "password")
+  email <- getDataFnM $ look "email"
+  passwd <- getDataFnM $ look "password"
+  rememberMeList <- getDataFnM $ look "rememberMe"
+  let
+    rememberMe =
+      case rememberMeList of
+        [] -> False
+        otherwise -> True
+  
   -- check the user things here
   maybeuser <- query $ GetUserByEmail (Email $ BS.fromString email)
   let Just user@User{userpassword} = maybeuser
-  -- FIXME: add password hashing here
-  if isJust maybeuser && (userpassword==BS.fromString passwd && passwd/="")
+  -- Compare password hashes.
+  if isJust maybeuser && (verifyPassword userpassword (BS.fromString passwd) && passwd/="")
      then do
+      setRememberMeCookie (userid user) rememberMe
       sessionid <- update $ NewSession (userid user)
       startSession sessionid
       response <- webHSP (seeOtherXML "/")
@@ -201,7 +210,15 @@ handleCreateUser :: Kontra Response
 handleCreateUser = do
   email <- g "email"
   fullname <- g "fullname"
-  liftIO $ createUser fullname email Nothing
+  user <- liftIO $ createUser fullname email Nothing
+  let letters =['a'..'z'] ++ ['0'..'9'] ++ ['A'..'Z']
+  indexes <- liftIO $ replicateM 8 (randomRIO (0,length letters-1))
+  let passwd = BS.fromString $ map (letters!!) indexes
+  hashedpassword <- liftIO $ createPassword  passwd
+  update $ SetUserPassword user hashedpassword
+  content <- liftIO $ passwordChangeMail email fullname passwd
+  liftIO $ sendMail [(fullname,email)]
+               (BS.fromString "SkrivaPa new password") content BS.empty
   -- FIXME: where to redirect?
   response <- webHSP (seeOtherXML "/stats")
   seeOther "/stats" response

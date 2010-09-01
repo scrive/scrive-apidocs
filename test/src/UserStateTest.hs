@@ -61,7 +61,7 @@ test_getUserByEmail_returnsNothing = withTestState $ do
     assert (isNothing queriedUser)
 
 test_getUserByEmail_returnsTheRightUser = withTestState $ do
-    user <- update $ AddUser (BS.fromString "Emily Green") (BS.fromString "emily@green.com") BS.empty Nothing
+    user <- update $ AddUser (BS.fromString "Emily Green") (BS.fromString "emily@green.com") NoPassword Nothing
     queriedUser <- query $ GetUserByEmail (Email (BS.fromString "emily@green.com"))
     assert (isJust queriedUser) 
     assertEqual "For GetUserByEmail result" user (fromJust queriedUser)
@@ -71,41 +71,42 @@ test_getUserByUserID_returnsNothing = withTestState $ do
     assert (isNothing queriedUser)
 
 test_getUserByUserID_returnsTheRightUser = withTestState $ do
-    user <- update $ AddUser (BS.fromString "Emily Green") (BS.fromString "emily@green.com") BS.empty Nothing
+    user <- update $ AddUser (BS.fromString "Emily Green") (BS.fromString "emily@green.com") NoPassword Nothing
     queriedUser <- query $ GetUserByUserID (userid user)
     assert (isJust queriedUser)
     assertEqual "For GetUserByUserID result" user (fromJust queriedUser)
 
 test_getUserSubaccounts_returnsTheRightUsers = withTestState $ do
-    user0 <- update $ AddUser (BS.fromString "Emily Green") (BS.fromString "emily@green.com") BS.empty (Just (UserID 100))
-    user1 <- update $ AddUser (BS.fromString "Bob Blue") (BS.fromString "bob@blue.com") BS.empty (Just (UserID 100))
+    user0 <- update $ AddUser (BS.fromString "Emily Green") (BS.fromString "emily@green.com") NoPassword (Just (UserID 100))
+    user1 <- update $ AddUser (BS.fromString "Bob Blue") (BS.fromString "bob@blue.com") NoPassword (Just (UserID 100))
     queriedSubAccounts <- query $ GetUserSubaccounts (UserID 100)
     assertEqual "For GetUserSubaccounts result" 2 (Set.size queriedSubAccounts)
     assert $ user0 `Set.member` queriedSubAccounts
     assert $ user1 `Set.member` queriedSubAccounts
 
 test_getUserStats_returnsTheUserCount = withTestState $ do
-    user0 <- update $ AddUser (BS.fromString "Emily Green") (BS.fromString "emily@green.com") BS.empty Nothing
-    user1 <- update $ AddUser (BS.fromString "Bob Blue") (BS.fromString "bob@blue.com") BS.empty Nothing
+    user0 <- update $ AddUser (BS.fromString "Emily Green") (BS.fromString "emily@green.com") NoPassword Nothing
+    user1 <- update $ AddUser (BS.fromString "Bob Blue") (BS.fromString "bob@blue.com") NoPassword Nothing
     queriedStats <- query $ GetUserStats
     assertEqual "For GetUserStats" 2 queriedStats
 
 test_getAllUsers_returnsAllUsers = withTestState $ do
-    user0 <- update $ AddUser (BS.fromString "Emily Green") (BS.fromString "emily@green.com") BS.empty (Just (UserID 100))
-    user1 <- update $ AddUser (BS.fromString "Bob Blue") (BS.fromString "bob@blue.com") BS.empty (Just (UserID 100))
+    user0 <- update $ AddUser (BS.fromString "Emily Green") (BS.fromString "emily@green.com") NoPassword (Just (UserID 100))
+    user1 <- update $ AddUser (BS.fromString "Bob Blue") (BS.fromString "bob@blue.com") NoPassword (Just (UserID 100))
     queriedUsers <- query $ GetAllUsers
     assertEqual "For GetAllUsers result" 2 (length queriedUsers)
     assert $ user0 `elem` queriedUsers
     assert $ user1 `elem` queriedUsers
 
 test_setUserPassword_changesPassword = withTestState $ do
-    user <- update $ AddUser (BS.fromString "Emily Green") (BS.fromString "emily@green.com") BS.empty Nothing
-    update $ SetUserPassword user (BS.fromString "Secret Password!")
+    user <- update $ AddUser (BS.fromString "Emily Green") (BS.fromString "emily@green.com") NoPassword Nothing
+    passwordhash <- (createPassword (BS.fromString "Secret Password!"))
+    update $ SetUserPassword user passwordhash
     queriedUser <- query $ GetUserByEmail (Email (BS.fromString "emily@green.com"))
-    assertEqual "For SetUserPassword result" (BS.fromString "Secret Password!") (userpassword (fromJust queriedUser))
+    assert $ verifyPassword (userpassword (fromJust queriedUser)) (BS.fromString "Secret Password!")
 
 test_setUserDetails_changesDetails = withTestState $ do
-    user <- update $ AddUser (BS.fromString "Emily Green") (BS.fromString "emily@green.com") BS.empty Nothing
+    user <- update $ AddUser (BS.fromString "Emily Green") (BS.fromString "emily@green.com") NoPassword Nothing
     newUser <- update $ SetUserDetails user (BS.fromString "Emily May Green") (BS.fromString "Some Corp") (BS.fromString "12345") (BS.fromString "15 High Street, Town")
     assertEqual "For SetUserDetails result" (BS.fromString "Emily May Green") (userfullname newUser)
     assertEqual "For SetUserDetails result" (BS.fromString "Some Corp") (usercompanyname newUser)
