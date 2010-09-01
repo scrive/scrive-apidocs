@@ -10,9 +10,12 @@ module User
     , isSuperUser
     , Kontra(..)
     , rpxSignInLink
+    , createRememberMeCookie
+    , sessionLength
     )
     where
 
+import System.Time
 import UserState
 import Session
 import Happstack.Server
@@ -25,12 +28,17 @@ import Network.HTTP (urlEncode)
 import qualified Data.ByteString.UTF8 as BS
 import Control.Monad
 import Data.Maybe
+import Codec.Utils (Octet)
 import Control.Monad.Reader (ask)
 import Control.Monad.Trans(liftIO, MonadIO,lift)
 import Data.Object
+import qualified Data.Binary as Binary
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.Object.Json as Json
+import qualified Codec.Binary.Base64 as Base64
+import Data.HMAC (hmac_sha1)
 import Happstack.Data.IxSet ((@=),getOne)
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.Server.HSP.HTML (webHSP)
@@ -156,23 +164,23 @@ userLogin1 = do
 
               maybeuser <- query $ GetUserByEmail (Email verifiedEmail)
     
-              case maybeuser of
-                Just user -> do
-                  liftIO $ noticeM rootLoggerName $ "User: " ++ BS.toString nameFormatted ++ " <" ++ 
-                         BS.toString verifiedEmail ++ "> logged in"
-                  sessionid <- update $ NewSession (userid user)
-                  startSession sessionid
-                  rq <- askRq
-                  let link = rqUri rq
-                  response <- webHSP (seeOtherXML link)
-                  finishWith (redirect 303 link response)
-                  return (Just user)
-
-                Nothing -> do
-                  let link = "/login"
-                  response <- webHSP $ seeOtherXML link
-                  finishWith (redirect 303 link response)
-                  return Nothing
+              user <- case maybeuser of
+                        Just user -> do
+                          liftIO $ noticeM rootLoggerName $ "User: " ++ BS.toString nameFormatted ++ " <" ++ 
+                                 BS.toString verifiedEmail ++ "> logged in"
+                          return user
+                        Nothing -> do
+                          user <- update $ AddUser nameFormatted verifiedEmail BS.empty Nothing
+                          liftIO $ noticeM rootLoggerName $ "User: " ++ BS.toString nameFormatted ++ " <" ++ 
+                                 BS.toString verifiedEmail ++ "> logged in (new)"
+                          return user
+              sessionid <- update $ NewSession (userid user)
+              startSession sessionid
+              rq <- askRq
+              let link = rqUri rq
+              response <- webHSP (seeOtherXML link)
+              finishWith (redirect 303 link response)
+              return (Just user)
 
 provideRPXNowLink :: (MonadIO m) => ServerPartT m Response
 provideRPXNowLink = do -- FIXME it was guarded by method GET but it didn't help
@@ -252,3 +260,64 @@ admins = map (Email . BS.fromString)
 
 isSuperUser (Just user@User{useremail}) = useremail `elem` admins 
 isSuperUser _ = False
+
+
+
+-- Identity, LongTerm, Nonce, Signature
+data RememberMe = RememberMe UserID Bool Integer [Octet] [Octet] deriving Show
+instance Binary.Binary RememberMe where
+    put (RememberMe identity longTerm expiry nonce signature) =
+        Binary.put (identity, longTerm, expiry, nonce, signature)
+    get = do
+        identity <- Binary.get
+        longTerm <- Binary.get
+        expiry <- Binary.get
+        nonce <- Binary.get
+        signature <- Binary.get
+        return (RememberMe identity longTerm expiry nonce signature)
+
+instance Binary.Binary UserID where
+    put UserID {unUserID} = Binary.put unUserID
+    get = do
+        id <- Binary.get
+        return $ UserID {unUserID=id}
+
+-- TODO make this something else - perhaps configurable - changing it will log everyone out
+rememberMeSecret :: [Octet]
+rememberMeSecret = [123,89,54,78,12,82,13,234] -- an arbitrary, but secret array of bytes
+
+makeNonce :: IO [Octet]
+makeNonce = randomOctets 20
+
+-- Create a remember me cookie
+createRememberMeCookie :: UserID -> Bool -> IO String
+createRememberMeCookie identity longTerm = do
+    nonce <- makeNonce
+    (TOD now _) <- getClockTime
+    let expiry = now + toInteger (sessionLength longTerm)
+    return $ Base64.encode $ BSL.unpack $ Binary.encode $ RememberMe identity longTerm expiry nonce (rememberMeSignature identity nonce expiry)
+    
+sessionLength :: Bool -> Int
+sessionLength True = 60 * 60 * 24 * 14 -- 2 weeks
+sessionLength False = 60 * 60 -- 1 hour
+
+rememberMeSignature :: UserID -> [Octet] -> Integer -> [Octet]
+rememberMeSignature identity nonce expiry =
+    hmac_sha1 rememberMeSecret (BSL.unpack $ Binary.encode (identity, nonce, expiry))
+
+readRememberMeCookie :: String -> IO (Maybe RememberMe)
+readRememberMeCookie cookieString = do
+    isCookieVerified <- verifyRememberMeCookie cookie
+    return $ if isCookieVerified
+      then Just cookie
+      else Nothing
+    where
+        Just cookieBytes = Base64.decode cookieString
+        cookie = (Binary.decode $ BSL.pack cookieBytes) :: RememberMe
+
+verifyRememberMeCookie :: RememberMe -> IO Bool
+verifyRememberMeCookie (RememberMe identity _ expiry nonce signature)
+    | (rememberMeSignature identity nonce expiry) == signature = do
+        (TOD now _) <- getClockTime
+        return $ expiry < now
+    | otherwise = return False

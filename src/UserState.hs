@@ -5,6 +5,7 @@ module UserState where
 import Happstack.Data
 import Happstack.State
 import Control.Monad.Reader (ask)
+import Control.Monad.Trans (liftIO)
 import Control.Monad.State (modify,MonadState(..))
 import Happstack.State.ClockTime
 import qualified Data.ByteString.UTF8 as BS
@@ -17,6 +18,9 @@ import Misc
 import Control.Monad
 import Happstack.Server.SimpleHTTP
 import Happstack.Util.Common
+import Codec.Utils (Octet)
+import Data.Digest.SHA256 (hash)
+import System.Random
 import Data.List
 import qualified Data.Set as Set
 
@@ -28,6 +32,7 @@ $(deriveAll [''Eq, ''Ord, ''Default]
       newtype ExternalUserID = ExternalUserID { unExternalUserID :: BS.ByteString }
       newtype FlashMessage = FlashMessage BS.ByteString
       newtype Email = Email { unEmail :: BS.ByteString }
+      data Password = Password [Octet] [Octet] | NoPassword
       newtype SupervisorID = SupervisorID { unSupervisorID :: Int }
                        
       data User = User
@@ -38,7 +43,7 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , usercompanynumber      :: BS.ByteString
           , userinvoiceaddress     :: BS.ByteString
           , userflashmessages      :: [FlashMessage]
-          , userpassword           :: BS.ByteString
+          , userpassword           :: Password
           , usersupervisor         :: Maybe SupervisorID
           , usercanhavesubaccounts :: Bool
           , useraccountsuspended   :: Bool
@@ -89,6 +94,7 @@ $(deriveAll [''Eq, ''Ord, ''Default]
 deriving instance Show User
 deriving instance Show Email
 deriving instance Show FlashMessage
+deriving instance Show Password
 
 instance Migrate User0 User1 where
     migrate (User0
@@ -167,7 +173,7 @@ instance Migrate User3 User where
           , usercompanynumber = usercompanynumber3
           , userinvoiceaddress = userinvoiceaddress3
           , userflashmessages = userflashmessages3
-          , userpassword = maybe (BS.empty) (id) userpassword3
+          , userpassword = NoPassword
           , usersupervisor = Nothing
           , usercanhavesubaccounts = True
           , useraccountsuspended = False -- should probably have a reason and time here
@@ -200,6 +206,9 @@ instance Version FlashMessage
 
 $(deriveSerialize ''Email)
 instance Version Email
+
+$(deriveSerialize ''Password)
+instance Version Password
 
 $(deriveSerialize ''UserID)
 instance Version UserID
@@ -254,7 +263,7 @@ getUserSubaccounts userid = do
 
 addUser :: BS.ByteString 
         -> BS.ByteString 
-        -> BS.ByteString 
+        -> Password
         -> Maybe UserID
         -> Update Users User
 addUser fullname email passwd maybesupervisor = do
@@ -312,11 +321,35 @@ addUserFlashMessage userid msg= do
           modify (updateIx userid (user { userflashmessages = msg : userflashmessages })) 
           return ()
 
-setUserPassword :: User -> BS.ByteString -> Update Users ()
+setUserPassword :: User -> Password -> Update Users ()
 setUserPassword user@User{userid} newpassword = do
   users <- ask
   modify (updateIx userid (user { userpassword = newpassword })) 
   return ()
+
+randomOctets :: Int -> IO [Octet]
+randomOctets n = do
+  randomGen <- newStdGen
+  return $ take n $ map fromIntegral (randoms randomGen :: [Int])
+
+makeSalt :: IO [Octet]
+makeSalt = randomOctets 10
+
+hashPassword :: BS.ByteString -> [Octet] -> [Octet]
+hashPassword password salt =
+  hash (salt ++ (BS.unpack password))
+
+createPassword :: BS.ByteString -> IO Password
+createPassword password = do
+  salt <- makeSalt
+  return $ Password salt (hashPassword password salt)
+  
+verifyPassword :: Password -> BS.ByteString -> Bool
+verifyPassword (Password salt hash) password
+    | hash == generatedHash = True
+    | otherwise = False
+    where
+        generatedHash = hashPassword password salt
 
 setUserDetails :: User 
                -> BS.ByteString

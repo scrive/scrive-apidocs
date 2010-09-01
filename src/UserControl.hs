@@ -12,7 +12,7 @@ import Happstack.State (update,query)
 import Control.Monad
 import User
 import AppView
-import Control.Monad.Trans
+import Control.Monad.Trans (liftIO)
 import Misc
 import SendMail
 import System.Random
@@ -62,7 +62,8 @@ createUser fullname email maybesupervisor = do
   let letters =['a'..'z'] ++ ['0'..'9'] ++ ['A'..'Z']
   indexes <- liftIO $ replicateM 8 (randomRIO (0,length letters-1))
   let passwd = BS.fromString $ map (letters!!) indexes
-  user <- update $ AddUser fullname email passwd (fmap userid maybesupervisor)
+  passwdhash <- createPassword passwd
+  user <- update $ AddUser fullname email passwdhash (fmap userid maybesupervisor)
   content <- case maybesupervisor of
     Nothing -> liftIO $ passwordChangeMail email fullname passwd
     Just supervisor -> liftIO $ inviteSubaccountMail (userfullname supervisor) (usercompanyname supervisor)
@@ -71,3 +72,10 @@ createUser fullname email maybesupervisor = do
                (BS.fromString "Välkommen!") content BS.empty
   return user
 
+rememberMeCookieName = "remember_me"
+setRememberMeCookie :: UserID -> Bool -> Kontra ()
+setRememberMeCookie userid rememberMe = do
+    cookie <- liftIO $ do
+        cookieString <- createRememberMeCookie userid rememberMe
+        return $ mkCookie rememberMeCookieName cookieString
+    addCookie (sessionLength rememberMe) cookie

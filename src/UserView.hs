@@ -198,4 +198,3 @@ inviteSubaccountMail supervisorname companyname emailaddress personname newpassw
 
       <% poweredBySkrivaPaPara %> 
      </span>
-
