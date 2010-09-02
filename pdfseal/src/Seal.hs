@@ -268,7 +268,7 @@ logentry (HistEntry {histdate,histcomment}) =
  "BT " ++
  "/TT0 1 Tf " ++
  "0.591 0.507 0.502 0.19 k " ++
- "10 0 0 10 54.1978 520.8887 Tm " ++
+ "10 0 0 10 46.5522 520.8887 Tm " ++
  "(" ++ map unicodeToWinAnsi histdate ++ ")Tj " ++
  "10 0 0 10 231.1978 520.8887 Tm " ++
  "(" ++ map unicodeToWinAnsi histcomment ++ ")Tj " ++
@@ -278,11 +278,12 @@ logentry (HistEntry {histdate,histcomment}) =
 lastpage (SealSpec {documentNumber,persons,history}) = 
  "0.081 0.058 0.068 0 k " ++
  "/GS0 gs " ++
+ "0.4 G " ++
  "581.839 14.37 -567.36 813.12 re " ++
- "f " ++
- "0 0 0 0 k " ++
- "578.853 824.603 -561.385 -807.345 re " ++
- "f " ++
+ "S " ++
+ -- "0 0 0 0 k " ++
+ -- "578.853 824.603 -561.385 -807.345 re " ++
+ -- "f " ++
  "0.039 0.024 0.02 0 k " ++
  "566.479 731.97 -537.601 20.16 re " ++
  "S " ++
@@ -324,7 +325,7 @@ lastpage (SealSpec {documentNumber,persons,history}) =
  
 
  -- Datum and Handelse
- "0.039 0.024 0.02 0 k " ++
+ "0.4 G " ++
  "566.479 540.93 -537.601 20.16 re " ++
  "S " ++
  "566.479 566.85 -537.601 20.16 re " ++
@@ -334,9 +335,9 @@ lastpage (SealSpec {documentNumber,persons,history}) =
  "0.784 0.698 0.475 0.533 k " ++
  "/TT0 1 Tf " ++
  "0 Tc 0 Tw " ++
- "11 0 0 11 39.8198 571.4502 Tm " ++
+ "11 0 0 11 40 571.4502 Tm " ++
  "[(T)37(idst\\344mplar)]TJ " ++
- "11 0 0 11 50.4092 546.3926 Tm " ++
+ "11 0 0 11 40 546.3926 Tm " ++
  "(Datum)Tj " ++
  "11 0 0 11 231.1978 546.3926 Tm " ++
  "(H\\344ndelse)Tj " ++
@@ -347,18 +348,16 @@ lastpage (SealSpec {documentNumber,persons,history}) =
  "Q " ++
 
  -- "0.039 0.024 0.02 0 k " ++
- -- "571.856 24.7 -548.354 64.55 re " ++
- -- "f " ++
+ "571.856 24.7 -548.354 64.55 re " ++
+ "S " ++
 
  "BT " ++
  "0.625 0.537 0.53 0.257 k " ++
  "/TT0 1 Tf " ++
  "9 0 0 9 39.8198 74.2334 Tm " ++
  "1.2 TL " ++
- -- "[(Detta certifikat \\344r utf\\344rdat av SkrivaP\\345 CPM )55(AB och styrker viktig information om)]TJ " ++
- -- "T* " ++ 
- -- "(avtalet, avtalsparter och avtalsprocessen.  )Tj " ++
- "[(Detta verifikat är utfärdat av SkrivaPå CM AB och styrker att dokument nummer " ++ documentNumber ++ " har undertecknats)]TJ " ++
+ "[(Detta verifikat är utfärdat av SkrivaPå CM AB och styrker att dokument nummer " ++ documentNumber ++ 
+ " har undertecknats)]TJ " ++
  "T* " ++
  "[(av avtalsparterna och är juridiskt bindande. Kursiverad information är säkert verifierad genom vår tjänst.)]TJ " ++
  "T* " ++
