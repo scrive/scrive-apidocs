@@ -245,41 +245,41 @@ listDocuments userid documents =
 	#selectable .ui-selected { background: #F39814; color: white; }
 	</style>
 	<script type="text/javascript">
-	$(function() {
+        $(function() {
                 // TODO: Shift-clicking should select a range
                 $("#selectable" ).selectable({
 		   cancel: 'a,input',
 
 		   unselected: function(event, ui) {
-	             $(ui.unselected).find(".check").attr("checked", false);
+                     var selectees = $(".ui-selectee");
+                     selectees.not(".ui-selected").find(".check").attr("checked", false);
+                     selectees.filter(".ui-selected").find(".check").attr("checked", true);
 		   },
 
 	           selected: function(event, ui) {
-	               $(ui.selected).find(".check").attr("checked", true);
+                     var selectees = $(".ui-selectee");
+                     selectees.not(".ui-selected").find(".check").attr("checked", false);
+                     selectees.filter(".ui-selected").find(".check").attr("checked", true);
 	           }});
 
                 $(".check:checked").parents("tr").addClass("ui-selected");
+                $(".ui-selected").find(".check").attr("checked", true);
 
 	        $(".check").click(
 	          function() {
-	               if($(this).attr("checked") == true) {
-                         $(this).parents("tr").addClass("ui-selected");
-	               } else {
-                         $(this).parents("tr").removeClass("ui-selected");
-                       }});
+                    var checks = $(".check");
+                    
+                    checks.not(":checked").parents("tr").removeClass("ui-selected");
+                    checks.filter(":checked").parents("tr").addClass("ui-selected");
+                       });
 
                 $('#all').click(function() {
-	          var c = $('.check');
-		  var acc = true;
-	          c.each(function(i, val) { acc = acc && $(val).attr("checked");});
-                  
-                  if(!acc) {
-                    $(c).parents("tr").removeClass("ui-selected");
-                  } else {
-                    $(c).parents("tr").addClass("ui-selected");
-                  }                  
+                  var checks = $(".check");
+                    
+                  checks.not(":checked").parents("tr").removeClass("ui-selected");
+                  checks.filter(":checked").parents("tr").addClass("ui-selected");
 	        }); 
-	});
+	      });
 	</script>
 
      <table class="doctable" cellspacing="0">
