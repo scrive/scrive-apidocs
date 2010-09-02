@@ -110,7 +110,7 @@ userLogin1 = do
 -- OpenID
 userLogin2 :: (MonadIO m) => ServerPartT m (Maybe User)
 userLogin2 = do
-    maybetoken <- getDataFn (look "token")
+    maybetoken <- getDataFn (look "token") 
 #if MIN_VERSION_happstack_server(0,5,1)
     case maybetoken of
       Left _ -> return Nothing
@@ -164,23 +164,23 @@ userLogin2 = do
 
               maybeuser <- query $ GetUserByEmail (Email verifiedEmail)
     
-              user <- case maybeuser of
-                        Just user -> do
-                          liftIO $ noticeM rootLoggerName $ "User: " ++ BS.toString nameFormatted ++ " <" ++ 
-                                 BS.toString verifiedEmail ++ "> logged in"
-                          return user
-                        Nothing -> do
-                          user <- update $ AddUser nameFormatted verifiedEmail NoPassword Nothing
-                          liftIO $ noticeM rootLoggerName $ "User: " ++ BS.toString nameFormatted ++ " <" ++ 
-                                 BS.toString verifiedEmail ++ "> logged in (new)"
-                          return user
-              sessionid <- update $ NewSession (userid user)
-              startSession sessionid
-              rq <- askRq
-              let link = rqUri rq
-              response <- webHSP (seeOtherXML link)
-              finishWith (redirect 303 link response)
-              return (Just user)
+              case maybeuser of
+                Just user -> do
+                  liftIO $ noticeM rootLoggerName $ "User: " ++ BS.toString nameFormatted ++ " <" ++ 
+                         BS.toString verifiedEmail ++ "> logged in"
+                  sessionid <- update $ NewSession (userid user)
+                  startSession sessionid
+                  rq <- askRq
+                  let link = rqUri rq
+                  response <- webHSP (seeOtherXML link)
+                  finishWith (redirect 303 link response)
+                  return (Just user)
+
+                Nothing -> do
+                  let link = "/login"
+                  response <- webHSP $ seeOtherXML link
+                  finishWith (redirect 303 link response)
+                  return Nothing
 
 rememberMeCookieName = "remember_me"
 setRememberMeCookie :: UserID -> Bool -> Kontra ()
