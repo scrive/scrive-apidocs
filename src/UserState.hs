@@ -48,6 +48,20 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , usercanhavesubaccounts :: Bool
           , useraccountsuspended   :: Bool
           }
+          
+      data User4 = User4
+          { userid4                 :: UserID
+          , userfullname4           :: BS.ByteString
+          , useremail4              :: Email
+          , usercompanyname4        :: BS.ByteString
+          , usercompanynumber4      :: BS.ByteString
+          , userinvoiceaddress4     :: BS.ByteString
+          , userflashmessages4      :: [FlashMessage]
+          , userpassword4           :: BS.ByteString
+          , usersupervisor4         :: Maybe SupervisorID
+          , usercanhavesubaccounts4 :: Bool
+          , useraccountsuspended4   :: Bool
+          }
 
       data User3 = User3
           { userid3             :: UserID
@@ -154,7 +168,7 @@ instance Migrate User2 User3 where
                 , userpassword3 = Nothing
                 }
 
-instance Migrate User3 User where
+instance Migrate User3 User4 where
     migrate (User3
           { userid3
           , userexternalids3
@@ -165,20 +179,46 @@ instance Migrate User3 User where
           , userinvoiceaddress3
           , userflashmessages3
           , userpassword3
-          }) = User
-          { userid = userid3
-          , userfullname = userfullname3
-          , useremail = useremail3
-          , usercompanyname = usercompanyname3
-          , usercompanynumber = usercompanynumber3
-          , userinvoiceaddress = userinvoiceaddress3
-          , userflashmessages = userflashmessages3
-          , userpassword = NoPassword
-          , usersupervisor = Nothing
-          , usercanhavesubaccounts = True
-          , useraccountsuspended = False -- should probably have a reason and time here
+          }) = User4
+          { userid4 = userid3
+          , userfullname4 = userfullname3
+          , useremail4 = useremail3
+          , usercompanyname4 = usercompanyname3
+          , usercompanynumber4 = usercompanynumber3
+          , userinvoiceaddress4 = userinvoiceaddress3
+          , userflashmessages4 = userflashmessages3
+          , userpassword4 = BS.empty
+          , usersupervisor4 = Nothing
+          , usercanhavesubaccounts4 = True
+          , useraccountsuspended4 = False -- should probably have a reason and time here
           }
 
+instance Migrate User4 User where
+    migrate (User4
+          { userid4
+          , userfullname4
+          , useremail4
+          , usercompanyname4
+          , usercompanynumber4
+          , userinvoiceaddress4
+          , userflashmessages4
+          , userpassword4
+          , usersupervisor4
+          , usercanhavesubaccounts4
+          , useraccountsuspended4
+          }) = User
+          { userid = userid4
+          , userfullname = userfullname4
+          , useremail = useremail4
+          , usercompanyname = usercompanyname4
+          , usercompanynumber = usercompanynumber4
+          , userinvoiceaddress = userinvoiceaddress4
+          , userflashmessages = userflashmessages4
+          , userpassword = NoPassword
+          , usersupervisor = usersupervisor4
+          , usercanhavesubaccounts = usercanhavesubaccounts4
+          , useraccountsuspended = useraccountsuspended4
+          }
 
 $(inferIxSet "Users" ''User 'noCalcs [''UserID, ''Email, ''SupervisorID])
 
