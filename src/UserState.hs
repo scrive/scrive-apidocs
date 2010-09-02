@@ -21,6 +21,7 @@ import Happstack.Util.Common
 import Codec.Utils (Octet)
 import Data.Digest.SHA256 (hash)
 import System.Random
+import System.IO.Unsafe
 import Data.List
 import qualified Data.Set as Set
 
@@ -214,11 +215,28 @@ instance Migrate User4 User where
           , usercompanynumber = usercompanynumber4
           , userinvoiceaddress = userinvoiceaddress4
           , userflashmessages = userflashmessages4
-          , userpassword = NoPassword
+          , userpassword = unsafePerformIO $ createPassword userpassword4
           , usersupervisor = usersupervisor4
           , usercanhavesubaccounts = usercanhavesubaccounts4
           , useraccountsuspended = useraccountsuspended4
           }
+
+createPassword :: BS.ByteString -> IO Password
+createPassword password = do
+  salt <- makeSalt
+  return $ Password salt (hashPassword password salt)
+  
+randomOctets :: Int -> IO [Octet]
+randomOctets n = do
+  randomGen <- newStdGen
+  return $ take n $ map fromIntegral (randoms randomGen :: [Int])
+
+makeSalt :: IO [Octet]
+makeSalt = randomOctets 10
+
+hashPassword :: BS.ByteString -> [Octet] -> [Octet]
+hashPassword password salt =
+  hash (salt ++ (BS.unpack password))
 
 $(inferIxSet "Users" ''User 'noCalcs [''UserID, ''Email, ''SupervisorID])
 
@@ -237,9 +255,13 @@ $(deriveSerialize ''User3)
 instance Version User3 where
     mode = extension 3 (Proxy :: Proxy User2)
 
+$(deriveSerialize ''User4)
+instance Version User4 where
+    mode = extension 4 (Proxy :: Proxy User3)
+
 $(deriveSerialize ''User)
 instance Version User where
-    mode = extension 4 (Proxy :: Proxy User3)
+    mode = extension 5 (Proxy :: Proxy User4)
 
 $(deriveSerialize ''FlashMessage)
 instance Version FlashMessage
@@ -366,23 +388,6 @@ setUserPassword user@User{userid} newpassword = do
   users <- ask
   modify (updateIx userid (user { userpassword = newpassword })) 
   return ()
-
-randomOctets :: Int -> IO [Octet]
-randomOctets n = do
-  randomGen <- newStdGen
-  return $ take n $ map fromIntegral (randoms randomGen :: [Int])
-
-makeSalt :: IO [Octet]
-makeSalt = randomOctets 10
-
-hashPassword :: BS.ByteString -> [Octet] -> [Octet]
-hashPassword password salt =
-  hash (salt ++ (BS.unpack password))
-
-createPassword :: BS.ByteString -> IO Password
-createPassword password = do
-  salt <- makeSalt
-  return $ Password salt (hashPassword password salt)
   
 verifyPassword :: Password -> BS.ByteString -> Bool
 verifyPassword (Password salt hash) password

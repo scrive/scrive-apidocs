@@ -1,17 +1,17 @@
-{-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -F -pgmFtrhsx #-}
 module User 
     ( module UserState
     , withUser
     , maybeSignInLink
     , maybeSignInLink2
-    , userLogin
     , Context(..)
     , isSuperUser
     , Kontra(..)
     , rpxSignInLink
     , createRememberMeCookie
     , sessionLength
+    , RememberMe(..)
+    , readRememberMeCookie
     )
     where
 
@@ -48,6 +48,7 @@ import Control.Monad.State
 import MinutesTime
 import KontraLink
 import DocState
+import System.IO.Unsafe
 import qualified Data.Set as Set
 import Control.Concurrent.MVar
 import System.Process
@@ -261,8 +262,6 @@ admins = map (Email . BS.fromString)
 isSuperUser (Just user@User{useremail}) = useremail `elem` admins 
 isSuperUser _ = False
 
-
-
 -- Identity, LongTerm, Nonce, Signature
 data RememberMe = RememberMe UserID Bool Integer [Octet] [Octet] deriving Show
 instance Binary.Binary RememberMe where
@@ -305,10 +304,10 @@ rememberMeSignature :: UserID -> [Octet] -> Integer -> [Octet]
 rememberMeSignature identity nonce expiry =
     hmac_sha1 rememberMeSecret (BSL.unpack $ Binary.encode (identity, nonce, expiry))
 
-readRememberMeCookie :: String -> IO (Maybe RememberMe)
+readRememberMeCookie :: String -> Maybe RememberMe
 readRememberMeCookie cookieString = do
-    isCookieVerified <- verifyRememberMeCookie cookie
-    return $ if isCookieVerified
+    let isCookieVerified = unsafePerformIO $ verifyRememberMeCookie cookie
+    if isCookieVerified
       then Just cookie
       else Nothing
     where
@@ -318,6 +317,6 @@ readRememberMeCookie cookieString = do
 verifyRememberMeCookie :: RememberMe -> IO Bool
 verifyRememberMeCookie (RememberMe identity _ expiry nonce signature)
     | (rememberMeSignature identity nonce expiry) == signature = do
-        (TOD now _) <- getClockTime
+        (TOD now _) <- liftIO $ getClockTime
         return $ expiry < now
     | otherwise = return False
