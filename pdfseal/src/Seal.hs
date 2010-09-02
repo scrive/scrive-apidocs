@@ -12,6 +12,7 @@ import qualified Data.Map as Map
 import qualified Data.Char as Char
 import Misc
 import Graphics.PDF.Text
+import Debug.Trace
 
 data Person = 
     Person { fullname :: String
@@ -146,12 +147,12 @@ mergeResources document source1 source2 =
           Dict (mergeResourceBranch document d1 d2)
       unite x y = x
 
-placeSealOnPageRefID :: RefID -> String -> RefID -> Document -> Document
-placeSealOnPageRefID sealrefid sealtext pagerefid document = 
+placeSealOnPageRefID :: RefID -> String -> RefID -> RefID -> Document -> Document
+placeSealOnPageRefID sealrefid sealtext sealmarkerformrefid pagerefid document = 
     let
         Just (Indir (Dict pagedict) pagestrem) = 
             PdfModel.lookup pagerefid document
-        Just contentvalue = Prelude.lookup (BS.pack "Contents") pagedict
+        Just contentvalue = trace (show pagedict) $ Prelude.lookup (BS.pack "Contents") pagedict
         contentlist = case contentvalue of
                         Ref{} -> [contentvalue]
                         Array arr -> arr
@@ -174,7 +175,12 @@ placeSealOnPageRefID sealrefid sealtext pagerefid document =
 
         sealresdict = getResDict document sealrefid
         pageresdict = getResDict document pagerefid
-        newresdict = Dict $ mergeResources document sealresdict pageresdict
+        newresdictcont1 = mergeResources document sealresdict pageresdict
+        newxobjectdict = case Prelude.lookup (BS.pack "XObject") newresdictcont1 of
+                           Just (Dict w) -> Dict (w ++ [(BS.pack "SealMarkerForm",Ref sealmarkerformrefid)])
+                           Nothing -> Dict [(BS.pack "SealMarkerForm",Ref sealmarkerformrefid)]
+        newresdict = Dict ((BS.pack "XObject",newxobjectdict) : skipXObject newresdictcont1)
+        skipXObject = filter (not . (== BS.pack "XObject") . fst)
                    
 
         newcontentarray = Array ([Ref q] ++ contentlist ++ [Ref qQ] ++ map Ref sealpagecontents ++ [Ref rr])
@@ -186,14 +192,14 @@ placeSealOnPageRefID sealrefid sealtext pagerefid document =
         newdocument = setIndirF pagerefid newpage docx
     in newdocument
 
-placeSeals :: RefID -> String -> RefID -> String -> State Document ()
-placeSeals sealrefid sealtext paginrefid pagintext = do
+placeSeals :: RefID -> String -> RefID -> String -> RefID -> State Document ()
+placeSeals sealrefid sealtext paginrefid pagintext sealmarkerformrefid = do
     pages <- gets listPageRefIDs
     let pagevalue = page_dict (Array []) (Array []) `ext` [entryna "MediaBox" [0,0,595,842]]
     -- should optimize pagintext into one stream
-    modify $ \document -> foldr (placeSealOnPageRefID paginrefid pagintext) document pages
+    modify $ \document -> foldr (placeSealOnPageRefID paginrefid pagintext sealmarkerformrefid) document pages
     lastpage <- addPageToDocument pagevalue
-    modify $ \document -> foldr (placeSealOnPageRefID sealrefid sealtext) document [lastpage]
+    modify $ \document -> foldr (placeSealOnPageRefID sealrefid sealtext sealmarkerformrefid) document [lastpage]
 
 
 {- 
@@ -365,7 +371,9 @@ lastpage (SealSpec {documentNumber,persons,history}) =
  "0.546 0.469 0.454 0.113 k " ++
  "10 0 0 10 46.5522 31.5469 Tm " ++
  "(Sida 1 av 1)Tj " ++
- "ET " ++ rightcornerseal
+ "ET " ++ rightcornerseal2 
+
+rightcornerseal2 = "q 1 0 0 1 491.839 14.37 cm /SealMarkerForm Do Q" 
 
  {-
  "q " ++
@@ -378,6 +386,24 @@ lastpage (SealSpec {documentNumber,persons,history}) =
  "Q" 
  -}
 
+pageToForm :: RefID -> State Document RefID
+pageToForm refid = do
+    Just (Indir (Dict page) _) <- gets $ PdfModel.lookup refid
+    let contentsrefid = case Prelude.lookup (BS.pack "Contents") page of
+                          Just (Array [Ref contentsrefid]) -> contentsrefid
+                          Just (Ref contentsrefid) -> contentsrefid
+    Just (Indir (Dict contentsdict) (Just streamdata)) <- gets $ PdfModel.lookup contentsrefid
+    
+    let changekeys (k,v)
+            | k==BS.pack "MediaBox" = [(BS.pack "BBox",v)]
+            | k==BS.pack "Group" = [(k,v)]
+            | k==BS.pack "Resources" = [(k,v)]
+            | True = []
+    let value = concatMap changekeys page ++ [entry "Subtype""Form"] ++ contentsdict
+    addStream (Dict value) streamdata
+
+
+
 process (sealSpec@SealSpec 
     { input
     , output
@@ -385,14 +411,18 @@ process (sealSpec@SealSpec
     , persons}) = do
     Just doc <- PdfModel.parseFile input
     Just seal <- PdfModel.parseFile sealFileName 
+    Just sealmarker <- PdfModel.parseFile "files/sealmarker.pdf" 
     let [paginpage1, sealpage1] = listPageRefIDs seal
-        pagintext1 = pagintext sealSpec
-        sealtext = lastpage sealSpec
+        [sealmarkerpage] = listPageRefIDs sealmarker 
 
     let ((),outputdoc) = 
             flip runState doc $ do
               [newpagincontents,newsealcontents] <- importObjects seal [paginpage1,sealpage1]
-              placeSeals newsealcontents sealtext newpagincontents pagintext1
+              [sealmarkerpage2] <- importObjects sealmarker [sealmarkerpage]
+              sealmarkerform <- pageToForm sealmarkerpage2
+              let pagintext1 = pagintext sealSpec
+              let sealtext = lastpage sealSpec
+              placeSeals newsealcontents sealtext newpagincontents pagintext1 sealmarkerform
     writeFileX output outputdoc
     return ()
 
