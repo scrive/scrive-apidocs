@@ -167,7 +167,7 @@ passwordChangeMail emailaddress personname newpassword =
       <a href="http://skrivapa.se/login">http://skrivapa.se/login</a>
       </p>
 
-      <p>MVH<br/>/Lukas Duczko och team <a href="http://skrivapa.se/">SkrivaPå</a>.
+      <p>Med vänliga hälsningar<br/>/Lukas Duczko och team <a href="http://skrivapa.se/">SkrivaPå</a>.
       </p>
      </span>
 
