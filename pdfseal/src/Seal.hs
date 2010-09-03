@@ -152,7 +152,7 @@ placeSealOnPageRefID sealrefid sealtext sealmarkerformrefid pagerefid document =
     let
         Just (Indir (Dict pagedict) pagestrem) = 
             PdfModel.lookup pagerefid document
-        Just contentvalue = trace (show pagedict) $ Prelude.lookup (BS.pack "Contents") pagedict
+        Just contentvalue = {- trace (show pagedict) $ -} Prelude.lookup (BS.pack "Contents") pagedict
         contentlist = case contentvalue of
                         Ref{} -> [contentvalue]
                         Array arr -> arr
@@ -197,7 +197,8 @@ placeSeals sealrefid sealtext paginrefid pagintext sealmarkerformrefid = do
     pages <- gets listPageRefIDs
     let pagevalue = page_dict (Array []) (Array []) `ext` [entryna "MediaBox" [0,0,595,842]]
     -- should optimize pagintext into one stream
-    modify $ \document -> foldr (placeSealOnPageRefID paginrefid pagintext sealmarkerformrefid) document pages
+    let pagintext1 = pagintext ++ " q 0.2 0 0 0.2 " ++ show ((595 - 18) / 2) ++ " 10 cm /SealMarkerForm Do Q "
+    modify $ \document -> foldr (placeSealOnPageRefID paginrefid pagintext1 sealmarkerformrefid) document pages
     lastpage <- addPageToDocument pagevalue
     modify $ \document -> foldr (placeSealOnPageRefID sealrefid sealtext sealmarkerformrefid) document [lastpage]
 
@@ -227,21 +228,17 @@ contentsValueListFromPageID document pagerefid =
     in contentlist
 
 pagintext (SealSpec{documentNumber,initials}) = 
- "BT " ++
+ let
+    docnrwidth = textWidth (PDFFont Helvetica 8) (toPDFString $ "Dok.nr. " ++ documentNumber)
+    docnroffset = 595/2 - 24 - docnrwidth
+ in
+ "BT " ++     -- it start 24 pt from the center
  "0.546 0.469 0.454 0.113 k " ++
  "/SkrivaPaHelvetica 1 Tf " ++
  "8 0 0 8 315.3584 10.8433 Tm " ++
- "(U)Tj " ++
- "6 0 0 6 321.1357 10.8433 Tm " ++
- "[(NDER)18(TECKNAT)111(: )]TJ " ++
- "8 0 0 8 368.6992 10.8433 Tm " ++
- "(" ++ initials ++ ")Tj " ++
- "-23.668 0 Td " ++
- "(D)Tj " ++
- "6 0 0 6 185.1362 10.8433 Tm " ++
- "(OK.NR. )Tj " ++
- "8 0 0 8 207.4722 10.8433 Tm " ++
- "(" ++ documentNumber ++ ")Tj " ++
+ "[(Undertecknat: " ++ map unicodeToWinAnsi initials ++ ")]TJ " ++
+ "8 0 0 8 " ++ show docnroffset ++ " 10.8433 Tm " ++
+ "(Dok.nr. " ++ documentNumber ++ ")Tj " ++
  "ET "
 
 signatorybox (Person {fullname,company,number,email}) = 
