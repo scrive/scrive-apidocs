@@ -148,7 +148,7 @@ welcomeEmail fullname =
       <p>Jag heter <strong>Lukas Duczko</strong> och är VD på <strong>SkrivaPå</strong>. Tack för att 
       du har skapat ett konto hos oss. Vi hoppas att du kommer att bli nöjd med våra tjänster. Tveka 
       inte att höra av dig med åsikter, feedback eller bara en enkel hälsning. Din åsikt är värdefull.</p>
-      <p>MVH<br/>
+      <p>Med vänliga hälsningar<br/>
          <strong>Lukas Duczko</strong> och team <a href="http://skrivapa.se/">SkrivaPå</a>
       </p>
     </div>
