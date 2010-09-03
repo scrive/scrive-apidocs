@@ -24,7 +24,7 @@ import System.Random
 import System.IO.Unsafe
 import Data.List
 import qualified Data.Set as Set
-
+import Debug.Trace
 
 $(deriveAll [''Eq, ''Ord, ''Default]
   [d|
@@ -188,7 +188,7 @@ instance Migrate User3 User4 where
           , usercompanynumber4 = usercompanynumber3
           , userinvoiceaddress4 = userinvoiceaddress3
           , userflashmessages4 = userflashmessages3
-          , userpassword4 = BS.empty
+          , userpassword4 = maybe BS.empty id userpassword3
           , usersupervisor4 = Nothing
           , usercanhavesubaccounts4 = True
           , useraccountsuspended4 = False -- should probably have a reason and time here

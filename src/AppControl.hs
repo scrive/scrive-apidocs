@@ -44,6 +44,7 @@ import KontraLink
 import Control.Concurrent
 import qualified Data.Set as Set
 import System.IO.Unsafe
+import Debug.Trace
 
 handleRoutes ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} = toIO ctx $ msum $
     [ nullDir >> webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx))
@@ -143,12 +144,8 @@ loginPagePost = do
   rq <- askRq
   email <- getDataFnM $ look "email"
   passwd <- getDataFnM $ look "password"
-  rememberMeList <- getDataFnM $ look "rememberMe"
-  let
-    rememberMe =
-      case rememberMeList of
-        [] -> False
-        otherwise -> True
+  rememberMeMaybe <- getDataFn $ look "rememberme"
+  let rememberMe = isJust rememberMeMaybe
   
   -- check the user things here
   maybeuser <- query $ GetUserByEmail (Email $ BS.fromString email)
