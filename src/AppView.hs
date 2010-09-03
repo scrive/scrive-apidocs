@@ -201,12 +201,9 @@ welcomeBody ctx@(Context {ctxmaybeuser = Nothing}) =
 
    <hr/>
 
-   <p class="headline">Välkommen till SkrivaPå!</p>
-
-   <p class="para">För tillfället testar vi vår online signaturlösning med 
-      utvalda kunder. Om du vill bli en tidig testkund, vänligen 
-      <a href="mailto:lukas@skrivapa.se">skicka ett mail</a>. Om du redan 
-      har ett konto logga in för att börja.</p>
+   <p class="para">SkrivaPå är en webtjänst för företag som skriver många avtal. Med vår smidiga tjänst blir det enklare och billigare att skriva, arkivera och hantera avtal. 
+   Den effektivare avtalsprocessen bidrar också till att större andel avtal undertecknas. Frigör tid och resurser från avtalshanteringen och bli bättre på det ni gör bäst.
+      <a href="mailto:lukas@skrivapa.se">Kontakta oss</a> så berättar vi gärna mer.</p>
   </div>
 
 errorReport :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
