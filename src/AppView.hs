@@ -133,8 +133,8 @@ loginBox ctx =
           <td>
           </td>
           <td>
-            <input type="checkbox" id="remember_me" name="remember_me"/>
-            <label for="remember_me">Remember Me</label>
+            <input type="checkbox" id="rememberme" name="rememberme"/>
+            <label for="rememberme">Remember Me</label>
           </td>
     </tr>
 	<tr> 
