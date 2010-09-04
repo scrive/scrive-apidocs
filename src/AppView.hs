@@ -201,9 +201,8 @@ welcomeBody ctx@(Context {ctxmaybeuser = Nothing}) =
 
    <hr/>
 
-   <p class="para">SkrivaPå är en webtjänst för företag som skriver många avtal. Med vår smidiga tjänst blir det enklare och billigare att skriva, arkivera och hantera avtal. 
-   Den effektivare avtalsprocessen bidrar också till att större andel avtal undertecknas. Frigör tid och resurser från avtalshanteringen och bli bättre på det ni gör bäst.
-      <a href="mailto:lukas@skrivapa.se">Kontakta oss</a> så berättar vi gärna mer.</p>
+   <p class="para">SkrivaPå är en webtjänst som hjälper företag med avtalshantering. Med vår smidiga lösning blir det enklare och billigare att skriva, arkivera och hantera avtal. 
+   Frigör tid och resurser redan idag! <a href="mailto:info@skrivapa.se">Kontakta oss</a> gärna för mer information.</p>
   </div>
 
 errorReport :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
