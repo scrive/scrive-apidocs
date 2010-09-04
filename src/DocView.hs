@@ -246,8 +246,44 @@ listDocuments userid documents =
 	</style>
 	<script type="text/javascript">
         $(function() {
-                // TODO: Shift-clicking should select a range
+
+                var focused;
+	  	// two alternative ways to track clicks off of a .check
+	 	//$("*").not(".check").click(function(){if(this == document.activeElement) { focused = null; }});
+	  	// this way is cleaner since it only installs a handler on the toplevel document instead of nearly
+	  	// every element
+	  	$(document).click(function(event){ 
+		   if($(event.target).parents("#selectable").size() === 0){ 
+                     focused = null; 
+                   }
+                });
+
+                $("#selectable tr").mousedown(function(event){
+                   if(focused && event.shiftKey && $(event.target).filter(".check").size() === 0){
+                      var checks = $(".check");
+                      var startIndex = focused?checks.index(focused):null;
+                      var endIndex = checks.index($(this).find(".check"));
+
+                      var s = Math.min(startIndex, endIndex);
+                      var e = Math.max(startIndex, endIndex);
+ 
+                      checks.slice(s, e+1).attr("checked", true);
+
+                      checks.not(":checked").parents("tr").removeClass("ui-selected");
+                      checks.filter(":checked").parents("tr").addClass("ui-selected");
+
+	              focused = $(checks.get(endIndex));
+                      checks.get(endIndex).focus();
+
+                      // cancel all further click processing
+		      // we are overriding the Selectable behavior for shift-clicks
+                      return false;
+		   }                     
+		});
+
+		// the jQuery Selectable feature 
                 $("#selectable" ).selectable({
+                   // links and input fields do not have click overridden
 		   cancel: 'a,input',
 
 		   unselected: function(event, ui) {
@@ -260,18 +296,31 @@ listDocuments userid documents =
                      var selectees = $(".ui-selectee");
                      selectees.not(".ui-selected").find(".check").attr("checked", false);
                      selectees.filter(".ui-selected").find(".check").attr("checked", true);
+
+		     $(ui.selected).find(".check").focus();
+                     focused = $(ui.selected).find(".check");
 	           }});
 
                 $(".check:checked").parents("tr").addClass("ui-selected");
                 $(".ui-selected").find(".check").attr("checked", true);
 
-	        $(".check").click(
-	          function() {
+		$(".check").click(function(event) {
                     var checks = $(".check");
                     
+                    if(event.shiftKey && focused && focused.filter(".check").size() > 0 && focused.attr("checked")){
+		      var startIndex = checks.index(focused);
+                      var endIndex = checks.index(this);
+
+                      var s = Math.min(startIndex, endIndex);
+                      var e = Math.max(startIndex, endIndex);
+ 
+                      checks.slice(s, e+1).attr("checked", true);
+                    } 
+
                     checks.not(":checked").parents("tr").removeClass("ui-selected");
                     checks.filter(":checked").parents("tr").addClass("ui-selected");
-                       });
+	            focused = $(this);
+	        });
 
                 $('#all').click(function() {
                   var checks = $(".check");
