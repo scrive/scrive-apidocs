@@ -178,7 +178,7 @@ welcomeBody :: (XMLGenerator m, EmbedAsAttr m (Attr [Char] KontraLink))
             -> XMLGenT m (HSX.XML m)
 welcomeBody (Context {ctxmaybeuser = Just _, ctxhostpart}) = 
   <div class="centerdivnarrow">
-   <p class="headline">Välkommen till SkrivaPå!</p>
+   <p></p>
 
    <form action=LinkIssue method="post" enctype="multipart/form-data">
     <span class="small">Ladda upp dokumentet som PDF</span><br/>
