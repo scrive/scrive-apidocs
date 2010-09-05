@@ -71,12 +71,10 @@ Let as skip 3 for now.
 willCreateAccountForYou False = <span/>
 willCreateAccountForYou True = 
      <p>
-       Du har nu möjlighet att utan avgift spara dokumentet så att det blir tillgängligt för 
-       dig via vår tjänst. Då kommer du även i framtiden kunna övervaka avtalet och verifiera 
-       avtalet mot vår databas. Du får också tillgång till vår smidiga arkiveringstjänst.
-       Detta erbjudande gäller endast nu och kostar ingenting (ordinarie engångsavgift för 
-       verifiering utan konto på tjänsten är 200kr/avtal). När du klickat på spara kommer vi att 
-       skicka inloggningsuppgifterna till din inkorg.
+       Vi rekommenderar att du sparar dokumentet på vår tjänst. Då är ditt avtal säkert oavsett vad 
+       som händer med din inkorg. Dessutom får du möjlighet att även i framtiden verifiera 
+       avtalet mot vår databas utan extra kostnad (ord. pris utan konto är 200kr/avtal). Detta erbjudande 
+       gäller endast nu och kostar ingenting. 
      </p>
 
 landpageSignedView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) => 
@@ -90,9 +88,9 @@ landpageSignedView ctx document@Document{documenttitle,documentstatus} signatory
     <div class="centerdivnarrow">
       <p class="headline">Vänligen läs noga</p>
       {- change "alla parter" to list of people -}
-      <p>Du har nu undertecknat avtalet <strong><% documenttitle %></strong>. I och med detta 
-         har samtliga parter undertecknat avtalet och en PDF-kopia av avtalet har skickats till 
-         din inkorg.</p>
+      <p>Du har nu undertecknat dokumentet <strong><% documenttitle %></strong>. I och med detta 
+         har samtliga avtalsparter undertecknat avtalet och och avtalet är nu juridiskt bindande. 
+         En kopia av det färdigställda dokumentet har skickats till din e-post.</p>
       <% willCreateAccountForYou (not hasaccount) %>
       <a class="bigbutton" href=(LinkLandpageSaved document signatorylink)>Spara</a>
     </div>
@@ -101,9 +99,9 @@ landpageSignedView ctx document@Document{documenttitle} signatorylink hasaccount
     <div class="centerdivnarrow">
       <p class="headline">Vänligen läs noga</p>
       {- change "alla parter" to list of people -}
-      <p>Du har nu undertecknat avtalet ”name of doc”. Vi väntar på att samtliga parter ska 
-         underteckna avtalet. När sista personen undertecknat kommer du att få en PDF-kopia av 
-         det färdigställda dokumentet skickat till din inkorg.</p>
+      <p>Du har nu undertecknat dokumentet <strong><% documenttitle %></strong>. Samtliga avtalsparter
+         har ännu inte undertecknat avtalet. När alla undertecknat kommer du en kopia av det 
+         färdigställda dokumentet att skickats till din e-post.</p>
       <% willCreateAccountForYou (not hasaccount) %>
       <a class="bigbutton" href=(LinkLandpageSaved document signatorylink)>Spara</a>
     </div>
@@ -592,8 +590,9 @@ showDocumentForSign action document authorname invitedname wassigned =
                   </script>
                 , <div id="dialog-confirm-sign" title="Underteckna">  
                    {- change "alla parter" to list of people -}
-                   <p>Är du säker på att du vill underteckna dokumentet 
-                     <strong><% documenttitle document %></strong>?</p>
+                   
+                   <p>Är du säker på att du vill underteckna dokumentet <strong><% documenttitle document %></strong>?</p>
+                   
                    <p>När alla parter undertecknat blir avtalet <strong>juridiskt bindande</strong> och du får det 
                       färdigställda dokumentet via e-post. Efter att du undertecknat får du även 
                       möjlighet att spara dokumentet online via SkrivaPå.
@@ -610,14 +609,9 @@ showDocumentForSign action document authorname invitedname wassigned =
                  <p>Välkommen <strong><% invitedname %></strong>,</p>
  
                  <p>På vänster sida har du dokumentet <strong><% documenttitle document %></strong> som <strong><% authorname %></strong> har 
-                    bjudit in dig att underteckna.
-                    Genom att underteckna ingår du ett <strong>juridiskt bindande</strong> avtal. 
+                    bjudit in dig att underteckna. Genom att underteckna ingår du ett <strong>juridiskt bindande</strong> avtal. 
                     Vill du underteckna? 
                  </p>
-
-                  {-
-                    <p>Om du inte är <strong><% invitedname %></strong> ber vi dig att avvisa avtalet.</p>
-                  -}
 
                   {- Avvisa - gray FIXME -}
 
@@ -663,13 +657,16 @@ invitationMail (Context {ctxmaybeuser = Just user, ctxhostpart})
       <p>Hej <strong><% personname %></strong>,</p>
 
       <p><strong><% creatorname %></strong> har bjudit in dig att underteckna dokumentet 
-         <strong><% documenttitle %></strong>. Så här går du vidare:</p> 
-
-      <p>1. Klicka på länken<br/>
+         <strong><% documenttitle %></strong>. <strong><% creatorname %></strong> har redan undertecknat.</p>
+ 
+      <p>Så här går du vidare:<br/>
+         1. Klicka på länken<br/>
          <a href=link><% link %></a><br/>
          2. Granska dokumentet online<br/>
          3. Underteckna<br/>
+         4. När alla parter undertecknat skickas det färdigställda dokumentet till din e-post<br/>
       </p>
+      
          <% case documenttimeouttime of
               Just time -> <p>Dokumentet kan undertecknas senast <% show time %>.</p>
               Nothing -> <span/>
@@ -693,15 +690,15 @@ closedMail (Context {ctxhostpart})
     in htmlHeadBodyWrapIO documenttitle 
      <span>
       {- change "alla parter" to list of people -}
-      <p>Hej <strong><% personname %></strong>,</p>
-      <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats av alla parter 
-         och avtalet är nu juridiskt bindande. Nedan bifogas en direktlänk till det
-         färdigställda dokumentet och en PDF-kopia.</p>
+       <p>Hej <strong><% personname %></strong>,</p>
+       <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats av alla parter 
+          och avtalet är nu juridiskt bindande. Det färdigställda dokumentet bifogas nedan.</p> 
 
-      <p><a href=link><% link %></a></p>
-     
-      <% poweredBySkrivaPaPara %>
-     </span>
+       <p>Du kan verifiera avtalet mot vår databas genom följande länk:<br />
+          <a href=link><% link %></a></p>
+   
+       <% poweredBySkrivaPaPara %>
+      </span>
 
 
 closedMailAuthor :: Context
@@ -716,15 +713,15 @@ closedMailAuthor (Context {ctxhostpart})
     in htmlHeadBodyWrapIO documenttitle
         <span>
          {- change "alla parter" to list of people -}
-         <p>Hej <strong><% personname %></strong>,</p>
-         <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats av alla parter 
-            och avtalet är nu juridiskt bindande. Nedan bifogas en direktlänk till det
-            färdigställda dokumentet och en PDF-kopia.</p>
-      
-         <p><a href=link><% link %></a></p>
-     
-         <% poweredBySkrivaPaPara %>
-        </span>
+          <p>Hej <strong><% personname %></strong>,</p>
+            <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats av alla parter 
+               och avtalet är nu juridiskt bindande. Det färdigställda dokumentet bifogas nedan.</p> 
+
+            <p>Du kan verifiera avtalet mot vår databas genom följande länk:<br />
+               <a href=link><% link %></a></p>
+
+            <% poweredBySkrivaPaPara %>
+           </span>
 
 
 poweredBySkrivaPaPara :: (XMLGenerator m) => XMLGenT m (HSX.XML m)
