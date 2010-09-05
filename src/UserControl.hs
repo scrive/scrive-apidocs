@@ -184,6 +184,7 @@ userLogin2 = do
                   return Nothing
 
 rememberMeCookieName = "remember_me"
+
 setRememberMeCookie :: UserID -> Bool -> Kontra ()
 setRememberMeCookie userid rememberMe = do
     cookie <- liftIO $ do

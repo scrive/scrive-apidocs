@@ -440,12 +440,54 @@ personsFromDocument document =
 
     in map x links
 
+sealSpecFromDocument :: Document -> User -> String -> String -> SealSpec
+sealSpecFromDocument document author@(User {userfullname,usercompanyname,usercompanynumber,useremail}) inputpath outputpath =
+  let docid = unDocumentID (documentid document)
+
+      -- FIXME: use the time when author clicked sign
+      signtime = case documentmaybesigninfo document of
+                   Nothing -> error "signtime1"
+                   Just (SignInfo t) -> t
+      authordetails = documentauthordetails document
+      authorline = if authordetails /= emptyDetails 
+                   then sealLine authordetails signtime
+                   else sealLine (SignatoryDetails 
+                                  { signatoryname = userfullname
+                                  , signatorycompany = usercompanyname
+                                  , signatorynumber = usercompanynumber
+                                  , signatoryemail = unEmail $ useremail
+                                  }) signtime
+
+
+      persons = authorline : personsFromDocument document
+      paddeddocid = reverse $ take 10 $ (reverse ("0000000000" ++ show docid))
+      initials = concatComma (map initialsOfPerson persons)
+      initialsOfPerson (Person {fullname}) = map head (words fullname)
+      makeHistoryEntry (Person {fullname}) = 
+          HistEntry
+          { histdate = show signtime
+          , histcomment = fullname ++ " undertecknat documentet"
+          }
+      concatComma = concat . intersperse ", "
+      history = map makeHistoryEntry persons
+      
+      config = Seal.SealSpec 
+            { input = inputpath
+            , output = outputpath
+            , documentNumber = paddeddocid
+            , persons = persons
+            , history = history
+            , initials = initials
+            }
+      in config
+
 sealDocument :: MinutesTime -> User -> Document -> IO Document
 sealDocument signtime1 author@(User {userfullname,usercompanyname,usercompanynumber,useremail}) document = do
   let (file@File {fileid,filename,filepdf,filejpgpages}) = 
            safehead "sealDocument" $ documentfiles document
   let docid = unDocumentID (documentid document)
 
+  {-
   -- FIXME: use the time when author clicked sign
   let signtime = case documentmaybesigninfo document of
                    Nothing -> signtime1
@@ -462,31 +504,15 @@ sealDocument signtime1 author@(User {userfullname,usercompanyname,usercompanynum
 
 
   let persons = authorline : personsFromDocument document
+  -}
+
   tmppath <- getTemporaryDirectory
   let tmpin = tmppath ++ "/in_" ++ show docid ++ ".pdf"
   let tmpout = tmppath ++ "/out_" ++ show docid ++ ".pdf"
   BS.writeFile tmpin filepdf
   let sealproc = (proc "dist/build/pdfseal/pdfseal" []) {std_in = CreatePipe}
   (Just inx, _, _, sealProcHandle) <- createProcess sealproc
-  let paddeddocid = reverse $ take 10 $ (reverse ("0000000000" ++ show docid))
-  let initials = concatComma (map initialsOfPerson persons)
-      initialsOfPerson (Person {fullname}) = map head (words fullname)
-      makeHistoryEntry (Person {fullname}) = 
-          HistEntry
-          { histdate = show signtime
-          , histcomment = fullname ++ " undertecknat documentet"
-          }
-      concatComma = concat . intersperse ", "
-      history = map makeHistoryEntry persons
-      
-  let config = Seal.SealSpec 
-            { input = tmpin
-            , output = tmpout
-            , documentNumber = paddeddocid
-            , persons = persons
-            , history = history
-            , initials = initials
-            }
+  let config = sealSpecFromDocument document author tmpin tmpout
 
   hPutStr inx (show config)
   hClose inx
