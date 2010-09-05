@@ -158,7 +158,7 @@ passwordChangeMail emailaddress personname newpassword =
 
       <p>Jag heter Lukas Duczko och är VD på SkrivaPå. Tack för att du har skapat ett konto hos oss. 
          Vi hoppas att du kommer att bli nöjd med våra tjänster. Tveka inte att höra av dig med 
-         åsikter eller bara en enkel hälsning. Din åsikt är värdefull.</p>
+         feedback eller bara en enkel hälsning. Din åsikt är värdefull.</p>
 
       <p>Användarnamn: <span style="color: orange; text-weight: bold"><% emailaddress %></span><br/>
          Lösenord: <span style="color: orange; text-weight: bold"><% newpassword %></span><br/>
