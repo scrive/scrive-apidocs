@@ -344,6 +344,7 @@ lastpage (SealSpec {documentNumber,persons,history}) =
  "(Datum)Tj " ++
  "11 0 0 11 231.1978 546.3926 Tm " ++
  "(H\\344ndelse)Tj " ++
+ "ET " ++ 
 
  -- logentry
  concatMap logentry history ++
