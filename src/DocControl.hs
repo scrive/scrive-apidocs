@@ -471,7 +471,7 @@ sealSpecFromDocument document author@(User {userfullname,usercompanyname,usercom
           }
       lastHistEntry = HistEntry
                       { histdate = show signtime
-                      , histcomment = "Alla parter har undertecknat dokumentet. Avtalet är nu juridiskt bindande och det färdigställda dokumentet skickas vi e-post till samtliga avtalsparter."
+                      , histcomment = "Alla parter har undertecknat dokumentet och avtalet är nu juridiskt bindande."
                       }
       firstHistEntry = HistEntry
                        { histdate = show signtime
