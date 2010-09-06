@@ -184,7 +184,7 @@ placeSeals sealrefid sealtext paginrefid pagintext sealmarkerformrefid = do
     pages <- gets listPageRefIDs
     let pagevalue = page_dict (Array []) (Array []) `ext` [entryna "MediaBox" [0,0,595,842]]
     -- should optimize pagintext into one stream
-    let pagintext1 = pagintext ++ " q 0.2 0 0 0.2 " ++ show ((595 - 18) / 2) ++ " 10 cm /SealMarkerForm Do Q "
+    let pagintext1 = pagintext ++ " q 0.2 0 0 0.2 " ++ show ((595 - 18) / 2) ++ " 14 cm /SealMarkerForm Do Q "
     modify $ \document -> foldr (placeSealOnPageRefID paginrefid pagintext1 sealmarkerformrefid) document pages
     lastpage <- addPageToDocument pagevalue
     modify $ \document -> foldr (placeSealOnPageRefID sealrefid sealtext sealmarkerformrefid) document [lastpage]
@@ -204,17 +204,30 @@ contentsValueListFromPageID document pagerefid =
 
 pagintext (SealSpec{documentNumber,initials}) = 
  let
-    docnrwidth = textWidth (PDFFont Helvetica 8) (toPDFString $ "Dok.nr. " ++ documentNumber)
-    docnroffset = 595/2 - 24 - docnrwidth
+    font = PDFFont Helvetica 8
+    docnrwidth = textWidth font (toPDFString docnrtext)
+    docnroffset = center - 20 - docnrwidth
+    center = 595/2
+    signedinitials = "Undertecknat: " ++ map unicodeToWinAnsi initials 
+    siwidth = textWidth font (toPDFString signedinitials)
+    sioffset = center + 20
+    docnrtext = "Dok.nr. " ++ documentNumber
+    
  in
- "BT " ++     -- it start 24 pt from the center
+ "q 1 0 0 1 0 5 cm " ++
+ "BT " ++
  "0.546 0.469 0.454 0.113 k " ++
  "/SkrivaPaHelvetica 1 Tf " ++
- "8 0 0 8 315.3584 10.8433 Tm " ++
- "[(Undertecknat: " ++ map unicodeToWinAnsi initials ++ ")]TJ " ++
- "8 0 0 8 " ++ show docnroffset ++ " 10.8433 Tm " ++
- "(Dok.nr. " ++ documentNumber ++ ")Tj " ++
- "ET "
+ "8 0 0 8 " ++ show sioffset ++ " 15 Tm " ++
+ "[(" ++ signedinitials ++ ")]TJ " ++
+ "8 0 0 8 " ++ show docnroffset ++ " 15 Tm " ++
+ "(" ++ docnrtext ++ ")Tj " ++
+ "ET " ++ 
+ "0.863 0.43 0.152 0.004 K " ++
+ "0.4 w " ++
+ "60 18 m " ++ show (docnroffset-10) ++ " 18 l S " ++
+ show (sioffset+siwidth+10) ++ " 18 m " ++ show (595 - 60) ++ " 18 l S " ++
+ "Q "
 
 signatorybox (Person {fullname,company,number,email}) = 
  let
@@ -263,15 +276,14 @@ makeManyLines font width text = result
     result = map textOutLine textLines 
 
 logentry (HistEntry {histdate,histcomment}) = 
- let outlines = (makeManyLines (PDFFont Helvetica 10) 300 histcomment) in
+ let outlines = (makeManyLines (PDFFont Helvetica_Oblique 10) 300 histcomment) in
  "BT " ++
- "/TT0 1 Tf " ++
+ "/TT2 1 Tf " ++
  "0.591 0.507 0.502 0.19 k " ++
- "10 0 0 10 46.5522 520.8887 Tm " ++
+ "10 0 0 10 46 520.8887 Tm " ++
  "(" ++ map unicodeToWinAnsi histdate ++ ")Tj " ++
- "10 0 0 10 231.1978 520.8887 Tm " ++
+ "10 0 0 10 231 520.8887 Tm " ++
  "1.2 TL " ++
- -- "(" ++ map unicodeToWinAnsi histcomment ++ ")Tj " ++
  concat outlines ++
  "ET 1 0 0 1 0 " ++ show ((-8) - length outlines * 12) ++ " cm "
 
@@ -297,14 +309,14 @@ lastpage (SealSpec {documentNumber,persons,history}) =
 
  "0.806 0.719 0.51 0.504 k " ++
  "21 0 0 21 39.8198 787.9463 Tm " ++
- "(Certifikat)Tj " ++
+ "(Verifikat)Tj " ++
 
  "0.546 0.469 0.454 0.113 k " ++
  "12 0 0 12 39.8198 766.9555 Tm " ++
  "[(Dok.nr)55(. " ++ map unicodeToWinAnsi documentNumber ++ ")]TJ " ++
 
  "0.806 0.719 0.51 0.504 k " ++
- "12 0 0 12 39.8198 736.3555 Tm " ++
+ "12 0 0 12 39.8198 736.8555 Tm " ++
  "(Avtalsparter)Tj " ++
  "ET " ++
 
@@ -336,12 +348,12 @@ lastpage (SealSpec {documentNumber,persons,history}) =
  "0.784 0.698 0.475 0.533 k " ++
  "/TT0 1 Tf " ++
  "0 Tc 0 Tw " ++
- "11 0 0 11 40 571.4502 Tm " ++
- "[(T)37(idst\\344mplar)]TJ " ++
+ "12 0 0 12 40 571.9502 Tm " ++
+ "[(Registrerade händelser)]TJ " ++
  "11 0 0 11 40 546.3926 Tm " ++
  "(Datum)Tj " ++
- "11 0 0 11 231.1978 546.3926 Tm " ++
- "(Registrerade händelser)Tj " ++
+ "11 0 0 11 225 546.3926 Tm " ++
+ "(Händelser)Tj " ++
  "ET " ++ 
 
  -- logentry
