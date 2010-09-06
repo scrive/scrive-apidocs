@@ -160,3 +160,31 @@ $(document).ready( function () {
     //    RPXNOW.overlay = true;
     //    RPXNOW.language_preference = 'sv';
 });
+// Email Validation 
+$(document).ready(function(){
+  $("form").submit(function(e){
+     var invalidEmailErrMsg="Value in the \"Email\" field was not recognized. Please make sure to put valid email address";
+	 var emptyEmailErrMsg="Please specifiy email address:";
+	 var errorMsg="";
+     var address=$('#email').val();
+	 var reg = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;
+	 var showError=false;
+	 var divContent = $("#modal").html();
+	 var keyword="msg_to_replace";
+	 
+	 if(address.length == 0){
+	   errorMsg=emptyEmailErrMsg
+	   showError=true;
+	 }
+	 if(reg.test(address) == false && showError==false) { 
+		errorMsg=invalidEmailErrMsg;
+        showError=true;
+     }
+	 
+	 if(showError){
+	  $("#errorMsg").html(errorMsg);
+      Popup.showModal('modal');
+	  return false;
+	 }
+  });
+});
