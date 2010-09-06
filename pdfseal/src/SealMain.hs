@@ -76,13 +76,13 @@ nda = SealSpec
         ]
     , initials = "LD, LD"
       , history = [ HistEntry { histdate = "2010-09-01 13:34"
-                              , histcomment = "I was here and mucked around with PDFs"
+                              , histcomment = "I was here and mucked around with PDFs. This is actually a very long line of text so we can really see if the line breaking works or maybe not that good."
                               }
                   , HistEntry { histdate = "One year later"
-                              , histcomment = "Still mucking around with PDFs some more"
+                              , histcomment = "Still mucking around with PDFs some more. This is actually a very long line of text so we can really see if the line breaking works or maybe not that good. This is actually a very long line of text so we can really see if the line breaking works or maybe not that good."
                               }
                   , HistEntry { histdate = "10 years later"
-                              , histcomment = "Really soon now öåä ÖÅÄ. Swedish works."
+                              , histcomment = "Really soon now öåä ÖÅÄ. Swedish works. This is actually a very long line of text so we can really see if the line breaking works or maybe not that good."
                               }
                   ]
     }

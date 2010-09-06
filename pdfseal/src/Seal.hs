@@ -13,6 +13,7 @@ import qualified Data.Char as Char
 import Misc
 import Graphics.PDF.Text
 import Debug.Trace
+import Graphics.PDF
 
 data Person = 
     Person { fullname :: String
@@ -241,16 +242,38 @@ signatorybox (Person {fullname,company,number,email}) =
  -- "f " ++
  "1 0 0 1 0 -42 cm "
 
+makeManyLines font width text = result
+    where
+    textSplit :: String -> [String]
+    textSplit [] = []
+    -- textSplit [x] = [[x]]
+    textSplit (text) = let (b,a1) = break (==' ') text 
+                           (s,a) = break (/=' ') a1
+                       in (b ++ s) : textSplit a  
+    textWithLength :: String -> (PDFFloat,String)
+    textWithLength text = (textWidth font (toPDFString text),text)
+    textSplitWithLength = map textWithLength (textSplit text)
+    takeWhileLength :: PDFFloat -> String -> [(PDFFloat,String)] -> [String]
+    takeWhileLength len text [] = [text]
+    takeWhileLength len text all@((l,t):rest)
+                    | len + l < width = takeWhileLength (len + l) (text ++ t) rest
+                    | otherwise = text : takeWhileLength 0 "" all
+    textOutLine text = "[(" ++ map unicodeToWinAnsi text ++ ")]TJ T* "
+    textLines = takeWhileLength 0 "" textSplitWithLength
+    result = map textOutLine textLines 
 
 logentry (HistEntry {histdate,histcomment}) = 
+ let outlines = (makeManyLines (PDFFont Helvetica 10) 300 histcomment) in
  "BT " ++
  "/TT0 1 Tf " ++
  "0.591 0.507 0.502 0.19 k " ++
  "10 0 0 10 46.5522 520.8887 Tm " ++
  "(" ++ map unicodeToWinAnsi histdate ++ ")Tj " ++
  "10 0 0 10 231.1978 520.8887 Tm " ++
- "(" ++ map unicodeToWinAnsi histcomment ++ ")Tj " ++
- "ET 1 0 0 1 0 -20 cm "
+ "1.2 TL " ++
+ -- "(" ++ map unicodeToWinAnsi histcomment ++ ")Tj " ++
+ concat outlines ++
+ "ET 1 0 0 1 0 " ++ show ((-8) - length outlines * 12) ++ " cm "
 
 
 lastpage (SealSpec {documentNumber,persons,history}) = 
