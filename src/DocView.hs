@@ -16,6 +16,7 @@ import Control.Monad.Identity
 import Control.Monad.Trans
 import KontraLink
 import Misc
+import Data.String.Utils
 
 instance Monad m => IsAttrValue m DocumentID where
     toAttrValue = toAttrValue . show
@@ -726,3 +727,17 @@ poweredBySkrivaPaPara =
      <a href="http://skrivapa.se/">SkrivaPå</a></small>
     </p>
 
+partyList :: Document -> [SignatoryDetails]
+partyList document =
+    let author = documentauthordetails document
+        signas = map signatorydetails (documentsignatorylinks document)
+    in author : signas
+
+partyListString :: Document -> BS.ByteString
+partyListString document = 
+    BS.fromString $ swedishListString (map (show . signatoryname) (partyList document))
+
+swedishListString :: [String] -> String
+swedishListString [] = ""
+swedishListString [x] = x
+swedishListString xs = Data.String.Utils.join ", " (init xs) ++ " och " ++ (last xs)
