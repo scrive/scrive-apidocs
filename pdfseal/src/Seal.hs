@@ -217,7 +217,8 @@ pagintext (SealSpec{documentNumber,initials}) =
 
 signatorybox (Person {fullname,company,number,email}) = 
  let
-    orgnroffset = textWidth (PDFFont Helvetica 10) (toPDFString $ "Org.nr. " ++ number)
+    orgnrtext = if number=="" then "" else "Org.nr. " ++ number
+    orgnroffset = textWidth (PDFFont Helvetica 10) (toPDFString orgnrtext)
     emailoffset = textWidth (PDFFont Helvetica_Oblique 10) (toPDFString email)
     rightmargin = 595 - 46.5522
  in
@@ -230,7 +231,7 @@ signatorybox (Person {fullname,company,number,email}) =
  "10 0 0 10 46.5522 695.9906 Tm " ++
  "(" ++ map unicodeToWinAnsi company ++ ")Tj " ++
  "10 0 0 10 " ++ show (rightmargin - orgnroffset) ++ " 707.3906 Tm " ++
- "(Org.nr. " ++ map unicodeToWinAnsi number ++ ")Tj " ++
+ "(" ++ map unicodeToWinAnsi orgnrtext ++ ")Tj " ++
  "/TT2 1 Tf " ++
  "10 0 0 10 " ++ show (rightmargin - emailoffset) ++ " 695.9906 Tm " ++
  "(" ++ map unicodeToWinAnsi email ++ ")Tj " ++
@@ -281,7 +282,7 @@ lastpage (SealSpec {documentNumber,persons,history}) =
 
  "0.806 0.719 0.51 0.504 k " ++
  "12 0 0 12 39.8198 736.3555 Tm " ++
- "(Undertecknat av)Tj " ++
+ "(Avtalsparter)Tj " ++
  "ET " ++
 
  {-
@@ -317,7 +318,7 @@ lastpage (SealSpec {documentNumber,persons,history}) =
  "11 0 0 11 40 546.3926 Tm " ++
  "(Datum)Tj " ++
  "11 0 0 11 231.1978 546.3926 Tm " ++
- "(H\\344ndelse)Tj " ++
+ "(Registrerade händelser)Tj " ++
  "ET " ++ 
 
  -- logentry

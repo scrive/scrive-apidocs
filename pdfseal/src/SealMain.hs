@@ -67,10 +67,10 @@ nda = SealSpec
           , number = "123456-4567"
           }
         , Person 
-          { fullname = "Lukas Duczko"
+          { fullname = "åöäÖÅÄ Lukas Duczko"
           , email = "lukas@duczko.se"
           , company = "CEO, SkrivaPå"
-          , number = "123456-4567"
+          , number = ""
           }
         
         ]
