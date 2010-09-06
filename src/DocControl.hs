@@ -463,13 +463,23 @@ sealSpecFromDocument document author@(User {userfullname,usercompanyname,usercom
       paddeddocid = reverse $ take 10 $ (reverse ("0000000000" ++ show docid))
       initials = concatComma (map initialsOfPerson persons)
       initialsOfPerson (Person {fullname}) = map head (words fullname)
+      -- 2. "Name of invited" granskar dokumentet online
       makeHistoryEntry (Person {fullname}) = 
           HistEntry
           { histdate = show signtime
-          , histcomment = fullname ++ " undertecknat documentet"
+          , histcomment = fullname ++ " undertecknar dokumentet online"
           }
+      lastHistEntry = HistEntry
+                      { histdate = show signtime
+                      , histcomment = "Alla parter har undertecknat dokumentet. Avtalet är nu juridiskt bindande och det färdigställda dokumentet skickas vi e-post till samtliga avtalsparter."
+                      }
+      firstHistEntry = HistEntry
+                       { histdate = show signtime
+                       , histcomment = Seal.fullname authorline ++ 
+                                       " undertecknar dokumentet och SkrivaPå skickar ut en inbjudan via e-post till samtliga avtalsparter."
+                       }
       concatComma = concat . intersperse ", "
-      history = map makeHistoryEntry persons
+      history = [firstHistEntry] ++ map makeHistoryEntry persons ++ [lastHistEntry]
       
       config = Seal.SealSpec 
             { input = inputpath
