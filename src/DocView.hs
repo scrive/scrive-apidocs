@@ -733,9 +733,9 @@ partyList document =
         signas = map signatorydetails (documentsignatorylinks document)
     in author : signas
 
-partyListString :: Document -> BS.ByteString
+partyListString :: Document -> String
 partyListString document = 
-    BS.fromString $ swedishListString (map (show . signatoryname) (partyList document))
+    swedishListString (map (BS.toString . signatoryname) (partyList document))
 
 swedishListString :: [String] -> String
 swedishListString [] = ""
