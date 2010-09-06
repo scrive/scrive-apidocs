@@ -126,8 +126,9 @@ userLogin1 = do
 #endif
 
               let req = "https://rpxnow.com/api/v2/auth_info" ++ 
-                        "?apiKey=03bbfc36d54e523b2602af0f95aa173fb96caed9" ++
-                        -- a348dd93f1d78ae11c443574d73d974299007c00" ++
+                        "?apiKey=" ++ 
+                        -- "03bbfc36d54e523b2602af0f95aa173fb96caed9" ++
+                        "a348dd93f1d78ae11c443574d73d974299007c00" ++
                         "&token=" ++ token
               
               let curlproc = CreateProcess { std_out = CreatePipe
