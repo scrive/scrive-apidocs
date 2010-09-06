@@ -123,7 +123,7 @@ landpageLoginForSaveView ctx document signatorylink =
 
 
 landpageDocumentSavedView :: (XMLGenerator m) => Context -> Document -> SignatoryLink -> XMLGenT m (HSX.XML m)
-landpageDocumentSavedView (ctx@Context { ctxmaybeuser = Just user }) signatorylink document = 
+landpageDocumentSavedView (ctx@Context { ctxmaybeuser = Just user }) document signatorylink = 
     <div class="centerdivnarrow">
      <p>Ditt dokument är nu sparat. Du finner dokumentet under Arkiv när du loggar in.</p>
  
