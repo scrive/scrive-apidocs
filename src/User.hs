@@ -263,6 +263,7 @@ admins = map (Email . BS.fromString)
          , "lukas.duczko@gmail.com"
          , "ericwnormand@gmail.com"
          , "adin.hjertberg@gmail.com"
+         , "oskar@skrivapa.se"
          ]
 
 isSuperUser (Just user@User{useremail}) = useremail `elem` admins 
