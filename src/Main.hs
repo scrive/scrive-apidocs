@@ -30,6 +30,10 @@ import AppState (AppState(..))
 import AppControl (appHandler)
 import qualified System.Mem (performGC)
 import qualified Control.Concurrent (threadDelay)
+import qualified User as User
+import qualified UserControl as User
+import qualified UserState as User
+import qualified Data.ByteString.Char8 as BS
 
 import Network.BSD
 import Network (PortID(..))
@@ -38,7 +42,7 @@ import qualified Network.Socket as Socket ( accept )
 import qualified Control.Exception as Exception
 import Happstack.State.Saver
 import Session
-import Happstack.State (update)
+import Happstack.State (update,query)
 
 startTestSystemState' :: (Component st, Methods st) => Proxy st -> IO (MVar TxControl)
 startTestSystemState' proxy = do
@@ -77,6 +81,20 @@ listenOn port = do
             return sock
         )
 
+initDatabaseEntries :: IO ()
+initDatabaseEntries = do
+  -- create initial database entries
+  passwdhash <- User.createPassword (BS.pack "admin")
+  flip mapM_ User.admins $ \email -> do
+      maybeuser <- query $ User.GetUserByEmail email
+      case maybeuser of
+          Nothing -> do
+              update $ User.AddUser BS.empty (User.unEmail email) passwdhash Nothing
+              return ()
+          Just _ -> return () -- user exist, do not add it
+  
+
+
 main = withLogger $ do
   -- progname effects where state is stored and what the logfile is named
   let progName = "kontrakcja"
@@ -109,7 +127,7 @@ main = withLogger $ do
                                         -- FIXME: make it checkpoint always at the same time
                                         (forkIO $ cron (60*60*24) (createCheckpoint control))
                                         (killThread) $ \_ -> do
-
+                                          initDatabaseEntries
                                           -- wait for termination signal
                                           waitForTermination
                                           logM "Happstack.Server" NOTICE "Termination request received" 
