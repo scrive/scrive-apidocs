@@ -16,7 +16,7 @@ import Control.Monad.Identity
 import Control.Monad.Trans
 import KontraLink
 import Misc
-import Data.String.Utils
+-- import Data.String.Utils
 
 instance Monad m => IsAttrValue m DocumentID where
     toAttrValue = toAttrValue . show
@@ -733,4 +733,4 @@ partyListString document =
 swedishListString :: [String] -> String
 swedishListString [] = ""
 swedishListString [x] = x
-swedishListString xs = Data.String.Utils.join ", " (init xs) ++ " och " ++ (last xs)
+swedishListString xs = concat (intersperse ", " (init xs)) ++ " och " ++ (last xs)
