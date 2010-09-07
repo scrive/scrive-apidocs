@@ -142,6 +142,8 @@ loginBox ctx =
           <td>
             {- <a href="#" onClick="$('#login').hide(); $('#register').show(); return false;">register</a> -}
            <% rpxSignInLink ctx "Logga in med OpenID" "/" %>
+           <br />
+           <a href=LinkSignup>Create account</a>
           </td>
 	</tr>
       </table>
@@ -430,6 +432,70 @@ statsPageView nusers ndocuments users df =
       <pre><% df %></pre>
      </div>
 
+signupConfirmPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
+               => Context -> XMLGenT m (HSX.XML m)
+signupConfirmPageView ctx =
+    <div>Please check your email for your password. TODO</div>
+
+data SignupForm = SignupForm {
+    signupFirstname::String,
+    signupLastname::String,
+    signupEmail::String,
+    signupPassword::String,
+    signupPassword2::String }
+    
+instance FromData SignupForm where
+    fromData = do
+        firstname <- look "firstname"
+        lastname <- look "lastname"
+        email <- look "email"
+        password <- look "password"
+        password2 <- look "password2"
+        return $ SignupForm {
+            signupFirstname = firstname,
+            signupLastname = lastname,
+            signupEmail = email,
+            signupPassword = password,
+            signupPassword2 = password2
+        }
+        
+getFormValue :: (Maybe a) -> (a -> String) -> String
+getFormValue Nothing _ = ""
+getFormValue (Just x) f = f x
+
+signupPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
+               => [String] -> Maybe SignupForm -> Context -> XMLGenT m (HSX.XML m)
+signupPageView errors form ctx =
+    <div>
+        <div class="flashmsgbox">
+            <% errors %>
+        </div> 
+        <form action=LinkSignup method="post">
+            <table>
+                <tr>
+                    <td>First name</td>
+                    <td><input name="firstname" value=(getFormValue form signupFirstname) /></td>
+                </tr>
+                <tr>
+                    <td>Last name</td>
+                    <td><input name="lastname" value=(getFormValue form signupLastname) /></td>
+                </tr>
+                <tr>
+                    <td>Email</td>
+                    <td><input name="email" value=(getFormValue form signupEmail) /></td>
+                </tr>
+                <tr>
+                    <td>Password</td>
+                    <td><input name="password" type="password" /></td>
+                </tr>
+                <tr>
+                    <td>Password again</td>
+                    <td><input name="password2" type="password" /></td>
+                </tr>
+            </table>
+            <input type="submit" value="Create Account" />
+        </form>
+    </div>
 
 loginPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
                => Context -> XMLGenT m (HSX.XML m)

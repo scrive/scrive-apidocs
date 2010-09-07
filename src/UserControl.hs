@@ -61,22 +61,32 @@ handlePostSubaccount ctx@Context { ctxmaybeuser = Just (user@User { userid })} =
   create <- g "create"   -- check if we are in proper action
   fullname <- g "fullname"
   email <- g "email"
-  user <- liftIO $ createUser fullname email (Just user)
+  user <- liftIO $ createUser fullname email Nothing (Just user)
   let link = show LinkSubaccount
   response <- webHSP (seeOtherXML link)
   seeOther link response
 
-createUser :: BS.ByteString -> BS.ByteString -> Maybe User -> IO User
-createUser fullname email maybesupervisor = do
-  let letters =['a'..'z'] ++ ['0'..'9'] ++ ['A'..'Z']
-  indexes <- liftIO $ replicateM 8 (randomRIO (0,length letters-1))
-  let passwd = BS.fromString $ map (letters!!) indexes
-  passwdhash <- createPassword passwd
+createUser :: BS.ByteString -> BS.ByteString -> Maybe BS.ByteString -> Maybe User -> IO User
+createUser fullname email maybepassword maybesupervisor =
+  case maybepassword of
+    Nothing -> do
+      let letters =['a'..'z'] ++ ['0'..'9'] ++ ['A'..'Z']
+      indexes <- liftIO $ replicateM 8 (randomRIO (0,length letters-1))
+      createUser1 fullname email (BS.fromString $ map (letters!!) indexes) False maybesupervisor
+    Just x ->
+      createUser1 fullname email x True maybesupervisor
+
+createUser1 :: BS.ByteString -> BS.ByteString -> BS.ByteString -> Bool -> Maybe User -> IO User
+createUser1 fullname email password isnewuser maybesupervisor = do
+  passwdhash <- createPassword password
   user <- update $ AddUser fullname email passwdhash (fmap userid maybesupervisor)
   content <- case maybesupervisor of
-    Nothing -> liftIO $ passwordChangeMail email fullname passwd
+    Nothing ->
+      if isnewuser
+       then liftIO $ passwordChangeMail email fullname password
+       else liftIO $ newUserMail email fullname
     Just supervisor -> liftIO $ inviteSubaccountMail (userfullname supervisor) (usercompanyname supervisor)
-                       email fullname passwd
+                       email fullname password
   liftIO $ sendMail [(fullname, email)]
                (BS.fromString "Välkommen!") content BS.empty
   return user
@@ -193,12 +203,16 @@ setRememberMeCookie userid rememberMe = do
         cookieString <- createRememberMeCookie userid rememberMe
         return $ mkCookie rememberMeCookieName cookieString
     addCookie (sessionLength rememberMe) cookie
+    
+clearRememberMeCookie :: Kontra ()
+clearRememberMeCookie =
+    expireCookie rememberMeCookieName
 
 instance FromData (Maybe RememberMe) where
     fromData = do
-        cookie <- readCookieValue rememberMeCookieName
+        cookie <- lookCookieValue rememberMeCookieName
         return $ readRememberMeCookie cookie
-        
+
 getRememberMeCookie :: (ServerMonad m, Control.Monad.MonadPlus m) => m (Maybe RememberMe)
 getRememberMeCookie = do
     cookie <- getData

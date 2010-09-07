@@ -145,7 +145,11 @@ viewSubaccounts ctx@(Context {ctxmaybeuser = Just user}) subusers =
 	</tr>
       </table>
     </form>
-  
+
+newUserMail :: BS.ByteString -> BS.ByteString -> IO BS.ByteString
+newUserMail emailaddress personname =
+    htmlHeadBodyWrapIO ""
+     <span>Hello <% personname %>. Welcome to SkrivaPå. TODO </span>
 
 passwordChangeMail :: BS.ByteString
                    -> BS.ByteString

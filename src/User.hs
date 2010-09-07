@@ -100,8 +100,8 @@ withUser Nothing action = msum
                             ]
 
 
-userLogin :: (MonadIO m) => ServerPartT m (Maybe User)
-userLogin = do
+userLoginx :: (MonadIO m) => ServerPartT m (Maybe User)
+userLoginx = do
   maybeuser <- withMSessionDataSP2 $ \maybeuserid -> do 
     case maybeuserid of
       Just (sid,userid) -> do
@@ -111,10 +111,10 @@ userLogin = do
       Nothing -> return Nothing
   case maybeuser of
     Just user -> return maybeuser
-    Nothing -> userLogin1
+    Nothing -> userLogin1x
 
-userLogin1 :: (MonadIO m) => ServerPartT m (Maybe User)
-userLogin1 = do
+userLogin1x :: (MonadIO m) => ServerPartT m (Maybe User)
+userLogin1x = do
     maybetoken <- getDataFn (look "token") 
 #if MIN_VERSION_happstack_server(0,5,1)
     case maybetoken of
@@ -285,7 +285,7 @@ instance Binary.Binary RememberMe where
         return (RememberMe identity longTerm expiry nonce signature)
 
 instance Binary.Binary UserID where
-    put UserID {unUserID} = Binary.put unUserID
+    put UserID {unUserID=id} = Binary.put id
     get = do
         id <- Binary.get
         return $ UserID {unUserID=id}
@@ -327,5 +327,5 @@ verifyRememberMeCookie :: RememberMe -> IO Bool
 verifyRememberMeCookie (RememberMe identity _ expiry nonce signature)
     | (rememberMeSignature identity nonce expiry) == signature = do
         (TOD now _) <- liftIO $ getClockTime
-        return $ expiry < now
+        return $ now < expiry
     | otherwise = return False
