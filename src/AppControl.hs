@@ -96,12 +96,47 @@ handleRoutes ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} = toIO ctx $ msum 
                        , dir "alluserstable" $ methodM GET >> handleAllUsersTable
                        ]
              ]
-         else []))
-   ++ [dir "logout" (handleLogout)
-      , dir "login" loginPage
-      , dir "tos" $ tosPage ctx
-      ]
-   ++ [ fileServe [] "public"] 
+    , dir "landpage" $ 
+          msum [ dir "signinvite" $ pathdb GetDocumentByDocumentID $ \document -> 
+                     DocControl.landpageSignInvite ctx document
+               , dir "signed" $ pathdb GetDocumentByDocumentID $ \document -> path $ \signatorylinkid ->
+                     DocControl.landpageSigned ctx document signatorylinkid
+               , dir "signedsave" $ pathdb GetDocumentByDocumentID $ \document -> 
+                     path $ \signatorylinkid ->
+                     DocControl.landpageSignedSave ctx document signatorylinkid
+               , dir "saved" $ withUser ctxmaybeuser $ pathdb GetDocumentByDocumentID $ \document -> 
+                     path $ \signatorylinkid ->
+                     DocControl.landpageSaved ctx document signatorylinkid
+               ]
+          
+    , dir "pagesofdoc" $ pathdb GetDocumentByDocumentID $ \document -> 
+        DocControl.handlePageOfDocument ctxnormalizeddocuments document
+    , dir "resendemail" $ 
+           pathdb GetDocumentByDocumentID $ \document -> 
+               path $ \signatorylinkid -> 
+                   resendEmail ctx document signatorylinkid
+    , dir "account" (withUser ctxmaybeuser (UserControl.handleUser ctx))
+    , dir "logout" (handleLogout)
+    , dir "login" loginPage
+    ]
+    ++ (if isSuperUser ctxmaybeuser then 
+            [ dir "stats" $ statsPage
+            , dir "createuser" $ handleCreateUser
+            , dir "adminonly" $ msum 
+                      [ methodM GET >> AppControl.showAdminOnly
+                      , dir "db" $ msum [ methodM GET >> indexDB
+                                        , fileServe [] "_local/kontrakcja_state"
+                                        ]
+                      , dir "cleanup" $ methodM POST >> databaseCleanup
+                      , dir "removeimages" $ methodM POST >> databaseRemoveImages
+                      , dir "become" $ methodM POST >> handleBecome
+                      , dir "takeoverdocuments" $ methodM POST >> handleTakeOverDocuments
+                      , dir "deleteaccount" $ methodM POST >> handleDeleteAccount
+                      , dir "alluserstable" $ methodM GET >> handleAllUsersTable
+                      ]
+            ]
+       else [])
+    ++ [ fileServe [] "public"] 
 
 -- uh uh, how to do that in correct way?
 normalizeddocuments :: MVar (Set.Set FileID)
@@ -136,6 +171,32 @@ appHandler = do
   handleRoutes ctx `mplus` do
      response <- webHSP (pageFromBody ctx TopNone kontrakcja (errorReport ctx rq))
      setRsCode 404 response
+     
+signupPage :: Kontra Response
+signupPage = (methodM GET >> signupPageGet) `mplus`
+             (methodM POST >> signupPagePost)
+             
+signupPageGet :: Kontra Response
+signupPageGet = do
+    ctx <- lift get
+    renderFromBody ctx TopNone kontrakcja (signupPageView [] Nothing ctx)
+    
+signupPagePost :: Kontra Response
+signupPagePost = do
+    ctx <- lift get
+    maybeform <- getData
+    
+    case maybeform of
+        Nothing ->
+            renderFromBody ctx TopNone kontrakcja (signupPageView [] Nothing ctx)
+        Just form -> do
+            if (signupPassword form) /= (signupPassword2 form)
+                then
+                    renderFromBody ctx TopNone kontrakcja (signupPageView ["Passwords must match TODO-translate"] maybeform ctx)
+                else do
+                    -- Create the user, which sends them a welcome email.
+                    account <- liftIO $ createUser (BS.fromString ((signupFirstname form) ++ " " ++ (signupLastname form))) (BS.fromString (signupEmail form)) (Just (BS.fromString (signupPassword form))) Nothing
+                    renderFromBody ctx TopNone kontrakcja (signupConfirmPageView ctx)
 
 loginPage :: Kontra Response
 loginPage = (methodM GET >> loginPageGet) `mplus` 
@@ -144,8 +205,7 @@ loginPage = (methodM GET >> loginPageGet) `mplus`
 loginPageGet :: Kontra Response
 loginPageGet = do
   ctx <- lift get
-  webHSP (pageFromBody ctx TopNone kontrakcja (loginPageView ctx))
-
+  renderFromBody ctx TopNone kontrakcja (loginPageView ctx)
 
 loginPagePost :: Kontra Response
 loginPagePost = do
@@ -176,6 +236,7 @@ loginPagePost = do
 handleLogout :: Kontra Response
 handleLogout = do
   endSession
+  clearRememberMeCookie
   response <- webHSP (seeOtherXML "/")
   seeOther "/" response
 
@@ -218,7 +279,7 @@ handleCreateUser :: Kontra Response
 handleCreateUser = do
   email <- g "email"
   fullname <- g "fullname"
-  user <- liftIO $ createUser fullname email Nothing
+  user <- liftIO $ createUser fullname email Nothing Nothing
   let letters =['a'..'z'] ++ ['0'..'9'] ++ ['A'..'Z']
   indexes <- liftIO $ replicateM 8 (randomRIO (0,length letters-1))
   let passwd = BS.fromString $ map (letters!!) indexes

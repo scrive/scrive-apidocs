@@ -183,7 +183,7 @@ landpageSignedSave ctx document signatorylinkid = do
             Nothing -> do -- create a new user
               let fullname = signatoryname details
               let email = signatoryemail details
-              user <- liftIO $ createUser fullname email Nothing
+              user <- liftIO $ createUser fullname email Nothing Nothing
               return user
             Just user -> return user
   Just document2 <- update $ SaveDocumentForSignedUser (documentid document) (userid user) signatorylinkid

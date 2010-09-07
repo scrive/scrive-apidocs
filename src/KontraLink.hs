@@ -24,6 +24,7 @@ import Misc
 data KontraLink
     = LinkAbout
     | LinkLogin
+    | LinkSignup
     | LinkIssue
     | LinkMain
     | LinkAccount
@@ -38,6 +39,7 @@ data KontraLink
 instance Show KontraLink where
     showsPrec _ LinkAbout = (++) "/about"
     showsPrec _ LinkLogin = (++) "/login"
+    showsPrec _ LinkSignup = (++) "/signup"
     showsPrec _ LinkIssue = (++) "/d"
     showsPrec _ LinkMain = (++) "/"
     showsPrec _ LinkAccount = (++) "/account"
