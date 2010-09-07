@@ -88,7 +88,6 @@ landpageSignedView ctx document@Document{documenttitle,documentstatus} signatory
     | documentstatus == Closed =
     <div class="centerdivnarrow">
       <p class="headline">Vänligen läs noga</p>
-      {- change "alla parter" to list of people -}
       <p>Du har undertecknat dokumentet <strong><% documenttitle %></strong>. Således har 
          <strong><% partyListString document %></strong> undertecknat dokumentet och avtalet är nu juridiskt bindande. En kopia av det 
          färdigställda dokumentet har skickats till din e-post.</p>
@@ -99,7 +98,6 @@ landpageSignedView ctx document@Document{documenttitle,documentstatus} signatory
 landpageSignedView ctx document@Document{documenttitle} signatorylink hasaccount =
     <div class="centerdivnarrow">
       <p class="headline">Vänligen läs noga</p>
-      {- change "alla parter" to list of people -}
       <p>Du har nu undertecknat dokumentet <strong><% documenttitle %></strong>. <strong><% partyListString document %></strong>
          har ännu inte undertecknat dokumentet. När alla undertecknat blir avtalet juridiskt bindande och
          en kopia av det färdigställda dokumentet skickats då till din e-post.</p>
@@ -131,7 +129,6 @@ landpageDocumentSavedView (ctx@Context { ctxmaybeuser = Just user }) document si
         SkrivaPå för att skriva dina avtal. Därför erbjuder vi dig som ny kund möjligheten att testa 
         tjänsten genom tre fria avtal. Dina fria avtal förbrukas endast då ett avtal undertecknats av 
         <strong><% partyListString document %></strong>.</p>
-      {- change "alla parter" to list of people -}
 
      <p>Börja redan nu! Ladda upp ditt avtal genom att klicka nedan.</p>
      <a class="bigbutton" href="/">Starta</a> {- FIXME: move upload stuff here also -}
@@ -173,7 +170,7 @@ documentSignedFlashMessage document = liftM (FlashMessage . renderXMLAsBSHTML) $
 
 documentClosedFlashMessage :: (MonadIO m) => Document -> m FlashMessage
 documentClosedFlashMessage document = liftM (FlashMessage . renderXMLAsBSHTML) $ webHSP1
-    <div>  {- change "alla parter" to list of people -}
+    <div>
      Du har undertecknat avtalet! Avtalet är undertecknat av <strong><% partyListString document %></strong> nu!
     </div>
   
@@ -493,7 +490,6 @@ showDocument user
                     <p>När du bekräftat kommer en automatisk inbjudan att skickas till 
                        <strong><span id="mrx">"Mr X"</span></strong> med e-post.
                        Avtalet blir <strong>juridiskt bindande</strong> när <strong><% partyListString document %></strong> undertecknat.</p>
-                       {- change "alla parter" to list of people -} 
                    </div>
 
                 , <div id="dialog-confirm-signinvite-done" title="Dokumentet undertecknat!">
@@ -589,7 +585,6 @@ showDocumentForSign action document authorname invitedname wassigned =
                 , <script> var documentid = <% show $ documentid document %>; 
                   </script>
                 , <div id="dialog-confirm-sign" title="Underteckna">  
-                   {- change "alla parter" to list of people -}
                    
                    <p>Är du säker att du vill underteckna dokumentet <strong><% documenttitle document %></strong>?</p>
                    <p>När <strong><% partyListString document %></strong> undertecknat blir avtalet <strong>juridiskt bindande</strong> och
@@ -685,7 +680,6 @@ closedMail (Context {ctxhostpart})
     let link = ctxhostpart ++ show (LinkSignDoc document signaturelink)
     in htmlHeadBodyWrapIO documenttitle 
      <span>
-      {- change "alla parter" to list of people -}
        <p>Hej <strong><% personname %></strong>,</p>
        <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats av <strong><% partyListString document %></strong> 
           och avtalet är nu juridiskt bindande. Det färdigställda dokumentet bifogas nedan.</p> 
@@ -708,7 +702,6 @@ closedMailAuthor (Context {ctxhostpart})
     let link = ctxhostpart ++ show (LinkIssueDoc document)
     in htmlHeadBodyWrapIO documenttitle
         <span>
-         {- change "alla parter" to list of people -}
           <p>Hej <strong><% personname %></strong>,</p>
             <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats av <strong><% partyListString document %></strong>
                och avtalet är nu juridiskt bindande. Det färdigställda dokumentet bifogas nedan.</p> 
