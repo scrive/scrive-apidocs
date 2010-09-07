@@ -16,7 +16,6 @@ import Control.Monad.Identity
 import Control.Monad.Trans
 import KontraLink
 import Misc
--- import Data.String.Utils
 
 instance Monad m => IsAttrValue m DocumentID where
     toAttrValue = toAttrValue . show
