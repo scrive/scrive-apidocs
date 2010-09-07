@@ -458,8 +458,8 @@ sealSpecFromDocument document author@(User {userfullname,usercompanyname,usercom
                                   , signatoryemail = unEmail $ useremail
                                   }) signtime
 
-
-      persons = authorline : personsFromDocument document
+      signatories = personsFromDocument document
+      persons = authorline : signatories
       paddeddocid = reverse $ take 10 $ (reverse ("0000000000" ++ show docid))
       initials = concatComma (map initialsOfPerson persons)
       initialsOfPerson (Person {fullname}) = map head (words fullname)
@@ -479,7 +479,7 @@ sealSpecFromDocument document author@(User {userfullname,usercompanyname,usercom
                                        " undertecknar dokumentet och SkrivaPå skickar ut en inbjudan via e-post till samtliga avtalsparter."
                        }
       concatComma = concat . intersperse ", "
-      history = [firstHistEntry] ++ map makeHistoryEntry persons ++ [lastHistEntry]
+      history = [firstHistEntry] ++ map makeHistoryEntry signatories ++ [lastHistEntry]
       
       config = Seal.SealSpec 
             { input = inputpath
