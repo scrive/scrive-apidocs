@@ -149,18 +149,21 @@ loginPagePost = do
   
   -- check the user things here
   maybeuser <- query $ GetUserByEmail (Email $ BS.fromString email)
-  let Just user@User{userpassword} = maybeuser
-  -- Compare password hashes.
-  if isJust maybeuser && (verifyPassword userpassword (BS.fromString passwd) && passwd/="")
-     then do
-      setRememberMeCookie (userid user) rememberMe
-      sessionid <- update $ NewSession (userid user)
-      startSession sessionid
-      response <- webHSP (seeOtherXML "/")
-      seeOther "/" response
-     else do
-      response <- webHSP (seeOtherXML "/login")
-      seeOther "/login" response
+  case maybeuser of
+    Just user@User{userpassword} ->
+        if verifyPassword userpassword (BS.fromString passwd) && passwd/=""
+        then do
+          setRememberMeCookie (userid user) rememberMe
+          sessionid <- update $ NewSession (userid user)
+          startSession sessionid
+          response <- webHSP (seeOtherXML "/")
+          seeOther "/" response
+        else do
+          response <- webHSP (seeOtherXML "/login")
+          seeOther "/login" response
+    Nothing -> do
+          response <- webHSP (seeOtherXML "/login")
+          seeOther "/login" response
 
 handleLogout :: Kontra Response
 handleLogout = do

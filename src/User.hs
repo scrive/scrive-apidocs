@@ -14,6 +14,7 @@ module User
     , sessionLength
     , RememberMe(..)
     , readRememberMeCookie
+    , admins
     )
     where
 
