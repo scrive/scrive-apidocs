@@ -160,34 +160,72 @@ $(document).ready( function () {
     //    RPXNOW.overlay = true;
     //    RPXNOW.language_preference = 'sv';
 });
-// Email Validation 
+
+// Email Validation on submit
 $(document).ready(function(){
   $("form").submit(function(e){
      var invalidEmailErrMsg="Value in the \"Email\" field was not recognized. Please make sure to put valid email address";
-     var emptyEmailErrMsg="Please specifiy email address:";
-     var errorMsg="";
-     var addressFields = $('#email');
-     if( addressFields.size()>0 ) {
-         var address=$('#email').val();
-         var reg = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;
-         var showError=false;
-         var divContent = $("#modal").html();
-         var keyword="msg_to_replace";
-     
-         if(address.length == 0){
-             errorMsg = emptyEmailErrMsg;
-             showError = true;
-         }
-         if(reg.test(address) == false && showError==false) { 
-             errorMsg = invalidEmailErrMsg;
-             showError = true;
-         }
+	 var emptyEmailErrMsg="Please specifiy email address:";
+	 var errorMsg="";
+     var address=$("input[name='email']").val();
+	 var reg = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;
+	 var showError=false;
 	 
-         if(showError) {
-             $("#errorMsg").html(errorMsg);
-             Popup.showModal('modal');
-             return false;
-         }
+	 
+	 if(address.length == 0){
+	   errorMsg=emptyEmailErrMsg
+	   showError=true;
+	 }
+	 if(isValidEmailAddress(address) == false && showError==false) { 
+		errorMsg=invalidEmailErrMsg;
+        showError=true;
      }
+	 
+	 if(showError){
+	  //$("#errorMsg").html(errorMsg);
+	   var $dialog = $('<div></div>')
+			.html(errorMsg)
+			.dialog({
+				autoOpen: false,
+				title: 'Error',
+				modal: true
+			});
+		$dialog.dialog('open');
+	  return false;
+	 }
   });
 });
+
+//Email Validation on key up
+$(document).ready(function() {
+        var email = $("input[name='email']");
+		email.keyup(function(){
+		
+			var emailVal = email.val();
+		
+			if(emailVal != 0)
+			{
+				if(isValidEmailAddress(emailVal))
+				{
+					$("#validEmailFlag").css({
+						"background-image": "url('theme/images/validYes.png')"
+					});
+				} else {
+					$("#validEmailFlag").css({
+						"background-image": "url('theme/images/validNo.png')"
+					});
+				}
+			} else {
+				$("#validEmailFlag").css({
+					"background-image": "none"
+				});			
+			}
+		
+		});
+	
+	});
+	
+function isValidEmailAddress(emailAddress) {
+	var pattern = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;
+	return pattern.test(emailAddress);
+}

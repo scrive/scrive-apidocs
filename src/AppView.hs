@@ -123,7 +123,7 @@ loginBox ctx =
       <table>
 	<tr>
           <td>E-mail:</td> 
-          <td><input id="email" type="textfield" name="email"/></td> 
+          <td><input type="textfield" name="email"/></td> 
         </tr>
 	<tr> 
           <td>Lösenord:</td> 
@@ -304,7 +304,6 @@ globalScriptsAndStyles =
       -}
       , <script src="/js/jquery.MultiFile.js"/>
       , <script src="/js/global.js"/>
-	  , <script src="/js/popup.js" />
       ]
 
 pageFromBody :: (EmbedAsChild (HSPT' IO) xml) 
@@ -384,10 +383,7 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
           })();
 
       </script>
-		<div class="modeldivbase" id="modal" >
-        <div class="modeldivbanner" id=":yw"><span class="modeldivbannertxt">Error</span><span class="modeldivbannerimg" style="" onClick="Popup.hide('modal')"></span></div>
-        <div class="modeldivtxt" id="errorMsg"></div><div class="modeldivbtn"><button name="ok" onClick="Popup.hide('modal')">OK</button></div><span tabindex="0"></span>
-      </div>
+		
      </body>
     </html>
 
