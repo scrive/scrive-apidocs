@@ -198,3 +198,7 @@ inviteSubaccountMail supervisorname companyname emailaddress personname newpassw
 
       <% poweredBySkrivaPaPara %> 
      </span>
+
+userDetailsSavedFlashMessage :: (MonadIO m) => m FlashMessage
+userDetailsSavedFlashMessage = liftM (FlashMessage . renderXMLAsBSHTML) $ webHSP1
+    <div>Dina kontoändringar har sparats.</div>

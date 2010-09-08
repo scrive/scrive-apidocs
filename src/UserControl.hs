@@ -36,13 +36,16 @@ handleUser ctx =
 
 
 handleUserPost :: Context -> Kontra Response
-handleUserPost ctx@Context{ctxmaybeuser = Just user} = do
+handleUserPost ctx@Context{ctxmaybeuser = Just user@User{userid}} = do
   fullname <- g "fullname"
   companyname <- g "companyname"
   companynumber <- g "companynumber"
   invoiceaddress <- g "invoiceaddress"
   newuser <- update $ SetUserDetails user fullname companyname companynumber invoiceaddress
-  -- FIME: add flash-message here
+
+  flashmsg <- userDetailsSavedFlashMessage
+  liftIO $ update $ AddUserFlashMessage userid flashmsg
+
   let link = show LinkAccount
   response <- webHSP (seeOtherXML link)
   seeOther link response
