@@ -198,7 +198,7 @@ $(document).ready(function(){
 
 //Email Validation on key up
 $(document).ready(function() {
-        var email = $("input[name='email']");
+ 		var email = $("input[name~='email']");
 		email.keyup(function(){
 		
 			var emailVal = email.val();
@@ -207,20 +207,15 @@ $(document).ready(function() {
 			{
 				if(isValidEmailAddress(emailVal))
 				{
-					$("#validEmailFlag").css({
-						"background-image": "url('theme/images/validYes.png')"
-					});
-				} else {
-					$("#validEmailFlag").css({
-						"background-image": "url('theme/images/validNo.png')"
-					});
+					email.css("border","0px");
 				}
-			} else {
-				$("#validEmailFlag").css({
-					"background-image": "none"
-				});			
+				else{
+				  email.css("border","1px solid red");
+				} 
 			}
-		
+			else{
+			     email.css("border","0px");
+			} 
 		});
 	
 	});
