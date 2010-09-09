@@ -167,8 +167,7 @@ $(document).ready(function(){
      var invalidEmailErrMsg="Value in the \"Email\" field was not recognized. Please make sure to put valid email address";
 	 var emptyEmailErrMsg="Please specifiy email address:";
 	 var errorMsg="";
-     var address=$("input[name='email']").val();
-	 var reg = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;
+     var address=$("input[name*='email']").val();
 	 var showError=false;
 	 
 	 
@@ -198,24 +197,26 @@ $(document).ready(function(){
 
 //Email Validation on key up
 $(document).ready(function() {
- 		var email = $("input[name~='email']");
-		email.keyup(function(){
-		
-			var emailVal = email.val();
-		
-			if(emailVal != 0)
-			{
-				if(isValidEmailAddress(emailVal))
+       $("input[name*='email']").focus(function(){
+		    $(this).keyup(function(){
+		   // alert(email.css());
+				var emailVal = $(this).val();
+			
+				if(emailVal != 0)
 				{
-					email.css("border","0px");
+					if(isValidEmailAddress(emailVal))
+					{
+						$(this).removeAttr("style");
+					}
+					else{
+					  $(this).css("border","1px solid red");
+					} 
 				}
 				else{
-				  email.css("border","1px solid red");
+					 $(this).removeAttr("style");
 				} 
-			}
-			else{
-			     email.css("border","0px");
-			} 
+				
+				});
 		});
 	
 	});
