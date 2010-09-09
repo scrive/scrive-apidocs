@@ -236,9 +236,8 @@ listDocuments userid documents =
      <form method="post" action=LinkIssue>
 
      <style type="text/css">
-	#selectable .ui-selecting { background: #80dcff; }
-	#selectable .ui-selected { background: #007dac; color: white; }
-        #selectable .ui-selected a { color: white; }
+	#selectable .ui-selecting { background: #e6e6e6; }
+	#selectable .ui-selected { background: #e0e0e0;}
 	</style>
 	<script type="text/javascript">
         $(function() {
