@@ -95,9 +95,11 @@ landpageSignedView ctx document@Document{documenttitle,documentstatus} signatory
     </div>
 
 landpageSignedView ctx document@Document{documenttitle} signatorylink hasaccount =
+    -- we need list of those who did *not yet* sign the document here
+    -- Alla parter = <% partyListString document %>
     <div class="centerdivnarrow">
       <p class="headline">Vänligen läs noga</p>
-      <p>Du har nu undertecknat dokumentet <strong><% documenttitle %></strong>. <% partyListString document %>
+      <p>Du har nu undertecknat dokumentet <strong><% documenttitle %></strong>. Alla parter
          har ännu inte undertecknat dokumentet. När alla undertecknat blir avtalet juridiskt bindande och
          en kopia av det färdigställda dokumentet skickats då till din e-post.</p>
       <% willCreateAccountForYou (not hasaccount) %>
