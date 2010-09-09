@@ -378,8 +378,8 @@ showSignatory sig = <li><% show sig %></li>
 
 
 
-showSignatoryEntryForEdit :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink),
-                              EmbedAsAttr m (Attr [Char] DocumentID)) 
+showSignatoryEntryForEdit :: ( XMLGenerator m, EmbedAsAttr m (Attr [Char] KontraLink),
+                               EmbedAsAttr m (Attr [Char] DocumentID)) 
                           => DocState.SignatoryDetails -> XMLGenT m (HSX.XML m)
 showSignatoryEntryForEdit (SignatoryDetails{signatoryname,signatorycompany,signatorynumber, signatoryemail}) = 
     showSignatoryEntryForEdit2 "" (BS.toString signatoryname) 
