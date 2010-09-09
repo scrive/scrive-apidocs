@@ -46,8 +46,8 @@ Executable kontrakcja-server
    GHC-Options: -threaded
  if os(windows)
    cpp-options: -DWINDOWS
- Build-depends: happstack-state, happstack-server, hslogger, mtl, time, time-extras
- Build-depends: hsx, hsp, happstack, utf8-string, random
+ Build-depends: happstack-state, happstack-server<0.5.1, hslogger, mtl, time, time-extras
+ Build-depends: hsx, hsp, happstack<0.5.1, utf8-string, random
  Build-depends: happstack-data, extensible-exceptions, happstack-ixset, containers
  Build-depends: happstack-util, directory, process
  Build-Depends: base >= 4 && < 5, syb, dataenc
@@ -75,8 +75,8 @@ Executable kontrakcja-test
  Build-depends: test-framework, test-framework-hunit, test-framework-quickcheck
  Build-depends: HUnit, QuickCheck
  Build-depends: filepath
- Build-depends: happstack-state, happstack-server, hslogger, mtl, time, time-extras
- Build-depends: hsx, hsp, happstack, utf8-string, random
+ Build-depends: happstack-state, happstack-server<0.5.1, hslogger, mtl, time, time-extras
+ Build-depends: hsx, hsp, happstack<0.5.1, utf8-string, random
  Build-depends: happstack-data, extensible-exceptions, happstack-ixset, containers
  Build-depends: happstack-util, directory, process
  Build-Depends: base >= 4 && < 5, syb, dataenc
