@@ -31,7 +31,7 @@ import Control.Concurrent
 import SendMail
 import System.Process
 import System.IO
-import Seal as Seal
+import qualified Seal as Seal
 import Happstack.Util.Common
 import KontraLink
 import System.Exit
@@ -420,27 +420,25 @@ handleDocumentUpload :: DocumentID -> BS.ByteString -> BS.ByteString -> IO ()
 handleDocumentUpload docid content filename = do
   update $ AttachFile docid filename content
 
-sealLine :: SignatoryDetails -> MinutesTime -> Seal.Person
-sealLine details signtime =
+personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
+personFromSignatoryDetails details =
     Seal.Person { Seal.fullname = BS.toString $ signatoryname details 
                 , Seal.company = BS.toString $ signatorycompany details
                 , Seal.email = BS.toString $ signatoryemail details
                 , Seal.number = BS.toString $ signatorynumber details
                 }
-                --   ((concat $ intersperse ", " (map BS.toString (filter (not . BS.null) details))) ++ 
-                --                "  |  " ++ showDateOnly signtime)
 
-personsFromDocument :: Document -> [Seal.Person]
+personsFromDocument :: Document -> [(Seal.Person, MinutesTime)]
 personsFromDocument document = 
     let
         links = documentsignatorylinks document
         x (SignatoryLink{ signatorydetails
                         , maybesigninfo = Just (SignInfo { signtime })})
-             = sealLine signatorydetails signtime
+             = (personFromSignatoryDetails signatorydetails, signtime)
 
     in map x links
 
-sealSpecFromDocument :: Document -> User -> String -> String -> SealSpec
+sealSpecFromDocument :: Document -> User -> String -> String -> Seal.SealSpec
 sealSpecFromDocument document author@(User {userfullname,usercompanyname,usercompanynumber,useremail}) inputpath outputpath =
   let docid = unDocumentID (documentid document)
 
@@ -450,44 +448,45 @@ sealSpecFromDocument document author@(User {userfullname,usercompanyname,usercom
                    Just (SignInfo t) -> t
       authordetails = documentauthordetails document
       authorline = if authordetails /= emptyDetails 
-                   then sealLine authordetails signtime
-                   else sealLine (SignatoryDetails 
+                   then (personFromSignatoryDetails authordetails, signtime)
+                   else (personFromSignatoryDetails (SignatoryDetails 
                                   { signatoryname = userfullname
                                   , signatorycompany = usercompanyname
                                   , signatorynumber = usercompanynumber
                                   , signatoryemail = unEmail $ useremail
-                                  }) signtime
+                                  }), signtime)
 
       signatories = personsFromDocument document
       persons = authorline : signatories
       paddeddocid = reverse $ take 10 $ (reverse ("0000000000" ++ show docid))
-      initials = concatComma (map initialsOfPerson persons)
-      initialsOfPerson (Person {fullname}) = map head (words fullname)
+      initials = concatComma (map (initialsOfPerson . fst) persons)
+      initialsOfPerson (Seal.Person {Seal.fullname}) = map head (words fullname)
       -- 2. "Name of invited" granskar dokumentet online
-      makeHistoryEntry (Person {fullname}) = 
-          HistEntry
-          { histdate = show signtime
-          , histcomment = fullname ++ " undertecknar dokumentet online"
+      makeHistoryEntry (Seal.Person {Seal.fullname},signtime2) = 
+          Seal.HistEntry
+          { Seal.histdate = show signtime2
+          , Seal.histcomment = fullname ++ " undertecknar dokumentet online"
           }
-      lastHistEntry = HistEntry
-                      { histdate = show signtime
-                      , histcomment = "Alla parter har undertecknat dokumentet och avtalet är nu juridiskt bindande."
+      lastHistEntry = Seal.HistEntry
+                      { Seal.histdate = show maxsigntime
+                      , Seal.histcomment = "Alla parter har undertecknat dokumentet och avtalet är nu juridiskt bindande."
                       }
-      firstHistEntry = HistEntry
-                       { histdate = show signtime
-                       , histcomment = Seal.fullname authorline ++ 
+      maxsigntime = maximum (signtime : map snd persons)
+      firstHistEntry = Seal.HistEntry
+                       { Seal.histdate = show signtime
+                       , Seal.histcomment = Seal.fullname (fst authorline) ++ 
                                        " undertecknar dokumentet och SkrivaPå skickar ut en inbjudan via e-post till samtliga avtalsparter."
                        }
       concatComma = concat . intersperse ", "
       history = [firstHistEntry] ++ map makeHistoryEntry signatories ++ [lastHistEntry]
       
       config = Seal.SealSpec 
-            { input = inputpath
-            , output = outputpath
-            , documentNumber = paddeddocid
-            , persons = persons
-            , history = history
-            , initials = initials
+            { Seal.input = inputpath
+            , Seal.output = outputpath
+            , Seal.documentNumber = paddeddocid
+            , Seal.persons = map fst persons
+            , Seal.history = history
+            , Seal.initials = initials
             }
       in config
 
