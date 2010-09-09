@@ -739,5 +739,5 @@ partyListString document =
 swedishListString :: (XMLGenerator m) => [XMLGenT m (HSX.XML m)] -> XMLGenT m (HSX.XML m)
 swedishListString [] = <span />
 swedishListString [x] = x
-swedishListString [x, y] = <% x %> och <% y %>
-swedishListString (x:xs) = <% x %>, <% swedishListString xs %>
+swedishListString [x, y] = <span><% x %> och <% y %></span>
+swedishListString (x:xs) = <span><% x %>, <% swedishListString xs %></span>
