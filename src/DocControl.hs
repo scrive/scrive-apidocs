@@ -478,7 +478,8 @@ sealSpecFromDocument document author@(User {userfullname,usercompanyname,usercom
                                        " undertecknar dokumentet och SkrivaPå skickar ut en inbjudan via e-post till samtliga avtalsparter."
                        }
       concatComma = concat . intersperse ", "
-      history = [firstHistEntry] ++ map makeHistoryEntry signatories ++ [lastHistEntry]
+      compareTime (person1,tm1) (person2,tm2) = compare tm1 tm2
+      history = [firstHistEntry] ++ map makeHistoryEntry (sortBy compareTime signatories) ++ [lastHistEntry]
       
       config = Seal.SealSpec 
             { Seal.input = inputpath
