@@ -34,6 +34,12 @@ handleUser ctx =
                               ]
     ]
 
+createMaybePassword :: BS.ByteString -> IO (Maybe Password)
+createMaybePassword password
+    | password == BS.empty = return Nothing
+    | otherwise = do
+        hash <- createPassword password
+        return $ Just hash
 
 handleUserPost :: Context -> Kontra Response
 handleUserPost ctx@Context{ctxmaybeuser = Just user@User{userid}} = do
@@ -42,10 +48,7 @@ handleUserPost ctx@Context{ctxmaybeuser = Just user@User{userid}} = do
   companynumber <- g "companynumber"
   invoiceaddress <- g "invoiceaddress"
   newuser <- update $ SetUserDetails user fullname companyname companynumber invoiceaddress
-
-  flashmsg <- userDetailsSavedFlashMessage
-  liftIO $ update $ AddUserFlashMessage userid flashmsg
-
+  -- FIME: add flash-message here
   let link = show LinkAccount
   response <- webHSP (seeOtherXML link)
   seeOther link response

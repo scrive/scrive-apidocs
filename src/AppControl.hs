@@ -181,6 +181,13 @@ signupPageGet :: Kontra Response
 signupPageGet = do
     ctx <- lift get
     renderFromBody ctx TopNone kontrakcja (signupPageView [] Nothing ctx)
+
+signupPageError :: SignupForm -> Maybe String
+signupPageError form
+    | signupEmail form == "" = Just "You must enter an email address TODO"
+    | signupPassword form /= signupPassword2 form = Just "Passwords must match TODO"
+    | not $ isPasswordStrong $ BS.fromString $ signupPassword form = Just "Passwords must be at least 6 characters TODO"
+    | otherwise = Nothing
     
 signupPagePost :: Kontra Response
 signupPagePost = do
@@ -191,10 +198,9 @@ signupPagePost = do
         Nothing ->
             renderFromBody ctx TopNone kontrakcja (signupPageView [] Nothing ctx)
         Just form -> do
-            if (signupPassword form) /= (signupPassword2 form)
-                then
-                    renderFromBody ctx TopNone kontrakcja (signupPageView ["Passwords must match TODO-translate"] maybeform ctx)
-                else do
+            case signupPageError form of
+                Just error -> renderFromBody ctx TopNone kontrakcja (signupPageView [error] maybeform ctx)
+                Nothing -> do
                     -- Create the user, which sends them a welcome email.
                     account <- liftIO $ createUser (BS.fromString ((signupFirstname form) ++ " " ++ (signupLastname form))) (BS.fromString (signupEmail form)) (Just (BS.fromString (signupPassword form))) Nothing
                     renderFromBody ctx TopNone kontrakcja (signupConfirmPageView ctx)

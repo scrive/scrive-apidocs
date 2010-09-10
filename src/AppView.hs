@@ -463,13 +463,16 @@ getFormValue :: (Maybe a) -> (a -> String) -> String
 getFormValue Nothing _ = ""
 getFormValue (Just x) f = f x
 
+signupPageFlashMessageBox :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) => [String] -> XMLGenT m (HSX.XML m)
+signupPageFlashMessageBox [] = <div></div>
+signupPageFlashMessageBox errors =
+    <div class="flashmsgbox"><% errors %></div>
+
 signupPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
                => [String] -> Maybe SignupForm -> Context -> XMLGenT m (HSX.XML m)
 signupPageView errors form ctx =
     <div>
-        <div class="flashmsgbox">
-            <% errors %>
-        </div> 
+        <% signupPageFlashMessageBox errors %>
         <form action=LinkSignup method="post">
             <table>
                 <tr>

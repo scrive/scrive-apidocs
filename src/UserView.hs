@@ -58,6 +58,15 @@ showUser ctx@(Context {ctxmaybeuser = Just user}) =
          <tr><td>Faktureringsadress:</td>
              <td><input type="text" name="invoiceaddress" value=(userinvoiceaddress user)/></td>
          </tr>
+         <tr><td>Old password TODO:</td>
+             <td><input type="password" name="oldpassword"/></td>
+         </tr>
+         <tr><td>New password TODO:</td>
+             <td><input type="password" name="password"/></td>
+         </tr>
+         <tr><td>New password again TODO:</td>
+             <td><input type="password" name="password2"/></td>
+         </tr>
        </table>
        <br/>
        <input class="button" type="submit" value="Change details"/>
