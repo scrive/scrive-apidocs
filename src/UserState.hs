@@ -38,18 +38,18 @@ $(deriveAll [''Eq, ''Ord, ''Default]
       newtype SupervisorID = SupervisorID { unSupervisorID :: Int }
                        
       data User = User
-          { userid                      :: UserID
-          , userfullname                :: BS.ByteString
-          , useremail                   :: Email
-          , usercompanyname             :: BS.ByteString
-          , usercompanynumber           :: BS.ByteString
-          , userinvoiceaddress          :: BS.ByteString
-          , userflashmessages           :: [FlashMessage]
-          , userpassword                :: Password
-          , usersupervisor              :: Maybe SupervisorID
-          , usercanhavesubaccounts      :: Bool
-          , useraccountsuspended        :: Bool
-          , userhacceptedtermsofservice :: Maybe MinutesTime
+          { userid                        :: UserID
+          , userfullname                  :: BS.ByteString
+          , useremail                     :: Email
+          , usercompanyname               :: BS.ByteString
+          , usercompanynumber             :: BS.ByteString
+          , userinvoiceaddress            :: BS.ByteString
+          , userflashmessages             :: [FlashMessage]
+          , userpassword                  :: Password
+          , usersupervisor                :: Maybe SupervisorID
+          , usercanhavesubaccounts        :: Bool
+          , useraccountsuspended          :: Bool
+          , userhasacceptedtermsofservice :: Maybe MinutesTime
           }
 
       data User5 = User5
@@ -262,7 +262,7 @@ instance Migrate User5 User where
                 , usersupervisor        = usersupervisor5
                 , usercanhavesubaccounts= usercanhavesubaccounts5
                 , useraccountsuspended  = useraccountsuspended5
-                , userhacceptedtermsofservice = Nothing
+                , userhasacceptedtermsofservice = Nothing
                 }
 
 createPassword :: BS.ByteString -> IO Password
@@ -393,7 +393,7 @@ addUser fullname email passwd maybesupervisor = do
                    , usersupervisor = fmap (SupervisorID . unUserID) maybesupervisor
                    , usercanhavesubaccounts = True
                    , useraccountsuspended = False
-                   , userhacceptedtermsofservice = Nothing
+                   , userhasacceptedtermsofservice = Nothing
                    })
   modify (updateIx (Email email) user)
   return user
@@ -470,7 +470,14 @@ fragileDeleteUser userid = do
   when (isJust maybeuser) $
        modify (deleteIx userid)
   return maybeuser
-  
+
+acceptTermsOfService :: UserID -> MinutesTime -> Update Users ()
+acceptTermsOfService userid minutestime = do
+  users <- ask
+  case getOne (users @= userid) of
+    Just (user) -> do
+      modify (updateIx userid (user { userhasacceptedtermsofservice = Just minutestime })) 
+  return ()
 
 instance Component Users where
   type Dependencies Users = End
@@ -487,6 +494,7 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'setUserPassword
                     , 'setUserDetails
                     , 'getUserSubaccounts
+                    , 'acceptTermsOfService
 
                       -- the below should be only used carefully and by admins
                     , 'fragileDeleteUser

@@ -129,16 +129,16 @@ sendClosedAuthorEmail ctx document = do
   
   
 handleSign :: Context -> Kontra Response
-handleSign ctx@(Context {ctxmaybeuser, ctxhostpart}) = 
-    msum [ path $ \documentid -> 
-               path $ \signatoryid -> 
-                   path $ \magichash -> 
-                       handleSignShow ctx documentid signatoryid magichash
-         , withUser ctxmaybeuser $ do
-             let u = userid $ fromJust ctxmaybeuser
-             documents <- query $ GetDocumentsBySignatory u
-             webHSP (pageFromBody ctx TopNone kontrakcja (listDocuments u documents))
-         ]
+handleSign ctx@(Context {ctxmaybeuser, ctxhostpart}) =
+  msum [path $ \documentid -> 
+            path $ \signatoryid -> 
+                  path $ \magichash -> 
+                      handleSignShow ctx documentid signatoryid magichash
+       , withUser ctxmaybeuser $ do
+          let u = userid $ fromJust ctxmaybeuser
+          documents <- query $ GetDocumentsBySignatory u
+          webHSP (pageFromBody ctx TopNone kontrakcja (listDocuments u documents))
+       ]
 
 signDoc :: Context -> DocumentID -> SignatoryLinkID -> Kontra  Response
 signDoc ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) documentid 
