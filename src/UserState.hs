@@ -393,6 +393,7 @@ addUser fullname email passwd maybesupervisor = do
                    , usersupervisor = fmap (SupervisorID . unUserID) maybesupervisor
                    , usercanhavesubaccounts = True
                    , useraccountsuspended = False
+                   , userhacceptedtermsofservice = Nothing
                    })
   modify (updateIx (Email email) user)
   return user

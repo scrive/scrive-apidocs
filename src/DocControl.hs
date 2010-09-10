@@ -428,14 +428,14 @@ personFromSignatoryDetails details =
                 , Seal.number = BS.toString $ signatorynumber details
                 }
 
-personsFromDocument :: Document -> [(Seal.Person, MinutesTime)]
+personsFromDocument :: Document -> [(Seal.Person, MinutesTime, MinutesTime)]
 personsFromDocument document = 
     let
         links = documentsignatorylinks document
         x (SignatoryLink{ signatorydetails
-                        , maybesigninfo = Just (SignInfo { signtime })})
-             = (personFromSignatoryDetails signatorydetails, signtime)
-
+                        , maybesigninfo = Just (SignInfo { signtime })
+                        , maybeseentime = Just seentime})
+             = (personFromSignatoryDetails signatorydetails, seentime, signtime)
     in map x links
 
 sealSpecFromDocument :: Document -> User -> String -> String -> Seal.SealSpec
@@ -447,45 +447,53 @@ sealSpecFromDocument document author@(User {userfullname,usercompanyname,usercom
                    Nothing -> error "signtime1"
                    Just (SignInfo t) -> t
       authordetails = documentauthordetails document
-      authorline = if authordetails /= emptyDetails 
-                   then (personFromSignatoryDetails authordetails, signtime)
-                   else (personFromSignatoryDetails (SignatoryDetails 
+      authorperson = if authordetails /= emptyDetails 
+                     then personFromSignatoryDetails authordetails
+                     else personFromSignatoryDetails (SignatoryDetails 
                                   { signatoryname = userfullname
                                   , signatorycompany = usercompanyname
                                   , signatorynumber = usercompanynumber
                                   , signatoryemail = unEmail $ useremail
-                                  }), signtime)
+                                  })
 
       signatories = personsFromDocument document
-      persons = authorline : signatories
+      fst3 (a,b,c) = a
+      snd3 (a,b,c) = b
+      thd3 (a,b,c) = c
+      persons = authorperson : (map fst3 signatories)
       paddeddocid = reverse $ take 10 $ (reverse ("0000000000" ++ show docid))
-      initials = concatComma (map (initialsOfPerson . fst) persons)
+      initials = concatComma (map initialsOfPerson persons)
       initialsOfPerson (Seal.Person {Seal.fullname}) = map head (words fullname)
       -- 2. "Name of invited" granskar dokumentet online
-      makeHistoryEntry (Seal.Person {Seal.fullname},signtime2) = 
-          Seal.HistEntry
-          { Seal.histdate = show signtime2
-          , Seal.histcomment = fullname ++ " undertecknar dokumentet online"
-          }
+      makeHistoryEntry (Seal.Person {Seal.fullname},seentime2, signtime2) = 
+          [ Seal.HistEntry
+            { Seal.histdate = show signtime2
+            , Seal.histcomment = fullname ++ " undertecknar dokumentet online"
+            }
+          , Seal.HistEntry
+            { Seal.histdate = show seentime2
+            , Seal.histcomment = fullname ++ " granskar dokumentet online"
+            } 
+          ]
       lastHistEntry = Seal.HistEntry
                       { Seal.histdate = show maxsigntime
                       , Seal.histcomment = "Alla parter har undertecknat dokumentet och avtalet är nu juridiskt bindande."
                       }
-      maxsigntime = maximum (signtime : map snd persons)
+      maxsigntime = maximum (signtime : map thd3 signatories)
       firstHistEntry = Seal.HistEntry
                        { Seal.histdate = show signtime
-                       , Seal.histcomment = Seal.fullname (fst authorline) ++ 
+                       , Seal.histcomment = Seal.fullname authorperson ++ 
                                        " undertecknar dokumentet och SkrivaPå skickar ut en inbjudan via e-post till samtliga avtalsparter."
                        }
       concatComma = concat . intersperse ", "
-      compareTime (person1,tm1) (person2,tm2) = compare tm1 tm2
-      history = [firstHistEntry] ++ map makeHistoryEntry (sortBy compareTime signatories) ++ [lastHistEntry]
+      -- compareTime (person1,tm1) (person2,tm2) = compare tm1 tm2
+      history = [firstHistEntry] ++ sort (concatMap makeHistoryEntry signatories) ++ [lastHistEntry]
       
       config = Seal.SealSpec 
             { Seal.input = inputpath
             , Seal.output = outputpath
             , Seal.documentNumber = paddeddocid
-            , Seal.persons = map fst persons
+            , Seal.persons = persons
             , Seal.history = history
             , Seal.initials = initials
             }
