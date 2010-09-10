@@ -556,3 +556,12 @@ pageAllUsersTable users =
        <% map userInfo users %>
       </table>
      </div>
+
+acceptTermsOfServicePage :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
+                            => String -> XMLGenT m (HSX.XML m)
+acceptTermsOfServicePage red = 
+                       <form method="post" action="/tos">
+                        <input type="hidden" name="redirect" id="redirect" value=red />
+                        <input type="checkbox" name="tos" id="tos">I accept and agree to the Terms of Service</input>
+                                                                                                                            <input type="submit" />
+                                                                                                                           </form>

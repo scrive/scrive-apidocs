@@ -15,7 +15,7 @@ import qualified Data.Object.Json as Json
 import Control.Monad
 import User
 import AppView
-import Control.Monad.Trans (liftIO,MonadIO)
+import Control.Monad.Trans (liftIO,MonadIO,lift)
 import Misc
 import SendMail
 import System.Random
@@ -123,7 +123,6 @@ userLogin2 = do
       Nothing -> return Nothing
       Just token -> do
 #endif
-
               let req = "https://rpxnow.com/api/v2/auth_info" ++ 
                         "?apiKey=" ++
                         -- "03bbfc36d54e523b2602af0f95aa173fb96caed9" ++
@@ -207,3 +206,51 @@ getRememberMeCookie = do
         Nothing -> Nothing
         Just Nothing -> Nothing
         Just (Just rememberMe) -> Just rememberMe
+
+
+ 
+withTOS :: (MonadIO m) => Context -> ServerPartT m Response -> ServerPartT m Response
+--withTOS ctx _ = do
+--  return $ tosPageGet ctx 
+
+withTOS ctx@(Context {ctxmaybeuser = (Just (User { userhasacceptedtermsofservice = Nothing }))}) _ = do
+  rq <- askRq
+  let ru = rqURL rq
+  let link = "/tos?redirect=" ++ ru
+  response <- webHSP $ seeOtherXML link
+  finishWith (redirect 303 link response)
+
+withTOS _ action = action
+
+tosPage :: Context -> Kontra Response
+tosPage ctx = (methodM GET >> tosPageGet ctx) `mplus` 
+              (methodM POST >> tosPagePost ctx)
+
+tosPageGet :: Context -> Kontra Response
+tosPageGet ctx = do
+  maybelink <- getDataFn (look "redirect")
+  let link = case maybelink of
+               Just l -> l
+               otherwise -> "/"
+  webHSP (pageFromBody ctx TopNone kontrakcja (acceptTermsOfServicePage link))
+
+
+tosPagePost :: Context -> Kontra Response
+tosPagePost ctx = do
+  let maybeuser = ctxmaybeuser ctx
+  let minutestime = ctxtime ctx
+  maybelink <- getDataFn (look "redirect")
+  let link = case maybelink of
+               Just l -> l
+               otherwise -> "/"
+  case maybeuser of
+    Just (User { userhasacceptedtermsofservice = _, userid = userid }) -> do 
+                   checked <- getDataFn (look "tos")
+                   case checked of
+                     Just "on" -> update $ AcceptTermsOfService userid minutestime
+                     otherwise -> return ()
+                   response <- webHSP (seeOtherXML link)
+                   seeOther link response
+    otherwise -> do 
+                response <- webHSP (seeOtherXML link)
+                seeOther link response

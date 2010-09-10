@@ -47,57 +47,61 @@ import System.IO.Unsafe
 import Debug.Trace
 
 handleRoutes ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} = toIO ctx $ msum $
-    [ nullDir >> webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx))
-    , dir "s" $ DocControl.handleSign ctx
-    , {- old -} dir "sign" $ DocControl.handleSign ctx
-    , dir "d" $ withUser ctxmaybeuser (DocControl.handleIssue ctx)
-    , {- old -} dir "issue" $ withUser ctxmaybeuser (DocControl.handleIssue ctx)
-    , dir "pages" $ path $ \fileid -> 
-        msum [ path $ \pageno -> do
-                 modminutes <- query $ FileModTime fileid
-                 DocControl.showPage ctx modminutes fileid pageno
+    ([nullDir >> withTOS ctx (webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx)))
+     , dir "s" $ withTOS ctx (DocControl.handleSign ctx)
+     , {- old -} dir "sign" $ (withTOS ctx (DocControl.handleSign ctx))
+     , dir "d" $ withUser ctxmaybeuser (withTOS ctx (DocControl.handleIssue ctx))
+     , {- old -} dir "issue" $ withUser ctxmaybeuser (withTOS ctx (DocControl.handleIssue ctx))
+     , dir "pages" $ withTOS ctx (path $ \fileid -> 
+                                               msum [ path $ \pageno -> do
+                                                        modminutes <- query $ FileModTime fileid
+                                                        DocControl.showPage ctx modminutes fileid pageno
+                                                    ])
+     , dir "landpage" $ 
+           withTOS ctx
+                       (msum [ dir "signinvite" $ pathdb GetDocumentByDocumentID $ \document -> 
+                                   DocControl.landpageSignInvite ctx document
+                             , dir "signed" $ pathdb GetDocumentByDocumentID $ \document -> path $ \signatorylinkid ->
+                                                                                            DocControl.landpageSigned ctx document signatorylinkid
+                             , dir "signedsave" $ pathdb GetDocumentByDocumentID $ \document -> 
+                                 path $ \signatorylinkid ->
+                                     DocControl.landpageSignedSave ctx document signatorylinkid
+                             , dir "saved" $ withUser ctxmaybeuser $ pathdb GetDocumentByDocumentID $ \document -> 
+                                 path $ \signatorylinkid ->
+                                     DocControl.landpageSaved ctx document signatorylinkid
+                             ])
+           
+     , dir "pagesofdoc" $ 
+           withTOS ctx (pathdb GetDocumentByDocumentID $ \document -> 
+                                     DocControl.handlePageOfDocument ctxnormalizeddocuments document)
+     , dir "resendemail" $ 
+           withTOS ctx (pathdb GetDocumentByDocumentID $ \document -> 
+                                     path $ \signatorylinkid -> 
+                                         resendEmail ctx document signatorylinkid)
+     , dir "account" (withUser ctxmaybeuser (withTOS ctx (UserControl.handleUser ctx)))]
+     
+     ++ (if isSuperUser ctxmaybeuser then 
+             [ dir "stats" $ statsPage
+             , dir "createuser" $ handleCreateUser
+             , dir "adminonly" $ msum 
+                       [ methodM GET >> AppControl.showAdminOnly
+                       , dir "db" $ msum [ methodM GET >> indexDB
+                                         , fileServe [] "_local/kontrakcja_state"
+                                         ]
+                       , dir "cleanup" $ methodM POST >> databaseCleanup
+                       , dir "removeimages" $ methodM POST >> databaseRemoveImages
+                       , dir "become" $ methodM POST >> handleBecome
+                       , dir "takeoverdocuments" $ methodM POST >> handleTakeOverDocuments
+                       , dir "deleteaccount" $ methodM POST >> handleDeleteAccount
+                       , dir "alluserstable" $ methodM GET >> handleAllUsersTable
+                       ]
              ]
-    , dir "landpage" $ 
-          msum [ dir "signinvite" $ pathdb GetDocumentByDocumentID $ \document -> 
-                     DocControl.landpageSignInvite ctx document
-               , dir "signed" $ pathdb GetDocumentByDocumentID $ \document -> path $ \signatorylinkid ->
-                     DocControl.landpageSigned ctx document signatorylinkid
-               , dir "signedsave" $ pathdb GetDocumentByDocumentID $ \document -> 
-                     path $ \signatorylinkid ->
-                     DocControl.landpageSignedSave ctx document signatorylinkid
-               , dir "saved" $ withUser ctxmaybeuser $ pathdb GetDocumentByDocumentID $ \document -> 
-                     path $ \signatorylinkid ->
-                     DocControl.landpageSaved ctx document signatorylinkid
-               ]
-          
-    , dir "pagesofdoc" $ pathdb GetDocumentByDocumentID $ \document -> 
-        DocControl.handlePageOfDocument ctxnormalizeddocuments document
-    , dir "resendemail" $ 
-           pathdb GetDocumentByDocumentID $ \document -> 
-               path $ \signatorylinkid -> 
-                   resendEmail ctx document signatorylinkid
-    , dir "account" (withUser ctxmaybeuser (UserControl.handleUser ctx))
-    , dir "logout" (handleLogout)
-    , dir "login" loginPage
-    ]
-    ++ (if isSuperUser ctxmaybeuser then 
-            [ dir "stats" $ statsPage
-            , dir "createuser" $ handleCreateUser
-            , dir "adminonly" $ msum 
-                      [ methodM GET >> AppControl.showAdminOnly
-                      , dir "db" $ msum [ methodM GET >> indexDB
-                                        , fileServe [] "_local/kontrakcja_state"
-                                        ]
-                      , dir "cleanup" $ methodM POST >> databaseCleanup
-                      , dir "removeimages" $ methodM POST >> databaseRemoveImages
-                      , dir "become" $ methodM POST >> handleBecome
-                      , dir "takeoverdocuments" $ methodM POST >> handleTakeOverDocuments
-                      , dir "deleteaccount" $ methodM POST >> handleDeleteAccount
-                      , dir "alluserstable" $ methodM GET >> handleAllUsersTable
-                      ]
-            ]
-       else [])
-    ++ [ fileServe [] "public"] 
+         else []))
+   ++ [dir "logout" (handleLogout)
+      , dir "login" loginPage
+      , dir "tos" $ tosPage ctx
+      ]
+   ++ [ fileServe [] "public"] 
 
 -- uh uh, how to do that in correct way?
 normalizeddocuments :: MVar (Set.Set FileID)
@@ -111,12 +115,13 @@ appHandler = do
   let hostpart =  scheme ++ "://" ++ host
   
   maybeuser <- userLogin
+
   flashmessages <- case maybeuser of
                      Just (User{userid}) -> 
                          liftIO $ update $ GetUserFlashMessages userid
                      Nothing -> return []
   minutestime <- liftIO $ getMinutesTime
-  
+
   let 
    ctx = Context
             { ctxmaybeuser = maybeuser
@@ -125,6 +130,9 @@ appHandler = do
             , ctxtime = minutestime
             , ctxnormalizeddocuments = normalizeddocuments
             }
+
+  
+
   handleRoutes ctx `mplus` do
      response <- webHSP (pageFromBody ctx TopNone kontrakcja (errorReport ctx rq))
      setRsCode 404 response
@@ -323,5 +331,6 @@ handleAllUsersTable = do
   users2 <- mapM queryNumberOfDocuments users
 
   webHSP $ pageAllUsersTable users2
+
 
 
