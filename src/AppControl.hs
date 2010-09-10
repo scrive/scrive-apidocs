@@ -96,47 +96,13 @@ handleRoutes ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} = toIO ctx $ msum 
                        , dir "alluserstable" $ methodM GET >> handleAllUsersTable
                        ]
              ]
-    , dir "landpage" $ 
-          msum [ dir "signinvite" $ pathdb GetDocumentByDocumentID $ \document -> 
-                     DocControl.landpageSignInvite ctx document
-               , dir "signed" $ pathdb GetDocumentByDocumentID $ \document -> path $ \signatorylinkid ->
-                     DocControl.landpageSigned ctx document signatorylinkid
-               , dir "signedsave" $ pathdb GetDocumentByDocumentID $ \document -> 
-                     path $ \signatorylinkid ->
-                     DocControl.landpageSignedSave ctx document signatorylinkid
-               , dir "saved" $ withUser ctxmaybeuser $ pathdb GetDocumentByDocumentID $ \document -> 
-                     path $ \signatorylinkid ->
-                     DocControl.landpageSaved ctx document signatorylinkid
-               ]
-          
-    , dir "pagesofdoc" $ pathdb GetDocumentByDocumentID $ \document -> 
-        DocControl.handlePageOfDocument ctxnormalizeddocuments document
-    , dir "resendemail" $ 
-           pathdb GetDocumentByDocumentID $ \document -> 
-               path $ \signatorylinkid -> 
-                   resendEmail ctx document signatorylinkid
-    , dir "account" (withUser ctxmaybeuser (UserControl.handleUser ctx))
-    , dir "logout" (handleLogout)
-    , dir "login" loginPage
-    ]
-    ++ (if isSuperUser ctxmaybeuser then 
-            [ dir "stats" $ statsPage
-            , dir "createuser" $ handleCreateUser
-            , dir "adminonly" $ msum 
-                      [ methodM GET >> AppControl.showAdminOnly
-                      , dir "db" $ msum [ methodM GET >> indexDB
-                                        , fileServe [] "_local/kontrakcja_state"
-                                        ]
-                      , dir "cleanup" $ methodM POST >> databaseCleanup
-                      , dir "removeimages" $ methodM POST >> databaseRemoveImages
-                      , dir "become" $ methodM POST >> handleBecome
-                      , dir "takeoverdocuments" $ methodM POST >> handleTakeOverDocuments
-                      , dir "deleteaccount" $ methodM POST >> handleDeleteAccount
-                      , dir "alluserstable" $ methodM GET >> handleAllUsersTable
-                      ]
-            ]
-       else [])
-    ++ [ fileServe [] "public"] 
+         else []))
+   ++ [dir "logout" (handleLogout)
+      , dir "login" loginPage
+      , dir "signup" signupPage
+      , dir "tos" $ tosPage ctx
+      ]
+   ++ [ fileServe [] "public"] 
 
 -- uh uh, how to do that in correct way?
 normalizeddocuments :: MVar (Set.Set FileID)

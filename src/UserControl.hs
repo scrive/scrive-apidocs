@@ -47,8 +47,27 @@ handleUserPost ctx@Context{ctxmaybeuser = Just user@User{userid}} = do
   companyname <- g "companyname"
   companynumber <- g "companynumber"
   invoiceaddress <- g "invoiceaddress"
-  newuser <- update $ SetUserDetails user fullname companyname companynumber invoiceaddress
-  -- FIME: add flash-message here
+  oldpassword <- g "oldpassword"
+  password <- g "password"
+  password2 <- g "password2"
+  
+  if (password) == (password2)
+    then 
+      if verifyPassword (userpassword user) oldpassword || password == BS.empty
+        then
+          if isPasswordStrong password || password == BS.empty
+            then do
+              passwordhash <- liftIO $ createMaybePassword password
+              newuser <- update $ SetUserDetails user fullname companyname companynumber invoiceaddress passwordhash
+              flashmsg <- userDetailsSavedFlashMessage
+              update $ AddUserFlashMessage userid flashmsg
+            else
+              update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "The new password must be at least 6 characters long TODO")
+        else
+          update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "Old password is incorrect TODO")
+    else
+      update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "Passwords must match TODO")
+
   let link = show LinkAccount
   response <- webHSP (seeOtherXML link)
   seeOther link response
