@@ -55,7 +55,7 @@ import System.IO.Unsafe
 import qualified Data.Set as Set
 import Control.Concurrent.MVar
 import System.Process
-
+import Data.Word
 
 seeOtherXML :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
@@ -66,6 +66,7 @@ data Context = Context
     , ctxflashmessages       :: [FlashMessage]
     , ctxtime                :: MinutesTime
     , ctxnormalizeddocuments :: MVar (Set.Set FileID)
+    , ctxipnumber            :: Word32
     }
 
 type Kontra a = ServerPartT (StateT Context IO) a

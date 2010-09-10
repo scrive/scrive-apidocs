@@ -164,6 +164,7 @@ appHandler = do
             , ctxflashmessages = flashmessages              
             , ctxtime = minutestime
             , ctxnormalizeddocuments = normalizeddocuments
+            , ctxipnumber = 0
             }
 
   

@@ -23,7 +23,7 @@ import MinutesTime
 import Control.Monad.Trans
 import Data.List (zipWith4)
 import System.Random
-
+import Data.Word
 
 $(deriveAll [''Eq, ''Ord, ''Default]
   [d|
@@ -66,7 +66,10 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           }
       data SignInfo = SignInfo
           { signtime :: MinutesTime
-            -- some authorization info probably
+          , signipnumber :: Word32
+          }
+      data SignInfo0 = SignInfo0
+          { signtime0 :: MinutesTime
           }
       newtype Signatory = Signatory { unSignatory :: UserID }
       {-
@@ -253,6 +256,7 @@ deriving instance Show SignatoryLink
 deriving instance Show SignatoryLink0
 deriving instance Show SignatoryLink1
 deriving instance Show SignInfo
+deriving instance Show SignInfo0
 deriving instance Show SignatoryDetails
 deriving instance Show DocumentHistoryEntry
 
@@ -291,8 +295,20 @@ instance FromReqURI SignatoryLinkID where
 instance FromReqURI FileID where
     fromReqURI = readM
 
+$(deriveSerialize ''SignInfo0)
+instance Version SignInfo0
+
 $(deriveSerialize ''SignInfo)
-instance Version SignInfo
+instance Version SignInfo where
+    mode = extension 1 (Proxy :: Proxy SignInfo0)
+
+instance Migrate SignInfo0 SignInfo where
+    migrate (SignInfo0 
+             { signtime0
+             }) = SignInfo
+                { signtime = signtime0
+                , signipnumber = 0 -- mean unknown
+                }
 
 $(deriveSerialize ''SignatoryDetails)
 instance Version SignatoryDetails
@@ -633,7 +649,7 @@ updateDocumentStatus time document1 newstatus = do
   let newdoc = document { documentstatus = newstatus
                         , documentmtime = time
                         , documentmaybesigninfo = case newstatus of
-                                                    Pending -> Just (SignInfo time)
+                                                    Pending -> Just (SignInfo time 0)
                                                     _ -> Nothing
                         }
   if legal 
@@ -645,16 +661,19 @@ updateDocumentStatus time document1 newstatus = do
        return document
   
 
-signDocument :: DocumentID -> SignatoryLinkID 
-             -> MinutesTime -> Update Documents (Maybe Document)
-signDocument documentid signatorylinkid1 time = do
+signDocument :: DocumentID
+             -> SignatoryLinkID 
+             -> MinutesTime 
+             -> Word32 
+             -> Update Documents (Maybe Document)
+signDocument documentid signatorylinkid1 time ipnumber = do
   documents <- ask
   let Just document = getOne (documents @= documentid)
       signeddocument = document { documentsignatorylinks = newsignatorylinks }
       newsignatorylinks = map maybesign (documentsignatorylinks document)
       maybesign x@(SignatoryLink {signatorylinkid} ) 
           | signatorylinkid == signatorylinkid1 = 
-              x { maybesigninfo = Just (SignInfo time)
+              x { maybesigninfo = Just (SignInfo time ipnumber)
                 }
       maybesign x = x
   modify (updateIx documentid signeddocument)

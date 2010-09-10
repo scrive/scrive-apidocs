@@ -37,6 +37,8 @@ import KontraLink
 import System.Exit
 import qualified Data.Set as Set
 import UserControl
+import Data.Word
+import Data.Bits
 
 {-
   Document state transitions are described in DocState.
@@ -140,12 +142,16 @@ handleSign ctx@(Context {ctxmaybeuser, ctxhostpart}) =
           webHSP (pageFromBody ctx TopNone kontrakcja (listDocuments u documents))
        ]
 
-signDoc :: Context -> DocumentID -> SignatoryLinkID -> Kontra  Response
-signDoc ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) documentid 
-               signatorylinkid1 = do
+signDocument :: Context 
+             -> DocumentID 
+             -> SignatoryLinkID 
+             -> Kontra Response
+signDocument ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber})
+             documentid 
+             signatorylinkid1 = do
   getDataFnM (look "sign")
   
-  Just document <- update $ SignDocument documentid signatorylinkid1 ctxtime
+  Just document <- update $ SignDocument documentid signatorylinkid1 ctxtime ctxipnumber
   let isallsigned = all f (documentsignatorylinks document)
       f (SignatoryLink {maybesigninfo}) = isJust maybesigninfo
   when isallsigned ((liftIO $ doctransPending2Closed ctx document) >> return ())
@@ -202,7 +208,7 @@ handleSignShow ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime})
                documentid 
                signatorylinkid1
                magichash1 = do
-  msum [ signDoc ctx documentid signatorylinkid1
+  msum [ DocControl.signDocument ctx documentid signatorylinkid1
        , do 
            -- FIXME: this is so wrong on so many different levels...
           mdocument <- update $ MarkDocumentSeen documentid signatorylinkid1 ctxtime
@@ -428,24 +434,23 @@ personFromSignatoryDetails details =
                 , Seal.number = BS.toString $ signatorynumber details
                 }
 
-personsFromDocument :: Document -> [(Seal.Person, MinutesTime, MinutesTime)]
+personsFromDocument :: Document -> [(Seal.Person, MinutesTime, (MinutesTime,Word32))]
 personsFromDocument document = 
     let
         links = documentsignatorylinks document
         x (SignatoryLink{ signatorydetails
-                        , maybesigninfo = Just (SignInfo { signtime })
+                        , maybesigninfo = Just (SignInfo { signtime, signipnumber })
                         , maybeseentime = Just seentime})
-             = (personFromSignatoryDetails signatorydetails, seentime, signtime)
+             = (personFromSignatoryDetails signatorydetails, seentime, (signtime,signipnumber))
     in map x links
 
 sealSpecFromDocument :: Document -> User -> String -> String -> Seal.SealSpec
 sealSpecFromDocument document author@(User {userfullname,usercompanyname,usercompanynumber,useremail}) inputpath outputpath =
   let docid = unDocumentID (documentid document)
-
-      -- FIXME: use the time when author clicked sign
-      signtime = case documentmaybesigninfo document of
-                   Nothing -> error "signtime1"
-                   Just (SignInfo t) -> t
+      (authorsigntime,authorsignipnumber) = 
+          case documentmaybesigninfo document of
+            Nothing -> error "signtime1"
+            Just (SignInfo {signtime,signipnumber}) -> (signtime,signipnumber)
       authordetails = documentauthordetails document
       authorperson = if authordetails /= emptyDetails 
                      then personFromSignatoryDetails authordetails
@@ -457,6 +462,13 @@ sealSpecFromDocument document author@(User {userfullname,usercompanyname,usercom
                                   })
 
       signatories = personsFromDocument document
+      formatIP :: Word32 -> String
+      formatIP 0 = ""
+      formatIP 0x7f000001 = ""
+      formatIP x = " " ++ show ((x `shiftR` 24) .&. 255) ++
+                   "." ++ show ((x `shiftR` 16) .&. 255) ++
+                   "." ++ show ((x `shiftR` 8) .&. 255) ++
+                   "." ++ show ((x `shiftR` 0) .&. 255)
       fst3 (a,b,c) = a
       snd3 (a,b,c) = b
       thd3 (a,b,c) = c
@@ -465,28 +477,29 @@ sealSpecFromDocument document author@(User {userfullname,usercompanyname,usercom
       initials = concatComma (map initialsOfPerson persons)
       initialsOfPerson (Seal.Person {Seal.fullname}) = map head (words fullname)
       -- 2. "Name of invited" granskar dokumentet online
-      makeHistoryEntry (Seal.Person {Seal.fullname},seentime2, signtime2) = 
+      makeHistoryEntry (Seal.Person {Seal.fullname},seentime2,(signtime2,signipnumber2)) = 
           [ Seal.HistEntry
             { Seal.histdate = show signtime2
-            , Seal.histcomment = fullname ++ " undertecknar dokumentet online"
+            , Seal.histcomment = fullname ++ " undertecknar dokumentet online" ++ formatIP signipnumber2
             }
           , Seal.HistEntry
             { Seal.histdate = show seentime2
-            , Seal.histcomment = fullname ++ " granskar dokumentet online"
+            , Seal.histcomment = fullname ++ " granskar dokumentet online" ++ formatIP 0
             } 
           ]
+      maxsigntime = maximum (authorsigntime : map (fst . thd3) signatories)
+      firstHistEntry = Seal.HistEntry
+                       { Seal.histdate = show authorsigntime
+                       , Seal.histcomment = Seal.fullname authorperson ++ 
+                                       " undertecknar dokumentet och SkrivaPå skickar ut en inbjudan via e-post till samtliga avtalsparter." ++ formatIP authorsignipnumber
+                       }
       lastHistEntry = Seal.HistEntry
                       { Seal.histdate = show maxsigntime
                       , Seal.histcomment = "Alla parter har undertecknat dokumentet och avtalet är nu juridiskt bindande."
                       }
-      maxsigntime = maximum (signtime : map thd3 signatories)
-      firstHistEntry = Seal.HistEntry
-                       { Seal.histdate = show signtime
-                       , Seal.histcomment = Seal.fullname authorperson ++ 
-                                       " undertecknar dokumentet och SkrivaPå skickar ut en inbjudan via e-post till samtliga avtalsparter."
-                       }
+
       concatComma = concat . intersperse ", "
-      -- compareTime (person1,tm1) (person2,tm2) = compare tm1 tm2
+
       history = [firstHistEntry] ++ sort (concatMap makeHistoryEntry signatories) ++ [lastHistEntry]
       
       config = Seal.SealSpec 
