@@ -680,8 +680,8 @@ markDocumentSeen documentid signatorylinkid1 time = do
     Just document -> do
       let document' = document { documentsignatorylinks = s }
           s = map c (documentsignatorylinks document)
-          c l@(SignatoryLink {signatorylinkid})
-            | signatorylinkid == signatorylinkid1 = 
+          c l@(SignatoryLink {signatorylinkid, maybeseentime})
+            | signatorylinkid == signatorylinkid1 && maybeseentime/=Nothing = 
               l { maybeseentime = Just time }
             | otherwise = l
       modify (updateIx documentid document')
