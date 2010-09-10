@@ -25,6 +25,7 @@ import System.IO.Unsafe
 import Data.List
 import qualified Data.Set as Set
 import Debug.Trace
+import MinutesTime
 
 $(deriveAll [''Eq, ''Ord, ''Default]
   [d|
@@ -37,17 +38,32 @@ $(deriveAll [''Eq, ''Ord, ''Default]
       newtype SupervisorID = SupervisorID { unSupervisorID :: Int }
                        
       data User = User
-          { userid                 :: UserID
-          , userfullname           :: BS.ByteString
-          , useremail              :: Email
-          , usercompanyname        :: BS.ByteString
-          , usercompanynumber      :: BS.ByteString
-          , userinvoiceaddress     :: BS.ByteString
-          , userflashmessages      :: [FlashMessage]
-          , userpassword           :: Password
-          , usersupervisor         :: Maybe SupervisorID
-          , usercanhavesubaccounts :: Bool
-          , useraccountsuspended   :: Bool
+          { userid                      :: UserID
+          , userfullname                :: BS.ByteString
+          , useremail                   :: Email
+          , usercompanyname             :: BS.ByteString
+          , usercompanynumber           :: BS.ByteString
+          , userinvoiceaddress          :: BS.ByteString
+          , userflashmessages           :: [FlashMessage]
+          , userpassword                :: Password
+          , usersupervisor              :: Maybe SupervisorID
+          , usercanhavesubaccounts      :: Bool
+          , useraccountsuspended        :: Bool
+          , userhacceptedtermsofservice :: Maybe MinutesTime
+          }
+
+      data User5 = User5
+          { userid5                 :: UserID
+          , userfullname5           :: BS.ByteString
+          , useremail5              :: Email
+          , usercompanyname5        :: BS.ByteString
+          , usercompanynumber5      :: BS.ByteString
+          , userinvoiceaddress5     :: BS.ByteString
+          , userflashmessages5      :: [FlashMessage]
+          , userpassword5           :: Password
+          , usersupervisor5         :: Maybe SupervisorID
+          , usercanhavesubaccounts5 :: Bool
+          , useraccountsuspended5   :: Bool
           }
           
       data User4 = User4
@@ -194,7 +210,7 @@ instance Migrate User3 User4 where
           , useraccountsuspended4 = False -- should probably have a reason and time here
           }
 
-instance Migrate User4 User where
+instance Migrate User4 User5 where
     migrate (User4
           { userid4
           , userfullname4
@@ -207,19 +223,47 @@ instance Migrate User4 User where
           , usersupervisor4
           , usercanhavesubaccounts4
           , useraccountsuspended4
-          }) = User
-          { userid = userid4
-          , userfullname = userfullname4
-          , useremail = useremail4
-          , usercompanyname = usercompanyname4
-          , usercompanynumber = usercompanynumber4
-          , userinvoiceaddress = userinvoiceaddress4
-          , userflashmessages = userflashmessages4
-          , userpassword = unsafePerformIO $ createPassword userpassword4
-          , usersupervisor = usersupervisor4
-          , usercanhavesubaccounts = usercanhavesubaccounts4
-          , useraccountsuspended = useraccountsuspended4
+          }) = User5
+          { userid5 = userid4
+          , userfullname5 = userfullname4
+          , useremail5 = useremail4
+          , usercompanyname5 = usercompanyname4
+          , usercompanynumber5 = usercompanynumber4
+          , userinvoiceaddress5 = userinvoiceaddress4
+          , userflashmessages5 = userflashmessages4
+          , userpassword5 = unsafePerformIO $ createPassword userpassword4
+          , usersupervisor5 = usersupervisor4
+          , usercanhavesubaccounts5 = usercanhavesubaccounts4
+          , useraccountsuspended5 = useraccountsuspended4
           }
+
+instance Migrate User5 User where
+    migrate (User5
+             { userid5
+             , userfullname5
+             , useremail5   
+             , usercompanyname5
+             , usercompanynumber5
+             , userinvoiceaddress5
+             , userflashmessages5 
+             , userpassword5      
+             , usersupervisor5    
+             , usercanhavesubaccounts5
+             , useraccountsuspended5
+             }) = User
+                { userid                = userid5
+                , userfullname          = userfullname5
+                , useremail             = useremail5
+                , usercompanyname       = usercompanyname5
+                , usercompanynumber     = usercompanynumber5
+                , userinvoiceaddress    = userinvoiceaddress5
+                , userflashmessages     = userflashmessages5
+                , userpassword          = userpassword5
+                , usersupervisor        = usersupervisor5
+                , usercanhavesubaccounts= usercanhavesubaccounts5
+                , useraccountsuspended  = useraccountsuspended5
+                , userhacceptedtermsofservice = Nothing
+                }
 
 createPassword :: BS.ByteString -> IO Password
 createPassword password = do
@@ -259,9 +303,13 @@ $(deriveSerialize ''User4)
 instance Version User4 where
     mode = extension 4 (Proxy :: Proxy User3)
 
+$(deriveSerialize ''User5)
+instance Version User5 where
+    mode = extension 5 (Proxy :: Proxy User4)
+
 $(deriveSerialize ''User)
 instance Version User where
-    mode = extension 5 (Proxy :: Proxy User4)
+    mode = extension 6 (Proxy :: Proxy User5)
 
 $(deriveSerialize ''FlashMessage)
 instance Version FlashMessage
