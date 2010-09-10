@@ -237,34 +237,6 @@ instance Migrate User4 User5 where
           , useraccountsuspended5 = useraccountsuspended4
           }
 
-instance Migrate User5 User where
-    migrate (User5
-             { userid5
-             , userfullname5
-             , useremail5   
-             , usercompanyname5
-             , usercompanynumber5
-             , userinvoiceaddress5
-             , userflashmessages5 
-             , userpassword5      
-             , usersupervisor5    
-             , usercanhavesubaccounts5
-             , useraccountsuspended5
-             }) = User
-                { userid                = userid5
-                , userfullname          = userfullname5
-                , useremail             = useremail5
-                , usercompanyname       = usercompanyname5
-                , usercompanynumber     = usercompanynumber5
-                , userinvoiceaddress    = userinvoiceaddress5
-                , userflashmessages     = userflashmessages5
-                , userpassword          = userpassword5
-                , usersupervisor        = usersupervisor5
-                , usercanhavesubaccounts= usercanhavesubaccounts5
-                , useraccountsuspended  = useraccountsuspended5
-                , userhasacceptedtermsofservice = Nothing
-                }
-
 createPassword :: BS.ByteString -> IO Password
 createPassword password = do
   salt <- makeSalt
@@ -447,11 +419,23 @@ verifyPassword (Password salt hash) password
 
 setUserDetails :: User 
                -> BS.ByteString
-               -> BS.ByteString 
-               -> BS.ByteString 
-               -> BS.ByteString 
+               -> BS.ByteString
+               -> BS.ByteString
+               -> BS.ByteString
+               -> Maybe Password
                -> Update Users User
-setUserDetails user1 fullname companyname companynumber invoiceaddress = do
+setUserDetails user1 fullname companyname companynumber invoiceaddress (Just password) = do
+  users <- ask
+  let Just user = getOne (users @= userid user1)
+  let newuser = user { userfullname = fullname
+                     , usercompanyname = companyname
+                     , usercompanynumber = companynumber
+                     , userinvoiceaddress = invoiceaddress
+                     , userpassword = password
+                     }
+  modify (updateIx (userid user) newuser)
+  return newuser
+setUserDetails user1 fullname companyname companynumber invoiceaddress Nothing = do
   users <- ask
   let Just user = getOne (users @= userid user1)
   let newuser = user { userfullname = fullname
