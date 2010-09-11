@@ -152,6 +152,10 @@ signDocument ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber})
   getDataFnM (look "sign")
   
   Just document <- update $ SignDocument documentid signatorylinkid1 ctxtime ctxipnumber
+  
+  when (documentmaybesigninfo document == Nothing) $
+       error "You are trying to sign a document that wasn't signed by his author"
+
   let isallsigned = all f (documentsignatorylinks document)
       f (SignatoryLink {maybesigninfo}) = isJust maybesigninfo
   when isallsigned ((liftIO $ doctransPending2Closed ctx document) >> return ())
