@@ -39,6 +39,12 @@ data HistEntry = HistEntry
     }
     deriving (Eq,Ord,Show,Read)
 
+winAnsiPostScriptEncode text = concatMap charEncode text
+    where
+      charEncode '(' = "\\("
+      charEncode ')' = "\\)"
+      charEncode x = [unicodeToWinAnsi x]
+
 sealFileName = "files/seal3.pdf"
 
 listPageRefIDSFromPages :: Document -> RefID -> [RefID]
@@ -208,7 +214,7 @@ pagintext (SealSpec{documentNumber,initials}) =
     docnrwidth = textWidth font (toPDFString docnrtext)
     docnroffset = center - 20 - docnrwidth
     center = 595/2
-    signedinitials = "Undertecknat: " ++ map unicodeToWinAnsi initials 
+    signedinitials = "Undertecknat: " ++ winAnsiPostScriptEncode initials 
     siwidth = textWidth font (toPDFString signedinitials)
     sioffset = center + 20
     docnrtext = "Dok.nr. " ++ documentNumber
@@ -240,15 +246,15 @@ signatorybox (Person {fullname,company,number,email}) =
  "0.806 0.719 0.51 0.504 k " ++
  "/TT1 1 Tf " ++
  "10 0 0 10 46.5522 707.3906 Tm " ++
- "(" ++ map unicodeToWinAnsi fullname ++ ")Tj " ++
+ "(" ++ winAnsiPostScriptEncode fullname ++ ")Tj " ++
  "/TT0 1 Tf " ++
  "10 0 0 10 46.5522 695.9906 Tm " ++
- "(" ++ map unicodeToWinAnsi company ++ ")Tj " ++
+ "(" ++ winAnsiPostScriptEncode company ++ ")Tj " ++
  "10 0 0 10 " ++ show (rightmargin - orgnroffset) ++ " 707.3906 Tm " ++
- "(" ++ map unicodeToWinAnsi orgnrtext ++ ")Tj " ++
+ "(" ++ winAnsiPostScriptEncode orgnrtext ++ ")Tj " ++
  "/TT2 1 Tf " ++
  "10 0 0 10 " ++ show (rightmargin - emailoffset) ++ " 695.9906 Tm " ++
- "(" ++ map unicodeToWinAnsi email ++ ")Tj " ++
+ "(" ++ winAnsiPostScriptEncode email ++ ")Tj " ++
  "ET " ++ 
  -- "0.039 0.024 0.02 0 k " ++
  -- "566.479 678.209 -537.601 3.841 re " ++
@@ -271,7 +277,7 @@ makeManyLines font width text = result
     takeWhileLength len text all@((l,t):rest)
                     | len + l < width = takeWhileLength (len + l) (text ++ t) rest
                     | otherwise = text : takeWhileLength 0 "" all
-    textOutLine text = "[(" ++ map unicodeToWinAnsi text ++ ")]TJ T* "
+    textOutLine text = "[(" ++ winAnsiPostScriptEncode text ++ ")]TJ T* "
     textLines = takeWhileLength 0 "" textSplitWithLength
     result = map textOutLine textLines 
 
@@ -281,7 +287,7 @@ logentry (HistEntry {histdate,histcomment}) =
  "/TT2 1 Tf " ++
  "0.591 0.507 0.502 0.19 k " ++
  "10 0 0 10 46 520.8887 Tm " ++
- "(" ++ map unicodeToWinAnsi histdate ++ ")Tj " ++
+ "(" ++ winAnsiPostScriptEncode histdate ++ ")Tj " ++
  "10 0 0 10 231 520.8887 Tm " ++
  "1.2 TL " ++
  concat outlines ++
@@ -313,7 +319,7 @@ lastpage (SealSpec {documentNumber,persons,history}) =
 
  "0.546 0.469 0.454 0.113 k " ++
  "12 0 0 12 39.8198 766.9555 Tm " ++
- "[(Dok.nr)55(. " ++ map unicodeToWinAnsi documentNumber ++ ")]TJ " ++
+ "[(Dok.nr)55(. " ++ winAnsiPostScriptEncode documentNumber ++ ")]TJ " ++
 
  "0.806 0.719 0.51 0.504 k " ++
  "12 0 0 12 39.8198 736.8555 Tm " ++
