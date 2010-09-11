@@ -58,13 +58,13 @@ showUser ctx@(Context {ctxmaybeuser = Just user}) =
          <tr><td>Faktureringsadress:</td>
              <td><input type="text" name="invoiceaddress" value=(userinvoiceaddress user)/></td>
          </tr>
-         <tr><td>Old password TODO:</td>
+         <tr><td>Old password:</td>
              <td><input type="password" name="oldpassword"/></td>
          </tr>
-         <tr><td>New password TODO:</td>
+         <tr><td>New password:</td>
              <td><input type="password" name="password"/></td>
          </tr>
-         <tr><td>New password again TODO:</td>
+         <tr><td>New password again:</td>
              <td><input type="password" name="password2"/></td>
          </tr>
        </table>
@@ -158,7 +158,7 @@ viewSubaccounts ctx@(Context {ctxmaybeuser = Just user}) subusers =
 newUserMail :: BS.ByteString -> BS.ByteString -> IO BS.ByteString
 newUserMail emailaddress personname =
     htmlHeadBodyWrapIO ""
-     <span>Hello <% personname %>. Welcome to SkrivaPå. TODO </span>
+     <span>Hello <% personname %>. Welcome to SkrivaPå. </span>
 
 passwordChangeMail :: BS.ByteString
                    -> BS.ByteString
