@@ -62,11 +62,11 @@ handleUserPost ctx@Context{ctxmaybeuser = Just user@User{userid}} = do
               flashmsg <- userDetailsSavedFlashMessage
               update $ AddUserFlashMessage userid flashmsg
             else
-              update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "The new password must be at least 6 characters long TODO")
+              update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "The new password must be at least 6 characters long")
         else
-          update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "Old password is incorrect TODO")
+          update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "Old password is incorrect")
     else
-      update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "Passwords must match TODO")
+      update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "Passwords must match")
 
   let link = show LinkAccount
   response <- webHSP (seeOtherXML link)
