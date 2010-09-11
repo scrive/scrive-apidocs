@@ -143,7 +143,7 @@ loginBox ctx =
             {- <a href="#" onClick="$('#login').hide(); $('#register').show(); return false;">register</a> -}
            <% rpxSignInLink ctx "Logga in med OpenID" "/" %>
            <br />
-           <a href=LinkSignup>Create account</a>
+           {- <a href=LinkSignup>Create account</a> -}
           </td>
 	</tr>
       </table>
