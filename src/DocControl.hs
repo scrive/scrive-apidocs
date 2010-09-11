@@ -440,8 +440,11 @@ personsFromDocument document =
         links = documentsignatorylinks document
         x (SignatoryLink{ signatorydetails
                         , maybesigninfo = Just (SignInfo { signtime, signipnumber })
-                        , maybeseentime = Just seentime})
-             = (personFromSignatoryDetails signatorydetails, seentime, (signtime,signipnumber))
+                        , maybeseentime
+                        })
+             -- FIXME: this one should really have seentime always...
+             = (personFromSignatoryDetails signatorydetails, maybe signtime id maybeseentime, (signtime,signipnumber))
+        x link = trace (show link) $ error "SignatoryLink does not have all the necessary data"
     in map x links
 
 sealSpecFromDocument :: Document -> User -> String -> String -> Seal.SealSpec
@@ -462,13 +465,15 @@ sealSpecFromDocument document author@(User {userfullname,usercompanyname,usercom
                                   })
 
       signatories = personsFromDocument document
+
+      -- oh boy, this is really network byte order!
       formatIP :: Word32 -> String
       formatIP 0 = ""
-      formatIP 0x7f000001 = ""
-      formatIP x = " " ++ show ((x `shiftR` 24) .&. 255) ++
-                   "." ++ show ((x `shiftR` 16) .&. 255) ++
+      -- formatIP 0x7f000001 = ""
+      formatIP x = " (IP: " ++ show ((x `shiftR` 0) .&. 255) ++
                    "." ++ show ((x `shiftR` 8) .&. 255) ++
-                   "." ++ show ((x `shiftR` 0) .&. 255)
+                   "." ++ show ((x `shiftR` 16) .&. 255) ++
+                   "." ++ show ((x `shiftR` 24) .&. 255) ++ ")"
       fst3 (a,b,c) = a
       snd3 (a,b,c) = b
       thd3 (a,b,c) = c
@@ -510,7 +515,7 @@ sealSpecFromDocument document author@(User {userfullname,usercompanyname,usercom
             , Seal.history = history
             , Seal.initials = initials
             }
-      in config
+      in trace (show config) config
 
 sealDocument :: MinutesTime -> User -> Document -> IO Document
 sealDocument signtime1 author@(User {userfullname,usercompanyname,usercompanynumber,useremail}) document = do

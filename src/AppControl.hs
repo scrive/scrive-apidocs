@@ -45,6 +45,7 @@ import Control.Concurrent
 import qualified Data.Set as Set
 import System.IO.Unsafe
 import Debug.Trace
+import Network.Socket
 
 handleRoutes ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} = toIO ctx $ msum $
     ([nullDir >> withTOS ctx (webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx)))
@@ -114,7 +115,27 @@ appHandler = do
   let host = maybe "skrivapa.se" BS.toString $ getHeader "host" rq
   let scheme = maybe "http" BS.toString $ getHeader "scheme" rq
   let hostpart =  scheme ++ "://" ++ host
-  
+
+  -- FIXME: we should read some headers from upstream proxy, if any
+  let peerhost = case getHeader "x-real-ip" rq of
+                   Just name -> BS.toString name
+                   Nothing -> fst (rqPeer rq)
+
+  -- rqPeer hostname comes always from showHostAddress
+  -- so it is a bunch of numbers, just read them out
+  -- getAddrInfo is strange that it can throw exceptions
+  -- if exception is thrown, whole page load fails with
+  -- error notification
+  let hints = defaultHints { addrFlags = [AI_ADDRCONFIG, AI_NUMERICHOST] } 
+  addrs <- liftIO $ getAddrInfo (Just hints) (Just peerhost) Nothing 
+  let addr = head addrs 
+  let peerip = case addrAddress addr of
+                 SockAddrInet port hostip -> hostip
+                 _ -> 0
+    
+  let peer = rqPeer rq
+  liftIO $ print (peer,peerip)
+
   maybeuser <- userLogin
 
   flashmessages <- case maybeuser of
@@ -130,7 +151,7 @@ appHandler = do
             , ctxflashmessages = flashmessages              
             , ctxtime = minutestime
             , ctxnormalizeddocuments = normalizeddocuments
-            , ctxipnumber = 0
+            , ctxipnumber = peerip
             }
 
   
