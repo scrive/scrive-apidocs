@@ -249,7 +249,7 @@ withTOS :: (MonadIO m) => Context -> ServerPartT m Response -> ServerPartT m Res
 --withTOS ctx _ = do
 --  return $ tosPageGet ctx 
 
-withTOS ctx@(Context {ctxmaybeuser = (Just (User { userhasacceptedtermsofservice = Nothing }))}) _ = do
+withTOS ctx@(Context {ctxmaybeuser = (Just (User { userhasacceptedtermsofservice = Nothing }))}) _ | False = do
   rq <- askRq
   let ru = rqURL rq
   let link = "/tos?redirect=" ++ ru
