@@ -493,11 +493,17 @@ sealSpecFromDocument document author@(User {userfullname,usercompanyname,usercom
             } 
           ]
       maxsigntime = maximum (authorsigntime : map (fst . thd3) signatories)
-      firstHistEntry = Seal.HistEntry
-                       { Seal.histdate = show authorsigntime
-                       , Seal.histcomment = Seal.fullname authorperson ++ 
-                                       " undertecknar dokumentet och SkrivaPå skickar ut en inbjudan via e-post till samtliga avtalsparter." ++ formatIP authorsignipnumber
-                       }
+      firstHistEntries = 
+          [ Seal.HistEntry
+            { Seal.histdate = show authorsigntime
+            , Seal.histcomment = Seal.fullname authorperson ++ 
+                                 " undertecknar dokumentet." ++ formatIP authorsignipnumber
+            }
+          , Seal.HistEntry
+            { Seal.histdate = show authorsigntime
+            , Seal.histcomment = "En automatisk inbjudan skickas via e-post till samtliga avtalsparter."
+            }
+          ]
       lastHistEntry = Seal.HistEntry
                       { Seal.histdate = show maxsigntime
                       , Seal.histcomment = "Alla parter har undertecknat dokumentet och avtalet är nu juridiskt bindande."
@@ -505,7 +511,7 @@ sealSpecFromDocument document author@(User {userfullname,usercompanyname,usercom
 
       concatComma = concat . intersperse ", "
 
-      history = [firstHistEntry] ++ sort (concatMap makeHistoryEntry signatories) ++ [lastHistEntry]
+      history = firstHistEntries ++ sort (concatMap makeHistoryEntry signatories) ++ [lastHistEntry]
       
       config = Seal.SealSpec 
             { Seal.input = inputpath
