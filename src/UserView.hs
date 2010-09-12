@@ -25,6 +25,7 @@ import AppView
 import User
 import KontraLink
 import DocView
+import MinutesTime
 
 instance (EmbedAsChild m BS.ByteString) => (EmbedAsChild m Email) where
     asChild = asChild . unEmail
@@ -40,8 +41,10 @@ showUser ctx@(Context {ctxmaybeuser = Just user}) =
     webHSP $ pageFromBody ctx TopAccount kontrakcja $ 
     <div class="doctable">
      <h1>Välkommen <% userfullname user %></h1>
+
       <div class="inlinebox">
        <form action=LinkAccount method="post">
+        <% tosMessage user %>
         <table>
          <tr><td>Namn:</td>
              <td><input type="text" name="fullname" value=(userfullname user)/></td>
@@ -215,3 +218,19 @@ inviteSubaccountMail supervisorname companyname emailaddress personname newpassw
 userDetailsSavedFlashMessage :: (MonadIO m) => m FlashMessage
 userDetailsSavedFlashMessage = liftM (FlashMessage . renderXMLAsBSHTML) $ webHSP1
     <div>Dina kontoändringar har sparats.</div>
+
+acceptTermsOfServiceForm :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
+                            => XMLGenT m (HSX.XML m)
+acceptTermsOfServiceForm = <span>
+                                 You must agree to the Terms of Service to continue. <br />
+                                 <input type="checkbox" name="tos" id="tos">I accept and agree to the Terms of Service</input>
+                           </span>
+
+
+
+acceptedTermsOfServiceMessage :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
+                                 => MinutesTime -> XMLGenT m (HSX.XML m)
+acceptedTermsOfServiceMessage time = <span>You accepted the terms of service agreement on <% showDateOnly time %>. </span>
+
+tosMessage user@(User { userhasacceptedtermsofservice = Just time }) = acceptedTermsOfServiceMessage time
+tosMessage _ = acceptTermsOfServiceForm
