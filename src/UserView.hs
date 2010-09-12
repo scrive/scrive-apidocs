@@ -227,5 +227,10 @@ acceptedTermsOfServiceMessage :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] Kont
                                  => MinutesTime -> XMLGenT m (HSX.XML m)
 acceptedTermsOfServiceMessage time = <span>You accepted the terms of service agreement on <% showDateOnly time %>. </span>
 
+tosMessage :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
+                            => XMLGenT m (HSX.XML m)
+tosMessage _ = <span />
+{-
 tosMessage user@(User { userhasacceptedtermsofservice = Just time }) = acceptedTermsOfServiceMessage time
 tosMessage _ = acceptTermsOfServiceForm
+-}

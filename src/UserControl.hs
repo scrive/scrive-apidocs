@@ -262,10 +262,11 @@ getRememberMeCookie = do
 withTOS :: (MonadIO m) => Context -> ServerPartT m Response -> ServerPartT m Response
 
 -- to disable requiring TOS signing, comment out this definition (leaving the second case)
+{-
 withTOS ctx@(Context {ctxmaybeuser = (Just (User {userid = userid, userhasacceptedtermsofservice = Nothing }))}) _ = do
   update $ AddUserFlashMessage userid (FlashMessage (BS.fromString "You must accept the Terms of Service Agreement"))
   let link = "/account"
   response <- webHSP $ seeOtherXML link
   finishWith (redirect 303 link response)
-
+-}
 withTOS _ action = action
