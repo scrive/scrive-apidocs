@@ -23,6 +23,7 @@ import System.Log.Logger
 import System.Process
 import Data.Object
 import qualified Data.Set as Set
+import Data.Maybe
 
 handleUser :: Context -> Kontra Response
 handleUser ctx = 
@@ -42,7 +43,7 @@ createMaybePassword password
         return $ Just hash
 
 handleUserPost :: Context -> Kontra Response
-handleUserPost ctx@Context{ctxmaybeuser = Just user@User{userid}} = do
+handleUserPost ctx@Context{ctxmaybeuser = Just user@User{userid}, ctxtime = minutestime} = do
   fullname <- g "fullname"
   companyname <- g "companyname"
   companynumber <- g "companynumber"
@@ -67,6 +68,15 @@ handleUserPost ctx@Context{ctxmaybeuser = Just user@User{userid}} = do
           update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "Old password is incorrect")
     else
       update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "Passwords must match")
+
+  -- Terms of Service logic
+  tos <- g "tos"
+
+  if tos == (BS.fromString "on") && isNothing (userhasacceptedtermsofservice user)
+     then
+         update $ AcceptTermsOfService userid minutestime
+     else
+         return ()
 
   let link = show LinkAccount
   response <- webHSP (seeOtherXML link)
@@ -246,47 +256,12 @@ getRememberMeCookie = do
 
  
 withTOS :: (MonadIO m) => Context -> ServerPartT m Response -> ServerPartT m Response
---withTOS ctx _ = do
---  return $ tosPageGet ctx 
 
+-- to disable requiring TOS signing, comment out this definition (leaving the second case)
 withTOS ctx@(Context {ctxmaybeuser = (Just (User { userhasacceptedtermsofservice = Nothing }))}) _ | False = do
-  rq <- askRq
-  let ru = rqURL rq
-  let link = "/tos?redirect=" ++ ru
+  let link = "/account"
   response <- webHSP $ seeOtherXML link
   finishWith (redirect 303 link response)
 
 withTOS _ action = action
 
-tosPage :: Context -> Kontra Response
-tosPage ctx = (methodM GET >> tosPageGet ctx) `mplus` 
-              (methodM POST >> tosPagePost ctx)
-
-tosPageGet :: Context -> Kontra Response
-tosPageGet ctx = do
-  maybelink <- getDataFn (look "redirect")
-  let link = case maybelink of
-               Just l -> l
-               otherwise -> "/"
-  webHSP (pageFromBody ctx TopNone kontrakcja (acceptTermsOfServicePage link))
-
-
-tosPagePost :: Context -> Kontra Response
-tosPagePost ctx = do
-  let maybeuser = ctxmaybeuser ctx
-  let minutestime = ctxtime ctx
-  maybelink <- getDataFn (look "redirect")
-  let link = case maybelink of
-               Just l -> l
-               otherwise -> "/"
-  case maybeuser of
-    Just (User { userhasacceptedtermsofservice = _, userid = userid }) -> do 
-                   checked <- getDataFn (look "tos")
-                   case checked of
-                     Just "on" -> update $ AcceptTermsOfService userid minutestime
-                     otherwise -> return ()
-                   response <- webHSP (seeOtherXML link)
-                   seeOther link response
-    otherwise -> do 
-                response <- webHSP (seeOtherXML link)
-                seeOther link response
