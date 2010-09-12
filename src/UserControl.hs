@@ -70,11 +70,15 @@ handleUserPost ctx@Context{ctxmaybeuser = Just user@User{userid}, ctxtime = minu
       update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "Passwords must match")
 
   -- Terms of Service logic
-  tos <- g "tos"
+  tos <- getDataFn (look "tos")
 
-  if tos == (BS.fromString "on") && isNothing (userhasacceptedtermsofservice user)
+  if isNothing (userhasacceptedtermsofservice user)
      then
-         update $ AcceptTermsOfService userid minutestime
+         if isJust tos
+            then do
+              update $ AcceptTermsOfService userid minutestime
+              update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "You have accepted the Terms of Service Agreement")
+            else update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "You must accept the Terms of Service Agreement")
      else
          return ()
 
@@ -258,10 +262,10 @@ getRememberMeCookie = do
 withTOS :: (MonadIO m) => Context -> ServerPartT m Response -> ServerPartT m Response
 
 -- to disable requiring TOS signing, comment out this definition (leaving the second case)
-withTOS ctx@(Context {ctxmaybeuser = (Just (User { userhasacceptedtermsofservice = Nothing }))}) _ | False = do
+withTOS ctx@(Context {ctxmaybeuser = (Just (User {userid = userid, userhasacceptedtermsofservice = Nothing }))}) _ = do
+  update $ AddUserFlashMessage userid (FlashMessage (BS.fromString "You must accept the Terms of Service Agreement"))
   let link = "/account"
   response <- webHSP $ seeOtherXML link
   finishWith (redirect 303 link response)
 
 withTOS _ action = action
-
