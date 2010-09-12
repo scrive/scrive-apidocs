@@ -492,8 +492,15 @@ acceptTermsOfService :: UserID -> MinutesTime -> Update Users ()
 acceptTermsOfService userid minutestime = do
   users <- ask
   case getOne (users @= userid) of
-    Just (user) -> do
-      modify (updateIx userid (user { userhasacceptedtermsofservice = Just minutestime })) 
+    Just user -> modify (updateIx userid (user { userhasacceptedtermsofservice = Just minutestime })) 
+  return ()
+
+-- for testing purposes
+deleteTermsOfService :: UserID -> Update Users ()
+deleteTermsOfService userid = do
+  users <- ask
+  case getOne (users @= userid) of
+    Just user -> modify (updateIx userid (user { userhasacceptedtermsofservice = Nothing }))
   return ()
 
 instance Component Users where
@@ -515,5 +522,6 @@ $(mkMethods ''Users [ 'getUserByUserID
 
                       -- the below should be only used carefully and by admins
                     , 'fragileDeleteUser
+                    , 'deleteTermsOfService
                     ])
 

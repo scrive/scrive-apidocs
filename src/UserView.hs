@@ -221,12 +221,7 @@ userDetailsSavedFlashMessage = liftM (FlashMessage . renderXMLAsBSHTML) $ webHSP
 
 acceptTermsOfServiceForm :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
                             => XMLGenT m (HSX.XML m)
-acceptTermsOfServiceForm = <span>
-                                 You must agree to the Terms of Service to continue. <br />
-                                 <input type="checkbox" name="tos" id="tos">I accept and agree to the Terms of Service</input>
-                           </span>
-
-
+acceptTermsOfServiceForm = <input type="checkbox" name="tos" id="tos">I accept and agree to the Terms of Service</input>
 
 acceptedTermsOfServiceMessage :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
                                  => MinutesTime -> XMLGenT m (HSX.XML m)

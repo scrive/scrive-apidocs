@@ -79,7 +79,7 @@ handleRoutes ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} = toIO ctx $ msum 
            withTOS ctx (pathdb GetDocumentByDocumentID $ \document -> 
                                      path $ \signatorylinkid -> 
                                          resendEmail ctx document signatorylinkid)
-     , dir "account" (withUser ctxmaybeuser (withTOS ctx (UserControl.handleUser ctx)))]
+     , dir "account" (withUser ctxmaybeuser (UserControl.handleUser ctx))]
      
      ++ (if isSuperUser ctxmaybeuser then 
              [ dir "stats" $ statsPage
