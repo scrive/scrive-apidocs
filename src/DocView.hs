@@ -509,7 +509,8 @@ showDocument user
         <% if documentstatus == Preparation
            then 
              <span>
-              <strong>1. Dina uppgifter</strong>
+              Avsändare<br/>
+              <div style="margin-bottom: 10px;">
               <input name="authorname" type="text" value=(signatoryname documentauthordetails)
                      infotext="Ditt namn"/><br/>
               <input name="authorcompany" type="text" value=(signatorycompany documentauthordetails)
@@ -518,8 +519,8 @@ showDocument user
                      infotext="Ditt Orgnr/Persnr"/><br/>
               <input name="authoremail" class="emailvalidation" type="text" value=(signatoryemail documentauthordetails)
                      infotext="Din e-mail"/><br/>
-
-              <strong>2. Din motpart</strong>
+              </div>
+              Motpart<br/>
               <div id="signatorylist">
                <% map showSignatoryEntryForEdit (if null documentsignatorylinks
                                                  then [emptyDetails] 
@@ -527,13 +528,13 @@ showDocument user
               </div>
               <a onclick="signatoryadd(); return false;" href="#">Lägg till fler</a>
 
-              <hr/>
-
-              <strong>3. Avtal</strong><br/>
-              Undertecknas inom <input type="text" name="daystosign" value=documentdaystosign maxlength="2" size="2"/> dagar<br/>
+              <div style="margin-top: 10px">
+              Undertecknas inom<br/>
+              <input type="text" name="daystosign" value=documentdaystosign maxlength="2" size="2"/> dagar<br/>
               <input class="bigbutton" type="submit" name="final" value="Underteckna" id="signinvite"/>
               <br/>
               <input class="secbutton" type="submit" name="save" value="Spara som utkast"/>
+              </div>
              </span>
            else
               <div id="signatorylist">
@@ -564,9 +565,8 @@ showDocumentPageHelper action document helpers title content =
       <% showDocumentBox document %>
      </div>
      <div class="docviewright"> 
-      <p class="headline"><% title %><br/> 
-          <small><a href=(LinkIssueDocPDF document) target="_blank">Öppna som PDF</a></small>
-      </p>
+      <p class="headline"><% title %></p>
+      <p><small><a href=(LinkIssueDocPDF document) target="_blank">Ladda ned PDF</a></small></p>
       <form method="post" id="form" name="form" action=action> 
        <% content %>
       </form>

@@ -46,7 +46,8 @@ function disableInfoText(where)
 
 function resizeToWindow()
 {
-    $("#mainContainer").height( $(this).height() - $('#headerContainer').height() - $('#footerContainer').height() - 2 );
+    // FIXME: try to extract css property margin-top and margin-bottom from #mainContainer
+    $("#mainContainer").height( $(this).height() - $('#headerContainer').height() - $('#footerContainer').height() - 25 - 25 );
 }
 
 function signatoryadd()
@@ -224,8 +225,8 @@ function applyRedBorder(field){
 	   
 
   function emailFieldsValidation(fields){
-	 var invalidEmailErrMsg="The Value \"email\" was not recognized as valid email address. Please make sure to put valid email address";
-	 var emptyEmailErrMsg="Please specifiy email address:";
+      var invalidEmailErrMsg = "Felaktig e-post \"email\". Försök igen.";
+      var emptyEmailErrMsg = "Du måste ange e-post till motpart.";
 	 var errorMsg="";
 	 var address="";
 	 var showError=false;
@@ -237,8 +238,8 @@ function applyRedBorder(field){
 		address = $(this).val();
 		 
 			if(address.length == 0){
-				errorMsg=emptyEmailErrMsg
-				showError=true;
+                            errorMsg = emptyEmailErrMsg;
+                            showError = true;
 			}
 			if(isValidEmailAddress(address) == false && showError==false) { 
 				errorMsg=invalidEmailErrMsg.replace("email",address);
@@ -250,7 +251,7 @@ function applyRedBorder(field){
 					.html(errorMsg)
 					.dialog({
 						autoOpen: false,
-						title: 'Error',
+						title: 'Felaktig e-post',
 						modal: true
 					});
 				$dialog.dialog('open');

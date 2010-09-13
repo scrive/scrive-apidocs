@@ -178,14 +178,14 @@ body {
 }
 
 #mainContainer {
-overflow:auto;
-padding-bottom:1px;
-padding-top:1px;
+    overflow: auto;
+    margin-bottom: 25px;
+    margin-top: 25px;
 }
 
 #mainContainer a {
     color: #007cac;
-    font-weight: bold;
+    // font-weight: bold;
     text-decoration: none;
 }
 
@@ -353,6 +353,23 @@ img.waiting
     position: relative;
 }
 
+.accounttable 
+{
+    border-collapse:collapse;
+    border-width: 1px;
+    background-color: #EAEAEA;
+    padding: 10px; 
+    width: 800px;
+    margin: 45px auto 10px;
+}
+
+.accounttable td
+{
+    border-width: 1px;
+    border-color: gray;
+    font-weight:normal;
+}
+
 .doctable {
     border-collapse:collapse;
     border-color: gray;
@@ -360,8 +377,7 @@ img.waiting
     background-color: #EAEAEA;
     padding: 10px; 
     width: 800px;
-    margin-left: auto;
-    margin-right: auto;
+    margin: 45px auto 10px;
 }
 
 .doctable td
@@ -369,6 +385,7 @@ img.waiting
     border-style: none none solid none; 
     border-width: 1px;
     border-color: gray;
+    font-weight:normal;
 }
 
 .doctable thead tr td,
@@ -432,9 +449,8 @@ img.waiting
 
 .docview 
 {
-    margin-left: auto;
-    margin-right: auto;
-    width: 1010px;
+    margin: 0px auto;
+    width: 1020px;
     height: 100%;
 }
 
