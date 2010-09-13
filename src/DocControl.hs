@@ -257,7 +257,10 @@ handleIssueShow ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpa
            methodM GET 
            freeleft <- freeLeftForUser user
            when (userid/=unAuthor documentauthor) mzero
-           webHSP (pageFromBody ctx TopDocument kontrakcja 
+           let toptab = if documentstatus document == Closed
+                        then TopDocument
+                        else TopNew
+           webHSP (pageFromBody ctx toptab kontrakcja 
                                     (showDocument user document False freeleft))
        , do
            methodM POST

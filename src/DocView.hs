@@ -402,7 +402,7 @@ showSignatoryEntryForEdit2 idx signatoryname signatorycompany signatorynumber si
              infotext="Orgnr/Persnr"/><br/>
       <input name="signatoryemail"  type="text" value=signatoryemail
              infotext="Personens e-mail" class="emailvalidation"/><br/>
-      <a onclick="return signatoryremove(this);" href="#">Ta bort</a>
+      <small><a onclick="return signatoryremove(this);" href="#">Ta bort</a></small>
     </div>
 
 showSignatoryEntryStatus :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
@@ -526,7 +526,7 @@ showDocument user
                                                  then [emptyDetails] 
                                                  else map signatorydetails documentsignatorylinks) %>
               </div>
-              <a onclick="signatoryadd(); return false;" href="#">Lägg till fler</a>
+              <small><a onclick="signatoryadd(); return false;" href="#">Lägg till fler</a></small>
 
               <div style="margin-top: 10px">
               Undertecknas inom<br/>
