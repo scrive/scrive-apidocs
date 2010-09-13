@@ -53,6 +53,9 @@ function signatoryadd()
 {
     var signatorylist = $( "#signatorylist" );
     var sig = $("#signatory_template").clone();
+	var text = sig.html();
+	var emailfield = sig.find(".emailvalidation");
+	emailfield.attr("id","othersignatoryemail");
     signatorylist.append(sig);
     enableInfoText(sig);
     sig.hide();
@@ -103,30 +106,35 @@ $(document).ready( function () {
          var button = $(this);
          var mrxs = $("form input[name='signatoryname']");
          var tot = "";
-         mrxs.each(function(index) {
-                 if( tot!="" ) tot += ", ";
-                 tot += $(this).val();
-             });
-         $("#mrx").text(tot);
+		 if(!emailFieldsValidation($('input.emailvalidation'))){
+		    return false;
+		 }
+		 else{
+			 mrxs.each(function(index) {
+					 if( tot!="" ) tot += ", ";
+					 tot += $(this).val();
+				 });
+			 $("#mrx").text(tot);
 
-         $("#dialog-confirm-signinvite").dialog({
-                 resizable: false,
-                     height: 340,
-                     width: 350,
-                     modal: true,
-                     buttons: {
-                     'Underteckna': function() {
-                         var form = $("#form");
-                         var name = button.attr("name");
-                         form.append("<input type='hidden' name='" + name + "' value='automatic'>");
-                         form.submit();
-                     },
-                         'Avbryt': function() {
-                             $(this).dialog('close');
-                         }
-                 }
-             });
+			 $("#dialog-confirm-signinvite").dialog({
+					 resizable: false,
+						 height: 340,
+						 width: 350,
+						 modal: true,
+						 buttons: {
+						 'Underteckna': function() {
+							 var form = $("#form");
+							 var name = button.attr("name");
+							 form.append("<input type='hidden' name='" + name + "' value='automatic'>");
+							 form.submit();
+						 },
+							 'Avbryt': function() {
+								 $(this).dialog('close');
+							 }
+					 }
+				 });
 
+		}
          return false;});
 
     $("#sign").click(function() {
@@ -151,6 +159,28 @@ $(document).ready( function () {
          
          return false;
     });
+	
+	$("input.emailvalidation").focus(function(){
+		applyRedBorder($(this));
+		return false;
+    });
+	
+	$("#loginbtn").click(function(){
+		if(emailFieldsValidation($('input.emailvalidation'))){
+			$("form").submit();
+		}						  
+		return false;
+	});
+	
+	$("#createnewaccount").click(function(){
+		if(emailFieldsValidation($('input.emailvalidation'))){
+			$("form").submit();
+		}
+		return false;
+							
+	
+	});
+	
     $(window).resize(resizeToWindow);
     $(window).resize();
     
@@ -161,67 +191,85 @@ $(document).ready( function () {
     //    RPXNOW.language_preference = 'sv';
 });
 
-// Email Validation on submit
-$(document).ready(function(){
-  $("form").submit(function(e){
-     var invalidEmailErrMsg="Value in the \"Email\" field was not recognized. Please make sure to put valid email address";
-	 var emptyEmailErrMsg="Please specifiy email address:";
-	 var errorMsg="";
-     var address=$("input[name*='email']").val();
-	 var showError=false;
-	 
-	 
-	 if(address.length == 0){
-	   errorMsg=emptyEmailErrMsg
-	   showError=true;
-	 }
-	 if(isValidEmailAddress(address) == false && showError==false) { 
-		errorMsg=invalidEmailErrMsg;
-        showError=true;
-     }
-	 
-	 if(showError){
-	  //$("#errorMsg").html(errorMsg);
-	   var $dialog = $('<div></div>')
-			.html(errorMsg)
-			.dialog({
-				autoOpen: false,
-				title: 'Error',
-				modal: true
-			});
-		$dialog.dialog('open');
-	  return false;
-	 }
-  });
+$("#othersignatoryemail").live('focus', function(e){	
+		    applyRedBorder($(this));
 });
 
-//Email Validation on key up
-$(document).ready(function() {
-       $("input[name*='email']").focus(function(){
-		    $(this).keyup(function(){
-		   // alert(email.css());
-				var emailVal = $(this).val();
-			
-				if(emailVal != 0)
-				{
-					if(isValidEmailAddress(emailVal))
-					{
-						$(this).removeAttr("style");
-					}
-					else{
-					  $(this).css("border","1px solid red");
-					} 
-				}
-				else{
-					 $(this).removeAttr("style");
-				} 
-				
-				});
-		});
-	
-	});
 	
 function isValidEmailAddress(emailAddress) {
 	var pattern = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;
 	return pattern.test(emailAddress);
+}
+
+function applyRedBorder(field){
+	field.keyup(function(){
+		var emailVal = $(this).val();
+		$(this).removeAttr("style");		
+		if(emailVal != 0)
+		{
+			if(isValidEmailAddress(emailVal))
+			{
+				$(this).removeAttr("style");
+			}
+			else{
+			  $(this).css("border","1px solid red");
+			} 
+		}
+		else{
+			 $(this).removeAttr("style");
+		} 
+				
+	});
+}
+	   
+
+  function emailFieldsValidation(fields){
+	 var invalidEmailErrMsg="The Value \"email\" was not recognized as valid email address. Please make sure to put valid email address";
+	 var emptyEmailErrMsg="Please specifiy email address:";
+	 var errorMsg="";
+	 var address="";
+	 var showError=false;
+	 var isValidEmail=false;
+
+    
+    fields.each(function() {
+		if(!isExceptionalField($(this))){
+		address = $(this).val();
+		 
+			if(address.length == 0){
+				errorMsg=emptyEmailErrMsg
+				showError=true;
+			}
+			if(isValidEmailAddress(address) == false && showError==false) { 
+				errorMsg=invalidEmailErrMsg.replace("email",address);
+				showError=true;
+			}
+			 
+			if(showError){
+				var $dialog = $('<div></div>')
+					.html(errorMsg)
+					.dialog({
+						autoOpen: false,
+						title: 'Error',
+						modal: true
+					});
+				$dialog.dialog('open');
+				return false;
+			}	
+		}
+	});
+	isValidEmail=(showError)?false:true;
+	return isValidEmail;
+}
+
+function isExceptionalField(field){
+
+	var parentid = field.closest("div").attr("id");
+	var fieldid = field.attr("id");
+	var fieldname=field.attr("name");
+
+	if(fieldname=="signatoryemail" && parentid == "signatory_template" && fieldid != "othersignatoryemail")
+		return true
+
+	return false
 }
