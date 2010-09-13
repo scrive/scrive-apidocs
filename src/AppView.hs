@@ -134,15 +134,12 @@ loginBox ctx =
           </td>
           <td>
             <input type="checkbox" id="rememberme" name="rememberme"/>
-            <label for="rememberme">Remember Me</label>
+            <label for="rememberme">Kom ihåg mig</label>
           </td>
     </tr>
 	<tr> 
           <td><input class="button" id="loginbtn" type="submit" name="login" value="Logga in"/></td>
           <td>
-            {- <a href="#" onClick="$('#login').hide(); $('#register').show(); return false;">register</a> -}
-           <% rpxSignInLink ctx "Logga in med OpenID" "/" %>
-           <br />
            {- <a href=LinkSignup>Create account</a> -}
           </td>
 	</tr>
@@ -179,15 +176,13 @@ welcomeBody :: (XMLGenerator m, EmbedAsAttr m (Attr [Char] KontraLink))
             => Context 
             -> XMLGenT m (HSX.XML m)
 welcomeBody (Context {ctxmaybeuser = Just _, ctxhostpart}) = 
-  <div class="centerdivnarrow">
-   <p></p>
-
+  <div class="centerdivnarrow" style="margin-top: 100px;">
+   
    <form action=LinkIssue method="post" enctype="multipart/form-data">
     <span class="small">Ladda upp dokumentet som PDF</span><br/>
     <input class="multi" maxlength="1" type="file" name="doc" accept="pdf"/>
     <input class="bigbutton" type="submit" value="Skapa"/>
    </form>
-   <hr/>
   </div>
 
 

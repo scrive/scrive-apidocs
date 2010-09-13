@@ -63,11 +63,11 @@ handleUserPost ctx@Context{ctxmaybeuser = Just user@User{userid}, ctxtime = minu
               flashmsg <- userDetailsSavedFlashMessage
               update $ AddUserFlashMessage userid flashmsg
             else
-              update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "The new password must be at least 6 characters long")
+              update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "Det nya lösenordet ska vara minst 6 tecken")
         else
-          update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "Old password is incorrect")
+          update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "Du har skrivit in fel nuvarande lösenord")
     else
-      update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "Passwords must match")
+      update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "Nytt lösenord matchar inte med upprepa lösenord")
 
   -- Terms of Service logic
   tos <- getDataFn (look "tos")
@@ -77,8 +77,8 @@ handleUserPost ctx@Context{ctxmaybeuser = Just user@User{userid}, ctxtime = minu
          if isJust tos
             then do
               update $ AcceptTermsOfService userid minutestime
-              update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "You have accepted the Terms of Service Agreement")
-            else update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "You must accept the Terms of Service Agreement")
+              -- update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "You have accepted the Terms of Service Agreement")
+            else update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "För att kunna använda tjänsten måste du acceptera SkrivaPå Allmänna Villkor.")
      else
          return ()
 

@@ -39,10 +39,10 @@ instance Monad m => IsAttrValue m UserID where
 
 showUser ctx@(Context {ctxmaybeuser = Just user}) = 
     webHSP $ pageFromBody ctx TopAccount kontrakcja $ 
-    <div class="doctable">
-     <h1>Välkommen <% userfullname user %></h1>
+    <div class="accounttable">
+     <h1><% userfullname user %></h1>
 
-      <div class="inlinebox">
+      <div>
        <form action=LinkAccount method="post">
         <% tosMessage user %>
         <table>
@@ -61,20 +61,20 @@ showUser ctx@(Context {ctxmaybeuser = Just user}) =
          <tr><td>Faktureringsadress:</td>
              <td><input type="text" name="invoiceaddress" value=(userinvoiceaddress user)/></td>
          </tr>
-         <tr><td>Old password:</td>
+         <tr><td>Nuvarande lösenord:</td>
              <td><input type="password" name="oldpassword"/></td>
          </tr>
-         <tr><td>New password:</td>
+         <tr><td>Nytt lösenord:</td>
              <td><input type="password" name="password"/></td>
          </tr>
-         <tr><td>New password again:</td>
+         <tr><td>Upprepa nytt lösenord:</td>
              <td><input type="password" name="password2"/></td>
          </tr>
        </table>
        <br/>
-       <input class="button" type="submit" value="Change details"/>
+       <input class="button" type="submit" value="Spara ändringar"/>
       </form>
-      <a href=LinkSubaccount>Subaccounts</a>
+      <a href=LinkSubaccount>Underkonton</a>
      </div>
     </div>
   
@@ -221,11 +221,11 @@ userDetailsSavedFlashMessage = liftM (FlashMessage . renderXMLAsBSHTML) $ webHSP
 
 acceptTermsOfServiceForm :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
                             => XMLGenT m (HSX.XML m)
-acceptTermsOfServiceForm = <input type="checkbox" name="tos" id="tos">I accept and agree to the Terms of Service</input>
+acceptTermsOfServiceForm = <input type="checkbox" name="tos" id="tos">Jag har läst och accepterar <a href="...">SkrivaPå Allmänna Villkor</a></input>
 
 acceptedTermsOfServiceMessage :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
                                  => MinutesTime -> XMLGenT m (HSX.XML m)
-acceptedTermsOfServiceMessage time = <span>You accepted the terms of service agreement on <% showDateOnly time %>. </span>
+acceptedTermsOfServiceMessage time = <span/> -- <span>You accepted the terms of service agreement on <% showDateOnly time %>. </span>
 
 
 tosMessage :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
