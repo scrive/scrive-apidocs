@@ -402,7 +402,7 @@ showSignatoryEntryForEdit2 idx signatoryname signatorycompany signatorynumber si
              infotext="Orgnr/Persnr"/><br/>
       <input name="signatoryemail"  type="text" value=signatoryemail
              infotext="Personens e-mail" class="emailvalidation"/><br/>
-      <small><a onclick="return signatoryremove(this);" href="#">Ta bort</a></small>
+      <small><a onclick="return signatoryremove(this.parentNode);" href="#">Ta bort</a></small>
     </div>
 
 showSignatoryEntryStatus :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
