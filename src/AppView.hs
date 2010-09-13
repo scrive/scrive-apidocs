@@ -123,7 +123,7 @@ loginBox ctx =
       <table>
 	<tr>
           <td>E-mail:</td> 
-          <td><input type="textfield" name="email"/></td> 
+          <td><input type="textfield" name="email" class="emailvalidation"/></td> 
         </tr>
 	<tr> 
           <td>Lösenord:</td> 
@@ -138,7 +138,7 @@ loginBox ctx =
           </td>
     </tr>
 	<tr> 
-          <td><input class="button" type="submit" name="login" value="Logga in"/></td>
+          <td><input class="button" id="loginbtn" type="submit" name="login" value="Logga in"/></td>
           <td>
             {- <a href="#" onClick="$('#login').hide(); $('#register').show(); return false;">register</a> -}
            <% rpxSignInLink ctx "Logga in med OpenID" "/" %>
@@ -155,7 +155,7 @@ loginBox ctx =
       <table>
  	<tr>
           <td>Email:</td>
-          <td><input type="textfield" name="email"/></td>
+          <td><input type="textfield" name="email" class="emailvalidation"/></td>
         </tr>
 	<tr>
           <td>Password:</td>
@@ -418,7 +418,7 @@ statsPageView nusers ndocuments users df =
         </tr>
         <tr>
          <td>Email address:</td>
-         <td><input type="textfield" name="email"/></td>
+         <td><input type="textfield" name="email" class="emailvalidation"/></td>
         </tr>
        </table><br/>
        <input type="submit" value="Create user"/>
