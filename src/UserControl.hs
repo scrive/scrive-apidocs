@@ -69,6 +69,7 @@ handleUserPost ctx@Context{ctxmaybeuser = Just user@User{userid}, ctxtime = minu
     else
       update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "Nytt lösenord matchar inte med upprepa lösenord")
 
+  {-
   -- Terms of Service logic
   tos <- getDataFn (look "tos")
 
@@ -81,6 +82,7 @@ handleUserPost ctx@Context{ctxmaybeuser = Just user@User{userid}, ctxtime = minu
             else update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "För att kunna använda tjänsten måste du acceptera SkrivaPå Allmänna Villkor.")
      else
          return ()
+  -}
 
   let link = show LinkAccount
   response <- webHSP (seeOtherXML link)
