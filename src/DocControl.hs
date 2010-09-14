@@ -276,8 +276,7 @@ handleIssueShow ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpa
                seeOther link response
             else do 
              let link = ctxhostpart ++ show LinkIssue
-             flashmsg <- documentSavedForLaterFlashMessage doc2
-             liftIO $ update $ AddUserFlashMessage userid flashmsg
+             addFlashMsgHtml $ documentSavedForLaterFlashMessage doc2
              response <- webHSP (seeOtherXML link)
              seeOther link response
 

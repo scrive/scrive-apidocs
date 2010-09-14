@@ -24,6 +24,28 @@ import System.Process
 import Data.Object
 import qualified Data.Set as Set
 import Data.Maybe
+import Control.Monad.State
+import DocView
+import qualified HSP
+
+addFlashMsgText :: BS.ByteString -> Kontra ()
+addFlashMsgText msg = do
+  ctx <- lift $ get
+  case ctxmaybeuser ctx of
+    -- FIXME: do html escape here
+    Just user -> update $ AddUserFlashMessage (userid user) (FlashMessage msg)
+    Nothing -> return ()
+  
+addFlashMsgHtml :: HSP.HSP HSP.XML 
+                -> Kontra ()
+addFlashMsgHtml msg = do
+  ctx <- lift $ get
+  case ctxmaybeuser ctx of
+    Just user -> do
+      flashmsg <- liftM (FlashMessage . renderXMLAsBSHTML) (webHSP1 msg)
+      update $ AddUserFlashMessage (userid user) flashmsg
+    Nothing -> return ()
+
 
 handleUser :: Context -> Kontra Response
 handleUser ctx = 
@@ -60,14 +82,13 @@ handleUserPost ctx@Context{ctxmaybeuser = Just user@User{userid}, ctxtime = minu
             then do
               passwordhash <- liftIO $ createMaybePassword password
               newuser <- update $ SetUserDetails user fullname companyname companynumber invoiceaddress passwordhash
-              flashmsg <- userDetailsSavedFlashMessage
-              update $ AddUserFlashMessage userid flashmsg
+              addFlashMsgHtml userDetailsSavedFlashMessage
             else
-              update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "Det nya lösenordet ska vara minst 6 tecken")
+              addFlashMsgText $ BS.fromString "Det nya lösenordet ska vara minst 6 tecken"
         else
-          update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "Du har skrivit in fel nuvarande lösenord")
+          addFlashMsgText $ BS.fromString "Du har skrivit in fel nuvarande lösenord"
     else
-      update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "Nytt lösenord matchar inte med upprepa lösenord")
+      addFlashMsgText $ BS.fromString "Nytt lösenord matchar inte med upprepa lösenord"
 
   {-
   -- Terms of Service logic

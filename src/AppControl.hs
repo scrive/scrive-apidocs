@@ -46,6 +46,8 @@ import qualified Data.Set as Set
 import System.IO.Unsafe
 import Debug.Trace
 import Network.Socket
+import qualified HSP as HSP
+
 
 handleRoutes ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} = toIO ctx $ msum $
     ([nullDir >> withTOS ctx (webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx)))
@@ -343,20 +345,11 @@ handleTakeOverDocuments = do
   Just srcuser <- query $ GetUserByUserID srcuserid
   
   update $ FragileTakeOverDocuments (userid ctxuser) srcuserid
-  addFlash $ BS.fromString $ "Took over all documents of '" ++ BS.toString (userfullname srcuser) ++ "'. His account is now empty and can be deleted if you wish so. Show some mercy, though."
+  addFlashMsgText $ BS.fromString $ "Took over all documents of '" ++ BS.toString (userfullname srcuser) ++ "'. His account is now empty and can be deleted if you wish so. Show some mercy, though."
   let link = "/adminonly/"
   response <- webHSP (seeOtherXML link)
   seeOther link response
     
-
-             
-addFlash :: BS.ByteString -> Kontra ()
-addFlash msg = do
-  ctx <- lift $ get
-  case ctxmaybeuser ctx of
-    Just user -> update $ AddUserFlashMessage (userid user) (FlashMessage msg)
-    Nothing -> return ()
-  
 
 
 handleDeleteAccount :: Kontra Response
@@ -367,9 +360,9 @@ handleDeleteAccount = do
   if null documents
      then do
        update $ FragileDeleteUser userid
-       addFlash (BS.fromString ("User deleted. You will not see '" ++ BS.toString (userfullname user) ++ "' here anymore"))
+       addFlashMsgText (BS.fromString ("User deleted. You will not see '" ++ BS.toString (userfullname user) ++ "' here anymore"))
      else do
-       addFlash (BS.fromString ("I cannot delete user. '" ++ BS.toString (userfullname user) ++ "' still has " ++ show (length documents) ++ " documents as author. Take over his documents, then try to delete the account again."))
+       addFlashMsgText (BS.fromString ("I cannot delete user. '" ++ BS.toString (userfullname user) ++ "' still has " ++ show (length documents) ++ " documents as author. Take over his documents, then try to delete the account again."))
   
   let link = "/adminonly/"
   response <- webHSP (seeOtherXML link)
