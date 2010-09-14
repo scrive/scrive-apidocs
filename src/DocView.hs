@@ -652,20 +652,24 @@ invitationMail (Context {ctxmaybeuser = Just user, ctxhostpart})
       <p>Hej <strong><% personname %></strong>,</p>
 
       <p><strong><% creatorname %></strong> har bjudit in dig att underteckna dokumentet 
-         <strong><% documenttitle %></strong> online via tjänsten SkrivaPå. Så här går du vidare:</p> 
+         <strong><% documenttitle %></strong> online via tjänsten SkrivaPå.</p> 
  
-      <p>1. Klicka på länken<br/>
+      <p><i>Översiktlig information</i><br/>
+         Parter: <% partyListString document %><br/>
+         Har undertecknat: <strong><% creatorname %></strong><br/>
+      </p> 
+       <% case documenttimeouttime of 
+              Just time -> <p>Undertecknas senast: <strong><% show time %></strong>.</p> 
+              Nothing -> <span/>
+       %> 
+      <p>Så här går du vidare:<br/>
+         1. Klicka på länken<br/>
          <a href=link><% link %></a><br/>
          2. Granska dokumentet online<br/>
          3. Underteckna<br/>
          4. Det färdigställda dokumentet skickas till din e-post när samtliga avtalsparter undertecknat<br/>
       </p>
       
-         <% case documenttimeouttime of
-              Just time -> <p>Dokumentet kan undertecknas senast <% show time %>.</p>
-              Nothing -> <span/>
-          %>
-
       <% poweredBySkrivaPaPara %>
      </span>
 
