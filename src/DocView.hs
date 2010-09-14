@@ -95,12 +95,11 @@ landpageSignedView ctx document@Document{documenttitle,documentstatus} signatory
     </div>
 
 landpageSignedView ctx document@Document{documenttitle} signatorylink hasaccount =
-    -- we need list of those who did *not yet* sign the document here
-    -- Alla parter = <% partyListString document %>
     <div class="centerdivnarrow">
       <p class="headline">Vänligen läs noga</p>
-      <p>Du har nu undertecknat dokumentet <strong><% documenttitle %></strong>. Alla parter
-         har ännu inte undertecknat dokumentet. När alla undertecknat blir avtalet juridiskt bindande och
+      <p>Du har nu undertecknat dokumentet <strong><% documenttitle %></strong>. 
+         <% partyUnsignedListString document %> har ännu inte undertecknat 
+         dokumentet. När alla undertecknat blir avtalet juridiskt bindande och
          en kopia av det färdigställda dokumentet skickats då till din e-post.</p>
       <% willCreateAccountForYou (not hasaccount) %>
       <a class="bigbutton" href=(LinkLandpageSaved document signatorylink)>Spara</a>
@@ -129,7 +128,7 @@ landpageDocumentSavedView (ctx@Context { ctxmaybeuser = Just user }) document si
      <p>Vi hoppas att du är nöjd med vår tjänst hittills och att du är nyfiken på att själv använda 
         SkrivaPå för att skriva dina avtal. Därför erbjuder vi dig som ny kund möjligheten att testa 
         tjänsten genom tre fria avtal. Dina fria avtal förbrukas endast då ett avtal undertecknats av 
-        <% partyListString document %>.</p>
+        alla parter.</p>
 
      <p>Börja redan nu! Ladda upp ditt avtal genom att klicka nedan.</p>
      <a class="bigbutton" href="/">Starta</a> {- FIXME: move upload stuff here also -}
@@ -488,16 +487,11 @@ showDocument user
                     <p>Är du säker att du vill underteckna dokumentet <strong><% documenttitle %></strong>?</p>
                     
                     <p>När du bekräftat kommer en automatisk inbjudan att skickas till 
-                       <strong><span id="mrx">"Mr X"</span></strong> med e-post.
-                       Avtalet blir <strong>juridiskt bindande</strong> när <% partyListString document %> undertecknat.</p>
+                       <span class="Xinvited">Invited</span> med e-post.
+                       Avtalet blir <strong>juridiskt bindande</strong> när alla parter undertecknat.</p>
                    </div>
 
-                , <div id="dialog-confirm-signinvite-done" title="Dokumentet undertecknat!">
-	            <p>Du har undertecknat avtalet och en inbjudan har nu skickats till 
-                    <strong><span id="mrx"><% concatSignatories (map signatorydetails $ documentsignatorylinks) %></span></strong>.</p>
-                   </div>
                 , <script> var documentid = "<% show $ documentid %>"; 
-                           var issuedone = <% if issuedone then "true" else "false" %>;
                   </script>
                 ]
    in showDocumentPageHelper (LinkIssueDoc document) document helper 
@@ -577,16 +571,22 @@ showDocumentPageHelper action document helpers title content =
 showDocumentForSign :: (XMLGenerator m,
                         EmbedAsAttr m (Attr [Char] KontraLink),
                         EmbedAsAttr m (Attr [Char] BS.ByteString)) =>
-                       KontraLink -> Document -> BS.ByteString -> BS.ByteString -> Bool 
+                       KontraLink 
+                           -> Document 
+                           -> BS.ByteString 
+                           -> BS.ByteString 
+                           -> MagicHash 
+                           -> Bool 
                     -> XMLGenT m (HSX.XML m)
-showDocumentForSign action document authorname invitedname wassigned =
+showDocumentForSign action document authorname invitedname magichash wassigned =
    let helper = [ <script type="text/javascript" src="/js/document-edit.js"/>
                 , <script> var documentid = <% show $ documentid document %>; 
                   </script>
                 , <div id="dialog-confirm-sign" title="Underteckna">  
                    
                    <p>Är du säker att du vill underteckna dokumentet <strong><% documenttitle document %></strong>?</p>
-                   <p>När <% partyListString document %> undertecknat blir avtalet <strong>juridiskt bindande</strong> och
+                   <p>När <% partyUnsignedMeAndListString magichash document %> undertecknat blir 
+                      avtalet <strong>juridiskt bindande</strong> och
                       det färdigställda avtalet skickas till din e-post.</p>
                   </div>
                 ]
@@ -597,12 +597,16 @@ showDocumentForSign action document authorname invitedname wassigned =
            then <span>Du har redan undertecknat!</span>
            else <span>
                 
-                 <p>Välkommen <strong><% invitedname %></strong>,</p>
+                 <p>Välkommen <strong><% invitedname %></strong></p>
+                
+                   <p>Vänligen var noga med att granska dokumentet och kontrollera uppgifterna 
+                      nedan innan du undertecknar.</p>
+                   
+                   <p><strong>Parter</strong><br/>
+                      <% partyListString document %></p>
  
-                 <p>På vänster sida har du dokumentet <strong><% documenttitle document %></strong> som <strong><% authorname %></strong> har 
-                    bjudit in dig att underteckna. Genom att underteckna ingår du ett <strong>juridiskt bindande</strong> avtal. 
-                    Vill du underteckna? 
-                 </p>
+                   <p>Genom att underteckna ingår du ett <strong>juridiskt bindande</strong> avtal. 
+                      Vill du underteckna?</p>
 
                   {- Avvisa - gray FIXME -}
 
@@ -681,7 +685,7 @@ closedMail (Context {ctxhostpart})
      <span>
        <p>Hej <strong><% personname %></strong>,</p>
        <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats 
-          av <% partyListString document %> avtalet 
+          av <% partyListString document %>. Avtalet 
           är nu juridiskt bindande. Det färdigställda dokumentet bifogas nedan.</p> 
 
        <p>Du kan verifiera avtalet mot vår databas genom följande länk:<br />
@@ -704,7 +708,7 @@ closedMailAuthor (Context {ctxhostpart})
         <span>
           <p>Hej <strong><% personname %></strong>,</p>
             <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats 
-               av <% partyListString document %> avtalet 
+               av <% partyListString document %>. Avtalet 
                är nu juridiskt bindande. Det färdigställda dokumentet bifogas nedan.</p> 
 
             <p>Du kan verifiera avtalet mot vår databas genom följande länk:<br />
@@ -727,15 +731,61 @@ partyList document =
         signas = map signatorydetails (documentsignatorylinks document)
     in author : signas
 
+partyUnsignedList :: Document -> [SignatoryDetails]
+partyUnsignedList document =
+    let signalinks = documentsignatorylinks document
+        unsignalinks = filter ((== Nothing) . maybesigninfo) signalinks
+        signas = map signatorydetails unsignalinks
+    in signas
+
+partyUnsignedMeAndList :: MagicHash -> Document -> [SignatoryDetails]
+partyUnsignedMeAndList magichash document =
+    let signalinks = documentsignatorylinks document
+        cond signlink = signatorymagichash signlink /= magichash &&
+                        maybesigninfo signlink == Nothing
+        unsignalinks = filter cond signalinks
+        me = SignatoryDetails { signatoryname = BS.fromString "du"
+                              , signatorycompany = BS.empty
+                              , signatorynumber = BS.empty
+                              , signatoryemail = BS.empty
+                              }
+        signas = map signatorydetails unsignalinks
+    in me : signas
+
+partyListButAuthor :: Document -> [SignatoryDetails]
+partyListButAuthor document =
+    map signatorydetails (documentsignatorylinks document)
+
+{-
+partyListButAuthor :: Document -> [SignatoryDetails]
+partyListButAuthor document =
+    map signatorydetails (documentsignatorylinks document)
+-}  
+
 strong :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 strong x = <strong><% x %></strong>
 
-partyListString :: (XMLGenerator m) => Document -> XMLGenT m (HSX.XML m)
+partyListString :: (XMLGenerator m) => Document -> GenChildList m
 partyListString document = 
     swedishListString (map (strong . BS.toString . signatoryname) (partyList document))
 
-swedishListString :: (XMLGenerator m) => [XMLGenT m (HSX.XML m)] -> XMLGenT m (HSX.XML m)
-swedishListString [] = <span />
-swedishListString [x] = x
-swedishListString [x, y] = <span><% x %> och <% y %></span>
-swedishListString (x:xs) = <span><% x %>, <% swedishListString xs %></span>
+partyUnsignedListString :: (XMLGenerator m) => Document -> GenChildList m
+partyUnsignedListString document = 
+    swedishListString (map (strong . BS.toString . signatoryname) (partyUnsignedList document))
+
+partyUnsignedMeAndListString :: (XMLGenerator m) => MagicHash -> Document -> GenChildList m
+partyUnsignedMeAndListString magichash document =
+    swedishListString (map (strong . BS.toString . signatoryname) (partyUnsignedMeAndList magichash document))
+
+
+swedishListString :: (XMLGenerator m) => [XMLGenT m (HSX.XML m)] -> GenChildList m
+swedishListString [] = return []
+swedishListString [x] = asChild x
+swedishListString [x, y] = do
+  list <- sequence [asChild x, asChild " och ", asChild y]
+  return (concat list)
+swedishListString (x:xs) = do
+  list <- sequence [asChild x, asChild ", "]
+  list2 <- swedishListString xs
+  return (concat list ++ list2)
+
