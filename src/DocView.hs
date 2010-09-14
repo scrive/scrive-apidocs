@@ -499,7 +499,6 @@ showDocument user
                 , <script> var documentid = "<% show $ documentid %>"; 
                            var issuedone = <% if issuedone then "true" else "false" %>;
                   </script>
-                , <script type="text/javascript" src="/js/document-edit.js"/>
                 ]
    in showDocumentPageHelper (LinkIssueDoc document) document helper 
            (BS.fromString $ "Avtal: " ++ BS.toString documenttitle)  
