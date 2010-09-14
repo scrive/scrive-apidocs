@@ -232,7 +232,7 @@ handleSignShow ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime})
               invitedname = signatoryname $ signatorydetails $ invitedlink 
           webHSP (pageFromBody ctx TopNone kontrakcja 
                  (showDocumentForSign (LinkSignDoc document invitedlink) 
-                       document authorname invitedname wassigned))
+                       document authorname invitedname magichash1 wassigned))
        ]
 
 handleIssue :: Context -> Kontra Response
