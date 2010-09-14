@@ -484,7 +484,7 @@ sealSpecFromDocument document author@(User {userfullname,usercompanyname,usercom
       snd3 (a,b,c) = b
       thd3 (a,b,c) = c
       persons = authorperson : (map fst3 signatories)
-      paddeddocid = reverse $ take 10 $ (reverse ("0000000000" ++ show docid))
+      paddeddocid = reverse $ take 20 $ (reverse (show docid) ++ repeat '0')
       initials = concatComma (map initialsOfPerson persons)
       initialsOfPerson (Seal.Person {Seal.fullname}) = map head (words fullname)
       -- 2. "Name of invited" granskar dokumentet online

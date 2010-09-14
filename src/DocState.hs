@@ -24,11 +24,12 @@ import Control.Monad.Trans
 import Data.List (zipWith4)
 import System.Random
 import Data.Word
+import Data.Int
 
 $(deriveAll [''Eq, ''Ord, ''Default]
   [d|
       newtype Author = Author { unAuthor :: UserID }
-      newtype DocumentID = DocumentID { unDocumentID :: Int }
+      newtype DocumentID = DocumentID { unDocumentID :: Int64 }
       newtype SignatoryLinkID = SignatoryLinkID { unSignatoryLinkID :: Int }
       newtype FileID = FileID { unFileID :: Int }
       newtype TimeoutTime = TimeoutTime { unTimeoutTime :: MinutesTime }
@@ -553,7 +554,7 @@ newDocument :: User
             -> Update Documents Document
 newDocument user@User{userid,userfullname,usercompanyname,usercompanynumber,useremail} title ctime isfree = do
   documents <- ask
-  docid <- getUnique documents DocumentID
+  docid <- getUnique64 documents DocumentID
   let doc = Document
           { documentid = docid
           , documenttitle = title

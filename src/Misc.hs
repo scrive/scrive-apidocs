@@ -36,6 +36,7 @@ import Happstack.Server.SimpleHTTP
 import Happstack.Util.Common
 import Data.Data
 import Happstack.Data
+import Data.Int
 
 {-
 
@@ -104,6 +105,13 @@ getUnique ixset constr = do
   if IxSet.null (ixset @= v)
      then return v
      else getUnique ixset constr
+
+getUnique64 ixset constr = do
+  r <- getRandomR (0,0x7fffffffffffffff::Int64)
+  let v = constr r
+  if IxSet.null (ixset @= v)
+     then return v
+     else getUnique64 ixset constr
 
 
 #ifdef WINDOWS

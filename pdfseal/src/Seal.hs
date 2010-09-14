@@ -374,7 +374,7 @@ lastpage (SealSpec {documentNumber,persons,history}) =
  "BT " ++
  "0.625 0.537 0.53 0.257 k " ++
  "/TT0 1 Tf " ++
- "9 0 0 9 39.8198 74.2334 Tm " ++
+ "8 0 0 8 39.8198 74.2334 Tm " ++
  "1.2 TL " ++
  "[(Detta verifikat är utfärdat av SkrivaPå CM AB och styrker att dokument nummer " ++ documentNumber ++ 
  " har undertecknats)]TJ " ++
