@@ -141,9 +141,11 @@ loginBox ctx =
           <td><input class="button" id="loginbtn" type="submit" name="login" value="Logga in"/></td>
           <td>
             {- <a href="#" onClick="$('#login').hide(); $('#register').show(); return false;">register</a> -}
-           <% rpxSignInLink ctx "Logga in med OpenID" "/" %>
-           <br />
-           <a href=LinkSignup>Create account</a>
+           {-<% rpxSignInLink ctx "Logga in med OpenID" "/" %>
+           <br />-}
+           {-<a href=LinkSignup>Create account</a>
+           <br />-}
+           <a href=LinkForgotPassword>Forgot password</a>
           </td>
 	</tr>
       </table>
@@ -434,7 +436,7 @@ statsPageView nusers ndocuments users df =
 signupConfirmPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
                => Context -> XMLGenT m (HSX.XML m)
 signupConfirmPageView ctx =
-    <div>Please check your email for your password. TODO</div>
+    <div>Please check your email for your password.</div>
 
 data SignupForm = SignupForm {
     signupFirstname::String,
@@ -518,7 +520,7 @@ forgotPasswordConfirmPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] Kont
                => XMLGenT m (HSX.XML m)
 forgotPasswordConfirmPageView =
   <div>
-    A new password has been emailed to you. Please check your email. TODO
+    A new password has been emailed to you. Please check your email.
   </div>
 
 loginPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 

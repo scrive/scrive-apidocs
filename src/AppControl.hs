@@ -102,8 +102,8 @@ handleRoutes ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} = toIO ctx $ msum 
          else []))
    ++ [dir "logout" (handleLogout)
       , dir "login" loginPage
-      , dir "signup" signupPage
-      , dir "tos" $ tosPage ctx
+      -- , dir "signup" signupPage
+      , dir "forgotpassword" forgotPasswordPage
       ]
    ++ [ fileServe [] "public"] 
 
@@ -189,9 +189,9 @@ signupPageGet = do
 
 signupPageError :: SignupForm -> Maybe String
 signupPageError form
-    | signupEmail form == "" = Just "You must enter an email address TODO"
-    | signupPassword form /= signupPassword2 form = Just "Passwords must match TODO"
-    | not $ isPasswordStrong $ BS.fromString $ signupPassword form = Just "Passwords must be at least 6 characters TODO"
+    | signupEmail form == "" = Just "You must enter an email address"
+    | signupPassword form /= signupPassword2 form = Just "Passwords must match"
+    | not $ isPasswordStrong $ BS.fromString $ signupPassword form = Just "Passwords must be at least 6 characters"
     | otherwise = Nothing
     
 signupPagePost :: Kontra Response
