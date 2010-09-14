@@ -52,6 +52,7 @@ handleUser ctx =
     msum 
     [ methodM GET >> showUser ctx
     , methodM POST >> handleUserPost ctx
+    , dir "password" $ handleUserPasswordPost ctx
     , dir "subaccount" $ msum [ methodM GET  >> handleGetSubaccount ctx 
                               , methodM POST >> handlePostSubaccount ctx
                               ]
@@ -65,7 +66,7 @@ createMaybePassword password
         return $ Just hash
 
 handleUserPost :: Context -> Kontra Response
-handleUserPost ctx@Context{ctxmaybeuser = Just user@User{userid}, ctxtime = minutestime} = do
+handleUserPost ctx@Context{ctxmaybeuser = Just user@User{userid}} = do
   fullname <- g "fullname"
   companyname <- g "companyname"
   companynumber <- g "companynumber"
@@ -74,36 +75,22 @@ handleUserPost ctx@Context{ctxmaybeuser = Just user@User{userid}, ctxtime = minu
   password <- g "password"
   password2 <- g "password2"
   
-  if (password) == (password2)
+  if password == password2
     then 
-      if verifyPassword (userpassword user) oldpassword || password == BS.empty
+      if verifyPassword (userpassword user) oldpassword
         then
-          if isPasswordStrong password || password == BS.empty
+          if isPasswordStrong password
             then do
               passwordhash <- liftIO $ createMaybePassword password
               newuser <- update $ SetUserDetails user fullname companyname companynumber invoiceaddress passwordhash
-              addFlashMsgHtml userDetailsSavedFlashMessage
+              flashmsg <- userDetailsSavedFlashMessage
+              update $ AddUserFlashMessage userid flashmsg
             else
               addFlashMsgText $ BS.fromString "Det nya lösenordet ska vara minst 6 tecken"
         else
           addFlashMsgText $ BS.fromString "Du har skrivit in fel nuvarande lösenord"
     else
-      addFlashMsgText $ BS.fromString "Nytt lösenord matchar inte med upprepa lösenord"
-
-  {-
-  -- Terms of Service logic
-  tos <- getDataFn (look "tos")
-
-  if isNothing (userhasacceptedtermsofservice user)
-     then
-         if isJust tos
-            then do
-              update $ AcceptTermsOfService userid minutestime
-              -- update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "You have accepted the Terms of Service Agreement")
-            else update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "För att kunna använda tjänsten måste du acceptera SkrivaPå Allmänna Villkor.")
-     else
-         return ()
-  -}
+      update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "Passwords must match TODO")
 
   let link = show LinkAccount
   response <- webHSP (seeOtherXML link)
@@ -125,13 +112,18 @@ handlePostSubaccount ctx@Context { ctxmaybeuser = Just (user@User { userid })} =
   response <- webHSP (seeOtherXML link)
   seeOther link response
 
+randomPassword :: IO BS.ByteString
+randomPassword = do
+    let letters =['a'..'z'] ++ ['0'..'9'] ++ ['A'..'Z']
+    indexes <- liftIO $ replicateM 8 (randomRIO (0,length letters-1))
+    return (BS.fromString $ map (letters!!) indexes)
+
 createUser :: BS.ByteString -> BS.ByteString -> Maybe BS.ByteString -> Maybe User -> IO User
 createUser fullname email maybepassword maybesupervisor =
   case maybepassword of
     Nothing -> do
-      let letters =['a'..'z'] ++ ['0'..'9'] ++ ['A'..'Z']
-      indexes <- liftIO $ replicateM 8 (randomRIO (0,length letters-1))
-      createUser1 fullname email (BS.fromString $ map (letters!!) indexes) False maybesupervisor
+      password <- randomPassword
+      createUser1 fullname email password False maybesupervisor
     Just x ->
       createUser1 fullname email x True maybesupervisor
 
@@ -149,6 +141,20 @@ createUser1 fullname email password isnewuser maybesupervisor = do
   liftIO $ sendMail [(fullname, email)]
                (BS.fromString "Välkommen!") content BS.empty
   return user
+  
+resetUserPassword :: BS.ByteString -> IO ()
+resetUserPassword email = do
+  maybeuser <- query $ GetUserByEmail (Email{unEmail=email})
+  case maybeuser of
+    Just user -> do
+      password <- randomPassword
+      passwordhash <- createPassword password
+      update $ SetUserPassword user passwordhash
+      content <- liftIO $ passwordChangeMail email (userfullname user) password
+      liftIO $ sendMail [((userfullname user), email)]
+        (BS.fromString "Password change TODO") content BS.empty
+    Nothing ->
+      return ()
 
 -- Session
 userLogin :: (MonadIO m) => ServerPartT m (Maybe User)
