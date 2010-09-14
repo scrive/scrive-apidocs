@@ -102,7 +102,8 @@ handleRoutes ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} = toIO ctx $ msum 
          else []))
    ++ [dir "logout" (handleLogout)
       , dir "login" loginPage
-      -- , dir "signup" signupPage
+      , dir "signup" signupPage
+      , dir "tos" $ tosPage ctx
       ]
    ++ [ fileServe [] "public"] 
 
@@ -160,7 +161,23 @@ appHandler = do
   handleRoutes ctx `mplus` do
      response <- webHSP (pageFromBody ctx TopNone kontrakcja (errorReport ctx rq))
      setRsCode 404 response
-     
+
+forgotPasswordPage :: Kontra Response
+forgotPasswordPage = (methodM GET >> forgotPasswordPageGet) `mplus`
+                     (methodM POST >> forgotPasswordPagePost)
+
+forgotPasswordPageGet :: Kontra Response
+forgotPasswordPageGet = do
+    ctx <- lift get
+    renderFromBody ctx TopNone kontrakcja forgotPasswordPageView
+    
+forgotPasswordPagePost :: Kontra Response
+forgotPasswordPagePost = do
+    ctx <- lift get
+    email <- getDataFnM $ look "email"
+    liftIO $ resetUserPassword (BS.fromString email)
+    renderFromBody ctx TopNone kontrakcja forgotPasswordConfirmPageView
+
 signupPage :: Kontra Response
 signupPage = (methodM GET >> signupPageGet) `mplus`
              (methodM POST >> signupPagePost)
@@ -168,7 +185,7 @@ signupPage = (methodM GET >> signupPageGet) `mplus`
 signupPageGet :: Kontra Response
 signupPageGet = do
     ctx <- lift get
-    renderFromBody ctx TopNone kontrakcja (signupPageView [] Nothing ctx)
+    renderFromBody ctx TopNone kontrakcja (signupPageView [] Nothing)
 
 signupPageError :: SignupForm -> Maybe String
 signupPageError form
@@ -184,10 +201,10 @@ signupPagePost = do
     
     case maybeform of
         Nothing ->
-            renderFromBody ctx TopNone kontrakcja (signupPageView [] Nothing ctx)
+            renderFromBody ctx TopNone kontrakcja (signupPageView [] Nothing)
         Just form -> do
             case signupPageError form of
-                Just error -> renderFromBody ctx TopNone kontrakcja (signupPageView [error] maybeform ctx)
+                Just error -> renderFromBody ctx TopNone kontrakcja (signupPageView [error] maybeform)
                 Nothing -> do
                     -- Create the user, which sends them a welcome email.
                     account <- liftIO $ createUser (BS.fromString ((signupFirstname form) ++ " " ++ (signupLastname form))) (BS.fromString (signupEmail form)) (Just (BS.fromString (signupPassword form))) Nothing

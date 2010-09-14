@@ -25,9 +25,11 @@ data KontraLink
     = LinkAbout
     | LinkLogin
     | LinkSignup
+    | LinkForgotPassword
     | LinkIssue
     | LinkMain
     | LinkAccount
+    | LinkAccountPassword
     | LinkLandpageSaved Document SignatoryLink
     | LinkSignDoc Document SignatoryLink
     | LinkIssueDoc Document
@@ -40,9 +42,11 @@ instance Show KontraLink where
     showsPrec _ LinkAbout = (++) "/about"
     showsPrec _ LinkLogin = (++) "/login"
     showsPrec _ LinkSignup = (++) "/signup"
+    showsPrec _ LinkForgotPassword = (++) "/forgotpassword"
     showsPrec _ LinkIssue = (++) "/d"
     showsPrec _ LinkMain = (++) "/"
     showsPrec _ LinkAccount = (++) "/account"
+    showsPrec _ LinkAccountPassword = (++) "/account/password"
     showsPrec _ LinkSubaccount = (++) "/account/subaccount"
     showsPrec _ (LinkLandpageSaved document signatorylink) = 
         (++) $ "/landpage/signedsave/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink)

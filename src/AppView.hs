@@ -140,7 +140,10 @@ loginBox ctx =
 	<tr> 
           <td><input class="button" id="loginbtn" type="submit" name="login" value="Logga in"/></td>
           <td>
-           {- <a href=LinkSignup>Create account</a> -}
+            {- <a href="#" onClick="$('#login').hide(); $('#register').show(); return false;">register</a> -}
+           <% rpxSignInLink ctx "Logga in med OpenID" "/" %>
+           <br />
+           <a href=LinkSignup>Create account</a>
           </td>
 	</tr>
       </table>
@@ -465,8 +468,8 @@ signupPageFlashMessageBox errors =
     <div class="flashmsgbox"><% errors %></div>
 
 signupPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
-               => [String] -> Maybe SignupForm -> Context -> XMLGenT m (HSX.XML m)
-signupPageView errors form ctx =
+               => [String] -> Maybe SignupForm -> XMLGenT m (HSX.XML m)
+signupPageView errors form =
     <div>
         <% signupPageFlashMessageBox errors %>
         <form action=LinkSignup method="post">
@@ -495,6 +498,28 @@ signupPageView errors form ctx =
             <input type="submit" value="Create Account" />
         </form>
     </div>
+
+forgotPasswordPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
+               => XMLGenT m (HSX.XML m)
+forgotPasswordPageView =
+  <div>
+    <form action=LinkForgotPassword method="post">
+      <table>
+        <tr>
+          <td>Email</td>
+          <td><input name="email" /></td>
+        </tr>
+      </table>
+      <input type="submit" value="Reset password" />
+    </form>
+  </div>
+
+forgotPasswordConfirmPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
+               => XMLGenT m (HSX.XML m)
+forgotPasswordConfirmPageView =
+  <div>
+    A new password has been emailed to you. Please check your email. TODO
+  </div>
 
 loginPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
                => Context -> XMLGenT m (HSX.XML m)
