@@ -215,8 +215,8 @@ inviteSubaccountMail supervisorname companyname emailaddress personname newpassw
       <% poweredBySkrivaPaPara %> 
      </span>
 
-userDetailsSavedFlashMessage :: (MonadIO m) => m FlashMessage
-userDetailsSavedFlashMessage = liftM (FlashMessage . renderXMLAsBSHTML) $ webHSP1
+userDetailsSavedFlashMessage :: HSP.HSP HSP.XML
+userDetailsSavedFlashMessage = 
     <div>Dina kontoändringar har sparats.</div>
 
 acceptTermsOfServiceForm :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 

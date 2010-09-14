@@ -150,27 +150,27 @@ welcomeEmail fullname =
 
 
 
-documentIssuedFlashMessage :: (MonadIO m) => Document -> m FlashMessage
-documentIssuedFlashMessage document = liftM (FlashMessage . renderXMLAsBSHTML) $ webHSP1
+documentIssuedFlashMessage :: Document -> HSP.HSP HSP.XML
+documentIssuedFlashMessage document = 
     <div>
      Du har undertecknat avtalet och en inbjudan har nu skickats till 
      <strong><span id="mrx"><% concatSignatories (map signatorydetails $ documentsignatorylinks document) %></span></strong>.
     </div>
 
-documentSavedForLaterFlashMessage :: (MonadIO m) => Document -> m FlashMessage
-documentSavedForLaterFlashMessage document = liftM (FlashMessage . renderXMLAsBSHTML) $ webHSP1
+documentSavedForLaterFlashMessage :: Document -> HSP.HSP HSP.XML
+documentSavedForLaterFlashMessage document = 
     <div>
      Du har sparat documentet.
     </div>
 
-documentSignedFlashMessage :: (MonadIO m) => Document -> m FlashMessage
-documentSignedFlashMessage document = liftM (FlashMessage . renderXMLAsBSHTML) $ webHSP1
+documentSignedFlashMessage :: Document -> HSP.HSP HSP.XML
+documentSignedFlashMessage document =
     <div>
      Du har undertecknat avtalet!
     </div>
 
-documentClosedFlashMessage :: (MonadIO m) => Document -> m FlashMessage
-documentClosedFlashMessage document = liftM (FlashMessage . renderXMLAsBSHTML) $ webHSP1
+documentClosedFlashMessage :: Document -> HSP.HSP HSP.XML
+documentClosedFlashMessage document =
     <div>
      Du har undertecknat avtalet! Avtalet är undertecknat av <% partyListString document %> nu!
     </div>
