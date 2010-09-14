@@ -75,8 +75,8 @@ handleRoutes ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} = toIO ctx $ msum 
                              ])
            
      , dir "pagesofdoc" $ 
-           withTOS ctx (pathdb GetDocumentByDocumentID $ \document -> 
-                                     DocControl.handlePageOfDocument ctxnormalizeddocuments document)
+           pathdb GetDocumentByDocumentID $ \document -> 
+                                     DocControl.handlePageOfDocument ctxnormalizeddocuments document
      , dir "resendemail" $ 
            withTOS ctx (pathdb GetDocumentByDocumentID $ \document -> 
                                      path $ \signatorylinkid -> 

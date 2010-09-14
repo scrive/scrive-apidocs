@@ -496,7 +496,7 @@ showDocument user
 	            <p>Du har undertecknat avtalet och en inbjudan har nu skickats till 
                     <strong><span id="mrx"><% concatSignatories (map signatorydetails $ documentsignatorylinks) %></span></strong>.</p>
                    </div>
-                , <script> var documentid = <% show $ documentid %>; 
+                , <script> var documentid = "<% show $ documentid %>"; 
                            var issuedone = <% if issuedone then "true" else "false" %>;
                   </script>
                 , <script type="text/javascript" src="/js/document-edit.js"/>
