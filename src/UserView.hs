@@ -61,7 +61,13 @@ showUser ctx@(Context {ctxmaybeuser = Just user}) =
          <tr><td>Faktureringsadress:</td>
              <td><input type="text" name="invoiceaddress" value=(userinvoiceaddress user)/></td>
          </tr>
-         <tr><td>Old password TODO:</td>
+       </table>
+       <input class="button" type="submit" value="Spara ändringar"/>
+      </form>
+      <br />
+      <form action=LinkAccountPassword method="post">
+        <table>
+         <tr><td>Nuvarande lösenord:</td>
              <td><input type="password" name="oldpassword"/></td>
          </tr>
          <tr><td>Nytt lösenord:</td>
@@ -71,10 +77,10 @@ showUser ctx@(Context {ctxmaybeuser = Just user}) =
              <td><input type="password" name="password2"/></td>
          </tr>
        </table>
-       <br/>
-       <input class="button" type="submit" value="Change details"/>
+       <input class="button" type="submit" value="Ändra lösenord"/>
       </form>
-      <a href=LinkSubaccount>Subaccounts</a>
+      <br />
+      <a href=LinkSubaccount>Underkonton</a>
      </div>
     </div>
   

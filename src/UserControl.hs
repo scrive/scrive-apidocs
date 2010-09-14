@@ -58,19 +58,8 @@ handleUser ctx =
                               ]
     ]
 
-createMaybePassword :: BS.ByteString -> IO (Maybe Password)
-createMaybePassword password
-    | password == BS.empty = return Nothing
-    | otherwise = do
-        hash <- createPassword password
-        return $ Just hash
-
-handleUserPost :: Context -> Kontra Response
-handleUserPost ctx@Context{ctxmaybeuser = Just user@User{userid}} = do
-  fullname <- g "fullname"
-  companyname <- g "companyname"
-  companynumber <- g "companynumber"
-  invoiceaddress <- g "invoiceaddress"
+handleUserPasswordPost :: Context -> Kontra Response
+handleUserPasswordPost ctx@Context{ctxmaybeuser = Just user@User{userid}} = do
   oldpassword <- g "oldpassword"
   password <- g "password"
   password2 <- g "password2"
@@ -92,6 +81,8 @@ handleUserPost ctx@Context{ctxmaybeuser = Just user@User{userid}} = do
     else
       update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "Passwords must match TODO")
 
+backToAccount :: Kontra Response
+backToAccount = do
   let link = show LinkAccount
   response <- webHSP (seeOtherXML link)
   seeOther link response
@@ -152,7 +143,7 @@ resetUserPassword email = do
       update $ SetUserPassword user passwordhash
       content <- liftIO $ passwordChangeMail email (userfullname user) password
       liftIO $ sendMail [((userfullname user), email)]
-        (BS.fromString "Password change TODO") content BS.empty
+        (BS.fromString "Password change") content BS.empty
     Nothing ->
       return ()
 
