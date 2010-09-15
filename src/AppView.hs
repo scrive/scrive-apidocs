@@ -288,6 +288,9 @@ topnavi True ctx title link =
 topnavi False ctx title link = 
     maybeSignInLink2 ctx title link ""
 
+#define _DATESTR(x) #x
+#define DATESTR _DATESTR(__DATE__)
+
 globalScriptsAndStyles = 
       [ <link rel="stylesheet" type="text/css" href="/theme/style.css" media="screen" />
       , <link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/ui-lightness/jquery-ui.css" media="screen" />
@@ -298,7 +301,7 @@ globalScriptsAndStyles =
       , <script src="/js/jquery-ui-1.8.custom.min.js"/>
       -}
       , <script src="/js/jquery.MultiFile.js"/>
-      , <script src="/js/global.js"/>
+      , <script src=("/js/global.js?" ++ __DATE__)/>
       ]
 
 pageFromBody :: (EmbedAsChild (HSPT' IO) xml) 
