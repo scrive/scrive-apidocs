@@ -578,9 +578,8 @@ showDocumentForSign :: (XMLGenerator m,
                            -> MagicHash 
                            -> Bool 
                     -> XMLGenT m (HSX.XML m)
-showDocumentForSign action document authorname invitedname magichash wassigned =
-   let helper = [ <script type="text/javascript" src="/js/document-edit.js"/>
-                , <script> var documentid = <% show $ documentid document %>; 
+showDocumentForSign action document invitedlink wassigned =
+   let helper = [ <script> var documentid = "<% show $ documentid document %>"; 
                   </script>
                 , <div id="dialog-confirm-sign" title="Underteckna">  
                    
