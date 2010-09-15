@@ -40,8 +40,8 @@ landpageSignInviteView ctx document@Document{ documenttitle
     <div class="centerdivnarrow">
      <p class="headline">Dokumentet <strong><% documenttitle %></strong> undertecknat!</p>
      
-     <p>En inbjudan till avtalet har nu skickats till 
-      <strong><span id="mrx"><% concatSignatories (map signatorydetails documentsignatorylinks) %></span></strong>.
+     <p>En inbjudan till avtalet har nu skickats 
+        till <% partyListButAuthorString document %>.
      </p>
 
      <p><a class="bigbutton" href="/">Skapa ett nytt avtal</a></p>
@@ -152,8 +152,8 @@ welcomeEmail fullname =
 documentIssuedFlashMessage :: Document -> HSP.HSP HSP.XML
 documentIssuedFlashMessage document = 
     <div>
-     Du har undertecknat avtalet och en inbjudan har nu skickats till 
-     <strong><span id="mrx"><% concatSignatories (map signatorydetails $ documentsignatorylinks document) %></span></strong>.
+     Du har undertecknat avtalet och en inbjudan har nu skickats 
+     till <% partyListButAuthorString document %>.
     </div>
 
 documentSavedForLaterFlashMessage :: Document -> HSP.HSP HSP.XML
@@ -567,15 +567,46 @@ showDocumentPageHelper action document helpers title content =
      <div class="clearboth"/>
     </div> 
 
+class ( XMLGenerator m
+      , EmbedAsAttr m (Attr [Char] KontraLink)
+      , EmbedAsAttr m (Attr [Char] BS.ByteString)) => XMLGenerator2 m
 
-showDocumentForSign :: (XMLGenerator m,
-                        EmbedAsAttr m (Attr [Char] KontraLink),
-                        EmbedAsAttr m (Attr [Char] BS.ByteString)) =>
+
+showSignatoryLinkForSign (SignatoryLink{ maybesigninfo
+                                       , maybeseentime
+                                       , signatorydetails = SignatoryDetails
+                                                            { signatoryname
+                                                            , signatorynumber
+                                                            , signatorycompany
+                                                            , signatoryemail
+                                                            }
+                                         }) =
+   let
+       (status,message) = case (maybesigninfo, maybeseentime) of
+                  (Just (SignInfo{signtime = tm}),_) -> (<img src="/theme/images/status_signed.png"/> 
+                                                        , "Undertecknat den " ++ show tm
+                                                        )
+                  (Nothing,Just tm) -> (<img src="/theme/images/status_viewed.png"/> 
+                                       , "Granskat den " ++ show tm
+                                       )
+                  (Nothing,Nothing) -> ( <img src="/theme/images/status_pending.png"/> 
+                                       , "Har ej undertecknat"
+                                       )
+   in asChild <p><% 
+                [asChild status] ++
+                (if BS.null signatoryname then [] else [ asChild signatoryname, asChild <br/> ]) ++
+                (if BS.null signatorycompany then [] else [ asChild signatorycompany, asChild <br/> ]) ++
+                (if BS.null signatorynumber then [] else [ asChild signatorynumber, asChild <br/> ]) ++
+                (if BS.null signatoryemail then [] else [ asChild signatoryemail, asChild <br/> ]) ++
+                ([asChild message])
+                %></p>
+
+showDocumentForSign :: ( XMLGenerator m
+      , EmbedAsAttr m (Attr [Char] KontraLink)
+      , EmbedAsAttr m (Attr [Char] BS.ByteString)) =>
                        KontraLink 
                            -> Document 
-                           -> BS.ByteString 
-                           -> BS.ByteString 
-                           -> MagicHash 
+                           -> SignatoryLink
                            -> Bool 
                     -> XMLGenT m (HSX.XML m)
 showDocumentForSign action document invitedlink wassigned =
@@ -589,29 +620,46 @@ showDocumentForSign action document invitedlink wassigned =
                       det färdigställda avtalet skickas till din e-post.</p>
                   </div>
                 ]
-
+       magichash = signatorymagichash invitedlink
+       authordetails = documentauthordetails document
+       authorname = signatoryname authordetails
+       allbutinvited = filter (/= invitedlink) (documentsignatorylinks document)
+       authorlink = SignatoryLink 
+                    { signatorydetails = authordetails
+                    , maybeseentime = Nothing 
+                    , maybesigninfo = documentmaybesigninfo document
+                    , signatorylinkid = SignatoryLinkID 0
+                    , maybesignatory = Nothing -- FIXME: should be author user id
+                    , signatorymagichash = MagicHash 0
+                    }
+                                         
    in showDocumentPageHelper action document helper 
               (BS.fromString $ "Avtal: " ++ BS.toString(documenttitle document)) $
-        if wassigned 
-           then <span>Du har redan undertecknat!</span>
-           else <span>
-                
-                 <p>Välkommen <strong><% invitedname %></strong></p>
-                
-                   <p>Vänligen var noga med att granska dokumentet och kontrollera uppgifterna 
-                      nedan innan du undertecknar.</p>
-                   
-                   <p><strong>Parter</strong><br/>
-                      <% partyListString document %></p>
- 
-                   <p>Genom att underteckna ingår du ett <strong>juridiskt bindande</strong> avtal. 
-                      Vill du underteckna?</p>
+              <span>
+       
+                 <p>Vänligen var noga med att granska dokumentet och kontrollera 
+                    uppgifterna nedan innan du undertecknar.</p>   
 
-                  {- Avvisa - gray FIXME -}
+                 <p><i>Dina uppgifter</i></p>
+                 <% showSignatoryLinkForSign invitedlink %>
 
-                 <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign"/>
+                 <p><i>Övriga parter</i></p>
+                 <% map showSignatoryLinkForSign (authorlink : allbutinvited) %>
+
+                 
+                 <%
+                   if wassigned 
+                     then <span>Du har redan undertecknat!</span>
+                     else
+                        <span>
+                           <p>Genom att underteckna ingår du ett <strong>juridiskt bindande</strong> avtal. 
+                           Vill du underteckna?</p>
+                           {- Avvisa - gray FIXME -}
+                           <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign"/>
+                        </span>
+                 %>
                  <p>Jag vill veta mer <a href="/about" target="_blank">om SkrivaPå</a>.</p>
-                </span>
+              </span>
 
 
 htmlHeadBodyWrap :: (XMLGenerator m,EmbedAsChild m a {- ,EmbedAsChild m b -})
@@ -666,7 +714,7 @@ invitationMail (Context {ctxmaybeuser = Just user, ctxhostpart})
          <a href=link><% link %></a><br/>
          2. Granska dokumentet online<br/>
          3. Underteckna<br/>
-         4. Det färdigställda dokumentet skickas till din e-post när samtliga avtalsparter undertecknat<br/>
+         4. Det färdigställda dokumentet skickas till din e-post när <% partyUnsignedListString document %> undertecknat<br/>
       </p>
       
       <% poweredBySkrivaPaPara %>
@@ -758,6 +806,10 @@ partyUnsignedMeAndList magichash document =
 partyListButAuthor :: Document -> [SignatoryDetails]
 partyListButAuthor document =
     map signatorydetails (documentsignatorylinks document)
+
+partyListButAuthorString :: (XMLGenerator m) => Document -> GenChildList m
+partyListButAuthorString document =
+    swedishListString (map (strong . BS.toString . signatoryname) (partyListButAuthor document))
 
 {-
 partyListButAuthor :: Document -> [SignatoryDetails]
