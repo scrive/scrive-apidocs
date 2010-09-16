@@ -70,16 +70,43 @@ handleUserPasswordPost ctx@Context{ctxmaybeuser = Just user@User{userid}} = do
         then
           if isPasswordStrong password
             then do
-              passwordhash <- liftIO $ createMaybePassword password
-              newuser <- update $ SetUserDetails user fullname companyname companynumber invoiceaddress passwordhash
-              flashmsg <- userDetailsSavedFlashMessage
-              update $ AddUserFlashMessage userid flashmsg
+              passwordhash <- liftIO $ createPassword password
+              update $ SetUserPassword user passwordhash
+              addFlashMsgHtml userDetailsSavedFlashMessage
             else
               addFlashMsgText $ BS.fromString "Det nya lösenordet ska vara minst 6 tecken"
         else
           addFlashMsgText $ BS.fromString "Du har skrivit in fel nuvarande lösenord"
     else
-      update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "Passwords must match TODO")
+      addFlashMsgText $ BS.fromString "Nytt lösenord matchar inte med upprepa lösenord"
+  backToAccount
+
+
+handleUserPost :: Context -> Kontra Response
+handleUserPost ctx@Context{ctxmaybeuser = Just user@User{userid}} = do
+  fullname <- g "fullname"
+  companyname <- g "companyname"
+  companynumber <- g "companynumber"
+  invoiceaddress <- g "invoiceaddress"
+  
+  newuser <- update $ SetUserDetails user fullname companyname companynumber invoiceaddress
+  addFlashMsgHtml userDetailsSavedFlashMessage
+  
+  backToAccount
+  {-
+  -- Terms of Service logic
+  tos <- getDataFn (look "tos")
+
+  if isNothing (userhasacceptedtermsofservice user)
+     then
+         if isJust tos
+            then do
+              update $ AcceptTermsOfService userid minutestime
+              -- update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "You have accepted the Terms of Service Agreement")
+            else update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "För att kunna använda tjänsten måste du acceptera SkrivaPå Allmänna Villkor.")
+     else
+         return ()
+  -}
 
 backToAccount :: Kontra Response
 backToAccount = do
