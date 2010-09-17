@@ -164,10 +164,26 @@ viewSubaccounts ctx@(Context {ctxmaybeuser = Just user}) subusers =
       </table>
     </form>
 
-newUserMail :: BS.ByteString -> BS.ByteString -> IO BS.ByteString
-newUserMail emailaddress personname =
+newUserMail :: BS.ByteString -> BS.ByteString -> BS.ByteString -> IO BS.ByteString
+newUserMail emailaddress personname newpassword =
     htmlHeadBodyWrapIO ""
-     <span>Hello <% personname %>. Welcome to SkrivaPå. </span>
+     <span>
+      <p>Hej <strong><% personname %></strong>,</p>
+
+      <p>Jag heter Lukas Duczko och är VD på SkrivaPå. Tack för att du har skapat ett konto hos oss. 
+         Vi hoppas att du kommer att bli nöjd med våra tjänster. Tveka inte att höra av dig med 
+         feedback eller bara en enkel hälsning. Din åsikt är värdefull.</p>
+
+      <p>Användarnamn: <span style="color: orange; text-weight: bold"><% emailaddress %></span><br/>
+         Lösenord: <span style="color: orange; text-weight: bold"><% newpassword %></span><br/>
+      </p>
+      <p>
+      <a href="http://skrivapa.se/login">http://skrivapa.se/login</a>
+      </p>
+
+      <p>Med vänliga hälsningar<br/>/Lukas Duczko och team <a href="http://skrivapa.se/">SkrivaPå</a>.
+      </p>
+     </span>
 
 passwordChangeMail :: BS.ByteString
                    -> BS.ByteString
@@ -178,9 +194,7 @@ passwordChangeMail emailaddress personname newpassword =
     <span>
       <p>Hej <strong><% personname %></strong>,</p>
 
-      <p>Jag heter Lukas Duczko och är VD på SkrivaPå. Tack för att du har skapat ett konto hos oss. 
-         Vi hoppas att du kommer att bli nöjd med våra tjänster. Tveka inte att höra av dig med 
-         feedback eller bara en enkel hälsning. Din åsikt är värdefull.</p>
+      <p>Your new password. Please change your password as soon as possible.</p>
 
       <p>Användarnamn: <span style="color: orange; text-weight: bold"><% emailaddress %></span><br/>
          Lösenord: <span style="color: orange; text-weight: bold"><% newpassword %></span><br/>

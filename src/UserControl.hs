@@ -153,7 +153,7 @@ createUser1 fullname email password isnewuser maybesupervisor = do
     Nothing ->
       if isnewuser
        then liftIO $ passwordChangeMail email fullname password
-       else liftIO $ newUserMail email fullname
+       else liftIO $ newUserMail email fullname password
     Just supervisor -> liftIO $ inviteSubaccountMail (userfullname supervisor) (usercompanyname supervisor)
                        email fullname password
   liftIO $ sendMail [(fullname, email)]
