@@ -504,7 +504,7 @@ signupPageView errors form =
 forgotPasswordPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
                => XMLGenT m (HSX.XML m)
 forgotPasswordPageView =
-  <div>
+  <div class="centerdivnarrow">
     <form action=LinkForgotPassword method="post">
       <table>
         <tr>
@@ -519,8 +519,9 @@ forgotPasswordPageView =
 forgotPasswordConfirmPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
                => XMLGenT m (HSX.XML m)
 forgotPasswordConfirmPageView =
-  <div>
-    A new password has been emailed to you. Please check your email.
+  <div class="centerdivnarrow">
+    <p>A new password has been emailed to you. Please check your email.</p>
+    <p>Proceed to <a href="/login">login page</a>.</p>
   </div>
 
 loginPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
