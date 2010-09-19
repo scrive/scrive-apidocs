@@ -300,9 +300,10 @@ topnavi False ctx title link =
 globalScriptsAndStyles = 
       [ <link rel="stylesheet" type="text/css" href="/theme/style.css" media="screen" />
       , <link rel="stylesheet" type="text/css" 
-            -- href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/ui-lightness/jquery-ui.css" 
+            href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/ui-lightness/jquery-ui.css" 
             -- href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/flick/jquery-ui.css"
-            href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/redmond/jquery-ui.css"
+            -- href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/redmond/jquery-ui.css"
+            -- href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/start/jquery-ui.css"
             media="screen" />
       , <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js"/>
       -- we loaded the min version but at some point google stopped serving this one
