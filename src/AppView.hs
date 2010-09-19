@@ -132,7 +132,8 @@ loginBox ctx =
     <tr>
           <td>
           </td>
-          <td>
+          
+          <td style="display: none">
             <input type="checkbox" id="rememberme" name="rememberme"/>
             <label for="rememberme">Kom ihåg mig</label>
           </td>
@@ -145,7 +146,7 @@ loginBox ctx =
            <br />-}
            {-<a href=LinkSignup>Create account</a>
            <br />-}
-           <a href=LinkForgotPassword>Forgot password</a>
+           <a href=LinkForgotPassword> Glömt lösenord</a>
           </td>
 	</tr>
       </table>
@@ -184,9 +185,9 @@ welcomeBody (Context {ctxmaybeuser = Just _, ctxhostpart}) =
   <div class="centerdivnarrow" style="margin-top: 100px;">
    
    <form action=LinkIssue method="post" enctype="multipart/form-data">
-    <span class="small">Ladda upp dokumentet som PDF</span><br/>
+    <span class="small">Välj dokument (endast PDF)</span><br/>
     <input class="multi" maxlength="1" type="file" name="doc" accept="pdf"/>
-    <input class="bigbutton" type="submit" value="Skapa"/>
+    <input class="bigbutton" type="submit" value="Ladda upp"/>
    </form>
   </div>
 
@@ -298,11 +299,15 @@ topnavi False ctx title link =
 
 globalScriptsAndStyles = 
       [ <link rel="stylesheet" type="text/css" href="/theme/style.css" media="screen" />
-      , <link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/ui-lightness/jquery-ui.css" media="screen" />
+      , <link rel="stylesheet" type="text/css" 
+            -- href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/ui-lightness/jquery-ui.css" 
+            -- href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/flick/jquery-ui.css"
+            href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/redmond/jquery-ui.css"
+            media="screen" />
       , <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js"/>
       -- we loaded the min version but at some point google stopped serving this one
       -- , <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"/>
-      , <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/jquery-ui.min.js"/>
+      , <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js"/>
       {- Local versions of the same, but locally
       , <script src="/js/jquery-1.4.2.min.js"/>
       , <script src="/js/jquery-ui-1.8.custom.min.js"/>
@@ -508,20 +513,21 @@ forgotPasswordPageView =
     <form action=LinkForgotPassword method="post">
       <table>
         <tr>
-          <td>Email</td>
+          <td>E-mail</td>
           <td><input name="email" /></td>
         </tr>
       </table>
-      <input type="submit" value="Reset password" />
+      <input type="submit" value="Skicka nytt lösenord" />
     </form>
   </div>
 
 forgotPasswordConfirmPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
-               => XMLGenT m (HSX.XML m)
-forgotPasswordConfirmPageView =
+                                 => Context
+                              -> XMLGenT m (HSX.XML m)
+forgotPasswordConfirmPageView ctx =
   <div class="centerdivnarrow">
-    <p>A new password has been emailed to you. Please check your email.</p>
-    <p>Proceed to <a href="/login">login page</a>.</p>
+    <p>Ett nytt lösenord har skickats till din e-post. Du kan nu logga in med dina nya uppgifter.</p>
+    <% loginBox ctx %>
   </div>
 
 loginPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 

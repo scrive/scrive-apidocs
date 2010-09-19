@@ -170,7 +170,7 @@ resetUserPassword email = do
       update $ SetUserPassword user passwordhash
       content <- liftIO $ passwordChangeMail email (userfullname user) password
       liftIO $ sendMail [((userfullname user), email)]
-        (BS.fromString "Password change") content BS.empty
+        (BS.fromString "Ditt nya lösenord") content BS.empty
     Nothing ->
       return ()
 
