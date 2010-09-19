@@ -339,8 +339,8 @@ listDocuments userid documents =
        <tr>
         <td><a href="#" id="all">Alla</a></td>
         <td></td> {- status icon -}
-        <td>Personer</td>
-        <td>Avtal</td>
+        <td>Motparter</td>
+        <td>Dokument</td>
         <td>Förfallodatum</td>
         <td>Senaste handelse</td>
         <td></td>
@@ -496,6 +496,15 @@ showDocument user
                 , <script> var documentid = "<% show $ documentid %>"; 
                   </script>
                 ]
+       allinvited = documentsignatorylinks
+       authorlink = SignatoryLink 
+                    { signatorydetails = documentauthordetails
+                    , maybeseentime = Nothing 
+                    , maybesigninfo = documentmaybesigninfo document
+                    , signatorylinkid = SignatoryLinkID 0
+                    , maybesignatory = Nothing -- FIXME: should be author user id
+                    , signatorymagichash = MagicHash 0
+                    }
    in showDocumentPageHelper (LinkIssueDoc document) document helper 
            (documenttitle)  
       <div>
@@ -533,7 +542,7 @@ showDocument user
              </span>
            else
               <div id="signatorylist">
-               <% map (showSignatoryEntryStatus document) documentsignatorylinks %>
+                 <% map showSignatoryLinkForSign (authorlink : allinvited) %>
               </div>
          %>
        </div>
@@ -560,7 +569,7 @@ showDocumentPageHelper action document helpers title content =
       <% showDocumentBox document %>
      </div>
      <div class="docviewright"> 
-      <p><% title %><br/>
+      <p><strong><% title %></strong><br/>
          <small><a href=(LinkIssueDocPDF document) target="_blank">Ladda ned PDF</a></small></p>
       <form method="post" id="form" name="form" action=action> 
        <% content %>
