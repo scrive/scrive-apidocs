@@ -16,6 +16,7 @@ import Control.Monad.Identity
 import Control.Monad.Trans
 import KontraLink
 import Misc
+import MinutesTime
 
 instance Monad m => IsAttrValue m DocumentID where
     toAttrValue = toAttrValue . show
@@ -40,11 +41,11 @@ landpageSignInviteView ctx document@Document{ documenttitle
     <div class="centerdivnarrow">
      <p class="headline">Dokumentet <strong><% documenttitle %></strong> undertecknat!</p>
      
-     <p>En inbjudan till avtalet har nu skickats 
+     <p>En inbjudan att underteckna har nu skickats 
         till <% partyListButAuthorString document %>.
      </p>
 
-     <p><a class="bigbutton" href="/">Skapa ett nytt avtal</a></p>
+     <p><a class="button" href="/">Skapa ett nytt avtal</a></p>
     </div>
 
 
@@ -69,13 +70,15 @@ Let as skip 3 for now.
 -}
 
 willCreateAccountForYou False = <span/>
-willCreateAccountForYou True = 
+willCreateAccountForYou True = <span/>
+{-
      <p>
        Vi rekommenderar att du sparar dokumentet på vår tjänst. Då är ditt avtal säkert oavsett vad 
        som händer med din inkorg. Dessutom får du möjlighet att även i framtiden verifiera 
        avtalet mot vår databas utan extra kostnad (ord. pris utan konto är 200kr/avtal). Detta erbjudande 
        gäller endast nu och kostar ingenting. 
      </p>
+-}
 
 landpageSignedView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) => 
                       Context -> 
@@ -487,15 +490,14 @@ showDocument user
                     <p>Är du säker att du vill underteckna dokumentet <strong><% documenttitle %></strong>?</p>
                     
                     <p>När du bekräftat kommer en automatisk inbjudan att skickas till 
-                       <span class="Xinvited">Invited</span> med e-post.
-                       Avtalet blir <strong>juridiskt bindande</strong> när alla parter undertecknat.</p>
+                       <span class="Xinvited">Invited</span> med e-post.</p>
                    </div>
 
                 , <script> var documentid = "<% show $ documentid %>"; 
                   </script>
                 ]
    in showDocumentPageHelper (LinkIssueDoc document) document helper 
-           (BS.fromString $ "Avtal: " ++ BS.toString documenttitle)  
+           (documenttitle)  
       <div>
        <div>
 
@@ -522,11 +524,11 @@ showDocument user
               <small><a onclick="signatoryadd(); return false;" href="#">Lägg till fler</a></small>
 
               <div style="margin-top: 10px">
-              Undertecknas inom<br/>
-              <input type="text" name="daystosign" value=documentdaystosign maxlength="2" size="2"/> dagar<br/>
+              Undertecknas inom (dagar)
+              <input type="text" name="daystosign" value=documentdaystosign maxlength="2" size="2"/>
+              <div style="height: 5px;"/>
               <input class="bigbutton" type="submit" name="final" value="Underteckna" id="signinvite"/>
-              <br/>
-              <input class="secbutton" type="submit" name="save" value="Spara som utkast"/>
+              <input class="button" type="submit" name="save" value="Spara som utkast"/>
               </div>
              </span>
            else
@@ -558,8 +560,8 @@ showDocumentPageHelper action document helpers title content =
       <% showDocumentBox document %>
      </div>
      <div class="docviewright"> 
-      <p class="headline"><% title %></p>
-      <p><small><a href=(LinkIssueDocPDF document) target="_blank">Ladda ned PDF</a></small></p>
+      <p><% title %><br/>
+         <small><a href=(LinkIssueDocPDF document) target="_blank">Ladda ned PDF</a></small></p>
       <form method="post" id="form" name="form" action=action> 
        <% content %>
       </form>
@@ -584,17 +586,17 @@ showSignatoryLinkForSign (SignatoryLink{ maybesigninfo
    let
        (status,message) = case (maybesigninfo, maybeseentime) of
                   (Just (SignInfo{signtime = tm}),_) -> (<img src="/theme/images/status_signed.png"/> 
-                                                        , "Undertecknat den " ++ show tm
+                                                        , "Undertecknat " ++ showDateOnly tm
                                                         )
                   (Nothing,Just tm) -> (<img src="/theme/images/status_viewed.png"/> 
-                                       , "Granskat den " ++ show tm
+                                       , "Granskat " ++ showDateOnly tm
                                        )
                   (Nothing,Nothing) -> ( <img src="/theme/images/status_pending.png"/> 
                                        , "Har ej undertecknat"
                                        )
    in asChild <p><% 
-                [asChild status] ++
-                (if BS.null signatoryname then [] else [ asChild signatoryname, asChild <br/> ]) ++
+                [asChild status, asChild " "] ++
+                (if BS.null signatoryname then [] else [ asChild <strong><% signatoryname %></strong>, asChild <br/> ]) ++
                 (if BS.null signatorycompany then [] else [ asChild signatorycompany, asChild <br/> ]) ++
                 (if BS.null signatorynumber then [] else [ asChild signatorynumber, asChild <br/> ]) ++
                 (if BS.null signatoryemail then [] else [ asChild signatoryemail, asChild <br/> ]) ++
@@ -634,31 +636,27 @@ showDocumentForSign action document invitedlink wassigned =
                     }
                                          
    in showDocumentPageHelper action document helper 
-              (BS.fromString $ "Avtal: " ++ BS.toString(documenttitle document)) $
+              (documenttitle document) $
               <span>
        
                  <p>Vänligen var noga med att granska dokumentet och kontrollera 
                     uppgifterna nedan innan du undertecknar.</p>   
 
-                 <p><i>Dina uppgifter</i></p>
                  <% showSignatoryLinkForSign invitedlink %>
 
-                 <p><i>Övriga parter</i></p>
                  <% map showSignatoryLinkForSign (authorlink : allbutinvited) %>
 
                  
                  <%
                    if wassigned 
-                     then <span>Du har redan undertecknat!</span>
+                     then <span>Du har redan undertecknat!<br/></span>
                      else
                         <span>
-                           <p>Genom att underteckna ingår du ett <strong>juridiskt bindande</strong> avtal. 
-                           Vill du underteckna?</p>
                            {- Avvisa - gray FIXME -}
                            <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign"/>
                         </span>
                  %>
-                 <p>Jag vill veta mer <a href="/about" target="_blank">om SkrivaPå</a>.</p>
+                 <small>Jag vill veta mer <a href="/about" target="_blank">om SkrivaPå</a>.</small>
               </span>
 
 
@@ -704,17 +702,17 @@ invitationMail (Context {ctxmaybeuser = Just user, ctxhostpart})
       <p><i>Översiktlig information</i><br/>
          Parter: <% partyListString document %><br/>
          Har undertecknat: <strong><% creatorname %></strong><br/>
-      </p> 
        <% case documenttimeouttime of 
-              Just time -> <p>Undertecknas senast: <strong><% show time %></strong>.</p> 
+              Just time -> <span>Undertecknas senast: <strong><% show time %></strong>.</span>
               Nothing -> <span/>
        %> 
-      <p>Så här går du vidare:<br/>
-         1. Klicka på länken<br/>
+      </p>
+      <p><i>Så här går du vidare</i><br/>
+         1. Klicka länken<br/>
          <a href=link><% link %></a><br/>
-         2. Granska dokumentet online<br/>
+         2. Granska online<br/>
          3. Underteckna<br/>
-         4. Det färdigställda dokumentet skickas till din e-post när <% partyUnsignedListString document %> undertecknat<br/>
+         4. Färdig<br/>
       </p>
       
       <% poweredBySkrivaPaPara %>

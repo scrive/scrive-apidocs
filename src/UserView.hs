@@ -194,7 +194,7 @@ passwordChangeMail emailaddress personname newpassword =
     <span>
       <p>Hej <strong><% personname %></strong>,</p>
 
-      <p>Your new password. Please change your password as soon as possible.</p>
+      <p>Här kommer ditt nya lösenord. Vänligen ändra lösenordet så snart som möjligt.</p>
 
       <p>Användarnamn: <span style="color: orange; text-weight: bold"><% emailaddress %></span><br/>
          Lösenord: <span style="color: orange; text-weight: bold"><% newpassword %></span><br/>
@@ -203,8 +203,7 @@ passwordChangeMail emailaddress personname newpassword =
       <a href="http://skrivapa.se/login">http://skrivapa.se/login</a>
       </p>
 
-      <p>Med vänliga hälsningar<br/>/Lukas Duczko och team <a href="http://skrivapa.se/">SkrivaPå</a>.
-      </p>
+      <% poweredBySkrivaPaPara %>
      </span>
 
 

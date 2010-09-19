@@ -233,7 +233,7 @@ body {
 }
 
 a.button {
-    color: white;
+    color: black !important;
 }
 
 .button {
@@ -242,22 +242,25 @@ a.button {
     -khtml-border-radius: 4px;
     border-radius: 4px;
 
-    color: white !important;
-    text-transform: uppercase;
-    background-color: #005794;
-    font-family: Verdana;
-    border: none;
+    border: 1px solid lightgray;
+    background-color: #F5F5FF;
+
+    //color: white !important;
+    //background-color: #005794;
+
+    //text-transform: uppercase;
+    //font-family: Verdana;
+    //border: none;
     text-align: center;
     vertical-align: center;
-    margin: 6px;
+    margin: 3px auto 3px 0px;
     padding: 0px 7px;
     display: block;
-    margin-left: auto;
     display: inline;
 
-    font-size: xx-small;
-    font-weight: bold;
-    height: 20px;
+    //font-size: xx-small;
+    //font-weight: bold;
+    //height: 20px;
     line-height: 20px;
     white-space:nowrap;
 }
@@ -278,10 +281,9 @@ a.secbutton {
     border: none;
     text-align: center;
     vertical-align: center;
-    margin: 6px;
+    margin: 3px auto 3px 0px;
     padding: 0px 7px;
     display: block;
-    margin-left: auto;
 
     font-size: xx-small;
     font-weight: bold;
@@ -308,12 +310,11 @@ a.bigbutton {
     border: none;
     text-align: center;
     vertical-align: center;
-    margin: 6px;
+    margin: 3px auto 3px 0px;
     padding: 0px 7px;
     display: block;
-    margin-left: auto;
 
-    font-size: x-small;
+    font-size: small;
     font-weight: bold;
     height: 35px;
     line-height: 35px;
@@ -554,7 +555,7 @@ div.clearboth
 input.grayed
 {
     color: #999999;
-    font-style: italic;
+    // font-style: italic;
 }
 
 input 
@@ -565,7 +566,7 @@ input
     -khtml-border-radius: 2px;
     border-radius: 2px;   
     background-color: #F5F5FF;
-    margin:3px;
+    margin: 3px auto 3px 0px;
 }
 
 #signatorylist input

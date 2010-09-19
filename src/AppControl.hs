@@ -176,7 +176,7 @@ forgotPasswordPagePost = do
     ctx <- lift get
     email <- getDataFnM $ look "email"
     liftIO $ resetUserPassword (BS.fromString email)
-    renderFromBody ctx TopNone kontrakcja forgotPasswordConfirmPageView
+    renderFromBody ctx TopNone kontrakcja (forgotPasswordConfirmPageView ctx)
 
 signupPage :: Kontra Response
 signupPage = (methodM GET >> signupPageGet) `mplus`
