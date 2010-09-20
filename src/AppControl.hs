@@ -292,14 +292,6 @@ handleCreateUser = do
   email <- g "email"
   fullname <- g "fullname"
   user <- liftIO $ createUser fullname email Nothing Nothing
-  let letters =['a'..'z'] ++ ['0'..'9'] ++ ['A'..'Z']
-  indexes <- liftIO $ replicateM 8 (randomRIO (0,length letters-1))
-  let passwd = BS.fromString $ map (letters!!) indexes
-  hashedpassword <- liftIO $ createPassword  passwd
-  update $ SetUserPassword user hashedpassword
-  content <- liftIO $ passwordChangeMail email fullname passwd
-  liftIO $ sendMail [(fullname,email)]
-               (BS.fromString "SkrivaPa new password") content BS.empty
   -- FIXME: where to redirect?
   response <- webHSP (seeOtherXML "/stats")
   seeOther "/stats" response
