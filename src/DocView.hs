@@ -743,11 +743,9 @@ closedMail (Context {ctxhostpart})
      <span>
        <p>Hej <strong><% personname %></strong>,</p>
        <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats 
-          av <% partyListString document %>. Avtalet 
-          är nu juridiskt bindande. Det färdigställda dokumentet bifogas nedan.</p> 
-
-       <p>Du kan verifiera avtalet mot vår databas genom följande länk:<br />
-          <a href=link><% link %></a></p>
+          av <% partyListString document %>. Avtalet är nu bindande.</p> 
+          
+       <p>Det färdigställda dokumentet bifogas med detta mail.</p> 
    
        <% poweredBySkrivaPaPara %>
       </span>
@@ -765,15 +763,13 @@ closedMailAuthor (Context {ctxhostpart})
     in htmlHeadBodyWrapIO documenttitle
         <span>
           <p>Hej <strong><% personname %></strong>,</p>
-            <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats 
-               av <% partyListString document %>. Avtalet 
-               är nu juridiskt bindande. Det färdigställda dokumentet bifogas nedan.</p> 
+             <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats 
+                av <% partyListString document %>. Avtalet är nu bindande.</p> 
 
-            <p>Du kan verifiera avtalet mot vår databas genom följande länk:<br />
-               <a href=link><% link %></a></p>
+             <p>Det färdigställda dokumentet bifogas med detta mail.</p> 
 
-            <% poweredBySkrivaPaPara %>
-           </span>
+             <% poweredBySkrivaPaPara %>
+            </span>
 
 
 poweredBySkrivaPaPara :: (XMLGenerator m) => XMLGenT m (HSX.XML m)
