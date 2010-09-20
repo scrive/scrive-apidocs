@@ -691,8 +691,13 @@ getFilePageJpg xfileid pageno = do
     jpg <- return (jpgs!!(pageno-1))
     return jpg
 
-markDocumentSeen :: DocumentID -> SignatoryLinkID 
-                 -> MinutesTime -> Update Documents (Maybe Document)
+-- ^ 'markDocumentSeen' should set the time when the document was seen
+-- first time by the user. It should change the first seen time later
+-- on.
+markDocumentSeen :: DocumentID 
+                 -> SignatoryLinkID 
+                 -> MinutesTime 
+                 -> Update Documents (Maybe Document)
 markDocumentSeen documentid signatorylinkid1 time = do
   documents <- ask
   case getOne (documents @= documentid) of
@@ -701,11 +706,11 @@ markDocumentSeen documentid signatorylinkid1 time = do
       let document' = document { documentsignatorylinks = s }
           s = map c (documentsignatorylinks document)
           c l@(SignatoryLink {signatorylinkid, maybeseentime})
-            | signatorylinkid == signatorylinkid1 && maybeseentime/=Nothing = 
+            | signatorylinkid == signatorylinkid1 && maybeseentime==Nothing = 
               l { maybeseentime = Just time }
             | otherwise = l
       modify (updateIx documentid document')
-      return (Just document)
+      return (Just document')
   
 
 getDocumentStats :: Query Documents Int
