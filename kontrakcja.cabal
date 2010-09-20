@@ -67,7 +67,7 @@ Executable kontrakcja-server
 Executable kontrakcja-test
  hs-source-dirs: test/src src pdfseal/src
 
- GHC-Options: -fwarn-tabs
+ GHC-Options: -fwarn-tabs -fhpc
  if !os(windows)
    -- don't do threaded on Windows because it uses blocking listen and accept
    GHC-Options: -threaded
