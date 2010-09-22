@@ -517,7 +517,7 @@ sealSpecFromDocument document author@(User {userfullname,usercompanyname,usercom
             }
           , Seal.HistEntry
             { Seal.histdate = show authorsigntime
-            , Seal.histcomment = "En automatisk inbjudan skickas via e-post till samtliga avtalsparter."
+            , Seal.histcomment = "En automatisk inbjudan skickas via e-post till samtliga parter."
             }
           ]
       lastHistEntry = Seal.HistEntry

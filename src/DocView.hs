@@ -409,7 +409,7 @@ showSignatoryEntryForEdit2 :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraL
 showSignatoryEntryForEdit2 idx signatoryname signatorycompany signatorynumber signatoryemail = 
     <div id=idx>
       <input name="signatoryname" type="text" value=signatoryname
-             infotext="Namn på avtalspart"/><br/>
+             infotext="Namn på motpart"/><br/>
       <input name="signatorycompany" type="text" value=signatorycompany
              infotext="Titel, företag"/><br/>
       <input name="signatorynumber" type="text" value=signatorynumber

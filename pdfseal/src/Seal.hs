@@ -323,7 +323,7 @@ lastpage (SealSpec {documentNumber,persons,history}) =
 
  "0.806 0.719 0.51 0.504 k " ++
  "12 0 0 12 39.8198 736.8555 Tm " ++
- "(Avtalsparter)Tj " ++
+ "(Parter)Tj " ++
  "ET " ++
 
  {-
@@ -379,7 +379,7 @@ lastpage (SealSpec {documentNumber,persons,history}) =
  "[(Detta verifikat är utfärdat av SkrivaPå CM AB och styrker att dokument nummer " ++ documentNumber ++ 
  " har undertecknats)]TJ " ++
  "T* " ++
- "[(av avtalsparterna och är juridiskt bindande. Kursiverad information är säkert verifierad genom vår tjänst.)]TJ " ++
+ "[(av parterna och är juridiskt bindande. Kursiverad information är säkert verifierad genom vår tjänst.)]TJ " ++
  "T* " ++
  "[(Kontrollera dokumentet mot vår databas genom följande länk: http://skrivapa.se/d/" ++ documentNumber ++ ".)]TJ " ++
  "0.546 0.469 0.454 0.113 k " ++
