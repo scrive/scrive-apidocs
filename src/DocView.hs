@@ -494,6 +494,7 @@ showDocument user
                               , documentid
                               , documentstatus
                               , documentdaystosign
+                              , documentinvitetext
                               } 
              issuedone 
              freeleft =
@@ -504,8 +505,7 @@ showDocument user
                     <p>När du bekräftat kommer en automatisk inbjudan att skickas till 
                        <span class="Xinvited">Invited</span> med e-post.</p>
                    </div>
-                , <div id="edit-invite-text-dialog" title="Invite text">
-                   Write here a message to other parties<br/>
+                , <div id="edit-invite-text-dialog" title="Hälsningsmeddelande">
                    <textarea cols="45" rows="6"></textarea>
                   </div>
 
@@ -549,11 +549,12 @@ showDocument user
               <small><a onclick="signatoryadd(); return false;" href="#">Lägg till fler</a></small>
 
               <div style="margin-top: 10px">
-              Undertecknas inom (dagar)
+              <a href="#" onclick="editinvitetext(); return false;">Skriv hälsningsmeddelande</a><br/>
+              <p>Undertecknas inom (dagar)
               <input type="text" name="daystosign" value=documentdaystosign maxlength="2" size="2"/>
-              <input type="hidden" name="invitetext" id="invitetext"/><br/>
-              <a href="#" onclick="editinvitetext(); return false;">Edit invite text</a>
-              <div style="height: 5px;"/>
+              <input type="hidden" name="invitetext" id="invitetext" value= documentinvitetext/>
+              </p>
+              <div style="height: 2px;"/>
               <input class="bigbutton" type="submit" name="final" value="Underteckna" id="signinvite"/>
               <input class="button" type="submit" name="save" value="Spara som utkast"/>
               </div>
@@ -719,35 +720,45 @@ invitationMail (Context {ctxmaybeuser = Just user, ctxhostpart})
                   signaturelink magichash = 
     let link = ctxhostpart ++ show (LinkSignDoc document signaturelink)
         creatorname = signatoryname documentauthordetails
-    in htmlHeadBodyWrapIO documenttitle
-     <span>
-      <p>Hej <strong><% personname %></strong>,</p>
+        --common :: (XMLGenerator m) => GenChildList m
+        common = sequence
+              [ asChild <p><i>Översiktlig information</i><br/>
+                 Parter: <% partyListString document %><br/>
+                 Har undertecknat: <strong><% creatorname %></strong><br/>
+                <% case documenttimeouttime of 
+                     Just time -> <span>Undertecknas senast: <strong><% show time %></strong>.</span>
+                     Nothing -> <span/>
+                 %> 
+                 </p>
+              , asChild <p><i>Så här går du vidare</i><br/>
+              1. Klicka länken<br/>
+              <a href=link><% link %></a><br/>
+              2. Granska online<br/>
+              3. Underteckna<br/>
+              4. Färdig<br/>
+              </p>
+             ]
+        --skrivapaversion  :: (XMLGenerator m) => GenChildList m
+        skrivapaversion = sequence 
+            [ asChild <p>Hej <strong><% personname %></strong>,</p>
+            , asChild <p><strong><% creatorname %></strong> har bjudit in dig att underteckna dokumentet 
+               <strong><% documenttitle %></strong> online via tjänsten SkrivaPå.</p> 
+            , asChild common
+            , asChild poweredBySkrivaPaPara
+            ]
+        --authorversion  :: (XMLGenerator m) => GenChildList m
+        authorversion = sequence
+               [ asChild documentinvitetext
+               , asChild common
+               , asChild "Hälsningar"
+               , asChild <br/>
+               , asChild creatorname
+               ]
+        content = if BS.null documentinvitetext
+                    then <span><% skrivapaversion %></span>
+                    else <span><% authorversion %></span>
+    in htmlHeadBodyWrapIO documenttitle content
 
-      <%
-         if BS.null documentinvitetext
-                then <p><strong><% creatorname %></strong> har bjudit in dig att underteckna dokumentet 
-                         <strong><% documenttitle %></strong> online via tjänsten SkrivaPå.</p> 
-                else <p><% documentinvitetext %></p>
-       %>
- 
-      <p><i>Översiktlig information</i><br/>
-         Parter: <% partyListString document %><br/>
-         Har undertecknat: <strong><% creatorname %></strong><br/>
-       <% case documenttimeouttime of 
-              Just time -> <span>Undertecknas senast: <strong><% show time %></strong>.</span>
-              Nothing -> <span/>
-       %> 
-      </p>
-      <p><i>Så här går du vidare</i><br/>
-         1. Klicka länken<br/>
-         <a href=link><% link %></a><br/>
-         2. Granska online<br/>
-         3. Underteckna<br/>
-         4. Färdig<br/>
-      </p>
-      
-      <% poweredBySkrivaPaPara %>
-     </span>
 
 closedMail :: Context
            -> BS.ByteString

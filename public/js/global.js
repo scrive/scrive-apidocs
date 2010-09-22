@@ -294,6 +294,7 @@ function isExceptionalField(field){
 function editinvitetext()
 {
     var txt = $("#invitetext").val();
+    $("#edit-invite-text-dialog textarea").val(txt);
     $('#edit-invite-text-dialog').dialog({
                      height: 280,
                      width: 350,
