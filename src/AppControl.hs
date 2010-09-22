@@ -103,7 +103,7 @@ handleRoutes ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} = toIO ctx $ msum 
    ++ [dir "logout" (handleLogout)
       , dir "login" loginPage
       -- , dir "signup" signupPage
-      , dir "forgotpassword" forgotPasswordPage
+      , dir "amnesia" forgotPasswordPage
       ]
    ++ [ fileServe [] "public"] 
 

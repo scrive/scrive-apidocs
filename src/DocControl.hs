@@ -189,14 +189,22 @@ landpageSignedSave ctx document signatorylinkid = do
   signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
   let details = signatorydetails signatorylink
   maybeuser <- query $ GetUserByEmail (Email $ signatoryemail details)
+  let fullname = signatoryname details
   user <- case maybeuser of
             Nothing -> do -- create a new user
-              let fullname = signatoryname details
+              password <- g "password"
+              password2 <- g "password2"
+              tos <- g "tos" -- this will fail if not checked
+              -- FIXME: what to do when two passwords do not match?
+              -- FIXME: what to do if passwords arent strong enough?
+              when (password /= password2) $ error "Passwords do not mutch"
+              when (not (isPasswordStrong password)) $ error "Password is too weak"
               let email = signatoryemail details
-              user <- liftIO $ createUser fullname email Nothing Nothing
+              user <- liftIO $ createUser fullname email (Just password) Nothing
               return user
             Just user -> return user
   Just document2 <- update $ SaveDocumentForSignedUser (documentid document) (userid user) signatorylinkid
+  -- should redirect
   webHSP $ pageFromBody ctx TopEmpty kontrakcja $ landpageLoginForSaveView ctx document2 signatorylink
 
 landpageSaved (ctx@Context { ctxmaybeuser = Just user@User{userid} }) 

@@ -42,7 +42,7 @@ instance Show KontraLink where
     showsPrec _ LinkAbout = (++) "/about"
     showsPrec _ LinkLogin = (++) "/login"
     showsPrec _ LinkSignup = (++) "/signup"
-    showsPrec _ LinkForgotPassword = (++) "/forgotpassword"
+    showsPrec _ LinkForgotPassword = (++) "/amnesia"
     showsPrec _ LinkIssue = (++) "/d"
     showsPrec _ LinkMain = (++) "/"
     showsPrec _ LinkAccount = (++) "/account"
