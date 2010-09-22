@@ -290,3 +290,23 @@ function isExceptionalField(field){
 
 	return false
 }
+
+function editinvitetext()
+{
+    var txt = $("#invitetext").val();
+    $('#edit-invite-text-dialog').dialog({
+                     height: 280,
+                     width: 350,
+                     modal: true,
+                     buttons: {
+                     'OK': function() {
+                         var newtxt = $("#edit-invite-text-dialog textarea").val();
+                         $("#invitetext").val( newtxt );
+                             $(this).dialog('close');
+                     },
+                         'Avbryt': function() {
+                             $(this).dialog('close');
+                         }
+                 }
+             });
+}

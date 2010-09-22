@@ -504,6 +504,10 @@ showDocument user
                     <p>När du bekräftat kommer en automatisk inbjudan att skickas till 
                        <span class="Xinvited">Invited</span> med e-post.</p>
                    </div>
+                , <div id="edit-invite-text-dialog" title="Invite text">
+                   Write here a message to other parties<br/>
+                   <textarea cols="45" rows="6"></textarea>
+                  </div>
 
                 , <script> var documentid = "<% show $ documentid %>"; 
                   </script>
@@ -547,6 +551,8 @@ showDocument user
               <div style="margin-top: 10px">
               Undertecknas inom (dagar)
               <input type="text" name="daystosign" value=documentdaystosign maxlength="2" size="2"/>
+              <input type="hidden" name="invitetext" id="invitetext"/><br/>
+              <a href="#" onclick="editinvitetext(); return false;">Edit invite text</a>
               <div style="height: 5px;"/>
               <input class="bigbutton" type="submit" name="final" value="Underteckna" id="signinvite"/>
               <input class="button" type="submit" name="save" value="Spara som utkast"/>
@@ -709,7 +715,7 @@ invitationMail :: Context
                -> IO BS.ByteString
 invitationMail (Context {ctxmaybeuser = Just user, ctxhostpart}) 
                   emailaddress personname 
-                  document@Document{documenttitle,documentid,documenttimeouttime,documentauthordetails} 
+                  document@Document{documenttitle,documentid,documenttimeouttime,documentauthordetails,documentinvitetext} 
                   signaturelink magichash = 
     let link = ctxhostpart ++ show (LinkSignDoc document signaturelink)
         creatorname = signatoryname documentauthordetails
@@ -717,8 +723,12 @@ invitationMail (Context {ctxmaybeuser = Just user, ctxhostpart})
      <span>
       <p>Hej <strong><% personname %></strong>,</p>
 
-      <p><strong><% creatorname %></strong> har bjudit in dig att underteckna dokumentet 
-         <strong><% documenttitle %></strong> online via tjänsten SkrivaPå.</p> 
+      <%
+         if BS.null documentinvitetext
+                then <p><strong><% creatorname %></strong> har bjudit in dig att underteckna dokumentet 
+                         <strong><% documenttitle %></strong> online via tjänsten SkrivaPå.</p> 
+                else <p><% documentinvitetext %></p>
+       %>
  
       <p><i>Översiktlig information</i><br/>
          Parter: <% partyListString document %><br/>

@@ -160,6 +160,25 @@ $(deriveAll [''Default]
 
           -- we really should keep history here so we know what happened
           }
+      data Document3 = Document3
+          { documentid3               :: DocumentID
+          , documenttitle3            :: BS.ByteString
+          , documentauthor3           :: Author
+          , documentsignatorylinks3   :: [SignatoryLink]  
+          , documentfiles3            :: [File]
+          , documentstatus3           :: DocumentStatus
+          , documentctime3            :: MinutesTime
+          , documentmtime3            :: MinutesTime
+          , documentchargemode3       :: ChargeMode
+          , documentdaystosign3       :: Int
+          , documenttimeouttime3      :: Maybe TimeoutTime
+          , documentdeleted3          :: Bool -- should not appear in list
+          , documentauthordetails3    :: SignatoryDetails
+          , documentmaybesigninfo3    :: Maybe SignInfo      -- about the author signed the document
+          , documenthistory3          :: [DocumentHistoryEntry]
+
+          -- we really should keep history here so we know what happened
+          }
       data Document = Document
           { documentid               :: DocumentID
           , documenttitle            :: BS.ByteString
@@ -176,6 +195,7 @@ $(deriveAll [''Default]
           , documentauthordetails    :: SignatoryDetails
           , documentmaybesigninfo    :: Maybe SignInfo      -- about the author signed the document
           , documenthistory          :: [DocumentHistoryEntry]
+          , documentinvitetext       :: BS.ByteString
 
           -- we really should keep history here so we know what happened
           }
@@ -232,6 +252,15 @@ instance Ord Document2 where
     compare a b | documentid2 a == documentid2 b = EQ
                 | otherwise = compare (documentmtime2 b,documenttitle2 a,documentid2 a) 
                                       (documentmtime2 a,documenttitle2 b,documentid2 b)
+                              -- see above: we use reverse time here!
+
+instance Eq Document3 where
+    a == b = documentid3 a == documentid3 b
+
+instance Ord Document3 where
+    compare a b | documentid3 a == documentid3 b = EQ
+                | otherwise = compare (documentmtime3 b,documenttitle3 a,documentid3 a) 
+                                      (documentmtime3 a,documenttitle3 b,documentid3 b)
                               -- see above: we use reverse time here!
 
 instance Eq File where
@@ -395,9 +424,13 @@ $(deriveSerialize ''Document2)
 instance Version Document2 where
     mode = extension 2 (Proxy :: Proxy Document1)
 
+$(deriveSerialize ''Document3)
+instance Version Document3 where
+    mode = extension 3 (Proxy :: Proxy Document2)
+
 $(deriveSerialize ''Document)
 instance Version Document where
-    mode = extension 3 (Proxy :: Proxy Document2)
+    mode = extension 4 (Proxy :: Proxy Document3)
 
 instance Migrate Document0 Document1 where
       migrate (Document0
@@ -446,7 +479,7 @@ instance Migrate Document1 Document2 where
           , documenttimeouttime2 = Nothing
           }
 
-instance Migrate Document2 Document where
+instance Migrate Document2 Document3 where
       migrate (Document2 
           { documentid2
           , documenttitle2
@@ -459,22 +492,58 @@ instance Migrate Document2 Document where
           , documentchargemode2
           , documentdaystosign2
           , documenttimeouttime2
+          }) = Document3
+          { documentid3 = documentid2
+          , documenttitle3 = documenttitle2
+          , documentauthor3 = documentauthor2
+          , documentsignatorylinks3 = documentsignatorylinks2
+          , documentfiles3 = documentfiles2
+          , documentstatus3 = documentstatus2
+          , documentctime3 = documentctime2
+          , documentmtime3 = documentmtime2
+          , documentchargemode3 = documentchargemode2
+          , documentdaystosign3 = 30
+          , documenttimeouttime3 = Nothing
+          , documentdeleted3 = False
+          , documentauthordetails3 = SignatoryDetails BS.empty BS.empty BS.empty BS.empty
+          , documentmaybesigninfo3 = Nothing
+          , documenthistory3 = []
+          }
+
+instance Migrate Document3 Document where
+      migrate (Document3
+          { documentid3
+          , documenttitle3
+          , documentauthor3
+          , documentsignatorylinks3
+          , documentfiles3
+          , documentstatus3
+          , documentctime3
+          , documentmtime3
+          , documentchargemode3
+          , documentdaystosign3
+          , documenttimeouttime3
+          , documentdeleted3
+          , documentauthordetails3
+          , documentmaybesigninfo3
+          , documenthistory3
           }) = Document
-          { documentid = documentid2
-          , documenttitle = documenttitle2
-          , documentauthor = documentauthor2
-          , documentsignatorylinks = documentsignatorylinks2
-          , documentfiles = documentfiles2
-          , documentstatus = documentstatus2
-          , documentctime = documentctime2
-          , documentmtime = documentmtime2
-          , documentchargemode = documentchargemode2
-          , documentdaystosign = 30
-          , documenttimeouttime = Nothing
+          { documentid = documentid3
+          , documenttitle = documenttitle3
+          , documentauthor = documentauthor3
+          , documentsignatorylinks = documentsignatorylinks3
+          , documentfiles = documentfiles3
+          , documentstatus = documentstatus3
+          , documentctime = documentctime3
+          , documentmtime = documentmtime3
+          , documentchargemode = documentchargemode3
+          , documentdaystosign = documentdaystosign3
+          , documenttimeouttime = documenttimeouttime3
           , documentdeleted = False
-          , documentauthordetails = SignatoryDetails BS.empty BS.empty BS.empty BS.empty
-          , documentmaybesigninfo = Nothing
-          , documenthistory = []
+          , documentauthordetails = documentauthordetails3
+          , documentmaybesigninfo = documentmaybesigninfo3
+          , documenthistory = documenthistory3
+          , documentinvitetext = BS.empty
           }
 
 
@@ -571,6 +640,7 @@ newDocument user@User{userid,userfullname,usercompanyname,usercompanynumber,user
           , documentauthordetails = details
           , documentmaybesigninfo = Nothing
           , documenthistory = []
+          , documentinvitetext = BS.empty
           }
       details = SignatoryDetails  
                 { signatoryname = userfullname
@@ -603,13 +673,15 @@ updateDocument :: MinutesTime
                -> SignatoryDetails  
                -> [SignatoryDetails]
                -> Int
+               -> BS.ByteString
                -> Update Documents Document
-updateDocument time document authordetails signatories daystosign = do
+updateDocument time document authordetails signatories daystosign invitetext = do
   signatorylinks <- sequence $ map mm signatories
   let doc2 = document { documentsignatorylinks = signatorylinks
                       , documentdaystosign = daystosign 
                       , documentauthordetails = authordetails
                       , documentmtime = time
+                      , documentinvitetext = invitetext
                       }
   if documentstatus document == Preparation
      then do

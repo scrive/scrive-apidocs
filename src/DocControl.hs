@@ -329,6 +329,8 @@ updateDocument ctx@Context{ctxtime} document = do
   authornumber <- getDataFnM (look "authornumber")
   authoremail <- getDataFnM (look "authoremail")
 
+  invitetext <- g "invitetext"
+
   let signatories = zipWith4 SignatoryDetails signatoriesnames signatoriescompanies signatoriesnumbers signatoriesemails
   let authordetails = SignatoryDetails (BS.fromString authorname) 
                                        (BS.fromString authorcompany) 
@@ -339,7 +341,7 @@ updateDocument ctx@Context{ctxtime} document = do
   when (daystosign<1 || daystosign>99) mzero
   
   doc2 <- update $ UpdateDocument ctxtime document 
-          authordetails signatories daystosign
+          authordetails signatories daystosign invitetext
 
   msum 
      [ do getDataFnM (look "final")
