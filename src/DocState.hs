@@ -502,8 +502,8 @@ instance Migrate Document2 Document3 where
           , documentctime3 = documentctime2
           , documentmtime3 = documentmtime2
           , documentchargemode3 = documentchargemode2
-          , documentdaystosign3 = 30
-          , documenttimeouttime3 = Nothing
+          , documentdaystosign3 = documentdaystosign2
+          , documenttimeouttime3 = documenttimeouttime2
           , documentdeleted3 = False
           , documentauthordetails3 = SignatoryDetails BS.empty BS.empty BS.empty BS.empty
           , documentmaybesigninfo3 = Nothing
@@ -634,7 +634,7 @@ newDocument user@User{userid,userfullname,usercompanyname,usercompanynumber,user
           , documentctime = ctime
           , documentmtime = ctime
           , documentchargemode = if isfree then ChargeInitialFree else ChargeNormal
-          , documentdaystosign = 30
+          , documentdaystosign = 7
           , documenttimeouttime = Nothing
           , documentdeleted = False
           , documentauthordetails = details
