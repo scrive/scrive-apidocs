@@ -539,7 +539,7 @@ instance Migrate Document3 Document where
           , documentchargemode = documentchargemode3
           , documentdaystosign = documentdaystosign3
           , documenttimeouttime = documenttimeouttime3
-          , documentdeleted = False
+          , documentdeleted = documentdeleted3
           , documentauthordetails = documentauthordetails3
           , documentmaybesigninfo = documentmaybesigninfo3
           , documenthistory = documenthistory3
