@@ -385,7 +385,10 @@ img.waiting
     border-style: none none solid none; 
     border-width: 1px;
     border-color: gray;
-    font-weight:normal;
+    font-weight: normal;
+    max-width: 300px;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
 .doctable thead tr td,
