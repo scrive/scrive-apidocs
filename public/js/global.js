@@ -89,16 +89,108 @@ function swedishString(names)
 }
 
 $(document).ready( function () {
+
+        var focused;
+        // two alternative ways to track clicks off of a .check
+        //$("*").not(".check").click(function(){if(this == document.activeElement) { focused = null; }});
+        // this way is cleaner since it only installs a handler on the toplevel document instead of nearly
+        // every element
+        $(document).click(function(event){ 
+                if($(event.target).parents("#selectable").size() === 0){ 
+                    focused = null; 
+                }
+            });
+
+        $("#selectable tr").mousedown(function(event){
+                if(focused && event.shiftKey && $(event.target).filter(".check").size() === 0){
+                    var checks = $(".check");
+                    var startIndex = focused?checks.index(focused):null;
+                    var endIndex = checks.index($(this).find(".check"));
+                    
+                    var s = Math.min(startIndex, endIndex);
+                    var e = Math.max(startIndex, endIndex);
+ 
+                    checks.slice(s, e+1).attr("checked", true);
+
+                    checks.not(":checked").parents("tr").removeClass("ui-selected");
+                    checks.filter(":checked").parents("tr").addClass("ui-selected");
+
+                    focused = $(checks.get(endIndex));
+                    checks.get(endIndex).focus();
+
+                    // cancel all further click processing
+                    // we are overriding the Selectable behavior for shift-clicks
+                    return false;
+                }                     
+            });
+
+        // the jQuery Selectable feature 
+        $("#selectable" ).selectable({
+                // links and input fields do not have click overridden
+                cancel: 'a,input',
+                    
+                unselected: function(event, ui) {
+                    var check = $(ui.unselected).find(".check");
+                    check.attr("checked", false);
+                },
+
+                selected: function(event, ui) {
+                    var check = $(ui.selected).find(".check");
+                    check.attr("checked", true);
+                    check.focus();
+                    focused = check;
+                }});
+
+        $(".check:checked").parents("tr").addClass("ui-selected");
+        $(".ui-selected").find(".check").attr("checked", true);
+        
+        $(".check").click(function(event) {
+                    
+                if(event.shiftKey && focused && focused.filter(".check").size() > 0 && focused.attr("checked")){
+                    var checks = $(".check");
+                    var startIndex = checks.index(focused);
+                    var endIndex = checks.index(this);
+                    
+                    var s = Math.min(startIndex, endIndex);
+                    var e = Math.max(startIndex, endIndex);
+ 
+                    var checksslice = checks.slice(s, e+1);
+                    checksslice.attr("checked", true);
+                    checksslice.parents("tr").addClass("ui-selected");
+                }
+                else {
+                    if( $(this).attr("checked")) {
+                        $(this).parents("tr").addClass("ui-selected");
+                    }
+                    else {
+                        $(this).parents("tr").removeClass("ui-selected");
+                    }
+                }
+
+                focused = $(this);
+            });
+
+        $('#all').click(function() {
+            var checks = $('input:checkbox[name="doccheck"]');
+            var acc = true;
+            checks.each(function(i, val) { acc = acc && $(val).attr("checked");});
+            checks.attr("checked", !acc);
+            
+            if( !acc ) {    
+                checks.parents("tr").addClass("ui-selected");
+            } else {
+                checks.parents("tr").removeClass("ui-selected");
+            }
+        }); 
+
     $('.flashmsgbox').delay(5000).fadeOut();
     $('.flashmsgbox').click( function() { 
          $(this).fadeOut() 
     });
+    /*
     $('#all').click(function() {
-            var c = $('input:checkbox[name="doccheck"]');
-            var acc = true;
-            c.each(function(i, val) { acc = acc && $(val).attr("checked");});
-            c.attr("checked", !acc);
     });
+    */
     enableInfoText();
     if(typeof(window.documentid)!= "undefined" ) {
         $.ajax({ url: "/pagesofdoc/" + documentid,
@@ -114,9 +206,6 @@ $(document).ready( function () {
             }
         });
     }
-
-    //$("#dialog-confirm-signinvite").hide();
-    //$("#dialog-confirm-sign").hide();
 
     $("#signinvite").click(function() {
          var button = $(this);
