@@ -193,20 +193,28 @@ welcomeBody (Context {ctxmaybeuser = Just _, ctxhostpart}) =
 
 
 welcomeBody ctx@(Context {ctxmaybeuser = Nothing}) = 
-  <div class="centerdiv" style="width: 280px"> 
-   <div style="text-align: center">
-    <img src="/theme/images/logolarge.png"/><br/>
-    <hr/>
-    <p class="headline" style="font-size: 200%; text-align: center">
-    </p>
-      <% loginBox ctx %>
-   </div>
-
-   <hr/>
-
-   <p class="para">SkrivaPå är en webtjänst som hjälper företag med avtalshantering. Med vår smidiga lösning blir det enklare och billigare att skriva, arkivera och hantera avtal. 
-   Frigör tid och resurser redan idag! <a href="mailto:info@skrivapa.se">Kontakta oss</a> gärna för mer information.</p>
-  </div>
+	<div id="firstPageContentContainer"> 
+		<div id="firstPageLeft"> 
+			<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras varius lacinia augue, non rutrum mi volutpat egestas.</p> 
+			<p>Nulla feugiat neque vel elit eleifend at imperdiet nisl pretium. Nunc aliquet lacus eget dolor consectetur id vehicula lorem tristique.</p> 
+	
+			<p>Vivamus sed leo urna, at semper massa. Nunc sodales dapibus auctor. Nam risus mi, blandit in vestibulum eu, euismod quis diam.</p> 
+		</div> 
+		
+		<div id="firstPageRight"> 
+			<div id="bigLogoPlaceholder"></div> 
+			<p>SkrivaPå är fortfarande i Betastadiet - skicka in din e-mailadress med formuläret nedan så återkopplar vi till dig med kontouppgifter.</p> 
+			
+			<div id="signUpContainer"> 
+				<form action="signupform" method="post"> 
+					<div> 
+						<input type="text" infotext="E-post"/> 
+						<input type="submit" value="Skicka" class="button"/>
+					</div> 
+				</form> 
+			</div> 
+		</div> 
+	</div> 
 
 errorReport :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
             => Context 
