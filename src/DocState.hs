@@ -723,7 +723,7 @@ updateDocumentStatus time document1 newstatus = do
                         , documentmtime = time
                         , documentmaybesigninfo = case newstatus of
                                                     Pending -> Just (SignInfo time 0)
-                                                    _ -> Nothing
+                                                    _ -> documentmaybesigninfo document
                         }
   if legal 
      then do

@@ -430,7 +430,13 @@ showDocument user
        authorlink = SignatoryLink 
                     { signatorydetails = documentauthordetails
                     , maybeseentime = Nothing 
-                    , maybesigninfo = documentmaybesigninfo document
+                      -- this gymanstic below is to cover up for some earlier error
+                      -- that erased sign times of authors
+                    , maybesigninfo = if isJust (documentmaybesigninfo document)
+                                      then (documentmaybesigninfo document)
+                                      else if documentstatus == Closed
+                                           then Just (SignInfo (MinutesTime 0) 0)
+                                           else Nothing
                     , signatorylinkid = SignatoryLinkID 0
                     , maybesignatory = Nothing -- FIXME: should be author user id
                     , signatorymagichash = MagicHash 0
@@ -575,7 +581,13 @@ showDocumentForSign action document invitedlink wassigned =
        authorlink = SignatoryLink 
                     { signatorydetails = authordetails
                     , maybeseentime = Nothing 
-                    , maybesigninfo = documentmaybesigninfo document
+                      -- this gymanstic below is to cover up for some earlier error
+                      -- that erased sign times of authors
+                    , maybesigninfo = if isJust (documentmaybesigninfo document)
+                                      then (documentmaybesigninfo document)
+                                      else if documentstatus document == Closed
+                                           then Just (SignInfo (MinutesTime 0) 0)
+                                           else Nothing
                     , signatorylinkid = SignatoryLinkID 0
                     , maybesignatory = Nothing -- FIXME: should be author user id
                     , signatorymagichash = MagicHash 0
