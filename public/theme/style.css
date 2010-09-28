@@ -16,7 +16,6 @@
 {
     width: 145px;
     height: 16px;
-    font-style: italic;
     margin-right: 6px;
     color: #848484;
 }
@@ -31,6 +30,7 @@
     text-transform: none;
     background-color: #5c5c69;
     font-weight: normal;
+    color: white;
 }
 
 /* new mouse-effects for loginbutton. just an example, what king of effect and colors need to be descussed */
@@ -86,13 +86,6 @@
     width: 190px;
 }
 
-#signUpContainer input[type=submit]
-{
-    background-color: #F5F5FF;
-    color: #3f3f4f !important;
-    border: 1px solid lightgray;
-    font-weight: normal;
-}
 
 input[type=submit]:hover
 {
@@ -670,7 +663,7 @@ img.waiting
     top: 12px;
     width: 127px;
     height: 20px;
-    background: url(/theme/images/status_signed.png) no-repeat 102px 1px; /* change url */
+    background: url(/theme/images/status_signed.png) no-repeat 102px 1px;
 }
 
 div.floatleft
@@ -691,6 +684,7 @@ div.clearboth
 input.grayed
 {
     color: #999999;
+    font-style: italic;
 }
 
 input 
