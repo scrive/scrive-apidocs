@@ -17,6 +17,7 @@ import Control.Monad.Trans
 import KontraLink
 import Misc
 import MinutesTime
+import Data.Maybe
 
 instance Monad m => IsAttrValue m DocumentID where
     toAttrValue = toAttrValue . show
@@ -211,10 +212,13 @@ oneDocumentRow userid document@Document{ documentid
                else LinkSignDoc document signatorylink
         [signatorylink] = filter (\x -> maybesignatory x == Just (Signatory userid)) documentsignatorylinks
         mk x = <a href=link><% x %></a>
+        seenstatus = any (isJust . maybeseentime) documentsignatorylinks
         statusimg = "/theme/images/" ++
                     case documentstatus of
                       Preparation -> "status_draft.png"
-                      Pending  -> "status_pending.png"
+                      Pending  -> if seenstatus
+                                  then "status_viewed.png"
+                                  else "status_pending.png"
                       Closed -> "status_signed.png"
                       Canceled -> "status_rejected.png"
                       Timedout -> "status_timeout.png"
@@ -408,13 +412,13 @@ showSignatoryEntryForEdit2 :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraL
                            -> String -> XMLGenT m (HSX.XML m)
 showSignatoryEntryForEdit2 idx signatoryname signatorycompany signatorynumber signatoryemail = 
     <div id=idx>
-      <input name="signatoryname" type="text" value=signatoryname
+      <input name="signatoryname" type="text" value=signatoryname autocomplete="off"
              infotext="Namn på motpart"/><br/>
-      <input name="signatorycompany" type="text" value=signatorycompany
+      <input name="signatorycompany" type="text" value=signatorycompany autocomplete="off"
              infotext="Titel, företag"/><br/>
-      <input name="signatorynumber" type="text" value=signatorynumber
+      <input name="signatorynumber" type="text" value=signatorynumber autocomplete="off"
              infotext="Orgnr/Persnr"/><br/>
-      <input name="signatoryemail"  type="text" value=signatoryemail
+      <input name="signatoryemail"  type="text" value=signatoryemail autocomplete="off"
              infotext="Personens e-mail" class="emailvalidation"/><br/>
       <small><a onclick="return signatoryremove(this.parentNode);" href="#">Ta bort</a></small>
     </div>
@@ -551,7 +555,7 @@ showDocument user
               <div style="margin-top: 10px">
               <a href="#" onclick="editinvitetext(); return false;">Skriv hälsningsmeddelande</a><br/>
               <p>Undertecknas inom (dagar)
-              <input type="text" name="daystosign" value=documentdaystosign maxlength="2" size="2"/>
+              <input type="text" name="daystosign" value=documentdaystosign maxlength="2" size="2" autocomplete="off"/>
               <input type="hidden" name="invitetext" id="invitetext" value= documentinvitetext/>
               </p>
               <div style="height: 2px;"/>
