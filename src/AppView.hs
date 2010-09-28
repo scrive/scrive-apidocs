@@ -341,13 +341,25 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
               </div> %>
        %>
       <div id="headerContainer">
-        <img class="logosmall"src="/theme/images/logosmall.png"/>
-        <span class="contactabout">Tel: 08-559 22 545 | <a href="mailto:info@skrivapa.se">Support</a> |
-         <%
-           case ctxmaybeuser of
+        <img class="logosmall" src="theme/images/logosmall.png" alt="Liten logga"/>
+        <span class="contactabout">Tel: 08-559 22 545<br/><a href="mailto:info@skrivapa.se">info@skrivapa.se</a></span>
+
+        <div id="loginContainer"> {- new id -}
+           <% case ctxmaybeuser of
              Just _ -> <a href="/logout">Logga ut</a>
-             Nothing -> <a href="/login">Logga in</a>
-         %></span>
+             Nothing -> 
+	         <form action="/login" method="post"> 
+		    <div> 
+			{- email and password need some javascriptwatermark-effect for the text -}
+			{- changed from type="textfield" to type="text" (type="textfield" is not valid) -}
+			<input type="text" infotext="Användarnamn" name="email" /> 
+			<input type="password" name="password" /><br /> 
+			<input type="submit" value="Logga in" name="login" class="button" /> 
+		    </div> 
+	         </form> 
+           %>
+        </div> 
+
         <div id="headerContainer2">
          <div id="nav">
           <% case ctxmaybeuser of 
@@ -368,7 +380,58 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
       </div>
       <div id="footerContainer">
        <div id="footerContainer2">
-        <span><a href="/termsofuse.html">Allmänna villkor</a> | <a href="/privacypolicy.html">Sekretesspolicy</a></span>
+		<ul> 
+			<li class="footerCategoryHeader"> 
+				<a href="#">SkrivaPå</a> 
+			</li> 
+			
+			<li> 
+				<a href="#">Hem</a> 
+			</li> 
+			
+			<li> 
+				<a href="#">Support</a> 
+			</li> 
+		</ul> 
+		
+		<ul> 
+			<li class="footerCategoryHeader"> 
+				<a href="#">Sekretess</a> 
+			</li> 
+			
+			<li> 
+				<a href="#">Allmänt</a> 
+			</li> 
+			
+			<li> 
+				<a href="#">Frågor och svar</a> 
+			</li> 
+			
+			<li> 
+				<a href="#">Hjälpcenter</a> 
+			</li> 
+		</ul> 
+		
+		<ul> 
+			<li class="footerCategoryHeader"> 
+				<a href="#">Reklam</a> 
+			</li> 
+			
+			<li> 
+				<a href="#">Förfrågningar</a> 
+			</li> 
+			
+			<li> 
+				<a href="#">Pris</a> 
+			</li> 
+			
+			<li> 
+				<a href="#">Kontakt</a> 
+			</li> 
+		</ul> 
+		
+		<div id="copy">&copy; 2010 SkrivaPå</div> 
+          {- <span><a href="/termsofuse.html">Allmänna villkor</a> | <a href="/privacypolicy.html">Sekretesspolicy</a></span> -}
           {-  | <a href=LinkAbout>Om SkrivaPå</a> -}
        </div>
       </div>

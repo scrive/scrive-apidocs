@@ -1,4 +1,101 @@
 
+#loginContainer{
+	position: absolute;
+	right: 8px;
+	top: 10px;
+	width: 200px;
+	text-align: right;
+	font-size: 10px;
+}
+
+/* dont know if you want to cascade these changes to all text-input? */
+#loginContainer input[type=text],
+#loginContainer input[type=password],
+#signUpContainer input[type=text]{
+	width: 145px;
+	height: 16px;
+	font-style: italic;
+	margin-right: 6px;
+	color: #848484;
+}
+
+/* dont know if you want to cascade these changes to all submit-buttons? */
+#loginContainer input[type=submit]{
+	height: 20px;
+	border: 1px solid #d2d2d6;
+	margin-top: 2px;
+	margin-left: 5px;
+	text-transform: none;
+	background-color: #5c5c69;
+	font-weight: normal;
+}
+
+/* new mouse-effects for loginbutton. just an example, what king of effect and colors need to be descussed */
+#loginContainer input[type=submit]:hover{
+	background-color: #87879b;
+}
+
+#loginContainer input[type=submit]:active{
+	background-color: #43434e;
+}
+
+/* new first page code */
+#firstPageContentContainer{
+	width: 690px;
+	margin: auto;
+}
+
+#firstPageLeft, #firstPageRight{
+	margin-top: 135px;
+	width: 298px;
+	float: left;
+}
+
+#firstPageLeft{
+	padding-right: 30px;
+	padding-left: 20px;
+	border-right: 1px dotted #c6c6c6;
+}
+
+#firstPageRight{
+	padding-left: 30px;
+	padding-right: 10px;
+}
+
+#signUpContainer{
+	border-top: 1px dotted #c6c6c6;
+	width: 95%;
+	text-align: center;
+	margin-top: 7px;
+	float: left;
+	padding-top: 15px;
+}
+
+#signUpContainer input[type=text]{
+	width: 190px;
+}
+
+#signUpContainer input[type=submit]{
+	background-color: #F5F5FF;
+	color: #3f3f4f !important;
+	border: 1px solid lightgray;
+	font-weight: normal;
+}
+
+#signUpContainer input[type=submit]:hover{
+	background-color: #d9dae3;
+}
+
+#signUpContainer input[type=submit]:active{
+	background-color: #b3b5bd;
+}
+
+#bigLogoPlaceholder{
+	width: 100%;
+	height: 61px;
+	background: url(images/bigLogo.png) no-repeat 0 0; /* change url */
+}
+
 .bodycolorbg {
     background-color: #fafafa;
 }
@@ -208,16 +305,16 @@ body {
 .contactabout
 {
     position: absolute;
-    top: 10px;
-    right: 10px;
+    top: 26px; /* change */
+    left: 191px; /* change */
 }
 
 .contactabout, .contactabout a {
-    text-align: right;
+    /* remove text-align: right; */
     color: #FFFFFF;
     text-decoration: none;
-    text-transform: uppercase;
-    font-size: xx-small;
+    /* remove text-transform: uppercase; */
+    font-size: 11px; /* change */
 }
 
 .centerdiv {
@@ -505,35 +602,57 @@ img.waiting
     //font-size: 200%;
 }
 
-#footerContainer
-{
-    //margin-top: 10px;
-    background: url(images/gradientbottomextent.png) repeat-x bottom center;
-    height: 36px;
-    line-height:36px;
-    vertical-align: middle;
+#footerContainer{
+    height: 85px;
     width: 100%;
-    color:#FFFFFF;
-    font-size:xx-small;
-    text-align:right;
-    text-decoration:none;
-    text-transform:uppercase;
+    background: #f5f5f5 url(images/footerGradient.png) no-repeat center 0; /* change url */
+    overflow: hidden;
+    position: fixed;
+    bottom: 0;
 }
 
-#footerContainer a
-{
-    color:#FFFFFF;
-    font-size:xx-small;
-    text-align:right;
-    text-decoration:none;
-    text-transform:uppercase;
+#footerContainer2{
+	position: relative;
+    color:#777;
+    font-size: 11px;
+    width: 865px;
+    margin: auto;
+    height: 100%;
+	border-top: 1px dotted #c6c6c6;
 }
 
-#footerContainer2
-{
-    background:url(images/gradientbottom.png) no-repeat bottom center;
-    height: 36px;
-    text-align: center;
+#footerContainer2 ul{
+    float: left;
+    list-style: none;
+    margin-right: 40px;
+    line-height: 14px;
+}
+
+.footerCategoryHeader{
+	margin-left: -7px;
+	font-weight: bold;
+}
+
+#footerContainer2 a{
+	color: #777;
+	text-decoration: none;
+}
+
+#footerContainer2 a:hover{
+	text-decoration: underline;	
+}
+
+#footerContainer2 a:active{
+	color: #535353;	
+}
+
+#copy{
+	position: absolute;
+	right: 100px;
+	top: 12px;
+	width: 127px;
+	height: 20px;
+	background: url(image/xLogo.png) no-repeat 102px 1px; /* change url */
 }
 
 /*
