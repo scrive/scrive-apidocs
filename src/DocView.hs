@@ -746,10 +746,14 @@ invitationMail (Context {ctxmaybeuser = Just user, ctxhostpart})
             , asChild common
             , asChild poweredBySkrivaPaPara
             ]
+        paragraphs :: [BS.ByteString]
+        paragraphs = BS.split 10 documentinvitetext
+        -- p :: [GenChildList IO]
+        p = intersperse (asChild <br/>) (map asChild paragraphs)
         --authorversion  :: (XMLGenerator m) => GenChildList m
-        authorversion = sequence
-               [ asChild documentinvitetext
-               , asChild common
+        authorversion = sequence $
+               p ++ 
+               [ asChild common
                , asChild "Hälsningar"
                , asChild <br/>
                , asChild creatorname
