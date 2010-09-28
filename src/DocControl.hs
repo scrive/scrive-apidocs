@@ -522,7 +522,7 @@ sealSpecFromDocument document author@(User {userfullname,usercompanyname,usercom
           ]
       lastHistEntry = Seal.HistEntry
                       { Seal.histdate = show maxsigntime
-                      , Seal.histcomment = "Alla parter har undertecknat dokumentet och avtalet är nu juridiskt bindande."
+                      , Seal.histcomment = "Samtliga parter har undertecknat dokumentet och avtalet är nu juridiskt bindande."
                       }
 
       concatComma = concat . intersperse ", "
