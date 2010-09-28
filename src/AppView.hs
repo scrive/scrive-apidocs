@@ -349,7 +349,7 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
               </div> %>
        %>
       <div id="headerContainer">
-        <img class="logosmall" src="theme/images/logosmall.png" alt="Liten logga"/>
+        <img class="logosmall" src="/theme/images/logosmall.png" alt="Liten logga"/>
         <span class="contactabout">Tel: 08-559 22 545<br/><a href="mailto:info@skrivapa.se">info@skrivapa.se</a></span>
 
         <div id="loginContainer"> {- new id -}
