@@ -36,6 +36,17 @@ showDateOnly (MinutesTime mins) =
         in formatCalendarTime defaultTimeLocale 
                "%Y-%m-%d" calendartime
 
+showDateAbbrev (MinutesTime current) (MinutesTime mins) 
+               | ctYear ct1 == ctYear ct && ctMonth ct1 == ctMonth ct && ctDay ct1 == ctDay ct =
+                   formatCalendarTime defaultTimeLocale "%H:%M" ct
+               | ctYear ct1 == ctYear ct =
+                   formatCalendarTime defaultTimeLocale "%m-%d" ct
+               | otherwise =
+                   formatCalendarTime defaultTimeLocale "%Y-%m-%d" ct
+               where
+                 ct1 = unsafePerformIO $ toCalendarTime $ TOD (fromIntegral current*60) 0
+                 ct = unsafePerformIO $ toCalendarTime $ TOD (fromIntegral mins*60) 0
+
 instance Version MinutesTime
 $(deriveSerialize ''MinutesTime)
 

@@ -199,7 +199,8 @@ concatSignatories :: [SignatoryDetails] -> String
 concatSignatories siglinks = 
     concat $ intersperse ", " $ map (BS.toString . signatoryname) siglinks 
 
-oneDocumentRow userid document@Document{ documentid
+-- oneDocumentRow :: (XMLGenerator m) => MinutesTime -> UserID -> Document -> GenChild m
+oneDocumentRow ctime userid document@Document{ documentid
                                 , documentsignatorylinks
                                 , documentstatus
                                 , documenttitle
@@ -236,21 +237,22 @@ oneDocumentRow userid document@Document{ documentid
                    -- FIXME: show days to sign, not the final date
                    Just (TimeoutTime x) -> 
                        if documentstatus==Pending || documentstatus==Timedout  
-                       then show x
+                       then showDateAbbrev ctime x
                        else "-"
           %>
      </td>
-     <td><% mk $ show $ documentmtime %></td>
+     <td><% mk $ showDateAbbrev ctime documentmtime %></td>
      <td class="tdright"></td>
     </tr>
 
 
 listDocuments :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink),
                       EmbedAsAttr m (Attr [Char] DocumentID)) 
-              => UserID
+              => MinutesTime
+              -> UserID
               -> [Document] 
               -> XMLGenT m (HSX.XML m)
-listDocuments userid documents = 
+listDocuments ctime userid documents = 
      <form method="post" action=LinkIssue>
      <table class="doctable" cellspacing="0">
       <col/>
@@ -289,7 +291,7 @@ listDocuments userid documents =
        </tr>
       </tfoot>
       <tbody id="selectable">
-       <% map (oneDocumentRow userid) (filter (not . documentdeleted) documents) %>
+       <% map (oneDocumentRow ctime userid) (filter (not . documentdeleted) documents) %>
       </tbody>
      </table>
      </form>
@@ -514,6 +516,10 @@ class ( XMLGenerator m
       , EmbedAsAttr m (Attr [Char] BS.ByteString)) => XMLGenerator2 m
 
 
+-- cover for a bug that we did forget time of signing
+showDateOnly1 (MinutesTime 0) = ""
+showDateOnly1 x = showDateOnly x
+
 showSignatoryLinkForSign (SignatoryLink{ maybesigninfo
                                        , maybeseentime
                                        , signatorydetails = SignatoryDetails
@@ -526,7 +532,7 @@ showSignatoryLinkForSign (SignatoryLink{ maybesigninfo
    let
        (status,message) = case (maybesigninfo, maybeseentime) of
                   (Just (SignInfo{signtime = tm}),_) -> (<img src="/theme/images/status_signed.png"/> 
-                                                        , "Undertecknat " ++ showDateOnly tm
+                                                        , "Undertecknat " ++ showDateOnly1 tm
                                                         )
                   (Nothing,Just tm) -> (<img src="/theme/images/status_viewed.png"/> 
                                        , "Granskat " ++ showDateOnly tm

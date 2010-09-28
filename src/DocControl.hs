@@ -131,7 +131,7 @@ sendClosedAuthorEmail ctx document = do
   
   
 handleSign :: Context -> Kontra Response
-handleSign ctx@(Context {ctxmaybeuser, ctxhostpart}) =
+handleSign ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) =
   msum [path $ \documentid -> 
             path $ \signatoryid -> 
                   path $ \magichash -> 
@@ -139,7 +139,7 @@ handleSign ctx@(Context {ctxmaybeuser, ctxhostpart}) =
        , withUser ctxmaybeuser $ do
           let u = userid $ fromJust ctxmaybeuser
           documents <- query $ GetDocumentsBySignatory u
-          webHSP (pageFromBody ctx TopNone kontrakcja (listDocuments u documents))
+          webHSP (pageFromBody ctx TopNone kontrakcja (listDocuments ctxtime u documents))
        ]
 
 signDocument :: Context 
@@ -351,9 +351,9 @@ updateDocument ctx@Context{ctxtime} document = do
     
 
 handleIssueGet :: (MonadIO m) => Context -> m Response
-handleIssueGet ctx@(Context {ctxmaybeuser = Just user, ctxhostpart}) = do
+handleIssueGet ctx@(Context {ctxmaybeuser = Just user, ctxhostpart, ctxtime}) = do
   documents <- query $ GetDocumentsByUser (userid user) 
-  webHSP (pageFromBody ctx TopDocument kontrakcja (listDocuments (userid user) documents))
+  webHSP (pageFromBody ctx TopDocument kontrakcja (listDocuments ctxtime (userid user) documents))
 
 gs :: String
 #ifdef WINDOWS
