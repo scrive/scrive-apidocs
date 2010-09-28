@@ -430,7 +430,7 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
 			</li> 
 		</ul> 
 		
-		<div id="copy">&copy; 2010 SkrivaPå</div> 
+		<div id="copy"><% cdata "&copy;" %> 2010 SkrivaPå</div> 
           {- <span><a href="/termsofuse.html">Allmänna villkor</a> | <a href="/privacypolicy.html">Sekretesspolicy</a></span> -}
           {-  | <a href=LinkAbout>Om SkrivaPå</a> -}
        </div>
