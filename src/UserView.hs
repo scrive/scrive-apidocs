@@ -105,7 +105,7 @@ viewSubaccounts :: Context -> [User] -> Kontra Response
 viewSubaccounts ctx@(Context {ctxmaybeuser = Just user}) subusers = 
     webHSP $ pageFromBody ctx TopAccount kontrakcja $ 
     <form method="post" action= LinkSubaccount>
-     <h1>Subaccounts</h1>
+     <h1>Underkonton</h1>
      <table class="doctable" cellspacing="0">
       <col/>
       <col/>
