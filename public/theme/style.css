@@ -7,6 +7,9 @@
     background-color: #fafafa;
 }
 
+#selectable .ui-selecting { background: #e6e6e6; }
+#selectable .ui-selected { background: #e0e0e0;}
+
 body {
     font-family: Verdana, serif;
     color: #6d6e70;
