@@ -14,7 +14,7 @@ function enableInfoText(where)
     if( where==null ) {
         where = $(document);
     }
-    var selector = 'input[(type="text") or (type="password")][infotext!=""]';
+    var selector = ':input[infotext]';
     var inputs = where.find(selector);
     
     inputs.focus(function() { 
@@ -31,8 +31,9 @@ function enableInfoText(where)
         });
     inputs.blur();
     $("form").submit(function () {
-            // this is so wrong on so many different levels!
-            $(selector).val("");
+            var elems = $(this).find(selector + ".grayed");
+            elems.val("");
+            return true;
         });
 }
 
