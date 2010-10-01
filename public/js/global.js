@@ -305,7 +305,7 @@ $("#othersignatoryemail").live('focus', function(e){
 
 	
 function isValidEmailAddress(emailAddress) {
-	var pattern = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;
+	var pattern = /^([A-Za-z0-9_\-\.+])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;
 	return pattern.test(emailAddress);
 }
 
