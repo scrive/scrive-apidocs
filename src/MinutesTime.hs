@@ -35,12 +35,30 @@ showDateOnly (MinutesTime mins) =
             calendartime = unsafePerformIO $ toCalendarTime clocktime
         in formatCalendarTime defaultTimeLocale 
                "%Y-%m-%d" calendartime
+{-
+
+We should use Swedish month names here:
+Jan
+Feb
+Mar
+Apr
+Jun
+Jul
+Aug
+Sep
+Okt
+Nov
+Dec
+
+%b -- is replaced by the locale's abbreviated month name
+
+-}
 
 showDateAbbrev (MinutesTime current) (MinutesTime mins) 
                | ctYear ct1 == ctYear ct && ctMonth ct1 == ctMonth ct && ctDay ct1 == ctDay ct =
                    formatCalendarTime defaultTimeLocale "%H:%M" ct
                | ctYear ct1 == ctYear ct =
-                   formatCalendarTime defaultTimeLocale "%m-%d" ct
+                   formatCalendarTime defaultTimeLocale "%b %d" ct
                | otherwise =
                    formatCalendarTime defaultTimeLocale "%Y-%m-%d" ct
                where
