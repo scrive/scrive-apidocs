@@ -309,6 +309,13 @@ body
     left: 0px;
 }
 
+#logout, #logout a
+{
+    color: #FFFFFF;
+    text-decoration: none;
+    font-size: 11px;
+}
+
 .contactabout
 {
     position: absolute;
