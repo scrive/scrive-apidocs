@@ -386,59 +386,49 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
       </div>
       <div id="footerContainer">
        <div id="footerContainer2">
-		<ul> 
-			<li class="footerCategoryHeader"> 
-				<a href="#">SkrivaPå</a> 
-			</li> 
-			
-			<li> 
-				<a href="#">Hem</a> 
-			</li> 
-			
-			<li> 
-				<a href="#">Support</a> 
-			</li> 
-		</ul> 
-		
-		<ul> 
-			<li class="footerCategoryHeader"> 
-				<a href="#">Sekretess</a> 
-			</li> 
-			
-			<li> 
-				<a href="#">Allmänt</a> 
-			</li> 
-			
-			<li> 
-				<a href="#">Frågor och svar</a> 
-			</li> 
-			
-			<li> 
-				<a href="#">Hjälpcenter</a> 
-			</li> 
-		</ul> 
-		
-		<ul> 
-			<li class="footerCategoryHeader"> 
-				<a href="#">Reklam</a> 
-			</li> 
-			
-			<li> 
-				<a href="#">Förfrågningar</a> 
-			</li> 
-			
-			<li> 
-				<a href="#">Pris</a> 
-			</li> 
-			
-			<li> 
-				<a href="#">Kontakt</a> 
-			</li> 
-		</ul> 
+        <ul>
+          <li class="footerCategoryHeader"> 
+           Tjänsten
+          </li>
+          <li>
+           <a href="/why.html">Varför SkrivaPå?</a>
+          </li>
+          <li>
+           <a href="/features.html">Funktioner och fördelar</a>
+          </li>
+          <li>
+           <a href="/pricing.html">Prisplan</a>
+          </li>
+        </ul>
+
+        <ul>
+          <li class="footerCategoryHeader"> 
+           Trygghet och villkor
+          </li>
+          <li>
+           <a href="/security.html">Säkerhet</a>
+          </li>
+          <li>
+           <a href="/legal.html">Juridik</a>
+          </li>
+          <li>
+           <a href="/privacypolicy.html">Sekretesspolicy</a>
+          </li>
+          <li>
+           <a href="/termsofuse.html">Allmäna Villkor</a>
+          </li>
+        </ul>
+
+        <ul>  
+          <li class="footerCategoryHeader"> 
+           SkrivaPå
+          </li>
+          <li>
+           <a href="/contact.html">Kontakt</a>
+          </li>
+        </ul>
 		
 		<div id="copy"><% cdata "&copy;" %> 2010 SkrivaPå</div> 
-          {- <span><a href="/termsofuse.html">Allmänna villkor</a> | <a href="/privacypolicy.html">Sekretesspolicy</a></span> -}
-          {-  | <a href=LinkAbout>Om SkrivaPå</a> -}
        </div>
       </div>
 
