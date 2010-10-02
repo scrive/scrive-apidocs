@@ -201,6 +201,9 @@ welcomeBody ctx@(Context {ctxmaybeuser = Nothing}) =
 		
 		<div id="firstPageRight"> 
 			<div id="bigLogoPlaceholder"></div> 
+			<p>SkrivaPå är fortfarande i Betastadiet - skicka in din e-mailadress till <a href="mailto:lukas@skrivapa.se">Lukas Duczko</a> så återkopplar han till dig med kontouppgifter.</p> 
+
+ {-
 			<p>SkrivaPå är fortfarande i Betastadiet - skicka in din e-mailadress med formuläret nedan så återkopplar vi till dig med kontouppgifter.</p> 
 			
 			<div id="signUpContainer"> 
@@ -211,6 +214,7 @@ welcomeBody ctx@(Context {ctxmaybeuser = Nothing}) =
 					</div> 
 				</form> 
 			</div> 
+ -}
 		</div> 
 	</div> 
 
