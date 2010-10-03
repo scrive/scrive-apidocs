@@ -12,6 +12,7 @@ import Happstack.Data
 import Data.Data
 import System.Locale
 import System.IO.Unsafe
+import System.Locale
 
 $(deriveAll [''Eq, ''Ord, ''Default]
   [d|
@@ -35,32 +36,28 @@ showDateOnly (MinutesTime mins) =
             calendartime = unsafePerformIO $ toCalendarTime clocktime
         in formatCalendarTime defaultTimeLocale 
                "%Y-%m-%d" calendartime
-{-
 
-We should use Swedish month names here:
-Jan
-Feb
-Mar
-Apr
-Jun
-Jul
-Aug
-Sep
-Okt
-Nov
-Dec
-
-%b -- is replaced by the locale's abbreviated month name
-
--}
+swedishTimeLocale = defaultTimeLocale { months = 
+                                            [ ("jan","jan")
+                                            , ("feb", "feb")
+                                            , ("mar", "mar")
+                                            , ("apr", "apr")
+                                            , ("jun", "jun")
+                                            , ("jul", "jul")
+                                            , ("aug", "aug")
+                                            , ("sep", "sep")
+                                            , ("okt", "okt")
+                                            , ("nov", "nov")
+                                            , ("dec", "dec")
+                                            ] }
 
 showDateAbbrev (MinutesTime current) (MinutesTime mins) 
                | ctYear ct1 == ctYear ct && ctMonth ct1 == ctMonth ct && ctDay ct1 == ctDay ct =
-                   formatCalendarTime defaultTimeLocale "%H:%M" ct
+                   formatCalendarTime swedishTimeLocale "%H:%M" ct
                | ctYear ct1 == ctYear ct =
-                   formatCalendarTime defaultTimeLocale "%b %d" ct
+                   formatCalendarTime swedishTimeLocale "%d %b" ct
                | otherwise =
-                   formatCalendarTime defaultTimeLocale "%Y-%m-%d" ct
+                   formatCalendarTime swedishTimeLocale "%Y-%m-%d" ct
                where
                  ct1 = unsafePerformIO $ toCalendarTime $ TOD (fromIntegral current*60) 0
                  ct = unsafePerformIO $ toCalendarTime $ TOD (fromIntegral mins*60) 0
