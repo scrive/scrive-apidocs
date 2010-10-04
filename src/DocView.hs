@@ -661,7 +661,7 @@ invitationMail (Context {ctxmaybeuser = Just user, ctxhostpart})
                  %> 
                  </p>
               , asChild <p><i>Så här går du vidare</i><br/>
-              1. Klicka länken<br/>
+              1. Klicka på länken<br/>
               <a href=link><% link %></a><br/>
               2. Granska online<br/>
               3. Underteckna<br/>
