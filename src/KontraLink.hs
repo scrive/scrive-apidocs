@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -F -pgmFtrhsx #-}
 module KontraLink where
 
@@ -20,6 +21,13 @@ import System.Log.Logger
 import Control.Monad.State
 import MinutesTime
 import Misc
+import Happstack.Server.HSP.HTML (webHSP)
+import qualified HSX.XMLGenerator as HSX (XML)
+import HSP
+
+seeOtherXML :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
+seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
+
 
 data KontraLink
     = LinkAbout
@@ -74,3 +82,28 @@ instance (EmbedAsChild m String) => (EmbedAsChild m KontraLink) where
 instance Monad m => IsAttrValue m KontraLink where
     toAttrValue = toAttrValue . show
 
+
+hpost0 action = methodM POST >> do
+                  (link :: KontraLink) <- action
+                  response <- webHSP (seeOtherXML $ show link)
+                  seeOther (show link) response
+
+hpost1 action = path $ \a1 -> methodM POST >>  do
+                  (link :: KontraLink) <- action a1
+                  response <- webHSP (seeOtherXML $ show link)
+                  seeOther (show link) response
+
+hpost2 action = path $ \a1 -> path $ \a2 -> methodM POST >>  do
+                  (link :: KontraLink) <- action a1 a2
+                  response <- webHSP (seeOtherXML $ show link)
+                  seeOther (show link) response
+
+hpost3 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> methodM POST >>  do
+                  (link :: KontraLink) <- action a1 a2 a3
+                  response <- webHSP (seeOtherXML $ show link)
+                  seeOther (show link) response
+
+hpost4 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> path $ \a4 -> methodM POST >>  do
+                  (link :: KontraLink) <- action a1 a2 a3 a4
+                  response <- webHSP (seeOtherXML $ show link)
+                  seeOther (show link) response

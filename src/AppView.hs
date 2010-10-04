@@ -463,10 +463,6 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
     </html>
 
 
-seeOtherXML :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
-seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
-
-
 showUserOption :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] BSC.ByteString)) 
                   => User -> XMLGenT m (HSX.XML m)
 showUserOption user =
