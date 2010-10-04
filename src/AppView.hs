@@ -364,7 +364,8 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
 			{- changed from type="textfield" to type="text" (type="textfield" is not valid) -}
 			<input type="text" infotext="Användarnamn" name="email" /> 
 			<input type="password" name="password" infotext="password"/><br /> 
-			<input type="submit" value="Logga in" name="login" class="button" /> 
+		        <a href=LinkForgotPassword> Glömt lösenord</a> 
+                        <input type="submit" value="Logga in" name="login" class="button" /> 
 		    </div> 
 	         </form> 
            %>

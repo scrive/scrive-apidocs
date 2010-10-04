@@ -44,6 +44,14 @@
     background-color: #43434e;
 }
 
+#loginContainer, #loginContainer a
+{
+    color: #FFFFFF;
+    text-decoration: none;
+    font-size: 11px;
+}
+
+
 /* new first page code */
 #firstPageContentContainer
 {
