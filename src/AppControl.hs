@@ -104,6 +104,7 @@ handleRoutes ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} = toIO ctx $ msum 
       , dir "login" loginPage
       -- , dir "signup" signupPage
       , dir "amnesia" forgotPasswordPage
+      , dir "amnesiadone" forgotPasswordDonePage
       ]
    ++ [ fileServe [] "public"] 
 
@@ -163,19 +164,25 @@ appHandler = do
      setRsCode 404 response
 
 forgotPasswordPage :: Kontra Response
-forgotPasswordPage = (methodM GET >> forgotPasswordPageGet) `mplus`
-                     (methodM POST >> forgotPasswordPagePost)
+forgotPasswordPage = hget0 forgotPasswordPageGet `mplus`
+                     hpost0 forgotPasswordPagePost
 
 forgotPasswordPageGet :: Kontra Response
 forgotPasswordPageGet = do
     ctx <- lift get
     renderFromBody ctx TopNone kontrakcja forgotPasswordPageView
     
-forgotPasswordPagePost :: Kontra Response
+forgotPasswordPagePost :: Kontra KontraLink
 forgotPasswordPagePost = do
     ctx <- lift get
     email <- getDataFnM $ look "email"
     liftIO $ resetUserPassword (BS.fromString email)
+    return LinkForgotPasswordDone
+    --renderFromBody ctx TopNone kontrakcja (forgotPasswordConfirmPageView ctx)
+
+forgotPasswordDonePage :: Kontra Response
+forgotPasswordDonePage = do
+    ctx <- lift get
     renderFromBody ctx TopNone kontrakcja (forgotPasswordConfirmPageView ctx)
 
 signupPage :: Kontra Response
