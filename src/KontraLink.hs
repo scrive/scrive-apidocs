@@ -34,6 +34,7 @@ data KontraLink
     | LinkLogin
     | LinkSignup
     | LinkForgotPassword
+    | LinkForgotPasswordDone
     | LinkIssue
     | LinkMain
     | LinkAccount
@@ -51,6 +52,7 @@ instance Show KontraLink where
     showsPrec _ LinkLogin = (++) "/login"
     showsPrec _ LinkSignup = (++) "/signup"
     showsPrec _ LinkForgotPassword = (++) "/amnesia"
+    showsPrec _ LinkForgotPasswordDone = (++) "/amnesiadone"
     showsPrec _ LinkIssue = (++) "/d"
     showsPrec _ LinkMain = (++) "/"
     showsPrec _ LinkAccount = (++) "/account"
