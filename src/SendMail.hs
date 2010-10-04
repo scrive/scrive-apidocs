@@ -101,6 +101,7 @@ sendMail fullnameemails title content attachmentcontent = do
   BS.hPutStr handle_in (BS.fromString header)
   BS.hPutStr handle_in (BS.fromString header1)
   BS.hPutStr handle_in content
+  BS.hPutStr handle_in (BS.fromString "\n\n\n")
   when (not (BS.null attachmentcontent)) $ do
     BS.hPutStr handle_in (BS.fromString header2)
     BS.hPutStr handle_in (BSC.pack $ concat $ intersperse "\r\n" $ Base64.chop 72 $ Base64.encode $ BS.unpack attachmentcontent)
