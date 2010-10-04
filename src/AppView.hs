@@ -308,7 +308,7 @@ topnavi False ctx title link =
 #define DATESTR _DATESTR(__DATE__)
 
 globalScriptsAndStyles = 
-      [ <link rel="stylesheet" type="text/css" href="/theme/style.css" media="screen" />
+      [ <link rel="stylesheet" type="text/css" href=("/theme/style.css?"  ++ __DATE__) media="screen" />
       , <link rel="stylesheet" type="text/css" 
             href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/ui-lightness/jquery-ui.css" 
             -- href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/flick/jquery-ui.css"
