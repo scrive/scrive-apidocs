@@ -42,6 +42,7 @@ swedishTimeLocale = defaultTimeLocale { months =
                                             , ("feb", "feb")
                                             , ("mar", "mar")
                                             , ("apr", "apr")
+                                            , ("mai", "mai")
                                             , ("jun", "jun")
                                             , ("jul", "jul")
                                             , ("aug", "aug")
