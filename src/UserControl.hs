@@ -17,7 +17,7 @@ import User
 import AppView
 import Control.Monad.Trans (liftIO,MonadIO,lift)
 import Misc
-import SendMail
+import SendMail(Mail,sendMail,fullnameemails)
 import System.Random
 import System.Log.Logger
 import System.Process
@@ -149,15 +149,14 @@ createUser1 :: BS.ByteString -> BS.ByteString -> BS.ByteString -> Bool -> Maybe 
 createUser1 fullname email password isnewuser maybesupervisor = do
   passwdhash <- createPassword password
   user <- update $ AddUser fullname email passwdhash (fmap userid maybesupervisor)
-  content <- case maybesupervisor of
+  mail <- case maybesupervisor of
     Nothing ->
-      if isnewuser
-       then liftIO $ passwordChangeMail email fullname password
-       else liftIO $ newUserMail email fullname password
-    Just supervisor -> liftIO $ inviteSubaccountMail (userfullname supervisor) (usercompanyname supervisor)
+      if not isnewuser
+       then passwordChangeMail email fullname password
+       else newUserMail email fullname password
+    Just supervisor -> inviteSubaccountMail (userfullname supervisor) (usercompanyname supervisor)
                        email fullname password
-  liftIO $ sendMail [(fullname, email)]
-               (BS.fromString "Välkommen!") content BS.empty
+  sendMail $ mail { fullnameemails = [(fullname, email)]}
   return user
   
 resetUserPassword :: BS.ByteString -> IO ()
@@ -168,9 +167,8 @@ resetUserPassword email = do
       password <- randomPassword
       passwordhash <- createPassword password
       update $ SetUserPassword user passwordhash
-      content <- liftIO $ passwordChangeMail email (userfullname user) password
-      liftIO $ sendMail [((userfullname user), email)]
-        (BS.fromString "Ditt nya lösenord") content BS.empty
+      mail <- passwordChangeMail email (userfullname user) password
+      sendMail $ mail { fullnameemails = [((userfullname user), email)]}
     Nothing ->
       return ()
 

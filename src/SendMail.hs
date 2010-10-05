@@ -1,8 +1,8 @@
 {-# LANGUAGE ForeignFunctionInterface, CPP #-}
 
 
-module SendMail where
-import Control.Monad(msum,liftM,mzero,guard,MonadPlus(..),when)
+module SendMail(Mail(),emptyMail,sendMail,title,content, fullnameemails,attachments) where
+import Control.Monad(msum,liftM,mzero,guard,MonadPlus(..),when,forM_)
 import Control.Monad.Reader (ask)
 import Control.Monad.Trans(liftIO, MonadIO,lift)
 import Happstack.Server hiding (simpleHTTP)
@@ -46,17 +46,19 @@ mailEncode source =
 mailEncode1 :: String -> String
 mailEncode1 source = mailEncode (BS.fromString source)
 
-{-
 type Email = BS.ByteString
 type Fullname = BS.ByteString
-sendMail :: BS.ByteString -- ^ title
-         -> [(Fullname,Email)] -- ^ fullname + email address pairs
-         -> BS.ByteString -- ^ html contents
-         -> [(BS.ByteString,BS.ByteString)] -- ^ filename + file contents 
-         -- more arguments follow
-         -> IO ()
--}
-sendMail fullnameemails title content attachmentcontent = do
+data Mail =  Mail {
+               fullnameemails::[(Fullname,Email)],
+               title::BS.ByteString,
+               content::BS.ByteString,      
+               attachments::[(BS.ByteString,BS.ByteString)] -- list of attachments (name,content). 
+             }
+             
+emptyMail = Mail { fullnameemails=[], title= BS.empty, content = BS.empty, attachments = []}    
+    
+sendMail::Mail->IO ()         
+sendMail (Mail fullnameemails title content attachments) = do
   tm <- getCurrentTime
   let mailtos = map fmt fullnameemails 
       -- ("Gracjan Polak","gracjan@skrivapa.se") => "Gracjan Polak <gracjan@skrivapa.se>"
@@ -101,7 +103,6 @@ sendMail fullnameemails title content attachmentcontent = do
   BS.hPutStr handle_in (BS.fromString header)
   BS.hPutStr handle_in (BS.fromString header1)
   BS.hPutStr handle_in content
-  BS.hPutStr handle_in (BS.fromString "\n\n\n")
   when (not (BS.null attachmentcontent)) $ do
     BS.hPutStr handle_in (BS.fromString header2)
     BS.hPutStr handle_in (BSC.pack $ concat $ intersperse "\r\n" $ Base64.chop 72 $ Base64.encode $ BS.unpack attachmentcontent)

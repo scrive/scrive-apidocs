@@ -18,6 +18,7 @@ import KontraLink
 import Misc
 import MinutesTime
 import Data.Maybe
+import SendMail(Mail,emptyMail,content,title)
 
 instance Monad m => IsAttrValue m DocumentID where
     toAttrValue = toAttrValue . show
@@ -150,6 +151,7 @@ landpageDocumentSavedView (ctx@Context { ctxmaybeuser = Just user }) document si
      <a class="bigbutton" href="/">Starta</a> {- FIXME: move upload stuff here also -}
     </div>
 
+--NOT USED!!!
 welcomeEmail :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 welcomeEmail fullname =
     <div>
@@ -643,7 +645,7 @@ invitationMail :: Context
                -> Document
                -> SignatoryLink
                -> MagicHash
-               -> IO BS.ByteString
+               -> IO Mail
 invitationMail (Context {ctxmaybeuser = Just user, ctxhostpart}) 
                   emailaddress personname 
                   document@Document{documenttitle,documentid,documenttimeouttime,documentauthordetails,documentinvitetext} 
@@ -691,8 +693,11 @@ invitationMail (Context {ctxmaybeuser = Just user, ctxhostpart})
         content = if BS.null documentinvitetext
                     then <span><% skrivapaversion %></span>
                     else <span><% authorversion %></span>
-    in htmlHeadBodyWrapIO documenttitle content
-
+    in 
+       do
+        let title =  BS.concat [BS.fromString "Inbjudan från ",creatorname , BS.fromString " till ", documenttitle]
+        content <- htmlHeadBodyWrapIO documenttitle content
+        return $ emptyMail {title = title, content = content}
 
 closedMail :: Context
            -> BS.ByteString
@@ -700,13 +705,15 @@ closedMail :: Context
            -> Document
            -> SignatoryLink
            -> MagicHash
-           -> IO BS.ByteString
+           -> IO Mail
 closedMail (Context {ctxhostpart}) 
               emailaddress personname 
               document@Document{documenttitle,documentid} 
               signaturelink magichash = 
+    do
+    let title = BS.append (BS.fromString "Bekräftelse: ")  documenttitle    
     let link = ctxhostpart ++ show (LinkSignDoc document signaturelink)
-    in htmlHeadBodyWrapIO documenttitle 
+    content <- htmlHeadBodyWrapIO documenttitle 
      <span>
        <p>Hej <strong><% personname %></strong>,</p>
        <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats 
@@ -716,18 +723,20 @@ closedMail (Context {ctxhostpart})
    
        <% poweredBySkrivaPaPara %>
       </span>
-
+    return $ emptyMail {title = title, content = content}
 
 closedMailAuthor :: Context
                  -> BS.ByteString
                  -> BS.ByteString
                  -> Document
-                 -> IO BS.ByteString
+                 -> IO Mail
 closedMailAuthor (Context {ctxhostpart}) 
                   emailaddress personname 
                   document@Document{documenttitle,documentid} = 
-    let link = ctxhostpart ++ show (LinkIssueDoc document)
-    in htmlHeadBodyWrapIO documenttitle
+    do
+     let title = BS.append (BS.fromString "Bekräftelse: ")  documenttitle
+     let link = ctxhostpart ++ show (LinkIssueDoc document)
+     content <- htmlHeadBodyWrapIO documenttitle
         <span>
           <p>Hej <strong><% personname %></strong>,</p>
              <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats 
@@ -736,8 +745,8 @@ closedMailAuthor (Context {ctxhostpart})
              <p>Det färdigställda dokumentet bifogas med detta mail.</p> 
 
              <% poweredBySkrivaPaPara %>
-            </span>
-
+        </span> 
+     return $ emptyMail {title = title, content = content}
 
 poweredBySkrivaPaPara :: (XMLGenerator m) => XMLGenT m (HSX.XML m)
 poweredBySkrivaPaPara = 
