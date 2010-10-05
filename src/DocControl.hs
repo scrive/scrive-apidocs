@@ -28,7 +28,7 @@ import qualified Data.Map as M
 import Data.List
 import MinutesTime
 import Control.Concurrent
-import SendMail
+import SendMail(Mail,sendMail,fullnameemails,attachments)
 import System.Process
 import System.IO
 import qualified Seal as Seal
@@ -52,7 +52,7 @@ doctransPreparation2Pending ctx@Context{ctxtime = MinutesTime m } doc = do
   newdoc <- update $ UpdateDocumentStatus (ctxtime ctx) doc Pending
   let timeout = TimeoutTime (MinutesTime (m + documentdaystosign doc * 24 * 60))
   newdoc2 <- update $ SetDocumentTimeoutTime newdoc timeout
-  liftIO $ sendInvitationEmails ctx newdoc2
+  sendInvitationEmails ctx newdoc2
   return newdoc2
 
 doctransPending2Closed :: Context -> Document -> IO Document
@@ -87,11 +87,10 @@ sendInvitationEmail1 ctx document signatorylink = do
                                                          }
                    , signatorymagichash } = signatorylink
       Document{documenttitle,documentid} = document
-  content <- invitationMail ctx signatoryemail signatoryname
+  mail <- invitationMail ctx signatoryemail signatoryname
              document signatorylink signatorymagichash
-
-  sendMail [(signatoryname,signatoryemail)] documenttitle content
-           (filepdf $ head $ documentfiles document)
+  let attachmentcontent = filepdf $ head $ documentfiles document
+  sendMail $ mail { fullnameemails =  [(signatoryname,signatoryemail)]  , attachments = [(documenttitle,attachmentcontent)]} 
 
 sendClosedEmails :: Context -> Document -> IO ()
 sendClosedEmails ctx document = do
@@ -107,18 +106,19 @@ sendClosedEmail1 ctx document signatorylink = do
                                                          , signatorycompany
                                                          , signatoryemail }} = signatorylink
       Document{documenttitle,documentid} = document
-  content <- closedMail ctx signatoryemail signatoryname
+  mail <- closedMail ctx signatoryemail signatoryname
              document signatorylink signatorymagichash
   let attachmentcontent = filepdf $ head $ documentfiles document
-  sendMail [(signatoryname,signatoryemail)] documenttitle content attachmentcontent
+  sendMail $ mail { fullnameemails =  [(signatoryname,signatoryemail)] , attachments = [(documenttitle,attachmentcontent)]}
 
 sendClosedAuthorEmail :: Context -> Document -> IO ()
 sendClosedAuthorEmail ctx document = do
   let authorid = unAuthor $ documentauthor document
   Just authoruser <- query $ GetUserByUserID authorid
-  content <- closedMailAuthor ctx (unEmail $ useremail authoruser) (userfullname authoruser)
+  mail<- closedMailAuthor ctx (unEmail $ useremail authoruser) (userfullname authoruser)
              document
   let attachmentcontent = filepdf $ head $ documentfiles document
+      Document{documenttitle,documentid} = document
   let email2 = signatoryemail $ documentauthordetails document
       email1 = unEmail $ useremail authoruser
       em = if email2/=BS.empty && email2/=email1
@@ -126,8 +126,7 @@ sendClosedAuthorEmail ctx document = do
            else []
       name1 = userfullname authoruser
       name2 = signatoryname $ documentauthordetails document
-  sendMail ([(name1,email1)] ++ em)
-           (documenttitle document) content attachmentcontent
+  sendMail $ mail { fullnameemails = ([(name1,email1)] ++ em), attachments = [(documenttitle,attachmentcontent)]}
   
   
 handleSign :: Context -> Kontra Response

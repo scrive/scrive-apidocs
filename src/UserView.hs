@@ -26,7 +26,7 @@ import User
 import KontraLink
 import DocView
 import MinutesTime
-
+import SendMail(Mail,emptyMail,title,content)
 instance (EmbedAsChild m BS.ByteString) => (EmbedAsChild m Email) where
     asChild = asChild . unEmail
 
@@ -164,9 +164,11 @@ viewSubaccounts ctx@(Context {ctxmaybeuser = Just user}) subusers =
       </table>
     </form>
 
-newUserMail :: BS.ByteString -> BS.ByteString -> BS.ByteString -> IO BS.ByteString
+newUserMail :: BS.ByteString -> BS.ByteString -> BS.ByteString -> IO Mail
 newUserMail emailaddress personname newpassword =
-    htmlHeadBodyWrapIO ""
+    do 
+    let title = BS.fromString "Nytt konto"
+    content <- htmlHeadBodyWrapIO ""
      <span>
       <p>Hej <strong><% personname %></strong>,</p>
 
@@ -184,14 +186,17 @@ newUserMail emailaddress personname newpassword =
       <p>Med vänliga hälsningar<br/>/Lukas Duczko och team <a href="http://skrivapa.se/">SkrivaPå</a>.
       </p>
      </span>
-
+    return $ emptyMail {title=title, content = content} 
+    
 passwordChangeMail :: BS.ByteString
                    -> BS.ByteString
                    -> BS.ByteString
-                   -> IO BS.ByteString
+                   -> IO Mail
 passwordChangeMail emailaddress personname newpassword = 
-   htmlHeadBodyWrapIO ""
-    <span>
+    do 
+    let title = BS.fromString "Nytt lösenord"
+    content <- htmlHeadBodyWrapIO ""
+     <span>
       <p>Hej <strong><% personname %></strong>,</p>
 
       <p>Här kommer ditt nya lösenord. Vänligen ändra lösenordet så snart som möjligt.</p>
@@ -205,7 +210,7 @@ passwordChangeMail emailaddress personname newpassword =
 
       <% poweredBySkrivaPaPara %>
      </span>
-
+    return $ emptyMail {title=title, content = content} 
 
 
 inviteSubaccountMail :: BS.ByteString
@@ -213,26 +218,29 @@ inviteSubaccountMail :: BS.ByteString
                      -> BS.ByteString
                      -> BS.ByteString
                      -> BS.ByteString
-                     -> IO BS.ByteString
+                     -> IO Mail
 inviteSubaccountMail supervisorname companyname emailaddress personname newpassword = 
-    htmlHeadBodyWrapIO ""
-     <span>
-      <p>Hej <strong><% personname %></strong>,</p>
-
-      <p><strong><% supervisorname %></strong> har bjudit in dig att öppna ett konto på SkrivaPå genom vilket du kan
-         skriva avtal för <strong><% companyname %></strong>. Observera att detta konto inte är
-         avsett för privat bruk.</p>
-
-      <p>Användarnamn: <span style="color: orange; text-weight: bold"><% emailaddress %></span><br/>
-         Lösenord: <span style="color: orange; text-weight: bold"><% newpassword %></span><br/>
-      </p>
-
-      <p>
-      <a href="http://skrivapa.se/login">http://skrivapa.se/login</a>
-      </p>
-
-      <% poweredBySkrivaPaPara %> 
-     </span>
+    do 
+     let title = BS.concat [(BS.fromString "Inbjudan från "),(supervisorname),(BS.fromString " till underkonto" )]
+     content <- htmlHeadBodyWrapIO ""
+       <span>
+       <p>Hej <strong><% personname %></strong>,</p>
+ 
+       <p><strong><% supervisorname %></strong> har bjudit in dig att öppna ett konto på SkrivaPå genom vilket du kan
+          skriva avtal för <strong><% companyname %></strong>. Observera att detta konto inte är
+          avsett för privat bruk.</p>
+ 
+       <p>Användarnamn: <span style="color: orange; text-weight: bold"><% emailaddress %></span><br/>
+          Lösenord: <span style="color: orange; text-weight: bold"><% newpassword %></span><br/>
+       </p>
+ 
+       <p>
+       <a href="http://skrivapa.se/login">http://skrivapa.se/login</a>
+       </p>
+ 
+       <% poweredBySkrivaPaPara %> 
+       </span>
+     return $ emptyMail{title=title, content = content} 
 
 userDetailsSavedFlashMessage :: HSP.HSP HSP.XML
 userDetailsSavedFlashMessage = 
