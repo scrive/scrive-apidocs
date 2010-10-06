@@ -12,6 +12,7 @@ import Network.HTTP (getRequest, getResponseBody, simpleHTTP)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.Lazy.Char8 as BSLC
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Char8 as BSC
 
@@ -64,23 +65,8 @@ sendMail (Mail fullnameemails title content attachments) = do
       -- ("Gracjan Polak","gracjan@skrivapa.se") => "Gracjan Polak <gracjan@skrivapa.se>"
       fmt (fullname,email) = mailEncode fullname ++ " <" ++ BS.toString email ++ ">"
   logM "Kontrakcja.Mail" NOTICE $ formatTimeCombined tm ++ " " ++ concat (intersperse ", " mailtos)
-#ifdef WINDOWS
-  tmp <- getTemporaryDirectory
-  let filename = tmp ++ "/Email-" ++ BS.toString (snd (head fullnameemails)) ++ ".eml"
-  handle_in <- openBinaryFile filename WriteMode 
-#else
-  let rcpt = concatMap (\(_,x) -> ["--mail-rcpt", "<" ++ BS.toString x ++ ">"]) fullnameemails
 
-  (Just handle_in,_,_,handle_process) <-
-      -- createProcess (proc "sendmail" (["-i"] ++ mailtos)) { std_in = CreatePipe }
-      createProcess (proc "./curl" ([ "--user"
-                                    , "info@skrivapa.se:kontrakcja"
-                                    , "smtp://smtp.gmail.com:587"
-                                    , "-k", "--ssl" -- , "-v", "-v"
-                                    , "--mail-from"
-                                    , "<info@skrivapa.se>"
-                                    ] ++ rcpt)) { std_in = CreatePipe}
-#endif
+
   -- FIXME: add =?UTF8?B= everywhere it is needed here
   let boundary = "skrivapa-mail-12-337331046" 
   let header = 
@@ -100,20 +86,37 @@ sendMail (Mail fullnameemails title content attachments) = do
           "Content-Transfer-Encoding: base64\r\n" ++
           "\r\n"
   let footer = "\r\n--" ++ boundary ++ "--\r\n.\r\n"
-  BS.hPutStr handle_in (BS.fromString header)
-  BS.hPutStr handle_in (BS.fromString header1)
-  BS.hPutStr handle_in content
-  when (not (BS.null attachmentcontent)) $ do
-    BS.hPutStr handle_in (BS.fromString header2)
-    BS.hPutStr handle_in (BSC.pack $ concat $ intersperse "\r\n" $ Base64.chop 72 $ Base64.encode $ BS.unpack attachmentcontent)
-  BS.hPutStr handle_in (BS.fromString footer)
-  
-  hFlush handle_in
-  hClose handle_in
+  let aheader fname = "\r\n--" ++ boundary ++ "\r\n" ++
+          "Content-Disposition: inline; filename=\"" ++ (BS.toString fname) ++".pdf\"\r\n" ++
+          "Content-Type: application/pdf; name=\"" ++ (BS.toString fname) ++ ".pdf\"\r\n" ++
+          "Content-Transfer-Encoding: base64\r\n" ++
+          "\r\n"
+  let attach (fname,fcontent) = BSL.fromString (aheader fname) `BSL.append` 
+                                (BSLC.pack $ concat $ intersperse "\r\n" $ Base64.chop 72 $ Base64.encode $ BS.unpack fcontent)
+
+  let wholeContent = BSL.concat $ 
+                     [ BSL.fromString header
+                     , BSL.fromString header1
+                     , BSL.fromChunks [content]
+                     ] ++ map attach attachments ++
+                     [ BSL.fromString footer
+                     ]
+
 #ifdef WINDOWS
+  tmp <- getTemporaryDirectory
+  let filename = tmp ++ "/Email-" ++ BS.toString (snd (head fullnameemails)) ++ ".eml"
+  BSL.writeFile filename wholeContent
   openDocument filename
 #else
-  waitForProcess handle_process
+  let rcpt = concatMap (\(_,x) -> ["--mail-rcpt", "<" ++ BS.toString x ++ ">"]) fullnameemails
+
+  (code,stdout,stderr) <- readProcessWithExitCode' "./curl" ([ "--user"
+                                                            , "info@skrivapa.se:kontrakcja"
+                                                            , "smtp://smtp.gmail.com:587"
+                                                            , "-k", "--ssl" -- , "-v", "-v"
+                                                            , "--mail-from"
+                                                            , "<info@skrivapa.se>"
+                                                            ] ++ rcpt) wholeContent
 #endif
   return ()
 
