@@ -12,7 +12,7 @@ import UserState
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
-import qualified Data.ByteString.Lazy.UTF8 as BSL
+import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.Lazy as BSL
 import Control.Monad
 import Control.Monad.Reader
@@ -536,7 +536,8 @@ sealSpecFromDocument document author@(User {userfullname,usercompanyname,usercom
             , Seal.history = history
             , Seal.initials = initials
             }
-      in trace (show config) config
+      in config
+
 
 sealDocument :: MinutesTime -> User -> Document -> IO Document
 sealDocument signtime1 author@(User {userfullname,usercompanyname,usercompanynumber,useremail}) document = do
@@ -544,37 +545,14 @@ sealDocument signtime1 author@(User {userfullname,usercompanyname,usercompanynum
            safehead "sealDocument" $ documentfiles document
   let docid = unDocumentID (documentid document)
 
-  {-
-  -- FIXME: use the time when author clicked sign
-  let signtime = case documentmaybesigninfo document of
-                   Nothing -> signtime1
-                   Just (SignInfo t) -> t
-  let authordetails = documentauthordetails document
-  let authorline = if authordetails /= emptyDetails 
-                   then sealLine authordetails signtime
-                   else sealLine (SignatoryDetails 
-                                  { signatoryname = userfullname
-                                  , signatorycompany = usercompanyname
-                                  , signatorynumber = usercompanynumber
-                                  , signatoryemail = unEmail $ useremail
-                                  }) signtime
-
-
-  let persons = authorline : personsFromDocument document
-  -}
-
   tmppath <- getTemporaryDirectory
   let tmpin = tmppath ++ "/in_" ++ show docid ++ ".pdf"
   let tmpout = tmppath ++ "/out_" ++ show docid ++ ".pdf"
   BS.writeFile tmpin filepdf
-  let sealproc = (proc "dist/build/pdfseal/pdfseal" []) {std_in = CreatePipe}
-  (Just inx, _, _, sealProcHandle) <- createProcess sealproc
   let config = sealSpecFromDocument document author tmpin tmpout
 
-  hPutStr inx (show config)
-  hClose inx
-  
-  waitForProcess sealProcHandle
+  (code,stdout,stderr) <- readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
+
   newfilepdf <- BS.readFile tmpout
   let newfile = file {filepdf = newfilepdf, filejpgpages = JpegPagesPending}
   update $ ReplaceFile (documentid document) newfile

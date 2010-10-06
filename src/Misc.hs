@@ -10,7 +10,7 @@ import Happstack.Server.HSP.HTML (webHSP)
 import Happstack.State (update,query,getRandomR)
 import Network.HTTP (getRequest, getResponseBody, simpleHTTP)
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy.UTF8 as BSL
+import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Object.Json as Json
@@ -37,6 +37,13 @@ import Happstack.Util.Common
 import Data.Data
 import Happstack.Data
 import Data.Int
+import qualified Control.Exception as C
+import System.Cmd
+import Control.Concurrent
+import System.Process
+import System.IO
+import System.Exit
+
 
 {-
 
@@ -279,4 +286,52 @@ instance Read MagicHash where
 instance FromReqURI MagicHash where
     fromReqURI = readM
  
+
+
+readProcessWithExitCode'
+    :: FilePath                 -- ^ command to run
+    -> [String]                 -- ^ any arguments
+    -> BSL.ByteString               -- ^ standard input
+    -> IO (ExitCode,BSL.ByteString,BSL.ByteString) -- ^ exitcode, stdout, stderr
+readProcessWithExitCode' cmd args input = do
+    (Just inh, Just outh, Just errh, pid) <-
+        createProcess (proc cmd args){ std_in  = CreatePipe,
+                                       std_out = CreatePipe,
+                                       std_err = CreatePipe }
+    outMVar <- newEmptyMVar
+
+    outM <- newEmptyMVar
+    errM <- newEmptyMVar
+
+    -- fork off a thread to start consuming stdout
+    forkIO $ do
+        out <- BSL.hGetContents outh
+        C.evaluate (BSL.length out)
+        putMVar outM out
+        putMVar outMVar ()
+
+    -- fork off a thread to start consuming stderr
+    forkIO $ do
+        err  <- BSL.hGetContents errh
+        C.evaluate (BSL.length err)
+        putMVar errM err
+        putMVar outMVar ()
+
+    -- now write and flush any input
+    when (not (BSL.null input)) $ do BSL.hPutStr inh input; hFlush inh
+    hClose inh -- done with stdin
+
+    -- wait on the output
+    takeMVar outMVar
+    takeMVar outMVar
+    hClose outh
+    hClose errh
+
+    -- wait on the process
+    ex <- waitForProcess pid
+
+    out <- readMVar outM
+    err <- readMVar errM
+
+    return (ex, out, err)
 
