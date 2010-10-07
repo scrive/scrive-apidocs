@@ -226,14 +226,28 @@ oneDocumentRow ctime userid document@Document{ documentid
                       Canceled -> "status_rejected.png"
                       Timedout -> "status_timeout.png"
                       Rejected -> "status_rejected.png"
+        dateDiffInDays (MinutesTime ctime) (MinutesTime mtime)
+                       | ctime>mtime = 0
+                       | otherwise = (mtime - ctime) `div` (60*24)
     in
     <tr class="ui-state-default">
      <td class="tdleft">
       <input type="checkbox" name="doccheck" value=documentid class="check" />
      </td>
      <td><img width="17" height="17" src=statusimg/></td>
+     <td>
+      <% case documenttimeouttime of
+                   Nothing -> <span/>
+                   -- FIXME: show days to sign, not the final date
+                   Just (TimeoutTime x) -> 
+                       if documentstatus==Pending
+                       then <span title=("Förfallodatum: " ++ show x)><% "(" ++ show (dateDiffInDays ctime x) ++ ")" %></span>
+                       else <span/>
+       %>
+     </td>
      <td><% mk $ concatSignatories (map signatorydetails documentsignatorylinks) %></td>
      <td><% mk $ documenttitle %></td>
+     {- 
      <td><% mk $ case documenttimeouttime of
                    Nothing -> "-"
                    -- FIXME: show days to sign, not the final date
@@ -243,6 +257,7 @@ oneDocumentRow ctime userid document@Document{ documentid
                        else "-"
           %>
      </td>
+     -}
      <td><% mk $ showDateAbbrev ctime documentmtime %></td>
      <td class="tdright"></td>
     </tr>
@@ -267,9 +282,9 @@ listDocuments ctime userid documents =
        <tr>
         <td><a href="#" id="all">Alla</a></td>
         <td></td> {- status icon -}
+        <td></td> {- Förfallodatum -}
         <td>Motparter</td>
         <td>Dokument</td>
-        <td>Förfallodatum</td>
         <td>Senaste handelse</td>
         <td></td>
        </tr>
