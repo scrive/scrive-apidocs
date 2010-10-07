@@ -29,22 +29,14 @@ import DocView
 import qualified HSP
 
 addFlashMsgText :: BS.ByteString -> Kontra ()
-addFlashMsgText msg = do
-  ctx <- lift $ get
-  case ctxmaybeuser ctx of
-    -- FIXME: do html escape here
-    Just user -> update $ AddUserFlashMessage (userid user) (FlashMessage msg)
-    Nothing -> return ()
+addFlashMsgText msg = addFlashMessage (FlashMessage msg)
+
   
 addFlashMsgHtml :: HSP.HSP HSP.XML 
                 -> Kontra ()
 addFlashMsgHtml msg = do
-  ctx <- lift $ get
-  case ctxmaybeuser ctx of
-    Just user -> do
-      flashmsg <- liftM (FlashMessage . renderXMLAsBSHTML) (webHSP1 msg)
-      update $ AddUserFlashMessage (userid user) flashmsg
-    Nothing -> return ()
+                       flashmsg <- liftM (FlashMessage . renderXMLAsBSHTML) (webHSP1 msg)
+                       addFlashMessage flashmsg
 
 
 handleUser :: Context -> Kontra Response
@@ -175,16 +167,16 @@ resetUserPassword email = do
 -- Session
 userLogin :: (MonadIO m) => ServerPartT m (Maybe User)
 userLogin = do
-  maybeuser <- withMSessionDataSP2 $ \maybeuserid -> do 
-    case maybeuserid of
-      Just (sid,userid) -> do
-                       -- prolong session
-                       startSession sid
-                       query $ GetUserByUserID userid
-      Nothing -> return Nothing
-  case maybeuser of
-    Just user -> return maybeuser
-    Nothing -> userLogin1
+   muserid <- currentUserID
+   msid <- currentSessionId 
+   muser <- case (muserid,msid) of
+            (Just userid,Just msid) -> do
+                                        startSession msid
+                                        query $ GetUserByUserID userid
+            _ -> return Nothing     
+   case muser of
+     Just user -> return muser
+     Nothing -> userLogin1
 
 -- RememberMe cookie
 userLogin1 :: (MonadIO m) => ServerPartT m (Maybe User)
@@ -195,7 +187,7 @@ userLogin1 = do
             maybeuser <- query $ GetUserByUserID userid
             case maybeuser of
                 Just user -> do
-                    sessionid <- update $ NewSession userid
+                    sessionid <- update $ NewSession $ emptySessionDataWithUserID userid
                     startSession sessionid
                     return maybeuser
                 Nothing -> userLogin2
@@ -262,7 +254,7 @@ userLogin2 = do
                 Just user -> do
                   liftIO $ noticeM rootLoggerName $ "User: " ++ BS.toString nameFormatted ++ " <" ++ 
                          BS.toString verifiedEmail ++ "> logged in"
-                  sessionid <- update $ NewSession (userid user)
+                  sessionid <- update $ NewSession $ emptySessionDataWithUserID (userid user)
                   startSession sessionid
                   rq <- askRq
                   let link = rqUri rq

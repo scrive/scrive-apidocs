@@ -141,10 +141,7 @@ appHandler = do
 
   maybeuser <- userLogin
 
-  flashmessages <- case maybeuser of
-                     Just (User{userid}) -> 
-                         liftIO $ update $ GetUserFlashMessages userid
-                     Nothing -> return []
+  flashmessages <- getFlashMessages
   minutestime <- liftIO $ getMinutesTime
 
   let 
@@ -241,7 +238,7 @@ loginPagePost = do
         if verifyPassword userpassword (BS.fromString passwd) && passwd/=""
         then do
           setRememberMeCookie (userid user) rememberMe
-          sessionid <- update $ NewSession (userid user)
+          sessionid <- update $ NewSession $ emptySessionDataWithUserID (userid user)
           startSession sessionid
           response <- webHSP (seeOtherXML "/")
           seeOther "/" response
@@ -286,7 +283,7 @@ statsPage = do
 handleBecome :: Kontra Response
 handleBecome = do
   (userid :: UserID) <- getDataFnM $ (look "user" >>= readM)
-  sessionid <- update $ NewSession userid
+  sessionid <- update $ NewSession $ emptySessionDataWithUserID userid
   setHeaderM "Set-Cookie" ""
   startSession sessionid
   response <- webHSP (seeOtherXML "/")

@@ -100,15 +100,15 @@ withUser Nothing action = msum
 
 userLoginx :: (MonadIO m) => ServerPartT m (Maybe User)
 userLoginx = do
-  maybeuser <- withMSessionDataSP2 $ \maybeuserid -> do 
-    case maybeuserid of
-      Just (sid,userid) -> do
-                       -- prolong session
-                       startSession sid
-                       query $ GetUserByUserID userid
-      Nothing -> return Nothing
-  case maybeuser of
-    Just user -> return maybeuser
+  muserid <- currentUserID
+  msid <- currentSessionId 
+  muser <- case (muserid,msid) of
+            (Just userid,Just msid) -> do
+                                        startSession msid
+                                        query $ GetUserByUserID userid
+            _ -> return Nothing     
+  case muser of
+    Just user -> return muser
     Nothing -> userLogin1x
 
 userLogin1x :: (MonadIO m) => ServerPartT m (Maybe User)
@@ -172,7 +172,7 @@ userLogin1x = do
                 Just user -> do
                   liftIO $ noticeM rootLoggerName $ "User: " ++ BS.toString nameFormatted ++ " <" ++ 
                          BS.toString verifiedEmail ++ "> logged in"
-                  sessionid <- update $ NewSession (userid user)
+                  sessionid <- update $ NewSession $ emptySessionDataWithUserID (userid user)
                   startSession sessionid
                   rq <- askRq
                   let link = rqUri rq
