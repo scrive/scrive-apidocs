@@ -566,7 +566,7 @@ basename :: String -> String
 basename filename = 
     case span (\x -> x/='\\' || x/='/') filename of
       (_,(_:rest)) -> basename rest
-      _ -> fst (span ((/=) '.') filename) -- FIXME: tak care of many dots in file name
+      _ -> fst (span ((/=) '.') filename) -- FIXME: take care of many dots in file name
 
 handleIssuePost :: Context -> Kontra Response
 handleIssuePost ctx = handleIssueNewDocument ctx `mplus` handleIssueArchive ctx
