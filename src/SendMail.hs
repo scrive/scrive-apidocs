@@ -117,6 +117,8 @@ sendMail (Mail fullnameemails title content attachments) = do
                                                             , "--mail-from"
                                                             , "<info@skrivapa.se>"
                                                             ] ++ rcpt) wholeContent
+  when (code /= ExitSuccess) $
+       putStrLn "Cannot execute ./curl to send emails"
 #endif
   return ()
 
