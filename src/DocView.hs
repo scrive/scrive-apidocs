@@ -689,6 +689,7 @@ invitationMail (Context {ctxmaybeuser = Just user, ctxhostpart})
                , asChild "Hälsningar"
                , asChild <br/>
                , asChild creatorname
+               , asChild <br/>
                ]
         content = if BS.null documentinvitetext
                     then <span><% skrivapaversion %></span>
