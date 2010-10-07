@@ -30,6 +30,7 @@ import KontraLink
 import System.Directory
 import Happstack.State (update,query)
 
+
 instance (XMLGenerator m) => (EmbedAsChild m HeaderPair) where
   asChild (HeaderPair name value) = 
      <% <p> 

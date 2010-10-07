@@ -32,7 +32,10 @@ $(deriveAll [''Eq, ''Ord, ''Default]
    
       newtype UserID = UserID { unUserID :: Int }
       newtype ExternalUserID = ExternalUserID { unExternalUserID :: BS.ByteString }
-      newtype FlashMessage = FlashMessage BS.ByteString
+      -- Leaving FlashMessage declaration here is necessity
+      -- Have to be used because of users versioning
+      -- Can't be moved to Session where it belong (cycle references)
+      newtype FlashMessage = FlashMessage BS.ByteString deriving Read       
       newtype Email = Email { unEmail :: BS.ByteString }
       data Password = Password [Octet] [Octet] | NoPassword
       newtype SupervisorID = SupervisorID { unSupervisorID :: Int }
@@ -416,27 +419,6 @@ getAllUsers = do
       compareuserfullname a b = compare (userfullname a) (userfullname b)
   return usersSorted
 
-getUserFlashMessages :: UserID -> Update Users [FlashMessage]
-getUserFlashMessages userid = do
-  users <- ask
-  case getOne (users @= userid) of
-    Nothing -> return []
-    Just (user@User{ userflashmessages }) -> 
-        do
-          modify (updateIx userid (user { userflashmessages = []})) 
-          return userflashmessages
-
-
-addUserFlashMessage :: UserID -> FlashMessage -> Update Users ()
-addUserFlashMessage userid msg= do
-  users <- ask
-  case getOne (users @= userid) of
-    Nothing -> return ()
-    Just (user@User{ userflashmessages }) -> 
-        do
-          modify (updateIx userid (user { userflashmessages = msg : userflashmessages })) 
-          return ()
-
 setUserPassword :: User -> Password -> Update Users ()
 setUserPassword user@User{userid} newpassword = do
   users <- ask
@@ -501,8 +483,6 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'addUser
                     , 'getUserStats
                     , 'getAllUsers
-                    , 'getUserFlashMessages
-                    , 'addUserFlashMessage
                     , 'setUserPassword
                     , 'setUserDetails
                     , 'getUserSubaccounts

@@ -24,14 +24,14 @@ $(deriveSerialize ''AppState)
 instance Version AppState
 
                      
-instance Component (Sessions UserID) where
-  type Dependencies (Sessions UserID) = End
+instance Component (Sessions) where
+  type Dependencies (Sessions) = End
   initialValue = IxSet.empty
 
 -- |top-level application component
 -- we depend on the GuestBook component
 instance Component AppState where
-  type Dependencies AppState = Documents :+: Sessions UserID :+: Users :+: End
+  type Dependencies AppState = Documents :+: Sessions :+: Users :+: End
   initialValue = defaultValue
 
 
