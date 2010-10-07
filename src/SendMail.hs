@@ -25,6 +25,7 @@ import HSX.XMLGenerator
 import HSP
 import Misc
 import System.Process
+import System.Exit
 import System.IO
 import System.Directory
 import Data.Array
