@@ -553,6 +553,9 @@ sealDocument signtime1 author@(User {userfullname,usercompanyname,usercompanynum
 
   (code,stdout,stderr) <- readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
 
+  when (code /= ExitSuccess) $
+       putStrLn "Cannot execute dist/build/pdfseal/pdfseal"
+
   newfilepdf <- BS.readFile tmpout
   let newfile = file {filepdf = newfilepdf, filejpgpages = JpegPagesPending}
   update $ ReplaceFile (documentid document) newfile
