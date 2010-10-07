@@ -241,7 +241,7 @@ oneDocumentRow ctime userid document@Document{ documentid
                    -- FIXME: show days to sign, not the final date
                    Just (TimeoutTime x) -> 
                        if documentstatus==Pending
-                       then <span title=("Förfallodatum: " ++ show x)><% "(" ++ show (dateDiffInDays ctime x) ++ ")" %></span>
+                       then <span title=("Förfallodatum: " ++ show x)><% mk $ "(" ++ show (dateDiffInDays ctime x) ++ ")" %></span>
                        else <span/>
        %>
      </td>
@@ -258,7 +258,7 @@ oneDocumentRow ctime userid document@Document{ documentid
           %>
      </td>
      -}
-     <td><% mk $ showDateAbbrev ctime documentmtime %></td>
+     <td><span title=(show documentmtime)><% mk $ showDateAbbrev ctime documentmtime %></span></td>
      <td class="tdright"></td>
     </tr>
 
