@@ -202,10 +202,18 @@ welcomeBody ctx@(Context {ctxmaybeuser = Nothing}) =
 		
 		<div id="firstPageRight"> 
 			<div id="bigLogoPlaceholder"></div> 
-			<p>SkrivaPå är fortfarande i Betastadiet - skicka in din e-mailadress till <a href="mailto:lukas@skrivapa.se">Lukas Duczko</a> så återkopplar han till dig med kontouppgifter.</p> 
+			<p>SkrivaPå är en tjänst för elektronisk signering och 	
+			arkivering. Spara tid och minska onödiga kostnader med 
+			enklare och smidigare avtalshantering. 
+			<a href="mailto:info@skrivapa.se">Kontakta oss</a> redan 
+			idag för att testa tjänsten.</p> 
 
- {-
-			<p>SkrivaPå är fortfarande i Betastadiet - skicka in din e-mailadress med formuläret nedan så återkopplar vi till dig med kontouppgifter.</p> 
+ {-			
+			<p>SkrivaPå är en tjänst för elektronisk signering och 
+			arkivering. Spara tid och minska onödiga kostnader med 
+			enklare och smidigare avtalshantering. 
+			<a href="mailto:info@skrivapa.se">Kontakta oss</a> redan 
+			idag för att testa tjänsten.</p>
 			
 			<div id="signUpContainer"> 
 				<form action="signupform" method="post"> 
