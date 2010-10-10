@@ -433,7 +433,7 @@ showDocument user
                 , <div id="dialog-confirm-signinvite" title="Underteckna">
                     <p>Är du säker att du vill underteckna dokumentet <strong><% documenttitle %></strong>?</p>
                     
-                    <p>När du bekräftat kommer en automatisk inbjudan att skickas till 
+                    <p>När du undertecknat kommer en automatisk inbjudan att skickas till 
                        <span class="Xinvited">Invited</span> med e-post.</p>
                    </div>
                 , <div id="edit-invite-text-dialog" title="Hälsningsmeddelande">
