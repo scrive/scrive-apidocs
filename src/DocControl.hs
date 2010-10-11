@@ -47,17 +47,18 @@ import Data.Bits
 -}
 
 doctransPreparation2Pending :: Context -> Document -> IO Document
-doctransPreparation2Pending ctx@Context{ctxtime = MinutesTime m } doc = do
+doctransPreparation2Pending ctx@Context{ctxtime, ctxipnumber } doc = do
+  let MinutesTime m = ctxtime
   -- FIXME: check if the status was really changed
-  newdoc <- update $ UpdateDocumentStatus (ctxtime ctx) doc Pending
+  newdoc <- update $ UpdateDocumentStatus doc Pending ctxtime ctxipnumber
   let timeout = TimeoutTime (MinutesTime (m + documentdaystosign doc * 24 * 60))
   newdoc2 <- update $ SetDocumentTimeoutTime newdoc timeout
   sendInvitationEmails ctx newdoc2
   return newdoc2
 
 doctransPending2Closed :: Context -> Document -> IO Document
-doctransPending2Closed ctx@Context{ctxtime} doc = do
-  update $ UpdateDocumentStatus ctxtime doc Closed
+doctransPending2Closed ctx@Context{ctxtime,ctxipnumber} doc = do
+  update $ UpdateDocumentStatus doc Closed ctxtime ctxipnumber
   newdoc <- update $ RemoveFileFromDoc (documentid doc)
   Just user <- query $ GetUserByUserID (unAuthor (documentauthor doc))
   liftIO $ forkIO $ do
@@ -66,12 +67,12 @@ doctransPending2Closed ctx@Context{ctxtime} doc = do
   return newdoc
 
 doctransPending2Canceled :: Context -> Document -> IO Document
-doctransPending2Canceled ctx@Context{ctxtime} doc = do
-  update $ UpdateDocumentStatus ctxtime doc Canceled
+doctransPending2Canceled ctx@Context{ctxtime,ctxipnumber} doc = do
+  update $ UpdateDocumentStatus doc Canceled ctxtime ctxipnumber
 
 doctransPending2Timedout :: Context -> Document -> IO Document
-doctransPending2Timedout ctx@Context{ctxtime} doc = do
-  update $ UpdateDocumentStatus ctxtime doc Timedout
+doctransPending2Timedout ctx@Context{ctxtime,ctxipnumber} doc = do
+  update $ UpdateDocumentStatus doc Timedout ctxtime ctxipnumber
 
 sendInvitationEmails :: Context -> Document -> IO ()
 sendInvitationEmails ctx document = do
@@ -215,14 +216,14 @@ landpageSaved (ctx@Context { ctxmaybeuser = Just user@User{userid} })
 
 
 handleSignShow :: Context -> DocumentID -> SignatoryLinkID -> MagicHash -> Kontra Response
-handleSignShow ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime})
+handleSignShow ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber})
                documentid 
                signatorylinkid1
                magichash1 = do
   msum [ DocControl.signDocument ctx documentid signatorylinkid1
        , do 
            -- FIXME: this is so wrong on so many different levels...
-          mdocument <- update $ MarkDocumentSeen documentid signatorylinkid1 ctxtime
+          mdocument <- update $ MarkDocumentSeen documentid signatorylinkid1 ctxtime ctxipnumber
           document <- maybe mzero return mdocument
              
           let invitedlinks = filter (\x -> signatorylinkid x == signatorylinkid1
@@ -449,16 +450,17 @@ personFromSignatoryDetails details =
                 , Seal.number = BS.toString $ signatorynumber details
                 }
 
-personsFromDocument :: Document -> [(Seal.Person, MinutesTime, (MinutesTime,Word32))]
+personsFromDocument :: Document -> [(Seal.Person, (MinutesTime,Word32), (MinutesTime,Word32))]
 personsFromDocument document = 
     let
         links = documentsignatorylinks document
+        unSignInfo (si@SignInfo { signtime, signipnumber }) = (signtime,signipnumber)
         x (SignatoryLink{ signatorydetails
-                        , maybesigninfo = Just (SignInfo { signtime, signipnumber })
-                        , maybeseentime
+                        , maybesigninfo = Just (si@SignInfo { signtime, signipnumber })
+                        , maybeseeninfo
                         })
              -- FIXME: this one should really have seentime always...
-             = (personFromSignatoryDetails signatorydetails, maybe signtime id maybeseentime, (signtime,signipnumber))
+             = (personFromSignatoryDetails signatorydetails, unSignInfo $ maybe si id maybeseeninfo, (signtime,signipnumber))
         x link = trace (show link) $ error "SignatoryLink does not have all the necessary data"
     in map x links
 
@@ -497,14 +499,14 @@ sealSpecFromDocument document author@(User {userfullname,usercompanyname,usercom
       initials = concatComma (map initialsOfPerson persons)
       initialsOfPerson (Seal.Person {Seal.fullname}) = map head (words fullname)
       -- 2. "Name of invited" granskar dokumentet online
-      makeHistoryEntry (Seal.Person {Seal.fullname},seentime2,(signtime2,signipnumber2)) = 
+      makeHistoryEntry (Seal.Person {Seal.fullname},(seentime2,seenipnumber2),(signtime2,signipnumber2)) = 
           [ Seal.HistEntry
             { Seal.histdate = show signtime2
             , Seal.histcomment = fullname ++ " undertecknar dokumentet online" ++ formatIP signipnumber2
             }
           , Seal.HistEntry
             { Seal.histdate = show seentime2
-            , Seal.histcomment = fullname ++ " granskar dokumentet online" ++ formatIP 0
+            , Seal.histcomment = fullname ++ " granskar dokumentet online" ++ formatIP seenipnumber2
             } 
           ]
       maxsigntime = maximum (authorsigntime : map (fst . thd3) signatories)

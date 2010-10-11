@@ -215,7 +215,7 @@ oneDocumentRow ctime userid document@Document{ documentid
                else LinkSignDoc document signatorylink
         [signatorylink] = filter (\x -> maybesignatory x == Just (Signatory userid)) documentsignatorylinks
         mk x = <a href=link><% x %></a>
-        seenstatus = any (isJust . maybeseentime) documentsignatorylinks
+        seenstatus = any (isJust . maybeseeninfo) documentsignatorylinks
         statusimg = "/theme/images/" ++
                     case documentstatus of
                       Preparation -> "status_draft.png"
@@ -356,15 +356,15 @@ showSignatoryEntryStatus document (signatorylink@SignatoryLink{ signatorydetails
                                                                                                    , signatoryemail
                                                                                                    }
                                                               , signatorylinkid
-                                                              , maybeseentime
+                                                              , maybeseeninfo
                                                               , maybesigninfo
                                                               }) = 
     <div> {- Sänd inbjudan igen, Sänd email-bekräftelse igen -}
         <b><% signatoryname %></b> <a href=(LinkResendEmail document signatorylink)>Sänd inbjudan igen</a><br/>
         <% case maybesigninfo of
              Just (SignInfo{signtime}) -> "Undertecknat " ++ show signtime 
-             Nothing -> case maybeseentime of
-                          Just time -> "Har öppnat dokumentet " ++ show time
+             Nothing -> case maybeseeninfo of
+                          Just (SignInfo time ip) -> "Har öppnat dokumentet " ++ show time
                           Nothing -> "Har inte öppnat dokumentet"
         %>
     </div>
@@ -446,7 +446,7 @@ showDocument user
        allinvited = documentsignatorylinks
        authorlink = SignatoryLink 
                     { signatorydetails = documentauthordetails
-                    , maybeseentime = Nothing 
+                    , maybeseeninfo = Nothing 
                       -- this gymanstic below is to cover up for some earlier error
                       -- that erased sign times of authors
                     , maybesigninfo = if isJust (documentmaybesigninfo document)
@@ -544,7 +544,7 @@ showDateOnly1 (MinutesTime 0) = ""
 showDateOnly1 x = showDateOnly x
 
 showSignatoryLinkForSign (SignatoryLink{ maybesigninfo
-                                       , maybeseentime
+                                       , maybeseeninfo
                                        , signatorydetails = SignatoryDetails
                                                             { signatoryname
                                                             , signatorynumber
@@ -553,11 +553,11 @@ showSignatoryLinkForSign (SignatoryLink{ maybesigninfo
                                                             }
                                          }) =
    let
-       (status,message) = case (maybesigninfo, maybeseentime) of
+       (status,message) = case (maybesigninfo, maybeseeninfo) of
                   (Just (SignInfo{signtime = tm}),_) -> (<img src="/theme/images/status_signed.png"/> 
                                                         , "Undertecknat " ++ showDateOnly1 tm
                                                         )
-                  (Nothing,Just tm) -> (<img src="/theme/images/status_viewed.png"/> 
+                  (Nothing,Just (SignInfo{signtime = tm})) -> (<img src="/theme/images/status_viewed.png"/> 
                                        , "Granskat " ++ showDateOnly tm
                                        )
                   (Nothing,Nothing) -> ( <img src="/theme/images/status_pending.png"/> 
@@ -597,7 +597,7 @@ showDocumentForSign action document invitedlink wassigned =
        allbutinvited = filter (/= invitedlink) (documentsignatorylinks document)
        authorlink = SignatoryLink 
                     { signatorydetails = authordetails
-                    , maybeseentime = Nothing 
+                    , maybeseeninfo = Nothing 
                       -- this gymanstic below is to cover up for some earlier error
                       -- that erased sign times of authors
                     , maybesigninfo = if isJust (documentmaybesigninfo document)
