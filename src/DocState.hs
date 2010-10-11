@@ -57,13 +57,21 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , maybesigninfo1      :: Maybe SignInfo
           , maybeseentime1      :: Maybe MinutesTime
           }
+      data SignatoryLink2 = SignatoryLink2 
+          { signatorylinkid2    :: SignatoryLinkID
+          , signatorydetails2   :: SignatoryDetails
+          , signatorymagichash2 :: MagicHash
+          , maybesignatory2     :: Maybe Signatory
+          , maybesigninfo2      :: Maybe SignInfo
+          , maybeseentime2      :: Maybe MinutesTime
+          }
       data SignatoryLink = SignatoryLink 
           { signatorylinkid    :: SignatoryLinkID
           , signatorydetails   :: SignatoryDetails
           , signatorymagichash :: MagicHash
           , maybesignatory     :: Maybe Signatory
           , maybesigninfo      :: Maybe SignInfo
-          , maybeseentime      :: Maybe MinutesTime
+          , maybeseeninfo      :: Maybe SignInfo
           }
       data SignInfo = SignInfo
           { signtime :: MinutesTime
@@ -332,6 +340,7 @@ $(deriveSerialize ''SignInfo)
 instance Version SignInfo where
     mode = extension 1 (Proxy :: Proxy SignInfo0)
 
+
 instance Migrate SignInfo0 SignInfo where
     migrate (SignInfo0 
              { signtime0
@@ -350,9 +359,13 @@ $(deriveSerialize ''SignatoryLink1)
 instance Version SignatoryLink1 where
     mode = extension 1 (Proxy :: Proxy SignatoryLink0)
 
+$(deriveSerialize ''SignatoryLink2)
+instance Version SignatoryLink2 where
+    mode = extension 2 (Proxy :: Proxy SignatoryLink1)
+
 $(deriveSerialize ''SignatoryLink)
 instance Version SignatoryLink where
-    mode = extension 2 (Proxy :: Proxy SignatoryLink1)
+    mode = extension 3 (Proxy :: Proxy SignatoryLink2)
 
 instance Migrate SignatoryLink0 SignatoryLink1 where
     migrate (SignatoryLink0 
@@ -376,23 +389,41 @@ instance Migrate SignatoryLink0 SignatoryLink1 where
           , maybeseentime1 = maybeseentime0
           }
 
-instance Migrate SignatoryLink1 SignatoryLink where
+instance Migrate SignatoryLink1 SignatoryLink2 where
     migrate (SignatoryLink1 
              { signatorylinkid1
              , signatorydetails1
              , maybesignatory1
              , maybesigninfo1
              , maybeseentime1
-             }) = SignatoryLink 
-                { signatorylinkid = signatorylinkid1
-                , signatorydetails = signatorydetails1
-                , maybesignatory = maybesignatory1
-                , maybesigninfo = maybesigninfo1
-                , maybeseentime = maybeseentime1
-                , signatorymagichash = MagicHash $ 
+             }) = SignatoryLink2 
+                { signatorylinkid2 = signatorylinkid1
+                , signatorydetails2 = signatorydetails1
+                , maybesignatory2 = maybesignatory1
+                , maybesigninfo2 = maybesigninfo1
+                , maybeseentime2 = maybeseentime1
+                , signatorymagichash2 = MagicHash $ 
                                        fromIntegral (unSignatoryLinkID signatorylinkid1) + 
                                                         0xcde156781937458e37
                 } 
+
+
+instance Migrate SignatoryLink2 SignatoryLink where
+      migrate (SignatoryLink2 
+          { signatorylinkid2
+          , signatorydetails2
+          , signatorymagichash2
+          , maybesignatory2
+          , maybesigninfo2
+          , maybeseentime2
+          }) = SignatoryLink 
+          { signatorylinkid    = signatorylinkid2
+          , signatorydetails   = signatorydetails2
+          , signatorymagichash = signatorymagichash2
+          , maybesignatory     = maybesignatory2
+          , maybesigninfo      = maybesigninfo2
+          , maybeseeninfo      = maybe Nothing (\t -> Just (SignInfo t 0)) maybeseentime2
+          }
 
 
 $(deriveSerialize ''SignatoryLinkID)
@@ -699,14 +730,15 @@ updateDocument time document authordetails signatories daystosign invitetext = d
                      , signatorymagichash  = magichash
                      , maybesignatory = Nothing
                      , maybesigninfo  = Nothing
-                     , maybeseentime  = Nothing
+                     , maybeseeninfo  = Nothing
                      }
 
-updateDocumentStatus :: MinutesTime
-                     -> Document 
+updateDocumentStatus :: Document 
                      -> DocumentStatus 
+                     -> MinutesTime
+                     -> Word32
                      -> Update Documents Document
-updateDocumentStatus time document1 newstatus = do
+updateDocumentStatus document1 newstatus time ipnumber = do
   -- check if document status change is a legal transition
   documents <- ask
   let Just document = getOne (documents @= documentid document1)
@@ -722,7 +754,7 @@ updateDocumentStatus time document1 newstatus = do
   let newdoc = document { documentstatus = newstatus
                         , documentmtime = time
                         , documentmaybesigninfo = case newstatus of
-                                                    Pending -> Just (SignInfo time 0)
+                                                    Pending -> Just (SignInfo time ipnumber)
                                                     _ -> documentmaybesigninfo document
                         }
   if legal 
@@ -769,17 +801,18 @@ getFilePageJpg xfileid pageno = do
 markDocumentSeen :: DocumentID 
                  -> SignatoryLinkID 
                  -> MinutesTime 
+                 -> Word32
                  -> Update Documents (Maybe Document)
-markDocumentSeen documentid signatorylinkid1 time = do
+markDocumentSeen documentid signatorylinkid1 time ipnumber = do
   documents <- ask
   case getOne (documents @= documentid) of
     Nothing -> return Nothing
     Just document -> do
       let document' = document { documentsignatorylinks = s }
           s = map c (documentsignatorylinks document)
-          c l@(SignatoryLink {signatorylinkid, maybeseentime})
-            | signatorylinkid == signatorylinkid1 && maybeseentime==Nothing = 
-              l { maybeseentime = Just time }
+          c l@(SignatoryLink {signatorylinkid, maybeseeninfo})
+            | signatorylinkid == signatorylinkid1 && maybeseeninfo==Nothing = 
+              l { maybeseeninfo = Just (SignInfo time ipnumber) }
             | otherwise = l
       modify (updateIx documentid document')
       return (Just document')
