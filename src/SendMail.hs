@@ -38,6 +38,7 @@ import Data.List
 import System.Log.Logger
 import Happstack.Util.LogFormat
 import Data.Time.Clock
+import Control.Concurrent (forkOS)
 
 -- from simple utf-8 to =?UTF-8?Q?zzzzzzz?=
 -- FIXME: should do better job at checking if encoding should be applied or not
@@ -110,16 +111,17 @@ sendMail (Mail fullnameemails title content attachments) = do
   openDocument filename
 #else
   let rcpt = concatMap (\(_,x) -> ["--mail-rcpt", "<" ++ BS.toString x ++ ">"]) fullnameemails
-
-  (code,stdout,stderr) <- readProcessWithExitCode' "./curl" ([ "--user"
+  forkOS $ 
+           do
+            (code,stdout,stderr) <- readProcessWithExitCode' "./curl" ([ "--user"
                                                             , "info@skrivapa.se:kontrakcja"
                                                             , "smtp://smtp.gmail.com:587"
                                                             , "-k", "--ssl" -- , "-v", "-v"
                                                             , "--mail-from"
                                                             , "<info@skrivapa.se>"
                                                             ] ++ rcpt) wholeContent
-  when (code /= ExitSuccess) $
-       putStrLn "Cannot execute ./curl to send emails"
+            when (code /= ExitSuccess) $
+               logM "Kontrakcja.Mail" ERROR $ "Cannot execute ./curl to send emails"
 #endif
   return ()
 

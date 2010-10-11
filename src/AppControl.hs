@@ -34,7 +34,6 @@ import Misc
 import MinutesTime
 import Control.Monad.State
 import DocView
-import SendMail
 import System.Random
 import System.Process
 import System.IO
