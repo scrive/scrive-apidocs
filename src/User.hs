@@ -65,9 +65,13 @@ data Context = Context
 
 type Kontra a = ServerPartT (StateT Context IO) a
 
+instance MonadState s m => MonadState s (ServerPartT m) where
+    get = lift get
+    put = lift . put
+
 withUser :: Kontra Response -> Kontra Response
 withUser action = do
-  ctx <- lift get
+  ctx <- get
   case ctxmaybeuser ctx of
     Just user -> action
     Nothing -> do
