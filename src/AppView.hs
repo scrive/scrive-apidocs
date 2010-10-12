@@ -108,15 +108,6 @@ kontrakcjaAscii :: [Char]
 kontrakcjaAscii = "skriva"
 
 
-handleRPXLoginView :: (XMLGenerator m) 
-                   => Json.JsonObject
-                   -> XMLGenT m (HSX.XML m)
-handleRPXLoginView json =
-    <p>
-      Welcome! This is what we know about you:
-      <% json %>
-    </p>
-
 loginBox ctx =
    <div>
     <div id="login">
@@ -142,11 +133,6 @@ loginBox ctx =
 	<tr> 
           <td><input class="button" id="loginbtn" type="submit" name="login" value="Logga in"/></td>
           <td>
-            {- <a href="#" onClick="$('#login').hide(); $('#register').show(); return false;">register</a> -}
-           {-<% rpxSignInLink ctx "Logga in med OpenID" "/" %>
-           <br />-}
-           {-<a href=LinkSignup>Create account</a>
-           <br />-}
            <a href=LinkForgotPassword> Glömt lösenord</a>
           </td>
 	</tr>
@@ -249,44 +235,6 @@ errorReport (Context {ctxmaybeuser}) request =
    <p><% map show $ rqCookies request %></p> 
   </div>  
 
-{-
-   <p>
-     <iframe src=("http://" ++ kontrakcjaAscii ++ 
-                  ".rpxnow.com/openid/embed?token_url=" ++ serverurl ++ "rpxsignin")
-             scrolling="no"  
-             frameBorder="no"  
-             allowtransparency="true"  
-             style="width:400px;height:240px">
-     </iframe> 
-   </p>
-
-Your token URL implementation should do the following:
-
-    * 1) Extract the token parameter from the POST data.
-    * 2) Use the token to make the auth_info API call:
-      URL: http://rpxnow.com/api/v2/auth_info
-      Parameters:
-
-      apiKey
-          03bbfc36d54e523b2602af0f95aa173fb96caed9
-      token
-          The token value you extracted above
-
-    * 3) Parse the response and extract the identifier. Here's a sample JSON response:
-
-      {
-        'stat': 'ok',
-        'profile': {
-          'identifier': 'http://user.myopenid.com/',
-          'email': 'user@example.com',
-          'preferredUsername': 'Joe User'
-         }
-      }
-
-    * 4) Use the identifier as the unique key to sign the user in to your website, 
-         and then redirect the user to the appropriate location.
--}
-
 -- * Convenience Functions
 
 dateStr :: UTCTime -> String
@@ -305,13 +253,14 @@ renderFromBody :: (MonadIO m, EmbedAsChild (HSPT' IO) xml)
                -> m Response
 renderFromBody ctx topmenu title = webHSP . pageFromBody ctx topmenu title
 
-topnavi :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) => Bool -> Context -> String 
-        -> KontraLink -> XMLGenT m (HSX.XML m)
-topnavi True ctx title link = 
-    maybeSignInLink2 ctx title link "active"
-
-topnavi False ctx title link = 
-    maybeSignInLink2 ctx title link ""
+topnavi :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
+        => Bool 
+        -> Context
+        -> String 
+        -> KontraLink 
+        -> XMLGenT m (HSX.XML m)
+topnavi active ctx title link = 
+    <a href=link class=(if active then "active" else "")><% title %></a>
 
 #define _DATESTR(x) #x
 #define DATESTR _DATESTR(__DATE__)
@@ -446,15 +395,6 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
        </div>
       </div>
 
-      <script type="text/javascript">
-         //var rpxJsHost = (("https:" == document.location.protocol) ? "https://" : "http://static.");
-         //document.write(unescape("%3Cscript src='" + rpxJsHost +
-         //       "rpxnow.com/js/lib/rpx.js' type='text/javascript'%3E%3C/script%3E"));
-      </script>
-      <script type="text/javascript">
-         //RPXNOW.overlay = true;
-         //RPXNOW.language_preference = 'en';
-      </script>
       <script type="text/javascript">
         var _gaq = _gaq || [];
         _gaq.push(['_setAccount', 'UA-6387711-9']);

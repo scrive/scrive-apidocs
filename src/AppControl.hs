@@ -52,13 +52,12 @@ handleRoutes ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} = toIO ctx $ msum 
     ([nullDir >> withTOS ctx (webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx)))
      , dir "s" $ withTOS ctx (DocControl.handleSign ctx)
      , {- old -} dir "sign" $ (withTOS ctx (DocControl.handleSign ctx))
-     , dir "d" $ withUser ctxmaybeuser (withTOS ctx (DocControl.handleIssue ctx))
-     , {- old -} dir "issue" $ withUser ctxmaybeuser (withTOS ctx (DocControl.handleIssue ctx))
-     , dir "pages" $ withTOS ctx (path $ \fileid -> 
-                                               msum [ path $ \pageno -> do
-                                                        modminutes <- query $ FileModTime fileid
-                                                        DocControl.showPage ctx modminutes fileid pageno
-                                                    ])
+     , dir "d" $ withUser (withTOS ctx (DocControl.handleIssue ctx))
+     , {- old -} dir "issue" $ withUser (withTOS ctx (DocControl.handleIssue ctx))
+     , dir "pages" $ withTOS ctx $ hget2 $ \fileid pageno -> do
+        modminutes <- query $ FileModTime fileid
+        DocControl.showPage ctx modminutes fileid pageno
+                                                    
      , dir "landpage" $ 
            withTOS ctx
                        (msum [ dir "signinvite" $ pathdb GetDocumentByDocumentID $ \document -> 
@@ -68,7 +67,7 @@ handleRoutes ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} = toIO ctx $ msum 
                              , dir "signedsave" $ pathdb GetDocumentByDocumentID $ \document -> 
                                  path $ \signatorylinkid ->
                                      DocControl.landpageSignedSave ctx document signatorylinkid
-                             , dir "saved" $ withUser ctxmaybeuser $ pathdb GetDocumentByDocumentID $ \document -> 
+                             , dir "saved" $ withUser $ pathdb GetDocumentByDocumentID $ \document -> 
                                  path $ \signatorylinkid ->
                                      DocControl.landpageSaved ctx document signatorylinkid
                              ])
@@ -80,7 +79,7 @@ handleRoutes ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} = toIO ctx $ msum 
            withTOS ctx (pathdb GetDocumentByDocumentID $ \document -> 
                                      path $ \signatorylinkid -> 
                                          resendEmail ctx document signatorylinkid)
-     , dir "account" (withUser ctxmaybeuser (UserControl.handleUser ctx))]
+     , dir "account" (withUser (UserControl.handleUser ctx))]
      
      ++ (if isSuperUser ctxmaybeuser then 
              [ dir "stats" $ statsPage

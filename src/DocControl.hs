@@ -136,7 +136,7 @@ handleSign ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) =
             path $ \signatoryid -> 
                   path $ \magichash -> 
                       handleSignShow ctx documentid signatoryid magichash
-       , withUser ctxmaybeuser $ do
+       , withUser $ do
           let u = userid $ fromJust ctxmaybeuser
           documents <- query $ GetDocumentsBySignatory u
           webHSP (pageFromBody ctx TopNone kontrakcja (listDocuments ctxtime u documents))
