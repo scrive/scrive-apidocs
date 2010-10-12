@@ -4,12 +4,9 @@
 module User 
     ( module UserState
     , withUser
-    , maybeSignInLink
-    , maybeSignInLink2
     , Context(..)
     , isSuperUser
     , Kontra(..)
-    , rpxSignInLink
     , createRememberMeCookie
     , sessionLength
     , RememberMe(..)
@@ -68,192 +65,25 @@ data Context = Context
 
 type Kontra a = ServerPartT (StateT Context IO) a
 
-{-
- We need pleasant user experience here. Therefore:
-
- When logged in link should just do action.
-
- When not logged in:
- 1. Link should trigger overlay (or login screen)
- 2. After login it should redirect to the page it was clicked at first
-
- Questions:
- - what to do about settings page?
- - what to do if login failed?
- - how to handle POST data?
-
- Thoughts:
- - settings page can serve as user-create too
- - if user just created, show the settings
- - otherwise just redirect back to proper place
-
--}
-withUser :: (MonadIO m) => Maybe User -> ServerPartT m Response -> ServerPartT m Response
-withUser (Just user) action = action
-withUser Nothing action = msum
-                          [ methodOnly GET >> provideRPXNowLink
-                             -- FIXME: you seem to be doing method POST while 
-                             -- not logged in and requesting login at the same time
-                             -- this is not going to work right now, stop it!
-                            ]
-
+withUser :: Kontra Response -> Kontra Response
+withUser action = do
+  ctx <- lift get
+  case ctxmaybeuser ctx of
+    Just user -> action
+    Nothing -> do
+      let link = ctxhostpart ctx ++ "/login"
+      response <- webHSP (seeOtherXML link)
+      seeOther link response
 
 userLoginx :: (MonadIO m) => ServerPartT m (Maybe User)
 userLoginx = do
   muserid <- currentUserID
   msid <- currentSessionId 
-  muser <- case (muserid,msid) of
+  case (muserid,msid) of
             (Just userid,Just msid) -> do
                                         startSession msid
                                         query $ GetUserByUserID userid
             _ -> return Nothing     
-  case muser of
-    Just user -> return muser
-    Nothing -> userLogin1x
-
-userLogin1x :: (MonadIO m) => ServerPartT m (Maybe User)
-userLogin1x = do
-    maybetoken <- getDataFn (look "token") 
-#if MIN_VERSION_happstack_server(0,5,1)
-    case maybetoken of
-      Left _ -> return Nothing
-      Right token -> do
-#else
-    case maybetoken of
-      Nothing -> return Nothing
-      Just token -> do
-#endif
-
-              let req = "https://rpxnow.com/api/v2/auth_info" ++ 
-                        "?apiKey=" ++ 
-                        -- "03bbfc36d54e523b2602af0f95aa173fb96caed9" ++
-                        "a348dd93f1d78ae11c443574d73d974299007c00" ++
-                        "&token=" ++ token
-              
-              let curlproc = CreateProcess { std_out = CreatePipe
-                                           , std_err = CreatePipe
-                                           , std_in = Inherit
-                                           , cwd = Nothing
-                                           , cmdspec = RawCommand "curl" [ "-q", "-k", req ]
-                                           , close_fds = True
-                                           , env = Nothing
-                                           }
-              (_, Just outhandle, Just errhandle, curlProcHandle) <- liftIO $ createProcess curlproc
-              errcontent <- liftIO $ BS.hGetContents errhandle
-              rpxdata <- liftIO $ BS.hGetContents outhandle
-              
-              liftIO $ noticeM rootLoggerName $ "RPXNow: " ++ BS.toString rpxdata
-
-              let unJsonString (Json.JsonString x) = x
-              let maybeProfileMapping = do
-                    json <- Json.decode rpxdata
-                    jsonMapping <- fromMapping json 
-                    lookupMapping (BS.fromString "profile") jsonMapping
-              let maybeVerifiedEmail = do
-                    profileMapping <- maybeProfileMapping
-                    verifiedEmail <- lookupScalar (BS.fromString "verifiedEmail") profileMapping
-                    return (unJsonString verifiedEmail)
-              let maybeNameFormatted = do
-                    profileMapping <- maybeProfileMapping
-                    nameMapping <- lookupMapping (BS.fromString "name") profileMapping
-                    nameFormatted <- lookupScalar (BS.fromString "formatted") nameMapping
-                    return (unJsonString nameFormatted)
-              let verifiedEmail = maybe BS.empty id maybeVerifiedEmail
-              let nameFormatted = maybe BS.empty id maybeNameFormatted
-
-              when (verifiedEmail==BS.empty) $ do
-                liftIO $ BS.putStrLn rpxdata
-                error "SkrivaPa requires verifiedEmail in your OpenID login data, we cannot work without one"
-                         
-
-              maybeuser <- query $ GetUserByEmail (Email verifiedEmail)
-    
-              case maybeuser of
-                Just user -> do
-                  liftIO $ noticeM rootLoggerName $ "User: " ++ BS.toString nameFormatted ++ " <" ++ 
-                         BS.toString verifiedEmail ++ "> logged in"
-                  sessionid <- update $ NewSession $ emptySessionDataWithUserID (userid user)
-                  startSession sessionid
-                  rq <- askRq
-                  let link = rqUri rq
-                  response <- webHSP (seeOtherXML link)
-                  finishWith (redirect 303 link response)
-                  return (Just user)
-
-                Nothing -> do
-                  let link = "/login"
-                  response <- webHSP $ seeOtherXML link
-                  finishWith (redirect 303 link response)
-                  return Nothing
-
-
-
-provideRPXNowLink :: (MonadIO m) => ServerPartT m Response
-provideRPXNowLink = do -- FIXME it was guarded by method GET but it didn't help
-    rq <- askRq
-    let Just host = getHeader "host" rq
-    {-
-      FIXME: watch out for protocol here
-    -}
-    let serverurl = "http://" ++ BS.toString host ++ rqUri rq
-    let url = "https://skrivapa.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode serverurl
-    v <- webHSP $ seeOtherXML url
-    seeOther url (v)
-
-rpxSignInLink (Context {ctxhostpart}) title url = do
-    -- FIXME: this is very simple url handling....
-    let fullurl = ctxhostpart ++ url
-    <a class="rpxnow"href=("https://skrivapa.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode fullurl)><% title %></a> 
-
-{-
-maybeSignInLink
-  :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] [Char])) =>
-     Context -> XMLGenT m (HSX.XML m) -> String -> XMLGenT m (HSX.XML m)
--}
-
-maybeSignInLink :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) => Context -> String 
-                -> KontraLink -> XMLGenT m (HSX.XML m)
-{-
-maybeSignInLink (Context {ctxmaybeuser = Nothing, ctxhostpart}) title url = do
-    -- FIXME: this is very simple url handling....
-    let fullurl = ctxhostpart ++ url
-    <a class="rpxnow" onclick="return false;"
-       href=("https://skrivapa.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode fullurl)><% title %></a> 
--}
-maybeSignInLink (Context {}) title url = do
-    <a href=url><% title %></a> 
-
-{-
-maybeSignInLink2 (Context {ctxmaybeuser = Nothing, ctxhostpart}) title url class1 = do
-    -- FIXME: this is very simple url handling....
-    let fullurl = ctxhostpart ++ url
-    <a class=("rpxnow " ++ class1) onclick="return false;" class=class1
-       href=("https://skrivapa.rpxnow.com/openid/v2/signin?token_url=" ++ urlEncode fullurl)><% title %></a> 
--}
-maybeSignInLink2 :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) => Context -> String 
-                 -> KontraLink -> String -> XMLGenT m (HSX.XML m)
-maybeSignInLink2 (Context {}) title url class1 = do
-    <a href=url class=class1><% title %></a> 
-
-
-{- 
-userLogin2 :: (MonadIO m) => ServerPartT m (Maybe User)
-userLogin2 = do
-  let identifier = BS.fromString "auser"
-  let formatted =  BS.fromString "Emica Zaboo"
-  maybeuser <- query $ GetUserByExternalUserID 
-               (ExternalUserID identifier)
-    
-  user <- case maybeuser of
-            Just user -> return user
-            Nothing -> do
-               user <- update $ AddUser (ExternalUserID identifier) (formatted) (BS.fromString "")
-               return user
-  sessionid <- update $ NewSession (userid user)
-  startSession sessionid
-
-  return (Just user)
--}
 
 admins = map (Email . BS.fromString)
          [ "gracjanpolak@gmail.com"
@@ -269,6 +99,7 @@ isSuperUser _ = False
 
 -- Identity, LongTerm, Nonce, Signature
 data RememberMe = RememberMe UserID Bool Integer [Octet] [Octet] deriving Show
+
 instance Binary.Binary RememberMe where
     put (RememberMe identity longTerm expiry nonce signature) =
         Binary.put (identity, longTerm, expiry, nonce, signature)
