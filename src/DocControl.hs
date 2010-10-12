@@ -48,32 +48,35 @@ import Data.Bits
 
 doctransPreparation2Pending :: Context -> Document -> IO Document
 doctransPreparation2Pending ctx@Context{ctxtime, ctxipnumber } doc = do
-  let MinutesTime m = ctxtime
-  -- FIXME: check if the status was really changed
-  newdoc <- update $ UpdateDocumentStatus doc Pending ctxtime ctxipnumber
-  let timeout = TimeoutTime (MinutesTime (m + documentdaystosign doc * 24 * 60))
-  newdoc2 <- update $ SetDocumentTimeoutTime newdoc timeout
-  sendInvitationEmails ctx newdoc2
-  return newdoc2
+  let MinutesTime m = ctxtime 
+  logErrorWithDefault (update $ UpdateDocumentStatus doc Pending ctxtime ctxipnumber) doc $ 
+   \newdoc -> do
+               let timeout = TimeoutTime (MinutesTime (m + documentdaystosign doc * 24 * 60))
+               newdoc2 <- update $ SetDocumentTimeoutTime newdoc timeout
+               sendInvitationEmails ctx newdoc2
+               return newdoc2
+ 
 
 doctransPending2Closed :: Context -> Document -> IO Document
 doctransPending2Closed ctx@Context{ctxtime,ctxipnumber} doc = do
-  update $ UpdateDocumentStatus doc Closed ctxtime ctxipnumber
-  newdoc <- update $ RemoveFileFromDoc (documentid doc)
-  Just user <- query $ GetUserByUserID (unAuthor (documentauthor doc))
-  liftIO $ forkIO $ do
-    newdoc <- sealDocument ctxtime user doc
-    sendClosedEmails ctx newdoc
-  return newdoc
-
+  logErrorWithDefault (update $ UpdateDocumentStatus doc Closed ctxtime ctxipnumber) doc $ 
+   \closedDoc  -> do
+                   clearDoc <- update $ RemoveFileFromDoc (documentid doc)
+                   Just user <- query $ GetUserByUserID (unAuthor (documentauthor doc))
+                   forkIO $ do
+                      newdoc <- sealDocument ctxtime user doc
+                      sendClosedEmails ctx newdoc
+                   return  clearDoc
+   
 doctransPending2Canceled :: Context -> Document -> IO Document
 doctransPending2Canceled ctx@Context{ctxtime,ctxipnumber} doc = do
-  update $ UpdateDocumentStatus doc Canceled ctxtime ctxipnumber
+  logErrorWithDefault (update $ UpdateDocumentStatus doc Canceled ctxtime ctxipnumber) doc return
+
 
 doctransPending2Timedout :: Context -> Document -> IO Document
 doctransPending2Timedout ctx@Context{ctxtime,ctxipnumber} doc = do
-  update $ UpdateDocumentStatus doc Timedout ctxtime ctxipnumber
-
+   logErrorWithDefault (update $ UpdateDocumentStatus doc Timedout ctxtime ctxipnumber) doc return
+                    
 sendInvitationEmails :: Context -> Document -> IO ()
 sendInvitationEmails ctx document = do
   let signlinks = documentsignatorylinks document

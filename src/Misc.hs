@@ -43,7 +43,7 @@ import Control.Concurrent
 import System.Process
 import System.IO
 import System.Exit
-
+import System.Log.Logger (errorM)
 
 {-
 
@@ -335,3 +335,12 @@ readProcessWithExitCode' cmd args input = do
 
     return (ex, out, err)
 
+--Utils
+logErrorWithDefault::IO (Either String a) -> b -> (a -> IO b) -> IO b
+logErrorWithDefault c d f = do
+                             c' <- c
+                             case c' of
+                              Right c'' ->  f c''
+                              Left err  ->  do 
+                                             errorM "Happstack.Server" err
+                                             return d

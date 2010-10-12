@@ -25,6 +25,7 @@ import Data.List (zipWith4)
 import System.Random
 import Data.Word
 import Data.Int
+import System.Log.Logger (errorM)
 
 $(deriveAll [''Eq, ''Ord, ''Default]
   [d|
@@ -737,7 +738,7 @@ updateDocumentStatus :: Document
                      -> DocumentStatus 
                      -> MinutesTime
                      -> Word32
-                     -> Update Documents Document
+                     -> Update Documents (Either String Document)
 updateDocumentStatus document1 newstatus time ipnumber = do
   -- check if document status change is a legal transition
   documents <- ask
@@ -760,11 +761,10 @@ updateDocumentStatus document1 newstatus time ipnumber = do
   if legal 
      then do
        modify (updateIx (documentid newdoc) newdoc)
-       return newdoc
+       return $ Right newdoc
      else do
-       -- FIXME: throw some error? log it somewhere?
-       return document
-  
+       return $ Left $ "Illegal document state change from:"++(show $ documentstatus document)++" to: " ++ (show newstatus)
+         
 
 signDocument :: DocumentID
              -> SignatoryLinkID 
