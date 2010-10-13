@@ -136,9 +136,9 @@ appHandler = do
     
   let peer = rqPeer rq
   liftIO $ print (peer,peerip)
-
+  removeSessionIfExpired
   maybeuser <- userLogin
-
+  when (isNothing maybeuser) (startSessionWhenNoSession)
   flashmessages <- getFlashMessages
   minutestime <- liftIO $ getMinutesTime
 
@@ -236,8 +236,7 @@ loginPagePost = do
         if verifyPassword userpassword (BS.fromString passwd) && passwd/=""
         then do
           setRememberMeCookie (userid user) rememberMe
-          sessionid <- update $ NewSession $ emptySessionDataWithUserID (userid user)
-          startSession sessionid
+          startSessionForUser (userid user)
           response <- webHSP (seeOtherXML "/")
           seeOther "/" response
         else do
@@ -281,9 +280,7 @@ statsPage = do
 handleBecome :: Kontra Response
 handleBecome = do
   (userid :: UserID) <- getDataFnM $ (look "user" >>= readM)
-  sessionid <- update $ NewSession $ emptySessionDataWithUserID userid
-  setHeaderM "Set-Cookie" ""
-  startSession sessionid
+  startSessionForUser userid
   response <- webHSP (seeOtherXML "/")
   seeOther "/" response
 

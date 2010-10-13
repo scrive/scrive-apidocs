@@ -168,11 +168,8 @@ resetUserPassword email = do
 userLogin :: (MonadIO m) => ServerPartT m (Maybe User)
 userLogin = do
    muserid <- currentUserID
-   msid <- currentSessionId 
-   muser <- case (muserid,msid) of
-            (Just userid,Just msid) -> do
-                                        startSession msid
-                                        query $ GetUserByUserID userid
+   muser <- case (muserid) of
+            Just userid -> query $ GetUserByUserID userid
             _ -> return Nothing     
    case muser of
      Just user -> return muser
@@ -187,8 +184,7 @@ userLogin1 = do
             maybeuser <- query $ GetUserByUserID userid
             case maybeuser of
                 Just user -> do
-                    sessionid <- update $ NewSession $ emptySessionDataWithUserID userid
-                    startSession sessionid
+                    startSessionForUser  userid
                     return maybeuser
                 Nothing -> userLogin2
         Nothing -> userLogin2
@@ -254,8 +250,7 @@ userLogin2 = do
                 Just user -> do
                   liftIO $ noticeM rootLoggerName $ "User: " ++ BS.toString nameFormatted ++ " <" ++ 
                          BS.toString verifiedEmail ++ "> logged in"
-                  sessionid <- update $ NewSession $ emptySessionDataWithUserID (userid user)
-                  startSession sessionid
+                  startSessionForUser (userid user)
                   rq <- askRq
                   let link = rqUri rq
                   response <- webHSP (seeOtherXML link)
@@ -289,10 +284,7 @@ instance FromData (Maybe RememberMe) where
 getRememberMeCookie :: (ServerMonad m, Control.Monad.MonadPlus m) => m (Maybe RememberMe)
 getRememberMeCookie = do
     cookie <- getData
-    return $ case cookie of
-        Nothing -> Nothing
-        Just Nothing -> Nothing
-        Just (Just rememberMe) -> Just rememberMe
+    return $ join cookie 
 
 
  

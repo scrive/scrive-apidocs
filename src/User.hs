@@ -79,15 +79,7 @@ withUser action = do
       response <- webHSP (seeOtherXML link)
       seeOther link response
 
-userLoginx :: (MonadIO m) => ServerPartT m (Maybe User)
-userLoginx = do
-  muserid <- currentUserID
-  msid <- currentSessionId 
-  case (muserid,msid) of
-            (Just userid,Just msid) -> do
-                                        startSession msid
-                                        query $ GetUserByUserID userid
-            _ -> return Nothing     
+
 
 admins = map (Email . BS.fromString)
          [ "gracjanpolak@gmail.com"
