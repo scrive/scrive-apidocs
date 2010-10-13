@@ -629,6 +629,7 @@ showDocumentForSign action document invitedlink wassigned =
                         <span>
                            {- Avvisa - gray FIXME -}
                            <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign"/>
+                           <br/>
                         </span>
                  %>
                  <small>Jag vill veta mer <a href="/about" target="_blank">om SkrivaPå</a>.</small>
