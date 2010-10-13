@@ -1,30 +1,23 @@
 {-# LANGUAGE TemplateHaskell, UndecidableInstances, DeriveDataTypeable, FlexibleInstances, FlexibleContexts, MultiParamTypeClasses, TypeSynonymInstances, GeneralizedNewtypeDeriving #-}
 -- |Simple session support
 module Session 
-    ( -- * Basic Types
-      SessionData
-    , SessionId
+    ( Sessions
     , Session
-    , Sessions
-      -- * State functions
-    , GetSession(..)
-    , UpdateSession(..)
-    , DelSession(..)
-    , NewSession(..)
-    , startSession  
+    , SessionId    
+    , startSessionForUser  
     , endSession
-    , currentSessionId
     , currentUserID
-    , emptySessionDataWithUserID
     , getFlashMessages
     , addFlashMessage
+    , startSessionWhenNoSession
+    , removeSessionIfExpired
     )
     where
 
 import Control.Monad.Reader (MonadPlus(..), ap, ReaderT(..), asks, ask)
 import Control.Monad.State hiding (State)
 import Data.Generics
-import Data.Maybe (isNothing)
+import Data.Maybe (isNothing,isJust, fromJust)
 import Happstack.Data (Default, deriveAll, gFind')
 import Happstack.Data.IxSet
 import Happstack.Data.IxSet (IxSet(..), Indexable(..), (@=), delete, getOne, 
@@ -39,7 +32,7 @@ import qualified Data.Set as Set
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import UserState (UserID,FlashMessage)
-
+import MinutesTime
 
 $( deriveAll [''Ord, ''Eq, ''Default, ''Num]
    [d|
@@ -57,17 +50,18 @@ $(deriveSerialize ''SessionId)
 instance Version SessionId   
 
 
-$(deriveAll [''Ord, ''Eq, ''Read, ''Show,''Default]
+$(deriveAll [''Ord, ''Eq,''Show,''Default]
   [d|
      data SessionData = SessionData {userID::Maybe UserID,
-                                     flashMessages::[FlashMessage]
+                                     flashMessages::[FlashMessage],
+                                     expires::MinutesTime
                                     } 
    |])                                           
 
 $(deriveSerialize ''SessionData)
 instance Version SessionData   
     
-$( deriveAll [''Ord, ''Eq, ''Read, ''Show, ''Default]
+$( deriveAll [''Ord, ''Eq, ''Show, ''Default]
    [d|
        data Session = Session {sessionId::SessionId,
                                sessionData::SessionData}
@@ -138,60 +132,77 @@ $(mkMethods ''Sessions
   
 --- Session interface  
   
-startSession :: (FilterMonad Response m,ServerMonad m) => SessionId -> m ()
-startSession sessionid = do
-  let cookie = mkCookie "sessionId" (show sessionid)
-  addCookie (60*60) cookie
+startSessionCookie :: (FilterMonad Response m,ServerMonad m, MonadIO m) => SessionId -> m ()
+startSessionCookie sessionid = addCookie (60*60) $ mkCookie "sessionId" (show sessionid)
 
-endSession :: (FilterMonad Response m,ServerMonad m) => m ()
---endSession = expireCookie "sessionId"
-endSession = do
-  let cookie = mkCookie "sessionId" ""
-  -- FIXME: this will remove all cookies, which is bad probably
-  setHeaderM "Set-Cookie" (mkCookieHeader 0 cookie)
+endSessionCookie :: (FilterMonad Response m,ServerMonad m,  MonadIO m) => m ()
+endSessionCookie = expireCookie "sessionId" 
 
-currentSessionId':: RqData (Maybe SessionId)
-currentSessionId' = (optional (readCookieValue "sessionId")) 
+removeSessionIfExpired::(MonadIO m, ServerMonad m, MonadPlus m,FilterMonad Response m) =>  m ()  
+removeSessionIfExpired =  do
+                          ms <- currentSession
+                          now <- liftIO $ getMinutesTime
+                          case ms of 
+                            Just s ->  do
+                                        when (now >= (expires $ sessionData $ s)) $
+                                           do
+                                            update $ DelSession (sessionId s)
+                                            return ()
+                                             
+                            Nothing -> return ()
+                                   
+  
+currentSessionIdFromCookie':: RqData (Maybe SessionId)
+currentSessionIdFromCookie' = (optional (readCookieValue "sessionId")) 
  where optional c = (liftM Just c) `mplus` (return Nothing)
 
-currentSessionId::(MonadIO m, ServerMonad m, MonadPlus m) => m (Maybe SessionId)
-currentSessionId = withDataFn currentSessionId'  return
+currentSessionIdFromCookie::(MonadIO m, ServerMonad m, MonadPlus m, FilterMonad Response m) => m (Maybe SessionId)
+currentSessionIdFromCookie = withDataFn currentSessionIdFromCookie'  return
  
-fromSession_ :: (MonadIO m, ServerMonad m, MonadPlus m) => (Maybe SessionData -> a) -> m a
-fromSession_ f = withDataFn currentSessionId' $ (\msid ->  
+currentSession ::(MonadIO m, ServerMonad m, MonadPlus m, FilterMonad Response m) => m (Maybe Session) 
+currentSession = withDataFn currentSessionIdFromCookie' $ (\msid ->  
+                            case (msid) of
+                            Just sid-> query $ GetSession sid                           
+                            Nothing ->  return  Nothing)
+
+
+fromSession_ :: (MonadIO m, ServerMonad m, MonadPlus m,FilterMonad Response m) => (Maybe SessionData -> a) -> m a
+fromSession_ f = withDataFn currentSessionIdFromCookie' $ (\msid ->  
                           case (msid) of
                           Just sid-> 
                             do
-                                  msession <- query (GetSession sid)
+                                  msession <- query $ GetSession sid
                                   case (msession) of
                                    Nothing -> return $ f Nothing
                                    Just sd   -> return $ f $ Just $ sessionData sd
                           Nothing ->  return $ f Nothing)
 
-fromSession :: (MonadIO m, ServerMonad m, MonadPlus m) => (SessionData -> a) -> m (Maybe a)
+fromSession :: (MonadIO m, ServerMonad m, MonadPlus m, FilterMonad Response m) => (SessionData -> a) -> m (Maybe a)
 fromSession f = fromSession_ (\msession -> case msession of
                                               Nothing -> Nothing
                                               Just sd -> Just $ f sd)
 
-modifySession:: (MonadIO m, ServerMonad m, MonadPlus m) => (SessionData -> SessionData) -> m ()
-modifySession f = withDataFn currentSessionId' $ (\msid -> 
+modifySession:: (MonadIO m, ServerMonad m, MonadPlus m, FilterMonad Response m) => (SessionData -> SessionData) -> m ()
+modifySession f = withDataFn currentSessionIdFromCookie' $ (\msid -> 
                    case (msid) of
                           Just sid-> 
                                  do
-                                  msession <- query (GetSession sid)
+                                  msession <- query $ GetSession sid
                                   case (msession) of
                                        Just session -> update $ UpdateSession $ session {sessionData = f (sessionData session)}
                                        Nothing -> return ()
                           Nothing -> return () )
 
+
+--Session data access
                           
-currentUserID::(MonadIO m, ServerMonad m, MonadPlus m) => m (Maybe UserID)
+currentUserID::(MonadIO m, ServerMonad m, MonadPlus m, FilterMonad Response m) => m (Maybe UserID)
 currentUserID = liftM join (fromSession userID)
                           
-addFlashMessage :: (MonadIO m, ServerMonad m, MonadPlus m) => FlashMessage -> m ()
+addFlashMessage :: (MonadIO m, ServerMonad m, MonadPlus m, FilterMonad Response m) => FlashMessage -> m ()
 addFlashMessage fm = modifySession (\sd -> sd {flashMessages = fm:(flashMessages sd) })
 
-getFlashMessages:: (MonadIO m, ServerMonad m, MonadPlus m) =>  m [FlashMessage]                       
+getFlashMessages:: (MonadIO m, ServerMonad m, MonadPlus m, FilterMonad Response m) =>  m [FlashMessage]                       
 getFlashMessages = do
                    l <- fromSession flashMessages
                    modifySession (\sd -> sd {flashMessages = []} )
@@ -199,5 +210,42 @@ getFlashMessages = do
                     Just l -> return l
                     _ -> return []
 
-                         
-emptySessionDataWithUserID userid = SessionData {userID = Just userid,  flashMessages = []}                                                                                                                                             
+                    
+--Contructors                     
+                    
+emptySessionDataWithUserID::UserID -> IO SessionData                                              
+emptySessionDataWithUserID userid = do
+                     now <- getMinutesTime
+                     return $ SessionData {userID = Just userid,  flashMessages = [], expires = 60 `minutesAfter` now}
+                     
+emptySessionData::IO SessionData                     
+emptySessionData = do
+                     now <- getMinutesTime
+                     return $ SessionData {userID = Nothing,  flashMessages = [], expires = 60 `minutesAfter` now}  
+
+                     
+--Starting and ending sessions                     
+startSessionForUser :: (FilterMonad Response m,ServerMonad m,  MonadIO m, MonadPlus m) => UserID -> m ()
+startSessionForUser userId = do
+                              sessionDataForUser <- liftIO $ emptySessionDataWithUserID userId
+                              sessionid <- update $ NewSession $ sessionDataForUser       
+                              startSessionCookie sessionid    
+   
+                                           
+startSessionWhenNoSession :: (FilterMonad Response m,ServerMonad m,  MonadIO m, MonadPlus m) => m ()
+startSessionWhenNoSession = do
+                           msession <- currentSession
+                           when (isNothing msession) $
+                             do
+                              emptySessionData <- liftIO $ emptySessionData
+                              sessionid <- update $ NewSession $ emptySessionData
+                              startSessionCookie sessionid    
+                              
+                              
+endSession :: (FilterMonad Response m,ServerMonad m,  MonadIO m, MonadPlus m) => m ()
+endSession =  do
+               sid <- currentSessionIdFromCookie 
+               when (isJust sid) $
+                 do update $ DelSession (fromJust sid)
+                    return ()
+               endSessionCookie
