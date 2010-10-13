@@ -252,8 +252,8 @@ handleSignShow documentid
 handleIssue :: Kontra Response
 handleIssue = 
     msum [ pathdb GetDocumentByDocumentID handleIssueShow
-         , methodM GET >> handleIssueGet
-         , methodM POST >> handleIssuePost
+         , hget0 handleIssueGet
+         , hpost0 handleIssuePost
          ]
 
 freeLeftForUser :: User -> Kontra Int
@@ -578,19 +578,17 @@ basename filename =
       (_,(_:rest)) -> basename rest
       _ -> fst (span ((/=) '.') filename) -- FIXME: take care of many dots in file name
 
-handleIssuePost :: Kontra Response
+handleIssuePost :: Kontra KontraLink
 handleIssuePost = handleIssueNewDocument `mplus` handleIssueArchive
 
-handleIssueNewDocument :: Kontra Response
+handleIssueNewDocument :: Kontra KontraLink
 handleIssueNewDocument = do
     ctx@(Context { ctxmaybeuser = Just user, ctxhostpart, ctxtime }) <- get
     input@(Input content (Just filename) _contentType) <- getDataFnM (lookInput "doc")
     -- see if we have empty input, then there was no file selected
     if BSL.null content
        then do
-         let link = ctxhostpart ++ "/"
-         response <- webHSP (seeOtherXML link)
-         seeOther link response
+         return LinkMain
         else do
           -- FIXME: here we have encoding issue
           -- Happstack gives use String done by BS.unpack, so BS.pack it here
@@ -599,22 +597,17 @@ handleIssueNewDocument = do
           freeleft <- freeLeftForUser user
           doc <- update $ NewDocument user title ctxtime (freeleft>0)
           liftIO $ forkIO $ handleDocumentUpload (documentid doc) (concatChunks content) title
-          let link = ctxhostpart ++ show (LinkIssueDoc doc)
-          response <- webHSP (seeOtherXML link)
-          seeOther link response
+          return $ LinkIssueDoc doc
 
 
-handleIssueArchive :: Kontra Response
+handleIssueArchive :: Kontra KontraLink
 handleIssueArchive = do
     ctx@(Context { ctxmaybeuser = Just user, ctxhostpart, ctxtime }) <- get
     something <- getDataFnM (lookInput "archive")
     idstrings <- getDataFnM (lookInputList "doccheck")
     let Just ids = sequence $ map (readM . BSL.toString) idstrings
     update $ ArchiveDocuments ids
-
-    let link = LinkIssue
-    response <- webHSP (seeOtherXML $ show link)
-    seeOther (show link) response
+    return LinkIssue
 
 
 showPage :: Context -> MinutesTime -> FileID -> Int -> Kontra Response
