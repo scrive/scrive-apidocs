@@ -39,6 +39,7 @@ import qualified Data.Set as Set
 import UserControl
 import Data.Word
 import Data.Bits
+import Control.Monad.State
 
 {-
   Document state transitions are described in DocState.
@@ -133,25 +134,26 @@ sendClosedAuthorEmail ctx document = do
   sendMail $ mail { fullnameemails = ([(name1,email1)] ++ em), attachments = [(documenttitle,attachmentcontent)]}
   
   
-handleSign :: Context -> Kontra Response
-handleSign ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) =
+handleSign :: Kontra Response
+handleSign = do
+  ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) <- get
   msum [path $ \documentid -> 
             path $ \signatoryid -> 
                   path $ \magichash -> 
-                      handleSignShow ctx documentid signatoryid magichash
+                      handleSignShow documentid signatoryid magichash
        , withUser $ do
           let u = userid $ fromJust ctxmaybeuser
           documents <- query $ GetDocumentsBySignatory u
           webHSP (pageFromBody ctx TopNone kontrakcja (listDocuments ctxtime u documents))
        ]
 
-signDocument :: Context 
-             -> DocumentID 
+signDocument :: DocumentID 
              -> SignatoryLinkID 
              -> Kontra Response
-signDocument ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber})
-             documentid 
+signDocument documentid 
              signatorylinkid1 = do
+  ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber}) <- get
+             
   getDataFnM (look "sign")
   
   Just document <- update $ SignDocument documentid signatorylinkid1 ctxtime ctxipnumber
@@ -218,12 +220,13 @@ landpageSaved (ctx@Context { ctxmaybeuser = Just user@User{userid} })
   webHSP $ pageFromBody ctx TopDocument kontrakcja $ landpageDocumentSavedView ctx document signatorylink
 
 
-handleSignShow :: Context -> DocumentID -> SignatoryLinkID -> MagicHash -> Kontra Response
-handleSignShow ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber})
-               documentid 
+handleSignShow :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra Response
+handleSignShow documentid 
                signatorylinkid1
                magichash1 = do
-  msum [ DocControl.signDocument ctx documentid signatorylinkid1
+  ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber}) <- get
+               
+  msum [ DocControl.signDocument documentid signatorylinkid1
        , do 
            -- FIXME: this is so wrong on so many different levels...
           mdocument <- update $ MarkDocumentSeen documentid signatorylinkid1 ctxtime ctxipnumber
@@ -246,11 +249,11 @@ handleSignShow ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber})
                        document invitedlink wassigned))
        ]
 
-handleIssue :: Context -> Kontra Response
-handleIssue ctx@(Context {ctxmaybeuser = Just user, ctxhostpart}) = 
-    msum [ pathdb GetDocumentByDocumentID (handleIssueShow ctx)
-         , methodM GET >> handleIssueGet ctx
-         , methodM POST >> handleIssuePost ctx
+handleIssue :: Kontra Response
+handleIssue = 
+    msum [ pathdb GetDocumentByDocumentID handleIssueShow
+         , methodM GET >> handleIssueGet
+         , methodM POST >> handleIssuePost
          ]
 
 freeLeftForUser :: User -> Kontra Int
@@ -259,11 +262,12 @@ freeLeftForUser user = do
   let freeleft = if numdoc >= 5 then 0 else 5 - numdoc
   return freeleft
 
-handleIssueShow :: Context -> Document -> Kontra Response
-handleIssueShow ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) 
-                document@Document{ documentauthor
+handleIssueShow :: Document -> Kontra Response
+handleIssueShow document@Document{ documentauthor
                                  , documentid
                                  } = do
+  ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) <- get
+                
   msum [ do
            methodM GET 
            freeleft <- freeLeftForUser user
@@ -353,8 +357,9 @@ updateDocument ctx@Context{ctxtime} document = do
      ]
     
 
-handleIssueGet :: (MonadIO m) => Context -> m Response
-handleIssueGet ctx@(Context {ctxmaybeuser = Just user, ctxhostpart, ctxtime}) = do
+handleIssueGet :: Kontra Response
+handleIssueGet = do
+  ctx@(Context {ctxmaybeuser = Just user, ctxhostpart, ctxtime}) <- get
   documents <- query $ GetDocumentsByUser (userid user) 
   webHSP (pageFromBody ctx TopDocument kontrakcja (listDocuments ctxtime (userid user) documents))
 
@@ -573,11 +578,12 @@ basename filename =
       (_,(_:rest)) -> basename rest
       _ -> fst (span ((/=) '.') filename) -- FIXME: take care of many dots in file name
 
-handleIssuePost :: Context -> Kontra Response
-handleIssuePost ctx = handleIssueNewDocument ctx `mplus` handleIssueArchive ctx
+handleIssuePost :: Kontra Response
+handleIssuePost = handleIssueNewDocument `mplus` handleIssueArchive
 
-handleIssueNewDocument :: Context -> Kontra Response
-handleIssueNewDocument ctx@(Context { ctxmaybeuser = Just user, ctxhostpart, ctxtime }) = do
+handleIssueNewDocument :: Kontra Response
+handleIssueNewDocument = do
+    ctx@(Context { ctxmaybeuser = Just user, ctxhostpart, ctxtime }) <- get
     input@(Input content (Just filename) _contentType) <- getDataFnM (lookInput "doc")
     -- see if we have empty input, then there was no file selected
     if BSL.null content
@@ -598,8 +604,9 @@ handleIssueNewDocument ctx@(Context { ctxmaybeuser = Just user, ctxhostpart, ctx
           seeOther link response
 
 
-handleIssueArchive :: Context -> Kontra Response
-handleIssueArchive ctx@(Context { ctxmaybeuser = Just user, ctxhostpart, ctxtime }) = do
+handleIssueArchive :: Kontra Response
+handleIssueArchive = do
+    ctx@(Context { ctxmaybeuser = Just user, ctxhostpart, ctxtime }) <- get
     something <- getDataFnM (lookInput "archive")
     idstrings <- getDataFnM (lookInputList "doccheck")
     let Just ids = sequence $ map (readM . BSL.toString) idstrings

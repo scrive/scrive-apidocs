@@ -296,7 +296,7 @@ getRememberMeCookie = do
 
 
  
-withTOS :: (MonadIO m) => Context -> ServerPartT m Response -> ServerPartT m Response
+withTOS :: Kontra Response -> Kontra Response
 
 -- to disable requiring TOS signing, comment out this definition (leaving the second case)
 {-
@@ -306,4 +306,4 @@ withTOS ctx@(Context {ctxmaybeuser = (Just (User {userid = userid, userhasaccept
   response <- webHSP $ seeOtherXML link
   finishWith (redirect 303 link response)
 -}
-withTOS _ action = action
+withTOS action = action

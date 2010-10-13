@@ -49,17 +49,17 @@ import qualified HSP as HSP
 
 
 handleRoutes ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} = toIO ctx $ msum $
-    ([nullDir >> withTOS ctx (webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx)))
-     , dir "s" $ withTOS ctx (DocControl.handleSign ctx)
-     , {- old -} dir "sign" $ (withTOS ctx (DocControl.handleSign ctx))
-     , dir "d" $ withUser (withTOS ctx (DocControl.handleIssue ctx))
-     , {- old -} dir "issue" $ withUser (withTOS ctx (DocControl.handleIssue ctx))
-     , dir "pages" $ withTOS ctx $ hget2 $ \fileid pageno -> do
+    ([nullDir >> withTOS (webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx)))
+     , dir "s" $ withTOS (DocControl.handleSign)
+     , {- old -} dir "sign" $ (withTOS (DocControl.handleSign))
+     , dir "d" $ withUser (withTOS (DocControl.handleIssue))
+     , {- old -} dir "issue" $ withUser (withTOS (DocControl.handleIssue))
+     , dir "pages" $ withTOS $ hget2 $ \fileid pageno -> do
         modminutes <- query $ FileModTime fileid
         DocControl.showPage ctx modminutes fileid pageno
                                                     
      , dir "landpage" $ 
-           withTOS ctx
+           withTOS 
                        (msum [ dir "signinvite" $ pathdb GetDocumentByDocumentID $ \document -> 
                                    DocControl.landpageSignInvite ctx document
                              , dir "signed" $ pathdb GetDocumentByDocumentID $ \document -> path $ \signatorylinkid ->
@@ -76,7 +76,7 @@ handleRoutes ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} = toIO ctx $ msum 
            pathdb GetDocumentByDocumentID $ \document -> 
                                      DocControl.handlePageOfDocument ctxnormalizeddocuments document
      , dir "resendemail" $ 
-           withTOS ctx (pathdb GetDocumentByDocumentID $ \document -> 
+           withTOS (pathdb GetDocumentByDocumentID $ \document -> 
                                      path $ \signatorylinkid -> 
                                          resendEmail ctx document signatorylinkid)
      , dir "account" (withUser (UserControl.handleUser ctx))]
