@@ -1,4 +1,4 @@
-{-# LANGUAGE ForeignFunctionInterface, CPP, ScopedTypeVariables, StandaloneDeriving  #-}
+{-# LANGUAGE ForeignFunctionInterface, CPP, ScopedTypeVariables, StandaloneDeriving, FlexibleInstances, MultiParamTypeClasses, FlexibleContexts, UndecidableInstances  #-}
 
 
 module Misc where
@@ -44,7 +44,6 @@ import System.Process
 import System.IO
 import System.Exit
 import System.Log.Logger (errorM)
-
 {-
 
 Dump bin for things that do not fit anywhere else
