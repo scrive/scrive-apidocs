@@ -46,7 +46,7 @@ import System.IO.Unsafe
 import Debug.Trace
 import Network.Socket
 import qualified HSP as HSP
-
+import InspectXML
 
 handleRoutes ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} = toIO ctx $ msum $
     ([nullDir >> withTOS (webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx)))
@@ -96,6 +96,12 @@ handleRoutes ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} = toIO ctx $ msum 
                        , dir "deleteaccount" $ methodM POST >> handleDeleteAccount
                        , dir "alluserstable" $ methodM GET >> handleAllUsersTable
                        ]
+             , dir "dave" $ msum
+                   [ dir "document" $ pathdb GetDocumentByDocumentID $ \document ->
+                        webHSP $ pageFromBody ctx TopNew kontrakcja $ inspectXML document
+                   , dir "user" $ pathdb GetUserByUserID $ \user ->
+                       webHSP $ pageFromBody ctx TopNew kontrakcja $ inspectXML user
+                   ]
              ]
          else []))
    ++ [dir "logout" (handleLogout)

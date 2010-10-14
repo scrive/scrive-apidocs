@@ -13,6 +13,7 @@ import Data.Data
 import System.Locale
 import System.IO.Unsafe
 import System.Locale
+import Misc
 
 $(deriveAll [''Eq, ''Ord, ''Default]
   [d|

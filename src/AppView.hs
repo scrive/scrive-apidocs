@@ -29,7 +29,47 @@ import HSP.XML
 import KontraLink
 import System.Directory
 import Happstack.State (update,query)
+import Data.Data
 
+poweredBySkrivaPaPara :: (XMLGenerator m) => XMLGenT m (HSX.XML m)
+poweredBySkrivaPaPara = 
+    <p>
+     <small>Med vänliga hälsningar<br/>
+     <a href="http://skrivapa.se/">SkrivaPå</a></small>
+    </p>
+
+htmlHeadBodyWrap :: (XMLGenerator m,EmbedAsChild m a {- ,EmbedAsChild m b -})
+                 => a
+                 -> XMLGenT m (HSX.XMLGenerator.XML m) --b
+                 -> XMLGenT m (HSX.XMLGenerator.XML m)
+htmlHeadBodyWrap title content =     
+    <html>
+     <head>
+      <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+      <title><% title %></title>
+     </head>
+     <body>
+      <% content %>
+     </body>
+    </html>
+
+htmlHeadBodyWrapIO title content = do
+  let xml = htmlHeadBodyWrap title content
+  renderHSPToByteString xml
+
+daveShowGeneric :: (Data d,XMLGenerator m) => d -> GenChildList m
+daveShowGeneric obj = do
+    let con = toConstr obj
+    let s = constrFields con
+    <% show con %> 
+    <% <ul>
+         <% case constrRep con of
+              AlgConstr {} ->  zipWith ($) (gmapQ (\x -> \k -> <li><% k %>: <% daveShowGeneric x %></li>) obj) 
+                    (constrFields con)
+              _ -> gmapQ (\x -> <li><% daveShowGeneric x %></li>) obj 
+          %>
+       </ul>
+     %>
 
 instance (XMLGenerator m) => (EmbedAsChild m HeaderPair) where
   asChild (HeaderPair name value) = 

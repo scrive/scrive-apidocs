@@ -1,4 +1,4 @@
-{-# LANGUAGE IncoherentInstances #-}
+{-# LANGUAGE IncoherentInstances, TemplateHaskell, NamedFieldPuns, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -F -pgmFtrhsx #-}
 
 module DocView where
@@ -19,7 +19,44 @@ import Misc
 import MinutesTime
 import Data.Maybe
 import SendMail(Mail,emptyMail,content,title)
+import InspectXML
+import UserView ()
 
+$(deriveInspectXML ''Document)
+
+instance InspectXML DocumentID where
+    inspectXML x = asChild <a href=("/dave/document/" ++ show x)><% show x %></a>
+
+instance InspectXML SignatoryLinkID where
+    inspectXML x = asChild <a href=("/dave/signatorylink/" ++ show x)><% show x %></a>
+    
+instance InspectXML Author where
+    inspectXML (Author x) = inspectXML x
+
+$(deriveInspectXML ''SignatoryLink)
+
+instance InspectXML File where
+    inspectXML = asChild . show
+instance InspectXML DocumentStatus where
+    inspectXML = asChild . show
+instance InspectXML ChargeMode where
+    inspectXML = asChild . show
+instance InspectXML TimeoutTime where
+    inspectXML = asChild . show
+
+$(deriveInspectXML ''SignatoryDetails)
+
+instance InspectXML SignInfo where
+    inspectXML = asChild . show
+instance InspectXML DocumentHistoryEntry where
+    inspectXML = asChild . show
+
+
+instance InspectXML MagicHash where
+    inspectXML = asChild . show
+instance InspectXML Signatory where
+    inspectXML = asChild . show
+    
 instance Monad m => IsAttrValue m DocumentID where
     toAttrValue = toAttrValue . show
 
@@ -620,7 +657,6 @@ showDocumentForSign action document invitedlink wassigned =
                  <% showSignatoryLinkForSign invitedlink %>
 
                  <% map showSignatoryLinkForSign (authorlink : allbutinvited) %>
-
                  
                  <%
                    if wassigned 
@@ -636,24 +672,6 @@ showDocumentForSign action document invitedlink wassigned =
               </span>
 
 
-htmlHeadBodyWrap :: (XMLGenerator m,EmbedAsChild m a {- ,EmbedAsChild m b -})
-                 => a
-                 -> XMLGenT m (HSX.XMLGenerator.XML m) --b
-                 -> XMLGenT m (HSX.XMLGenerator.XML m)
-htmlHeadBodyWrap title content =     
-    <html>
-     <head>
-      <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-      <title><% title %></title>
-     </head>
-     <body>
-      <% content %>
-     </body>
-    </html>
-
-htmlHeadBodyWrapIO title content = do
-  let xml = htmlHeadBodyWrap title content
-  renderHSPToByteString xml
 
 invitationMail :: Context
                -> BS.ByteString
@@ -765,12 +783,6 @@ closedMailAuthor (Context {ctxhostpart})
         </span> 
      return $ emptyMail {title = title, content = content}
 
-poweredBySkrivaPaPara :: (XMLGenerator m) => XMLGenT m (HSX.XML m)
-poweredBySkrivaPaPara = 
-    <p>
-     <small>Med vänliga hälsningar<br/>
-     <a href="http://skrivapa.se/">SkrivaPå</a></small>
-    </p>
 
 partyList :: Document -> [SignatoryDetails]
 partyList document =
