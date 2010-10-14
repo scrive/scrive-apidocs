@@ -27,7 +27,7 @@ import Happstack.Server (ServerMonad, withDataFn, readCookieValue,addCookie,Filt
 import Happstack.Server.Cookie (Cookie,mkCookie,mkCookieHeader)
 import Happstack.Server.HTTP.Types ()
 import Happstack.State (Serialize, Version, Query, Update, deriveSerialize, getRandomR, 
-                        mkMethods, query, update)
+                        mkMethods, query, update, mode, extension, Proxy(Proxy), Migrate, migrate)
 import qualified Data.Set as Set
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
@@ -48,29 +48,36 @@ instance Read SessionId where
 
 $(deriveSerialize ''SessionId)
 instance Version SessionId   
-
-
-$(deriveAll [''Ord, ''Eq,''Show,''Default]
-  [d|
-     data SessionData = SessionData {userID::Maybe UserID,
-                                     flashMessages::[FlashMessage],
-                                     expires::MinutesTime
-                                    } 
-   |])                                           
-
-$(deriveSerialize ''SessionData)
-instance Version SessionData   
+  
+  
+data SessionData0 = SessionData0 { userID0::Maybe UserID,
+                                   flashMessages0::[FlashMessage]
+                                 } deriving (Ord,Eq,Show,Typeable,Data)
+$(deriveSerialize ''SessionData0)
+instance Version (SessionData0)
+                                   
+data SessionData = SessionData {  
+                                  userID::Maybe UserID,
+                                  flashMessages::[FlashMessage],
+                                  expires::MinutesTime
+                               }  deriving (Ord,Eq,Show,Typeable,Data)
+$(deriveSerialize ''SessionData) 
+instance Version (SessionData) where
+   mode = extension 1 (Proxy :: Proxy SessionData0)
+     
+instance Migrate SessionData0 SessionData where
+      migrate _ = SessionData {userID = Nothing, flashMessages = [], expires = MinutesTime 0}
     
-$( deriveAll [''Ord, ''Eq, ''Show, ''Default]
-   [d|
-       data Session = Session {sessionId::SessionId,
-                               sessionData::SessionData}
-    |])
+   
 
-$(inferIxSet "Sessions" ''Session 'noCalcs [''SessionId])
+data Session = Session {sessionId::SessionId,
+                        sessionData::SessionData}
+               deriving (Ord, Eq, Show, Data, Typeable)
 
 $(deriveSerialize ''Session)
 instance Version (Session)
+   
+$(inferIxSet "Sessions" ''Session 'noCalcs [''SessionId])
 
 -- Some helpers. MACID demands it before use.
 -- |perform insert only if test is True
