@@ -30,6 +30,7 @@ data SealSpec = SealSpec
     , persons :: [Person]
     , history :: [HistEntry]
     , initials :: String
+    , hostpart :: String
     }
     deriving (Eq,Ord,Show,Read)
 
@@ -294,7 +295,7 @@ logentry (HistEntry {histdate,histcomment}) =
  "ET 1 0 0 1 0 " ++ show ((-8) - length outlines * 12) ++ " cm "
 
 
-lastpage (SealSpec {documentNumber,persons,history}) = 
+lastpage (SealSpec {documentNumber,persons,history,hostpart}) = 
  "0.081 0.058 0.068 0 k " ++
  "/GS0 gs " ++
  "0.4 G " ++
@@ -381,7 +382,7 @@ lastpage (SealSpec {documentNumber,persons,history}) =
  "T* " ++
  "[(av parterna och är juridiskt bindande. Kursiverad information är säkert verifierad genom vår tjänst.)]TJ " ++
  "T* " ++
- "[(Kontrollera dokumentet mot vår databas genom följande länk: http://skrivapa.se/d/" ++ documentNumber ++ ".)]TJ " ++
+ "[(Kontrollera dokumentet mot vår databas genom följande länk: " ++ hostpart ++ "/d/" ++ documentNumber ++ ".)]TJ " ++
  "0.546 0.469 0.454 0.113 k " ++
  "10 0 0 10 46.5522 31.5469 Tm " ++
  "(Sida 1 av 1)Tj " ++
