@@ -29,15 +29,21 @@ import DocView
 import qualified HSP
 
 addFlashMsgText :: BS.ByteString -> Kontra ()
-addFlashMsgText msg = addFlashMessage (FlashMessage msg)
+addFlashMsgText msg = do
+                       ctx@Context{ ctxflashmessages = flashmessages} <- get
+                       put $ ctx{ ctxflashmessages =  (FlashMessage msg) : flashmessages}
 
   
 addFlashMsgHtml :: HSP.HSP HSP.XML 
                 -> Kontra ()
 addFlashMsgHtml msg = do
-                       flashmsg <- liftM (FlashMessage . renderXMLAsBSHTML) (webHSP1 msg)
-                       addFlashMessage flashmsg
+                       ctx@Context{ ctxflashmessages = flashmessages} <- get
+                       msg' <- liftM renderXMLAsBSHTML (webHSP1 msg)
+                       put $ ctx {ctxflashmessages = (FlashMessage msg') :  flashmessages} 
 
+logUserToContext user =  do
+                          ctx<- get
+                          put$ ctx { ctxmaybeuser =  user}
 
 handleUser :: Context -> Kontra Response
 handleUser ctx = 
@@ -165,18 +171,11 @@ resetUserPassword email = do
       return ()
 
 -- Session
-userLogin :: (MonadIO m) => ServerPartT m (Maybe User)
-userLogin = do
-   muserid <- currentUserID
-   muser <- case (muserid) of
-            Just userid -> query $ GetUserByUserID userid
-            _ -> return Nothing     
-   case muser of
-     Just user -> return muser
-     Nothing -> userLogin1
+userLogin :: Kontra (Maybe User)
+userLogin = userLogin1
 
 -- RememberMe cookie
-userLogin1 :: (MonadIO m) => ServerPartT m (Maybe User)
+userLogin1 :: Kontra (Maybe User)
 userLogin1 = do
     mayberememberme <- getRememberMeCookie
     case mayberememberme of
@@ -184,13 +183,13 @@ userLogin1 = do
             maybeuser <- query $ GetUserByUserID userid
             case maybeuser of
                 Just user -> do
-                    startSessionForUser  userid
+                    logUserToContext maybeuser
                     return maybeuser
                 Nothing -> userLogin2
         Nothing -> userLogin2
 
 -- OpenID
-userLogin2 :: (MonadIO m) => ServerPartT m (Maybe User)
+userLogin2 :: Kontra (Maybe User)
 userLogin2 = do
     maybetoken <- getDataFn (look "token") 
 #if MIN_VERSION_happstack_server(0,5,1)
@@ -250,7 +249,7 @@ userLogin2 = do
                 Just user -> do
                   liftIO $ noticeM rootLoggerName $ "User: " ++ BS.toString nameFormatted ++ " <" ++ 
                          BS.toString verifiedEmail ++ "> logged in"
-                  startSessionForUser (userid user)
+                  logUserToContext maybeuser
                   rq <- askRq
                   let link = rqUri rq
                   response <- webHSP (seeOtherXML link)
