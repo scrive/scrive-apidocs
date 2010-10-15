@@ -48,7 +48,10 @@ import Network.Socket
 import qualified HSP as HSP
 import InspectXML
 
-handleRoutes ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} = toIO ctx $ msum $
+handleRoutes =  
+  do
+   ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} <- get 
+   msum $
     ([nullDir >> withTOS (webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx)))
      , dir "s" $ withTOS (DocControl.handleSign)
      , {- old -} dir "sign" $ (withTOS (DocControl.handleSign))
@@ -104,13 +107,13 @@ handleRoutes ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} = toIO ctx $ msum 
                    ]
              ]
          else []))
-   ++ [dir "logout" (handleLogout)
+     ++ [dir "logout" (handleLogout)
       , dir "login" loginPage
       -- , dir "signup" signupPage
       , dir "amnesia" forgotPasswordPage
       , dir "amnesiadone" forgotPasswordDonePage
       ]
-   ++ [ fileServe [] "public"] 
+     ++ [ fileServe [] "public"] 
 
 -- uh uh, how to do that in correct way?
 normalizeddocuments :: MVar (Set.Set FileID)
@@ -142,27 +145,33 @@ appHandler = do
     
   let peer = rqPeer rq
   liftIO $ print (peer,peerip)
-  removeSessionIfExpired
-  maybeuser <- userLogin
-  when (isNothing maybeuser) (startSessionWhenNoSession)
-  flashmessages <- getFlashMessages
   minutestime <- liftIO $ getMinutesTime
-
+  session <- handleSession
+  muser <- getUserFromSession session
+  flashmessages <- getFlashMessagesFromSession session          
   let 
    ctx = Context
-            { ctxmaybeuser = maybeuser
+            { ctxmaybeuser = muser
             , ctxhostpart = hostpart
-            , ctxflashmessages = flashmessages              
+            , ctxflashmessages = flashmessages
             , ctxtime = minutestime
             , ctxnormalizeddocuments = normalizeddocuments
             , ctxipnumber = peerip
             }
-
-  
-
-  handleRoutes ctx `mplus` do
-     response <- webHSP (pageFromBody ctx TopNone kontrakcja (errorReport ctx rq))
-     setRsCode 404 response
+  (res,ctx)<- toIO ctx $  
+     do
+      userLogin
+      res <- (handleRoutes) `mplus` do
+         response <- webHSP (pageFromBody ctx TopNone kontrakcja (errorReport ctx rq))
+         setRsCode 404 response     
+      ctx <- get 
+      return (res,ctx)   
+      
+  let newsessionuser = fmap userid $ ctxmaybeuser ctx  
+  let newflashmessages = if (200 == rsCode res && rqMethod rq == GET) then [] else (ctxflashmessages ctx)
+  updateSessionWithContextData session newsessionuser newflashmessages
+  return res
+      
 
 forgotPasswordPage :: Kontra Response
 forgotPasswordPage = hget0 forgotPasswordPageGet `mplus`
@@ -242,7 +251,7 @@ loginPagePost = do
         if verifyPassword userpassword (BS.fromString passwd) && passwd/=""
         then do
           setRememberMeCookie (userid user) rememberMe
-          startSessionForUser (userid user)
+          logUserToContext maybeuser
           response <- webHSP (seeOtherXML "/")
           seeOther "/" response
         else do
@@ -254,7 +263,7 @@ loginPagePost = do
 
 handleLogout :: Kontra Response
 handleLogout = do
-  endSession
+  logUserToContext Nothing
   clearRememberMeCookie
   response <- webHSP (seeOtherXML "/")
   seeOther "/" response
@@ -286,7 +295,8 @@ statsPage = do
 handleBecome :: Kontra Response
 handleBecome = do
   (userid :: UserID) <- getDataFnM $ (look "user" >>= readM)
-  startSessionForUser userid
+  user <- liftM query GetUserByUserID userid
+  logUserToContext user
   response <- webHSP (seeOtherXML "/")
   seeOther "/" response
 
