@@ -190,7 +190,7 @@ landpageSigned ctx document signatorylinkid = do
  Here we need to save the document either under existing account or create a new account
  send invitation email and put the document in that account
 -}
-landpageSignedSave ctx document signatorylinkid = do
+landpageSignedSave ctx@Context{ctxhostpart} document signatorylinkid = do
   signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
   let details = signatorydetails signatorylink
   maybeuser <- query $ GetUserByEmail (Email $ signatoryemail details)
@@ -205,7 +205,7 @@ landpageSignedSave ctx document signatorylinkid = do
               when (password /= password2) $ error "Passwords do not mutch"
               when (not (isPasswordStrong password)) $ error "Password is too weak"
               let email = signatoryemail details
-              user <- liftIO $ createUser fullname email (Just password) Nothing
+              user <- liftIO $ createUser ctxhostpart fullname email (Just password) Nothing
               return user
             Just user -> return user
   Just document2 <- update $ SaveDocumentForSignedUser (documentid document) (userid user) signatorylinkid

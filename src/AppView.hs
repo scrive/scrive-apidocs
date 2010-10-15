@@ -31,11 +31,11 @@ import System.Directory
 import Happstack.State (update,query)
 import Data.Data
 
-poweredBySkrivaPaPara :: (XMLGenerator m) => XMLGenT m (HSX.XML m)
-poweredBySkrivaPaPara = 
+poweredBySkrivaPaPara :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
+poweredBySkrivaPaPara hostpart = 
     <p>
      <small>Med vänliga hälsningar<br/>
-     <a href="http://skrivapa.se/">SkrivaPå</a></small>
+     <a href=hostpart>SkrivaPå</a></small>
     </p>
 
 htmlHeadBodyWrap :: (XMLGenerator m,EmbedAsChild m a {- ,EmbedAsChild m b -})

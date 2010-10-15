@@ -207,11 +207,12 @@ newUserMail emailaddress personname newpassword =
      </span>
     return $ emptyMail {title=title, content = content} 
     
-passwordChangeMail :: BS.ByteString
+passwordChangeMail :: String
+                   -> BS.ByteString
                    -> BS.ByteString
                    -> BS.ByteString
                    -> IO Mail
-passwordChangeMail emailaddress personname newpassword = 
+passwordChangeMail hostpart emailaddress personname newpassword = 
     do 
     let title = BS.fromString "Nytt lösenord"
     content <- htmlHeadBodyWrapIO ""
@@ -224,21 +225,22 @@ passwordChangeMail emailaddress personname newpassword =
          Lösenord: <span style="color: orange; text-weight: bold"><% newpassword %></span><br/>
       </p>
       <p>
-      <a href="http://skrivapa.se/login">http://skrivapa.se/login</a>
+      <a href=(hostpart ++ "/login")><% hostpart ++ "/login" %></a>
       </p>
 
-      <% poweredBySkrivaPaPara %>
+      <% poweredBySkrivaPaPara hostpart %>
      </span>
     return $ emptyMail {title=title, content = content} 
 
 
-inviteSubaccountMail :: BS.ByteString
+inviteSubaccountMail :: String
+                     -> BS.ByteString
                      -> BS.ByteString
                      -> BS.ByteString
                      -> BS.ByteString
                      -> BS.ByteString
                      -> IO Mail
-inviteSubaccountMail supervisorname companyname emailaddress personname newpassword = 
+inviteSubaccountMail hostpart supervisorname companyname emailaddress personname newpassword = 
     do 
      let title = BS.concat [(BS.fromString "Inbjudan från "),(supervisorname),(BS.fromString " till underkonto" )]
      content <- htmlHeadBodyWrapIO ""
@@ -254,10 +256,10 @@ inviteSubaccountMail supervisorname companyname emailaddress personname newpassw
        </p>
  
        <p>
-       <a href="http://skrivapa.se/login">http://skrivapa.se/login</a>
+       <a href=(hostpart ++ "/login")><% hostpart ++ "/login" %></a>
        </p>
  
-       <% poweredBySkrivaPaPara %> 
+       <% poweredBySkrivaPaPara hostpart %> 
        </span>
      return $ emptyMail{title=title, content = content} 
 
