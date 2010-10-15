@@ -59,13 +59,13 @@ doctransPreparation2Pending ctx@Context{ctxtime, ctxipnumber } doc = do
  
 
 doctransPending2Closed :: Context -> Document -> IO Document
-doctransPending2Closed ctx@Context{ctxtime,ctxipnumber} doc = do
+doctransPending2Closed ctx@Context{ctxtime,ctxipnumber,ctxhostpart} doc = do
   logErrorWithDefault (update $ UpdateDocumentStatus doc Closed ctxtime ctxipnumber) doc $ 
    \closedDoc  -> do
                    clearDoc <- update $ RemoveFileFromDoc (documentid doc)
                    Just user <- query $ GetUserByUserID (unAuthor (documentauthor doc))
                    forkIO $ do
-                      newdoc <- sealDocument ctxtime user doc
+                      newdoc <- sealDocument ctxhostpart ctxtime user doc
                       sendClosedEmails ctx newdoc
                    return  clearDoc
    
@@ -472,8 +472,8 @@ personsFromDocument document =
         x link = trace (show link) $ error "SignatoryLink does not have all the necessary data"
     in map x links
 
-sealSpecFromDocument :: Document -> User -> String -> String -> Seal.SealSpec
-sealSpecFromDocument document author@(User {userfullname,usercompanyname,usercompanynumber,useremail}) inputpath outputpath =
+sealSpecFromDocument :: String -> Document -> User -> String -> String -> Seal.SealSpec
+sealSpecFromDocument hostpart document author@(User {userfullname,usercompanyname,usercompanynumber,useremail}) inputpath outputpath =
   let docid = unDocumentID (documentid document)
       (authorsigntime,authorsignipnumber) = 
           case documentmaybesigninfo document of
@@ -545,12 +545,13 @@ sealSpecFromDocument document author@(User {userfullname,usercompanyname,usercom
             , Seal.persons = persons
             , Seal.history = history
             , Seal.initials = initials
+            , Seal.hostpart = hostpart
             }
       in config
 
 
-sealDocument :: MinutesTime -> User -> Document -> IO Document
-sealDocument signtime1 author@(User {userfullname,usercompanyname,usercompanynumber,useremail}) document = do
+sealDocument :: String -> MinutesTime -> User -> Document -> IO Document
+sealDocument hostpart signtime1 author@(User {userfullname,usercompanyname,usercompanynumber,useremail}) document = do
   let (file@File {fileid,filename,filepdf,filejpgpages}) = 
            safehead "sealDocument" $ documentfiles document
   let docid = unDocumentID (documentid document)
@@ -559,7 +560,7 @@ sealDocument signtime1 author@(User {userfullname,usercompanyname,usercompanynum
   let tmpin = tmppath ++ "/in_" ++ show docid ++ ".pdf"
   let tmpout = tmppath ++ "/out_" ++ show docid ++ ".pdf"
   BS.writeFile tmpin filepdf
-  let config = sealSpecFromDocument document author tmpin tmpout
+  let config = sealSpecFromDocument hostpart document author tmpin tmpout
 
   (code,stdout,stderr) <- readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
 

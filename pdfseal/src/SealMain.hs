@@ -16,6 +16,7 @@ exrotate = SealSpec
     { input = "16pages.pdf"
     , output = "16pages_sealed.pdf"
     , documentNumber = "0000001234"
+    , hostpart = "http://host.skrivapa"
     , persons = 
         [ Person 
           { fullname = "Lukas Duczko öåä ÖÅÄ"
@@ -53,6 +54,7 @@ nda = SealSpec
     { input = "nda.pdf"
     , output = "nda_sealed.pdf"
     , documentNumber = "0000001234"
+    , hostpart = "http://host.skrivapa"
     , persons = 
         [ Person 
           { fullname = "Lukas Duczko"
