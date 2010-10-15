@@ -119,11 +119,11 @@ handleGetSubaccount ctx@Context { ctxmaybeuser = Just user@User { userid } }  = 
   viewSubaccounts ctx (Set.toList subaccounts)
 
 handlePostSubaccount :: Context -> Kontra Response
-handlePostSubaccount ctx@Context { ctxmaybeuser = Just (user@User { userid })} = do
+handlePostSubaccount ctx@Context { ctxmaybeuser = Just (user@User { userid }), ctxhostpart } = do
   create <- g "create"   -- check if we are in proper action
   fullname <- g "fullname"
   email <- g "email"
-  user <- liftIO $ createUser fullname email Nothing (Just user)
+  user <- liftIO $ createUser ctxhostpart fullname email Nothing (Just user)
   let link = show LinkSubaccount
   response <- webHSP (seeOtherXML link)
   seeOther link response
@@ -134,38 +134,38 @@ randomPassword = do
     indexes <- liftIO $ replicateM 8 (randomRIO (0,length letters-1))
     return (BS.fromString $ map (letters!!) indexes)
 
-createUser :: BS.ByteString -> BS.ByteString -> Maybe BS.ByteString -> Maybe User -> IO User
-createUser fullname email maybepassword maybesupervisor =
+createUser :: String -> BS.ByteString -> BS.ByteString -> Maybe BS.ByteString -> Maybe User -> IO User
+createUser hostpart fullname email maybepassword maybesupervisor =
   case maybepassword of
     Nothing -> do
       password <- randomPassword
-      createUser1 fullname email password False maybesupervisor
+      createUser1 hostpart fullname email password False maybesupervisor
     Just x ->
-      createUser1 fullname email x True maybesupervisor
+      createUser1 hostpart fullname email x True maybesupervisor
 
-createUser1 :: BS.ByteString -> BS.ByteString -> BS.ByteString -> Bool -> Maybe User -> IO User
-createUser1 fullname email password isnewuser maybesupervisor = do
+createUser1 :: String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Bool -> Maybe User -> IO User
+createUser1 hostpart fullname email password isnewuser maybesupervisor = do
   passwdhash <- createPassword password
   user <- update $ AddUser fullname email passwdhash (fmap userid maybesupervisor)
   mail <- case maybesupervisor of
     Nothing ->
       if not isnewuser
-       then passwordChangeMail email fullname password
+       then passwordChangeMail hostpart email fullname password
        else newUserMail email fullname password
-    Just supervisor -> inviteSubaccountMail (userfullname supervisor) (usercompanyname supervisor)
+    Just supervisor -> inviteSubaccountMail hostpart (userfullname supervisor) (usercompanyname supervisor)
                        email fullname password
   sendMail $ mail { fullnameemails = [(fullname, email)]}
   return user
   
-resetUserPassword :: BS.ByteString -> IO ()
-resetUserPassword email = do
+resetUserPassword :: String -> BS.ByteString -> IO ()
+resetUserPassword hostpart email = do
   maybeuser <- query $ GetUserByEmail (Email{unEmail=email})
   case maybeuser of
     Just user -> do
       password <- randomPassword
       passwordhash <- createPassword password
       update $ SetUserPassword user passwordhash
-      mail <- passwordChangeMail email (userfullname user) password
+      mail <- passwordChangeMail hostpart email (userfullname user) password
       sendMail $ mail { fullnameemails = [((userfullname user), email)]}
     Nothing ->
       return ()

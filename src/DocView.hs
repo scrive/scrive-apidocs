@@ -188,21 +188,6 @@ landpageDocumentSavedView (ctx@Context { ctxmaybeuser = Just user }) document si
      <a class="bigbutton" href="/">Starta</a> {- FIXME: move upload stuff here also -}
     </div>
 
---NOT USED!!!
-welcomeEmail :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
-welcomeEmail fullname =
-    <div>
-      <p>Hej <strong><% fullname %></strong>,</p>
-      
-      <p>Jag heter <strong>Lukas Duczko</strong> och är VD på <strong>SkrivaPå</strong>. Tack för att 
-      du har skapat ett konto hos oss. Vi hoppas att du kommer att bli nöjd med våra tjänster. Tveka 
-      inte att höra av dig med feedback eller bara en enkel hälsning. Din åsikt är värdefull.</p>
-      <p>Med vänliga hälsningar<br/>
-         <strong>Lukas Duczko</strong> och team <a href="http://skrivapa.se/">SkrivaPå</a>
-      </p>
-    </div>
-
-
 
 documentIssuedFlashMessage :: Document -> HSP.HSP HSP.XML
 documentIssuedFlashMessage document = 
@@ -710,7 +695,7 @@ invitationMail (Context {ctxmaybeuser = Just user, ctxhostpart})
             , asChild <p><strong><% creatorname %></strong> har bjudit in dig att underteckna dokumentet 
                <strong><% documenttitle %></strong> online via tjänsten SkrivaPå.</p> 
             , asChild common
-            , asChild poweredBySkrivaPaPara
+            , asChild (poweredBySkrivaPaPara ctxhostpart)
             ]
         paragraphs :: [BS.ByteString]
         paragraphs = BS.split 10 documentinvitetext
@@ -756,7 +741,7 @@ closedMail (Context {ctxhostpart})
           
        <p>Det färdigställda dokumentet bifogas med detta mail.</p> 
    
-       <% poweredBySkrivaPaPara %>
+       <% poweredBySkrivaPaPara ctxhostpart %>
       </span>
     return $ emptyMail {title = title, content = content}
 
@@ -779,7 +764,7 @@ closedMailAuthor (Context {ctxhostpart})
 
              <p>Det färdigställda dokumentet bifogas med detta mail.</p> 
 
-             <% poweredBySkrivaPaPara %>
+             <% poweredBySkrivaPaPara ctxhostpart %>
         </span> 
      return $ emptyMail {title = title, content = content}
 

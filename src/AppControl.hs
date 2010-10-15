@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, 
-             NamedFieldPuns, ScopedTypeVariables, CPP
+             NamedFieldPuns, ScopedTypeVariables, CPP, RecordWildCards
  #-}
 module AppControl where
 
@@ -184,9 +184,9 @@ forgotPasswordPageGet = do
     
 forgotPasswordPagePost :: Kontra KontraLink
 forgotPasswordPagePost = do
-    ctx <- lift get
+    ctx@Context{..} <- lift get
     email <- getDataFnM $ look "email"
-    liftIO $ resetUserPassword (BS.fromString email)
+    liftIO $ resetUserPassword ctxhostpart (BS.fromString email)
     return LinkForgotPasswordDone
     --renderFromBody ctx TopNone kontrakcja (forgotPasswordConfirmPageView ctx)
 
@@ -213,7 +213,7 @@ signupPageError form
     
 signupPagePost :: Kontra Response
 signupPagePost = do
-    ctx <- lift get
+    ctx@Context{..} <- lift get
     maybeform <- getData
     
     case maybeform of
@@ -224,7 +224,7 @@ signupPagePost = do
                 Just error -> renderFromBody ctx TopNone kontrakcja (signupPageView [error] maybeform)
                 Nothing -> do
                     -- Create the user, which sends them a welcome email.
-                    account <- liftIO $ createUser (BS.fromString ((signupFirstname form) ++ " " ++ (signupLastname form))) (BS.fromString (signupEmail form)) (Just (BS.fromString (signupPassword form))) Nothing
+                    account <- liftIO $ createUser ctxhostpart (BS.fromString ((signupFirstname form) ++ " " ++ (signupLastname form))) (BS.fromString (signupEmail form)) (Just (BS.fromString (signupPassword form))) Nothing
                     renderFromBody ctx TopNone kontrakcja (signupConfirmPageView ctx)
 
 loginPage :: Kontra Response
@@ -304,9 +304,10 @@ handleBecome = do
 
 handleCreateUser :: Kontra Response
 handleCreateUser = do
+  ctx@Context{..} <- get
   email <- g "email"
   fullname <- g "fullname"
-  user <- liftIO $ createUser fullname email Nothing Nothing
+  user <- liftIO $ createUser ctxhostpart fullname email Nothing Nothing
   -- FIXME: where to redirect?
   response <- webHSP (seeOtherXML "/stats")
   seeOther "/stats" response
