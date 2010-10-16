@@ -11,8 +11,10 @@
 
 /* dont know if you want to cascade these changes to all text-input? */
 #loginContainer input[type=text],
+#loginContainer input[type=email],
 #loginContainer input[type=password],
 #signUpContainer input[type=text]
+#signUpContainer input[type=email]
 {
     width: 145px;
     height: 16px;
@@ -96,7 +98,8 @@ input[name=final] {
     padding-top: 15px;
 }
 
-#signUpContainer input[type=text]
+#signUpContainer input[type=text],
+#signUpContainer input[type=email]
 {
     width: 190px;
 }
