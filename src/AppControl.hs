@@ -52,37 +52,39 @@ handleRoutes =
   do
    ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} <- get 
    msum $
-    ([nullDir >> withTOS (webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx)))
-     , dir "s" $ withTOS (DocControl.handleSign)
-     , {- old -} dir "sign" $ (withTOS (DocControl.handleSign))
-     , dir "d" $ withUser (withTOS (DocControl.handleIssue))
-     , {- old -} dir "issue" $ withUser (withTOS (DocControl.handleIssue))
-     , dir "pages" $ withTOS $ hget2 $ \fileid pageno -> do
+    ([nullDir >> if isJust ctxmaybeuser
+              then withUserTOS (webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx)))
+              else webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx))
+     , dir "s" $ withUserTOS $ DocControl.handleSign
+     , {- old -} dir "sign" $ withUserTOS $ DocControl.handleSign
+     , dir "d" $ withUserTOS $ DocControl.handleIssue
+     , {- old -} dir "issue" $ withUserTOS $ DocControl.handleIssue
+     , dir "pages" $ withUserTOS $ hget2 $ \fileid pageno -> do
         modminutes <- query $ FileModTime fileid
         DocControl.showPage ctx modminutes fileid pageno
                                                     
-     , dir "landpage" $ 
-           withTOS 
-                       (msum [ dir "signinvite" $ pathdb GetDocumentByDocumentID $ \document -> 
-                                   DocControl.landpageSignInvite ctx document
-                             , dir "signed" $ pathdb GetDocumentByDocumentID $ \document -> path $ \signatorylinkid ->
-                                                                                            DocControl.landpageSigned ctx document signatorylinkid
-                             , dir "signedsave" $ pathdb GetDocumentByDocumentID $ \document -> 
-                                 path $ \signatorylinkid ->
-                                     DocControl.landpageSignedSave ctx document signatorylinkid
-                             , dir "saved" $ withUser $ pathdb GetDocumentByDocumentID $ \document -> 
-                                 path $ \signatorylinkid ->
-                                     DocControl.landpageSaved ctx document signatorylinkid
-                             ])
+     , dir "landpage" $ msum 
+               [ dir "signinvite" $ pathdb GetDocumentByDocumentID $ \document -> 
+                     DocControl.landpageSignInvite ctx document
+               , dir "signed" $ pathdb GetDocumentByDocumentID $ \document -> path $ \signatorylinkid ->
+                                                                              DocControl.landpageSigned ctx document signatorylinkid
+               , dir "signedsave" $ pathdb GetDocumentByDocumentID $ \document -> 
+                   path $ \signatorylinkid ->
+                       DocControl.landpageSignedSave ctx document signatorylinkid
+               , dir "saved" $ withUser $ pathdb GetDocumentByDocumentID $ \document -> 
+                   path $ \signatorylinkid ->
+                       DocControl.landpageSaved ctx document signatorylinkid
+               ]
            
      , dir "pagesofdoc" $ 
            pathdb GetDocumentByDocumentID $ \document -> 
-                                     DocControl.handlePageOfDocument ctxnormalizeddocuments document
+               DocControl.handlePageOfDocument ctxnormalizeddocuments document
      , dir "resendemail" $ 
-           withTOS (pathdb GetDocumentByDocumentID $ \document -> 
+           pathdb GetDocumentByDocumentID $ \document -> 
                                      path $ \signatorylinkid -> 
-                                         resendEmail ctx document signatorylinkid)
-     , dir "account" (withUser (UserControl.handleUser ctx))]
+                                         resendEmail ctx document signatorylinkid
+     , dir "account" $ withUser $ UserControl.handleUser ctx
+     ]
      
      ++ (if isSuperUser ctxmaybeuser then 
              [ dir "stats" $ statsPage
@@ -107,12 +109,13 @@ handleRoutes =
                    ]
              ]
          else []))
-     ++ [dir "logout" (handleLogout)
-      , dir "login" loginPage
-      -- , dir "signup" signupPage
-      , dir "amnesia" forgotPasswordPage
-      , dir "amnesiadone" forgotPasswordDonePage
-      ]
+     ++ 
+     [ dir "logout" handleLogout
+     , dir "login" loginPage
+     -- , dir "signup" signupPage
+     , dir "amnesia" forgotPasswordPage
+     , dir "amnesiadone" forgotPasswordDonePage
+     ]
      ++ [ fileServe [] "public"] 
 
 -- uh uh, how to do that in correct way?

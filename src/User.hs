@@ -3,7 +3,6 @@
 
 module User 
     ( module UserState
-    , withUser
     , Context(..)
     , isSuperUser
     , Kontra(..)
@@ -68,17 +67,6 @@ type Kontra a = ServerPartT (StateT Context IO) a
 instance MonadState s m => MonadState s (ServerPartT m) where
     get = lift get
     put = lift . put
-
-withUser :: Kontra Response -> Kontra Response
-withUser action = do
-  ctx <- get
-  case ctxmaybeuser ctx of
-    Just user -> action
-    Nothing -> do
-      let link = ctxhostpart ctx ++ "/login"
-      response <- webHSP (seeOtherXML link)
-      seeOther link response
-
 
 
 admins = map (Email . BS.fromString)

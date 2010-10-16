@@ -27,6 +27,7 @@ import KontraLink
 import MinutesTime
 import SendMail(Mail,emptyMail,title,content)
 import InspectXML
+import Data.Maybe
 
 $(deriveInspectXML ''User)
 
@@ -57,13 +58,13 @@ instance Monad m => IsAttrValue m UserID where
 
 
 showUser ctx@(Context {ctxmaybeuser = Just user}) = 
+    let User{userhasacceptedtermsofservice} = user in
     webHSP $ pageFromBody ctx TopAccount kontrakcja $ 
     <div class="accounttable">
      <h1><% userfullname user %></h1>
 
       <div>
        <form action=LinkAccount method="post">
-        <% tosMessage user %>
         <table>
          <tr><td>Namn:</td>
              <td><input type="text" name="fullname" value=(userfullname user)/></td>
@@ -81,6 +82,11 @@ showUser ctx@(Context {ctxmaybeuser = Just user}) =
              <td><input type="text" name="invoiceaddress" value=(userinvoiceaddress user)/></td>
          </tr>
        </table>
+       <%
+          if isJust userhasacceptedtermsofservice
+           then <div/>
+           else <div><input type="checkbox" name="tos" id="tos">Jag har läst och accepterar <a href="/termsofuse.html">SkrivaPå Allmänna Villkor</a></input></div>
+       %>
        <input class="button" type="submit" value="Spara ändringar"/>
       </form>
       <br />
@@ -266,20 +272,3 @@ inviteSubaccountMail hostpart supervisorname companyname emailaddress personname
 userDetailsSavedFlashMessage :: HSP.HSP HSP.XML
 userDetailsSavedFlashMessage = 
     <div>Dina kontoändringar har sparats.</div>
-
-acceptTermsOfServiceForm :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
-                            => XMLGenT m (HSX.XML m)
-acceptTermsOfServiceForm = <input type="checkbox" name="tos" id="tos">Jag har läst och accepterar <a href="...">SkrivaPå Allmänna Villkor</a></input>
-
-acceptedTermsOfServiceMessage :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
-                                 => MinutesTime -> XMLGenT m (HSX.XML m)
-acceptedTermsOfServiceMessage time = <span/> -- <span>You accepted the terms of service agreement on <% showDateOnly time %>. </span>
-
-
-tosMessage :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
-                            => User -> XMLGenT m (HSX.XML m)
-tosMessage _ = <span />
-{-
-tosMessage user@(User { userhasacceptedtermsofservice = Just time }) = acceptedTermsOfServiceMessage time
-tosMessage _ = acceptTermsOfServiceForm
--}

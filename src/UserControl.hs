@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP, OverloadedStrings #-}
 
 module UserControl where
 import UserState
@@ -81,30 +81,27 @@ handleUserPasswordPost ctx@Context{ctxmaybeuser = Just user@User{userid}} = do
 
 
 handleUserPost :: Context -> Kontra Response
-handleUserPost ctx@Context{ctxmaybeuser = Just user@User{userid}} = do
+handleUserPost ctx@Context{ctxmaybeuser = Just user@User{userid},ctxtime} = do
   fullname <- g "fullname"
   companyname <- g "companyname"
   companynumber <- g "companynumber"
   invoiceaddress <- g "invoiceaddress"
+  tos <- getDataFn (look "tos")
   
   newuser <- update $ SetUserDetails user fullname companyname companynumber invoiceaddress
-  addFlashMsgHtml userDetailsSavedFlashMessage
-  
-  backToAccount
-  {-
-  -- Terms of Service logic
-  tos <- getDataFn (look "tos")
-
   if isNothing (userhasacceptedtermsofservice user)
      then
          if isJust tos
             then do
-              update $ AcceptTermsOfService userid minutestime
-              -- update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "You have accepted the Terms of Service Agreement")
-            else update $ AddUserFlashMessage userid (FlashMessage $ BS.fromString "För att kunna använda tjänsten måste du acceptera SkrivaPå Allmänna Villkor.")
-     else
+              update $ AcceptTermsOfService userid ctxtime
+              addFlashMsgHtml userDetailsSavedFlashMessage
+            else addFlashMsgText $ BS.fromString "För att kunna använda tjänsten måste du acceptera SkrivaPå Allmänna Villkor."
+     else do
+         addFlashMsgHtml userDetailsSavedFlashMessage
          return ()
-  -}
+
+  backToAccount
+
 
 backToAccount :: Kontra Response
 backToAccount = do
@@ -286,15 +283,25 @@ getRememberMeCookie = do
     return $ join cookie 
 
 
- 
-withTOS :: Kontra Response -> Kontra Response
+withUser :: Kontra Response -> Kontra Response
+withUser action = do
+  ctx <- get
+  case ctxmaybeuser ctx of
+    Just user -> action
+    Nothing -> do
+      let link = ctxhostpart ctx ++ "/login"
+      response <- webHSP (seeOtherXML link)
+      seeOther link response
 
--- to disable requiring TOS signing, comment out this definition (leaving the second case)
-{-
-withTOS ctx@(Context {ctxmaybeuser = (Just (User {userid = userid, userhasacceptedtermsofservice = Nothing }))}) _ = do
-  update $ AddUserFlashMessage userid (FlashMessage (BS.fromString "You must accept the Terms of Service Agreement"))
-  let link = "/account"
-  response <- webHSP $ seeOtherXML link
-  finishWith (redirect 303 link response)
--}
-withTOS action = action
+
+
+ 
+withUserTOS :: Kontra Response -> Kontra Response
+withUserTOS action = withUser $ do
+  ctx@(Context {ctxmaybeuser = (Just (User {userhasacceptedtermsofservice}))}) <- get
+  case userhasacceptedtermsofservice of
+    Nothing -> do
+      let link = "/account"
+      response <- webHSP $ seeOtherXML link
+      finishWith (redirect 303 link response)
+    Just _ -> action
