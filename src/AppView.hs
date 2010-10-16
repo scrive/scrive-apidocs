@@ -222,8 +222,8 @@ welcomeBody (Context {ctxmaybeuser = Just _, ctxhostpart}) =
 welcomeBody ctx@(Context {ctxmaybeuser = Nothing}) = 
 	<div id="firstPageContentContainer"> 
 		<div id="firstPageLeft"> 
-                   <iframe src="http://player.vimeo.com/video/15252510" width="300" height="184" frameborder="0"></iframe>
-                   <p><a href="http://vimeo.com/15252510">Demo</a> from <a href="http://vimeo.com/user4807925">SkrivaPå CM AB</a> on <a href="http://vimeo.com">Vimeo</a>.</p>
+                   <iframe src="http://player.vimeo.com/video/15894469" width="300" height="184" frameborder="0"></iframe>
+                   <p><a href="http://vimeo.com/15894469">Avtala på under 60 sekunder</a>.</p>
 		</div> 
 		
 		<div id="firstPageRight"> 
