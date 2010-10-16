@@ -274,7 +274,7 @@ $(document).ready( function () {
     });
 	
 	$("#loginbtn").click(function(){
-		if(emailFieldsValidation($("input[type='email']"))){
+		if(emailFieldsValidation($("input[type='email']",this.form))){
 			$(this.form).submit();
 		}						  
 		return false;
