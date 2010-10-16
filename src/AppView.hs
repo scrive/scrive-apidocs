@@ -155,7 +155,7 @@ loginBox ctx =
       <table>
 	<tr>
           <td>E-mail:</td> 
-          <td><input type="textfield" name="email" class="emailvalidation"/></td> 
+          <td><input type="email" name="email"/></td> 
         </tr>
 	<tr> 
           <td>Lösenord:</td> 
@@ -361,7 +361,7 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
 		    <div> 
 			{- email and password need some javascriptwatermark-effect for the text -}
 			{- changed from type="textfield" to type="text" (type="textfield" is not valid) -}
-			<input type="text" infotext="Användarnamn" name="email" /> 
+			<input type="email" infotext="Användarnamn" name="email" /> 
 			<input type="password" name="password" infotext="password"/><br /> 
 		        <a href=LinkForgotPassword> Glömt lösenord</a> 
                         <input type="submit" value="Logga in" name="login" class="button" /> 
@@ -475,11 +475,11 @@ statsPageView nusers ndocuments users df =
        <table>
         <tr>
          <td>Full name:</td>
-         <td><input type="textfield" name="fullname"/></td>
+         <td><input type="text" name="fullname"/></td>
         </tr>
         <tr>
          <td>Email address:</td>
-         <td><input type="textfield" name="email" class="emailvalidation"/></td>
+         <td><input type="email" name="email"/></td>
         </tr>
        </table><br/>
        <input type="submit" value="Create user"/>
@@ -542,7 +542,7 @@ signupPageView errors form =
                 </tr>
                 <tr>
                     <td>Email</td>
-                    <td><input name="email" value=(getFormValue form signupEmail) /></td>
+                    <td><input type="email" name="email" value=(getFormValue form signupEmail) /></td>
                 </tr>
                 <tr>
                     <td>Password</td>
@@ -565,7 +565,7 @@ forgotPasswordPageView =
       <table>
         <tr>
           <td>E-mail</td>
-          <td><input name="email" /></td>
+          <td><input name="email" type="email"/></td>
         </tr>
       </table>
       <input type="submit" value="Skicka nytt lösenord" />

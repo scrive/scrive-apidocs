@@ -367,8 +367,8 @@ showSignatoryEntryForEdit2 idx signatoryname signatorycompany signatorynumber si
              infotext="Titel, företag"/><br/>
       <input name="signatorynumber" type="text" value=signatorynumber autocomplete="off"
              infotext="Orgnr/Persnr"/><br/>
-      <input name="signatoryemail"  type="text" value=signatoryemail autocomplete="off"
-             infotext="Personens e-mail" class="emailvalidation"/><br/>
+      <input name="signatoryemail"  type="email" value=signatoryemail autocomplete="off"
+             infotext="Personens e-mail"/><br/>
       <small><a onclick="return signatoryremove(this.parentNode);" href="#">Ta bort</a></small>
     </div>
 
@@ -496,7 +496,7 @@ showDocument user
                      infotext="Titel, företag"/><br/>
               <input name="authornumber" type="text" value=(signatorynumber documentauthordetails)
                      infotext="Ditt Orgnr/Persnr"/><br/>
-              <input name="authoremail" class="emailvalidation" type="text" value=(signatoryemail documentauthordetails)
+              <input name="authoremail" type="email" value=(signatoryemail documentauthordetails)
                      infotext="Din e-mail"/><br/>
               </div>
               Motpart<br/>

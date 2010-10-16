@@ -57,7 +57,7 @@ function signatoryadd()
     var signatorylist = $( "#signatorylist" );
     var sig = $("#signatory_template").clone();
 	var text = sig.html();
-	var emailfield = sig.find(".emailvalidation");
+	var emailfield = sig.find("input[type='email']");
 	emailfield.attr("id","othersignatoryemail");
     signatorylist.append(sig);
     enableInfoText(sig);
@@ -213,7 +213,7 @@ $(document).ready( function () {
          var button = $(this);
          var mrxs = $("form input[name='signatoryname']");
          var tot = "";
-         if(!emailFieldsValidation($('input.emailvalidation'))){
+         if(!emailFieldsValidation($("input[type='email']"))){
              return false;
          }
          else{
@@ -268,21 +268,21 @@ $(document).ready( function () {
          return false;
     });
 	
-	$("input.emailvalidation").focus(function(){
+	$("input[type='email']").focus(function(){
 		applyRedBorder($(this));
 		return false;
     });
 	
 	$("#loginbtn").click(function(){
-		if(emailFieldsValidation($('input.emailvalidation'))){
+		if(emailFieldsValidation($("input[type='email']"))){
 			$(this.form).submit();
 		}						  
 		return false;
 	});
 	
 	$("#createnewaccount").click(function(){
-		if(emailFieldsValidation($('input.emailvalidation'))){
-			$("form").submit();
+		if(emailFieldsValidation($("input[type='email']"))){
+			$(this.form).submit();
 		}
 		return false;
 							

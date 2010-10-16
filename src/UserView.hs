@@ -176,11 +176,11 @@ viewSubaccounts ctx@(Context {ctxmaybeuser = Just user}) subusers =
       <table>
 	<tr> 
           <td>Namn:</td> 
-          <td><input type="textfield" name="fullname"/></td> 
+          <td><input type="text" name="fullname"/></td> 
         </tr>
 	<tr>
           <td>E-mail:</td> 
-          <td><input type="textfield" name="email" class="emailvalidation"/></td> 
+          <td><input type="email" name="email"/></td> 
         </tr>
 	<tr> 
           <td><input class="button" id="createnewaccount" type="submit" name="create" value="Skapa ny"/></td>
