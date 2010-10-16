@@ -354,7 +354,8 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
 
         <div id="loginContainer"> {- new id -}
            <% case ctxmaybeuser of
-             Just _ -> <span id="logout"><a href="/logout">Logga ut</a></span>
+             Just User{userfullname} -> 
+                 <span id="logout"><a href="account"><% userfullname %></a>, <a href="/logout">Logga ut</a></span>
              Nothing -> 
 	         <form action="/login" method="post"> 
 		    <div> 
