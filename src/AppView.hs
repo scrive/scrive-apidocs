@@ -155,11 +155,11 @@ loginBox ctx =
       <table>
 	<tr>
           <td>E-mail:</td> 
-          <td><input type="email" name="email"/></td> 
+          <td><input type="email" name="email" autocomplete="off"/></td> 
         </tr>
 	<tr> 
           <td>Lösenord:</td> 
-          <td><input type="password" name="password"/></td> 
+          <td><input type="password" name="password" autocomplete="off"/></td> 
         </tr>
     <tr>
           <td>
@@ -361,8 +361,8 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
 		    <div> 
 			{- email and password need some javascriptwatermark-effect for the text -}
 			{- changed from type="textfield" to type="text" (type="textfield" is not valid) -}
-			<input type="email" infotext="Användarnamn" name="email" /> 
-			<input type="password" name="password" infotext="password"/><br /> 
+			<input type="email" infotext="Användarnamn" name="email" autocomplete="off" /> 
+			<input type="password" name="password" infotext="password" autocomplete="off" /><br /> 
 		        <a href=LinkForgotPassword> Glömt lösenord</a> 
                         <input type="submit" value="Logga in" name="login" class="button" /> 
 		    </div> 
