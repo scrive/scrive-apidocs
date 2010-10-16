@@ -33,6 +33,13 @@
     color: white;
 }
 
+input[name=final] {
+    background-image: url(/theme/images/status_signed.png);
+    background-repeat: no-repeat;
+    padding-left: 20px;
+    background-position: 4px; 
+}
+
 /* new mouse-effects for loginbutton. just an example, what king of effect and colors need to be descussed */
 #loginContainer input[type=submit]:hover
 {
