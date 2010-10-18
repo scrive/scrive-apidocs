@@ -48,6 +48,8 @@ import Network.Socket
 import qualified HSP as HSP
 import InspectXML
 import Control.Exception 
+import HSP.XML
+
 handleRoutes =  
   do
    ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} <- get 
@@ -418,17 +420,11 @@ serveHTMLFiles =  do
                 (
                  do
                   s<-liftIO $ BS.readFile $ "html/"++fileName
-                  response <- webHSP (pageFromBody ctx TopNew kontrakcja ("#####")) --ugly,ugly hack
-                  let respText = replaceString "#####" (BS.toString s) $ BSL.toString $ rsBody response
-                  return response {rsBody = BSL.fromString $ respText}
+                  webHSP (pageFromBody ctx TopNew kontrakcja (cdata $ BS.toString $ s))
                 )
                case res of 
                 Right r -> return r
                 Left _ -> mzero               
                
          else mzero
-        
-replaceString  old new s@(a:x) =  if (old `isPrefixOf` s)
-                                  then new ++ (drop (length old) s)
-                                  else a:(replaceString  old new x)
-replaceString  old new [] = []
+      
