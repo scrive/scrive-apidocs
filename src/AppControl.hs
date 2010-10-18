@@ -47,7 +47,7 @@ import Debug.Trace
 import Network.Socket
 import qualified HSP as HSP
 import InspectXML
-
+import Control.Exception 
 handleRoutes =  
   do
    ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} <- get 
@@ -116,7 +116,7 @@ handleRoutes =
      , dir "amnesia" forgotPasswordPage
      , dir "amnesiadone" forgotPasswordDonePage
      ]
-     ++ [ fileServe [] "public"] 
+     ++ [serveHTMLFiles, fileServe [] "public"] 
 
 -- uh uh, how to do that in correct way?
 normalizeddocuments :: MVar (Set.Set FileID)
@@ -407,5 +407,28 @@ handleAllUsersTable = do
 
   webHSP $ pageAllUsersTable users2
 
-
-
+serveHTMLFiles:: Kontra Response  
+serveHTMLFiles =  do
+        ctx <- get
+        rq <- askRq
+        let fileName = last (rqPaths rq)
+        if ((length (rqPaths rq) > 0) && isSuffixOf ".html" fileName)
+         then do
+               res <- liftIO $ (try::IO Response -> IO (Either SomeException Response))
+                (
+                 do
+                  s<-liftIO $ BS.readFile $ "html/"++fileName
+                  response <- webHSP (pageFromBody ctx TopNew kontrakcja ("#####")) --ugly,ugly hack
+                  let respText = replaceString "#####" (BS.toString s) $ BSL.toString $ rsBody response
+                  return response {rsBody = BSL.fromString $ respText}
+                )
+               case res of 
+                Right r -> return r
+                Left _ -> mzero               
+               
+         else mzero
+        
+replaceString  old new s@(a:x) =  if (old `isPrefixOf` s)
+                                  then new ++ (drop (length old) s)
+                                  else a:(replaceString  old new x)
+replaceString  old new [] = []
