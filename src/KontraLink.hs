@@ -44,8 +44,8 @@ data KontraLink
     | LinkIssueDoc Document
     | LinkIssueDocPDF Document {- Which file? -}
     | LinkSubaccount
-    | LinkResendEmail Document SignatoryLink
-    
+    | LinkResendEmail Document SignatoryLink {- Old and should be droped-}
+    | LinkRemind Document SignatoryLink
 
 instance Show KontraLink where
     showsPrec _ LinkAbout = (++) "/about"
@@ -69,7 +69,7 @@ instance Show KontraLink where
                  "/" ++ show (signatorymagichash signatorylink)
     showsPrec _ (LinkResendEmail document signatorylink) = 
         (++) $ "/resendemail/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink)
-
+    showsPrec _ (LinkRemind document signlink) = (++) $ "/resend/"++(show $ documentid document)++"/"++(show $ signatorylinkid signlink)   
 {-
 instance (EmbedAsAttr m String) => (EmbedAsAttr m KontraLink) where
     asAttr = asAttr . show

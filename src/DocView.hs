@@ -1,7 +1,10 @@
 {-# LANGUAGE IncoherentInstances, TemplateHaskell, NamedFieldPuns, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -F -pgmFtrhsx #-}
 
-module DocView where
+module DocView(webHSP1,emptyDetails,showFilesImages2,showDocument,listDocuments,invitationMail,closedMail,closedMailAuthor,
+landpageSignInviteView,landpageSignedView,landpageLoginForSaveView,landpageDocumentSavedView,
+showDocumentForSign,documentSavedForLaterFlashMessage,remindMail
+) where
 import AppView
 import Data.List
 import DocState
@@ -18,7 +21,7 @@ import KontraLink
 import Misc
 import MinutesTime
 import Data.Maybe
-import SendMail(Mail,emptyMail,content,title)
+import SendMail(Mail,emptyMail,content,title,attachments)
 import InspectXML
 import UserView ()
 
@@ -372,6 +375,9 @@ showSignatoryEntryForEdit2 idx signatoryname signatorycompany signatorynumber si
       <small><a onclick="return signatoryremove(this.parentNode);" href="#">Ta bort</a></small>
     </div>
 
+    
+    
+--This can be dropped!!!!!!!!!!!!!!!!!! (with old resend implementation)    
 showSignatoryEntryStatus :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
                             => Document -> SignatoryLink -> XMLGenT m (HSX.XML m)
 showSignatoryEntryStatus document (signatorylink@SignatoryLink{ signatorydetails = SignatoryDetails{ signatoryname
@@ -520,7 +526,9 @@ showDocument user
              </span>
            else
               <div id="signatorylist">
-                 <% map showSignatoryLinkForSign (authorlink : allinvited) %>
+                 <% showSignatoryLinkForSign (Just user) document authorlink %>
+                 <% map (showSignatoryLinkForSign (Just user) document) allinvited 
+                 %>
               </div>
          %>
        </div>
@@ -565,7 +573,8 @@ class ( XMLGenerator m
 showDateOnly1 (MinutesTime 0) = ""
 showDateOnly1 x = showDateOnly x
 
-showSignatoryLinkForSign (SignatoryLink{ maybesigninfo
+showSignatoryLinkForSign muser document siglnk@(SignatoryLink{  signatorylinkid 
+                                       , maybesigninfo
                                        , maybeseeninfo
                                        , signatorydetails = SignatoryDetails
                                                             { signatoryname
@@ -575,23 +584,33 @@ showSignatoryLinkForSign (SignatoryLink{ maybesigninfo
                                                             }
                                          }) =
    let
-       (status,message) = case (maybesigninfo, maybeseeninfo) of
-                  (Just (SignInfo{signtime = tm}),_) -> (<img src="/theme/images/status_signed.png"/> 
-                                                        , "Undertecknat " ++ showDateOnly1 tm
-                                                        )
-                  (Nothing,Just (SignInfo{signtime = tm})) -> (<img src="/theme/images/status_viewed.png"/> 
-                                       , "Granskat " ++ showDateOnly tm
-                                       )
-                  (Nothing,Nothing) -> ( <img src="/theme/images/status_pending.png"/> 
-                                       , "Har ej undertecknat"
-                                       )
+      wasSigned =  isJust maybesigninfo
+      wasSeen = isJust maybeseeninfo
+      status = if (wasSigned)
+               then <img src="/theme/images/status_signed.png"/> 
+               else if (wasSeen)
+                    then <img src="/theme/images/status_viewed.png"/> 
+                    else <img src="/theme/images/status_pending.png"/> 
+      message =  if (wasSigned)
+                 then "Undertecknat " ++ showDateOnly1 (signtime $ fromJust maybesigninfo)
+                 else if (wasSeen)
+                    then "Granskat " ++ showDateOnly (signtime $ fromJust maybeseeninfo)
+                    else  "Har ej undertecknat"         
+      isCurrentUserAuthor = (isJust muser) && isAuthor (fromJust muser) document    
+      isCurrentSignatorAuthor = (fmap (unEmail . useremail) muser) ==  (Just signatoryemail)    
+      reminderText = if (wasSigned)
+                     then "Skicka dokumentet igen"
+                     else "Skicka påminnelse"
+      reminderhref = LinkRemind document siglnk       
+      reminderLink = <a href=reminderhref >  <% reminderText %>  </a>
    in asChild <p><% 
-                [asChild status, asChild " "] ++
+                [asChild status,asChild " "] ++
                 (if BS.null signatoryname then [] else [ asChild <strong><% signatoryname %></strong>, asChild <br/> ]) ++
                 (if BS.null signatorycompany then [] else [ asChild signatorycompany, asChild <br/> ]) ++
                 (if BS.null signatorynumber then [] else [ asChild signatorynumber, asChild <br/> ]) ++
                 (if BS.null signatoryemail then [] else [ asChild signatoryemail, asChild <br/> ]) ++
-                ([asChild message])
+                ([asChild message]) ++
+                (if (isCurrentUserAuthor && (not isCurrentSignatorAuthor)) then [asChild <br/> ,asChild reminderLink] else [])
                 %></p>
 
 showDocumentForSign :: ( XMLGenerator m
@@ -599,10 +618,11 @@ showDocumentForSign :: ( XMLGenerator m
       , EmbedAsAttr m (Attr [Char] BS.ByteString)) =>
                        KontraLink 
                            -> Document 
+                           -> (Maybe User)
                            -> SignatoryLink
                            -> Bool 
                     -> XMLGenT m (HSX.XML m)
-showDocumentForSign action document invitedlink wassigned =
+showDocumentForSign action document muser invitedlink wassigned =
    let helper = [ <script> var documentid = "<% show $ documentid document %>"; 
                   </script>
                 , <div id="dialog-confirm-sign" title="Underteckna">  
@@ -639,9 +659,9 @@ showDocumentForSign action document invitedlink wassigned =
                  <p>Vänligen var noga med att granska dokumentet och kontrollera 
                     uppgifterna nedan innan du undertecknar.</p>   
 
-                 <% showSignatoryLinkForSign invitedlink %>
+                 <% showSignatoryLinkForSign muser document invitedlink %>
 
-                 <% map showSignatoryLinkForSign (authorlink : allbutinvited) %>
+                 <% map (showSignatoryLinkForSign muser document) (authorlink : allbutinvited) %>
                  
                  <%
                    if wassigned 
@@ -837,3 +857,90 @@ swedishListString (x:xs) = do
   list2 <- swedishListString xs
   return (concat list ++ list2)
 
+remindMail:: Context -> Document -> SignatoryLink -> IO Mail
+remindMail c d s = case s of 
+                       SignatoryLink{maybesigninfo = Nothing} -> remindMailNotSigned c d s
+                       _ -> remindMailSigned c d s
+
+  
+remindMailNotSigned:: Context -> Document -> SignatoryLink -> IO Mail
+remindMailNotSigned ctx@Context{ctxmaybeuser = Just user, ctxhostpart}
+           document@Document{documenttitle,documentid,documenttimeouttime,documentauthordetails,documentinvitetext} 
+           signlink = 
+    let link = ctxhostpart ++ show (LinkSignDoc document signlink)
+        creatorname = signatoryname documentauthordetails
+        personname = if (BS.null $ signatoryname $ signatorydetails signlink)
+                      then  signatoryname $ signatorydetails signlink
+                      else signatoryemail $ signatorydetails signlink
+        --common :: (XMLGenerator m) => GenChildList m
+        common = sequence
+              [ asChild <p><i>Översiktlig information</i><br/>
+                 Parter: <% partyListString document %><br/>
+                 Har undertecknat: <strong><% creatorname %></strong><br/>
+                <% case documenttimeouttime of 
+                     Just time -> <span>Undertecknas senast: <strong><% show time %></strong>.</span>
+                     Nothing -> <span/>
+                 %> 
+                 </p>
+              , asChild <p><i>Så här går du vidare</i><br/>
+              1. Klicka på länken<br/>
+              <a href=link><% link %></a><br/>
+              2. Granska online<br/>
+              3. Underteckna<br/>
+              4. Färdig<br/>
+              </p>
+             ]
+        --skrivapaversion  :: (XMLGenerator m) => GenChildList m
+        skrivapaversion = sequence 
+            [ asChild common
+            , asChild (poweredBySkrivaPaPara ctxhostpart)
+            ]
+        paragraphs :: [BS.ByteString]
+        paragraphs = BS.split 10 documentinvitetext
+        -- p :: [GenChildList IO]
+        p = intersperse (asChild <br/>) (map asChild paragraphs)
+        --authorversion  :: (XMLGenerator m) => GenChildList m
+        authorversion = sequence $
+               p ++ 
+               [ asChild common
+               , asChild "Hälsningar"
+               , asChild <br/>
+               , asChild creatorname
+               , asChild <br/>
+               ]
+        content =   <p> <%creatorname%> vill påminna dig om att du inte undertecknat dokument <%documenttitle%> ännu
+                        <br/>
+                        <% if BS.null documentinvitetext
+                         then <span><% skrivapaversion %></span>
+                         else <span><% authorversion %></span>
+                        %> 
+                    </p>     
+              
+        title =  BS.concat [BS.fromString "Hej ",personname]             
+    in 
+       do
+        content <- htmlHeadBodyWrapIO documenttitle content
+        return $ emptyMail {title = title, content = content}
+
+remindMailSigned:: Context -> Document -> SignatoryLink -> IO Mail
+remindMailSigned ctx@Context{ctxmaybeuser = Just user, ctxhostpart}
+           document@Document{documenttitle,documentid,documenttimeouttime,documentauthordetails,documentinvitetext} 
+           signlink = 
+           let 
+           personname = if (BS.null $ signatoryname $ signatorydetails signlink)
+                      then  signatoryname $ signatorydetails signlink
+                      else signatoryemail $ signatorydetails signlink
+           title =  BS.concat [BS.fromString "Hej ",personname]              
+           content = <p> Hej  <% personname %> har på din begäran skickat ut dokumentet  <% documenttitle %> som du  
+                        <br/>
+                        undertecknat  via tjänsten SkrivaP. Dokumentet bifogas nedan.
+                        <br/>
+                        <br/>
+                        Med vänliga hälsningar
+                        <br/>
+                        SkrivaPå
+                    </p>     
+           attachmentcontent = filepdf $ head $ documentfiles document          
+       in do
+        content <- htmlHeadBodyWrapIO documenttitle content
+        return $ emptyMail {title = title, content = content, attachments = [(documenttitle,attachmentcontent)]}
