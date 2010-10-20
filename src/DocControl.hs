@@ -246,7 +246,7 @@ handleSignShow documentid
               invitedname = signatoryname $ signatorydetails $ invitedlink 
           webHSP (pageFromBody ctx TopNone kontrakcja 
                  (showDocumentForSign (LinkSignDoc document invitedlink) 
-                       document invitedlink wassigned))
+                      document  ctxmaybeuser invitedlink wassigned))
        ]
 
 handleIssue :: Kontra Response
@@ -622,3 +622,22 @@ showPage ctx modminutes fileid pageno = do
       let modtime = toUTCTime modminutes
       rq <- askRq                 -- FIXME: what?
       return $ ifModifiedSince modtime rq res2
+
+handleResend:: Kontra Response
+handleResend = do
+    ctx<- get
+    pathdb GetDocumentByDocumentID $ \doc -> 
+            path $ \signlinkid -> 
+                    do
+                      case (signlinkFromDocById doc signlinkid) of
+                       Just signlink -> 
+                               do 
+                                mail <- liftIO $ remindMail ctx doc signlink
+                                liftIO $ sendMail (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )]})
+                                let link = show (LinkIssueDoc doc)
+                                response <- webHSP (seeOtherXML link)
+                                seeOther link response
+                       Nothing -> mzero         
+
+   where signlinkFromDocById doc sid = find (((==) sid) . signatorylinkid) (documentsignatorylinks  doc)
+

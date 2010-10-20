@@ -942,3 +942,5 @@ $(mkMethods ''Documents [ 'getDocumentsByAuthor
 
 
 
+isAuthor::User->Document->Bool
+isAuthor u d = (userid u) == ( unAuthor . documentauthor $ d)   

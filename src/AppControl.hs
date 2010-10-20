@@ -57,11 +57,12 @@ handleRoutes =
     ([nullDir >> if isJust ctxmaybeuser
               then withUserTOS (webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx)))
               else webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx))
-     , dir "s" $ withUserTOS $ DocControl.handleSign
+     , dir "s" $ DocControl.handleSign
      , {- old -} dir "sign" $ withUserTOS $ DocControl.handleSign
      , dir "d" $ withUserTOS $ DocControl.handleIssue
      , {- old -} dir "issue" $ withUserTOS $ DocControl.handleIssue
-     , dir "pages" $ withUserTOS $ hget2 $ \fileid pageno -> do
+     , dir "resend" $ withUserTOS $ DocControl.handleResend
+     , dir "pages" $ hget2 $ \fileid pageno -> do
         modminutes <- query $ FileModTime fileid
         DocControl.showPage ctx modminutes fileid pageno
                                                     
