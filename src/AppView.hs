@@ -6,7 +6,6 @@ module AppView where
 import HSP hiding (Request)
 import System.Locale (defaultTimeLocale)
 import Happstack.Server (Response)
-import Happstack.Server.HStringTemplate (webST)
 import Happstack.Server.HSP.HTML (webHSP)
 import Happstack.Server.SimpleHTTP
 import qualified HSX.XMLGenerator as HSX (XML)
