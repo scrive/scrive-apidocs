@@ -922,23 +922,22 @@ remindMailNotSigned ctx@Context{ctxmaybeuser = Just user, ctxhostpart}
 
 remindMailSigned:: Context -> Document -> SignatoryLink -> IO Mail
 remindMailSigned ctx@Context{ctxmaybeuser = Just user, ctxhostpart}
-           document@Document{documenttitle,documentid,documenttimeouttime,documentauthordetails,documentinvitetext} 
-           signlink = 
-           let 
-           personname = if (BS.null $ signatoryname $ signatorydetails signlink)
-                      then  signatoryname $ signatorydetails signlink
-                      else signatoryemail $ signatorydetails signlink
-           title =  BS.concat [BS.fromString "Hej ",personname]              
-           content = <p> Hej  <% personname %> har på din begäran skickat ut dokumentet  <% documenttitle %> som du  
-                        <br/>
-                        undertecknat  via tjänsten SkrivaP. Dokumentet bifogas nedan.
-                        <br/>
-                        <br/>
-                        Med vänliga hälsningar
-                        <br/>
-                        SkrivaPå
-                    </p>     
-           attachmentcontent = filepdf $ head $ documentfiles document          
-       in do
-        content <- htmlHeadBodyWrapIO documenttitle content
-        return $ emptyMail {title = title, content = content, attachments = [(documenttitle,attachmentcontent)]}
+                 document@Document{documenttitle,documentid,documenttimeouttime,documentauthordetails,documentinvitetext} 
+                 signlink = 
+                     let 
+                         personname = if (BS.null $ signatoryname $ signatorydetails signlink)
+                                      then signatoryname $ signatorydetails signlink
+                                      else signatoryemail $ signatorydetails signlink
+                         title =  BS.concat [BS.fromString "Hej ",personname]              
+                         content = <span>
+                                     <p>Hej <% userfullname user %>,</p>
+                                     <p><% personname %> har på din begäran skickat ut dokumentet <% documenttitle %> som du  
+                                     har undertecknat via tjänsten SkrivaPå. Dokumentet bifogas nedan.</p>
+                                     <% poweredBySkrivaPaPara ctxhostpart %>
+                                   </span>
+                         attachmentcontent = filepdf $ head $ documentfiles document          
+                     in do
+                       content <- htmlHeadBodyWrapIO documenttitle content
+                       return $ emptyMail {title = title, content = content, attachments = [(documenttitle,attachmentcontent)]}
+
+
