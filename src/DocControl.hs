@@ -334,11 +334,8 @@ updateDocument ctx@Context{ctxtime} document@Document{documentid} = do
 
   invitetext <- g "invitetext"
 
-  let signatories = zipWith4 SignatoryDetails signatoriesnames signatoriescompanies signatoriesnumbers signatoriesemails
-  let authordetails = SignatoryDetails (BS.fromString authorname) 
-                                       (BS.fromString authorcompany) 
-                                       (BS.fromString authornumber) 
-                                       (BS.fromString authoremail)
+  let signatories = zipWith4 sd signatoriesnames signatoriescompanies signatoriesnumbers signatoriesemails where
+                                               sd n c no e = SignatoryDetails n c no e [] [] [] [] []
 
   -- FIXME: tell the user what happened!
   when (daystosign<1 || daystosign>99) mzero
