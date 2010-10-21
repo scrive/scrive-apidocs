@@ -791,4 +791,9 @@ input
     width:140px;
 }
 
+.pagediv 
+{
+    position: relative;
+}
+
 /* Localized */
