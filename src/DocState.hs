@@ -775,34 +775,34 @@ attachFile documentid filename1 content = do
   modify $ updateIx documentid document2
 
 updateDocument :: MinutesTime
-               -> Document
-               -> SignatoryDetails  
+               -> DocumentID
                -> [SignatoryDetails]
                -> Int
                -> BS.ByteString
                -> Update Documents Document
-updateDocument time document authordetails signatories daystosign invitetext = do
+updateDocument time documentid signatories daystosign invitetext = do
+  documents <- ask
+  let Just document = getOne (documents @= documentid)
   signatorylinks <- sequence $ map mm signatories
   let doc2 = document { documentsignatorylinks = signatorylinks
                       , documentdaystosign = daystosign 
-                      , documentauthordetails = authordetails
                       , documentmtime = time
                       , documentinvitetext = invitetext
                       }
   if documentstatus document == Preparation
      then do
-       modify (updateIx (documentid doc2) doc2)
+       modify (updateIx documentid doc2)
        return doc2
      else
          return document
   where mm details = do
           sg <- ask
-          x <- getUnique sg SignatoryLinkID
+          linkid <- getUnique sg SignatoryLinkID
           magichash <- getRandom
           return $ SignatoryLink 
-                     { signatorylinkid = x
+                     { signatorylinkid = linkid
                      , signatorydetails = details
-                     , signatorymagichash  = magichash
+                     , signatorymagichash = magichash
                      , maybesignatory = Nothing
                      , maybesigninfo  = Nothing
                      , maybeseeninfo  = Nothing
