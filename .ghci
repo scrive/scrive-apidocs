@@ -5,6 +5,7 @@
 :set -DWINDOWS
 :set -XTemplateHaskell
 :set -XTypeFamilies
+:set -XPackageImports
 :set -XDeriveDataTypeable
 :set -XFlexibleInstances
 :set -XMultiParamTypeClasses
