@@ -35,13 +35,44 @@ $(deriveAll [''Eq, ''Ord, ''Default]
       newtype FileID = FileID { unFileID :: Int }
       newtype TimeoutTime = TimeoutTime { unTimeoutTime :: MinutesTime }
 
+      -- added by Eric Normand for template system
+      -- Defines a new field to be placed in a contract
+      data FieldDefinition = FieldDefinition
+          { fieldlabel :: BS.ByteString 
+          , fieldvalue :: BS.ByteString
+          , fieldplacements :: [FieldPlacement]
+          }
 
-      data SignatoryDetails = SignatoryDetails 
+      -- defines where a field is placed
+      data FieldPlacement = FieldPlacement
+          { placementx :: Int
+          , placementy :: Int
+          , placementpage :: Int
+          , placementpagewidth :: Int
+          , placementpageheight :: Int
+          }
+      -- end of updates for template system
+
+      data SignatoryDetails0 = SignatoryDetails0
+          { signatoryname00      :: BS.ByteString  -- "Gracjan Polak" 
+          , signatorycompany00   :: BS.ByteString  -- SkrivaPå
+          , signatorynumber00    :: BS.ByteString  -- 123456789
+          , signatoryemail00     :: BS.ByteString  -- "gracjanpolak@skrivapa.se"
+          }
+
+      data SignatoryDetails = SignatoryDetails
           { signatoryname      :: BS.ByteString  -- "Gracjan Polak" 
           , signatorycompany   :: BS.ByteString  -- SkrivaPå
           , signatorynumber    :: BS.ByteString  -- 123456789
           , signatoryemail     :: BS.ByteString  -- "gracjanpolak@skrivapa.se"
-          }
+          -- for templates
+          , signatorynameplacements :: [FieldPlacement]
+          , signatorycompanyplacements :: [FieldPlacement]
+          , signatoryemailplacements :: [FieldPlacement]
+          , signatorynumberplacements :: [FieldPlacement]
+          , signatoryotherfields :: [FieldDefinition]
+          } 
+
       data SignatoryLink0 = SignatoryLink0 
           { signatorylinkid0    :: SignatoryLinkID
           , signatoryname0      :: BS.ByteString 
@@ -288,6 +319,10 @@ deriving instance Show DocumentStatus
 deriving instance Show ChargeMode
 deriving instance Show Author
 
+deriving instance Show FieldDefinition
+deriving instance Show FieldPlacement
+
+
 instance Show TimeoutTime where
     showsPrec prec = showsPrec prec . unTimeoutTime
 
@@ -297,6 +332,7 @@ deriving instance Show SignatoryLink1
 deriving instance Show SignInfo
 deriving instance Show SignInfo0
 deriving instance Show SignatoryDetails
+deriving instance Show SignatoryDetails0
 deriving instance Show DocumentHistoryEntry
 
 instance Show Signatory where
@@ -334,6 +370,12 @@ instance FromReqURI SignatoryLinkID where
 instance FromReqURI FileID where
     fromReqURI = readM
 
+$(deriveSerialize ''FieldDefinition)
+instance Version FieldDefinition
+
+$(deriveSerialize ''FieldPlacement)
+instance Version FieldPlacement
+
 $(deriveSerialize ''SignInfo0)
 instance Version SignInfo0
 
@@ -350,8 +392,12 @@ instance Migrate SignInfo0 SignInfo where
                 , signipnumber = 0 -- mean unknown
                 }
 
+$(deriveSerialize ''SignatoryDetails0)
+instance Version SignatoryDetails0
+
 $(deriveSerialize ''SignatoryDetails)
-instance Version SignatoryDetails
+instance Version SignatoryDetails where
+    mode = extension 1 (Proxy :: Proxy SignatoryDetails0)
 
 $(deriveSerialize ''SignatoryLink0)
 instance Version SignatoryLink0
@@ -367,6 +413,24 @@ instance Version SignatoryLink2 where
 $(deriveSerialize ''SignatoryLink)
 instance Version SignatoryLink where
     mode = extension 3 (Proxy :: Proxy SignatoryLink2)
+
+instance Migrate SignatoryDetails0 SignatoryDetails where
+    migrate (SignatoryDetails0
+             { signatoryname00 
+             , signatorycompany00
+             , signatorynumber00 
+             , signatoryemail00
+             }) = SignatoryDetails
+                { signatoryname = signatoryname00
+                , signatorycompany = signatorycompany00
+                , signatorynumber = signatorynumber00
+                , signatoryemail = signatoryemail00
+                , signatorynameplacements = []
+                , signatorycompanyplacements = []
+                , signatoryemailplacements = []
+                , signatorynumberplacements = []
+                , signatoryotherfields = []
+                }
 
 instance Migrate SignatoryLink0 SignatoryLink1 where
     migrate (SignatoryLink0 
@@ -384,6 +448,11 @@ instance Migrate SignatoryLink0 SignatoryLink1 where
                                , signatorycompany = signatorycompany0
                                , signatorynumber = BS.empty
                                , signatoryemail = signatoryemail0
+                               , signatorynameplacements = []
+                               , signatorycompanyplacements = []
+                               , signatoryemailplacements = []
+                               , signatorynumberplacements = []
+                               , signatoryotherfields = []
                                }
           , maybesignatory1 = maybesignatory0
           , maybesigninfo1 = maybesigninfo0
@@ -537,7 +606,7 @@ instance Migrate Document2 Document3 where
           , documentdaystosign3 = documentdaystosign2
           , documenttimeouttime3 = documenttimeouttime2
           , documentdeleted3 = False
-          , documentauthordetails3 = SignatoryDetails BS.empty BS.empty BS.empty BS.empty
+          , documentauthordetails3 = SignatoryDetails BS.empty BS.empty BS.empty BS.empty [] [] [] [] []
           , documentmaybesigninfo3 = Nothing
           , documenthistory3 = []
           }
@@ -679,6 +748,11 @@ newDocument user@User{userid,userfullname,usercompanyname,usercompanynumber,user
                 , signatorycompany = usercompanyname
                 , signatorynumber = usercompanynumber
                 , signatoryemail = unEmail $ useremail
+                , signatorynameplacements = []
+                , signatorycompanyplacements = []
+                , signatoryemailplacements = []
+                , signatorynumberplacements = []
+                , signatoryotherfields = []
                 }
 
   modify $ insert doc

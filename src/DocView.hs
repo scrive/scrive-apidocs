@@ -25,6 +25,10 @@ import "mtl" Control.Monad.Trans
 
 $(deriveInspectXML ''Document)
 
+$(deriveInspectXML ''FieldDefinition)
+
+$(deriveInspectXML ''FieldPlacement)
+
 instance InspectXML DocumentID where
     inspectXML x = asChild <a href=("/dave/document/" ++ show x)><% show x %></a>
 
