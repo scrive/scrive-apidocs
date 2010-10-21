@@ -27,23 +27,38 @@ function placementToHTML(label, value) {
 
 // var docstate;
 
+function buildDraggableField(val) {
+    return $("<div><input type='text' value='" + val + "' /></div>");
+}
+
+// destroy the HTML that's there to sync it with the docstate
 function docstateToHTML(){
     // author first
     var author = docstate.author;
-    
-    $("#authorname").attr("value", author.name);
-    $("#authorcompany").attr("value", author.company);
-    $("#authornumber").attr("value", author.number);
-    $("#authoremail").attr("value", author.email);
 
+    var ad = $("#authordetails");
+
+    ad.html("");
+
+    /*
     $(author.nameplacements).each(function () {
 	    var pl = this;
 	    var d = placementToHTML("Author Name", author.name);
 	    // set offset of d
 	    $("#page" + pl.page).append(d);
 	});
+    */
+
 
     var signatories = docstate.signatories;
+    $("#signatorylist").html("");
 
+    $(signatories).each(function () {
+	    var sig = this;
+	    
     
 }
+
+$(document).ready(function () {
+	docstateToHTML();
+    });
