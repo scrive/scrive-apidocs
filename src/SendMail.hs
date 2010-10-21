@@ -2,9 +2,6 @@
 
 
 module SendMail(Mail(),emptyMail,sendMail,title,content, fullnameemails,attachments) where
-import Control.Monad(msum,liftM,mzero,guard,MonadPlus(..),when,forM_)
-import Control.Monad.Reader (ask)
-import Control.Monad.Trans(liftIO, MonadIO,lift)
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.Server.HSP.HTML (webHSP)
 import Happstack.State (update,query,getRandomR)

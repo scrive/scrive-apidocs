@@ -12,13 +12,10 @@ import HSP
 import qualified Data.ByteString.UTF8 as BS
 import Control.Monad
 import Data.Maybe
-import Control.Monad.Reader (ask)
-import Control.Monad.Trans(liftIO, MonadIO,lift)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.Object.Json as Json
 import System.Log.Logger
-import Control.Monad.State
 import MinutesTime
 import Misc
 import Happstack.Server.HSP.HTML (webHSP)

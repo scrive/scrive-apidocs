@@ -2,9 +2,6 @@
 
 
 module InspectXML where
-import Control.Monad(msum,liftM,mzero,guard,MonadPlus(..))
-import Control.Monad.Reader (ask)
-import Control.Monad.Trans(liftIO, MonadIO,lift)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.Lazy as BSL

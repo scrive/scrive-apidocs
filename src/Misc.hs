@@ -1,10 +1,10 @@
-{-# LANGUAGE ForeignFunctionInterface, CPP, ScopedTypeVariables, StandaloneDeriving, FlexibleInstances, MultiParamTypeClasses, FlexibleContexts, UndecidableInstances  #-}
+{-# LANGUAGE ForeignFunctionInterface, CPP, ScopedTypeVariables, StandaloneDeriving, FlexibleInstances, MultiParamTypeClasses, FlexibleContexts, UndecidableInstances, PackageImports  #-}
 
 
 module Misc where
 import Control.Monad(msum,liftM,mzero,guard,MonadPlus(..))
-import Control.Monad.Reader (ask)
-import Control.Monad.Trans(liftIO, MonadIO,lift)
+import "mtl" Control.Monad.Reader (ask)
+import "mtl" Control.Monad.Trans(liftIO, MonadIO,lift)
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.Server.HSP.HTML (webHSP)
 import Happstack.State (update,query,getRandomR)
@@ -22,8 +22,8 @@ import Foreign.Ptr
 import Foreign.C.String
 import HSX.XMLGenerator
 import HSP
-import Control.Monad.State
-import Control.Monad.Error
+import "mtl" Control.Monad.State
+import "mtl" Control.Monad.Error
 import Data.Monoid
 import Data.List
 import Data.Char

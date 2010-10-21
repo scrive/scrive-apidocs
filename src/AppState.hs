@@ -11,7 +11,6 @@ import Session
 import Data.Data
 import qualified Happstack.Data.IxSet as IxSet (empty,size)
 import DocState
-import Control.Monad.Reader
 
 
 -- |top-level application state

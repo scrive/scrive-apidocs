@@ -1,11 +1,11 @@
-{-# LANGUAGE CPP, BangPatterns #-}
+{-# LANGUAGE CPP, BangPatterns, PackageImports #-}
 {-# OPTIONS_GHC -fglasgow-exts -funbox-strict-fields #-}
 
 module PdfModel where
 import Prelude hiding (String)
 import qualified Prelude as P
-import Control.Monad.State.Strict
-import Control.Monad.ST
+import "mtl" Control.Monad.State.Strict
+-- import "mtl" Control.Monad.ST
 import Data.STRef
 import Data.Array.ST
 import System.IO
@@ -37,12 +37,12 @@ import qualified Data.Binary.Builder as Bin
 import Data.Monoid
 import Text.Printf
 import Data.Ratio
-import Control.Monad.Writer.Class
-import qualified Control.Monad.Writer.Lazy as Lazy
-import qualified Control.Monad.Writer.Strict as Strict
-import Control.Monad.State.Class
-import qualified Control.Monad.State.Strict as Strict
-import qualified Control.Monad.State.Lazy as Lazy
+import "mtl" Control.Monad.Writer.Class
+import qualified "mtl" Control.Monad.Writer.Lazy as Lazy
+import qualified "mtl" Control.Monad.Writer.Strict as Strict
+import "mtl" Control.Monad.State.Class
+import qualified "mtl" Control.Monad.State.Strict as Strict
+import qualified "mtl" Control.Monad.State.Lazy as Lazy
 -- import Debug.Trace
 
 import GHC.Num

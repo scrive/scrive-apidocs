@@ -15,43 +15,42 @@ module User
     where
 
 import System.Time
-import UserState
-import Session
-import Happstack.Server
-import Happstack.Server.HStringTemplate (webST)
-import Happstack.Server.HSP.HTML (webHSP)
-import Happstack.Server.SimpleHTTP
-import qualified HSX.XMLGenerator as HSX (XML)
-import HSP
-import Network.HTTP (urlEncode)
-import qualified Data.ByteString.UTF8 as BS
-import Control.Monad
-import Data.Maybe
+import "mtl" Control.Monad.Reader
+import "mtl" Control.Monad.State
+import "mtl" Control.Monad.Trans
 import Codec.Utils (Octet)
-import Control.Monad.Reader (ask)
-import Control.Monad.Trans(liftIO, MonadIO,lift)
+import Control.Concurrent.MVar
+import Data.HMAC (hmac_sha1)
+import Data.Maybe
 import Data.Object
+import Data.Word
+import DocState
+import HSP
+import Happstack.Data.IxSet ((@=),getOne)
+import Happstack.Server
+import Happstack.Server hiding (simpleHTTP)
+import Happstack.Server.HSP.HTML (webHSP)
+import Happstack.Server.HSP.HTML (webHSP)
+import Happstack.Server.HStringTemplate (webST)
+import Happstack.Server.SimpleHTTP
+import Happstack.State (update,query)
+import KontraLink
+import MinutesTime
+import Network.HTTP (urlEncode)
+import Session
+import System.IO.Unsafe
+import System.Log.Logger
+import System.Process
+import UserState
+import qualified Codec.Binary.Base64 as Base64
 import qualified Data.Binary as Binary
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
+import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Object.Json as Json
-import qualified Codec.Binary.Base64 as Base64
-import Data.HMAC (hmac_sha1)
-import Happstack.Data.IxSet ((@=),getOne)
-import Happstack.Server hiding (simpleHTTP)
-import Happstack.Server.HSP.HTML (webHSP)
-import Happstack.State (update,query)
-import System.Log.Logger
-import Control.Monad.State
-import MinutesTime
-import KontraLink
-import DocState
-import System.IO.Unsafe
 import qualified Data.Set as Set
-import Control.Concurrent.MVar
-import System.Process
-import Data.Word
+import qualified HSX.XMLGenerator as HSX (XML)
 
 data Context = Context 
     { ctxmaybeuser           :: Maybe User

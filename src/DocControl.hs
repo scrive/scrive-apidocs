@@ -1,45 +1,45 @@
 {-# LANGUAGE CPP, ScopedTypeVariables #-}
 
 module DocControl where
-import DocView
+import "base" Control.Monad
+import "mtl" Control.Monad.Reader
+import "mtl" Control.Monad.State
+import "mtl" Control.Monad.Trans
+import AppView
+import Control.Concurrent
+import Data.Bits
+import Data.List
+import Data.Maybe
+import Data.Word
+import Debug.Trace
 import DocState hiding (updateDocument)
+import DocView
+import HSP
 import Happstack.Data.IxSet 
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.Server.HSP.HTML (webHSP)
 import Happstack.State (update,query)
-import AppView
-import UserState
-import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Char8 as BSC
-import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
-import qualified Data.ByteString.Lazy as BSL
-import Control.Monad
-import Control.Monad.Reader
-import HSP
-import Data.Maybe
-import Control.Monad.Trans
-import Misc
-import Debug.Trace
-import User
-import System.Cmd
-import System.Directory
-import qualified Data.Map as M
-import Data.List
-import MinutesTime
-import Control.Concurrent
-import SendMail(Mail,sendMail,fullnameemails,attachments)
-import System.Process
-import System.IO
-import qualified Seal as Seal
 import Happstack.Util.Common
 import KontraLink
+import MinutesTime
+import Misc
+import SendMail(Mail,sendMail,fullnameemails,attachments)
+import System.Cmd
+import System.Directory
 import System.Exit
-import qualified Data.Set as Set
+import System.IO
+import System.Process
+import User
 import UserControl
-import Data.Word
-import Data.Bits
-import Control.Monad.State
+import UserState
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BSC
+import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
+import qualified Data.ByteString.UTF8 as BS
+import qualified Data.Map as M
+import qualified Data.Set as Set
+import qualified Seal as Seal
 
 {-
   Document state transitions are described in DocState.

@@ -5,15 +5,12 @@ module AppView where
 
 import HSP hiding (Request)
 import System.Locale (defaultTimeLocale)
-import Control.Monad.Trans (MonadIO,liftIO,lift)
-import Control.Monad.State (get)
 import Happstack.Server (Response)
 import Happstack.Server.HStringTemplate (webST)
 import Happstack.Server.HSP.HTML (webHSP)
 import Happstack.Server.SimpleHTTP
 import qualified HSX.XMLGenerator as HSX (XML)
 import qualified HSX.XMLGenerator
-import Control.Monad
 import Data.Object.Json as Json
 import Data.Object as Json
 import qualified Data.ByteString as BS
@@ -30,6 +27,7 @@ import KontraLink
 import System.Directory
 import Happstack.State (update,query)
 import Data.Data
+import "mtl" Control.Monad.Trans
 
 poweredBySkrivaPaPara :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 poweredBySkrivaPaPara hostpart = 
