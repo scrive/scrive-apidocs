@@ -493,6 +493,11 @@ sealSpecFromDocument hostpart document author@(User {userfullname,usercompanynam
                                   , signatorycompany = usercompanyname
                                   , signatorynumber = usercompanynumber
                                   , signatoryemail = unEmail $ useremail
+                                  , signatorynameplacements = []
+                                  , signatorycompanyplacements = []
+                                  , signatorynumberplacements = []
+                                  , signatoryemailplacements = []
+                                  , signatoryotherfields = []
                                   })
 
       signatories = personsFromDocument document
