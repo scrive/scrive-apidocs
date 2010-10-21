@@ -60,6 +60,12 @@ showUser ctx@(Context {ctxmaybeuser = Just user}) =
     webHSP $ pageFromBody ctx TopAccount kontrakcja $ 
     <div class="accounttable">
      <h1><% userfullname user %></h1>
+      <% if isJust userhasacceptedtermsofservice 
+         then <% () %>
+         else <%
+              <div><strong>Please check your details and make sure you read and accept terms of service below.</strong></div>
+              %>
+       %>
 
       <div>
        <form action=LinkAccount method="post">
@@ -83,10 +89,12 @@ showUser ctx@(Context {ctxmaybeuser = Just user}) =
        <%
           if isJust userhasacceptedtermsofservice
            then <div/>
-           else <div><input type="checkbox" name="tos" id="tos">Jag har läst och accepterar <a href="/termsofuse.html">SkrivaPå Allmänna Villkor</a></input></div>
+           else <div><input type="checkbox" name="tos" id="tos">Jag har läst och accepterar <a href="/termsofuse.html" target="_blank">SkrivaPå Allmänna Villkor</a></input></div>
        %>
        <input class="button" type="submit" value="Spara ändringar"/>
       </form>
+      <br />
+      <br />
       <br />
       <form action=LinkAccountPassword method="post">
         <table>
