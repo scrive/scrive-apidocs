@@ -36,6 +36,7 @@ import System.Log.Logger
 import Happstack.Util.LogFormat
 import Data.Time.Clock
 import Control.Concurrent (forkIO)
+import Control.Monad
 
 -- from simple utf-8 to =?UTF-8?Q?zzzzzzz?=
 -- FIXME: should do better job at checking if encoding should be applied or not
