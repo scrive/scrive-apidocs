@@ -399,8 +399,8 @@ showSignatoryEntryStatus document (signatorylink@SignatoryLink{ signatorydetails
         %>
     </div>
 
-showFileImages file@File { fileid, filejpgpages = JpegPages jpgpages } = 
-   [ <img class="pagejpg" src=("/pages/" ++ show fileid ++ "/" ++ show pageno) width="300"/> |
+showFileImages file@File { fileid, filejpgpages = JpegPages jpgpages } =
+   [ <div id=("page" ++ show pageno) class="pagediv"><img class="pagejpg" src=("/pages/" ++ show fileid ++ "/" ++ show pageno) width="300" /></div> |
      pageno <- [1..(length jpgpages)]]
 showFileImages file@File { fileid, filejpgpages = JpegPagesPending } = 
    [ <div class="pagejpga4 pagejpg">
