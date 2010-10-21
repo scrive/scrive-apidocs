@@ -502,7 +502,7 @@ showDocument user
            then 
              <span>
               Avsändare<br/>
-              <div style="margin-bottom: 10px;">
+              <div style="margin-bottom: 10px;" id="authordetails">
               <input name="authorname" type="text" value=(signatoryname documentauthordetails)
                      infotext="Ditt namn"/><br/>
               <input name="authorcompany" type="text" value=(signatorycompany documentauthordetails)
