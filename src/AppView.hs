@@ -220,8 +220,8 @@ welcomeBody (Context {ctxmaybeuser = Just _, ctxhostpart}) =
 welcomeBody ctx@(Context {ctxmaybeuser = Nothing}) = 
 	<div id="firstPageContentContainer"> 
 		<div id="firstPageLeft"> 
-                   <iframe src="http://player.vimeo.com/video/15894469" width="300" height="184" frameborder="0"></iframe>
-                   <p><a href="http://vimeo.com/15894469">Avtala på under 60 sekunder</a>.</p>
+                   <iframe src="//player.vimeo.com/video/15894469" width="300" height="184" frameborder="0"></iframe>
+                   <p><a href="//vimeo.com/15894469">Avtala på under 60 sekunder</a>.</p>
 		</div> 
 		
 		<div id="firstPageRight"> 
@@ -306,15 +306,15 @@ topnavi active ctx title link =
 globalScriptsAndStyles = 
       [ <link rel="stylesheet" type="text/css" href=("/theme/style.css?"  ++ __DATE__) media="screen" />
       , <link rel="stylesheet" type="text/css" 
-            href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/ui-lightness/jquery-ui.css" 
+            href="//ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/ui-lightness/jquery-ui.css" 
             -- href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/flick/jquery-ui.css"
             -- href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/redmond/jquery-ui.css"
             -- href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/start/jquery-ui.css"
             media="screen" />
-      , <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js"/>
+      , <script src="//ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js"/>
       -- we loaded the min version but at some point google stopped serving this one
       -- , <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"/>
-      , <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js"/>
+      , <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js"/>
       {- Local versions of the same, but locally
       , <script src="/js/jquery-1.4.2.min.js"/>
       , <script src="/js/jquery-ui-1.8.custom.min.js"/>
