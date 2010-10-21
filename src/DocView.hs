@@ -437,6 +437,11 @@ emptyDetails = SignatoryDetails
           , signatorycompany = BS.empty
           , signatorynumber = BS.empty
           , signatoryemail = BS.empty
+          , signatorynameplacements = []
+          , signatorycompanyplacements = []
+          , signatorynumberplacements = []
+          , signatoryemailplacements = []
+          , signatoryotherfields = []
           }
 
 showDocument :: (XMLGenerator m,
@@ -814,6 +819,11 @@ partyUnsignedMeAndList magichash document =
                               , signatorycompany = BS.empty
                               , signatorynumber = BS.empty
                               , signatoryemail = BS.empty
+                              , signatorynameplacements = []
+                              , signatorycompanyplacements = []
+                              , signatorynumberplacements = []
+                              , signatoryemailplacements = []
+                              , signatoryotherfields = []
                               }
         signas = map signatorydetails unsignalinks
     in me : signas
