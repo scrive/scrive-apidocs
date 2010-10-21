@@ -518,7 +518,7 @@ showDocument user
                                                  then [emptyDetails] 
                                                  else map signatorydetails documentsignatorylinks) %>
               </div>
-              <small><a onclick="signatoryadd(); return false;" href="#">Lägg till fler</a></small>
+              <small><a id="addsiglink" onclick="signatoryadd(); return false;" href="#">Lägg till fler</a></small>
 
               <div style="margin-top: 10px">
               <a href="#" onclick="editinvitetext(); return false;">Skriv hälsningsmeddelande</a><br/>
