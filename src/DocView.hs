@@ -493,6 +493,9 @@ showDocument user
                     , maybesignatory = Nothing -- FIXME: should be author user id
                     , signatorymagichash = MagicHash 0
                     }
+       addbr text | BS.null text = <span/>
+       addbr text = <span><% text %><br/></span>
+
    in showDocumentPageHelper (LinkIssueDoc document) document helper 
            (documenttitle)  
       <div>
@@ -503,14 +506,10 @@ showDocument user
              <span>
               Avsändare<br/>
               <div style="margin-bottom: 10px;" id="authordetails">
-              <input name="authorname" type="text" value=(signatoryname documentauthordetails)
-                     infotext="Ditt namn"/><br/>
-              <input name="authorcompany" type="text" value=(signatorycompany documentauthordetails)
-                     infotext="Titel, företag"/><br/>
-              <input name="authornumber" type="text" value=(signatorynumber documentauthordetails)
-                     infotext="Ditt Orgnr/Persnr"/><br/>
-              <input name="authoremail" type="email" value=(signatoryemail documentauthordetails)
-                     infotext="Din e-mail"/><br/>
+              <strong><% signatoryname documentauthordetails %></strong><br/>
+              <% addbr $ signatorycompany documentauthordetails %>
+              <% addbr $ signatorynumber documentauthordetails %>
+              <% addbr $ signatoryemail documentauthordetails %>
               </div>
               Motpart<br/>
               <div id="signatorylist">
