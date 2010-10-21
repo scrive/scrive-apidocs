@@ -4,9 +4,9 @@
 module UserState where
 import Happstack.Data
 import Happstack.State
-import Control.Monad.Reader (ask)
-import Control.Monad.Trans (liftIO)
-import Control.Monad.State (modify,MonadState(..))
+import "mtl" Control.Monad.Reader (ask)
+import "mtl" Control.Monad.Trans (liftIO)
+import "mtl" Control.Monad.State (modify,MonadState(..))
 import Happstack.State.ClockTime
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS

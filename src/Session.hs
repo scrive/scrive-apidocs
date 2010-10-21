@@ -10,8 +10,8 @@ module Session
     )
     where
 
-import Control.Monad.Reader (MonadPlus(..), ap, ReaderT(..), asks, ask)
-import Control.Monad.State hiding (State)
+import "mtl" Control.Monad.Reader (MonadPlus(..), ap, ReaderT(..), asks, ask)
+import "mtl" Control.Monad.State hiding (State)
 import Data.Generics
 import Data.Maybe (isNothing,isJust, fromJust)
 import Happstack.Data (Default, deriveAll, gFind')

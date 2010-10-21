@@ -47,7 +47,7 @@ Executable kontrakcja-server
    GHC-Options: -threaded
  if os(windows)
    cpp-options: -DWINDOWS
- Build-depends: happstack-state, happstack-server<0.5.1, hslogger, mtl, time, time-extras
+ Build-depends: happstack-state, happstack-server<0.5.1, hslogger,  time, time-extras
  Build-depends: hsx, hsp, happstack<0.5.1, utf8-string, random
  Build-depends: happstack-data, extensible-exceptions, happstack-ixset, containers
  Build-depends: happstack-util, directory, process
@@ -58,12 +58,15 @@ Executable kontrakcja-server
  Build-Depends: HaXml == 1.13.*
  Build-Depends: parallel == 2.2.*
  Build-Depends: template-haskell
+ -- Build-Depends: heist
+ -- Build-Depends: monads-fd
+ Build-Depends: mtl
  Main-Is: Main.hs
 
  Extensions: TemplateHaskell, TypeFamilies, DeriveDataTypeable,
              FlexibleInstances, MultiParamTypeClasses, FlexibleContexts,
              UndecidableInstances, TypeOperators, TypeSynonymInstances,
-             GeneralizedNewtypeDeriving, NamedFieldPuns
+             GeneralizedNewtypeDeriving, NamedFieldPuns, PackageImports
 
 Executable kontrakcja-test
  hs-source-dirs: test/src src pdfseal/src
@@ -77,7 +80,7 @@ Executable kontrakcja-test
  Build-depends: test-framework, test-framework-hunit, test-framework-quickcheck
  Build-depends: HUnit, QuickCheck
  Build-depends: filepath
- Build-depends: happstack-state, happstack-server<0.5.1, hslogger, mtl, time, time-extras
+ Build-depends: happstack-state, happstack-server<0.5.1, hslogger, time, time-extras
  Build-depends: hsx, hsp, happstack<0.5.1, utf8-string, random
  Build-depends: happstack-data, extensible-exceptions, happstack-ixset, containers
  Build-depends: happstack-util, directory, process
@@ -92,4 +95,4 @@ Executable kontrakcja-test
  Extensions: TemplateHaskell, TypeFamilies, DeriveDataTypeable,
              FlexibleInstances, MultiParamTypeClasses, FlexibleContexts,
              UndecidableInstances, TypeOperators, TypeSynonymInstances,
-             GeneralizedNewtypeDeriving, NamedFieldPuns
+             GeneralizedNewtypeDeriving, NamedFieldPuns, PackageImports

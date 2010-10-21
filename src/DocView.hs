@@ -14,9 +14,6 @@ import qualified Data.ByteString as BS
 import qualified HSX.XMLGenerator as HSX (XML)
 import qualified HSX.XMLGenerator
 import User
-import Control.Monad
-import Control.Monad.Identity
-import Control.Monad.Trans
 import KontraLink
 import Misc
 import MinutesTime
@@ -24,6 +21,7 @@ import Data.Maybe
 import SendMail(Mail,emptyMail,content,title,attachments)
 import InspectXML
 import UserView ()
+import "mtl" Control.Monad.Trans
 
 $(deriveInspectXML ''Document)
 

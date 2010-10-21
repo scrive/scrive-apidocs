@@ -6,8 +6,9 @@
 module DocState where
 import Happstack.Data
 import Happstack.State
-import Control.Monad.Reader (ask)
-import Control.Monad.State (modify)
+import "mtl" Control.Monad.Reader (ask)
+import "mtl" Control.Monad.State (modify)
+import "mtl" Control.Monad.Trans
 import UserState
 import Happstack.Data.IxSet as IxSet
 import qualified Data.ByteString.UTF8 as BS
@@ -20,7 +21,6 @@ import Misc
 import Control.Monad
 import Data.List (find)
 import MinutesTime
-import Control.Monad.Trans
 import Data.List (zipWith4)
 import System.Random
 import Data.Word

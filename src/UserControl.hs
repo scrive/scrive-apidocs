@@ -1,31 +1,31 @@
 {-# LANGUAGE CPP, OverloadedStrings #-}
 
 module UserControl where
-import UserState
-import UserView
-import Session
-import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString as BS
-import KontraLink
+import "mtl" Control.Monad.State
+import "mtl" Control.Monad.Trans (liftIO,MonadIO,lift)
+import "base" Control.Monad
+import AppView
+import Data.Maybe
+import Data.Object
+import DocView
 import Happstack.Data.IxSet 
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.Server.HSP.HTML (webHSP)
 import Happstack.State (update,query)
-import qualified Data.Object.Json as Json
-import Control.Monad
-import User
-import AppView
-import Control.Monad.Trans (liftIO,MonadIO,lift)
+import KontraLink
 import Misc
 import SendMail(Mail,sendMail,fullnameemails)
-import System.Random
+import Session
 import System.Log.Logger
 import System.Process
-import Data.Object
+import System.Random
+import User
+import UserState
+import UserView
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.UTF8 as BS
+import qualified Data.Object.Json as Json
 import qualified Data.Set as Set
-import Data.Maybe
-import Control.Monad.State
-import DocView
 import qualified HSP
 
 addFlashMsgText :: BS.ByteString -> Kontra ()

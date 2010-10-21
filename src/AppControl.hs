@@ -1,54 +1,60 @@
 {-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, 
-             NamedFieldPuns, ScopedTypeVariables, CPP, RecordWildCards
+             NamedFieldPuns, ScopedTypeVariables, CPP, RecordWildCards,
+             PackageImports
  #-}
 module AppControl where
 
+import "base" Control.Monad (msum, mzero, liftM)
+import "mtl" Control.Monad.Reader
+import "mtl" Control.Monad.Reader (ask)
+import "mtl" Control.Monad.State
+import "mtl" Control.Monad.Trans
+import "mtl" Control.Monad.Trans(liftIO, MonadIO,lift)
 import AppState
 import AppView
-import Control.Monad(msum,liftM)
-import Control.Monad.Reader (ask)
-import Control.Monad.Trans(liftIO, MonadIO,lift)
+import Control.Concurrent
+import Control.Exception 
+import Data.ByteString.Char8 (ByteString)
+import Data.List
+import Data.Maybe
 import Data.Object
+import Debug.Trace
+import DocState
+import DocView
+import HSP.XML
 import Happstack.Data.IxSet ((@=),getOne,size)
+import Happstack.Server
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.Server.HSP.HTML (webHSP)
+import Happstack.Server.HTTP.FileServe
+import Happstack.Server.SimpleHTTP (seeOther)
 import Happstack.State (update,query)
-import Network.HTTP (getRequest, getResponseBody, simpleHTTP)
+import Happstack.Util.Common
+import InspectXML
+import KontraLink
+import MinutesTime
+import Misc
+import Network.Socket
 import Session
+import System.Directory
+import System.IO
+import System.IO.Unsafe
+import System.Process
+import System.Random
 import User
+import UserControl
+import UserState
+import UserView
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as B
+import qualified Data.ByteString.Lazy  as L
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Object.Json as Json
-import qualified DocView as DocView
-import qualified DocControl as DocControl
-import Happstack.Server.SimpleHTTP (seeOther)
-import Control.Monad.Reader
-import DocState
-import UserState
-import UserView
-import Happstack.Util.Common
-import UserControl
-import Data.Maybe
-import Misc
-import MinutesTime
-import Control.Monad.State
-import DocView
-import System.Random
-import System.Process
-import System.IO
-import System.Directory
-import Data.List
-import KontraLink
-import Control.Concurrent
 import qualified Data.Set as Set
-import System.IO.Unsafe
-import Debug.Trace
-import Network.Socket
+import qualified DocControl as DocControl
+import qualified DocView as DocView
 import qualified HSP as HSP
-import InspectXML
-import Control.Exception 
-import HSP.XML
 
 handleRoutes =  
   do
@@ -120,6 +126,30 @@ handleRoutes =
      , dir "amnesiadone" forgotPasswordDonePage
      ]
      ++ [serveHTMLFiles, fileServe [] "public"] 
+
+{-
+
+This is example of how to use heist. Let it be a comment until we decide either 
+we want it or remove from this file.
+
+Needed because Heist uses transformers rather than the old mtl package.
+
+import Text.Templating.Heist
+import Text.Templating.Heist.TemplateDirectory
+import qualified "monads-fd" Control.Monad.Trans as TRA
+
+instance (MonadIO m) => TRA.MonadIO (ServerPartT m) 
+    where liftIO = liftIO
+
+   dir "heist" $ path $ \name -> do
+         td <- liftIO $ newTemplateDirectory' "tpl" emptyTemplateState
+         let template = BS.fromString name
+         ts    <- liftIO $ getDirectoryTS td
+         bytes <- renderTemplate ts template
+         flip (maybe mzero) bytes $ \x -> do
+              return (toResponseBS (BS.fromString "text/html; charset=utf-8") (L.fromChunks [x]))
+-}
+
 
 -- uh uh, how to do that in correct way?
 normalizeddocuments :: MVar (Set.Set FileID)
