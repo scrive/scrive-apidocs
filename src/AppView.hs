@@ -220,7 +220,12 @@ welcomeBody (Context {ctxmaybeuser = Just _, ctxhostpart}) =
 welcomeBody ctx@(Context {ctxmaybeuser = Nothing}) = 
 	<div id="firstPageContentContainer"> 
 		<div id="firstPageLeft"> 
-                   <iframe src="//player.vimeo.com/video/15894469" width="300" height="184" frameborder="0"></iframe>
+                  <object width="300" height="184">
+                   <param name="allowfullscreen" value="true"/>
+                   <param name="allowscriptaccess" value="always"/>
+                   <param name="movie" value="https://secure.vimeo.com/moogaloop.swf?clip_id=15894469&amp;server=vimeo.com&amp;show_title=1&amp;show_byline=1&amp;show_portrait=0&amp;color=00ADEF&amp;fullscreen=1"/>
+                   <embed src="https://secure.vimeo.com/moogaloop.swf?clip_id=15894469&amp;server=vimeo.com&amp;show_title=1&amp;show_byline=1&amp;show_portrait=0&amp;color=00ADEF&amp;fullscreen=1" type="application/x-shockwave-flash" allowfullscreen="true" allowscriptaccess="always" height="184" width="300"/>
+                  </object>
                    <p><a href="//vimeo.com/15894469">Avtala på under 60 sekunder</a>.</p>
 		</div> 
 		
