@@ -449,7 +449,7 @@ serveHTMLFiles =  do
                 (
                  do
                   s<-liftIO $ BS.readFile $ "html/"++fileName
-                  webHSP (pageFromBody ctx TopNew kontrakcja (cdata $ BS.toString $ s))
+                  webHSP (pageFromBody ctx TopNone kontrakcja (cdata $ BS.toString $ s))
                 )
                case res of 
                 Right r -> return r
