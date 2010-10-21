@@ -28,10 +28,7 @@ import DocState
 import HSP
 import Happstack.Data.IxSet ((@=),getOne)
 import Happstack.Server
-import Happstack.Server hiding (simpleHTTP)
 import Happstack.Server.HSP.HTML (webHSP)
-import Happstack.Server.HSP.HTML (webHSP)
-import Happstack.Server.HStringTemplate (webST)
 import Happstack.Server.SimpleHTTP
 import Happstack.State (update,query)
 import KontraLink
@@ -48,7 +45,6 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
-import qualified Data.Object.Json as Json
 import qualified Data.Set as Set
 import qualified HSX.XMLGenerator as HSX (XML)
 

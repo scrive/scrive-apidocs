@@ -23,7 +23,6 @@ import DocState
 import DocView
 import HSP.XML
 import Happstack.Data.IxSet ((@=),getOne,size)
-import Happstack.Server
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.Server.HSP.HTML (webHSP)
 import Happstack.Server.HTTP.FileServe
@@ -50,7 +49,6 @@ import qualified Data.ByteString.Char8 as B
 import qualified Data.ByteString.Lazy  as L
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
-import qualified Data.Object.Json as Json
 import qualified Data.Set as Set
 import qualified DocControl as DocControl
 import qualified DocView as DocView

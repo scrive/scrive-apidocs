@@ -37,7 +37,7 @@ import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS
-import qualified Data.Map as M
+import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Seal as Seal
 
@@ -299,7 +299,7 @@ handleIssueShow document@Document{ documentauthor
            when (userid/=unAuthor documentauthor) mzero
            let file = safehead "handleIssueShow" (documentfiles document)
            let contents = filepdf file
-           let res = Response 200 M.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
+           let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
            let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
            return res2
        ]
@@ -617,7 +617,7 @@ showPage ctx modminutes fileid pageno = do
   case maybecontents of
     Nothing -> mzero
     Just contents -> do
-      let res = Response 200 M.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
+      let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
       let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/jpeg") res
       let modtime = toUTCTime modminutes
       rq <- askRq                 -- FIXME: what?
