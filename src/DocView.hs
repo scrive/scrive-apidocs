@@ -954,4 +954,40 @@ remindMailSigned ctx@Context{ctxmaybeuser = Just user, ctxhostpart}
                        content <- htmlHeadBodyWrapIO documenttitle content
                        return $ emptyMail {title = title, content = content, attachments = [(documenttitle,attachmentcontent)]}
 
+joinWith _ [] = []
+joinWith _ [x] = x
+joinWith s (x:xs) = x ++ s ++ (joinWith s xs)
 
+jsArray xs = "[" ++ (joinWith ", " xs) ++ "]"
+
+buildDefJS fd@FieldDefinition { fieldlabel, fieldvalue, fieldplacements } = 
+    "{ label: " ++ show fieldlabel -- show because we need quotes
+                    ++ ", value: " ++ show fieldvalue
+                    ++ ", placements: " ++ (jsArray (map buildPlacementJS fieldplacements))
+                    ++ " }"
+
+buildPlacementJS pl@FieldPlacement { placementx, placementy, placementpage, placementpagewidth, placementpageheight } = 
+    "{ x: " ++ show placementx 
+                ++ ", y: " ++ show placementy
+                ++ ", page: " ++ show placementpage
+                ++ ", h: " ++ show placementpageheight
+                ++ ", w: " ++ show placementpagewidth
+                ++ " }"
+                
+
+buildSigJS signatorydetails@SignatoryDetails { signatoryname, signatorycompany, signatorynumber, signatoryemail, signatorynameplacements, signatorycompanyplacements, signatoryemailplacements, signatorynumberplacements, signatoryotherfields } = 
+    "{ name: " ++ show signatoryname
+                   ++ ", company: " ++ show signatorycompany
+                   ++ ", email: " ++ show signatoryemail
+                   ++ ", number: " ++ show signatorynumber
+                   ++ ", nameplacements: " ++ (jsArray (map buildPlacementJS signatorynameplacements))
+                   ++ ", companyplacements: " ++ (jsArray (map buildPlacementJS signatorycompanyplacements))
+                   ++ ", emailplacements: " ++ (jsArray (map buildPlacementJS signatoryemailplacements))
+                   ++ ", numberplacements: " ++ (jsArray (map buildPlacementJS signatorynumberplacements))
+                   ++ ", otherfields: " ++ (jsArray (map buildDefJS signatoryotherfields))
+                   ++ " }"
+
+buildJS authordetails signatorydetails = 
+    "{ signatories: " ++ (jsArray (map buildSigJS signatorydetails))
+                          ++ ", author: " ++ buildSigJS authordetails
+                          ++ " }"
