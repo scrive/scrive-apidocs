@@ -988,6 +988,9 @@ buildSigJS signatorydetails@SignatoryDetails { signatoryname, signatorycompany, 
                    ++ " }"
 
 buildJS authordetails signatorydetails = 
-    "{ signatories: " ++ (jsArray (map buildSigJS signatorydetails))
+    "{ signatories: " ++ sigs
                           ++ ", author: " ++ buildSigJS authordetails
-                          ++ " }"
+                          ++ " }" where 
+                              sigs = if (length signatorydetails) > 0
+                                     then (jsArray (map buildSigJS signatorydetails))
+                                     else (jsArray [(buildSigJS emptyDetails)])
