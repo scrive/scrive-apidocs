@@ -18,8 +18,8 @@ function newsignatory() {
 	    otherfields: []};
 }
 
-function newplacement(x, y, page, w, h, el) {
-    return {x: x, y: y, page: page, w: w, h: h, el: el};
+function newplacement(x, y, page, w, h) {
+    return {x: x, y: y, page: page, w: w, h: h};
 }
 
 function placementToHTML(label, value) {
@@ -28,40 +28,70 @@ function placementToHTML(label, value) {
 	v = label;
     }
     return $("<div class='placedfield'>"
-	     + v +
-	     "</div>");
+	     + "<span class='value'>" + v + "</span>" 
+	     + "</div>");
 }
 
-function placePlacements(pls, label, value) {
+function placePlacements(pls, label, value, sigid, fieldid) {
     $(pls).each(function () {
 	    var pl = this;
 	    var d = placementToHTML(label, value);
-	    d.position({left: pl.x, top: pl.y});
+	    d.offset({left: pl.x, top: pl.y});
+	    d.append(newHiddenValue("sigid", sigid));
+	    d.append(newHiddenValue("fieldid", fieldid));
 	    $("#page" + pl.page).append(d);
+
+	    d.draggable({ 
+		    appendTo: "body",
+			helper: function (event, ui) {
+			return placementToHTML(label, value);
+		    },
+			start: function (event, ui) {
+			$(this).css({ display: "none" });
+		    }
+		
+		});
 	});
 }
 
 function newHiddenValue(label, value) {
-    return $("<div style='display: none' class='" + label + "'>" + value + "</div>");
+    return $("<span style='display: none' class='" + label + "'>" + value + "</span>");
 }
 
-// this var will be kept in sync with the fields.
+function magicUpdate(){
+    var field = $(this);
+    var sigid = field.parents(".sigentry").find(".sigid").text();
+    var fieldid = field.parent().find(".fieldid").text();
+    var value = field.attr("value");
 
-// var docstate;
+    $(".placedfield").each(function () {
+	    var f = $(this);
+	    if(f.find(".sigid").text() == sigid
+	       && f.find(".fieldid").text() == fieldid) {
+		f.find(".value").text(value);
+	    }
+	});
+}
 
 function buildDraggableField(info, val) {
     var x = $("<div><span class='draghandle'>drag</span><input type='text' infotext='" + info + "' value='" + val + "' /></div>");
     x.draggable({ handle: ".draghandle"
 		, helper: function (event) {
-		return placementToHTML(info, val);
+		var field = $(this);
+		var input = field.find("input");
+		return placementToHTML(input.attr("infotext"), input.attr("value"));
 	    }
 		});
+    var input = x.find("input");
 
+    input.keydown(magicUpdate);
+    input.keyup(magicUpdate);
+    input.change(magicUpdate);
     return x;
 }
 
 function buildDraggableText(val) {
-    var x = $("<div><span class='draghandle'>drag</span> " + val + "</div>");
+    var x = $("<div><span class='draghandle'>drag</span> <span class='fieldvalue'>" + val + "</span></div>");
     x.draggable({ handle: ".draghandle"
 		, helper: function (event) {
 		return placementToHTML("abc", val);
@@ -79,21 +109,26 @@ function docstateToHTML(){
     var ad = $("#authordetails");
 
     ad.html("");
+    ad.append(newHiddenValue("sigid", "author"));
 
     if(author.name) {
 	var aname = buildDraggableText(author.name);
+	aname.append(newHiddenValue("fieldid", "name"));
 	ad.append(aname);
     }
     if(author.company){
 	var acomp = buildDraggableText(author.company);
+	acomp.append(newHiddenValue("fieldid", "company"));
 	ad.append(acomp);
     }
     if(author.number) {
 	var anumb = buildDraggableText(author.number);
+	anumb.append(newHiddenValue("fieldid", "number"));
 	ad.append(anumb);
     }
     if(author.email) {
 	var aemai = buildDraggableText(author.email);
+	aemai.append(newHiddenValue("fieldid", "email"));
 	ad.append(aemai);
     }
 
@@ -102,6 +137,7 @@ function docstateToHTML(){
     $(author.otherfields).each(function (){
 	    var fd = this;
 	    var field = buildDraggableField(fd.label, fd.value);
+	    field.append(newHiddenValue("fieldid", newUUID()));
 	    ad.append(field);
 	});
 
@@ -112,7 +148,8 @@ function docstateToHTML(){
 
     $(author.otherfields).each(function (){
 	    var fd = this;
-	    placePlacements(fd.placements, fd.label, fd.value);
+	    fd.id = newUUID();
+	    placePlacements(fd.placements, fd.label, fd.value, "author", fd.id);
 	});
 
     var signatories = docstate.signatories;
@@ -130,46 +167,53 @@ function signatoryToHTML(sig) {
     sig.id = sigid;
     
     var sigentry = $("<div class='sigentry'></div>");
+    sigentry.append(newHiddenValue("sigid", sigid));    
     
-    
-    var d = $("<div class='fields'></div>");
+    var d = $("<div class='standardfields'></div>");
     
     var aname = buildDraggableField("Namn på motpart", sig.name);
     var acomp = buildDraggableField("Titel, företag", sig.company);
     var anumb = buildDraggableField("Orgnr/Persnr", sig.number);
     var aemai = buildDraggableField("Personens e-mail", sig.email);
+
+    aname.find("input").attr("name", "signatoryname");
+    acomp.find("input").attr("name", "signatorycompany");
+    anumb.find("input").attr("name", "signatorynumber");
+    aemai.find("input").attr("name", "signatoryemail");
     
+    aname.append(newHiddenValue("fieldid", "name"));
+    acomp.append(newHiddenValue("fieldid", "company"));
+    anumb.append(newHiddenValue("fieldid", "number"));
+    aemai.append(newHiddenValue("fieldid", "email"));
+
     d.append(aname);
     d.append(acomp);
     d.append(anumb);
     d.append(aemai);
     
     // other fields
+
+    var of = $("<div class='otherfields'></div>");
     
     $(sig.otherfields).each(function (){
 	    var fd = this;
 	    var field = buildDraggableField(fd.label, fd.value);
-	    d.append(field);
+	    field.append(newHiddenValue("fieldid", newUUID()));
+	    of.append(field);
 	});
     
     sl.append(sigentry);
     
     var removeLink = $("<small><a href='#'>Ta bort</a></small>");
     removeLink.find("a").click(function () {
-	    var ind = -1;
-	    for(i = 0; i < docstate.signatories.length; i++){
-		if(docstate.signatories[i].id = sigid) {
-		    ind = i;
-		    break;
-		}
-	    }
-	    
-	    docstate.signatories.splice(ind, 1);
 	    var link = $(this);
-	    link.parent().parent().detach();
+	    link.parents(".sigentry").detach();
 	    return false;
 	});
+
+
     sigentry.append(d);
+    sigentry.append(of);
     sigentry.append(removeLink);
     
     placePlacements(sig.nameplacements, "Namn på motpart", sig.name);
@@ -179,21 +223,85 @@ function signatoryToHTML(sig) {
     
     $(sig.otherfields).each(function (){
 	    var fd = this;
-	    placePlacements(fd.placements, fd.label, fd.value);
+	    fd.id = newUUID();
+	    placePlacements(fd.placements, fd.label, fd.value, sig.id, fd.id);
 	});
 }
 
 signatoryadd = function() {
     var sig = newsignatory();
-    docstate.signatories.push(sig);
     signatoryToHTML(sig);
     enableInfoText();
     return false;
+};
+
+function getLabel(x) {
+    var label = $(x).find("input").attr("infotext");
+    if(!label) {
+	label = "nolabel";
+    }
+    return label;
+}
+
+function getValue(x) {
+    var val = $(x).find(".fieldvalue").text();
+    if(!val) {
+	if(!$(x).find("input").hasClass("grayed")) {
+	    val = $(x).find("input").attr("value");
+	}
+    }
+
+    if (!val) {
+	val = "";
+    }
+
+    return val;
+}
+
+function makeDropTargets() {
+    $(".pagediv").droppable({ drop: function(event, ui) {
+		var page = $(this);
+		var field = $(ui.draggable);
+		var helper = $(ui.helper);
+
+		var top = helper.offset().top - page.offset().top;
+		var left = helper.offset().left - page.offset().left;
+
+		var pageno = parseInt(page.attr("id").substr(4));
+
+
+
+		var fieldid = field.find(".fieldid").text();
+
+		if(!field.hasClass("placedfield")) {
+		    var sigid = field.parents(".sigentry").find(".sigid").text();
+		    if(!sigid) {
+			sigid = field.parents("#authordetails").find(".sigid").text();
+		    }
+		    
+		    if(!sigid) {
+			alert("no sig id");
+		    }
+		    var pl = newplacement(left, top, pageno, page.width(), page.height());
+		    placePlacements([pl], getLabel(field), getValue(field), sigid, fieldid);
+		} else {
+		    var sigid = field.find(".sigid").text();
+		    
+		    var pl = newplacement(left, top, pageno, page.width(), page.height());
+		    placePlacements([pl], "nolabel", field.find(".value").text(), sigid, fieldid);
+		    field.remove();
+		    helper.remove();
+		}
+	    }});
+
+    return true;
 }
 
 $(document).ready(function () {
 	docstateToHTML();
 	
-
 	enableInfoText();
+
+	setTimeout("makeDropTargets();", 1000);
+	
     });
