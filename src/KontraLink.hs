@@ -43,6 +43,7 @@ data KontraLink
     | LinkSubaccount
     | LinkResendEmail Document SignatoryLink {- Old and should be droped-}
     | LinkRemind Document SignatoryLink
+    | LinkSigned DocumentID SignatoryLinkID 
 
 instance Show KontraLink where
     showsPrec _ LinkAbout = (++) "/about"
@@ -67,6 +68,7 @@ instance Show KontraLink where
     showsPrec _ (LinkResendEmail document signatorylink) = 
         (++) $ "/resendemail/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink)
     showsPrec _ (LinkRemind document signlink) = (++) $ "/resend/"++(show $ documentid document)++"/"++(show $ signatorylinkid signlink)   
+    showsPrec _ (LinkSigned documentid signatorylinkid) = (++) $ "/landpage/signed/" ++ show documentid ++ "/" ++ show signatorylinkid
 {-
 instance (EmbedAsAttr m String) => (EmbedAsAttr m KontraLink) where
     asAttr = asAttr . show

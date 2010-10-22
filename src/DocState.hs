@@ -230,10 +230,10 @@ $(deriveAll [''Default]
           , documentmtime            :: MinutesTime
           , documentchargemode       :: ChargeMode
           , documentdaystosign       :: Int
-          , documenttimeouttime      :: Maybe TimeoutTime
+          , documenttimeouttime      :: Maybe TimeoutTime 
           , documentdeleted          :: Bool -- should not appear in list
           , documentauthordetails    :: SignatoryDetails
-          , documentmaybesigninfo    :: Maybe SignInfo      -- about the author signed the document
+          , documentmaybesigninfo    :: Maybe SignInfo      -- about the author signed the document |should be droped and check at runtime|
           , documenthistory          :: [DocumentHistoryEntry]
           , documentinvitetext       :: BS.ByteString
 
@@ -696,7 +696,11 @@ instance Component Documents where
   type Dependencies Documents = End
   initialValue = empty
 
-  
+getDocuments:: Query Documents [Document]
+getDocuments = do
+    documents <- ask
+    return $ toList documents  
+
 getDocumentByDocumentID :: DocumentID -> Query Documents (Maybe Document)
 getDocumentByDocumentID documentid = do
   documents <- ask
@@ -844,7 +848,7 @@ signDocument :: DocumentID
              -> SignatoryLinkID 
              -> MinutesTime 
              -> Word32 
-             -> Update Documents (Maybe Document)
+             -> Update Documents (Either String Document)
 signDocument documentid signatorylinkid1 time ipnumber = do
   documents <- ask
   let Just document = getOne (documents @= documentid)
@@ -855,8 +859,13 @@ signDocument documentid signatorylinkid1 time ipnumber = do
               x { maybesigninfo = Just (SignInfo time ipnumber)
                 }
       maybesign x = x
-  modify (updateIx documentid signeddocument)
-  return (Just signeddocument)
+  if (documentstatus document == Pending)
+   then do
+        modify (updateIx documentid signeddocument)
+        return (Right signeddocument)
+   else return $ Left (case (documentstatus document) of  
+                            Timedout -> "Förfallodatum har passerat"
+                            _ ->        "Bad document status" )
   
 
 getFilePageJpg :: FileID -> Int -> Query Documents (Maybe BS.ByteString)
@@ -988,7 +997,8 @@ fragileTakeOverDocuments destuserid srcuserid = do
 
 
 -- create types for event serialization
-$(mkMethods ''Documents [ 'getDocumentsByAuthor
+$(mkMethods ''Documents [ 'getDocuments
+                        , 'getDocumentsByAuthor
                         , 'getDocumentsBySignatory
                         , 'newDocument
                         , 'getDocumentByDocumentID

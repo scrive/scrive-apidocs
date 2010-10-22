@@ -343,3 +343,9 @@ logErrorWithDefault c d f = do
                               Left err  ->  do 
                                              errorM "Happstack.Server" err
                                              return d
+
+                                        
+caseOf ((True,a):_) _ = a
+caseOf (_:r) d = caseOf r d
+caseOf [] d = d
+                                             
