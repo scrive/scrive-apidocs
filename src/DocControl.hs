@@ -153,22 +153,22 @@ signDocument :: DocumentID
 signDocument documentid 
              signatorylinkid1 = do
   ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber}) <- get
-             
   getDataFnM (look "sign")
+  do
+     mdocument <- update $ SignDocument documentid signatorylinkid1 ctxtime ctxipnumber
+     case (mdocument) of
+      Left messege -> do
+                       addFlashMsgText $ BS.fromString messege
+                       let link = LinkMain
+                       response <- webHSP (seeOtherXML $ show link)
+                       seeOther (show LinkMain) response
+      Right document -> do 
+                        let isallsigned = all (isJust . maybesigninfo) (documentsignatorylinks document)
+                        when isallsigned ((liftIO $ doctransPending2Closed ctx document) >> return ())
+                        let link = LinkSigned documentid signatorylinkid1
+                        response <- webHSP (seeOtherXML $ show link)
+                        seeOther (show link) response
   
-  Just document <- update $ SignDocument documentid signatorylinkid1 ctxtime ctxipnumber
-  
-  when (documentmaybesigninfo document == Nothing) $
-       error "You are trying to sign a document that wasn't signed by his author"
-
-  let isallsigned = all f (documentsignatorylinks document)
-      f (SignatoryLink {maybesigninfo}) = isJust maybesigninfo
-  when isallsigned ((liftIO $ doctransPending2Closed ctx document) >> return ())
-
-  let link = "/landpage/signed/" ++ show documentid ++ "/" ++ show signatorylinkid1
-  response <- webHSP (seeOtherXML link)
-  seeOther link response
-
 signatoryLinkFromDocumentByID document@Document{documentsignatorylinks} linkid = do
     let invitedlinks = filter (\x -> signatorylinkid x == linkid
                                {- && signatorymagichash x == magichash1 -})

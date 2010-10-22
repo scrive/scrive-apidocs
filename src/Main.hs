@@ -42,6 +42,7 @@ import qualified Network.Socket as Socket ( accept )
 import qualified Control.Exception as Exception
 import Happstack.State.Saver
 import Session
+import Scheduler
 import Happstack.State (update,query)
 
 startTestSystemState' :: (Component st, Methods st) => Proxy st -> IO (MVar TxControl)
@@ -121,8 +122,11 @@ main = withLogger $ do
                   Exception.bracket 
                            (do -- socket <- listenOn (port (httpConf appConf))
                                -- forkIO $ simpleHTTPWithSocket socket (httpConf appConf) appHandler
-                             forkIO $ simpleHTTP (httpConf appConf) appHandler)
-                           (killThread) $ \_ -> Exception.bracket
+                              t1 <- forkIO $ simpleHTTP (httpConf appConf) appHandler
+                              t2 <- forkIO $ cron 60 runScheduler
+                              return [t1,t2]
+                           )
+                           (mapM_ killThread) $ \_ -> Exception.bracket
                                         -- checkpoint the state once a day
                                         -- FIXME: make it checkpoint always at the same time
                                         (forkIO $ cron (60*60*24) (createCheckpoint control))

@@ -599,16 +599,19 @@ showSignatoryLinkForSign muser document siglnk@(SignatoryLink{  signatorylinkid
    let
       wasSigned =  isJust maybesigninfo
       wasSeen = isJust maybeseeninfo
-      status = if (wasSigned)
-               then <img src="/theme/images/status_signed.png"/> 
-               else if (wasSeen)
-                    then <img src="/theme/images/status_viewed.png"/> 
-                    else <img src="/theme/images/status_pending.png"/> 
-      message =  if (wasSigned)
-                 then "Undertecknat " ++ showDateOnly1 (signtime $ fromJust maybesigninfo)
-                 else if (wasSeen)
-                    then "Granskat " ++ showDateOnly (signtime $ fromJust maybeseeninfo)
-                    else  "Har ej undertecknat"         
+      isTimedout = documentstatus document == Timedout
+      
+      status =  caseOf
+                [( isTimedout, <img src="/theme/images/status_timeout.png"/>), 
+                (wasSigned, <img src="/theme/images/status_signed.png"/>),
+                (wasSeen, <img src="/theme/images/status_viewed.png"/> )]
+                <img src="/theme/images/status_pending.png"/>
+      message = caseOf
+                [
+                (wasSigned, "Undertecknat " ++ showDateOnly1 (signtime $ fromJust maybesigninfo) ),
+                (isTimedout, "Förfallodatum har passerat"),
+                (wasSeen,  "Granskat " ++ showDateOnly (signtime $ fromJust maybeseeninfo))]
+                "Har ej undertecknat"       
       isCurrentUserAuthor = (isJust muser) && isAuthor (fromJust muser) document    
       isCurrentSignatorAuthor = (fmap (unEmail . useremail) muser) ==  (Just signatoryemail)    
       reminderText = if (wasSigned)
@@ -623,7 +626,7 @@ showSignatoryLinkForSign muser document siglnk@(SignatoryLink{  signatorylinkid
                 (if BS.null signatorynumber then [] else [ asChild signatorynumber, asChild <br/> ]) ++
                 (if BS.null signatoryemail then [] else [ asChild signatoryemail, asChild <br/> ]) ++
                 ([asChild message]) ++
-                (if (isCurrentUserAuthor && (not isCurrentSignatorAuthor)) then [asChild <br/> ,asChild reminderLink] else [])
+                (if (isCurrentUserAuthor && (not isCurrentSignatorAuthor) && (not isTimedout)) then [asChild <br/> ,asChild reminderLink] else [])
                 %></p>
 
 showDocumentForSign :: ( XMLGenerator m
@@ -676,15 +679,17 @@ showDocumentForSign action document muser invitedlink wassigned =
 
                  <% map (showSignatoryLinkForSign muser document) (authorlink : allbutinvited) %>
                  
-                 <%
-                   if wassigned 
-                     then <span>Du har redan undertecknat!<br/></span>
-                     else
-                        <span>
-                           {- Avvisa - gray FIXME -}
-                           <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign"/>
-                           <br/>
-                        </span>
+                 <% caseOf 
+                    [(wassigned ,
+                              <span>Du har redan undertecknat!<br/></span>),
+                    (documentstatus document == Timedout, 
+                              <span>Förfallodatum har passerat!<br/></span>)
+                    ]
+                              <span>
+                                {- Avvisa - gray FIXME -}
+                                <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign"/>
+                                <br/>
+                              </span>
                  %>
                  <small>Jag vill veta mer <a href="/about" target="_blank">om SkrivaPå</a>.</small>
               </span>
