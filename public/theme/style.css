@@ -796,4 +796,9 @@ input
     position: relative;
 }
 
+.placedfield 
+{
+    position: absolute;
+}
+
 /* Localized */
