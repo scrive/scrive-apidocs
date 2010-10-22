@@ -60,6 +60,17 @@ function buildDraggableField(info, val) {
     return x;
 }
 
+function buildDraggableText(val) {
+    var x = $("<div><span class='draghandle'>drag</span> " + val + "</div>");
+    x.draggable({ handle: ".draghandle"
+		, helper: function (event) {
+		return placementToHTML("abc", val);
+	    }
+		});
+
+    return x;
+}
+
 // destroy the HTML that's there to sync it with the docstate
 function docstateToHTML(){
     // author first
@@ -69,15 +80,22 @@ function docstateToHTML(){
 
     ad.html("");
 
-    var aname = buildDraggableField("Namn på motpart", author.name);
-    var acomp = buildDraggableField("Titel, företag", author.company);
-    var anumb = buildDraggableField("Orgnr/Persnr", author.number);
-    var aemai = buildDraggableField("Personens e-mail", author.email);
-
-    ad.append(aname);
-    ad.append(acomp);
-    ad.append(anumb);
-    ad.append(aemai);
+    if(author.name) {
+	var aname = buildDraggableText(author.name);
+	ad.append(aname);
+    }
+    if(author.company){
+	var acomp = buildDraggableText(author.company);
+	ad.append(acomp);
+    }
+    if(author.number) {
+	var anumb = buildDraggableText(author.number);
+	ad.append(anumb);
+    }
+    if(author.email) {
+	var aemai = buildDraggableText(author.email);
+	ad.append(aemai);
+    }
 
     // other fields
 
@@ -104,7 +122,6 @@ function docstateToHTML(){
     $(signatories).each(function () {
 	    signatoryToHTML(this);
 	});
-   
 }
 
 function signatoryToHTML(sig) {
