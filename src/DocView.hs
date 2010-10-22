@@ -504,6 +504,13 @@ showDocument user
         <% if documentstatus == Preparation
            then 
              <span>
+               <script type="text/javascript">
+                 <% "var docstate = " ++ (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks) ++ ";" %>
+               </script>
+
+               
+
+
               Avsändare<br/>
               <div style="margin-bottom: 10px;" id="authordetails">
               <strong><% signatoryname documentauthordetails %></strong><br/>
