@@ -58,6 +58,10 @@ function newHiddenValue(label, value) {
     return $("<span style='display: none' class='" + label + "'>" + value + "</span>");
 }
 
+function newHiddenField(name, value) {
+    return $("<input type='hidden' name='" + name + "' value='" + value + "' />");
+}
+
 function magicUpdate(){
     var field = $(this);
     var sigid = field.parents(".sigentry").find(".sigid").text();
@@ -168,7 +172,8 @@ function signatoryToHTML(sig) {
     
     var sigentry = $("<div class='sigentry'></div>");
     sigentry.append(newHiddenValue("sigid", sigid));    
-    
+    sigentry.append(newHiddenField("sigid", sigid));
+
     var d = $("<div class='standardfields'></div>");
     
     var aname = buildDraggableField("Namn på motpart", sig.name);
@@ -198,7 +203,12 @@ function signatoryToHTML(sig) {
     $(sig.otherfields).each(function (){
 	    var fd = this;
 	    var field = buildDraggableField(fd.label, fd.value);
-	    field.append(newHiddenValue("fieldid", newUUID()));
+	    field.find("input").attr("name", "fieldvalue");
+	    var fieldid = newUUID();
+	    field.append(newHiddenValue("fieldid", fieldid));
+
+	    field.append(newHiddenField("fieldid", fieldid));
+	    field.append(newHiddenField("fieldsigid", sigid));
 	    of.append(field);
 	});
     
@@ -269,8 +279,6 @@ function makeDropTargets() {
 
 		var pageno = parseInt(page.attr("id").substr(4));
 
-
-
 		var fieldid = field.find(".fieldid").text();
 
 		if(!field.hasClass("placedfield")) {
@@ -303,5 +311,26 @@ $(document).ready(function () {
 	enableInfoText();
 
 	setTimeout("makeDropTargets();", 1000);
+
+	$("form").submit(function () {
+		$(".placedfield").each(function () {
+			var field = $(this);
+			var x = field.position().left;
+			var y = field.position().top;
+			var pageno = field.parent().attr("id").substr(4);
+			var pagew = field.parent().width();
+			var pageh = field.parent().height();
+			var sigid = field.find(".sigid").text();
+			var fieldid = field.find(".fieldid").text();
+
+			$("form").append(newHiddenField("placedx", x));
+			$("form").append(newHiddenField("placedy", y));
+			$("form").append(newHiddenField("placedpage", pageno));
+			$("form").append(newHiddenField("placedwidth", pagew));
+			$("form").append(newHiddenField("placedheight", pageh));
+			$("form").append(newHiddenField("placedsigid", sigid));
+			$("form").append(newHiddenField("placedfieldid", fieldid));
+		    });
+	    });
 	
     });
