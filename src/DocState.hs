@@ -952,13 +952,13 @@ getNumberOfDocumentsOfUser user = do
   let numdoc = size (documents @= Author (userid user))
   return numdoc
 
-setDocumentTimeoutTime :: Document -> TimeoutTime -> Update Documents Document
-setDocumentTimeoutTime document1 timeouttime = do
+setDocumentTimeoutTime :: DocumentID -> TimeoutTime -> Update Documents Document
+setDocumentTimeoutTime documentid timeouttime = do
   -- check if document status change is a legal transition
   documents <- ask
-  let Just document = getOne (documents @= documentid document1)
+  let Just document = getOne (documents @= documentid)
   let newdoc = document { documenttimeouttime = Just timeouttime }
-  modify (updateIx (documentid newdoc) newdoc)
+  modify (updateIx documentid newdoc)
   return newdoc
 
 archiveDocuments :: [DocumentID] -> Update Documents ()
