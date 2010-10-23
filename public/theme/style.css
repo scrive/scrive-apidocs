@@ -376,6 +376,16 @@ body
     font-size: 11px;
 }
 
+#logout
+{
+    position: absolute;
+    right: 8px;
+    top: 10px;
+    width: 200px;
+    text-align: right;
+}
+
+
 /* 002 update values */
 .contactabout
 {
