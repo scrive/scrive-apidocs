@@ -1,7 +1,10 @@
 {-# LANGUAGE FlexibleContexts, FlexibleInstances, IncoherentInstances,
              MultiParamTypeClasses, NamedFieldPuns, CPP #-}
 {-# OPTIONS_GHC -F -pgmFtrhsx #-}
-module AppView where
+module AppView( TopMenu(..),kontrakcja,htmlHeadBodyWrapIO,poweredBySkrivaPaPara,loginBox,
+welcomeBody,errorReport,renderFromBody,forgotPasswordPageView,forgotPasswordConfirmPageView,signupPageView,
+SignupForm,signupEmail,signupPassword,signupPassword2,databaseContents,showAdminOnly,pageAllUsersTable,
+signupFirstname, signupLastname, signupConfirmPageView, loginPageView,statsPageView) where
 
 import HSP hiding (Request)
 import System.Locale (defaultTimeLocale)
@@ -287,13 +290,16 @@ dateStr ct =
 
 -- * Main Implementation
 
-renderFromBody :: (MonadIO m, EmbedAsChild (HSPT' IO) xml) 
+renderFromBody :: (EmbedAsChild (HSPT' IO) xml) 
                => Context 
                -> TopMenu 
                -> String 
                -> xml 
-               -> m Response
-renderFromBody ctx topmenu title = webHSP . pageFromBody ctx topmenu title
+               -> Kontra Response
+renderFromBody ctx topmenu title xml = do
+                                        res <- webHSP $ pageFromBody ctx topmenu title xml
+                                        clearFlashMsgs
+                                        return res
 
 topnavi :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
         => Bool 

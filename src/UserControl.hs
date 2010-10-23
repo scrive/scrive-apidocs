@@ -28,22 +28,7 @@ import qualified Data.Object.Json as Json
 import qualified Data.Set as Set
 import qualified HSP
 
-addFlashMsgText :: BS.ByteString -> Kontra ()
-addFlashMsgText msg = do
-                       ctx@Context{ ctxflashmessages = flashmessages} <- get
-                       put $ ctx{ ctxflashmessages =  (FlashMessage msg) : flashmessages}
 
-  
-addFlashMsgHtml :: HSP.HSP HSP.XML 
-                -> Kontra ()
-addFlashMsgHtml msg = do
-                       ctx@Context{ ctxflashmessages = flashmessages} <- get
-                       msg' <- liftM renderXMLAsBSHTML (webHSP1 msg)
-                       put $ ctx {ctxflashmessages = (FlashMessage msg') :  flashmessages} 
-
-logUserToContext user =  do
-                          ctx<- get
-                          put$ ctx { ctxmaybeuser =  user}
 
 handleUser :: Context -> Kontra Response
 handleUser ctx = 

@@ -13,7 +13,6 @@ import "mtl" Control.Monad.Trans(liftIO, MonadIO,lift)
 import AppState
 import AppView
 import Control.Concurrent
-import Control.Exception 
 import Data.ByteString.Char8 (ByteString)
 import Data.List
 import Data.Maybe
@@ -60,8 +59,8 @@ handleRoutes =
    ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} <- get 
    msum $
     ([nullDir >> if isJust ctxmaybeuser
-              then withUserTOS (webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx)))
-              else webHSP (pageFromBody ctx TopNew kontrakcja (welcomeBody ctx))
+              then withUserTOS (renderFromBody ctx TopNew kontrakcja (welcomeBody ctx))
+              else renderFromBody ctx TopNew kontrakcja (welcomeBody ctx)
      , dir "s" $ DocControl.handleSign
      , {- old -} dir "sign" $ withUserTOS $ DocControl.handleSign
      , dir "d" $ withUserTOS $ DocControl.handleIssue
@@ -111,9 +110,9 @@ handleRoutes =
                        ]
              , dir "dave" $ msum
                    [ dir "document" $ pathdb GetDocumentByDocumentID $ \document ->
-                        webHSP $ pageFromBody ctx TopNew kontrakcja $ inspectXML document
+                        renderFromBody ctx TopNew kontrakcja $ inspectXML document
                    , dir "user" $ pathdb GetUserByUserID $ \user ->
-                       webHSP $ pageFromBody ctx TopNew kontrakcja $ inspectXML user
+                       renderFromBody ctx TopNew kontrakcja $ inspectXML user
                    ]
              ]
          else []))
@@ -197,13 +196,13 @@ appHandler = do
      do
       userLogin
       res <- (handleRoutes) `mplus` do
-         response <- webHSP (pageFromBody ctx TopNone kontrakcja (errorReport ctx rq))
+         response <- renderFromBody ctx TopNone kontrakcja (errorReport ctx rq)
          setRsCode 404 response     
       ctx <- get 
       return (res,ctx)   
       
   let newsessionuser = fmap userid $ ctxmaybeuser ctx  
-  let newflashmessages = if (200 == rsCode res && rqMethod rq == GET) then [] else (ctxflashmessages ctx)
+  let newflashmessages = ctxflashmessages ctx
   updateSessionWithContextData session newsessionuser newflashmessages
   return res
       
@@ -446,15 +445,11 @@ serveHTMLFiles =  do
         let fileName = last (rqPaths rq)
         if ((length (rqPaths rq) > 0) && isSuffixOf ".html" fileName)
          then do
-               res <- liftIO $ (try::IO Response -> IO (Either SomeException Response))
-                (
-                 do
-                  s<-liftIO $ BS.readFile $ "html/"++fileName
-                  webHSP (pageFromBody ctx TopNone kontrakcja (cdata $ BS.toString $ s))
-                )
-               case res of 
-                Right r -> return r
-                Left _ -> mzero               
+         
+                   ms <- liftIO $ catch (fmap Just ( BS.readFile $ "html/"++fileName)) (const $ return Nothing)
+                   case ms of 
+                    Just s -> renderFromBody ctx TopNone kontrakcja (cdata $ BS.toString $ s)
+                    _ -> mzero
                
          else mzero
       
