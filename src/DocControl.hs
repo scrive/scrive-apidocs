@@ -54,7 +54,12 @@ doctransPreparation2Pending ctx@Context{ctxtime, ctxipnumber } doc = do
    \newdoc -> do
                let timeout = TimeoutTime (MinutesTime (m + documentdaystosign doc * 24 * 60))
                newdoc2 <- update $ SetDocumentTimeoutTime (documentid newdoc) timeout
-               forkIO $ sendInvitationEmails ctx newdoc2
+               forkIO $ do
+                 -- this is here to postpone email send a second
+                 -- so our service has a chance to give answer first
+                 -- is GHC using blocking calls or what?
+                 threadDelay 1000 
+                 sendInvitationEmails ctx newdoc2
                return newdoc2
  
 
