@@ -29,7 +29,7 @@ timeoutDocuments = do
                                                              let expired = (unTimeoutTime timeout) < now
                                                              if (pending && expired)
                                                               then do 
-                                                                    update $ UpdateDocumentStatus doc Timedout now 0                                                     
+                                                                    update $ UpdateDocumentStatus (documentid doc) Timedout now 0                                                     
                                                                     debugM "Happstack.Server" $ "Document timedout" ++ (show $ documenttitle doc)                                                                   
                                                               else return ()
                                             _ -> return () 

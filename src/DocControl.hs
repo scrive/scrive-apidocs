@@ -50,7 +50,7 @@ import qualified Seal as Seal
 doctransPreparation2Pending :: Context -> Document -> IO Document
 doctransPreparation2Pending ctx@Context{ctxtime, ctxipnumber } doc = do
   let MinutesTime m = ctxtime 
-  logErrorWithDefault (update $ UpdateDocumentStatus doc Pending ctxtime ctxipnumber) doc $ 
+  logErrorWithDefault (update $ UpdateDocumentStatus (documentid doc) Pending ctxtime ctxipnumber) doc $ 
    \newdoc -> do
                let timeout = TimeoutTime (MinutesTime (m + documentdaystosign doc * 24 * 60))
                newdoc2 <- update $ SetDocumentTimeoutTime newdoc timeout
@@ -60,7 +60,7 @@ doctransPreparation2Pending ctx@Context{ctxtime, ctxipnumber } doc = do
 
 doctransPending2Closed :: Context -> Document -> IO Document
 doctransPending2Closed ctx@Context{ctxtime,ctxipnumber,ctxhostpart} doc = do
-  logErrorWithDefault (update $ UpdateDocumentStatus doc Closed ctxtime ctxipnumber) doc $ 
+  logErrorWithDefault (update $ UpdateDocumentStatus (documentid doc) Closed ctxtime ctxipnumber) doc $ 
    \closedDoc  -> do
                    clearDoc <- update $ RemoveFileFromDoc (documentid doc)
                    Just user <- query $ GetUserByUserID (unAuthor (documentauthor doc))
@@ -71,12 +71,12 @@ doctransPending2Closed ctx@Context{ctxtime,ctxipnumber,ctxhostpart} doc = do
    
 doctransPending2Canceled :: Context -> Document -> IO Document
 doctransPending2Canceled ctx@Context{ctxtime,ctxipnumber} doc = do
-  logErrorWithDefault (update $ UpdateDocumentStatus doc Canceled ctxtime ctxipnumber) doc return
+  logErrorWithDefault (update $ UpdateDocumentStatus (documentid doc) Canceled ctxtime ctxipnumber) doc return
 
 
 doctransPending2Timedout :: Context -> Document -> IO Document
 doctransPending2Timedout ctx@Context{ctxtime,ctxipnumber} doc = do
-   logErrorWithDefault (update $ UpdateDocumentStatus doc Timedout ctxtime ctxipnumber) doc return
+   logErrorWithDefault (update $ UpdateDocumentStatus (documentid doc) Timedout ctxtime ctxipnumber) doc return
                     
 sendInvitationEmails :: Context -> Document -> IO ()
 sendInvitationEmails ctx document = do
