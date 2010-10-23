@@ -54,7 +54,7 @@ doctransPreparation2Pending ctx@Context{ctxtime, ctxipnumber } doc = do
    \newdoc -> do
                let timeout = TimeoutTime (MinutesTime (m + documentdaystosign doc * 24 * 60))
                newdoc2 <- update $ SetDocumentTimeoutTime newdoc timeout
-               sendInvitationEmails ctx newdoc2
+               forkIO $ sendInvitationEmails ctx newdoc2
                return newdoc2
  
 
