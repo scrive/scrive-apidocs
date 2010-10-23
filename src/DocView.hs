@@ -1,9 +1,9 @@
 {-# LANGUAGE IncoherentInstances, TemplateHaskell, NamedFieldPuns, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -F -pgmFtrhsx #-}
 
-module DocView(webHSP1,emptyDetails,showFilesImages2,showDocument,listDocuments,invitationMail,closedMail,closedMailAuthor,
+module DocView(emptyDetails,showFilesImages2,showDocument,listDocuments,invitationMail,closedMail,closedMailAuthor,
 landpageSignInviteView,landpageSignedView,landpageLoginForSaveView,landpageDocumentSavedView,
-showDocumentForSign,documentSavedForLaterFlashMessage,remindMail
+showDocumentForSign,documentSavedForLaterFlashMessage,remindMail,remindMailFlashMessage 
 ) where
 import AppView
 import Data.List
@@ -64,15 +64,6 @@ instance InspectXML Signatory where
     
 instance Monad m => IsAttrValue m DocumentID where
     toAttrValue = toAttrValue . show
-
-webHSP1' :: (MonadIO m) => 
-            Maybe XMLMetaData -> 
-            HSP XML -> 
-            m (Maybe XMLMetaData, XML)
-webHSP1' metadata hsp = liftIO (evalHSP metadata hsp)
-
-webHSP1 :: (MonadIO m) => HSP XML -> m (Maybe XMLMetaData, XML)
-webHSP1 hsp = webHSP1' Nothing hsp
 
 
 landpageSignInviteView :: (XMLGenerator m) => 
@@ -983,3 +974,13 @@ buildJS authordetails signatorydetails =
                               sigs = if (length signatorydetails) > 0
                                      then (jsArray (map buildSigJS signatorydetails))
                                      else (jsArray [(buildSigJS emptyDetails)])
+                                     
+                                     
+remindMailFlashMessage doc signlink =  
+                case signlink of 
+                  SignatoryLink{maybesigninfo = Nothing} -> (BS.fromString "En påminnelse har skickats till ") `BS.append` personname
+                  _ -> (BS.fromString "Dokumentet har skickats till ") `BS.append` personname
+                 where
+                   personname =  if (BS.null $ signatoryname $ signatorydetails signlink)
+                                  then  signatoryname $ signatorydetails signlink
+                                  else signatoryemail $ signatorydetails signlink

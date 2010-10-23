@@ -144,7 +144,7 @@ handleSign = do
        , withUser $ do
           let u = userid $ fromJust ctxmaybeuser
           documents <- query $ GetDocumentsBySignatory u
-          webHSP (pageFromBody ctx TopNone kontrakcja (listDocuments ctxtime u documents))
+          renderFromBody ctx TopNone kontrakcja (listDocuments ctxtime u documents)
        ]
 
 signDocument :: DocumentID 
@@ -179,12 +179,12 @@ signatoryLinkFromDocumentByID document@Document{documentsignatorylinks} linkid =
     
 
 landpageSignInvite ctx document = do
-  webHSP $ pageFromBody ctx TopNone kontrakcja $ landpageSignInviteView ctx document
+  renderFromBody ctx TopNone kontrakcja $ landpageSignInviteView ctx document
 
 landpageSigned ctx document signatorylinkid = do
   signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
   maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
-  webHSP $ pageFromBody ctx TopEmpty kontrakcja $ landpageSignedView ctx document signatorylink (isJust maybeuser)
+  renderFromBody ctx TopEmpty kontrakcja $ landpageSignedView ctx document signatorylink (isJust maybeuser)
 
 {-
  Here we need to save the document either under existing account or create a new account
@@ -210,14 +210,14 @@ landpageSignedSave ctx@Context{ctxhostpart} document signatorylinkid = do
             Just user -> return user
   Just document2 <- update $ SaveDocumentForSignedUser (documentid document) (userid user) signatorylinkid
   -- should redirect
-  webHSP $ pageFromBody ctx TopEmpty kontrakcja $ landpageLoginForSaveView ctx document2 signatorylink
+  renderFromBody ctx TopEmpty kontrakcja $ landpageLoginForSaveView ctx document2 signatorylink
 
 landpageSaved (ctx@Context { ctxmaybeuser = Just user@User{userid} }) 
               document@Document{documentid}
               signatorylinkid = do
   Just document2 <- update $ SaveDocumentForSignedUser documentid userid signatorylinkid
   signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
-  webHSP $ pageFromBody ctx TopDocument kontrakcja $ landpageDocumentSavedView ctx document signatorylink
+  renderFromBody ctx TopDocument kontrakcja $ landpageDocumentSavedView ctx document signatorylink
 
 
 handleSignShow :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra Response
@@ -244,9 +244,9 @@ handleSignShow documentid
           Just author <- query $ GetUserByUserID authoruserid
           let authorname = signatoryname $ documentauthordetails document
               invitedname = signatoryname $ signatorydetails $ invitedlink 
-          webHSP (pageFromBody ctx TopNone kontrakcja 
+          renderFromBody ctx TopNone kontrakcja 
                  (showDocumentForSign (LinkSignDoc document invitedlink) 
-                      document  ctxmaybeuser invitedlink wassigned))
+                      document  ctxmaybeuser invitedlink wassigned)
        ]
 
 handleIssue :: Kontra Response
@@ -275,8 +275,8 @@ handleIssueShow document@Document{ documentauthor
            let toptab = if documentstatus document == Closed
                         then TopDocument
                         else TopNew
-           webHSP (pageFromBody ctx toptab kontrakcja 
-                                    (showDocument user document False freeleft))
+           renderFromBody ctx toptab kontrakcja 
+                                    (showDocument user document False freeleft)
        , do
            methodM POST
            when (userid/=unAuthor documentauthor) mzero
@@ -354,7 +354,7 @@ handleIssueGet :: Kontra Response
 handleIssueGet = do
   ctx@(Context {ctxmaybeuser = Just user, ctxhostpart, ctxtime}) <- get
   documents <- query $ GetDocumentsByUser (userid user) 
-  webHSP (pageFromBody ctx TopDocument kontrakcja (listDocuments ctxtime (userid user) documents))
+  renderFromBody ctx TopDocument kontrakcja (listDocuments ctxtime (userid user) documents)
 
 gs :: String
 #ifdef WINDOWS
@@ -634,6 +634,7 @@ handleResend = do
                                do 
                                 mail <- liftIO $ remindMail ctx doc signlink
                                 liftIO $ sendMail (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )]})
+                                addFlashMsgText ( remindMailFlashMessage doc signlink)
                                 let link = show (LinkIssueDoc doc)
                                 response <- webHSP (seeOtherXML link)
                                 seeOther link response

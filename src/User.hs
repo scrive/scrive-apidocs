@@ -11,6 +11,10 @@ module User
     , RememberMe(..)
     , readRememberMeCookie
     , admins
+    , clearFlashMsgs
+    , addFlashMsgText 
+    , addFlashMsgHtml
+    , logUserToContext
     )
     where
 
@@ -47,7 +51,6 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Set as Set
 import qualified HSX.XMLGenerator as HSX (XML)
-import qualified Data.Map as Map
 
 data Context = Context 
     { ctxmaybeuser           :: Maybe User
@@ -136,3 +139,25 @@ verifyRememberMeCookie (RememberMe identity _ expiry nonce signature)
         (TOD now _) <- liftIO $ getClockTime
         return $ now < expiry
     | otherwise = return False
+
+    
+addFlashMsgText :: BS.ByteString -> Kontra ()
+addFlashMsgText msg = do
+                       ctx@Context{ ctxflashmessages = flashmessages} <- get
+                       put $ ctx{ ctxflashmessages =  (FlashMessage msg) : flashmessages}
+                       
+clearFlashMsgs:: Kontra ()                       
+clearFlashMsgs = do
+                       ctx <- get
+                       put $ ctx{ ctxflashmessages = []}
+  
+addFlashMsgHtml :: HSP.HSP HSP.XML 
+                -> Kontra ()
+addFlashMsgHtml msg = do
+                       ctx@Context{ ctxflashmessages = flashmessages} <- get
+                       msg' <- liftM renderXMLAsBSHTML (liftIO $ evalHSP Nothing msg)
+                       put $ ctx {ctxflashmessages = (FlashMessage msg') :  flashmessages} 
+
+logUserToContext user =  do
+                          ctx<- get
+                          put$ ctx { ctxmaybeuser =  user}    

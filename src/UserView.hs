@@ -56,7 +56,7 @@ instance Monad m => IsAttrValue m UserID where
 
 showUser ctx@(Context {ctxmaybeuser = Just user}) = 
     let User{userhasacceptedtermsofservice} = user in
-    webHSP $ pageFromBody ctx TopAccount kontrakcja $ 
+    renderFromBody ctx TopAccount kontrakcja $ 
     <div class="accounttable">
      <h1><% userfullname user %></h1>
       <% if isJust userhasacceptedtermsofservice 
@@ -133,7 +133,7 @@ oneRow user@User{ userfullname, useremail, userid }  =
 
 viewSubaccounts :: Context -> [User] -> Kontra Response
 viewSubaccounts ctx@(Context {ctxmaybeuser = Just user}) subusers = 
-    webHSP $ pageFromBody ctx TopAccount kontrakcja $ 
+    renderFromBody ctx TopAccount kontrakcja $ 
     <form method="post" action= LinkSubaccount>
      <h1>Underkonton</h1>
      <table class="doctable" cellspacing="0">
