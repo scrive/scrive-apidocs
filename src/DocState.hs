@@ -814,15 +814,15 @@ updateDocument time documentid signatories daystosign invitetext = do
                      , maybeseeninfo  = Nothing
                      }
 
-updateDocumentStatus :: Document 
+updateDocumentStatus :: DocumentID
                      -> DocumentStatus 
                      -> MinutesTime
                      -> Word32
                      -> Update Documents (Either String Document)
-updateDocumentStatus document1 newstatus time ipnumber = do
+updateDocumentStatus documentid newstatus time ipnumber = do
   -- check if document status change is a legal transition
   documents <- ask
-  let Just document = getOne (documents @= documentid document1)
+  let Just document = getOne (documents @= documentid )
   let legal = (documentstatus document,newstatus) `elem`
               [ (Preparation,Pending)
               , (Pending,Canceled)
@@ -840,7 +840,7 @@ updateDocumentStatus document1 newstatus time ipnumber = do
                         }
   if legal 
      then do
-       modify (updateIx (documentid newdoc) newdoc)
+       modify (updateIx documentid newdoc)
        return $ Right newdoc
      else do
        return $ Left $ "Illegal document state change from:"++(show $ documentstatus document)++" to: " ++ (show newstatus)
@@ -869,16 +869,6 @@ signDocument documentid signatorylinkid1 time ipnumber = do
                             Timedout -> "Förfallodatum har passerat"
                             _ ->        "Bad document status" )
   
-
-getFilePageJpg :: FileID -> Int -> Query Documents (Maybe BS.ByteString)
-getFilePageJpg xfileid pageno = do
-  documents <- ask
-  return $ do -- maybe monad!
-    document <- getOne (documents @= xfileid)
-    nfile <- find (\f -> fileid f == xfileid) (documentfiles document)
-    JpegPages jpgs <- return $ filejpgpages nfile
-    jpg <- return (jpgs!!(pageno-1))
-    return jpg
 
 -- ^ 'markDocumentSeen' should set the time when the document was seen
 -- first time by the user. It should change the first seen time later
@@ -1007,7 +997,6 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'updateDocument
                         , 'updateDocumentStatus
                         , 'signDocument
-                        , 'getFilePageJpg
                         , 'attachFile
                         , 'markDocumentSeen
                         , 'getDocumentStats
