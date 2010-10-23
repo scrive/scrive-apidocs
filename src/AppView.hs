@@ -354,11 +354,11 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
         <img class="logosmall" src="/theme/images/logosmall.png" alt="Liten logga"/>
         <span class="contactabout">Tel: 08-559 22 545<br/><a href="mailto:info@skrivapa.se">info@skrivapa.se</a></span>
 
-        <div id="loginContainer"> {- new id -}
            <% case ctxmaybeuser of
              Just User{userfullname} -> 
-                 <span id="logout"><a href="account">Välkomen <% userfullname %></a> | <a href="/logout">Logga ut</a></span>
+                 <span id="logout"><% userfullname %> | <a href="account">Konto</a> | <a href="/logout">Logga ut</a></span>
              Nothing -> 
+               <div id="loginContainer"> {- new id -}
 	         <form action="/login" method="post"> 
 		    <div> 
 			{- email and password need some javascriptwatermark-effect for the text -}
@@ -369,8 +369,8 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
                         <input type="submit" value="Logga in" name="login" class="button" /> 
 		    </div> 
 	         </form> 
+               </div> 
            %>
-        </div> 
 
         <div id="headerContainer2">
          <div id="nav">
