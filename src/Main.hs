@@ -77,7 +77,7 @@ listenOn port = do
         (sClose)
         (\sock -> do
             setSocketOption sock ReuseAddr 1
-            bindSocket sock (SockAddrInet (fromIntegral port) iNADDR_ANY)
+            bindSocket sock (SockAddrInet (fromIntegral port) 0x0100007F)
             listen sock maxListenQueue
             return sock
         )
