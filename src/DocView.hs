@@ -379,41 +379,19 @@ showSignatoryEntryForEdit2 idx signatoryname signatorycompany signatorynumber si
 
     
     
---This can be dropped!!!!!!!!!!!!!!!!!! (with old resend implementation)    
-showSignatoryEntryStatus :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
-                            => Document -> SignatoryLink -> XMLGenT m (HSX.XML m)
-showSignatoryEntryStatus document (signatorylink@SignatoryLink{ signatorydetails = SignatoryDetails{ signatoryname
-                                                                                                   , signatoryemail
-                                                                                                   }
-                                                              , signatorylinkid
-                                                              , maybeseeninfo
-                                                              , maybesigninfo
-                                                              }) = 
-    <div> {- Sänd inbjudan igen, Sänd email-bekräftelse igen -}
-        <b><% signatoryname %></b> <a href=(LinkResendEmail document signatorylink)>Sänd inbjudan igen</a><br/>
-        <% case maybesigninfo of
-             Just (SignInfo{signtime}) -> "Undertecknat " ++ show signtime 
-             Nothing -> case maybeseeninfo of
-                          Just (SignInfo time ip) -> "Har öppnat dokumentet " ++ show time
-                          Nothing -> "Har inte öppnat dokumentet"
-        %>
-    </div>
-
-showFileImages file@File { fileid, filejpgpages = JpegPages jpgpages } =
+showFileImages File{fileid} (JpegPages jpgpages) =
    [ <div id=("page" ++ show pageno) class="pagediv"><img class="pagejpg" src=("/pages/" ++ show fileid ++ "/" ++ show pageno) width="300" /></div> |
      pageno <- [1..(length jpgpages)]]
-showFileImages file@File { fileid, filejpgpages = JpegPagesPending } = 
+showFileImages File{fileid} JpegPagesPending = 
    [ <div class="pagejpga4 pagejpg">
       <img class="waiting" src="/theme/images/wait30trans.gif"/>
      </div> ]
-showFileImages file@File { fileid, filejpgpages = JpegPagesError normalizelog } = 
+showFileImages File{fileid} (JpegPagesError normalizelog) = 
    [ <div class="pagejpga4 pagejpg">
       <% normalizelog %>
      </div> ]
 
-
-
-showFilesImages2 files = <span><% concatMap showFileImages files %></span> 
+showFilesImages2 files = <span><% concatMap (uncurry showFileImages) files %></span> 
 
 showDocumentBox document = 
     <div id="documentBox">

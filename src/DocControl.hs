@@ -410,34 +410,34 @@ convertPdfToJpgPages fileid content = do
   return result
        
 
-maybeScheduleRendering :: MVar (Set.Set FileID) -> DocumentID -> File -> IO Bool
+maybeScheduleRendering :: MVar (Map.Map FileID JpegPages) -> File -> IO JpegPages
 maybeScheduleRendering mvar 
-                       documentid 
-                       (file@File { filejpgpages = JpegPagesPending
-                                  , fileid
+                       (file@File { fileid
                                   , filepdf 
                                   }) = do
   modifyMVar mvar $ \setoffilesrenderednow ->
-      if Set.member fileid setoffilesrenderednow
-         then return (setoffilesrenderednow, True)
-         else do
+      case Map.lookup fileid setoffilesrenderednow of
+         Just pages -> return (setoffilesrenderednow, pages)
+         Nothing -> do
            forkIO $ do
                 -- putStrLn $ "Rendering " ++ show fileid
                 -- FIXME: handle exceptions gracefully
                 jpegpages <- convertPdfToJpgPages fileid filepdf
-                update $ ReplaceFile documentid (file { filejpgpages = jpegpages })
-                modifyMVar_ mvar (\setoffilesrenderednow -> return (Set.delete fileid setoffilesrenderednow))
-           return (Set.insert fileid setoffilesrenderednow, True)
-maybeScheduleRendering _ _ _ = return False
+                modifyMVar_ mvar (\setoffilesrenderednow -> return (Map.insert fileid jpegpages setoffilesrenderednow))
+           return (Map.insert fileid JpegPagesPending setoffilesrenderednow, JpegPagesPending)
 
-handlePageOfDocument mvar document@Document {documentfiles,documentid} =
+handlePageOfDocument :: Document -> Kontra Response
+handlePageOfDocument document@Document {documentfiles,documentid} = do
+    Context{ctxnormalizeddocuments} <- get
+    let pending JpegPagesPending = True
+        pending _ = False
     case documentfiles of
       [] -> notFound (toResponse "temporary unavailable (document has no files)")
       f -> do
-        b <- mapM (\file -> liftIO $ maybeScheduleRendering mvar documentid file) f
-        if any id b
+        b <- mapM (\file -> liftIO $ maybeScheduleRendering ctxnormalizeddocuments file) f
+        if any pending b
            then notFound (toResponse "temporary unavailable (document has files pending for process)")
-           else webHSP (DocView.showFilesImages2 f)
+           else webHSP (DocView.showFilesImages2 $ zip f b)
     
 handleDocumentUpload :: DocumentID -> BS.ByteString -> BS.ByteString -> IO ()
 handleDocumentUpload docid content filename = do
@@ -609,17 +609,19 @@ handleIssueArchive = do
     return LinkIssue
 
 
-showPage :: Context -> MinutesTime -> FileID -> Int -> Kontra Response
-showPage ctx modminutes fileid pageno = do
-  maybecontents <- query $ GetFilePageJpg fileid pageno
-  case maybecontents of
-    Nothing -> mzero
-    Just contents -> do
+showPage :: MinutesTime -> FileID -> Int -> Kontra Response
+showPage modminutes fileid pageno = do
+  Context{ctxnormalizeddocuments} <- get
+  docmap <- liftIO $ readMVar ctxnormalizeddocuments
+  case Map.lookup fileid docmap of
+    Just (JpegPages pages) -> do
+      let contents = pages !! (pageno - 1)
       let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
       let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/jpeg") res
       let modtime = toUTCTime modminutes
       rq <- askRq                 -- FIXME: what?
       return $ ifModifiedSince modtime rq res2
+    _ -> mzero
 
 handleResend:: Kontra Response
 handleResend = do

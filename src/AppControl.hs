@@ -53,6 +53,7 @@ import qualified Data.Set as Set
 import qualified DocControl as DocControl
 import qualified DocView as DocView
 import qualified HSP as HSP
+import qualified Data.Map as Map
 
 handleRoutes =  
   do
@@ -68,7 +69,7 @@ handleRoutes =
      , dir "resend" $ withUserTOS $ DocControl.handleResend
      , dir "pages" $ hget2 $ \fileid pageno -> do
         modminutes <- query $ FileModTime fileid
-        DocControl.showPage ctx modminutes fileid pageno
+        DocControl.showPage modminutes fileid pageno
                                                     
      , dir "landpage" $ msum 
                [ dir "signinvite" $ pathdb GetDocumentByDocumentID $ \document -> 
@@ -85,7 +86,7 @@ handleRoutes =
            
      , dir "pagesofdoc" $ 
            pathdb GetDocumentByDocumentID $ \document -> 
-               DocControl.handlePageOfDocument ctxnormalizeddocuments document
+               DocControl.handlePageOfDocument document
      , dir "resendemail" $ 
            pathdb GetDocumentByDocumentID $ \document -> 
                                      path $ \signatorylinkid -> 
@@ -150,8 +151,8 @@ instance (MonadIO m) => TRA.MonadIO (ServerPartT m)
 
 
 -- uh uh, how to do that in correct way?
-normalizeddocuments :: MVar (Set.Set FileID)
-normalizeddocuments = unsafePerformIO $ newMVar (Set.empty)
+normalizeddocuments :: MVar (Map.Map FileID JpegPages)
+normalizeddocuments = unsafePerformIO $ newMVar Map.empty
 
 appHandler :: ServerPartT IO Response
 appHandler = do

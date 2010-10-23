@@ -47,13 +47,14 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Set as Set
 import qualified HSX.XMLGenerator as HSX (XML)
+import qualified Data.Map as Map
 
 data Context = Context 
     { ctxmaybeuser           :: Maybe User
     , ctxhostpart            :: String
     , ctxflashmessages       :: [FlashMessage]
     , ctxtime                :: MinutesTime
-    , ctxnormalizeddocuments :: MVar (Set.Set FileID)
+    , ctxnormalizeddocuments :: MVar (Map.Map FileID JpegPages)
     , ctxipnumber            :: Word32
     }
 
