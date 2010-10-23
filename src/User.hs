@@ -51,6 +51,8 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Set as Set
 import qualified HSX.XMLGenerator as HSX (XML)
+import Misc (renderXMLAsBSHTML)
+import qualified Data.Map as Map
 
 data Context = Context 
     { ctxmaybeuser           :: Maybe User
