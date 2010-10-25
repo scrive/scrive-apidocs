@@ -349,7 +349,9 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
       <% globalScriptsAndStyles %>
      </head>
      <body>
-      <%
+     <div id="headerWide"/>
+     <div id="mainContainer960">
+     <%
        case ctxflashmessages of
          [] -> <% () %>
          _ -> <% <div class="flashmsgbox">
@@ -357,12 +359,14 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
               </div> %>
        %>
       <div id="headerContainer">
-        <img class="logosmall" src="/theme/images/logosmall.png" alt="Liten logga"/>
+      <a href="">
+        <img id="logosmall" src="/theme/images/logosmall.png" alt="Liten logga"/>
+       </a> 
         <span class="contactabout">Tel: 08-559 22 545<br/><a href="mailto:info@skrivapa.se">info@skrivapa.se</a></span>
 
            <% case ctxmaybeuser of
              Just User{userfullname} -> 
-                 <span id="logout"><% userfullname %> | <a href="account">Konto</a> | <a href="/logout">Logga ut</a></span>
+                 <span id="userMenu"><% userfullname %> | <a href="account">Konto</a> | <a href="/logout">Logga ut</a></span>
              Nothing -> 
                <div id="loginContainer"> {- new id -}
 	         <form action="/login" method="post"> 
@@ -378,7 +382,7 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
                </div> 
            %>
 
-        <div id="headerContainer2">
+        
          <div id="nav">
           <% case ctxmaybeuser of 
                Just _ ->
@@ -390,12 +394,15 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
                _ -> <span/>
            %>
          </div>
-        </div>
+     
         <div class="clearboth"/>
       </div>
       <div id="mainContainer">
           <% body %>
       </div>
+      </div>
+      
+      
       <div id="footerContainer">
        <div id="footerContainer2">
         <ul>

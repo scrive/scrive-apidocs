@@ -49,7 +49,7 @@ function disableInfoText(where)
 function resizeToWindow()
 {
     // FIXME: try to extract css property margin-top and margin-bottom from #mainContainer
-    $("#mainContainer").height( $(this).height() - $('#headerContainer').height() - $('#footerContainer').height() - 25 - 25 );
+    $("#mainContainer").css("min-height",$(this).height() - $('#headerContainer').height() - $('#footerContainer').height() - 80);
 }
 
 function signatoryadd()
