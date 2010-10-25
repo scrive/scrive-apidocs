@@ -220,43 +220,28 @@ welcomeBody (Context {ctxmaybeuser = Just _, ctxhostpart}) =
 
 
 welcomeBody ctx@(Context {ctxmaybeuser = Nothing}) = 
-	<div id="firstPageContentContainer"> 
-		<div id="firstPageLeft"> 
-                  <object width="300" height="184">
-                   <param name="allowfullscreen" value="true"/>
-                   <param name="allowscriptaccess" value="always"/>
-                   <param name="movie" value="https://secure.vimeo.com/moogaloop.swf?clip_id=15894469&amp;server=vimeo.com&amp;show_title=1&amp;show_byline=1&amp;show_portrait=0&amp;color=00ADEF&amp;fullscreen=1"/>
-                   <embed src="https://secure.vimeo.com/moogaloop.swf?clip_id=15894469&amp;server=vimeo.com&amp;show_title=1&amp;show_byline=1&amp;show_portrait=0&amp;color=00ADEF&amp;fullscreen=1" type="application/x-shockwave-flash" allowfullscreen="true" allowscriptaccess="always" height="184" width="300"/>
-                  </object>
-                   <p><a href="//vimeo.com/15894469">Avtala på under 60 sekunder</a>.</p>
-		</div> 
-		
-		<div id="firstPageRight"> 
-			<div id="bigLogoPlaceholder"></div> 
-			<p>SkrivaPå är en tjänst för elektronisk signering och 	
-			arkivering. Spara tid och minska onödiga kostnader med 
-			enklare och smidigare avtalshantering. 
-			<a href="mailto:info@skrivapa.se">Kontakta oss</a> redan 
-			idag för att testa tjänsten.</p> 
+ <div>
+     <div id="firstPageLeft">
+         <h1>Snabbare, smidigare och bättre</h1>
+         <p>SkrivaPå är en tjänst för elektronisk signering och arkivering. 
+         Spara tid och minska onödiga kostnader med enklare och smidigare avtalshantering. 
+         Kontakta oss redan idag för att testa tjänsten.</p>
+    </div>
+    <div id="firstPageRight">
+         <object width="450" height="276">
+             <param name="allowfullscreen" value="true"/>
+             <param name="allowscriptaccess" value="always"/>
+             <param name="movie" value="https://secure.vimeo.com/moogaloop.swf?clip_id=15894469&amp;amp;server=vimeo.com&amp;amp;show_title=1&amp;amp;show_byline=1&amp;amp;show_portrait=0&amp;amp;color=00ADEF&amp;amp;fullscreen=1"/>
+             <embed src="https://secure.vimeo.com/moogaloop.swf?clip_id=15894469&amp;amp;server=vimeo.com&amp;amp;show_title=1&amp;amp;show_byline=1&amp;amp;show_portrait=0&amp;amp;color=00ADEF&amp;amp;fullscreen=1" type="application/x-shockwave-flash" allowfullscreen="true" allowscriptaccess="always" height="276" width="450">
+             </embed>
+        </object>
+         <p>
+            <a href="//vimeo.com/15894469">Avtala på under 60 sekunder</a>.
+         </p>
+    </div>
+ </div>
 
- {-			
-			<p>SkrivaPå är en tjänst för elektronisk signering och 
-			arkivering. Spara tid och minska onödiga kostnader med 
-			enklare och smidigare avtalshantering. 
-			<a href="mailto:info@skrivapa.se">Kontakta oss</a> redan 
-			idag för att testa tjänsten.</p>
-			
-			<div id="signUpContainer"> 
-				<form action="signupform" method="post"> 
-					<div> 
-						<input type="text" infotext="E-post"/> 
-						<input type="submit" value="Skicka" class="button"/>
-					</div> 
-				</form> 
-			</div> 
- -}
-		</div> 
-	</div> 
+
 
 errorReport :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
             => Context 
@@ -362,7 +347,7 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
       <a href="">
         <img id="logosmall" src="/theme/images/logosmall.png" alt="Liten logga"/>
        </a> 
-        <span class="contactabout">Tel: 08-559 22 545<br/><a href="mailto:info@skrivapa.se">info@skrivapa.se</a></span>
+  
 
            <% case ctxmaybeuser of
              Just User{userfullname} -> 
