@@ -46,12 +46,6 @@ function disableInfoText(where)
     inputs.focus();
 }
 
-function resizeToWindow()
-{
-    // FIXME: try to extract css property margin-top and margin-bottom from #mainContainer
-    $("#mainContainer").css("min-height",$(this).height() - $('#headerContainer').height() - $('#footerContainer').height() - 80);
-}
-
 function signatoryadd()
 {
     var signatorylist = $( "#signatorylist" );
@@ -289,7 +283,6 @@ $(document).ready( function () {
 	
 	});
 	
-    $(window).resize(resizeToWindow);
     $(window).resize();
     
     //var rpxJsHost = (("https:" == document.location.protocol) ? "https://" : "http://static.");
