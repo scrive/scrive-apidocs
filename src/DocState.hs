@@ -722,7 +722,14 @@ getDocumentsBySignatory :: UserID -> Query Documents [Document]
 getDocumentsBySignatory userid = do
     documents <- ask
     return $ toList (documents @= Signatory userid)
-
+    
+getTimeoutedButPendingDocuments  :: MinutesTime -> Query Documents [Document]
+getTimeoutedButPendingDocuments now = do
+                         docs <-  ask
+                         return $ (flip filter) (toList docs) $ \doc -> case (documenttimeouttime doc) of
+                                                  Just timeout -> (documentstatus doc) == Pending &&(unTimeoutTime timeout) < now
+                                                  _ -> False           
+    
 newDocument :: User
             -> BS.ByteString
             -> MinutesTime 
@@ -994,6 +1001,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'getDocumentsBySignatory
                         , 'newDocument
                         , 'getDocumentByDocumentID
+                        , 'getTimeoutedButPendingDocuments
                         , 'updateDocument
                         , 'updateDocumentStatus
                         , 'signDocument

@@ -8,7 +8,7 @@ import Happstack.Data (Proxy(..))
 import Happstack.State (runTxSystem, TxControl, shutdownSystem, Saver(..))
 
 import Control.Concurrent (MVar)
-import Control.Exception (bracket,bracket_)
+import Control.Exception (bracket,finally)
 import System.Directory
 import System.FilePath
 import System.Random (randomIO)
@@ -36,9 +36,8 @@ withTemporaryDirectory action
          exist <- doesDirectoryExist dir
          if exist
             then withTemporaryDirectory action
-            else bracket_ (createDirectoryIfMissing False dir)
-                          (removeDirectoryRecursive dir)
-                          (action dir)
+            else finally (action dir)  (removeDirectoryRecursive dir)
+                        
 
 withTestState :: IO() -> IO()
 withTestState action = withTemporaryDirectory (\tmpDir -> withFileSaver tmpDir action)

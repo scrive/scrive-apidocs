@@ -15,23 +15,11 @@ runScheduler = do
                 timeoutDocuments 
                 debugM "Happstack.Server" $ "Scheduler is running ..."                                                        
 
-
-
-
-
 timeoutDocuments = do
-                    docs <- query GetDocuments      
                     now <- getMinutesTime
-                    forM_ docs $ \doc -> do                     
-                                           case (documenttimeouttime doc) of
-                                            Just timeout -> do
-                                                             let pending = (documentstatus)  doc == Pending 
-                                                             let expired = (unTimeoutTime timeout) < now
-                                                             if (pending && expired)
-                                                              then do 
-                                                                    update $ UpdateDocumentStatus (documentid doc) Timedout now 0                                                     
-                                                                    debugM "Happstack.Server" $ "Document timedout" ++ (show $ documenttitle doc)                                                                   
-                                                              else return ()
-                                            _ -> return () 
+                    docs <- query $ GetTimeoutedButPendingDocuments now
+                    forM_ docs $ \doc -> do 
+                                           update $ UpdateDocumentStatus (documentid doc) Timedout now 0                                                     
+                                           debugM "Happstack.Server" $ "Document timedout" ++ (show $ documenttitle doc)                                                                   
                                           
                                            
