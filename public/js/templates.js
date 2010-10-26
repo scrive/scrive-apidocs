@@ -305,33 +305,50 @@ function makeDropTargets() {
     return true;
 }
 
+function initializeTemplates () {
+
+    if($(".pagediv").size() == 0){
+	setTimeout("initializeTemplates();", 500);
+	return;
+    }
+
+    $("#loading-message").css({ display: "none" });
+    $("#edit-bar").css({ display: "" });
+	
+
+    docstateToHTML();
+	
+    enableInfoText();
+    
+    makeDropTargets();
+
+    $("form").submit(function () {
+	    $(".placedfield").each(function () {
+		    var field = $(this);
+		    var x = field.position().left;
+		    var y = field.position().top;
+		    var pageno = field.parent().attr("id").substr(4);
+		    var pagew = field.parent().width();
+		    var pageh = field.parent().height();
+		    var sigid = field.find(".sigid").text();
+		    var fieldid = field.find(".fieldid").text();
+		    
+		    $("form").append(newHiddenField("placedx", x));
+		    $("form").append(newHiddenField("placedy", y));
+		    $("form").append(newHiddenField("placedpage", pageno));
+		    $("form").append(newHiddenField("placedwidth", pagew));
+		    $("form").append(newHiddenField("placedheight", pageh));
+		    $("form").append(newHiddenField("placedsigid", sigid));
+		    $("form").append(newHiddenField("placedfieldid", fieldid));
+		});
+
+	});
+}
+
 $(document).ready(function () {
-	docstateToHTML();
+	$("#loading-message").css({ display: "" });
+	$("#edit-bar").css({ display: "none" });
 	
-	enableInfoText();
 
-	setTimeout("makeDropTargets();", 1000);
-
-	$("form").submit(function () {
-		$(".placedfield").each(function () {
-			var field = $(this);
-			var x = field.position().left;
-			var y = field.position().top;
-			var pageno = field.parent().attr("id").substr(4);
-			var pagew = field.parent().width();
-			var pageh = field.parent().height();
-			var sigid = field.find(".sigid").text();
-			var fieldid = field.find(".fieldid").text();
-
-			$("form").append(newHiddenField("placedx", x));
-			$("form").append(newHiddenField("placedy", y));
-			$("form").append(newHiddenField("placedpage", pageno));
-			$("form").append(newHiddenField("placedwidth", pagew));
-			$("form").append(newHiddenField("placedheight", pageh));
-			$("form").append(newHiddenField("placedsigid", sigid));
-			$("form").append(newHiddenField("placedfieldid", fieldid));
-		    });
-
-	    });
-	
+	initializeTemplates();	
     });
