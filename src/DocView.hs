@@ -468,7 +468,10 @@ showDocument user
    in showDocumentPageHelper (LinkIssueDoc document) document helper 
            (documenttitle)  
       <div>
-       <div>
+       <div id="loading-message" style="display:none">
+            Loading pages . . .
+       </div>
+       <div id="edit-bar">
 
         <% if documentstatus == Preparation
            then 
