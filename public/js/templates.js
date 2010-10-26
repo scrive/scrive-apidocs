@@ -145,10 +145,10 @@ function docstateToHTML(){
 	    ad.append(field);
 	});
 
-    placePlacements(author.nameplacements, "Avsändare namn på motpart", author.name);
-    placePlacements(author.companyplacements, "Avsändare  titel, företag", author.company);
-    placePlacements(author.numberplacements, "Avsändare Orgnr/Persnr", author.number);
-    placePlacements(author.emailplacements, "Avsändare personens e-mail", author.email);
+    placePlacements(author.nameplacements, "Avsändare namn på motpart", author.name, "author", "name");
+    placePlacements(author.companyplacements, "Avsändare  titel, företag", author.company, "author", "company");
+    placePlacements(author.numberplacements, "Avsändare Orgnr/Persnr", author.number, "author", "number");
+    placePlacements(author.emailplacements, "Avsändare personens e-mail", author.email, "author", "email");
 
     $(author.otherfields).each(function (){
 	    var fd = this;
@@ -226,10 +226,10 @@ function signatoryToHTML(sig) {
     sigentry.append(of);
     sigentry.append(removeLink);
     
-    placePlacements(sig.nameplacements, "Namn på motpart", sig.name);
-    placePlacements(sig.companyplacements, "Titel, företag", sig.company);
-    placePlacements(sig.numberplacements, "Orgnr/Persnr", sig.number);
-    placePlacements(sig.emailplacements, "Personens e-mail", sig.email);
+    placePlacements(sig.nameplacements, "Namn på motpart", sig.name, sigid, "name");
+    placePlacements(sig.companyplacements, "Titel, företag", sig.company, sigid, "company");
+    placePlacements(sig.numberplacements, "Orgnr/Persnr", sig.number, sigid, "number");
+    placePlacements(sig.emailplacements, "Personens e-mail", sig.email, sigid, "email");
     
     $(sig.otherfields).each(function (){
 	    var fd = this;
