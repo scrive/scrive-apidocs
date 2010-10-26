@@ -195,7 +195,7 @@ function signatoryToHTML(sig) {
     
     // other fields
 
-    var of = $("<div class='otherfields'></div>");
+    var of = $("<div class='otherfields'><hr />Fields to be filled out by signatory<br /></div>");
     
     $(sig.otherfields).each(function (){
 	    var fd = this;
@@ -204,11 +204,22 @@ function signatoryToHTML(sig) {
 	    var fieldid = newUUID();
 	    fd.id = fieldid;
 	    field.append(newHiddenValue("fieldid", fieldid));
-
 	    field.append(newHiddenField("fieldid", fieldid));
 	    field.append(newHiddenField("fieldsigid", sigid));
 	    of.append(field);
 	    placePlacements(fd.placements, fd.label, fd.value, sig.id, fd.id);
+	});
+
+    var newFieldLink = $("<small><a href='#'>New Field</a></small><br />");
+    newFieldLink.find("a").click(function () {
+	    var field = buildDraggableField("Field Name", "");
+	    field.find("input[type='text']").attr("name", "fieldname");
+	    var fieldid = newUUID();
+	    field.append(newHiddenValue("fieldid", fieldid));
+	    field.append(newHiddenField("fieldid", fieldid));
+	    field.append(newHiddenField("fieldsigid", sigid));
+	    of.append(field);
+	    enableInfoText(field);
 	});
     
     sl.append(sigentry);
@@ -223,6 +234,7 @@ function signatoryToHTML(sig) {
 
     sigentry.append(d);
     sigentry.append(of);
+    sigentry.append(newFieldLink);
     sigentry.append(removeLink);
     
     placePlacements(sig.nameplacements, "Namn på motpart", sig.name, sigid, "name");
