@@ -650,11 +650,6 @@ showAdminOnly users ctxflashmessages =
      just in case of failure. It is good to remove old files from time to time.<br/>
      <input type="submit" value="Cleanup"/><br/>
      </form>
-     <form method="post" action="/adminonly/removeimages">
-     Database stores quite a lot of temporary data to be a bit faster. That data needs to be cleaned on regular basis. 
-     It will be automatic soon, but right now you have to click the button below once a week or so.<br/>
-     <input type="submit" value="Remove jpegs"/><br/>
-     </form>
      <h3>Users</h3>
       You can see <a href="/adminonly/alluserstable">big table of all users</a>.<br/>
       <form method="post" action="/adminonly/become">

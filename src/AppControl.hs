@@ -102,7 +102,6 @@ handleRoutes =
                                          , fileServe [] "_local/kontrakcja_state"
                                          ]
                        , dir "cleanup" $ methodM POST >> databaseCleanup
-                       , dir "removeimages" $ methodM POST >> databaseRemoveImages
                        , dir "become" $ methodM POST >> handleBecome
                        , dir "takeoverdocuments" $ methodM POST >> handleTakeOverDocuments
                        , dir "deleteaccount" $ methodM POST >> handleDeleteAccount
@@ -373,14 +372,6 @@ databaseCleanup = do
   contents <- liftIO databaseCleanupWorker
   webHSP (AppView.databaseContents (sort contents))
 
-databaseRemoveImages :: Kontra Response
-databaseRemoveImages = do
-  update $ FixRemoveImages
-  let link = "/adminonly/"
-  response <- webHSP (seeOtherXML link)
-  seeOther link response
-  
-  
   
 resendEmail :: Context -> Document -> SignatoryLinkID -> Kontra Response
 resendEmail ctx document@Document{documentsignatorylinks} signatorylinkid1 = do

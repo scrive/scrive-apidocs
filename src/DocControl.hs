@@ -64,13 +64,13 @@ doctransPreparation2Pending ctx@Context{ctxtime, ctxipnumber } doc = do
  
 
 doctransPending2Closed :: Context -> Document -> IO Document
-doctransPending2Closed ctx@Context{ctxtime,ctxipnumber,ctxhostpart} doc = do
+doctransPending2Closed ctx@Context{ctxtime,ctxipnumber,ctxhostpart,ctxnormalizeddocuments} doc = do
   logErrorWithDefault (update $ UpdateDocumentStatus (documentid doc) Closed ctxtime ctxipnumber) doc $ 
    \closedDoc  -> do
                    clearDoc <- update $ RemoveFileFromDoc (documentid doc)
                    Just user <- query $ GetUserByUserID (unAuthor (documentauthor doc))
                    forkIO $ do
-                      newdoc <- sealDocument ctxhostpart ctxtime user doc
+                      newdoc <- sealDocument ctxnormalizeddocuments ctxhostpart ctxtime user doc
                       sendClosedEmails ctx newdoc
                    return  clearDoc
    
@@ -678,9 +678,9 @@ sealSpecFromDocument hostpart document author@(User {userfullname,usercompanynam
       in config
 
 
-sealDocument :: String -> MinutesTime -> User -> Document -> IO Document
-sealDocument hostpart signtime1 author@(User {userfullname,usercompanyname,usercompanynumber,useremail}) document = do
-  let (file@File {fileid,filename,filepdf,filejpgpages}) = 
+sealDocument :: MVar (Map.Map FileID JpegPages) -> String -> MinutesTime -> User -> Document -> IO Document
+sealDocument normalizemap hostpart signtime1 author@(User {userfullname,usercompanyname,usercompanynumber,useremail}) document = do
+  let (file@File {fileid,filename,filepdf}) = 
            safehead "sealDocument" $ documentfiles document
   let docid = unDocumentID (documentid document)
 
@@ -696,7 +696,8 @@ sealDocument hostpart signtime1 author@(User {userfullname,usercompanyname,userc
        putStrLn "Cannot execute dist/build/pdfseal/pdfseal"
 
   newfilepdf <- BS.readFile tmpout
-  let newfile = file {filepdf = newfilepdf, filejpgpages = JpegPagesPending}
+  let newfile = file {filepdf = newfilepdf}
+  modifyMVar_ normalizemap (\themap -> return $ Map.delete fileid themap)
   update $ ReplaceFile (documentid document) newfile
   
 
