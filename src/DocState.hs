@@ -790,10 +790,11 @@ attachFile documentid filename1 content = do
 updateDocument :: MinutesTime
                -> DocumentID
                -> [SignatoryDetails]
+               -> SignatoryDetails
                -> Int
                -> BS.ByteString
                -> Update Documents Document
-updateDocument time documentid signatories daystosign invitetext = do
+updateDocument time documentid signatories author daystosign invitetext = do
   documents <- ask
   let Just document = getOne (documents @= documentid)
   signatorylinks <- sequence $ map mm signatories
@@ -801,6 +802,7 @@ updateDocument time documentid signatories daystosign invitetext = do
                       , documentdaystosign = daystosign 
                       , documentmtime = time
                       , documentinvitetext = invitetext
+                      , documentauthordetails = author
                       }
   if documentstatus document == Preparation
      then do
