@@ -339,9 +339,126 @@ updateDocument ctx@Context{ctxtime} document@Document{documentid, documentauthor
 
   invitetext <- g "invitetext"
 
-  let signatories = zipWith4 sd signatoriesnames signatoriescompanies signatoriesnumbers signatoriesemails where
-                                               sd n c no e = SignatoryDetails n c no e [] [] [] [] []
+  sigids <- getAndConcat "sigid"
 
+  liftIO $ print "sigids"
+  -- liftIO $ print sigids
+
+  fieldnames <- getAndConcat "fieldname"
+  liftIO $ print "fieldnames"
+  liftIO $ print fieldnames
+
+  fieldids <- getAndConcat "fieldid"
+  liftIO $ print "fieldids"
+  liftIO $ print fieldids
+
+  fieldsigids <- getAndConcat "fieldsigid"
+  liftIO $ print "fieldsigids"
+  liftIO $ print fieldsigids
+  
+  placedxs <- getAndConcat "placedx"
+  liftIO $ print "placedxs"
+  liftIO $ print placedxs
+
+  placedys <- getAndConcat "placedy"
+  liftIO $ print "placedys"
+  liftIO $ print placedys
+
+  placedpages <- getAndConcat "placedpage"
+  liftIO $ print "placedpages"
+  liftIO $ print placedpages
+
+  placedwidths <- getAndConcat "placedwidth"
+  liftIO $ print "placedwidths"
+  liftIO $ print placedwidths
+
+  placedheights <- getAndConcat "placedheight"
+  liftIO $ print "placedheights"
+  liftIO $ print placedheights
+
+  placedsigids <- getAndConcat "placedsigid"
+  liftIO $ print "placedsigids"
+  liftIO $ print placedsigids
+
+  placedfieldids <- getAndConcat "placedfieldid"
+  liftIO $ print "placedfieldids"
+  liftIO $ print placedfieldids
+
+  let placements = zipWith5 FieldPlacement 
+                   (map (read . BS.toString) placedxs)
+                   (map (read . BS.toString) placedys)
+                   (map (read . BS.toString) placedpages)
+                   (map (read . BS.toString) placedwidths)
+                   (map (read . BS.toString) placedheights)
+                   
+  liftIO $ print "placements"
+  liftIO $ print placements
+
+
+  let pls = zipWith3 m placedsigids placedfieldids placements where
+          m s f p = (s, f, p)
+
+  liftIO $ print (length placements)
+
+  let placementsByID sigid fieldid = 
+          map plac (filter (sameids sigid fieldid) pls) where
+              sameids sigid fieldid tup = case tup of
+                                            (sigid, fieldid, _) -> True
+                                            _                   -> False
+              plac (_, _, x) = x
+
+
+
+  let fielddefs = zipWith3 fd fieldnames fieldids fieldsigids where
+          
+          fd fn id sigid = (sigid,
+                                 FieldDefinition { fieldlabel = fn, 
+                                                   fieldvalue = BS.fromString "",
+                                                   fieldplacements = placementsByID sigid id
+                                                 })
+  let defsByID sigid = 
+          map snd (filter (sid sigid) fielddefs) where
+              sid id tup = case tup of
+                             (id, _) -> True
+                             _       -> False
+
+
+
+  let signatories = sigs where
+          sigs = if sigids == [] 
+                 then zipWith4 sdsimple signatoriesnames signatoriescompanies signatoriesnumbers signatoriesemails
+                      
+                 else zipWith5 sd sigids signatoriesnames signatoriescompanies signatoriesnumbers signatoriesemails 
+          sdsimple n c no e = SignatoryDetails n
+                                               c
+                                               no
+                                               e
+                                               []
+                                               []
+                                               []
+                                               []
+                                               []
+          sd id n c no e = SignatoryDetails n 
+                                            c 
+                                            no 
+                                            e 
+                                            (placementsByID id (BS.fromString "name"))
+                                            (placementsByID id (BS.fromString "company"))
+                                            (placementsByID id (BS.fromString "email"))
+                                            (placementsByID id (BS.fromString "number"))
+                                            (defsByID id)
+  liftIO $ print ""
+  liftIO $ print "signatories: "
+  liftIO $ print signatories
+  liftIO $ print ""
+
+  liftIO $ print "sigids: "
+  liftIO $ print sigids
+  liftIO $ print ""
+
+  liftIO $ print "placements"
+  liftIO $ print pls
+ 
   -- FIXME: tell the user what happened!
   when (daystosign<1 || daystosign>99) mzero
   
