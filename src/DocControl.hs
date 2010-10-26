@@ -418,10 +418,9 @@ updateDocument ctx@Context{ctxtime} document@Document{documentid, documentauthor
                                                  })
   let defsByID sigid = 
           map snd (filter (sid sigid) fielddefs) where
-              sid id tup = case tup of
-                             (id, _) -> True
-                             _       -> False
-
+              sid id (id2, _) 
+                  | id == id2 = True
+                  | otherwise = False
 
 
   let signatories = sigs where
