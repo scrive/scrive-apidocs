@@ -471,7 +471,7 @@ updateDocument ctx@Context{ctxtime} document@Document{documentid, documentauthor
   when (daystosign<1 || daystosign>99) mzero
   
   doc2 <- update $ UpdateDocument ctxtime documentid
-          signatories daystosign invitetext
+          signatories author2 daystosign invitetext
 
   msum 
      [ do getDataFnM (look "final")
