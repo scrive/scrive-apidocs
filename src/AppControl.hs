@@ -5,10 +5,8 @@
 module AppControl where
 
 import "base" Control.Monad (msum, mzero, liftM)
-import "mtl" Control.Monad.Reader
 import "mtl" Control.Monad.Reader (ask)
 import "mtl" Control.Monad.State
-import "mtl" Control.Monad.Trans
 import "mtl" Control.Monad.Trans(liftIO, MonadIO,lift)
 import AppState
 import AppView
@@ -86,10 +84,6 @@ handleRoutes =
      , dir "pagesofdoc" $ 
            pathdb GetDocumentByDocumentID $ \document -> 
                DocControl.handlePageOfDocument document
-     , dir "resendemail" $ 
-           pathdb GetDocumentByDocumentID $ \document -> 
-                                     path $ \signatorylinkid -> 
-                                         resendEmail ctx document signatorylinkid
      , dir "account" $ withUser $ UserControl.handleUser ctx
      ]
      
@@ -372,14 +366,6 @@ databaseCleanup = do
   contents <- liftIO databaseCleanupWorker
   webHSP (AppView.databaseContents (sort contents))
 
-  
-resendEmail :: Context -> Document -> SignatoryLinkID -> Kontra Response
-resendEmail ctx document@Document{documentsignatorylinks} signatorylinkid1 = do
-  let [invitedlink] = filter (\x -> signatorylinkid x == signatorylinkid1) documentsignatorylinks
-  liftIO $ forkIO $ DocControl.sendInvitationEmail1 ctx document invitedlink
-  let link = LinkIssueDoc document
-  response <- webHSP (seeOtherXML (show link))
-  seeOther (show link) response
 
 showAdminOnly :: Kontra Response
 showAdminOnly = do

@@ -21,23 +21,14 @@ module User
 import System.Time
 import "mtl" Control.Monad.Reader
 import "mtl" Control.Monad.State
-import "mtl" Control.Monad.Trans
 import Codec.Utils (Octet)
 import Control.Concurrent.MVar
 import Data.HMAC (hmac_sha1)
-import Data.Maybe
-import Data.Object
 import Data.Word
 import DocState
 import HSP
-import Happstack.Data.IxSet ((@=),getOne)
 import Happstack.Server
-import Happstack.Server.HSP.HTML (webHSP)
-import Happstack.Server.SimpleHTTP
-import Happstack.State (update,query)
-import KontraLink
 import MinutesTime
-import Network.HTTP (urlEncode)
 import Session
 import System.IO.Unsafe
 import System.Log.Logger

@@ -5,15 +5,11 @@ module UserState where
 import Happstack.Data
 import Happstack.State
 import "mtl" Control.Monad.Reader (ask)
-import "mtl" Control.Monad.Trans (liftIO)
 import "mtl" Control.Monad.State (modify,MonadState(..))
-import Happstack.State.ClockTime
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import Happstack.Data.IxSet as IxSet
-import Control.Applicative((<$>))
-import Data.Data(Data(..))
-import Data.Maybe(isNothing,isJust)
+import Data.Maybe(isJust)
 import Misc
 import Control.Monad
 import Happstack.Server.SimpleHTTP
@@ -24,7 +20,7 @@ import System.Random
 import System.IO.Unsafe
 import Data.List
 import qualified Data.Set as Set
-import Debug.Trace
+
 import MinutesTime
 
 $(deriveAll [''Eq, ''Ord, ''Default]
@@ -426,12 +422,10 @@ setUserPassword user@User{userid} newpassword = do
   return ()
   
 verifyPassword :: Password -> BS.ByteString -> Bool
-verifyPassword (Password salt hash) password
-    | hash == generatedHash = True
-    | otherwise = False
-    where
-        generatedHash = hashPassword password salt
-
+verifyPassword (Password salt hash) password =  hash == (hashPassword password salt)
+verifyPassword _ _ = False        
+        
+        
 setUserDetails :: User 
                -> BS.ByteString
                -> BS.ByteString
