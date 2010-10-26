@@ -140,21 +140,18 @@ function docstateToHTML(){
 
     $(author.otherfields).each(function (){
 	    var fd = this;
+	    fd.id = newUUID();
 	    var field = buildDraggableField(fd.label, fd.value);
-	    field.append(newHiddenValue("fieldid", newUUID()));
+	    field.append(newHiddenValue("fieldid", fd.id));
 	    ad.append(field);
+
+	    placePlacements(fd.placements, fd.label, fd.value, "author", fd.id);
 	});
 
     placePlacements(author.nameplacements, "Avsändare namn på motpart", author.name, "author", "name");
     placePlacements(author.companyplacements, "Avsändare  titel, företag", author.company, "author", "company");
     placePlacements(author.numberplacements, "Avsändare Orgnr/Persnr", author.number, "author", "number");
     placePlacements(author.emailplacements, "Avsändare personens e-mail", author.email, "author", "email");
-
-    $(author.otherfields).each(function (){
-	    var fd = this;
-	    fd.id = newUUID();
-	    placePlacements(fd.placements, fd.label, fd.value, "author", fd.id);
-	});
 
     var signatories = docstate.signatories;
     var sl = $("#signatorylist");
@@ -205,11 +202,13 @@ function signatoryToHTML(sig) {
 	    var field = buildDraggableField(fd.label, fd.value);
 	    field.find("input").attr("name", "fieldname");
 	    var fieldid = newUUID();
+	    fd.id = fieldid;
 	    field.append(newHiddenValue("fieldid", fieldid));
 
 	    field.append(newHiddenField("fieldid", fieldid));
 	    field.append(newHiddenField("fieldsigid", sigid));
 	    of.append(field);
+	    placePlacements(fd.placements, fd.label, fd.value, sig.id, fd.id);
 	});
     
     sl.append(sigentry);
@@ -231,11 +230,6 @@ function signatoryToHTML(sig) {
     placePlacements(sig.numberplacements, "Orgnr/Persnr", sig.number, sigid, "number");
     placePlacements(sig.emailplacements, "Personens e-mail", sig.email, sigid, "email");
     
-    $(sig.otherfields).each(function (){
-	    var fd = this;
-	    fd.id = newUUID();
-	    placePlacements(fd.placements, fd.label, fd.value, sig.id, fd.id);
-	});
 }
 
 signatoryadd = function() {
