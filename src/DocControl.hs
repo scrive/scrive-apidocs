@@ -402,9 +402,9 @@ updateDocument ctx@Context{ctxtime} document@Document{documentid, documentauthor
 
   let placementsByID sigid fieldid = 
           map plac (filter (sameids sigid fieldid) pls) where
-              sameids sigid fieldid tup = case tup of
-                                            (sigid, fieldid, _) -> True
-                                            _                   -> False
+              sameids sigid fieldid (sigid2, fieldid2, _)
+                  | sigid == sigid2 && fieldid == fieldid2 = True
+                  | otherwise                              = False
               plac (_, _, x) = x
 
 
