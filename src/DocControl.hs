@@ -457,6 +457,15 @@ updateDocument ctx@Context{ctxtime} document@Document{documentid, documentauthor
 
   liftIO $ print "placements"
   liftIO $ print pls
+
+  let author2 = documentauthordetails { signatorynameplacements = placementsByID (BS.fromString "author") (BS.fromString "name"),
+                                        signatorycompanyplacements = placementsByID (BS.fromString "author") (BS.fromString "company"),
+                                        signatoryemailplacements = placementsByID (BS.fromString "author") (BS.fromString "email"),
+                                        signatorynumberplacements = placementsByID (BS.fromString "author") (BS.fromString "number"),
+                                        signatoryotherfields = defsByID (BS.fromString "author") }
+
+  liftIO $ print "author"
+  liftIO $ print author2
  
   -- FIXME: tell the user what happened!
   when (daystosign<1 || daystosign>99) mzero
