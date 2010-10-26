@@ -245,7 +245,12 @@ $(deriveAll [''Default]
           { fileid       :: FileID
           , filename     :: BS.ByteString
           , filepdf      :: BS.ByteString 
-          , filejpgpages :: JpegPages
+          }
+      data File1 = File1 
+          { fileid1       :: FileID
+          , filename1     :: BS.ByteString
+          , filepdf1      :: BS.ByteString 
+          , filejpgpages1 :: JpegPages
           }
       data File0 = File0 
           { fileid0       :: FileID
@@ -659,22 +664,37 @@ instance Version ChargeMode where
 
 $(deriveSerialize ''File)
 instance Version File where
+    mode = extension 2 (Proxy :: Proxy File1)
+
+$(deriveSerialize ''File1)
+instance Version File1 where
     mode = extension 1 (Proxy :: Proxy File0)
 
 $(deriveSerialize ''File0)
 instance Version File0 where
 
-instance Migrate File0 File where
+instance Migrate File0 File1 where
     migrate (File0 
              { fileid0
              , filename0
              , filepdf0
              , filejpgpages0
-             }) = File 
-                { fileid = fileid0
-                , filename = filename0
-                , filepdf = filepdf0
-                , filejpgpages = JpegPages filejpgpages0
+             }) = File1 
+                { fileid1 = fileid0
+                , filename1 = filename0
+                , filepdf1 = filepdf0
+                , filejpgpages1 = JpegPages filejpgpages0
+                }
+
+instance Migrate File1 File where
+    migrate (File1 
+                { fileid1
+                , filename1
+                , filepdf1
+                }) = File 
+                { fileid = fileid1
+                , filename = filename1
+                , filepdf = filepdf1
                 }
 
 
@@ -780,7 +800,6 @@ attachFile documentid filename1 content = do
   let Just document = getOne (documents @= documentid)
   fileid2 <- getUnique documents FileID
   let nfile = File { fileid = fileid2
-                   , filejpgpages = JpegPagesPending
                    , filename = filename1
                    , filepdf = content
                    }
@@ -978,15 +997,6 @@ archiveDocuments docidlist = do
                                Just doc -> updateIx docid (doc { documentdeleted = True }) documents
                                Nothing -> documents
       
-fixRemoveImages :: Update Documents ()
-fixRemoveImages = do
-  -- FIXME: oh boy, this is so absolutely ugly!
-  let fixImagesInOneDocument (document@Document {documentfiles}) =
-                                  document {documentfiles = map fixOneFile documentfiles}
-      fixOneFile file = file { filejpgpages = JpegPagesPending }
-  modify (\documents -> IxSet.fromList (map fixImagesInOneDocument (IxSet.toList documents)))
-  return ()
-
 
 fragileTakeOverDocuments :: UserID -> UserID -> Update Documents ()
 fragileTakeOverDocuments destuserid srcuserid = do
@@ -1021,7 +1031,6 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'archiveDocuments
 
                           -- admin only area follows
-                        , 'fixRemoveImages
                         , 'fragileTakeOverDocuments
                         ])
 
