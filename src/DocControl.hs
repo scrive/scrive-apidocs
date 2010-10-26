@@ -329,7 +329,7 @@ getAndConcat field = do
   return $ map concatChunks values
 
 updateDocument :: Context -> Document -> Kontra Document  
-updateDocument ctx@Context{ctxtime} document@Document{documentid} = do
+updateDocument ctx@Context{ctxtime} document@Document{documentid, documentauthordetails} = do
   signatoriesnames <- getAndConcat "signatoryname"
   signatoriescompanies <- getAndConcat "signatorycompany"
   signatoriesnumbers <- getAndConcat "signatorynumber"
