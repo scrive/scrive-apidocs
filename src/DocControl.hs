@@ -398,7 +398,7 @@ updateDocument ctx@Context{ctxtime} document@Document{documentid, documentauthor
   let pls = zipWith3 m placedsigids placedfieldids placements where
           m s f p = (s, f, p)
 
-  liftIO $ print (length placements)
+  liftIO $ print pls
 
   let placementsByID sigid fieldid = 
           map plac (filter (sameids sigid fieldid) pls) where
