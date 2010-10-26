@@ -339,11 +339,11 @@ function initializeTemplates () {
 		    var sigid = field.find(".sigid").text();
 		    var fieldid = field.find(".fieldid").text();
 		    
-		    $("form").append(newHiddenField("placedx", x));
-		    $("form").append(newHiddenField("placedy", y));
-		    $("form").append(newHiddenField("placedpage", pageno));
-		    $("form").append(newHiddenField("placedwidth", pagew));
-		    $("form").append(newHiddenField("placedheight", pageh));
+		    $("form").append(newHiddenField("placedx", Math.round(x)));
+		    $("form").append(newHiddenField("placedy", Math.round(y)));
+		    $("form").append(newHiddenField("placedpage", Math.round(pageno)));
+		    $("form").append(newHiddenField("placedwidth", Math.round(pagew)));
+		    $("form").append(newHiddenField("placedheight", Math.round(pageh)));
 		    $("form").append(newHiddenField("placedsigid", sigid));
 		    $("form").append(newHiddenField("placedfieldid", fieldid));
 		});
