@@ -203,7 +203,7 @@ function signatoryToHTML(sig) {
     $(sig.otherfields).each(function (){
 	    var fd = this;
 	    var field = buildDraggableField(fd.label, fd.value);
-	    field.find("input").attr("name", "fieldvalue");
+	    field.find("input").attr("name", "fieldname");
 	    var fieldid = newUUID();
 	    field.append(newHiddenValue("fieldid", fieldid));
 
@@ -331,6 +331,7 @@ $(document).ready(function () {
 			$("form").append(newHiddenField("placedsigid", sigid));
 			$("form").append(newHiddenField("placedfieldid", fieldid));
 		    });
+
 	    });
 	
     });
