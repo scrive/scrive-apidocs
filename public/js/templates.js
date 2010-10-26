@@ -68,6 +68,10 @@ function magicUpdate(){
     var fieldid = field.parent().find(".fieldid").text();
     var value = field.attr("value");
 
+    if(value == "") {
+	value = field.attr("infotext");
+    }
+
     $(".placedfield").each(function () {
 	    var f = $(this);
 	    if(f.find(".sigid").text() == sigid
