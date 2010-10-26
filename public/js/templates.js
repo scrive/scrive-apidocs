@@ -192,10 +192,11 @@ function signatoryToHTML(sig) {
     anumb.append(newHiddenValue("fieldid", "number"));
     aemai.append(newHiddenValue("fieldid", "email"));
 
+    d.append(aemai);
     d.append(aname);
     d.append(acomp);
     d.append(anumb);
-    d.append(aemai);
+
     
     // other fields
 
