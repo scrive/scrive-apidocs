@@ -1,6 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -F -pgmFtrhsx #-}
-module KontraLink where
+module KontraLink(KontraLink(..), hpost0, hpost1, hpost2, hpost3, hpost4, seeOtherXML ) where
 
 import UserState
 import DocState
@@ -15,9 +15,7 @@ import Data.Maybe
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.Object.Json as Json
-import System.Log.Logger
 import MinutesTime
-import Misc
 import Happstack.Server.HSP.HTML (webHSP)
 import qualified HSX.XMLGenerator as HSX (XML)
 import HSP
@@ -41,7 +39,6 @@ data KontraLink
     | LinkIssueDoc Document
     | LinkIssueDocPDF Document {- Which file? -}
     | LinkSubaccount
-    | LinkResendEmail Document SignatoryLink {- Old and should be droped-}
     | LinkRemind Document SignatoryLink
     | LinkSigned DocumentID SignatoryLinkID 
 
@@ -65,8 +62,6 @@ instance Show KontraLink where
     showsPrec _ (LinkSignDoc document signatorylink) = 
         (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++ 
                  "/" ++ show (signatorymagichash signatorylink)
-    showsPrec _ (LinkResendEmail document signatorylink) = 
-        (++) $ "/resendemail/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink)
     showsPrec _ (LinkRemind document signlink) = (++) $ "/resend/"++(show $ documentid document)++"/"++(show $ signatorylinkid signlink)   
     showsPrec _ (LinkSigned documentid signatorylinkid) = (++) $ "/landpage/signed/" ++ show documentid ++ "/" ++ show signatorylinkid
 {-

@@ -6,7 +6,6 @@ import Happstack.State (waitForTermination)
 import Happstack.Server
   ( Conf(port)
   , simpleHTTP
-  , simpleHTTPWithSocket
   , nullConf
   , validator
   , wdgHTMLValidator
@@ -16,7 +15,6 @@ import Happstack.State
   , Proxy(..)
   , Methods
   , TxControl
-  , Saver(Queue, FileSaver)
   , runTxSystem
   , shutdownSystem
   , createCheckpoint
@@ -28,11 +26,8 @@ import System.Console.GetOpt
 import AppLogger (withLogger)
 import AppState (AppState(..))
 import AppControl (appHandler)
-import qualified System.Mem (performGC)
 import qualified Control.Concurrent (threadDelay)
 import qualified User as User
-import qualified UserControl as User
-import qualified UserState as User
 import qualified Data.ByteString.Char8 as BS
 
 import Network.BSD
@@ -41,7 +36,6 @@ import Network.Socket hiding ( accept, socketPort, recvFrom, sendTo )
 import qualified Network.Socket as Socket ( accept )
 import qualified Control.Exception as Exception
 import Happstack.State.Saver
-import Session
 import Scheduler
 import Happstack.State (update,query)
 
