@@ -10,26 +10,21 @@ module Session
     )
     where
 
-import "mtl" Control.Monad.Reader (MonadPlus(..), ap, ReaderT(..), asks, ask)
+import "mtl" Control.Monad.Reader (ask)
 import "mtl" Control.Monad.State hiding (State)
 import Data.Generics
 import Data.Maybe (isNothing,isJust, fromJust)
 import Happstack.Data (Default, deriveAll, gFind')
 import Happstack.Data.IxSet
-import Happstack.Data.IxSet (IxSet(..), Indexable(..), (@=), delete, getOne, 
-                             inferIxSet, noCalcs, updateIx)
-import Happstack.Server (ServerMonad, withDataFn, readCookieValue,addCookie,FilterMonad(..),
-                         Response,expireCookie,setHeaderM,withData,RqData)
-import Happstack.Server.Cookie (Cookie,mkCookie,mkCookieHeader)
 import Happstack.Server.HTTP.Types ()
-import Happstack.State (Serialize, Version, Query, Update, deriveSerialize, getRandomR, 
+import Happstack.State (Version, Query, Update, deriveSerialize, getRandomR, 
                         mkMethods, query, update, mode, extension, Proxy(Proxy), Migrate, migrate)
-import qualified Data.Set as Set
-import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString as BS
 import UserState (UserID,FlashMessage,GetUserByUserID(GetUserByUserID), User)
 import MinutesTime
-import Happstack.Server hiding (simpleHTTP)
+import Happstack.Server
+import System.Random
+import Happstack.Util.Common ( readM)
+import Misc (MagicHash(MagicHash))
 
 $( deriveAll [''Ord, ''Eq, ''Default, ''Num]
    [d|
@@ -53,19 +48,34 @@ data SessionData0 = SessionData0 { userID0::Maybe UserID,
 $(deriveSerialize ''SessionData0)
 instance Version (SessionData0)
                                    
+data SessionData1 = SessionData1 {  
+                                  userID1::Maybe UserID,
+                                  flashMessages1::[FlashMessage],
+                                  expires1::MinutesTime
+                               }  deriving (Ord,Eq,Show,Typeable,Data)
+$(deriveSerialize ''SessionData1) 
+instance Version (SessionData1) where
+   mode = extension 1 (Proxy :: Proxy SessionData0)
+                               
 data SessionData = SessionData {  
                                   userID::Maybe UserID,
                                   flashMessages::[FlashMessage],
-                                  expires::MinutesTime
-                               }  deriving (Ord,Eq,Show,Typeable,Data)
+                                  expires::MinutesTime,
+                                  hash::MagicHash
+                               }  deriving (Ord,Eq,Show,Typeable,Data)                               
+                               
 $(deriveSerialize ''SessionData) 
 instance Version (SessionData) where
-   mode = extension 1 (Proxy :: Proxy SessionData0)
+   mode = extension 2 (Proxy :: Proxy SessionData1)
      
-instance Migrate SessionData0 SessionData where
-      migrate _ = SessionData {userID = Nothing, flashMessages = [], expires = MinutesTime 0}
+instance Migrate SessionData0 SessionData1 where
+      migrate (SessionData0 {userID0 = _, flashMessages0 = _}) = SessionData1 {userID1 = Nothing, flashMessages1 = [], expires1 = MinutesTime 0}
     
-   
+instance Migrate SessionData1 SessionData where
+      migrate (SessionData1 {userID1 = _, flashMessages1 = _, expires1 = _})
+                             = SessionData {userID = Nothing, flashMessages = [], expires = MinutesTime 0, hash = MagicHash 0}
+    
+      
 
 data Session = Session {sessionId::SessionId,
                         sessionData::SessionData}
@@ -78,6 +88,7 @@ $(inferIxSet "Sessions" ''Session 'noCalcs [''SessionId])
 
 -- Some helpers. MACID demands it before use.
 -- |perform insert only if test is True
+testAndInsert :: (MonadState (IxSet a) m, Data a, Ord a, Indexable a b) =>(IxSet a -> Bool) -> a -> m Bool
 testAndInsert test a =
     maybeModify $ \ixset ->
         if test ixset
@@ -133,43 +144,67 @@ $(mkMethods ''Sessions
   , 'newSession
   ])
 
-  
+--Info that we store in cookies  
+data SessionCookieInfo =  SessionCookieInfo {
+                                         cookieSessionId::SessionId, --While parsing we depend on it containing just nums
+                                         cookieSessionHash::MagicHash --While parsing we depend on it starting with alpha
+                                         }
+instance Show (SessionCookieInfo) where         
+    show sci = (show $ cookieSessionId sci) ++ "-" ++ (show $ cookieSessionHash sci)
+
+instance Read (SessionCookieInfo) where         
+     readsPrec _ s = do
+                        let (sid,sh) = break (== '-') s
+                        sid' <- readM sid  --if need to understand that just read about list monad
+                        sh' <- readM (drop 1 sh)  
+                        return $ (SessionCookieInfo {cookieSessionId = sid', cookieSessionHash=sh'},"")
+    
+cookieInfoFromSession::Session->SessionCookieInfo
+cookieInfoFromSession s =  SessionCookieInfo {
+                                         cookieSessionId = sessionId s,
+                                         cookieSessionHash = hash $ sessionData s }
+                                         
+sessionAndCookieHashMatch::Session->SessionCookieInfo->Bool    
+sessionAndCookieHashMatch session sci =  (cookieSessionHash sci) == (hash $ sessionData session)
 --- Session interface  
   
-startSessionCookie :: (FilterMonad Response m,ServerMonad m, MonadIO m) => SessionId -> m ()
-startSessionCookie sessionid = addCookie (60*60) $ mkCookie "sessionId" (show sessionid)
-
-endSessionCookie :: (FilterMonad Response m,ServerMonad m,  MonadIO m) => m ()
-endSessionCookie = expireCookie "sessionId" 
+startSessionCookie :: (FilterMonad Response m,ServerMonad m, MonadIO m) => Session -> m ()
+startSessionCookie session = addCookie (60*60) $ mkCookie "sessionId" $ show $ cookieInfoFromSession session
                                  
-currentSessionIdFromCookie':: RqData (Maybe SessionId)
-currentSessionIdFromCookie' = (optional (readCookieValue "sessionId")) 
+currentSessionInfoCookie:: RqData (Maybe SessionCookieInfo)
+currentSessionInfoCookie = (optional (readCookieValue "sessionId")) 
  where optional c = (liftM Just c) `mplus` (return Nothing)
  
 currentSession ::(MonadIO m, ServerMonad m, MonadPlus m, FilterMonad Response m) => m (Maybe Session) 
-currentSession = withDataFn currentSessionIdFromCookie' $ (\msid ->  
-                            case (msid) of
-                            Just sid-> query $ GetSession sid                           
-                            Nothing ->  return  Nothing)
+currentSession = withDataFn currentSessionInfoCookie $ (\mscd ->  
+                            case (mscd) of
+                             Just scd-> do 
+                                         session <- query $ GetSession $ cookieSessionId scd                           
+                                         if (isJust session && sessionAndCookieHashMatch (fromJust session) scd) 
+                                          then return session                               
+                                          else return Nothing
+                             Nothing ->  return  Nothing)
 
 emptySessionData::IO SessionData                     
 emptySessionData = do
                      now <- getMinutesTime
-                     return $ SessionData {userID = Nothing,  flashMessages = [], expires = 60 `minutesAfter` now}  
+                     magicHash <-  randomIO
+                     return $ SessionData {userID = Nothing,  flashMessages = [], expires = 60 `minutesAfter` now, hash = magicHash }  
 
                                                                 
 startSession :: (FilterMonad Response m,ServerMonad m,  MonadIO m, MonadPlus m) => m Session
 startSession = do
-                emptySessionData <- liftIO $ emptySessionData
-                session <- update $ NewSession $ emptySessionData
-                startSessionCookie (sessionId session)   
+                emptySession <- liftIO $ emptySessionData
+                session <- update $ NewSession $ emptySession
+                startSessionCookie session
                 return session                   
                
 getUserFromSession::Session -> ServerPartT IO (Maybe User)               
 getUserFromSession s = case (userID $ sessionData s) of
-                        Just id -> query $ GetUserByUserID id
+                        Just i -> query $ GetUserByUserID i
                         _ -> return Nothing    
-
+                        
+getFlashMessagesFromSession::Session -> ServerPartT IO  [FlashMessage]
 getFlashMessagesFromSession s = return $ flashMessages $ sessionData s      
                   
                   
@@ -181,11 +216,11 @@ handleSession = do
                                    now <- liftIO getMinutesTime
                                    if (now >= (expires $ sessionData $ session)) 
                                     then do
-                                         update $ DelSession (sessionId session)
+                                         _ <- update $ DelSession (sessionId session)
                                          startSession
                                     else return session      
                    Nothing -> startSession
                    
 
 updateSessionWithContextData::Session -> (Maybe UserID)->[FlashMessage]->ServerPartT IO ()                                     
-updateSessionWithContextData (Session id sd) u fm = update $ UpdateSession (Session id $ sd {userID = u, flashMessages = fm})
+updateSessionWithContextData (Session i sd) u fm = update $ UpdateSession (Session i $ sd {userID = u, flashMessages = fm})
