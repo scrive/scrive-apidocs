@@ -36,10 +36,17 @@ function placePlacements(pls, label, value, sigid, fieldid) {
     $(pls).each(function () {
 	    var pl = this;
 	    var d = placementToHTML(label, value);
+	    var page = $("#page" + pl.page);
 	    d.offset({left: pl.x, top: pl.y});
-	    d.append(newHiddenValue("sigid", sigid));
-	    d.append(newHiddenValue("fieldid", fieldid));
-	    $("#page" + pl.page).append(d);
+	    setPlacedSigID(d, sigid);
+	    setPlacedFieldID(d, fieldid);
+	    setHiddenField(d, "placedx", String(Math.round(pl.x)));
+	    setHiddenField(d, "placedy", String(Math.round(pl.y)));
+	    setHiddenField(d, "placedpage", String(pl.page));
+	    setHiddenField(d, "placedwidth", String(Math.round(page.width())));
+	    setHiddenField(d, "placedheight", String(Math.round(page.height())));
+
+	    page.append(d);
 
 	    d.draggable({ 
 		    appendTo: "body",
@@ -58,31 +65,167 @@ function newHiddenValue(label, value) {
     return $("<span style='display: none' class='" + label + "'>" + value + "</span>");
 }
 
+function getHiddenValue(field, label) {
+    var s = $(field).find("." + label);
+    if(s.size()){
+	return s.text();
+    }
+    alert("field has no value named " + label);
+}
+
+function setHiddenValue(field, label, value) {
+    var s = $(field).find("." + label);
+    if(s.size()){
+	s.text(value);
+    } else {
+	field.append(newHiddenValue(label, value));
+    }
+}
+
 function newHiddenField(name, value) {
     return $("<input type='hidden' name='" + name + "' value='" + value + "' />");
 }
 
+function getHiddenField(field, label) {
+    var s = $(field).find("input[name='" + label + "']");
+    if(s.size()){
+	return s.attr("value");
+    }
+    alert("field has no hidden field called " + label);
+}
+
+function setHiddenField(field, label, value) {
+    var s = $(field).find("input[name='" + label + "']");
+    if(s.size()){
+	s.attr("value", value);
+    } else {
+	field.append("<input type='hidden' name='" + label + "' value='" + value + "' />");
+    }
+}
+
 function magicUpdate(){
-    var field = $(this);
-    var sigid = field.parents(".sigentry").find(".sigid").text();
-    var fieldid = field.parent().find(".fieldid").text();
-    var value = field.attr("value");
+    var field = $(this).parents(".dragfield");
+    var sigid = getFieldSigID(field);
+    var fieldid = getFieldID(field);
+    var value = getValue(field);
 
     if(value == "") {
-	value = field.attr("infotext");
+	value = getInfotext(field);
     }
 
     $(".placedfield").each(function () {
 	    var f = $(this);
-	    if(f.find(".sigid").text() == sigid
-	       && f.find(".fieldid").text() == fieldid) {
-		f.find(".value").text(value);
+	    if(getPlacedSigID(f) == sigid
+	       && getPlacedFieldID(f) == fieldid) {
+		setPlacedValue(f, value);
 	    }
 	});
+    updateStatus(field);
 }
 
-function buildDraggableField(info, val) {
-    var x = $("<div><span class='draghandle'>drag</span><input type='text' infotext='" + info + "' value='" + val + "' /></div>");
+function isDraggableField(field){
+    return $(field).hasClass("dragfield");
+}
+
+function isDraggableText(field){
+    return $(field).hasClass("dragtext");
+}
+
+function getValue(field) {
+    if(isDraggableField(field)) {
+	var s = $(field).find("input[type='text']");
+	if(s.size()) {
+	    return s.attr("value");
+	} else {
+	    alert("field has no input box");
+	}
+    } else if(isDraggableText(field)) {
+	return getHiddenValue(field, "fieldvalue");
+    } else {
+	alert("I don't know what that field is");
+    }
+}
+
+function setValue(field, value) {
+    var s = $(field).find("input[type='text']");
+    if(s.size()) {
+	s.attr("value", value);
+    } else {
+        alert("field has no input box!");
+    }
+}
+
+function getFieldType(field) {
+    return getHiddenValue(field, "type");
+}
+
+function setFieldType(field, type) {
+    setHiddenValue(field, "type", type);
+}
+
+function getFieldID(field) {
+    if(isDraggableField(field)) {
+	return getHiddenField(field, "fieldid");
+    } else if(isDraggableText(field)) {
+	return getHiddenValue(field, "fieldid");
+    } else {
+	alert("unknown type");
+    }
+}
+
+function setFieldID(field, fieldid) {
+    if(isDraggableField(field)) {
+	setHiddenField(field, "fieldid", fieldid);
+    } else if(isDraggableText(field)) {
+	setHiddenValue(field, "fieldid", fieldid);
+    } else {
+	alert("unknown type");
+    }
+}
+
+function getFieldName(field) {
+    var s = $(field).find("input[type='text']");
+    if(s.size()) {
+	return s.attr("name");
+    } else {
+	alert("field has no text box");
+    }
+}
+
+function setFieldName(field, name) {
+    var s = $(field).find("input[type='text']");
+    if(s.size()) {
+	s.attr("name", name);
+    } else {
+	alert("field has no text box");
+    }
+}
+
+function getInfotext(field) {
+    var s = $(field).find("input[type='text']");
+    if(s.size()) {
+	return s.attr("infotext");
+    } else {
+	alert("field has no text box");
+    }
+}
+
+function setInfotext(field, infotext) {
+    var s = $(field).find("input[type='text']");
+    if(s.size()) {
+	s.attr("infotext", infotext);
+    } else {
+	alert("field has no text box");
+    }
+}
+
+function buildDraggableField(info, val, type) {
+    var x = $("<div class='dragfield'><span class='draghandle'>drag</span><input type='text' autocomplete='off' /><span class='status'></span></div>");
+
+    setInfotext(x, info);
+    setValue(x, val);
+    setFieldType(x, type);
+
     x.draggable({ handle: ".draghandle"
 		, helper: function (event) {
 		var field = $(this);
@@ -90,6 +233,7 @@ function buildDraggableField(info, val) {
 		return placementToHTML(input.attr("infotext"), input.attr("value"));
 	    }
 		});
+
     var input = x.find("input");
 
     input.keydown(magicUpdate);
@@ -98,8 +242,9 @@ function buildDraggableField(info, val) {
     return x;
 }
 
+// for use with author fields
 function buildDraggableText(val) {
-    var x = $("<div><span class='draghandle'>drag</span> <span class='fieldvalue'>" + val + "</span></div>");
+    var x = $("<div class='dragtext'><span class='draghandle'>drag</span> <span class='fieldvalue'>" + val + "</span></div>");
     x.draggable({ handle: ".draghandle"
 		, helper: function (event) {
 		return placementToHTML("abc", val);
@@ -121,22 +266,30 @@ function docstateToHTML(){
 
     if(author.name) {
 	var aname = buildDraggableText(author.name);
-	aname.append(newHiddenValue("fieldid", "name"));
+	setFieldID(aname, "name");
+	setFieldSigID(aname, "author");
+	setFieldType(aname, "text");
 	ad.append(aname);
     }
     if(author.company){
 	var acomp = buildDraggableText(author.company);
-	acomp.append(newHiddenValue("fieldid", "company"));
+	setFieldID(acomp, "name");
+	setFieldSigID(acomp, "author");
+	setFieldType(acomp, "text");
 	ad.append(acomp);
     }
     if(author.number) {
 	var anumb = buildDraggableText(author.number);
-	anumb.append(newHiddenValue("fieldid", "number"));
+	setFieldID(anumb, "name");
+	setFieldSigID(anumb, "author");
+	setFieldType(anumb, "text");
 	ad.append(anumb);
     }
     if(author.email) {
 	var aemai = buildDraggableText(author.email);
-	aemai.append(newHiddenValue("fieldid", "email"));
+	setFieldID(aemai, "name");
+	setFieldSigID(aemai, "author");
+	setFieldType(aemai, "text");
 	ad.append(aemai);
     }
 
@@ -146,9 +299,10 @@ function docstateToHTML(){
 	    var fd = this;
 	    fd.id = newUUID();
 	    var field = buildDraggableField(fd.label, fd.value);
-	    field.append(newHiddenValue("fieldid", fd.id));
+	    setFieldID(field, fd.id);
+	    setFieldSigID(field, "author");
 	    ad.append(field);
-
+	    setFieldType(field, "author");
 	    placePlacements(fd.placements, fd.label, fd.value, "author", fd.id);
 	});
 
@@ -164,6 +318,105 @@ function docstateToHTML(){
     $(signatories).each(function () {
 	    signatoryToHTML(this);
 	});
+
+    $(".dragfield").each(function () {
+	    updateStatus(this);
+	});
+}
+
+function getIcon(field){
+    return getHiddenValue(field, "status");
+}
+
+function setIcon(field, status) {
+    setHiddenValue(field, "status", status);
+}
+
+function getSigID(field) {
+    return getHiddenField(field, "sigid");
+}
+
+function setSigID(field, sigid) {
+    setHiddenField(field, "sigid", sigid);
+}
+
+function getFieldSigID(field) {
+    return getHiddenField(field, "fieldsigid");
+}
+
+function setFieldSigID(field, sigid) {
+    setHiddenField(field, "fieldsigid", sigid);
+}
+
+function getPlacedFieldID(field) {
+    return getHiddenField(field, "placedfieldid");
+}
+
+function setPlacedFieldID(field, fieldid) {
+    setHiddenField(field, "placedfieldid", fieldid);
+}
+
+function getPlacedSigID(field) {
+    return getHiddenField(field, "placedsigid");
+}
+
+function setPlacedSigID(field, sigid) {
+    setHiddenField(field, "placedsigid", sigid);
+}
+
+function setPlacedValue(field, value) {
+    setHiddenValue(field, "value", value);
+}
+
+function getPlacedValue(value) {
+    getHiddenValue(field, "value");
+}
+
+function getPlacedFieldsForField(field) {
+    var fieldid = getFieldID(field);
+    var fields = [];
+    var fieldsigid = getFieldSigID(field);
+    $(".placedfield").each(function() {
+	    var p = $(this);
+	    var fid = getPlacedFieldID(p);
+	    var sid = getPlacedSigID(p);
+	    if(fid == fieldid) {
+		fields[fields.length] = p;
+	    }
+	});
+    return $(fields);
+}
+
+// function to automatically change status icon
+// status is a function of field type and current state
+function updateStatus(field) {
+    field = $(field);
+    var type = getFieldType(field);
+    if(type == "author") {
+	console.log("author field: " + getFieldName(field));
+	if(getValue(field)) {
+	    setIcon(field, "done");
+	} else {
+	    setIcon(field, "athr");
+	}
+    } else if(type == "sig") {
+	console.log("author field: " + getFieldName(field));
+	if(getValue(field)) {
+	    // it's a signatory field, but it's filled out
+	    setIcon(field, "done");
+	} else if(getPlacedFieldsForField(field).size()) {
+	    // if it's placed
+	    setIcon(field, "sig");
+	} else {
+	    // not placed, so won't send
+	    setIcon(field, "none");
+	}
+    } else if(type == "text") {
+	// do nothing
+    } else {
+	console.log("field has bad field type: " + getFieldName(field));
+	alert("bad field type");
+    }
 }
 
 function signatoryToHTML(sig) {
@@ -175,56 +428,69 @@ function signatoryToHTML(sig) {
     sigentry.append(newHiddenValue("sigid", sigid));    
     sigentry.append(newHiddenField("sigid", sigid));
 
-    var d = $("<div class='standardfields'></div>");
+    var d = $("<div class='fields'></div>");
     
     var aname = buildDraggableField("Namn på motpart", sig.name);
     var acomp = buildDraggableField("Titel, företag", sig.company);
     var anumb = buildDraggableField("Orgnr/Persnr", sig.number);
     var aemai = buildDraggableField("Personens e-mail", sig.email);
 
-    aname.find("input").attr("name", "signatoryname");
-    acomp.find("input").attr("name", "signatorycompany");
-    anumb.find("input").attr("name", "signatorynumber");
-    aemai.find("input").attr("name", "signatoryemail");
+    setFieldName(aname, "signatoryname");
+    setFieldName(acomp, "signatorycompany");
+    setFieldName(anumb, "signatorynumber");
+    setFieldName(aemai, "signatoryemail");
     
-    aname.append(newHiddenValue("fieldid", "name"));
-    acomp.append(newHiddenValue("fieldid", "company"));
-    anumb.append(newHiddenValue("fieldid", "number"));
-    aemai.append(newHiddenValue("fieldid", "email"));
+    setFieldID(aname, "name");
+    setFieldID(acomp, "company");
+    setFieldID(anumb, "number");
+    setFieldID(aemai, "email");
+
+    setFieldSigID(aname, sigid);
+    setFieldSigID(acomp, sigid);
+    setFieldSigID(anumb, sigid);
+    setFieldSigID(aemai, sigid);
+
+    // email is required
+    setFieldType(aemai, "author");
+    setFieldType(acomp, "sig");
+    setFieldType(anumb, "sig");
+    setFieldType(aname, "sig");
+
+    if(aemai.find("input").attr("value")) {
+	setIcon(aemai, "done");
+    }
 
     d.append(aemai);
     d.append(aname);
     d.append(acomp);
     d.append(anumb);
-
     
     // other fields
 
-    var of = $("<div class='otherfields'><hr />Fields to be filled out by signatory<br /></div>");
-    
     $(sig.otherfields).each(function (){
 	    var fd = this;
 	    var field = buildDraggableField(fd.label, fd.value);
 	    field.find("input").attr("name", "fieldname");
 	    var fieldid = newUUID();
 	    fd.id = fieldid;
-	    field.append(newHiddenValue("fieldid", fieldid));
-	    field.append(newHiddenField("fieldid", fieldid));
-	    field.append(newHiddenField("fieldsigid", sigid));
-	    of.append(field);
+	    setFieldID(field, fieldid);
+	    setFieldSigID(field, sigid);
+	    setFieldType(field, "sig");
+	    d.append(field);
 	    placePlacements(fd.placements, fd.label, fd.value, sig.id, fd.id);
 	});
 
     var newFieldLink = $("<small><a href='#'>New Field</a></small><br />");
     newFieldLink.find("a").click(function () {
 	    var field = buildDraggableField("Field Name", "");
-	    field.find("input[type='text']").attr("name", "fieldname");
+	    setFieldName(field, "fieldname");
 	    var fieldid = newUUID();
-	    field.append(newHiddenValue("fieldid", fieldid));
-	    field.append(newHiddenField("fieldid", fieldid));
-	    field.append(newHiddenField("fieldsigid", sigid));
-	    of.append(field);
+	    setFieldID(field, fieldid);
+	    setFieldSigID(field, sigid);
+	    setFieldType(field, "sig");
+	    d.append(field);
 	    enableInfoText(field);
+	    return false;
 	});
     
     sl.append(sigentry);
@@ -238,7 +504,6 @@ function signatoryToHTML(sig) {
 
 
     sigentry.append(d);
-    sigentry.append(of);
     sigentry.append(newFieldLink);
     sigentry.append(removeLink);
     
@@ -264,19 +529,8 @@ function getLabel(x) {
     return label;
 }
 
-function getValue(x) {
-    var val = $(x).find(".fieldvalue").text();
-    if(!val) {
-	if(!$(x).find("input").hasClass("grayed")) {
-	    val = $(x).find("input").attr("value");
-	}
-    }
-
-    if (!val) {
-	val = "";
-    }
-
-    return val;
+function isPlacedField(field) {
+    return $(field).hasClass("placedfield");
 }
 
 function makeDropTargets() {
@@ -290,27 +544,22 @@ function makeDropTargets() {
 
 		var pageno = parseInt(page.attr("id").substr(4));
 
-		var fieldid = field.find(".fieldid").text();
-
-		if(!field.hasClass("placedfield")) {
-		    var sigid = field.parents(".sigentry").find(".sigid").text();
-		    if(!sigid) {
-			sigid = field.parents("#authordetails").find(".sigid").text();
-		    }
-		    
-		    if(!sigid) {
-			alert("no sig id");
-		    }
+		if(!isPlacedField(field)) {
+		    var sigid = getFieldSigID(field);
+		    var fieldid = getFieldID(field);
 		    var pl = newplacement(left, top, pageno, page.width(), page.height());
 		    placePlacements([pl], getLabel(field), getValue(field), sigid, fieldid);
+		    updateStatus(field);
 		} else {
-		    var sigid = field.find(".sigid").text();
-		    
+		    var sigid = getPlacedSigID(field);
+		    var fieldid = getPlacedFieldID(field);
 		    var pl = newplacement(left, top, pageno, page.width(), page.height());
 		    placePlacements([pl], "nolabel", field.find(".value").text(), sigid, fieldid);
 		    field.remove();
 		    helper.remove();
 		}
+		
+		
 	    }});
 
     return true;
@@ -332,28 +581,6 @@ function initializeTemplates () {
     enableInfoText();
     
     makeDropTargets();
-
-    $("form").submit(function () {
-	    $(".placedfield").each(function () {
-		    var field = $(this);
-		    var x = field.position().left;
-		    var y = field.position().top;
-		    var pageno = field.parent().attr("id").substr(4);
-		    var pagew = field.parent().width();
-		    var pageh = field.parent().height();
-		    var sigid = field.find(".sigid").text();
-		    var fieldid = field.find(".fieldid").text();
-		    
-		    $("form").append(newHiddenField("placedx", Math.round(x)));
-		    $("form").append(newHiddenField("placedy", Math.round(y)));
-		    $("form").append(newHiddenField("placedpage", Math.round(pageno)));
-		    $("form").append(newHiddenField("placedwidth", Math.round(pagew)));
-		    $("form").append(newHiddenField("placedheight", Math.round(pageh)));
-		    $("form").append(newHiddenField("placedsigid", sigid));
-		    $("form").append(newHiddenField("placedfieldid", fieldid));
-		});
-
-	});
 }
 
 $(document).ready(function () {
