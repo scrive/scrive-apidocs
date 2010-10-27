@@ -536,16 +536,16 @@ showDocumentPageHelper action document helpers title content =
      <div style="display: none">
       <% helpers %>
      </div>
-     <div class="docviewleft">
-      <% showDocumentBox document %>
-     </div>
-     <div class="docviewright"> 
-      <p><strong><% title %></strong><br/>
-         <small><a href=(LinkIssueDocPDF document) target="_blank">Ladda ned PDF</a></small></p>
-      <form method="post" id="form" name="form" action=action> 
+     <form method="post" id="form" name="form" action=action> 
+      <div class="docviewleft">
+       <% showDocumentBox document %>
+      </div>
+      <div class="docviewright"> 
+       <p><strong><% title %></strong><br/>
+          <small><a href=(LinkIssueDocPDF document) target="_blank">Ladda ned PDF</a></small></p>
        <% content %>
-      </form>
-     </div>
+      </div>
+     </form>
      <div class="clearboth"/>
     </div> 
 
