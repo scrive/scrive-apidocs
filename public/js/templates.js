@@ -38,8 +38,8 @@ function placePlacements(pls, label, value, sigid, fieldid) {
 	    var d = placementToHTML(label, value);
 	    var page = $("#page" + pl.page);
 	    d.offset({left: pl.x, top: pl.y});
-	    setPlacedSigID(d, sigid);
-	    setPlacedFieldID(d, fieldid);
+	    setSigID(d, sigid);
+	    setFieldID(d, fieldid);
 	    setHiddenField(d, "placedx", String(Math.round(pl.x)));
 	    setHiddenField(d, "placedy", String(Math.round(pl.y)));
 	    setHiddenField(d, "placedpage", String(pl.page));
@@ -91,7 +91,7 @@ function getHiddenField(field, label) {
     if(s.size()){
 	return s.attr("value");
     }
-    alert("field has no hidden field called " + label);
+    console.log("field has no hidden field called " + label);
 }
 
 function setHiddenField(field, label, value) {
@@ -105,7 +105,7 @@ function setHiddenField(field, label, value) {
 
 function magicUpdate(){
     var field = $(this).parents(".dragfield");
-    var sigid = getFieldSigID(field);
+    var sigid = getSigID(field);
     var fieldid = getFieldID(field);
     var value = getValue(field);
 
@@ -115,9 +115,9 @@ function magicUpdate(){
 
     $(".placedfield").each(function () {
 	    var f = $(this);
-	    if(getPlacedSigID(f) == sigid
-	       && getPlacedFieldID(f) == fieldid) {
-		setPlacedValue(f, value);
+	    if(getSigID(f) == sigid
+	       && getFieldID(f) == fieldid) {
+		setValue(f, value);
 	    }
 	});
     updateStatus(field);
@@ -133,25 +133,40 @@ function isDraggableText(field){
 
 function getValue(field) {
     if(isDraggableField(field)) {
+	console.log("here");
 	var s = $(field).find("input[type='text']");
 	if(s.size()) {
-	    return s.attr("value");
+	    if(s.attr("value") == s.attr("infotext")) {
+		return "";
+	    } else {
+		return s.attr("value");
+	    }
 	} else {
-	    alert("field has no input box");
+	    console.log("field has no input box");
 	}
     } else if(isDraggableText(field)) {
 	return getHiddenValue(field, "fieldvalue");
+    } else if(isPlacedField(field)) {
+	return getHiddenValue(field, "value");
     } else {
-	alert("I don't know what that field is");
+	console.log("I don't know what that field is");
     }
 }
 
 function setValue(field, value) {
-    var s = $(field).find("input[type='text']");
-    if(s.size()) {
-	s.attr("value", value);
+    if(isDraggableField(field)){
+	var s = $(field).find("input[type='text']");
+	if(s.size()) {
+	    s.attr("value", value);
+	} else {
+	    alert("field has no input box!");
+	}
+    } else if(isDraggableText(field)) {
+	setHiddenValue(field, "value", value);
+    } else if(isPlacedField(field)) {
+	setHiddenValue(field, "value", value);
     } else {
-        alert("field has no input box!");
+	console.log("unknown type: " + getFieldType(field));
     }
 }
 
@@ -168,8 +183,10 @@ function getFieldID(field) {
 	return getHiddenField(field, "fieldid");
     } else if(isDraggableText(field)) {
 	return getHiddenValue(field, "fieldid");
+    } else if(isPlacedField(field)) {
+	return getHiddenField(field, "placedfieldid");
     } else {
-	alert("unknown type");
+	console.log("unknown type");
     }
 }
 
@@ -178,8 +195,10 @@ function setFieldID(field, fieldid) {
 	setHiddenField(field, "fieldid", fieldid);
     } else if(isDraggableText(field)) {
 	setHiddenValue(field, "fieldid", fieldid);
+    } else if(isPlacedField(field)) {
+	setHiddenField(field, "placedfieldid", fieldid);
     } else {
-	alert("unknown type");
+	console.log("unknown type");
     }
 }
 
@@ -267,28 +286,28 @@ function docstateToHTML(){
     if(author.name) {
 	var aname = buildDraggableText(author.name);
 	setFieldID(aname, "name");
-	setFieldSigID(aname, "author");
+	setSigID(aname, "author");
 	setFieldType(aname, "text");
 	ad.append(aname);
     }
     if(author.company){
 	var acomp = buildDraggableText(author.company);
 	setFieldID(acomp, "name");
-	setFieldSigID(acomp, "author");
+	setSigID(acomp, "author");
 	setFieldType(acomp, "text");
 	ad.append(acomp);
     }
     if(author.number) {
 	var anumb = buildDraggableText(author.number);
 	setFieldID(anumb, "name");
-	setFieldSigID(anumb, "author");
+	setSigID(anumb, "author");
 	setFieldType(anumb, "text");
 	ad.append(anumb);
     }
     if(author.email) {
 	var aemai = buildDraggableText(author.email);
 	setFieldID(aemai, "name");
-	setFieldSigID(aemai, "author");
+	setSigID(aemai, "author");
 	setFieldType(aemai, "text");
 	ad.append(aemai);
     }
@@ -300,7 +319,7 @@ function docstateToHTML(){
 	    fd.id = newUUID();
 	    var field = buildDraggableField(fd.label, fd.value);
 	    setFieldID(field, fd.id);
-	    setFieldSigID(field, "author");
+	    setSigID(field, "author");
 	    ad.append(field);
 	    setFieldType(field, "author");
 	    placePlacements(fd.placements, fd.label, fd.value, "author", fd.id);
@@ -325,61 +344,55 @@ function docstateToHTML(){
 }
 
 function getIcon(field){
-    return getHiddenValue(field, "status");
+    if(isDraggableField(field)){
+	return getHiddenValue(field, "status");
+    } else {
+	console.log(getFieldType(field) + " does not have an icon, cannot get");
+	return "";
+    }
 }
 
 function setIcon(field, status) {
-    setHiddenValue(field, "status", status);
+    if(isDraggableField(field)) {
+	setHiddenValue(field, "status", status);
+    } else {
+	console.log(getFieldType(field) + " does not have an icon, cannot set");
+    }
 }
 
 function getSigID(field) {
-    return getHiddenField(field, "sigid");
+    if(isDraggableField(field)) {
+	return getHiddenField(field, "fieldsigid");
+    } else if(isDraggableText(field)) {
+	return getHiddenValue(field, "fieldsigid");
+    } else if(isPlacedField(field)) {
+	return getHiddenField(field, "placedsigid");
+    } else {
+	console.log(getFieldType(field) + " does not have sigid");
+    }
 }
 
 function setSigID(field, sigid) {
-    setHiddenField(field, "sigid", sigid);
-}
-
-function getFieldSigID(field) {
-    return getHiddenField(field, "fieldsigid");
-}
-
-function setFieldSigID(field, sigid) {
-    setHiddenField(field, "fieldsigid", sigid);
-}
-
-function getPlacedFieldID(field) {
-    return getHiddenField(field, "placedfieldid");
-}
-
-function setPlacedFieldID(field, fieldid) {
-    setHiddenField(field, "placedfieldid", fieldid);
-}
-
-function getPlacedSigID(field) {
-    return getHiddenField(field, "placedsigid");
-}
-
-function setPlacedSigID(field, sigid) {
-    setHiddenField(field, "placedsigid", sigid);
-}
-
-function setPlacedValue(field, value) {
-    setHiddenValue(field, "value", value);
-}
-
-function getPlacedValue(value) {
-    getHiddenValue(field, "value");
+    if(isDraggableField(field)) {
+	setHiddenField(field, "fieldsigid", sigid);
+    } else if(isDraggableText(field)) {
+	setHiddenValue(field, "fieldsigid", sigid);
+    } else if(isPlacedField(field)) {
+	setHiddenField(field, "placedsigid", sigid);
+    } else {
+	console.log(getFieldType(field) + " does not have sigid");
+    }
+    
 }
 
 function getPlacedFieldsForField(field) {
     var fieldid = getFieldID(field);
     var fields = [];
-    var fieldsigid = getFieldSigID(field);
+    var fieldsigid = getSigID(field);
     $(".placedfield").each(function() {
 	    var p = $(this);
-	    var fid = getPlacedFieldID(p);
-	    var sid = getPlacedSigID(p);
+	    var fid = getFieldID(p);
+	    var sid = getSigID(p);
 	    if(fid == fieldid) {
 		fields[fields.length] = p;
 	    }
@@ -425,7 +438,6 @@ function signatoryToHTML(sig) {
     sig.id = sigid;
     
     var sigentry = $("<div class='sigentry'></div>");
-    sigentry.append(newHiddenValue("sigid", sigid));    
     sigentry.append(newHiddenField("sigid", sigid));
 
     var d = $("<div class='fields'></div>");
@@ -445,10 +457,10 @@ function signatoryToHTML(sig) {
     setFieldID(anumb, "number");
     setFieldID(aemai, "email");
 
-    setFieldSigID(aname, sigid);
-    setFieldSigID(acomp, sigid);
-    setFieldSigID(anumb, sigid);
-    setFieldSigID(aemai, sigid);
+    setSigID(aname, sigid);
+    setSigID(acomp, sigid);
+    setSigID(anumb, sigid);
+    setSigID(aemai, sigid);
 
     // email is required
     setFieldType(aemai, "author");
@@ -474,7 +486,7 @@ function signatoryToHTML(sig) {
 	    var fieldid = newUUID();
 	    fd.id = fieldid;
 	    setFieldID(field, fieldid);
-	    setFieldSigID(field, sigid);
+	    setSigID(field, sigid);
 	    setFieldType(field, "sig");
 	    d.append(field);
 	    placePlacements(fd.placements, fd.label, fd.value, sig.id, fd.id);
@@ -486,7 +498,7 @@ function signatoryToHTML(sig) {
 	    setFieldName(field, "fieldname");
 	    var fieldid = newUUID();
 	    setFieldID(field, fieldid);
-	    setFieldSigID(field, sigid);
+	    setSigID(field, sigid);
 	    setFieldType(field, "sig");
 	    d.append(field);
 	    enableInfoText(field);
@@ -544,19 +556,18 @@ function makeDropTargets() {
 
 		var pageno = parseInt(page.attr("id").substr(4));
 
-		if(!isPlacedField(field)) {
-		    var sigid = getFieldSigID(field);
-		    var fieldid = getFieldID(field);
-		    var pl = newplacement(left, top, pageno, page.width(), page.height());
-		    placePlacements([pl], getLabel(field), getValue(field), sigid, fieldid);
-		    updateStatus(field);
-		} else {
-		    var sigid = getPlacedSigID(field);
-		    var fieldid = getPlacedFieldID(field);
-		    var pl = newplacement(left, top, pageno, page.width(), page.height());
-		    placePlacements([pl], "nolabel", field.find(".value").text(), sigid, fieldid);
+
+		var sigid = getSigID(field);
+		var fieldid = getFieldID(field);
+		var pl = newplacement(left, top, pageno, page.width(), page.height());
+		placePlacements([pl], getLabel(field), getValue(field), sigid, fieldid);
+		
+	
+		if(isPlacedField(field)) {
 		    field.remove();
 		    helper.remove();
+		} else {
+		    updateStatus(field);
 		}
 		
 		
@@ -568,13 +579,12 @@ function makeDropTargets() {
 function initializeTemplates () {
 
     if($(".pagediv").size() == 0){
-	setTimeout("initializeTemplates();", 500);
+	setTimeout("initializeTemplates();", 100);
 	return;
     }
 
     $("#loading-message").css({ display: "none" });
     $("#edit-bar").css({ display: "" });
-	
 
     docstateToHTML();
 	
@@ -586,7 +596,6 @@ function initializeTemplates () {
 $(document).ready(function () {
 	$("#loading-message").css({ display: "" });
 	$("#edit-bar").css({ display: "none" });
-	
 
 	initializeTemplates();	
     });
