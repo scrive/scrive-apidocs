@@ -754,6 +754,7 @@ handleIssueNewDocument = do
           let title = BSC.pack (basename filename) 
           freeleft <- freeLeftForUser user
           doc <- update $ NewDocument user title ctxtime (freeleft>0)
+          liftIO $ print (useremail user, documentid doc,title)
           liftIO $ forkIO $ handleDocumentUpload (documentid doc) (concatChunks content) title
           return $ LinkIssueDoc doc
 
