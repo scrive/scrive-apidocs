@@ -37,16 +37,20 @@ function placePlacements(pls, label, value, sigid, fieldid) {
 	    var pl = this;
 	    var d = placementToHTML(label, value);
 	    var page = $("#page" + pl.page);
+	    console.log(pl.y);
 	    d.offset({left: pl.x, top: pl.y});
+
+	    page.append(d);
+	    
 	    setSigID(d, sigid);
 	    setFieldID(d, fieldid);
-	    setHiddenField(d, "placedx", String(Math.round(pl.x)));
-	    setHiddenField(d, "placedy", String(Math.round(pl.y)));
+	    setHiddenField(d, "placedx", String(Math.round(d.position().left)));
+	    setHiddenField(d, "placedy", String(Math.round(d.position().top)));
 	    setHiddenField(d, "placedpage", String(pl.page));
 	    setHiddenField(d, "placedwidth", String(Math.round(page.width())));
 	    setHiddenField(d, "placedheight", String(Math.round(page.height())));
 
-	    page.append(d);
+
 
 	    d.draggable({ 
 		    appendTo: "body",
@@ -70,7 +74,7 @@ function getHiddenValue(field, label) {
     if(s.size()){
 	return s.text();
     }
-    alert("field has no value named " + label);
+    console.log("field has no value named " + label);
 }
 
 function setHiddenValue(field, label, value) {
@@ -131,6 +135,19 @@ function isDraggableText(field){
     return $(field).hasClass("dragtext");
 }
 
+function isStandardField(field) {
+    if(isDraggableField(field)) {
+	var name = getFieldName(field);
+	if(name == "signatoryemail" 
+	   || name == "signatoryname"
+	   || name == "signatorycompany"
+	   || name == "signatorynumber") {
+	    return true;
+	}
+    }
+    return false;
+}
+
 function getValue(field) {
     if(isDraggableField(field)) {
 	console.log("here");
@@ -180,7 +197,11 @@ function setFieldType(field, type) {
 
 function getFieldID(field) {
     if(isDraggableField(field)) {
-	return getHiddenField(field, "fieldid");
+	if(isStandardField(field)) {
+	    return getHiddenValue(field, "fieldid");
+	} else {
+	    return getHiddenField(field, "fieldid");
+	}
     } else if(isDraggableText(field)) {
 	return getHiddenValue(field, "fieldid");
     } else if(isPlacedField(field)) {
@@ -192,7 +213,11 @@ function getFieldID(field) {
 
 function setFieldID(field, fieldid) {
     if(isDraggableField(field)) {
-	setHiddenField(field, "fieldid", fieldid);
+	if(isStandardField(field)) {
+	    setHiddenValue(field, "fieldid", fieldid);
+	} else {
+	    setHiddenField(field, "fieldid", fieldid);
+	}
     } else if(isDraggableText(field)) {
 	setHiddenValue(field, "fieldid", fieldid);
     } else if(isPlacedField(field)) {
@@ -362,7 +387,11 @@ function setIcon(field, status) {
 
 function getSigID(field) {
     if(isDraggableField(field)) {
-	return getHiddenField(field, "fieldsigid");
+	if(isStandardField(field)) {
+	    return getHiddenValue(field, "fieldsigid");
+	} else {
+	    return getHiddenField(field, "fieldsigid");
+	}
     } else if(isDraggableText(field)) {
 	return getHiddenValue(field, "fieldsigid");
     } else if(isPlacedField(field)) {
@@ -374,7 +403,11 @@ function getSigID(field) {
 
 function setSigID(field, sigid) {
     if(isDraggableField(field)) {
-	setHiddenField(field, "fieldsigid", sigid);
+	if(isStandardField(field)) {
+	    setHiddenValue(field, "fieldsigid", sigid);
+	} else {
+	    setHiddenField(field, "fieldsigid", sigid);
+	}
     } else if(isDraggableText(field)) {
 	setHiddenValue(field, "fieldsigid", sigid);
     } else if(isPlacedField(field)) {
@@ -490,25 +523,37 @@ function signatoryToHTML(sig) {
 
     $(sig.otherfields).each(function (){
 	    var fd = this;
-	    var field = buildDraggableField(fd.label, fd.value);
-	    field.find("input").attr("name", "fieldname");
+	    var field = buildDraggableField(fd.label, fd.value, "sig");
 	    var fieldid = newUUID();
 	    fd.id = fieldid;
 	    setFieldID(field, fieldid);
 	    setSigID(field, sigid);
-	    setFieldType(field, "sig");
+	    setFieldName(field, "fieldvalue");
+	    setHiddenField(field, "fieldname", fd.label);
 	    d.append(field);
 	    placePlacements(fd.placements, fd.label, fd.value, sig.id, fd.id);
 	});
 
     var newFieldLink = $("<small><a href='#'>New Field</a></small><br />");
     newFieldLink.find("a").click(function () {
-	    var field = buildDraggableField("Field Name", "");
-	    setFieldName(field, "fieldname");
-	    var fieldid = newUUID();
-	    setFieldID(field, fieldid);
-	    setSigID(field, sigid);
-	    setFieldType(field, "sig");
+	    var field = $("<div class='newfield'><input type='text' infotext='Type Field Name' /><input type='submit' value='ok'></div>");
+	    field.find("input[type='submit']").click(function () {
+		    fieldname = field.find("input[type='text']").attr("value");
+		    if(fieldname == "Type Field Name" || fieldname == "") {
+			return false;
+		    }
+		    var f = buildDraggableField(fieldname, "", "sig");
+		    setFieldName(f, "fieldvalue");
+		    var fieldid = newUUID();
+		    setFieldID(f, fieldid);
+		    setSigID(f, sigid);
+		    setHiddenField(f, "fieldname", fieldname);
+		    d.append(f);
+		    enableInfoText(f);
+		    updateStatus(f);
+		    field.detach();
+		    return false;
+		});
 	    d.append(field);
 	    enableInfoText(field);
 	    return false;
@@ -565,7 +610,6 @@ function makeDropTargets() {
 		var left = helper.offset().left - page.offset().left + window.pageXOffset;
 
 		var pageno = parseInt(page.attr("id").substr(4));
-
 
 		var sigid = getSigID(field);
 		var fieldid = getFieldID(field);
