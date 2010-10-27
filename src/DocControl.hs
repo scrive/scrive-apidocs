@@ -47,6 +47,7 @@ import qualified Seal as Seal
   Here are all actions associated with transitions.
 -}
 
+{-
 doctransPreparation2Pending :: Context -> Document -> IO Document
 doctransPreparation2Pending ctx@Context{ctxtime, ctxipnumber } doc = do
   let MinutesTime m = ctxtime 
@@ -62,7 +63,9 @@ doctransPreparation2Pending ctx@Context{ctxtime, ctxipnumber } doc = do
                  sendInvitationEmails ctx newdoc2
                return newdoc2
  
+-}
 
+{-
 doctransPending2Closed :: Context -> Document -> IO Document
 doctransPending2Closed ctx@Context{ctxtime,ctxipnumber,ctxhostpart,ctxnormalizeddocuments} doc = do
   logErrorWithDefault (update $ UpdateDocumentStatus (documentid doc) Closed ctxtime ctxipnumber) doc $ 
@@ -73,16 +76,31 @@ doctransPending2Closed ctx@Context{ctxtime,ctxipnumber,ctxhostpart,ctxnormalized
                       newdoc <- sealDocument ctxnormalizeddocuments ctxhostpart ctxtime user doc
                       sendClosedEmails ctx newdoc
                    return  clearDoc
-   
-doctransPending2Canceled :: Context -> Document -> IO Document
-doctransPending2Canceled ctx@Context{ctxtime,ctxipnumber} doc = do
-  logErrorWithDefault (update $ UpdateDocumentStatus (documentid doc) Canceled ctxtime ctxipnumber) doc return
+-}
 
+postDocumentChangeAction :: Document -> DocumentStatus -> Kontra ()
+postDocumentChangeAction document@Document{documentstatus} oldstatus 
+    | documentstatus == oldstatus = return ()
+    | oldstatus == Preparation && documentstatus == Pending = do
+        ctx <- get
+        liftIO $ forkIO $ do
+          -- this is here to postpone email send a couple of seconds
+          -- so our service has a chance to give answer first
+          -- is GHC using blocking calls or what?
+          threadDelay 5000 
+          sendInvitationEmails ctx document
+        return ()
+    | oldstatus == Pending && documentstatus == Closed = do
+        ctx@Context{ctxnormalizeddocuments,ctxhostpart,ctxtime} <- get
+        liftIO $ forkIO $ do
+          Just user <- query $ GetUserByUserID (unAuthor (documentauthor document))
+          newdoc <- sealDocument ctxnormalizeddocuments ctxhostpart ctxtime user document
+          sendClosedEmails ctx newdoc
+        return ()
+    | otherwise = -- do nothing. FIXME: log status change
+         return ()
+          
 
-doctransPending2Timedout :: Context -> Document -> IO Document
-doctransPending2Timedout ctx@Context{ctxtime,ctxipnumber} doc = do
-   logErrorWithDefault (update $ UpdateDocumentStatus (documentid doc) Timedout ctxtime ctxipnumber) doc return
-                    
 sendInvitationEmails :: Context -> Document -> IO ()
 sendInvitationEmails ctx document = do
   let signlinks = documentsignatorylinks document
@@ -160,19 +178,44 @@ signDocument documentid
   ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber}) <- get
   getDataFnM (look "sign")
   do
-     mdocument <- update $ SignDocument documentid signatorylinkid1 ctxtime ctxipnumber
+     Just olddocument@Document{documentstatus=olddocumentstatus} <- query $ GetDocumentByDocumentID documentid
+     newdocument <- update $ SignDocument documentid signatorylinkid1 ctxtime ctxipnumber
+     case newdocument of
+       Left message -> 
+           do
+             addFlashMsgText $ BS.fromString message
+             let link = LinkMain
+             response <- webHSP (seeOtherXML $ show link)
+             seeOther (show LinkMain) response
+       Right document -> 
+           do 
+             postDocumentChangeAction document olddocumentstatus
+             let link = LinkSigned documentid signatorylinkid1
+             response <- webHSP (seeOtherXML $ show link)
+             seeOther (show link) response
+
+cancelDocument :: DocumentID 
+               -> SignatoryLinkID 
+               -> Kontra Response
+cancelDocument documentid 
+               signatorylinkid1 = do
+  ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber}) <- get
+  getDataFnM (look "cancel")
+  do
+     mdocument <- update $ CancelDocument documentid signatorylinkid1 ctxtime ctxipnumber
      case (mdocument) of
-      Left messege -> do
-                       addFlashMsgText $ BS.fromString messege
-                       let link = LinkMain
-                       response <- webHSP (seeOtherXML $ show link)
-                       seeOther (show LinkMain) response
-      Right document -> do 
-                        let isallsigned = all (isJust . maybesigninfo) (documentsignatorylinks document)
-                        when isallsigned ((liftIO $ doctransPending2Closed ctx document) >> return ())
-                        let link = LinkSigned documentid signatorylinkid1
-                        response <- webHSP (seeOtherXML $ show link)
-                        seeOther (show link) response
+      Left message -> 
+          do
+            addFlashMsgText $ BS.fromString message
+            let link = LinkMain
+            response <- webHSP (seeOtherXML $ show link)
+            seeOther (show LinkMain) response
+      Right document -> 
+          do  
+            addFlashMsgText $ BS.fromString "You have cancelled this document"
+            let link = LinkSigned documentid signatorylinkid1
+            response <- webHSP (seeOtherXML $ show link)
+            seeOther (show link) response
   
 signatoryLinkFromDocumentByID document@Document{documentsignatorylinks} linkid = do
     let invitedlinks = filter (\x -> signatorylinkid x == linkid
@@ -232,6 +275,7 @@ handleSignShow documentid
   ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber}) <- get
                
   msum [ DocControl.signDocument documentid signatorylinkid1
+       , DocControl.cancelDocument documentid signatorylinkid1
        , do 
            -- FIXME: this is so wrong on so many different levels...
           mdocument <- update $ MarkDocumentSeen documentid signatorylinkid1 ctxtime ctxipnumber
@@ -302,7 +346,9 @@ handleIssueShow document@Document{ documentauthor
 
        , path $ \(_title::String) -> methodM GET >> do
            when (userid/=unAuthor documentauthor) mzero
-           let file = safehead "handleIssueShow" (documentfiles document)
+           let file = safehead "handleIssueShow" (case documentstatus document of
+                                                    Closed -> documentsealedfiles document
+                                                    _ -> documentfiles document)
            let contents = filepdf file
            let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
            let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
@@ -329,7 +375,7 @@ getAndConcat field = do
   return $ map concatChunks values
 
 updateDocument :: Context -> Document -> Kontra Document  
-updateDocument ctx@Context{ctxtime} document@Document{documentid, documentauthordetails} = do
+updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid, documentauthordetails} = do
   signatoriesnames <- getAndConcat "signatoryname"
   signatoriescompanies <- getAndConcat "signatorycompany"
   signatoriesnumbers <- getAndConcat "signatorynumber"
@@ -474,8 +520,13 @@ updateDocument ctx@Context{ctxtime} document@Document{documentid, documentauthor
           signatories author2 daystosign invitetext
 
   msum 
-     [ do getDataFnM (look "final")
-          liftIO $ doctransPreparation2Pending ctx doc2
+     [ do getDataFnM (look "final" `mplus` look "sign")
+          mdocument <- update $ AuthorSignDocument documentid ctxtime ctxipnumber
+          case mdocument of
+            Left msg -> return doc2
+            Right newdocument -> do
+                postDocumentChangeAction newdocument (documentstatus doc2)
+                return newdocument
      , return doc2
      ]
     
@@ -557,11 +608,14 @@ maybeScheduleRendering mvar
            return (Map.insert fileid JpegPagesPending setoffilesrenderednow, JpegPagesPending)
 
 handlePageOfDocument :: Document -> Kontra Response
-handlePageOfDocument document@Document {documentfiles,documentid} = do
+handlePageOfDocument document@Document {documentfiles,documentsealedfiles,documentstatus,documentid} = do
     Context{ctxnormalizeddocuments} <- get
     let pending JpegPagesPending = True
         pending _ = False
-    case documentfiles of
+        files = if documentstatus == Closed
+                then documentsealedfiles
+                else documentfiles
+    case files of
       [] -> notFound (toResponse "temporary unavailable (document has no files)")
       f -> do
         b <- mapM (\file -> liftIO $ maybeScheduleRendering ctxnormalizeddocuments file) f
@@ -572,6 +626,7 @@ handlePageOfDocument document@Document {documentfiles,documentid} = do
 handleDocumentUpload :: DocumentID -> BS.ByteString -> BS.ByteString -> IO ()
 handleDocumentUpload docid content filename = do
   update $ AttachFile docid filename content
+  return ()
 
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
 personFromSignatoryDetails details =
@@ -682,7 +737,7 @@ sealDocument :: MVar (Map.Map FileID JpegPages) -> String -> MinutesTime -> User
 sealDocument normalizemap hostpart signtime1 author@(User {userfullname,usercompanyname,usercompanynumber,useremail}) document = do
   let (file@File {fileid,filename,filepdf}) = 
            safehead "sealDocument" $ documentfiles document
-  let docid = unDocumentID (documentid document)
+  let docid = documentid document
 
   tmppath <- getTemporaryDirectory
   let tmpin = tmppath ++ "/in_" ++ show docid ++ ".pdf"
@@ -696,9 +751,13 @@ sealDocument normalizemap hostpart signtime1 author@(User {userfullname,usercomp
        putStrLn "Cannot execute dist/build/pdfseal/pdfseal"
 
   newfilepdf <- BS.readFile tmpout
-  let newfile = file {filepdf = newfilepdf}
-  modifyMVar_ normalizemap (\themap -> return $ Map.delete fileid themap)
-  update $ ReplaceFile (documentid document) newfile
+  mdocument <- update $ AttachSealedFile docid filename newfilepdf
+  case mdocument of
+    Right document -> return document
+    Left msg -> error msg
+  -- let newfile = file {filepdf = newfilepdf}
+  -- modifyMVar_ normalizemap (\themap -> return $ Map.delete fileid themap)
+  -- update $ ReplaceFile (documentid document) newfile
   
 
 

@@ -863,17 +863,30 @@ newDocument user@User{userid,userfullname,usercompanyname,usercompanynumber,user
 attachFile :: DocumentID 
            -> BS.ByteString 
            -> BS.ByteString 
-           -> Update Documents ()
+           -> Update Documents (Either String Document)
 attachFile documentid filename1 content = do
   documents <- ask
-  let Just document = getOne (documents @= documentid)
   fileid2 <- getUnique documents FileID
-  let nfile = File { fileid = fileid2
-                   , filename = filename1
-                   , filepdf = content
-                   }
-  let document2 = document { documentfiles = documentfiles document ++ [nfile] }
-  modify $ updateIx documentid document2
+  modifyDocument documentid $ \document ->
+      let nfile = File { fileid = fileid2
+                       , filename = filename1
+                       , filepdf = content
+                       }
+      in Right $ document { documentfiles = documentfiles document ++ [nfile] }
+
+attachSealedFile :: DocumentID 
+                 -> BS.ByteString 
+                 -> BS.ByteString 
+                 -> Update Documents (Either String Document)
+attachSealedFile documentid filename1 content = do
+  documents <- ask
+  fileid2 <- getUnique documents FileID
+  modifyDocument documentid $ \document ->
+      let nfile = File { fileid = fileid2
+                       , filename = filename1
+                       , filepdf = content
+                       }
+      in Right $ document { documentsealedfiles = documentsealedfiles document ++ [nfile] }
 
 updateDocument :: MinutesTime
                -> DocumentID
@@ -911,6 +924,7 @@ updateDocument time documentid signatories author daystosign invitetext = do
                      , maybeseeninfo  = Nothing
                      }
 
+{-
 updateDocumentStatus :: DocumentID
                      -> DocumentStatus 
                      -> MinutesTime
@@ -941,7 +955,18 @@ updateDocumentStatus documentid newstatus time ipnumber = do
        return $ Right newdoc
      else do
        return $ Left $ "Illegal document state change from:"++(show $ documentstatus document)++" to: " ++ (show newstatus)
+-}
          
+timeoutDocument :: DocumentID
+                -> MinutesTime
+                -> Update Documents (Either String Document)
+timeoutDocument documentid time = do
+  modifyDocument documentid $ \document ->
+      let
+          newdocument = document { documentstatus = Timedout }
+      in case documentstatus document of
+           Pending -> Right newdocument
+           _ -> Left "Illegal document status change"
 
 signDocument :: DocumentID
              -> SignatoryLinkID 
@@ -949,22 +974,78 @@ signDocument :: DocumentID
              -> Word32 
              -> Update Documents (Either String Document)
 signDocument documentid signatorylinkid1 time ipnumber = do
+  modifyDocument documentid $ \document ->
+      let
+          signeddocument = document { documentsignatorylinks = newsignatorylinks }
+          newsignatorylinks = map maybesign (documentsignatorylinks document)
+          maybesign link@(SignatoryLink {signatorylinkid} ) 
+              | signatorylinkid == signatorylinkid1 = 
+                  link { maybesigninfo = Just (SignInfo time ipnumber)
+                    }
+          maybesign link = link
+          isallsigned = all (isJust . maybesigninfo) newsignatorylinks
+          -- FIXME: this is so wrong on so many different levels
+          signeddocument2 = 
+              if isallsigned
+              then signeddocument { documentstatus = Closed
+                                  }
+              else signeddocument
+
+      in case documentstatus document of
+           Pending ->  Right signeddocument2
+           Timedout -> Left "Förfallodatum har passerat"
+           _ ->        Left ("Bad document status: " ++ show (documentstatus document))
+
+authorSignDocument :: DocumentID
+                   -> MinutesTime
+                   -> Word32
+                   -> Update Documents (Either String Document)
+authorSignDocument documentid time ipnumber =
+    modifyDocument documentid $ \document ->
+        case documentstatus document of
+          Preparation -> 
+              let timeout = TimeoutTime (MinutesTime (m + documentdaystosign document * 24 * 60))
+                  MinutesTime m = time 
+              in Right $ document { documenttimeouttime = Just timeout
+                                  , documentmtime = time
+                                  , documentmaybesigninfo = Just (SignInfo time ipnumber)
+                                  , documentstatus = Pending
+                                  }
+              
+          Timedout -> Left "Förfallodatum har passerat" -- possibly quite strange here...
+          _ ->        Left ("Bad document status: " ++ show (documentstatus document))
+  
+modifyDocument :: DocumentID 
+               -> (Document -> Either String Document) 
+               -> Update Documents (Either String Document)
+modifyDocument docid action = do
   documents <- ask
-  let Just document = getOne (documents @= documentid)
-      signeddocument = document { documentsignatorylinks = newsignatorylinks }
-      newsignatorylinks = map maybesign (documentsignatorylinks document)
-      maybesign x@(SignatoryLink {signatorylinkid} ) 
-          | signatorylinkid == signatorylinkid1 = 
-              x { maybesigninfo = Just (SignInfo time ipnumber)
-                }
-      maybesign x = x
-  if (documentstatus document == Pending)
-   then do
-        modify (updateIx documentid signeddocument)
-        return (Right signeddocument)
-   else return $ Left (case (documentstatus document) of  
-                            Timedout -> "Förfallodatum har passerat"
-                            _ ->        "Bad document status" )
+  case getOne (documents @= docid) of
+    Nothing -> return $ Left "no such document"
+    Just document -> 
+        case action document of
+          Left message -> return $ Left message
+          Right newdocument -> 
+              do
+                when (documentid newdocument /= docid) $ error "new document must have same id as old one"
+                modify (updateIx docid newdocument)
+                return $ Right newdocument
+
+cancelDocument :: DocumentID
+               -> SignatoryLinkID 
+               -> MinutesTime 
+               -> Word32 
+               -> Update Documents (Either String Document)
+cancelDocument documentid signatorylinkid1 time ipnumber = do
+  modifyDocument documentid $ \document ->
+      let
+          newdocument = document { documentstatus = Canceled }
+          -- FIXME: need to say who has cancelled the document
+          -- what his IP was, and time of happening
+      in case documentstatus document of
+           Pending ->  Right newdocument
+           Timedout -> Left "Förfallodatum har passerat"
+           _ ->        Left "Bad document status"
   
 
 -- ^ 'markDocumentSeen' should set the time when the document was seen
@@ -996,6 +1077,7 @@ getDocumentStats = do
   return (size documents)
 
 
+{-
 replaceFile :: DocumentID -> File -> Update Documents Document
 replaceFile documentid file = do
   documents <- ask
@@ -1011,6 +1093,7 @@ removeFileFromDoc documentid = do
   let newdoc = doc {documentfiles = []} -- FIXME: care about many files here
   modify (updateIx documentid newdoc)
   return newdoc
+-}
 
 fileModTime :: FileID -> Query Documents MinutesTime
 fileModTime fileid = do
@@ -1084,20 +1167,24 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'getDocumentByDocumentID
                         , 'getTimeoutedButPendingDocuments
                         , 'updateDocument
-                        , 'updateDocumentStatus
+                        -- , 'updateDocumentStatus
                         , 'signDocument
+                        , 'authorSignDocument
+                        , 'cancelDocument
                         , 'attachFile
+                        , 'attachSealedFile
                         , 'markDocumentSeen
                         , 'getDocumentStats
-                        , 'replaceFile
+                        -- , 'replaceFile
                         , 'fileModTime
                         , 'fileByFileID
-                        , 'removeFileFromDoc
+                        -- , 'removeFileFromDoc
                         , 'saveDocumentForSignedUser
                         , 'getDocumentsByUser
                         , 'getNumberOfDocumentsOfUser
                         , 'setDocumentTimeoutTime
                         , 'archiveDocuments
+                        , 'timeoutDocument
 
                           -- admin only area follows
                         , 'fragileTakeOverDocuments
