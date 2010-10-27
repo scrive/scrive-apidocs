@@ -19,7 +19,7 @@ timeoutDocuments = do
                     now <- getMinutesTime
                     docs <- query $ GetTimeoutedButPendingDocuments now
                     forM_ docs $ \doc -> do 
-                                           update $ UpdateDocumentStatus (documentid doc) Timedout now 0                                                     
+                                           update $ TimeoutDocument (documentid doc) now                                                     
                                            debugM "Happstack.Server" $ "Document timedout" ++ (show $ documenttitle doc)                                                                   
                                           
                                            
