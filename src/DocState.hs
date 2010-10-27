@@ -924,39 +924,6 @@ updateDocument time documentid signatories author daystosign invitetext = do
                      , maybeseeninfo  = Nothing
                      }
 
-{-
-updateDocumentStatus :: DocumentID
-                     -> DocumentStatus 
-                     -> MinutesTime
-                     -> Word32
-                     -> Update Documents (Either String Document)
-updateDocumentStatus documentid newstatus time ipnumber = do
-  -- check if document status change is a legal transition
-  documents <- ask
-  let Just document = getOne (documents @= documentid )
-  let legal = (documentstatus document,newstatus) `elem`
-              [ (Preparation,Pending)
-              , (Pending,Canceled)
-              , (Pending,Timedout)
-              , (Pending,Closed)
-              , (Canceled,Preparation)
-              , (Timedout,Preparation)
-              ]
-
-  let newdoc = document { documentstatus = newstatus
-                        , documentmtime = time
-                        , documentmaybesigninfo = case newstatus of
-                                                    Pending -> Just (SignInfo time ipnumber)
-                                                    _ -> documentmaybesigninfo document
-                        }
-  if legal 
-     then do
-       modify (updateIx documentid newdoc)
-       return $ Right newdoc
-     else do
-       return $ Left $ "Illegal document state change from:"++(show $ documentstatus document)++" to: " ++ (show newstatus)
--}
-         
 timeoutDocument :: DocumentID
                 -> MinutesTime
                 -> Update Documents (Either String Document)
@@ -984,7 +951,7 @@ signDocument documentid signatorylinkid1 time ipnumber = do
                     }
           maybesign link = link
           isallsigned = all (isJust . maybesigninfo) newsignatorylinks
-          -- FIXME: this is so wrong on so many different levels
+
           signeddocument2 = 
               if isallsigned
               then signeddocument { documentstatus = Closed
@@ -1076,38 +1043,11 @@ getDocumentStats = do
   documents <- ask 
   return (size documents)
 
-
-{-
-replaceFile :: DocumentID -> File -> Update Documents Document
-replaceFile documentid file = do
-  documents <- ask
-  let Just doc = getOne (documents @= documentid)
-  let newdoc = doc {documentfiles = [file]} -- FIXME: care about many files here
-  modify (updateIx documentid newdoc)
-  return newdoc
-
-removeFileFromDoc :: DocumentID -> Update Documents Document
-removeFileFromDoc documentid = do
-  documents <- ask
-  let Just doc = getOne (documents @= documentid)
-  let newdoc = doc {documentfiles = []} -- FIXME: care about many files here
-  modify (updateIx documentid newdoc)
-  return newdoc
--}
-
 fileModTime :: FileID -> Query Documents MinutesTime
 fileModTime fileid = do
   documents <- ask
   let Just doc = getOne (documents @= fileid)
   return (documentmtime doc)
-
-fileByFileID :: FileID -> Query Documents (Maybe File)
-fileByFileID fileid = do
-  documents <- ask
-  case getOne (documents @= fileid) of
-    Just doc -> return (Just $ safehead "fileByFileID" $ documentfiles doc)
-    Nothing -> return Nothing
-
 
 saveDocumentForSignedUser :: DocumentID -> UserID -> SignatoryLinkID 
                           -> Update Documents (Maybe Document)
@@ -1167,7 +1107,6 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'getDocumentByDocumentID
                         , 'getTimeoutedButPendingDocuments
                         , 'updateDocument
-                        -- , 'updateDocumentStatus
                         , 'signDocument
                         , 'authorSignDocument
                         , 'cancelDocument
@@ -1175,10 +1114,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'attachSealedFile
                         , 'markDocumentSeen
                         , 'getDocumentStats
-                        -- , 'replaceFile
                         , 'fileModTime
-                        , 'fileByFileID
-                        -- , 'removeFileFromDoc
                         , 'saveDocumentForSignedUser
                         , 'getDocumentsByUser
                         , 'getNumberOfDocumentsOfUser
@@ -1194,3 +1130,4 @@ $(mkMethods ''Documents [ 'getDocuments
 
 isAuthor::User->Document->Bool
 isAuthor u d = (userid u) == ( unAuthor . documentauthor $ d)   
+
