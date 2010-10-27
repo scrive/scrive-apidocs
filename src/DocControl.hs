@@ -375,60 +375,33 @@ getAndConcat field = do
   return $ map concatChunks values
 
 updateDocument :: Context -> Document -> Kontra Document  
-updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid, documentauthordetails} = do
+updateDocument ctx@Context{ctxtime} document@Document{documentid, documentauthordetails} = do
   signatoriesnames <- getAndConcat "signatoryname"
   signatoriescompanies <- getAndConcat "signatorycompany"
   signatoriesnumbers <- getAndConcat "signatorynumber"
   signatoriesemails <- getAndConcat "signatoryemail"
+  -- if the post doesn't contain this one, we parse the old way
+  sigids <- getAndConcat "sigid"
+
   daystosignstring <- getDataFnM (look "daystosign")
   daystosign <- readM daystosignstring
 
   invitetext <- g "invitetext"
 
-  sigids <- getAndConcat "sigid"
-
-  liftIO $ print "sigids"
-  -- liftIO $ print sigids
 
   fieldnames <- getAndConcat "fieldname"
-  liftIO $ print "fieldnames"
-  liftIO $ print fieldnames
-
   fieldids <- getAndConcat "fieldid"
-  liftIO $ print "fieldids"
-  liftIO $ print fieldids
-
   fieldsigids <- getAndConcat "fieldsigid"
-  liftIO $ print "fieldsigids"
-  liftIO $ print fieldsigids
-  
+  fieldvalues <- getAndConcat "fieldvalue"
+
+  -- each placed field must have these values
   placedxs <- getAndConcat "placedx"
-  liftIO $ print "placedxs"
-  liftIO $ print placedxs
-
   placedys <- getAndConcat "placedy"
-  liftIO $ print "placedys"
-  liftIO $ print placedys
-
   placedpages <- getAndConcat "placedpage"
-  liftIO $ print "placedpages"
-  liftIO $ print placedpages
-
   placedwidths <- getAndConcat "placedwidth"
-  liftIO $ print "placedwidths"
-  liftIO $ print placedwidths
-
   placedheights <- getAndConcat "placedheight"
-  liftIO $ print "placedheights"
-  liftIO $ print placedheights
-
   placedsigids <- getAndConcat "placedsigid"
-  liftIO $ print "placedsigids"
-  liftIO $ print placedsigids
-
   placedfieldids <- getAndConcat "placedfieldid"
-  liftIO $ print "placedfieldids"
-  liftIO $ print placedfieldids
 
   let placements = zipWith5 FieldPlacement 
                    (map (read . BS.toString) placedxs)
@@ -437,14 +410,8 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid, do
                    (map (read . BS.toString) placedwidths)
                    (map (read . BS.toString) placedheights)
                    
-  liftIO $ print "placements"
-  liftIO $ print placements
-
-
   let pls = zipWith3 m placedsigids placedfieldids placements where
           m s f p = (s, f, p)
-
-  liftIO $ print pls
 
   let placementsByID sigid fieldid = 
           map plac (filter (sameids sigid fieldid) pls) where
@@ -455,11 +422,11 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid, do
 
 
 
-  let fielddefs = zipWith3 fd fieldnames fieldids fieldsigids where
+  let fielddefs = zipWith4 fd fieldnames fieldvalues fieldids fieldsigids where
           
-          fd fn id sigid = (sigid,
+          fd fn fv id sigid = (sigid,
                                  FieldDefinition { fieldlabel = fn, 
-                                                   fieldvalue = BS.fromString "",
+                                                   fieldvalue = fv,
                                                    fieldplacements = placementsByID sigid id
                                                  })
   let defsByID sigid = 
