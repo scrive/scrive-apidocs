@@ -465,7 +465,7 @@ showDocument user
        addbr text | BS.null text = <span/>
        addbr text = <span><% text %><br/></span>
 
-   in showDocumentPageHelper (LinkIssueDoc document) document helper 
+   in showDocumentPageHelper document helper 
            (documenttitle)  
       <div>
        <div id="loading-message" style="display:none">
@@ -481,7 +481,7 @@ showDocument user
                </script>
 
                
-
+              <form method="post" name="form" action=(LinkIssueDoc document) > 
 
               Avsändare<br/>
               <div style="margin-bottom: 10px;" id="authordetails">
@@ -508,6 +508,7 @@ showDocument user
               <input class="bigbutton" type="submit" name="final" value="Underteckna" id="signinvite"/>
               <input class="button" type="submit" name="save" value="Spara som utkast"/>
               </div>
+              </form>
              </span>
            else
               <div id="signatorylist">
@@ -525,18 +526,16 @@ showDocumentPageHelper
         EmbedAsAttr m (Attr [Char] KontraLink),
         HSX.XMLGenerator.EmbedAsChild m d,
         EmbedAsAttr m (Attr [Char] BS.ByteString)) =>
-     KontraLink
-     -> DocState.Document
+        DocState.Document
      -> c
      -> BS.ByteString
      -> d
      -> XMLGenT m (HSX.XML m)
-showDocumentPageHelper action document helpers title content =
+showDocumentPageHelper document helpers title content =
     <div class="docview">
      <div style="display: none">
       <% helpers %>
      </div>
-     <form method="post" id="form" name="form" action=action> 
       <div class="docviewleft">
        <% showDocumentBox document %>
       </div>
@@ -545,7 +544,6 @@ showDocumentPageHelper action document helpers title content =
           <small><a href=(LinkIssueDocPDF document) target="_blank">Ladda ned PDF</a></small></p>
        <% content %>
       </div>
-     </form>
      <div class="clearboth"/>
     </div> 
 
@@ -640,7 +638,7 @@ showDocumentForSign action document muser invitedlink wassigned =
                     , signatorymagichash = MagicHash 0
                     }
                                          
-   in showDocumentPageHelper action document helper 
+   in showDocumentPageHelper document helper 
               (documenttitle document) $
               <span>
        
@@ -658,8 +656,10 @@ showDocumentForSign action document muser invitedlink wassigned =
                               <div>Förfallodatum har passerat!</div>)
                     ]
                               <div>
-                                <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign"/>
-                                <input class="bigbutton" type="submit" name="cancel" value="Avvisa" id="cancel"/>
+                                <form method="post" name="form" action=action> 
+                                 <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign"/>
+                                 <input class="bigbutton" type="submit" name="cancel" value="Avvisa" id="cancel"/>
+                                </form> 
                               </div>
                  %>
                  <small>Jag vill veta mer <a href="/about" target="_blank">om SkrivaPå</a>.</small>
