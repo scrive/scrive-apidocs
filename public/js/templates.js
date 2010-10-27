@@ -307,34 +307,35 @@ function docstateToHTML(){
 
     ad.html("");
     ad.append(newHiddenValue("sigid", "author"));
+    var fds = $("<div class='fields'></div>");
 
     if(author.name) {
 	var aname = buildDraggableText(author.name);
 	setFieldID(aname, "name");
 	setSigID(aname, "author");
 	setFieldType(aname, "text");
-	ad.append(aname);
+	fds.append(aname);
     }
     if(author.company){
 	var acomp = buildDraggableText(author.company);
 	setFieldID(acomp, "name");
 	setSigID(acomp, "author");
 	setFieldType(acomp, "text");
-	ad.append(acomp);
+	fds.append(acomp);
     }
     if(author.number) {
 	var anumb = buildDraggableText(author.number);
 	setFieldID(anumb, "name");
 	setSigID(anumb, "author");
 	setFieldType(anumb, "text");
-	ad.append(anumb);
+	fds.append(anumb);
     }
     if(author.email) {
 	var aemai = buildDraggableText(author.email);
 	setFieldID(aemai, "name");
 	setSigID(aemai, "author");
 	setFieldType(aemai, "text");
-	ad.append(aemai);
+	fds.append(aemai);
     }
 
     // other fields
@@ -343,12 +344,42 @@ function docstateToHTML(){
 	    var fd = this;
 	    fd.id = newUUID();
 	    var field = buildDraggableField(fd.label, fd.value);
+	    setFieldName(field, "fieldvalue");
 	    setFieldID(field, fd.id);
 	    setSigID(field, "author");
-	    ad.append(field);
+	    setHiddenField(field, "fieldname", fd.label);
+	    fds.append(field);
 	    setFieldType(field, "author");
 	    placePlacements(fd.placements, fd.label, fd.value, "author", fd.id);
 	});
+
+    var newFieldLink = $("<small><a href='#'>New Field</a></small><br />");
+    newFieldLink.find("a").click(function () {
+	    var field = $("<div class='newfield'><input type='text' infotext='Type Field Name' /><input type='submit' value='ok'></div>");
+	    field.find("input[type='submit']").click(function () {
+		    var fieldname = field.find("input[type='text']").attr("value");
+		    if(fieldname == "Type Field Name" || fieldname == "") {
+			return false;
+		    }
+		    var f = buildDraggableField(fieldname, "", "author");
+		    setFieldName(f, "fieldvalue");
+		    var fieldid = newUUID();
+		    setFieldID(f, fieldid);
+		    setSigID(f, "author");
+		    setHiddenField(f, "fieldname", fieldname);
+		    fds.append(f);
+		    enableInfoText(f);
+		    updateStatus(f);
+		    field.detach();
+		    return false;
+		});
+	    fds.append(field);
+	    enableInfoText(field);
+	    return false;
+	});
+
+    ad.append(fds);
+    ad.append(newFieldLink);
 
     placePlacements(author.nameplacements, "Avsändare namn på motpart", author.name, "author", "name");
     placePlacements(author.companyplacements, "Avsändare  titel, företag", author.company, "author", "company");
