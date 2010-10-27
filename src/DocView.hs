@@ -653,15 +653,14 @@ showDocumentForSign action document muser invitedlink wassigned =
                  
                  <% caseOf 
                     [(wassigned ,
-                              <span>Du har redan undertecknat!<br/></span>),
+                              <div>Du har redan undertecknat!</div>),
                     (documentstatus document == Timedout, 
-                              <span>Förfallodatum har passerat!<br/></span>)
+                              <div>Förfallodatum har passerat!</div>)
                     ]
-                              <span>
-                                {- Avvisa - gray FIXME -}
+                              <div>
                                 <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign"/>
-                                <br/>
-                              </span>
+                                <input class="bigbutton" type="submit" name="cancel" value="Avvisa" id="cancel"/>
+                              </div>
                  %>
                  <small>Jag vill veta mer <a href="/about" target="_blank">om SkrivaPå</a>.</small>
               </span>
