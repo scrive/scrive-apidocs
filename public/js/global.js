@@ -205,6 +205,7 @@ $(document).ready( function () {
 
     $("#signinvite").click(function() {
          var button = $(this);
+         var form = $(this.form);
          var mrxs = $("form input[name='signatoryname']");
          var tot = "";
          if(!emailFieldsValidation($("input[type='email']"))){
@@ -225,7 +226,6 @@ $(document).ready( function () {
                          modal: true,
                          buttons: {
                          'Underteckna': function() {
-                             var form = $("#form");
                              var name = button.attr("name");
                              form.append("<input type='hidden' name='" + name + "' value='automatic'>");
                              //alert(tot);
@@ -241,6 +241,7 @@ $(document).ready( function () {
 
     $("#sign").click(function() {
          var button = $(this);
+         var form = $(this.form);
          $("#dialog-confirm-sign").dialog({
                  resizable: false,
                      height: 280,
@@ -248,7 +249,6 @@ $(document).ready( function () {
                      modal: true,
                      buttons: {
                      'Underteckna': function() {
-                         var form = $("#form");
                          var name = button.attr("name");
                          form.append("<input type='hidden' name='" + name + "' value='automatic'>");
                          form.submit();
