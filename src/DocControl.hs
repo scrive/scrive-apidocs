@@ -136,7 +136,7 @@ sendClosedEmail1 ctx document signatorylink = do
       Document{documenttitle,documentid} = document
   mail <- closedMail ctx signatoryemail signatoryname
              document signatorylink signatorymagichash
-  let attachmentcontent = filepdf $ head $ documentfiles document
+  let attachmentcontent = filepdf $ head $ documentsealedfiles document
   sendMail $ mail { fullnameemails =  [(signatoryname,signatoryemail)] , attachments = [(documenttitle,attachmentcontent)]}
 
 sendClosedAuthorEmail :: Context -> Document -> IO ()
@@ -145,7 +145,7 @@ sendClosedAuthorEmail ctx document = do
   Just authoruser <- query $ GetUserByUserID authorid
   mail<- closedMailAuthor ctx (unEmail $ useremail authoruser) (userfullname authoruser)
              document
-  let attachmentcontent = filepdf $ head $ documentfiles document
+  let attachmentcontent = filepdf $ head $ documentsealedfiles document
       Document{documenttitle,documentid} = document
   let email2 = signatoryemail $ documentauthordetails document
       email1 = unEmail $ useremail authoruser
