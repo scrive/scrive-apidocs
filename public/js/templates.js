@@ -432,6 +432,15 @@ function updateStatus(field) {
     }
 }
 
+function detachFieldsForSig(sigid) {
+    $(".placedfield").each(function () {
+	    var field = $(this);
+	    if(sigid == getSigID(field)){
+		field.detach();
+	    }
+	});
+}
+
 function signatoryToHTML(sig) {
     var sl = $("#signatorylist");
     var sigid = newUUID();
@@ -510,6 +519,7 @@ function signatoryToHTML(sig) {
     var removeLink = $("<small><a href='#'>Ta bort</a></small>");
     removeLink.find("a").click(function () {
 	    var link = $(this);
+	    detachFieldsForSig(sigid);
 	    link.parents(".sigentry").detach();
 	    return false;
 	});
