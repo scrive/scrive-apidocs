@@ -28,6 +28,7 @@ import Data.Int
 import System.Log.Logger (errorM)
 import qualified Data.Map as Map
 import qualified Data.Set as Set
+import Data.Maybe
 
 $(deriveAll [''Eq, ''Ord, ''Default]
   [d|
@@ -221,12 +222,33 @@ $(deriveAll [''Default]
 
           -- we really should keep history here so we know what happened
           }
+      data Document4 = Document4
+          { documentid4               :: DocumentID
+          , documenttitle4            :: BS.ByteString
+          , documentauthor4           :: Author
+          , documentsignatorylinks4   :: [SignatoryLink]  
+          , documentfiles4            :: [File]
+          , documentstatus4           :: DocumentStatus
+          , documentctime4            :: MinutesTime
+          , documentmtime4            :: MinutesTime
+          , documentchargemode4       :: ChargeMode
+          , documentdaystosign4       :: Int
+          , documenttimeouttime4      :: Maybe TimeoutTime 
+          , documentdeleted4          :: Bool -- should not appear in list
+          , documentauthordetails4    :: SignatoryDetails
+          , documentmaybesigninfo4    :: Maybe SignInfo      -- about the author signed the document |should be droped and check at runtime|
+          , documenthistory4          :: [DocumentHistoryEntry]
+          , documentinvitetext4       :: BS.ByteString
+
+          -- we really should keep history here so we know what happened
+          }
       data Document = Document
           { documentid               :: DocumentID
           , documenttitle            :: BS.ByteString
           , documentauthor           :: Author
           , documentsignatorylinks   :: [SignatoryLink]  
           , documentfiles            :: [File]
+          , documentsealedfiles      :: [File]
           , documentstatus           :: DocumentStatus
           , documentctime            :: MinutesTime
           , documentmtime            :: MinutesTime
@@ -536,9 +558,13 @@ $(deriveSerialize ''Document3)
 instance Version Document3 where
     mode = extension 3 (Proxy :: Proxy Document2)
 
+$(deriveSerialize ''Document4)
+instance Version Document4 where
+    mode = extension 4 (Proxy :: Proxy Document3)
+
 $(deriveSerialize ''Document)
 instance Version Document where
-    mode = extension 4 (Proxy :: Proxy Document3)
+    mode = extension 5 (Proxy :: Proxy Document4)
 
 instance Migrate Document0 Document1 where
       migrate (Document0
@@ -618,7 +644,7 @@ instance Migrate Document2 Document3 where
           , documenthistory3 = []
           }
 
-instance Migrate Document3 Document where
+instance Migrate Document3 Document4 where
       migrate (Document3
           { documentid3
           , documenttitle3
@@ -635,23 +661,65 @@ instance Migrate Document3 Document where
           , documentauthordetails3
           , documentmaybesigninfo3
           , documenthistory3
+          }) = Document4
+          { documentid4 = documentid3
+          , documenttitle4 = documenttitle3
+          , documentauthor4 = documentauthor3
+          , documentsignatorylinks4 = documentsignatorylinks3
+          , documentfiles4 = documentfiles3
+          , documentstatus4 = documentstatus3
+          , documentctime4 = documentctime3
+          , documentmtime4 = documentmtime3
+          , documentchargemode4 = documentchargemode3
+          , documentdaystosign4 = documentdaystosign3
+          , documenttimeouttime4 = documenttimeouttime3
+          , documentdeleted4 = documentdeleted3
+          , documentauthordetails4 = documentauthordetails3
+          , documentmaybesigninfo4 = documentmaybesigninfo3
+          , documenthistory4 = documenthistory3
+          , documentinvitetext4 = BS.empty
+          }
+
+instance Migrate Document4 Document where
+      migrate (Document4
+          { documentid4
+          , documenttitle4
+          , documentauthor4
+          , documentsignatorylinks4
+          , documentfiles4
+          , documentstatus4
+          , documentctime4
+          , documentmtime4
+          , documentchargemode4
+          , documentdaystosign4
+          , documenttimeouttime4
+          , documentdeleted4
+          , documentauthordetails4
+          , documentmaybesigninfo4
+          , documenthistory4
+          , documentinvitetext4
           }) = Document
-          { documentid = documentid3
-          , documenttitle = documenttitle3
-          , documentauthor = documentauthor3
-          , documentsignatorylinks = documentsignatorylinks3
-          , documentfiles = documentfiles3
-          , documentstatus = documentstatus3
-          , documentctime = documentctime3
-          , documentmtime = documentmtime3
-          , documentchargemode = documentchargemode3
-          , documentdaystosign = documentdaystosign3
-          , documenttimeouttime = documenttimeouttime3
-          , documentdeleted = documentdeleted3
-          , documentauthordetails = documentauthordetails3
-          , documentmaybesigninfo = documentmaybesigninfo3
-          , documenthistory = documenthistory3
-          , documentinvitetext = BS.empty
+          { documentid = documentid4
+          , documenttitle = documenttitle4
+          , documentauthor = documentauthor4
+          , documentsignatorylinks = documentsignatorylinks4
+          , documentfiles = if documentstatus4 == Closed
+                            then []
+                            else documentfiles4
+          , documentstatus = documentstatus4
+          , documentctime = documentctime4
+          , documentmtime = documentmtime4
+          , documentchargemode = documentchargemode4
+          , documentdaystosign = documentdaystosign4
+          , documenttimeouttime = documenttimeouttime4
+          , documentdeleted = documentdeleted4
+          , documentauthordetails = documentauthordetails4
+          , documentmaybesigninfo = documentmaybesigninfo4
+          , documenthistory = documenthistory4
+          , documentinvitetext = documentinvitetext4
+          , documentsealedfiles = if documentstatus4 == Closed
+                                  then documentfiles4
+                                  else []
           }
 
 
@@ -775,6 +843,7 @@ newDocument user@User{userid,userfullname,usercompanyname,usercompanynumber,user
           , documentmaybesigninfo = Nothing
           , documenthistory = []
           , documentinvitetext = BS.empty
+          , documentsealedfiles = []
           }
       details = SignatoryDetails  
                 { signatoryname = userfullname
