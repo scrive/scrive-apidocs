@@ -205,9 +205,8 @@ loginBox ctx =
     -}
    </div>
 
-welcomeBody :: (XMLGenerator m, EmbedAsAttr m (Attr [Char] KontraLink)) 
-            => Context 
-            -> XMLGenT m (HSX.XML m)
+welcomeBody :: Context 
+            -> XMLGenT (HSPT' IO)  (HSX.XML (HSPT' IO) )
 welcomeBody (Context {ctxmaybeuser = Just _, ctxhostpart}) = 
   <div class="centerdivnarrow" style="margin-top: 100px;">
    
@@ -221,26 +220,21 @@ welcomeBody (Context {ctxmaybeuser = Just _, ctxhostpart}) =
 
 welcomeBody ctx@(Context {ctxmaybeuser = Nothing}) = 
  <div>
-     <div id="firstPageLeft">
-         <h1>Snabbare, smidigare och bättre</h1>
-         <p>SkrivaPå är en tjänst för elektronisk signering och arkivering. 
-         Spara tid och minska onödiga kostnader med enklare och smidigare avtalshantering. 
-         Kontakta oss redan idag för att testa tjänsten.</p>
-    </div>
-    <div id="firstPageRight">
-         <object width="450" height="276">
-             <param name="allowfullscreen" value="true"/>
-             <param name="allowscriptaccess" value="always"/>
-             <param name="movie" value="https://secure.vimeo.com/moogaloop.swf?clip_id=15894469&amp;amp;server=vimeo.com&amp;amp;show_title=1&amp;amp;show_byline=1&amp;amp;show_portrait=0&amp;amp;color=00ADEF&amp;amp;fullscreen=1"/>
-             <embed src="https://secure.vimeo.com/moogaloop.swf?clip_id=15894469&amp;amp;server=vimeo.com&amp;amp;show_title=1&amp;amp;show_byline=1&amp;amp;show_portrait=0&amp;amp;color=00ADEF&amp;amp;fullscreen=1" type="application/x-shockwave-flash" allowfullscreen="true" allowscriptaccess="always" height="276" width="450">
-             </embed>
-        </object>
+    <div id="firstPageLeft">
+         <h1>Snabbt, smidigt och säkert</h1>
          <p>
-            <a href="//vimeo.com/15894469">Avtala på under 60 sekunder</a>.
+                            SkrivaPå är en tjänst för elektronisk signering och arkivering. 
+                            Spara tid och minska onödiga kostnader med enklare och smidigare avtalshantering. 
+                            Kontakta oss redan idag för att testa tjänsten.
          </p>
     </div>
+    <div id="firstPageRight">
+      <%
+       	<iframe height="319" frameborder="0" width="520" src=(attrVal "http://player.vimeo.com/video/15894469?title=0&byline=0&portrait=0&color=ffffff")></iframe>
+       %> 
+        <p> </p>
+     </div>
  </div>
-
 
 
 errorReport :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
@@ -374,7 +368,6 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
                  <ul>
                    <li><% topnavi (topMenu== TopNew) ctx "Skapa avtal" LinkMain %></li>
                    <li><% topnavi (topMenu== TopDocument) ctx "Arkiv" LinkIssue %></li>
-                   <li><% topnavi (topMenu== TopAccount) ctx "Konto" LinkAccount %></li>
                  </ul>
                _ -> <span/>
            %>
