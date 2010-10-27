@@ -389,7 +389,7 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid, do
 
   invitetext <- g "invitetext"
 
-
+  -- each custom field must have this
   fieldnames <- getAndConcat "fieldname"
   fieldids <- getAndConcat "fieldid"
   fieldsigids <- getAndConcat "fieldsigid"
@@ -415,13 +415,11 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid, do
           m s f p = (s, f, p)
 
   let placementsByID sigid fieldid = 
-          map plac (filter (sameids sigid fieldid) pls) where
-              sameids sigid fieldid (sigid2, fieldid2, _)
+          map plac (filter sameids pls) where
+              sameids (sigid2, fieldid2, _)
                   | sigid == sigid2 && fieldid == fieldid2 = True
                   | otherwise                              = False
               plac (_, _, x) = x
-
-
 
   let fielddefs = zipWith4 fd fieldnames fieldvalues fieldids fieldsigids where
           
@@ -430,6 +428,9 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid, do
                                                    fieldvalue = fv,
                                                    fieldplacements = placementsByID sigid id
                                                  })
+
+  liftIO $ print fielddefs
+
   let defsByID sigid = 
           map snd (filter (sid sigid) fielddefs) where
               sid id (id2, _) 
