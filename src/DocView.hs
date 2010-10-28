@@ -602,8 +602,16 @@ showSignatoryLinkForSign muser document siglnk@(SignatoryLink{  signatorylinkid
       reminderText = if (wasSigned)
                      then "Skicka dokumentet igen"
                      else "Skicka påminnelse"
-      reminderhref = LinkRemind document siglnk       
-      reminderLink = <a href=reminderhref >  <% reminderText %>  </a>
+      
+      reminderForm = <form action=(LinkRemind document siglnk) method="POST" title=reminderText>
+                       <p class="showOnDialog" style="display:none">
+                         Custom message for <strong> <%(personname siglnk)%> </strong>
+                       </p>  
+                       <textarea name="customtext" cols="30" rows="4" autocompleate="off" class="showOnDialog" style="display:none">
+                         
+                       </textarea>
+                       <a onclick="prepareToSendReminderMail($(this).parent())" style="cursor:pointer" class="hideOnDialog">  <% reminderText %>  </a>
+                     </form>     
    in asChild <p><% 
                 [asChild status,asChild " "] ++
                 (if BS.null signatoryname then [] else [ asChild <strong><% signatoryname %></strong>, asChild <br/> ]) ++
@@ -611,7 +619,7 @@ showSignatoryLinkForSign muser document siglnk@(SignatoryLink{  signatorylinkid
                 (if BS.null signatorynumber then [] else [ asChild signatorynumber, asChild <br/> ]) ++
                 (if BS.null signatoryemail then [] else [ asChild signatoryemail, asChild <br/> ]) ++
                 ([asChild message]) ++
-                (if (isCurrentUserAuthor && (not isCurrentSignatorAuthor) && (not isTimedout)) then [asChild <br/> ,asChild reminderLink] else [])
+                (if (isCurrentUserAuthor && (not isCurrentSignatorAuthor) && (not isTimedout)) then [asChild <br/> ,asChild reminderForm] else [])
                 %></p>
 
 showDocumentForSign :: ( XMLGenerator m
@@ -889,26 +897,20 @@ swedishListString (x:xs) = do
   list2 <- swedishListString xs
   return (concat list ++ list2)
 
-remindMail:: Context -> Document -> SignatoryLink -> IO Mail
-remindMail c d s = case s of 
-                       SignatoryLink{maybesigninfo = Nothing} -> remindMailNotSigned c d s
-                       _ -> remindMailSigned c d s
-
-  
-remindMailNotSigned:: Context -> Document -> SignatoryLink -> IO Mail
-remindMailNotSigned ctx@Context{ctxmaybeuser = Just user, ctxhostpart}
+remindMail:: BS.ByteString -> Context -> Document -> SignatoryLink -> IO Mail
+remindMail cm c d s = case s of 
+                       SignatoryLink{maybesigninfo = Nothing} -> remindMailNotSigned cm c d s
+                       _ -> remindMailSigned cm c d s
+          
+remindMailNotSigned:: BS.ByteString -> Context -> Document -> SignatoryLink -> IO Mail
+remindMailNotSigned customMessage ctx@Context{ctxmaybeuser = Just user, ctxhostpart}
            document@Document{documenttitle,documentid,documenttimeouttime,documentauthordetails,documentinvitetext} 
            signlink = 
     let link = ctxhostpart ++ show (LinkSignDoc document signlink)
-        creatorname = signatoryname documentauthordetails
-        personname = if (BS.null $ signatoryname $ signatorydetails signlink)
-                      then  signatoryname $ signatorydetails signlink
-                      else signatoryemail $ signatorydetails signlink
-        --common :: (XMLGenerator m) => GenChildList m
         common = sequence
               [ asChild <p><i>Översiktlig information</i><br/>
                  Parter: <% partyListString document %><br/>
-                 Har undertecknat: <strong><% creatorname %></strong><br/>
+                 Har undertecknat: <strong><% signatoryname documentauthordetails %></strong><br/>
                 <% case documenttimeouttime of 
                      Just time -> <span>Undertecknas senast: <strong><% show time %></strong>.</span>
                      Nothing -> <span/>
@@ -922,59 +924,68 @@ remindMailNotSigned ctx@Context{ctxmaybeuser = Just user, ctxhostpart}
               4. Färdig<br/>
               </p>
              ]
-        --skrivapaversion  :: (XMLGenerator m) => GenChildList m
-        skrivapaversion = sequence 
-            [ asChild common
-            , asChild (poweredBySkrivaPaPara ctxhostpart)
-            ]
-        paragraphs :: [BS.ByteString]
-        paragraphs = BS.split 10 documentinvitetext
-        -- p :: [GenChildList IO]
-        p = intersperse (asChild <br/>) (map asChild paragraphs)
-        --authorversion  :: (XMLGenerator m) => GenChildList m
-        authorversion = sequence $
-               p ++ 
-               [ asChild common
-               , asChild "Hälsningar"
-               , asChild <br/>
-               , asChild creatorname
-               , asChild <br/>
-               ]
-        content =   <p> <%creatorname%> vill påminna dig om att du inte undertecknat dokument <%documenttitle%> ännu
-                        <br/>
-                        <% if BS.null documentinvitetext
-                         then <span><% skrivapaversion %></span>
-                         else <span><% authorversion %></span>
-                        %> 
-                    </p>     
-              
-        title =  BS.concat [BS.fromString "Hej ",personname]             
-    in 
+        skrivapaversion = 
+            <span> 
+             <%common%>
+             <%(poweredBySkrivaPaPara ctxhostpart) %>
+            </span>          
+        header   = headerWithCustom  customMessage (remindMailNotSignedStandardHeader user document signlink)
+        content  = messageWithHeader header skrivapaversion                    
+        attachmentcontent = filepdf $ head $ documentfiles document          
+        title =  BS.concat [BS.fromString "Hej ",personname signlink]  
+      in 
        do
         content <- htmlHeadBodyWrapIO documenttitle content
         return $ emptyMail {title = title, content = content}
 
-remindMailSigned:: Context -> Document -> SignatoryLink -> IO Mail
-remindMailSigned ctx@Context{ctxmaybeuser = Just user, ctxhostpart}
+        
+        
+remindMailSigned:: BS.ByteString -> Context -> Document -> SignatoryLink -> IO Mail
+remindMailSigned customMessage ctx@Context{ctxmaybeuser = Just user, ctxhostpart}
                  document@Document{documenttitle,documentid,documenttimeouttime,documentauthordetails,documentinvitetext} 
                  signlink = 
                      let 
-                         personname = if (BS.null $ signatoryname $ signatorydetails signlink)
-                                      then signatoryname $ signatorydetails signlink
-                                      else signatoryemail $ signatorydetails signlink
-                         title =  BS.concat [BS.fromString "Hej ",personname]              
-                         content = <span>
-                                     <p>Hej <% userfullname user %>,</p>
-                                     <p><% personname %> har på din begäran skickat ut dokumentet <% documenttitle %> som du  
-                                     har undertecknat via tjänsten SkrivaPå. Dokumentet bifogas nedan.</p>
-                                     <% poweredBySkrivaPaPara ctxhostpart %>
-                                   </span>
+                         title =  BS.concat [BS.fromString "Hej ",personname signlink]              
+                         content  = messageWithHeader
+                                      (headerWithCustom 
+                                                customMessage 
+                                                (remindMailSignedStandardHeader user document signlink)                
+                                      )
+                                    (poweredBySkrivaPaPara ctxhostpart)
                          attachmentcontent = filepdf $ head $ documentfiles document          
                      in do
                        content <- htmlHeadBodyWrapIO documenttitle content
                        return $ emptyMail {title = title, content = content, attachments = [(documenttitle,attachmentcontent)]}
 
+headerWithCustom::(XMLGenerator m) => BS.ByteString->(XMLGenT m (HSX.XML m)) -> (XMLGenT m (HSX.XML m)) 
+headerWithCustom customMessage standardMessage = if (BS.null customMessage) 
+                                                  then standardMessage       
+                                                  else <p> <% customMessage%> </p>  
+                                                        
+messageWithHeader::(XMLGenerator m) => (XMLGenT m (HSX.XML m))-> ( XMLGenT m (HSX.XML m))-> (XMLGenT m (HSX.XML m)) 
+messageWithHeader header message = <p><span> <%header%></span><span><%message%></span> </p>                  
+                       
+remindMailNotSignedStandardHeader::(XMLGenerator m) => User -> Document -> SignatoryLink -> XMLGenT m (HSX.XML m)
+remindMailNotSignedStandardHeader _ document signlink =  <p>
+                                                           <%(signatoryname $ documentauthordetails document)%> vill påminna dig om att du inte undertecknat dokument 
+                                                           <% documenttitle document %>  ännu  
+                                                         </p>  
+                                              
+                       
+remindMailSignedStandardHeader::(XMLGenerator m) => User -> Document -> SignatoryLink -> XMLGenT m (HSX.XML m)
+remindMailSignedStandardHeader user document signlink =   
+                                                <span>
+                                                 <p> Hej <% userfullname user %> </p>
+                                                 <p>
+                                                  <% (personname signlink)%> har på din begäran skickat ut dokumentet <% documenttitle document %> som du  
+                                                  har undertecknat via tjänsten SkrivaPå. Dokumentet bifogas nedan.
+                                                 </p>          
+                                                </span>                                                 
 
+personname signlink = if (BS.null $ signatoryname $ signatorydetails signlink)
+                        then  signatoryemail $ signatorydetails signlink  
+                        else  signatoryname $ signatorydetails signlink
+              
 joinWith _ [] = []
 joinWith _ [x] = x
 joinWith s (x:xs) = x ++ s ++ (joinWith s xs)
