@@ -835,22 +835,22 @@ showPage modminutes fileid pageno = do
       return $ ifModifiedSince modtime rq res2
     _ -> mzero
 
-handleResend:: Kontra Response
-handleResend = do
-    ctx<- get
-    pathdb GetDocumentByDocumentID $ \doc -> 
-            path $ \signlinkid -> 
-                    do
-                      case (signlinkFromDocById doc signlinkid) of
-                       Just signlink -> 
-                               do 
-                                mail <- liftIO $ remindMail ctx doc signlink
-                                liftIO $ sendMail (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )]})
-                                addFlashMsgText ( remindMailFlashMessage doc signlink)
-                                let link = show (LinkIssueDoc doc)
-                                response <- webHSP (seeOtherXML link)
-                                seeOther link response
-                       Nothing -> mzero         
+handleResend:: String -> String -> Kontra KontraLink
+handleResend docid signlinkid  = do
+                      ctx<- get
+                      doc' <- query $ GetDocumentByDocumentID (read docid)
+                      case (doc') of
+                       Just doc -> 
+                               case (signlinkFromDocById doc (read signlinkid)) of
+                                 Just signlink -> 
+                                  do 
+                                   customMessageInput <- getDataFnM (lookInput "customtext") 
+                                   mail <- liftIO $ remindMail (BS.fromString $ BSL.toString $ inputValue customMessageInput) ctx doc signlink
+                                   liftIO $ sendMail (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )]})
+                                   addFlashMsgText ( remindMailFlashMessage doc signlink)
+                                   return (LinkIssueDoc doc)
+                                 Nothing -> mzero           
+                       Nothing -> mzero               
 
    where signlinkFromDocById doc sid = find (((==) sid) . signatorylinkid) (documentsignatorylinks  doc)
 

@@ -451,3 +451,32 @@ function editinvitetext()
                  }
              });
 }
+
+function prepareToSendReminderMail(form)
+{
+    var clone = form.clone();
+    $("body").append(clone);
+    var buttons = {};
+    buttons[form.attr("title")]= function() {
+                              clone.submit();
+                         }
+    buttons['Avbryt']= function() {
+                              clone.dialog('close');
+                         }
+    clone.dialog({
+                     resizable: false,
+                     height: 300,
+                     width: 300,
+                     modal: true,
+                     buttons:  buttons
+                     
+                 })
+  startDialogHere(clone)             
+}    
+
+function startDialogHere(form)
+{ 
+     $(".hideOnDialog",form).hide()
+     $(".showOnDialog",form).show()
+         
+}   
