@@ -73,6 +73,8 @@ handleRoutes =
                      DocControl.landpageSignInvite ctx document
                , dir "signed" $ pathdb GetDocumentByDocumentID $ \document -> path $ \signatorylinkid ->
                                                                               DocControl.landpageSigned ctx document signatorylinkid
+               , dir "rejected" $ pathdb GetDocumentByDocumentID $ \document -> path $ \signatorylinkid ->
+                                                                              DocControl.landpageRejected ctx document signatorylinkid
                , dir "signedsave" $ pathdb GetDocumentByDocumentID $ \document -> 
                    path $ \signatorylinkid ->
                        DocControl.landpageSignedSave ctx document signatorylinkid

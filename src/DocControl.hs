@@ -97,6 +97,12 @@ postDocumentChangeAction document@Document{documentstatus} oldstatus
           newdoc <- sealDocument ctxnormalizeddocuments ctxhostpart ctxtime user document
           sendClosedEmails ctx newdoc
         return ()
+    | oldstatus == Pending && documentstatus == Rejected = do
+        ctx@Context{ctxnormalizeddocuments,ctxhostpart,ctxtime} <- get
+        liftIO $ forkIO $ do
+          threadDelay 5000 
+          sendRejectAuthorEmail ctx document
+        return ()
     | otherwise = -- do nothing. FIXME: log status change
          return ()
           
@@ -155,15 +161,28 @@ sendClosedAuthorEmail ctx document = do
       name1 = userfullname authoruser
       name2 = signatoryname $ documentauthordetails document
   sendMail $ mail { fullnameemails = ([(name1,email1)] ++ em), attachments = [(documenttitle,attachmentcontent)]}
+
+sendRejectAuthorEmail :: Context -> Document -> IO ()
+sendRejectAuthorEmail ctx document = do
+  let authorid = unAuthor $ documentauthor document
+  Just authoruser <- query $ GetUserByUserID authorid
+  mail<- rejectedMailAuthor ctx (unEmail $ useremail authoruser) (userfullname authoruser)
+             document
+  let email2 = signatoryemail $ documentauthordetails document
+      email1 = unEmail $ useremail authoruser
+      em = if email2/=BS.empty && email2/=email1
+           then [(name2,email2)]
+           else []
+      name1 = userfullname authoruser
+      name2 = signatoryname $ documentauthordetails document
+  sendMail $ mail { fullnameemails = ([(name1,email1)] ++ em)}
   
   
 handleSign :: Kontra Response
 handleSign = do
   ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) <- get
-  msum [path $ \documentid -> 
-            path $ \signatoryid -> 
-                  path $ \magichash -> 
-                      handleSignShow documentid signatoryid magichash
+  msum [ hpost3 handleSignPost
+       , hget3 handleSignShow
        , withUser $ do
           let u = userid $ fromJust ctxmaybeuser
           documents <- query $ GetDocumentsBySignatory u
@@ -172,7 +191,7 @@ handleSign = do
 
 signDocument :: DocumentID 
              -> SignatoryLinkID 
-             -> Kontra Response
+             -> Kontra KontraLink
 signDocument documentid 
              signatorylinkid1 = do
   ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber}) <- get
@@ -184,19 +203,15 @@ signDocument documentid
        Left message -> 
            do
              addFlashMsgText $ BS.fromString message
-             let link = LinkMain
-             response <- webHSP (seeOtherXML $ show link)
-             seeOther (show LinkMain) response
+             return $ LinkMain
        Right document -> 
            do 
              postDocumentChangeAction document olddocumentstatus
-             let link = LinkSigned documentid signatorylinkid1
-             response <- webHSP (seeOtherXML $ show link)
-             seeOther (show link) response
+             return $ LinkSigned documentid signatorylinkid1
 
 cancelDocument :: DocumentID 
                -> SignatoryLinkID 
-               -> Kontra Response
+               -> Kontra KontraLink
 cancelDocument documentid 
                signatorylinkid1 = do
   ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber}) <- get
@@ -207,15 +222,12 @@ cancelDocument documentid
       Left message -> 
           do
             addFlashMsgText $ BS.fromString message
-            let link = LinkMain
-            response <- webHSP (seeOtherXML $ show link)
-            seeOther (show LinkMain) response
+            return $ LinkMain
       Right document -> 
           do  
+            postDocumentChangeAction document Pending
             addFlashMsgText $ BS.fromString "You have cancelled this document"
-            let link = LinkSigned documentid signatorylinkid1
-            response <- webHSP (seeOtherXML $ show link)
-            seeOther (show link) response
+            return $ LinkRejected documentid signatorylinkid1
   
 signatoryLinkFromDocumentByID document@Document{documentsignatorylinks} linkid = do
     let invitedlinks = filter (\x -> signatorylinkid x == linkid
@@ -233,6 +245,11 @@ landpageSigned ctx document signatorylinkid = do
   signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
   maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
   renderFromBody ctx TopEmpty kontrakcja $ landpageSignedView ctx document signatorylink (isJust maybeuser)
+
+landpageRejected ctx document signatorylinkid = do
+  signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
+  maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
+  renderFromBody ctx TopEmpty kontrakcja $ landpageRejectedView ctx document signatorylink (isJust maybeuser)
 
 {-
  Here we need to save the document either under existing account or create a new account
@@ -268,35 +285,41 @@ landpageSaved (ctx@Context { ctxmaybeuser = Just user@User{userid} })
   renderFromBody ctx TopDocument kontrakcja $ landpageDocumentSavedView ctx document signatorylink
 
 
-handleSignShow :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra Response
-handleSignShow documentid 
+handleSignPost :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra KontraLink
+handleSignPost documentid 
                signatorylinkid1
                magichash1 = do
   ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber}) <- get
                
   msum [ DocControl.signDocument documentid signatorylinkid1
        , DocControl.cancelDocument documentid signatorylinkid1
-       , do 
-           -- FIXME: this is so wrong on so many different levels...
-          mdocument <- update $ MarkDocumentSeen documentid signatorylinkid1 ctxtime ctxipnumber
-          document <- maybe mzero return mdocument
-             
-          let invitedlinks = filter (\x -> signatorylinkid x == signatorylinkid1
-                                     && signatorymagichash x == magichash1)
-                              (documentsignatorylinks document)
-          invitedlink <- case invitedlinks of
-                           [invitedlink] -> return invitedlink
-                           _ -> mzero
-          let wassigned = f invitedlink
-              f (SignatoryLink {maybesigninfo}) = isJust maybesigninfo 
-              authoruserid = unAuthor $ documentauthor document
-          Just author <- query $ GetUserByUserID authoruserid
-          let authorname = signatoryname $ documentauthordetails document
-              invitedname = signatoryname $ signatorydetails $ invitedlink 
-          renderFromBody ctx TopNone kontrakcja 
-                 (showDocumentForSign (LinkSignDoc document invitedlink) 
-                      document  ctxmaybeuser invitedlink wassigned)
        ]
+
+handleSignShow :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra Response
+handleSignShow documentid 
+               signatorylinkid1
+               magichash1 = do
+  ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber}) <- get
+               
+  -- FIXME: this is so wrong on so many different levels...
+  mdocument <- update $ MarkDocumentSeen documentid signatorylinkid1 ctxtime ctxipnumber
+  document <- maybe mzero return mdocument
+             
+  let invitedlinks = filter (\x -> signatorylinkid x == signatorylinkid1
+                                   && signatorymagichash x == magichash1)
+                     (documentsignatorylinks document)
+  invitedlink <- case invitedlinks of
+                   [invitedlink] -> return invitedlink
+                   _ -> mzero
+  let wassigned = f invitedlink
+      f (SignatoryLink {maybesigninfo}) = isJust maybesigninfo 
+      authoruserid = unAuthor $ documentauthor document
+  Just author <- query $ GetUserByUserID authoruserid
+  let authorname = signatoryname $ documentauthordetails document
+      invitedname = signatoryname $ signatorydetails $ invitedlink 
+  renderFromBody ctx TopNone kontrakcja 
+                     (showDocumentForSign (LinkSignDoc document invitedlink) 
+                      document  ctxmaybeuser invitedlink wassigned)
 
 handleIssue :: Kontra Response
 handleIssue = 

@@ -1006,7 +1006,7 @@ cancelDocument :: DocumentID
 cancelDocument documentid signatorylinkid1 time ipnumber = do
   modifyDocument documentid $ \document ->
       let
-          newdocument = document { documentstatus = Canceled }
+          newdocument = document { documentstatus = Rejected }
           -- FIXME: need to say who has cancelled the document
           -- what his IP was, and time of happening
       in case documentstatus document of

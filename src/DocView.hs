@@ -3,7 +3,7 @@
 
 module DocView(emptyDetails,showFilesImages2,showDocument,listDocuments,invitationMail,closedMail,closedMailAuthor,
 landpageSignInviteView,landpageSignedView,landpageLoginForSaveView,landpageDocumentSavedView,
-showDocumentForSign,documentSavedForLaterFlashMessage,remindMail,remindMailFlashMessage 
+showDocumentForSign,documentSavedForLaterFlashMessage,remindMail,remindMailFlashMessage, rejectedMailAuthor, landpageRejectedView
 ) where
 import AppView
 import Data.List
@@ -128,6 +128,21 @@ willCreateAccountForYou ctx document siglink True =
        <input class="button" type="submit" value="Skapa konto"/>
       </form>
     </p>
+
+landpageRejectedView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink),EmbedAsAttr m (Attr [Char] BS.ByteString)) => 
+                      Context -> 
+                      Document -> 
+                      SignatoryLink -> 
+                      Bool ->
+                      XMLGenT m (HSX.XML m)
+landpageRejectedView ctx document@Document{documenttitle,documentstatus} signatorylink hasaccount =
+    <div class="centerdivnarrow">
+      <p class="headline">Dokumentet har avvisat</p>
+      <p>Du har avvisat dokumentet <strong><% documenttitle %></strong>.</p>
+      <p>Please stay in touch with the author of the document.</p>
+      <p>Meanwhile you can explore SkrivaPa service.</p>
+      <p><a href="/">Go to home page</a></p>
+    </div>
 
 
 landpageSignedView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink),EmbedAsAttr m (Attr [Char] BS.ByteString)) => 
@@ -618,6 +633,9 @@ showDocumentForSign action document muser invitedlink wassigned =
                       avtalet <strong>juridiskt bindande</strong> och
                       det färdigställda avtalet skickas till din e-post.</p>
                   </div>
+                , <div id="dialog-confirm-cancel" title="Avvisa">
+                    <p>Är du säker att du vill avvisa dokumentet <strong><% documenttitle document %></strong>?</p>
+                  </div>
                 ]
        magichash = signatorymagichash invitedlink
        authordetails = documentauthordetails document
@@ -772,6 +790,26 @@ closedMailAuthor (Context {ctxhostpart})
                 av <% partyListString document %>. Avtalet är nu bindande.</p> 
 
              <p>Det färdigställda dokumentet bifogas med detta mail.</p> 
+
+             <% poweredBySkrivaPaPara ctxhostpart %>
+        </span> 
+     return $ emptyMail {title = title, content = content}
+
+rejectedMailAuthor :: Context
+                   -> BS.ByteString
+                   -> BS.ByteString
+                   -> Document
+                   -> IO Mail
+rejectedMailAuthor (Context {ctxhostpart}) 
+                   emailaddress personname 
+                   document@Document{documenttitle,documentid} = 
+    do
+     let title = BS.append (BS.fromString "Avvisat: ")  documenttitle
+     let link = ctxhostpart ++ show (LinkIssueDoc document)
+     content <- htmlHeadBodyWrapIO documenttitle
+        <span>
+          <p>Hej <strong><% personname %></strong>,</p>
+             <p>Dokumentet <strong><% documenttitle %></strong> har avvisat.</p> 
 
              <% poweredBySkrivaPaPara ctxhostpart %>
         </span> 
@@ -935,6 +973,7 @@ remindMailSigned ctx@Context{ctxmaybeuser = Just user, ctxhostpart}
                      in do
                        content <- htmlHeadBodyWrapIO documenttitle content
                        return $ emptyMail {title = title, content = content, attachments = [(documenttitle,attachmentcontent)]}
+
 
 joinWith _ [] = []
 joinWith _ [x] = x
