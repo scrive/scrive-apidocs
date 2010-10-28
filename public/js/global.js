@@ -261,11 +261,35 @@ $(document).ready( function () {
          
          return false;
     });
+
+    $("#cancel").click(function() {
+         var button = $(this);
+         var form = $(this.form);
+         $("#dialog-confirm-cancel").dialog({
+                 resizable: false,
+                     // autoOpen: false,
+                     height: 340,
+                     width: 350,
+                     modal: true,
+                     buttons: {
+                     'Avvisa': function() {
+                         var name = button.attr("name");
+                         form.append("<input type='hidden' name='" + name + "' value='automatic'>");
+                         //alert(tot);
+                         form.submit();
+                     },
+                         'Avbryt': function() {
+                             $(this).dialog('close');
+                         }
+                 }
+             });
+         return false;
+        });
 	
 	$("input[type='email']").focus(function(){
 		applyRedBorder($(this));
 		return false;
-    });
+            });
 	
 	$("#loginbtn").click(function(){
 		if(emailFieldsValidation($("input[type='email']",this.form))){
