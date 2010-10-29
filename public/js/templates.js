@@ -541,6 +541,8 @@ function signatoryToHTML(sig) {
     setFieldType(anumb, "sig");
     setFieldType(aname, "sig");
 
+    aemai.find("input").attr('id', 'othersignatoryemail');
+
     if(aemai.find("input").attr("value")) {
 	setIcon(aemai, "done");
     }
@@ -676,6 +678,7 @@ function initializeTemplates () {
     enableInfoText();
     
     makeDropTargets();
+
 
     $("form").submit(function () {
 	    var form = $("form");
