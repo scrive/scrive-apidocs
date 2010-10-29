@@ -70,6 +70,8 @@ function signatoryremove(node)
   return false;
 }
 
+
+
 function swedishString(names)
 { 
     if( names.length == 0) 
@@ -209,19 +211,11 @@ $(document).ready( function () {
          var mrxs = $("form input[name='signatoryname']");
          var tot = "";
 
-	 var remainingAuthFields = false;
 	 
-	 $(".dragfield").each(function(){
-		 var field = $(this);
-		 var s = getIcon(field);
-		 if(s == 'athr') {
-		     remainingAuthFields = true;
-		 }
-	     });
 
          if(!emailFieldsValidation($("input[type='email']"))){
              return false;
-         } else if(remainingAuthFields){
+         } else if(!authorFieldsValidation()){
 	     return false;
          } else{
              var allparties = new Array();
@@ -397,6 +391,32 @@ function applyRedBorder(field){
 	});
 	isValidEmail=(showError)?false:true;
 	return isValidEmail;
+}
+
+function authorFieldsValidation(){
+
+    var remainingAuthFields = false;
+	 
+    $(".dragfield").each(function(){
+	    var field = $(this);
+	    var s = getIcon(field);
+	    if(s == 'athr') {
+		remainingAuthFields = true;
+	    }
+	});
+    var emptyMsg = "Please fill out all of the required fields.";
+    if(remainingAuthFields){
+	var $dialog = $('<div></div>')
+	    .html(emptyMsg)
+	    .dialog({
+		    autoOpen: false,
+		    title: 'Required fields',
+		    modal: true
+		});
+	$dialog.dialog('open');
+	return false;
+    }	
+    return !remainingAuthFields;
 }
 
 function isExceptionalField(field){
