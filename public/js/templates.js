@@ -676,6 +676,15 @@ function initializeTemplates () {
     enableInfoText();
     
     makeDropTargets();
+
+    $("form").submit(function () {
+	    var form = $("form");
+	    $(".placedfield input[type='hidden']").each(function () {
+		    var h = $(this);
+		    console.log(h.attr('name') + ": " + h.attr('value'));
+		    form.append(h);
+		});
+	});
 }
 
 $(document).ready(function () {
