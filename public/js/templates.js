@@ -151,7 +151,7 @@ function isStandardField(field) {
 function getValue(field) {
     if(isDraggableField(field)) {
 	console.log("here");
-	var s = $(field).find("input[type='text']");
+	var s = $(field).find("input[type='text'], input[type='email']");
 	if(s.size()) {
 	    if(s.attr("value") == s.attr("infotext")) {
 		return "";
@@ -172,7 +172,7 @@ function getValue(field) {
 
 function setValue(field, value) {
     if(isDraggableField(field)){
-	var s = $(field).find("input[type='text']");
+	var s = $(field).find("input[type='text'], input[type='email']");
 	if(s.size()) {
 	    s.attr("value", value);
 	} else {
@@ -228,7 +228,7 @@ function setFieldID(field, fieldid) {
 }
 
 function getFieldName(field) {
-    var s = $(field).find("input[type='text']");
+    var s = $(field).find("input[type='text'], input[type='email']");
     if(s.size()) {
 	return s.attr("name");
     } else {
@@ -237,7 +237,7 @@ function getFieldName(field) {
 }
 
 function setFieldName(field, name) {
-    var s = $(field).find("input[type='text']");
+    var s = $(field).find("input[type='text'], input[type='email']");
     if(s.size()) {
 	s.attr("name", name);
     } else {
@@ -246,7 +246,7 @@ function setFieldName(field, name) {
 }
 
 function getInfotext(field) {
-    var s = $(field).find("input[type='text']");
+    var s = $(field).find("input[type='text'], input[type='email']");
     if(s.size()) {
 	return s.attr("infotext");
     } else {
@@ -255,7 +255,7 @@ function getInfotext(field) {
 }
 
 function setInfotext(field, infotext) {
-    var s = $(field).find("input[type='text']");
+    var s = $(field).find("input[type='text'], input[type='email']");
     if(s.size()) {
 	s.attr("infotext", infotext);
     } else {
@@ -263,8 +263,12 @@ function setInfotext(field, infotext) {
     }
 }
 
-function buildDraggableField(info, val, type) {
+function buildDraggableField(info, val, type, emailp) {
     var x = $("<div class='dragfield'><span class='draghandle'>drag</span><input type='text' autocomplete='off' /><span class='status'></span></div>");
+    if(emailp) {
+	x = $("<div class='dragfield'><span class='draghandle'>drag</span><input type='email' autocomplete='off' /><span class='status'></span></div>");
+    }
+
 
     setInfotext(x, info);
     setValue(x, val);
@@ -343,13 +347,12 @@ function docstateToHTML(){
     $(author.otherfields).each(function (){
 	    var fd = this;
 	    fd.id = newUUID();
-	    var field = buildDraggableField(fd.label, fd.value);
+	    var field = buildDraggableField(fd.label, fd.value, "author");
 	    setFieldName(field, "fieldvalue");
 	    setFieldID(field, fd.id);
 	    setSigID(field, "author");
 	    setHiddenField(field, "fieldname", fd.label);
 	    fds.append(field);
-	    setFieldType(field, "author");
 	    placePlacements(fd.placements, fd.label, fd.value, "author", fd.id);
 	});
 
@@ -515,10 +518,10 @@ function signatoryToHTML(sig) {
 
     var d = $("<div class='fields'></div>");
     
-    var aname = buildDraggableField("Namn på motpart", sig.name);
-    var acomp = buildDraggableField("Titel, företag", sig.company);
-    var anumb = buildDraggableField("Orgnr/Persnr", sig.number);
-    var aemai = buildDraggableField("Personens e-mail", sig.email);
+    var aname = buildDraggableField("Namn på motpart", sig.name, "sig");
+    var acomp = buildDraggableField("Titel, företag", sig.company, "sig");
+    var anumb = buildDraggableField("Orgnr/Persnr", sig.number, "sig");
+    var aemai = buildDraggableField("Personens e-mail", sig.email, "author", true);
 
     setFieldName(aname, "signatoryname");
     setFieldName(acomp, "signatorycompany");
@@ -535,14 +538,7 @@ function signatoryToHTML(sig) {
     setSigID(anumb, sigid);
     setSigID(aemai, sigid);
 
-    // email is required
-    setFieldType(aemai, "author");
-    setFieldType(acomp, "sig");
-    setFieldType(anumb, "sig");
-    setFieldType(aname, "sig");
-
     aemai.find("input").attr('id', 'othersignatoryemail');
-
     if(aemai.find("input").attr("value")) {
 	setIcon(aemai, "done");
     }
