@@ -229,9 +229,11 @@ welcomeBody ctx@(Context {ctxmaybeuser = Nothing}) =
          </p>
     </div>
     <div id="firstPageRight">
-      <%
-       	<iframe height="319" frameborder="0" width="520" src=(attrVal "http://player.vimeo.com/video/15894469?title=0&byline=0&portrait=0&color=ffffff")></iframe>
-       %> 
+         <object>
+             <embed src="https://secure.vimeo.com/moogaloop.swf?clip_id=15894469&server=vimeo.com&show_title=0&show_byline=0&show_portrait=0&color=00ADEF&fullscreen=1" type="application/x-shockwave-flash" allowfullscreen="true" allowscriptaccess="always" width="520" height="319">
+             </embed>
+         </object>
+  
         <p> </p>
      </div>
  </div>
