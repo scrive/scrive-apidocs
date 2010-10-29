@@ -592,7 +592,7 @@ function signatoryToHTML(sig) {
 	    return false;
 	});
     
-    sl.append(sigentry);
+    
     
     var removeLink = $("<small><a href='#'>Ta bort</a></small>");
     removeLink.find("a").click(function () {
@@ -606,6 +606,11 @@ function signatoryToHTML(sig) {
     sigentry.append(d);
     sigentry.append(newFieldLink);
     sigentry.append(removeLink);
+
+    sl.append(sigentry);
+
+    sigentry.hide();
+    sigentry.slideDown("slow");
     
     placePlacements(sig.nameplacements, "Namn på motpart", sig.name, sigid, "name");
     placePlacements(sig.companyplacements, "Titel, företag", sig.company, sigid, "company");
