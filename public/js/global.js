@@ -208,10 +208,22 @@ $(document).ready( function () {
          var form = $(this.form);
          var mrxs = $("form input[name='signatoryname']");
          var tot = "";
+
+	 var remainingAuthFields = false;
+	 
+	 $(".dragfield").each(function(){
+		 var field = $(this);
+		 var s = getIcon(field);
+		 if(s == 'athr') {
+		     remainingAuthFields = true;
+		 }
+	     });
+
          if(!emailFieldsValidation($("input[type='email']"))){
              return false;
-         }
-         else{
+         } else if(remainingAuthFields){
+	     return false;
+         } else{
              var allparties = new Array();
              mrxs.each(function(index) { 
                      allparties.push($(this).val());
