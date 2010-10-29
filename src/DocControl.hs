@@ -642,6 +642,29 @@ personsFromDocument document =
         x link = trace (show link) $ error "SignatoryLink does not have all the necessary data"
     in map x links
 
+fieldsFromPlacement value placement =
+    Seal.Field { Seal.value = value
+               , Seal.x = placementx placement
+               , Seal.y = placementy placement
+               , Seal.page = placementpage placement
+               , Seal.w = placementpagewidth placement
+               , Seal.h = placementpageheight placement
+               }
+
+fieldsFromDefinition def =
+    map (fieldsFromPlacement (BS.toString (fieldvalue def))) (fieldplacements def)
+
+fieldsFromSignatory sig = 
+    (map (fieldsFromPlacement (BS.toString (signatoryname sig))) (signatorynameplacements sig))
+    ++
+    (map (fieldsFromPlacement (BS.toString (signatoryemail sig))) (signatoryemailplacements sig))
+    ++
+    (map (fieldsFromPlacement (BS.toString (signatorycompany sig))) (signatorycompanyplacements sig))
+    ++
+    (map (fieldsFromPlacement (BS.toString (signatorynumber sig))) (signatorynumberplacements sig))
+    ++
+    (foldl (++) [] (map fieldsFromDefinition (signatoryotherfields sig)))    
+
 sealSpecFromDocument :: String -> Document -> User -> String -> String -> Seal.SealSpec
 sealSpecFromDocument hostpart document author@(User {userfullname,usercompanyname,usercompanynumber,useremail}) inputpath outputpath =
   let docid = unDocumentID (documentid document)
@@ -663,6 +686,7 @@ sealSpecFromDocument hostpart document author@(User {userfullname,usercompanynam
                                   , signatoryemailplacements = []
                                   , signatoryotherfields = []
                                   })
+      signatoriesdetails = map signatorydetails $ documentsignatorylinks document
 
       signatories = personsFromDocument document
 
@@ -715,7 +739,7 @@ sealSpecFromDocument hostpart document author@(User {userfullname,usercompanynam
       
       -- document fields
 
-      fields = []
+      fields = (foldl (++) (fieldsFromSignatory authordetails) (map fieldsFromSignatory signatoriesdetails))
 
       config = Seal.SealSpec 
             { Seal.input = inputpath
