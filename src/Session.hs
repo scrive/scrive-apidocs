@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell, UndecidableInstances, DeriveDataTypeable, FlexibleInstances, FlexibleContexts, MultiParamTypeClasses, TypeSynonymInstances, GeneralizedNewtypeDeriving #-}
+{-# OPTIONS_GHC -Wall #-}
 -- |Simple session support
 module Session 
     ( Sessions
@@ -223,4 +224,6 @@ handleSession = do
                    
 
 updateSessionWithContextData::Session -> (Maybe UserID)->[FlashMessage]->ServerPartT IO ()                                     
-updateSessionWithContextData (Session i sd) u fm = update $ UpdateSession (Session i $ sd {userID = u, flashMessages = fm})
+updateSessionWithContextData (Session i sd) u fm = do
+                                                    now <- liftIO getMinutesTime  
+                                                    update $ UpdateSession (Session i $ sd {userID = u, flashMessages = fm,  expires = 60 `minutesAfter` now})
