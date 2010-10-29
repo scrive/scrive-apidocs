@@ -24,6 +24,16 @@ data Person =
            }
     deriving (Eq,Ord,Show,Read)
 
+data Field =
+    Field { value :: String
+          , x :: Int
+          , y :: Int
+          , page :: Int
+          , w :: Int
+          , h :: Int 
+          }
+    deriving (Eq, Ord, Show, Read)
+
 data SealSpec = SealSpec 
     { input :: String
     , output :: String
@@ -32,6 +42,7 @@ data SealSpec = SealSpec
     , history :: [HistEntry]
     , initials :: String
     , hostpart :: String
+    , fields :: [Field]
     }
     deriving (Eq,Ord,Show,Read)
 

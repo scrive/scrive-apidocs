@@ -713,6 +713,10 @@ sealSpecFromDocument hostpart document author@(User {userfullname,usercompanynam
 
       history = firstHistEntries ++ sort (concatMap makeHistoryEntry signatories) ++ [lastHistEntry]
       
+      -- document fields
+
+      fields = []
+
       config = Seal.SealSpec 
             { Seal.input = inputpath
             , Seal.output = outputpath
@@ -721,6 +725,7 @@ sealSpecFromDocument hostpart document author@(User {userfullname,usercompanynam
             , Seal.history = history
             , Seal.initials = initials
             , Seal.hostpart = hostpart
+            , Seal.fields = fields
             }
       in config
 
