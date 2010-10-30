@@ -457,16 +457,20 @@ function prepareToSendReminderMail(form)
     var clone = form.clone();
     $("body").append(clone);
     var buttons = {};
-    buttons[form.attr("title")]= function() {
+    buttons[$(".submiter",clone).attr("name")]= function() {
                               clone.submit();
                          }
+    buttons[$(".editer",clone).attr("name")]= function() {
+                              prepareForEdit(clone);
+                         }
+    
     buttons['Avbryt']= function() {
                               clone.dialog('close');
                          }
     clone.dialog({
                      resizable: false,
-                     height: 300,
-                     width: 300,
+                     height: parseInt(clone.attr("height")),
+                     width: parseInt(clone.attr("width")),
                      modal: true,
                      buttons:  buttons
                      
@@ -480,3 +484,8 @@ function startDialogHere(form)
      $(".showOnDialog",form).show()
          
 }   
+function prepareForEdit(form){
+    $(".editable",form).each( function(){
+        $(this).replaceWith($("<textarea style='width:95%;height:90px'  name='"+$(this).attr('name')+"'> "+ $(this).text()+ "</textarea>"));
+    })    
+}

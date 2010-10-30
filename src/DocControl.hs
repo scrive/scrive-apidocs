@@ -325,7 +325,7 @@ handleSignShow documentid
       invitedname = signatoryname $ signatorydetails $ invitedlink 
   renderFromBody ctx TopNone kontrakcja 
                      (showDocumentForSign (LinkSignDoc document invitedlink) 
-                      document  ctxmaybeuser invitedlink wassigned)
+                      document ctx invitedlink wassigned)
 
 handleIssue :: Kontra Response
 handleIssue = 
@@ -354,7 +354,7 @@ handleIssueShow document@Document{ documentauthor
                         then TopDocument
                         else TopNew
            renderFromBody ctx toptab kontrakcja 
-                                    (showDocument user document False freeleft)
+                                    (showDocument ctx document False freeleft)
        , do
            methodM POST
            when (userid/=unAuthor documentauthor) mzero
@@ -849,8 +849,8 @@ handleResend docid signlinkid  = do
                                case (signlinkFromDocById doc (read signlinkid)) of
                                  Just signlink -> 
                                   do 
-                                   customMessageInput <- getDataFnM (lookInput "customtext") 
-                                   mail <- liftIO $ remindMail (BS.fromString $ BSL.toString $ inputValue customMessageInput) ctx doc signlink
+                                   customMessageInput <- fmap (maybe BS.empty concatChunks) $ getDataFn (lookBS "customtext")  
+                                   mail <- liftIO $ remindMail customMessageInput ctx doc signlink
                                    liftIO $ sendMail (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )]})
                                    addFlashMsgText ( remindMailFlashMessage doc signlink)
                                    return (LinkIssueDoc doc)
