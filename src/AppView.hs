@@ -443,7 +443,7 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
           })();
 
       </script>
-		
+      <script type="text/javascript" src="https://eu1.snoobi.com/snoop.php?tili=skrivapa_se"/> 
      </body>
     </html>
 
