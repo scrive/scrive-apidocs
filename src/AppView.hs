@@ -34,8 +34,7 @@ import "mtl" Control.Monad.Trans
 poweredBySkrivaPaPara :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 poweredBySkrivaPaPara hostpart = 
     <p>
-     <small>Med vänliga hälsningar<br/>
-     <a href=hostpart>SkrivaPå</a></small>
+     <small>Med vänliga hälsningar<%"\n"%><br/><a href=hostpart>SkrivaPå</a></small>
     </p>
 
 htmlHeadBodyWrap :: (XMLGenerator m,EmbedAsChild m a {- ,EmbedAsChild m b -})
