@@ -553,7 +553,8 @@ convertPdfToJpgPages fileid content = do
                         , "-dBATCH"
                         , "-dNOPAUSE"
                         , "-dTextAlphaBits=4"
-                        , "-r144"
+                        , "-dGraphicsAlphaBits=4"
+                        , "-r91.361344537815126050420168067227"
                         , sourcepath
                         ]) { std_out = CreatePipe
                            , std_err = CreatePipe
