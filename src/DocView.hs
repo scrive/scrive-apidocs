@@ -3,7 +3,8 @@
 
 module DocView(emptyDetails,showFilesImages2,showDocument,listDocuments,invitationMail,closedMail,closedMailAuthor,
 landpageSignInviteView,landpageSignedView,landpageLoginForSaveView,landpageDocumentSavedView,
-showDocumentForSign,documentSavedForLaterFlashMessage,remindMail,remindMailFlashMessage, rejectedMailAuthor, landpageRejectedView
+showDocumentForSign,documentSavedForLaterFlashMessage,remindMail,remindMailFlashMessage, rejectedMailAuthor, landpageRejectedView,
+rejectedDocumentHtml
 ) where
 import AppView
 import Data.List
@@ -137,10 +138,8 @@ landpageRejectedView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink),E
                       XMLGenT m (HSX.XML m)
 landpageRejectedView ctx document@Document{documenttitle,documentstatus} signatorylink hasaccount =
     <div class="centerdivnarrow">
-      <p class="headline">Dokumentet har avvisat</p>
-      <p>Du har avvisat dokumentet <strong><% documenttitle %></strong>.</p>
-      <p>Please stay in touch with the author of the document.</p>
-      <p>Meanwhile you can explore SkrivaPa service.</p>
+      <p class="headline">Du har nekat att underteckna dokumentet <strong><% documenttitle %></strong>.</p>
+      <p>Ett meddelande har skickats till <% partyListString document %>.</p>
       <p><a href="/">Go to home page</a></p>
     </div>
 
@@ -494,10 +493,7 @@ showDocument user
                <script type="text/javascript">
                  <% "var docstate = " ++ (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks) ++ ";" %>
                </script>
-
-               
               <form method="post" name="form" action=(LinkIssueDoc document) > 
-
               Avsändare<br/>
               <div style="margin-bottom: 10px;" id="authordetails">
               <strong><% signatoryname documentauthordetails %></strong><br/>
@@ -642,7 +638,10 @@ showDocumentForSign action document muser invitedlink wassigned =
                       det färdigställda avtalet skickas till din e-post.</p>
                   </div>
                 , <div id="dialog-confirm-cancel" title="Avvisa">
-                    <p>Är du säker att du vill avvisa dokumentet <strong><% documenttitle document %></strong>?</p>
+                    <p>Är du säker på att du vill neka att underteckna dokumentet <strong><% documenttitle document %></strong>?</p>
+                    <p>När du nekat kommer vi att meddela via e-post till <strong><% authorname %></strong>.</p>
+
+                    {- Not yet: Om du vill kan du lägga till ett eget meddelande nedan om varför du valt att neka. -}
                   </div>
                 ]
        magichash = signatorymagichash invitedlink
@@ -803,21 +802,31 @@ closedMailAuthor (Context {ctxhostpart})
         </span> 
      return $ emptyMail {title = title, content = content}
 
+rejectedDocumentHtml :: Document -> HSP.HSP HSP.XML
+rejectedDocumentHtml document@Document{ documenttitle } = 
+    <div>
+     Du har nekat att underteckna dokumentet <strong><% documenttitle %></strong>.
+     Ett meddelande har skickats till <% partyListString document %>.
+    </div>
+
 rejectedMailAuthor :: Context
                    -> BS.ByteString
                    -> BS.ByteString
                    -> Document
+                   -> BS.ByteString
                    -> IO Mail
 rejectedMailAuthor (Context {ctxhostpart}) 
                    emailaddress personname 
-                   document@Document{documenttitle,documentid} = 
+                   document@Document{documenttitle,documentid} 
+                           rejectorName = 
     do
      let title = BS.append (BS.fromString "Avvisat: ")  documenttitle
      let link = ctxhostpart ++ show (LinkIssueDoc document)
      content <- htmlHeadBodyWrapIO documenttitle
         <span>
-          <p>Hej <strong><% personname %></strong>,</p>
-             <p>Dokumentet <strong><% documenttitle %></strong> har avvisat.</p> 
+           <p>Hej <% personname %>,</p>
+           <p><% rejectorName %> har nekat att underteckna dokumentet <strong><% documenttitle %></strong>. 
+              Avtalsprocessen är därmed avbruten.</p>
 
              <% poweredBySkrivaPaPara ctxhostpart %>
         </span> 

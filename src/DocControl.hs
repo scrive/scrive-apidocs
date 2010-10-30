@@ -78,8 +78,10 @@ doctransPending2Closed ctx@Context{ctxtime,ctxipnumber,ctxhostpart,ctxnormalized
                    return  clearDoc
 -}
 
-postDocumentChangeAction :: Document -> DocumentStatus -> Kontra ()
-postDocumentChangeAction document@Document{documentstatus} oldstatus 
+signlinkFromDocById doc sid = find (((==) sid) . signatorylinkid) (documentsignatorylinks  doc)
+
+postDocumentChangeAction :: Document -> DocumentStatus -> Maybe SignatoryLinkID -> Kontra ()
+postDocumentChangeAction document@Document{documentstatus, documentsignatorylinks} oldstatus msignalinkid
     | documentstatus == oldstatus = return ()
     | oldstatus == Preparation && documentstatus == Pending = do
         ctx <- get
@@ -101,10 +103,11 @@ postDocumentChangeAction document@Document{documentstatus} oldstatus
         ctx@Context{ctxnormalizeddocuments,ctxhostpart,ctxtime} <- get
         liftIO $ forkIO $ do
           threadDelay 5000 
-          sendRejectAuthorEmail ctx document
+          sendRejectAuthorEmail ctx document (fromJust msignalink)
         return ()
     | otherwise = -- do nothing. FIXME: log status change
          return ()
+    where msignalink = maybe Nothing (signlinkFromDocById document) msignalinkid
           
 
 sendInvitationEmails :: Context -> Document -> IO ()
@@ -162,12 +165,13 @@ sendClosedAuthorEmail ctx document = do
       name2 = signatoryname $ documentauthordetails document
   sendMail $ mail { fullnameemails = ([(name1,email1)] ++ em), attachments = [(documenttitle,attachmentcontent)]}
 
-sendRejectAuthorEmail :: Context -> Document -> IO ()
-sendRejectAuthorEmail ctx document = do
+sendRejectAuthorEmail :: Context -> Document -> SignatoryLink -> IO ()
+sendRejectAuthorEmail ctx document signalink = do
   let authorid = unAuthor $ documentauthor document
   Just authoruser <- query $ GetUserByUserID authorid
-  mail<- rejectedMailAuthor ctx (unEmail $ useremail authoruser) (userfullname authoruser)
-             document
+  let rejectorName = signatoryname (signatorydetails signalink)
+  mail <- rejectedMailAuthor ctx (unEmail $ useremail authoruser) (userfullname authoruser)
+             document rejectorName
   let email2 = signatoryemail $ documentauthordetails document
       email1 = unEmail $ useremail authoruser
       em = if email2/=BS.empty && email2/=email1
@@ -206,7 +210,7 @@ signDocument documentid
              return $ LinkMain
        Right document -> 
            do 
-             postDocumentChangeAction document olddocumentstatus
+             postDocumentChangeAction document olddocumentstatus (Just signatorylinkid1)
              return $ LinkSigned documentid signatorylinkid1
 
 cancelDocument :: DocumentID 
@@ -225,8 +229,7 @@ cancelDocument documentid
             return $ LinkMain
       Right document -> 
           do  
-            postDocumentChangeAction document Pending
-            addFlashMsgText $ BS.fromString "You have cancelled this document"
+            postDocumentChangeAction document Pending (Just signatorylinkid1)
             return $ LinkRejected documentid signatorylinkid1
   
 signatoryLinkFromDocumentByID document@Document{documentsignatorylinks} linkid = do
@@ -517,7 +520,7 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid, do
           case mdocument of
             Left msg -> return doc2
             Right newdocument -> do
-                postDocumentChangeAction newdocument (documentstatus doc2)
+                postDocumentChangeAction newdocument (documentstatus doc2) Nothing
                 return newdocument
      , return doc2
      ]
@@ -851,6 +854,4 @@ handleResend docid signlinkid  = do
                                    return (LinkIssueDoc doc)
                                  Nothing -> mzero           
                        Nothing -> mzero               
-
-   where signlinkFromDocById doc sid = find (((==) sid) . signatorylinkid) (documentsignatorylinks  doc)
 
