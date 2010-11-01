@@ -518,7 +518,7 @@ function signatoryToHTML(sig) {
 
     var d = $("<div class='fields'></div>");
     
-    var aname = buildDraggableField("Namn på motpart", sig.name, "sig");
+    var aname = buildDraggableField("Namn på motpart", sig.name, "author");
     var acomp = buildDraggableField("Titel, företag", sig.company, "sig");
     var anumb = buildDraggableField("Orgnr/Persnr", sig.number, "sig");
     var aemai = buildDraggableField("Personens e-mail", sig.email, "author", true);
