@@ -634,7 +634,7 @@ showDocumentForSign action document muser invitedlink wassigned =
                 , <script type="text/javascript">
                    <% "var docstate = " ++ (buildJS (documentauthordetails document) $ map signatorydetails (documentsignatorylinks document)) ++ "; docstate['useremail'] = '" ++ (BS.toString $ signatoryemail $ signatorydetails invitedlink) ++ "';" %>
                   </script>
-                , <script src="/js/showfields.js" />
+                , <script src="/js/signatory.js" />
                 , <div id="dialog-confirm-sign" title="Underteckna">  
                    
                    <p>Är du säker att du vill underteckna dokumentet <strong><% documenttitle document %></strong>?</p>
