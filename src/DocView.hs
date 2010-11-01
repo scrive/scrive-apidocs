@@ -614,6 +614,7 @@ showSignatoryLinkForSign muser document siglnk@(SignatoryLink{  signatorylinkid
                 (if BS.null signatorycompany then [] else [ asChild signatorycompany, asChild <br/> ]) ++
                 (if BS.null signatorynumber then [] else [ asChild signatorynumber, asChild <br/> ]) ++
                 (if BS.null signatoryemail then [] else [ asChild signatoryemail, asChild <br/> ]) ++
+                [asChild <span class="signatoryfields" />] ++
                 ([asChild message]) ++
                 (if (isCurrentUserAuthor && (not isCurrentSignatorAuthor) && (not isTimedout)) then [asChild <br/> ,asChild reminderForm] else [])
                 %></div>
