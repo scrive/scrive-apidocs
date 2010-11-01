@@ -632,7 +632,7 @@ showDocumentForSign action document muser invitedlink wassigned =
    let helper = [ <script> var documentid = "<% show $ documentid document %>"; 
                   </script>
                 , <script type="text/javascript">
-                   <% "var docstate = " ++ (buildJS (documentauthordetails document) $ map signatorydetails (documentsignatorylinks document)) ++ ";" %>
+                   <% "var docstate = " ++ (buildJS (documentauthordetails document) $ map signatorydetails (documentsignatorylinks document)) ++ "; docstate['useremail'] = '" ++ (BS.toString $ signatoryemail $ signatorydetails invitedlink) ++ "';" %>
                   </script>
                 , <script src="/js/showfields.js" />
                 , <div id="dialog-confirm-sign" title="Underteckna">  
