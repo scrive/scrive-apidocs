@@ -608,7 +608,7 @@ showSignatoryLinkForSign muser document siglnk@(SignatoryLink{  signatorylinkid
                        </textarea>
                        <a onclick="prepareToSendReminderMail($(this).parent())" style="cursor:pointer" class="hideOnDialog">  <% reminderText %>  </a>
                      </form>     
-   in asChild <p><% 
+   in asChild <div class=(if isCurrentUserAuthor then "author" else "signatory")><% 
                 [asChild status,asChild " "] ++
                 (if BS.null signatoryname then [] else [ asChild <strong><% signatoryname %></strong>, asChild <br/> ]) ++
                 (if BS.null signatorycompany then [] else [ asChild signatorycompany, asChild <br/> ]) ++
@@ -616,7 +616,7 @@ showSignatoryLinkForSign muser document siglnk@(SignatoryLink{  signatorylinkid
                 (if BS.null signatoryemail then [] else [ asChild signatoryemail, asChild <br/> ]) ++
                 ([asChild message]) ++
                 (if (isCurrentUserAuthor && (not isCurrentSignatorAuthor) && (not isTimedout)) then [asChild <br/> ,asChild reminderForm] else [])
-                %></p>
+                %></div>
 
 showDocumentForSign :: ( XMLGenerator m
       , EmbedAsAttr m (Attr [Char] KontraLink)
