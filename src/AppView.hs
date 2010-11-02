@@ -4,7 +4,7 @@
 module AppView( TopMenu(..),kontrakcja,htmlHeadBodyWrapIO,poweredBySkrivaPaPara,loginBox,
 pageWelcome,pageErrorReport,renderFromBody,forgotPasswordPageView,forgotPasswordConfirmPageView,signupPageView,
 SignupForm,signupEmail,signupPassword,signupPassword2,databaseContents,showAdminOnly,pageAllUsersTable,
-signupFirstname, signupLastname, signupConfirmPageView, loginPageView,statsPageView) where
+signupFirstname, signupLastname, signupConfirmPageView, pageLogin,statsPageView) where
 
 import HSP hiding (Request)
 import System.Locale (defaultTimeLocale)
@@ -575,9 +575,9 @@ forgotPasswordConfirmPageView ctx =
     <% loginBox ctx %>
   </div>
 
-loginPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
+pageLogin :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
                => Context -> XMLGenT m (HSX.XML m)
-loginPageView ctx = 
+pageLogin ctx = 
   <div class="centerdivnarrow">
 
    <p class="headline">Logga in SkrivaPå!</p>
