@@ -248,6 +248,9 @@ $(document).ready( function () {
     $("#sign").click(function() {
          var button = $(this);
          var form = $(this.form);
+	 if(!sigFieldsValidation()){
+	     return false;
+	 }
          $("#dialog-confirm-sign").dialog({
                  resizable: false,
                      height: 280,
@@ -417,6 +420,31 @@ function authorFieldsValidation(){
 	return false;
     }	
     return !remainingAuthFields;
+}
+
+function sigFieldsValidation(){
+
+    var remainingSigFields = false;
+	 
+    $(".dragfield").each(function(){
+	    var field = $(this);
+	    if(getValue(field).length === 0) {
+		remainingSigFields = true;
+	    }
+	});
+    var emptyMsg = "Please fill out all of the fields.";
+    if(remainingSigFields){
+	var $dialog = $('<div></div>')
+	    .html(emptyMsg)
+	    .dialog({
+		    autoOpen: false,
+		    title: 'Required fields',
+		    modal: true
+		});
+	$dialog.dialog('open');
+	return false;
+    }	
+    return !remainingSigFields;
 }
 
 function isExceptionalField(field){
