@@ -560,11 +560,11 @@ function isPlacedField(field) {
     return $(field).hasClass("placedfield");
 }
 
-function initializeTemplates () {
-
+function initializeTemplates () 
+{
     if($(".pagediv").size() == 0){
-	setTimeout("initializeTemplates();", 100);
-	return;
+        setTimeout(function() { initializeTemplates();}, 100);
+        return;
     }
 
     $("#loading-message").css({ display: "none" });
