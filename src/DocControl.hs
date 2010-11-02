@@ -41,6 +41,7 @@ import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Seal as Seal
 
+
 {-
   Document state transitions are described in DocState.
 
