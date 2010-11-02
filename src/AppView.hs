@@ -4,7 +4,7 @@
 module AppView( TopMenu(..),kontrakcja,htmlHeadBodyWrapIO,poweredBySkrivaPaPara,loginBox,
 pageWelcome,pageErrorReport,renderFromBody,forgotPasswordPageView,forgotPasswordConfirmPageView,signupPageView,
 SignupForm,signupEmail,signupPassword,signupPassword2,databaseContents,showAdminOnly,pageAllUsersTable,
-signupFirstname, signupLastname, signupConfirmPageView, pageLogin,statsPageView) where
+signupFirstname, signupLastname, signupConfirmPageView, pageLogin, pageStats) where
 
 import HSP hiding (Request)
 import System.Locale (defaultTimeLocale)
@@ -290,27 +290,27 @@ topnavi :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink))
 topnavi active ctx title link = 
     <a href=link class=(if active then "active" else "")><% title %></a>
 
-#define _DATESTR(x) #x
-#define DATESTR _DATESTR(__DATE__)
+partialScripts =
+      [ <script src="//ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js"/>
+      -- we loaded the min version but at some point google stopped serving this one
+      -- , <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"/>
+      , <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js"/>
+      {- Local versions of the same
+      , <script src="/js/jquery-1.4.2.min.js"/>
+      , <script src="/js/jquery-ui-1.8.custom.min.js"/>
+      -}
+      , <script src="/js/jquery.MultiFile.js"/>
+      , <script src="/js/global.js?"/>
+      ]
 
-globalScriptsAndStyles = 
-      [ <link rel="stylesheet" type="text/css" href=("/theme/style.css?"  ++ __DATE__) media="screen" />
+partialStyles = 
+      [ <link rel="stylesheet" type="text/css" href="/theme/style.css?" media="screen" />
       , <link rel="stylesheet" type="text/css" 
             href="//ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/ui-lightness/jquery-ui.css" 
             -- href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/flick/jquery-ui.css"
             -- href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/redmond/jquery-ui.css"
             -- href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/start/jquery-ui.css"
             media="screen" />
-      , <script src="//ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js"/>
-      -- we loaded the min version but at some point google stopped serving this one
-      -- , <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"/>
-      , <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js"/>
-      {- Local versions of the same, but locally
-      , <script src="/js/jquery-1.4.2.min.js"/>
-      , <script src="/js/jquery-ui-1.8.custom.min.js"/>
-      -}
-      , <script src="/js/jquery.MultiFile.js"/>
-      , <script src=("/js/global.js?" ++ __DATE__)/>
       ]
 
 pageFromBody :: (EmbedAsChild (HSPT' IO) xml) 
@@ -326,7 +326,8 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
      <head>
       <title><% title %></title>
       <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-      <% globalScriptsAndStyles %>
+      <% partialStyles %>
+      <% partialScripts {- we would like to move this to the end of html, to load faster -} %>
      </head>
      <body>
      <div id="headerWide"/>
@@ -454,8 +455,8 @@ showUserOption user =
           <% userfullname user %> <% unEmail $ useremail user %>
     </option>
  
-statsPageView :: Int -> Int -> [User] -> BS.ByteString -> HSP XML
-statsPageView nusers ndocuments users df =
+pageStats :: Int -> Int -> [User] -> BS.ByteString -> HSP XML
+pageStats nusers ndocuments users df =
     developmentWrapper "Stats page" []
      <div>
       <h1>Stats page</h1>
@@ -598,7 +599,8 @@ developmentWrapper title ctxflashmessages body =
      <head>
       <title><% title %></title>
       <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-      <% globalScriptsAndStyles %>
+      <% partialStyles %>
+      <% partialScripts %>
      </head>
      <body>
        <%

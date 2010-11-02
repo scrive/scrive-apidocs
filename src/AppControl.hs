@@ -89,7 +89,7 @@ handleRoutes =
      ]
      
      ++ (if isSuperUser ctxmaybeuser then 
-             [ dir "stats" $ statsPage
+             [ dir "stats" $ handleStats
              , dir "createuser" $ handleCreateUser
              , dir "adminonly" $ msum 
                        [ methodM GET >> AppControl.showAdminOnly
@@ -307,8 +307,8 @@ read_df = do
 #endif
 
 
-statsPage :: Kontra Response
-statsPage = do
+handleStats :: Kontra Response
+handleStats = do
   ndocuments <- query $ GetDocumentStats
   allusers <- query $ GetAllUsers
 #ifndef WINDOWS
@@ -316,7 +316,7 @@ statsPage = do
 #else
   let df = BS.empty
 #endif
-  webHSP (statsPageView (length allusers) ndocuments allusers df)
+  webHSP (V.pageStats (length allusers) ndocuments allusers df)
     
 
 handleBecome :: Kontra Response
