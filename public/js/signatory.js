@@ -243,7 +243,7 @@ function setInfotext(field, infotext) {
 }
 
 function buildField(info, val, type) {
-    var x = $("<div class='dragfield'><input type='text' autocomplete='off' /><span class='status'></span></div>");
+    var x = $("<div class='dragfield'><input type='text' name='fieldvalue' autocomplete='off' /><span class='status'></span></div>");
 
     setInfotext(x, info);
     setValue(x, val);
@@ -264,8 +264,8 @@ function docstateToHTML(){
 
     placePlacements(author.nameplacements, "Namn", author.name, "author", "name");
     placePlacements(author.emailplacements, "email", author.email, "author", "email");
-    placePlacements(author.companyplacements, "company", author.company, "author", "company");
-    placePlacements(author.numberplacements, "number", author.number, "author", "number");
+    placePlacements(author.companyplacements, "company", author.company, "author", "sigco");
+    placePlacements(author.numberplacements, "number", author.number, "author", "signr");
 
 
     var currentsig;
@@ -283,35 +283,38 @@ function docstateToHTML(){
 
     $(docstate.signatories).each(function() {
 	    var s = this;
+	    s.id = newUUID();
 	    if(s.email === useremail) {
 		currentsig = s;
-		currentsig.sid = newUUID();
+		console.log("current user is: " + useremail);
 	    }
 
-	    placePlacements(this.nameplacements, "Namn", this.name, this.id, "name");
-	    placePlacements(this.emailplacements, "email", this.email, this.id, "email");
-	    placePlacements(this.companyplacements, "company", this.company, this.id, "company");
-	    placePlacements(this.numberplacements, "number", this.number, this.id, "number");
+	    placePlacements(this.nameplacements, "Namn", this.name, s.id, "name");
+	    placePlacements(this.emailplacements, "email", this.email, s.id, "email");
+	    placePlacements(this.companyplacements, "company", this.company, s.id, "sigco");
+	    placePlacements(this.numberplacements, "number", this.number, s.id, "signr");
 
 
 	    $(s.otherfields).each(function () {
 		    var f = this;
 		    f.id = newUUID();
-		    placePlacements([f.placements, f.label, f.value, s.id, f.id]);
+		    placePlacements(f.placements, f.label, f.value, s.id, f.id);
 		});
 	});
 
     if(currentsig.company.length === 0 && currentsig.companyplacements.length > 0) {
 	var cfield = buildField("Company", currentsig.company, "sig");
-	setFieldID(cfield, "company");
+	setFieldID(cfield, "sigco");
 	setSigID(cfield, currentsig.id);
+	setHiddenField(cfield, "fieldname", "sigco");
 	fields.append(cfield);
     }
 
     if(currentsig.number.length === 0 && currentsig.numberplacements.length > 0) {
 	var nfield = buildField("Number", currentsig.number, "sig");
-	setFieldID(nfield, "number");
+	setFieldID(nfield, "signr");
 	setSigID(nfield, currentsig.id);
+	setHiddenField(nfield, "fieldname", "signr");
 	fields.append(nfield);
     }
 
@@ -320,6 +323,7 @@ function docstateToHTML(){
 	    ofield = buildField(f.label, f.value, "sig");
 	    setFieldID(ofield, f.id);
 	    setSigID(ofield, currentsig.id);
+	    setHiddenField(ofield, "fieldname", f.label);
 	    fields.append(ofield);
 	});
 }
