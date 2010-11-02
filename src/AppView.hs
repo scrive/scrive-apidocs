@@ -2,7 +2,7 @@
              MultiParamTypeClasses, NamedFieldPuns, CPP #-}
 {-# OPTIONS_GHC -F -pgmFtrhsx #-}
 module AppView( TopMenu(..),kontrakcja,htmlHeadBodyWrapIO,poweredBySkrivaPaPara,loginBox,
-welcomeBody,errorReport,renderFromBody,forgotPasswordPageView,forgotPasswordConfirmPageView,signupPageView,
+pageWelcome,pageErrorReport,renderFromBody,forgotPasswordPageView,forgotPasswordConfirmPageView,signupPageView,
 SignupForm,signupEmail,signupPassword,signupPassword2,databaseContents,showAdminOnly,pageAllUsersTable,
 signupFirstname, signupLastname, signupConfirmPageView, loginPageView,statsPageView) where
 
@@ -204,9 +204,9 @@ loginBox ctx =
     -}
    </div>
 
-welcomeBody :: Context 
+pageWelcome :: Context 
             -> XMLGenT (HSPT' IO)  (HSX.XML (HSPT' IO) )
-welcomeBody (Context {ctxmaybeuser = Just _, ctxhostpart}) = 
+pageWelcome (Context {ctxmaybeuser = Just _, ctxhostpart}) = 
   <div class="centerdivnarrow" style="margin-top: 100px;">
    
    <form action=LinkIssue method="post" enctype="multipart/form-data">
@@ -217,7 +217,7 @@ welcomeBody (Context {ctxmaybeuser = Just _, ctxhostpart}) =
   </div>
 
 
-welcomeBody ctx@(Context {ctxmaybeuser = Nothing}) = 
+pageWelcome ctx@(Context {ctxmaybeuser = Nothing}) = 
  <div>
     <div id="firstPageLeft">
          <h1>Snabbt, smidigt och säkert</h1>
@@ -238,11 +238,11 @@ welcomeBody ctx@(Context {ctxmaybeuser = Nothing}) =
  </div>
 
 
-errorReport :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
+pageErrorReport :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
             => Context 
             -> Request 
             -> XMLGenT m (HSX.XML m)
-errorReport (Context {ctxmaybeuser}) request = 
+pageErrorReport (Context {ctxmaybeuser}) request = 
   <div>
    <p>Ett fel har uppstått. Det beror inte på dig. Det beror på oss. Vi tar 
       hand om problemet så snart vi kan. Tills vi fixat problemet, vänligen 

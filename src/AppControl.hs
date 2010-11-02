@@ -9,7 +9,7 @@ import "mtl" Control.Monad.Reader (ask)
 import "mtl" Control.Monad.State
 import "mtl" Control.Monad.Trans(liftIO, MonadIO,lift)
 import AppState
-import AppView
+import AppView as V
 import Control.Concurrent
 import Data.ByteString.Char8 (ByteString)
 import Data.List
@@ -17,7 +17,7 @@ import Data.Maybe
 import Data.Object
 import Debug.Trace
 import DocState
-import DocView
+import qualified DocView as V
 import HSP.XML
 import Happstack.Data.IxSet ((@=),getOne,size)
 import Happstack.Server hiding (simpleHTTP)
@@ -40,7 +40,7 @@ import System.Random
 import User
 import UserControl
 import UserState
-import UserView
+import qualified UserView as V
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as B
 import qualified Data.ByteString.Lazy  as L
@@ -48,7 +48,6 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Set as Set
 import qualified DocControl as DocControl
-import qualified DocView as DocView
 import qualified HSP as HSP
 import qualified Data.Map as Map
 
@@ -57,8 +56,8 @@ handleRoutes =
    ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} <- get 
    msum $
     ([nullDir >> if isJust ctxmaybeuser
-              then withUserTOS (renderFromBody ctx TopNew kontrakcja (welcomeBody ctx))
-              else renderFromBody ctx TopNew kontrakcja (welcomeBody ctx)
+              then withUserTOS (V.renderFromBody ctx V.TopNew V.kontrakcja (V.pageWelcome ctx))
+              else V.renderFromBody ctx V.TopNew V.kontrakcja (V.pageWelcome ctx)
      , dir "s" $ DocControl.handleSign
      , {- old -} dir "sign" $ withUserTOS $ DocControl.handleSign
      , dir "d" $ withUserTOS $ DocControl.handleIssue
@@ -105,9 +104,9 @@ handleRoutes =
                        ]
              , dir "dave" $ msum
                    [ dir "document" $ pathdb GetDocumentByDocumentID $ \document ->
-                        renderFromBody ctx TopNew kontrakcja $ inspectXML document
+                        V.renderFromBody ctx V.TopNew V.kontrakcja $ inspectXML document
                    , dir "user" $ pathdb GetUserByUserID $ \user ->
-                       renderFromBody ctx TopNew kontrakcja $ inspectXML user
+                       V.renderFromBody ctx V.TopNew V.kontrakcja $ inspectXML user
                    ]
              ]
          else []))
@@ -191,7 +190,7 @@ appHandler = do
      do
       userLogin
       res <- (handleRoutes) `mplus` do
-         response <- renderFromBody ctx TopNone kontrakcja (errorReport ctx rq)
+         response <- V.renderFromBody ctx V.TopNone V.kontrakcja (V.pageErrorReport ctx rq)
          setRsCode 404 response     
       ctx <- get 
       return (res,ctx)   
@@ -209,7 +208,7 @@ forgotPasswordPage = hget0 forgotPasswordPageGet `mplus`
 forgotPasswordPageGet :: Kontra Response
 forgotPasswordPageGet = do
     ctx <- lift get
-    renderFromBody ctx TopNone kontrakcja forgotPasswordPageView
+    V.renderFromBody ctx V.TopNone V.kontrakcja forgotPasswordPageView
     
 forgotPasswordPagePost :: Kontra KontraLink
 forgotPasswordPagePost = do
@@ -217,12 +216,11 @@ forgotPasswordPagePost = do
     email <- getDataFnM $ look "email"
     liftIO $ resetUserPassword ctxhostpart (BS.fromString email)
     return LinkForgotPasswordDone
-    --renderFromBody ctx TopNone kontrakcja (forgotPasswordConfirmPageView ctx)
 
 forgotPasswordDonePage :: Kontra Response
 forgotPasswordDonePage = do
     ctx <- lift get
-    renderFromBody ctx TopNone kontrakcja (forgotPasswordConfirmPageView ctx)
+    V.renderFromBody ctx V.TopNone V.kontrakcja (forgotPasswordConfirmPageView ctx)
 
 signupPage :: Kontra Response
 signupPage = (methodM GET >> signupPageGet) `mplus`
@@ -231,7 +229,7 @@ signupPage = (methodM GET >> signupPageGet) `mplus`
 signupPageGet :: Kontra Response
 signupPageGet = do
     ctx <- lift get
-    renderFromBody ctx TopNone kontrakcja (signupPageView [] Nothing)
+    V.renderFromBody ctx V.TopNone V.kontrakcja (signupPageView [] Nothing)
 
 signupPageError :: SignupForm -> Maybe String
 signupPageError form
@@ -247,14 +245,14 @@ signupPagePost = do
     
     case maybeform of
         Nothing ->
-            renderFromBody ctx TopNone kontrakcja (signupPageView [] Nothing)
+            V.renderFromBody ctx V.TopNone V.kontrakcja (signupPageView [] Nothing)
         Just form -> do
             case signupPageError form of
-                Just error -> renderFromBody ctx TopNone kontrakcja (signupPageView [error] maybeform)
+                Just error -> V.renderFromBody ctx V.TopNone V.kontrakcja (signupPageView [error] maybeform)
                 Nothing -> do
                     -- Create the user, which sends them a welcome email.
                     account <- liftIO $ createUser ctxhostpart (BS.fromString ((signupFirstname form) ++ " " ++ (signupLastname form))) (BS.fromString (signupEmail form)) (Just (BS.fromString (signupPassword form))) Nothing
-                    renderFromBody ctx TopNone kontrakcja (signupConfirmPageView ctx)
+                    V.renderFromBody ctx V.TopNone V.kontrakcja (signupConfirmPageView ctx)
 
 loginPage :: Kontra Response
 loginPage = (methodM GET >> loginPageGet) `mplus` 
@@ -263,7 +261,7 @@ loginPage = (methodM GET >> loginPageGet) `mplus`
 loginPageGet :: Kontra Response
 loginPageGet = do
   ctx <- lift get
-  renderFromBody ctx TopNone kontrakcja (loginPageView ctx)
+  V.renderFromBody ctx V.TopNone V.kontrakcja (loginPageView ctx)
 
 loginPagePost :: Kontra Response
 loginPagePost = do
@@ -346,8 +344,8 @@ handleDownloadDatabase = do fail "nothing"
   
 indexDB :: Kontra Response
 indexDB = do
-  contents <- liftIO $ getDirectoryContents "_local/kontrakcja_state"
-  webHSP (AppView.databaseContents (sort contents))
+  contents <- liftIO $ getDirectoryContents "_local/V.kontrakcja_state"
+  webHSP (V.databaseContents (sort contents))
 
 databaseCleanupWorker :: IO [FilePath]
 databaseCleanupWorker = do
@@ -366,14 +364,14 @@ databaseCleanup = do
   -- dangerous, cleanup all old files, where old means chechpoints but the last one
   -- and all events that have numbers less than last checkpoint
   contents <- liftIO databaseCleanupWorker
-  webHSP (AppView.databaseContents (sort contents))
+  webHSP (V.databaseContents (sort contents))
 
 
 showAdminOnly :: Kontra Response
 showAdminOnly = do
   ctx@Context { ctxflashmessages} <- lift get
   users <- query $ GetAllUsers
-  webHSP (AppView.showAdminOnly users ctxflashmessages)
+  webHSP (V.showAdminOnly users ctxflashmessages)
   
 
 handleTakeOverDocuments :: Kontra Response
@@ -415,7 +413,7 @@ handleAllUsersTable = do
                         
   users2 <- mapM queryNumberOfDocuments users
 
-  webHSP $ pageAllUsersTable users2
+  webHSP $ V.pageAllUsersTable users2
 
 serveHTMLFiles:: Kontra Response  
 serveHTMLFiles =  do
@@ -427,7 +425,7 @@ serveHTMLFiles =  do
          
                    ms <- liftIO $ catch (fmap Just ( BS.readFile $ "html/"++fileName)) (const $ return Nothing)
                    case ms of 
-                    Just s -> renderFromBody ctx TopNone kontrakcja (cdata $ BS.toString $ s)
+                    Just s -> V.renderFromBody ctx V.TopNone V.kontrakcja (cdata $ BS.toString $ s)
                     _ -> mzero
                
          else mzero
