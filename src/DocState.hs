@@ -939,18 +939,31 @@ signDocument :: DocumentID
              -> SignatoryLinkID 
              -> MinutesTime 
              -> Word32 
+             -> [(BS.ByteString, BS.ByteString)]
              -> Update Documents (Either String Document)
-signDocument documentid signatorylinkid1 time ipnumber = do
+signDocument documentid signatorylinkid1 time ipnumber fields = do
   modifyDocument documentid $ \document ->
       let
           signeddocument = document { documentsignatorylinks = newsignatorylinks }
           newsignatorylinks = map maybesign (documentsignatorylinks document)
-          maybesign link@(SignatoryLink {signatorylinkid} ) 
+          maybesign link@(SignatoryLink {signatorylinkid, signatorydetails} ) 
               | signatorylinkid == signatorylinkid1 = 
                   link { maybesigninfo = Just (SignInfo time ipnumber)
+                       , signatorydetails = updateWithFields fields signatorydetails
                     }
           maybesign link = link
           isallsigned = all (isJust . maybesigninfo) newsignatorylinks
+
+          updateWithFields [] sd = sd
+          updateWithFields ((name, value):fs) sd 
+              | name == BS.fromString "sigco" = sd { signatorycompany = value }
+              | value == BS.fromString "signr" = sd { signatorynumber = value }
+              | otherwise = updateWithFields fs sd { signatoryotherfields = updateOtherFields name value (signatoryotherfields sd) }
+
+          updateOtherFields _    _     []      = []
+          updateOtherFields name value (f@FieldDefinition { fieldlabel }:fs)  
+              | name == fieldlabel = f { fieldvalue = value} : fs
+              | otherwise          = f : updateOtherFields name value fs
 
           signeddocument2 = 
               if isallsigned

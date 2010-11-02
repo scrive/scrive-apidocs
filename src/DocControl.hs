@@ -200,9 +200,12 @@ signDocument documentid
              signatorylinkid1 = do
   ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber}) <- get
   getDataFnM (look "sign")
+  fieldnames <- getAndConcat "fieldname"
+  fieldvalues <- getAndConcat "fieldvalue"
+  let fields = zipWith (\x y -> (x, y)) fieldnames fieldvalues
   do
      Just olddocument@Document{documentstatus=olddocumentstatus} <- query $ GetDocumentByDocumentID documentid
-     newdocument <- update $ SignDocument documentid signatorylinkid1 ctxtime ctxipnumber
+     newdocument <- update $ SignDocument documentid signatorylinkid1 ctxtime ctxipnumber fields
      case newdocument of
        Left message -> 
            do
@@ -454,8 +457,6 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid, do
                                                    fieldvalue = fv,
                                                    fieldplacements = placementsByID sigid id
                                                  })
-
-  liftIO $ print fielddefs
 
   let defsByID sigid = 
           map snd (filter (sid sigid) fielddefs) where
