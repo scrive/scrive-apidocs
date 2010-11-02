@@ -671,7 +671,7 @@ showDocumentForSign action document muser invitedlink wassigned =
    in showDocumentPageHelper document helper 
               (documenttitle document) $
               <span>
-       
+                 <form method="post" name="form" action=action> 
                  <p>Vänligen var noga med att granska dokumentet och kontrollera 
                     uppgifterna nedan innan du undertecknar.</p>   
 
@@ -686,13 +686,14 @@ showDocumentForSign action document muser invitedlink wassigned =
                               <div>Förfallodatum har passerat!</div>)
                     ]
                               <div>
-                                <form method="post" name="form" action=action> 
+                                
                                  <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign"/>
                                  <input class="bigbutton" type="submit" name="cancel" value="Avvisa" id="cancel"/>
-                                </form> 
+                                
                               </div>
                  %>
                  <small>Jag vill veta mer <a href="/about" target="_blank">om SkrivaPå</a>.</small>
+                 </form> 
               </span>
 
 
