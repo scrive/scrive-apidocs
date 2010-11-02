@@ -208,7 +208,7 @@ forgotPasswordPage = hget0 forgotPasswordPageGet `mplus`
 forgotPasswordPageGet :: Kontra Response
 forgotPasswordPageGet = do
     ctx <- lift get
-    V.renderFromBody ctx V.TopNone V.kontrakcja forgotPasswordPageView
+    V.renderFromBody ctx V.TopNone V.kontrakcja V.pageForgotPassword
     
 forgotPasswordPagePost :: Kontra KontraLink
 forgotPasswordPagePost = do
@@ -220,7 +220,7 @@ forgotPasswordPagePost = do
 forgotPasswordDonePage :: Kontra Response
 forgotPasswordDonePage = do
     ctx <- lift get
-    V.renderFromBody ctx V.TopNone V.kontrakcja (forgotPasswordConfirmPageView ctx)
+    V.renderFromBody ctx V.TopNone V.kontrakcja (V.pageForgotPasswordConfirm ctx)
 
 signupPage :: Kontra Response
 signupPage = (methodM GET >> signupPageGet) `mplus`
@@ -371,7 +371,7 @@ showAdminOnly :: Kontra Response
 showAdminOnly = do
   ctx@Context { ctxflashmessages} <- lift get
   users <- query $ GetAllUsers
-  webHSP (V.showAdminOnly users ctxflashmessages)
+  webHSP (V.pageAdminOnly users ctxflashmessages)
   
 
 handleTakeOverDocuments :: Kontra Response

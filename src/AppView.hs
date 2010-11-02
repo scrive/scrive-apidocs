@@ -1,10 +1,30 @@
 {-# LANGUAGE FlexibleContexts, FlexibleInstances, IncoherentInstances,
              MultiParamTypeClasses, NamedFieldPuns, CPP #-}
 {-# OPTIONS_GHC -F -pgmFtrhsx #-}
-module AppView( TopMenu(..),kontrakcja,htmlHeadBodyWrapIO,poweredBySkrivaPaPara,loginBox,
-pageWelcome,pageErrorReport,renderFromBody,forgotPasswordPageView,forgotPasswordConfirmPageView,signupPageView,
-SignupForm,signupEmail,signupPassword,signupPassword2,databaseContents,showAdminOnly,pageAllUsersTable,
-signupFirstname, signupLastname, signupConfirmPageView, pageLogin, pageStats) where
+module AppView( TopMenu(..)
+              , kontrakcja
+              , htmlHeadBodyWrapIO
+              , poweredBySkrivaPaPara
+              , loginBox
+              , pageWelcome
+              , pageErrorReport
+              , renderFromBody
+              , pageForgotPassword
+              , pageForgotPasswordConfirm
+              , signupPageView
+              , SignupForm(..)
+              , signupEmail
+              , signupPassword
+              , signupPassword2
+              , databaseContents
+              , pageAdminOnly
+              , pageAllUsersTable
+              , signupFirstname
+              , signupLastname
+              , signupConfirmPageView
+              , pageLogin
+              , pageStats
+              ) where
 
 import HSP hiding (Request)
 import System.Locale (defaultTimeLocale)
@@ -552,9 +572,9 @@ signupPageView errors form =
         </form>
     </div>
 
-forgotPasswordPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
+pageForgotPassword :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
                => XMLGenT m (HSX.XML m)
-forgotPasswordPageView =
+pageForgotPassword =
   <div class="centerdivnarrow">
     <form action=LinkForgotPassword method="post">
       <table>
@@ -567,10 +587,10 @@ forgotPasswordPageView =
     </form>
   </div>
 
-forgotPasswordConfirmPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
-                                 => Context
-                              -> XMLGenT m (HSX.XML m)
-forgotPasswordConfirmPageView ctx =
+pageForgotPasswordConfirm :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
+                             => Context
+                          -> XMLGenT m (HSX.XML m)
+pageForgotPasswordConfirm ctx =
   <div class="centerdivnarrow">
     <p>Ett nytt lösenord har skickats till din e-post. Du kan nu logga in med dina nya uppgifter.</p>
     <% loginBox ctx %>
@@ -636,7 +656,7 @@ showUserSelect users =
     <% map showUserOption users %>
   </select>
   
-showAdminOnly users ctxflashmessages =
+pageAdminOnly users ctxflashmessages =
     developmentWrapper "SkrivaPa admin only page" ctxflashmessages
     <div>
      <h3>Database files</h3>
