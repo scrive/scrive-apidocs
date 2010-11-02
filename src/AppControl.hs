@@ -261,7 +261,7 @@ handleLogin = (methodM GET >> handleLoginGet) `mplus`
 handleLoginGet :: Kontra Response
 handleLoginGet = do
   ctx <- lift get
-  V.renderFromBody ctx V.TopNone V.kontrakcja (loginPageView ctx)
+  V.renderFromBody ctx V.TopNone V.kontrakcja (V.pageLogin ctx)
 
 handleLoginPost :: Kontra Response
 handleLoginPost = do
