@@ -880,3 +880,62 @@ input
 }
 
 /* Localized */
+
+
+.overlay {
+	
+	/* place overlay on top of other elements */
+	z-index:10000;
+	display:none;
+	/* styling */
+	background-color:#FFFFFF;
+	
+	width:675px;	
+	min-height:200px;
+	border:1px solid #666;
+    padding:5px;
+	
+	/* CSS3 styling for latest browsers */
+	-moz-box-shadow:0 0 90px 5px #000;
+	-webkit-box-shadow: 0 0 90px #000;	
+}
+
+/* close button positioned on upper right corner */
+.overlay a.close {
+	background-image:url(images/close.png);
+	position:absolute;
+	right:-15px;
+	top:-15px;
+	cursor:pointer;
+	height:35px;
+	width:35px;
+}
+
+.overlay button{
+-moz-border-radius:10.2em 10.2em 10.2em 10.2em;
+-moz-box-shadow:0 0.1em 0.2em rgba(0, 0, 0, 0.5);
+background-color:#5D689A;
+border-bottom:0.2em solid #666666;
+border-width:1px 1px 0.2em;
+color:#FFFFFF;
+cursor:pointer;
+font-size:1em;
+line-height:1;
+padding:0.3em 0.6em;
+text-shadow:0 0 0.1em #222222;
+}
+.overlay h2 {
+    	margin:0px;
+		padding:10px 0 10px 45px;
+		border-bottom:1px solid #333;
+		font-size:20px;
+        background:url("images/info.png") no-repeat scroll 0 50% transparent;
+	}
+.overlay .buttonbox   {
+ float:right;
+ padding-top:10px;
+
+}
+.overlay p    {
+margin:8px;
+}

@@ -315,7 +315,7 @@ partialScripts =
       -- we loaded the min version but at some point google stopped serving this one
       -- , <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"/>
       , <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js"/>
-      {- Local versions of the same
+      {- Local versions of the same, but locally
       , <script src="/js/jquery-1.4.2.min.js"/>
       , <script src="/js/jquery-ui-1.8.custom.min.js"/>
       -}
