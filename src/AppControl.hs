@@ -112,7 +112,7 @@ handleRoutes =
          else []))
      ++ 
      [ dir "logout" handleLogout
-     , dir "login" loginPage
+     , dir "login" handleLogin
      -- , dir "signup" signupPage
      , dir "amnesia" forgotPasswordPage
      , dir "amnesiadone" forgotPasswordDonePage
@@ -254,17 +254,17 @@ signupPagePost = do
                     account <- liftIO $ createUser ctxhostpart (BS.fromString ((signupFirstname form) ++ " " ++ (signupLastname form))) (BS.fromString (signupEmail form)) (Just (BS.fromString (signupPassword form))) Nothing
                     V.renderFromBody ctx V.TopNone V.kontrakcja (signupConfirmPageView ctx)
 
-loginPage :: Kontra Response
-loginPage = (methodM GET >> loginPageGet) `mplus` 
-            (methodM POST >> loginPagePost)
+handleLogin :: Kontra Response
+handleLogin = (methodM GET >> handleLoginGet) `mplus` 
+            (methodM POST >> handleLoginPost)
 
-loginPageGet :: Kontra Response
-loginPageGet = do
+handleLoginGet :: Kontra Response
+handleLoginGet = do
   ctx <- lift get
   V.renderFromBody ctx V.TopNone V.kontrakcja (loginPageView ctx)
 
-loginPagePost :: Kontra Response
-loginPagePost = do
+handleLoginPost :: Kontra Response
+handleLoginPost = do
   rq <- askRq
   email <- getDataFnM $ look "email"
   passwd <- getDataFnM $ look "password"
