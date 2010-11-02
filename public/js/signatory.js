@@ -573,11 +573,19 @@ function initializeTemplates () {
     docstateToHTML();
 	
     enableInfoText();
+
+    $("#sign").show();
+    $("#cancel").show();
 }
 
 $(document).ready(function () {
 	$("#loading-message").css({ display: "" });
 	$("#edit-bar").css({ display: "none" });
 
+	$("#sign").hide();
+	$("#cancel").hide();
+
+	
+	
 	initializeTemplates();	
     });
