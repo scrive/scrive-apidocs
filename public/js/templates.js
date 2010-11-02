@@ -543,8 +543,9 @@ function signatoryToHTML(sig) {
 	setIcon(aemai, "done");
     }
 
-    d.append(aemai);
     d.append(aname);
+    d.append(aemai);
+
     d.append(acomp);
     d.append(anumb);
     
