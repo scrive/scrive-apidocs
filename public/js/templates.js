@@ -264,9 +264,9 @@ function setInfotext(field, infotext) {
 }
 
 function buildDraggableField(info, val, type, emailp) {
-    var x = $("<div class='dragfield'><span class='draghandle'>drag</span><input type='text' autocomplete='off' /><span class='status'></span></div>");
+    var x = $("<div class='dragfield'><span class='draghandle ui-icon ui-icon-arrowthick-1-w'>drag</span><input type='text' autocomplete='off' /><span class='status'></span></div>");
     if(emailp) {
-	x = $("<div class='dragfield'><span class='draghandle'>drag</span><input type='email' autocomplete='off' /><span class='status'></span></div>");
+	x = $("<div class='dragfield'><span class='draghandle ui-icon ui-icon-arrowthick-1-w'>drag</span><input type='email' autocomplete='off' /><span class='status'></span></div>");
     }
 
 
@@ -292,7 +292,7 @@ function buildDraggableField(info, val, type, emailp) {
 
 // for use with author fields
 function buildDraggableText(val) {
-    var x = $("<div class='dragtext'><span class='draghandle'>drag</span> <span class='fieldvalue'>" + val + "</span></div>");
+    var x = $("<div class='dragtext'><span class='draghandle ui-icon ui-icon-arrowthick-1-w'>drag</span> <span class='fieldvalue'>" + val + "</span></div>");
     x.draggable({ handle: ".draghandle"
 		, helper: function (event) {
 		return placementToHTML("abc", val);
