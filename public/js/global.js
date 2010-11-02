@@ -479,41 +479,32 @@ function editinvitetext()
                  }
              });
 }
-
-function prepareToSendReminderMail(form)
-{
-    var clone = form.clone();
-    $("body").append(clone);
-    var buttons = {};
-    buttons[$(".submiter",clone).attr("name")]= function() {
-                              clone.submit();
-                         }
-    buttons[$(".editer",clone).attr("name")]= function() {
-                              prepareForEdit(clone);
-                         }
-    
-    buttons['Avbryt']= function() {
-                              clone.dialog('close');
-                         }
-    clone.dialog({
+$(function(){
+    $(".prepareToSendReminderMail").each(function(){
+        var form = $($(this).attr("rel"));
+        $(this).overlay({
                      resizable: false,
-                     height: parseInt(clone.attr("height")),
-                     width: parseInt(clone.attr("width")),
-                     modal: true,
-                     buttons:  buttons
-                     
+                     onClose: function(e){ return false;
+                    }
                  })
-  startDialogHere(clone)             
-}    
+    })
+    $(".submiter").each(function() {
+                              $(this).click(
+                              function(){
+                               $(this.form).submit();
+                               })
+                         })
+   $(".editer").each(function() {
+                             $(this).click(function(){
+                                  prepareForEdit($(this.form));
+                                  $(this).hide();
+                                  return false;
+                                  })
+                         })                      
+})
 
-function startDialogHere(form)
-{ 
-     $(".hideOnDialog",form).hide()
-     $(".showOnDialog",form).show()
-         
-}   
 function prepareForEdit(form){
     $(".editable",form).each( function(){
-        $(this).replaceWith($("<textarea style='width:95%;height:90px'  name='"+$(this).attr('name')+"'> "+ $(this).text()+ "</textarea>"));
+        $(this).replaceWith($("<textarea style='width:95%;height:120px'  name='"+$(this).attr('name')+"'> "+ $(this).text()+ "</textarea>"));
     })    
 }

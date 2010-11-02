@@ -609,17 +609,24 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document siglnk@(
                          then <span>Du vill skicka dokumentet <% documenttitle document %> till <%(personname siglnk)%> igen. Nedan ser du vårt standardmeddelande. Om du vill kan du ändra meddelandet Innan du skickar.</span>
                          else <span>Du vill skicka en påminnelse att underteckna dokumentet <% documenttitle document %> till <%(personname siglnk)%>. Nedan ser du vårt standardmeddelande. Om du vill kan du ändra meddelandet Innan du skickar.</span>
       dialogHeight =   if (wasSigned) then "400" else "600"
-      reminderForm = <form action=(LinkRemind document siglnk) method="POST" title=reminderDialogTitle width="600" height=dialogHeight>
-                       <p class="showOnDialog" style="display:none">
+      reminderForm = <span>
+                      <a style="cursor:pointer" class="prepareToSendReminderMail" rel=("#siglnk" ++ (show signatorylinkid ))>  <% reminderText %>  </a>
+                      <form class="overlay" action=(LinkRemind document siglnk) method="POST" title=reminderDialogTitle width="600" height=dialogHeight id=("siglnk" ++ (show signatorylinkid))>
+                       <a class="close"> </a>
+                       <h2> <% reminderDialogTitle %> </h2>
+                       <p>
                          <% mainDialogText %>
                        </p>  
-                       <div style="border:1px solid #DDDDDD;padding:3px;display:none" class="showOnDialog"> 
+                       <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
                          <% reminderMessage %>
                        </div>
-                       <input type="button" style="display:none" class="submiter" name=reminderSenderText/>
-                       <input type="button" style="display:none" class="editer" name=reminderEditorText/>
-                       <a onclick="prepareToSendReminderMail($(this).parent())" style="cursor:pointer" class="hideOnDialog">  <% reminderText %>  </a>
-                     </form>     
+                       <div class="buttonbox">
+                       <button class="submiter" type="button"> <%reminderSenderText%> </button>
+                       <button class="editer" type="button"> <%reminderEditorText%> </button>
+                       <button class="close" type="button"> Avbryt </button>
+                       </div>
+                      </form>     
+                    </span>  
    in asChild <div class=(if isCurrentUserAuthor then "author" else "signatory")><% 
                 [asChild status,asChild " "] ++
                 (if BS.null signatoryname then [] else [ asChild <strong><% signatoryname %></strong>, asChild <br/> ]) ++
@@ -683,14 +690,13 @@ showDocumentForSign action document ctx@(Context {ctxmaybeuser = muser})  invite
    in showDocumentPageHelper document helper 
               (documenttitle document) $
               <span>
-                 <form method="post" name="form" action=action> 
                  <p>Vänligen var noga med att granska dokumentet och kontrollera 
                     uppgifterna nedan innan du undertecknar.</p>   
 
                  <% showSignatoryLinkForSign ctx document invitedlink %>
 
                  <% map (showSignatoryLinkForSign ctx document) (authorlink : allbutinvited) %>
-                 
+                 <form method="post" name="form" action=action>               
                  <% caseOf 
                     [(wassigned ,
                               <div>Du har redan undertecknat!</div>),
@@ -1019,7 +1025,7 @@ before::(XMLGenerator m) => (XMLGenT m (HSX.XML m))-> ( XMLGenT m (HSX.XML m))->
 before header message = <p><span><%header%></span><span><%message%></span> </p>                                     
                                            
 makeEditable::(XMLGenerator m) => (XMLGenT m (HSX.XML m))-> ( XMLGenT m (HSX.XML m))
-makeEditable c = <span class="editable" name="customtext"><%c%></span>         
+makeEditable c = <div class="editable" name="customtext"><%c%></div>         
                                   
 personname signlink = if (BS.null $ signatoryname $ signatorydetails signlink)
                         then  signatoryemail $ signatorydetails signlink  
