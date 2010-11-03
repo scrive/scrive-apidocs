@@ -1,3 +1,7 @@
+
+
+var debug = false;
+
 function newUUID() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
 	    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
@@ -33,8 +37,6 @@ function placePlacements(pls, label, value, sigid, fieldid) {
 	    var pl = this;
 	    var d = placementToHTML(label, value);
 	    var page = $("#page" + pl.page);
-	    console.log("pl: ", pl);
-	    console.log("y: " + pl.y);
 	    d.offset({left: pl.x, top: pl.y});
 
 	    page.append(d);
@@ -52,8 +54,9 @@ function getHiddenValue(field, label) {
     var s = $(field).find("." + label);
     if(s.size()){
 	return s.text();
+    } else if(debug) {
+	console.log("field has no value named " + label);
     }
-    console.log("field has no value named " + label);
 }
 
 function setHiddenValue(field, label, value) {
@@ -73,8 +76,9 @@ function getHiddenField(field, label) {
     var s = $(field).find("input[name='" + label + "']");
     if(s.size()){
 	return s.attr("value");
+    } else if(debug) {
+	console.log("field has no hidden field called " + label);
     }
-    console.log("field has no hidden field called " + label);
 }
 
 function setHiddenField(field, label, value) {
@@ -129,7 +133,6 @@ function isStandardField(field) {
 
 function getValue(field) {
     if(isDraggableField(field)) {
-	console.log("here");
 	var s = $(field).find("input[type='text'], input[type='email']");
 	if(s.size()) {
 	    if(s.attr("value") == s.attr("infotext")) {
@@ -137,14 +140,14 @@ function getValue(field) {
 	    } else {
 		return s.attr("value");
 	    }
-	} else {
+	} else if(debug) {
 	    console.log("field has no input box");
 	}
     } else if(isDraggableText(field)) {
 	return getHiddenValue(field, "fieldvalue");
     } else if(isPlacedField(field)) {
 	return getHiddenValue(field, "value");
-    } else {
+    } else if(debug) {
 	console.log("I don't know what that field is");
     }
 }
@@ -161,7 +164,7 @@ function setValue(field, value) {
 	setHiddenValue(field, "value", value);
     } else if(isPlacedField(field)) {
 	setHiddenValue(field, "value", value);
-    } else {
+    } else if(debug) {
 	console.log("unknown type: " + getFieldType(field));
     }
 }
@@ -185,7 +188,7 @@ function getFieldID(field) {
 	return getHiddenValue(field, "fieldid");
     } else if(isPlacedField(field)) {
 	return getHiddenField(field, "placedfieldid");
-    } else {
+    } else if(debug) {
 	console.log("unknown type");
     }
 }
@@ -201,7 +204,7 @@ function setFieldID(field, fieldid) {
 	setHiddenValue(field, "fieldid", fieldid);
     } else if(isPlacedField(field)) {
 	setHiddenField(field, "placedfieldid", fieldid);
-    } else {
+    } else if(debug) {
 	console.log("unknown type");
     }
 }
@@ -286,7 +289,6 @@ function docstateToHTML(){
 	    s.id = newUUID();
 	    if(s.email === useremail) {
 		currentsig = s;
-		console.log("current user is: " + useremail);
 	    }
 
 	    placePlacements(this.nameplacements, "Namn på motpart", this.name, s.id, "name");
@@ -331,16 +333,16 @@ function docstateToHTML(){
 function getIcon(field){
     if(isDraggableField(field)){
 	return getHiddenValue(field, "status");
-    } else {
+    } else if(debug) {
 	console.log(getFieldType(field) + " does not have an icon, cannot get");
-	return "";
     }
+    return "";
 }
 
 function setIcon(field, status) {
     if(isDraggableField(field)) {
 	setHiddenValue(field, "status", status);
-    } else {
+    } else if(debug) {
 	console.log(getFieldType(field) + " does not have an icon, cannot set");
     }
 }
@@ -356,7 +358,7 @@ function getSigID(field) {
 	return getHiddenValue(field, "fieldsigid");
     } else if(isPlacedField(field)) {
 	return getHiddenField(field, "placedsigid");
-    } else {
+    } else if(debug) {
 	console.log(getFieldType(field) + " does not have sigid");
     }
 }
@@ -372,7 +374,7 @@ function setSigID(field, sigid) {
 	setHiddenValue(field, "fieldsigid", sigid);
     } else if(isPlacedField(field)) {
 	setHiddenField(field, "placedsigid", sigid);
-    } else {
+    } else if(debug) {
 	console.log(getFieldType(field) + " does not have sigid");
     }
     
@@ -399,14 +401,12 @@ function updateStatus(field) {
     field = $(field);
     var type = getFieldType(field);
     if(type == "author") {
-	console.log("author field: " + getFieldName(field));
 	if(getValue(field)) {
 	    setIcon(field, "done");
 	} else {
 	    setIcon(field, "athr");
 	}
     } else if(type == "sig") {
-	console.log("author field: " + getFieldName(field));
 	if(getValue(field)) {
 	    // it's a signatory field, but it's filled out
 	    setIcon(field, "done");
@@ -419,9 +419,8 @@ function updateStatus(field) {
 	}
     } else if(type == "text") {
 	// do nothing
-    } else {
+    } else if(debug) {
 	console.log("field has bad field type: " + getFieldName(field));
-	alert("bad field type");
     }
 }
 
