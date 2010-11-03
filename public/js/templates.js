@@ -2,13 +2,10 @@
 
 // include this file to start the dragging functionality
 
-function newUUID() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-	    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-	    return v.toString(16);
-	}).toUpperCase();
-}
+// set this to true to output logging messages to the console
+var debug = false;
 
+// create a new signatory. pretty useless without calling signatoryToHTML
 function newsignatory() {
     return {name: "", company: "", number: "", email: "", 
 	    nameplacements: [],
@@ -37,7 +34,6 @@ function placePlacements(pls, label, value, sigid, fieldid) {
 	    var pl = this;
 	    var d = placementToHTML(label, value);
 	    var page = $("#page" + pl.page);
-	    console.log(pl.y);
 	    d.offset({left: pl.x, top: pl.y});
 
 	    page.append(d);
@@ -50,13 +46,16 @@ function placePlacements(pls, label, value, sigid, fieldid) {
 	    setHiddenField(d, "placedwidth", String(Math.round(page.width())));
 	    setHiddenField(d, "placedheight", String(Math.round(page.height())));
 
-
-
+	    // make it draggable
 	    d.draggable({ 
+		    // this makes sure it can move between divs
 		    appendTo: "body",
+			// build a helper so it doesn't delete the original
 			helper: function (event, ui) {
 			return placementToHTML(label, value);
 		    },
+			// but we don't want to show the original so it looks like 
+			// you are dragging the original
 			start: function (event, ui) {
 			$(this).css({ display: "none" });
 		    }
@@ -69,12 +68,15 @@ function newHiddenValue(label, value) {
     return $("<span style='display: none' class='" + label + "'>" + value + "</span>");
 }
 
+// getHiddenValue does not care if it's hidden
 function getHiddenValue(field, label) {
     var s = $(field).find("." + label);
     if(s.size()){
 	return s.text();
     }
-    console.log("field has no value named " + label);
+    if(debug) {
+	console.log("field has no value named " + label);
+    }
 }
 
 function setHiddenValue(field, label, value) {
@@ -90,12 +92,15 @@ function newHiddenField(name, value) {
     return $("<input type='hidden' name='" + name + "' value='" + value + "' />");
 }
 
+// works on any input field, not just hidden ones
 function getHiddenField(field, label) {
     var s = $(field).find("input[name='" + label + "']");
     if(s.size()){
 	return s.attr("value");
     }
-    console.log("field has no hidden field called " + label);
+    if(debug) {
+	console.log("field has no hidden field called " + label);
+    }
 }
 
 function setHiddenField(field, label, value) {
@@ -165,7 +170,7 @@ function getValue(field) {
 	return getHiddenValue(field, "fieldvalue");
     } else if(isPlacedField(field)) {
 	return getHiddenValue(field, "value");
-    } else {
+    } else if(debug) {
 	console.log("I don't know what that field is");
     }
 }
@@ -182,7 +187,7 @@ function setValue(field, value) {
 	setHiddenValue(field, "value", value);
     } else if(isPlacedField(field)) {
 	setHiddenValue(field, "value", value);
-    } else {
+    } else if(debug) {
 	console.log("unknown type: " + getFieldType(field));
     }
 }
@@ -206,7 +211,7 @@ function getFieldID(field) {
 	return getHiddenValue(field, "fieldid");
     } else if(isPlacedField(field)) {
 	return getHiddenField(field, "placedfieldid");
-    } else {
+    } else if(debug) {
 	console.log("unknown type");
     }
 }
@@ -222,7 +227,7 @@ function setFieldID(field, fieldid) {
 	setHiddenValue(field, "fieldid", fieldid);
     } else if(isPlacedField(field)) {
 	setHiddenField(field, "placedfieldid", fieldid);
-    } else {
+    } else if(debug) {
 	console.log("unknown type");
     }
 }
@@ -405,16 +410,16 @@ function docstateToHTML(){
 function getIcon(field){
     if(isDraggableField(field)){
 	return getHiddenValue(field, "status");
-    } else {
+    } else if(debug) {
 	console.log(getFieldType(field) + " does not have an icon, cannot get");
-	return "";
     }
+    return "";
 }
 
 function setIcon(field, status) {
     if(isDraggableField(field)) {
 	setHiddenValue(field, "status", status);
-    } else {
+    } else if(debug) {
 	console.log(getFieldType(field) + " does not have an icon, cannot set");
     }
 }
@@ -430,7 +435,7 @@ function getSigID(field) {
 	return getHiddenValue(field, "fieldsigid");
     } else if(isPlacedField(field)) {
 	return getHiddenField(field, "placedsigid");
-    } else {
+    } else if(debug) {
 	console.log(getFieldType(field) + " does not have sigid");
     }
 }
@@ -446,7 +451,7 @@ function setSigID(field, sigid) {
 	setHiddenValue(field, "fieldsigid", sigid);
     } else if(isPlacedField(field)) {
 	setHiddenField(field, "placedsigid", sigid);
-    } else {
+    } else if(debug) {
 	console.log(getFieldType(field) + " does not have sigid");
     }
     
@@ -473,14 +478,12 @@ function updateStatus(field) {
     field = $(field);
     var type = getFieldType(field);
     if(type == "author") {
-	console.log("author field: " + getFieldName(field));
 	if(getValue(field)) {
 	    setIcon(field, "done");
 	} else {
 	    setIcon(field, "athr");
 	}
     } else if(type == "sig") {
-	console.log("author field: " + getFieldName(field));
 	if(getValue(field)) {
 	    // it's a signatory field, but it's filled out
 	    setIcon(field, "done");
@@ -493,9 +496,8 @@ function updateStatus(field) {
 	}
     } else if(type == "text") {
 	// do nothing
-    } else {
+    } else if(debug) {
 	console.log("field has bad field type: " + getFieldName(field));
-	alert("bad field type");
     }
 }
 
@@ -686,7 +688,6 @@ function initializeTemplates () {
 	    var form = $("form");
 	    $(".placedfield input[type='hidden']").each(function () {
 		    var h = $(this);
-		    console.log(h.attr('name') + ": " + h.attr('value'));
 		    form.append(h);
 		});
 	});
@@ -698,3 +699,13 @@ $(document).ready(function () {
 
 	initializeTemplates();	
     });
+
+// utility functions
+
+function newUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+	    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+	    return v.toString(16);
+	}).toUpperCase();
+}
+
