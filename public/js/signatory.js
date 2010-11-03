@@ -289,10 +289,10 @@ function docstateToHTML(){
 		console.log("current user is: " + useremail);
 	    }
 
-	    placePlacements(this.nameplacements, "Namn", this.name, s.id, "name");
-	    placePlacements(this.emailplacements, "email", this.email, s.id, "email");
-	    placePlacements(this.companyplacements, "company", this.company, s.id, "sigco");
-	    placePlacements(this.numberplacements, "number", this.number, s.id, "signr");
+	    placePlacements(this.nameplacements, "Namn på motpart", this.name, s.id, "name");
+	    placePlacements(this.emailplacements, "Personens e-mail", this.email, s.id, "email");
+	    placePlacements(this.companyplacements, "Titel, företag", this.company, s.id, "sigco");
+	    placePlacements(this.numberplacements, "Orgnr/Persnr", this.number, s.id, "signr");
 
 
 	    $(s.otherfields).each(function () {
@@ -303,7 +303,7 @@ function docstateToHTML(){
 	});
 
     if(currentsig.company.length === 0 && currentsig.companyplacements.length > 0) {
-	var cfield = buildField("Company", currentsig.company, "sig");
+	var cfield = buildField("Titel, företag", currentsig.company, "sig");
 	setFieldID(cfield, "sigco");
 	setSigID(cfield, currentsig.id);
 	setHiddenField(cfield, "fieldname", "sigco");
@@ -311,7 +311,7 @@ function docstateToHTML(){
     }
 
     if(currentsig.number.length === 0 && currentsig.numberplacements.length > 0) {
-	var nfield = buildField("Number", currentsig.number, "sig");
+	var nfield = buildField("Orgnr/Persnr", currentsig.number, "sig");
 	setFieldID(nfield, "signr");
 	setSigID(nfield, currentsig.id);
 	setHiddenField(nfield, "fieldname", "signr");
