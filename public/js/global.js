@@ -204,96 +204,50 @@ $(document).ready( function () {
             }
         });
     }
-
-    $("#signinvite").click(function() {
-         var button = $(this);
-         var form = $(this.form);
-         var mrxs = $("form input[name='signatoryname']");
-         var tot = "";
-
-	 
-
-         if(!emailFieldsValidation($("input[type='email']"))){
-             return false;
-         } else if(!authorFieldsValidation()){
-	     return false;
-         } else{
-             var allparties = new Array();
+    
+ 
+    $("#signinvite").overlay({  
+    onBeforeLoad: function () { 
+           if (!emailFieldsValidation($("input[type='email']"))) return false;
+           if (!authorFieldsValidation()) return false;
+           var mrxs = $("form input[name='signatoryname']");
+           var tot = "";
+           var allparties = new Array();
              mrxs.each(function(index) { 
                      allparties.push($(this).val());
                  });
-             var tot = swedishString(allparties);
-             $(".Xinvited").html(tot);
-             $("#dialog-confirm-signinvite").dialog({
-                     resizable: false,
-                         // autoOpen: false,
-                         height: 340,
-                         width: 350,
-                         modal: true,
-                         buttons: {
-                         'Underteckna': function() {
-                             var name = button.attr("name");
-                             form.append("<input type='hidden' name='" + name + "' value='automatic'>");
-                             //alert(tot);
-                             form.submit();
-                         },
-                             'Avbryt': function() {
-                                 $(this).dialog('close');
-                             }
-                     }
-                 });
-         }
-         return false;});
-
-    $("#sign").click(function() {
-         var button = $(this);
-         var form = $(this.form);
-	 if(!sigFieldsValidation()){
-	     return false;
-	 }
-         $("#dialog-confirm-sign").dialog({
-                 resizable: false,
-                     height: 280,
-                     width: 350,
-                     modal: true,
-                     buttons: {
-                     'Underteckna': function() {
-                         var name = button.attr("name");
-                         form.append("<input type='hidden' name='" + name + "' value='automatic'>");
-                         form.submit();
-                     },
-                         'Avbryt': function() {
-                             $(this).dialog('close');
-                         }
-                 }
-             });
-         
-         return false;
-    });
-
-    $("#cancel").click(function() {
-         var button = $(this);
-         var form = $(this.form);
-         $("#dialog-confirm-cancel").dialog({
-                 resizable: false,
-                     // autoOpen: false,
-                     height: 340,
-                     width: 350,
-                     modal: true,
-                     buttons: {
-                     'Avvisa': function() {
-                         var name = button.attr("name");
-                         form.append("<input type='hidden' name='" + name + "' value='automatic'>");
-                         //alert(tot);
-                         form.submit();
-                     },
-                         'Avbryt': function() {
-                             $(this).dialog('close');
-                         }
-                 }
-             });
-         return false;
-        });
+           tot = swedishString(allparties);
+           $(".Xinvited").html(tot);
+          } })
+        
+    $(".submiter").click(function(){
+                               $(this.form).submit();
+    })
+ 
+    $("#editinvitetextlink").overlay({        
+    onBeforeLoad: function () { 
+            var newtxt = $("#invitetext").val()
+            $("#edit-invite-text-dialog textarea").val(newtxt );          
+    }
+    })   
+        
+    $("#editing-invite-text-finished").click(function() {
+                         var newtxt = $("#edit-invite-text-dialog textarea").val();
+                         $("#invitetext").val( newtxt );
+                     })
+    $(".redirectsubmitform").submit(function(){
+                          var newform = $($(this).attr("rel"))
+                          var inputs = $("input[type='hidden']",$(this));
+                          newform.append(inputs); 
+                          newform.submit();
+                          return false;
+                          })                      
+    $("#sign").overlay({
+        onBeforeLoad: function () { if (!sigFieldsValidation()) return false;}
+    })
+    
+    $("#cancel").overlay({
+    })    
 	
 	$("input[type='email']").focus(function(){
 		applyRedBorder($(this));
@@ -459,26 +413,7 @@ function isExceptionalField(field){
 	return false
 }
 
-function editinvitetext()
-{
-    var txt = $("#invitetext").val();
-    $("#edit-invite-text-dialog textarea").val(txt);
-    $('#edit-invite-text-dialog').dialog({
-                     height: 280,
-                     width: 350,
-                     modal: true,
-                     buttons: {
-                     'OK': function() {
-                         var newtxt = $("#edit-invite-text-dialog textarea").val();
-                         $("#invitetext").val( newtxt );
-                             $(this).dialog('close');
-                     },
-                         'Avbryt': function() {
-                             $(this).dialog('close');
-                         }
-                 }
-             });
-}
+
 $(function(){
     $(".prepareToSendReminderMail").each(function(){
         var form = $($(this).attr("rel"));
@@ -488,12 +423,6 @@ $(function(){
                     }
                  })
     })
-    $(".submiter").each(function() {
-                              $(this).click(
-                              function(){
-                               $(this.form).submit();
-                               })
-                         })
    $(".editer").each(function() {
                              $(this).click(function(){
                                   prepareForEdit($(this.form));
