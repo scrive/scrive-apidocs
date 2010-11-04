@@ -461,16 +461,6 @@ pageDocumentForAuthor ctx@(Context {ctxmaybeuser = Just user})
              issuedone 
              freeleft =
    let helper = [ showSignatoryEntryForEdit2 "signatory_template" "" "" "" ""
-                , <div id="dialog-confirm-signinvite" title="Underteckna">
-                    <p>Är du säker att du vill underteckna dokumentet <strong><% documenttitle %></strong>?</p>
-                    
-                    <p>När du undertecknat kommer en automatisk inbjudan att skickas till 
-                       <span class="Xinvited">Invited</span> med e-post.</p>
-                   </div>
-                , <div id="edit-invite-text-dialog" title="Hälsningsmeddelande">
-                   <textarea cols="45" rows="6"></textarea>
-                  </div>
-
                 , <script> var documentid = "<% show $ documentid %>"; 
                   </script>
                 ]
@@ -504,7 +494,7 @@ pageDocumentForAuthor ctx@(Context {ctxmaybeuser = Just user})
                <script type="text/javascript">
                  <% "var docstate = " ++ (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks) ++ ";" %>
                </script>
-              <form method="post" name="form" action=(LinkIssueDoc document) > 
+              <form method="post" name="form" action=(LinkIssueDoc document) id="main-document-form"> 
               Avsändare<br/>
               <div style="margin-bottom: 10px;" id="authordetails">
               <strong><% signatoryname documentauthordetails %></strong><br/>
@@ -521,16 +511,48 @@ pageDocumentForAuthor ctx@(Context {ctxmaybeuser = Just user})
               <small><a id="addsiglink" onclick="signatoryadd(); return false;" href="#">Lägg till fler</a></small>
 
               <div style="margin-top: 10px">
-              <a href="#" onclick="editinvitetext(); return false;">Skriv hälsningsmeddelande</a><br/>
+              <a href="#" id="editinvitetextlink" rel="#edit-invite-text-dialog">Skriv hälsningsmeddelande</a><br/>
               <p>Undertecknas inom (dagar)
               <input type="text" name="daystosign" value=documentdaystosign maxlength="2" size="2" autocomplete="off"/>
               <input type="hidden" name="invitetext" id="invitetext" value= documentinvitetext/>
               </p>
               <div style="height: 2px;"/>
-              <input class="bigbutton" type="submit" name="final" value="Underteckna" id="signinvite"/>
+              <input class="bigbutton" type="submit" name="final" value="Underteckna" id="signinvite" rel="#dialog-confirm-signinvite"/>
               <input class="button" type="submit" name="save" value="Spara som utkast"/>
               </div>
               </form>
+              <span class="localdialogs">
+                <form method="post" name="form" action=(LinkIssueDoc document) class="overlay redirectsubmitform" id="dialog-confirm-signinvite" rel="#main-document-form">  
+                   <a class="close"> </a>
+                   <h2>"Underteckna"</h2>
+                    <p>Är du säker att du vill underteckna dokumentet <strong><% documenttitle %></strong>?</p>
+                    
+                    <p>När du undertecknat kommer en automatisk inbjudan att skickas till 
+                       <span class="Xinvited">Invited</span> med e-post.</p>
+                 
+                   <BR/>
+                   <BR/>
+                   <BR/>
+                   <div class="buttonbox">
+                       <input type="hidden" name="final" value="automatic"/>
+                       <button class="submiter" type="button"> Underteckna </button>
+                       <button class="close" type="button"> Avbryt </button>
+                   </div>
+                 </form>  
+                 <form method="post" name="form" action=(LinkIssueDoc document) class="overlay" id="edit-invite-text-dialog"> 
+                  <a class="close"> </a>
+                  <h2> Hälsningsmeddelande </h2>
+                   <BR/>
+                   <div>                    
+                   <textarea cols="45" rows="6"></textarea>
+                   </div>
+                   <BR/>
+                   <div class="buttonbox">
+                       <button class="close" type="button" id="editing-invite-text-finished"> Ok </button>
+                       <button class="close" type="button"> Avbryt </button>
+                   </div>
+                 </form> 
+              </span>
              </span>
            else
               <div id="signatorylist">
@@ -657,26 +679,12 @@ pageDocumentForSign :: ( Monad m) =>
                            -> Bool 
                     -> (HSPT m XML) 
 pageDocumentForSign action document ctx@(Context {ctxmaybeuser = muser})  invitedlink wassigned =
-   let helper = [ <script> var documentid = "<% show $ documentid document %>"; 
+   let helpers = [ <script> var documentid = "<% show $ documentid document %>"; 
                   </script>
                 , <script type="text/javascript">
                    <% "var docstate = " ++ (buildJS (documentauthordetails document) $ map signatorydetails (documentsignatorylinks document)) ++ "; docstate['useremail'] = '" ++ (BS.toString $ signatoryemail $ signatorydetails invitedlink) ++ "';" %>
                   </script>
-                , <script src="/js/signatory.js" />
-                , <div id="dialog-confirm-sign" title="Underteckna">  
-                   
-                   <p>Är du säker att du vill underteckna dokumentet <strong><% documenttitle document %></strong>?</p>
-                   <p>När <% partyUnsignedMeAndListString magichash document %> undertecknat blir 
-                      avtalet <strong>juridiskt bindande</strong> och
-                      det färdigställda avtalet skickas till din e-post.</p>
-                  </div>
-                , <div id="dialog-confirm-cancel" title="Avvisa">
-                    <p>Är du säker på att du vill neka att underteckna dokumentet <strong><% documenttitle document %></strong>?</p>
-                    <p>När du nekat kommer vi att meddela via e-post till <strong><% authorname %></strong>.</p>
-
-                    {- Not yet: Om du vill kan du lägga till ett eget meddelande nedan om varför du valt att neka. -}
-                  </div>
-                ]
+                , <script src="/js/signatory.js" /> ]
        magichash = signatorymagichash invitedlink
        authordetails = documentauthordetails document
        authorname = signatoryname authordetails
@@ -696,7 +704,7 @@ pageDocumentForSign action document ctx@(Context {ctxmaybeuser = muser})  invite
                     , signatorymagichash = MagicHash 0
                     }
                                          
-   in showDocumentPageHelper document helper 
+   in showDocumentPageHelper document helpers
               (documenttitle document) $
               <span>
                  <p>Vänligen var noga med att granska dokumentet och kontrollera 
@@ -705,7 +713,6 @@ pageDocumentForSign action document ctx@(Context {ctxmaybeuser = muser})  invite
                  <% showSignatoryLinkForSign ctx document invitedlink %>
 
                  <% map (showSignatoryLinkForSign ctx document) (authorlink : allbutinvited) %>
-                 <form method="post" name="form" action=action>               
                  <% caseOf 
                     [(wassigned ,
                               <div>Du har redan undertecknat!</div>),
@@ -714,13 +721,45 @@ pageDocumentForSign action document ctx@(Context {ctxmaybeuser = muser})  invite
                     ]
                               <div>
                                 
-                                 <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign"/>
-                                 <input class="bigbutton" type="submit" name="cancel" value="Avvisa" id="cancel"/>
+                                 <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign" rel="#dialog-confirm-sign"/>
+                                 <input class="bigbutton" type="submit" name="cancel" value="Avvisa" rel="#dialog-confirm-cancel" id="cancel"/>
                                 
                               </div>
                  %>
                  <small>Jag vill veta mer <a href="/about" target="_blank">om SkrivaPå</a>.</small>
+                 <span class="localdialogs ">
+                  <form method="post" name="form" action=action id="dialog-confirm-sign" class="overlay">     
+                     <a class="close"> </a>                  
+                     <h2>Underteckna</h2>  
+                     <p>Är du säker att du vill underteckna dokumentet <strong><% documenttitle document %></strong>?</p>
+                     <p>När <% partyUnsignedMeAndListString magichash document %> undertecknat blir 
+                      avtalet <strong>juridiskt bindande</strong> och
+                      det färdigställda avtalet skickas till din e-post.</p>
+                      <BR/>
+                      <BR/>
+                      <div class="buttonbox">
+                      <input type="hidden" name="sign" value="automatic"/>
+                      <button class="submiter" type="button"> Underteckna </button>
+                      <button class="close" type="button"> Avbryt </button>
+                      </div>
+                  </form>
+                 <form method="post" name="form" action=action id="dialog-confirm-cancel" class="overlay">   
+                    <a class="close"> </a>     
+                       <h2>Avvisa</h2>                 
+                    <p>Är du säker på att du vill neka att underteckna dokumentet <strong><% documenttitle document %></strong>?</p>
+                    <p>När du nekat kommer vi att meddela via e-post till <strong><% authorname %></strong>.</p>
+
+                    {- Not yet: Om du vill kan du lägga till ett eget meddelande nedan om varför du valt att neka. -}
+                    <BR/>
+                    <BR/>
+                    <div class="buttonbox">
+                     <input type="hidden" name="cancel" value="automatic"/>
+                     <button class="submiter" type="button"> Avvisa </button>
+                     <button class="close" type="button"> Avbryt </button>
+                    </div> 
                  </form> 
+                 </span>
+                 
               </span>
 
 
