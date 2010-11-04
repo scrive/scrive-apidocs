@@ -505,6 +505,14 @@ $(function(){
 
 function prepareForEdit(form){
     $(".editable",form).each( function(){
-        $(this).replaceWith($("<textarea style='width:95%;height:120px'  name='"+$(this).attr('name')+"'> "+ $(this).text()+ "</textarea>"));
+        var textarea = $("<textarea style='width:95%;height:120px'  name='"+$(this).attr('name')+"'> "+ $(this).html()+ "</textarea>")
+        $(this).replaceWith(textarea);
+        textarea.tinymce({
+                          script_url : '/tiny_mce/tiny_mce.js',
+                          theme : "advanced",
+                          theme_advanced_toolbar_location : "top",     
+                          theme_advanced_buttons1 : "bold,italic,underline,separator,strikethrough,bullist,numlist,separator,undo,redo,separator,cut,copy,paste",
+                          theme_advanced_buttons2 : ""
+                         })
     })    
 }
