@@ -5,9 +5,9 @@ module DocView( emptyDetails
               , showFilesImages2
               , showDocument
               , listDocuments
-              , invitationMail
-              , closedMail
-              , closedMailAuthor
+              , mailInvitationToSign
+              , mailDocumentClosedForSignatories
+              , mailDocumentClosedForAuthor
               , landpageSignInviteView
               , landpageSignedView
               , landpageLoginForSaveView
@@ -725,14 +725,14 @@ showDocumentForSign action document ctx@(Context {ctxmaybeuser = muser})  invite
 
 
 
-invitationMail :: Context
+mailInvitationToSign :: Context
                -> BS.ByteString
                -> BS.ByteString
                -> Document
                -> SignatoryLink
                -> MagicHash
                -> IO Mail
-invitationMail (Context {ctxmaybeuser = Just user, ctxhostpart}) 
+mailInvitationToSign (Context {ctxmaybeuser = Just user, ctxhostpart}) 
                   emailaddress personname 
                   document@Document{documenttitle,documentid,documenttimeouttime,documentauthordetails,documentinvitetext} 
                   signaturelink magichash = 
@@ -786,14 +786,14 @@ invitationMail (Context {ctxmaybeuser = Just user, ctxhostpart})
         content <- htmlHeadBodyWrapIO documenttitle content
         return $ emptyMail {title = title, content = content}
 
-closedMail :: Context
+mailDocumentClosedForSignatories :: Context
            -> BS.ByteString
            -> BS.ByteString
            -> Document
            -> SignatoryLink
            -> MagicHash
            -> IO Mail
-closedMail (Context {ctxhostpart}) 
+mailDocumentClosedForSignatories (Context {ctxhostpart}) 
               emailaddress personname 
               document@Document{documenttitle,documentid} 
               signaturelink magichash = 
@@ -812,12 +812,12 @@ closedMail (Context {ctxhostpart})
       </span>
     return $ emptyMail {title = title, content = content}
 
-closedMailAuthor :: Context
+mailDocumentClosedForAuthor :: Context
                  -> BS.ByteString
                  -> BS.ByteString
                  -> Document
                  -> IO Mail
-closedMailAuthor (Context {ctxhostpart}) 
+mailDocumentClosedForAuthor (Context {ctxhostpart}) 
                   emailaddress personname 
                   document@Document{documenttitle,documentid} = 
     do
