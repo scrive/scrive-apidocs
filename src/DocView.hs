@@ -426,6 +426,9 @@ emptyDetails = SignatoryDetails
           , signatoryotherfields = []
           }
 
+addbr text | BS.null text = []
+addbr text = [<% text %>, <% <br/> %>]
+
 showDocument :: (Monad m) 
              => Context 
              -> Document 
@@ -472,8 +475,6 @@ showDocument ctx@(Context {ctxmaybeuser = Just user})
                     , maybesignatory = Nothing -- FIXME: should be author user id
                     , signatorymagichash = MagicHash 0
                     }
-       addbr text | BS.null text = <span/>
-       addbr text = <span><% text %><br/></span>
 
    in showDocumentPageHelper document helper 
            (documenttitle)  

@@ -27,6 +27,7 @@ seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
 data KontraLink
     = LinkAbout
     | LinkLogin
+    | LinkLogout
     | LinkSignup
     | LinkForgotPassword
     | LinkForgotPasswordDone
@@ -46,6 +47,7 @@ data KontraLink
 instance Show KontraLink where
     showsPrec _ LinkAbout = (++) "/about"
     showsPrec _ LinkLogin = (++) "/login"
+    showsPrec _ LinkLogout = (++) "/logout"
     showsPrec _ LinkSignup = (++) "/signup"
     showsPrec _ LinkForgotPassword = (++) "/amnesia"
     showsPrec _ LinkForgotPasswordDone = (++) "/amnesiadone"
