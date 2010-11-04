@@ -157,6 +157,7 @@ $(deriveAll [''Eq, ''Ord, ''Default]
 
       data DocumentStatus = Preparation 
                           | Pending  
+                          | AwaitingAuthor
                           | Closed 
                           | Canceled 
                           | Timedout
