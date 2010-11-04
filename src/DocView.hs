@@ -3,7 +3,7 @@
 
 module DocView( emptyDetails
               , showFilesImages2
-              , showDocument
+              , pageDocumentForAuthor
               , listDocuments
               , mailInvitationToSign
               , mailDocumentClosedForSignatories
@@ -12,7 +12,7 @@ module DocView( emptyDetails
               , landpageSignedView
               , landpageLoginForSaveView
               , landpageDocumentSavedView
-              , showDocumentForSign
+              , pageDocumentForSign
               , flashDocumentDraftSaved
               , remindMail
               , flashRemindMailSent
@@ -443,13 +443,13 @@ emptyDetails = SignatoryDetails
 addbr text | BS.null text = []
 addbr text = [<% text %>, <% <br/> %>]
 
-showDocument :: (Monad m) 
+pageDocumentForAuthor :: (Monad m) 
              => Context 
              -> Document 
              -> Bool 
              -> Int                -- free documents left
              -> (HSPT m XML) 
-showDocument ctx@(Context {ctxmaybeuser = Just user})
+pageDocumentForAuthor ctx@(Context {ctxmaybeuser = Just user})
              document@Document{ documentsignatorylinks
                               , documentauthordetails
                               , documenttitle
@@ -649,14 +649,14 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document siglnk@(
                 (if (isCurrentUserAuthor && (not isCurrentSignatorAuthor) && (not isTimedout)) then [asChild <br/> ,asChild reminderForm] else [])
                 %></div>
 
-showDocumentForSign :: ( Monad m) =>
+pageDocumentForSign :: ( Monad m) =>
                        KontraLink 
                            -> Document 
                            -> Context
                            -> SignatoryLink
                            -> Bool 
                     -> (HSPT m XML) 
-showDocumentForSign action document ctx@(Context {ctxmaybeuser = muser})  invitedlink wassigned =
+pageDocumentForSign action document ctx@(Context {ctxmaybeuser = muser})  invitedlink wassigned =
    let helper = [ <script> var documentid = "<% show $ documentid document %>"; 
                   </script>
                 , <script type="text/javascript">

@@ -325,7 +325,7 @@ handleSignShow documentid
   let authorname = signatoryname $ documentauthordetails document
       invitedname = signatoryname $ signatorydetails $ invitedlink 
   renderFromBody ctx TopNone kontrakcja 
-                     (showDocumentForSign (LinkSignDoc document invitedlink) 
+                     (pageDocumentForSign (LinkSignDoc document invitedlink) 
                       document ctx invitedlink wassigned)
 
 handleIssue :: Kontra Response
@@ -355,7 +355,7 @@ handleIssueShow document@Document{ documentauthor
                         then TopDocument
                         else TopNew
            renderFromBody ctx toptab kontrakcja 
-                                    (showDocument ctx document False freeleft)
+                                    (pageDocumentForAuthor ctx document False freeleft)
        , do
            methodM POST
            when (userid/=unAuthor documentauthor) mzero
