@@ -321,6 +321,7 @@ partialScripts =
       , <script src="/js/jquery-ui-1.8.custom.min.js"/>
       -}
       , <script src="/js/jquery.MultiFile.js"/>
+      , <script src="/tiny_mce/jquery.tinymce.js"></script>
       , <script src="/js/global.js"/>
       ]
 

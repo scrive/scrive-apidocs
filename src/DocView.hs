@@ -12,8 +12,7 @@ import DocState
 import HSP
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
-import qualified HSX.XMLGenerator as HSX (XML)
-import qualified HSX.XMLGenerator
+import qualified HSX.XMLGenerator as HSX
 import User
 import KontraLink
 import Misc
@@ -427,15 +426,12 @@ emptyDetails = SignatoryDetails
           , signatoryotherfields = []
           }
 
-showDocument :: (XMLGenerator m,
-                 EmbedAsAttr m (Attr [Char] KontraLink),
-                 EmbedAsAttr m (Attr [Char] DocumentID),
-                 EmbedAsAttr m (Attr [Char] BS.ByteString)) 
+showDocument :: (Monad m) 
              => Context 
              -> Document 
              -> Bool 
              -> Int                -- free documents left
-             -> XMLGenT m (HSX.XMLGenerator.XML m)
+             -> (HSPT m XML) 
 showDocument ctx@(Context {ctxmaybeuser = Just user})
              document@Document{ documentsignatorylinks
                               , documentauthordetails
@@ -533,9 +529,9 @@ showDocument ctx@(Context {ctxmaybeuser = Just user})
 
 showDocumentPageHelper
     :: (XMLGenerator m, 
-        HSX.XMLGenerator.EmbedAsChild m c,
+        HSX.EmbedAsChild m c,
         EmbedAsAttr m (Attr [Char] KontraLink),
-        HSX.XMLGenerator.EmbedAsChild m d,
+        HSX.EmbedAsChild m d,
         EmbedAsAttr m (Attr [Char] BS.ByteString)) =>
         DocState.Document
      -> c
@@ -604,7 +600,7 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document siglnk@(
                       else "Skicka påminnelse"               
       reminderEditorText = "Skriv eget meddelande"                          
       reminderDialogTitle = reminderText
-      reminderMessage =  remindMailContent BS.empty ctx document siglnk
+      reminderMessage =  remindMailContent Nothing ctx document siglnk
       mainDialogText =  if (wasSigned)
                          then <span>Du vill skicka dokumentet <% documenttitle document %> till <%(personname siglnk)%> igen. Nedan ser du vårt standardmeddelande. Om du vill kan du ändra meddelandet Innan du skickar.</span>
                          else <span>Du vill skicka en påminnelse att underteckna dokumentet <% documenttitle document %> till <%(personname siglnk)%>. Nedan ser du vårt standardmeddelande. Om du vill kan du ändra meddelandet Innan du skickar.</span>
@@ -638,15 +634,13 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document siglnk@(
                 (if (isCurrentUserAuthor && (not isCurrentSignatorAuthor) && (not isTimedout)) then [asChild <br/> ,asChild reminderForm] else [])
                 %></div>
 
-showDocumentForSign :: ( XMLGenerator m
-      , EmbedAsAttr m (Attr [Char] KontraLink)
-      , EmbedAsAttr m (Attr [Char] BS.ByteString)) =>
+showDocumentForSign :: ( Monad m) =>
                        KontraLink 
                            -> Document 
                            -> Context
                            -> SignatoryLink
                            -> Bool 
-                    -> XMLGenT m (HSX.XML m)
+                    -> (HSPT m XML) 
 showDocumentForSign action document ctx@(Context {ctxmaybeuser = muser})  invitedlink wassigned =
    let helper = [ <script> var documentid = "<% show $ documentid document %>"; 
                   </script>
@@ -930,17 +924,17 @@ swedishListString (x:xs) = do
   list2 <- swedishListString xs
   return (concat list ++ list2)
 
-remindMail:: BS.ByteString -> Context -> Document -> SignatoryLink -> IO Mail
+remindMail:: Maybe (BS.ByteString) -> Context -> Document -> SignatoryLink -> IO Mail
 remindMail cm c d s = case s of 
                        SignatoryLink{maybesigninfo = Nothing} -> remindMailNotSigned cm c d s
                        _ -> remindMailSigned cm c d s
                        
-remindMailContent ::(XMLGenerator m) =>  BS.ByteString -> Context -> Document -> SignatoryLink -> XMLGenT m (HSX.XML m)
+remindMailContent :: (Monad m) => Maybe (BS.ByteString) -> Context -> Document -> SignatoryLink ->(HSPT m XML) 
 remindMailContent  cm c d s = case s of 
                                SignatoryLink{maybesigninfo = Nothing} -> remindMailNotSignedContent  cm c d s
                                _ -> remindMailSignedContent  cm c d s          
                        
-remindMailNotSigned:: BS.ByteString -> Context -> Document -> SignatoryLink -> IO Mail
+remindMailNotSigned:: Maybe (BS.ByteString) -> Context -> Document -> SignatoryLink -> IO Mail
 remindMailNotSigned customMessage ctx@Context{ctxmaybeuser = Just user, ctxhostpart}
            document@Document{documenttitle,documentid,documenttimeouttime,documentauthordetails,documentinvitetext} 
            signlink = 
@@ -955,7 +949,7 @@ remindMailNotSigned customMessage ctx@Context{ctxmaybeuser = Just user, ctxhostp
 
         
         
-remindMailSigned:: BS.ByteString -> Context -> Document -> SignatoryLink -> IO Mail
+remindMailSigned:: Maybe (BS.ByteString)-> Context -> Document -> SignatoryLink -> IO Mail
 remindMailSigned customMessage ctx@Context{ctxmaybeuser = Just user, ctxhostpart}
                  document@Document{documenttitle,documentid,documenttimeouttime,documentauthordetails,documentinvitetext} 
                  signlink = 
@@ -967,6 +961,7 @@ remindMailSigned customMessage ctx@Context{ctxmaybeuser = Just user, ctxhostpart
                        content <- htmlHeadBodyWrapIO documenttitle content
                        return $ emptyMail {title = title, content = content, attachments = [(documenttitle,attachmentcontent)]}
 
+remindMailNotSignedContent::(Monad m) => (Maybe BS.ByteString) -> Context -> Document -> SignatoryLink -> (HSPT m XML)                                       
 remindMailNotSignedContent customMessage ctx  document signlink =  
                let link = (ctxhostpart ctx) ++ show (LinkSignDoc document signlink)
                    common = sequence
@@ -993,7 +988,8 @@ remindMailNotSignedContent customMessage ctx  document signlink =
                         </span>          
                    header   = withCustom  customMessage (remindMailNotSignedStandardHeader ctx document signlink)
                    in (makeEditable header) `before` skrivapaversion       
-                                      
+
+remindMailSignedContent ::(Monad m) => (Maybe BS.ByteString) -> Context -> Document -> SignatoryLink -> (HSPT m XML)                  
 remindMailSignedContent customMessage ctx  document signlink        
                          = makeEditable $
                             withCustom 
@@ -1002,29 +998,30 @@ remindMailSignedContent customMessage ctx  document signlink
                                       
                                       
                                       
-remindMailSignedStandardHeader::(XMLGenerator m) => Context -> Document -> SignatoryLink -> XMLGenT m (HSX.XML m)
+remindMailSignedStandardHeader::(Monad m) => Context -> Document -> SignatoryLink -> (HSPT m XML) 
 remindMailSignedStandardHeader ctx@Context{ctxmaybeuser = Just user} document signlink =        
                                                <span>
                                                  <p>Hej <%(personname signlink)%><%"\n"%><%"\n"%></p>
                                                  <p><%(signatoryname $ documentauthordetails document)%> vill påminna dig om att du inte undertecknat dokument <% documenttitle document %> ännu.<%"\n"%><%"\n"%></p>  
                                                </span> 
                        
-remindMailNotSignedStandardHeader::(XMLGenerator m) => Context -> Document -> SignatoryLink -> XMLGenT m (HSX.XML m)
+remindMailNotSignedStandardHeader::(Monad m) => Context -> Document -> SignatoryLink -> (HSPT m XML) 
 remindMailNotSignedStandardHeader ctx@Context{ctxmaybeuser = Just user} document signlink =   
                                                 <span>
                                                  <p>Hej <%(personname signlink)%><%"\n"%><%"\n"%></p>
                                                  <p><%(userfullname user)%> har på din begäran skickat ut dokumentet <% documenttitle document %> som du har undertecknat via tjänsten SkrivaPå. Dokumentet bifogas nedan.<%"\n"%></p>
                                                 </span>
                                                 
-withCustom::(XMLGenerator m) => BS.ByteString->(XMLGenT m (HSX.XML m)) -> (XMLGenT m (HSX.XML m)) 
-withCustom customMessage standardMessage = if (BS.null customMessage) 
-                                                  then standardMessage       
-                                                  else <p><% t2x customMessage%></p>  
+withCustom::(Monad m) => Maybe (BS.ByteString)->(HSPT m XML) ->(HSPT m XML) 
+
+withCustom (Just customMessage) _ =  <p> <% (cdata $ BS.toString customMessage ) %> </p>
+withCustom Nothing standardMessage = standardMessage       
+
                                                         
-before::(XMLGenerator m) => (XMLGenT m (HSX.XML m))-> ( XMLGenT m (HSX.XML m))-> (XMLGenT m (HSX.XML m)) 
+before::(Monad m) => (HSPT m XML)-> (HSPT m XML)-> (HSPT m XML) 
 before header message = <p><span><%header%></span><span><%message%></span> </p>                                     
                                            
-makeEditable::(XMLGenerator m) => (XMLGenT m (HSX.XML m))-> ( XMLGenT m (HSX.XML m))
+makeEditable::(Monad m) => (HSPT m XML) ->(HSPT m XML) 
 makeEditable c = <div class="editable" name="customtext"><%c%></div>         
                                   
 personname signlink = if (BS.null $ signatoryname $ signatorydetails signlink)
@@ -1081,5 +1078,4 @@ remindMailFlashMessage doc signlink =
                    personname =  if (BS.null $ signatoryname $ signatorydetails signlink)
                                   then  signatoryname $ signatorydetails signlink
                                   else signatoryemail $ signatorydetails signlink
-
-t2x text = intersperse (asChild <br/>) (map asChild (BS.split 10 text))                                  
+                               

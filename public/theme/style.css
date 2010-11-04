@@ -916,13 +916,18 @@ input
 -moz-box-shadow:0 0.1em 0.2em rgba(0, 0, 0, 0.5);
 background-color:#5D689A;
 border-bottom:0.2em solid #666666;
-border-width:1px 1px 0.2em;
-color:#FFFFFF;
 cursor:pointer;
-font-size:1em;
 line-height:1;
 padding:0.3em 0.6em;
 text-shadow:0 0 0.1em #222222;
+-webkit-box-shadow: rgba(0, 0, 0, 0.496094) 0px 0.1em 0.2em;
+border-bottom-left-radius: 10.2em 10.2em;
+border-bottom-right-radius: 10.2em 10.2em;
+border-width: 1px 1px 0.2em;
+border-top-left-radius: 10.2em 10.2em;
+border-top-right-radius: 10.2em 10.2em;
+font-size: 1em;
+color: #FFFFFF;
 }
 .overlay h2 {
     	margin:0px;
