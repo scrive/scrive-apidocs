@@ -171,7 +171,7 @@ sendRejectAuthorEmail ctx document signalink = do
   let authorid = unAuthor $ documentauthor document
   Just authoruser <- query $ GetUserByUserID authorid
   let rejectorName = signatoryname (signatorydetails signalink)
-  mail <- rejectedMailAuthor ctx (unEmail $ useremail authoruser) (userfullname authoruser)
+  mail <- mailDocumentRejectedForAuthor ctx (unEmail $ useremail authoruser) (userfullname authoruser)
              document rejectorName
   let email2 = signatoryemail $ documentauthordetails document
       email1 = unEmail $ useremail authoruser
@@ -191,7 +191,7 @@ handleSign = do
        , withUser $ do
           let u = userid $ fromJust ctxmaybeuser
           documents <- query $ GetDocumentsBySignatory u
-          renderFromBody ctx TopNone kontrakcja (listDocuments ctxtime u documents)
+          renderFromBody ctx TopNone kontrakcja (pageDocumentList ctxtime u documents)
        ]
 
 signDocument :: DocumentID 
@@ -532,7 +532,7 @@ handleIssueGet :: Kontra Response
 handleIssueGet = do
   ctx@(Context {ctxmaybeuser = Just user, ctxhostpart, ctxtime}) <- get
   documents <- query $ GetDocumentsByUser (userid user) 
-  renderFromBody ctx TopDocument kontrakcja (listDocuments ctxtime (userid user) documents)
+  renderFromBody ctx TopDocument kontrakcja (pageDocumentList ctxtime (userid user) documents)
 
 gs :: String
 #ifdef WINDOWS
