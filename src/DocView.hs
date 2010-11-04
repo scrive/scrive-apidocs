@@ -1,11 +1,25 @@
 {-# LANGUAGE IncoherentInstances, TemplateHaskell, NamedFieldPuns, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -F -pgmFtrhsx #-}
 
-module DocView(emptyDetails,showFilesImages2,showDocument,listDocuments,invitationMail,closedMail,closedMailAuthor,
-landpageSignInviteView,landpageSignedView,landpageLoginForSaveView,landpageDocumentSavedView,
-showDocumentForSign,flashDocumentDraftSaved,remindMail,flashRemindMailSent, rejectedMailAuthor, landpageRejectedView,
-rejectedDocumentHtml
-) where
+module DocView( emptyDetails
+              , showFilesImages2
+              , showDocument
+              , listDocuments
+              , invitationMail
+              , closedMail
+              , closedMailAuthor
+              , landpageSignInviteView
+              , landpageSignedView
+              , landpageLoginForSaveView
+              , landpageDocumentSavedView
+              , showDocumentForSign
+              , flashDocumentDraftSaved
+              , remindMail
+              , flashRemindMailSent
+              , rejectedMailAuthor
+              , landpageRejectedView
+              , rejectedDocumentHtml
+              ) where
 import AppView
 import Data.List
 import DocState
