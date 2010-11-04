@@ -119,31 +119,29 @@ $(deriveAll [''Eq, ''Ord, ''Default]
       {-
          Document start in Preparation state.
 
-         * Preparation: can add/remove signatories, edit document,
-           edit dates and times. Nobody else can see the document.
-           Goes to ReadyToSign or Canceled state.
-         * Pending: people can sign document. When last person
-           has signed, goes to Closed state. When owner cancels document
-           goes to Canceled state. When time is up, goes to Timedout
-           state.
-         * Closed: everybody signed. This is final state.
-         * Canceled: this can be final state or we can go back to 
-           Preparation.
-         * Timedout: this works as autocancel and has exactly same 
-           properties. Can go to Preparation.
+         Meaning:
+         * Preparation: Only author can see it. He's still editing.
+         * Pending: People can sign document. Could be timed out.
+         * Closed: Everybody signed. This is final state.
+         * Canceled: Author has canceled the document.
+         * Timedout: This works as autocancel and has exactly same 
+           properties.
 
          Transitions:
-         * Preparation to ReadyToSign: invitations are sent.
-         * ReadyToSign to Closed: info about closed deal is sent to
-           everybody involved.
-         * ReadyToSign/Preparation to Cancel: mail about cancel to 
-           all who have signed it already is sent. 
-         * ReadyToSign/Preparation to Timedout: mail about timeout to 
+         * Preparation to Pending: When invitations are sent.
+         * Pending to Closed: When all signatories have signed. 
+           Info about closed deal is sent to everybody involved.
+         * Pending to Cancel: Send no emails.
+         * Preparation to Cancel: mail about cancel to 
+           all who have signed it already is sent.
+           TODO: Should other parties get an email?
+         * Pending to Timeout: TODO: No action?
+         * Preparation to Timedout: mail about timeout to 
            all who have signed it already is sent.
 
          Allowed actions:
          * Preparation: change document, change title, add/rem signatories
-         * ReadyToSign: change email of a signatory
+         * Pending: change email of a signatory, signatory can sign
          * Closed: nothing
          * Canceled: edit back to Preparation
          * Timedout: edit back to Preparation
