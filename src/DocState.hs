@@ -974,7 +974,10 @@ signDocument documentid signatorylinkid1 time ipnumber fields = do
 
           signeddocument2 = 
               if isallsigned
-              then signeddocument { documentstatus = Closed
+              then signeddocument { documentstatus = if hasfields then
+                                                         AwaitingAuthor
+                                                     else
+                                                         Closed
                                   }
               else signeddocument
 
