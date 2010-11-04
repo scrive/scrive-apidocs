@@ -4,7 +4,7 @@
 module DocView( emptyDetails
               , showFilesImages2
               , pageDocumentForAuthor
-              , listDocuments
+              , pageDocumentList
               , mailInvitationToSign
               , mailDocumentClosedForSignatories
               , mailDocumentClosedForAuthor
@@ -16,9 +16,9 @@ module DocView( emptyDetails
               , flashDocumentDraftSaved
               , remindMail
               , flashRemindMailSent
-              , rejectedMailAuthor
+              , mailDocumentRejectedForAuthor
               , landpageRejectedView
-              , rejectedDocumentHtml
+              , flashDocumentRejected
               ) where
 import AppView
 import Data.List
@@ -308,13 +308,13 @@ oneDocumentRow ctime userid document@Document{ documentid
     </tr>
 
 
-listDocuments :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink),
+pageDocumentList :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink),
                       EmbedAsAttr m (Attr [Char] DocumentID)) 
               => MinutesTime
               -> UserID
               -> [Document] 
               -> XMLGenT m (HSX.XML m)
-listDocuments ctime userid documents = 
+pageDocumentList ctime userid documents = 
      <form method="post" action=LinkIssue>
      <table class="doctable" cellspacing="0">
       <col/>
@@ -835,20 +835,20 @@ mailDocumentClosedForAuthor (Context {ctxhostpart})
         </span> 
      return $ emptyMail {title = title, content = content}
 
-rejectedDocumentHtml :: Document -> HSP.HSP HSP.XML
-rejectedDocumentHtml document@Document{ documenttitle } = 
+flashDocumentRejected :: Document -> HSP.HSP HSP.XML
+flashDocumentRejected document@Document{ documenttitle } = 
     <div>
      Du har nekat att underteckna dokumentet <strong><% documenttitle %></strong>.
      Ett meddelande har skickats till <% partyListString document %>.
     </div>
 
-rejectedMailAuthor :: Context
+mailDocumentRejectedForAuthor :: Context
                    -> BS.ByteString
                    -> BS.ByteString
                    -> Document
                    -> BS.ByteString
                    -> IO Mail
-rejectedMailAuthor (Context {ctxhostpart}) 
+mailDocumentRejectedForAuthor (Context {ctxhostpart}) 
                    emailaddress personname 
                    document@Document{documenttitle,documentid} 
                            rejectorName = 
