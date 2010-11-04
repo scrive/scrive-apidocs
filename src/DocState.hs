@@ -129,15 +129,15 @@ $(deriveAll [''Eq, ''Ord, ''Default]
 
          Transitions:
          * Preparation to Pending: When invitations are sent.
-         * Pending to Closed: When all signatories have signed. 
-           Info about closed deal is sent to everybody involved.
-         * Pending to Cancel: Send no emails.
          * Preparation to Cancel: mail about cancel to 
            all who have signed it already is sent.
            TODO: Should other parties get an email?
-         * Pending to Timeout: TODO: No action?
          * Preparation to Timedout: mail about timeout to 
            all who have signed it already is sent.
+         * Pending to Closed: When all signatories have signed. 
+           Info about closed deal is sent to everybody involved.
+         * Pending to Cancel: Send no emails.
+         * Pending to Timeout: TODO: No action?
 
          Allowed actions:
          * Preparation: change document, change title, add/rem signatories
