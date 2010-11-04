@@ -370,7 +370,7 @@ handleIssueShow document@Document{ documentauthor
                seeOther link response
             else do 
              let link = ctxhostpart ++ show LinkIssue
-             addFlashMsgHtml $ documentSavedForLaterFlashMessage doc2
+             addFlashMsgHtml $ flashDocumentDraftSaved doc2
              response <- webHSP (seeOtherXML link)
              seeOther link response
 
@@ -853,7 +853,7 @@ handleResend docid signlinkid  = do
                                    customMessageInput <- fmap (fmap concatChunks) $ getDataFn (lookBS "customtext")  
                                    mail <- liftIO $ remindMail customMessageInput ctx doc signlink
                                    liftIO $ sendMail (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )]})
-                                   addFlashMsgText ( remindMailFlashMessage doc signlink)
+                                   addFlashMsgText ( flashRemindMailSent doc signlink)
                                    return (LinkIssueDoc doc)
                                  Nothing -> mzero           
                        Nothing -> mzero               

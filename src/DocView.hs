@@ -3,7 +3,7 @@
 
 module DocView(emptyDetails,showFilesImages2,showDocument,listDocuments,invitationMail,closedMail,closedMailAuthor,
 landpageSignInviteView,landpageSignedView,landpageLoginForSaveView,landpageDocumentSavedView,
-showDocumentForSign,documentSavedForLaterFlashMessage,remindMail,remindMailFlashMessage, rejectedMailAuthor, landpageRejectedView,
+showDocumentForSign,flashDocumentDraftSaved,remindMail,flashRemindMailSent, rejectedMailAuthor, landpageRejectedView,
 rejectedDocumentHtml
 ) where
 import AppView
@@ -198,27 +198,27 @@ landpageDocumentSavedView (ctx@Context { ctxmaybeuser = Just user }) document si
     </div>
 
 
-documentIssuedFlashMessage :: Document -> HSP.HSP HSP.XML
-documentIssuedFlashMessage document = 
+flashDocumentIssued :: Document -> HSP.HSP HSP.XML
+flashDocumentIssued document = 
     <div>
      Du har undertecknat avtalet och en inbjudan har nu skickats 
      till <% partyListButAuthorString document %>.
     </div>
 
-documentSavedForLaterFlashMessage :: Document -> HSP.HSP HSP.XML
-documentSavedForLaterFlashMessage document = 
+flashDocumentDraftSaved :: Document -> HSP.HSP HSP.XML
+flashDocumentDraftSaved document = 
     <div>
      Du har sparat documentet.
     </div>
 
-documentSignedFlashMessage :: Document -> HSP.HSP HSP.XML
-documentSignedFlashMessage document =
+flashDocumentSigned :: Document -> HSP.HSP HSP.XML
+flashDocumentSigned document =
     <div>
      Du har undertecknat avtalet!
     </div>
 
-documentClosedFlashMessage :: Document -> HSP.HSP HSP.XML
-documentClosedFlashMessage document =
+flashDocumentClosed :: Document -> HSP.HSP HSP.XML
+flashDocumentClosed document =
     <div>
      Du har undertecknat avtalet! Avtalet är undertecknat av <% partyListString document %> nu!
     </div>
@@ -1071,7 +1071,7 @@ buildJS authordetails signatorydetails =
                                      else (jsArray [(buildSigJS emptyDetails)])
                                      
                                      
-remindMailFlashMessage doc signlink =  
+flashRemindMailSent doc signlink =  
                 case signlink of 
                   SignatoryLink{maybesigninfo = Nothing} -> (BS.fromString "En påminnelse har skickats till ") `BS.append` personname
                   _ -> (BS.fromString "Dokumentet har skickats till ") `BS.append` personname
