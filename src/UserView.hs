@@ -194,8 +194,8 @@ viewSubaccounts ctx@(Context {ctxmaybeuser = Just user}) subusers =
       </table>
     </form>
 
-newUserMail :: BS.ByteString -> BS.ByteString -> BS.ByteString -> IO Mail
-newUserMail emailaddress personname newpassword =
+newUserMail :: String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> IO Mail
+newUserMail hostpart emailaddress personname newpassword =
     do 
     let title = BS.fromString "Nytt konto"
     content <- htmlHeadBodyWrapIO ""
@@ -206,14 +206,14 @@ newUserMail emailaddress personname newpassword =
          Vi hoppas att du kommer att bli nöjd med våra tjänster. Tveka inte att höra av dig med 
          feedback eller bara en enkel hälsning. Din åsikt är värdefull.</p>
 
-      <p>Användarnamn: <span style="color: orange; text-weight: bold"><% emailaddress %></span><br/>
-         Lösenord: <span style="color: orange; text-weight: bold"><% newpassword %></span><br/>
+      <p>Användarnamn: <b><% emailaddress %></b><br/>
+         Lösenord: <b><% newpassword %></b><br/>
       </p>
       <p>
-      <a href="http://skrivapa.se/login">http://skrivapa.se/login</a>
+      <a href=(hostpart ++ "/login")><% hostpart ++ "/login" %></a>
       </p>
 
-      <p>Med vänliga hälsningar<br/>/Lukas Duczko och team <a href="http://skrivapa.se/">SkrivaPå</a>.
+      <p>Med vänliga hälsningar<br/>/Lukas Duczko och team <a href=(hostpart ++ "/")>SkrivaPå</a>.
       </p>
      </span>
     return $ emptyMail {title=title, content = content} 
