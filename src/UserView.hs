@@ -55,14 +55,19 @@ instance Monad m => IsAttrValue m UserID where
 
 
 showUser ctx@(Context {ctxmaybeuser = Just user}) = 
-    let User{userhasacceptedtermsofservice} = user in
-    renderFromBody ctx TopAccount kontrakcja $ 
+    let User{userhasacceptedtermsofservice} = user 
+        accepted = isJust userhasacceptedtermsofservice 
+        toptab = if accepted
+                 then TopAccount
+                 else TopEmpty
+    in
+    renderFromBody ctx toptab kontrakcja $ 
     <div class="accounttable">
      <h1><% userfullname user %></h1>
-      <% if isJust userhasacceptedtermsofservice 
+      <% if accepted
          then <% () %>
          else <%
-              <div><strong>Please check your details and make sure you read and accept terms of service below.</strong></div>
+              <div><strong>Vänligen fyll i dina uppgifter och acceptera användarvillkoren.</strong></div>
               %>
        %>
 
@@ -92,25 +97,31 @@ showUser ctx@(Context {ctxmaybeuser = Just user}) =
        %>
        <input class="button" type="submit" value="Spara ändringar"/>
       </form>
-      <br />
-      <br />
-      <br />
-      <form action=LinkAccountPassword method="post">
-        <table>
-         <tr><td>Nuvarande lösenord:</td>
-             <td><input type="password" name="oldpassword" autocomplete="off" /></td>
-         </tr>
-         <tr><td>Nytt lösenord:</td>
-             <td><input type="password" name="password" autocomplete="off" /></td>
-         </tr>
-         <tr><td>Upprepa nytt lösenord:</td>
-             <td><input type="password" name="password2" autocomplete="off" /></td>
-         </tr>
-       </table>
-       <input class="button" type="submit" value="Ändra lösenord"/>
-      </form>
-      <br />
-      <a href=LinkSubaccount>Underkonton</a>
+      <% if accepted
+         then
+          <span>
+           <div>
+           <form action=LinkAccountPassword method="post">
+            <table>
+             <tr><td>Nuvarande lösenord:</td>
+              <td><input type="password" name="oldpassword" autocomplete="off" /></td>
+             </tr>
+             <tr><td>Nytt lösenord:</td>
+              <td><input type="password" name="password" autocomplete="off" /></td>
+             </tr>
+             <tr><td>Upprepa nytt lösenord:</td>
+              <td><input type="password" name="password2" autocomplete="off" /></td>
+             </tr>
+            </table>
+            <input class="button" type="submit" value="Ändra lösenord"/>
+           </form>
+          </div>
+          <div>
+           <a href=LinkSubaccount>Underkonton</a>
+          </div>
+          </span>
+         else <span/>
+       %>
      </div>
     </div>
   
