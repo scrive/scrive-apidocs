@@ -535,23 +535,23 @@ signupPageView form =
         <form action=LinkSignup method="post">
             <table>
                 <tr>
-                    <td>Full name</td>
+                    <td>Namn:</td>
                     <td><input name="fullname" value=(maybe BS.empty signupFullname form) /></td>
                 </tr>
                 <tr>
-                    <td>Email</td>
+                    <td>E-mail:</td>
                     <td><input type="email" name="email" value=(maybe BS.empty signupEmail form) /></td>
                 </tr>
                 <tr>
-                    <td>Password</td>
+                    <td>Lösenord:</td>
                     <td><input name="password" type="password" /></td>
                 </tr>
                 <tr>
-                    <td>Password again</td>
+                    <td>Upprepa nytt lösenord:</td>
                     <td><input name="password2" type="password" /></td>
                 </tr>
             </table>
-            <input type="submit" value="Skapa konton" />
+            <input type="submit" value="Skapa konto" />
         </form>
     </div>
 
