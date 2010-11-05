@@ -736,10 +736,9 @@ pageDocumentForSign action document ctx@(Context {ctxmaybeuser = muser})  invite
                        <h2>Avvisa</h2>                 
                     <p>Är du säker på att du vill avvisa dokumentet <strong><% documenttitle document %></strong>?</p>
                     <p>När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela <strong><% authorname %></strong>.</p>
-
-                    {- Not yet: Om du vill kan du lägga till ett eget meddelande nedan om varför du valt att neka. -}
-                    <BR/>
-                    <BR/>
+                    <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
+                     <% rejectMessage %>
+                    </div>
                     <div class="buttonbox">
                      <input type="hidden" name="cancel" value="automatic"/>
                      <button class="submiter" type="button"> Avvisa </button>
@@ -822,20 +821,19 @@ mailDocumentClosedForSignatories :: Context
 mailDocumentClosedForSignatories (Context {ctxhostpart}) 
               emailaddress personname 
               document@Document{documenttitle,documentid} 
-              signaturelink magichash = 
-    do
+              signaturelink magichash = do
     let title = BS.append (BS.fromString "Bekräftelse: ")  documenttitle    
     let link = ctxhostpart ++ show (LinkSignDoc document signaturelink)
     content <- htmlHeadBodyWrapIO documenttitle 
-     <span>
-       <p>Hej <strong><% personname %></strong>,</p>
-       <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats 
-          av <% partyListString document %>. Avtalet är nu bindande.</p> 
+         <span>
+           <p>Hej <strong><% personname %></strong>,</p>
+           <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats 
+             av <% partyListString document %>. Avtalet är nu bindande.</p> 
           
-       <p>Det färdigställda dokumentet bifogas med detta mail.</p> 
+           <p>Det färdigställda dokumentet bifogas med detta mail.</p> 
    
-       <% poweredBySkrivaPaPara ctxhostpart %>
-      </span>
+           <% poweredBySkrivaPaPara ctxhostpart %>
+         </span>
     return $ emptyMail {title = title, content = content}
 
 mailDocumentClosedForAuthor :: Context
@@ -878,18 +876,9 @@ mailDocumentRejectedForAuthor customMessage
                    ctx@(Context {ctxhostpart}) 
                    emailaddress personname 
                    document@Document{documenttitle,documentid} 
-                           rejectorName = 
-    do
+                           rejectorName = do
      let title = BS.append (BS.fromString "Avvisat: ")  documenttitle
-     let link = ctxhostpart ++ show (LinkIssueDoc document)
-     content <- htmlHeadBodyWrapIO documenttitle
-        <span>
-           <p>Hej <% personname %>,</p>
-           <p><% rejectorName %> har nekat att underteckna dokumentet <strong><% documenttitle %></strong>. 
-              Avtalsprocessen är därmed avbruten.</p>
-
-             <% poweredBySkrivaPaPara ctxhostpart %>
-        </span> 
+     content <- htmlHeadBodyWrapIO documenttitle $ rejectMailContent customMessage ctx emailaddress personname document rejectorName
      return $ emptyMail {title = title, content = content}
 
 rejectMailContent customMessage (Context {ctxhostpart}) 
