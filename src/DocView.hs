@@ -511,10 +511,8 @@ pageDocumentForAuthor ctx@(Context {ctxmaybeuser = Just user})
               <small><a id="addsiglink" onclick="signatoryadd(); return false;" href="#">Lägg till fler</a></small>
 
               <div style="margin-top: 10px">
-              <a href="#" id="editinvitetextlink" rel="#edit-invite-text-dialog">Skriv hälsningsmeddelande</a><br/>
               <p>Undertecknas inom (dagar)
               <input type="text" name="daystosign" value=documentdaystosign maxlength="2" size="2" autocomplete="off"/>
-              <input type="hidden" name="invitetext" id="invitetext" value= documentinvitetext/>
               </p>
               <div style="height: 2px;"/>
               <input class="bigbutton" type="submit" name="final" value="Underteckna" id="signinvite" rel="#dialog-confirm-signinvite"/>
@@ -524,35 +522,25 @@ pageDocumentForAuthor ctx@(Context {ctxmaybeuser = Just user})
               <span class="localdialogs">
                 <form method="post" name="form" action=(LinkIssueDoc document) class="overlay redirectsubmitform" id="dialog-confirm-signinvite" rel="#main-document-form">  
                    <a class="close"> </a>
-                   <h2>"Underteckna"</h2>
+                   <h2>Underteckna</h2>
                     <p>Är du säker att du vill underteckna dokumentet <strong><% documenttitle %></strong>?</p>
                     
                     <p>När du undertecknat kommer en automatisk inbjudan att skickas till 
                        <span class="Xinvited">Invited</span> med e-post.</p>
-                 
+                   <BR/>    
+                   <div style="padding-left:5px">
+                   <% makeEditable "invitetext" $ withCustom  (Just documentinvitetext) <p></p> %>
+                   </div>
                    <BR/>
                    <BR/>
-                   <BR/>
-                   <div class="buttonbox">
+                   <div class="buttonbox" >
                        <input type="hidden" name="final" value="automatic"/>
                        <button class="submiter" type="button"> Underteckna </button>
+                       <button class="editer" type="button"> Skriv eget meddelande   </button>
                        <button class="close" type="button"> Avbryt </button>
                    </div>
                  </form>  
-                 <form method="post" name="form" action=(LinkIssueDoc document) class="overlay" id="edit-invite-text-dialog"> 
-                  <a class="close"> </a>
-                  <h2> Hälsningsmeddelande </h2>
-                   <BR/>
-                   <div>                    
-                   <textarea cols="45" rows="6"></textarea>
-                   </div>
-                   <BR/>
-                   <div class="buttonbox">
-                       <button class="close" type="button" id="editing-invite-text-finished"> Ok </button>
-                       <button class="close" type="button"> Avbryt </button>
-                   </div>
-                 </form> 
-              </span>
+               </span>
              </span>
            else
               <div id="signatorylist">
@@ -803,14 +791,12 @@ mailInvitationToSign (Context {ctxmaybeuser = Just user, ctxhostpart})
             , asChild common
             , asChild (poweredBySkrivaPaPara ctxhostpart)
             ]
-        paragraphs :: [BS.ByteString]
-        paragraphs = BS.split 10 documentinvitetext
-        -- p :: [GenChildList IO]
-        p = intersperse (asChild <br/>) (map asChild paragraphs)
+
         --authorversion  :: (XMLGenerator m) => GenChildList m
         authorversion = sequence $
-               p ++ 
-               [ asChild common
+
+               [ <% cdata $ BS.toString documentinvitetext %>
+               , asChild common
                , asChild "Hälsningar"
                , asChild <br/>
                , asChild creatorname
@@ -1041,11 +1027,11 @@ remindMailNotSignedContent customMessage ctx  document signlink =
                           <%(poweredBySkrivaPaPara (ctxhostpart ctx)) %>
                         </span>          
                    header   = withCustom  customMessage (remindMailNotSignedStandardHeader ctx document signlink)
-                   in (makeEditable header) `before` skrivapaversion       
+                   in (makeEditable "customtext" header) `before` skrivapaversion       
 
 remindMailSignedContent ::(Monad m) => (Maybe BS.ByteString) -> Context -> Document -> SignatoryLink -> (HSPT m XML)                  
 remindMailSignedContent customMessage ctx  document signlink        
-                         = makeEditable $
+                         = makeEditable "customtext" $
                             withCustom 
                                 customMessage $
                                 (remindMailSignedStandardHeader ctx document signlink) `before` (poweredBySkrivaPaPara (ctxhostpart ctx))                     
@@ -1075,8 +1061,8 @@ withCustom Nothing standardMessage = standardMessage
 before::(Monad m) => (HSPT m XML)-> (HSPT m XML)-> (HSPT m XML) 
 before header message = <p><span><%header%></span><span><%message%></span> </p>                                     
                                            
-makeEditable::(Monad m) => (HSPT m XML) ->(HSPT m XML) 
-makeEditable c = <div class="editable" name="customtext"><%c%></div>         
+makeEditable::(Monad m) => String -> (HSPT m XML) ->(HSPT m XML) 
+makeEditable name c = <div class="editable" name=name><%c%></div>         
                                   
 personname signlink = if (BS.null $ signatoryname $ signatorydetails signlink)
                         then  signatoryemail $ signatorydetails signlink  

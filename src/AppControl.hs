@@ -268,7 +268,7 @@ handleLoginPost = do
   rq <- askRq
   email <- getDataFnM $ look "email"
   passwd <- getDataFnM $ look "password"
-  rememberMeMaybe <- getDataFn $ look "rememberme"
+  rememberMeMaybe <- getDataFn' $ look "rememberme"
   let rememberMe = isJust rememberMeMaybe
   
   -- check the user things here

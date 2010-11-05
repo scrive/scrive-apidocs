@@ -224,6 +224,14 @@ $(document).ready( function () {
                                $(this.form).submit();
     })
  
+   $(".editer").each(function() {
+                             $(this).click(function(){
+                                  prepareForEdit($(this.form));
+                                  $(this).hide();
+                                  return false;
+                                  })
+                         })   
+                         
     $("#editinvitetextlink").overlay({        
     onBeforeLoad: function () { 
             var newtxt = $("#invitetext").val()
@@ -237,10 +245,15 @@ $(document).ready( function () {
                      })
     $(".redirectsubmitform").submit(function(){
                           var newform = $($(this).attr("rel"))
-                          var inputs = $("input[type='hidden']",$(this));
+                          var inputs = $("input",$(this))
+                          $('textarea:tinymce',$(this)).each(
+                             function(){
+                             inputs = inputs.add($("<input name='"+$(this).attr('name')+"' value='"+$(this).html()+"'>"))
+                             })
+                          inputs.css("display","none");
                           newform.append(inputs); 
                           newform.submit();
-                          return false;
+                          return false; 
                           })                      
     $("#sign").overlay({
         onBeforeLoad: function () { if (!sigFieldsValidation()) return false;}
@@ -422,26 +435,20 @@ $(function(){
                      onClose: function(e){ return false;
                     }
                  })
-    })
-   $(".editer").each(function() {
-                             $(this).click(function(){
-                                  prepareForEdit($(this.form));
-                                  $(this).hide();
-                                  return false;
-                                  })
-                         })                      
+    })                   
 })
 
 function prepareForEdit(form){
     $(".editable",form).each( function(){
         var textarea = $("<textarea style='width:95%;height:120px'  name='"+$(this).attr('name')+"'> "+ $(this).html()+ "</textarea>")
         $(this).replaceWith(textarea);
-        textarea.tinymce({
+        var editor = textarea.tinymce({
                           script_url : '/tiny_mce/tiny_mce.js',
                           theme : "advanced",
                           theme_advanced_toolbar_location : "top",     
                           theme_advanced_buttons1 : "bold,italic,underline,separator,strikethrough,bullist,numlist,separator,undo,redo,separator,cut,copy,paste",
-                          theme_advanced_buttons2 : ""
+                          theme_advanced_buttons2 : "",
+                          
                          })
-    })    
+  })    
 }
