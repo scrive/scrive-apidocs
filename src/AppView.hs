@@ -193,30 +193,6 @@ loginBox ctx =
       </table>
     </form>
     </div>
-    {-
-    <div id="register" style="display: none;">
-     <form action="/tutorial/actions/newuser" method="post">
-      <table>
- 	<tr>
-          <td>Email:</td>
-          <td><input type="textfield" name="email" class="emailvalidation"/></td>
-        </tr>
-	<tr>
-          <td>Password:</td>
-          <td><input type="password" name="password"/></td>
-        </tr>
-	<tr>
-          <td>Verify Password:</td>
-          <td><input type="password" name="password2"/></td>
-        </tr>
-	<tr>
-          <td><input type="submit" name="create" value="Create Account"/></td>
-          <td><a href="#" onClick="$('#register').hide(); $('#login').show(); return false;">login</a></td>
-        </tr>
-      </table>
-     </form>
-    </div>
-    -}
    </div>
 
 pageWelcome :: Context 
@@ -369,8 +345,6 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
                <div id="loginContainer"> {- new id -}
 	         <form action="/login" method="post"> 
 		    <div> 
-			{- email and password need some javascriptwatermark-effect for the text -}
-			{- changed from type="textfield" to type="text" (type="textfield" is not valid) -}
 			<input type="email" infotext="Användarnamn" name="email" autocomplete="off" /> 
 			<input type="password" name="password" infotext="password" autocomplete="off" /><br /> 
 		        <a href=LinkForgotPassword> Glömt lösenord</a> 
