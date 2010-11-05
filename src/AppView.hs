@@ -409,7 +409,7 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
        <div id="footerContainer2">
         <ul>
           <li class="footerCategoryHeader"> 
-           Tjänsten
+           SkrivaPå
           </li>
           <li>
            <a href="/why.html">Fördelar</a>
@@ -442,7 +442,7 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
 
         <ul>  
           <li class="footerCategoryHeader"> 
-           SkrivaPå
+           Om oss
           </li>
           <li>
            <a href="/contact.html">Kontakt</a>
