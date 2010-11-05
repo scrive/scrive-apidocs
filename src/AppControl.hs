@@ -113,7 +113,8 @@ handleRoutes =
      ++ 
      [ dir "logout" handleLogout
      , dir "login" handleLogin
-     -- , dir "signup" signupPage
+     , dir "signup" signupPage
+     , dir "signupdone" signupPageDone
      , dir "amnesia" forgotPasswordPage
      , dir "amnesiadone" forgotPasswordDonePage
      ]
@@ -223,36 +224,45 @@ forgotPasswordDonePage = do
     V.renderFromBody ctx V.TopNone V.kontrakcja (V.pageForgotPasswordConfirm ctx)
 
 signupPage :: Kontra Response
-signupPage = (methodM GET >> signupPageGet) `mplus`
-             (methodM POST >> signupPagePost)
+signupPage = (hget0 signupPageGet) `mplus`
+             (hpost0 signupPagePost)
              
 signupPageGet :: Kontra Response
 signupPageGet = do
     ctx <- lift get
-    V.renderFromBody ctx V.TopNone V.kontrakcja (signupPageView [] Nothing)
+    V.renderFromBody ctx V.TopNone V.kontrakcja (signupPageView Nothing)
 
 signupPageError :: SignupForm -> Maybe String
 signupPageError form
-    | signupEmail form == "" = Just "You must enter an email address"
+    | signupEmail form == BS.empty = Just "You must enter an email address"
     | signupPassword form /= signupPassword2 form = Just "Passwords must match"
-    | not $ isPasswordStrong $ BS.fromString $ signupPassword form = Just "Passwords must be at least 6 characters"
+    | not $ isPasswordStrong $ signupPassword form = Just "Passwords must be at least 6 characters"
     | otherwise = Nothing
     
-signupPagePost :: Kontra Response
+signupPagePost :: Kontra KontraLink
 signupPagePost = do
     ctx@Context{..} <- lift get
     maybeform <- getData
     
     case maybeform of
         Nothing ->
-            V.renderFromBody ctx V.TopNone V.kontrakcja (signupPageView [] Nothing)
+            -- V.renderFromBody ctx V.TopNone V.kontrakcja (signupPageView Nothing)
+            return LinkSignup
         Just form -> do
             case signupPageError form of
-                Just error -> V.renderFromBody ctx V.TopNone V.kontrakcja (signupPageView [error] maybeform)
+                Just err -> do
+                       addFlashMsgText (BS.fromString err)
+                       -- V.renderFromBody ctx V.TopNone V.kontrakcja (signupPageView maybeform)
+                       return LinkSignup
                 Nothing -> do
                     -- Create the user, which sends them a welcome email.
-                    account <- liftIO $ createUser ctxhostpart (BS.fromString ((signupFirstname form) ++ " " ++ (signupLastname form))) (BS.fromString (signupEmail form)) (Just (BS.fromString (signupPassword form))) Nothing
-                    V.renderFromBody ctx V.TopNone V.kontrakcja (signupConfirmPageView ctx)
+                    account <- liftIO $ createUser ctxhostpart (signupFullname form) (signupEmail form) (Just (signupPassword form)) Nothing
+                    return LinkSignupDone
+
+signupPageDone :: Kontra Response
+signupPageDone = do
+  ctx <- get
+  V.renderFromBody ctx V.TopNone V.kontrakcja (signupConfirmPageView ctx)
 
 handleLogin :: Kontra Response
 handleLogin = (methodM GET >> handleLoginGet) `mplus` 

@@ -13,14 +13,9 @@ module AppView( TopMenu(..)
               , pageForgotPasswordConfirm
               , signupPageView
               , SignupForm(..)
-              , signupEmail
-              , signupPassword
-              , signupPassword2
               , databaseContents
               , pageAdminOnly
               , pageAllUsersTable
-              , signupFirstname
-              , signupLastname
               , signupConfirmPageView
               , pageLogin
               , pageStats
@@ -512,54 +507,40 @@ signupConfirmPageView ctx =
     <div>Please check your email for your password.</div>
 
 data SignupForm = SignupForm {
-    signupFirstname::String,
-    signupLastname::String,
-    signupEmail::String,
-    signupPassword::String,
-    signupPassword2::String }
+    signupFullname :: BS.ByteString,
+    signupEmail :: BS.ByteString,
+    signupPassword :: BS.ByteString,
+    signupPassword2 :: BS.ByteString }
     
 instance FromData SignupForm where
     fromData = do
-        firstname <- look "firstname"
-        lastname <- look "lastname"
-        email <- look "email"
-        password <- look "password"
-        password2 <- look "password2"
+        fullname <- lookBS "fullname"
+        email <- lookBS "email"
+        password <- lookBS "password"
+        password2 <- lookBS "password2"
         return $ SignupForm {
-            signupFirstname = firstname,
-            signupLastname = lastname,
-            signupEmail = email,
-            signupPassword = password,
-            signupPassword2 = password2
+            signupFullname = concatChunks fullname,
+            signupEmail = concatChunks email,
+            signupPassword = concatChunks password,
+            signupPassword2 = concatChunks password2
         }
         
-getFormValue :: (Maybe a) -> (a -> String) -> String
-getFormValue Nothing _ = ""
-getFormValue (Just x) f = f x
-
-signupPageFlashMessageBox :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) => [String] -> XMLGenT m (HSX.XML m)
-signupPageFlashMessageBox [] = <div></div>
-signupPageFlashMessageBox errors =
-    <div class="flashmsgbox"><% errors %></div>
-
-signupPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
-               => [String] -> Maybe SignupForm -> XMLGenT m (HSX.XML m)
-signupPageView errors form =
-    <div>
-        <% signupPageFlashMessageBox errors %>
+signupPageView :: ( XMLGenerator m
+                  , EmbedAsAttr m (Attr String KontraLink)
+                  , EmbedAsAttr m (Attr String BS.ByteString)
+                  ) 
+               => Maybe SignupForm -> XMLGenT m (HSX.XML m)
+signupPageView form =
+    <div class="centerdivnarrow">
         <form action=LinkSignup method="post">
             <table>
                 <tr>
-                    <td>First name</td>
-                    <td><input name="firstname" value=(getFormValue form signupFirstname) /></td>
-                </tr>
-                <tr>
-                    <td>Last name</td>
-                    <td><input name="lastname" value=(getFormValue form signupLastname) /></td>
+                    <td>Full name</td>
+                    <td><input name="fullname" value=(maybe BS.empty signupFullname form) /></td>
                 </tr>
                 <tr>
                     <td>Email</td>
-                    <td><input type="email" name="email" value=(getFormValue form signupEmail) /></td>
+                    <td><input type="email" name="email" value=(maybe BS.empty signupEmail form) /></td>
                 </tr>
                 <tr>
                     <td>Password</td>
@@ -570,7 +551,7 @@ signupPageView errors form =
                     <td><input name="password2" type="password" /></td>
                 </tr>
             </table>
-            <input type="submit" value="Create Account" />
+            <input type="submit" value="Skapa konton" />
         </form>
     </div>
 
