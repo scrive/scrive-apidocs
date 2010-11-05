@@ -412,10 +412,10 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
            Tjänsten
           </li>
           <li>
-           <a href="/why.html">Varför SkrivaPå?</a>
+           <a href="/why.html">Fördelar</a>
           </li>
           <li>
-           <a href="/features.html">Funktioner och fördelar</a>
+           <a href="/features.html">Funktioner</a>
           </li>
           <li>
            <a href="/pricing.html">Prisplan</a>

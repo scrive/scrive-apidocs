@@ -151,7 +151,7 @@ landpageRejectedView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink),E
                       XMLGenT m (HSX.XML m)
 landpageRejectedView ctx document@Document{documenttitle,documentstatus} signatorylink hasaccount =
     <div class="centerdivnarrow">
-      <p class="headline">Du har nekat att underteckna dokumentet <strong><% documenttitle %></strong>.</p>
+      <p class="headline">Du har avvisat dokumentet <strong><% documenttitle %></strong>.</p>
       <p>Ett meddelande har skickats till <% partyListString document %>.</p>
       <p><a href="/">Go to home page</a></p>
     </div>
@@ -734,10 +734,10 @@ pageDocumentForSign action document ctx@(Context {ctxmaybeuser = muser})  invite
                  <form method="post" name="form" action=action id="dialog-confirm-cancel" class="overlay">   
                     <a class="close"> </a>     
                        <h2>Avvisa</h2>                 
-                    <p>Är du säker på att du vill neka att underteckna dokumentet <strong><% documenttitle document %></strong>?</p>
-                    <p>När du nekat kommer vi att meddela via e-post till <strong><% authorname %></strong>.</p>
+                    <p>Är du säker på att du vill avvisa dokumentet <strong><% documenttitle document %></strong>?</p>
+                    <p>När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela <strong><% authorname %></strong>.</p>
 
-                    {- Not yet: Om du vill kan du lägga till ett eget meddelande nedan om varför du valt att neka. -}
+                    {- Not yet: Om du vill kan du lägga till ett eget meddelande nedan om varför du valt att avvisa. -}
                     <BR/>
                     <BR/>
                     <div class="buttonbox">
@@ -863,7 +863,7 @@ mailDocumentClosedForAuthor (Context {ctxhostpart})
 flashDocumentRejected :: Document -> HSP.HSP HSP.XML
 flashDocumentRejected document@Document{ documenttitle } = 
     <div>
-     Du har nekat att underteckna dokumentet <strong><% documenttitle %></strong>.
+     Du har avvisat dokumentet <strong><% documenttitle %></strong>.
      Ett meddelande har skickats till <% partyListString document %>.
     </div>
 
@@ -883,8 +883,7 @@ mailDocumentRejectedForAuthor (Context {ctxhostpart})
      content <- htmlHeadBodyWrapIO documenttitle
         <span>
            <p>Hej <% personname %>,</p>
-           <p><% rejectorName %> har nekat att underteckna dokumentet <strong><% documenttitle %></strong>. 
-              Avtalsprocessen är därmed avbruten.</p>
+           <p><% rejectorName %> har avvisat dokumentet <strong><% documenttitle %></strong>. Avtalsprocessen är därmed avbruten.</p>
 
              <% poweredBySkrivaPaPara ctxhostpart %>
         </span> 
@@ -1042,15 +1041,17 @@ remindMailSignedStandardHeader::(Monad m) => Context -> Document -> SignatoryLin
 remindMailSignedStandardHeader ctx@Context{ctxmaybeuser = Just user} document signlink =        
                                                <span>
                                                  <p>Hej <%(personname signlink)%><%"\n"%><%"\n"%></p>
-                                                 <p><%(signatoryname $ documentauthordetails document)%> vill påminna dig om att du inte undertecknat dokument <% documenttitle document %> ännu.<%"\n"%><%"\n"%></p>  
-                                               </span> 
+
+												<p><%(userfullname user)%> har begärt att vi ska skicka dokumentet <% documenttitle document %> till dig som du har undertecknat via tjänsten SkrivaPå. Dokumentet bifogas med detta mail.<%"\n"%></p>
+                                                </span>
                        
 remindMailNotSignedStandardHeader::(Monad m) => Context -> Document -> SignatoryLink -> (HSPT m XML) 
 remindMailNotSignedStandardHeader ctx@Context{ctxmaybeuser = Just user} document signlink =   
                                                 <span>
                                                  <p>Hej <%(personname signlink)%><%"\n"%><%"\n"%></p>
-                                                 <p><%(userfullname user)%> har på din begäran skickat ut dokumentet <% documenttitle document %> som du har undertecknat via tjänsten SkrivaPå. Dokumentet bifogas nedan.<%"\n"%></p>
-                                                </span>
+                                                 
+                                                 <p><%(signatoryname $ documentauthordetails document)%> vill påminna dig om att du inte undertecknat dokument <% documenttitle document %> ännu.<%"\n"%><%"\n"%></p>  
+                                               </span>
                                                 
 withCustom::(Monad m) => Maybe (BS.ByteString)->(HSPT m XML) ->(HSPT m XML) 
 
