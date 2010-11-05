@@ -233,6 +233,15 @@ getDataFnM fun = do
     Nothing -> mzero
 #endif
 
+--Since we sometimes want to get Maybe and also we wont work with newer versions of happstack here is
+--This should be droped when new version is globaly established
+getDataFn' fun = do
+  m <- getDataFn fun
+#if MIN_VERSION_happstack_server(0,5,1)
+  either (\_ -> Nothing) (return . Just ) m
+#else
+  return m
+#endif
 
 pathdb get action = path $ \id -> do
     m <- query $ get id

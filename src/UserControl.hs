@@ -71,7 +71,7 @@ handleUserPost ctx@Context{ctxmaybeuser = Just user@User{userid},ctxtime} = do
   companyname <- g "companyname"
   companynumber <- g "companynumber"
   invoiceaddress <- g "invoiceaddress"
-  tos <- getDataFn (look "tos")
+  tos <- getDataFn' (look "tos")
   
   newuser <- update $ SetUserDetails user fullname companyname companynumber invoiceaddress
   if isNothing (userhasacceptedtermsofservice user)
@@ -173,16 +173,10 @@ userLogin1 = do
 -- OpenID
 userLogin2 :: Kontra (Maybe User)
 userLogin2 = do
-    maybetoken <- getDataFn (look "token") 
-#if MIN_VERSION_happstack_server(0,5,1)
-    case maybetoken of
-      Left _ -> return Nothing
-      Right token -> do
-#else
+    maybetoken <- getDataFn' (look "token") 
     case maybetoken of
       Nothing -> return Nothing
       Just token -> do
-#endif
               let req = "https://rpxnow.com/api/v2/auth_info" ++ 
                         "?apiKey=" ++
                         -- "03bbfc36d54e523b2602af0f95aa173fb96caed9" ++

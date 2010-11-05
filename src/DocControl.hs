@@ -416,9 +416,8 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid, do
 
   daystosignstring <- getDataFnM (look "daystosign")
   daystosign <- readM daystosignstring
-
-  invitetext <- g "invitetext"
-
+  invitetext <- fmap (maybe BS.empty concatChunks) (getDataFn' $ lookBS "invitetext")
+  
   -- each custom field must have this
   fieldnames <- getAndConcat "fieldname"
   fieldids <- getAndConcat "fieldid"
@@ -850,7 +849,7 @@ handleResend docid signlinkid  = do
                                case (signlinkFromDocById doc (read signlinkid)) of
                                  Just signlink -> 
                                   do 
-                                   customMessageInput <- fmap (fmap concatChunks) $ getDataFn (lookBS "customtext")  
+                                   customMessageInput <- fmap (fmap concatChunks) $ getDataFn' (lookBS "customtext")  
                                    mail <- liftIO $ remindMail customMessageInput ctx doc signlink
                                    liftIO $ sendMail (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )]})
                                    addFlashMsgText ( flashRemindMailSent doc signlink)
