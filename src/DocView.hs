@@ -153,7 +153,7 @@ landpageRejectedView ctx document@Document{documenttitle,documentstatus} signato
     <div class="centerdivnarrow">
       <p class="headline">Du har avvisat dokumentet <strong><% documenttitle %></strong>.</p>
       <p>Ett meddelande har skickats till <% partyListString document %>.</p>
-      <p><a href="/">Go to home page</a></p>
+      <p><a href="/">Tillbaks till förstasidan</a></p>
     </div>
 
 
