@@ -48,37 +48,6 @@ import qualified Seal as Seal
   Here are all actions associated with transitions.
 -}
 
-{-
-doctransPreparation2Pending :: Context -> Document -> IO Document
-doctransPreparation2Pending ctx@Context{ctxtime, ctxipnumber } doc = do
-  let MinutesTime m = ctxtime 
-  logErrorWithDefault (update $ UpdateDocumentStatus (documentid doc) Pending ctxtime ctxipnumber) doc $ 
-   \newdoc -> do
-               let timeout = TimeoutTime (MinutesTime (m + documentdaystosign doc * 24 * 60))
-               newdoc2 <- update $ SetDocumentTimeoutTime (documentid newdoc) timeout
-               forkIO $ do
-                 -- this is here to postpone email send a second
-                 -- so our service has a chance to give answer first
-                 -- is GHC using blocking calls or what?
-                 threadDelay 5000 
-                 sendInvitationEmails ctx newdoc2
-               return newdoc2
- 
--}
-
-{-
-doctransPending2Closed :: Context -> Document -> IO Document
-doctransPending2Closed ctx@Context{ctxtime,ctxipnumber,ctxhostpart,ctxnormalizeddocuments} doc = do
-  logErrorWithDefault (update $ UpdateDocumentStatus (documentid doc) Closed ctxtime ctxipnumber) doc $ 
-   \closedDoc  -> do
-                   clearDoc <- update $ RemoveFileFromDoc (documentid doc)
-                   Just user <- query $ GetUserByUserID (unAuthor (documentauthor doc))
-                   forkIO $ do
-                      newdoc <- sealDocument ctxnormalizeddocuments ctxhostpart ctxtime user doc
-                      sendClosedEmails ctx newdoc
-                   return  clearDoc
--}
-
 signlinkFromDocById doc sid = find (((==) sid) . signatorylinkid) (documentsignatorylinks  doc)
 
 postDocumentChangeAction :: Document -> DocumentStatus -> Maybe SignatoryLinkID -> Kontra ()
