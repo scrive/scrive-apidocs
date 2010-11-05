@@ -448,7 +448,7 @@ function prepareForEdit(form){
                           theme_advanced_toolbar_location : "top",     
                           theme_advanced_buttons1 : "bold,italic,underline,separator,strikethrough,bullist,numlist,separator,undo,redo,separator,cut,copy,paste",
                           theme_advanced_buttons2 : "",
-                          
-                         })
+                          convert_urls : false
+                        })
   })    
 }
