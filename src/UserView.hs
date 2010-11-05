@@ -72,7 +72,7 @@ showUser ctx@(Context {ctxmaybeuser = Just user}) =
          <tr><td>Namn:</td>
              <td><input type="text" name="fullname" value=(userfullname user)/></td>
          </tr>
-         <tr><td>E-mail:</td>
+         <tr><td>E-post:</td>
              <td><% unEmail $ useremail user %></td>
          </tr>
          <tr><td>Företagsnamn:</td>
@@ -147,15 +147,15 @@ viewSubaccounts ctx@(Context {ctxmaybeuser = Just user}) subusers =
         <td><a href="#" id="all">Alla</a></td>
         <td></td> {- status icon -}
         <td>Namn</td>
-        <td>E-mail</td>
-        <td>Other possible data goes here</td>
+        <td>E-post</td>
+        <td>Övrigt</td>
         <td></td>
        </tr>
       </thead>
       <tfoot>
        <tr>
         <td colspan="6" style="text-align: right; overflow: hidden;">
-          <span> Footer </span>
+          <span> Sidfot </span>
           {-
           <div class="floatleft">
            <input type="submit" class="button" name="archive" value="Radera"/>
@@ -184,7 +184,7 @@ viewSubaccounts ctx@(Context {ctxmaybeuser = Just user}) subusers =
           <td><input type="text" name="fullname"/></td> 
         </tr>
 	<tr>
-          <td>E-mail:</td> 
+          <td>E-post:</td> 
           <td><input type="email" name="email"/></td> 
         </tr>
 	<tr> 
