@@ -71,9 +71,10 @@ postDocumentChangeAction document@Document{documentstatus, documentsignatorylink
         return ()
     | oldstatus == Pending && documentstatus == Rejected = do
         ctx@Context{ctxnormalizeddocuments,ctxhostpart,ctxtime} <- get
+        customMessage <- fmap (fmap concatChunks) $ getDataFn' (lookBS "customtext")  
         liftIO $ forkIO $ do
           threadDelay 5000 
-          sendRejectAuthorEmail ctx document (fromJust msignalink)
+          sendRejectAuthorEmail customMessage ctx document (fromJust msignalink)
         return ()
     | otherwise = -- do nothing. FIXME: log status change
          return ()
@@ -135,12 +136,12 @@ sendClosedAuthorEmail ctx document = do
       name2 = signatoryname $ documentauthordetails document
   sendMail $ mail { fullnameemails = ([(name1,email1)] ++ em), attachments = [(documenttitle,attachmentcontent)]}
 
-sendRejectAuthorEmail :: Context -> Document -> SignatoryLink -> IO ()
-sendRejectAuthorEmail ctx document signalink = do
+sendRejectAuthorEmail :: (Maybe BS.ByteString) -> Context -> Document -> SignatoryLink -> IO ()
+sendRejectAuthorEmail customMessage ctx document signalink = do
   let authorid = unAuthor $ documentauthor document
   Just authoruser <- query $ GetUserByUserID authorid
   let rejectorName = signatoryname (signatorydetails signalink)
-  mail <- mailDocumentRejectedForAuthor ctx (unEmail $ useremail authoruser) (userfullname authoruser)
+  mail <- mailDocumentRejectedForAuthor customMessage ctx (unEmail $ useremail authoruser) (userfullname authoruser)
              document rejectorName
   let email2 = signatoryemail $ documentauthordetails document
       email1 = unEmail $ useremail authoruser
@@ -818,8 +819,8 @@ handleResend docid signlinkid  = do
                                case (signlinkFromDocById doc (read signlinkid)) of
                                  Just signlink -> 
                                   do 
-                                   customMessageInput <- fmap (fmap concatChunks) $ getDataFn' (lookBS "customtext")  
-                                   mail <- liftIO $ remindMail customMessageInput ctx doc signlink
+                                   customMessage <- fmap (fmap concatChunks) $ getDataFn' (lookBS "customtext")  
+                                   mail <- liftIO $ remindMail customMessage ctx doc signlink
                                    liftIO $ sendMail (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )]})
                                    addFlashMsgText ( flashRemindMailSent doc signlink)
                                    return (LinkIssueDoc doc)

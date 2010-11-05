@@ -691,7 +691,7 @@ pageDocumentForSign action document ctx@(Context {ctxmaybeuser = muser})  invite
                     , maybesignatory = Nothing -- FIXME: should be author user id
                     , signatorymagichash = MagicHash 0
                     }
-                                         
+       rejectMessage =  rejectMailContent Nothing ctx BS.empty (personname authorlink) document (personname invitedlink)
    in showDocumentPageHelper document helpers
               (documenttitle document) $
               <span>
@@ -737,12 +737,13 @@ pageDocumentForSign action document ctx@(Context {ctxmaybeuser = muser})  invite
                     <p>Är du säker på att du vill avvisa dokumentet <strong><% documenttitle document %></strong>?</p>
                     <p>När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela <strong><% authorname %></strong>.</p>
 
-                    {- Not yet: Om du vill kan du lägga till ett eget meddelande nedan om varför du valt att avvisa. -}
+                    {- Not yet: Om du vill kan du lägga till ett eget meddelande nedan om varför du valt att neka. -}
                     <BR/>
                     <BR/>
                     <div class="buttonbox">
                      <input type="hidden" name="cancel" value="automatic"/>
                      <button class="submiter" type="button"> Avvisa </button>
+                     <button class="editer" type="button"> Skriv eget meddelande </button>
                      <button class="close" type="button"> Avbryt </button>
                     </div> 
                  </form> 
@@ -867,13 +868,14 @@ flashDocumentRejected document@Document{ documenttitle } =
      Ett meddelande har skickats till <% partyListString document %>.
     </div>
 
-mailDocumentRejectedForAuthor :: Context
+mailDocumentRejectedForAuthor :: (Maybe BS.ByteString) -> Context
                    -> BS.ByteString
                    -> BS.ByteString
                    -> Document
                    -> BS.ByteString
                    -> IO Mail
-mailDocumentRejectedForAuthor (Context {ctxhostpart}) 
+mailDocumentRejectedForAuthor customMessage 
+                   ctx@(Context {ctxhostpart}) 
                    emailaddress personname 
                    document@Document{documenttitle,documentid} 
                            rejectorName = 
@@ -883,12 +885,27 @@ mailDocumentRejectedForAuthor (Context {ctxhostpart})
      content <- htmlHeadBodyWrapIO documenttitle
         <span>
            <p>Hej <% personname %>,</p>
-           <p><% rejectorName %> har avvisat dokumentet <strong><% documenttitle %></strong>. Avtalsprocessen är därmed avbruten.</p>
+           <p><% rejectorName %> har nekat att underteckna dokumentet <strong><% documenttitle %></strong>. 
+              Avtalsprocessen är därmed avbruten.</p>
 
              <% poweredBySkrivaPaPara ctxhostpart %>
         </span> 
      return $ emptyMail {title = title, content = content}
 
+rejectMailContent customMessage (Context {ctxhostpart}) 
+                   emailaddress personname 
+                   document@Document{documenttitle,documentid} 
+                   rejectorName =   
+     let link = ctxhostpart ++ show (LinkIssueDoc document)
+         content = 
+          <span>
+            <p>Hej <% personname %>,</p>
+            <p><% rejectorName %> har nekat att underteckna dokumentet <strong><% documenttitle %></strong>. 
+               Avtalsprocessen är därmed avbruten.</p>
+               <% poweredBySkrivaPaPara ctxhostpart %>
+          </span>  
+     in makeEditable "customtext" $ withCustom customMessage content    
+     
 
 partyList :: Document -> [SignatoryDetails]
 partyList document =
