@@ -969,16 +969,16 @@ remindMail cm c d s = case s of
                        _ -> remindMailSigned cm c d s
                        
 remindMailContent :: (Monad m) => Maybe (BS.ByteString) -> Context -> Document -> SignatoryLink ->(HSPT m XML) 
-remindMailContent  cm c d s = case s of 
-                               SignatoryLink{maybesigninfo = Nothing} -> remindMailNotSignedContent  cm c d s
-                               _ -> remindMailSignedContent  cm c d s          
+remindMailContent cm c d s = case s of 
+                               SignatoryLink{maybesigninfo = Nothing} -> remindMailNotSignedContent True cm c d s
+                               _ -> remindMailSignedContent True cm c d s
                        
-remindMailNotSigned:: Maybe (BS.ByteString) -> Context -> Document -> SignatoryLink -> IO Mail
+remindMailNotSigned::Maybe (BS.ByteString) -> Context -> Document -> SignatoryLink -> IO Mail
 remindMailNotSigned customMessage ctx@Context{ctxmaybeuser = Just user, ctxhostpart}
            document@Document{documenttitle,documentid,documenttimeouttime,documentauthordetails,documentinvitetext} 
            signlink = 
     let link = ctxhostpart ++ show (LinkSignDoc document signlink)
-        content  = remindMailNotSignedContent customMessage ctx  document signlink                 
+        content  = remindMailNotSignedContent False customMessage ctx  document signlink                 
         attachmentcontent = filepdf $ head $ documentfiles document          
         title =  BS.concat [BS.fromString "Hej ",personname signlink]  
       in 
@@ -988,21 +988,24 @@ remindMailNotSigned customMessage ctx@Context{ctxmaybeuser = Just user, ctxhostp
 
         
         
-remindMailSigned:: Maybe (BS.ByteString)-> Context -> Document -> SignatoryLink -> IO Mail
+remindMailSigned::Maybe (BS.ByteString)-> Context -> Document -> SignatoryLink -> IO Mail
 remindMailSigned customMessage ctx@Context{ctxmaybeuser = Just user, ctxhostpart}
                  document@Document{documenttitle,documentid,documenttimeouttime,documentauthordetails,documentinvitetext} 
                  signlink = 
                      let 
                          title =  BS.concat [BS.fromString "Hej ",personname signlink]              
                          attachmentcontent = filepdf $ head $ documentfiles document   
-                         content = remindMailSignedContent customMessage ctx  document signlink                             
+                         content = remindMailSignedContent False customMessage ctx  document signlink                             
                      in do
                        content <- htmlHeadBodyWrapIO documenttitle content
                        return $ emptyMail {title = title, content = content, attachments = [(documenttitle,attachmentcontent)]}
 
-remindMailNotSignedContent::(Monad m) => (Maybe BS.ByteString) -> Context -> Document -> SignatoryLink -> (HSPT m XML)                                       
-remindMailNotSignedContent customMessage ctx  document signlink =  
-               let link = (ctxhostpart ctx) ++ show (LinkSignDoc document signlink)
+remindMailNotSignedContent::(Monad m) => Bool ->  (Maybe BS.ByteString) -> Context -> Document -> SignatoryLink -> (HSPT m XML)                                       
+remindMailNotSignedContent hideSensitive customMessage ctx  document signlink =  
+               let link =  (ctxhostpart ctx) ++ show (LinkSignDoc document signlink)
+                   link' =  if (hideSensitive)
+                             then <a href="#"> https://skrivapa.se/s/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/</a>
+                             else <a href=link><% link %></a>
                    common = sequence
                             [ asChild <p><i>Översiktlig information</i><br/>
                               Parter: <% partyListString document %><br/>
@@ -1014,7 +1017,7 @@ remindMailNotSignedContent customMessage ctx  document signlink =
                              </p>
                              , asChild <p><i>Så här går du vidare</i><br/>
                              1. Klicka på länken<br/>
-                              <a href=link><% link %></a><br/>
+                              <% link' %><br/>
                              2. Granska online<br/>
                              3. Underteckna<br/>
                              4. Färdig<br/>
@@ -1028,8 +1031,8 @@ remindMailNotSignedContent customMessage ctx  document signlink =
                    header   = withCustom  customMessage (remindMailNotSignedStandardHeader ctx document signlink)
                    in (makeEditable "customtext" header) `before` skrivapaversion       
 
-remindMailSignedContent ::(Monad m) => (Maybe BS.ByteString) -> Context -> Document -> SignatoryLink -> (HSPT m XML)                  
-remindMailSignedContent customMessage ctx  document signlink        
+remindMailSignedContent ::(Monad m) => Bool -> (Maybe BS.ByteString) -> Context -> Document -> SignatoryLink -> (HSPT m XML)                  
+remindMailSignedContent hideSensitive customMessage ctx  document signlink        
                          = makeEditable "customtext" $
                             withCustom 
                                 customMessage $
