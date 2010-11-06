@@ -8,6 +8,8 @@ import "mtl" Control.Monad.Reader (ask)
 import "mtl" Control.Monad.State (modify,MonadState(..))
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BS8
+import qualified Data.ByteString.Internal as BSI
 import Happstack.Data.IxSet as IxSet
 import Data.Maybe(isJust)
 import Misc
@@ -467,6 +469,14 @@ deleteTermsOfService userid = do
     Just user -> modify (updateIx userid (user { userhasacceptedtermsofservice = Nothing }))
   return ()
 
+exportUsersDetailsToCSV :: Query Users [BS.ByteString]
+exportUsersDetailsToCSV = do
+  users <- ask
+  let fields user = [userfullname user, unEmail $ useremail user]
+      char2BS c = BS.pack [BSI.c2w c]
+      content = BS.intercalate (char2BS ',') <$> fields
+  return $ content <$> (toList users)
+
 instance Component Users where
   type Dependencies Users = End
   initialValue = IxSet.empty
@@ -481,6 +491,7 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'setUserDetails
                     , 'getUserSubaccounts
                     , 'acceptTermsOfService
+                    , 'exportUsersDetailsToCSV
 
                       -- the below should be only used carefully and by admins
                     , 'fragileDeleteUser
