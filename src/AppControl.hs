@@ -448,3 +448,11 @@ serveHTMLFiles =  do
                
          else mzero
       
+onlySuperUser :: Kontra Response  
+onlySuperUser = do
+  ctx@Context{ctxmaybeuser} <- get 
+  case isSuperUser ctxmaybeuser of
+      False -> do
+        let link = "/login"
+        response <- webHSP $ seeOtherXML link
+        finishWith (redirect 303 link response)
