@@ -813,6 +813,7 @@ showPage modminutes fileid pageno = do
 
 handleResend:: String -> String -> Kontra KontraLink
 handleResend docid signlinkid  = do
+                      checkUserTOS
                       ctx<- get
                       doc' <- query $ GetDocumentByDocumentID (read docid)
                       case (doc') of
@@ -820,11 +821,10 @@ handleResend docid signlinkid  = do
                                case (signlinkFromDocById doc (read signlinkid)) of
                                  Just signlink -> 
                                   do 
-                                   customMessageInput <- fmap (maybe BS.empty concatChunks) $ getDataFn (lookBS "customtext")  
-                                   mail <- liftIO $ remindMail customMessageInput ctx doc signlink
+                                   customMessage <- fmap (fmap concatChunks) $ getDataFn' (lookBS "customtext")  
+                                   mail <- liftIO $ remindMail customMessage ctx doc signlink
                                    liftIO $ sendMail (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )]})
-                                   addFlashMsgText ( remindMailFlashMessage doc signlink)
+                                   addFlashMsgText ( flashRemindMailSent doc signlink)
                                    return (LinkIssueDoc doc)
                                  Nothing -> mzero           
                        Nothing -> mzero               
-
