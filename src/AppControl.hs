@@ -54,9 +54,11 @@ import qualified Data.Map as Map
 handleRoutes = do
    ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} <- get 
    msum $
-    ([nullDir >> if isJust ctxmaybeuser
-              then withUserTOS (V.renderFromBody ctx V.TopNew V.kontrakcja (V.pageWelcome ctx))
-              else V.renderFromBody ctx V.TopNew V.kontrakcja (V.pageWelcome ctx)
+    ([nullDir >> if isJust ctxmaybeuser then
+                     withUserTOS (V.renderFromBody ctx V.TopNew V.kontrakcja (V.pageWelcome ctx))
+                 else
+                     V.renderFromBody ctx V.TopNew V.kontrakcja (V.pageWelcome ctx)
+
      , dir "s" $ DocControl.handleSign
      , {- old -} dir "sign" $ withUserTOS $ DocControl.handleSign
      , dir "d" $ withUserTOS $ DocControl.handleIssue
