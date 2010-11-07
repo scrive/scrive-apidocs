@@ -67,11 +67,10 @@ handleRoutes = do
      , dir "pages" $ hget2 $ \fileid pageno -> do
         modminutes <- query $ FileModTime fileid
         DocControl.showPage modminutes fileid pageno
-                                                    
+     , dir "landpage" $ dir "signinvite" $ pathdb GetDocumentByDocumentID $ \document -> 
+         DocControl.landpageSignInvite ctx document
      , dir "landpage" $ msum 
-               [ dir "signinvite" $ pathdb GetDocumentByDocumentID $ \document -> 
-                     DocControl.landpageSignInvite ctx document
-               , dir "signed" $ pathdb GetDocumentByDocumentID $ \document -> path $ \signatorylinkid ->
+               [ dir "signed" $ pathdb GetDocumentByDocumentID $ \document -> path $ \signatorylinkid ->
                                                                               DocControl.landpageSigned ctx document signatorylinkid
                , dir "rejected" $ pathdb GetDocumentByDocumentID $ \document -> path $ \signatorylinkid ->
                                                                               DocControl.landpageRejected ctx document signatorylinkid
