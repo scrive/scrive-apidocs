@@ -326,6 +326,7 @@ read_df = do
 
 handleStats :: Kontra Response
 handleStats = do
+  onlySuperUser
   ndocuments <- query $ GetDocumentStats
   allusers <- query $ GetAllUsers
 #ifndef WINDOWS
