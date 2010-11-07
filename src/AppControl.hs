@@ -93,9 +93,7 @@ handleRoutes = do
              , dir "adminonly" $ handleBecome
              , dir "adminonly" $ dir "takeoverdocuments" $ handleTakeOverDocuments
              , dir "adminonly" $ dir "deleteaccount" $ handleDeleteAccount
-             , dir "adminonly" $ msum 
-                       [ dir "alluserstable" $ methodM GET >> handleAllUsersTable
-                       ]
+             , dir "adminonly" $ dir "alluserstable" $ handleAllUsersTable
              , dir "dave" $ msum
                    [ dir "document" $ pathdb GetDocumentByDocumentID $ \document ->
                         V.renderFromBody ctx V.TopNew V.kontrakcja $ inspectXML document
@@ -435,6 +433,8 @@ handleDeleteAccount = do
 
 handleAllUsersTable :: Kontra Response
 handleAllUsersTable = do
+  methodM GET
+  onlySuperUser
   users <- query $ GetAllUsers
   let queryNumberOfDocuments user = do
                         documents <- query $ GetDocumentsByAuthor (userid user)
