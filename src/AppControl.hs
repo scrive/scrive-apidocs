@@ -89,9 +89,9 @@ handleRoutes = do
              , dir "adminonly" $ nullDir >> AppControl.showAdminOnly
              , dir "adminonly" $ dir "db" $ nullDir >> indexDB
              , dir "adminonly" $ dir "db" $ fileServe [] "_local/kontrakcja_state"
+             , dir "adminonly" $ dir "cleanup" $ databaseCleanup
              , dir "adminonly" $ msum 
-                       [ dir "cleanup" $ methodM POST >> databaseCleanup
-                       , dir "become" $ methodM POST >> handleBecome
+                       [ dir "become" $ methodM POST >> handleBecome
                        , dir "takeoverdocuments" $ methodM POST >> handleTakeOverDocuments
                        , dir "deleteaccount" $ methodM POST >> handleDeleteAccount
                        , dir "alluserstable" $ methodM GET >> handleAllUsersTable
@@ -382,6 +382,8 @@ databaseCleanup :: Kontra Response
 databaseCleanup = do
   -- dangerous, cleanup all old files, where old means chechpoints but the last one
   -- and all events that have numbers less than last checkpoint
+  methodM POST
+  onlySuperUser
   contents <- liftIO databaseCleanupWorker
   webHSP (V.databaseContents (sort contents))
 
