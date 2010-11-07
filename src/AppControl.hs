@@ -92,9 +92,9 @@ handleRoutes = do
              , dir "adminonly" $ dir "cleanup" $ databaseCleanup
              , dir "adminonly" $ handleBecome
              , dir "adminonly" $ dir "takeoverdocuments" $ handleTakeOverDocuments
+             , dir "adminonly" $ dir "deleteaccount" $ handleDeleteAccount
              , dir "adminonly" $ msum 
-                       [ dir "deleteaccount" $ methodM POST >> handleDeleteAccount
-                       , dir "alluserstable" $ methodM GET >> handleAllUsersTable
+                       [ dir "alluserstable" $ methodM GET >> handleAllUsersTable
                        ]
              , dir "dave" $ msum
                    [ dir "document" $ pathdb GetDocumentByDocumentID $ \document ->
@@ -417,6 +417,8 @@ handleTakeOverDocuments = do
 
 handleDeleteAccount :: Kontra Response
 handleDeleteAccount = do
+  methodM POST
+  onlySuperUser
   (userid :: UserID) <- getDataFnM $ (look "user" >>= readM)
   Just user <- query $ GetUserByUserID userid
   documents <- query $ GetDocumentsByAuthor userid
