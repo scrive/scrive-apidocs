@@ -83,25 +83,23 @@ handleRoutes = do
      ]
      
      -- super user only
-     ++ (if isSuperUser ctxmaybeuser then 
-             [ dir "stats" handleStats
-             , dir "createuser" handleCreateUser
-             , dir "adminonly" $ nullDir >> AppControl.showAdminOnly
-             , dir "adminonly" $ dir "db" $ nullDir >> indexDB
-             , dir "adminonly" $ dir "db" $ fileServe [] "_local/kontrakcja_state"
-             , dir "adminonly" $ dir "cleanup" $ databaseCleanup
-             , dir "adminonly" $ handleBecome
-             , dir "adminonly" $ dir "takeoverdocuments" $ handleTakeOverDocuments
-             , dir "adminonly" $ dir "deleteaccount" $ handleDeleteAccount
-             , dir "adminonly" $ dir "alluserstable" $ handleAllUsersTable
-             , dir "dave" $ msum
-                   [ dir "document" $ pathdb GetDocumentByDocumentID $ \document ->
-                        V.renderFromBody ctx V.TopNew V.kontrakcja $ inspectXML document
-                   , dir "user" $ pathdb GetUserByUserID $ \user ->
-                       V.renderFromBody ctx V.TopNew V.kontrakcja $ inspectXML user
-                   ]
-             ]
-         else []))
+     ++ 
+     [ dir "stats" handleStats
+     , dir "createuser" handleCreateUser
+     , dir "adminonly" $ nullDir >> AppControl.showAdminOnly
+     , dir "adminonly" $ dir "db" $ nullDir >> indexDB
+     , dir "adminonly" $ dir "db" $ fileServe [] "_local/kontrakcja_state"
+     , dir "adminonly" $ dir "cleanup" $ databaseCleanup
+     , dir "adminonly" $ handleBecome
+     , dir "adminonly" $ dir "takeoverdocuments" $ handleTakeOverDocuments
+     , dir "adminonly" $ dir "deleteaccount" $ handleDeleteAccount
+     , dir "adminonly" $ dir "alluserstable" $ handleAllUsersTable
+     , dir "dave" $ dir "document" $ daveDocument
+     , dir "dave" $ dir "user" $ daveUser
+           
+           
+     ]
+         
      -- account stuff
      ++ 
      [ dir "logout" handleLogout
@@ -113,7 +111,7 @@ handleRoutes = do
      ]
      -- static files
      ++ [serveHTMLFiles
-        , fileServe [] "public"] 
+        , fileServe [] "public"] )
 
 {-
 
@@ -468,3 +466,17 @@ onlySuperUser = do
         response <- webHSP $ seeOtherXML link
         finishWith (redirect 303 link response)
       True -> webHSP $ seeOtherXML "abc"
+
+daveDocument :: Kontra Response
+daveDocument = do
+  ctx <- get
+  onlySuperUser
+  pathdb GetDocumentByDocumentID $ \document ->
+      V.renderFromBody ctx V.TopNew V.kontrakcja $ inspectXML document
+
+daveUser :: Kontra Response
+daveUser = do 
+  ctx <- get
+  onlySuperUser
+  pathdb GetUserByUserID $ \user ->
+      V.renderFromBody ctx V.TopNew V.kontrakcja $ inspectXML user
