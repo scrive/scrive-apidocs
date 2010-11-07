@@ -389,6 +389,7 @@ databaseCleanup = do
 showAdminOnly :: Kontra Response
 showAdminOnly = do
   methodM GET
+  onlySuperUser
   ctx@Context { ctxflashmessages} <- lift get
   users <- query $ GetAllUsers
   webHSP (V.pageAdminOnly users ctxflashmessages)
