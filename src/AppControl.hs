@@ -91,9 +91,9 @@ handleRoutes = do
              , dir "adminonly" $ dir "db" $ fileServe [] "_local/kontrakcja_state"
              , dir "adminonly" $ dir "cleanup" $ databaseCleanup
              , dir "adminonly" $ handleBecome
+             , dir "adminonly" $ dir "takeoverdocuments" $ handleTakeOverDocuments
              , dir "adminonly" $ msum 
-                       [ dir "takeoverdocuments" $ methodM POST >> handleTakeOverDocuments
-                       , dir "deleteaccount" $ methodM POST >> handleDeleteAccount
+                       [ dir "deleteaccount" $ methodM POST >> handleDeleteAccount
                        , dir "alluserstable" $ methodM GET >> handleAllUsersTable
                        ]
              , dir "dave" $ msum
@@ -401,6 +401,8 @@ showAdminOnly = do
 
 handleTakeOverDocuments :: Kontra Response
 handleTakeOverDocuments = do
+  methodM POST
+  onlySuperUser
   ctx@Context{ctxmaybeuser = Just ctxuser} <- lift $ get
   (srcuserid :: UserID) <- getDataFnM $ (look "user" >>= readM)
   Just srcuser <- query $ GetUserByUserID srcuserid
