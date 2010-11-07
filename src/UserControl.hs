@@ -273,7 +273,16 @@ withUser action = do
       seeOther link response
 
 
-
+checkUserTOS :: Kontra Response
+checkUserTOS = do
+  withUser $ do
+    ctx@(Context {ctxmaybeuser = (Just (User {userhasacceptedtermsofservice}))}) <- get
+    case userhasacceptedtermsofservice of
+      Nothing -> do
+                 let link = "/account"
+                 response <- webHSP $ seeOtherXML link
+                 finishWith (redirect 303 link response)
+      
  
 withUserTOS :: Kontra Response -> Kontra Response
 withUserTOS action = withUser $ do
