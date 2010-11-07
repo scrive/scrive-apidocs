@@ -282,3 +282,4 @@ checkUserTOS = do
                  let link = "/account"
                  response <- webHSP $ seeOtherXML link
                  finishWith (redirect 303 link response)
+      _       -> webHSP $ seeOtherXML "abc"
