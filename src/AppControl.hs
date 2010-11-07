@@ -85,7 +85,7 @@ handleRoutes = do
      -- super user only
      ++ (if isSuperUser ctxmaybeuser then 
              [ dir "stats" handleStats
-             , dir "createuser" $ handleCreateUser
+             , dir "createuser" handleCreateUser
              , dir "adminonly" $ nullDir >> AppControl.showAdminOnly
              , dir "adminonly" $ msum 
                        [ dir "db" $ msum [ methodM GET >> indexDB
@@ -349,6 +349,7 @@ handleBecome = do
 
 handleCreateUser :: Kontra Response
 handleCreateUser = do
+  onlySuperUser
   ctx@Context{..} <- get
   email <- g "email"
   fullname <- g "fullname"
