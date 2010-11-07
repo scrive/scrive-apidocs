@@ -82,8 +82,9 @@ handleRoutes = do
      , dir "account" $ withUser $ UserControl.handleUser ctx
      ]
      
+     -- super user only
      ++ (if isSuperUser ctxmaybeuser then 
-             [ dir "stats" $ handleStats
+             [ dir "stats" handleStats
              , dir "createuser" $ handleCreateUser
              , dir "adminonly" $ nullDir >> AppControl.showAdminOnly
              , dir "adminonly" $ msum 
@@ -104,6 +105,7 @@ handleRoutes = do
                    ]
              ]
          else []))
+     -- account stuff
      ++ 
      [ dir "logout" handleLogout
      , dir "login" handleLogin
@@ -112,7 +114,9 @@ handleRoutes = do
      , dir "amnesia" forgotPasswordPage
      , dir "amnesiadone" forgotPasswordDonePage
      ]
-     ++ [serveHTMLFiles, fileServe [] "public"] 
+     -- static files
+     ++ [serveHTMLFiles
+        , fileServe [] "public"] 
 
 {-
 
