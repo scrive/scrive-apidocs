@@ -85,7 +85,7 @@ handleRoutes = do
      ++ (if isSuperUser ctxmaybeuser then 
              [ dir "stats" $ handleStats
              , dir "createuser" $ handleCreateUser
-             , dir "adminonly" AppControl.showAdminOnly
+             , dir "adminonly" $ nullDir >> AppControl.showAdminOnly
              , dir "adminonly" $ msum 
                        [ dir "db" $ msum [ methodM GET >> indexDB
                                          , fileServe [] "_local/kontrakcja_state"
