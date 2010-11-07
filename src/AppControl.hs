@@ -76,11 +76,9 @@ handleRoutes = do
      , dir "landpage" $ dir "signedsave" $ pathdb GetDocumentByDocumentID $ \document -> 
          path $ \signatorylinkid ->
              DocControl.landpageSignedSave ctx document signatorylinkid
-     , dir "landpage" $ msum 
-               [ dir "saved" $ withUser $ pathdb GetDocumentByDocumentID $ \document -> 
+     , dir "landpage" $ dir "saved" $ withUser $ pathdb GetDocumentByDocumentID $ \document -> 
                    path $ \signatorylinkid ->
                        DocControl.landpageSaved ctx document signatorylinkid
-               ]
            
      , dir "pagesofdoc" $ 
            pathdb GetDocumentByDocumentID $ \document -> 
