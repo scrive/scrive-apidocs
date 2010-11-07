@@ -59,10 +59,10 @@ handleRoutes = do
                  else
                      V.renderFromBody ctx V.TopNew V.kontrakcja (V.pageWelcome ctx)
 
-     , dir "s" $ DocControl.handleSign
-     , {- old -} dir "sign" $ DocControl.handleSign
-     , dir "d" $ withUserTOS $ DocControl.handleIssue
-     , {- old -} dir "issue" $ DocControl.handleIssue
+     , dir "s" DocControl.handleSign
+     , {- old -} dir "sign" DocControl.handleSign
+     , dir "d" $ withUserTOS DocControl.handleIssue
+     , {- old -} dir "issue" DocControl.handleIssue
      , dir "resend" $ hpost2 DocControl.handleResend
      , dir "pages" $ hget2 $ \fileid pageno -> do
         modminutes <- query $ FileModTime fileid
