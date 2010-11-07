@@ -300,12 +300,12 @@ handleSignShow documentid
                       document ctx invitedlink wassigned)
 
 handleIssue :: Kontra Response
-handleIssue =
-    msum [ checkUserTOS
-         , pathdb GetDocumentByDocumentID handleIssueShow
-         , hget0 handleIssueGet
-         , hpost0 handleIssuePost
-         ]
+handleIssue = do
+  checkUserTOS
+  msum [ pathdb GetDocumentByDocumentID handleIssueShow
+       , hget0 handleIssueGet
+       , hpost0 handleIssuePost
+       ]
 
 freeLeftForUser :: User -> Kontra Int
 freeLeftForUser user = do

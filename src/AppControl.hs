@@ -363,7 +363,7 @@ handleDownloadDatabase = do fail "nothing"
 indexDB :: Kontra Response
 indexDB = do
   onlySuperUser
-  contents <- liftIO $ getDirectoryContents "_local/V.kontrakcja_state"
+  contents <- liftIO $ getDirectoryContents "_local/kontrakcja_state"
   webHSP (V.databaseContents (sort contents))
 
 databaseCleanupWorker :: IO [FilePath]
@@ -467,3 +467,4 @@ onlySuperUser = do
         let link = "/login"
         response <- webHSP $ seeOtherXML link
         finishWith (redirect 303 link response)
+      True -> webHSP $ seeOtherXML "abc"
