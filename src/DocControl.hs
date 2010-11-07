@@ -300,8 +300,9 @@ handleSignShow documentid
                       document ctx invitedlink wassigned)
 
 handleIssue :: Kontra Response
-handleIssue = 
-    msum [ pathdb GetDocumentByDocumentID handleIssueShow
+handleIssue =
+    msum [ checkUserTOS
+         , pathdb GetDocumentByDocumentID handleIssueShow
          , hget0 handleIssueGet
          , hpost0 handleIssuePost
          ]
