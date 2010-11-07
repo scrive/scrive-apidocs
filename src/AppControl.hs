@@ -89,9 +89,9 @@ handleRoutes = do
      ++ (if isSuperUser ctxmaybeuser then 
              [ dir "stats" $ handleStats
              , dir "createuser" $ handleCreateUser
+             , dir "adminonly" AppControl.showAdminOnly
              , dir "adminonly" $ msum 
-                       [ methodM GET >> AppControl.showAdminOnly
-                       , dir "db" $ msum [ methodM GET >> indexDB
+                       [ dir "db" $ msum [ methodM GET >> indexDB
                                          , fileServe [] "_local/kontrakcja_state"
                                          ]
                        , dir "cleanup" $ methodM POST >> databaseCleanup
@@ -377,6 +377,7 @@ databaseCleanup = do
 
 showAdminOnly :: Kontra Response
 showAdminOnly = do
+  methodM GET
   ctx@Context { ctxflashmessages} <- lift get
   users <- query $ GetAllUsers
   webHSP (V.pageAdminOnly users ctxflashmessages)
