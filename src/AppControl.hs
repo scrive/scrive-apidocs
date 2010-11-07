@@ -87,11 +87,10 @@ handleRoutes = do
              [ dir "stats" handleStats
              , dir "createuser" handleCreateUser
              , dir "adminonly" $ nullDir >> AppControl.showAdminOnly
+             , dir "adminonly" $ dir "db" $ nullDir >> indexDB
+             , dir "adminonly" $ dir "db" $ fileServe [] "_local/kontrakcja_state"
              , dir "adminonly" $ msum 
-                       [ dir "db" $ msum [ methodM GET >> indexDB
-                                         , fileServe [] "_local/kontrakcja_state"
-                                         ]
-                       , dir "cleanup" $ methodM POST >> databaseCleanup
+                       [ dir "cleanup" $ methodM POST >> databaseCleanup
                        , dir "become" $ methodM POST >> handleBecome
                        , dir "takeoverdocuments" $ methodM POST >> handleTakeOverDocuments
                        , dir "deleteaccount" $ methodM POST >> handleDeleteAccount
@@ -363,6 +362,7 @@ handleDownloadDatabase = do fail "nothing"
   
 indexDB :: Kontra Response
 indexDB = do
+  onlySuperUser
   contents <- liftIO $ getDirectoryContents "_local/V.kontrakcja_state"
   webHSP (V.databaseContents (sort contents))
 
