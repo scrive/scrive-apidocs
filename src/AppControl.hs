@@ -54,11 +54,7 @@ import qualified Data.Map as Map
 handleRoutes = do
    ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} <- get 
    msum $
-    ([nullDir >> if isJust ctxmaybeuser then
-                     withUserTOS (V.renderFromBody ctx V.TopNew V.kontrakcja (V.pageWelcome ctx))
-                 else
-                     V.renderFromBody ctx V.TopNew V.kontrakcja (V.pageWelcome ctx)
-
+    ([nullDir >> handleHomepage
      , dir "s" DocControl.handleSign
      , {- old -} dir "sign" DocControl.handleSign
      , dir "d" DocControl.handleIssue
@@ -140,6 +136,15 @@ instance (MonadIO m) => TRA.MonadIO (ServerPartT m)
          flip (maybe mzero) bytes $ \x -> do
               return (toResponseBS (BS.fromString "text/html; charset=utf-8") (L.fromChunks [x]))
 -}
+
+handleHomepage = do
+  ctx@Context{ctxmaybeuser} <- get
+  case ctxmaybeuser of
+    Just user -> do
+      checkUserTOS
+      V.renderFromBody ctx V.TopNew V.kontrakcja (V.pageWelcome ctx)
+    Nothing ->
+      V.renderFromBody ctx V.TopNew V.kontrakcja (V.pageWelcome ctx)
 
 
 -- uh uh, how to do that in correct way?
