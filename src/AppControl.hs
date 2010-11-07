@@ -63,7 +63,7 @@ handleRoutes = do
      , {- old -} dir "sign" $ DocControl.handleSign
      , dir "d" $ withUserTOS $ DocControl.handleIssue
      , {- old -} dir "issue" $ DocControl.handleIssue
-     , dir "resend" $ withUserTOS $ hpost2 DocControl.handleResend
+     , dir "resend" $ hpost2 DocControl.handleResend
      , dir "pages" $ hget2 $ \fileid pageno -> do
         modminutes <- query $ FileModTime fileid
         DocControl.showPage modminutes fileid pageno
