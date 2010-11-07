@@ -51,8 +51,7 @@ import qualified DocControl as DocControl
 import qualified HSP as HSP
 import qualified Data.Map as Map
 
-handleRoutes =  
-  do
+handleRoutes = do
    ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} <- get 
    msum $
     ([nullDir >> if isJust ctxmaybeuser
