@@ -61,7 +61,7 @@ handleRoutes = do
 
      , dir "s" DocControl.handleSign
      , {- old -} dir "sign" DocControl.handleSign
-     , dir "d" $ withUserTOS DocControl.handleIssue
+     , dir "d" DocControl.handleIssue
      , {- old -} dir "issue" DocControl.handleIssue
      , dir "resend" $ hpost2 DocControl.handleResend
      , dir "pages" $ hget2 $ \fileid pageno -> do
