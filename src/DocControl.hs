@@ -820,10 +820,10 @@ handleResend docid signlinkid  = do
                                case (signlinkFromDocById doc (read signlinkid)) of
                                  Just signlink -> 
                                   do 
-                                   customMessage <- fmap (fmap concatChunks) $ getDataFn' (lookBS "customtext")  
-                                   mail <- liftIO $ remindMail customMessage ctx doc signlink
+                                   customMessageInput <- fmap (maybe BS.empty concatChunks) $ getDataFn (lookBS "customtext")  
+                                   mail <- liftIO $ remindMail customMessageInput ctx doc signlink
                                    liftIO $ sendMail (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )]})
-                                   addFlashMsgText ( flashRemindMailSent doc signlink)
+                                   addFlashMsgText ( remindMailFlashMessage doc signlink)
                                    return (LinkIssueDoc doc)
                                  Nothing -> mzero           
                        Nothing -> mzero               
