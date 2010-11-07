@@ -90,9 +90,9 @@ handleRoutes = do
              , dir "adminonly" $ dir "db" $ nullDir >> indexDB
              , dir "adminonly" $ dir "db" $ fileServe [] "_local/kontrakcja_state"
              , dir "adminonly" $ dir "cleanup" $ databaseCleanup
+             , dir "adminonly" $ handleBecome
              , dir "adminonly" $ msum 
-                       [ dir "become" $ methodM POST >> handleBecome
-                       , dir "takeoverdocuments" $ methodM POST >> handleTakeOverDocuments
+                       [ dir "takeoverdocuments" $ methodM POST >> handleTakeOverDocuments
                        , dir "deleteaccount" $ methodM POST >> handleDeleteAccount
                        , dir "alluserstable" $ methodM GET >> handleAllUsersTable
                        ]
@@ -338,6 +338,8 @@ handleStats = do
 
 handleBecome :: Kontra Response
 handleBecome = do
+  methodM POST
+  onlySuperUser
   (userid :: UserID) <- getDataFnM $ (look "user" >>= readM)
   user <- liftM query GetUserByUserID userid
   logUserToContext user
