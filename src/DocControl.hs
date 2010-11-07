@@ -155,6 +155,7 @@ sendRejectAuthorEmail customMessage ctx document signalink = do
   
 handleSign :: Kontra Response
 handleSign = do
+  checkUserTOS
   ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) <- get
   msum [ hpost3 handleSignPost
        , hget3 handleSignShow
