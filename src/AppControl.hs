@@ -54,7 +54,7 @@ import qualified Data.Map as Map
 handleRoutes = do
    ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} <- get 
    msum $
-    ([nullDir >> handleHomepage
+     [nullDir >> handleHomepage
      , dir "s" DocControl.handleSign
      , {- old -} dir "sign" DocControl.handleSign
      , dir "d" DocControl.handleIssue
@@ -80,11 +80,10 @@ handleRoutes = do
            pathdb GetDocumentByDocumentID $ \document -> 
                DocControl.handlePageOfDocument document
      , dir "account" $ withUser $ UserControl.handleUser ctx
-     ]
-     
+
+
      -- super user only
-     ++ 
-     [ dir "stats" handleStats
+     , dir "stats" handleStats
      , dir "createuser" handleCreateUser
      , dir "adminonly" $ nullDir >> AppControl.showAdminOnly
      , dir "adminonly" $ dir "db" $ nullDir >> indexDB
@@ -97,21 +96,18 @@ handleRoutes = do
      , dir "dave" $ dir "document" $ daveDocument
      , dir "dave" $ dir "user" $ daveUser
            
-           
-     ]
          
      -- account stuff
-     ++ 
-     [ dir "logout" handleLogout
+     , dir "logout" handleLogout
      , dir "login" handleLogin
      , dir "signup" signupPage
      , dir "signupdone" signupPageDone
      , dir "amnesia" forgotPasswordPage
      , dir "amnesiadone" forgotPasswordDonePage
-     ]
+     
      -- static files
-     ++ [serveHTMLFiles
-        , fileServe [] "public"] )
+     , serveHTMLFiles
+     , fileServe [] "public"]
 
 {-
 
