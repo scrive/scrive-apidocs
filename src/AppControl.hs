@@ -60,7 +60,7 @@ handleRoutes = do
                      V.renderFromBody ctx V.TopNew V.kontrakcja (V.pageWelcome ctx)
 
      , dir "s" $ DocControl.handleSign
-     , {- old -} dir "sign" $ withUserTOS $ DocControl.handleSign
+     , {- old -} dir "sign" $ DocControl.handleSign
      , dir "d" $ withUserTOS $ DocControl.handleIssue
      , {- old -} dir "issue" $ withUserTOS $ DocControl.handleIssue
      , dir "resend" $ withUserTOS $ hpost2 DocControl.handleResend
