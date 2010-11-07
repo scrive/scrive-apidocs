@@ -69,10 +69,10 @@ handleRoutes = do
         DocControl.showPage modminutes fileid pageno
      , dir "landpage" $ dir "signinvite" $ pathdb GetDocumentByDocumentID $ \document -> 
          DocControl.landpageSignInvite ctx document
+     , dir "landpage" $ dir "signed" $ pathdb GetDocumentByDocumentID $ \document -> path $ \signatorylinkid ->
+                                                                                     DocControl.landpageSigned ctx document signatorylinkid
      , dir "landpage" $ msum 
-               [ dir "signed" $ pathdb GetDocumentByDocumentID $ \document -> path $ \signatorylinkid ->
-                                                                              DocControl.landpageSigned ctx document signatorylinkid
-               , dir "rejected" $ pathdb GetDocumentByDocumentID $ \document -> path $ \signatorylinkid ->
+               [ dir "rejected" $ pathdb GetDocumentByDocumentID $ \document -> path $ \signatorylinkid ->
                                                                               DocControl.landpageRejected ctx document signatorylinkid
                , dir "signedsave" $ pathdb GetDocumentByDocumentID $ \document -> 
                    path $ \signatorylinkid ->
