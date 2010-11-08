@@ -23,26 +23,7 @@ import User
 import KontraLink
 import MinutesTime
 import SendMail(Mail,emptyMail,title,content)
-import InspectXML
 import Data.Maybe
-
-$(deriveInspectXML ''User)
-
-instance InspectXML UserID where
-    inspectXML x = asChild <a href=("/dave/user/" ++ show x)><% show x %></a>
-
-
-instance InspectXML MinutesTime where
-    inspectXML = asChild . show
-instance InspectXML SupervisorID where
-    inspectXML = asChild . show
-instance InspectXML Password where
-    inspectXML = asChild . show
-instance InspectXML FlashMessage where
-    inspectXML = asChild . show
-instance InspectXML Email where
-    inspectXML = asChild . show
-
 
 instance (EmbedAsChild m BS.ByteString) => (EmbedAsChild m Email) where
     asChild = asChild . unEmail
