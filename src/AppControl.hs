@@ -317,49 +317,49 @@ read_df = do
 
 
 handleStats :: Kontra Response
-handleStats = do
-  onlySuperUser
-  ndocuments <- query $ GetDocumentStats
-  allusers <- query $ GetAllUsers
+handleStats = onlySuperUser $
+  do
+    ndocuments <- query $ GetDocumentStats
+    allusers <- query $ GetAllUsers
 #ifndef WINDOWS
-  df <- liftIO read_df
+    df <- liftIO read_df
 #else
-  let df = BS.empty
+    let df = BS.empty
 #endif
-  webHSP (V.pageStats (length allusers) ndocuments allusers df)
+    webHSP (V.pageStats (length allusers) ndocuments allusers df)
     
 
 handleBecome :: Kontra Response
-handleBecome = do
-  methodM POST
-  onlySuperUser
-  (userid :: UserID) <- getDataFnM $ (look "user" >>= readM)
-  user <- liftM query GetUserByUserID userid
-  logUserToContext user
-  response <- webHSP (seeOtherXML "/")
-  seeOther "/" response
+handleBecome = onlySuperUser $
+  do
+    methodM POST
+    (userid :: UserID) <- getDataFnM $ (look "user" >>= readM)
+    user <- liftM query GetUserByUserID userid
+    logUserToContext user
+    response <- webHSP (seeOtherXML "/")
+    seeOther "/" response
 
 
 
 handleCreateUser :: Kontra Response
-handleCreateUser = do
-  onlySuperUser
-  ctx@Context{..} <- get
-  email <- g "email"
-  fullname <- g "fullname"
-  user <- liftIO $ createUser ctxhostpart fullname email Nothing Nothing
-  -- FIXME: where to redirect?
-  response <- webHSP (seeOtherXML "/stats")
-  seeOther "/stats" response
+handleCreateUser = onlySuperUser $
+  do
+    ctx@Context{..} <- get
+    email <- g "email"
+    fullname <- g "fullname"
+    user <- liftIO $ createUser ctxhostpart fullname email Nothing Nothing
+    -- FIXME: where to redirect?
+    response <- webHSP (seeOtherXML "/stats")
+    seeOther "/stats" response
   
 handleDownloadDatabase :: Kontra Response
 handleDownloadDatabase = do fail "nothing"
   
 indexDB :: Kontra Response
-indexDB = do
-  onlySuperUser
-  contents <- liftIO $ getDirectoryContents "_local/kontrakcja_state"
-  webHSP (V.databaseContents (sort contents))
+indexDB = onlySuperUser $
+  do
+    contents <- liftIO $ getDirectoryContents "_local/kontrakcja_state"
+    webHSP (V.databaseContents (sort contents))
 
 databaseCleanupWorker :: IO [FilePath]
 databaseCleanupWorker = do
@@ -374,70 +374,70 @@ databaseCleanupWorker = do
   getDirectoryContents "_local/kontrakcja_state"
 
 databaseCleanup :: Kontra Response
-databaseCleanup = do
-  -- dangerous, cleanup all old files, where old means chechpoints but the last one
-  -- and all events that have numbers less than last checkpoint
-  methodM POST
-  onlySuperUser
-  contents <- liftIO databaseCleanupWorker
-  webHSP (V.databaseContents (sort contents))
+databaseCleanup =   onlySuperUser $
+  do
+    -- dangerous, cleanup all old files, where old means chechpoints but the last one
+    -- and all events that have numbers less than last checkpoint
+    methodM POST
+    contents <- liftIO databaseCleanupWorker
+    webHSP (V.databaseContents (sort contents))
 
 
 showAdminOnly :: Kontra Response
-showAdminOnly = do
-  methodM GET
-  onlySuperUser
-  ctx@Context { ctxflashmessages} <- lift get
-  users <- query $ GetAllUsers
-  webHSP (V.pageAdminOnly users ctxflashmessages)
+showAdminOnly = onlySuperUser $
+  do
+    methodM GET
+    ctx@Context { ctxflashmessages} <- lift get
+    users <- query $ GetAllUsers
+    webHSP (V.pageAdminOnly users ctxflashmessages)
   
 
 handleTakeOverDocuments :: Kontra Response
-handleTakeOverDocuments = do
-  methodM POST
-  onlySuperUser
-  ctx@Context{ctxmaybeuser = Just ctxuser} <- lift $ get
-  (srcuserid :: UserID) <- getDataFnM $ (look "user" >>= readM)
-  Just srcuser <- query $ GetUserByUserID srcuserid
+handleTakeOverDocuments = onlySuperUser $
+  do
+    methodM POST
+    ctx@Context{ctxmaybeuser = Just ctxuser} <- lift $ get
+    (srcuserid :: UserID) <- getDataFnM $ (look "user" >>= readM)
+    Just srcuser <- query $ GetUserByUserID srcuserid
   
-  update $ FragileTakeOverDocuments (userid ctxuser) srcuserid
-  addFlashMsgText $ BS.fromString $ "Took over all documents of '" ++ BS.toString (userfullname srcuser) ++ "'. His account is now empty and can be deleted if you wish so. Show some mercy, though."
-  let link = "/adminonly/"
-  response <- webHSP (seeOtherXML link)
-  seeOther link response
+    update $ FragileTakeOverDocuments (userid ctxuser) srcuserid
+    addFlashMsgText $ BS.fromString $ "Took over all documents of '" ++ BS.toString (userfullname srcuser) ++ "'. His account is now empty and can be deleted if you wish so. Show some mercy, though."
+    let link = "/adminonly/"
+    response <- webHSP (seeOtherXML link)
+    seeOther link response
     
 
 
 handleDeleteAccount :: Kontra Response
-handleDeleteAccount = do
-  methodM POST
-  onlySuperUser
-  (userid :: UserID) <- getDataFnM $ (look "user" >>= readM)
-  Just user <- query $ GetUserByUserID userid
-  documents <- query $ GetDocumentsByAuthor userid
-  if null documents
+handleDeleteAccount = onlySuperUser $
+  do
+    methodM POST
+    (userid :: UserID) <- getDataFnM $ (look "user" >>= readM)
+    Just user <- query $ GetUserByUserID userid
+    documents <- query $ GetDocumentsByAuthor userid
+    if null documents
      then do
        update $ FragileDeleteUser userid
        addFlashMsgText (BS.fromString ("User deleted. You will not see '" ++ BS.toString (userfullname user) ++ "' here anymore"))
      else do
        addFlashMsgText (BS.fromString ("I cannot delete user. '" ++ BS.toString (userfullname user) ++ "' still has " ++ show (length documents) ++ " documents as author. Take over his documents, then try to delete the account again."))
   
-  let link = "/adminonly/"
-  response <- webHSP (seeOtherXML link)
-  seeOther link response
+    let link = "/adminonly/"
+    response <- webHSP (seeOtherXML link)
+    seeOther link response
 
 handleAllUsersTable :: Kontra Response
-handleAllUsersTable = do
-  methodM GET
-  onlySuperUser
-  users <- query $ GetAllUsers
-  let queryNumberOfDocuments user = do
-                        documents <- query $ GetDocumentsByAuthor (userid user)
-                        return (user,length documents)
+handleAllUsersTable = onlySuperUser $
+  do
+    methodM GET
+    users <- query $ GetAllUsers
+    let queryNumberOfDocuments user = do
+          documents <- query $ GetDocumentsByAuthor (userid user)
+          return (user,length documents)
                         
-  users2 <- mapM queryNumberOfDocuments users
+    users2 <- mapM queryNumberOfDocuments users
 
-  webHSP $ V.pageAllUsersTable users2
+    webHSP $ V.pageAllUsersTable users2
 
 serveHTMLFiles:: Kontra Response  
 serveHTMLFiles =  do
@@ -454,26 +454,28 @@ serveHTMLFiles =  do
                
          else mzero
       
-onlySuperUser :: Kontra Response  
-onlySuperUser = do
+onlySuperUser :: Kontra Response -> Kontra Response  
+onlySuperUser action = do
   ctx@Context{ctxmaybeuser} <- get 
   case isSuperUser ctxmaybeuser of
-      False -> do
-        let link = "/login"
-        response <- webHSP $ seeOtherXML link
-        finishWith (redirect 303 link response)
-      True -> webHSP $ seeOtherXML "abc"
+      False -> sendRedirect "/login"
+      True  -> action
 
 daveDocument :: Kontra Response
-daveDocument = do
-  ctx <- get
-  onlySuperUser
-  pathdb GetDocumentByDocumentID $ \document ->
-      V.renderFromBody ctx V.TopNew V.kontrakcja $ inspectXML document
+daveDocument = onlySuperUser $
+    do
+      ctx <- get
+      pathdb GetDocumentByDocumentID $ \document ->
+          V.renderFromBody ctx V.TopNew V.kontrakcja $ inspectXML document
 
 daveUser :: Kontra Response
-daveUser = do 
-  ctx <- get
-  onlySuperUser
-  pathdb GetUserByUserID $ \user ->
-      V.renderFromBody ctx V.TopNew V.kontrakcja $ inspectXML user
+daveUser = onlySuperUser $ 
+    do 
+      ctx <- get
+      pathdb GetUserByUserID $ \user ->
+          V.renderFromBody ctx V.TopNew V.kontrakcja $ inspectXML user
+
+sendRedirect :: String -> Kontra Response
+sendRedirect link = do           
+  response <- webHSP $ seeOtherXML link
+  return $ redirect 303 link response
