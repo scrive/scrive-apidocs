@@ -212,7 +212,7 @@ pageWelcome ctx@(Context {ctxmaybeuser = Nothing}) =
  <div>
     <div id="firstPageLeft">
          <h1>Snabbt, smidigt och säkert</h1>
-         <p>SkrivaPå är en tjänst för elektronisk signering och arkivering. Spara tid och minska onödiga kostnader med enklare och smidigare avtals&shy;hantering. Skapa ett konto gratis och testa tjänsten redan idag! Vi bjuder på de 5 första avtalen.</p>
+         <p>SkrivaPå är en tjänst för elektronisk signering och arkivering. Spara tid och minska onödiga kostnader med enklare och smidigare avtalshantering. Skapa ett konto gratis och testa tjänsten redan idag! Vi bjuder på de 5 första avtalen.</p>
          <p><a href=LinkSignup class="button">Skapa konto</a></p>
     </div>
     <div id="firstPageRight">
