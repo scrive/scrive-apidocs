@@ -40,10 +40,17 @@ $(deriveAll [''Eq, ''Ord, ''Default]
 
       -- added by Eric Normand for template system
       -- Defines a new field to be placed in a contract
+      data FieldDefinition0 = FieldDefinition0
+          { fieldlabel0 :: BS.ByteString 
+          , fieldvalue0 :: BS.ByteString
+          , fieldplacements0 :: [FieldPlacement]
+          }
+
       data FieldDefinition = FieldDefinition
           { fieldlabel :: BS.ByteString 
           , fieldvalue :: BS.ByteString
           , fieldplacements :: [FieldPlacement]
+          , fieldfilledbyauthor :: Bool
           }
 
       -- defines where a field is placed
@@ -403,8 +410,24 @@ instance FromReqURI SignatoryLinkID where
 instance FromReqURI FileID where
     fromReqURI = readM
 
+$(deriveSerialize ''FieldDefinition0)
+instance Version FieldDefinition0
+
 $(deriveSerialize ''FieldDefinition)
-instance Version FieldDefinition
+instance Version FieldDefinition where
+    mode = extension 1 (Proxy :: Proxy FieldDefinition0)
+
+instance Migrate FieldDefinition0 FieldDefinition where
+    migrate (FieldDefinition0
+             { fieldlabel0
+             , fieldvalue0
+             , fieldplacements0
+             }) = FieldDefinition
+                { fieldlabel = fieldlabel0
+                , fieldvalue = fieldvalue0
+                , fieldplacements = fieldplacements0
+                , fieldfilledbyauthor = False
+                }
 
 $(deriveSerialize ''FieldPlacement)
 instance Version FieldPlacement
