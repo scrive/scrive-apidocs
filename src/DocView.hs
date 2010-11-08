@@ -33,48 +33,7 @@ import Misc
 import MinutesTime
 import Data.Maybe
 import SendMail(Mail,emptyMail,content,title,attachments)
-import InspectXML
-import UserView ()
 import "mtl" Control.Monad.Trans
-
-$(deriveInspectXML ''Document)
-
-$(deriveInspectXML ''FieldDefinition)
-
-$(deriveInspectXML ''FieldPlacement)
-
-instance InspectXML DocumentID where
-    inspectXML x = asChild <a href=("/dave/document/" ++ show x)><% show x %></a>
-
-instance InspectXML SignatoryLinkID where
-    inspectXML x = asChild <a href=("/dave/signatorylink/" ++ show x)><% show x %></a>
-    
-instance InspectXML Author where
-    inspectXML (Author x) = inspectXML x
-
-$(deriveInspectXML ''SignatoryLink)
-
-instance InspectXML File where
-    inspectXML = asChild . show
-instance InspectXML DocumentStatus where
-    inspectXML = asChild . show
-instance InspectXML ChargeMode where
-    inspectXML = asChild . show
-instance InspectXML TimeoutTime where
-    inspectXML = asChild . show
-
-$(deriveInspectXML ''SignatoryDetails)
-
-instance InspectXML SignInfo where
-    inspectXML = asChild . show
-instance InspectXML DocumentHistoryEntry where
-    inspectXML = asChild . show
-
-
-instance InspectXML MagicHash where
-    inspectXML = asChild . show
-instance InspectXML Signatory where
-    inspectXML = asChild . show
     
 instance Monad m => IsAttrValue m DocumentID where
     toAttrValue = toAttrValue . show

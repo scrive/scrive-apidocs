@@ -27,6 +27,7 @@ import Happstack.Server.SimpleHTTP (seeOther)
 import Happstack.State (update,query)
 import Happstack.Util.Common
 import InspectXML
+import InspectXMLInstances
 import KontraLink
 import MinutesTime
 import Misc

@@ -1,4 +1,12 @@
 {-# LANGUAGE ForeignFunctionInterface, CPP, ScopedTypeVariables, StandaloneDeriving, TemplateHaskell, FlexibleInstances, MultiParamTypeClasses, FlexibleContexts, UndecidableInstances  #-}
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  InspectXML
+--
+-- Class and basic instances for viewing data. Usefull for debugging etc.
+-- Contains a derivator. But it forces big types to be moved to InspectXMLUtil.
+-- Otherwise we would like to have them here.
+-----------------------------------------------------------------------------
 
 
 module InspectXML where
