@@ -478,4 +478,4 @@ daveUser = onlySuperUser $
 sendRedirect :: String -> Kontra Response
 sendRedirect link = do           
   response <- webHSP $ seeOtherXML link
-  return $ redirect 303 link response
+  seeOther link response
