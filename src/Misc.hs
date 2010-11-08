@@ -44,6 +44,7 @@ import System.Process
 import System.IO
 import System.Exit
 import System.Log.Logger (errorM)
+
 {-
 
 Dump bin for things that do not fit anywhere else
@@ -357,4 +358,3 @@ logErrorWithDefault c d f = do
 caseOf ((True,a):_) _ = a
 caseOf (_:r) d = caseOf r d
 caseOf [] d = d
-                                             

@@ -427,7 +427,8 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid, do
           fd fn fv id sigid = (sigid,
                                  FieldDefinition { fieldlabel = fn, 
                                                    fieldvalue = fv,
-                                                   fieldplacements = placementsByID sigid id
+                                                   fieldplacements = placementsByID sigid id,
+                                                   fieldfilledbyauthor = (BS.length fv > 0)
                                                  })
 
   let defsByID sigid = 

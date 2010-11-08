@@ -110,3 +110,4 @@ hpost4 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> path $ \a4 -> methodM 
                   (link :: KontraLink) <- action a1 a2 a3 a4
                   response <- webHSP (seeOtherXML $ show link)
                   seeOther (show link) response
+
