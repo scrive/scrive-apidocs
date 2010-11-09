@@ -80,7 +80,7 @@ initDatabaseEntries :: IO ()
 initDatabaseEntries = do
   -- create initial database entries
   passwdhash <- User.createPassword (BS.pack "admin")
-  flip mapM_ User.admins $ \email -> do
+  flip mapM_ User.initialUsers $ \email -> do
       maybeuser <- query $ User.GetUserByEmail email
       case maybeuser of
           Nothing -> do

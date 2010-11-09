@@ -11,6 +11,7 @@ module User
     , RememberMe(..)
     , readRememberMeCookie
     , admins
+    , initialUsers
     , clearFlashMsgs
     , addFlashMsgText 
     , addFlashMsgHtml
@@ -63,9 +64,13 @@ instance MonadState s m => MonadState s (ServerPartT m) where
 
 admins = map (Email . BS.fromString)
          [ "gracjanpolak@gmail.com"
-         , "gracjan@skrivapa.se"
          , "lukas@skrivapa.se"
-         , "lukas.duczko@gmail.com"
+         , "oskar@skrivapa.se"
+         ]
+
+initialUsers = map (Email . BS.fromString)
+         [ "gracjanpolak@gmail.com"
+         , "lukas@skrivapa.se"
          , "ericwnormand@gmail.com"
          , "oskar@skrivapa.se"
          , "kbaldyga@gmail.com"
