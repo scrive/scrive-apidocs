@@ -95,8 +95,7 @@ sendInvitationEmail1 ctx document signatorylink = do
                                                          }
                    , signatorymagichash } = signatorylink
       Document{documenttitle,documentid} = document
-  mail <- mailInvitationToSign ctx signatoryemail signatoryname
-             document signatorylink signatorymagichash
+  mail <- mailInvitationToSign ctx document signatorylink
   let attachmentcontent = filepdf $ head $ documentfiles document
   sendMail $ mail { fullnameemails =  [(signatoryname,signatoryemail)]  , attachments = [(documenttitle,attachmentcontent)]} 
 
@@ -396,7 +395,7 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid, do
 
   daystosignstring <- getDataFnM (look "daystosign")
   daystosign <- readM daystosignstring
-  invitetext <- fmap (maybe BS.empty concatChunks) (getDataFn' $ lookBS "invitetext")
+  invitetext <- fmap (maybe defaultInviteMessage concatChunks) (getDataFn' $ lookBS "invitetext")
   
   -- each custom field must have this
   fieldnames <- getAndConcat "fieldname"

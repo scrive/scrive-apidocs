@@ -513,5 +513,3 @@ daveUser = onlySuperUserGet $
       ctx <- get
       pathdb GetUserByUserID $ \user ->
           V.renderFromBody ctx V.TopNew V.kontrakcja $ inspectXML user
-
-
