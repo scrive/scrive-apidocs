@@ -19,6 +19,7 @@ module DocView( emptyDetails
               , mailDocumentRejectedForAuthor
               , landpageRejectedView
               , flashDocumentRejected
+              , defaultInviteMessage
               ) where
 import AppView
 import Data.List
@@ -469,11 +470,15 @@ pageDocumentForAuthor ctx@(Context {ctxmaybeuser = Just user})
                                                  else map signatorydetails documentsignatorylinks) %>
               </div>
               <small><a id="addsiglink" onclick="signatoryadd(); return false;" href="#">Lägg till fler</a></small>
-
-              <div style="margin-top: 10px">
+              <div style="margin-top: 5px">
+              <small><a rel="#edit-invite-text-dialog" id="editinvitetextlink" href="#" style="padding-top:3px">Hälsningsmeddelande</a></small>
+              <input type="hidden" id="invitetext" name="invitetext" value=documentinvitetext />
+              </div>
+              <div style="margin-top: 5px">
               <p>Undertecknas inom (dagar)
               <input type="text" name="daystosign" value=documentdaystosign maxlength="2" size="2" autocomplete="off"/>
               </p>
+              
               <div style="height: 2px;"/>
               <input class="bigbutton" type="submit" name="final" value="Underteckna" id="signinvite" rel="#dialog-confirm-signinvite"/>
               <input class="button" type="submit" name="save" value="Spara som utkast"/>
@@ -488,16 +493,26 @@ pageDocumentForAuthor ctx@(Context {ctxmaybeuser = Just user})
                     <p>När du undertecknat kommer en automatisk inbjudan att skickas till 
                        <span class="Xinvited">Invited</span> med e-post.</p>
                    <BR/>    
-                   <div style="padding-left:5px">
-                   <% makeEditable "invitetext" $ withCustom  (Just documentinvitetext) <p></p> %>
-                   </div>
                    <BR/>
                    <BR/>
                    <div class="buttonbox" >
                        <input type="hidden" name="final" value="automatic"/>
-                       <button class="submiter" type="button"> Underteckna </button>
-                       <button class="editer" type="button"> Skriv eget meddelande   </button>
-                       <button class="close" type="button"> Avbryt </button>
+                       <button class="close button" type="button"> Avbryt </button>
+                       <button class="submiter button" type="button"> Underteckna </button>
+                       </div>
+                 </form>  
+                 <form method="post" name="form" action="" class="overlay" id="edit-invite-text-dialog" >  
+                   <a class="close"> </a>
+                   <h2>Hälsningsmeddelande</h2>
+                   <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
+                   <% mailInvitationToSignContent False ctx document Nothing%>
+                   </div>
+                   <BR/>
+                   <BR/>
+                   <div class="buttonbox" >
+                       <button class="close button" type="button"> Avbryt </button>
+                       <button class="editer button" type=""> Skriv eget meddelande </button>
+                       <button class="close button" type="button" id="editing-invite-text-finished"> Ok </button>
                    </div>
                  </form>  
                </span>
@@ -586,25 +601,19 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document siglnk@(
       reminderEditorText = "Skriv eget meddelande"                          
       reminderDialogTitle = reminderText
       reminderMessage =  remindMailContent Nothing ctx document siglnk
-      mainDialogText =  if (wasSigned)
-                         then <span>Du vill skicka dokumentet <% documenttitle document %> till <%(personname siglnk)%> igen. Nedan ser du vårt standardmeddelande. Om du vill kan du ändra meddelandet Innan du skickar.</span>
-                         else <span>Du vill skicka en påminnelse att underteckna dokumentet <% documenttitle document %> till <%(personname siglnk)%>. Nedan ser du vårt standardmeddelande. Om du vill kan du ändra meddelandet Innan du skickar.</span>
       dialogHeight =   if (wasSigned) then "400" else "600"
       reminderForm = <span>
                       <a style="cursor:pointer" class="prepareToSendReminderMail" rel=("#siglnk" ++ (show signatorylinkid ))>  <% reminderText %>  </a>
                       <form class="overlay" action=(LinkRemind document siglnk) method="POST" title=reminderDialogTitle width="600" height=dialogHeight id=("siglnk" ++ (show signatorylinkid))>
                        <a class="close"> </a>
                        <h2> <% reminderDialogTitle %> </h2>
-                       <p>
-                         <% mainDialogText %>
-                       </p>  
                        <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
                          <% reminderMessage %>
                        </div>
                        <div class="buttonbox">
-                       <button class="submiter" type="button"> <%reminderSenderText%> </button>
-                       <button class="editer" type="button"> <%reminderEditorText%> </button>
-                       <button class="close" type="button"> Avbryt </button>
+                       <button class="close button" type="button"> Avbryt </button>
+                       <button class="editer button" type="button"> <%reminderEditorText%> </button>
+                       <button class="submiter button" type="button"> <%reminderSenderText%> </button>
                        </div>
                       </form>     
                     </span>  
@@ -617,7 +626,9 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document siglnk@(
                 [asChild <span class="signatoryfields" />] ++
                 ([asChild message]) ++
                 (if (isCurrentUserAuthor && (not isCurrentSignatorAuthor) && (not isTimedout)) then [asChild <br/> ,asChild reminderForm] else [])
-                %></div>
+                %>
+               <BR/><BR/>
+              </div>
 
 pageDocumentForSign :: ( Monad m) =>
                        KontraLink 
@@ -668,10 +679,8 @@ pageDocumentForSign action document ctx@(Context {ctxmaybeuser = muser})  invite
                               <div>Förfallodatum har passerat!</div>)
                     ]
                               <div>
-                                
                                  <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign" rel="#dialog-confirm-sign"/>
                                  <input class="bigbutton" type="submit" name="cancel" value="Avvisa" rel="#dialog-confirm-cancel" id="cancel"/>
-                                
                               </div>
                  %>
                  <small>Jag vill veta mer <a href="/about" target="_blank">om SkrivaPå</a>.</small>
@@ -687,8 +696,8 @@ pageDocumentForSign action document ctx@(Context {ctxmaybeuser = muser})  invite
                       <BR/>
                       <div class="buttonbox">
                       <input type="hidden" name="sign" value="automatic"/>
-                      <button class="submiter" type="button"> Underteckna </button>
-                      <button class="close" type="button"> Avbryt </button>
+                      <button class="close button" type="button"> Avbryt </button>
+                      <button class="submiter button" type="button"> Underteckna </button>
                       </div>
                   </form>
                  <form method="post" name="form" action=action id="dialog-confirm-cancel" class="overlay">   
@@ -701,9 +710,9 @@ pageDocumentForSign action document ctx@(Context {ctxmaybeuser = muser})  invite
                     </div>
                     <div class="buttonbox">
                      <input type="hidden" name="cancel" value="automatic"/>
-                     <button class="submiter" type="button"> Avvisa </button>
-                     <button class="editer" type="button"> Skriv eget meddelande </button>
-                     <button class="close" type="button"> Avbryt </button>
+                     <button class="close button" type="button"> Avbryt </button>
+                     <button class="editer button" type="button"> Skriv eget meddelande </button>
+                     <button class="submiter button" type="button"> Avvisa </button>
                     </div> 
                  </form> 
                  </span>
@@ -759,10 +768,7 @@ buildJS authordetails signatorydetails =
                                      
 flashRemindMailSent doc signlink =  
                 case signlink of 
-                  SignatoryLink{maybesigninfo = Nothing} -> (BS.fromString "En påminnelse har skickats till ") `BS.append` personname
-                  _ -> (BS.fromString "Dokumentet har skickats till ") `BS.append` personname
-                 where
-                   personname =  if (BS.null $ signatoryname $ signatorydetails signlink)
-                                  then  signatoryname $ signatorydetails signlink
-                                  else signatoryemail $ signatorydetails signlink
-                               
+                  SignatoryLink{maybesigninfo = Nothing} -> (BS.fromString "En påminnelse har skickats till ") `BS.append` (personname signlink)
+                  _ -> (BS.fromString "Dokumentet har skickats till ") `BS.append` (personname signlink)
+
+defaultInviteMessage = BS.empty                              

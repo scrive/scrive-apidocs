@@ -207,6 +207,7 @@ $(document).ready( function () {
     
  
     $("#signinvite").overlay({  
+    mask: standardDialogMask,    
     onBeforeLoad: function () { 
            if (!emailFieldsValidation($("input[type='email']"))) return false;
            if (!authorFieldsValidation()) return false;
@@ -233,6 +234,7 @@ $(document).ready( function () {
                          })   
                          
     $("#editinvitetextlink").overlay({        
+    mask: standardDialogMask,    
     onBeforeLoad: function () { 
             var newtxt = $("#invitetext").val()
             $("#edit-invite-text-dialog textarea").val(newtxt );          
@@ -243,6 +245,7 @@ $(document).ready( function () {
                          var newtxt = $("#edit-invite-text-dialog textarea").val();
                          $("#invitetext").val( newtxt );
                      })
+                         
     $(".redirectsubmitform").submit(function(){
                           var newform = $($(this).attr("rel"))
                           var inputs = $("input",$(this))
@@ -255,11 +258,11 @@ $(document).ready( function () {
                           newform.submit();
                           return false; 
                           })                      
-    $("#sign").overlay({
+    $("#sign").overlay({ mask: standardDialogMask,
         onBeforeLoad: function () { if (!sigFieldsValidation()) return false;}
     })
     
-    $("#cancel").overlay({
+    $("#cancel").overlay({	mask: standardDialogMask
     })    
 	
 	$("input[type='email']").focus(function(){
@@ -431,6 +434,7 @@ $(function(){
     $(".prepareToSendReminderMail").each(function(){
         var form = $($(this).attr("rel"));
         $(this).overlay({
+                     mask: standardDialogMask,
                      resizable: false,
                      onClose: function(e){ return false;
                     }
@@ -442,13 +446,25 @@ function prepareForEdit(form){
     $(".editable",form).each( function(){
         var textarea = $("<textarea style='width:95%;height:120px'  name='"+$(this).attr('name')+"'> "+ $(this).html()+ "</textarea>")
         $(this).replaceWith(textarea);
-        var editor = textarea.tinymce({
+        var editor = prepareEditor(textarea)
+  }) 
+    $(".replacebynextonedit",form).each( function(){
+        var replacement = $(this).next();
+        $(this).replaceWith(replacement);
+        replacement.show();
+        
+    })
+}
+
+function prepareEditor(textarea) {
+ return textarea.tinymce({
                           script_url : '/tiny_mce/tiny_mce.js',
                           theme : "advanced",
                           theme_advanced_toolbar_location : "top",     
                           theme_advanced_buttons1 : "bold,italic,underline,separator,strikethrough,bullist,numlist,separator,undo,redo,separator,cut,copy,paste",
                           theme_advanced_buttons2 : "",
-                          convert_urls : false
-                        })
-  })    
-}
+                          convert_urls : false,
+                          theme_advanced_toolbar_align : "left"
+                        })}
+ 
+standardDialogMask = "#333333"

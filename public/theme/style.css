@@ -889,7 +889,6 @@ input
 	display:none;
 	/* styling */
 	background-color:#FFFFFF;
-	
 	width:675px;	
 	min-height:200px;
 	border:1px solid #666;
@@ -911,30 +910,11 @@ input
 	width:35px;
 }
 
-.overlay button{
--moz-border-radius:10.2em 10.2em 10.2em 10.2em;
--moz-box-shadow:0 0.1em 0.2em rgba(0, 0, 0, 0.5);
-background-color:#5D689A;
-border-bottom:0.2em solid #666666;
-cursor:pointer;
-line-height:1;
-padding:0.3em 0.6em;
-text-shadow:0 0 0.1em #222222;
--webkit-box-shadow: rgba(0, 0, 0, 0.496094) 0px 0.1em 0.2em;
-border-bottom-left-radius: 10.2em 10.2em;
-border-bottom-right-radius: 10.2em 10.2em;
-border-width: 1px 1px 0.2em;
-border-top-left-radius: 10.2em 10.2em;
-border-top-right-radius: 10.2em 10.2em;
-font-size: 1em;
-color: #FFFFFF;
-}
 .overlay h2 {
     	margin:0px;
-		padding:10px 0 10px 45px;
+		padding:10px 0 10px 10px;
 		border-bottom:1px solid #333;
 		font-size:20px;
-        background:url("images/info.png") no-repeat scroll 0 50% transparent;
 	}
 .overlay .buttonbox   {
  float:right;

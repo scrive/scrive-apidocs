@@ -10,6 +10,7 @@ module DocViewUtil (   personname,
                        makeEditable,
                        withCustom,
                        before,
+                       replaceOnEdit,
                        joinWith
            ) where
 import AppView
@@ -24,8 +25,6 @@ import KontraLink
 import Misc
 import MinutesTime
 import Data.Maybe
-import SendMail(Mail,emptyMail,content,title,attachments)
-import UserView ()
 import "mtl" Control.Monad.Trans
 
 
@@ -102,16 +101,19 @@ personname signlink = if (BS.null $ signatoryname $ signatorydetails signlink)
               
               
 withCustom::(Monad m) => Maybe (BS.ByteString)->(HSPT m XML) ->(HSPT m XML) 
-withCustom (Just customMessage) _ =  <p> <% (cdata $ BS.toString customMessage ) %> </p>
-withCustom Nothing standardMessage = standardMessage       
-
+withCustom (Just customMessage) _ = <span> <% (cdata $ BS.toString customMessage ) %> </span>
+withCustom Nothing standardMessage =  standardMessage 
                                                         
 before::(Monad m) => (HSPT m XML)-> (HSPT m XML)-> (HSPT m XML) 
-before header message = <p><span><%header%></span><span><%message%></span> </p>                                     
+before header message = <span><span><%header%></span><span><%message%></span><br/></span>                                     
                                            
 makeEditable::(Monad m) => String -> (HSPT m XML) ->(HSPT m XML) 
 makeEditable name c = <div class="editable" name=name><%c%></div>                      
               
+replaceOnEdit this with =  <span> 
+                            <span class="replacebynextonedit"> <% this %> </span> 
+                            <span style="display:none"> <% with %> </span>  
+                           </span>              
 joinWith _ [] = []
 joinWith _ [x] = x
 joinWith s (x:xs) = x ++ s ++ (joinWith s xs)  
