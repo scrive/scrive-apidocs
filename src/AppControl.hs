@@ -124,7 +124,7 @@ handleRoutes = do
      , dir "adminonly" $ dir "db" $ nullDir >> indexDB
      , dir "adminonly" $ dir "db" $ fileServe [] "_local/kontrakcja_state"
      , dir "adminonly" $ dir "cleanup" $ databaseCleanup
-     , dir "adminonly" $ handleBecome
+     , dir "adminonly" $ dir "become" $ handleBecome
      , dir "adminonly" $ dir "takeoverdocuments" $ handleTakeOverDocuments
      , dir "adminonly" $ dir "deleteaccount" $ handleDeleteAccount
      , dir "adminonly" $ dir "alluserstable" $ handleAllUsersTable
@@ -221,7 +221,6 @@ appHandler = do
             }
   (res,ctx)<- toIO ctx $  
      do
-      userLogin
       res <- (handleRoutes) `mplus` do
          response <- V.renderFromBody ctx V.TopNone V.kontrakcja (V.pageErrorReport ctx rq)
          setRsCode 404 response     
@@ -319,7 +318,6 @@ handleLoginPost = do
     Just user@User{userpassword} ->
         if verifyPassword userpassword (BS.fromString passwd) && passwd/=""
         then do
-          setRememberMeCookie (userid user) rememberMe
           logUserToContext maybeuser
           response <- webHSP (seeOtherXML "/")
           seeOther "/" response
@@ -333,7 +331,6 @@ handleLoginPost = do
 handleLogout :: Kontra Response
 handleLogout = do
   logUserToContext Nothing
-  clearRememberMeCookie
   response <- webHSP (seeOtherXML "/")
   seeOther "/" response
 
