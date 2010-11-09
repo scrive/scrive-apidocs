@@ -5,7 +5,7 @@ import Happstack.Util.Cron (cron)
 import Happstack.State (waitForTermination)
 import Happstack.Server
   ( Conf(port)
-  , simpleHTTP
+  , simpleHTTPWithSocket
   , nullConf
   , validator
   , wdgHTMLValidator
@@ -114,9 +114,12 @@ main = withLogger $ do
 
                   -- start the http server
                   Exception.bracket 
-                           (do -- socket <- listenOn (port (httpConf appConf))
-                               -- forkIO $ simpleHTTPWithSocket socket (httpConf appConf) appHandler
-                              t1 <- forkIO $ simpleHTTP (httpConf appConf) appHandler
+                           (do 
+                              -- we need to use our own listenOn as we want to:
+                              -- use only IPv4 addresses
+                              -- bind only to 127.0.0.1
+                              socket <- listenOn (port (httpConf appConf))
+                              t1 <- forkIO $ simpleHTTPWithSocket socket (httpConf appConf) appHandler
                               t2 <- forkIO $ cron 60 runScheduler
                               return [t1,t2]
                            )
