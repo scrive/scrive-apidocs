@@ -52,6 +52,18 @@ import qualified DocControl as DocControl
 import qualified HSP as HSP
 import qualified Data.Map as Map
 
+{- |
+   The routing table for the app.
+   Routes in this table should be of the form
+   dir "segment1" $ dir "segment2" $ .. $ dir "segmentn" $ hgetx $ handler
+   OR
+   dir "segment1" $ dir "segment2" $ .. $ dir "segmentn" $ hpostx $ handler
+
+   No other logic should be in here and no similar logic should be in the handler.
+   That is, all routing logic should be in this table to ensure that we can find
+   the function for any given path and method.
+-}
+handleRoutes :: Kontra Response
 handleRoutes = do
    ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} <- get 
    msum $
@@ -80,7 +92,6 @@ handleRoutes = do
      , dir "issue" $ hget2  $ DocControl.handleIssueShowTitleGet
      , dir "issue" $ hpost0 $ DocControl.handleIssuePost
      , dir "issue" $ hpost1 $ DocControl.handleIssueShowPost
-
 
      , dir "resend" $ hpost2 $ DocControl.handleResend
 
