@@ -982,7 +982,7 @@ signDocument documentid signatorylinkid1 time ipnumber fields = do
           isallsigned = all (isJust . maybesigninfo) newsignatorylinks
           
           -- Check if there are custom fields in any signatory (that is, not author)
-          hasfields = foldl (\x y -> (x || ((length $ signatoryotherfields $ signatorydetails y) > 0))) False (documentsignatorylinks document) 
+          hasfields = any ((any (not . fieldfilledbyauthor)) . (signatoryotherfields . signatorydetails)) (documentsignatorylinks document)
 
           updateWithFields [] sd = sd
           updateWithFields ((name, value):fs) sd 
