@@ -55,12 +55,35 @@ import qualified Data.Map as Map
 handleRoutes = do
    ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} <- get 
    msum $
-     [nullDir >> handleHomepage
-     , dir "s" DocControl.handleSign
-     , {- old -} dir "sign" DocControl.handleSign
-     , dir "d" DocControl.handleIssue
-     , {- old -} dir "issue" DocControl.handleIssue
-     , dir "resend" $ hpost2 DocControl.handleResend
+     [ hget0 $ handleHomepage
+
+     , dir "s" $ hget0  $ DocControl.handleSTable
+     , dir "s" $ hget3  $ DocControl.handleSignShow
+     , dir "s" $ hpost3 $ DocControl.handleSignPost
+
+     -- OLD
+     -- Question: Do we still need these?
+     , dir "sign" $ hget0  $ DocControl.handleSTable
+     , dir "sign" $ hget3  $ DocControl.handleSignShow
+     , dir "sign" $ hpost3 $ DocControl.handleSignPost
+
+     , dir "d" $ hget0  $ DocControl.handleIssueGet
+     , dir "d" $ hget1  $ DocControl.handleIssueShowGet
+     , dir "d" $ hget2  $ DocControl.handleIssueShowTitleGet
+     , dir "d" $ hpost0 $ DocControl.handleIssuePost
+     , dir "d" $ hpost1 $ DocControl.handleIssueShowPost
+
+     -- OLD
+     -- Question: Do we still need these?
+     , dir "issue" $ hget0  $ DocControl.handleIssueGet
+     , dir "issue" $ hget1  $ DocControl.handleIssueShowGet
+     , dir "issue" $ hget2  $ DocControl.handleIssueShowTitleGet
+     , dir "issue" $ hpost0 $ DocControl.handleIssuePost
+     , dir "issue" $ hpost1 $ DocControl.handleIssueShowPost
+
+
+     , dir "resend" $ hpost2 $ DocControl.handleResend
+
      , dir "pages" $ hget2 $ \fileid pageno -> do
         modminutes <- query $ FileModTime fileid
         DocControl.showPage modminutes fileid pageno
@@ -73,14 +96,14 @@ handleRoutes = do
      , dir "landpage" $ dir "signedsave" $ pathdb GetDocumentByDocumentID $ \document -> 
          path $ \signatorylinkid ->
              DocControl.landpageSignedSave ctx document signatorylinkid
-     , dir "landpage" $ dir "saved" $ withUser $ pathdb GetDocumentByDocumentID $ \document -> 
+     , dir "landpage" $ dir "saved" $ pathdb GetDocumentByDocumentID $ \document -> 
                    path $ \signatorylinkid ->
                        DocControl.landpageSaved ctx document signatorylinkid
            
      , dir "pagesofdoc" $ 
            pathdb GetDocumentByDocumentID $ \document -> 
                DocControl.handlePageOfDocument document
-     , dir "account" $ withUser $ UserControl.handleUser ctx
+     , dir "account" $ UserControl.handleUser ctx
 
 
      -- super user only
@@ -136,8 +159,7 @@ instance (MonadIO m) => TRA.MonadIO (ServerPartT m)
 handleHomepage = do
   ctx@Context{ctxmaybeuser} <- get
   case ctxmaybeuser of
-    Just user -> do
-      checkUserTOS
+    Just user -> checkUserTOSGet $
       V.renderFromBody ctx V.TopNew V.kontrakcja (V.pageWelcome ctx)
     Nothing ->
       V.renderFromBody ctx V.TopNew V.kontrakcja (V.pageWelcome ctx)
@@ -317,7 +339,7 @@ read_df = do
 
 
 handleStats :: Kontra Response
-handleStats = onlySuperUser $
+handleStats = onlySuperUserGet $
   do
     ndocuments <- query $ GetDocumentStats
     allusers <- query $ GetAllUsers
@@ -330,7 +352,7 @@ handleStats = onlySuperUser $
     
 
 handleBecome :: Kontra Response
-handleBecome = onlySuperUser $
+handleBecome = onlySuperUserGet $
   do
     methodM POST
     (userid :: UserID) <- getDataFnM $ (look "user" >>= readM)
@@ -342,7 +364,7 @@ handleBecome = onlySuperUser $
 
 
 handleCreateUser :: Kontra Response
-handleCreateUser = onlySuperUser $
+handleCreateUser = onlySuperUserGet $
   do
     ctx@Context{..} <- get
     email <- g "email"
@@ -356,7 +378,7 @@ handleDownloadDatabase :: Kontra Response
 handleDownloadDatabase = do fail "nothing"
   
 indexDB :: Kontra Response
-indexDB = onlySuperUser $
+indexDB = onlySuperUserGet $
   do
     contents <- liftIO $ getDirectoryContents "_local/kontrakcja_state"
     webHSP (V.databaseContents (sort contents))
@@ -374,7 +396,7 @@ databaseCleanupWorker = do
   getDirectoryContents "_local/kontrakcja_state"
 
 databaseCleanup :: Kontra Response
-databaseCleanup =   onlySuperUser $
+databaseCleanup =   onlySuperUserGet $
   do
     -- dangerous, cleanup all old files, where old means chechpoints but the last one
     -- and all events that have numbers less than last checkpoint
@@ -384,7 +406,7 @@ databaseCleanup =   onlySuperUser $
 
 
 showAdminOnly :: Kontra Response
-showAdminOnly = onlySuperUser $
+showAdminOnly = onlySuperUserGet $
   do
     methodM GET
     ctx@Context { ctxflashmessages} <- lift get
@@ -393,7 +415,7 @@ showAdminOnly = onlySuperUser $
   
 
 handleTakeOverDocuments :: Kontra Response
-handleTakeOverDocuments = onlySuperUser $
+handleTakeOverDocuments = onlySuperUserGet $
   do
     methodM POST
     ctx@Context{ctxmaybeuser = Just ctxuser} <- lift $ get
@@ -409,7 +431,7 @@ handleTakeOverDocuments = onlySuperUser $
 
 
 handleDeleteAccount :: Kontra Response
-handleDeleteAccount = onlySuperUser $
+handleDeleteAccount = onlySuperUserGet $
   do
     methodM POST
     (userid :: UserID) <- getDataFnM $ (look "user" >>= readM)
@@ -427,7 +449,7 @@ handleDeleteAccount = onlySuperUser $
     seeOther link response
 
 handleAllUsersTable :: Kontra Response
-handleAllUsersTable = onlySuperUser $
+handleAllUsersTable = onlySuperUserGet $
   do
     methodM GET
     users <- query $ GetAllUsers
@@ -454,28 +476,23 @@ serveHTMLFiles =  do
                
          else mzero
       
-onlySuperUser :: Kontra Response -> Kontra Response  
-onlySuperUser action = do
-  ctx@Context{ctxmaybeuser} <- get 
-  case isSuperUser ctxmaybeuser of
-      False -> sendRedirect "/login"
-      True  -> action
+onlySuperUserGet :: Kontra Response -> Kontra Response  
+onlySuperUserGet action = do
+  Context{ctxmaybeuser} <- get 
+  if isSuperUser ctxmaybeuser 
+   then action
+   else sendRedirect LinkLogin
 
 daveDocument :: Kontra Response
-daveDocument = onlySuperUser $
+daveDocument = onlySuperUserGet $
     do
       ctx <- get
       pathdb GetDocumentByDocumentID $ \document ->
           V.renderFromBody ctx V.TopNew V.kontrakcja $ inspectXML document
 
 daveUser :: Kontra Response
-daveUser = onlySuperUser $ 
+daveUser = onlySuperUserGet $ 
     do 
       ctx <- get
       pathdb GetUserByUserID $ \user ->
           V.renderFromBody ctx V.TopNew V.kontrakcja $ inspectXML user
-
-sendRedirect :: String -> Kontra Response
-sendRedirect link = do           
-  response <- webHSP $ seeOtherXML link
-  seeOther link response

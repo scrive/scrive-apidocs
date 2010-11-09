@@ -1,6 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -F -pgmFtrhsx #-}
-module KontraLink(KontraLink(..), hpost0, hpost1, hpost2, hpost3, hpost4, seeOtherXML ) where
+module KontraLink(KontraLink(..), hpost0, hpost1, hpost2, hpost3, hpost4, seeOtherXML, sendRedirect ) where
 
 import UserState
 import DocState
@@ -44,6 +44,7 @@ data KontraLink
     | LinkRemind Document SignatoryLink
     | LinkSigned DocumentID SignatoryLinkID 
     | LinkRejected DocumentID SignatoryLinkID 
+    | LinkSignInvite DocumentID
 
 instance Show KontraLink where
     showsPrec _ LinkAbout = (++) "/about"
@@ -70,6 +71,7 @@ instance Show KontraLink where
     showsPrec _ (LinkRemind document signlink) = (++) $ "/resend/"++(show $ documentid document)++"/"++(show $ signatorylinkid signlink)   
     showsPrec _ (LinkSigned documentid signatorylinkid) = (++) $ "/landpage/signed/" ++ show documentid ++ "/" ++ show signatorylinkid
     showsPrec _ (LinkRejected documentid signatorylinkid) = (++) $ "/landpage/rejected/" ++ show documentid ++ "/" ++ show signatorylinkid
+    showsPrec _ (LinkSignInvite documentid) = (++) $ "/landpage/signinvite/" ++ show documentid ++ "/"
 
 {-
 instance (EmbedAsAttr m String) => (EmbedAsAttr m KontraLink) where
@@ -111,3 +113,7 @@ hpost4 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> path $ \a4 -> methodM 
                   response <- webHSP (seeOtherXML $ show link)
                   seeOther (show link) response
 
+--sendRedirect :: KontraLink -> Kontra Response
+sendRedirect link = do  
+  response <- webHSP (seeOtherXML $ show link)
+  seeOther (show link) response
