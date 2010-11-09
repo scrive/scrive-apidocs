@@ -151,19 +151,13 @@ sendRejectAuthorEmail customMessage ctx document signalink = do
       name1 = userfullname authoruser
       name2 = signatoryname $ documentauthordetails document
   sendMail $ mail { fullnameemails = ([(name1,email1)] ++ em)}
-  
-  
-handleSign :: Kontra Response
-handleSign = do
-  checkUserTOS
-  ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) <- get
-  msum [ hpost3 handleSignPost
-       , hget3 handleSignShow
-       , withUser $ do
-          let u = userid $ fromJust ctxmaybeuser
-          documents <- query $ GetDocumentsBySignatory u
-          renderFromBody ctx TopNone kontrakcja (pageDocumentList ctxtime u documents)
-       ]
+
+handleSTable = withUserGet $ checkUserTOSGet $
+    do
+      ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) <- get
+      let u = userid $ fromJust ctxmaybeuser
+      documents <- query $ GetDocumentsBySignatory u
+      renderFromBody ctx TopNone kontrakcja (pageDocumentList ctxtime u documents)
 
 signDocument :: DocumentID 
              -> SignatoryLinkID 
@@ -219,7 +213,7 @@ signatoryLinkFromDocumentByID document@Document{documentsignatorylinks} linkid =
 landpageSignInvite ctx document = do
   renderFromBody ctx TopNone kontrakcja $ landpageSignInviteView ctx document
 
-landpageSigned ctx document signatorylinkid = do
+landpageSigned ctx document signatorylinkid = withUserGet $ do
   signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
   maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
   renderFromBody ctx TopEmpty kontrakcja $ landpageSignedView ctx document signatorylink (isJust maybeuser)
@@ -299,63 +293,77 @@ handleSignShow documentid
                      (pageDocumentForSign (LinkSignDoc document invitedlink) 
                       document ctx invitedlink wassigned)
 
-handleIssue :: Kontra Response
-handleIssue = do
-  checkUserTOS
-  msum [ pathdb GetDocumentByDocumentID handleIssueShow
-       , hget0 handleIssueGet
-       , hpost0 handleIssuePost
-       ]
-
 freeLeftForUser :: User -> Kontra Int
 freeLeftForUser user = do
   numdoc <- query $ GetNumberOfDocumentsOfUser user
   let freeleft = if numdoc >= 5 then 0 else 5 - numdoc
   return freeleft
 
-handleIssueShow :: Document -> Kontra Response
-handleIssueShow document@Document{ documentauthor
-                                 , documentid
-                                 } = do
-  ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) <- get
-                
-  msum [ do
-           methodM GET 
-           freeleft <- freeLeftForUser user
-           when (userid/=unAuthor documentauthor) mzero
-           let toptab = if documentstatus document == Closed
-                        then TopDocument
-                        else TopNew
-           renderFromBody ctx toptab kontrakcja 
-                                    (pageDocumentForAuthor ctx document False freeleft)
-       , do
-           methodM POST
-           when (userid/=unAuthor documentauthor) mzero
-           doc2 <- updateDocument ctx document
-           
-           if (documentstatus doc2 == Pending &&
-               documentstatus document /= Pending) 
-             then do
-               -- FIXME: create KontraLink
-               let link = "/landpage/signinvite/" ++ show documentid
-               response <- webHSP (seeOtherXML link)
-               seeOther link response
-            else do 
-             let link = ctxhostpart ++ show LinkIssue
-             addFlashMsgHtml $ flashDocumentDraftSaved doc2
-             response <- webHSP (seeOtherXML link)
-             seeOther link response
+handleIssueShowGet :: DocumentID -> Kontra Response
+handleIssueShowGet docid = withUserGet $ checkUserTOSGet $
+ do
+  maybedocument <- query $ GetDocumentByDocumentID $ docid
+  case maybedocument of
+    -- Q: We know what they want, shouldn't we send 404 here?
+    Nothing -> mzero
+    Just document@Document{ documentauthor
+                          , documentid
+                          } -> do
+                       ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) <- get
+  
+                       freeleft <- freeLeftForUser user
+                       when (userid/=unAuthor documentauthor) mzero
+                       let toptab = if documentstatus document == Closed
+                                     then TopDocument
+                                     else TopNew
+                       renderFromBody ctx toptab kontrakcja 
+                                          (pageDocumentForAuthor ctx document False freeleft)
 
-       , path $ \(_title::String) -> methodM GET >> do
-           when (userid/=unAuthor documentauthor) mzero
-           let file = safehead "handleIssueShow" (case documentstatus document of
-                                                    Closed -> documentsealedfiles document
-                                                    _ -> documentfiles document)
-           let contents = filepdf file
-           let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
-           let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
-           return res2
-       ]
+
+
+handleIssueShowPost :: DocumentID -> Kontra KontraLink
+handleIssueShowPost docid = withUserPost $
+ do
+  maybedocument <- query $ GetDocumentByDocumentID $ docid
+  case maybedocument of
+    -- Q: We know what they want, shouldn't we send 404 here?
+    Nothing -> mzero
+    Just document@Document{ documentauthor
+                          , documentid
+                          } -> do
+  
+     ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) <- get
+ 
+     when (userid/=unAuthor documentauthor) mzero
+     doc2 <- updateDocument ctx document
+           
+     if (documentstatus doc2 == Pending &&
+         documentstatus document /= Pending) 
+      then return $ LinkSignInvite documentid
+      else do 
+        addFlashMsgHtml $ flashDocumentDraftSaved doc2
+        return LinkIssue
+
+handleIssueShowTitleGet :: DocumentID -> String -> Kontra Response
+handleIssueShowTitleGet docid _title = withUserGet $ checkUserTOSGet $
+  do
+   maybedocument <- query $ GetDocumentByDocumentID $ docid
+   case maybedocument of
+     -- Q: We know what they want, shouldn't we send 404 here?
+     Nothing -> mzero
+     Just document@Document{ documentauthor
+                           , documentid
+                           } -> do
+
+                        ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) <- get
+                        when (userid/=unAuthor documentauthor) mzero
+                        let file = safehead "handleIssueShow" (case documentstatus document of
+                                                                 Closed -> documentsealedfiles document
+                                                                 _      -> documentfiles document)
+                        let contents = filepdf file
+                        let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
+                        let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
+                        return res2
 
 -- | Useful inside the RqData monad.  Gets the named input parameter
 -- (either from a POST or a GET)
@@ -485,9 +493,9 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid, do
      , return doc2
      ]
     
-
 handleIssueGet :: Kontra Response
-handleIssueGet = do
+handleIssueGet = withUserGet $ checkUserTOSGet $ 
+ do
   ctx@(Context {ctxmaybeuser = Just user, ctxhostpart, ctxtime}) <- get
   documents <- query $ GetDocumentsByUser (userid user) 
   renderFromBody ctx TopDocument kontrakcja (pageDocumentList ctxtime (userid user) documents)
@@ -800,9 +808,9 @@ showPage modminutes fileid pageno = do
     _ -> mzero
 
 handleResend:: String -> String -> Kontra KontraLink
-handleResend docid signlinkid  = do
-                      checkUserTOS
-                      ctx<- get
+handleResend docid signlinkid  = withUserPost $
+                    do
+                      ctx <- get
                       doc' <- query $ GetDocumentByDocumentID (read docid)
                       case (doc') of
                        Just doc -> 

@@ -29,9 +29,8 @@ import qualified Data.Set as Set
 import qualified HSP
 
 
-
 handleUser :: Context -> Kontra Response
-handleUser ctx = 
+handleUser ctx = withUserGet $
     msum 
     [ methodM GET >> showUser ctx
     , methodM POST >> handleUserPost ctx
@@ -261,25 +260,36 @@ getRememberMeCookie = do
     cookie <- getData
     return $ join cookie 
 
-
-withUser :: Kontra Response -> Kontra Response
-withUser action = do
+{- |
+   Guard against a POST with no logged in user.
+   If they are not logged in, redirect to login page.
+-}
+withUserPost :: Kontra KontraLink -> Kontra KontraLink
+withUserPost action = do
   ctx <- get
   case ctxmaybeuser ctx of
     Just user -> action
-    Nothing -> do
-      let link = ctxhostpart ctx ++ "/login"
-      response <- webHSP (seeOtherXML link)
-      seeOther link response
+    Nothing   -> return LinkLogin
 
+{- |
+   Guard against a GET with no logged in user.
+   If they are not logged in, redirect to login page.
+-}
+withUserGet :: Kontra Response -> Kontra Response
+withUserGet action = do
+  ctx <- get
+  case ctxmaybeuser ctx of
+    Just user -> action
+    Nothing   -> sendRedirect LinkLogin
 
-checkUserTOS :: Kontra Response
-checkUserTOS = do
-  withUser $ do
+{- |
+   Guard against a GET with logged in users who have not signed the TOS agreement.
+   If they have not, redirect to their account page.
+-}
+checkUserTOSGet :: Kontra Response -> Kontra Response
+checkUserTOSGet action =
+  withUserGet $ do
     ctx@(Context {ctxmaybeuser = (Just (User {userhasacceptedtermsofservice}))}) <- get
     case userhasacceptedtermsofservice of
-      Nothing -> do
-                 let link = "/account"
-                 response <- webHSP $ seeOtherXML link
-                 finishWith (redirect 303 link response)
-      _       -> webHSP $ seeOtherXML "abc"
+      Nothing -> sendRedirect LinkAccount
+      Just _  -> action
