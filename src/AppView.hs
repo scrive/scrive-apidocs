@@ -620,6 +620,7 @@ pageAdminOnly users ctxflashmessages =
      </form>
      <h3>Users</h3>
       You can see <a href="/adminonly/alluserstable">big table of all users</a>.<br/>
+      Here is a CSV version of this table: <a href="/adminonly/skrivapausers.csv">skrivapausers.csv</a>.<br/>
       <form method="post" action="/adminonly/become">
        Here you can see the world in the same way as a user sees it. You cannot do any 
        actions on behalf of that user though: 

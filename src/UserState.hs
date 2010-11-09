@@ -22,7 +22,7 @@ import System.Random
 import System.IO.Unsafe
 import Data.List
 import qualified Data.Set as Set
-
+import Control.Applicative
 import MinutesTime
 
 $(deriveAll [''Eq, ''Ord, ''Default]
