@@ -118,25 +118,20 @@ handleRoutes = do
 
 
      -- super user only
-     ++ (if isSuperUser ctxmaybeuser then 
-             [ dir "stats" handleStats
-             , dir "createuser" handleCreateUser
-             , dir "adminonly" $ nullDir >> AppControl.showAdminOnly
-             , dir "adminonly" $ dir "db" $ nullDir >> indexDB
-             , dir "adminonly" $ dir "db" $ fileServe [] "_local/kontrakcja_state"
-             , dir "adminonly" $ dir "cleanup" $ databaseCleanup
-             , dir "adminonly" $ handleBecome
-             , dir "adminonly" $ dir "takeoverdocuments" $ handleTakeOverDocuments
-             , dir "adminonly" $ dir "deleteaccount" $ handleDeleteAccount
-             , dir "adminonly" $ dir "alluserstable" $ handleAllUsersTable
-             , dir "dave" $ msum
-                   [ dir "document" $ pathdb GetDocumentByDocumentID $ \document ->
-                        V.renderFromBody ctx V.TopNew V.kontrakcja $ inspectXML document
-                   , dir "user" $ pathdb GetUserByUserID $ \user ->
-                       V.renderFromBody ctx V.TopNew V.kontrakcja $ inspectXML user
-                   ]
-             ]
-         else []))
+     , dir "stats" handleStats
+     , dir "createuser" handleCreateUser
+     , dir "adminonly" $ nullDir >> AppControl.showAdminOnly
+     , dir "adminonly" $ dir "db" $ nullDir >> indexDB
+     , dir "adminonly" $ dir "db" $ fileServe [] "_local/kontrakcja_state"
+     , dir "adminonly" $ dir "cleanup" $ databaseCleanup
+     , dir "adminonly" $ handleBecome
+     , dir "adminonly" $ dir "takeoverdocuments" $ handleTakeOverDocuments
+     , dir "adminonly" $ dir "deleteaccount" $ handleDeleteAccount
+     , dir "adminonly" $ dir "alluserstable" $ handleAllUsersTable
+     , dir "adminonly" $ dir "skrivapausers.csv" $ methodM GET >> getUsersDetailsToCSV
+     , dir "dave" $ dir "document" $ daveDocument
+     , dir "dave" $ dir "user" $ daveUser
+           
      -- account stuff
      , dir "logout" handleLogout
      , dir "login" handleLogin
@@ -491,7 +486,19 @@ serveHTMLFiles =  do
                     _ -> mzero
                
          else mzero
+
+getUsersDetailsToCSV :: Kontra Response
+getUsersDetailsToCSV = do
+  x <- query $ ExportUsersDetailsToCSV
+  let response = toResponseBS (B.pack "text/csv") $ L.fromChunks [B.unlines x]
+  return response
       
+onlySuperUserGet :: Kontra Response -> Kontra Response  
+onlySuperUserGet action = do
+  Context{ctxmaybeuser} <- get 
+  if isSuperUser ctxmaybeuser 
+   then action
+   else sendRedirect LinkLogin
 
 daveDocument :: Kontra Response
 daveDocument = onlySuperUserGet $
@@ -506,3 +513,5 @@ daveUser = onlySuperUserGet $
       ctx <- get
       pathdb GetUserByUserID $ \user ->
           V.renderFromBody ctx V.TopNew V.kontrakcja $ inspectXML user
+
+
