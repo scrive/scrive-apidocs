@@ -164,11 +164,11 @@ $(deriveAll [''Eq, ''Ord, ''Default]
 
       data DocumentStatus = Preparation 
                           | Pending  
-                          | AwaitingAuthor
                           | Closed 
                           | Canceled 
                           | Timedout
                           | Rejected
+                          | AwaitingAuthor
 
       data ChargeMode = ChargeInitialFree   -- initial 5 documents are free
                       | ChargeNormal        -- value times number of people involved
