@@ -200,12 +200,12 @@ input[name=final]
 }
 
 
-input[type=submit]:hover
+input[type=submit]:hover,  button:hover,  a.button:hover
 {
     background-color: #d9dae3;
 }
 
-input[type=submit]:active
+input[type=submit]:active , button:active , a.button:active
 {
     background-color: #b3b5bd;
 }
@@ -487,7 +487,6 @@ a.button
 {
     color: black !important;
 }
-
 .button 
 {
     -moz-border-radius: 4px;
@@ -508,7 +507,6 @@ a.button
     line-height: 20px;
     white-space:nowrap;
 }
-
 a.secbutton 
 {
     color: white;
@@ -853,7 +851,7 @@ input.grayed
     font-style: italic;
 }
 
-input 
+input , button, a.button
 {
     border: 1px solid lightgray;
     -moz-border-radius: 2px;
@@ -921,6 +919,12 @@ input
  padding-top:10px;
 
 }
+.overlay .buttonbox   button{
+  margin-right:3px;
+}
 .overlay p    {
 margin:8px;
+}
+.author , .signatory {
+ margin-bottom:10px;
 }

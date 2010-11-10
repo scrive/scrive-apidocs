@@ -444,9 +444,13 @@ $(function(){
 
 function prepareForEdit(form){
     $(".editable",form).each( function(){
-        var textarea = $("<textarea style='width:95%;height:120px'  name='"+$(this).attr('name')+"'> "+ $(this).html()+ "</textarea>")
-        $(this).replaceWith(textarea);
+        
+        var textarea = $("<textarea style='width:95%;height:0px;border:0px;padding:0px;margin:0px'  name='"+$(this).attr('name')+"'> "+ $(this).html()+ "</textarea>")
+        var wrapper = $("<div></div>").css("min-height",($(this).height())+15+"px");
+        wrapper.append(textarea);
+        $(this).replaceWith(wrapper);
         var editor = prepareEditor(textarea)
+            
   }) 
     $(".replacebynextonedit",form).each( function(){
         var replacement = $(this).next();

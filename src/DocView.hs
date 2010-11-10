@@ -627,7 +627,6 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document siglnk@(
                 ([asChild message]) ++
                 (if (isCurrentUserAuthor && (not isCurrentSignatorAuthor) && (not isTimedout)) then [asChild <br/> ,asChild reminderForm] else [])
                 %>
-               <BR/><BR/>
               </div>
 
 pageDocumentForSign :: ( Monad m) =>
