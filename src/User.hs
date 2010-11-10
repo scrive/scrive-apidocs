@@ -6,10 +6,6 @@ module User
     , Context(..)
     , isSuperUser
     , Kontra(..)
-    , createRememberMeCookie
-    , sessionLength
-    , RememberMe(..)
-    , readRememberMeCookie
     , admins
     , initialUsers
     , clearFlashMsgs
@@ -79,67 +75,6 @@ initialUsers = map (Email . BS.fromString)
 isSuperUser (Just user@User{useremail}) = useremail `elem` admins 
 isSuperUser _ = False
 
--- Identity, LongTerm, Nonce, Signature
-data RememberMe = RememberMe UserID Bool Integer [Octet] [Octet] deriving Show
-
-instance Binary.Binary RememberMe where
-    put (RememberMe identity longTerm expiry nonce signature) =
-        Binary.put (identity, longTerm, expiry, nonce, signature)
-    get = do
-        identity <- Binary.get
-        longTerm <- Binary.get
-        expiry <- Binary.get
-        nonce <- Binary.get
-        signature <- Binary.get
-        return (RememberMe identity longTerm expiry nonce signature)
-
-instance Binary.Binary UserID where
-    put UserID {unUserID=id} = Binary.put id
-    get = do
-        id <- Binary.get
-        return $ UserID {unUserID=id}
-
--- TODO make this something else - perhaps configurable - changing it will log everyone out
-rememberMeSecret :: [Octet]
-rememberMeSecret = [123,89,54,78,12,82,13,234] -- an arbitrary, but secret array of bytes
-
-makeNonce :: IO [Octet]
-makeNonce = randomOctets 20
-
--- Create a remember me cookie
-createRememberMeCookie :: UserID -> Bool -> IO String
-createRememberMeCookie identity longTerm = do
-    nonce <- makeNonce
-    (TOD now _) <- getClockTime
-    let expiry = now + toInteger (sessionLength longTerm)
-    return $ Base64.encode $ BSL.unpack $ Binary.encode $ RememberMe identity longTerm expiry nonce (rememberMeSignature identity nonce expiry)
-    
-sessionLength :: Bool -> Int
-sessionLength True = 60 * 60 * 24 * 14 -- 2 weeks
-sessionLength False = 60 * 60 -- 1 hour
-
-rememberMeSignature :: UserID -> [Octet] -> Integer -> [Octet]
-rememberMeSignature identity nonce expiry =
-    hmac_sha1 rememberMeSecret (BSL.unpack $ Binary.encode (identity, nonce, expiry))
-
-readRememberMeCookie :: String -> Maybe RememberMe
-readRememberMeCookie cookieString = do
-    let isCookieVerified = unsafePerformIO $ verifyRememberMeCookie cookie
-    if isCookieVerified
-      then Just cookie
-      else Nothing
-    where
-        Just cookieBytes = Base64.decode cookieString
-        cookie = (Binary.decode $ BSL.pack cookieBytes) :: RememberMe
-
-verifyRememberMeCookie :: RememberMe -> IO Bool
-verifyRememberMeCookie (RememberMe identity _ expiry nonce signature)
-    | (rememberMeSignature identity nonce expiry) == signature = do
-        (TOD now _) <- liftIO $ getClockTime
-        return $ now < expiry
-    | otherwise = return False
-
-    
 addFlashMsgText :: BS.ByteString -> Kontra ()
 addFlashMsgText msg = do
                        ctx@Context{ ctxflashmessages = flashmessages} <- get
