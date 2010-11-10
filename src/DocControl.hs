@@ -113,8 +113,7 @@ sendClosedEmail1 ctx document signatorylink = do
                                                          , signatorycompany
                                                          , signatoryemail }} = signatorylink
       Document{documenttitle,documentid} = document
-  mail <- mailDocumentClosedForSignatories ctx signatoryemail signatoryname
-             document signatorylink signatorymagichash
+  mail <- mailDocumentClosedForSignatories ctx document signatorylink
   let attachmentcontent = filepdf $ head $ documentsealedfiles document
   sendMail $ mail { fullnameemails =  [(signatoryname,signatoryemail)] , attachments = [(documenttitle,attachmentcontent)]}
 
@@ -122,7 +121,7 @@ sendClosedAuthorEmail :: Context -> Document -> IO ()
 sendClosedAuthorEmail ctx document = do
   let authorid = unAuthor $ documentauthor document
   Just authoruser <- query $ GetUserByUserID authorid
-  mail<- mailDocumentClosedForAuthor ctx (unEmail $ useremail authoruser) (userfullname authoruser)
+  mail<- mailDocumentClosedForAuthor ctx (userfullname authoruser)
              document
   let attachmentcontent = filepdf $ head $ documentsealedfiles document
       Document{documenttitle,documentid} = document
@@ -140,7 +139,7 @@ sendRejectAuthorEmail customMessage ctx document signalink = do
   let authorid = unAuthor $ documentauthor document
   Just authoruser <- query $ GetUserByUserID authorid
   let rejectorName = signatoryname (signatorydetails signalink)
-  mail <- mailDocumentRejectedForAuthor customMessage ctx (unEmail $ useremail authoruser) (userfullname authoruser)
+  mail <- mailDocumentRejectedForAuthor customMessage ctx (userfullname authoruser)
              document rejectorName
   let email2 = signatoryemail $ documentauthordetails document
       email1 = unEmail $ useremail authoruser

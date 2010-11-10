@@ -1,5 +1,5 @@
 {-# LANGUAGE IncoherentInstances, TemplateHaskell, NamedFieldPuns, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses #-}
-{-# OPTIONS_GHC -F -pgmFtrhsx #-}
+{-# OPTIONS_GHC -F -pgmFtrhsx -Wall #-}
 
 module DocViewMail ( remindMail,
                      remindMailContent,
@@ -11,20 +11,15 @@ module DocViewMail ( remindMail,
                      mailInvitationToSignContent
            ) where
 import AppView
-import Data.List
 import DocState
 import HSP
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
-import qualified HSX.XMLGenerator as HSX
 import User
 import KontraLink
-import Misc
-import MinutesTime
 import Data.Maybe
 import SendMail(Mail,emptyMail,content,title,attachments)
 import DocViewUtil
-import "mtl" Control.Monad.Trans
 
 remindMail:: Maybe (BS.ByteString) -> Context -> Document -> SignatoryLink -> IO Mail
 remindMail cm c d s = case s of 
@@ -34,34 +29,30 @@ remindMail cm c d s = case s of
 remindMailContent :: (Monad m) => Maybe (BS.ByteString) -> Context -> Document -> SignatoryLink ->(HSPT m XML) 
 remindMailContent cm c d s = case s of 
                                SignatoryLink{maybesigninfo = Nothing} -> remindMailNotSignedContent False cm c d s
-                               _ -> remindMailSignedContent False cm c d s
+                               _ -> remindMailSignedContent cm c d s
                        
 remindMailNotSigned::Maybe (BS.ByteString) -> Context -> Document -> SignatoryLink -> IO Mail
-remindMailNotSigned customMessage ctx@Context{ctxmaybeuser = Just user, ctxhostpart}
-           document@Document{documenttitle,documentid,documenttimeouttime,documentauthordetails,documentinvitetext} 
-           signlink = 
-    let link = ctxhostpart ++ show (LinkSignDoc document signlink)
-        content  = remindMailNotSignedContent True customMessage ctx  document signlink                 
-        attachmentcontent = filepdf $ head $ documentfiles document          
-        title =  BS.concat [BS.fromString "Hej ",personname signlink]  
+remindMailNotSigned customMessage ctx document@Document{documenttitle} signlink = 
+      let content  = remindMailNotSignedContent True customMessage ctx  document signlink                 
+          attachmentcontent = filepdf $ head $ documentfiles document          
+          title =  BS.concat [BS.fromString "Hej ",personname signlink]  
       in 
        do
-        content <- htmlHeadBodyWrapIO documenttitle content
-        return $ emptyMail {title = title, content = content}
+        content' <- htmlHeadBodyWrapIO documenttitle content
+        return $ emptyMail {title = title, content = content', attachments = [(documenttitle,attachmentcontent)]}
 
         
         
 remindMailSigned::Maybe (BS.ByteString)-> Context -> Document -> SignatoryLink -> IO Mail
-remindMailSigned customMessage ctx@Context{ctxmaybeuser = Just user, ctxhostpart}
-                 document@Document{documenttitle,documentid,documenttimeouttime,documentauthordetails,documentinvitetext} 
-                 signlink = 
+remindMailSigned customMessage ctx document@Document{documenttitle}  signlink = 
                      let 
                          title =  BS.concat [BS.fromString "Hej ",personname signlink]              
-                         attachmentcontent = filepdf $ head $ documentfiles document   
-                         content = remindMailSignedContent False customMessage ctx  document signlink                             
+                         attachmentcontent = filepdf $ head $ documentsealedfiles document   
+                         content = remindMailSignedContent customMessage ctx  document signlink     
+                        
                      in do
-                       content <- htmlHeadBodyWrapIO documenttitle content
-                       return $ emptyMail {title = title, content = content, attachments = [(documenttitle,attachmentcontent)]}
+                       content' <- htmlHeadBodyWrapIO documenttitle content
+                       return $ emptyMail {title = title, content = content', attachments = [(documenttitle,attachmentcontent)]}
 
 remindMailNotSignedContent::(Monad m) => Bool ->  (Maybe BS.ByteString) -> Context -> Document -> SignatoryLink -> (HSPT m XML)                                       
 remindMailNotSignedContent forMail customMessage ctx  document signlink =  
@@ -98,73 +89,60 @@ remindMailNotSignedContent forMail customMessage ctx  document signlink =
                                     </small> 
                                     </p>            
                    footer = if (isNothing customMessage) then standardFooter else customFooter                
-                   header   = withCustom  customMessage (remindMailNotSignedStandardHeader ctx document signlink)
+                   header   = withCustom  customMessage (remindMailNotSignedStandardHeader document signlink)
                    in (makeEditable "customtext" header) `before` content `before` footer 
 
-remindMailSignedContent ::(Monad m) => Bool -> (Maybe BS.ByteString) -> Context -> Document -> SignatoryLink -> (HSPT m XML)                  
-remindMailSignedContent forMail customMessage ctx  document signlink        
+remindMailSignedContent ::(Monad m) => (Maybe BS.ByteString) -> Context -> Document -> SignatoryLink -> (HSPT m XML)                  
+remindMailSignedContent customMessage ctx  document signlink        
                          = makeEditable "customtext" $
                             withCustom 
                                 customMessage $
-                                (remindMailSignedStandardHeader ctx document signlink) `before` (poweredBySkrivaPaPara (ctxhostpart ctx))                     
+                                (remindMailSignedStandardHeader document signlink) `before` (poweredBySkrivaPaPara (ctxhostpart ctx))                     
                                       
                                       
                                       
-remindMailSignedStandardHeader::(Monad m) => Context -> Document -> SignatoryLink -> (HSPT m XML) 
-remindMailSignedStandardHeader ctx@Context{ctxmaybeuser = Just user} document signlink =        
+remindMailSignedStandardHeader::(Monad m) => Document -> SignatoryLink -> (HSPT m XML) 
+remindMailSignedStandardHeader document signlink =        
                                                <span>
                                                  <p>Hej <%(personname signlink)%><%"\n"%><%"\n"%></p>
-                                                 <p><%(userfullname user)%> har begärt att vi ska skicka dokumentet <% documenttitle document %> till dig som du har undertecknat via tjänsten SkrivaPå. Dokumentet bifogas med detta mail.<%"\n"%></p>
+                                                 <p><%(signatoryname $ documentauthordetails document)%> har begärt att vi ska skicka dokumentet <% documenttitle document %> till dig som du har undertecknat via tjänsten SkrivaPå. Dokumentet bifogas med detta mail.<%"\n"%></p>
                                                 </span>
-                       
-remindMailNotSignedStandardHeader::(Monad m) => Context -> Document -> SignatoryLink -> (HSPT m XML) 
-remindMailNotSignedStandardHeader ctx@Context{ctxmaybeuser = Just user} document signlink =   
+                                               
+remindMailNotSignedStandardHeader::(Monad m) => Document -> SignatoryLink -> (HSPT m XML) 
+remindMailNotSignedStandardHeader document signlink =   
                                                 <span>
                                                  <p>Hej <%(personname signlink)%><%"\n"%><%"\n"%></p>
-                                                 
                                                  <p><%(signatoryname $ documentauthordetails document)%> vill påminna dig om att du inte undertecknat dokument <% documenttitle document %> ännu.<%"\n"%><%"\n"%></p>  
                                                </span>
-
-mailDocumentRejectedForAuthor :: (Maybe BS.ByteString) -> Context
-                   -> BS.ByteString
-                   -> BS.ByteString
-                   -> Document
-                   -> BS.ByteString
-                   -> IO Mail
-mailDocumentRejectedForAuthor customMessage 
-                   ctx@(Context {ctxhostpart}) 
-                   emailaddress personname 
-                   document@Document{documenttitle,documentid} 
-                           rejectorName = do
+                                               
+mailDocumentRejectedForAuthor ::(Maybe BS.ByteString) -> Context -> BS.ByteString -> Document -> BS.ByteString -> IO Mail 
+mailDocumentRejectedForAuthor customMessage ctx authorname  document@Document{documenttitle}  rejectorName = 
+    do
      let title = BS.append (BS.fromString "Avvisat: ")  documenttitle
-     content <- htmlHeadBodyWrapIO documenttitle $ rejectMailContent customMessage ctx emailaddress personname document rejectorName
+     content <- htmlHeadBodyWrapIO documenttitle $ rejectMailContent customMessage ctx authorname document rejectorName
      return $ emptyMail {title = title, content = content}
 
-rejectMailContent customMessage (Context {ctxhostpart}) 
-                   emailaddress personname 
-                   document@Document{documenttitle,documentid} 
-                   rejectorName =   
-     let link = ctxhostpart ++ show (LinkIssueDoc document)
-         content = 
-          <span>
-            <p>Hej <% personname %>,</p>
-            <p><% rejectorName %> har nekat att underteckna dokumentet <strong><% documenttitle %></strong>. 
-               Avtalsprocessen är därmed avbruten.</p>
-               <% poweredBySkrivaPaPara ctxhostpart %>
-          </span>  
-     in makeEditable "customtext" $ withCustom customMessage content        
+rejectMailContent:: (Monad m) => (Maybe BS.ByteString) -> Context -> BS.ByteString -> Document -> BS.ByteString -> (HSPT m XML)   
+rejectMailContent customMessage ctx  authorname  document  rejectorName =   
+      makeEditable "customtext" $ withCustom customMessage $
+                    <span>
+                      <p>Hej <% authorname %>,</p>
+                      <p><% rejectorName %> har nekat att underteckna dokumentet <strong><%(documenttitle document)%></strong>. 
+                      Avtalsprocessen är därmed avbruten.</p>
+                      <% poweredBySkrivaPaPara (ctxhostpart ctx) %>
+                    </span>       
 
 
-
-mailInvitationToSignContent :: (Monad m) => Bool -> Context
+mailInvitationToSignContent :: (Monad m) => Bool 
+               -> Context
                -> Document
                -> (Maybe SignatoryLink)
                -> (HSPT m XML)        
-mailInvitationToSignContent forMail (Context {ctxmaybeuser = Just user, ctxhostpart}) 
-                  document@Document{documenttitle,documentid,documenttimeouttime,documentauthordetails,documentinvitetext} 
+mailInvitationToSignContent forMail (Context {ctxhostpart}) 
+                  document@Document{documenttimeouttime,documentauthordetails,documentinvitetext} 
                   signaturelink = 
     let link = case (signaturelink) of
-                Just signaturelink -> ctxhostpart ++ show (LinkSignDoc document signaturelink)
+                Just signaturelink' -> ctxhostpart ++ show (LinkSignDoc document signaturelink')
                 Nothing -> ctxhostpart ++ "/s/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
         creatorname = signatoryname documentauthordetails
         common = <span>
@@ -181,7 +159,7 @@ mailInvitationToSignContent forMail (Context {ctxmaybeuser = Just user, ctxhostp
                     <a href=link><% link %></a><br/>
                   2. Granska online<br/>
                   3. Underteckna<br/>
-                  4. Färdig<br/>
+                  4. Färdig<br/> 
                  </p>
                 </span>
         defaultHeader = <p>Hej, <BR/> <%creatorname%> har bjudit in dig att underteckna dokumentet Testavtal online via tjänsten SkrivaPå. </p>
@@ -194,71 +172,50 @@ mailInvitationToSignContent forMail (Context {ctxmaybeuser = Just user, ctxhostp
                         </small> 
                         </p>
         customMessage = if (BS.null documentinvitetext) then Nothing else (Just documentinvitetext )       
-        footer =    if (BS.null documentinvitetext) then (if (forMail) then defaultFooter else replaceOnEdit defaultFooter customFooter ) else customFooter 
+        footer =    if (BS.null documentinvitetext) 
+                    then (if (forMail)
+                           then defaultFooter 
+                           else replaceOnEdit defaultFooter customFooter) 
+                    else customFooter 
         header   = withCustom customMessage (defaultHeader)
                    
    in  (makeEditable "customtext" header) `before` common `before` footer                     
    
         
-mailInvitationToSign:: Context
-               -> Document
-               -> SignatoryLink 
-               -> IO Mail
-mailInvitationToSign ctx@(Context {ctxmaybeuser = Just user, ctxhostpart}) 
-                  document@Document{documenttitle,documentid,documenttimeouttime,documentauthordetails,documentinvitetext} 
-                  signaturelink = 
+mailInvitationToSign:: Context -> Document -> SignatoryLink -> IO Mail
+mailInvitationToSign ctx document@Document{documenttitle,documentauthordetails} signaturelink = 
                let title =  BS.concat [BS.fromString "Inbjudan från ",creatorname , BS.fromString " till ", documenttitle]
                    creatorname = signatoryname documentauthordetails
                    content = mailInvitationToSignContent True ctx document (Just signaturelink)
                 in do  
-                   content <- htmlHeadBodyWrapIO documenttitle content
-                   return $ emptyMail {title = title, content = content}
+                   content' <- htmlHeadBodyWrapIO documenttitle content
+                   return $ emptyMail {title = title, content = content'}
       
     
-mailDocumentClosedForSignatories :: Context
-           -> BS.ByteString
-           -> BS.ByteString
-           -> Document
-           -> SignatoryLink
-           -> MagicHash
-           -> IO Mail
-mailDocumentClosedForSignatories (Context {ctxhostpart}) 
-              emailaddress personname 
-              document@Document{documenttitle,documentid} 
-              signaturelink magichash = do
+mailDocumentClosedForSignatories :: Context -> Document -> SignatoryLink  -> IO Mail
+mailDocumentClosedForSignatories (Context {ctxhostpart}) document@Document{documenttitle} signaturelink = 
+   do
     let title = BS.append (BS.fromString "Bekräftelse: ")  documenttitle    
-    let link = ctxhostpart ++ show (LinkSignDoc document signaturelink)
-    content <- htmlHeadBodyWrapIO documenttitle 
+    content' <- htmlHeadBodyWrapIO documenttitle 
          <span>
-           <p>Hej <strong><% personname %></strong>,</p>
+           <p>Hej <strong><% personname signaturelink %></strong>,</p>
            <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats 
              av <% partyListString document %>. Avtalet är nu bindande.</p> 
-          
            <p>Det färdigställda dokumentet bifogas med detta mail.</p> 
-   
            <% poweredBySkrivaPaPara ctxhostpart %>
          </span>
-    return $ emptyMail {title = title, content = content}
+    return $ emptyMail {title = title, content = content'}
 
-mailDocumentClosedForAuthor :: Context
-                 -> BS.ByteString
-                 -> BS.ByteString
-                 -> Document
-                 -> IO Mail
-mailDocumentClosedForAuthor (Context {ctxhostpart}) 
-                  emailaddress personname 
-                  document@Document{documenttitle,documentid} = 
+mailDocumentClosedForAuthor :: Context -> BS.ByteString -> Document  -> IO Mail
+mailDocumentClosedForAuthor (Context {ctxhostpart}) authorname  document@Document{documenttitle} = 
     do
-     let title = BS.append (BS.fromString "Bekräftelse: ")  documenttitle
-     let link = ctxhostpart ++ show (LinkIssueDoc document)
+     let title = BS.append (BS.fromString "Bekräftelse: ")  documenttitle 
      content <- htmlHeadBodyWrapIO documenttitle
         <span>
-          <p>Hej <strong><% personname %></strong>,</p>
+          <p>Hej <strong><% authorname %></strong>,</p>
              <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats 
                 av <% partyListString document %>. Avtalet är nu bindande.</p> 
-
              <p>Det färdigställda dokumentet bifogas med detta mail.</p> 
-
              <% poweredBySkrivaPaPara ctxhostpart %>
         </span> 
      return $ emptyMail {title = title, content = content}

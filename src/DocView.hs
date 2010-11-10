@@ -662,7 +662,7 @@ pageDocumentForSign action document ctx@(Context {ctxmaybeuser = muser})  invite
                     , maybesignatory = Nothing -- FIXME: should be author user id
                     , signatorymagichash = MagicHash 0
                     }
-       rejectMessage =  rejectMailContent Nothing ctx BS.empty (personname authorlink) document (personname invitedlink)
+       rejectMessage =  rejectMailContent Nothing ctx (personname authorlink) document (personname invitedlink)
    in showDocumentPageHelper document helpers
               (documenttitle document) $
               <span>
