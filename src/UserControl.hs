@@ -7,11 +7,13 @@ import "base" Control.Monad
 import AppView
 import Data.Maybe
 import Data.Object
+import DocState
 import DocView
 import Happstack.Data.IxSet 
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.Server.HSP.HTML (webHSP)
-import Happstack.State (update,query)
+import Happstack.State (Update,update,query)
+import Happstack.Util.Common (readM)
 import KontraLink
 import Misc
 import SendMail(Mail,sendMail,fullnameemails)
@@ -25,6 +27,7 @@ import UserView
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Lazy as LS
+import qualified Data.ByteString.Lazy.UTF8 as LS
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.Object.Json as Json
 import qualified Data.Set as Set
@@ -103,10 +106,40 @@ handleGetSubaccount ctx@Context { ctxmaybeuser = Just user@User { userid } }  = 
 
 handlePostSubaccount :: Context -> Kontra Response
 handlePostSubaccount ctx@Context { ctxmaybeuser = Just (user@User { userid }), ctxhostpart } = do
-  create <- g "create"   -- check if we are in proper action
+  create <- getDataFn (look "create")
+  remove <- getDataFn (look "remove")
+  case (create, remove) of
+      (Just _, _) -> handleCreateSubaccount ctx
+      (_, Just _) -> handleRemoveSubaccounts ctx
+      _ -> backToSubaccount
+
+handleCreateSubaccount :: Context -> Kontra Response
+handleCreateSubaccount ctx@Context { ctxmaybeuser = Just (user@User { userid }), ctxhostpart } = do
   fullname <- g "fullname"
   email <- g "email"
   user <- liftIO $ createUser ctxhostpart fullname email Nothing (Just user)
+  backToSubaccount
+
+handleRemoveSubaccounts :: Context -> Kontra Response
+handleRemoveSubaccounts ctx@Context { ctxmaybeuser = Just (user@User { userid }), ctxhostpart } = do
+  subidstrings <- getDataFnM (lookInputList "doccheck")
+  let Just subids = sequence $ map (readM . LS.toString) subidstrings
+  removed <- liftIO $ removeSubaccounts userid subids
+  backToSubaccount
+
+removeSubaccounts :: UserID -> [UserID] -> IO ()
+removeSubaccounts _ [] = return ()
+removeSubaccounts userid (subid:xs) = do
+    removeSubaccount userid subid
+    removeSubaccounts userid xs
+
+removeSubaccount userid subId = do
+  takeover <- update $ FragileTakeOverDocuments userid subId
+  maybeuser <- update $ FragileDeleteUser subId
+  return ()
+
+backToSubaccount :: Kontra Response
+backToSubaccount = do
   let link = show LinkSubaccount
   response <- webHSP (seeOtherXML link)
   seeOther link response

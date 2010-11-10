@@ -363,20 +363,6 @@ handleIssueShowTitleGet docid _title = withUserGet $ checkUserTOSGet $
                         let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
                         return res2
 
--- | Useful inside the RqData monad.  Gets the named input parameter
--- (either from a POST or a GET)
-lookInputList :: String -> RqData [BSL.ByteString]
-lookInputList name
-    = do 
-#if MIN_VERSION_happstack_server(0,5,1)
-         inputs <- asks (\(a,b,c) -> a ++ b)
-#else
-         inputs <- asks fst
-#endif
-         let isname (xname,(Input value _ _)) | xname == name = [value]
-             isname _ = []
-         return [value | k <- inputs, value <- isname k]
-
 getAndConcat :: String -> Kontra [BS.ByteString]
 getAndConcat field = do
   values <- getDataFnM $ lookInputList field
