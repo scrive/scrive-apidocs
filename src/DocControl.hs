@@ -211,7 +211,7 @@ signatoryLinkFromDocumentByID document@Document{documentsignatorylinks} linkid =
 landpageSignInvite ctx document = do
   renderFromBody ctx TopNone kontrakcja $ landpageSignInviteView ctx document
 
-landpageSigned ctx document signatorylinkid = withUserGet $ do
+landpageSigned ctx document signatorylinkid = do
   signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
   maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
   renderFromBody ctx TopEmpty kontrakcja $ landpageSignedView ctx document signatorylink (isJust maybeuser)
