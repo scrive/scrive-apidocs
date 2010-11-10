@@ -1,5 +1,5 @@
 {-# LANGUAGE IncoherentInstances, TemplateHaskell, NamedFieldPuns, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses #-}
-{-# OPTIONS_GHC -F -pgmFtrhsx #-}
+{-# OPTIONS_GHC -F -pgmFtrhsx -Wall #-}
 
 module DocViewUtil (   personname,
                        partyListString,
@@ -13,19 +13,12 @@ module DocViewUtil (   personname,
                        replaceOnEdit,
                        joinWith
            ) where
-import AppView
-import Data.List
 import DocState
 import HSP
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import qualified HSX.XMLGenerator as HSX
-import User
-import KontraLink
 import Misc
-import MinutesTime
-import Data.Maybe
-import "mtl" Control.Monad.Trans
 
 
 partyList :: Document -> [SignatoryDetails]
@@ -68,9 +61,6 @@ partyListButAuthorString :: (XMLGenerator m) => Document -> GenChildList m
 partyListButAuthorString document =
     swedishListString (map (strong . BS.toString . signatoryname) (partyListButAuthor document))
 
-strong :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
-strong x = <strong><% x %></strong>
-
 partyListString :: (XMLGenerator m) => Document -> GenChildList m
 partyListString document = 
     swedishListString (map (strong . BS.toString . signatoryname) (partyList document))
@@ -94,7 +84,11 @@ swedishListString (x:xs) = do
   list <- sequence [asChild x, asChild ", "]
   list2 <- swedishListString xs
   return (concat list ++ list2)
-                                  
+  
+strong :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
+strong x = <strong><% x %></strong>
+ 
+personname::SignatoryLink -> BS.ByteString 
 personname signlink = if (BS.null $ signatoryname $ signatorydetails signlink)
                         then  signatoryemail $ signatorydetails signlink  
                         else  signatoryname $ signatorydetails signlink
@@ -109,11 +103,13 @@ before header message = <span><span><%header%></span><span><%message%></span><br
                                            
 makeEditable::(Monad m) => String -> (HSPT m XML) ->(HSPT m XML) 
 makeEditable name c = <div class="editable" name=name><%c%></div>                      
-              
+ 
+replaceOnEdit::(Monad m) => (HSPT m XML)-> (HSPT m XML)-> (HSPT m XML)  
 replaceOnEdit this with =  <span> 
                             <span class="replacebynextonedit"> <% this %> </span> 
                             <span style="display:none"> <% with %> </span>  
                            </span>              
+joinWith::[a]->[[a]]->[a]
 joinWith _ [] = []
 joinWith _ [x] = x
 joinWith s (x:xs) = x ++ s ++ (joinWith s xs)  
