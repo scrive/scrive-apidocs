@@ -3,7 +3,7 @@
 
 module Misc where
 import Control.Monad(msum,liftM,mzero,guard,MonadPlus(..))
-import "mtl" Control.Monad.Reader (ask)
+import "mtl" Control.Monad.Reader (ask,asks)
 import "mtl" Control.Monad.Trans(liftIO, MonadIO,lift)
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.Server.HSP.HTML (webHSP)
@@ -253,6 +253,19 @@ pathdb get action = path $ \id -> do
 -- g :: String -> Kontra BS.ByteString 
 g name = fmap concatChunks (getDataFnM (lookBS name))
 
+-- | Useful inside the RqData monad.  Gets the named input parameter
+-- (either from a POST or a GET)
+lookInputList :: String -> RqData [BSL.ByteString]
+lookInputList name
+    = do 
+#if MIN_VERSION_happstack_server(0,5,1)
+         inputs <- asks (\(a,b,c) -> a ++ b)
+#else
+         inputs <- asks fst
+#endif
+         let isname (xname,(Input value _ _)) | xname == name = [value]
+             isname _ = []
+         return [value | k <- inputs, value <- isname k]
 
 hget0 action = methodM GET >> action
 hget1 action = path $ \a1 -> methodM GET >> action a1

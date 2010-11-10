@@ -111,9 +111,9 @@ oneRow user@User{ userfullname, useremail, userid }  =
     let link = "nothing to see here"
         statusimg = ""
     in
-    <tr>
+    <tr class="ui-state-default">
      <td class="tdleft">
-      <input type="checkbox" name="usercheck" value=userid/>
+      <input type="checkbox" name="doccheck" value=userid class="check" />
      </td>
      <td><img width="17" height="17" src=statusimg/></td>
      <td><% userfullname %></td>
@@ -147,11 +147,10 @@ viewSubaccounts ctx@(Context {ctxmaybeuser = Just user}) subusers =
       <tfoot>
        <tr>
         <td colspan="6" style="text-align: right; overflow: hidden;">
-          <span> Sidfot </span>
-          {-
           <div class="floatleft">
-           <input type="submit" class="button" name="archive" value="Radera"/>
+           <input type="submit" class="button" name="remove" value="Radera"/>
           </div>
+          {-
           <div class="floatright">
            <img src="/theme/images/status_draft.png"/> Utkast
            <img src="/theme/images/status_rejected.png"/> Avbrutet
@@ -160,13 +159,13 @@ viewSubaccounts ctx@(Context {ctxmaybeuser = Just user}) subusers =
            <img src="/theme/images/status_viewed.png"/> Granskat
            <img src="/theme/images/status_signed.png"/> Undertecknat
           </div>
-          <div class="clearboth"/>
           -}
+          <div class="clearboth"/>
          </td>
        </tr>
       </tfoot>
      
-      <tbody>
+      <tbody id="selectable">
        <% map oneRow subusers %>
       </tbody>
      </table><br/>
