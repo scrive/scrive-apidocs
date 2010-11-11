@@ -87,16 +87,16 @@ pageAcceptTOS ctx tostext =
     let toptab = TopEmpty
     in
     renderFromBody ctx toptab kontrakcja $
-    <div>
-     <strong>Vänligen acceptera användarvillkoren.</strong>
-     <div id="toscontainer">
+     <form method="post" action="/accepttos" id="toscontainer" class="overlay">
+      <a class="close"> </a>                  
+      <h2>Vänligen acceptera användarvillkoren</h2>
       <% cdata $ BS.toString tostext %>
-     </div>
-     <form method="post" action="/accepttos">
+     <br/>
      <input type="checkbox" name="tos" id="tos"/>Jag har läst och accepterar SkrivaPå Allmänna Villkor<br/>
-     <input type="submit" value="Skicka"/>
-     </form>
-    </div>
+     <div class="buttonbox">
+      <input class="submiter button" type="submit" value="Skicka"/>
+     </div> 
+    </form>
   
 
 oneRow user@User{ userfullname, useremail, userid }  = 
