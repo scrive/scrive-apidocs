@@ -573,6 +573,15 @@ function initializeTemplates ()
 	
     enableInfoText();
 
+    $("form#dialog-confirm-sign").submit(function(){
+	    var form = $(this);
+	    $(".dragfield").each(function(){
+		    var field = $(this);
+		    form.append("<input type='hidden' name='fieldvalue' value='" + getValue(field) + "' />");		    
+		    form.append("<input type='hidden' name='fieldname' value='" + getHiddenField(field, "fieldname") + "' />");
+		});
+	});
+
     $("#sign").show();
     $("#cancel").show();
 }
