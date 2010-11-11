@@ -1,7 +1,32 @@
 {-# LANGUAGE TemplateHaskell, TypeFamilies, DeriveDataTypeable,
     FlexibleInstances, MultiParamTypeClasses, FlexibleContexts,
     UndecidableInstances, TypeSynonymInstances, StandaloneDeriving #-}
-module UserState where
+module UserState 
+    ( Email(..)
+    , ExternalUserID(..)
+    , FlashMessage(..)
+    , Password(..)
+    , SupervisorID(..)
+    , User(..)
+    , UserID(..)
+    , Users(..)
+    , createPassword
+    , isPasswordStrong
+    , verifyPassword
+
+    , AcceptTermsOfService(..)
+    , AddUser(..)
+    , DeleteTermsOfService(..)
+    , ExportUsersDetailsToCSV(..)
+    , FragileDeleteUser(..)
+    , GetAllUsers(..)
+    , GetUserByEmail(..)
+    , GetUserByUserID(..)
+    , GetUserStats(..)
+    , GetUserSubaccounts(..)
+    , SetUserDetails(..)
+    , SetUserPassword(..)
+) where
 import Happstack.Data
 import Happstack.State
 import "mtl" Control.Monad.Reader (ask)
