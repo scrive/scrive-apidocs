@@ -231,16 +231,9 @@ landpageSignedSave ctx@Context{ctxhostpart} document signatorylinkid = do
   maybeuser <- query $ GetUserByEmail (Email $ signatoryemail details)
   let fullname = signatoryname details
   user <- case maybeuser of
-            Nothing -> do -- create a new user
-              password <- g "password"
-              password2 <- g "password2"
-              tos <- g "tos" -- this will fail if not checked
-              -- FIXME: what to do when two passwords do not match?
-              -- FIXME: what to do if passwords arent strong enough?
-              when (password /= password2) $ error "Passwords do not mutch"
-              when (not (isPasswordStrong password)) $ error "Password is too weak"
+            Nothing -> do 
               let email = signatoryemail details
-              user <- liftIO $ createUser ctxhostpart fullname email (Just password) Nothing
+              user <- liftIO $ createUser ctxhostpart fullname email Nothing Nothing
               return user
             Just user -> return user
   Just document2 <- update $ SaveDocumentForSignedUser (documentid document) (userid user) signatorylinkid
