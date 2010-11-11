@@ -12,7 +12,7 @@ import Data.List
 import Data.Maybe
 import Data.Word
 import Debug.Trace
-import DocState hiding (updateDocument)
+import DocState
 import DocView
 import HSP
 import Happstack.Data.IxSet 

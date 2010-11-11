@@ -3,7 +3,51 @@
     UndecidableInstances, TypeOperators, TypeSynonymInstances,
     GeneralizedNewtypeDeriving, StandaloneDeriving, NamedFieldPuns #-}
 
-module DocState where
+module DocState 
+    ( Author(..)
+    , ChargeMode(..)
+    , Document(..)
+    , DocumentHistoryEntry(..)
+    , DocumentID(..)
+    , DocumentStatus(..)
+    , Documents(..)
+    , FieldDefinition(..)
+    , FieldPlacement(..)
+    , File(..)
+    , FileID(..)
+    , JpegPages(..)
+    , SignInfo(..)
+    , Signatory(..)
+    , SignatoryDetails(..)
+    , SignatoryLink(..)
+    , SignatoryLinkID(..)
+    , TimeoutTime(..)
+    , isAuthor
+
+    , ArchiveDocuments(..)
+    , AttachFile(..)
+    , AttachSealedFile(..)
+    , AuthorSignDocument(..)
+    , CancelDocument(..)
+    , FileModTime(..)
+    , FragileTakeOverDocuments(..)
+    , GetDocumentByDocumentID(..)
+    , GetDocumentStats(..)
+    , GetDocuments(..)
+    , GetDocumentsByAuthor(..)
+    , GetDocumentsBySignatory(..)
+    , GetDocumentsByUser(..)
+    , GetNumberOfDocumentsOfUser(..)
+    , GetTimeoutedButPendingDocuments(..)
+    , MarkDocumentSeen(..)
+    , NewDocument(..)
+    , SaveDocumentForSignedUser(..)
+    , SetDocumentTimeoutTime(..)
+    , SignDocument(..)
+    , TimeoutDocument(..)
+    , UpdateDocument(..)
+    )
+where
 import Happstack.Data
 import Happstack.State
 import "mtl" Control.Monad.Reader (ask)
@@ -380,7 +424,6 @@ instance Show Signatory where
 
 instance Show DocumentID where
     showsPrec prec (DocumentID val) = 
-        -- let s = show val in (++) (take (10-length s) "000000000" ++ s)
          showsPrec prec val
 
 instance Read DocumentID where
@@ -753,20 +796,19 @@ instance Migrate Document4 Document where
 $(deriveSerialize ''DocumentStatus)
 instance Version DocumentStatus where
 
-
 $(deriveSerialize ''ChargeMode)
 instance Version ChargeMode where
 
-$(deriveSerialize ''File)
-instance Version File where
-    mode = extension 2 (Proxy :: Proxy File1)
+$(deriveSerialize ''File0)
+instance Version File0 where
 
 $(deriveSerialize ''File1)
 instance Version File1 where
     mode = extension 1 (Proxy :: Proxy File0)
 
-$(deriveSerialize ''File0)
-instance Version File0 where
+$(deriveSerialize ''File)
+instance Version File where
+    mode = extension 2 (Proxy :: Proxy File1)
 
 instance Migrate File0 File1 where
     migrate (File0 
