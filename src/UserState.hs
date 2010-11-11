@@ -1,6 +1,7 @@
 {-# LANGUAGE TemplateHaskell, TypeFamilies, DeriveDataTypeable,
     FlexibleInstances, MultiParamTypeClasses, FlexibleContexts,
     UndecidableInstances, TypeSynonymInstances, StandaloneDeriving #-}
+{-# OPTIONS_GHC -Wall #-}
 module UserState 
     ( Email(..)
     , ExternalUserID(..)
@@ -9,7 +10,7 @@ module UserState
     , SupervisorID(..)
     , User(..)
     , UserID(..)
-    , Users(..)
+    , Users
     , createPassword
     , isPasswordStrong
     , verifyPassword
@@ -33,8 +34,6 @@ import "mtl" Control.Monad.Reader (ask)
 import "mtl" Control.Monad.State (modify,MonadState(..))
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Char8 as BS8
-import qualified Data.ByteString.Internal as BSI
 import Happstack.Data.IxSet as IxSet
 import Data.Maybe(isJust)
 import Misc
@@ -214,7 +213,7 @@ instance Migrate User2 User3 where
 instance Migrate User3 User4 where
     migrate (User3
           { userid3
-          , userexternalids3
+          -- , userexternalids3
           , userfullname3
           , useremail3
           , usercompanyname3
@@ -387,6 +386,24 @@ instance Read SupervisorID where
 instance FromReqURI SupervisorID where
     fromReqURI = readM
 
+
+modifyUser :: UserID 
+           -> (User -> Either String User) 
+           -> Update Users (Either String User)
+modifyUser uid action = do
+  users <- ask
+  case getOne (users @= uid) of
+    Nothing -> return $ Left "no such user"
+    Just user -> 
+        case action user of
+          Left message -> return $ Left message
+          Right newuser -> 
+              if userid newuser /= uid
+                 then return $ Left "new user must have same id as old one"
+              else do
+                modify (updateIx uid newuser)
+                return $ Right newuser
+
 getUserByEmail :: Email -> Query Users (Maybe User)
 getUserByEmail email = do
   users <- ask
@@ -444,32 +461,27 @@ getAllUsers = do
 
 setUserPassword :: User -> Password -> Update Users ()
 setUserPassword user@User{userid} newpassword = do
-  users <- ask
   modify (updateIx userid (user { userpassword = newpassword })) 
   return ()
   
 verifyPassword :: Password -> BS.ByteString -> Bool
-verifyPassword (Password salt hash) password =  hash == (hashPassword password salt)
+verifyPassword (Password salt hash1) password = hash1 == (hashPassword password salt)
 verifyPassword _ _ = False        
         
         
-setUserDetails :: User 
+setUserDetails :: UserID
                -> BS.ByteString
                -> BS.ByteString
                -> BS.ByteString
                -> BS.ByteString
-               -> Update Users User
-setUserDetails user1 fullname companyname companynumber invoiceaddress = do
-  users <- ask
-  let Just user = getOne (users @= userid user1)
-  let newuser = user { userfullname = fullname
+               -> Update Users (Either String User)
+setUserDetails userid fullname companyname companynumber invoiceaddress =
+    modifyUser userid $ \user -> 
+        Right $ user { userfullname = fullname
                      , usercompanyname = companyname
                      , usercompanynumber = companynumber
                      , userinvoiceaddress = invoiceaddress
                      }
-  modify (updateIx (userid user) newuser)
-  return newuser
-  
 
 fragileDeleteUser :: UserID -> Update Users (Maybe User)
 fragileDeleteUser userid = do
@@ -479,27 +491,21 @@ fragileDeleteUser userid = do
        modify (deleteIx userid)
   return maybeuser
 
-acceptTermsOfService :: UserID -> MinutesTime -> Update Users ()
-acceptTermsOfService userid minutestime = do
-  users <- ask
-  case getOne (users @= userid) of
-    Just user -> modify (updateIx userid (user { userhasacceptedtermsofservice = Just minutestime })) 
-  return ()
+acceptTermsOfService :: UserID -> MinutesTime -> Update Users (Either String User)
+acceptTermsOfService userid minutestime = 
+    modifyUser userid $ \user -> 
+        Right $ user { userhasacceptedtermsofservice = Just minutestime }
 
 -- for testing purposes
-deleteTermsOfService :: UserID -> Update Users ()
-deleteTermsOfService userid = do
-  users <- ask
-  case getOne (users @= userid) of
-    Just user -> modify (updateIx userid (user { userhasacceptedtermsofservice = Nothing }))
-  return ()
+deleteTermsOfService :: UserID -> Update Users (Either String User)
+deleteTermsOfService userid =
+    modifyUser userid $ \user -> Right $ user { userhasacceptedtermsofservice = Nothing }
 
 exportUsersDetailsToCSV :: Query Users [BS.ByteString]
 exportUsersDetailsToCSV = do
   users <- ask
   let fields user = [userfullname user, unEmail $ useremail user]
-      char2BS c = BS.pack [BSI.c2w c]
-      content = BS.intercalate (char2BS ',') <$> fields
+      content = BS.intercalate (BS.fromString ",") <$> fields
   return $ content <$> (toList users)
 
 instance Component Users where

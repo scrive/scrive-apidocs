@@ -77,7 +77,7 @@ handleUserPost ctx@Context{ctxmaybeuser = Just user@User{userid},ctxtime} = do
   invoiceaddress <- g "invoiceaddress"
   tos <- getDataFn' (look "tos")
   
-  newuser <- update $ SetUserDetails user fullname companyname companynumber invoiceaddress
+  newuser <- update $ SetUserDetails userid fullname companyname companynumber invoiceaddress
   if isNothing (userhasacceptedtermsofservice user)
      then
          if isJust tos
