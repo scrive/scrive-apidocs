@@ -217,5 +217,25 @@ checkUserTOSGet action =
   withUserGet $ do
     ctx@(Context {ctxmaybeuser = (Just (User {userhasacceptedtermsofservice}))}) <- get
     case userhasacceptedtermsofservice of
-      Nothing -> sendRedirect LinkAccount
+      Nothing -> sendRedirect LinkAcceptTOS
       Just _  -> action
+
+handleAcceptTOSGet ctx = 
+    withUserGet $ do
+      tostext <- liftIO $ BS.readFile $ "html/termsofuse.html"
+      pageAcceptTOS ctx tostext
+
+handleAcceptTOSPost :: Context -> Kontra KontraLink
+handleAcceptTOSPost ctx@Context{ctxmaybeuser = Just user@User{userid},ctxtime} = do
+  tos <- getDataFn' (look "tos")
+  
+  if isJust tos
+    then do
+      update $ AcceptTermsOfService userid ctxtime
+      addFlashMsgHtml userDetailsSavedFlashMessage
+      return LinkMain
+    else do
+      addFlashMsgText $ BS.fromString "För att kunna använda tjänsten måste du acceptera SkrivaPå Allmänna Villkor."
+      return LinkAcceptTOS
+
+  
