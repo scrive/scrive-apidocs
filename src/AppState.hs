@@ -3,7 +3,9 @@
     UndecidableInstances, TypeOperators, TypeSynonymInstances,
     GeneralizedNewtypeDeriving, ScopedTypeVariables
     #-}
-module AppState where
+module AppState 
+    ( AppState
+    ) where
 import Happstack.Data
 import Happstack.State
 import User
