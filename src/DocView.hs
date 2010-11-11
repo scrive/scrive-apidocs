@@ -87,14 +87,6 @@ willCreateAccountForYou ctx document siglink True =
     <p>Du kan nu spara dokumentet på SkrivaPå, då är ditt dokument säkert lagrat och dessutom 
        kan du även i framtiden verifiera avtalet mot vår databas. Detta kostar ingenting. 
       <form action=(LinkLandpageSaved document siglink) method="post">
-        <table>
-         <tr><td>Lösenord:</td>
-             <td><input type="password" name="password"/></td>
-         </tr>
-         <tr><td>Upprepa lösenord:</td>
-             <td><input type="password" name="password2"/></td>
-         </tr>
-       </table>
        <input class="button" type="submit" value="Skapa konto"/>
       </form>
     </p>
