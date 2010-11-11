@@ -75,19 +75,9 @@ handleUserPost ctx@Context{ctxmaybeuser = Just user@User{userid},ctxtime} = do
   companyname <- g "companyname"
   companynumber <- g "companynumber"
   invoiceaddress <- g "invoiceaddress"
-  tos <- getDataFn' (look "tos")
   
   newuser <- update $ SetUserDetails userid fullname companyname companynumber invoiceaddress
-  if isNothing (userhasacceptedtermsofservice user)
-     then
-         if isJust tos
-            then do
-              update $ AcceptTermsOfService userid ctxtime
-              addFlashMsgHtml userDetailsSavedFlashMessage
-            else addFlashMsgText $ BS.fromString "För att kunna använda tjänsten måste du acceptera SkrivaPå Allmänna Villkor."
-     else do
-         addFlashMsgHtml userDetailsSavedFlashMessage
-         return ()
+  addFlashMsgHtml userDetailsSavedFlashMessage
 
   backToAccount
 
