@@ -1028,8 +1028,8 @@ signDocument documentid signatorylinkid1 time ipnumber fields = do
 
           updateWithFields [] sd = sd
           updateWithFields ((name, value):fs) sd 
-              | name == BS.fromString "sigco" = sd { signatorycompany = value }
-              | value == BS.fromString "signr" = sd { signatorynumber = value }
+              | name == BS.fromString "sigco" = updateWithFields fs sd { signatorycompany = value }
+              | name == BS.fromString "signr" = updateWithFields fs sd { signatorynumber = value }
               | otherwise = updateWithFields fs sd { signatoryotherfields = updateOtherFields name value (signatoryotherfields sd) }
 
           updateOtherFields _    _     []      = []
