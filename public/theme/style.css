@@ -487,6 +487,7 @@ input[type=submit]:active , button:active , a.button:active
 {
   height: 350px;
   overflow: auto;
+  margin: auto;
 }
 
 a.button 

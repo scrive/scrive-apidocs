@@ -263,7 +263,10 @@ $(document).ready( function () {
     })
     
     $("#cancel").overlay({	mask: standardDialogMask
-    })    
+                });
+    $("#toscontainer").overlay({mask: standardDialogMask,
+                load: true
+                });
 	
 	$("input[type='email']").focus(function(){
 		applyRedBorder($(this));
