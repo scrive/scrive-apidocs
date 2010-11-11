@@ -483,6 +483,12 @@ input[type=submit]:active , button:active , a.button:active
     font-size: small;
 }
 
+#toscontainer #textOneColumn
+{
+  height: 350px;
+  overflow: auto;
+}
+
 a.button 
 {
     color: black !important;

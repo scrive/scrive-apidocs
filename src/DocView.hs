@@ -94,11 +94,6 @@ willCreateAccountForYou ctx document siglink True =
          <tr><td>Upprepa lösenord:</td>
              <td><input type="password" name="password2"/></td>
          </tr>
-         <tr><td colspan="2">
-             <input type="checkbox" name="tos" id="tos">Jag har läst och accepterar 
-                    <a href="/termsofuse.html">SkrivaPå Allmänna Villkor</a></input>
-             </td>
-         </tr>
        </table>
        <input class="button" type="submit" value="Skapa konto"/>
       </form>

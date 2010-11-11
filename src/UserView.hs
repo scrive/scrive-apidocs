@@ -36,22 +36,9 @@ instance Monad m => IsAttrValue m UserID where
 
 
 showUser ctx@(Context {ctxmaybeuser = Just user}) = 
-    let User{userhasacceptedtermsofservice} = user 
-        accepted = isJust userhasacceptedtermsofservice 
-        toptab = if accepted
-                 then TopAccount
-                 else TopEmpty
-    in
-    renderFromBody ctx toptab kontrakcja $ 
+    renderFromBody ctx TopAccount kontrakcja $ 
     <div class="accounttable">
      <h1><% userfullname user %></h1>
-      <% if accepted
-         then <% () %>
-         else <%
-              <div><strong>Vänligen fyll i dina uppgifter och acceptera användarvillkoren.</strong></div>
-              %>
-       %>
-
       <div>
        <form action=LinkAccount method="post">
         <table>
@@ -71,17 +58,9 @@ showUser ctx@(Context {ctxmaybeuser = Just user}) =
              <td><input type="text" name="invoiceaddress" value=(userinvoiceaddress user)/></td>
          </tr>
        </table>
-       <%
-          if isJust userhasacceptedtermsofservice
-           then <div/>
-           else <div><input type="checkbox" name="tos" id="tos">Jag har läst och accepterar <a href="/termsofuse.html" target="_blank">SkrivaPå Allmänna Villkor</a></input></div>
-       %>
        <input class="button" type="submit" value="Spara ändringar"/>
       </form>
-      <% if accepted
-         then
-          <span>
-           <div>
+      <div>
            <form action=LinkAccountPassword method="post">
             <table>
              <tr><td>Nuvarande lösenord:</td>
@@ -100,10 +79,23 @@ showUser ctx@(Context {ctxmaybeuser = Just user}) =
           <div>
            <a href=LinkSubaccount>Underkonton</a>
           </div>
-          </span>
-         else <span/>
-       %>
+
      </div>
+    </div>
+
+pageAcceptTOS ctx tostext = 
+    let toptab = TopEmpty
+    in
+    renderFromBody ctx toptab kontrakcja $
+    <div>
+     <strong>Vänligen acceptera användarvillkoren.</strong>
+     <div id="toscontainer">
+      <% cdata $ BS.toString tostext %>
+     </div>
+     <form method="post" action="/accepttos">
+     <input type="checkbox" name="tos" id="tos"/>Jag har läst och accepterar SkrivaPå Allmänna Villkor<br/>
+     <input type="submit" value="Skicka"/>
+     </form>
     </div>
   
 

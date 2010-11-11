@@ -45,6 +45,7 @@ data KontraLink
     | LinkSigned DocumentID SignatoryLinkID 
     | LinkRejected DocumentID SignatoryLinkID 
     | LinkSignInvite DocumentID
+    | LinkAcceptTOS
 
 instance Show KontraLink where
     showsPrec _ LinkAbout = (++) "/about"
@@ -56,6 +57,7 @@ instance Show KontraLink where
     showsPrec _ LinkForgotPasswordDone = (++) "/amnesiadone"
     showsPrec _ LinkIssue = (++) "/d"
     showsPrec _ LinkMain = (++) "/"
+    showsPrec _ LinkAcceptTOS = (++) "/accepttos"
     showsPrec _ LinkAccount = (++) "/account"
     showsPrec _ LinkAccountPassword = (++) "/account/password"
     showsPrec _ LinkSubaccount = (++) "/account/subaccount"

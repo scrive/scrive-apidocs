@@ -116,6 +116,9 @@ handleRoutes = do
                DocControl.handlePageOfDocument document
      , dir "account" $ UserControl.handleUser ctx
 
+     , dir "accepttos" $ hget0 $ UserControl.handleAcceptTOSGet ctx
+     , dir "accepttos" $ hpost0 $ UserControl.handleAcceptTOSPost ctx
+
 
      -- super user only
      , dir "stats" handleStats
