@@ -11,7 +11,8 @@ module DocViewUtil (   personname,
                        withCustom,
                        before,
                        replaceOnEdit,
-                       joinWith
+                       joinWith,
+                       addbr
            ) where
 import DocState
 import HSP
@@ -113,3 +114,7 @@ joinWith::[a]->[[a]]->[a]
 joinWith _ [] = []
 joinWith _ [x] = x
 joinWith s (x:xs) = x ++ s ++ (joinWith s xs)  
+
+addbr::(HSX.XMLGen m) => BS.ByteString -> [GenChildList m]
+addbr text | BS.null text = []
+addbr text = [<% text %>, <% <br/> %>]
