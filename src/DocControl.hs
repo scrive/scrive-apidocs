@@ -238,15 +238,14 @@ landpageSignedSave ctx@Context{ctxhostpart} document signatorylinkid = do
             Just user -> return user
   Just document2 <- update $ SaveDocumentForSignedUser (documentid document) (userid user) signatorylinkid
   -- should redirect
-  renderFromBody ctx TopEmpty kontrakcja $ landpageLoginForSaveView ctx document2 signatorylink
+  renderFromBody ctx TopEmpty kontrakcja $ landpageLoginForSaveView ctx 
 
 landpageSaved (ctx@Context { ctxmaybeuser = Just user@User{userid} }) 
               document@Document{documentid}
               signatorylinkid = do
   Just document2 <- update $ SaveDocumentForSignedUser documentid userid signatorylinkid
   signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
-  renderFromBody ctx TopDocument kontrakcja $ landpageDocumentSavedView ctx document signatorylink
-
+  renderFromBody ctx TopDocument kontrakcja $ landpageDocumentSavedView
 
 handleSignPost :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra KontraLink
 handleSignPost documentid 
@@ -301,14 +300,12 @@ handleIssueShowGet docid = withUserGet $ checkUserTOSGet $
                           , documentid
                           } -> do
                        ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) <- get
-  
-                       freeleft <- freeLeftForUser user
                        when (userid/=unAuthor documentauthor) mzero
                        let toptab = if documentstatus document == Closed
                                      then TopDocument
                                      else TopNew
                        renderFromBody ctx toptab kontrakcja 
-                                          (pageDocumentForAuthor ctx document False freeleft)
+                                          (pageDocumentForAuthor ctx document)
 
 
 
@@ -332,7 +329,7 @@ handleIssueShowPost docid = withUserPost $
          documentstatus document /= Pending) 
       then return $ LinkSignInvite documentid
       else do 
-        addFlashMsgHtml $ flashDocumentDraftSaved doc2
+        addFlashMsgHtml $ flashDocumentDraftSaved
         return LinkIssue
 
 handleIssueShowTitleGet :: DocumentID -> String -> Kontra Response
@@ -797,7 +794,7 @@ handleResend docid signlinkid  = withUserPost $
                                    customMessage <- fmap (fmap concatChunks) $ getDataFn' (lookBS "customtext")  
                                    mail <- liftIO $ remindMail customMessage ctx doc signlink
                                    liftIO $ sendMail (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )]})
-                                   addFlashMsgText ( flashRemindMailSent doc signlink)
+                                   addFlashMsgText ( flashRemindMailSent signlink)
                                    return (LinkIssueDoc doc)
                                  Nothing -> mzero           
                        Nothing -> mzero               

@@ -30,7 +30,8 @@ instance Show MinutesTime where
             calendartime = unsafePerformIO $ toCalendarTime clocktime
         in (++) $ formatCalendarTime defaultTimeLocale 
                "%Y-%m-%d, %H:%M" calendartime
-
+               
+showDateOnly (MinutesTime 0) = ""
 showDateOnly (MinutesTime mins) = 
         let clocktime = TOD (fromIntegral mins*60) 0
             -- FIXME: use TimeZone of user

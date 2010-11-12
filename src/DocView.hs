@@ -19,7 +19,7 @@ module DocView( emptyDetails
               , mailDocumentRejectedForAuthor
               , landpageRejectedView
               , flashDocumentRejected
-              , defaultInviteMessage
+              , defaultInviteMessage 
               ) where
 import AppView
 import Data.List
@@ -131,22 +131,17 @@ landpageSignedView ctx document@Document{documenttitle} signatorylink hasaccount
     </div>
 
 landpageLoginForSaveView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
-                         => Context -> Document -> SignatoryLink -> XMLGenT m (HSX.XML m)
-landpageLoginForSaveView ctx document signatorylink =
-    {- let loginlink = maybeSignInLink2 ctx "Login" (LinkLandpageSaved document signatorylink) 
-                    "bigbutton" in
-     -}
+                         => Context -> XMLGenT m (HSX.XML m)
+landpageLoginForSaveView ctx  =
     <div class="centerdivnarrow">
      <a class="headline">Login</a>
      <p>Ditt dokument är nu sparat. Du finner dokumentet under Avtal when you log in.</p>
-        {- <p>För att du ska kunna komma åt ditt avtal i framtiden skapar vi ett konto till dig.</p>
-         -}
      <% loginBox ctx %>
     </div>
 
 
-landpageDocumentSavedView :: (XMLGenerator m) => Context -> Document -> SignatoryLink -> XMLGenT m (HSX.XML m)
-landpageDocumentSavedView (ctx@Context { ctxmaybeuser = Just user }) document signatorylink = 
+landpageDocumentSavedView :: (XMLGenerator m) =>  XMLGenT m (HSX.XML m)
+landpageDocumentSavedView = 
     <div class="centerdivnarrow">
      <p>Ditt dokument är nu sparat. Du finner dokumentet under Arkiv när du loggar in.</p>
  
@@ -159,43 +154,20 @@ landpageDocumentSavedView (ctx@Context { ctxmaybeuser = Just user }) document si
      <a class="bigbutton" href="/">Starta</a> {- FIXME: move upload stuff here also -}
     </div>
 
-
-flashDocumentIssued :: Document -> HSP.HSP HSP.XML
-flashDocumentIssued document = 
-    <div>
-     Du har undertecknat avtalet och en inbjudan har nu skickats 
-     till <% partyListButAuthorString document %>.
-    </div>
-
-flashDocumentDraftSaved :: Document -> HSP.HSP HSP.XML
-flashDocumentDraftSaved document = 
+flashDocumentDraftSaved :: HSP.HSP HSP.XML
+flashDocumentDraftSaved  = 
     <div>
      Du har sparat documentet.
     </div>
-
-flashDocumentSigned :: Document -> HSP.HSP HSP.XML
-flashDocumentSigned document =
-    <div>
-     Du har undertecknat avtalet!
-    </div>
-
-flashDocumentClosed :: Document -> HSP.HSP HSP.XML
-flashDocumentClosed document =
-    <div>
-     Du har undertecknat avtalet! Avtalet är undertecknat av <% partyListString document %> nu!
-    </div>
-  
-mkSignDocLink :: String -> Document -> SignatoryLink -> String
-mkSignDocLink hostpart documentid signaturelink =
-    hostpart ++ show (LinkSignDoc documentid signaturelink)
 
 
 concatSignatories :: [SignatoryDetails] -> String
 concatSignatories siglinks = 
     concat $ intersperse ", " $ map (BS.toString . signatoryname) siglinks 
 
--- oneDocumentRow :: (XMLGenerator m) => MinutesTime -> UserID -> Document -> GenChild m
-oneDocumentRow ctime userid document@Document{ documentid
+oneDocumentRow::(EmbedAsAttr m (Attr [Char] [Char]), EmbedAsAttr m (Attr [Char] KontraLink), EmbedAsAttr m (Attr [Char] DocumentID)) =>
+                MinutesTime -> UserID -> Document  -> XMLGenT m (HSX.XML m)
+oneDocumentRow crtime userid document@Document{ documentid
                                 , documentsignatorylinks
                                 , documentstatus
                                 , documenttitle
@@ -219,6 +191,7 @@ oneDocumentRow ctime userid document@Document{ documentid
                       Canceled -> "status_rejected.png"
                       Timedout -> "status_timeout.png"
                       Rejected -> "status_rejected.png"
+                      AwaitingAuthor ->  "status_pending.png" --TODO: use bettter image
         dateDiffInDays (MinutesTime ctime) (MinutesTime mtime)
                        | ctime>mtime = 0
                        | otherwise = (mtime - ctime) `div` (60*24)
@@ -234,24 +207,13 @@ oneDocumentRow ctime userid document@Document{ documentid
                    -- FIXME: show days to sign, not the final date
                    Just (TimeoutTime x) -> 
                        if documentstatus==Pending
-                       then <span title=("Förfallodatum: " ++ show x)><% mk $ "(" ++ show (dateDiffInDays ctime x) ++ ")" %></span>
+                       then <span title=("Förfallodatum: " ++ show x)><% mk $ "(" ++ show (dateDiffInDays crtime x) ++ ")" %></span>
                        else <span/>
        %>
      </td>
      <td><% mk $ concatSignatories (map signatorydetails documentsignatorylinks) %></td>
      <td><% mk $ documenttitle %></td>
-     {- 
-     <td><% mk $ case documenttimeouttime of
-                   Nothing -> "-"
-                   -- FIXME: show days to sign, not the final date
-                   Just (TimeoutTime x) -> 
-                       if documentstatus==Pending || documentstatus==Timedout  
-                       then showDateAbbrev ctime x
-                       else "-"
-          %>
-     </td>
-     -}
-     <td><span title=(show documentmtime)><% mk $ showDateAbbrev ctime documentmtime %></span></td>
+     <td><span title=(show documentmtime)><% mk $ showDateAbbrev crtime documentmtime %></span></td>
      <td class="tdright"></td>
     </tr>
 
@@ -306,17 +268,6 @@ pageDocumentList ctime userid documents =
      </table>
      </form>
 
-showFile
-  :: (EmbedAsChild m String) =>
-     File -> XMLGenT m (HSX.XML m)
-showFile file = <li><% show file %></li>
-
-showSignatory
-  :: (EmbedAsChild m String, Show a) => a -> XMLGenT m (HSX.XML m)
-showSignatory sig = <li><% show sig %></li>
-
-
-
 showSignatoryEntryForEdit :: ( XMLGenerator m, EmbedAsAttr m (Attr [Char] KontraLink),
                                EmbedAsAttr m (Attr [Char] DocumentID)) 
                           => DocState.SignatoryDetails -> XMLGenT m (HSX.XML m)
@@ -344,27 +295,31 @@ showSignatoryEntryForEdit2 idx signatoryname signatorycompany signatorynumber si
     </div>
 
     
-    
+showFileImages ::(EmbedAsAttr m (Attr [Char] [Char])) => File -> JpegPages -> [XMLGenT m (HSX.XML m)]    
 showFileImages File{fileid} (JpegPages jpgpages) =
    [ <div id=("page" ++ show pageno) class="pagediv"><img class="pagejpg" src=("/pages/" ++ show fileid ++ "/" ++ show pageno) width="300" /></div> |
      pageno <- [1..(length jpgpages)]]
-showFileImages File{fileid} JpegPagesPending = 
+     
+showFileImages _ JpegPagesPending = 
    [ <div class="pagejpga4 pagejpg">
       <img class="waiting" src="/theme/images/wait30trans.gif"/>
      </div> ]
-showFileImages File{fileid} (JpegPagesError normalizelog) = 
+     
+showFileImages _ (JpegPagesError normalizelog) = 
    [ <div class="pagejpga4 pagejpg">
       <% normalizelog %>
      </div> ]
-
+     
+showFilesImages2 :: (EmbedAsAttr m (Attr [Char] [Char])) => [(File, JpegPages)] -> XMLGenT m (HSX.XML m)
 showFilesImages2 files = <span><% concatMap (uncurry showFileImages) files %></span> 
 
-showDocumentBox document = 
+showDocumentBox :: (EmbedAsAttr m (Attr [Char] [Char])) => XMLGenT m (HSX.XML m)
+showDocumentBox = 
     <div id="documentBox">
      <div class="pagejpga4 pagejpg">
       <img class="waiting" src="/theme/images/wait30trans.gif"/>
      </div>
-    </div>
+    </div> 
 
 {-
 
@@ -375,7 +330,7 @@ showDocumentBox document =
    mp3 -- we cannot do anything with this document
 -}
 
-
+emptyDetails :: SignatoryDetails
 emptyDetails = SignatoryDetails 
           { signatoryname = BS.empty
           , signatorycompany = BS.empty
@@ -388,16 +343,11 @@ emptyDetails = SignatoryDetails
           , signatoryotherfields = []
           }
 
-addbr text | BS.null text = []
-addbr text = [<% text %>, <% <br/> %>]
-
 pageDocumentForAuthor :: (Monad m) 
              => Context 
              -> Document 
-             -> Bool 
-             -> Int                -- free documents left
              -> (HSPT m XML) 
-pageDocumentForAuthor ctx@(Context {ctxmaybeuser = Just user})
+pageDocumentForAuthor ctx
              document@Document{ documentsignatorylinks
                               , documentauthordetails
                               , documenttitle
@@ -406,8 +356,7 @@ pageDocumentForAuthor ctx@(Context {ctxmaybeuser = Just user})
                               , documentdaystosign
                               , documentinvitetext
                               } 
-             issuedone 
-             freeleft =
+             =
    let helper = [ showSignatoryEntryForEdit2 "signatory_template" "" "" "" ""
                 , <script> var documentid = "<% show $ documentid %>"; 
                   </script>
@@ -531,7 +480,7 @@ showDocumentPageHelper document helpers title content =
       <% helpers %>
      </div>
       <div class="docviewleft">
-       <% showDocumentBox document %>
+       <% showDocumentBox%>
       </div>
       <div class="docviewright"> 
        <p><strong><% title %></strong><br/>
@@ -541,15 +490,7 @@ showDocumentPageHelper document helpers title content =
      <div class="clearboth"/>
     </div> 
 
-class ( XMLGenerator m
-      , EmbedAsAttr m (Attr [Char] KontraLink)
-      , EmbedAsAttr m (Attr [Char] BS.ByteString)) => XMLGenerator2 m
-
-
--- cover for a bug that we did forget time of signing
-showDateOnly1 (MinutesTime 0) = ""
-showDateOnly1 x = showDateOnly x
-
+showSignatoryLinkForSign :: (Monad m) => Context -> Document -> SignatoryLink -> GenChildList (HSPT' m)
 showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document siglnk@(SignatoryLink{  signatorylinkid 
                                        , maybesigninfo
                                        , maybeseeninfo
@@ -572,7 +513,7 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document siglnk@(
                 <img src="/theme/images/status_pending.png"/>
       message = caseOf
                 [
-                (wasSigned, "Undertecknat " ++ showDateOnly1 (signtime $ fromJust maybesigninfo) ),
+                (wasSigned, "Undertecknat " ++ showDateOnly (signtime $ fromJust maybesigninfo) ),
                 (isTimedout, "Förfallodatum har passerat"),
                 (wasSeen,  "Granskat " ++ showDateOnly (signtime $ fromJust maybeseeninfo))]
                 "Har ej undertecknat"       
@@ -623,7 +564,7 @@ pageDocumentForSign :: ( Monad m) =>
                            -> SignatoryLink
                            -> Bool 
                     -> (HSPT m XML) 
-pageDocumentForSign action document ctx@(Context {ctxmaybeuser = muser})  invitedlink wassigned =
+pageDocumentForSign action document ctx  invitedlink wassigned =
    let helpers = [ <script> var documentid = "<% show $ documentid document %>"; 
                   </script>
                 , <script type="text/javascript">
@@ -713,16 +654,18 @@ flashDocumentRejected document@Document{ documenttitle } =
     </div>
      
      
-
+jsArray :: [[Char]] -> [Char]
 jsArray xs = "[" ++ (joinWith ", " xs) ++ "]"
 
-buildDefJS fd@FieldDefinition { fieldlabel, fieldvalue, fieldplacements } = 
+buildDefJS :: FieldDefinition -> [Char]
+buildDefJS (FieldDefinition { fieldlabel, fieldvalue, fieldplacements }) = 
     "{ label: " ++ show fieldlabel -- show because we need quotes
                     ++ ", value: " ++ show fieldvalue
                     ++ ", placements: " ++ (jsArray (map buildPlacementJS fieldplacements))
                     ++ " }"
-
-buildPlacementJS pl@FieldPlacement { placementx, placementy, placementpage, placementpagewidth, placementpageheight } = 
+                    
+buildPlacementJS :: FieldPlacement -> [Char]
+buildPlacementJS (FieldPlacement { placementx, placementy, placementpage, placementpagewidth, placementpageheight }) = 
     "{ x: " ++ show placementx 
                 ++ ", y: " ++ show placementy
                 ++ ", page: " ++ show placementpage
@@ -730,8 +673,8 @@ buildPlacementJS pl@FieldPlacement { placementx, placementy, placementpage, plac
                 ++ ", w: " ++ show placementpagewidth
                 ++ " }"
                 
-
-buildSigJS signatorydetails@SignatoryDetails { signatoryname, signatorycompany, signatorynumber, signatoryemail, signatorynameplacements, signatorycompanyplacements, signatoryemailplacements, signatorynumberplacements, signatoryotherfields } = 
+buildSigJS :: SignatoryDetails -> [Char]
+buildSigJS (SignatoryDetails { signatoryname, signatorycompany, signatorynumber, signatoryemail, signatorynameplacements, signatorycompanyplacements, signatoryemailplacements, signatorynumberplacements, signatoryotherfields }) = 
     "{ name: " ++ show signatoryname
                    ++ ", company: " ++ show signatorycompany
                    ++ ", email: " ++ show signatoryemail
@@ -742,7 +685,8 @@ buildSigJS signatorydetails@SignatoryDetails { signatoryname, signatorycompany, 
                    ++ ", numberplacements: " ++ (jsArray (map buildPlacementJS signatorynumberplacements))
                    ++ ", otherfields: " ++ (jsArray (map buildDefJS signatoryotherfields))
                    ++ " }"
-
+                   
+buildJS :: SignatoryDetails -> [SignatoryDetails] -> [Char]
 buildJS authordetails signatorydetails = 
     "{ signatories: " ++ sigs
                           ++ ", author: " ++ buildSigJS authordetails
@@ -751,10 +695,11 @@ buildJS authordetails signatorydetails =
                                      then (jsArray (map buildSigJS signatorydetails))
                                      else (jsArray [(buildSigJS emptyDetails)])
                                      
-                                     
-flashRemindMailSent doc signlink =  
+flashRemindMailSent :: SignatoryLink -> BS.ByteString                                    
+flashRemindMailSent signlink =  
                 case signlink of 
                   SignatoryLink{maybesigninfo = Nothing} -> (BS.fromString "En påminnelse har skickats till ") `BS.append` (personname signlink)
                   _ -> (BS.fromString "Dokumentet har skickats till ") `BS.append` (personname signlink)
 
+defaultInviteMessage :: BS.ByteString
 defaultInviteMessage = BS.empty                              
