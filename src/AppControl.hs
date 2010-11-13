@@ -254,7 +254,7 @@ forgotPasswordPagePost = do
 forgotPasswordDonePage :: Kontra Response
 forgotPasswordDonePage = do
     ctx <- lift get
-    V.renderFromBody ctx V.TopNone V.kontrakcja (V.pageForgotPasswordConfirm ctx)
+    V.renderFromBody ctx V.TopNone V.kontrakcja V.pageForgotPasswordConfirm 
 
 signupPageGet :: Kontra Response
 signupPageGet = do
@@ -291,12 +291,12 @@ signupPagePost = do
 signupPageDone :: Kontra Response
 signupPageDone = do
   ctx <- get
-  V.renderFromBody ctx V.TopNone V.kontrakcja (signupConfirmPageView ctx)
+  V.renderFromBody ctx V.TopNone V.kontrakcja signupConfirmPageView
 
 handleLoginGet :: Kontra Response
 handleLoginGet = do
   ctx <- lift get
-  V.renderFromBody ctx V.TopNone V.kontrakcja (V.pageLogin ctx)
+  V.renderFromBody ctx V.TopNone V.kontrakcja V.pageLogin 
 
 handleLoginPost :: Kontra KontraLink
 handleLoginPost = do
@@ -345,7 +345,7 @@ handleStats = onlySuperUserGet $ do
 #else
     let df = BS.empty
 #endif
-    webHSP (V.pageStats (length allusers) ndocuments allusers df)
+    webHSP (V.pageStats (length allusers) ndocuments df)
     
 
 handleBecome :: Kontra KontraLink

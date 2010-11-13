@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts, FlexibleInstances, IncoherentInstances,
              MultiParamTypeClasses, NamedFieldPuns, CPP #-}
-{-# OPTIONS_GHC -F -pgmFtrhsx #-}
+{-# OPTIONS_GHC -F -pgmFtrhsx -Wall#-}
 module AppView( TopMenu(..)
               , kontrakcja
               , htmlHeadBodyWrapIO
@@ -19,32 +19,19 @@ module AppView( TopMenu(..)
               , signupConfirmPageView
               , pageLogin
               , pageStats
-              ) where
+              ) where 
 
 import HSP hiding (Request)
-import System.Locale (defaultTimeLocale)
-import Happstack.Server (Response)
 import Happstack.Server.HSP.HTML (webHSP)
 import Happstack.Server.SimpleHTTP
 import qualified HSX.XMLGenerator as HSX (XML)
 import qualified HSX.XMLGenerator
-import Data.Object.Json as Json
-import Data.Object as Json
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy as BSCL
-import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.UTF8 as BSC
 import User
-import Network.HTTP (urlEncode)
-import Data.Time
 import qualified Data.Map as Map
 import Misc
-import HSP.XML
 import KontraLink
-import System.Directory
-import Happstack.State (update,query)
-import Data.Data
-import "mtl" Control.Monad.Trans
 
 poweredBySkrivaPaPara :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 poweredBySkrivaPaPara hostpart = 
@@ -66,110 +53,26 @@ htmlHeadBodyWrap title content =
       <% content %>
      </body>
     </html>
-
+htmlHeadBodyWrapIO :: (EmbedAsChild (HSPT' IO) a) => a -> XMLGenT (HSPT' IO) (HSX.XMLGenerator.XML (HSPT' IO))   -> IO BSC.ByteString
 htmlHeadBodyWrapIO title content = do
-  let xml = htmlHeadBodyWrap title content
+  let xml = htmlHeadBodyWrap title content 
   renderHSPToByteString xml
-
-daveShowGeneric :: (Data d,XMLGenerator m) => d -> GenChildList m
-daveShowGeneric obj = do
-    let con = toConstr obj
-    let s = constrFields con
-    <% show con %> 
-    <% <ul>
-         <% case constrRep con of
-              AlgConstr {} ->  zipWith ($) (gmapQ (\x -> \k -> <li><% k %>: <% daveShowGeneric x %></li>) obj) 
-                    (constrFields con)
-              _ -> gmapQ (\x -> <li><% daveShowGeneric x %></li>) obj 
-          %>
-       </ul>
-     %>
-
-instance (XMLGenerator m) => (EmbedAsChild m HeaderPair) where
-  asChild (HeaderPair name value) = 
-     <% <p> 
-         <% BS.toString name ++ ": " ++ show value  %> 
-        </p> 
-      %>	
-
 
 data TopMenu = TopNew | TopDocument | TopAccount | TopNone | TopEmpty
              deriving (Eq,Ord)
 
-instance (XMLGenerator m) => (EmbedAsChild m User) where
-  asChild user = <% BS.toString (userfullname user) ++ " <" ++ 
-                 BS.toString (unEmail $ useremail user) ++ ">"  %>	
-
-#if MIN_VERSION_happstack_server(0,5,1)
-rqInputs rq = rqInputsQuery rq ++ rqInputsBody rq
-#endif
-
-instance (XMLGenerator m) => (EmbedAsChild m Request) where
-  asChild rq = <% <code>
-                  <% show (rqMethod rq) %> <% rqUri rq ++ rqQuery rq %><br/>
-                  <% map asChild1 (rqInputs rq) %>
-                 </code> %>
-    where asChild1 (name,input) = 
-              <% <span><% name %>: <% input %><br/></span> %>
-
-instance (XMLGenerator m) => (EmbedAsChild m Input) where
-  asChild (Input _value (Just filename) _contentType) = 
-       <% "File " ++ show filename %>
-  asChild (Input value _maybefilename _contentType) = 
-       <% show (concatMap BSC.toString (BSCL.toChunks value)) %>
-
-instance (XMLGenerator m) => (EmbedAsChild m Json.JsonScalar) where
-  asChild (JsonString x) = <% BS.toString x %>	
-  asChild (JsonNumber x) = <% show x %>	
-  asChild (JsonBoolean x) = <% show x %>
-  asChild JsonNull = <% "null" %>
-
-s (k, v) = <li><% BS.toString k %>: <% v %></li>
-
-y v = <li><% v %></li>
-
-
-
-instance (EmbedAsChild m HSP.XML.XML) => (EmbedAsChild m FlashMessage) where
-  asChild (FlashMessage msg) = 
-      <% cdata $ BSC.toString msg %>
-
-
-instance (XMLGenerator m) => 
-    (EmbedAsChild m (Json.Object BS.ByteString Json.JsonScalar)) where
-  asChild (Json.Mapping xs) =
-    <%
-      <ul>
-        <% map s xs %>
-      </ul>
-    %>
-  asChild (Json.Sequence xs) =
-    <%
-     <ol>
-      <% map y xs %>
-     </ol>
-    %>
-  asChild (Json.Scalar val) =
-    <%
-     <span><% val %></span>
-    %>
-
 kontrakcja :: [Char]
-kontrakcja = "SkrivaPå"
+kontrakcja = "SkrivaPå" 
 
--- small letter ascii only version on app name
-kontrakcjaAscii :: [Char]
-kontrakcjaAscii = "skriva"
-
-
-loginBox ctx =
+loginBox :: (EmbedAsAttr m (Attr [Char] [Char]),EmbedAsAttr m (Attr [Char] KontraLink)) => XMLGenT m (HSX.XMLGenerator.XML m)
+loginBox =
    <div>
     <div id="login">
      <form action=LinkLogin method="post">
       <table>
 	<tr>
           <td>E-mail:</td> 
-          <td><input type="email" name="email" autocomplete="off"/></td> 
+          <td><input type="email" name="email" autocomplete="off" class="noflash"/></td> 
         </tr>
 	<tr> 
           <td>Lösenord:</td> 
@@ -197,7 +100,7 @@ loginBox ctx =
 
 pageWelcome :: Context 
             -> XMLGenT (HSPT' IO)  (HSX.XML (HSPT' IO) )
-pageWelcome (Context {ctxmaybeuser = Just _, ctxhostpart}) = 
+pageWelcome (Context {ctxmaybeuser = Just _}) = 
   <div class="centerdivnarrow" style="margin-top: 100px;">
    
    <form action=LinkIssue method="post" enctype="multipart/form-data">
@@ -208,7 +111,7 @@ pageWelcome (Context {ctxmaybeuser = Just _, ctxhostpart}) =
   </div>
 
 
-pageWelcome ctx@(Context {ctxmaybeuser = Nothing}) = 
+pageWelcome (Context {ctxmaybeuser = Nothing}) = 
  <div>
     <div id="firstPageLeft">
          <h1>Snabbt, smidigt och säkert</h1>
@@ -246,13 +149,6 @@ pageErrorReport (Context {ctxmaybeuser}) request =
    <p><% map show $ rqCookies request %></p> 
   </div>  
 
--- * Convenience Functions
-
-dateStr :: UTCTime -> String
-dateStr ct =
-  formatTime
-    defaultTimeLocale
-    "%a, %B %d, %Y at %H:%M:%S (UTC)" ct
 
 -- * Main Implementation
 
@@ -269,13 +165,13 @@ renderFromBody ctx topmenu title xml = do
 
 topnavi :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
         => Bool 
-        -> Context
         -> String 
         -> KontraLink 
         -> XMLGenT m (HSX.XML m)
-topnavi active ctx title link = 
+topnavi active title link = 
     <a href=link class=(if active then "active" else "")><% title %></a>
 
+partialScripts :: (EmbedAsAttr m (Attr [Char] [Char])) => [XMLGenT m (HSX.XMLGenerator.XML m)]    
 partialScripts =
       [ <script src="//ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js"/>
       -- we loaded the min version but at some point google stopped serving this one
@@ -290,7 +186,7 @@ partialScripts =
       , <script src="/tiny_mce/jquery.tinymce.js"></script>
       , <script src="/js/global.js"/>
       ]
-
+partialStyles :: (EmbedAsAttr m (Attr [Char] [Char])) => [XMLGenT m (HSX.XMLGenerator.XML m)]
 partialStyles = 
       [ <link rel="stylesheet" type="text/css" href="/theme/style.css" media="screen" />
       , <link rel="stylesheet" type="text/css" 
@@ -307,7 +203,7 @@ pageFromBody :: (EmbedAsChild (HSPT' IO) xml)
              -> String 
              -> xml 
              -> HSP XML
-pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages}) 
+pageFromBody (Context {ctxmaybeuser,ctxflashmessages}) 
              topMenu title body =
     withMetaData html4Strict $
     <html>
@@ -320,13 +216,10 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
      <body>
      <div id="headerWide"/>
      <div id="mainContainer960">
-     <%
-       case ctxflashmessages of
-         [] -> <% () %>
-         _ -> <% <div class="flashmsgbox">
+      <div class="flashmsgbox">
                <% ctxflashmessages %>
-              </div> %>
-       %>
+      </div>
+   
       <div id="headerContainer">
       <a href="/">
         <img id="logosmall" src="/theme/images/logosmall.png" alt="Liten logga"/>
@@ -348,14 +241,13 @@ pageFromBody ctx@(Context {ctxmaybeuser,ctxhostpart,ctxflashmessages})
 	         </form> 
                </div> 
            %>
-
-        
+      
          <div id="nav">
           <% case ctxmaybeuser of 
                Just _ ->
                  <ul>
-                   <li><% topnavi (topMenu== TopNew) ctx "Skapa avtal" LinkMain %></li>
-                   <li><% topnavi (topMenu== TopDocument) ctx "Arkiv" LinkIssue %></li>
+                   <li><% topnavi (topMenu== TopNew) "Skapa avtal" LinkMain %></li>
+                   <li><% topnavi (topMenu== TopDocument) "Arkiv" LinkIssue %></li>
                  </ul>
                _ -> <span/>
            %>
@@ -439,10 +331,10 @@ showUserOption :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] BSC.ByteString))
 showUserOption user =
     <option value=(show $ userid user) title=(unEmail $ useremail user)>
           <% userfullname user %> <% unEmail $ useremail user %>
-    </option>
+    </option> 
  
-pageStats :: Int -> Int -> [User] -> BS.ByteString -> HSP XML
-pageStats nusers ndocuments users df =
+pageStats :: Int -> Int -> BS.ByteString -> HSP XML
+pageStats nusers ndocuments df =
     developmentWrapper "Stats page" []
      <div>
       <h1>Stats page</h1>
@@ -470,10 +362,8 @@ pageStats nusers ndocuments users df =
       <pre><% df %></pre>
      </div>
 
-signupConfirmPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
-               => Context -> XMLGenT m (HSX.XML m)
-signupConfirmPageView ctx =
-    <div>Please check your email for your password.</div>
+signupConfirmPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) =>  XMLGenT m (HSX.XML m)
+signupConfirmPageView  =  <div>Please check your email for your password.</div>
 
 data SignupForm = SignupForm {
     signupFullname :: BS.ByteString,
@@ -494,11 +384,7 @@ instance FromData SignupForm where
             signupPassword2 = concatChunks password2
         }
         
-signupPageView :: ( XMLGenerator m
-                  , EmbedAsAttr m (Attr String KontraLink)
-                  , EmbedAsAttr m (Attr String BS.ByteString)
-                  ) 
-               => Maybe SignupForm -> XMLGenT m (HSX.XML m)
+signupPageView :: ( XMLGenerator m , EmbedAsAttr m (Attr String KontraLink), EmbedAsAttr m (Attr String BS.ByteString))=> Maybe SignupForm -> XMLGenT m (HSX.XML m)
 signupPageView form =
     <div class="centerdivnarrow">
         <form action=LinkSignup method="post">
@@ -539,23 +425,20 @@ pageForgotPassword =
     </form>
   </div>
 
-pageForgotPasswordConfirm :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
-                             => Context
-                          -> XMLGenT m (HSX.XML m)
-pageForgotPasswordConfirm ctx =
+pageForgotPasswordConfirm :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) =>  XMLGenT m (HSX.XML m)
+pageForgotPasswordConfirm  =
   <div class="centerdivnarrow">
     <p>Ett nytt lösenord har skickats till din e-post. Du kan nu logga in med dina nya uppgifter.</p>
-    <% loginBox ctx %>
+    <% loginBox %>
   </div>
 
-pageLogin :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
-               => Context -> XMLGenT m (HSX.XML m)
-pageLogin ctx = 
+pageLogin :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) => XMLGenT m (HSX.XML m)
+pageLogin = 
   <div class="centerdivnarrow">
 
-   <p class="headline">Logga in SkrivaPå!</p>
+   <p class="headline">Logga in SkrivaPå!</p> 
 
-   <% loginBox ctx %>
+   <% loginBox %>
 
   </div>
 
@@ -575,16 +458,10 @@ developmentWrapper title ctxflashmessages body =
       <% partialScripts %>
      </head>
      <body>
-       <%
-         -- (lift get) >>= \(Context {ctxflashmessages}) -> 
-           case ctxflashmessages of
-             [] -> <% () %>
-             _ -> <% 
-                   <div class="flashmsgbox">
-                     <% ctxflashmessages %>
-                   </div> 
-                   %>
-       %>
+        <div class="flashmsgbox">
+          <% ctxflashmessages %>
+        </div> 
+  
       <% body %>
      </body>
     </html>
@@ -599,7 +476,7 @@ databaseContents contents = developmentWrapper "All database files" []
   </div>
   where showOneFile file = <li><a href=file><% file %></a></li>
 
-
+showUserSelect ::(XMLGenerator m, EmbedAsAttr m (Attr [Char] BSC.ByteString)) => [User] -> XMLGenT m (HSX.XMLGenerator.XML m)
 showUserSelect users = 
   <select name="user">
     <option value="" title="-- select user --">
@@ -607,7 +484,8 @@ showUserSelect users =
     </option>
     <% map showUserOption users %>
   </select>
-  
+
+pageAdminOnly::[User] -> [FlashMessage] -> HSP XML  
 pageAdminOnly users ctxflashmessages =
     developmentWrapper "SkrivaPa admin only page" ctxflashmessages
     <div>
@@ -657,7 +535,7 @@ pageAdminOnly users ctxflashmessages =
       </form>
     </div>
 
-
+userInfo :: (HSX.XMLGenerator.XMLGen m, Show t) =>  (User, t) -> XMLGenT m (HSX.XMLGenerator.XML m)
 userInfo (user,docs) = <tr><td><% userfullname user %></td><td><% unEmail $ useremail user %></td><td><% show docs %></td></tr>
 
 pageAllUsersTable :: [(User,Int)] -> HSP XML
@@ -670,18 +548,5 @@ pageAllUsersTable users =
        <% map userInfo users %>
       </table>
      </div>
-
-acceptTermsOfServicePage :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
-                            => String -> XMLGenT m (HSX.XML m)
-acceptTermsOfServicePage red = 
-                       <form method="post" action="/tos">
-                        <input type="hidden" name="redirect" id="redirect" value=red />
-                        <input type="checkbox" name="tos" id="tos">I accept and agree to the Terms of Service</input>
-                        <input type="submit" />
-                       </form>
-
-
-
-
 
 
