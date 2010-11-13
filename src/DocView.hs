@@ -1,5 +1,5 @@
 {-# LANGUAGE IncoherentInstances, TemplateHaskell, NamedFieldPuns, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses #-}
-{-# OPTIONS_GHC -F -pgmFtrhsx #-}
+{-# OPTIONS_GHC -F -pgmFtrhsx -Wall #-}
 
 module DocView( emptyDetails
               , showFilesImages2
@@ -34,28 +34,19 @@ import KontraLink
 import Misc
 import MinutesTime
 import Data.Maybe
-import "mtl" Control.Monad.Trans
 import DocViewMail
 import DocViewUtil
     
-instance Monad m => IsAttrValue m DocumentID where
-    toAttrValue = toAttrValue . show
-
 
 landpageSignInviteView :: (XMLGenerator m) => 
-                          Context -> 
                           Document -> 
                           XMLGenT m (HSX.XML m)
-landpageSignInviteView ctx document@Document{ documenttitle
-                                            , documentsignatorylinks
-                                            } =
+landpageSignInviteView document =
     <div class="centerdivnarrow">
-     <p class="headline">Dokumentet <strong><% documenttitle %></strong> undertecknat!</p>
-     
+     <p class="headline">Dokumentet <strong><% documenttitle document%></strong> undertecknat!</p>
      <p>En inbjudan att underteckna har nu skickats 
         till <% partyListButAuthorString document %>.
      </p>
-
      <p><a class="button" href="/">Skapa ett nytt avtal</a></p>
     </div>
 
@@ -79,12 +70,12 @@ Let as skip 3 for now.
    Halfdoc + no account
 
 -}
-
-willCreateAccountForYou ctx _ _ False = 
+willCreateAccountForYou::(XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink),EmbedAsAttr m (Attr [Char] BS.ByteString)) => Document->SignatoryLink->Bool->  XMLGenT m (HSX.XML m)
+willCreateAccountForYou _ _ False = 
     <p>Dokumentet har sparats till ditt konto. 
-     <% loginBox ctx %>
+     <% loginBox %>
     </p>
-willCreateAccountForYou ctx document siglink True = 
+willCreateAccountForYou document siglink True = 
     <p>Du kan nu spara dokumentet på SkrivaPå, då är ditt dokument säkert lagrat och dessutom 
        kan du även i framtiden verifiera avtalet mot vår databas. Detta kostar ingenting. 
       <form action=(LinkLandpageSaved document siglink) method="post">
@@ -93,12 +84,9 @@ willCreateAccountForYou ctx document siglink True =
     </p>
 
 landpageRejectedView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink),EmbedAsAttr m (Attr [Char] BS.ByteString)) => 
-                      Context -> 
                       Document -> 
-                      SignatoryLink -> 
-                      Bool ->
                       XMLGenT m (HSX.XML m)
-landpageRejectedView ctx document@Document{documenttitle,documentstatus} signatorylink hasaccount =
+landpageRejectedView document@Document{documenttitle} =
     <div class="centerdivnarrow">
       <p class="headline">Du har avvisat dokumentet <strong><% documenttitle %></strong>.</p>
       <p>Ett meddelande har skickats till <% partyListString document %>.</p>
@@ -107,28 +95,27 @@ landpageRejectedView ctx document@Document{documenttitle,documentstatus} signato
 
 
 landpageSignedView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink),EmbedAsAttr m (Attr [Char] BS.ByteString)) => 
-                      Context -> 
                       Document -> 
                       SignatoryLink -> 
                       Bool ->
                       XMLGenT m (HSX.XML m)
-landpageSignedView ctx document@Document{documenttitle,documentstatus} signatorylink hasaccount 
+landpageSignedView document@Document{documenttitle,documentstatus} signatorylink hasaccount 
     | documentstatus == Closed =
     <div class="centerdivnarrow">
       <p class="headline">Dokumentet är färdigställt</p>
       <p>Du har undertecknat dokumentet <strong><% documenttitle %></strong>. Således har 
          <% partyListString document %> undertecknat dokumentet och avtalet är nu juridiskt bindande.</p>
-      <% willCreateAccountForYou ctx document signatorylink (not hasaccount) %>
+      <% willCreateAccountForYou document signatorylink (not hasaccount) %>
     </div>
 
-landpageSignedView ctx document@Document{documenttitle} signatorylink hasaccount =
+landpageSignedView document@Document{documenttitle} signatorylink hasaccount =
     <div class="centerdivnarrow">
       <p class="headline">Du har undertecknat</p>
       <p>Du har nu undertecknat dokumentet <strong><% documenttitle %></strong>. 
          <% partyUnsignedListString document %> har ännu inte undertecknat 
          dokumentet. När alla undertecknat blir avtalet juridiskt bindande och
          en kopia av det färdigställda dokumentet skickats då till din e-post.</p>
-      <% willCreateAccountForYou ctx document signatorylink (not hasaccount) %>
+      <% willCreateAccountForYou document signatorylink (not hasaccount) %>
     </div>
 
 landpageLoginForSaveView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
@@ -137,7 +124,7 @@ landpageLoginForSaveView ctx  =
     <div class="centerdivnarrow">
      <a class="headline">Login</a>
      <p>Ditt dokument är nu sparat. Du finner dokumentet under Avtal when you log in.</p>
-     <% loginBox ctx %>
+     <% loginBox %>
     </div>
 
 

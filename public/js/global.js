@@ -50,9 +50,9 @@ function signatoryadd()
 {
     var signatorylist = $( "#signatorylist" );
     var sig = $("#signatory_template").clone();
-	var text = sig.html();
+    sig.removeAttr("id");
 	var emailfield = sig.find("input[type='email']");
-	emailfield.attr("id","othersignatoryemail");
+	emailfield.addClass("othersignatoryemail"); 
     signatorylist.append(sig);
     enableInfoText(sig);
     sig.hide();
@@ -181,10 +181,7 @@ $(document).ready( function () {
             }
         }); 
 
-    $('.flashmsgbox').delay(5000).fadeOut();
-    $('.flashmsgbox').click( function() { 
-         $(this).fadeOut() 
-    });
+    flashFlashMessages();
     /*
     $('#all').click(function() {
     });
@@ -268,18 +265,13 @@ $(document).ready( function () {
                 load: true
                 });
 	
-	$("input[type='email']").focus(function(){
-		applyRedBorder($(this));
-		return false;
-            });
-	
 	$("#loginbtn").click(function(){
-		if(emailFieldsValidation($("input[type='email']",this.form))){
+		if(emailFieldsValidation($(":email",this.form))){
 			$(this.form).submit();
 		}						  
 		return false;
 	});
-	
+
 	$("#createnewaccount").click(function(){
 		if(emailFieldsValidation($("input[type='email']"))){
 			$(this.form).submit();
@@ -298,75 +290,14 @@ $(document).ready( function () {
     //    RPXNOW.language_preference = 'sv';
 });
 
-$("#othersignatoryemail").live('focus', function(e){	
-		    applyRedBorder($(this));
-});
-
-	
-function isValidEmailAddress(emailAddress) {
-	var pattern = /^([A-Za-z0-9_\-\.+])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;
-	return pattern.test(emailAddress);
-}
-
-function applyRedBorder(field){
-	field.keyup(function(){
-		var emailVal = $(this).val();
-		$(this).removeAttr("style");		
-		if(emailVal != 0)
-		{
-			if(isValidEmailAddress(emailVal))
-			{
-				$(this).removeAttr("style");
-			}
-			else{
-			  $(this).css("border","1px solid red");
-			} 
-		}
-		else{
-			 $(this).removeAttr("style");
-		} 
-				
-	});
-}
-	   
-
   function emailFieldsValidation(fields){
-      var invalidEmailErrMsg = "Felaktig e-post \"email\". Försök igen.";
-      var emptyEmailErrMsg = "Du måste ange e-post till motpart.";
-	 var errorMsg="";
-	 var address="";
-	 var showError=false;
-	 var isValidEmail=false;
-
-    
-    fields.each(function() {
-		if(!isExceptionalField($(this))){
-		address = $(this).val();
-		 
-			if(address.length == 0){
-                            errorMsg = emptyEmailErrMsg;
-                            showError = true;
-			}
-			if(isValidEmailAddress(address) == false && showError==false) { 
-				errorMsg=invalidEmailErrMsg.replace("email",address);
-				showError=true;
-			}
-			 
-			if(showError){
-				var $dialog = $('<div></div>')
-					.html(errorMsg)
-					.dialog({
-						autoOpen: false,
-						title: 'Felaktig e-post',
-						modal: true
-					});
-				$dialog.dialog('open');
-				return false;
-			}	
-		}
-	});
-	isValidEmail=(showError)?false:true;
-	return isValidEmail;
+      fields = fields.filter(function(){return !isExceptionalField($(this))});
+      var inputs = fields.validator({
+                                    effect:'failWithFlashOnEmail',
+                                    formEvent: 'null'
+                                    });
+      var valid = inputs.data("validator").checkValidity();
+      return valid;
 }
 
 function authorFieldsValidation(){
@@ -422,14 +353,7 @@ function sigFieldsValidation(){
 
 function isExceptionalField(field){
 
-	var parentid = field.closest("div").attr("id");
-	var fieldid = field.attr("id");
-	var fieldname=field.attr("name");
-
-	if(fieldname=="signatoryemail" && parentid == "signatory_template" && fieldid != "othersignatoryemail")
-		return true
-
-	return false
+	return (field.closest("div").attr("id") == "signatory_template")
 }
 
 
@@ -463,6 +387,21 @@ function prepareForEdit(form){
     })
 }
 
+function flashFlashMessages(){
+    var flashmsgbox = $('.flashmsgbox');
+    if ($('.flashmessage',flashmsgbox).size()>0)
+     {
+      flashmsgbox.show();
+      flashmsgbox.delay(5000).fadeOut(function(){$('.flashmessage',flashmsgbox).remove()});
+      flashmsgbox.click( function() { $(this).fadeOut()  });
+     } 
+}
+function addFlashMessage(msg){
+    var flashmsgbox = $('.flashmsgbox');    
+    $('.flashmessage',flashmsgbox).remove()
+    flashmsgbox.append("<span class='flashmessage' >"+msg+"</span>");
+    flashFlashMessages();
+}   
 function prepareEditor(textarea) {
  return textarea.tinymce({
                           script_url : '/tiny_mce/tiny_mce.js',
@@ -475,3 +414,16 @@ function prepareEditor(textarea) {
                         })}
  
 standardDialogMask = "#333333"
+    
+$.tools.validator.addEffect("failWithFlashOnEmail", function(errors, event) {
+    var invalidEmailErrMsg = "Felaktig e-post \"email\". Försök igen.";
+    var emptyEmailErrMsg = "Du måste ange e-post till motpart.";
+	$.each(errors, function(index, error) {
+    	var input = error.input;
+        $(input).addClass("redborder");
+        if (!$(input).hasClass("noflash")) addFlashMessage(invalidEmailErrMsg);
+	});
+
+}, function(inputs)  {
+	$(inputs).removeClass("redborder");
+});    

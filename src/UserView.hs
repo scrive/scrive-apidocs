@@ -1,41 +1,21 @@
 {-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, NamedFieldPuns #-}
-{-# OPTIONS_GHC -F -pgmFtrhsx #-}
-module UserView where
+{-# OPTIONS_GHC -F -pgmFtrhsx -Wall #-}
+module UserView(viewSubaccounts,passwordChangeMail,showUser,userDetailsSavedFlashMessage,newUserMail,inviteSubaccountMail,pageAcceptTOS) where
 
 import HSP hiding (Request)
-import System.Locale (defaultTimeLocale)
-import Happstack.Server (Response)
-import Happstack.Server.HSP.HTML (webHSP)
 import Happstack.Server.SimpleHTTP
-import qualified HSX.XMLGenerator as HSX (XML)
-import Data.Object.Json as Json
-import Data.Object as Json
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy as BSCL
 import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString.UTF8 as BSC
-import Network.HTTP (urlEncode)
-import Data.Time
 import UserState
-import Misc
 import AppView
 import User
 import KontraLink
-import MinutesTime
 import SendMail(Mail,emptyMail,title,content)
-import Data.Maybe
+import Control.Monad
+import qualified HSX.XMLGenerator
 
-instance (EmbedAsChild m BS.ByteString) => (EmbedAsChild m Email) where
-    asChild = asChild . unEmail
-
-instance Monad m => IsAttrValue m Email where
-    toAttrValue = toAttrValue . unEmail
-
-instance Monad m => IsAttrValue m UserID where
-    toAttrValue = toAttrValue . show
-
-
-showUser user = 
+showUser ctx@(Context {ctxmaybeuser = Just user}) = 
+    renderFromBody ctx TopAccount kontrakcja $ 
     <div class="accounttable">
      <h1><% userfullname user %></h1>
       <div>
@@ -81,7 +61,9 @@ showUser user =
 
      </div>
     </div>
+showUser _ = mzero
 
+pageAcceptTOS :: Context -> BS.ByteString -> Kontra Response
 pageAcceptTOS ctx tostext = 
     let toptab = TopEmpty
     in
@@ -97,16 +79,13 @@ pageAcceptTOS ctx tostext =
      </div> 
     </form>
   
-
-oneRow user@User{ userfullname, useremail, userid }  = 
-    let link = "nothing to see here"
-        statusimg = ""
-    in
+oneRow :: (EmbedAsAttr m (Attr [Char] [Char]), EmbedAsAttr m (Attr [Char] UserID)) =>  User -> XMLGenT m (HSX.XMLGenerator.XML m)
+oneRow (User{ userfullname, useremail, userid })  = 
     <tr class="ui-state-default">
      <td class="tdleft">
       <input type="checkbox" name="doccheck" value=userid class="check" />
      </td>
-     <td><img width="17" height="17" src=statusimg/></td>
+     <td><img width="17" height="17" src=""/></td>
      <td><% userfullname %></td>
      <td><% useremail %></td>
      <td> - </td>
@@ -115,7 +94,7 @@ oneRow user@User{ userfullname, useremail, userid }  =
 
 
 viewSubaccounts :: Context -> [User] -> Kontra Response
-viewSubaccounts ctx@(Context {ctxmaybeuser = Just user}) subusers = 
+viewSubaccounts ctx subusers = 
     renderFromBody ctx TopAccount kontrakcja $ 
     <form method="post" action= LinkSubaccount>
      <h1>Underkonton</h1>

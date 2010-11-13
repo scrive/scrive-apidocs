@@ -229,32 +229,18 @@ signatoryLinkFromDocumentByID document@Document{documentsignatorylinks} linkid =
       _ -> mzero
     
 
-landpageSignInvite documentid = do
-  ctx <- get
-  mdocument <- query $ GetDocumentByDocumentID documentid
-  case mdocument of
-    Nothing -> mzero
-    Just document -> renderFromBody ctx TopNone kontrakcja $ landpageSignInviteView ctx document
+landpageSignInvite ctx document = do
+  renderFromBody ctx TopNone kontrakcja $ landpageSignInviteView ctx document
 
-landpageSigned documentid signatorylinkid = do
-  ctx <- get
-  mdocument <- query $ GetDocumentByDocumentID documentid
-  case mdocument of
-    Nothing -> mzero
-    Just document -> do
-                   signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
-                   maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
-                   renderFromBody ctx TopEmpty kontrakcja $ landpageSignedView ctx document signatorylink (isJust maybeuser)
+landpageSigned ctx document signatorylinkid = do
+  signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
+  maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
+  renderFromBody ctx TopEmpty kontrakcja $ landpageSignedView ctx document signatorylink (isJust maybeuser)
 
-landpageRejected documentid signatorylinkid = do
-  ctx <- get
-  mdocument <- query $ GetDocumentByDocumentID documentid
-  case mdocument of
-    Nothing -> mzero
-    Just document -> do
-                   signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
-                   maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
-                   renderFromBody ctx TopEmpty kontrakcja $ landpageRejectedView ctx document signatorylink (isJust maybeuser)
+landpageRejected ctx document signatorylinkid = do
+  signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
+  maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
+  renderFromBody ctx TopEmpty kontrakcja $ landpageRejectedView ctx document signatorylink (isJust maybeuser)
 
 {-
  Here we need to save the document either under existing account or create a new account

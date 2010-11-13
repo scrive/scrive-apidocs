@@ -213,4 +213,4 @@ handleAcceptTOSPost = do
       addFlashMsgText $ BS.fromString "För att kunna använda tjänsten måste du acceptera SkrivaPå Allmänna Villkor."
       return LinkAcceptTOS
 
-  
+
