@@ -355,7 +355,7 @@ handleIssueShowPost docid = withUserPost $
                         then return $ LinkSignInvite documentid
                         -- otherwise it was just a save
                         else do
-                          addFlashMsgHtml $ flashDocumentDraftSaved doc2
+                          addFlashMsgHtml $ flashDocumentDraftSaved
                           return LinkIssue
        AwaitingAuthor -> do 
                           doc2 <- update $ SetDocumentStatus documentid Closed

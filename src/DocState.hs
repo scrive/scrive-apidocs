@@ -46,6 +46,7 @@ module DocState
     , SignDocument(..)
     , TimeoutDocument(..)
     , UpdateDocument(..)
+    , SetDocumentStatus(..)
     )
 where
 import Happstack.Data
