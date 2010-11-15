@@ -119,8 +119,8 @@ landpageSignedView document@Document{documenttitle} signatorylink hasaccount =
     </div>
 
 landpageLoginForSaveView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
-                         => Context -> XMLGenT m (HSX.XML m)
-landpageLoginForSaveView ctx  =
+                         =>XMLGenT m (HSX.XML m)
+landpageLoginForSaveView  =
     <div class="centerdivnarrow">
      <a class="headline">Login</a>
      <p>Ditt dokument är nu sparat. Du finner dokumentet under Avtal when you log in.</p>
@@ -181,7 +181,6 @@ oneDocumentRow crtime userid document@Document{ documentid
                       Canceled -> "status_rejected.png"
                       Timedout -> "status_timeout.png"
                       Rejected -> "status_rejected.png"
-                      AwaitingAuthor ->  "status_pending.png" --TODO: use bettter image
         dateDiffInDays (MinutesTime ctime) (MinutesTime mtime)
                        | ctime>mtime = 0
                        | otherwise = (mtime - ctime) `div` (60*24)

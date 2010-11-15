@@ -229,19 +229,33 @@ signatoryLinkFromDocumentByID document@Document{documentsignatorylinks} linkid =
       _ -> mzero
     
 
-landpageSignInvite ctx document = do
-  renderFromBody ctx TopNone kontrakcja $ landpageSignInviteView ctx document
+landpageSignInvite documentid = do
+  ctx <- get
+  mdocument <- query $ GetDocumentByDocumentID documentid
+  case mdocument of
+    Nothing -> mzero
+    Just document -> renderFromBody ctx TopNone kontrakcja $ landpageSignInviteView document
 
-landpageSigned ctx document signatorylinkid = do
-  signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
-  maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
-  renderFromBody ctx TopEmpty kontrakcja $ landpageSignedView ctx document signatorylink (isJust maybeuser)
 
-landpageRejected ctx document signatorylinkid = do
-  signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
-  maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
-  renderFromBody ctx TopEmpty kontrakcja $ landpageRejectedView ctx document signatorylink (isJust maybeuser)
+landpageSigned documentid signatorylinkid = do
+  ctx <- get
+  mdocument <- query $ GetDocumentByDocumentID documentid
+  case mdocument of
+    Nothing -> mzero
+    Just document -> do
+                     signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
+                     maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
+                     renderFromBody ctx TopEmpty kontrakcja $ landpageSignedView document signatorylink (isJust maybeuser)
 
+landpageRejected documentid signatorylinkid = do
+  ctx <- get
+  mdocument <- query $ GetDocumentByDocumentID documentid
+  case mdocument of
+    Nothing -> mzero
+    Just document -> do
+                     signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
+                     maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
+                     renderFromBody ctx TopEmpty kontrakcja $ landpageRejectedView document
 {-
  Here we need to save the document either under existing account or create a new account
  send invitation email and put the document in that account
@@ -264,7 +278,7 @@ landpageSignedSave documentid signatorylinkid = do
             Just user -> return user
      Just document2 <- update $ SaveDocumentForSignedUser documentid (userid user) signatorylinkid
      -- should redirect
-     renderFromBody ctx TopEmpty kontrakcja $ landpageLoginForSaveView ctx 
+     renderFromBody ctx TopEmpty kontrakcja $ landpageLoginForSaveView
 
 landpageSaved documentid signatorylinkid = do
   (ctx@Context { ctxmaybeuser = Just user@User{userid} }) <- get
