@@ -104,10 +104,16 @@ handleRoutes = do
      , dir "landpage" $ dir "saved"      $ hget2 $ DocControl.landpageSaved
            
      , dir "pagesofdoc" $ hget1 $ DocControl.handlePageOfDocument
-     , dir "account" $ UserControl.handleUser ctx
 
-     , dir "accepttos" $ hget0 $ UserControl.handleAcceptTOSGet ctx
-     , dir "accepttos" $ hpost0 $ UserControl.handleAcceptTOSPost ctx
+     -- UserControl
+     , dir "account"                    $ hget0  $ UserControl.handleUserGet
+     , dir "account"                    $ hpost0 $ UserControl.handleUserPost
+     , dir "account" $ dir "password"   $ hpost0 $ UserControl.handleUserPasswordPost
+     , dir "account" $ dir "subaccount" $ hget0  $ UserControl.handleGetSubaccount
+     , dir "account" $ dir "subaccount" $ hpost0 $ UserControl.handlePostSubaccount
+
+     , dir "accepttos" $ hget0  $ UserControl.handleAcceptTOSGet
+     , dir "accepttos" $ hpost0 $ UserControl.handleAcceptTOSPost
 
 
      -- super user only
