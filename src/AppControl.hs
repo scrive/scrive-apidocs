@@ -99,11 +99,8 @@ handleRoutes = do
 
      , dir "landpage" $ dir "signinvite" $ hget1 $ DocControl.landpageSignInvite
      , dir "landpage" $ dir "signed" $ hget2 $ DocControl.landpageSigned 
-     , dir "landpage" $ dir "rejected" $ pathdb GetDocumentByDocumentID $ \document -> path $ \signatorylinkid ->
-                                                                                       DocControl.landpageRejected ctx document signatorylinkid
-     , dir "landpage" $ dir "signedsave" $ pathdb GetDocumentByDocumentID $ \document -> 
-         path $ \signatorylinkid ->
-             DocControl.landpageSignedSave ctx document signatorylinkid
+     , dir "landpage" $ dir "rejected" $ hget2 $ DocControl.landpageRejected
+     , dir "landpage" $ dir "signedsave" $ hget2 $ DocControl.landpageSignedSave
      , dir "landpage" $ dir "saved" $ pathdb GetDocumentByDocumentID $ \document -> 
                    path $ \signatorylinkid ->
                        DocControl.landpageSaved ctx document signatorylinkid
