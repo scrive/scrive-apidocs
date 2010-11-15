@@ -132,8 +132,8 @@ handleRoutes = do
      , dir "adminonly" $ dir "alluserstable"     $ hget0  $ handleAllUsersTable
      , dir "adminonly" $ dir "skrivapausers.csv" $ hget0  $ getUsersDetailsToCSV
 
-     , dir "dave" $ dir "document" $ daveDocument
-     , dir "dave" $ dir "user"     $ daveUser
+     , dir "dave" $ dir "document" $ hget1 $ daveDocument
+     , dir "dave" $ dir "user"     $ hget1 $ daveUser
            
      -- account stuff
      , dir "logout"      $ hget0  $ handleLogout
@@ -468,15 +468,21 @@ onlySuperUserPost action = do
    then action
    else return LinkLogin
 
-daveDocument :: Kontra Response
-daveDocument = onlySuperUserGet $ do
+daveDocument :: DocumentID -> Kontra Response
+daveDocument documentid = onlySuperUserGet $ do
       ctx <- get
-      pathdb GetDocumentByDocumentID $ \document ->
+      mdocument <- query $ GetDocumentByDocumentID documentid
+      case mdocument of
+        Nothing -> mzero
+        Just document ->
           V.renderFromBody ctx V.TopNew V.kontrakcja $ inspectXML document
 
-daveUser :: Kontra Response
-daveUser = onlySuperUserGet $ do 
+daveUser :: UserID -> Kontra Response
+daveUser userid = onlySuperUserGet $ do 
       ctx <- get
-      pathdb GetUserByUserID $ \user ->
+      muser <- query $ GetUserByUserID userid
+      case muser of
+        Nothing -> mzero
+        Just user ->
           V.renderFromBody ctx V.TopNew V.kontrakcja $ inspectXML user
 
