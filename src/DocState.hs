@@ -1186,6 +1186,13 @@ fragileTakeOverDocuments destuserid srcuserid = do
   mapM_ takeover (IxSet.toList hisdocuments)
   return ()
 
+setDocumentStatus :: DocumentID -> DocumentStatus -> Update Documents (Maybe Document)
+setDocumentStatus docid status = do
+  doc <- modifyDocument docid (\d -> Right $ d { documentstatus = status }) 
+  case doc of
+    Left _ -> return Nothing
+    Right d -> return $ Just d
+
 
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocuments
@@ -1209,7 +1216,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'setDocumentTimeoutTime
                         , 'archiveDocuments
                         , 'timeoutDocument
-
+                        , 'setDocumentStatus
                           -- admin only area follows
                         , 'fragileTakeOverDocuments
                         ])

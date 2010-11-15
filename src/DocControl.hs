@@ -62,7 +62,13 @@ postDocumentChangeAction document@Document{documentstatus, documentsignatorylink
           threadDelay 5000 
           sendInvitationEmails ctx document
         return ()
-    | oldstatus == Pending && documentstatus == Closed = do
+    | oldstatus == Pending && documentstatus == AwaitingAuthor = do
+        ctx <- get
+        liftIO $ forkIO $ do
+          threadDelay 5000 
+          sendAwaitingEmail ctx document
+        return ()
+    | (oldstatus == Pending || oldstatus == AwaitingAuthor) && documentstatus == Closed = do
         ctx@Context{ctxnormalizeddocuments,ctxhostpart,ctxtime} <- get
         liftIO $ forkIO $ do
           Just user <- query $ GetUserByUserID (unAuthor (documentauthor document))
@@ -116,6 +122,21 @@ sendClosedEmail1 ctx document signatorylink = do
   mail <- mailDocumentClosedForSignatories ctx document signatorylink
   let attachmentcontent = filepdf $ head $ documentsealedfiles document
   sendMail $ mail { fullnameemails =  [(signatoryname,signatoryemail)] , attachments = [(documenttitle,attachmentcontent)]}
+
+sendAwaitingEmail :: Context -> Document -> IO ()
+sendAwaitingEmail ctx document = do
+  let authorid = unAuthor $ documentauthor document
+  Just authoruser <- query $ GetUserByUserID authorid
+  mail<- mailDocumentAwaitingForAuthor ctx (userfullname authoruser)
+             document
+  let email2 = signatoryemail $ documentauthordetails document
+      email1 = unEmail $ useremail authoruser
+      em = if email2/=BS.empty && email2/=email1
+           then [(name2,email2)]
+           else []
+      name1 = userfullname authoruser
+      name2 = signatoryname $ documentauthordetails document
+  sendMail $ mail { fullnameemails = ([(name1,email1)] ++ em) }
 
 sendClosedAuthorEmail :: Context -> Document -> IO ()
 sendClosedAuthorEmail ctx document = do
@@ -323,14 +344,37 @@ handleIssueShowPost docid = withUserPost $
      ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) <- get
  
      when (userid/=unAuthor documentauthor) mzero
-     doc2 <- updateDocument ctx document
-           
+
+     
+     -- something has to change here
+     case documentstatus document of
+       Preparation -> do
+                       doc2 <- updateDocument ctx document
+                       if documentstatus doc2 == Pending
+                        -- It went to pending, so it's been sent to signatories
+                        then return $ LinkSignInvite documentid
+                        -- otherwise it was just a save
+                        else do
+                          addFlashMsgHtml $ flashDocumentDraftSaved doc2
+                          return LinkIssue
+       AwaitingAuthor -> do 
+                          doc2 <- update $ SetDocumentStatus documentid Closed
+                          case doc2 of
+                            -- this should be impossible, but what should we do in this case?
+                            Nothing -> return LinkIssue
+                            Just d -> do 
+                                       postDocumentChangeAction d AwaitingAuthor Nothing
+                                       return LinkIssue
+       -- FIXME
+       _ -> mzero
+{-
      if (documentstatus doc2 == Pending &&
          documentstatus document /= Pending) 
       then return $ LinkSignInvite documentid
       else do 
         addFlashMsgHtml $ flashDocumentDraftSaved
         return LinkIssue
+-}
 
 handleIssueShowTitleGet :: DocumentID -> String -> Kontra Response
 handleIssueShowTitleGet docid _title = withUserGet $ checkUserTOSGet $

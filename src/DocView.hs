@@ -17,6 +17,7 @@ module DocView( emptyDetails
               , remindMail
               , flashRemindMailSent
               , mailDocumentRejectedForAuthor
+              , mailDocumentAwaitingForAuthor
               , landpageRejectedView
               , flashDocumentRejected
               , defaultInviteMessage 
@@ -187,6 +188,8 @@ oneDocumentRow crtime userid document@Document{ documentid
                       Pending  -> if seenstatus
                                   then "status_viewed.png"
                                   else "status_pending.png"
+                      -- question: what status icon to use?
+                      AwaitingAuthor -> "status_signed.png"
                       Closed -> "status_signed.png"
                       Canceled -> "status_rejected.png"
                       Timedout -> "status_timeout.png"
@@ -384,8 +387,8 @@ pageDocumentForAuthor ctx
             Loading pages . . .
        </div>
        <div id="edit-bar">
-
-        <% if documentstatus == Preparation
+        -- someone please refactor this. the then statement is so long I can't see the else!
+        <%if documentstatus == Preparation
            then 
              <span>
                <script type="text/javascript">
@@ -454,11 +457,24 @@ pageDocumentForAuthor ctx
                </span>
              </span>
            else
+               <span>
+               <% if documentstatus == Pending || documentstatus == AwaitingAuthor then
+                      <script type="text/javascript" language="Javascript" src="/js/showfields.js"> 
+                                  </script>
+                  else <span /> %>
+               <script type="text/javascript">
+                 <% "var docstate = " ++ (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks) ++ ";" %>
+               </script>
+               
               <div id="signatorylist">
                  <% showSignatoryLinkForSign ctx document authorlink %>
                  <% map (showSignatoryLinkForSign ctx document) allinvited 
                  %>
               </div>
+              <% if documentstatus == AwaitingAuthor
+                  then <form method="post" action=""><input class="bigbutton" type="submit" name="final" value="Underteckna" id="signinvite" /></form>
+                  else <span />%>
+              </span>
          %>
        </div>
       </div>

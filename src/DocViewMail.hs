@@ -8,7 +8,8 @@ module DocViewMail ( remindMail,
                      mailDocumentClosedForAuthor, 
                      mailDocumentClosedForSignatories,
                      mailInvitationToSign,
-                     mailInvitationToSignContent
+                     mailInvitationToSignContent,
+                     mailDocumentAwaitingForAuthor
            ) where
 import AppView
 import DocState
@@ -216,6 +217,21 @@ mailDocumentClosedForAuthor (Context {ctxhostpart}) authorname  document@Documen
              <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats 
                 av <% partyListString document %>. Avtalet är nu bindande.</p> 
              <p>Det färdigställda dokumentet bifogas med detta mail.</p> 
+             <% poweredBySkrivaPaPara ctxhostpart %>
+        </span> 
+     return $ emptyMail {title = title, content = content}
+
+mailDocumentAwaitingForAuthor :: Context -> BS.ByteString -> Document  -> IO Mail
+mailDocumentAwaitingForAuthor (Context {ctxhostpart}) authorname  document@Document{documenttitle} = 
+    -- FIXME: change to swedish
+    do
+     let title = BS.append (BS.fromString "Bekräftelse: ")  documenttitle 
+     content <- htmlHeadBodyWrapIO documenttitle
+        <span>
+          <p>Hej <strong><% authorname %></strong>,</p>
+             <p>Dokumentet <strong><% documenttitle %></strong> has been signed by all signatories. There were fields for the signatories to fill out. The contract is being held for your final review.  Please follow the link below to read and confirm the information for each signatory.</p>
+             <a href=(ctxhostpart ++ (show $ LinkIssueDoc document))><% documenttitle %></a>
+
              <% poweredBySkrivaPaPara ctxhostpart %>
         </span> 
      return $ emptyMail {title = title, content = content}
