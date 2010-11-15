@@ -11,11 +11,11 @@ import AppView
 import User
 import KontraLink
 import SendMail(Mail,emptyMail,title,content)
-import Control.Monad
 import qualified HSX.XMLGenerator
 
-showUser ctx@(Context {ctxmaybeuser = Just user}) = 
-    renderFromBody ctx TopAccount kontrakcja $ 
+
+showUser :: User -> HSP.HSP HSP.XML
+showUser user = 
     <div class="accounttable">
      <h1><% userfullname user %></h1>
       <div>
@@ -61,7 +61,6 @@ showUser ctx@(Context {ctxmaybeuser = Just user}) =
 
      </div>
     </div>
-showUser _ = mzero
 
 pageAcceptTOS :: Context -> BS.ByteString -> Kontra Response
 pageAcceptTOS ctx tostext = 
