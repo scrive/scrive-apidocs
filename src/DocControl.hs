@@ -229,8 +229,12 @@ signatoryLinkFromDocumentByID document@Document{documentsignatorylinks} linkid =
       _ -> mzero
     
 
-landpageSignInvite ctx document = do
-  renderFromBody ctx TopNone kontrakcja $ landpageSignInviteView ctx document
+landpageSignInvite documentid = do
+  ctx <- get
+  mdocument <- query $ GetDocumentByDocumentID documentid
+  case mdocument of
+    Nothing -> mzero
+    Just document -> renderFromBody ctx TopNone kontrakcja $ landpageSignInviteView ctx document
 
 landpageSigned ctx document signatorylinkid = do
   signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
@@ -811,9 +815,10 @@ handleIssueArchive = do
     return LinkIssue
 
 
-showPage :: MinutesTime -> FileID -> Int -> Kontra Response
-showPage modminutes fileid pageno = do
+showPage :: FileID -> Int -> Kontra Response
+showPage fileid pageno = do
   Context{ctxnormalizeddocuments} <- get
+  modminutes <- query $ FileModTime fileid
   docmap <- liftIO $ readMVar ctxnormalizeddocuments
   case Map.lookup fileid docmap of
     Just (JpegPages pages) -> do
