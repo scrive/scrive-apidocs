@@ -95,7 +95,7 @@ handleRoutes = do
 
      , dir "resend" $ hpost2 $ DocControl.handleResend
 
-     , dir "pages" $ hget2 $ DocControl.showPage
+     , dir "pages"  $ hget2  $ DocControl.showPage
 
      , dir "landpage" $ dir "signinvite" $ hget1 $ DocControl.landpageSignInvite
      , dir "landpage" $ dir "signed"     $ hget2 $ DocControl.landpageSigned 
@@ -103,9 +103,7 @@ handleRoutes = do
      , dir "landpage" $ dir "signedsave" $ hget2 $ DocControl.landpageSignedSave
      , dir "landpage" $ dir "saved"      $ hget2 $ DocControl.landpageSaved
            
-     , dir "pagesofdoc" $ 
-           pathdb GetDocumentByDocumentID $ \document -> 
-               DocControl.handlePageOfDocument document
+     , dir "pagesofdoc" $ hget1 $ DocControl.handlePageOfDocument
      , dir "account" $ UserControl.handleUser ctx
 
      , dir "accepttos" $ hget0 $ UserControl.handleAcceptTOSGet ctx
