@@ -246,29 +246,39 @@ landpageSigned documentid signatorylinkid = do
                    maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
                    renderFromBody ctx TopEmpty kontrakcja $ landpageSignedView ctx document signatorylink (isJust maybeuser)
 
-landpageRejected ctx document signatorylinkid = do
-  signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
-  maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
-  renderFromBody ctx TopEmpty kontrakcja $ landpageRejectedView ctx document signatorylink (isJust maybeuser)
+landpageRejected documentid signatorylinkid = do
+  ctx <- get
+  mdocument <- query $ GetDocumentByDocumentID documentid
+  case mdocument of
+    Nothing -> mzero
+    Just document -> do
+                   signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
+                   maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
+                   renderFromBody ctx TopEmpty kontrakcja $ landpageRejectedView ctx document signatorylink (isJust maybeuser)
 
 {-
  Here we need to save the document either under existing account or create a new account
  send invitation email and put the document in that account
 -}
-landpageSignedSave ctx@Context{ctxhostpart} document signatorylinkid = do
-  signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
-  let details = signatorydetails signatorylink
-  maybeuser <- query $ GetUserByEmail (Email $ signatoryemail details)
-  let fullname = signatoryname details
-  user <- case maybeuser of
+landpageSignedSave documentid signatorylinkid = do
+  ctx@Context{ctxhostpart} <- get
+  mdocument <- query $ GetDocumentByDocumentID documentid
+  case mdocument of
+    Nothing -> mzero
+    Just document -> do
+     signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
+     let details = signatorydetails signatorylink
+     maybeuser <- query $ GetUserByEmail (Email $ signatoryemail details)
+     let fullname = signatoryname details
+     user <- case maybeuser of
             Nothing -> do 
               let email = signatoryemail details
               user <- liftIO $ createUser ctxhostpart fullname email Nothing Nothing
               return user
             Just user -> return user
-  Just document2 <- update $ SaveDocumentForSignedUser (documentid document) (userid user) signatorylinkid
-  -- should redirect
-  renderFromBody ctx TopEmpty kontrakcja $ landpageLoginForSaveView ctx 
+     Just document2 <- update $ SaveDocumentForSignedUser documentid (userid user) signatorylinkid
+     -- should redirect
+     renderFromBody ctx TopEmpty kontrakcja $ landpageLoginForSaveView ctx 
 
 landpageSaved (ctx@Context { ctxmaybeuser = Just user@User{userid} }) 
               document@Document{documentid}
