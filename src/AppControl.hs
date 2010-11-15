@@ -64,10 +64,8 @@ import qualified Data.Map as Map
    the function for any given path and method.
 -}
 handleRoutes :: Kontra Response
-handleRoutes = do
-   ctx@Context{ctxmaybeuser,ctxnormalizeddocuments} <- get 
-   msum $
-     [ hget0 $ handleHomepage
+handleRoutes = msum [
+       hget0 $ handleHomepage
 
      , dir "s" $ hget0  $ DocControl.handleSTable
      , dir "s" $ hget3  $ DocControl.handleSignShow
@@ -148,7 +146,9 @@ handleRoutes = do
      
      -- static files
      , serveHTMLFiles
-     , fileServe [] "public"]
+     , fileServe [] "public"
+
+               ]
 
 {-
 
