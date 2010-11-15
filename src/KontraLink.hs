@@ -47,6 +47,11 @@ data KontraLink
     | LinkSignInvite DocumentID
     | LinkAcceptTOS
 
+
+    | LinkAdminOnly
+    | LinkAdminOnlyIndexDB
+    | LinkStats
+
 instance Show KontraLink where
     showsPrec _ LinkAbout = (++) "/about"
     showsPrec _ LinkLogin = (++) "/login"
@@ -74,6 +79,9 @@ instance Show KontraLink where
     showsPrec _ (LinkSigned documentid signatorylinkid) = (++) $ "/landpage/signed/" ++ show documentid ++ "/" ++ show signatorylinkid
     showsPrec _ (LinkRejected documentid signatorylinkid) = (++) $ "/landpage/rejected/" ++ show documentid ++ "/" ++ show signatorylinkid
     showsPrec _ (LinkSignInvite documentid) = (++) $ "/landpage/signinvite/" ++ show documentid ++ "/"
+    showsPrec _ LinkAdminOnly = (++) $ "/adminonly/"
+    showsPrec _ LinkAdminOnlyIndexDB = (++) $ "/adminonly/db"
+    showsPrec _ LinkStats = (++) $ "/stats"
 
 {-
 instance (EmbedAsAttr m String) => (EmbedAsAttr m KontraLink) where
