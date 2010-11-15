@@ -611,19 +611,23 @@ maybeScheduleRendering mvar
                 modifyMVar_ mvar (\setoffilesrenderednow -> return (Map.insert fileid jpegpages setoffilesrenderednow))
            return (Map.insert fileid JpegPagesPending setoffilesrenderednow, JpegPagesPending)
 
-handlePageOfDocument :: Document -> Kontra Response
-handlePageOfDocument document@Document {documentfiles,documentsealedfiles,documentstatus,documentid} = do
-    Context{ctxnormalizeddocuments} <- get
-    let pending JpegPagesPending = True
-        pending _ = False
-        files = if documentstatus == Closed
-                then documentsealedfiles
-                else documentfiles
-    case files of
-      [] -> notFound (toResponse "temporary unavailable (document has no files)")
-      f -> do
-        b <- mapM (\file -> liftIO $ maybeScheduleRendering ctxnormalizeddocuments file) f
-        if any pending b
+handlePageOfDocument :: DocumentID -> Kontra Response
+handlePageOfDocument documentid = do
+  mdocument <- query $ GetDocumentByDocumentID documentid
+  case mdocument of
+    Nothing -> mzero
+    Just document@Document {documentfiles,documentsealedfiles,documentstatus,documentid} -> do
+      Context{ctxnormalizeddocuments} <- get
+      let pending JpegPagesPending = True
+          pending _                = False
+          files                    = if documentstatus == Closed
+                                      then documentsealedfiles
+                                      else documentfiles
+      case files of
+        [] -> notFound (toResponse "temporary unavailable (document has no files)")
+        f  -> do
+          b <- mapM (\file -> liftIO $ maybeScheduleRendering ctxnormalizeddocuments file) f
+          if any pending b
            then notFound (toResponse "temporary unavailable (document has files pending for process)")
            else webHSP (DocView.showFilesImages2 $ zip f b)
     
