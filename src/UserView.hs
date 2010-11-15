@@ -35,8 +35,7 @@ instance Monad m => IsAttrValue m UserID where
     toAttrValue = toAttrValue . show
 
 
-showUser ctx@(Context {ctxmaybeuser = Just user}) = 
-    renderFromBody ctx TopAccount kontrakcja $ 
+showUser user = 
     <div class="accounttable">
      <h1><% userfullname user %></h1>
       <div>

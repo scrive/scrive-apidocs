@@ -34,19 +34,9 @@ import qualified Data.Set as Set
 import qualified HSP
 
 
-handleUser :: Context -> Kontra Response
-handleUser ctx = withUserGet $
-    msum 
-    [ methodM GET >> showUser ctx
-    , methodM POST >> handleUserPost ctx
-    , dir "password" $ handleUserPasswordPost ctx
-    , dir "subaccount" $ msum [ methodM GET  >> handleGetSubaccount ctx 
-                              , methodM POST >> handlePostSubaccount ctx
-                              ]
-    ]
-
-handleUserPasswordPost :: Context -> Kontra Response
-handleUserPasswordPost ctx@Context{ctxmaybeuser = Just user@User{userid}} = do
+handleUserPasswordPost :: Kontra KontraLink
+handleUserPasswordPost = do
+  ctx@Context{ctxmaybeuser = Just user@User{userid}} <- get
   oldpassword <- g "oldpassword"
   password <- g "password"
   password2 <- g "password2"
@@ -66,11 +56,16 @@ handleUserPasswordPost ctx@Context{ctxmaybeuser = Just user@User{userid}} = do
           addFlashMsgText $ BS.fromString "Du har skrivit in fel nuvarande lösenord"
     else
       addFlashMsgText $ BS.fromString "Nytt lösenord matchar inte med upprepa lösenord"
-  backToAccount
+  return LinkAccount
 
+handleUserGet :: Kontra Response
+handleUserGet = do
+  ctx@(Context {ctxmaybeuser = Just user}) <- get
+  renderFromBody ctx TopAccount kontrakcja $ showUser user
 
-handleUserPost :: Context -> Kontra Response
-handleUserPost ctx@Context{ctxmaybeuser = Just user@User{userid},ctxtime} = do
+handleUserPost :: Kontra KontraLink
+handleUserPost = do
+  ctx@Context{ctxmaybeuser = Just user@User{userid},ctxtime} <- get
   fullname <- g "fullname"
   companyname <- g "companyname"
   companynumber <- g "companynumber"
@@ -79,43 +74,38 @@ handleUserPost ctx@Context{ctxmaybeuser = Just user@User{userid},ctxtime} = do
   newuser <- update $ SetUserDetails userid fullname companyname companynumber invoiceaddress
   addFlashMsgHtml userDetailsSavedFlashMessage
 
-  backToAccount
+  return LinkAccount
 
 
-backToAccount :: Kontra Response
-backToAccount = do
-  let link = show LinkAccount
-  response <- webHSP (seeOtherXML link)
-  seeOther link response
-
-
-handleGetSubaccount :: Context -> Kontra Response
-handleGetSubaccount ctx@Context { ctxmaybeuser = Just user@User { userid } }  = do
+handleGetSubaccount :: Kontra Response
+handleGetSubaccount = do
+  ctx@Context { ctxmaybeuser = Just user@User { userid } } <- get
   subaccounts <- query $ GetUserSubaccounts userid
   viewSubaccounts ctx (Set.toList subaccounts)
 
-handlePostSubaccount :: Context -> Kontra Response
-handlePostSubaccount ctx@Context { ctxmaybeuser = Just (user@User { userid }), ctxhostpart } = do
+handlePostSubaccount :: Kontra KontraLink
+handlePostSubaccount = do
+  ctx@Context { ctxmaybeuser = Just (user@User { userid }), ctxhostpart } <- get
   create <- getDataFn (look "create")
   remove <- getDataFn (look "remove")
   case (create, remove) of
       (Just _, _) -> handleCreateSubaccount ctx
       (_, Just _) -> handleRemoveSubaccounts ctx
-      _ -> backToSubaccount
+      _ -> return LinkSubaccount
 
-handleCreateSubaccount :: Context -> Kontra Response
+handleCreateSubaccount :: Context -> Kontra KontraLink
 handleCreateSubaccount ctx@Context { ctxmaybeuser = Just (user@User { userid }), ctxhostpart } = do
   fullname <- g "fullname"
   email <- g "email"
   user <- liftIO $ createUser ctxhostpart fullname email Nothing (Just user)
-  backToSubaccount
+  return LinkSubaccount
 
-handleRemoveSubaccounts :: Context -> Kontra Response
+handleRemoveSubaccounts :: Context -> Kontra KontraLink
 handleRemoveSubaccounts ctx@Context { ctxmaybeuser = Just (user@User { userid }), ctxhostpart } = do
   subidstrings <- getDataFnM (lookInputList "doccheck")
   let Just subids = sequence $ map (readM . LS.toString) subidstrings
   removed <- liftIO $ removeSubaccounts userid subids
-  backToSubaccount
+  return LinkSubaccount
 
 removeSubaccounts :: UserID -> [UserID] -> IO ()
 removeSubaccounts _ [] = return ()
@@ -127,12 +117,6 @@ removeSubaccount userid subId = do
   takeover <- update $ FragileTakeOverDocuments userid subId
   maybeuser <- update $ FragileDeleteUser subId
   return ()
-
-backToSubaccount :: Kontra Response
-backToSubaccount = do
-  let link = show LinkSubaccount
-  response <- webHSP (seeOtherXML link)
-  seeOther link response
 
 randomPassword :: IO BS.ByteString
 randomPassword = do
@@ -210,13 +194,14 @@ checkUserTOSGet action =
       Nothing -> sendRedirect LinkAcceptTOS
       Just _  -> action
 
-handleAcceptTOSGet ctx = 
-    withUserGet $ do
+handleAcceptTOSGet = withUserGet $ do
+      ctx <- get
       tostext <- liftIO $ BS.readFile $ "html/termsofuse.html"
       pageAcceptTOS ctx tostext
 
-handleAcceptTOSPost :: Context -> Kontra KontraLink
-handleAcceptTOSPost ctx@Context{ctxmaybeuser = Just user@User{userid},ctxtime} = do
+handleAcceptTOSPost :: Kontra KontraLink
+handleAcceptTOSPost = do
+  ctx@Context{ctxmaybeuser = Just user@User{userid},ctxtime} <- get
   tos <- getDataFn' (look "tos")
   
   if isJust tos
