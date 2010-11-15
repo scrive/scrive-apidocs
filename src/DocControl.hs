@@ -236,10 +236,15 @@ landpageSignInvite documentid = do
     Nothing -> mzero
     Just document -> renderFromBody ctx TopNone kontrakcja $ landpageSignInviteView ctx document
 
-landpageSigned ctx document signatorylinkid = do
-  signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
-  maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
-  renderFromBody ctx TopEmpty kontrakcja $ landpageSignedView ctx document signatorylink (isJust maybeuser)
+landpageSigned documentid signatorylinkid = do
+  ctx <- get
+  mdocument <- query $ GetDocumentByDocumentID documentid
+  case mdocument of
+    Nothing -> mzero
+    Just document -> do
+                   signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
+                   maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
+                   renderFromBody ctx TopEmpty kontrakcja $ landpageSignedView ctx document signatorylink (isJust maybeuser)
 
 landpageRejected ctx document signatorylinkid = do
   signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
