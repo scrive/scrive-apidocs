@@ -280,12 +280,15 @@ landpageSignedSave documentid signatorylinkid = do
      -- should redirect
      renderFromBody ctx TopEmpty kontrakcja $ landpageLoginForSaveView ctx 
 
-landpageSaved (ctx@Context { ctxmaybeuser = Just user@User{userid} }) 
-              document@Document{documentid}
-              signatorylinkid = do
-  Just document2 <- update $ SaveDocumentForSignedUser documentid userid signatorylinkid
-  signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
-  renderFromBody ctx TopDocument kontrakcja $ landpageDocumentSavedView
+landpageSaved documentid signatorylinkid = do
+  (ctx@Context { ctxmaybeuser = Just user@User{userid} }) <- get
+  mdocument <- query $ GetDocumentByDocumentID documentid
+  case mdocument of
+    Nothing -> mzero
+    Just document -> do
+                   Just document2 <- update $ SaveDocumentForSignedUser documentid userid signatorylinkid
+                   signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
+                   renderFromBody ctx TopDocument kontrakcja $ landpageDocumentSavedView
 
 handleSignPost :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra KontraLink
 handleSignPost documentid 
