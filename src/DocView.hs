@@ -181,7 +181,7 @@ oneDocumentRow crtime userid document@Document{ documentid
                       Canceled -> "status_rejected.png"
                       Timedout -> "status_timeout.png"
                       Rejected -> "status_rejected.png"
-                      AwaitingAuthor ->  "status_pending.png" --TODO: use bettter image
+
         dateDiffInDays (MinutesTime ctime) (MinutesTime mtime)
                        | ctime>mtime = 0
                        | otherwise = (mtime - ctime) `div` (60*24)
