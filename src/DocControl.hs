@@ -40,6 +40,8 @@ import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Seal as Seal
+import qualified Network.AWS.Authentication as AWS
+import qualified Network.HTTP as HTTP
 
 
 {-
@@ -547,12 +549,28 @@ gs = "c:\\Program Files\\gs\\gs8.60\\bin\\gswin32c.exe"
 gs = "gs"
 #endif
 
-convertPdfToJpgPages :: FileID ->BS.ByteString ->IO JpegPages
-convertPdfToJpgPages fileid content = do
+awsUrlFromFile :: File -> String
+awsUrlFromFile File{filename,fileid} =
+    "/skrivapa-test/" ++ show fileid ++ "/" ++ BS.toString filename
+
+convertPdfToJpgPages :: Context
+                     -> File
+                     -> IO JpegPages
+convertPdfToJpgPages Context{ctxs3action} file@File{fileid,filestoragemode,filename} = do
   tmppath1 <- getTemporaryDirectory
   let tmppath = tmppath1 ++ "/" ++ show fileid
   createDirectoryIfMissing True tmppath
   let sourcepath = tmppath ++ "/source.pdf"
+  content <- case filestoragemode of
+               FileStorageLocal -> return $ filepdf file
+               FileStorageAWS -> do
+                 let url = awsUrlFromFile file
+                 result <- AWS.runAction (ctxs3action { AWS.s3object = url })
+                 case result of
+                   Right rsp -> return (concatChunks (HTTP.rspBody rsp))
+                   _ -> error (show result)
+
+
   BS.writeFile sourcepath content
 
   let gsproc = (proc gs [ "-sDEVICE=jpeg" 
@@ -595,11 +613,11 @@ convertPdfToJpgPages fileid content = do
   return result
        
 
-maybeScheduleRendering :: MVar (Map.Map FileID JpegPages) -> File -> IO JpegPages
-maybeScheduleRendering mvar 
-                       (file@File { fileid
-                                  , filepdf 
-                                  }) = do
+maybeScheduleRendering :: Context 
+                       -> File
+                       -> IO JpegPages
+maybeScheduleRendering ctx@Context{ ctxnormalizeddocuments = mvar }
+                       (file@File { fileid }) = do
   modifyMVar mvar $ \setoffilesrenderednow ->
       case Map.lookup fileid setoffilesrenderednow of
          Just pages -> return (setoffilesrenderednow, pages)
@@ -607,7 +625,7 @@ maybeScheduleRendering mvar
            forkIO $ do
                 -- putStrLn $ "Rendering " ++ show fileid
                 -- FIXME: handle exceptions gracefully
-                jpegpages <- convertPdfToJpgPages fileid filepdf
+                jpegpages <- convertPdfToJpgPages ctx file
                 modifyMVar_ mvar (\setoffilesrenderednow -> return (Map.insert fileid jpegpages setoffilesrenderednow))
            return (Map.insert fileid JpegPagesPending setoffilesrenderednow, JpegPagesPending)
 
@@ -617,7 +635,7 @@ handlePageOfDocument documentid = do
   case mdocument of
     Nothing -> mzero
     Just document@Document {documentfiles,documentsealedfiles,documentstatus,documentid} -> do
-      Context{ctxnormalizeddocuments} <- get
+      ctx@Context{ctxnormalizeddocuments} <- get
       let pending JpegPagesPending = True
           pending _                = False
           files                    = if documentstatus == Closed
@@ -626,7 +644,7 @@ handlePageOfDocument documentid = do
       case files of
         [] -> notFound (toResponse "temporary unavailable (document has no files)")
         f  -> do
-          b <- mapM (\file -> liftIO $ maybeScheduleRendering ctxnormalizeddocuments file) f
+          b <- mapM (\file -> liftIO $ maybeScheduleRendering ctx file) f
           if any pending b
            then notFound (toResponse "temporary unavailable (document has files pending for process)")
            else webHSP (DocView.showFilesImages2 $ zip f b)

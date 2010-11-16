@@ -43,6 +43,10 @@ import qualified Data.Map as Map
 import HSP.XML
 import Data.Object.Json as Json
 import Data.Object as Json
+import qualified Network.AWS.Authentication as AWS
+
+
+
 
 instance Monad m => IsAttrValue m DocumentID where
     toAttrValue = toAttrValue . show
@@ -113,6 +117,7 @@ data Context = Context
     , ctxtime                :: MinutesTime
     , ctxnormalizeddocuments :: MVar (Map.Map FileID JpegPages)
     , ctxipnumber            :: Word32
+    , ctxs3action            :: AWS.S3Action
     }
 
 type Kontra a = ServerPartT (StateT Context IO) a
