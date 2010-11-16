@@ -310,6 +310,7 @@ function docstateToHTML(){
 	setSigID(cfield, currentsig.id);
 	setHiddenField(cfield, "fieldname", "sigco");
 	fields.append(cfield);
+	updateStatus(cfield);
     }
 
     if(currentsig.number.length === 0 && currentsig.numberplacements.length > 0) {
@@ -318,6 +319,7 @@ function docstateToHTML(){
 	setSigID(nfield, currentsig.id);
 	setHiddenField(nfield, "fieldname", "signr");
 	fields.append(nfield);
+	updateStatus(nfield);
     }
 
     $(currentsig.otherfields).each(function () {
@@ -328,6 +330,7 @@ function docstateToHTML(){
 		setSigID(ofield, currentsig.id);
 		setHiddenField(ofield, "fieldname", f.label);
 		fields.append(ofield);
+		updateStatus(ofield);
 	    }
 	});
 }

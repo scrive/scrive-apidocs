@@ -561,8 +561,9 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document siglnk@(
                 %>
               </div>
 
-displayField field@FieldDefinition {fieldlabel, fieldvalue} =
-    <div><span class="fieldlabel"><% fieldlabel %>: </span><span class="fieldvalue"><% fieldvalue %></span></div>
+displayField field@FieldDefinition {fieldlabel, fieldvalue} 
+    | fieldvalue == BS.fromString "" = <span />
+    | otherwise        = <div><span class="fieldlabel"><% fieldlabel %>: </span><span class="fieldvalue"><% fieldvalue %></span></div>
 
 pageDocumentForSign :: ( Monad m) =>
                        KontraLink 

@@ -303,15 +303,20 @@ $(document).ready( function () {
 function authorFieldsValidation(){
 
     var remainingAuthFields = false;
-	 
+    var remainingDragFields = false;
     $(".dragfield").each(function(){
 	    var field = $(this);
-	    var s = getIcon(field);
-	    if(s == 'athr') {
+	    var s = getFillStatus(field);
+	    var ds = getDragStatus(field);
+	    if(s == 'author') {
 		remainingAuthFields = true;
+	    }
+	    if(ds == 'must place'){
+		remainingDragFields = true;
 	    }
 	});
     var emptyMsg = "Please fill out all of the required fields.";
+    var dragMsg = "Please drag all of the custom fields onto the document.";
     if(remainingAuthFields){
 	var $dialog = $('<div></div>')
 	    .html(emptyMsg)
@@ -322,8 +327,18 @@ function authorFieldsValidation(){
 		});
 	$dialog.dialog('open');
 	return false;
-    }	
-    return !remainingAuthFields;
+    } else if(remainingDragFields){
+	var $dialog = $('<div></div>')
+	    .html(dragMsg)
+	    .dialog({
+		    autoOpen: false,
+		    title: 'Required fields',
+		    modal: true
+		});
+	$dialog.dialog('open');
+	return false;
+    }
+    return true;
 }
 
 function sigFieldsValidation(){
