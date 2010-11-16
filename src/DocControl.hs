@@ -74,7 +74,7 @@ postDocumentChangeAction document@Document{documentstatus, documentsignatorylink
         ctx@Context{ctxnormalizeddocuments,ctxhostpart,ctxtime} <- get
         liftIO $ forkIO $ do
           Just user <- query $ GetUserByUserID (unAuthor (documentauthor document))
-          newdoc <- sealDocument ctxnormalizeddocuments ctxhostpart ctxtime user document
+          newdoc <- sealDocument ctx ctxnormalizeddocuments ctxhostpart ctxtime user document
           sendClosedEmails ctx newdoc
         return ()
     | oldstatus == Pending && documentstatus == Rejected = do
@@ -551,7 +551,7 @@ gs = "gs"
 
 awsUrlFromFile :: File -> String
 awsUrlFromFile File{filename,fileid} =
-    "/skrivapa-test/" ++ show fileid ++ "/" ++ BS.toString filename
+    "/" ++ show fileid ++ "/" ++ BS.toString filename
 
 convertPdfToJpgPages :: Context
                      -> File
@@ -649,9 +649,15 @@ handlePageOfDocument documentid = do
            then notFound (toResponse "temporary unavailable (document has files pending for process)")
            else webHSP (DocView.showFilesImages2 $ zip f b)
     
-handleDocumentUpload :: DocumentID -> BS.ByteString -> BS.ByteString -> IO ()
+handleDocumentUpload :: DocumentID -> BS.ByteString -> BS.ByteString -> Kontra ()
 handleDocumentUpload docid content filename = do
-  update $ AttachFile docid filename content
+  ctx <- get
+  result <- update $ AttachFile docid filename content
+  case result of
+    Left err -> return ()
+    Right document -> do
+        liftIO $ forkIO $ mapM_ (amazonUploadFile ctx) (documentfiles document)
+        return ()
   return ()
 
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
@@ -788,8 +794,19 @@ sealSpecFromDocument hostpart document author@(User {userfullname,usercompanynam
       in config
 
 
-sealDocument :: MVar (Map.Map FileID JpegPages) -> String -> MinutesTime -> User -> Document -> IO Document
-sealDocument normalizemap hostpart signtime1 author@(User {userfullname,usercompanyname,usercompanynumber,useremail}) document = do
+sealDocument :: Context 
+             -> MVar (Map.Map FileID JpegPages)
+             -> String
+             -> MinutesTime
+             -> User
+             -> Document
+             -> IO Document
+sealDocument ctx
+             normalizemap 
+             hostpart
+             signtime1
+             author@(User {userfullname,usercompanyname,usercompanynumber,useremail})
+             document = do
   let (file@File {fileid,filename,filepdf}) = 
            safehead "sealDocument" $ documentfiles document
   let docid = documentid document
@@ -808,7 +825,9 @@ sealDocument normalizemap hostpart signtime1 author@(User {userfullname,usercomp
   newfilepdf <- BS.readFile tmpout
   mdocument <- update $ AttachSealedFile docid filename newfilepdf
   case mdocument of
-    Right document -> return document
+    Right document -> do
+        forkIO $ mapM_ (amazonUploadFile ctx) (documentsealedfiles document)
+        return document
     Left msg -> error msg
   -- let newfile = file {filepdf = newfilepdf}
   -- modifyMVar_ normalizemap (\themap -> return $ Map.delete fileid themap)
@@ -841,7 +860,7 @@ handleIssueNewDocument = withUserPost $ do
           freeleft <- freeLeftForUser user
           doc <- update $ NewDocument user title ctxtime (freeleft>0)
           liftIO $ print (useremail user, documentid doc,title)
-          liftIO $ forkIO $ handleDocumentUpload (documentid doc) (concatChunks content) title
+          handleDocumentUpload (documentid doc) (concatChunks content) title
           return $ LinkIssueDoc doc
 
 
@@ -901,3 +920,16 @@ handleResend docid signlinkid  =
                                    return (LinkIssueDoc doc)
                                  Nothing -> mzero           
                        Nothing -> mzero               
+
+amazonUploadFile ctx@Context{ctxs3action} file = do
+  let action = ctxs3action { AWS.s3object = awsUrlFromFile file
+                           , AWS.s3operation = HTTP.PUT
+                           , AWS.s3body = BSL.fromChunks [filepdf file]
+                           }
+  print ("Uploading AWS", filename file)
+  result <- AWS.runAction action
+  case result of
+    Right _ -> return ()
+    -- FIXME: do much better error handling
+    Left err -> print err >> return ()
+  
