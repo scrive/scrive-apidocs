@@ -23,7 +23,6 @@ import Happstack.Data.IxSet ((@=),getOne,size)
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.Server.HSP.HTML (webHSP)
 import Happstack.Server.HTTP.FileServe
-import Happstack.Server.SimpleHTTP (seeOther)
 import Happstack.State (update,query)
 import Happstack.Util.Common
 import InspectXML

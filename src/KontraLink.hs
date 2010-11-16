@@ -1,6 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -F -pgmFtrhsx #-}
-module KontraLink(KontraLink(..), hpost0, hpost1, hpost2, hpost3, hpost4, seeOtherXML, sendRedirect ) where
+module KontraLink(KontraLink(..), hpost0, hpost1, hpost2, hpost3, hpost4, sendRedirect ) where
 
 import UserState
 import DocState
@@ -100,28 +100,23 @@ instance Monad m => IsAttrValue m KontraLink where
 
 hpost0 action = methodM POST >> do
                   (link :: KontraLink) <- action
-                  response <- webHSP (seeOtherXML $ show link)
-                  seeOther (show link) response
+                  sendRedirect link
 
 hpost1 action = path $ \a1 -> methodM POST >>  do
                   (link :: KontraLink) <- action a1
-                  response <- webHSP (seeOtherXML $ show link)
-                  seeOther (show link) response
+                  sendRedirect link
 
 hpost2 action = path $ \a1 -> path $ \a2 -> methodM POST >>  do
                   (link :: KontraLink) <- action a1 a2
-                  response <- webHSP (seeOtherXML $ show link)
-                  seeOther (show link) response
+                  sendRedirect link
 
 hpost3 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> methodM POST >>  do
                   (link :: KontraLink) <- action a1 a2 a3
-                  response <- webHSP (seeOtherXML $ show link)
-                  seeOther (show link) response
+                  sendRedirect link
 
 hpost4 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> path $ \a4 -> methodM POST >>  do
                   (link :: KontraLink) <- action a1 a2 a3 a4
-                  response <- webHSP (seeOtherXML $ show link)
-                  seeOther (show link) response
+                  sendRedirect link
 
 --sendRedirect :: KontraLink -> Kontra Response
 sendRedirect link = do  
