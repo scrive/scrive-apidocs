@@ -155,7 +155,6 @@ function isStandardField(field) {
 
 function getValue(field) {
     if(isDraggableField(field)) {
-	console.log("here");
 	var s = $(field).find("input[type='text'], input[type='email']");
 	if(s.size()) {
 	    if(s.attr("value") == s.attr("infotext")) {
@@ -269,9 +268,9 @@ function setInfotext(field, infotext) {
 }
 
 function buildDraggableField(info, val, type, emailp) {
-    var x = $("<div class='dragfield'><span class='draghandle ui-icon ui-icon-arrowthick-1-w'>drag</span><input type='text' autocomplete='off' /><span class='status'></span></div>");
+    var x = $("<div class='dragfield'><span class='draghandle ui-icon ui-icon-arrowthick-1-w'>drag</span><input type='text' autocomplete='off' /><span class='dragstatus'></span> <span class='fillstatus'></span></div>");
     if(emailp) {
-	x = $("<div class='dragfield'><span class='draghandle ui-icon ui-icon-arrowthick-1-w'>drag</span><input type='email' autocomplete='off' /><span class='status'></span></div>");
+	x = $("<div class='dragfield'><span class='draghandle ui-icon ui-icon-arrowthick-1-w'>drag</span><input type='email' autocomplete='off' /><span class='dragstatus'></span> <span class='fillstatus'></span></div>");
     }
 
 
@@ -407,18 +406,35 @@ function docstateToHTML(){
 	});
 }
 
-function getIcon(field){
+function getDragStatus(field){
     if(isDraggableField(field)){
-	return getHiddenValue(field, "status");
+	return getHiddenValue(field, "dragstatus");
     } else if(debug) {
 	console.log(getFieldType(field) + " does not have an icon, cannot get");
     }
     return "";
 }
 
-function setIcon(field, status) {
+function getFillStatus(field){
+    if(isDraggableField(field)){
+	return getHiddenValue(field, "fillstatus");
+    } else if(debug) {
+	console.log(getFieldType(field) + " does not have an icon, cannot get");
+    }
+    return "";
+}
+
+function setDragStatus(field, status) {
     if(isDraggableField(field)) {
-	setHiddenValue(field, "status", status);
+	setHiddenValue(field, "dragstatus", status);
+    } else if(debug) {
+	console.log(getFieldType(field) + " does not have an icon, cannot set");
+    }
+}
+
+function setFillStatus(field, status) {
+    if(isDraggableField(field)) {
+	setHiddenValue(field, "fillstatus", status);
     } else if(debug) {
 	console.log(getFieldType(field) + " does not have an icon, cannot set");
     }
@@ -478,21 +494,33 @@ function updateStatus(field) {
     field = $(field);
     var type = getFieldType(field);
     if(type == "author") {
-	if(getValue(field)) {
-	    setIcon(field, "done");
+	if(getPlacedFieldsForField(field).size()){
+	    setDragStatus(field, "placed");
 	} else {
-	    setIcon(field, "athr");
+	    setDragStatus(field, "not placed");
+	}
+	if(getValue(field)) {
+	    setFillStatus(field, "filled");
+	} else {
+	    setFillStatus(field, "author");
 	}
     } else if(type == "sig") {
+	if(getPlacedFieldsForField(field).size()){
+	    setDragStatus(field, "placed");
+	} else if(isStandardField(field)) {
+	    setDragStatus(field, "not placed");
+	} else {
+	    setDragStatus(field, "must place");
+	}
 	if(getValue(field)) {
 	    // it's a signatory field, but it's filled out
-	    setIcon(field, "done");
+	    setFillStatus(field, "done");
 	} else if(getPlacedFieldsForField(field).size()) {
 	    // if it's placed
-	    setIcon(field, "sig");
+	    setFillStatus(field, "sig");
 	} else {
 	    // not placed, so won't send
-	    setIcon(field, "none");
+	    setFillStatus(field, "sig");
 	}
     } else if(type == "text") {
 	// do nothing
