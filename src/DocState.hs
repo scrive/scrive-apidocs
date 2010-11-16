@@ -15,6 +15,7 @@ module DocState
     , FieldPlacement(..)
     , File(..)
     , FileID(..)
+    , FileStorageMode(..)
     , JpegPages(..)
     , SignInfo(..)
     , Signatory(..)
@@ -340,10 +341,11 @@ $(deriveAll [''Default]
 
           -- we really should keep history here so we know what happened
           }
-      data File = File 
-          { fileid       :: FileID
-          , filename     :: BS.ByteString
-          , filepdf      :: BS.ByteString 
+      data File0 = File0 
+          { fileid0       :: FileID
+          , filename0     :: BS.ByteString
+          , filepdf0      :: BS.ByteString 
+          , filejpgpages0 :: [BS.ByteString]
           }
       data File1 = File1 
           { fileid1       :: FileID
@@ -351,17 +353,24 @@ $(deriveAll [''Default]
           , filepdf1      :: BS.ByteString 
           , filejpgpages1 :: JpegPages
           }
-      data File0 = File0 
-          { fileid0       :: FileID
-          , filename0     :: BS.ByteString
-          , filepdf0      :: BS.ByteString 
-          , filejpgpages0 :: [BS.ByteString]
+      data File2 = File2 
+          { fileid2       :: FileID
+          , filename2     :: BS.ByteString
+          , filepdf2      :: BS.ByteString 
+          }
+      data File = File 
+          { fileid          :: FileID
+          , filename        :: BS.ByteString
+          , filepdf         :: BS.ByteString 
+          , filestoragemode :: FileStorageMode
           }
 
       data JpegPages = JpegPagesPending
                      | JpegPages [BS.ByteString]    -- FIXME: add width and height to each one
                      | JpegPagesError BS.ByteString -- normalization error with whole log from normalizer
-
+                       
+      data FileStorageMode = FileStorageLocal
+                           | FileStorageAWS
    |])
 
 instance Eq Document where
@@ -866,14 +875,6 @@ instance Version ChargeMode where
 $(deriveSerialize ''File0)
 instance Version File0 where
 
-$(deriveSerialize ''File1)
-instance Version File1 where
-    mode = extension 1 (Proxy :: Proxy File0)
-
-$(deriveSerialize ''File)
-instance Version File where
-    mode = extension 2 (Proxy :: Proxy File1)
-
 instance Migrate File0 File1 where
     migrate (File0 
              { fileid0
@@ -887,17 +888,43 @@ instance Migrate File0 File1 where
                 , filejpgpages1 = JpegPages filejpgpages0
                 }
 
-instance Migrate File1 File where
+$(deriveSerialize ''File1)
+instance Version File1 where
+    mode = extension 1 (Proxy :: Proxy File0)
+
+instance Migrate File1 File2 where
     migrate (File1 
                 { fileid1
                 , filename1
                 , filepdf1
-                }) = File 
-                { fileid = fileid1
-                , filename = filename1
-                , filepdf = filepdf1
+                }) = File2 
+                { fileid2 = fileid1
+                , filename2 = filename1
+                , filepdf2 = filepdf1
                 }
 
+$(deriveSerialize ''File2)
+instance Version File2 where
+    mode = extension 2 (Proxy :: Proxy File1)
+
+instance Migrate File2 File where
+    migrate (File2
+                { fileid2
+                , filename2
+                , filepdf2
+                }) = File 
+                { fileid = fileid2
+                , filename = filename2
+                , filepdf = filepdf2
+                , filestoragemode = FileStorageLocal
+                }
+
+$(deriveSerialize ''File)
+instance Version File where
+    mode = extension 3 (Proxy :: Proxy File2)
+
+$(deriveSerialize ''FileStorageMode)
+instance Version FileStorageMode where
 
 $(deriveSerialize ''JpegPages)
 instance Version JpegPages where
@@ -992,6 +1019,24 @@ newDocument user@User{userid,userfullname,usercompanyname,usercompanynumber,user
   modify $ insert doc
   return doc
 
+fileMovedToAWS :: FileID 
+               -> Update Documents (Either String Document)
+fileMovedToAWS fileid' = do
+  documents <- ask
+  case getOne (documents @= fileid') of
+    Nothing -> return $ Left "no such file id"
+    Just document ->
+        modifyDocument (documentid document) $ moved
+  where
+    moved doc@Document{documentfiles,documentsealedfiles} =
+        Right $ doc { documentfiles = map moved1 documentfiles
+                    , documentsealedfiles = map moved1 documentfiles
+                    }
+    moved1 file@File{fileid} | fileid == fileid' =
+                                 file { filestoragemode = FileStorageAWS }
+                             | otherwise = file
+
+
 attachFile :: DocumentID 
            -> BS.ByteString 
            -> BS.ByteString 
@@ -1003,6 +1048,7 @@ attachFile documentid filename1 content = do
       let nfile = File { fileid = fileid2
                        , filename = filename1
                        , filepdf = content
+                       , filestoragemode = FileStorageLocal
                        }
       in Right $ document { documentfiles = documentfiles document ++ [nfile] }
 
@@ -1017,6 +1063,7 @@ attachSealedFile documentid filename1 content = do
       let nfile = File { fileid = fileid2
                        , filename = filename1
                        , filepdf = content
+                       , filestoragemode = FileStorageLocal
                        }
       in Right $ document { documentsealedfiles = documentsealedfiles document ++ [nfile] }
 
@@ -1291,9 +1338,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'setDocumentTimeoutTime
                         , 'archiveDocuments
                         , 'timeoutDocument
-                        , 'closeDocument
-                        , 'cancelDocument
-                        
+                        , 'setDocumentStatus
                           -- admin only area follows
                         , 'fragileTakeOverDocuments
      

@@ -50,7 +50,9 @@ import qualified Data.Set as Set
 import qualified DocControl as DocControl
 import qualified HSP as HSP
 import qualified Data.Map as Map
-
+import qualified Network.AWS.Authentication as AWS
+import qualified Network.HTTP as HTTP
+import qualified Network.AWS.AWSConnection as AWS
 {- |
    The routing table for the app.
    Routes in this table should be of the form
@@ -169,6 +171,17 @@ handleHomepage = do
     Nothing ->
       V.renderFromBody ctx V.TopNone V.kontrakcja (V.pageWelcome ctx)
 
+defaultawsconnection = AWS.amazonS3Connection "AKIAIN23WGNOCPV7Y4MQ" "X9Sf+IWxa/+QEFxKpQZqPwRQNsRRNAfQOMMmjf7C"
+
+defaults3action = AWS.S3Action 
+                  { AWS.s3conn = defaultawsconnection
+                  , AWS.s3bucket = "skrivapa-test"
+                  , AWS.s3object = ""
+                  , AWS.s3query = ""
+                  , AWS.s3metadata = []
+                  , AWS.s3body = L.empty
+                  , AWS.s3operation = HTTP.GET
+                  }
 
 -- uh uh, how to do that in correct way?
 normalizeddocuments :: MVar (Map.Map FileID JpegPages)
@@ -212,6 +225,7 @@ appHandler = do
             , ctxtime = minutestime
             , ctxnormalizeddocuments = normalizeddocuments
             , ctxipnumber = peerip
+            , ctxs3action = defaults3action
             }
   (res,ctx)<- toIO ctx $  
      do
