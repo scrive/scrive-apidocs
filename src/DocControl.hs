@@ -808,7 +808,7 @@ handleIssuePost :: Kontra KontraLink
 handleIssuePost = handleIssueNewDocument `mplus` handleIssueArchive
 
 handleIssueNewDocument :: Kontra KontraLink
-handleIssueNewDocument = do
+handleIssueNewDocument = withUserPost $ do
     ctx@(Context { ctxmaybeuser = Just user, ctxhostpart, ctxtime }) <- get
     input@(Input content (Just filename) _contentType) <- getDataFnM (lookInput "doc")
     -- see if we have empty input, then there was no file selected
