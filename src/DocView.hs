@@ -502,6 +502,7 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document siglnk@(
                                                             , signatorynumber
                                                             , signatorycompany
                                                             , signatoryemail
+                                                            , signatoryotherfields
                                                             }
                                          }) =
    let
@@ -548,17 +549,20 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document siglnk@(
                        </div>
                       </form>     
                     </span>  
-   in asChild <div class=(if isCurrentUserAuthor then "author" else "signatory")><% 
+   in asChild <div class=(if isCurrentSignatorAuthor then "author" else "signatory")><% 
                 [asChild status,asChild " "] ++
                 (if BS.null signatoryname then [] else [ asChild <strong><% signatoryname %></strong>, asChild <br/> ]) ++
                 (if BS.null signatorycompany then [] else [ asChild signatorycompany, asChild <br/> ]) ++
                 (if BS.null signatorynumber then [] else [ asChild signatorynumber, asChild <br/> ]) ++
                 (if BS.null signatoryemail then [] else [ asChild signatoryemail, asChild <br/> ]) ++
-                [asChild <span class="signatoryfields" />] ++
+                [asChild <div class="signatoryfields"><% map displayField signatoryotherfields %></div>] ++
                 ([asChild message]) ++
                 (if (isCurrentUserAuthor && (not isCurrentSignatorAuthor) && (not isTimedout)) then [asChild <br/> ,asChild reminderForm] else [])
                 %>
               </div>
+
+displayField field@FieldDefinition {fieldlabel, fieldvalue} =
+    <div><span class="fieldlabel"><% fieldlabel %>: </span><span class="fieldvalue"><% fieldvalue %></span></div>
 
 pageDocumentForSign :: ( Monad m) =>
                        KontraLink 
