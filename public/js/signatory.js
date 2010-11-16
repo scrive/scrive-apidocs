@@ -322,11 +322,13 @@ function docstateToHTML(){
 
     $(currentsig.otherfields).each(function () {
 	    var f = this;
-	    ofield = buildField(f.label, f.value, "sig");
-	    setFieldID(ofield, f.id);
-	    setSigID(ofield, currentsig.id);
-	    setHiddenField(ofield, "fieldname", f.label);
-	    fields.append(ofield);
+	    if(f.value.length === 0){
+		ofield = buildField(f.label, f.value, "sig");
+		setFieldID(ofield, f.id);
+		setSigID(ofield, currentsig.id);
+		setHiddenField(ofield, "fieldname", f.label);
+		fields.append(ofield);
+	    }
 	});
 }
 
