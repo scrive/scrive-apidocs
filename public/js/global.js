@@ -280,7 +280,60 @@ $(document).ready( function () {
 							
 	
 	});
-	
+    $(".addremovecheckbox").change(function(){
+        var what = $($(this).attr("rel"))
+        var location = $($(this).attr("location"))
+        var oldlocation = $($(this).attr("oldlocation")) 
+        if ($(this).val()=="off")
+         {
+            location.append(what);      
+            $(this).val("on");
+            $(this).attr("checked","checked");
+            
+         }
+        else 
+        {
+            oldlocation.append(what);
+            $(this).val("off");
+            $(this).removeAttr("checked");
+        }    
+        return false;
+        
+    }).each(function(){
+        if ($(this).val()=="on")
+         {
+            $($(this).attr("location")).append($($(this).attr("rel")));      
+            $(this).attr("checked","checked");
+         } })    
+    $(".datetodaystip").each(function() {
+         var curr = $(this);
+         var basictime =  new Date().getTime() ;
+         var daysinput = $(curr.attr("rel"));
+         var localignore = true;
+         curr.dateinput({
+             format:'dd-mm-yy',
+             change: function() {
+                 if (localignore) return false;
+                 var ONE_DAY = 1000 * 60 * 60 * 24
+                 var date_ms = curr.data("dateinput").getValue().getTime() 
+                 var difference_ms = Math.abs(date_ms - basictime)            
+                 var dist = Math.floor(difference_ms/ONE_DAY) + 1
+                 daysinput.val(dist);
+                 curr.text("("+curr.data("dateinput").getValue('dd-mm-yy')+")"); 
+             },
+         min:  new Date(),
+        })
+        curr.data("dateinput").setValue(new Date());
+        localignore = false;
+        curr.data("dateinput").addDay(parseInt($(curr.attr("rel")).val()));
+         
+        daysinput.change(function(){
+                 localignore = true
+                 curr.data("dateinput").setValue(new Date());
+                 localignore = false;
+                 curr.data("dateinput").addDay(parseInt(daysinput.val()));
+        })
+    })
     $(window).resize();
     
     //var rpxJsHost = (("https:" == document.location.protocol) ? "https://" : "http://static.");

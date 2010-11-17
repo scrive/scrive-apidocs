@@ -434,8 +434,8 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid, do
   -- if the post doesn't contain this one, we parse the old way
   sigids <- getAndConcat "sigid"
 
-  daystosignstring <- getDataFnM (look "daystosign")
-  daystosign <- readM daystosignstring
+  daystosignstring <- getDataFn' (look "daystosign")
+  daystosign <- maybe (return Nothing) ((fmap Just). readM) daystosignstring
   invitetext <- fmap (maybe defaultInviteMessage concatChunks) (getDataFn' $ lookBS "invitetext")
   
   -- each custom field must have this
@@ -517,7 +517,7 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid, do
                                         signatoryotherfields = defsByID (BS.fromString "author") }
  
   -- FIXME: tell the user what happened!
-  when (daystosign<1 || daystosign>99) mzero
+  -- when (daystosign<1 || daystosign>99) mzero
   
   doc2 <- update $ UpdateDocument ctxtime documentid
           signatories author2 daystosign invitetext

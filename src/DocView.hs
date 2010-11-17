@@ -371,7 +371,8 @@ pageDocumentForAuthor ctx
                     , maybesignatory = Nothing -- FIXME: should be author user id
                     , signatorymagichash = MagicHash 0
                     }
-
+       documentdaystosignboxvalue = maybe 7 id documentdaystosign
+       showdaystosign = isJust documentdaystosign 
    in showDocumentPageHelper document helper 
            (documenttitle)  
       <div>
@@ -406,10 +407,10 @@ pageDocumentForAuthor ctx
               <input type="hidden" id="invitetext" name="invitetext" value=documentinvitetext />
               </div>
               <div style="margin-top: 5px">
-              <p>Undertecknas inom (dagar)
-              <input type="text" name="daystosign" value=documentdaystosign maxlength="2" size="2" autocomplete="off"/>
-              </p>
-              
+              <span>
+                <input type="checkbox" class="addremovecheckbox" rel="#daystosignbox" location="#datetosigncontainer" oldlocation="#hiddenttimestuffbox" autocomplete="off" value=(if  showdaystosign then "on" else "off") ></input> Välj förfallodatum
+                <div id="datetosigncontainer">  </div>
+              </span>
               <div style="height: 2px;"/>
               <input class="bigbutton" type="submit" name="final" value="Underteckna" id="signinvite" rel="#dialog-confirm-signinvite"/>
               <input class="button" type="submit" name="save" value="Spara som utkast"/>
@@ -446,6 +447,13 @@ pageDocumentForAuthor ctx
                        <button class="close button" type="button" id="editing-invite-text-finished"> Ok </button>
                    </div>
                  </form>  
+                 <div class="hidden" id="hiddenttimestuffbox">
+                       <div id="daystosignbox">Undertecknas inom (dagar)
+                        <BR/>
+                        <input type="text" id="daystosign" name="daystosign" value=documentdaystosignboxvalue maxlength="2" size="2" autocomplete="off"/>
+                        <small> <a  class="datetodaystip" rel="#daystosign"> </a> </small>
+                       </div>
+                 </div>
                </span>
              </span>
            else
@@ -566,7 +574,8 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document siglnk@(
                 %>
               </div>
 
-displayField field@FieldDefinition {fieldlabel, fieldvalue} 
+displayField::(Monad m) => FieldDefinition -> (HSPT m XML) 
+displayField FieldDefinition {fieldlabel, fieldvalue} 
     | fieldvalue == BS.fromString "" = <span />
     | otherwise        = <div><span class="fieldlabel"><% fieldlabel %>: </span><span class="fieldvalue"><% fieldvalue %></span></div>
 

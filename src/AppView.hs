@@ -188,8 +188,9 @@ partialScripts =
       ]
 partialStyles :: (EmbedAsAttr m (Attr [Char] [Char])) => [XMLGenT m (HSX.XMLGenerator.XML m)]
 partialStyles = 
-      [ <link rel="stylesheet" type="text/css" href="/theme/style.css" media="screen" />
-      , <link rel="stylesheet" type="text/css" 
+      [ <link rel="stylesheet" type="text/css" href="/theme/style.css" media="screen" />,
+        <link rel="stylesheet" type="text/css" href="/theme/calendar.css" media="screen" />,
+        <link rel="stylesheet" type="text/css" 
             href="//ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/ui-lightness/jquery-ui.css" 
             -- href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/flick/jquery-ui.css"
             -- href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/redmond/jquery-ui.css"
