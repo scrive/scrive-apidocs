@@ -298,6 +298,26 @@ $(deriveAll [''Default]
 
           -- we really should keep history here so we know what happened
           }
+      data Document5 = Document5
+          { documentid5               :: DocumentID
+          , documenttitle5            :: BS.ByteString
+          , documentauthor5           :: Author
+          , documentsignatorylinks5   :: [SignatoryLink]  
+          , documentfiles5            :: [File]
+          , documentsealedfiles5      :: [File]
+          , documentstatus5           :: DocumentStatus
+          , documentctime5            :: MinutesTime
+          , documentmtime5            :: MinutesTime
+          , documentchargemode5       :: ChargeMode
+          , documentdaystosign5       :: Int
+          , documenttimeouttime5      :: Maybe TimeoutTime 
+          , documentdeleted5          :: Bool -- should not appear in list
+          , documentauthordetails5    :: SignatoryDetails
+          , documentmaybesigninfo5    :: Maybe SignInfo      -- about the author signed the document |should be droped and check at runtime|
+          , documenthistory5          :: [DocumentHistoryEntry]
+          , documentinvitetext5       :: BS.ByteString
+          }
+          
       data Document = Document
           { documentid               :: DocumentID
           , documenttitle            :: BS.ByteString
@@ -309,7 +329,7 @@ $(deriveAll [''Default]
           , documentctime            :: MinutesTime
           , documentmtime            :: MinutesTime
           , documentchargemode       :: ChargeMode
-          , documentdaystosign       :: Int
+          , documentdaystosign       :: Maybe Int
           , documenttimeouttime      :: Maybe TimeoutTime 
           , documentdeleted          :: Bool -- should not appear in list
           , documentauthordetails    :: SignatoryDetails
@@ -633,9 +653,13 @@ $(deriveSerialize ''Document4)
 instance Version Document4 where
     mode = extension 4 (Proxy :: Proxy Document3)
 
+$(deriveSerialize ''Document5)
+instance Version Document5 where
+    mode = extension 5 (Proxy :: Proxy Document4)
+    
 $(deriveSerialize ''Document)
 instance Version Document where
-    mode = extension 5 (Proxy :: Proxy Document4)
+    mode = extension 6 (Proxy :: Proxy Document5)
 
 instance Migrate Document0 Document1 where
       migrate (Document0
@@ -751,7 +775,7 @@ instance Migrate Document3 Document4 where
           , documentinvitetext4 = BS.empty
           }
 
-instance Migrate Document4 Document where
+instance Migrate Document4 Document5 where
       migrate (Document4
           { documentid4
           , documenttitle4
@@ -769,30 +793,68 @@ instance Migrate Document4 Document where
           , documentmaybesigninfo4
           , documenthistory4
           , documentinvitetext4
-          }) = Document
-          { documentid = documentid4
-          , documenttitle = documenttitle4
-          , documentauthor = documentauthor4
-          , documentsignatorylinks = documentsignatorylinks4
-          , documentfiles = if documentstatus4 == Closed
+          }) = Document5
+          { documentid5 = documentid4
+          , documenttitle5 = documenttitle4
+          , documentauthor5 = documentauthor4
+          , documentsignatorylinks5 = documentsignatorylinks4
+          , documentfiles5 = if documentstatus4 == Closed
                             then []
                             else documentfiles4
-          , documentstatus = documentstatus4
-          , documentctime = documentctime4
-          , documentmtime = documentmtime4
-          , documentchargemode = documentchargemode4
-          , documentdaystosign = documentdaystosign4
-          , documenttimeouttime = documenttimeouttime4
-          , documentdeleted = documentdeleted4
-          , documentauthordetails = documentauthordetails4
-          , documentmaybesigninfo = documentmaybesigninfo4
-          , documenthistory = documenthistory4
-          , documentinvitetext = documentinvitetext4
-          , documentsealedfiles = if documentstatus4 == Closed
+          , documentstatus5 = documentstatus4
+          , documentctime5 = documentctime4
+          , documentmtime5 = documentmtime4
+          , documentchargemode5 = documentchargemode4
+          , documentdaystosign5 = documentdaystosign4
+          , documenttimeouttime5 = documenttimeouttime4
+          , documentdeleted5 = documentdeleted4
+          , documentauthordetails5 = documentauthordetails4
+          , documentmaybesigninfo5 = documentmaybesigninfo4
+          , documenthistory5 = documenthistory4
+          , documentinvitetext5 = documentinvitetext4
+          , documentsealedfiles5 = if documentstatus4 == Closed
                                   then documentfiles4
                                   else []
           }
-
+          
+instance Migrate Document5 Document where
+      migrate (Document5
+          { documentid5
+          , documenttitle5
+          , documentauthor5
+          , documentsignatorylinks5
+          , documentfiles5
+          , documentstatus5
+          , documentctime5
+          , documentmtime5
+          , documentchargemode5
+          , documentdaystosign5
+          , documenttimeouttime5
+          , documentdeleted5
+          , documentauthordetails5
+          , documentmaybesigninfo5
+          , documenthistory5
+          , documentinvitetext5
+          , documentsealedfiles5
+          }) = Document
+          { documentid = documentid5
+          , documenttitle = documenttitle5
+          , documentauthor = documentauthor5
+          , documentsignatorylinks = documentsignatorylinks5
+          , documentfiles = documentfiles5 
+          , documentstatus = documentstatus5
+          , documentctime = documentctime5
+          , documentmtime = documentmtime5
+          , documentchargemode = documentchargemode5
+          , documentdaystosign = Just documentdaystosign5
+          , documenttimeouttime = documenttimeouttime5
+          , documentdeleted = documentdeleted5
+          , documentauthordetails = documentauthordetails5
+          , documentmaybesigninfo = documentmaybesigninfo5
+          , documenthistory = documenthistory5
+          , documentinvitetext = documentinvitetext5
+          , documentsealedfiles =  documentsealedfiles5
+          }
 
 $(deriveSerialize ''DocumentStatus)
 instance Version DocumentStatus where
@@ -906,7 +968,7 @@ newDocument user@User{userid,userfullname,usercompanyname,usercompanynumber,user
           , documentctime = ctime
           , documentmtime = ctime
           , documentchargemode = if isfree then ChargeInitialFree else ChargeNormal
-          , documentdaystosign = 7
+          , documentdaystosign = Nothing
           , documenttimeouttime = Nothing
           , documentdeleted = False
           , documentauthordetails = details
@@ -962,7 +1024,7 @@ updateDocument :: MinutesTime
                -> DocumentID
                -> [SignatoryDetails]
                -> SignatoryDetails
-               -> Int
+               -> Maybe Int
                -> BS.ByteString
                -> Update Documents Document
 updateDocument time documentid signatories author daystosign invitetext = do
@@ -1060,9 +1122,12 @@ authorSignDocument documentid time ipnumber =
     modifyDocument documentid $ \document ->
         case documentstatus document of
           Preparation -> 
-              let timeout = TimeoutTime (MinutesTime (m + documentdaystosign document * 24 * 60))
+              let timeout = do
+                             days <- documentdaystosign document 
+                             let enddate = m + (days * 24 *60)
+                             return $ (TimeoutTime . MinutesTime ) enddate
                   MinutesTime m = time 
-              in Right $ document { documenttimeouttime = Just timeout
+              in Right $ document { documenttimeouttime = timeout
                                   , documentmtime = time
                                   , documentmaybesigninfo = Just (SignInfo time ipnumber)
                                   , documentstatus = Pending
