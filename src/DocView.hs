@@ -149,14 +149,9 @@ flashDocumentDraftSaved  =
     </div>
 
 
-concatSignatories :: [SignatoryDetails] -> String
+concatSignatories :: [SignatoryLink] -> String
 concatSignatories siglinks = 
-    concat $ intersperse ", " $ map displayName siglinks
-
-displayName :: SignatoryDetails -> String
-displayName sig = if (null name) then email else name
-    where name = BS.toString $ signatoryname sig
-          email = BS.toString $ signatoryemail sig
+    concat $ intersperse ", " $ map (BS.toString . personname) siglinks
 
 oneDocumentRow::(EmbedAsAttr m (Attr [Char] [Char]), EmbedAsAttr m (Attr [Char] KontraLink), EmbedAsAttr m (Attr [Char] DocumentID)) =>
                 MinutesTime -> UserID -> Document  -> XMLGenT m (HSX.XML m)
@@ -206,7 +201,7 @@ oneDocumentRow crtime userid document@Document{ documentid
                        else <span/>
        %>
      </td>
-     <td><% mk $ concatSignatories (map signatorydetails documentsignatorylinks) %></td>
+     <td><% mk $ concatSignatories documentsignatorylinks %></td>
      <td><% mk $ documenttitle %></td>
      <td><span title=(show documentmtime)><% mk $ showDateAbbrev crtime documentmtime %></span></td>
      <td class="tdright"></td>
@@ -372,7 +367,7 @@ pageDocumentForAuthor ctx
                     , signatorymagichash = MagicHash 0
                     }
        documentdaystosignboxvalue = maybe 7 id documentdaystosign
-       showdaystosign = isJust documentdaystosign 
+       timetosignset = isJust documentdaystosign --swedish low constrain
    in showDocumentPageHelper document helper 
            (documenttitle)  
       <div>
@@ -408,7 +403,7 @@ pageDocumentForAuthor ctx
               </div>
               <div style="margin-top: 5px">
               <span>
-                <input type="checkbox" class="addremovecheckbox" rel="#daystosignbox" location="#datetosigncontainer" oldlocation="#hiddenttimestuffbox" autocomplete="off" value=(if  showdaystosign then "on" else "off") ></input> Välj förfallodatum
+                <input type="checkbox" class="addremovecheckbox" rel="#daystosignbox" location="#datetosigncontainer" oldlocation="#hiddenttimestuffbox" autocomplete="off" value=(if timetosignset then "on" else "off") ></input> Välj förfallodatum
                 <div id="datetosigncontainer">  </div>
               </span>
               <div style="height: 2px;"/>
@@ -475,7 +470,13 @@ pageDocumentForAuthor ctx
                   then <form method="post" action=""><input class="bigbutton" type="submit" name="final" value="Underteckna" id="signinvite" /></form>
                   else <span />%>
               </span>
-         %>
+              %>
+            <% if (documentstatus == Pending || documentstatus == AwaitingAuthor) && not timetosignset
+                  then <form method="post" action=(LinkCancel document)>
+                       <input class="submit"  class="bigbutton" type="submit" name="cancel" value="Cancel" />    
+                       </form>
+                  else <span />
+             %>         
        </div>
       </div>
 
@@ -625,12 +626,13 @@ pageDocumentForSign action document ctx  invitedlink wassigned =
                     [(wassigned ,
                               <div>Du har redan undertecknat!</div>),
                     (documentstatus document == Timedout, 
-                              <div>Förfallodatum har passerat!</div>)
-                    ]
+                              <div>Förfallodatum har passerat!</div>),
+                    (documentstatus document == Pending, 
                               <div>
                                  <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign" rel="#dialog-confirm-sign"/>
                                  <input class="bigbutton" type="submit" name="cancel" value="Avvisa" rel="#dialog-confirm-cancel" id="cancel"/>
-                              </div>
+                              </div>) ]
+                     <span/>                 
                  %>
                  <small>Jag vill veta mer <a href="/about" target="_blank">om SkrivaPå</a>.</small>
                  <span class="localdialogs ">

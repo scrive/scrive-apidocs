@@ -28,7 +28,7 @@ module DocState
     , AttachFile(..)
     , AttachSealedFile(..)
     , AuthorSignDocument(..)
-    , CancelDocument(..)
+    , RejectDocument(..)
     , FileModTime(..)
     , FragileTakeOverDocuments(..)
     , GetDocumentByDocumentID(..)
@@ -913,7 +913,6 @@ $(inferIxSet "Documents" ''Document 'noCalcs
                  , ''FileID
                  , ''TimeoutTime
                  ])
-
 instance Component Documents where
   type Dependencies Documents = End
   initialValue = empty
@@ -1152,12 +1151,12 @@ modifyDocument docid action = do
                 modify (updateIx docid newdocument)
                 return $ Right newdocument
 
-cancelDocument :: DocumentID
+rejectDocument :: DocumentID
                -> SignatoryLinkID 
                -> MinutesTime 
                -> Word32 
                -> Update Documents (Either String Document)
-cancelDocument documentid signatorylinkid1 time ipnumber = do
+rejectDocument documentid signatorylinkid1 time ipnumber = do
   modifyDocument documentid $ \document ->
       let
           newdocument = document { documentstatus = Rejected }
@@ -1252,6 +1251,7 @@ fragileTakeOverDocuments destuserid srcuserid = do
   mapM_ takeover (IxSet.toList hisdocuments)
   return ()
 
+--This function is not secure and in my opinion MUST NOT be public in this form. MR
 setDocumentStatus :: DocumentID -> DocumentStatus -> Update Documents (Maybe Document)
 setDocumentStatus docid status = do
   doc <- modifyDocument docid (\d -> Right $ d { documentstatus = status }) 
@@ -1270,7 +1270,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'updateDocument
                         , 'signDocument
                         , 'authorSignDocument
-                        , 'cancelDocument
+                        , 'rejectDocument
                         , 'attachFile
                         , 'attachSealedFile
                         , 'markDocumentSeen

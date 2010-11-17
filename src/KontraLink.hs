@@ -42,12 +42,11 @@ data KontraLink
     | LinkIssueDocPDF Document {- Which file? -}
     | LinkSubaccount
     | LinkRemind Document SignatoryLink
+    | LinkCancel Document
     | LinkSigned DocumentID SignatoryLinkID 
     | LinkRejected DocumentID SignatoryLinkID 
     | LinkSignInvite DocumentID
     | LinkAcceptTOS
-
-
     | LinkAdminOnly
     | LinkAdminOnlyIndexDB
     | LinkStats
@@ -76,6 +75,7 @@ instance Show KontraLink where
         (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++ 
                  "/" ++ show (signatorymagichash signatorylink)
     showsPrec _ (LinkRemind document signlink) = (++) $ "/resend/"++(show $ documentid document)++"/"++(show $ signatorylinkid signlink)   
+    showsPrec _ (LinkCancel document) = (++) $ "/cancel/"++(show $ documentid document)
     showsPrec _ (LinkSigned documentid signatorylinkid) = (++) $ "/landpage/signed/" ++ show documentid ++ "/" ++ show signatorylinkid
     showsPrec _ (LinkRejected documentid signatorylinkid) = (++) $ "/landpage/rejected/" ++ show documentid ++ "/" ++ show signatorylinkid
     showsPrec _ (LinkSignInvite documentid) = (++) $ "/landpage/signinvite/" ++ show documentid ++ "/"

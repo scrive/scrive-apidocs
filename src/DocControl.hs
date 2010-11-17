@@ -201,15 +201,15 @@ signDocument documentid
              postDocumentChangeAction document olddocumentstatus (Just signatorylinkid1)
              return $ LinkSigned documentid signatorylinkid1
 
-cancelDocument :: DocumentID 
+rejectDocument :: DocumentID 
                -> SignatoryLinkID 
                -> Kontra KontraLink
-cancelDocument documentid 
+rejectDocument documentid 
                signatorylinkid1 = do
   ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber}) <- get
   getDataFnM (look "cancel")
   do
-     mdocument <- update $ CancelDocument documentid signatorylinkid1 ctxtime ctxipnumber
+     mdocument <- update $ RejectDocument documentid signatorylinkid1 ctxtime ctxipnumber
      case (mdocument) of
       Left message -> 
           do
@@ -297,7 +297,7 @@ handleSignPost documentid
   ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber}) <- get
                
   msum [ DocControl.signDocument documentid signatorylinkid1
-       , DocControl.cancelDocument documentid signatorylinkid1
+       , DocControl.rejectDocument documentid signatorylinkid1
        ]
 
 handleSignShow :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra Response
@@ -805,7 +805,7 @@ basename filename =
       _ -> fst (span ((/=) '.') filename) -- FIXME: take care of many dots in file name
 
 handleIssuePost :: Kontra KontraLink
-handleIssuePost = handleIssueNewDocument `mplus` handleIssueArchive
+handleIssuePost = handleIssueNewDocument `mplus` handleIssueArchive --This work just by accident, HAVE to be with cleaner flow  MR.
 
 handleIssueNewDocument :: Kontra KontraLink
 handleIssueNewDocument = withUserPost $ do
@@ -852,12 +852,25 @@ showPage fileid pageno = do
       return $ ifModifiedSince modtime rq res2
     _ -> mzero
 
+--In this and next check if current is author MR
+handleCancel:: String -> Kontra KontraLink
+handleCancel docid =  do
+                       ctx <- get
+                       mdoc <- query $ GetDocumentByDocumentID (read docid)
+                       case (mdoc) of
+                          Just doc -> do 
+                                      mdoc' <- update $ SetDocumentStatus (documentid doc) Canceled 
+                                      let info = if (isJust mdoc') then "Document canceled"  else "Document dould not be canceled"   --Move texts to view 
+                                      addFlashMsgText (BS.fromString info)
+                                      return (LinkIssueDoc doc)
+                          Nothing -> mzero  
+                         
 handleResend:: String -> String -> Kontra KontraLink
 handleResend docid signlinkid  = withUserPost $
                     do
                       ctx <- get
-                      doc' <- query $ GetDocumentByDocumentID (read docid)
-                      case (doc') of
+                      mdoc <- query $ GetDocumentByDocumentID (read docid)
+                      case (mdoc) of
                        Just doc -> 
                                case (signlinkFromDocById doc (read signlinkid)) of
                                  Just signlink -> 
