@@ -181,7 +181,7 @@ handleHomepage = do
     Just user -> checkUserTOSGet $
       V.renderFromBody ctx V.TopNew V.kontrakcja (V.pageWelcome ctx)
     Nothing ->
-      V.renderFromBody ctx V.TopNew V.kontrakcja (V.pageWelcome ctx)
+      V.renderFromBody ctx V.TopNone V.kontrakcja (V.pageWelcome ctx)
 
 
 -- uh uh, how to do that in correct way?
@@ -477,7 +477,7 @@ daveDocument documentid = onlySuperUserGet $ do
       case mdocument of
         Nothing -> mzero
         Just document ->
-          V.renderFromBody ctx V.TopNew V.kontrakcja $ inspectXML document
+          V.renderFromBody ctx V.TopNone V.kontrakcja $ inspectXML document
 
 daveUser :: UserID -> Kontra Response
 daveUser userid = onlySuperUserGet $ do 
@@ -486,5 +486,5 @@ daveUser userid = onlySuperUserGet $ do
       case muser of
         Nothing -> mzero
         Just user ->
-          V.renderFromBody ctx V.TopNew V.kontrakcja $ inspectXML user
+          V.renderFromBody ctx V.TopNone V.kontrakcja $ inspectXML user
 

@@ -170,7 +170,7 @@ sessionAndCookieHashMatch session sci =  (cookieSessionHash sci) == (hash $ sess
 --- Session interface  
   
 startSessionCookie :: (FilterMonad Response m,ServerMonad m, MonadIO m) => Session -> m ()
-startSessionCookie session = addCookie (60*60) $ mkCookie "sessionId" $ show $ cookieInfoFromSession session
+startSessionCookie session = addCookie (60*60*24) $ mkCookie "sessionId" $ show $ cookieInfoFromSession session
                                  
 currentSessionInfoCookie:: RqData (Maybe SessionCookieInfo)
 currentSessionInfoCookie = (optional (readCookieValue "sessionId")) 

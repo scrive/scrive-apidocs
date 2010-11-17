@@ -346,7 +346,7 @@ handleIssueShowGet docid = withUserGet $ checkUserTOSGet $
                        when (userid/=unAuthor documentauthor) mzero
                        let toptab = if documentstatus document == Closed
                                      then TopDocument
-                                     else TopNew
+                                     else TopNone
                        renderFromBody ctx toptab kontrakcja 
                                           (pageDocumentForAuthor ctx document)
 
