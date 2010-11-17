@@ -47,8 +47,11 @@ remindMailNotSigned customMessage ctx document@Document{documenttitle} signlink 
 remindMailSigned::Maybe (BS.ByteString)-> Context -> Document -> SignatoryLink -> IO Mail
 remindMailSigned customMessage ctx document@Document{documenttitle}  signlink = 
                      let 
-                         title =  BS.concat [BS.fromString "Hej ",personname signlink]              
-                         attachmentcontent = filepdf $ head $ documentsealedfiles document   
+                         title =  BS.concat [BS.fromString "Hej ",personname signlink]
+                         files = if (null sealedfiles) then unsealedfiles else sealedfiles
+                                 where sealedfiles = documentsealedfiles document
+                                       unsealedfiles = documentfiles document
+                         attachmentcontent = filepdf $ head $ files   
                          content = remindMailSignedContent customMessage ctx  document signlink     
                         
                      in do
