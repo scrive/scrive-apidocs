@@ -75,7 +75,8 @@ handleRoutes = msum [
      , dir "sign" $ hget0  $ DocControl.handleSTable
      , dir "sign" $ hget3  $ DocControl.handleSignShow
      , dir "sign" $ hpost3 $ DocControl.handleSignPost
-
+     
+     --This all needs to be done by author. Why we dont check it here? MR
      , dir "d" $ hget0  $ DocControl.handleIssueGet
      , dir "d" $ hget1  $ DocControl.handleIssueShowGet
      , dir "d" $ hget2  $ DocControl.handleIssueShowTitleGet
@@ -90,8 +91,10 @@ handleRoutes = msum [
      , dir "issue" $ hpost0 $ DocControl.handleIssuePost
      , dir "issue" $ hpost1 $ DocControl.handleIssueShowPost
 
+     --This are actions on documents. We may integrate it with all the stuff above, but I don't like it. MR
      , dir "resend" $ hpost2 $ DocControl.handleResend
-
+     , dir "cancel" $ hpost1 $ DocControl.handleCancel
+     
      , dir "pages"  $ hget2  $ DocControl.showPage
 
      , dir "landpage" $ dir "signinvite" $ hget1 $ DocControl.landpageSignInvite
