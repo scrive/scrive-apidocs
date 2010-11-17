@@ -151,7 +151,12 @@ flashDocumentDraftSaved  =
 
 concatSignatories :: [SignatoryDetails] -> String
 concatSignatories siglinks = 
-    concat $ intersperse ", " $ map (BS.toString . signatoryname) siglinks 
+    concat $ intersperse ", " $ map displayName siglinks
+
+displayName :: SignatoryDetails -> String
+displayName sig = if (null name) then email else name
+    where name = BS.toString $ signatoryname sig
+          email = BS.toString $ signatoryemail sig
 
 oneDocumentRow::(EmbedAsAttr m (Attr [Char] [Char]), EmbedAsAttr m (Attr [Char] KontraLink), EmbedAsAttr m (Attr [Char] DocumentID)) =>
                 MinutesTime -> UserID -> Document  -> XMLGenT m (HSX.XML m)
