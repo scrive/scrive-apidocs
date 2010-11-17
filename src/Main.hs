@@ -25,7 +25,7 @@ import System.Exit (exitFailure)
 import System.Console.GetOpt
 import AppLogger (withLogger)
 import AppState (AppState(..))
-import AppControl (appHandler)
+import AppControl (appHandler,defaults3action)
 import qualified Control.Concurrent (threadDelay)
 import qualified User as User
 import qualified Data.ByteString.Char8 as BS
@@ -38,6 +38,8 @@ import qualified Control.Exception as Exception
 import Happstack.State.Saver
 import Scheduler
 import Happstack.State (update,query)
+import DocControl
+import DocState
 
 startTestSystemState' :: (Component st, Methods st) => Proxy st -> IO (MVar TxControl)
 startTestSystemState' proxy = do
@@ -89,6 +91,10 @@ initDatabaseEntries = do
           Just _ -> return () -- user exist, do not add it
   
 
+uploadOldFilesToAmazon :: IO ()
+uploadOldFilesToAmazon = do
+  files <- query $ GetFilesThatShouldBeMovedToAmazon
+  mapM_ (amazonUploadFile defaults3action) files
 
 main = withLogger $ do
   -- progname effects where state is stored and what the logfile is named
