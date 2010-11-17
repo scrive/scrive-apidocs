@@ -551,7 +551,7 @@ gs = "gs"
 
 awsUrlFromFile :: File -> String
 awsUrlFromFile File{filename,fileid} =
-    "/" ++ show fileid ++ "/" ++ BS.toString filename
+    show fileid ++ "/" ++ HTTP.urlEncode (BS.toString filename) ++ ".pdf"
 
 convertPdfToJpgPages :: Context
                      -> File
@@ -651,12 +651,12 @@ handlePageOfDocument documentid = do
     
 handleDocumentUpload :: DocumentID -> BS.ByteString -> BS.ByteString -> Kontra ()
 handleDocumentUpload docid content filename = do
-  ctx <- get
+  ctx@Context{ctxs3action} <- get
   result <- update $ AttachFile docid filename content
   case result of
     Left err -> return ()
     Right document -> do
-        liftIO $ forkIO $ mapM_ (amazonUploadFile ctx) (documentfiles document)
+        liftIO $ forkIO $ mapM_ (amazonUploadFile ctxs3action) (documentfiles document)
         return ()
   return ()
 
@@ -801,7 +801,7 @@ sealDocument :: Context
              -> User
              -> Document
              -> IO Document
-sealDocument ctx
+sealDocument ctx@Context{ctxs3action}
              normalizemap 
              hostpart
              signtime1
@@ -826,7 +826,7 @@ sealDocument ctx
   mdocument <- update $ AttachSealedFile docid filename newfilepdf
   case mdocument of
     Right document -> do
-        forkIO $ mapM_ (amazonUploadFile ctx) (documentsealedfiles document)
+        forkIO $ mapM_ (amazonUploadFile ctxs3action) (documentsealedfiles document)
         return document
     Left msg -> error msg
   -- let newfile = file {filepdf = newfilepdf}
@@ -921,7 +921,7 @@ handleResend docid signlinkid  =
                                  Nothing -> mzero           
                        Nothing -> mzero               
 
-amazonUploadFile ctx@Context{ctxs3action} file = do
+amazonUploadFile ctxs3action file@File{filestoragemode = FileStorageLocal} = do
   let action = ctxs3action { AWS.s3object = awsUrlFromFile file
                            , AWS.s3operation = HTTP.PUT
                            , AWS.s3body = BSL.fromChunks [filepdf file]
@@ -932,4 +932,5 @@ amazonUploadFile ctx@Context{ctxs3action} file = do
     Right _ -> return ()
     -- FIXME: do much better error handling
     Left err -> print err >> return ()
+amazonUploadFile _ _ = return ()
   

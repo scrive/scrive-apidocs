@@ -38,17 +38,18 @@ module DocState
     , GetDocumentsByAuthor(..)
     , GetDocumentsBySignatory(..)
     , GetDocumentsByUser(..)
+    , GetFilesThatShouldBeMovedToAmazon(..)
     , GetNumberOfDocumentsOfUser(..)
     , GetTimeoutedButPendingDocuments(..)
     , MarkDocumentSeen(..)
     , NewDocument(..)
     , SaveDocumentForSignedUser(..)
+    , SetDocumentStatus(..)
     , SetDocumentTimeoutTime(..)
     , SignDocument(..)
     , TimeoutDocument(..)
     , UpdateDocument(..)
-    , CloseDocument(..)
-    , CancelDocument(..)
+    , SetDocumentStatus(..)
     )
 where
 import Happstack.Data
@@ -1308,13 +1309,6 @@ closeDocument docid = do
     Left _ -> return Nothing
     Right d -> return $ Just d
 
---We should add current state checkers here (not co cancel closed documents etc.)
-cancelDocument :: DocumentID -> Update Documents (Maybe Document)
-cancelDocument docid = do
-  doc <- modifyDocument docid (\d -> Right $ d { documentstatus = Canceled }) 
-  case doc of
-    Left _ -> return Nothing
-    Right d -> return $ Just d
 
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocuments
@@ -1341,7 +1335,6 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'setDocumentStatus
                           -- admin only area follows
                         , 'fragileTakeOverDocuments
-     
                         ])
 
 
