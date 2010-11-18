@@ -21,6 +21,7 @@ import KontraLink
 import Data.Maybe
 import SendMail(Mail,emptyMail,content,title,attachments)
 import DocViewUtil
+import Amazon
 
 remindMail:: Maybe (BS.ByteString) -> Context -> Document -> SignatoryLink -> IO Mail
 remindMail cm c d s = case s of 
@@ -35,10 +36,11 @@ remindMailContent cm c d s = case s of
 remindMailNotSigned::Maybe (BS.ByteString) -> Context -> Document -> SignatoryLink -> IO Mail
 remindMailNotSigned customMessage ctx document@Document{documenttitle} signlink = 
       let content  = remindMailNotSignedContent True customMessage ctx  document signlink                 
-          attachmentcontent = filepdf $ head $ documentfiles document          
+
           title =  BS.concat [BS.fromString "Hej ",personname signlink]  
       in 
        do
+        attachmentcontent <- getFileContents (ctxs3action ctx) $ head $ documentfiles document          
         content' <- htmlHeadBodyWrapIO documenttitle content
         return $ emptyMail {title = title, content = content', attachments = [(documenttitle,attachmentcontent)]}
 
@@ -51,10 +53,10 @@ remindMailSigned customMessage ctx document@Document{documenttitle}  signlink =
                          files = if (null sealedfiles) then unsealedfiles else sealedfiles
                                  where sealedfiles = documentsealedfiles document
                                        unsealedfiles = documentfiles document
-                         attachmentcontent = filepdf $ head $ files   
                          content = remindMailSignedContent customMessage ctx  document signlink     
                         
                      in do
+                       attachmentcontent <- getFileContents (ctxs3action ctx) $ head $ files   
                        content' <- htmlHeadBodyWrapIO documenttitle content
                        return $ emptyMail {title = title, content = content', attachments = [(documenttitle,attachmentcontent)]}
 
