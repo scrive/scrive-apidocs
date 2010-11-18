@@ -103,7 +103,7 @@ sendInvitationEmail1 ctx document signatorylink = do
                    , signatorymagichash } = signatorylink
       Document{documenttitle,documentid} = document
   mail <- mailInvitationToSign ctx document signatorylink
-  let attachmentcontent = filepdf $ head $ documentfiles document
+  attachmentcontent <- AWS.getFileContents (ctxs3action ctx) $ head $ documentfiles document
   sendMail $ mail { fullnameemails =  [(signatoryname,signatoryemail)]  , attachments = [(documenttitle,attachmentcontent)]} 
 
 sendClosedEmails :: Context -> Document -> IO ()
@@ -121,7 +121,7 @@ sendClosedEmail1 ctx document signatorylink = do
                                                          , signatoryemail }} = signatorylink
       Document{documenttitle,documentid} = document
   mail <- mailDocumentClosedForSignatories ctx document signatorylink
-  let attachmentcontent = filepdf $ head $ documentsealedfiles document
+  attachmentcontent <- AWS.getFileContents (ctxs3action ctx) $ head $ documentsealedfiles document
   sendMail $ mail { fullnameemails =  [(signatoryname,signatoryemail)] , attachments = [(documenttitle,attachmentcontent)]}
 
 sendAwaitingEmail :: Context -> Document -> IO ()
@@ -145,9 +145,9 @@ sendClosedAuthorEmail ctx document = do
   Just authoruser <- query $ GetUserByUserID authorid
   mail<- mailDocumentClosedForAuthor ctx (userfullname authoruser)
              document
-  let attachmentcontent = filepdf $ head $ documentsealedfiles document
-      Document{documenttitle,documentid} = document
-  let email2 = signatoryemail $ documentauthordetails document
+  attachmentcontent <- AWS.getFileContents (ctxs3action ctx) $ head $ documentsealedfiles document
+  let Document{documenttitle,documentid} = document
+      email2 = signatoryemail $ documentauthordetails document
       email1 = unEmail $ useremail authoruser
       em = if email2/=BS.empty && email2/=email1
            then [(name2,email2)]
@@ -402,6 +402,7 @@ handleIssueShowPost docid = withUserPost $
 handleIssueShowTitleGet :: DocumentID -> String -> Kontra Response
 handleIssueShowTitleGet docid _title = withUserGet $ checkUserTOSGet $
   do
+   ctx <- get
    maybedocument <- query $ GetDocumentByDocumentID $ docid
    case maybedocument of
      -- Q: We know what they want, shouldn't we send 404 here?
@@ -415,7 +416,7 @@ handleIssueShowTitleGet docid _title = withUserGet $ checkUserTOSGet $
                         let file = safehead "handleIssueShow" (case documentstatus document of
                                                                  Closed -> documentsealedfiles document
                                                                  _      -> documentfiles document)
-                        let contents = filepdf file
+                        contents <- liftIO $ AWS.getFileContents (ctxs3action ctx) file
                         let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
                         let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
                         return res2
@@ -551,20 +552,12 @@ gs = "gs"
 convertPdfToJpgPages :: Context
                      -> File
                      -> IO JpegPages
-convertPdfToJpgPages Context{ctxs3action} file@File{fileid,filestoragemode,filename} = do
+convertPdfToJpgPages Context{ctxs3action} file@File{fileid,filename} = do
   tmppath1 <- getTemporaryDirectory
   let tmppath = tmppath1 ++ "/" ++ show fileid
   createDirectoryIfMissing True tmppath
   let sourcepath = tmppath ++ "/source.pdf"
-  content <- case filestoragemode of
-               FileStorageLocal -> return $ filepdf file
-               FileStorageAWS -> do
-                 let url = AWS.urlFromFile file
-                 result <- AWS.runAction (ctxs3action { AWS.s3object = url })
-                 case result of
-                   Right rsp -> return (concatChunks (HTTP.rspBody rsp))
-                   _ -> error (show result)
-
+  content <- AWS.getFileContents ctxs3action file
 
   BS.writeFile sourcepath content
 
@@ -802,14 +795,15 @@ sealDocument ctx@Context{ctxs3action}
              signtime1
              author@(User {userfullname,usercompanyname,usercompanynumber,useremail})
              document = do
-  let (file@File {fileid,filename,filepdf}) = 
+  let (file@File {fileid,filename}) = 
            safehead "sealDocument" $ documentfiles document
   let docid = documentid document
 
   tmppath <- getTemporaryDirectory
   let tmpin = tmppath ++ "/in_" ++ show docid ++ ".pdf"
   let tmpout = tmppath ++ "/out_" ++ show docid ++ ".pdf"
-  BS.writeFile tmpin filepdf
+  contents <- AWS.getFileContents ctxs3action file
+  BS.writeFile tmpin contents
   let config = sealSpecFromDocument hostpart document author tmpin tmpout
 
   (code,stdout,stderr) <- readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))

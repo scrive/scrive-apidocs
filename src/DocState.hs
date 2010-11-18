@@ -15,7 +15,7 @@ module DocState
     , FieldPlacement(..)
     , File(..)
     , FileID(..)
-    , FileStorageMode(..)
+    , FileStorage(..)
     , JpegPages(..)
     , SignInfo(..)
     , Signatory(..)
@@ -31,6 +31,7 @@ module DocState
     , AuthorSignDocument(..)
     , RejectDocument(..)
     , FileModTime(..)
+    , FileMovedToAWS(..)
     , FragileTakeOverDocuments(..)
     , GetDocumentByDocumentID(..)
     , GetDocumentStats(..)
@@ -44,12 +45,12 @@ module DocState
     , MarkDocumentSeen(..)
     , NewDocument(..)
     , SaveDocumentForSignedUser(..)
-    , SetDocumentStatus(..)
     , SetDocumentTimeoutTime(..)
     , SignDocument(..)
     , TimeoutDocument(..)
     , UpdateDocument(..)
-    , SetDocumentStatus(..)
+    , CloseDocument(..)
+    , CancelDocument(..)
     )
 where
 import Happstack.Data
@@ -362,16 +363,15 @@ $(deriveAll [''Default]
       data File = File 
           { fileid          :: FileID
           , filename        :: BS.ByteString
-          , filepdf         :: BS.ByteString 
-          , filestoragemode :: FileStorageMode
+          , filestorage     :: FileStorage
           }
 
       data JpegPages = JpegPagesPending
                      | JpegPages [BS.ByteString]    -- FIXME: add width and height to each one
                      | JpegPagesError BS.ByteString -- normalization error with whole log from normalizer
                        
-      data FileStorageMode = FileStorageLocal
-                           | FileStorageAWS
+      data FileStorage = FileStorageMemory BS.ByteString
+                       | FileStorageAWS BS.ByteString BS.ByteString -- ^ bucket, url inside bucket
    |])
 
 instance Eq Document where
@@ -916,16 +916,15 @@ instance Migrate File2 File where
                 }) = File 
                 { fileid = fileid2
                 , filename = filename2
-                , filepdf = filepdf2
-                , filestoragemode = FileStorageLocal
+                , filestorage = FileStorageMemory filepdf2
                 }
 
 $(deriveSerialize ''File)
 instance Version File where
     mode = extension 3 (Proxy :: Proxy File2)
 
-$(deriveSerialize ''FileStorageMode)
-instance Version FileStorageMode where
+$(deriveSerialize ''FileStorage)
+instance Version FileStorage where
 
 $(deriveSerialize ''JpegPages)
 instance Version JpegPages where
@@ -1021,8 +1020,10 @@ newDocument user@User{userid,userfullname,usercompanyname,usercompanynumber,user
   return doc
 
 fileMovedToAWS :: FileID 
+               -> BS.ByteString
+               -> BS.ByteString
                -> Update Documents (Either String Document)
-fileMovedToAWS fileid' = do
+fileMovedToAWS fileid' bucket url = do
   documents <- ask
   case getOne (documents @= fileid') of
     Nothing -> return $ Left "no such file id"
@@ -1033,8 +1034,10 @@ fileMovedToAWS fileid' = do
         Right $ doc { documentfiles = map moved1 documentfiles
                     , documentsealedfiles = map moved1 documentfiles
                     }
-    moved1 file@File{fileid} | fileid == fileid' =
-                                 file { filestoragemode = FileStorageAWS }
+    moved1 file@File{ fileid
+                    , filestorage = FileStorageMemory _
+                    } | fileid == fileid' =
+                                 file { filestorage = FileStorageAWS bucket url }
                              | otherwise = file
 
 
@@ -1048,8 +1051,7 @@ attachFile documentid filename1 content = do
   modifyDocument documentid $ \document ->
       let nfile = File { fileid = fileid2
                        , filename = filename1
-                       , filepdf = content
-                       , filestoragemode = FileStorageLocal
+                       , filestorage = FileStorageMemory content
                        }
       in Right $ document { documentfiles = documentfiles document ++ [nfile] }
 
@@ -1063,8 +1065,7 @@ attachSealedFile documentid filename1 content = do
   modifyDocument documentid $ \document ->
       let nfile = File { fileid = fileid2
                        , filename = filename1
-                       , filepdf = content
-                       , filestoragemode = FileStorageLocal
+                       , filestorage = FileStorageMemory content
                        }
       in Right $ document { documentsealedfiles = documentsealedfiles document ++ [nfile] }
 
@@ -1309,6 +1310,23 @@ closeDocument docid = do
     Left _ -> return Nothing
     Right d -> return $ Just d
 
+--We should add current state checkers here (not co cancel closed documents etc.)
+cancelDocument :: DocumentID -> Update Documents (Maybe Document)
+cancelDocument docid = do
+  doc <- modifyDocument docid (\d -> Right $ d { documentstatus = Canceled }) 
+  case doc of
+    Left _ -> return Nothing
+    Right d -> return $ Just d
+
+getFilesThatShouldBeMovedToAmazon :: Query Documents [File]
+getFilesThatShouldBeMovedToAmazon = do
+  documents <- ask
+  let doclist = IxSet.toList documents
+  let getFiles Document{documentfiles,documentsealedfiles} = documentfiles ++ documentsealedfiles
+  let allFiles = concatMap getFiles doclist
+  let getID file@File{ filestorage = FileStorageMemory _ } = [file]
+      getID _ = []
+  return (concatMap getID allFiles)
 
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocuments
@@ -1332,9 +1350,13 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'setDocumentTimeoutTime
                         , 'archiveDocuments
                         , 'timeoutDocument
-                        , 'setDocumentStatus
+                        , 'closeDocument
+                        , 'cancelDocument
+                        , 'fileMovedToAWS
+
                           -- admin only area follows
                         , 'fragileTakeOverDocuments
+                        , 'getFilesThatShouldBeMovedToAmazon
                         ])
 
 

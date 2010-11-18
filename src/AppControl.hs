@@ -53,6 +53,17 @@ import qualified Data.Map as Map
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 import qualified Network.AWS.AWSConnection as AWS
+
+data AppConf
+    = AppConf { httpConf        :: Conf
+              , store           :: FilePath
+              , static          :: FilePath 
+              , awsBucket       :: String
+              , awsAccessKey    :: String
+              , awsSecretKey    :: String
+              }              
+
+
 {- |
    The routing table for the app.
    Routes in this table should be of the form
@@ -171,24 +182,25 @@ handleHomepage = do
     Nothing ->
       V.renderFromBody ctx V.TopNone V.kontrakcja (V.pageWelcome ctx)
 
-defaultawsconnection = AWS.amazonS3Connection "AKIAIN23WGNOCPV7Y4MQ" "X9Sf+IWxa/+QEFxKpQZqPwRQNsRRNAfQOMMmjf7C"
-
-defaults3action = AWS.S3Action 
-                  { AWS.s3conn = defaultawsconnection
-                  , AWS.s3bucket = "skrivapa-test"
-                  , AWS.s3object = ""
-                  , AWS.s3query = ""
-                  , AWS.s3metadata = []
-                  , AWS.s3body = L.empty
-                  , AWS.s3operation = HTTP.GET
-                  }
-
 -- uh uh, how to do that in correct way?
 normalizeddocuments :: MVar (Map.Map FileID JpegPages)
 normalizeddocuments = unsafePerformIO $ newMVar Map.empty
 
-appHandler :: ServerPartT IO Response
-appHandler = do
+defaultAWSAction appConf = 
+    AWS.S3Action 
+           { AWS.s3conn = AWS.amazonS3Connection 
+                          (awsAccessKey appConf) 
+                          (awsSecretKey appConf)
+           , AWS.s3bucket = awsBucket appConf
+           , AWS.s3object = ""
+           , AWS.s3query = ""
+           , AWS.s3metadata = []
+           , AWS.s3body = L.empty
+           , AWS.s3operation = HTTP.GET
+           }
+
+appHandler :: AppConf -> ServerPartT IO Response
+appHandler appConf = do
   rq <- askRq
   let host = maybe "skrivapa.se" BS.toString $ getHeader "host" rq
   let scheme = maybe "http" BS.toString $ getHeader "scheme" rq
@@ -225,7 +237,7 @@ appHandler = do
             , ctxtime = minutestime
             , ctxnormalizeddocuments = normalizeddocuments
             , ctxipnumber = peerip
-            , ctxs3action = defaults3action
+            , ctxs3action = defaultAWSAction appConf
             }
   (res,ctx)<- toIO ctx $  
      do

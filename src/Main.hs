@@ -25,7 +25,7 @@ import System.Exit (exitFailure)
 import System.Console.GetOpt
 import AppLogger (withLogger)
 import AppState (AppState(..))
-import AppControl (appHandler,defaults3action)
+import AppControl (appHandler,defaultAWSAction,AppConf(..))
 import qualified Control.Concurrent (threadDelay)
 import qualified User as User
 import qualified Data.ByteString.Char8 as BS
@@ -92,10 +92,10 @@ initDatabaseEntries = do
           Just _ -> return () -- user exist, do not add it
   
 
-uploadOldFilesToAmazon :: IO ()
-uploadOldFilesToAmazon = do
+uploadOldFilesToAmazon :: AppConf -> IO ()
+uploadOldFilesToAmazon appConf = do
   files <- query $ GetFilesThatShouldBeMovedToAmazon
-  mapM_ (AWS.uploadFile defaults3action) files
+  mapM_ (AWS.uploadFile (defaultAWSAction appConf)) files
 
 main = withLogger $ do
   -- progname effects where state is stored and what the logfile is named
@@ -126,7 +126,7 @@ main = withLogger $ do
                               -- use only IPv4 addresses
                               -- bind only to 127.0.0.1
                               socket <- listenOn (port (httpConf appConf))
-                              t1 <- forkIO $ simpleHTTPWithSocket socket (httpConf appConf) appHandler
+                              t1 <- forkIO $ simpleHTTPWithSocket socket (httpConf appConf) (appHandler appConf)
                               t2 <- forkIO $ cron 60 runScheduler
                               return [t1,t2]
                            )
@@ -136,24 +136,22 @@ main = withLogger $ do
                                         (forkIO $ cron (60*60*24) (createCheckpoint control))
                                         (killThread) $ \_ -> do
                                           initDatabaseEntries
-                                          forkIO $ uploadOldFilesToAmazon
+                                          forkIO $ uploadOldFilesToAmazon appConf
                                           -- wait for termination signal
                                           waitForTermination
                                           logM "Happstack.Server" NOTICE "Termination request received" 
 
                   return ())
 
-data AppConf
-    = AppConf { httpConf :: Conf
-              , store :: FilePath
-              , static :: FilePath 
-              }
 
 defaultConf :: String -> AppConf
 defaultConf progName
     = AppConf { httpConf = nullConf
               , store    = "_local/" ++ progName ++ "_state"
               , static   = "public"
+              , awsBucket = ""
+              , awsSecretKey = ""
+              , awsAccessKey = ""
               }
 
 opts :: [OptDescr (AppConf -> AppConf)]
@@ -172,6 +170,15 @@ opts = [ Option [] ["http-port"]
        , Option [] ["static"]      
          (ReqArg (\h c -> c {static = h}) "PATH") 
          "The directory searched for static files" 
+       , Option [] ["awsbucket"]      
+         (ReqArg (\h c -> c {awsBucket = h}) "NAME") 
+         "The bucket name to use for AWS S3 storage" 
+       , Option [] ["awssecretkey"]      
+         (ReqArg (\h c -> c {awsSecretKey = h}) "BASE64") 
+         "The AWS secret key"
+       , Option [] ["awsaccesskey"]      
+         (ReqArg (\h c -> c {awsAccessKey = h}) "BASE64") 
+         "The AWS access key" 
        ]
 
 parseConfig :: [String] -> Either [String] (AppConf -> AppConf)
