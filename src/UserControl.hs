@@ -181,7 +181,17 @@ withUserGet action = do
   case ctxmaybeuser ctx of
     Just user -> action
     Nothing   -> sendRedirect LinkLogin
-
+    
+{- | 
+     Takes a document and a action
+     Runs an action only if current user (from context) is author of document
+| -}
+withDocumentAuthor :: Document -> Kontra a -> Kontra a
+withDocumentAuthor document action= do
+                                     ctx <- get
+                                     case fmap (isAuthor document) (ctxmaybeuser ctx) of
+                                      Just True -> action
+                                      Nothing   -> mzero                   
 {- |
    Guard against a GET with logged in users who have not signed the TOS agreement.
    If they have not, redirect to their account page.

@@ -46,7 +46,8 @@ module DocState
     , SignDocument(..)
     , TimeoutDocument(..)
     , UpdateDocument(..)
-    , SetDocumentStatus(..)
+    , CloseDocument(..)
+    , CancelDocument(..)
     )
 where
 import Happstack.Data
@@ -1251,14 +1252,22 @@ fragileTakeOverDocuments destuserid srcuserid = do
   mapM_ takeover (IxSet.toList hisdocuments)
   return ()
 
---This function is not secure and in my opinion MUST NOT be public in this form. MR
-setDocumentStatus :: DocumentID -> DocumentStatus -> Update Documents (Maybe Document)
-setDocumentStatus docid status = do
-  doc <- modifyDocument docid (\d -> Right $ d { documentstatus = status }) 
+--This is only for Eric functionality with awayting author
+--We should add current state checkers here (not co cancel closed documents etc.)
+closeDocument :: DocumentID -> Update Documents (Maybe Document)
+closeDocument docid = do
+  doc <- modifyDocument docid (\d -> Right $ d { documentstatus = Closed }) 
   case doc of
     Left _ -> return Nothing
     Right d -> return $ Just d
 
+--We should add current state checkers here (not co cancel closed documents etc.)
+cancelDocument :: DocumentID -> Update Documents (Maybe Document)
+cancelDocument docid = do
+  doc <- modifyDocument docid (\d -> Right $ d { documentstatus = Canceled }) 
+  case doc of
+    Left _ -> return Nothing
+    Right d -> return $ Just d
 
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocuments
@@ -1282,12 +1291,15 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'setDocumentTimeoutTime
                         , 'archiveDocuments
                         , 'timeoutDocument
-                        , 'setDocumentStatus
+                        , 'closeDocument
+                        , 'cancelDocument
+                        
                           -- admin only area follows
                         , 'fragileTakeOverDocuments
+     
                         ])
 
 
 
-isAuthor::User->Document->Bool
-isAuthor u d = (userid u) == ( unAuthor . documentauthor $ d)   
+isAuthor::Document->User->Bool
+isAuthor d u = (userid u) == ( unAuthor . documentauthor $ d)   

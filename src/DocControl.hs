@@ -380,7 +380,7 @@ handleIssueShowPost docid = withUserPost $
                           addFlashMsgHtml $ flashDocumentDraftSaved
                           return LinkIssue
        AwaitingAuthor -> do 
-                          doc2 <- update $ SetDocumentStatus documentid Closed
+                          doc2 <- update $ CloseDocument documentid 
                           case doc2 of
                             -- this should be impossible, but what should we do in this case?
                             Nothing -> return LinkIssue
@@ -858,20 +858,21 @@ handleCancel docid =  do
                        ctx <- get
                        mdoc <- query $ GetDocumentByDocumentID (read docid)
                        case (mdoc) of
-                          Just doc -> do 
-                                      mdoc' <- update $ SetDocumentStatus (documentid doc) Canceled 
-                                      let info = if (isJust mdoc') then "Document canceled"  else "Document dould not be canceled"   --Move texts to view 
-                                      addFlashMsgText (BS.fromString info)
-                                      return (LinkIssueDoc doc)
+                          Just doc -> withDocumentAuthor doc $
+                                      do 
+                                       mdoc' <- update $ CancelDocument(documentid doc) 
+                                       let info = if (isJust mdoc') then "Document canceled"  else "Document dould not be canceled"   --Move texts to view 
+                                       addFlashMsgText (BS.fromString info)
+                                       return (LinkIssueDoc doc)
                           Nothing -> mzero  
                          
 handleResend:: String -> String -> Kontra KontraLink
-handleResend docid signlinkid  = withUserPost $
+handleResend docid signlinkid  =
                     do
                       ctx <- get
                       mdoc <- query $ GetDocumentByDocumentID (read docid)
                       case (mdoc) of
-                       Just doc -> 
+                       Just doc -> withDocumentAuthor doc $
                                case (signlinkFromDocById doc (read signlinkid)) of
                                  Just signlink -> 
                                   do 
