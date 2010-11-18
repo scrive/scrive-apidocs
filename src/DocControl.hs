@@ -40,9 +40,8 @@ import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Seal as Seal
-import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
-
+import qualified Amazon as AWS
 
 {-
   Document state transitions are described in DocState.
@@ -549,10 +548,6 @@ gs = "c:\\Program Files\\gs\\gs8.60\\bin\\gswin32c.exe"
 gs = "gs"
 #endif
 
-awsUrlFromFile :: File -> String
-awsUrlFromFile File{filename,fileid} =
-    show fileid ++ "/" ++ HTTP.urlEncode (BS.toString filename) ++ ".pdf"
-
 convertPdfToJpgPages :: Context
                      -> File
                      -> IO JpegPages
@@ -564,7 +559,7 @@ convertPdfToJpgPages Context{ctxs3action} file@File{fileid,filestoragemode,filen
   content <- case filestoragemode of
                FileStorageLocal -> return $ filepdf file
                FileStorageAWS -> do
-                 let url = awsUrlFromFile file
+                 let url = AWS.urlFromFile file
                  result <- AWS.runAction (ctxs3action { AWS.s3object = url })
                  case result of
                    Right rsp -> return (concatChunks (HTTP.rspBody rsp))
@@ -656,7 +651,7 @@ handleDocumentUpload docid content filename = do
   case result of
     Left err -> return ()
     Right document -> do
-        liftIO $ forkIO $ mapM_ (amazonUploadFile ctxs3action) (documentfiles document)
+        liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxs3action) (documentfiles document)
         return ()
   return ()
 
@@ -826,7 +821,7 @@ sealDocument ctx@Context{ctxs3action}
   mdocument <- update $ AttachSealedFile docid filename newfilepdf
   case mdocument of
     Right document -> do
-        forkIO $ mapM_ (amazonUploadFile ctxs3action) (documentsealedfiles document)
+        forkIO $ mapM_ (AWS.uploadFile ctxs3action) (documentsealedfiles document)
         return document
     Left msg -> error msg
   -- let newfile = file {filepdf = newfilepdf}
@@ -921,16 +916,3 @@ handleResend docid signlinkid  =
                                  Nothing -> mzero           
                        Nothing -> mzero               
 
-amazonUploadFile ctxs3action file@File{filestoragemode = FileStorageLocal} = do
-  let action = ctxs3action { AWS.s3object = awsUrlFromFile file
-                           , AWS.s3operation = HTTP.PUT
-                           , AWS.s3body = BSL.fromChunks [filepdf file]
-                           }
-  print ("Uploading AWS", filename file)
-  result <- AWS.runAction action
-  case result of
-    Right _ -> return ()
-    -- FIXME: do much better error handling
-    Left err -> print err >> return ()
-amazonUploadFile _ _ = return ()
-  
