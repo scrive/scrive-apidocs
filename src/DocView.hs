@@ -535,7 +535,7 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document siglnk@(
                 (isTimedout, "Förfallodatum har passerat"),
                 (wasSeen,  "Granskat " ++ showDateOnly (signtime $ fromJust maybeseeninfo))]
                 "Har ej undertecknat"       
-      isCurrentUserAuthor = (isJust muser) && isAuthor (fromJust muser) document    
+      isCurrentUserAuthor = maybe False (isAuthor document) muser
       isCurrentSignatorAuthor = (fmap (unEmail . useremail) muser) ==  (Just signatoryemail)    
       reminderText = if (wasSigned)
                       then "Skicka dokumentet igen"

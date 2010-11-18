@@ -69,12 +69,6 @@ handleRoutes = msum [
      , dir "s" $ hget0  $ DocControl.handleSTable
      , dir "s" $ hget3  $ DocControl.handleSignShow
      , dir "s" $ hpost3 $ DocControl.handleSignPost
-
-     -- OLD
-     -- Question: Do we still need these?
-     , dir "sign" $ hget0  $ DocControl.handleSTable
-     , dir "sign" $ hget3  $ DocControl.handleSignShow
-     , dir "sign" $ hpost3 $ DocControl.handleSignPost
      
      --This all needs to be done by author. Why we dont check it here? MR
      , dir "d" $ hget0  $ DocControl.handleIssueGet
@@ -82,14 +76,6 @@ handleRoutes = msum [
      , dir "d" $ hget2  $ DocControl.handleIssueShowTitleGet
      , dir "d" $ hpost0 $ DocControl.handleIssuePost
      , dir "d" $ hpost1 $ DocControl.handleIssueShowPost
-
-     -- OLD
-     -- Question: Do we still need these?
-     , dir "issue" $ hget0  $ DocControl.handleIssueGet
-     , dir "issue" $ hget1  $ DocControl.handleIssueShowGet
-     , dir "issue" $ hget2  $ DocControl.handleIssueShowTitleGet
-     , dir "issue" $ hpost0 $ DocControl.handleIssuePost
-     , dir "issue" $ hpost1 $ DocControl.handleIssueShowPost
 
      --This are actions on documents. We may integrate it with all the stuff above, but I don't like it. MR
      , dir "resend" $ hpost2 $ DocControl.handleResend
