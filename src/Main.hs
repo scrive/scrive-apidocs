@@ -40,6 +40,7 @@ import Scheduler
 import Happstack.State (update,query)
 import DocControl
 import DocState
+import qualified Amazon as AWS
 
 startTestSystemState' :: (Component st, Methods st) => Proxy st -> IO (MVar TxControl)
 startTestSystemState' proxy = do
@@ -94,7 +95,7 @@ initDatabaseEntries = do
 uploadOldFilesToAmazon :: IO ()
 uploadOldFilesToAmazon = do
   files <- query $ GetFilesThatShouldBeMovedToAmazon
-  mapM_ (amazonUploadFile defaults3action) files
+  mapM_ (AWS.uploadFile defaults3action) files
 
 main = withLogger $ do
   -- progname effects where state is stored and what the logfile is named
@@ -135,6 +136,7 @@ main = withLogger $ do
                                         (forkIO $ cron (60*60*24) (createCheckpoint control))
                                         (killThread) $ \_ -> do
                                           initDatabaseEntries
+                                          forkIO $ uploadOldFilesToAmazon
                                           -- wait for termination signal
                                           waitForTermination
                                           logM "Happstack.Server" NOTICE "Termination request received" 
