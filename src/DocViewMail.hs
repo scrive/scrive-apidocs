@@ -9,7 +9,9 @@ module DocViewMail ( remindMail,
                      mailDocumentClosedForSignatories,
                      mailInvitationToSign,
                      mailInvitationToSignContent,
-                     mailDocumentAwaitingForAuthor
+                     mailDocumentAwaitingForAuthor,
+                     mailCancelDocumentByAuthorContent,
+		             mailCancelDocumentByAuthor
            ) where
 import AppView
 import DocState
@@ -19,7 +21,7 @@ import qualified Data.ByteString as BS
 import User
 import KontraLink
 import Data.Maybe
-import SendMail(Mail,emptyMail,content,title,attachments)
+import SendMail(Mail,emptyMail,content,title,attachments,fullnameemails)
 import DocViewUtil
 import Amazon
 
@@ -240,3 +242,36 @@ mailDocumentAwaitingForAuthor (Context {ctxhostpart}) authorname  document@Docum
              <% poweredBySkrivaPaPara ctxhostpart %>
         </span> 
      return $ emptyMail {title = title, content = content}
+
+mailCancelDocumentByAuthorContent ::(Monad m) =>  Bool ->  (Maybe BS.ByteString) -> Context  -> Document  -> (HSPT m XML) 
+mailCancelDocumentByAuthorContent forMail customMessage ctx document = 
+        let 
+        creatorname = signatoryname $ documentauthordetails document 
+        common = <p>
+                 <% creatorname %> har valt att aterkalla sin inbjudan att underteckna dokument <% documenttitle document %>.
+                  Därmed är avtalsprocessen avbruten och du kan inte längre underteckna dokumentet.
+                 </p>
+        defaultHeader = <p>Hej </p>
+        defaultFooter = poweredBySkrivaPaPara $ ctxhostpart ctx
+        customFooter =  <p>
+                          Hälsningar
+                          <br/>
+                          <% creatorname %>
+                        </p>
+        footer =    if (forMail) 
+                    then if (isNothing customMessage)
+                           then defaultFooter 
+                           else customFooter
+                    else replaceOnEdit defaultFooter customFooter
+        header   = withCustom customMessage (defaultHeader)
+   in  (makeEditable "customtext" header) `before` common `before` footer  
+
+mailCancelDocumentByAuthor ::(Maybe BS.ByteString) -> Context  -> Document -> SignatoryLink -> IO Mail 
+mailCancelDocumentByAuthor customMessage ctx document@Document{documenttitle} signlink = 
+   let content  = mailCancelDocumentByAuthorContent True customMessage ctx document          
+       title =  BS.fromString "Hej" --need new text here
+   in 
+       do
+        attachmentcontent <- getFileContents (ctxs3action ctx) $ head $ documentfiles document          
+        content' <- htmlHeadBodyWrapIO documenttitle  content
+        return $ emptyMail {title = title, fullnameemails =  [emailFromSignLink signlink] , content = content', attachments = [(documenttitle,attachmentcontent)]}

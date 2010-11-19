@@ -21,6 +21,9 @@ module DocView( emptyDetails
               , landpageRejectedView
               , flashDocumentRejected
               , defaultInviteMessage 
+              , mailCancelDocumentByAuthorContent
+              , mailCancelDocumentByAuthor
+              ,flashMessageCanceled 
               ) where
 import AppView
 import Data.List
@@ -472,9 +475,27 @@ pageDocumentForAuthor ctx
               </span>
               %>
             <% if (documentstatus == Pending || documentstatus == AwaitingAuthor) && not timetosignset
-                  then <form method="post" action=(LinkCancel document)>
-                       <input class="submit"  class="bigbutton" type="submit" name="cancel" value="Cancel" />    
-                       </form>
+                then <span>
+                     <input class="button cancel" type="button" name="cancel" value="Aterkalla inbjudan"  rel="#cancel-by-author-dialog" />    
+                     <span class="localdialogs">
+                     <form method="post" action=(LinkCancel document) class="overlay" id="cancel-by-author-dialog">
+                                <a class="close"> </a>
+                                <h2> Aterkalla inbjudan </h2>
+                                <p>Är du säker att du vill aterkalla din inbjudan att underteckna dokumentet?
+			           <BR/>När du aterkallat inbjudan kommer nedanstaende meddelande att skickas till dina motparter.
+                                </p>
+                                <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
+                                 <% mailCancelDocumentByAuthorContent False Nothing ctx document%>
+                                </div>
+                                <div class="buttonbox" >
+                                   <button class="close button" type="button"> Avbryt </button>
+                                   <button class="editer button" type=""> Skriv eget meddelande </button>
+                                   <button class="submiter button" type="button"> Aterkalla inbjudan </button>
+                                </div>
+                          </form>
+                       </span>
+                       </span>
+
                   else <span />
              %>         
        </div>
@@ -523,9 +544,12 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document siglnk@(
       wasSigned =  isJust maybesigninfo
       wasSeen = isJust maybeseeninfo
       isTimedout = documentstatus document == Timedout
-      
+      isCanceled = documentstatus document == Canceled
+      dontShowAnyReminder = isTimedout || isCanceled 
       status =  caseOf
-                [( isTimedout, <img src="/theme/images/status_timeout.png"/>), 
+                [
+                ( isCanceled, <img src="/theme/images/status_rejected.png"/>), 
+                ( isTimedout, <img src="/theme/images/status_timeout.png"/>), 
                 (wasSigned, <img src="/theme/images/status_signed.png"/>),
                 (wasSeen, <img src="/theme/images/status_viewed.png"/> )]
                 <img src="/theme/images/status_pending.png"/>
@@ -533,8 +557,9 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document siglnk@(
                 [
                 (wasSigned, "Undertecknat " ++ showDateOnly (signtime $ fromJust maybesigninfo) ),
                 (isTimedout, "Förfallodatum har passerat"),
-                (wasSeen,  "Granskat " ++ showDateOnly (signtime $ fromJust maybeseeninfo))]
-                "Har ej undertecknat"       
+                (wasSeen,  "Granskat " ++ showDateOnly (signtime $ fromJust maybeseeninfo)),
+                (isCanceled, "" )]
+                 "Har ej undertecknat"       
       isCurrentUserAuthor = maybe False (isAuthor document) muser
       isCurrentSignatorAuthor = (fmap (unEmail . useremail) muser) ==  (Just signatoryemail)    
       reminderText = if (wasSigned)
@@ -571,7 +596,7 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document siglnk@(
                 (if BS.null signatoryemail then [] else [ asChild signatoryemail, asChild <br/> ]) ++
                 [asChild <div class="signatoryfields"><% map displayField signatoryotherfields %></div>] ++
                 ([asChild message]) ++
-                (if (isCurrentUserAuthor && (not isCurrentSignatorAuthor) && (not isTimedout)) then [asChild <br/> ,asChild reminderForm] else [])
+                (if (isCurrentUserAuthor && (not isCurrentSignatorAuthor) && (not dontShowAnyReminder)) then [asChild <br/> ,asChild reminderForm] else [])
                 %>
               </div>
 
@@ -726,4 +751,7 @@ flashRemindMailSent signlink =
                   _ -> (BS.fromString "Dokumentet har skickats till ") `BS.append` (personname signlink)
 
 defaultInviteMessage :: BS.ByteString
-defaultInviteMessage = BS.empty                              
+defaultInviteMessage = BS.empty                
+
+flashMessageCanceled::HSP.HSP HSP.XML 
+flashMessageCanceled = <span> Du har nu aterkallat inbjudan att underteckna <BR/> dokumentet och ett meddelande om <BR/> aterkallelsen har skickats till samtliga parter.</span>              
