@@ -12,7 +12,8 @@ module DocViewUtil (   personname,
                        before,
                        replaceOnEdit,
                        joinWith,
-                       addbr
+                       addbr,
+                       emailFromSignLink
            ) where
 import DocState
 import HSP
@@ -88,12 +89,7 @@ swedishListString (x:xs) = do
   
 strong :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 strong x = <strong><% x %></strong>
- 
-personname::SignatoryLink -> BS.ByteString 
-personname signlink = if (BS.null $ signatoryname $ signatorydetails signlink)
-                        then  signatoryemail $ signatorydetails signlink  
-                        else  signatoryname $ signatorydetails signlink
-              
+            
               
 withCustom::(Monad m) => Maybe (BS.ByteString)->(HSPT m XML) ->(HSPT m XML) 
 withCustom (Just customMessage) _ = <span> <% (cdata $ BS.toString customMessage ) %> </span>
@@ -118,3 +114,14 @@ joinWith s (x:xs) = x ++ s ++ (joinWith s xs)
 addbr::(HSX.XMLGen m) => BS.ByteString -> [GenChildList m]
 addbr text | BS.null text = []
 addbr text = [<% text %>, <% <br/> %>]
+
+
+{- Either a signatory name or email address. We dont want to show empty strings -}
+personname::SignatoryLink -> BS.ByteString 
+personname signlink = if (BS.null $ signatoryname $ signatorydetails signlink)
+                        then  signatoryemail $ signatorydetails signlink  
+                        else  signatoryname $ signatorydetails signlink
+
+{- Function for changing SignatoryLink into our inner email address so u dont have to unwrap every time-}
+emailFromSignLink::SignatoryLink->(BS.ByteString,BS.ByteString)
+emailFromSignLink sl = (signatoryname $ signatorydetails sl,signatoryemail $ signatorydetails sl) 

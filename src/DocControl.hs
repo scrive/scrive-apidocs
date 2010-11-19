@@ -883,12 +883,18 @@ handleCancel:: String -> Kontra KontraLink
 handleCancel docid =  do
                        ctx <- get
                        mdoc <- query $ GetDocumentByDocumentID (read docid)
+                       customMessage <- fmap (fmap concatChunks) $ getDataFn' (lookBS "customtext")  
                        case (mdoc) of
                           Just doc -> withDocumentAuthor doc $
                                       do 
                                        mdoc' <- update $ CancelDocument(documentid doc) 
-                                       let info = if (isJust mdoc') then "Document canceled"  else "Document dould not be canceled"   --Move texts to view 
-                                       addFlashMsgText (BS.fromString info)
+                                       let success = isJust mdoc
+                                       case mdoc' of 
+                                        Just doc' ->
+                                             do
+                                              sendCancelMailsForDocument customMessage ctx doc
+                                              addFlashMsgHtml flashMessageCanceled 
+                                        Nothing -> addFlashMsgText $ BS.fromString "Could not cancel"
                                        return (LinkIssueDoc doc)
                           Nothing -> mzero  
                          
@@ -910,3 +916,6 @@ handleResend docid signlinkid  =
                                  Nothing -> mzero           
                        Nothing -> mzero               
 
+sendCancelMailsForDocument:: (Maybe BS.ByteString) -> Context -> Document -> Kontra ()
+sendCancelMailsForDocument customMessage ctx document = liftIO $ 
+        forM_ (documentsignatorylinks document) (sendMail  <=< (mailCancelDocumentByAuthor customMessage ctx document))

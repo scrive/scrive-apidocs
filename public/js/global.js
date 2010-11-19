@@ -259,7 +259,7 @@ $(document).ready( function () {
         onBeforeLoad: function () { if (!sigFieldsValidation()) return false;}
     })
     
-    $("#cancel").overlay({	mask: standardDialogMask
+    $("#cancel, .cancel").overlay({	mask: standardDialogMask
                 });
     $("#toscontainer").overlay({mask: standardDialogMask,
                 load: true
