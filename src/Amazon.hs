@@ -31,7 +31,9 @@ urlFromFile File{filename,fileid} =
     "file/" ++ show fileid ++ "/" ++ HTTP.urlEncode (BSC.unpack filename) ++ ".pdf"
 
 
-uploadFile ctxs3action@AWS.S3Action{ AWS.s3bucket = "" } _ = return ()
+uploadFile ctxs3action@AWS.S3Action{ AWS.s3bucket = "" } _ = do
+  putStrLn "No uploadind as bucket is ''"
+  return ()
 uploadFile ctxs3action file@File{fileid,filestorage = FileStorageMemory content} = do
   let action = ctxs3action { AWS.s3object = url
                            , AWS.s3operation = HTTP.PUT
@@ -55,7 +57,8 @@ uploadFile ctxs3action file@File{fileid,filestorage = FileStorageMemory content}
                 return ()
 uploadFile _ _ = return ()
 
-getFileContents s3action File{ filestorage = FileStorageMemory content } = 
+getFileContents s3action File{ filestorage = FileStorageMemory content, filename } = do
+    putStrLn $ "getFileContents local " ++ BS.toString filename
     return content
 getFileContents s3action File{ filestorage = FileStorageAWS bucket url } = do
   putStrLn $ "AWS download " ++ BS.toString bucket ++ "/" ++ BS.toString url
