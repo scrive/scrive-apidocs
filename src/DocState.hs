@@ -1038,7 +1038,8 @@ fileMovedToAWS fileid' bucket url = do
                     , filestorage = FileStorageMemory _
                     } | fileid == fileid' =
                                  file { filestorage = FileStorageAWS bucket url }
-                             | otherwise = file
+                      | otherwise = file
+    moved1 file = file
 
 
 attachFile :: DocumentID 
