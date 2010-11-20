@@ -26,7 +26,9 @@ import Happstack.State (update)
 
 urlFromFile :: File -> String
 urlFromFile File{filename,fileid} =
-    show fileid ++ "/" ++ HTTP.urlEncode (BS.toString filename) ++ ".pdf"
+    -- here we use BSC.unpack, as HTTP.urlEncode
+    -- does only %-escaping for 8bit values
+    show fileid ++ "/" ++ HTTP.urlEncode (BSC.unpack filename) ++ ".pdf"
 
 
 uploadFile ctxs3action@AWS.S3Action{ AWS.s3bucket = "" } _ = return ()
@@ -47,6 +49,7 @@ uploadFile ctxs3action file@File{fileid,filestorage = FileStorageMemory content}
 
     -- FIXME: do much better error handling
     Left err -> do
+                putStrLn $ "AWS failed to upload: " ++ bucket ++ "/" ++ url
                 print err 
                 return ()
 uploadFile _ _ = return ()
@@ -54,6 +57,7 @@ uploadFile _ _ = return ()
 getFileContents s3action File{ filestorage = FileStorageMemory content } = 
     return content
 getFileContents s3action File{ filestorage = FileStorageAWS bucket url } = do
+  putStrLn $ "AWS download " ++ BS.toString bucket ++ "/" ++ BS.toString url
   result <- AWS.runAction (s3action { AWS.s3object = BS.toString url
                                        , AWS.s3bucket = BS.toString bucket
                                        })
