@@ -28,7 +28,7 @@ urlFromFile :: File -> String
 urlFromFile File{filename,fileid} =
     -- here we use BSC.unpack, as HTTP.urlEncode
     -- does only %-escaping for 8bit values
-    show fileid ++ "/" ++ HTTP.urlEncode (BSC.unpack filename) ++ ".pdf"
+    "file/" ++ show fileid ++ "/" ++ HTTP.urlEncode (BSC.unpack filename) ++ ".pdf"
 
 
 uploadFile ctxs3action@AWS.S3Action{ AWS.s3bucket = "" } _ = return ()
@@ -36,6 +36,7 @@ uploadFile ctxs3action file@File{fileid,filestorage = FileStorageMemory content}
   let action = ctxs3action { AWS.s3object = url
                            , AWS.s3operation = HTTP.PUT
                            , AWS.s3body = BSL.fromChunks [content]
+                           , AWS.s3metadata = [("Content-Type","application/pdf")]
                            }
       url = urlFromFile file
       bucket = AWS.s3bucket ctxs3action
