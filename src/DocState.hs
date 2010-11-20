@@ -1032,7 +1032,7 @@ fileMovedToAWS fileid' bucket url = do
   where
     moved doc@Document{documentfiles,documentsealedfiles} =
         Right $ doc { documentfiles = map moved1 documentfiles
-                    , documentsealedfiles = map moved1 documentfiles
+                    , documentsealedfiles = map moved1 documentsealedfiles
                     }
     moved1 file@File{ fileid
                     , filestorage = FileStorageMemory _
