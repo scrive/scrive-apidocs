@@ -406,8 +406,13 @@ pageDocumentForAuthor ctx
               </div>
               <div style="margin-top: 5px">
               <span>
-                <input type="checkbox" class="addremovecheckbox" rel="#daystosignbox" location="#datetosigncontainer" oldlocation="#hiddenttimestuffbox" autocomplete="off" value=(if timetosignset then "on" else "off") ></input> Välj förfallodatum
+              <input type="checkbox" class="addremovecheckbox flashOnClick" rel="#daystosignbox" location="#datetosigncontainer" oldlocation="#hiddenttimestuffbox" autocomplete="off" value=(if timetosignset then "on" else "off") ></input> Välj förfallodatum
                 <div id="datetosigncontainer">  </div>
+                <% if timetosignset
+                   then <span/>
+                   else <span class="hidden flashMessage" > Varning: Om du väljer ett förfallodatum kan du inte återkalla inbjudan innan datumet förfallit. Detta regleras av avtalslagen.</span>
+                   
+                %>   
               </span>
               <div style="height: 2px;"/>
               <input class="bigbutton" type="submit" name="final" value="Underteckna" id="signinvite" rel="#dialog-confirm-signinvite"/>
