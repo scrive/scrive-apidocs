@@ -155,7 +155,15 @@ mailInvitationToSignContent forMail (Context {ctxhostpart})
         creatorname = signatoryname documentauthordetails
         common = <span>
                   <p><i>Översiktlig information</i><br/>
-                   Parter: <% partyListString document %><br/>
+                   Parter: 
+                  <% if (forMail) 
+                     then  <span><% partyListString document %> </span>
+                     else  <span>
+                            <span class="partylistupdate"></span>
+                            <span class="hidden authorname"> <% personname' documentauthordetails %> </span>
+                           </span> 
+            	  %>
+		   <BR/>
                    Har undertecknat: <strong><% creatorname %></strong><br/>
                   <% case documenttimeouttime of 
                       Just time -> <span>Undertecknas senast: <strong><% show time %></strong>.</span>

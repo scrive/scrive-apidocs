@@ -2,6 +2,7 @@
 {-# OPTIONS_GHC -F -pgmFtrhsx -Wall #-}
 
 module DocViewUtil (   personname,
+                       personname',
                        partyListString,
                        partyListButAuthorString,
                        partyUnsignedListString,
@@ -61,19 +62,19 @@ partyListButAuthor document =
 
 partyListButAuthorString :: (XMLGenerator m) => Document -> GenChildList m
 partyListButAuthorString document =
-    swedishListString (map (strong . BS.toString . signatoryname) (partyListButAuthor document))
+    swedishListString (map (strong . BS.toString . personname') (partyListButAuthor document))
 
 partyListString :: (XMLGenerator m) => Document -> GenChildList m
 partyListString document = 
-    swedishListString (map (strong . BS.toString . signatoryname) (partyList document))
+    swedishListString (map (strong . BS.toString . personname') (partyList document))
 
 partyUnsignedListString :: (XMLGenerator m) => Document -> GenChildList m
 partyUnsignedListString document = 
-    swedishListString (map (strong . BS.toString . signatoryname) (partyUnsignedList document))
+    swedishListString (map (strong . BS.toString . personname') (partyUnsignedList document))
 
 partyUnsignedMeAndListString :: (XMLGenerator m) => MagicHash -> Document -> GenChildList m
 partyUnsignedMeAndListString magichash document =
-    swedishListString (map (strong . BS.toString . signatoryname) (partyUnsignedMeAndList magichash document))
+    swedishListString (map (strong . BS.toString . personname') (partyUnsignedMeAndList magichash document))
 
 
 swedishListString :: (XMLGenerator m) => [XMLGenT m (HSX.XML m)] -> GenChildList m
@@ -118,9 +119,13 @@ addbr text = [<% text %>, <% <br/> %>]
 
 {- Either a signatory name or email address. We dont want to show empty strings -}
 personname::SignatoryLink -> BS.ByteString 
-personname signlink = if (BS.null $ signatoryname $ signatorydetails signlink)
-                        then  signatoryemail $ signatorydetails signlink  
-                        else  signatoryname $ signatorydetails signlink
+personname = personname' . signatorydetails 
+
+{- Same but unwrapped. We need this cause author detais are in this format  -}
+personname'::SignatoryDetails -> BS.ByteString 
+personname' signdetails = if (BS.null $ signatoryname $ signdetails)
+                           then  signatoryemail $ signdetails
+                           else  signatoryname $ signdetails
 
 {- Function for changing SignatoryLink into our inner email address so u dont have to unwrap every time-}
 emailFromSignLink::SignatoryLink->(BS.ByteString,BS.ByteString)

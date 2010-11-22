@@ -234,7 +234,25 @@ $(document).ready( function () {
     mask: standardDialogMask,    
     onBeforeLoad: function () { 
             var newtxt = $("#invitetext").val()
-            $("#edit-invite-text-dialog textarea").val(newtxt );          
+            $("#edit-invite-text-dialog textarea").val(newtxt);    
+            var author = $(".authorname") .text();
+	    var sigs = $(".signatorybox").not("#signatory_template");
+            var partners = new Array()
+            partners[0] = author;
+            var i = 1;
+            sigs.each(function(){
+              var namefield = $("[name='signatoryname']",this);
+              var mailfield =  $("[name='signatoryemail']",this)
+              
+              var res = $(this).attr("alt");
+              if (!namefield.hasClass("grayed"))          
+                 res = namefield.val();
+             else if (!mailfield.hasClass("grayed") )
+                 res = mailfield.val(); 
+              partners[i] = res
+              i++;
+            })
+            $(".partylistupdate",$(this).attr("rel")).html(swedishList(partners));
     }
     })   
         
@@ -305,6 +323,7 @@ $(document).ready( function () {
             $($(this).attr("location")).append($($(this).attr("rel")));      
             $(this).attr("checked","checked");
          } })    
+    
     $(".datetodaystip").each(function() {
          var curr = $(this);
          var basictime =  new Date().getTime() ;
@@ -495,3 +514,19 @@ $.tools.validator.addEffect("failWithFlashOnEmail", function(errors, event) {
 }, function(inputs)  {
 	$(inputs).removeClass("redborder");
 });    
+
+
+function swedishList(list)
+{
+  var res = strong(list[0]);
+  for(i=1;i<list.length;i++)
+  {
+   if (i==list.length-1)
+     res += " och " + strong(list[i])
+   else
+     res += ", " + strong(list[i])
+     
+  }
+  return res;
+}
+function strong(l) {return "<strong>"+l+"</strong>"}
