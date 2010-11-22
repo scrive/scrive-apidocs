@@ -142,7 +142,7 @@ createUser1 hostpart fullname email password isnewuser maybesupervisor = do
       if not isnewuser
        then passwordChangeMail hostpart email fullname password
        else newUserMail hostpart email fullname password
-    Just supervisor -> inviteSubaccountMail hostpart (userfullname supervisor) (usercompanyname supervisor)
+    Just supervisor -> inviteSubaccountMail hostpart (prettyName  supervisor) (usercompanyname supervisor)
                        email fullname password
   sendMail $ mail { fullnameemails = [(fullname, email)]}
   return user

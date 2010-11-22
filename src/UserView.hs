@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, NamedFieldPuns #-}
 {-# OPTIONS_GHC -F -pgmFtrhsx -Wall #-}
-module UserView(viewSubaccounts,passwordChangeMail,showUser,userDetailsSavedFlashMessage,newUserMail,inviteSubaccountMail,pageAcceptTOS) where
+module UserView(viewSubaccounts,passwordChangeMail,showUser,userDetailsSavedFlashMessage,newUserMail,inviteSubaccountMail,pageAcceptTOS,prettyName) where
 
 import HSP hiding (Request)
 import Happstack.Server.SimpleHTTP
@@ -211,23 +211,24 @@ inviteSubaccountMail :: String
                      -> BS.ByteString
                      -> BS.ByteString
                      -> IO Mail
-inviteSubaccountMail hostpart supervisorname companyname emailaddress personname newpassword = 
+inviteSubaccountMail hostpart supervisorname _ emailaddress personname newpassword = 
     do 
      let title = BS.concat [(BS.fromString "Inbjudan från "),(supervisorname),(BS.fromString " till underkonto" )]
      content <- htmlHeadBodyWrapIO ""
        <span>
        <p>Hej <strong><% personname %></strong>,</p>
  
-       <p><strong><% supervisorname %></strong> har bjudit in dig att öppna ett konto på SkrivaPå genom vilket du kan
-          skriva avtal för <strong><% companyname %></strong>. Observera att detta konto inte är
-          avsett för privat bruk.</p>
- 
-       <p>Användarnamn: <span style="color: orange; text-weight: bold"><% emailaddress %></span><br/>
-          Lösenord: <span style="color: orange; text-weight: bold"><% newpassword %></span><br/>
+       <p><strong><% supervisorname %></strong> har bjudit in dig till ett konto på tjänsten SkrivaPå. </p>
+       
+       <p>"SkrivaPå är ett webbaserat tredjepartsnotariat som gör det möjligt att underteckna, 
+       hantera och arkivera avtal elektroniskt. SkrivaPå är som Gmail för dina avtal."</p>
+      
+       <p>Användarnamn: <span style="text-weight: bold"><% emailaddress %></span><br/>
+          Lösenord: <span style="text-weight: bold"><% newpassword %></span><br/>
        </p>
  
        <p>
-       <a href=(hostpart ++ "/login")><% hostpart ++ "/login" %></a>
+       <a href=(hostpart)><% hostpart %></a>
        </p>
  
        <% poweredBySkrivaPaPara hostpart %> 
@@ -237,3 +238,10 @@ inviteSubaccountMail hostpart supervisorname companyname emailaddress personname
 userDetailsSavedFlashMessage :: HSP.HSP HSP.XML
 userDetailsSavedFlashMessage = 
     <div>Dina kontoändringar har sparats.</div>
+
+{- Same as personname (username or email) from DocView but works on User not singlinks-}
+prettyName::User -> BS.ByteString
+prettyName u = if (BS.null $ userfullname u)
+               then unEmail $ useremail u 
+               else userfullname u
+          
