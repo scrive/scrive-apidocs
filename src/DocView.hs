@@ -476,11 +476,11 @@ pageDocumentForAuthor ctx
               %>
             <% if (documentstatus == Pending || documentstatus == AwaitingAuthor) && not timetosignset
                 then <span>
-                     <input class="button cancel" type="button" name="cancel" value="Aterkalla inbjudan"  rel="#cancel-by-author-dialog" />    
+                     <input class="button cancel" type="button" name="cancel" value="Återkalla inbjudan"  rel="#cancel-by-author-dialog" />    
                      <span class="localdialogs">
                      <form method="post" action=(LinkCancel document) class="overlay" id="cancel-by-author-dialog">
                                 <a class="close"> </a>
-                                <h2> Aterkalla inbjudan </h2>
+                                <h2> Återkalla inbjudan </h2>
                                 <p>Är du säker att du vill aterkalla din inbjudan att underteckna dokumentet?
 			           <BR/>När du aterkallat inbjudan kommer nedanstaende meddelande att skickas till dina motparter.
                                 </p>
@@ -490,7 +490,7 @@ pageDocumentForAuthor ctx
                                 <div class="buttonbox" >
                                    <button class="close button" type="button"> Avbryt </button>
                                    <button class="editer button" type=""> Skriv eget meddelande </button>
-                                   <button class="submiter button" type="button"> Aterkalla inbjudan </button>
+                                   <button class="submiter button" type="button"> Återkalla inbjudan</button>
                                 </div>
                           </form>
                        </span>
