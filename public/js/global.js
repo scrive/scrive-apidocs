@@ -298,6 +298,12 @@ $(document).ready( function () {
 							
 	
 	});
+    $(".flashOnClick").click( function(){
+      $(".flashMessage",$(this).parent()).each(function(){
+         addFlashMessage($(this).html())
+         $(this).remove();
+      })
+    })    
     $(".addremovecheckbox").change(function(){
         var what = $($(this).attr("rel"))
         var location = $($(this).attr("location"))
