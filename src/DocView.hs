@@ -275,7 +275,7 @@ showSignatoryEntryForEdit2 :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraL
                            => String -> String -> String -> String
                            -> String -> XMLGenT m (HSX.XML m)
 showSignatoryEntryForEdit2 idx signatoryname signatorycompany signatorynumber signatoryemail = 
-    <div id=idx>
+    <div id=idx class="signatorybox" alt="Namn på avtalspart">
       <input name="signatoryname" type="text" value=signatoryname autocomplete="off"
              infotext="Namn på motpart"/><br/>
       <input name="signatorycompany" type="text" value=signatorycompany autocomplete="off"
