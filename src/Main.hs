@@ -152,6 +152,7 @@ defaultConf progName
               , awsBucket = ""
               , awsSecretKey = ""
               , awsAccessKey = ""
+              , production = False
               }
 
 opts :: [OptDescr (AppConf -> AppConf)]
@@ -179,6 +180,9 @@ opts = [ Option [] ["http-port"]
        , Option [] ["awsaccesskey"]      
          (ReqArg (\h c -> c {awsAccessKey = h}) "BASE64") 
          "The AWS access key" 
+       , Option [] ["production"]    
+         (NoArg (\ c -> c { production = True })) 
+         "Turn on production environment"
        ]
 
 parseConfig :: [String] -> Either [String] (AppConf -> AppConf)

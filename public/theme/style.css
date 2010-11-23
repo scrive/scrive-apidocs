@@ -218,6 +218,11 @@ input[type=submit]:active , button:active , a.button:active
     background: url(images/logolarge1.png) no-repeat 0 0;
 }
 
+.development #logosmall
+{
+    background-color: orange;
+}
+
 .bodycolorbg 
 {
     background-color: #fafafa;

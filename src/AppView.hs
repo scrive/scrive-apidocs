@@ -204,17 +204,17 @@ pageFromBody :: (EmbedAsChild (HSPT' IO) xml)
              -> String 
              -> xml 
              -> HSP XML
-pageFromBody (Context {ctxmaybeuser,ctxflashmessages}) 
+pageFromBody (Context {ctxmaybeuser,ctxflashmessages,ctxproduction}) 
              topMenu title body =
     withMetaData html4Strict $
     <html>
      <head>
-      <title><% title %></title>
+      <title><% title %><% if ctxproduction then "" else " (devel)" %></title>
       <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
       <% partialStyles %>
       <% partialScripts {- we would like to move this to the end of html, to load faster -} %>
      </head>
-     <body>
+     <body class=(if ctxproduction then "" else "development")>
      <div id="headerWide"/>
      <div id="mainContainer960">
       <div class="flashmsgbox">
@@ -309,20 +309,24 @@ pageFromBody (Context {ctxmaybeuser,ctxflashmessages})
 		<div id="copy"><% cdata "&copy;" %> 2010 SkrivaPå</div> 
        </div>
       </div>
+      <% if ctxproduction
+         then [
+               <script type="text/javascript">
+                 var _gaq = _gaq || [];
+                 _gaq.push(['_setAccount', 'UA-6387711-9']);
+                 _gaq.push(['_trackPageview']);
 
-      <script type="text/javascript">
-        var _gaq = _gaq || [];
-        _gaq.push(['_setAccount', 'UA-6387711-9']);
-        _gaq.push(['_trackPageview']);
+                 (function() {
+                    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+                    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+                    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+                  })();
 
-        (function() {
-          var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-          ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-          var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-          })();
-
-      </script>
-      <script type="text/javascript" src="https://eu1.snoobi.com/snoop.php?tili=skrivapa_se"/> 
+               </script>
+               , <script type="text/javascript" src="https://eu1.snoobi.com/snoop.php?tili=skrivapa_se"/> 
+               ]
+         else []
+       %>
      </body>
     </html>
 
