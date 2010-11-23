@@ -61,6 +61,7 @@ data AppConf
               , awsBucket       :: String
               , awsAccessKey    :: String
               , awsSecretKey    :: String
+              , production      :: Bool
               }              
 
 
@@ -238,6 +239,7 @@ appHandler appConf = do
             , ctxnormalizeddocuments = normalizeddocuments
             , ctxipnumber = peerip
             , ctxs3action = defaultAWSAction appConf
+            , ctxproduction = production appConf
             }
   (res,ctx)<- toIO ctx $  
      do

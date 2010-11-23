@@ -118,6 +118,7 @@ data Context = Context
     , ctxnormalizeddocuments :: MVar (Map.Map FileID JpegPages)
     , ctxipnumber            :: Word32
     , ctxs3action            :: AWS.S3Action
+    , ctxproduction          :: Bool
     }
 
 type Kontra a = ServerPartT (StateT Context IO) a
