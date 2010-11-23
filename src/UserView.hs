@@ -211,20 +211,18 @@ inviteSubaccountMail :: String
                      -> BS.ByteString
                      -> BS.ByteString
                      -> IO Mail
-inviteSubaccountMail hostpart supervisorname _ emailaddress personname newpassword = 
+inviteSubaccountMail hostpart supervisorname companyname emailaddress personname newpassword = 
     do 
      let title = BS.concat [(BS.fromString "Inbjudan från "),(supervisorname),(BS.fromString " till underkonto" )]
      content <- htmlHeadBodyWrapIO ""
        <span>
        <p>Hej <strong><% personname %></strong>,</p>
  
-       <p><strong><% supervisorname %></strong> har bjudit in dig till ett konto på tjänsten SkrivaPå. </p>
-       
-       <p>"SkrivaPå är ett webbaserat tredjepartsnotariat som gör det möjligt att underteckna, 
-       hantera och arkivera avtal elektroniskt. SkrivaPå är som Gmail för dina avtal."</p>
-      
-       <p>Användarnamn: <span style="text-weight: bold"><% emailaddress %></span><br/>
-          Lösenord: <span style="text-weight: bold"><% newpassword %></span><br/>
+       <p><strong><% supervisorname %></strong> har bjudit in dig att öppna ett konto på SkrivaPå genom vilket du kan
+          skriva avtal för <strong><% companyname %></strong>. Observera att detta konto inte är
+          avsett för privat bruk.</p>     
+       <p>Användarnamn: <span style="color: orange; text-weight: bold"><% emailaddress %></span><br/>
+          Lösenord: <span style="color: orange; text-weight: bold"><% newpassword %></span><br/>
        </p>
  
        <p>
