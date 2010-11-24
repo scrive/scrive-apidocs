@@ -157,8 +157,8 @@ concatSignatories siglinks =
     concat $ intersperse ", " $ map (BS.toString . personname) siglinks
 
 oneDocumentRow::(EmbedAsAttr m (Attr [Char] [Char]), EmbedAsAttr m (Attr [Char] KontraLink), EmbedAsAttr m (Attr [Char] DocumentID)) =>
-                MinutesTime -> UserID -> Document  -> XMLGenT m (HSX.XML m)
-oneDocumentRow crtime userid document@Document{ documentid
+                MinutesTime -> User -> Document  -> XMLGenT m (HSX.XML m)
+oneDocumentRow crtime user document@Document{ documentid
                                 , documentsignatorylinks
                                 , documentstatus
                                 , documenttitle
@@ -166,10 +166,10 @@ oneDocumentRow crtime userid document@Document{ documentid
                                 , documentmtime
                                 , documentauthor
                                 }  = 
-    let link = if unAuthor documentauthor==userid
+    let link = if unAuthor documentauthor==(userid user)
                then LinkIssueDoc document
                else LinkSignDoc document signatorylink
-        [signatorylink] = filter (\x -> maybesignatory x == Just (Signatory userid)) documentsignatorylinks
+        [signatorylink] = filter (isMatchingSignatoryLink user) documentsignatorylinks
         mk x = <a href=link><% x %></a>
         seenstatus = any (isJust . maybeseeninfo) documentsignatorylinks
         statusimg = "/theme/images/" ++
@@ -214,10 +214,10 @@ oneDocumentRow crtime userid document@Document{ documentid
 pageDocumentList :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink),
                       EmbedAsAttr m (Attr [Char] DocumentID)) 
               => MinutesTime
-              -> UserID
+              -> User
               -> [Document] 
               -> XMLGenT m (HSX.XML m)
-pageDocumentList ctime userid documents = 
+pageDocumentList ctime user documents = 
      <form method="post" action=LinkIssue>
      <table class="doctable" cellspacing="0">
       <col/>
@@ -256,7 +256,7 @@ pageDocumentList ctime userid documents =
        </tr>
       </tfoot>
       <tbody id="selectable">
-       <% map (oneDocumentRow ctime userid) (filter (not . documentdeleted) documents) %>
+       <% map (oneDocumentRow ctime user) (filter (not . documentdeleted) documents) %>
       </tbody>
      </table>
      </form>
