@@ -427,9 +427,6 @@ pageDocumentForAuthor ctx
                     
                     <p>När du undertecknat kommer en automatisk inbjudan att skickas till 
                        <span class="Xinvited">Invited</span> med e-post.</p>
-                   <BR/>    
-                   <BR/>
-                   <BR/>
                    <div class="buttonbox" >
                        <input type="hidden" name="final" value="automatic"/>
                        <button class="close button" type="button"> Avbryt </button>
@@ -442,8 +439,6 @@ pageDocumentForAuthor ctx
                    <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
                    <% mailInvitationToSignContent False ctx document Nothing%>
                    </div>
-                   <BR/>
-                   <BR/>
                    <div class="buttonbox" >
                        <button class="close button" type="button"> Avbryt </button>
                        <button class="editer button" type=""> Skriv eget meddelande </button>
@@ -673,8 +668,6 @@ pageDocumentForSign action document ctx  invitedlink wassigned =
                      <p>När <% partyUnsignedMeAndListString magichash document %> undertecknat blir 
                       avtalet <strong>juridiskt bindande</strong> och
                       det färdigställda avtalet skickas till din e-post.</p>
-                      <BR/>
-                      <BR/>
                       <div class="buttonbox">
                       <input type="hidden" name="sign" value="automatic"/>
                       <button class="close button" type="button"> Avbryt </button>
