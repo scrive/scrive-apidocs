@@ -163,7 +163,6 @@ mailInvitationToSignContent forMail (Context {ctxhostpart})
                             <span class="hidden authorname"> <% personname' documentauthordetails %> </span>
                            </span> 
             	  %>
-		   <BR/>
                    Har undertecknat: <strong><% creatorname %></strong><br/>
                   <% case documenttimeouttime of 
                       Just time -> <span>Undertecknas senast: <strong><% show time %></strong>.</span>
