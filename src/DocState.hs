@@ -24,7 +24,7 @@ module DocState
     , SignatoryLinkID(..)
     , TimeoutTime(..)
     , isAuthor
-
+    , isMatchingSignatoryLink
     , ArchiveDocuments(..)
     , AttachFile(..)
     , AttachSealedFile(..)
@@ -960,16 +960,25 @@ getDocumentsByAuthor userid = do
     documents <- ask
     return $ toList (documents @= Author userid)
 
-getDocumentsByUser :: UserID -> Query Documents [Document]
-getDocumentsByUser userid = do
-    documents <- ask
-    return $ toList (documents @= Author userid ||| documents @= Signatory userid)
+getDocumentsByUser :: User -> Query Documents [Document]
+getDocumentsByUser user = do
+    authoredDocs <- getDocumentsByAuthor $ userid user
+    signatoryDocs <- getDocumentsBySignatory $ user
+    return $ authoredDocs ++ signatoryDocs
 
-getDocumentsBySignatory :: UserID -> Query Documents [Document]
-getDocumentsBySignatory userid = do
+getDocumentsBySignatory :: User -> Query Documents [Document]
+getDocumentsBySignatory user = do
     documents <- ask
-    return $ toList (documents @= Signatory userid)
-    
+    return $ filter ((any (isMatchingSignatoryLink user)) . documentsignatorylinks) (toList documents)
+
+isMatchingSignatoryLink :: User -> SignatoryLink -> Bool
+isMatchingSignatoryLink user sigLink = signatoryMatches || emailMatches
+	where signatoryMatches = case (maybesignatory sigLink) of
+                                             Just (Signatory sigid) | sigid == (userid user) -> True
+                                             _ -> False
+              emailMatches = (signatoryemail . signatorydetails $ sigLink) == (unEmail . useremail $ user)
+
+
 getTimeoutedButPendingDocuments  :: MinutesTime -> Query Documents [Document]
 getTimeoutedButPendingDocuments now = do
                          docs <-  ask

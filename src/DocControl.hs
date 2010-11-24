@@ -175,9 +175,9 @@ sendRejectAuthorEmail customMessage ctx document signalink = do
 handleSTable = withUserGet $ checkUserTOSGet $
     do
       ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) <- get
-      let u = userid $ fromJust ctxmaybeuser
-      documents <- query $ GetDocumentsBySignatory u
-      renderFromBody ctx TopNone kontrakcja (pageDocumentList ctxtime u documents)
+      let user = fromJust ctxmaybeuser
+      documents <- query $ GetDocumentsBySignatory user
+      renderFromBody ctx TopNone kontrakcja (pageDocumentList ctxtime user documents)
 
 signDocument :: DocumentID 
              -> SignatoryLinkID 
@@ -539,8 +539,8 @@ handleIssueGet :: Kontra Response
 handleIssueGet = withUserGet $ checkUserTOSGet $ 
  do
   ctx@(Context {ctxmaybeuser = Just user, ctxhostpart, ctxtime}) <- get
-  documents <- query $ GetDocumentsByUser (userid user) 
-  renderFromBody ctx TopDocument kontrakcja (pageDocumentList ctxtime (userid user) documents)
+  documents <- query $ GetDocumentsByUser user 
+  renderFromBody ctx TopDocument kontrakcja (pageDocumentList ctxtime user documents)
 
 gs :: String
 #ifdef WINDOWS
