@@ -758,5 +758,5 @@ flashRemindMailSent signlink =
 defaultInviteMessage :: BS.ByteString
 defaultInviteMessage = BS.empty                
 
-flashMessageCanceled::HSP.HSP HSP.XML 
-flashMessageCanceled = <span> Du har nu aterkallat inbjudan att underteckna <BR/> dokumentet och ett meddelande om <BR/> aterkallelsen har skickats till samtliga parter.</span>              
+flashMessageCanceled :: HSP.HSP HSP.XML 
+flashMessageCanceled = <span> Du har nu aterkallat inbjudan att underteckna dokumentet och ett meddelande om aterkallelsen har skickats till samtliga parter.</span>
