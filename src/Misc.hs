@@ -210,15 +210,6 @@ toIO2 state = mapServerPartT evalStateT'
       mapFst f (a,b) = (f a,b)
 
 
--- this is cheating
--- FIXME: font encoding
-winAnsiChars = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~?€\201‚ƒ„…†‡ˆ‰Š‹Œ\215Ž\217\220‘’“”•–—˜™š›œ\235žŸ ¡¢£¤¥¦§¨©ª«¬?®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ"
-
-unicodeToWinAnsi x = 
-    case findIndex (==x) winAnsiChars of
-      Just i -> chr (i + 33)
-      Nothing -> x
-      
 
 safehead s [] = error s
 safehead _ (x:_) = x
