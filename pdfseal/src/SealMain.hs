@@ -4,7 +4,7 @@
 module Main where
 
 import Seal
-import PdfModel
+import PdfModel hiding (value)
 import System.Environment
 import Data.Maybe
 import Data.Time.Clock
@@ -89,14 +89,12 @@ nda = SealSpec
                               , histcomment = "Really soon now öåä ÖÅÄ. Swedish works. This is actually a very long line of text so we can really see if the line breaking works or maybe not that good."
                               }
                   ]
-    , fields = [ Field { Seal.value = "Text"
-                      , x = 100
-                      , y = 100
-                      , w = 595
-                      , h = 800
-                      , page = 0
-                      }
-              ]
+    -- should be in 4 corners, aligned
+    , fields = [ Field {value = "Gracjan Polak", x = 7, y = 7, page = 1, w = 770, h = 1085}
+               , Field {value = "Gracjan Polak", x = 681, y = 7, page = 1, w = 770, h = 1085}
+               , Field {value = "Gracjan Polak", x = 7, y = 1058, page = 1, w = 770, h = 1085}
+               , Field {value = "Gracjan Polak", x = 681, y = 1058, page = 1, w = 770, h = 1085}
+               , Field {value = "gracjan@mail.com", x = 121, y = 347, page = 1,w = 770, h = 1085}]
     }
 
 
