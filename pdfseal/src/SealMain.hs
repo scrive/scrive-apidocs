@@ -18,6 +18,7 @@ exrotate = SealSpec
     , output = "16pages_sealed.pdf"
     , documentNumber = "0000001234"
     , hostpart = "http://host.skrivapa"
+    , fields = []
     , persons = 
         [ Person 
           { fullname = "Lukas Duczko öåä ÖÅÄ"
@@ -88,6 +89,14 @@ nda = SealSpec
                               , histcomment = "Really soon now öåä ÖÅÄ. Swedish works. This is actually a very long line of text so we can really see if the line breaking works or maybe not that good."
                               }
                   ]
+    , fields = [ Field { Seal.value = "Text"
+                      , x = 100
+                      , y = 100
+                      , w = 595
+                      , h = 800
+                      , page = 0
+                      }
+              ]
     }
 
 

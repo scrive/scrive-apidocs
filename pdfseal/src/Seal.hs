@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, BangPatterns, PackageImports #-}
+{-# LANGUAGE CPP, BangPatterns, PackageImports, NamedFieldPuns #-}
 {-# OPTIONS_GHC -fglasgow-exts #-}
 
 module Seal where
@@ -11,7 +11,8 @@ import qualified Data.ByteString.Lazy.Char8 as BSL
 import "mtl" Control.Monad.State.Strict
 import qualified Data.Map as Map
 import qualified Data.Char as Char
-import Misc
+import Data.List
+import Data.Char
 import Graphics.PDF.Text
 import Debug.Trace
 import Graphics.PDF
@@ -153,8 +154,8 @@ mergeResources document source1 source2 =
           Dict (mergeResourceBranch document d1 d2)
       unite x y = x
 
-placeSealOnPageRefID :: RefID -> String -> RefID -> RefID -> Document -> Document
-placeSealOnPageRefID sealrefid sealtext sealmarkerformrefid pagerefid document = 
+placeSealOnPageRefID :: RefID -> RefID -> (RefID,String) -> Document -> Document
+placeSealOnPageRefID sealrefid sealmarkerformrefid (pagerefid,sealtext) document = 
     let
         Just (Indir (Dict pagedict) pagestrem) = 
             PdfModel.lookup pagerefid document
@@ -198,15 +199,34 @@ placeSealOnPageRefID sealrefid sealtext sealmarkerformrefid pagerefid document =
         newdocument = setIndirF pagerefid newpage docx
     in newdocument
 
-placeSeals :: RefID -> String -> RefID -> String -> RefID -> State Document ()
-placeSeals sealrefid sealtext paginrefid pagintext sealmarkerformrefid = do
+fieldstext fields = concatMap fieldtext fields
+  where
+    fieldtext Field{ Seal.value = val
+                   , x
+                   , y
+                   , w
+                   , h
+                   } = "q 1 0 0 1 " ++ show (topagex x w) ++ " " ++ show (topagey y h) ++ " cm " ++
+                       "BT /SkrivaPaHelvetica 10 Tf (" ++ winAnsiPostScriptEncode val ++ ") Tj ET Q "
+    pagew = 595
+    pageh = 842
+    topagex x w = (fromIntegral x / fromIntegral w * fromIntegral pagew)
+    topagey y h = (fromIntegral h - fromIntegral y / fromIntegral h * fromIntegral pageh)
+
+placeSeals :: [Field] -> RefID -> String -> RefID -> String -> RefID -> State Document ()
+placeSeals fields sealrefid sealtext paginrefid pagintext sealmarkerformrefid = do
     pages <- gets listPageRefIDs
     let pagevalue = page_dict (Array []) (Array []) `ext` [entryna "MediaBox" [0,0,595,842]]
     -- should optimize pagintext into one stream
-    let pagintext1 = pagintext ++ " q 0.2 0 0 0.2 " ++ show ((595 - 18) / 2) ++ " 14 cm /SealMarkerForm Do Q "
-    modify $ \document -> foldr (placeSealOnPageRefID paginrefid pagintext1 sealmarkerformrefid) document pages
+    let findFields pageno = filter (\x -> page x == pageno) fields
+    let pagintext1 pageno = fieldstext (findFields pageno)++ 
+                     pagintext ++ 
+                     " q 0.2 0 0 0.2 " ++ show ((595 - 18) / 2) ++ " 14 cm /SealMarkerForm Do Q "
+
+    modify $ \document -> foldr (placeSealOnPageRefID paginrefid sealmarkerformrefid) document 
+                          [(page,pagintext1 pageno) | (page,pageno) <- zip pages [0..]]
     lastpage <- addPageToDocument pagevalue
-    modify $ \document -> foldr (placeSealOnPageRefID sealrefid sealtext sealmarkerformrefid) document [lastpage]
+    modify $ \document -> foldr (placeSealOnPageRefID sealrefid sealmarkerformrefid) document [(lastpage,sealtext)]
 
 
 contentsValueListFromPageID :: Document -> RefID -> [RefID]
@@ -415,7 +435,7 @@ pageToForm refid = do
             | k==BS.pack "Group" = [(k,v)]
             | k==BS.pack "Resources" = [(k,v)]
             | True = []
-    let value = concatMap changekeys page ++ [entry "Subtype""Form"] ++ contentsdict
+    let value = concatMap changekeys page ++ [entry "Subtype" "Form"] ++ contentsdict
     addStream (Dict value) streamdata
 
 
@@ -424,7 +444,9 @@ process (sealSpec@SealSpec
     { input
     , output
     , documentNumber
-    , persons}) = do
+    , persons
+    , fields 
+    }) = do
     Just doc <- PdfModel.parseFile input
     Just seal <- PdfModel.parseFile sealFileName 
     Just sealmarker <- PdfModel.parseFile "files/sealmarker.pdf" 
@@ -438,7 +460,17 @@ process (sealSpec@SealSpec
               sealmarkerform <- pageToForm sealmarkerpage2
               let pagintext1 = pagintext sealSpec
               let sealtext = lastpage sealSpec
-              placeSeals newsealcontents sealtext newpagincontents pagintext1 sealmarkerform
+              placeSeals fields newsealcontents sealtext newpagincontents pagintext1 sealmarkerform
     writeFileX output outputdoc
     return ()
 
+
+-- this is cheating
+-- FIXME: font encoding
+winAnsiChars = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~?€\201‚ƒ„…†‡ˆ‰Š‹Œ\215Ž\217\220‘’“”•–—˜™š›œ\235žŸ ¡¢£¤¥¦§¨©ª«¬?®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ"
+
+unicodeToWinAnsi x = 
+    case findIndex (==x) winAnsiChars of
+      Just i -> chr (i + 33)
+      Nothing -> x
+      
