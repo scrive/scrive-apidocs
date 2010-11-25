@@ -211,7 +211,7 @@ fieldstext fields = concatMap fieldtext fields
     pagew = 595
     pageh = 842
     topagex x w = (fromIntegral x / fromIntegral w * fromIntegral pagew)
-    topagey y h = (fromIntegral h - fromIntegral y / fromIntegral h * fromIntegral pageh)
+    topagey y h = (fromIntegral (h - y) / fromIntegral h * fromIntegral pageh) - 10 {- 10 is baseline -}
 
 placeSeals :: [Field] -> RefID -> String -> RefID -> String -> RefID -> State Document ()
 placeSeals fields sealrefid sealtext paginrefid pagintext sealmarkerformrefid = do
@@ -224,7 +224,7 @@ placeSeals fields sealrefid sealtext paginrefid pagintext sealmarkerformrefid = 
                      " q 0.2 0 0 0.2 " ++ show ((595 - 18) / 2) ++ " 14 cm /SealMarkerForm Do Q "
 
     modify $ \document -> foldr (placeSealOnPageRefID paginrefid sealmarkerformrefid) document 
-                          [(page,pagintext1 pageno) | (page,pageno) <- zip pages [0..]]
+                          [(page,pagintext1 pageno) | (page,pageno) <- zip pages [1..]]
     lastpage <- addPageToDocument pagevalue
     modify $ \document -> foldr (placeSealOnPageRefID sealrefid sealmarkerformrefid) document [(lastpage,sealtext)]
 
