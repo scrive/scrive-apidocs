@@ -61,6 +61,7 @@ Executable kontrakcja-server
  -- Build-Depends: monads-fd
  Build-Depends: mtl
  Build-Depends: hS3
+ Build-Depends: hxt<9
  Main-Is: Main.hs
 
  Extensions: TemplateHaskell, TypeFamilies, DeriveDataTypeable,
