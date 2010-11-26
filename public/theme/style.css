@@ -200,12 +200,12 @@ input[name=final]
 }
 
 
-input[type=submit]:hover,  button:hover,  a.button:hover
+input[type=submit]:hover, input[type=button]:hover, button:hover, a.button:hover
 {
     background-color: #d9dae3;
 }
 
-input[type=submit]:active , button:active , a.button:active
+input[type=submit]:active, input[type=button]:active, button:active, a.button:active
 {
     background-color: #b3b5bd;
 }
