@@ -659,7 +659,7 @@ pageDocumentForSign action document ctx  invitedlink wassigned =
                               </div>) ]
                      <span/>                 
                  %>
-                 <small>Jag vill veta mer <a href="/about" target="_blank">om SkrivaPå</a>.</small>
+                 {- <small>Jag vill veta mer <a href="/about" target="_blank">om SkrivaPå</a>.</small> -}
                  <span class="localdialogs ">
                   <form method="post" name="form" action=action id="dialog-confirm-sign" class="overlay">     
                      <a class="close"> </a>                  
