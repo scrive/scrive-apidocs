@@ -485,7 +485,7 @@ function flashFlashMessages(){
     if ($('.flashmessage',flashmsgbox).size()>0)
      {
       flashmsgbox.show();
-      flashmsgbox.delay(5000).fadeOut(function(){$('.flashmessage',flashmsgbox).remove()});
+      flashmsgbox.delay(12000).fadeOut(function(){$('.flashmessage',flashmsgbox).remove()});
       flashmsgbox.click( function() { $(this).fadeOut()  });
      } 
 }
