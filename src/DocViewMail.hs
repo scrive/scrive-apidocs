@@ -255,7 +255,7 @@ mailCancelDocumentByAuthorContent forMail customMessage ctx document =
         let 
         creatorname = signatoryname $ documentauthordetails document 
         common = <p>
-                 <% creatorname %> har valt att aterkalla sin inbjudan att underteckna dokument <% documenttitle document %>.
+                 <% creatorname %> har valt att återkalla sin inbjudan att underteckna dokument <% documenttitle document %>.
                   Därmed är avtalsprocessen avbruten och du kan inte längre underteckna dokumentet.
                  </p>
         defaultHeader = <p>Hej </p>

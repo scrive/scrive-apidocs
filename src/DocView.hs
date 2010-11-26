@@ -481,8 +481,8 @@ pageDocumentForAuthor ctx
                      <form method="post" action=(LinkCancel document) class="overlay" id="cancel-by-author-dialog">
                                 <a class="close"> </a>
                                 <h2> Återkalla inbjudan </h2>
-                                <p>Är du säker att du vill aterkalla din inbjudan att underteckna dokumentet?
-			           <BR/>När du aterkallat inbjudan kommer nedanstaende meddelande att skickas till dina motparter.
+                                <p>Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?
+			           <BR/>När du återkallat inbjudan kommer nedanstaende meddelande att skickas till dina motparter.
                                 </p>
                                 <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
                                  <% mailCancelDocumentByAuthorContent False Nothing ctx document%>
