@@ -752,4 +752,4 @@ defaultInviteMessage :: BS.ByteString
 defaultInviteMessage = BS.empty                
 
 flashMessageCanceled :: HSP.HSP HSP.XML 
-flashMessageCanceled = <span> Du har nu aterkallat inbjudan att underteckna dokumentet och ett meddelande om aterkallelsen har skickats till samtliga parter.</span>
+flashMessageCanceled = <span>Du har nu återkallat inbjudan att underteckna dokumentet och ett meddelande om återkallelsen har skickats till samtliga parter.</span>
