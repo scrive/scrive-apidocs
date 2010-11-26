@@ -373,10 +373,10 @@ handleBecome = onlySuperUserPost $ do
 
 handleCreateUser :: Kontra KontraLink
 handleCreateUser = onlySuperUserPost $ do
-    ctx@Context{..} <- get
+    ctx <- get
     email <- g "email"
     fullname <- g "fullname"
-    user <- liftIO $ createUser ctxhostpart fullname email Nothing Nothing
+    user <- liftIO $ createNewUserByAdmin ctx fullname email 
     -- FIXME: where to redirect?
     return LinkStats
   
