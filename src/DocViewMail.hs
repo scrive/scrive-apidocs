@@ -273,10 +273,11 @@ mailCancelDocumentByAuthorContent forMail customMessage ctx document =
         header   = withCustom customMessage (defaultHeader)
    in  (makeEditable "customtext" header) `before` common `before` footer  
 
+
 mailCancelDocumentByAuthor ::(Maybe BS.ByteString) -> Context  -> Document -> SignatoryLink -> IO Mail 
 mailCancelDocumentByAuthor customMessage ctx document@Document{documenttitle} signlink = 
    let content  = mailCancelDocumentByAuthorContent True customMessage ctx document          
-       title =  BS.fromString "Hej" --need new text here
+       title =  BS.fromString $ "Återkallelsenotis: " ++ BS.toString documenttitle
    in 
        do
         attachmentcontent <- getFileContents (ctxs3action ctx) $ head $ documentfiles document          

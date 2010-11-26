@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, NamedFieldPuns #-}
 {-# OPTIONS_GHC -F -pgmFtrhsx -Wall #-}
-module UserView(viewSubaccounts,passwordChangeMail,showUser,userDetailsSavedFlashMessage,newUserMail,inviteSubaccountMail,pageAcceptTOS,prettyName) where
+module UserView(viewSubaccounts,passwordChangeMail,showUser,userDetailsSavedFlashMessage,newUserMail,inviteSubaccountMail,pageAcceptTOS,prettyName,mailNewAccountCreatedByAdmin) where
 
 import HSP hiding (Request)
 import Happstack.Server.SimpleHTTP
@@ -232,6 +232,31 @@ inviteSubaccountMail hostpart supervisorname companyname emailaddress personname
        <% poweredBySkrivaPaPara hostpart %> 
        </span>
      return $ emptyMail{title=title, content = content} 
+
+mailNewAccountCreatedByAdmin:: Context-> BS.ByteString -> BS.ByteString -> BS.ByteString ->  IO Mail
+mailNewAccountCreatedByAdmin ctx fullname email password =    do 
+    let title = BS.fromString "Nytt konto"
+    let creatorname = maybe BS.empty prettyName (ctxmaybeuser  ctx)
+    content <- htmlHeadBodyWrapIO ""
+     <span>
+      <p>Hej <strong><% fullname %></strong>,</p>
+
+      <p><%creatorname%> har bjudit in dig till ett konto på tjänsten SkrivaPå. </p>
+
+      <p>SkrivaPå är ett webbaserat tredjepartsnotariat som gör det möjligt att underteckna, 
+         hantera och arkivera avtal elektroniskt. SkrivaPå är som Gmail för dina avtal.</p>
+
+      <p>Användarnamn: <b><% email %></b><br/>
+         Lösenord: <b><% password %></b><br/>
+      </p>
+      <p>
+      <a href=(ctxhostpart ctx)><% ctxhostpart ctx %></a>
+      </p>
+
+          <% poweredBySkrivaPaPara $ ctxhostpart ctx%> 
+     </span>
+    return $ emptyMail {title=title, content = content} 
+    
 
 userDetailsSavedFlashMessage :: HSP.HSP HSP.XML
 userDetailsSavedFlashMessage = 

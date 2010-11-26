@@ -133,6 +133,16 @@ createUser hostpart fullname email maybepassword maybesupervisor =
     Just x ->
       createUser1 hostpart fullname email x True maybesupervisor
 
+createNewUserByAdmin :: Context -> BS.ByteString -> BS.ByteString -> IO User
+createNewUserByAdmin cxt fullname email =
+     do
+      password <- randomPassword
+      passwdhash <- createPassword password
+      user <- update $ AddUser fullname email passwdhash Nothing
+      mail <- mailNewAccountCreatedByAdmin cxt fullname email password
+      sendMail $ mail { fullnameemails = [(fullname, email)]}
+      return user
+
 createUser1 :: String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Bool -> Maybe User -> IO User
 createUser1 hostpart fullname email password isnewuser maybesupervisor = do
   passwdhash <- createPassword password
