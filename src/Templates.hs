@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, NamedFieldPuns #-}
 {-# OPTIONS_GHC -Wall #-}
-module Templates(renderTemplate,renderTemplate',wrapHTML) where
+module Templates(renderTemplate,renderTemplate',wrapHTML,templateList) where
 
 import Text.StringTemplate 
 import System.IO
@@ -31,12 +31,15 @@ renderTemplateMain name params = do
                                let ts' = groupStringTemplates (concat ts)
                                let mt =  getStringTemplate name ts'
                                case mt of 
-                                  Just t -> return $ render (setManyAttrib params  t)
+                                  Just t -> do
+                                            let t'= (setManyAttrib params  t)   
+                                            let (e,p,st) = checkTemplateDeep t'
+                                            when (not (null e) || not (null p) || not (null st)) $
+                                                    errorM "Happstack.Server" $ "Template " ++ name ++ " problem with message " ++(show (e,p,st)) 
+                                            return $ render t'
                                   Nothing -> do
-                                              errorM "Happstack.Server" $ "Template problem with " ++ name 
-                                              return $ ""
-                               
-
+                                              errorM "Happstack.Server" $ "No template named " ++ name 
+                                              return ""                                   
 
 getTemplates::String -> IO [(String, StringTemplate String)]            
 getTemplates fp= do
@@ -70,6 +73,27 @@ parseLines handle = do
                       else fmap ((:) l) (parseLines handle)
 
 {- Common templates - should be shared and it seams like a good place fo them -}
-
 wrapHTML::String->IO String
 wrapHTML body =  renderTemplate "wrapHTML" [("body",body)]
+
+{- Template checker, printing info about params-}
+templateList :: IO ()
+templateList = do 
+                ts <- fmap concat $ sequence (map getTemplates templateFiles)         
+                let tsnames = map fst ts
+                let tsgroup = groupStringTemplates ts
+                sequence_ $ map (printTemplateData tsgroup) tsnames
+                
+printTemplateData::STGroup String -> String -> IO ()
+printTemplateData tsgroup name =  do 
+                                   let Just t = getStringTemplate name tsgroup
+                                   let (e,p,st) = checkTemplateDeep t
+                                   putStrLn $ name ++ ": " 
+                                   if (not $ null e) 
+                                      then putStrLn $ "PARSE ERROR " ++ (show e)
+                                      else if (not $ null st)  
+                                            then putStrLn $ "MISING SUBTEMPLATES " ++ (show st)
+                                            else 
+                                              do
+                                               sequence_ $ map (putStrLn . ("    " ++ )) p
+                                               putStrLn ""
