@@ -10,7 +10,7 @@ module User
     , initialUsers
     , clearFlashMsgs
     , addFlashMsgText 
-    , addFlashMsgHtml
+    , addFlashMsgHtmlFromTemplate
     , logUserToContext
     )
     where
@@ -145,22 +145,19 @@ initialUsers = map (Email . BS.fromString)
 isSuperUser (Just user@User{useremail}) = useremail `elem` admins 
 isSuperUser _ = False
 
-addFlashMsgText :: BS.ByteString -> Kontra ()
+addFlashMsgText :: String -> Kontra ()
 addFlashMsgText msg = do
                        ctx@Context{ ctxflashmessages = flashmessages} <- get
-                       put $ ctx{ ctxflashmessages =  (FlashMessage msg) : flashmessages}
+                       put $ ctx{ ctxflashmessages =  (FlashMessage $ BS.fromString msg) : flashmessages}
                        
 clearFlashMsgs:: Kontra ()                       
 clearFlashMsgs = do
                        ctx <- get
                        put $ ctx{ ctxflashmessages = []}
-  
-addFlashMsgHtml :: HSP.HSP HSP.XML 
-                -> Kontra ()
-addFlashMsgHtml msg = do
+                       
+addFlashMsgHtmlFromTemplate msg = do
                        ctx@Context{ ctxflashmessages = flashmessages} <- get
-                       msg' <- liftM renderXMLAsBSHTML (liftIO $ evalHSP Nothing msg)
-                       put $ ctx {ctxflashmessages = (FlashMessage msg') :  flashmessages} 
+                       put $ ctx {ctxflashmessages = (FlashMessage $ BS.fromString msg) :  flashmessages} 
 
 logUserToContext user =  do
                           ctx<- get

@@ -1,6 +1,23 @@
 {-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, NamedFieldPuns #-}
 {-# OPTIONS_GHC -F -pgmFtrhsx -Wall #-}
-module UserView(viewSubaccounts,passwordChangeMail,showUser,userDetailsSavedFlashMessage,newUserMail,inviteSubaccountMail,pageAcceptTOS,prettyName,mailNewAccountCreatedByAdmin) where
+module UserView(
+   --pages
+    viewSubaccounts,
+    showUser,
+    pageAcceptTOS,
+    --mails  
+    passwordChangeMail,
+    newUserMail,
+    inviteSubaccountMail,
+    mailNewAccountCreatedByAdmin,
+    --flashmessages
+    flashMessageUserDetailsSaved,
+    flashMessageMustAcceptTOS,
+    flashMessagePasswordNotStrong,
+    flashMessageBadOldPassword,
+    flashMessagePasswordsDontMatch,
+    --utils  
+    prettyName) where
 
 import HSP hiding (Request)
 import Happstack.Server.SimpleHTTP
@@ -12,7 +29,7 @@ import User
 import KontraLink
 import SendMail(Mail,emptyMail,title,content)
 import qualified HSX.XMLGenerator
-
+import Templates
 
 showUser :: User -> HSP.HSP HSP.XML
 showUser user = 
@@ -157,112 +174,63 @@ viewSubaccounts ctx subusers =
 newUserMail :: String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> IO Mail
 newUserMail hostpart emailaddress personname newpassword =
     do 
-    let title = BS.fromString "Nytt konto"
-    content <- htmlHeadBodyWrapIO ""
-     <span>
-      <p>Hej <strong><% personname %></strong>,</p>
-
-      <p>Jag heter Lukas Duczko och är VD på SkrivaPå. Tack för att du har skapat ett konto hos oss. 
-         Vi hoppas att du kommer att bli nöjd med våra tjänster. Tveka inte att höra av dig med 
-         feedback eller bara en enkel hälsning. Din åsikt är värdefull.</p>
-
-      <p>Användarnamn: <b><% emailaddress %></b><br/>
-         Lösenord: <b><% newpassword %></b><br/>
-      </p>
-      <p>
-      <a href=(hostpart ++ "/login")><% hostpart ++ "/login" %></a>
-      </p>
-
-      <p>Med vänliga hälsningar<br/>/Lukas Duczko och team <a href=(hostpart ++ "/")>SkrivaPå</a>.
-      </p>
-     </span>
-    return $ emptyMail {title=title, content = content} 
+    title <- renderTemplate "newUserMailTitle" []
+    content <- wrapHTML =<< renderTemplate "newUserMailContent" [("personname",BS.toString $ personname),
+                                                                 ("email",BS.toString $ emailaddress),
+                                                                 ("password",BS.toString $ newpassword),
+                                                                 ("ctxhostpart",hostpart)]
+    return $ emptyMail {title=BS.fromString title, content = BS.fromString content} 
     
-passwordChangeMail :: String
-                   -> BS.ByteString
-                   -> BS.ByteString
-                   -> BS.ByteString
-                   -> IO Mail
+passwordChangeMail :: String -> BS.ByteString -> BS.ByteString  -> BS.ByteString    -> IO Mail
 passwordChangeMail hostpart emailaddress personname newpassword = 
     do 
-    let title = BS.fromString "Nytt lösenord"
-    content <- htmlHeadBodyWrapIO ""
-     <span>
-      <p>Hej <strong><% personname %></strong>,</p>
-
-      <p>Här kommer ditt nya lösenord. Vänligen ändra lösenordet så snart som möjligt.</p>
-
-      <p>Användarnamn: <span style="color: orange; text-weight: bold"><% emailaddress %></span><br/>
-         Lösenord: <span style="color: orange; text-weight: bold"><% newpassword %></span><br/>
-      </p>
-      <p>
-      <a href=(hostpart ++ "/login")><% hostpart ++ "/login" %></a>
-      </p>
-
-      <% poweredBySkrivaPaPara hostpart %>
-     </span>
-    return $ emptyMail {title=title, content = content} 
+    title <- renderTemplate "passwordChangeMailTitle" []
+    content <- wrapHTML =<< renderTemplate "passwordChangeMailContent" [("personname",BS.toString $ personname),
+                                                                 ("email",BS.toString $ emailaddress),
+                                                                 ("password",BS.toString $ newpassword),
+                                                                 ("ctxhostpart",hostpart)]
+    return $ emptyMail {title=BS.fromString title, content = BS.fromString content} 
 
 
-inviteSubaccountMail :: String
-                     -> BS.ByteString
-                     -> BS.ByteString
-                     -> BS.ByteString
-                     -> BS.ByteString
-                     -> BS.ByteString
-                     -> IO Mail
+inviteSubaccountMail :: String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> BS.ByteString -> BS.ByteString -> IO Mail
 inviteSubaccountMail hostpart supervisorname companyname emailaddress personname newpassword = 
     do 
-     let title = BS.concat [(BS.fromString "Inbjudan från "),(supervisorname),(BS.fromString " till underkonto" )]
-     content <- htmlHeadBodyWrapIO ""
-       <span>
-       <p>Hej <strong><% personname %></strong>,</p>
- 
-       <p><strong><% supervisorname %></strong> har bjudit in dig att öppna ett konto på SkrivaPå genom vilket du kan
-          skriva avtal för <strong><% companyname %></strong>. Observera att detta konto inte är
-          avsett för privat bruk.</p>     
-       <p>Användarnamn: <span style="color: orange; text-weight: bold"><% emailaddress %></span><br/>
-          Lösenord: <span style="color: orange; text-weight: bold"><% newpassword %></span><br/>
-       </p>
- 
-       <p>
-       <a href=(hostpart)><% hostpart %></a>
-       </p>
- 
-       <% poweredBySkrivaPaPara hostpart %> 
-       </span>
-     return $ emptyMail{title=title, content = content} 
+    title <- renderTemplate "inviteSubaccountMailTitle" []
+    content <- wrapHTML =<< renderTemplate "inviteSubaccountMailContent" [("personname",BS.toString $ personname),
+                                                                 ("email",BS.toString $ emailaddress),
+                                                                 ("password",BS.toString $ newpassword),
+                                                                 ("supervisorname",BS.toString $ supervisorname),  
+                                                                 ("companyname",BS.toString $ companyname),
+                                                                 ("ctxhostpart",hostpart)]
+    return $ emptyMail {title=BS.fromString title, content = BS.fromString content}   
 
 mailNewAccountCreatedByAdmin:: Context-> BS.ByteString -> BS.ByteString -> BS.ByteString ->  IO Mail
-mailNewAccountCreatedByAdmin ctx fullname email password =    do 
-    let title = BS.fromString "Nytt konto"
-    let creatorname = maybe BS.empty prettyName (ctxmaybeuser  ctx)
-    content <- htmlHeadBodyWrapIO ""
-     <span>
-      <p>Hej <strong><% fullname %></strong>,</p>
-
-      <p><%creatorname%> har bjudit in dig till ett konto på tjänsten SkrivaPå. </p>
-
-      <p>SkrivaPå är ett webbaserat tredjepartsnotariat som gör det möjligt att underteckna, 
-         hantera och arkivera avtal elektroniskt. SkrivaPå är som Gmail för dina avtal.</p>
-
-      <p>Användarnamn: <b><% email %></b><br/>
-         Lösenord: <b><% password %></b><br/>
-      </p>
-      <p>
-      <a href=(ctxhostpart ctx)><% ctxhostpart ctx %></a>
-      </p>
-
-          <% poweredBySkrivaPaPara $ ctxhostpart ctx%> 
-     </span>
-    return $ emptyMail {title=title, content = content} 
+mailNewAccountCreatedByAdmin ctx personname email password =    do 
+      title <- renderTemplate "inviteSubaccountMailTitle" []
+      content <- wrapHTML =<< renderTemplate "inviteSubaccountMailContent" [("personname",BS.toString $ personname),
+                                                                 ("email",BS.toString $ email),
+                                                                 ("password",BS.toString $ password),
+                                                                 ("creatorname", BS.toString$ maybe BS.empty prettyName (ctxmaybeuser  ctx)),  
+                                                                 ("ctxhostpart",ctxhostpart ctx)]
+      return $ emptyMail {title=BS.fromString title, content = BS.fromString content}   
     
 
-userDetailsSavedFlashMessage :: HSP.HSP HSP.XML
-userDetailsSavedFlashMessage = 
-    <div>Dina kontoändringar har sparats.</div>
+flashMessageUserDetailsSaved:: IO String
+flashMessageUserDetailsSaved = renderTemplate "flashMessageUserDetailsSaved" [] 
 
-{- Same as personname (username or email) from DocView but works on User not singlinks-}
+flashMessageMustAcceptTOS::IO String
+flashMessageMustAcceptTOS = renderTemplate "flashMessageMustAcceptTOS" []
+
+flashMessagePasswordNotStrong::IO String
+flashMessagePasswordNotStrong= renderTemplate "flashMessagePasswordNotStrong" []
+
+flashMessageBadOldPassword::IO String
+flashMessageBadOldPassword= renderTemplate "flashMessageBadOldPassword" []
+
+flashMessagePasswordsDontMatch::IO String
+flashMessagePasswordsDontMatch= renderTemplate "flashMessagePasswordsDontMatch" []
+
+{- Same as personname (username or email) from DocView but works on User -}
 prettyName::User -> BS.ByteString
 prettyName u = if (BS.null $ userfullname u)
                then unEmail $ useremail u 
