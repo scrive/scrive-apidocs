@@ -19,13 +19,11 @@ module DocView( emptyDetails
               , mailDocumentRejectedForAuthor
               , mailDocumentAwaitingForAuthor
               , landpageRejectedView
-              , flashDocumentRejected
               , defaultInviteMessage 
               , mailCancelDocumentByAuthorContent
               , mailCancelDocumentByAuthor
-              ,flashMessageCanceled 
+              , flashMessageCanceled 
               ) where
-import AppView
 import Data.List
 import DocState
 import HSP
@@ -39,118 +37,61 @@ import MinutesTime
 import Data.Maybe
 import DocViewMail
 import DocViewUtil
-    
+import Templates    
 
-landpageSignInviteView :: (XMLGenerator m) => 
-                          Document -> 
-                          XMLGenT m (HSX.XML m)
+landpageSignInviteView :: Document ->  IO String
 landpageSignInviteView document =
-    <div class="centerdivnarrow">
-     <p class="headline">Dokumentet <strong><% documenttitle document%></strong> undertecknat!</p>
-     <p>En inbjudan att underteckna har nu skickats 
-        till <% partyListButAuthorString document %>.
-     </p>
-     <p><a class="button" href="/">Skapa ett nytt avtal</a></p>
-    </div>
+     do 
+      partylist <-renderListTemplate (map (BS.toString . personname') $ partyListButAuthor document)
+      renderTemplate "landpageSignInviteView" [("partyListButAuthor", partylist),
+                                               ("documenttitle",BS.toString $ documenttitle document )]
 
-
-{-
-
-Variables:
-1. all signed?
-2. has account already?
-3. is logged in as the account?
-
-Let as skip 3 for now.
--}
-
-
-{-
-
-   Fulldoc + account
-   Halfdoc + account
-   Fulldoc + no account
-   Halfdoc + no account
-
--}
-willCreateAccountForYou::(XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink),EmbedAsAttr m (Attr [Char] BS.ByteString)) => Document->SignatoryLink->Bool->  XMLGenT m (HSX.XML m)
-willCreateAccountForYou _ _ False = 
-    <p>Dokumentet har sparats till ditt konto. 
-     <% loginBox %>
-    </p>
+willCreateAccountForYou:: Document->SignatoryLink->Bool->  IO String
+willCreateAccountForYou _ _ False =  renderTemplate "willCreateAccountForYouNoAccount" ([]::[(String,String)])
 willCreateAccountForYou document siglink True = 
-    <p>Du kan nu spara dokumentet på SkrivaPå, då är ditt dokument säkert lagrat och dessutom 
-       kan du även i framtiden verifiera avtalet mot vår databas. Detta kostar ingenting. 
-      <form action=(LinkLandpageSaved document siglink) method="post">
-       <input class="button" type="submit" value="Skapa konto"/>
-      </form>
-    </p>
+                                     renderTemplate "willCreateAccountForYouHasAccount" [("documentid",show $ unDocumentID $ documentid document),
+                                                                                         ("signatorylinkid",show $ unSignatoryLinkID $ signatorylinkid siglink)]
 
-landpageRejectedView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink),EmbedAsAttr m (Attr [Char] BS.ByteString)) => 
-                      Document -> 
-                      XMLGenT m (HSX.XML m)
-landpageRejectedView document@Document{documenttitle} =
-    <div class="centerdivnarrow">
-      <p class="headline">Du har avvisat dokumentet <strong><% documenttitle %></strong>.</p>
-      <p>Ett meddelande har skickats till <% partyListString document %>.</p>
-      <p><a href="/">Tillbaks till förstasidan</a></p>
-    </div>
+landpageRejectedView :: Document -> IO String
+landpageRejectedView document =
+   do 
+      partylist <-renderListTemplate (map (BS.toString . personname') $ partyList document)
+      renderTemplate "landpageRejectedView" [("partyList", partylist),
+                                              ("documenttitle",BS.toString $ documenttitle document )]
 
+landpageSignedView :: Document -> SignatoryLink -> Bool -> IO String
+landpageSignedView document@Document{documenttitle,documentstatus} signatorylink hasaccount =
+    do
+       willCreateAccountForYouProposal <- willCreateAccountForYou document signatorylink (not hasaccount) 
+       if (documentstatus == Closed) 
+        then do
+              partylist <- renderListTemplate $ map (BS.toString . personname') $ partyList document
+              renderTemplate "landpageSignedViewClosed" [("partyListString", partylist),
+                                                         ("documenttitle",BS.toString $ documenttitle),
+                                                         ("willCreateAccountForYou", willCreateAccountForYouProposal)]
+        else do
+              partyunsignedlist <- renderListTemplate $ map (BS.toString . personname') $ partyUnsignedList document
+              renderTemplate "landpageSignedViewNotClosed"  [("partyUnsignedListString", partyunsignedlist),
+                                                             ("documenttitle",BS.toString $ documenttitle),
+                                                             ("willCreateAccountForYou", willCreateAccountForYouProposal)]   
 
-landpageSignedView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink),EmbedAsAttr m (Attr [Char] BS.ByteString)) => 
-                      Document -> 
-                      SignatoryLink -> 
-                      Bool ->
-                      XMLGenT m (HSX.XML m)
-landpageSignedView document@Document{documenttitle,documentstatus} signatorylink hasaccount 
-    | documentstatus == Closed =
-    <div class="centerdivnarrow">
-      <p class="headline">Dokumentet är färdigställt</p>
-      <p>Du har undertecknat dokumentet <strong><% documenttitle %></strong>. Således har 
-         <% partyListString document %> undertecknat dokumentet och avtalet är nu juridiskt bindande.</p>
-      <% willCreateAccountForYou document signatorylink (not hasaccount) %>
-    </div>
+landpageLoginForSaveView::IO String
+landpageLoginForSaveView  = renderTemplate "landpageLoginForSaveView" []
 
-landpageSignedView document@Document{documenttitle} signatorylink hasaccount =
-    <div class="centerdivnarrow">
-      <p class="headline">Du har undertecknat</p>
-      <p>Du har nu undertecknat dokumentet <strong><% documenttitle %></strong>. 
-         <% partyUnsignedListString document %> har ännu inte undertecknat 
-         dokumentet. När alla undertecknat blir avtalet juridiskt bindande och
-         en kopia av det färdigställda dokumentet skickats då till din e-post.</p>
-      <% willCreateAccountForYou document signatorylink (not hasaccount) %>
-    </div>
+landpageDocumentSavedView :: IO String
+landpageDocumentSavedView = renderTemplate "landpageDocumentSavedView" []
 
-landpageLoginForSaveView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
-                         =>XMLGenT m (HSX.XML m)
-landpageLoginForSaveView  =
-    <div class="centerdivnarrow">
-     <a class="headline">Login</a>
-     <p>Ditt dokument är nu sparat. Du finner dokumentet under Avtal when you log in.</p>
-     <% loginBox %>
-    </div>
+flashDocumentDraftSaved :: IO String
+flashDocumentDraftSaved  = renderTemplate "flashDocumentDraftSaved" []
 
-
-landpageDocumentSavedView :: (XMLGenerator m) =>  XMLGenT m (HSX.XML m)
-landpageDocumentSavedView = 
-    <div class="centerdivnarrow">
-     <p>Ditt dokument är nu sparat. Du finner dokumentet under Arkiv när du loggar in.</p>
  
-     <p>Vi hoppas att du är nöjd med vår tjänst hittills och att du är nyfiken på att själv använda 
-        SkrivaPå för att skriva dina avtal. Därför erbjuder vi dig som ny kund möjligheten att testa 
-        tjänsten genom tre fria avtal. Dina fria avtal förbrukas endast då ett avtal undertecknats av 
-        alla parter.</p>
+flashRemindMailSent :: SignatoryLink -> IO String                                
+flashRemindMailSent  signlink@SignatoryLink{maybesigninfo = Nothing}  = renderTemplate "flashRemindMailSentNotSigned" [("personname",BS.toString $ personname signlink)] 
+flashRemindMailSent  signlink = renderTemplate "flashRemindMailSentSigned" [("personname",BS.toString $ personname signlink)] 
 
-     <p>Börja redan nu! Ladda upp ditt avtal genom att klicka nedan.</p>
-     <a class="bigbutton" href="/">Starta</a> {- FIXME: move upload stuff here also -}
-    </div>
 
-flashDocumentDraftSaved :: HSP.HSP HSP.XML
-flashDocumentDraftSaved  = 
-    <div>
-     Du har sparat documentet.
-    </div>
-
+flashMessageCanceled :: IO String
+flashMessageCanceled = renderTemplate "flashMessageCanceled" []
 
 concatSignatories :: [SignatoryLink] -> String
 concatSignatories siglinks = 
@@ -336,10 +277,9 @@ emptyDetails = SignatoryDetails
           , signatoryotherfields = []
           }
 
-pageDocumentForAuthor :: (Monad m) 
-             => Context 
+pageDocumentForAuthor :: Context 
              -> Document 
-             -> (HSPT m XML) 
+             -> (HSPT IO XML) 
 pageDocumentForAuthor ctx
              document@Document{ documentsignatorylinks
                               , documentauthordetails
@@ -437,7 +377,7 @@ pageDocumentForAuthor ctx
                    <a class="close"> </a>
                    <h2>Hälsningsmeddelande</h2>
                    <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
-                   <% mailInvitationToSignContent False ctx document Nothing%>
+                   <% fmap cdata $ mailInvitationToSignContent False ctx document Nothing%>
                    </div>
                    <div class="buttonbox" >
                        <button class="close button" type="button"> Avbryt </button>
@@ -485,7 +425,7 @@ pageDocumentForAuthor ctx
 			           <BR/>När du återkallat inbjudan kommer nedanstaende meddelande att skickas till dina motparter.
                                 </p>
                                 <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
-                                 <% mailCancelDocumentByAuthorContent False Nothing ctx document%>
+                                 <% fmap cdata $ mailCancelDocumentByAuthorContent False Nothing ctx document%>
                                 </div>
                                 <div class="buttonbox" >
                                    <button class="close button" type="button"> Avbryt </button>
@@ -528,7 +468,7 @@ showDocumentPageHelper document helpers title content =
      <div class="clearboth"/>
     </div> 
 
-showSignatoryLinkForSign :: (Monad m) => Context -> Document -> SignatoryLink -> GenChildList (HSPT' m)
+showSignatoryLinkForSign :: Context -> Document -> SignatoryLink -> GenChildList (HSPT' IO)
 showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document siglnk@(SignatoryLink{  signatorylinkid 
                                        , maybesigninfo
                                        , maybeseeninfo
@@ -571,7 +511,7 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document siglnk@(
                       else "Skicka påminnelse"               
       reminderEditorText = "Skriv eget meddelande"                          
       reminderDialogTitle = reminderText
-      reminderMessage =  remindMailContent Nothing ctx document siglnk
+      reminderMessage =  fmap cdata $ remindMailContent Nothing ctx document siglnk
       dialogHeight =   if (wasSigned) then "400" else "600"
       reminderForm = <span>
                       <a style="cursor:pointer" class="prepareToSendReminderMail" rel=("#siglnk" ++ (show signatorylinkid ))>  <% reminderText %>  </a>
@@ -605,13 +545,12 @@ displayField FieldDefinition {fieldlabel, fieldvalue}
     | fieldvalue == BS.fromString "" = <span />
     | otherwise        = <div><span class="fieldlabel"><% fieldlabel %>: </span><span class="fieldvalue"><% fieldvalue %></span></div>
 
-pageDocumentForSign :: ( Monad m) =>
-                       KontraLink 
+pageDocumentForSign ::  KontraLink 
                            -> Document 
                            -> Context
                            -> SignatoryLink
                            -> Bool 
-                    -> (HSPT m XML) 
+                    -> (HSPT IO XML) 
 pageDocumentForSign action document ctx  invitedlink wassigned =
    let helpers = [ <script> var documentid = "<% show $ documentid document %>"; 
                   </script>
@@ -637,7 +576,7 @@ pageDocumentForSign action document ctx  invitedlink wassigned =
                     , maybesignatory = Nothing -- FIXME: should be author user id
                     , signatorymagichash = MagicHash 0
                     }
-       rejectMessage =  rejectMailContent Nothing ctx (personname authorlink) document (personname invitedlink)
+       rejectMessage =  fmap cdata $ mailRejectMailContent Nothing ctx (personname authorlink) document (personname invitedlink)
    in showDocumentPageHelper document helpers
               (documenttitle document) $
               <span>
@@ -692,13 +631,6 @@ pageDocumentForSign action document ctx  invitedlink wassigned =
                  </span>
                  
               </span>
-
-flashDocumentRejected :: Document -> HSP.HSP HSP.XML
-flashDocumentRejected document@Document{ documenttitle } = 
-    <div>
-     Du har avvisat dokumentet <strong><% documenttitle %></strong>.
-     Ett meddelande har skickats till <% partyListString document %>.
-    </div>
      
      
 jsArray :: [[Char]] -> [Char]
@@ -741,15 +673,6 @@ buildJS authordetails signatorydetails =
                               sigs = if (length signatorydetails) > 0
                                      then (jsArray (map buildSigJS signatorydetails))
                                      else (jsArray [(buildSigJS emptyDetails)])
-                                     
-flashRemindMailSent :: SignatoryLink -> BS.ByteString                                    
-flashRemindMailSent signlink =  
-                case signlink of 
-                  SignatoryLink{maybesigninfo = Nothing} -> (BS.fromString "En påminnelse har skickats till ") `BS.append` (personname signlink)
-                  _ -> (BS.fromString "Dokumentet har skickats till ") `BS.append` (personname signlink)
-
+                                    
 defaultInviteMessage :: BS.ByteString
-defaultInviteMessage = BS.empty                
-
-flashMessageCanceled :: HSP.HSP HSP.XML 
-flashMessageCanceled = <span>Du har nu återkallat inbjudan att underteckna dokumentet och ett meddelande om återkallelsen har skickats till samtliga parter.</span>
+defaultInviteMessage = BS.empty     

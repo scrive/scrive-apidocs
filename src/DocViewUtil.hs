@@ -3,18 +3,18 @@
 
 module DocViewUtil (   personname,
                        personname',
+                       partyList,
+                       partyListButAuthor,
                        partyListString,
                        partyListButAuthorString,
                        partyUnsignedListString,
                        partyUnsignedMeAndList,
                        partyUnsignedMeAndListString,
-                       makeEditable,
-                       withCustom,
-                       before,
-                       replaceOnEdit,
+                       partyUnsignedList,  
                        joinWith,
                        addbr,
-                       emailFromSignLink
+                       emailFromSignLink,
+                       renderListTemplate  
            ) where
 import DocState
 import HSP
@@ -22,6 +22,7 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import qualified HSX.XMLGenerator as HSX
 import Misc
+import Templates
 
 
 partyList :: Document -> [SignatoryDetails]
@@ -90,23 +91,7 @@ swedishListString (x:xs) = do
   
 strong :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 strong x = <strong><% x %></strong>
-            
-              
-withCustom::(Monad m) => Maybe (BS.ByteString)->(HSPT m XML) ->(HSPT m XML) 
-withCustom (Just customMessage) _ = <span> <% (cdata $ BS.toString customMessage ) %> </span>
-withCustom Nothing standardMessage =  standardMessage 
-                                                        
-before::(Monad m) => (HSPT m XML)-> (HSPT m XML)-> (HSPT m XML) 
-before header message = <span><span><%header%></span><span><%message%></span><br/></span>                                     
-                                           
-makeEditable::(Monad m) => String -> (HSPT m XML) ->(HSPT m XML) 
-makeEditable name c = <div class="editable" name=name><%c%></div>                      
- 
-replaceOnEdit::(Monad m) => (HSPT m XML)-> (HSPT m XML)-> (HSPT m XML)  
-replaceOnEdit this with =  <span> 
-                            <span class="replacebynextonedit"> <% this %> </span> 
-                            <span style="display:none"> <% with %> </span>  
-                           </span>              
+                 
 joinWith::[a]->[[a]]->[a]
 joinWith _ [] = []
 joinWith _ [x] = x
@@ -130,3 +115,10 @@ personname' signdetails = if (BS.null $ signatoryname $ signdetails)
 {- Function for changing SignatoryLink into our inner email address so u dont have to unwrap every time-}
 emailFromSignLink::SignatoryLink->(BS.ByteString,BS.ByteString)
 emailFromSignLink sl = (signatoryname $ signatorydetails sl,signatoryemail $ signatorydetails sl) 
+
+
+renderListTemplate::[String] -> IO String
+renderListTemplate list = if (length list > 1)
+                          then  renderTemplate' "morethenonelist" [("list",init list),("last", [last list])]   
+                          else  renderTemplate' "nomoretheneonelist" [("list",list)]   
+

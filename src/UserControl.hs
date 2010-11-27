@@ -49,13 +49,13 @@ handleUserPasswordPost = do
             then do
               passwordhash <- liftIO $ createPassword password
               update $ SetUserPassword user passwordhash
-              addFlashMsgHtml userDetailsSavedFlashMessage
+              addFlashMsgHtmlFromTemplate =<< (liftIO  flashMessageUserDetailsSaved)
             else
-              addFlashMsgText $ BS.fromString "Det nya lösenordet ska vara minst 6 tecken"
+              addFlashMsgText =<< (liftIO flashMessagePasswordNotStrong)
         else
-          addFlashMsgText $ BS.fromString "Du har skrivit in fel nuvarande lösenord"
+          addFlashMsgText =<< (liftIO flashMessageBadOldPassword)
     else
-      addFlashMsgText $ BS.fromString "Nytt lösenord matchar inte med upprepa lösenord"
+      addFlashMsgText =<< (liftIO flashMessagePasswordsDontMatch)
   return LinkAccount
 
 handleUserGet :: Kontra Response
@@ -72,7 +72,7 @@ handleUserPost = do
   invoiceaddress <- g "invoiceaddress"
   
   newuser <- update $ SetUserDetails userid fullname companyname companynumber invoiceaddress
-  addFlashMsgHtml userDetailsSavedFlashMessage
+  addFlashMsgHtmlFromTemplate =<< (liftIO  flashMessageUserDetailsSaved)
 
   return LinkAccount
 
@@ -227,10 +227,10 @@ handleAcceptTOSPost = do
   if isJust tos
     then do
       update $ AcceptTermsOfService userid ctxtime
-      addFlashMsgHtml userDetailsSavedFlashMessage
+      addFlashMsgHtmlFromTemplate =<< (liftIO  flashMessageUserDetailsSaved)
       return LinkMain
     else do
-      addFlashMsgText $ BS.fromString "För att kunna använda tjänsten måste du acceptera SkrivaPå Allmänna Villkor."
+      addFlashMsgText =<< (liftIO flashMessageMustAcceptTOS)
       return LinkAcceptTOS
 
 

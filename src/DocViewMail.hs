@@ -4,7 +4,7 @@
 module DocViewMail ( remindMail,
                      remindMailContent,
                      mailDocumentRejectedForAuthor,
-                     rejectMailContent,
+                     mailRejectMailContent,
                      mailDocumentClosedForAuthor, 
                      mailDocumentClosedForSignatories,
                      mailInvitationToSign,
@@ -13,9 +13,7 @@ module DocViewMail ( remindMail,
                      mailCancelDocumentByAuthorContent,
 		             mailCancelDocumentByAuthor
            ) where
-import AppView
 import DocState
-import HSP
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import User
@@ -24,262 +22,241 @@ import Data.Maybe
 import SendMail(Mail,emptyMail,content,title,attachments,fullnameemails)
 import DocViewUtil
 import Amazon
+import Templates
 
 remindMail:: Maybe (BS.ByteString) -> Context -> Document -> SignatoryLink -> IO Mail
 remindMail cm c d s = case s of 
                        SignatoryLink{maybesigninfo = Nothing} -> remindMailNotSigned cm c d s
                        _ -> remindMailSigned cm c d s
                        
-remindMailContent :: (Monad m) => Maybe (BS.ByteString) -> Context -> Document -> SignatoryLink ->(HSPT m XML) 
+remindMailContent :: Maybe (BS.ByteString) -> Context -> Document -> SignatoryLink ->IO String
 remindMailContent cm c d s = case s of 
                                SignatoryLink{maybesigninfo = Nothing} -> remindMailNotSignedContent False cm c d s
                                _ -> remindMailSignedContent cm c d s
                        
 remindMailNotSigned::Maybe (BS.ByteString) -> Context -> Document -> SignatoryLink -> IO Mail
 remindMailNotSigned customMessage ctx document@Document{documenttitle} signlink = 
-      let content  = remindMailNotSignedContent True customMessage ctx  document signlink                 
-
-          title =  BS.concat [BS.fromString "Hej ",personname signlink]  
-      in 
        do
+        title<- renderTemplate "remindMailNotSignedTitle" [("personname",BS.toString $ personname signlink)]
+        content<- wrapHTML =<< remindMailNotSignedContent True customMessage ctx  document signlink  
         attachmentcontent <- getFileContents (ctxs3action ctx) $ head $ documentfiles document          
-        content' <- htmlHeadBodyWrapIO documenttitle content
-        return $ emptyMail {title = title, content = content', attachments = [(documenttitle,attachmentcontent)]}
+        return $ emptyMail {title = BS.fromString title, content = BS.fromString content, attachments = [(documenttitle,attachmentcontent)]}
 
         
         
 remindMailSigned::Maybe (BS.ByteString)-> Context -> Document -> SignatoryLink -> IO Mail
 remindMailSigned customMessage ctx document@Document{documenttitle}  signlink = 
-                     let 
-                         title =  BS.concat [BS.fromString "Hej ",personname signlink]
-                         files = if (null sealedfiles) then unsealedfiles else sealedfiles
-                                 where sealedfiles = documentsealedfiles document
-                                       unsealedfiles = documentfiles document
-                         content = remindMailSignedContent customMessage ctx  document signlink     
-                        
-                     in do
-                       attachmentcontent <- getFileContents (ctxs3action ctx) $ head $ files   
-                       content' <- htmlHeadBodyWrapIO documenttitle content
-                       return $ emptyMail {title = title, content = content', attachments = [(documenttitle,attachmentcontent)]}
+                    do
+                     let files = if (null $ documentsealedfiles document) then (documentfiles document) else (documentsealedfiles document)
+                     title<- renderTemplate "remindMailNotSignedTitle" [("personname",BS.toString $ personname signlink)]
+                     content<-wrapHTML =<<remindMailSignedContent customMessage ctx  document signlink     
+                     attachmentcontent <- getFileContents (ctxs3action ctx) $ head $ files   
+                     return $ emptyMail {title = BS.fromString title, content = BS.fromString content, attachments = [(documenttitle,attachmentcontent)]}
 
-remindMailNotSignedContent::(Monad m) => Bool ->  (Maybe BS.ByteString) -> Context -> Document -> SignatoryLink -> (HSPT m XML)                                       
+remindMailNotSignedContent:: Bool ->  (Maybe BS.ByteString) -> Context -> Document -> SignatoryLink -> IO String                                
 remindMailNotSignedContent forMail customMessage ctx  document signlink =  
-               let link =  (ctxhostpart ctx) ++ show (LinkSignDoc document signlink)
-                   link' =  if (forMail)
-                             then <a href=link><% link %></a>
-                             else <a href="#"> https://skrivapa.se/s/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/</a>
-                   creatorname = signatoryname $ documentauthordetails document         
-                   content = <span>
-                              <p><i>Översiktlig information</i><br/>
-                              Parter: <% partyListString document %><br/>
-                              Har undertecknat: <strong><% signatoryname $ documentauthordetails document %></strong><br/>
-                              <% case (documenttimeouttime document) of 
-                                 Just time -> <span>Undertecknas senast: <strong><% show time %></strong>.</span>
-                                 Nothing -> <span/>
-                              %> 
-                             </p>
-                             <p><i>Så här går du vidare</i><br/>
-                             1. Klicka på länken<br/>
-                              <% link' %><br/>
-                             2. Granska online<br/>
-                             3. Underteckna<br/>
-                             4. Färdig<br/>
-                             </p>
-                             </span>
-                   standardFooter =  if (forMail)
-                                     then poweredBySkrivaPaPara (ctxhostpart ctx)
-                                     else replaceOnEdit (poweredBySkrivaPaPara (ctxhostpart ctx)) customFooter 
-                   customFooter =   <p>
-                                    <small>
-                                    Hälsningar
-                                    <br/>
-                                    <% creatorname %>
-                                    </small> 
-                                    </p>            
-                   footer = if (isNothing customMessage) then standardFooter else customFooter                
-                   header   = withCustom  customMessage (remindMailNotSignedStandardHeader document signlink)
-                   in (makeEditable "customtext" header) `before` content `before` footer 
+               let link =  if (forMail)
+                             then (ctxhostpart ctx) ++ show (LinkSignDoc document signlink)
+                             else (ctxhostpart ctx) ++ "/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
+                   creatorname = BS.toString $ personname' $ documentauthordetails document  
+                   timetosigninfo = case (documenttimeouttime document) of 
+                                     Just time -> renderTemplate "timetosigninfo" [("time",show time )]
+                                     Nothing -> return ""
+                   partnersinfo = renderListTemplate $  map (BS.toString . personname') $ partyList document       
+                   footer =    if (forMail) 
+                               then if (isNothing customMessage)
+                                    then renderTemplate "poweredBySkrivaPaPara" [("ctxhostpart",ctxhostpart ctx)] 
+                                    else renderTemplate "customFooter" [("creatorname", creatorname)] 
+                               else do
+                                     this <- renderTemplate "poweredBySkrivaPaPara" [("ctxhostpart",ctxhostpart ctx)] 
+                                     with <- renderTemplate "customFooter" [("creatorname",creatorname)] 
+                                     replaceOnEdit' this with                 
+                   header   = if (isNothing customMessage) 
+                              then remindMailNotSignedStandardHeader document signlink
+                              else return $ BS.toString $ fromJust customMessage
+                              
+                in do
+                    header' <- header
+                    editableHeader <- makeEditable' "customtext" header'
+                    footer' <- footer
+                    partnersinfo' <- partnersinfo
+                    timetosigninfo' <- timetosigninfo
+                    renderTemplate "remindMailNotSignedContent" [("header",editableHeader),
+                                                                ("footer",footer'),
+                                                                ("timetosigninfo",timetosigninfo'),
+                                                                ("partnersinfo",partnersinfo'),  
+                                                                ("creatorname", creatorname),
+                                                                ("documenttitle",BS.toString $ documenttitle document),
+                                                                ("link",link)]         
 
-remindMailSignedContent ::(Monad m) => (Maybe BS.ByteString) -> Context -> Document -> SignatoryLink -> (HSPT m XML)                  
-remindMailSignedContent customMessage ctx  document signlink        
-                         = makeEditable "customtext" $
-                            withCustom 
-                                customMessage $
-                                (remindMailSignedStandardHeader document signlink) `before` (poweredBySkrivaPaPara (ctxhostpart ctx))                     
+remindMailSignedContent ::(Maybe BS.ByteString) -> Context -> Document -> SignatoryLink -> IO String        
+remindMailSignedContent customMessage ctx  document signlink =       
+                           do
+                           content <- if (isNothing customMessage) 
+                                       then do   
+                                            header <- remindMailSignedStandardHeader document signlink
+                                            skv <- renderTemplate "poweredBySkrivaPaPara" [("ctxhostpart",ctxhostpart  ctx)] 
+                                            return $ header ++skv
+                                       else return $ BS.toString $ fromJust customMessage     
+                           makeEditable' "customtext" content
+                                          
                                       
                                       
                                       
-remindMailSignedStandardHeader::(Monad m) => Document -> SignatoryLink -> (HSPT m XML) 
-remindMailSignedStandardHeader document signlink =        
-                                               <span>
-                                                 <p>Hej <%(personname signlink)%><%"\n"%><%"\n"%></p>
-                                                 <p><%(signatoryname $ documentauthordetails document)%> har begärt att vi ska skicka dokumentet <% documenttitle document %> till dig som du har undertecknat via tjänsten SkrivaPå. Dokumentet bifogas med detta mail.<%"\n"%></p>
-                                                </span>
+remindMailSignedStandardHeader:: Document -> SignatoryLink -> IO String
+remindMailSignedStandardHeader document signlink = renderTemplate "remindMailSignedStandardHeader" 
+                                                               [("documenttitle",BS.toString $ documenttitle document),
+                                                                ("author",BS.toString $ personname' $ documentauthordetails document),
+                                                                ("personname",BS.toString $ personname signlink) ]
                                                
-remindMailNotSignedStandardHeader::(Monad m) => Document -> SignatoryLink -> (HSPT m XML) 
-remindMailNotSignedStandardHeader document signlink =   
-                                                <span>
-                                                 <p>Hej <%(personname signlink)%><%"\n"%><%"\n"%></p>
-                                                 <p><%(signatoryname $ documentauthordetails document)%> vill påminna dig om att du inte undertecknat dokument <% documenttitle document %> ännu.<%"\n"%><%"\n"%></p>  
-                                               </span>
-                                               
+remindMailNotSignedStandardHeader:: Document -> SignatoryLink -> IO String
+remindMailNotSignedStandardHeader document signlink =  renderTemplate "remindMailNotSignedStandardHeader" 
+                                                               [("documenttitle",BS.toString $ documenttitle document),
+                                                                ("author",BS.toString $ personname' $ documentauthordetails document),
+                                                                ("personname",BS.toString $ personname signlink) ]
+                                                                             
 mailDocumentRejectedForAuthor ::(Maybe BS.ByteString) -> Context -> BS.ByteString -> Document -> BS.ByteString -> IO Mail 
 mailDocumentRejectedForAuthor customMessage ctx authorname  document@Document{documenttitle}  rejectorName = 
     do
-     let title = BS.append (BS.fromString "Avvisat: ")  documenttitle
-     content <- htmlHeadBodyWrapIO documenttitle $ rejectMailContent customMessage ctx authorname document rejectorName
-     return $ emptyMail {title = title, content = content}
+     title <- renderTemplate "mailRejectMailTitle"  [("documenttitle",BS.toString documenttitle)]
+     content <- wrapHTML =<< mailRejectMailContent customMessage ctx authorname document rejectorName
+     return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
 
-rejectMailContent:: (Monad m) => (Maybe BS.ByteString) -> Context -> BS.ByteString -> Document -> BS.ByteString -> (HSPT m XML)   
-rejectMailContent customMessage ctx  authorname  document  rejectorName =   
-      makeEditable "customtext" $ withCustom customMessage $
-                    <span>
-                      <p>Hej <% authorname %>,</p>
-                      <p><% rejectorName %> har nekat att underteckna dokumentet <strong><%(documenttitle document)%></strong>. 
-                      Avtalsprocessen är därmed avbruten.</p>
-                      <% poweredBySkrivaPaPara (ctxhostpart ctx) %>
-                    </span>       
+mailRejectMailContent:: (Maybe BS.ByteString) -> Context -> BS.ByteString -> Document -> BS.ByteString -> IO String  
+mailRejectMailContent customMessage ctx  authorname  document  rejectorName =   
+      do
+       c<-case customMessage of
+           Just message -> return $ BS.toString message
+           Nothing -> renderTemplate "mailRejectMailContent" [("authorname",BS.toString $ authorname ),
+                                                              ("documenttitle", BS.toString $ documenttitle document),
+                                                              ("rejectorName",BS.toString rejectorName),  
+                                                              ("ctxhostpart",ctxhostpart ctx)] 
+       makeEditable' "customtext" c                                                                         
 
 
-mailInvitationToSignContent :: (Monad m) => Bool 
-               -> Context
-               -> Document
-               -> (Maybe SignatoryLink)
-               -> (HSPT m XML)        
+mailInvitationToSignContent :: Bool -> Context  -> Document  -> (Maybe SignatoryLink) -> IO String        
 mailInvitationToSignContent forMail (Context {ctxhostpart}) 
                   document@Document{documenttimeouttime,documentauthordetails,documentinvitetext} 
                   signaturelink = 
     let link = case (signaturelink) of
                 Just signaturelink' -> ctxhostpart ++ show (LinkSignDoc document signaturelink')
                 Nothing -> ctxhostpart ++ "/s/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
-        creatorname = signatoryname documentauthordetails
-        common = <span>
-                  <p><i>Översiktlig information</i><br/>
-                   Parter: 
-                  <% if (forMail) 
-                     then  <span><% partyListString document %></span>
-                     else  <span>
-                            <span class="partylistupdate"></span>
-                            <span class="hidden authorname"> <% personname' documentauthordetails %> </span>
-                           </span> 
-            	  %><br/>
-                   Har undertecknat: <strong><% creatorname %></strong><br/>
-                  <% case documenttimeouttime of 
-                      Just time -> <span>Undertecknas senast: <strong><% show time %></strong>.</span>
-                      Nothing -> <span></span>
-                  %> 
-                  </p>
-                 <p><i>Så här går du vidare</i><br/>
-                  1. Klicka på länken<br/>
-                    <a href=link><% link %></a><br/>
-                  2. Granska online<br/>
-                  3. Underteckna<br/>
-                  4. Färdig<br/> 
-                 </p>
-                </span>
-        defaultHeader = <p>Hej, <BR/> <%creatorname%> har bjudit in dig att underteckna dokumentet Testavtal online via tjänsten SkrivaPå. </p>
-        defaultFooter = poweredBySkrivaPaPara ctxhostpart
-        customFooter =  <p>
-                         <small>
-                          Hälsningar
-                          <br/>
-                          <% creatorname %>
-                        </small> 
-                        </p>
-        customMessage = if (BS.null documentinvitetext) then Nothing else (Just documentinvitetext )       
-        footer =    if (BS.null documentinvitetext) 
-                    then (if (forMail)
-                           then defaultFooter 
-                           else replaceOnEdit defaultFooter customFooter) 
-                    else customFooter 
-        header   = withCustom customMessage (defaultHeader)
-                   
-   in  (makeEditable "customtext" header) `before` common `before` footer                     
-   
+        creatorname = BS.toString $ personname' documentauthordetails
+        partnersinfo = if (forMail) 
+                        then  renderListTemplate $  map (BS.toString . personname') $ partyList document
+                        else  renderTemplate "updateinglistwithauthor" [("creatorname",creatorname )]
+        timetosigninfo = case documenttimeouttime of 
+                          Just time -> renderTemplate "timetosigninfo" [("time",show time )]
+                          Nothing -> return ""
+                          
+        footer =    if (forMail) 
+                    then if (BS.null documentinvitetext)
+                           then renderTemplate "poweredBySkrivaPaPara" [("ctxhostpart",ctxhostpart)] 
+                           else renderTemplate "customFooter" [("creatorname", creatorname)] 
+                    else do
+                          this <- renderTemplate "poweredBySkrivaPaPara" [("ctxhostpart",ctxhostpart)] 
+                          with <- renderTemplate "customFooter" [("creatorname",creatorname)] 
+                          replaceOnEdit' this with            
+        header   =  if (BS.null documentinvitetext) 
+                     then renderTemplate "mailInvitationToSignDefaultHeader" [("creatorname",creatorname)]  
+                     else return $ BS.toString documentinvitetext      
+           
+   in  do
+            header' <- header
+            editableHeader <- makeEditable' "customtext" header'
+            footer' <- footer
+            partnersinfo' <- partnersinfo
+            timetosigninfo' <- timetosigninfo
+            renderTemplate "mailInvitationToSignContent" [("header",editableHeader),
+                                                                ("footer",footer'),
+                                                                ("timetosigninfo",timetosigninfo'),
+                                                                ("partnersinfo",partnersinfo'),  
+                                                                ("creatorname", creatorname),
+                                                                ("documenttitle",BS.toString $ documenttitle document),
+                                                                ("link",link)]                      
+
         
 mailInvitationToSign:: Context -> Document -> SignatoryLink -> IO Mail
 mailInvitationToSign ctx document@Document{documenttitle,documentauthordetails} signaturelink = 
-               let title =  BS.concat [BS.fromString "Inbjudan från ",creatorname , BS.fromString " till ", documenttitle]
-                   creatorname = signatoryname documentauthordetails
-                   content = mailInvitationToSignContent True ctx document (Just signaturelink)
-                in do  
-                   content' <- htmlHeadBodyWrapIO documenttitle content
-                   return $ emptyMail {title = title, content = content'}
+                 do  
+                   title <- renderTemplate "mailInvitationToSignTitle" [("documenttitle",BS.toString  documenttitle ),
+                                                                        ("creatorname",BS.toString $ personname' $ documentauthordetails)] 
+                   content <- wrapHTML =<< mailInvitationToSignContent True ctx document (Just signaturelink)
+                   return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
       
     
 mailDocumentClosedForSignatories :: Context -> Document -> SignatoryLink  -> IO Mail
 mailDocumentClosedForSignatories (Context {ctxhostpart}) document@Document{documenttitle} signaturelink = 
    do
-    let title = BS.append (BS.fromString "Bekräftelse: ")  documenttitle    
-    content' <- htmlHeadBodyWrapIO documenttitle 
-         <span>
-           <p>Hej <strong><% personname signaturelink %></strong>,</p>
-           <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats 
-             av <% partyListString document %>. Avtalet är nu bindande.</p> 
-           <p>Det färdigställda dokumentet bifogas med detta mail.</p> 
-           <% poweredBySkrivaPaPara ctxhostpart %>
-         </span>
-    return $ emptyMail {title = title, content = content'}
+     title <- renderTemplate "mailDocumentClosedForSignatoriesTitle" [("documenttitle",BS.toString  documenttitle )] 
+     partylist <- renderListTemplate $  map (BS.toString . personname') $ partyList document
+     content <- wrapHTML =<< renderTemplate "mailDocumentClosedForSignatoriesContent" [("personname",BS.toString $ personname signaturelink ),
+                                                                          ("documenttitle", BS.toString documenttitle ),
+                                                                          ("partylist",partylist),  
+                                                                          ("ctxhostpart",ctxhostpart)] 
+     return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
 
 mailDocumentClosedForAuthor :: Context -> BS.ByteString -> Document  -> IO Mail
 mailDocumentClosedForAuthor (Context {ctxhostpart}) authorname  document@Document{documenttitle} = 
     do
-     let title = BS.append (BS.fromString "Bekräftelse: ")  documenttitle 
-     content <- htmlHeadBodyWrapIO documenttitle
-        <span>
-          <p>Hej <strong><% authorname %></strong>,</p>
-             <p>Dokumentet <strong><% documenttitle %></strong> har undertecknats 
-                av <% partyListString document %>. Avtalet är nu bindande.</p> 
-             <p>Det färdigställda dokumentet bifogas med detta mail.</p> 
-             <% poweredBySkrivaPaPara ctxhostpart %>
-        </span> 
-     return $ emptyMail {title = title, content = content}
+     title <- renderTemplate "mailDocumentAwaitingForAuthorTitle" [("documenttitle",BS.toString  documenttitle )] 
+     partylist <- renderListTemplate $  map (BS.toString . personname') $ partyList document
+     content <- renderTemplate "mailDocumentClosedForAuthorContent" [("authorname",BS.toString authorname),
+                                                                     ("documenttitle", BS.toString documenttitle ),
+                                                                     ("partylist",partylist),  
+                                                                     ("ctxhostpart",ctxhostpart)] 
+     content' <- wrapHTML content
+     return $ emptyMail {title = BS.fromString title, content = BS.fromString content'}
+
 
 mailDocumentAwaitingForAuthor :: Context -> BS.ByteString -> Document  -> IO Mail
-mailDocumentAwaitingForAuthor (Context {ctxhostpart}) authorname  document@Document{documenttitle} = 
-    -- FIXME: change to swedish
+mailDocumentAwaitingForAuthor (Context {ctxhostpart}) authorname  document@Document{documenttitle} =
     do
-     let title = BS.append (BS.fromString "Bekräftelse: ")  documenttitle 
-     content <- htmlHeadBodyWrapIO documenttitle
-        <span>
-          <p>Hej <strong><% authorname %></strong>,</p>
-             <p>Dokumentet <strong><% documenttitle %></strong> has been signed by all signatories. There were fields for the signatories to fill out. The contract is being held for your final review.  Please follow the link below to read and confirm the information for each signatory.</p>
-             <a href=(ctxhostpart ++ (show $ LinkIssueDoc document))><% documenttitle %></a>
+      title <- renderTemplate "mailDocumentAwaitingForAuthorTitle" [("documenttitle", BS.toString documenttitle )]
+      content <- renderTemplate "mailDocumentAwaitingForAuthorContent" [("authorname",BS.toString authorname),
+                                                                        ("documenttitle", BS.toString  documenttitle ),
+                                                                        ("ctxhostpart",ctxhostpart),
+                                                                        ("documentlink",ctxhostpart ++ (show $ LinkIssueDoc document))] 
+      content' <- wrapHTML content
+      return $ emptyMail {title = BS.fromString title, content = BS.fromString content'}
 
-             <% poweredBySkrivaPaPara ctxhostpart %>
-        </span> 
-     return $ emptyMail {title = title, content = content}
-
-mailCancelDocumentByAuthorContent ::(Monad m) =>  Bool ->  (Maybe BS.ByteString) -> Context  -> Document  -> (HSPT m XML) 
+mailCancelDocumentByAuthorContent ::Bool ->  (Maybe BS.ByteString) -> Context  -> Document  -> IO String
 mailCancelDocumentByAuthorContent forMail customMessage ctx document = 
         let 
-        creatorname = signatoryname $ documentauthordetails document 
-        common = <p>
-                 <% creatorname %> har valt att återkalla sin inbjudan att underteckna dokument <% documenttitle document %>.
-                  Därmed är avtalsprocessen avbruten och du kan inte längre underteckna dokumentet.
-                 </p>
-        defaultHeader = <p>Hej </p>
-        defaultFooter = poweredBySkrivaPaPara $ ctxhostpart ctx
-        customFooter =  <p>
-                          Hälsningar
-                          <br/>
-                          <% creatorname %>
-                        </p>
+        creatorname = BS.toString $ personname' $ documentauthordetails document 
         footer =    if (forMail) 
                     then if (isNothing customMessage)
-                           then defaultFooter 
-                           else customFooter
-                    else replaceOnEdit defaultFooter customFooter
-        header   = withCustom customMessage (defaultHeader)
-   in  (makeEditable "customtext" header) `before` common `before` footer  
+                           then renderTemplate "poweredBySkrivaPaPara" [("ctxhostpart",ctxhostpart  ctx)] 
+                           else renderTemplate "customFooter" [("creatorname", creatorname)] 
+                    else do
+                          this <- renderTemplate "poweredBySkrivaPaPara" [("ctxhostpart",ctxhostpart  ctx)] 
+                          with <- renderTemplate "customFooter" [("creatorname",creatorname)] 
+                          replaceOnEdit' this with
+        header   = case customMessage of 
+                     Just c -> return $ BS.toString c
+                     Nothing  -> renderTemplate "mailCancelDocumentByAuthorStandardHeader" []
+        in 
+          do
+            header' <- header
+            editableHeader <- makeEditable' "customtext" header' 
+            footer' <- footer
+            renderTemplate "mailCancelDocumentByAuthorContent" [("header",editableHeader),
+                                                                ("footer",footer'),
+                                                                ("creatorname", creatorname),
+                                                                ("documenttitle",BS.toString $ documenttitle document)] 
 
 
 mailCancelDocumentByAuthor ::(Maybe BS.ByteString) -> Context  -> Document -> SignatoryLink -> IO Mail 
 mailCancelDocumentByAuthor customMessage ctx document@Document{documenttitle} signlink = 
-   let content  = mailCancelDocumentByAuthorContent True customMessage ctx document          
-       title =  BS.fromString $ "Återkallelsenotis: " ++ BS.toString documenttitle
-   in 
        do
+        title<- renderTemplate "mailCancelDocumentByAuthorTitle" [("documenttitle",BS.toString documenttitle)] 
+        content <- wrapHTML =<< mailCancelDocumentByAuthorContent True customMessage ctx document    
         attachmentcontent <- getFileContents (ctxs3action ctx) $ head $ documentfiles document          
-        content' <- htmlHeadBodyWrapIO documenttitle  content
-        return $ emptyMail {title = title, fullnameemails =  [emailFromSignLink signlink] , content = content', attachments = [(documenttitle,attachmentcontent)]}
+        return $ emptyMail {title = BS.fromString title, fullnameemails =  [emailFromSignLink signlink] , content = BS.fromString content, attachments = [(documenttitle,attachmentcontent)]}
+
+
+makeEditable'::String->String->IO String
+makeEditable' name this = renderTemplate "makeEditable" [("name",name),("this",this)]
+
+replaceOnEdit'::String->String->IO String
+replaceOnEdit' this with =  renderTemplate "replaceOnEdit" [("this",this),("with",with)]

@@ -101,7 +101,7 @@ handleRoutes = msum [
      , dir "landpage" $ dir "signed"     $ hget2 $ DocControl.landpageSigned 
      , dir "landpage" $ dir "rejected"   $ hget2 $ DocControl.landpageRejected
      , dir "landpage" $ dir "signedsave" $ hget2 $ DocControl.landpageSignedSave
-     , dir "landpage" $ dir "saved"      $ hget2 $ DocControl.landpageSaved
+     , dir "landpage" $ dir "saved"      $ hget2 $ DocControl.landpageSaved --got to check this I belive it is not used. MR
            
      , dir "pagesofdoc" $ hget1 $ DocControl.handlePageOfDocument
 
@@ -296,7 +296,7 @@ signupPagePost = do
         Just form -> do
             case signupPageError form of
                 Just err -> do
-                       addFlashMsgText (BS.fromString err)
+                       addFlashMsgText err
                        -- V.renderFromBody ctx V.TopNone V.kontrakcja (signupPageView maybeform)
                        return LinkSignup
                 Nothing -> do
@@ -422,7 +422,7 @@ handleTakeOverDocuments = onlySuperUserPost $ do
     Just srcuser <- query $ GetUserByUserID srcuserid
   
     update $ FragileTakeOverDocuments (userid ctxuser) srcuserid
-    addFlashMsgText $ BS.fromString $ "Took over all documents of '" ++ BS.toString (userfullname srcuser) ++ "'. His account is now empty and can be deleted if you wish so. Show some mercy, though."
+    addFlashMsgText $ "Took over all documents of '" ++ BS.toString (userfullname srcuser) ++ "'. His account is now empty and can be deleted if you wish so. Show some mercy, though."
     return LinkAdminOnly
 
 handleDeleteAccount :: Kontra KontraLink
@@ -433,9 +433,9 @@ handleDeleteAccount = onlySuperUserPost $ do
     if null documents
      then do
        update $ FragileDeleteUser userid
-       addFlashMsgText (BS.fromString ("User deleted. You will not see '" ++ BS.toString (userfullname user) ++ "' here anymore"))
+       addFlashMsgText ("User deleted. You will not see '" ++ BS.toString (userfullname user) ++ "' here anymore")
      else
-       addFlashMsgText (BS.fromString ("I cannot delete user. '" ++ BS.toString (userfullname user) ++ "' still has " ++ show (length documents) ++ " documents as author. Take over his documents, then try to delete the account again."))
+       addFlashMsgText ("I cannot delete user. '" ++ BS.toString (userfullname user) ++ "' still has " ++ show (length documents) ++ " documents as author. Take over his documents, then try to delete the account again.")
     return LinkAdminOnly
 
 handleAllUsersTable :: Kontra Response

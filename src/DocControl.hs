@@ -42,7 +42,6 @@ import qualified Data.Set as Set
 import qualified Seal as Seal
 import qualified Network.HTTP as HTTP
 import qualified Amazon as AWS
-
 {-
   Document state transitions are described in DocState.
 
@@ -195,7 +194,7 @@ signDocument documentid
      case newdocument of
        Left message -> 
            do
-             addFlashMsgText $ BS.fromString message
+             addFlashMsgText message
              return $ LinkMain
        Right document -> 
            do 
@@ -214,7 +213,7 @@ rejectDocument documentid
      case (mdocument) of
       Left message -> 
           do
-            addFlashMsgText $ BS.fromString message
+            addFlashMsgText  message
             return $ LinkMain
       Right document -> 
           do  
@@ -235,7 +234,9 @@ landpageSignInvite documentid = do
   mdocument <- query $ GetDocumentByDocumentID documentid
   case mdocument of
     Nothing -> mzero
-    Just document -> renderFromBody ctx TopNone kontrakcja $ landpageSignInviteView document
+    Just document -> do
+                      content <- liftIO $ landpageSignInviteView document
+                      renderFromBody ctx TopNone kontrakcja $ cdata content
 
 
 landpageSigned documentid signatorylinkid = do
@@ -246,7 +247,8 @@ landpageSigned documentid signatorylinkid = do
     Just document -> do
                      signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
                      maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
-                     renderFromBody ctx TopEmpty kontrakcja $ landpageSignedView document signatorylink (isJust maybeuser)
+                     content <- liftIO $ landpageSignedView document signatorylink (isJust maybeuser)
+                     renderFromBody ctx TopEmpty kontrakcja $ cdata content
 
 landpageRejected documentid signatorylinkid = do
   ctx <- get
@@ -256,7 +258,8 @@ landpageRejected documentid signatorylinkid = do
     Just document -> do
                      signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
                      maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
-                     renderFromBody ctx TopEmpty kontrakcja $ landpageRejectedView document
+                     content <- liftIO $ landpageRejectedView document
+                     renderFromBody ctx TopEmpty kontrakcja $ cdata content
 {-
  Here we need to save the document either under existing account or create a new account
  send invitation email and put the document in that account
@@ -279,7 +282,8 @@ landpageSignedSave documentid signatorylinkid = do
             Just user -> return user
      Just document2 <- update $ SaveDocumentForSignedUser documentid (userid user) signatorylinkid
      -- should redirect
-     renderFromBody ctx TopEmpty kontrakcja $ landpageLoginForSaveView
+     content <- liftIO landpageLoginForSaveView
+     renderFromBody ctx TopEmpty kontrakcja $ cdata content
 
 landpageSaved documentid signatorylinkid = do
   (ctx@Context { ctxmaybeuser = Just user@User{userid} }) <- get
@@ -289,7 +293,8 @@ landpageSaved documentid signatorylinkid = do
     Just document -> do
                    Just document2 <- update $ SaveDocumentForSignedUser documentid userid signatorylinkid
                    signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
-                   renderFromBody ctx TopDocument kontrakcja $ landpageDocumentSavedView
+                   content <- liftIO landpageDocumentSavedView
+                   renderFromBody ctx TopDocument kontrakcja $ cdata content
 
 handleSignPost :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra KontraLink
 handleSignPost documentid 
@@ -378,7 +383,8 @@ handleIssueShowPost docid = withUserPost $
                         then return $ LinkSignInvite documentid
                         -- otherwise it was just a save
                         else do
-                          addFlashMsgHtml $ flashDocumentDraftSaved
+                          fm <- liftIO flashDocumentDraftSaved
+                          addFlashMsgHtmlFromTemplate $ fm
                           return LinkIssue
        AwaitingAuthor -> do 
                           doc2 <- update $ CloseDocument documentid 
@@ -893,8 +899,9 @@ handleCancel docid =  do
                                         Just doc' ->
                                              do
                                               sendCancelMailsForDocument customMessage ctx doc
-                                              addFlashMsgHtml flashMessageCanceled 
-                                        Nothing -> addFlashMsgText $ BS.fromString "Could not cancel"
+                                              fm <-liftIO $ flashMessageCanceled
+                                              addFlashMsgHtmlFromTemplate fm
+                                        Nothing -> addFlashMsgText "Could not cancel"
                                        return (LinkIssueDoc doc)
                           Nothing -> mzero  
                          
@@ -911,7 +918,8 @@ handleResend docid signlinkid  =
                                    customMessage <- fmap (fmap concatChunks) $ getDataFn' (lookBS "customtext")  
                                    mail <- liftIO $ remindMail customMessage ctx doc signlink
                                    liftIO $ sendMail (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )]})
-                                   addFlashMsgText ( flashRemindMailSent signlink)
+                                   fm <- liftIO $ flashRemindMailSent signlink
+                                   addFlashMsgText fm
                                    return (LinkIssueDoc doc)
                                  Nothing -> mzero           
                        Nothing -> mzero               
