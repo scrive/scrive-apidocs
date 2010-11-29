@@ -5,24 +5,26 @@ module DocView( emptyDetails
               , showFilesImages2
               , pageDocumentForAuthor
               , pageDocumentList
-              , mailInvitationToSign
-              , mailDocumentClosedForSignatories
-              , mailDocumentClosedForAuthor
               , landpageSignInviteView
               , landpageSignedView
               , landpageLoginForSaveView
               , landpageDocumentSavedView
               , pageDocumentForSign
-              , flashDocumentDraftSaved
-              , remindMail
               , flashRemindMailSent
-              , mailDocumentRejectedForAuthor
-              , mailDocumentAwaitingForAuthor
+              , flashMessageCanceled 
+              , flashDocumentRestarted
+              , flashDocumentDraftSaved
               , landpageRejectedView
               , defaultInviteMessage 
+              , mailDocumentRemind
+              , mailDocumentRejectedForAuthor
+              , mailDocumentAwaitingForAuthor
               , mailCancelDocumentByAuthorContent
               , mailCancelDocumentByAuthor
-              , flashMessageCanceled 
+              , mailInvitationToSign
+              , mailDocumentClosedForSignatories
+              , mailDocumentClosedForAuthor
+              
               ) where
 import Data.List
 import DocState
@@ -84,7 +86,9 @@ landpageDocumentSavedView = renderTemplate "landpageDocumentSavedView" []
 flashDocumentDraftSaved :: IO String
 flashDocumentDraftSaved  = renderTemplate "flashDocumentDraftSaved" []
 
- 
+flashDocumentRestarted :: IO String
+flashDocumentRestarted  = renderTemplate "flashDocumentRestarted" []
+
 flashRemindMailSent :: SignatoryLink -> IO String                                
 flashRemindMailSent  signlink@SignatoryLink{maybesigninfo = Nothing}  = renderTemplate "flashRemindMailSentNotSigned" [("personname",BS.toString $ personname signlink)] 
 flashRemindMailSent  signlink = renderTemplate "flashRemindMailSentSigned" [("personname",BS.toString $ personname signlink)] 
@@ -108,7 +112,7 @@ oneDocumentRow crtime user document@Document{ documentid
                                 , documentauthor
                                 }  = 
     let link = if unAuthor documentauthor==(userid user)
-               then LinkIssueDoc document
+               then LinkIssueDoc documentid
                else LinkSignDoc document signatorylink
         [signatorylink] = filter (isMatchingSignatoryLink user) documentsignatorylinks
         mk x = <a href=link><% x %></a>
@@ -325,7 +329,7 @@ pageDocumentForAuthor ctx
                <script type="text/javascript">
                  <% "var docstate = " ++ (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks) ++ ";" %>
                </script>
-              <form method="post" name="form" action=(LinkIssueDoc document) id="main-document-form"> 
+              <form method="post" name="form" action=(LinkIssueDoc documentid) id="main-document-form"> 
               Avsändare<br/>
               <div style="margin-bottom: 10px;" id="authordetails">
               <strong><% signatoryname documentauthordetails %></strong><br/>
@@ -360,7 +364,7 @@ pageDocumentForAuthor ctx
               </div>
               </form>
               <span class="localdialogs">
-                <form method="post" name="form" action=(LinkIssueDoc document) class="overlay redirectsubmitform" id="dialog-confirm-signinvite" rel="#main-document-form">  
+                <form method="post" name="form" action=(LinkIssueDoc documentid) class="overlay redirectsubmitform" id="dialog-confirm-signinvite" rel="#main-document-form">  
                    <a class="close"> </a>
                    <h2>Underteckna</h2>
                     <p>Är du säker att du vill underteckna dokumentet <strong><% documenttitle %></strong>?</p>
@@ -438,6 +442,11 @@ pageDocumentForAuthor ctx
 
                   else <span />
              %>         
+            <% fmap cdata $
+               if (documentstatus == Canceled || documentstatus == Timedout || documentstatus == Rejected)
+               then renderActionButton (LinkRestart documentid) "restartButtonName"
+               else return ""
+             %>  
        </div>
       </div>
 
@@ -485,10 +494,12 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document siglnk@(
       wasSeen = isJust maybeseeninfo
       isTimedout = documentstatus document == Timedout
       isCanceled = documentstatus document == Canceled
+      isRejected = documentstatus document == Rejected
       dontShowAnyReminder = isTimedout || isCanceled 
       status =  caseOf
                 [
                 ( isCanceled, <img src="/theme/images/status_rejected.png"/>), 
+                ( isRejected, <img src="/theme/images/status_rejected.png"/>), 
                 ( isTimedout, <img src="/theme/images/status_timeout.png"/>), 
                 (wasSigned, <img src="/theme/images/status_signed.png"/>),
                 (wasSeen, <img src="/theme/images/status_viewed.png"/> )]
@@ -497,8 +508,9 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document siglnk@(
                 [
                 (wasSigned, "Undertecknat " ++ showDateOnly (signtime $ fromJust maybesigninfo) ),
                 (isTimedout, "Förfallodatum har passerat"),
-                (wasSeen,  "Granskat " ++ showDateOnly (signtime $ fromJust maybeseeninfo)),
-                (isCanceled, "" )]
+                (isCanceled, "" ),
+                (isRejected, "" ),
+                (wasSeen,  "Granskat " ++ showDateOnly (signtime $ fromJust maybeseeninfo))]
                  "Har ej undertecknat"       
       isCurrentUserAuthor = maybe False (isAuthor document) muser
       isCurrentSignatorAuthor = (fmap (unEmail . useremail) muser) ==  (Just signatoryemail)    
@@ -511,7 +523,7 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document siglnk@(
                       else "Skicka påminnelse"               
       reminderEditorText = "Skriv eget meddelande"                          
       reminderDialogTitle = reminderText
-      reminderMessage =  fmap cdata $ remindMailContent Nothing ctx document siglnk
+      reminderMessage =  fmap cdata $  mailDocumentRemindContent Nothing ctx document siglnk
       dialogHeight =   if (wasSigned) then "400" else "600"
       reminderForm = <span>
                       <a style="cursor:pointer" class="prepareToSendReminderMail" rel=("#siglnk" ++ (show signatorylinkid ))>  <% reminderText %>  </a>

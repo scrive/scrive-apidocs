@@ -51,6 +51,7 @@ module DocState
     , UpdateDocument(..)
     , CloseDocument(..)
     , CancelDocument(..)
+    , RestartDocument(..)
     )
 where
 import Happstack.Data
@@ -337,7 +338,7 @@ $(deriveAll [''Default]
           , documenttimeouttime      :: Maybe TimeoutTime 
           , documentdeleted          :: Bool -- should not appear in list
           , documentauthordetails    :: SignatoryDetails
-          , documentmaybesigninfo    :: Maybe SignInfo      -- about the author signed the document |should be droped and check at runtime|
+          , documentmaybesigninfo    :: Maybe SignInfo      -- about the author signed the document 
           , documenthistory          :: [DocumentHistoryEntry]
           , documentinvitetext       :: BS.ByteString
 
@@ -973,10 +974,10 @@ getDocumentsBySignatory user = do
 
 isMatchingSignatoryLink :: User -> SignatoryLink -> Bool
 isMatchingSignatoryLink user sigLink = signatoryMatches || emailMatches
-	where signatoryMatches = case (maybesignatory sigLink) of
+  where signatoryMatches = case (maybesignatory sigLink) of
                                              Just (Signatory sigid) | sigid == (userid user) -> True
                                              _ -> False
-              emailMatches = (signatoryemail . signatorydetails $ sigLink) == (unEmail . useremail $ user)
+        emailMatches = (signatoryemail . signatorydetails $ sigLink) == (unEmail . useremail $ user)
 
 
 getTimeoutedButPendingDocuments  :: MinutesTime -> Query Documents [Document]
@@ -1089,7 +1090,7 @@ updateDocument :: MinutesTime
 updateDocument time documentid signatories author daystosign invitetext = do
   documents <- ask
   let Just document = getOne (documents @= documentid)
-  signatorylinks <- sequence $ map mm signatories
+  signatorylinks <- sequence $ map signLinkFromDetails signatories
   let doc2 = document { documentsignatorylinks = signatorylinks
                       , documentdaystosign = daystosign 
                       , documentmtime = time
@@ -1102,19 +1103,7 @@ updateDocument time documentid signatories author daystosign invitetext = do
        return doc2
      else
          return document
-  where mm details = do
-          sg <- ask
-          linkid <- getUnique sg SignatoryLinkID
-          magichash <- getRandom
-          return $ SignatoryLink 
-                     { signatorylinkid = linkid
-                     , signatorydetails = details
-                     , signatorymagichash = magichash
-                     , maybesignatory = Nothing
-                     , maybesigninfo  = Nothing
-                     , maybeseeninfo  = Nothing
-                     }
-
+                     
 timeoutDocument :: DocumentID
                 -> MinutesTime
                 -> Update Documents (Either String Document)
@@ -1198,12 +1187,19 @@ authorSignDocument documentid time ipnumber =
 modifyDocument :: DocumentID 
                -> (Document -> Either String Document) 
                -> Update Documents (Either String Document)
-modifyDocument docid action = do
+modifyDocument docid action = modifyDocument' docid (return . action)
+                
+modifyDocument' :: DocumentID 
+               -> (Document ->  Update Documents (Either String Document)) 
+               -> Update Documents (Either String Document)
+modifyDocument' docid action = do
   documents <- ask
   case getOne (documents @= docid) of
     Nothing -> return $ Left "no such document"
     Just document -> 
-        case action document of
+        do
+        actionresult <- action document
+        case actionresult of
           Left message -> return $ Left message
           Right newdocument -> 
               do
@@ -1338,6 +1334,57 @@ getFilesThatShouldBeMovedToAmazon = do
       getID _ = []
   return (concatMap getID allFiles)
 
+
+{- Restarts document,    
+    Checks the autor and status
+    Clears sign links and stuff
+    Sets status to Pending
+    
+    It is passed a document 
+-} 
+restartDocument :: DocumentID -> User-> Update Documents (Either String Document)
+restartDocument docid user =
+   modifyDocument' docid (\d -> tryToGetRestarted d user)    
+
+
+{- Returns restarted version of document
+    Checks the autor and status
+    Clears sign links and stuff
+-}
+tryToGetRestarted::Document->User-> Update Documents (Either String Document)
+tryToGetRestarted doc user= 
+                            if (documentstatus doc `notElem` [Canceled,Timedout, Rejected])
+                             then return $ Left $ "Can't restart document with " ++ (show $ documentstatus doc) ++ " status"
+                             else if (not $ isAuthor doc user)
+                                   then return $ Left $ "Can't restart document is You are not it's author"
+                                   else do 
+                                         doc' <-clearSignInfofromDoc doc 
+                                         return $ Right doc'
+clearSignInfofromDoc doc = do
+                            let signatoriesDetails = map signatorydetails $ documentsignatorylinks doc
+                            newSignLinks <- sequence $ map signLinkFromDetails signatoriesDetails
+                            return doc {documentstatus=Preparation,
+                                documentmaybesigninfo=Nothing,
+                                documenttimeouttime = Nothing,
+                                documentsignatorylinks = newSignLinks
+                             }
+--UTILS - have to be put before creating action constructors
+signLinkFromDetails details = do
+          sg <- ask
+          linkid <- getUnique sg SignatoryLinkID
+          magichash <- getRandom
+          return $ SignatoryLink 
+                     { signatorylinkid = linkid
+                     , signatorydetails = details
+                     , signatorymagichash = magichash
+                     , maybesignatory = Nothing
+                     , maybesigninfo  = Nothing
+                     , maybeseeninfo  = Nothing
+                     }
+
+isAuthor::Document->User->Bool
+isAuthor d u = (userid u) == ( unAuthor . documentauthor $ d)   
+
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocuments
                         , 'getDocumentsByAuthor
@@ -1367,9 +1414,5 @@ $(mkMethods ''Documents [ 'getDocuments
                           -- admin only area follows
                         , 'fragileTakeOverDocuments
                         , 'getFilesThatShouldBeMovedToAmazon
+                        , 'restartDocument
                         ])
-
-
-
-isAuthor::Document->User->Bool
-isAuthor d u = (userid u) == ( unAuthor . documentauthor $ d)   

@@ -1,0 +1,3 @@
+### 
+restartButtonName=Restart
+######

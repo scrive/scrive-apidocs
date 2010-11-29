@@ -19,3 +19,5 @@ flashMessageBadOldPassword=Du har skrivit in fel nuvarande lösenord
 ####
 flashMessagePasswordsDontMatch=Nytt lösenord matchar inte med upprepa lösenord 
 ###
+flashDocumentRestarted=Document restarted
+###
