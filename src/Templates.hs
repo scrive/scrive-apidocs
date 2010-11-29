@@ -44,6 +44,7 @@ renderTemplateMain name params = do
 getTemplates::String -> IO [(String, StringTemplate String)]            
 getTemplates fp= do
                  handle <- openFile fp ReadMode
+                 hSetEncoding handle utf8
                  ts <- parseTemplates handle
                  hClose handle
                  return $ Prelude.map (fromJust) $ Prelude.filter isJust ts
