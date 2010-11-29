@@ -92,8 +92,9 @@ handleRoutes = msum [
      , dir "d" $ hpost1 $ DocControl.handleIssueShowPost
 
      --This are actions on documents. We may integrate it with all the stuff above, but I don't like it. MR
-     , dir "resend" $ hpost2 $ DocControl.handleResend
-     , dir "cancel" $ hpost1 $ DocControl.handleCancel
+     , dir "resend"  $ hpost2 $ DocControl.handleResend
+     , dir "restart" $ hpost1 $ DocControl.handleRestart
+     , dir "cancel"  $ hpost1 $ DocControl.handleCancel
      
      , dir "pages"  $ hget2  $ DocControl.showPage
 

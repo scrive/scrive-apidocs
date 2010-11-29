@@ -856,7 +856,7 @@ handleIssueNewDocument = withUserPost $ do
           doc <- update $ NewDocument user title ctxtime (freeleft>0)
           liftIO $ print (useremail user, documentid doc,title)
           handleDocumentUpload (documentid doc) (concatChunks content) title
-          return $ LinkIssueDoc doc
+          return $ LinkIssueDoc $ documentid doc
 
 
 handleIssueArchive :: Kontra KontraLink
@@ -902,9 +902,19 @@ handleCancel docid =  do
                                               fm <-liftIO $ flashMessageCanceled
                                               addFlashMsgHtmlFromTemplate fm
                                         Nothing -> addFlashMsgText "Could not cancel"
-                                       return (LinkIssueDoc doc)
+                                       return (LinkIssueDoc $ documentid doc)
                           Nothing -> mzero  
-                         
+
+handleRestart:: String -> Kontra KontraLink
+handleRestart docid = do
+                       ctx <- get
+                       case ctxmaybeuser ctx of
+                        Just user -> do
+                                      update $ RestartDocument (read docid) user
+                                      addFlashMsgText =<< (liftIO flashDocumentRestarted)
+                                      return $ LinkIssueDoc (read docid)             
+                        Nothing -> return LinkLogin          
+                    
 handleResend:: String -> String -> Kontra KontraLink
 handleResend docid signlinkid  =
                     do
@@ -916,11 +926,10 @@ handleResend docid signlinkid  =
                                  Just signlink -> 
                                   do 
                                    customMessage <- fmap (fmap concatChunks) $ getDataFn' (lookBS "customtext")  
-                                   mail <- liftIO $ remindMail customMessage ctx doc signlink
+                                   mail <- liftIO $  mailDocumentRemind customMessage ctx doc signlink
                                    liftIO $ sendMail (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )]})
-                                   fm <- liftIO $ flashRemindMailSent signlink
-                                   addFlashMsgText fm
-                                   return (LinkIssueDoc doc)
+                                   addFlashMsgText =<< (liftIO $ flashRemindMailSent signlink)
+                                   return (LinkIssueDoc $ documentid doc)
                                  Nothing -> mzero           
                        Nothing -> mzero               
 

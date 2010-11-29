@@ -38,11 +38,12 @@ data KontraLink
     | LinkAccountPassword
     | LinkLandpageSaved Document SignatoryLink
     | LinkSignDoc Document SignatoryLink
-    | LinkIssueDoc Document
+    | LinkIssueDoc DocumentID
     | LinkIssueDocPDF Document {- Which file? -}
     | LinkSubaccount
     | LinkRemind Document SignatoryLink
     | LinkCancel Document
+    | LinkRestart DocumentID
     | LinkSigned DocumentID SignatoryLinkID 
     | LinkRejected DocumentID SignatoryLinkID 
     | LinkSignInvite DocumentID
@@ -67,8 +68,8 @@ instance Show KontraLink where
     showsPrec _ LinkSubaccount = (++) "/account/subaccount"
     showsPrec _ (LinkLandpageSaved document signatorylink) = 
         (++) $ "/landpage/signedsave/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink)
-    showsPrec _ (LinkIssueDoc document) = 
-        (++) $ "/d/" ++ show (documentid document)
+    showsPrec _ (LinkIssueDoc documentid) = 
+        (++) $ "/d/" ++ show documentid
     showsPrec _ (LinkIssueDocPDF document) = 
         (++) $ "/d/" ++ show (documentid document) ++ "/" ++ BS.toString (documenttitle document) ++ ".pdf"
     showsPrec _ (LinkSignDoc document signatorylink) = 
@@ -76,6 +77,7 @@ instance Show KontraLink where
                  "/" ++ show (signatorymagichash signatorylink)
     showsPrec _ (LinkRemind document signlink) = (++) $ "/resend/"++(show $ documentid document)++"/"++(show $ signatorylinkid signlink)   
     showsPrec _ (LinkCancel document) = (++) $ "/cancel/"++(show $ documentid document)
+    showsPrec _ (LinkRestart documentid) = (++) $ "/restart/"++(show  documentid)
     showsPrec _ (LinkSigned documentid signatorylinkid) = (++) $ "/landpage/signed/" ++ show documentid ++ "/" ++ show signatorylinkid
     showsPrec _ (LinkRejected documentid signatorylinkid) = (++) $ "/landpage/rejected/" ++ show documentid ++ "/" ++ show signatorylinkid
     showsPrec _ (LinkSignInvite documentid) = (++) $ "/landpage/signinvite/" ++ show documentid ++ "/"

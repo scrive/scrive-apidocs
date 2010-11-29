@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, NamedFieldPuns #-}
 {-# OPTIONS_GHC -Wall #-}
-module Templates(renderTemplate,renderTemplate',wrapHTML,templateList) where
+module Templates(renderTemplate,renderTemplate',wrapHTML,templateList,renderActionButton) where
 
 import Text.StringTemplate 
 import System.IO
@@ -9,10 +9,11 @@ import Data.Maybe
 import Data.List
 import Data.Char
 import System.Log.Logger
+import KontraLink
 
 {-Names of template files -}
 templateFiles::[String]
-templateFiles = ["templates/landpages.st","templates/flash.st","templates/mails.st","templates/utils.st"]
+templateFiles = ["templates/landpages.st","templates/flash.st","templates/mails.st","templates/utils.st","templates/pages.st"]
 
 
 {- Filling template with a given name using given attributes
@@ -76,6 +77,12 @@ parseLines handle = do
 {- Common templates - should be shared and it seams like a good place fo them -}
 wrapHTML::String->IO String
 wrapHTML body =  renderTemplate "wrapHTML" [("body",body)]
+
+renderActionButton::KontraLink -> String -> IO String
+renderActionButton action button = do
+                                        buttonname <- renderTemplate button []
+                                        renderTemplate "actionButton" [("action",show action),("buttonname",buttonname)]
+                                    
 
 {- Template checker, printing info about params-}
 templateList :: IO ()

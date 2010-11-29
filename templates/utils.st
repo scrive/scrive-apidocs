@@ -68,6 +68,9 @@ replaceOnEdit= <span>
                  <span style="display:none"> $with$ </span>  
                </span>  
 #####
+actionButton=<form method="POST" action="$action$"> <input type="submit" value="$buttonname$">
+             </form>
+#####
 LinkLogin=/login
 ###
 LinkForgotPassword=/amnesia

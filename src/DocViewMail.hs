@@ -1,8 +1,8 @@
 {-# LANGUAGE IncoherentInstances, TemplateHaskell, NamedFieldPuns, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -F -pgmFtrhsx -Wall #-}
 
-module DocViewMail ( remindMail,
-                     remindMailContent,
+module DocViewMail ( mailDocumentRemind,
+                     mailDocumentRemindContent,
                      mailDocumentRejectedForAuthor,
                      mailRejectMailContent,
                      mailDocumentClosedForAuthor, 
@@ -24,13 +24,13 @@ import DocViewUtil
 import Amazon
 import Templates
 
-remindMail:: Maybe (BS.ByteString) -> Context -> Document -> SignatoryLink -> IO Mail
-remindMail cm c d s = case s of 
+mailDocumentRemind:: Maybe (BS.ByteString) -> Context -> Document -> SignatoryLink -> IO Mail
+mailDocumentRemind cm c d s = case s of 
                        SignatoryLink{maybesigninfo = Nothing} -> remindMailNotSigned cm c d s
                        _ -> remindMailSigned cm c d s
                        
-remindMailContent :: Maybe (BS.ByteString) -> Context -> Document -> SignatoryLink ->IO String
-remindMailContent cm c d s = case s of 
+mailDocumentRemindContent :: Maybe (BS.ByteString) -> Context -> Document -> SignatoryLink ->IO String
+mailDocumentRemindContent cm c d s = case s of 
                                SignatoryLink{maybesigninfo = Nothing} -> remindMailNotSignedContent False cm c d s
                                _ -> remindMailSignedContent cm c d s
                        
@@ -210,13 +210,13 @@ mailDocumentClosedForAuthor (Context {ctxhostpart}) authorname  document@Documen
 
 
 mailDocumentAwaitingForAuthor :: Context -> BS.ByteString -> Document  -> IO Mail
-mailDocumentAwaitingForAuthor (Context {ctxhostpart}) authorname  document@Document{documenttitle} =
+mailDocumentAwaitingForAuthor (Context {ctxhostpart}) authorname  Document{documenttitle,documentid} =
     do
       title <- renderTemplate "mailDocumentAwaitingForAuthorTitle" [("documenttitle", BS.toString documenttitle )]
       content <- renderTemplate "mailDocumentAwaitingForAuthorContent" [("authorname",BS.toString authorname),
                                                                         ("documenttitle", BS.toString  documenttitle ),
                                                                         ("ctxhostpart",ctxhostpart),
-                                                                        ("documentlink",ctxhostpart ++ (show $ LinkIssueDoc document))] 
+                                                                        ("documentlink",ctxhostpart ++ (show $ LinkIssueDoc documentid))] 
       content' <- wrapHTML content
       return $ emptyMail {title = BS.fromString title, content = BS.fromString content'}
 
