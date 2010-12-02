@@ -53,7 +53,8 @@ import qualified Data.Map as Map
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 import qualified Network.AWS.AWSConnection as AWS
-
+import qualified Payments.PaymentsControl as Payments
+import Templates (readTemplates)
 data AppConf
     = AppConf { httpConf        :: Conf
               , store           :: FilePath
@@ -132,6 +133,9 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "deleteaccount"     $ hpost0 $ handleDeleteAccount
      , dir "adminonly" $ dir "alluserstable"     $ hget0  $ handleAllUsersTable
      , dir "adminonly" $ dir "skrivapausers.csv" $ hget0  $ getUsersDetailsToCSV
+     , dir "adminonly" $ dir "payments"          $ hget1m  $ Payments.handleAdminView
+ 
+     , dir "sales" $ dir "payments" $ hget1m $ Payments.handleSalesView 
 
      , dir "dave" $ dir "document" $ hget1 $ daveDocument
      , dir "dave" $ dir "user"     $ hget1 $ daveUser
@@ -231,6 +235,7 @@ appHandler appConf = do
   session <- handleSession
   muser <- getUserFromSession session
   flashmessages <- getFlashMessagesFromSession session          
+  templates <- liftIO $ readTemplates
   let 
    ctx = Context
             { ctxmaybeuser = muser
@@ -241,6 +246,7 @@ appHandler appConf = do
             , ctxipnumber = peerip
             , ctxs3action = defaultAWSAction appConf
             , ctxproduction = production appConf
+            , ctxtemplates = templates
             }
   (res,ctx)<- toIO ctx $  
      do
@@ -263,9 +269,9 @@ forgotPasswordPageGet = do
     
 forgotPasswordPagePost :: Kontra KontraLink
 forgotPasswordPagePost = do
-    ctx@Context{..} <- lift get
+    ctx@Context{ctxtemplates,ctxhostpart} <- lift get
     email <- getDataFnM $ look "email"
-    liftIO $ resetUserPassword ctxhostpart (BS.fromString email)
+    liftIO $ resetUserPassword ctxtemplates ctxhostpart (BS.fromString email)
     return LinkForgotPasswordDone
 
 forgotPasswordDonePage :: Kontra Response
@@ -287,7 +293,7 @@ signupPageError form
     
 signupPagePost :: Kontra KontraLink
 signupPagePost = do
-    ctx@Context{..} <- lift get
+    ctx@Context{ctxtemplates,ctxhostpart} <- lift get
     maybeform <- getData
     
     case maybeform of
@@ -302,7 +308,7 @@ signupPagePost = do
                        return LinkSignup
                 Nothing -> do
                     -- Create the user, which sends them a welcome email.
-                    account <- liftIO $ createUser ctxhostpart (signupFullname form) (signupEmail form) (Just (signupPassword form)) Nothing
+                    account <- liftIO $ createUser ctxtemplates ctxhostpart (signupFullname form) (signupEmail form) (Just (signupPassword form)) Nothing
                     return LinkSignupDone
 
 signupPageDone :: Kontra Response
@@ -503,3 +509,38 @@ daveUser userid = onlySuperUserGet $ do
         Just user ->
           V.renderFromBody ctx V.TopNone V.kontrakcja $ inspectXML user
 
+
+
+
+hpost0 action = methodM POST >> do
+                  (link :: KontraLink) <- action
+                  sendRedirect link
+
+hpost1 action = path $ \a1 -> methodM POST >>  do
+                  (link :: KontraLink) <- action a1
+                  sendRedirect link
+
+hpost2 action = path $ \a1 -> path $ \a2 -> methodM POST >>  do
+                  (link :: KontraLink) <- action a1 a2
+                  sendRedirect link
+
+hpost3 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> methodM POST >>  do
+                  (link :: KontraLink) <- action a1 a2 a3
+                  sendRedirect link
+
+hpost4 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> path $ \a4 -> methodM POST >>  do
+                  (link :: KontraLink) <- action a1 a2 a3 a4
+                  sendRedirect link
+
+hget0 action = methodM GET >> action
+hget1 action = path $ \a1 -> methodM GET >> action a1
+hget2 action = path $ \a1 -> path $ \a2 -> methodM GET >> action a1 a2
+hget3 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> methodM GET >> action a1 a2 a3
+hget4 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> path $ \a4 -> methodM GET >> action a1 a2 a3 a4
+
+{-Version supporting optional path param
+  Usualy when we want ta have similar path when looking at list and when looking at element
+
+ -} 
+hget1m::(Maybe String -> Kontra Response)->Kontra Response 
+hget1m action = (path $ \a1 -> methodM GET >> (action $ Just a1)) `mplus`  (methodM GET >> action Nothing)

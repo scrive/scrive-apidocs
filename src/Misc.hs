@@ -258,13 +258,6 @@ lookInputList name
              isname _ = []
          return [value | k <- inputs, value <- isname k]
 
-hget0 action = methodM GET >> action
-hget1 action = path $ \a1 -> methodM GET >> action a1
-hget2 action = path $ \a1 -> path $ \a2 -> methodM GET >> action a1 a2
-hget3 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> methodM GET >> action a1 a2 a3
-hget4 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> path $ \a4 -> methodM GET >> action a1 a2 a3 a4
-
-
 renderXMLAsBSHTML (meta,content) = 
     case meta of
       Just (XMLMetaData (showDt, dt) _ pr) -> 

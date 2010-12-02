@@ -1,6 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -F -pgmFtrhsx #-}
-module KontraLink(KontraLink(..), hpost0, hpost1, hpost2, hpost3, hpost4, sendRedirect ) where
+module KontraLink(KontraLink(..), sendRedirect ) where
 
 import UserState
 import DocState
@@ -51,7 +51,9 @@ data KontraLink
     | LinkAdminOnly
     | LinkAdminOnlyIndexDB
     | LinkStats
-
+    | LinkPaymentsAdmin
+    | LinkPaymentsSales
+    
 instance Show KontraLink where
     showsPrec _ LinkAbout = (++) "/about"
     showsPrec _ LinkLogin = (++) "/login"
@@ -84,7 +86,8 @@ instance Show KontraLink where
     showsPrec _ LinkAdminOnly = (++) $ "/adminonly/"
     showsPrec _ LinkAdminOnlyIndexDB = (++) $ "/adminonly/db"
     showsPrec _ LinkStats = (++) $ "/stats"
-
+    showsPrec _ LinkPaymentsAdmin = (++) $ "/adminonly/payments"
+    showsPrec _ LinkPaymentsSales = (++) $ "/sales/payments"
 {-
 instance (EmbedAsAttr m String) => (EmbedAsAttr m KontraLink) where
     asAttr = asAttr . show
@@ -98,27 +101,6 @@ instance (EmbedAsChild m String) => (EmbedAsChild m KontraLink) where
 
 instance Monad m => IsAttrValue m KontraLink where
     toAttrValue = toAttrValue . show
-
-
-hpost0 action = methodM POST >> do
-                  (link :: KontraLink) <- action
-                  sendRedirect link
-
-hpost1 action = path $ \a1 -> methodM POST >>  do
-                  (link :: KontraLink) <- action a1
-                  sendRedirect link
-
-hpost2 action = path $ \a1 -> path $ \a2 -> methodM POST >>  do
-                  (link :: KontraLink) <- action a1 a2
-                  sendRedirect link
-
-hpost3 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> methodM POST >>  do
-                  (link :: KontraLink) <- action a1 a2 a3
-                  sendRedirect link
-
-hpost4 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> path $ \a4 -> methodM POST >>  do
-                  (link :: KontraLink) <- action a1 a2 a3 a4
-                  sendRedirect link
 
 --sendRedirect :: KontraLink -> Kontra Response
 sendRedirect link = do  

@@ -101,7 +101,7 @@ sendInvitationEmail1 ctx document signatorylink = do
                                                          }
                    , signatorymagichash } = signatorylink
       Document{documenttitle,documentid} = document
-  mail <- mailInvitationToSign ctx document signatorylink
+  mail <- mailInvitationToSign (ctxtemplates ctx) ctx document signatorylink
   attachmentcontent <- AWS.getFileContents (ctxs3action ctx) $ head $ documentfiles document
   sendMail $ mail { fullnameemails =  [(signatoryname,signatoryemail)]  , attachments = [(documenttitle,attachmentcontent)]} 
 
@@ -119,7 +119,7 @@ sendClosedEmail1 ctx document signatorylink = do
                                                          , signatorycompany
                                                          , signatoryemail }} = signatorylink
       Document{documenttitle,documentid} = document
-  mail <- mailDocumentClosedForSignatories ctx document signatorylink
+  mail <- mailDocumentClosedForSignatories (ctxtemplates ctx) ctx document signatorylink
   attachmentcontent <- AWS.getFileContents (ctxs3action ctx) $ head $ documentsealedfiles document
   sendMail $ mail { fullnameemails =  [(signatoryname,signatoryemail)] , attachments = [(documenttitle,attachmentcontent)]}
 
@@ -127,7 +127,7 @@ sendAwaitingEmail :: Context -> Document -> IO ()
 sendAwaitingEmail ctx document = do
   let authorid = unAuthor $ documentauthor document
   Just authoruser <- query $ GetUserByUserID authorid
-  mail<- mailDocumentAwaitingForAuthor ctx (userfullname authoruser)
+  mail<- mailDocumentAwaitingForAuthor (ctxtemplates ctx) ctx (userfullname authoruser)
              document
   let email2 = signatoryemail $ documentauthordetails document
       email1 = unEmail $ useremail authoruser
@@ -142,7 +142,7 @@ sendClosedAuthorEmail :: Context -> Document -> IO ()
 sendClosedAuthorEmail ctx document = do
   let authorid = unAuthor $ documentauthor document
   Just authoruser <- query $ GetUserByUserID authorid
-  mail<- mailDocumentClosedForAuthor ctx (userfullname authoruser)
+  mail<- mailDocumentClosedForAuthor (ctxtemplates ctx) ctx (userfullname authoruser)
              document
   attachmentcontent <- AWS.getFileContents (ctxs3action ctx) $ head $ documentsealedfiles document
   let Document{documenttitle,documentid} = document
@@ -160,7 +160,7 @@ sendRejectAuthorEmail customMessage ctx document signalink = do
   let authorid = unAuthor $ documentauthor document
   Just authoruser <- query $ GetUserByUserID authorid
   let rejectorName = signatoryname (signatorydetails signalink)
-  mail <- mailDocumentRejectedForAuthor customMessage ctx (userfullname authoruser)
+  mail <- mailDocumentRejectedForAuthor (ctxtemplates ctx) customMessage ctx (userfullname authoruser)
              document rejectorName
   let email2 = signatoryemail $ documentauthordetails document
       email1 = unEmail $ useremail authoruser
@@ -235,7 +235,7 @@ landpageSignInvite documentid = do
   case mdocument of
     Nothing -> mzero
     Just document -> do
-                      content <- liftIO $ landpageSignInviteView document
+                      content <- liftIO $ landpageSignInviteView (ctxtemplates ctx) document
                       renderFromBody ctx TopNone kontrakcja $ cdata content
 
 
@@ -247,7 +247,7 @@ landpageSigned documentid signatorylinkid = do
     Just document -> do
                      signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
                      maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
-                     content <- liftIO $ landpageSignedView document signatorylink (isJust maybeuser)
+                     content <- liftIO $ landpageSignedView (ctxtemplates ctx) document signatorylink (isJust maybeuser)
                      renderFromBody ctx TopEmpty kontrakcja $ cdata content
 
 landpageRejected documentid signatorylinkid = do
@@ -258,7 +258,7 @@ landpageRejected documentid signatorylinkid = do
     Just document -> do
                      signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
                      maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
-                     content <- liftIO $ landpageRejectedView document
+                     content <- liftIO $ landpageRejectedView (ctxtemplates ctx) document
                      renderFromBody ctx TopEmpty kontrakcja $ cdata content
 {-
  Here we need to save the document either under existing account or create a new account
@@ -277,12 +277,12 @@ landpageSignedSave documentid signatorylinkid = do
      user <- case maybeuser of
             Nothing -> do 
               let email = signatoryemail details
-              user <- liftIO $ createUser ctxhostpart fullname email Nothing Nothing
+              user <- liftIO $ createUser (ctxtemplates ctx) ctxhostpart fullname email Nothing Nothing
               return user
             Just user -> return user
      Just document2 <- update $ SaveDocumentForSignedUser documentid (userid user) signatorylinkid
      -- should redirect
-     content <- liftIO landpageLoginForSaveView
+     content <- liftIO $ landpageLoginForSaveView (ctxtemplates ctx)
      renderFromBody ctx TopEmpty kontrakcja $ cdata content
 
 landpageSaved documentid signatorylinkid = do
@@ -293,7 +293,7 @@ landpageSaved documentid signatorylinkid = do
     Just document -> do
                    Just document2 <- update $ SaveDocumentForSignedUser documentid userid signatorylinkid
                    signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
-                   content <- liftIO landpageDocumentSavedView
+                   content <- liftIO $ landpageDocumentSavedView (ctxtemplates ctx)
                    renderFromBody ctx TopDocument kontrakcja $ cdata content
 
 handleSignPost :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra KontraLink
@@ -383,7 +383,7 @@ handleIssueShowPost docid = withUserPost $
                         then return $ LinkSignInvite documentid
                         -- otherwise it was just a save
                         else do
-                          fm <- liftIO flashDocumentDraftSaved
+                          fm <- liftIO $ flashDocumentDraftSaved (ctxtemplates ctx)
                           addFlashMsgHtmlFromTemplate $ fm
                           return LinkIssue
        AwaitingAuthor -> do 
@@ -899,7 +899,7 @@ handleCancel docid =  do
                                         Just doc' ->
                                              do
                                               sendCancelMailsForDocument customMessage ctx doc
-                                              fm <-liftIO $ flashMessageCanceled
+                                              fm <-liftIO $ flashMessageCanceled (ctxtemplates ctx)
                                               addFlashMsgHtmlFromTemplate fm
                                         Nothing -> addFlashMsgText "Could not cancel"
                                        return (LinkIssueDoc $ documentid doc)
@@ -911,7 +911,7 @@ handleRestart docid = do
                        case ctxmaybeuser ctx of
                         Just user -> do
                                       update $ RestartDocument (read docid) user
-                                      addFlashMsgText =<< (liftIO flashDocumentRestarted)
+                                      addFlashMsgText =<< (liftIO $ flashDocumentRestarted (ctxtemplates ctx))
                                       return $ LinkIssueDoc (read docid)             
                         Nothing -> return LinkLogin          
                     
@@ -926,13 +926,13 @@ handleResend docid signlinkid  =
                                  Just signlink -> 
                                   do 
                                    customMessage <- fmap (fmap concatChunks) $ getDataFn' (lookBS "customtext")  
-                                   mail <- liftIO $  mailDocumentRemind customMessage ctx doc signlink
+                                   mail <- liftIO $  mailDocumentRemind (ctxtemplates ctx) customMessage ctx doc signlink
                                    liftIO $ sendMail (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )]})
-                                   addFlashMsgText =<< (liftIO $ flashRemindMailSent signlink)
+                                   addFlashMsgText =<< (liftIO $ flashRemindMailSent (ctxtemplates ctx) signlink)
                                    return (LinkIssueDoc $ documentid doc)
                                  Nothing -> mzero           
                        Nothing -> mzero               
 
 sendCancelMailsForDocument:: (Maybe BS.ByteString) -> Context -> Document -> Kontra ()
 sendCancelMailsForDocument customMessage ctx document = liftIO $ 
-        forM_ (documentsignatorylinks document) (sendMail  <=< (mailCancelDocumentByAuthor customMessage ctx document))
+        forM_ (documentsignatorylinks document) (sendMail  <=< (mailCancelDocumentByAuthor (ctxtemplates ctx) customMessage ctx document))

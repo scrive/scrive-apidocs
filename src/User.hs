@@ -44,7 +44,7 @@ import HSP.XML
 import Data.Object.Json as Json
 import Data.Object as Json
 import qualified Network.AWS.Authentication as AWS
-
+import Templates (KontrakcjaTemplates)
 
 
 
@@ -119,6 +119,7 @@ data Context = Context
     , ctxipnumber            :: Word32
     , ctxs3action            :: AWS.S3Action
     , ctxproduction          :: Bool
+    , ctxtemplates           :: KontrakcjaTemplates 
     }
 
 type Kontra a = ServerPartT (StateT Context IO) a

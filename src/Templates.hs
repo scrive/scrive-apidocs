@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, NamedFieldPuns #-}
 {-# OPTIONS_GHC -Wall #-}
-module Templates(renderTemplate,renderTemplate',wrapHTML,templateList,renderActionButton) where
+module Templates(readTemplates,renderTemplate,renderTemplate',wrapHTML,templateList,renderActionButton,KontrakcjaTemplates) where
 
 import Text.StringTemplate 
 import System.IO
@@ -9,28 +9,26 @@ import Data.Maybe
 import Data.List
 import Data.Char
 import System.Log.Logger
-import KontraLink
+import KontraLink 
 
 {-Names of template files -}
 templateFiles::[String]
-templateFiles = ["templates/landpages.st","templates/flash.st","templates/mails.st","templates/utils.st","templates/pages.st"]
+templateFiles = ["templates/landpages.st","templates/flash.st","templates/mails.st","templates/utils.st","templates/pages.st","templates/payments.st"]
 
-
+type KontrakcjaTemplates =  STGroup String
 {- Filling template with a given name using given attributes
    It never fail, just returns empty message and writes something in the logs
    In next version it will be shared, but for now it reads all files for every template
 -}
-renderTemplate::String->[(String, String)] ->  IO String
+renderTemplate::KontrakcjaTemplates ->String->[(String, String)] ->  IO String
 renderTemplate = renderTemplateMain
 
-renderTemplate'::String->[(String, [String])] ->  IO String
+renderTemplate'::KontrakcjaTemplates ->String->[(String, [String])] ->  IO String
 renderTemplate'= renderTemplateMain
 
-renderTemplateMain::(ToSElem a)=>String->[(String, a)] ->  IO String
-renderTemplateMain name params = do 
-                               ts <- sequence (map getTemplates templateFiles)
-                               let ts' = groupStringTemplates (concat ts)
-                               let mt =  getStringTemplate name ts'
+renderTemplateMain::(ToSElem a)=>KontrakcjaTemplates ->String->[(String, a)] ->  IO String
+renderTemplateMain ts name params = do 
+                               let mt =  getStringTemplate name ts
                                case mt of 
                                   Just t -> do
                                             let t'= (setManyAttrib params  t)   
@@ -41,6 +39,11 @@ renderTemplateMain name params = do
                                   Nothing -> do
                                               errorM "Happstack.Server" $ "No template named " ++ name 
                                               return ""                                   
+readTemplates::IO KontrakcjaTemplates 
+readTemplates =   do
+                   ts <- sequence (map getTemplates templateFiles)
+                   return $ groupStringTemplates (concat ts)
+
 
 getTemplates::String -> IO [(String, StringTemplate String)]            
 getTemplates fp= do
@@ -75,13 +78,13 @@ parseLines handle = do
                       else fmap ((:) l) (parseLines handle)
 
 {- Common templates - should be shared and it seams like a good place fo them -}
-wrapHTML::String->IO String
-wrapHTML body =  renderTemplate "wrapHTML" [("body",body)]
+wrapHTML::KontrakcjaTemplates  -> String->IO String
+wrapHTML templates body =  renderTemplate templates  "wrapHTML" [("body",body)]
 
-renderActionButton::KontraLink -> String -> IO String
-renderActionButton action button = do
-                                        buttonname <- renderTemplate button []
-                                        renderTemplate "actionButton" [("action",show action),("buttonname",buttonname)]
+renderActionButton::KontrakcjaTemplates  -> KontraLink -> String -> IO String
+renderActionButton templates  action button = do
+                                        buttonname <- renderTemplate templates  button []
+                                        renderTemplate templates "actionButton" [("action",show action),("buttonname",buttonname)]
                                     
 
 {- Template checker, printing info about params-}
