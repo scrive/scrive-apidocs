@@ -24,7 +24,6 @@ import qualified HSX.XMLGenerator as HSX
 import Misc
 import Templates
 
-
 partyList :: Document -> [SignatoryDetails]
 partyList document =
     let author = documentauthordetails document
@@ -117,8 +116,8 @@ emailFromSignLink::SignatoryLink->(BS.ByteString,BS.ByteString)
 emailFromSignLink sl = (signatoryname $ signatorydetails sl,signatoryemail $ signatorydetails sl) 
 
 
-renderListTemplate::[String] -> IO String
-renderListTemplate list = if (length list > 1)
-                          then  renderTemplate' "morethenonelist" [("list",init list),("last", [last list])]   
-                          else  renderTemplate' "nomoretheneonelist" [("list",list)]   
+renderListTemplate:: KontrakcjaTemplates -> [String] -> IO String
+renderListTemplate templates list = if (length list > 1)
+                          then  renderTemplate' templates "morethenonelist" [("list",init list),("last", [last list])]   
+                          else  renderTemplate' templates "nomoretheneonelist" [("list",list)]   
 

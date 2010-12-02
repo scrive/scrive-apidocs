@@ -171,32 +171,34 @@ viewSubaccounts ctx subusers =
       </table>
     </form>
 
-newUserMail :: String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> IO Mail
-newUserMail hostpart emailaddress personname newpassword =
+newUserMail :: KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> IO Mail
+newUserMail templates hostpart emailaddress personname newpassword =
     do 
-    title <- renderTemplate "newUserMailTitle" []
-    content <- wrapHTML =<< renderTemplate "newUserMailContent" [("personname",BS.toString $ personname),
+    title <- renderTemplate templates "newUserMailTitle" []
+    content <- wrapHTML templates =<< renderTemplate templates "newUserMailContent" [("personname",BS.toString $ personname),
                                                                  ("email",BS.toString $ emailaddress),
                                                                  ("password",BS.toString $ newpassword),
                                                                  ("ctxhostpart",hostpart)]
     return $ emptyMail {title=BS.fromString title, content = BS.fromString content} 
     
-passwordChangeMail :: String -> BS.ByteString -> BS.ByteString  -> BS.ByteString    -> IO Mail
-passwordChangeMail hostpart emailaddress personname newpassword = 
+passwordChangeMail ::  KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString  -> BS.ByteString    -> IO Mail
+passwordChangeMail templates hostpart emailaddress personname newpassword = 
     do 
-    title <- renderTemplate "passwordChangeMailTitle" []
-    content <- wrapHTML =<< renderTemplate "passwordChangeMailContent" [("personname",BS.toString $ personname),
+    title <- renderTemplate templates "passwordChangeMailTitle" []
+    content <- wrapHTML templates =<< renderTemplate templates "passwordChangeMailContent" 
+                                                                [("personname",BS.toString $ personname),
                                                                  ("email",BS.toString $ emailaddress),
                                                                  ("password",BS.toString $ newpassword),
                                                                  ("ctxhostpart",hostpart)]
     return $ emptyMail {title=BS.fromString title, content = BS.fromString content} 
 
 
-inviteSubaccountMail :: String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> BS.ByteString -> BS.ByteString -> IO Mail
-inviteSubaccountMail hostpart supervisorname companyname emailaddress personname newpassword = 
+inviteSubaccountMail ::  KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> BS.ByteString -> BS.ByteString -> IO Mail
+inviteSubaccountMail  templates hostpart supervisorname companyname emailaddress personname newpassword = 
     do 
-    title <- renderTemplate "inviteSubaccountMailTitle" []
-    content <- wrapHTML =<< renderTemplate "inviteSubaccountMailContent" [("personname",BS.toString $ personname),
+    title <- renderTemplate templates "inviteSubaccountMailTitle" []
+    content <- wrapHTML templates =<< renderTemplate templates "inviteSubaccountMailContent" 
+                                                                [("personname",BS.toString $ personname),
                                                                  ("email",BS.toString $ emailaddress),
                                                                  ("password",BS.toString $ newpassword),
                                                                  ("supervisorname",BS.toString $ supervisorname),  
@@ -204,10 +206,11 @@ inviteSubaccountMail hostpart supervisorname companyname emailaddress personname
                                                                  ("ctxhostpart",hostpart)]
     return $ emptyMail {title=BS.fromString title, content = BS.fromString content}   
 
-mailNewAccountCreatedByAdmin:: Context-> BS.ByteString -> BS.ByteString -> BS.ByteString ->  IO Mail
-mailNewAccountCreatedByAdmin ctx personname email password =    do 
-      title <- renderTemplate "inviteSubaccountMailTitle" []
-      content <- wrapHTML =<< renderTemplate "inviteSubaccountMailContent" [("personname",BS.toString $ personname),
+mailNewAccountCreatedByAdmin:: KontrakcjaTemplates -> Context-> BS.ByteString -> BS.ByteString -> BS.ByteString ->  IO Mail
+mailNewAccountCreatedByAdmin templates ctx personname email password =    do 
+      title <- renderTemplate templates "inviteSubaccountMailTitle" []
+      content <- wrapHTML templates =<< renderTemplate templates "inviteSubaccountMailContent"
+                                                                 [("personname",BS.toString $ personname),
                                                                  ("email",BS.toString $ email),
                                                                  ("password",BS.toString $ password),
                                                                  ("creatorname", BS.toString$ maybe BS.empty prettyName (ctxmaybeuser  ctx)),  
@@ -215,20 +218,20 @@ mailNewAccountCreatedByAdmin ctx personname email password =    do
       return $ emptyMail {title=BS.fromString title, content = BS.fromString content}   
     
 
-flashMessageUserDetailsSaved:: IO String
-flashMessageUserDetailsSaved = renderTemplate "flashMessageUserDetailsSaved" [] 
+flashMessageUserDetailsSaved:: KontrakcjaTemplates -> IO String
+flashMessageUserDetailsSaved templates = renderTemplate templates "flashMessageUserDetailsSaved" [] 
 
-flashMessageMustAcceptTOS::IO String
-flashMessageMustAcceptTOS = renderTemplate "flashMessageMustAcceptTOS" []
+flashMessageMustAcceptTOS:: KontrakcjaTemplates ->IO String
+flashMessageMustAcceptTOS templates = renderTemplate templates "flashMessageMustAcceptTOS" []
 
-flashMessagePasswordNotStrong::IO String
-flashMessagePasswordNotStrong= renderTemplate "flashMessagePasswordNotStrong" []
+flashMessagePasswordNotStrong:: KontrakcjaTemplates ->IO String
+flashMessagePasswordNotStrong templates = renderTemplate templates "flashMessagePasswordNotStrong" []
 
-flashMessageBadOldPassword::IO String
-flashMessageBadOldPassword= renderTemplate "flashMessageBadOldPassword" []
+flashMessageBadOldPassword:: KontrakcjaTemplates ->IO String
+flashMessageBadOldPassword templates= renderTemplate templates "flashMessageBadOldPassword" []
 
-flashMessagePasswordsDontMatch::IO String
-flashMessagePasswordsDontMatch= renderTemplate "flashMessagePasswordsDontMatch" []
+flashMessagePasswordsDontMatch:: KontrakcjaTemplates ->IO String
+flashMessagePasswordsDontMatch templates = renderTemplate templates"flashMessagePasswordsDontMatch" []
 
 {- Same as personname (username or email) from DocView but works on User -}
 prettyName::User -> BS.ByteString

@@ -41,61 +41,64 @@ import DocViewMail
 import DocViewUtil
 import Templates    
 
-landpageSignInviteView :: Document ->  IO String
-landpageSignInviteView document =
+landpageSignInviteView ::KontrakcjaTemplates -> Document ->  IO String
+landpageSignInviteView templates  document =
      do 
-      partylist <-renderListTemplate (map (BS.toString . personname') $ partyListButAuthor document)
-      renderTemplate "landpageSignInviteView" [("partyListButAuthor", partylist),
-                                               ("documenttitle",BS.toString $ documenttitle document )]
+      partylist <-renderListTemplate templates (map (BS.toString . personname') $ partyListButAuthor document)
+      renderTemplate templates  "landpageSignInviteView" [("partyListButAuthor", partylist),
+                                                          ("documenttitle",BS.toString $ documenttitle document )]
 
-willCreateAccountForYou:: Document->SignatoryLink->Bool->  IO String
-willCreateAccountForYou _ _ False =  renderTemplate "willCreateAccountForYouNoAccount" ([]::[(String,String)])
-willCreateAccountForYou document siglink True = 
-                                     renderTemplate "willCreateAccountForYouHasAccount" [("documentid",show $ unDocumentID $ documentid document),
-                                                                                         ("signatorylinkid",show $ unSignatoryLinkID $ signatorylinkid siglink)]
+willCreateAccountForYou::KontrakcjaTemplates -> Document->SignatoryLink->Bool->  IO String
+willCreateAccountForYou templates  _ _ False =  renderTemplate templates "willCreateAccountForYouNoAccount" ([]::[(String,String)])
+willCreateAccountForYou templates  document siglink True = 
+                                     renderTemplate templates  "willCreateAccountForYouHasAccount" 
+                                                                     [("documentid",show $ unDocumentID $ documentid document),
+                                                                     ("signatorylinkid",show $ unSignatoryLinkID $ signatorylinkid siglink)]
 
-landpageRejectedView :: Document -> IO String
-landpageRejectedView document =
+landpageRejectedView ::KontrakcjaTemplates -> Document -> IO String
+landpageRejectedView templates document =
    do 
-      partylist <-renderListTemplate (map (BS.toString . personname') $ partyList document)
-      renderTemplate "landpageRejectedView" [("partyList", partylist),
+      partylist <-renderListTemplate templates  (map (BS.toString . personname') $ partyList document)
+      renderTemplate templates  "landpageRejectedView" [("partyList", partylist),
                                               ("documenttitle",BS.toString $ documenttitle document )]
 
-landpageSignedView :: Document -> SignatoryLink -> Bool -> IO String
-landpageSignedView document@Document{documenttitle,documentstatus} signatorylink hasaccount =
+landpageSignedView ::KontrakcjaTemplates -> Document -> SignatoryLink -> Bool -> IO String
+landpageSignedView templates document@Document{documenttitle,documentstatus} signatorylink hasaccount =
     do
-       willCreateAccountForYouProposal <- willCreateAccountForYou document signatorylink (not hasaccount) 
+       willCreateAccountForYouProposal <- willCreateAccountForYou templates document signatorylink (not hasaccount) 
        if (documentstatus == Closed) 
         then do
-              partylist <- renderListTemplate $ map (BS.toString . personname') $ partyList document
-              renderTemplate "landpageSignedViewClosed" [("partyListString", partylist),
+              partylist <- renderListTemplate templates $ map (BS.toString . personname') $ partyList document
+              renderTemplate templates "landpageSignedViewClosed" [("partyListString", partylist),
                                                          ("documenttitle",BS.toString $ documenttitle),
                                                          ("willCreateAccountForYou", willCreateAccountForYouProposal)]
         else do
-              partyunsignedlist <- renderListTemplate $ map (BS.toString . personname') $ partyUnsignedList document
-              renderTemplate "landpageSignedViewNotClosed"  [("partyUnsignedListString", partyunsignedlist),
+              partyunsignedlist <- renderListTemplate templates  $ map (BS.toString . personname') $ partyUnsignedList document
+              renderTemplate templates  "landpageSignedViewNotClosed"  [("partyUnsignedListString", partyunsignedlist),
                                                              ("documenttitle",BS.toString $ documenttitle),
                                                              ("willCreateAccountForYou", willCreateAccountForYouProposal)]   
 
-landpageLoginForSaveView::IO String
-landpageLoginForSaveView  = renderTemplate "landpageLoginForSaveView" []
+landpageLoginForSaveView::KontrakcjaTemplates ->IO String
+landpageLoginForSaveView  templates  = renderTemplate templates  "landpageLoginForSaveView" []
 
-landpageDocumentSavedView :: IO String
-landpageDocumentSavedView = renderTemplate "landpageDocumentSavedView" []
+landpageDocumentSavedView ::KontrakcjaTemplates -> IO String
+landpageDocumentSavedView templates  = renderTemplate templates  "landpageDocumentSavedView" []
 
-flashDocumentDraftSaved :: IO String
-flashDocumentDraftSaved  = renderTemplate "flashDocumentDraftSaved" []
+flashDocumentDraftSaved :: KontrakcjaTemplates ->IO String
+flashDocumentDraftSaved  templates  = renderTemplate templates  "flashDocumentDraftSaved" []
 
-flashDocumentRestarted :: IO String
-flashDocumentRestarted  = renderTemplate "flashDocumentRestarted" []
+flashDocumentRestarted :: KontrakcjaTemplates ->IO String
+flashDocumentRestarted  templates  = renderTemplate templates "flashDocumentRestarted" []
 
-flashRemindMailSent :: SignatoryLink -> IO String                                
-flashRemindMailSent  signlink@SignatoryLink{maybesigninfo = Nothing}  = renderTemplate "flashRemindMailSentNotSigned" [("personname",BS.toString $ personname signlink)] 
-flashRemindMailSent  signlink = renderTemplate "flashRemindMailSentSigned" [("personname",BS.toString $ personname signlink)] 
+flashRemindMailSent :: KontrakcjaTemplates -> SignatoryLink -> IO String                                
+flashRemindMailSent templates  signlink@SignatoryLink{maybesigninfo = Nothing}  = 
+                            renderTemplate templates  "flashRemindMailSentNotSigned" [("personname",BS.toString $ personname signlink)] 
+flashRemindMailSent templates  signlink = 
+                            renderTemplate templates  "flashRemindMailSentSigned" [("personname",BS.toString $ personname signlink)] 
 
 
-flashMessageCanceled :: IO String
-flashMessageCanceled = renderTemplate "flashMessageCanceled" []
+flashMessageCanceled :: KontrakcjaTemplates -> IO String
+flashMessageCanceled templates = renderTemplate templates  "flashMessageCanceled" []
 
 concatSignatories :: [SignatoryLink] -> String
 concatSignatories siglinks = 
@@ -381,7 +384,7 @@ pageDocumentForAuthor ctx
                    <a class="close"> </a>
                    <h2>Hälsningsmeddelande</h2>
                    <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
-                   <% fmap cdata $ mailInvitationToSignContent False ctx document Nothing%>
+                   <% fmap cdata $ mailInvitationToSignContent (ctxtemplates ctx) False ctx document Nothing%>
                    </div>
                    <div class="buttonbox" >
                        <button class="close button" type="button"> Avbryt </button>
@@ -429,7 +432,7 @@ pageDocumentForAuthor ctx
 			           <BR/>När du återkallat inbjudan kommer nedanstaende meddelande att skickas till dina motparter.
                                 </p>
                                 <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
-                                 <% fmap cdata $ mailCancelDocumentByAuthorContent False Nothing ctx document%>
+                                 <% fmap cdata $ mailCancelDocumentByAuthorContent  (ctxtemplates ctx) False Nothing ctx document%>
                                 </div>
                                 <div class="buttonbox" >
                                    <button class="close button" type="button"> Avbryt </button>
@@ -444,7 +447,7 @@ pageDocumentForAuthor ctx
              %>         
             <% fmap cdata $
                if (documentstatus == Canceled || documentstatus == Timedout || documentstatus == Rejected)
-               then renderActionButton (LinkRestart documentid) "restartButtonName"
+               then renderActionButton  (ctxtemplates ctx) (LinkRestart documentid) "restartButtonName"
                else return ""
              %>  
        </div>
@@ -523,7 +526,7 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document siglnk@(
                       else "Skicka påminnelse"               
       reminderEditorText = "Skriv eget meddelande"                          
       reminderDialogTitle = reminderText
-      reminderMessage =  fmap cdata $  mailDocumentRemindContent Nothing ctx document siglnk
+      reminderMessage =  fmap cdata $  mailDocumentRemindContent  (ctxtemplates ctx) Nothing ctx document siglnk
       dialogHeight =   if (wasSigned) then "400" else "600"
       reminderForm = <span>
                       <a style="cursor:pointer" class="prepareToSendReminderMail" rel=("#siglnk" ++ (show signatorylinkid ))>  <% reminderText %>  </a>
@@ -588,7 +591,7 @@ pageDocumentForSign action document ctx  invitedlink wassigned =
                     , maybesignatory = Nothing -- FIXME: should be author user id
                     , signatorymagichash = MagicHash 0
                     }
-       rejectMessage =  fmap cdata $ mailRejectMailContent Nothing ctx (personname authorlink) document (personname invitedlink)
+       rejectMessage =  fmap cdata $ mailRejectMailContent  (ctxtemplates ctx) Nothing ctx (personname authorlink) document (personname invitedlink)
    in showDocumentPageHelper document helpers
               (documenttitle document) $
               <span>

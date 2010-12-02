@@ -32,7 +32,7 @@ import qualified Data.ByteString.Char8 as BS8
 import qualified Data.Object.Json as Json
 import qualified Data.Set as Set
 import qualified HSP
-
+import Templates (KontrakcjaTemplates)
 
 handleUserPasswordPost :: Kontra KontraLink
 handleUserPasswordPost = do
@@ -49,13 +49,13 @@ handleUserPasswordPost = do
             then do
               passwordhash <- liftIO $ createPassword password
               update $ SetUserPassword user passwordhash
-              addFlashMsgHtmlFromTemplate =<< (liftIO  flashMessageUserDetailsSaved)
+              addFlashMsgHtmlFromTemplate =<< (liftIO $ flashMessageUserDetailsSaved  (ctxtemplates ctx))
             else
-              addFlashMsgText =<< (liftIO flashMessagePasswordNotStrong)
+              addFlashMsgText =<< (liftIO $ flashMessagePasswordNotStrong (ctxtemplates ctx))
         else
-          addFlashMsgText =<< (liftIO flashMessageBadOldPassword)
+          addFlashMsgText =<< (liftIO $ flashMessageBadOldPassword  (ctxtemplates ctx))
     else
-      addFlashMsgText =<< (liftIO flashMessagePasswordsDontMatch)
+      addFlashMsgText =<< (liftIO $ flashMessagePasswordsDontMatch (ctxtemplates ctx))
   return LinkAccount
 
 handleUserGet :: Kontra Response
@@ -72,7 +72,7 @@ handleUserPost = do
   invoiceaddress <- g "invoiceaddress"
   
   newuser <- update $ SetUserDetails userid fullname companyname companynumber invoiceaddress
-  addFlashMsgHtmlFromTemplate =<< (liftIO  flashMessageUserDetailsSaved)
+  addFlashMsgHtmlFromTemplate =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
 
   return LinkAccount
 
@@ -97,7 +97,7 @@ handleCreateSubaccount :: Context -> Kontra KontraLink
 handleCreateSubaccount ctx@Context { ctxmaybeuser = Just (user@User { userid }), ctxhostpart } = do
   fullname <- g "fullname"
   email <- g "email"
-  user <- liftIO $ createUser ctxhostpart fullname email Nothing (Just user)
+  user <- liftIO $ createUser (ctxtemplates ctx) ctxhostpart fullname email Nothing (Just user)
   return LinkSubaccount
 
 handleRemoveSubaccounts :: Context -> Kontra KontraLink
@@ -124,48 +124,48 @@ randomPassword = do
     indexes <- liftIO $ replicateM 8 (randomRIO (0,length letters-1))
     return (BS.fromString $ map (letters!!) indexes)
 
-createUser :: String -> BS.ByteString -> BS.ByteString -> Maybe BS.ByteString -> Maybe User -> IO User
-createUser hostpart fullname email maybepassword maybesupervisor =
+createUser ::  KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> Maybe BS.ByteString -> Maybe User -> IO User
+createUser templates hostpart fullname email maybepassword maybesupervisor =
   case maybepassword of
     Nothing -> do
       password <- randomPassword
-      createUser1 hostpart fullname email password False maybesupervisor
+      createUser1 templates hostpart fullname email password False maybesupervisor
     Just x ->
-      createUser1 hostpart fullname email x True maybesupervisor
+      createUser1 templates hostpart fullname email x True maybesupervisor
 
 createNewUserByAdmin :: Context -> BS.ByteString -> BS.ByteString -> IO User
-createNewUserByAdmin cxt fullname email =
+createNewUserByAdmin ctx fullname email =
      do
       password <- randomPassword
       passwdhash <- createPassword password
       user <- update $ AddUser fullname email passwdhash Nothing
-      mail <- mailNewAccountCreatedByAdmin cxt fullname email password
+      mail <- mailNewAccountCreatedByAdmin (ctxtemplates ctx) ctx fullname email password
       sendMail $ mail { fullnameemails = [(fullname, email)]}
       return user
 
-createUser1 :: String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Bool -> Maybe User -> IO User
-createUser1 hostpart fullname email password isnewuser maybesupervisor = do
+createUser1 :: KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Bool -> Maybe User -> IO User
+createUser1 templates hostpart fullname email password isnewuser maybesupervisor = do
   passwdhash <- createPassword password
   user <- update $ AddUser fullname email passwdhash (fmap userid maybesupervisor)
   mail <- case maybesupervisor of
     Nothing ->
       if not isnewuser
-       then passwordChangeMail hostpart email fullname password
-       else newUserMail hostpart email fullname password
-    Just supervisor -> inviteSubaccountMail hostpart (prettyName  supervisor) (usercompanyname supervisor)
+       then passwordChangeMail templates hostpart email fullname password
+       else newUserMail templates hostpart email fullname password
+    Just supervisor -> inviteSubaccountMail templates hostpart (prettyName  supervisor) (usercompanyname supervisor)
                        email fullname password
   sendMail $ mail { fullnameemails = [(fullname, email)]}
   return user
   
-resetUserPassword :: String -> BS.ByteString -> IO ()
-resetUserPassword hostpart email = do
+resetUserPassword :: KontrakcjaTemplates -> String -> BS.ByteString -> IO ()
+resetUserPassword templates hostpart email = do
   maybeuser <- query $ GetUserByEmail (Email{unEmail=email})
   case maybeuser of
     Just user -> do
       password <- randomPassword
       passwordhash <- createPassword password
       update $ SetUserPassword user passwordhash
-      mail <- passwordChangeMail hostpart email (userfullname user) password
+      mail <- passwordChangeMail templates hostpart email (userfullname user) password
       sendMail $ mail { fullnameemails = [((userfullname user), email)]}
     Nothing ->
       return ()
@@ -227,10 +227,10 @@ handleAcceptTOSPost = do
   if isJust tos
     then do
       update $ AcceptTermsOfService userid ctxtime
-      addFlashMsgHtmlFromTemplate =<< (liftIO  flashMessageUserDetailsSaved)
+      addFlashMsgHtmlFromTemplate =<< (liftIO $ flashMessageUserDetailsSaved  (ctxtemplates ctx))
       return LinkMain
     else do
-      addFlashMsgText =<< (liftIO flashMessageMustAcceptTOS)
+      addFlashMsgText =<< (liftIO $ flashMessageMustAcceptTOS  (ctxtemplates ctx))
       return LinkAcceptTOS
 
 
