@@ -19,5 +19,5 @@ flashMessageBadOldPassword=Du har skrivit in fel nuvarande lösenord
 ####
 flashMessagePasswordsDontMatch=Nytt lösenord matchar inte med upprepa lösenord 
 ###
-flashDocumentRestarted=Hey, Jag är Mariusz
+flashDocumentRestarted=Du har startat om dokumentet och kan nu underteckna och skicka inbjudan på nytt.
 ###
