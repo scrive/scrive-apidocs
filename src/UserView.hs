@@ -208,8 +208,8 @@ inviteSubaccountMail  templates hostpart supervisorname companyname emailaddress
 
 mailNewAccountCreatedByAdmin:: KontrakcjaTemplates -> Context-> BS.ByteString -> BS.ByteString -> BS.ByteString ->  IO Mail
 mailNewAccountCreatedByAdmin templates ctx personname email password =    do 
-      title <- renderTemplate templates "inviteSubaccountMailTitle" []
-      content <- wrapHTML templates =<< renderTemplate templates "inviteSubaccountMailContent"
+      title <- renderTemplate templates "mailNewAccountCreatedByAdminTitle" []
+      content <- wrapHTML templates =<< renderTemplate templates "mailNewAccountCreatedByAdminContent"
                                                                  [("personname",BS.toString $ personname),
                                                                  ("email",BS.toString $ email),
                                                                  ("password",BS.toString $ password),
