@@ -168,6 +168,7 @@ inviteSubaccountMailContent=
        </span>
 ####
 mailNewAccountCreatedByAdminTitle=Nytt konto
+###
 mailNewAccountCreatedByAdminContent=  
      <span>
       <p>Hej <strong>$personname$</strong>,</p>

@@ -1,3 +1,3 @@
 ### 
-restartButtonName=Restart
+restartButtonName=Starta om dokument
 ######

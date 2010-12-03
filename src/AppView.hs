@@ -368,7 +368,7 @@ pageStats nusers ndocuments df =
      </div>
 
 signupConfirmPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) =>  XMLGenT m (HSX.XML m)
-signupConfirmPageView  =  <div>Please check your email for your password.</div>
+signupConfirmPageView  =  <div>Ditt konto har skapats! Vi har skickat ett mail med dina användaruppgifter till din inkorg.</div>
 
 data SignupForm = SignupForm {
     signupFullname :: BS.ByteString,
