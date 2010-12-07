@@ -114,10 +114,10 @@ oneDocumentRow crtime user document@Document{ documentid
                                 , documentmtime
                                 , documentauthor
                                 }  = 
-    let link = if unAuthor documentauthor==(userid user)
+    let link = if unAuthor documentauthor==(userid user) || null signatorylinklist
                then LinkIssueDoc documentid
-               else LinkSignDoc document signatorylink
-        [signatorylink] = filter (isMatchingSignatoryLink user) documentsignatorylinks
+               else LinkSignDoc document (head signatorylinklist)
+        signatorylinklist = filter (isMatchingSignatoryLink user) documentsignatorylinks
         mk x = <a href=link><% x %></a>
         seenstatus = any (isJust . maybeseeninfo) documentsignatorylinks
         statusimg = "/theme/images/" ++
