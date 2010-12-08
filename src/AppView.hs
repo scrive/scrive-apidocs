@@ -223,7 +223,10 @@ pageFromBody (Context {ctxmaybeuser,ctxflashmessages,ctxproduction})
    
       <div id="headerContainer">
       <a href="/">
-        <img id="logosmall" src="/theme/images/logosmall.png" alt="Liten logga"/>
+        <% if ctxproduction
+               then <img id="logosmall" src="/theme/images/logosmall.png" alt="Liten logga"/>
+               else <span id="logosmall">Staging area</span>
+         %>
        </a> 
   
 
