@@ -919,30 +919,39 @@ input , button, a.button
 }
 
 .overlay h2 {
-    	margin:0px;
-		padding:10px 0 10px 10px;
-		border-bottom:1px solid #333;
-		font-size:20px;
-	}
-.overlay .buttonbox   {
- float:right;
- padding-top:10px;
+    margin:0px;
+    padding:10px 0 10px 10px;
+    border-bottom:1px solid #333;
+    font-size:20px;
+}
 
+.overlay .buttonbox   
+{
+    float:right;
+    padding-top:10px;
+    position: absolute;
+    bottom: 7px;
+    right: 7px;
 }
-.overlay .buttonbox   button{
-  margin-right:3px;
+
+.overlay .buttonbox button{
+    margin-right:3px;
 }
-.overlay p    {
-margin:8px;
+
+.overlay p {
+    margin:8px;
 }
-.author , .signatory {
- margin-bottom:10px;
+
+.author, .signatory {
+    margin-bottom:10px;
 }
+
 .redborder {
-border:1px solid red;
+    border:1px solid red;
 }
+
 .hidden {
-display:none;
-height:0px;
-width:0px;
+    display:none;
+    height:0px;
+    width:0px;
 }
