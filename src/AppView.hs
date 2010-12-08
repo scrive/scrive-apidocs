@@ -331,7 +331,6 @@ pageFromBody (Context {ctxmaybeuser,ctxflashmessages,ctxproduction})
                     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
                   })();
                </script>
-               , <script type="text/javascript" src="https://eu1.snoobi.com/snoop.php?tili=skrivapa_se"/> 
                ]
          else []
        %>
