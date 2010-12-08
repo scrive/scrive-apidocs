@@ -218,11 +218,6 @@ input[type=submit]:active, input[type=button]:active, button:active, a.button:ac
     background: url(images/logolarge1.png) no-repeat 0 0;
 }
 
-.development #logosmall
-{
-    background-color: orange;
-}
-
 .bodycolorbg 
 {
     background-color: #fafafa;
@@ -435,6 +430,8 @@ input[type=submit]:active, input[type=button]:active, button:active, a.button:ac
     position: absolute;
     top: 21px;
     left: 0;
+    color: white;
+    font-size: 300%;
 }
 
 /* 003l changed from #logout to #userMenu */
