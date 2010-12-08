@@ -105,7 +105,7 @@ pageWelcome (Context {ctxmaybeuser = Just _}) =
    
    <form action=LinkIssue method="post" enctype="multipart/form-data">
     <span class="small">Välj dokument (endast PDF)</span><br/>
-    <input class="multi" maxlength="1" type="file" name="doc" accept="pdf"/>
+    <input class="multi" maxlength="1" type="file" name="doc" accept="application/pdf"/>
     <input class="bigbutton" type="submit" value="Ladda upp"/>
    </form>
   </div>
