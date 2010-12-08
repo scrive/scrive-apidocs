@@ -603,7 +603,7 @@ convertPdfToJpgPages Context{ctxs3action} file@File{fileid,filename} = do
                   return (JpegPages x)
   -- remove the directory with all the files now
   -- everything as been collected, process has ended, we are done!
-  -- removeDirectoryRecursive tmppath
+  removeDirectoryRecursive tmppath
   return result
        
 
@@ -818,6 +818,7 @@ sealDocument ctx@Context{ctxs3action}
        putStrLn "Cannot execute dist/build/pdfseal/pdfseal"
 
   newfilepdf <- BS.readFile tmpout
+  removeFile tmpout
   mdocument <- update $ AttachSealedFile docid filename newfilepdf
   case mdocument of
     Right document -> do
