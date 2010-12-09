@@ -13,7 +13,7 @@ import Session
 import Data.Data
 import qualified Happstack.Data.IxSet as IxSet (empty,size)
 import DocState
-
+import Payments.PaymentsState
 
 -- |top-level application state
 $(deriveAll [''Show, ''Eq, ''Ord, ''Default]
@@ -24,7 +24,8 @@ $(deriveAll [''Show, ''Eq, ''Ord, ''Default]
 $(deriveSerialize ''AppState)
 instance Version AppState
 
-                     
+
+--Move this instance declaration back to session
 instance Component (Sessions) where
   type Dependencies (Sessions) = End
   initialValue = IxSet.empty
@@ -32,7 +33,7 @@ instance Component (Sessions) where
 -- |top-level application component
 -- we depend on the GuestBook component
 instance Component AppState where
-  type Dependencies AppState = Documents :+: Sessions :+: Users :+: End
+  type Dependencies AppState = Documents :+: Sessions :+: Users :+:PaymentAccountModels :+: End
   initialValue = defaultValue
 
 

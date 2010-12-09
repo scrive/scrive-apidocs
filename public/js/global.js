@@ -298,13 +298,6 @@ $(document).ready( function () {
 							
 	
 	});
-    $(".onSelectAppendAndSubmit").change(function(){
-     
-      var value = $(this).val();
-      var action = $(this.form).attr("action")
-      $(this.form).attr("action",action+"/"+value);
-      $(this.form).submit();
-    })    
     $(".flashOnClick").click( function(){
       $(".flashMessage",$(this).parent()).each(function(){
          addFlashMessage($(this).html())

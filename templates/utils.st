@@ -77,3 +77,19 @@ LinkForgotPassword=/amnesia
 ###
 LinkLandpageSaved=/landpage/signedsave/$documentid$/$signatorylinkid$
 ###
+###
+join=$fst$$snd$
+###
+###
+input= <input style="width:50px" type="$iType$" name="$iName$" value="$iValue$"/>    
+###
+showmoney=$main$.$rest$ 
+###
+br = $it$<br/>
+###
+###
+td = <td style="text-align:center">$it$</td>
+###
+###
+th = <th style="width:60px;text-align:center">$it$</th>
+###
