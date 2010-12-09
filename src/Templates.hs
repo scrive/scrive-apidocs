@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, NamedFieldPuns #-}
 {-# OPTIONS_GHC -Wall #-}
-module Templates(readTemplates,renderTemplate,renderTemplate',wrapHTML,templateList,renderActionButton,KontrakcjaTemplates) where
+module Templates(readTemplates,renderTemplate,renderTemplate',renderTemplateComplex,wrapHTML,templateList,renderActionButton,KontrakcjaTemplates,Templates.setAttribute) where
 
 import Text.StringTemplate 
 import System.IO
@@ -16,22 +16,36 @@ templateFiles::[String]
 templateFiles = ["templates/landpages.st","templates/flash.st","templates/mails.st","templates/utils.st","templates/pages.st","templates/payments.st"]
 
 type KontrakcjaTemplates =  STGroup String
+type KontrakcjaTemplate = StringTemplate String
 {- Filling template with a given name using given attributes
    It never fail, just returns empty message and writes something in the logs
-   In next version it will be shared, but for now it reads all files for every template
+   HStringTemplate fails with UTF8 bytestrings so basic interface supports strings and lists of strings
 -}
 renderTemplate::KontrakcjaTemplates ->String->[(String, String)] ->  IO String
-renderTemplate = renderTemplateMain
+renderTemplate ts name attrs = renderTemplateMain ts name attrs id
 
 renderTemplate'::KontrakcjaTemplates ->String->[(String, [String])] ->  IO String
-renderTemplate'= renderTemplateMain
+renderTemplate'  ts name attrs = renderTemplateMain ts name attrs id
 
-renderTemplateMain::(ToSElem a)=>KontrakcjaTemplates ->String->[(String, a)] ->  IO String
-renderTemplateMain ts name params = do 
+
+{-This is special templating function . Use it carefull'y with setAttributes composition as last param
+  Remember that setAttributes can work with maps, data structures and other not-string stuff.
+  It should be used when template has some logic (usually iteration).See payments view for example
+-}
+renderTemplateComplex::KontrakcjaTemplates ->String->(KontrakcjaTemplate -> KontrakcjaTemplate) ->  IO String
+renderTemplateComplex  ts name f = renderTemplateMain ts name ([]::[(String, String)]) f
+
+{-Use this as (setAttributes name1 val1) . (setAttributes name2 val2) . (setAttributes name3 val3) -}
+setAttribute :: (ToSElem a) => String -> a -> KontrakcjaTemplate -> KontrakcjaTemplate
+setAttribute =  Text.StringTemplate.setAttribute
+
+--This is avaible only for special cases
+renderTemplateMain::(ToSElem a)=>KontrakcjaTemplates ->String->[(String, a)] -> (KontrakcjaTemplate-> KontrakcjaTemplate)->  IO String
+renderTemplateMain ts name params f = do 
                                let mt =  getStringTemplate name ts
                                case mt of 
                                   Just t -> do
-                                            let t'= (setManyAttrib params  t)   
+                                            let t'= f (setManyAttrib params  t)   
                                             let (e,p,st) = checkTemplateDeep t'
                                             when (not (null e) || not (null p) || not (null st)) $
                                                     errorM "Happstack.Server" $ "Template " ++ name ++ " problem with message " ++(show (e,p,st)) 

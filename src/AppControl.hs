@@ -133,10 +133,8 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "deleteaccount"     $ hpost0 $ handleDeleteAccount
      , dir "adminonly" $ dir "alluserstable"     $ hget0  $ handleAllUsersTable
      , dir "adminonly" $ dir "skrivapausers.csv" $ hget0  $ getUsersDetailsToCSV
-     , dir "adminonly" $ dir "payments"          $ hget1m  $ Payments.handleAdminView
- 
-     , dir "sales" $ dir "payments" $ hget1m $ Payments.handleSalesView 
-
+     , dir "adminonly" $ dir "payments"          $ hget0  $ Payments.handleAdminView
+     , dir "adminonly" $ dir "payments"          $ hpost0  $ Payments.handleAccountModelsChange
      , dir "dave" $ dir "document" $ hget1 $ daveDocument
      , dir "dave" $ dir "user"     $ hget1 $ daveUser
            
