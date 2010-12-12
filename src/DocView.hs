@@ -347,11 +347,11 @@ pageDocumentForAuthor ctx
                                                  else map signatorydetails documentsignatorylinks) %>
               </div>
               <small><a id="addsiglink" onclick="signatoryadd(); return false;" href="#">Lägg till fler</a></small>
-              <div style="margin-top: 5px">
+              <div style="margin-top: 20px">
               <small><a rel="#edit-invite-text-dialog" id="editinvitetextlink" href="#" style="padding-top:3px">Hälsningsmeddelande</a></small>
               <input type="hidden" id="invitetext" name="invitetext" value=documentinvitetext />
               </div>
-              <div style="margin-top: 5px">
+              <div style="margin-top: 20px">
               <span>
               <input type="checkbox" class="addremovecheckbox flashOnClick" rel="#daystosignbox" location="#datetosigncontainer" oldlocation="#hiddenttimestuffbox" autocomplete="off" value=(if timetosignset then "on" else "off") ></input> Välj förfallodatum
                 <div id="datetosigncontainer">  </div>
@@ -421,7 +421,8 @@ pageDocumentForAuthor ctx
                   else <span />%>
               </span>
               %>
-            <% if (documentstatus == Pending || documentstatus == AwaitingAuthor) && not timetosignset
+            <% if (documentstatus == Pending || documentstatus == AwaitingAuthor) 
+                then if not timetosignset
                 then <span>
                      <input class="button cancel" type="button" name="cancel" value="Återkalla inbjudan"  rel="#cancel-by-author-dialog" />    
                      <span class="localdialogs">
@@ -443,7 +444,8 @@ pageDocumentForAuthor ctx
                        </span>
                        </span>
 
-                  else <span />
+                  else <span>Du kan inte återkalla inbjudan före förfallodatum.</span>
+                 else <span/>
              %>         
             <% fmap cdata $
                if (documentstatus == Canceled || documentstatus == Timedout || documentstatus == Rejected)
