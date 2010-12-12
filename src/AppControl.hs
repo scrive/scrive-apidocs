@@ -54,7 +54,8 @@ import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 import qualified Network.AWS.AWSConnection as AWS
 import qualified Payments.PaymentsControl as Payments
-import Templates (readTemplates)
+import Templates (readTemplates, renderTemplate)
+
 data AppConf
     = AppConf { httpConf        :: Conf
               , store           :: FilePath
@@ -179,12 +180,14 @@ instance (MonadIO m) => TRA.MonadIO (ServerPartT m)
 -}
 
 handleHomepage = do
-  ctx@Context{ctxmaybeuser} <- get
+  ctx@Context{ctxmaybeuser, ctxtemplates} <- get
   case ctxmaybeuser of
-    Just user -> checkUserTOSGet $
-      V.renderFromBody ctx V.TopNew V.kontrakcja (V.pageWelcome ctx)
-    Nothing ->
-      V.renderFromBody ctx V.TopNone V.kontrakcja (V.pageWelcome ctx)
+    Just user -> checkUserTOSGet $ do
+                      text <- liftIO $ renderTemplate ctxtemplates "uploadPageContent" []
+                      V.renderFromBody ctx V.TopNew V.kontrakcja (cdata text)
+    Nothing -> do
+      text <- liftIO $ renderTemplate ctxtemplates "firstPageContent" []
+      V.renderFromBody ctx V.TopNone V.kontrakcja (cdata text)
 
 -- uh uh, how to do that in correct way?
 normalizeddocuments :: MVar (Map.Map FileID JpegPages)
