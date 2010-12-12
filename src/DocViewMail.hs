@@ -141,6 +141,7 @@ mailInvitationToSignContent templates forMail (Context {ctxhostpart})
     let link = case (signaturelink) of
                 Just signaturelink' -> ctxhostpart ++ show (LinkSignDoc document signaturelink')
                 Nothing -> ctxhostpart ++ "/s/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
+        personname1 = maybe "" (BS.toString . signatoryname . signatorydetails) signaturelink
         creatorname = BS.toString $ personname' documentauthordetails
         partnersinfo = if (forMail) 
                         then  renderListTemplate templates $  map (BS.toString . personname') $ partyList document
@@ -158,7 +159,8 @@ mailInvitationToSignContent templates forMail (Context {ctxhostpart})
                           with <- renderTemplate templates "customFooter" [("creatorname",creatorname)] 
                           replaceOnEdit' templates this with            
         header   =  if (BS.null documentinvitetext) 
-                     then renderTemplate templates "mailInvitationToSignDefaultHeader" [("creatorname",creatorname)]  
+                     then renderTemplate templates "mailInvitationToSignDefaultHeader" [("creatorname",creatorname)
+                                                                                       ,("personname",personname1)]  
                      else return $ BS.toString documentinvitetext      
            
    in  do

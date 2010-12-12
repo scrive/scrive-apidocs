@@ -63,8 +63,9 @@ mailInvitationToSignContent=
                    $timetosigninfo$
                   </p>
                  <p><i>Så här går du vidare</i><br/>
-                  1. Klicka på länken<br/>
-                    <a href="$link$">$link$</a><br/>
+                  1. Klicka på länken <br/>
+                    <a href="$link$">$link$</a> <br/>
+                    <br/>
                   2. Granska online<br/>
                   3. Underteckna<br/>
                   4. Färdig<br/> 
@@ -72,7 +73,7 @@ mailInvitationToSignContent=
                 </span>
                 $footer$
 ######                
-mailInvitationToSignDefaultHeader = <p>Hej, <BR/> $creatorname$ har bjudit in dig att underteckna 
+mailInvitationToSignDefaultHeader = <p>Hej $personname$, <br/><br/> $creatorname$ har bjudit in dig att underteckna 
                                        dokumentet Testavtal online via tjänsten SkrivaPå. </p>
 ####
 remindMailSignedTitle=Hej $personname$      
