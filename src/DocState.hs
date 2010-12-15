@@ -977,7 +977,7 @@ isMatchingSignatoryLink user sigLink = signatoryMatches || emailMatches
   where signatoryMatches = case (maybesignatory sigLink) of
                                              Just (Signatory sigid) | sigid == (userid user) -> True
                                              _ -> False
-        emailMatches = (signatoryemail . signatorydetails $ sigLink) == (unEmail . useremail $ user)
+        emailMatches = (signatoryemail . signatorydetails $ sigLink) == (unEmail . useremail $ userinfo user)
 
 
 getTimeoutedButPendingDocuments  :: MinutesTime -> Query Documents [Document]
@@ -992,13 +992,13 @@ newDocument :: User
             -> MinutesTime 
             -> Bool -- is free?
             -> Update Documents Document
-newDocument user@User{userid,userfullname,usercompanyname,usercompanynumber,useremail} title ctime isfree = do
+newDocument user title ctime isfree = do
   documents <- ask
   docid <- getUnique64 documents DocumentID
   let doc = Document
           { documentid = docid
           , documenttitle = title
-          , documentauthor = Author userid
+          , documentauthor = Author $ userid user
           , documentsignatorylinks = []
           , documentfiles = []
           , documentstatus = Preparation
@@ -1015,10 +1015,10 @@ newDocument user@User{userid,userfullname,usercompanyname,usercompanynumber,user
           , documentsealedfiles = []
           }
       details = SignatoryDetails  
-                { signatoryname = userfullname
-                , signatorycompany = usercompanyname
-                , signatorynumber = usercompanynumber
-                , signatoryemail = unEmail $ useremail
+                { signatoryname = userfullname user
+                , signatorycompany = usercompanyname $ userinfo user
+                , signatorynumber = usercompanynumber $ userinfo user
+                , signatoryemail = unEmail $ useremail $ userinfo user
                 , signatorynameplacements = []
                 , signatorycompanyplacements = []
                 , signatoryemailplacements = []

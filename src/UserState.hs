@@ -7,10 +7,17 @@ module UserState
     , ExternalUserID(..)
     , FlashMessage(..)
     , Password(..)
+    , StorageType(..)
+    , UserAccountType(..)
+    , PaymentMethod(..)
+    , UserAccountPlan(..)
     , SupervisorID(..)
     , User(..)
+    , UserInfo(..)
+    , UserSettings(..)
     , UserID(..)
     , Users
+    , userfullname
     , createPassword
     , isPasswordStrong
     , verifyPassword
@@ -26,6 +33,10 @@ module UserState
     , GetUserStats(..)
     , GetUserSubaccounts(..)
     , SetUserDetails(..)
+    , SetUserInfo(..)
+    , SetUserSettings(..)
+    , SetUserPaymentAccount(..)
+    , SetUserPaymentPolicyChange(..)
     , SetUserPassword(..)
 ) where
 import Happstack.Data
@@ -35,7 +46,7 @@ import "mtl" Control.Monad.State (modify,MonadState(..))
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import Happstack.Data.IxSet as IxSet
-import Data.Maybe(isJust)
+import Data.Maybe(isJust,isNothing)
 import Misc
 import Control.Monad
 import Happstack.Server.SimpleHTTP
@@ -48,6 +59,7 @@ import Data.List
 import qualified Data.Set as Set
 import Control.Applicative
 import MinutesTime
+import qualified Payments.PaymentsState as Payments
 
 $(deriveAll [''Eq, ''Ord, ''Default]
   [d|
@@ -61,20 +73,56 @@ $(deriveAll [''Eq, ''Ord, ''Default]
       newtype Email = Email { unEmail :: BS.ByteString }
       data Password = Password [Octet] [Octet] | NoPassword
       newtype SupervisorID = SupervisorID { unSupervisorID :: Int }
-                       
-      data User = User
-          { userid                        :: UserID
-          , userfullname                  :: BS.ByteString
-          , useremail                     :: Email
+      data StorageType = Amazon | TrustWeaver
+      data UserAccountType = MainAccount | SubAccount
+      data PaymentMethod = CreditCard | Invoice | Undefined
+      data UserAccountPlan = Basic
+      data UserInfo = UserInfo {
+            userfstname                   :: BS.ByteString
+          , usersndname                   :: BS.ByteString
+          , userpersonalnumber            :: BS.ByteString
           , usercompanyname               :: BS.ByteString
           , usercompanynumber             :: BS.ByteString
-          , userinvoiceaddress            :: BS.ByteString
-          , userflashmessages             :: [FlashMessage]
+          , useraddress                   :: BS.ByteString 
+          , userzip                       :: BS.ByteString
+          , usercity                      :: BS.ByteString
+          , usercountry                   :: BS.ByteString
+          , userphone                     :: BS.ByteString
+          , usermobile                    :: BS.ByteString
+          , useremail                     :: Email 
+          }       
+      data UserSettings  = UserSettings {
+               accounttype :: UserAccountType
+             , accountplan :: UserAccountPlan
+             , signeddocstorage :: StorageType
+             , userpaymentmethod :: PaymentMethod
+      }
+      data User = User
+          { userid                        :: UserID
           , userpassword                  :: Password
           , usersupervisor                :: Maybe SupervisorID
           , usercanhavesubaccounts        :: Bool
           , useraccountsuspended          :: Bool
           , userhasacceptedtermsofservice :: Maybe MinutesTime
+          , userinfo                      :: UserInfo
+          , usersettings                  :: UserSettings
+          , userpaymentpolicy             :: Payments.UserPaymentPolicy
+          , userpaymentaccount            :: Payments.UserPaymentAccount
+          }
+      
+      data User6 = User6
+          { userid6                        :: UserID
+          , userfullname6                  :: BS.ByteString
+          , useremail6                     :: Email
+          , usercompanyname6               :: BS.ByteString
+          , usercompanynumber6             :: BS.ByteString
+          , userinvoiceaddress6            :: BS.ByteString
+          , userflashmessages6             :: [FlashMessage]
+          , userpassword6                  :: Password
+          , usersupervisor6                :: Maybe SupervisorID
+          , usercanhavesubaccounts6        :: Bool
+          , useraccountsuspended6          :: Bool
+          , userhasacceptedtermsofservice6 :: Maybe MinutesTime
           }
 
       data User5 = User5
@@ -147,10 +195,33 @@ $(deriveAll [''Eq, ''Ord, ''Default]
 
    |])
 
+
+deriving instance Show StorageType 
+deriving instance Show UserAccountType 
+deriving instance Show PaymentMethod
+deriving instance Show UserAccountPlan 
+deriving instance Show UserInfo
+deriving instance Show UserSettings
 deriving instance Show User
 deriving instance Show Email
 deriving instance Show FlashMessage
 deriving instance Show Password
+
+deriving instance Bounded StorageType 
+deriving instance Enum StorageType 
+deriving instance Read StorageType 
+
+deriving instance Bounded UserAccountType
+deriving instance Enum UserAccountType
+deriving instance Read UserAccountType
+
+deriving instance Bounded PaymentMethod
+deriving instance Enum PaymentMethod
+deriving instance Read PaymentMethod
+
+deriving instance Bounded UserAccountPlan
+deriving instance Enum UserAccountPlan
+deriving instance Read UserAccountPlan
 
 instance Migrate User0 User1 where
     migrate (User0
@@ -262,7 +333,7 @@ instance Migrate User4 User5 where
           , useraccountsuspended5 = useraccountsuspended4
           }
 
-instance Migrate User5 User where
+instance Migrate User5 User6 where
     migrate (User5
              { userid5
              , userfullname5
@@ -275,21 +346,70 @@ instance Migrate User5 User where
              , usersupervisor5    
              , usercanhavesubaccounts5
              , useraccountsuspended5
-             }) = User
-                { userid                = userid5
-                , userfullname          = userfullname5
-                , useremail             = useremail5
-                , usercompanyname       = usercompanyname5
-                , usercompanynumber     = usercompanynumber5
-                , userinvoiceaddress    = userinvoiceaddress5
-                , userflashmessages     = userflashmessages5
-                , userpassword          = userpassword5
-                , usersupervisor        = usersupervisor5
-                , usercanhavesubaccounts= usercanhavesubaccounts5
-                , useraccountsuspended  = useraccountsuspended5
-                , userhasacceptedtermsofservice = Nothing
+             }) = User6
+                { userid6                = userid5
+                , userfullname6          = userfullname5
+                , useremail6             = useremail5
+                , usercompanyname6       = usercompanyname5
+                , usercompanynumber6     = usercompanynumber5
+                , userinvoiceaddress6    = userinvoiceaddress5
+                , userflashmessages6     = userflashmessages5
+                , userpassword6          = userpassword5
+                , usersupervisor6        = usersupervisor5
+                , usercanhavesubaccounts6= usercanhavesubaccounts5
+                , useraccountsuspended6  = useraccountsuspended5
+                , userhasacceptedtermsofservice6 = Nothing
                 }
-
+                
+instance Migrate User6 User where
+    migrate (User6
+             { userid6
+             , userfullname6
+             , useremail6   
+             , usercompanyname6
+             , usercompanynumber6
+             , userinvoiceaddress6
+             , userpassword6      
+             , usersupervisor6    
+             , usercanhavesubaccounts6
+             , useraccountsuspended6
+             , userhasacceptedtermsofservice6
+             }) = User
+                {  userid                  =  userid6
+                 , userpassword            =  userpassword6 
+                 , usersupervisor          =  usersupervisor6   
+                 , usercanhavesubaccounts  =  usercanhavesubaccounts6 
+                 , useraccountsuspended    =  useraccountsuspended6      
+                 , userhasacceptedtermsofservice = userhasacceptedtermsofservice6
+                 , userinfo = UserInfo {
+                                    userfstname = userfullname6          
+                                  , usersndname = BS.empty
+                                  , userpersonalnumber = BS.empty
+                                  , usercompanyname = usercompanyname6
+                                  , usercompanynumber  = usercompanynumber6
+                                  , useraddress = userinvoiceaddress6
+                                  , userzip = BS.empty
+                                  , usercity  = BS.empty
+                                  , usercountry = BS.empty
+                                  , userphone = BS.empty
+                                  , usermobile = BS.empty
+                                  , useremail = useremail6   
+                                   }
+                , usersettings  = UserSettings {
+                                    accounttype = if (isNothing usersupervisor6)  then MainAccount else SubAccount
+                                  , accountplan = Basic
+                                  , signeddocstorage = Amazon
+                                  , userpaymentmethod = Undefined
+                                  }                   
+                , userpaymentpolicy =  Payments.basicPaymentPolicy
+                , userpaymentaccount = Payments.emptyPaymentAccount                  
+      }       
+      
+userfullname :: User -> BS.ByteString
+userfullname u = if (BS.null $ usersndname $ userinfo u) 
+                  then (userfstname $ userinfo u) 
+                  else (userfstname $ userinfo u) `BS.append` (BS.fromString " ") `BS.append` (usersndname $ userinfo u)
+  
 isPasswordStrong :: BS.ByteString -> Bool
 isPasswordStrong password
     | length (BS.toString password) >= 6 = True
@@ -337,9 +457,32 @@ $(deriveSerialize ''User5)
 instance Version User5 where
     mode = extension 5 (Proxy :: Proxy User4)
 
+$(deriveSerialize ''User6)
+instance Version User6 where
+    mode = extension 6 (Proxy :: Proxy User5)
+
 $(deriveSerialize ''User)
 instance Version User where
-    mode = extension 6 (Proxy :: Proxy User5)
+    mode = extension 7 (Proxy :: Proxy User6) 
+
+
+$(deriveSerialize ''StorageType )
+instance Version StorageType 
+
+$(deriveSerialize ''UserAccountType )
+instance Version UserAccountType 
+
+$(deriveSerialize ''PaymentMethod)
+instance Version PaymentMethod
+
+$(deriveSerialize ''UserAccountPlan )
+instance Version UserAccountPlan 
+
+$(deriveSerialize ''UserInfo)
+instance Version UserInfo
+
+$(deriveSerialize ''UserSettings)
+instance Version UserSettings
 
 $(deriveSerialize ''FlashMessage)
 instance Version FlashMessage
@@ -430,19 +573,36 @@ addUser fullname email passwd maybesupervisor = do
      (error "user with same email address exists")
           
   userid <- getUnique users UserID
-  let user = (User { userid = userid
-                   , userfullname = fullname
-                   , useremail = Email email
-                   , usercompanyname = BS.empty
-                   , usercompanynumber = BS.empty
-                   , userinvoiceaddress = BS.empty
-                   , userflashmessages = []
-                   , userpassword = passwd
-                   , usersupervisor = fmap (SupervisorID . unUserID) maybesupervisor
-                   , usercanhavesubaccounts = True
-                   , useraccountsuspended = False
-                   , userhasacceptedtermsofservice = Nothing
-                   })
+  let user = (User {  
+                   userid                  =  userid
+                 , userpassword            =  passwd
+                 , usersupervisor          =  fmap (SupervisorID . unUserID) maybesupervisor
+                 , usercanhavesubaccounts  =  True 
+                 , useraccountsuspended    =  False  
+                 , userhasacceptedtermsofservice = Nothing
+                 , userinfo = UserInfo {
+                                    userfstname = fullname       
+                                  , usersndname = BS.empty
+                                  , userpersonalnumber = BS.empty
+                                  , usercompanyname =  BS.empty
+                                  , usercompanynumber  =  BS.empty
+                                  , useraddress =  BS.empty
+                                  , userzip = BS.empty
+                                  , usercity  = BS.empty
+                                  , usercountry = BS.empty
+                                  , userphone = BS.empty
+                                  , usermobile = BS.empty
+                                  , useremail =  Email email 
+                                   }
+                , usersettings  = UserSettings {
+                                    accounttype = MainAccount 
+                                  , accountplan = Basic
+                                  , signeddocstorage = Amazon
+                                  , userpaymentmethod = Undefined
+                                  }                   
+                , userpaymentpolicy =  Payments.basicPaymentPolicy
+                , userpaymentaccount = Payments.emptyPaymentAccount  
+                 })             
   modify (updateIx (Email email) user)
   return user
 
@@ -477,11 +637,38 @@ setUserDetails :: UserID
                -> Update Users (Either String User)
 setUserDetails userid fullname companyname companynumber invoiceaddress =
     modifyUser userid $ \user -> 
-        Right $ user { userfullname = fullname
-                     , usercompanyname = companyname
-                     , usercompanynumber = companynumber
-                     , userinvoiceaddress = invoiceaddress
-                     }
+            Right $ user { userinfo = (userinfo user) { 
+                                                      userfstname = fullname
+                                                    , usercompanyname = companyname
+                                                    , usercompanynumber = companynumber
+                                                    , useraddress = invoiceaddress
+                                                    }
+                         }                            
+
+setUserInfo :: UserID -> UserInfo -> Update Users (Either String User)
+setUserInfo userid userinfo =
+    modifyUser userid $ \user -> 
+            Right $ user { userinfo = userinfo }                            
+
+setUserSettings :: UserID -> UserSettings -> Update Users (Either String User)
+setUserSettings userid usersettings =
+    modifyUser userid $ \user -> 
+            Right $ user { usersettings = usersettings }   
+
+
+setUserPaymentAccount :: UserID -> Payments.UserPaymentAccount -> Update Users (Either String User)
+setUserPaymentAccount userid userpaymentaccount =
+    modifyUser userid $ \user -> 
+            Right $ user {userpaymentaccount = userpaymentaccount}   
+
+
+setUserPaymentPolicyChange :: UserID -> Payments.UserPaymentPolicy -> Update Users (Either String User)
+setUserPaymentPolicyChange userid userpaymentpolicy =
+    modifyUser userid $ \user -> 
+            Right $ user {userpaymentpolicy = userpaymentpolicy}   
+
+
+
 
 fragileDeleteUser :: UserID -> Update Users (Maybe User)
 fragileDeleteUser userid = do
@@ -504,7 +691,7 @@ deleteTermsOfService userid =
 exportUsersDetailsToCSV :: Query Users [BS.ByteString]
 exportUsersDetailsToCSV = do
   users <- ask
-  let fields user = [userfullname user, unEmail $ useremail user]
+  let fields user = [userfullname user, unEmail $ useremail $ userinfo user]
       content = BS.intercalate (BS.fromString ",") <$> fields
   return $ content <$> (toList users)
 
@@ -520,6 +707,10 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'getAllUsers
                     , 'setUserPassword
                     , 'setUserDetails
+                    , 'setUserInfo
+                    , 'setUserSettings
+                    , 'setUserPaymentAccount 
+                    , 'setUserPaymentPolicyChange
                     , 'getUserSubaccounts
                     , 'acceptTermsOfService
                     , 'exportUsersDetailsToCSV

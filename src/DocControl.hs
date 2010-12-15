@@ -130,7 +130,7 @@ sendAwaitingEmail ctx document = do
   mail<- mailDocumentAwaitingForAuthor (ctxtemplates ctx) ctx (userfullname authoruser)
              document
   let email2 = signatoryemail $ documentauthordetails document
-      email1 = unEmail $ useremail authoruser
+      email1 = unEmail $ useremail $ userinfo authoruser
       em = if email2/=BS.empty && email2/=email1
            then [(name2,email2)]
            else []
@@ -147,7 +147,7 @@ sendClosedAuthorEmail ctx document = do
   attachmentcontent <- AWS.getFileContents (ctxs3action ctx) $ head $ documentsealedfiles document
   let Document{documenttitle,documentid} = document
       email2 = signatoryemail $ documentauthordetails document
-      email1 = unEmail $ useremail authoruser
+      email1 = unEmail $ useremail $ userinfo authoruser
       em = if email2/=BS.empty && email2/=email1
            then [(name2,email2)]
            else []
@@ -163,7 +163,7 @@ sendRejectAuthorEmail customMessage ctx document signalink = do
   mail <- mailDocumentRejectedForAuthor (ctxtemplates ctx) customMessage ctx (userfullname authoruser)
              document rejectorName
   let email2 = signatoryemail $ documentauthordetails document
-      email1 = unEmail $ useremail authoruser
+      email1 = unEmail $ useremail $ userinfo authoruser
       em = if email2/=BS.empty && email2/=email1
            then [(name2,email2)]
            else []
@@ -700,7 +700,7 @@ fieldsFromSignatory sig =
     (foldl (++) [] (map fieldsFromDefinition (signatoryotherfields sig)))    
 
 sealSpecFromDocument :: String -> Document -> User -> String -> String -> Seal.SealSpec
-sealSpecFromDocument hostpart document author@(User {userfullname,usercompanyname,usercompanynumber,useremail}) inputpath outputpath =
+sealSpecFromDocument hostpart document author inputpath outputpath =
   let docid = unDocumentID (documentid document)
       (authorsigntime,authorsignipnumber) = 
           case documentmaybesigninfo document of
@@ -710,10 +710,10 @@ sealSpecFromDocument hostpart document author@(User {userfullname,usercompanynam
       authorperson = if authordetails /= emptyDetails 
                      then personFromSignatoryDetails authordetails
                      else personFromSignatoryDetails (SignatoryDetails 
-                                  { signatoryname = userfullname
-                                  , signatorycompany = usercompanyname
-                                  , signatorynumber = usercompanynumber
-                                  , signatoryemail = unEmail $ useremail
+                                  { signatoryname = userfullname author
+                                  , signatorycompany = usercompanyname $ userinfo author
+                                  , signatorynumber = usercompanynumber $ userinfo author
+                                  , signatoryemail = unEmail $ useremail $ userinfo author
                                   , signatorynameplacements = []
                                   , signatorycompanyplacements = []
                                   , signatorynumberplacements = []
@@ -799,7 +799,7 @@ sealDocument ctx@Context{ctxs3action}
              normalizemap 
              hostpart
              signtime1
-             author@(User {userfullname,usercompanyname,usercompanynumber,useremail})
+             author
              document = do
   let (file@File {fileid,filename}) = 
            safehead "sealDocument" $ documentfiles document
@@ -855,7 +855,7 @@ handleIssueNewDocument = withUserPost $ do
           let title = BSC.pack (basename filename) 
           freeleft <- freeLeftForUser user
           doc <- update $ NewDocument user title ctxtime (freeleft>0)
-          liftIO $ print (useremail user, documentid doc,title)
+          liftIO $ print (useremail $ userinfo user, documentid doc,title)
           handleDocumentUpload (documentid doc) (concatChunks content) title
           return $ LinkIssueDoc $ documentid doc
 

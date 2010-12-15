@@ -10,7 +10,7 @@
 -- Payment admin view - for standard user (not editable) and superuser 
 --
 -----------------------------------------------------------------------------
-module Payments.PaymentsView(adminView,adminViewForSuperuser) where
+module Payments.PaymentsView(adminView,adminViewForSuperuser,getModelView,showMoney,getChangeView, PaymentChangeView) where
 
 import KontraLink
 import Templates
@@ -47,7 +47,21 @@ data PaymentAccountModelView  = PaymentAccountModelView {
                                       fordraft::String   
 } deriving (Data, Typeable)
 
-{-Conversion from data storage structure to template friendly structure-}
+data PaymentChangeView  = PaymentChangeView {
+                                      changeforaccount::Maybe String,
+                                      changeforsubaccount::Maybe String,   
+                                      changeforemailsignature::Maybe String,
+                                      changeforelegsignature::Maybe String,  
+                                      changeformobiledignature::Maybe String,
+                                      changeforcrediteardsignature::Maybe String,
+                                      changeforipadsignature::Maybe String,
+                                      changeforamazon::Maybe String,
+                                      changefortrustweaver::Maybe String,
+                                      changefortemplate::Maybe String,
+                                      changefordraft::Maybe String   
+} deriving (Data, Typeable)
+
+{-Conversion from data storage structure to template friendly structure for payments models-}
 getModelView::PaymentAccountModel -> PaymentAccountModelView
 getModelView  (PaymentAccountModel {modelAccountType,
                                     modelPaymentForAccounts,
@@ -68,8 +82,28 @@ getModelView  (PaymentAccountModel {modelAccountType,
                                                       fortrustweaver=  showMoney $ forTrustWeaver modelPaymentForSignedStorage,
                                                       fortemplate=  showMoney $ forTemplate   modelPaymentForOtherStorage ,
                                                       fordraft= showMoney $ forDraft  modelPaymentForOtherStorage }
-
+                                                      
+{-Conversion from data storage structure to template friendly structure for temporary payment change-}
+getChangeView::PaymentChange -> PaymentChangeView
+getChangeView  (PaymentChange  {changePaymentForAccounts,
+                                        changePaymentForSignature,                          
+                                        changePaymentForSignedStorage,       
+                                        changePaymentForOtherStorage                                           
+                                               }) =  PaymentChangeView {
+                                                      changeforaccount = fmap showMoney $ forAccount changePaymentForAccounts,
+                                                      changeforsubaccount = fmap showMoney $ forSubaccount changePaymentForAccounts,     
+                                                      changeforemailsignature=fmap showMoney $ forEmailSignature changePaymentForSignature,
+                                                      changeforelegsignature= fmap showMoney $ forElegSignature changePaymentForSignature,
+                                                      changeformobiledignature= fmap showMoney $ forMobileSignature changePaymentForSignature,
+                                                      changeforcrediteardsignature= fmap showMoney $ forCreditCardSignature changePaymentForSignature,
+                                                      changeforipadsignature = fmap showMoney $ forIPadSignature changePaymentForSignature,
+                                                      changeforamazon= fmap showMoney $ forAmazon changePaymentForSignedStorage,
+                                                      changefortrustweaver= fmap showMoney $ forTrustWeaver changePaymentForSignedStorage,
+                                                      changefortemplate= fmap showMoney $ forTemplate   changePaymentForOtherStorage ,
+                                                      changefordraft= fmap showMoney $ forDraft  changePaymentForOtherStorage }
 {-Money printer. Since show instance is derived by storage module, we provided nicer version -}
 showMoney::Money->String  
-showMoney (Money i) = (show $ i `div` 100)++"."++(show $ (i `div` 10) `mod` 10) ++ (show $ i `mod` 10)
+showMoney (Money i) = if (i>=0)
+                       then (show $ i `div` 100)++"."++(show $ (i `div` 10) `mod` 10) ++ (show $ i `mod` 10)
+                       else "-" ++ (showMoney (Money $ -1*i))
              

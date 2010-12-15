@@ -16,7 +16,8 @@ import User
 import Misc
 import MinutesTime
 import InspectXML
-
+import UserState
+import Payments.PaymentsState
 
 --Complex types, usualy big that should be derived automatically
 $(deriveInspectXML ''Document)
@@ -71,3 +72,16 @@ instance InspectXML FlashMessage where
     inspectXML = asChild . show
 instance InspectXML Email where
     inspectXML = asChild . show
+
+instance InspectXML UserInfo where
+    inspectXML = asChild . show 
+
+instance InspectXML UserSettings where
+    inspectXML = asChild . show 
+
+instance InspectXML UserPaymentPolicy where
+    inspectXML = asChild . show 
+
+instance InspectXML UserPaymentAccount where
+    inspectXML = asChild . show 
+                     

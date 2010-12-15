@@ -351,7 +351,22 @@ logErrorWithDefault c d f = do
                                              errorM "Happstack.Server" err
                                              return d
 
-                                        
+---I belive that this should be in prelude!!                                        
 caseOf ((True,a):_) _ = a
 caseOf (_:r) d = caseOf r d
 caseOf [] d = d
+
+allValues::(Bounded a, Enum a) => [a]
+allValues = enumFrom minBound
+
+for = flip map
+
+maybeRead :: Read a => String -> Maybe a
+maybeRead = fmap fst . listToMaybe . reads
+
+maybe' a ma = maybe a id ma   
+
+getField name = getDataFn' (look name)
+getField' f name = fmap (fmap f) $ getDataFn' (look name)
+
+readField name = fmap (join . (fmap maybeRead)) $ getDataFn' (look name)     

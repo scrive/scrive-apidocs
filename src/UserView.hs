@@ -42,16 +42,16 @@ showUser user =
              <td><input type="text" name="fullname" value=(userfullname user)/></td>
          </tr>
          <tr><td>E-post:</td>
-             <td><% unEmail $ useremail user %></td>
+             <td><% unEmail $ useremail $ userinfo user %></td>
          </tr>
          <tr><td>Företagsnamn:</td>
-             <td><input type="text" name="companyname" value=(usercompanyname user)/></td>
+             <td><input type="text" name="companyname" value=(usercompanyname $ userinfo user)/></td>
          </tr>
          <tr><td>Organisationsnummer:</td>
-             <td><input type="text" name="companynumber" value=(usercompanynumber user)/></td>
+             <td><input type="text" name="companynumber" value=(usercompanynumber $ userinfo user)/></td>
          </tr>
          <tr><td>Faktureringsadress:</td>
-             <td><input type="text" name="invoiceaddress" value=(userinvoiceaddress user)/></td>
+             <td><input type="text" name="invoiceaddress" value=(useraddress $ userinfo user)/></td>
          </tr>
        </table>
        <input class="button" type="submit" value="Spara ändringar"/>
@@ -96,14 +96,14 @@ pageAcceptTOS ctx tostext =
     </form>
   
 oneRow :: (EmbedAsAttr m (Attr [Char] [Char]), EmbedAsAttr m (Attr [Char] UserID)) =>  User -> XMLGenT m (HSX.XMLGenerator.XML m)
-oneRow (User{ userfullname, useremail, userid })  = 
+oneRow (user)  = 
     <tr class="ui-state-default">
      <td class="tdleft">
-      <input type="checkbox" name="doccheck" value=userid class="check" />
+      <input type="checkbox" name="doccheck" value=(userid user) class="check" />
      </td>
      <td><img width="17" height="17" src=""/></td>
-     <td><% userfullname %></td>
-     <td><% useremail %></td>
+     <td><% userfullname user%></td>
+     <td><% useremail $ userinfo user %></td>
      <td> - </td>
      <td class="tdright"></td>
     </tr>
@@ -236,6 +236,6 @@ flashMessagePasswordsDontMatch templates = renderTemplate templates"flashMessage
 {- Same as personname (username or email) from DocView but works on User -}
 prettyName::User -> BS.ByteString
 prettyName u = if (BS.null $ userfullname u)
-               then unEmail $ useremail u 
+               then unEmail $ useremail $ userinfo u 
                else userfullname u
           

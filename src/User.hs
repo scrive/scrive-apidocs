@@ -12,6 +12,7 @@ module User
     , addFlashMsgText 
     , addFlashMsgHtmlFromTemplate
     , logUserToContext
+    , onlySuperUser
     )
     where
 
@@ -62,7 +63,7 @@ instance Monad m => IsAttrValue m UserID where
 
 instance (XMLGenerator m) => (EmbedAsChild m User) where
   asChild user = <% BS.toString (userfullname user) ++ " <" ++ 
-                 BS.toString (unEmail $ useremail user) ++ ">"  %>	    
+                 BS.toString (unEmail $ useremail $ userinfo user) ++ ">"  %>	    
 
 instance (XMLGenerator m) => (EmbedAsChild m HeaderPair) where
   asChild (HeaderPair name value) = 
@@ -143,8 +144,17 @@ initialUsers = map (Email . BS.fromString)
          , "kbaldyga@gmail.com"
          ]
 
-isSuperUser (Just user@User{useremail}) = useremail `elem` admins 
+isSuperUser (Just user) = (useremail $ userinfo user) `elem` admins 
 isSuperUser _ = False
+
+onlySuperUser::Kontra a -> Kontra a
+onlySuperUser a =
+                 do
+                 ctx <- get
+                 if (isSuperUser $ ctxmaybeuser  ctx)
+                  then a
+                  else mzero
+                     
 
 addFlashMsgText :: String -> Kontra ()
 addFlashMsgText msg = do

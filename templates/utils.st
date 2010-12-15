@@ -80,6 +80,9 @@ LinkLandpageSaved=/landpage/signedsave/$documentid$/$signatorylinkid$
 ###
 join=$fst$$snd$
 ###
+option=<option value="$oValue$" $if(oSelected)$ SELECTED $endif$ > $oText$ </option>
+###
+options= $it:{n | $option(oValue=n.oValue;oText=n.oText;oSelected=n.oSelected)$}$
 ###
 input= <input style="width:50px" type="$iType$" name="$iName$" value="$iValue$"/>    
 ###

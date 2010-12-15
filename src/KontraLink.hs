@@ -19,7 +19,7 @@ import MinutesTime
 import Happstack.Server.HSP.HTML (webHSP)
 import qualified HSX.XMLGenerator as HSX (XML)
 import HSP
-import Payments.PaymentsState (AccountType)
+
 seeOtherXML :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
 
@@ -52,7 +52,8 @@ data KontraLink
     | LinkAdminOnlyIndexDB
     | LinkStats
     | LinkPaymentsAdmin
-
+    | LinkUserAdmin (Maybe UserID)
+    
 instance Show KontraLink where
     showsPrec _ LinkAbout = (++) "/about"
     showsPrec _ LinkLogin = (++) "/login"
@@ -85,7 +86,9 @@ instance Show KontraLink where
     showsPrec _ LinkAdminOnly = (++) $ "/adminonly/"
     showsPrec _ LinkAdminOnlyIndexDB = (++) $ "/adminonly/db"
     showsPrec _ LinkStats = (++) $ "/stats"
-    showsPrec _ (LinkPaymentsAdmin ) = (++) $ "/adminonly/payments"
+    showsPrec _ (LinkPaymentsAdmin ) = (++) $ "/adminonly/advpayments"
+    showsPrec _ (LinkUserAdmin Nothing) = (++) $ "/adminonly/useradmin"
+    showsPrec _ (LinkUserAdmin (Just userId)) = (++) $ "/adminonly/useradmin/"++show userId
 {-
 instance (EmbedAsAttr m String) => (EmbedAsAttr m KontraLink) where
     asAttr = asAttr . show

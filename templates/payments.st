@@ -1,4 +1,4 @@
-####           ADMIN        
+####          PAYMENT ADMIN        
 paymentsadminpage= <div style="text-align:center;margin-left:20%;margin-right:20%;"> 
                        <strong>     This page shows prices for all account types</strong> 
                         <div style="padding:20px;border:1px solid #DDDDDD;width:600px;margin-top:20px">
@@ -61,7 +61,7 @@ paymentsadminpage= <div style="text-align:center;margin-left:20%;margin-right:20
                                  $models:{$it.fordraft$}:td()$
                            </tr> 
                          <tbody></table>
-                       </div>
+                       </div></div>
 ###
 paymentsadminpagesuperuser = <div style="text-align:center;margin-left:20%;margin-right:20%;"> 
                        <strong>   This page shows prices for all account types </strong>
@@ -130,6 +130,6 @@ paymentsadminpagesuperuser = <div style="text-align:center;margin-left:20%;margi
                          <BR/>
                          <input type="submit" style="width:200px;font-weight:bold" value="Change">
                          </form>
-                       </div>
+                       </div></div>
 
 ###

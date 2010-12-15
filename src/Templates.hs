@@ -13,7 +13,7 @@ import KontraLink
 
 {-Names of template files -}
 templateFiles::[String]
-templateFiles = ["templates/landpages.st","templates/flash.st","templates/mails.st","templates/utils.st","templates/pages.st","templates/payments.st"]
+templateFiles = ["templates/landpages.st","templates/flash.st","templates/mails.st","templates/utils.st","templates/pages.st","templates/payments.st","templates/administration.st"]
 
 type KontrakcjaTemplates =  STGroup String
 type KontrakcjaTemplate = StringTemplate String
