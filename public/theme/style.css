@@ -955,3 +955,7 @@ input , button, a.button
     height:0px;
     width:0px;
 }
+.transparent{
+  border:0;
+  background-color:transparent
+}

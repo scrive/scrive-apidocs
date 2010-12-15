@@ -359,6 +359,28 @@ $(document).ready( function () {
                  curr.data("dateinput").addDay(parseInt(daysinput.val()));
         })
     })
+    $(".datetodate").each(function() {     
+         var curr = $(this);
+         var basictime =  new Date().getTime() ;
+         var input = $(curr.attr("rel"));
+         curr.dateinput({
+             format:'dd-mm-yyyy',
+             change: function() {
+                 input.val(curr.data("dateinput").getValue('dd-mm-yyyy'));
+                 curr.text(curr.data("dateinput").getValue('dd-mm-yyyy')); 
+             },
+         min:  new Date(),
+        })
+        if (input.val()=="") 
+         curr.data("dateinput").setValue(new Date());
+        else
+        {  
+         date = input.val().split('-');
+         curr.data("dateinput").setValue(date[0],date[1],date[2]); 
+        }
+    })
+    
+    
     $(window).resize();
     
     //var rpxJsHost = (("https:" == document.location.protocol) ? "https://" : "http://static.");

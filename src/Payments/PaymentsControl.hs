@@ -10,7 +10,7 @@
 -- Payment admin view with edit handlers, with permissions checker 
 --
 -----------------------------------------------------------------------------
-module Payments.PaymentsControl(handleAdminView,handleAccountModelsChange) where
+module Payments.PaymentsControl(handlePaymentsModelForViewView, handlePaymentsModelForEditView ,handleAccountModelsChange,readMoneyField,getPaymentChangeChange) where
 import "mtl" Control.Monad.State
 import AppView
 import Data.Maybe
@@ -24,41 +24,43 @@ import Payments.PaymentsState
 import Payments.PaymentsView
 
 {- | Admin view of payments accounts -}
-handleAdminView::Kontra Response
-handleAdminView = do
-                    ctx<- get
-                    models <- update $ GetPaymentModels
-                    case (ctxmaybeuser ctx) of 
-                      Nothing -> sendRedirect LinkLogin
-                      _ ->
-                            do
-                             content <- if (isSuperUser $ ctxmaybeuser ctx)
-                                         then liftIO $ adminViewForSuperuser (ctxtemplates ctx) models
-                                         else liftIO $ adminView (ctxtemplates ctx) models
-                             renderFromBody ctx TopEmpty kontrakcja $ cdata content
-                                    
+handlePaymentsModelForViewView::Kontra Response
+handlePaymentsModelForViewView = onlySuperUser $
+                                 do
+                                  ctx<- get
+                                  models <- update $ GetPaymentModels
+                                  content <- liftIO $ adminView (ctxtemplates ctx) models 
+                                  renderFromBody ctx TopEmpty kontrakcja $ cdata content
+
+handlePaymentsModelForEditView ::Kontra Response
+handlePaymentsModelForEditView =  onlySuperUser $
+                                  do
+                                   ctx<- get
+                                   models <- update $ GetPaymentModels
+                                   content <- liftIO $ adminViewForSuperuser (ctxtemplates ctx) models
+                                   renderFromBody ctx TopEmpty kontrakcja $ cdata content                                  
 {- | Handle change of models values request.
      Supports full and partial upgrade.
-     Fields names like in PaymentModelView (see PaymentsView) with AccountType suffix.
+     Fields names like in PaymentModelView (see PaymentsView) with PaymentAccountType suffix.
  -} 
 handleAccountModelsChange::Kontra KontraLink
 handleAccountModelsChange= do
                             ctx<- get
                             if (isSuperUser $ ctxmaybeuser ctx)
                              then do   
-                                  mapM_ getAndApplyAccountModelChange accountTypes 
+                                  mapM_ getAndApplyAccountModelChange (allValues::[PaymentAccountType])
                                   return $ LinkPaymentsAdmin 
                              else do
                                   return $ LinkPaymentsAdmin 
                                   
-getAndApplyAccountModelChange :: AccountType -> Kontra ()
+getAndApplyAccountModelChange :: PaymentAccountType -> Kontra ()
 getAndApplyAccountModelChange accountType = do
                                     f <- getAccountModelChange  accountType
                                     model <- update $ GetPaymentModel accountType
                                     update $ UpdateAccountModel accountType (f model)
                                     
 -- | For selected account type we read request params and retur a function for updating a structure
-getAccountModelChange::AccountType->Kontra (PaymentAccountModel -> PaymentAccountModel)    
+getAccountModelChange::PaymentAccountType->Kontra (PaymentAccountModel -> PaymentAccountModel)    
 getAccountModelChange accountType = 
                            do
                             mforaccount <- readMoneyField $ withAccountType "foraccount" 
@@ -116,8 +118,51 @@ getAccountModelChange accountType =
                                 )    
                           where 
                              withAccountType s = s ++ (show accountType)
-                             maybe' a ma = maybe a id ma
-                           
+
+
+
+getPaymentChangeChange::String -> Kontra (PaymentChange -> PaymentChange)    
+getPaymentChangeChange fieldSuffix = 
+                           do
+                            mforaccount <- readMoneyField $ withSuffix "foraccount" 
+                            mforsubaccount <- readMoneyField $ withSuffix "forsubaccount"
+                            mforemailsignature <- readMoneyField $  withSuffix "foremailsignature"
+                            mforelegsignature <- readMoneyField $  withSuffix "forelegsignature"
+                            mformobiledignature <- readMoneyField $  withSuffix "formobiledignature"
+                            mforcrediteardsignature <- readMoneyField $  withSuffix "forcrediteardsignature"
+                            mforipadsignature <- readMoneyField $  withSuffix "foripadsignature"
+                            mforamazon <- readMoneyField $  withSuffix "foramazon"
+                            mfortrustweaver <- readMoneyField $  withSuffix "fortrustweaver"
+                            mfortemplate <- readMoneyField $  withSuffix "fortemplate"
+                            mfordraft <- readMoneyField $  withSuffix "fordraft"
+                            return (\_ -> PaymentChange {
+                                               changePaymentForAccounts = PaymentForAccounts {
+                                                                                  forAccount= mforaccount,
+                                                                                  forSubaccount= mforsubaccount
+                                                                          },
+                                               changePaymentForSignature = PaymentForSignature {
+                                                                                  forEmailSignature=mforemailsignature,
+                                                                                  forElegSignature= mforelegsignature,
+                                                                                  forMobileSignature=  mformobiledignature,
+                                                                                  forCreditCardSignature= mforcrediteardsignature,
+                                                                                  forIPadSignature= mforipadsignature
+                                                                          },                         
+                                               changePaymentForSignedStorage = PaymentForSignedStorage {
+                                                                                  forAmazon= mforamazon,
+                                                                                  forTrustWeaver=mfortrustweaver
+                                                                          },       
+                                               changePaymentForOtherStorage = PaymentForOtherStorage {
+                                                                                  forTemplate= mfortemplate,
+                                                                                  forDraft= mfordraft
+                                                                          }                                            
+                                               }
+                                )    
+                          where 
+                             withSuffix s = s ++  fieldSuffix
+
+
+
+
 
 {-| Utils for reading money fields -}
 readMoneyField::String -> Kontra (Maybe Money)
@@ -128,9 +173,5 @@ readMoney s = do
                let (m,r) = break (== '.') s 
                main<-maybeRead m
                rest<-(maybeRead $ drop 1 r) `mplus` (return 0)
-               return $ Money (main * 100 + rest)
-
-
----I belive that this should be in prelude!!
-maybeRead :: Read a => String -> Maybe a
-maybeRead = fmap fst . listToMaybe . reads
+               let rest' = rest * (if (main>=0) then 1 else -1)
+               return $ Money (main * 100 + rest')

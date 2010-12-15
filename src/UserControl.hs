@@ -152,7 +152,7 @@ createUser1 templates hostpart fullname email password isnewuser maybesupervisor
       if not isnewuser
        then passwordChangeMail templates hostpart email fullname password
        else newUserMail templates hostpart email fullname password
-    Just supervisor -> inviteSubaccountMail templates hostpart (prettyName  supervisor) (usercompanyname supervisor)
+    Just supervisor -> inviteSubaccountMail templates hostpart (prettyName  supervisor) (usercompanyname $ userinfo supervisor)
                        email fullname password
   sendMail $ mail { fullnameemails = [(fullname, email)]}
   return user

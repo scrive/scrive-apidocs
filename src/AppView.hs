@@ -14,7 +14,6 @@ module AppView( TopMenu(..)
               , signupPageView
               , SignupForm(..)
               , databaseContents
-              , pageAdminOnly
               , pageAllUsersTable
               , signupConfirmPageView
               , pageLogin
@@ -203,8 +202,8 @@ pageFromBody (Context {ctxmaybeuser,ctxflashmessages,ctxproduction})
   
 
            <% case ctxmaybeuser of
-             Just User{userfullname} -> 
-                 <span id="userMenu"><% userfullname %> | <a href=LinkAccount>Konto</a> | <a href=LinkLogout>Logga ut</a></span>
+             Just user-> 
+                 <span id="userMenu"><% userfullname user%> | <a href=LinkAccount>Konto</a> | <a href=LinkLogout>Logga ut</a></span>
              Nothing -> 
                <div id="loginContainer"> {- new id -}
 	         <form action="/login" method="post"> 
@@ -309,14 +308,6 @@ pageFromBody (Context {ctxmaybeuser,ctxflashmessages,ctxproduction})
      </body>
     </html>
 
-
-showUserOption :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] BSC.ByteString)) 
-                  => User -> XMLGenT m (HSX.XML m)
-showUserOption user =
-    <option value=(show $ userid user) title=(unEmail $ useremail user)>
-          <% userfullname user %> <% unEmail $ useremail user %>
-    </option> 
- 
 pageStats :: Int -> Int -> BS.ByteString -> HSP XML
 pageStats nusers ndocuments df =
     developmentWrapper "Stats page" []
@@ -460,67 +451,9 @@ databaseContents contents = developmentWrapper "All database files" []
   </div>
   where showOneFile file = <li><a href=file><% file %></a></li>
 
-showUserSelect ::(XMLGenerator m, EmbedAsAttr m (Attr [Char] BSC.ByteString)) => [User] -> XMLGenT m (HSX.XMLGenerator.XML m)
-showUserSelect users = 
-  <select name="user">
-    <option value="" title="-- select user --">
-      <% "-- select user --" %>
-    </option>
-    <% map showUserOption users %>
-  </select>
-
-pageAdminOnly::[User] -> [FlashMessage] -> HSP XML  
-pageAdminOnly users ctxflashmessages =
-    developmentWrapper "SkrivaPa admin only page" ctxflashmessages
-    <div>
-     <h3>Database files</h3>
-     <a href="/adminonly/db/">Show list of database files</a><br/>
-     <form method="post" action="/adminonly/cleanup">
-     Database incrementally stores backups of itself. Old copies aren't useful in normal situations,
-     just in case of failure. It is good to remove old files from time to time.<br/>
-     <input type="submit" value="Cleanup"/><br/>
-     </form>
-     <h3>Users</h3>
-      You can see <a href="/adminonly/alluserstable">big table of all users</a>.<br/>
-      Here is a CSV version of this table: <a href="/adminonly/skrivapausers.csv">skrivapausers.csv</a>.<br/>
-      <form method="post" action="/adminonly/become">
-       Here you can see the world in the same way as a user sees it. You cannot do any 
-       actions on behalf of that user though: 
-       <table>
-        <tr>
-         <td>
-          <% showUserSelect users %>
-         </td>
-         <td>
-          <input type="submit" value="Monitor user"/>
-         </td>
-        </tr>
-       </table>
-      </form>
-      <br/>
-      <form method="post" action="/adminonly/takeoverdocuments">
-       Here you can take over documents from other account. This action reassigns all documents of the user you 
-       select to your own accout. Watch out, this operation cannot be reversed! This should probably be moved
-       to all accounts when people whould like to merge accounts. As a password you need to user the other account
-       password or 'skrivapaadmin' when you are SkrivaPa administrator.
-       <br/> 
-          User: <% showUserSelect users %><br/>
-          Password: <input type="password" name="password"/><br/>
-          <input type="submit" value="Take over documents from account"/>
-      </form>
-      <br/>
-      <form method="post" action="/adminonly/deleteaccount">
-       Here you can remove an account from the system. For safety reasons you can remove only accounts that
-       have no documents in them (use Take over documents above to free accounts). This action cannot be reversed
-       so beware!
-       <br/> 
-          User: <% showUserSelect users %><br/>
-          <input type="submit" value="Annihilate account"/>
-      </form>
-    </div>
 
 userInfo :: (HSX.XMLGenerator.XMLGen m, Show t) =>  (User, t) -> XMLGenT m (HSX.XMLGenerator.XML m)
-userInfo (user,docs) = <tr><td><% userfullname user %></td><td><% unEmail $ useremail user %></td><td><% show docs %></td></tr>
+userInfo (user,docs) = <tr><td><% userfullname user %></td><td><% unEmail $ useremail $ userinfo user %></td><td><% show docs %></td></tr>
 
 pageAllUsersTable :: [(User,Int)] -> HSP XML
 pageAllUsersTable users =

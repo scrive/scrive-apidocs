@@ -13,9 +13,9 @@ import Data.Data
 import System.Locale
 import System.IO.Unsafe
 import System.Locale
-import Misc
+import Data.Time
 
-$(deriveAll [''Eq, ''Ord, ''Default]
+$(deriveAll [''Eq, ''Ord, ''Default, ''Read]
   [d|
 
    -- | Time in minutes from 1970-01-01 00:00 in UTC coordinates
@@ -76,6 +76,16 @@ getMinutesTime = do
 toUTCTime (MinutesTime time) = 
     System.Time.toUTCTime (TOD (fromIntegral time * 60) 0)
 
-    
+parseMinutesTimeMDY::String -> Maybe MinutesTime
+parseMinutesTimeMDY s = do
+                      t <- parseTime defaultTimeLocale "%d-%m-%Y" s
+                      startOfTime <- parseTime defaultTimeLocale "%d-%m-%Y" "01-01-1970" 
+                      let val = diffDays t startOfTime  
+                      return (MinutesTime (fromIntegral $ (val *24*60)))
+
+showDateMDY (MinutesTime mins) =  let clocktime = TOD (fromIntegral mins*60) 0
+                                      calendartime = unsafePerformIO $ toCalendarTime clocktime
+                                  in formatCalendarTime defaultTimeLocale "%d-%m-%y" calendartime  
+                
 minutesAfter::Int -> MinutesTime -> MinutesTime 
 minutesAfter i (MinutesTime i') = MinutesTime $ i + i'

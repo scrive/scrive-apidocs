@@ -55,6 +55,8 @@ import qualified Network.HTTP as HTTP
 import qualified Network.AWS.AWSConnection as AWS
 import qualified Payments.PaymentsControl as Payments
 import Templates (readTemplates, renderTemplate)
+import qualified Administration.AdministrationControl as Administration
+
 
 data AppConf
     = AppConf { httpConf        :: Conf
@@ -123,8 +125,10 @@ handleRoutes = msum [
      , dir "stats"      $ hget0  $ handleStats
      , dir "createuser" $ hpost0 $ handleCreateUser
 
-     , dir "adminonly" $ hget0 $ showAdminOnly
-
+     , dir "adminonly" $ hget0 $ Administration.showAdminMainPage
+     , dir "adminonly" $ dir "advuseradmin" $ Administration.showAdminManageAllPage
+     , dir "adminonly" $ dir "useradmin" $ hget1m Administration.showAdminUsers
+     , dir "adminonly" $ dir "useradmin" $ hpost1 Administration.handleUserChange
      , dir "adminonly" $ dir "db" $ hget0 $ indexDB
      , dir "adminonly" $ dir "db" $ fileServe [] "_local/kontrakcja_state"
 
@@ -134,8 +138,9 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "deleteaccount"     $ hpost0 $ handleDeleteAccount
      , dir "adminonly" $ dir "alluserstable"     $ hget0  $ handleAllUsersTable
      , dir "adminonly" $ dir "skrivapausers.csv" $ hget0  $ getUsersDetailsToCSV
-     , dir "adminonly" $ dir "payments"          $ hget0  $ Payments.handleAdminView
-     , dir "adminonly" $ dir "payments"          $ hpost0  $ Payments.handleAccountModelsChange
+     , dir "adminonly" $ dir "payments"          $ hget0  $ Payments.handlePaymentsModelForViewView
+     , dir "adminonly" $ dir "advpayments"       $ hget0 $ Payments.handlePaymentsModelForEditView
+     , dir "adminonly" $ dir "advpayments"       $ hpost0 $ Payments.handleAccountModelsChange
      , dir "dave" $ dir "document" $ hget1 $ daveDocument
      , dir "dave" $ dir "user"     $ hget1 $ daveUser
            
@@ -414,14 +419,7 @@ databaseCleanup = onlySuperUserPost $  do
     -- and all events that have numbers less than last checkpoint
     contents <- liftIO databaseCleanupWorker
     return LinkAdminOnlyIndexDB
-
-
-showAdminOnly :: Kontra Response
-showAdminOnly = onlySuperUserGet $ do
-    ctx@Context { ctxflashmessages} <- lift get
-    users <- query $ GetAllUsers
-    webHSP (V.pageAdminOnly users ctxflashmessages)
-  
+ 
 
 handleTakeOverDocuments :: Kontra KontraLink
 handleTakeOverDocuments = onlySuperUserPost $ do

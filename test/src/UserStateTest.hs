@@ -109,9 +109,9 @@ test_setUserDetails_changesDetails = withTestState $ do
     user <- update $ AddUser (BS.fromString "Emily Green") (BS.fromString "emily@green.com") NoPassword Nothing
     Right newUser <- update $ SetUserDetails (userid user) (BS.fromString "Emily May Green") (BS.fromString "Some Corp") (BS.fromString "12345") (BS.fromString "15 High Street, Town")
     assertEqual "For SetUserDetails result" (BS.fromString "Emily May Green") (userfullname newUser)
-    assertEqual "For SetUserDetails result" (BS.fromString "Some Corp") (usercompanyname newUser)
-    assertEqual "For SetUserDetails result" (BS.fromString "12345") (usercompanynumber newUser)
-    assertEqual "For SetUserDetails result" (BS.fromString "15 High Street, Town") (userinvoiceaddress newUser)
+    assertEqual "For SetUserDetails result" (BS.fromString "Some Corp") (usercompanyname $ userinfo newUser)
+    assertEqual "For SetUserDetails result" (BS.fromString "12345") (usercompanynumber $ userinfo newUser)
+    assertEqual "For SetUserDetails result" (BS.fromString "15 High Street, Town") (useraddress $ userinfo newUser)
 
 -- This one doesn't compile
 --
