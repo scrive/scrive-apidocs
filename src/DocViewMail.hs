@@ -22,7 +22,8 @@ import Data.Maybe
 import SendMail(Mail,emptyMail,content,title,attachments,fullnameemails)
 import DocViewUtil
 import Amazon
-import Templates
+import Templates.Templates 
+import Templates.TemplatesUtils
 
 mailDocumentRemind::  KontrakcjaTemplates -> Maybe (BS.ByteString) -> Context -> Document -> SignatoryLink -> IO Mail
 mailDocumentRemind templates cm c d s = case s of 

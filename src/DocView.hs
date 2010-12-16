@@ -39,7 +39,8 @@ import MinutesTime
 import Data.Maybe
 import DocViewMail
 import DocViewUtil
-import Templates    
+import Templates.Templates
+import Templates.TemplatesUtils
 
 landpageSignInviteView ::KontrakcjaTemplates -> Document ->  IO String
 landpageSignInviteView templates  document =

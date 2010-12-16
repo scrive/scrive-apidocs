@@ -29,7 +29,8 @@ import User
 import KontraLink
 import SendMail(Mail,emptyMail,title,content)
 import qualified HSX.XMLGenerator
-import Templates
+import Templates.Templates 
+import Templates.TemplatesUtils
 
 showUser :: User -> HSP.HSP HSP.XML
 showUser user = 

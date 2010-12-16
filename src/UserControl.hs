@@ -32,7 +32,7 @@ import qualified Data.ByteString.Char8 as BS8
 import qualified Data.Object.Json as Json
 import qualified Data.Set as Set
 import qualified HSP
-import Templates (KontrakcjaTemplates)
+import Templates.Templates (KontrakcjaTemplates)
 
 handleUserPasswordPost :: Kontra KontraLink
 handleUserPasswordPost = do

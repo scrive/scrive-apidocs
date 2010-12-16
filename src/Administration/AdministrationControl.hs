@@ -10,10 +10,13 @@
 -- Handlers for all administrations tasks
 --
 -----------------------------------------------------------------------------
-module Administration.AdministrationControl(showAdminMainPage,showAdminManageAllPage,showAdminUsers, handleUserChange) where
+module Administration.AdministrationControl(
+            showAdminMainPage
+          , showAdminManageAllPage
+          , showAdminUsers
+          , handleUserChange) where
 import "mtl" Control.Monad.State
 import AppView
-import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.State (update,query)
 import Misc
@@ -26,13 +29,15 @@ import Data.ByteString.UTF8 (fromString)
 import Payments.PaymentsControl(readMoneyField,getPaymentChangeChange)
 import MinutesTime
 
+{- | Main page. Redirects users to other admin panels -} 
 showAdminMainPage ::Kontra Response
 showAdminMainPage = onlySuperUser $
                      do
                       ctx@Context {ctxtemplates} <- lift get
                       content <- liftIO $ adminMainPage ctxtemplates 
                       renderFromBody ctx TopEmpty kontrakcja $ cdata content 
-                   
+
+{- | Process view for advanced user administration -}                    
 showAdminManageAllPage :: Kontra Response
 showAdminManageAllPage = onlySuperUser $
                           do
@@ -40,7 +45,9 @@ showAdminManageAllPage = onlySuperUser $
                            users <- query $ GetAllUsers
                            content <- liftIO $ adminManageAllPage ctxtemplates users 
                            renderFromBody ctx TopEmpty kontrakcja $ cdata content 
-    
+
+{- | Process view for finding a user in basic administration. If provided with userId string as param 
+it allows to edit user details -}     
 showAdminUsers:: Maybe String -> Kontra Response 
 showAdminUsers Nothing= onlySuperUser $
                           do
@@ -67,9 +74,10 @@ showAdminUsers (Just a)= onlySuperUser $
                                      renderFromBody ctx TopEmpty kontrakcja $ cdata content 
 
 
+{- | Handling user details change. It reads user info change, user settings change , paymentpolicy and payment account change -}     
+handleUserChange :: String -> Kontra KontraLink
 handleUserChange a = onlySuperUser $
                      do
-                     ctx@Context {ctxtemplates} <- lift get
                      let muserId = maybeRead a
                      case muserId of 
                        Nothing -> mzero   
@@ -79,17 +87,19 @@ handleUserChange a = onlySuperUser $
                           case muser of 
                              Nothing -> mzero     
                              Just user -> do   
+                                           --Reading changes from params using dedicated functions for each user part
                                            infoChange <- getUserInfoChange
                                            settingsChange <- getUserSettingsChange
                                            paymentAccountChange <- getUserPaymentAccountChange
                                            paymentPaymentPolicy <- getUserPaymentPolicyChange
-                                           update $ SetUserInfo userId $ infoChange $ userinfo user
-                                           update $ SetUserSettings userId $ settingsChange $ usersettings user
-                                           update $ SetUserPaymentAccount userId $ paymentAccountChange $ userpaymentaccount user
-                                           update $ SetUserPaymentPolicyChange userId $ paymentPaymentPolicy $ userpaymentpolicy user
+                                           --Updating DB , ignoring fails
+                                           _ <- update $ SetUserInfo userId $ infoChange $ userinfo user
+                                           _ <- update $ SetUserSettings userId $ settingsChange $ usersettings user
+                                           _ <- update $ SetUserPaymentAccount userId $ paymentAccountChange $ userpaymentaccount user
+                                           _ <- update $ SetUserPaymentPolicyChange userId $ paymentPaymentPolicy $ userpaymentpolicy user
                                            return $ LinkUserAdmin $ Just userId
 
-
+{- | Reads params and returns function for conversion of user info. With no param leaves fields unchanged -}  
 getUserInfoChange::Kontra (UserInfo -> UserInfo)
 getUserInfoChange = do      
                      muserfstname        <- getField' fromString "userfstname" 
@@ -131,7 +141,8 @@ getUserInfoChange = do
                                           , usermobile = maybe' usermobile musermobile
                                           , useremail =  maybe' useremail museremail
                                         })
-
+                                        
+{- | Reads params and returns function for conversion of user settings. With no param leaves fields unchanged -}
 getUserSettingsChange::Kontra (UserSettings -> UserSettings)
 getUserSettingsChange =  do 
                           maccounttype          <- readField "accounttype" 
@@ -149,7 +160,8 @@ getUserSettingsChange =  do
                                           , signeddocstorage  = maybe' signeddocstorage  msigneddocstorage 
                                           , userpaymentmethod =  maybe' userpaymentmethod muserpaymentmethod
                                           })
-
+                                          
+{- | Reads params and returns function for conversion of user payment account. With no param leaves fields unchanged -}
 getUserPaymentAccountChange::Kontra (UserPaymentAccount -> UserPaymentAccount)
 getUserPaymentAccountChange =  do 
                           mpaymentaccountmoney                 <- readMoneyField "paymentaccountmoney" 
@@ -163,6 +175,7 @@ getUserPaymentAccountChange =  do
                                           , paymentaccountfreesignatures = maybe' paymentaccountfreesignatures mpaymentaccountfreesignatures
                                         })                                        
 
+{- | Reads params and returns function for conversion of user payment policy. With no param clears custom and temporary fields !!!!-}
 getUserPaymentPolicyChange::Kontra (UserPaymentPolicy -> UserPaymentPolicy)
 getUserPaymentPolicyChange =  do 
                           mtmppaymentchangeenddate   <- fmap (join . (fmap parseMinutesTimeMDY)) $ getField "tmppaymentchangeenddate" 
@@ -185,6 +198,7 @@ getUserPaymentPolicyChange =  do
                                                  
                                         })      
                                         
+{- | Reads params and returns structured params for user managment pages. -}                                        
 getAdminUsersPageParams::Kontra AdminUsersPageParams
 getAdminUsersPageParams = do
                           search <- getDataFn' (look "search")         

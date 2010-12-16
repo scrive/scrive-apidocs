@@ -45,7 +45,7 @@ import HSP.XML
 import Data.Object.Json as Json
 import Data.Object as Json
 import qualified Network.AWS.Authentication as AWS
-import Templates (KontrakcjaTemplates)
+import Templates.Templates  (KontrakcjaTemplates)
 
 
 
