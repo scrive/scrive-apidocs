@@ -14,7 +14,6 @@ module AppView( TopMenu(..)
               , signupPageView
               , SignupForm(..)
               , databaseContents
-              , pageAllUsersTable
               , signupConfirmPageView
               , pageLogin
               , pageStats
@@ -454,16 +453,4 @@ databaseContents contents = developmentWrapper "All database files" []
 
 userInfo :: (HSX.XMLGenerator.XMLGen m, Show t) =>  (User, t) -> XMLGenT m (HSX.XMLGenerator.XML m)
 userInfo (user,docs) = <tr><td><% userfullname user %></td><td><% unEmail $ useremail $ userinfo user %></td><td><% show docs %></td></tr>
-
-pageAllUsersTable :: [(User,Int)] -> HSP XML
-pageAllUsersTable users =
-    developmentWrapper "Alla SkrivaPå anwender" []
-     <div>
-      <h1>Alla SkrivaPå anwender</h1>
-      <table>
-       <thead><td>Username</td><td>Email</td><td>Docs</td></thead>
-       <% map userInfo users %>
-      </table>
-     </div>
-
 

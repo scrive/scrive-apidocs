@@ -132,11 +132,11 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "db" $ hget0 $ indexDB
      , dir "adminonly" $ dir "db" $ fileServe [] "_local/kontrakcja_state"
 
-     , dir "adminonly" $ dir "cleanup"           $ hpost0 $ databaseCleanup
-     , dir "adminonly" $ dir "become"            $ hpost0 $ handleBecome
-     , dir "adminonly" $ dir "takeoverdocuments" $ hpost0 $ handleTakeOverDocuments
-     , dir "adminonly" $ dir "deleteaccount"     $ hpost0 $ handleDeleteAccount
-     , dir "adminonly" $ dir "alluserstable"     $ hget0  $ handleAllUsersTable
+     , dir "adminonly" $ dir "cleanup"           $ hpost0 $ Administration.handleDatabaseCleanup
+     , dir "adminonly" $ dir "become"            $ hpost0 $ Administration.handleBecome
+     , dir "adminonly" $ dir "takeoverdocuments" $ hpost0 $ Administration.handleTakeOverDocuments
+     , dir "adminonly" $ dir "deleteaccount"     $ hpost0 $ Administration.handleDeleteAccount
+     , dir "adminonly" $ dir "alluserstable"     $ hget0  $ Administration.showAllUsersTable
      , dir "adminonly" $ dir "skrivapausers.csv" $ hget0  $ getUsersDetailsToCSV
      , dir "adminonly" $ dir "payments"          $ hget0  $ Payments.handlePaymentsModelForViewView
      , dir "adminonly" $ dir "advpayments"       $ hget0 $ Payments.handlePaymentsModelForEditView
@@ -377,13 +377,6 @@ handleStats = onlySuperUserGet $ do
     webHSP (V.pageStats (length allusers) ndocuments df)
     
 
-handleBecome :: Kontra KontraLink
-handleBecome = onlySuperUserPost $ do
-    (userid :: UserID) <- getDataFnM $ (look "user" >>= readM)
-    user <- liftM query GetUserByUserID userid
-    logUserToContext user
-    return LinkMain
-
 handleCreateUser :: Kontra KontraLink
 handleCreateUser = onlySuperUserPost $ do
     ctx <- get
@@ -400,60 +393,6 @@ indexDB :: Kontra Response
 indexDB = onlySuperUserGet $ do
     contents <- liftIO $ getDirectoryContents "_local/kontrakcja_state"
     webHSP (V.databaseContents (sort contents))
-
-databaseCleanupWorker :: IO [FilePath]
-databaseCleanupWorker = do
-  contents <- getDirectoryContents "_local/kontrakcja_state"
-  let checkpoints = filter ("checkpoints-" `isPrefixOf`) contents
-  let events = filter ("events-" `isPrefixOf`) contents
-  let lastcheckpoint = last (sort checkpoints)
-  let cutoffevent = "events-" ++ drop 12 lastcheckpoint
-  let eventsToRemove = filter (< cutoffevent) events 
-  let checkpointsToRemove = filter (< lastcheckpoint) checkpoints
-  mapM_ (\x -> removeFile ("_local/kontrakcja_state/" ++ x)) (eventsToRemove ++ checkpointsToRemove)
-  getDirectoryContents "_local/kontrakcja_state"
-
-databaseCleanup :: Kontra KontraLink
-databaseCleanup = onlySuperUserPost $  do
-    -- dangerous, cleanup all old files, where old means chechpoints but the last one
-    -- and all events that have numbers less than last checkpoint
-    contents <- liftIO databaseCleanupWorker
-    return LinkAdminOnlyIndexDB
- 
-
-handleTakeOverDocuments :: Kontra KontraLink
-handleTakeOverDocuments = onlySuperUserPost $ do
-    ctx@Context{ctxmaybeuser = Just ctxuser} <- lift $ get
-    (srcuserid :: UserID) <- getDataFnM $ (look "user" >>= readM)
-    Just srcuser <- query $ GetUserByUserID srcuserid
-  
-    update $ FragileTakeOverDocuments (userid ctxuser) srcuserid
-    addFlashMsgText $ "Took over all documents of '" ++ BS.toString (userfullname srcuser) ++ "'. His account is now empty and can be deleted if you wish so. Show some mercy, though."
-    return LinkAdminOnly
-
-handleDeleteAccount :: Kontra KontraLink
-handleDeleteAccount = onlySuperUserPost $ do
-    (userid :: UserID) <- getDataFnM $ (look "user" >>= readM)
-    Just user <- query $ GetUserByUserID userid
-    documents <- query $ GetDocumentsByAuthor userid
-    if null documents
-     then do
-       update $ FragileDeleteUser userid
-       addFlashMsgText ("User deleted. You will not see '" ++ BS.toString (userfullname user) ++ "' here anymore")
-     else
-       addFlashMsgText ("I cannot delete user. '" ++ BS.toString (userfullname user) ++ "' still has " ++ show (length documents) ++ " documents as author. Take over his documents, then try to delete the account again.")
-    return LinkAdminOnly
-
-handleAllUsersTable :: Kontra Response
-handleAllUsersTable = onlySuperUserGet $ do
-    users <- query $ GetAllUsers
-    let queryNumberOfDocuments user = do
-          documents <- query $ GetDocumentsByAuthor (userid user)
-          return (user,length documents)
-                        
-    users2 <- mapM queryNumberOfDocuments users
-
-    webHSP $ V.pageAllUsersTable users2
 
 serveHTMLFiles:: Kontra Response  
 serveHTMLFiles =  do

@@ -290,3 +290,12 @@ adminuser=
   </div>
  
 ###
+allUsersTable=
+    <div>
+      <h1>Alla SkrivaPå anwender</h1>
+      <table>
+       <thead><td style="width:200px">Username</td><td style="width:200px">Email</td><td>Docs</td></thead>
+       $users:{user|<tr> <td> $user.usvFullname$  </td> <td> $user.usvEmail$ </td> <td> $user.usvDocsCount$ </td></tr>}$
+      </table>
+     </div>
+###
