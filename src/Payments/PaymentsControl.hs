@@ -7,13 +7,12 @@
 -- Stability   :  stable
 -- Portability :  portable
 --
--- Payment admin view with edit handlers, with permissions checker 
---
+-- Payment admin view with edit handlers, with permissions checker. 
+-- 'getPaymentChangeChange' is used to parse user payments change in admin backend.
 -----------------------------------------------------------------------------
 module Payments.PaymentsControl(handlePaymentsModelForViewView, handlePaymentsModelForEditView ,handleAccountModelsChange,readMoneyField,getPaymentChangeChange) where
 import "mtl" Control.Monad.State
 import AppView
-import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.State (update)
 import KontraLink
@@ -22,8 +21,9 @@ import User
 import HSP (cdata)
 import Payments.PaymentsState
 import Payments.PaymentsView
+import Payments.PaymentsUtils
 
-{- | Admin view of payments accounts -}
+{- | View of payment models (not editable) -}
 handlePaymentsModelForViewView::Kontra Response
 handlePaymentsModelForViewView = onlySuperUser $
                                  do
@@ -31,7 +31,8 @@ handlePaymentsModelForViewView = onlySuperUser $
                                   models <- update $ GetPaymentModels
                                   content <- liftIO $ adminView (ctxtemplates ctx) models 
                                   renderFromBody ctx TopEmpty kontrakcja $ cdata content
-
+                                  
+{- | View of payment models (editable) -}
 handlePaymentsModelForEditView ::Kontra Response
 handlePaymentsModelForEditView =  onlySuperUser $
                                   do
@@ -120,7 +121,7 @@ getAccountModelChange accountType =
                              withAccountType s = s ++ (show accountType)
 
 
-
+{- | We read paymentchange from Kontra Params. It takes field suffix so we can use it for both, custom and temporary changes -}
 getPaymentChangeChange::String -> Kontra (PaymentChange -> PaymentChange)    
 getPaymentChangeChange fieldSuffix = 
                            do
@@ -159,19 +160,7 @@ getPaymentChangeChange fieldSuffix =
                                 )    
                           where 
                              withSuffix s = s ++  fieldSuffix
-
-
-
-
-
+                             
 {-| Utils for reading money fields -}
 readMoneyField::String -> Kontra (Maybe Money)
 readMoneyField name =  fmap (join . (fmap readMoney)) $ getDataFn' (look name)                                    
-
-readMoney::String->Maybe Money  
-readMoney s = do
-               let (m,r) = break (== '.') s 
-               main<-maybeRead m
-               rest<-(maybeRead $ drop 1 r) `mplus` (return 0)
-               let rest' = rest * (if (main>=0) then 1 else -1)
-               return $ Money (main * 100 + rest')

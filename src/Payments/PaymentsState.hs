@@ -9,8 +9,11 @@
 -- Stability   :  stable
 -- Portability :  portable
 --
--- Payment models with data storage interface. Also contains datatype for holding temporary changes in payments (for users)
---
+-- Data storage structures for all payments in the system. 
+-- 'PaymentAccountModel' holds information abount payment models such as Private, Minimal, Corp etc.
+-- 'UserPaymentPolicy' holds the user payment policy, with chosen account type and cutom and temporary changes.
+-- 'UserPaymentAccount' holds money and free signatures for user. Last two are stored inside 'UserState.User'
+--  while 'PaymentAccountModel' is undependent. 
 -----------------------------------------------------------------------------
 
 module Payments.PaymentsState  (
@@ -29,8 +32,7 @@ module Payments.PaymentsState  (
        --Structures for users payment accounts
        , UserPaymentPolicy(..)
        , UserPaymentAccount(..)
-       
-       -- Utils  
+        -- Utils  
        , emptyChange
        , basicPaymentPolicy
        , emptyPaymentAccount  
@@ -96,12 +98,14 @@ $( deriveAll [''Ord, ''Eq, ''Default, ''Show, ''Read]
       data PaymentForOtherStorage value  = PaymentForOtherStorage {
                                  forTemplate::value,
                                  forDraft::value
-                               }                        
+                               }         
+      --  | How the user should pay for signing etc                       
       data UserPaymentPolicy =  UserPaymentPolicy {
                paymentaccounttype:: PaymentAccountType
              , custompaymentchange:: PaymentChange 
              , temppaymentchange:: Maybe (MinutesTime,PaymentChange)
       }  
+      -- | Info about free signatures left and money for user
       data UserPaymentAccount = UserPaymentAccount {
                paymentaccountmoney ::Money
              , paymentaccountfreesignatures:: Int  
@@ -213,6 +217,8 @@ emptyChange =  PaymentChange {
                                                                                   forDraft=Nothing
                                                                           }                                              
                         }
+                        
+-- | Basic payments policy, Private account with no changes custom or temporary changes                        
 basicPaymentPolicy:: UserPaymentPolicy                        
 basicPaymentPolicy =  UserPaymentPolicy {
                                       paymentaccounttype = Private

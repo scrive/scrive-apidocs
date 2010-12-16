@@ -23,6 +23,7 @@ import Data.List (isPrefixOf, isInfixOf)
 import Data.Char
 import Payments.PaymentsView
 import Payments.PaymentsState
+import Payments.PaymentsUtils
 import Misc
 import MinutesTime
 
