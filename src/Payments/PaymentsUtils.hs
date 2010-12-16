@@ -12,11 +12,7 @@
 -----------------------------------------------------------------------------
 module Payments.PaymentsUtils(showMoney,readMoney) where
 
-import KontraLink
-import Templates
 import Payments.PaymentsState
-import Data.Typeable
-import Data.Data
 import Control.Monad
 import Misc
 

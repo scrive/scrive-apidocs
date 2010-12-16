@@ -1,6 +1,21 @@
 {-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, NamedFieldPuns #-}
 {-# OPTIONS_GHC -Wall #-}
-module Templates(readTemplates,renderTemplate,renderTemplate',renderTemplateComplex,wrapHTML,templateList,renderActionButton,KontrakcjaTemplates,Templates.setAttribute) where
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  Templates.Templates
+-- Maintainer  :  mariusz@skrivapa.se
+-- Stability   :  development
+-- Portability :  portable
+--
+-- This is main templating module. Basic interface contains 
+-- 'renderTemplate' and 'renderTemplateComplex' and 'setAttribute'.
+-- 'renderTemplate'  takes template name and list of name<->string params maps
+-- 'renderTemplateComplex' can handle passing advanced data structures to template
+-- This module also provides reading template files, some checking and template info
+-- 'KontrakcjaTemplates' is alias for template group, but ma be changed in a future
+-----------------------------------------------------------------------------
+module Templates.Templates
+    (readTemplates,renderTemplate,renderTemplate',renderTemplateComplex,templateList,KontrakcjaTemplates,Templates.Templates.setAttribute) where
 
 import Text.StringTemplate 
 import System.IO
@@ -9,7 +24,6 @@ import Data.Maybe
 import Data.List
 import Data.Char
 import System.Log.Logger
-import KontraLink 
 
 {-Names of template files -}
 templateFiles::[String]
@@ -90,16 +104,6 @@ parseLines handle = do
                      if (e || isPrefixOf ("#") l) 
                       then return []
                       else fmap ((:) l) (parseLines handle)
-
-{- Common templates - should be shared and it seams like a good place fo them -}
-wrapHTML::KontrakcjaTemplates  -> String->IO String
-wrapHTML templates body =  renderTemplate templates  "wrapHTML" [("body",body)]
-
-renderActionButton::KontrakcjaTemplates  -> KontraLink -> String -> IO String
-renderActionButton templates  action button = do
-                                        buttonname <- renderTemplate templates  button []
-                                        renderTemplate templates "actionButton" [("action",show action),("buttonname",buttonname)]
-                                    
 
 {- Template checker, printing info about params-}
 templateList :: IO ()

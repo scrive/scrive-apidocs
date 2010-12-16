@@ -22,7 +22,7 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import qualified HSX.XMLGenerator as HSX
 import Misc
-import Templates
+import Templates.Templates 
 
 partyList :: Document -> [SignatoryDetails]
 partyList document =

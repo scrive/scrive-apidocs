@@ -14,7 +14,7 @@
 module Payments.PaymentsView(adminView,adminViewForSuperuser,getModelView,getChangeView, PaymentChangeView) where
 
 import KontraLink
-import Templates
+import Templates.Templates 
 import Payments.PaymentsState
 import Payments.PaymentsUtils
 import Data.Typeable

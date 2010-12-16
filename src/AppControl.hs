@@ -54,7 +54,7 @@ import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 import qualified Network.AWS.AWSConnection as AWS
 import qualified Payments.PaymentsControl as Payments
-import Templates (readTemplates, renderTemplate)
+import Templates.Templates (readTemplates, renderTemplate)
 import qualified Administration.AdministrationControl as Administration
 
 
