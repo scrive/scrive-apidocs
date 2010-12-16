@@ -123,7 +123,7 @@ handleRoutes = msum [
 
      -- super user only
      , dir "stats"      $ hget0  $ handleStats
-     , dir "createuser" $ hpost0 $ handleCreateUser
+     , dir "createuser" $ hpost0 $ Administration.handleCreateUser
 
      , dir "adminonly" $ hget0 $ Administration.showAdminMainPage
      , dir "adminonly" $ dir "advuseradmin" $ Administration.showAdminManageAllPage
@@ -374,18 +374,8 @@ handleStats = onlySuperUserGet $ do
 #else
     let df = BS.empty
 #endif
-    webHSP (V.pageStats (length allusers) ndocuments df)
-    
-
-handleCreateUser :: Kontra KontraLink
-handleCreateUser = onlySuperUserPost $ do
-    ctx <- get
-    email <- g "email"
-    fullname <- g "fullname"
-    user <- liftIO $ createNewUserByAdmin ctx fullname email 
-    -- FIXME: where to redirect?
-    return LinkStats
-  
+    webHSP (V.pageStats (length allusers) ndocuments df)  
+ 
 handleDownloadDatabase :: Kontra Response
 handleDownloadDatabase = do fail "nothing"
   
