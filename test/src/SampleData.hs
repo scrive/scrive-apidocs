@@ -7,7 +7,7 @@ import Test.Framework.Providers.HUnit (testCase)
 import DocState
 import MinutesTime
 import Misc
-import Templates
+import Templates.Templates
 import SendMail
 import User
 
