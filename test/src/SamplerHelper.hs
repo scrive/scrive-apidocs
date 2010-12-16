@@ -4,7 +4,7 @@ import Test.HUnit (assert, assertEqual, assertFailure, Assertion(..))
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 
-import Templates
+import Templates.Templates
 import SendMail
 
 import System.Directory
