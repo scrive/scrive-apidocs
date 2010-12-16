@@ -19,7 +19,8 @@ module Administration.AdministrationControl(
           , handleDatabaseCleanup
           , handleBecome
           , handleTakeOverDocuments
-          , handleDeleteAccount) where
+          , handleDeleteAccount
+          , handleCreateUser) where
 import "mtl" Control.Monad.State
 import AppView
 import Happstack.Server hiding (simpleHTTP)
@@ -36,7 +37,7 @@ import Payments.PaymentsControl(readMoneyField,getPaymentChangeChange)
 import MinutesTime
 import System.Directory
 import Data.List (isPrefixOf,sort)
-
+import UserControl
 {- | Main page. Redirects users to other admin panels -} 
 showAdminMainPage ::Kontra Response
 showAdminMainPage = onlySuperUser $
@@ -176,6 +177,15 @@ handleDeleteAccount = onlySuperUser $ do
                   Nothing -> mzero
       Nothing -> mzero          
 
+handleCreateUser :: Kontra KontraLink
+handleCreateUser = onlySuperUser $ do
+    ctx <- get
+    email <- g "email"
+    fullname <- g "fullname"
+    _ <- liftIO $ createNewUserByAdmin ctx fullname email 
+    -- FIXME: where to redirect?
+    return LinkStats
+    
 showAllUsersTable :: Kontra Response
 showAllUsersTable = onlySuperUser $ do
     ctx@Context {ctxtemplates} <- lift get
@@ -186,6 +196,7 @@ showAllUsersTable = onlySuperUser $ do
     users2 <- mapM queryNumberOfDocuments users
     content <- liftIO $ allUsersTable ctxtemplates users2
     renderFromBody ctx TopEmpty kontrakcja $ cdata  content
+    
 {- | Reads params and returns function for conversion of user info. With no param leaves fields unchanged -}  
 getUserInfoChange::Kontra (UserInfo -> UserInfo)
 getUserInfoChange = do      
