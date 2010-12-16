@@ -14,7 +14,12 @@ module Administration.AdministrationControl(
             showAdminMainPage
           , showAdminManageAllPage
           , showAdminUsers
-          , handleUserChange) where
+          , showAllUsersTable
+          , handleUserChange
+          , handleDatabaseCleanup
+          , handleBecome
+          , handleTakeOverDocuments
+          , handleDeleteAccount) where
 import "mtl" Control.Monad.State
 import AppView
 import Happstack.Server hiding (simpleHTTP)
@@ -24,10 +29,13 @@ import User
 import HSP (cdata)
 import Administration.AdministrationView
 import Payments.PaymentsState
+import DocState
 import KontraLink
-import Data.ByteString.UTF8 (fromString)
+import Data.ByteString.UTF8 (fromString,toString)
 import Payments.PaymentsControl(readMoneyField,getPaymentChangeChange)
 import MinutesTime
+import System.Directory
+import Data.List (isPrefixOf,sort)
 
 {- | Main page. Redirects users to other admin panels -} 
 showAdminMainPage ::Kontra Response
@@ -99,6 +107,85 @@ handleUserChange a = onlySuperUser $
                                            _ <- update $ SetUserPaymentPolicyChange userId $ paymentPaymentPolicy $ userpaymentpolicy user
                                            return $ LinkUserAdmin $ Just userId
 
+{-| Cleaning the database -}
+handleDatabaseCleanup :: Kontra KontraLink
+handleDatabaseCleanup = onlySuperUser $  do
+    -- dangerous, cleanup all old files, where old means chechpoints but the last one
+    -- and all events that have numbers less than last checkpoint
+    _ <- liftIO databaseCleanupWorker
+    return LinkAdminOnlyIndexDB
+
+databaseCleanupWorker :: IO [FilePath]
+databaseCleanupWorker = do
+  contents <- getDirectoryContents "_local/kontrakcja_state"
+  let checkpoints = filter ("checkpoints-" `isPrefixOf`) contents
+  let events = filter ("events-" `isPrefixOf`) contents
+  let lastcheckpoint = last (sort checkpoints)
+  let cutoffevent = "events-" ++ drop 12 lastcheckpoint
+  let eventsToRemove = filter (< cutoffevent) events 
+  let checkpointsToRemove = filter (< lastcheckpoint) checkpoints
+  mapM_ (\x -> removeFile ("_local/kontrakcja_state/" ++ x)) (eventsToRemove ++ checkpointsToRemove)
+  getDirectoryContents "_local/kontrakcja_state" --This can be dropped
+
+{- Administrator can became any user he want's -}
+handleBecome :: Kontra KontraLink
+handleBecome = onlySuperUser $ do
+    muserid  <- readField "user"
+    case muserid of
+        Just userid ->  do
+                         user <- liftM query GetUserByUserID userid
+                         logUserToContext user
+                         return LinkMain
+        _ -> mzero                 
+
+
+
+{- Assinging all selected user docs to current user -}
+handleTakeOverDocuments :: Kontra KontraLink
+handleTakeOverDocuments = onlySuperUser $ do
+     Context{ctxmaybeuser = Just ctxuser} <- lift $ get
+     msrcuserid  <- readField "user"
+     case (msrcuserid) of
+      Just srcuserid ->  do
+                         msrcuser <- query $ GetUserByUserID srcuserid
+                         case msrcuser of
+                          Just srcuser -> do     
+                                         update $ FragileTakeOverDocuments (userid ctxuser) srcuserid
+                                         addFlashMsgText $ "Took over all documents of '" ++ toString (userfullname srcuser) ++ "'. His account is now empty and can be deleted if you wish so. Show some mercy, though."
+                                         return LinkAdminOnly
+                          Nothing -> mzero                
+      Nothing -> mzero                   
+
+{- Deleting user account, Fails if user still has any documents -}
+handleDeleteAccount :: Kontra KontraLink
+handleDeleteAccount = onlySuperUser $ do
+    muserid <- readField "user"
+    case (muserid) of
+      Just userid -> do
+                muser <- query $ GetUserByUserID userid
+                case (muser) of
+                  Just user ->  do  
+                      documents <- query $ GetDocumentsByAuthor userid
+                      if null documents
+                       then do
+                           _ <- update $ FragileDeleteUser userid
+                           addFlashMsgText ("User deleted. You will not see '" ++ toString (userfullname user) ++ "' here anymore")
+                       else
+                           addFlashMsgText ("I cannot delete user. '" ++ toString (userfullname user) ++ "' still has " ++ show (length documents) ++ " documents as author. Take over his documents, then try to delete the account again.")
+                      return LinkAdminOnly
+                  Nothing -> mzero
+      Nothing -> mzero          
+
+showAllUsersTable :: Kontra Response
+showAllUsersTable = onlySuperUser $ do
+    ctx@Context {ctxtemplates} <- lift get
+    users <- query $ GetAllUsers
+    let queryNumberOfDocuments user = do
+          documents <- query $ GetDocumentsByAuthor (userid user)
+          return (user,length documents)
+    users2 <- mapM queryNumberOfDocuments users
+    content <- liftIO $ allUsersTable ctxtemplates users2
+    renderFromBody ctx TopEmpty kontrakcja $ cdata  content
 {- | Reads params and returns function for conversion of user info. With no param leaves fields unchanged -}  
 getUserInfoChange::Kontra (UserInfo -> UserInfo)
 getUserInfoChange = do      

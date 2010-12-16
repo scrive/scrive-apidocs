@@ -10,7 +10,7 @@
 -- Almoust all the stuff that is visible under /adminsonly path
 --
 -----------------------------------------------------------------------------
-module Administration.AdministrationView(adminMainPage,adminManageAllPage,adminUsersPage,AdminUsersPageParams(..),adminUserPage) where
+module Administration.AdministrationView(adminMainPage,adminManageAllPage,adminUsersPage,AdminUsersPageParams(..),adminUserPage,allUsersTable) where
 
 import KontraLink
 import Templates.Templates 
@@ -53,7 +53,11 @@ adminUserPage templates user paymentModel  = renderTemplateComplex templates "ad
                                                         (setAttribute "user" $ userAdminView user) .
                                                         (setAttribute "paymentmodel" $ getModelView paymentModel) 
     
-                                                        
+
+allUsersTable::KontrakcjaTemplates -> [(User,Int)] -> IO String
+allUsersTable templates users =  renderTemplateComplex templates "allUsersTable" $
+                                                        (setAttribute "users" $ map userSmallViewWithDocsCount $ users) 
+
 {-| Paging list as options [1..21] -> [1-5,6-10,11-15,16-20,21-21]  -}                                                      
 intervals::[a] ->  [Option]                                                      
 intervals users =  intervals' $ (filter (\x-> 0 == x `rem` pageSize) [0..((length users) - 1)]) ++ [length users]
@@ -95,7 +99,8 @@ data AdminUsersPageParams = AdminUsersPageParams {
 data UserSmallView = UserSmallView {
                          usvId::String,  
                          usvFullname::String,
-                         usvEmail::String
+                         usvEmail::String,
+                         usvDocsCount::String
                      } deriving (Data, Typeable)
                      
 {-| Users full view (for templates) -}
@@ -166,7 +171,16 @@ userAdminView u =  UserAdminView {
                                      
 {-| Conversion from 'User' to 'Option', for select box UserSmallView  -}      
 userSmallView::User -> UserSmallView 
-userSmallView u = UserSmallView { usvId = (show $ userid u), usvFullname = (toString $ userfullname  u), usvEmail = (toString $ unEmail $ useremail $ userinfo u) }
+userSmallView u = UserSmallView {     usvId = (show $ userid u)
+                                    , usvFullname = (toString $ userfullname  u)
+                                    , usvEmail = (toString $ unEmail $ useremail $ userinfo u)
+                                    , usvDocsCount = "" }
+
+userSmallViewWithDocsCount::(User,Int) -> UserSmallView 
+userSmallViewWithDocsCount (u,c) = UserSmallView { usvId = (show $ userid u)
+                                                 , usvFullname = (toString $ userfullname  u)
+                                                 , usvEmail = (toString $ unEmail $ useremail $ userinfo u)
+                                                 , usvDocsCount = show c }
 
 {-| Conversion from 'User' to 'Option' for select box -} 
 userOption::User -> Option
