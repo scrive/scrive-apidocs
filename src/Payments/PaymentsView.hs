@@ -7,30 +7,31 @@
 -- Stability   :  stable
 -- Portability :  portable
 --
--- Payment admin view - for standard user (not editable) and superuser 
---
+-- Payment admin view - editable and not . 
+-- Main templates are in payments.st . 
+-- 'PaymentChangeView' export data structure for payments change in templates (for admin backend)
 -----------------------------------------------------------------------------
-module Payments.PaymentsView(adminView,adminViewForSuperuser,getModelView,showMoney,getChangeView, PaymentChangeView) where
+module Payments.PaymentsView(adminView,adminViewForSuperuser,getModelView,getChangeView, PaymentChangeView) where
 
 import KontraLink
 import Templates
 import Payments.PaymentsState
+import Payments.PaymentsUtils
 import Data.Typeable
 import Data.Data
 import Text.StringTemplate.GenericStandard()
 
-{- | Payments models view for normal user. -}
+{- | Payments models view. Not-editable -}
 adminView::KontrakcjaTemplates-> [PaymentAccountModel] -> IO String                                      
 adminView templates models = renderTemplateComplex templates "paymentsadminpage" $  
                                          (setAttribute "models" $ map getModelView models) 
-{-| Payments models view for superadmin.
-   Allows him to change values.
- -}                                         
+{-| Payments models view . Editable -}                                         
 adminViewForSuperuser::KontrakcjaTemplates-> [PaymentAccountModel] -> IO String          
 adminViewForSuperuser templates models = renderTemplateComplex templates "paymentsadminpagesuperuser" $  
                                          (setAttribute "models" $ map getModelView models) .
                                          (setAttribute "changeaction" $ show LinkPaymentsAdmin) 
-{- | Datastructure to pack model. It can be easyly handle by templates -}                                                     
+                                         
+{- | Nice view for 'PaymentAccountModel'. It can be easyly handled by templates -}                                                     
 data PaymentAccountModelView  = PaymentAccountModelView {
                                       modelname::String,
                                       modelfieldsprefix::String,  
@@ -46,7 +47,8 @@ data PaymentAccountModelView  = PaymentAccountModelView {
                                       fortemplate::String,
                                       fordraft::String   
 } deriving (Data, Typeable)
-
+{- | Nice view for 'PaymentChange'. It can be easyly handled by templates.
+     To be used by user admin view -}              
 data PaymentChangeView  = PaymentChangeView {
                                       changeforaccount::Maybe String,
                                       changeforsubaccount::Maybe String,   
@@ -61,7 +63,7 @@ data PaymentChangeView  = PaymentChangeView {
                                       changefordraft::Maybe String   
 } deriving (Data, Typeable)
 
-{-Conversion from data storage structure to template friendly structure for payments models-}
+{-Conversion 'PaymentAccountModel' to 'PaymentAccountModelView' -}
 getModelView::PaymentAccountModel -> PaymentAccountModelView
 getModelView  (PaymentAccountModel {modelAccountType,
                                     modelPaymentForAccounts,
@@ -83,7 +85,8 @@ getModelView  (PaymentAccountModel {modelAccountType,
                                                       fortemplate=  showMoney $ forTemplate   modelPaymentForOtherStorage ,
                                                       fordraft= showMoney $ forDraft  modelPaymentForOtherStorage }
                                                       
-{-Conversion from data storage structure to template friendly structure for temporary payment change-}
+
+{-Conversion 'PaymentChange' to 'PaymentChangeView' -}
 getChangeView::PaymentChange -> PaymentChangeView
 getChangeView  (PaymentChange  {changePaymentForAccounts,
                                         changePaymentForSignature,                          
@@ -101,9 +104,5 @@ getChangeView  (PaymentChange  {changePaymentForAccounts,
                                                       changefortrustweaver= fmap showMoney $ forTrustWeaver changePaymentForSignedStorage,
                                                       changefortemplate= fmap showMoney $ forTemplate   changePaymentForOtherStorage ,
                                                       changefordraft= fmap showMoney $ forDraft  changePaymentForOtherStorage }
-{-Money printer. Since show instance is derived by storage module, we provided nicer version -}
-showMoney::Money->String  
-showMoney (Money i) = if (i>=0)
-                       then (show $ i `div` 100)++"."++(show $ (i `div` 10) `mod` 10) ++ (show $ i `mod` 10)
-                       else "-" ++ (showMoney (Money $ -1*i))
+
              
