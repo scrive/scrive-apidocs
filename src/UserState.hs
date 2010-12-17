@@ -45,6 +45,7 @@ import "mtl" Control.Monad.Reader (ask)
 import "mtl" Control.Monad.State (modify,MonadState(..))
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BS (unlines) 
 import Happstack.Data.IxSet as IxSet
 import Data.Maybe(isJust,isNothing)
 import Misc
@@ -688,12 +689,12 @@ deleteTermsOfService :: UserID -> Update Users (Either String User)
 deleteTermsOfService userid =
     modifyUser userid $ \user -> Right $ user { userhasacceptedtermsofservice = Nothing }
 
-exportUsersDetailsToCSV :: Query Users [BS.ByteString]
+exportUsersDetailsToCSV :: Query Users BS.ByteString
 exportUsersDetailsToCSV = do
   users <- ask
   let fields user = [userfullname user, unEmail $ useremail $ userinfo user]
       content = BS.intercalate (BS.fromString ",") <$> fields
-  return $ content <$> (toList users)
+  return $ BS.unlines $ content <$> (toList users)
 
 instance Component Users where
   type Dependencies Users = End

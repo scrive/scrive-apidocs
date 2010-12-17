@@ -6,17 +6,14 @@ module AppView( TopMenu(..)
               , htmlHeadBodyWrapIO
               , poweredBySkrivaPaPara
               , loginBox
-               -- , pageWelcome
               , pageErrorReport
               , renderFromBody
               , pageForgotPassword
               , pageForgotPasswordConfirm
               , signupPageView
               , SignupForm(..)
-              , databaseContents
               , signupConfirmPageView
               , pageLogin
-              , pageStats
               ) where 
 
 import HSP hiding (Request)
@@ -307,35 +304,6 @@ pageFromBody (Context {ctxmaybeuser,ctxflashmessages,ctxproduction})
      </body>
     </html>
 
-pageStats :: Int -> Int -> BS.ByteString -> HSP XML
-pageStats nusers ndocuments df =
-    developmentWrapper "Stats page" []
-     <div>
-      <h1>Stats page</h1>
-      <table>
-       <tr><td>Users</td><td><% show nusers %></td></tr>
-       <tr><td>Documents</td><td><% show ndocuments %></td></tr>
-      </table>
-      <br/>
-      <form method="post" action="/createuser">
-       Create user:<br/> 
-       <table>
-        <tr>
-         <td>Full name:</td>
-         <td><input type="text" name="fullname"/></td>
-        </tr>
-        <tr>
-         <td>Email address:</td>
-         <td><input type="email" name="email"/></td>
-        </tr>
-       </table><br/>
-       <input type="submit" value="Create user"/>
-      </form>
-      <br/>
-      Disk status:<br/>
-      <pre><% df %></pre>
-     </div>
-
 signupConfirmPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) =>  XMLGenT m (HSX.XML m)
 signupConfirmPageView  =  <div>Ditt konto har skapats! Vi har skickat ett mail med dina användaruppgifter till din inkorg.</div>
 
@@ -439,18 +407,3 @@ developmentWrapper title ctxflashmessages body =
       <% body %>
      </body>
     </html>
-
-databaseContents :: [String] -> HSP XML
-databaseContents contents = developmentWrapper "All database files" []
-  <div>
-     <h1>All database files</h1>
-     <ul>
-      <% map showOneFile contents %>
-     </ul>
-  </div>
-  where showOneFile file = <li><a href=file><% file %></a></li>
-
-
-userInfo :: (HSX.XMLGenerator.XMLGen m, Show t) =>  (User, t) -> XMLGenT m (HSX.XMLGenerator.XML m)
-userInfo (user,docs) = <tr><td><% userfullname user %></td><td><% unEmail $ useremail $ userinfo user %></td><td><% show docs %></td></tr>
-
