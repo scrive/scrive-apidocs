@@ -7,7 +7,8 @@
 
 module MinutesTime where
 
-import System.Time
+import System.Time hiding (toClockTime,toUTCTime)
+import qualified System.Time as System.Time (toClockTime,toUTCTime)
 import Happstack.Data
 import Data.Data
 import System.Locale
@@ -68,13 +69,12 @@ showDateAbbrev (MinutesTime current) (MinutesTime mins)
 instance Version MinutesTime
 $(deriveSerialize ''MinutesTime)
 
-getMinutesTime = do
-  TOD secs picos <- getClockTime
-  return (MinutesTime (fromIntegral $ (secs `div` 60)))
+getMinutesTime = (return . fromClockTime) =<< getClockTime
 
-  
-toUTCTime (MinutesTime time) = 
-    System.Time.toUTCTime (TOD (fromIntegral time * 60) 0)
+fromClockTime (TOD secs picos) =  MinutesTime (fromIntegral $ (secs `div` 60))
+toClockTime (MinutesTime time) = (TOD (fromIntegral time * 60) 0)   
+
+toUTCTime = System.Time.toUTCTime . toClockTime
 
 parseMinutesTimeMDY::String -> Maybe MinutesTime
 parseMinutesTimeMDY s = do
@@ -89,3 +89,12 @@ showDateMDY (MinutesTime mins) =  let clocktime = TOD (fromIntegral mins*60) 0
                 
 minutesAfter::Int -> MinutesTime -> MinutesTime 
 minutesAfter i (MinutesTime i') = MinutesTime $ i + i'
+
+startOfMonth::MinutesTime->MinutesTime
+startOfMonth t = let 
+                   CalendarTime {ctDay,ctHour,ctMin,ctSec,ctPicosec} = toUTCTime t
+                   diff = (noTimeDiff {tdDay= (-1)*ctDay+1,tdHour=(-1)*ctHour,tdMin=(-1)*ctMin,tdSec=(-1)*ctSec,tdPicosec=(-1)*ctPicosec})
+                 in fromClockTime $ addToClockTime diff  (toClockTime t)
+                   
+addMonths::Int ->MinutesTime -> MinutesTime
+addMonths i t = fromClockTime $ addToClockTime (noTimeDiff {tdMonth = i})  (toClockTime t)
