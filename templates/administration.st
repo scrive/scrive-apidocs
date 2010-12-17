@@ -24,6 +24,7 @@ adminsmain=
 
 ###
 adminsmanageall = 
+     $backtoadminmainlink()$ 
     <div><strong>SkrivaPa admin only page</strong></div> <BR/>
     <div>
      <h3>Database files</h3>
@@ -36,84 +37,73 @@ adminsmanageall =
      <h3>Users</h3>
       You can see <a href="/adminonly/alluserstable">big table of all users</a>.<br/>
       Here is a CSV version of this table: <a href="/adminonly/skrivapausers.csv">skrivapausers.csv</a>.<br/>
-      <form method="post" action="/adminonly/become">
-       Here you can see the world in the same way as a user sees it. You cannot do any 
-       actions on behalf of that user though: 
-       <table>
-        <tr>
-         <td>
-           <select name="user">
-               <option value="" title="-- select user --">
-                 -- select user --
-                 </option>
-                $users:options()$
-           </select>
-         </td>
-         <td>
+      <div>
+       $usersfilter(link="/adminonly/advuseradmin")$
+      </div>
+      <div>
+       $userspaging()$ 
+       <table><tbody>
+       $users:{user|
+          <tr>
+          <td> 
+           $user.usvFullname$ 
+          </td>
+          <td>
+          &lt;$user.usvEmail$&gt; 
+          </td>
+          <td>
+          <form method="post" action="/adminonly/become"  style="display:inline">
+          <input type="hidden" name="user" value="$user.usvId$">
           <input type="submit" value="Monitor user"/>
-         </td>
-        </tr>
-       </table>
-      </form>
-      <br/>
-      <form method="post" action="/adminonly/takeoverdocuments">
-       Here you can take over documents from other account. This action reassigns all documents of the user you 
-       select to your own accout. Watch out, this operation cannot be reversed! This should probably be moved
-       to all accounts when people whould like to merge accounts. As a password you need to user the other account
-       password or 'skrivapaadmin' when you are SkrivaPa administrator.
-       <br/> 
-          User: <select name="user">
-               <option value="" title="-- select user --">
-                 -- select user --
-                 </option>
-                $users:options()$
-           </select> <br/>
-          Password: <input type="password" name="password"/><br/>
-          <input type="submit" value="Take over documents from account"/>
-      </form>
-      <br/>
-      <form method="post" action="/adminonly/deleteaccount">
-       Here you can remove an account from the system. For safety reasons you can remove only accounts that
-       have no documents in them (use Take over documents above to free accounts). This action cannot be reversed
-       so beware!
-       <br/> 
-          User: <select name="user">
-                 <option value="" title="-- select user --">
-                  -- select user --
-                  </option>
-                 $users:options()$ 
-                </select> 
-                <br/>
+          </form> 
+          </td>
+          <td>
+          <form method="post" action="/adminonly/takeoverdocuments"  style="display:inline">
+          <input type="hidden" name="user" value="$user.usvId$">
+          <input type="submit" value="Take over"/>
+          </form> 
+          </td>
+          <td>
+          <form method="post" action="/adminonly/deleteaccount" >
+          <input type="hidden" name="user" value="$user.usvId$">
           <input type="submit" value="Annihilate account"/>
-      </form>
-    </div>
+          </td>
+          </form> 
+          </tr>
+       }$
+      </tbody></table>
+      </div>
+   </div>
 ###
-adminusers=
-
-<strong>USER ADMIN</strong> <BR/>
-
+usersfilter=<form action="$link$" method="GET">
 <div style="border:1px solid #DDDDDD;padding:5px;margin-top:5px">
-<form action="$adminuserlink$" method="GET">
 Find user:
 <input type="text" style="width:200px;margin-left:5px;margin-right:5px" name="search" value="$search$"/>
 <input type="submit" value="Search"/>
 </form>
-<BR/>
-
-<a href="$adminuserlink$">View list of users </a>
 <BR/><BR/>
-<form action="$adminuserlink$" method="GET">
+<a href="$link$">View list of users </a>
+<BR/><BR/>
+<form action="$link$" method="GET">
 Find by name: 
 $letters:{letter |<button type="submit" name="startletter" class="transparent" value="$letter$"><a>$letter$</a> </button>}$
 </form>
-<BR/>
 </div>
-<form action="$adminuserlink$" method="GET">
+###
+userspaging=
+<form action="$link$" method="GET">
 View page:
 $intervals:{interval |<button type="submit" name="page" class="transparent" value="$interval.oValue$"><a>$interval.oText$</a> </button>}$
 <input type="hidden" name="startletter" value="$startletter$"/>
 <input type="hidden" name="search" value="$search$"/>
-</from><BR/><BR/>
+</from>
+###
+adminusers=
+<strong>USER ADMIN</strong> <BR/>
+$backtoadminmainlink()$ 
+$usersfilter(link=adminuserlink)$
+$userspaging()$
+<BR/><BR/>
 <form>
 $users:{user| <a href="$adminuserlink$/$user.usvId$"> $user.usvFullname$ &lt;$user.usvEmail$&gt; </a>}:br()$
 </from>
@@ -291,6 +281,7 @@ adminuser=
  
 ###
 allUsersTable=
+     $backtoadminmainlink()$ 
     <div>
       <h1>Alla SkrivaPå anwender</h1>
       <table>
@@ -300,6 +291,7 @@ allUsersTable=
      </div>
 ###
 databaseContents=
+ $backtoadminmainlink()$ 
   <div>
      <h1>All database files</h1>
      <ul>
@@ -309,6 +301,7 @@ databaseContents=
 
 ####
 pageStats=
+     $backtoadminmainlink()$ 
      <div>
       <h1>Stats page</h1>
       <table>
@@ -334,3 +327,7 @@ pageStats=
       Disk status:<br/>
       <pre>$sysinfo$</pre>
      </div>
+####
+backtoadminmainlink=<a href="$adminlink$">Go back to main admin page</a> 
+<BR/><BR/>
+####

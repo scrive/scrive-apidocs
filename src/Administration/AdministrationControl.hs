@@ -12,7 +12,7 @@
 -----------------------------------------------------------------------------
 module Administration.AdministrationControl(
             showAdminMainPage
-          , showAdminManageAllPage
+          , showAdminUserAdvanced
           , showAdminUsers
           , showAllUsersTable
           , showStats
@@ -55,12 +55,13 @@ showAdminMainPage = onlySuperUser $
                       renderFromBody ctx TopEmpty kontrakcja $ cdata content 
 
 {- | Process view for advanced user administration -}                    
-showAdminManageAllPage :: Kontra Response
-showAdminManageAllPage = onlySuperUser $
+showAdminUserAdvanced :: Kontra Response
+showAdminUserAdvanced = onlySuperUser $
                           do
                            ctx@Context {ctxtemplates} <- lift get
                            users <- query $ GetAllUsers
-                           content <- liftIO $ adminManageAllPage ctxtemplates users 
+                           params <- getAdminUsersPageParams
+                           content <- liftIO $ adminUsersAdvancedPage ctxtemplates users params
                            renderFromBody ctx TopEmpty kontrakcja $ cdata content 
 
 {- | Process view for finding a user in basic administration. If provided with userId string as param 
@@ -214,7 +215,7 @@ handleTakeOverDocuments = onlySuperUser $ do
                           Just srcuser -> do     
                                          update $ FragileTakeOverDocuments (userid ctxuser) srcuserid
                                          addFlashMsgText $ "Took over all documents of '" ++ toString (userfullname srcuser) ++ "'. His account is now empty and can be deleted if you wish so. Show some mercy, though."
-                                         return LinkAdminOnly
+                                         return LoopBack
                           Nothing -> mzero                
       Nothing -> mzero                   
 
@@ -234,7 +235,7 @@ handleDeleteAccount = onlySuperUser $ do
                            addFlashMsgText ("User deleted. You will not see '" ++ toString (userfullname user) ++ "' here anymore")
                        else
                            addFlashMsgText ("I cannot delete user. '" ++ toString (userfullname user) ++ "' still has " ++ show (length documents) ++ " documents as author. Take over his documents, then try to delete the account again.")
-                      return LinkAdminOnly
+                      return LoopBack
                   Nothing -> mzero
       Nothing -> mzero          
 
