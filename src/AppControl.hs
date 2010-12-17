@@ -2,7 +2,10 @@
              NamedFieldPuns, ScopedTypeVariables, CPP, RecordWildCards,
              PackageImports
  #-}
-module AppControl where
+module AppControl(
+              appHandler
+            , AppConf(..)
+            , defaultAWSAction) where
 
 import "base" Control.Monad (msum, mzero, liftM)
 import "mtl" Control.Monad.Reader (ask)
@@ -125,7 +128,7 @@ handleRoutes = msum [
      , dir "createuser" $ hpost0 $ Administration.handleCreateUser
 
      , dir "adminonly" $ hget0 $ Administration.showAdminMainPage
-     , dir "adminonly" $ dir "advuseradmin" $ hget0 Administration.showAdminManageAllPage
+     , dir "adminonly" $ dir "advuseradmin" $ hget0 Administration.showAdminUserAdvanced
      , dir "adminonly" $ dir "useradmin" $ hget1m Administration.showAdminUsers
      , dir "adminonly" $ dir "useradmin" $ hpost1 Administration.handleUserChange
      , dir "adminonly" $ dir "db" $ hget0 $ Administration.indexDB
@@ -351,10 +354,6 @@ handleLogout :: Kontra Response
 handleLogout = do
   logUserToContext Nothing
   sendRedirect LinkMain
-
- 
-handleDownloadDatabase :: Kontra Response
-handleDownloadDatabase = do fail "nothing"
   
 serveHTMLFiles:: Kontra Response  
 serveHTMLFiles =  do

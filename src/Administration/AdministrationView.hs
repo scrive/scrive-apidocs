@@ -7,12 +7,12 @@
 -- Stability   :  develpment
 -- Portability :  portable
 --
--- Almoust all the stuff that is visible under /adminsonly path
+-- Almoust all the stuff that is visible under /adminsonly path 
 --
 -----------------------------------------------------------------------------
 module Administration.AdministrationView( 
             adminMainPage
-          , adminManageAllPage
+          , adminUsersAdvancedPage
           , adminUsersPage
           , adminUserPage
           , allUsersTable
@@ -41,12 +41,19 @@ adminMainPage::KontrakcjaTemplates ->  IO String
 adminMainPage templates =  renderTemplateComplex templates "adminsmain" id
 
 {-| Manage users page  - advanced, will be changed-}
-adminManageAllPage::KontrakcjaTemplates -> [User] -> IO String
-adminManageAllPage templates users =  renderTemplateComplex templates "adminsmanageall" 
-                                                        (setAttribute "users" $ map userOption users) 
+adminUsersAdvancedPage::KontrakcjaTemplates -> [User] -> AdminUsersPageParams -> IO String
+adminUsersAdvancedPage templates users params =  renderTemplateComplex templates "adminsmanageall" $
+                                                        (setAttribute "users" $ map userSmallView $ visibleUsers params users) .
+                                                        (setAttribute "letters" $ letters) .
+                                                        (setAttribute "adminuserlink" $ show $ LinkUserAdmin Nothing) .
+                                                        (setAttribute "intervals" $ intervals $ avaibleUsers params users) .
+                                                        (setAttribute "search" $ search params) . 
+                                                        (setAttribute "startletter" $ startletter params) .
+                                                        (setAttribute "adminlink" $ show $ LinkAdminOnly) 
 {-| Manage users page - can find user here -}
 adminUsersPage::KontrakcjaTemplates ->[User] -> AdminUsersPageParams -> IO String
 adminUsersPage templates users params = renderTemplateComplex templates "adminusers" $
+                                                        (setAttribute "adminlink" $ show $ LinkAdminOnly) . 
                                                         (setAttribute "users" $ map userSmallView $ visibleUsers params users) .
                                                         (setAttribute "letters" $ letters) .
                                                         (setAttribute "adminuserlink" $ show $ LinkUserAdmin Nothing) .
@@ -56,23 +63,26 @@ adminUsersPage templates users params = renderTemplateComplex templates "adminus
 {-| Manage user page - can change user info and settings here -}
 adminUserPage::KontrakcjaTemplates ->User -> PaymentAccountModel -> IO String
 adminUserPage templates user paymentModel  = renderTemplateComplex templates "adminuser" $   
-                                                        (setAttribute "adminlink" $ show $ LinkAdminOnly) . 
                                                         (setAttribute "adminuserslink" $ show $ LinkUserAdmin Nothing) .
                                                         (setAttribute "user" $ userAdminView user) .
-                                                        (setAttribute "paymentmodel" $ getModelView paymentModel) 
+                                                        (setAttribute "paymentmodel" $ getModelView paymentModel) .
+                                                        (setAttribute "adminlink" $ show $ LinkAdminOnly)
     
 
 allUsersTable::KontrakcjaTemplates -> [(User,Int)] -> IO String
 allUsersTable templates users =  renderTemplateComplex templates "allUsersTable" $
-                                                        (setAttribute "users" $ map userSmallViewWithDocsCount $ users) 
+                                                        (setAttribute "users" $ map userSmallViewWithDocsCount $ users) .
+                                                        (setAttribute "adminlink" $ show $ LinkAdminOnly) 
 databaseContent ::KontrakcjaTemplates -> [String] -> IO String
 databaseContent templates filenames = renderTemplateComplex templates "databaseContents" $
-                                                        (setAttribute "files" $ filenames) 
+                                                        (setAttribute "files" $ filenames) .
+                                                        (setAttribute "adminlink" $ show $ LinkAdminOnly)
 statsPage::KontrakcjaTemplates -> Int->Int -> String -> IO String
 statsPage templates userscount docscount sysinfo = renderTemplateComplex templates "pageStats" $
                                                          (setAttribute "userscount" $ userscount) .
                                                          (setAttribute "docscount" $ docscount) .
-                                                         (setAttribute "sysinfo" $ sysinfo) 
+                                                         (setAttribute "sysinfo" $ sysinfo) .
+                                                         (setAttribute "adminlink" $ show $ LinkAdminOnly) 
 {-| Paging list as options [1..21] -> [1-5,6-10,11-15,16-20,21-21]  -}                                                      
 intervals::[a] ->  [Option]                                                      
 intervals users =  intervals' $ (filter (\x-> 0 == x `rem` pageSize) [0..((length users) - 1)]) ++ [length users]
@@ -196,10 +206,6 @@ userSmallViewWithDocsCount (u,c) = UserSmallView { usvId = (show $ userid u)
                                                  , usvFullname = (toString $ userfullname  u)
                                                  , usvEmail = (toString $ unEmail $ useremail $ userinfo u)
                                                  , usvDocsCount = show c }
-
-{-| Conversion from 'User' to 'Option' for select box -} 
-userOption::User -> Option
-userOption = option (show . userid ) (toString . unEmail . useremail . userinfo)
 
 letters::[String]
 letters = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","X","Y","Z","Å","Ä","Ö"]

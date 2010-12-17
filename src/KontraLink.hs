@@ -53,6 +53,7 @@ data KontraLink
     | LinkStats
     | LinkPaymentsAdmin
     | LinkUserAdmin (Maybe UserID)
+    | LoopBack
     
 instance Show KontraLink where
     showsPrec _ LinkAbout = (++) "/about"
@@ -89,6 +90,7 @@ instance Show KontraLink where
     showsPrec _ (LinkPaymentsAdmin ) = (++) $ "/adminonly/advpayments"
     showsPrec _ (LinkUserAdmin Nothing) = (++) $ "/adminonly/useradmin"
     showsPrec _ (LinkUserAdmin (Just userId)) = (++) $ "/adminonly/useradmin/"++show userId
+    showsPrec _ LoopBack = (++) $ "/" -- this should be never used
 {-
 instance (EmbedAsAttr m String) => (EmbedAsAttr m KontraLink) where
     asAttr = asAttr . show
@@ -104,6 +106,12 @@ instance Monad m => IsAttrValue m KontraLink where
     toAttrValue = toAttrValue . show
 
 --sendRedirect :: KontraLink -> Kontra Response
+sendRedirect LoopBack = do
+                         ref <- getHeaderM "referer"
+                         let link = fromMaybe "/" $ fmap BS.toString ref
+                         response <- webHSP (seeOtherXML link)
+                         seeOther link response
+
 sendRedirect link = do  
   response <- webHSP (seeOtherXML $ show link)
   seeOther (show link) response
