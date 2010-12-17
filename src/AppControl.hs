@@ -193,7 +193,7 @@ handleHomepage = do
                       text <- liftIO $ renderTemplate ctxtemplates "uploadPageContent" []
                       V.renderFromBody ctx V.TopNew V.kontrakcja (cdata text)
     Nothing -> do
-      text <- liftIO $ renderTemplate ctxtemplates "firstPageContent" []
+      text <- liftIO $ renderTemplate ctxtemplates "firstPageContent" [("signuplink",show LinkSignup)]
       V.renderFromBody ctx V.TopNone V.kontrakcja (cdata text)
 
 -- uh uh, how to do that in correct way?
