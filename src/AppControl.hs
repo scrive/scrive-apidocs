@@ -35,7 +35,6 @@ import Session
 import System.Directory
 import System.IO
 import System.IO.Unsafe
-import System.Process
 import System.Random
 import User
 import UserControl
@@ -122,24 +121,24 @@ handleRoutes = msum [
 
 
      -- super user only
-     , dir "stats"      $ hget0  $ handleStats
+     , dir "stats"      $ hget0  $ Administration.showStats
      , dir "createuser" $ hpost0 $ Administration.handleCreateUser
 
      , dir "adminonly" $ hget0 $ Administration.showAdminMainPage
-     , dir "adminonly" $ dir "advuseradmin" $ Administration.showAdminManageAllPage
+     , dir "adminonly" $ dir "advuseradmin" $ hget0 Administration.showAdminManageAllPage
      , dir "adminonly" $ dir "useradmin" $ hget1m Administration.showAdminUsers
      , dir "adminonly" $ dir "useradmin" $ hpost1 Administration.handleUserChange
-     , dir "adminonly" $ dir "db" $ hget0 $ indexDB
-     , dir "adminonly" $ dir "db" $ fileServe [] "_local/kontrakcja_state"
+     , dir "adminonly" $ dir "db" $ hget0 $ Administration.indexDB
+     , dir "adminonly" $ dir "db" $ onlySuperUser $ fileServe [] "_local/kontrakcja_state"
 
      , dir "adminonly" $ dir "cleanup"           $ hpost0 $ Administration.handleDatabaseCleanup
      , dir "adminonly" $ dir "become"            $ hpost0 $ Administration.handleBecome
      , dir "adminonly" $ dir "takeoverdocuments" $ hpost0 $ Administration.handleTakeOverDocuments
      , dir "adminonly" $ dir "deleteaccount"     $ hpost0 $ Administration.handleDeleteAccount
      , dir "adminonly" $ dir "alluserstable"     $ hget0  $ Administration.showAllUsersTable
-     , dir "adminonly" $ dir "skrivapausers.csv" $ hget0  $ getUsersDetailsToCSV
+     , dir "adminonly" $ dir "skrivapausers.csv" $ hget0  $ Administration.getUsersDetailsToCSV
      , dir "adminonly" $ dir "payments"          $ hget0  $ Payments.handlePaymentsModelForViewView
-     , dir "adminonly" $ dir "advpayments"       $ hget0 $ Payments.handlePaymentsModelForEditView
+     , dir "adminonly" $ dir "advpayments"       $ hget0  $ Payments.handlePaymentsModelForEditView
      , dir "adminonly" $ dir "advpayments"       $ hpost0 $ Payments.handleAccountModelsChange
      , dir "dave" $ dir "document" $ hget1 $ daveDocument
      , dir "dave" $ dir "user"     $ hget1 $ daveUser
@@ -353,37 +352,10 @@ handleLogout = do
   logUserToContext Nothing
   sendRedirect LinkMain
 
-
-#ifndef WINDOWS
-read_df = do
-  (_,Just handle_out,_,handle_process) <-
-      createProcess (proc "df" []) { std_out = CreatePipe, env = Just [("LANG","C")] }
-  s <- BS.hGetContents handle_out
-  hClose handle_out
-  waitForProcess handle_process
-  return s
-#endif
-
-
-handleStats :: Kontra Response
-handleStats = onlySuperUserGet $ do
-    ndocuments <- query $ GetDocumentStats
-    allusers <- query $ GetAllUsers
-#ifndef WINDOWS
-    df <- liftIO read_df
-#else
-    let df = BS.empty
-#endif
-    webHSP (V.pageStats (length allusers) ndocuments df)  
  
 handleDownloadDatabase :: Kontra Response
 handleDownloadDatabase = do fail "nothing"
   
-indexDB :: Kontra Response
-indexDB = onlySuperUserGet $ do
-    contents <- liftIO $ getDirectoryContents "_local/kontrakcja_state"
-    webHSP (V.databaseContents (sort contents))
-
 serveHTMLFiles:: Kontra Response  
 serveHTMLFiles =  do
         ctx <- get
@@ -398,12 +370,6 @@ serveHTMLFiles =  do
                     _ -> mzero
                
          else mzero
-
-getUsersDetailsToCSV :: Kontra Response
-getUsersDetailsToCSV = do
-  x <- query $ ExportUsersDetailsToCSV
-  let response = toResponseBS (B.pack "text/csv") $ L.fromChunks [B.unlines x]
-  return response
       
 onlySuperUserGet :: Kontra Response -> Kontra Response  
 onlySuperUserGet action = do

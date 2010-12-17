@@ -10,7 +10,15 @@
 -- Almoust all the stuff that is visible under /adminsonly path
 --
 -----------------------------------------------------------------------------
-module Administration.AdministrationView(adminMainPage,adminManageAllPage,adminUsersPage,AdminUsersPageParams(..),adminUserPage,allUsersTable) where
+module Administration.AdministrationView( 
+            adminMainPage
+          , adminManageAllPage
+          , adminUsersPage
+          , adminUserPage
+          , allUsersTable
+          , databaseContent
+          , statsPage
+          , AdminUsersPageParams(..)) where
 
 import KontraLink
 import Templates.Templates 
@@ -57,7 +65,14 @@ adminUserPage templates user paymentModel  = renderTemplateComplex templates "ad
 allUsersTable::KontrakcjaTemplates -> [(User,Int)] -> IO String
 allUsersTable templates users =  renderTemplateComplex templates "allUsersTable" $
                                                         (setAttribute "users" $ map userSmallViewWithDocsCount $ users) 
-
+databaseContent ::KontrakcjaTemplates -> [String] -> IO String
+databaseContent templates filenames = renderTemplateComplex templates "databaseContents" $
+                                                        (setAttribute "files" $ filenames) 
+statsPage::KontrakcjaTemplates -> Int->Int -> String -> IO String
+statsPage templates userscount docscount sysinfo = renderTemplateComplex templates "pageStats" $
+                                                         (setAttribute "userscount" $ userscount) .
+                                                         (setAttribute "docscount" $ docscount) .
+                                                         (setAttribute "sysinfo" $ sysinfo) 
 {-| Paging list as options [1..21] -> [1-5,6-10,11-15,16-20,21-21]  -}                                                      
 intervals::[a] ->  [Option]                                                      
 intervals users =  intervals' $ (filter (\x-> 0 == x `rem` pageSize) [0..((length users) - 1)]) ++ [length users]

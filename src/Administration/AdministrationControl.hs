@@ -15,12 +15,16 @@ module Administration.AdministrationControl(
           , showAdminManageAllPage
           , showAdminUsers
           , showAllUsersTable
+          , showStats
+          , indexDB
+          , getUsersDetailsToCSV
           , handleUserChange
           , handleDatabaseCleanup
           , handleBecome
           , handleTakeOverDocuments
           , handleDeleteAccount
-          , handleCreateUser) where
+          , handleCreateUser
+          ) where
 import "mtl" Control.Monad.State
 import AppView
 import Happstack.Server hiding (simpleHTTP)
@@ -31,11 +35,15 @@ import HSP (cdata)
 import Administration.AdministrationView
 import Payments.PaymentsState
 import DocState
-import KontraLink
 import Data.ByteString.UTF8 (fromString,toString)
+import Data.ByteString (hGetContents,ByteString)
+import qualified Data.ByteString.Lazy  as L
+import KontraLink
 import Payments.PaymentsControl(readMoneyField,getPaymentChangeChange)
 import MinutesTime
 import System.Directory
+import System.Process
+import System.IO (hClose)
 import Data.List (isPrefixOf,sort)
 import UserControl
 {- | Main page. Redirects users to other admin panels -} 
@@ -81,8 +89,60 @@ showAdminUsers (Just a)= onlySuperUser $
                                      paymentmodel <- update $ GetPaymentModel $ paymentaccounttype $ userpaymentpolicy user
                                      content <- liftIO $ adminUserPage ctxtemplates user paymentmodel
                                      renderFromBody ctx TopEmpty kontrakcja $ cdata content 
+{- Shows table of all users-}
+showAllUsersTable :: Kontra Response
+showAllUsersTable = onlySuperUser $ do
+    ctx@Context {ctxtemplates} <- lift get
+    users <- query $ GetAllUsers
+    let queryNumberOfDocuments user = do
+          documents <- query $ GetDocumentsByAuthor (userid user)
+          return (user,length documents)
+    users2 <- mapM queryNumberOfDocuments users
+    content <- liftIO $ allUsersTable ctxtemplates users2
+    renderFromBody ctx TopEmpty kontrakcja $ cdata  content
 
 
+
+#ifndef WINDOWS
+read_df :: IO ByteString
+read_df = do
+  (_,Just handle_out,_,handle_process) <-
+      createProcess (proc "df" []) { std_out = CreatePipe, env = Just [("LANG","C")] }
+  s <- hGetContents handle_out
+  hClose handle_out
+  _ <- waitForProcess handle_process
+  return s
+#endif
+
+
+showStats :: Kontra Response
+showStats = onlySuperUser $ do
+    ndocuments <- query $ GetDocumentStats
+    allusers <- query $ GetAllUsers
+#ifndef WINDOWS
+    df <- liftIO read_df
+#else
+    let df = BS.empty
+#endif
+    ctx@Context {ctxtemplates} <- lift get
+    content <- liftIO $ statsPage ctxtemplates (length allusers) ndocuments (toString df)
+    renderFromBody ctx TopEmpty kontrakcja $ cdata content
+
+indexDB :: Kontra Response
+indexDB = onlySuperUser $ do
+    ctx@Context {ctxtemplates} <- lift get
+    files <- liftIO $ getDirectoryContents "_local/kontrakcja_state"
+    content <- liftIO $ databaseContent ctxtemplates (sort files) 
+    renderFromBody ctx TopEmpty kontrakcja $ cdata  content
+    
+getUsersDetailsToCSV :: Kontra Response
+getUsersDetailsToCSV = onlySuperUser $ do
+      x <- query $ ExportUsersDetailsToCSV
+      let response = toResponseBS (fromString "text/csv")   (L.fromChunks [x])
+      return response    
+        
+    
+    
 {- | Handling user details change. It reads user info change, user settings change , paymentpolicy and payment account change -}     
 handleUserChange :: String -> Kontra KontraLink
 handleUserChange a = onlySuperUser $
@@ -107,6 +167,7 @@ handleUserChange a = onlySuperUser $
                                            _ <- update $ SetUserPaymentAccount userId $ paymentAccountChange $ userpaymentaccount user
                                            _ <- update $ SetUserPaymentPolicyChange userId $ paymentPaymentPolicy $ userpaymentpolicy user
                                            return $ LinkUserAdmin $ Just userId
+
 
 {-| Cleaning the database -}
 handleDatabaseCleanup :: Kontra KontraLink
@@ -185,18 +246,7 @@ handleCreateUser = onlySuperUser $ do
     _ <- liftIO $ createNewUserByAdmin ctx fullname email 
     -- FIXME: where to redirect?
     return LinkStats
-    
-showAllUsersTable :: Kontra Response
-showAllUsersTable = onlySuperUser $ do
-    ctx@Context {ctxtemplates} <- lift get
-    users <- query $ GetAllUsers
-    let queryNumberOfDocuments user = do
-          documents <- query $ GetDocumentsByAuthor (userid user)
-          return (user,length documents)
-    users2 <- mapM queryNumberOfDocuments users
-    content <- liftIO $ allUsersTable ctxtemplates users2
-    renderFromBody ctx TopEmpty kontrakcja $ cdata  content
-    
+          
 {- | Reads params and returns function for conversion of user info. With no param leaves fields unchanged -}  
 getUserInfoChange::Kontra (UserInfo -> UserInfo)
 getUserInfoChange = do      

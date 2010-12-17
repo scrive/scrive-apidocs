@@ -299,3 +299,38 @@ allUsersTable=
       </table>
      </div>
 ###
+databaseContents=
+  <div>
+     <h1>All database files</h1>
+     <ul>
+      $files:{file| <li><a href="$file$">$file$</a></li>}$
+     </ul>
+  </div>
+
+####
+pageStats=
+     <div>
+      <h1>Stats page</h1>
+      <table>
+       <tr><td>Users</td><td>$userscount$</td></tr>
+       <tr><td>Documents</td><td>$docscount$</td></tr>
+      </table>
+      <br/>
+      <form method="post" action="/createuser">
+       Create user:<br/> 
+       <table>
+        <tr>
+         <td>Full name:</td>
+         <td><input type="text" name="fullname"/></td>
+        </tr>
+        <tr>
+         <td>Email address:</td>
+         <td><input type="email" name="email"/></td>
+        </tr>
+       </table><br/>
+       <input type="submit" value="Create user"/>
+      </form>
+      <br/>
+      Disk status:<br/>
+      <pre>$sysinfo$</pre>
+     </div>
