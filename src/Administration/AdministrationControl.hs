@@ -36,7 +36,7 @@ import Administration.AdministrationView
 import Payments.PaymentsState
 import DocState
 import Data.ByteString.UTF8 (fromString,toString)
-import Data.ByteString (hGetContents,ByteString)
+import Data.ByteString (hGetContents,ByteString,empty)
 import qualified Data.ByteString.Lazy  as L
 import KontraLink
 import Payments.PaymentsControl(readMoneyField,getPaymentChangeChange)
@@ -123,7 +123,7 @@ showStats = onlySuperUser $ do
 #ifndef WINDOWS
     df <- liftIO read_df
 #else
-    let df = BS.empty
+    let df = empty
 #endif
     ctx@Context {ctxtemplates} <- lift get
     content <- liftIO $ statsPage ctxtemplates (length allusers) ndocuments (toString df)
