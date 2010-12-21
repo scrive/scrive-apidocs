@@ -54,7 +54,7 @@ Executable kontrakcja-server
  Build-Depends: syb-with-class, binary, old-locale, old-time
  Build-Depends: network, HTTP, data-object-json, bytestring, data-object
  Build-Depends: Crypto == 4.2.*
- Build-Depends: HaXml == 1.13.*
+ Build-Depends: HaXml == 1.20.*
  Build-Depends: parallel == 2.2.*
  Build-Depends: HStringTemplate == 0.6.5
  Build-Depends: template-haskell
@@ -89,7 +89,7 @@ Executable kontrakcja-test
  Build-Depends: base >= 4 && < 5, syb, dataenc
  Build-Depends: syb-with-class, binary, old-locale, old-time
  Build-Depends: network, HTTP, data-object-json, bytestring, data-object
- Build-Depends: HaXml == 1.13.*
+ Build-Depends: HaXml == 1.20.*
  Build-Depends: parallel == 2.2.*
  Build-Depends: template-haskell
  Main-is: TestMain.hs
