@@ -42,6 +42,8 @@ import qualified Data.Set as Set
 import qualified Seal as Seal
 import qualified Network.HTTP as HTTP
 import qualified Amazon as AWS
+import qualified TrustWeaver as TW
+
 {-
   Document state transitions are described in DocState.
 
@@ -817,9 +819,14 @@ sealDocument ctx@Context{ctxs3action}
   when (code /= ExitSuccess) $
        putStrLn "Cannot execute dist/build/pdfseal/pdfseal"
 
-  newfilepdf <- BS.readFile tmpout
+  newfilepdf1 <- BS.readFile tmpout
   removeFile tmpout
-  mdocument <- update $ AttachSealedFile docid filename newfilepdf
+
+  newfilepdf <- TW.signDocument ctx newfilepdf1
+  
+  when (not $ isJust newfilepdf) $ error "TrustWeaver signing is not working properly"
+
+  mdocument <- update $ AttachSealedFile docid filename (fromJust newfilepdf)
   case mdocument of
     Right document -> do
         forkIO $ mapM_ (AWS.uploadFile ctxs3action) (documentsealedfiles document)
