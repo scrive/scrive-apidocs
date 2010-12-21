@@ -823,7 +823,7 @@ sealDocument ctx@Context{ctxs3action}
   removeFile tmpout
 
   newfilepdf <- 
-      if null ctxtwsigncert 
+      if ctxtwsigncert == ""
          then newfilepdf1
          else TW.signDocument ctx newfilepdf1
   when (not $ isJust newfilepdf) $ error "TrustWeaver signing is not working properly"
