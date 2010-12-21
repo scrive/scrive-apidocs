@@ -17,7 +17,6 @@ import qualified Data.ByteString.UTF8 as BS
 import Data.Maybe
 import Data.Either
 import HSX.XMLGenerator
-import HSP
 import qualified Control.Exception as C
 import System.Log.Logger (errorM)
 import qualified Language.Haskell.TH as TH

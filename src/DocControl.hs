@@ -1,10 +1,10 @@
 {-# LANGUAGE CPP, ScopedTypeVariables #-}
 
 module DocControl where
-import "base" Control.Monad
-import "mtl" Control.Monad.Reader
-import "mtl" Control.Monad.State
-import "mtl" Control.Monad.Trans
+import Control.Monad
+import Control.Monad.Reader
+import Control.Monad.State
+import Control.Monad.Trans
 import AppView
 import Control.Concurrent
 import Data.Bits
