@@ -63,7 +63,7 @@ signDocument ctx pdfdata = do
 
   print args
 
-  (code,stdout,stderr) <- readProcessWithExitCode' "curl.exe" args input
+  (code,stdout,stderr) <- readProcessWithExitCode' "./curl" args input
 
   when (code /= ExitSuccess) $ do
        putStrLn "Cannot execute ./curl for TrustWeaver"
