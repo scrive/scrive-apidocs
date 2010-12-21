@@ -68,6 +68,8 @@ data AppConf
               , awsAccessKey    :: String
               , awsSecretKey    :: String
               , production      :: Bool
+              , twSignCert      :: FilePath
+              , twSignCertPwd   :: String
               }              
 
 
@@ -255,6 +257,8 @@ appHandler appConf = do
             , ctxs3action = defaultAWSAction appConf
             , ctxproduction = production appConf
             , ctxtemplates = templates
+            , ctxtwsigncert = twSignCert appConf
+            , ctxtwsigncertpwd = twSignCertPwd appConf
             }
   (res,ctx)<- toIO ctx $  
      do

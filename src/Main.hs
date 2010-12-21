@@ -153,6 +153,8 @@ defaultConf progName
               , awsSecretKey = ""
               , awsAccessKey = ""
               , production = False
+              , twSignCert = ""
+              , twSignCertPwd = ""
               }
 
 opts :: [OptDescr (AppConf -> AppConf)]
@@ -180,6 +182,12 @@ opts = [ Option [] ["http-port"]
        , Option [] ["awsaccesskey"]      
          (ReqArg (\h c -> c {awsAccessKey = h}) "BASE64") 
          "The AWS access key" 
+       , Option [] ["twsigncert"]      
+         (ReqArg (\h c -> c {twSignCert = h}) "PATH") 
+         "The TrustWeaver *.pem file with public and private key (for signing)" 
+       , Option [] ["twsigncertpwd"]      
+         (ReqArg (\h c -> c {twSignCertPwd = h}) "STRING") 
+         "The TrustWeaver password for private key (for signing)" 
        , Option [] ["production"]    
          (NoArg (\ c -> c { production = True })) 
          "Turn on production environment"
