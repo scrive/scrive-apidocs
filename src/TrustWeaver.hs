@@ -40,15 +40,16 @@ instance (XmlContent a) => XmlContent (SOAP a) where
                          [CElem (Elem "Body" [] 
                          (toContents a)) ()]) ()]
     parseContents = do
-        { e@(Elem _ [] _) <- element ["Envelope"]
+        { e <- elementWith skipNamespacePrefix ["Envelope"]
         ; interior e $ do
-            { b@(Elem _ [] _) <- element ["Body"]
+            { b <- elementWith skipNamespacePrefix ["Body"]
             ; interior b $ return SOAP `apply` parseContents -- (text `onFail` return "")
             }
         } `adjustErr` ("in <Envelope/Body>, "++)
 
 
 data SignRequest = SignRequest BS.ByteString
+            deriving (Eq,Ord,Show,Read)
 
 instance HTypeable (SignRequest) where
     toHType x = Defined "SignRequest" [] []
@@ -65,6 +66,30 @@ instance XmlContent (SignRequest) where
                          ]) ()]
     parseContents = error "Please do not parse SignRequest"
 
+data SignResult = SignResult BS.ByteString
+            deriving (Eq,Ord,Show,Read)
+
+instance HTypeable (SignResult) where
+    toHType x = Defined "SignResult" [] []
+instance XmlContent (SignResult) where
+    toContents (SignResult pdfdata) = error "Do not do this"
+    parseContents =  do
+        { e <- elementWith skipNamespacePrefix ["SignResult"]
+        ; base64 <- interior e $ do
+            { result <- elementWith skipNamespacePrefix ["Result"]
+            ; signedDocument <- elementWith skipNamespacePrefix ["SignedDocument"]
+            ; details <- elementWith skipNamespacePrefix ["Details"]
+            ; interior signedDocument $ (text `onFail` return "")
+            }
+        ; case decode base64 of
+            Nothing -> fail "Cannot parse base64 encoded PDF signed document"
+            Just value -> return (SignResult (BS.pack value))
+        } `adjustErr` ("in <SignResponse>, "++)
+
+skipNamespacePrefix fqname tomatch = 
+    case break (==':') fqname of 
+      (name,"") -> name == tomatch
+      (_,':':name) -> name == tomatch
 
 signSoapCallText pdfdata = showXml False (SOAP (SignRequest pdfdata))
 
@@ -90,14 +115,9 @@ signDocument ctx pdfdata = do
   when (code /= ExitSuccess) $ do
        putStrLn "Cannot execute ./curl for TrustWeaver"
        BSL.hPutStr System.IO.stdout stderr
-  
-  let stdout1 = BS.concat (BSL.toChunks stdout)
-  let begtag = BS.fromString "<SignedDocument>"
-  let endtag = BS.fromString "</SignedDocument>"
-  let (b,e) = BS.breakSubstring begtag stdout1
-      d1 = BS.drop (BS.length begtag) e
-      (d,_) = BS.breakSubstring endtag d1
-  
-  if BS.null d
-     then return Nothing
-     else return $ fmap BS.pack $ decode (BS.toString d)
+
+  case readXml (BSL.toString stdout) of
+    Right (SOAP (SignResult value)) -> return (Just value)
+    Left errmsg -> do
+      -- FIXME: should log it somewhere
+      return Nothing
