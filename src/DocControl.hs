@@ -797,7 +797,7 @@ sealDocument :: Context
              -> User
              -> Document
              -> IO Document
-sealDocument ctx@Context{ctxs3action}
+sealDocument ctx@Context{ctxs3action,ctxtwsigncert}
              normalizemap 
              hostpart
              signtime1
