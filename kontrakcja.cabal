@@ -60,7 +60,7 @@ Executable kontrakcja-server
  Build-Depends: template-haskell
  -- Build-Depends: heist
  -- Build-Depends: monads-fd
- Build-Depends: mtl
+ Build-Depends: mtl == 1.*
  Build-Depends: hS3
  Build-Depends: hxt<9
  Main-Is: Main.hs
