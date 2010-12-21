@@ -26,23 +26,47 @@ import System.IO
 import System.Process
 import Control.Monad
 import User (Context(..))
- 
+import Text.XML.HaXml.XmlContent.Parser 
+import Text.XML.HaXml.XmlContent
 
-signSoapCallText pdfdata = 
- let base64data = encode (BS.unpack pdfdata) in
- "<?xml version=\"1.0\"?>" ++
- "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\">" ++
- "  <s:Body xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">" ++
- "  <SignRequest xmlns=\"http://www.trustweaver.com/tsswitch\">" ++
- "  <InputType>PDF</InputType>" ++
- "  <JobType>CADESA</JobType>" ++
- "  <OutputType>PDF</OutputType>" ++
- "  <Document>" ++ base64data ++ "</Document>" ++
- "  <SenderTag>SE</SenderTag>" ++
- "  <ReceiverTag>SE</ReceiverTag>" ++
- "  </SignRequest>" ++
- "  </s:Body>" ++
- "</s:Envelope>"
+data SOAP a = SOAP a
+            deriving (Eq,Ord,Show,Read)
+
+instance HTypeable (SOAP a) where
+    toHType x = Defined "soap" [] []
+instance (XmlContent a) => XmlContent (SOAP a) where
+    toContents (SOAP a) =
+        [CElem (Elem "Envelope" [mkAttr "xmlns" "http://schemas.xmlsoap.org/soap/envelope/"] 
+                         [CElem (Elem "Body" [] 
+                         (toContents a)) ()]) ()]
+    parseContents = do
+        { e@(Elem _ [] _) <- element ["Envelope"]
+        ; interior e $ do
+            { b@(Elem _ [] _) <- element ["Body"]
+            ; interior b $ return SOAP `apply` parseContents -- (text `onFail` return "")
+            }
+        } `adjustErr` ("in <Envelope/Body>, "++)
+
+
+data SignRequest = SignRequest BS.ByteString
+
+instance HTypeable (SignRequest) where
+    toHType x = Defined "SignRequest" [] []
+instance XmlContent (SignRequest) where
+    toContents (SignRequest pdfdata) =
+        let base64data = encode (BS.unpack pdfdata) in
+        [CElem (Elem "SignRequest" [mkAttr "xmlns" "http://www.trustweaver.com/tsswitch"] 
+                         [ mkElemC "InputType" (toText "PDF")
+                         , mkElemC "JobType" (toText "CADESA")
+                         , mkElemC "OutputType" (toText "PDF")
+                         , mkElemC "SenderTag" (toText "SE")
+                         , mkElemC "ReceiverTag" (toText "SE")
+                         , mkElemC "Document" (toText base64data)
+                         ]) ()]
+    parseContents = error "Please do not parse SignRequest"
+
+
+signSoapCallText pdfdata = showXml False (SOAP (SignRequest pdfdata))
 
 
 signDocument :: Context -> BS.ByteString -> IO (Maybe BS.ByteString)
@@ -60,8 +84,6 @@ signDocument ctx pdfdata = do
                "-H", "SOAPAction: \"http://www.trustweaver.com/tsswitch#Sign\"",
                "https://tseiod-dev.trustweaver.com/ts/svs.asmx"
              ]
-
-  print args
 
   (code,stdout,stderr) <- readProcessWithExitCode' "./curl" args input
 
