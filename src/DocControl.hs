@@ -822,8 +822,10 @@ sealDocument ctx@Context{ctxs3action}
   newfilepdf1 <- BS.readFile tmpout
   removeFile tmpout
 
-  newfilepdf <- TW.signDocument ctx newfilepdf1
-  
+  newfilepdf <- 
+      if null ctxtwsigncert 
+         then newfilepdf1
+         else TW.signDocument ctx newfilepdf1
   when (not $ isJust newfilepdf) $ error "TrustWeaver signing is not working properly"
 
   mdocument <- update $ AttachSealedFile docid filename (fromJust newfilepdf)
