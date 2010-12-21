@@ -121,6 +121,8 @@ data Context = Context
     , ctxs3action            :: AWS.S3Action
     , ctxproduction          :: Bool
     , ctxtemplates           :: KontrakcjaTemplates 
+    , ctxtwsigncert          :: FilePath
+    , ctxtwsigncertpwd       :: String
     }
 
 type Kontra a = ServerPartT (StateT Context IO) a
