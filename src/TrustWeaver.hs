@@ -86,13 +86,122 @@ instance XmlContent (SignResult) where
             Just value -> return (SignResult (BS.pack value))
         } `adjustErr` ("in <SignResponse>, "++)
 
+data RegisterSectionRequest = RegisterSectionRequest String
+
+instance HTypeable (RegisterSectionRequest) where
+    toHType x = Defined "RegisterSectionRequest" [] []
+instance XmlContent (RegisterSectionRequest) where
+    toContents (RegisterSectionRequest name) =
+        [CElem (Elem "RegisterSection" [mkAttr "xmlns" "http://www.trustweaver.com/trustarchive/admin/v1"] 
+                         [mkElemC "Request" 
+                                      [ mkElemC "Name" (toText name)
+                                      , mkElemC "StorageSectionInfo" 
+                                                    [ mkElemC "CountryOfEstablishment" (toText "SE")
+                                                    -- , mkElemC "FriendlyName" (toText "???")
+                                                    ]
+                                      , mkElemC "RegistrationMode" (toText "CreateNew")
+                                      ]]) ()]
+    parseContents = error "Do not parse RegisterSectionRequest"
+
+
+data RegisterSectionResponse = RegisterSectionResponse
+
+instance HTypeable (RegisterSectionResponse) where
+    toHType x = Defined "RegisterSectionResponse" [] []
+instance XmlContent (RegisterSectionResponse) where
+    toContents (RegisterSectionResponse) = error "Do not serialize RegisterSectionResponse"
+    parseContents =  do
+      --  this element just has to be there, contains nothing
+        { e <- elementWith skipNamespacePrefix ["RegisterSectionResponse"]
+        ; return RegisterSectionResponse
+        } `adjustErr` ("in <RegisterSectionRequest>, "++)
+
+
+data EnableSectionRequest = EnableSectionRequest String
+
+instance HTypeable (EnableSectionRequest) where
+    toHType x = Defined "RegisterSectionRequest" [] []
+instance XmlContent (EnableSectionRequest) where
+    toContents (EnableSectionRequest name) =
+        [CElem (Elem "EnableSection" [mkAttr "xmlns" "http://www.trustweaver.com/trustarchive/admin/v1"] 
+                         [mkElemC "Request" 
+                                      [ mkElemC "Name" (toText name)
+                                      ]]) ()]
+    parseContents = error "Do not parse RegisterSectionRequest"
+
+data EnableSectionResponse = EnableSectionResponse String String String
+
+instance HTypeable (EnableSectionResponse) where
+    toHType x = Defined "EnableSectionResponse" [] []
+instance XmlContent (EnableSectionResponse) where
+    toContents _ = error "Do not serialize EnableSectionResponse"
+    parseContents =  do
+        { e <- elementWith skipNamespacePrefix ["EnableSectionResponse"]
+        ; interior e $ do
+            { r  <- elementWith skipNamespacePrefix ["Result"]
+            ; interior r $ do
+                { superAdminUsername <- inElementWith skipNamespacePrefix "SuperAdminUseername" text
+                ; superAdminPwd <- inElementWith skipNamespacePrefix "SuperAdminPwd" text
+                ; sectionPath <- inElementWith skipNamespacePrefix "SectionPath" text
+                ; return (EnableSectionResponse superAdminUsername superAdminPwd sectionPath)
+                }
+            }
+        } `adjustErr` ("in <EnableSectionResponse>, "++)
+
+data StoreInvoiceRequest = StoreInvoiceRequest String String String BS.ByteString 
+
+instance HTypeable (StoreInvoiceRequest) where
+    toHType x = Defined "StoreInvoiceRequest" [] []
+instance XmlContent (StoreInvoiceRequest) where
+    toContents (StoreInvoiceRequest documentid documentdate ownertwname pdfdata) =
+        let base64data = encode (BS.unpack pdfdata) in
+        [CElem (Elem "StoreInvoice" [mkAttr "xmlns" "http://www.trustweaver.com/trustarchive/admin/v1"] 
+                         [mkElemC "Request" 
+                                      [ mkElemC "Document" 
+                                                    [ mkElemC "Data" (toText base64data)
+                                                    , mkElemC "DocumentFormat" (toText "PDF")
+                                                    , mkElemC "ImplicitSignatureInfo"
+                                                              [ mkElemC "SignatureFormat" (toText "PDF")
+                                                              , mkElemC "AuditCategory" (toText "CADESA")
+                                                              ]
+                                                    ]
+                                      , mkElemC "InvoiceInfo" 
+                                                    [ mkElemC "InvoiceNo" (toText documentid)
+                                                    , mkElemC "InvoiceDate" (toText documentdate)
+                                                    -- , mkElemC "PurchaseOrderNo" (toText 1)
+                                                    ]
+                                      , mkElemC "SupplierInfo"
+                                                [ mkElemC "Name" (toText ownertwname)
+                                                , mkElemC "StoreFor" (toText "true")
+                                                , mkElemC "CountryCode" (toText "SE")
+                                                ]
+                                      ]]) ()]
+    parseContents = error "Do not parse RegisterSectionRequest"
+
+data StoreInvoiceResponse = StoreInvoiceResponse String
+
+instance HTypeable (StoreInvoiceResponse) where
+    toHType x = Defined "StoreInvoiceResponse" [] []
+instance XmlContent (StoreInvoiceResponse) where
+    toContents (StoreInvoiceResponse name) = error "Do not serialize EnableSectionResponse"
+    parseContents =  do
+        { e <- elementWith skipNamespacePrefix ["StoreInvoiceResponse"]
+        ; interior e $ do
+            { r  <- elementWith skipNamespacePrefix ["Result"]
+            ; interior r $ do
+                { supplierReference <- inElementWith skipNamespacePrefix "SupplierReference" text
+                ; return (StoreInvoiceResponse supplierReference)
+                }
+            }
+        } `adjustErr` ("in <StoreInvoiceResponse>, "++)
+
+
 skipNamespacePrefix fqname tomatch = 
     case break (==':') fqname of 
       (name,"") -> name == tomatch
       (_,':':name) -> name == tomatch
 
 signSoapCallText pdfdata = showXml False (SOAP (SignRequest pdfdata))
-
 
 signDocument :: Context -> BS.ByteString -> IO (Maybe BS.ByteString)
 signDocument ctx pdfdata = do
