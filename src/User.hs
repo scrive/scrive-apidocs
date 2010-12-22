@@ -123,6 +123,8 @@ data Context = Context
     , ctxtemplates           :: KontrakcjaTemplates 
     , ctxtwsigncert          :: FilePath
     , ctxtwsigncertpwd       :: String
+    , ctxtwadmincert         :: FilePath
+    , ctxtwadmincertpwd      :: String
     }
 
 type Kontra a = ServerPartT (StateT Context IO) a
@@ -173,5 +175,5 @@ addFlashMsgHtmlFromTemplate msg = do
                        put $ ctx {ctxflashmessages = (FlashMessage $ BS.fromString msg) :  flashmessages} 
 
 logUserToContext user =  do
-                          ctx<- get
-                          put$ ctx { ctxmaybeuser =  user}    
+  ctx <- get
+  put $ ctx { ctxmaybeuser =  user}    

@@ -42,8 +42,9 @@ instance (XmlContent a) => XmlContent (SOAP a) where
     parseContents = do
         { e <- elementWith skipNamespacePrefix ["Envelope"]
         ; interior e $ do
-            { b <- elementWith skipNamespacePrefix ["Body"]
-            ; interior b $ return SOAP `apply` parseContents -- (text `onFail` return "")
+            { optional $ elementWith skipNamespacePrefix ["Header"]
+            ; b <- elementWith skipNamespacePrefix ["Body"]
+            ; interior b $ return SOAP `apply` parseContents
             }
         } `adjustErr` ("in <Envelope/Body>, "++)
 
@@ -140,7 +141,7 @@ instance XmlContent (EnableSectionResponse) where
         ; interior e $ do
             { r  <- elementWith skipNamespacePrefix ["Result"]
             ; interior r $ do
-                { superAdminUsername <- inElementWith skipNamespacePrefix "SuperAdminUseername" text
+                { superAdminUsername <- inElementWith skipNamespacePrefix "SuperAdminUsername" text
                 ; superAdminPwd <- inElementWith skipNamespacePrefix "SuperAdminPwd" text
                 ; sectionPath <- inElementWith skipNamespacePrefix "SectionPath" text
                 ; return (EnableSectionResponse superAdminUsername superAdminPwd sectionPath)
@@ -201,32 +202,64 @@ skipNamespacePrefix fqname tomatch =
       (name,"") -> name == tomatch
       (_,':':name) -> name == tomatch
 
-signSoapCallText pdfdata = showXml False (SOAP (SignRequest pdfdata))
 
 signDocument :: Context -> BS.ByteString -> IO (Maybe BS.ByteString)
 signDocument ctx pdfdata = do
   let Context{ctxtwsigncert,ctxtwsigncertpwd} = ctx
 
-  let input = BSL.fromString (signSoapCallText pdfdata)
+  result <- makeSoapCall "https://tseiod-dev.trustweaver.com/ts/svs.asmx"
+            "http://www.trustweaver.com/tsswitch#Sign"
+            ctxtwsigncert ctxtwsigncertpwd
+           (SignRequest pdfdata)
+  case result of
+    Just (SignResult pdfdata') -> return (Just pdfdata')
+    Nothing -> return Nothing
+
+registerAndEnableSection :: Context -> String -> IO (String,String,String)
+registerAndEnableSection ctx name = do
+  let Context{ctxtwadmincert,ctxtwadmincertpwd} = ctx
+
+  Just RegisterSectionResponse <- makeSoapCall "https://twa-test-db.trustweaver.com/ta_hubservices/Admin/AdminService.svc"
+            "http://www.trustweaver.com/trustarchive/admin/v1/AdminServicePort/RegisterSection"
+            ctxtwadmincert ctxtwadmincertpwd
+           (RegisterSectionRequest name)
+
+  result2 <- makeSoapCall "https://twa-test-db.trustweaver.com/ta_hubservices/Admin/AdminService.svc"
+            "http://www.trustweaver.com/trustarchive/admin/v1/AdminServicePort/EnableSection"
+            ctxtwadmincert ctxtwadmincertpwd
+           (EnableSectionRequest name)
+
+  case result2 of
+    Just (EnableSectionResponse superAdminUsername superAdminPwd sectionPath) -> 
+        return (superAdminUsername, superAdminPwd, sectionPath)
+    Nothing -> error "Section not enabled, sorry"
+  
+
+makeSoapCall :: (XmlContent a, XmlContent b) => String -> String -> String -> String -> a -> IO (Maybe b)
+makeSoapCall url action cert certpwd request = do
+  let input = fpsShowXml False (SOAP request)
   let args = [ "-X", "POST", 
                "-k", "--silent", "--show-error",
-               "--cert", ctxtwsigncert ++ ":" ++ ctxtwsigncertpwd,
-               "--cacert", ctxtwsigncert,
+               "--cert", cert ++ ":" ++ certpwd,
+               "--cacert", cert,
                "--data-binary", "@-",
                "-H", "Content-Type: text/xml; charset=UTF-8",
                "-H", "Expect: 100-continue",
-               "-H", "SOAPAction: \"http://www.trustweaver.com/tsswitch#Sign\"",
-               "https://tseiod-dev.trustweaver.com/ts/svs.asmx"
+               "-H", "SOAPAction: " ++ action,
+               url
              ]
 
-  (code,stdout,stderr) <- readProcessWithExitCode' "./curl" args input
+  (code,stdout,stderr) <- readProcessWithExitCode' "curl.exe" args input
 
   when (code /= ExitSuccess) $ do
        putStrLn "Cannot execute ./curl for TrustWeaver"
        BSL.hPutStr System.IO.stdout stderr
 
   case readXml (BSL.toString stdout) of
-    Right (SOAP (SignResult value)) -> return (Just value)
+    Right (SOAP result) -> return (Just result)
     Left errmsg -> do
-      -- FIXME: should log it somewhere
+      print $ "makeSoapCall error: " ++ errmsg
+      print args
+      print input
+      print stdout
       return Nothing
