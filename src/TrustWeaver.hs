@@ -40,10 +40,10 @@ instance (XmlContent a) => XmlContent (SOAP a) where
                          [CElem (Elem "Body" [] 
                          (toContents a)) ()]) ()]
     parseContents = do
-        { e <- elementWith skipNamespacePrefix ["Envelope"]
+        { e <- elementNS "Envelope"
         ; interior e $ do
-            { optional $ elementWith skipNamespacePrefix ["Header"]
-            ; b <- elementWith skipNamespacePrefix ["Body"]
+            { optional $ elementNS "Header"
+            ; b <- elementNS "Body"
             ; interior b $ return SOAP `apply` parseContents
             }
         } `adjustErr` ("in <Envelope/Body>, "++)
@@ -73,19 +73,19 @@ data SignResult = SignResult BS.ByteString
 instance HTypeable (SignResult) where
     toHType x = Defined "SignResult" [] []
 instance XmlContent (SignResult) where
-    toContents (SignResult pdfdata) = error "Do not do this"
+    toContents (SignResult pdfdata) = error "Please do not serialize SignResult"
     parseContents =  do
-        { e <- elementWith skipNamespacePrefix ["SignResult"]
+        { e <- elementNS "SignResult"
         ; base64 <- interior e $ do
-            { result <- elementWith skipNamespacePrefix ["Result"]
-            ; signedDocument <- elementWith skipNamespacePrefix ["SignedDocument"]
-            ; details <- elementWith skipNamespacePrefix ["Details"]
-            ; interior signedDocument $ (text `onFail` return "")
+            { result <- elementNS "Result"
+            ; signedDocument <- elementNS "SignedDocument"
+            ; details <- elementNS "Details"
+            ; interior signedDocument $ text
             }
         ; case decode base64 of
             Nothing -> fail "Cannot parse base64 encoded PDF signed document"
             Just value -> return (SignResult (BS.pack value))
-        } `adjustErr` ("in <SignResponse>, "++)
+        } `adjustErr` ("in <SignResult>, "++)
 
 data RegisterSectionRequest = RegisterSectionRequest String
 
@@ -110,10 +110,10 @@ data RegisterSectionResponse = RegisterSectionResponse
 instance HTypeable (RegisterSectionResponse) where
     toHType x = Defined "RegisterSectionResponse" [] []
 instance XmlContent (RegisterSectionResponse) where
-    toContents (RegisterSectionResponse) = error "Do not serialize RegisterSectionResponse"
+    toContents (RegisterSectionResponse) = error "Please do not serialize RegisterSectionResponse"
     parseContents =  do
       --  this element just has to be there, contains nothing
-        { e <- elementWith skipNamespacePrefix ["RegisterSectionResponse"]
+        { e <- elementNS "RegisterSectionResponse"
         ; return RegisterSectionResponse
         } `adjustErr` ("in <RegisterSectionRequest>, "++)
 
@@ -137,9 +137,9 @@ instance HTypeable (EnableSectionResponse) where
 instance XmlContent (EnableSectionResponse) where
     toContents _ = error "Do not serialize EnableSectionResponse"
     parseContents =  do
-        { e <- elementWith skipNamespacePrefix ["EnableSectionResponse"]
+        { e <- elementNS "EnableSectionResponse"
         ; interior e $ do
-            { r  <- elementWith skipNamespacePrefix ["Result"]
+            { r  <- elementNS "Result"
             ; interior r $ do
                 { superAdminUsername <- inElementWith skipNamespacePrefix "SuperAdminUsername" text
                 ; superAdminPwd <- inElementWith skipNamespacePrefix "SuperAdminPwd" text
@@ -177,18 +177,18 @@ instance XmlContent (StoreInvoiceRequest) where
                                                 , mkElemC "CountryCode" (toText "SE")
                                                 ]
                                       ]]) ()]
-    parseContents = error "Do not parse RegisterSectionRequest"
+    parseContents = error "Do not parse StoreInvoiceRequest"
 
 data StoreInvoiceResponse = StoreInvoiceResponse String
 
 instance HTypeable (StoreInvoiceResponse) where
     toHType x = Defined "StoreInvoiceResponse" [] []
 instance XmlContent (StoreInvoiceResponse) where
-    toContents (StoreInvoiceResponse name) = error "Do not serialize EnableSectionResponse"
+    toContents (StoreInvoiceResponse name) = error "Do not serialize StoreInvoiceResponse"
     parseContents =  do
-        { e <- elementWith skipNamespacePrefix ["StoreInvoiceResponse"]
+        { e <- elementNS "StoreInvoiceResponse"
         ; interior e $ do
-            { r  <- elementWith skipNamespacePrefix ["Result"]
+            { r  <- elementNS "Result"
             ; interior r $ do
                 { supplierReference <- inElementWith skipNamespacePrefix "SupplierReference" text
                 ; return (StoreInvoiceResponse supplierReference)
@@ -218,17 +218,17 @@ instance HTypeable (GetInvoiceResponse) where
 instance XmlContent (GetInvoiceResponse) where
     toContents (GetInvoiceResponse pdfdata) = error "Do not serialize GetInvoiceResponse"
     parseContents =  do
-        { e <- elementWith skipNamespacePrefix ["GetInvoiceResponse"]
+        { e <- elementNS "GetInvoiceResponse"
         ; interior e $ do
-            { r  <- elementWith skipNamespacePrefix ["Result"]
+            { r  <- elementNS "Result"
             ; interior r $ do
-                { document <- elementWith skipNamespacePrefix ["Document"]
-                ; invoiceInfo <- elementWith skipNamespacePrefix ["InvoiceInfo"]
-                ; supplierInfo <- elementWith skipNamespacePrefix ["SupplierInfo"]
-                ; buyerInfo <- optional $ elementWith skipNamespacePrefix ["BuyerInfo"]
-                ; attachments <- optional $ elementWith skipNamespacePrefix ["Attachments"]
+                { document <- elementNS "Document"
+                ; invoiceInfo <- elementNS "InvoiceInfo"
+                ; supplierInfo <- elementNS "SupplierInfo"
+                ; buyerInfo <- optional $ elementNS "BuyerInfo"
+                ; attachments <- optional $ elementNS "Attachments"
                 ; interior document $ do
-                    { dta <- elementWith skipNamespacePrefix ["Data"]
+                    { dta <- elementNS "Data"
                     ; base64encoded <- interior dta $ text
                     ; case decode base64encoded of
                         Nothing -> fail "cannot decode base64 data"
@@ -244,6 +244,8 @@ skipNamespacePrefix fqname tomatch =
       (name,"") -> name == tomatch
       (_,':':name) -> name == tomatch
 
+elementNS name = elementWith skipNamespacePrefix [name]
+ 
 
 signDocument :: Context -> BS.ByteString -> IO (Maybe BS.ByteString)
 signDocument ctx pdfdata = do
