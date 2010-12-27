@@ -1,4 +1,4 @@
-
+{-# LANGUAGE ScopedTypeVariables #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  TrustWeaver
@@ -195,6 +195,48 @@ instance XmlContent (StoreInvoiceResponse) where
                 }
             }
         } `adjustErr` ("in <StoreInvoiceResponse>, "++)
+
+
+
+data GetInvoiceRequest = GetInvoiceRequest String
+
+instance HTypeable (GetInvoiceRequest) where
+    toHType x = Defined "GetInvoiceRequest" [] []
+instance XmlContent (GetInvoiceRequest) where
+    toContents (GetInvoiceRequest supplierReference) =
+        [CElem (Elem "GetInvoice" [mkAttr "xmlns" "http://www.trustweaver.com/trustarchive/admin/v1"] 
+                         [mkElemC "Request" 
+                                      [ mkElemC "Reference" (toText supplierReference)
+                                      ]
+                         ]) ()]
+    parseContents = error "Do not parse GetInvoiceRequest"
+
+data GetInvoiceResponse = GetInvoiceResponse BS.ByteString
+
+instance HTypeable (GetInvoiceResponse) where
+    toHType x = Defined "GetInvoiceResponse" [] []
+instance XmlContent (GetInvoiceResponse) where
+    toContents (GetInvoiceResponse pdfdata) = error "Do not serialize GetInvoiceResponse"
+    parseContents =  do
+        { e <- elementWith skipNamespacePrefix ["GetInvoiceResponse"]
+        ; interior e $ do
+            { r  <- elementWith skipNamespacePrefix ["Result"]
+            ; interior r $ do
+                { document <- elementWith skipNamespacePrefix ["Document"]
+                ; invoiceInfo <- elementWith skipNamespacePrefix ["InvoiceInfo"]
+                ; supplierInfo <- elementWith skipNamespacePrefix ["SupplierInfo"]
+                ; buyerInfo <- optional $ elementWith skipNamespacePrefix ["BuyerInfo"]
+                ; attachments <- optional $ elementWith skipNamespacePrefix ["Attachments"]
+                ; interior document $ do
+                    { dta <- elementWith skipNamespacePrefix ["Data"]
+                    ; base64encoded <- interior dta $ text
+                    ; case decode base64encoded of
+                        Nothing -> fail "cannot decode base64 data"
+                        Just bin -> return (GetInvoiceResponse (BS.pack bin))
+                    }
+                }
+            }
+        } `adjustErr` ("in <GetInvoiceResponse>, "++)
 
 
 skipNamespacePrefix fqname tomatch = 
