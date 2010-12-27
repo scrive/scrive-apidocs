@@ -41,6 +41,7 @@ import Happstack.State (update,query)
 import DocControl
 import DocState
 import qualified Amazon as AWS
+import Mails.MailsConfig
 
 startTestSystemState' :: (Component st, Methods st) => Proxy st -> IO (MVar TxControl)
 startTestSystemState' proxy = do
@@ -102,12 +103,11 @@ main = withLogger $ do
   let progName = "kontrakcja"
 
   args <- getArgs
-
+  mailsConf <- getMailsConfig
   appConf <- case parseConfig args of
     (Left e) -> do logM "Happstack.Server" ERROR (unlines e)
                    exitFailure
-    (Right f) -> return (f $ defaultConf progName)
-  
+    (Right f) -> return $ (f $ defaultConf progName) {mailsConfig = mailsConf}
   Exception.bracket
                  -- start the state system
               (logM "Happstack.Server" NOTICE ("Using store " ++ store appConf) >>
@@ -127,7 +127,7 @@ main = withLogger $ do
                               -- bind only to 127.0.0.1
                               socket <- listenOn (port (httpConf appConf))
                               t1 <- forkIO $ simpleHTTPWithSocket socket (httpConf appConf) (appHandler appConf)
-                              t2 <- forkIO $ cron 60 runScheduler
+                              t2 <- forkIO $ cron 60 $ runScheduler appConf
                               return [t1,t2]
                            )
                            (mapM_ killThread) $ \_ -> Exception.bracket
@@ -155,6 +155,7 @@ defaultConf progName
               , production = False
               , twSignCert = ""
               , twSignCertPwd = ""
+              , mailsConfig = defaultMailConfig
               }
 
 opts :: [OptDescr (AppConf -> AppConf)]

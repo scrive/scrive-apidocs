@@ -43,6 +43,7 @@ module DocState
     , GetNumberOfDocumentsOfUser(..)
     , GetTimeoutedButPendingDocuments(..)
     , MarkDocumentSeen(..)
+    , SetInvitationDeliveryStatus(..)
     , NewDocument(..)
     , SaveDocumentForSignedUser(..)
     , SetDocumentTimeoutTime(..)
@@ -79,6 +80,7 @@ import System.Log.Logger (errorM)
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import Data.Maybe
+import Mails.MailsUtil
 
 $(deriveAll [''Eq, ''Ord, ''Default]
   [d|
@@ -157,6 +159,14 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , maybesigninfo2      :: Maybe SignInfo
           , maybeseentime2      :: Maybe MinutesTime
           }
+      data SignatoryLink3 = SignatoryLink3 
+          { signatorylinkid3    :: SignatoryLinkID
+          , signatorydetails3   :: SignatoryDetails
+          , signatorymagichash3 :: MagicHash
+          , maybesignatory3     :: Maybe Signatory
+          , maybesigninfo3      :: Maybe SignInfo
+          , maybeseeninfo3      :: Maybe SignInfo
+          }        
       data SignatoryLink = SignatoryLink 
           { signatorylinkid    :: SignatoryLinkID
           , signatorydetails   :: SignatoryDetails
@@ -164,7 +174,8 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , maybesignatory     :: Maybe Signatory
           , maybesigninfo      :: Maybe SignInfo
           , maybeseeninfo      :: Maybe SignInfo
-          }
+          , invitationdeliverystatus :: MailsDeliveryStatus
+          }    
       data SignInfo = SignInfo
           { signtime :: MinutesTime
           , signipnumber :: Word32
@@ -446,6 +457,7 @@ instance Show TimeoutTime where
 deriving instance Show SignatoryLink
 deriving instance Show SignatoryLink0
 deriving instance Show SignatoryLink1
+deriving instance Show SignatoryLink2
 deriving instance Show SignInfo
 deriving instance Show SignInfo0
 deriving instance Show SignatoryDetails
@@ -542,10 +554,14 @@ $(deriveSerialize ''SignatoryLink2)
 instance Version SignatoryLink2 where
     mode = extension 2 (Proxy :: Proxy SignatoryLink1)
 
-$(deriveSerialize ''SignatoryLink)
-instance Version SignatoryLink where
+$(deriveSerialize ''SignatoryLink3)
+instance Version SignatoryLink3 where
     mode = extension 3 (Proxy :: Proxy SignatoryLink2)
 
+$(deriveSerialize ''SignatoryLink)
+instance Version SignatoryLink where
+    mode = extension 4 (Proxy :: Proxy SignatoryLink3)
+    
 instance Migrate SignatoryDetails0 SignatoryDetails where
     migrate (SignatoryDetails0
              { signatoryname00 
@@ -610,7 +626,7 @@ instance Migrate SignatoryLink1 SignatoryLink2 where
                 } 
 
 
-instance Migrate SignatoryLink2 SignatoryLink where
+instance Migrate SignatoryLink2 SignatoryLink3 where
       migrate (SignatoryLink2 
           { signatorylinkid2
           , signatorydetails2
@@ -618,13 +634,32 @@ instance Migrate SignatoryLink2 SignatoryLink where
           , maybesignatory2
           , maybesigninfo2
           , maybeseentime2
+          }) = SignatoryLink3
+          { signatorylinkid3    = signatorylinkid2
+          , signatorydetails3   = signatorydetails2
+          , signatorymagichash3 = signatorymagichash2
+          , maybesignatory3     = maybesignatory2
+          , maybesigninfo3      = maybesigninfo2
+          , maybeseeninfo3      = maybe Nothing (\t -> Just (SignInfo t 0)) maybeseentime2
+          }
+
+
+instance Migrate SignatoryLink3 SignatoryLink where
+      migrate (SignatoryLink3 
+          { signatorylinkid3    
+          , signatorydetails3   
+          , signatorymagichash3 
+          , maybesignatory3     
+          , maybesigninfo3      
+          , maybeseeninfo3   
           }) = SignatoryLink 
-          { signatorylinkid    = signatorylinkid2
-          , signatorydetails   = signatorydetails2
-          , signatorymagichash = signatorymagichash2
-          , maybesignatory     = maybesignatory2
-          , maybesigninfo      = maybesigninfo2
-          , maybeseeninfo      = maybe Nothing (\t -> Just (SignInfo t 0)) maybeseentime2
+          { signatorylinkid    = signatorylinkid3
+          , signatorydetails   = signatorydetails3
+          , signatorymagichash = signatorymagichash3
+          , maybesignatory     = maybesignatory3
+          , maybesigninfo      = maybesigninfo3
+          , maybeseeninfo      = maybeseeninfo3 
+          , invitationdeliverystatus = Delivered
           }
 
 
@@ -971,7 +1006,7 @@ getDocumentsBySignatory :: User -> Query Documents [Document]
 getDocumentsBySignatory user = do
     documents <- ask
     return $ filter ((any (isMatchingSignatoryLink user)) . documentsignatorylinks) (toList documents)
-
+       
 isMatchingSignatoryLink :: User -> SignatoryLink -> Bool
 isMatchingSignatoryLink user sigLink = signatoryMatches || emailMatches
   where signatoryMatches = case (maybesignatory sigLink) of
@@ -1246,7 +1281,19 @@ markDocumentSeen documentid signatorylinkid1 time ipnumber = do
       modify (updateIx documentid document')
       return (Just document')
   
-
+setInvitationDeliveryStatus::SignatoryLinkID -> MailsDeliveryStatus -> Update Documents (Maybe Document)
+setInvitationDeliveryStatus siglnkid status = do
+                                               documents <- ask 
+                                               case getOne (documents @= siglnkid) of   
+                                                    Nothing -> return Nothing
+                                                    Just doc -> do
+                                                                let oldsls = documentsignatorylinks doc
+                                                                let newsls = for oldsls $ \sl -> if (signatorylinkid sl == siglnkid)
+                                                                                                 then sl {invitationdeliverystatus = status}
+                                                                                                 else sl
+                                                                let newdoc = doc {documentsignatorylinks = newsls}                                 
+                                                                modify (updateIx (documentid doc) newdoc)
+                                                                return $ Just newdoc
 getDocumentStats :: Query Documents Int
 getDocumentStats = do
   documents <- ask 
@@ -1380,6 +1427,7 @@ signLinkFromDetails details = do
                      , maybesignatory = Nothing
                      , maybesigninfo  = Nothing
                      , maybeseeninfo  = Nothing
+                     , invitationdeliverystatus = Unknown
                      }
 
 isAuthor::Document->User->Bool
@@ -1399,6 +1447,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'attachFile
                         , 'attachSealedFile
                         , 'markDocumentSeen
+                        , 'setInvitationDeliveryStatus
                         , 'getDocumentStats
                         , 'fileModTime
                         , 'saveDocumentForSignedUser

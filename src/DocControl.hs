@@ -23,7 +23,7 @@ import Happstack.Util.Common
 import KontraLink
 import MinutesTime
 import Misc
-import SendMail(Mail,sendMail,fullnameemails,attachments)
+import Mails.SendMail
 import System.Cmd
 import System.Directory
 import System.Exit
@@ -105,7 +105,7 @@ sendInvitationEmail1 ctx document signatorylink = do
       Document{documenttitle,documentid} = document
   mail <- mailInvitationToSign (ctxtemplates ctx) ctx document signatorylink
   attachmentcontent <- AWS.getFileContents (ctxs3action ctx) $ head $ documentfiles document
-  sendMail $ mail { fullnameemails =  [(signatoryname,signatoryemail)]  , attachments = [(documenttitle,attachmentcontent)]} 
+  sendMail (ctxmailsconfig ctx) $ mail { fullnameemails =  [(signatoryname,signatoryemail)]  , attachments = [(documenttitle,attachmentcontent)] , from=ctxmaybeuser ctx, mailInfo = Invitation signatorylinkid } 
 
 sendClosedEmails :: Context -> Document -> IO ()
 sendClosedEmails ctx document = do
@@ -123,7 +123,7 @@ sendClosedEmail1 ctx document signatorylink = do
       Document{documenttitle,documentid} = document
   mail <- mailDocumentClosedForSignatories (ctxtemplates ctx) ctx document signatorylink
   attachmentcontent <- AWS.getFileContents (ctxs3action ctx) $ head $ documentsealedfiles document
-  sendMail $ mail { fullnameemails =  [(signatoryname,signatoryemail)] , attachments = [(documenttitle,attachmentcontent)]}
+  sendMail  (ctxmailsconfig ctx) $ mail { fullnameemails =  [(signatoryname,signatoryemail)] , attachments = [(documenttitle,attachmentcontent)]}
 
 sendAwaitingEmail :: Context -> Document -> IO ()
 sendAwaitingEmail ctx document = do
@@ -138,7 +138,7 @@ sendAwaitingEmail ctx document = do
            else []
       name1 = userfullname authoruser
       name2 = signatoryname $ documentauthordetails document
-  sendMail $ mail { fullnameemails = ([(name1,email1)] ++ em) }
+  sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = ([(name1,email1)] ++ em) }
 
 sendClosedAuthorEmail :: Context -> Document -> IO ()
 sendClosedAuthorEmail ctx document = do
@@ -155,7 +155,7 @@ sendClosedAuthorEmail ctx document = do
            else []
       name1 = userfullname authoruser
       name2 = signatoryname $ documentauthordetails document
-  sendMail $ mail { fullnameemails = ([(name1,email1)] ++ em), attachments = [(documenttitle,attachmentcontent)]}
+  sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = ([(name1,email1)] ++ em), attachments = [(documenttitle,attachmentcontent)]}
 
 sendRejectAuthorEmail :: (Maybe BS.ByteString) -> Context -> Document -> SignatoryLink -> IO ()
 sendRejectAuthorEmail customMessage ctx document signalink = do
@@ -171,7 +171,7 @@ sendRejectAuthorEmail customMessage ctx document signalink = do
            else []
       name1 = userfullname authoruser
       name2 = signatoryname $ documentauthordetails document
-  sendMail $ mail { fullnameemails = ([(name1,email1)] ++ em)}
+  sendMail  (ctxmailsconfig ctx) $ mail { fullnameemails = ([(name1,email1)] ++ em)}
 
 handleSTable = withUserGet $ checkUserTOSGet $
     do
@@ -279,7 +279,7 @@ landpageSignedSave documentid signatorylinkid = do
      user <- case maybeuser of
             Nothing -> do 
               let email = signatoryemail details
-              user <- liftIO $ createUser (ctxtemplates ctx) ctxhostpart fullname email Nothing Nothing
+              user <- liftIO $ createUser ctx ctxhostpart fullname email Nothing Nothing
               return user
             Just user -> return user
      Just document2 <- update $ SaveDocumentForSignedUser documentid (userid user) signatorylinkid
@@ -937,7 +937,9 @@ handleResend docid signlinkid  =
                                   do 
                                    customMessage <- fmap (fmap concatChunks) $ getDataFn' (lookBS "customtext")  
                                    mail <- liftIO $  mailDocumentRemind (ctxtemplates ctx) customMessage ctx doc signlink
-                                   liftIO $ sendMail (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )]})
+                                   liftIO $ sendMail (ctxmailsconfig ctx) (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )],
+                                                                           from=ctxmaybeuser ctx,
+                                                                           mailInfo = Invitation $ signatorylinkid signlink })
                                    addFlashMsgText =<< (liftIO $ flashRemindMailSent (ctxtemplates ctx) signlink)
                                    return (LinkIssueDoc $ documentid doc)
                                  Nothing -> mzero           
@@ -945,4 +947,4 @@ handleResend docid signlinkid  =
 
 sendCancelMailsForDocument:: (Maybe BS.ByteString) -> Context -> Document -> Kontra ()
 sendCancelMailsForDocument customMessage ctx document = liftIO $ 
-        forM_ (documentsignatorylinks document) (sendMail  <=< (mailCancelDocumentByAuthor (ctxtemplates ctx) customMessage ctx document))
+        forM_ (documentsignatorylinks document) (sendMail  (ctxmailsconfig ctx) <=< (mailCancelDocumentByAuthor (ctxtemplates ctx) customMessage ctx document))

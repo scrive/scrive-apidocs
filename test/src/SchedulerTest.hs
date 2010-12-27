@@ -14,6 +14,8 @@ import Happstack.State (update, query)
 import MinutesTime
 import Scheduler
 import DocState
+import AppControl
+import Happstack.Server
 
 schedulerTests :: [Test]
 schedulerTests = [testGroup "Scheduler" 
@@ -24,6 +26,13 @@ schedulerTests = [testGroup "Scheduler"
 testDocumentsBecameTimeouted = withTestState $ 
             do
              now <- getMinutesTime
-             runScheduler
+             runScheduler $ AppConf { httpConf = nullConf
+                             , store    = ""
+                             , static   = ""
+                             , awsBucket = ""
+                             , awsSecretKey = ""
+                             , awsAccessKey = ""
+                             , production = False
+                             }
              docs <- query $ GetTimeoutedButPendingDocuments now
              assert $ null docs

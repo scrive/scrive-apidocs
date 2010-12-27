@@ -19,7 +19,7 @@ import qualified Data.ByteString as BS
 import User
 import KontraLink
 import Data.Maybe
-import SendMail(Mail,emptyMail,content,title,attachments,fullnameemails)
+import Mails.SendMail(Mail,emptyMail,content,title,attachments,fullnameemails)
 import DocViewUtil
 import Amazon
 import Templates.Templates 

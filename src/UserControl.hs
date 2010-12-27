@@ -16,7 +16,7 @@ import Happstack.State (Update,update,query)
 import Happstack.Util.Common (readM)
 import KontraLink
 import Misc
-import SendMail(Mail,sendMail,fullnameemails)
+import Mails.SendMail(Mail,sendMail,fullnameemails)
 import Session
 import System.Log.Logger
 import System.Process
@@ -97,7 +97,7 @@ handleCreateSubaccount :: Context -> Kontra KontraLink
 handleCreateSubaccount ctx@Context { ctxmaybeuser = Just (user@User { userid }), ctxhostpart } = do
   fullname <- g "fullname"
   email <- g "email"
-  user <- liftIO $ createUser (ctxtemplates ctx) ctxhostpart fullname email Nothing (Just user)
+  user <- liftIO $ createUser ctx ctxhostpart fullname email Nothing (Just user)
   return LinkSubaccount
 
 handleRemoveSubaccounts :: Context -> Kontra KontraLink
@@ -124,14 +124,14 @@ randomPassword = do
     indexes <- liftIO $ replicateM 8 (randomRIO (0,length letters-1))
     return (BS.fromString $ map (letters!!) indexes)
 
-createUser ::  KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> Maybe BS.ByteString -> Maybe User -> IO User
-createUser templates hostpart fullname email maybepassword maybesupervisor =
+createUser ::  Context -> String -> BS.ByteString -> BS.ByteString -> Maybe BS.ByteString -> Maybe User -> IO User
+createUser ctx hostpart fullname email maybepassword maybesupervisor =
   case maybepassword of
     Nothing -> do
       password <- randomPassword
-      createUser1 templates hostpart fullname email password False maybesupervisor
+      createUser1 ctx hostpart fullname email password False maybesupervisor
     Just x ->
-      createUser1 templates hostpart fullname email x True maybesupervisor
+      createUser1 ctx hostpart fullname email x True maybesupervisor
 
 createNewUserByAdmin :: Context -> BS.ByteString -> BS.ByteString -> IO User
 createNewUserByAdmin ctx fullname email =
@@ -140,33 +140,33 @@ createNewUserByAdmin ctx fullname email =
       passwdhash <- createPassword password
       user <- update $ AddUser fullname email passwdhash Nothing
       mail <- mailNewAccountCreatedByAdmin (ctxtemplates ctx) ctx fullname email password
-      sendMail $ mail { fullnameemails = [(fullname, email)]}
+      sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = [(fullname, email)]} 
       return user
 
-createUser1 :: KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Bool -> Maybe User -> IO User
-createUser1 templates hostpart fullname email password isnewuser maybesupervisor = do
+createUser1 :: Context -> String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Bool -> Maybe User -> IO User
+createUser1 ctx hostpart fullname email password isnewuser maybesupervisor = do
   passwdhash <- createPassword password
   user <- update $ AddUser fullname email passwdhash (fmap userid maybesupervisor)
   mail <- case maybesupervisor of
     Nothing ->
       if not isnewuser
-       then passwordChangeMail templates hostpart email fullname password
-       else newUserMail templates hostpart email fullname password
-    Just supervisor -> inviteSubaccountMail templates hostpart (prettyName  supervisor) (usercompanyname $ userinfo supervisor)
+       then passwordChangeMail (ctxtemplates ctx) hostpart email fullname password
+       else newUserMail (ctxtemplates ctx) hostpart email fullname password
+    Just supervisor -> inviteSubaccountMail (ctxtemplates ctx) hostpart (prettyName  supervisor) (usercompanyname $ userinfo supervisor)
                        email fullname password
-  sendMail $ mail { fullnameemails = [(fullname, email)]}
+  sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = [(fullname, email)]}
   return user
   
-resetUserPassword :: KontrakcjaTemplates -> String -> BS.ByteString -> IO ()
-resetUserPassword templates hostpart email = do
+resetUserPassword :: Context -> String -> BS.ByteString -> IO ()
+resetUserPassword ctx hostpart email = do
   maybeuser <- query $ GetUserByEmail (Email{unEmail=email})
   case maybeuser of
     Just user -> do
       password <- randomPassword
       passwordhash <- createPassword password
       update $ SetUserPassword user passwordhash
-      mail <- passwordChangeMail templates hostpart email (userfullname user) password
-      sendMail $ mail { fullnameemails = [((userfullname user), email)]}
+      mail <- passwordChangeMail (ctxtemplates ctx) hostpart email (userfullname user) password
+      sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = [((userfullname user), email)]}
     Nothing ->
       return ()
 

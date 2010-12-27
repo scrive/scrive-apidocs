@@ -8,8 +8,9 @@ import DocState
 import MinutesTime
 import Misc
 import Templates.Templates
-import SendMail
+import Mails.SendMail
 import User
+import Mails.MailsUtil
 
 import Control.Concurrent.MVar
 import System.IO.Unsafe
@@ -96,13 +97,15 @@ anUnsignedSigLink = SignatoryLink { signatorylinkid = SignatoryLinkID 123,
              signatorymagichash = MagicHash 123,
              maybesignatory = Nothing,
              maybesigninfo = Nothing,
-             maybeseeninfo = Nothing }
+             maybeseeninfo = Nothing, 
+             invitationdeliverystatus = Unknown}
 aSignedSigLink = SignatoryLink { signatorylinkid = SignatoryLinkID 123,
              signatorydetails = otherSignatoryDetails,
              signatorymagichash = MagicHash 123,
              maybesignatory = Nothing,
              maybesigninfo = Just someSignInfo,
-             maybeseeninfo = Nothing }
+             maybeseeninfo = Nothing,
+             invitationdeliverystatus = Unknown}
 aTestFile = File {fileid = FileID 123,
                   filename = BS.fromString "a_test_doc.pdf",
                   filestorage = FileStorageMemory $ BS.fromString ""}

@@ -58,7 +58,8 @@ import qualified Network.AWS.AWSConnection as AWS
 import qualified Payments.PaymentsControl as Payments
 import Templates.Templates (readTemplates, renderTemplate)
 import qualified Administration.AdministrationControl as Administration
-
+import Mails.MailsConfig
+import Mails.SendGridEvents
 
 data AppConf
     = AppConf { httpConf        :: Conf
@@ -70,6 +71,7 @@ data AppConf
               , production      :: Bool
               , twSignCert      :: FilePath
               , twSignCertPwd   :: String
+              , mailsConfig     :: MailsConfig
               }              
 
 
@@ -128,7 +130,7 @@ handleRoutes = msum [
      -- super user only
      , dir "stats"      $ hget0  $ Administration.showStats
      , dir "createuser" $ hpost0 $ Administration.handleCreateUser
-
+     , dir "sendgrid" $ dir "events" $ hpost0 handleSendgridEvent
      , dir "adminonly" $ hget0 $ Administration.showAdminMainPage
      , dir "adminonly" $ dir "advuseradmin" $ hget0 Administration.showAdminUserAdvanced
      , dir "adminonly" $ dir "useradmin" $ hget1m Administration.showAdminUsers
@@ -162,7 +164,6 @@ handleRoutes = msum [
      -- static files
      , serveHTMLFiles
      , fileServe [] "public"
-
                ]
 
 {-
@@ -257,6 +258,7 @@ appHandler appConf = do
             , ctxs3action = defaultAWSAction appConf
             , ctxproduction = production appConf
             , ctxtemplates = templates
+            , ctxmailsconfig = mailsConfig appConf
             , ctxtwsigncert = twSignCert appConf
             , ctxtwsigncertpwd = twSignCertPwd appConf
             }
@@ -283,7 +285,7 @@ forgotPasswordPagePost :: Kontra KontraLink
 forgotPasswordPagePost = do
     ctx@Context{ctxtemplates,ctxhostpart} <- lift get
     email <- getDataFnM $ look "email"
-    liftIO $ resetUserPassword ctxtemplates ctxhostpart (BS.fromString email)
+    liftIO $ resetUserPassword ctx ctxhostpart (BS.fromString email)
     return LinkForgotPasswordDone
 
 forgotPasswordDonePage :: Kontra Response
@@ -320,7 +322,7 @@ signupPagePost = do
                        return LinkSignup
                 Nothing -> do
                     -- Create the user, which sends them a welcome email.
-                    account <- liftIO $ createUser ctxtemplates ctxhostpart (signupFullname form) (signupEmail form) (Just (signupPassword form)) Nothing
+                    account <- liftIO $ createUser ctx ctxhostpart (signupFullname form) (signupEmail form) (Just (signupPassword form)) Nothing
                     return LinkSignupDone
 
 signupPageDone :: Kontra Response
