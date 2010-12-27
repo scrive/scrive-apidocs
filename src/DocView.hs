@@ -41,6 +41,7 @@ import DocViewMail
 import DocViewUtil
 import Templates.Templates
 import Templates.TemplatesUtils
+import Mails.MailsUtil
 
 landpageSignInviteView ::KontrakcjaTemplates -> Document ->  IO String
 landpageSignInviteView templates  document =
@@ -316,6 +317,7 @@ pageDocumentForAuthor ctx
                     , signatorylinkid = SignatoryLinkID 0
                     , maybesignatory = Nothing -- FIXME: should be author user id
                     , signatorymagichash = MagicHash 0
+                    , invitationdeliverystatus = Delivered
                     }
        documentdaystosignboxvalue = maybe 7 id documentdaystosign
        timetosignset = isJust documentdaystosign --swedish low constrain
@@ -487,6 +489,7 @@ showSignatoryLinkForSign :: Context -> Document -> SignatoryLink -> GenChildList
 showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document siglnk@(SignatoryLink{  signatorylinkid 
                                        , maybesigninfo
                                        , maybeseeninfo
+                                       , invitationdeliverystatus
                                        , signatorydetails = SignatoryDetails
                                                             { signatoryname
                                                             , signatorynumber
@@ -508,7 +511,8 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document siglnk@(
                 ( isRejected, <img src="/theme/images/status_rejected.png"/>), 
                 ( isTimedout, <img src="/theme/images/status_timeout.png"/>), 
                 (wasSigned, <img src="/theme/images/status_signed.png"/>),
-                (wasSeen, <img src="/theme/images/status_viewed.png"/> )]
+                (wasSeen, <img src="/theme/images/status_viewed.png"/> ),
+                (invitationdeliverystatus == Undelivered, <img src="/theme/images/status_rejected.png"/> ) ]
                 <img src="/theme/images/status_pending.png"/>
       message = caseOf
                 [
@@ -593,6 +597,7 @@ pageDocumentForSign action document ctx  invitedlink wassigned =
                     , signatorylinkid = SignatoryLinkID 0
                     , maybesignatory = Nothing -- FIXME: should be author user id
                     , signatorymagichash = MagicHash 0
+                    , invitationdeliverystatus = Delivered
                     }
        rejectMessage =  fmap cdata $ mailRejectMailContent  (ctxtemplates ctx) Nothing ctx (personname authorlink) document (personname invitedlink)
    in showDocumentPageHelper document helpers

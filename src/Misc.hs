@@ -252,7 +252,7 @@ lookInputList name
 #if MIN_VERSION_happstack_server(0,5,1)
          inputs <- asks (\(a,b,c) -> a ++ b)
 #else
-         inputs <- asks fst
+         inputs <- asks fst 
 #endif
          let isname (xname,(Input value _ _)) | xname == name = [value]
              isname _ = []

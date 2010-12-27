@@ -27,7 +27,7 @@ import UserState
 import AppView
 import User
 import KontraLink
-import SendMail(Mail,emptyMail,title,content)
+import Mails.SendMail(Mail,emptyMail,title,content)
 import qualified HSX.XMLGenerator
 import Templates.Templates 
 import Templates.TemplatesUtils

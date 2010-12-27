@@ -188,6 +188,9 @@ mailNewAccountCreatedByAdminContent=
        $poweredBySkrivaPaPara()$
      </span>
 ####
+invitationMailUndeliveredTitle = Undeliverd mail
+###
+invitationMailUndeliveredContent = Undeliver mail to address $email$
 ####UTILS
 timetosigninfo=  <span>Undertecknas senast: <strong>$time$</strong>.</span>
 ###
@@ -195,4 +198,4 @@ updateinglistwithauthor= <span>
                            <span class="partylistupdate"></span>
                            <span class="hidden authorname"> $creatorname$ </span>
                           </span> 
-####
+#### 

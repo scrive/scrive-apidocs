@@ -15,11 +15,11 @@ import "mtl" Control.Monad.Reader (ask)
 import "mtl" Control.Monad.State hiding (State)
 import Data.Generics
 import Data.Maybe (isNothing,isJust, fromJust)
-import Happstack.Data (Default, deriveAll, gFind')
+import Happstack.Data
 import Happstack.Data.IxSet
+import qualified Happstack.Data.IxSet as IxSet
 import Happstack.Server.HTTP.Types ()
-import Happstack.State (Version, Query, Update, deriveSerialize, getRandomR, 
-                        mkMethods, query, update, mode, extension, Proxy(Proxy), Migrate, migrate)
+import Happstack.State 
 import UserState (UserID,FlashMessage,GetUserByUserID(GetUserByUserID), User)
 import MinutesTime
 import Happstack.Server
@@ -86,6 +86,10 @@ $(deriveSerialize ''Session)
 instance Version (Session)
    
 $(inferIxSet "Sessions" ''Session 'noCalcs [''SessionId])
+
+instance Component (Sessions) where
+  type Dependencies (Sessions) = End
+  initialValue = IxSet.empty
 
 -- Some helpers. MACID demands it before use.
 -- |perform insert only if test is True

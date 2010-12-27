@@ -10,8 +10,10 @@ import Happstack.State (query, update)
 import Control.Monad
 import MinutesTime
 import System.Log.Logger
+import AppControl
 
-runScheduler = do
+runScheduler appconfig = 
+               do
                 timeoutDocuments 
                 debugM "Happstack.Server" $ "Scheduler is running ..."                                                        
 
@@ -22,4 +24,3 @@ timeoutDocuments = do
                                            update $ TimeoutDocument (documentid doc) now                                                     
                                            debugM "Happstack.Server" $ "Document timedout" ++ (show $ documenttitle doc)                                                                   
                                           
-                                           

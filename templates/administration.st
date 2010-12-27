@@ -41,7 +41,7 @@ adminsmanageall =
        $usersfilter(link="/adminonly/advuseradmin")$
       </div>
       <div>
-       $userspaging()$ 
+       $userspaging(link="/adminonly/advuseradmin")$ 
        <table><tbody>
        $users:{user|
           <tr>

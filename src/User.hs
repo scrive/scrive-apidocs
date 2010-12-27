@@ -46,7 +46,7 @@ import Data.Object.Json as Json
 import Data.Object as Json
 import qualified Network.AWS.Authentication as AWS
 import Templates.Templates  (KontrakcjaTemplates)
-
+import Mails.MailsConfig
 
 
 instance Monad m => IsAttrValue m DocumentID where
@@ -121,6 +121,7 @@ data Context = Context
     , ctxs3action            :: AWS.S3Action
     , ctxproduction          :: Bool
     , ctxtemplates           :: KontrakcjaTemplates 
+    , ctxmailsconfig         :: MailsConfig  
     , ctxtwsigncert          :: FilePath
     , ctxtwsigncertpwd       :: String
     , ctxtwadmincert         :: FilePath

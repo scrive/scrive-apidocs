@@ -5,7 +5,7 @@ import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 
 import Templates.Templates
-import SendMail
+import Mails.SendMail
 
 import System.Directory
 import System.FilePath

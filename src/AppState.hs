@@ -24,12 +24,6 @@ $(deriveAll [''Show, ''Eq, ''Ord, ''Default]
 $(deriveSerialize ''AppState)
 instance Version AppState
 
-
---Move this instance declaration back to session
-instance Component (Sessions) where
-  type Dependencies (Sessions) = End
-  initialValue = IxSet.empty
-
 -- |top-level application component
 -- we depend on the GuestBook component
 instance Component AppState where
