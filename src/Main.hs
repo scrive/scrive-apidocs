@@ -192,6 +192,12 @@ opts = [ Option [] ["http-port"]
        , Option [] ["twsigncertpwd"]      
          (ReqArg (\h c -> c {twSignCertPwd = h}) "STRING") 
          "The TrustWeaver password for private key (for signing)" 
+       , Option [] ["twsigncert"]      
+         (ReqArg (\h c -> c {twAdminCert = h}) "PATH") 
+         "The TrustWeaver *.pem file with public and private key (for storage)" 
+       , Option [] ["twsigncertpwd"]      
+         (ReqArg (\h c -> c {twAdminCertPwd = h}) "STRING") 
+         "The TrustWeaver password for private key (for storage)" 
        , Option [] ["production"]    
          (NoArg (\ c -> c { production = True })) 
          "Turn on production environment"

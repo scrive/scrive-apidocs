@@ -813,7 +813,7 @@ sealDocument :: Context
              -> User
              -> Document
              -> IO Document
-sealDocument ctx@Context{ctxs3action,ctxtwsigncert}
+sealDocument ctx@Context{ctxs3action,ctxtwconf}
              normalizemap 
              hostpart
              signtime1
@@ -839,9 +839,9 @@ sealDocument ctx@Context{ctxs3action,ctxtwsigncert}
   removeFile tmpout
 
   newfilepdf <- 
-      if ctxtwsigncert == ""
+      if TW.signcert ctxtwconf == ""
          then return (Just newfilepdf1)
-         else TW.signDocument ctx newfilepdf1
+         else TW.signDocument ctxtwconf newfilepdf1
   when (not $ isJust newfilepdf) $ error "TrustWeaver signing is not working properly"
 
   mdocument <- update $ AttachSealedFile docid filename (fromJust newfilepdf)
