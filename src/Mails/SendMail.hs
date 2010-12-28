@@ -123,3 +123,4 @@ sendMail config (Mail {fullnameemails,title,content,attachments,from,mailInfo}) 
            BSL.writeFile filename wholeContent
            openDocument filename
            return ()
+
