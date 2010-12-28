@@ -158,6 +158,8 @@ defaultConf progName
               , production = False
               , twSignCert = ""
               , twSignCertPwd = ""
+              , twAdminCert = ""
+              , twAdminCertPwd = ""
               , mailsConfig = defaultMailConfig
               }
 

@@ -34,9 +34,11 @@ data TrustWeaverConf = TrustWeaverConf
     , admincert         :: FilePath
     , admincertpwd      :: String
     }
+                       deriving (Eq,Ord,Show,Read)
 
 
 data SOAP a = SOAP a
+            | SOAPFault String String String
             deriving (Eq,Ord,Show,Read)
 
 instance HTypeable (SOAP a) where
@@ -46,13 +48,21 @@ instance (XmlContent a) => XmlContent (SOAP a) where
         [CElem (Elem "Envelope" [mkAttr "xmlns" "http://schemas.xmlsoap.org/soap/envelope/"] 
                          [CElem (Elem "Body" [] 
                          (toContents a)) ()]) ()]
+    toContents _ = error "Please do not serialize SOAPFault"
     parseContents = do
-        { e <- elementNS "Envelope"
-        ; interior e $ do
+        { inElementNS "Envelope" $ do
             { optional $ elementNS "Header"
-            ; b <- elementNS "Body"
-            ; interior b $ return SOAP `apply` parseContents
-            }
+            ; inElementNS "Body" $ choice SOAP 
+                                             (inElementNS "Fault" $ do
+                                                { faultcode <- inElementNS "faultcode" text
+                                                ; faultstring <- inElementNS "faultstring" text
+                                                -- ; faultactor <- optional $ inElementNS "faultactor" text
+                                                ; detail <- optional $ inElementNS "detail" (optional text)
+                                                -- ; return (SOAPFault faultcode faultstring (maybe "" id faultactor))
+                                                ; return (SOAPFault faultcode faultstring "")
+                                                }
+                                              )
+           }
         } `adjustErr` ("in <Envelope/Body>, "++)
 
 
@@ -86,13 +96,55 @@ instance XmlContent (SignResult) where
         ; base64 <- interior e $ do
             { result <- elementNS "Result"
             ; signedDocument <- elementNS "SignedDocument"
-            ; details <- elementNS "Details"
+            ; details <- optional $ elementNS "Details"
             ; interior signedDocument $ text
             }
         ; case decode base64 of
             Nothing -> fail "Cannot parse base64 encoded PDF signed document"
             Just value -> return (SignResult (BS.pack value))
         } `adjustErr` ("in <SignResult>, "++)
+
+
+data ValidateRequest = ValidateRequest BS.ByteString
+            deriving (Eq,Ord,Show,Read)
+
+instance HTypeable (ValidateRequest) where
+    toHType x = Defined "ValidateRequest" [] []
+instance XmlContent (ValidateRequest) where
+    toContents (ValidateRequest pdfdata) =
+        let base64data = encode (BS.unpack pdfdata) in
+        [CElem (Elem "ValidateRequest" [mkAttr "xmlns" "http://www.trustweaver.com/tsswitch"] 
+                         [ mkElemC "InputType" (toText "PDF")
+                         , mkElemC "JobType" (toText "CADESA")
+                         , mkElemC "OutputType" (toText "PDF")
+                         , mkElemC "SenderTag" (toText "SE")
+                         , mkElemC "ReceiverTag" (toText "SE")
+                         , mkElemC "SignedDocument" (toText base64data)
+                         , mkElemC "ExcludeOriginalDocument" (toText "false")
+                         ]) ()]
+    parseContents = error "Please do not parse ValidateRequest"
+
+data ValidateResult = ValidateResult String String
+            deriving (Eq,Ord,Show,Read)
+
+instance HTypeable (ValidateResult) where
+    toHType x = Defined "ValidateResult" [] []
+instance XmlContent (ValidateResult) where
+    toContents _ = error "Please do not serialize ValidateResult"
+    parseContents =  do
+        { e <- elementNS "ValidateResult"
+        ; interior e $ do
+            { result <- optional $ inElementNS "Result" $ do
+                          code <- inElementNS "Code" text
+                          desc <- inElementNS "Desc" text
+                          return (code ++ ": " ++ desc)
+            ; document <- optional $ elementNS "Document"
+            -- ; validationResult <- optional $ inElementNS "ValidationResult" text
+            ; archive <- optional $ elementNS "Archive"
+            ; details <- optional $ elementNS "Details"
+            ; return (ValidateResult (maybe "" id result) "")
+            }
+        } `adjustErr` ("in <ValidateResult>, "++)
 
 data RegisterSectionRequest = RegisterSectionRequest String
 
@@ -148,9 +200,9 @@ instance XmlContent (EnableSectionResponse) where
         ; interior e $ do
             { r  <- elementNS "Result"
             ; interior r $ do
-                { superAdminUsername <- inElementWith skipNamespacePrefix "SuperAdminUsername" text
-                ; superAdminPwd <- inElementWith skipNamespacePrefix "SuperAdminPwd" text
-                ; sectionPath <- inElementWith skipNamespacePrefix "SectionPath" text
+                { superAdminUsername <- inElementNS "SuperAdminUsername" text
+                ; superAdminPwd <- inElementNS "SuperAdminPwd" text
+                ; sectionPath <- inElementNS "SectionPath" text
                 ; return (EnableSectionResponse superAdminUsername superAdminPwd sectionPath)
                 }
             }
@@ -197,7 +249,7 @@ instance XmlContent (StoreInvoiceResponse) where
         ; interior e $ do
             { r  <- elementNS "Result"
             ; interior r $ do
-                { supplierReference <- inElementWith skipNamespacePrefix "SupplierReference" text
+                { supplierReference <- inElementNS "SupplierReference" text
                 ; return (StoreInvoiceResponse supplierReference)
                 }
             }
@@ -253,22 +305,36 @@ skipNamespacePrefix fqname tomatch =
 
 elementNS name = elementWith skipNamespacePrefix [name]
  
+inElementNS name action = do
+  e <- elementNS name
+  interior e action
 
-signDocument :: TrustWeaverConf -> BS.ByteString -> IO (Maybe BS.ByteString)
+signDocument :: TrustWeaverConf -> BS.ByteString -> IO (Either String BS.ByteString)
 signDocument TrustWeaverConf{signcert,signcertpwd} pdfdata = do
 
   result <- makeSoapCall "https://tseiod-dev.trustweaver.com/ts/svs.asmx"
             "http://www.trustweaver.com/tsswitch#Sign"
             signcert signcertpwd
            (SignRequest pdfdata)
-  case result of
-    Just (SignResult pdfdata') -> return (Just pdfdata')
-    Nothing -> return Nothing
+  let extract (SignResult pdfdata') = pdfdata'
+  return (fmap extract result)
 
-registerAndEnableSection :: TrustWeaverConf -> String -> IO (String,String,String)
+
+validateDocument :: TrustWeaverConf -> BS.ByteString -> IO (Either String (String,String))
+validateDocument TrustWeaverConf{signcert,signcertpwd} pdfdata = do
+
+  result <- makeSoapCall "https://tseiod-dev.trustweaver.com/ts/svs.asmx"
+            "http://www.trustweaver.com/tsswitch#Validate"
+            signcert signcertpwd
+           (ValidateRequest pdfdata)
+  let extract (ValidateResult result validateResult) = (result,validateResult)
+  return (fmap extract result)
+
+
+registerAndEnableSection :: TrustWeaverConf -> String -> IO (Either String (String,String,String))
 registerAndEnableSection TrustWeaverConf{admincert,admincertpwd} name = do
 
-  Just RegisterSectionResponse <- makeSoapCall "https://twa-test-db.trustweaver.com/ta_hubservices/Admin/AdminService.svc"
+  Right RegisterSectionResponse <- makeSoapCall "https://twa-test-db.trustweaver.com/ta_hubservices/Admin/AdminService.svc"
             "http://www.trustweaver.com/trustarchive/admin/v1/AdminServicePort/RegisterSection"
             admincert admincertpwd
            (RegisterSectionRequest name)
@@ -278,15 +344,21 @@ registerAndEnableSection TrustWeaverConf{admincert,admincertpwd} name = do
             admincert admincertpwd
            (EnableSectionRequest name)
 
-  case result2 of
-    Just (EnableSectionResponse superAdminUsername superAdminPwd sectionPath) -> 
-        return (superAdminUsername, superAdminPwd, sectionPath)
-    Nothing -> error "Section not enabled, sorry"
+  let extract (EnableSectionResponse superAdminUsername superAdminPwd sectionPath) =
+        (superAdminUsername, superAdminPwd, sectionPath)
+  return (fmap extract result2)
   
 
-makeSoapCall :: (XmlContent a, XmlContent b) => String -> String -> String -> String -> a -> IO (Maybe b)
+makeSoapCall :: (XmlContent request, XmlContent result) 
+                => String
+             -> String
+             -> String
+             -> String
+             -> request
+             -> IO (Either String result)
 makeSoapCall url action cert certpwd request = do
   let input = fpsShowXml False (SOAP request)
+
   let args = [ "-X", "POST", 
                "-k", "--silent", "--show-error",
                "--cert", cert ++ ":" ++ certpwd,
@@ -300,15 +372,9 @@ makeSoapCall url action cert certpwd request = do
 
   (code,stdout,stderr) <- readProcessWithExitCode' "curl.exe" args input
 
-  when (code /= ExitSuccess) $ do
-       putStrLn "Cannot execute ./curl for TrustWeaver"
-       BSL.hPutStr System.IO.stdout stderr
-
-  case readXml (BSL.toString stdout) of
-    Right (SOAP result) -> return (Just result)
-    Left errmsg -> do
-      print $ "makeSoapCall error: " ++ errmsg
-      print args
-      print input
-      print stdout
-      return Nothing
+  if (code /= ExitSuccess)
+       then return (Left $ "Cannot execute ./curl for TrustWeaver: " ++ BSL.toString stderr)
+     else case readXml (BSL.toString stdout) of
+            Right (SOAP result) -> return (Right result)
+            Right (SOAPFault code string actor) -> return (Left (code ++":" ++ string ++":" ++ actor))
+            Left errmsg -> return (Left (errmsg ++ ": " ++ BSL.toString stdout))
