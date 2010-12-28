@@ -71,6 +71,8 @@ data AppConf
               , production      :: Bool
               , twSignCert      :: FilePath
               , twSignCertPwd   :: String
+              , twAdminCert     :: FilePath
+              , twAdminCertPwd  :: String
               , mailsConfig     :: MailsConfig
               }              
 
@@ -261,6 +263,8 @@ appHandler appConf = do
             , ctxmailsconfig = mailsConfig appConf
             , ctxtwsigncert = twSignCert appConf
             , ctxtwsigncertpwd = twSignCertPwd appConf
+            , ctxtwadmincert = twAdminCert appConf
+            , ctxtwadmincertpwd = twAdminCertPwd appConf
             }
   (res,ctx)<- toIO ctx $  
      do

@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 
 module TrustWeaver 
-    (signDocument)
+    -- (signDocument)
     where
 import Codec.Binary.Base64
 import qualified Data.ByteString as BS
