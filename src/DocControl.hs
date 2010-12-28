@@ -840,11 +840,14 @@ sealDocument ctx@Context{ctxs3action,ctxtwconf}
 
   newfilepdf <- 
       if TW.signcert ctxtwconf == ""
-         then return (Just newfilepdf1)
-         else TW.signDocument ctxtwconf newfilepdf1
-  when (not $ isJust newfilepdf) $ error "TrustWeaver signing is not working properly"
+         then return newfilepdf1
+         else do
+           x <- TW.signDocument ctxtwconf newfilepdf1
+           case x of
+                   Left errmsg -> error errmsg
+                   Right result -> return result
 
-  mdocument <- update $ AttachSealedFile docid filename (fromJust newfilepdf)
+  mdocument <- update $ AttachSealedFile docid filename newfilepdf
   case mdocument of
     Right document -> do
         forkIO $ mapM_ (AWS.uploadFile ctxs3action) (documentsealedfiles document)

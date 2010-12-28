@@ -56,6 +56,7 @@ import qualified Data.Map as Map
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 import qualified Network.AWS.AWSConnection as AWS
+import qualified TrustWeaver as TW
 import qualified Payments.PaymentsControl as Payments
 import Templates.Templates (readTemplates, renderTemplate)
 import qualified Administration.AdministrationControl as Administration
@@ -264,10 +265,12 @@ appHandler appConf = do
             , ctxproduction = production appConf
             , ctxtemplates = templates
             , ctxmailsconfig = mailsConfig appConf
-            , ctxtwsigncert = twSignCert appConf
-            , ctxtwsigncertpwd = twSignCertPwd appConf
-            , ctxtwadmincert = twAdminCert appConf
-            , ctxtwadmincertpwd = twAdminCertPwd appConf
+            , ctxtwconf = TW.TrustWeaverConf 
+                          { TW.signcert = twSignCert appConf
+                          , TW.signcertpwd = twSignCertPwd appConf
+                          , TW.admincert = twAdminCert appConf
+                          , TW.admincertpwd = twAdminCertPwd appConf
+                          }
             }
   (res,ctx)<- toIO ctx $  
      do
