@@ -25,9 +25,16 @@ import System.Exit
 import System.IO
 import System.Process
 import Control.Monad
-import User (Context(..))
 import Text.XML.HaXml.XmlContent.Parser 
 import Text.XML.HaXml.XmlContent
+
+data TrustWeaverConf = TrustWeaverConf
+    { signcert          :: FilePath
+    , signcertpwd       :: String
+    , admincert         :: FilePath
+    , admincertpwd      :: String
+    }
+
 
 data SOAP a = SOAP a
             deriving (Eq,Ord,Show,Read)
@@ -247,30 +254,28 @@ skipNamespacePrefix fqname tomatch =
 elementNS name = elementWith skipNamespacePrefix [name]
  
 
-signDocument :: Context -> BS.ByteString -> IO (Maybe BS.ByteString)
-signDocument ctx pdfdata = do
-  let Context{ctxtwsigncert,ctxtwsigncertpwd} = ctx
+signDocument :: TrustWeaverConf -> BS.ByteString -> IO (Maybe BS.ByteString)
+signDocument TrustWeaverConf{signcert,signcertpwd} pdfdata = do
 
   result <- makeSoapCall "https://tseiod-dev.trustweaver.com/ts/svs.asmx"
             "http://www.trustweaver.com/tsswitch#Sign"
-            ctxtwsigncert ctxtwsigncertpwd
+            signcert signcertpwd
            (SignRequest pdfdata)
   case result of
     Just (SignResult pdfdata') -> return (Just pdfdata')
     Nothing -> return Nothing
 
-registerAndEnableSection :: Context -> String -> IO (String,String,String)
-registerAndEnableSection ctx name = do
-  let Context{ctxtwadmincert,ctxtwadmincertpwd} = ctx
+registerAndEnableSection :: TrustWeaverConf -> String -> IO (String,String,String)
+registerAndEnableSection TrustWeaverConf{admincert,admincertpwd} name = do
 
   Just RegisterSectionResponse <- makeSoapCall "https://twa-test-db.trustweaver.com/ta_hubservices/Admin/AdminService.svc"
             "http://www.trustweaver.com/trustarchive/admin/v1/AdminServicePort/RegisterSection"
-            ctxtwadmincert ctxtwadmincertpwd
+            admincert admincertpwd
            (RegisterSectionRequest name)
 
   result2 <- makeSoapCall "https://twa-test-db.trustweaver.com/ta_hubservices/Admin/AdminService.svc"
             "http://www.trustweaver.com/trustarchive/admin/v1/AdminServicePort/EnableSection"
-            ctxtwadmincert ctxtwadmincertpwd
+            admincert admincertpwd
            (EnableSectionRequest name)
 
   case result2 of

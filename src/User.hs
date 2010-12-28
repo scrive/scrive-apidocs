@@ -48,7 +48,7 @@ import Data.Object as Json
 import qualified Network.AWS.Authentication as AWS
 import Templates.Templates  (KontrakcjaTemplates)
 import Mails.MailsConfig
-import KontraLink
+
 
 instance Monad m => IsAttrValue m DocumentID where
     toAttrValue = toAttrValue . show
@@ -123,10 +123,7 @@ data Context = Context
     , ctxproduction          :: Bool
     , ctxtemplates           :: KontrakcjaTemplates 
     , ctxmailsconfig         :: MailsConfig  
-    , ctxtwsigncert          :: FilePath
-    , ctxtwsigncertpwd       :: String
-    , ctxtwadmincert         :: FilePath
-    , ctxtwadmincertpwd      :: String
+    , ctxtwconf              :: TW.TrustWeaverConf
     }
 
 type Kontra a = ServerPartT (StateT Context IO) a
