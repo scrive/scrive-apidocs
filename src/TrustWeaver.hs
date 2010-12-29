@@ -15,7 +15,7 @@ module TrustWeaver
     where
 import Codec.Binary.Base64
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.UTF8 as BS hiding (length, drop)
+import qualified Data.ByteString.UTF8 as BS hiding (length, drop, break)
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length, drop)
 import qualified Data.ByteString.Lazy as BSL
 import Misc
@@ -215,7 +215,7 @@ instance HTypeable (StoreInvoiceRequest) where
 instance XmlContent (StoreInvoiceRequest) where
     toContents (StoreInvoiceRequest documentid documentdate ownertwname pdfdata) =
         let base64data = encode (BS.unpack pdfdata) in
-        [CElem (Elem "StoreInvoice" [mkAttr "xmlns" "http://www.trustweaver.com/trustarchive/admin/v1"] 
+        [CElem (Elem "StoreInvoice" [mkAttr "xmlns" "http://www.trustweaver.com/trustarchive/storage/v1"] 
                          [mkElemC "Request" 
                                       [ mkElemC "Document" 
                                                     [ mkElemC "Data" (toText base64data)
@@ -263,7 +263,7 @@ instance HTypeable (GetInvoiceRequest) where
     toHType x = Defined "GetInvoiceRequest" [] []
 instance XmlContent (GetInvoiceRequest) where
     toContents (GetInvoiceRequest supplierReference) =
-        [CElem (Elem "GetInvoice" [mkAttr "xmlns" "http://www.trustweaver.com/trustarchive/admin/v1"] 
+        [CElem (Elem "GetInvoice" [mkAttr "xmlns" "http://www.trustweaver.com/trustarchive/storage/v1"] 
                          [mkElemC "Request" 
                                       [ mkElemC "Reference" (toText supplierReference)
                                       ]
@@ -286,6 +286,11 @@ instance XmlContent (GetInvoiceResponse) where
                 ; supplierInfo <- elementNS "SupplierInfo"
                 ; buyerInfo <- optional $ elementNS "BuyerInfo"
                 ; attachments <- optional $ elementNS "Attachments"
+                -- to get that document data we would need to parse multiparts
+                -- and the make use of xop and something
+                -- ugly, lets skip this!
+                ; return (GetInvoiceResponse (BS.empty))
+                {-
                 ; interior document $ do
                     { dta <- elementNS "Data"
                     ; base64encoded <- interior dta $ text
@@ -293,6 +298,7 @@ instance XmlContent (GetInvoiceResponse) where
                         Nothing -> fail "cannot decode base64 data"
                         Just bin -> return (GetInvoiceResponse (BS.pack bin))
                     }
+             -}
                 }
             }
         } `adjustErr` ("in <GetInvoiceResponse>, "++)
@@ -347,7 +353,33 @@ registerAndEnableSection TrustWeaverConf{admincert,admincertpwd} name = do
   let extract (EnableSectionResponse superAdminUsername superAdminPwd sectionPath) =
         (superAdminUsername, superAdminPwd, sectionPath)
   return (fmap extract result2)
+
+storeInvoice :: TrustWeaverConf 
+             -> String 
+             -> String 
+             -> String 
+             -> BS.ByteString 
+             -> IO (Either String String)
+storeInvoice TrustWeaverConf{admincert,admincertpwd} documentid documentdate ownertwname pdfdata = do
+  result <- makeSoapCall "https://twa-test-db.trustweaver.com/ta_hubservices/Storage/StorageService.svc"
+            "http://www.trustweaver.com/trustarchive/storage/v1/StorageServicePort/StoreInvoice"
+            admincert admincertpwd
+           (StoreInvoiceRequest documentid documentdate ownertwname pdfdata)
+  let extract (StoreInvoiceResponse referece) = referece
+  return (fmap extract result)
   
+getInvoice :: TrustWeaverConf 
+           -> String 
+           -> IO (Either String BS.ByteString)
+getInvoice TrustWeaverConf{admincert,admincertpwd} reference = do
+  result <- makeSoapCall "https://twa-test-db.trustweaver.com/ta_hubservices/Storage/StorageService.svc"
+            "http://www.trustweaver.com/trustarchive/storage/v1/StorageServicePort/GetInvoice"
+            admincert admincertpwd
+           (GetInvoiceRequest reference)
+  let extract (GetInvoiceResponse pdfdata) = pdfdata
+  return (fmap extract result)
+  
+
 
 makeSoapCall :: (XmlContent request, XmlContent result) 
                 => String
@@ -358,6 +390,7 @@ makeSoapCall :: (XmlContent request, XmlContent result)
              -> IO (Either String result)
 makeSoapCall url action cert certpwd request = do
   let input = fpsShowXml False (SOAP request)
+  -- BSL.appendFile "soap.xml" input
 
   let args = [ "-X", "POST", 
                "-k", "--silent", "--show-error",
@@ -371,10 +404,39 @@ makeSoapCall url action cert certpwd request = do
              ]
 
   (code,stdout,stderr) <- readProcessWithExitCode' "curl.exe" args input
+  -- BSL.appendFile "soap.xml" stdout
+
+  {-
+   stdout here might be a multipart stream
+   lets do it the painful way
+
+   --uuid:1616144b-0f50-40a5-9587-92b5b989e330+id=48
+   Content-ID: <http://tempuri.org/0>
+   Content-Transfer-Encoding: 8bit
+   Content-Type: application/xop+xml;charset=utf-8;type="text/xml"
+
+   <s:Envelope ...>,,,</s:Envelope>
+   --uuid:1616144b-0f50-40a5-9587-92b5b989e330+id=48--
+
+   so:
+   1. See if it starts with --
+   2. Cut off to first \n and remember
+   3. Cut-off to first \n\n
+   4. Cut up to the remembered part
+   5. Use middle as XML to parse
+   -}
+  let (boundary,rest) = BS.breakSubstring (BS.fromString "\r\n") (BS.concat (BSL.toChunks (BSL.drop 2 stdout)))
+      (header,rest2) = BS.breakSubstring (BS.fromString "\r\n\r\n") rest
+      (xml1,_) = BS.breakSubstring boundary rest2
+  
+  xml <- if BSL.fromString "\r\n--" `BSL.isPrefixOf` stdout
+            then do
+              return (BSL.fromChunks [xml1])
+            else return stdout
 
   if (code /= ExitSuccess)
        then return (Left $ "Cannot execute ./curl for TrustWeaver: " ++ BSL.toString stderr)
-     else case readXml (BSL.toString stdout) of
+     else case readXml (BSL.toString xml) of
             Right (SOAP result) -> return (Right result)
             Right (SOAPFault code string actor) -> return (Left (code ++":" ++ string ++":" ++ actor))
             Left errmsg -> return (Left (errmsg ++ ": " ++ BSL.toString stdout))
