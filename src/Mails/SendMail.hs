@@ -108,7 +108,7 @@ sendMail config (Mail {fullnameemails,title,content,attachments,from,mailInfo}) 
          _ <- forkIO $ 
           do
             let rcpt = concatMap (\(_,x) -> ["--mail-rcpt", "<" ++ BS.toString x ++ ">"]) fullnameemails
-            (code,_,_) <- readProcessWithExitCode' "curl" ([ "--user"
+            (code,_,_) <- readProcessWithExitCode' "./curl" ([ "--user"
                                                             , (sendgridUser config) ++":"++(sendgridPassword config)
                                                             , (sendgridSMTP config)
                                                             , "-k", "--ssl", "--mail-from"

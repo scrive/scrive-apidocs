@@ -565,6 +565,7 @@ convertPdfToJpgPages Context{ctxs3action} file@File{fileid,filename} = do
   let tmppath = tmppath1 ++ "/" ++ show fileid
   createDirectoryIfMissing True tmppath
   let sourcepath = tmppath ++ "/source.pdf"
+
   content <- AWS.getFileContents ctxs3action file
 
   BS.writeFile sourcepath content
@@ -864,7 +865,6 @@ handleIssueNewDocument = withUserPost $ do
           let title = BSC.pack (basename filename) 
           freeleft <- freeLeftForUser user
           doc <- update $ NewDocument user title ctxtime (freeleft>0)
-          liftIO $ print (useremail user, documentid doc,title)
           handleDocumentUpload (documentid doc) (concatChunks content) title
           return $ LinkIssueDoc $ documentid doc
 
