@@ -58,10 +58,10 @@ uploadFile ctxs3action file@File{fileid,filestorage = FileStorageMemory content}
 uploadFile _ _ = return ()
 
 getFileContents s3action File{ filestorage = FileStorageMemory content, filename } = do
-    putStrLn $ "getFileContents local " ++ BS.toString filename
+    -- putStrLn $ "getFileContents local " ++ BS.toString filename
     return content
 getFileContents s3action File{ filestorage = FileStorageAWS bucket url } = do
-  putStrLn $ "AWS download " ++ BS.toString bucket ++ "/" ++ BS.toString url
+  -- putStrLn $ "AWS download " ++ BS.toString bucket ++ "/" ++ BS.toString url
   result <- AWS.runAction (s3action { AWS.s3object = BS.toString url
                                        , AWS.s3bucket = BS.toString bucket
                                        })
