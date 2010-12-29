@@ -29,6 +29,7 @@ import AppControl (appHandler,defaultAWSAction,AppConf(..))
 import qualified Control.Concurrent (threadDelay)
 import qualified User as User
 import qualified Data.ByteString.Char8 as BS
+import System.IO
 
 import Network.BSD
 import Network (PortID(..))
@@ -100,6 +101,8 @@ uploadOldFilesToAmazon appConf = do
 
 main = withLogger $ do
   -- progname effects where state is stored and what the logfile is named
+  hSetEncoding stdout utf8
+  hSetEncoding stderr utf8
   let progName = "kontrakcja"
 
   args <- getArgs
