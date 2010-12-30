@@ -4,6 +4,8 @@
 {-# OPTIONS_GHC -Wall #-}
 module UserState 
     ( Email(..)
+    , Friend(..)
+    , DefaultMainSignatory(..)
     , ExternalUserID(..)
     , FlashMessage(..)
     , Password(..)
@@ -38,6 +40,10 @@ module UserState
     , SetUserPaymentAccount(..)
     , SetUserPaymentPolicyChange(..)
     , SetUserPassword(..)
+    , SetDefaultMainSignatoryByEmail(..)
+    , GetUsersByFriendUserID(..)
+    , AddViewerByEmail(..)
+    , GetUsersByUserIDs(..)
 ) where
 import Happstack.Data
 import Happstack.State
@@ -70,6 +76,8 @@ $(deriveAll [''Eq, ''Ord, ''Default]
       -- Leaving FlashMessage declaration here is necessity
       -- Have to be used because of users versioning
       -- Can't be moved to Session where it belong (cycle references)
+      newtype Friend = Friend { unFriend :: Int }
+      newtype DefaultMainSignatory = DefaultMainSignatory { unDMS :: Int }
       newtype FlashMessage = FlashMessage BS.ByteString deriving Read       
       newtype Email = Email { unEmail :: BS.ByteString }
       data Password = Password [Octet] [Octet] | NoPassword
@@ -109,6 +117,21 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , usersettings                  :: UserSettings
           , userpaymentpolicy             :: Payments.UserPaymentPolicy
           , userpaymentaccount            :: Payments.UserPaymentAccount
+          , userfriends                   :: [Friend]
+          , userdefaultmainsignatory      :: DefaultMainSignatory
+          }
+
+      data User7 = User7
+          { userid7                        :: UserID
+          , userpassword7                  :: Password
+          , usersupervisor7                :: Maybe SupervisorID
+          , usercanhavesubaccounts7        :: Bool
+          , useraccountsuspended7          :: Bool
+          , userhasacceptedtermsofservice7 :: Maybe MinutesTime
+          , userinfo7                      :: UserInfo
+          , usersettings7                  :: UserSettings
+          , userpaymentpolicy7             :: Payments.UserPaymentPolicy
+          , userpaymentaccount7            :: Payments.UserPaymentAccount
           }
       
       data User6 = User6
@@ -207,6 +230,8 @@ deriving instance Show User
 deriving instance Show Email
 deriving instance Show FlashMessage
 deriving instance Show Password
+deriving instance Show Friend
+deriving instance Show DefaultMainSignatory
 
 deriving instance Bounded StorageType 
 deriving instance Enum StorageType 
@@ -362,7 +387,7 @@ instance Migrate User5 User6 where
                 , userhasacceptedtermsofservice6 = Nothing
                 }
                 
-instance Migrate User6 User where
+instance Migrate User6 User7 where
     migrate (User6
              { userid6
              , userfullname6
@@ -375,14 +400,14 @@ instance Migrate User6 User where
              , usercanhavesubaccounts6
              , useraccountsuspended6
              , userhasacceptedtermsofservice6
-             }) = User
-                {  userid                  =  userid6
-                 , userpassword            =  userpassword6 
-                 , usersupervisor          =  usersupervisor6   
-                 , usercanhavesubaccounts  =  usercanhavesubaccounts6 
-                 , useraccountsuspended    =  useraccountsuspended6      
-                 , userhasacceptedtermsofservice = userhasacceptedtermsofservice6
-                 , userinfo = UserInfo {
+             }) = User7
+                {  userid7                  =  userid6
+                 , userpassword7            =  userpassword6 
+                 , usersupervisor7          =  usersupervisor6   
+                 , usercanhavesubaccounts7  =  usercanhavesubaccounts6 
+                 , useraccountsuspended7    =  useraccountsuspended6      
+                 , userhasacceptedtermsofservice7 = userhasacceptedtermsofservice6
+                 , userinfo7 = UserInfo {
                                     userfstname = userfullname6          
                                   , usersndname = BS.empty
                                   , userpersonalnumber = BS.empty
@@ -396,16 +421,43 @@ instance Migrate User6 User where
                                   , usermobile = BS.empty
                                   , useremail = useremail6   
                                    }
-                , usersettings  = UserSettings {
+                , usersettings7  = UserSettings {
                                     accounttype = if (isNothing usersupervisor6)  then MainAccount else SubAccount
                                   , accountplan = Basic
                                   , signeddocstorage = Amazon
                                   , userpaymentmethod = Undefined
                                   }                   
-                , userpaymentpolicy =  Payments.basicPaymentPolicy
-                , userpaymentaccount = Payments.emptyPaymentAccount                  
+                , userpaymentpolicy7 =  Payments.basicPaymentPolicy
+                , userpaymentaccount7 = Payments.emptyPaymentAccount                  
       }       
       
+instance Migrate User7 User where
+    migrate (User7 
+             { userid7 
+             , userpassword7
+             , usersupervisor7 
+             , usercanhavesubaccounts7
+             , useraccountsuspended7     
+             , userhasacceptedtermsofservice7
+             , userinfo7                   
+             , usersettings7                  
+             , userpaymentpolicy7
+             , userpaymentaccount7  
+             }) = User 
+                { userid                         = userid7
+                , userpassword                   = userpassword7
+                , usersupervisor                 = usersupervisor7
+                , usercanhavesubaccounts         = usercanhavesubaccounts7
+                , useraccountsuspended           = useraccountsuspended7
+                , userhasacceptedtermsofservice  = userhasacceptedtermsofservice7
+                , userinfo                       = userinfo7
+                , usersettings                   = usersettings7
+                , userpaymentpolicy              = userpaymentpolicy7
+                , userpaymentaccount             = userpaymentaccount7
+                , userfriends                    = []
+                , userdefaultmainsignatory       = DefaultMainSignatory $ unUserID userid7
+                }
+
 userfullname :: User -> BS.ByteString
 userfullname u = if (BS.null $ usersndname $ userinfo u) 
                   then (userfstname $ userinfo u) 
@@ -462,10 +514,13 @@ $(deriveSerialize ''User6)
 instance Version User6 where
     mode = extension 6 (Proxy :: Proxy User5)
 
-$(deriveSerialize ''User)
-instance Version User where
+$(deriveSerialize ''User7)
+instance Version User7 where
     mode = extension 7 (Proxy :: Proxy User6) 
 
+$(deriveSerialize ''User)
+instance Version User where
+    mode = extension 8 (Proxy :: Proxy User7)
 
 $(deriveSerialize ''StorageType )
 instance Version StorageType 
@@ -496,6 +551,12 @@ instance Version Password
 
 $(deriveSerialize ''UserID)
 instance Version UserID
+
+$(deriveSerialize ''Friend)
+instance Version Friend
+
+$(deriveSerialize ''DefaultMainSignatory)
+instance Version DefaultMainSignatory
 
 $(deriveSerialize ''SupervisorID)
 instance Version SupervisorID
@@ -558,6 +619,20 @@ getUserByUserID userid = do
   users <- ask
   return $ getOne (users @= userid)
 
+getUsersByUserIDs :: [UserID] -> Query Users [User]
+getUsersByUserIDs [] = return []
+getUsersByUserIDs (u:us) = do
+  muser1 <- getUserByUserID u
+  users <- getUsersByUserIDs us
+  case muser1 of
+    Just user1 -> return $ [user1]
+    Nothing -> return $ []
+
+getUsersByFriendUserID :: UserID -> Query Users [User]
+getUsersByFriendUserID uid = do
+  users <- ask
+  return $ filter (\u -> (unUserID uid) `elem` (map unFriend (userfriends u))) $ toList users
+
 getUserSubaccounts :: UserID -> Query Users (Set.Set User)
 getUserSubaccounts userid = do
   users <- ask
@@ -602,7 +677,9 @@ addUser fullname email passwd maybesupervisor = do
                                   , userpaymentmethod = Undefined
                                   }                   
                 , userpaymentpolicy =  Payments.basicPaymentPolicy
-                , userpaymentaccount = Payments.emptyPaymentAccount  
+                , userpaymentaccount = Payments.emptyPaymentAccount 
+              , userfriends = []
+              , userdefaultmainsignatory = DefaultMainSignatory $ unUserID userid
                  })             
   modify (updateIx (Email email) user)
   return user
@@ -638,13 +715,23 @@ setUserDetails :: UserID
                -> Update Users (Either String User)
 setUserDetails userid fullname companyname companynumber invoiceaddress =
     modifyUser userid $ \user -> 
-            Right $ user { userinfo = (userinfo user) { 
-                                                      userfstname = fullname
-                                                    , usercompanyname = companyname
-                                                    , usercompanynumber = companynumber
-                                                    , useraddress = invoiceaddress
-                                                    }
+            Right $ user { userinfo = (userinfo user) { userfstname = fullname
+                                                      , usercompanyname = companyname
+                                                      , usercompanynumber = companynumber
+                                                      , useraddress = invoiceaddress
+                                                      }
                          }                            
+
+{- |
+  Set the default main signatory for a user by email address.
+ -}
+setDefaultMainSignatoryByEmail :: UserID -> Email -> Update Users (Either String User)
+setDefaultMainSignatoryByEmail uid dmsemail = do
+  mms <- do users <- ask
+            return $ getOne (users @= dmsemail)
+  case mms of
+    Just ms -> modifyUser uid (\user -> Right (user { userdefaultmainsignatory = DefaultMainSignatory (unUserID $ userid ms) }))
+    Nothing -> return $ Left $ "no such user " ++ (BS.toString $ unEmail dmsemail)
 
 setUserInfo :: UserID -> UserInfo -> Update Users (Either String User)
 setUserInfo userid userinfo =
@@ -668,7 +755,17 @@ setUserPaymentPolicyChange userid userpaymentpolicy =
     modifyUser userid $ \user -> 
             Right $ user {userpaymentpolicy = userpaymentpolicy}   
 
-
+{- |
+   Add a new viewer (friend) given the email address
+ -}
+addViewerByEmail :: UserID -> Email -> Update Users (Either String User)
+addViewerByEmail uid vieweremail = do
+  mms <- do users <- ask
+            return $ getOne (users @= vieweremail)
+  case mms of
+    Just ms -> modifyUser uid $ \user ->
+                                      Right $ user { userfriends = (Friend (unUserID $ userid ms) : (userfriends user)) }
+    Nothing -> return $ Left $ "no such user " ++ (BS.toString $ unEmail vieweremail)
 
 
 fragileDeleteUser :: UserID -> Update Users (Maybe User)
@@ -703,6 +800,7 @@ instance Component Users where
 -- create types for event serialization
 $(mkMethods ''Users [ 'getUserByUserID
                     , 'getUserByEmail
+                    , 'getUsersByUserIDs
                     , 'addUser
                     , 'getUserStats
                     , 'getAllUsers
@@ -713,9 +811,11 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'setUserPaymentAccount 
                     , 'setUserPaymentPolicyChange
                     , 'getUserSubaccounts
+                    , 'getUsersByFriendUserID
                     , 'acceptTermsOfService
                     , 'exportUsersDetailsToCSV
-
+                    , 'setDefaultMainSignatoryByEmail
+                    , 'addViewerByEmail
                       -- the below should be only used carefully and by admins
                     , 'fragileDeleteUser
                     , 'deleteTermsOfService
