@@ -95,7 +95,7 @@ parseTemplate handle = do
                         if (null ls || null (name) || null t)
                          then return Nothing   
                          else do
-                              let template = concat ((tail t): (tail ls)) 
+                              let template = intercalate "\r\n" ((tail t): (tail ls)) 
                               return $ Just (filter isAlphaNum name,newSTMP template)
 parseLines::Handle->IO [String]                                    
 parseLines handle = do
