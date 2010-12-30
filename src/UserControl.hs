@@ -61,7 +61,13 @@ handleUserPasswordPost = do
 handleUserGet :: Kontra Response
 handleUserGet = do
   ctx@(Context {ctxmaybeuser = Just user}) <- get
-  renderFromBody ctx TopAccount kontrakcja $ showUser user
+  mms <- query $ GetUserByUserID $ UserID $ unDMS (userdefaultmainsignatory user)
+  maybefriends <- mapM (query . GetUserByUserID . UserID . unFriend) (userfriends user)
+  let friends = map fromJust $ filter isJust maybefriends
+  let ms = case mms of
+             Just m -> m
+             Nothing -> user
+  renderFromBody ctx TopAccount kontrakcja $ showUser user ms friends
 
 handleUserPost :: Kontra KontraLink
 handleUserPost = do
@@ -70,6 +76,24 @@ handleUserPost = do
   companyname <- g "companyname"
   companynumber <- g "companynumber"
   invoiceaddress <- g "invoiceaddress"
+  defaultmainsignatoryemail <- g "defaultmainsignatory"
+  newvieweremail <- g "newvieweremail"
+
+  liftIO $ print "what's up?"
+
+  when (BS8.length defaultmainsignatoryemail > 0) $ do
+     dmsreturn <- update $ SetDefaultMainSignatoryByEmail userid $ Email defaultmainsignatoryemail
+     case dmsreturn of
+       Left msg -> addFlashMsgText msg
+       Right _  -> return ()
+     return ()
+
+  when (BS8.length newvieweremail > 0) $ do
+     avereturn <- update $ AddViewerByEmail userid $ Email newvieweremail
+     case avereturn of
+       Left msg -> addFlashMsgText msg
+       Right _  -> return ()
+     return ()
   
   newuser <- update $ SetUserDetails userid fullname companyname companynumber invoiceaddress
   addFlashMsgHtmlFromTemplate =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))

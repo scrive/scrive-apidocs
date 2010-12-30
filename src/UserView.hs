@@ -32,8 +32,8 @@ import qualified HSX.XMLGenerator
 import Templates.Templates 
 import Templates.TemplatesUtils
 
-showUser :: User -> HSP.HSP HSP.XML
-showUser user = 
+showUser :: User -> User -> [User] -> HSP.HSP HSP.XML
+showUser user ms viewers = 
     <div class="accounttable">
      <h1><% userfullname user %></h1>
       <div>
@@ -55,6 +55,12 @@ showUser user =
              <td><input type="text" name="invoiceaddress" value=(useraddress $ userinfo user)/></td>
          </tr>
        </table>
+       <p>I typically author documents for <% if user == ms then "myself" else BS.toString $ prettyName ms %>. <input type="text" name="defaultmainsignatory" infotext="enter email of other party to change" /></p>
+       <p>These users can view documents in your archive:</p>
+       <ul>
+       <% map (\x -> <li><% BS.toString $ prettyName x %></li>) viewers %>
+       </ul>
+       <p><input type="text" name="newvieweremail" infotext="enter email to add new" /></p>
        <input class="button" type="submit" value="Spara ändringar"/>
       </form>
       <div>
