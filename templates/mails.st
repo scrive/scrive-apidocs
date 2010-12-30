@@ -47,7 +47,7 @@ mailRejectMailTitle=Avvisat: $documenttitle$
 ####
 mailRejectMailContent= <span>
                       <p>Hej $authorname$,</p>
-                      <p>$rejectorName$ har nekat att underteckna dokumentet <strong>$documenttitle$</strong>. 
+                      <p>$rejectorName$ har avvisat att underteckna dokumentet <strong>$documenttitle$</strong>. 
                       Avtalsprocessen är därmed avbruten.</p>
                       $poweredBySkrivaPaPara()$
                     </span>       
@@ -81,7 +81,7 @@ remindMailSignedTitle=Hej $personname$
 remindMailSignedStandardHeader=     <span>
                                       <p>Hej <strong>$personname$</strong></p>
                                       <p><strong>$author$</strong> har begärt att vi ska skicka dokumentet <strong>$documenttitle$</strong> 
-                                      till dig som du har undertecknat via tjänsten SkrivaPå.Dokumentet bifogas med detta mail.</p>
+                                      till dig som du har undertecknat via tjänsten SkrivaPå. Dokumentet bifogas med detta mail.</p>
                                     </span>
 ####
 remindMailNotSignedTitle=Hej $personname$
@@ -123,7 +123,7 @@ newUserMailContent=
 
       <p>Användarnamn: <b>$email$</b><br/>
       </p>
-      <p>
+      <p>Du kan nu logga in från vår hemsida eller genom att klicka på följande länk:<br/>
       <a href="$ctxhostpart$/login">$ctxhostpart$/login</a>
       </p>
 
@@ -135,16 +135,10 @@ passwordChangeMailTitle=Nytt lösenord
 ####
 passwordChangeMailContent= 
      <span>
-      <p>Hej <strong>$personname$</strong>,</p>
+      <p>Hej $personname$,</p>
 
-      <p>Här kommer ditt nya lösenord. Vänligen ändra lösenordet så snart som möjligt.</p>
-
-      <p>Användarnamn: <span style="color: orange; text-weight: bold">$email$</span><br/>
-      </p>
-      <p> To set password use this link:  <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a>
-      </p>
-      <p>
-      <a href="$ctxhostpart$/login">$ctxhostpart$/login</a>
+      <p>Du har begärt ett nytt lösenord. Vänligen klicka på länken nedan för att välja ett nytt lösenord.<br/>  
+	<a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a>
       </p>
        $poweredBySkrivaPaPara()$
      </span>
@@ -160,7 +154,8 @@ inviteSubaccountMailContent=
           avsett för privat bruk.</p>     
        <p>Användarnamn: <span style="color: orange; text-weight: bold">$email$</span><br/> 
        </p>
-       <p> To set password use this link:  <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a>
+       <p>Vänligen klicka på länken för att aktivera kontot:<br/>  
+	<a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a>
       </p>
        <p>
        <a href="$ctxhostpart$">$ctxhostpart$</a>
@@ -179,9 +174,11 @@ mailNewAccountCreatedByAdminContent=
       <p>SkrivaPå är ett webbaserat tredjepartsnotariat som gör det möjligt att underteckna, 
          hantera och arkivera avtal elektroniskt. SkrivaPå är som Gmail för dina avtal.</p>
 
-      <p>Användarnamn: <b>$email$</b><br/>
-      </p>
-      <p> To set password use this link:  <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a>
+	<p>Användarnamn: <span style="color: orange; text-weight: bold">$email$</span><br/> 
+       </p>
+
+      <p>Vänligen klicka på länken för att aktivera kontot:<br/>  
+	<a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a>
       </p>
       <p>
        <a href="$ctxhostpart$">$ctxhostpart$</a>
@@ -189,15 +186,30 @@ mailNewAccountCreatedByAdminContent=
        $poweredBySkrivaPaPara()$
      </span>
 ####
-invitationMailUndeliveredTitle = Undeliverd mail
+invitationMailUndeliveredTitle = Felaktig e-post adress
 ###
-invitationMailUndeliveredContent = Undeliver mail to address $email$
+invitationMailUndeliveredContent = 
+	<span>
+	<p>Hej $authorname$,</p>
+	<p>Adressen $email$ existerar inte och därför kunde vi inte leverera din inbjudan att underteckna via e-post. 		
+	Processen har därmed avbrutits. Gör så här om du vill börja om:</p>
+
+	<p>1. Kontrollera vilken som är mottagarens korrekta adress<br/>  
+	   2. Klicka på dokumentet i ditt arkiv eller på följande länk<br/>  
+	   $unsigneddoclink$</p>
+
+	<p>3. Klicka "Starta om"<br/>
+	   4. Skriv in rätt e-postadress och skicka igen</p>
+       
+	$poweredBySkrivaPaPara()$
+     </span>
+
 ###
 passwordChangeLinkMailTitle=Change password request
 ###
 passwordChangeLinkMailTitleContent=   <span>
       <p>Hej </p>
-      <p>You requested to change Your password to SkrivaPa. Please use the fallowing link to change it </p>
+      <p>Du har begärt att ändra ditt lösenord på SkrivaPå. Vänligen klicka på följande länk för att gå vidare:</p>
       <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a>
        $poweredBySkrivaPaPara()$
      </span>
