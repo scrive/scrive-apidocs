@@ -458,6 +458,60 @@ pageDocumentForAuthor ctx
        </div>
       </div>
 
+{- |
+   Show the document for Viewers (friends of author or signatory).
+   Show no buttons or other controls
+ -}
+pageDocumentForViewer :: Context -> Document -> (HSPT IO XML) 
+pageDocumentForViewer ctx
+             document@Document{ documentsignatorylinks
+                              , documentauthordetails
+                              , documenttitle
+                              , documentid
+                              , documentstatus
+                              } 
+             =
+   let helper = [ showSignatoryEntryForEdit2 "signatory_template" "" "" "" ""
+                , <script> var documentid = "<% show $ documentid %>"; 
+                  </script>
+                ]
+       allinvited = documentsignatorylinks
+       authorlink = SignatoryLink 
+                    { signatorydetails = documentauthordetails
+                    , maybeseeninfo = Nothing 
+                      -- this gymanstic below is to cover up for some earlier error
+                      -- that erased sign times of authors
+                    , maybesigninfo = if isJust (documentmaybesigninfo document)
+                                      then (documentmaybesigninfo document)
+                                      else if documentstatus == Closed
+                                           then Just (SignInfo (MinutesTime 0) 0)
+                                           else Nothing
+                    , signatorylinkid = SignatoryLinkID 0
+                    , maybesignatory = Nothing -- FIXME: should be author user id
+                    , signatorymagichash = MagicHash 0
+                    , invitationdeliverystatus = Delivered
+                    }
+   in showDocumentPageHelper document helper 
+           (documenttitle)  
+      <div>
+       <div id="loading-message" style="display:none">
+            Loading pages . . .
+       </div>
+       <div id="edit-bar">
+                <script type="text/javascript" language="Javascript" src="/js/showfields.js"> 
+                </script>
+                <script type="text/javascript">
+                  <% "var docstate = " ++ (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks) ++ ";" %>
+                </script>
+               
+              <div id="signatorylist">
+                 <% showSignatoryLinkForSign ctx document authorlink %>
+                 <% map (showSignatoryLinkForSign ctx document) allinvited %>
+              </div>
+       </div>
+      </div>
+
+
 showDocumentPageHelper
     :: (XMLGenerator m, 
         HSX.EmbedAsChild m c,
