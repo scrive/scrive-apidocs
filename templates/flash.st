@@ -21,3 +21,7 @@ flashMessagePasswordsDontMatch=Nytt lösenord matchar inte med upprepa lösenord
 ###
 flashDocumentRestarted=Du har startat om dokumentet och kan nu underteckna och skicka inbjudan på nytt.
 ###
+flashMessageUserPasswordChanged=Password changed
+###
+flashMessagePasswordChangeLinkNotValid=We are sorry but this link has expired.<BR/> Plese use password reminder to get new one.
+###

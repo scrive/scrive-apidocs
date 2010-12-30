@@ -33,31 +33,87 @@ import qualified Data.Object.Json as Json
 import qualified Data.Set as Set
 import qualified HSP
 import Templates.Templates (KontrakcjaTemplates)
+import HSP.XML
 
 handleUserPasswordPost :: Kontra KontraLink
 handleUserPasswordPost = do
   ctx@Context{ctxmaybeuser = Just user@User{userid}} <- get
-  oldpassword <- g "oldpassword"
-  password <- g "password"
-  password2 <- g "password2"
-  
-  if password == password2
-    then 
-      if verifyPassword (userpassword user) oldpassword
-        then
-          if isPasswordStrong password
-            then do
-              passwordhash <- liftIO $ createPassword password
-              update $ SetUserPassword user passwordhash
-              addFlashMsgHtmlFromTemplate =<< (liftIO $ flashMessageUserDetailsSaved  (ctxtemplates ctx))
-            else
-              addFlashMsgText =<< (liftIO $ flashMessagePasswordNotStrong (ctxtemplates ctx))
-        else
-          addFlashMsgText =<< (liftIO $ flashMessageBadOldPassword  (ctxtemplates ctx))
-    else
-      addFlashMsgText =<< (liftIO $ flashMessagePasswordsDontMatch (ctxtemplates ctx))
+  oldpassword <- fmap (fromMaybe "") $ getField "oldpassword"
+  password <- fmap (fromMaybe "") $ getField "password"
+  password2 <- fmap (fromMaybe "") $ getField "password2"
+  if verifyPassword (userpassword user) $ BS.fromString oldpassword
+    then
+          case (checkPasswords password password2) of
+           Right () -> do
+                        passwordhash <- liftIO $ createPassword $ BS.fromString password
+                        update $ SetUserPassword user passwordhash
+                        addFlashMsgHtmlFromTemplate =<< (liftIO $ flashMessageUserDetailsSaved  (ctxtemplates ctx))
+           Left f ->  addFlashMsgText =<< (liftIO $ f (ctxtemplates ctx))
+    else  addFlashMsgText =<< (liftIO $ flashMessageBadOldPassword  (ctxtemplates ctx))
   return LinkAccount
 
+
+checkPasswords::String -> String -> Either (KontrakcjaTemplates -> IO String) ()
+checkPasswords p1 p2 =  if p1 == p2
+                        then 
+                          if isPasswordStrong $ BS.fromString p1
+                          then Right ()
+                          else Left  flashMessagePasswordNotStrong 
+                        else Left  flashMessagePasswordsDontMatch 
+
+handleChangePassword::String->String -> Kontra KontraLink
+handleChangePassword sid mh = do
+                              ctx <- get
+                              muser <- userFromExternalSessionData sid mh
+                              case muser of 
+                                Just user -> 
+                                   do
+                                     password <- fmap (fromMaybe "") $ getField "password"
+                                     password2 <- fmap (fromMaybe "") $ getField "password2"
+                                     case (checkPasswords password password2) of
+                                      Right () ->
+                                        do
+                                          passwordhash <- liftIO $ createPassword $ BS.fromString password
+                                          update $ SetUserPassword user passwordhash
+                                          addFlashMsgHtmlFromTemplate =<< (liftIO $ flashMessageUserPasswordChanged  (ctxtemplates ctx))
+                                          dropExternalSession sid mh
+                                          return LinkMain  
+                                      Left f -> 
+                                        do
+                                          addFlashMsgText =<< (liftIO $ f (ctxtemplates ctx))
+                                          return LoopBack
+                                Nothing -> return LoopBack
+                                
+userFromExternalSessionData ::String -> String -> Kontra (Maybe User)
+userFromExternalSessionData sid mh = do
+                                      msession <- sequenceMM $ 
+                                           do
+                                            sid' <- maybeRead sid
+                                            mh' <- maybeRead mh
+                                            return $ findSession sid' mh'
+                                      muser <-  sequenceMM $ 
+                                           do
+                                            session <- msession
+                                            userId <- getSessionUserID session
+                                            return $ liftIO $ query $ GetUserByUserID userId
+                                      return muser
+                                      
+dropExternalSession::String -> String -> Kontra ()
+dropExternalSession sid _ = fromMaybe (return ()) $ fmap (liftIO . dropSession) (maybeRead sid)
+                                         
+                                         
+newPasswordPage::String->String -> Kontra Response
+newPasswordPage sid mh= do
+                   ctx <- get
+                   muser <- userFromExternalSessionData sid mh 
+                   case muser of 
+                    Just user -> do    
+                                  content <- liftIO $ newPasswordPageView (ctxtemplates ctx)
+                                  renderFromBody ctx TopNone kontrakcja $ cdata content
+                    Nothing -> do 
+                                 addFlashMsgText =<< (liftIO $ flashMessagePasswordChangeLinkNotValid (ctxtemplates ctx)) 
+                                 sendRedirect LinkMain              
+                   
 handleUserGet :: Kontra Response
 handleUserGet = do
   ctx@(Context {ctxmaybeuser = Just user}) <- get
@@ -163,7 +219,8 @@ createNewUserByAdmin ctx fullname email =
       password <- randomPassword
       passwdhash <- createPassword password
       user <- update $ AddUser fullname email passwdhash Nothing
-      mail <- mailNewAccountCreatedByAdmin (ctxtemplates ctx) ctx fullname email password
+      chpwdlink <- changePasswordLink (userid user)
+      mail <- mailNewAccountCreatedByAdmin (ctxtemplates ctx) ctx fullname email chpwdlink
       sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = [(fullname, email)]} 
       return user
 
@@ -171,28 +228,16 @@ createUser1 :: Context -> String -> BS.ByteString -> BS.ByteString -> BS.ByteStr
 createUser1 ctx hostpart fullname email password isnewuser maybesupervisor = do
   passwdhash <- createPassword password
   user <- update $ AddUser fullname email passwdhash (fmap userid maybesupervisor)
+  chpwdlink <- changePasswordLink (userid user)
   mail <- case maybesupervisor of
     Nothing ->
       if not isnewuser
-       then passwordChangeMail (ctxtemplates ctx) hostpart email fullname password
-       else newUserMail (ctxtemplates ctx) hostpart email fullname password
+       then passwordChangeMail (ctxtemplates ctx) hostpart email fullname chpwdlink
+       else newUserMail (ctxtemplates ctx) hostpart email fullname
     Just supervisor -> inviteSubaccountMail (ctxtemplates ctx) hostpart (prettyName  supervisor) (usercompanyname $ userinfo supervisor)
-                       email fullname password
+                       email fullname chpwdlink
   sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = [(fullname, email)]}
   return user
-  
-resetUserPassword :: Context -> String -> BS.ByteString -> IO ()
-resetUserPassword ctx hostpart email = do
-  maybeuser <- query $ GetUserByEmail (Email{unEmail=email})
-  case maybeuser of
-    Just user -> do
-      password <- randomPassword
-      passwordhash <- createPassword password
-      update $ SetUserPassword user passwordhash
-      mail <- passwordChangeMail (ctxtemplates ctx) hostpart email (userfullname user) password
-      sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = [((userfullname user), email)]}
-    Nothing ->
-      return ()
 
 {- |
    Guard against a POST with no logged in user.
@@ -256,5 +301,5 @@ handleAcceptTOSPost = do
     else do
       addFlashMsgText =<< (liftIO $ flashMessageMustAcceptTOS  (ctxtemplates ctx))
       return LinkAcceptTOS
-
-
+                                    
+      

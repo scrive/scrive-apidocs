@@ -4,10 +4,19 @@
 module Session 
     ( Sessions
     , Session 
+    , SessionId
     , getFlashMessagesFromSession
     , getUserFromSession
     , handleSession
     , updateSessionWithContextData
+    
+    -- | Functions usefull when we do remember passwords emails
+    , createLongTermSession
+    , findSession
+    , getSessionId
+    , getSessionMagicHash
+    , getSessionUserID
+    , dropSession
     )
     where
 
@@ -231,3 +240,39 @@ updateSessionWithContextData::Session -> (Maybe UserID)->[FlashMessage]->ServerP
 updateSessionWithContextData (Session i sd) u fm = do
                                                     now <- liftIO getMinutesTime  
                                                     update $ UpdateSession (Session i $ sd {userID = u, flashMessages = fm,  expires = 60 `minutesAfter` now})
+                                    
+                                    
+-- | This are special sessions used for passwords reminder links. Such links should be carefully                                    
+createLongTermSession:: (MonadIO m) =>  UserID -> m Session
+createLongTermSession uid = do
+                         now <- liftIO $ getMinutesTime
+                         magicHash <- liftIO $ randomIO
+                         let longUserSession = SessionData {userID = Just uid,  flashMessages = [], expires = (60 * 12) `minutesAfter` now, hash = magicHash }  
+                         update $ NewSession $ longUserSession
+
+findSession:: (MonadIO m) => SessionId -> MagicHash -> m (Maybe Session)
+findSession sid mh = do
+                      ms <-query $ GetSession $ sid
+                      case ms of 
+                         Just session ->  do
+                                           now <- liftIO getMinutesTime
+                                           let hashmatch = mh == (hash $ sessionData session)
+                                           let notexpired = now <= (expires $ sessionData $ session)
+                                           if (hashmatch && notexpired)
+                                            then return $ Just session
+                                            else do
+                                                   _ <- update $ DelSession (sessionId session)
+                                                   return Nothing
+                         Nothing -> return Nothing
+                         
+getSessionId::Session -> SessionId
+getSessionId = sessionId 
+
+getSessionMagicHash::Session -> MagicHash
+getSessionMagicHash = hash . sessionData
+
+getSessionUserID::Session -> (Maybe UserID)
+getSessionUserID = userID . sessionData
+
+dropSession::SessionId -> IO ()
+dropSession sid = (update $ DelSession sid) >> return ()

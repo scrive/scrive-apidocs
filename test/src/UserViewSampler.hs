@@ -28,19 +28,19 @@ userViewSamples =
 
 sampleNewUserMail =
   sampleMail "new_user" 
-             (\t -> newUserMail t aHost aTestEmail aTestName aTestPassword)
+             (\t -> newUserMail t aHost aTestEmail aTestName)
 
 samplePasswordChangeMail =
   sampleMail "password_change" 
-             (\t -> passwordChangeMail t aHost aTestEmail aTestName aTestPassword)
+             (\t -> passwordChangeMail t aHost aTestEmail aTestName aSetPasswordLink)
 
 sampleInviteSubaccountMail =
   sampleMail "invite_subaccount" 
-             (\t -> inviteSubaccountMail t aHost aTestName aTestCompany anotherTestEmail anotherTestName aTestPassword)
+             (\t -> inviteSubaccountMail t aHost aTestName aTestCompany anotherTestEmail anotherTestName aSetPasswordLink)
 
 sampleNewAccountCreatedByAdminMail =
   sampleMail "new_account_by_admin" 
-             (\t -> mailNewAccountCreatedByAdmin t aTestCtx anotherTestName anotherTestEmail aTestPassword)        
+             (\t -> mailNewAccountCreatedByAdmin t aTestCtx anotherTestName anotherTestEmail aSetPasswordLink)        
 
 sampleUserDetailsSavedFlashMsg =
   sampleFlashMsg "user_details_saved" flashMessageUserDetailsSaved
