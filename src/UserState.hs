@@ -642,14 +642,14 @@ addUser :: BS.ByteString
         -> BS.ByteString 
         -> Password
         -> Maybe UserID
-        -> Update Users User
+        -> Update Users (Maybe User)
 addUser fullname email passwd maybesupervisor = do
   users <- get
-  when (IxSet.size (users @= Email email) /= 0)
-     (error "user with same email address exists")
-          
-  userid <- getUnique users UserID
-  let user = (User {  
+  if (IxSet.size (users @= Email email) /= 0)
+   then return Nothing  -- "user with same email address exists"
+   else do         
+        userid <- getUnique users UserID
+        let user = (User {  
                    userid                  =  userid
                  , userpassword            =  passwd
                  , usersupervisor          =  fmap (SupervisorID . unUserID) maybesupervisor
@@ -681,8 +681,8 @@ addUser fullname email passwd maybesupervisor = do
               , userfriends = []
               , userdefaultmainsignatory = DefaultMainSignatory $ unUserID userid
                  })             
-  modify (updateIx (Email email) user)
-  return user
+        modify (updateIx (Email email) user)
+        return $ Just user
 
 getUserStats :: Query Users Int
 getUserStats = do

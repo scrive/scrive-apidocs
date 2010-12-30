@@ -174,10 +174,11 @@ handlePostSubaccount = do
       _ -> return LinkSubaccount
 
 handleCreateSubaccount :: Context -> Kontra KontraLink
-handleCreateSubaccount ctx@Context { ctxmaybeuser = Just (user@User { userid }), ctxhostpart } = do
+handleCreateSubaccount ctx@Context { ctxmaybeuser = Just (user@User { userid }), ctxhostpart, ctxtemplates } = do
   fullname <- g "fullname"
   email <- g "email"
-  user <- liftIO $ createUser ctx ctxhostpart fullname email Nothing (Just user)
+  muser <- liftIO $ createUser ctx ctxhostpart fullname email Nothing (Just user)
+  when (isNothing muser) $ addFlashMsgText =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
   return LinkSubaccount
 
 handleRemoveSubaccounts :: Context -> Kontra KontraLink
@@ -204,7 +205,7 @@ randomPassword = do
     indexes <- liftIO $ replicateM 8 (randomRIO (0,length letters-1))
     return (BS.fromString $ map (letters!!) indexes)
 
-createUser ::  Context -> String -> BS.ByteString -> BS.ByteString -> Maybe BS.ByteString -> Maybe User -> IO User
+createUser ::  Context -> String -> BS.ByteString -> BS.ByteString -> Maybe BS.ByteString -> Maybe User -> IO (Maybe User)
 createUser ctx hostpart fullname email maybepassword maybesupervisor =
   case maybepassword of
     Nothing -> do
@@ -213,31 +214,37 @@ createUser ctx hostpart fullname email maybepassword maybesupervisor =
     Just x ->
       createUser1 ctx hostpart fullname email x True maybesupervisor
 
-createNewUserByAdmin :: Context -> BS.ByteString -> BS.ByteString -> IO User
+createNewUserByAdmin :: Context -> BS.ByteString -> BS.ByteString -> IO (Maybe User)
 createNewUserByAdmin ctx fullname email =
      do
       password <- randomPassword
       passwdhash <- createPassword password
-      user <- update $ AddUser fullname email passwdhash Nothing
-      chpwdlink <- changePasswordLink (userid user)
-      mail <- mailNewAccountCreatedByAdmin (ctxtemplates ctx) ctx fullname email chpwdlink
-      sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = [(fullname, email)]} 
-      return user
+      muser <- update $ AddUser fullname email passwdhash Nothing
+      case muser of 
+       Just user -> do
+                    chpwdlink <- changePasswordLink (userid user)
+                    mail <- mailNewAccountCreatedByAdmin (ctxtemplates ctx) ctx fullname email chpwdlink
+                    sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = [(fullname, email)]} 
+                    return muser
+       Nothing -> return muser
 
-createUser1 :: Context -> String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Bool -> Maybe User -> IO User
+
+createUser1 :: Context -> String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Bool -> Maybe User -> IO (Maybe User)
 createUser1 ctx hostpart fullname email password isnewuser maybesupervisor = do
   passwdhash <- createPassword password
-  user <- update $ AddUser fullname email passwdhash (fmap userid maybesupervisor)
-  chpwdlink <- changePasswordLink (userid user)
-  mail <- case maybesupervisor of
-    Nothing ->
-      if not isnewuser
-       then passwordChangeMail (ctxtemplates ctx) hostpart email fullname chpwdlink
-       else newUserMail (ctxtemplates ctx) hostpart email fullname
-    Just supervisor -> inviteSubaccountMail (ctxtemplates ctx) hostpart (prettyName  supervisor) (usercompanyname $ userinfo supervisor)
-                       email fullname chpwdlink
-  sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = [(fullname, email)]}
-  return user
+  muser <- update $ AddUser fullname email passwdhash (fmap userid maybesupervisor)
+  case muser of 
+   Just user -> do
+        chpwdlink <- changePasswordLink (userid user)
+        mail <- case maybesupervisor of
+                  Nothing -> if not isnewuser
+                             then passwordChangeMail (ctxtemplates ctx) hostpart email fullname chpwdlink
+                             else newUserMail (ctxtemplates ctx) hostpart email fullname
+                  Just supervisor -> inviteSubaccountMail (ctxtemplates ctx) hostpart (prettyName  supervisor) (usercompanyname $ userinfo supervisor)
+                                        email fullname chpwdlink
+        sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = [(fullname, email)]}
+        return muser
+   Nothing -> return muser     
 
 {- |
    Guard against a POST with no logged in user.

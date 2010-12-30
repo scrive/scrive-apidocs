@@ -342,8 +342,13 @@ signupPagePost = do
                        return LinkSignup
                 Nothing -> do
                     -- Create the user, which sends them a welcome email.
-                    account <- liftIO $ createUser ctx ctxhostpart (signupFullname form) (signupEmail form) (Just (signupPassword form)) Nothing
-                    return LinkSignupDone
+                    maccount <- liftIO $ createUser ctx ctxhostpart (signupFullname form) (signupEmail form) (Just (signupPassword form)) Nothing
+                    if isJust maccount       
+                     then return LinkSignupDone
+                     else do
+                          addFlashMsgText =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
+                          return LinkSignup
+                    
 
 signupPageDone :: Kontra Response
 signupPageDone = do
