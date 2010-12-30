@@ -129,6 +129,7 @@ Executable kontrakcja-test
  Build-Depends: HPDF
  Build-Depends: mmap==0.5.*
  Build-Depends: array
+
  Main-is: TestMain.hs
 
  Extensions: TemplateHaskell, TypeFamilies, DeriveDataTypeable,
