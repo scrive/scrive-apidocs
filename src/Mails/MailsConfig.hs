@@ -16,6 +16,7 @@ module Mails.MailsConfig(
            , defaultMailConfig) where
              
 import System.Log.Logger (Priority(..), logM)
+import System.IO
 -- | Configuration of mails
 data MailsConfig = MailsConfig {
                       ourInfoEmail::String
@@ -32,13 +33,16 @@ data MailsConfig = MailsConfig {
 -}
 getMailsConfig :: IO MailsConfig                  
 getMailsConfig = do 
-                  catch (do
-                          s <- readFile "mail.conf"
-                          putStrLn $ show ((reads $ s) ::[(MailsConfig,[Char])] )
-                          r <- fmap read (readFile "mail.conf" )
-                          return r)   (\e ->  
+                  catch (  do
+                            h <- openFile "mail.conf" ReadMode
+                            hSetEncoding h utf8
+                            c <- hGetContents h
+                            conf <- readIO c
+                            hClose h
+                            logM "Happstack.Server" NOTICE "Mail config file read and parsed"  
+                            return conf
+                         )   (\_ ->  
                            do 
-                             putStrLn $ show e
                              logM "Happstack.Server" NOTICE "No mail config provided. Falling back do default"  
                              return defaultMailConfig )
          
