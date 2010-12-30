@@ -207,7 +207,7 @@ invitationMailUndeliveredContent =
 ###
 passwordChangeLinkMailTitle=Change password request
 ###
-passwordChangeLinkMailTitleContent=   <span>
+passwordChangeLinkMailContent=   <span>
       <p>Hej </p>
       <p>Du har begärt att ändra ditt lösenord på SkrivaPå. Vänligen klicka på följande länk för att gå vidare:</p>
       <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a>

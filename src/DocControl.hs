@@ -276,13 +276,12 @@ landpageSignedSave documentid signatorylinkid = do
      let details = signatorydetails signatorylink
      maybeuser <- query $ GetUserByEmail (Email $ signatoryemail details)
      let fullname = signatoryname details
-     user <- case maybeuser of
+     muser <- case maybeuser of
             Nothing -> do 
               let email = signatoryemail details
-              user <- liftIO $ createUser ctx ctxhostpart fullname email Nothing Nothing
-              return user
-            Just user -> return user
-     Just document2 <- update $ SaveDocumentForSignedUser documentid (userid user) signatorylinkid
+              liftIO $ createUser ctx ctxhostpart fullname email Nothing Nothing
+            Just user -> return maybeuser
+     when_ (isJust muser) $ update $ SaveDocumentForSignedUser documentid (userid $ fromJust muser) signatorylinkid
      -- should redirect
      content <- liftIO $ landpageLoginForSaveView (ctxtemplates ctx)
      renderFromBody ctx TopEmpty kontrakcja $ cdata content
@@ -411,8 +410,7 @@ handleIssueShowPost docid = withUserPost $ withDocumentPost docid $ do
                         then return $ LinkSignInvite documentid
                         -- otherwise it was just a save
                         else do
-                          fm <- liftIO $ flashDocumentDraftSaved (ctxtemplates ctx)
-                          addFlashMsgHtmlFromTemplate $ fm
+                          addFlashMsgText =<< (liftIO $ flashDocumentDraftSaved $ ctxtemplates ctx)
                           return LinkIssue
        AwaitingAuthor -> do 
                           doc2 <- update $ CloseDocument documentid 

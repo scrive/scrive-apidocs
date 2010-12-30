@@ -367,6 +367,9 @@ for = flip map
 sequenceMM:: (Applicative m) => Maybe (m (Maybe a)) -> m (Maybe a)
 sequenceMM = (fmap join) . sequenceA 
 
+when_::(Monad m) => Bool -> m a -> m ()
+when_ b c =  when b $ c >> return () 
+
 maybeRead :: Read a => String -> Maybe a
 maybeRead = fmap fst . listToMaybe . reads
 

@@ -36,7 +36,7 @@ import Administration.AdministrationView
 import Payments.PaymentsState
 import DocState
 import Data.ByteString.UTF8 (fromString,toString)
-import Data.ByteString (hGetContents,ByteString,empty)
+import Data.ByteString (hGetContents,ByteString)
 import qualified Data.ByteString.Lazy  as L
 import KontraLink
 import Payments.PaymentsControl(readMoneyField,getPaymentChangeChange)
@@ -46,6 +46,8 @@ import System.Process
 import System.IO (hClose)
 import Data.List (isPrefixOf,sort)
 import UserControl
+import UserView
+import Data.Maybe
 {- | Main page. Redirects users to other admin panels -} 
 showAdminMainPage ::Kontra Response
 showAdminMainPage = onlySuperUser $
@@ -244,7 +246,9 @@ handleCreateUser = onlySuperUser $ do
     ctx <- get
     email <- g "email"
     fullname <- g "fullname"
-    _ <- liftIO $ createNewUserByAdmin ctx fullname email 
+    muser <- liftIO $ createNewUserByAdmin ctx fullname email 
+    when (isNothing muser) $ addFlashMsgText =<< (liftIO $ flashMessageUserWithSameEmailExists $ ctxtemplates ctx)
+
     -- FIXME: where to redirect?
     return LinkStats
           

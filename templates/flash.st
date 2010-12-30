@@ -25,3 +25,5 @@ flashMessageUserPasswordChanged=Password changed
 ###
 flashMessagePasswordChangeLinkNotValid=We are sorry but this link has expired.<BR/> Plese use password reminder to get new one.
 ###
+flashMessageUserWithSameEmailExists=User with same address exists
+###

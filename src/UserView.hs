@@ -21,6 +21,7 @@ module UserView(
     flashMessagePasswordsDontMatch,
     flashMessageUserPasswordChanged,
     flashMessagePasswordChangeLinkNotValid,
+    flashMessageUserWithSameEmailExists,
     --utils  
     prettyName) where
 
@@ -191,7 +192,7 @@ newPasswordPageView templates = renderTemplate templates "newPasswordPage" []
 resetPasswordMail::KontrakcjaTemplates -> String -> User -> KontraLink -> IO Mail
 resetPasswordMail templates hostname user setpasslink =  do
            title <- renderTemplate templates "passwordChangeLinkMailTitle" []
-           content <- wrapHTML templates =<< renderTemplate templates "passwordChangeLinkMailTitleContent" 
+           content <- wrapHTML templates =<< renderTemplate templates "passwordChangeLinkMailContent" 
                                                                 [("passwordlink",show setpasslink),
                                                                  ("ctxhostpart",hostname)]
            return $ emptyMail {title=BS.fromString title, content = BS.fromString content} 
@@ -263,6 +264,8 @@ flashMessageUserPasswordChanged templates = renderTemplate templates "flashMessa
 flashMessagePasswordChangeLinkNotValid:: KontrakcjaTemplates -> IO String
 flashMessagePasswordChangeLinkNotValid templates = renderTemplate templates "flashMessagePasswordChangeLinkNotValid" []
 
+flashMessageUserWithSameEmailExists:: KontrakcjaTemplates -> IO String
+flashMessageUserWithSameEmailExists templates = renderTemplate templates "flashMessageUserWithSameEmailExists" []
 {- Same as personname (username or email) from DocView but works on User -}
 prettyName::User -> BS.ByteString
 prettyName u = if (BS.null $ userfullname u)
