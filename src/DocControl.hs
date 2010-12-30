@@ -340,44 +340,70 @@ freeLeftForUser user = do
   let freeleft = if numdoc >= 5 then 0 else 5 - numdoc
   return freeleft
 
+
+
+{- |
+   The user with id uid is a friend of user.
+   Should be moved to User and imported
+ -}
+isFriendOf uid user = (unUserID uid `elem` map unFriend (userfriends user))
+
+{- |
+   Handles the request to show a document to a user.
+   User must be logged in.
+   User must have signed TOS agreement.
+   Document must exist.
+   User must be authorized to view the document.
+   There are two cases: 
+    1. author or secretary, in which case they get pageDocumentForAuthor
+    2. Friend of author or secretary, in which case they get pageDocumentForViewer
+ -}
 handleIssueShowGet :: DocumentID -> Kontra Response
-handleIssueShowGet docid = withUserGet $ checkUserTOSGet $
- do
-  maybedocument <- query $ GetDocumentByDocumentID $ docid
-  case maybedocument of
-    -- Q: We know what they want, shouldn't we send 404 here?
-    Nothing -> mzero
-    Just document@Document{ documentauthor
-                          , documentid
-                          } -> do
-                       ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) <- get
-                       when (userid/=unAuthor documentauthor) mzero
-                       let toptab = if documentstatus document == Closed
-                                     then TopDocument
-                                     else TopNone
-                       renderFromBody ctx toptab kontrakcja 
-                                          (pageDocumentForAuthor ctx document)
+handleIssueShowGet docid = withUserGet $ checkUserTOSGet $ (withDocumentGet docid) $ do
+  Just document@Document{ documentauthor
+                        , documentid
+                        , documentsecretary
+                        } <- query $ GetDocumentByDocumentID $ docid
+  ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) <- get
+  mauthor <- query $ GetUserByUserID $ unAuthor documentauthor
+  msecretary <- query $ GetUserByUserID $ UserID $ unSecretary documentsecretary
 
+  let toptab = if documentstatus document == Closed
+                then TopDocument
+                else TopNone
+  -- authors and secretaries get a view with buttons
+  if isAuthor document user || isSecretary document user
+   then renderFromBody ctx toptab kontrakcja 
+            (pageDocumentForAuthor ctx document)
+   -- friends can just look (but not touch)
+   else if (isJust msecretary && isFriendOf userid (fromJust msecretary))
+            || (isJust mauthor && isFriendOf userid (fromJust mauthor))
+         then renderFromBody ctx toptab kontrakcja
+                  (pageDocumentForViewer ctx document)
+         else mzero
 
-
+{- |
+   Modify a document. Typically called with the "Underteckna" or "Save" button
+   If document is in preparation, we move it to pending
+   If document is in AwaitingAuthor, we move it to Closed
+   Otherwise, we do mzero (NOTE: this is not the correct action to take)
+   User must be logged in.
+   Document must exist
+   User must be author or secretary
+ -}
 handleIssueShowPost :: DocumentID -> Kontra KontraLink
-handleIssueShowPost docid = withUserPost $
- do
-  maybedocument <- query $ GetDocumentByDocumentID $ docid
-  case maybedocument of
-    -- Q: We know what they want, shouldn't we send 404 here?
-    Nothing -> mzero
-    Just document@Document{ documentauthor
-                          , documentid
-                          } -> do
+handleIssueShowPost docid = withUserPost $ withDocumentPost docid $ do
+  Just document@Document{ documentauthor
+                        , documentid
+                        } <- query $ GetDocumentByDocumentID $ docid
   
-     ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) <- get
- 
-     when (userid/=unAuthor documentauthor) mzero
-
+  ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) <- get
      
-     -- something has to change here
-     case documentstatus document of
+  -- only authors and secretaries can modify documents
+  when (not $ isAuthor document user || isSecretary document user) mzero
+     
+  -- something has to change here
+  case documentstatus document of
        Preparation -> do
                        doc2 <- updateDocument ctx document
                        if documentstatus doc2 == Pending
@@ -398,14 +424,7 @@ handleIssueShowPost docid = withUserPost $
                                        return LinkIssue
        -- FIXME
        _ -> mzero
-{-
-     if (documentstatus doc2 == Pending &&
-         documentstatus document /= Pending) 
-      then return $ LinkSignInvite documentid
-      else do 
-        addFlashMsgHtml $ flashDocumentDraftSaved
-        return LinkIssue
--}
+
 
 handleIssueShowTitleGet :: DocumentID -> String -> Kontra Response
 handleIssueShowTitleGet docid _title = withUserGet $ checkUserTOSGet $
@@ -543,11 +562,20 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid, do
      , return doc2
      ]
     
+{- |
+   Constructs a list of documents (Arkiv) to show to the user.
+   The list contains all documents the user is an author on, a secretary on, or
+   is a friend of the author or a friend of the secretary.
+   Duplicates are removed.
+ -}
 handleIssueGet :: Kontra Response
-handleIssueGet = withUserGet $ checkUserTOSGet $ 
- do
+handleIssueGet = withUserGet $ checkUserTOSGet $ do  
   ctx@(Context {ctxmaybeuser = Just user, ctxhostpart, ctxtime}) <- get
-  documents <- query $ GetDocumentsByUser user 
+  mydocuments <- query $ GetDocumentsByUser user 
+  usersICanView <- query $ GetUsersByFriendUserID $ userid user
+  friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
+  -- get rid of duplicates
+  let documents = nub $ mydocuments ++ concat friends'Documents
   renderFromBody ctx TopDocument kontrakcja (pageDocumentList ctxtime user documents)
 
 gs :: String
@@ -948,3 +976,27 @@ handleResend docid signlinkid  =
 sendCancelMailsForDocument:: (Maybe BS.ByteString) -> Context -> Document -> Kontra ()
 sendCancelMailsForDocument customMessage ctx document = liftIO $ 
         forM_ (documentsignatorylinks document) (sendMail  (ctxmailsconfig ctx) <=< (mailCancelDocumentByAuthor (ctxtemplates ctx) customMessage ctx document))
+
+{- |
+   Guard against the non-existence of a document in a GET request.
+   The hope is that this guard will simplify code by eliminating a pattern match for Just document.
+   FIXME: This should probably include a 404 page instead of mzero.
+ -}
+withDocumentGet :: DocumentID -> Kontra Response -> Kontra Response
+withDocumentGet docid action = do
+  mdoc <- query $ GetDocumentByDocumentID docid
+  case mdoc of
+    Just doc -> action
+    Nothing  -> mzero
+
+{- |
+   Guard against the non-existence of a document in a POST request.
+   The hope is that this guard will simplify code by eliminating a pattern match for Just document.
+   FIXME: This should probably include a 404 page instead of mzero.
+ -}
+withDocumentPost :: DocumentID -> Kontra KontraLink -> Kontra KontraLink
+withDocumentPost docid link = do
+  mdoc <- query $ GetDocumentByDocumentID docid
+  case mdoc of
+    Just doc -> link
+    Nothing  -> return LinkIssue
