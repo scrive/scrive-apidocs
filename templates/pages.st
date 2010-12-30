@@ -25,4 +25,17 @@ firstPageContent=
          </object>
      </div>
  </div>
-
+#####
+newPasswordPage=     <form action="" method="post">
+                     <table><tbody>
+                       <tr>
+                        <td>Nytt lösenord:</td>
+                        <td><input type="password" name="password" autocomplete="off" /></td>
+                       </tr>
+                       <tr>
+                        <td>Upprepa nytt lösenord:</td>
+                        <td><input type="password" name="password2" autocomplete="off" /></td>
+                       </tr>
+                      </tbody></table>
+                     <input class="button" type="submit" value="Ändra lösenord"/>
+                     </form>

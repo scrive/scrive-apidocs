@@ -44,7 +44,8 @@ import System.Process
 import System.IO
 import System.Exit
 import System.Log.Logger (errorM)
-
+import Data.Traversable (sequenceA)
+import Control.Applicative
 {-
 
 Dump bin for things that do not fit anywhere else
@@ -360,6 +361,11 @@ allValues::(Bounded a, Enum a) => [a]
 allValues = enumFrom minBound
 
 for = flip map
+{- sequenceA says that if we maybe have (Maybe (m a)) a computation that gives a then we can get real computation that may fail m (Maybe a)
+   sequenceMM doest the same, but is aware that first computation can also fail, and so it joins two posible fails.
+ -}
+sequenceMM:: (Applicative m) => Maybe (m (Maybe a)) -> m (Maybe a)
+sequenceMM = (fmap join) . sequenceA 
 
 maybeRead :: Read a => String -> Maybe a
 maybeRead = fmap fst . listToMaybe . reads

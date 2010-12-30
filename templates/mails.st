@@ -122,7 +122,6 @@ newUserMailContent=
          feedback eller bara en enkel hälsning. Din åsikt är värdefull.</p>
 
       <p>Användarnamn: <b>$email$</b><br/>
-         Lösenord: <b>$password$</b><br/>
       </p>
       <p>
       <a href="$ctxhostpart$/login">$ctxhostpart$/login</a>
@@ -141,7 +140,8 @@ passwordChangeMailContent=
       <p>Här kommer ditt nya lösenord. Vänligen ändra lösenordet så snart som möjligt.</p>
 
       <p>Användarnamn: <span style="color: orange; text-weight: bold">$email$</span><br/>
-         Lösenord: <span style="color: orange; text-weight: bold">$password$</span><br/>
+      </p>
+      <p> To set password use this link:  <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a>
       </p>
       <p>
       <a href="$ctxhostpart$/login">$ctxhostpart$/login</a>
@@ -158,10 +158,10 @@ inviteSubaccountMailContent=
        <p><strong>$supervisorname$</strong> har bjudit in dig att öppna ett konto på SkrivaPå genom vilket du kan
           skriva avtal för <strong>$companyname$</strong>. Observera att detta konto inte är
           avsett för privat bruk.</p>     
-       <p>Användarnamn: <span style="color: orange; text-weight: bold">$email$</span><br/>
-          Lösenord: <span style="color: orange; text-weight: bold">$password$</span><br/>
+       <p>Användarnamn: <span style="color: orange; text-weight: bold">$email$</span><br/> 
        </p>
- 
+       <p> To set password use this link:  <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a>
+      </p>
        <p>
        <a href="$ctxhostpart$">$ctxhostpart$</a>
        </p>
@@ -180,7 +180,8 @@ mailNewAccountCreatedByAdminContent=
          hantera och arkivera avtal elektroniskt. SkrivaPå är som Gmail för dina avtal.</p>
 
       <p>Användarnamn: <b>$email$</b><br/>
-         Lösenord: <b>$password$</b><br/>
+      </p>
+      <p> To set password use this link:  <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a>
       </p>
       <p>
        <a href="$ctxhostpart$">$ctxhostpart$</a>
@@ -191,6 +192,17 @@ mailNewAccountCreatedByAdminContent=
 invitationMailUndeliveredTitle = Undeliverd mail
 ###
 invitationMailUndeliveredContent = Undeliver mail to address $email$
+###
+passwordChangeLinkMailTitle=Change password request
+###
+passwordChangeLinkMailTitleContent=   <span>
+      <p>Hej </p>
+      <p>You requested to change Your password to SkrivaPa. Please use the fallowing link to change it </p>
+      <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a>
+       $poweredBySkrivaPaPara()$
+     </span>
+###
+###
 ####UTILS
 timetosigninfo=  <span>Undertecknas senast: <strong>$time$</strong>.</span>
 ###

@@ -13,6 +13,7 @@ module User
     , addFlashMsgHtmlFromTemplate
     , logUserToContext
     , onlySuperUser
+    , changePasswordLink
     )
     where
 
@@ -47,7 +48,7 @@ import Data.Object as Json
 import qualified Network.AWS.Authentication as AWS
 import Templates.Templates  (KontrakcjaTemplates)
 import Mails.MailsConfig
-
+import KontraLink
 
 instance Monad m => IsAttrValue m DocumentID where
     toAttrValue = toAttrValue . show
@@ -178,3 +179,8 @@ addFlashMsgHtmlFromTemplate msg = do
 logUserToContext user =  do
   ctx <- get
   put $ ctx { ctxmaybeuser =  user}    
+
+changePasswordLink::UserID -> IO KontraLink
+changePasswordLink uid =  do
+                           session <- createLongTermSession (uid)
+                           return (LinkPasswordChange (getSessionId session) (getSessionMagicHash session))     

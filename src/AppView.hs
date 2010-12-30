@@ -28,6 +28,7 @@ import qualified Data.Map as Map
 import Misc
 import KontraLink
 
+
 poweredBySkrivaPaPara :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 poweredBySkrivaPaPara hostpart = 
     <p>
@@ -383,27 +384,3 @@ pageLogin =
    <% loginBox %>
 
   </div>
-
-
-developmentWrapper :: (EmbedAsChild (HSPT' IO) body) 
-                   => String 
-                   -> [FlashMessage]
-                   -> body 
-                   -> HSP XML
-developmentWrapper title ctxflashmessages body =
-    withMetaData html4Strict $
-    <html>
-     <head>
-      <title><% title %></title>
-      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-      <% partialStyles %>
-      <% partialScripts %>
-     </head>
-     <body>
-        <div class="flashmsgbox">
-          <% ctxflashmessages %>
-        </div> 
-  
-      <% body %>
-     </body>
-    </html>

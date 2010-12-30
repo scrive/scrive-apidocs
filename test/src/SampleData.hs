@@ -11,6 +11,7 @@ import Templates.Templates
 import Mails.SendMail
 import User
 import Mails.MailsUtil
+import KontraLink
 
 import Control.Concurrent.MVar
 import System.IO.Unsafe
@@ -26,6 +27,7 @@ aHost = "http://localhost:8080"
 aTestName = (BS.fromString "Bob O'Brien")
 aTestEmail = (BS.fromString "bob@testcorp.com")
 aTestPassword = (BS.fromString "pa$$w0rd")
+aSetPasswordLink = LoopBack -- doesnt matter for tests
 aTestCompany = (BS.fromString "Test Corp")
 anotherTestName = (BS.fromString "Annie Angus")
 anotherTestEmail = (BS.fromString "annie@testcorp.com")

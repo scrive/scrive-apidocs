@@ -19,6 +19,8 @@ import MinutesTime
 import Happstack.Server.HSP.HTML (webHSP)
 import qualified HSX.XMLGenerator as HSX (XML)
 import HSP
+import Session (SessionId)
+import Misc
 
 seeOtherXML :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
@@ -53,6 +55,7 @@ data KontraLink
     | LinkStats
     | LinkPaymentsAdmin
     | LinkUserAdmin (Maybe UserID)
+    | LinkPasswordChange SessionId MagicHash
     | LoopBack
     
 instance Show KontraLink where
@@ -90,6 +93,7 @@ instance Show KontraLink where
     showsPrec _ (LinkPaymentsAdmin ) = (++) $ "/adminonly/advpayments"
     showsPrec _ (LinkUserAdmin Nothing) = (++) $ "/adminonly/useradmin"
     showsPrec _ (LinkUserAdmin (Just userId)) = (++) $ "/adminonly/useradmin/"++show userId
+    showsPrec _ (LinkPasswordChange sid mh) = (++) $ "/changepassword/"++show sid++"/"++show mh
     showsPrec _ LoopBack = (++) $ "/" -- this should be never used
 {-
 instance (EmbedAsAttr m String) => (EmbedAsAttr m KontraLink) where

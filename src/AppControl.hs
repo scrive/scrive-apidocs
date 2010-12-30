@@ -41,6 +41,7 @@ import System.IO.Unsafe
 import System.Random
 import User
 import UserControl
+import UserView as UserView
 import UserState
 import qualified UserView as V
 import qualified Data.ByteString as BS
@@ -60,6 +61,7 @@ import Templates.Templates (readTemplates, renderTemplate)
 import qualified Administration.AdministrationControl as Administration
 import Mails.MailsConfig
 import Mails.SendGridEvents
+import Mails.SendMail
 
 data AppConf
     = AppConf { httpConf        :: Conf
@@ -162,7 +164,8 @@ handleRoutes = msum [
      , dir "amnesia"     $ hget0  $ forgotPasswordPageGet
      , dir "amnesia"     $ hpost0 $ forgotPasswordPagePost
      , dir "amnesiadone" $ hget0  $ forgotPasswordDonePage
-     
+     , dir "changepassword" $ hget2  $ UserControl.newPasswordPage     
+     , dir "changepassword" $ hpost2  $ UserControl.handleChangePassword     
      -- static files
      , serveHTMLFiles
      , fileServe [] "public"
@@ -287,11 +290,24 @@ forgotPasswordPageGet = do
     
 forgotPasswordPagePost :: Kontra KontraLink
 forgotPasswordPagePost = do
-    ctx@Context{ctxtemplates,ctxhostpart} <- lift get
-    email <- getDataFnM $ look "email"
-    liftIO $ resetUserPassword ctx ctxhostpart (BS.fromString email)
-    return LinkForgotPasswordDone
+    memail <- getField "email"
+    case memail of 
+      Just email -> do
+                      muser <- query $ GetUserByEmail $ Email (BS.fromString email)                    
+                      case muser of 
+                       Nothing -> return LinkMain
+                       Just user -> do
+                                     sendResetPasswordMail user
+                                     return LinkForgotPasswordDone
+      Nothing -> return LinkMain
 
+sendResetPasswordMail::User -> Kontra ()
+sendResetPasswordMail user = do
+                         ctx <- get
+                         chpwdlink <- liftIO $ changePasswordLink (userid user)
+                         mail <-liftIO $ UserView.resetPasswordMail (ctxtemplates ctx) (ctxhostpart ctx) user chpwdlink     
+                         liftIO $ sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = [((userfullname user), (unEmail $ useremail $ userinfo user))]}    
+                                                        
 forgotPasswordDonePage :: Kontra Response
 forgotPasswordDonePage = do
     ctx <- lift get
