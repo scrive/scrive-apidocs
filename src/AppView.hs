@@ -27,7 +27,7 @@ import User
 import qualified Data.Map as Map
 import Misc
 import KontraLink
-
+import Data.Maybe
 
 poweredBySkrivaPaPara :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 poweredBySkrivaPaPara hostpart = 
@@ -60,8 +60,8 @@ data TopMenu = TopNew | TopDocument | TopAccount | TopNone | TopEmpty
 kontrakcja :: [Char]
 kontrakcja = "SkrivaPå" 
 
-loginBox :: (EmbedAsAttr m (Attr [Char] [Char]),EmbedAsAttr m (Attr [Char] KontraLink)) => XMLGenT m (HSX.XMLGenerator.XML m)
-loginBox =
+loginBox :: (EmbedAsAttr m (Attr [Char] [Char]),EmbedAsAttr m (Attr [Char] KontraLink)) => Maybe String -> XMLGenT m (HSX.XMLGenerator.XML m)
+loginBox referer=
    <div>
     <div id="login">
      <form action=LinkLogin method="post">
@@ -84,7 +84,9 @@ loginBox =
           </td>
     </tr>
 	<tr> 
-          <td><input class="button" id="loginbtn" type="submit" name="login" value="Logga in"/></td>
+          <td><input class="button" id="loginbtn" type="submit" name="login" value="Logga in"/>
+              <input type="hidden" name="referer" value=(fromMaybe "" referer)/>
+           </td>
           <td>
            <a href=LinkForgotPassword> Glömt lösenord</a>
           </td>
@@ -372,15 +374,15 @@ pageForgotPasswordConfirm :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLi
 pageForgotPasswordConfirm  =
   <div class="centerdivnarrow">
     <p>Ett nytt lösenord har skickats till din e-post. Du kan nu logga in med dina nya uppgifter.</p>
-    <% loginBox %>
+    <% loginBox Nothing %>
   </div>
 
-pageLogin :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) => XMLGenT m (HSX.XML m)
-pageLogin = 
+pageLogin :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) => Maybe String -> XMLGenT m (HSX.XML m)
+pageLogin referer = 
   <div class="centerdivnarrow">
 
    <p class="headline">Logga in SkrivaPå!</p> 
 
-   <% loginBox %>
+   <% loginBox referer %>
 
   </div>
