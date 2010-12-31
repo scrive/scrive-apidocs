@@ -21,6 +21,9 @@ import qualified HSX.XMLGenerator as HSX (XML)
 import HSP
 import Session (SessionId)
 import Misc
+import qualified Codec.Binary.Url as URL
+import qualified Codec.Binary.UTF8.String as UTF
+import Control.Monad.Trans(liftIO, MonadIO,lift)
 
 seeOtherXML :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
@@ -57,6 +60,7 @@ data KontraLink
     | LinkUserAdmin (Maybe UserID)
     | LinkPasswordChange SessionId MagicHash
     | LoopBack
+    | BackToReferer
     
 instance Show KontraLink where
     showsPrec _ LinkAbout = (++) "/about"
@@ -95,6 +99,8 @@ instance Show KontraLink where
     showsPrec _ (LinkUserAdmin (Just userId)) = (++) $ "/adminonly/useradmin/"++show userId
     showsPrec _ (LinkPasswordChange sid mh) = (++) $ "/changepassword/"++show sid++"/"++show mh
     showsPrec _ LoopBack = (++) $ "/" -- this should be never used
+    showsPrec _ BackToReferer = (++) $ "/" -- this should be never used
+    
 {-
 instance (EmbedAsAttr m String) => (EmbedAsAttr m KontraLink) where
     asAttr = asAttr . show
@@ -111,9 +117,20 @@ instance Monad m => IsAttrValue m KontraLink where
 
 --sendRedirect :: KontraLink -> Kontra Response
 sendRedirect LoopBack = do
-                         ref <- getHeaderM "referer"
-                         let link = fromMaybe "/" $ fmap BS.toString ref
+                         ref <- fmap (fmap BS.toString) $ getHeaderM "referer"
+                         let link = fromMaybe (show LinkMain) $ ref 
                          response <- webHSP (seeOtherXML link)
+                         seeOther link response
+sendRedirect BackToReferer    = do
+                         ref <- getField "referer"
+                         let link = fromMaybe (show LinkMain) $ ref
+                         response <- webHSP (seeOtherXML link)
+                         seeOther link response
+
+sendRedirect LinkLogin = do
+                         curr <- fmap rqUri askRq 
+                         let link =  (show LinkLogin) ++"?referer=" ++ (URL.encode $ UTF.encode curr) 
+                         response <- webHSP (seeOtherXML $ link)
                          seeOther link response
 
 sendRedirect link = do  

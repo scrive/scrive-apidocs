@@ -358,14 +358,19 @@ signupPageDone = do
 handleLoginGet :: Kontra Response
 handleLoginGet = do
   ctx <- lift get
-  V.renderFromBody ctx V.TopNone V.kontrakcja V.pageLogin 
-
+  case (ctxmaybeuser ctx) of
+    Just _ -> sendRedirect LinkMain   
+    Nothing -> do 
+                referer <- getField "referer"
+                V.renderFromBody ctx V.TopNone V.kontrakcja $ V.pageLogin referer
+    
 handleLoginPost :: Kontra KontraLink
 handleLoginPost = do
   rq <- askRq
   email <- getDataFnM $ look "email"
   passwd <- getDataFnM $ look "password"
   rememberMeMaybe <- getDataFn' $ look "rememberme"
+  whereToGoOnFail <- fmap (maybe LinkLogin $ const LoopBack) $ getField "referer"
   let rememberMe = isJust rememberMeMaybe
   
   -- check the user things here
@@ -375,11 +380,11 @@ handleLoginPost = do
         if verifyPassword userpassword (BS.fromString passwd) && passwd/=""
         then do
           logUserToContext maybeuser
-          return LinkMain
+          return BackToReferer
         else do
-          return LinkLogin
+          return whereToGoOnFail
     Nothing -> do
-          return LinkLogin
+          return whereToGoOnFail
 
 handleLogout :: Kontra Response
 handleLogout = do
