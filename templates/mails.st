@@ -196,7 +196,7 @@ invitationMailUndeliveredContent =
 
 	<p>1. Kontrollera vilken som är mottagarens korrekta adress<br/>  
 	   2. Klicka på dokumentet i ditt arkiv eller på följande länk<br/>  
-	   $unsigneddoclink$</p>
+	  <a href="$ctxhostpart$$unsigneddoclink$">$ctxhostpart$$unsigneddoclink$</a> </p>
 
 	<p>3. Klicka "Starta om"<br/>
 	   4. Skriv in rätt e-postadress och skicka igen</p>

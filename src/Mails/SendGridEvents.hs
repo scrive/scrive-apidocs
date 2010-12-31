@@ -78,7 +78,11 @@ handleSendgridEvent' (SendgridEvent {info=Invitation signlinkid,event= Undeliver
                  case msld of
                   Just sld -> do    
                     content <- liftIO $ wrapHTML (ctxtemplates ctx)=<< renderTemplate (ctxtemplates ctx) "invitationMailUndeliveredContent"
-                                                                       [("name",BS.toString $ signatoryname sld),("email",BS.toString $ signatoryemail sld)]  
+                                                                       [("authorname",BS.toString $ signatoryname $ documentauthordetails doc),
+                                                                        ("email",BS.toString $ signatoryemail sld),
+                                                                        ("unsigneddoclink", show $ LinkIssueDoc $ documentid doc),
+                                                                        ("ctxhostpart",ctxhostpart ctx)  
+                                                                       ]  
                     liftIO $ sendMail (ctxmailsconfig ctx)  $  emptyMail {title=BS.fromString title,content=BS.fromString content,fullnameemails = fullnameemails}
                   Nothing -> return () 
      Nothing -> return ()                                                                                  
