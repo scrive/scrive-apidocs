@@ -558,7 +558,8 @@ handleIssueGet = withUserGet $ checkUserTOSGet $ do
   friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
   -- get rid of duplicates
   let documents = nub $ mydocuments ++ concat friends'Documents
-  renderFromBody ctx TopDocument kontrakcja (pageDocumentList ctxtime user documents)
+  let sorteddocuments = sortBy (\d1 d2 -> compare (documentmtime d2) (documentmtime d1)) documents
+  renderFromBody ctx TopDocument kontrakcja (pageDocumentList ctxtime user sorteddocuments) 
 
 gs :: String
 #ifdef WINDOWS
