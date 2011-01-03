@@ -14,6 +14,7 @@ module User
     , logUserToContext
     , onlySuperUser
     , changePasswordLink
+    , activateLink
     )
     where
 
@@ -181,3 +182,7 @@ changePasswordLink::UserID -> IO KontraLink
 changePasswordLink uid =  do
                            session <- createLongTermSession (uid)
                            return (LinkPasswordChange (getSessionId session) (getSessionMagicHash session))     
+activateLink::UserID -> IO KontraLink
+activateLink uid =  do
+                           session <- createLongTermSession (uid)
+                           return (LinkActivateAccount (getSessionId session) (getSessionMagicHash session))                            

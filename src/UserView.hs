@@ -6,6 +6,7 @@ module UserView(
     showUser,
     pageAcceptTOS,
     newPasswordPageView,
+    activatePageView,
     --mails  
     passwordChangeMail,
     newUserMail,
@@ -22,6 +23,7 @@ module UserView(
     flashMessageUserPasswordChanged,
     flashMessagePasswordChangeLinkNotValid,
     flashMessageUserWithSameEmailExists,
+    flashMessageActivationLinkNotValid,
     --utils  
     prettyName) where
 
@@ -184,6 +186,9 @@ viewSubaccounts ctx subusers =
     </form>
 
 
+activatePageView::KontrakcjaTemplates -> String ->  IO String
+activatePageView templates tostext = renderTemplate templates "activatePageView" [("tostext",tostext)]
+
 
 newPasswordPageView::KontrakcjaTemplates -> IO String
 newPasswordPageView templates = renderTemplate templates "newPasswordPage" []
@@ -196,12 +201,13 @@ resetPasswordMail templates hostname user setpasslink =  do
                                                                  ("ctxhostpart",hostname)]
            return $ emptyMail {title=BS.fromString title, content = BS.fromString content} 
 
-newUserMail :: KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> IO Mail
-newUserMail templates hostpart emailaddress personname =
+newUserMail :: KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> IO Mail
+newUserMail templates hostpart emailaddress personname activatelink=
     do 
     title <- renderTemplate templates "newUserMailTitle" []
     content <- wrapHTML templates =<< renderTemplate templates "newUserMailContent" [("personname",BS.toString $ personname),
                                                                  ("email",BS.toString $ emailaddress),
+                                                                 ("activatelink",show activatelink),  
                                                                  ("ctxhostpart",hostpart)]
     return $ emptyMail {title=BS.fromString title, content = BS.fromString content} 
     
@@ -265,7 +271,6 @@ flashMessagePasswordChangeLinkNotValid templates = renderTemplate templates "fla
 
 flashMessageUserWithSameEmailExists:: KontrakcjaTemplates -> IO String
 flashMessageUserWithSameEmailExists templates = renderTemplate templates "flashMessageUserWithSameEmailExists" []
-
 {- Same as personname (username or email) from DocView but works on User -}
 prettyName::User -> BS.ByteString
 prettyName u = if (BS.null $ userfullname u)

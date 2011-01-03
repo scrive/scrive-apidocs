@@ -59,6 +59,7 @@ data KontraLink
     | LinkPaymentsAdmin
     | LinkUserAdmin (Maybe UserID)
     | LinkPasswordChange SessionId MagicHash
+    | LinkActivateAccount SessionId MagicHash
     | LoopBack
     | BackToReferer
     
@@ -98,6 +99,7 @@ instance Show KontraLink where
     showsPrec _ (LinkUserAdmin Nothing) = (++) $ "/adminonly/useradmin"
     showsPrec _ (LinkUserAdmin (Just userId)) = (++) $ "/adminonly/useradmin/"++show userId
     showsPrec _ (LinkPasswordChange sid mh) = (++) $ "/changepassword/"++show sid++"/"++show mh
+    showsPrec _ (LinkActivateAccount sid mh) = (++) $ "/activate/"++show sid++"/"++show mh
     showsPrec _ LoopBack = (++) $ "/" -- this should be never used
     showsPrec _ BackToReferer = (++) $ "/" -- this should be never used
     
