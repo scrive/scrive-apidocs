@@ -354,29 +354,26 @@ isFriendOf uid user = (unUserID uid `elem` map unFriend (userfriends user))
    Document must exist.
    User must be authorized to view the document.
    There are two cases: 
-    1. author or secretary, in which case they get pageDocumentForAuthor
-    2. Friend of author or secretary, in which case they get pageDocumentForViewer
+    1. author in which case they get pageDocumentForAuthor
+    2. Friend of author in which case they get pageDocumentForViewer
  -}
 handleIssueShowGet :: DocumentID -> Kontra Response
 handleIssueShowGet docid = withUserGet $ checkUserTOSGet $ (withDocumentGet docid) $ do
   Just document@Document{ documentauthor
                         , documentid
-                        , documentsecretary
                         } <- query $ GetDocumentByDocumentID $ docid
   ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) <- get
   mauthor <- query $ GetUserByUserID $ unAuthor documentauthor
-  msecretary <- query $ GetUserByUserID $ UserID $ unSecretary documentsecretary
 
   let toptab = if documentstatus document == Closed
                 then TopDocument
                 else TopNone
-  -- authors and secretaries get a view with buttons
-  if isAuthor document user || isSecretary document user
+  -- authors get a view with buttons
+  if isAuthor document user
    then renderFromBody ctx toptab kontrakcja 
             (pageDocumentForAuthor ctx document)
    -- friends can just look (but not touch)
-   else if (isJust msecretary && isFriendOf userid (fromJust msecretary))
-            || (isJust mauthor && isFriendOf userid (fromJust mauthor))
+   else if (isJust mauthor && isFriendOf userid (fromJust mauthor))
          then renderFromBody ctx toptab kontrakcja
                   (pageDocumentForViewer ctx document)
          else mzero
@@ -388,7 +385,7 @@ handleIssueShowGet docid = withUserGet $ checkUserTOSGet $ (withDocumentGet doci
    Otherwise, we do mzero (NOTE: this is not the correct action to take)
    User must be logged in.
    Document must exist
-   User must be author or secretary
+   User must be author
  -}
 handleIssueShowPost :: DocumentID -> Kontra KontraLink
 handleIssueShowPost docid = withUserPost $ withDocumentPost docid $ do
@@ -398,8 +395,8 @@ handleIssueShowPost docid = withUserPost $ withDocumentPost docid $ do
   
   ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) <- get
      
-  -- only authors and secretaries can modify documents
-  when (not $ isAuthor document user || isSecretary document user) mzero
+  -- only authors can modify documents
+  when (not $ isAuthor document user) mzero
      
   -- something has to change here
   case documentstatus document of
@@ -562,8 +559,8 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid, do
     
 {- |
    Constructs a list of documents (Arkiv) to show to the user.
-   The list contains all documents the user is an author on, a secretary on, or
-   is a friend of the author or a friend of the secretary.
+   The list contains all documents the user is an author on or
+   is a friend of the author.
    Duplicates are removed.
  -}
 handleIssueGet :: Kontra Response

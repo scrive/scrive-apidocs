@@ -4,6 +4,7 @@
 module DocView( emptyDetails
               , showFilesImages2
               , pageDocumentForAuthor
+              , pageDocumentForViewer
               , pageDocumentList
               , landpageSignInviteView
               , landpageSignedView
