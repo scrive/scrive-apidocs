@@ -230,6 +230,7 @@ $(deriveAll [''Eq, ''Ord, ''Default]
                           | Timedout
                           | Rejected
                           | AwaitingAuthor
+                          | AutoCanceled
 
       data ChargeMode = ChargeInitialFree   -- initial 5 documents are free
                       | ChargeNormal        -- value times number of people involved
@@ -1346,7 +1347,9 @@ markDocumentSeen documentid signatorylinkid1 time ipnumber = do
             | otherwise = l
       modify (updateIx documentid document')
       return (Just document')
-  
+
+
+-- | We set info about delivering invitation. On undeliver we autocancel document
 setInvitationDeliveryStatus::SignatoryLinkID -> MailsDeliveryStatus -> Update Documents (Maybe Document)
 setInvitationDeliveryStatus siglnkid status = do
                                                documents <- ask 
@@ -1357,7 +1360,11 @@ setInvitationDeliveryStatus siglnkid status = do
                                                                 let newsls = for oldsls $ \sl -> if (signatorylinkid sl == siglnkid)
                                                                                                  then sl {invitationdeliverystatus = status}
                                                                                                  else sl
-                                                                let newdoc = doc {documentsignatorylinks = newsls}                                 
+                                                                let newdoc = doc {documentsignatorylinks = newsls,
+                                                                                  documentstatus = if status == Undelivered 
+                                                                                                    then AutoCanceled
+                                                                                                    else documentstatus doc
+                                                                                 }           
                                                                 modify (updateIx (documentid doc) newdoc)
                                                                 return $ Just newdoc
 getDocumentStats :: Query Documents Int
@@ -1467,7 +1474,7 @@ restartDocument docid user =
 -}
 tryToGetRestarted::Document->User-> Update Documents (Either String Document)
 tryToGetRestarted doc user= 
-                            if (documentstatus doc `notElem` [Canceled,Timedout, Rejected])
+                            if (documentstatus doc `notElem` [Canceled,Timedout, Rejected,AutoCanceled])
                              then return $ Left $ "Can't restart document with " ++ (show $ documentstatus doc) ++ " status"
                              else if (not $ isAuthor doc user)
                                    then return $ Left $ "Can't restart document is You are not it's author"
