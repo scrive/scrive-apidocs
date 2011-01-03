@@ -524,13 +524,18 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} = 
 
   -- FIXME: tell the user what happened!
   -- when (daystosign<1 || daystosign>99) mzero
-  
+
+  --let emails = zip signatoriesemails 
+  --              (sequence $ map (query . GetUserByEmail . Email) signatoriesemails)
+
+  Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor document
+
   doc2 <- update $ UpdateDocument ctxtime documentid
-           signatories daystosign invitetext
+           signatories daystosign invitetext author
 
   msum 
      [ do getDataFnM (look "final" `mplus` look "sign")
-          mdocument <- update $ AuthorSignDocument documentid ctxtime ctxipnumber
+          mdocument <- update $ AuthorSignDocument documentid ctxtime ctxipnumber author
           case mdocument of
             Left msg -> return doc2
             Right newdocument -> do
