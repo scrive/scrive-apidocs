@@ -250,7 +250,7 @@ appHandler appConf = do
                  _ -> 0
     
   let peer = rqPeer rq
-  -- liftIO $ print (peer,peerip)
+
   minutestime <- liftIO $ getMinutesTime
   session <- handleSession
   muser <- getUserFromSession session

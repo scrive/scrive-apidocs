@@ -36,14 +36,12 @@ import Administration.AdministrationView
 import Payments.PaymentsState
 import DocState
 import Data.ByteString.UTF8 (fromString,toString)
-import Data.ByteString (hGetContents,ByteString)
+import Data.ByteString (ByteString,empty)
 import qualified Data.ByteString.Lazy  as L
 import KontraLink
 import Payments.PaymentsControl(readMoneyField,getPaymentChangeChange)
 import MinutesTime
 import System.Directory
-import System.Process
-import System.IO (hClose)
 import Data.List (isPrefixOf,sort)
 import UserControl
 import UserView
