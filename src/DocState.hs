@@ -967,7 +967,7 @@ instance Migrate Document6 Document where
                                                    , maybeseeninfo = documentmaybesigninfo6
                                                    , maybesignatory = Just $ Signatory $ unAuthor $ documentauthor6
                                                    , signatorydetails = documentauthordetails6
-                                                   , invitationdeliverystatus = Unknown
+                                                   , invitationdeliverystatus = Delivered
                                                    , signatorymagichash = MagicHash 0
                                                    , signatorylinkid = SignatoryLinkID 0
                                                    }
