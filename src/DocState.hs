@@ -1175,11 +1175,13 @@ updateDocument :: MinutesTime
                -> [SignatoryDetails]
                -> Maybe Int
                -> BS.ByteString
+               -> User
                -> Update Documents Document
-updateDocument time documentid signatories daystosign invitetext = do
+updateDocument time documentid signatories daystosign invitetext author = do
   documents <- ask
   let Just document = getOne (documents @= documentid)
-  signatorylinks <- sequence $ map signLinkFromDetails signatories
+      authoremail = unEmail $ useremail $ userinfo author
+  signatorylinks <- sequence $ map (signLinkFromDetails [(authoremail, author)]) signatories
   let doc2 = document { documentsignatorylinks = signatorylinks
                       , documentdaystosign = daystosign 
                       , documentmtime = time
@@ -1250,12 +1252,18 @@ signDocument documentid signatorylinkid1 time ipnumber fields = do
            Timedout -> Left "Förfallodatum har passerat"
            _ ->        Left ("Bad document status: " ++ show (documentstatus document))
 
+signWithUserID [] _ _ = []
+signWithUserID (s:ss) id sinfo
+    | maybe False (((==) id) . unSignatory) (maybesignatory s) = s {maybesigninfo = sinfo, maybeseeninfo = sinfo} : ss
+    | otherwise = s : signWithUserID ss id sinfo
+
 -- maybe this goes away
 authorSignDocument :: DocumentID
                    -> MinutesTime
                    -> Word32
+                   -> User
                    -> Update Documents (Either String Document)
-authorSignDocument documentid time ipnumber =
+authorSignDocument documentid time ipnumber author =
     modifyDocument documentid $ \document ->
         case documentstatus document of
           Preparation -> 
@@ -1264,9 +1272,11 @@ authorSignDocument documentid time ipnumber =
                              let enddate = m + (days * 24 *60)
                              return $ (TimeoutTime . MinutesTime ) enddate
                   MinutesTime m = time 
+                  authorid = userid author
+                  sinfo = Just (SignInfo time ipnumber)
               in Right $ document { documenttimeouttime = timeout
                                   , documentmtime = time
-                                  --, documentmaybesigninfo = Just (SignInfo time ipnumber)
+                                  , documentsignatorylinks = signWithUserID (documentsignatorylinks document) authorid sinfo
                                   , documentstatus = Pending
                                   }
               
@@ -1448,7 +1458,8 @@ restartDocument docid user =
    modifyDocument' docid (\d -> tryToGetRestarted d user)    
 
 
-{- Returns restarted version of document
+{- | 
+    Returns restarted version of document
     Checks the autor and status
     Clears sign links and stuff
 -}
@@ -1459,29 +1470,41 @@ tryToGetRestarted doc user=
                              else if (not $ isAuthor doc user)
                                    then return $ Left $ "Can't restart document is You are not it's author"
                                    else do 
-                                         doc' <-clearSignInfofromDoc doc 
+                                         doc' <-clearSignInfofromDoc doc user
                                          return $ Right doc'
-clearSignInfofromDoc doc = do
-                            let signatoriesDetails = map signatorydetails $ documentsignatorylinks doc
-                            newSignLinks <- sequence $ map signLinkFromDetails signatoriesDetails
-                            return doc {documentstatus=Preparation,
-                                documenttimeouttime = Nothing,
-                                documentsignatorylinks = newSignLinks
-                             }
+
+
+clearSignInfofromDoc doc author = do
+  let signatoriesDetails = map signatorydetails $ documentsignatorylinks doc
+      authoremail = unEmail $ useremail $ userinfo author
+  newSignLinks <- sequence $ map (signLinkFromDetails [(authoremail, author)]) signatoriesDetails
+  return doc {documentstatus=Preparation,
+              documenttimeouttime = Nothing,
+              documentsignatorylinks = newSignLinks
+             }
+
+findMaybeUserByEmail [] _ = Nothing
+findMaybeUserByEmail ((email, user):eus) em 
+    | email == em = Just user
+    | otherwise   = findMaybeUserByEmail eus em
+
 --UTILS - have to be put before creating action constructors
-signLinkFromDetails details = do
+signLinkFromDetails emails details = do
           sg <- ask
           linkid <- getUnique sg SignatoryLinkID
           magichash <- getRandom
+          let muser = findMaybeUserByEmail emails (signatoryemail details)
+              msig = maybe Nothing (Just . Signatory . userid) muser
           return $ SignatoryLink 
                      { signatorylinkid = linkid
                      , signatorydetails = details
                      , signatorymagichash = magichash
-                     , maybesignatory = Nothing
+                     , maybesignatory = msig
                      , maybesigninfo  = Nothing
                      , maybeseeninfo  = Nothing
                      , invitationdeliverystatus = Unknown
                      }
+
 {- |
    The user is the author of the document
  -}
