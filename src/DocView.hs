@@ -25,7 +25,7 @@ module DocView( emptyDetails
               , mailInvitationToSign
               , mailDocumentClosedForSignatories
               , mailDocumentClosedForAuthor
-              
+              , isNotLinkForUserID
               ) where
 import Data.List
 import DocState
@@ -43,6 +43,7 @@ import DocViewUtil
 import Templates.Templates
 import Templates.TemplatesUtils
 import Mails.MailsUtil
+import UserView (prettyName)
 
 landpageSignInviteView ::KontrakcjaTemplates -> Document ->  IO String
 landpageSignInviteView templates  document =
@@ -288,43 +289,39 @@ emptyDetails = SignatoryDetails
           }
 
 {- |
+   link does not belong to user with uid
+ -}
+isNotLinkForUserID uid link =
+    hasNoUserID || notSameUserID
+        where hasNoUserID = isNothing $ maybesignatory link
+              notSameUserID = uid /= linkuid
+              linkuid = unSignatory $ fromJust $ maybesignatory link
+
+{- |
    Show the document to the author with controls he needs.
  -}
 pageDocumentForAuthor :: Context 
              -> Document 
+             -> User
              -> (HSPT IO XML) 
 pageDocumentForAuthor ctx
              document@Document{ documentsignatorylinks
-                              , documentauthordetails
                               , documenttitle
                               , documentid
                               , documentstatus
                               , documentdaystosign
                               , documentinvitetext
                               } 
-             =
+             author =
    let helper = [ showSignatoryEntryForEdit2 "signatory_template" "" "" "" ""
                 , <script> var documentid = "<% show $ documentid %>"; 
                   </script>
                 ]
-       allinvited = documentsignatorylinks
-       authorlink = SignatoryLink 
-                    { signatorydetails = documentauthordetails
-                    , maybeseeninfo = Nothing 
-                      -- this gymanstic below is to cover up for some earlier error
-                      -- that erased sign times of authors
-                    , maybesigninfo = if isJust (documentmaybesigninfo document)
-                                      then (documentmaybesigninfo document)
-                                      else if documentstatus == Closed
-                                           then Just (SignInfo (MinutesTime 0) 0)
-                                           else Nothing
-                    , signatorylinkid = SignatoryLinkID 0
-                    , maybesignatory = Nothing -- FIXME: should be author user id
-                    , signatorymagichash = MagicHash 0
-                    , invitationdeliverystatus = Delivered
-                    }
+       authorid = userid author
+       allinvited = filter (isNotLinkForUserID authorid) documentsignatorylinks
        documentdaystosignboxvalue = maybe 7 id documentdaystosign
        timetosignset = isJust documentdaystosign --swedish low constrain
+       documentauthordetails = signatoryDetailsFromUser author
    in showDocumentPageHelper document helper 
            (documenttitle)  
       <div>
@@ -342,13 +339,13 @@ pageDocumentForAuthor ctx
               <form method="post" name="form" action=(LinkIssueDoc documentid) id="main-document-form"> 
               Avsändare<br/>
               <div style="margin-bottom: 10px;" id="authordetails">
-              <strong><% signatoryname documentauthordetails %></strong><br/>
-              <% addbr $ signatorycompany documentauthordetails %>
-              <% addbr $ signatorynumber documentauthordetails %>
-              <% addbr $ signatoryemail documentauthordetails %>
+              <strong><span id="sauthoryname"><% signatoryname documentauthordetails %></span></strong><br />
+              <span id="sauthorcompany"><% signatorycompany documentauthordetails %></span><br />
+              <span id="sauthornumber"><% signatorynumber documentauthordetails %></span><br />
+              <span id="sauthoremail"><% signatoryemail documentauthordetails %></span>
               </div>
 
-              <select name="authorrole">
+              <select name="authorrole" id="authorroledropdown">
                       <option value="signatory">Signatory</option>
                       <option value="secretary">Secretary</option>
               </select>
@@ -397,7 +394,7 @@ pageDocumentForAuthor ctx
                    <a class="close"> </a>
                    <h2>Hälsningsmeddelande</h2>
                    <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
-                   <% fmap cdata $ mailInvitationToSignContent (ctxtemplates ctx) False ctx document Nothing%>
+                   <% fmap cdata $ mailInvitationToSignContent (ctxtemplates ctx) False ctx document author Nothing%>
                    </div>
                    <div class="buttonbox" >
                        <button class="close button" type="button"> Avbryt </button>
@@ -425,8 +422,7 @@ pageDocumentForAuthor ctx
                </script>
                
               <div id="signatorylist">
-                 <% showSignatoryLinkForSign ctx document authorlink %>
-                 <% map (showSignatoryLinkForSign ctx document) allinvited 
+                 <% map (showSignatoryLinkForSign ctx document author) allinvited 
                  %>
               </div>
               <% if documentstatus == AwaitingAuthor
@@ -446,7 +442,7 @@ pageDocumentForAuthor ctx
 			           <BR/>När du återkallat inbjudan kommer nedanstaende meddelande att skickas till dina motparter.
                                 </p>
                                 <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
-                                 <% fmap cdata $ mailCancelDocumentByAuthorContent  (ctxtemplates ctx) False Nothing ctx document%>
+                                 <% fmap cdata $ mailCancelDocumentByAuthorContent  (ctxtemplates ctx) False Nothing ctx document author%>
                                 </div>
                                 <div class="buttonbox" >
                                    <button class="close button" type="button"> Avbryt </button>
@@ -472,35 +468,21 @@ pageDocumentForAuthor ctx
    Show the document for Viewers (friends of author or signatory).
    Show no buttons or other controls
  -}
-pageDocumentForViewer :: Context -> Document -> (HSPT IO XML) 
+pageDocumentForViewer :: Context -> Document -> User -> (HSPT IO XML) 
 pageDocumentForViewer ctx
              document@Document{ documentsignatorylinks
-                              , documentauthordetails
                               , documenttitle
                               , documentid
                               , documentstatus
                               } 
+             author
              =
    let helper = [ showSignatoryEntryForEdit2 "signatory_template" "" "" "" ""
                 , <script> var documentid = "<% show $ documentid %>"; 
                   </script>
                 ]
        allinvited = documentsignatorylinks
-       authorlink = SignatoryLink 
-                    { signatorydetails = documentauthordetails
-                    , maybeseeninfo = Nothing 
-                      -- this gymanstic below is to cover up for some earlier error
-                      -- that erased sign times of authors
-                    , maybesigninfo = if isJust (documentmaybesigninfo document)
-                                      then (documentmaybesigninfo document)
-                                      else if documentstatus == Closed
-                                           then Just (SignInfo (MinutesTime 0) 0)
-                                           else Nothing
-                    , signatorylinkid = SignatoryLinkID 0
-                    , maybesignatory = Nothing -- FIXME: should be author user id
-                    , signatorymagichash = MagicHash 0
-                    , invitationdeliverystatus = Delivered
-                    }
+       documentauthordetails = signatoryDetailsFromUser author
    in showDocumentPageHelper document helper 
            (documenttitle)  
       <div>
@@ -515,8 +497,7 @@ pageDocumentForViewer ctx
                 </script>
                
               <div id="signatorylist">
-                 <% showSignatoryLinkForSign ctx document authorlink %>
-                 <% map (showSignatoryLinkForSign ctx document) allinvited %>
+                 <% map (showSignatoryLinkForSign ctx document author) allinvited %>
               </div>
        </div>
       </div>
@@ -549,8 +530,8 @@ showDocumentPageHelper document helpers title content =
      <div class="clearboth"/>
     </div> 
 
-showSignatoryLinkForSign :: Context -> Document -> SignatoryLink -> GenChildList (HSPT' IO)
-showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document siglnk@(SignatoryLink{  signatorylinkid 
+showSignatoryLinkForSign :: Context -> Document -> User -> SignatoryLink -> GenChildList (HSPT' IO)
+showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document author siglnk@(SignatoryLink{  signatorylinkid 
                                        , maybesigninfo
                                        , maybeseeninfo
                                        , invitationdeliverystatus
@@ -597,7 +578,7 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document siglnk@(
                       else "Skicka påminnelse"               
       reminderEditorText = "Skriv eget meddelande"                          
       reminderDialogTitle = reminderText
-      reminderMessage =  fmap cdata $  mailDocumentRemindContent  (ctxtemplates ctx) Nothing ctx document siglnk
+      reminderMessage =  fmap cdata $  mailDocumentRemindContent  (ctxtemplates ctx) Nothing ctx document siglnk author
       dialogHeight =   if (wasSigned) then "400" else "600"
       reminderForm = <span>
                       <a style="cursor:pointer" class="prepareToSendReminderMail" rel=("#siglnk" ++ (show signatorylinkid ))>  <% reminderText %>  </a>
@@ -631,48 +612,32 @@ displayField FieldDefinition {fieldlabel, fieldvalue}
     | fieldvalue == BS.fromString "" = <span />
     | otherwise        = <div><span class="fieldlabel"><% fieldlabel %>: </span><span class="fieldvalue"><% fieldvalue %></span></div>
 
-pageDocumentForSign ::  KontraLink 
-                           -> Document 
-                           -> Context
-                           -> SignatoryLink
-                           -> Bool 
+pageDocumentForSign :: KontraLink 
+                    -> Document 
+                    -> Context
+                    -> SignatoryLink
+                    -> Bool 
+                    -> User
                     -> (HSPT IO XML) 
-pageDocumentForSign action document ctx  invitedlink wassigned =
+pageDocumentForSign action document ctx  invitedlink wassigned author =
    let helpers = [ <script> var documentid = "<% show $ documentid document %>"; 
                   </script>
                 , <script type="text/javascript">
-                   <% "var docstate = " ++ (buildJS (documentauthordetails document) $ map signatorydetails (documentsignatorylinks document)) ++ "; docstate['useremail'] = '" ++ (BS.toString $ signatoryemail $ signatorydetails invitedlink) ++ "';" %>
+                   <% "var docstate = " ++ (buildJS documentauthordetails $ map signatorydetails (documentsignatorylinks document)) ++ "; docstate['useremail'] = '" ++ (BS.toString $ signatoryemail $ signatorydetails invitedlink) ++ "';" %>
                   </script>
                 , <script src="/js/signatory.js" /> ]
        magichash = signatorymagichash invitedlink
-       authordetails = documentauthordetails document
-       authorname = signatoryname authordetails
+       authorname = signatoryname documentauthordetails
        allbutinvited = filter (/= invitedlink) (documentsignatorylinks document)
-       authorlink = SignatoryLink 
-                    { signatorydetails = authordetails
-                    , maybeseeninfo = Nothing 
-                      -- this gymanstic below is to cover up for some earlier error
-                      -- that erased sign times of authors
-                    , maybesigninfo = if isJust (documentmaybesigninfo document)
-                                      then (documentmaybesigninfo document)
-                                      else if documentstatus document == Closed
-                                           then Just (SignInfo (MinutesTime 0) 0)
-                                           else Nothing
-                    , signatorylinkid = SignatoryLinkID 0
-                    , maybesignatory = Nothing -- FIXME: should be author user id
-                    , signatorymagichash = MagicHash 0
-                    , invitationdeliverystatus = Delivered
-                    }
-       rejectMessage =  fmap cdata $ mailRejectMailContent  (ctxtemplates ctx) Nothing ctx (personname authorlink) document (personname invitedlink)
+       documentauthordetails = signatoryDetailsFromUser author
+       rejectMessage =  fmap cdata $ mailRejectMailContent (ctxtemplates ctx) Nothing ctx (prettyName author) document (personname invitedlink)
    in showDocumentPageHelper document helpers
               (documenttitle document) $
               <span>
                  <p>Vänligen var noga med att granska dokumentet och kontrollera 
                     uppgifterna nedan innan du undertecknar.</p>   
 
-                 <% showSignatoryLinkForSign ctx document invitedlink %>
-
-                 <% map (showSignatoryLinkForSign ctx document) (authorlink : allbutinvited) %>
+                 <% map (showSignatoryLinkForSign ctx document author) (allbutinvited) %>
                  <% caseOf 
                     [(wassigned ,
                               <div>Du har redan undertecknat!</div>),
@@ -763,3 +728,15 @@ buildJS authordetails signatorydetails =
                                     
 defaultInviteMessage :: BS.ByteString
 defaultInviteMessage = BS.empty     
+
+signatoryDetailsFromUser user = 
+    SignatoryDetails { signatoryname = userfullname user
+                     , signatoryemail = unEmail $ useremail $ userinfo user
+                     , signatorycompany = usercompanyname $ userinfo user
+                     , signatorynumber = usercompanynumber $ userinfo user
+                     , signatorynameplacements = []
+                     , signatorycompanyplacements = []
+                     , signatoryemailplacements = []
+                     , signatorynumberplacements = []
+                     , signatoryotherfields = []
+                     }
