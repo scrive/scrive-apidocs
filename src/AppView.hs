@@ -11,7 +11,6 @@ module AppView( TopMenu(..)
               , pageForgotPassword
               , pageForgotPasswordConfirm
               , signupPageView
-              , SignupForm(..)
               , signupConfirmPageView
               , pageLogin
               ) where 
@@ -21,13 +20,13 @@ import Happstack.Server.HSP.HTML (webHSP)
 import Happstack.Server.SimpleHTTP
 import qualified HSX.XMLGenerator as HSX (XML)
 import qualified HSX.XMLGenerator
-import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BSC
 import User
 import qualified Data.Map as Map
 import Misc
 import KontraLink
 import Data.Maybe
+import Templates.Templates
 
 poweredBySkrivaPaPara :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 poweredBySkrivaPaPara hostpart = 
@@ -309,51 +308,9 @@ pageFromBody (Context {ctxmaybeuser,ctxflashmessages,ctxproduction})
 
 signupConfirmPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) =>  XMLGenT m (HSX.XML m)
 signupConfirmPageView  =  <div>Ditt konto har skapats! Vi har skickat ett mail med dina användaruppgifter till din inkorg.</div>
-
-data SignupForm = SignupForm {
-    signupFullname :: BS.ByteString,
-    signupEmail :: BS.ByteString,
-    signupPassword :: BS.ByteString,
-    signupPassword2 :: BS.ByteString }
-    
-instance FromData SignupForm where
-    fromData = do
-        fullname <- lookBS "fullname"
-        email <- lookBS "email"
-        password <- lookBS "password"
-        password2 <- lookBS "password2"
-        return $ SignupForm {
-            signupFullname = concatChunks fullname,
-            signupEmail = concatChunks email,
-            signupPassword = concatChunks password,
-            signupPassword2 = concatChunks password2
-        }
         
-signupPageView :: ( XMLGenerator m , EmbedAsAttr m (Attr String KontraLink), EmbedAsAttr m (Attr String BS.ByteString))=> Maybe SignupForm -> XMLGenT m (HSX.XML m)
-signupPageView form =
-    <div class="centerdivnarrow">
-        <form action=LinkSignup method="post">
-            <table>
-                <tr>
-                    <td>Namn:</td>
-                    <td><input name="fullname" value=(maybe BS.empty signupFullname form) /></td>
-                </tr>
-                <tr>
-                    <td>E-mail:</td>
-                    <td><input type="email" name="email" value=(maybe BS.empty signupEmail form) /></td>
-                </tr>
-                <tr>
-                    <td>Lösenord:</td>
-                    <td><input name="password" type="password" /></td>
-                </tr>
-                <tr>
-                    <td>Upprepa nytt lösenord:</td>
-                    <td><input name="password2" type="password" /></td>
-                </tr>
-            </table>
-            <input type="submit" value="Skapa konto" />
-        </form>
-    </div>
+signupPageView :: KontrakcjaTemplates -> IO String
+signupPageView templates = renderTemplate templates "signupPageView" []
 
 pageForgotPassword :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
                => XMLGenT m (HSX.XML m)

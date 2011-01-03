@@ -167,6 +167,9 @@ handleRoutes = msum [
      , dir "amnesiadone" $ hget0  $ forgotPasswordDonePage
      , dir "changepassword" $ hget2  $ UserControl.newPasswordPage     
      , dir "changepassword" $ hpost2  $ UserControl.handleChangePassword     
+     , dir "activate" $ hget2  $ UserControl.activatePage 
+     , dir "activate" $ hpost2  $ UserControl.handleActivate
+     
      -- static files
      , serveHTMLFiles
      , fileServe [] "public"
@@ -319,33 +322,19 @@ forgotPasswordDonePage = do
 signupPageGet :: Kontra Response
 signupPageGet = do
     ctx <- lift get
-    V.renderFromBody ctx V.TopNone V.kontrakcja (signupPageView Nothing)
-
-signupPageError :: SignupForm -> Maybe String
-signupPageError form
-    | signupEmail form == BS.empty = Just "You must enter an email address"
-    | signupPassword form /= signupPassword2 form = Just "Passwords must match"
-    | not $ isPasswordStrong $ signupPassword form = Just "Passwords must be at least 6 characters"
-    | otherwise = Nothing
+    content <- liftIO (signupPageView $ ctxtemplates ctx)
+    V.renderFromBody ctx V.TopNone V.kontrakcja $ cdata content 
     
 signupPagePost :: Kontra KontraLink
 signupPagePost = do
     ctx@Context{ctxtemplates,ctxhostpart} <- lift get
-    maybeform <- getData
-    
-    case maybeform of
+    memail <- getField "email"
+    case memail of
         Nothing ->
             -- V.renderFromBody ctx V.TopNone V.kontrakcja (signupPageView Nothing)
             return LinkSignup
-        Just form -> do
-            case signupPageError form of
-                Just err -> do
-                       addFlashMsgText err
-                       -- V.renderFromBody ctx V.TopNone V.kontrakcja (signupPageView maybeform)
-                       return LinkSignup
-                Nothing -> do
-                    -- Create the user, which sends them a welcome email.
-                    maccount <- liftIO $ createUser ctx ctxhostpart (signupFullname form) (signupEmail form) (Just (signupPassword form)) Nothing
+        Just email -> do
+                    maccount <- liftIO $ createUser ctx ctxhostpart BS.empty (BS.fromString email) Nothing True Nothing
                     if isJust maccount       
                      then return LinkSignupDone
                      else do

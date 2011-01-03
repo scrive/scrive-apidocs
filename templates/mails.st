@@ -123,6 +123,8 @@ newUserMailContent=
 
       <p>Användarnamn: <b>$email$</b><br/>
       </p>
+      <p> <a href="$ctxhostpart$$activatelink$">$ctxhostpart$$activatelink$</a>
+      </p>
       <p>Du kan nu logga in från vår hemsida eller genom att klicka på följande länk:<br/>
       <a href="$ctxhostpart$/login">$ctxhostpart$/login</a>
       </p>

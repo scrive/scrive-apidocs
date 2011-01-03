@@ -39,3 +39,44 @@ newPasswordPage=     <form action="" method="post">
                       </tbody></table>
                      <input class="button" type="submit" value="Ändra lösenord"/>
                      </form>
+####
+signupPageView =
+    <div class="centerdivnarrow">
+        <form action="" method="post">
+            <table>
+                <tr>
+                    <td>E-mail:</td>
+                    <td><input type="email" name="email" value="" /></td>
+                </tr>
+            </table>
+            <input type="submit" value="Skapa konto" />
+        </form>
+    </div>
+####
+activatePageView=   <form action="" method="post">
+                    <h2>Vänligen acceptera användarvillkoren</h2>
+                    <div style="height:480px;overflow-y:scroll;border:1px solid #EEEEEE">
+                      $tostext$
+                     <br/>
+                    </div>
+                    <br/>
+                    <input type="checkbox" name="tos" class="addremovecheckbox" rel=".passwordAndSubmit" location=".passwordAndSubmitVisible" oldlocation=".passwordAndSubmitHidden" value="off" autocomplete="off"/>
+                    Jag har läst och accepterar SkrivaPå Allmänna Villkor<br/><br/>
+                    <div class="passwordAndSubmitVisible"> </div>
+                     </form>
+                     <div class="passwordAndSubmitHidden" style="display:none">
+                     <div class="passwordAndSubmit">
+                     <table><tbody>
+                       <tr>
+                        <td>Nytt lösenord:</td>
+                        <td><input type="password" name="password" autocomplete="off" /></td>
+                       </tr>
+                       <tr>
+                        <td>Upprepa nytt lösenord:</td>
+                        <td><input type="password" name="password2" autocomplete="off" /></td>
+                       </tr>
+                      </tbody></table>
+                    <input class="button" type="submit" value="Activate"/>
+                    </div>
+                    </div>
+###

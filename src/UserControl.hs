@@ -177,7 +177,7 @@ handleCreateSubaccount :: Context -> Kontra KontraLink
 handleCreateSubaccount ctx@Context { ctxmaybeuser = Just (user@User { userid }), ctxhostpart, ctxtemplates } = do
   fullname <- g "fullname"
   email <- g "email"
-  muser <- liftIO $ createUser ctx ctxhostpart fullname email Nothing (Just user)
+  muser <- liftIO $ createUser ctx ctxhostpart fullname email Nothing True (Just user)
   when (isNothing muser) $ addFlashMsgText =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
   return LinkSubaccount
 
@@ -205,14 +205,14 @@ randomPassword = do
     indexes <- liftIO $ replicateM 8 (randomRIO (0,length letters-1))
     return (BS.fromString $ map (letters!!) indexes)
 
-createUser ::  Context -> String -> BS.ByteString -> BS.ByteString -> Maybe BS.ByteString -> Maybe User -> IO (Maybe User)
-createUser ctx hostpart fullname email maybepassword maybesupervisor =
+createUser ::  Context -> String -> BS.ByteString -> BS.ByteString -> Maybe BS.ByteString -> Bool -> Maybe User -> IO (Maybe User)
+createUser ctx hostpart fullname email maybepassword isnewuser maybesupervisor =
   case maybepassword of
     Nothing -> do
       password <- randomPassword
-      createUser1 ctx hostpart fullname email password False maybesupervisor
+      createUser1 ctx hostpart fullname email password isnewuser maybesupervisor
     Just x ->
-      createUser1 ctx hostpart fullname email x True maybesupervisor
+      createUser1 ctx hostpart fullname email x isnewuser maybesupervisor
 
 createNewUserByAdmin :: Context -> BS.ByteString -> BS.ByteString -> IO (Maybe User)
 createNewUserByAdmin ctx fullname email =
@@ -239,7 +239,9 @@ createUser1 ctx hostpart fullname email password isnewuser maybesupervisor = do
         mail <- case maybesupervisor of
                   Nothing -> if not isnewuser
                              then passwordChangeMail (ctxtemplates ctx) hostpart email fullname chpwdlink
-                             else newUserMail (ctxtemplates ctx) hostpart email fullname
+                             else do
+                                   al <- activateLink $ userid user
+                                   newUserMail (ctxtemplates ctx) hostpart email fullname al
                   Just supervisor -> inviteSubaccountMail (ctxtemplates ctx) hostpart (prettyName  supervisor) (usercompanyname $ userinfo supervisor)
                                         email fullname chpwdlink
         sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = [(fullname, email)]}
@@ -308,5 +310,45 @@ handleAcceptTOSPost = do
     else do
       addFlashMsgText =<< (liftIO $ flashMessageMustAcceptTOS  (ctxtemplates ctx))
       return LinkAcceptTOS
-                                    
+      
+activatePage::String->String -> Kontra Response                                    
+activatePage sid mh=  do
+                   ctx <- get
+                   muser <- userFromExternalSessionData sid mh 
+                   case muser of 
+                    Just user -> do    
+                                  tostext <- liftIO $ BS.readFile $ "html/termsofuse.html"
+                                  content <- liftIO $ activatePageView (ctxtemplates ctx) $ BS.toString tostext
+                                  renderFromBody ctx TopNone kontrakcja $ cdata content
+                    Nothing -> do 
+                                 addFlashMsgText =<< (liftIO $ flashMessageActivationLinkNotValid (ctxtemplates ctx)) 
+                                 sendRedirect LinkMain   
+                                 
+handleActivate::String->String -> Kontra KontraLink
+handleActivate sid mh = do
+                        ctx <- get
+                        muser <- userFromExternalSessionData sid mh 
+                        tos <- fmap ((==) $ Just "on") $ getField "tos"
+                        password <- fmap (fromMaybe "") $ getField "password"
+                        password2 <- fmap (fromMaybe "") $ getField "password2"
+                        case muser of 
+                         Just user -> do    
+                            case (checkPasswords password password2) of
+                             Right () ->  if (tos)
+                                           then do  
+                                            passwordhash <- liftIO $ createPassword $ BS.fromString password
+                                            update $ SetUserPassword user passwordhash
+                                            update $ AcceptTermsOfService (userid user) (ctxtime ctx)
+                                            dropExternalSession sid mh
+                                            addFlashMsgHtmlFromTemplate =<< (liftIO $ flashMessageUserDetailsSaved  (ctxtemplates ctx))
+                                            return LinkMain 
+                                           else do
+                                            addFlashMsgText =<< (liftIO $ flashMessageMustAcceptTOS (ctxtemplates ctx)) 
+                                            return LoopBack
+                             Left f ->  do
+                                         addFlashMsgText =<< (liftIO $ f (ctxtemplates ctx))          
+                                         return LoopBack  
+                         Nothing -> do 
+                                 addFlashMsgText =<< (liftIO $ flashMessageActivationLinkNotValid (ctxtemplates ctx)) 
+                                 return LinkMain   
       
