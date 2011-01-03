@@ -284,8 +284,8 @@ mailCancelDocumentByAuthorContent templates forMail customMessage ctx document a
                                                                 ("documenttitle",BS.toString $ documenttitle document)] 
 
 
-mailCancelDocumentByAuthor :: KontrakcjaTemplates -> (Maybe BS.ByteString) -> Context  -> Document -> SignatoryLink -> User -> IO Mail 
-mailCancelDocumentByAuthor templates customMessage ctx document@Document{documenttitle} signlink author = 
+mailCancelDocumentByAuthor :: KontrakcjaTemplates -> (Maybe BS.ByteString) -> Context  -> Document -> User -> SignatoryLink -> IO Mail 
+mailCancelDocumentByAuthor templates customMessage ctx document@Document{documenttitle} author signlink = 
        do
         title<- renderTemplate templates "mailCancelDocumentByAuthorTitle" [("documenttitle",BS.toString documenttitle)] 
         content <- wrapHTML templates =<< mailCancelDocumentByAuthorContent templates True customMessage ctx document author
