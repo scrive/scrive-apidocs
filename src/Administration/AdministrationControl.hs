@@ -46,6 +46,8 @@ import Data.List (isPrefixOf,sort)
 import UserControl
 import UserView
 import Data.Maybe
+import System.Process
+
 {- | Main page. Redirects users to other admin panels -} 
 showAdminMainPage ::Kontra Response
 showAdminMainPage = onlySuperUser $
