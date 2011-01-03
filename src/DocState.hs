@@ -1429,7 +1429,9 @@ signLinkFromDetails details = do
                      , maybeseeninfo  = Nothing
                      , invitationdeliverystatus = Unknown
                      }
-
+{- |
+   The user is the author of the document
+ -}
 isAuthor::Document->User->Bool
 isAuthor d u = (userid u) == ( unAuthor . documentauthor $ d)   
 
