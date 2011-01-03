@@ -137,7 +137,7 @@ oneDocumentRow crtime user document@Document{ documentid
                       Canceled -> "status_rejected.png"
                       Timedout -> "status_timeout.png"
                       Rejected -> "status_rejected.png"
-
+                      AutoCanceled -> "status_rejected.png"
         dateDiffInDays (MinutesTime ctime) (MinutesTime mtime)
                        | ctime>mtime = 0
                        | otherwise = (mtime - ctime) `div` (60*24)
@@ -146,7 +146,10 @@ oneDocumentRow crtime user document@Document{ documentid
      <td class="tdleft">
       <input type="checkbox" name="doccheck" value=documentid class="check" />
      </td>
-     <td><img width="17" height="17" src=statusimg/></td>
+     <td>
+       <img width="17" height="17" src=statusimg/> 
+       <% if (documentstatus == AutoCanceled) then <span style="color:#000000;position:relative;top:-3px">!</span> else <span/> %>   
+     </td>
      <td>
       <% case documenttimeouttime of
                    Nothing -> <span/>
@@ -460,7 +463,7 @@ pageDocumentForAuthor ctx
                  else <span/>
              %>         
             <% fmap cdata $
-               if (documentstatus == Canceled || documentstatus == Timedout || documentstatus == Rejected)
+               if (documentstatus == Canceled || documentstatus == Timedout || documentstatus == Rejected || documentstatus == AutoCanceled)
                then renderActionButton  (ctxtemplates ctx) (LinkRestart documentid) "restartButtonName"
                else return ""
              %>  
@@ -552,22 +555,27 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document author s
       isTimedout = documentstatus document == Timedout
       isCanceled = documentstatus document == Canceled
       isRejected = documentstatus document == Rejected
-      dontShowAnyReminder = isTimedout || isCanceled 
+      isAutoCanceled = documentstatus document == AutoCanceled
+      dontShowAnyReminder = isTimedout || isCanceled || isRejected || isAutoCanceled
       status =  caseOf
                 [
+                ( isAutoCanceled && invitationdeliverystatus == Undelivered, <span>
+                                                                                   <img src="/theme/images/status_rejected.png"/>
+                                                                                   <span style="color:#000000;position:relative;top:-3px">!</span>
+                                                                              </span>), 
+                ( isAutoCanceled, <img src="/theme/images/status_rejected.png"/>), 
                 ( isCanceled, <img src="/theme/images/status_rejected.png"/>), 
                 ( isRejected, <img src="/theme/images/status_rejected.png"/>), 
                 ( isTimedout, <img src="/theme/images/status_timeout.png"/>), 
                 (wasSigned, <img src="/theme/images/status_signed.png"/>),
-                (wasSeen, <img src="/theme/images/status_viewed.png"/> ),
-                (invitationdeliverystatus == Undelivered, <img src="/theme/images/status_rejected.png"/> ) ]
+                (wasSeen, <img src="/theme/images/status_viewed.png"/> )
+               ]
                 <img src="/theme/images/status_pending.png"/>
       message = caseOf
                 [
                 (wasSigned, "Undertecknat " ++ showDateOnly (signtime $ fromJust maybesigninfo) ),
                 (isTimedout, "Förfallodatum har passerat"),
-                (isCanceled, "" ),
-                (isRejected, "" ),
+                (isCanceled || isRejected || isAutoCanceled, "" ),
                 (wasSeen,  "Granskat " ++ showDateOnly (signtime $ fromJust maybeseeninfo))]
                  "Har ej undertecknat"       
       isCurrentUserAuthor = maybe False (isAuthor document) muser
