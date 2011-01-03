@@ -88,6 +88,8 @@ Executable kontrakcja-server
  Build-Depends: hS3
  Build-Depends: hxt<9
  Build-Depends: HPDF
+ Build-Depends: mmap==0.5.*
+ Build-Depends: array
  Main-Is: Main.hs
 
  Extensions: TemplateHaskell, TypeFamilies, DeriveDataTypeable,
