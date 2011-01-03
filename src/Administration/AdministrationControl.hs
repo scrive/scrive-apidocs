@@ -36,7 +36,7 @@ import Administration.AdministrationView
 import Payments.PaymentsState
 import DocState
 import Data.ByteString.UTF8 (fromString,toString)
-import Data.ByteString (ByteString,empty)
+import Data.ByteString (ByteString,empty, hGetContents)
 import qualified Data.ByteString.Lazy  as L
 import KontraLink
 import Payments.PaymentsControl(readMoneyField,getPaymentChangeChange)
@@ -47,6 +47,7 @@ import UserControl
 import UserView
 import Data.Maybe
 import System.Process
+import System.IO (hClose)
 
 {- | Main page. Redirects users to other admin panels -} 
 showAdminMainPage ::Kontra Response
