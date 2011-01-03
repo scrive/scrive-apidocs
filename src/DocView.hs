@@ -319,7 +319,7 @@ pageDocumentForAuthor ctx
                   </script>
                 ]
        authorid = userid author
-       allinvited = filter (isNotLinkForUserID authorid) documentsignatorylinks
+       allinvited = documentsignatorylinks
        documentdaystosignboxvalue = maybe 7 id documentdaystosign
        timetosignset = isJust documentdaystosign --swedish low constrain
        documentauthordetails = signatoryDetailsFromUser author
@@ -340,16 +340,18 @@ pageDocumentForAuthor ctx
               <form method="post" name="form" action=(LinkIssueDoc documentid) id="main-document-form"> 
               Avsändare<br/>
               <div style="margin-bottom: 10px;" id="authordetails">
-              <strong><span id="sauthoryname"><% signatoryname documentauthordetails %></span></strong><br />
-              <span id="sauthorcompany"><% signatorycompany documentauthordetails %></span><br />
-              <span id="sauthornumber"><% signatorynumber documentauthordetails %></span><br />
-              <span id="sauthoremail"><% signatoryemail documentauthordetails %></span>
+              <strong><span id="sauthoryname"><% signatoryname documentauthordetails %></span></strong>
+              <span id="sauthorcompany"><% addbr $ signatorycompany documentauthordetails %></span>
+              <span id="sauthornumber"><% addbr $ signatorynumber documentauthordetails %></span>
+              <span id="sauthoremail"><% addbr $ signatoryemail documentauthordetails %></span>
               </div>
 
               <select name="authorrole" id="authorroledropdown">
                       <option value="signatory">Signatory</option>
                       <option value="secretary">Secretary</option>
               </select>
+
+              <br />
 
               Motpart<br/>
               <div id="signatorylist">
@@ -373,7 +375,7 @@ pageDocumentForAuthor ctx
                 %>   
               </span>
               <div style="height: 2px;"/>
-              <input class="bigbutton" type="submit" name="final" value="Underteckna" id="signinvite" rel="#dialog-confirm-signinvite"/>
+              <input class="bigbutton" type="submit" name="final" value="Underteckna" id="signinvite" rel="#dialog-confirm-signinvite"/> <br />
               <input class="button" type="submit" name="save" value="Spara som utkast"/>
               </div>
               </form>
