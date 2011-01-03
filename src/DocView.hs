@@ -344,6 +344,11 @@ pageDocumentForAuthor ctx
               <% addbr $ signatorynumber documentauthordetails %>
               <% addbr $ signatoryemail documentauthordetails %>
               </div>
+
+              <select name="authorrole">
+                      <option value="signatory">Signatory</option>
+                      <option value="secretary">Secretary</option>
+              </select>
               Motpart<br/>
               <div id="signatorylist">
                <% map showSignatoryEntryForEdit (if null documentsignatorylinks
