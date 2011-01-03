@@ -333,7 +333,27 @@ $(deriveAll [''Default]
           , documenthistory5          :: [DocumentHistoryEntry]
           , documentinvitetext5       :: BS.ByteString
           }
-          
+      data Document6 = Document6
+          { documentid6               :: DocumentID
+          , documenttitle6            :: BS.ByteString
+          , documentauthor6           :: Author
+          , documentsignatorylinks6   :: [SignatoryLink]  
+          , documentfiles6            :: [File]
+          , documentsealedfiles6      :: [File]
+          , documentstatus6           :: DocumentStatus
+          , documentctime6            :: MinutesTime
+          , documentmtime6            :: MinutesTime
+          , documentchargemode6       :: ChargeMode
+          , documentdaystosign6       :: Maybe Int
+          , documenttimeouttime6      :: Maybe TimeoutTime 
+          , documentdeleted6          :: Bool -- should not appear in list
+          , documentauthordetails6    :: SignatoryDetails
+          , documentmaybesigninfo6    :: Maybe SignInfo      -- about the author signed the document 
+          , documenthistory6          :: [DocumentHistoryEntry]
+          , documentinvitetext6       :: BS.ByteString
+
+          -- we really should keep history here so we know what happened
+          }
       data Document = Document
           { documentid               :: DocumentID
           , documenttitle            :: BS.ByteString
@@ -347,14 +367,13 @@ $(deriveAll [''Default]
           , documentchargemode       :: ChargeMode
           , documentdaystosign       :: Maybe Int
           , documenttimeouttime      :: Maybe TimeoutTime 
-          , documentdeleted          :: Bool -- should not appear in list
-          , documentauthordetails    :: SignatoryDetails
-          , documentmaybesigninfo    :: Maybe SignInfo      -- about the author signed the document 
+          -- | If true, this Document will not appear in the document list
+          , documentdeleted          :: Bool
           , documenthistory          :: [DocumentHistoryEntry]
           , documentinvitetext       :: BS.ByteString
-
           -- we really should keep history here so we know what happened
           }
+
       data File0 = File0 
           { fileid0       :: FileID
           , filename0     :: BS.ByteString
@@ -704,9 +723,13 @@ $(deriveSerialize ''Document5)
 instance Version Document5 where
     mode = extension 5 (Proxy :: Proxy Document4)
     
+$(deriveSerialize ''Document6)
+instance Version Document6 where
+    mode = extension 6 (Proxy :: Proxy Document5)
+
 $(deriveSerialize ''Document)
 instance Version Document where
-    mode = extension 6 (Proxy :: Proxy Document5)
+    mode = extension 7 (Proxy :: Proxy Document6)
 
 instance Migrate Document0 Document1 where
       migrate (Document0
@@ -864,7 +887,8 @@ instance Migrate Document4 Document5 where
                                   else []
           }
           
-instance Migrate Document5 Document where
+          
+instance Migrate Document5 Document6 where
       migrate (Document5
           { documentid5
           , documenttitle5
@@ -883,25 +907,70 @@ instance Migrate Document5 Document where
           , documenthistory5
           , documentinvitetext5
           , documentsealedfiles5
-          }) = Document
-          { documentid = documentid5
-          , documenttitle = documenttitle5
-          , documentauthor = documentauthor5
-          , documentsignatorylinks = documentsignatorylinks5
-          , documentfiles = documentfiles5 
-          , documentstatus = documentstatus5
-          , documentctime = documentctime5
-          , documentmtime = documentmtime5
-          , documentchargemode = documentchargemode5
-          , documentdaystosign = Just documentdaystosign5
-          , documenttimeouttime = documenttimeouttime5
-          , documentdeleted = documentdeleted5
-          , documentauthordetails = documentauthordetails5
-          , documentmaybesigninfo = documentmaybesigninfo5
-          , documenthistory = documenthistory5
-          , documentinvitetext = documentinvitetext5
-          , documentsealedfiles =  documentsealedfiles5
+          }) = Document6
+          { documentid6 = documentid5
+          , documenttitle6 = documenttitle5
+          , documentauthor6 = documentauthor5
+          , documentsignatorylinks6 = documentsignatorylinks5
+          , documentfiles6 = documentfiles5 
+          , documentstatus6 = documentstatus5
+          , documentctime6 = documentctime5
+          , documentmtime6 = documentmtime5
+          , documentchargemode6 = documentchargemode5
+          , documentdaystosign6 = Just documentdaystosign5
+          , documenttimeouttime6 = documenttimeouttime5
+          , documentdeleted6 = documentdeleted5
+          , documentauthordetails6 = documentauthordetails5
+          , documentmaybesigninfo6 = documentmaybesigninfo5
+          , documenthistory6 = documenthistory5
+          , documentinvitetext6 = documentinvitetext5
+          , documentsealedfiles6 =  documentsealedfiles5
           }
+
+instance Migrate Document6 Document where
+    migrate (Document6
+             { documentid6
+             , documenttitle6
+             , documentauthor6
+             , documentsignatorylinks6
+             , documentfiles6
+             , documentsealedfiles6
+             , documentstatus6
+             , documentctime6
+             , documentmtime6
+             , documentchargemode6
+             , documentdaystosign6
+             , documenttimeouttime6
+             , documentdeleted6
+             , documentauthordetails6
+             , documentmaybesigninfo6
+             , documenthistory6
+             , documentinvitetext6
+             }) = Document
+                { documentid               = documentid6
+                , documenttitle            = documenttitle6
+                , documentauthor           = documentauthor6
+                , documentsignatorylinks   = (authorlink : documentsignatorylinks6)
+                , documentfiles            = documentfiles6
+                , documentsealedfiles      = documentsealedfiles6
+                , documentstatus           = documentstatus6
+                , documentctime            = documentctime6
+                , documentmtime            = documentmtime6
+                , documentchargemode       = documentchargemode6
+                , documentdaystosign       = documentdaystosign6
+                , documenttimeouttime      = documenttimeouttime6
+                , documentdeleted          = documentdeleted6
+                , documenthistory          = documenthistory6
+                , documentinvitetext       = documentinvitetext6
+                }
+                  where authorlink = SignatoryLink { maybesigninfo = documentmaybesigninfo6
+                                                   , maybeseeninfo = documentmaybesigninfo6
+                                                   , maybesignatory = Just $ Signatory $ unAuthor $ documentauthor6
+                                                   , signatorydetails = documentauthordetails6
+                                                   , invitationdeliverystatus = Unknown
+                                                   , signatorymagichash = MagicHash 0
+                                                   , signatorylinkid = SignatoryLinkID 0
+                                                   }
 
 $(deriveSerialize ''DocumentStatus)
 instance Version DocumentStatus where
@@ -1043,24 +1112,10 @@ newDocument user title ctime isfree = do
           , documentdaystosign = Nothing
           , documenttimeouttime = Nothing
           , documentdeleted = False
-          , documentauthordetails = details
-          , documentmaybesigninfo = Nothing
           , documenthistory = []
           , documentinvitetext = BS.empty
           , documentsealedfiles = []
           }
-      details = SignatoryDetails  
-                { signatoryname = userfullname user
-                , signatorycompany = usercompanyname $ userinfo user
-                , signatorynumber = usercompanynumber $ userinfo user
-                , signatoryemail = unEmail $ useremail $ userinfo user
-                , signatorynameplacements = []
-                , signatorycompanyplacements = []
-                , signatoryemailplacements = []
-                , signatorynumberplacements = []
-                , signatoryotherfields = []
-                }
-
   modify $ insert doc
   return doc
 
@@ -1118,11 +1173,10 @@ attachSealedFile documentid filename1 content = do
 updateDocument :: MinutesTime
                -> DocumentID
                -> [SignatoryDetails]
-               -> SignatoryDetails
                -> Maybe Int
                -> BS.ByteString
                -> Update Documents Document
-updateDocument time documentid signatories author daystosign invitetext = do
+updateDocument time documentid signatories daystosign invitetext = do
   documents <- ask
   let Just document = getOne (documents @= documentid)
   signatorylinks <- sequence $ map signLinkFromDetails signatories
@@ -1130,7 +1184,6 @@ updateDocument time documentid signatories author daystosign invitetext = do
                       , documentdaystosign = daystosign 
                       , documentmtime = time
                       , documentinvitetext = invitetext
-                      , documentauthordetails = author
                       }
   if documentstatus document == Preparation
      then do
@@ -1197,6 +1250,7 @@ signDocument documentid signatorylinkid1 time ipnumber fields = do
            Timedout -> Left "Förfallodatum har passerat"
            _ ->        Left ("Bad document status: " ++ show (documentstatus document))
 
+-- maybe this goes away
 authorSignDocument :: DocumentID
                    -> MinutesTime
                    -> Word32
@@ -1212,7 +1266,7 @@ authorSignDocument documentid time ipnumber =
                   MinutesTime m = time 
               in Right $ document { documenttimeouttime = timeout
                                   , documentmtime = time
-                                  , documentmaybesigninfo = Just (SignInfo time ipnumber)
+                                  --, documentmaybesigninfo = Just (SignInfo time ipnumber)
                                   , documentstatus = Pending
                                   }
               
@@ -1411,7 +1465,6 @@ clearSignInfofromDoc doc = do
                             let signatoriesDetails = map signatorydetails $ documentsignatorylinks doc
                             newSignLinks <- sequence $ map signLinkFromDetails signatoriesDetails
                             return doc {documentstatus=Preparation,
-                                documentmaybesigninfo=Nothing,
                                 documenttimeouttime = Nothing,
                                 documentsignatorylinks = newSignLinks
                              }
