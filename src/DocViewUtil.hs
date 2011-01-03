@@ -25,10 +25,7 @@ import Misc
 import Templates.Templates 
 
 partyList :: Document -> [SignatoryDetails]
-partyList document =
-    let author = documentauthordetails document
-        signas = map signatorydetails (documentsignatorylinks document)
-    in author : signas
+partyList document = map signatorydetails (documentsignatorylinks document)
 
 partyUnsignedList :: Document -> [SignatoryDetails]
 partyUnsignedList document =
