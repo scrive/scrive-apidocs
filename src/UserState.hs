@@ -118,6 +118,7 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , userpaymentpolicy             :: Payments.UserPaymentPolicy
           , userpaymentaccount            :: Payments.UserPaymentAccount
           , userfriends                   :: [Friend]
+          -- should remove userdefaultmainsignatory in the next migration. just get rid of it.
           , userdefaultmainsignatory      :: DefaultMainSignatory
           }
 

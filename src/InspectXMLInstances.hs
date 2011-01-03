@@ -45,10 +45,9 @@ instance InspectXML UserID where
 --UnWrappers, usualy when we want to use above but our type is wraped    
 instance InspectXML Author where
     inspectXML (Author x) = inspectXML x     
-instance InspectXML Secretary where
-    inspectXML (Secretary x) = inspectXML x
 instance InspectXML Friend where
     inspectXML (Friend x) = inspectXML x
+-- old; should be removed
 instance InspectXML DefaultMainSignatory where
     inspectXML (DefaultMainSignatory x) = inspectXML x
     
