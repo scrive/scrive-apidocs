@@ -266,6 +266,7 @@ flashMessagePasswordChangeLinkNotValid templates = renderTemplate templates "fla
 
 flashMessageUserWithSameEmailExists:: KontrakcjaTemplates -> IO String
 flashMessageUserWithSameEmailExists templates = renderTemplate templates "flashMessageUserWithSameEmailExists" []
+
 {- Same as personname (username or email) from DocView but works on User -}
 prettyName::User -> BS.ByteString
 prettyName u = if (BS.null $ userfullname u)

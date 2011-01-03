@@ -43,6 +43,7 @@ import qualified Seal as Seal
 import qualified Network.HTTP as HTTP
 import qualified Amazon as AWS
 import qualified TrustWeaver as TW
+import UserView (prettyName)
 
 {-
   Document state transitions are described in DocState.
@@ -57,18 +58,20 @@ postDocumentChangeAction document@Document{documentstatus, documentsignatorylink
     | documentstatus == oldstatus = return ()
     | oldstatus == Preparation && documentstatus == Pending = do
         ctx <- get
+        Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor document
         liftIO $ forkIO $ do
           -- this is here to postpone email send a couple of seconds
           -- so our service has a chance to give answer first
           -- is GHC using blocking calls or what?
           threadDelay 5000 
-          sendInvitationEmails ctx document
+          sendInvitationEmails ctx document author
         return ()
     | oldstatus == Pending && documentstatus == AwaitingAuthor = do
         ctx <- get
+        Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor document
         liftIO $ forkIO $ do
           threadDelay 5000 
-          sendAwaitingEmail ctx document
+          sendAwaitingEmail ctx document author
         return ()
     | (oldstatus == Pending || oldstatus == AwaitingAuthor) && documentstatus == Closed = do
         ctx@Context{ctxnormalizeddocuments,ctxhostpart,ctxtime} <- get
@@ -89,13 +92,13 @@ postDocumentChangeAction document@Document{documentstatus, documentsignatorylink
     where msignalink = maybe Nothing (signlinkFromDocById document) msignalinkid
           
 
-sendInvitationEmails :: Context -> Document -> IO ()
-sendInvitationEmails ctx document = do
-  let signlinks = documentsignatorylinks document
-  forM_ signlinks (sendInvitationEmail1 ctx document)
+sendInvitationEmails :: Context -> Document -> User -> IO ()
+sendInvitationEmails ctx document author = do
+  let signlinks = filter (isNotLinkForUserID $ userid author) $ documentsignatorylinks document
+  forM_ signlinks (sendInvitationEmail1 ctx document author)
 
-sendInvitationEmail1 :: Context -> Document -> SignatoryLink -> IO ()
-sendInvitationEmail1 ctx document signatorylink = do
+sendInvitationEmail1 :: Context -> Document -> User -> SignatoryLink -> IO ()
+sendInvitationEmail1 ctx document author signatorylink = do
   let SignatoryLink{ signatorylinkid
                    , signatorydetails = SignatoryDetails { signatoryname
                                                          , signatorycompany
@@ -103,7 +106,7 @@ sendInvitationEmail1 ctx document signatorylink = do
                                                          }
                    , signatorymagichash } = signatorylink
       Document{documenttitle,documentid} = document
-  mail <- mailInvitationToSign (ctxtemplates ctx) ctx document signatorylink
+  mail <- mailInvitationToSign (ctxtemplates ctx) ctx document signatorylink author
   attachmentcontent <- AWS.getFileContents (ctxs3action ctx) $ head $ documentfiles document
   sendMail (ctxmailsconfig ctx) $ mail { fullnameemails =  [(signatoryname,signatoryemail)]  , attachments = [(documenttitle,attachmentcontent)] , from=ctxmaybeuser ctx, mailInfo = Invitation signatorylinkid } 
 
@@ -125,20 +128,15 @@ sendClosedEmail1 ctx document signatorylink = do
   attachmentcontent <- AWS.getFileContents (ctxs3action ctx) $ head $ documentsealedfiles document
   sendMail  (ctxmailsconfig ctx) $ mail { fullnameemails =  [(signatoryname,signatoryemail)] , attachments = [(documenttitle,attachmentcontent)]}
 
-sendAwaitingEmail :: Context -> Document -> IO ()
-sendAwaitingEmail ctx document = do
+sendAwaitingEmail :: Context -> Document -> User -> IO ()
+sendAwaitingEmail ctx document author = do
   let authorid = unAuthor $ documentauthor document
   Just authoruser <- query $ GetUserByUserID authorid
-  mail<- mailDocumentAwaitingForAuthor (ctxtemplates ctx) ctx (userfullname authoruser)
+  mail <- mailDocumentAwaitingForAuthor (ctxtemplates ctx) ctx (userfullname authoruser)
              document
-  let email2 = signatoryemail $ documentauthordetails document
-      email1 = unEmail $ useremail $ userinfo authoruser
-      em = if email2/=BS.empty && email2/=email1
-           then [(name2,email2)]
-           else []
+  let email1 = unEmail $ useremail $ userinfo authoruser
       name1 = userfullname authoruser
-      name2 = signatoryname $ documentauthordetails document
-  sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = ([(name1,email1)] ++ em) }
+  sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = [(name1,email1)] }
 
 sendClosedAuthorEmail :: Context -> Document -> IO ()
 sendClosedAuthorEmail ctx document = do
@@ -148,14 +146,9 @@ sendClosedAuthorEmail ctx document = do
              document
   attachmentcontent <- AWS.getFileContents (ctxs3action ctx) $ head $ documentsealedfiles document
   let Document{documenttitle,documentid} = document
-      email2 = signatoryemail $ documentauthordetails document
       email1 = unEmail $ useremail $ userinfo authoruser
-      em = if email2/=BS.empty && email2/=email1
-           then [(name2,email2)]
-           else []
       name1 = userfullname authoruser
-      name2 = signatoryname $ documentauthordetails document
-  sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = ([(name1,email1)] ++ em), attachments = [(documenttitle,attachmentcontent)]}
+  sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = [(name1,email1)], attachments = [(documenttitle,attachmentcontent)]}
 
 sendRejectAuthorEmail :: (Maybe BS.ByteString) -> Context -> Document -> SignatoryLink -> IO ()
 sendRejectAuthorEmail customMessage ctx document signalink = do
@@ -164,14 +157,9 @@ sendRejectAuthorEmail customMessage ctx document signalink = do
   let rejectorName = signatoryname (signatorydetails signalink)
   mail <- mailDocumentRejectedForAuthor (ctxtemplates ctx) customMessage ctx (userfullname authoruser)
              document rejectorName
-  let email2 = signatoryemail $ documentauthordetails document
-      email1 = unEmail $ useremail $ userinfo authoruser
-      em = if email2/=BS.empty && email2/=email1
-           then [(name2,email2)]
-           else []
+  let email1 = unEmail $ useremail $ userinfo authoruser
       name1 = userfullname authoruser
-      name2 = signatoryname $ documentauthordetails document
-  sendMail  (ctxmailsconfig ctx) $ mail { fullnameemails = ([(name1,email1)] ++ em)}
+  sendMail  (ctxmailsconfig ctx) $ mail { fullnameemails = [(name1,email1)]}
 
 handleSTable = withUserGet $ checkUserTOSGet $
     do
@@ -327,11 +315,11 @@ handleSignShow documentid
       f (SignatoryLink {maybesigninfo}) = isJust maybesigninfo 
       authoruserid = unAuthor $ documentauthor document
   Just author <- query $ GetUserByUserID authoruserid
-  let authorname = signatoryname $ documentauthordetails document
+  let authorname = prettyName author
       invitedname = signatoryname $ signatorydetails $ invitedlink 
   renderFromBody ctx TopNone kontrakcja 
                      (pageDocumentForSign (LinkSignDoc document invitedlink) 
-                      document ctx invitedlink wassigned)
+                      document ctx invitedlink wassigned author)
 
 freeLeftForUser :: User -> Kontra Int
 freeLeftForUser user = do
@@ -363,7 +351,7 @@ handleIssueShowGet docid = withUserGet $ checkUserTOSGet $ (withDocumentGet doci
                         , documentid
                         } <- query $ GetDocumentByDocumentID $ docid
   ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) <- get
-  mauthor <- query $ GetUserByUserID $ unAuthor documentauthor
+  Just author <- query $ GetUserByUserID $ unAuthor documentauthor
 
   let toptab = if documentstatus document == Closed
                 then TopDocument
@@ -371,11 +359,11 @@ handleIssueShowGet docid = withUserGet $ checkUserTOSGet $ (withDocumentGet doci
   -- authors get a view with buttons
   if isAuthor document user
    then renderFromBody ctx toptab kontrakcja 
-            (pageDocumentForAuthor ctx document)
+            (pageDocumentForAuthor ctx document author)
    -- friends can just look (but not touch)
-   else if (isJust mauthor && isFriendOf userid (fromJust mauthor))
+   else if isFriendOf userid author
          then renderFromBody ctx toptab kontrakcja
-                  (pageDocumentForViewer ctx document)
+                  (pageDocumentForViewer ctx document author)
          else mzero
 
 {- |
@@ -449,7 +437,7 @@ getAndConcat field = do
   return $ map concatChunks values
 
 updateDocument :: Context -> Document -> Kontra Document  
-updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid, documentauthordetails} = do
+updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} = do
   -- each signatory has these predefined fields
   signatoriesnames <- getAndConcat "signatoryname"
   signatoriescompanies <- getAndConcat "signatorycompany"
@@ -534,17 +522,11 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid, do
                                             (placementsByID id (BS.fromString "number"))
                                             (defsByID id)
 
-  let author2 = documentauthordetails { signatorynameplacements = placementsByID (BS.fromString "author") (BS.fromString "name"),
-                                        signatorycompanyplacements = placementsByID (BS.fromString "author") (BS.fromString "company"),
-                                        signatoryemailplacements = placementsByID (BS.fromString "author") (BS.fromString "email"),
-                                        signatorynumberplacements = placementsByID (BS.fromString "author") (BS.fromString "number"),
-                                        signatoryotherfields = defsByID (BS.fromString "author") }
- 
   -- FIXME: tell the user what happened!
   -- when (daystosign<1 || daystosign>99) mzero
   
   doc2 <- update $ UpdateDocument ctxtime documentid
-          signatories author2 daystosign invitetext
+           signatories daystosign invitetext
 
   msum 
      [ do getDataFnM (look "final" `mplus` look "sign")
@@ -728,7 +710,8 @@ fieldsFromSignatory sig =
 sealSpecFromDocument :: String -> Document -> User -> String -> String -> Seal.SealSpec
 sealSpecFromDocument hostpart document author inputpath outputpath =
   let docid = unDocumentID (documentid document)
-      (authorsigntime,authorsignipnumber) = 
+      {-
+        (authorsigntime,authorsignipnumber) = 
           case documentmaybesigninfo document of
             Nothing -> error "signtime1"
             Just (SignInfo {signtime,signipnumber}) -> (signtime,signipnumber)
@@ -746,6 +729,7 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
                                   , signatoryemailplacements = []
                                   , signatoryotherfields = []
                                   })
+      -}
       signatoriesdetails = map signatorydetails $ documentsignatorylinks document
 
       signatories = personsFromDocument document
@@ -761,7 +745,8 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
       fst3 (a,b,c) = a
       snd3 (a,b,c) = b
       thd3 (a,b,c) = c
-      persons = authorperson : (map fst3 signatories)
+      persons = (map fst3 signatories)
+      -- persons = authorperson : (map fst3 signatories)
       paddeddocid = reverse $ take 20 $ (reverse (show docid) ++ repeat '0')
       initials = concatComma (map initialsOfPerson persons)
       initialsOfPerson (Seal.Person {Seal.fullname}) = map head (words fullname)
@@ -776,8 +761,9 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
             , Seal.histcomment = fullname ++ " granskar dokumentet online" ++ formatIP seenipnumber2
             } 
           ]
-      maxsigntime = maximum (authorsigntime : map (fst . thd3) signatories)
-      firstHistEntries = 
+      maxsigntime = maximum (map (fst . thd3) signatories)
+      firstHistEntries = []
+      {-
           [ Seal.HistEntry
             { Seal.histdate = show authorsigntime
             , Seal.histcomment = Seal.fullname authorperson ++ 
@@ -788,6 +774,7 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
             , Seal.histcomment = "En automatisk inbjudan skickas via e-post till samtliga parter."
             }
           ]
+      -}
       lastHistEntry = Seal.HistEntry
                       { Seal.histdate = show maxsigntime
                       , Seal.histcomment = "Samtliga parter har undertecknat dokumentet och avtalet är nu juridiskt bindande."
@@ -799,7 +786,7 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
       
       -- document fields
 
-      fields = (foldl (++) (fieldsFromSignatory authordetails) (map fieldsFromSignatory signatoriesdetails))
+      fields = (concat (map fieldsFromSignatory signatoriesdetails))
 
       config = Seal.SealSpec 
             { Seal.input = inputpath
@@ -949,28 +936,28 @@ handleRestart docid = do
                         Nothing -> return LinkLogin          
                     
 handleResend:: String -> String -> Kontra KontraLink
-handleResend docid signlinkid  =
-                    do
-                      ctx <- get
-                      mdoc <- query $ GetDocumentByDocumentID (read docid)
-                      case (mdoc) of
-                       Just doc -> withDocumentAuthor doc $
-                               case (signlinkFromDocById doc (read signlinkid)) of
-                                 Just signlink -> 
-                                  do 
-                                   customMessage <- fmap (fmap concatChunks) $ getDataFn' (lookBS "customtext")  
-                                   mail <- liftIO $  mailDocumentRemind (ctxtemplates ctx) customMessage ctx doc signlink
-                                   liftIO $ sendMail (ctxmailsconfig ctx) (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )],
-                                                                           from=ctxmaybeuser ctx,
-                                                                           mailInfo = Invitation $ signatorylinkid signlink })
-                                   addFlashMsgText =<< (liftIO $ flashRemindMailSent (ctxtemplates ctx) signlink)
-                                   return (LinkIssueDoc $ documentid doc)
-                                 Nothing -> mzero           
-                       Nothing -> mzero               
+handleResend docid signlinkid  = do
+  ctx <- get
+  mdoc <- query $ GetDocumentByDocumentID (read docid)
+  case (mdoc) of
+    Just doc -> withDocumentAuthor doc $
+                 case (signlinkFromDocById doc (read signlinkid)) of
+                   Just signlink -> do 
+                     Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor doc
+                     customMessage <- fmap (fmap concatChunks) $ getDataFn' (lookBS "customtext")  
+                     mail <- liftIO $  mailDocumentRemind (ctxtemplates ctx) customMessage ctx doc signlink author
+                     liftIO $ sendMail (ctxmailsconfig ctx) (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )],
+                                                                   from=ctxmaybeuser ctx,
+                                                                   mailInfo = Invitation $ signatorylinkid signlink })
+                     addFlashMsgText =<< (liftIO $ flashRemindMailSent (ctxtemplates ctx) signlink)
+                     return (LinkIssueDoc $ documentid doc)
+                   Nothing -> mzero           
+    Nothing -> mzero               
 
 sendCancelMailsForDocument:: (Maybe BS.ByteString) -> Context -> Document -> Kontra ()
-sendCancelMailsForDocument customMessage ctx document = liftIO $ 
-        forM_ (documentsignatorylinks document) (sendMail  (ctxmailsconfig ctx) <=< (mailCancelDocumentByAuthor (ctxtemplates ctx) customMessage ctx document))
+sendCancelMailsForDocument customMessage ctx document = do
+  Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor document
+  liftIO $ forM_ (documentsignatorylinks document) (sendMail  (ctxmailsconfig ctx) <=< (mailCancelDocumentByAuthor (ctxtemplates ctx) customMessage ctx document author))
 
 {- |
    Guard against the non-existence of a document in a GET request.

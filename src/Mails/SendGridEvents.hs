@@ -18,7 +18,7 @@ import Misc
 import Data.Maybe
 import qualified Mails.MailsUtil as Mail
 import DocState
-import Happstack.State (update)
+import Happstack.State (update,query)
 import Mails.SendMail
 import Templates.Templates
 import Templates.TemplatesUtils
@@ -26,6 +26,7 @@ import Control.Monad.State
 import qualified Data.ByteString.UTF8 as BS (fromString,toString)
 import Data.List (find)
 import System.Log.Logger
+import DocView (signatoryDetailsFromUser)
 data SendGridEventType = Delivered | Undelivered | Other deriving Show
 
 
@@ -73,12 +74,14 @@ handleSendgridEvent' (SendgridEvent {info=Invitation signlinkid,event= Undeliver
      Just doc -> do   
                  ctx <- get
                  title <- liftIO $ renderTemplate (ctxtemplates ctx) "invitationMailUndeliveredTitle" []  
-                 let fullnameemails = [(signatoryname $ documentauthordetails doc ,signatoryemail $ documentauthordetails doc)]
+                 Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor doc
+                 let documentauthordetails = signatoryDetailsFromUser author
+                 let fullnameemails = [(signatoryname $ documentauthordetails, signatoryemail $ documentauthordetails)]
                  let msld = fmap signatorydetails $ find ((==) signlinkid . signatorylinkid ) $ documentsignatorylinks doc
                  case msld of
                   Just sld -> do    
                     content <- liftIO $ wrapHTML (ctxtemplates ctx)=<< renderTemplate (ctxtemplates ctx) "invitationMailUndeliveredContent"
-                                                                       [("authorname",BS.toString $ signatoryname $ documentauthordetails doc),
+                                                                       [("authorname",BS.toString $ signatoryname $ documentauthordetails),
                                                                         ("email",BS.toString $ signatoryemail sld),
                                                                         ("unsigneddoclink", show $ LinkIssueDoc $ documentid doc),
                                                                         ("ctxhostpart",ctxhostpart ctx)  

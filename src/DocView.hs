@@ -26,6 +26,7 @@ module DocView( emptyDetails
               , mailDocumentClosedForSignatories
               , mailDocumentClosedForAuthor
               , isNotLinkForUserID
+              , signatoryDetailsFromUser
               ) where
 import Data.List
 import DocState
