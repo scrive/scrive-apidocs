@@ -1074,7 +1074,9 @@ getDocumentsByUser user = do
 getDocumentsBySignatory :: User -> Query Documents [Document]
 getDocumentsBySignatory user = do
     documents <- ask
-    return $ filter ((any (isMatchingSignatoryLink user)) . documentsignatorylinks) (toList documents)
+    let involvedAsSignatory doc = (any (isMatchingSignatoryLink user) $ documentsignatorylinks doc)
+                                   && (Preparation /= documentstatus doc)
+    return $ filter involvedAsSignatory (toList documents)
        
 isMatchingSignatoryLink :: User -> SignatoryLink -> Bool
 isMatchingSignatoryLink user sigLink = signatoryMatches || emailMatches
