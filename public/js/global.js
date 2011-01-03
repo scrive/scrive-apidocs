@@ -379,7 +379,30 @@ $(document).ready( function () {
          curr.data("dateinput").setValue(date[0],date[1],date[2]); 
         }
     })
+
+	$("#authorroledropdown").change(function() { 
+		if($("#authorroledropdown option:selected").val() == "signatory") {
+		    $("#signinvite").val("Underteckna");
+		    $(".buttonbox .submiter").text("Underteckna");
+		} else {
+		    $("#signinvite").val("Send");
+		    $(".buttonbox .submiter").text("Send");
+		}
+	    });
+
+    function gettext(id) {
+	return $("#" + id).text();
+    }
     
+    $("#main-document-form").submit(function () {
+	    var form = $("#main-document-form");
+	    if($("#authorroledropdown option:selected").val() === "signatory") {
+		form.append("<input type='hidden' name='signatoryname' value='"+ gettext('sauthorname') + "' />");
+		form.append("<input type='hidden' name='signatorycompany' value='"+ gettext('sauthorcompany') + "' />");
+		form.append("<input type='hidden' name='signatorynumber' value='"+ gettext('sauthornumber') + "' />");
+		form.append("<input type='hidden' name='signatoryemail' value='"+ gettext('sauthoremail') + "' />");
+	    }
+	});
     
     $(window).resize();
     
