@@ -61,7 +61,6 @@ showUser user ms viewers =
              <td><input type="text" name="invoiceaddress" value=(useraddress $ userinfo user)/></td>
          </tr>
        </table>
-       <p>I typically author documents for <% if user == ms then "myself" else BS.toString $ prettyName ms %>. <input type="text" name="defaultmainsignatory" infotext="enter email of other party to change" /></p>
        <p>These users can view documents in your archive:</p>
        <ul>
        <% map (\x -> <li><% BS.toString $ prettyName x %></li>) viewers %>
