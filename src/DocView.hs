@@ -362,6 +362,7 @@ pageDocumentForAuthor ctx
               <span id="sauthoremail"><% addbr $ signatoryemail documentauthordetails %></span>
               </div>
 
+              Användarroll 
               <% if authorhaslink 
                   then
                       <select name="authorrole" id="authorroledropdown">
