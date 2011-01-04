@@ -53,6 +53,7 @@ module DocState
     , CloseDocument(..)
     , CancelDocument(..)
     , RestartDocument(..)
+    , signatoryDetailsFromUser
     )
 where
 import Happstack.Data
@@ -1102,11 +1103,12 @@ newDocument :: User
 newDocument user title ctime isfree = do
   documents <- ask
   docid <- getUnique64 documents DocumentID
+  authorlink <- signLinkFromDetails [(unEmail $ useremail $ userinfo user, user)] $ signatoryDetailsFromUser user
   let doc = Document
           { documentid = docid
           , documenttitle = title
           , documentauthor = Author $ userid user
-          , documentsignatorylinks = []
+          , documentsignatorylinks = [authorlink]
           , documentfiles = []
           , documentstatus = Preparation
           , documentctime = ctime
@@ -1519,6 +1521,21 @@ signLinkFromDetails emails details = do
  -}
 isAuthor::Document->User->Bool
 isAuthor d u = (userid u) == ( unAuthor . documentauthor $ d)   
+
+{- |
+   Build a SignatoryDetails from a User with no fields
+ -}
+signatoryDetailsFromUser user = 
+    SignatoryDetails { signatoryname = userfullname user
+                     , signatoryemail = unEmail $ useremail $ userinfo user
+                     , signatorycompany = usercompanyname $ userinfo user
+                     , signatorynumber = usercompanynumber $ userinfo user
+                     , signatorynameplacements = []
+                     , signatorycompanyplacements = []
+                     , signatoryemailplacements = []
+                     , signatorynumberplacements = []
+                     , signatoryotherfields = []
+                     }
 
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocuments
