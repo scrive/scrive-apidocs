@@ -303,6 +303,9 @@ emptyDetails = SignatoryDetails
 {- |
    link does not belong to user with uid
  -}
+isNotLinkForUserID :: UserID
+                   -> SignatoryLink
+                   -> Bool
 isNotLinkForUserID uid link =
     hasNoUserID || notSameUserID
         where hasNoUserID = isNothing $ maybesignatory link
