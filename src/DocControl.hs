@@ -884,7 +884,10 @@ sealDocument ctx@Context{ctxs3action,ctxtwconf}
          else do
            x <- TW.signDocument ctxtwconf newfilepdf1
            case x of
-                   Left errmsg -> error errmsg
+                   Left errmsg -> do
+                     -- FIXME: handle the error in a better way here
+                     putStrLn errmsg
+                     return newfilepdf1
                    Right result -> return result
 
   mdocument <- update $ AttachSealedFile docid filename newfilepdf
