@@ -66,9 +66,10 @@ showUser user ms viewers =
          <tr><td>Faktureringsadress:</td>
              <td><input type="text" name="invoiceaddress" value=(useraddress $ userinfo user)/></td>
          </tr>
-       </table>
-       <p>Du delar dina dokument med följande användare:</p>
-       <ul>
+
+        </table>
+        <p>Du delar dina dokument med följande användare:</p>
+        <ul>
           <% map (\x -> <li><% BS.toString $ prettyName x %></li>) viewers %>
           <li><input type="text" name="newvieweremail" infotext="Skriv e-post för att lägga till fler" size="28" /></li>
         </ul>
