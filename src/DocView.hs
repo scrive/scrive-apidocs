@@ -353,13 +353,13 @@ pageDocumentForAuthor ctx
               <% if authorhaslink 
                   then
                       <select name="authorrole" id="authorroledropdown">
-                                  <option value="signatory">Signatory</option>
-                                  <option value="secretary">Secretary</option>
+                                  <option value="signatory">Undertecknare</option>
+                                  <option value="secretary">Sekreterare</option>
                       </select>
                   else
                       <select name="authorrole" id="authorroledropdown">
-                                  <option value="secretary">Secretary</option>
-                                  <option value="signatory">Signatory</option>
+                                  <option value="secretary">Sekreterare</option>
+                                  <option value="signatory">Undertecknare</option>
                       </select> %>
 
               <br /><br />
