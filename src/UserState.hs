@@ -40,7 +40,6 @@ module UserState
     , SetUserPaymentAccount(..)
     , SetUserPaymentPolicyChange(..)
     , SetUserPassword(..)
-    , SetDefaultMainSignatoryByEmail(..)
     , GetUsersByFriendUserID(..)
     , AddViewerByEmail(..)
     , GetUsersByUserIDs(..)
@@ -723,16 +722,6 @@ setUserDetails userid fullname companyname companynumber invoiceaddress =
                                                       }
                          }                            
 
-{- |
-  Set the default main signatory for a user by email address.
- -}
-setDefaultMainSignatoryByEmail :: UserID -> Email -> Update Users (Either String User)
-setDefaultMainSignatoryByEmail uid dmsemail = do
-  mms <- do users <- ask
-            return $ getOne (users @= dmsemail)
-  case mms of
-    Just ms -> modifyUser uid (\user -> Right (user { userdefaultmainsignatory = DefaultMainSignatory (unUserID $ userid ms) }))
-    Nothing -> return $ Left $ "no such user " ++ (BS.toString $ unEmail dmsemail)
 
 setUserInfo :: UserID -> UserInfo -> Update Users (Either String User)
 setUserInfo userid userinfo =
@@ -815,7 +804,6 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'getUsersByFriendUserID
                     , 'acceptTermsOfService
                     , 'exportUsersDetailsToCSV
-                    , 'setDefaultMainSignatoryByEmail
                     , 'addViewerByEmail
                       -- the below should be only used carefully and by admins
                     , 'fragileDeleteUser
