@@ -29,11 +29,11 @@ firstPageContent=
 newPasswordPage=     <form action="" method="post">
                      <table><tbody>
                        <tr>
-                        <td>Nytt lösenord:</td>
+                        <td>Lösenord:</td>
                         <td><input type="password" name="password" autocomplete="off" /></td>
                        </tr>
                        <tr>
-                        <td>Upprepa nytt lösenord:</td>
+                        <td>Upprepa lösenord:</td>
                         <td><input type="password" name="password2" autocomplete="off" /></td>
                        </tr>
                       </tbody></table>
