@@ -323,6 +323,7 @@ pageDocumentForAuthor ctx
                 ]
        authorid = userid author
        allinvited = documentsignatorylinks
+       authorhaslink = not $ null $ filter (not . isNotLinkForUserID authorid) documentsignatorylinks
        documentdaystosignboxvalue = maybe 7 id documentdaystosign
        timetosignset = isJust documentdaystosign --swedish low constrain
        documentauthordetails = signatoryDetailsFromUser author
@@ -349,10 +350,17 @@ pageDocumentForAuthor ctx
               <span id="sauthoremail"><% addbr $ signatoryemail documentauthordetails %></span>
               </div>
 
-              <select name="authorrole" id="authorroledropdown">
-                      <option value="signatory">Signatory</option>
-                      <option value="secretary">Secretary</option>
-              </select>
+              <% if authorhaslink 
+                  then
+                      <select name="authorrole" id="authorroledropdown">
+                                  <option value="signatory">Signatory</option>
+                                  <option value="secretary">Secretary</option>
+                      </select>
+                  else
+                      <select name="authorrole" id="authorroledropdown">
+                                  <option value="secretary">Secretary</option>
+                                  <option value="signatory">Signatory</option>
+                      </select> %>
 
               <br />
 
