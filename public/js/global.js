@@ -392,6 +392,8 @@ $(document).ready( function () {
 		    $("#signinvite").val("Underteckna");
 		    $(".buttonbox .submiter").text("Underteckna");
 
+		    $("#signinvite").addClass("cross-button");
+
 		    $("#dialog-title-sign").removeClass("hidden");
 		    $("#dialog-title-send").addClass("hidden");
 
@@ -401,6 +403,8 @@ $(document).ready( function () {
 	} else if($("#authorroledropdown option:selected").val() == "secretary"){
 		    $("#signinvite").val("Skicka");
 		    $(".buttonbox .submiter").text("Skicka");
+
+		    $("#signinvite").removeClass("cross-button");
 
 		    $("#dialog-title-sign").addClass("hidden");
 		    $("#dialog-title-send").removeClass("hidden");
@@ -416,6 +420,8 @@ $(document).ready( function () {
 		    $("#signinvite").val("Underteckna");
 		    $(".buttonbox .submiter").text("Underteckna");
 
+		    $("#signinvite").addClass("cross-button");
+
 		    $("#dialog-title-sign").removeClass("hidden");
 		    $("#dialog-title-send").addClass("hidden");
 
@@ -425,6 +431,8 @@ $(document).ready( function () {
 		} else if($("#authorroledropdown option:selected").val() == "secretary"){
 		    $("#signinvite").val("Skicka");
 		    $(".buttonbox .submiter").text("Skicka");
+
+		    $("#signinvite").removeClass("cross-button");
 
 		    $("#dialog-title-sign").addClass("hidden");
 		    $("#dialog-title-send").removeClass("hidden");
