@@ -67,37 +67,37 @@ showUser user ms viewers =
              <td><input type="text" name="invoiceaddress" value=(useraddress $ userinfo user)/></td>
          </tr>
        </table>
-
-       <input class="button" type="submit" value="Spara ändringar"/>
-
        <p>Du delar dina dokument med följande användare:</p>
        <ul>
           <% map (\x -> <li><% BS.toString $ prettyName x %></li>) viewers %>
           <li><input type="text" name="newvieweremail" infotext="Skriv e-post för att lägga till fler" size="28" /></li>
-       </ul>
+        </ul>
 
-       <input class="button" type="submit" value="Spara ändringar"/>
+        <input class="button" type="submit" value="Spara ändringar"/>
       </form>
-      <div>
-           <form action=LinkAccountPassword method="post">
-            <table>
-             <tr><td>Nuvarande lösenord:</td>
-              <td><input type="password" name="oldpassword" autocomplete="off" /></td>
-             </tr>
-             <tr><td>Nytt lösenord:</td>
-              <td><input type="password" name="password" autocomplete="off" /></td>
-             </tr>
-             <tr><td>Upprepa nytt lösenord:</td>
-              <td><input type="password" name="password2" autocomplete="off" /></td>
-             </tr>
-            </table>
-            <input class="button" type="submit" value="Ändra lösenord"/>
-           </form>
-          </div>
-          <div>
-           <a href=LinkSubaccount>Underkonton</a>
-          </div>
+     </div>
 
+
+
+     <div>
+      <form action=LinkAccountPassword method="post">
+       <table>
+        <tr><td>Nuvarande lösenord:</td>
+            <td><input type="password" name="oldpassword" autocomplete="off" /></td>
+        </tr>
+        <tr><td>Nytt lösenord:</td>
+            <td><input type="password" name="password" autocomplete="off" /></td>
+        </tr>
+        <tr><td>Upprepa nytt lösenord:</td>
+            <td><input type="password" name="password2" autocomplete="off" /></td>
+        </tr>
+       </table>
+       <input class="button" type="submit" value="Ändra lösenord"/>
+      </form>
+     </div>
+
+     <div>
+      <a href=LinkSubaccount>Underkonton</a>
      </div>
     </div>
 
