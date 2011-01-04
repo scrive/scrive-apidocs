@@ -132,17 +132,7 @@ handleUserPost = do
   companyname <- g "companyname"
   companynumber <- g "companynumber"
   invoiceaddress <- g "invoiceaddress"
-  defaultmainsignatoryemail <- g "defaultmainsignatory"
   newvieweremail <- g "newvieweremail"
-
-  liftIO $ print "what's up?"
-
-  when (BS8.length defaultmainsignatoryemail > 0) $ do
-     dmsreturn <- update $ SetDefaultMainSignatoryByEmail userid $ Email defaultmainsignatoryemail
-     case dmsreturn of
-       Left msg -> addFlashMsgText msg
-       Right _  -> return ()
-     return ()
 
   when (BS8.length newvieweremail > 0) $ do
      avereturn <- update $ AddViewerByEmail userid $ Email newvieweremail
