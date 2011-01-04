@@ -317,9 +317,12 @@ handleSignShow documentid
   Just author <- query $ GetUserByUserID authoruserid
   let authorname = prettyName author
       invitedname = signatoryname $ signatorydetails $ invitedlink 
-  renderFromBody ctx TopNone kontrakcja 
-                     (pageDocumentForSign (LinkSignDoc document invitedlink) 
-                      document ctx invitedlink wassigned author)
+  if wassigned
+   then renderFromBody ctx TopNone kontrakcja
+                       (pageDocumentForViewer ctx document author)
+   else renderFromBody ctx TopNone kontrakcja 
+                       (pageDocumentForSign (LinkSignDoc document invitedlink) 
+                                            document ctx invitedlink wassigned author)
 
 freeLeftForUser :: User -> Kontra Int
 freeLeftForUser user = do
