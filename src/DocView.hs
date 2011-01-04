@@ -109,8 +109,13 @@ concatSignatories :: [SignatoryLink] -> String
 concatSignatories siglinks = 
     concat $ intersperse ", " $ map (BS.toString . personname) siglinks
 
-oneDocumentRow::(EmbedAsAttr m (Attr [Char] [Char]), EmbedAsAttr m (Attr [Char] KontraLink), EmbedAsAttr m (Attr [Char] DocumentID)) =>
-                MinutesTime -> User -> Document  -> XMLGenT m (HSX.XML m)
+oneDocumentRow :: ( EmbedAsAttr m (Attr [Char] [Char])
+                  , EmbedAsAttr m (Attr [Char] KontraLink)
+                  , EmbedAsAttr m (Attr [Char] DocumentID)) =>
+                MinutesTime -> 
+                User -> 
+                Document -> 
+                XMLGenT m (HSX.XML m)
 oneDocumentRow crtime user document@Document{ documentid
                                 , documentsignatorylinks
                                 , documentstatus
@@ -163,7 +168,10 @@ oneDocumentRow crtime user document@Document{ documentid
      <td><% mk $ concatSignatories documentsignatorylinks %></td>
      <td><% mk $ documenttitle %></td>
      <td><span title=(show documentmtime)><% mk $ showDateAbbrev crtime documentmtime %></span></td>
-     <td class="tdright"></td>
+     <% if isSuperUser (Just user)
+        then <td class="tdright"><a href=("/dave/document/" ++ show documentid)>*</a></td>
+        else <td class="tdright"></td>
+     %>
     </tr>
 
 
