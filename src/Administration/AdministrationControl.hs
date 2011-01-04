@@ -221,7 +221,7 @@ handleUserEnableTrustWeaverStorage a =
                                                                        })
                                                            }
 
-                                         update $ SetUserSettings userId newsettings
+                                         _ <- update $ SetUserSettings userId newsettings
                                          
                                          return $ LinkUserAdmin $ Just userId)
                                             `mplus` (return $ LinkUserAdmin $ Just userId)

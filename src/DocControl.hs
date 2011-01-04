@@ -822,6 +822,29 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
             }
       in config
 
+eitherLog action = do
+  value <- action
+  case value of
+    Left errmsg -> do
+               putStrLn errmsg
+               error errmsg
+    Right value -> return value
+
+uploadDocumentFilesToTrustWeaver :: TW.TrustWeaverConf 
+                                 -> TrustWeaverStorage 
+                                 -> Document 
+                                 -> IO ()
+uploadDocumentFilesToTrustWeaver ctxtwconf twsettings document = do
+  let twdocumentid = show (documentid document)
+  let twdocumentdate = showDateOnly (documentmtime document)
+  let twownername = BS.toString (storagetwname twsettings)
+  let File{filestorage = FileStorageMemory pdfdata} = head $ documentsealedfiles document 
+          
+  -- FIXME: we should retry here if the following fails
+  -- because of external reasons 
+  reference <- eitherLog $ TW.storeInvoice ctxtwconf twdocumentid twdocumentdate twownername pdfdata
+  update $ SetDocumentTrustWeaverReference (documentid document) reference
+  return ()
 
 sealDocument :: Context 
              -> MVar (Map.Map FileID JpegPages)
@@ -868,6 +891,11 @@ sealDocument ctx@Context{ctxs3action,ctxtwconf}
   case mdocument of
     Right document -> do
         forkIO $ mapM_ (AWS.uploadFile ctxs3action) (documentsealedfiles document)
+        case signeddocstorage (usersettings author) of
+          Nothing -> return ()
+          Just twsettings -> do
+                        forkIO $ uploadDocumentFilesToTrustWeaver ctxtwconf twsettings document
+                        return ()
         return document
     Left msg -> error msg
   -- let newfile = file {filepdf = newfilepdf}

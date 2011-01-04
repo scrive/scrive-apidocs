@@ -49,6 +49,7 @@ module DocState
     , NewDocument(..)
     , SaveDocumentForSignedUser(..)
     , SetDocumentTimeoutTime(..)
+    , SetDocumentTrustWeaverReference(..)
     , SignDocument(..)
     , TimeoutDocument(..)
     , UpdateDocument(..)
@@ -360,6 +361,25 @@ $(deriveAll [''Default]
 
           -- we really should keep history here so we know what happened
           }
+      data Document7 = Document7
+          { documentid7               :: DocumentID
+          , documenttitle7            :: BS.ByteString
+          , documentauthor7           :: Author
+          , documentsignatorylinks7   :: [SignatoryLink]  
+          , documentfiles7            :: [File]
+          , documentsealedfiles7      :: [File]
+          , documentstatus7           :: DocumentStatus
+          , documentctime7            :: MinutesTime
+          , documentmtime7            :: MinutesTime
+          , documentchargemode7       :: ChargeMode
+          , documentdaystosign7       :: Maybe Int
+          , documenttimeouttime7      :: Maybe TimeoutTime 
+          -- | If true, this Document will not appear in the document list
+          , documentdeleted7          :: Bool
+          , documenthistory7          :: [DocumentHistoryEntry]
+          , documentinvitetext7       :: BS.ByteString
+          }
+
       data Document = Document
           { documentid               :: DocumentID
           , documenttitle            :: BS.ByteString
@@ -377,7 +397,7 @@ $(deriveAll [''Default]
           , documentdeleted          :: Bool
           , documenthistory          :: [DocumentHistoryEntry]
           , documentinvitetext       :: BS.ByteString
-          -- we really should keep history here so we know what happened
+          , documenttrustweaverreference :: Maybe BS.ByteString
           }
 
       data File0 = File0 
@@ -733,9 +753,13 @@ $(deriveSerialize ''Document6)
 instance Version Document6 where
     mode = extension 6 (Proxy :: Proxy Document5)
 
+$(deriveSerialize ''Document7)
+instance Version Document7 where
+    mode = extension 7 (Proxy :: Proxy Document6)
+
 $(deriveSerialize ''Document)
 instance Version Document where
-    mode = extension 7 (Proxy :: Proxy Document6)
+    mode = extension 8 (Proxy :: Proxy Document7)
 
 instance Migrate Document0 Document1 where
       migrate (Document0
@@ -933,7 +957,7 @@ instance Migrate Document5 Document6 where
           , documentsealedfiles6 =  documentsealedfiles5
           }
 
-instance Migrate Document6 Document where
+instance Migrate Document6 Document7 where
     migrate (Document6
              { documentid6
              , documenttitle6
@@ -952,22 +976,22 @@ instance Migrate Document6 Document where
              , documentmaybesigninfo6
              , documenthistory6
              , documentinvitetext6
-             }) = Document
-                { documentid               = documentid6
-                , documenttitle            = documenttitle6
-                , documentauthor           = documentauthor6
-                , documentsignatorylinks   = (authorlink : documentsignatorylinks6)
-                , documentfiles            = documentfiles6
-                , documentsealedfiles      = documentsealedfiles6
-                , documentstatus           = documentstatus6
-                , documentctime            = documentctime6
-                , documentmtime            = documentmtime6
-                , documentchargemode       = documentchargemode6
-                , documentdaystosign       = documentdaystosign6
-                , documenttimeouttime      = documenttimeouttime6
-                , documentdeleted          = documentdeleted6
-                , documenthistory          = documenthistory6
-                , documentinvitetext       = documentinvitetext6
+             }) = Document7
+                { documentid7               = documentid6
+                , documenttitle7            = documenttitle6
+                , documentauthor7           = documentauthor6
+                , documentsignatorylinks7   = (authorlink : documentsignatorylinks6)
+                , documentfiles7            = documentfiles6
+                , documentsealedfiles7      = documentsealedfiles6
+                , documentstatus7           = documentstatus6
+                , documentctime7            = documentctime6
+                , documentmtime7            = documentmtime6
+                , documentchargemode7       = documentchargemode6
+                , documentdaystosign7       = documentdaystosign6
+                , documenttimeouttime7      = documenttimeouttime6
+                , documentdeleted7          = documentdeleted6
+                , documenthistory7          = documenthistory6
+                , documentinvitetext7       = documentinvitetext6
                 }
                   where authorlink = SignatoryLink { maybesigninfo = documentmaybesigninfo6
                                                    , maybeseeninfo = documentmaybesigninfo6
@@ -977,6 +1001,42 @@ instance Migrate Document6 Document where
                                                    , signatorymagichash = MagicHash 0
                                                    , signatorylinkid = SignatoryLinkID 0
                                                    }
+
+instance Migrate Document7 Document where
+    migrate (Document7
+                { documentid7            
+                , documenttitle7         
+                , documentauthor7        
+                , documentsignatorylinks7
+                , documentfiles7       
+                , documentsealedfiles7 
+                , documentstatus7      
+                , documentctime7       
+                , documentmtime7       
+                , documentchargemode7  
+                , documentdaystosign7  
+                , documenttimeouttime7 
+                , documentdeleted7   
+                , documenthistory7   
+                , documentinvitetext7
+                }) = Document
+                { documentid = documentid7           
+                , documenttitle = documenttitle7        
+                , documentauthor = documentauthor7       
+                , documentsignatorylinks = documentsignatorylinks7
+                , documentfiles = documentfiles7      
+                , documentsealedfiles = documentsealedfiles7
+                , documentstatus = documentstatus7     
+                , documentctime = documentctime7      
+                , documentmtime = documentmtime7      
+                , documentchargemode = documentchargemode7 
+                , documentdaystosign = documentdaystosign7 
+                , documenttimeouttime = documenttimeouttime7 
+                , documentdeleted = documentdeleted7  
+                , documenthistory = documenthistory7  
+                , documentinvitetext = documentinvitetext7
+                , documenttrustweaverreference = Nothing
+                }
 
 $(deriveSerialize ''DocumentStatus)
 instance Version DocumentStatus where
@@ -1124,6 +1184,7 @@ newDocument user title ctime isfree = do
           , documenthistory = []
           , documentinvitetext = BS.empty
           , documentsealedfiles = []
+          , documenttrustweaverreference = Nothing
           }
   modify $ insert doc
   return doc
@@ -1539,6 +1600,13 @@ signLinkFromDetails emails details = do
                      , invitationdeliverystatus = Unknown
                      }
 
+setDocumentTrustWeaverReference :: DocumentID -> String -> Update Documents (Either String Document)
+setDocumentTrustWeaverReference documentid reference = do
+  modifyDocument documentid $ \document ->
+      let
+          newdocument = document { documenttrustweaverreference = Just (BS.fromString reference) }
+      in Right newdocument
+  
 {- |
    The user is the author of the document
  -}
@@ -1584,6 +1652,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'getDocumentsByUser
                         , 'getNumberOfDocumentsOfUser
                         , 'setDocumentTimeoutTime
+                        , 'setDocumentTrustWeaverReference
                         , 'archiveDocuments
                         , 'timeoutDocument
                         , 'closeDocument
