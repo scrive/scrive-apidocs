@@ -344,7 +344,7 @@ pageDocumentForAuthor ctx
               <form method="post" name="form" action=(LinkIssueDoc documentid) id="main-document-form"> 
               Avsändare<br/>
               <div style="margin-bottom: 10px;" id="authordetails">
-              <strong><span id="sauthoryname"><% signatoryname documentauthordetails %></span></strong>
+              <strong><span id="sauthoryname"><% addbr $ signatoryname documentauthordetails %></span></strong>
               <span id="sauthorcompany"><% addbr $ signatorycompany documentauthordetails %></span>
               <span id="sauthornumber"><% addbr $ signatorynumber documentauthordetails %></span>
               <span id="sauthoremail"><% addbr $ signatoryemail documentauthordetails %></span>
@@ -362,7 +362,7 @@ pageDocumentForAuthor ctx
                                   <option value="signatory">Signatory</option>
                       </select> %>
 
-              <br />
+              <br /><br />
 
               Motpart<br/>
               <div id="signatorylist">
