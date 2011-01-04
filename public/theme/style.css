@@ -62,7 +62,8 @@ a img
     color: #848484;
 }
 
-input[name=final] 
+/*input[name=final] */
+.cross-button
 {
     background-image: url(images/status_signed.png);
     background-repeat: no-repeat;

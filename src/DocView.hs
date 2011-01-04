@@ -408,7 +408,7 @@ pageDocumentForAuthor ctx
                 %>   
               </span>
               <div style="height: 2px;"/>
-              <input class="bigbutton" type="submit" name="final" value="Underteckna" id="signinvite" rel="#dialog-confirm-signinvite"/> <br />
+              <input class="bigbutton cross-button" type="submit" name="final" value="Underteckna" id="signinvite" rel="#dialog-confirm-signinvite"/> <br />
               <input class="button" type="submit" name="save" value="Spara som utkast"/>
               </div>
               </form>
@@ -471,7 +471,7 @@ pageDocumentForAuthor ctx
                  %>
               </div>
               <% if documentstatus == AwaitingAuthor
-                  then <form method="post" action=""><input class="bigbutton" type="submit" name="final" value="Underteckna" id="signinvite" /></form>
+                  then <form method="post" action=""><input class="bigbutton cross-button" type="submit" name="final" value="Underteckna" id="signinvite" /></form>
                   else <span />%>
               </span>
               %>
