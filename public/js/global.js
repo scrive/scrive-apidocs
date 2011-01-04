@@ -383,7 +383,7 @@ $(document).ready( function () {
 	if($("#authorroledropdown option:selected").val() == "signatory") {
 		    $("#signinvite").val("Underteckna");
 		    $(".buttonbox .submiter").text("Underteckna");
-		} else {
+	} else if($("#authorroledropdown option:selected").val() == "secretary"){
 		    $("#signinvite").val("Skicka");
 		    $(".buttonbox .submiter").text("Skicka");
 		}
@@ -392,7 +392,7 @@ $(document).ready( function () {
 		if($("#authorroledropdown option:selected").val() == "signatory") {
 		    $("#signinvite").val("Underteckna");
 		    $(".buttonbox .submiter").text("Underteckna");
-		} else {
+		} else if($("#authorroledropdown option:selected").val() == "secretary"){
 		    $("#signinvite").val("Skicka");
 		    $(".buttonbox .submiter").text("Skicka");
 		}
