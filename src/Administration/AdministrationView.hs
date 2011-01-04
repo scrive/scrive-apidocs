@@ -144,7 +144,7 @@ data UserAdminView = UserAdminView {
                    , uavuseremail::String 
                    , uavaccounttype::[Option]
                    , uavaccountplan::[Option]
-                   , uavsigneddocstorage::[Option]
+                   , uavsigneddocstorage::String
                    , uavuserpaymentmethod::[Option]
                    , uavpaymentaccounttype ::[Option]
                    , uavpaymentaccountmoney :: String
@@ -175,9 +175,7 @@ userAdminView u =  UserAdminView {
                    , uavaccountplan = for (allValues::[UserAccountPlan]) (\x -> if (x == (accountplan $ usersettings u))
                                                                                  then soption show show x
                                                                                  else option show show x)
-                   , uavsigneddocstorage = for (allValues::[StorageType]) (\x -> if (x == (signeddocstorage $ usersettings u))
-                                                                                 then soption show show x
-                                                                                 else option show show x)                                                              
+                   , uavsigneddocstorage = show (signeddocstorage $ usersettings u)
                    , uavuserpaymentmethod = for (allValues::[PaymentMethod ]) (\x -> if (x == (userpaymentmethod $ usersettings u))
                                                                                  then soption show show x
                                                                                  else option show show x)        

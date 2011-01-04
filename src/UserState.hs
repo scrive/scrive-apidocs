@@ -9,7 +9,7 @@ module UserState
     , ExternalUserID(..)
     , FlashMessage(..)
     , Password(..)
-    , StorageType(..)
+    , TrustWeaverStorage(..)
     , UserAccountType(..)
     , PaymentMethod(..)
     , UserAccountPlan(..)
@@ -81,7 +81,13 @@ $(deriveAll [''Eq, ''Ord, ''Default]
       newtype Email = Email { unEmail :: BS.ByteString }
       data Password = Password [Octet] [Octet] | NoPassword
       newtype SupervisorID = SupervisorID { unSupervisorID :: Int }
-      data StorageType = Amazon | TrustWeaver
+      data TrustWeaverStorage = TrustWeaverStorage
+          { storagetwenabled       :: Bool
+          , storagetwsuplierid     :: BS.ByteString
+          , storagetwsuperadmin    :: BS.ByteString
+          , storagetwsuperadminpwd :: BS.ByteString
+          , storagetwbaseurl       :: BS.ByteString
+          }
       data UserAccountType = MainAccount | SubAccount
       data PaymentMethod = CreditCard | Invoice | Undefined
       data UserAccountPlan = Basic
@@ -102,7 +108,7 @@ $(deriveAll [''Eq, ''Ord, ''Default]
       data UserSettings  = UserSettings {
                accounttype :: UserAccountType
              , accountplan :: UserAccountPlan
-             , signeddocstorage :: StorageType
+             , signeddocstorage :: Maybe TrustWeaverStorage
              , userpaymentmethod :: PaymentMethod
       }
       data User = User
@@ -220,7 +226,7 @@ $(deriveAll [''Eq, ''Ord, ''Default]
    |])
 
 
-deriving instance Show StorageType 
+deriving instance Show TrustWeaverStorage
 deriving instance Show UserAccountType 
 deriving instance Show PaymentMethod
 deriving instance Show UserAccountPlan 
@@ -233,9 +239,7 @@ deriving instance Show Password
 deriving instance Show Friend
 deriving instance Show DefaultMainSignatory
 
-deriving instance Bounded StorageType 
-deriving instance Enum StorageType 
-deriving instance Read StorageType 
+deriving instance Read TrustWeaverStorage
 
 deriving instance Bounded UserAccountType
 deriving instance Enum UserAccountType
@@ -424,7 +428,7 @@ instance Migrate User6 User7 where
                 , usersettings7  = UserSettings {
                                     accounttype = if (isNothing usersupervisor6)  then MainAccount else SubAccount
                                   , accountplan = Basic
-                                  , signeddocstorage = Amazon
+                                  , signeddocstorage = Nothing
                                   , userpaymentmethod = Undefined
                                   }                   
                 , userpaymentpolicy7 =  Payments.basicPaymentPolicy
@@ -522,8 +526,8 @@ $(deriveSerialize ''User)
 instance Version User where
     mode = extension 8 (Proxy :: Proxy User7)
 
-$(deriveSerialize ''StorageType )
-instance Version StorageType 
+$(deriveSerialize ''TrustWeaverStorage )
+instance Version TrustWeaverStorage
 
 $(deriveSerialize ''UserAccountType )
 instance Version UserAccountType 
@@ -673,7 +677,7 @@ addUser fullname email passwd maybesupervisor = do
                 , usersettings  = UserSettings {
                                     accounttype = MainAccount 
                                   , accountplan = Basic
-                                  , signeddocstorage = Amazon
+                                  , signeddocstorage = Nothing
                                   , userpaymentmethod = Undefined
                                   }                   
                 , userpaymentpolicy =  Payments.basicPaymentPolicy
