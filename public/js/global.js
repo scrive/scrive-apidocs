@@ -385,8 +385,8 @@ $(document).ready( function () {
 		    $("#signinvite").val("Underteckna");
 		    $(".buttonbox .submiter").text("Underteckna");
 		} else {
-		    $("#signinvite").val("Send");
-		    $(".buttonbox .submiter").text("Send");
+		    $("#signinvite").val("Skicka");
+		    $(".buttonbox .submiter").text("Skicka");
 		}
 	    });
 
