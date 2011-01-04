@@ -325,7 +325,7 @@ readProcessWithExitCode' cmd args input = do
         putMVar outMVar ()
 
     -- now write and flush any input
-    when (not (BSL.null input)) $ $ C.handle ((\e -> return ()) :: (C.IOException -> IO ())) $ do BSL.hPutStr inh input; hFlush inh
+    when (not (BSL.null input)) $ C.handle ((\e -> return ()) :: (C.IOException -> IO ())) $ do BSL.hPutStr inh input; hFlush inh
     hClose inh -- done with stdin
 
     -- wait on the output
