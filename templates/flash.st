@@ -1,6 +1,6 @@
 ### Some comment here
 flashDocumentDraftSaved= <div>
-     Du har sparat documentet.
+     Du har sparat dokumentet.
     </div>
 ######
 flashRemindMailSentNotSigned=En påminnelse har skickats till $personname$
@@ -17,15 +17,15 @@ flashMessagePasswordNotStrong=Det nya lösenordet ska vara minst 6 tecken
 ####        
 flashMessageBadOldPassword=Du har skrivit in fel nuvarande lösenord
 ####
-flashMessagePasswordsDontMatch=Nytt lösenord matchar inte med upprepa lösenord 
+flashMessagePasswordsDontMatch="Nytt lösenord" matchar inte med "Upprepa lösenord" 
 ###
 flashDocumentRestarted=Du har startat om dokumentet och kan nu underteckna och skicka inbjudan på nytt.
 ###
-flashMessageUserPasswordChanged=Password changed
+flashMessageUserPasswordChanged=Lösenord ändrat
 ###
-flashMessagePasswordChangeLinkNotValid=We are sorry but this link has expired.<BR/> Plese use password reminder to get new one.
+flashMessagePasswordChangeLinkNotValid=Vi beklagar. Länken är inte längre giltig.<BR/> Vänligen använd "Glömt lösenord" för att generera en ny länk.
 ###
-flashMessageUserWithSameEmailExists=User with same address exists
+flashMessageUserWithSameEmailExists=En användare med samma e-post existerar redan.
 ###
-flashMessageActivationLinkNotValid=We are sorry but this link has expired.<BR/> Plese use password reminder to get new one.
+flashMessageActivationLinkNotValid=Vi beklagar. Länken är inte längre giltig.<BR/> Vänligen använd "Glömt lösenord" för att generera en ny länk.
 ###

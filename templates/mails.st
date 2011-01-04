@@ -207,10 +207,10 @@ invitationMailUndeliveredContent =
      </span>
 
 ###
-passwordChangeLinkMailTitle=Change password request
+passwordChangeLinkMailTitle=Nytt lösenord
 ###
 passwordChangeLinkMailContent=   <span>
-      <p>Hej </p>
+      <p>Hej $personname$,</p>
       <p>Du har begärt att ändra ditt lösenord på SkrivaPå. Vänligen klicka på följande länk för att gå vidare:</p>
       <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a>
        $poweredBySkrivaPaPara()$
@@ -225,3 +225,4 @@ updateinglistwithauthor= <span>
                            <span class="hidden authorname"> $creatorname$ </span>
                           </span> 
 #### 
+
