@@ -83,10 +83,10 @@ $(deriveAll [''Eq, ''Ord, ''Default]
       newtype SupervisorID = SupervisorID { unSupervisorID :: Int }
       data TrustWeaverStorage = TrustWeaverStorage
           { storagetwenabled       :: Bool
-          , storagetwsuplierid     :: BS.ByteString
+          , storagetwname          :: BS.ByteString
           , storagetwsuperadmin    :: BS.ByteString
           , storagetwsuperadminpwd :: BS.ByteString
-          , storagetwbaseurl       :: BS.ByteString
+          , storagetwsectionpath   :: BS.ByteString
           }
       data UserAccountType = MainAccount | SubAccount
       data PaymentMethod = CreditCard | Invoice | Undefined

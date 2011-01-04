@@ -24,6 +24,7 @@ module Administration.AdministrationControl(
           , handleTakeOverDocuments
           , handleDeleteAccount
           , handleCreateUser
+          , handleUserEnableTrustWeaverStorage
           ) where
 import "mtl" Control.Monad.State
 import AppView
@@ -48,6 +49,18 @@ import UserView
 import Data.Maybe
 import System.Process
 import System.IO (hClose)
+import qualified TrustWeaver as TW
+
+eitherFlash :: ServerPartT (StateT Context IO) (Either String b)
+            -> ServerPartT (StateT Context IO) b
+eitherFlash action = do
+  x <- action
+  case x of
+    Left errmsg -> do
+           addFlashMsgText errmsg
+           mzero
+    Right value -> return value
+
 
 {- | Main page. Redirects users to other admin panels -} 
 showAdminMainPage ::Kontra Response
@@ -152,6 +165,7 @@ handleUserChange :: String -> Kontra KontraLink
 handleUserChange a = onlySuperUser $
                      do
                      let muserId = maybeRead a
+                     _ <- g "change"
                      case muserId of 
                        Nothing -> mzero   
                        Just userId ->    
@@ -172,6 +186,45 @@ handleUserChange a = onlySuperUser $
                                            _ <- update $ SetUserPaymentPolicyChange userId $ paymentPaymentPolicy $ userpaymentpolicy user
                                            return $ LinkUserAdmin $ Just userId
 
+handleUserEnableTrustWeaverStorage :: String -> Kontra KontraLink
+handleUserEnableTrustWeaverStorage a =
+    onlySuperUser $
+                  do
+                    let muserId = maybeRead a
+                    _ <- g "enabletrustweaver"
+                    case muserId of 
+                       Nothing -> mzero   
+                       Just userId ->    
+                        do 
+                          muser <- query $ GetUserByUserID userId
+                          case muser of 
+                             Nothing -> mzero     
+                             Just user -> 
+                                     case signeddocstorage (usersettings user) of
+                                       Just _ -> do
+                                         -- FIXME: add text: was already enabled
+                                         return $ LinkUserAdmin $ Just userId
+                                       Nothing -> (do
+                                         let name = show userId
+                                         Context{ctxtwconf} <- get
+                                         -- FIXME: error handling here
+                                         (superAdminUsername, superAdminPwd, sectionPath) <-
+                                             eitherFlash $ liftIO $ TW.registerAndEnableSection ctxtwconf name
+                                         let newsettings = (usersettings user)
+                                                           { signeddocstorage = 
+                                                                 Just (TrustWeaverStorage
+                                                                       { storagetwenabled = True
+                                                                       , storagetwname = fromString name
+                                                                       , storagetwsuperadmin = fromString superAdminUsername
+                                                                       , storagetwsuperadminpwd = fromString superAdminPwd
+                                                                       , storagetwsectionpath = fromString sectionPath
+                                                                       })
+                                                           }
+
+                                         update $ SetUserSettings userId newsettings
+                                         
+                                         return $ LinkUserAdmin $ Just userId)
+                                            `mplus` (return $ LinkUserAdmin $ Just userId)
 
 {-| Cleaning the database -}
 handleDatabaseCleanup :: Kontra KontraLink
