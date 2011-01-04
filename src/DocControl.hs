@@ -250,7 +250,7 @@ landpageRejected documentid signatorylinkid = do
                      maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
                      content <- liftIO $ landpageRejectedView (ctxtemplates ctx) document
                      renderFromBody ctx TopEmpty kontrakcja $ cdata content
-{-
+{- |
  Here we need to save the document either under existing account or create a new account
  send invitation email and put the document in that account
 -}
