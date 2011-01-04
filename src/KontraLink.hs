@@ -60,6 +60,8 @@ data KontraLink
     | LinkUserAdmin (Maybe UserID)
     | LinkPasswordChange SessionId MagicHash
     | LinkActivateAccount SessionId MagicHash
+    | LinkChangeSignatoryEmail DocumentID SignatoryLinkID 
+    | LinkWithdrawn DocumentID 
     | LoopBack
     | BackToReferer
     | LinkDaveDocument DocumentID
@@ -101,6 +103,8 @@ instance Show KontraLink where
     showsPrec _ (LinkUserAdmin (Just userId)) = (++) $ "/adminonly/useradmin/"++show userId
     showsPrec _ (LinkPasswordChange sid mh) = (++) $ "/changepassword/"++show sid++"/"++show mh
     showsPrec _ (LinkActivateAccount sid mh) = (++) $ "/activate/"++show sid++"/"++show mh
+    showsPrec _ (LinkChangeSignatoryEmail did slid ) = (++) $ "/changeemail/"++show did++"/"++show slid
+    showsPrec _ (LinkWithdrawn did ) = (++) $ "/withdrawn/"++show did
     showsPrec _ LoopBack = (++) $ "/" -- this should be never used
     showsPrec _ BackToReferer = (++) $ "/" -- this should be never used
     showsPrec _ (LinkDaveDocument docid) = (++) ("/dave/document/" ++ show docid)

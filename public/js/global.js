@@ -387,7 +387,13 @@ $(document).ready( function () {
          curr.data("dateinput").setValue(date[0],date[1],date[2]); 
         }
     })
-
+    $(".replacebynextonclick").click( function(){
+        var replacement = $(this).next();
+        $(this).replaceWith(replacement);
+        replacement.show();
+        
+    })
+    
 	if($("#authorroledropdown option:selected").val() == "signatory") {
 		    $("#signinvite").val("Underteckna");
 		    $(".buttonbox .submiter").text("Underteckna");

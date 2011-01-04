@@ -151,7 +151,7 @@ oneDocumentRow crtime user document@Document{ documentid
                       Canceled -> "status_rejected.png"
                       Timedout -> "status_timeout.png"
                       Rejected -> "status_rejected.png"
-                      AutoCanceled -> "status_rejected.png"
+                      Withdrawn -> "status_rejected.png"
         dateDiffInDays (MinutesTime ctime) (MinutesTime mtime)
                        | ctime>mtime = 0
                        | otherwise = (mtime - ctime) `div` (60*24)
@@ -162,7 +162,7 @@ oneDocumentRow crtime user document@Document{ documentid
      </td>
      <td>
        <img width="17" height="17" src=statusimg/> 
-       <% if (documentstatus == AutoCanceled) then <span style="color:#000000;position:relative;top:-3px">!</span> else <span/> %>   
+       <% if (anyInvitationUndelivered document) then <span style="color:#000000;position:relative;top:-3px">!</span> else <span/> %>   
      </td>
      <td>
       <% case documenttimeouttime of
@@ -458,10 +458,19 @@ pageDocumentForAuthor ctx
              </span>
            else
                <span>
-               <% if documentstatus == Pending || documentstatus == AwaitingAuthor then
-                      <script type="text/javascript" language="Javascript" src="/js/showfields.js"> 
-                                  </script>
-                  else <span /> %>
+               <% if documentstatus == Pending || documentstatus == AwaitingAuthor 
+                   then
+                      <script type="text/javascript" language="Javascript" src="/js/showfields.js">  </script>
+                   else <span /> %>
+               <% if (documentstatus == Pending || documentstatus == AwaitingAuthor  || anyInvitationUndelivered document)
+                          then <small> Dokument kan inte färdigställas eftersom e-post adressen
+                                   <strong>
+                                    <% BS.intercalate (BS.fromString ", ") $ map (signatoryemail . signatorydetails) $ undeliveredSignatoryLinks document %> 
+                                   </strong>  <BR/>
+                                    inte existerar. Kontrollera adressen och försök igen. <BR/>
+                               </small>
+                          else <span/>
+               %>       
                <script type="text/javascript">
                  <% "var docstate = " ++ (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks) ++ ";" %>
                </script>
@@ -475,16 +484,24 @@ pageDocumentForAuthor ctx
                   else <span />%>
               </span>
               %>
+            <% if ((documentstatus == Pending || documentstatus == AwaitingAuthor) && anyInvitationUndelivered document)
+                    then
+                       <form method="post" action=(LinkWithdrawn $ documentid)>
+                         <input type="submit" value="Återkalla inbjudan"/>
+                       </form>
+                    else <span/> 
+            %>        
             <% if (documentstatus == Pending || documentstatus == AwaitingAuthor) 
-                then if not timetosignset
-                then <span>
+                then 
+                   if not timetosignset
+                    then <span>
                      <input class="button cancel" type="button" name="cancel" value="Återkalla inbjudan"  rel="#cancel-by-author-dialog" />    
                      <span class="localdialogs">
                      <form method="post" action=(LinkCancel document) class="overlay" id="cancel-by-author-dialog">
                                 <a class="close"> </a>
                                 <h2> Återkalla inbjudan </h2>
                                 <p>Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?
-			           <BR/>När du återkallat inbjudan kommer nedanstaende meddelande att skickas till dina motparter.
+                                <BR/>När du återkallat inbjudan kommer nedanstaende meddelande att skickas till dina motparter.
                                 </p>
                                 <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
                                  <% fmap cdata $ mailCancelDocumentByAuthorContent  (ctxtemplates ctx) False Nothing ctx document author%>
@@ -497,12 +514,11 @@ pageDocumentForAuthor ctx
                           </form>
                        </span>
                        </span>
-
-                  else <span>Du kan inte återkalla inbjudan före förfallodatum.</span>
-                 else <span/>
+                    else <span>Du kan inte återkalla inbjudan före förfallodatum.</span>
+                else <span/>
              %>         
             <% fmap cdata $
-               if (documentstatus == Canceled || documentstatus == Timedout || documentstatus == Rejected || documentstatus == AutoCanceled)
+               if (documentstatus == Canceled || documentstatus == Timedout || documentstatus == Rejected || documentstatus == Withdrawn)
                then renderActionButton  (ctxtemplates ctx) (LinkRestart documentid) "restartButtonName"
                else return ""
              %>  
@@ -594,15 +610,15 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document author s
       isTimedout = documentstatus document == Timedout
       isCanceled = documentstatus document == Canceled
       isRejected = documentstatus document == Rejected
-      isAutoCanceled = documentstatus document == AutoCanceled
-      dontShowAnyReminder = isTimedout || isCanceled || isRejected || isAutoCanceled
+      isWithDrawn = documentstatus document == Withdrawn
+      dontShowAnyReminder = isTimedout || isCanceled || isRejected || isWithDrawn
       status =  caseOf
                 [
-                ( isAutoCanceled && invitationdeliverystatus == Undelivered, <span>
+                ( invitationdeliverystatus == Undelivered, <span>
                                                                                    <img src="/theme/images/status_rejected.png"/>
                                                                                    <span style="color:#000000;position:relative;top:-3px">!</span>
                                                                               </span>), 
-                ( isAutoCanceled, <img src="/theme/images/status_rejected.png"/>), 
+                ( isWithDrawn, <img src="/theme/images/status_rejected.png"/>), 
                 ( isCanceled, <img src="/theme/images/status_rejected.png"/>), 
                 ( isRejected, <img src="/theme/images/status_rejected.png"/>), 
                 ( isTimedout, <img src="/theme/images/status_timeout.png"/>), 
@@ -614,7 +630,7 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document author s
                 [
                 (wasSigned, "Undertecknat " ++ showDateOnly (signtime $ fromJust maybesigninfo) ),
                 (isTimedout, "Förfallodatum har passerat"),
-                (isCanceled || isRejected || isAutoCanceled, "" ),
+                (isCanceled || isRejected || isWithDrawn, "" ),
                 (wasSeen,  "Granskat " ++ showDateOnly (signtime $ fromJust maybeseeninfo))]
                  "Har ej undertecknat"       
       isCurrentUserAuthor = maybe False (isAuthor document) muser
@@ -645,6 +661,14 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document author s
                        </div>
                       </form>     
                     </span>  
+      changeEmailAddress = 
+                   <span>
+                      <a style="cursor:pointer" class="replacebynextonclick"> Skicka inbjudan till ny adress  </a>
+                      <form action=(LinkChangeSignatoryEmail (documentid document) signatorylinkid) method="POST" style="display:none">
+                        <input type="text" style="width:180px" name="email" value=(BS.toString signatoryemail)/>
+                        <input type="submit" style="width:100px" value="Skicka"/>
+                      </form>     
+                   </span>                
    in asChild <div class=(if isCurrentSignatorAuthor then "author" else "signatory")><% 
                 [asChild status,asChild " "] ++
                 (if BS.null signatoryname then [] else [ asChild <strong><% signatoryname %></strong>, asChild <br/> ]) ++
@@ -653,7 +677,8 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document author s
                 (if BS.null signatoryemail then [] else [ asChild signatoryemail, asChild <br/> ]) ++
                 [asChild <div class="signatoryfields"><% map displayField signatoryotherfields %></div>] ++
                 ([asChild message]) ++
-                (if (isCurrentUserAuthor && (not isCurrentSignatorAuthor) && (not dontShowAnyReminder)) then [asChild <br/> ,asChild reminderForm] else [])
+                (if (isCurrentUserAuthor && (not isCurrentSignatorAuthor) && (not dontShowAnyReminder) && (invitationdeliverystatus /= Undelivered)) then [asChild <br/> ,asChild reminderForm] else []) ++
+                (if (isCurrentUserAuthor && (invitationdeliverystatus == Undelivered) && (not dontShowAnyReminder)) then [asChild <br/> ,asChild changeEmailAddress] else [])
                 %>
               </div>
 
