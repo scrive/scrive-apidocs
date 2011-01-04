@@ -322,7 +322,8 @@ pageDocumentForAuthor ctx
                   </script>
                 ]
        authorid = userid author
-       allinvited = documentsignatorylinks
+       -- the author gets his own space when he's editing
+       allinvited = filter (isNotLinkForUserID authorid) documentsignatorylinks
        authorhaslink = not $ null $ filter (not . isNotLinkForUserID authorid) documentsignatorylinks
        documentdaystosignboxvalue = maybe 7 id documentdaystosign
        timetosignset = isJust documentdaystosign --swedish low constrain
@@ -366,9 +367,9 @@ pageDocumentForAuthor ctx
 
               Motpart<br/>
               <div id="signatorylist">
-               <% map showSignatoryEntryForEdit (if null documentsignatorylinks
+               <% map showSignatoryEntryForEdit (if null allinvited
                                                  then [emptyDetails] 
-                                                 else map signatorydetails documentsignatorylinks) %>
+                                                 else map signatorydetails allinvited) %>
               </div>
               <small><a id="addsiglink" onclick="signatoryadd(); return false;" href="#">Lägg till fler</a></small>
               <div style="margin-top: 20px">
