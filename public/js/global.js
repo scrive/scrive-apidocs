@@ -1,5 +1,6 @@
 
 
+
 function getUniqueId()
 {
     var rnd = Math.round(Math.random() * 1000000000);
@@ -390,9 +391,22 @@ $(document).ready( function () {
 	if($("#authorroledropdown option:selected").val() == "signatory") {
 		    $("#signinvite").val("Underteckna");
 		    $(".buttonbox .submiter").text("Underteckna");
+
+		    $("#dialog-title-sign").removeClass("hidden");
+		    $("#dialog-title-send").addClass("hidden");
+
+		    $("#dialog-confirm-text-sign").removeClass("hidden");
+		    $("#dialog-confirm-text-send").addClass("hidden");
+
 	} else if($("#authorroledropdown option:selected").val() == "secretary"){
 		    $("#signinvite").val("Skicka");
 		    $(".buttonbox .submiter").text("Skicka");
+
+		    $("#dialog-title-sign").addClass("hidden");
+		    $("#dialog-title-send").removeClass("hidden");
+
+		    $("#dialog-confirm-text-sign").addClass("hidden");
+		    $("#dialog-confirm-text-send").removeClass("hidden");
 		}
 
 	$("#authorroledropdown").change(function() { 
@@ -401,9 +415,23 @@ $(document).ready( function () {
 		if($("#authorroledropdown option:selected").val() == "signatory") {
 		    $("#signinvite").val("Underteckna");
 		    $(".buttonbox .submiter").text("Underteckna");
+
+		    $("#dialog-title-sign").removeClass("hidden");
+		    $("#dialog-title-send").addClass("hidden");
+
+		    $("#dialog-confirm-text-sign").removeClass("hidden");
+		    $("#dialog-confirm-text-send").addClass("hidden");
+
 		} else if($("#authorroledropdown option:selected").val() == "secretary"){
 		    $("#signinvite").val("Skicka");
 		    $(".buttonbox .submiter").text("Skicka");
+
+		    $("#dialog-title-sign").addClass("hidden");
+		    $("#dialog-title-send").removeClass("hidden");
+
+		    $("#dialog-confirm-text-sign").addClass("hidden");
+		    $("#dialog-confirm-text-send").removeClass("hidden");
+
 		}
 	    });
 

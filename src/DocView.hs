@@ -406,11 +406,20 @@ pageDocumentForAuthor ctx
               <span class="localdialogs">
                 <form method="post" name="form" action=(LinkIssueDoc documentid) class="overlay redirectsubmitform" id="dialog-confirm-signinvite" rel="#main-document-form">  
                    <a class="close"> </a>
-                   <h2>Underteckna</h2>
+                   <h2 id="dialog-title-sign">Underteckna</h2>
+                   <h2 id="dialog-title-send">Skicka inbjudan</h2>
+                   <div id="dialog-confirm-text-sign">
                     <p>Är du säker att du vill underteckna dokumentet <strong><% documenttitle %></strong>?</p>
                     
                     <p>När du undertecknat kommer en automatisk inbjudan att skickas till 
-                       <span class="Xinvited">Invited</span> med e-post.</p>
+                                    
+                    <span class="Xinvited">Invited</span> med e-post.</p>
+                   </div>
+
+                   <div id="dialog-confirm-text-send">
+                     <p>Du har valt en sekreterarroll och kommer själv inte att underteckna. Är du säker på att du vill skicka en inbjudan att underteckna dokumentet <strong><% documenttitle %></strong> till <span class="Xinvited">Invited</span>?</p>
+                   </div>
+                   
                    <div class="buttonbox" >
                        <input type="hidden" name="final" value="automatic"/>
                        <button class="close button" type="button"> Avbryt </button>
