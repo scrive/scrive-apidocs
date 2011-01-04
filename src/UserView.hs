@@ -63,6 +63,9 @@ showUser user ms viewers =
              <td><input type="text" name="invoiceaddress" value=(useraddress $ userinfo user)/></td>
          </tr>
        </table>
+
+       <input class="button" type="submit" value="Spara ändringar"/>
+
        <p>Du delar dina dokument med följande användare:</p>
        <ul>
           <% map (\x -> <li><% BS.toString $ prettyName x %></li>) viewers %>
