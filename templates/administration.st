@@ -138,7 +138,7 @@ adminuser=
      <tr > <td style="padding-top:10px" ><strong>Account</strong></td> <td> </td></tr>
      <tr> <td>Account type:</td> <td> <select autocomplete="off" name="accounttype">$user.uavaccounttype:options()$</select></td></tr>
      <tr> <td>Account plan:</td> <td> <select autocomplete="off" name="accountplan">$user.uavaccountplan:options()$</select>   </td></tr>
-     <tr> <td>Signed doc storage:</td> <td> <select autocomplete="off" name="signeddocstorage">$user.uavsigneddocstorage:options()$</select> </td></tr>
+     <tr> <td>Signed doc storage:</td> <td> $user.uavsigneddocstorage$ </td></tr>
      <tr> <td>Payment method:</td> <td><select autocomplete="off" name="userpaymentmethod" >$user.uavuserpaymentmethod:options()$</select></td></tr>
 
      <tr > <td style="padding-top:10px" ><strong>Special deals</strong></td> <td> </td></tr>
@@ -270,7 +270,11 @@ adminuser=
                          <tbody></table>
 
  <BR/>
-  <input type="submit" style="width:200px;font-weight:bold" value="Change">
+  <input type="submit" style="width:200px;font-weight:bold" value="Change" name="change">
+  </form>
+  <BR/>
+  <form method="post" action="">
+  <input type="submit" name="enabletrustweaver" style="width:600px;font-weight:bold" value="Enable TrustWeaver storage for this client (cannot be undone)">
   </form>
   <div id="hiddenttimestuffbox" style="display:none"> 
      <span id="daystosignbox">

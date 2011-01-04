@@ -140,6 +140,7 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "advuseradmin" $ hget0 Administration.showAdminUserAdvanced
      , dir "adminonly" $ dir "useradmin" $ hget1m Administration.showAdminUsers
      , dir "adminonly" $ dir "useradmin" $ hpost1 Administration.handleUserChange
+     , dir "adminonly" $ dir "useradmin" $ hpost1 Administration.handleUserEnableTrustWeaverStorage
      , dir "adminonly" $ dir "db" $ hget0 $ Administration.indexDB
      , dir "adminonly" $ dir "db" $ onlySuperUser $ fileServe [] "_local/kontrakcja_state"
 

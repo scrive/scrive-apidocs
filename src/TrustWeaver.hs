@@ -340,19 +340,22 @@ validateDocument TrustWeaverConf{signcert,signcertpwd} pdfdata = do
 registerAndEnableSection :: TrustWeaverConf -> String -> IO (Either String (String,String,String))
 registerAndEnableSection TrustWeaverConf{admincert,admincertpwd} name = do
 
-  Right RegisterSectionResponse <- makeSoapCall "https://twa-test-db.trustweaver.com/ta_hubservices/Admin/AdminService.svc"
+  result  <- makeSoapCall "https://twa-test-db.trustweaver.com/ta_hubservices/Admin/AdminService.svc"
             "http://www.trustweaver.com/trustarchive/admin/v1/AdminServicePort/RegisterSection"
             admincert admincertpwd
            (RegisterSectionRequest name)
 
-  result2 <- makeSoapCall "https://twa-test-db.trustweaver.com/ta_hubservices/Admin/AdminService.svc"
-            "http://www.trustweaver.com/trustarchive/admin/v1/AdminServicePort/EnableSection"
-            admincert admincertpwd
-           (EnableSectionRequest name)
+  case result of
+    Left errmsg -> return $ Left errmsg
+    Right RegisterSectionResponse -> do
+                result2 <- makeSoapCall "https://twa-test-db.trustweaver.com/ta_hubservices/Admin/AdminService.svc"
+                           "http://www.trustweaver.com/trustarchive/admin/v1/AdminServicePort/EnableSection"
+                           admincert admincertpwd
+                          (EnableSectionRequest name)
 
-  let extract (EnableSectionResponse superAdminUsername superAdminPwd sectionPath) =
-        (superAdminUsername, superAdminPwd, sectionPath)
-  return (fmap extract result2)
+                let extract (EnableSectionResponse superAdminUsername superAdminPwd sectionPath) =
+                        (superAdminUsername, superAdminPwd, sectionPath)
+                return (fmap extract result2)
 
 storeInvoice :: TrustWeaverConf 
              -> String 
