@@ -747,15 +747,3 @@ buildJS authordetails signatorydetails =
                                     
 defaultInviteMessage :: BS.ByteString
 defaultInviteMessage = BS.empty     
-
-signatoryDetailsFromUser user = 
-    SignatoryDetails { signatoryname = userfullname user
-                     , signatoryemail = unEmail $ useremail $ userinfo user
-                     , signatorycompany = usercompanyname $ userinfo user
-                     , signatorynumber = usercompanynumber $ userinfo user
-                     , signatorynameplacements = []
-                     , signatorycompanyplacements = []
-                     , signatoryemailplacements = []
-                     , signatorynumberplacements = []
-                     , signatoryotherfields = []
-                     }
