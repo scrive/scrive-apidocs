@@ -25,6 +25,8 @@ module DocState
     , TimeoutTime(..)
     , isAuthor
     , isMatchingSignatoryLink
+    , anyInvitationUndelivered
+    , undeliveredSignatoryLinks
     , ArchiveDocuments(..)
     , AttachFile(..)
     , AttachSealedFile(..)
@@ -52,7 +54,9 @@ module DocState
     , UpdateDocument(..)
     , CloseDocument(..)
     , CancelDocument(..)
+    , WithdrawnDocument(..)
     , RestartDocument(..)
+    , ChangeSignatoryEmailWhenUndelivered(..)
     , signatoryDetailsFromUser
     )
 where
@@ -231,7 +235,7 @@ $(deriveAll [''Eq, ''Ord, ''Default]
                           | Timedout
                           | Rejected
                           | AwaitingAuthor
-                          | AutoCanceled
+                          | Withdrawn
 
       data ChargeMode = ChargeInitialFree   -- initial 5 documents are free
                       | ChargeNormal        -- value times number of people involved
@@ -1362,11 +1366,7 @@ setInvitationDeliveryStatus siglnkid status = do
                                                                 let newsls = for oldsls $ \sl -> if (signatorylinkid sl == siglnkid)
                                                                                                  then sl {invitationdeliverystatus = status}
                                                                                                  else sl
-                                                                let newdoc = doc {documentsignatorylinks = newsls,
-                                                                                  documentstatus = if status == Undelivered 
-                                                                                                    then AutoCanceled
-                                                                                                    else documentstatus doc
-                                                                                 }           
+                                                                let newdoc = doc {documentsignatorylinks = newsls}           
                                                                 modify (updateIx (documentid doc) newdoc)
                                                                 return $ Just newdoc
 getDocumentStats :: Query Documents Int
@@ -1446,6 +1446,13 @@ cancelDocument docid = do
     Left _ -> return Nothing
     Right d -> return $ Just d
 
+withdrawnDocument:: DocumentID -> Update Documents (Maybe Document)
+withdrawnDocument docid = do
+  doc <- modifyDocument docid (\d -> Right $ d { documentstatus = Withdrawn }) 
+  case doc of
+    Left _ -> return Nothing
+    Right d -> return $ Just d
+
 getFilesThatShouldBeMovedToAmazon :: Query Documents [File]
 getFilesThatShouldBeMovedToAmazon = do
   documents <- ask
@@ -1476,7 +1483,7 @@ restartDocument docid user =
 -}
 tryToGetRestarted::Document->User-> Update Documents (Either String Document)
 tryToGetRestarted doc user= 
-                            if (documentstatus doc `notElem` [Canceled,Timedout, Rejected,AutoCanceled])
+                            if (documentstatus doc `notElem` [Canceled,Timedout, Rejected,Withdrawn])
                              then return $ Left $ "Can't restart document with " ++ (show $ documentstatus doc) ++ " status"
                              else if (not $ isAuthor doc user)
                                    then return $ Left $ "Can't restart document is You are not it's author"
@@ -1499,6 +1506,22 @@ findMaybeUserByEmail ((email, user):eus) em
     | email == em = Just user
     | otherwise   = findMaybeUserByEmail eus em
 
+changeSignatoryEmailWhenUndelivered::DocumentID -> SignatoryLinkID -> BS.ByteString ->  Update Documents (Either String Document)
+changeSignatoryEmailWhenUndelivered did slid email = modifyDocument did $ changeEmail
+  where changeEmail doc = let signlinks = documentsignatorylinks doc
+                              mnsignlink = do
+                                           sl <- find ((== slid) . signatorylinkid) signlinks
+                                           when (invitationdeliverystatus sl /= Undelivered ) Nothing
+                                           return $ sl {invitationdeliverystatus = Unknown, signatorydetails = (signatorydetails sl) {signatoryemail = email}}
+                                           
+                          in case mnsignlink  of
+                           Just nsl -> let sll = for signlinks $ \sl -> if ( slid == signatorylinkid sl) then nsl else sl      
+                                       in  if (documentstatus doc == Pending || documentstatus doc == AwaitingAuthor)
+                                            then Right $ doc {documentsignatorylinks = sll}
+                                            else Left "We cant change status of not pending documents"
+                                            
+                           Nothing -> Left "We could not find signatory"            
+                     
 --UTILS - have to be put before creating action constructors
 signLinkFromDetails emails details = do
           sg <- ask
@@ -1521,6 +1544,9 @@ signLinkFromDetails emails details = do
  -}
 isAuthor::Document->User->Bool
 isAuthor d u = (userid u) == ( unAuthor . documentauthor $ d)   
+
+anyInvitationUndelivered =  not . Prelude.null . undeliveredSignatoryLinks
+undeliveredSignatoryLinks doc =  filter ((== Undelivered) . invitationdeliverystatus) $ documentsignatorylinks doc
 
 {- |
    Build a SignatoryDetails from a User with no fields
@@ -1562,10 +1588,12 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'timeoutDocument
                         , 'closeDocument
                         , 'cancelDocument
+                        , 'withdrawnDocument
                         , 'fileMovedToAWS
 
                           -- admin only area follows
                         , 'fragileTakeOverDocuments
                         , 'getFilesThatShouldBeMovedToAmazon
                         , 'restartDocument
+                        , 'changeSignatoryEmailWhenUndelivered
                         ])

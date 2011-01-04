@@ -14,7 +14,8 @@ module DocViewUtil (   personname,
                        joinWith,
                        addbr,
                        emailFromSignLink,
-                       renderListTemplate  
+                       renderListTemplate,  
+                       swedishListString 
            ) where
 import DocState
 import HSP

@@ -950,6 +950,17 @@ handleCancel docid =  do
                                        return (LinkIssueDoc $ documentid doc)
                           Nothing -> mzero  
 
+handleWithdrawn:: String -> Kontra KontraLink
+handleWithdrawn docid = do
+                          mdoc <- query $ GetDocumentByDocumentID (read docid)  
+                          case (mdoc) of
+                            Just doc -> withDocumentAuthor doc $ 
+                                         do
+                                           update $ WithdrawnDocument $ documentid doc
+                                           return (LinkIssueDoc $ documentid doc)
+                            Nothing -> return LinkMain          
+ 
+
 handleRestart:: String -> Kontra KontraLink
 handleRestart docid = do
                        ctx <- get
@@ -978,6 +989,30 @@ handleResend docid signlinkid  = do
                      return (LinkIssueDoc $ documentid doc)
                    Nothing -> mzero           
     Nothing -> mzero               
+
+--This only works for undelivered mails. We shoulkd check if current user is author
+handleChangeSignatoryEmail::String -> String -> Kontra KontraLink
+handleChangeSignatoryEmail did slid = do
+                                     let mdid = maybeRead did
+                                     memail <- getField "email"
+                                     let mslid = maybeRead slid
+                                     case (mdid,mslid,memail) of
+                                       (Just docid,Just slid,Just email) -> do
+                                                                           ctx <- get
+                                                                           md <- query $ GetDocumentByDocumentID docid
+                                                                           when ((liftM2 isAuthor md $ ctxmaybeuser ctx) /= Just True) mzero
+                                                                           mdoc <- update $ ChangeSignatoryEmailWhenUndelivered docid slid (BS.fromString email)
+                                                                           let msl =  do 
+                                                                                        doc <- either (const Nothing) Just mdoc
+                                                                                        find ((== slid) . signatorylinkid) $ documentsignatorylinks doc 
+                                                                           case (mdoc,msl,ctxmaybeuser ctx) of 
+                                                                            (Right doc,Just sl,Just user) -> do
+                                                                                             liftIO $ sendInvitationEmail1 ctx doc user sl
+                                                                                             return $ LinkIssueDoc $ docid                                           
+                                                                            _ -> return LinkMain  
+                                                                           
+                                       _ -> return LinkMain  
+                                     
 
 sendCancelMailsForDocument:: (Maybe BS.ByteString) -> Context -> Document -> Kontra ()
 sendCancelMailsForDocument customMessage ctx document = do
