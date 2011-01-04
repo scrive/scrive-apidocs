@@ -445,7 +445,7 @@ pageDocumentForAuthor ctx
                </script>
                
               <div id="signatorylist">
-                 <% map (showSignatoryLinkForSign ctx document author) allinvited 
+                 <% map (showSignatoryLinkForSign ctx document author) documentsignatorylinks
                  %>
               </div>
               <% if documentstatus == AwaitingAuthor
