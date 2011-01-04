@@ -201,6 +201,12 @@ $(document).ready( function () {
             }
         });
     }
+
+    $("#addsiglink").click(function(){
+	    $("#addsiglink").removeClass("redborder");
+	    $("#authorroledropdown").removeClass("redborder");
+	    
+	});
     
  
     $("#signinvite").overlay({  
@@ -208,6 +214,7 @@ $(document).ready( function () {
     onBeforeLoad: function () { 
            if (!emailFieldsValidation($("input[type='email']"))) return false;
            if (!authorFieldsValidation()) return false;
+	   if (!nonZeroSignatories()) return false;
            var mrxs = $("form input[name='signatoryname']");
            var tot = "";
            var allparties = new Array();
@@ -389,6 +396,8 @@ $(document).ready( function () {
 		}
 
 	$("#authorroledropdown").change(function() { 
+		$("#addsiglink").removeClass("redborder");
+		$("#authorroledropdown").removeClass("redborder");
 		if($("#authorroledropdown option:selected").val() == "signatory") {
 		    $("#signinvite").val("Underteckna");
 		    $(".buttonbox .submiter").text("Underteckna");
@@ -423,12 +432,15 @@ $(document).ready( function () {
 
   function emailFieldsValidation(fields){
       fields = fields.filter(function(){return !isExceptionalField($(this))});
-      var inputs = fields.validator({
-                                    effect:'failWithFlashOnEmail',
-                                    formEvent: 'null'
-                                    });
-      var valid = inputs.data("validator").checkValidity();
-      return valid;
+      if(fields.length > 0){
+	  var inputs = fields.validator({
+		  effect:'failWithFlashOnEmail',
+		  formEvent: 'null'
+	      });
+	  var valid = inputs.data("validator").checkValidity();
+	  return valid;
+      }
+      return true;
 }
 
 function authorFieldsValidation(){
@@ -495,6 +507,24 @@ function sigFieldsValidation(){
 	return false;
     }	
     return !remainingSigFields;
+}
+
+function nonZeroSignatories() {
+    var sigs = 0;
+    if($("#authorroledropdown option:selected").val() === "signatory"){
+	sigs = 1;
+    }
+
+    sigs += $("#signatorylist .signatorybox").length;
+    var error = (sigs === 0);
+
+    if(error) {
+	addFlashMessage('Det finns inga undertecknande parter för detta dokument. Vänligen lägg till undertecknande parter eller ändra din roll till "undertecknare".');
+	$("#addsiglink").addClass("redborder");
+	$("#authorroledropdown").addClass("redborder");
+	return false;
+    }
+    return true;
 }
 
 function isExceptionalField(field){
