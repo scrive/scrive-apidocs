@@ -43,7 +43,11 @@ import Templates.TemplatesUtils
 showUser :: User -> User -> [User] -> HSP.HSP HSP.XML
 showUser user ms viewers = 
     <div class="accounttable">
+
      <h1><% userfullname user %></h1>
+
+
+
       <div>
        <form action=LinkAccount method="post">
         <table>
