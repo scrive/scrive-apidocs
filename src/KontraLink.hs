@@ -62,6 +62,7 @@ data KontraLink
     | LinkActivateAccount SessionId MagicHash
     | LoopBack
     | BackToReferer
+    | LinkDaveDocument DocumentID
     
 instance Show KontraLink where
     showsPrec _ LinkAbout = (++) "/about"
@@ -102,6 +103,7 @@ instance Show KontraLink where
     showsPrec _ (LinkActivateAccount sid mh) = (++) $ "/activate/"++show sid++"/"++show mh
     showsPrec _ LoopBack = (++) $ "/" -- this should be never used
     showsPrec _ BackToReferer = (++) $ "/" -- this should be never used
+    showsPrec _ (LinkDaveDocument docid) = (++) ("/dave/document/" ++ show docid)
     
 {-
 instance (EmbedAsAttr m String) => (EmbedAsAttr m KontraLink) where
