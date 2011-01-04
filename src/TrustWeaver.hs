@@ -438,7 +438,7 @@ makeSoapCall url action cert certpwd request = do
             else return stdout
 
   if (code /= ExitSuccess)
-       then return (Left $ "Cannot execute ./curl for TrustWeaver: " ++ BSL.toString stderr)
+       then return (Left $ "Cannot execute ./curl for TrustWeaver: " ++ show args ++ BSL.toString stderr)
      else case readXml (BSL.toString xml) of
             Right (SOAP result) -> return (Right result)
             Right (SOAPFault code string actor) -> return (Left (code ++":" ++ string ++":" ++ actor))
