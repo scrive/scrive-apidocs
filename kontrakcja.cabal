@@ -41,6 +41,7 @@ Executable pdfseal
   else
     Buildable: False
 
+  GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
   hs-source-dirs: pdfseal/src src
   -- .hs or .lhs file containing the Main module.
   Main-is: SealMain.hs
@@ -63,7 +64,7 @@ Executable kontrakcja-server
 
  hs-source-dirs: src pdfseal/src
 
- GHC-Options: -fwarn-tabs
+ GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
  if !os(windows)
    -- don't do threaded on Windows because it uses blocking listen and accept
    GHC-Options: -threaded
@@ -104,7 +105,7 @@ Executable kontrakcja-test
     Buildable: False
  hs-source-dirs: test/src src pdfseal/src
 
- GHC-Options: -fwarn-tabs
+ GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
  if !os(windows)
    -- don't do threaded on Windows because it uses blocking listen and accept
    GHC-Options: -threaded
