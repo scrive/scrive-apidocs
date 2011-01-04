@@ -23,6 +23,7 @@ module DocView( emptyDetails
               , mailCancelDocumentByAuthorContent
               , mailCancelDocumentByAuthor
               , mailInvitationToSign
+              , mailInvitationToSend
               , mailDocumentClosedForSignatories
               , mailDocumentClosedForAuthor
               , isNotLinkForUserID

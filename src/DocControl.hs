@@ -106,7 +106,11 @@ sendInvitationEmail1 ctx document author signatorylink = do
                                                          }
                    , signatorymagichash } = signatorylink
       Document{documenttitle,documentid} = document
-  mail <- mailInvitationToSign (ctxtemplates ctx) ctx document signatorylink author
+      authorid = unAuthor $ documentauthor document
+      hasAuthorSigned = not $ Data.List.null $ filter (not . isNotLinkForUserID authorid) (documentsignatorylinks document)
+  mail <- if hasAuthorSigned 
+           then mailInvitationToSign (ctxtemplates ctx) ctx document signatorylink author
+           else mailInvitationToSend (ctxtemplates ctx) ctx document signatorylink author
   attachmentcontent <- AWS.getFileContents (ctxs3action ctx) $ head $ documentfiles document
   sendMail (ctxmailsconfig ctx) $ mail { fullnameemails =  [(signatoryname,signatoryemail)]  , attachments = [(documenttitle,attachmentcontent)] , from=ctxmaybeuser ctx, mailInfo = Invitation signatorylinkid } 
 

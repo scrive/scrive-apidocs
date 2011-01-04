@@ -72,6 +72,25 @@ mailInvitationToSignContent=
                  </p>
                 </span>
                 $footer$
+###
+mailInvitationToSendContent= 
+                $header$
+                <span>
+                  <p><i>Översiktlig information</i><br/>
+                   Parter: $partnersinfo$<br/>
+                   Har undertecknat: Ingen har undertecknat dokumentet än
+                   $timetosigninfo$
+                  </p>
+                 <p><i>Så här går du vidare</i><br/>
+                  1. Klicka på länken <br/>
+                    <a href="$link$">$link$</a> <br/>
+                    <br/>
+                  2. Granska online<br/>
+                  3. Underteckna<br/>
+                  4. Färdig<br/> 
+                 </p>
+                </span>
+                $footer$
 ######                
 mailInvitationToSignDefaultHeader = <p>Hej $personname$, <br/><br/> $creatorname$ har bjudit in dig att underteckna 
                                        dokumentet Testavtal online via tjänsten SkrivaPå. </p>
