@@ -620,8 +620,8 @@ function prepareEditor(textarea) {
 standardDialogMask = "#333333"
     
 $.tools.validator.addEffect("failWithFlashOnEmail", function(errors, event) {
-    var invalidEmailErrMsg = "Felaktig e-post \"email\". Försök igen.";
-    var emptyEmailErrMsg = "Du måste ange e-post till motpart.";
+	var invalidEmailErrMsg = "Du har inte skrivit in en e-post eller e-posten är felaktig. Vänligen försök igen.";
+	var emptyEmailErrMsg = "Du måste ange e-post till motpart.";
 	$.each(errors, function(index, error) {
     	var input = error.input;
         $(input).addClass("redborder");
