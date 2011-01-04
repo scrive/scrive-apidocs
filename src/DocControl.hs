@@ -314,7 +314,12 @@ handleSignShow documentid
   let wassigned = f invitedlink
       f (SignatoryLink {maybesigninfo}) = isJust maybesigninfo 
       authoruserid = unAuthor $ documentauthor document
-  Just author <- query $ GetUserByUserID authoruserid
+  mauthor <- query $ GetUserByUserID authoruserid
+
+  -- FIXME: this is a bug really
+  when (not (isJust mauthor)) mzero
+
+  let Just author = mauthor
   let authorname = prettyName author
       invitedname = signatoryname $ signatorydetails $ invitedlink 
   if wassigned
