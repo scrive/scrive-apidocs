@@ -380,6 +380,14 @@ $(document).ready( function () {
         }
     })
 
+	if($("#authorroledropdown option:selected").val() == "signatory") {
+		    $("#signinvite").val("Underteckna");
+		    $(".buttonbox .submiter").text("Underteckna");
+		} else {
+		    $("#signinvite").val("Skicka");
+		    $(".buttonbox .submiter").text("Skicka");
+		}
+
 	$("#authorroledropdown").change(function() { 
 		if($("#authorroledropdown option:selected").val() == "signatory") {
 		    $("#signinvite").val("Underteckna");
