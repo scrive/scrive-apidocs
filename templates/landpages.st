@@ -7,8 +7,15 @@ landpageSignInviteView=
      </p>
      <p><a class="button" href="/">Skapa ett nytt avtal</a></p>
     </div>
-
-
+######
+landpageSendInviteView=
+    <div class="centerdivnarrow">
+     <p class="headline">Dokumentet <strong>$documenttitle$</strong> skickat!</p>
+     <p>En inbjudan att underteckna har nu skickats 
+        till $partyListButAuthor$.
+     </p>
+     <p><a class="button" href="/">Skapa ett nytt avtal</a></p>
+    </div>
 ######
 landpageDocumentSavedView= 
     <div class="centerdivnarrow">

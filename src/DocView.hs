@@ -7,6 +7,7 @@ module DocView( emptyDetails
               , pageDocumentForViewer
               , pageDocumentList
               , landpageSignInviteView
+              , landpageSendInviteView
               , landpageSignedView
               , landpageLoginForSaveView
               , landpageDocumentSavedView
@@ -52,6 +53,13 @@ landpageSignInviteView templates  document =
      do 
       partylist <-renderListTemplate templates (map (BS.toString . personname') $ partyListButAuthor document)
       renderTemplate templates  "landpageSignInviteView" [("partyListButAuthor", partylist),
+                                                          ("documenttitle",BS.toString $ documenttitle document )]
+
+landpageSendInviteView ::KontrakcjaTemplates -> Document ->  IO String
+landpageSendInviteView templates  document =
+     do 
+      partylist <-renderListTemplate templates (map (BS.toString . personname') $ partyListButAuthor document)
+      renderTemplate templates  "landpageSendInviteView" [("partyListButAuthor", partylist),
                                                           ("documenttitle",BS.toString $ documenttitle document )]
 
 willCreateAccountForYou::KontrakcjaTemplates -> Document->SignatoryLink->Bool->  IO String

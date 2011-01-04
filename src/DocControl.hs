@@ -229,7 +229,11 @@ landpageSignInvite documentid = do
   case mdocument of
     Nothing -> mzero
     Just document -> do
-                      content <- liftIO $ landpageSignInviteView (ctxtemplates ctx) document
+                      let authorid = unAuthor $ documentauthor document
+                          hasAuthorSigned = not $ Data.List.null $ filter (not . isNotLinkForUserID authorid) (documentsignatorylinks document)
+                      content <- liftIO $ if hasAuthorSigned 
+                                            then landpageSignInviteView (ctxtemplates ctx) document
+                                            else landpageSendInviteView (ctxtemplates ctx) document
                       renderFromBody ctx TopNone kontrakcja $ cdata content
 
 
