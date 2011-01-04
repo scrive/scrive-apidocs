@@ -766,7 +766,7 @@ addViewerByEmail uid vieweremail = do
   case mms of
     Just ms -> modifyUser uid $ \user ->
                                       Right $ user { userfriends = (Friend (unUserID $ userid ms) : (userfriends user)) }
-    Nothing -> return $ Left $ "no such user " ++ (BS.toString $ unEmail vieweremail)
+    Nothing -> return $ Left $ "Användaren existerar ej: " ++ (BS.toString $ unEmail vieweremail)
 
 
 fragileDeleteUser :: UserID -> Update Users (Maybe User)
