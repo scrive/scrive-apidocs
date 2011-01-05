@@ -203,7 +203,7 @@ mailNewAccountCreatedByAdminContent=
        $poweredBySkrivaPaPara()$
      </span>
 ####
-invitationMailUndeliveredTitle = Felaktig e-post adress
+invitationMailUndeliveredTitle =Felaktig e-post
 ###
 invitationMailUndeliveredContent = 
 	<span>

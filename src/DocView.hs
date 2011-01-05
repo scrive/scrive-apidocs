@@ -462,13 +462,12 @@ pageDocumentForAuthor ctx
                    then
                       <script type="text/javascript" language="Javascript" src="/js/showfields.js">  </script>
                    else <span /> %>
-               <% if (documentstatus == Pending || documentstatus == AwaitingAuthor  || anyInvitationUndelivered document)
-                          then <small> Dokument kan inte färdigställas eftersom e-post adressen
+               <% if ((documentstatus == Pending || documentstatus == AwaitingAuthor) &&  anyInvitationUndelivered document)
+                          then <p> Adressen 
                                    <strong>
                                     <% BS.intercalate (BS.fromString ", ") $ map (signatoryemail . signatorydetails) $ undeliveredSignatoryLinks document %> 
-                                   </strong>  <BR/>
-                                    inte existerar. Kontrollera adressen och försök igen. <BR/>
-                               </small>
+                                   </strong> existerar inte. Kontrollera adressen och försök igen.
+                               </p>
                           else <span/>
                %>       
                <script type="text/javascript">
@@ -484,13 +483,6 @@ pageDocumentForAuthor ctx
                   else <span />%>
               </span>
               %>
-            <% if ((documentstatus == Pending || documentstatus == AwaitingAuthor) && anyInvitationUndelivered document)
-                    then
-                       <form method="post" action=(LinkWithdrawn $ documentid)>
-                         <input type="submit" value="Återkalla inbjudan"/>
-                       </form>
-                    else <span/> 
-            %>        
             <% if (documentstatus == Pending || documentstatus == AwaitingAuthor) 
                 then 
                    if not timetosignset
@@ -665,7 +657,7 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document author s
                    <span>
                       <a style="cursor:pointer" class="replacebynextonclick"> Skicka inbjudan till ny adress  </a>
                       <form action=(LinkChangeSignatoryEmail (documentid document) signatorylinkid) method="POST" style="display:none">
-                        <input type="text" style="width:180px" name="email" value=(BS.toString signatoryemail)/>
+                        <input type="text" style="width:170px" name="email" value=(BS.toString signatoryemail)/>
                         <input type="submit" style="width:100px" value="Skicka"/>
                       </form>     
                    </span>                
