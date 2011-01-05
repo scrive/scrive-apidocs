@@ -123,7 +123,8 @@ handleUserGet = do
   let ms = case mms of
              Just m -> m
              Nothing -> user
-  renderFromBody ctx TopAccount kontrakcja $ showUser user ms friends
+  content <- liftIO $ showUser (ctxtemplates ctx) user friends           
+  renderFromBody ctx TopAccount kontrakcja $ cdata content
 
 handleUserPost :: Kontra KontraLink
 handleUserPost = do
@@ -151,7 +152,8 @@ handleGetSubaccount :: Kontra Response
 handleGetSubaccount = do
   ctx@Context { ctxmaybeuser = Just user@User { userid } } <- get
   subaccounts <- query $ GetUserSubaccounts userid
-  viewSubaccounts ctx (Set.toList subaccounts)
+  content <- liftIO $ viewSubaccounts (ctxtemplates ctx) (Set.toList subaccounts)
+  renderFromBody ctx TopAccount kontrakcja $ cdata content
 
 handlePostSubaccount :: Kontra KontraLink
 handlePostSubaccount = do
@@ -286,7 +288,8 @@ checkUserTOSGet action =
 handleAcceptTOSGet = withUserGet $ do
       ctx <- get
       tostext <- liftIO $ BS.readFile $ "html/termsofuse.html"
-      pageAcceptTOS ctx tostext
+      content <- liftIO $ pageAcceptTOS (ctxtemplates ctx) tostext
+      renderFromBody ctx TopNone kontrakcja $ cdata content
 
 handleAcceptTOSPost :: Kontra KontraLink
 handleAcceptTOSPost = do

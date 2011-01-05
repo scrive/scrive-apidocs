@@ -26,7 +26,9 @@ module UserView(
     flashMessageActivationLinkNotValid,
     flashMessageUserActivated,
     --utils  
-    prettyName) where
+    prettyName,
+    userSmallView,
+    userSmallViewWithDocsCount) where
 
 import HSP hiding (Request)
 import Happstack.Server.SimpleHTTP
@@ -40,161 +42,30 @@ import Mails.SendMail(Mail,emptyMail,title,content)
 import qualified HSX.XMLGenerator
 import Templates.Templates 
 import Templates.TemplatesUtils
+import Data.Typeable
+import Data.Data
 
-showUser :: User -> User -> [User] -> HSP.HSP HSP.XML
-showUser user ms viewers = 
-    <div class="accounttable">
+showUser :: KontrakcjaTemplates -> User -> [User] -> IO String 
+showUser templates user viewers = renderTemplateComplex templates "showUser" $
+                                                        (setAttribute "fullname" $ BS.toString $ userfullname user ) .
+                                                        (setAttribute "email" $ BS.toString $ unEmail $ useremail $ userinfo user) .
+                                                        (setAttribute "companyname" $ BS.toString $ usercompanyname $ userinfo user) .
+                                                        (setAttribute "companynumber" $ BS.toString $ usercompanynumber $ userinfo user) .
+                                                        (setAttribute "invoiceaddress" $ BS.toString $ useraddress $ userinfo user) .
+                                                        (setAttribute "viewers" $ map (BS.toString . prettyName)  viewers) .
+                                                        (setAttribute "linkaccount" $ show LinkAccount) .
+                                                        (setAttribute "linkaccountpassword" $ show LinkAccountPassword) .
+                                                        (setAttribute "linksubaccount" $ show LinkSubaccount) 
+    
+pageAcceptTOS :: KontrakcjaTemplates ->  BS.ByteString -> IO String
+pageAcceptTOS templates tostext = 
+    renderTemplate templates "pageAcceptTOS" [("tostext", BS.toString tostext)]
 
-     <h1><% userfullname user %></h1>
-
-
-
-      <div>
-       <form action=LinkAccount method="post">
-        <table>
-         <tr><td>Namn:</td>
-             <td><input type="text" name="fullname" value=(userfullname user)/></td>
-         </tr>
-         <tr><td>E-post:</td>
-             <td><% unEmail $ useremail $ userinfo user %></td>
-         </tr>
-         <tr><td>Företagsnamn:</td>
-             <td><input type="text" name="companyname" value=(usercompanyname $ userinfo user)/></td>
-         </tr>
-         <tr><td>Organisationsnummer:</td>
-             <td><input type="text" name="companynumber" value=(usercompanynumber $ userinfo user)/></td>
-         </tr>
-         <tr><td>Faktureringsadress:</td>
-             <td><input type="text" name="invoiceaddress" value=(useraddress $ userinfo user)/></td>
-         </tr>
-
-        </table>
-        <p>Du delar dina dokument med följande användare:</p>
-        <ul>
-          <% map (\x -> <li><% BS.toString $ prettyName x %></li>) viewers %>
-          <li><input type="text" name="newvieweremail" infotext="Skriv e-post för att lägga till fler" size="28" /></li>
-        </ul>
-
-        <input class="button" type="submit" value="Spara ändringar"/>
-      </form>
-     </div>
-
-
-
-     <div>
-      <form action=LinkAccountPassword method="post">
-       <table>
-        <tr><td>Nuvarande lösenord:</td>
-            <td><input type="password" name="oldpassword" autocomplete="off" /></td>
-        </tr>
-        <tr><td>Nytt lösenord:</td>
-            <td><input type="password" name="password" autocomplete="off" /></td>
-        </tr>
-        <tr><td>Upprepa nytt lösenord:</td>
-            <td><input type="password" name="password2" autocomplete="off" /></td>
-        </tr>
-       </table>
-       <input class="button" type="submit" value="Ändra lösenord"/>
-      </form>
-     </div>
-
-     <div>
-      <a href=LinkSubaccount>Underkonton</a>
-     </div>
-    </div>
-
-pageAcceptTOS :: Context -> BS.ByteString -> Kontra Response
-pageAcceptTOS ctx tostext = 
-    let toptab = TopEmpty
-    in
-    renderFromBody ctx toptab kontrakcja $
-     <form method="post" action="/accepttos" id="toscontainer" class="overlay">
-      <a class="close"> </a>                  
-      <h2>Vänligen acceptera användarvillkoren</h2>
-      <% cdata $ BS.toString tostext %>
-     <br/>
-     <input type="checkbox" name="tos" id="tos"/>Jag har läst och accepterar SkrivaPå Allmänna Villkor<br/>
-     <div class="buttonbox">
-      <input class="submiter button" type="submit" value="Skicka"/>
-     </div> 
-    </form>
   
-oneRow :: (EmbedAsAttr m (Attr [Char] [Char]), EmbedAsAttr m (Attr [Char] UserID)) =>  User -> XMLGenT m (HSX.XMLGenerator.XML m)
-oneRow (user)  = 
-    <tr class="ui-state-default">
-     <td class="tdleft">
-      <input type="checkbox" name="doccheck" value=(userid user) class="check" />
-     </td>
-     <td><img width="17" height="17" src=""/></td>
-     <td><% userfullname user%></td>
-     <td><% useremail $ userinfo user %></td>
-     <td> - </td>
-     <td class="tdright"></td>
-    </tr>
-
-
-viewSubaccounts :: Context -> [User] -> Kontra Response
-viewSubaccounts ctx subusers = 
-    renderFromBody ctx TopAccount kontrakcja $ 
-    <form method="post" action= LinkSubaccount>
-     <h1>Underkonton</h1>
-     <table class="doctable" cellspacing="0">
-      <col/>
-      <col/>
-      <col/>
-      <col/>
-      <col/>
-      <thead>
-       <tr>
-        <td><a href="#" id="all">Alla</a></td>
-        <td></td> {- status icon -}
-        <td>Namn</td>
-        <td>E-post</td>
-        <td>Övrigt</td>
-        <td></td>
-       </tr>
-      </thead>
-      <tfoot>
-       <tr>
-        <td colspan="6" style="text-align: right; overflow: hidden;">
-          <div class="floatleft">
-           <input type="submit" class="button" name="remove" value="Radera"/>
-          </div>
-          {-
-          <div class="floatright">
-           <img src="/theme/images/status_draft.png"/> Utkast
-           <img src="/theme/images/status_rejected.png"/> Avbrutet
-           <img src="/theme/images/status_timeout.png"/> Förfallet
-           <img src="/theme/images/status_pending.png"/> Väntar
-           <img src="/theme/images/status_viewed.png"/> Granskat
-           <img src="/theme/images/status_signed.png"/> Undertecknat
-          </div>
-          -}
-          <div class="clearboth"/>
-         </td>
-       </tr>
-      </tfoot>
-     
-      <tbody id="selectable">
-       <% map oneRow subusers %>
-      </tbody>
-     </table><br/>
-      <table>
-	<tr> 
-          <td>Namn:</td> 
-          <td><input type="text" name="fullname"/></td> 
-        </tr>
-	<tr>
-          <td>E-post:</td> 
-          <td><input type="email" name="email"/></td> 
-        </tr>
-	<tr> 
-          <td><input class="button" id="create" type="submit" name="create" value="Skapa ny"/></td>
-          <td></td>
-	</tr>
-      </table>
-    </form>
-
+viewSubaccounts :: KontrakcjaTemplates -> [User] -> IO String
+viewSubaccounts templates subusers = renderTemplateComplex templates "viewSubaccounts" $
+                                                        (setAttribute "subusers" $ map userSmallView $ subusers) .
+                                                        (setAttribute "subaccountslink" $ show LinkSubaccount) 
 
 activatePageView::KontrakcjaTemplates -> String ->  IO String
 activatePageView templates tostext = renderTemplate templates "activatePageView" [("tostext",tostext)]
@@ -294,3 +165,25 @@ prettyName u = if (BS.null $ userfullname u)
                then unEmail $ useremail $ userinfo u 
                else userfullname u
           
+{- View Utills  -}
+
+{-| Users simple view (for templates) -}
+data UserSmallView = UserSmallView {
+                         usvId::String,  
+                         usvFullname::String,
+                         usvEmail::String,
+                         usvDocsCount::String
+                     } deriving (Data, Typeable)
+
+{-| Conversion from 'User' to 'Option', for select box UserSmallView  -}      
+userSmallView::User -> UserSmallView 
+userSmallView u = UserSmallView {     usvId = (show $ userid u)
+                                    , usvFullname = (BS.toString $ userfullname  u)
+                                    , usvEmail = (BS.toString $ unEmail $ useremail $ userinfo u)
+                                    , usvDocsCount = "" }
+
+userSmallViewWithDocsCount::(User,Int) -> UserSmallView 
+userSmallViewWithDocsCount (u,c) = UserSmallView { usvId = (show $ userid u)
+                                                 , usvFullname = (BS.toString $ userfullname  u)
+                                                 , usvEmail = (BS.toString $ unEmail $ useremail $ userinfo u)
+                                                 , usvDocsCount = show c }
