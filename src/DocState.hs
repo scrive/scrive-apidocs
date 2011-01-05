@@ -81,7 +81,7 @@ import Misc
 import Control.Monad
 import Data.List (find)
 import MinutesTime
-import Data.List (zipWith4)
+import Data.List (zipWith4,partition)
 import System.Random
 import Data.Word
 import Data.Int
@@ -1492,13 +1492,25 @@ archiveDocuments docidlist = do
                                Nothing -> documents
       
 
-fragileTakeOverDocuments :: UserID -> UserID -> Update Documents ()
-fragileTakeOverDocuments destuserid srcuserid = do
+fragileTakeOverDocuments :: User -> User -> Update Documents ()
+fragileTakeOverDocuments destuser srcuser = do
   documents <- ask
-  let hisdocuments = documents @= Author srcuserid
-      takeover document = modify $ updateIx (documentid document) (document { documentauthor = Author destuserid })
-  mapM_ takeover (IxSet.toList hisdocuments)
+  let hisdocuments = documents @= Author (userid srcuser)
+      sigdocuments = filter ((any (isMatchingSignatoryLink srcuser)) . documentsignatorylinks) (toList documents)
+  mapM_ (updateDoc takeoverAsAuthor) (IxSet.toList hisdocuments)
+  mapM_ (updateDoc takeoverAsSignatory) sigdocuments
   return ()
+  where updateDoc takeover document = modify $ updateIx (documentid document) (takeover document)
+        takeoverAsAuthor document = document { documentauthor = Author (userid destuser) }
+        takeoverAsSignatory document = document { documentsignatorylinks = takeoverSigLinks (documentsignatorylinks document) }
+        takeoverSigLinks siglinks = (map takeoverSigLink matching) ++ others
+                                    where (matching, others) = partition (isMatchingSignatoryLink srcuser) siglinks 
+        takeoverSigLink siglink = siglink {maybesignatory = Just (Signatory (userid destuser)),
+                                           signatorydetails = takeoverSigDetails (signatorydetails siglink) }
+        takeoverSigDetails sigdetails = sigdetails {signatoryname = BS.intercalate (BS.fromString " ") [userfstname info, usersndname info],
+                                                    signatorycompany = usercompanyname info,
+                                                    signatoryemail = unEmail $ useremail info }
+                                        where info = userinfo destuser
 
 --This is only for Eric functionality with awayting author
 --We should add current state checkers here (not co cancel closed documents etc.)

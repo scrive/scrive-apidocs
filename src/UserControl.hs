@@ -172,20 +172,21 @@ handleCreateSubaccount ctx@Context { ctxmaybeuser = Just (user@User { userid }),
   return LinkSubaccount
 
 handleRemoveSubaccounts :: Context -> Kontra KontraLink
-handleRemoveSubaccounts ctx@Context { ctxmaybeuser = Just (user@User { userid }), ctxhostpart } = do
+handleRemoveSubaccounts ctx@Context { ctxmaybeuser = Just (user), ctxhostpart } = do
   subidstrings <- getDataFnM (lookInputList "doccheck")
   let Just subids = sequence $ map (readM . LS.toString) subidstrings
-  removed <- liftIO $ removeSubaccounts userid subids
+  removed <- liftIO $ removeSubaccounts user subids
   return LinkSubaccount
 
-removeSubaccounts :: UserID -> [UserID] -> IO ()
+removeSubaccounts :: User -> [UserID] -> IO ()
 removeSubaccounts _ [] = return ()
-removeSubaccounts userid (subid:xs) = do
-    removeSubaccount userid subid
-    removeSubaccounts userid xs
+removeSubaccounts user (subid:xs) = do
+    removeSubaccount user subid
+    removeSubaccounts user xs
 
-removeSubaccount userid subId = do
-  takeover <- update $ FragileTakeOverDocuments userid subId
+removeSubaccount user subId = do
+  Just subuser <- query $ GetUserByUserID subId
+  takeover <- update $ FragileTakeOverDocuments user subuser
   maybeuser <- update $ FragileDeleteUser subId
   return ()
 
