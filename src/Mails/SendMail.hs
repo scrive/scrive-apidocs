@@ -49,7 +49,7 @@ data Mail =  Mail {
                attachments::[(BS.ByteString,BS.ByteString)], -- list of attachments (name,content). 
                from::Maybe User,
                mailInfo ::MailInfo 
-             }
+             } deriving Show
              
 data MailInfo = Invitation SignatoryLinkID | None deriving (Show,Read)
 
@@ -62,7 +62,7 @@ emptyMail = Mail { fullnameemails=[], title= BS.empty, content = BS.empty, attac
        2) If sendMails in MailsConfig is not set we only create local email file and try to open it.
  -}
 sendMail::MailsConfig -> Mail->IO ()         
-sendMail config (Mail {fullnameemails,title,content,attachments,from,mailInfo}) = do
+sendMail config mail@(Mail {fullnameemails,title,content,attachments,from,mailInfo}) = do
   tm <- getCurrentTime
   let mailtos = map fmt fullnameemails 
       -- ("Gracjan Polak","gracjan@skrivapa.se") => "Gracjan Polak <gracjan@skrivapa.se>"
@@ -113,8 +113,9 @@ sendMail config (Mail {fullnameemails,title,content,attachments,from,mailInfo}) 
                                                             , (sendgridSMTP config)
                                                             , "-k", "--ssl", "--mail-from"
                                                             , "<"++(ourInfoEmail config)++">"]++ rcpt) wholeContent
-            when (code /= ExitSuccess) $
-               logM "Kontrakcja.Mail" ERROR $ "Cannot execute ./curl to send emails"
+            if (code /= ExitSuccess) 
+             then  logM "Kontrakcja.Mail" ERROR $ "Cannot execute ./curl to send emails"
+             else  logM "Kontrakcja.Mail" ERROR $ "Curl executed with mail: " ++ (show $ mail {attachments = map (\(x,_)->(x,BS.empty) )attachments})
          return ()   
    else
         do
