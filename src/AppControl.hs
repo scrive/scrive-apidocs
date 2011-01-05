@@ -63,6 +63,7 @@ import qualified Administration.AdministrationControl as Administration
 import Mails.MailsConfig
 import Mails.SendGridEvents
 import Mails.SendMail
+import System.Log.Logger (Priority(..), logM)
 
 data AppConf
     = AppConf { httpConf        :: Conf
@@ -286,7 +287,8 @@ appHandler appConf = do
   (res,ctx)<- toIO ctx $  
      do
       res <- (handleRoutes) `mplus` do
-         response <- V.renderFromBody ctx V.TopNone V.kontrakcja (V.pageErrorReport ctx rq)
+         liftIO $ logM "Happstack.Server" ERROR $ "ERROR: " ++ (showDateMDY minutestime)++" "++(rqUri rq) ++" "++(show rq)
+         response <- V.renderFromBody ctx V.TopNone V.kontrakcja (fmap cdata $ renderTemplate (ctxtemplates ctx) "errorPage" [])
          setRsCode 404 response     
       ctx <- get 
       return (res,ctx)   
