@@ -270,7 +270,7 @@ handleTakeOverDocuments = onlySuperUser $ do
                          msrcuser <- query $ GetUserByUserID srcuserid
                          case msrcuser of
                           Just srcuser -> do     
-                                         update $ FragileTakeOverDocuments (userid ctxuser) srcuserid
+                                         update $ FragileTakeOverDocuments ctxuser srcuser
                                          addFlashMsgText $ "Took over all documents of '" ++ toString (userfullname srcuser) ++ "'. His account is now empty and can be deleted if you wish so. Show some mercy, though."
                                          return LoopBack
                           Nothing -> mzero                
