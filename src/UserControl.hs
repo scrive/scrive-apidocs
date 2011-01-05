@@ -327,10 +327,10 @@ handleActivate sid mh = do
                             case (checkPasswords password password2) of
                              Right () ->  if (tos)
                                            then do  
-                                            update $ SetUserInfo (userid user) $ (userinfo user) {userfstname = BS.fromString name}
                                             passwordhash <- liftIO $ createPassword $ BS.fromString password
                                             update $ SetUserPassword user passwordhash
                                             update $ AcceptTermsOfService (userid user) (ctxtime ctx)
+                                            update $ SetUserInfo (userid user) $ (userinfo user) {userfstname = BS.fromString name}
                                             dropExternalSession sid mh
                                             addFlashMsgHtmlFromTemplate =<< (liftIO $ flashMessageUserActivated (ctxtemplates ctx))
                                             logUserToContext $ Just user
