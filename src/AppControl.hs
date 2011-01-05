@@ -287,7 +287,7 @@ appHandler appConf = do
   (res,ctx)<- toIO ctx $  
      do
       res <- (handleRoutes) `mplus` do
-         liftIO $ logM "Happstack.Server" ERROR $ "ERROR: " ++ (showDateMDY minutestime)++" "++(rqUri rq) ++" "++(show rq)
+         liftIO $ logM "Happstack.Server" ERROR $ "ERROR" ++ (showDateMDY minutestime)++" "++(rqUri rq) ++" "++(show rq)
          response <- V.renderFromBody ctx V.TopNone V.kontrakcja (fmap cdata $ renderTemplate (ctxtemplates ctx) "errorPage" [])
          setRsCode 404 response     
       ctx <- get 
