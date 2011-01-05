@@ -1,0 +1,62 @@
+How to get started with automated tests in Selenium
+---------------------------------------------------
+
+[Warning:  I started playing around with Selenium about a week ago, and I don't know Ruby, so please forgive any bad information.]
+
+
+1. Make you sure you have java.
+   
+   * run "java -version", if you get nothing, install it
+
+2. Check that you can run the Selenium server
+
+   * cd to kontrakcja/selenium-test/lib
+
+   * run "java -jar selenium-server-standalone-2.0a7.jar", and check it looks sensible
+
+3. Install Ruby & Ruby Gems
+
+4. Install RSpec
+
+   * run "gem install --version '=1.2.9' rspec"
+
+   * in ubuntu, i also needed "sudo apt-get install librspec-ruby"
+
+   * in windows, you'll also need "gem install win32console" to get pretty coloured output
+
+   * check it installed okay by running "spec -v".  
+  
+5. Install Ruby Selenium RC client
+
+   * run "gem install selenium-client"
+
+6. Manual installation check
+
+   * Run the Selenium server as in 2
+
+   * Test that google lets you find cute cats!
+       
+       * cd to kontrakcja/selenium-test/src
+
+       * run rspec by calling "google_spec.rb", hopefully a browser will appear and you'll catch a brief look at some cute cats.
+
+       * make the rspec output prettier by calling "spec --colour --format specdoc google_spec.rb"
+
+7. Um,..., what just happened?!
+
+   RSpec just ran google_spec.rb as a test.  Using the selenium client API's this test chats to the selenium server, and tells it the tests it wants to run.  The selenium server then opens up a browser (possibly many browsers, depending on what you have installed, and how it's configured), and executes the tests on them.  It interacts with the browser in a way I can't fathom, but involves JavaScript.  It's a bit convuluted - but there are selenium client API's available in a whole host of languages, and this can be supported with client/server separation - I guess there are numerous other advantages.
+
+8. This looks time consuming
+
+  * I've tried to help by creating the ruby script kontrakcja/selenium-test/src/runAll.rb, which takes care of starting and stopping the kontrakcja and selenium servers for you, and then run anything under the src dir ending in _spec.rb as an RSpec test.  
+
+  * The runAll.rb script uses a library called POpen4 (http://popen4.rubyforge.org/) to help it to run command line type stuff for both Unix and Windows machines, you'll need to install it by running "gem install popen4".
+
+   * Now you can run the tests by cd'ing to kontrakcja/selenium-test and calling "ruby src/runAll.rb".
+
+9. Adding a test
+   
+   * Either add a requirement to an existing test file, or add a new test file.
+
+   * You will be writing the test using the Selenium Ruby Client API.  To help you can install a Firefox Selenium IDE plugin that will record your actions on the browser, which can then be exported as Ruby RSpec files.  This plugin doesn't generate fantastic code, but I find it's a good starting point.
+
