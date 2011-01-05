@@ -703,7 +703,7 @@ pageDocumentForSign action document ctx  invitedlink wassigned author =
                 , <script src="/js/signatory.js" /> ]
        magichash = signatorymagichash invitedlink
        authorname = signatoryname documentauthordetails
-       allbutinvited = filter (/= invitedlink) (documentsignatorylinks document)
+       allbutinvited = {- filter (/= invitedlink) -} (documentsignatorylinks document)
        documentauthordetails = signatoryDetailsFromUser author
        rejectMessage =  fmap cdata $ mailRejectMailContent (ctxtemplates ctx) Nothing ctx (prettyName author) document (personname invitedlink)
    in showDocumentPageHelper document helpers
