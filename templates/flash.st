@@ -29,3 +29,5 @@ flashMessageUserWithSameEmailExists=En användare med samma e-post existerar red
 ###
 flashMessageActivationLinkNotValid=Vi beklagar. Länken är inte längre giltig.<BR/> Vänligen använd "Glömt lösenord" för att generera en ny länk.
 ###
+flashMessageUserActivated=Välkommen till SkrivaPå!
+###

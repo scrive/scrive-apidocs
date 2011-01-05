@@ -68,15 +68,19 @@ activatePageView=   <form action="" method="post">
                      <div class="passwordAndSubmit">
                      <table><tbody>
                        <tr>
-                        <td>Nytt lösenord:</td>
+                        <td>Namn:</td>
+                        <td><input type="text" name="name" autocomplete="off" /></td>
+                       </tr>
+                       <tr>
+                        <td>Välj lösenord:</td>
                         <td><input type="password" name="password" autocomplete="off" /></td>
                        </tr>
                        <tr>
-                        <td>Upprepa nytt lösenord:</td>
+                        <td>Upprepa lösenord:</td>
                         <td><input type="password" name="password2" autocomplete="off" /></td>
                        </tr>
                       </tbody></table>
-                    <input class="button" type="submit" value="Activate"/>
+                    <input class="button" type="submit" value="Gå vidare"/>
                     </div>
                     </div>
 ###
