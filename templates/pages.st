@@ -84,3 +84,12 @@ activatePageView=   <form action="" method="post">
                     </div>
                     </div>
 ###
+errorPage=<div style="width:500px;margin-top:100px;border:5px solid #AAAACC;margin-left: auto;margin-right: auto;text-align:center">
+              <div style="padding:30px">
+              <div style="font-size:19pt;font-weight:bold" > Whoops, an error occurred </div>
+              <BR/>
+              <BR/>
+              <div> Don't worry, we're looking into it.</div>
+              </div>
+           </div>
+####
