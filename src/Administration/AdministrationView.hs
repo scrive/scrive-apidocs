@@ -35,6 +35,7 @@ import Payments.PaymentsState
 import Payments.PaymentsUtils
 import Misc
 import MinutesTime
+import UserView
 
 {-| Main admin page - can go from here to other pages -}
 adminMainPage::KontrakcjaTemplates ->  IO String
@@ -119,14 +120,6 @@ data AdminUsersPageParams = AdminUsersPageParams {
                              startletter::Maybe String,
                              page::Int
                             } 
-
-{-| Users simple view (for templates) -}
-data UserSmallView = UserSmallView {
-                         usvId::String,  
-                         usvFullname::String,
-                         usvEmail::String,
-                         usvDocsCount::String
-                     } deriving (Data, Typeable)
                      
 {-| Users full view (for templates) -}
 data UserAdminView = UserAdminView {
@@ -192,18 +185,5 @@ userAdminView u =  UserAdminView {
                                                                              
                    }           
                                      
-{-| Conversion from 'User' to 'Option', for select box UserSmallView  -}      
-userSmallView::User -> UserSmallView 
-userSmallView u = UserSmallView {     usvId = (show $ userid u)
-                                    , usvFullname = (toString $ userfullname  u)
-                                    , usvEmail = (toString $ unEmail $ useremail $ userinfo u)
-                                    , usvDocsCount = "" }
-
-userSmallViewWithDocsCount::(User,Int) -> UserSmallView 
-userSmallViewWithDocsCount (u,c) = UserSmallView { usvId = (show $ userid u)
-                                                 , usvFullname = (toString $ userfullname  u)
-                                                 , usvEmail = (toString $ unEmail $ useremail $ userinfo u)
-                                                 , usvDocsCount = show c }
-
 letters::[String]
 letters = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","X","Y","Z","Å","Ä","Ö"]
