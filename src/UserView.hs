@@ -24,6 +24,7 @@ module UserView(
     flashMessagePasswordChangeLinkNotValid,
     flashMessageUserWithSameEmailExists,
     flashMessageActivationLinkNotValid,
+    flashMessageUserActivated,
     --utils  
     prettyName) where
 
@@ -283,6 +284,9 @@ flashMessageUserWithSameEmailExists templates = renderTemplate templates "flashM
 
 flashMessageActivationLinkNotValid:: KontrakcjaTemplates -> IO String
 flashMessageActivationLinkNotValid templates = renderTemplate templates "flashMessageActivationLinkNotValid" []
+
+flashMessageUserActivated:: KontrakcjaTemplates -> IO String
+flashMessageUserActivated templates = renderTemplate templates "flashMessageUserActivated" []
 
 {- Same as personname (username or email) from DocView but works on User -}
 prettyName::User -> BS.ByteString

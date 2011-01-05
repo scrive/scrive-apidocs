@@ -137,17 +137,13 @@ newUserMailContent=
       <p>Hej <strong>$personname$</strong>,</p>
 
       <p>Jag heter Lukas Duczko och är VD på SkrivaPå. Tack för att du har skapat ett konto hos oss. 
-         Vi hoppas att du kommer att bli nöjd med våra tjänster. Tveka inte att höra av dig med 
-         feedback eller bara en enkel hälsning. Din åsikt är värdefull.</p>
-
-      <p>Användarnamn: <b>$email$</b><br/>
+         Vi hoppas att du kommer att bli nöjd med våra tjänster.
+         Tveka inte att höra av dig med feedback eller bara en enkel hälsning. Din åsikt är värdefull.</p>
+      <p>Användarnamn: <a style="color:#0000CC;font-weight:bold">$email$</a><br/>
       </p>
-      <p> <a href="$ctxhostpart$$activatelink$">$ctxhostpart$$activatelink$</a>
+      <p>Du aktiverar ditt konto genom att klicka på länken nedan. Länken är giltig i 12 timmar. <BR/>
+         <a href="$ctxhostpart$$activatelink$">$ctxhostpart$$activatelink$</a>
       </p>
-      <p>Du kan nu logga in från vår hemsida eller genom att klicka på följande länk:<br/>
-      <a href="$ctxhostpart$/login">$ctxhostpart$/login</a>
-      </p>
-
       <p>Med vänliga hälsningar<br/>/Lukas Duczko och team <a href="$ctxhostpart$/">SkrivaPå</a>.
       </p>
      </span>

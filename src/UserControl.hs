@@ -319,6 +319,7 @@ handleActivate sid mh = do
                         ctx <- get
                         muser <- userFromExternalSessionData sid mh 
                         tos <- fmap ((==) $ Just "on") $ getField "tos"
+                        name <- fmap (fromMaybe "") $ getField "name"
                         password <- fmap (fromMaybe "") $ getField "password"
                         password2 <- fmap (fromMaybe "") $ getField "password2"
                         case muser of 
@@ -326,11 +327,13 @@ handleActivate sid mh = do
                             case (checkPasswords password password2) of
                              Right () ->  if (tos)
                                            then do  
+                                            update $ SetUserInfo (userid user) $ (userinfo user) {userfstname = BS.fromString name}
                                             passwordhash <- liftIO $ createPassword $ BS.fromString password
                                             update $ SetUserPassword user passwordhash
                                             update $ AcceptTermsOfService (userid user) (ctxtime ctx)
                                             dropExternalSession sid mh
-                                            addFlashMsgHtmlFromTemplate =<< (liftIO $ flashMessageUserDetailsSaved  (ctxtemplates ctx))
+                                            addFlashMsgHtmlFromTemplate =<< (liftIO $ flashMessageUserActivated (ctxtemplates ctx))
+                                            logUserToContext $ Just user
                                             return LinkMain 
                                            else do
                                             addFlashMsgText =<< (liftIO $ flashMessageMustAcceptTOS (ctxtemplates ctx)) 
