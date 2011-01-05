@@ -25,6 +25,7 @@ module Administration.AdministrationControl(
           , handleDeleteAccount
           , handleCreateUser
           , handleUserEnableTrustWeaverStorage
+          , handleMigrate0
           ) where
 import "mtl" Control.Monad.State
 import AppView
@@ -380,7 +381,44 @@ getUserPaymentAccountChange =  do
                                     -> UserPaymentAccount  {
                                             paymentaccountmoney  = maybe' paymentaccountmoney  mpaymentaccountmoney
                                           , paymentaccountfreesignatures = maybe' paymentaccountfreesignatures mpaymentaccountfreesignatures
-                                        })                                        
+                                        })        
+
+replace0SignatoryLinkID :: SignatoryLink -> Kontra SignatoryLink
+replace0SignatoryLinkID l 
+    | (signatorylinkid l == SignatoryLinkID 0) = do
+                                                  liftIO $ print "changed 0 linkid"
+                                                  linkid <- update $ GetUniqueSignatoryLinkID
+                                                  return l { signatorylinkid = linkid}
+    | otherwise = return l
+
+replace0MagicHash :: SignatoryLink -> Kontra SignatoryLink
+replace0MagicHash l
+    | (signatorymagichash l == MagicHash 0) = do
+                                               liftIO $ print "changed 0 magichash"
+                                               magichash <- update $ GetMagicHash
+                                               return l { signatorymagichash = magichash }
+    | otherwise = return l
+                          
+migrate0SignatoryLinks :: [SignatoryLink] -> Kontra [SignatoryLink]
+migrate0SignatoryLinks links = do
+    l1 <- sequence $ map replace0SignatoryLinkID links
+    l2 <- sequence $ map replace0MagicHash l1
+    return l2
+
+{- |
+   A temporary service to fix the migration; 0 MagicHash and 0 SignatoryLinkID is replaced with new
+   random one.
+ -}
+handleMigrate0 :: Kontra Response
+handleMigrate0 = onlySuperUser $ do
+ documents <- query $ GetDocuments
+ d2 <- sequence $ map (\d -> do
+                               links <- migrate0SignatoryLinks $ documentsignatorylinks d
+                               d2 <- update $ SetSignatoryLinks (documentid d) links
+                               return d2)
+                      documents
+ liftIO $ print d2 -- force the value
+ sendRedirect LinkAdminOnly
 
 {- | Reads params and returns function for conversion of user payment policy. With no param clears custom and temporary fields !!!!-}
 getUserPaymentPolicyChange::Kontra (UserPaymentPolicy -> UserPaymentPolicy)

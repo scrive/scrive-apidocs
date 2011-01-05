@@ -155,6 +155,11 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "payments"          $ hget0  $ Payments.handlePaymentsModelForViewView
      , dir "adminonly" $ dir "advpayments"       $ hget0  $ Payments.handlePaymentsModelForEditView
      , dir "adminonly" $ dir "advpayments"       $ hpost0 $ Payments.handleAccountModelsChange
+
+     -- a temporary service to help migration
+
+     , dir "adminonly" $ dir "migrate0" $ hget0 $ Administration.handleMigrate0
+
      , dir "dave" $ dir "document" $ hget1 $ daveDocument
      , dir "dave" $ dir "user"     $ hget1 $ daveUser
            

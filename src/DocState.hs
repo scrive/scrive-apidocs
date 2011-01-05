@@ -59,6 +59,9 @@ module DocState
     , RestartDocument(..)
     , ChangeSignatoryEmailWhenUndelivered(..)
     , signatoryDetailsFromUser
+    , SetSignatoryLinks(..)
+    , GetUniqueSignatoryLinkID(..)
+    , GetMagicHash(..)
     )
 where
 import Happstack.Data
@@ -1353,6 +1356,13 @@ authorSignDocument documentid time ipnumber author =
           Timedout -> Left "Förfallodatum har passerat" -- possibly quite strange here...
           _ ->        Left ("Bad document status: " ++ show (documentstatus document))
   
+getMagicHash :: Update Documents MagicHash
+getMagicHash = getRandom
+
+setSignatoryLinks :: DocumentID -> [SignatoryLink] -> Update Documents (Either String Document)
+setSignatoryLinks docid links =
+    modifyDocument docid (\doc -> Right doc { documentsignatorylinks = links })
+
 modifyDocument :: DocumentID 
                -> (Document -> Either String Document) 
                -> Update Documents (Either String Document)
@@ -1600,6 +1610,12 @@ signLinkFromDetails emails details = do
                      , invitationdeliverystatus = Unknown
                      }
 
+getUniqueSignatoryLinkID :: Update Documents SignatoryLinkID
+getUniqueSignatoryLinkID = do
+  sg <- ask
+  linkid <- getUnique sg SignatoryLinkID
+  return linkid
+
 setDocumentTrustWeaverReference :: DocumentID -> String -> Update Documents (Either String Document)
 setDocumentTrustWeaverReference documentid reference = do
   modifyDocument documentid $ \document ->
@@ -1665,4 +1681,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'getFilesThatShouldBeMovedToAmazon
                         , 'restartDocument
                         , 'changeSignatoryEmailWhenUndelivered
+                        , 'setSignatoryLinks
+                        , 'getUniqueSignatoryLinkID
+                        , 'getMagicHash
                         ])
