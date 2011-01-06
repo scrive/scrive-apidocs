@@ -534,11 +534,17 @@ handleIssueShowTitleGet docid _title = withUserGet $ checkUserTOSGet $ do
    let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
    return res2
 
+{- |
+   Get multiple post/get params and return them in an array
+ -}
 getAndConcat :: String -> Kontra [BS.ByteString]
 getAndConcat field = do
   values <- getDataFnM $ lookInputList field
   return $ map concatChunks values
 
+{- |
+   do the work necessary for saving a document being authored
+ -}
 updateDocument :: Context -> Document -> Kontra Document  
 updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} = do
   -- each signatory has these predefined fields
