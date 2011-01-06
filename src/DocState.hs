@@ -1403,7 +1403,7 @@ rejectDocument documentid signatorylinkid1 time ipnumber = do
            _ ->        Left "Bad document status"
   
 
--- ^ 'markDocumentSeen' should set the time when the document was seen
+-- | 'markDocumentSeen' should set the time when the document was seen
 -- first time by the user. It should change the first seen time later
 -- on.
 markDocumentSeen :: DocumentID 
