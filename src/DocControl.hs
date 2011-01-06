@@ -324,27 +324,39 @@ landpageSignInvite documentid = withUserGet $ do
                        else landpageSendInviteView (ctxtemplates ctx) document
   renderFromBody ctx TopNone kontrakcja $ cdata content
 
+{- |
+   The author has signed the document
+ -}
+authorHasSigned :: UserID -> Document -> Bool
+authorHasSigned authorid document = not $ Data.List.null $ filter (not . isNotLinkForUserID authorid) (documentsignatorylinks document)
+
+{- |
+   When someone has signed a document
+   URL: /landpage/signed
+   Method: GET
+ -}
+landpageSigned :: DocumentID -> SignatoryLinkID -> Kontra Response
 landpageSigned documentid signatorylinkid = do
   ctx <- get
-  mdocument <- query $ GetDocumentByDocumentID documentid
-  case mdocument of
-    Nothing -> mzero
-    Just document -> do
-                     signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
-                     maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
-                     content <- liftIO $ landpageSignedView (ctxtemplates ctx) document signatorylink (isJust maybeuser)
-                     renderFromBody ctx TopEmpty kontrakcja $ cdata content
+  document <- queryOrFail $ GetDocumentByDocumentID documentid
+  signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
+  maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
+  content <- liftIO $ landpageSignedView (ctxtemplates ctx) document signatorylink (isJust maybeuser)
+  renderFromBody ctx TopEmpty kontrakcja $ cdata content
 
+{- |
+   When someone rejects a document
+   URL: /landpage/rejected
+   Method: GET
+ -}
+landpageRejected :: DocumentID -> SignatoryLinkID -> Kontra Response
 landpageRejected documentid signatorylinkid = do
   ctx <- get
-  mdocument <- query $ GetDocumentByDocumentID documentid
-  case mdocument of
-    Nothing -> mzero
-    Just document -> do
-                     signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
-                     maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
-                     content <- liftIO $ landpageRejectedView (ctxtemplates ctx) document
-                     renderFromBody ctx TopEmpty kontrakcja $ cdata content
+  document <- queryOrFail $ GetDocumentByDocumentID documentid
+  signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
+  content <- liftIO $ landpageRejectedView (ctxtemplates ctx) document
+  renderFromBody ctx TopEmpty kontrakcja $ cdata content
+
 {- |
  Here we need to save the document either under existing account or create a new account
  send invitation email and put the document in that account
