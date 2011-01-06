@@ -112,7 +112,11 @@ sendInvitationEmail1 ctx document author signatorylink = do
            then mailInvitationToSign (ctxtemplates ctx) ctx document signatorylink author
            else mailInvitationToSend (ctxtemplates ctx) ctx document signatorylink author
   attachmentcontent <- AWS.getFileContents (ctxs3action ctx) $ head $ documentfiles document
-  sendMail (ctxmailsconfig ctx) $ mail { fullnameemails =  [(signatoryname,signatoryemail)]  , attachments = [(documenttitle,attachmentcontent)] , from=ctxmaybeuser ctx, mailInfo = Invitation signatorylinkid } 
+  sendMail (ctxmailsconfig ctx) $ 
+           mail { fullnameemails = [(signatoryname,signatoryemail)]
+                , attachments = [(documenttitle,attachmentcontent)]
+                , mailInfo = Invitation signatorylinkid
+                } 
 
 sendClosedEmails :: Context -> Document -> IO ()
 sendClosedEmails ctx document = do
