@@ -289,7 +289,11 @@ rejectDocument documentid
         do  
           postDocumentChangeAction document Pending (Just signatorylinkid1)
           return $ LinkRejected documentid signatorylinkid1
-  
+
+{- |
+   Get the SignatoryLink associated with a SignatoryLinkID or mzero if not found
+ -}
+signatoryLinkFromDocumentByID :: Document -> SignatoryLinkID -> Kontra SignatoryLink
 signatoryLinkFromDocumentByID document@Document{documentsignatorylinks} linkid = do
     let invitedlinks = filter (\x -> signatorylinkid x == linkid
                                {- && signatorymagichash x == magichash1 -})
@@ -297,7 +301,6 @@ signatoryLinkFromDocumentByID document@Document{documentsignatorylinks} linkid =
     case invitedlinks of
       [invitedlink] -> return invitedlink
       _ -> mzero
-    
 
 landpageSignInvite documentid = do
   ctx <- get
