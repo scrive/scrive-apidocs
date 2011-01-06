@@ -397,31 +397,28 @@ landpageSaved documentid signatorylinkid = do
   content <- liftIO $ landpageDocumentSavedView (ctxtemplates ctx)
   renderFromBody ctx TopDocument kontrakcja $ cdata content
 
+{- |
+   Show the document to be signed
+ -}
 handleSignShow :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra Response
 handleSignShow documentid 
                signatorylinkid1
                magichash1 = do
+  doc1 <- queryOrFail $ GetDocumentByDocumentID documentid
+  checkLinkIDAndMagicHash doc1 signatorylinkid1 magichash1
+
   ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber}) <- get
-               
-  -- FIXME: this is so wrong on so many different levels...
+  
   mdocument <- update $ MarkDocumentSeen documentid signatorylinkid1 ctxtime ctxipnumber
+  -- I believe this is redundant - Eric
   document <- maybe mzero return mdocument
-             
-  let invitedlinks = filter (\x -> signatorylinkid x == signatorylinkid1
-                                   && signatorymagichash x == magichash1)
-                     (documentsignatorylinks document)
-  invitedlink <- case invitedlinks of
-                   [invitedlink] -> return invitedlink
-                   _ -> mzero
-  let wassigned = f invitedlink
-      f (SignatoryLink {maybesigninfo}) = isJust maybesigninfo 
+
+  invitedlink <- signatoryLinkFromDocumentByID document signatorylinkid1
+  let wassigned = isJust $ maybesigninfo invitedlink
       authoruserid = unAuthor $ documentauthor document
-  mauthor <- query $ GetUserByUserID authoruserid
 
-  -- FIXME: this is a bug really
-  when (not (isJust mauthor)) mzero
+  author <- queryOrFail $ GetUserByUserID authoruserid
 
-  let Just author = mauthor
   let authorname = prettyName author
       invitedname = signatoryname $ signatorydetails $ invitedlink 
   if wassigned
