@@ -105,7 +105,8 @@ handleRoutes = msum [
      , dir "d" $ hget0  $ DocControl.handleIssueGet
      , dir "d" $ hget1  $ DocControl.handleIssueShowGet
      , dir "d" $ hget2  $ DocControl.handleIssueShowTitleGet
-     , dir "d" $ hpost0 $ DocControl.handleIssuePost
+     , dir "d" $ param "doc" $ hpost0 $ DocControl.handleIssueNewDocument
+     , dir "d" $ param "archive" $ hpost0 $ DocControl.handleIssueArchive
      , dir "d" $ hpost1 $ DocControl.handleIssueShowPost
 
      --This are actions on documents. We may integrate it with all the stuff above, but I don't like it. MR
@@ -115,7 +116,7 @@ handleRoutes = msum [
      , dir "restart" $ hpost1 $ DocControl.handleRestart
      , dir "cancel"  $ hpost1 $ DocControl.handleCancel
      
-     , dir "pages"  $ hget2  $ DocControl.showPage
+     , dir "pages"  $ hget2 $ DocControl.showPage
 
      , dir "landpage" $ dir "signinvite" $ hget1 $ DocControl.landpageSignInvite
      , dir "landpage" $ dir "signed"     $ hget2 $ DocControl.landpageSigned 
