@@ -4,12 +4,13 @@
    DocControl represents the controler (in MVC) of the document.
  -}
 module DocControl where
+
+import AppView
+import Control.Concurrent
 import Control.Monad
 import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Trans
-import AppView
-import Control.Concurrent
 import Data.Bits
 import Data.List
 import Data.Maybe
@@ -24,9 +25,9 @@ import Happstack.Server.HSP.HTML (webHSP)
 import Happstack.State (update,query)
 import Happstack.Util.Common
 import KontraLink
+import Mails.SendMail
 import MinutesTime
 import Misc
-import Mails.SendMail
 import System.Cmd
 import System.Directory
 import System.Exit
@@ -35,6 +36,8 @@ import System.Process
 import User
 import UserControl
 import UserState
+import UserView (prettyName)
+import qualified Amazon as AWS
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as BSL
@@ -42,11 +45,9 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 import qualified Data.Set as Set
-import qualified Seal as Seal
 import qualified Network.HTTP as HTTP
-import qualified Amazon as AWS
+import qualified Seal as Seal
 import qualified TrustWeaver as TW
-import UserView (prettyName)
 
 {-
   Document state transitions are described in DocState.
