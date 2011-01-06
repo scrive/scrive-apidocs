@@ -34,7 +34,7 @@ import Session
 import System.IO.Unsafe
 import System.Log.Logger
 import System.Process
-import Happstack.State (update,query,getRandomR,Query,QueryEvent)
+import Happstack.State (query,QueryEvent)
 import UserState
 import qualified Codec.Binary.Base64 as Base64
 import qualified Data.Binary as Binary
