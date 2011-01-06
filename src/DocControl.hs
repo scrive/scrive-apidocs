@@ -214,13 +214,25 @@ sendRejectAuthorEmail customMessage ctx document signalink = do
       name1 = userfullname authoruser
   sendMail  (ctxmailsconfig ctx) $ mail { fullnameemails = [(name1,email1)]}
 
-handleSTable = withUserGet $ checkUserTOSGet $
-    do
+{- |
+   Render a page of documents that a user has signed
+   URL: /s
+   Method: Get
+   ??: Is this what it does?
+ -}
+handleSTable :: Kontra Response
+handleSTable = withUserGet $ checkUserTOSGet $ do
       ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) <- get
       let user = fromJust ctxmaybeuser
       documents <- query $ GetDocumentsBySignatory user
       renderFromBody ctx TopNone kontrakcja (pageDocumentList ctxtime user documents)
 
+{- |
+   Control the signing of a document
+   URL: /s/{docid}/{signatorylinkid1}/{magichash1}
+   Method: POST
+   NOTE: magichash1 is currently ignored! (though it must exist)
+ -}
 signDocument :: DocumentID 
              -> SignatoryLinkID 
              -> MagicHash
