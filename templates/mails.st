@@ -68,8 +68,10 @@ mailInvitationToSignContent=
                     <br/>
                   2. Granska online<br/>
                   3. Underteckna<br/>
-                  4. Färdig<br/> 
-                 </p>
+                  4. Färdig</p>
+		 <p>
+		 <i>Detta mail får inte vidarebefordras.</i>
+		 </p>
                 </span>
                 $footer$
 ###
@@ -87,8 +89,10 @@ mailInvitationToSendContent=
                     <br/>
                   2. Granska online<br/>
                   3. Underteckna<br/>
-                  4. Färdig<br/> 
-                 </p>
+                  4. Färdig</p>
+		 <p>
+		 <i>Detta mail får inte vidarebefordras.</i>
+		 </p>
                 </span>
                 $footer$
 ######                
@@ -124,8 +128,10 @@ remindMailNotSignedContent=
                                  <a href="$link$">$link$</a><br/>
                              2. Granska online<br/>
                              3. Underteckna<br/>
-                             4. Färdig<br/>
-                             </p>
+                             4. Färdig</p>
+			    <p>
+			    <i>Detta mail får inte vidarebefordras.</i>
+			    </p>
                              </span>
                              $footer$                            
                              
