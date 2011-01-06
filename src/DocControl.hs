@@ -1065,26 +1065,20 @@ showPage fileid pageno = do
       return $ ifModifiedSince modtime rq res2
     _ -> mzero
 
---In this and next check if current is author MR
-handleCancel:: String -> Kontra KontraLink
-handleCancel docid =  do
-                       ctx <- get
-                       mdoc <- query $ GetDocumentByDocumentID (read docid)
-                       customMessage <- fmap (fmap concatChunks) $ getDataFn' (lookBS "customtext")  
-                       case (mdoc) of
-                          Just doc -> withDocumentAuthor doc $
-                                      do 
-                                       mdoc' <- update $ CancelDocument(documentid doc) 
-                                       let success = isJust mdoc
-                                       case mdoc' of 
-                                        Just doc' ->
-                                             do
-                                              sendCancelMailsForDocument customMessage ctx doc
-                                              fm <-liftIO $ flashMessageCanceled (ctxtemplates ctx)
-                                              addFlashMsgHtmlFromTemplate fm
-                                        Nothing -> addFlashMsgText "Could not cancel"
-                                       return (LinkIssueDoc $ documentid doc)
-                          Nothing -> mzero  
+handleCancel:: DocumentID -> Kontra KontraLink
+handleCancel docid = withUserPost $ do
+  ctx@Context { ctxmaybeuser = Just user } <- get
+  doc <- queryOrFail $ GetDocumentByDocumentID docid
+  failIfNotAuthor doc user
+  customMessage <- fmap (fmap concatChunks) $ getDataFn' (lookBS "customtext")  
+  mdoc' <- update $ CancelDocument(documentid doc) 
+  case mdoc' of 
+    Just doc' -> do
+          sendCancelMailsForDocument customMessage ctx doc
+          fm <-liftIO $ flashMessageCanceled (ctxtemplates ctx)
+          addFlashMsgHtmlFromTemplate fm
+    Nothing -> addFlashMsgText "Could not cancel"
+  return (LinkIssueDoc $ documentid doc)
 
 handleWithdrawn:: String -> Kontra KontraLink
 handleWithdrawn docid = do
