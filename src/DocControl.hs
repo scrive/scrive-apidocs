@@ -484,17 +484,14 @@ handleIssueShowGet docid = withUserGet $ checkUserTOSGet $ do
    User must be logged in.
    Document must exist
    User must be author
+   URL: /d/{documentid}
+   Method: POST
  -}
 handleIssueShowPost :: DocumentID -> Kontra KontraLink
-handleIssueShowPost docid = withUserPost $ withDocumentPost docid $ do
-  Just document@Document{ documentauthor
-                        , documentid
-                        } <- query $ GetDocumentByDocumentID $ docid
-  
-  ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) <- get
-     
-  -- only authors can modify documents
-  when (not $ isAuthor document user) mzero
+handleIssueShowPost docid = withUserPost $ do
+  document <- queryOrFail $ GetDocumentByDocumentID $ docid
+  ctx@Context { ctxmaybeuser = Just user } <- get
+  failIfNotAuthor document user
      
   -- something has to change here
   case documentstatus document of
@@ -502,22 +499,19 @@ handleIssueShowPost docid = withUserPost $ withDocumentPost docid $ do
                        doc2 <- updateDocument ctx document
                        if documentstatus doc2 == Pending
                         -- It went to pending, so it's been sent to signatories
-                        then return $ LinkSignInvite documentid
+                        then return $ LinkSignInvite docid
                         -- otherwise it was just a save
                         else do
                           addFlashMsgText =<< (liftIO $ flashDocumentDraftSaved $ ctxtemplates ctx)
                           return LinkIssue
        AwaitingAuthor -> do 
-                          doc2 <- update $ CloseDocument documentid 
+                          doc2 <- update $ CloseDocument docid 
                           case doc2 of
-                            -- this should be impossible, but what should we do in this case?
-                            Nothing -> return LinkIssue
+                            Nothing -> return $ LinkIssueDoc docid
                             Just d -> do 
                                        postDocumentChangeAction d AwaitingAuthor Nothing
                                        return LinkIssue
-       -- FIXME
-       _ -> mzero
-
+       _ -> return $ LinkIssueDoc docid
 
 handleIssueShowTitleGet :: DocumentID -> String -> Kontra Response
 handleIssueShowTitleGet docid _title = withUserGet $ checkUserTOSGet $
