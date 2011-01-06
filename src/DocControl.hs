@@ -671,6 +671,9 @@ handleIssueGet = withUserGet $ checkUserTOSGet $ do
   let sorteddocuments = sortBy (\d1 d2 -> compare (documentmtime d2) (documentmtime d1)) documents
   renderFromBody ctx TopDocument kontrakcja (pageDocumentList ctxtime user sorteddocuments) 
 
+{- |
+   The command line for calling ghostscript
+ -}
 gs :: String
 #ifdef WINDOWS
 gs = "c:\\Program Files\\gs\\gs8.60\\bin\\gswin32c.exe" 
@@ -678,6 +681,9 @@ gs = "c:\\Program Files\\gs\\gs8.60\\bin\\gswin32c.exe"
 gs = "gs"
 #endif
 
+{- |
+   Convert PDF to jpeg images of pages
+ -}
 convertPdfToJpgPages :: Context
                      -> File
                      -> IO JpegPages
@@ -730,7 +736,9 @@ convertPdfToJpgPages Context{ctxs3action} file@File{fileid,filename} = do
   removeDirectoryRecursive tmppath
   return result
        
-
+{- |
+   
+ -}
 maybeScheduleRendering :: Context 
                        -> File
                        -> IO JpegPages
