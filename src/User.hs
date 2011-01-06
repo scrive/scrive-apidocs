@@ -190,6 +190,9 @@ activateLink uid =  do
                            session <- createLongTermSession (uid)
                            return (LinkActivateAccount (getSessionId session) (getSessionMagicHash session))                            
 
+{- |
+   perform a query (like with query) but if it returns Nothing, mzero; otherwise, return fromJust
+ -}
 queryOrFail :: (QueryEvent ev (Maybe res)) => ev -> Kontra res
 queryOrFail q = do
   mres <- query q
