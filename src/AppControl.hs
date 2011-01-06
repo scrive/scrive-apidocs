@@ -475,3 +475,11 @@ hget4 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> path $ \a4 -> methodM G
  -} 
 hget1m::(Maybe String -> Kontra Response)->Kontra Response 
 hget1m action = (path $ \a1 -> methodM GET >> (action $ Just a1)) `mplus`  (methodM GET >> action Nothing)
+
+{- |
+   Guard on the existence of a parameter.
+ -}
+param :: String -> Kontra Response -> Kontra Response
+param p action = do
+  getDataFnM $ look p
+  action
