@@ -381,16 +381,21 @@ landpageSignedSave documentid signatorylinkid = do
   content <- liftIO $ landpageLoginForSaveView (ctxtemplates ctx)
   renderFromBody ctx TopEmpty kontrakcja $ cdata content
 
+{- |
+   Landpage when a document is saved
+   Perhapse this is not used
+   URL: /landpage/saved
+   Method: GET
+ -}
+landpageSaved :: DocumentID -> SignatoryLinkID -> Kontra Response
 landpageSaved documentid signatorylinkid = do
   (ctx@Context { ctxmaybeuser = Just user@User{userid} }) <- get
-  mdocument <- query $ GetDocumentByDocumentID documentid
-  case mdocument of
-    Nothing -> mzero
-    Just document -> do
-                   Just document2 <- update $ SaveDocumentForSignedUser documentid userid signatorylinkid
-                   signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
-                   content <- liftIO $ landpageDocumentSavedView (ctxtemplates ctx)
-                   renderFromBody ctx TopDocument kontrakcja $ cdata content
+  document <- queryOrFail $ GetDocumentByDocumentID documentid
+  -- ignore output
+  update $ SaveDocumentForSignedUser documentid userid signatorylinkid
+  signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
+  content <- liftIO $ landpageDocumentSavedView (ctxtemplates ctx)
+  renderFromBody ctx TopDocument kontrakcja $ cdata content
 
 handleSignShow :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra Response
 handleSignShow documentid 
