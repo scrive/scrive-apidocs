@@ -1021,9 +1021,6 @@ basename filename =
       (_,(_:rest)) -> basename rest
       _ -> fst (span ((/=) '.') filename) -- FIXME: take care of many dots in file name
 
-handleIssuePost :: Kontra KontraLink
-handleIssuePost = handleIssueNewDocument `mplus` handleIssueArchive --This work just by accident, HAVE to be with cleaner flow  MR.
-
 handleIssueNewDocument :: Kontra KontraLink
 handleIssueNewDocument = withUserPost $ do
     ctx@(Context { ctxmaybeuser = Just user, ctxhostpart, ctxtime }) <- get
