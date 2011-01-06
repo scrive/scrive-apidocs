@@ -98,7 +98,8 @@ handleRoutes = msum [
 
      , dir "s" $ hget0  $ DocControl.handleSTable
      , dir "s" $ hget3  $ DocControl.handleSignShow
-     , dir "s" $ hpost3 $ DocControl.handleSignPost
+     , dir "s" $ param "sign" $ hpost3 $ DocControl.signDocument
+     , dir "s" $ param "cancel" $ hpost3 $ DocControl.rejectDocument
      
      --This all needs to be done by author. Why we dont check it here? MR
      , dir "d" $ hget0  $ DocControl.handleIssueGet
