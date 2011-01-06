@@ -114,12 +114,19 @@ postDocumentChangeAction document@Document{documentstatus, documentsignatorylink
          return ()
     where msignalink = maybe Nothing (signlinkFromDocById document) msignalinkid
           
-
+{- |
+   Send emails to all of the invited parties.
+   ??: Should this be in DocControl or in an email-sepecific file?
+ -}
 sendInvitationEmails :: Context -> Document -> User -> IO ()
 sendInvitationEmails ctx document author = do
   let signlinks = filter (isNotLinkForUserID $ userid author) $ documentsignatorylinks document
   forM_ signlinks (sendInvitationEmail1 ctx document author)
 
+{- |
+   Helper function to send emails to invited parties
+   ??: Should this be in DocControl or in an email-specific file?
+ -}
 sendInvitationEmail1 :: Context -> Document -> User -> SignatoryLink -> IO ()
 sendInvitationEmail1 ctx document author signatorylink = do
   let SignatoryLink{ signatorylinkid
@@ -141,12 +148,18 @@ sendInvitationEmail1 ctx document author signatorylink = do
                 , mailInfo = Invitation signatorylinkid
                 } 
 
+{- |
+   Send emails to all parties when a document is closed.
+ -}
 sendClosedEmails :: Context -> Document -> IO ()
 sendClosedEmails ctx document = do
   let signlinks = documentsignatorylinks document
   forM_ signlinks (sendClosedEmail1 ctx document)
   sendClosedAuthorEmail ctx document
 
+{- |
+   Helper for sendClosedEmails
+ -}
 sendClosedEmail1 :: Context -> Document -> SignatoryLink -> IO ()
 sendClosedEmail1 ctx document signatorylink = do
   let SignatoryLink{ signatorylinkid
@@ -159,6 +172,9 @@ sendClosedEmail1 ctx document signatorylink = do
   attachmentcontent <- AWS.getFileContents (ctxs3action ctx) $ head $ documentsealedfiles document
   sendMail  (ctxmailsconfig ctx) $ mail { fullnameemails =  [(signatoryname,signatoryemail)] , attachments = [(documenttitle,attachmentcontent)]}
 
+{- |
+   Send an email to the author when the document is awaiting approval
+ -}
 sendAwaitingEmail :: Context -> Document -> User -> IO ()
 sendAwaitingEmail ctx document author = do
   let authorid = unAuthor $ documentauthor document
@@ -169,6 +185,9 @@ sendAwaitingEmail ctx document author = do
       name1 = userfullname authoruser
   sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = [(name1,email1)] }
 
+{- |
+   Send the email to the Author when the document is closed
+ -}
 sendClosedAuthorEmail :: Context -> Document -> IO ()
 sendClosedAuthorEmail ctx document = do
   let authorid = unAuthor $ documentauthor document
@@ -181,6 +200,9 @@ sendClosedAuthorEmail ctx document = do
       name1 = userfullname authoruser
   sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = [(name1,email1)], attachments = [(documenttitle,attachmentcontent)]}
 
+{- |
+   Send an email to the author when the document is rejected
+ -}
 sendRejectAuthorEmail :: (Maybe BS.ByteString) -> Context -> Document -> SignatoryLink -> IO ()
 sendRejectAuthorEmail customMessage ctx document signalink = do
   let authorid = unAuthor $ documentauthor document
