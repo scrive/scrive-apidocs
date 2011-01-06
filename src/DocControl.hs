@@ -1051,26 +1051,21 @@ sendCancelMailsForDocument customMessage ctx document = do
   Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor document
   liftIO $ forM_ (documentsignatorylinks document) (sendMail  (ctxmailsconfig ctx) <=< (mailCancelDocumentByAuthor (ctxtemplates ctx) customMessage ctx document author))
 
-{- |
-   Guard against the non-existence of a document in a GET request.
-   The hope is that this guard will simplify code by eliminating a pattern match for Just document.
-   FIXME: This should probably include a 404 page instead of mzero.
- -}
-withDocumentGet :: DocumentID -> Kontra Response -> Kontra Response
-withDocumentGet docid action = do
+failIfNoDocument :: DocumentID -> Kontra ()
+failIfNoDocument docid = do
   mdoc <- query $ GetDocumentByDocumentID docid
   case mdoc of
-    Just doc -> action
+    Just doc -> return ()
     Nothing  -> mzero
 
-{- |
-   Guard against the non-existence of a document in a POST request.
-   The hope is that this guard will simplify code by eliminating a pattern match for Just document.
-   FIXME: This should probably include a 404 page instead of mzero.
- -}
-withDocumentPost :: DocumentID -> Kontra KontraLink -> Kontra KontraLink
-withDocumentPost docid link = do
-  mdoc <- query $ GetDocumentByDocumentID docid
-  case mdoc of
-    Just doc -> link
-    Nothing  -> return LinkIssue
+failIfNotAuthor :: Document -> User -> Kontra ()
+failIfNotAuthor document user = when (not $ isAuthor document user) mzero
+
+checkLinkIDAndMagicHash :: Document -> SignatoryLinkID -> MagicHash -> Kontra ()
+checkLinkIDAndMagicHash document linkid magichash1 = do
+    case signlinkFromDocById document linkid of
+      Just SignatoryLink { signatorymagichash } -> if signatorymagichash == magichash1 
+                                                    then return ()
+                                                    else mzero
+      Nothing -> mzero
+
