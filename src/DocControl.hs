@@ -660,7 +660,8 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} = 
    Duplicates are removed.
  -}
 handleIssueGet :: Kontra Response
-handleIssueGet = withUserGet $ checkUserTOSGet $ do  
+handleIssueGet = withUserGet $ checkUserTOSGet $ do
+  -- Just user is safe here because we guard for logged in user
   ctx@(Context {ctxmaybeuser = Just user, ctxhostpart, ctxtime}) <- get
   mydocuments <- query $ GetDocumentsByUser user 
   usersICanView <- query $ GetUsersByFriendUserID $ userid user
