@@ -3,6 +3,10 @@
     UndecidableInstances, TypeOperators, TypeSynonymInstances,
     GeneralizedNewtypeDeriving, ScopedTypeVariables
     #-}
+
+{- |
+   Sores the top-level application state
+ -}
 module AppState 
     ( AppState
     ) where
