@@ -358,28 +358,28 @@ landpageRejected documentid signatorylinkid = do
   renderFromBody ctx TopEmpty kontrakcja $ cdata content
 
 {- |
- Here we need to save the document either under existing account or create a new account
- send invitation email and put the document in that account
+   Here we need to save the document either under existing account or create a new account
+   send invitation email and put the document in that account
+   URL: /landpage/signedsave
+   Method: GET
 -}
+landpageSignedSave :: DocumentID -> SignatoryLinkID -> Kontra Response
 landpageSignedSave documentid signatorylinkid = do
   ctx@Context{ctxhostpart} <- get
-  mdocument <- query $ GetDocumentByDocumentID documentid
-  case mdocument of
-    Nothing -> mzero
-    Just document -> do
-     signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
-     let details = signatorydetails signatorylink
-     maybeuser <- query $ GetUserByEmail (Email $ signatoryemail details)
-     let fullname = signatoryname details
-     muser <- case maybeuser of
-            Nothing -> do 
-              let email = signatoryemail details
-              liftIO $ createUser ctx ctxhostpart fullname email Nothing True Nothing
-            Just user -> return maybeuser
-     when_ (isJust muser) $ update $ SaveDocumentForSignedUser documentid (userid $ fromJust muser) signatorylinkid
-     -- should redirect
-     content <- liftIO $ landpageLoginForSaveView (ctxtemplates ctx)
-     renderFromBody ctx TopEmpty kontrakcja $ cdata content
+  document <- queryOrFail $ GetDocumentByDocumentID documentid
+  signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
+  let details = signatorydetails signatorylink
+      fullname = signatoryname details
+  maybeuser <- query $ GetUserByEmail (Email $ signatoryemail details)
+  muser <- case maybeuser of
+             Nothing -> do 
+               let email = signatoryemail details
+               liftIO $ createUser ctx ctxhostpart fullname email Nothing True Nothing
+             Just user -> return maybeuser
+  when_ (isJust muser) $ update $ SaveDocumentForSignedUser documentid (userid $ fromJust muser) signatorylinkid
+  -- should redirect
+  content <- liftIO $ landpageLoginForSaveView (ctxtemplates ctx)
+  renderFromBody ctx TopEmpty kontrakcja $ cdata content
 
 landpageSaved documentid signatorylinkid = do
   (ctx@Context { ctxmaybeuser = Just user@User{userid} }) <- get
