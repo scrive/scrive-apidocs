@@ -1090,34 +1090,30 @@ handleWithdrawn docid = do
     Nothing -> return LinkMain          
  
 
-handleRestart:: String -> Kontra KontraLink
+handleRestart:: DocumentID -> Kontra KontraLink
 handleRestart docid = do
-                       ctx <- get
-                       case ctxmaybeuser ctx of
-                        Just user -> do
-                                      update $ RestartDocument (read docid) user
-                                      addFlashMsgText =<< (liftIO $ flashDocumentRestarted (ctxtemplates ctx))
-                                      return $ LinkIssueDoc (read docid)             
-                        Nothing -> return LinkLogin          
-                    
-handleResend:: String -> String -> Kontra KontraLink
-handleResend docid signlinkid  = do
   ctx <- get
-  mdoc <- query $ GetDocumentByDocumentID (read docid)
-  case (mdoc) of
-    Just doc -> withDocumentAuthor doc $
-                 case (signlinkFromDocById doc (read signlinkid)) of
-                   Just signlink -> do 
-                     Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor doc
-                     customMessage <- fmap (fmap concatChunks) $ getDataFn' (lookBS "customtext")  
-                     mail <- liftIO $  mailDocumentRemind (ctxtemplates ctx) customMessage ctx doc signlink author
-                     liftIO $ sendMail (ctxmailsconfig ctx) (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )],
-                                                                   from=ctxmaybeuser ctx,
-                                                                   mailInfo = Invitation $ signatorylinkid signlink })
-                     addFlashMsgText =<< (liftIO $ flashRemindMailSent (ctxtemplates ctx) signlink)
-                     return (LinkIssueDoc $ documentid doc)
-                   Nothing -> mzero           
-    Nothing -> mzero               
+  case ctxmaybeuser ctx of
+    Just user -> do
+      update $ RestartDocument docid user
+      addFlashMsgText =<< (liftIO $ flashDocumentRestarted (ctxtemplates ctx))
+      return $ LinkIssueDoc docid
+    Nothing -> return LinkLogin          
+                    
+handleResend:: DocumentID -> SignatoryLinkID -> Kontra KontraLink
+handleResend docid signlinkid  = withUserPost $ do
+  ctx@Context { ctxmaybeuser = Just user } <- get
+  doc <- queryOrFail $ GetDocumentByDocumentID docid
+  failIfNotAuthor doc user
+  signlink <- signatoryLinkFromDocumentByID doc signlinkid
+  author <- queryOrFail $ GetUserByUserID $ unAuthor $ documentauthor doc
+  customMessage <- fmap (fmap concatChunks) $ getDataFn' (lookBS "customtext")  
+  mail <- liftIO $  mailDocumentRemind (ctxtemplates ctx) customMessage ctx doc signlink author
+  liftIO $ sendMail (ctxmailsconfig ctx) (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )],
+                                                from=ctxmaybeuser ctx,
+                                                mailInfo = Invitation $ signatorylinkid signlink })
+  addFlashMsgText =<< (liftIO $ flashRemindMailSent (ctxtemplates ctx) signlink)
+  return (LinkIssueDoc $ documentid doc)
 
 --This only works for undelivered mails. We shoulkd check if current user is author
 handleChangeSignatoryEmail::String -> String -> Kontra KontraLink
