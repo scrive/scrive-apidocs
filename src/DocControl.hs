@@ -55,7 +55,11 @@ import qualified TrustWeaver as TW
   Here are all actions associated with transitions.
 -}
 
-signlinkFromDocById doc sid = find (((==) sid) . signatorylinkid) (documentsignatorylinks  doc)
+{- |
+   Get the Just SignatoryLink from doc that has sid. Nothing when not found.
+ -}
+signlinkFromDocById :: Document -> SignatoryLinkID -> Maybe SignatoryLink
+signlinkFromDocById doc sid = find ((== sid) . signatorylinkid) (documentsignatorylinks  doc)
 
 postDocumentChangeAction :: Document -> DocumentStatus -> Maybe SignatoryLinkID -> Kontra ()
 postDocumentChangeAction document@Document{documentstatus, documentsignatorylinks} oldstatus msignalinkid
