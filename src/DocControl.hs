@@ -453,14 +453,14 @@ isFriendOf uid user = (unUserID uid `elem` map unFriend (userfriends user))
    There are two cases: 
     1. author in which case they get pageDocumentForAuthor
     2. Friend of author in which case they get pageDocumentForViewer
+   URL: /d/{documentid}
+   Method: GET
  -}
 handleIssueShowGet :: DocumentID -> Kontra Response
-handleIssueShowGet docid = withUserGet $ checkUserTOSGet $ (withDocumentGet docid) $ do
-  Just document@Document{ documentauthor
-                        , documentid
-                        } <- query $ GetDocumentByDocumentID $ docid
+handleIssueShowGet docid = withUserGet $ checkUserTOSGet $ do
+  document@Document{ documentauthor } <- queryOrFail $ GetDocumentByDocumentID $ docid
   ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) <- get
-  Just author <- query $ GetUserByUserID $ unAuthor documentauthor
+  author <- queryOrFail $ GetUserByUserID $ unAuthor documentauthor
 
   let toptab = if documentstatus document == Closed
                 then TopDocument
@@ -473,6 +473,7 @@ handleIssueShowGet docid = withUserGet $ checkUserTOSGet $ (withDocumentGet doci
    else if isFriendOf userid author
          then renderFromBody ctx toptab kontrakcja
                   (pageDocumentForViewer ctx document author)
+         -- not allowed
          else mzero
 
 {- |
