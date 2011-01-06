@@ -302,19 +302,27 @@ signatoryLinkFromDocumentByID document@Document{documentsignatorylinks} linkid =
       [invitedlink] -> return invitedlink
       _ -> mzero
 
-landpageSignInvite documentid = do
-  ctx <- get
-  mdocument <- query $ GetDocumentByDocumentID documentid
-  case mdocument of
-    Nothing -> mzero
-    Just document -> do
-                      let authorid = unAuthor $ documentauthor document
-                          hasAuthorSigned = not $ Data.List.null $ filter (not . isNotLinkForUserID authorid) (documentsignatorylinks document)
-                      content <- liftIO $ if hasAuthorSigned 
-                                            then landpageSignInviteView (ctxtemplates ctx) document
-                                            else landpageSendInviteView (ctxtemplates ctx) document
-                      renderFromBody ctx TopNone kontrakcja $ cdata content
+{- |
+   The page the author sees after sending a document
+   URL: /landpage/signinvite/{documentid}
+   Method: GET
 
+   User must be author
+ -}
+landpageSignInvite :: DocumentID -> Kontra Response
+landpageSignInvite documentid = withUserGet $ do
+  ctx@Context { ctxmaybeuser = Just user } <- get
+  document <- queryOrFail $ GetDocumentByDocumentID documentid
+
+  failIfNotAuthor document user
+
+  let authorid = unAuthor $ documentauthor document
+      hasAuthorSigned = authorHasSigned authorid document
+
+  content <- liftIO $ if hasAuthorSigned 
+                       then landpageSignInviteView (ctxtemplates ctx) document
+                       else landpageSendInviteView (ctxtemplates ctx) document
+  renderFromBody ctx TopNone kontrakcja $ cdata content
 
 landpageSigned documentid signatorylinkid = do
   ctx <- get
