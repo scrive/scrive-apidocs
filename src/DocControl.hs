@@ -428,18 +428,20 @@ handleSignShow documentid
                        (pageDocumentForSign (LinkSignDoc document invitedlink) 
                                             document ctx invitedlink wassigned author)
 
+{- |
+   How many documents does the free user have left?
+ -}
 freeLeftForUser :: User -> Kontra Int
 freeLeftForUser user = do
   numdoc <- query $ GetNumberOfDocumentsOfUser user
   let freeleft = if numdoc >= 5 then 0 else 5 - numdoc
   return freeleft
 
-
-
 {- |
    The user with id uid is a friend of user.
    Should be moved to User and imported
  -}
+isFriendOf :: UserID -> User -> Bool
 isFriendOf uid user = (unUserID uid `elem` map unFriend (userfriends user))
 
 {- |
