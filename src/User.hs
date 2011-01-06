@@ -15,6 +15,7 @@ module User
     , onlySuperUser
     , changePasswordLink
     , activateLink
+    , queryOrFail
     )
     where
 
@@ -33,6 +34,7 @@ import Session
 import System.IO.Unsafe
 import System.Log.Logger
 import System.Process
+import Happstack.State (update,query,getRandomR,Query,QueryEvent)
 import UserState
 import qualified Codec.Binary.Base64 as Base64
 import qualified Data.Binary as Binary
@@ -187,3 +189,10 @@ activateLink::UserID -> IO KontraLink
 activateLink uid =  do
                            session <- createLongTermSession (uid)
                            return (LinkActivateAccount (getSessionId session) (getSessionMagicHash session))                            
+
+queryOrFail :: (QueryEvent ev (Maybe res)) => ev -> Kontra res
+queryOrFail q = do
+  mres <- query q
+  case mres of
+    Just res -> return res
+    Nothing -> mzero
