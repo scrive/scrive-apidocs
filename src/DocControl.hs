@@ -61,9 +61,16 @@ import qualified TrustWeaver as TW
 signlinkFromDocById :: Document -> SignatoryLinkID -> Maybe SignatoryLink
 signlinkFromDocById doc sid = find ((== sid) . signatorylinkid) (documentsignatorylinks  doc)
 
+{- |
+   Perform the appropriate action when transitioning between documentstatuses.
+   This function should always be called after changing the document.
+ -}
 postDocumentChangeAction :: Document -> DocumentStatus -> Maybe SignatoryLinkID -> Kontra ()
 postDocumentChangeAction document@Document{documentstatus, documentsignatorylinks} oldstatus msignalinkid
+    -- No status change ; no action
     | documentstatus == oldstatus = return ()
+    -- Preparation -> Pending
+    -- main action: sendInvitationEmails
     | oldstatus == Preparation && documentstatus == Pending = do
         ctx <- get
         Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor document
@@ -74,6 +81,8 @@ postDocumentChangeAction document@Document{documentstatus, documentsignatorylink
           threadDelay 5000 
           sendInvitationEmails ctx document author
         return ()
+    -- Pending -> AwaitingAuthor
+    -- main action: sendAwaitingEmail
     | oldstatus == Pending && documentstatus == AwaitingAuthor = do
         ctx <- get
         Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor document
@@ -81,6 +90,8 @@ postDocumentChangeAction document@Document{documentstatus, documentsignatorylink
           threadDelay 5000 
           sendAwaitingEmail ctx document author
         return ()
+    -- Pending -> Closed OR AwaitingAuthor -> Closed
+    -- main action: sendClosedEmails
     | (oldstatus == Pending || oldstatus == AwaitingAuthor) && documentstatus == Closed = do
         ctx@Context{ctxnormalizeddocuments,ctxhostpart,ctxtime} <- get
         liftIO $ forkIO $ do
@@ -88,6 +99,8 @@ postDocumentChangeAction document@Document{documentstatus, documentsignatorylink
           newdoc <- sealDocument ctx ctxnormalizeddocuments ctxhostpart ctxtime user document
           sendClosedEmails ctx newdoc
         return ()
+    -- Pending -> Rejected
+    -- main action: sendRejectAuthorEmail
     | oldstatus == Pending && documentstatus == Rejected = do
         ctx@Context{ctxnormalizeddocuments,ctxhostpart,ctxtime} <- get
         customMessage <- fmap (fmap concatChunks) $ getDataFn' (lookBS "customtext")  
@@ -95,7 +108,9 @@ postDocumentChangeAction document@Document{documentstatus, documentsignatorylink
           threadDelay 5000 
           sendRejectAuthorEmail customMessage ctx document (fromJust msignalink)
         return ()
-    | otherwise = -- do nothing. FIXME: log status change
+    -- transition with no necessary action; do nothing
+    -- FIXME: log status change
+    | otherwise = 
          return ()
     where msignalink = maybe Nothing (signlinkFromDocById document) msignalinkid
           
