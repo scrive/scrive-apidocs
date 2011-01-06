@@ -12,15 +12,15 @@ import MinutesTime
 import System.Log.Logger
 import AppControl
 
-runScheduler appconfig = 
-               do
-                timeoutDocuments 
-                debugM "Happstack.Server" $ "Scheduler is running ..."                                                        
+-- | Run the scheduler
+runScheduler appconfig = do
+  timeoutDocuments 
+  debugM "Happstack.Server" $ "Scheduler is running ..."
 
+-- | Timeout all old documents
 timeoutDocuments = do
-                    now <- getMinutesTime
-                    docs <- query $ GetTimeoutedButPendingDocuments now
-                    forM_ docs $ \doc -> do 
-                                           update $ TimeoutDocument (documentid doc) now                                                     
-                                           debugM "Happstack.Server" $ "Document timedout" ++ (show $ documenttitle doc)                                                                   
-                                          
+  now <- getMinutesTime
+  docs <- query $ GetTimeoutedButPendingDocuments now
+  forM_ docs $ \doc -> do 
+                     update $ TimeoutDocument (documentid doc) now 
+                     debugM "Happstack.Server" $ "Document timedout " ++ (show $ documenttitle doc)
