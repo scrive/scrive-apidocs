@@ -28,7 +28,8 @@ module UserView(
     --utils  
     prettyName,
     userSmallView,
-    userSmallViewWithDocsCount) where
+    userSmallViewWithDocsCount,
+    UserSmallView(..)) where
 
 import HSP hiding (Request)
 import Happstack.Server.SimpleHTTP
