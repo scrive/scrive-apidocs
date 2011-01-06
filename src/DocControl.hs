@@ -178,11 +178,13 @@ handleSTable = withUserGet $ checkUserTOSGet $
 
 signDocument :: DocumentID 
              -> SignatoryLinkID 
+             -> MagicHash
              -> Kontra KontraLink
-signDocument documentid 
-             signatorylinkid1 = do
+signDocument documentid -- ^ The DocumentID of the document to sign
+             signatorylinkid1 -- ^ The SignatoryLinkID that is in the URL
+             magichash1 -- ^ The MagicHash that is in the URL (NOTE: This is ignored!)
+                 = do
   ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber}) <- get
-  getDataFnM (look "sign")
   fieldnames <- getAndConcat "fieldname"
   fieldvalues <- getAndConcat "fieldvalue"
   let fields = zipWith (\x y -> (x, y)) fieldnames fieldvalues
@@ -201,22 +203,23 @@ signDocument documentid
 
 rejectDocument :: DocumentID 
                -> SignatoryLinkID 
+               -> MagicHash
                -> Kontra KontraLink
 rejectDocument documentid 
-               signatorylinkid1 = do
+               signatorylinkid1 
+               magichash -- ^ The MagicHash that is in the URL (NOTE: This is ignored!)
+                   = do
   ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber}) <- get
-  getDataFnM (look "cancel")
-  do
-     mdocument <- update $ RejectDocument documentid signatorylinkid1 ctxtime ctxipnumber
-     case (mdocument) of
-      Left message -> 
-          do
-            addFlashMsgText  message
-            return $ LinkMain
-      Right document -> 
-          do  
-            postDocumentChangeAction document Pending (Just signatorylinkid1)
-            return $ LinkRejected documentid signatorylinkid1
+  mdocument <- update $ RejectDocument documentid signatorylinkid1 ctxtime ctxipnumber
+  case (mdocument) of
+    Left message -> 
+        do
+          addFlashMsgText message
+          return $ LinkMain
+    Right document -> 
+        do  
+          postDocumentChangeAction document Pending (Just signatorylinkid1)
+          return $ LinkRejected documentid signatorylinkid1
   
 signatoryLinkFromDocumentByID document@Document{documentsignatorylinks} linkid = do
     let invitedlinks = filter (\x -> signatorylinkid x == linkid
@@ -296,16 +299,6 @@ landpageSaved documentid signatorylinkid = do
                    signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
                    content <- liftIO $ landpageDocumentSavedView (ctxtemplates ctx)
                    renderFromBody ctx TopDocument kontrakcja $ cdata content
-
-handleSignPost :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra KontraLink
-handleSignPost documentid 
-               signatorylinkid1
-               magichash1 = do
-  ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber}) <- get
-               
-  msum [ DocControl.signDocument documentid signatorylinkid1
-       , DocControl.rejectDocument documentid signatorylinkid1
-       ]
 
 handleSignShow :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra Response
 handleSignShow documentid 
