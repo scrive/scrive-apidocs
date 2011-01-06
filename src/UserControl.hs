@@ -268,7 +268,7 @@ withUserGet action = do
      Runs an action only if current user (from context) is author of document
 | -}
 withDocumentAuthor :: Document -> Kontra a -> Kontra a
-withDocumentAuthor document action= do
+withDocumentAuthor document action = do
                                      ctx <- get
                                      case fmap (isAuthor document) (ctxmaybeuser ctx) of
                                       Just True -> action
