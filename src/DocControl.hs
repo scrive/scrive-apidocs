@@ -513,27 +513,26 @@ handleIssueShowPost docid = withUserPost $ do
                                        return LinkIssue
        _ -> return $ LinkIssueDoc docid
 
+{- |
+   Show the document with title in the url
+   URL: /d/{documentid}/{title}
+   Method: GET
+ -}
 handleIssueShowTitleGet :: DocumentID -> String -> Kontra Response
-handleIssueShowTitleGet docid _title = withUserGet $ checkUserTOSGet $
-  do
+handleIssueShowTitleGet docid _title = withUserGet $ checkUserTOSGet $ do
    ctx <- get
-   maybedocument <- query $ GetDocumentByDocumentID $ docid
-   case maybedocument of
-     -- Q: We know what they want, shouldn't we send 404 here?
-     Nothing -> mzero
-     Just document@Document{ documentauthor
-                           , documentid
-                           } -> do
-
-                        ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) <- get
-                        when (userid/=unAuthor documentauthor) mzero
-                        let file = safehead "handleIssueShow" (case documentstatus document of
-                                                                 Closed -> documentsealedfiles document
-                                                                 _      -> documentfiles document)
-                        contents <- liftIO $ AWS.getFileContents (ctxs3action ctx) file
-                        let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
-                        let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
-                        return res2
+   document@Document{ documentauthor
+                    , documentid
+                    } <- queryOrFail $ GetDocumentByDocumentID $ docid
+   ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) <- get
+   failIfNotAuthor document user
+   let file = safehead "handleIssueShow" (case documentstatus document of
+                                            Closed -> documentsealedfiles document
+                                            _      -> documentfiles document)
+   contents <- liftIO $ AWS.getFileContents (ctxs3action ctx) file
+   let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
+   let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
+   return res2
 
 getAndConcat :: String -> Kontra [BS.ByteString]
 getAndConcat field = do
