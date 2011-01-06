@@ -261,6 +261,11 @@ signDocument documentid -- ^ The DocumentID of the document to sign
           postDocumentChangeAction document olddocumentstatus (Just signatorylinkid1)
           return $ LinkSigned documentid signatorylinkid1
 
+{- |
+   Control rejecting the document
+   URL: /s/{docid}/{signatorylinkid1}/{magichash1}
+   NOTE: magichash1 is currently ignored! (though it must exist)
+ -}
 rejectDocument :: DocumentID 
                -> SignatoryLinkID 
                -> MagicHash
@@ -270,6 +275,10 @@ rejectDocument documentid
                magichash -- ^ The MagicHash that is in the URL (NOTE: This is ignored!)
                    = do
   ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber}) <- get
+  document@Document{ documentsignatorylinks } <- queryOrFail $ GetDocumentByDocumentID documentid
+
+  checkLinkIDAndMagicHash document signatorylinkid1 magichash
+
   mdocument <- update $ RejectDocument documentid signatorylinkid1 ctxtime ctxipnumber
   case (mdocument) of
     Left message -> 
