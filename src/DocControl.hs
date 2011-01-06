@@ -1,5 +1,8 @@
 {-# LANGUAGE CPP, ScopedTypeVariables #-}
 
+{- |
+   DocControl represents the controler (in MVC) of the document.
+ -}
 module DocControl where
 import Control.Monad
 import Control.Monad.Reader
