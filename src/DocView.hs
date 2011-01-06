@@ -46,7 +46,9 @@ import DocViewUtil
 import Templates.Templates
 import Templates.TemplatesUtils
 import Mails.MailsUtil
-import UserView (prettyName)
+import UserView (prettyName,UserSmallView(..))
+import Data.Typeable
+import Data.Data
 
 landpageSignInviteView ::KontrakcjaTemplates -> Document ->  IO String
 landpageSignInviteView templates  document =
@@ -114,126 +116,67 @@ flashRemindMailSent templates  signlink =
 flashMessageCanceled :: KontrakcjaTemplates -> IO String
 flashMessageCanceled templates = renderTemplate templates  "flashMessageCanceled" []
 
-concatSignatories :: [SignatoryLink] -> String
-concatSignatories siglinks = 
-    concat $ intersperse ", " $ map (BS.toString . personname) siglinks
 
-oneDocumentRow :: ( EmbedAsAttr m (Attr [Char] [Char])
-                  , EmbedAsAttr m (Attr [Char] KontraLink)
-                  , EmbedAsAttr m (Attr [Char] DocumentID)) =>
-                MinutesTime -> 
-                User -> 
-                Document -> 
-                XMLGenT m (HSX.XML m)
-oneDocumentRow crtime user document@Document{ documentid
-                                , documentsignatorylinks
-                                , documentstatus
-                                , documenttitle
-                                , documenttimeouttime
-                                , documentmtime
-                                , documentauthor
-                                }  = 
-    let link = if unAuthor documentauthor==(userid user) || null signatorylinklist
-               then LinkIssueDoc documentid
-               else LinkSignDoc document (head signatorylinklist)
-        signatorylinklist = filter (isMatchingSignatoryLink user) documentsignatorylinks
-        mk x = <a href=link><% x %></a>
-        seenstatus = any (isJust . maybeseeninfo) documentsignatorylinks
-        statusimg = "/theme/images/" ++
-                    case documentstatus of
-                      Preparation -> "status_draft.png"
-                      Pending  -> if seenstatus
-                                  then "status_viewed.png"
-                                  else "status_pending.png"
-                      -- question: what status icon to use?
-                      AwaitingAuthor -> "status_pending.png"
-                      Closed -> "status_signed.png"
-                      Canceled -> "status_rejected.png"
-                      Timedout -> "status_timeout.png"
-                      Rejected -> "status_rejected.png"
-                      Withdrawn -> "status_rejected.png"
-        dateDiffInDays (MinutesTime ctime) (MinutesTime mtime)
-                       | ctime>mtime = 0
-                       | otherwise = (mtime - ctime) `div` (60*24)
-    in
-    <tr class="ui-state-default">
-     <td class="tdleft">
-      <input type="checkbox" name="doccheck" value=documentid class="check" />
-     </td>
-     <td>
-       <img width="17" height="17" src=statusimg/> 
-       <% if (anyInvitationUndelivered document) then <span style="color:#000000;position:relative;top:-3px">!</span> else <span/> %>   
-     </td>
-     <td>
-      <% case documenttimeouttime of
-                   Nothing -> <span/>
-                   -- FIXME: show days to sign, not the final date
-                   Just (TimeoutTime x) -> 
-                       if documentstatus==Pending
-                       then <span title=("Förfallodatum: " ++ show x)><% mk $ "(" ++ show (dateDiffInDays crtime x) ++ ")" %></span>
-                       else <span/>
-       %>
-     </td>
-     <td><% mk $ concatSignatories documentsignatorylinks %></td>
-     <td><% mk $ documenttitle %></td>
-     <td><span title=(show documentmtime)><% mk $ showDateAbbrev crtime documentmtime %></span></td>
-     <% if isSuperUser (Just user)
-        then <td class="tdright"><a href=("/dave/document/" ++ show documentid)>*</a></td>
-        else <td class="tdright"></td>
-     %>
-    </tr>
+--All doc view
+singLinkUserSmallView sl = UserSmallView {     usvId =  show $ signatorylinkid sl
+                                             , usvFullname = BS.toString $ personname sl
+                                             , usvEmail = ""
+                                             , usvDocsCount = "" }
+
+data DocumentSmallView = DocumentSmallView {
+                          dsvId::String,
+                          dsvTitle::String,
+                          dsvSignatories::[UserSmallView],
+                          dsvAnyinvitationundelivered::Bool,
+                          dsvStatusimage::String,
+                          dsvDoclink::String,
+                          dsvDavelink::Maybe String,
+                          dsvTimeoutdate::Maybe String,
+                          dsvTimeoutdaysleft::Maybe String,  
+                          dsvMtime::String
+                         } deriving (Data, Typeable)
+                         
+documentSmallView::MinutesTime ->  User -> Document ->DocumentSmallView
+documentSmallView crtime user doc = DocumentSmallView {
+                          dsvId = show $ documentid doc,
+                          dsvTitle = BS.toString $ documenttitle doc,
+                          dsvSignatories = map singLinkUserSmallView $ documentsignatorylinks doc,
+                          dsvAnyinvitationundelivered = anyInvitationUndelivered doc,
+                          dsvStatusimage = "/theme/images/" ++
+                                               case (documentstatus doc) of
+                                                  Preparation -> "status_draft.png"
+                                                  Pending  -> if  any (isJust . maybeseeninfo) $ documentsignatorylinks doc
+                                                               then "status_viewed.png"
+                                                               else "status_pending.png"
+                                                  AwaitingAuthor -> "status_pending.png"
+                                                  Closed -> "status_signed.png"
+                                                  Canceled -> "status_rejected.png"
+                                                  Timedout -> "status_timeout.png"
+                                                  Rejected -> "status_rejected.png"
+                                                  Withdrawn -> "status_rejected.png",
+                          dsvDoclink =     if (unAuthor $ documentauthor doc) ==(userid user) || (null $ signatorylinklist)
+                                            then show $ LinkIssueDoc $ documentid doc
+                                            else show $ LinkSignDoc doc (head $ signatorylinklist),
+                          dsvDavelink = if isSuperUser (Just user) 
+                                         then Just $ "/dave/document/" ++ (show documentid) 
+                                         else Nothing  ,               
+                          dsvTimeoutdate =  fromTimeout show,
+                          dsvTimeoutdaysleft =  fromTimeout $ show . (dateDiffInDays crtime),    
+                          dsvMtime = showDateAbbrev crtime (documentmtime doc)
+                         }
+  where   signatorylinklist = filter (isMatchingSignatoryLink user) $ documentsignatorylinks doc  
+          fromTimeout f =  case (documenttimeouttime doc,documentstatus doc) of
+                                (Just (TimeoutTime x),Pending) -> Just $ f x
+                                _ -> Nothing
+                                                                            
+
+pageDocumentList:: KontrakcjaTemplates -> MinutesTime -> User -> [Document] -> IO String
+pageDocumentList templates ctime user documents = renderTemplateComplex templates "pageDocumentList" $
+                                                        (setAttribute "documents" $ map (documentSmallView ctime user) $ filter (not . documentdeleted) documents)
 
 
-pageDocumentList :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink),
-                      EmbedAsAttr m (Attr [Char] DocumentID)) 
-              => MinutesTime
-              -> User
-              -> [Document] 
-              -> XMLGenT m (HSX.XML m)
-pageDocumentList ctime user documents = 
-     <form method="post" action=LinkIssue>
-     <table class="doctable" cellspacing="0">
-      <col/>
-      <col/>
-      <col/>
-      <col/>
-      <col/>
-      <col/>
-      <thead>
-       <tr>
-        <td><a href="#" id="all">Alla</a></td>
-        <td></td> {- status icon -}
-        <td></td> {- Förfallodatum -}
-        <td>Motparter</td>
-        <td>Dokument</td>
-        <td>Senaste handelse</td>
-        <td></td>
-       </tr>
-      </thead>
-      <tfoot>
-       <tr>
-        <td colspan="7" style="text-align: right; overflow: hidden;">
-          <div class="floatleft">
-           <input type="submit" class="button" name="archive" value="Radera"/>
-          </div>
-          <div class="floatright">
-           <img src="/theme/images/status_draft.png"/> Utkast
-           <img src="/theme/images/status_rejected.png"/> Avbrutet
-           <img src="/theme/images/status_timeout.png"/> Förfallet
-           <img src="/theme/images/status_pending.png"/> Skickat
-           <img src="/theme/images/status_viewed.png"/> Granskat av motpart
-           <img src="/theme/images/status_signed.png"/> Undertecknat
-          </div>
-          <div class="clearboth"/>
-         </td>
-       </tr>
-      </tfoot>
-      <tbody id="selectable">
-       <% map (oneDocumentRow ctime user) (filter (not . documentdeleted) documents) %>
-      </tbody>
-     </table>
-     </form>
 
+----Single document view
 showSignatoryEntryForEdit :: ( XMLGenerator m, EmbedAsAttr m (Attr [Char] KontraLink),
                                EmbedAsAttr m (Attr [Char] DocumentID)) 
                           => DocState.SignatoryDetails -> XMLGenT m (HSX.XML m)
@@ -751,7 +694,10 @@ pageDocumentForSign action document ctx  invitedlink wassigned author =
                  
               </span>
      
-     
+
+
+
+--We keep this javascript code generation for now
 jsArray :: [[Char]] -> [Char]
 jsArray xs = "[" ++ (joinWith ", " xs) ++ "]"
 

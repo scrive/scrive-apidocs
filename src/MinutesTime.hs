@@ -98,3 +98,8 @@ startOfMonth t = let
                    
 addMonths::Int ->MinutesTime -> MinutesTime
 addMonths i t = fromClockTime $ addToClockTime (noTimeDiff {tdMonth = i})  (toClockTime t)
+
+dateDiffInDays::MinutesTime->MinutesTime -> Int
+dateDiffInDays (MinutesTime ctime) (MinutesTime mtime)
+                       | ctime>mtime = 0
+                       | otherwise = (mtime - ctime) `div` (60*24)

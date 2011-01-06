@@ -222,10 +222,11 @@ sendRejectAuthorEmail customMessage ctx document signalink = do
  -}
 handleSTable :: Kontra Response
 handleSTable = withUserGet $ checkUserTOSGet $ do
-      ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime}) <- get
+      ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxtemplates}) <- get
       let user = fromJust ctxmaybeuser
       documents <- query $ GetDocumentsBySignatory user
-      renderFromBody ctx TopNone kontrakcja (pageDocumentList ctxtime user documents)
+      content <- liftIO $ pageDocumentList ctxtemplates ctxtime user documents
+      renderFromBody ctx TopNone kontrakcja $ cdata content
 
 {- |
    Control the signing of a document
@@ -662,14 +663,15 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} = 
 handleIssueGet :: Kontra Response
 handleIssueGet = withUserGet $ checkUserTOSGet $ do
   -- Just user is safe here because we guard for logged in user
-  ctx@(Context {ctxmaybeuser = Just user, ctxhostpart, ctxtime}) <- get
+  ctx@(Context {ctxmaybeuser = Just user, ctxhostpart, ctxtime, ctxtemplates}) <- get
   mydocuments <- query $ GetDocumentsByUser user 
   usersICanView <- query $ GetUsersByFriendUserID $ userid user
   friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
   -- get rid of duplicates
   let documents = nub $ mydocuments ++ concat friends'Documents
   let sorteddocuments = sortBy (\d1 d2 -> compare (documentmtime d2) (documentmtime d1)) documents
-  renderFromBody ctx TopDocument kontrakcja (pageDocumentList ctxtime user sorteddocuments) 
+  content <- liftIO $ pageDocumentList ctxtemplates ctxtime user sorteddocuments
+  renderFromBody ctx TopDocument kontrakcja $ cdata content
 
 {- |
    The command line for calling ghostscript
