@@ -1155,10 +1155,10 @@ isMatchingSignatoryLink user sigLink = signatoryMatches || emailMatches
         emailMatches = (signatoryemail . signatorydetails $ sigLink) == (unEmail . useremail $ userinfo user)
 
 
-getTimeoutedButPendingDocuments  :: MinutesTime -> Query Documents [Document]
+getTimeoutedButPendingDocuments :: MinutesTime -> Query Documents [Document]
 getTimeoutedButPendingDocuments now = do
-                         docs <-  ask
-                         return $ (flip filter) (toList docs) $ \doc -> case (documenttimeouttime doc) of
+  docs <-  ask
+  return $ (flip filter) (toList docs) $ \doc -> case (documenttimeouttime doc) of
                                                   Just timeout -> (documentstatus doc) == Pending &&(unTimeoutTime timeout) < now
                                                   _ -> False           
     
