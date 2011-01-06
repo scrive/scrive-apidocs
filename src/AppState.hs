@@ -10,14 +10,15 @@
 module AppState 
     ( AppState
     ) where
+
+import Data.Data
+import DocState
 import Happstack.Data
 import Happstack.State
-import User
-import Session
-import Data.Data
-import qualified Happstack.Data.IxSet as IxSet (empty,size)
-import DocState
 import Payments.PaymentsState
+import Session
+import User
+import qualified Happstack.Data.IxSet as IxSet (empty,size)
 
 -- |top-level application state
 $(deriveAll [''Show, ''Eq, ''Ord, ''Default]
