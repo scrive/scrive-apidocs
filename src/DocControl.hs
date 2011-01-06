@@ -241,22 +241,25 @@ signDocument documentid -- ^ The DocumentID of the document to sign
              signatorylinkid1 -- ^ The SignatoryLinkID that is in the URL
              magichash1 -- ^ The MagicHash that is in the URL (NOTE: This is ignored!)
                  = do
-  ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber}) <- get
+  Context { ctxtime, ctxipnumber } <- get
+  document@Document{ documentstatus = olddocumentstatus, documentsignatorylinks } <- queryOrFail $ GetDocumentByDocumentID documentid
+
+  checkLinkIDAndMagicHash document signatorylinkid1 magichash1
+
   fieldnames <- getAndConcat "fieldname"
   fieldvalues <- getAndConcat "fieldvalue"
-  let fields = zipWith (\x y -> (x, y)) fieldnames fieldvalues
-  do
-     Just olddocument@Document{documentstatus=olddocumentstatus} <- query $ GetDocumentByDocumentID documentid
-     newdocument <- update $ SignDocument documentid signatorylinkid1 ctxtime ctxipnumber fields
-     case newdocument of
-       Left message -> 
-           do
-             addFlashMsgText message
-             return $ LinkMain
-       Right document -> 
-           do 
-             postDocumentChangeAction document olddocumentstatus (Just signatorylinkid1)
-             return $ LinkSigned documentid signatorylinkid1
+  let fields = zip fieldnames fieldvalues
+
+  newdocument <- update $ SignDocument documentid signatorylinkid1 ctxtime ctxipnumber fields
+  case newdocument of
+    Left message -> 
+        do
+          addFlashMsgText message
+          return $ LinkMain
+    Right document -> 
+        do 
+          postDocumentChangeAction document olddocumentstatus (Just signatorylinkid1)
+          return $ LinkSigned documentid signatorylinkid1
 
 rejectDocument :: DocumentID 
                -> SignatoryLinkID 
