@@ -40,7 +40,6 @@ pageDocumentList=
       <tbody id="selectable">
        $documents:{document |
 
-
      <tr class="ui-state-default">
      <td class="tdleft">
       <input type="checkbox" name="doccheck" value="$document.dsvId$" class="check" />
@@ -69,10 +68,23 @@ pageDocumentList=
      </td>
      </tr>
 
-
        }$
       </tbody>
      </table>
      </form>
 
+####
+showFileImagesReady= $pages:{pageno| 
+                      <div id="page$pageno$" class="pagediv">
+                          <img class="pagejpg" src="/pages/$fileid$/$pageno$" width="300" />
+                      </div> 
+                     }$
+####
+showFileImagesPending= <div class="pagejpga4 pagejpg">
+      <img class="waiting" src="/theme/images/wait30trans.gif"/>
+     </div>
+####
+showFileImagesError=<div class="pagejpga4 pagejpg">
+      $normalizelog$
+     </div> 
 ####

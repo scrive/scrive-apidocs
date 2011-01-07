@@ -90,6 +90,7 @@ showmoney=$main$.$rest$
 ###
 br = $it$<br/>
 ###
+span = <span>$it$</span>
 ###
 td = <td style="text-align:center">$it$</td>
 ###
