@@ -204,23 +204,19 @@ showSignatoryEntryForEdit2 idx signatoryname signatorycompany signatorynumber si
     </div>
 
     
-showFileImages ::(EmbedAsAttr m (Attr [Char] [Char])) => File -> JpegPages -> [XMLGenT m (HSX.XML m)]    
-showFileImages File{fileid} (JpegPages jpgpages) =
-   [ <div id=("page" ++ show pageno) class="pagediv"><img class="pagejpg" src=("/pages/" ++ show fileid ++ "/" ++ show pageno) width="300" /></div> |
-     pageno <- [1..(length jpgpages)]]
+showFileImages ::KontrakcjaTemplates -> File -> JpegPages -> IO String
+showFileImages templates File{fileid} (JpegPages jpgpages) = renderTemplateComplex templates "showFileImagesReady" $
+                                                              (setAttribute "fileid" $ show fileid) .
+                                                              (setAttribute "pages" $ [1..(length jpgpages)])                                                          
+showFileImages templates _ JpegPagesPending = renderTemplate templates  "showFileImagesPending" []    
+showFileImages templates _ (JpegPagesError normalizelog) = renderTemplate templates  "showFileImagesError" [("normalizelog",BS.toString normalizelog)]
+  
      
-showFileImages _ JpegPagesPending = 
-   [ <div class="pagejpga4 pagejpg">
-      <img class="waiting" src="/theme/images/wait30trans.gif"/>
-     </div> ]
-     
-showFileImages _ (JpegPagesError normalizelog) = 
-   [ <div class="pagejpga4 pagejpg">
-      <% normalizelog %>
-     </div> ]
-     
-showFilesImages2 :: (EmbedAsAttr m (Attr [Char] [Char])) => [(File, JpegPages)] -> XMLGenT m (HSX.XML m)
-showFilesImages2 files = <span><% concatMap (uncurry showFileImages) files %></span> 
+showFilesImages2 :: KontrakcjaTemplates ->  [(File, JpegPages)] -> IO String
+showFilesImages2 templates files = do
+                                    filesPages <- sequence $ map (uncurry (showFileImages templates)) files
+                                    renderTemplate templates  "span" [("it",concat filesPages)]  
+
 
 showDocumentBox :: (EmbedAsAttr m (Attr [Char] [Char])) => XMLGenT m (HSX.XML m)
 showDocumentBox = 

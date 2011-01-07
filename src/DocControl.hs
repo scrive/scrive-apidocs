@@ -781,7 +781,9 @@ handlePageOfDocument documentid = do
       b <- mapM (\file -> liftIO $ maybeScheduleRendering ctx file) f
       if any pending b
        then notFound (toResponse "temporary unavailable (document has files pending for process)")
-       else webHSP (DocView.showFilesImages2 $ zip f b)
+       else do
+              pages <- liftIO $ DocView.showFilesImages2 (ctxtemplates ctx) $ zip f b
+              webHSP $ return $ cdata pages
     
 handleDocumentUpload :: DocumentID -> BS.ByteString -> BS.ByteString -> Kontra ()
 handleDocumentUpload docid content filename = do
