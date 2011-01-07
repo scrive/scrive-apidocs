@@ -340,22 +340,22 @@ $(document).ready( function () {
     
     $(".datetodaystip").each(function() {
          var curr = $(this);
-         var basictime =  new Date().getTime() ;
+         var basictime =  new Date().getTime();
          var daysinput = $(curr.attr("rel"));
          var localignore = true;
          curr.dateinput({
-             format:'dd-mm-yy',
-             change: function() {
-                 if (localignore) return false;
-                 var ONE_DAY = 1000 * 60 * 60 * 24
-                 var date_ms = curr.data("dateinput").getValue().getTime() 
-                 var difference_ms = Math.abs(date_ms - basictime)            
-                 var dist = Math.floor(difference_ms/ONE_DAY) + 1
-                 daysinput.val(dist);
-                 curr.text("("+curr.data("dateinput").getValue('dd-mm-yy')+")"); 
-             },
-         min:  new Date(),
-        })
+                 format: 'dd-mm-yy',
+                     change: function() {
+                     if (localignore) return false;
+                     var ONE_DAY = 1000 * 60 * 60 * 24;
+                     var date_ms = curr.data("dateinput").getValue().getTime();
+                     var difference_ms = Math.abs(date_ms - basictime);            
+                     var dist = Math.floor(difference_ms/ONE_DAY) + 1;
+                     daysinput.val(dist);
+                     curr.text("("+curr.data("dateinput").getValue('dd-mm-yy')+")"); 
+                 },
+                     min:  new Date()
+                     });
         curr.data("dateinput").setValue(new Date());
         localignore = false;
         curr.data("dateinput").addDay(parseInt($(curr.attr("rel")).val()));
@@ -365,34 +365,34 @@ $(document).ready( function () {
                  curr.data("dateinput").setValue(new Date());
                  localignore = false;
                  curr.data("dateinput").addDay(parseInt(daysinput.val()));
-        })
-    })
+            });
+        });
     $(".datetodate").each(function() {     
          var curr = $(this);
-         var basictime =  new Date().getTime() ;
+         var basictime =  new Date().getTime();
          var input = $(curr.attr("rel"));
          curr.dateinput({
              format:'dd-mm-yyyy',
              change: function() {
                  input.val(curr.data("dateinput").getValue('dd-mm-yyyy'));
                  curr.text(curr.data("dateinput").getValue('dd-mm-yyyy')); 
-             },
-         min:  new Date(),
-        })
-        if (input.val()=="") 
-         curr.data("dateinput").setValue(new Date());
-        else
-        {  
-         date = input.val().split('-');
-         curr.data("dateinput").setValue(date[0],date[1],date[2]); 
-        }
-    })
+                 },
+                     min:  new Date()
+                     });
+         if (input.val()=="") 
+             curr.data("dateinput").setValue(new Date());
+         else
+             {  
+                 date = input.val().split('-');
+                 curr.data("dateinput").setValue(date[0],date[1],date[2]); 
+             }
+        });
     $(".replacebynextonclick").click( function(){
-        var replacement = $(this).next();
-        $(this).replaceWith(replacement);
-        replacement.show();
+            var replacement = $(this).next();
+            $(this).replaceWith(replacement);
+            replacement.show();
         
-    })
+        });
     
 	if($("#authorroledropdown option:selected").val() == "signatory") {
 		    $("#signinvite").val("Underteckna");
