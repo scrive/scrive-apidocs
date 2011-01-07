@@ -177,32 +177,23 @@ pageDocumentList templates ctime user documents = renderTemplateComplex template
 
 
 ----Single document view
-showSignatoryEntryForEdit :: ( XMLGenerator m, EmbedAsAttr m (Attr [Char] KontraLink),
-                               EmbedAsAttr m (Attr [Char] DocumentID)) 
-                          => DocState.SignatoryDetails -> XMLGenT m (HSX.XML m)
-showSignatoryEntryForEdit (SignatoryDetails{signatoryname,signatorycompany,signatorynumber, signatoryemail}) = 
-    showSignatoryEntryForEdit2 "" (BS.toString signatoryname) 
-                                   (BS.toString signatorycompany) 
-                                   (BS.toString signatorynumber) 
-                                   (BS.toString signatoryemail)
+showSignatoryEntryForEdit :: KontrakcjaTemplates -> DocState.SignatoryDetails -> IO String
+showSignatoryEntryForEdit templates (SignatoryDetails{signatoryname,signatorycompany,signatorynumber, signatoryemail}) = 
+    showSignatoryEntryForEdit2 templates "" 
+                                  (BS.toString signatoryname) 
+                                  (BS.toString signatorycompany) 
+                                  (BS.toString signatorynumber) 
+                                  (BS.toString signatoryemail)
 
-showSignatoryEntryForEdit2 :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink),
-                               EmbedAsAttr m (Attr [Char] DocumentID)) 
-                           => String -> String -> String -> String
-                           -> String -> XMLGenT m (HSX.XML m)
-showSignatoryEntryForEdit2 idx signatoryname signatorycompany signatorynumber signatoryemail = 
-    <div id=idx class="signatorybox" alt="Namn på avtalspart">
-      <input name="signatoryname" type="text" value=signatoryname autocomplete="off"
-             infotext="Namn på motpart"/><br/>
-      <input name="signatorycompany" type="text" value=signatorycompany autocomplete="off"
-             infotext="Titel, företag"/><br/>
-      <input name="signatorynumber" type="text" value=signatorynumber autocomplete="off"
-             infotext="Orgnr/Persnr"/><br/>
-      <input name="signatoryemail"  type="email" value=signatoryemail autocomplete="off"
-             infotext="Personens e-mail"/><br/>
-      <small><a onclick="return signatoryremove(this.parentNode);" href="#">Ta bort</a></small>
-    </div>
-
+showSignatoryEntryForEdit2 :: KontrakcjaTemplates -> String -> String -> String -> String -> String -> IO String
+showSignatoryEntryForEdit2 templates idx signatoryname signatorycompany signatorynumber signatoryemail = 
+ renderTemplateComplex templates "showSignatoryEntryForEdit2" $  
+                                                              (setAttribute "idx" $ idx) .
+                                                              (setAttribute "signatoryname" $ signatoryname) .
+                                                              (setAttribute "signatorycompany" $ signatorycompany) .
+                                                              (setAttribute "signatorynumber" $ signatorynumber) .
+                                                              (setAttribute "signatoryemail" $ signatoryemail) 
+                                                              
     
 showFileImages ::KontrakcjaTemplates -> File -> JpegPages -> IO String
 showFileImages templates File{fileid} (JpegPages jpgpages) = renderTemplateComplex templates "showFileImagesReady" $
@@ -218,13 +209,9 @@ showFilesImages2 templates files = do
                                     renderTemplate templates  "span" [("it",concat filesPages)]  
 
 
-showDocumentBox :: (EmbedAsAttr m (Attr [Char] [Char])) => XMLGenT m (HSX.XML m)
-showDocumentBox = 
-    <div id="documentBox">
-     <div class="pagejpga4 pagejpg">
-      <img class="waiting" src="/theme/images/wait30trans.gif"/>
-     </div>
-    </div> 
+showDocumentBox :: KontrakcjaTemplates ->  IO String
+showDocumentBox templates = renderTemplate templates  "showDocumentBox" []
+
 
 {-
 
@@ -276,8 +263,8 @@ pageDocumentForAuthor ctx
                               , documentinvitetext
                               } 
              author =
-   let helper = [ showSignatoryEntryForEdit2 "signatory_template" "" "" "" ""
-                , <script> var documentid = "<% show $ documentid %>"; 
+   let helper = [  <span class="templating_insert"> <%fmap cdata $ showSignatoryEntryForEdit2 (ctxtemplates ctx) "signatory_template" "" "" "" "" %></span>,
+                  <script> var documentid = "<% show $ documentid %>"; 
                   </script>
                 ]
        authorid = userid author
@@ -287,7 +274,7 @@ pageDocumentForAuthor ctx
        documentdaystosignboxvalue = maybe 7 id documentdaystosign
        timetosignset = isJust documentdaystosign --swedish low constrain
        documentauthordetails = signatoryDetailsFromUser author
-   in showDocumentPageHelper document helper 
+   in showDocumentPageHelper (ctxtemplates ctx) document helper 
            (documenttitle)  
       <div>
        <div id="loading-message" style="display:none">
@@ -327,7 +314,7 @@ pageDocumentForAuthor ctx
 
               Motpart<br/>
               <div id="signatorylist">
-               <% map showSignatoryEntryForEdit (if null allinvited
+               <% map ((fmap cdata) . showSignatoryEntryForEdit (ctxtemplates ctx)) (if null allinvited
                                                  then [emptyDetails] 
                                                  else map signatorydetails allinvited) %>
               </div>
@@ -414,7 +401,7 @@ pageDocumentForAuthor ctx
                </script>
                
               <div id="signatorylist">
-                 <% map (showSignatoryLinkForSign ctx document author) documentsignatorylinks
+                 <% fmap (cdata . concat) $ sequence $ map (showSignatoryLinkForSign' ctx document author) documentsignatorylinks
                  %>
               </div>
               <% if documentstatus == AwaitingAuthor
@@ -460,7 +447,7 @@ pageDocumentForAuthor ctx
    Show the document for Viewers (friends of author or signatory).
    Show no buttons or other controls
  -}
-pageDocumentForViewer :: Context -> Document -> User -> (HSPT IO XML) 
+pageDocumentForViewer :: Context -> Document -> User -> IO String
 pageDocumentForViewer ctx
              document@Document{ documentsignatorylinks
                               , documenttitle
@@ -469,50 +456,38 @@ pageDocumentForViewer ctx
                               } 
              author
              =
-   let helper = [ showSignatoryEntryForEdit2 "signatory_template" "" "" "" ""
-                , <script> var documentid = "<% show $ documentid %>"; 
-                  </script>
-                ]
+   let
        allinvited = documentsignatorylinks
        documentauthordetails = signatoryDetailsFromUser author
-   in showDocumentPageHelper document helper 
-           (documenttitle)  
-      <div>
-       <div id="loading-message" style="display:none">
-            Loading pages . . .
-       </div>
-       <div id="edit-bar">
-                <script type="text/javascript" language="Javascript" src="/js/showfields.js"> 
-                </script>
-                <script type="text/javascript">
-                  <% "var docstate = " ++ (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks) ++ ";" %>
-                </script>
-               
-              <div id="signatorylist">
-                 <% map (showSignatoryLinkForSign ctx document author) allinvited %>
-              </div>
-       </div>
-      </div>
+   in do
+      signatoryentryforedit <- showSignatoryEntryForEdit2 (ctxtemplates ctx) "signatory_template" "" "" "" ""
+      helpers <- renderTemplate (ctxtemplates ctx) "pageDocumentForViewerHelpers" [("documentid",show documentid),
+                                                                                   ("signatoryentryforedit",signatoryentryforedit)]                          
+      let localscript = "var docstate = " ++ (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks) ++ ";" 
+      signatorylist <- fmap concat $ sequence $ map (showSignatoryLinkForSign' ctx document author) allinvited
+      content <- renderTemplate (ctxtemplates ctx) "pageDocumentForViewerContent" [("localscript",localscript),
+                                                                                   ("signatorylist",signatorylist)]                          
+      showDocumentPageHelper' (ctxtemplates ctx) document helpers (documenttitle) content
 
 
-showDocumentPageHelper
-    :: (XMLGenerator m, 
-        HSX.EmbedAsChild m c,
-        EmbedAsAttr m (Attr [Char] KontraLink),
-        HSX.EmbedAsChild m d,
-        EmbedAsAttr m (Attr [Char] BS.ByteString)) =>
-        DocState.Document
-     -> c
-     -> BS.ByteString
-     -> d
-     -> XMLGenT m (HSX.XML m)
-showDocumentPageHelper document helpers title content =
+showDocumentPageHelper' templates document helpers title content =
+   do 
+   docbox <- showDocumentBox templates  
+   renderTemplateComplex templates "showDocumentPageHelper" $  
+                                                              (setAttribute "helpers" $ helpers) .
+                                                              (setAttribute "docbox" $ docbox) .
+                                                              (setAttribute "title" $ title) .
+                                                              (setAttribute "content" $ content ) .
+                                                              (setAttribute "linkissuedocpdf" $ show (LinkIssueDocPDF document)) 
+
+
+showDocumentPageHelper templates document helpers title content =
     <div class="docview">
      <div style="display: none">
       <% helpers %>
      </div>
       <div class="docviewleft">
-       <% showDocumentBox%>
+       <% fmap cdata $ showDocumentBox templates%>
       </div>
       <div class="docviewright"> 
        <p><strong><% title %></strong><br/>
@@ -522,8 +497,7 @@ showDocumentPageHelper document helpers title content =
      <div class="clearboth"/>
     </div> 
 
-showSignatoryLinkForSign :: Context -> Document -> User -> SignatoryLink -> GenChildList (HSPT' IO)
-showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document author siglnk@(SignatoryLink{  signatorylinkid 
+showSignatoryLinkForSign' ctx@(Context {ctxmaybeuser = muser,ctxtemplates})  document author siglnk@(SignatoryLink{  signatorylinkid 
                                        , maybesigninfo
                                        , maybeseeninfo
                                        , invitationdeliverystatus
@@ -535,88 +509,73 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser})  document author s
                                                             , signatoryotherfields
                                                             }
                                          }) =
-   let
-      wasSigned =  isJust maybesigninfo
-      wasSeen = isJust maybeseeninfo
-      isTimedout = documentstatus document == Timedout
-      isCanceled = documentstatus document == Canceled
-      isRejected = documentstatus document == Rejected
-      isWithDrawn = documentstatus document == Withdrawn
-      dontShowAnyReminder = isTimedout || isCanceled || isRejected || isWithDrawn
-      status =  caseOf
+  do
+      let wasSigned =  isJust maybesigninfo
+      let wasSeen = isJust maybeseeninfo
+      let isTimedout = documentstatus document == Timedout
+      let isCanceled = documentstatus document == Canceled
+      let isRejected = documentstatus document == Rejected
+      let isWithDrawn = documentstatus document == Withdrawn
+      let dontShowAnyReminder = isTimedout || isCanceled || isRejected || isWithDrawn
+      let isCurrentUserAuthor = maybe False (isAuthor document) muser
+      let isCurrentSignatorAuthor = (fmap (unEmail . useremail . userinfo) muser) ==  (Just signatoryemail)                  
+      let dialogHeight =   if (wasSigned) then "400" else "600"
+      let status =  caseOf
                 [
-                ( invitationdeliverystatus == Undelivered, <span>
-                                                                                   <img src="/theme/images/status_rejected.png"/>
-                                                                                   <span style="color:#000000;position:relative;top:-3px">!</span>
-                                                                              </span>), 
-                ( isWithDrawn, <img src="/theme/images/status_rejected.png"/>), 
-                ( isCanceled, <img src="/theme/images/status_rejected.png"/>), 
-                ( isRejected, <img src="/theme/images/status_rejected.png"/>), 
-                ( isTimedout, <img src="/theme/images/status_timeout.png"/>), 
-                (wasSigned, <img src="/theme/images/status_signed.png"/>),
-                (wasSeen, <img src="/theme/images/status_viewed.png"/> )
-               ]
-                <img src="/theme/images/status_pending.png"/>
-      message = caseOf
-                [
-                (wasSigned, "Undertecknat " ++ showDateOnly (signtime $ fromJust maybesigninfo) ),
-                (isTimedout, "Förfallodatum har passerat"),
-                (isCanceled || isRejected || isWithDrawn, "" ),
-                (wasSeen,  "Granskat " ++ showDateOnly (signtime $ fromJust maybeseeninfo))]
-                 "Har ej undertecknat"       
-      isCurrentUserAuthor = maybe False (isAuthor document) muser
-      isCurrentSignatorAuthor = (fmap (unEmail . useremail . userinfo) muser) ==  (Just signatoryemail)    
-      reminderText = if (wasSigned)
-                      then "Skicka dokumentet igen"
-                      else "Skicka påminnelse"
-      reminderSenderText = 
+                ( invitationdeliverystatus == Undelivered,"/theme/images/status_rejected.png"),
+                ( isWithDrawn,"/theme/images/status_rejected.png"), 
+                ( isCanceled, "/theme/images/status_rejected.png"), 
+                ( isRejected, "/theme/images/status_rejected.png"), 
+                ( isTimedout, "/theme/images/status_timeout.png"), 
+                ( wasSigned,  "/theme/images/status_signed.png"),
+                ( wasSeen,    "/theme/images/status_viewed.png" )]        
+                              "/theme/images/status_pending.png"
+      message <- caseOf
+                   [
+                    (wasSigned, renderTemplate ctxtemplates "signatoryMessageSigned" [("date", showDateOnly $ signtime $ fromJust maybesigninfo)]),  
+                    (isTimedout, renderTemplate ctxtemplates "signatoryMessageTimedout" []),
+                    (isCanceled || isRejected || isWithDrawn, return "" ),
+                    (wasSeen,  renderTemplate ctxtemplates "signatoryMessageSeen" [("date", showDateOnly $ signtime $ fromJust maybeseeninfo)])
+                   ]        (renderTemplate ctxtemplates "signatoryMessageNotSigned" [])
+      reminderText <- if (wasSigned)
+                      then renderTemplate ctxtemplates "reminderTextSigned" [] 
+                      else renderTemplate ctxtemplates "reminderTextNotSigned" []
+      reminderSenderText <- 
                      if (wasSigned)
-                      then "Skicka"
-                      else "Skicka påminnelse"               
-      reminderEditorText = "Skriv eget meddelande"                          
-      reminderDialogTitle = reminderText
-      reminderMessage =  fmap cdata $  mailDocumentRemindContent  (ctxtemplates ctx) Nothing ctx document siglnk author
-      dialogHeight =   if (wasSigned) then "400" else "600"
-      reminderForm = <span>
-                      <a style="cursor:pointer" class="prepareToSendReminderMail" rel=("#siglnk" ++ (show signatorylinkid ))>  <% reminderText %>  </a>
-                      <form class="overlay" action=(LinkRemind document siglnk) method="POST" title=reminderDialogTitle width="600" height=dialogHeight id=("siglnk" ++ (show signatorylinkid))>
-                       <a class="close"> </a>
-                       <h2> <% reminderDialogTitle %> </h2>
-                       <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
-                         <% reminderMessage %>
-                       </div>
-                       <div class="buttonbox">
-                       <button class="close button" type="button"> Avbryt </button>
-                       <button class="editer button" type="button"> <%reminderEditorText%> </button>
-                       <button class="submiter button" type="button"> <%reminderSenderText%> </button>
-                       </div>
-                      </form>     
-                    </span>  
-      changeEmailAddress = 
-                   <span>
-                      <a style="cursor:pointer" class="replacebynextonclick"> Skicka inbjudan till ny adress  </a>
-                      <form action=(LinkChangeSignatoryEmail (documentid document) signatorylinkid) method="POST" style="display:none">
-                        <input type="text" style="width:170px" name="email" value=(BS.toString signatoryemail)/>
-                        <input type="submit" style="width:100px" value="Skicka"/>
-                      </form>     
-                   </span>                
-   in asChild <div class=(if isCurrentSignatorAuthor then "author" else "signatory")><% 
-                [asChild status,asChild " "] ++
-                (if BS.null signatoryname then [] else [ asChild <strong><% signatoryname %></strong>, asChild <br/> ]) ++
-                (if BS.null signatorycompany then [] else [ asChild signatorycompany, asChild <br/> ]) ++
-                (if BS.null signatorynumber then [] else [ asChild signatorynumber, asChild <br/> ]) ++
-                (if BS.null signatoryemail then [] else [ asChild signatoryemail, asChild <br/> ]) ++
-                [asChild <div class="signatoryfields"><% map displayField signatoryotherfields %></div>] ++
-                ([asChild message]) ++
-                (if (isCurrentUserAuthor && (not isCurrentSignatorAuthor) && (not dontShowAnyReminder) && (invitationdeliverystatus /= Undelivered)) then [asChild <br/> ,asChild reminderForm] else []) ++
-                (if (isCurrentUserAuthor && (invitationdeliverystatus == Undelivered) && (not dontShowAnyReminder)) then [asChild <br/> ,asChild changeEmailAddress] else [])
-                %>
-              </div>
+                      then renderTemplate ctxtemplates "reminderSenderTextSigned" [] 
+                      else renderTemplate ctxtemplates "reminderSenderTextNotSigned" []             
+      reminderEditorText <- renderTemplate ctxtemplates "reminderEditorText" []                         
+      reminderDialogTitle <- return reminderText   
+      reminderMessage <-  mailDocumentRemindContent ctxtemplates Nothing ctx document siglnk author
+      reminderForm <- whenMaybe (isCurrentUserAuthor && (not isCurrentSignatorAuthor) && (not dontShowAnyReminder) && (invitationdeliverystatus /= Undelivered)) $
+                        renderTemplateComplex ctxtemplates "reminderForm" $  
+                                         (setAttribute "reminderDialogTitle" $  reminderDialogTitle) .
+                                         (setAttribute "signatorylinkid" $  show signatorylinkid ) .
+                                         (setAttribute "reminderText" $  reminderDialogTitle) .
+                                         (setAttribute "reminderMessage" $ reminderMessage ) .
+                                         (setAttribute "reminderEditorText" $ reminderEditorText) .
+                                         (setAttribute "reminderSenderText" $ reminderSenderText ) .
+                                         (setAttribute "dialogHeight" $ dialogHeight ) .
+                                         (setAttribute "linkremind" $ show (LinkRemind document siglnk)) 
+                                      
+      changeEmailAddress <-  whenMaybe (isCurrentUserAuthor && (invitationdeliverystatus == Undelivered) && (not dontShowAnyReminder)) $ 
+                                renderTemplateComplex ctxtemplates "changeEmailAddress" $  
+                                         (setAttribute "linkchangeemail" $  show $ LinkChangeSignatoryEmail (documentid document) signatorylinkid) .
+                                         (setAttribute "signatoryemail" $  BS.toString signatoryemail)          
+      renderTemplateComplex ctxtemplates "showSignatoryLinkForSign" $  
+                              (setAttribute "mainclass" $         if isCurrentSignatorAuthor  then "author" else "signatory") .
+                              (setAttribute "status" $ status) .
+                              (setAttribute "signatoryname" $     packToMString signatoryname ) .
+                              (setAttribute "signatorycompany" $ packToMString signatorycompany) .
+                              (setAttribute "signatorynumber" $   packToMString signatorynumber) .
+                              (setAttribute "signatoryemail" $    packToMString signatoryemail) .
+                              (setAttribute "fields" $ signatoryotherfields ) .
+                              (setAttribute "message" $  message) .
+                              (setAttribute "reminderForm" $ reminderForm) .
+                              (setAttribute "changeEmailAddress" $  changeEmailAddress) 
+                       
 
-displayField::(Monad m) => FieldDefinition -> (HSPT m XML) 
-displayField FieldDefinition {fieldlabel, fieldvalue} 
-    | fieldvalue == BS.fromString "" = <span />
-    | otherwise        = <div><span class="fieldlabel"><% fieldlabel %>: </span><span class="fieldvalue"><% fieldvalue %></span></div>
+packToMString x = if BS.null x then Nothing else (Just x) 
 
 pageDocumentForSign :: KontraLink 
                     -> Document 
@@ -637,13 +596,13 @@ pageDocumentForSign action document ctx  invitedlink wassigned author =
        allbutinvited = {- filter (/= invitedlink) -} (documentsignatorylinks document)
        documentauthordetails = signatoryDetailsFromUser author
        rejectMessage =  fmap cdata $ mailRejectMailContent (ctxtemplates ctx) Nothing ctx (prettyName author) document (personname invitedlink)
-   in showDocumentPageHelper document helpers
+   in showDocumentPageHelper (ctxtemplates ctx) document helpers
               (documenttitle document) $
               <span>
                  <p>Vänligen var noga med att granska dokumentet och kontrollera 
                     uppgifterna nedan innan du undertecknar.</p>   
 
-                 <% map (showSignatoryLinkForSign ctx document author) (allbutinvited) %>
+                 <% fmap (cdata . concat) $ sequence $ map (showSignatoryLinkForSign' ctx document author) (allbutinvited) %>
                  <% caseOf 
                     [(wassigned ,
                               <div>Du har redan undertecknat!</div>),
