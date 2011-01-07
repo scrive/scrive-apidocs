@@ -382,3 +382,6 @@ getField' f name = fmap (fmap f) $ getDataFn' (look name)
 
 readField name = fmap (join . (fmap maybeRead)) $ getDataFn' (look name)     
 
+whenMaybe::(Functor m,Monad m) => Bool -> m a -> m (Maybe a)
+whenMaybe True  c = fmap Just c
+whenMaybe False _ = return Nothing
