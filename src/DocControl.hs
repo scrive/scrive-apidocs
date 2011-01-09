@@ -426,7 +426,7 @@ handleSignShow documentid
    then renderFromBody ctx TopNone kontrakcja
                        (fmap cdata $ pageDocumentForViewer ctx document author)
    else renderFromBody ctx TopNone kontrakcja 
-                       (pageDocumentForSign (LinkSignDoc document invitedlink) 
+                       (fmap cdata $ pageDocumentForSign (LinkSignDoc document invitedlink) 
                                             document ctx invitedlink wassigned author)
 
 {- |
@@ -469,7 +469,7 @@ handleIssueShowGet docid = withUserGet $ checkUserTOSGet $ do
   -- authors get a view with buttons
   if isAuthor document user
    then renderFromBody ctx toptab kontrakcja 
-            (pageDocumentForAuthor ctx document author)
+            (fmap cdata $ pageDocumentForAuthor ctx document author)
    -- friends can just look (but not touch)
    else if isFriendOf userid author
          then renderFromBody ctx toptab kontrakcja

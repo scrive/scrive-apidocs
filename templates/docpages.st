@@ -144,8 +144,8 @@ showDocumentPageHelper=
           <small><a href="$linkissuedocpdf$" target="_blank">Ladda ned PDF</a></small></p>
        $content$
       </div>
-     <div class="clearboth"/>
-    </div> 
+     <div class="clearboth"></div>
+   </div>
 ####
 signatoryMessageSigned=Undertecknat $date$
 ###
@@ -221,5 +221,227 @@ showSignatoryLinkForSign =
  $reminderForm$
  $changeEmailAddress$
 </div>
+
+####
+pageDocumentForSignHelpers=
+                  <script> var documentid = "$documentid$"; 
+                  </script>
+                  <script type="text/javascript">
+                   $localscripts$
+                  </script>
+                 <script src="/js/signatory.js" > </script> 
+
+
+######
+pageDocumentForSignSigned=<div>Du har redan undertecknat!</div>
+####
+pageDocumentForSignTimedout= <div>Förfallodatum har passerat!</div>
+####
+pageDocumentForSignButtons=  <div>
+                                 <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign" rel="#dialog-confirm-sign"/>
+                                 <input class="bigbutton" type="submit" name="cancel" value="Avvisa" rel="#dialog-confirm-cancel" id="cancel"/>
+                              </div>
+####
+pageDocumentForSignContent= 
+              <span>
+                 <p>Vänligen var noga med att granska dokumentet och kontrollera 
+                    uppgifterna nedan innan du undertecknar.</p>   
+
+                $signatories$
+                $messageoption$
+                 <span class="localdialogs ">
+                  <form method="post" name="form" action="$action$" id="dialog-confirm-sign" class="overlay">     
+                     <a class="close"> </a>                  
+                     <h2>Underteckna</h2>  
+                     <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
+                     <p>När $partyUnsigned$ undertecknat blir 
+                      avtalet <strong>juridiskt bindande</strong> och
+                      det färdigställda avtalet skickas till din e-post.</p>
+                      <div class="buttonbox">
+                      <input type="hidden" name="sign" value="automatic"/>
+                      <button class="close button" type="button"> Avbryt </button>
+                      <button class="submiter button" type="button"> Underteckna </button>
+                      </div>
+                  </form>
+                 <form method="post" name="form" action="$action$" id="dialog-confirm-cancel" class="overlay">   
+                    <a class="close"> </a>     
+                       <h2>Avvisa</h2>                 
+                    <p>Är du säker på att du vill avvisa dokumentet <strong>$documenttitle$</strong>?</p>
+                    <p>När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela <strong>$authorname$</strong>.</p>
+                    <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
+                     $rejectMessage$
+                    </div>
+                    <div class="buttonbox">
+                     <input type="hidden" name="cancel" value="automatic"/>
+                     <button class="close button" type="button"> Avbryt </button>
+                     <button class="editer button" type="button"> Skriv eget meddelande </button>
+                     <button class="submiter button" type="button"> Avvisa </button>
+                    </div> 
+                 </form> 
+                 </span>
+                 
+              </span>
+####
+pageDocumentForAuthorHelpers=
+                 <span class="templating_insert"> $signatoryEntry$</span>,
+                  <script> var documentid = "$documentid$"; 
+                  </script>     
+#####
+pageDocumentForAuthorContent=
+   <div>
+       <div id="loading-message" style="display:none">
+            Loading pages . . .
+       </div>
+       <div id="edit-bar">
+        $if(preparation)$
+             <span>
+               <script type="text/javascript">
+                 $jscript$
+               </script>
+              <form method="post" name="form" action="$linkissuedoc$" id="main-document-form"> 
+              Avsändare<br/>
+              <div style="margin-bottom: 10px;" id="authordetails">
+              <strong><span id="sauthorname">$authorname$<BR/></span></strong>
+              <span id="sauthorcompany">$authorcompany$<BR/></span>
+              <span id="sauthornumber">$authornumber$<BR/></span>
+              <span id="sauthoremail">$authoremail$<BR/></span>
+              </div>
+              Användarroll 
+              $if(authorhaslink)$ 
+                  
+                      <select name="authorrole" id="authorroledropdown">
+                                  <option value="signatory">Undertecknare</option>
+                                  <option value="secretary">Sekreterare</option>
+                      </select>
+              $else$
+                      <select name="authorrole" id="authorroledropdown">
+                                  <option value="secretary">Sekreterare</option>
+                                  <option value="signatory">Undertecknare</option>
+                      </select> 
+              $endif$
+              
+              <br /><br />
+
+              Motpart<br/>
+              <div id="signatorylist">
+               $signatoriesForEdit$
+              </div>
+              <small><a id="addsiglink" onclick="signatoryadd(); return false;" href="#">Lägg till fler</a></small>
+              <div style="margin-top: 20px">
+              <small><a rel="#edit-invite-text-dialog" id="editinvitetextlink" href="#" style="padding-top:3px">Hälsningsmeddelande</a></small>
+              <input type="hidden" id="invitetext" name="invitetext" value="$documentinvitetext$" />
+              </div>
+              <div style="margin-top: 20px"></div>
+              <span>
+              <input type="checkbox" class="addremovecheckbox flashOnClick" rel="#daystosignbox" location="#datetosigncontainer" oldlocation="#hiddenttimestuffbox" autocomplete="off" value="$if(timetosignset)$on$else$off$endif$" ></input> Välj förfallodatum
+                <div id="datetosigncontainer">  </div>
+                $if(timetosignset)$
+                <span class="hidden flashMessage" > Varning: Om du väljer ett förfallodatum kan du inte återkalla inbjudan innan datumet förfallit. Detta regleras av avtalslagen.</span>
+                $endif$   
+
+              </span>
+              <div style="height: 2px;"/>
+              <input class="bigbutton cross-button" type="submit" name="final" value="Underteckna" id="signinvite" rel="#dialog-confirm-signinvite"/> <br />
+              <input class="button" type="submit" name="save" value="Spara som utkast"/>
+              </div>
+              </form>
+              <span class="localdialogs">
+                <form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-signinvite" rel="#main-document-form">  
+                   <a class="close"> </a>
+                   <h2 id="dialog-title-sign">Underteckna</h2>
+                   <h2 id="dialog-title-send">Skicka inbjudan</h2>
+                   <div id="dialog-confirm-text-sign">
+                    <p>Är du säker att du vill underteckna dokumentet <strong><% documenttitle %></strong>?</p>
+                    
+                    <p>När du undertecknat kommer en automatisk inbjudan att skickas till 
+                                    
+                    <span class="Xinvited">Invited</span> med e-post.</p>
+                   </div>
+
+                   <div id="dialog-confirm-text-send">
+                     <p>Du har valt en sekreterarroll och kommer själv inte att underteckna. Är du säker på att du vill skicka en inbjudan att underteckna dokumentet <strong><% documenttitle %></strong> till <span class="Xinvited">Invited</span>?</p>
+                   </div>
+                   
+                   <div class="buttonbox" >
+                       <input type="hidden" name="final" value="automatic"/>
+                       <button class="close button" type="button"> Avbryt </button>
+                       <button class="submiter button" type="button"> Underteckna </button>
+                       </div>
+                 </form>  
+                 <form method="post" name="form" action="" class="overlay" id="edit-invite-text-dialog" >  
+                   <a class="close"> </a>
+                   <h2>Hälsningsmeddelande</h2>
+                   <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
+                   $invitationMailContent$
+                   </div>
+                   <div class="buttonbox" >
+                       <button class="close button" type="button"> Avbryt </button>
+                       <button class="editer button" type=""> Skriv eget meddelande </button>
+                       <button class="close button" type="button" id="editing-invite-text-finished"> Ok </button>
+                   </div>
+                 </form>  
+                 <div class="hidden" id="hiddenttimestuffbox">
+                       <div id="daystosignbox">Undertecknas inom (dagar)
+                        <BR/>
+                        <input type="text" id="daystosign" name="daystosign" value="$documentdaystosignboxvalue$" maxlength="2" size="2" autocomplete="off"/>
+                        <small> <a  class="datetodaystip" rel="#daystosign"> </a> </small>
+                       </div>
+                 </div>
+               </span>
+             </span>
+        $else$
+               <span>
+               $if(pending)$
+                      <script type="text/javascript" language="Javascript" src="/js/showfields.js">  </script>
+                   $if(anyinvitationundelivered)$
+                       <p> Adressen 
+                          <strong>
+                            $undelivered; separator=", "$ 
+                             </strong> existerar inte. Kontrollera adressen och försök igen.
+                       </p>
+                    $endif$
+               $endif$
+               <script type="text/javascript">
+                 $jscript$
+               </script>
+               
+              <div id="signatorylist">
+                    $signatories$
+              </div>
+              $if(awaitingauthor)$
+                  <form method="post" action=""><input class="bigbutton cross-button" type="submit" name="final" value="Underteckna" id="signinvite" /></form>
+              $endif$
+              $if(pending)$
+                    $if(!timetosignset)$
+                    <span>
+                     <input class="button cancel" type="button" name="cancel" value="Återkalla inbjudan"  rel="#cancel-by-author-dialog" />    
+                     <span class="localdialogs">
+                     <form method="post" action=(LinkCancel document) class="overlay" id="cancel-by-author-dialog">
+                                <a class="close"> </a>
+                                <h2> Återkalla inbjudan </h2>
+                                <p>Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?
+                                <BR/>När du återkallat inbjudan kommer nedanstaende meddelande att skickas till dina motparter.
+                                </p>
+                                <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
+                                 $cancelMailContent$
+                                </div>
+                                <div class="buttonbox" >
+                                   <button class="close button" type="button"> Avbryt </button>
+                                   <button class="editer button" type=""> Skriv eget meddelande </button>
+                                   <button class="submiter button" type="button"> Återkalla inbjudan</button>
+                                </div>
+                          </form>
+                       </span>
+                       </span>
+                    $else$
+                       <span>Du kan inte återkalla inbjudan före förfallodatum.</span>
+                    $endif$   
+            $endif$      
+            $if(canberestarted)$
+              $restartForm$
+            $endif$ 
+        $endif$
+       </div>
+      </div>
 
 ####
