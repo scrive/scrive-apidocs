@@ -249,7 +249,7 @@ isNotLinkForUserID uid link =
 
 {- |
    Show the document to the author with controls he needs.
- -}
+ 
 pageDocumentForAuthor :: Context 
              -> Document 
              -> User
@@ -443,6 +443,70 @@ pageDocumentForAuthor ctx
        </div>
       </div>
 
+ -}
+
+
+
+
+pageDocumentForAuthor :: Context 
+             -> Document 
+             -> User
+             -> IO String
+pageDocumentForAuthor ctx
+             document@Document{ documentsignatorylinks
+                              , documenttitle
+                              , documentid
+                              , documentstatus
+                              , documentdaystosign
+                              , documentinvitetext
+                              } 
+             author =
+   let 
+       authorid = userid author
+       -- the author gets his own space when he's editing
+       allinvited = filter (isNotLinkForUserID authorid) documentsignatorylinks
+       authorhaslink = not $ null $ filter (not . isNotLinkForUserID authorid) documentsignatorylinks
+       documentdaystosignboxvalue = maybe 7 id documentdaystosign
+       timetosignset = isJust documentdaystosign --swedish low constrain
+       documentauthordetails = signatoryDetailsFromUser author
+   in do
+     signatoryEntry <- showSignatoryEntryForEdit2 (ctxtemplates ctx) "signatory_template" "" "" "" "" 
+     helpers <- renderTemplate (ctxtemplates ctx) "pageDocumentForAuthorHelpers" [("documentid",show documentid),
+                                                                                  ("signatoryEntry",signatoryEntry)] 
+     let jscript =  "var docstate = " ++ (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks) ++ ";" 
+     signatoriesForEdit <- fmap concat $ sequence $ map (showSignatoryEntryForEdit (ctxtemplates ctx)) (if (null allinvited)
+                                                                                       then [emptyDetails] 
+                                                                                       else map signatorydetails allinvited)
+     signatories <- fmap concat $ sequence $ map (showSignatoryLinkForSign' ctx document author) documentsignatorylinks                                                                                  
+     invitationMailContent <- mailInvitationToSignContent (ctxtemplates ctx) False ctx document author Nothing
+     restartForm <-   renderActionButton  (ctxtemplates ctx) (LinkRestart documentid) "restartButtonName"
+     cancelMailContent <- mailCancelDocumentByAuthorContent  (ctxtemplates ctx) False Nothing ctx document author
+     content <-  renderTemplateComplex (ctxtemplates ctx) "pageDocumentForAuthorContent" $  
+                                                              (setAttribute "jscript" $ jscript) .
+                                                              (setAttribute "linkissuedoc" $ show $ LinkIssueDoc documentid) .
+                                                              (setAttribute "authorname" $ BS.toString $ signatoryname documentauthordetails) .
+                                                              (setAttribute "authorcompany" $ BS.toString $ signatorycompany documentauthordetails ) .
+                                                              (setAttribute "authornumber" $ BS.toString $ signatorynumber documentauthordetails) .
+                                                              (setAttribute "authoremail" $ BS.toString $ signatoryemail documentauthordetails) .
+                                                              (setAttribute "authorhaslink" $ authorhaslink) .                                                                              
+                                                              (setAttribute "documentinvitetext" $ documentinvitetext) .                                                                              
+                                                              (setAttribute "timetosignset" $ timetosignset) .
+                                                              (setAttribute "invitationMailContent" $ invitationMailContent) .             
+                                                              (setAttribute "signatoriesForEdit" $ signatoriesForEdit  ) .
+                                                              (setAttribute "documentdaystosignboxvalue" $ documentdaystosignboxvalue ) .
+                                                              (setAttribute "anyinvitationundelivered" $ anyInvitationUndelivered document) .
+                                                              (setAttribute "undelivered" $ map (signatoryemail . signatorydetails) $ undeliveredSignatoryLinks document  ) .
+                                                              (setAttribute "preparation" $ documentstatus == Preparation).
+                                                              (setAttribute "signatories" signatories) .
+                                                              (setAttribute "pending" $ documentstatus == Pending || documentstatus == AwaitingAuthor ) .
+                                                              (setAttribute "awaitingauthor" $ documentstatus == AwaitingAuthor ) .
+                                                              (setAttribute "canberestarted" $ documentstatus `elem` [Canceled , Timedout , Rejected , Withdrawn ]) . 
+                                                              (setAttribute "restartForm" $ restartForm) .
+                                                              (setAttribute "cancelMailContent" $ cancelMailContent)   
+                                                           
+     showDocumentPageHelper' (ctxtemplates ctx) document helpers (documenttitle)  content
+   
+
 {- |
    Show the document for Viewers (friends of author or signatory).
    Show no buttons or other controls
@@ -583,74 +647,35 @@ pageDocumentForSign :: KontraLink
                     -> SignatoryLink
                     -> Bool 
                     -> User
-                    -> (HSPT IO XML) 
+                    -> IO String 
 pageDocumentForSign action document ctx  invitedlink wassigned author =
-   let helpers = [ <script> var documentid = "<% show $ documentid document %>"; 
-                  </script>
-                , <script type="text/javascript">
-                   <% "var docstate = " ++ (buildJS documentauthordetails $ map signatorydetails (documentsignatorylinks document)) ++ "; docstate['useremail'] = '" ++ (BS.toString $ signatoryemail $ signatorydetails invitedlink) ++ "';" %>
-                  </script>
-                , <script src="/js/signatory.js" /> ]
+    let
+       localscripts =  "var docstate = " ++ (buildJS documentauthordetails $ map signatorydetails (documentsignatorylinks document)) ++ "; docstate['useremail'] = '" ++ (BS.toString $ signatoryemail $ signatorydetails invitedlink) ++ "';"          
        magichash = signatorymagichash invitedlink
        authorname = signatoryname documentauthordetails
        allbutinvited = {- filter (/= invitedlink) -} (documentsignatorylinks document)
        documentauthordetails = signatoryDetailsFromUser author
-       rejectMessage =  fmap cdata $ mailRejectMailContent (ctxtemplates ctx) Nothing ctx (prettyName author) document (personname invitedlink)
-   in showDocumentPageHelper (ctxtemplates ctx) document helpers
-              (documenttitle document) $
-              <span>
-                 <p>Vänligen var noga med att granska dokumentet och kontrollera 
-                    uppgifterna nedan innan du undertecknar.</p>   
-
-                 <% fmap (cdata . concat) $ sequence $ map (showSignatoryLinkForSign' ctx document author) (allbutinvited) %>
-                 <% caseOf 
-                    [(wassigned ,
-                              <div>Du har redan undertecknat!</div>),
-                    (documentstatus document == Timedout, 
-                              <div>Förfallodatum har passerat!</div>),
-                    (documentstatus document == Pending, 
-                              <div>
-                                 <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign" rel="#dialog-confirm-sign"/>
-                                 <input class="bigbutton" type="submit" name="cancel" value="Avvisa" rel="#dialog-confirm-cancel" id="cancel"/>
-                              </div>) ]
-                     <span/>                 
-                 %>
-                 {- <small>Jag vill veta mer <a href="/about" target="_blank">om SkrivaPå</a>.</small> -}
-                 <span class="localdialogs ">
-                  <form method="post" name="form" action=action id="dialog-confirm-sign" class="overlay">     
-                     <a class="close"> </a>                  
-                     <h2>Underteckna</h2>  
-                     <p>Är du säker att du vill underteckna dokumentet <strong><% documenttitle document %></strong>?</p>
-                     <p>När <% partyUnsignedMeAndListString magichash document %> undertecknat blir 
-                      avtalet <strong>juridiskt bindande</strong> och
-                      det färdigställda avtalet skickas till din e-post.</p>
-                      <div class="buttonbox">
-                      <input type="hidden" name="sign" value="automatic"/>
-                      <button class="close button" type="button"> Avbryt </button>
-                      <button class="submiter button" type="button"> Underteckna </button>
-                      </div>
-                  </form>
-                 <form method="post" name="form" action=action id="dialog-confirm-cancel" class="overlay">   
-                    <a class="close"> </a>     
-                       <h2>Avvisa</h2>                 
-                    <p>Är du säker på att du vill avvisa dokumentet <strong><% documenttitle document %></strong>?</p>
-                    <p>När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela <strong><% authorname %></strong>.</p>
-                    <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
-                     <% rejectMessage %>
-                    </div>
-                    <div class="buttonbox">
-                     <input type="hidden" name="cancel" value="automatic"/>
-                     <button class="close button" type="button"> Avbryt </button>
-                     <button class="editer button" type="button"> Skriv eget meddelande </button>
-                     <button class="submiter button" type="button"> Avvisa </button>
-                    </div> 
-                 </form> 
-                 </span>
-                 
-              </span>
-     
-
-
+    in
+    do 
+     helpers <- renderTemplate (ctxtemplates ctx) "pageDocumentForSignHelpers" [("documentid",show (documentid document)),("localscripts",localscripts)]   
+     rejectMessage <- mailRejectMailContent (ctxtemplates ctx) Nothing ctx (prettyName author) document (personname invitedlink)                                                        
+     signatories <- fmap concat $ sequence $ map (showSignatoryLinkForSign' ctx document author) (allbutinvited)
+     messageoption <- caseOf [ 
+                     (wassigned,                           renderTemplate (ctxtemplates ctx) "pageDocumentForSignSigned" []),  
+                     (documentstatus document == Timedout, renderTemplate (ctxtemplates ctx) "pageDocumentForSignTimedout" []),
+                     (documentstatus document == Pending,  renderTemplate (ctxtemplates ctx) "pageDocumentForSignButtons" [])
+                     ]  $ return ""   
+                     
+     partyUnsigned <- renderListTemplate (ctxtemplates ctx) $  map (BS.toString . personname') $ partyUnsignedMeAndList magichash document
+     content <- renderTemplate (ctxtemplates ctx) "pageDocumentForSignContent" [("signatories",signatories),
+                                                                                 ("messageoption",messageoption),
+                                                                                 ("documenttitle", BS.toString $ documenttitle document),
+                                                                                 ("authorname", BS.toString $ authorname),
+                                                                                 ("rejectMessage", rejectMessage),
+                                                                                 ("partyUnsigned", partyUnsigned),
+                                                                                 ("action", show action)]        
+     putStrLn content                                                                                 
+     showDocumentPageHelper' (ctxtemplates ctx) document helpers  (documenttitle document) content
 
 --We keep this javascript code generation for now
 jsArray :: [[Char]] -> [Char]
