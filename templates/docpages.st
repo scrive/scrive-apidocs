@@ -340,7 +340,7 @@ pageDocumentForAuthorContent=
                 $endif$   
 
               </span>
-              <div style="height: 2px;"/>
+              <div style="height: 60px;"/>
               <input class="bigbutton cross-button" type="submit" name="final" value="Underteckna" id="signinvite" rel="#dialog-confirm-signinvite"/> <br />
               <input class="button" type="submit" name="save" value="Spara som utkast"/>
               </div>
@@ -416,7 +416,7 @@ pageDocumentForAuthorContent=
                     <span>
                      <input class="button cancel" type="button" name="cancel" value="Återkalla inbjudan"  rel="#cancel-by-author-dialog" />    
                      <span class="localdialogs">
-                     <form method="post" action=(LinkCancel document) class="overlay" id="cancel-by-author-dialog">
+                     <form method="post" action="$linkcancel$" class="overlay" id="cancel-by-author-dialog">
                                 <a class="close"> </a>
                                 <h2> Återkalla inbjudan </h2>
                                 <p>Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?
