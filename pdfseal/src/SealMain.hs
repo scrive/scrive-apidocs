@@ -10,8 +10,9 @@ import Data.Maybe
 import Data.Time.Clock
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
-import "mtl" Control.Monad.State.Strict
+import Control.Monad.State.Strict
 import qualified Data.Map as Map
+import SealSpec
 
 exrotate = SealSpec 
     { input = "16pages.pdf"

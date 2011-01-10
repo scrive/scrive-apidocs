@@ -46,7 +46,7 @@ import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Network.HTTP as HTTP
-import qualified Seal as Seal
+import qualified SealSpec as Seal
 import qualified TrustWeaver as TW
 
 {-

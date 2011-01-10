@@ -1,5 +1,4 @@
-{-# LANGUAGE CPP, BangPatterns, PackageImports, NamedFieldPuns #-}
-{-# OPTIONS_GHC -fglasgow-exts #-}
+{-# LANGUAGE CPP, BangPatterns, NamedFieldPuns, DoRec #-}
 
 module Seal where
 import PdfModel
@@ -8,7 +7,7 @@ import Data.Maybe
 import Data.Time.Clock
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
-import "mtl" Control.Monad.State.Strict
+import Control.Monad.State.Strict
 import qualified Data.Map as Map
 import qualified Data.Char as Char
 import Data.List
@@ -16,42 +15,7 @@ import Data.Char
 import Graphics.PDF.Text
 import Debug.Trace
 import Graphics.PDF
-
-data Person = 
-    Person { fullname :: String
-           , company :: String
-           , number :: String
-           , email :: String
-           }
-    deriving (Eq,Ord,Show,Read)
-
-data Field =
-    Field { value :: String
-          , x :: Int
-          , y :: Int
-          , page :: Int
-          , w :: Int
-          , h :: Int 
-          }
-    deriving (Eq, Ord, Show, Read)
-
-data SealSpec = SealSpec 
-    { input :: String
-    , output :: String
-    , documentNumber :: String
-    , persons :: [Person]
-    , history :: [HistEntry]
-    , initials :: String
-    , hostpart :: String
-    , fields :: [Field]
-    }
-    deriving (Eq,Ord,Show,Read)
-
-data HistEntry = HistEntry
-    { histdate :: String
-    , histcomment :: String
-    }
-    deriving (Eq,Ord,Show,Read)
+import SealSpec
 
 winAnsiPostScriptEncode text = concatMap charEncode text
     where
@@ -201,7 +165,7 @@ placeSealOnPageRefID sealrefid sealmarkerformrefid (pagerefid,sealtext) document
 
 fieldstext fields = concatMap fieldtext fields
   where
-    fieldtext Field{ Seal.value = val
+    fieldtext Field{ SealSpec.value = val
                    , x
                    , y
                    , w
