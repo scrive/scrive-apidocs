@@ -115,6 +115,7 @@ flashMessageCanceled templates = renderTemplate templates  "flashMessageCanceled
 
 
 --All doc view
+singLinkUserSmallView::SignatoryLink -> UserSmallView
 singLinkUserSmallView sl = UserSmallView {     usvId =  show $ signatorylinkid sl
                                              , usvFullname = BS.toString $ personname sl
                                              , usvEmail = ""
@@ -312,7 +313,6 @@ pageDocumentForViewer ctx
              document@Document{ documentsignatorylinks
                               , documenttitle
                               , documentid
-                              , documentstatus
                               } 
              author
              =
@@ -330,6 +330,7 @@ pageDocumentForViewer ctx
       showDocumentPageHelper (ctxtemplates ctx) document helpers (documenttitle) content
 
 
+showDocumentPageHelper:: KontrakcjaTemplates -> Document -> String -> BS.ByteString -> String -> IO String
 showDocumentPageHelper templates document helpers title content =
    do 
    docbox <- showDocumentBox templates  
@@ -339,7 +340,8 @@ showDocumentPageHelper templates document helpers title content =
                                                               (setAttribute "title" $ title) .
                                                               (setAttribute "content" $ content ) .
                                                               (setAttribute "linkissuedocpdf" $ show (LinkIssueDocPDF document)) 
-
+                                                              
+showSignatoryLinkForSign::Context -> Document -> User -> SignatoryLink-> IO String
 showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser,ctxtemplates})  document author siglnk@(SignatoryLink{  signatorylinkid 
                                        , maybesigninfo
                                        , maybeseeninfo
@@ -417,7 +419,7 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser,ctxtemplates})  docu
                               (setAttribute "reminderForm" $ reminderForm) .
                               (setAttribute "changeEmailAddress" $  changeEmailAddress) 
                        
-
+packToMString:: BS.ByteString -> Maybe BS.ByteString
 packToMString x = if BS.null x then Nothing else (Just x) 
 
 pageDocumentForSign :: KontraLink 
@@ -452,8 +454,7 @@ pageDocumentForSign action document ctx  invitedlink wassigned author =
                                                                                  ("authorname", BS.toString $ authorname),
                                                                                  ("rejectMessage", rejectMessage),
                                                                                  ("partyUnsigned", partyUnsigned),
-                                                                                 ("action", show action)]        
-     putStrLn content                                                                                 
+                                                                                 ("action", show action)]                                                                                   
      showDocumentPageHelper (ctxtemplates ctx) document helpers  (documenttitle document) content
 
 --We keep this javascript code generation for now
