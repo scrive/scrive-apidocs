@@ -77,7 +77,7 @@ Executable kontrakcja-server
  Build-depends: happstack-util, directory, process
  Build-Depends: base >= 4 && < 5, syb, dataenc
  Build-Depends: syb-with-class, binary, old-locale, old-time
- Build-Depends: network, HTTP, data-object-json, bytestring, data-object
+ Build-Depends: network, HTTP, bytestring
  Build-Depends: Crypto == 4.2.*
  Build-Depends: HaXml == 1.20.*
  Build-Depends: parallel == 2.2.*
@@ -120,7 +120,7 @@ Executable kontrakcja-test
  Build-depends: happstack-util, directory, process
  Build-Depends: base >= 4 && < 5, syb, dataenc
  Build-Depends: syb-with-class, binary, old-locale, old-time
- Build-Depends: network, HTTP, data-object-json, bytestring, data-object
+ Build-Depends: network, HTTP, bytestring
  Build-Depends: HaXml == 1.20.*
  Build-Depends: parallel == 2.2.*
  Build-Depends: template-haskell

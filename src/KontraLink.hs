@@ -14,7 +14,6 @@ import Control.Monad
 import Data.Maybe
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL
-import qualified Data.Object.Json as Json
 import MinutesTime
 import Happstack.Server.HSP.HTML (webHSP)
 import qualified HSX.XMLGenerator as HSX (XML)
