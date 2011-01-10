@@ -85,7 +85,7 @@ showFileImagesPending= <div class="pagejpga4 pagejpg">
      </div>
 ####
 showFileImagesError=<div class="pagejpga4 pagejpg">
-      $normalizelog$
+      $normalizelog:noescape()$
      </div> 
 ####
 showDocumentBox=  
@@ -122,10 +122,10 @@ pageDocumentForViewerContent=
                 <script type="text/javascript" language="Javascript" src="/js/showfields.js"> 
                 </script>
                 <script type="text/javascript">
-                 $localscript$
+                 $localscript:noescape()$
                 </script>
               <div id="signatorylist">
-                 $signatorylist$
+                 $signatorylist:noescape()$
               </div>
        </div>
       </div>
@@ -134,15 +134,15 @@ pageDocumentForViewerContent=
 showDocumentPageHelper=
     <div class="docview">
      <div style="display: none">
-      $helpers$
+      $helpers:noescape()$
      </div>
       <div class="docviewleft">
-       $docbox$
+       $docbox:noescape()$
       </div>
       <div class="docviewright"> 
        <p><strong>$title$</strong><br/>
           <small><a href="$linkissuedocpdf$" target="_blank">Ladda ned PDF</a></small></p>
-       $content$
+       $content:noescape()$
       </div>
      <div class="clearboth"></div>
    </div>
@@ -171,7 +171,7 @@ reminderForm = <span>
                        <a class="close"> </a>
                        <h2> $reminderDialogTitle$ </h2>
                        <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
-                         $reminderMessage$
+                         $reminderMessage:noescape()$
                        </div>
                        <div class="buttonbox">
                        <button class="close button" type="button"> Avbryt </button>
@@ -216,10 +216,10 @@ showSignatoryLinkForSign =
  $fields:{field| <div><span class="fieldlabel">$field.fieldlabel$: </span><span class="fieldvalue">$field.fieldvalue$</span></div>}$
  </div>
  
- $message$
+ $message:noescape()$
  <BR/>
- $reminderForm$
- $changeEmailAddress$
+ $reminderForm:noescape()$
+ $changeEmailAddress:noescape()$
 </div>
 
 ####
@@ -227,7 +227,7 @@ pageDocumentForSignHelpers=
                   <script> var documentid = "$documentid$"; 
                   </script>
                   <script type="text/javascript">
-                   $localscripts$
+                   $localscripts:noescape()$
                   </script>
                  <script src="/js/signatory.js" > </script> 
 
@@ -247,14 +247,14 @@ pageDocumentForSignContent=
                  <p>Vänligen var noga med att granska dokumentet och kontrollera 
                     uppgifterna nedan innan du undertecknar.</p>   
 
-                $signatories$
-                $messageoption$
+                $signatories:noescape()$
+                $messageoption:noescape()$
                  <span class="localdialogs ">
                   <form method="post" name="form" action="$action$" id="dialog-confirm-sign" class="overlay">     
                      <a class="close"> </a>                  
                      <h2>Underteckna</h2>  
                      <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
-                     <p>När $partyUnsigned$ undertecknat blir 
+                     <p>När $partyUnsigned:noescape()$ undertecknat blir 
                       avtalet <strong>juridiskt bindande</strong> och
                       det färdigställda avtalet skickas till din e-post.</p>
                       <div class="buttonbox">
@@ -269,7 +269,7 @@ pageDocumentForSignContent=
                     <p>Är du säker på att du vill avvisa dokumentet <strong>$documenttitle$</strong>?</p>
                     <p>När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela <strong>$authorname$</strong>.</p>
                     <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
-                     $rejectMessage$
+                     $rejectMessage:noescape()$
                     </div>
                     <div class="buttonbox">
                      <input type="hidden" name="cancel" value="automatic"/>
@@ -283,7 +283,7 @@ pageDocumentForSignContent=
               </span>
 ####
 pageDocumentForAuthorHelpers=
-                 <span class="templating_insert"> $signatoryEntry$</span>,
+                 <span class="templating_insert"> $signatoryEntry:noescape()$</span>,
                   <script> var documentid = "$documentid$"; 
                   </script>     
 #####
@@ -296,7 +296,7 @@ pageDocumentForAuthorContent=
         $if(preparation)$
              <span>
                <script type="text/javascript">
-                 $jscript$
+                 $jscript:noescape()$
                </script>
               <form method="post" name="form" action="$linkissuedoc$" id="main-document-form"> 
               Avsändare<br/>
@@ -324,7 +324,7 @@ pageDocumentForAuthorContent=
 
               Motpart<br/>
               <div id="signatorylist">
-               $signatoriesForEdit$
+               $signatoriesForEdit:noescape()$
               </div>
               <small><a id="addsiglink" onclick="signatoryadd(); return false;" href="#">Lägg till fler</a></small>
               <div style="margin-top: 20px">
@@ -351,7 +351,7 @@ pageDocumentForAuthorContent=
                    <h2 id="dialog-title-sign">Underteckna</h2>
                    <h2 id="dialog-title-send">Skicka inbjudan</h2>
                    <div id="dialog-confirm-text-sign">
-                    <p>Är du säker att du vill underteckna dokumentet <strong><% documenttitle %></strong>?</p>
+                    <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
                     
                     <p>När du undertecknat kommer en automatisk inbjudan att skickas till 
                                     
@@ -359,7 +359,7 @@ pageDocumentForAuthorContent=
                    </div>
 
                    <div id="dialog-confirm-text-send">
-                     <p>Du har valt en sekreterarroll och kommer själv inte att underteckna. Är du säker på att du vill skicka en inbjudan att underteckna dokumentet <strong><% documenttitle %></strong> till <span class="Xinvited">Invited</span>?</p>
+                     <p>Du har valt en sekreterarroll och kommer själv inte att underteckna. Är du säker på att du vill skicka en inbjudan att underteckna dokumentet <strong>$documenttitle$</strong> till <span class="Xinvited">Invited</span>?</p>
                    </div>
                    
                    <div class="buttonbox" >
@@ -372,7 +372,7 @@ pageDocumentForAuthorContent=
                    <a class="close"> </a>
                    <h2>Hälsningsmeddelande</h2>
                    <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
-                   $invitationMailContent$
+                   $invitationMailContent:noescape()$
                    </div>
                    <div class="buttonbox" >
                        <button class="close button" type="button"> Avbryt </button>
@@ -402,11 +402,11 @@ pageDocumentForAuthorContent=
                     $endif$
                $endif$
                <script type="text/javascript">
-                 $jscript$
+                 $jscript:noescape()$
                </script>
                
               <div id="signatorylist">
-                    $signatories$
+                    $signatories:noescape()$
               </div>
               $if(awaitingauthor)$
                   <form method="post" action=""><input class="bigbutton cross-button" type="submit" name="final" value="Underteckna" id="signinvite" /></form>
@@ -423,7 +423,7 @@ pageDocumentForAuthorContent=
                                 <BR/>När du återkallat inbjudan kommer nedanstaende meddelande att skickas till dina motparter.
                                 </p>
                                 <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
-                                 $cancelMailContent$
+                                 $cancelMailContent:noescape()$
                                 </div>
                                 <div class="buttonbox" >
                                    <button class="close button" type="button"> Avbryt </button>
@@ -438,7 +438,7 @@ pageDocumentForAuthorContent=
                     $endif$   
             $endif$      
             $if(canberestarted)$
-              $restartForm$
+              $restartForm:noescape()$
             $endif$ 
         $endif$
        </div>

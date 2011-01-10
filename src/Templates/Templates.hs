@@ -24,7 +24,7 @@ import Data.Maybe
 import Data.List
 import Data.Char
 import System.Log.Logger
-
+import Text.Html (stringToHtmlString)
 {-Names of template files -}
 templateFiles::[String]
 templateFiles = ["templates/landpages.st",
@@ -64,7 +64,9 @@ setAttribute =  Text.StringTemplate.setAttribute
 --This is avaible only for special cases
 renderTemplateMain::(ToSElem a)=>KontrakcjaTemplates ->String->[(String, a)] -> (KontrakcjaTemplate-> KontrakcjaTemplate)->  IO String
 renderTemplateMain ts name params f = do 
-                               let mt =  getStringTemplate name ts
+                               let ts' = setEncoderGroup stringToHtmlString ts
+                               let noescape = groupStringTemplates [("noescape", newSTMP "$it$" :: StringTemplate String)]
+                               let mt =  getStringTemplate name $ mergeSTGroups noescape ts'
                                case mt of 
                                   Just t -> do
                                             let t'= f (setManyAttrib params  t)   

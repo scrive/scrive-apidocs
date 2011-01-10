@@ -3,7 +3,7 @@ landpageSignInviteView=
     <div class="centerdivnarrow">
      <p class="headline">Dokumentet <strong>$documenttitle$</strong> undertecknat!</p>
      <p>En inbjudan att underteckna har nu skickats 
-        till $partyListButAuthor$.
+        till $partyListButAuthor:noescape()$.
      </p>
      <p><a class="button" href="/">Skapa ett nytt avtal</a></p>
     </div>
@@ -12,7 +12,7 @@ landpageSendInviteView=
     <div class="centerdivnarrow">
      <p class="headline">Dokumentet <strong>$documenttitle$</strong> skickat!</p>
      <p>En inbjudan att underteckna har nu skickats 
-        till $partyListButAuthor$.
+        till $partyListButAuthor:noescape()$.
      </p>
      <p><a class="button" href="/">Skapa ett nytt avtal</a></p>
     </div>
@@ -40,13 +40,13 @@ landpageLoginForSaveView=    <div class="centerdivnarrow">
 landpageRejectedView=
     <div class="centerdivnarrow">
       <p class="headline">Du har avvisat dokumentet <strong>$documenttitle$</strong>.</p>
-      <p>Ett meddelande har skickats till $partyList$.</p>
+      <p>Ett meddelande har skickats till $partyList:noescape()$.</p>
       <p><a href="/">Tillbaks till förstasidan</a></p>
     </div>
 #####    
 willCreateAccountForYouNoAccount= 
     <p>Dokumentet har sparats till ditt konto. 
-      $loginBox$
+      $loginBox()$
     </p>    
 #####  
 willCreateAccountForYouHasAccount= 
@@ -61,17 +61,17 @@ landpageSignedViewClosed=
      <div class="centerdivnarrow">
       <p class="headline">Dokumentet är färdigställt</p>
       <p>Du har undertecknat dokumentet <strong>$documenttitle$</strong>. Således har 
-         $partyListString$ undertecknat dokumentet och avtalet är nu juridiskt bindande.</p>
-         $willCreateAccountForYou$
+         $partyListString:noescape()$ undertecknat dokumentet och avtalet är nu juridiskt bindande.</p>
+         $willCreateAccountForYou:noescape()$
     </div>
 #####
 landpageSignedViewNotClosed=  
     <div class="centerdivnarrow">
       <p class="headline">Du har undertecknat</p>
       <p>Du har nu undertecknat dokumentet <strong>$documenttitle$</strong>. 
-         $partyUnsignedListString$ har ännu inte undertecknat 
+         $partyUnsignedListString:noescape()$ har ännu inte undertecknat 
          dokumentet. När alla undertecknat blir avtalet juridiskt bindande och
          en kopia av det färdigställda dokumentet skickats då till din e-post.</p>
-         $willCreateAccountForYou$
+         $willCreateAccountForYou:noescape()$
     </div>
 ###
