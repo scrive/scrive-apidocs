@@ -56,7 +56,7 @@ signupPageView =
 activatePageView=   <form action="" method="post">
                     <h2>Vänligen acceptera användarvillkoren</h2>
                     <div style="height:480px;overflow-y:scroll;border:1px solid #EEEEEE">
-                      $tostext$
+                      $tostext:noescape()$
                      <br/>
                     </div>
                     <br/>

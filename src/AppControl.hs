@@ -57,7 +57,7 @@ import qualified Network.HTTP as HTTP
 import qualified Network.AWS.AWSConnection as AWS
 import qualified TrustWeaver as TW
 import qualified Payments.PaymentsControl as Payments
-import Templates.Templates (readTemplates, renderTemplate)
+import Templates.Templates (readTemplates, renderTemplate, KontrakcjaTemplates)
 import qualified Administration.AdministrationControl as Administration
 import Mails.MailsConfig
 import Mails.SendGridEvents
@@ -77,6 +77,7 @@ data AppConf
               , twAdminCert     :: FilePath
               , twAdminCertPwd  :: String
               , mailsConfig     :: MailsConfig
+              , templates       :: KontrakcjaTemplates
               }              
 
 
@@ -265,7 +266,6 @@ appHandler appConf = do
   session <- handleSession
   muser <- getUserFromSession session
   flashmessages <- getFlashMessagesFromSession session          
-  templates <- liftIO $ readTemplates
   let 
    ctx = Context
             { ctxmaybeuser = muser
@@ -276,7 +276,7 @@ appHandler appConf = do
             , ctxipnumber = peerip
             , ctxs3action = defaultAWSAction appConf
             , ctxproduction = production appConf
-            , ctxtemplates = templates
+            , ctxtemplates = templates appConf
             , ctxmailsconfig = mailsConfig appConf
             , ctxtwconf = TW.TrustWeaverConf 
                           { TW.signcert = twSignCert appConf

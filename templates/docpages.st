@@ -11,9 +11,9 @@ pageDocumentList=
       <thead>
        <tr>
         <td><a href="#" id="all">Alla</a></td>
-        <td></td> 
+        <td><span style="padding-left:5px">Status</span></td> 
         <td></td>
-        <td>Motparter</td>
+        <td>Parter</td>
         <td>Dokument</td>
         <td>Senaste handelse</td>
         <td></td>
