@@ -43,6 +43,7 @@ import DocControl
 import DocState
 import qualified Amazon as AWS
 import Mails.MailsConfig
+import Templates.Templates (readTemplates,emptyTemplates)
 
 startTestSystemState' :: (Component st, Methods st) => Proxy st -> IO (MVar TxControl)
 startTestSystemState' proxy = do
@@ -107,10 +108,11 @@ main = withLogger $ do
 
   args <- getArgs
   mailsConf <- getMailsConfig
+  templates <- readTemplates
   appConf <- case parseConfig args of
     (Left e) -> do logM "Happstack.Server" ERROR (unlines e)
                    exitFailure
-    (Right f) -> return $ (f $ defaultConf progName) {mailsConfig = mailsConf}
+    (Right f) -> return $ (f $ defaultConf progName) {mailsConfig = mailsConf, templates = templates} 
   Exception.bracket
                  -- start the state system
               (logM "Happstack.Server" NOTICE ("Using store " ++ store appConf) >>
@@ -161,6 +163,7 @@ defaultConf progName
               , twAdminCert = ""
               , twAdminCertPwd = ""
               , mailsConfig = defaultMailConfig
+              , templates = emptyTemplates  
               }
 
 opts :: [OptDescr (AppConf -> AppConf)]

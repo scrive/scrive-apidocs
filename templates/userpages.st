@@ -66,7 +66,7 @@ pageAcceptTOS =
      <form method="post" action="/accepttos" id="toscontainer" class="overlay">
       <a class="close"> </a>                  
       <h2>Vänligen acceptera användarvillkoren</h2>
-      $tostext$
+      $tostext:noescape()$
      <br/>
      <input type="checkbox" name="tos" id="tos"/>Jag har läst och accepterar SkrivaPå Allmänna Villkor<br/>
      <div class="buttonbox">

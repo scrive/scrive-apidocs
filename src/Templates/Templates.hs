@@ -15,7 +15,7 @@
 -- 'KontrakcjaTemplates' is alias for template group, but ma be changed in a future
 -----------------------------------------------------------------------------
 module Templates.Templates
-    (readTemplates,renderTemplate,renderTemplate',renderTemplateComplex,templateList,KontrakcjaTemplates,Templates.Templates.setAttribute) where
+    (readTemplates,renderTemplate,renderTemplate',renderTemplateComplex,templateList,KontrakcjaTemplates,Templates.Templates.setAttribute,emptyTemplates) where
 
 import Text.StringTemplate 
 import System.IO
@@ -136,3 +136,5 @@ printTemplateData tsgroup name =  do
                                               do
                                                sequence_ $ map (putStrLn . ("    " ++ )) p
                                                putStrLn ""
+emptyTemplates::KontrakcjaTemplates                                               
+emptyTemplates = nullGroup                                               
