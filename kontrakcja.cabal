@@ -71,7 +71,7 @@ Executable kontrakcja-server
  if os(windows)
    cpp-options: -DWINDOWS
  Build-depends: happstack-state, happstack-server==0.5.0.4, hslogger,  time, time-extras
- Build-depends: hsx == 0.7.0, hsp == 0.5.2
+ Build-depends: hsx == 0.7.*, hsp == 0.5.2
  Build-depends: happstack==0.5.0.3, utf8-string, random
  Build-depends: happstack-data, extensible-exceptions, happstack-ixset, containers
  Build-depends: happstack-util, directory, process
@@ -83,8 +83,6 @@ Executable kontrakcja-server
  Build-Depends: parallel == 2.2.*
  Build-Depends: HStringTemplate == 0.6.5
  Build-Depends: template-haskell
- -- Build-Depends: heist
- -- Build-Depends: monads-fd
  Build-Depends: mtl == 1.*
  Build-Depends: hS3
  Build-Depends: hxt<9
@@ -114,7 +112,7 @@ Executable kontrakcja-test
  Build-depends: HUnit, QuickCheck
  Build-depends: filepath
  Build-depends: happstack-state, happstack-server==0.5.0.4, hslogger, time, time-extras
- Build-depends: hsx == 0.7.0, hsp == 0.5.2
+ Build-depends: hsx == 0.7.*, hsp == 0.5.2
  Build-depends: happstack==0.5.0.3, utf8-string, random
  Build-depends: happstack-data, extensible-exceptions, happstack-ixset, containers
  Build-depends: happstack-util, directory, process
