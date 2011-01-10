@@ -4,12 +4,12 @@ mailCancelDocumentByAuthorTitle=Återkallelsenotis: $documenttitle$
 mailCancelDocumentByAuthorStandardHeader=<p>Hej </p>
 ######
 mailCancelDocumentByAuthorContent=    
-        $header$
+        $header:noescape()$
         <p>
                  $creatorname$ har valt att återkalla sin inbjudan att underteckna dokument $documenttitle$.
                  Därmed är avtalsprocessen avbruten och du kan inte längre underteckna dokumentet.    
         </p>
-        $footer$
+        $footer:noescape()$
 #####
 mailDocumentAwaitingForAuthorTitle=Bekräftelse: $documenttitle$ 
 ######
@@ -28,7 +28,7 @@ mailDocumentClosedForAuthorTitle=Bekräftelse: $documenttitle$
 mailDocumentClosedForAuthorContent=    <span>
           <p>Hej <strong>$authorname$</strong>,</p>
              <p>Dokumentet <strong>$documenttitle$</strong> har undertecknats 
-                av $partylist$. Avtalet är nu bindande.</p> 
+                av $partylist:noescape()$. Avtalet är nu bindande.</p> 
              <p>Det färdigställda dokumentet bifogas med detta mail.</p> 
              $poweredBySkrivaPaPara()$
         </span> 
@@ -38,7 +38,7 @@ mailDocumentClosedForSignatoriesTitle=Bekräftelse: $documenttitle$
 mailDocumentClosedForSignatoriesContent=     <span>
            <p>Hej <strong>$personname$</strong>,</p>
            <p>Dokumentet <strong>$documenttitle$</strong> har undertecknats 
-             av $partylist$. Avtalet är nu bindande.</p> 
+             av $partylist:noescape()$. Avtalet är nu bindande.</p> 
            <p>Det färdigställda dokumentet bifogas med detta mail.</p> 
             $poweredBySkrivaPaPara()$
          </span>
@@ -55,12 +55,12 @@ mailRejectMailContent= <span>
 mailInvitationToSignTitle=Inbjudan från $creatorname$ till $documenttitle$
 ###
 mailInvitationToSignContent= 
-                $header$
+                $header:noescape()$
                 <span>
                   <p><i>Översiktlig information</i><br/>
-                   Parter: $partnersinfo$<br/>
+                   Parter: $partnersinfo:noescape()$<br/>
                    Har undertecknat: <strong>$creatorname$</strong><br/>
-                   $timetosigninfo$
+                   $timetosigninfo:noescape()$
                   </p>
                  <p><i>Så här går du vidare</i><br/>
                   1. Klicka på länken <br/>
@@ -73,29 +73,8 @@ mailInvitationToSignContent=
 		 <i>Detta mail får inte vidarebefordras.</i>
 		 </p>
                 </span>
-                $footer$
-###
-mailInvitationToSendContent= 
-                $header$
-                <span>
-                  <p><i>Översiktlig information</i><br/>
-                   Parter: $partnersinfo$<br/>
-                   Har undertecknat: Ingen har undertecknat dokumentet än
-                   $timetosigninfo$
-                  </p>
-                 <p><i>Så här går du vidare</i><br/>
-                  1. Klicka på länken <br/>
-                    <a href="$link$">$link$</a> <br/>
-                    <br/>
-                  2. Granska online<br/>
-                  3. Underteckna<br/>
-                  4. Färdig</p>
-		 <p>
-		 <i>Detta mail får inte vidarebefordras.</i>
-		 </p>
-                </span>
-                $footer$
-######                
+                $footer:noescape()$
+###        
 mailInvitationToSignDefaultHeader = <p>Hej $personname$, <br/><br/> $creatorname$ har bjudit in dig att underteckna 
                                        dokumentet Testavtal online via tjänsten SkrivaPå. </p>
 ####
@@ -116,12 +95,12 @@ remindMailNotSignedStandardHeader=   <span>
 
 #####
 remindMailNotSignedContent=
-                             $header$
+                             $header:noescape()$
                              <span>
                               <p><i>Översiktlig information</i><br/>
-                              Parter: $partnersinfo$<br/>
+                              Parter: $partnersinfo:noescape()$<br/>
                               Har undertecknat: <strong>$creatorname$</strong><br/>
-                              $timetosigninfo$
+                              $timetosigninfo:noescape()$
                               </p>
                              <p><i>Så här går du vidare</i><br/>
                              1. Klicka på länken<br/>
@@ -133,7 +112,7 @@ remindMailNotSignedContent=
 			    <i>Detta mail får inte vidarebefordras.</i>
 			    </p>
                              </span>
-                             $footer$                            
+                             $footer:noescape()$                            
                              
 ####
 newUserMailTitle=Nytt konto

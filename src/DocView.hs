@@ -204,7 +204,7 @@ showFileImages templates _ (JpegPagesError normalizelog) = renderTemplate templa
 showFilesImages2 :: KontrakcjaTemplates ->  [(File, JpegPages)] -> IO String
 showFilesImages2 templates files = do
                                     filesPages <- sequence $ map (uncurry (showFileImages templates)) files
-                                    renderTemplate templates  "span" [("it",concat filesPages)]  
+                                    renderTemplate templates  "spanNoEscape" [("it",concat filesPages)]  
 
 
 showDocumentBox :: KontrakcjaTemplates ->  IO String
@@ -279,6 +279,7 @@ pageDocumentForAuthor ctx
      restartForm <-   renderActionButton  (ctxtemplates ctx) (LinkRestart documentid) "restartButtonName"
      cancelMailContent <- mailCancelDocumentByAuthorContent  (ctxtemplates ctx) False Nothing ctx document author
      content <-  renderTemplateComplex (ctxtemplates ctx) "pageDocumentForAuthorContent" $  
+                                                              (setAttribute "documenttitle" $ documenttitle) .
                                                               (setAttribute "jscript" $ jscript) .
                                                               (setAttribute "linkissuedoc" $ show $ LinkIssueDoc documentid) .
                                                               (setAttribute "authorname" $ BS.toString $ signatoryname documentauthordetails) .

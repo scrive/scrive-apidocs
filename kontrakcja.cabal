@@ -88,6 +88,7 @@ Executable kontrakcja-server
  Build-Depends: hxt<9
  Build-Depends: mmap==0.5.*
  Build-Depends: array
+ Build-Depends: html
  Main-Is: Main.hs
 
  Extensions: TemplateHaskell, TypeFamilies, DeriveDataTypeable,
@@ -128,7 +129,7 @@ Executable kontrakcja-test
  Build-Depends: Crypto == 4.2.*
  Build-Depends: mmap==0.5.*
  Build-Depends: array
-
+ Build-Depends: html
  Main-is: TestMain.hs
 
  Extensions: TemplateHaskell, TypeFamilies, DeriveDataTypeable,

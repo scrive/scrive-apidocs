@@ -56,16 +56,16 @@ wrapHTML= <html>
       <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
      </head>
      <body>
-       $body$
+       $body:noescape()$
      </body>
     </html>
 
 ####
-makeEditable=<div class="editable" name="$name$">$this$</div>         
+makeEditable=<div class="editable" name="$name$">$this:noescape()$</div>         
 ####
 replaceOnEdit= <span> 
-                 <span class="replacebynextonedit"> $this$ </span> 
-                 <span style="display:none"> $with$ </span>  
+                 <span class="replacebynextonedit"> $this:noescape()$ </span> 
+                 <span style="display:none"> $with:noescape()$ </span>  
                </span>  
 #####
 actionButton=<form method="POST" action="$action$"> <input type="submit" value="$buttonname$">
@@ -88,12 +88,14 @@ input= <input style="width:50px" type="$iType$" name="$iName$" value="$iValue$"/
 ###
 showmoney=$main$.$rest$ 
 ###
-br = $it$<br/>
+br = $it:noescape()$<br/>
 ###
-span = <span>$it$</span>
+span = <span>$it:noescape()$</span>
 ###
-td = <td style="text-align:center">$it$</td>
+td = <td style="text-align:center">$it:noescape()$</td>
 ###
 ###
-th = <th style="width:60px;text-align:center">$it$</th>
+th = <th style="width:60px;text-align:center">$it:noescape()$</th>
 ###
+spanNoEscape = <span>$it:noescape()$</span>
+####
