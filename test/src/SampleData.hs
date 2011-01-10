@@ -125,8 +125,8 @@ anUnsignedDocument = Document {
                documentdaystosign = Nothing,
                documenttimeouttime = Nothing,
                documentdeleted = False,
-               documentauthordetails = someSignatoryDetails,
-               documentmaybesigninfo = Nothing,
+               -- documentauthordetails = someSignatoryDetails,
+               -- documentmaybesigninfo = Nothing,
                documenthistory = [],
                documentinvitetext = BS.fromString "" }
 aSignedDocument = Document {
@@ -143,8 +143,8 @@ aSignedDocument = Document {
                documentdaystosign = Nothing,
                documenttimeouttime = Nothing,
                documentdeleted = False,
-               documentauthordetails = someSignatoryDetails,
-               documentmaybesigninfo = Just (SignInfo {signtime = MinutesTime 123, signipnumber = 123}),
+               --documentauthordetails = someSignatoryDetails,
+               --documentmaybesigninfo = Just (SignInfo {signtime = MinutesTime 123, signipnumber = 123}),
                documenthistory = [],
                documentinvitetext = BS.fromString "" }
 
