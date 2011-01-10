@@ -8,6 +8,8 @@ require "src/user_helper"
 include UserHelper
 require "src/footer_helper"
 include FooterHelper
+require "src/email_helper"
+include EmailHelper
 
 describe "signup page" do
   attr_reader :selenium_driver
@@ -42,46 +44,38 @@ describe "signup page" do
   end
 
   it "has logout link in header when somebody is logged in" do
-    UserHelper.register_login(page, "Harry Happstack", "harry@corp.xyz", "passwordh")
+    UserHelper.login_as_new_user(page, "bob@corp.xyz", "Bob Blue", "passwordb")
     begin
       UserHelper.is_logout_link_present_in_header(page).should be_true
     ensure
       UserHelper.logout(page)
     end
   end
-  
-  it "has all footer links" do
-    FooterHelper.are_footer_links_present(page).should be_true
-  end
 
-  it "displays signup form again if passwords don't match" do
-    UserHelper.register_with_second_password(page, "Irene Iris", "irene@comltd.xyz", "passwordi", "not_passwordi")
-    UserHelper.is_signup_form_present(page).should be_true
+  it "sends an email with a link after a successful registration" do
+    UserHelper.register(page, "david@comp.xyz")
+    EmailHelper.is_email_for("david@comp.xyz").should be_true
+    EmailHelper.is_link_in_mail_for("david@comp.xyz").should be_true
   end
 
   it "displays signup form again if email is blank" do
-    UserHelper.register(page, "Jack Jones", "", "passwordj")
+    UserHelper.register(page, "")
     UserHelper.is_signup_form_present(page).should be_true
   end
 
-  it "displays signup form again if password is empty" do
-    UserHelper.register(page, "Liam Loh", "liam@comltd.xyz", "")
+  it "displays signup form again if using registered user's email" do
+    UserHelper.register(page, "emma@comp.xyz")
+    UserHelper.register(page, "emma@comp.xyz")
+    UserHelper.is_signup_form_present(page).should be_true
+  end
+  
+  it "displays signup form again if using activated user's email" do
+    UserHelper.create_new_user(page, "fred@comp.xyz", "Fred Farrow", "passwordf")
+    UserHelper.register(page, "fred@comp.xyz")
     UserHelper.is_signup_form_present(page).should be_true
   end
 
-  it "displays signup form again if password is shorter than 6 chars long" do
-    UserHelper.register(page, "Marjorie Mowlem", "marjorie@comltd.xyz", "just5")
-    UserHelper.is_signup_form_present(page).should be_true
+  it "has all footer links" do
+    FooterHelper.are_footer_links_present(page).should be_true
   end
-
-  it "allows user to signup with a blank name" do
-    UserHelper.register_login_and_logout(page, "", "kat@comltd.xyz", "passwordk")
-  end
-
-  it "displays signup form again if using existing email" do
-    UserHelper.register_login_and_logout(page, "Nigel Noodle", "nigel@comp.xyz", "passwordn")
-    UserHelper.register(page, "Nigel Noodle Again", "nigel@comp.xyz", "passwordn_again")
-    UserHelper.is_signup_form_present(page).should be_true
-  end
-
 end

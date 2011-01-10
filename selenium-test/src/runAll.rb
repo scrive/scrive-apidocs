@@ -1,6 +1,9 @@
-require "rubygems"
 require "src/kontrakcja_server.rb"
 require "src/selenium_server.rb"
+require "src/email_helper.rb"
+include EmailHelper
+
+EmailHelper.clear_all
 
 @selenium_server = SeleniumServer.new
 @selenium_server.start

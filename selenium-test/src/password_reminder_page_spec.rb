@@ -42,31 +42,44 @@ describe "password reminder page" do
   end
 
   it "has logout link in header when somebody is logged in" do
-    UserHelper.register_login(page, "Freddie Farrow", "freddie@corp.xyz", "passwordf")
+    UserHelper.login_as_new_user(page, "oscar@corp.xyz", "Oscar O'Keefe", "passwordo")
     begin
       UserHelper.is_logout_link_present_in_header(page).should be_true
     ensure
       UserHelper.logout(page)
     end
   end
-  
-  it "has all footer links" do
-    FooterHelper.are_footer_links_present(page).should be_true
+
+  it "sends an email with a link after a successful request" do
+    UserHelper.create_new_user(page, "petri@corp.xyz", "Petri Pesky", "passwordp")
+    UserHelper.request_password_reminder(page, "petri@corp.xyz")
+    EmailHelper.is_email_for("petri@corp.xyz").should be_true
+    EmailHelper.is_link_in_mail_for("petri@corp.xyz").should be_true
   end
 
-  it "displays login form after a successful request" do
-    UserHelper.register_login_and_logout(page, "Emma Emo", "emma@compltd.xyz", "passworde")
-    UserHelper.request_password_reminder(page, "emma@compltd.xyz")
+  it "displays the login form after a successful request" do
+    UserHelper.create_new_user(page, "quentin@corp.xyz", "Quentin Queue", "passwordq")
+    UserHelper.request_password_reminder(page, "quentin@corp.xyz")
     UserHelper.is_login_form_present_in_main(page).should be_true
   end
 
-  it "displays reminder form again if email doesn't exist for a user" do
+  it "doesn't send an email if the account is non-existant" do
     UserHelper.request_password_reminder(page, "an_incorrect_email@xyz.xyz")
-    UserHelper.is_password_remind_form_present(page).should be_true 
+    UserHelper.is_email_for("an_incorrect_email@xyz.xyz").should be_false 
+  end
+
+  it "doesn't send an email if the account hasn't been activated" do
+    UserHelper.register(page, "roberta@corp.xyz")
+    UserHelper.request_password_reminder(page, "roberta@corp.xyz")
+    UserHelper.is_email_for("roberta@corp.xyz").should be_false
   end
 
   it "displays reminder form again if email is left blank" do
     UserHelper.request_password_reminder(page, "")
     UserHelper.is_password_remind_form_present(page).should be_true 
+  end
+
+  it "has all footer links" do
+    FooterHelper.are_footer_links_present(page).should be_true
   end
 end

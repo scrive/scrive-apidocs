@@ -1,16 +1,10 @@
 require "rubygems"
-gem "rspec"
-gem "selenium-client"
-require "selenium/client"
-require "selenium/rspec/spec_helper"
-require "spec/test/unit"
 require "fileutils"
 require "popen4"
 
 class KontrakcjaServer
 
   def start
-    puts "Starting Kontrakcja Server ..."
     move_working_dir
 
     if File.directory? "_local" then
@@ -29,7 +23,6 @@ class KontrakcjaServer
   end
 
   def stop
-    puts "Stopping Kontrakcja Server ..."
     Process.kill 15, @pid
   end
 
