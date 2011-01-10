@@ -46,8 +46,6 @@ import qualified Data.Set as Set
 import Misc (renderXMLAsBSHTML)
 import qualified Data.Map as Map
 import HSP.XML
-import Data.Object.Json as Json
-import Data.Object as Json
 import qualified Network.AWS.Authentication as AWS
 import Templates.Templates  (KontrakcjaTemplates)
 import Mails.MailsConfig
@@ -79,23 +77,6 @@ instance (XMLGenerator m) => (EmbedAsChild m HeaderPair) where
 instance (EmbedAsChild m HSP.XML.XML,EmbedAsAttr m (Attr [Char] [Char])) => (EmbedAsChild m FlashMessage) where
   asChild (FlashMessage msg) = 
      asChild (<span class="flashmessage"> <% cdata $ BS.toString msg %> </span>)
-     
-instance (XMLGenerator m) => (EmbedAsChild m (Json.Object BS.ByteString Json.JsonScalar)) where
-  asChild (Json.Mapping xs) = 
-    let s (k, v) = <li><% BS.toString k %>: <% v %></li> 
-    in
-     <% <ul> <% map s xs %>  </ul> %>
-  asChild (Json.Sequence xs) =
-   let y v = <li><% v %></li>
-   in
-     <% <ol> <% map y xs %> </ol> %>
-  asChild (Json.Scalar val) =  <% <span> <% val %> </span> %>
-
-instance (XMLGenerator m) => (EmbedAsChild m Json.JsonScalar) where
-  asChild (JsonString x) = <% BS.toString x %>	
-  asChild (JsonNumber x) = <% show x %>	
-  asChild (JsonBoolean x) = <% show x %>
-  asChild JsonNull = <% "null" %>  
     
 #if MIN_VERSION_happstack_server(0,5,1)
 rqInputs rq = rqInputsQuery rq ++ rqInputsBody rq

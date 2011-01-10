@@ -17,7 +17,6 @@ import Control.Concurrent
 import Data.ByteString.Char8 (ByteString)
 import Data.List
 import Data.Maybe
-import Data.Object
 import Debug.Trace
 import DocState
 import qualified DocView as V

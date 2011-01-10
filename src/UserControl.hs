@@ -6,7 +6,6 @@ import "mtl" Control.Monad.Trans (liftIO,MonadIO,lift)
 import "base" Control.Monad
 import AppView
 import Data.Maybe
-import Data.Object
 import DocState
 import DocView
 import Happstack.Data.IxSet 
@@ -29,7 +28,6 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Lazy as LS
 import qualified Data.ByteString.Lazy.UTF8 as LS
 import qualified Data.ByteString.Char8 as BS8
-import qualified Data.Object.Json as Json
 import qualified Data.Set as Set
 import qualified HSP
 import Templates.Templates (KontrakcjaTemplates)

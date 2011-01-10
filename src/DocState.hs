@@ -1162,6 +1162,7 @@ getTimeoutedButPendingDocuments now = do
                                                   Just timeout -> (documentstatus doc) == Pending &&(unTimeoutTime timeout) < now
                                                   _ -> False           
     
+
 newDocument :: User
             -> BS.ByteString
             -> MinutesTime 
