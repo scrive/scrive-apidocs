@@ -42,7 +42,7 @@ Executable pdfseal
     Buildable: False
 
   GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
-  hs-source-dirs: pdfseal/src src
+  hs-source-dirs: pdfseal/src pdfseal/inc
   -- .hs or .lhs file containing the Main module.
   Main-is: SealMain.hs
 
@@ -62,7 +62,7 @@ Executable kontrakcja-server
  else
     Buildable: False
 
- hs-source-dirs: src pdfseal/src
+ hs-source-dirs: src pdfseal/inc
 
  GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
  if !os(windows)
@@ -88,7 +88,6 @@ Executable kontrakcja-server
  Build-Depends: mtl == 1.*
  Build-Depends: hS3
  Build-Depends: hxt<9
- Build-Depends: HPDF
  Build-Depends: mmap==0.5.*
  Build-Depends: array
  Main-Is: Main.hs
@@ -103,7 +102,7 @@ Executable kontrakcja-test
     Buildable: True
  else
     Buildable: False
- hs-source-dirs: test/src src pdfseal/src
+ hs-source-dirs: test/src src pdfseal/inc
 
  GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
  if !os(windows)
@@ -129,7 +128,6 @@ Executable kontrakcja-test
  Build-Depends: hS3
  Build-Depends: HStringTemplate == 0.6.5
  Build-Depends: Crypto == 4.2.*
- Build-Depends: HPDF
  Build-Depends: mmap==0.5.*
  Build-Depends: array
 
