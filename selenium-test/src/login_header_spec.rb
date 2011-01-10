@@ -12,7 +12,7 @@ require "src/upload_helper"
 include UploadHelper
 require "src/kontrakcja_server.rb"
 
-describe "login page" do
+describe "login header" do
   attr_reader :selenium_driver
   alias :page :selenium_driver
 
@@ -28,7 +28,7 @@ describe "login page" do
   end
 
   before(:each) do
-    page.open "/login"
+    page.open "/"
     page.wait_for_page_to_load "30000"
   end
   
@@ -40,42 +40,29 @@ describe "login page" do
     @selenium_driver.close_current_browser_session
   end
 
-  it "has login form in header when nobody is logged in" do
-    UserHelper.is_login_form_present_in_header(page).should be_true
-  end
-
-  it "has logout link in header when somebody is logged in" do
-    UserHelper.login_as_new_user(page, "wilma@corp.xyz", "Wilma Wilde", "passwordw")
+  it "displays upload form if login successful" do
+    UserHelper.create_new_user(page, "zebadee@compltd.xyz", "Zebadee Zing", "passwordz")
+    UserHelper.login_with_header_form(page, "zebadee@compltd.xyz", "passwordz")
     begin
-      UserHelper.is_logout_link_present_in_header(page).should be_true
+      UploadHelper.is_upload_form_present(page).should be_true
     ensure
       UserHelper.logout(page)
     end
   end
-  
-#  it "displays upload form if login successful (this fails, but it's a bug with the test, not with the program)" do
-#    UserHelper.create_new_user(page, "xavier@compltd.xyz", "Xavier Xanu", "passwordx")
-#    UserHelper.login_with_main_form(page, "xavier@compltd.xyz", "passwordx")
-#    begin
-#      UploadHelper.is_upload_form_present(page).should be_true
-#    ensure
-#      UserHelper.logout(page)
-#    end
-#  end
 
   it "displays login form if fields left empty" do
-    UserHelper.login_with_main_form(page, "", "")
+    UserHelper.login_with_header_form(page, "", "")
     UserHelper.is_login_form_present_in_main(page).should be_true
   end
 
   it "displays login form if invalid password is used" do
-    UserHelper.create_new_user(page, "yvonne@compltd.xyz", "Yvonne Yoghurt", "passwordy")
-    UserHelper.login_with_main_form(page, "yvonne@compltd.xyz", "an_incorrect_password")
+    UserHelper.create_new_user(page, "annabella@compltd.xyz", "Annabella Aberdeen", "passworda")
+    UserHelper.login_with_header_form(page, "annabella@compltd.xyz", "an_incorrect_password")
     UserHelper.is_login_form_present_in_main(page).should be_true
   end
 
   it "displays login form if invalid username is used" do
-    UserHelper.login_with_main_form(page, "idontexist@nowhere.xyz", "a_password")
+    UserHelper.login_with_header_form(page, "idontexist@nowhere.xyz", "a_password")
     UserHelper.is_login_form_present_in_main(page).should be_true
   end
 

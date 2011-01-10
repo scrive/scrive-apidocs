@@ -42,7 +42,7 @@ describe "landing page" do
   end
 
   it "has logout link in header when somebody is logged in" do
-    UserHelper.register_login(page, "Gillian Garvy", "gill@corp.xyz", "passwordg")
+    UserHelper.login_as_new_user(page, "annie@corp.xyz", "Annie Angus", "passworda")
     begin
       UserHelper.is_logout_link_present_in_header(page).should be_true
     ensure

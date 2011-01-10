@@ -4,10 +4,6 @@ gem "selenium-client"
 require "selenium/client"
 require "selenium/rspec/spec_helper"
 require "spec/test/unit"
-require "src/user_helper"
-include UserHelper
-require "src/footer_helper"
-include FooterHelper
 
 describe "footer" do
   attr_reader :selenium_driver

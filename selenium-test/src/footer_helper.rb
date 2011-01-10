@@ -1,9 +1,6 @@
 require "rubygems"
-gem "rspec"
 gem "selenium-client"
 require "selenium/client"
-require "selenium/rspec/spec_helper"
-require "spec/test/unit"
 
 module FooterHelper
 
