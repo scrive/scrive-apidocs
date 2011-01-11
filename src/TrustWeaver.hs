@@ -399,14 +399,13 @@ makeSoapCall url action cert certpwd request = do
                "-k", "--silent", "--show-error",
                "--cert", cert ++ ":" ++ certpwd,
                "--cacert", cert,
-               "--data-binary", "@-",
                "-H", "Content-Type: text/xml; charset=UTF-8",
                "-H", "Expect: 100-continue",
                "-H", "SOAPAction: " ++ action,
                url
              ]
 
-  (code,stdout,stderr) <- readProcessWithExitCode' "curl.exe" args input
+  (code,stdout,stderr) <- readCurl args input
   -- BSL.appendFile "soap.xml" stdout
 
   {-

@@ -45,6 +45,8 @@ import System.Exit
 import System.Log.Logger (errorM)
 import Data.Traversable (sequenceA)
 import Control.Applicative
+import System.Directory
+
 {-
 
 Dump bin for things that do not fit anywhere else
@@ -342,6 +344,22 @@ readProcessWithExitCode' cmd args input = do
     err <- readMVar errM
 
     return (ex, out, err)
+
+{-| This function executes curl as external program. Args are args. The input though will
+-}
+readCurl :: [String]                 -- ^ any arguments
+         -> BSL.ByteString           -- ^ standard input
+         -> IO (ExitCode,BSL.ByteString,BSL.ByteString) -- ^ exitcode, stdout, stderr
+readCurl args input = do
+  tmpDir <- getTemporaryDirectory
+  C.bracket
+    (openTempFile tmpDir "skpa")
+    (\(name, handle) -> hClose handle >> removeFile name)
+    $ \(filepath,handle) -> do
+                        BSL.hPutStr handle input
+                        let allargs = (["--data-binary",filepath] ++ args) :: [String]
+                        readProcessWithExitCode' "./curl" allargs BSL.empty
+  
 
 --Utils
 logErrorWithDefault::IO (Either String a) -> b -> (a -> IO b) -> IO b
