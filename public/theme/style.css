@@ -37,7 +37,6 @@ a img
 	margin-right: 30px;
 	margin: auto;
 	overflow: hidden;
-	position: relative;
 }
 
 /* 003 a lot of changes */
@@ -245,6 +244,7 @@ input[type=submit]:active, input[type=button]:active, button:active, a.button:ac
     background: url(images/gradientextent.png) repeat-x bottom center; /* 003 removed #color and new image */
     color: #fafafa;
     height: 90px;
+    position:relative;
 }
 
 /* 003 new: headerWide */
