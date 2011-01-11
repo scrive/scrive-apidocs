@@ -9,6 +9,7 @@ module User
     , admins
     , initialUsers
     , clearFlashMsgs
+    , addELegTransaction
     , addFlashMsgText 
     , addFlashMsgHtmlFromTemplate
     , logUserToContext
@@ -51,6 +52,7 @@ import Templates.Templates  (KontrakcjaTemplates)
 import Mails.MailsConfig
 import KontraLink
 import qualified TrustWeaver as TW
+import ELegitimation.ELeg
 
 instance Monad m => IsAttrValue m DocumentID where
     toAttrValue = toAttrValue . show
@@ -109,6 +111,7 @@ data Context = Context
     , ctxtemplates           :: KontrakcjaTemplates 
     , ctxmailsconfig         :: MailsConfig  
     , ctxtwconf              :: TW.TrustWeaverConf
+    , ctxelegtransactions    :: [ELegTransaction]
     }
 
 type Kontra a = ServerPartT (StateT Context IO) a
@@ -143,6 +146,10 @@ onlySuperUser a =
                   then a
                   else mzero
                      
+addELegTransaction :: ELegTransaction -> Kontra ()
+addELegTransaction tr = do
+  ctx@Context { ctxelegtransactions = currenttrans } <- get
+  put $ ctx { ctxelegtransactions = (tr : currenttrans) }
 
 addFlashMsgText :: String -> Kontra ()
 addFlashMsgText msg = do
