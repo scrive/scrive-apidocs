@@ -333,6 +333,7 @@ pageDocumentForAuthor ctx
               </span>
               <div style="height: 2px;"/>
               <input class="bigbutton cross-button" type="submit" name="final" value="Underteckna" id="signinvite" rel="#dialog-confirm-signinvite"/> <br />
+              
               <input class="button" type="submit" name="save" value="Spara som utkast"/>
               </div>
               </form>
@@ -356,9 +357,10 @@ pageDocumentForAuthor ctx
                    <div class="buttonbox" >
                        <input type="hidden" name="final" value="automatic"/>
                        <button class="close button" type="button"> Avbryt </button>
-                       <button class="submiter button" type="button"> Underteckna </button>
+                       <button class="submiter button cross-button" type="button"> Underteckna </button>
                        </div>
                  </form>  
+
                  <form method="post" name="form" action="" class="overlay" id="edit-invite-text-dialog" >  
                    <a class="close"> </a>
                    <h2>Hälsningsmeddelande</h2>
@@ -442,6 +444,7 @@ pageDocumentForAuthor ctx
       </div>
 
  -}
+
 
 
 
@@ -638,62 +641,26 @@ pageDocumentForSign action document ctx  invitedlink wassigned author =
        authorname = signatoryname documentauthordetails
        allbutinvited = {- filter (/= invitedlink) -} (documentsignatorylinks document)
        documentauthordetails = signatoryDetailsFromUser author
-       rejectMessage =  fmap cdata $ mailRejectMailContent (ctxtemplates ctx) Nothing ctx (prettyName author) document (personname invitedlink)
-   in showDocumentPageHelper (ctxtemplates ctx) document helpers
-              (documenttitle document) $
-              <span>
-                 <p>Vänligen var noga med att granska dokumentet och kontrollera 
-                    uppgifterna nedan innan du undertecknar.</p>   
-
-                 <% fmap (cdata . concat) $ sequence $ map (showSignatoryLinkForSign' ctx document author) (allbutinvited) %>
-                 <% caseOf 
-                    [(wassigned ,
-                              <div>Du har redan undertecknat!</div>),
-                    (documentstatus document == Timedout, 
-                              <div>Förfallodatum har passerat!</div>),
-                    (documentstatus document == Pending, 
-                              <div>
-                                 <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign" rel="#dialog-confirm-sign"/>
-                                 <input class="bigbutton" type="submit" name="cancel" value="Avvisa" rel="#dialog-confirm-cancel" id="cancel"/>
-                              </div>) ]
-                     <span/>                 
-                 %>
-                 {- <small>Jag vill veta mer <a href="/about" target="_blank">om SkrivaPå</a>.</small> -}
-                 <span class="localdialogs ">
-                  <form method="post" name="form" action=action id="dialog-confirm-sign" class="overlay">     
-                     <a class="close"> </a>                  
-                     <h2>Underteckna</h2>  
-                     <p>Är du säker att du vill underteckna dokumentet <strong><% documenttitle document %></strong>?</p>
-                     <p>När <% partyUnsignedMeAndListString magichash document %> undertecknat blir 
-                      avtalet <strong>juridiskt bindande</strong> och
-                      det färdigställda avtalet skickas till din e-post.</p>
-                      <div class="buttonbox">
-                      <input type="hidden" name="sign" value="automatic"/>
-                      <button class="close button" type="button"> Avbryt </button>
-                      <button class="submiter button" type="button"> Underteckna </button>
-                      </div>
-                  </form>
-                 <form method="post" name="form" action=action id="dialog-confirm-cancel" class="overlay">   
-                    <a class="close"> </a>     
-                       <h2>Avvisa</h2>                 
-                    <p>Är du säker på att du vill avvisa dokumentet <strong><% documenttitle document %></strong>?</p>
-                    <p>När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela <strong><% authorname %></strong>.</p>
-                    <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
-                     <% rejectMessage %>
-                    </div>
-                    <div class="buttonbox">
-                     <input type="hidden" name="cancel" value="automatic"/>
-                     <button class="close button" type="button"> Avbryt </button>
-                     <button class="editer button" type="button"> Skriv eget meddelande </button>
-                     <button class="submiter button" type="button"> Avvisa </button>
-                    </div> 
-                 </form> 
-                 </span>
-                 
-              </span>
-     
-
-
+    in
+    do 
+     helpers <- renderTemplate (ctxtemplates ctx) "pageDocumentForSignHelpers" [("documentid",show (documentid document)),("localscripts",localscripts)]   
+     rejectMessage <- mailRejectMailContent (ctxtemplates ctx) Nothing ctx (prettyName author) document (personname invitedlink)                                                        
+     signatories <- fmap concat $ sequence $ map (showSignatoryLinkForSign ctx document author) (allbutinvited)
+     messageoption <- caseOf [ 
+                     (wassigned,                           renderTemplate (ctxtemplates ctx) "pageDocumentForSignSigned" []),  
+                     (documentstatus document == Timedout, renderTemplate (ctxtemplates ctx) "pageDocumentForSignTimedout" []),
+                     (documentstatus document == Pending,  renderTemplate (ctxtemplates ctx) "pageDocumentForSignButtons" [])
+                     ]  $ return ""   
+                     
+     partyUnsigned <- renderListTemplate (ctxtemplates ctx) $  map (BS.toString . personname') $ partyUnsignedMeAndList magichash document
+     content <- renderTemplate (ctxtemplates ctx) "pageDocumentForSignContent" [("signatories",signatories),
+                                                                                 ("messageoption",messageoption),
+                                                                                 ("documenttitle", BS.toString $ documenttitle document),
+                                                                                 ("authorname", BS.toString $ authorname),
+                                                                                 ("rejectMessage", rejectMessage),
+                                                                                 ("partyUnsigned", partyUnsigned),
+                                                                                 ("action", show action)]                                                                                   
+     showDocumentPageHelper (ctxtemplates ctx) document helpers  (documenttitle document) content
 
 --We keep this javascript code generation for now
 jsArray :: [[Char]] -> [Char]
