@@ -7,6 +7,7 @@ module AppControl(
             , AppConf(..)
             , defaultAWSAction) where
 
+import ELegitimation.BankID as BankID
 import "base" Control.Monad (msum, mzero, liftM)
 import "mtl" Control.Monad.Reader (ask)
 import "mtl" Control.Monad.State
@@ -180,6 +181,11 @@ handleRoutes = msum [
      , dir "changepassword" $ hpost2  $ UserControl.handleChangePassword     
      , dir "activate" $ hget2  $ UserControl.activatePage 
      , dir "activate" $ hpost2  $ UserControl.handleActivate
+
+     -- e-legitimation stuff
+
+     , dir "bankid" $ dir "s" $ hget3  $ BankID.handleSign
+     , dir "s" $ param "bankid" $ hpost3 $ BankID.handleSignPost
      
      -- static files
      , serveHTMLFiles
