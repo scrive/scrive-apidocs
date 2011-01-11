@@ -1,6 +1,4 @@
 
-
-
 function getUniqueId()
 {
     var rnd = Math.round(Math.random() * 1000000000);
@@ -224,11 +222,18 @@ $(document).ready( function () {
                  });
            tot = swedishString(allparties);
            $(".Xinvited").html(tot);
-          } })
+	    } });
         
     $(".submiter").click(function(){
                                $(this.form).submit();
-    })
+	});
+
+	$("#dialog-confirm-sign-eleg .bankid").click(function(){
+		sign2(window.location.pathname,
+		      "#dialog-confirm-sign-eleg",
+		      "/bankid" + window.location.pathname);
+		return false;
+	    });
  
    $(".editer").each(function() {
                              $(this).click(function(){
@@ -236,7 +241,7 @@ $(document).ready( function () {
                                   $(this).hide();
                                   return false;
                                   })
-                         })   
+				 })   ;
                          
     $("#editinvitetextlink").overlay({        
     mask: standardDialogMask,    
@@ -284,6 +289,9 @@ $(document).ready( function () {
     $("#sign").overlay({ mask: standardDialogMask,
         onBeforeLoad: function () { if (!sigFieldsValidation()) return false;}
     })
+
+	$("#signbankid").overlay({ mask: standardDialogMask
+		    });
     
     $("#cancel, .cancel").overlay({	mask: standardDialogMask
                 });
@@ -661,3 +669,4 @@ function swedishList(list)
   return res;
 }
 function strong(l) {return "<strong>"+l+"</strong>"}
+
