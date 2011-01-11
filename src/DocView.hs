@@ -245,6 +245,207 @@ isNotLinkForUserID uid link =
               notSameUserID = uid /= linkuid
               linkuid = unSignatory $ fromJust $ maybesignatory link
 
+{- |
+   Show the document to the author with controls he needs.
+ 
+pageDocumentForAuthor :: Context 
+             -> Document 
+             -> User
+             -> (HSPT IO XML) 
+pageDocumentForAuthor ctx
+             document@Document{ documentsignatorylinks
+                              , documenttitle
+                              , documentid
+                              , documentstatus
+                              , documentdaystosign
+                              , documentinvitetext
+                              } 
+             author =
+   let helper = [  <span class="templating_insert"> <%fmap cdata $ showSignatoryEntryForEdit2 (ctxtemplates ctx) "signatory_template" "" "" "" "" %></span>,
+                  <script> var documentid = "<% show $ documentid %>"; 
+                  </script>
+                ]
+       authorid = userid author
+       -- the author gets his own space when he's editing
+       allinvited = filter (isNotLinkForUserID authorid) documentsignatorylinks
+       authorhaslink = not $ null $ filter (not . isNotLinkForUserID authorid) documentsignatorylinks
+       documentdaystosignboxvalue = maybe 7 id documentdaystosign
+       timetosignset = isJust documentdaystosign --swedish low constrain
+       documentauthordetails = signatoryDetailsFromUser author
+   in showDocumentPageHelper (ctxtemplates ctx) document helper 
+           (documenttitle)  
+      <div>
+       <div id="loading-message" style="display:none">
+            Loading pages . . .
+       </div>
+       <div id="edit-bar">
+        -- someone please refactor this. the then statement is so long I can't see the else!
+        <%if documentstatus == Preparation
+           then 
+             <span>
+               <script type="text/javascript">
+                 <% "var docstate = " ++ (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks) ++ ";" %>
+               </script>
+              <form method="post" name="form" action=(LinkIssueDoc documentid) id="main-document-form"> 
+              Avsändare<br/>
+              <div style="margin-bottom: 10px;" id="authordetails">
+              <strong><span id="sauthorname"><% addbr $ signatoryname documentauthordetails %></span></strong>
+              <span id="sauthorcompany"><% addbr $ signatorycompany documentauthordetails %></span>
+              <span id="sauthornumber"><% addbr $ signatorynumber documentauthordetails %></span>
+              <span id="sauthoremail"><% addbr $ signatoryemail documentauthordetails %></span>
+              </div>
+
+              Användarroll 
+              <% if authorhaslink 
+                  then
+                      <select name="authorrole" id="authorroledropdown">
+                                  <option value="signatory">Undertecknare</option>
+                                  <option value="secretary">Sekreterare</option>
+                      </select>
+                  else
+                      <select name="authorrole" id="authorroledropdown">
+                                  <option value="secretary">Sekreterare</option>
+                                  <option value="signatory">Undertecknare</option>
+                      </select> %>
+
+              <br /><br />
+
+              Motpart<br/>
+              <div id="signatorylist">
+               <% map ((fmap cdata) . showSignatoryEntryForEdit (ctxtemplates ctx)) (if null allinvited
+                                                 then [emptyDetails] 
+                                                 else map signatorydetails allinvited) %>
+              </div>
+              <small><a id="addsiglink" onclick="signatoryadd(); return false;" href="#">Lägg till fler</a></small>
+              <div style="margin-top: 20px">
+              <small><a rel="#edit-invite-text-dialog" id="editinvitetextlink" href="#" style="padding-top:3px">Hälsningsmeddelande</a></small>
+              <input type="hidden" id="invitetext" name="invitetext" value=documentinvitetext />
+              </div>
+              <div style="margin-top: 20px">
+              <span>
+              <input type="checkbox" class="addremovecheckbox flashOnClick" rel="#daystosignbox" location="#datetosigncontainer" oldlocation="#hiddenttimestuffbox" autocomplete="off" value=(if timetosignset then "on" else "off") ></input> Välj förfallodatum
+                <div id="datetosigncontainer">  </div>
+                <% if timetosignset
+                   then <span/>
+                   else <span class="hidden flashMessage" > Varning: Om du väljer ett förfallodatum kan du inte återkalla inbjudan innan datumet förfallit. Detta regleras av avtalslagen.</span>
+                   
+                %>   
+              </span>
+              <div style="height: 2px;"/>
+              <input class="bigbutton cross-button" type="submit" name="final" value="Underteckna" id="signinvite" rel="#dialog-confirm-signinvite"/> <br />
+              <input class="button" type="submit" name="save" value="Spara som utkast"/>
+              </div>
+              </form>
+              <span class="localdialogs">
+                <form method="post" name="form" action=(LinkIssueDoc documentid) class="overlay redirectsubmitform" id="dialog-confirm-signinvite" rel="#main-document-form">  
+                   <a class="close"> </a>
+                   <h2 id="dialog-title-sign">Underteckna</h2>
+                   <h2 id="dialog-title-send">Skicka inbjudan</h2>
+                   <div id="dialog-confirm-text-sign">
+                    <p>Är du säker att du vill underteckna dokumentet <strong><% documenttitle %></strong>?</p>
+                    
+                    <p>När du undertecknat kommer en automatisk inbjudan att skickas till 
+                                    
+                    <span class="Xinvited">Invited</span> med e-post.</p>
+                   </div>
+
+                   <div id="dialog-confirm-text-send">
+                     <p>Du har valt en sekreterarroll och kommer själv inte att underteckna. Är du säker på att du vill skicka en inbjudan att underteckna dokumentet <strong><% documenttitle %></strong> till <span class="Xinvited">Invited</span>?</p>
+                   </div>
+                   
+                   <div class="buttonbox" >
+                       <input type="hidden" name="final" value="automatic"/>
+                       <button class="close button" type="button"> Avbryt </button>
+                       <button class="submiter button" type="button"> Underteckna </button>
+                       </div>
+                 </form>  
+                 <form method="post" name="form" action="" class="overlay" id="edit-invite-text-dialog" >  
+                   <a class="close"> </a>
+                   <h2>Hälsningsmeddelande</h2>
+                   <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
+                   <% fmap cdata $ mailInvitationToSignContent (ctxtemplates ctx) False ctx document author Nothing%>
+                   </div>
+                   <div class="buttonbox" >
+                       <button class="close button" type="button"> Avbryt </button>
+                       <button class="editer button" type=""> Skriv eget meddelande </button>
+                       <button class="close button" type="button" id="editing-invite-text-finished"> Ok </button>
+                   </div>
+                 </form>  
+                 <div class="hidden" id="hiddenttimestuffbox">
+                       <div id="daystosignbox">Undertecknas inom (dagar)
+                        <BR/>
+                        <input type="text" id="daystosign" name="daystosign" value=documentdaystosignboxvalue maxlength="2" size="2" autocomplete="off"/>
+                        <small> <a  class="datetodaystip" rel="#daystosign"> </a> </small>
+                       </div>
+                 </div>
+               </span>
+             </span>
+           else
+               <span>
+               <% if documentstatus == Pending || documentstatus == AwaitingAuthor 
+                   then
+                      <script type="text/javascript" language="Javascript" src="/js/showfields.js">  </script>
+                   else <span /> %>
+               <% if ((documentstatus == Pending || documentstatus == AwaitingAuthor) &&  anyInvitationUndelivered document)
+                          then <p> Adressen 
+                                   <strong>
+                                    <% BS.intercalate (BS.fromString ", ") $ map (signatoryemail . signatorydetails) $ undeliveredSignatoryLinks document %> 
+                                   </strong> existerar inte. Kontrollera adressen och försök igen.
+                               </p>
+                          else <span/>
+               %>       
+               <script type="text/javascript">
+                 <% "var docstate = " ++ (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks) ++ ";" %>
+               </script>
+               
+              <div id="signatorylist">
+                 <% fmap (cdata . concat) $ sequence $ map (showSignatoryLinkForSign' ctx document author) documentsignatorylinks
+                 %>
+              </div>
+              <% if documentstatus == AwaitingAuthor
+                  then <form method="post" action=""><input class="bigbutton cross-button" type="submit" name="final" value="Underteckna" id="signinvite" /></form>
+                  else <span />%>
+              </span>
+              %>
+            <% if (documentstatus == Pending || documentstatus == AwaitingAuthor) 
+                then 
+                   if not timetosignset
+                    then <span>
+                     <input class="button cancel" type="button" name="cancel" value="Återkalla inbjudan"  rel="#cancel-by-author-dialog" />    
+                     <span class="localdialogs">
+                     <form method="post" action=(LinkCancel document) class="overlay" id="cancel-by-author-dialog">
+                                <a class="close"> </a>
+                                <h2> Återkalla inbjudan </h2>
+                                <p>Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?
+                                <BR/>När du återkallat inbjudan kommer nedanstaende meddelande att skickas till dina motparter.
+                                </p>
+                                <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
+                                 <% fmap cdata $ mailCancelDocumentByAuthorContent  (ctxtemplates ctx) False Nothing ctx document author%>
+                                </div>
+                                <div class="buttonbox" >
+                                   <button class="close button" type="button"> Avbryt </button>
+                                   <button class="editer button" type=""> Skriv eget meddelande </button>
+                                   <button class="submiter button" type="button"> Återkalla inbjudan</button>
+                                </div>
+                          </form>
+                       </span>
+                       </span>
+                    else <span>Du kan inte återkalla inbjudan före förfallodatum.</span>
+                else <span/>
+             %>         
+            <% fmap cdata $
+               if (documentstatus == Canceled || documentstatus == Timedout || documentstatus == Rejected || documentstatus == Withdrawn)
+               then renderActionButton  (ctxtemplates ctx) (LinkRestart documentid) "restartButtonName"
+               else return ""
+             %>  
+       </div>
+      </div>
+
+ -}
+
+
+
+
 pageDocumentForAuthor :: Context 
              -> Document 
              -> User
@@ -437,26 +638,62 @@ pageDocumentForSign action document ctx  invitedlink wassigned author =
        authorname = signatoryname documentauthordetails
        allbutinvited = {- filter (/= invitedlink) -} (documentsignatorylinks document)
        documentauthordetails = signatoryDetailsFromUser author
-    in
-    do 
-     helpers <- renderTemplate (ctxtemplates ctx) "pageDocumentForSignHelpers" [("documentid",show (documentid document)),("localscripts",localscripts)]   
-     rejectMessage <- mailRejectMailContent (ctxtemplates ctx) Nothing ctx (prettyName author) document (personname invitedlink)                                                        
-     signatories <- fmap concat $ sequence $ map (showSignatoryLinkForSign ctx document author) (allbutinvited)
-     messageoption <- caseOf [ 
-                     (wassigned,                           renderTemplate (ctxtemplates ctx) "pageDocumentForSignSigned" []),  
-                     (documentstatus document == Timedout, renderTemplate (ctxtemplates ctx) "pageDocumentForSignTimedout" []),
-                     (documentstatus document == Pending,  renderTemplate (ctxtemplates ctx) "pageDocumentForSignButtons" [])
-                     ]  $ return ""   
-                     
-     partyUnsigned <- renderListTemplate (ctxtemplates ctx) $  map (BS.toString . personname') $ partyUnsignedMeAndList magichash document
-     content <- renderTemplate (ctxtemplates ctx) "pageDocumentForSignContent" [("signatories",signatories),
-                                                                                 ("messageoption",messageoption),
-                                                                                 ("documenttitle", BS.toString $ documenttitle document),
-                                                                                 ("authorname", BS.toString $ authorname),
-                                                                                 ("rejectMessage", rejectMessage),
-                                                                                 ("partyUnsigned", partyUnsigned),
-                                                                                 ("action", show action)]                                                                                   
-     showDocumentPageHelper (ctxtemplates ctx) document helpers  (documenttitle document) content
+       rejectMessage =  fmap cdata $ mailRejectMailContent (ctxtemplates ctx) Nothing ctx (prettyName author) document (personname invitedlink)
+   in showDocumentPageHelper (ctxtemplates ctx) document helpers
+              (documenttitle document) $
+              <span>
+                 <p>Vänligen var noga med att granska dokumentet och kontrollera 
+                    uppgifterna nedan innan du undertecknar.</p>   
+
+                 <% fmap (cdata . concat) $ sequence $ map (showSignatoryLinkForSign' ctx document author) (allbutinvited) %>
+                 <% caseOf 
+                    [(wassigned ,
+                              <div>Du har redan undertecknat!</div>),
+                    (documentstatus document == Timedout, 
+                              <div>Förfallodatum har passerat!</div>),
+                    (documentstatus document == Pending, 
+                              <div>
+                                 <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign" rel="#dialog-confirm-sign"/>
+                                 <input class="bigbutton" type="submit" name="cancel" value="Avvisa" rel="#dialog-confirm-cancel" id="cancel"/>
+                              </div>) ]
+                     <span/>                 
+                 %>
+                 {- <small>Jag vill veta mer <a href="/about" target="_blank">om SkrivaPå</a>.</small> -}
+                 <span class="localdialogs ">
+                  <form method="post" name="form" action=action id="dialog-confirm-sign" class="overlay">     
+                     <a class="close"> </a>                  
+                     <h2>Underteckna</h2>  
+                     <p>Är du säker att du vill underteckna dokumentet <strong><% documenttitle document %></strong>?</p>
+                     <p>När <% partyUnsignedMeAndListString magichash document %> undertecknat blir 
+                      avtalet <strong>juridiskt bindande</strong> och
+                      det färdigställda avtalet skickas till din e-post.</p>
+                      <div class="buttonbox">
+                      <input type="hidden" name="sign" value="automatic"/>
+                      <button class="close button" type="button"> Avbryt </button>
+                      <button class="submiter button" type="button"> Underteckna </button>
+                      </div>
+                  </form>
+                 <form method="post" name="form" action=action id="dialog-confirm-cancel" class="overlay">   
+                    <a class="close"> </a>     
+                       <h2>Avvisa</h2>                 
+                    <p>Är du säker på att du vill avvisa dokumentet <strong><% documenttitle document %></strong>?</p>
+                    <p>När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela <strong><% authorname %></strong>.</p>
+                    <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
+                     <% rejectMessage %>
+                    </div>
+                    <div class="buttonbox">
+                     <input type="hidden" name="cancel" value="automatic"/>
+                     <button class="close button" type="button"> Avbryt </button>
+                     <button class="editer button" type="button"> Skriv eget meddelande </button>
+                     <button class="submiter button" type="button"> Avvisa </button>
+                    </div> 
+                 </form> 
+                 </span>
+                 
+              </span>
+     
+
+
 
 --We keep this javascript code generation for now
 jsArray :: [[Char]] -> [Char]
