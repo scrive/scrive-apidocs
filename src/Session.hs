@@ -9,6 +9,7 @@ module Session
     , getUserFromSession
     , handleSession
     , updateSessionWithContextData
+    , getELegTransactions
     
     -- | Functions usefull when we do remember passwords emails
     , createLongTermSession
@@ -35,6 +36,7 @@ import Happstack.Server
 import System.Random
 import Happstack.Util.Common ( readM)
 import Misc (MagicHash(MagicHash))
+import ELegitimation.ELeg
 
 $( deriveAll [''Ord, ''Eq, ''Default, ''Num]
    [d|
@@ -67,23 +69,39 @@ $(deriveSerialize ''SessionData1)
 instance Version (SessionData1) where
    mode = extension 1 (Proxy :: Proxy SessionData0)
                                
+data SessionData2 = SessionData2 {  
+                                  userID2::Maybe UserID,
+                                  flashMessages2::[FlashMessage],
+                                  expires2::MinutesTime,
+                                  hash2::MagicHash
+                               }  deriving (Ord,Eq,Show,Typeable,Data)                               
+                               
+$(deriveSerialize ''SessionData2) 
+instance Version (SessionData2) where
+   mode = extension 2 (Proxy :: Proxy SessionData1)
+
 data SessionData = SessionData {  
                                   userID::Maybe UserID,
                                   flashMessages::[FlashMessage],
                                   expires::MinutesTime,
-                                  hash::MagicHash
+                                  hash::MagicHash,
+                                  elegtransactions::[ELegTransaction]
                                }  deriving (Ord,Eq,Show,Typeable,Data)                               
                                
 $(deriveSerialize ''SessionData) 
 instance Version (SessionData) where
-   mode = extension 2 (Proxy :: Proxy SessionData1)
+   mode = extension 3 (Proxy :: Proxy SessionData2)
      
 instance Migrate SessionData0 SessionData1 where
       migrate (SessionData0 {userID0 = _, flashMessages0 = _}) = SessionData1 {userID1 = Nothing, flashMessages1 = [], expires1 = MinutesTime 0}
     
-instance Migrate SessionData1 SessionData where
+instance Migrate SessionData1 SessionData2 where
       migrate (SessionData1 {userID1 = _, flashMessages1 = _, expires1 = _})
-                             = SessionData {userID = Nothing, flashMessages = [], expires = MinutesTime 0, hash = MagicHash 0}
+                             = SessionData2 {userID2 = Nothing, flashMessages2 = [], expires2 = MinutesTime 0, hash2 = MagicHash 0}
+
+instance Migrate SessionData2 SessionData where
+      migrate (SessionData2 {userID2 = _, flashMessages2 = _, expires2 = _})
+                             = SessionData {userID = Nothing, flashMessages = [], expires = MinutesTime 0, hash = MagicHash 0, elegtransactions=[]}
     
       
 
@@ -203,7 +221,7 @@ emptySessionData::IO SessionData
 emptySessionData = do
                      now <- getMinutesTime
                      magicHash <-  randomIO
-                     return $ SessionData {userID = Nothing,  flashMessages = [], expires = 60 `minutesAfter` now, hash = magicHash }  
+                     return $ SessionData {userID = Nothing,  flashMessages = [], expires = 60 `minutesAfter` now, hash = magicHash, elegtransactions = [] }  
 
                                                                 
 startSession :: (FilterMonad Response m,ServerMonad m,  MonadIO m, MonadPlus m) => m Session
@@ -236,10 +254,10 @@ handleSession = do
                    Nothing -> startSession
                    
 
-updateSessionWithContextData::Session -> (Maybe UserID)->[FlashMessage]->ServerPartT IO ()                                     
-updateSessionWithContextData (Session i sd) u fm = do
+updateSessionWithContextData::Session -> (Maybe UserID)->[FlashMessage]->[ELegTransaction]->ServerPartT IO ()                                     
+updateSessionWithContextData (Session i sd) u fm trans= do
                                                     now <- liftIO getMinutesTime  
-                                                    update $ UpdateSession (Session i $ sd {userID = u, flashMessages = fm,  expires = 60 `minutesAfter` now})
+                                                    update $ UpdateSession (Session i $ sd {userID = u, flashMessages = fm,  expires = 60 `minutesAfter` now, elegtransactions = trans})
                                     
                                     
 -- | This are special sessions used for passwords reminder links. Such links should be carefully                                    
@@ -247,7 +265,7 @@ createLongTermSession:: (MonadIO m) =>  UserID -> m Session
 createLongTermSession uid = do
                          now <- liftIO $ getMinutesTime
                          magicHash <- liftIO $ randomIO
-                         let longUserSession = SessionData {userID = Just uid,  flashMessages = [], expires = (60 * 12) `minutesAfter` now, hash = magicHash }  
+                         let longUserSession = SessionData {userID = Just uid,  flashMessages = [], expires = (60 * 12) `minutesAfter` now, hash = magicHash, elegtransactions = [] }  
                          update $ NewSession $ longUserSession
 
 findSession:: (MonadIO m) => SessionId -> MagicHash -> m (Maybe Session)
@@ -276,3 +294,6 @@ getSessionUserID = userID . sessionData
 
 dropSession::SessionId -> IO ()
 dropSession sid = (update $ DelSession sid) >> return ()
+
+getELegTransactions :: Session -> [ELegTransaction]
+getELegTransactions = elegtransactions . sessionData
