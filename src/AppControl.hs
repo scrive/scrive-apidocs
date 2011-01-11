@@ -272,7 +272,7 @@ appHandler appConf = do
   session <- handleSession
   muser <- getUserFromSession session
   flashmessages <- getFlashMessagesFromSession session          
-  templates <- liftIO $ readTemplates
+  let elegtrans = getELegTransactions session
   let 
    ctx = Context
             { ctxmaybeuser = muser
@@ -491,5 +491,5 @@ hget1m action = (path $ \a1 -> methodM GET >> (action $ Just a1)) `mplus`  (meth
  -}
 param :: String -> Kontra Response -> Kontra Response
 param p action = do
-  getDataFnM $ look p
+  getDataFnM $ look p -- will mzero if parameter is not found
   action

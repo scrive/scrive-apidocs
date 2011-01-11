@@ -239,6 +239,7 @@ pageDocumentForSignTimedout= <div>Förfallodatum har passerat!</div>
 ####
 pageDocumentForSignButtons=  <div>
                                  <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign" rel="#dialog-confirm-sign"/>
+				 <input class="bigbutton cross-button" type="submit" name="signbankid" value="Underteckna with E-Leg" id="signbankid" rel="#dialog-confirm-sign-eleg"/>
                                  <input class="bigbutton" type="submit" name="cancel" value="Avvisa" rel="#dialog-confirm-cancel" id="cancel"/>
                               </div>
 ####
@@ -263,6 +264,22 @@ pageDocumentForSignContent=
                       <button class="submiter button" type="button"> Underteckna </button>
                       </div>
                   </form>
+                  <form method="post" name="form" action=action id="dialog-confirm-sign-eleg" class="overlay">     
+                     <script src="/js/bankid.js"></script>
+                     <a class="close"> </a>                  
+                     <h2>Underteckna with BankID</h2>  
+                     <p>Är du säker att du vill underteckna dokumentet <strong><% documenttitle document %></strong>?</p>
+                     <p>När <% partyUnsignedMeAndListString magichash document %> undertecknat blir 
+                      avtalet <strong>juridiskt bindande</strong> och
+                      det färdigställda avtalet skickas till din e-post.</p>
+                      <div class="buttonbox">
+                      <input type="hidden" name="bankid" value="automatic"/>
+                      <input type="hidden" name="signature" value="" id="signature" />
+                      <input type="hidden" name="transactionid" value="" id="transactionid" />
+                      <button class="close button" type="button"> Avbryt </button>
+                      <button class="bankid button" type="button"> Underteckna with BankID</button>
+                      </div>
+                 </form>
                  <form method="post" name="form" action="$action$" id="dialog-confirm-cancel" class="overlay">   
                     <a class="close"> </a>     
                        <h2>Avvisa</h2>                 
