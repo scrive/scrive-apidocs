@@ -272,6 +272,7 @@ appHandler appConf = do
   session <- handleSession
   muser <- getUserFromSession session
   flashmessages <- getFlashMessagesFromSession session          
+  templates <- liftIO $ readTemplates
   let 
    ctx = Context
             { ctxmaybeuser = muser
@@ -290,6 +291,7 @@ appHandler appConf = do
                           , TW.admincert = twAdminCert appConf
                           , TW.admincertpwd = twAdminCertPwd appConf
                           }
+            , ctxelegtransactions = elegtrans
             }
   (res,ctx)<- toIO ctx $  
      do
@@ -302,7 +304,8 @@ appHandler appConf = do
       
   let newsessionuser = fmap userid $ ctxmaybeuser ctx  
   let newflashmessages = ctxflashmessages ctx
-  updateSessionWithContextData session newsessionuser newflashmessages
+  let newelegtrans = ctxelegtransactions ctx
+  updateSessionWithContextData session newsessionuser newflashmessages newelegtrans
   return res
       
 
