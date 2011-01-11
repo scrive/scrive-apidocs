@@ -18,6 +18,7 @@ module Session
     , getSessionMagicHash
     , getSessionUserID
     , dropSession
+    , dropExpiredSessions
     )
     where
 
@@ -167,6 +168,14 @@ newSession sessData =
           then return (Session sessId sessData)
           else newSession sessData
 
+
+-- | Drops expired session from database,to be used with scheduler
+-- | We need to clean db once in a while since sessions are created in db for each sessionless request
+dropExpired::MinutesTime -> Update Sessions ()
+dropExpired now = do
+                           sessions <- ask
+                           let expired = (flip filter) (toList  sessions) (\s -> now >  60 `minutesAfter` (expires $ sessionData s))
+                           sequence_ $ map (modify . delete ) expired
 -- * methods
 
 $(mkMethods ''Sessions 
@@ -174,6 +183,7 @@ $(mkMethods ''Sessions
   , 'updateSession
   , 'delSession
   , 'newSession
+  , 'dropExpired
   ])
 
 --Info that we store in cookies  
@@ -294,6 +304,9 @@ getSessionUserID = userID . sessionData
 
 dropSession::SessionId -> IO ()
 dropSession sid = (update $ DelSession sid) >> return ()
+
+dropExpiredSessions::MinutesTime -> IO ()
+dropExpiredSessions = update . DropExpired
 
 getELegTransactions :: Session -> [ELegTransaction]
 getELegTransactions = elegtransactions . sessionData
