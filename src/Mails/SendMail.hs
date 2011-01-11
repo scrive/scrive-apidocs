@@ -108,11 +108,11 @@ sendMail config mail@(Mail {fullnameemails,title,content,attachments,from,mailIn
          _ <- forkIO $ 
           do
             let rcpt = concatMap (\(_,x) -> ["--mail-rcpt", "<" ++ BS.toString x ++ ">"]) fullnameemails
-            (code,_,_) <- readProcessWithExitCode' "./curl" ([ "--user"
-                                                            , (sendgridUser config) ++":"++(sendgridPassword config)
-                                                            , (sendgridSMTP config)
-                                                            , "-k", "--ssl", "--mail-from"
-                                                            , "<"++(ourInfoEmail config)++">"]++ rcpt) wholeContent
+            (code,_,_) <- readCurl ([ "--user"
+                                    , (sendgridUser config) ++":"++(sendgridPassword config)
+                                    , (sendgridSMTP config)
+                                    , "-k", "--ssl", "--mail-from"
+                                    , "<"++(ourInfoEmail config)++">"]++ rcpt) wholeContent
             if (code /= ExitSuccess) 
              then  logM "Kontrakcja.Mail" ERROR $ "Cannot execute ./curl to send emails"
              else  logM "Kontrakcja.Mail" ERROR $ "Curl executed with mail: " ++ (show $ mail {attachments = map (\(x,_)->(x,BS.empty) )attachments})
