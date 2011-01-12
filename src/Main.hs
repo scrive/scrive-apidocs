@@ -25,7 +25,7 @@ import System.Exit (exitFailure)
 import System.Console.GetOpt
 import AppLogger (withLogger)
 import AppState (AppState(..))
-import AppControl (appHandler,defaultAWSAction,AppConf(..))
+import AppControl (appHandler,defaultAWSAction,AppConf(..),AppGlobals(..))
 import qualified Control.Concurrent (threadDelay)
 import qualified User as User
 import qualified Data.ByteString.Char8 as BS
@@ -44,6 +44,29 @@ import DocState
 import qualified Amazon as AWS
 import Mails.MailsConfig
 import Templates.Templates (readTemplates,emptyTemplates)
+
+{- | Getting application configuration. Reads 'kontrakcja.conf' from current directory
+     Setting production param can change default setting (not to send mails)
+-}
+readAppConfig :: IO AppConf
+readAppConfig = read `catch` printDefault
+    where
+      filepath = "kontrakcja.conf"
+      read = do
+        h <- openFile filepath ReadMode
+        hSetEncoding h utf8
+        c <- hGetContents h
+        conf <- readIO c
+        hClose h
+        logM "Happstack.Server" NOTICE $ "App config file " ++ filepath ++" read and parsed"
+        return conf
+      printDefault ex = do
+        logM "Happstack.Server" NOTICE $ "No app config provided. Exiting now. Error: " ++ show ex
+        putStrLn $ "Please provide application config file " ++ filepath
+        putStrLn $ "Example configuration:"
+        putStrLn $ show (defaultConf "kontrakcja")
+        error "Config file error"
+         
 
 startTestSystemState' :: (Component st, Methods st) => Proxy st -> IO (MVar TxControl)
 startTestSystemState' proxy = do
@@ -107,12 +130,13 @@ main = withLogger $ do
   let progName = "kontrakcja"
 
   args <- getArgs
-  mailsConf <- getMailsConfig
+  appConf1 <- readAppConfig
   templates <- readTemplates
+  let appGlobals = AppGlobals { templates = templates }
   appConf <- case parseConfig args of
     (Left e) -> do logM "Happstack.Server" ERROR (unlines e)
                    exitFailure
-    (Right f) -> return $ (f $ defaultConf progName) {mailsConfig = mailsConf, templates = templates} 
+    (Right f) -> return $ (f (appConf1))
   Exception.bracket
                  -- start the state system
               (logM "Happstack.Server" NOTICE ("Using store " ++ store appConf) >>
@@ -130,8 +154,9 @@ main = withLogger $ do
                               -- we need to use our own listenOn as we want to:
                               -- use only IPv4 addresses
                               -- bind only to 127.0.0.1
-                              socket <- listenOn (port (httpConf appConf))
-                              t1 <- forkIO $ simpleHTTPWithSocket socket (httpConf appConf) (appHandler appConf)
+                              socket <- listenOn (httpPort appConf)
+                              t1 <- forkIO $ simpleHTTPWithSocket socket (nullConf { port = httpPort appConf }) 
+                                    (appHandler appConf appGlobals)
                               t2 <- forkIO $ cron 60 $ runScheduler appConf
                               return [t1,t2]
                            )
@@ -151,7 +176,7 @@ main = withLogger $ do
 
 defaultConf :: String -> AppConf
 defaultConf progName
-    = AppConf { httpConf = nullConf
+    = AppConf { httpPort = 8000
               , store    = "_local/" ++ progName ++ "_state"
               , static   = "public"
               , awsBucket = ""
@@ -163,19 +188,20 @@ defaultConf progName
               , twAdminCert = ""
               , twAdminCertPwd = ""
               , mailsConfig = defaultMailConfig
-              , templates = emptyTemplates  
               }
 
 opts :: [OptDescr (AppConf -> AppConf)]
 opts = [ Option [] ["http-port"]  
-         (ReqArg (\h c -> c { httpConf = (httpConf c) {port = read h} }) "port") 
+         (ReqArg (\h c -> c { httpPort = read h}) "port") 
          "port to bind http server"
+       {-
        , Option [] ["no-validate"] 
          (NoArg (\ c -> c { httpConf = (httpConf c) { validator = Nothing } })) 
          "Turn off HTML validation"
        , Option [] ["validate"]    
          (NoArg (\ c -> c { httpConf = (httpConf c) { validator = Just wdgHTMLValidator } })) 
          "Turn on HTML validation"
+       -}
        , Option [] ["store"]       
          (ReqArg (\h c -> c {store = h}) "PATH") 
          "The directory used for database storage."

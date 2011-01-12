@@ -2,10 +2,12 @@
              NamedFieldPuns, ScopedTypeVariables, CPP, RecordWildCards,
              PackageImports
  #-}
-module AppControl(
-              appHandler
-            , AppConf(..)
-            , defaultAWSAction) where
+module AppControl
+    ( appHandler
+    , AppConf(..)
+    , AppGlobals(..)
+    , defaultAWSAction
+    ) where
 
 import ELegitimation.BankID as BankID
 import "base" Control.Monad (msum, mzero, liftM)
@@ -66,7 +68,7 @@ import Mails.SendMail
 import System.Log.Logger (Priority(..), logM)
 
 data AppConf
-    = AppConf { httpConf        :: Conf
+    = AppConf { httpPort        :: Int
               , store           :: FilePath
               , static          :: FilePath 
               , awsBucket       :: String
@@ -78,9 +80,13 @@ data AppConf
               , twAdminCert     :: FilePath
               , twAdminCertPwd  :: String
               , mailsConfig     :: MailsConfig
-              , templates       :: KontrakcjaTemplates
-              }              
 
+              }              
+      deriving (Show,Read,Eq,Ord)
+
+data AppGlobals 
+    = AppGlobals { templates       :: KontrakcjaTemplates
+                 }
 
 {- |
    The routing table for the app.
@@ -242,8 +248,8 @@ defaultAWSAction appConf =
            , AWS.s3operation = HTTP.GET
            }
 
-appHandler :: AppConf -> ServerPartT IO Response
-appHandler appConf = do
+appHandler :: AppConf -> AppGlobals -> ServerPartT IO Response
+appHandler appConf appGlobals= do
   rq <- askRq
   let host = maybe "skrivapa.se" BS.toString $ getHeader "host" rq
   let scheme = maybe "http" BS.toString $ getHeader "scheme" rq
@@ -283,7 +289,7 @@ appHandler appConf = do
             , ctxipnumber = peerip
             , ctxs3action = defaultAWSAction appConf
             , ctxproduction = production appConf
-            , ctxtemplates = templates appConf
+            , ctxtemplates = templates appGlobals
             , ctxmailsconfig = mailsConfig appConf
             , ctxtwconf = TW.TrustWeaverConf 
                           { TW.signcert = twSignCert appConf
@@ -493,3 +499,4 @@ param :: String -> Kontra Response -> Kontra Response
 param p action = do
   getDataFnM $ look p -- will mzero if parameter is not found
   action
+
