@@ -1114,7 +1114,6 @@ handleResend docid signlinkid  = withUserPost $ do
   customMessage <- fmap (fmap concatChunks) $ getDataFn' (lookBS "customtext")  
   mail <- liftIO $  mailDocumentRemind (ctxtemplates ctx) customMessage ctx doc signlink author
   liftIO $ sendMail (ctxmailsconfig ctx) (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )],
-                                                from=ctxmaybeuser ctx,
                                                 mailInfo = Invitation $ signatorylinkid signlink })
   addFlashMsgText =<< (liftIO $ flashRemindMailSent (ctxtemplates ctx) signlink)
   return (LinkIssueDoc $ documentid doc)
