@@ -143,15 +143,21 @@ documentSmallView crtime user doc = DocumentSmallView {
                           dsvStatusimage = "/theme/images/" ++
                                                case (documentstatus doc) of
                                                   Preparation -> "status_draft.png"
-                                                  Pending  -> if  any (isJust . maybeseeninfo) $ documentsignatorylinks doc
-                                                               then "status_viewed.png"
-                                                               else "status_pending.png"
-                                                  AwaitingAuthor -> "status_pending.png"
                                                   Closed -> "status_signed.png"
                                                   Canceled -> "status_rejected.png"
                                                   Timedout -> "status_timeout.png"
                                                   Rejected -> "status_rejected.png"
-                                                  Withdrawn -> "status_rejected.png",
+                                                  Withdrawn -> "status_rejected.png"
+                                                  Pending  -> if anyInvitationUndelivered doc
+                                                               then "status_rejected.png"    
+                                                               else if all (isJust . maybeseeninfo) $ documentsignatorylinks doc
+                                                                     then "status_viewed.png"
+                                                                     else "status_pending.png"
+                                                  AwaitingAuthor -> if anyInvitationUndelivered doc
+                                                                     then "status_rejected.png"    
+                                                                     else if all (isJust . maybeseeninfo) $ documentsignatorylinks doc
+                                                                           then "status_viewed.png"
+                                                                           else "status_pending.png"  ,       
                           dsvDoclink =     if (unAuthor $ documentauthor doc) ==(userid user) || (null $ signatorylinklist)
                                             then show $ LinkIssueDoc $ documentid doc
                                             else show $ LinkSignDoc doc (head $ signatorylinklist),
