@@ -11,7 +11,10 @@ import Templates.Templates
 import Mails.SendMail
 import User
 import Mails.MailsUtil
-import KontraLink
+import Mails.MailsConfig
+import KontraLink 
+import TrustWeaver
+import Payments.PaymentsState
 
 import Control.Concurrent.MVar
 import System.IO.Unsafe
@@ -23,15 +26,15 @@ import qualified Data.Map as Map
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.AWS.AWSConnection as AWS
 
-aHost = "http://localhost:8080"
+aTestHost = "http://localhost:8080"
 aTestName = (BS.fromString "Bob O'Brien")
-aTestEmail = (BS.fromString "bob@testcorp.com")
-aTestPassword = (BS.fromString "pa$$w0rd")
-aSetPasswordLink = LoopBack -- doesnt matter for tests
-aTestCompany = (BS.fromString "Test Corp")
 anotherTestName = (BS.fromString "Annie Angus")
 anotherTestEmail = (BS.fromString "annie@testcorp.com")
-aTestUserInfo = UserInfo {
+aTestEmail = (BS.fromString "bob@testcorp.com")
+aTestCompany = (BS.fromString "Test Corp")
+aTestLink = LoopBack --doesn't matter for tests
+aTestPassword = (BS.fromString "pa$$w0rd")
+someTestUserInfo = UserInfo {
                   userfstname = aTestName          
                 , usersndname = BS.empty
                 , userpersonalnumber = BS.empty
@@ -45,19 +48,54 @@ aTestUserInfo = UserInfo {
                 , usermobile = BS.empty
                 , useremail = Email aTestEmail   
                 }
-aTestUser = User{ userid = UserID 123,
-                  -- userfullname = aTestName, 
-                  -- useremail = Email aTestEmail,
-                  -- usercompanyname = aTestCompany,
-                  -- usercompanynumber = BS.fromString "",
-                  -- userinvoiceaddress = BS.fromString "",
-                  -- userflashmessages = [],
-                  userinfo = aTestUserInfo,
-                  userpassword = unsafePerformIO $ createPassword aTestPassword,
-                  usersupervisor = Nothing,
-                  usercanhavesubaccounts = False,
-                  useraccountsuspended = False,
-                  userhasacceptedtermsofservice = Just $ MinutesTime 123 }
+someTestUserSettings = UserSettings {
+                        accounttype = MainAccount
+                      , accountplan = Basic
+                      , userpaymentmethod = Undefined
+                      }
+
+aTestPaymentChange = PaymentChange {  
+                                  changePaymentForAccounts = testChangePaymentForAccounts,
+                                  changePaymentForSignature = testChangePaymentForSignature,  
+                                  changePaymentForSignedStorage = testChangePaymentForSignedStorage,  
+                                  changePaymentForOtherStorage = testChangePaymentForOtherStorage }
+                      where testChangePaymentForAccounts = PaymentForAccounts {
+                                                              forAccount = Nothing,
+                                                              forSubaccount = Nothing}
+                            testChangePaymentForSignature = PaymentForSignature {
+                                                               forEmailSignature = Nothing,
+                                                               forElegSignature = Nothing,  
+                                                               forMobileSignature = Nothing,  
+                                                               forCreditCardSignature = Nothing,  
+                                                               forIPadSignature = Nothing}
+                            testChangePaymentForSignedStorage = PaymentForSignedStorage {
+                                                                   forAmazon = Nothing,
+                                                                   forTrustWeaver = Nothing}
+                            testChangePaymentForOtherStorage = PaymentForOtherStorage {
+                                                                   forTemplate = Nothing,
+                                                                   forDraft = Nothing}
+aTestUserPaymentPolicy =  UserPaymentPolicy {
+               paymentaccounttype = Private
+             , custompaymentchange = aTestPaymentChange
+             , temppaymentchange = Nothing } 
+aTestUserPaymentAccount = UserPaymentAccount {
+               paymentaccountmoney = Money 0
+             , paymentaccountfreesignatures = 100  
+      }
+aTestUser = User { 
+            userid = UserID 123
+          , userpassword = unsafePerformIO $ createPassword aTestPassword
+          , usersupervisor = Nothing
+          , usercanhavesubaccounts = True
+          , useraccountsuspended = False
+          , userhasacceptedtermsofservice = Just $ MinutesTime 123
+          , userinfo = someTestUserInfo
+          , usersettings = someTestUserSettings
+          , userpaymentpolicy = aTestUserPaymentPolicy
+          , userpaymentaccount = aTestUserPaymentAccount
+          , userfriends = []
+          , userdefaultmainsignatory = DefaultMainSignatory 123
+          }
 aTestS3action = AWS.S3Action { AWS.s3conn = AWS.amazonS3Connection "accesskey" "secretkey",
                                AWS.s3bucket = "bucket",
                                AWS.s3object = "",
@@ -65,86 +103,96 @@ aTestS3action = AWS.S3Action { AWS.s3conn = AWS.amazonS3Connection "accesskey" "
                                AWS.s3metadata = [],
                                AWS.s3body = L.empty,
                                AWS.s3operation = HTTP.GET}
+aTestTwConf = TrustWeaverConf 
+                          { signcert = ""
+                          , signcertpwd = ""
+                          , admincert = ""
+                          , admincertpwd = ""
+                          }
 aTestCtx = Context{ctxmaybeuser = Just aTestUser, 
-                   ctxhostpart = aHost,
+                   ctxhostpart = aTestHost,
                    ctxflashmessages = [],
                    ctxtime = MinutesTime 123,
                    ctxnormalizeddocuments = unsafePerformIO $ newMVar Map.empty,
                    ctxipnumber = 123,
                    ctxs3action = aTestS3action,
                    ctxproduction = False,
-                   ctxtemplates = unsafePerformIO $ readTemplates}
-aCustomMsg = (BS.fromString "blah blah, custom message blah")
-someSignatoryDetails = SignatoryDetails { signatoryname = aTestName,
-                                          signatorycompany = aTestCompany,
-                                          signatorynumber = BS.fromString "1234",
-                                          signatoryemail = aTestEmail,
-                                          signatorynameplacements = [],
-                                          signatorycompanyplacements = [],
-                                          signatoryemailplacements = [],
-                                          signatorynumberplacements = [],
-                                          signatoryotherfields = [] }
-otherSignatoryDetails = SignatoryDetails { signatoryname = anotherTestName,
-                                           signatorycompany = aTestCompany,
-                                           signatorynumber = BS.fromString "12345",
-                                           signatoryemail = anotherTestEmail,
-                                           signatorynameplacements = [],
-                                           signatorycompanyplacements = [],
-                                           signatoryemailplacements = [],
-                                           signatorynumberplacements = [],
-                                           signatoryotherfields = [] }
-someSignInfo = SignInfo {signtime = MinutesTime 123, signipnumber = 123}
-anUnsignedSigLink = SignatoryLink { signatorylinkid = SignatoryLinkID 123,
-             signatorydetails = otherSignatoryDetails,
-             signatorymagichash = MagicHash 123,
-             maybesignatory = Nothing,
-             maybesigninfo = Nothing,
-             maybeseeninfo = Nothing, 
-             invitationdeliverystatus = Unknown}
-aSignedSigLink = SignatoryLink { signatorylinkid = SignatoryLinkID 123,
-             signatorydetails = otherSignatoryDetails,
-             signatorymagichash = MagicHash 123,
-             maybesignatory = Nothing,
-             maybesigninfo = Just someSignInfo,
-             maybeseeninfo = Nothing,
-             invitationdeliverystatus = Unknown}
-aTestFile = File {fileid = FileID 123,
-                  filename = BS.fromString "a_test_doc.pdf",
-                  filestorage = FileStorageMemory $ BS.fromString ""}
-anUnsignedDocument = Document {
-               documentid = DocumentID 123,
-               documenttitle = BS.fromString "a_test_doc.pdf",
-               documentauthor = Author $ UserID 123,
-               documentsignatorylinks = [anUnsignedSigLink],
-               documentfiles = [aTestFile],
-               documentsealedfiles = [],
-               documentstatus = Pending,
-               documentctime = MinutesTime 123,
-               documentmtime = MinutesTime 123,
-               documentchargemode = ChargeNormal,
-               documentdaystosign = Nothing,
-               documenttimeouttime = Nothing,
-               documentdeleted = False,
-               -- documentauthordetails = someSignatoryDetails,
-               -- documentmaybesigninfo = Nothing,
-               documenthistory = [],
-               documentinvitetext = BS.fromString "" }
-aSignedDocument = Document {
-               documentid = DocumentID 123,
-               documenttitle = BS.fromString "a_test_doc.pdf",
-               documentauthor = Author $ UserID 123,
-               documentsignatorylinks = [aSignedSigLink],
-               documentfiles = [aTestFile],
-               documentsealedfiles = [],
-               documentstatus = Pending,
-               documentctime = MinutesTime 123,
-               documentmtime = MinutesTime 123,
-               documentchargemode = ChargeNormal,
-               documentdaystosign = Nothing,
-               documenttimeouttime = Nothing,
-               documentdeleted = False,
-               --documentauthordetails = someSignatoryDetails,
-               --documentmaybesigninfo = Just (SignInfo {signtime = MinutesTime 123, signipnumber = 123}),
-               documenthistory = [],
-               documentinvitetext = BS.fromString "" }
+                   ctxtemplates = unsafePerformIO $ readTemplates,
+                   ctxmailsconfig = unsafePerformIO $ getMailsConfig,
+                   ctxtwconf = aTestTwConf,
+                   ctxelegtransactions = []}
+
+--aCustomMsg = (BS.fromString "blah blah, custom message blah")
+--someSignatoryDetails = SignatoryDetails { signatoryname = aTestName,
+--                                          signatorycompany = aTestCompany,
+--                                          signatorynumber = BS.fromString "1234",
+--                                          signatoryemail = aTestEmail,
+--                                          signatorynameplacements = [],
+--                                          signatorycompanyplacements = [],
+--                                          signatoryemailplacements = [],
+--                                          signatorynumberplacements = [],
+--                                          signatoryotherfields = [] }
+--otherSignatoryDetails = SignatoryDetails { signatoryname = anotherTestName,
+--                                           signatorycompany = aTestCompany,
+--                                           signatorynumber = BS.fromString "12345",
+--                                           signatoryemail = anotherTestEmail,
+--                                           signatorynameplacements = [],
+--                                           signatorycompanyplacements = [],
+--                                           signatoryemailplacements = [],
+--                                           signatorynumberplacements = [],
+--                                           signatoryotherfields = [] }
+--someSignInfo = SignInfo {signtime = MinutesTime 123, signipnumber = 123}
+--anUnsignedSigLink = SignatoryLink { signatorylinkid = SignatoryLinkID 123,
+--             signatorydetails = otherSignatoryDetails,
+--             signatorymagichash = MagicHash 123,
+--             maybesignatory = Nothing,
+--             maybesigninfo = Nothing,
+--             maybeseeninfo = Nothing, 
+--             invitationdeliverystatus = Unknown}
+--aSignedSigLink = SignatoryLink { signatorylinkid = SignatoryLinkID 123,
+--             signatorydetails = otherSignatoryDetails,
+--             signatorymagichash = MagicHash 123,
+--             maybesignatory = Nothing,
+--             maybesigninfo = Just someSignInfo,
+--             maybeseeninfo = Nothing,
+--             invitationdeliverystatus = Unknown}
+--aTestFile = File {fileid = FileID 123,
+--                  filename = BS.fromString "a_test_doc.pdf",
+--                  filestorage = FileStorageMemory $ BS.fromString ""}
+--anUnsignedDocument = Document {
+--               documentid = DocumentID 123,
+--               documenttitle = BS.fromString "a_test_doc.pdf",
+--               documentauthor = Author $ UserID 123,
+--               documentsignatorylinks = [anUnsignedSigLink],
+--               documentfiles = [aTestFile],
+--               documentsealedfiles = [],
+--               documentstatus = Pending,
+--               documentctime = MinutesTime 123,
+--               documentmtime = MinutesTime 123,
+--               documentchargemode = ChargeNormal,
+--               documentdaystosign = Nothing,
+--               documenttimeouttime = Nothing,
+--               documentdeleted = False,
+--               -- documentauthordetails = someSignatoryDetails,
+--               -- documentmaybesigninfo = Nothing,
+--               documenthistory = [],
+--               documentinvitetext = BS.fromString "" }
+--aSignedDocument = Document {
+--               documentid = DocumentID 123,
+--               documenttitle = BS.fromString "a_test_doc.pdf",
+--               documentauthor = Author $ UserID 123,
+--               documentsignatorylinks = [aSignedSigLink],
+--               documentfiles = [aTestFile],
+--               documentsealedfiles = [],
+--               documentstatus = Pending,
+--               documentctime = MinutesTime 123,
+--               documentmtime = MinutesTime 123,
+--               documentchargemode = ChargeNormal,
+--               documentdaystosign = Nothing,
+--               documenttimeouttime = Nothing,
+--               documentdeleted = False,
+--               --documentauthordetails = someSignatoryDetails,
+--               --documentmaybesigninfo = Just (SignInfo {signtime = MinutesTime 123, signipnumber = 123}),
+--               documenthistory = [],
+--               documentinvitetext = BS.fromString "" }
 

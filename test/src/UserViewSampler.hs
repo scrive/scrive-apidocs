@@ -14,33 +14,38 @@ import SampleData
 userViewSamples :: [Test]
 userViewSamples = 
                      [testGroup "sample user emails" 
-                           [testCase "new user" sampleNewUserMail,
-                            testCase "password change" samplePasswordChangeMail,
-                            testCase "invite subaccount" sampleInviteSubaccountMail,
-                            testCase "new account created by admin" sampleNewAccountCreatedByAdminMail],
-                      testGroup "sample user flash messages"
-                           [testCase "user details saved" sampleUserDetailsSavedFlashMsg,
-                            testCase "must accept tos" sampleMustAcceptTOSFlashMsg,
-                            testCase "password not strong" samplePasswordNotStrongFlashMsg,
-                            testCase "bad old password" sampleBadOldPasswordFlashMsg,
-                            testCase "passwords don't match" samplePasswordsDontMatchFlashMsg]]
+                           [
+                             testCase "new user" sampleNewUserMail
+                            ,testCase "password change" samplePasswordChangeMail
+                            ,testCase "invite subaccount" sampleInviteSubaccountMail
+                            ,testCase "new account created by admin" sampleNewAccountCreatedByAdminMail
+                           ]
+                      ,testGroup "sample user flash messages"
+                           [
+                              testCase "user details saved" sampleUserDetailsSavedFlashMsg
+                             ,testCase "must accept tos" sampleMustAcceptTOSFlashMsg
+                             ,testCase "password not strong" samplePasswordNotStrongFlashMsg
+                             ,testCase "bad old password" sampleBadOldPasswordFlashMsg
+                             ,testCase "passwords don't match" samplePasswordsDontMatchFlashMsg
+                           ]
+                      ]
 
 
 sampleNewUserMail =
   sampleMail "new_user" 
-             (\t -> newUserMail t aHost aTestEmail aTestName)
+             (\t -> newUserMail t aTestHost aTestEmail aTestName aTestLink)
 
 samplePasswordChangeMail =
   sampleMail "password_change" 
-             (\t -> passwordChangeMail t aHost aTestEmail aTestName aSetPasswordLink)
+             (\t -> passwordChangeMail t aTestHost aTestEmail aTestName aTestLink)
 
 sampleInviteSubaccountMail =
   sampleMail "invite_subaccount" 
-             (\t -> inviteSubaccountMail t aHost aTestName aTestCompany anotherTestEmail anotherTestName aSetPasswordLink)
+             (\t -> inviteSubaccountMail t aTestHost aTestName aTestCompany anotherTestEmail anotherTestName aTestLink)
 
 sampleNewAccountCreatedByAdminMail =
   sampleMail "new_account_by_admin" 
-             (\t -> mailNewAccountCreatedByAdmin t aTestCtx anotherTestName anotherTestEmail aSetPasswordLink)        
+             (\t -> mailNewAccountCreatedByAdmin t aTestCtx anotherTestName anotherTestEmail aTestLink)        
 
 sampleUserDetailsSavedFlashMsg =
   sampleFlashMsg "user_details_saved" flashMessageUserDetailsSaved
