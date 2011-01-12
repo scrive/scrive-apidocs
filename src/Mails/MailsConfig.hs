@@ -10,13 +10,11 @@
 -- We use Show/Read instances for parsing. We may have some problems with unicode on win machines,
 -- but don't care about this for now
 -----------------------------------------------------------------------------
-module Mails.MailsConfig(
-             MailsConfig(..)
-           , getMailsConfig
-           , defaultMailConfig) where
+module Mails.MailsConfig
+    ( MailsConfig(..)
+    , defaultMailConfig
+    ) where
              
-import System.Log.Logger (Priority(..), logM)
-import System.IO
 -- | Configuration of mails
 data MailsConfig = MailsConfig {
                       ourInfoEmail::String
@@ -26,26 +24,8 @@ data MailsConfig = MailsConfig {
                     , sendgridUser::String
                     , sendgridPassword::String       
                     , sendMails::Bool
-                   } deriving (Show, Read)
+                   } deriving (Show, Read, Eq, Ord)
                    
-{- | Getting configuration - in future wilk work with files.
-     Setting production param can change default setting (not to send mails)
--}
-getMailsConfig :: IO MailsConfig                  
-getMailsConfig = do 
-                  catch (  do
-                            h <- openFile "mail.conf" ReadMode
-                            hSetEncoding h utf8
-                            c <- hGetContents h
-                            conf <- readIO c
-                            hClose h
-                            logM "Happstack.Server" NOTICE "Mail config file read and parsed"  
-                            return conf
-                         )   (\_ ->  
-                           do 
-                             logM "Happstack.Server" NOTICE "No mail config provided. Falling back do default"  
-                             return defaultMailConfig )
-         
 
 
 defaultMailConfig::MailsConfig                  
