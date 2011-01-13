@@ -107,7 +107,7 @@ showUser =
           <li><input type="text" name="newvieweremail" infotext="Skriv e-post för att lägga till fler" size="28" /></li>
         </ul>
 
-        <input class="button" type="submit" value="Spara ändringar"/>
+        <input class="button" type="submit" value="Spara ändringar"></input>
       </form>
      </div>
 

@@ -325,19 +325,18 @@ $(document).ready( function () {
         var location = $($(this).attr("location"))
         var oldlocation = $($(this).attr("oldlocation")) 
         if ($(this).val()=="off")
-         {
+         {  
             location.append(what);      
-            $(this).val("on");
+            $(this).val("on"); 
             $(this).attr("checked","checked");
-            
-         }
+         } 
         else 
         {
             oldlocation.append(what);
             $(this).val("off");
             $(this).removeAttr("checked");
         }    
-        return false;
+        return true;
         
     }).each(function(){
         if ($(this).val()=="on")
