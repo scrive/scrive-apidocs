@@ -760,6 +760,7 @@ img.waiting
     -khtml-border-radius: 4px;
     border-radius: 4px;
     display:none;
+    z-index:1;
 }
 
 /* 002 a lot of changes in #footerContainer  */
