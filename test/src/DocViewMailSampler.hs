@@ -14,35 +14,38 @@ import SampleData
 docViewMailSamples :: [Test]
 docViewMailSamples = 
                      [testGroup "sample document emails"
-                           [testCase "remind not signed" sampleRemindNotSignedMail,
-                            testCase "remind not signed (with custom msg)" sampleRemindNotSignedMailWithCustomMsg,
-                            testCase "remind signed" sampleRemindSignedMail,
-                            testCase "remind signed (with custom msg)" sampleRemindSignedMailWithCustomMsg,
-                            testCase "document rejected" sampleDocumentRejectedMail,
-                            testCase "document rejected (with custom msg)" sampleDocumentRejectedMailWithCustomMsg,
-                            testCase "invitation to sign" sampleInvitationToSignMail,
-                            testCase "document closed for signatories" sampleDocumentClosedForSignatoriesMail,
-                            testCase "document closed for author" sampleDocumentClosedForAuthorMail,
-                            testCase "document awaiting" sampleDocumentAwaitingMail,
-                            testCase "document cancelled" sampleDocumentCancelledMail,
-                            testCase "document cancelled (with custom msg)" sampleDocumentCancelledMailWithCustomMsg]]
+                           [
+                             testCase "remind not signed" sampleRemindNotSignedMail
+                            ,testCase "remind not signed (with custom msg)" sampleRemindNotSignedMailWithCustomMsg
+                            ,testCase "remind signed" sampleRemindSignedMail
+                            ,testCase "remind signed (with custom msg)" sampleRemindSignedMailWithCustomMsg
+                            ,testCase "document rejected" sampleDocumentRejectedMail
+                            ,testCase "document rejected (with custom msg)" sampleDocumentRejectedMailWithCustomMsg
+                            ,testCase "invitation to sign" sampleInvitationToSignMail
+                            ,testCase "document closed for signatories" sampleDocumentClosedForSignatoriesMail
+                            ,testCase "document closed for author" sampleDocumentClosedForAuthorMail
+                            ,testCase "document awaiting" sampleDocumentAwaitingMail
+                            ,testCase "document cancelled" sampleDocumentCancelledMail
+                            ,testCase "document cancelled (with custom msg)" sampleDocumentCancelledMailWithCustomMsg
+                           ]
+                     ]
 
 
 sampleRemindNotSignedMail =
   sampleMail "remind_not_signed" 
-             (\t -> mailDocumentRemind t Nothing aTestCtx anUnsignedDocument anUnsignedSigLink)
+             (\t -> mailDocumentRemind t Nothing aTestCtx anUnsignedDocument anUnsignedSigLink aTestUser)
 
 sampleRemindNotSignedMailWithCustomMsg =
   sampleMail "remind_not_signed_with_custom_msg" 
-             (\t -> mailDocumentRemind t (Just aCustomMsg) aTestCtx anUnsignedDocument anUnsignedSigLink)
+             (\t -> mailDocumentRemind t (Just aCustomMsg) aTestCtx anUnsignedDocument anUnsignedSigLink aTestUser)
 
 sampleRemindSignedMail =
   sampleMail "remind_signed"
-             (\t -> mailDocumentRemind t Nothing aTestCtx aSignedDocument aSignedSigLink)
+             (\t -> mailDocumentRemind t Nothing aTestCtx aSignedDocument aSignedSigLink aTestUser)
 
 sampleRemindSignedMailWithCustomMsg =
   sampleMail "remind_signed_with_custom_msg"
-             (\t -> mailDocumentRemind t (Just aCustomMsg) aTestCtx aSignedDocument aSignedSigLink)
+             (\t -> mailDocumentRemind t (Just aCustomMsg) aTestCtx aSignedDocument aSignedSigLink aTestUser)
 
 sampleDocumentRejectedMail =
   sampleMail "document_rejected"
@@ -54,7 +57,7 @@ sampleDocumentRejectedMailWithCustomMsg =
 
 sampleInvitationToSignMail =
   sampleMail "invitation_to_sign"
-             (\t -> mailInvitationToSign t aTestCtx anUnsignedDocument anUnsignedSigLink)
+             (\t -> mailInvitationToSign t aTestCtx anUnsignedDocument anUnsignedSigLink aTestUser)
 
 sampleDocumentClosedForSignatoriesMail =
   sampleMail "document_closed_for_signatories"
@@ -70,9 +73,9 @@ sampleDocumentAwaitingMail =
 
 sampleDocumentCancelledMail =
   sampleMail "document_cancelled"
-             (\t -> mailCancelDocumentByAuthor t Nothing aTestCtx anUnsignedDocument anUnsignedSigLink)
+             (\t -> mailCancelDocumentByAuthor t Nothing aTestCtx anUnsignedDocument aTestUser anUnsignedSigLink)
 
 sampleDocumentCancelledMailWithCustomMsg =
   sampleMail "document_cancelled_with_custom_msg"
-             (\t -> mailCancelDocumentByAuthor t (Just aCustomMsg) aTestCtx anUnsignedDocument anUnsignedSigLink)
+             (\t -> mailCancelDocumentByAuthor t (Just aCustomMsg) aTestCtx anUnsignedDocument aTestUser anUnsignedSigLink)
 
