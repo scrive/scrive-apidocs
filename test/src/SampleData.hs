@@ -122,77 +122,71 @@ aTestCtx = Context{ctxmaybeuser = Just aTestUser,
                    ctxtwconf = aTestTwConf,
                    ctxelegtransactions = []}
 
---aCustomMsg = (BS.fromString "blah blah, custom message blah")
---someSignatoryDetails = SignatoryDetails { signatoryname = aTestName,
---                                          signatorycompany = aTestCompany,
---                                          signatorynumber = BS.fromString "1234",
---                                          signatoryemail = aTestEmail,
---                                          signatorynameplacements = [],
---                                          signatorycompanyplacements = [],
---                                          signatoryemailplacements = [],
---                                          signatorynumberplacements = [],
---                                          signatoryotherfields = [] }
---otherSignatoryDetails = SignatoryDetails { signatoryname = anotherTestName,
---                                           signatorycompany = aTestCompany,
---                                           signatorynumber = BS.fromString "12345",
---                                           signatoryemail = anotherTestEmail,
---                                           signatorynameplacements = [],
---                                           signatorycompanyplacements = [],
---                                           signatoryemailplacements = [],
---                                           signatorynumberplacements = [],
---                                           signatoryotherfields = [] }
---someSignInfo = SignInfo {signtime = MinutesTime 123, signipnumber = 123}
---anUnsignedSigLink = SignatoryLink { signatorylinkid = SignatoryLinkID 123,
---             signatorydetails = otherSignatoryDetails,
---             signatorymagichash = MagicHash 123,
---             maybesignatory = Nothing,
---             maybesigninfo = Nothing,
---             maybeseeninfo = Nothing, 
---             invitationdeliverystatus = Unknown}
---aSignedSigLink = SignatoryLink { signatorylinkid = SignatoryLinkID 123,
---             signatorydetails = otherSignatoryDetails,
---             signatorymagichash = MagicHash 123,
---             maybesignatory = Nothing,
---             maybesigninfo = Just someSignInfo,
---             maybeseeninfo = Nothing,
---             invitationdeliverystatus = Unknown}
---aTestFile = File {fileid = FileID 123,
---                  filename = BS.fromString "a_test_doc.pdf",
---                  filestorage = FileStorageMemory $ BS.fromString ""}
---anUnsignedDocument = Document {
---               documentid = DocumentID 123,
---               documenttitle = BS.fromString "a_test_doc.pdf",
---               documentauthor = Author $ UserID 123,
---               documentsignatorylinks = [anUnsignedSigLink],
---               documentfiles = [aTestFile],
---               documentsealedfiles = [],
---               documentstatus = Pending,
---               documentctime = MinutesTime 123,
---               documentmtime = MinutesTime 123,
---               documentchargemode = ChargeNormal,
---               documentdaystosign = Nothing,
---               documenttimeouttime = Nothing,
---               documentdeleted = False,
---               -- documentauthordetails = someSignatoryDetails,
---               -- documentmaybesigninfo = Nothing,
---               documenthistory = [],
---               documentinvitetext = BS.fromString "" }
---aSignedDocument = Document {
---               documentid = DocumentID 123,
---               documenttitle = BS.fromString "a_test_doc.pdf",
---               documentauthor = Author $ UserID 123,
---               documentsignatorylinks = [aSignedSigLink],
---               documentfiles = [aTestFile],
---               documentsealedfiles = [],
---               documentstatus = Pending,
---               documentctime = MinutesTime 123,
---               documentmtime = MinutesTime 123,
---               documentchargemode = ChargeNormal,
---               documentdaystosign = Nothing,
---               documenttimeouttime = Nothing,
---               documentdeleted = False,
---               --documentauthordetails = someSignatoryDetails,
---               --documentmaybesigninfo = Just (SignInfo {signtime = MinutesTime 123, signipnumber = 123}),
---               documenthistory = [],
---               documentinvitetext = BS.fromString "" }
+otherSignatoryDetails = SignatoryDetails { signatoryname = anotherTestName,
+                                           signatorycompany = aTestCompany,
+                                           signatorynumber = BS.fromString "12345",
+                                           signatoryemail = anotherTestEmail,
+                                           signatorynameplacements = [],
+                                           signatorycompanyplacements = [],
+                                           signatoryemailplacements = [],
+                                           signatorynumberplacements = [],
+                                           signatoryotherfields = [] }
+anUnsignedSigLink = SignatoryLink { 
+             signatorylinkid = SignatoryLinkID 123,
+             signatorydetails = otherSignatoryDetails,
+             signatorymagichash = MagicHash 123,
+             maybesignatory = Nothing,
+             maybesigninfo = Nothing,
+             maybeseeninfo = Nothing, 
+             invitationdeliverystatus = Unknown}
+someSignInfo = SignInfo {signtime = MinutesTime 123, signipnumber = 123}
+aSignedSigLink = SignatoryLink { 
+             signatorylinkid = SignatoryLinkID 123,
+             signatorydetails = otherSignatoryDetails,
+             signatorymagichash = MagicHash 123,
+             maybesignatory = Nothing,
+             maybesigninfo = Just someSignInfo,
+             maybeseeninfo = Nothing, 
+             invitationdeliverystatus = Unknown}
+aTestFile = File {fileid = FileID 123,
+                  filename = BS.fromString "a_test_doc.pdf",
+                  filestorage = FileStorageMemory $ BS.fromString ""}
+anUnsignedDocument = Document { 
+            documentid = DocumentID 123
+          , documenttitle = BS.fromString "a_test_doc.pdf"
+          , documentauthor = Author $ UserID 123
+          , documentsignatorylinks = [anUnsignedSigLink] 
+          , documentfiles = [aTestFile]
+          , documentsealedfiles = []
+          , documentstatus = Pending
+          , documentctime = MinutesTime 123
+          , documentmtime = MinutesTime 123
+          , documentchargemode = ChargeNormal
+          , documentdaystosign = Nothing
+          , documenttimeouttime = Nothing
+          , documentdeleted = False
+          , documenthistory = []
+          , documentinvitetext = BS.fromString "some test invite text"
+          , documenttrustweaverreference = Nothing
+          }
+aSignedDocument = Document { 
+            documentid = DocumentID 123
+          , documenttitle = BS.fromString "a_test_doc.pdf"
+          , documentauthor = Author $ UserID 123
+          , documentsignatorylinks = [aSignedSigLink] 
+          , documentfiles = [aTestFile]
+          , documentsealedfiles = []
+          , documentstatus = Pending
+          , documentctime = MinutesTime 123
+          , documentmtime = MinutesTime 123
+          , documentchargemode = ChargeNormal
+          , documentdaystosign = Nothing
+          , documenttimeouttime = Nothing
+          , documentdeleted = False
+          , documenthistory = []
+          , documentinvitetext = BS.fromString "some test invite text"
+          , documenttrustweaverreference = Nothing
+          }
+aCustomMsg = (BS.fromString "blah blah, custom message blah")
+
 
