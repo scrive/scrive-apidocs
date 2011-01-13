@@ -131,7 +131,8 @@ data DocumentSmallView = DocumentSmallView {
                           dsvDavelink::Maybe String,
                           dsvTimeoutdate::Maybe String,
                           dsvTimeoutdaysleft::Maybe String,  
-                          dsvMtime::String
+                          dsvMtime::String,
+                          dsvIsauthor::Bool  
                          } deriving (Data, Typeable)
                          
 documentSmallView::MinutesTime ->  User -> Document ->DocumentSmallView
@@ -166,7 +167,8 @@ documentSmallView crtime user doc = DocumentSmallView {
                                          else Nothing  ,               
                           dsvTimeoutdate =  fromTimeout show,
                           dsvTimeoutdaysleft =  fromTimeout $ show . (dateDiffInDays crtime),    
-                          dsvMtime = showDateAbbrev crtime (documentmtime doc)
+                          dsvMtime = showDateAbbrev crtime (documentmtime doc),
+                          dsvIsauthor = isAuthor doc user
                          }
   where   signatorylinklist = filter (isMatchingSignatoryLink user) $ documentsignatorylinks doc  
           fromTimeout f =  case (documenttimeouttime doc,documentstatus doc) of

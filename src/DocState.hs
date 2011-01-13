@@ -1484,12 +1484,14 @@ setDocumentTimeoutTime documentid timeouttime = do
   modify (updateIx documentid newdoc)
   return newdoc
 
-archiveDocuments :: [DocumentID] -> Update Documents ()
-archiveDocuments docidlist = do
+archiveDocuments :: User -> [DocumentID] -> Update Documents ()
+archiveDocuments user docidlist = do
   -- FIXME: can use a fold here
   forM_ docidlist $ \docid -> do
       modify $ \documents -> case getOne (documents @= docid) of
-                               Just doc -> updateIx docid (doc { documentdeleted = True }) documents
+                               Just doc -> if (isAuthor doc user)
+                                            then updateIx docid (doc { documentdeleted = True }) documents
+                                            else documents
                                Nothing -> documents
       
 

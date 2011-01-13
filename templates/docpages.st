@@ -42,7 +42,7 @@ pageDocumentList=
 
      <tr class="ui-state-default">
      <td class="tdleft">
-      <input type="checkbox" name="doccheck" value="$document.dsvId$" class="check" />
+        $if(document.dsvIsauthor)$ <input type="checkbox" name="doccheck" value="$document.dsvId$" class="check" /> $endif$
      </td>
      <td>
        <img width="17" height="17" src="$document.dsvStatusimage$"/> 
