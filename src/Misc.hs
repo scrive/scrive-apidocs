@@ -345,6 +345,57 @@ readProcessWithExitCode' cmd args input = do
 
     return (ex, out, err)
 
+readProcessWithExitCode2
+    :: FilePath                 -- ^ command to run
+    -> [String]                 -- ^ any arguments
+    -> Handle                   -- ^ standard input
+    -> IO (ExitCode,BSL.ByteString,BSL.ByteString) -- ^ exitcode, stdout, stderr
+readProcessWithExitCode2 cmd args inputhandle = do
+    hSeek inputhandle AbsoluteSeek 0
+    (_, Just outh, Just errh, pid) <-
+        createProcess (proc cmd args){ std_in  = UseHandle inputhandle,
+                                       std_out = CreatePipe,
+                                       std_err = CreatePipe }
+    outMVar <- newEmptyMVar
+
+    outM <- newEmptyMVar
+    errM <- newEmptyMVar
+
+    -- fork off a thread to start consuming stdout
+    forkIO $ do
+        out <- BSL.hGetContents outh
+        C.evaluate (BSL.length out)
+        putMVar outM out
+        putMVar outMVar ()
+
+    -- fork off a thread to start consuming stderr
+    forkIO $ do
+        err  <- BSL.hGetContents errh
+        C.evaluate (BSL.length err)
+        putMVar errM err
+        putMVar outMVar ()
+
+
+    -- wait on the output
+    takeMVar outMVar
+    takeMVar outMVar
+    C.handle ((\e -> return ()) :: (C.IOException -> IO ())) $ hClose outh
+    C.handle ((\e -> return ()) :: (C.IOException -> IO ())) $ hClose errh
+
+    -- wait on the process
+    ex <- waitForProcess pid
+
+    out <- readMVar outM
+    err <- readMVar errM
+
+    return (ex, out, err)
+
+#ifdef WINDOWS
+curl_exe = "curl.exe"
+#else
+curl_exe = "./curl"
+#endif
+
 {-| This function executes curl as external program. Args are args. The input though will
 -}
 readCurl :: [String]                 -- ^ any arguments
@@ -357,8 +408,7 @@ readCurl args input = do
     (\(name, handle) -> hClose handle >> removeFile name)
     $ \(filepath,handle) -> do
                         BSL.hPutStr handle input
-                        let allargs = (["--data-binary",filepath] ++ args) :: [String]
-                        readProcessWithExitCode' "./curl" allargs BSL.empty
+                        readProcessWithExitCode2 curl_exe args handle
   
 
 --Utils
