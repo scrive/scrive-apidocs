@@ -59,7 +59,7 @@ mailInvitationToSignContent=
                 <span>
                   <p><i>Översiktlig information</i><br/>
                    Parter: $partnersinfo:noescape()$<br/>
-                   Har undertecknat: <strong>$creatorname$</strong><br/>
+                   Har undertecknat: $signedinfo:noescape()$<br/>
                    $timetosigninfo:noescape()$
                   </p>
                  <p><i>Så här går du vidare</i><br/>
@@ -225,4 +225,5 @@ updateinglistwithauthor= <span>
                            <span class="hidden authorname"> $creatorname$ </span>
                           </span> 
 #### 
-
+authornamewhennotsecretary=<span class="authornamewhennotsecretary"></span>
+####
