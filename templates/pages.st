@@ -84,6 +84,22 @@ activatePageView=   <form action="" method="post">
                     </div>
                     </div>
 ###
+activatePageViewNotValidLink=
+      <div class="centerdivnarrow">
+        <p> Begklagar, din aktiveringslänk är äldre än 12 timmar. Vänligen fyll i
+            din mailadress så skickar vi en ny aktiveringslänk omedelbart.
+        </p>
+        <form action="" method="post">
+            <table>
+                <tr>
+                    <td>E-mail:</td>
+                    <td><input type="email" name="email" value="" /></td>
+                </tr>
+            </table>
+            <input type="submit" value="Send" />
+        </form>
+      </div>
+####
 errorPage=<div style="width:500px;margin-top:100px;border:5px solid #AAAACC;margin-left: auto;margin-right: auto;text-align:center">
               <div style="padding:30px">
               <div style="font-size:19pt;font-weight:bold" > Oops, ett fel har uppstått </div>

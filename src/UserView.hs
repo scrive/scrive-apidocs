@@ -7,6 +7,7 @@ module UserView(
     pageAcceptTOS,
     newPasswordPageView,
     activatePageView,
+    activatePageViewNotValidLink,
     --mails  
     passwordChangeMail,
     newUserMail,
@@ -25,6 +26,8 @@ module UserView(
     flashMessageUserWithSameEmailExists,
     flashMessageActivationLinkNotValid,
     flashMessageUserActivated,
+    flashMessageUserAlreadyActivated,
+    flashMessageNoSuchUserExistsUseSignup,
     --utils  
     prettyName,
     userSmallView,
@@ -70,6 +73,9 @@ viewSubaccounts templates subusers = renderTemplateComplex templates "viewSubacc
 
 activatePageView::KontrakcjaTemplates -> String ->  IO String
 activatePageView templates tostext = renderTemplate templates "activatePageView" [("tostext",tostext)]
+
+activatePageViewNotValidLink::KontrakcjaTemplates ->  IO String
+activatePageViewNotValidLink templates  = renderTemplate templates "activatePageViewNotValidLink" []
 
 
 newPasswordPageView::KontrakcjaTemplates -> IO String
@@ -160,6 +166,11 @@ flashMessageActivationLinkNotValid templates = renderTemplate templates "flashMe
 flashMessageUserActivated:: KontrakcjaTemplates -> IO String
 flashMessageUserActivated templates = renderTemplate templates "flashMessageUserActivated" []
 
+flashMessageUserAlreadyActivated:: KontrakcjaTemplates -> IO String
+flashMessageUserAlreadyActivated templates = renderTemplate templates "flashMessageUserAlreadyActivated" []
+                                                        
+flashMessageNoSuchUserExistsUseSignup:: KontrakcjaTemplates -> IO String                                                        
+flashMessageNoSuchUserExistsUseSignup templates = renderTemplate templates "flashMessageNoSuchUserExistsUseSignup" []
 {- Same as personname (username or email) from DocView but works on User -}
 prettyName::User -> BS.ByteString
 prettyName u = if (BS.null $ userfullname u)
