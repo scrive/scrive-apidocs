@@ -15,7 +15,8 @@ docViewSamples :: [Test]
 docViewSamples = [testGroup "sample document flash messages"
                            [testCase "document draft saved" sampleDocumentDraftSavedFlashMsg,
                             testCase "document restarted" sampleDocumentRestartedFlashMsg,
-                            testCase "remind mail sent" sampleRemindMailSentFlashMsg,
+                            testCase "remind unsigned mail sent" sampleRemindUnsignedMailSentFlashMsg,
+                            testCase "remind signed mail sent" sampleRemindSignedMailSentFlashMsg,
                             testCase "document canceled" sampleCanceledFlashMsg ],
                   testGroup "sample document views"
                            [testCase "landpage sign invite" sampleLandpageSignInviteView,
@@ -32,8 +33,11 @@ sampleDocumentDraftSavedFlashMsg =
 sampleDocumentRestartedFlashMsg =
   sampleFlashMsg "document_restarted" flashDocumentRestarted
 
-sampleRemindMailSentFlashMsg = 
-  sampleFlashMsg "remind_mail_sent" (\t -> flashRemindMailSent t anUnsignedSigLink)
+sampleRemindUnsignedMailSentFlashMsg = 
+  sampleFlashMsg "remind_unsigned_mail_sent" (\t -> flashRemindMailSent t anUnsignedSigLink)
+
+sampleRemindSignedMailSentFlashMsg = 
+  sampleFlashMsg "remind_signed_mail_sent" (\t -> flashRemindMailSent t aSignedSigLink)
 
 sampleCanceledFlashMsg =
   sampleFlashMsg "document_canceled" flashMessageCanceled
