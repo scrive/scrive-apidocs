@@ -48,6 +48,7 @@ import qualified Data.Set as Set
 import qualified Network.HTTP as HTTP
 import qualified SealSpec as Seal
 import qualified TrustWeaver as TW
+import ActionQueueState
 
 {-
   Document state transitions are described in DocState.
@@ -792,8 +793,9 @@ handleDocumentUpload docid content filename = do
   case result of
     Left err -> return ()
     Right document -> do
-        liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxs3action) (documentfiles document)
-        return ()
+        -- liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxs3action) (documentfiles document)
+                liftIO $ mapM_ (\file -> update $ EnqueueAction (AmazonUpload docid (fileid file))) (documentfiles document)
+                return ()
   return ()
 
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
@@ -942,20 +944,31 @@ eitherLog action = do
                error errmsg
     Right value -> return value
 
+uploadDocumentFileToAmazon ctxs3action docid fileid1 = do
+  Just doc <- query $ GetDocumentByDocumentID docid
+  let files = documentfiles doc ++ documentsealedfiles doc
+  case filter (\x -> fileid x == fileid1) files  of
+    [file] -> do
+      AWS.uploadFile ctxs3action file
+      return ()
+    _ -> return ()
+  return ()
+
+
 uploadDocumentFilesToTrustWeaver :: TW.TrustWeaverConf 
-                                 -> TrustWeaverStorage 
-                                 -> Document 
+                                 -> String 
+                                 -> DocumentID 
                                  -> IO ()
-uploadDocumentFilesToTrustWeaver ctxtwconf twsettings document = do
-  let twdocumentid = show (documentid document)
+uploadDocumentFilesToTrustWeaver ctxtwconf twownername documentid = do
+  Just document <- query $ GetDocumentByDocumentID documentid
+  let twdocumentid = show documentid
   let twdocumentdate = showDateOnly (documentmtime document)
-  let twownername = BS.toString (storagetwname twsettings)
   let File{filestorage = FileStorageMemory pdfdata} = head $ documentsealedfiles document 
           
   -- FIXME: we should retry here if the following fails
   -- because of external reasons 
   reference <- eitherLog $ TW.storeInvoice ctxtwconf twdocumentid twdocumentdate twownername pdfdata
-  update $ SetDocumentTrustWeaverReference (documentid document) reference
+  update $ SetDocumentTrustWeaverReference documentid reference
   return ()
 
 sealDocument :: Context 
@@ -1005,18 +1018,15 @@ sealDocument ctx@Context{ctxs3action,ctxtwconf}
   mdocument <- update $ AttachSealedFile docid filename newfilepdf
   case mdocument of
     Right document -> do
-        forkIO $ mapM_ (AWS.uploadFile ctxs3action) (documentsealedfiles document)
+        mapM_ (\File{fileid} -> update $ EnqueueAction (AmazonUpload docid fileid)) (documentsealedfiles document)
         case signeddocstorage (usersettings author) of
           Nothing -> return ()
           Just twsettings -> do
-                        forkIO $ uploadDocumentFilesToTrustWeaver ctxtwconf twsettings document
+                        -- forkIO $ uploadDocumentFilesToTrustWeaver ctxtwconf twsettings document
+                        update $ EnqueueAction (TrustWeaverUpload (BS.toString $ storagetwname twsettings) docid)
                         return ()
         return document
     Left msg -> error msg
-  -- let newfile = file {filepdf = newfilepdf}
-  -- modifyMVar_ normalizemap (\themap -> return $ Map.delete fileid themap)
-  -- update $ ReplaceFile (documentid document) newfile
-  
 
 
 basename :: String -> String
