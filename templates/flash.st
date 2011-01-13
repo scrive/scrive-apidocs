@@ -1,7 +1,5 @@
 ### Some comment here
-flashDocumentDraftSaved= <div>
-     Du har sparat dokumentet.
-    </div>
+flashDocumentDraftSaved= Du har sparat dokumentet.
 ######
 flashRemindMailSentNotSigned=En påminnelse har skickats till $personname$
 ######
@@ -30,4 +28,8 @@ flashMessageUserWithSameEmailExists=En användare med samma e-post existerar red
 flashMessageActivationLinkNotValid=Vi beklagar. Länken är inte längre giltig.<BR/> Vänligen använd "Glömt lösenord" för att generera en ny länk.
 ###
 flashMessageUserActivated=Välkommen till SkrivaPå!
+###
+flashMessageUserAlreadyActivated=This user had activated his account. If You do not remember password please use the reminder.
+###                                                        
+flashMessageNoSuchUserExistsUseSignup=There is no user with such email. 
 ###

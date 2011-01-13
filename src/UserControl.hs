@@ -313,8 +313,9 @@ activatePage sid mh=  do
                                   content <- liftIO $ activatePageView (ctxtemplates ctx) $ BS.toString tostext
                                   renderFromBody ctx TopNone kontrakcja $ cdata content
                     Nothing -> do 
-                                 addFlashMsgText =<< (liftIO $ flashMessageActivationLinkNotValid (ctxtemplates ctx)) 
-                                 sendRedirect LinkMain   
+                                  content <- liftIO $ activatePageViewNotValidLink (ctxtemplates ctx)
+                                  renderFromBody ctx TopNone kontrakcja $ cdata content
+
                                  
 handleActivate::String->String -> Kontra KontraLink
 handleActivate sid mh = do
@@ -344,6 +345,26 @@ handleActivate sid mh = do
                                          addFlashMsgText =<< (liftIO $ f (ctxtemplates ctx))          
                                          return LoopBack  
                          Nothing -> do 
-                                 addFlashMsgText =<< (liftIO $ flashMessageActivationLinkNotValid (ctxtemplates ctx)) 
-                                 return LinkMain   
+                                     memail <- fmap (fmap BS.fromString) $ getField "email"
+                                     case memail of  
+                                      Just email -> do
+                                                     muser <- query $ GetUserByEmail $ Email email
+                                                     case  muser of
+                                                      Just user -> 
+                                                          if (isNothing $ userhasacceptedtermsofservice user) 
+                                                          then liftIO $ 
+                                                               do  al <- activateLink $ userid user
+                                                                   mail <-  newUserMail (ctxtemplates ctx) (ctxhostpart ctx) email email al
+                                                                   sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = [(email, email)]}
+                                                                   return LinkSignupDone
+                                                          else do
+                                                                addFlashMsgText =<< (liftIO $ flashMessageUserAlreadyActivated (ctxtemplates ctx)) 
+                                                                return LinkMain
+                                                      Nothing -> do
+                                                                 addFlashMsgText =<< (liftIO $ flashMessageNoSuchUserExistsUseSignup (ctxtemplates ctx)) 
+                                                                 return LoopBack
+                                                              
+                                      Nothing -> do
+                                         addFlashMsgText =<< (liftIO $ flashMessageActivationLinkNotValid (ctxtemplates ctx)) 
+                                         return LinkMain   
       
