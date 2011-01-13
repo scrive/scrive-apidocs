@@ -26,7 +26,6 @@ import System.Log.Logger
 import Happstack.Util.LogFormat
 import Data.Time.Clock
 import Control.Concurrent (forkIO)
-import Control.Monad
 import UserState 
 import DocState 
 import Mails.MailsConfig
