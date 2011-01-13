@@ -44,6 +44,9 @@ import DocState
 import qualified Amazon as AWS
 import Mails.MailsConfig
 import Templates.Templates (readTemplates,emptyTemplates)
+import ActionQueue
+import User
+import qualified TrustWeaver as TW
 
 {- | Getting application configuration. Reads 'kontrakcja.conf' from current directory
      Setting production param can change default setting (not to send mails)
@@ -137,6 +140,29 @@ main = withLogger $ do
     (Left e) -> do logM "Happstack.Server" ERROR (unlines e)
                    exitFailure
     (Right f) -> return $ (f (appConf1))
+
+  let 
+   ctx = Context
+            { ctxmaybeuser = error "Do not use ctxmaybeuser in actions"
+            , ctxhostpart = error "Do not use ctxhostpart in actions"
+            , ctxflashmessages = error "Do not use ctxflashmessages in actions"
+            , ctxtime = error "The ctxtime should be set per action"
+            , ctxnormalizeddocuments = error "Do not use normalized documents in actions"
+            , ctxipnumber = error "Do not use peerip in actions"
+            , ctxs3action = defaultAWSAction appConf
+            , ctxproduction = production appConf
+            , ctxtemplates = templates
+            , ctxmailsconfig = mailsConfig appConf
+            , ctxtwconf = TW.TrustWeaverConf 
+                          { TW.signcert = twSignCert appConf
+                          , TW.signcertpwd = twSignCertPwd appConf
+                          , TW.admincert = twAdminCert appConf
+                          , TW.admincertpwd = twAdminCertPwd appConf
+                          }
+            , ctxelegtransactions = error "Do not use ctxelegtransactions in actions"
+            }
+
+
   Exception.bracket
                  -- start the state system
               (logM "Happstack.Server" NOTICE ("Using store " ++ store appConf) >>
@@ -168,6 +194,7 @@ main = withLogger $ do
                                           initDatabaseEntries
                                           forkIO $ uploadOldFilesToAmazon appConf
                                           -- wait for termination signal
+                                          runActionLoop ctx
                                           waitForTermination
                                           logM "Happstack.Server" NOTICE "Termination request received" 
 
