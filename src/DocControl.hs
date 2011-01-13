@@ -1050,7 +1050,7 @@ handleIssueArchive = do
     something <- getDataFnM (lookInput "archive")
     idstrings <- getDataFnM (lookInputList "doccheck")
     let Just ids = sequence $ map (readM . BSL.toString) idstrings
-    update $ ArchiveDocuments ids
+    update $ ArchiveDocuments user ids
     return LinkIssue
 
 
