@@ -7,6 +7,7 @@ module DocViewUtil (   personname,
                        partyListButAuthor,
                        partyListString,
                        partyListButAuthorString,
+                       partySignedList,
                        partyUnsignedListString,
                        partyUnsignedMeAndList,
                        partyUnsignedMeAndListString,
@@ -24,6 +25,7 @@ import qualified Data.ByteString as BS
 import qualified HSX.XMLGenerator as HSX
 import Misc
 import Templates.Templates 
+import Data.Maybe
 
 partyList :: Document -> [SignatoryDetails]
 partyList document = map signatorydetails (documentsignatorylinks document)
@@ -34,6 +36,14 @@ partyUnsignedList document =
         unsignalinks = filter ((== Nothing) . maybesigninfo) signalinks
         signas = map signatorydetails unsignalinks
     in signas
+
+partySignedList :: Document -> [SignatoryDetails]
+partySignedList document =
+    let signalinks = documentsignatorylinks document
+        unsignalinks = filter ((isJust) . maybesigninfo) signalinks
+        signas = map signatorydetails unsignalinks
+    in signas
+
 
 partyUnsignedMeAndList :: MagicHash -> Document -> [SignatoryDetails]
 partyUnsignedMeAndList magichash document =

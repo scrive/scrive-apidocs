@@ -183,6 +183,9 @@ mailInvitationToSignContent templates forMail (Context {ctxhostpart})
         partnersinfo = if (forMail) 
                         then  renderListTemplate templates $  map (BS.toString . personname') $ partyList document
                         else  renderTemplate templates "updateinglistwithauthor" [("creatorname",creatorname )]
+        signedinfo =  if (forMail) 
+                        then  renderListTemplate templates $  map (BS.toString . personname') $ partySignedList document
+                        else  renderTemplate templates "authornamewhennotsecretary" []
         timetosigninfo = case documenttimeouttime of 
                           Just time -> renderTemplate templates "timetosigninfo" [("time",show time )]
                           Nothing -> return ""
@@ -205,64 +208,16 @@ mailInvitationToSignContent templates forMail (Context {ctxhostpart})
             editableHeader <- makeEditable' templates "customtext" header'
             footer' <- footer
             partnersinfo' <- partnersinfo
+            signedinfo' <- signedinfo
             timetosigninfo' <- timetosigninfo
             renderTemplate templates "mailInvitationToSignContent" [("header",editableHeader),
                                                                 ("footer",footer'),
                                                                 ("timetosigninfo",timetosigninfo'),
                                                                 ("partnersinfo",partnersinfo'),  
-                                                                ("creatorname", creatorname),
+                                                                ("signedinfo", signedinfo'),
                                                                 ("documenttitle",BS.toString $ documenttitle document),
-                                                                ("link",link)]                      
-
-
-
-mailInvitationToSendContent ::  KontrakcjaTemplates -> Bool -> Context  -> Document -> User -> (Maybe SignatoryLink) -> IO String        
-mailInvitationToSendContent templates forMail (Context {ctxhostpart}) 
-                  document@Document{documenttimeouttime, documentinvitetext} 
-                  author
-                  signaturelink = 
-    let link = case (signaturelink) of
-                Just signaturelink' -> ctxhostpart ++ show (LinkSignDoc document signaturelink')
-                Nothing -> ctxhostpart ++ "/s/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
-        personname1 = maybe "" (BS.toString . signatoryname . signatorydetails) signaturelink
-        creatorname = BS.toString $ prettyName author
-        partnersinfo = if (forMail) 
-                        then  renderListTemplate templates $  map (BS.toString . personname') $ partyList document
-                        else  renderTemplate templates "updateinglistwithauthor" [("creatorname",creatorname )]
-        timetosigninfo = case documenttimeouttime of 
-                          Just time -> renderTemplate templates "timetosigninfo" [("time",show time )]
-                          Nothing -> return ""
-                          
-        footer =    if (forMail) 
-                    then if (BS.null documentinvitetext)
-                           then renderTemplate templates "poweredBySkrivaPaPara" [("ctxhostpart",ctxhostpart)] 
-                           else renderTemplate templates "customFooter" [("creatorname", creatorname)] 
-                    else do
-                          this <- renderTemplate templates "poweredBySkrivaPaPara" [("ctxhostpart",ctxhostpart)] 
-                          with <- renderTemplate templates "customFooter" [("creatorname",creatorname)] 
-                          replaceOnEdit' templates this with            
-        header   =  if (BS.null documentinvitetext) 
-                     then renderTemplate templates "mailInvitationToSignDefaultHeader" [("creatorname",creatorname)
-                                                                                       ,("personname",personname1)]  
-                     else return $ BS.toString documentinvitetext      
-           
-   in  do
-            header' <- header
-            editableHeader <- makeEditable' templates "customtext" header'
-            footer' <- footer
-            partnersinfo' <- partnersinfo
-            timetosigninfo' <- timetosigninfo
-            renderTemplate templates "mailInvitationToSignContent" [("header",editableHeader),
-                                                                ("footer",footer'),
-                                                                ("timetosigninfo",timetosigninfo'),
-                                                                ("partnersinfo",partnersinfo'),  
-                                                                --("creatorname", creatorname),
-                                                                ("documenttitle",BS.toString $ documenttitle document),
-                                                                ("link",link)]                      
-
-
-
-        
+                                                                ("link",link)]    
+                                                                
 mailInvitationToSign::  KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> User -> IO Mail
 mailInvitationToSign templates ctx document@Document{documenttitle} signaturelink author = 
                  do  
@@ -277,7 +232,7 @@ mailInvitationToSend templates ctx document@Document{documenttitle} signaturelin
                  do  
                    title <- renderTemplate templates "mailInvitationToSignTitle" [("documenttitle",BS.toString  documenttitle ),
                                                                         ("creatorname",BS.toString $ prettyName author)] 
-                   content <- wrapHTML templates =<< mailInvitationToSendContent templates True ctx document author (Just signaturelink)
+                   content <- wrapHTML templates =<< mailInvitationToSignContent templates True ctx document author (Just signaturelink)
                    return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
 
   

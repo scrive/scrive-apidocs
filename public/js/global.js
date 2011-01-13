@@ -248,11 +248,21 @@ $(document).ready( function () {
     onBeforeLoad: function () { 
             var newtxt = $("#invitetext").val()
             $("#edit-invite-text-dialog textarea").val(newtxt);    
-            var author = $(".authorname") .text();
+            var author = $(".authorname").text();
 	    var sigs = $(".signatorybox").not("#signatory_template");
             var partners = new Array()
-            partners[0] = author;
-            var i = 1;
+            var i = 0;
+            var authorSignes = jQuery("[name='authorrole']").val()!="secretary"
+                                                                 
+            if (authorSignes)
+            {  
+               partners[0] = author;
+               i++;
+               jQuery(".authornamewhennotsecretary").html("<strong>"+author+"</strong>");
+            }
+            else {
+              jQuery(".authornamewhennotsecretary").html("");
+            }
             sigs.each(function(){
               var namefield = $("[name='signatoryname']",this);
               var mailfield =  $("[name='signatoryemail']",this)
