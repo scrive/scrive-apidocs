@@ -10,10 +10,10 @@ module AppControl
     ) where
 
 import ELegitimation.BankID as BankID
-import "base" Control.Monad (msum, mzero, liftM)
-import "mtl" Control.Monad.Reader (ask)
-import "mtl" Control.Monad.State
-import "mtl" Control.Monad.Trans(liftIO, MonadIO,lift)
+import Control.Monad (msum, mzero, liftM)
+import Control.Monad.Reader (ask)
+import Control.Monad.State
+import Control.Monad.Trans(liftIO, MonadIO,lift)
 import AppState
 import AppView as V
 import Control.Concurrent
