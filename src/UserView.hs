@@ -34,16 +34,12 @@ module UserView(
     userSmallViewWithDocsCount,
     UserSmallView(..)) where
 
-import HSP hiding (Request)
-import Happstack.Server.SimpleHTTP
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import UserState
-import AppView
 import User
 import KontraLink
 import Mails.SendMail(Mail,emptyMail,title,content)
-import qualified HSX.XMLGenerator
 import Templates.Templates 
 import Templates.TemplatesUtils
 import Data.Typeable
