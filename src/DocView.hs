@@ -632,8 +632,8 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser,ctxtemplates})  docu
                               (setAttribute "reminderForm" $ reminderForm) .
                               (setAttribute "changeEmailAddress" $  changeEmailAddress) 
                        
-packToMString:: BS.ByteString -> Maybe BS.ByteString
-packToMString x = if BS.null x then Nothing else (Just x) 
+packToMString:: BS.ByteString -> Maybe String
+packToMString x = if BS.null x then Nothing else (Just $ BS.toString x) 
 
 pageDocumentForSign :: KontraLink 
                     -> Document 
