@@ -48,6 +48,7 @@ import Templates.Templates
 import Templates.TemplatesUtils
 import Data.Typeable
 import Data.Data
+import Text.StringTemplate.GenericStandard()
 
 showUser :: KontrakcjaTemplates -> User -> [User] -> IO String 
 showUser templates user viewers = renderTemplateComplex templates "showUser" $
