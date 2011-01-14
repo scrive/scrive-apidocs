@@ -32,8 +32,7 @@ stringSaver file str = writeFile file ("<html><head><meta http-equiv=\"content-t
 
 withSampleDirectory :: (FilePath -> IO a) -> IO a
 withSampleDirectory action = do 
-  tmp <- getTemporaryDirectory
-  let sampleDir = tmp </> "kontrakcja-content-samples"
+  let sampleDir = "kontrakcja-content-samples"
   createDirectoryIfMissing False sampleDir
   action sampleDir
   
