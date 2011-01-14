@@ -118,7 +118,7 @@ aTestCtx = Context{ctxmaybeuser = Just aTestUser,
                    ctxs3action = aTestS3action,
                    ctxproduction = False,
                    ctxtemplates = unsafePerformIO $ readTemplates,
-                   ctxmailsconfig = unsafePerformIO $ getMailsConfig,
+                   ctxmailsconfig = defaultMailConfig,
                    ctxtwconf = aTestTwConf,
                    ctxelegtransactions = []}
 

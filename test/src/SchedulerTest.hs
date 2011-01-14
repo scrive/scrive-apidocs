@@ -26,7 +26,7 @@ schedulerTests = [testGroup "Scheduler"
 testDocumentsBecameTimeouted = withTestState $ 
             do
              now <- getMinutesTime
-             runScheduler $ AppConf { httpConf = nullConf
+             runScheduler $ AppConf { httpPort = 8000
                              , store    = ""
                              , static   = ""
                              , awsBucket = ""
