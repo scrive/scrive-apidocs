@@ -59,7 +59,7 @@ mailInvitationToSignContent=
                 <span>
                   <p><i>Översiktlig information</i><br/>
                    Parter: $partnersinfo:noescape()$<br/>
-                   Har undertecknat: $signedinfo:noescape()$<br/>
+                   $whohadsignedinfo:noescape()$<br/>
                    $timetosigninfo:noescape()$
                   </p>
                  <p><i>Så här går du vidare</i><br/>
@@ -99,7 +99,7 @@ remindMailNotSignedContent=
                              <span>
                               <p><i>Översiktlig information</i><br/>
                               Parter: $partnersinfo:noescape()$<br/>
-                              Har undertecknat: <strong>$creatorname$</strong><br/>
+                              $whohadsignedinfo:noescape()$<br/>
                               $timetosigninfo:noescape()$
                               </p>
                              <p><i>Så här går du vidare</i><br/>
@@ -224,6 +224,15 @@ updateinglistwithauthor= <span>
                            <span class="partylistupdate"></span>
                            <span class="hidden authorname"> $creatorname$ </span>
                           </span> 
-#### 
-authornamewhennotsecretary=<span class="authornamewhennotsecretary"></span>
+####
+noonehadsignedtext=Ingen har undertecknat dokumentet ännu
+####
+whohadsignedinfoformail =  $if(signedlist)$
+                            Har undertecknat: $signedlist:noescape()$
+                           $else$
+                            $noonehadsignedtext()$
+                           $endif$ 
+####
+####
+whohadsignedinfoforpreview = <span class="authornamewhennotsecretary" alt="$noonehadsignedtext()$" okprefix="Har undertecknat:"></span>
 ####
