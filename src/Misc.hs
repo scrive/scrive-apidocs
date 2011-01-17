@@ -260,14 +260,19 @@ lookInputList name
              isname _ = []
          return [value | k <- inputs, value <- isname k]
 
-renderXMLAsBSHTML (meta,content) = 
+renderXMLAsStringHTML (meta,content) = 
     case meta of
       Just (XMLMetaData (showDt, dt) _ pr) -> 
-          BS.fromString ((if showDt then (dt ++) else id) (pr content))
-      Nothing -> BS.fromString (renderAsHTML content)
+          (if showDt then (dt ++) else id) (pr content)
+      Nothing -> renderAsHTML content
+
+renderXMLAsBSHTML = BS.fromString . renderXMLAsStringHTML
 
 renderHSPToByteString xml = do
   fmap renderXMLAsBSHTML $ evalHSP Nothing xml
+
+renderHSPToString xml = do
+  fmap renderXMLAsStringHTML $ evalHSP Nothing xml
 
 
 
