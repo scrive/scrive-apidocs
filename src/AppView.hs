@@ -13,6 +13,7 @@ module AppView( TopMenu(..)
               , signupPageView
               , signupConfirmPageView
               , pageLogin
+              , pageFromBody'
               ) where 
 
 import HSP hiding (Request)
@@ -140,27 +141,29 @@ topnavi :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink))
 topnavi active title link = 
     <a href=link class=(if active then "active" else "")><% title %></a>
 
-partialScripts :: (EmbedAsAttr m (Attr [Char] [Char])) => [XMLGenT m (HSX.XMLGenerator.XML m)]    
-partialScripts =
-      [ <script src="//ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js"/>
+partialScripts :: (EmbedAsAttr m (Attr [Char] [Char])) => String -> [XMLGenT m (HSX.XMLGenerator.XML m)]    
+partialScripts prefix =
+    let http = if null prefix then "" else "http:" in 
+      [ <script src=(http ++ "//ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js")/>
       -- we loaded the min version but at some point google stopped serving this one
       -- , <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"/>
-      , <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js"/>
-      , <script src="/js/jquery.tools.min.js"/> 
+      , <script src=(http ++ "//ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js")/>
+      , <script src=(prefix ++ "/js/jquery.tools.min.js")/> 
       {- Local versions of the same, but locally
       , <script src="/js/jquery-1.4.2.min.js"/>
       , <script src="/js/jquery-ui-1.8.custom.min.js"/>
       -}
-      , <script src="/js/jquery.MultiFile.js"/>
-      , <script src="/tiny_mce/jquery.tinymce.js"></script>
-      , <script src="/js/global.js"/>
+      , <script src=(prefix ++ "/js/jquery.MultiFile.js")/>
+      , <script src=(prefix ++ "/tiny_mce/jquery.tinymce.js")></script>
+      , <script src=(prefix ++ "/js/global.js")/>
       ]
-partialStyles :: (EmbedAsAttr m (Attr [Char] [Char])) => [XMLGenT m (HSX.XMLGenerator.XML m)]
-partialStyles = 
-      [ <link rel="stylesheet" type="text/css" href="/theme/style.css" media="screen" />,
-        <link rel="stylesheet" type="text/css" href="/theme/calendar.css" media="screen" />,
+
+partialStyles :: (EmbedAsAttr m (Attr [Char] [Char])) => String -> [XMLGenT m (HSX.XMLGenerator.XML m)]
+partialStyles prefix = let http = if null prefix then "" else "http:" in 
+      [ <link rel="stylesheet" type="text/css" href=(prefix ++ "/theme/style.css") media="screen" />,
+        <link rel="stylesheet" type="text/css" href=(prefix ++ "/theme/calendar.css") media="screen" />,
         <link rel="stylesheet" type="text/css" 
-            href="//ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/ui-lightness/jquery-ui.css" 
+            href=(http ++ "//ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/ui-lightness/jquery-ui.css")
             -- href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/flick/jquery-ui.css"
             -- href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/redmond/jquery-ui.css"
             -- href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/start/jquery-ui.css"
@@ -173,15 +176,25 @@ pageFromBody :: (EmbedAsChild (HSPT' IO) xml)
              -> String 
              -> xml 
              -> HSP XML
-pageFromBody (Context {ctxmaybeuser,ctxflashmessages,ctxproduction}) 
-             topMenu title body =
+pageFromBody = pageFromBody' ""
+
+pageFromBody' :: (EmbedAsChild (HSPT' IO) xml) 
+              => String
+              -> Context 
+              -> TopMenu 
+              -> String 
+              -> xml 
+              -> HSP XML
+pageFromBody' prefix 
+                  (Context {ctxmaybeuser,ctxflashmessages,ctxproduction}) 
+                  topMenu title body =
     withMetaData html4Strict $
     <html>
      <head>
       <title><% title %><% if ctxproduction then "" else " (devel)" %></title>
       <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-      <% partialStyles %>
-      <% partialScripts {- we would like to move this to the end of html, to load faster -} %>
+      <% partialStyles prefix %>
+      <% partialScripts prefix {- we would like to move this to the end of html, to load faster -} %>
      </head>
      <body class=(if ctxproduction then "" else "development")>
      <div id="headerWide"/>
