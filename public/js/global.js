@@ -253,15 +253,15 @@ $(document).ready( function () {
             var partners = new Array()
             var i = 0;
             var authorSignes = jQuery("[name='authorrole']").val()!="secretary"
-                                                                 
+            var signedList =  jQuery(".authornamewhennotsecretary");                                                     
             if (authorSignes)
             {  
                partners[0] = author;
                i++;
-               jQuery(".authornamewhennotsecretary").html("<strong>"+author+"</strong>");
+               signedList.html(signedList.attr("okprefix")+" <strong>"+author+"</strong>");
             }
             else {
-              jQuery(".authornamewhennotsecretary").html("");
+               signedList.html(signedList.attr("alt"));
             }
             sigs.each(function(){
               var namefield = $("[name='signatoryname']",this);

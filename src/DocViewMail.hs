@@ -91,7 +91,13 @@ remindMailNotSignedContent templates forMail customMessage ctx document signlink
         timetosigninfo = case (documenttimeouttime document) of 
                            Just time -> renderTemplate templates "timetosigninfo" [("time",show time )]
                            Nothing   -> return ""
-        partnersinfo = renderListTemplate templates $  map (BS.toString . personname') $ partyList document       
+        partnersinfo = renderListTemplate templates $  map (BS.toString . personname') $ partyList document    
+        whohadsignedinfo =  do
+                               signedlist <- if (not $ null $ partySignedList document)
+                                                   then fmap Just $ renderListTemplate templates $  map (BS.toString . personname') $ partySignedList document
+                                                   else return Nothing
+                               renderTemplateComplex templates "whohadsignedinfoformail" (setAttribute "signedlist" signedlist)
+
         footer =    if (forMail) 
                      then if (isNothing customMessage)
                            then renderTemplate templates "poweredBySkrivaPaPara" [("ctxhostpart",ctxhostpart ctx)] 
@@ -109,11 +115,13 @@ remindMailNotSignedContent templates forMail customMessage ctx document signlink
       editableHeader <- makeEditable' templates "customtext" header'
       footer' <- footer
       partnersinfo' <- partnersinfo
+      whohadsignedinfo' <- whohadsignedinfo 
       timetosigninfo' <- timetosigninfo
       renderTemplate templates "remindMailNotSignedContent" [("header",editableHeader),
                                                              ("footer",footer'),
                                                              ("timetosigninfo",timetosigninfo'),
                                                              ("partnersinfo",partnersinfo'),  
+                                                             ("whohadsignedinfo", whohadsignedinfo'),
                                                              ("creatorname", creatorname),
                                                              ("documenttitle",BS.toString $ documenttitle document),
                                                              ("link",link)]         
@@ -183,9 +191,13 @@ mailInvitationToSignContent templates forMail (Context {ctxhostpart})
         partnersinfo = if (forMail) 
                         then  renderListTemplate templates $  map (BS.toString . personname') $ partyList document
                         else  renderTemplate templates "updateinglistwithauthor" [("creatorname",creatorname )]
-        signedinfo =  if (forMail) 
-                        then  renderListTemplate templates $  map (BS.toString . personname') $ partySignedList document
-                        else  renderTemplate templates "authornamewhennotsecretary" []
+        whohadsignedinfo =  if (forMail) 
+                             then do
+                                    signedlist <- if (not $ null $ partySignedList document)
+                                                       then fmap Just $ renderListTemplate templates $  map (BS.toString . personname') $ partySignedList document
+                                                       else return Nothing
+                                    renderTemplateComplex templates "whohadsignedinfoformail" (setAttribute "signedlist" signedlist)
+                             else  renderTemplate templates "whohadsignedinfoforpreview" []
         timetosigninfo = case documenttimeouttime of 
                           Just time -> renderTemplate templates "timetosigninfo" [("time",show time )]
                           Nothing -> return ""
@@ -208,13 +220,13 @@ mailInvitationToSignContent templates forMail (Context {ctxhostpart})
             editableHeader <- makeEditable' templates "customtext" header'
             footer' <- footer
             partnersinfo' <- partnersinfo
-            signedinfo' <- signedinfo
+            whohadsignedinfo' <- whohadsignedinfo
             timetosigninfo' <- timetosigninfo
             renderTemplate templates "mailInvitationToSignContent" [("header",editableHeader),
                                                                 ("footer",footer'),
                                                                 ("timetosigninfo",timetosigninfo'),
                                                                 ("partnersinfo",partnersinfo'),  
-                                                                ("signedinfo", signedinfo'),
+                                                                ("whohadsignedinfo", whohadsignedinfo'),
                                                                 ("documenttitle",BS.toString $ documenttitle document),
                                                                 ("link",link)]    
                                                                 
