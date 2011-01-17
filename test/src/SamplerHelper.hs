@@ -1,4 +1,4 @@
-module SamplerHelper (sampleMail, sampleFlashMsg, sampleView) where
+module SamplerHelper (sampleMail, sampleFlashMsg, sampleView, sample) where
 
 import Test.HUnit (assert, assertEqual, assertFailure, Assertion(..))
 import Test.Framework (Test, testGroup)

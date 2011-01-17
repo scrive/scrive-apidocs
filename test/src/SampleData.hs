@@ -109,6 +109,7 @@ aTestTwConf = TrustWeaverConf
                           , admincert = ""
                           , admincertpwd = ""
                           }
+
 aTestCtx = Context{ctxmaybeuser = Just aTestUser, 
                    ctxhostpart = aTestHost,
                    ctxflashmessages = [],

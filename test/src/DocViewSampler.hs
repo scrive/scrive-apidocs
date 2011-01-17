@@ -9,7 +9,15 @@ import Test.Framework.Providers.HUnit (testCase)
 import DocView
 import SamplerHelper
 import SampleData
-
+import User
+import DocState
+import UserState
+import Misc
+import AppView
+import KontraLink
+import HSP
+import System.IO.Unsafe
+import qualified Data.ByteString.UTF8 as BS
 
 docViewSamples :: [Test]
 docViewSamples = [testGroup "sample document flash messages"
@@ -24,7 +32,8 @@ docViewSamples = [testGroup "sample document flash messages"
                             testCase "landpage signed (no account)" sampleLandpageSignedNoAccountView,
                             testCase "landpage signed (has account)" sampleLandpageSignedHasAccountView,
                             testCase "landpage login for save" sampleLandpageLoginForSaveView, 
-                            testCase "landpage document saved" sampleDocumentSavedView]]
+                            testCase "landpage document saved" sampleDocumentSavedView,
+                            testCase "document for sign" sampleDocumentViewForSign]]
 
 
 sampleDocumentDraftSavedFlashMsg =
@@ -59,3 +68,17 @@ sampleLandpageLoginForSaveView =
 
 sampleDocumentSavedView =
   sampleView "document_saved" landpageDocumentSavedView
+
+sampleDocumentViewForSign =
+    let ctx = aTestCtx
+        document = anUnsignedDocument
+        wassigned = False
+        author = aTestUser
+        invitedlink = head $ documentsignatorylinks document
+    in
+    sampleView2 "document_for_sign" (\templ -> pageFromBody' "../public" (ctx{ctxtemplates=templ}) TopNone "kontrakcja"
+                                               (fmap cdata $ pageDocumentForSign (LinkSignDoc document invitedlink) 
+                                                     document (ctx{ctxtemplates=templ}) invitedlink wassigned author))
+
+
+sampleView2 name action = sample name "view" (\t -> renderHSPToString (action t)) writeFile
