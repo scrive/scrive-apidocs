@@ -31,5 +31,7 @@ flashMessageUserActivated=Välkommen till SkrivaPå!
 ###
 flashMessageUserAlreadyActivated=This user had activated his account. If You do not remember password please use the reminder.
 ###                                                        
-flashMessageNoSuchUserExistsUseSignup=There is no user with such email. 
+flashMessageNoSuchUserExists=There is no user with such email. 
 ###
+flashMessageChangePasswordEmailSend=Mail with link to change password had been send.
+####

@@ -361,7 +361,7 @@ handleActivate sid mh = do
                                                                 addFlashMsgText =<< (liftIO $ flashMessageUserAlreadyActivated (ctxtemplates ctx)) 
                                                                 return LinkMain
                                                       Nothing -> do
-                                                                 addFlashMsgText =<< (liftIO $ flashMessageNoSuchUserExistsUseSignup (ctxtemplates ctx)) 
+                                                                 addFlashMsgText =<< (liftIO $ flashMessageNoSuchUserExists (ctxtemplates ctx)) 
                                                                  return LoopBack
                                                               
                                       Nothing -> do

@@ -322,16 +322,20 @@ forgotPasswordPageGet = do
     
 forgotPasswordPagePost :: Kontra KontraLink
 forgotPasswordPagePost = do
+    ctx <- get
     memail <- getField "email"
     case memail of 
       Just email -> do
                       muser <- query $ GetUserByEmail $ Email (BS.fromString email)                    
                       case muser of 
-                       Nothing -> return LinkMain
+                       Nothing -> do 
+                                   addFlashMsgText =<< (liftIO $ flashMessageNoSuchUserExists $ ctxtemplates ctx)
+                                   return LoopBack
                        Just user -> do
                                      sendResetPasswordMail user
+                                     addFlashMsgText =<< (liftIO $ flashMessageChangePasswordEmailSend $ ctxtemplates ctx)
                                      return LinkForgotPasswordDone
-      Nothing -> return LinkMain
+      Nothing -> return LoopBack
 
 sendResetPasswordMail::User -> Kontra ()
 sendResetPasswordMail user = do
