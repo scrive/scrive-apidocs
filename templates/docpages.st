@@ -352,7 +352,7 @@ pageDocumentForAuthorContent=
               <span>
               <input type="checkbox" class="addremovecheckbox flashOnClick" rel="#daystosignbox" location="#datetosigncontainer" oldlocation="#hiddenttimestuffbox" autocomplete="off" value="$if(timetosignset)$on$else$off$endif$" ></input> Välj förfallodatum
                 <div id="datetosigncontainer">  </div>
-                $if(timetosignset)$
+                $if(!timetosignset)$
                 <span class="hidden flashMessage" > Varning: Om du väljer ett förfallodatum kan du inte återkalla inbjudan innan datumet förfallit. Detta regleras av avtalslagen.</span>
                 $endif$   
 
