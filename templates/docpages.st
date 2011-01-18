@@ -2,12 +2,12 @@
 pageDocumentList= 
      <form method="post" action="">
      <table class="doctable" cellspacing="0">
-      <col/>
-      <col/>
-      <col/>
-      <col/>
-      <col/>
-      <col/>
+      <col>
+      <col>
+      <col>
+      <col>
+      <col>
+      <col>
       <thead>
        <tr>
         <td><a href="#" id="all">Alla</a></td>
@@ -23,17 +23,17 @@ pageDocumentList=
        <tr>
         <td colspan="7" style="text-align: right; overflow: hidden;">
           <div class="floatleft">
-           <input type="submit" class="button" name="archive" value="Radera"/>
+           <input type="submit" class="button" name="archive" value="Radera">
           </div>
           <div class="floatright">
-           <img src="/theme/images/status_draft.png"/> Utkast
-           <img src="/theme/images/status_rejected.png"/> Avbrutet
-           <img src="/theme/images/status_timeout.png"/> Förfallet
-           <img src="/theme/images/status_pending.png"/> Skickat
-           <img src="/theme/images/status_viewed.png"/> Granskat av motpart
-           <img src="/theme/images/status_signed.png"/> Undertecknat
+           <img src="/theme/images/status_draft.png"> Utkast
+           <img src="/theme/images/status_rejected.png"> Avbrutet
+           <img src="/theme/images/status_timeout.png"> Förfallet
+           <img src="/theme/images/status_pending.png"> Skickat
+           <img src="/theme/images/status_viewed.png"> Granskat av motpart
+           <img src="/theme/images/status_signed.png"> Undertecknat
           </div>
-          <div class="clearboth"/>
+          <div class="clearboth"></div>
          </td>
        </tr>
       </tfoot>
@@ -42,10 +42,10 @@ pageDocumentList=
 
      <tr class="ui-state-default">
      <td class="tdleft">
-        $if(document.dsvIsauthor)$ <input type="checkbox" name="doccheck" value="$document.dsvId$" class="check" /> $endif$
+        $if(document.dsvIsauthor)$ <input type="checkbox" name="doccheck" value="$document.dsvId$" class="check"> $endif$
      </td>
      <td>
-       <img width="17" height="17" src="$document.dsvStatusimage$"/> 
+       <img width="17" height="17" src="$document.dsvStatusimage$"> 
          $if(document.dsvAnyinvitationundelivered)$  <span style="color:#000000;position:relative;top:-3px">!</span>$endif$
 
      </td>
@@ -76,12 +76,12 @@ pageDocumentList=
 ####
 showFileImagesReady= $pages:{pageno| 
                       <div id="page$pageno$" class="pagediv">
-                          <img class="pagejpg" src="/pages/$fileid$/$pageno$" width="300" />
+                          <img class="pagejpg" src="/pages/$fileid$/$pageno$" width="300">
                       </div> 
                      }$
 ####
 showFileImagesPending= <div class="pagejpga4 pagejpg">
-      <img class="waiting" src="/theme/images/wait30trans.gif"/>
+      <img class="waiting" src="/theme/images/wait30trans.gif">
      </div>
 ####
 showFileImagesError=<div class="pagejpga4 pagejpg">
@@ -91,20 +91,20 @@ showFileImagesError=<div class="pagejpga4 pagejpg">
 showDocumentBox=  
     <div id="documentBox">
      <div class="pagejpga4 pagejpg">
-      <img class="waiting" src="/theme/images/wait30trans.gif"/>
+      <img class="waiting" src="/theme/images/wait30trans.gif">
      </div>
     </div> 
 ###
 showSignatoryEntryForEdit2= 
  <div id="$idx$" class="signatorybox" alt="Namn på avtalspart">
       <input name="signatoryname" type="text" value="$signatoryname$" autocomplete="off"
-             infotext="Namn på motpart"/><br/>
+             infotext="Namn på motpart"><br>
       <input name="signatorycompany" type="text" value="$signatorycompany$" autocomplete="off"
-             infotext="Titel, företag"/><br/>
+             infotext="Titel, företag"><br>
       <input name="signatorynumber" type="text" value="$signatorynumber$" autocomplete="off"
-             infotext="Orgnr/Persnr"/><br/>
+             infotext="Orgnr/Persnr"><br>
       <input name="signatoryemail"  type="email" value="$signatoryemail$" autocomplete="off"
-             infotext="Personens e-mail"/><br/>
+             infotext="Personens e-mail"><br>
       <small><a onclick="return signatoryremove(this.parentNode);" href="#">Ta bort</a></small>
     </div>
 ####
@@ -140,7 +140,7 @@ showDocumentPageHelper=
        $docbox:noescape()$
       </div>
       <div class="docviewright"> 
-       <p><strong>$title$</strong><br/>
+       <p><strong>$title$</strong><br>
           <small><a href="$linkissuedocpdf$" target="_blank">Ladda ned PDF</a></small></p>
        $content:noescape()$
       </div>
@@ -183,33 +183,33 @@ reminderForm = <span>
 ####
 changeEmailAddress =  <a style="cursor:pointer" class="replacebynextonclick"> Skicka inbjudan till ny adress  </a>
                       <form action="$linkchangeemail$" method="POST" style="display:none">
-                        <input type="text" style="width:170px" name="email" value="$signatoryemail$"/>
-                        <input type="submit" style="width:100px" value="Skicka"/>
+                        <input type="text" style="width:170px" name="email" value="$signatoryemail$">
+                        <input type="submit" style="width:100px" value="Skicka">
                       </form>     
 
 ####
 showSignatoryLinkForSign =
 <div class="$mainclass$">
- <img src="$status$"/>
+ <img src="$status$">
 
  $if(changeEmailAddress)$
  <span style="color:#000000;position:relative;top:-3px">!</span>
  $endif$
 
  $if(signatoryname)$
- $signatoryname$<BR/>
+ $signatoryname$<BR>
  $endif$
 
  $if(signatorycompany)$
- $signatorycompany$<BR/>
+ $signatorycompany$<BR>
  $endif$
 
  $if(signatorynumber)$
- $signatorynumber$<BR/>
+ $signatorynumber$<BR>
  $endif$
 
  $if(signatoryemail)$
- $signatoryemail$<BR/>
+ $signatoryemail$<BR>
  $endif$
 
  <div class="signatoryfields">
@@ -217,7 +217,7 @@ showSignatoryLinkForSign =
  </div>
  
  $message:noescape()$
- <BR/>
+ <BR>
  $reminderForm:noescape()$
  $changeEmailAddress:noescape()$
 </div>
@@ -238,9 +238,9 @@ pageDocumentForSignSigned=<div>Du har redan undertecknat!</div>
 pageDocumentForSignTimedout= <div>Förfallodatum har passerat!</div>
 ####
 pageDocumentForSignButtons=  <div>
-                                 <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign" rel="#dialog-confirm-sign"/>
-				 <input class="bigbutton cross-button" type="submit" name="signbankid" value="Underteckna with E-Leg" id="signbankid" rel="#dialog-confirm-sign-eleg"/>
-                                 <input class="bigbutton" type="submit" name="cancel" value="Avvisa" rel="#dialog-confirm-cancel" id="cancel"/>
+                                 <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign" rel="#dialog-confirm-sign">
+				 <input class="bigbutton cross-button" type="submit" name="signbankid" value="Underteckna with E-Leg" id="signbankid" rel="#dialog-confirm-sign-eleg">
+                                 <input class="bigbutton" type="submit" name="cancel" value="Avvisa" rel="#dialog-confirm-cancel" id="cancel">
                               </div>
 ####
 pageDocumentForSignContent= 
@@ -259,7 +259,7 @@ pageDocumentForSignContent=
                       avtalet <strong>juridiskt bindande</strong> och
                       det färdigställda avtalet skickas till din e-post.</p>
                       <div class="buttonbox">
-                      <input type="hidden" name="sign" value="automatic"/>
+                      <input type="hidden" name="sign" value="automatic">
                       <button class="close button" type="button"> Avbryt </button>
                       <button class="submiter button" type="button"> Underteckna </button>
                       </div>
@@ -273,9 +273,9 @@ pageDocumentForSignContent=
                       avtalet <strong>juridiskt bindande</strong> och
                       det färdigställda avtalet skickas till din e-post.</p>
                       <div class="buttonbox">
-                      <input type="hidden" name="bankid" value="automatic"/>
-                      <input type="hidden" name="signature" value="" id="signature" />
-                      <input type="hidden" name="transactionid" value="" id="transactionid" />
+                      <input type="hidden" name="bankid" value="automatic">
+                      <input type="hidden" name="signature" value="" id="signature">
+                      <input type="hidden" name="transactionid" value="" id="transactionid">
                       <button class="close button" type="button"> Avbryt </button>
                       <button class="bankid button" type="button"> Underteckna with BankID</button>
                       </div>
@@ -289,7 +289,7 @@ pageDocumentForSignContent=
                      $rejectMessage:noescape()$
                     </div>
                     <div class="buttonbox">
-                     <input type="hidden" name="cancel" value="automatic"/>
+                     <input type="hidden" name="cancel" value="automatic">
                      <button class="close button" type="button"> Avbryt </button>
                      <button class="editer button" type="button"> Skriv eget meddelande </button>
                      <button class="submiter button" type="button"> Avvisa </button>
@@ -316,12 +316,12 @@ pageDocumentForAuthorContent=
                  $jscript:noescape()$
                </script>
               <form method="post" name="form" action="$linkissuedoc$" id="main-document-form"> 
-              Avsändare<br/>
+              Avsändare<br>
               <div style="margin-bottom: 10px;" id="authordetails">
-              <strong><span id="sauthorname">$authorname$<BR/></span></strong>
-              <span id="sauthorcompany">$authorcompany$<BR/></span>
-              <span id="sauthornumber">$authornumber$<BR/></span>
-              <span id="sauthoremail">$authoremail$<BR/></span>
+              <strong><span id="sauthorname">$authorname$<BR></span></strong>
+              <span id="sauthorcompany">$authorcompany$<BR></span>
+              <span id="sauthornumber">$authornumber$<BR></span>
+              <span id="sauthoremail">$authoremail$<BR></span>
               </div>
               Användarroll 
               $if(authorhaslink)$ 
@@ -337,16 +337,16 @@ pageDocumentForAuthorContent=
                       </select> 
               $endif$
               
-              <br /><br />
+              <br><br>
 
-              Motpart<br/>
+              Motpart<br>
               <div id="signatorylist">
                $signatoriesForEdit:noescape()$
               </div>
               <small><a id="addsiglink" onclick="signatoryadd(); return false;" href="#">Lägg till fler</a></small>
               <div style="margin-top: 20px">
               <small><a rel="#edit-invite-text-dialog" id="editinvitetextlink" href="#" style="padding-top:3px">Hälsningsmeddelande</a></small>
-              <input type="hidden" id="invitetext" name="invitetext" value="$documentinvitetext$" />
+              <input type="hidden" id="invitetext" name="invitetext" value="$documentinvitetext$">
               </div>
               <div style="margin-top: 20px"></div>
               <span>
@@ -357,9 +357,9 @@ pageDocumentForAuthorContent=
                 $endif$   
 
               </span>
-              <div style="height: 60px;"/>
-              <input class="bigbutton cross-button" type="submit" name="final" value="Underteckna" id="signinvite" rel="#dialog-confirm-signinvite"/> <br />
-              <input class="button" type="submit" name="save" value="Spara som utkast"/>
+              <div style="height: 60px;">
+              <input class="bigbutton cross-button" type="submit" name="final" value="Underteckna" id="signinvite" rel="#dialog-confirm-signinvite"> <br>
+              <input class="button" type="submit" name="save" value="Spara som utkast">
               </div>
               </form>
               <span class="localdialogs">
@@ -380,7 +380,7 @@ pageDocumentForAuthorContent=
                    </div>
                    
                    <div class="buttonbox" >
-                       <input type="hidden" name="final" value="automatic"/>
+                       <input type="hidden" name="final" value="automatic">
                        <button class="close button" type="button"> Avbryt </button>
                        <button class="submiter button" type="button"> Underteckna </button>
                        </div>
@@ -399,8 +399,8 @@ pageDocumentForAuthorContent=
                  </form>  
                  <div class="hidden" id="hiddenttimestuffbox">
                        <div id="daystosignbox">Undertecknas inom (dagar)
-                        <BR/>
-                        <input type="text" id="daystosign" name="daystosign" value="$documentdaystosignboxvalue$" maxlength="2" size="2" autocomplete="off"/>
+                        <BR>
+                        <input type="text" id="daystosign" name="daystosign" value="$documentdaystosignboxvalue$" maxlength="2" size="2" autocomplete="off">
                         <small> <a  class="datetodaystip" rel="#daystosign"> </a> </small>
                        </div>
                  </div>
@@ -426,18 +426,18 @@ pageDocumentForAuthorContent=
                     $signatories:noescape()$
               </div>
               $if(awaitingauthor)$
-                  <form method="post" action=""><input class="bigbutton cross-button" type="submit" name="final" value="Underteckna" id="signinvite" /></form>
+                  <form method="post" action=""><input class="bigbutton cross-button" type="submit" name="final" value="Underteckna" id="signinvite"></form>
               $endif$
               $if(pending)$
                     $if(!timetosignset)$
                     <span>
-                     <input class="button cancel" type="button" name="cancel" value="Återkalla inbjudan"  rel="#cancel-by-author-dialog" />    
+                     <input class="button cancel" type="button" name="cancel" value="Återkalla inbjudan"  rel="#cancel-by-author-dialog">    
                      <span class="localdialogs">
                      <form method="post" action="$linkcancel$" class="overlay" id="cancel-by-author-dialog">
                                 <a class="close"> </a>
                                 <h2> Återkalla inbjudan </h2>
                                 <p>Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?
-                                <BR/>När du återkallat inbjudan kommer nedanstaende meddelande att skickas till dina motparter.
+                                <BR>När du återkallat inbjudan kommer nedanstaende meddelande att skickas till dina motparter.
                                 </p>
                                 <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
                                  $cancelMailContent:noescape()$
