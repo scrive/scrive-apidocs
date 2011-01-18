@@ -620,7 +620,7 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser,ctxtemplates})  docu
                                 renderTemplateComplex ctxtemplates "changeEmailAddress" $  
                                          (setAttribute "linkchangeemail" $  show $ LinkChangeSignatoryEmail (documentid document) signatorylinkid) .
                                          (setAttribute "signatoryemail" $  BS.toString signatoryemail)          
-      renderTemplateComplex ctxtemplates "showSignatoryLinkForSign" $  
+      renderTemplateComplex ctxtemplates "showSignatoryLinkForSign2" $  
                               (setAttribute "mainclass" $         if isCurrentSignatorAuthor  then "author" else "signatory") .
                               (setAttribute "status" $ status) .
                               (setAttribute "signatoryname" $     packToMString signatoryname ) .

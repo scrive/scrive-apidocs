@@ -278,6 +278,12 @@ appHandler appConf appGlobals= do
   session <- handleSession
   muser <- getUserFromSession session
   flashmessages <- getFlashMessagesFromSession session          
+
+  -- do reload templates in non-production code
+  templates2 <- if production appConf
+                then return $ templates appGlobals
+                else liftIO $ readTemplates
+
   let elegtrans = getELegTransactions session
   let 
    ctx = Context
@@ -289,7 +295,7 @@ appHandler appConf appGlobals= do
             , ctxipnumber = peerip
             , ctxs3action = defaultAWSAction appConf
             , ctxproduction = production appConf
-            , ctxtemplates = templates appGlobals
+            , ctxtemplates = templates2
             , ctxmailsconfig = mailsConfig appConf
             , ctxtwconf = TW.TrustWeaverConf 
                           { TW.signcert = twSignCert appConf
