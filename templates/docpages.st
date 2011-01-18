@@ -188,6 +188,20 @@ changeEmailAddress =  <a style="cursor:pointer" class="replacebynextonclick"> Sk
                       </form>     
 
 ####
+showSignatoryLinkForSign2 =
+                      <div class="signViewBodyRight"> 
+                        <div class="signViewBodyIcons"> <a href="#man2" class="man"></a> 
+                          <div class="signViewBodyTitle"> <span>Part</span> </div>
+                        </div>
+                        <div class="signViewBodyRightTextContainer">
+                          <div class="text">$signatoryname$</div>
+                          <div class="text">$signatoryemail$</div>
+                          <div class="text">$signatorycompany$</div>
+                          <span class="text">$signatorynumber$</span> 
+                        </div>
+                      </div>
+####
+
 showSignatoryLinkForSign =
 <div class="$mainclass$">
  <img src="$status$">
@@ -247,7 +261,104 @@ pageDocumentForSignButtons=  <div>
                                  <input class="bigbutton" type="submit" name="cancel" value="Avvisa" rel="#dialog-confirm-cancel" id="cancel">
                               </div>
 ####
-pageDocumentForSignContent= 
+pageDocumentForSignContent=
+    <div id="signStepsContainer"> 
+      <div class="localdialogs">
+        <form method="post" name="form" action="$action$" id="dialog-confirm-sign" class="overlay">     
+          <a href="#" class="close"> </a>                  
+          <h2>Underteckna</h2>  
+          <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
+          <p>När $partyUnsigned:noescape()$ undertecknat blir 
+            avtalet <strong>juridiskt bindande</strong> och
+            det färdigställda avtalet skickas till din e-post.</p>
+          <div class="buttonbox">
+            <input type="hidden" name="sign" value="automatic">
+            <button class="close button" type="button"> Avbryt </button>
+            <button class="submiter button" type="button"> Underteckna </button>
+          </div>
+        </form>
+        <form method="post" name="form" action=action id="dialog-confirm-sign-eleg" class="overlay">     
+          <script src="/js/bankid.js"></script>
+          <a href="#" class="close"> </a>                  
+          <h2>Underteckna with BankID</h2>  
+          <p>Är du säker att du vill underteckna dokumentet <strong><% documenttitle document %></strong>?</p>
+          <p>När <% partyUnsignedMeAndListString magichash document %> undertecknat blir 
+            avtalet <strong>juridiskt bindande</strong> och
+            det färdigställda avtalet skickas till din e-post.</p>
+          <div class="buttonbox">
+            <input type="hidden" name="bankid" value="automatic">
+            <input type="hidden" name="signature" value="" id="signature">
+            <input type="hidden" name="transactionid" value="" id="transactionid">
+            <button class="close button" type="button"> Avbryt </button>
+            <button class="bankid button" type="button"> Underteckna with BankID</button>
+          </div>
+        </form>
+        <form method="post" name="form" action="$action$" id="dialog-confirm-cancel" class="overlay">   
+          <a href="#" class="close"> </a>     
+          <h2>Avvisa</h2>                 
+          <p>Är du säker på att du vill avvisa dokumentet <strong>$documenttitle$</strong>?</p>
+          <p>När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela <strong>$authorname$</strong>.</p>
+          <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
+            $rejectMessage:noescape()$
+          </div>
+          <div class="buttonbox">
+            <input type="hidden" name="cancel" value="automatic">
+            <button class="close button" type="button"> Avbryt </button>
+            <button class="editer button" type="button"> Skriv eget meddelande </button>
+            <button class="submiter button" type="button"> Avvisa </button>
+          </div> 
+        </form> 
+      </div>
+      <div id="signStepsTitleRow"> <span id="signStepsTitleRowTextContainer"> 
+          <span class="title">DOKUMENT:</span> <span class="name">$title$ | 
+            Transaction #$docid$</span> </span> </div>
+      <div id="signStepsBody"> 
+        <div id="signViewBodyLeft" > 
+          <span id="signViewBodyLeftTextContainer"> 
+            <span class="header">Granska</span><br>
+            <span class="text">Vänligen var noga med att granska dokumentet och 
+              kontrollera uppgifterna nedan innan du undertecknar.</span>
+          </span> 
+        </div>
+        $signatories:noescape()$
+        <div id="signStepsBodyBorderBottom"></div>
+      </div>
+    </div>
+    <div id="signViewNotificationContainer"> 
+      <div id="signViewNotificationContainerLeft"> 
+        <div class="title">Scrolla ner för att skriva på </div>
+        <div class="text">Applications can no longer send you notifications on 
+          Facebook. If you like you can start receiving emails from Mocies.</div>
+      </div>
+      <div id="signViewNotificationContainerRight"> 
+        <div class="anchor">
+          <a href="#" onclick="jQuery('#signViewNotificationContainer').fadeOut('slow'); return false;">close</a>
+        </div>
+      </div>
+    </div>
+    <div id="documentBox">
+     <div class="waiting4page"></div>
+    </div>
+    <div id="signViewBottomBox"> 
+      <div id="signViewBottomBoxTop"></div>
+      <div id="signViewBottomBoxContainer"> 
+        <div id="signViewBottomBoxContainerLeft"> 
+          <div id="signViewBottomBoxContainerLeftText"> 
+            <input type="checkbox"> <span class="title">Jag intygar...</span> 
+            More text should follow
+          </div>
+        </div>
+        <div id="signViewBottomBoxContainerRight"> 
+          <input class="button" type="submit" name="sign" value="Underteckna!" id="sign" rel="#dialog-confirm-sign">
+          <input class="bigbutton" type="submit" name="cancel" value="Avvisa" rel="#dialog-confirm-cancel" id="cancel">
+        </div>
+      </div>
+      <div id="signViewBottomBoxBottom"></div>
+    </div>
+    
+###
+
+pageDocumentForSignContent_old= 
               <span>
                  <p>Vänligen var noga med att granska dokumentet och kontrollera 
                     uppgifterna nedan innan du undertecknar.</p>   

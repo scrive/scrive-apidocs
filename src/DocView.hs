@@ -650,7 +650,12 @@ pageDocumentForSign :: KontraLink
                     -> IO String 
 pageDocumentForSign action document ctx  invitedlink wassigned author =
     let
-       localscripts =  "var docstate = " ++ (buildJS documentauthordetails $ map signatorydetails (documentsignatorylinks document)) ++ "; docstate['useremail'] = '" ++ (BS.toString $ signatoryemail $ signatorydetails invitedlink) ++ "';"          
+       localscripts = "var docstate = " ++ 
+                      (buildJS documentauthordetails $ 
+                       map signatorydetails (documentsignatorylinks document)) ++ 
+                      "; docstate['useremail'] = '" ++ 
+                      (BS.toString $ signatoryemail $ signatorydetails invitedlink) ++ 
+                      "';"       
        magichash = signatorymagichash invitedlink
        authorname = signatoryname documentauthordetails
        allbutinvited = filter (/= invitedlink) (documentsignatorylinks document)
@@ -670,14 +675,13 @@ pageDocumentForSign action document ctx  invitedlink wassigned author =
                      ]  $ return ""   
                      
      partyUnsigned <- renderListTemplate (ctxtemplates ctx) $  map (BS.toString . personname') $ partyUnsignedMeAndList magichash document
-     content <- renderTemplateComplex (ctxtemplates ctx) "pageDocumentForSignContent" $
-                 (setAttribute "signatories" signatories) .
-                 (setAttribute "messageoption" messageoption) .
-                 (setAttribute "documenttitle" $ BS.toString $ documenttitle document) .
-                 (setAttribute "authorname" $ BS.toString $ authorname) .
-                 (setAttribute "rejectMessage" rejectMessage) .
-                 (setAttribute "partyUnsigned" partyUnsigned) .
-                 (setAttribute "action" $ show action)
+     content <- renderTemplate (ctxtemplates ctx) "pageDocumentForSignContent" [("signatories",signatories),
+                                                                                 ("messageoption",messageoption),
+                                                                                 ("documenttitle", BS.toString $ documenttitle document),
+                                                                                 ("authorname", BS.toString $ authorname),
+                                                                                 ("rejectMessage", rejectMessage),
+                                                                                 ("partyUnsigned", partyUnsigned),
+                                                                                 ("action", show action)]                                                                                   
      showDocumentPageHelper (ctxtemplates ctx) document helpers  (documenttitle document) content
 
 --We keep this javascript code generation for now
