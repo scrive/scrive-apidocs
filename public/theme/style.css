@@ -3,9 +3,9 @@
 /* 003 new: html */
 html 
 {
-	/* will always show a scroll */
+    /* will always show a scroll */
     overflow-y: scroll;
-	/* background-color: #f7f7f7; */
+	background-color: #f7f7f7;
 }
 
 /* 003 moved body to the top */
@@ -14,7 +14,7 @@ body
     /* 002 new font-family */
     font-family: 'lucida grande', 'Segoe UI', arial, verdana, 'lucida sans unicode', tahoma, sans-serif;
     color: #6d6e70;
-	/* 003  new backgroundcolor */
+    /* 003  new backgroundcolor */
     background-color: white;
     font-size: small;
     margin: 0px;
@@ -23,20 +23,20 @@ body
 /* 003 new */
 a img
 {
-	border: 0;	
+    border: 0;	
 }
 
 
 /* 003 new: #mainContainer960. Consider to change this name to mainContainer */
 #mainContainer960
 {
-	width: 960px;
-	min-height: 600px;
-	height: auto;
-	margin-left: 30px;
-	margin-right: 30px;
-	margin: auto;
-	overflow: hidden;
+    width: 960px;
+    min-height: 600px;
+    height: auto;
+    margin-left: 30px;
+    margin-right: 30px;
+    margin: auto;
+    overflow: hidden;
 }
 
 /* 003 a lot of changes */
@@ -74,7 +74,7 @@ a img
 #loginContainer input[type=submit]
 {
     /*height: 11px; 003 remove */
-	font-size: 11px; /* 003 new */
+    font-size: 11px; /* 003 new */
     border: 1px solid #d2d2d6;
     margin-top: 2px;
     margin-left: 5px;
@@ -82,7 +82,7 @@ a img
     background-color: #5c5c69;
     font-weight: normal;
     color: white;
-	text-align: right; /* 003 new */
+    text-align: right; /* 003 new */
 }
 
 /* new mouse-effects for loginbutton. just an example, what king of effect and colors need to be descussed */
@@ -105,83 +105,83 @@ a img
 
 /* 002 new, alaign loginbutton right with input fields */
 /* 003 remove
-#loginContainer .button{
-	margin-right: 7px;
-}*/
+   #loginContainer .button{
+   margin-right: 7px;
+   }*/
 
 /* 002 new code start */
 #textOneColumn,
 #pricingContainer{
-	width:  470px;
-	margin-top: 30px;
+    width:  470px;
+    margin-top: 30px;
 }
 
 #textOneColumn p,
 #textOneColumn ul,
 #textOneColumn ol{
-	font-size: 12px;
+    font-size: 12px;
 }
 
 #textOneColumn li{
-	padding-bottom: 10px;
+    padding-bottom: 10px;
 }
 
 #pricingContainer{
-	width: 700px;
+    width: 700px;
 }
 
 #pricingContainer td{
-	width: 150px;
-	background-color: #f5f5f5;
-	padding: 5px;
+    width: 150px;
+    background-color: #f5f5f5;
+    padding: 5px;
 }
 
 #pricingContainer th{
-	text-align: left;
+    text-align: left;
 }
 
 .alphaList{
-	list-style-type: lower-alpha;
+    list-style-type: lower-alpha;
 }
 /* 002 new code end */
 
 /* new first page code */
 /* 003 #firstPageContentContainer
-{
-    width: 690px;
-    margin: auto;
-    margin-bottom: 105px;
-}*/
+   {
+   width: 690px;
+   margin: auto;
+   margin-bottom: 105px;
+   }*/
 
 /* 003 remove
-#firstPageLeft, #firstPageRight
-{
-    margin-top: 70px;
-    float: left;
-}*/
+   #firstPageLeft, #firstPageRight
+   {
+   margin-top: 70px;
+   float: left;
+   }*/
 
 /* 003 a lot of changes */
 /* 004 a lot of changes */
 #firstPageLeft
 {
-	float: left;
-	margin-top: 145px;
-	width: 400px;
-	padding-right: 40px;
+    float: left;
+    margin-top: 145px;
+    width: 400px;
+    padding-right: 40px;
 }
 
 /* 004 new */
 #firstPageLeft h1{
-	Xfont-size: 22px;
+    Xfont-size: 22px;
 }
 
 /* 003 a lot of changes */
 /* 004 a lot of changes */
 #firstPageRight
 {
-	float: left;
-	margin-top: 70px;
-	width: 520px;
+    float: left;
+    margin-top: 70px;
+    width: 520px;
 }
 
 #signUpContainer
@@ -250,10 +250,10 @@ input[type=submit]:active, input[type=button]:active, button:active, a.button:ac
 /* 003 new: headerWide */
 #headerWide
 {
-	width: 100%;
-	position: absolute;
-	top: 0;
-	left: 0;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
 #headerContainer.topempty
@@ -288,11 +288,11 @@ input[type=submit]:active, input[type=button]:active, button:active, a.button:ac
     margin-right: auto;
     height: auto;
     margin-top: auto;
-	float: right; /* 003l new */
+    float: right; /* 003l new */
     padding: 50px 0 0 0;
     text-align: center;
 
-    /*width: 470px !important; 003l remove*/
+/*width: 470px !important; 003l remove*/
 }
 
 #nav ul 
@@ -323,10 +323,10 @@ input[type=submit]:active, input[type=button]:active, button:active, a.button:ac
     text-align: center;
 
     color: #999999; /* 003l new/changed */
-	font-weight: bold; /* 003l new */
+    font-weight: bold; /* 003l new */
     width: 151px;
-	
-	background: url("images/ButtonTOPUnactive.png") no-repeat scroll left top transparent; /* 003l new */
+    
+    background: url("images/ButtonTOPUnactive.png") no-repeat scroll left top transparent; /* 003l new */
 }
 
 #nav li a.active 
@@ -488,9 +488,9 @@ input[type=submit]:active, input[type=button]:active, button:active, a.button:ac
 
 #toscontainer #textOneColumn
 {
-  height: 350px;
-  overflow: auto;
-  margin: auto;
+    height: 350px;
+    overflow: auto;
+    margin: auto;
 }
 
 a.button 
@@ -549,7 +549,7 @@ a.secbutton
 
 a.bigbutton 
 
-    color: white;
+color: white;
 }
 
 .bigbutton 
@@ -584,6 +584,19 @@ a.bigbutton
     height: 100%;
     width: 770px;
     background-color: #999;
+}
+
+.waiting4page
+{
+    width: 755px;
+    height: 100px;
+    align: center;
+    margin: 6px;
+    border: 1px solid black;
+    background-color: #fafafa;
+    background-image: url(images/wait30trans.gif);
+    background-repeat: no-repeat;
+    background-position: center center;
 }
 
 .pagejpg 
@@ -772,10 +785,10 @@ img.waiting
     margin-top: 30px;
     width: 100%;
     background: #f7f7f7 url(images/gradientbottom.png) no-repeat center 0; /* 004 new image */ /* 003 new image */
-	position: relative; /*003*/
-    /*overflow: hidden;*/
-    /* 002 position: fixed;*/
-    /*bottom: 0;*/
+    position: relative; /*003*/
+/*overflow: hidden;*/
+/* 002 position: fixed;*/
+/*bottom: 0;*/
 }
 
 /* 003 a lot of changes in #footerContainer2  */
@@ -795,8 +808,8 @@ img.waiting
     float: left;
     list-style: none;
     margin-right: 40px;
-	/* 002 new margin-top */
-	margin-top: 6px;
+    /* 002 new margin-top */
+    margin-top: 6px;
     line-height: 14px;
 }
 
@@ -807,8 +820,8 @@ img.waiting
 }
 
 /* 
-002 new: #footerContainer2 .footerCategoryHeader instead of .footerCategoryHeader
-*/
+   002 new: #footerContainer2 .footerCategoryHeader instead of .footerCategoryHeader
+   */
 #footerContainer2 .footerCategoryHeader
 {
     margin-left: -7px;
@@ -893,31 +906,31 @@ input , button, a.button
 
 
 .overlay {
-	
-	/* place overlay on top of other elements */
-	z-index:10000;
-	display:none;
-	/* styling */
-	background-color:#FFFFFF;
-	width:675px;	
-	min-height:200px;
-	border:1px solid #666;
+    
+    /* place overlay on top of other elements */
+    z-index:10000;
+    display:none;
+    /* styling */
+    background-color:#FFFFFF;
+    width:675px;	
+    min-height:200px;
+    border:1px solid #666;
     padding:5px;
-	
-	/* CSS3 styling for latest browsers */
-	-moz-box-shadow:0 0 90px 5px #000;
-	-webkit-box-shadow: 0 0 90px #000;	
+    
+    /* CSS3 styling for latest browsers */
+    -moz-box-shadow:0 0 90px 5px #000;
+    -webkit-box-shadow: 0 0 90px #000;	
 }
 
 /* close button positioned on upper right corner */
 .overlay a.close {
-	background-image:url(images/close.png);
-	position:absolute;
-	right:-15px;
-	top:-15px;
-	cursor:pointer;
-	height:35px;
-	width:35px;
+    background-image:url(images/close.png);
+    position:absolute;
+    right:-15px;
+    top:-15px;
+    cursor:pointer;
+    height:35px;
+    width:35px;
 }
 
 .overlay h2 {
@@ -944,20 +957,884 @@ input , button, a.button
     margin:8px;
 }
 
-.author, .signatory {
+.author, .signatory 
+{
     margin-bottom:10px;
 }
 
-.redborder {
+.redborder 
+{
     border:1px solid red;
 }
 
-.hidden {
+.hidden 
+{
     display:none;
     height:0px;
     width:0px;
 }
-.transparent{
-  border:0;
-  background-color:transparent
+.transparent
+{
+    border:0;
+    background-color:transparent
+}
+
+
+/* 005 new code below */
+#signStepsContainer
+{
+    width: 960px;
+}
+
+#signStepsContainer a{
+    color: #2e99d3;
+}
+
+#signStepsMenu
+{
+    height: 25px;
+    font-size: 11px;
+    position: relative;
+}
+
+#signStepsMenu div
+{
+    height: 23px;
+    position: relative;
+    float: left;
+    z-index: 2;
+}
+
+#signStepsMenu div#signStepsMenuEmptyStep
+{
+    border-width: 1px 1px 1px 1px;
+    border-top-color: #808080;
+    border-right-color: #bdbdbd;
+    border-bottom-color: #000000;
+    border-left-color: #808080;
+    border-style: solid;
+    height: 23px;
+    width: 958px;
+    top: 0;
+    left: 0;
+    position: absolute;
+    z-index: 1;
+    background-color: #f4f4f4;
+}
+
+#signStepsMenu .text
+{
+    display: inline-block;
+    margin: 5px 18px 0 28px;
+}
+
+#signStepsMenu div a
+{
+    color: #4b4b4b;
+}
+
+#signStepsMenu .clickArea,
+.signStepsButton .clickArea
+{
+    width: 100%;
+    height: 100%;
+    display: block;
+    z-index: 3;
+    position: absolute;
+}
+
+#signStepsMenu div img
+{
+    position: absolute;
+    top: 5px;
+    left: 5px;
+}
+
+#signStepsMenu div#current
+{
+    background-image: url(images/singStepsDarkPattern.png);
+    background-repeat: repeat;
+    border-width: 1px 1px 0 1px;
+    border-color: #000000;
+    border-style: solid;
+    color: #d9d9d9;
+    height: 24px;
+}
+#signStepsMenu div#current a
+{
+    color: #d9d9d9;
+}
+#signStepsMenu div#current img
+{
+    top: 4px;	
+}
+/**/
+#signStepsTitleRow
+{
+    color: #ffffff;
+    background-image: url(images/singStepsDarkPattern.png);
+    height: 36px;
+    border-width: 0 1px 0 1px;
+    border-color: #000000;
+    border-style: solid;
+    position: relative;
+}
+
+#signStepsTitleRowTextContainer
+{
+    display: inline-block;
+    margin: 7px 0 0 18px;	
+}
+
+#signStepsTitleRow .title
+{
+    font-size: 10px;
+    margin-right: 2px;
+}
+
+#signStepsTitleRow .name
+{
+    font-weight: bold;
+    font-size: 16px;
+    margin-right: 2px;
+}
+
+#signStepsTitleRow .changeName a
+{
+    font-size: 10px;
+}
+
+#signStepsTitleRow .signStepsButton
+{
+    position: absolute;
+    right: 10px;
+    top: 6px;
+}
+
+.signStepsButton
+{
+    width: 120px;
+    height: 25px;
+    background-image: url(images/singStepsButton.png);
+    background-repeat: no-repeat;
+    overflow: hidden;
+    position: relative; /* 008 new */
+}
+
+.signStepsButton .icon
+{
+    width: 11px;
+    height: 13px;
+    display: inline-block;
+    background-repeat: no-repeat;
+    left: 8px;
+    top: 6px;
+    position: absolute;
+}
+
+.signStepsButton .icon.arrowRight
+{
+    background-image: url(images/iconArrowRight.png);
+}
+
+/* 008 new */
+.signStepsButton .icon.arrowUp
+{
+    background-image: url(images/iconArrowUp.png);
+    width: 13px;
+    height: 11px;
+}
+
+.signStepsButton .icon.check
+{
+    background-image: url(images/iconGreenCheck.png);
+    width: 14px;
+    top: 5px;
+}
+
+.signStepsButton a .text
+{
+    font-size: 11px;
+    position: absolute;
+    left: 28px;
+    top: 5px;
+    color: #414241;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+/**/
+#signStepsBody
+{
+    color: #414241;
+    background-image: url(images/signStepsBodyBorder.png);
+    background-repeat: repeat-y;
+    overflow: hidden;
+}
+
+#signStepsBodyBorderBottom
+{
+    background-image: url(images/signStepsBodyBorderBottom.png);
+    background-repeat: no-repeat;
+    width: 960px;
+    height: 11px;
+    float: left; /* 008 new */
+}
+
+/* 006 i couldnt get the real pixel sizes from the psd, please edit the sizes if needed */
+/* step 1 */
+#signStepsBodyUploadBox
+{
+    width: 250px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    border-top: 1px solid #E0E0E0;
+    border-right: 1px solid #E0E0E0;
+    border-bottom: 1px solid #E8E5E5;
+    border-left: 1px solid #E8E5E5;
+    padding: 14px;
+}
+
+/* 015 new */
+#signStepsBodyUploadBox.step3
+{
+    width: 217px;
+    text-align: center;
+    margin-left: 0;
+    padding: 5px 14px;
+}
+
+/* 015 new */
+#signStepsBodyUploadBox.step3 #signStepsButtonContainer
+{
+    margin-left: 44px;
+    margin-top: 6px;
+}
+
+/* 008 new */
+#signStepsBodyUploadTextContainer .text
+{
+    color: #666666;
+}
+
+#signStepsBodyUploadBox .header
+{
+    font-weight: bold;
+    font-size: 16px;
+    color: black; /* 008 new */
+}
+
+#signStepsBodyUploadBox .title
+{
+    font-size: 14px;
+}
+
+#signStepsButtonContainer
+{
+    position: relative; /* 008 new */
+    margin-top: 15px;
+    margin-bottom: 5px;
+    margin-left: 65px;
+}
+
+
+/* 007 code below added in 007 */
+/* step 2 */
+/* 013 changed */
+#signStepsBodyLeft
+{
+    width: 303px;
+    float: left;
+    position: relative;
+    padding: 14px 15px 5px 20px;
+}
+
+/* 013 changed */
+#signStepsBodyRight
+{
+    width: 303px;
+    float: left;
+    position: relative;
+    padding: 14px 15px 5px 20px;
+}
+
+.signViewBodyRight 
+{
+    width: 165px;
+    float: left;
+    position: relative;
+    padding: 10px 0px 5px 20px;
+    border-top: 1px solid #E0E0E0;
+    border-right: 1px solid #E0E0E0;
+    border-bottom: 1px solid #E8E5E5;
+    border-left: 1px solid #E8E5E5;
+    margin-top: 15px;
+    margin-left: 5px;
+}
+
+#signViewBodyLeft
+{
+    width: 142px;
+    float: left;
+    position: relative;
+    padding: 14px 15px 5px 20px;
+    margin-top: 20px;	
+}
+
+.signViewBodyRightTextContainer
+{
+    margin-top: 10px;
+    display: table;
+}
+
+.signViewBodyRightTextContainer .text
+{
+    margin-top: 5px;
+    margin-bottom: 15px;
+    font-size: 11px;
+    height: 25px;
+    display: table-row;
+    position: relative; 
+}
+
+.signViewBodyLeftTextContainer .text
+{
+    margin-top: 5px;
+    color: #666666;
+    font-size: 11px; 
+}
+
+#signViewBodyLeft .header
+{
+    font-weight: bold;
+    font-size: 16px;
+    color: black; /* 008 new */
+}
+
+
+
+/* 015 new */
+.border
+{
+    background-color: #ecedf3;
+    width: 1px;
+    height: 120px;
+    position: absolute;
+    top: 28px;
+}
+
+/* 015 new */
+#signStepsBodyRight.step3 .border.left
+{
+    left: -12px;
+}
+
+/* 015 new */
+#signStepsBodyRight.step3 .border.right
+{
+    right: 34px;
+}
+
+/* 015 new */
+#signStepsBodyRight.step3,
+#signStepsBodyFunctions.step3,
+#signStepsBodyLeft.step3
+{
+    color: #666666;
+}
+
+/* 013 changed */
+.signStepsBodyTitle
+{
+    height: 14px;
+    font-size: 11px;
+}
+
+.signViewBodyTitle
+{
+    marign-top: 9px;
+    height: 14px;
+    font-size: 12px;
+}
+
+
+.signStepsBodyIcons
+{
+    margin-top: 5px;
+    /* width: 55px; 013 removed */
+    height: 16px;	
+}
+
+.signViewBodyIcons
+{
+    margin-top: 0px;
+    /* width: 55px; 013 removed */
+    height: 16px;
+}
+
+/* 008 new starts */
+.signStepsBodyIcons a,
+.signStepsBodyAddField a
+{
+    display: block;
+    width: 16px;
+    height: 16px;
+    margin-right: 2px;
+    float: left;
+    background-repeat: no-repeat;
+}
+
+.signViewBodyIcons a,
+.signViewField a
+{
+    display: block;
+    width: 16px;
+    height: 16px;
+    margin-right: 2px;
+    float: left;
+    background-repeat: no-repeat;
+}
+
+
+/* 015 new */
+#signStepsBodyLeft .options p,
+#signStepsBodyFunctions .options p
+{
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+/* 015 new */
+.signStepsBodyInvation a
+{
+    margin: 13px 0 4px 0px;
+    display: inline-block;
+    background-position: 2px 2px;
+    background-image: url(images/iconPen.png);
+    background-repeat: no-repeat;
+    padding-left: 23px;
+}
+
+/* 013 new */
+.signStepsBodyIcons a
+{
+    margin-right: 6px;
+}
+
+.signStepsBodyIcons a.man
+{
+    background-image: url(images/iconMan.png);
+}
+
+.signStepsBodyIcons a.hand
+{
+    background-image: url(images/iconHand.png);
+}
+
+.signStepsBodyIcons a.briefcase
+{
+    background-image: url(images/iconBriefcase.png);
+}
+
+.signViewBodyIcons a
+{
+    margin-right: 6px;
+}
+
+.signViewBodyIcons a.man
+{
+    background-image: url(images/iconMan.png);
+}
+
+.signStepsBodyAddField a.plus,
+#signStepsBodyFunctionsBox ul a.plus
+{
+    background-image: url(images/iconPlus.png);
+}
+
+.signStepsBodyAddField a.minus,
+#signStepsBodyFunctionsBox ul a.minus
+{
+    background-image: url(images/iconMinus.png);
+}
+
+.signStepsBodyAddField p
+{
+    position: absolute;
+    left: 40px;
+    top: -3px;
+    margin: 0;
+}
+
+/* 013 changed */
+.signStepsBodyForms input
+{
+    padding-left: 20px;
+    width: 118px;
+    background-image: url(images/iconHand.png); 
+    background-repeat: no-repeat;
+    background-position: 3px 3px;
+    height: 18px;
+    line-height: 18px;
+    font-size: 12px;
+    border-color: #6782a5;
+    margin: 3px 5px 0 0;
+}
+
+.signViewBodyForms input
+{
+    padding-left: 20px;
+    width: 118px;
+    height: 18px;
+    line-height: 18px;
+    font-size: 11px;
+    border-color: #6782a5;
+    margin: 3px 5px 0 0;
+}
+
+
+/* 013 changed */
+#signStepsBodyFunctionsBox ul
+{
+    list-style-type: none;
+    margin: 9px 0 16px 22px;
+    padding-left: 0;
+}
+
+/* 013 new */
+#signStepsBodyFunctionsBox ul li
+{
+    margin-bottom: 7px;
+}
+
+#signStepsBodyFunctionsBox ul a
+{
+    background-repeat: no-repeat;
+    padding-left: 20px;
+    height: 20px;
+    background-position: 0 2px;
+}
+
+/* 015 changed */
+#signStepsBodyFunctionsBox ul a.floppy,
+.signStepsBodySaveMethods label
+{
+    background-image: url(images/iconFloppy.png);
+}
+
+#signStepsBodyFunctionsBox ul a.arrowDown
+{
+    background-image: url(images/iconArrowDown.png);
+    background-position: 2px 2px;
+}
+
+/* 008 ends */
+
+/* 015 new */
+.signStepsBodySaveMethods label
+{
+    height: 17px;
+    background-repeat: no-repeat;
+    background-position: 0 3px;
+    padding-left: 18px;
+}
+
+.signStepsBodyForms
+{
+    margin: 5px 0 5px 0; /* 013 changed */
+}
+
+.signViewBodyForms
+{
+    margin: 5px 0 5px 0; /* 013 changed */
+}
+
+.signStepsBodyAddField
+{
+    /*width: 50px; 008 removed */
+    position: relative; /* 008 new */
+    height: 14px;
+    font-size: 11px; /* 013 changed */
+    line-height: 19px; /* 013 new */
+    margin-top: 3px;
+}
+
+/* 013 new */
+.signStepsBodyAddField p
+{
+    margin-left: -2px;
+}
+
+#signStepsBodyFunctions
+{
+    width: 280px;
+    position: relative;
+    float: left;
+}
+
+/* 015 new */
+#signStepsBodyFunctions.step3
+{
+    padding-top: 14px;
+}
+
+/* 013 changed */
+#signStepsBodyFunctionsBox
+{
+    width: 238px;
+    margin: 12px 25px 10px -5px;
+    
+    -moz-border-radius: 2px;
+    -webkit-border-radius: 2px;
+    -khtml-border-radius: 2px;
+    border-radius: 2px;
+}
+
+/* 013 new */
+#signStepsBodyLeft #people,
+#signStepsBodyFunctionsBox
+{
+    border: 1px solid black;
+    border-top-color: #e6e7ef;
+    border-right-color: #f3f4f7;
+    border-bottom-color: #f0f1f5;
+    border-left-color: #f2f2f7;
+}
+
+/* 013 new */
+.buttonSignLarge
+{
+    background-image: url(images/buttonSignLarge.png);
+    background-repeat: no-repeat;
+    display: block;
+    width: 252px;
+    height: 61px;
+}
+
+/* 013 new */
+#signStepsBodyLeft #people
+{
+    width: 264px;
+    float: right;
+    padding: 10px 8px;
+}
+
+/* 013 new */
+#signStepsBodyLeft #people .signStepsBodyTitle .totalCount
+{
+    color: #9a9a9a;
+}
+
+/* 013 new */
+#signStepsBodyLeft #people .signStepsBodyForms a
+{
+    display: block;
+    font-size: 11px;
+}
+
+/* 013 new */
+#signStepsBodyLeft #people .signStepsBodyAddField.partCount
+{
+    height: auto;
+}
+
+/* 013 new */
+#signStepsBodyLeft #people .signStepsBodyAddField.partCount span
+{
+    margin-right: 3px;
+}
+
+/* 013 new */
+#signStepsBodyLeft #people .signStepsBodyAddField.partCount a
+{
+    display: inline;
+    float: none;
+    width: auto;
+}
+
+#signViewBodySpacer
+{
+    width: 5px;
+    float: left;
+    position: relative;
+    
+    margin-top: 15px;
+}
+
+#signViewNotificationContainer
+{
+    margin-top:15px;
+    width: 955px;
+    height: 84px;
+    border-top: 1px solid #E2C822;
+    border-right: 1px solid #E2C822;
+    border-bottom: 1px solid #E2C822;
+    border-left: 1px solid #E2C822;
+    background-color:#FFF9D7;
+    position: absolute;
+}
+
+#signViewNotificationContainerRight
+{
+    width: 100px;
+    float: left;
+    position: relative;
+    margin-top: 10px;
+    padding: 0px,0px,5px,5px;	
+}
+
+#signViewNotificationContainerLeft
+{
+    width: 855px;
+    float: left;
+    position: relative;
+    height: 84px;
+}
+
+#signViewNotificationContainer .title
+{
+    color:#595A59;
+    font-size: 13px;
+    font-weight: bold;
+    margin-top: 10px;
+    margin-left: 15px;
+}
+
+#signViewNotificationContainer .text
+{
+    color:#595A59;
+    font-size: 11px;
+    margin-top: 15px;
+    margin-left: 15px;  
+}
+
+#signViewNotificationContainerRight .anchor
+{
+    font-size: 11px;
+    text-align:right;
+    margin-right: 25px;	
+}
+
+#signViewNotificationContainerRight .anchor a
+{
+    color: #7895BA;
+    text-decoration: none;
+}
+
+#signViewBottomBox
+{
+    background-image: url(images/box2-repeat.png);
+    background-repeat: repeat-y;
+    background:#F2F2F2;
+    
+    /* 002 float: left;*/
+    margin-top: 30px;
+    
+    position: relative;
+}
+
+#signViewBottomBoxTop
+{
+    background-image: url(images/box2-top.png);
+    background-repeat: no-repeat;
+    width: 960px;
+    height: 10px;
+    float: left; /* 008 new */
+}
+
+#signViewBottomBoxContainer
+{
+    background:#F2F2F2;
+    border-left: 1px solid #999999;
+    border-right: 2px solid #999999;
+    width:100%;
+    height:143px;
+    float:left;
+    clear:left;
+    margin:0;
+    padding:0;
+    -moz-box-sizing: border-box;	
+}
+
+#signViewBottomBoxContainerLeft
+{
+    width: 625px;
+    float: left;
+    position: relative;
+    padding:10px 0 10px 25px;	
+}
+
+#signViewBottomBoxContainerLeftIcon
+{
+    float:left;
+    width: 30px;
+}
+
+#signViewBottomBoxContainerLeftText
+{
+    float:left;
+    margin-top:2px;
+    width:351px;
+    display:table;
+}
+
+#signViewBottomBoxContainerLeftText .title
+{
+    font-size:16px;
+    color: black;
+    width:100%;
+}
+
+#signViewBottomBoxContainerLeftText .text
+{
+    margin-top:20px;
+    font-size:12px;
+    color: #666666;
+    width:100%;
+    display:table-row;
+}
+
+#signViewBottomBoxContainerRight
+{
+    width: 300px;
+    float: left;
+    position: relative;
+    margin-top:45px;
+    color:white;
+}
+
+#signViewBottomBoxContainerRight .button
+{
+    background-image: url(images/button-bg.png);
+    background-repeat: no-repeat;
+    display: block;
+    width: 167px;
+    height: 43px;
+}
+
+#signViewBottomBoxContainerRight .linkText
+{
+    display: block;
+    font-size: 16px;
+    height: 40px;
+    line-height: 40px;
+    text-decoration: none;
+    vertical-align: center;
+    text-align: center;
+
+    color: white; /* 003l new/changed */
+    font-weight: bold; /* 003l new */
+    width: 151px;
+    margin-left:15px;
+}
+
+#signViewBottomBoxBottom
+{
+    background-image: url("images/box2-bottom.png");
+    background-repeat: no-repeat;
+    float: left;
+    height: 10px;
+    width: 960px;
 }
