@@ -26,7 +26,6 @@ import Control.Monad.State
 import qualified Data.ByteString.UTF8 as BS (fromString,toString)
 import Data.List (find)
 import System.Log.Logger
-import DocView (signatoryDetailsFromUser)
 data SendGridEventType = Delivered | Undelivered | Other deriving Show
 
 
