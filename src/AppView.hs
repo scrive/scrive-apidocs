@@ -331,7 +331,7 @@ pageForgotPassword =
           <td><input name="email" type="email"/></td>
         </tr>
       </table>
-      <input type="submit" value="Skicka nytt lösenord" />
+      <input type="submit" value="Skicka nytt lösenord"  class="validateEmail"/>
     </form>
   </div>
 

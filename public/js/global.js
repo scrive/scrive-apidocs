@@ -309,14 +309,14 @@ $(document).ready( function () {
                 load: true
                 });
 	
-	$("#loginbtn").click(function(){
+    $("#loginbtn").click(function(){
 		if(emailFieldsValidation($(":email",this.form))){
 			$(this.form).submit();
 		}						  
 		return false;
 	});
 
-	$("#createnewaccount").click(function(){
+    $("#createnewaccount").click(function(){
 		if(emailFieldsValidation($("input[type='email']"))){
 			$(this.form).submit();
 		}
@@ -324,6 +324,11 @@ $(document).ready( function () {
 							
 	
 	});
+    
+    $(".validateEmail").click(function(){
+                return (emailFieldsValidation($(":email",this.form)))
+        });
+    
     $(".flashOnClick").click( function(){
       $(".flashMessage",$(this).parent()).each(function(){
          addFlashMessage($(this).html())

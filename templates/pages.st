@@ -49,7 +49,7 @@ signupPageView =
                     <td><input type="email" name="email" value="" /></td>
                 </tr>
             </table>
-            <input type="submit" value="Skapa konto" />
+            <input type="submit" class="validateEmail" value="Skapa konto" />
         </form>
     </div>
 ####
@@ -96,7 +96,7 @@ activatePageViewNotValidLink=
                     <td><input type="email" name="email" value="" /></td>
                 </tr>
             </table>
-            <input type="submit" value="Send" />
+            <input type="submit" value="Send"  class="validateEmail" />
         </form>
       </div>
 ####
