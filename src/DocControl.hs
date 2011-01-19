@@ -155,7 +155,9 @@ sendInvitationEmail1 ctx document author signatorylink = do
 sendClosedEmails :: Context -> Document -> IO ()
 sendClosedEmails ctx document = do
   let signlinks = documentsignatorylinks document
-  forM_ signlinks (sendClosedEmail1 ctx document)
+  forM_ signlinks $ \sl -> do 
+                            when (not $ isAuthor document sl) $
+                              sendClosedEmail1 ctx document sl
   sendClosedAuthorEmail ctx document
 
 {- |

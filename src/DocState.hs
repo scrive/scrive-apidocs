@@ -1641,8 +1641,19 @@ setDocumentTrustWeaverReference documentid reference = do
 {- |
    The user is the author of the document
  -}
-isAuthor::Document->User->Bool
-isAuthor d u = (userid u) == ( unAuthor . documentauthor $ d)   
+class MayBeAuthor a where
+  isAuthor::Document->a->Bool
+
+instance MayBeAuthor User where
+  isAuthor d u = isAuthor d $ userid u
+  
+instance MayBeAuthor UserID where
+  isAuthor d uid = uid == ( unAuthor . documentauthor $ d)   
+  
+instance MayBeAuthor SignatoryLink where
+  isAuthor d sl = case maybesignatory sl of
+                   Just s -> unSignatory s == ( unAuthor . documentauthor $ d)
+                   Nothing -> False
 
 anyInvitationUndelivered =  not . Prelude.null . undeliveredSignatoryLinks
 undeliveredSignatoryLinks doc =  filter ((== Undelivered) . invitationdeliverystatus) $ documentsignatorylinks doc
