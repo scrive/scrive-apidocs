@@ -28,12 +28,30 @@ docViewSamples = [testGroup "sample document flash messages"
                             testCase "remind signed mail sent" sampleRemindSignedMailSentFlashMsg,
                             testCase "document canceled" sampleCanceledFlashMsg ],
                   testGroup "sample document views"
-                           [testCase "landpage sign invite" sampleLandpageSignInviteView,
-                            testCase "landpage rejected view" sampleLandpageRejectedView,
-                            testCase "landpage signed (no account)" sampleLandpageSignedNoAccountView,
-                            testCase "landpage signed (has account)" sampleLandpageSignedHasAccountView,
+                           [testCase "landpage sign invite (with long data)" sampleLandpageSignInviteView_longData,
+                            testCase "landpage sign invite (with international chars)" sampleLandpageSignInviteView_internationalChars,
+                            testCase "landpage sign invite (with html in data)" sampleLandpageSignInviteView_htmlInData,
+                            testCase "landpage sign invite (with empty data)" sampleLandpageSignInviteView_blankData,
+                            testCase "landpage sign invite (with a few signatories)" sampleLandpageSignInviteView_aFewSignatories,
+                            testCase "landpage sign invite (with a lot of signatories)" sampleLandpageSignInviteView_aLotOfSignatories,
+                            testCase "landpage send invite (with long data)" sampleLandpageSendInviteView_longData,
+                            testCase "landpage send invite (with international chars)" sampleLandpageSendInviteView_internationalChars,
+                            testCase "landpage send invite (with html in data)" sampleLandpageSendInviteView_htmlInData,
+                            testCase "landpage send invite (with empty data)" sampleLandpageSendInviteView_blankData,
+                            testCase "landpage send invite (with a few signatories)" sampleLandpageSendInviteView_aFewSignatories,
+                            testCase "landpage send invite (with a lot of signatories)" sampleLandpageSendInviteView_aLotOfSignatories,
+                            testCase "landpage rejected (with long data)" sampleLandpageRejectedView_longData,
+                            testCase "landpage rejected (with international chars)" sampleLandpageRejectedView_internationalChars,
+                            testCase "landpage rejected (with html in data)" sampleLandpageRejectedView_htmlInData,
+                            testCase "landpage rejected (with empty data)" sampleLandpageRejectedView_blankData,
+                            testCase "landpage rejected (with a few signatories)" sampleLandpageRejectedView_aFewSignatories,
+                            testCase "landpage rejected (with a lot of signatories)" sampleLandpageRejectedView_aLotOfSignatories,
+                            testCase "landpage signed not closed (no account)" sampleLandpageSignedNotClosedView_noAccount,
+                            testCase "landpage signed not closed (has account)" sampleLandpageSignedNotClosedView_hasAccount,
+                            testCase "landpage signed closed (no account)" sampleLandpageSignedClosedView_noAccount,
+                            testCase "landpage signed closed (has account)" sampleLandpageSignedClosedView_hasAccount,
                             testCase "landpage login for save" sampleLandpageLoginForSaveView, 
-                            testCase "landpage document saved" sampleDocumentSavedView,
+                            testCase "landpage document saved" sampleLandpageDocumentSavedView,
                             testCase "document for sign (logged out)" sampleDocumentViewForSign_loggedOut,
                             testCase "document for sign (logged in as author)" sampleDocumentViewForSign_loggedInAsAuthor,
                             testCase "document for sign (logged in as signatory)" sampleDocumentViewForSign_loggedInAsSignatory,
@@ -60,58 +78,178 @@ sampleRemindSignedMailSentFlashMsg =
 sampleCanceledFlashMsg =
   sampleFlashMsg "document_canceled" flashMessageCanceled
 
-sampleLandpageSignInviteView =
-  let ctx = aTestCtx{ctxmaybeuser=Nothing}
-  in sampleView2 "landpage_sign_invite" (\templ -> pageFromBody' "../public" (ctx{ctxtemplates=templ}) TopNone "kontrakcja"
-                                               (fmap cdata $ landpageSignInviteView templ anUnsignedDocument))
+sampleLandpageSignInviteView_longData = sampleLandpageSignInviteView
+                                                   "landpage_sign_invite_long_data" 
+                                                   aLongFileName
+                                                   signatoriesWithLongData
 
-sampleLandpageRejectedView =
-  let ctx = aTestCtx{ctxmaybeuser=Nothing}
-  in sampleView2 "landpage_rejected_view" (\templ -> pageFromBody' "../public" (ctx{ctxtemplates=templ}) TopNone "kontrakcja"
-                                               (fmap cdata $ landpageRejectedView templ anUnsignedDocument))
+sampleLandpageSignInviteView_internationalChars = sampleLandpageSignInviteView
+                                                    "landpage_sign_invite_international_chars"
+                                                    aFileNameWithInternationalChars
+                                                    signatoriesWithInternationalChars
 
-sampleLandpageSignedNoAccountView =
-  let ctx = aTestCtx{ctxmaybeuser=Nothing}
-  in sampleView2 "landpage_signed_no_account" (\templ -> pageFromBody' "../public" (ctx{ctxtemplates=templ}) TopNone "kontrakcja"
-                                               (fmap cdata $ landpageSignedView templ aSignedDocument aSignedSigLink False))
+sampleLandpageSignInviteView_htmlInData = sampleLandpageSignInviteView 
+                                                  "landpage_sign_invite_with_html_in_data"
+                                                  aFileNameWithHtml
+                                                  signatoriesWithHtmlInData
 
-sampleLandpageSignedHasAccountView =
-  let ctx = aTestCtx{ctxmaybeuser=Nothing}
-  in sampleView2 "landpage_signed_has_account" (\templ -> pageFromBody' "../public" (ctx{ctxtemplates=templ}) TopNone "kontrakcja"
-                                               (fmap cdata $ landpageSignedView templ aSignedDocument aSignedSigLink True))
+sampleLandpageSignInviteView_blankData = sampleLandpageSignInviteView 
+                                                  "landpage_sign_invite_with_blank_data"
+                                                  aFileName
+                                                  signatoriesWithBlankData
+
+sampleLandpageSignInviteView_aFewSignatories = sampleLandpageSignInviteView 
+                                                  "landpage_sign_invite_with_a_few_signatories"
+                                                  aFileName
+                                                  aFewSignatories
+
+sampleLandpageSignInviteView_aLotOfSignatories = sampleLandpageSignInviteView 
+                                                  "landpage_sign_invite_with_a_lot_of_signatories"
+                                                  aFileName
+                                                  oneHundredSignatories
+
+sampleLandpageSignInviteView name documenttitle sigs =
+  let document = createUnsignedDocument documenttitle sigs
+  in
+    sampleCompleteView name Nothing (\templ ctx -> landpageSignInviteView templ document)
+
+sampleLandpageSendInviteView_longData = sampleLandpageSendInviteView
+                                                   "landpage_send_invite_long_data" 
+                                                   aLongFileName
+                                                   signatoriesWithLongData
+
+sampleLandpageSendInviteView_internationalChars = sampleLandpageSendInviteView
+                                                    "landpage_send_invite_international_chars"
+                                                    aFileNameWithInternationalChars
+                                                    signatoriesWithInternationalChars
+
+sampleLandpageSendInviteView_htmlInData = sampleLandpageSendInviteView 
+                                                  "landpage_send_invite_with_html_in_data"
+                                                  aFileNameWithHtml
+                                                  signatoriesWithHtmlInData
+
+sampleLandpageSendInviteView_blankData = sampleLandpageSendInviteView 
+                                                  "landpage_send_invite_with_blank_data"
+                                                  aFileName
+                                                  signatoriesWithBlankData
+
+sampleLandpageSendInviteView_aFewSignatories = sampleLandpageSendInviteView 
+                                                  "landpage_send_invite_with_a_few_signatories"
+                                                  aFileName
+                                                  aFewSignatories
+
+sampleLandpageSendInviteView_aLotOfSignatories = sampleLandpageSendInviteView 
+                                                  "landpage_send_invite_with_a_lot_of_signatories"
+                                                  aFileName
+                                                  oneHundredSignatories
+
+sampleLandpageSendInviteView name documenttitle sigs =
+  let document = createUnsignedDocument documenttitle sigs
+  in
+    sampleCompleteView name Nothing (\templ ctx -> landpageSendInviteView templ document)
+
+
+sampleLandpageRejectedView_longData = sampleLandpageRejectedView
+                                                   "landpage_rejected_long_data" 
+                                                   aLongFileName
+                                                   signatoriesWithLongData
+
+sampleLandpageRejectedView_internationalChars = sampleLandpageRejectedView
+                                                    "landpage_rejected_international_chars"
+                                                    aFileNameWithInternationalChars
+                                                    signatoriesWithInternationalChars
+
+sampleLandpageRejectedView_htmlInData = sampleLandpageRejectedView 
+                                                  "landpage_rejected_with_html_in_data"
+                                                  aFileNameWithHtml
+                                                  signatoriesWithHtmlInData
+
+sampleLandpageRejectedView_blankData = sampleLandpageRejectedView 
+                                                  "landpage_rejected_with_blank_data"
+                                                  aFileName
+                                                  signatoriesWithBlankData
+
+sampleLandpageRejectedView_aFewSignatories = sampleLandpageRejectedView 
+                                                  "landpage_rejected_with_a_few_signatories"
+                                                  aFileName
+                                                  aFewSignatories
+
+sampleLandpageRejectedView_aLotOfSignatories = sampleLandpageRejectedView 
+                                                  "landpage_rejected_with_a_lot_of_signatories"
+                                                  aFileName
+                                                  oneHundredSignatories
+
+sampleLandpageRejectedView name documenttitle sigs =
+  let document = createUnsignedDocument documenttitle sigs
+  in
+    sampleCompleteView name Nothing (\templ ctx -> landpageRejectedView templ document)
+
+sampleLandpageSignedNotClosedView_noAccount =
+  sampleLandpageSignedNotClosedView "landpage_signed_not_closed_no_account" 
+                                    aFileName
+                                    aFewSignatories
+                                    False
+
+sampleLandpageSignedNotClosedView_hasAccount =
+  sampleLandpageSignedNotClosedView "landpage_signed_not_closed_has_account" 
+                                    aFileName
+                                    aFewSignatories
+                                    True
+
+sampleLandpageSignedNotClosedView name documenttitle sigs hasaccount =
+  let document = createUnsignedDocument documenttitle sigs
+      unsignedSigLink = head $ documentsignatorylinks document
+  in
+    sampleCompleteView name Nothing (\templ ctx -> landpageSignedView templ document unsignedSigLink hasaccount)
+
+sampleLandpageSignedClosedView_noAccount =
+  sampleLandpageSignedClosedView "landpage_signed_closed_no_account" 
+                                 aFileName
+                                 aFewSignatories
+                                 False
+
+sampleLandpageSignedClosedView_hasAccount =
+  sampleLandpageSignedClosedView "landpage_signed_closed_has_account" 
+                                 aFileName
+                                 aFewSignatories
+                                 True
+
+sampleLandpageSignedClosedView name documenttitle sigs hasaccount =
+  let document = createSignedDocument documenttitle sigs
+      signedSigLink = head $ documentsignatorylinks document
+  in
+    sampleCompleteView name Nothing (\templ ctx -> landpageSignedView templ document signedSigLink hasaccount)
 
 sampleLandpageLoginForSaveView =
-  let ctx = aTestCtx{ctxmaybeuser=Nothing}
-  in sampleView2 "landpage_login_for_save" (\templ -> pageFromBody' "../public" (ctx{ctxtemplates=templ}) TopNone "kontrakcja"
-                                               (fmap cdata $ landpageLoginForSaveView templ))
+  sampleCompleteView "landpage_login_for_save" 
+                     Nothing 
+                     (\templ ctx -> landpageLoginForSaveView templ)
+  
+sampleLandpageDocumentSavedView =
+  sampleCompleteView "landpage_document_saved" 
+                     Nothing 
+                     (\templ ctx -> landpageDocumentSavedView templ)
 
-sampleDocumentSavedView =
-  let ctx = aTestCtx{ctxmaybeuser=Nothing}
-  in sampleView2 "document_saved" (\templ -> pageFromBody' "../public" (ctx{ctxtemplates=templ}) TopNone "kontrakcja"
-                                               (fmap cdata $ landpageDocumentSavedView templ))
+--pageDocumentList tests go here
 
 sampleDocumentViewForSign_loggedOut = sampleDocumentViewForSign 
                                                           "document_for_sign_logged_out" 
                                                           Nothing 
-                                                          "a_test_doc.pdf"
-                                                          [("annie@testcorp.com", "Annie Angus", "Test Corp", "1234"),
-                                                           ("clara@testcorp.com", "Clara Contrary", "Test Corp", "2222")]
+                                                          aFileName
+                                                          aFewSignatories
 
 sampleDocumentViewForSign_loggedInAsAuthor = sampleDocumentViewForSign 
                                                           "document_for_sign_logged_in_as_author" 
                                                           (Just aTestUser)
-                                                          "a_test_doc.pdf"
-                                                          [("annie@testcorp.com", "Annie Angus", "Test Corp", "1234"),
-                                                           ("clara@testcorp.com", "Clara Contrary", "Test Corp", "2222")]
+                                                          aFileName
+                                                          aFewSignatories
 
 sampleDocumentViewForSign_loggedInAsSignatory = sampleDocumentViewForSign 
                                                           "document_for_sign_logged_in_as_signatory" 
-                                                          (Just annie)
-                                                          "a_test_doc.pdf"
-                                                          [("annie@testcorp.com", "Annie Angus", "Test Corp", "1111"),
-                                                           ("clara@testcorp.com", "Clara Contrary", "Test Corp", "2222")]
-                                                  where  annie :: User
-                                                         annie = aTestUser{userid = UserID 1111, 
+                                                          (Just aSignatory)
+                                                          aFileName
+                                                          aFewSignatories
+                                                 where  aSignatory = aTestUser{userid = UserID 1111, 
                                                                           userinfo = someTestUserInfo{
                                                                                        userfstname=(BS.fromString "Annie"), 
                                                                                        usersndname=(BS.fromString "Angus"),
@@ -120,78 +258,108 @@ sampleDocumentViewForSign_loggedInAsSignatory = sampleDocumentViewForSign
 sampleDocumentViewForSign_longData = sampleDocumentViewForSign 
                                                           "document_for_sign_with_long_data" 
                                                           Nothing
-                                                          "A Test Document With an Extremely Long Name With Lots of Spaces in Too - Okay it might be unlikely but it is perfectly possible.pdf"
-                                                          [("annie@testcorp.com", "An Especially Long Name for the Signatory - Admittedly unlikely, but it's important to test", "Test Corp", "1111"),
-                                                           ("clara@testcorp.com", "Clara Contrary", "Llanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogoch is in Wales", "2222"),
-                                                           ("dave@acorpwithaveryverylongaddresssowecantestthelayout.com", "Dave Daventry", "Test Corp", "3333"),
-                                                           ("emma@testcorp.com", "Emma Emo", "Test Corp", "44444444444444444444444444444444444")]
+                                                          aLongFileName
+                                                          signatoriesWithLongData
 
 sampleDocumentViewForSign_internationalChars = sampleDocumentViewForSign 
                                                           "document_for_sign_with_international_chars" 
                                                           Nothing 
-                                                          "Mam nadzieję, że to ma sens (mały żółw).pdf"
-                                                          [("tinyturtle@turtlecorp.com", "mały żółw", "korpus żółwia", "1111"),
-                                                           ("clara@testcorp.com", "Клара Контрерый", "тест компании", "2222"),
-                                                           ("dave@testcorp.com", "戴夫达文特里", "測試公司", "3333"),
-                                                           ("emma@testcorp.com", "エマエモ", "テスト会社", "4444"),
-                                                           ("fred@svenskatecken.se", "Fred Felint", "svenska tecken ÅÄÖåäö", "5555")]    
+                                                          aFileNameWithInternationalChars
+                                                          signatoriesWithInternationalChars    
 
 sampleDocumentViewForSign_htmlInData = sampleDocumentViewForSign 
                                                   "document_for_sign_with_html_in_data" 
                                                   Nothing 
-                                                  "<a=\"some%20html\">can you see some html?</a>.pdf"
-                                                  [("annie@testcorp.com", "<escapethis>should be in tags</escapethis>", "Test Corp", "1111"),
-                                                   ("clara@testcorp.com", "Clara Contrary", "<script type=\"text/javascript\">should be in tags</script>", "2222"),
-                                                   ("dave@testcorp.com", "&lt;Dave Daventry surrounded by funny stuff&gt;", "Test Corp", "3333"),
-                                                   ("emma@testcorp.com", "Emma Emo", "Test%20Corp%20with%20funny%20stuff", "4444")]
+                                                  aFileNameWithHtml
+                                                  signatoriesWithHtmlInData
 
 sampleDocumentViewForSign_blankData = sampleDocumentViewForSign 
                                                   "document_for_sign_with_blank_data" 
                                                   Nothing 
-                                                  "a_test_doc.pdf"
-                                                  [("annie@hasnoname.com", "", "Test Corp", "1111"),
-                                                   ("clara@hasnocompany.com", "Clara Contrary", "", "2222"),
-                                                   ("dave@hasneithernamenorcompany.com", "", "", "3333")]
+                                                  aFileName
+                                                  signatoriesWithBlankData
 
 sampleDocumentViewForSign_aFewSignatories = sampleDocumentViewForSign 
                                                   "document_for_sign_with_a_few_signatories" 
                                                   Nothing 
-                                                  "a_test_doc.pdf"
-                                                  [("annie@testcorp.com", "Annie Angus", "Test Corp", "1111"),
-                                                   ("clara@testcorp.com", "Clara Contrary", "Test Corp", "2222"),
-                                                   ("dave@testcorp.com", "Dave Daventry", "Test Corp", "3333"),
-                                                   ("emma@testcorp.com", "Emma Emo", "Test Corp", "4444")]
+                                                  aFileName
+                                                  aFewSignatories
 
 sampleDocumentViewForSign_aLotOfSignatories = sampleDocumentViewForSign 
                                                   "document_for_sign_with_a_lot_of_signatories" 
                                                   Nothing 
-                                                  "a_test_doc.pdf"
-                                                   oneHundredSignatories
+                                                  aFileName
+                                                  oneHundredSignatories
 
-sampleDocumentViewForSign testName ctxmaybeuser' documenttitle' sigs =
-    let ctx = aTestCtx{ctxmaybeuser=ctxmaybeuser'}
-        document = anUnsignedDocument{documenttitle = BS.fromString documenttitle',
-                                      documentsignatorylinks = map 
-                                                                (\sig@(sigemail, signame, sigcompany, signum) ->  
-                                                                      createSigLink sigemail signame sigcompany signum) 
-                                                               sigs
-                                     }
+sampleDocumentViewForSign name ctxmaybeuser documenttitle sigs =
+    let document = createUnsignedDocument documenttitle sigs
         wassigned = False
         author = aTestUser
         invitedlink = head $ documentsignatorylinks document
     in
-    sampleView2 testName (\templ -> pageFromBody' "../public" (ctx{ctxtemplates=templ}) TopNone "kontrakcja"
-                                    (fmap cdata $ pageDocumentForSign (LinkSignDoc document invitedlink) 
-                                          document (ctx{ctxtemplates=templ}) invitedlink wassigned author))
+    sampleCompleteView name ctxmaybeuser (\templ ctx -> pageDocumentForSign (LinkSignDoc document invitedlink) 
+                                                                   document 
+                                                                   ctx 
+                                                                   invitedlink 
+                                                                   wassigned 
+                                                                   author)
 
-createSigLink sigemail signame sigcompany signum = anUnsignedSigLink{
-                                                       signatorydetails = otherSignatoryDetails{
-                                                                            signatoryemail = BS.fromString sigemail,
-                                                                            signatoryname = BS.fromString signame,
-                                                                            signatorycompany = BS.fromString sigcompany,
-                                                                            signatorynumber = BS.fromString signum}}
+createUnsignedDocument documenttitle' sigs = anUnsignedDocument{
+                                                  documenttitle = BS.fromString documenttitle',
+                                                  documentsignatorylinks = map createSigLink sigs}
+                                              where createSigLink (sigemail, signame, sigcompany, signum) =
+                                                       anUnsignedSigLink{signatorydetails = otherSignatoryDetails{
+                                                                                              signatoryemail = BS.fromString sigemail,
+                                                                                              signatoryname = BS.fromString signame,
+                                                                                              signatorycompany = BS.fromString sigcompany,
+                                                                                              signatorynumber = BS.fromString signum}}
+createSignedDocument documenttitle' sigs = aSignedDocument{
+                                                  documenttitle = BS.fromString documenttitle',
+                                                  documentsignatorylinks = map createSigLink sigs}
+                                              where createSigLink (sigemail, signame, sigcompany, signum) =
+                                                       aSignedSigLink{signatorydetails = otherSignatoryDetails{
+                                                                                              signatoryemail = BS.fromString sigemail,
+                                                                                              signatoryname = BS.fromString signame,
+                                                                                              signatorycompany = BS.fromString sigcompany,
+                                                                                              signatorynumber = BS.fromString signum}} 
+ 
+sampleCompleteView name ctxmaybeuser' action =
+  let ctx = aTestCtx{ctxmaybeuser=ctxmaybeuser'}
+  in sampleView name (\templ -> pageFromBody' "../public" (ctx{ctxtemplates=templ}) TopNone "kontrakcja" (fmap cdata $ action templ ctx))
+     where sampleView name action = sample name "view" (\t -> renderHSPToString (action t)) (UTF8.writeFile)
 
-sampleView2 name action = sample name "view" (\t -> renderHSPToString (action t)) (UTF8.writeFile)
+aFileName = "a_test_doc.pdf"
+
+aLongFileName = "A Test Document With an Extremely Long Name With Lots of Spaces in Too - Okay it might be unlikely but it is perfectly possible.pdf"
+
+aFileNameWithInternationalChars = "Mam nadzieję, że to ma sens (mały żółw).pdf"
+
+aFileNameWithHtml = "<html>&gtshould be in html tags</html>"
+
+signatoriesWithLongData = [("annie@testcorp.com", "An Especially Long Name for the Signatory - Admittedly unlikely, but it's important to test", "Test Corp", "1111"),
+                           ("clara@testcorp.com", "Clara Contrary", "Llanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogoch is in Wales", "2222"),
+                           ("dave@acorpwithaveryverylongaddresssowecantestthelayout.com", "Dave Daventry", "Test Corp", "3333"),
+                           ("emma@testcorp.com", "Emma Emo", "Test Corp", "44444444444444444444444444444444444")]
+
+signatoriesWithInternationalChars = [("tinyturtle@turtlecorp.com", "mały żółw", "korpus żółwia", "1111"),
+                                     ("clara@testcorp.com", "Клара Контрерый", "тест компании", "2222"),
+                                     ("dave@testcorp.com", "戴夫达文特里", "測試公司", "3333"),
+                                     ("emma@testcorp.com", "エマエモ", "テスト会社", "4444"),
+                                     ("fred@svenskatecken.se", "Fred Felint", "svenska tecken ÅÄÖåäö", "5555")]
+
+signatoriesWithHtmlInData = [("annie@testcorp.com", "<escapethis>should be in tags</escapethis>", "Test Corp", "1111"),
+                             ("clara@testcorp.com", "Clara Contrary", "<script type=\"text/javascript\">should be in tags</script>", "2222"),
+                             ("dave@testcorp.com", "&lt;Dave Daventry surrounded by funny stuff&gt;", "Test Corp", "3333"),
+                             ("emma@testcorp.com", "Emma Emo", "Test%20Corp%20with%20funny%20stuff", "4444")]
+
+signatoriesWithBlankData = [("annie@hasnoname.com", "", "Test Corp", "1111"),
+                            ("clara@hasnocompany.com", "Clara Contrary", "", "2222"),
+                            ("dave@hasneithernamenorcompany.com", "", "", "3333")]
+
+aFewSignatories = [("annie@testcorp.com", "Annie Angus", "Test Corp", "1111"),
+                   ("clara@testcorp.com", "Clara Contrary", "Test Corp", "2222"),
+                   ("dave@testcorp.com", "Dave Daventry", "Test Corp", "3333"),
+                   ("emma@testcorp.com", "Emma Emo", "Test Corp", "4444")]
 
 oneHundredSignatories = [("signatory_1@testcorp.com", "Signatory 1", "Test Corp", "1"),
                          ("signatory_2@testcorp.com", "Signatory 2", "Test Corp", "2"),
