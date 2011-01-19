@@ -307,13 +307,8 @@ pageFromBody' prefix
                     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
                   })();
 
-                 (function() {
-                    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-                    ga.src = "https://eu1.snoobi.com/snoop.php?tili=skrivapa_se";
-                    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-                  })();
                </script>
-               ]
+               , <script type="text/javascript" src="https://eu1.snoobi.com/snoop.php?tili=skrivapa_se"/>               ]
          else []
        %>
      </body>
