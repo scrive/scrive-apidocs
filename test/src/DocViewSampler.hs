@@ -18,6 +18,7 @@ import KontraLink
 import HSP
 import System.IO.Unsafe
 import qualified Data.ByteString.UTF8 as BS
+import System.IO.UTF8 as UTF8
 
 docViewSamples :: [Test]
 docViewSamples = [testGroup "sample document flash messages"
@@ -33,7 +34,8 @@ docViewSamples = [testGroup "sample document flash messages"
                             testCase "landpage signed (has account)" sampleLandpageSignedHasAccountView,
                             testCase "landpage login for save" sampleLandpageLoginForSaveView, 
                             testCase "landpage document saved" sampleDocumentSavedView,
-                            testCase "document for sign" sampleDocumentViewForSign]]
+                            testCase "document for sign" sampleDocumentViewForSign
+                           ]]
 
 
 sampleDocumentDraftSavedFlashMsg =
@@ -52,25 +54,37 @@ sampleCanceledFlashMsg =
   sampleFlashMsg "document_canceled" flashMessageCanceled
 
 sampleLandpageSignInviteView =
-  sampleView "landpage_sign_invite" (\t -> landpageSignInviteView t anUnsignedDocument)
+  let ctx = aTestCtx{ctxmaybeuser=Nothing}
+  in sampleView2 "landpage_sign_invite" (\templ -> pageFromBody' "../public" (ctx{ctxtemplates=templ}) TopNone "kontrakcja"
+                                               (fmap cdata $ landpageSignInviteView templ anUnsignedDocument))
 
 sampleLandpageRejectedView =
-  sampleView "landpage_rejected_view" (\t -> landpageRejectedView t anUnsignedDocument)
+  let ctx = aTestCtx{ctxmaybeuser=Nothing}
+  in sampleView2 "landpage_rejected_view" (\templ -> pageFromBody' "../public" (ctx{ctxtemplates=templ}) TopNone "kontrakcja"
+                                               (fmap cdata $ landpageRejectedView templ anUnsignedDocument))
 
 sampleLandpageSignedNoAccountView =
-  sampleView "landpage_signed_no_account" (\t -> landpageSignedView t aSignedDocument aSignedSigLink False)
+  let ctx = aTestCtx{ctxmaybeuser=Nothing}
+  in sampleView2 "landpage_signed_no_account" (\templ -> pageFromBody' "../public" (ctx{ctxtemplates=templ}) TopNone "kontrakcja"
+                                               (fmap cdata $ landpageSignedView templ aSignedDocument aSignedSigLink False))
 
 sampleLandpageSignedHasAccountView =
-  sampleView "landpage_signed_has_account" (\t -> landpageSignedView t aSignedDocument aSignedSigLink True)
+  let ctx = aTestCtx{ctxmaybeuser=Nothing}
+  in sampleView2 "landpage_signed_has_account" (\templ -> pageFromBody' "../public" (ctx{ctxtemplates=templ}) TopNone "kontrakcja"
+                                               (fmap cdata $ landpageSignedView templ aSignedDocument aSignedSigLink True))
 
 sampleLandpageLoginForSaveView =
-  sampleView "landpage_login_for_save" landpageLoginForSaveView
+  let ctx = aTestCtx{ctxmaybeuser=Nothing}
+  in sampleView2 "landpage_login_for_save" (\templ -> pageFromBody' "../public" (ctx{ctxtemplates=templ}) TopNone "kontrakcja"
+                                               (fmap cdata $ landpageLoginForSaveView templ))
 
 sampleDocumentSavedView =
-  sampleView "document_saved" landpageDocumentSavedView
+  let ctx = aTestCtx{ctxmaybeuser=Nothing}
+  in sampleView2 "document_saved" (\templ -> pageFromBody' "../public" (ctx{ctxtemplates=templ}) TopNone "kontrakcja"
+                                               (fmap cdata $ landpageDocumentSavedView templ))
 
 sampleDocumentViewForSign =
-    let ctx = aTestCtx
+    let ctx = aTestCtx{ctxmaybeuser=Nothing}
         document = anUnsignedDocument
         wassigned = False
         author = aTestUser
@@ -81,4 +95,4 @@ sampleDocumentViewForSign =
                                                      document (ctx{ctxtemplates=templ}) invitedlink wassigned author))
 
 
-sampleView2 name action = sample name "view" (\t -> renderHSPToString (action t)) writeFile
+sampleView2 name action = sample name "view" (\t -> renderHSPToString (action t)) (UTF8.writeFile)

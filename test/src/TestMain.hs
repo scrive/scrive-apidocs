@@ -7,8 +7,12 @@ import UserViewSampler
 import DocViewMailSampler
 import DocViewSampler
 import TrustWeaverTest
+import System.IO
 
-main = defaultMain tests
+main = do
+  hSetEncoding stdout utf8
+  hSetEncoding stderr utf8
+  defaultMain tests
 
 tests = [testGroup "UserState" userStateTests,
          testGroup "Scheduler" schedulerTests,

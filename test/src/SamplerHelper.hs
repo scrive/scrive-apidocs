@@ -12,6 +12,7 @@ import System.FilePath
 
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
+import System.IO.UTF8 as UTF8
 
 sampleMail name action = sample name "mail" action mailSaver
 
@@ -28,7 +29,7 @@ sample name suffix action saver = withSampleDirectory $ \tmp -> do
 
 mailSaver file mail = BS.writeFile file (content mail)
 
-stringSaver file str = writeFile file ("<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\"/></head><body>" ++ str ++ "</body></html>")
+stringSaver file str = UTF8.writeFile file ("<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\"/></head><body>" ++ str ++ "</body></html>")
 
 withSampleDirectory :: (FilePath -> IO a) -> IO a
 withSampleDirectory action = do 
