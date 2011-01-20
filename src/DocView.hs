@@ -148,7 +148,7 @@ documentSmallView crtime user doc = DocumentSmallView {
                                                   Canceled -> "status_rejected.png"
                                                   Timedout -> "status_timeout.png"
                                                   Rejected -> "status_rejected.png"
-                                                  Withdrawn -> "status_rejected.png"
+                                                  -- Withdrawn -> "status_rejected.png"
                                                   Pending  -> if anyInvitationUndelivered doc
                                                                then "status_rejected.png"    
                                                                else if all (isJust . maybeseeninfo) $ documentsignatorylinks doc
@@ -158,7 +158,9 @@ documentSmallView crtime user doc = DocumentSmallView {
                                                                      then "status_rejected.png"    
                                                                      else if all (isJust . maybeseeninfo) $ documentsignatorylinks doc
                                                                            then "status_viewed.png"
-                                                                           else "status_pending.png"  ,       
+                                                                           else "status_pending.png"  
+                                                  _ -> "status_rejected.png",       
+                          
                           dsvDoclink =     if (unAuthor $ documentauthor doc) ==(userid user) || (null $ signatorylinklist)
                                             then show $ LinkIssueDoc $ documentid doc
                                             else show $ LinkSignDoc doc (head $ signatorylinklist),
@@ -510,7 +512,7 @@ pageDocumentForAuthor ctx
                                                               (setAttribute "signatories" signatories) .
                                                               (setAttribute "pending" $ documentstatus == Pending || documentstatus == AwaitingAuthor ) .
                                                               (setAttribute "awaitingauthor" $ documentstatus == AwaitingAuthor ) .
-                                                              (setAttribute "canberestarted" $ documentstatus `elem` [Canceled , Timedout , Rejected , Withdrawn ]) . 
+                                                              (setAttribute "canberestarted" $ documentstatus `elem` [Canceled , Timedout , Rejected]) . 
                                                               (setAttribute "restartForm" $ restartForm) .
                                                               (setAttribute "cancelMailContent" $ cancelMailContent)   .
                                                               (setAttribute "linkcancel" $ show $ LinkCancel document)               
@@ -573,15 +575,15 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser,ctxtemplates})  docu
       let isTimedout = documentstatus document == Timedout
       let isCanceled = documentstatus document == Canceled
       let isRejected = documentstatus document == Rejected
-      let isWithDrawn = documentstatus document == Withdrawn
-      let dontShowAnyReminder = isTimedout || isCanceled || isRejected || isWithDrawn
+      -- let isWithDrawn = documentstatus document == Withdrawn
+      let dontShowAnyReminder = isTimedout || isCanceled || isRejected
       let isCurrentUserAuthor = maybe False (isAuthor document) muser
       let isCurrentSignatorAuthor = (fmap (unEmail . useremail . userinfo) muser) ==  (Just signatoryemail)                  
       let dialogHeight =   if (wasSigned) then "400" else "600"
       let status =  caseOf
                 [
                 ( invitationdeliverystatus == Undelivered,"/theme/images/status_rejected.png"),
-                ( isWithDrawn,"/theme/images/status_rejected.png"), 
+                -- ( isWithDrawn,"/theme/images/status_rejected.png"), 
                 ( isCanceled, "/theme/images/status_rejected.png"), 
                 ( isRejected, "/theme/images/status_rejected.png"), 
                 ( isTimedout, "/theme/images/status_timeout.png"), 
@@ -592,7 +594,7 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser,ctxtemplates})  docu
                    [
                     (wasSigned, renderTemplate ctxtemplates "signatoryMessageSigned" [("date", showDateOnly $ signtime $ fromJust maybesigninfo)]),  
                     (isTimedout, renderTemplate ctxtemplates "signatoryMessageTimedout" []),
-                    (isCanceled || isRejected || isWithDrawn, return "" ),
+                    (isCanceled || isRejected, return "" ),
                     (wasSeen,  renderTemplate ctxtemplates "signatoryMessageSeen" [("date", showDateOnly $ signtime $ fromJust maybeseeninfo)])
                    ]        (renderTemplate ctxtemplates "signatoryMessageNotSigned" [])
       reminderText <- if (wasSigned)
