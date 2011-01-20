@@ -51,6 +51,7 @@ import qualified SealSpec as Seal
 import qualified TrustWeaver as TW
 import ActionQueueState
 import qualified AppLogger as Log
+import System.IO.Temp
 
 {-
   Document state transitions are described in DocState.
@@ -851,10 +852,46 @@ handlePageOfDocument documentid = do
        else do
               pages <- liftIO $ DocView.showFilesImages2 (ctxtemplates ctx) $ zip f b
               webHSP $ return $ cdata pages
+
+{- |
+   Convert PDF to jpeg images of pages
+ -}
+preprocessPDF :: BS.ByteString
+              -> IO BS.ByteString
+preprocessPDF content = withSystemTempDirectory "gs" $ \tmppath -> do
+  let sourcepath = tmppath ++ "/source.pdf"
+  let outputpath = tmppath ++ "/output.pdf"
+
+  BS.writeFile sourcepath content
+
+  let gsproc = (proc gs [ "-sDEVICE=pdfwrite" 
+                        , "-sOutputFile=" ++ outputpath 
+                        , "-dSAFER"
+                        , "-dBATCH"
+                        , "-dNOPAUSE"
+                        , sourcepath
+                        ]) { std_out = CreatePipe
+                           , std_err = CreatePipe
+                           }
+  (_, Just outhandle, Just errhandle, gsProcHandle) <- createProcess gsproc
+  errcontent <- BS.hGetContents errhandle
+  outcontent <- BS.hGetContents outhandle
+                 
+  exitcode <- waitForProcess gsProcHandle
+
+  result <- case exitcode of
+    ExitFailure _ -> return $ BS.empty
+    ExitSuccess -> BS.readFile outputpath
+
+  return result
     
 handleDocumentUpload :: DocumentID -> BS.ByteString -> BS.ByteString -> Kontra ()
-handleDocumentUpload docid content filename = do
+handleDocumentUpload docid content1 filename = do
   ctx@Context{ctxs3action} <- get
+  -- we need to downgrade the PDF to 1.4 that has uncompressed structure
+  -- we use gs to do that of course
+  content <- liftIO $ preprocessPDF content1
+
   result <- update $ AttachFile docid filename content
   case result of
     Left err -> return ()
@@ -1093,7 +1130,7 @@ sealDocument ctx@Context{ctxs3action,ctxtwconf}
                         return ()
           return $ Right document
          Left msg -> error msg
-      else do
+     else do
         -- error handling
         Log.error $ "seal: cannot seal document " ++ show docid ++ ", fileid " ++ show fileid
         update $ ErrorDocument docid "could not seal document"
