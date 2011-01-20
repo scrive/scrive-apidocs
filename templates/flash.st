@@ -29,9 +29,13 @@ flashMessageActivationLinkNotValid=Vi beklagar. Länken är inte längre giltig.
 ###
 flashMessageUserActivated=Välkommen till SkrivaPå!
 ###
-flashMessageUserAlreadyActivated=This user had activated his account. If You do not remember password please use the reminder.
+flashMessageUserAlreadyActivated=Du har redan aktiverat detta konto. Om du inte kommer ihåg ditt lösenord vänligen använd funktionaliteten "glömt lösenord" för att begära ett nytt lösenord.
 ###                                                        
-flashMessageNoSuchUserExists=There is no user with such email. 
+flashMessageNoSuchUserExists=Det finns ingen användare med denna epost. Vänligen försök igen. 
 ###
-flashMessageChangePasswordEmailSend=Mail with link to change password had been send.
+flashMessageChangePasswordEmailSend=Vi har skickat din kontoinbjudan igen. Vänligen gå tillbaks till din inkorg och klicka på länken i mailet för att aktivera ditt konto.
 ####
+flashMessageNewActivationLinkSend=Vi har skickat din kontoinbjudan igen. Vänligen gå tillbaks till din inkorg och klicka på länken i mailet för att aktivera ditt konto.
+###
+###
+###

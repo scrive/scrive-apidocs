@@ -96,7 +96,7 @@ activatePageViewNotValidLink=
                     <td><input type="email" name="email" value="" /></td>
                 </tr>
             </table>
-            <input type="submit" value="Send"  class="validateEmail" />
+            <input type="submit" value="Skicka"  class="validateEmail" />
         </form>
       </div>
 ####
