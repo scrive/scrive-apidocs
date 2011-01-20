@@ -32,7 +32,7 @@ data LoggerHandle = LoggerHandle [GenericHandler Handle]
 setupLogger = do
     createDirectoryIfMissing False "log"
     
-    let fmt = simpleLogFormatter "[$time : $loggername : $prio] $msg"
+    let fmt = tfLogFormatter "%F %T" "$time $msg"
         
     appLog <- fileHandler "log/app.log" INFO
     accessLog <- fileHandler "log/access.log" INFO
