@@ -562,13 +562,12 @@ handleIssueShowPost docid = withUserPost $ do
    Method: GET
  -}
 handleIssueShowTitleGet :: DocumentID -> String -> Kontra Response
-handleIssueShowTitleGet docid _title = withUserGet $ checkUserTOSGet $ do
+handleIssueShowTitleGet docid _title = 
+   do
    ctx <- get
    document@Document{ documentauthor
                     , documentid
                     } <- queryOrFail $ GetDocumentByDocumentID $ docid
-   ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) <- get
-   failIfNotAuthor document user
    let file = safehead "handleIssueShow" (case documentstatus document of
                                             Closed -> documentsealedfiles document
                                             _      -> documentfiles document)
