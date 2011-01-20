@@ -491,7 +491,7 @@ pageDocumentForAuthor ctx
      restartForm <-   renderActionButton  (ctxtemplates ctx) (LinkRestart documentid) "restartButtonName"
      cancelMailContent <- mailCancelDocumentByAuthorContent  (ctxtemplates ctx) False Nothing ctx document author
      content <-  renderTemplateComplex (ctxtemplates ctx) "pageDocumentForAuthorContent" $  
-                                                              (setAttribute "documenttitle" $ documenttitle) .
+                                                              (setAttribute "documenttitle" $ BS.toString documenttitle) .
                                                               (setAttribute "jscript" $ jscript) .
                                                               (setAttribute "linkissuedoc" $ show $ LinkIssueDoc documentid) .
                                                               (setAttribute "authorname" $ BS.toString $ signatoryname documentauthordetails) .
@@ -550,7 +550,7 @@ showDocumentPageHelper templates document helpers title content =
    renderTemplateComplex templates "showDocumentPageHelper" $  
                                                               (setAttribute "helpers" $ helpers) .
                                                               (setAttribute "docbox" $ docbox) .
-                                                              (setAttribute "title" $ title) .
+                                                              (setAttribute "title" $ BS.toString title) .
                                                               (setAttribute "content" $ content ) .
                                                               (setAttribute "linkissuedocpdf" $ show (LinkIssueDocPDF document)) 
                                                               
