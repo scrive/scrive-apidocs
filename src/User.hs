@@ -187,3 +187,4 @@ queryOrFail q = do
   case mres of
     Just res -> return res
     Nothing -> mzero
+

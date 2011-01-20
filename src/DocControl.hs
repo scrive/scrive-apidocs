@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, ScopedTypeVariables #-}
+{-# LANGUAGE CPP, ScopedTypeVariables, PatternGuards #-}
 
 {- |
    DocControl represents the controler (in MVC) of the document.
@@ -18,6 +18,7 @@ import Data.Word
 import Debug.Trace
 import DocState
 import DocView
+import DocViewMail
 import HSP
 import Happstack.Data.IxSet 
 import Happstack.Server hiding (simpleHTTP)
@@ -68,54 +69,90 @@ signlinkFromDocById doc sid = find ((== sid) . signatorylinkid) (documentsignato
    This function should always be called after changing the document.
  -}
 postDocumentChangeAction :: Document -> DocumentStatus -> Maybe SignatoryLinkID -> Kontra ()
-postDocumentChangeAction document@Document{documentstatus, documentsignatorylinks} oldstatus msignalinkid
+postDocumentChangeAction document@Document{documentstatus, documentsignatorylinks, documentid, documentauthor} oldstatus msignalinkid
     -- No status change ; no action
     | documentstatus == oldstatus = return ()
     -- Preparation -> Pending
     -- main action: sendInvitationEmails
     | oldstatus == Preparation && documentstatus == Pending = do
         ctx <- get
-        Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor document
-        liftIO $ forkIO $ do
-          -- this is here to postpone email send a couple of seconds
-          -- so our service has a chance to give answer first
-          -- is GHC using blocking calls or what?
-          threadDelay 5000 
+        Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor
+        Log.forkIOLogWhenError ("error in sending invitation emails for document " ++ show documentid) $ do
           sendInvitationEmails ctx document author
         return ()
     -- Pending -> AwaitingAuthor
     -- main action: sendAwaitingEmail
     | oldstatus == Pending && documentstatus == AwaitingAuthor = do
         ctx <- get
-        Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor document
-        liftIO $ forkIO $ do
-          threadDelay 5000 
+        Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor
+        Log.forkIOLogWhenError ("error in sending awaiting emails for document " ++ show documentid) $ do
           sendAwaitingEmail ctx document author
         return ()
     -- Pending -> Closed OR AwaitingAuthor -> Closed
     -- main action: sendClosedEmails
     | (oldstatus == Pending || oldstatus == AwaitingAuthor) && documentstatus == Closed = do
         ctx@Context{ctxnormalizeddocuments,ctxhostpart,ctxtime} <- get
-        liftIO $ forkIO $ do
-          Just user <- query $ GetUserByUserID (unAuthor (documentauthor document))
-          newdoc <- sealDocument ctx ctxnormalizeddocuments ctxhostpart ctxtime user document
-          sendClosedEmails ctx newdoc
+        Log.forkIOLogWhenError ("error sealing document " ++ show documentid)$ do
+          Just user <- query $ GetUserByUserID (unAuthor (documentauthor))
+          enewdoc <- sealDocument ctx ctxnormalizeddocuments ctxhostpart ctxtime user document
+          case enewdoc of
+               Right newdoc -> sendClosedEmails ctx newdoc
+               Left errmsg -> do
+                 update $ ErrorDocument documentid errmsg
+                 Log.forkIOLogWhenError ("error in sending seal error emails for document " ++ show documentid) $ do
+                       sendDocumentErrorEmail ctx document
+                 return ()
         return ()
     -- Pending -> Rejected
     -- main action: sendRejectAuthorEmail
     | oldstatus == Pending && documentstatus == Rejected = do
         ctx@Context{ctxnormalizeddocuments,ctxhostpart,ctxtime} <- get
         customMessage <- fmap (fmap concatChunks) $ getDataFn' (lookBS "customtext")  
-        liftIO $ forkIO $ do
-          threadDelay 5000 
+        Log.forkIOLogWhenError ("error in sending rejection emails for document " ++ show documentid) $ do
           sendRejectAuthorEmail customMessage ctx document (fromJust msignalink)
         return ()
+    -- * -> DocumentError
+    | DocumentError msg <- documentstatus = do
+        ctx <- get
+        Log.forkIOLogWhenError ("error in sending error emails for document " ++ show documentid) $ do
+          sendDocumentErrorEmail ctx document
+        return ()
+                                            
     -- transition with no necessary action; do nothing
     -- FIXME: log status change
     | otherwise = 
          return ()
     where msignalink = maybe Nothing (signlinkFromDocById document) msignalinkid
           
+{- |
+   Send emails to all of the invited parties saying that we fucked up the process.
+   Say sorry about this to them.
+   ??: Should this be in DocControl or in an email-sepecific file?
+ -}
+sendDocumentErrorEmail :: Context -> Document -> IO ()
+sendDocumentErrorEmail ctx document = do
+  let signlinks = documentsignatorylinks document
+  forM_ signlinks (sendDocumentErrorEmail1 ctx document)
+
+{- |
+   Helper function to send emails to invited parties
+   ??: Should this be in DocControl or in an email-specific file?
+ -}
+sendDocumentErrorEmail1 :: Context -> Document -> SignatoryLink -> IO ()
+sendDocumentErrorEmail1 ctx document signatorylink = do
+  let SignatoryLink{ signatorylinkid
+                   , signatorydetails = SignatoryDetails { signatoryname
+                                                         , signatorycompany
+                                                         , signatoryemail
+                                                         }
+                   , signatorymagichash } = signatorylink
+      Document{documenttitle,documentid} = document
+  mail <- mailDocumentError (ctxtemplates ctx) ctx document
+  sendMail (ctxmailsconfig ctx) $ 
+           mail { fullnameemails = [(signatoryname,signatoryemail)]
+                , mailInfo = Invitation signatorylinkid
+                } 
+
 {- |
    Send emails to all of the invited parties.
    ??: Should this be in DocControl or in an email-sepecific file?
@@ -782,9 +819,7 @@ maybeScheduleRendering ctx@Context{ ctxnormalizeddocuments = mvar }
       case Map.lookup fileid setoffilesrenderednow of
          Just pages -> return (setoffilesrenderednow, pages)
          Nothing -> do
-           forkIO $ do
-                -- putStrLn $ "Rendering " ++ show fileid
-                -- FIXME: handle exceptions gracefully
+           Log.forkIOLogWhenError ("error rendering file " ++ show fileid) $ do
                 jpegpages <- convertPdfToJpgPages ctx file
                 modifyMVar_ mvar (\setoffilesrenderednow -> return (Map.insert fileid jpegpages setoffilesrenderednow))
            return (Map.insert fileid JpegPagesPending setoffilesrenderednow, JpegPagesPending)
@@ -1008,7 +1043,7 @@ sealDocument :: Context
              -> MinutesTime
              -> User
              -> Document
-             -> IO Document
+             -> IO (Either String Document)
 sealDocument ctx@Context{ctxs3action,ctxtwconf}
              normalizemap 
              hostpart
@@ -1028,14 +1063,14 @@ sealDocument ctx@Context{ctxs3action,ctxtwconf}
 
   (code,stdout,stderr) <- readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
 
-  when (code /= ExitSuccess) $
-       putStrLn "Cannot execute dist/build/pdfseal/pdfseal"
+  if code == ExitSuccess 
+     then do
 
-  newfilepdf1 <- BS.readFile tmpout
-  removeFile tmpout
+       newfilepdf1 <- BS.readFile tmpout
+       removeFile tmpout
 
-  newfilepdf <- 
-      if TW.signcert ctxtwconf == ""
+       newfilepdf <- 
+        if TW.signcert ctxtwconf == ""
          then return newfilepdf1
          else do
            x <- TW.signDocument ctxtwconf newfilepdf1
@@ -1046,18 +1081,23 @@ sealDocument ctx@Context{ctxs3action,ctxtwconf}
                      return newfilepdf1
                    Right result -> return result
 
-  mdocument <- update $ AttachSealedFile docid filename newfilepdf
-  case mdocument of
-    Right document -> do
-        mapM_ (\File{fileid} -> update $ EnqueueAction (AmazonUpload docid fileid)) (documentsealedfiles document)
-        case signeddocstorage (usersettings author) of
-          Nothing -> return ()
-          Just twsettings -> do
+       mdocument <- update $ AttachSealedFile docid filename newfilepdf
+       case mdocument of
+         Right document -> do
+          mapM_ (\File{fileid} -> update $ EnqueueAction (AmazonUpload docid fileid)) (documentsealedfiles document)
+          case signeddocstorage (usersettings author) of
+           Nothing -> return ()
+           Just twsettings -> do
                         -- forkIO $ uploadDocumentFilesToTrustWeaver ctxtwconf twsettings document
                         update $ EnqueueAction (TrustWeaverUpload (BS.toString $ storagetwname twsettings) docid)
                         return ()
-        return document
-    Left msg -> error msg
+          return $ Right document
+         Left msg -> error msg
+      else do
+        -- error handling
+        Log.error $ "seal: cannot seal document " ++ show docid ++ ", fileid " ++ show fileid
+        update $ ErrorDocument docid "could not seal document"
+        return $ Left "could not seal document"
 
 
 basename :: String -> String

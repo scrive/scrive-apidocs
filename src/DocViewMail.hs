@@ -12,7 +12,8 @@ module DocViewMail ( mailDocumentRemind,
                      mailInvitationToSend,
                      mailDocumentAwaitingForAuthor,
                      mailCancelDocumentByAuthorContent,
-		             mailCancelDocumentByAuthor
+                     mailDocumentError,
+                     mailCancelDocumentByAuthor
            ) where
 import DocState
 import qualified Data.ByteString.UTF8 as BS
@@ -177,6 +178,20 @@ mailRejectMailContent templates customMessage ctx  authorname  document  rejecto
                                                               ("ctxhostpart",ctxhostpart ctx)] 
        makeEditable' templates "customtext" c                                                                         
 
+mailDocumentError :: KontrakcjaTemplates -> Context -> Document -> IO Mail 
+mailDocumentError templates ctx document@Document{documenttitle} = 
+    do
+     title <- renderTemplate templates "mailDocumentErrorTitle"  [("documenttitle",BS.toString documenttitle)]
+     content <- wrapHTML templates =<< mailDocumentErrorContent templates ctx document
+     return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
+
+
+mailDocumentErrorContent :: KontrakcjaTemplates -> Context -> Document -> IO String  
+mailDocumentErrorContent templates ctx document =   
+  -- FIXME: should have author name here also
+  renderTemplate templates "mailDocumentErrorContent" [-- ("authorname", BS.toString $ authorname ),
+    ("documenttitle", BS.toString $ documenttitle document),
+    ("ctxhostpart", ctxhostpart ctx)] 
 
 mailInvitationToSignContent ::  KontrakcjaTemplates -> Bool -> Context  -> Document -> User -> (Maybe SignatoryLink) -> IO String        
 mailInvitationToSignContent templates forMail (Context {ctxhostpart}) 
