@@ -4,9 +4,11 @@ module AppLogger ( setupLogger
                    
                  , debug
                  , mail
+                 , error
                  , amazon    
                  , trustWeaver  
                  , server
+                   , forkIOLogWhenError
                  ) where
 
 import System.Log.Logger
@@ -15,7 +17,7 @@ import System.Log.Logger
     , setLevel
     , setHandlers
     , updateGlobalLogger
-      , noticeM
+                        , noticeM
     )
 import Control.Exception.Extensible (bracket)
 import System.Log.Handler (close, setFormatter)
@@ -24,6 +26,10 @@ import System.Log.Formatter
 import System.IO (stdout,Handle,hSetEncoding,utf8,hClose)
 import System.Directory
 import Control.Monad.Trans
+import Prelude hiding (error)
+import Control.Monad.Trans
+import qualified Control.Exception as C
+import qualified Control.Concurrent as C
 
 -- | Opaque type covering all information needed to teardown the logger.
 data LoggerHandle = LoggerHandle [GenericHandler Handle]
@@ -38,6 +44,7 @@ setupLogger = do
     accessLog <- fileHandler "log/access.log" INFO
     mailLog <- fileHandler "log/mail.log" INFO >>= \lh -> return $ setFormatter lh fmt
     debugLog <- fileHandler "log/debug.log" INFO >>= \lh -> return $ setFormatter lh fmt
+    errorLog <- fileHandler "log/error.log" INFO >>= \lh -> return $ setFormatter lh fmt
     amazonLog <- fileHandler "log/amazon.log" INFO >>= \lh -> return $ setFormatter lh fmt
     trustWeaverLog <- fileHandler "log/trustweaver.log" INFO >>= \lh -> return $ setFormatter lh fmt
     stdoutLog <- streamHandler stdout NOTICE
@@ -46,6 +53,7 @@ setupLogger = do
     hSetEncoding (privData accessLog) utf8
     hSetEncoding (privData mailLog) utf8
     hSetEncoding (privData debugLog) utf8
+    hSetEncoding (privData errorLog) utf8
     hSetEncoding (privData amazonLog) utf8
     hSetEncoding (privData trustWeaverLog) utf8
 
@@ -79,6 +87,11 @@ setupLogger = do
         "Kontrakcja.Debug"
         (setLevel NOTICE . setHandlers [debugLog, stdoutLog])
 
+    -- Error Log
+    updateGlobalLogger
+        "Kontrakcja.Error"
+        (setLevel NOTICE . setHandlers [errorLog])
+
     -- Server Log
     updateGlobalLogger
         "Happstack.Server"
@@ -89,6 +102,7 @@ setupLogger = do
                           , stdoutLog
                           , mailLog
                           , debugLog
+                          , errorLog
                           , trustWeaverLog
                           , amazonLog
                           ]
@@ -107,6 +121,9 @@ withLogger = bracket setupLogger teardownLogger . const
 debug :: (MonadIO m) => String -> m ()
 debug msg = liftIO $ noticeM "Kontrakcja.Debug" msg
 
+error :: (MonadIO m) => String -> m ()
+error msg = liftIO $ noticeM "Kontrakcja.Error" msg
+
 mail :: (MonadIO m) => String -> m ()
 mail msg = liftIO $ noticeM "Kontrakcja.Mail" msg
 
@@ -118,3 +135,12 @@ trustWeaver msg = liftIO $ noticeM "Kontrakcja.TrustWeaver" msg
 
 server :: (MonadIO m) => String -> m ()
 server msg = liftIO $ noticeM "Happstack.Server" msg
+
+
+forkIOLogWhenError :: (MonadIO m) => String -> IO () -> m ()
+forkIOLogWhenError errmsg action = 
+  liftIO $ do
+    C.forkIO (action `C.catch` \(e :: C.SomeException) -> error $ errmsg ++ " " ++ show e)
+    return ()
+  
+  
