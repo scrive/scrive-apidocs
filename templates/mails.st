@@ -206,6 +206,18 @@ invitationMailUndeliveredContent =
 	$poweredBySkrivaPaPara()$
      </span>
 
+####
+mailDocumentErrorTitle=SkrivaPå could no handle $documenttitle$
+###
+mailDocumentErrorContent= 
+   <p>Hej,</p>
+   <p>We are sorry, but we could not handle document <strong>$documenttitle$</strong>.
+      There are probably very good reasons for this, but they might be hard to explain.</p>
+   <p>Our technicians were notified about this issue. We will (probably) contact you when fix is available.</p>
+   <p>Processen har därmed avbrutits.</p>
+   <p>We are sorry for the inconvenience
+   $poweredBySkrivaPaPara()$
+
 ###
 passwordChangeLinkMailTitle=Nytt lösenord
 ###

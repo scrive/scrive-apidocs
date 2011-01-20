@@ -63,6 +63,7 @@ module DocState
     , GetUniqueSignatoryLinkID(..)
     , GetMagicHash(..)
     , GetDocumentByFileID(..)
+    , ErrorDocument(..)
     )
 where
 import Happstack.Data
