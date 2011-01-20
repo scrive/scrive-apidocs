@@ -49,6 +49,7 @@ import qualified Network.HTTP as HTTP
 import qualified SealSpec as Seal
 import qualified TrustWeaver as TW
 import ActionQueueState
+import qualified AppLogger as Log
 
 {-
   Document state transitions are described in DocState.
@@ -537,6 +538,34 @@ handleIssueShowTitleGet docid _title = withUserGet $ checkUserTOSGet $ do
    let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
    let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
    return res2
+
+{- |
+   Show the document with title in the url
+   URL: /d/{documentid}/{title}
+   Method: GET
+ -}
+handleFileGet :: FileID -> String -> Kontra Response
+handleFileGet fileid' _title = do
+  withUserGet $ onlySuperUser $ do
+   ctx <- get
+   mdocument <- query $ GetDocumentByFileID $ fileid'
+   document <- case mdocument of
+     Right document -> return document
+     Left msg -> do
+       Log.debug $ "Cannot file a document for fileid " ++ show fileid' ++ ", msg= " ++ msg
+       mzero
+   
+   let allfiles = documentsealedfiles document ++ documentfiles document
+   case filter (\file -> fileid file == fileid') allfiles of 
+     [file] -> do
+       contents <- liftIO $ AWS.getFileContents (ctxs3action ctx) file
+       let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
+       let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
+       return res2
+     _ -> do
+       Log.debug $ "We found a document for file id but then there was no such file in there. docid "++
+         show (documentid document) ++ ", fileid " ++ show fileid'
+       mzero
 
 {- |
    Get multiple post/get params and return them in an array
