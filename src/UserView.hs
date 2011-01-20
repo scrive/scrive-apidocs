@@ -29,6 +29,7 @@ module UserView(
     flashMessageUserAlreadyActivated,
     flashMessageNoSuchUserExists,
     flashMessageChangePasswordEmailSend,  
+    flashMessageNewActivationLinkSend,
     --utils  
     prettyName,
     userSmallView,
@@ -173,6 +174,8 @@ flashMessageNoSuchUserExists templates = renderTemplate templates "flashMessageN
 flashMessageChangePasswordEmailSend:: KontrakcjaTemplates -> IO String                                                        
 flashMessageChangePasswordEmailSend templates = renderTemplate templates "flashMessageChangePasswordEmailSend" []
 
+flashMessageNewActivationLinkSend:: KontrakcjaTemplates -> IO String                                                        
+flashMessageNewActivationLinkSend templates = renderTemplate templates "flashMessageNewActivationLinkSend" []
 {- Same as personname (username or email) from DocView but works on User -}
 prettyName::User -> BS.ByteString
 prettyName u = if (BS.null $ userfullname u)

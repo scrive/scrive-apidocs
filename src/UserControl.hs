@@ -352,11 +352,12 @@ handleActivate sid mh = do
                                                      case  muser of
                                                       Just user -> 
                                                           if (isNothing $ userhasacceptedtermsofservice user) 
-                                                          then liftIO $ 
-                                                               do  al <- activateLink $ userid user
-                                                                   mail <-  newUserMail (ctxtemplates ctx) (ctxhostpart ctx) email email al
-                                                                   sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = [(email, email)]}
-                                                                   return LinkSignupDone
+                                                          then  
+                                                               do  al <- liftIO $ activateLink $ userid user
+                                                                   mail <-  liftIO $ newUserMail (ctxtemplates ctx) (ctxhostpart ctx) email email al
+                                                                   liftIO $ sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = [(email, email)]}
+                                                                   addFlashMsgText =<< (liftIO $ flashMessageNewActivationLinkSend  (ctxtemplates ctx)) 
+                                                                   return LinkMain
                                                           else do
                                                                 addFlashMsgText =<< (liftIO $ flashMessageUserAlreadyActivated (ctxtemplates ctx)) 
                                                                 return LinkMain
