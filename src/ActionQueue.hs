@@ -57,6 +57,7 @@ runActionLoop ctx = do
                                 -- we want to repeat the action
                                 -- lets put it at the end of the queue
                                 update $ EnqueueAction action
+                                threadDelay 10000
   runActionLoop ctx
 
 runSingleAction :: Context -> Action -> IO ()
