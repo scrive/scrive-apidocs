@@ -115,6 +115,7 @@ handleRoutes = msum [
      , dir "d" $ param "doc" $ hpost0 $ DocControl.handleIssueNewDocument
      , dir "d" $ param "archive" $ hpost0 $ DocControl.handleIssueArchive
      , dir "d" $ hpost1 $ DocControl.handleIssueShowPost
+     , dir "df" $ hget2 $ DocControl.handleFileGet
 
      --This are actions on documents. We may integrate it with all the stuff above, but I don't like it. MR
      , dir "resend"  $ hpost2 $ DocControl.handleResend

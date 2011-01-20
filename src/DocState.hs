@@ -62,6 +62,7 @@ module DocState
     , SetSignatoryLinks(..)
     , GetUniqueSignatoryLinkID(..)
     , GetMagicHash(..)
+    , GetDocumentByFileID(..)
     )
 where
 import Happstack.Data
@@ -1215,6 +1216,13 @@ fileMovedToAWS fileid' bucket url = do
                       | otherwise = file
     moved1 file = file
 
+getDocumentByFileID :: FileID 
+                       -> Query Documents (Either String Document)
+getDocumentByFileID fileid' = do
+  documents <- ask
+  case getOne (documents @= fileid') of
+    Nothing -> return $ Left "no such file id"
+    Just document -> return $ Right document
 
 attachFile :: DocumentID 
            -> BS.ByteString 
@@ -1710,4 +1718,6 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'setSignatoryLinks
                         , 'getUniqueSignatoryLinkID
                         , 'getMagicHash
+                          
+                        , 'getDocumentByFileID
                         ])

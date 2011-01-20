@@ -64,6 +64,7 @@ data KontraLink
     | LoopBack
     | BackToReferer
     | LinkDaveDocument DocumentID
+    | LinkFile FileID BS.ByteString
     
 instance Show KontraLink where
     showsPrec _ LinkAbout = (++) "/about"
@@ -85,6 +86,8 @@ instance Show KontraLink where
         (++) $ "/d/" ++ show documentid
     showsPrec _ (LinkIssueDocPDF document) = 
         (++) $ "/d/" ++ show (documentid document) ++ "/" ++ BS.toString (documenttitle document) ++ ".pdf"
+    showsPrec _ (LinkFile fileid filename) = 
+        (++) $ "/df/" ++ show fileid ++ "/" ++ BS.toString filename
     showsPrec _ (LinkSignDoc document signatorylink) = 
         (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++ 
                  "/" ++ show (signatorymagichash signatorylink)

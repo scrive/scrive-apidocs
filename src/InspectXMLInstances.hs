@@ -19,6 +19,8 @@ import InspectXML
 import UserState
 import Payments.PaymentsState
 import Mails.MailsUtil
+import KontraLink
+import qualified Data.ByteString.UTF8 as BS
 
 --Complex types, usualy big that should be derived automatically
 $(deriveInspectXML ''Document)
@@ -53,7 +55,12 @@ instance InspectXML DefaultMainSignatory where
     
 --Standard instances for other data types (based on show)
 instance InspectXML File where
-    inspectXML = asChild . show
+    inspectXML (File 
+          { fileid
+          , filename
+          , filestorage
+          })= asChild <a href=(show $ LinkFile fileid filename)><% show fileid ++ "/" ++ BS.toString filename %></a>
+                              
 instance InspectXML DocumentStatus where
     inspectXML = asChild . show
 instance InspectXML ChargeMode where
