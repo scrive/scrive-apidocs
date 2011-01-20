@@ -120,7 +120,7 @@ handleRoutes = msum [
      --This are actions on documents. We may integrate it with all the stuff above, but I don't like it. MR
      , dir "resend"  $ hpost2 $ DocControl.handleResend
      , dir "changeemail" $ hpost2 $ DocControl.handleChangeSignatoryEmail
-     , dir "withdrawn" $ hpost1 $ DocControl.handleWithdrawn
+     -- , dir "withdrawn" $ hpost1 $ DocControl.handleWithdrawn
      , dir "restart" $ hpost1 $ DocControl.handleRestart
      , dir "cancel"  $ hpost1 $ DocControl.handleCancel
      

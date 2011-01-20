@@ -55,7 +55,7 @@ module DocState
     , UpdateDocument(..)
     , CloseDocument(..)
     , CancelDocument(..)
-    , WithdrawnDocument(..)
+    -- , WithdrawnDocument(..)
     , RestartDocument(..)
     , ChangeSignatoryEmailWhenUndelivered(..)
     , signatoryDetailsFromUser
@@ -241,7 +241,7 @@ $(deriveAll [''Eq, ''Ord, ''Default]
                           | Timedout
                           | Rejected
                           | AwaitingAuthor
-                          | Withdrawn
+                          | DocumentError String
 
       data ChargeMode = ChargeInitialFree   -- initial 5 documents are free
                       | ChargeNormal        -- value times number of people involved
@@ -1541,12 +1541,14 @@ cancelDocument docid = do
     Left _ -> return Nothing
     Right d -> return $ Just d
 
+{-
 withdrawnDocument:: DocumentID -> Update Documents (Maybe Document)
 withdrawnDocument docid = do
   doc <- modifyDocument docid (\d -> Right $ d { documentstatus = Withdrawn }) 
   case doc of
     Left _ -> return Nothing
     Right d -> return $ Just d
+-}
 
 getFilesThatShouldBeMovedToAmazon :: Query Documents [File]
 getFilesThatShouldBeMovedToAmazon = do
@@ -1578,7 +1580,7 @@ restartDocument docid user =
 -}
 tryToGetRestarted::Document->User-> Update Documents (Either String Document)
 tryToGetRestarted doc user= 
-                            if (documentstatus doc `notElem` [Canceled,Timedout, Rejected,Withdrawn])
+                            if (documentstatus doc `notElem` [Canceled,Timedout, Rejected])
                              then return $ Left $ "Can't restart document with " ++ (show $ documentstatus doc) ++ " status"
                              else if (not $ isAuthor doc user)
                                    then return $ Left $ "Can't restart document is You are not it's author"
@@ -1647,6 +1649,13 @@ setDocumentTrustWeaverReference documentid reference = do
           newdocument = document { documenttrustweaverreference = Just (BS.fromString reference) }
       in Right newdocument
   
+errorDocument :: DocumentID -> String -> Update Documents (Either String Document)
+errorDocument documentid errormsg = 
+  modifyDocument documentid $ \document ->
+      let
+          newdocument = document { documentstatus = DocumentError errormsg }
+      in Right newdocument
+
 {- |
    The user is the author of the document
  -}
@@ -1708,7 +1717,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'timeoutDocument
                         , 'closeDocument
                         , 'cancelDocument
-                        , 'withdrawnDocument
+                        -- , 'withdrawnDocument
                         , 'fileMovedToAWS
 
                           -- admin only area follows
@@ -1721,4 +1730,5 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'getMagicHash
                           
                         , 'getDocumentByFileID
+                        , 'errorDocument
                         ])

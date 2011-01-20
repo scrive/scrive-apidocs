@@ -1201,6 +1201,7 @@ handleCancel docid = withUserPost $ do
     Nothing -> addFlashMsgText "Could not cancel"
   return (LinkIssueDoc $ documentid doc)
 
+{-
 handleWithdrawn:: DocumentID -> Kontra KontraLink
 handleWithdrawn docid = do
   mdoc <- query $ GetDocumentByDocumentID docid
@@ -1209,7 +1210,7 @@ handleWithdrawn docid = do
                           update $ WithdrawnDocument $ documentid doc
                           return (LinkIssueDoc $ documentid doc)
     Nothing -> return LinkMain          
- 
+-}
 
 handleRestart:: DocumentID -> Kontra KontraLink
 handleRestart docid = do
