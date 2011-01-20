@@ -148,8 +148,14 @@ placeSealOnPageRefID sealrefid sealmarkerformrefid (pagerefid,sealtext) document
         pageresdict = getResDict document pagerefid
         newresdictcont1 = mergeResources document sealresdict pageresdict
         newxobjectdict = case Prelude.lookup (BS.pack "XObject") newresdictcont1 of
-                           Just (Dict w) -> Dict (w ++ [(BS.pack "SealMarkerForm",Ref sealmarkerformrefid)])
+                           Just (Dict w) -> Dict (w ++ [(BS.pack "SealMarkerForm",Ref sealmarkerformrefid)]) 
+                           Just (Ref r) -> case PdfModel.lookup r document of
+                                             Just (Indir (Dict w) _) -> 
+                                                   Dict (w ++ [(BS.pack "SealMarkerForm",Ref sealmarkerformrefid)])
+                                             x -> error (show x)
+
                            Nothing -> Dict [(BS.pack "SealMarkerForm",Ref sealmarkerformrefid)]
+                           x -> error (show x)
         newresdict = Dict ((BS.pack "XObject",newxobjectdict) : skipXObject newresdictcont1)
         skipXObject = filter (not . (== BS.pack "XObject") . fst)
                    
