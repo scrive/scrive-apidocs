@@ -53,6 +53,45 @@ exrotate = SealSpec
                   ]
     }
 
+gsnorm = SealSpec 
+    { input = "testfiles/gs_norm.pdf"
+    , output = "testfiles/gs_norm_sealed.pdf"
+    , documentNumber = "0000001234"
+    , hostpart = "http://host.skrivapa"
+    , fields = []
+    , persons = 
+        [ Person 
+          { fullname = "Lukas Duczko öåä ÖÅÄ"
+          , email = "lukas@duczko.se öåä ÖÅÄ"
+          , company = "CEO, SkrivaPa öåä ÖÅÄ"
+          , number = "123456-4567 öåä ÖÅÄ"
+          }
+        , Person 
+          { fullname = "Żółw Łódź öåä ÖÅÄ"
+          , email = "lukas@duczko.se öåä ÖÅÄ"
+          , company = "CEO, öåä ÖÅÄ"
+          , number = "123456-4567 öåä ÖÅÄ"
+          }
+        , Person 
+          { fullname = "Żółw Łódź öåä ÖÅÄ"
+          , email = "some kind of email that is also quite long lukas@duczko.se"
+          , company = "Really long company name, CEO, öåä ÖÅÄ"
+          , number = "123456-4567"
+          }
+        ]
+    , initials = "öåä, ÖÅÄ"
+      , history = [ HistEntry { histdate = "2010-06-01 13:34"
+                              , histcomment = "I was here and mucked around with PDFs"
+                              }
+                  , HistEntry { histdate = "One year later öåä ÖÅÄ"
+                              , histcomment = "Still mucking around with PDFs öåä ÖÅÄ"
+                              }
+                  , HistEntry { histdate = "10 years later öåä ÖÅÄ"
+                              , histcomment = "Really soon now öåä ÖÅÄ"
+                              }
+                  ]
+    }
+
 nda = SealSpec 
     { input = "nda.pdf"
     , output = "nda_sealed.pdf"
