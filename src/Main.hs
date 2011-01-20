@@ -20,10 +20,9 @@ import Happstack.State
   , createCheckpoint
   )
 import System.Environment (getArgs)
-import System.Log.Logger (Priority(..), logM)
 import System.Exit (exitFailure)
 import System.Console.GetOpt
-import AppLogger (withLogger)
+import qualified AppLogger as Log
 import AppState (AppState(..))
 import AppControl (appHandler,defaultAWSAction,AppConf(..),AppGlobals(..))
 import qualified Control.Concurrent (threadDelay)
@@ -61,13 +60,13 @@ readAppConfig = read `catch` printDefault
         c <- hGetContents h
         conf <- readIO c
         hClose h
-        logM "Happstack.Server" NOTICE $ "App config file " ++ filepath ++" read and parsed"
+        Log.server $ "App config file " ++ filepath ++" read and parsed"
         return conf
       printDefault ex = do
-        logM "Happstack.Server" NOTICE $ "No app config provided. Exiting now. Error: " ++ show ex
-        putStrLn $ "Please provide application config file " ++ filepath
-        putStrLn $ "Example configuration:"
-        putStrLn $ show (defaultConf "kontrakcja")
+        Log.server $ "No app config provided. Exiting now. Error: " ++ show ex
+        Log.server $ "Please provide application config file " ++ filepath
+        Log.server $ "Example configuration:"
+        Log.server $ show (defaultConf "kontrakcja")
         error "Config file error"
          
 
@@ -126,7 +125,7 @@ uploadOldFilesToAmazon appConf = do
   files <- query $ GetFilesThatShouldBeMovedToAmazon
   mapM_ (AWS.uploadFile (defaultAWSAction appConf)) files
 
-main = withLogger $ do
+main = Log.withLogger $ do
   -- progname effects where state is stored and what the logfile is named
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
@@ -137,7 +136,7 @@ main = withLogger $ do
   templates <- readTemplates
   let appGlobals = AppGlobals { templates = templates }
   appConf <- case parseConfig args of
-    (Left e) -> do logM "Happstack.Server" ERROR (unlines e)
+    (Left e) -> do Log.server (unlines e)
                    exitFailure
     (Right f) -> return $ (f (appConf1))
 
@@ -165,12 +164,13 @@ main = withLogger $ do
 
   Exception.bracket
                  -- start the state system
-              (logM "Happstack.Server" NOTICE ("Using store " ++ store appConf) >>
-               startSystemState' (store appConf) stateProxy)
+              (do
+                  Log.server $ "Using store " ++ store appConf
+                  startSystemState' (store appConf) stateProxy)
               (\control -> do
-                  logM "Happstack.Server" NOTICE "Creating checkpoint before exit" 
+                  Log.server $ "Creating checkpoint before exit" 
                   createCheckpoint control
-                  logM "Happstack.Server" NOTICE "Closing transaction system" 
+                  Log.server $ "Closing transaction system" 
                   shutdownSystem control)
               (\control -> do
 
@@ -196,7 +196,7 @@ main = withLogger $ do
                                           -- wait for termination signal
                                           runActionLoop ctx
                                           waitForTermination
-                                          logM "Happstack.Server" NOTICE "Termination request received" 
+                                          Log.server $ "Termination request received" 
 
                   return ())
 
