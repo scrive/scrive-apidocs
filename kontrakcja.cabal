@@ -96,7 +96,8 @@ Executable kontrakcja-server
  Extensions: TemplateHaskell, TypeFamilies, DeriveDataTypeable,
              FlexibleInstances, MultiParamTypeClasses, FlexibleContexts,
              UndecidableInstances, TypeOperators, TypeSynonymInstances,
-             GeneralizedNewtypeDeriving, NamedFieldPuns, PackageImports
+             GeneralizedNewtypeDeriving, NamedFieldPuns, PackageImports,
+             ScopedTypeVariables
 
 Executable kontrakcja-test
  if flag(test)
@@ -139,4 +140,5 @@ Executable kontrakcja-test
  Extensions: TemplateHaskell, TypeFamilies, DeriveDataTypeable,
              FlexibleInstances, MultiParamTypeClasses, FlexibleContexts,
              UndecidableInstances, TypeOperators, TypeSynonymInstances,
-             GeneralizedNewtypeDeriving, NamedFieldPuns, PackageImports
+             GeneralizedNewtypeDeriving, NamedFieldPuns, PackageImports,
+             ScopedTypeVariables
