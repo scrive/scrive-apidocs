@@ -77,7 +77,7 @@ setupLogger = do
     -- Debug Log
     updateGlobalLogger
         "Kontrakcja.Debug"
-        (setLevel NOTICE . setHandlers [debugLog])
+        (setLevel NOTICE . setHandlers [debugLog, stdoutLog])
 
     -- Server Log
     updateGlobalLogger
