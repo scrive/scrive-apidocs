@@ -52,6 +52,7 @@ someTestUserSettings = UserSettings {
                         accounttype = MainAccount
                       , accountplan = Basic
                       , userpaymentmethod = Undefined
+                     , signeddocstorage = Nothing       
                       }
 
 aTestPaymentChange = PaymentChange {  
@@ -167,7 +168,7 @@ anUnsignedDocument = Document {
           , documenttimeouttime = Nothing
           , documentdeleted = False
           , documenthistory = []
-          , documentinvitetext = BS.fromString "some test invite text"
+          , documentinvitetext = BS.empty
           , documenttrustweaverreference = Nothing
           }
 aSignedDocument = Document { 
@@ -185,7 +186,7 @@ aSignedDocument = Document {
           , documenttimeouttime = Nothing
           , documentdeleted = False
           , documenthistory = []
-          , documentinvitetext = BS.fromString "some test invite text"
+          , documentinvitetext = BS.empty
           , documenttrustweaverreference = Nothing
           }
 aCustomMsg = (BS.fromString "blah blah, custom message blah")
