@@ -1142,9 +1142,9 @@ sealDocument ctx@Context{ctxs3action,ctxtwconf}
 
 basename :: String -> String
 basename filename = 
-    case span (\x -> x/='\\' || x/='/') filename of
+    case break (\x -> (x=='\\') || (x=='/')) filename of
       (_,(_:rest)) -> basename rest
-      _ -> fst (span ((/=) '.') filename) -- FIXME: take care of many dots in file name
+      _ -> takeWhile ((/=) '.') filename
 
 handleIssueNewDocument :: Kontra KontraLink
 handleIssueNewDocument = withUserPost $ do
