@@ -43,7 +43,6 @@ import DocState
 import qualified Amazon as AWS
 import Mails.MailsConfig
 import Templates.Templates (readTemplates,emptyTemplates)
-import ActionQueue
 import User
 import qualified TrustWeaver as TW
 
@@ -194,7 +193,6 @@ main = Log.withLogger $ do
                                           initDatabaseEntries
                                           forkIO $ uploadOldFilesToAmazon appConf
                                           -- wait for termination signal
-                                          runActionLoop ctx
                                           waitForTermination
                                           Log.server $ "Termination request received" 
 
