@@ -76,7 +76,7 @@ mailInvitationToSignContent=
                 $footer:noescape()$
 ###        
 mailInvitationToSignDefaultHeader = <p>Hej $personname$, <br/><br/> $creatorname$ har bjudit in dig att underteckna 
-                                       dokumentet Testavtal online via tjänsten SkrivaPå. </p>
+                                       dokumentet $documenttitle$ online via tjänsten SkrivaPå. </p>
 ####
 remindMailSignedTitle=Hej $personname$      
 ###
