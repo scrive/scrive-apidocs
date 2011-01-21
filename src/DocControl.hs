@@ -872,13 +872,17 @@ preprocessPDF content = withSystemTempDirectory "gs" $ \tmppath -> do
                            , std_err = CreatePipe
                            }
   (_, Just outhandle, Just errhandle, gsProcHandle) <- createProcess gsproc
-  errcontent <- BS.hGetContents errhandle
-  outcontent <- BS.hGetContents outhandle
+  errcontent <- BSL.hGetContents errhandle
+  outcontent <- BSL.hGetContents outhandle
                  
   exitcode <- waitForProcess gsProcHandle
 
   result <- case exitcode of
-    ExitFailure _ -> return $ BS.empty
+    ExitFailure _ -> do
+       Log.debug $ "preprocess PDF error code " ++ show exitcode
+       Log.debug $ "stdout: " ++ BSL.toString outcontent
+       Log.debug $ "stderr: " ++ BSL.toString errcontent
+       return content
     ExitSuccess -> BS.readFile outputpath
 
   return result
@@ -1096,6 +1100,9 @@ sealDocument ctx@Context{ctxs3action,ctxtwconf}
   let config = sealSpecFromDocument hostpart document author tmpin tmpout
 
   (code,stdout,stderr) <- readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
+  Log.debug $ "seal exit code " ++ show code
+  Log.debug $ "seal stdout: " ++ BSL.toString stdout
+  Log.debug $ "seal stderr: " ++ BSL.toString stderr
 
   if code == ExitSuccess 
      then do
