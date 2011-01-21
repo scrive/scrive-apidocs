@@ -4,7 +4,7 @@
     GeneralizedNewtypeDeriving, StandaloneDeriving, NamedFieldPuns,
     ScopedTypeVariables #-}
 
-module ActionQueue
+module ActionQueue ()
 where
 import Happstack.Data
 import Happstack.State

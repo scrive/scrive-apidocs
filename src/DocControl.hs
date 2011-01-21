@@ -49,7 +49,6 @@ import qualified Data.Set as Set
 import qualified Network.HTTP as HTTP
 import qualified SealSpec as Seal
 import qualified TrustWeaver as TW
-import ActionQueueState
 import qualified AppLogger as Log
 import System.IO.Temp
 
@@ -895,9 +894,8 @@ handleDocumentUpload docid content1 filename = do
   case result of
     Left err -> return ()
     Right document -> do
-        -- liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxs3action) (documentfiles document)
-                liftIO $ mapM_ (\file -> update $ EnqueueAction (AmazonUpload docid (fileid file))) (documentfiles document)
-                return ()
+        liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxs3action) (documentfiles document)
+        return ()
   return ()
 
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
@@ -1120,12 +1118,11 @@ sealDocument ctx@Context{ctxs3action,ctxtwconf}
        mdocument <- update $ AttachSealedFile docid filename newfilepdf
        case mdocument of
          Right document -> do
-          mapM_ (\File{fileid} -> update $ EnqueueAction (AmazonUpload docid fileid)) (documentsealedfiles document)
+          liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxs3action) (documentsealedfiles document)
           case signeddocstorage (usersettings author) of
            Nothing -> return ()
            Just twsettings -> do
-                        -- forkIO $ uploadDocumentFilesToTrustWeaver ctxtwconf twsettings document
-                        update $ EnqueueAction (TrustWeaverUpload (BS.toString $ storagetwname twsettings) docid)
+                        forkIO $ uploadDocumentFilesToTrustWeaver ctxtwconf (BS.toString $ storagetwname twsettings) (documentid document)
                         return ()
           return $ Right document
          Left msg -> error msg
