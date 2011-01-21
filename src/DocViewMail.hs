@@ -195,7 +195,7 @@ mailDocumentErrorContent templates ctx document =
 
 mailInvitationToSignContent ::  KontrakcjaTemplates -> Bool -> Context  -> Document -> User -> (Maybe SignatoryLink) -> IO String        
 mailInvitationToSignContent templates forMail (Context {ctxhostpart}) 
-                  document@Document{documenttimeouttime, documentinvitetext} 
+                  document@Document{documenttimeouttime, documentinvitetext,documenttitle} 
                   author
                   signaturelink = 
     let link = case (signaturelink) of
@@ -227,7 +227,9 @@ mailInvitationToSignContent templates forMail (Context {ctxhostpart})
                           replaceOnEdit' templates this with            
         header   =  if (BS.null documentinvitetext) 
                      then renderTemplate templates "mailInvitationToSignDefaultHeader" [("creatorname",creatorname)
-                                                                                       ,("personname",personname1)]  
+                                                                                       ,("personname",personname1)
+                                                                                       ,("documenttitle",BS.toString documenttitle) 
+                                                                                       ]  
                      else return $ BS.toString documentinvitetext      
            
    in  do
@@ -242,7 +244,7 @@ mailInvitationToSignContent templates forMail (Context {ctxhostpart})
                                                                 ("timetosigninfo",timetosigninfo'),
                                                                 ("partnersinfo",partnersinfo'),  
                                                                 ("whohadsignedinfo", whohadsignedinfo'),
-                                                                ("documenttitle",BS.toString $ documenttitle document),
+                                                                ("documenttitle",BS.toString documenttitle),
                                                                 ("link",link)]    
                                                                 
 mailInvitationToSign::  KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> User -> IO Mail
