@@ -27,6 +27,7 @@ import System.Process
 import Control.Monad
 import Text.XML.HaXml.XmlContent.Parser 
 import Text.XML.HaXml.XmlContent
+import SOAP.SOAP
 
 data TrustWeaverConf = TrustWeaverConf
     { signcert          :: FilePath
@@ -35,36 +36,6 @@ data TrustWeaverConf = TrustWeaverConf
     , admincertpwd      :: String
     }
                        deriving (Eq,Ord,Show,Read)
-
-
-data SOAP a = SOAP a
-            | SOAPFault String String String
-            deriving (Eq,Ord,Show,Read)
-
-instance HTypeable (SOAP a) where
-    toHType x = Defined "soap" [] []
-instance (XmlContent a) => XmlContent (SOAP a) where
-    toContents (SOAP a) =
-        [CElem (Elem "Envelope" [mkAttr "xmlns" "http://schemas.xmlsoap.org/soap/envelope/"] 
-                         [CElem (Elem "Body" [] 
-                         (toContents a)) ()]) ()]
-    toContents _ = error "Please do not serialize SOAPFault"
-    parseContents = do
-        { inElementNS "Envelope" $ do
-            { optional $ elementNS "Header"
-            ; inElementNS "Body" $ choice SOAP 
-                                             (inElementNS "Fault" $ do
-                                                { faultcode <- inElementNS "faultcode" text
-                                                ; faultstring <- inElementNS "faultstring" text
-                                                -- ; faultactor <- optional $ inElementNS "faultactor" text
-                                                ; detail <- optional $ inElementNS "detail" (optional text)
-                                                -- ; return (SOAPFault faultcode faultstring (maybe "" id faultactor))
-                                                ; return (SOAPFault faultcode faultstring "")
-                                                }
-                                              )
-           }
-        } `adjustErr` ("in <Envelope/Body>, "++)
-
 
 data SignRequest = SignRequest BS.ByteString
             deriving (Eq,Ord,Show,Read)
@@ -304,17 +275,6 @@ instance XmlContent (GetInvoiceResponse) where
         } `adjustErr` ("in <GetInvoiceResponse>, "++)
 
 
-skipNamespacePrefix fqname tomatch = 
-    case break (==':') fqname of 
-      (name,"") -> name == tomatch
-      (_,':':name) -> name == tomatch
-
-elementNS name = elementWith skipNamespacePrefix [name]
- 
-inElementNS name action = do
-  e <- elementNS name
-  interior e action
-
 signDocument :: TrustWeaverConf -> BS.ByteString -> IO (Either String BS.ByteString)
 signDocument TrustWeaverConf{signcert,signcertpwd} pdfdata = do
 
@@ -382,64 +342,3 @@ getInvoice TrustWeaverConf{admincert,admincertpwd} reference = do
   let extract (GetInvoiceResponse pdfdata) = pdfdata
   return (fmap extract result)
   
-
-
-makeSoapCall :: (XmlContent request, XmlContent result) 
-                => String
-             -> String
-             -> String
-             -> String
-             -> request
-             -> IO (Either String result)
-makeSoapCall url action cert certpwd request = do
-  let input = fpsShowXml False (SOAP request)
-  -- BSL.appendFile "soap.xml" input
-
-  let args = [ "-X", "POST", 
-               "-k", "--silent", "--show-error",
-               "--cert", cert ++ ":" ++ certpwd,
-               "--cacert", cert,
-               "--data-binary", "@-",
-               "-H", "Content-Type: text/xml; charset=UTF-8",
-               "-H", "Expect: 100-continue",
-               "-H", "SOAPAction: " ++ action,
-               url
-             ]
-
-  (code,stdout,stderr) <- readCurl args input
-  -- BSL.appendFile "soap.xml" stdout
-
-  {-
-   stdout here might be a multipart stream
-   lets do it the painful way
-
-   --uuid:1616144b-0f50-40a5-9587-92b5b989e330+id=48
-   Content-ID: <http://tempuri.org/0>
-   Content-Transfer-Encoding: 8bit
-   Content-Type: application/xop+xml;charset=utf-8;type="text/xml"
-
-   <s:Envelope ...>,,,</s:Envelope>
-   --uuid:1616144b-0f50-40a5-9587-92b5b989e330+id=48--
-
-   so:
-   1. See if it starts with --
-   2. Cut off to first \n and remember
-   3. Cut-off to first \n\n
-   4. Cut up to the remembered part
-   5. Use middle as XML to parse
-   -}
-  let (boundary,rest) = BS.breakSubstring (BS.fromString "\r\n") (BS.concat (BSL.toChunks (BSL.drop 2 stdout)))
-      (header,rest2) = BS.breakSubstring (BS.fromString "\r\n\r\n") rest
-      (xml1,_) = BS.breakSubstring boundary rest2
-  
-  xml <- if BSL.fromString "\r\n--" `BSL.isPrefixOf` stdout
-            then do
-              return (BSL.fromChunks [xml1])
-            else return stdout
-
-  if (code /= ExitSuccess)
-       then return (Left $ "Cannot execute ./curl for TrustWeaver: " ++ show args ++ BSL.toString stderr)
-     else case readXml (BSL.toString xml) of
-            Right (SOAP result) -> return (Right result)
-            Right (SOAPFault code string actor) -> return (Left (code ++":" ++ string ++":" ++ actor))
-            Left errmsg -> return (Left (errmsg ++ ": " ++ BSL.toString stdout))

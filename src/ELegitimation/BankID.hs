@@ -19,7 +19,7 @@ import Misc
 import Session
 import "mtl" Control.Monad.State
 import DocControl
-import TrustWeaver
+import SOAP.SOAP
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS hiding (length, drop, break)
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length, drop)
@@ -463,37 +463,3 @@ getAfter pre s
     | isPrefixOf pre s = drop (length pre) s
     | otherwise        = getAfter pre (tail s)    
                               
-
-makeSoapCallINSECURE :: (XmlContent request, XmlContent response) =>
-                        String -> String -> request -> IO (Either String response)
-makeSoapCallINSECURE url action request = do
-  let input = fpsShowXml False (SOAP request)
-  -- BSL.appendFile "soap.xml" input
-  liftIO $ print $ BSL.toString input
-  let args = [               "-k", "--verbose", "--show-error",
-               -- "--cert", cert ++ ":" ++ certpwd,
-               -- "--cacert", cert,
-               "--data-binary", "@-",
-               "-H", "Content-Type: text/xml; charset=UTF-8",
-               "-H", "Expect: 100-continue",
-               "-H", "SOAPAction: " ++ action,
-               url
-             ]
-
-  (code,stdout,stderr) <- readProcessWithExitCode' "curl" args input
-  liftIO $ print $ BSL.toString stdout
-  let (boundary,rest) = BS.breakSubstring (BS.fromString "\r\n") (BS.concat (BSL.toChunks (BSL.drop 2 stdout)))
-      (header,rest2) = BS.breakSubstring (BS.fromString "\r\n\r\n") rest
-      (xml1,_) = BS.breakSubstring boundary rest2
-  
-  xml <- if BSL.fromString "\r\n--" `BSL.isPrefixOf` stdout
-            then do
-              return (BSL.fromChunks [xml1])
-            else return stdout
-
-  if (code /= ExitSuccess)
-       then return (Left $ "Cannot execute ./curl for BankID: " ++ show args ++ BSL.toString stderr)
-     else case readXml (BSL.toString xml) of
-            Right (SOAP result) -> return (Right result)
-            Right (SOAPFault code string actor) -> return (Left (code ++":" ++ string ++":" ++ actor))
-            Left errmsg -> return (Left (errmsg ++ ": " ++ BSL.toString stdout))
