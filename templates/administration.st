@@ -32,56 +32,57 @@ adminsmain=
 
 ###
 adminsmanageall = 
-     $backtoadminmainlink()$ 
-    <div><strong>SkrivaPa admin only page</strong></div> <BR/>
+    $backtoadminmainlink()$ 
+    <div><strong>SkrivaPa admin only page</strong></div>
+    <BR>
     <div>
-     <h3>Database files</h3>
-     <a href="/adminonly/db/">Show list of database files</a><br/>
-     <form method="post" action="/adminonly/cleanup">
-     Database incrementally stores backups of itself. Old copies aren't useful in normal situations,
-     just in case of failure. It is good to remove old files from time to time.<br/>
-     <input type="submit" value="Cleanup"/><br/>
-     </form>
-     <h3>Users</h3>
-      You can see <a href="/adminonly/alluserstable">big table of all users</a>.<br/>
-      Here is a CSV version of this table: <a href="/adminonly/skrivapausers.csv">skrivapausers.csv</a>.<br/>
+      <h3>Database files</h3>
+      <a href="/adminonly/db/">Show list of database files</a><br>
+      <form method="post" action="/adminonly/cleanup">
+        Database incrementally stores backups of itself. Old copies aren't useful in normal situations,
+        just in case of failure. It is good to remove old files from time to time.<br>
+        <input type="submit" value="Cleanup"><br>
+      </form>
+      <h3>Users</h3>
+      You can see <a href="/adminonly/alluserstable">big table of all users</a>.<br>
+      Here is a CSV version of this table: <a href="/adminonly/skrivapausers.csv">skrivapausers.csv</a>.
       <div>
-       $usersfilter(link="/adminonly/advuseradmin")$
+        $usersfilter(link="/adminonly/advuseradmin")$
       </div>
       <div>
-       $userspaging(link="/adminonly/advuseradmin")$ 
-       <table><tbody>
-       $users:{user|
-          <tr>
-          <td> 
-           $user.usvFullname$ 
-          </td>
-          <td>
-          &lt;$user.usvEmail$&gt; 
-          </td>
-          <td>
-          <form method="post" action="/adminonly/become"  style="display:inline">
-          <input type="hidden" name="user" value="$user.usvId$">
-          <input type="submit" value="Monitor user"/>
-          </form> 
-          </td>
-          <td>
-          <form method="post" action="/adminonly/takeoverdocuments"  style="display:inline">
-          <input type="hidden" name="user" value="$user.usvId$">
-          <input type="submit" value="Take over"/>
-          </form> 
-          </td>
-          <td>
-          <form method="post" action="/adminonly/deleteaccount" >
-          <input type="hidden" name="user" value="$user.usvId$">
-          <input type="submit" value="Annihilate account"/>
-          </td>
-          </form> 
-          </tr>
-       }$
-      </tbody></table>
+        $userspaging(link="/adminonly/advuseradmin")$ 
+        <table><tbody>
+            $users:{user|
+            <tr>
+              <td> 
+                $user.usvFullname$ 
+              </td>
+              <td>
+                &lt;$user.usvEmail$&gt; 
+              </td>
+              <td>
+                <form method="post" action="/adminonly/become"  style="display:inline">
+                  <input type="hidden" name="user" value="$user.usvId$">
+                  <input type="submit" value="Monitor user">
+                </form> 
+              </td>
+              <td>
+                <form method="post" action="/adminonly/takeoverdocuments"  style="display:inline">
+                  <input type="hidden" name="user" value="$user.usvId$">
+                  <input type="submit" value="Take over"/>
+                </form> 
+              </td>
+              <td>
+                <form method="post" action="/adminonly/deleteaccount" >
+                  <input type="hidden" name="user" value="$user.usvId$">
+                  <input type="submit" value="Annihilate account"/>
+              </td>
+              </form> 
+            </tr>
+            }$
+        </tbody></table>
       </div>
-   </div>
+    </div>
 ###
 usersfilter=<form action="$link$" method="GET">
 <div style="border:1px solid #DDDDDD;padding:5px;margin-top:5px">
