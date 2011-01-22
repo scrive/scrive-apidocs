@@ -292,7 +292,7 @@ signDocument documentid -- ^ The DocumentID of the document to sign
   fieldvalues <- getAndConcat "fieldvalue"
   let fields = zip fieldnames fieldvalues
 
-  newdocument <- update $ SignDocument documentid signatorylinkid1 ctxtime ctxipnumber fields
+  newdocument <- update $ SignDocument documentid signatorylinkid1 ctxtime ctxipnumber Nothing fields
   case newdocument of
     Left message -> 
         do
@@ -538,7 +538,7 @@ handleIssueShowPost docid = withUserPost $ do
   -- something has to change here
   case documentstatus document of
        Preparation -> do
-                       doc2 <- updateDocument ctx document
+                       doc2 <- updateDocument ctx document Nothing
                        if documentstatus doc2 == Pending
                         -- It went to pending, so it's been sent to signatories
                         then return $ LinkSignInvite docid
@@ -614,8 +614,8 @@ getAndConcat field = do
 {- |
    do the work necessary for saving a document being authored
  -}
-updateDocument :: Context -> Document -> Kontra Document  
-updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} = do
+updateDocument :: Context -> Document -> Maybe SignatureInfo -> Kontra Document  
+updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} msiginfo = do
   -- each signatory has these predefined fields
   signatoriesnames <- getAndConcat "signatoryname"
   signatoriescompanies <- getAndConcat "signatorycompany"
@@ -713,7 +713,7 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} = 
 
   msum 
      [ do getDataFnM (look "final" `mplus` look "sign")
-          mdocument <- update $ AuthorSignDocument documentid ctxtime ctxipnumber author
+          mdocument <- update $ AuthorSignDocument documentid ctxtime ctxipnumber author msiginfo
           case mdocument of
             Left msg -> return doc2
             Right newdocument -> do
