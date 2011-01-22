@@ -259,44 +259,59 @@ invitationMailUndeliveredContent=
     </span>
 
 ####
-mailDocumentErrorTitle=SkrivaPå could no handle $documenttitle$
-###
-mailDocumentErrorContent= 
-   <p>Hej,</p>
-   <p>We are sorry, but we could not handle document <strong>$documenttitle$</strong>.
-      There are probably very good reasons for this, but they might be hard to explain.</p>
-   <p>Our technicians were notified about this issue. We will (probably) contact you when fix is available.</p>
-   <p>Processen har därmed avbrutits.</p>
-   <p>We are sorry for the inconvenience
-   $poweredBySkrivaPaPara()$
+mailDocumentErrorTitle=
+    SkrivaPå could no handle $documenttitle$
 
 ###
-passwordChangeLinkMailTitle=Nytt lösenord
+mailDocumentErrorContent= 
+    <p>Hej,</p>
+    <p>We are sorry, but we could not handle document <strong>$documenttitle$</strong>.
+      There are probably very good reasons for this, but they might be hard to explain.</p>
+    <p>Our technicians were notified about this issue. We will (probably) contact you when fix is available.</p>
+    <p>Processen har därmed avbrutits.</p>
+    <p>We are sorry for the inconvenience</p>
+    $poweredBySkrivaPaPara()$
+
 ###
-passwordChangeLinkMailContent=   <span>
+passwordChangeLinkMailTitle=
+    Nytt lösenord
+
+###
+passwordChangeLinkMailContent=
+    <span>
       <p>Hej $personname$,</p>
       <p>Du har begärt att ändra ditt lösenord på SkrivaPå. Vänligen klicka på följande länk för att gå vidare:</p>
       <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a>
-       $poweredBySkrivaPaPara()$
-     </span>
+      $poweredBySkrivaPaPara()$
+    </span>
+
+
 ###
 ###
 ####UTILS
-timetosigninfo=  <span>Undertecknas senast: <strong>$time$</strong>.</span>
+timetosigninfo=
+    <span>Undertecknas senast: <strong>$time$</strong>.</span>
+
 ###
-updateinglistwithauthor= <span>
-                           <span class="partylistupdate"></span>
-                           <span class="hidden authorname"> $creatorname$ </span>
-                          </span> 
+updateinglistwithauthor=
+    <span>
+      <span class="partylistupdate"></span>
+      <span class="hidden authorname"> $creatorname$ </span>
+    </span> 
+
 ####
-noonehadsignedtext=Ingen har undertecknat dokumentet ännu
+noonehadsignedtext=
+    Ingen har undertecknat dokumentet ännu
+
 ####
-whohadsignedinfoformail =  $if(signedlist)$
-                            Har undertecknat: $signedlist:noescape()$
-                           $else$
-                            $noonehadsignedtext()$
-                           $endif$ 
+whohadsignedinfoformail=
+    $if(signedlist)$
+    Har undertecknat: $signedlist:noescape()$
+    $else$
+    $noonehadsignedtext()$
+    $endif$ 
+
 ####
-####
-whohadsignedinfoforpreview = <span class="authornamewhennotsecretary" alt="$noonehadsignedtext()$" okprefix="Har undertecknat:"></span>
+whohadsignedinfoforpreview=
+    <span class="authornamewhennotsecretary" alt="$noonehadsignedtext()$" okprefix="Har undertecknat:"></span>
 ####
