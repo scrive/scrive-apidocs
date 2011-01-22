@@ -237,23 +237,26 @@ mailNewAccountCreatedByAdminContent=
     </span>
 
 ####
-invitationMailUndeliveredTitle =Felaktig e-post
+invitationMailUndeliveredTitle=
+    Felaktig e-post
+
 ###
-invitationMailUndeliveredContent = 
-	<span>
-	<p>Hej $authorname$,</p>
-	<p>Adressen $email$ existerar inte och därför kunde vi inte leverera din inbjudan att underteckna via e-post. 		
+invitationMailUndeliveredContent= 
+    <span>
+      <p>Hej $authorname$,</p>
+      <p>Adressen $email$ existerar inte och därför kunde vi inte leverera din inbjudan att underteckna via e-post. 		
 	Processen har därmed avbrutits. Gör så här om du vill börja om:</p>
 
-	<p>1. Kontrollera vilken som är mottagarens korrekta adress<br/>  
-	   2. Klicka på dokumentet i ditt arkiv eller på följande länk<br/>  
-	  <a href="$ctxhostpart$$unsigneddoclink$">$ctxhostpart$$unsigneddoclink$</a> </p>
-
-	<p>3. Klicka "Starta om"<br/>
-	   4. Skriv in rätt e-postadress och skicka igen</p>
+      <p>1. Kontrollera vilken som är mottagarens korrekta adress<br>  
+	2. Klicka på dokumentet i ditt arkiv eller på följande länk<br>  
+	<a href="$ctxhostpart$$unsigneddoclink$">$ctxhostpart$$unsigneddoclink$</a><br>
+        <br>
+        3. Klicka "Starta om"<br>
+	4. Skriv in rätt e-postadress och skicka igen
+      </p>
        
-	$poweredBySkrivaPaPara()$
-     </span>
+      $poweredBySkrivaPaPara()$
+    </span>
 
 ####
 mailDocumentErrorTitle=SkrivaPå could no handle $documenttitle$
