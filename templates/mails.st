@@ -188,25 +188,28 @@ passwordChangeMailContent=
     </span>
 
 ####
-inviteSubaccountMailTitle=Inbjudan från $supervisorname$ till underkonto
+inviteSubaccountMailTitle=
+    Inbjudan från $supervisorname$ till underkonto
+
 ####
 inviteSubaccountMailContent=
-       <span>
-       <p>Hej <strong>$personname$</strong>,</p>
+    <span>
+      <p>Hej <strong>$personname$</strong>,</p>
  
-       <p><strong>$supervisorname$</strong> har bjudit in dig att öppna ett konto på SkrivaPå genom vilket du kan
+      <p><strong>$supervisorname$</strong> har bjudit in dig att öppna ett konto på SkrivaPå genom vilket du kan
           skriva avtal för <strong>$companyname$</strong>. Observera att detta konto inte är
-          avsett för privat bruk.</p>     
-       <p>Användarnamn: <span style="color: orange; text-weight: bold">$email$</span><br/> 
-       </p>
-       <p>Vänligen klicka på länken för att aktivera kontot:<br/>  
+        avsett för privat bruk.</p>     
+      <p>Användarnamn: <span style="color: orange; text-weight: bold">$email$</span><br/> 
+      </p>
+      <p>Vänligen klicka på länken för att aktivera kontot:<br/>  
 	<a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a>
       </p>
-       <p>
-       <a href="$ctxhostpart$">$ctxhostpart$</a>
-       </p>
-       $poweredBySkrivaPaPara()$
-       </span>
+      <p>
+        <a href="$ctxhostpart$">$ctxhostpart$</a>
+      </p>
+      $poweredBySkrivaPaPara()$
+    </span>
+
 ####
 mailNewAccountCreatedByAdminTitle=Nytt konto
 ###
