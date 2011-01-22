@@ -267,7 +267,7 @@ pageDocumentForSignContent=
                   <form method="post" name="form" action=action id="dialog-confirm-sign-eleg" class="overlay">     
                      <script src="/js/bankid.js"></script>
                      <a class="close"> </a>                  
-                     <h2>Underteckna with BankID</h2>  
+                     <h2>Underteckna with E-Legitimation</h2>  
                      <p>Är du säker att du vill underteckna dokumentet <strong><% documenttitle document %></strong>?</p>
                      <p>När <% partyUnsignedMeAndListString magichash document %> undertecknat blir 
                       avtalet <strong>juridiskt bindande</strong> och
@@ -357,8 +357,17 @@ pageDocumentForAuthorContent=
                 $endif$   
 
               </span>
+	      <div>
+	        <input type="combobox" name="allowedsignaturetypes" id="allowedbox">
+		  <option value="Email+ELeg">Email and E-Legitimation (extra charge)</option>
+		  <option value="Email">Email only</option>
+		  <option value="ELeg">E-Legitimation (extra charge)</option>
+		</input>
+              </div>
+
               <div style="height: 60px;">
-              <input class="bigbutton cross-button" type="submit" name="final" value="Underteckna" id="signinvite" rel="#dialog-confirm-signinvite"> <br>
+              <input class="bigbutton cross-button" type="submit" name="final" value="Underteckna" id="signinvite" rel="#dialog-confirm-signinvite"> <br />
+	      <input class="bigbutton cross-button" type="submit" name="signbankid" value="Underteckna with E-Leg" id="signbankid" rel="#dialog-confirm-sign-eleg"> <br />
               <input class="button" type="submit" name="save" value="Spara som utkast">
               </div>
               </form>
@@ -384,6 +393,22 @@ pageDocumentForAuthorContent=
                        <button class="close button" type="button"> Avbryt </button>
                        <button class="submiter button" type="button"> Underteckna </button>
                        </div>
+                 </form>
+		 <form method="post" name="form" action=action id="dialog-confirm-sign-eleg" class="overlay">     
+                     <script src="/js/bankid.js"></script>
+                     <a class="close"> </a>                  
+                     <h2>Underteckna with E-Legitimation</h2>  
+                     <p>CHANGE!!!Är du säker att du vill underteckna dokumentet <strong><% documenttitle document %></strong>?</p>
+                     <p>När <% partyUnsignedMeAndListString magichash document %> undertecknat blir 
+                      avtalet <strong>juridiskt bindande</strong> och
+                      det färdigställda avtalet skickas till din e-post.</p>
+                      <div class="buttonbox">
+                      <input type="hidden" name="bankid" value="automatic">
+                      <input type="hidden" name="signature" value="" id="signature">
+                      <input type="hidden" name="transactionid" value="" id="transactionid">
+                      <button class="close button" type="button"> Avbryt </button>
+                      <button class="bankid button" type="button"> Underteckna with BankID</button>
+                      </div>
                  </form>  
                  <form method="post" name="form" action="" class="overlay" id="edit-invite-text-dialog" >  
                    <a class="close"> </a>
