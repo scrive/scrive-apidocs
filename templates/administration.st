@@ -439,6 +439,7 @@ pageStats=
       <pre>$sysinfo$</pre>
     </div>
 ####
-backtoadminmainlink=<a href="$adminlink$">Go back to main admin page</a> 
-<BR/><BR/>
+backtoadminmainlink=
+    <a href="$adminlink$">Go back to main admin page</a> 
+    <BR><BR>
 ####
