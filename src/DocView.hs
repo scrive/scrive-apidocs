@@ -656,6 +656,7 @@ pageDocumentForSign action document ctx  invitedlink wassigned author =
        authorname = signatoryname documentauthordetails
        allbutinvited = {- filter (/= invitedlink) -} (documentsignatorylinks document)
        documentauthordetails = signatoryDetailsFromUser author
+       allowedtypes = documentallowedidtypes document
     in
     do 
      helpers <- renderTemplate (ctxtemplates ctx) "pageDocumentForSignHelpers" [("documentid",show (documentid document)),("localscripts",localscripts)]   
@@ -664,17 +665,20 @@ pageDocumentForSign action document ctx  invitedlink wassigned author =
      messageoption <- caseOf [ 
                      (wassigned,                           renderTemplate (ctxtemplates ctx) "pageDocumentForSignSigned" []),  
                      (documentstatus document == Timedout, renderTemplate (ctxtemplates ctx) "pageDocumentForSignTimedout" []),
-                     (documentstatus document == Pending,  renderTemplate (ctxtemplates ctx) "pageDocumentForSignButtons" [])
+                     (documentstatus document == Pending,  renderTemplateComplex (ctxtemplates ctx) "pageDocumentForSignButtons" $ 
+                      (setAttribute "emailallowed" $  isJust $ find (== EmailIdentification) allowedtypes) .
+                      (setAttribute "elegallowed" $ isJust $ find (== ELegitimationIdentification) allowedtypes))
                      ]  $ return ""   
                      
      partyUnsigned <- renderListTemplate (ctxtemplates ctx) $  map (BS.toString . personname') $ partyUnsignedMeAndList magichash document
-     content <- renderTemplate (ctxtemplates ctx) "pageDocumentForSignContent" [("signatories",signatories),
-                                                                                 ("messageoption",messageoption),
-                                                                                 ("documenttitle", BS.toString $ documenttitle document),
-                                                                                 ("authorname", BS.toString $ authorname),
-                                                                                 ("rejectMessage", rejectMessage),
-                                                                                 ("partyUnsigned", partyUnsigned),
-                                                                                 ("action", show action)]                                                                                   
+     content <- renderTemplateComplex (ctxtemplates ctx) "pageDocumentForSignContent" $
+                 (setAttribute "signatories" signatories) .
+                 (setAttribute "messageoption" messageoption) .
+                 (setAttribute "documenttitle" $ BS.toString $ documenttitle document) .
+                 (setAttribute "authorname" $ BS.toString $ authorname) .
+                 (setAttribute "rejectMessage" rejectMessage) .
+                 (setAttribute "partyUnsigned" partyUnsigned) .
+                 (setAttribute "action" $ show action)
      showDocumentPageHelper (ctxtemplates ctx) document helpers  (documenttitle document) content
 
 --We keep this javascript code generation for now
