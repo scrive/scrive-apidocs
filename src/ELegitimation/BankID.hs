@@ -43,6 +43,7 @@ handleSign docid signid magic = do
 
   nonceresponse <- generateChallenge
 
+  -- should generate this somehow
   let tbs = "This is what you need to sign."
   case nonceresponse of
     Left (ImplStatus _a _b code msg) -> return $ toResponse $ toJSON [("status", JInt code)
