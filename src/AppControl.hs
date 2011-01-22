@@ -95,6 +95,9 @@ data AppGlobals
    OR
    dir "segment1" $ dir "segment2" $ .. $ dir "segmentn" $ hpostx $ handler
 
+   param "name" is also allowed, which will guard based on the
+   existence of a post/get param
+
    No other logic should be in here and no similar logic should be in the handler.
    That is, all routing logic should be in this table to ensure that we can find
    the function for any given path and method.
@@ -108,7 +111,12 @@ handleRoutes = msum [
      , dir "s" $ param "sign" $ hpost3 $ DocControl.signDocument
      , dir "s" $ param "cancel" $ hpost3 $ DocControl.rejectDocument
      
-     --This all needs to be done by author. Why we dont check it here? MR
+     --Q: This all needs to be done by author. Why we dont check it
+     --here? MR
+
+     --A: Because this table only contains routing logic. The logic of
+     --what it does/access control is left to the handler. EN
+
      , dir "d" $ hget0  $ DocControl.handleIssueGet
      , dir "d" $ hget1  $ DocControl.handleIssueShowGet
      , dir "d" $ hget2  $ DocControl.handleIssueShowTitleGet
