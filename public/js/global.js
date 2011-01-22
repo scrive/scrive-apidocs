@@ -416,6 +416,7 @@ $(document).ready( function () {
         
         });
 
+    if($("#allowedbox").size() > 0) {
     if($("#allowedbox").val().indexOf("Email")>=0) {
 	$("#signinvite").show();
     } else {
@@ -426,7 +427,7 @@ $(document).ready( function () {
 	$("#signbankid").show();
     } else {
 	$("#signbankid").hide();
-    }
+    } }
 
     $("#allowedbox").change(function(){
 	    if($("#allowedbox").val().indexOf("Email")>=0) {
