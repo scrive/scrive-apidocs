@@ -1,47 +1,64 @@
 ######
-mailCancelDocumentByAuthorTitle=Återkallelsenotis: $documenttitle$
+mailCancelDocumentByAuthorTitle=
+    Återkallelsenotis: $documenttitle$
+
 ####
-mailCancelDocumentByAuthorStandardHeader=<p>Hej </p>
+mailCancelDocumentByAuthorStandardHeader=
+    <p>Hej, </p>
+
 ######
 mailCancelDocumentByAuthorContent=    
-        $header:noescape()$
-        <p>
-                 $creatorname$ har valt att återkalla sin inbjudan att underteckna dokument $documenttitle$.
-                 Därmed är avtalsprocessen avbruten och du kan inte längre underteckna dokumentet.    
-        </p>
-        $footer:noescape()$
-#####
-mailDocumentAwaitingForAuthorTitle=Bekräftelse: $documenttitle$ 
-######
-mailDocumentAwaitingForAuthorContent=  <span>
-             <p>Hej <strong>$authorname$</strong>,</p>
-             <p>Dokumentet <strong>$documenttitle$</strong> has been signed by all signatories. 
-                There were fields for the signatories to fill out. The contract is being held for your final review.  
-                Please follow the link below to read and confirm the information for each signatory.</p>
-             <a href="$documentlink$">$documenttitle$</a>
-             $poweredBySkrivaPaPara()$
-        </span> 
+    $header:noescape()$
+    <p>
+      $creatorname$ har valt att återkalla sin inbjudan att underteckna dokument $documenttitle$.
+      Därmed är avtalsprocessen avbruten och du kan inte längre underteckna dokumentet.    
+    </p>
+    $footer:noescape()$
 
 #####
-mailDocumentClosedForAuthorTitle=Bekräftelse: $documenttitle$ 
+mailDocumentAwaitingForAuthorTitle=
+    Bekräftelse: $documenttitle$ 
+
+######
+mailDocumentAwaitingForAuthorContent=
+    <span>
+      <p>Hej <strong>$authorname$</strong>,</p>
+      <p>Dokumentet <strong>$documenttitle$</strong> has been signed by all signatories. 
+        There were fields for the signatories to fill out. The contract is being held for your final review.  
+        Please follow the link below to read and confirm the information for each signatory.
+      </p>
+      <a href="$documentlink$">$documenttitle$</a>
+      $poweredBySkrivaPaPara()$
+    </span> 
+
 #####
-mailDocumentClosedForAuthorContent=    <span>
-          <p>Hej <strong>$authorname$</strong>,</p>
-             <p>Dokumentet <strong>$documenttitle$</strong> har undertecknats 
-                av $partylist:noescape()$. Avtalet är nu bindande.</p> 
-             <p>Det färdigställda dokumentet bifogas med detta mail.</p> 
-             $poweredBySkrivaPaPara()$
-        </span> 
+mailDocumentClosedForAuthorTitle=
+    Bekräftelse: $documenttitle$ 
+
 #####
-mailDocumentClosedForSignatoriesTitle=Bekräftelse: $documenttitle$    
+mailDocumentClosedForAuthorContent=
+    <span>
+      <p>Hej <strong>$authorname$</strong>,</p>
+      <p>Dokumentet <strong>$documenttitle$</strong> har undertecknats 
+        av $partylist:noescape()$. Avtalet är nu bindande.</p> 
+      <p>Det färdigställda dokumentet bifogas med detta mail.</p> 
+      $poweredBySkrivaPaPara()$
+    </span> 
+
 #####
-mailDocumentClosedForSignatoriesContent=     <span>
-           <p>Hej <strong>$personname$</strong>,</p>
-           <p>Dokumentet <strong>$documenttitle$</strong> har undertecknats 
-             av $partylist:noescape()$. Avtalet är nu bindande.</p> 
-           <p>Det färdigställda dokumentet bifogas med detta mail.</p> 
-            $poweredBySkrivaPaPara()$
-         </span>
+mailDocumentClosedForSignatoriesTitle=
+    Bekräftelse: $documenttitle$    
+
+#####
+mailDocumentClosedForSignatoriesContent=
+    <span>
+      <p>Hej <strong>$personname$</strong>,</p>
+      <p>Dokumentet <strong>$documenttitle$</strong> har undertecknats 
+        av $partylist:noescape()$. Avtalet är nu bindande.</p> 
+      <p>Det färdigställda dokumentet bifogas med detta mail.</p> 
+      $poweredBySkrivaPaPara()$
+    </span>
+
 ####
 mailRejectMailTitle=Avvisat: $documenttitle$
 ####
