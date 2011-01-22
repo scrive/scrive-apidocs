@@ -415,6 +415,32 @@ $(document).ready( function () {
             replacement.show();
         
         });
+
+    if($("#allowedbox").val().indexOf("Email")>=0) {
+	$("#signinvite").show();
+    } else {
+	$("#signinvite").hide();
+    }
+
+    if($("#allowedbox").val().indexOf("ELeg")>=0) {
+	$("#signbankid").show();
+    } else {
+	$("#signbankid").hide();
+    }
+
+    $("#allowedbox").change(function(){
+	    if($("#allowedbox").val().indexOf("Email")>=0) {
+		$("#signinvite").show();
+	    } else {
+		$("#signinvite").hide();
+	    }
+	    
+	    if($("#allowedbox").val().indexOf("ELeg")>=0) {
+		$("#signbankid").show();
+	    } else {
+		$("#signbankid").hide();
+	    }
+	});
     
 	if($("#authorroledropdown option:selected").val() == "signatory") {
 		    $("#signinvite").val("Underteckna");

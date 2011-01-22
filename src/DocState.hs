@@ -1382,8 +1382,9 @@ updateDocument :: MinutesTime
                -> Maybe Int
                -> BS.ByteString
                -> User
+               -> [IdentificationType]
                -> Update Documents Document
-updateDocument time documentid signatories daystosign invitetext author = do
+updateDocument time documentid signatories daystosign invitetext author idtypes = do
   documents <- ask
   let Just document = getOne (documents @= documentid)
       authoremail = unEmail $ useremail $ userinfo author
@@ -1392,6 +1393,7 @@ updateDocument time documentid signatories daystosign invitetext author = do
                       , documentdaystosign = daystosign 
                       , documentmtime = time
                       , documentinvitetext = invitetext
+                      , documentallowedidtypes = idtypes
                       }
   if documentstatus document == Preparation
      then do

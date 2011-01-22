@@ -46,6 +46,7 @@ import Mails.MailsUtil
 import UserView (prettyName,UserSmallView(..))
 import Data.Typeable
 import Data.Data
+import Data.List (find)
 
 landpageSignInviteView ::KontrakcjaTemplates -> Document ->  IO String
 landpageSignInviteView templates  document =
@@ -470,6 +471,7 @@ pageDocumentForAuthor ctx
                               , documentstatus
                               , documentdaystosign
                               , documentinvitetext
+                              , documentallowedidtypes
                               } 
              author =
    let 
@@ -515,7 +517,10 @@ pageDocumentForAuthor ctx
                                                               (setAttribute "canberestarted" $ documentstatus `elem` [Canceled , Timedout , Rejected]) . 
                                                               (setAttribute "restartForm" $ restartForm) .
                                                               (setAttribute "cancelMailContent" $ cancelMailContent)   .
-                                                              (setAttribute "linkcancel" $ show $ LinkCancel document)               
+                                                              (setAttribute "linkcancel" $ show $ LinkCancel document) .
+                                                              (setAttribute "emailelegitimation" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)) .
+                                                              (setAttribute "emailonly" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isNothing $ find (== ELegitimationIdentification) documentallowedidtypes)) .
+                                                              (setAttribute "elegitimationonly" $ (isNothing $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes))
      showDocumentPageHelper (ctxtemplates ctx) document helpers (documenttitle)  content
    
 

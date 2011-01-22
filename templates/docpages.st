@@ -358,11 +358,11 @@ pageDocumentForAuthorContent=
 
               </span>
 	      <div>
-	        <input type="combobox" name="allowedsignaturetypes" id="allowedbox">
-		  <option value="Email+ELeg">Email and E-Legitimation (extra charge)</option>
-		  <option value="Email">Email only</option>
-		  <option value="ELeg">E-Legitimation (extra charge)</option>
-		</input>
+	        <select name="allowedsignaturetypes" id="allowedbox">
+		  <option value="Email+ELeg" $if(emailelegitimation)$ selected="true" $endif$>Email and E-Legitimation (extra charge)</option>
+		  <option value="Email" $if(emailonly)$ selected="true" $endif$>Email only</option>
+		  <option value="ELeg" $if(elegitimationonly)$ selected="true" $endif$>E-Legitimation (extra charge)</option>
+		</select>
               </div>
 
               <div style="height: 60px;">

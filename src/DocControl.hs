@@ -643,6 +643,18 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} ms
   placedsigids <- getAndConcat "placedsigid"
   placedfieldids <- getAndConcat "placedfieldid"
 
+  -- which type of identifications are allowed
+  allowedidtypes <- getDataFnM $ look "allowedsignaturetypes"
+
+  let emailallowed = if "Email" `isInfixOf` allowedidtypes
+                      then [EmailIdentification]
+                      else []
+      elegitimationallowed = if "ELeg" `isInfixOf` allowedidtypes
+                              then [ELegitimationIdentification]
+                              else []
+      
+  let docallowedidtypes = emailallowed ++ elegitimationallowed
+
   let placements = zipWith5 FieldPlacement 
                    (map (read . BS.toString) placedxs)
                    (map (read . BS.toString) placedys)
@@ -709,7 +721,7 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} ms
   Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor document
 
   doc2 <- update $ UpdateDocument ctxtime documentid
-           signatories daystosign invitetext author
+           signatories daystosign invitetext author docallowedidtypes
 
   msum 
      [ do getDataFnM (look "final" `mplus` look "sign")
