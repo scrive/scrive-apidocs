@@ -99,44 +99,56 @@ mailInvitationToSignContent=
     $footer:noescape()$
 
 ###        
-mailInvitationToSignDefaultHeader = <p>Hej $personname$, <br/><br/> $creatorname$ har bjudit in dig att underteckna 
-                                       dokumentet $documenttitle$ online via tjänsten SkrivaPå. </p>
+mailInvitationToSignDefaultHeader=
+    <p>Hej $personname$,
+      <br><br>
+      $creatorname$ har bjudit in dig att underteckna dokumentet $documenttitle$ online via tjänsten SkrivaPå.
+    </p>
+
 ####
-remindMailSignedTitle=Hej $personname$      
+remindMailSignedTitle=
+    Hej $personname$      
+
 ###
-remindMailSignedStandardHeader=     <span>
-                                      <p>Hej <strong>$personname$</strong></p>
-                                      <p><strong>$author$</strong> har begärt att vi ska skicka dokumentet <strong>$documenttitle$</strong> 
-                                      till dig som du har undertecknat via tjänsten SkrivaPå. Dokumentet bifogas med detta mail.</p>
-                                    </span>
+remindMailSignedStandardHeader=
+    <span>
+      <p>Hej <strong>$personname$</strong></p>
+      <p><strong>$author$</strong> har begärt att vi ska skicka dokumentet <strong>$documenttitle$</strong> 
+        till dig som du har undertecknat via tjänsten SkrivaPå. Dokumentet bifogas med detta mail.</p>
+    </span>
+
 ####
-remindMailNotSignedTitle=Hej $personname$
+remindMailNotSignedTitle=
+    Hej $personname$
+
 ########              
-remindMailNotSignedStandardHeader=   <span>
-  <p>Hej <strong>$personname$</strong></p>
-  <p><strong>$author$</strong> vill påminna dig om att du inte undertecknat dokument <strong>$documenttitle$</strong> ännu.   </p>  
-  </span>
+remindMailNotSignedStandardHeader=
+    <span>
+      <p>Hej <strong>$personname$</strong></p>
+      <p><strong>$author$</strong> vill påminna dig om att du inte undertecknat dokument <strong>$documenttitle$</strong> ännu.</p>  
+    </span>
 
 #####
 remindMailNotSignedContent=
-                             $header:noescape()$
-                             <span>
-                              <p><i>Översiktlig information</i><br/>
-                              Parter: $partnersinfo:noescape()$<br/>
-                              $whohadsignedinfo:noescape()$<br/>
-                              $timetosigninfo:noescape()$
-                              </p>
-                             <p><i>Så här går du vidare</i><br/>
-                             1. Klicka på länken<br/>
-                                 <a href="$link$">$link$</a><br/>
-                             2. Granska online<br/>
-                             3. Underteckna<br/>
-                             4. Färdig</p>
-			    <p>
-			    <i>Detta mail får inte vidarebefordras.</i>
-			    </p>
-                             </span>
-                             $footer:noescape()$                            
+    $header:noescape()$
+    <span>
+      <p><i>Översiktlig information</i><br>
+        Parter: $partnersinfo:noescape()$<br>
+        $whohadsignedinfo:noescape()$<br>
+        $timetosigninfo:noescape()$
+      </p>
+      <p><i>Så här går du vidare</i><br>
+        1. Klicka på länken<br>
+        <a href="$link$">$link$</a><br>
+        2. Granska online<br>
+        3. Underteckna<br>
+        4. Färdig
+      </p>
+      <p>
+	<i>Detta mail får inte vidarebefordras.</i>
+      </p>
+    </span>
+    $footer:noescape()$                            
                              
 ####
 newUserMailTitle=Nytt konto
