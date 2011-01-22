@@ -9,6 +9,7 @@ import Happstack.Data
 import Happstack.State
 import DocState
 import MinutesTime
+import Misc
 
 $(deriveAll [''Eq, ''Ord, ''Default]
   [d|
@@ -17,7 +18,9 @@ $(deriveAll [''Eq, ''Ord, ''Default]
                                              , transactiontbs :: String
                                              , transactionencodedtbs :: String
                                              , transactionservertime :: MinutesTime
-                                             , transactionsignatorylinkid :: SignatoryLinkID
+                                             , transactionsignatorylinkid :: Maybe SignatoryLinkID
+                                             , transactiondocumentid :: DocumentID
+                                             , transactionmagichash :: Maybe MagicHash
                                              }
   |])
 

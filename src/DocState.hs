@@ -112,7 +112,7 @@ $(deriveAll [''Eq, ''Ord, ''Default]
       data SignatureInfo = SignatureInfo { signatureinfotext        :: String
                                          , signatureinfosignature   :: String
                                          , signatureinfocertificate :: String
-                                         , signatureprovider        :: SignatureProvider
+                                         , signatureinfoprovider    :: SignatureProvider
                                          }
 
       -- added by Eric Normand for template system
@@ -1414,10 +1414,11 @@ timeoutDocument documentid time = do
 signDocument :: DocumentID
              -> SignatoryLinkID 
              -> MinutesTime 
-             -> Word32 
+             -> Word32
+             -> Maybe SignatureInfo
              -> [(BS.ByteString, BS.ByteString)]
              -> Update Documents (Either String Document)
-signDocument documentid signatorylinkid1 time ipnumber fields = do
+signDocument documentid signatorylinkid1 time ipnumber msiginfo fields = do
   modifyDocument documentid $ \document ->
       let
           signeddocument = document { documentsignatorylinks = newsignatorylinks }
@@ -1426,6 +1427,7 @@ signDocument documentid signatorylinkid1 time ipnumber fields = do
               | signatorylinkid == signatorylinkid1 = 
                   link { maybesigninfo = Just (SignInfo time ipnumber)
                        , signatorydetails = updateWithFields fields signatorydetails
+                       , signatorysignatureinfo = msiginfo
                     }
           maybesign link = link
           isallsigned = all (isJust . maybesigninfo) newsignatorylinks
@@ -1458,18 +1460,19 @@ signDocument documentid signatorylinkid1 time ipnumber fields = do
            Timedout -> Left "Förfallodatum har passerat"
            _ ->        Left ("Bad document status: " ++ show (documentstatus document))
 
-signWithUserID [] _ _ = []
-signWithUserID (s:ss) id sinfo
-    | maybe False (((==) id) . unSignatory) (maybesignatory s) = s {maybesigninfo = sinfo, maybeseeninfo = sinfo} : ss
-    | otherwise = s : signWithUserID ss id sinfo
+signWithUserID [] _ _ _ = []
+signWithUserID (s:ss) id sinfo msiginfo
+    | maybe False (((==) id) . unSignatory) (maybesignatory s) = s {maybesigninfo = sinfo, maybeseeninfo = sinfo, signatorysignatureinfo = msiginfo} : ss
+    | otherwise = s : signWithUserID ss id sinfo msiginfo
 
 -- maybe this goes away
 authorSignDocument :: DocumentID
                    -> MinutesTime
                    -> Word32
                    -> User
+                   -> Maybe SignatureInfo
                    -> Update Documents (Either String Document)
-authorSignDocument documentid time ipnumber author =
+authorSignDocument documentid time ipnumber author msiginfo =
     modifyDocument documentid $ \document ->
         case documentstatus document of
           Preparation -> 
@@ -1482,7 +1485,7 @@ authorSignDocument documentid time ipnumber author =
                   sinfo = Just (SignInfo time ipnumber)
               in Right $ document { documenttimeouttime = timeout
                                   , documentmtime = time
-                                  , documentsignatorylinks = signWithUserID (documentsignatorylinks document) authorid sinfo
+                                  , documentsignatorylinks = signWithUserID (documentsignatorylinks document) authorid sinfo msiginfo
                                   , documentstatus = Pending
                                   }
               

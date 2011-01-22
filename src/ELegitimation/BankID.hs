@@ -5,6 +5,7 @@
 module ELegitimation.BankID where
 
 import User
+import UserControl
 import System.Process
 import System.Exit
 import System.IO
@@ -60,7 +61,9 @@ handleSign docid signid magic = do
                                               , transactiontransactionid = transactionid
                                               , transactiontbs = tbs
                                               , transactionencodedtbs = text
-                                              , transactionsignatorylinkid = signid
+                                              , transactionsignatorylinkid = Just signid
+                                              , transactiondocumentid = docid
+                                              , transactionmagichash = Just magic
                                               , transactionnonce = nonce
                                               }
                        let MinutesTime time = ctxtime ctx
@@ -72,10 +75,8 @@ handleSign docid signid magic = do
 
 handleSignPost :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra KontraLink
 handleSignPost docid signid magic = do
-  -- document <- queryOrFail $ GetDocumentByDocumentID docid
-  -- checkLinkIDAndMagicHash document signid magic
-
-  -- check transaction id, etc
+  document <- queryOrFail $ GetDocumentByDocumentID docid
+  checkLinkIDAndMagicHash document signid magic
 
   signature <- getDataFnM $ look "signature"
   transactionid <- getDataFnM $ look "transactionid"
@@ -86,6 +87,16 @@ handleSignPost docid signid magic = do
   case mtrans of
     Nothing -> mzero
     Just trans -> do
+                -- validate transaction with document info
+                when (isNothing $ transactionsignatorylinkid trans) mzero
+                when (isNothing $ transactionmagichash trans) mzero
+                let ELegTransaction { transactionsignatorylinkid = Just tsignid
+                                    , transactiondocumentid = tdocid
+                                    , transactionmagichash = Just tmagic
+                                    } = trans
+                when (not (tsignid == signid && tdocid == docid && tmagic == magic)) mzero
+                -- end validation
+
                 done <- verifySignature (transactionencodedtbs trans)
                                         signature
                                         (transactionnonce trans)
@@ -97,15 +108,20 @@ handleSignPost docid signid magic = do
                                                               ,("msg", JString msg)]
                                       -- change me! I should return back to the same page
                                       return $ LinkMain
-                  Right code -> do
-                            liftIO $ print $ "BankID returned successful with this code: " ++ show code
+                  Right (cert, attrs) -> do
                             Context { ctxtime, ctxipnumber } <- get
                             document@DocState.Document{ documentstatus = olddocumentstatus, documentsignatorylinks } <- queryOrFail $ GetDocumentByDocumentID docid
                             fieldnames <- getAndConcat "fieldname"
                             fieldvalues <- getAndConcat "fieldvalue"
                             let fields = zip fieldnames fieldvalues
+                                signinfo = SignatureInfo { signatureinfotext = transactiontbs trans
+                                                         , signatureinfosignature = signature
+                                                         , signatureinfocertificate = cert
+                                                         , signatureinfoprovider = BankIDProvider
+                                                         }
+                                
 
-                            newdocument <- update $ SignDocument docid signid ctxtime ctxipnumber fields
+                            newdocument <- update $ SignDocument docid signid ctxtime ctxipnumber (Just signinfo) fields
                             case newdocument of
                               Left message -> do
                                                addFlashMsgText message
@@ -113,7 +129,82 @@ handleSignPost docid signid magic = do
                               Right document -> do 
                                                postDocumentChangeAction document olddocumentstatus (Just signid)
                                                return $ LinkSigned docid signid
-        
+handleIssue :: DocumentID -> Kontra Response
+handleIssue docid = do
+  ctx <- get
+
+  liftIO $ print $ ctxelegtransactions ctx
+
+  nonceresponse <- generateChallenge
+
+  -- should generate this somehow
+  let tbs = "This is what you need to sign."
+  case nonceresponse of
+    Left (ImplStatus _a _b code msg) -> return $ toResponse $ toJSON [("status", JInt code)
+                                                                     ,("msg", JString msg)]
+    Right (nonce, transactionid) -> do
+        encodetbsresponse <- encodeTBS tbs transactionid 
+        case encodetbsresponse of
+          Left (ImplStatus _a _b code msg) -> return $ toResponse $ toJSON [("status", JInt code)
+                                                                           ,("msg", JString msg)]
+          Right text -> do
+                       -- store in session
+                       addELegTransaction $ ELegTransaction 
+                                              { transactionservertime = ctxtime ctx
+                                              , transactiontransactionid = transactionid
+                                              , transactiontbs = tbs
+                                              , transactionencodedtbs = text
+                                              , transactionsignatorylinkid = Nothing
+                                              , transactiondocumentid = docid
+                                              , transactionmagichash = Nothing
+                                              , transactionnonce = nonce
+                                              }
+                       let MinutesTime time = ctxtime ctx
+                       return $ toResponse $ toJSON [("status", JInt 0)
+                                                    ,("servertime", JString $ show $ 60 * time)
+                                                    ,("nonce", JString nonce)
+                                                    ,("tbs", JString text)
+                                                    ,("transactionid", JString transactionid)]
+
+
+handleIssuePost :: DocumentID -> Kontra KontraLink
+handleIssuePost docid = withUserPost $ do
+  document <- queryOrFail $ GetDocumentByDocumentID $ docid
+  ctx@Context { ctxmaybeuser = Just user, ctxelegtransactions } <- get
+  failIfNotAuthor document user
+
+  signature <- getDataFnM $ look "signature"
+  transactionid <- getDataFnM $ look "transactionid"
+
+  let mtrans = find ((== transactionid) . transactiontransactionid) ctxelegtransactions
+  case mtrans of
+    Nothing -> mzero
+    Just trans -> do
+                -- validate transaction
+                let ELegTransaction { transactiondocumentid = tdocid } = trans
+                when (docid /= tdocid) mzero
+                -- end validation
+
+                done <- verifySignature (transactionencodedtbs trans)
+                                        signature
+                                        (transactionnonce trans)
+                                        transactionid
+
+                case done of
+                  Left (ImplStatus _a _b code msg) -> do
+                                      liftIO $ print $ toJSON [("status", JInt code)
+                                                              ,("msg", JString msg)]
+                                      -- change me! I should return back to the same page
+                                      return $ LinkMain
+                  Right (cert, attrs) -> do
+                            let siginfo = SignatureInfo { signatureinfotext = transactiontbs trans
+                                                        , signatureinfosignature = signature
+                                                        , signatureinfocertificate = cert
+                                                        , signatureinfoprovider = BankIDProvider
+                                                        }
+                            doc2 <- updateDocument ctx document $ Just siginfo
+                            return $ LinkSignInvite docid
+
 
 data JSONValue = JString String
                | JInt Int  
@@ -273,7 +364,7 @@ slurpAttributes' ls = do
     Just nv -> slurpAttributes' $ nv : ls
   
 
-data VerifySignatureResponse = VerifySignatureResponse ImplStatus
+data VerifySignatureResponse = VerifySignatureResponse ImplStatus [(String, String)] String
 
 instance HTypeable (VerifySignatureResponse) where
     toHType x = Defined "VerifySignatureResponse" [] []
@@ -296,7 +387,7 @@ instance XmlContent (VerifySignatureResponse) where
             ; attributes <- slurpAttributes
             ; transactionid <- optional $ inElementNS "transactionID" text
             ; certificate <- optional $ inElementNS "certificate" text
-            ; return (VerifySignatureResponse status)
+            ; return (VerifySignatureResponse status attributes (maybe "" id certificate))
             }
         } `adjustErr` ("in <VerifySignatureResponse>, "++)
 
@@ -333,16 +424,16 @@ encodeTBS tbs transactionID = do
                          then return $ Right text
                          else return $ Left (ImplStatus a b status msg)
 
-verifySignature :: String -> String -> String -> String -> Kontra (Either ImplStatus Int)
+verifySignature :: String -> String -> String -> String -> Kontra (Either ImplStatus (String, [(String, String)]))
 verifySignature tbs signature nonce transactionID = do
   eresponse <- liftIO $ makeSoapCallINSECURE endpoint "VerifySignature" $ VerifySignatureRequest 6 "logtest004" tbs signature nonce transactionID
   case eresponse of
     Left msg -> do
       liftIO $ print msg
       error msg
-    Right (VerifySignatureResponse (ImplStatus a b status msg)) -> do
+    Right (VerifySignatureResponse (ImplStatus a b status msg) attrs certificate) -> do
                       if status == 0
-                         then return $ Right 0
+                         then return $ Right (certificate, attrs)
                          else return $ Left (ImplStatus a b status msg)
 
 parseChallenge = getBetween "<challenge>" "</challenge>"
