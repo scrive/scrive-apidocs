@@ -211,28 +211,31 @@ inviteSubaccountMailContent=
     </span>
 
 ####
-mailNewAccountCreatedByAdminTitle=Nytt konto
+mailNewAccountCreatedByAdminTitle=
+    Nytt konto
+
 ###
 mailNewAccountCreatedByAdminContent=  
-     <span>
+    <span>
       <p>Hej <strong>$personname$</strong>,</p>
 
       <p>$creatorname$ har bjudit in dig till ett konto på tjänsten SkrivaPå. </p>
 
       <p>SkrivaPå är ett webbaserat tredjepartsnotariat som gör det möjligt att underteckna, 
-         hantera och arkivera avtal elektroniskt. SkrivaPå är som Gmail för dina avtal.</p>
+        hantera och arkivera avtal elektroniskt. SkrivaPå är som Gmail för dina avtal.</p>
 
-	<p>Användarnamn: <span style="color: orange; text-weight: bold">$email$</span><br/> 
-       </p>
+      <p>Användarnamn: <span style="color: orange; text-weight: bold">$email$</span><br/> 
+      </p>
 
       <p>Vänligen klicka på länken för att aktivera kontot:<br/>  
 	<a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a>
       </p>
       <p>
-       <a href="$ctxhostpart$">$ctxhostpart$</a>
+        <a href="$ctxhostpart$">$ctxhostpart$</a>
       </p>
-       $poweredBySkrivaPaPara()$
-     </span>
+      $poweredBySkrivaPaPara()$
+    </span>
+
 ####
 invitationMailUndeliveredTitle =Felaktig e-post
 ###
