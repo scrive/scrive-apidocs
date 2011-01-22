@@ -1,5 +1,5 @@
 ###
-adminsmain=  
+adminsmain=
     <strong>Admin Tools</strong>
     <table><tbody>
         <tr>
@@ -8,9 +8,9 @@ adminsmain=
               <button style="width:150px"> Statistics</button>
             </a>
           </td>
-          <td style="height:50px"> 
+          <td style="height:50px">
             <a href="/adminonly/payments">
-              <button style="width:150px">Price Plan</button> 
+              <button style="width:150px">Price Plan</button>
             </a>
           </td>
         </tr>
@@ -28,11 +28,9 @@ adminsmain=
           <td style="height:50px;width:200px"> <a href="/adminonly/advpayments"><button style="width:150px"> App Admin </button> </a></td>
         </tr>
     </tbody></table>
-   
-
 ###
-adminsmanageall = 
-    $backtoadminmainlink()$ 
+adminsmanageall =
+    $backtoadminmainlink()$
     <div><strong>SkrivaPa admin only page</strong></div>
     <BR>
     <div>
@@ -50,34 +48,34 @@ adminsmanageall =
         $usersfilter(link="/adminonly/advuseradmin")$
       </div>
       <div>
-        $userspaging(link="/adminonly/advuseradmin")$ 
+        $userspaging(link="/adminonly/advuseradmin")$
         <table><tbody>
             $users:{user|
             <tr>
-              <td> 
-                $user.usvFullname$ 
+              <td>
+                $user.usvFullname$
               </td>
               <td>
-                &lt;$user.usvEmail$&gt; 
+                &lt;$user.usvEmail$&gt;
               </td>
               <td>
                 <form method="post" action="/adminonly/become"  style="display:inline">
                   <input type="hidden" name="user" value="$user.usvId$">
                   <input type="submit" value="Monitor user">
-                </form> 
+                </form>
               </td>
               <td>
                 <form method="post" action="/adminonly/takeoverdocuments"  style="display:inline">
                   <input type="hidden" name="user" value="$user.usvId$">
                   <input type="submit" value="Take over"/>
-                </form> 
+                </form>
               </td>
               <td>
                 <form method="post" action="/adminonly/deleteaccount" >
                   <input type="hidden" name="user" value="$user.usvId$">
                   <input type="submit" value="Annihilate account"/>
               </td>
-              </form> 
+              </form>
             </tr>
             }$
         </tbody></table>
@@ -95,7 +93,7 @@ usersfilter=
     <a href="$link$">View list of users </a>
     <BR><BR>
     <form action="$link$" method="GET">
-      Find by name: 
+      Find by name:
       $letters:{letter |<button type="submit" name="startletter" class="transparent" value="$letter$"><a>$letter$</a> </button>}$
     </form>
 ###
@@ -110,7 +108,7 @@ userspaging=
 adminusers=
     <strong>USER ADMIN</strong>
     <BR>
-    $backtoadminmainlink()$ 
+    $backtoadminmainlink()$
     $usersfilter(link=adminuserlink)$
     $userspaging()$
     <BR><BR>
@@ -118,7 +116,7 @@ adminusers=
       $users:{user| <a href="$adminuserlink$/$user.usvId$"> $user.usvFullname$ &lt;$user.usvEmail$&gt; </a>}:br()$
     </form>
 ###
-adminuser= 
+adminuser=
     <a href="$adminlink$">Go back to main admin page</a>
     <a style="padding-left:100px" href="$adminuserslink$">Go back to user admin page</a>
     <BR>
@@ -127,19 +125,19 @@ adminuser=
       <table><tbody>
           <tr> <th style="width:200px"></th> <th> </th></tr>
           <tr> <td style="padding-top:10px"><strong>User data</strong></td> <td> </td></tr>
-          <tr> <td>First Name:</td> 
+          <tr> <td>First Name:</td>
             <td>
-              <input type="text" style="width:200px;margin:0" value="$user.uavuserfstname$"  name="userfstname"> 
+              <input type="text" style="width:200px;margin:0" value="$user.uavuserfstname$"  name="userfstname">
             </td>
           </tr>
-          <tr> <td>Secound Name:</td> 
+          <tr> <td>Secound Name:</td>
             <td>
               <input type="text" style="width:200px;margin:0" value="$user.uavusersndname$"  name="usersndname">
             </td>
           </tr>
-          <tr> <td>Pers Nr:</td> 
-            <td> 
-              <input type="text" style="width:200px;margin:0" value="$user.uavuserpersonalnumber$"  name="userpersonalnumber"> 
+          <tr> <td>Pers Nr:</td>
+            <td>
+              <input type="text" style="width:200px;margin:0" value="$user.uavuserpersonalnumber$"  name="userpersonalnumber">
             </td>
           </tr>
           <tr> <td>Company:</td>
@@ -147,38 +145,35 @@ adminuser=
               <input type="text" style="width:200px;margin:0" value="$user.uavusercompanyname$"  name="usercompanyname">
             </td>
           </tr>
-          <tr> <td>Company nr:</td> 
+          <tr> <td>Company nr:</td>
             <td>
               <input type="text" style="width:200px;margin:0" value="$user.uavusercompanynumber$"  name="usercompanynumber">
             </td>
           </tr>
-
           <tr> <td style="padding-top:10px"><strong>Location</strong></td>
             <td> </td>
           </tr>
-          <tr> <td>Adress:</td> 
+          <tr> <td>Adress:</td>
             <td> <input type="text" style="width:200px;margin:0" value="$user.uavuseraddress$"  name="useraddress">
             </td>
           </tr>
-          <tr> <td>ZIP:</td> 
-            <td> 
+          <tr> <td>ZIP:</td>
+            <td>
               <input type="text" style="width:200px;margin:0" value="$user.uavuserzip$"  name="userzip">
             </td>
           </tr>
-          <tr> <td>City:</td> 
+          <tr> <td>City:</td>
             <td>
               <input type="text" style="width:200px;margin:0" value="$user.uavusercity$"  name="usercity">
             </td>
           </tr>
-          <tr> <td>Country:</td> 
-            <td> 
+          <tr> <td>Country:</td>
+            <td>
               <input type="text" style="width:200px;margin:0" value="$user.uavusercountry$" name="usercountry">
             </td>
           </tr>
-
-
-          <tr> <td style="padding-top:10px" ><strong>Contact</strong></td> 
-            <td> 
+          <tr> <td style="padding-top:10px" ><strong>Contact</strong></td>
+            <td>
             </td>
           </tr>
           <tr> <td>Phone:</td>
@@ -188,43 +183,41 @@ adminuser=
           </tr>
           <tr> <td>Mobile:</td>
             <td>
-              <input type="text" style="width:200px;margin:0" value="$user.uavusermobile$" name="usermobile"> 
+              <input type="text" style="width:200px;margin:0" value="$user.uavusermobile$" name="usermobile">
             </td>
           </tr>
           <tr> <td>Email:</td>
             <td>
-              <input type="text" style="width:200px;margin:0"  value="$user.uavuseremail$" name="useremail"> 
+              <input type="text" style="width:200px;margin:0"  value="$user.uavuseremail$" name="useremail">
             </td>
           </tr>
-
-          <tr> 
+          <tr>
             <td style="padding-top:10px" ><strong>Account</strong></td>
             <td> </td>
           </tr>
-          <tr> <td>Account type:</td> 
-            <td> 
+          <tr> <td>Account type:</td>
+            <td>
               <select autocomplete="off" name="accounttype">$user.uavaccounttype:options()$</select>
             </td>
           </tr>
-          <tr> <td>Account plan:</td> 
+          <tr> <td>Account plan:</td>
             <td>
-              <select autocomplete="off" name="accountplan">$user.uavaccountplan:options()$</select> 
+              <select autocomplete="off" name="accountplan">$user.uavaccountplan:options()$</select>
             </td>
           </tr>
           <tr> <td>Signed doc storage:</td>
             <td> $user.uavsigneddocstorage$ </td>
           </tr>
-          <tr> <td>Payment method:</td> 
+          <tr> <td>Payment method:</td>
             <td>
               <select autocomplete="off" name="userpaymentmethod" >$user.uavuserpaymentmethod:options()$</select>
             </td>
           </tr>
-
           <tr> <td style="padding-top:10px" ><strong>Special deals</strong></td>
             <td> </td>
           </tr>
-          <tr> <td>Current account state:</td> 
-            <td> 
+          <tr> <td>Current account state:</td>
+            <td>
               <input type="text" style="width:40px;margin:0" value="$user.uavpaymentaccountmoney$" name="paymentaccountmoney">
             </td>
           </tr>
@@ -233,20 +226,19 @@ adminuser=
               <input type="text" style="width:40px;margin:0" value="$user.uavpaymentaccountfreesignatures$" name="paymentaccountfreesignatures">
             </td>
           </tr>
-
           <tr> <td style="padding-top:10px" ><strong>Pricing</strong></td>
             <td>
             </td>
           </tr>
-          <tr> <td>Payment plan:</td> 
+          <tr> <td>Payment plan:</td>
             <td>
               <select autocomplete="off" name="paymentaccounttype">$user.uavpaymentaccounttype:options()$</select>
             </td>
           </tr>
           <tr> <td>Temporary price:</td>
-            <td> 
+            <td>
               <span>
-                <input type="checkbox" value="$if(user.uavtmppaymentchangeenddate)$on$else$off$endif$" autocomplete="off" oldlocation="#hiddenttimestuffbox" location="#datetosigncontainer" rel="#daystosignbox" class="addremovecheckbox"> 
+                <input type="checkbox" value="$if(user.uavtmppaymentchangeenddate)$on$else$off$endif$" autocomplete="off" oldlocation="#hiddenttimestuffbox" location="#datetosigncontainer" rel="#daystosignbox" class="addremovecheckbox">
                 <span id="datetosigncontainer">
                 </span>
               </span>
@@ -256,8 +248,8 @@ adminuser=
       <BR>
       <strong>User price plan</strong>
       <BR><BR>
-      <table style="text-align:left"><tbody> 
-          <tr> 
+      <table style="text-align:left"><tbody>
+          <tr>
             <th style="width:300px;"></th>
             <th> Standard</th>
             <th style="width:100px"> </th>
@@ -265,7 +257,7 @@ adminuser=
             <th style="width:100px"> </th>
             <th> Temporary</th>
           </tr>
-          <tr> 
+          <tr>
             <td style="padding-top:10px"><strong>Payment for account </strong> </td>
           </tr>
           <tr>
@@ -274,99 +266,98 @@ adminuser=
             <td></td>
             ${<input type="text" style="width:45px" name="foraccountcustom" value="$user.uavcustompaymentchange.changeforaccount$"/>}:td()$
             <td></td>
-            ${<input type="text" style="width:45px" name="foraccounttemp" value="$user.uavtemppaymentchange.changeforaccount$"/>}:td()$ 
+            ${<input type="text" style="width:45px" name="foraccounttemp" value="$user.uavtemppaymentchange.changeforaccount$"/>}:td()$
           </tr>
-          <tr> 
-            <td>For subaccount: </td>  
+          <tr>
+            <td>For subaccount: </td>
             $paymentmodel.forsubaccount:td()$
             <td></td>
             ${<input type="text" style="width:45px" name="forsubaccountcustom" value="$user.uavcustompaymentchange.changeforsubaccount$"/>}:td()$
             <td></td>
-            ${<input type="text" style="width:45px" name="forsubaccounttemp" value="$user.uavtemppaymentchange.changeforsubaccount$"/>}:td()$ 
+            ${<input type="text" style="width:45px" name="forsubaccounttemp" value="$user.uavtemppaymentchange.changeforsubaccount$"/>}:td()$
           </tr>
-          <tr> 
+          <tr>
             <td style="padding-top:20px"><strong>Payment for signatures </strong> </td>
           </tr>
-          <tr> 
-            <td>For email signature:</td>   
-            $paymentmodel.foremailsignature:td()$ 
+          <tr>
+            <td>For email signature:</td>
+            $paymentmodel.foremailsignature:td()$
             <td></td>
             ${<input type="text" style="width:45px" name="foremailsignaturecustom" value="$user.uavcustompaymentchange.changeforemailsignature$"/>}:td()$
             <td></td>
-            ${<input type="text" style="width:45px" name="foremailsignaturetemp" value="$user.uavtemppaymentchange.changeforemailsignature$"/>}:td()$ 
+            ${<input type="text" style="width:45px" name="foremailsignaturetemp" value="$user.uavtemppaymentchange.changeforemailsignature$"/>}:td()$
           </tr>
           <tr>
-            <td>For eLeg signature:</td> 
-            $paymentmodel.forelegsignature:td()$ 
+            <td>For eLeg signature:</td>
+            $paymentmodel.forelegsignature:td()$
             <td></td>
             ${<input type="text" style="width:45px" name="forelegsignaturecustom" value="$user.uavcustompaymentchange.changeforelegsignature$"/>}:td()$
             <td></td>
-            ${<input type="text" style="width:45px" name="forelegsignaturetemp" value="$user.uavtemppaymentchange.changeforelegsignature$"/>}:td()$ 
-          </tr> 
-          <tr>  
-            <td> For mobile signature: :</td>  
+            ${<input type="text" style="width:45px" name="forelegsignaturetemp" value="$user.uavtemppaymentchange.changeforelegsignature$"/>}:td()$
+          </tr>
+          <tr>
+            <td> For mobile signature: :</td>
             $paymentmodel.formobiledignature:td()$
             <td></td>
             ${<input type="text" style="width:45px" name="formobiledignaturecustom" value="$user.uavcustompaymentchange.changeformobiledignature$"/>}:td()$
             <td></td>
-            ${<input type="text" style="width:45px" name="formobiledignaturetemp" value="$user.uavtemppaymentchange.changeformobiledignature$"/>}:td()$ 
-          </tr> 
-          <tr> 
-            <td>For creadit card signature:</td>  
-            $paymentmodel.forcrediteardsignature:td()$ 
+            ${<input type="text" style="width:45px" name="formobiledignaturetemp" value="$user.uavtemppaymentchange.changeformobiledignature$"/>}:td()$
+          </tr>
+          <tr>
+            <td>For creadit card signature:</td>
+            $paymentmodel.forcrediteardsignature:td()$
             <td></td>
             ${<input type="text" style="width:45px" name="forcrediteardsignaturecustom" value="$user.uavcustompaymentchange.changeforcrediteardsignature$"/>}:td()$
             <td></td>
-            ${<input type="text" style="width:45px" name="forcrediteardsignaturetemp" value="$user.uavtemppaymentchange.changeforcrediteardsignature$"/>}:td()$ 
-          </tr> 
-          <tr> 
-            <td>For iPad signature: </td>  
-            $paymentmodel.foripadsignature:td()$ 
+            ${<input type="text" style="width:45px" name="forcrediteardsignaturetemp" value="$user.uavtemppaymentchange.changeforcrediteardsignature$"/>}:td()$
+          </tr>
+          <tr>
+            <td>For iPad signature: </td>
+            $paymentmodel.foripadsignature:td()$
             <td></td>
             ${<input type="text" style="width:45px" name="foripadsignaturecustom" value="$user.uavcustompaymentchange.changeforipadsignature$"/>}:td()$
             <td></td>
-            ${<input type="text" style="width:45px" name="foripadsignaturetemp" value="$user.uavtemppaymentchange.changeforipadsignature$"/>}:td()$ 
-          </tr> 
-          <tr> 
+            ${<input type="text" style="width:45px" name="foripadsignaturetemp" value="$user.uavtemppaymentchange.changeforipadsignature$"/>}:td()$
+          </tr>
+          <tr>
             <td style="padding-top:20px"><strong>Storage of signed documents</strong> </td>
-          </tr> 
-          <tr> 
-            <td>For Amazon: </td>     
+          </tr>
+          <tr>
+            <td>For Amazon: </td>
             $paymentmodel.foramazon:td()$
             <td></td>
             ${<input type="text" style="width:45px" name="foramazoncustom" value="$user.uavcustompaymentchange.changeforamazon$"/>}:td()$
             <td></td>
-            ${<input type="text" style="width:45px" name="foramazontemp" value="$user.uavtemppaymentchange.changeforamazon$"/>}:td()$ 
-          </tr> 
-          <tr>  
-            <td>For TrustWeaver: </td>  
-            $paymentmodel.fortrustweaver:td()$ 
+            ${<input type="text" style="width:45px" name="foramazontemp" value="$user.uavtemppaymentchange.changeforamazon$"/>}:td()$
+          </tr>
+          <tr>
+            <td>For TrustWeaver: </td>
+            $paymentmodel.fortrustweaver:td()$
             <td></td>
             ${<input type="text" style="width:45px" name="fortrustweavercustom" value="$user.uavcustompaymentchange.changefortrustweaver$"/>}:td()$
             <td></td>
-            ${<input type="text" style="width:45px" name="fortrustweavertemp" value="$user.uavtemppaymentchange.changefortrustweaver$"/>}:td()$ 
-          </tr> 
-          <tr> 
-            <td style="padding-top:20px">  <strong>Storage of other documents</strong> </td>
-          </tr>   
+            ${<input type="text" style="width:45px" name="fortrustweavertemp" value="$user.uavtemppaymentchange.changefortrustweaver$"/>}:td()$
+          </tr>
           <tr>
-            <td>Template:  </td>     
+            <td style="padding-top:20px">  <strong>Storage of other documents</strong> </td>
+          </tr>
+          <tr>
+            <td>Template:  </td>
             $paymentmodel.fortemplate:td()$
             <td></td>
             ${<input type="text" style="width:45px" name="fortemplatecustom" value="$user.uavcustompaymentchange.changefortemplate$"/>}:td()$
             <td></td>
-            ${<input type="text" style="width:45px" name="fortemplatetemp" value="$user.uavtemppaymentchange.changefortemplate$"/>}:td()$ 
-          </tr> 
-          <tr> 
-            <td> Draft:  </td>    
+            ${<input type="text" style="width:45px" name="fortemplatetemp" value="$user.uavtemppaymentchange.changefortemplate$"/>}:td()$
+          </tr>
+          <tr>
+            <td> Draft:  </td>
             $paymentmodel.fordraft:td()$
             <td></td>
             ${<input type="text" style="width:45px" name="fordraftcustom" value="$user.uavcustompaymentchange.changefordraft$"/>}:td()$
             <td></td>
-            ${<input type="text" style="width:45px" name="fordrafttemp" value="$user.uavtemppaymentchange.changefordraft$"/>}:td()$ 
-          </tr> 
+            ${<input type="text" style="width:45px" name="fordrafttemp" value="$user.uavtemppaymentchange.changefordraft$"/>}:td()$
+          </tr>
       </tbody></table>
-
       <BR>
       <input type="submit" style="width:200px;font-weight:bold" value="Change" name="change">
     </form>
@@ -374,16 +365,15 @@ adminuser=
     <form method="post" action="">
       <input type="submit" name="enabletrustweaver" style="width:600px;font-weight:bold" value="Enable TrustWeaver storage for this client (cannot be undone)">
     </form>
-    <div id="hiddenttimestuffbox" style="display:none"> 
+    <div id="hiddenttimestuffbox" style="display:none">
       <span id="daystosignbox">
         <a class="datetodate date" rel="[name='tmppaymentchangeenddate']"> </a>
         <input type="hidden" autocomplete="off" name="tmppaymentchangeenddate" value="$user.uavtmppaymentchangeenddate$">
       </span>
     </div>
- 
 ###
 allUsersTable=
-    $backtoadminmainlink()$ 
+    $backtoadminmainlink()$
     <div>
       <h1>Alla SkrivaPå anwender</h1>
       <table>
@@ -392,27 +382,25 @@ allUsersTable=
           <td style="width:200px">Email</td>
           <td>Docs</td>
         </thead>
-        $users:{user|<tr> 
+        $users:{user|<tr>
           <td> $user.usvFullname$  </td>
           <td> $user.usvEmail$ </td>
           <td> $user.usvDocsCount$ </td>
         </tr>}$
       </table>
     </div>
-
 ###
 databaseContents=
-    $backtoadminmainlink()$ 
+    $backtoadminmainlink()$
     <div>
       <h1>All database files</h1>
       <ul>
         $files:{file| <li><a href="$file$">$file$</a></li>}$
       </ul>
     </div>
-
 ####
 pageStats=
-    $backtoadminmainlink()$ 
+    $backtoadminmainlink()$
     <div>
       <h1>Stats page</h1>
       <table>
@@ -421,7 +409,7 @@ pageStats=
       </table>
       <br>
       <form method="post" action="/createuser">
-        Create user:<br> 
+        Create user:<br>
         <table>
           <tr>
             <td>Full name:</td>
@@ -440,6 +428,6 @@ pageStats=
     </div>
 ####
 backtoadminmainlink=
-    <a href="$adminlink$">Go back to main admin page</a> 
+    <a href="$adminlink$">Go back to main admin page</a>
     <BR><BR>
 ####
