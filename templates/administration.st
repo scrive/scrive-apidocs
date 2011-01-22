@@ -84,20 +84,20 @@ adminsmanageall =
       </div>
     </div>
 ###
-usersfilter=<form action="$link$" method="GET">
-<div style="border:1px solid #DDDDDD;padding:5px;margin-top:5px">
-Find user:
-<input type="text" style="width:200px;margin-left:5px;margin-right:5px" name="search" value="$search$"/>
-<input type="submit" value="Search"/>
-</form>
-<BR/><BR/>
-<a href="$link$">View list of users </a>
-<BR/><BR/>
-<form action="$link$" method="GET">
-Find by name: 
-$letters:{letter |<button type="submit" name="startletter" class="transparent" value="$letter$"><a>$letter$</a> </button>}$
-</form>
-</div>
+usersfilter=
+    <form action="$link$" method="GET">
+      <div style="border:1px solid #DDDDDD;padding:5px;margin-top:5px">
+        Find user:
+        <input type="text" style="width:200px;margin-left:5px;margin-right:5px" name="search" value="$search$">
+        <input type="submit" value="Search"/>
+    </form>
+    <BR><BR>
+    <a href="$link$">View list of users </a>
+    <BR><BR>
+    <form action="$link$" method="GET">
+      Find by name: 
+      $letters:{letter |<button type="submit" name="startletter" class="transparent" value="$letter$"><a>$letter$</a> </button>}$
+    </form>
 ###
 userspaging=
 <form action="$link$" method="GET">
