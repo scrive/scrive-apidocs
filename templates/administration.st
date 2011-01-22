@@ -15,8 +15,8 @@ adminsmain=
           </td>
         </tr>
         <tr>
-          <td style="height:50px;width:200px"><a href="/stats"><button style="width:150px"> Create User </button> </a> <td>
-          <td style="height:50px;width:200px"> <a href="/adminonly/useradmin"><button style="width:150px"> User Admin </button> </a><td>
+          <td style="height:50px;width:200px"><a href="/stats"><button style="width:150px"> Create User </button> </a> </td>
+          <td style="height:50px;width:200px"> <a href="/adminonly/useradmin"><button style="width:150px"> User Admin </button> </a></td>
         </tr>
     </tbody></table>
     <BR>
