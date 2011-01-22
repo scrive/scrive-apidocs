@@ -64,6 +64,9 @@ module DocState
     , GetMagicHash(..)
     , GetDocumentByFileID(..)
     , ErrorDocument(..)
+    , IdentificationType(..)
+    , SignatureInfo(..)
+    , SignatureProvider(..)
     )
 where
 import Happstack.Data
@@ -100,6 +103,17 @@ $(deriveAll [''Eq, ''Ord, ''Default]
       newtype SignatoryLinkID = SignatoryLinkID { unSignatoryLinkID :: Int }
       newtype FileID = FileID { unFileID :: Int }
       newtype TimeoutTime = TimeoutTime { unTimeoutTime :: MinutesTime }
+
+      data IdentificationType = EmailIdentification
+                              | ELegitimationIdentification
+
+      data SignatureProvider = BankIDProvider
+
+      data SignatureInfo = SignatureInfo { signatureinfotext        :: String
+                                         , signatureinfosignature   :: String
+                                         , signatureinfocertificate :: String
+                                         , signatureprovider        :: SignatureProvider
+                                         }
 
       -- added by Eric Normand for template system
       -- Defines a new field to be placed in a contract
@@ -178,6 +192,15 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , maybesigninfo3      :: Maybe SignInfo
           , maybeseeninfo3      :: Maybe SignInfo
           }        
+      data SignatoryLink4 = SignatoryLink4
+          { signatorylinkid4    :: SignatoryLinkID
+          , signatorydetails4   :: SignatoryDetails
+          , signatorymagichash4 :: MagicHash
+          , maybesignatory4     :: Maybe Signatory
+          , maybesigninfo4      :: Maybe SignInfo
+          , maybeseeninfo4      :: Maybe SignInfo
+          , invitationdeliverystatus4 :: MailsDeliveryStatus
+          }
       data SignatoryLink = SignatoryLink 
           { signatorylinkid    :: SignatoryLinkID
           , signatorydetails   :: SignatoryDetails
@@ -186,6 +209,7 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , maybesigninfo      :: Maybe SignInfo
           , maybeseeninfo      :: Maybe SignInfo
           , invitationdeliverystatus :: MailsDeliveryStatus
+          , signatorysignatureinfo :: Maybe SignatureInfo
           }    
       data SignInfo = SignInfo
           { signtime :: MinutesTime
@@ -385,6 +409,26 @@ $(deriveAll [''Default]
           , documentinvitetext7       :: BS.ByteString
           }
 
+      data Document8 = Document8
+          { documentid8               :: DocumentID
+          , documenttitle8            :: BS.ByteString
+          , documentauthor8           :: Author
+          , documentsignatorylinks8   :: [SignatoryLink]  
+          , documentfiles8            :: [File]
+          , documentsealedfiles8      :: [File]
+          , documentstatus8           :: DocumentStatus
+          , documentctime8            :: MinutesTime
+          , documentmtime8            :: MinutesTime
+          , documentchargemode8       :: ChargeMode
+          , documentdaystosign8       :: Maybe Int
+          , documenttimeouttime8      :: Maybe TimeoutTime 
+          -- | If true, this Document will not appear in the document list
+          , documentdeleted8          :: Bool
+          , documenthistory8          :: [DocumentHistoryEntry]
+          , documentinvitetext8       :: BS.ByteString
+          , documenttrustweaverreference8 :: Maybe BS.ByteString
+          }
+
       data Document = Document
           { documentid               :: DocumentID
           , documenttitle            :: BS.ByteString
@@ -403,6 +447,7 @@ $(deriveAll [''Default]
           , documenthistory          :: [DocumentHistoryEntry]
           , documentinvitetext       :: BS.ByteString
           , documenttrustweaverreference :: Maybe BS.ByteString
+          , documentallowedidtypes   :: [IdentificationType]
           }
 
       data File0 = File0 
@@ -513,6 +558,9 @@ deriving instance Show SignInfo0
 deriving instance Show SignatoryDetails
 deriving instance Show SignatoryDetails0
 deriving instance Show DocumentHistoryEntry
+deriving instance Show IdentificationType
+deriving instance Show SignatureProvider
+deriving instance Show SignatureInfo
 
 instance Show Signatory where
     showsPrec prec (Signatory userid) = showsPrec prec userid
@@ -577,6 +625,14 @@ $(deriveSerialize ''SignInfo)
 instance Version SignInfo where
     mode = extension 1 (Proxy :: Proxy SignInfo0)
 
+$(deriveSerialize ''IdentificationType)
+instance Version IdentificationType
+
+$(deriveSerialize ''SignatureProvider)
+instance Version SignatureProvider
+
+$(deriveSerialize ''SignatureInfo)
+instance Version SignatureInfo
 
 instance Migrate SignInfo0 SignInfo where
     migrate (SignInfo0 
@@ -608,9 +664,13 @@ $(deriveSerialize ''SignatoryLink3)
 instance Version SignatoryLink3 where
     mode = extension 3 (Proxy :: Proxy SignatoryLink2)
 
+$(deriveSerialize ''SignatoryLink4)
+instance Version SignatoryLink4 where
+    mode = extension 4 (Proxy :: Proxy SignatoryLink3)
+
 $(deriveSerialize ''SignatoryLink)
 instance Version SignatoryLink where
-    mode = extension 4 (Proxy :: Proxy SignatoryLink3)
+    mode = extension 5 (Proxy :: Proxy SignatoryLink4)
     
 instance Migrate SignatoryDetails0 SignatoryDetails where
     migrate (SignatoryDetails0
@@ -694,7 +754,7 @@ instance Migrate SignatoryLink2 SignatoryLink3 where
           }
 
 
-instance Migrate SignatoryLink3 SignatoryLink where
+instance Migrate SignatoryLink3 SignatoryLink4 where
       migrate (SignatoryLink3 
           { signatorylinkid3    
           , signatorydetails3   
@@ -702,16 +762,35 @@ instance Migrate SignatoryLink3 SignatoryLink where
           , maybesignatory3     
           , maybesigninfo3      
           , maybeseeninfo3   
-          }) = SignatoryLink 
-          { signatorylinkid    = signatorylinkid3
-          , signatorydetails   = signatorydetails3
-          , signatorymagichash = signatorymagichash3
-          , maybesignatory     = maybesignatory3
-          , maybesigninfo      = maybesigninfo3
-          , maybeseeninfo      = maybeseeninfo3 
-          , invitationdeliverystatus = Delivered
+          }) = SignatoryLink4 
+          { signatorylinkid4    = signatorylinkid3
+          , signatorydetails4   = signatorydetails3
+          , signatorymagichash4 = signatorymagichash3
+          , maybesignatory4     = maybesignatory3
+          , maybesigninfo4      = maybesigninfo3
+          , maybeseeninfo4      = maybeseeninfo3 
+          , invitationdeliverystatus4 = Delivered
           }
 
+instance Migrate SignatoryLink4 SignatoryLink where
+    migrate (SignatoryLink4
+             { signatorylinkid4
+             , signatorydetails4
+             , signatorymagichash4
+             , maybesignatory4
+             , maybesigninfo4
+             , maybeseeninfo4
+             , invitationdeliverystatus4
+             }) = SignatoryLink
+             { signatorylinkid = signatorylinkid4
+             , signatorydetails = signatorydetails4
+             , signatorymagichash = signatorymagichash4
+             , maybesignatory = maybesignatory4
+             , maybesigninfo = maybesigninfo4
+             , maybeseeninfo = maybeseeninfo4
+             , invitationdeliverystatus = invitationdeliverystatus4
+             , signatorysignatureinfo = Nothing
+             }
 
 $(deriveSerialize ''SignatoryLinkID)
 instance Version SignatoryLinkID
@@ -762,9 +841,13 @@ $(deriveSerialize ''Document7)
 instance Version Document7 where
     mode = extension 7 (Proxy :: Proxy Document6)
 
+$(deriveSerialize ''Document8)
+instance Version Document8 where
+    mode = extension 8 (Proxy :: Proxy Document7)
+
 $(deriveSerialize ''Document)
 instance Version Document where
-    mode = extension 8 (Proxy :: Proxy Document7)
+    mode = extension 9 (Proxy :: Proxy Document8)
 
 instance Migrate Document0 Document1 where
       migrate (Document0
@@ -1005,9 +1088,10 @@ instance Migrate Document6 Document7 where
                                                    , invitationdeliverystatus = Delivered
                                                    , signatorymagichash = MagicHash 0
                                                    , signatorylinkid = SignatoryLinkID 0
+                                                   , signatorysignatureinfo = Nothing
                                                    }
 
-instance Migrate Document7 Document where
+instance Migrate Document7 Document8 where
     migrate (Document7
                 { documentid7            
                 , documenttitle7         
@@ -1024,23 +1108,61 @@ instance Migrate Document7 Document where
                 , documentdeleted7   
                 , documenthistory7   
                 , documentinvitetext7
+                }) = Document8
+                { documentid8 = documentid7           
+                , documenttitle8 = documenttitle7        
+                , documentauthor8 = documentauthor7       
+                , documentsignatorylinks8 = documentsignatorylinks7
+                , documentfiles8 = documentfiles7      
+                , documentsealedfiles8 = documentsealedfiles7
+                , documentstatus8 = documentstatus7     
+                , documentctime8 = documentctime7      
+                , documentmtime8 = documentmtime7      
+                , documentchargemode8 = documentchargemode7 
+                , documentdaystosign8 = documentdaystosign7 
+                , documenttimeouttime8 = documenttimeouttime7 
+                , documentdeleted8 = documentdeleted7  
+                , documenthistory8 = documenthistory7  
+                , documentinvitetext8 = documentinvitetext7
+                , documenttrustweaverreference8 = Nothing
+                }
+
+instance Migrate Document8 Document where
+    migrate (Document8
+                { documentid8
+                , documenttitle8
+                , documentauthor8
+                , documentsignatorylinks8
+                , documentfiles8
+                , documentsealedfiles8
+                , documentstatus8 
+                , documentctime8
+                , documentmtime8
+                , documentchargemode8
+                , documentdaystosign8
+                , documenttimeouttime8
+                , documentdeleted8
+                , documenthistory8
+                , documentinvitetext8
+                , documenttrustweaverreference8
                 }) = Document
-                { documentid = documentid7           
-                , documenttitle = documenttitle7        
-                , documentauthor = documentauthor7       
-                , documentsignatorylinks = documentsignatorylinks7
-                , documentfiles = documentfiles7      
-                , documentsealedfiles = documentsealedfiles7
-                , documentstatus = documentstatus7     
-                , documentctime = documentctime7      
-                , documentmtime = documentmtime7      
-                , documentchargemode = documentchargemode7 
-                , documentdaystosign = documentdaystosign7 
-                , documenttimeouttime = documenttimeouttime7 
-                , documentdeleted = documentdeleted7  
-                , documenthistory = documenthistory7  
-                , documentinvitetext = documentinvitetext7
-                , documenttrustweaverreference = Nothing
+                { documentid = documentid8
+                , documenttitle = documenttitle8
+                , documentauthor = documentauthor8
+                , documentsignatorylinks = documentsignatorylinks8
+                , documentfiles = documentfiles8
+                , documentsealedfiles = documentsealedfiles8
+                , documentstatus = documentstatus8
+                , documentctime = documentctime8
+                , documentmtime = documentmtime8
+                , documentchargemode = documentchargemode8
+                , documentdaystosign = documentdaystosign8
+                , documenttimeouttime = documenttimeouttime8
+                , documentdeleted = documentdeleted8
+                , documenthistory = documenthistory8
+                , documentinvitetext = documentinvitetext8
+                , documenttrustweaverreference = documenttrustweaverreference8
+                , documentallowedidtypes = [EmailIdentification]
                 }
 
 $(deriveSerialize ''DocumentStatus)
@@ -1191,6 +1313,7 @@ newDocument user title ctime isfree = do
           , documentinvitetext = BS.empty
           , documentsealedfiles = []
           , documenttrustweaverreference = Nothing
+          , documentallowedidtypes = [EmailIdentification]
           }
   modify $ insert doc
   return doc
@@ -1634,6 +1757,7 @@ signLinkFromDetails emails details = do
                      , maybesigninfo  = Nothing
                      , maybeseeninfo  = Nothing
                      , invitationdeliverystatus = Unknown
+                     , signatorysignatureinfo = Nothing
                      }
 
 getUniqueSignatoryLinkID :: Update Documents SignatoryLinkID
