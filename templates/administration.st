@@ -108,15 +108,15 @@ userspaging=
     </form>
 ###
 adminusers=
-<strong>USER ADMIN</strong> <BR/>
-$backtoadminmainlink()$ 
-$usersfilter(link=adminuserlink)$
-$userspaging()$
-<BR/><BR/>
-<form>
-$users:{user| <a href="$adminuserlink$/$user.usvId$"> $user.usvFullname$ &lt;$user.usvEmail$&gt; </a>}:br()$
-</from>
-###
+    <strong>USER ADMIN</strong>
+    <BR>
+    $backtoadminmainlink()$ 
+    $usersfilter(link=adminuserlink)$
+    $userspaging()$
+    <BR><BR>
+    <form>
+      $users:{user| <a href="$adminuserlink$/$user.usvId$"> $user.usvFullname$ &lt;$user.usvEmail$&gt; </a>}:br()$
+    </form>
 ###
 adminuser= 
      <a href="$adminlink$">Go back to main admin page</a> <a style="padding-left:100px" href="$adminuserslink$">Go back to user admin page</a>
