@@ -412,32 +412,32 @@ databaseContents=
 
 ####
 pageStats=
-     $backtoadminmainlink()$ 
-     <div>
+    $backtoadminmainlink()$ 
+    <div>
       <h1>Stats page</h1>
       <table>
-       <tr><td>Users</td><td>$userscount$</td></tr>
-       <tr><td>Documents</td><td>$docscount$</td></tr>
+        <tr><td>Users</td><td>$userscount$</td></tr>
+        <tr><td>Documents</td><td>$docscount$</td></tr>
       </table>
-      <br/>
+      <br>
       <form method="post" action="/createuser">
-       Create user:<br/> 
-       <table>
-        <tr>
-         <td>Full name:</td>
-         <td><input type="text" name="fullname"/></td>
-        </tr>
-        <tr>
-         <td>Email address:</td>
-         <td><input type="email" name="email"/></td>
-        </tr>
-       </table><br/>
-       <input type="submit" value="Create user"/>
+        Create user:<br> 
+        <table>
+          <tr>
+            <td>Full name:</td>
+            <td><input type="text" name="fullname"></td>
+          </tr>
+          <tr>
+            <td>Email address:</td>
+            <td><input type="email" name="email"></td>
+          </tr>
+        </table><br>
+        <input type="submit" value="Create user">
       </form>
-      <br/>
-      Disk status:<br/>
+      <br>
+      Disk status:<br>
       <pre>$sysinfo$</pre>
-     </div>
+    </div>
 ####
 backtoadminmainlink=<a href="$adminlink$">Go back to main admin page</a> 
 <BR/><BR/>
