@@ -238,8 +238,12 @@ pageDocumentForSignSigned=<div>Du har redan undertecknat!</div>
 pageDocumentForSignTimedout= <div>Förfallodatum har passerat!</div>
 ####
 pageDocumentForSignButtons=  <div>
+			      $if(emailallowed)$
                                  <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign" rel="#dialog-confirm-sign">
+			      $endif$
+			      $if(elegallowed)$
 				 <input class="bigbutton cross-button" type="submit" name="signbankid" value="Underteckna with E-Leg" id="signbankid" rel="#dialog-confirm-sign-eleg">
+			      $endif$
                                  <input class="bigbutton" type="submit" name="cancel" value="Avvisa" rel="#dialog-confirm-cancel" id="cancel">
                               </div>
 ####
