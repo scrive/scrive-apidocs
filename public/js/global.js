@@ -86,18 +86,21 @@ function swedishString(names)
 }
 
 $(document).ready( function () {
-
+	// remember the last row of the table that was clicked
         var focused;
         // two alternative ways to track clicks off of a .check
         //$("*").not(".check").click(function(){if(this == document.activeElement) { focused = null; }});
         // this way is cleaner since it only installs a handler on the toplevel document instead of nearly
         // every element
+
+	// when you click outside of the table, lose focus
         $(document).click(function(event){ 
                 if($(event.target).parents("#selectable").size() === 0){ 
                     focused = null; 
                 }
             });
 
+	// override click when shift key is held
         $("#selectable tr").mousedown(function(event){
                 if(focused && event.shiftKey && $(event.target).filter(".check").size() === 0){
                     var checks = $(".check");
@@ -107,7 +110,7 @@ $(document).ready( function () {
                     var s = Math.min(startIndex, endIndex);
                     var e = Math.max(startIndex, endIndex);
  
-                    checks.slice(s, e+1).attr("checked", true);
+                    checks.slice(s, e + 1).attr("checked", true);
 
                     checks.not(":checked").parents("tr").removeClass("ui-selected");
                     checks.filter(":checked").parents("tr").addClass("ui-selected");
