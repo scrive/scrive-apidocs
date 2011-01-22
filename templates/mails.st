@@ -151,25 +151,30 @@ remindMailNotSignedContent=
     $footer:noescape()$                            
                              
 ####
-newUserMailTitle=Nytt konto
+newUserMailTitle=
+    Nytt konto
+
 ####
 newUserMailContent=
     <span>
       <p>Hej <strong>$personname$</strong>,</p>
 
       <p>Jag heter Lukas Duczko och är VD på SkrivaPå. Tack för att du har skapat ett konto hos oss. 
-         Vi hoppas att du kommer att bli nöjd med våra tjänster.
-         Tveka inte att höra av dig med feedback eller bara en enkel hälsning. Din åsikt är värdefull.</p>
-      <p>Användarnamn: <a style="color:#0000CC;font-weight:bold">$email$</a><br/>
+        Vi hoppas att du kommer att bli nöjd med våra tjänster.
+        Tveka inte att höra av dig med feedback eller bara en enkel hälsning. Din åsikt är värdefull.</p>
+      <p>Användarnamn: <a style="color:#0000CC;font-weight:bold">$email$</a>
       </p>
-      <p>Du aktiverar ditt konto genom att klicka på länken nedan. Länken är giltig i 12 timmar. <BR/>
-         <a href="$ctxhostpart$$activatelink$">$ctxhostpart$$activatelink$</a>
+      <p>Du aktiverar ditt konto genom att klicka på länken nedan. Länken är giltig i 12 timmar. <BR>
+        <a href="$ctxhostpart$$activatelink$">$ctxhostpart$$activatelink$</a>
       </p>
-      <p>Med vänliga hälsningar<br/>/Lukas Duczko och team <a href="$ctxhostpart$/">SkrivaPå</a>.
+      <p>Med vänliga hälsningar<br>
+        /Lukas Duczko och team <a href="$ctxhostpart$/">SkrivaPå</a>.
       </p>
-     </span>
+    </span>
+
 ####
 passwordChangeMailTitle=Nytt lösenord
+
 ####
 passwordChangeMailContent= 
      <span>
