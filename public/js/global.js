@@ -416,87 +416,9 @@ $(document).ready( function () {
         
         });
 
-    if($("#allowedbox").size() > 0) {
-    if($("#allowedbox").val().indexOf("Email")>=0) {
-	$("#signinvite").show();
-    } else {
-	$("#signinvite").hide();
-    }
-
-    if($("#allowedbox").val().indexOf("ELeg")>=0) {
-	$("#signbankid").show();
-    } else {
-	$("#signbankid").hide();
-    } }
-
-    $("#allowedbox").change(function(){
-	    if($("#allowedbox").val().indexOf("Email")>=0) {
-		$("#signinvite").show();
-	    } else {
-		$("#signinvite").hide();
-	    }
-	    
-	    if($("#allowedbox").val().indexOf("ELeg")>=0) {
-		$("#signbankid").show();
-	    } else {
-		$("#signbankid").hide();
-	    }
-	});
-    
-	if($("#authorroledropdown option:selected").val() == "signatory") {
-		    $("#signinvite").val("Underteckna");
-		    $(".buttonbox .submiter").text("Underteckna");
-
-		    $("#signinvite").addClass("cross-button");
-
-		    $("#dialog-title-sign").removeClass("hidden");
-		    $("#dialog-title-send").addClass("hidden");
-
-		    $("#dialog-confirm-text-sign").removeClass("hidden");
-		    $("#dialog-confirm-text-send").addClass("hidden");
-
-	} else if($("#authorroledropdown option:selected").val() == "secretary"){
-		    $("#signinvite").val("Skicka");
-		    $(".buttonbox .submiter").text("Skicka");
-
-		    $("#signinvite").removeClass("cross-button");
-
-		    $("#dialog-title-sign").addClass("hidden");
-		    $("#dialog-title-send").removeClass("hidden");
-
-		    $("#dialog-confirm-text-sign").addClass("hidden");
-		    $("#dialog-confirm-text-send").removeClass("hidden");
-		}
-
-	$("#authorroledropdown").change(function() { 
-		$("#addsiglink").removeClass("redborder");
-		$("#authorroledropdown").removeClass("redborder");
-		if($("#authorroledropdown option:selected").val() == "signatory") {
-		    $("#signinvite").val("Underteckna");
-		    $(".buttonbox .submiter").text("Underteckna");
-
-		    $("#signinvite").addClass("cross-button");
-
-		    $("#dialog-title-sign").removeClass("hidden");
-		    $("#dialog-title-send").addClass("hidden");
-
-		    $("#dialog-confirm-text-sign").removeClass("hidden");
-		    $("#dialog-confirm-text-send").addClass("hidden");
-
-		} else if($("#authorroledropdown option:selected").val() == "secretary"){
-		    $("#signinvite").val("Skicka");
-		    $(".buttonbox .submiter").text("Skicka");
-
-		    $("#signinvite").removeClass("cross-button");
-
-		    $("#dialog-title-sign").addClass("hidden");
-		    $("#dialog-title-send").removeClass("hidden");
-
-		    $("#dialog-confirm-text-sign").addClass("hidden");
-		    $("#dialog-confirm-text-send").removeClass("hidden");
-
-		}
-	    });
+    showProperSignButtons();    
+    $("#allowedbox").change(showProperSignButtons);
+    $("#authorroledropdown").change(showProperSignButtons);
 
     function gettext(id) {
 	return $("#" + id).text();
@@ -520,6 +442,58 @@ $(document).ready( function () {
     //    RPXNOW.overlay = true;
     //    RPXNOW.language_preference = 'sv';
 });
+
+function showProperSignButtons() {
+    if($("#allowedbox").size() > 0
+       && $("#authorroledropdown").size() > 0) {
+
+	if($("#allowedbox").val().indexOf("Email")>=0 
+	   || $("#authorroledropdown").val() == "secretary") {
+	    $("#signinvite").show();
+	} else {
+	    $("#signinvite").hide();
+	}
+
+
+	if($("#allowedbox").val().indexOf("ELeg")>=0 
+	   && $("#authorroledropdown").val() == "signatory") {
+	    $("#signbankid").show();
+	} else {
+	    $("#signbankid").hide();
+	}
+
+	$("#addsiglink").removeClass("redborder");
+	$("#authorroledropdown").removeClass("redborder");
+	if($("#authorroledropdown").val() == "signatory") {
+	    $("#signinvite").val("Underteckna");
+	    $(".buttonbox .submiter").text("Underteckna");
+	    
+	    $("#signinvite").addClass("cross-button");
+
+	    $("#dialog-title-sign").removeClass("hidden");
+	    $("#dialog-title-send").addClass("hidden");
+
+	    $("#dialog-confirm-text-sign").removeClass("hidden");
+	    $("#dialog-confirm-text-send").addClass("hidden");
+
+	} else if($("#authorroledropdown").val() == "secretary"){
+	    $("#signinvite").val("Skicka");
+	    $("#signinvite").show();
+	    $(".buttonbox .submiter").text("Skicka");
+
+	    $("#signinvite").removeClass("cross-button");
+
+	    $("#dialog-title-sign").addClass("hidden");
+	    $("#dialog-title-send").removeClass("hidden");
+
+	    $("#dialog-confirm-text-sign").addClass("hidden");
+	    $("#dialog-confirm-text-send").removeClass("hidden");
+
+	}
+
+    }
+
+}
 
   function emailFieldsValidation(fields){
       fields = fields.filter(function(){return !isExceptionalField($(this))});
