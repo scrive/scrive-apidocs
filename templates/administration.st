@@ -1,25 +1,33 @@
 ###
 adminsmain=  
-             <strong>Admin Tools</strong>
-             <table><tbody>
-             <tr>
-             <td style="height:50px;width:200px"> <a href="/adminonly/alluserstable"><button style="width:150px"> Statistics</button></a><td>
-             <td style="height:50px"> <a href="/adminonly/payments"><button style="width:150px">Price Plan</button> </a> <td>
-             <tr>
-             <tr>
-             <td style="height:50px;width:200px"><a href="/stats"><button style="width:150px"> Create User </button> </a> <td>
-             <td style="height:50px;width:200px"> <a href="/adminonly/useradmin"><button style="width:150px"> User Admin </button> </a><td>
-             <tr>
-             </tbody><table>
-             <BR/>
-             <BR/>
-             <strong> Super Admin Tools Only </strong>
-             <table><tbody>
-             <tr>
-             <td style="height:50px;width:200px"><a href="/adminonly/advuseradmin"><button style="width:150px"> Adv. User Admin </button> </a> <td>
-             <td style="height:50px;width:200px"> <a href="/adminonly/advpayments"><button style="width:150px"> App Admin </button> </a><td>
-             <tr>
-             </tbody></table>
+    <strong>Admin Tools</strong>
+    <table><tbody>
+        <tr>
+          <td style="height:50px;width:200px">
+            <a href="/adminonly/alluserstable">
+              <button style="width:150px"> Statistics</button>
+            </a>
+          </td>
+          <td style="height:50px"> 
+            <a href="/adminonly/payments">
+              <button style="width:150px">Price Plan</button> 
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td style="height:50px;width:200px"><a href="/stats"><button style="width:150px"> Create User </button> </a> <td>
+          <td style="height:50px;width:200px"> <a href="/adminonly/useradmin"><button style="width:150px"> User Admin </button> </a><td>
+        </tr>
+    </tbody></table>
+    <BR>
+    <BR>
+    <strong> Super Admin Tools Only </strong>
+    <table><tbody>
+        <tr>
+          <td style="height:50px;width:200px"><a href="/adminonly/advuseradmin"><button style="width:150px"> Adv. User Admin </button> </a> </td>
+          <td style="height:50px;width:200px"> <a href="/adminonly/advpayments"><button style="width:150px"> App Admin </button> </a></td>
+        </tr>
+    </tbody></table>
    
 
 ###
