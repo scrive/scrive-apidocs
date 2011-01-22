@@ -402,13 +402,13 @@ allUsersTable=
 
 ###
 databaseContents=
- $backtoadminmainlink()$ 
-  <div>
-     <h1>All database files</h1>
-     <ul>
-      $files:{file| <li><a href="$file$">$file$</a></li>}$
-     </ul>
-  </div>
+    $backtoadminmainlink()$ 
+    <div>
+      <h1>All database files</h1>
+      <ul>
+        $files:{file| <li><a href="$file$">$file$</a></li>}$
+      </ul>
+    </div>
 
 ####
 pageStats=
