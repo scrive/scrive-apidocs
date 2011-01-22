@@ -72,28 +72,32 @@ mailRejectMailContent=
     </span>      
  
 ###
-mailInvitationToSignTitle=Inbjudan från $creatorname$ till $documenttitle$
+mailInvitationToSignTitle=
+    Inbjudan från $creatorname$ till $documenttitle$
+
 ###
 mailInvitationToSignContent= 
-                $header:noescape()$
-                <span>
-                  <p><i>Översiktlig information</i><br/>
-                   Parter: $partnersinfo:noescape()$<br/>
-                   $whohadsignedinfo:noescape()$<br/>
-                   $timetosigninfo:noescape()$
-                  </p>
-                 <p><i>Så här går du vidare</i><br/>
-                  1. Klicka på länken <br/>
-                    <a href="$link$">$link$</a> <br/>
-                    <br/>
-                  2. Granska online<br/>
-                  3. Underteckna<br/>
-                  4. Färdig</p>
-		 <p>
-		 <i>Detta mail får inte vidarebefordras.</i>
-		 </p>
-                </span>
-                $footer:noescape()$
+    $header:noescape()$
+    <span>
+      <p><i>Översiktlig information</i><br>
+        Parter: $partnersinfo:noescape()$<br>
+        $whohadsignedinfo:noescape()$<br>
+        $timetosigninfo:noescape()$
+      </p>
+      <p><i>Så här går du vidare</i><br>
+        1. Klicka på länken <br>
+        <a href="$link$">$link$</a> <br>
+        <br>
+        2. Granska online<br>
+        3. Underteckna<br>
+        4. Färdig
+      </p>
+      <p>
+	<i>Detta mail får inte vidarebefordras.</i>
+      </p>
+    </span>
+    $footer:noescape()$
+
 ###        
 mailInvitationToSignDefaultHeader = <p>Hej $personname$, <br/><br/> $creatorname$ har bjudit in dig att underteckna 
                                        dokumentet $documenttitle$ online via tjänsten SkrivaPå. </p>
