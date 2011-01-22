@@ -100,12 +100,12 @@ usersfilter=
     </form>
 ###
 userspaging=
-<form action="$link$" method="GET">
-View page:
-$intervals:{interval |<button type="submit" name="page" class="transparent" value="$interval.oValue$"><a>$interval.oText$</a> </button>}$
-<input type="hidden" name="startletter" value="$startletter$"/>
-<input type="hidden" name="search" value="$search$"/>
-</from>
+    <form action="$link$" method="GET">
+      View page:
+      $intervals:{interval |<button type="submit" name="page" class="transparent" value="$interval.oValue$"><a>$interval.oText$</a> </button>}$
+      <input type="hidden" name="startletter" value="$startletter$">
+      <input type="hidden" name="search" value="$search$">
+    </form>
 ###
 adminusers=
 <strong>USER ADMIN</strong> <BR/>
