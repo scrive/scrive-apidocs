@@ -101,3 +101,11 @@ instance InspectXML UserPaymentPolicy where
 instance InspectXML UserPaymentAccount where
     inspectXML = asChild . show 
                      
+instance InspectXML IdentificationType where
+    inspectXML = asChild . show
+
+instance InspectXML SignatureProvider where
+    inspectXML = asChild . show
+
+instance InspectXML SignatureInfo where
+    inspectXML = asChild . show
