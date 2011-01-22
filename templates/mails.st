@@ -60,14 +60,17 @@ mailDocumentClosedForSignatoriesContent=
     </span>
 
 ####
-mailRejectMailTitle=Avvisat: $documenttitle$
+mailRejectMailTitle=
+    Avvisat: $documenttitle$
+
 ####
-mailRejectMailContent= <span>
-                      <p>Hej $authorname$,</p>
-                      <p>$rejectorName$ har avvisat att underteckna dokumentet <strong>$documenttitle$</strong>. 
-                      Avtalsprocessen är därmed avbruten.</p>
-                      $poweredBySkrivaPaPara()$
-                    </span>       
+mailRejectMailContent=
+    <span>
+      <p>Hej $authorname$,</p>
+      <p>$rejectorName$ har avvisat att underteckna dokumentet <strong>$documenttitle$</strong>. Avtalsprocessen är därmed avbruten.</p>
+      $poweredBySkrivaPaPara()$
+    </span>      
+ 
 ###
 mailInvitationToSignTitle=Inbjudan från $creatorname$ till $documenttitle$
 ###
