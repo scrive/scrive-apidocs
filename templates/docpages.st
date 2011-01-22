@@ -273,7 +273,7 @@ pageDocumentForSignContent=
                      <a class="close"> </a>                  
                      <h2>Underteckna with E-Legitimation</h2>  
                      <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
-                     <p>När $partyUnsigned$ undertecknat blir 
+                     <p>När $partyUnsigned:noescape()$ undertecknat blir 
                       avtalet <strong>juridiskt bindande</strong> och
                       det färdigställda avtalet skickas till din e-post.</p>
                       <div class="buttonbox">
@@ -403,7 +403,7 @@ pageDocumentForAuthorContent=
                      <a class="close"> </a>                  
                      <h2>Underteckna with E-Legitimation</h2>  
                      <p>CHANGE!!!Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
-                     <p>När $partyUnsigned$ undertecknat blir 
+                     <p>När  undertecknat blir 
                       avtalet <strong>juridiskt bindande</strong> och
                       det färdigställda avtalet skickas till din e-post.</p>
                       <div class="buttonbox">
