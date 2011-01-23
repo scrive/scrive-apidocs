@@ -78,6 +78,11 @@ handleSignPost docid signid magic = do
   document <- queryOrFail $ GetDocumentByDocumentID docid
   checkLinkIDAndMagicHash document signid magic
 
+  let allowedidtypes = documentallowedidtypes document
+      allowsELeg = isJust $ find (== ELegitimationIdentification) allowedidtypes
+
+  when (not allowsELeg) mzero
+
   signature <- getDataFnM $ look "signature"
   transactionid <- getDataFnM $ look "transactionid"
 
@@ -172,6 +177,12 @@ handleIssuePost docid = withUserPost $ do
   document <- queryOrFail $ GetDocumentByDocumentID $ docid
   ctx@Context { ctxmaybeuser = Just user, ctxelegtransactions } <- get
   failIfNotAuthor document user
+
+  let allowedidtypes = documentallowedidtypes document
+      allowsELeg = isJust $ find (== ELegitimationIdentification) allowedidtypes
+
+  when (not allowsELeg) mzero
+
 
   signature <- getDataFnM $ look "signature"
   transactionid <- getDataFnM $ look "transactionid"

@@ -292,6 +292,11 @@ signDocument documentid -- ^ The DocumentID of the document to sign
   fieldvalues <- getAndConcat "fieldvalue"
   let fields = zip fieldnames fieldvalues
 
+  let allowedidtypes = documentallowedidtypes document
+      allowsEmail = isJust $ find (== EmailIdentification) allowedidtypes
+
+  when (not allowsEmail) mzero
+
   newdocument <- update $ SignDocument documentid signatorylinkid1 ctxtime ctxipnumber Nothing fields
   case newdocument of
     Left message -> 
@@ -534,7 +539,7 @@ handleIssueShowPost docid = withUserPost $ do
   document <- queryOrFail $ GetDocumentByDocumentID $ docid
   ctx@Context { ctxmaybeuser = Just user } <- get
   failIfNotAuthor document user
-     
+  
   -- something has to change here
   case documentstatus document of
        Preparation -> do
