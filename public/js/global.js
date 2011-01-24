@@ -337,7 +337,13 @@ $(document).ready( function () {
          addFlashMessage($(this).html())
          $(this).remove();
       })
-    })    
+    })  
+   $(".flashOnOn").change( function(){
+     if ($(this).val()=="off")
+       $(".flashMessage",$(this).parent()).each(function(){
+            addFlashMessage($(this).html())
+          })
+    }) 
     $(".addremovecheckbox").change(function(){
         var what = $($(this).attr("rel"))
         var location = $($(this).attr("location"))
