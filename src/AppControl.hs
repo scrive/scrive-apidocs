@@ -79,6 +79,9 @@ data AppConf
               , twSignCertPwd   :: String
               , twAdminCert     :: FilePath
               , twAdminCertPwd  :: String
+              , twSignUrl       :: String
+              , twAdminUrl      :: String
+              , twStorageUrl    :: String
               , mailsConfig     :: MailsConfig
 
               }              
@@ -313,6 +316,9 @@ appHandler appConf appGlobals= do
                           , TW.signcertpwd = twSignCertPwd appConf
                           , TW.admincert = twAdminCert appConf
                           , TW.admincertpwd = twAdminCertPwd appConf
+                          , TW.signurl = twSignUrl appConf
+                          , TW.adminurl = twAdminUrl appConf
+                          , TW.storageurl = twStorageUrl appConf
                           }
             , ctxelegtransactions = elegtrans
             }
