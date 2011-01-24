@@ -354,7 +354,7 @@ pageDocumentForAuthorContent=
               </div>
               <div style="margin-top: 20px"></div>
               <span>
-              <input type="checkbox" class="addremovecheckbox flashOnClick" rel="#daystosignbox" location="#datetosigncontainer" oldlocation="#hiddenttimestuffbox" autocomplete="off" value="$if(timetosignset)$on$else$off$endif$" ></input> Välj förfallodatum
+              <input type="checkbox" class="addremovecheckbox flashOnOn" rel="#daystosignbox" location="#datetosigncontainer" oldlocation="#hiddenttimestuffbox" autocomplete="off" value="$if(timetosignset)$on$else$off$endif$" ></input> Välj förfallodatum
                 <div id="datetosigncontainer">  </div>
                 $if(!timetosignset)$
                 <span class="hidden flashMessage" > Varning: Om du väljer ett förfallodatum kan du inte återkalla inbjudan innan datumet förfallit. Detta regleras av avtalslagen.</span>
@@ -369,7 +369,7 @@ pageDocumentForAuthorContent=
 		</select>
               </div>
 
-              <div style="height: 60px;">
+              <div style="height: 70px;">
               <input class="bigbutton cross-button" type="submit" name="final" value="Underteckna" id="signinvite" rel="#dialog-confirm-signinvite"> <br />
 	      <input class="bigbutton cross-button" type="submit" name="signbankid" value="Underteckna with E-Leg" id="signbankid" rel="#dialog-confirm-sign-eleg"> <br />
               <input class="button" type="submit" name="save" value="Spara som utkast">
