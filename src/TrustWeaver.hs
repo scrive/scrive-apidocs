@@ -32,10 +32,14 @@ import SOAP.SOAP
 data TrustWeaverConf = TrustWeaverConf
     { signcert          :: FilePath
     , signcertpwd       :: String
+    , signurl           :: String
     , admincert         :: FilePath
     , admincertpwd      :: String
-    }
-                       deriving (Eq,Ord,Show,Read)
+    , adminurl          :: String
+    , storageurl        :: String
+    , retries           :: Int
+    , timeout           :: Int
+    } deriving (Eq,Ord,Show,Read)
 
 data SignRequest = SignRequest BS.ByteString
             deriving (Eq,Ord,Show,Read)
