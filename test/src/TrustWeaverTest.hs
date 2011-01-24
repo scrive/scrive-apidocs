@@ -71,18 +71,45 @@ Retrieving Invoices from TrustWeaver-Archiving™ (test case F1.8)
 
 -}
 
+twconf = TW.TrustWeaverConf
+    { TW.signcert = "certs/dev.pem"
+    , TW.signcertpwd = "abcd1234"
+    , TW.admincert = "certs/dev-admin.pem"
+    , TW.admincertpwd = "abcd1234"
+    , TW.signurl = "https://tseiod-dev.trustweaver.com/ts/svs.asmx"
+    , TW.adminurl = "https://twa-test-db.trustweaver.com/ta_hubservices/Admin/AdminService.svc"
+    , TW.storageurl = "https://twa-test-db.trustweaver.com/ta_hubservices/Storage/StorageService.svc"
+    , TW.retries = 1
+    , TW.timeout = 10
+    }
+
+twconf_bad = TW.TrustWeaverConf
+    { TW.signcert = "certs/dev.pem"
+    , TW.signcertpwd = "abcd1234"
+    , TW.admincert = "certs/dev-admin.pem"
+    , TW.admincertpwd = "abcd1234"
+    , TW.signurl = "https://tseiod-dev.trustweaver.com/ts/svs.asmx-"
+    , TW.adminurl = "https://twa-test-db.trustweaver.com/ta_hubservices/Admin/AdminService.svc-"
+    , TW.storageurl = "https://twa-test-db.trustweaver.com/ta_hubservices/Storage/StorageService.svc-"
+    , TW.retries = 1
+    , TW.timeout = 10
+    }
 
 trustWeaverTests :: [Test]
 trustWeaverTests = [ testGroup "TrustWeaver" 
-                     [ testCase "Signing and validation (F1.1 and F1.2)" testSignAndValidate
-                     , testCase "Register and enable section (F1.6)" testRegisterAndEnableSection
-                     , testCase "Store and retrieve invoice (F1.7 and F1.8)" testStoreAndRetrieveInvoice
-                    ]  
-                 ] 
+                     [ testCase "Signing and validation (F1.1 and F1.2)" $ testSignAndValidate twconf
+                     , testCase "Register and enable section (F1.6)" $ testRegisterAndEnableSection twconf
+                     , testCase "Store and retrieve invoice (F1.7 and F1.8)" $ testStoreAndRetrieveInvoice twconf
+                     ]
+                   , testGroup "TrustWeaver_badurls" 
+                     [ testCase "Signing and validation (F1.1 and F1.2)" $ testSignAndValidate twconf_bad
+                     , testCase "Register and enable section (F1.6)" $ testRegisterAndEnableSection twconf_bad
+                     , testCase "Store and retrieve invoice (F1.7 and F1.8)" $ testStoreAndRetrieveInvoice twconf_bad
+                     ]  
+                   ] 
 
-testSignAndValidate :: IO ()
-testSignAndValidate = do
-  twconf <- fmap read $ readFile "tw-test.conf" 
+testSignAndValidate :: TW.TrustWeaverConf -> IO ()
+testSignAndValidate twconf = do
   pdfdata <- BS.readFile "nda.pdf"
   result1 <- TW.signDocument twconf pdfdata
   case result1 of
@@ -97,9 +124,8 @@ testSignAndValidate = do
                         print x
                         return ()
 
-testRegisterAndEnableSection :: IO ()
-testRegisterAndEnableSection = do
-  twconf <- fmap read $ readFile "tw-test.conf" 
+testRegisterAndEnableSection :: TW.TrustWeaverConf -> IO ()
+testRegisterAndEnableSection twconf = do
   MinutesTime m <- getMinutesTime
   -- should be unique enough
   result <- TW.registerAndEnableSection twconf ("skrivapa-test-section-" ++ show m)
@@ -110,9 +136,8 @@ testRegisterAndEnableSection = do
           print x
           return ()
 
-testStoreAndRetrieveInvoice :: IO ()
-testStoreAndRetrieveInvoice = do
-  twconf <- fmap read $ readFile "tw-test.conf" 
+testStoreAndRetrieveInvoice :: TW.TrustWeaverConf -> IO ()
+testStoreAndRetrieveInvoice twconf = do
   pdfdata <- BS.readFile "nda-signed.pdf"
   result <- TW.storeInvoice twconf "11111111" "2010-12-12T00:00:00" "skrivapa-test-section" pdfdata
   case result of
