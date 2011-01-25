@@ -46,7 +46,7 @@ instance (XmlContent a) => XmlContent (SOAP a) where
                                                 { faultcode <- inElementNS "faultcode" text
                                                 ; faultstring <- inElementNS "faultstring" text
                                                 -- ; faultactor <- optional $ inElementNS "faultactor" text
-                                                ; _ <- optional $ inElementNS "detail" (optional text)
+                                                ; _ <- optional $ elementNS "detail"
                                                 -- ; return (SOAPFault faultcode faultstring (maybe "" id faultactor))
                                                 ; return (SOAPFault faultcode faultstring "")
                                                 }
