@@ -282,16 +282,17 @@ instance XmlContent (GetInvoiceResponse) where
 
 retry TrustWeaverConf{timeout,retries} action = worker retries
     where
-      worker 0 = action
       worker n = do
-        putStrLn $ "TW action execute"
         result <- action
         case result of
           Left errmsg -> do
-                      --Log.debug $ "Retrying TrustWeaver action"
-                      putStrLn $ "Retrying TrustWeaver action"
-                      threadDelay timeout
-                      worker (n-1)
+                      Log.trustWeaver $ errmsg
+                      if n==0 || ":Client:" `isPrefixOf` (dropWhile (/=':') errmsg)
+                       then return result
+                       else do
+                        Log.trustWeaver $ "Retrying TrustWeaver action"
+                        threadDelay timeout
+                        worker (n-1)
           _ -> return result
 
 signDocument' :: TrustWeaverConf

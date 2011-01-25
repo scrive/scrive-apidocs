@@ -319,6 +319,8 @@ appHandler appConf appGlobals= do
                           , TW.signurl = twSignUrl appConf
                           , TW.adminurl = twAdminUrl appConf
                           , TW.storageurl = twStorageUrl appConf
+                          , TW.retries = 3
+                          , TW.timeout = 60000
                           }
             , ctxelegtransactions = elegtrans
             }
