@@ -11,7 +11,16 @@
 -----------------------------------------------------------------------------
 
 module TrustWeaver 
-    -- (signDocument)
+    ( TrustWeaverConf(..)
+    , signDocument
+    , signDocumentEx -- ^ for testing purposes
+    , validateDocument
+    , registerAndEnableSection
+    , storeInvoice
+    , getInvoice
+    , registerSection
+    , enableSection
+    )
     where
 import Codec.Binary.Base64
 import qualified Data.ByteString as BS
@@ -30,6 +39,7 @@ import Text.XML.HaXml.XmlContent
 import SOAP.SOAP
 import Control.Concurrent
 import qualified AppLogger as Log
+import Data.List
 
 data TrustWeaverConf = TrustWeaverConf
     { signcert          :: FilePath
@@ -43,20 +53,20 @@ data TrustWeaverConf = TrustWeaverConf
     , timeout           :: Int
     } deriving (Eq,Ord,Show,Read)
 
-data SignRequest = SignRequest BS.ByteString
+data SignRequest = SignRequest BS.ByteString String String
             deriving (Eq,Ord,Show,Read)
 
 instance HTypeable (SignRequest) where
     toHType x = Defined "SignRequest" [] []
 instance XmlContent (SignRequest) where
-    toContents (SignRequest pdfdata) =
+    toContents (SignRequest pdfdata senderTag receiverTag) =
         let base64data = encode (BS.unpack pdfdata) in
         [CElem (Elem "SignRequest" [mkAttr "xmlns" "http://www.trustweaver.com/tsswitch"] 
                          [ mkElemC "InputType" (toText "PDF")
                          , mkElemC "JobType" (toText "CADESA")
                          , mkElemC "OutputType" (toText "PDF")
-                         , mkElemC "SenderTag" (toText "SE")
-                         , mkElemC "ReceiverTag" (toText "SE")
+                         , mkElemC "SenderTag" (toText senderTag)
+                         , mkElemC "ReceiverTag" (toText receiverTag)
                          , mkElemC "Document" (toText base64data)
                          ]) ()]
     parseContents = error "Please do not parse SignRequest"
@@ -297,19 +307,28 @@ retry TrustWeaverConf{timeout,retries} action = worker retries
 
 signDocument' :: TrustWeaverConf
               -> BS.ByteString
+              -> String
+              -> String
               -> IO (Either String BS.ByteString)
-signDocument' TrustWeaverConf{signcert,signcertpwd,signurl} pdfdata = do
+signDocument' TrustWeaverConf{signcert,signcertpwd,signurl} pdfdata senderTag receiverTag = do
   result <- makeSoapCall signurl 
             "http://www.trustweaver.com/tsswitch#Sign"
             signcert signcertpwd
-           (SignRequest pdfdata)
+           (SignRequest pdfdata senderTag receiverTag)
   let extract (SignResult pdfdata') = pdfdata'
   return (fmap extract result)
 
 signDocument :: TrustWeaverConf
              -> BS.ByteString
              -> IO (Either String BS.ByteString)
-signDocument twconf = retry twconf . signDocument' twconf
+signDocument twconf pdfdata = retry twconf $ signDocument' twconf pdfdata "SE" "SE"
+
+signDocumentEx :: TrustWeaverConf
+               -> BS.ByteString
+               -> String
+               -> String
+               -> IO (Either String BS.ByteString)
+signDocumentEx twconf pdfdata senderTag receiverTag = retry twconf $ signDocument' twconf pdfdata senderTag receiverTag 
 
 validateDocument' :: TrustWeaverConf
                   -> BS.ByteString
@@ -353,6 +372,46 @@ registerAndEnableSection :: TrustWeaverConf
                           -> String
                           -> IO (Either String (String,String,String))
 registerAndEnableSection twconf = retry twconf . registerAndEnableSection' twconf
+
+
+
+registerSection' :: TrustWeaverConf
+                 -> String
+                 -> IO (Either String ())
+registerSection' TrustWeaverConf{admincert,admincertpwd,adminurl} name = do
+  result  <- makeSoapCall adminurl
+            "http://www.trustweaver.com/trustarchive/admin/v1/AdminServicePort/RegisterSection"
+            admincert admincertpwd
+           (RegisterSectionRequest name)
+
+  let extract (RegisterSectionResponse) = ()
+  return (fmap extract result)
+
+registerSection :: TrustWeaverConf
+                -> String
+                -> IO (Either String ())
+registerSection twconf = retry twconf . registerSection' twconf
+
+
+enableSection' :: TrustWeaverConf
+               -> String
+               -> IO (Either String (String,String,String))
+enableSection' TrustWeaverConf{admincert,admincertpwd,adminurl} name = do
+  result <- makeSoapCall adminurl
+            "http://www.trustweaver.com/trustarchive/admin/v1/AdminServicePort/EnableSection"
+            admincert admincertpwd
+           (EnableSectionRequest name)
+
+  let extract (EnableSectionResponse superAdminUsername superAdminPwd sectionPath) =
+          (superAdminUsername, superAdminPwd, sectionPath)
+  return (fmap extract result)
+
+enableSection :: TrustWeaverConf
+                          -> String
+                          -> IO (Either String (String,String,String))
+enableSection twconf = retry twconf . enableSection' twconf
+
+
 
 storeInvoice' :: TrustWeaverConf 
              -> String 
