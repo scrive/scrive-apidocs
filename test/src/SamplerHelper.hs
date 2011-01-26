@@ -14,6 +14,10 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import System.IO.UTF8 as UTF8
 
+import Data.Either
+
+import Text.XML.HaXml.Parse (xmlParse')
+
 sampleMail name action = sample name "mail" action mailSaver
 
 sampleFlashMsg name action = sample name "flash_msg" action stringSaver
@@ -22,10 +26,12 @@ sampleView name action = sample name "view" action stringSaver
 
 sample name suffix action saver = withSampleDirectory $ \tmp -> do
    t <- readTemplates
-   content <- action t
+   sample <- action t
    let file = tmp ++ "/" ++ name ++ "_" ++ suffix ++ ".html"
-   saver file content 
-   assert True
+   saver file sample
+   content <- Prelude.readFile file
+   let xml = xmlParse' file content
+   either assertFailure (\_ -> assert True) xml
 
 mailSaver file mail = BS.writeFile file (content mail)
 
