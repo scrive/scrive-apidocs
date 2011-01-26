@@ -297,7 +297,10 @@ appHandler appConf appGlobals= do
                 else liftIO $ readTemplates
 
   let elegtrans = getELegTransactions session
-  let 
+  let
+   mailer | production appConf = createRealMailer cfg
+          | otherwise = createDevMailer (ourInfoEmail cfg) (ourInfoEmailNiceName cfg)
+     where cfg = mailsConfig appConf
    ctx = Context
             { ctxmaybeuser = muser
             , ctxhostpart = hostpart
@@ -308,7 +311,7 @@ appHandler appConf appGlobals= do
             , ctxs3action = defaultAWSAction appConf
             , ctxproduction = production appConf
             , ctxtemplates = templates2
-            , ctxmailsconfig = mailsConfig appConf
+            , ctxmailer = mailer
             , ctxtwconf = TW.TrustWeaverConf 
                           { TW.signcert = twSignCert appConf
                           , TW.signcertpwd = twSignCertPwd appConf
@@ -366,7 +369,7 @@ sendResetPasswordMail user = do
                          ctx <- get
                          chpwdlink <- liftIO $ changePasswordLink (userid user)
                          mail <-liftIO $ UserView.resetPasswordMail (ctxtemplates ctx) (ctxhostpart ctx) user chpwdlink     
-                         liftIO $ sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = [((userfullname user), (unEmail $ useremail $ userinfo user))]}    
+                         liftIO $ sendMail (ctxmailer ctx) $ mail { fullnameemails = [((userfullname user), (unEmail $ useremail $ userinfo user))]}    
                                                         
 forgotPasswordDonePage :: Kontra Response
 forgotPasswordDonePage = do

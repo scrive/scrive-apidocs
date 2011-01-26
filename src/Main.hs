@@ -42,6 +42,7 @@ import DocControl
 import DocState
 import qualified Amazon as AWS
 import Mails.MailsConfig
+import Mails.SendMail
 import Templates.Templates (readTemplates,emptyTemplates)
 import User
 import qualified TrustWeaver as TW
@@ -140,7 +141,10 @@ main = Log.withLogger $ do
     (Right f) -> return $ (f (appConf1))
 
   let 
-   ctx = Context
+    mailer | production appConf = createRealMailer cfg
+           | otherwise = createDevMailer (ourInfoEmail cfg) (ourInfoEmailNiceName cfg)
+    cfg = mailsConfig appConf
+    ctx = Context
             { ctxmaybeuser = error "Do not use ctxmaybeuser in actions"
             , ctxhostpart = error "Do not use ctxhostpart in actions"
             , ctxflashmessages = error "Do not use ctxflashmessages in actions"
@@ -150,7 +154,7 @@ main = Log.withLogger $ do
             , ctxs3action = defaultAWSAction appConf
             , ctxproduction = production appConf
             , ctxtemplates = templates
-            , ctxmailsconfig = mailsConfig appConf
+            , ctxmailer = mailer
             , ctxtwconf = TW.TrustWeaverConf 
                           { TW.signcert = twSignCert appConf
                           , TW.signcertpwd = twSignCertPwd appConf
@@ -164,7 +168,7 @@ main = Log.withLogger $ do
                           }
             , ctxelegtransactions = error "Do not use ctxelegtransactions in actions"
             }
-
+    
 
   Exception.bracket
                  -- start the state system

@@ -52,6 +52,7 @@ import Mails.MailsConfig
 import KontraLink
 import qualified TrustWeaver as TW
 import ELegitimation.ELeg
+import Mails.SendMail
 
 instance Monad m => IsAttrValue m DocumentID where
     toAttrValue = toAttrValue . show
@@ -108,7 +109,7 @@ data Context = Context
     , ctxs3action            :: AWS.S3Action
     , ctxproduction          :: Bool
     , ctxtemplates           :: KontrakcjaTemplates 
-    , ctxmailsconfig         :: MailsConfig  
+    , ctxmailer              :: Mailer 
     , ctxtwconf              :: TW.TrustWeaverConf
     , ctxelegtransactions    :: [ELegTransaction]
     }

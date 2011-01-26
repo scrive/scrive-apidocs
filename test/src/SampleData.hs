@@ -120,7 +120,7 @@ aTestCtx = Context{ctxmaybeuser = Just aTestUser,
                    ctxs3action = aTestS3action,
                    ctxproduction = False,
                    ctxtemplates = unsafePerformIO $ readTemplates,
-                   ctxmailsconfig = defaultMailConfig,
+                   ctxmailer = createDevMailer "unittest@skrivapa-test.com" "SkrivaPå Test",
                    ctxtwconf = aTestTwConf,
                    ctxelegtransactions = []}
 

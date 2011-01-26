@@ -85,7 +85,7 @@ handleSendgridEvent' (SendgridEvent {info=Invitation signlinkid,event= Undeliver
                                                                         ("unsigneddoclink", show $ LinkIssueDoc $ documentid doc),
                                                                         ("ctxhostpart",ctxhostpart ctx)  
                                                                        ]  
-                    liftIO $ sendMail (ctxmailsconfig ctx)  $  emptyMail {title=BS.fromString title,content=BS.fromString content,fullnameemails = fullnameemails}
+                    liftIO $ sendMail (ctxmailer ctx)  $  emptyMail {title=BS.fromString title,content=BS.fromString content,fullnameemails = fullnameemails}
                   Nothing -> return () 
      Nothing -> return ()                                                                                  
 
