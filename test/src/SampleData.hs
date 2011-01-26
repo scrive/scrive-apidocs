@@ -170,7 +170,6 @@ anUnsignedDocument = Document {
           , documenthistory = []
           , documentinvitetext = BS.empty
           , documenttrustweaverreference = Nothing
-          , documentallowedidtypes = [EmailIdentification, ELegitimationIdentification]
           }
 aSignedDocument = Document { 
             documentid = DocumentID 123
@@ -189,6 +188,7 @@ aSignedDocument = Document {
           , documenthistory = []
           , documentinvitetext = BS.empty
           , documenttrustweaverreference = Nothing
+          , documentallowedidtypes = [EmailIdentification]
           }
 aCustomMsg = (BS.fromString "blah blah, custom message blah")
 
