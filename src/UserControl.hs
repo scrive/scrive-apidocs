@@ -13,7 +13,7 @@ import Happstack.State (Update,update,query)
 import Happstack.Util.Common (readM)
 import KontraLink
 import Misc
-import Mails.SendMail(Mail,sendMail,fullnameemails)
+import Mails.SendMail
 import Session
 import System.Log.Logger
 import System.Process
@@ -213,7 +213,7 @@ createNewUserByAdmin ctx fullname email =
        Just user -> do
                     chpwdlink <- activateLink $ userid user
                     mail <- mailNewAccountCreatedByAdmin (ctxtemplates ctx) ctx fullname email chpwdlink
-                    sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = [(fullname, email)]} 
+                    sendMail (ctxmailer ctx) $ mail { fullnameemails = [(fullname, email)]} 
                     return muser
        Nothing -> return muser
 
@@ -233,7 +233,7 @@ createUser1 ctx hostpart fullname email password isnewuser maybesupervisor = do
                                    newUserMail (ctxtemplates ctx) hostpart email fullname al
                   Just supervisor -> inviteSubaccountMail (ctxtemplates ctx) hostpart (prettyName  supervisor) (usercompanyname $ userinfo supervisor)
                                         email fullname chpwdlink
-        sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = [(fullname, email)]}
+        sendMail (ctxmailer ctx) $ mail { fullnameemails = [(fullname, email)]}
         return muser
    Nothing -> return muser     
 
@@ -353,7 +353,7 @@ handleActivate sid mh = do
                                                           then  
                                                                do  al <- liftIO $ activateLink $ userid user
                                                                    mail <-  liftIO $ newUserMail (ctxtemplates ctx) (ctxhostpart ctx) email email al
-                                                                   liftIO $ sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = [(email, email)]}
+                                                                   liftIO $ sendMail (ctxmailer ctx) $ mail { fullnameemails = [(email, email)]}
                                                                    addFlashMsgText =<< (liftIO $ flashMessageNewActivationLinkSend  (ctxtemplates ctx)) 
                                                                    return LinkMain
                                                           else do

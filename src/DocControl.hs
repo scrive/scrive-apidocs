@@ -146,7 +146,7 @@ sendDocumentErrorEmail1 ctx document signatorylink = do
                    , signatorymagichash } = signatorylink
       Document{documenttitle,documentid} = document
   mail <- mailDocumentError (ctxtemplates ctx) ctx document
-  sendMail (ctxmailsconfig ctx) $ 
+  sendMail (ctxmailer ctx) $ 
            mail { fullnameemails = [(signatoryname,signatoryemail)]
                 , mailInfo = Invitation signatorylinkid
                 } 
@@ -179,7 +179,7 @@ sendInvitationEmail1 ctx document author signatorylink = do
            then mailInvitationToSign (ctxtemplates ctx) ctx document signatorylink author
            else mailInvitationToSend (ctxtemplates ctx) ctx document signatorylink author
   attachmentcontent <- AWS.getFileContents (ctxs3action ctx) $ head $ documentfiles document
-  sendMail (ctxmailsconfig ctx) $ 
+  sendMail (ctxmailer ctx) $ 
            mail { fullnameemails = [(signatoryname,signatoryemail)]
                 , attachments = [(documenttitle,attachmentcontent)]
                 , mailInfo = Invitation signatorylinkid
@@ -209,7 +209,7 @@ sendClosedEmail1 ctx document signatorylink = do
       Document{documenttitle,documentid} = document
   mail <- mailDocumentClosedForSignatories (ctxtemplates ctx) ctx document signatorylink
   attachmentcontent <- AWS.getFileContents (ctxs3action ctx) $ head $ documentsealedfiles document
-  sendMail  (ctxmailsconfig ctx) $ mail { fullnameemails =  [(signatoryname,signatoryemail)] , attachments = [(documenttitle,attachmentcontent)]}
+  sendMail  (ctxmailer ctx) $ mail { fullnameemails =  [(signatoryname,signatoryemail)] , attachments = [(documenttitle,attachmentcontent)]}
 
 {- |
    Send an email to the author when the document is awaiting approval
@@ -222,7 +222,7 @@ sendAwaitingEmail ctx document author = do
              document
   let email1 = unEmail $ useremail $ userinfo authoruser
       name1 = userfullname authoruser
-  sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = [(name1,email1)] }
+  sendMail (ctxmailer ctx) $ mail { fullnameemails = [(name1,email1)] }
 
 {- |
    Send the email to the Author when the document is closed
@@ -237,7 +237,7 @@ sendClosedAuthorEmail ctx document = do
   let Document{documenttitle,documentid} = document
       email1 = unEmail $ useremail $ userinfo authoruser
       name1 = userfullname authoruser
-  sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = [(name1,email1)], attachments = [(documenttitle,attachmentcontent)]}
+  sendMail (ctxmailer ctx) $ mail { fullnameemails = [(name1,email1)], attachments = [(documenttitle,attachmentcontent)]}
 
 {- |
    Send an email to the author when the document is rejected
@@ -245,12 +245,11 @@ sendClosedAuthorEmail ctx document = do
 sendRejectEmails :: (Maybe BS.ByteString) -> Context -> Document -> SignatoryLink -> IO ()
 sendRejectEmails customMessage ctx document signalink = do
   let rejectorName = signatoryname (signatorydetails signalink)
-  forM_ (documentsignatorylinks document) $ \sl ->  
-                     do
-                      let semail = signatoryemail $ signatorydetails  sl
-                      let sname = signatoryname $ signatorydetails  sl
-                      mail <- mailDocumentRejected (ctxtemplates ctx) customMessage ctx sname document rejectorName
-                      sendMail  (ctxmailsconfig ctx) $ mail { fullnameemails = [(sname,semail)]}
+  mail <- mailDocumentRejectedForAuthor (ctxtemplates ctx) customMessage ctx (userfullname authoruser)
+             document rejectorName
+  let email1 = unEmail $ useremail $ userinfo authoruser
+      name1 = userfullname authoruser
+  sendMail  (ctxmailsconfig ctx) $ mail { fullnameemails = [(name1,email1)]}
   when (not $ any (isAuthor document) $ documentsignatorylinks document) $ 
         do
           mauthor <- query $ GetUserByUserID (unAuthor $ documentauthor document) 
@@ -1273,7 +1272,7 @@ handleResend docid signlinkid  = withUserPost $ do
   author <- queryOrFail $ GetUserByUserID $ unAuthor $ documentauthor doc
   customMessage <- fmap (fmap concatChunks) $ getDataFn' (lookBS "customtext")  
   mail <- liftIO $  mailDocumentRemind (ctxtemplates ctx) customMessage ctx doc signlink author
-  liftIO $ sendMail (ctxmailsconfig ctx) (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )],
+  liftIO $ sendMail (ctxmailer ctx) (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )],
                                                 mailInfo = Invitation $ signatorylinkid signlink })
   addFlashMsgText =<< (liftIO $ flashRemindMailSent (ctxtemplates ctx) signlink)
   return (LinkIssueDoc $ documentid doc)
@@ -1305,7 +1304,7 @@ handleChangeSignatoryEmail did slid = do
 sendCancelMailsForDocument:: (Maybe BS.ByteString) -> Context -> Document -> Kontra ()
 sendCancelMailsForDocument customMessage ctx document = do
   Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor document
-  liftIO $ forM_ (documentsignatorylinks document) (sendMail  (ctxmailsconfig ctx) <=< (mailCancelDocumentByAuthor (ctxtemplates ctx) customMessage ctx document author))
+  liftIO $ forM_ (documentsignatorylinks document) (sendMail  (ctxmailer ctx) <=< (mailCancelDocumentByAuthor (ctxtemplates ctx) customMessage ctx document author))
 
 failIfNoDocument :: DocumentID -> Kontra ()
 failIfNoDocument docid = do
