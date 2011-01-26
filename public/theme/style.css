@@ -241,7 +241,7 @@ input[type=submit]:active, input[type=button]:active, button:active, a.button:ac
 #headerContainer,
 #headerWide
 {
-    background: url(images/darkpattern.png) repeat-x bottom center; /* 003 removed #color and new image */
+    background: url(images/darkpattern.png) repeat bottom center; /* 003 removed #color and new image */
     color: #fafafa;
     height: 90px;
     position:relative;
