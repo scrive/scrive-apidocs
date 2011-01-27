@@ -156,6 +156,11 @@ main = Log.withLogger $ do
                           , TW.signcertpwd = twSignCertPwd appConf
                           , TW.admincert = twAdminCert appConf
                           , TW.admincertpwd = twAdminCertPwd appConf
+                          , TW.signurl = twSignUrl appConf
+                          , TW.adminurl = twAdminUrl appConf
+                          , TW.storageurl = twStorageUrl appConf
+                          , TW.retries = 4
+                          , TW.timeout = 30000 --30sek
                           }
             , ctxelegtransactions = error "Do not use ctxelegtransactions in actions"
             }
@@ -212,7 +217,10 @@ defaultConf progName
               , twSignCertPwd = ""
               , twAdminCert = ""
               , twAdminCertPwd = ""
+              , twSignUrl = ""
               , mailsConfig = defaultMailConfig
+              , twAdminUrl = ""
+              , twStorageUrl = ""
               }
 
 opts :: [OptDescr (AppConf -> AppConf)]
