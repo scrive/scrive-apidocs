@@ -6,6 +6,7 @@ import SchedulerTest
 import UserViewSampler
 import DocViewMailSampler
 import DocViewSampler
+import DocControlTest
 import TrustWeaverTest
 import System.IO
 
@@ -19,5 +20,6 @@ tests = [testGroup "UserState" userStateTests,
          testGroup "UserView (Sampler)" userViewSamples,
          testGroup "DocViewMail (Sampler)" docViewMailSamples,
          testGroup "DocView (Sampler)" docViewSamples,
+         testGroup "DocControl" docControlTests,
          testGroup "TrustWeaver" trustWeaverTests
         ]
