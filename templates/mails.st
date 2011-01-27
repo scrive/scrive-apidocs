@@ -56,7 +56,7 @@ mailRejectMailTitle=
 ####
 mailRejectMailContent=
     <span>
-      <p>Hej $authorname$,</p>
+      <p>Hej,</p>
       <p>$rejectorName$ har avvisat att underteckna dokumentet <strong>$documenttitle$</strong>. Avtalsprocessen är därmed avbruten.</p>
       $poweredBySkrivaPaPara()$
     </span>
@@ -92,8 +92,7 @@ mailInvitationToSignDefaultHeader=
       $creatorname$ har bjudit in dig att underteckna dokumentet $documenttitle$ online via tjänsten SkrivaPå.
     </p>
 ####
-remindMailSignedTitle=
-    Hej $personname$
+remindMailSignedTitle=Påminnelse att underteckna  $documenttitle$
 ###
 remindMailSignedStandardHeader=
     <span>
@@ -102,8 +101,7 @@ remindMailSignedStandardHeader=
         till dig som du har undertecknat via tjänsten SkrivaPå. Dokumentet bifogas med detta mail.</p>
     </span>
 ####
-remindMailNotSignedTitle=
-    Hej $personname$
+remindMailNotSignedTitle=Påminnelse att underteckna  $documenttitle$
 ########
 remindMailNotSignedStandardHeader=
     <span>

@@ -3,7 +3,7 @@
 
 module DocViewMail ( mailDocumentRemind,
                      mailDocumentRemindContent,
-                     mailDocumentRejectedForAuthor,
+                     mailDocumentRejected,
                      mailRejectMailContent,
                      mailDocumentClosedForAuthor, 
                      mailDocumentClosedForSignatories,
@@ -60,7 +60,7 @@ remindMailNotSigned :: KontrakcjaTemplates
                     -> User 
                     -> IO Mail
 remindMailNotSigned templates customMessage ctx document@Document{documenttitle} signlink author = do
-  title <- renderTemplate templates "remindMailNotSignedTitle" [("personname",BS.toString $ personname signlink)]
+  title <- renderTemplate templates "remindMailNotSignedTitle" [("documenttitle",BS.toString $ documenttitle)]
   content <- wrapHTML templates =<< remindMailNotSignedContent templates True customMessage ctx  document signlink author
   attachmentcontent <- getFileContents (ctxs3action ctx) $ head $ documentfiles document          
   return $ emptyMail {title = BS.fromString title, content = BS.fromString content, attachments = [(documenttitle,attachmentcontent)]}
@@ -71,7 +71,7 @@ remindMailSigned:: KontrakcjaTemplates -> Maybe (BS.ByteString)-> Context -> Doc
 remindMailSigned templates customMessage ctx document@Document{documenttitle}  signlink author = 
                     do
                      let files = if (null $ documentsealedfiles document) then (documentfiles document) else (documentsealedfiles document)
-                     title<- renderTemplate templates "remindMailNotSignedTitle" [("personname",BS.toString $ personname signlink)]
+                     title<- renderTemplate templates "remindMailSignedTitle" [("documenttitle",BS.toString $ documenttitle)]
                      content<-wrapHTML templates =<<remindMailSignedContent templates customMessage ctx  document signlink author
                      attachmentcontent <- getFileContents (ctxs3action ctx) $ head $ files   
                      return $ emptyMail {title = BS.fromString title, content = BS.fromString content, attachments = [(documenttitle,attachmentcontent)]}
@@ -160,19 +160,19 @@ remindMailNotSignedStandardHeader templates document signlink author =  renderTe
                                                                 ("author",BS.toString $ prettyName author),
                                                                 ("personname",BS.toString $ personname signlink) ]
                                                                              
-mailDocumentRejectedForAuthor :: KontrakcjaTemplates -> (Maybe BS.ByteString) -> Context -> BS.ByteString -> Document -> BS.ByteString -> IO Mail 
-mailDocumentRejectedForAuthor templates customMessage ctx authorname  document@Document{documenttitle}  rejectorName = 
+mailDocumentRejected :: KontrakcjaTemplates -> (Maybe BS.ByteString) -> Context -> BS.ByteString -> Document -> BS.ByteString -> IO Mail 
+mailDocumentRejected templates customMessage ctx username  document@Document{documenttitle}  rejectorName = 
     do
      title <- renderTemplate templates "mailRejectMailTitle"  [("documenttitle",BS.toString documenttitle)]
-     content <- wrapHTML templates =<< mailRejectMailContent templates customMessage ctx authorname document rejectorName
+     content <- wrapHTML templates =<< mailRejectMailContent templates customMessage ctx username document rejectorName
      return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
 
 mailRejectMailContent::  KontrakcjaTemplates -> (Maybe BS.ByteString) -> Context -> BS.ByteString -> Document -> BS.ByteString -> IO String  
-mailRejectMailContent templates customMessage ctx  authorname  document  rejectorName =   
+mailRejectMailContent templates customMessage ctx  username  document  rejectorName =   
       do
        c<-case customMessage of
            Just message -> return $ BS.toString message
-           Nothing -> renderTemplate templates "mailRejectMailContent" [("authorname",BS.toString $ authorname ),
+           Nothing -> renderTemplate templates "mailRejectMailContent" [("username",BS.toString $ username ),
                                                               ("documenttitle", BS.toString $ documenttitle document),
                                                               ("rejectorName",BS.toString rejectorName),  
                                                               ("ctxhostpart",ctxhostpart ctx)] 

@@ -109,7 +109,7 @@ postDocumentChangeAction document@Document{documentstatus, documentsignatorylink
         ctx@Context{ctxnormalizeddocuments,ctxhostpart,ctxtime} <- get
         customMessage <- fmap (fmap concatChunks) $ getDataFn' (lookBS "customtext")  
         Log.forkIOLogWhenError ("error in sending rejection emails for document " ++ show documentid) $ do
-          sendRejectAuthorEmail customMessage ctx document (fromJust msignalink)
+          sendRejectEmails customMessage ctx document (fromJust msignalink)
         return ()
     -- * -> DocumentError
     | DocumentError msg <- documentstatus = do
@@ -244,16 +244,15 @@ sendClosedAuthorEmail ctx document = do
 {- |
    Send an email to the author when the document is rejected
  -}
-sendRejectAuthorEmail :: (Maybe BS.ByteString) -> Context -> Document -> SignatoryLink -> IO ()
-sendRejectAuthorEmail customMessage ctx document signalink = do
-  let authorid = unAuthor $ documentauthor document
-  Just authoruser <- query $ GetUserByUserID authorid
+sendRejectEmails :: (Maybe BS.ByteString) -> Context -> Document -> SignatoryLink -> IO ()
+sendRejectEmails customMessage ctx document signalink = do
   let rejectorName = signatoryname (signatorydetails signalink)
-  mail <- mailDocumentRejectedForAuthor (ctxtemplates ctx) customMessage ctx (userfullname authoruser)
-             document rejectorName
-  let email1 = unEmail $ useremail $ userinfo authoruser
-      name1 = userfullname authoruser
-  sendMail  (ctxmailsconfig ctx) $ mail { fullnameemails = [(name1,email1)]}
+  forM_ (documentsignatorylinks document) $ \sl ->  
+            when (signalink /= sl) $ do
+                      let semail = signatoryemail $ signatorydetails  sl
+                      let sname = signatoryname $ signatorydetails  sl
+                      mail <- mailDocumentRejected (ctxtemplates ctx) customMessage ctx sname document rejectorName
+                      sendMail  (ctxmailsconfig ctx) $ mail { fullnameemails = [(sname,semail)]}
 
 {- |
    Render a page of documents that a user has signed
