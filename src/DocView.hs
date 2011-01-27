@@ -19,7 +19,7 @@ module DocView( emptyDetails
               , landpageRejectedView
               , defaultInviteMessage 
               , mailDocumentRemind
-              , mailDocumentRejectedForAuthor
+              , mailDocumentRejected
               , mailDocumentAwaitingForAuthor
               , mailCancelDocumentByAuthorContent
               , mailCancelDocumentByAuthor
