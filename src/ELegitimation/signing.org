@@ -1,0 +1,78 @@
+
+| Needed info       | From                       | To            | Session |
+|-------------------+----------------------------+---------------+---------|
+| Text to be signed | Server? User?              | User + BankID | YES     |
+| Nonce             | BankID                     | bankid        | YES     |
+| EncodedTBS        | BankID                     | BankID        | YES     |
+| Servertime        | Server                     | User          | YES     |
+| TransactionID     | BankID (GenerateChallenge) | Server        | YES     |
+| Signature         | User                       | Server        |         |
+
+We can use a static text? Or a text generated from the document?
+
+| Client Action          | Client<->Server                                   | Server action                                             | Server<->BankID                       |
+|------------------------+---------------------------------------------------+-----------------------------------------------------------+---------------------------------------|
+| Click Sign with bankid |                                                   |                                                           |                                       |
+| Check for plugin/fail  |                                                   |                                                           |                                       |
+|                        | - ajax /bankid/s/{docid}/{linkid}/{magichash} ->  |                                                           |                                       |
+|                        |                                                   | Validate (same as for regular sign)                       |                                       |
+|                        |                                                   |                                                           | - GenerateChallenge ->                |
+|                        |                                                   |                                                           | <- Nonce, transactionID -             |
+|                        |                                                   |                                                           | - EncodeTBS ->                        |
+|                        |                                                   |                                                           | <- EncodedTBS, transactionID -        |
+|                        |                                                   | New BankIDSession (Nonce, TransactionID, TBS, servertime) |                                       |
+|                        | <- Nonce, TBS, servertime, transactionID (JSON) - |                                                           |                                       |
+| Activate plugin        |                                                   |                                                           |                                       |
+| Build form             |                                                   |                                                           |                                       |
+|                        | - POST Signature, transactionID ->                |                                                           |                                       |
+|                        |                                                   | Validate TransactionID                                    |                                       |
+|                        |                                                   |                                                           | - VerifySignature ->                  |
+|                        |                                                   |                                                           | <- user info, status, transactionID - |
+|                        |                                                   | Sign document / Fail signature                            |                                       |
+|                        |                                                   | Close BankIDSession                                       |                                       |
+|                        | <- Confirmation                                   |                                                           |                                       |
+
+
+
+From Petter: Don't use hiddenTBS, userID or host.
+
+
+
+
+| CA     | pki-klient     | provider | signature     |
+|--------+----------------+----------+---------------|
+| BankID | Signer2 (BISP) |        6 | XML-signature |
+| Nordea | WebSigner      |        4 | pkcs#7        |
+| Telia  | iid - Sign     |        4 | pkcs#7        |
+
+
+These are the things petter needs:
+
+1. ip address (for firewall)
+2. ip/host pairs for server browser connects to
+
+* Algorithms to compare ELeg user with our signatory data
+** strict comparison
+match as much as possible. Any mismatch is a fail. very strict
+*** make a list of all data items that exist in both data sets
+**** person number
+**** last name
+**** first name
+*** if any don't match then FAIL
+*** otherwise MERGE
+
+** ordered comparison
+compare the elements in order. If one fails, fail. As soon as one
+passes, merge, ignoring later mismatches
+*** if person # exists in both 
+**** if they don't match FAIL
+**** if they match MERGE
+*** else if last name + first name exists in both 
+**** if they don't match FAIL
+**** if they match MERGE
+*** else if last name exists in both
+**** if they don't match FAIL
+**** if they match MERGE
+
+* Merge procedure
+Prefer data from ELeg
