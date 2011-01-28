@@ -395,7 +395,7 @@ handleIssuePostNordea docid = withUserPost $ do
                             let siginfo = SignatureInfo { signatureinfotext = transactiontbs trans
                                                         , signatureinfosignature = signature
                                                         , signatureinfocertificate = cert
-                                                        , signatureinfoprovider = BankIDProvider
+                                                        , signatureinfoprovider = NordeaProvider
                                                         }
                             doc2 <- updateDocument ctx document $ Just siginfo
                             return $ LinkSignInvite docid
