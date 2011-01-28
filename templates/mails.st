@@ -247,7 +247,7 @@ whohadsignedinfoformail=
     $if(signedlist)$
     Har undertecknat: $signedlist:noescape()$
     $else$
-    $noonehadsignedtext()$
+    Har undertecknat: $noonehadsignedtext()$
     $endif$
 ####
 whohadsignedinfoforpreview=
