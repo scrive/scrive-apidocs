@@ -1024,7 +1024,7 @@ input , button, a.button
 #signStepsMenu .text
 {
     display: inline-block;
-    margin: 5px 18px 0 28px;
+    margin: 5px 18px 0 2px;
 }
 
 #signStepsMenu div a
@@ -1072,7 +1072,7 @@ input , button, a.button
 {
     color: #ffffff;
     background-image: url(images/darkpattern.png);
-    height: 36px;
+    height: 28px;
     border-width: 0 1px 0 1px;
     border-color: #000000;
     border-style: solid;
@@ -1082,7 +1082,7 @@ input , button, a.button
 #signStepsTitleRowTextContainer
 {
     display: inline-block;
-    margin: 7px 0 0 18px;	
+    margin: 3px 0 0 18px;	
 }
 
 #signStepsTitleRow .title
@@ -1107,7 +1107,7 @@ input , button, a.button
 {
     position: absolute;
     right: 10px;
-    top: 6px;
+    top: 1px;
 }
 
 .signStepsButton
@@ -1825,4 +1825,31 @@ input , button, a.button
     float: left;
     height: 10px;
     width: 960px;
+}
+
+.step1icon {
+    background-image: url(images/icon1.png);
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
+    float: left;
+    height: 23px;
+    width: 23px;
+}
+
+.step2icon {
+    background-image: url(images/icon2.png);
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
+    float: left;
+    height: 23px;
+    width: 23px;
+}
+
+.step3icon {
+    background-image: url(images/icon3.png);
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
+    float: left;
+    height: 23px;
+    width: 23px;
 }
