@@ -400,6 +400,194 @@ handleIssuePostNordea docid = withUserPost $ do
                             doc2 <- updateDocument ctx document $ Just siginfo
                             return $ LinkSignInvite docid
 
+
+-- Telia
+
+handleSignTelia :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra Response
+handleSignTelia docid signid magic = do
+  -- document <- queryOrFail $ GetDocumentByDocumentID docid
+  -- checkLinkIDAndMagicHash document signid magic
+  ctx <- get
+
+  liftIO $ print $ ctxelegtransactions ctx
+
+  nonceresponse <- generateChallenge
+
+  -- should generate this somehow
+  let tbs = "This is what you need to sign."
+  case nonceresponse of
+    Left (ImplStatus _a _b code msg) -> return $ toResponse $ toJSON [("status", JInt code)
+                                                                     ,("msg", JString msg)]
+    Right (nonce, transactionid) -> do
+        encodetbsresponse <- encodeTBS tbs transactionid 
+        case encodetbsresponse of
+          Left (ImplStatus _a _b code msg) -> return $ toResponse $ toJSON [("status", JInt code)
+                                                                           ,("msg", JString msg)]
+          Right text -> do
+                       -- store in session
+                       addELegTransaction $ ELegTransaction 
+                                              { transactionservertime = ctxtime ctx
+                                              , transactiontransactionid = transactionid
+                                              , transactiontbs = tbs
+                                              , transactionencodedtbs = text
+                                              , transactionsignatorylinkid = Just signid
+                                              , transactiondocumentid = docid
+                                              , transactionmagichash = Just magic
+                                              , transactionnonce = nonce
+                                              }
+                       let MinutesTime time = ctxtime ctx
+                       return $ toResponse $ toJSON [("status", JInt 0)
+                                                    ,("servertime", JString $ show $ 60 * time)
+                                                    ,("nonce", JString nonce)
+                                                    ,("tbs", JString text)
+                                                    ,("transactionid", JString transactionid)]
+
+handleSignPostTelia :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra KontraLink
+handleSignPostTelia docid signid magic = do
+  document <- queryOrFail $ GetDocumentByDocumentID docid
+  checkLinkIDAndMagicHash document signid magic
+
+  let allowedidtypes = documentallowedidtypes document
+      allowsELeg = isJust $ find (== ELegitimationIdentification) allowedidtypes
+
+  when (not allowsELeg) mzero
+
+  signature <- getDataFnM $ look "signature"
+  transactionid <- getDataFnM $ look "transactionid"
+
+  ctx@Context { ctxelegtransactions } <- get
+
+  let mtrans = find ((== transactionid) . transactiontransactionid) ctxelegtransactions
+  case mtrans of
+    Nothing -> mzero
+    Just trans -> do
+                -- validate transaction with document info
+                when (isNothing $ transactionsignatorylinkid trans) mzero
+                when (isNothing $ transactionmagichash trans) mzero
+                let ELegTransaction { transactionsignatorylinkid = Just tsignid
+                                    , transactiondocumentid = tdocid
+                                    , transactionmagichash = Just tmagic
+                                    } = trans
+                when (not (tsignid == signid && tdocid == docid && tmagic == magic)) mzero
+                -- end validation
+
+                done <- verifySignature 5
+                                        (transactionencodedtbs trans)
+                                        signature
+                                        (transactionnonce trans)
+                                        transactionid
+
+                case done of
+                  Left (ImplStatus _a _b code msg) -> do
+                                      liftIO $ print $ toJSON [("status", JInt code)
+                                                              ,("msg", JString msg)]
+                                      -- change me! I should return back to the same page
+                                      return $ LinkMain
+                  Right (cert, attrs) -> do
+                            Context { ctxtime, ctxipnumber } <- get
+                            document@DocState.Document{ documentstatus = olddocumentstatus, documentsignatorylinks } <- queryOrFail $ GetDocumentByDocumentID docid
+                            fieldnames <- getAndConcat "fieldname"
+                            fieldvalues <- getAndConcat "fieldvalue"
+                            let fields = zip fieldnames fieldvalues
+                                signinfo = SignatureInfo { signatureinfotext = transactiontbs trans
+                                                         , signatureinfosignature = signature
+                                                         , signatureinfocertificate = cert
+                                                         , signatureinfoprovider = TeliaProvider
+                                                         }
+                                
+
+                            newdocument <- update $ SignDocument docid signid ctxtime ctxipnumber (Just signinfo) fields
+                            case newdocument of
+                              Left message -> do
+                                               addFlashMsgText message
+                                               return $ LinkMain
+                              Right document -> do 
+                                               postDocumentChangeAction document olddocumentstatus (Just signid)
+                                               return $ LinkSigned docid signid
+handleIssueTelia :: DocumentID -> Kontra Response
+handleIssueTelia docid = do
+  ctx <- get
+
+  liftIO $ print $ ctxelegtransactions ctx
+
+  nonceresponse <- generateChallenge
+
+  -- should generate this somehow
+  let tbs = "This is what you need to sign."
+  case nonceresponse of
+    Left (ImplStatus _a _b code msg) -> return $ toResponse $ toJSON [("status", JInt code)
+                                                                     ,("msg", JString msg)]
+    Right (nonce, transactionid) -> do
+        encodetbsresponse <- encodeTBS tbs transactionid 
+        case encodetbsresponse of
+          Left (ImplStatus _a _b code msg) -> return $ toResponse $ toJSON [("status", JInt code)
+                                                                           ,("msg", JString msg)]
+          Right text -> do
+                       -- store in session
+                       addELegTransaction $ ELegTransaction 
+                                              { transactionservertime = ctxtime ctx
+                                              , transactiontransactionid = transactionid
+                                              , transactiontbs = tbs
+                                              , transactionencodedtbs = text
+                                              , transactionsignatorylinkid = Nothing
+                                              , transactiondocumentid = docid
+                                              , transactionmagichash = Nothing
+                                              , transactionnonce = nonce
+                                              }
+                       let MinutesTime time = ctxtime ctx
+                       return $ toResponse $ toJSON [("status", JInt 0)
+                                                    ,("servertime", JString $ show $ 60 * time)
+                                                    ,("nonce", JString nonce)
+                                                    ,("tbs", JString text)
+                                                    ,("transactionid", JString transactionid)]
+
+
+handleIssuePostTelia :: DocumentID -> Kontra KontraLink
+handleIssuePostTelia docid = withUserPost $ do
+  document <- queryOrFail $ GetDocumentByDocumentID $ docid
+  ctx@Context { ctxmaybeuser = Just user, ctxelegtransactions } <- get
+  failIfNotAuthor document user
+
+  let allowedidtypes = documentallowedidtypes document
+      allowsELeg = isJust $ find (== ELegitimationIdentification) allowedidtypes
+
+  when (not allowsELeg) mzero
+
+
+  signature <- getDataFnM $ look "signature"
+  transactionid <- getDataFnM $ look "transactionid"
+
+  let mtrans = find ((== transactionid) . transactiontransactionid) ctxelegtransactions
+  case mtrans of
+    Nothing -> mzero
+    Just trans -> do
+                -- validate transaction
+                let ELegTransaction { transactiondocumentid = tdocid } = trans
+                when (docid /= tdocid) mzero
+                -- end validation
+
+                done <- verifySignature 5
+                                        (transactionencodedtbs trans)
+                                        signature
+                                        (transactionnonce trans)
+                                        transactionid
+
+                case done of
+                  Left (ImplStatus _a _b code msg) -> do
+                                      liftIO $ print $ toJSON [("status", JInt code)
+                                                              ,("msg", JString msg)]
+                                      -- change me! I should return back to the same page
+                                      return $ LinkMain
+                  Right (cert, attrs) -> do
+                            let siginfo = SignatureInfo { signatureinfotext = transactiontbs trans
+                                                        , signatureinfosignature = signature
+                                                        , signatureinfocertificate = cert
+                                                        , signatureinfoprovider = TeliaProvider
+                                                        }
+                            doc2 <- updateDocument ctx document $ Just siginfo
+                            return $ LinkSignInvite docid
+
+
 -- JSON - just enough to get things working
 
 data JSONValue = JString String
