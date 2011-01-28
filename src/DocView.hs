@@ -654,14 +654,14 @@ pageDocumentForSign action document ctx  invitedlink wassigned author =
        localscripts =  "var docstate = " ++ (buildJS documentauthordetails $ map signatorydetails (documentsignatorylinks document)) ++ "; docstate['useremail'] = '" ++ (BS.toString $ signatoryemail $ signatorydetails invitedlink) ++ "';"          
        magichash = signatorymagichash invitedlink
        authorname = signatoryname documentauthordetails
-       allbutinvited = {- filter (/= invitedlink) -} (documentsignatorylinks document)
+       allbutinvited = filter (/= invitedlink) (documentsignatorylinks document)
        documentauthordetails = signatoryDetailsFromUser author
        allowedtypes = documentallowedidtypes document
     in
     do 
      helpers <- renderTemplate (ctxtemplates ctx) "pageDocumentForSignHelpers" [("documentid",show (documentid document)),("localscripts",localscripts)]   
      rejectMessage <- mailRejectMailContent (ctxtemplates ctx) Nothing ctx (prettyName author) document (personname invitedlink)                                                        
-     signatories <- fmap concat $ sequence $ map (showSignatoryLinkForSign ctx document author) (allbutinvited)
+     signatories <- fmap concat $ sequence $ map (showSignatoryLinkForSign ctx document author) (invitedlink : allbutinvited)
      messageoption <- caseOf [ 
                      (wassigned,                           renderTemplate (ctxtemplates ctx) "pageDocumentForSignSigned" []),  
                      (documentstatus document == Timedout, renderTemplate (ctxtemplates ctx) "pageDocumentForSignTimedout" []),
