@@ -46,7 +46,7 @@ handleSignBankID docid signid magic = do
     Left (ImplStatus _a _b code msg) -> return $ toResponse $ toJSON [("status", JInt code)
                                                                      ,("msg", JString msg)]
     Right (nonce, transactionid) -> do
-        encodetbsresponse <- encodeTBS tbs transactionid 
+        encodetbsresponse <- encodeTBS 6 tbs transactionid 
         case encodetbsresponse of
           Left (ImplStatus _a _b code msg) -> return $ toResponse $ toJSON [("status", JInt code)
                                                                            ,("msg", JString msg)]
@@ -145,7 +145,7 @@ handleIssueBankID docid = do
     Left (ImplStatus _a _b code msg) -> return $ toResponse $ toJSON [("status", JInt code)
                                                                      ,("msg", JString msg)]
     Right (nonce, transactionid) -> do
-        encodetbsresponse <- encodeTBS tbs transactionid 
+        encodetbsresponse <- encodeTBS 6 tbs transactionid 
         case encodetbsresponse of
           Left (ImplStatus _a _b code msg) -> return $ toResponse $ toJSON [("status", JInt code)
                                                                            ,("msg", JString msg)]
@@ -232,7 +232,7 @@ handleSignNordea docid signid magic = do
     Left (ImplStatus _a _b code msg) -> return $ toResponse $ toJSON [("status", JInt code)
                                                                      ,("msg", JString msg)]
     Right (nonce, transactionid) -> do
-        encodetbsresponse <- encodeTBS tbs transactionid 
+        encodetbsresponse <- encodeTBS 4 tbs transactionid 
         case encodetbsresponse of
           Left (ImplStatus _a _b code msg) -> return $ toResponse $ toJSON [("status", JInt code)
                                                                            ,("msg", JString msg)]
@@ -331,7 +331,7 @@ handleIssueNordea docid = do
     Left (ImplStatus _a _b code msg) -> return $ toResponse $ toJSON [("status", JInt code)
                                                                      ,("msg", JString msg)]
     Right (nonce, transactionid) -> do
-        encodetbsresponse <- encodeTBS tbs transactionid 
+        encodetbsresponse <- encodeTBS 4 tbs transactionid 
         case encodetbsresponse of
           Left (ImplStatus _a _b code msg) -> return $ toResponse $ toJSON [("status", JInt code)
                                                                            ,("msg", JString msg)]
@@ -419,7 +419,7 @@ handleSignTelia docid signid magic = do
     Left (ImplStatus _a _b code msg) -> return $ toResponse $ toJSON [("status", JInt code)
                                                                      ,("msg", JString msg)]
     Right (nonce, transactionid) -> do
-        encodetbsresponse <- encodeTBS tbs transactionid 
+        encodetbsresponse <- encodeTBS 5 tbs transactionid 
         case encodetbsresponse of
           Left (ImplStatus _a _b code msg) -> return $ toResponse $ toJSON [("status", JInt code)
                                                                            ,("msg", JString msg)]
@@ -518,7 +518,7 @@ handleIssueTelia docid = do
     Left (ImplStatus _a _b code msg) -> return $ toResponse $ toJSON [("status", JInt code)
                                                                      ,("msg", JString msg)]
     Right (nonce, transactionid) -> do
-        encodetbsresponse <- encodeTBS tbs transactionid 
+        encodetbsresponse <- encodeTBS 5 tbs transactionid 
         case encodetbsresponse of
           Left (ImplStatus _a _b code msg) -> return $ toResponse $ toJSON [("status", JInt code)
                                                                            ,("msg", JString msg)]
@@ -777,15 +777,7 @@ instance XmlContent (VerifySignatureResponse) where
             }
         } `adjustErr` ("in <VerifySignatureResponse>, "++)
 
-{-
-generateChallenge :: Kontra (Either String (String, String))
-generateChallenge = do
-  let action = "GenerateChallenge"
-  res <- liftIO $ soapPost endpoint action content
-  if "<challenge>" `isInfixOf` res && "<transactionID>" `isInfixOf` res
-   then return $ Right $ (parseChallenge res, parseTransactionID res)
-   else return $ Left $ "Could not parse challenge response: " ++ res
--}
+
 generateChallenge :: Kontra (Either ImplStatus (String, String))
 generateChallenge = do
   eresponse <- liftIO $ makeSoapCallINSECURE endpoint "GenerateChallenge" $ GenerateChallengeRequest 6 "logtest004"
@@ -798,9 +790,9 @@ generateChallenge = do
                          then return $ Right (challenge, transactionid)
                          else return $ Left (ImplStatus a b status msg)
                  
-encodeTBS :: String -> String -> Kontra (Either ImplStatus String)
-encodeTBS tbs transactionID = do
-  eresponse <- liftIO $ makeSoapCallINSECURE endpoint "EncodeTBS" $ EncodeTBSRequest 6 "logtest004" tbs transactionID
+encodeTBS :: Int -> String -> String -> Kontra (Either ImplStatus String)
+encodeTBS provider tbs transactionID = do
+  eresponse <- liftIO $ makeSoapCallINSECURE endpoint "EncodeTBS" $ EncodeTBSRequest provider "logtest004" tbs transactionID
   case eresponse of
     Left msg -> do
       liftIO $ print msg
