@@ -340,7 +340,8 @@ appHandler appConf appGlobals= do
 forgotPasswordPageGet :: Kontra Response
 forgotPasswordPageGet = do
     ctx <- lift get
-    V.renderFromBody ctx V.TopNone V.kontrakcja V.pageForgotPassword
+    content <- liftIO $ V.pageForgotPassword (ctxtemplates ctx)
+    V.renderFromBody ctx V.TopNone V.kontrakcja $ cdata content
     
 forgotPasswordPagePost :: Kontra KontraLink
 forgotPasswordPagePost = do
@@ -369,7 +370,8 @@ sendResetPasswordMail user = do
 forgotPasswordDonePage :: Kontra Response
 forgotPasswordDonePage = do
     ctx <- lift get
-    V.renderFromBody ctx V.TopNone V.kontrakcja V.pageForgotPasswordConfirm 
+    content <- liftIO $ V.pageForgotPasswordConfirm (ctxtemplates ctx)
+    V.renderFromBody ctx V.TopNone V.kontrakcja $ cdata content
 
 signupPageGet :: Kontra Response
 signupPageGet = do
@@ -405,8 +407,9 @@ handleLoginGet = do
   case (ctxmaybeuser ctx) of
     Just _ -> sendRedirect LinkMain   
     Nothing -> do 
-                referer <- getField "referer"
-                V.renderFromBody ctx V.TopNone V.kontrakcja $ V.pageLogin referer
+      referer <- getField "referer"
+      content <- liftIO $ V.pageLogin ctx referer
+      V.renderFromBody ctx V.TopNone V.kontrakcja $ cdata $ content
     
 handleLoginPost :: Kontra KontraLink
 handleLoginPost = do

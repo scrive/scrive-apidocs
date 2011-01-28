@@ -188,7 +188,7 @@ changeEmailAddress =  <a style="cursor:pointer" class="replacebynextonclick"> Sk
                       </form>     
 
 ####
-showSignatoryLinkForSign2 =
+showSignatoryLinkForSign =
                       <div class="signViewBodyRight"> 
                         <div class="signViewBodyIcons"> <a href="#man2" class="man"></a> 
                           <div class="signViewBodyTitle"> <span>Part</span> </div>
@@ -264,6 +264,9 @@ pageDocumentForSignButtons=  <div>
 pageDocumentForSignContent=
     <div id="signStepsContainer"> 
       <div class="localdialogs">
+        <div style="display: none">
+          $helpers:noescape()$
+        </div>
         <form method="post" name="form" action="$action$" id="dialog-confirm-sign" class="overlay">     
           <a href="#" class="close"> </a>                  
           <h2>Underteckna</h2>  
@@ -340,20 +343,16 @@ pageDocumentForSignContent=
      <div class="waiting4page"></div>
     </div>
     <div id="signViewBottomBox"> 
-      <div id="signViewBottomBoxTop"></div>
-      <div id="signViewBottomBoxContainer"> 
-        <div id="signViewBottomBoxContainerLeft"> 
-          <div id="signViewBottomBoxContainerLeftText"> 
-            <input type="checkbox"> <span class="title">Jag intygar...</span> 
-            More text should follow
-          </div>
-        </div>
-        <div id="signViewBottomBoxContainerRight"> 
-          <input class="button" type="submit" name="sign" value="Underteckna!" id="sign" rel="#dialog-confirm-sign">
-          <input class="bigbutton" type="submit" name="cancel" value="Avvisa" rel="#dialog-confirm-cancel" id="cancel">
+      <div id="signViewBottomBoxContainerLeft"> 
+        <div id="signViewBottomBoxContainerLeftText"> 
+          <input type="checkbox"> <span class="title">Jag intygar...</span> 
+          More text should follow
         </div>
       </div>
-      <div id="signViewBottomBoxBottom"></div>
+      <div id="signViewBottomBoxContainerRight"> 
+        <input class="button" type="submit" name="sign" value="Underteckna!" id="sign" rel="#dialog-confirm-sign">
+        <input class="bigbutton" type="submit" name="cancel" value="Avvisa" rel="#dialog-confirm-cancel" id="cancel">
+      </div>
     </div>
     
 ###
@@ -415,11 +414,73 @@ pageDocumentForSignContent_old=
               </span>
 ####
 pageDocumentForAuthorHelpers=
-                 <span class="templating_insert"> $signatoryEntry:noescape()$</span>,
+              <span class="templating_insert"> $signatoryEntry:noescape()$</span>,
                   <script> var documentid = "$documentid$"; 
-                  </script>     
+                  </script>
+
+pageDocumentForAuthorHelpersLocalDialogs=
+    <div class="localdialogs">
+      <form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-signinvite" rel="#main-document-form">  
+        <a class="close"> </a>
+        <h2 id="dialog-title-sign">Underteckna</h2>
+        <h2 id="dialog-title-send">Skicka inbjudan</h2>
+        <div id="dialog-confirm-text-sign">
+          <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
+                    
+          <p>När du undertecknat kommer en automatisk inbjudan att skickas till 
+                                    
+            <span class="Xinvited">Invited</span> med e-post.</p>
+        </div>
+
+        <div id="dialog-confirm-text-send">
+          <p>Du har valt en sekreterarroll och kommer själv inte att underteckna. Är du säker på att du vill skicka en inbjudan att underteckna dokumentet <strong>$documenttitle$</strong> till <span class="Xinvited">Invited</span>?</p>
+        </div>
+                   
+        <div class="buttonbox" >
+          <input type="hidden" name="final" value="automatic">
+          <button class="close button" type="button"> Avbryt </button>
+          <button class="submiter button" type="button"> Underteckna </button>
+        </div>
+      </form>
+      <form method="post" name="form" action=action id="dialog-confirm-sign-eleg" class="overlay">     
+        <script src="/js/bankid.js"></script>
+        <a class="close"> </a>                  
+        <h2>Underteckna with E-Legitimation</h2>  
+        <p>CHANGE!!!Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
+        <p>När  undertecknat blir 
+          avtalet <strong>juridiskt bindande</strong> och
+          det färdigställda avtalet skickas till din e-post.</p>
+        <div class="buttonbox">
+          <input type="hidden" name="bankid" value="automatic">
+          <input type="hidden" name="signature" value="" id="signature">
+          <input type="hidden" name="transactionid" value="" id="transactionid">
+          <button class="close button" type="button"> Avbryt </button>
+          <button class="bankid button" type="button"> Underteckna with BankID</button>
+        </div>
+      </form>  
+      <form method="post" name="form" action="" class="overlay" id="edit-invite-text-dialog" >  
+        <a class="close"> </a>
+        <h2>Hälsningsmeddelande</h2>
+        <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
+          $invitationMailContent:noescape()$
+        </div>
+        <div class="buttonbox" >
+          <button class="close button" type="button"> Avbryt </button>
+          <button class="editer button" type=""> Skriv eget meddelande </button>
+          <button class="close button" type="button" id="editing-invite-text-finished"> Ok </button>
+        </div>
+      </form>  
+      <div class="hidden" id="hiddenttimestuffbox">
+        <div id="daystosignbox">Undertecknas inom (dagar)
+          <BR>
+          <input type="text" id="daystosign" name="daystosign" value="$documentdaystosignboxvalue$" maxlength="2" size="2" autocomplete="off">
+          <small> <a  class="datetodaystip" rel="#daystosign"> </a> </small>
+        </div>
+      </div>
+    </div>
+
 #####
-pageDocumentForAuthorContent=
+pageDocumentForAuthorContent_old=
    <div>
        <div id="loading-message" style="display:none">
             Loading pages . . .
@@ -486,65 +547,7 @@ pageDocumentForAuthorContent=
               <input class="button" type="submit" name="save" value="Spara som utkast">
               </div>
               </form>
-              <span class="localdialogs">
-                <form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-signinvite" rel="#main-document-form">  
-                   <a class="close"> </a>
-                   <h2 id="dialog-title-sign">Underteckna</h2>
-                   <h2 id="dialog-title-send">Skicka inbjudan</h2>
-                   <div id="dialog-confirm-text-sign">
-                    <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
-                    
-                    <p>När du undertecknat kommer en automatisk inbjudan att skickas till 
-                                    
-                    <span class="Xinvited">Invited</span> med e-post.</p>
-                   </div>
-
-                   <div id="dialog-confirm-text-send">
-                     <p>Du har valt en sekreterarroll och kommer själv inte att underteckna. Är du säker på att du vill skicka en inbjudan att underteckna dokumentet <strong>$documenttitle$</strong> till <span class="Xinvited">Invited</span>?</p>
-                   </div>
-                   
-                   <div class="buttonbox" >
-                       <input type="hidden" name="final" value="automatic">
-                       <button class="close button" type="button"> Avbryt </button>
-                       <button class="submiter button" type="button"> Underteckna </button>
-                       </div>
-                 </form>
-		 <form method="post" name="form" action=action id="dialog-confirm-sign-eleg" class="overlay">     
-                     <script src="/js/bankid.js"></script>
-                     <a class="close"> </a>                  
-                     <h2>Underteckna with E-Legitimation</h2>  
-                     <p>CHANGE!!!Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
-                     <p>När  undertecknat blir 
-                      avtalet <strong>juridiskt bindande</strong> och
-                      det färdigställda avtalet skickas till din e-post.</p>
-                      <div class="buttonbox">
-                      <input type="hidden" name="bankid" value="automatic">
-                      <input type="hidden" name="signature" value="" id="signature">
-                      <input type="hidden" name="transactionid" value="" id="transactionid">
-                      <button class="close button" type="button"> Avbryt </button>
-                      <button class="bankid button" type="button"> Underteckna with BankID</button>
-                      </div>
-                 </form>  
-                 <form method="post" name="form" action="" class="overlay" id="edit-invite-text-dialog" >  
-                   <a class="close"> </a>
-                   <h2>Hälsningsmeddelande</h2>
-                   <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
-                   $invitationMailContent:noescape()$
-                   </div>
-                   <div class="buttonbox" >
-                       <button class="close button" type="button"> Avbryt </button>
-                       <button class="editer button" type=""> Skriv eget meddelande </button>
-                       <button class="close button" type="button" id="editing-invite-text-finished"> Ok </button>
-                   </div>
-                 </form>  
-                 <div class="hidden" id="hiddenttimestuffbox">
-                       <div id="daystosignbox">Undertecknas inom (dagar)
-                        <BR>
-                        <input type="text" id="daystosign" name="daystosign" value="$documentdaystosignboxvalue$" maxlength="2" size="2" autocomplete="off">
-                        <small> <a  class="datetodaystip" rel="#daystosign"> </a> </small>
-                       </div>
-                 </div>
-               </span>
+              $pageDocumentForAuthorHelpersLocalDialogs:noescape()$
              </span>
         $else$
                <span>
@@ -601,4 +604,127 @@ pageDocumentForAuthorContent=
        </div>
       </div>
 
+####
+
+#####
+pageDocumentForAuthorContent=
+   <div id="signStepsContainer">
+     <div id="signStepsMenu">
+       <div>
+         <a href="#step1" class="clickArea"></a>
+         <a href="#step1" class="step1icon">
+	 </a>
+	 <a href="#step1" class="text">Ladda upp dokument</a>
+       </div>
+
+       <div id="current">
+	 <a href="#step2" class="clickArea"></a>
+	 <a href="#step2" class="step2icon">
+	 </a>
+	 <a href="#step2" class="text">Fyll i uppgifter</a>
+       </div>
+
+       <div>
+	 <a href="#step3" class="clickArea"></a>
+	 <a href="#step3" class="step3icon">
+	 </a>
+	 <a href="#step3" class="text">Underteckna och skicka!</a>
+       </div>
+						
+       <div id="signStepsMenuEmptyStep"></div>
+     </div>
+					
+     <div id="signStepsTitleRow">
+       <span id="signStepsTitleRowTextContainer">
+	 <span class="title">DOKUMENT:</span>
+	 <span class="name">$title$ | Transaction #$documentid$</span>
+	 <!-- <span class="changeName"><a href="#changeName">BYT TITEL</a></span> -->
+       </span>
+						
+       <div class="signStepsButton">
+	 <a href="#nextStep" class="clickArea"></a>
+	 
+	 <a href="#nextStep"><span class="icon arrowRight"></span></a><!-- 005 no whitespace here pleace, or one pixel of the button will be unclicable pixel in IE --><a href="#nextStep">
+	   <span class="text">Nästa steg</span>
+	 </a>
+       </div>
+     </div>
+					
+     <div id="signStepsBody">
+					
+       <div id="signStepsBodyLeft">
+	 <div id="people">
+	   <div class="signStepsBodyTitle">
+	     <span>PERSONER</span>
+	   </div>
+								
+	   <div class="signStepsBodyForms">
+             <ol>
+	       <li><a href="#">Lukas Duczko</a>
+	       <li><a href="#">Ardalan Eschkalan</a>
+	       <li><a href="#">Bertil Hult</a>
+	       <li><a href="#">Fltintastek Svensson</a>
+	       <li><a href="#">MBMA ar fett bra</a>
+             </ol>
+	   </div>
+								
+	   <!--<div class="signStepsBodyAddField partCount">
+	     <span>Visa</span>
+	     <a href="">11-20</a>,
+	     <a href="">21-30</a>
+	   </div>
+             -->
+	 </div>
+       </div>
+						
+       <div id="signStepsBodyRight">
+	 <div class="signStepsBodyTitle">
+	   <span>PART 3</span>
+	 </div>
+							
+	 <!-- 008 change/new -->
+	 <div class="signStepsBodyIcons">
+	   <a href="#man2" class="man"></a>
+	   <a href="#briefcase2" class="briefcase"></a>
+	   <!-- <a href="#hand2" class="hand"></a> -->
+	 </div>
+							
+	 <!-- 013 changed -->
+	 <div class="signStepsBodyForms">
+	   <form action="">
+	     <input type="text" infotext="För- & efternamn" name="name">
+	     <input type="text" infotext="Ev. Företagsnamn" name="business">
+	     
+	     <input type="email" infotext="E-post" name="mail">
+	     <input type="text" infotext="Org.-nr / Personnr." name="business">
+	   </form>
+	 </div>
+							
+	 <!-- 008 change/new -->
+         <!--
+	 <div class="signStepsBodyAddField">
+	   <a href="#plus2" class="plus"></a>
+	   <a href="#minus2" class="minus"></a>
+	   <p>Fält</p>
+	 </div>
+	 -->						
+       </div>
+						
+       <div id="signStepsBodyFunctions">
+	 <div id="signStepsBodyFunctionsBox">
+	   <ul>
+	     <!-- 008 changed/new -->
+	     <li><a href="#add" class="plus">LÄGG TILL PERSON</a></li>
+	     <li><a href="#remove" class="minus">TA BORT PERSON</a></li>
+	     <!-- <li><a href="#save" class="floppy">SPARA SOM MALL</a></li> -->
+	     <!-- <li><a href="#download" class="arrowDown">LADDA NED SOM PDF</a></li> -->
+	   </ul>
+	 </div>
+       </div>
+						
+						
+       <!-- span>signStepsBorderBottom går upp till titelRow om man tar bort denna text. förslag på lösning? Lösning: lägg till float:left på signStepsBodyBorderBottom /johan  </span -->
+       <div id="signStepsBodyBorderBottom"></div>
+     </div>			
+   </div>
 ####
