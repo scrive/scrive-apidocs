@@ -1,6 +1,5 @@
 ######
-mailCancelDocumentByAuthorTitle=
-    Återkallelsenotis: $documenttitle$
+mailCancelDocumentByAuthorTitle=Återkallelsenotis: $documenttitle$
 ####
 mailCancelDocumentByAuthorStandardHeader=
     <p>Hej, </p>
@@ -13,8 +12,7 @@ mailCancelDocumentByAuthorContent=
     </p>
     $footer:noescape()$
 #####
-mailDocumentAwaitingForAuthorTitle=
-    Bekräftelse: $documenttitle$
+mailDocumentAwaitingForAuthorTitle=Bekräftelse: $documenttitle$
 ######
 mailDocumentAwaitingForAuthorContent=
     <span>
@@ -27,8 +25,7 @@ mailDocumentAwaitingForAuthorContent=
       $poweredBySkrivaPaPara()$
     </span>
 #####
-mailDocumentClosedForAuthorTitle=
-    Bekräftelse: $documenttitle$
+mailDocumentClosedForAuthorTitle=Bekräftelse: $documenttitle$
 #####
 mailDocumentClosedForAuthorContent=
     <span>
@@ -39,8 +36,7 @@ mailDocumentClosedForAuthorContent=
       $poweredBySkrivaPaPara()$
     </span>
 #####
-mailDocumentClosedForSignatoriesTitle=
-    Bekräftelse: $documenttitle$
+mailDocumentClosedForSignatoriesTitle=Bekräftelse: $documenttitle$
 #####
 mailDocumentClosedForSignatoriesContent=
     <span>
@@ -51,8 +47,7 @@ mailDocumentClosedForSignatoriesContent=
       $poweredBySkrivaPaPara()$
     </span>
 ####
-mailRejectMailTitle=
-    Avvisat: $documenttitle$
+mailRejectMailTitle=Avvisat: $documenttitle$
 ####
 mailRejectMailContent=
     <span>
@@ -61,8 +56,7 @@ mailRejectMailContent=
       $poweredBySkrivaPaPara()$
     </span>
 ###
-mailInvitationToSignTitle=
-    Inbjudan från $creatorname$ till $documenttitle$
+mailInvitationToSignTitle=Inbjudan från $creatorname$ till $documenttitle$
 ###
 mailInvitationToSignContent=
     $header:noescape()$
@@ -130,8 +124,7 @@ remindMailNotSignedContent=
     </span>
     $footer:noescape()$
 ####
-newUserMailTitle=
-    Nytt konto
+newUserMailTitle=Nytt konto
 ####
 newUserMailContent=
     <span>
@@ -149,8 +142,7 @@ newUserMailContent=
       </p>
     </span>
 ####
-passwordChangeMailTitle=
-    Nytt lösenord
+passwordChangeMailTitle=Nytt lösenord
 ####
 passwordChangeMailContent=
     <span>
@@ -161,8 +153,7 @@ passwordChangeMailContent=
       $poweredBySkrivaPaPara()$
     </span>
 ####
-inviteSubaccountMailTitle=
-    Inbjudan från $supervisorname$ till underkonto
+inviteSubaccountMailTitle=Inbjudan från $supervisorname$ till underkonto
 ####
 inviteSubaccountMailContent=
     <span>
@@ -181,8 +172,7 @@ inviteSubaccountMailContent=
       $poweredBySkrivaPaPara()$
     </span>
 ####
-mailNewAccountCreatedByAdminTitle=
-    Nytt konto
+mailNewAccountCreatedByAdminTitle=Nytt konto
 ###
 mailNewAccountCreatedByAdminContent=
     <span>
@@ -201,8 +191,7 @@ mailNewAccountCreatedByAdminContent=
       $poweredBySkrivaPaPara()$
     </span>
 ####
-invitationMailUndeliveredTitle=
-    Felaktig e-post
+invitationMailUndeliveredTitle=Felaktig e-post
 ###
 invitationMailUndeliveredContent=
     <span>
@@ -219,8 +208,7 @@ invitationMailUndeliveredContent=
       $poweredBySkrivaPaPara()$
     </span>
 ####
-mailDocumentErrorTitle=
-    SkrivaPå could no handle $documenttitle$
+mailDocumentErrorTitle=SkrivaPå could no handle $documenttitle$
 ###
 mailDocumentErrorContent=
     <p>Hej,</p>
@@ -231,8 +219,7 @@ mailDocumentErrorContent=
     <p>We are sorry for the inconvenience</p>
     $poweredBySkrivaPaPara()$
 ###
-passwordChangeLinkMailTitle=
-    Nytt lösenord
+passwordChangeLinkMailTitle=Nytt lösenord
 ###
 passwordChangeLinkMailContent=
     <span>

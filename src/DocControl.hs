@@ -248,12 +248,21 @@ sendRejectEmails :: (Maybe BS.ByteString) -> Context -> Document -> SignatoryLin
 sendRejectEmails customMessage ctx document signalink = do
   let rejectorName = signatoryname (signatorydetails signalink)
   forM_ (documentsignatorylinks document) $ \sl ->  
-            when (signalink /= sl) $ do
+                     do
                       let semail = signatoryemail $ signatorydetails  sl
                       let sname = signatoryname $ signatorydetails  sl
                       mail <- mailDocumentRejected (ctxtemplates ctx) customMessage ctx sname document rejectorName
                       sendMail  (ctxmailsconfig ctx) $ mail { fullnameemails = [(sname,semail)]}
-
+  when (not $ any (isAuthor document) $ documentsignatorylinks document) $ 
+        do
+          mauthor <- query $ GetUserByUserID (unAuthor $ documentauthor document) 
+          case (mauthor) of
+            Just user ->  do 
+                      let aemail =  unEmail $ useremail $ userinfo $ user
+                      let aname = userfullname user
+                      mail <- mailDocumentRejected (ctxtemplates ctx) customMessage ctx aname document rejectorName
+                      sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = [(aname,aemail)]}
+            Nothing -> return ()
 {- |
    Render a page of documents that a user has signed
    URL: /s
