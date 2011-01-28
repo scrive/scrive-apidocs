@@ -30,8 +30,8 @@ import KontraLink
 import ELegitimation.ELeg
 import MinutesTime
 
-handleSign :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra Response
-handleSign docid signid magic = do
+handleSignBankID :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra Response
+handleSignBankID docid signid magic = do
   -- document <- queryOrFail $ GetDocumentByDocumentID docid
   -- checkLinkIDAndMagicHash document signid magic
   ctx <- get
@@ -69,8 +69,8 @@ handleSign docid signid magic = do
                                                     ,("tbs", JString text)
                                                     ,("transactionid", JString transactionid)]
 
-handleSignPost :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra KontraLink
-handleSignPost docid signid magic = do
+handleSignPostBankID :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra KontraLink
+handleSignPostBankID docid signid magic = do
   document <- queryOrFail $ GetDocumentByDocumentID docid
   checkLinkIDAndMagicHash document signid magic
 
@@ -98,7 +98,8 @@ handleSignPost docid signid magic = do
                 when (not (tsignid == signid && tdocid == docid && tmagic == magic)) mzero
                 -- end validation
 
-                done <- verifySignature (transactionencodedtbs trans)
+                done <- verifySignature 6
+                                        (transactionencodedtbs trans)
                                         signature
                                         (transactionnonce trans)
                                         transactionid
@@ -130,8 +131,8 @@ handleSignPost docid signid magic = do
                               Right document -> do 
                                                postDocumentChangeAction document olddocumentstatus (Just signid)
                                                return $ LinkSigned docid signid
-handleIssue :: DocumentID -> Kontra Response
-handleIssue docid = do
+handleIssueBankID :: DocumentID -> Kontra Response
+handleIssueBankID docid = do
   ctx <- get
 
   liftIO $ print $ ctxelegtransactions ctx
@@ -168,8 +169,8 @@ handleIssue docid = do
                                                     ,("transactionid", JString transactionid)]
 
 
-handleIssuePost :: DocumentID -> Kontra KontraLink
-handleIssuePost docid = withUserPost $ do
+handleIssuePostBankID :: DocumentID -> Kontra KontraLink
+handleIssuePostBankID docid = withUserPost $ do
   document <- queryOrFail $ GetDocumentByDocumentID $ docid
   ctx@Context { ctxmaybeuser = Just user, ctxelegtransactions } <- get
   failIfNotAuthor document user
@@ -192,7 +193,8 @@ handleIssuePost docid = withUserPost $ do
                 when (docid /= tdocid) mzero
                 -- end validation
 
-                done <- verifySignature (transactionencodedtbs trans)
+                done <- verifySignature 6
+                                        (transactionencodedtbs trans)
                                         signature
                                         (transactionnonce trans)
                                         transactionid
@@ -222,6 +224,8 @@ kvJson (k, JString v) = "\"" ++ k ++ "\" : \"" ++ v ++ "\""
 
 toJSON :: [(String, JSONValue)] -> String
 toJSON kvs = "{ " ++ (concat $ intersperse ", " (map kvJson kvs)) ++ " }"
+
+-- SOAP
 
 endpoint = "https://eidt.funktionstjanster.se:18898/osif"
 
@@ -431,9 +435,9 @@ encodeTBS tbs transactionID = do
                          then return $ Right text
                          else return $ Left (ImplStatus a b status msg)
 
-verifySignature :: String -> String -> String -> String -> Kontra (Either ImplStatus (String, [(String, String)]))
-verifySignature tbs signature nonce transactionID = do
-  eresponse <- liftIO $ makeSoapCallINSECURE endpoint "VerifySignature" $ VerifySignatureRequest 6 "logtest004" tbs signature nonce transactionID
+verifySignature :: Int -> String -> String -> String -> String -> Kontra (Either ImplStatus (String, [(String, String)]))
+verifySignature provider tbs signature nonce transactionID = do
+  eresponse <- liftIO $ makeSoapCallINSECURE endpoint "VerifySignature" $ VerifySignatureRequest provider "logtest004" tbs signature nonce transactionID
   case eresponse of
     Left msg -> do
       liftIO $ print msg
