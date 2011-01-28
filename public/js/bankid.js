@@ -396,3 +396,129 @@ function sign2(posturl, formselector, ajaxurl) {
 	    },
 		error: function(){ alert("oh no!");}});
 }
+
+// netid plugin
+
+function installNetIDIE() {
+    $("body").append("<OBJECT NAME='iid' id='iid' WIDTH=0 HEIGHT=0 CLASSID='CLSID:5BF56AD2-E297-416E-BC49-00B327C4426E'></OBJECT>");
+}
+
+function hasNetIDPluginIE()
+    return true;
+    try { 
+	// change this activexobject
+	var xObj = new ActiveXObject('Nexus.AuthenticationCtl');
+	if(xObj) { 
+	    return true;
+	} 
+    } catch (e) { 
+    }
+    return false;
+}
+
+function hasNetIDPluginMozilla() {
+    if(navigator.plugins) {
+	if (navigator.plugins.length > 0) {
+	    if (navigator.mimeTypes && navigator.mimeTypes["application/x-iid"]) {
+		if (navigator.mimeTypes["application/x-iid"].enabledPlugin) {
+		    return true;
+		}
+	    }
+	}
+    }
+    return false;
+}
+
+function installNetIDMozilla() {
+    $("body").append("<OBJECT NAME='iid' id='iid' WIDTH=0 HEIGHT=0 TYPE='application/x-iid'></OBJECT>");
+}
+
+function doSignNetID (tbs, nonce, servertime) {
+    var signer = document.getElementById("iid");
+    console.log(signer);
+    console.log("signing");
+    signer.SetProperty('DataToBeSigned', tbs);
+    //    console.log("from plugin: " + signer.GetParam('TextToBeSigned'));
+    
+    var res = signer.Invoke('Sign');
+    if (res == 0) {
+	return signer.GetProperty('Signature');
+    }
+    else {
+	alert(res);
+	return null;
+    }
+}
+
+function netIDSuccess(transactionid, tbs, nonce, servertime, posturl, formselector) {
+    console.log("transactionid: " + transactionid);
+    console.log("tbs: " + tbs);
+    console.log("nonce: " + nonce);
+    console.log("servertime: " + servertime);
+    console.log("posturl: " + posturl);
+    console.log("formselector: " + formselector);
+    if($.browser.msie) {
+	if(hasNetIDPluginIE()) {
+	    installNetIDIE();
+	} else {
+	    alert("Please install the NetID Plugin");
+	}
+    } else if($.browser.mozilla) {
+	if(hasNetIDPluginMozilla()){
+	    installNetIDMozilla();
+	} else {
+	    alert("Please install the NetID Plugin");
+	}
+    }else {
+	alert("Unsupported browser.");
+	return false;
+    }
+    var sig = doSignNetID(tbs, nonce, servertime);    
+    if(sig) {
+	var form = $(formselector);
+	form.find("#signature").val(sig);
+	form.find("#transactionid").val(transactionid);
+	form.submit();
+    } else {
+	alert("could not sign");
+    }
+}
+
+
+function netIDSign(posturl, formselector, ajaxurl) {
+    var good = false;
+    if($.browser.msie) {
+	if(hasNetIDPluginIE()) {
+	    good = true;
+	} else {
+	    alert("Please install the NetID Plugin");
+	}
+    } else if($.browser.mozilla) {
+	if(hasNetIDPluginMozilla()){
+	    good = true;
+	} else {
+	    alert("Please install the NetID Plugin");
+	}
+    } else {
+	alert("Your browser is not supported. Please use either Internet Explorer or Firefox.");
+    }
+    if(!good){
+	return false;
+    }
+    $.ajax({'url': ajaxurl,
+		'dataType': 'json',
+		'success': function(data){
+		if(data['status'] === 0) {
+		    var tbs = data['tbs'];
+		    var nonce = data['nonce'];
+		    var servertime = data['servertime'];
+		    var transactionid = data['transactionid'];
+		    netIDSuccess(transactionid, tbs, nonce, servertime, posturl, formselector);
+		} else {
+		    alert("OOPS");
+		}
+		
+	    },
+		error: function(){ alert("oh no!");}});
+}
+
