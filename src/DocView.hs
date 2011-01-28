@@ -519,8 +519,10 @@ pageDocumentForAuthor ctx
                                                               (setAttribute "linkcancel" $ show $ LinkCancel document) .
                                                               (setAttribute "emailelegitimation" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)) .
                                                               (setAttribute "emailonly" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isNothing $ find (== ELegitimationIdentification) documentallowedidtypes)) .
-                                                              (setAttribute "elegitimationonly" $ (isNothing $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes))
-     showDocumentPageHelper (ctxtemplates ctx) document helpers (documenttitle)  content
+                                                              (setAttribute "elegitimationonly" $ (isNothing $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)) .
+                                                              (setAttribute "helpers" helpers)
+     --showDocumentPageHelper (ctxtemplates ctx) document helpers (documenttitle)  content
+     return content
    
 
 {- |
@@ -675,14 +677,19 @@ pageDocumentForSign action document ctx  invitedlink wassigned author =
                      ]  $ return ""   
                      
      partyUnsigned <- renderListTemplate (ctxtemplates ctx) $  map (BS.toString . personname') $ partyUnsignedMeAndList magichash document
-     content <- renderTemplate (ctxtemplates ctx) "pageDocumentForSignContent" [("signatories",signatories),
-                                                                                 ("messageoption",messageoption),
-                                                                                 ("documenttitle", BS.toString $ documenttitle document),
-                                                                                 ("authorname", BS.toString $ authorname),
-                                                                                 ("rejectMessage", rejectMessage),
-                                                                                 ("partyUnsigned", partyUnsigned),
-                                                                                 ("action", show action)]                                                                                   
-     showDocumentPageHelper (ctxtemplates ctx) document helpers  (documenttitle document) content
+     renderTemplateComplex (ctxtemplates ctx) "pageDocumentForSignContent" $
+                 (setAttribute "helpers" helpers) .
+                 (setAttribute "signatories" signatories) .
+                 (setAttribute "messageoption" messageoption) .
+                 (setAttribute "documenttitle" $ BS.toString $ documenttitle document) .
+                 (setAttribute "authorname" $ BS.toString $ authorname) .
+                 (setAttribute "rejectMessage" rejectMessage) .
+                 (setAttribute "partyUnsigned" partyUnsigned) .
+                 (setAttribute "action" $ show action) .
+                 (setAttribute "helpers" $ helpers) .
+                 (setAttribute "title" $ BS.toString $ documenttitle document) .
+                 (setAttribute "linkissuedocpdf" $ show (LinkIssueDocPDF document)) .
+                 (setAttribute "docid" $ show $ documentid document)
 
 --We keep this javascript code generation for now
 jsArray :: [[Char]] -> [Char]

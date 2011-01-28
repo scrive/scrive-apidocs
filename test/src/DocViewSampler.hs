@@ -60,7 +60,8 @@ docViewSamples = [testGroup "sample document flash messages"
                             testCase "document for sign (with html in data)" sampleDocumentViewForSign_htmlInData,
                             testCase "document for sign (with empty data)" sampleDocumentViewForSign_blankData,
                             testCase "document for sign (with a few signatories)" sampleDocumentViewForSign_aFewSignatories,
-                            testCase "document for sign (with a lot of signatories)" sampleDocumentViewForSign_aLotOfSignatories]]
+                            testCase "document for sign (with a lot of signatories)" sampleDocumentViewForSign_aLotOfSignatories,
+                           testCase "document for author" sampleDocumentViewForAuthor_normal]]
 
 
 sampleDocumentDraftSavedFlashMsg =
@@ -230,7 +231,13 @@ sampleLandpageDocumentSavedView =
                      Nothing 
                      (\templ ctx -> landpageDocumentSavedView templ)
 
+
 --pageDocumentList tests go here
+sampleDocumentViewForAuthor_normal = 
+    sampleDocumentViewForAuthor "document_for_author" 
+                                    (Just aTestUser)
+                                    aFileName
+                                    aFewSignatories
 
 sampleDocumentViewForSign_loggedOut = sampleDocumentViewForSign 
                                                           "document_for_sign_logged_out" 
@@ -290,6 +297,15 @@ sampleDocumentViewForSign_aLotOfSignatories = sampleDocumentViewForSign
                                                   Nothing 
                                                   aFileName
                                                   oneHundredSignatories
+
+sampleDocumentViewForAuthor name ctxmaybeuser documenttitle sigs =
+    let document = createUnsignedDocument documenttitle sigs
+        author = aTestUser
+    in
+    sampleCompleteView name ctxmaybeuser (\templ ctx -> pageDocumentForAuthor 
+                                                                   ctx 
+                                                                   document 
+                                                                   author)
 
 sampleDocumentViewForSign name ctxmaybeuser documenttitle sigs =
     let document = createUnsignedDocument documenttitle sigs

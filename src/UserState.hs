@@ -74,7 +74,7 @@ $(deriveAll [''Eq, ''Ord, ''Default]
       -- Can't be moved to Session where it belong (cycle references)
       newtype Friend = Friend { unFriend :: Int }
       newtype DefaultMainSignatory = DefaultMainSignatory { unDMS :: Int }
-      newtype FlashMessage = FlashMessage BS.ByteString deriving Read       
+      newtype FlashMessage = FlashMessage { unFlashMessage :: BS.ByteString }  deriving Read       
       newtype Email = Email { unEmail :: BS.ByteString }
       data Password = Password [Octet] [Octet] | NoPassword
       newtype SupervisorID = SupervisorID { unSupervisorID :: Int }

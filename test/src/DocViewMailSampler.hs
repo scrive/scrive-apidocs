@@ -49,11 +49,11 @@ sampleRemindSignedMailWithCustomMsg =
 
 sampleDocumentRejectedMail =
   sampleMail "document_rejected"
-             (\t -> mailDocumentRejectedForAuthor t Nothing aTestCtx aTestName anUnsignedDocument anotherTestName)
+             (\t -> mailDocumentRejected t Nothing aTestCtx aTestName anUnsignedDocument anotherTestName)
 
 sampleDocumentRejectedMailWithCustomMsg =
   sampleMail "document_rejected_with_custom_msg"
-             (\t -> mailDocumentRejectedForAuthor t (Just aCustomMsg) aTestCtx aTestName anUnsignedDocument anotherTestName)
+             (\t -> mailDocumentRejected t (Just aCustomMsg) aTestCtx aTestName anUnsignedDocument anotherTestName)
 
 sampleInvitationToSignMail =
   sampleMail "invitation_to_sign"
