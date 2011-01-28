@@ -137,6 +137,30 @@ nda = SealSpec
     }
 
 
+twod = SealSpec 
+    { input = "TWOD Custom Compliance Configuration Filled.pdf"
+    , output = "TWOD Custom Compliance Configuration Filled and Sealed.pdf"
+    , documentNumber = "0000001234"
+    , hostpart = "http://host.skrivapa"
+    , fields = []
+    , persons = 
+        [ ]
+    , initials = "öåä, ÖÅÄ"
+      , history = []
+    }
+
+twodgs = SealSpec 
+    { input = "TWOD Custom Compliance Configuration Filled from GS.pdf"
+    , output = "TWOD Custom Compliance Configuration Filled from GS and Sealed.pdf"
+    , documentNumber = "0000001234"
+    , hostpart = "http://host.skrivapa"
+    , fields = []
+    , persons = 
+        [ ]
+    , initials = "öåä, ÖÅÄ"
+      , history = []
+    }
+
 {-
 
 ex1 = SealSpec 

@@ -293,7 +293,7 @@ binarizeValue (Number x) = do
     put True
 binarizeValue (String False x) = do
     tell $ bin_builder_char '('
-    tell $ bin_builder_bytestring x
+    tell $ bin_builder_bytestring_escape x
     tell $ bin_builder_char ')'
     put False
 binarizeValue (String True x) = do
@@ -323,11 +323,26 @@ binarizeValue (Operator x) = do
     put True
 
 
-bin_builder_char x = Bin.singleton (BSB.c2w x)
+bin_builder_word8 x = Bin.singleton x
+bin_builder_char x = bin_builder_word8 (BSB.c2w x)
+
+bin_builder_word8_escape x | x<32 || isdelim x = mconcat [ Bin.singleton (BSB.c2w '\\')
+                                                  , Bin.singleton (((x `div` 64) `mod` 8)  + 48)
+                                                  , Bin.singleton (((x `div` 8) `mod` 8) + 48)
+                                                  , Bin.singleton ((x `mod` 8) + 48)
+                                                  ]
+                    | otherwise = Bin.singleton x
+bin_builder_char_escape x = bin_builder_word8_escape (BSB.c2w x)
+
 bin_builder_string x =
-    bin_builder_bytestring (BSC.pack x)
+    mconcat (map bin_builder_char x)
 bin_builder_bytestring x =
-    mconcat (map Bin.singleton (BS.unpack x))
+    mconcat (map bin_builder_word8 (BS.unpack x))
+
+bin_builder_string_escape x =
+    mconcat (map bin_builder_char_escape x)
+bin_builder_bytestring_escape x =
+    mconcat (map bin_builder_word8_escape (BS.unpack x))
 
 hexencode x = BS.concatMap hex x
     where hex x = BS.pack [hex1 ((x `shiftR` 4) .&. 15),hex1 (x .&. 15)]
@@ -946,8 +961,14 @@ parseString = do
                                , P.string (o "\\r") >> return (o "\r")
                                , P.string (o "\\n") >> return (o "\n")
                                , P.string (o "\\t") >> return (o "\t")
-                               , P.char (BSB.c2w '\\') >>
-                                    P.get >>= return . BS.singleton
+                               , P.char (BSB.c2w '\\') >> 
+                                    ((do 
+                                                  o1 <- octDigit
+                                                  o2 <- octDigit
+                                                  o3 <- octDigit
+                                                  return $ BS.singleton ((o1-48)*8*8 + (o2-48)*8 + (o3-48))) P.<++
+                                             (P.get >>= return . BS.singleton)
+                                             )
                                ]
         string_string_p = do
              P.string (o "(")
@@ -955,6 +976,7 @@ parseString = do
              P.string (o ")")
              return (BS.concat ([o "("] ++ x ++ [o ")"]))
         o = BSC.pack
+        octDigit = P.satisfy (\x -> BSB.c2w '0' <= x && x <= BSB.c2w '7')
 
 parseHexString :: MyReadP BS.ByteString
 parseHexString = do
