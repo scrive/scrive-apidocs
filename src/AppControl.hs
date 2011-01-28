@@ -204,6 +204,14 @@ handleRoutes = msum [
      , dir "s" $ param "bankid" $ hpost3 $ BankID.handleSignPost
      , dir "d" $ param "bankid" $ hpost1 $ BankID.handleIssuePost
 
+     , dir "nordea" $ dir "s" $ hget3  $ BankID.handleSignNordea
+     , dir "nordea" $ dir "d" $ hget1  $ BankID.handleIssueNordea
+     , dir "s" $ param "nordea" $ hpost3 $ BankID.handleSignPostNordea
+     , dir "d" $ param "nordea" $ hpost1 $ BankID.handleIssuePostNordea
+
+     
+
+
      -- static files
      , serveHTMLFiles
      , fileServe [] "public"
