@@ -499,6 +499,19 @@ freeLeftForUser user = do
 isFriendOf :: UserID -> User -> Bool
 isFriendOf uid user = (unUserID uid `elem` map unFriend (userfriends user))
 
+isFriendOf' :: UserID -> Maybe User -> Bool
+isFriendOf' uid muser = fromMaybe False $ fmap (isFriendOf uid) muser
+
+isFriendWithSignatory :: UserID -> Document -> IO Bool
+isFriendWithSignatory uid document = do
+                                   areFriends <- sequence $ map (isFriendWithSignatoryLink uid) $ documentsignatorylinks document
+                                   return $ or areFriends
+                                   
+isFriendWithSignatoryLink :: UserID -> SignatoryLink -> IO Bool
+isFriendWithSignatoryLink uid sl = do
+                                     muser1 <- query $ GetUserByEmail $ Email $ signatoryemail $ signatorydetails $  sl
+                                     muser2 <- sequenceMM $ fmap (query . GetUserByUserID . unSignatory) $ maybesignatory sl
+                                     return $ (isFriendOf' uid muser1) || (isFriendOf' uid muser2)
 {- |
    Handles the request to show a document to a user.
    User must be logged in.
@@ -525,7 +538,9 @@ handleIssueShowGet docid = withUserGet $ checkUserTOSGet $ do
    then renderFromBody ctx toptab kontrakcja 
             (fmap cdata $ pageDocumentForAuthor ctx document author)
    -- friends can just look (but not touch)
-   else if isFriendOf userid author
+   else do
+        friendWithSignatory <- liftIO $ isFriendWithSignatory userid document 
+        if (isFriendOf userid author || friendWithSignatory )
          then renderFromBody ctx toptab kontrakcja
                   (fmap cdata $ pageDocumentForViewer ctx document author)
          -- not allowed
