@@ -651,6 +651,8 @@ pageDocumentForAuthorContent=
      </div>
 			
      <div id="signStepsContentStack">
+
+     <form action="" method="post">
      <div id="signStep2Content">
        <div id="signStepsBody">
 	 
@@ -821,11 +823,12 @@ pageDocumentForAuthorContent=
 	        </p>
 	        -->
 	     <!-- 013 changed sign button tag -->
-	     <a href="#sign" class="buttonSignLarge"></a>
+	     <input type="submit" value="" name="final" class="buttonSignLarge">
 	   </div>
 	 </div>
 	 
        </div>			
+       </form>
      </div>
      </div>
 						
