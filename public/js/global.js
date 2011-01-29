@@ -10,26 +10,32 @@ function getUniqueId()
 
 function enableInfoText(where)
 {
+    return;
+}
+
+function enableInfoTextOnce(where)
+{
     if( where==null ) {
         where = $(document);
     }
     var selector = ':input[infotext]';
-    var inputs = where.find(selector);
+    var inputs = $(selector, where);
     
-    inputs.focus(function() { 
+    inputs.live("focus", function() { 
             if( $(this).hasClass("grayed")) {
                 $(this).val("");
                 $(this).removeClass("grayed");
             }
-            });
-    inputs.blur(function() {
+        });
+    inputs.live("blur", function() {
             if( $(this).val()=="" || $(this).val()==$(this).attr("infotext") ) {
                 $(this).addClass("grayed");
                 $(this).val($(this).attr("infotext"));
             }
         });
     inputs.blur();
-    $("form").submit(function () {
+
+    $("form").live("submit",function () {
             var elems = $(this).find(selector + ".grayed");
             elems.val("");
             return true;
@@ -188,7 +194,7 @@ $(document).ready( function () {
     $('#all').click(function() {
     });
     */
-    enableInfoText();
+    enableInfoTextOnce();
     if(typeof(window.documentid)!= "undefined" ) {
         $.ajax({ url: "/pagesofdoc/" + documentid,
             success: function(data) {
