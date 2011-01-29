@@ -610,25 +610,25 @@ pageDocumentForAuthorContent_old=
 pageDocumentForAuthorContent=
    <div id="signStepsContainer">
      <div id="signStepsMenu">
-       <div>
-         <a href="#step1" class="clickArea"></a>
-         <a href="#step1" class="step1icon">
+       <div id="step1select">
+         <a href="#" class="step1select clickArea"></a>
+         <a href="#" class="step1select step1icon">
 	 </a>
-	 <a href="#step1" class="text">Ladda upp dokument</a>
+	 <a href="#" class="step1select text">Ladda upp dokument</a>
        </div>
 
-       <div id="current">
-	 <a href="#step2" class="clickArea"></a>
-	 <a href="#step2" class="step2icon">
+       <div id="step2select" class="current">
+	 <a href="#" class="step2select clickArea"></a>
+	 <a href="#" class="step2select step2icon">
 	 </a>
-	 <a href="#step2" class="text">Fyll i uppgifter</a>
+	 <a href="#" class="step2select text">Fyll i uppgifter</a>
        </div>
 
-       <div>
-	 <a href="#step3" class="clickArea"></a>
-	 <a href="#step3" class="step3icon">
+       <div id="step3select">
+	 <a href="#" class="step3select clickArea"></a>
+	 <a href="#" class="step3select step3icon">
 	 </a>
-	 <a href="#step3" class="text">Underteckna och skicka!</a>
+	 <a href="#" class="step3select text">Underteckna och skicka!</a>
        </div>
 						
        <div id="signStepsMenuEmptyStep"></div>
@@ -649,82 +649,178 @@ pageDocumentForAuthorContent=
 	 </a>
        </div>
      </div>
-					
-     <div id="signStepsBody">
-					
-       <div id="signStepsBodyLeft">
-	 <div id="people">
-	   <div class="signStepsBodyTitle">
-	     <span>PERSONER</span>
-	   </div>
-								
-	   <div class="signStepsBodyForms">
-             <ol>
-	       <li><a href="#">Lukas Duczko</a>
-	       <li><a href="#">Ardalan Eschkalan</a>
-	       <li><a href="#">Bertil Hult</a>
-	       <li><a href="#">Fltintastek Svensson</a>
-	       <li><a href="#">MBMA ar fett bra</a>
-             </ol>
-	   </div>
-								
-	   <!--<div class="signStepsBodyAddField partCount">
-	     <span>Visa</span>
-	     <a href="">11-20</a>,
-	     <a href="">21-30</a>
-	   </div>
-             -->
-	 </div>
-       </div>
-						
-       <div id="signStepsBodyRight">
-	 <div class="signStepsBodyTitle">
-	   <span>PART 3</span>
-	 </div>
-							
-	 <!-- 008 change/new -->
-	 <div class="signStepsBodyIcons">
-	   <a href="#man2" class="man"></a>
-	   <a href="#briefcase2" class="briefcase"></a>
-	   <!-- <a href="#hand2" class="hand"></a> -->
-	 </div>
-							
-	 <!-- 013 changed -->
-	 <div class="signStepsBodyForms">
-	   <form action="">
-	     <input type="text" infotext="För- & efternamn" name="name">
-	     <input type="text" infotext="Ev. Företagsnamn" name="business">
+			
+     <div id="signStepsContentStack">
+     <div id="signStep2Content">
+       <div id="signStepsBody">
+	 
+         <div id="signStepsBodyLeft">
+	   <div id="people">
+	     <div class="signStepsBodyTitle">
+	       <span>PERSONER</span>
+	     </div>
 	     
-	     <input type="email" infotext="E-post" name="mail">
-	     <input type="text" infotext="Org.-nr / Personnr." name="business">
-	   </form>
-	 </div>
-							
-	 <!-- 008 change/new -->
-         <!--
-	 <div class="signStepsBodyAddField">
-	   <a href="#plus2" class="plus"></a>
-	   <a href="#minus2" class="minus"></a>
-	   <p>Fält</p>
-	 </div>
-	 -->						
+	     <div class="signStepsBodyForms">
+               <ol>
+	         <li><a href="#">Lukas Duczko</a>
+	         <li><a href="#">Ardalan Eschkalan</a>
+	         <li><a href="#">Bertil Hult</a>
+	         <li><a href="#">Fltintastek Svensson</a>
+	         <li><a href="#">MBMA ar fett bra</a>
+               </ol>
+	     </div>
+	     
+	     <!--<div class="signStepsBodyAddField partCount">
+	              <span>Visa</span>
+	              <a href="">11-20</a>,
+	              <a href="">21-30</a>
+	     </div>
+             -->
+	   </div>
+         </div>
+	 
+         <div id="signStepsBodyRight">
+	   <div class="signStepsBodyTitle">
+	     <span>PART 3</span>
+	   </div>
+	   
+	   <!-- 008 change/new -->
+	   <div class="signStepsBodyIcons">
+	     <a href="#man2" class="man"></a>
+	     <a href="#briefcase2" class="briefcase"></a>
+	     <!-- <a href="#hand2" class="hand"></a> -->
+	   </div>
+	   
+	   <!-- 013 changed -->
+	   <div class="signStepsBodyForms">
+	     <form action="">
+	       <input type="text" infotext="För- & efternamn" name="name">
+	       <input type="text" infotext="Ev. Företagsnamn" name="business">
+	       
+	       <input type="email" infotext="E-post" name="mail">
+	       <input type="text" infotext="Org.-nr / Personnr." name="business">
+	     </form>
+	   </div>
+	   
+	   <!-- 008 change/new -->
+           <!--
+	      <div class="signStepsBodyAddField">
+	        <a href="#plus2" class="plus"></a>
+	        <a href="#minus2" class="minus"></a>
+	        <p>Fält</p>
+	      </div>
+	      -->						
+         </div>
+	 
+         <div id="signStepsBodyFunctions">
+	   <div id="signStepsBodyFunctionsBox">
+	     <ul>
+	       <!-- 008 changed/new -->
+	       <li><a href="#add" class="plus">LÄGG TILL PERSON</a></li>
+	       <li><a href="#remove" class="minus">TA BORT PERSON</a></li>
+	       <!-- <li><a href="#save" class="floppy">SPARA SOM MALL</a></li> -->
+	       <!-- <li><a href="#download" class="arrowDown">LADDA NED SOM PDF</a></li> -->
+	     </ul>
+	   </div>
+         </div>
        </div>
-						
-       <div id="signStepsBodyFunctions">
-	 <div id="signStepsBodyFunctionsBox">
-	   <ul>
-	     <!-- 008 changed/new -->
-	     <li><a href="#add" class="plus">LÄGG TILL PERSON</a></li>
-	     <li><a href="#remove" class="minus">TA BORT PERSON</a></li>
-	     <!-- <li><a href="#save" class="floppy">SPARA SOM MALL</a></li> -->
-	     <!-- <li><a href="#download" class="arrowDown">LADDA NED SOM PDF</a></li> -->
-	   </ul>
+     </div>
+
+     <div id="signStep3Content" style="display: none">
+       <div id="signStepsBody">
+	   
+	 <div id="signStepsBodyLeft" class="step3">
+	   <div class="signStepsBodyTitle">
+	     <span>DOKUMENTHANTERING</span>
+
+	   </div>
+	   <div class="options">
+	     <p>
+	       <input type="checkbox" id="a" />
+	       <label for="a">Aktivera förfallodatum</label>
+	     </p>
+	     
+	     <p>
+	       <input type="checkbox" id="b" />
+
+	       <label for="b">Aktivera automatisk påminnelse</label>
+	     </p>
+
+             <!-- 
+	        <p class="signStepsBodySaveMethods">
+		  <label for="c">Lagring</label> 
+		  <select id="c">
+		    <option value="1">Standard</option>
+		    <option value="2">Trustweaver</option>
+
+		    <option value="3">Option 3</option>
+		  </select>
+	        </p>
+                -->
+	   </div>
 	 </div>
-       </div>
+	 
+	 
+	 <div id="signStepsBodyRight" class="step3">
+	   <div class="border left"></div>
+	   <div class="border right"></div>
+
+	   
+	   <div class="signStepsBodyTitle">
+	     <span>INBJUDAN</span>
+	   </div>
+	   
+	   <div class="signStepsBodyInvation">
+	     <a href="#sayHello">JUSTERA HÄLSNINGSMEDDELANDE</a>
+	   </div>
+	   
+	   <!-- 015 new -->
+           <!-- 
+	      <div id="signStepsBodyUploadBox" class="step3">
+
+	        <span id="signStepsBodyUploadTextContainer">
+		  <span class="text">Bifoga dokument med inbjudan</span>
+	        </span>
+	        <br />
+	        
+	        <div id="signStepsButtonContainer">
+		  <div class="signStepsButton">
+		    <a href="#attachFile" class="clickArea"></a>
+		    
+		    <a href="#attachFile"><span class="icon arrowUp"></span></a><a href="#attachFile">
+
+		      <span class="text">Ladda upp fil</span>
+		    </a>
+		  </div>
+	        </div>
+	      </div>
+              -->
+	 </div>
+	 <div id="signStepsBodyFunctions" class="step3">
+	   <div class="signStepsBodyTitle">
+	     <span>SIGNERING</span>
+	   </div>
+	   <div class="signStepsBodyFunctionsBox options">
+             <!--
+	        <p>
+		  <label for="d">Metod</label> 
+		  <select id="d">
+		    <option value="1">e-post</option>
+		    <option value="2">e-legitimation</option>
+		    <option value="3">Option 3</option>
+		  </select>
+	        </p>
+	        -->
+	     <!-- 013 changed sign button tag -->
+	     <a href="#sign" class="buttonSignLarge"></a>
+	   </div>
+	 </div>
+	 
+       </div>			
+     </div>
+     </div>
 						
-						
-       <!-- span>signStepsBorderBottom går upp till titelRow om man tar bort denna text. förslag på lösning? Lösning: lägg till float:left på signStepsBodyBorderBottom /johan  </span -->
-       <div id="signStepsBodyBorderBottom"></div>
-     </div>			
-   </div>
+     <!-- span>signStepsBorderBottom går upp till titelRow om man tar bort denna text. förslag på lösning? Lösning: lägg till float:left på signStepsBodyBorderBottom /johan  </span -->
+     <div id="signStepsBodyBorderBottom"></div>
+   </div>			
 ####
