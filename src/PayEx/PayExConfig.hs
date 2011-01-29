@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP, OverloadedStrings, TupleSections#-}
 {-# OPTIONS_GHC -Wall #-}
 -----------------------------------------------------------------------------
 -- |

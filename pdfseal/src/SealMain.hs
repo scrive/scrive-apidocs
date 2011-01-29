@@ -1,5 +1,3 @@
-{-# LANGUAGE CPP, BangPatterns, PackageImports #-}
-
 module Main where
 
 import Seal

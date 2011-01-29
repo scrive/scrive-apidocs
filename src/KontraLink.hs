@@ -1,4 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -F -pgmFtrhsx #-}
 module KontraLink(KontraLink(..), sendRedirect ) where
 

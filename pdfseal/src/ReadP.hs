@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP, TypeOperators, ExistentialQuantification, PolymorphicComponents #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Text.ParserCombinators.ReadP.ByteString

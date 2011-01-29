@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -F -pgmFtrhsx #-}
 
 module User 

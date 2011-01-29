@@ -1,4 +1,3 @@
-{-# LANGUAGE ForeignFunctionInterface, CPP, ScopedTypeVariables, StandaloneDeriving, TemplateHaskell, FlexibleInstances, MultiParamTypeClasses, FlexibleContexts, UndecidableInstances  #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  InspectXML

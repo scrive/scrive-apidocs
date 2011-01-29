@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP, OverloadedStrings, TupleSections , OverlappingInstances , ViewPatterns, Arrows #-}
 {-# OPTIONS_GHC -Wall #-}
 -----------------------------------------------------------------------------
 -- |

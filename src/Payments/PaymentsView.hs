@@ -1,4 +1,3 @@
-{-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, TupleSections, NamedFieldPuns #-}
 {-# OPTIONS_GHC -Wall #-}
 -----------------------------------------------------------------------------
 -- |

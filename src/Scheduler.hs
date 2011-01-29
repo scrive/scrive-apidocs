@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell, UndecidableInstances, DeriveDataTypeable, FlexibleInstances, FlexibleContexts, MultiParamTypeClasses, TypeSynonymInstances, GeneralizedNewtypeDeriving #-}
 -- |Simple session support
 module Scheduler
     ( runScheduler )

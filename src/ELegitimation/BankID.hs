@@ -1,7 +1,3 @@
-{-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, 
-             NamedFieldPuns, ScopedTypeVariables, CPP, RecordWildCards,
-             PackageImports
- #-}
 module ELegitimation.BankID where
 
 import User
