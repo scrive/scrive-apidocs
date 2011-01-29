@@ -197,11 +197,12 @@ handleRoutes = msum [
      , dir "activate" $ hpost2  $ UserControl.handleActivate
 
      -- e-legitimation stuff
-
+     {- Disabled until finished
      , dir "bankid" $ dir "s" $ hget3  $ BankID.handleSign
      , dir "bankid" $ dir "d" $ hget1  $ BankID.handleIssue
      , dir "s" $ param "bankid" $ hpost3 $ BankID.handleSignPost
      , dir "d" $ param "bankid" $ hpost1 $ BankID.handleIssuePost
+     -}
 
      -- static files
      , serveHTMLFiles
