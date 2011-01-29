@@ -1042,6 +1042,18 @@ input , button, a.button
     position: absolute;
 }
 
+#signStepsContentStack
+{
+    position: relative;
+}
+
+#signStep1Content,
+#signStep2Content,
+#signStep3Content
+{
+    position: absolute;
+}
+
 #signStepsMenu div img
 {
     position: absolute;
@@ -1049,7 +1061,7 @@ input , button, a.button
     left: 5px;
 }
 
-#signStepsMenu div#current
+#signStepsMenu div.current
 {
     background-image: url(images/darkpattern.png);
     background-repeat: repeat;
@@ -1059,11 +1071,11 @@ input , button, a.button
     color: #d9d9d9;
     height: 24px;
 }
-#signStepsMenu div#current a
+#signStepsMenu div.current a
 {
     color: #d9d9d9;
 }
-#signStepsMenu div#current img
+#signStepsMenu div.current img
 {
     top: 4px;	
 }
