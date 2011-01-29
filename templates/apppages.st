@@ -61,7 +61,7 @@ wholePage=
               $endif$
             </a> 
             $if(userfullname)$
-            <span id="userMenu">$userfullname$ | <a href="/account">Konto</a> | <a href="logout">Logga ut</a></span>
+            <span id="userMenu">$userfullname$ | <a href="/account">Konto</a> | <a href="/logout">Logga ut</a></span>
             $else$
             <div id="loginContainer">
 	      <form action="/login" method="post"> 
@@ -74,6 +74,18 @@ wholePage=
 	      </form> 
             </div> 
             $endif$     
+           <div id="nav">
+           $if(uploadTab + documentTab)$
+                 <ul>
+               $if(uploadTab)$
+                  <li>  <a href="$uploadTab.0$" $if(uploadTab.1)$ class="active" $endif$>Skapa avtal</a></li>
+               $endif$
+               $if(documentTab)$
+                   <li>  <a href="$documentTab.0$" $if(documentTab.1)$ class="active" $endif$>Arkiv</a></li>
+               $endif$ 
+                 </ul>
+           $endif$
+            </div>
             <div class="clearboth"></div>
           </div>
           $content:noescape()$
