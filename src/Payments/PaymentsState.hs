@@ -41,8 +41,8 @@ module Payments.PaymentsState  (
        
     ) where
 
-import "mtl" Control.Monad.Reader (ask)
-import "mtl" Control.Monad.State hiding (State)
+import Control.Monad.Reader (ask)
+import Control.Monad.State hiding (State)
 import Happstack.Data (Default, deriveAll, )
 import Happstack.Data.IxSet as IxSet
 import Happstack.State 

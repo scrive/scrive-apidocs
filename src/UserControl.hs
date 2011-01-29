@@ -1,7 +1,7 @@
 module UserControl where
-import "mtl" Control.Monad.State
-import "mtl" Control.Monad.Trans (liftIO,MonadIO,lift)
-import "base" Control.Monad
+import Control.Monad.State
+import Control.Monad.Trans (liftIO,MonadIO,lift)
+import Control.Monad
 import AppView
 import Data.Maybe
 import DocState

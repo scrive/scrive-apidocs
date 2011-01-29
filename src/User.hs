@@ -20,8 +20,8 @@ module User
     where
 
 import System.Time
-import "mtl" Control.Monad.Reader
-import "mtl" Control.Monad.State
+import Control.Monad.Reader
+import Control.Monad.State
 import Codec.Utils (Octet)
 import Control.Concurrent.MVar
 import Data.HMAC (hmac_sha1)

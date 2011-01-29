@@ -10,7 +10,7 @@
 -- 'getPaymentChangeChange' is used to parse user payments change in admin backend.
 -----------------------------------------------------------------------------
 module Payments.PaymentsControl(handlePaymentsModelForViewView, handlePaymentsModelForEditView ,handleAccountModelsChange,readMoneyField,getPaymentChangeChange) where
-import "mtl" Control.Monad.State
+import Control.Monad.State
 import AppView
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.State (update)
