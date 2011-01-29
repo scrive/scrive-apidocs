@@ -1057,6 +1057,7 @@ input , button, a.button
 #peopleDetails
 {
     position: relative;
+    height: 50px;
 }
 
 #peopleDetails div
