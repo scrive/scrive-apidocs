@@ -729,4 +729,36 @@ $(document).ready(function() {
                 $('#signStep3Content').fadeIn();
                 return false;
             });
+        $('a', '#peopleList').live('click', function() {
+                var li = $(this).parent();
+                var ol = li.parent();
+                var idx = ol.children().index(li);
+                var children = $('#peopleDetails').children();
+                children.filter(':not(:eq(' + idx + '))').hide();
+                children.filter(':eq(' + idx + ')').show();
+                return false;
+            });
+        $('#addSignatory').click(function() {
+                var child = $('#peopleDetails').children().first();
+                var child2 = child.clone();
+                $('#peopleDetails').append(child2);
+                child2.find("input").each( function () {
+                        $(this).val( $(this).attr("infotext"));
+                        $(this).blur();
+                    });
+                
+                $('#peopleList ol').append("<li><a href='#'>Name</a></li>");
+            });
+        $('#delSignatory').click(function() {
+                var children = $('#peopleDetails').children();
+                if( children.size()==1 )
+                    return;
+                var child = children.filter(':visible');
+                var idx = children.index(child);
+                
+                child.remove();
+                
+                var li = $("#peopleList li:eq(" + idx + ")");
+                li.remove();
+            });
     });

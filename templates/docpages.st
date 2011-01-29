@@ -660,13 +660,11 @@ pageDocumentForAuthorContent=
 	       <span>PERSONER</span>
 	     </div>
 	     
-	     <div class="signStepsBodyForms">
+	     <div id="peopleList" class="signStepsBodyForms">
                <ol>
-	         <li><a href="#">Lukas Duczko</a>
-	         <li><a href="#">Ardalan Eschkalan</a>
-	         <li><a href="#">Bertil Hult</a>
-	         <li><a href="#">Fltintastek Svensson</a>
-	         <li><a href="#">MBMA ar fett bra</a>
+	         <li><a href="#">aaa 1</a>
+	         <li><a href="#">aaa 2</a>
+	         <li><a href="#">aaa 3</a>
                </ol>
 	     </div>
 	     
@@ -692,14 +690,28 @@ pageDocumentForAuthorContent=
 	   </div>
 	   
 	   <!-- 013 changed -->
-	   <div class="signStepsBodyForms">
-	     <form action="">
-	       <input type="text" infotext="För- & efternamn" name="name">
-	       <input type="text" infotext="Ev. Företagsnamn" name="business">
+	   <div class="signStepsBodyForms" id="peopleDetails">
+	     <div>
+	       <input type="text" infotext="För- & efternamn" name="signatoryname" autocomplete="off" value="1">
+	       <input type="text" infotext="Ev. Företagsnamn" name="signatorycompany" autocomplete="off">
 	       
-	       <input type="email" infotext="E-post" name="mail">
-	       <input type="text" infotext="Org.-nr / Personnr." name="business">
-	     </form>
+	       <input type="email" infotext="E-post" name="signatoryemail" autocomplete="off">
+	       <input type="text" infotext="Org.-nr / Personnr." name="signatorynumber" autocomplete="off">
+	     </div>
+	     <div>
+	       <input type="text" infotext="För- & efternamn" name="signatoryname" autocomplete="off" value="2">
+	       <input type="text" infotext="Ev. Företagsnamn" name="signatorycompany" autocomplete="off">
+	       
+	       <input type="email" infotext="E-post" name="signatoryemail" autocomplete="off">
+	       <input type="text" infotext="Org.-nr / Personnr." name="signatorynumber" autocomplete="off">
+	     </div>
+	     <div>
+	       <input type="text" infotext="För- & efternamn" name="signatoryname" autocomplete="off" value="3">
+	       <input type="text" infotext="Ev. Företagsnamn" name="signatorycompany" autocomplete="off">
+	       
+	       <input type="email" infotext="E-post" name="signatoryemail" autocomplete="off">
+	       <input type="text" infotext="Org.-nr / Personnr." name="signatorynumber" autocomplete="off">
+	     </div>
 	   </div>
 	   
 	   <!-- 008 change/new -->
@@ -716,8 +728,8 @@ pageDocumentForAuthorContent=
 	   <div id="signStepsBodyFunctionsBox">
 	     <ul>
 	       <!-- 008 changed/new -->
-	       <li><a href="#add" class="plus">LÄGG TILL PERSON</a></li>
-	       <li><a href="#remove" class="minus">TA BORT PERSON</a></li>
+	       <li><a href="#add" class="plus" id="addSignatory">LÄGG TILL PERSON</a></li>
+	       <li><a href="#remove" class="minus" id="delSignatory">TA BORT PERSON</a></li>
 	       <!-- <li><a href="#save" class="floppy">SPARA SOM MALL</a></li> -->
 	       <!-- <li><a href="#download" class="arrowDown">LADDA NED SOM PDF</a></li> -->
 	     </ul>
