@@ -1054,6 +1054,16 @@ input , button, a.button
     position: absolute;
 }
 
+#peopleDetails
+{
+    position: relative;
+}
+
+#peopleDetails div
+{
+    position: absolute;
+}
+
 #signStepsMenu div img
 {
     position: absolute;
