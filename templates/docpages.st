@@ -608,6 +608,9 @@ pageDocumentForAuthorContent_old=
 
 #####
 pageDocumentForAuthorContent=
+   <div style="display: none">
+      $helpers:noescape()$
+   </div>
    <div id="signStepsContainer">
      <div id="signStepsMenu">
        <div id="step1select">
@@ -839,4 +842,7 @@ pageDocumentForAuthorContent=
      <!-- span>signStepsBorderBottom går upp till titelRow om man tar bort denna text. förslag på lösning? Lösning: lägg till float:left på signStepsBodyBorderBottom /johan  </span -->
      <div id="signStepsBodyBorderBottom"></div>
    </div>			
+    <div id="documentBox">
+     <div class="waiting4page"></div>
+    </div>
 ####
