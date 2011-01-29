@@ -686,7 +686,7 @@ pageDocumentForAuthorContent=
 	   <div class="signStepsBodyIcons">
 	     <a href="#man2" class="man"></a>
 	     <a href="#briefcase2" class="briefcase"></a>
-	     <!-- <a href="#hand2" class="hand"></a> -->
+	     <a href="#hand2" class="hand"></a>
 	   </div>
 	   
 	   <!-- 013 changed -->
@@ -714,14 +714,11 @@ pageDocumentForAuthorContent=
 	     </div>
 	   </div>
 	   
-	   <!-- 008 change/new -->
-           <!--
-	      <div class="signStepsBodyAddField">
-	        <a href="#plus2" class="plus"></a>
-	        <a href="#minus2" class="minus"></a>
-	        <p>Fält</p>
-	      </div>
-	      -->						
+	   <div class="signStepsBodyAddField">
+	     <a href="#plus2" class="plus"></a>
+	     <a href="#minus2" class="minus"></a>
+	     <p>Fält</p>
+	   </div>
          </div>
 	 
          <div id="signStepsBodyFunctions">
@@ -787,26 +784,26 @@ pageDocumentForAuthorContent=
 	   </div>
 	   
 	   <!-- 015 new -->
-           <!-- 
-	      <div id="signStepsBodyUploadBox" class="step3">
 
-	        <span id="signStepsBodyUploadTextContainer">
-		  <span class="text">Bifoga dokument med inbjudan</span>
-	        </span>
-	        <br />
+	   <div id="signStepsBodyUploadBox" class="step3">
+
+	     <span id="signStepsBodyUploadTextContainer">
+	       <span class="text">Bifoga dokument med inbjudan</span>
+	     </span>
+	     <br />
 	        
-	        <div id="signStepsButtonContainer">
-		  <div class="signStepsButton">
-		    <a href="#attachFile" class="clickArea"></a>
-		    
-		    <a href="#attachFile"><span class="icon arrowUp"></span></a><a href="#attachFile">
+	     <div id="signStepsButtonContainer">
+	       <div class="signStepsButton">
+		 <a href="#attachFile" class="clickArea"></a>
+		 
+		 <a href="#attachFile"><span class="icon arrowUp"></span></a><a href="#attachFile">
+                      
+		   <span class="text">Ladda upp fil</span>
+		 </a>
+	       </div>
+	     </div>
+	   </div>
 
-		      <span class="text">Ladda upp fil</span>
-		    </a>
-		  </div>
-	        </div>
-	      </div>
-              -->
 	 </div>
 	 <div id="signStepsBodyFunctions" class="step3">
 	   <div class="signStepsBodyTitle">
