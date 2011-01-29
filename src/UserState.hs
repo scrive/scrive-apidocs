@@ -43,8 +43,8 @@ module UserState
 ) where
 import Happstack.Data
 import Happstack.State
-import "mtl" Control.Monad.Reader (ask)
-import "mtl" Control.Monad.State (modify,MonadState(..))
+import Control.Monad.Reader (ask)
+import Control.Monad.State (modify,MonadState(..))
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BS (unlines) 

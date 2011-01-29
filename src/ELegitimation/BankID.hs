@@ -13,7 +13,7 @@ import Happstack.State
 import DocState
 import Misc
 import Session
-import "mtl" Control.Monad.State
+import Control.Monad.State
 import DocControl
 import SOAP.SOAP
 import qualified Data.ByteString as BS

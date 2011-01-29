@@ -21,8 +21,8 @@ module Session
     )
     where
 
-import "mtl" Control.Monad.Reader (ask)
-import "mtl" Control.Monad.State hiding (State)
+import Control.Monad.Reader (ask)
+import Control.Monad.State hiding (State)
 import Data.Generics
 import Data.Maybe (isNothing,isJust, fromJust)
 import Happstack.Data

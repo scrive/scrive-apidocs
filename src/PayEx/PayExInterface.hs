@@ -9,7 +9,7 @@
 --  Wrapper around PeyEx webservices
 -----------------------------------------------------------------------------
 module PayEx.PayExInterface(payexTest) where
-import "mtl" Control.Monad.State
+import Control.Monad.State
 import PayEx.PayExState
 import PayEx.PayExRequest
 import PayEx.PayExResponse

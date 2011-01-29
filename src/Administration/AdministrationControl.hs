@@ -26,7 +26,7 @@ module Administration.AdministrationControl(
           , handleUserEnableTrustWeaverStorage
           , handleMigrate0
           ) where
-import "mtl" Control.Monad.State
+import Control.Monad.State
 import AppView
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.State (update,query)

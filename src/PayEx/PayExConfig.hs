@@ -9,7 +9,7 @@
 --  Configuration of PayEx service 
 -----------------------------------------------------------------------------
 module PayEx.PayExConfig(PayExConfig(..),getPayExConfig) where
-import "mtl" Control.Monad.Reader
+import Control.Monad.Reader
 import Payments.PaymentsState
 import PayEx.PayExState
 

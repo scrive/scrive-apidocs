@@ -10,7 +10,7 @@
 --  some config or other data that PayEx requeires
 -----------------------------------------------------------------------------
 module PayEx.PayExRequest where
-import "mtl" Control.Monad.State
+import Control.Monad.State
 import Payments.PaymentsState
 import PayEx.PayExState
 import PayEx.PayExConfig
