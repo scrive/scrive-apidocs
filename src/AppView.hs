@@ -169,6 +169,8 @@ pageFromBody' prefix
                     content <- liftIO $ renderHSPToString <div id="mainContainer"><% body %></div>
                     wholePage <- liftIO $ renderTemplateComplex ctxtemplates "wholePage" $
                                  (setAttribute "production" ctxproduction) .
+                                 (setAttribute "uploadTab" $ uploadTabInfo ctxmaybeuser topMenu) .
+                                 (setAttribute "documentTab" $ documentTabInfo ctxmaybeuser topMenu) .
                                  (setAttribute "content" content) .
                                  (setAttribute "prefix" prefix) .
                                  (setAttribute "flashmessages" (map (BSC.toString . unFlashMessage) ctxflashmessages)) .
@@ -199,3 +201,12 @@ pageLogin :: Context -> Maybe String -> IO String
 pageLogin ctx referer = do
   renderTemplateComplex (ctxtemplates ctx) "pageLogin" $
                             (setAttribute "referer" referer)
+
+  
+uploadTabInfo::Maybe User -> TopMenu ->  Maybe (String,Bool)
+uploadTabInfo Nothing _= Nothing
+uploadTabInfo _ menu = Just (show LinkMain,(menu== TopNew))
+
+documentTabInfo::Maybe User -> TopMenu -> Maybe (String,Bool)
+documentTabInfo Nothing _ = Nothing
+documentTabInfo _ menu = Just (show LinkIssue,(menu== TopDocument))
