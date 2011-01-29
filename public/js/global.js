@@ -761,4 +761,13 @@ $(document).ready(function() {
                 var li = $("#peopleList li:eq(" + idx + ")");
                 li.remove();
             });
+        $("input[name='signatoryname']", "#peopleDetails").live('change keyup', function() {
+                var val = $(this).val();
+                console.log(val);
+                var div = $(this).parentsUntil("#peopleDetails").last();
+                var idx = div.parent().children().index(div);
+                if( val=="") 
+                    val = "(fill in)";
+                $('#peopleList li:eq(' + idx + ') a').text(val);
+            });
     });
