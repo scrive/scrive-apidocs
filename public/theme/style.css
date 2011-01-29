@@ -1051,7 +1051,7 @@ input , button, a.button
 #signStep2Content,
 #signStep3Content
 {
-    position: absolute;
+    /* position: absolute; */
 }
 
 #peopleDetails
