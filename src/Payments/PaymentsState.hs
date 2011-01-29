@@ -1,6 +1,3 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies, DeriveDataTypeable,
-    FlexibleInstances, MultiParamTypeClasses, FlexibleContexts,
-    UndecidableInstances, TypeSynonymInstances, StandaloneDeriving, TupleSections #-}    
 {-# OPTIONS_GHC -Wall #-}    
 -----------------------------------------------------------------------------
 -- |

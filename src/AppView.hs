@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleContexts, FlexibleInstances, IncoherentInstances,
-             MultiParamTypeClasses, NamedFieldPuns, CPP #-}
 {-# OPTIONS_GHC -F -pgmFtrhsx -Wall#-}
 module AppView( TopMenu(..)
               , kontrakcja

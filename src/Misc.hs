@@ -1,6 +1,3 @@
-{-# LANGUAGE ForeignFunctionInterface, CPP, ScopedTypeVariables, StandaloneDeriving, FlexibleInstances, MultiParamTypeClasses, FlexibleContexts, UndecidableInstances  #-}
-
-
 module Misc where
 import Control.Monad(msum,liftM,mzero,guard,MonadPlus(..))
 import Control.Monad.Reader (ask,asks)

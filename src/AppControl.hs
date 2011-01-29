@@ -1,7 +1,3 @@
-{-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, 
-             NamedFieldPuns, ScopedTypeVariables, CPP, RecordWildCards,
-             PackageImports
- #-}
 module AppControl
     ( appHandler
     , AppConf(..)
@@ -287,6 +283,7 @@ appHandler appConf appGlobals= do
                  _ -> 0
     
   let peer = rqPeer rq
+ 
 
   minutestime <- liftIO $ getMinutesTime
   session <- handleSession

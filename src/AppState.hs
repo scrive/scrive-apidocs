@@ -1,9 +1,3 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies, DeriveDataTypeable,
-    FlexibleInstances, MultiParamTypeClasses, FlexibleContexts,
-    UndecidableInstances, TypeOperators, TypeSynonymInstances,
-    GeneralizedNewtypeDeriving, ScopedTypeVariables
-    #-}
-
 {- |
    Sores the top-level application state
  -}

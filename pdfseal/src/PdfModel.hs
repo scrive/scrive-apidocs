@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP, BangPatterns, PackageImports #-}
 {-# OPTIONS_GHC -fglasgow-exts -funbox-strict-fields #-}
 
 module PdfModel where

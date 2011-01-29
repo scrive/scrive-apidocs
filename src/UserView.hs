@@ -1,4 +1,3 @@
-{-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, NamedFieldPuns #-}
 {-# OPTIONS_GHC -F -pgmFtrhsx -Wall #-}
 module UserView(
    --pages

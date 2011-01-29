@@ -1,5 +1,3 @@
-{-# LANGUAGE CPP, OverloadedStrings #-}
-
 module UserControl where
 import "mtl" Control.Monad.State
 import "mtl" Control.Monad.Trans (liftIO,MonadIO,lift)

@@ -1,4 +1,3 @@
-{-# LANGUAGE IncoherentInstances, TemplateHaskell, NamedFieldPuns, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -F -pgmFtrhsx #-}
 
 -----------------------------------------------------------------------------

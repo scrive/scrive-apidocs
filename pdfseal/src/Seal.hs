@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP, BangPatterns, NamedFieldPuns, DoRec #-}
 
 module Seal where
 import PdfModel

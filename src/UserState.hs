@@ -1,6 +1,3 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies, DeriveDataTypeable,
-    FlexibleInstances, MultiParamTypeClasses, FlexibleContexts,
-    UndecidableInstances, TypeSynonymInstances, StandaloneDeriving #-}
 {-# OPTIONS_GHC -Wall #-}
 module UserState 
     ( Email(..)

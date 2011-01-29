@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell, UndecidableInstances, DeriveDataTypeable, FlexibleInstances, FlexibleContexts, MultiParamTypeClasses, TypeSynonymInstances, GeneralizedNewtypeDeriving #-}
 {-# OPTIONS_GHC -Wall #-}
 -- |Simple session support
 module Session 

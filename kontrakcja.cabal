@@ -50,10 +50,24 @@ Executable pdfseal
   Build-depends: base, mmap==0.5.*, parallel, array
   Build-Depends: HPDF
   Build-Depends: mtl<2
-  Extensions: TemplateHaskell, TypeFamilies, DeriveDataTypeable,
-             FlexibleInstances, MultiParamTypeClasses, FlexibleContexts,
-             UndecidableInstances, TypeOperators, TypeSynonymInstances,
-             GeneralizedNewtypeDeriving, NamedFieldPuns
+  Extensions: CPP,
+              BangPatterns,
+              DeriveDataTypeable,
+              FlexibleContexts,
+              FlexibleInstances, 
+              ForeignFunctionInterface,
+              GeneralizedNewtypeDeriving, 
+              MultiParamTypeClasses, 
+              NamedFieldPuns,
+              PackageImports,
+              RankNTypes,
+              RecursiveDo,
+              StandaloneDeriving,
+              TemplateHaskell, 
+              TypeFamilies, 
+              TypeOperators, 
+              TypeSynonymInstances,
+              UndecidableInstances
 
 
 Executable kontrakcja-server
@@ -96,11 +110,26 @@ Executable kontrakcja-server
 
  Main-Is: Main.hs
 
- Extensions: TemplateHaskell, TypeFamilies, DeriveDataTypeable,
-             FlexibleInstances, MultiParamTypeClasses, FlexibleContexts,
-             UndecidableInstances, TypeOperators, TypeSynonymInstances,
-             GeneralizedNewtypeDeriving, NamedFieldPuns, PackageImports,
-             ScopedTypeVariables
+ Extensions: CPP,
+             BangPatterns,
+             DeriveDataTypeable,
+             FlexibleContexts,
+             FlexibleInstances, 
+             ForeignFunctionInterface,
+             GeneralizedNewtypeDeriving, 
+             MultiParamTypeClasses, 
+             NamedFieldPuns, 
+             PackageImports,
+             PatternGuards,
+             RankNTypes,
+             RecursiveDo,
+             ScopedTypeVariables,
+             StandaloneDeriving,
+             TemplateHaskell,
+             TypeFamilies, 
+             TypeOperators, 
+             TypeSynonymInstances,
+             UndecidableInstances
 
 Executable kontrakcja-test
  if flag(test)
@@ -142,8 +171,23 @@ Executable kontrakcja-test
 
  Main-is: TestMain.hs
 
- Extensions: TemplateHaskell, TypeFamilies, DeriveDataTypeable,
-             FlexibleInstances, MultiParamTypeClasses, FlexibleContexts,
-             UndecidableInstances, TypeOperators, TypeSynonymInstances,
-             GeneralizedNewtypeDeriving, NamedFieldPuns, PackageImports,
-             ScopedTypeVariables
+ Extensions: CPP,
+             BangPatterns,
+             DeriveDataTypeable,
+             FlexibleContexts,
+             FlexibleInstances, 
+             ForeignFunctionInterface,
+             GeneralizedNewtypeDeriving, 
+             MultiParamTypeClasses, 
+             NamedFieldPuns,             
+             PackageImports,
+             PatternGuards,
+             RankNTypes,
+             RecursiveDo,
+             ScopedTypeVariables,
+             StandaloneDeriving,
+             TemplateHaskell, 
+             TypeFamilies, 
+             TypeOperators, 
+             TypeSynonymInstances,
+             UndecidableInstances
