@@ -706,27 +706,27 @@ $(document).ready(function() {
                 $('#step1select').addClass("current");
                 $('#step2select').removeClass("current");
                 $('#step3select').removeClass("current");
-                $('#signStep1Content').fadeIn();
-                $('#signStep2Content').fadeOut();
-                $('#signStep3Content').fadeOut();
+                $('#signStep1Content').show();
+                $('#signStep2Content').hide();
+                $('#signStep3Content').hide();
                 return false; 
             });
         $('#step2select a').click(function() {
                 $('#step1select').removeClass("current");
                 $('#step2select').addClass("current");
                 $('#step3select').removeClass("current");
-                $('#signStep1Content').fadeOut();
-                $('#signStep2Content').fadeIn();
-                $('#signStep3Content').fadeOut();
+                $('#signStep1Content').hide();
+                $('#signStep2Content').show();
+                $('#signStep3Content').hide();
                 return false;
             });
         $('#step3select a').click(function() {
                 $('#step1select').removeClass("current");
                 $('#step2select').removeClass("current");
                 $('#step3select').addClass("current");
-                $('#signStep1Content').fadeOut();
-                $('#signStep2Content').fadeOut();
-                $('#signStep3Content').fadeIn();
+                $('#signStep1Content').hide();
+                $('#signStep2Content').hide();
+                $('#signStep3Content').show();
                 return false;
             });
         $('a', '#peopleList').live('click', function() {
