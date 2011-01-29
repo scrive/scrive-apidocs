@@ -653,6 +653,10 @@ pageDocumentForAuthorContent=
      <div id="signStepsContentStack">
 
      <form action="" method="post">
+       <input type="hidden" name="sigid" value="">
+       <input type="hidden" name="daystosign" value="7">
+       <input type="hidden" name="allowedsignaturetypes" value="Email">
+
      <div id="signStep2Content">
        <div id="signStepsBody">
 	 
