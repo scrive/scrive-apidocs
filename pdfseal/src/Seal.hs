@@ -1,3 +1,4 @@
+{-# LANGUAGE DoRec #-}
 
 module Seal where
 import PdfModel
