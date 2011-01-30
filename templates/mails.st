@@ -123,73 +123,83 @@ remindMailNotSignedContent=
       </p>
     </span>
     $footer:noescape()$
+
+###
+signupLinkEmailPart=
+    <p>Användarnamn:<br>
+    $email$</p>
+    
+    <p>Vänligen klicka på länken för att aktivera kontot:<br>
+    <br>
+    <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a><p>
+
+    $poweredBySkrivaPaPara()$
+
 ####
 newUserMailTitle=Nytt konto
 ####
 newUserMailContent=
-    <span>
-      <p>Hej <strong>$personname$</strong>,</p>
-      <p>Jag heter Lukas Duczko och är VD på SkrivaPå. Tack för att du har skapat ett konto hos oss.
-        Vi hoppas att du kommer att bli nöjd med våra tjänster.
-        Tveka inte att höra av dig med feedback eller bara en enkel hälsning. Din åsikt är värdefull.</p>
-      <p>Användarnamn: <a style="color:#0000CC;font-weight:bold">$email$</a>
-      </p>
-      <p>Du aktiverar ditt konto genom att klicka på länken nedan. Länken är giltig i 12 timmar. <BR>
-        <a href="$ctxhostpart$$activatelink$">$ctxhostpart$$activatelink$</a>
-      </p>
-      <p>Med vänliga hälsningar<br>
-        /Lukas Duczko och team <a href="$ctxhostpart$/">SkrivaPå</a>.
-      </p>
-    </span>
+    <p>Hej <strong>$personname$</strong>,</p>
+    <p>Jag heter Lukas Duczko och är VD på SkrivaPå. Tack för att du har skapat ett konto hos oss.
+       Vi hoppas att du kommer att bli nöjd med våra tjänster.
+       Tveka inte att höra av dig med feedback eller bara en enkel hälsning. Din åsikt är värdefull.</p>
+
+    <p>Användarnamn:<br>
+    $email$</p>
+    
+    <p>Du aktiverar ditt konto genom att klicka på länken nedan. Länken är giltig i 12 timmar.<br>
+    <br>
+    <a href="$ctxhostpart$$activatelink$">$ctxhostpart$$activatelink$</a><p>
+
+    $poweredBySkrivaPaPara()$
 ####
 passwordChangeMailTitle=Nytt lösenord
 ####
 passwordChangeMailContent=
-    <span>
-      <p>Hej $personname$,</p>
-      <p>Du har begärt ett nytt lösenord. Vänligen klicka på länken nedan för att välja ett nytt lösenord.<br>
-	<a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a>
-      </p>
-      $poweredBySkrivaPaPara()$
-    </span>
+    <p>Hej $personname$,</p>
+    <p>Du har begärt ett nytt lösenord. Vänligen klicka på länken nedan för att välja ett nytt lösenord. Länken är giltig i 12 timmar.<br>
+    <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a>
+    </p>
+    $poweredBySkrivaPaPara()$
 ####
 inviteSubaccountMailTitle=Inbjudan från $supervisorname$ till underkonto
 ####
 inviteSubaccountMailContent=
-    <span>
-      <p>Hej <strong>$personname$</strong>,</p>
-      <p><strong>$supervisorname$</strong> har bjudit in dig att öppna ett konto på SkrivaPå genom vilket du kan
-          skriva avtal för <strong>$companyname$</strong>. Observera att detta konto inte är
-        avsett för privat bruk.</p>
-      <p>Användarnamn: <span style="color: orange; text-weight: bold">$email$</span><br/>
-      </p>
-      <p>Vänligen klicka på länken för att aktivera kontot:<br/>
-	<a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a>
-      </p>
-      <p>
-        <a href="$ctxhostpart$">$ctxhostpart$</a>
-      </p>
-      $poweredBySkrivaPaPara()$
-    </span>
+    <p>Hej <strong>$personname$</strong>,</p>
+
+    <p><strong>$supervisorname$</strong> har bjudit in dig till ett underkonto på SkrivaPå genom vilket du kan 
+    skriva avtal för <strong>$companyname$</strong>.
+    Observera att detta konto inte är avsett för privat bruk.</p>
+
+    <p>Användarnamn:<br>
+    $email$</p>
+    
+    <p>Vänligen klicka på länken för att aktivera kontot:<br>
+    <br>
+    <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a><p>
+
+    $poweredBySkrivaPaPara()$
+
 ####
 mailNewAccountCreatedByAdminTitle=Nytt konto
+
 ###
 mailNewAccountCreatedByAdminContent=
-    <span>
-      <p>Hej <strong>$personname$</strong>,</p>
-      <p>$creatorname$ har bjudit in dig till ett konto på tjänsten SkrivaPå. </p>
-      <p>SkrivaPå är ett webbaserat tredjepartsnotariat som gör det möjligt att underteckna,
-        hantera och arkivera avtal elektroniskt. SkrivaPå är som Gmail för dina avtal.</p>
-      <p>Användarnamn: <span style="color: orange; text-weight: bold">$email$</span><br/>
-      </p>
-      <p>Vänligen klicka på länken för att aktivera kontot:<br/>
-	<a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a>
-      </p>
-      <p>
-        <a href="$ctxhostpart$">$ctxhostpart$</a>
-      </p>
-      $poweredBySkrivaPaPara()$
-    </span>
+    <p>Hej <strong>$personname$</strong>,</p>
+
+    <p>$creatorname$ har bjudit in dig till ett konto på tjänsten SkrivaPå. 
+    SkrivaPå är en tjänst för att skriva på och arkivera dokument elektroniskt. 
+    Spara pengar, frustration och miljö och använd SkrivaPå istället. 
+    Du kan spara mellan 50-250kr/dokument!</p>
+
+    <p>Användarnamn:<br>
+    $email$</p>
+    
+    <p>Vänligen klicka på länken för att aktivera kontot:<br>
+    <br>
+    <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a><p>
+
+    $poweredBySkrivaPaPara()$
 ####
 invitationMailUndeliveredTitle=Felaktig e-post
 ###
@@ -222,12 +232,10 @@ mailDocumentErrorContent=
 passwordChangeLinkMailTitle=Nytt lösenord
 ###
 passwordChangeLinkMailContent=
-    <span>
-      <p>Hej $personname$,</p>
-      <p>Du har begärt att ändra ditt lösenord på SkrivaPå. Vänligen klicka på följande länk för att gå vidare:</p>
-      <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a>
-      $poweredBySkrivaPaPara()$
-    </span>
+    <p>Hej $personname$,</p>
+    <p>Du har begärt att ändra ditt lösenord på SkrivaPå. Vänligen klicka på följande länk för att gå vidare. Länken är giltig i 12 timmar.<br>
+    <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a></p>
+    $poweredBySkrivaPaPara()$
 ###
 ###
 ####UTILS
