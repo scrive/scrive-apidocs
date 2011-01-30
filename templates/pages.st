@@ -1,14 +1,5 @@
 ###
 restartButtonName=Starta om dokument
-######
-uploadPageContent=
-    <div class="centerdivnarrow" style="margin-top: 100px;">
-      <form action="/d" method="post" enctype="multipart/form-data">
-        <span class="small">Välj dokument (endast PDF)</span><br>
-        <input class="multi" maxlength="1" type="file" name="doc" accept="application/pdf">
-        <input class="bigbutton" type="submit" value="Ladda upp">
-      </form>
-    </div>
 ####
 firstPageContent=
     <div>

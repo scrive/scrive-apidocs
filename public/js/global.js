@@ -129,7 +129,8 @@ $(document).ready( function () {
                     return false;
                 }                     
             });
-
+        $(".multiFileInput").each(
+            function() {$(this).MultiFile({list: $(this).attr("rel")})});
         // the jQuery Selectable feature 
         $("#selectable" ).selectable({
                 // links and input fields do not have click overridden
@@ -448,7 +449,8 @@ $(document).ready( function () {
 		form.append("<input type='hidden' name='signatoryemail' value='"+ gettext('sauthoremail') + "' />");
 	    }
 	});
-    
+    $(".submitStepFormOnClick").click( function(){
+       $(".stepForm").submit(); })
     $(window).resize();
     
     //var rpxJsHost = (("https:" == document.location.protocol) ? "https://" : "http://static.");

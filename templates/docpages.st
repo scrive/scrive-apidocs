@@ -1,4 +1,77 @@
 ####    Pages for documents - main part of system
+creatingDocumentFrame=   <div id="signStepsContainer">
+     <div id="signStepsMenu">
+       <div id="step1select" $if(step1)$class="current"$endif$>
+         <a href="#" class="step1select clickArea"></a>
+         <a href="#" class="step1select step1icon">
+         </a>
+         <a href="#" class="step1select text">Ladda upp dokument</a>
+       </div>
+
+       <div id="step2select" $if(step2)$class="current"$endif$>
+         <a href="#" class="step2select clickArea"></a>
+         <a href="#" class="step2select step2icon">
+         </a>
+         <a href="#" class="step2select text">Fyll i uppgifter</a>
+       </div>
+
+       <div id="step3select" $if(step3)$class="current"$endif$>
+         <a href="#" class="step3select clickArea"></a>
+         <a href="#" class="step3select step3icon">
+         </a>
+         <a href="#" class="step3select text">Underteckna och skicka!</a>
+       </div>
+                                                
+       <div id="signStepsMenuEmptyStep"></div>
+     </div>
+                                        
+     <div id="signStepsTitleRow">
+       <span id="signStepsTitleRowTextContainer">
+         <span class="title">DOKUMENT:</span>
+         <span class="name">$title$ | Transaction #$documentid$</span>
+       </span>
+                                                
+       <div class="signStepsButton $if(submitFormOnNext)$ submitStepFormOnClick $endif$">
+         <a href="#nextStep" class="clickArea"></a>
+         
+         <a href="#nextStep"><span class="icon arrowRight"></span></a><!-- 005 no whitespace here pleace, or one pixel of the button will be unclicable pixel in IE --><a href="#nextStep">
+           <span class="text">Nästa steg</span>
+         </a>
+       </div>
+     </div>
+
+     <div id="signStepsBody"> 
+        $steps:noescape()$
+     </div>
+     <div id="signStepsBodyBorderBottom"></div>
+     </div>
+     </div>
+
+   </div>                       
+    
+######
+uploadPageContent=
+       <div id="signStepsBodyUploadBox"> 
+       <form action="/d" method="post" enctype="multipart/form-data" class="stepForm"> 
+        <span id="signStepsBodyUploadTextContainer"> 
+          <span class="header">Välj fil och ladda upp!</span><br>
+          <span class="text">OBS! Det går endast att ladda upp .PDF</span> </span> 
+          <br>
+          <div id="signStepsButtonContainer">
+            <div class="signStepsButton" >  
+              <a href="#attachFile"><span class="icon arrowUp"></span></a><a href="#attachFile"> 
+              <span class="text">Ladda upp fil</span> </a> 
+              <input class="multiFileInput" maxlength="1" type="file" name="doc" accept="application/pdf"
+                     style="position:relative;z-index:10;cursor:pointer;opacity:0;top:-10;left:-10;font-size:30" 
+                     rel=".filelist">
+            </div>
+          </div>
+          <div class="filelist" style="padding-left:10px"></div>
+        </div>
+       </form>
+      </div>
+  
+####
 pageDocumentList= 
      <form method="post" action="">
      <table class="doctable" cellspacing="0">
