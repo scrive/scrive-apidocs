@@ -71,7 +71,7 @@ mailInvitationToSignContent=
         <a href="$link$">$link$</a> <br>
         <br>
         2. Granska online<br>
-        3. Underteckna<br>
+        3. Underteckna (eller avvisa)<br>
         4. Färdig
       </p>
       <p>
@@ -115,7 +115,7 @@ remindMailNotSignedContent=
         1. Klicka på länken<br>
         <a href="$link$">$link$</a><br>
         2. Granska online<br>
-        3. Underteckna<br>
+        3. Underteckna (eller avvisa)<br>
         4. Färdig
       </p>
       <p>
