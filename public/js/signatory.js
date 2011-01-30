@@ -286,9 +286,11 @@ function docstateToHTML(){
 
     $(docstate.signatories).each(function() {
 	    var s = this;
+	    var cc = false;
 	    s.id = newUUID();
 	    if(s.email === useremail) {
 		currentsig = s;
+		cc = true;
 	    }
 
 	    placePlacements(this.nameplacements, "Namn på motpart", this.name, s.id, "name");
@@ -296,11 +298,21 @@ function docstateToHTML(){
 	    placePlacements(this.companyplacements, "Titel, företag", this.company, s.id, "sigco");
 	    placePlacements(this.numberplacements, "Orgnr/Persnr", this.number, s.id, "signr");
 
+	    
 
 	    $(s.otherfields).each(function () {
 		    var f = this;
 		    f.id = newUUID();
 		    placePlacements(f.placements, f.label, f.value, s.id, f.id);
+		    if(!cc){
+		    $(".signViewBodyRight").each(function() {
+			    var ff = $(this);
+			    console.log(s);
+			    if(ff.text().indexOf(s.email) > -1) {
+				ff.find(".signViewBodyRightTextContainer").append("<span class='text'>"+f.value+"</span>");
+			    }
+			});
+		    }
 		});
 	});
 
