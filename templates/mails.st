@@ -175,7 +175,6 @@ inviteSubaccountMailContent=
     $email$</p>
     
     <p>Vänligen klicka på länken för att aktivera kontot:<br>
-    <br>
     <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a><p>
 
     $poweredBySkrivaPaPara()$
@@ -196,7 +195,6 @@ mailNewAccountCreatedByAdminContent=
     $email$</p>
     
     <p>Vänligen klicka på länken för att aktivera kontot:<br>
-    <br>
     <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a><p>
 
     $poweredBySkrivaPaPara()$
