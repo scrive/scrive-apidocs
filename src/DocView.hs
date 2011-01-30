@@ -485,7 +485,7 @@ pageDocumentForAuthor ctx
      signatoryEntry <- showSignatoryEntryForEdit2 (ctxtemplates ctx) "signatory_template" "" "" "" "" 
      helpers <- renderTemplate (ctxtemplates ctx) "pageDocumentForAuthorHelpers" [("documentid",show documentid),
                                                                                   ("signatoryEntry",signatoryEntry)] 
-     let signatoriesForEdit <- fmap concat $ sequence $ map (showSignatoryEntryForEdit (ctxtemplates ctx)) (if (null allinvited)
+     signatoriesForEdit <- fmap concat $ sequence $ map (showSignatoryEntryForEdit (ctxtemplates ctx)) (if (null allinvited)
                                                                                        then [emptyDetails] 
                                                                                        else map signatorydetails allinvited)
      signatories <- fmap concat $ sequence $ map (showSignatoryLinkForSign ctx document author) documentsignatorylinks                                                                                  
