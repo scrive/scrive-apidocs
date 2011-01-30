@@ -785,7 +785,7 @@ img.waiting
     width: 100%;
     background: #f7f7f7 url(images/gradientbottom.png) no-repeat center 0; /* 004 new image */ /* 003 new image */
     position: relative; /*003*/
-/*overflow: hidden;*/
+    overflow: hidden;
 /* 002 position: fixed;*/
 /*bottom: 0;*/
 }
@@ -1057,7 +1057,7 @@ input , button, a.button
 #peopleDetails
 {
     position: relative;
-    height: 50px;
+    min-height: 50px;
 }
 
 #peopleDetails div
@@ -1274,7 +1274,8 @@ input , button, a.button
 }
 
 /* 013 changed */
-#signStepsBodyRight
+#signStepsBodyRight,
+#personpane
 {
     width: 303px;
     float: left;
@@ -1470,7 +1471,7 @@ input , button, a.button
     background-image: url(images/iconMan.png);
 }
 
-.signStepsBodyAddField a.plus,
+.signStepsBodyIcons a.plus,
 #signStepsBodyFunctionsBox ul a.plus
 {
     background-image: url(images/iconPlus.png);
@@ -1589,7 +1590,7 @@ input , button, a.button
 .signStepsBodyAddField
 {
     /*width: 50px; 008 removed */
-    position: relative; /* 008 new */
+    /*position: relative; /* 008 new */
     height: 14px;
     font-size: 11px; /* 013 changed */
     line-height: 19px; /* 013 new */
