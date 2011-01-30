@@ -485,8 +485,7 @@ pageDocumentForAuthor ctx
      signatoryEntry <- showSignatoryEntryForEdit2 (ctxtemplates ctx) "signatory_template" "" "" "" "" 
      helpers <- renderTemplate (ctxtemplates ctx) "pageDocumentForAuthorHelpers" [("documentid",show documentid),
                                                                                   ("signatoryEntry",signatoryEntry)] 
-     let jscript =  "var docstate = " ++ (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks) ++ ";" 
-     signatoriesForEdit <- fmap concat $ sequence $ map (showSignatoryEntryForEdit (ctxtemplates ctx)) (if (null allinvited)
+     let signatoriesForEdit <- fmap concat $ sequence $ map (showSignatoryEntryForEdit (ctxtemplates ctx)) (if (null allinvited)
                                                                                        then [emptyDetails] 
                                                                                        else map signatorydetails allinvited)
      signatories <- fmap concat $ sequence $ map (showSignatoryLinkForSign ctx document author) documentsignatorylinks                                                                                  
@@ -495,7 +494,6 @@ pageDocumentForAuthor ctx
      cancelMailContent <- mailCancelDocumentByAuthorContent  (ctxtemplates ctx) False Nothing ctx document author
      content <-  renderTemplateComplex (ctxtemplates ctx) "pageDocumentForAuthorContent" $  
                                                               (setAttribute "documenttitle" $ BS.toString documenttitle) .
-                                                              (setAttribute "jscript" $ jscript) .
                                                               (setAttribute "linkissuedoc" $ show $ LinkIssueDoc documentid) .
                                                               (setAttribute "authorname" $ BS.toString $ signatoryname documentauthordetails) .
                                                               (setAttribute "authorcompany" $ BS.toString $ signatorycompany documentauthordetails ) .
@@ -520,7 +518,8 @@ pageDocumentForAuthor ctx
                                                               (setAttribute "emailelegitimation" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)) .
                                                               (setAttribute "emailonly" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isNothing $ find (== ELegitimationIdentification) documentallowedidtypes)) .
                                                               (setAttribute "elegitimationonly" $ (isNothing $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)) .
-                                                              (setAttribute "helpers" helpers)
+                                                              (setAttribute "helpers" helpers) .
+                                                              (setAttribute "docstate" (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks))
      --showDocumentPageHelper (ctxtemplates ctx) document helpers (documenttitle)  content
      return content
    

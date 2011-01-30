@@ -1495,14 +1495,27 @@ input , button, a.button
 {
     padding-left: 20px;
     width: 118px;
-    background-image: url(images/iconHand.png); 
+    /*background-image: url(images/iconHand.png); 
     background-repeat: no-repeat;
-    background-position: 3px 3px;
+    background-position: 3px 3px;*/
     height: 18px;
     line-height: 18px;
     font-size: 12px;
     border-color: #6782a5;
     margin: 3px 5px 0 0;
+}
+
+/* For the draggable fields in signatory details */
+.dragfield {
+  position: relative;
+}
+
+/* a class for the little hand in an input field */
+.draghandle {
+  position: absolute;
+  top: 0px;
+  left: 3px;
+
 }
 
 .signViewBodyForms input

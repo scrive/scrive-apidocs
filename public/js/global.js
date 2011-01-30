@@ -741,27 +741,34 @@ $(document).ready(function() {
                 return false;
             });
         $('#addSignatory').click(function() {
-                var child = $('#peopleDetails').children().first();
-                var child2 = child.clone();
-                $('#peopleDetails').append(child2);
-                child2.find("input").each( function () {
-                        $(this).val( $(this).attr("infotext"));
-                        $(this).blur();
-                    });
-                
-                $('#peopleList ol').append("<li><a href='#'>Name</a></li>");
-            });
+		$('#peopleDetails').children().hide();
+		signatoryToHTML(newsignatory());
+	    });
         $('#delSignatory').click(function() {
                 var children = $('#peopleDetails').children();
                 if( children.size()==1 )
                     return;
                 var child = children.filter(':visible');
                 var idx = children.index(child);
+
+		console.log(child);
+		var sigid = getHiddenField(child, "sigid");
                 
+		console.log("removing signatory with id: " + sigid);
+
+		detachFieldsForSig(sigid);
                 child.remove();
                 
                 var li = $("#peopleList li:eq(" + idx + ")");
                 li.remove();
+
+		var newidx = idx - 1;
+		if(newidx < 0) {
+		    newidx = 0;
+		}
+
+		$("#peopleDetails .sigentry:eq(" + newidx + ")").show();
+		
             });
         $("input[name='signatoryname']", "#peopleDetails").live('change keyup', function() {
                 var val = $(this).val();
