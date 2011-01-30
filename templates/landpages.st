@@ -28,11 +28,10 @@ landpageDocumentSavedView=
       <a class="bigbutton" href="/">Starta</a>
     </div>
 #####
-landpageLoginForSaveView=
-    <div class="centerdivnarrow">
-      <a class="headline">Login</a>
-      <p>Ditt dokument är nu sparat. Du finner dokumentet under Avtal when you log in.</p>
-      $loginBox()$
+landpageLoginForSaveView=    <div class="centerdivnarrow">
+     <a class="headline">Login</a>
+     <p>Ditt dokument är nu sparat. Du finner dokumentet under Avtal when you log in.</p>
+     $loginBox()$
     </div>
 #####
 landpageRejectedView=
