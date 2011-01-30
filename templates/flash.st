@@ -39,9 +39,7 @@ flashDocumentRestarted=
     Du har startat om dokumentet och kan nu underteckna och skicka inbjudan på nytt.
 
 ###
-flashMessageUserPasswordChanged=
-    Lösenord ändrat
-
+flashMessageUserPasswordChanged=Lösenord ändrat
 ###
 flashMessagePasswordChangeLinkNotValid=
     Vi beklagar. Länken är inte längre giltig.<BR>
