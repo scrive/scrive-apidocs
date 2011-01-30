@@ -490,7 +490,7 @@ pageDocumentForAuthorHelpers=
               <span class="templating_insert"> $signatoryEntry:noescape()$</span>,
                   <script> var documentid = "$documentid$"; 
                   </script>
-
+####
 pageDocumentForAuthorHelpersLocalDialogs=
     <div class="localdialogs">
       <form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-signinvite" rel="#main-document-form">  
@@ -543,6 +543,13 @@ pageDocumentForAuthorHelpersLocalDialogs=
           <button class="close button" type="button" id="editing-invite-text-finished"> Ok </button>
         </div>
       </form>  
+      <div class="hidden" id="hiddenttimestuffbox">
+        <div id="daystosignbox">Undertecknas inom (dagar)
+          <BR>
+          <input type="text" id="daystosign" name="daystosign" value="$documentdaystosignboxvalue$" maxlength="2" size="2" autocomplete="off">
+          <small> <a  class="datetodaystip" rel="#daystosign"> </a> </small>
+        </div>
+      </div>
     </div>
 
 #####
@@ -857,7 +864,8 @@ pageDocumentForAuthorContent=
 	   </div>
 	   
 	   <div class="signStepsBodyInvation">
-	     <a href="#sayHello">JUSTERA HÄLSNINGSMEDDELANDE</a>
+              <small><a rel="#edit-invite-text-dialog" id="editinvitetextlink" href="#" style="padding-top:3px">JUSTERA HÄLSNINGSMEDDELANDE</a></small>
+              <input type="hidden" id="invitetext" name="invitetext" value="$documentinvitetext$">
 	   </div>
 	   
 	   <!-- 015 new -->
@@ -904,13 +912,7 @@ pageDocumentForAuthorContent=
 	 
        </div>			
        </form>
-       <div class="hidden" id="hiddenttimestuffbox">
-        <div id="daystosignbox">Undertecknas inom (dagar)
-          <BR>
-          <input type="text" id="daystosign" name="daystosign" value="$documentdaystosignboxvalue$" maxlength="2" size="2" autocomplete="off">
-          <small> <a  class="datetodaystip" rel="#daystosign"> </a> </small>
-        </div>
-      </div>
+       $pageDocumentForAuthorHelpersLocalDialogs()$
      </div>
      </div>
 						
