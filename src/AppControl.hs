@@ -236,8 +236,8 @@ handleHomepage = do
   ctx@Context{ctxmaybeuser, ctxtemplates} <- get
   case ctxmaybeuser of
     Just user -> checkUserTOSGet $ do
-                      text <- liftIO $ renderTemplate ctxtemplates "uploadPageContent" []
-                      V.renderFromBody ctx V.TopNew V.kontrakcja (cdata text)
+                       content <- liftIO $ V.uploadPage ctxtemplates 
+                       V.renderFromBody ctx V.TopNew V.kontrakcja (cdata content)
     Nothing -> do
       text <- liftIO $ renderTemplate ctxtemplates "firstPageContent" [("signuplink",show LinkSignup)]
       V.renderFromBody ctx V.TopNone V.kontrakcja (cdata text)

@@ -246,7 +246,7 @@
             // Handle error
             MultiFile.error(ERROR);
 												
-            // 2007-06-24: BUG FIX - Thanks to Adrian Wróbel <adrian [dot] wrobel [at] gmail.com>
+            // 2007-06-24: BUG FIX - Thanks to Adrian Wr�bel <adrian [dot] wrobel [at] gmail.com>
             // Ditch the trouble maker and add a fresh new element
             MultiFile.n--;
             MultiFile.addSlave(newEle[0], slave_count);
@@ -474,11 +474,11 @@
 		
 		// STRING: collection lets you show messages in different languages
 		STRING: {
-			remove: 'x',
-			denied: 'Du kan inte välja en $ext-fil. Bara PDF-dokument kan behandlas.',
-			file:' $file',
-			selected: 'Väld fil: $file',
-			duplicate: 'Den här filen är redan väld: $file'
+			remove:'x',
+			denied:'You cannot select a $ext file.\nTry again...',
+			file:'$file',
+			selected:'File selected: $file',
+			duplicate:'This file has already been selected:\n$file'
 		},
 		
 		// name of methods that should be automcatically intercepted so the plugin can disable

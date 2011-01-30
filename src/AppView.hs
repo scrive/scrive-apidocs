@@ -12,6 +12,7 @@ module AppView( TopMenu(..)
               , signupConfirmPageView
               , pageLogin
               , pageFromBody'
+              , uploadPage
               ) where 
 
 import HSP hiding (Request)
@@ -202,7 +203,18 @@ pageLogin ctx referer = do
   renderTemplateComplex (ctxtemplates ctx) "pageLogin" $
                             (setAttribute "referer" referer)
 
-  
+
+uploadPage:: KontrakcjaTemplates -> IO String
+uploadPage templates = do
+                   uploadBox <- liftIO $ renderTemplate templates "uploadPageContent" []
+                   liftIO $ renderTemplateComplex templates "creatingDocumentFrame" $ 
+                                                       (setAttribute  "steps" uploadBox) .
+                                                       (setAttribute  "step1" True) .
+                                                       (setAttribute  "submitFormOnNext" True) 
+                                                       
+               
+
+
 uploadTabInfo::Maybe User -> TopMenu ->  Maybe (String,Bool)
 uploadTabInfo Nothing _= Nothing
 uploadTabInfo _ menu = Just (show LinkMain,(menu== TopNew))
