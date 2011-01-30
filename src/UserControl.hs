@@ -211,7 +211,7 @@ createNewUserByAdmin ctx fullname email =
       muser <- update $ AddUser fullname email passwdhash Nothing
       case muser of 
        Just user -> do
-                    chpwdlink <- changePasswordLink (userid user)
+                    chpwdlink <- activateLink $ userid user
                     mail <- mailNewAccountCreatedByAdmin (ctxtemplates ctx) ctx fullname email chpwdlink
                     sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = [(fullname, email)]} 
                     return muser
