@@ -67,9 +67,7 @@ flashMessageNoSuchUserExists=
     Det finns ingen användare med denna epost. Vänligen försök igen. 
 
 ###
-flashMessageChangePasswordEmailSend=
-    Vi har skickat din kontoinbjudan igen. Vänligen gå tillbaks till din inkorg och klicka på länken i mailet för att aktivera ditt konto.
-
+flashMessageChangePasswordEmailSend=Vi har skickat din kontoinbjudan igen. Vänligen gå tillbaks till din inkorg och klicka på länken i mailet för att aktivera ditt konto.
 ####
 flashMessageNewActivationLinkSend=
     Vi har skickat din kontoinbjudan igen. Vänligen gå tillbaks till din inkorg och klicka på länken i mailet för att aktivera ditt konto.
