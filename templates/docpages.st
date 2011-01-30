@@ -606,7 +606,8 @@ pageDocumentForAuthorContent_old=
                 $endif$   
 
               </span>
-	      <div>
+
+	      <div style="display:none">
 	        <select name="allowedsignaturetypes" id="allowedbox">
 		  <option value="Email+ELeg" $if(emailelegitimation)$ selected="true" $endif$>Email and E-Legitimation (extra charge)</option>
 		  <option value="Email" $if(emailonly)$ selected="true" $endif$>Email only</option>
@@ -743,9 +744,6 @@ pageDocumentForAuthorContent=
 	     
 	     <div id="peopleList" class="signStepsBodyForms">
                <ol>
-	         <li><a href="#">aaa 1</a>
-	         <li><a href="#">aaa 2</a>
-	         <li><a href="#">aaa 3</a>
                </ol>
 	     </div>
 	     
@@ -772,27 +770,6 @@ pageDocumentForAuthorContent=
 	   
 	   <!-- 013 changed -->
 	   <div class="signStepsBodyForms" id="peopleDetails">
-	     <div>
-	       <input type="text" infotext="För- & efternamn" name="signatoryname" autocomplete="off" value="1">
-	       <input type="text" infotext="Ev. Företagsnamn" name="signatorycompany" autocomplete="off">
-	       
-	       <input type="email" infotext="E-post" name="signatoryemail" autocomplete="off">
-	       <input type="text" infotext="Org.-nr / Personnr." name="signatorynumber" autocomplete="off">
-	     </div>
-	     <div>
-	       <input type="text" infotext="För- & efternamn" name="signatoryname" autocomplete="off" value="2">
-	       <input type="text" infotext="Ev. Företagsnamn" name="signatorycompany" autocomplete="off">
-	       
-	       <input type="email" infotext="E-post" name="signatoryemail" autocomplete="off">
-	       <input type="text" infotext="Org.-nr / Personnr." name="signatorynumber" autocomplete="off">
-	     </div>
-	     <div>
-	       <input type="text" infotext="För- & efternamn" name="signatoryname" autocomplete="off" value="3">
-	       <input type="text" infotext="Ev. Företagsnamn" name="signatorycompany" autocomplete="off">
-	       
-	       <input type="email" infotext="E-post" name="signatoryemail" autocomplete="off">
-	       <input type="text" infotext="Org.-nr / Personnr." name="signatorynumber" autocomplete="off">
-	     </div>
 	   </div>
 	   
 	   <div class="signStepsBodyAddField">
@@ -920,6 +897,41 @@ pageDocumentForAuthorContent=
      <div id="signStepsBodyBorderBottom"></div>
    </div>			
     <div id="documentBox">
+     <script>
+       var docstate = $docstate:noescape()$;
+     </script>
+     <script src="/js/templates.js"></script>
      <div class="waiting4page"></div>
+    </div>
+    <div id="templates" style="display:none;">
+      <div class="sigentry">
+        <input type="hidden" name="sigid" value="" />
+	<span class="fields">
+	<span class='dragfield signame'>
+	  <span style="display:none;" class="fieldid">name</span>
+	  <span style="display:none;" class="type">author</span>
+	  <input type="text" infotext="För- & efternamn" name="signatoryname" autocomplete="off" value="">
+	  <img src="/theme/images/iconHand.png" class="draghandle" />
+        </span>
+	<span class='dragfield sigcomp'>
+	  <span style="display:none;" class="fieldid">company</span>
+	  <span style="display:none;" class="type">sig</span>
+          <input type="text" infotext="Ev. Företagsnamn" name="signatorycompany" autocomplete="off">
+	  <img src="/theme/images/iconHand.png" class="draghandle" />
+        </span><br />
+        <span class='dragfield sigemail'>
+	  <span style="display:none;" class="fieldid">email</span>
+	  <span style="display:none;" class="type">author</span>
+	  <input type="email" infotext="E-post" name="signatoryemail" autocomplete="off">
+	  <img src="/theme/images/iconHand.png" class="draghandle" />
+	</span>
+	<span class='dragfield signum'>
+	  <span style="display:none;" class="fieldid">number</span>
+	  <span style="display:none;" class="type">sig</span>
+	  <input type="text" infotext="Org.-nr / Personnr." name="signatorynumber" autocomplete="off">
+	  <img src="/theme/images/iconHand.png" class="draghandle" />
+	</span>
+	</span>
+      </div>
     </div>
 ####
