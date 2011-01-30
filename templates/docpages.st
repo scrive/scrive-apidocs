@@ -271,6 +271,7 @@ showSignatoryLinkForSign =
                           <div class="text">$signatoryemail$</div>
                           <div class="text">$signatorycompany$</div>
                           <span class="text">$signatorynumber$</span> 
+			  <span class="signViewBodyForms"></span>
                         </div>
                       </div>
 ####

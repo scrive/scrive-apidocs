@@ -685,7 +685,6 @@ pageDocumentForSign action document ctx  invitedlink wassigned author =
                  (setAttribute "rejectMessage" rejectMessage) .
                  (setAttribute "partyUnsigned" partyUnsigned) .
                  (setAttribute "action" $ show action) .
-                 (setAttribute "helpers" $ helpers) .
                  (setAttribute "title" $ BS.toString $ documenttitle document) .
                  (setAttribute "linkissuedocpdf" $ show (LinkIssueDocPDF document)) .
                  (setAttribute "docid" $ show $ documentid document)
