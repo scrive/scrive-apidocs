@@ -632,17 +632,18 @@ function signatoryToHTML(sig) {
 	    input.change(magicUpdate);
 
 	    d.append(field);
-	    //	    placePlacements(fd.placements, fd.label, fd.value, sig.id, fd.id);
+	    //	    
 	});
 
     sigentry.find("a.plus").click(function () {
-	    var field = $("<div class='newfield'><input type='text' infotext='Type Field Name' /><input type='submit' value='ok'></div>");
-	    field.find("input[type='submit']").click(function () {
+	    var field = $("<div class='newfield'><input class='newfieldbox' type='text' infotext='Type Field Name' /><a href='#' class='plus'></a></div>");
+	    field.find("a.plus").click(function () {
 		    fieldname = field.find("input[type='text']").attr("value");
 		    if(fieldname == "Type Field Name" || fieldname == "") {
 			return false;
 		    }
-		    var f = $("#templates .customfield").get(0).clone();
+		    var f = $("#templates .customfield").first().clone();
+		    console.log(f);
 		    //var f = buildDraggableField(fieldname, "", "sig");
 		    setInfotext(f, fieldname);
 		    setValue(f, "");
@@ -669,10 +670,23 @@ function signatoryToHTML(sig) {
 		    setFieldID(f, fieldid);
 		    setSigID(f, sigid);
 		    setHiddenField(f, "fieldname", fieldname);
+
+		    f.find("a.minus").click(function() {
+			    console.log(f);
+			    
+			    var ff = getPlacedFieldsForField(f);
+			    console.log(ff);
+			    ff.each(function(){this.remove();});
+			    f.remove();
+			});
+		    
 		    of.append(f);
-		    enableInfoText(f);
+		    enableInfoTextOnce(f);
 		    updateStatus(f);
+		    
+
 		    field.detach();
+		    
 		    return false;
 		});
 	    of.append(field);
@@ -715,6 +729,10 @@ function placePlacementsOfSignatories(signatories) {
 	    placePlacements(sig.companyplacements, "Titel, företag", sig.company, sig.id, "company");
 	    placePlacements(sig.numberplacements, "Orgnr/Persnr", sig.number, sig.id, "number");
 	    placePlacements(sig.emailplacements, "Personens e-mail", sig.email, sig.id, "email");
+	    $(sig.otherfields).each(function(){
+		    var fd = this;
+		    placePlacements(fd.placements, fd.label, fd.value, sig.id, fd.id);
+		});
 	});
 }
 
