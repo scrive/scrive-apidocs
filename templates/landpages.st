@@ -1,8 +1,8 @@
 ###
 landpageSignInviteView=
     <div class="centerdivnarrow">
-      <p class="headline">Dokumentet <strong>$documenttitle$</strong> undertecknat!</p>
-      <p>En inbjudan att underteckna har nu skickats
+     <p class="headline">Dokumentet <strong>$documenttitle$</strong> undertecknat!</p>
+     <p>En inbjudan att underteckna har nu skickats 
         till $partyListButAuthor:noescape()$.
       </p>
       <p><a class="button" href="/">Skapa ett nytt avtal</a></p>
