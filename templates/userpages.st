@@ -1,48 +1,49 @@
 ####    Pages for users - usual from my account
 viewSubaccounts =
     <form method="post" action="$subaccountslink$">
-      <h1>Underkonton</h1>
-      <table class="doctable" cellspacing="0">
-        <col>
-        <col>
-        <col>
-        <col>
-        <col>
-        <thead>
-          <tr>
-            <td><a href="#" id="all">Alla</a></td>
-            <td></td>
-            <td>Namn</td>
-            <td>E-post</td>
-            <td>Övrigt</td>
-            <td></td>
-          </tr>
-        </thead>
-        <tfoot>
-          <tr>
-            <td colspan="6" style="text-align: right; overflow: hidden;">
-              <div class="floatleft">
-                <input type="submit" class="button" name="remove" value="Radera">
-              </div>
-              <div class="clearboth"></div>
-            </td>
-          </tr>
-        </tfoot>
-        <tbody id="selectable">
-          $subusers:{subuser |
-          <tr class="ui-state-default">
-            <td class="tdleft">
-              <input type="checkbox" name="doccheck" value="$subuser.usvId$" class="check">
-            </td>
-            <td><img width="17" height="17"></td>
-            <td>$subuser.usvFullname$</td>
-            <td>$subuser.usvEmail$</td>
-            <td> - </td>
-            <td class="tdright"></td>
-          </tr>
-          }$
-        </tbody>
-      </table><br>
+     <h1>Underkonton</h1>
+     <table class="doctable" cellspacing="0">
+      <col/>
+      <col/>
+      <col/>
+      <col/>
+      <col/>
+      <thead>
+       <tr>
+        <td><a href="#" id="all">Alla</a></td>
+        <td></td>
+        <td>Namn</td>
+        <td>E-post</td>
+        <td>Övrigt</td>
+        <td></td>
+       </tr>
+      </thead>
+      <tfoot>
+       <tr>
+        <td colspan="6" style="text-align: right; overflow: hidden;">
+          <div class="floatleft">
+           <input type="submit" class="button" name="remove" value="Radera"/>
+          </div>
+          <div class="clearboth"/>
+         </td>
+       </tr>
+      </tfoot>
+     
+      <tbody id="selectable">
+       $subusers:{subuser |
+           <tr class="ui-state-default">
+             <td class="tdleft">
+              <input type="checkbox" name="doccheck" value="$subuser.usvId$" class="check" />
+             </td>
+             <td><img width="17" height="17" src=""/></td>
+             <td>$subuser.usvFullname$ </td>
+             <td>$subuser.usvEmail$</td>
+             <td> - </td>
+             <td class="tdright"></td>
+             </tr>
+                  }$
+      </tbody>
+     </table><br/>
       <table>
         <tr>
           <td>Namn:</td>
@@ -52,8 +53,8 @@ viewSubaccounts =
           <td>E-post:</td>
           <td><input type="email" name="email"></td>
         </tr>
-        <tr>
-          <td><input class="button" id="create" type="submit" name="create" value="Skapa ny"></td>
+        <tr> 
+          <td><input class="button" id="create" type="submit" name="create" value="Skapa ny"/></td>
           <td></td>
         </tr>
       </table>
