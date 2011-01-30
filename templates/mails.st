@@ -7,7 +7,7 @@ mailCancelDocumentByAuthorStandardHeader=
 mailCancelDocumentByAuthorContent=
     $header:noescape()$
     <p>
-      $creatorname$ har valt att återkalla sin inbjudan att underteckna dokument $documenttitle$.
+      <strong>$creatorname$</strong> har valt att återkalla sin inbjudan att underteckna dokument $documenttitle$.
       Därmed är avtalsprocessen avbruten och du kan inte längre underteckna dokumentet.
     </p>
     $footer:noescape()$
@@ -83,7 +83,7 @@ mailInvitationToSignContent=
 mailInvitationToSignDefaultHeader=
     <p>Hej $personname$,
       <br><br>
-      $creatorname$ har bjudit in dig att underteckna dokumentet $documenttitle$ online via tjänsten SkrivaPå.
+      <strong>$creatorname$</strong> har bjudit in dig att underteckna dokumentet <strong>$documenttitle$</strong> online via tjänsten SkrivaPå.
     </p>
 ####
 remindMailSignedTitle=Påminnelse att underteckna  $documenttitle$
