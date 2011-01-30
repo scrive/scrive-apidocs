@@ -1056,13 +1056,13 @@ input , button, a.button
 
 #peopleDetails
 {
-    position: relative;
+    
     min-height: 50px;
 }
 
 #peopleDetails div
 {
-    position: absolute;
+    
 }
 
 #signStepsMenu div img
@@ -1472,9 +1472,53 @@ input , button, a.button
 }
 
 .signStepsBodyIcons a.plus,
+.newfield a.plus,
 #signStepsBodyFunctionsBox ul a.plus
 {
     background-image: url(images/iconPlus.png);
+
+}
+
+.otherfields {
+    width: 250px;
+}
+
+.newfield {
+    position: relative;
+    width: 245px;
+}
+
+.newfield input.newfieldbox {
+    width: 245px;
+}
+
+.newfield a.plus {
+    width: 16px;
+    height: 16px;
+    display: block;
+    background-repeat: no-repeat;
+    position: absolute;
+    right: 0px;
+    top: 5px;
+}
+
+.customfield a.minus {
+    width: 16px;
+    height: 16px;
+    display: block;
+    background-repeat: no-repeat;
+    position: absolute;
+    right: 9px;
+    top: 0px;
+    background-image: url(images/iconMinus.png);
+}
+
+.customfield input.customfieldbox {
+    width: 245px;
+}
+
+.customfield {
+    width: 245px;
 }
 
 .signStepsBodyAddField a.minus,

@@ -885,7 +885,9 @@ pageDocumentForAuthorContent=
     </div>
     <div id="templates" style="display:none;">
       <span class="customfield dragfield">
-        <input type="text" value="" /><a href="#minus2" class="minus"></a>
+        <input type="text" value="" class="customfieldbox" />
+	<a href="#minus2" class="minus"></a>
+	<img src="/theme/images/iconHand.png" class="draghandle" />
       </span>
       <span class="persondetails">
 	   <div class="signStepsBodyTitle">
