@@ -735,17 +735,20 @@ $(document).ready(function() {
                 var li = $(this).parent();
                 var ol = li.parent();
                 var idx = ol.children().index(li);
-                var children = $('#peopleDetails').children();
+                var children = $('#personpane').children();
                 children.filter(':not(:eq(' + idx + '))').hide();
                 children.filter(':eq(' + idx + ')').show();
                 return false;
             });
+
         $('#addSignatory').click(function() {
-		$('#peopleDetails').children().hide();
+		
 		signatoryToHTML(newsignatory());
+		$('#personpane').children().hide().last().show();
+	
 	    });
         $('#delSignatory').click(function() {
-                var children = $('#peopleDetails').children();
+                var children = $('#personpane').children();
                 if( children.size()==1 )
                     return;
                 var child = children.filter(':visible');
@@ -767,16 +770,18 @@ $(document).ready(function() {
 		    newidx = 0;
 		}
 
-		$("#peopleDetails .sigentry:eq(" + newidx + ")").show();
+		$("#personpane .persondetails:eq(" + newidx + ")").show();
 		
             });
-        $("input[name='signatoryname']", "#peopleDetails").live('change keyup', function() {
+        $("input[name='signatoryname']", "#personpane").live('change keyup', function() {
                 var val = $(this).val();
                 console.log(val);
-                var div = $(this).parentsUntil("#peopleDetails").last();
+                var div = $(this).parentsUntil("#personpane").last();
                 var idx = div.parent().children().index(div);
                 if( val=="") 
                     val = "(fill in)";
                 $('#peopleList li:eq(' + idx + ') a').text(val);
             });
     });
+
+var addsignatorymutex = false;

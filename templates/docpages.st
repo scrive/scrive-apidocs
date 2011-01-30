@@ -730,7 +730,6 @@ pageDocumentForAuthorContent=
      <div id="signStepsContentStack">
 
      <form action="" method="post">
-       <input type="hidden" name="sigid" value="">
        <input type="hidden" name="allowedsignaturetypes" value="Email">
 
      <div id="signStep2Content">
@@ -756,27 +755,8 @@ pageDocumentForAuthorContent=
 	   </div>
          </div>
 	 
-         <div id="signStepsBodyRight">
-	   <div class="signStepsBodyTitle">
-	     <span>PART 3</span>
-	   </div>
+         <div id="personpane">
 	   
-	   <!-- 008 change/new -->
-	   <div class="signStepsBodyIcons">
-	     <a href="#man2" class="man"></a>
-	     <a href="#briefcase2" class="briefcase"></a>
-	     <a href="#hand2" class="hand"></a>
-	   </div>
-	   
-	   <!-- 013 changed -->
-	   <div class="signStepsBodyForms" id="peopleDetails">
-	   </div>
-	   
-	   <div class="signStepsBodyAddField">
-	     <a href="#plus2" class="plus"></a>
-	     <a href="#minus2" class="minus"></a>
-	     <p>Fält</p>
-	   </div>
          </div>
 	 
          <div id="signStepsBodyFunctions">
@@ -904,7 +884,23 @@ pageDocumentForAuthorContent=
      <div class="waiting4page"></div>
     </div>
     <div id="templates" style="display:none;">
-      <div class="sigentry">
+      <span class="customfield dragfield">
+        <input type="text" value="" /><a href="#minus2" class="minus"></a>
+      </span>
+      <span class="persondetails">
+	   <div class="signStepsBodyTitle">
+	     <span>PART 3</span>
+	   </div>
+	   
+	   <!-- 008 change/new -->
+	   <div class="signStepsBodyIcons">
+	     <a href="#man2" class="man"></a>
+	     <a href="#briefcase2" class="briefcase"></a>
+	     <a href="#plus2" class="plus"></a>
+	   </div>
+	   
+	   <!-- 013 changed -->
+	   <div class="sigentry signStepsBodyForms" id="peopleDetails">
         <input type="hidden" name="sigid" value="" />
 	<span class="fields">
 	<span class='dragfield signame'>
@@ -932,6 +928,11 @@ pageDocumentForAuthorContent=
 	  <img src="/theme/images/iconHand.png" class="draghandle" />
 	</span>
 	</span>
-      </div>
+	<div class="otherfields">
+	  
+	</div>
+      </span>
+	   </div>
+	   </span>
     </div>
 ####
