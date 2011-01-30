@@ -543,13 +543,6 @@ pageDocumentForAuthorHelpersLocalDialogs=
           <button class="close button" type="button" id="editing-invite-text-finished"> Ok </button>
         </div>
       </form>  
-      <div class="hidden" id="hiddenttimestuffbox">
-        <div id="daystosignbox">Undertecknas inom (dagar)
-          <BR>
-          <input type="text" id="daystosign" name="daystosign" value="$documentdaystosignboxvalue$" maxlength="2" size="2" autocomplete="off">
-          <small> <a  class="datetodaystip" rel="#daystosign"> </a> </small>
-        </div>
-      </div>
     </div>
 
 #####
@@ -730,7 +723,6 @@ pageDocumentForAuthorContent=
 
      <form action="" method="post">
        <input type="hidden" name="sigid" value="">
-       <input type="hidden" name="daystosign" value="7">
        <input type="hidden" name="allowedsignaturetypes" value="Email">
 
      <div id="signStep2Content">
@@ -827,9 +819,12 @@ pageDocumentForAuthorContent=
 	   </div>
 	   <div class="options">
 	     <p>
-	       <input type="checkbox" id="a" />
-	       <label for="a">Aktivera förfallodatum</label>
-	     </p>
+               <span>
+               <input type="checkbox" class="addremovecheckbox flashOnOn" rel="#daystosignbox" location="#datetosigncontainer" oldlocation="#hiddenttimestuffbox" autocomplete="off" value="$if(timetosignset)$on$else$off$endif$" ></input>Aktivera förfallodatum
+                <div id="datetosigncontainer" style="padding-left:15px">  </div>
+                <span class="hidden flashMessage" > Varning: Om du väljer ett förfallodatum kan du inte återkalla inbjudan innan datumet förfallit. Detta regleras av avtalslagen.</span>
+              </span>
+	    </p>
 	     
 	     <p>
 	       <input type="checkbox" id="b" />
@@ -909,6 +904,13 @@ pageDocumentForAuthorContent=
 	 
        </div>			
        </form>
+       <div class="hidden" id="hiddenttimestuffbox">
+        <div id="daystosignbox">Undertecknas inom (dagar)
+          <BR>
+          <input type="text" id="daystosign" name="daystosign" value="$documentdaystosignboxvalue$" maxlength="2" size="2" autocomplete="off">
+          <small> <a  class="datetodaystip" rel="#daystosign"> </a> </small>
+        </div>
+      </div>
      </div>
      </div>
 						
