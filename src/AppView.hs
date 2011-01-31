@@ -178,7 +178,8 @@ pageFromBody' prefix
                                  (if prefix=="" then id else setAttribute "protocol" "http:") .
                                  (setAttribute "title" title) .
                                  (maybe (setAttribute "userfullname" False) 
-                                            (\_ -> setAttribute "userfullname" "XXX YYY") ctxmaybeuser)
+                                        (\user -> setAttribute "userfullname" (userfullname user)) 
+                                        ctxmaybeuser)
                     return $ cdata wholePage
 
 
