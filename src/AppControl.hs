@@ -191,11 +191,9 @@ handleRoutes = msum [
      , dir "amnesia"     $ hget0  $ forgotPasswordPageGet
      , dir "amnesia"     $ hpost0 $ forgotPasswordPagePost
      , dir "amnesiadone" $ hget0  $ forgotPasswordDonePage
-     , dir "changepassword" $ hget2  $ UserControl.newPasswordPage     
-     , dir "changepassword" $ hpost2  $ UserControl.handleChangePassword     
-     , dir "activate" $ hget2  $ UserControl.activatePage 
-     , dir "activate" $ hpost2  $ UserControl.handleActivate
-
+     , dir "unlogged"    $ hget2  $ UserControl.unloggedActionPage
+     , dir "unlogged"    $ hpost2  $ UserControl.handleUnloggedAction
+     
      -- e-legitimation stuff
      {- Disabled until finished
      , dir "bankid" $ dir "s" $ hget3  $ BankID.handleSign
@@ -367,7 +365,7 @@ forgotPasswordPagePost = do
 sendResetPasswordMail::User -> Kontra ()
 sendResetPasswordMail user = do
                          ctx <- get
-                         chpwdlink <- liftIO $ changePasswordLink (userid user)
+                         chpwdlink <- liftIO $ unloggedActionLink user
                          mail <-liftIO $ UserView.resetPasswordMail (ctxtemplates ctx) (ctxhostpart ctx) user chpwdlink     
                          liftIO $ sendMail (ctxmailer ctx) $ mail { fullnameemails = [((userfullname user), (unEmail $ useremail $ userinfo user))]}    
                                                         

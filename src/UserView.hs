@@ -69,11 +69,11 @@ viewSubaccounts templates subusers = renderTemplateComplex templates "viewSubacc
                                                         (setAttribute "subusers" $ map userSmallView $ subusers) .
                                                         (setAttribute "subaccountslink" $ show LinkSubaccount) 
 
-activatePageView::KontrakcjaTemplates -> String ->  IO String
-activatePageView templates tostext = renderTemplate templates "activatePageView" [("tostext",tostext)]
+activatePageView::KontrakcjaTemplates -> String -> String ->  IO String
+activatePageView templates tostext name = renderTemplate templates "activatePageView" [("tostext",tostext),("name",name)]
 
-activatePageViewNotValidLink::KontrakcjaTemplates ->  IO String
-activatePageViewNotValidLink templates  = renderTemplate templates "activatePageViewNotValidLink" []
+activatePageViewNotValidLink::KontrakcjaTemplates -> String ->  IO String
+activatePageViewNotValidLink templates email = renderTemplate templates "activatePageViewNotValidLink" [("email",email)]
 
 
 newPasswordPageView::KontrakcjaTemplates -> IO String

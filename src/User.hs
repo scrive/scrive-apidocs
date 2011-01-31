@@ -13,8 +13,7 @@ module User
     , addFlashMsgHtmlFromTemplate
     , logUserToContext
     , onlySuperUser
-    , changePasswordLink
-    , activateLink
+    , unloggedActionLink
     , queryOrFail
     )
     where
@@ -169,14 +168,14 @@ logUserToContext user =  do
   ctx <- get
   put $ ctx { ctxmaybeuser =  user}    
 
-changePasswordLink::UserID -> IO KontraLink
-changePasswordLink uid =  do
-                           session <- createLongTermSession (uid)
-                           return (LinkPasswordChange (getSessionId session) (getSessionMagicHash session))     
-activateLink::UserID -> IO KontraLink
-activateLink uid =  do
-                           session <- createLongTermSession (uid)
-                           return (LinkActivateAccount (getSessionId session) (getSessionMagicHash session))                            
+unloggedActionLink::User -> IO KontraLink
+unloggedActionLink user =  do
+                           session <- createLongTermSession (userid user)
+                           return $ LinkUnloggedUserAction (getSessionId session) 
+                                                           (getSessionMagicHash session) 
+                                                           (BS.toString $ unEmail $ useremail $ userinfo user)
+                                                           (BS.toString $ userfullname user)
+                                                       
 
 {- |
    perform a query (like with query) but if it returns Nothing, mzero; otherwise, return fromJust

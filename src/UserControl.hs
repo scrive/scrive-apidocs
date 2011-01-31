@@ -55,60 +55,7 @@ checkPasswords p1 p2 =  if p1 == p2
                           if isPasswordStrong $ BS.fromString p1
                           then Right ()
                           else Left  flashMessagePasswordNotStrong 
-                        else Left  flashMessagePasswordsDontMatch 
-
-handleChangePassword::String->String -> Kontra KontraLink
-handleChangePassword sid mh = do
-                              ctx <- get
-                              muser <- userFromExternalSessionData sid mh
-                              case muser of 
-                                Just user -> 
-                                   do
-                                     password <- fmap (fromMaybe "") $ getField "password"
-                                     password2 <- fmap (fromMaybe "") $ getField "password2"
-                                     case (checkPasswords password password2) of
-                                      Right () ->
-                                        do
-                                          passwordhash <- liftIO $ createPassword $ BS.fromString password
-                                          update $ SetUserPassword user passwordhash
-                                          addFlashMsgHtmlFromTemplate =<< (liftIO $ flashMessageUserPasswordChanged  (ctxtemplates ctx))
-                                          dropExternalSession sid mh
-                                          return LinkMain  
-                                      Left f -> 
-                                        do
-                                          addFlashMsgText =<< (liftIO $ f (ctxtemplates ctx))
-                                          return LoopBack
-                                Nothing -> return LoopBack
-                                
-userFromExternalSessionData ::String -> String -> Kontra (Maybe User)
-userFromExternalSessionData sid mh = do
-                                      msession <- sequenceMM $ 
-                                           do
-                                            sid' <- maybeRead sid
-                                            mh' <- maybeRead mh
-                                            return $ findSession sid' mh'
-                                      muser <-  sequenceMM $ 
-                                           do
-                                            session <- msession
-                                            userId <- getSessionUserID session
-                                            return $ liftIO $ query $ GetUserByUserID userId
-                                      return muser
-                                      
-dropExternalSession::String -> String -> Kontra ()
-dropExternalSession sid _ = fromMaybe (return ()) $ fmap (liftIO . dropSession) (maybeRead sid)
-                                         
-                                         
-newPasswordPage::String->String -> Kontra Response
-newPasswordPage sid mh= do
-                   ctx <- get
-                   muser <- userFromExternalSessionData sid mh 
-                   case muser of 
-                    Just user -> do    
-                                  content <- liftIO $ newPasswordPageView (ctxtemplates ctx)
-                                  renderFromBody ctx TopNone kontrakcja $ cdata content
-                    Nothing -> do 
-                                 addFlashMsgText =<< (liftIO $ flashMessagePasswordChangeLinkNotValid (ctxtemplates ctx)) 
-                                 sendRedirect LinkMain              
+                        else Left  flashMessagePasswordsDontMatch      
                    
 handleUserGet :: Kontra Response
 handleUserGet = do
@@ -211,7 +158,7 @@ createNewUserByAdmin ctx fullname email =
       muser <- update $ AddUser fullname email passwdhash Nothing
       case muser of 
        Just user -> do
-                    chpwdlink <- activateLink $ userid user
+                    chpwdlink <- changePasswordLink (userid user)
                     mail <- mailNewAccountCreatedByAdmin (ctxtemplates ctx) ctx fullname email chpwdlink
                     sendMail (ctxmailer ctx) $ mail { fullnameemails = [(fullname, email)]} 
                     return muser
@@ -224,15 +171,13 @@ createUser1 ctx hostpart fullname email password isnewuser maybesupervisor = do
   muser <- update $ AddUser fullname email passwdhash (fmap userid maybesupervisor)
   case muser of 
    Just user -> do
-        chpwdlink <- changePasswordLink (userid user)
+        al <- unloggedActionLink (user)
         mail <- case maybesupervisor of
                   Nothing -> if not isnewuser
-                             then passwordChangeMail (ctxtemplates ctx) hostpart email fullname chpwdlink
-                             else do
-                                   al <- activateLink $ userid user
-                                   newUserMail (ctxtemplates ctx) hostpart email fullname al
+                             then passwordChangeMail (ctxtemplates ctx) hostpart email fullname al
+                             else newUserMail (ctxtemplates ctx) hostpart email fullname al
                   Just supervisor -> inviteSubaccountMail (ctxtemplates ctx) hostpart (prettyName  supervisor) (usercompanyname $ userinfo supervisor)
-                                        email fullname chpwdlink
+                                        email fullname al
         sendMail (ctxmailer ctx) $ mail { fullnameemails = [(fullname, email)]}
         return muser
    Nothing -> return muser     
@@ -300,25 +245,90 @@ handleAcceptTOSPost = do
     else do
       addFlashMsgText =<< (liftIO $ flashMessageMustAcceptTOS  (ctxtemplates ctx))
       return LinkAcceptTOS
-      
-activatePage::String->String -> Kontra Response                                    
-activatePage sid mh=  do
+
+
+
+unloggedActionPage::String->String -> Kontra Response                         
+unloggedActionPage sid mh = do
+                      muser <- userFromExternalSessionData sid mh 
+                      name <- fmap  (fromMaybe "")  $ getField "name"
+                      email <- fmap  (fromMaybe "") $ getField "email"
+                      case muser of 
+                        Just user -> if (isNothing $ userhasacceptedtermsofservice user)
+                                     then activatePage muser (name,email)                           
+                                     else newPasswordPage muser  (name,email)
+                        Nothing -> do 
+                                    muserFromEmail <- query $ GetUserByEmail $ Email $ BS.fromString email
+                                    case (muserFromEmail) of 
+                                     Just userFromEmail -> if (isNothing $ userhasacceptedtermsofservice userFromEmail)
+                                                            then activatePage Nothing (name,email) 
+                                                            else newPasswordPage Nothing (name,email) 
+                                     Nothing -> newPasswordPage Nothing (name,email)              
+                  
+handleUnloggedAction::String->String -> Kontra KontraLink
+handleUnloggedAction sid mh = do
+                      muser <- userFromExternalSessionData sid mh 
+                      case muser of 
+                        Just user -> if (isNothing $ userhasacceptedtermsofservice user)
+                                     then handleActivate muser (dropExternalSession sid mh)                           
+                                     else handleChangePassword muser  (dropExternalSession sid mh)
+                        Nothing -> do
+                                     resendActivate <- getField "resendActivate"
+                                     if (isJust resendActivate)
+                                      then handleActivate Nothing (dropExternalSession sid mh)
+                                      else return LoopBack             
+
+
+activatePage::Maybe User -> (String,String) ->  Kontra Response                                    
+activatePage muser (name,email) = do
                    ctx <- get
-                   muser <- userFromExternalSessionData sid mh 
                    case muser of 
                     Just user -> do    
                                   tostext <- liftIO $ BS.readFile $ "html/termsofuse.html"
-                                  content <- liftIO $ activatePageView (ctxtemplates ctx) $ BS.toString tostext
+                                  content <- liftIO $ activatePageView (ctxtemplates ctx) (BS.toString tostext) name
                                   renderFromBody ctx TopNone kontrakcja $ cdata content
                     Nothing -> do 
-                                  content <- liftIO $ activatePageViewNotValidLink (ctxtemplates ctx)
+                                  content <- liftIO $ activatePageViewNotValidLink (ctxtemplates ctx) email
                                   renderFromBody ctx TopNone kontrakcja $ cdata content
 
+handleChangePassword::(Maybe User) -> Kontra () -> Kontra KontraLink
+handleChangePassword muser dropSessionAction = do
+                             ctx <- get
+                             case muser of 
+                                Just user -> 
+                                   do
+                                     password <- fmap (fromMaybe "") $ getField "password"
+                                     password2 <- fmap (fromMaybe "") $ getField "password2"
+                                     case (checkPasswords password password2) of
+                                      Right () ->
+                                        do
+                                          passwordhash <- liftIO $ createPassword $ BS.fromString password
+                                          update $ SetUserPassword user passwordhash
+                                          addFlashMsgHtmlFromTemplate =<< (liftIO $ flashMessageUserPasswordChanged  (ctxtemplates ctx))
+                                          dropSessionAction
+                                          logUserToContext $ Just user
+                                          return LinkMain  
+                                      Left f -> 
+                                        do
+                                          addFlashMsgText =<< (liftIO $ f (ctxtemplates ctx))
+                                          return LoopBack
+                                Nothing -> return LoopBack
+                                       
+                                         
+newPasswordPage::Maybe User -> (String,String) -> Kontra Response
+newPasswordPage muser (name,email)= do
+                       ctx <- get
+                       case muser of 
+                        Just user -> do    
+                                  content <- liftIO $ newPasswordPageView (ctxtemplates ctx)
+                                  renderFromBody ctx TopNone kontrakcja $ cdata content
+                        Nothing -> do 
+                                 addFlashMsgText =<< (liftIO $ flashMessagePasswordChangeLinkNotValid (ctxtemplates ctx)) 
+                                 sendRedirect LinkMain        
                                  
-handleActivate::String->String -> Kontra KontraLink
-handleActivate sid mh = do
+handleActivate::(Maybe User) ->Kontra () -> Kontra KontraLink
+handleActivate muser dropSessionAction = do
                         ctx <- get
-                        muser <- userFromExternalSessionData sid mh 
                         tos <- fmap ((==) $ Just "on") $ getField "tos"
                         name <- fmap (fromMaybe "") $ getField "name"
                         password <- fmap (fromMaybe "") $ getField "password"
@@ -332,7 +342,7 @@ handleActivate sid mh = do
                                             update $ SetUserPassword user passwordhash
                                             update $ AcceptTermsOfService (userid user) (ctxtime ctx)
                                             update $ SetUserInfo (userid user) $ (userinfo user) {userfstname = BS.fromString name}
-                                            dropExternalSession sid mh
+                                            dropSessionAction
                                             addFlashMsgHtmlFromTemplate =<< (liftIO $ flashMessageUserActivated (ctxtemplates ctx))
                                             logUserToContext $ Just user
                                             return LinkMain 
@@ -351,7 +361,7 @@ handleActivate sid mh = do
                                                       Just user -> 
                                                           if (isNothing $ userhasacceptedtermsofservice user) 
                                                           then  
-                                                               do  al <- liftIO $ activateLink $ userid user
+                                                               do  al <- liftIO $ unloggedActionLink user
                                                                    mail <-  liftIO $ newUserMail (ctxtemplates ctx) (ctxhostpart ctx) email email al
                                                                    liftIO $ sendMail (ctxmailer ctx) $ mail { fullnameemails = [(email, email)]}
                                                                    addFlashMsgText =<< (liftIO $ flashMessageNewActivationLinkSend  (ctxtemplates ctx)) 
@@ -367,3 +377,19 @@ handleActivate sid mh = do
                                          addFlashMsgText =<< (liftIO $ flashMessageActivationLinkNotValid (ctxtemplates ctx)) 
                                          return LinkMain   
       
+userFromExternalSessionData ::String -> String -> Kontra (Maybe User)
+userFromExternalSessionData sid mh = do
+                                      msession <- sequenceMM $ 
+                                           do
+                                            sid' <- maybeRead sid
+                                            mh' <- maybeRead mh
+                                            return $ findSession sid' mh'
+                                      muser <-  sequenceMM $ 
+                                           do
+                                            session <- msession
+                                            userId <- getSessionUserID session
+                                            return $ liftIO $ query $ GetUserByUserID userId
+                                      return muser
+                                      
+dropExternalSession::String -> String -> Kontra ()
+dropExternalSession sid _ = fromMaybe (return ()) $ fmap (liftIO . dropSession) (maybeRead sid)
