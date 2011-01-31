@@ -724,35 +724,62 @@ function swedishList(list)
 }
 function strong(l) {return "<strong>"+l+"</strong>"}
 
+function showStep1()
+{
+    $('#step1select').addClass("current");
+    $('#step2select').removeClass("current");
+    $('#step3select').removeClass("current");
+    $('#signStep1Content').show();
+    $('#signStep2Content').hide();
+    $('#signStep3Content').hide();
+    $('#signStepsNextButton').show();
+    return false; 
+}
+
+function showStep2()
+{
+    $('#step1select').removeClass("current");
+    $('#step2select').addClass("current");
+    $('#step3select').removeClass("current");
+    $('#signStep1Content').hide();
+    $('#signStep2Content').show();
+    $('#signStep3Content').hide();
+    $('#signStepsNextButton').show();
+    return false;
+}
+
+function showStep3()
+{
+    $('#step1select').removeClass("current");
+    $('#step2select').removeClass("current");
+    $('#step3select').addClass("current");
+    $('#signStep1Content').hide();
+    $('#signStep2Content').hide();
+    $('#signStep3Content').show();
+    $('#signStepsNextButton').hide();
+    return false;
+}
+
+function nextStep()
+{
+    console.log("next step");
+    if( $('#signStep1Content').is(':visible')) {
+        showStep2();
+    }
+    else if( $('#signStep2Content').is(':visible')) {
+        showStep3();
+    }
+    return false;
+}
+
+
 
 $(document).ready(function() {
-        $('#step1select a').click(function() { 
-                $('#step1select').addClass("current");
-                $('#step2select').removeClass("current");
-                $('#step3select').removeClass("current");
-                $('#signStep1Content').show();
-                $('#signStep2Content').hide();
-                $('#signStep3Content').hide();
-                return false; 
-            });
-        $('#step2select a').click(function() {
-                $('#step1select').removeClass("current");
-                $('#step2select').addClass("current");
-                $('#step3select').removeClass("current");
-                $('#signStep1Content').hide();
-                $('#signStep2Content').show();
-                $('#signStep3Content').hide();
-                return false;
-            });
-        $('#step3select a').click(function() {
-                $('#step1select').removeClass("current");
-                $('#step2select').removeClass("current");
-                $('#step3select').addClass("current");
-                $('#signStep1Content').hide();
-                $('#signStep2Content').hide();
-                $('#signStep3Content').show();
-                return false;
-            });
+        $('#step1select a').click(showStep1);
+        $('#step2select a').click(showStep2);
+        $('#step3select a').click(showStep3);
+        $('#signStepsNextButton').click(nextStep);
+
         $('a', '#peopleList').live('click', function() {
                 var li = $(this).parent();
                 var ol = li.parent();
