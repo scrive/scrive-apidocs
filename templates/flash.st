@@ -39,7 +39,8 @@ flashDocumentRestarted=
     Du har startat om dokumentet och kan nu underteckna och skicka inbjudan på nytt.
 
 ###
-flashMessageUserPasswordChanged=Lösenord ändrat
+flashMessageUserPasswordChanged=Ditt lösenord har ändrats.
+
 ###
 flashMessagePasswordChangeLinkNotValid=
     Vi beklagar. Länken är inte längre giltig.<BR>
@@ -67,7 +68,8 @@ flashMessageNoSuchUserExists=
     Det finns ingen användare med denna epost. Vänligen försök igen. 
 
 ###
-flashMessageChangePasswordEmailSend=Vi har skickat din kontoinbjudan igen. Vänligen gå tillbaks till din inkorg och klicka på länken i mailet för att aktivera ditt konto.
+flashMessageChangePasswordEmailSend=Vi har skickat ditt lösenord till din inkorg.
+
 ####
 flashMessageNewActivationLinkSend=
     Vi har skickat din kontoinbjudan igen. Vänligen gå tillbaks till din inkorg och klicka på länken i mailet för att aktivera ditt konto.
