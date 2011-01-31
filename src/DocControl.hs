@@ -245,11 +245,12 @@ sendClosedAuthorEmail ctx document = do
 sendRejectEmails :: (Maybe BS.ByteString) -> Context -> Document -> SignatoryLink -> IO ()
 sendRejectEmails customMessage ctx document signalink = do
   let rejectorName = signatoryname (signatorydetails signalink)
-  mail <- mailDocumentRejectedForAuthor (ctxtemplates ctx) customMessage ctx (userfullname authoruser)
-             document rejectorName
-  let email1 = unEmail $ useremail $ userinfo authoruser
-      name1 = userfullname authoruser
-  sendMail  (ctxmailsconfig ctx) $ mail { fullnameemails = [(name1,email1)]}
+  forM_ (documentsignatorylinks document) $ \sl ->  
+                     do
+                      let semail = signatoryemail $ signatorydetails  sl
+                      let sname = signatoryname $ signatorydetails  sl
+                      mail <- mailDocumentRejected (ctxtemplates ctx) customMessage ctx sname document rejectorName
+                      sendMail  (ctxmailsconfig ctx) $ mail { fullnameemails = [(sname,semail)]}
   when (not $ any (isAuthor document) $ documentsignatorylinks document) $ 
         do
           mauthor <- query $ GetUserByUserID (unAuthor $ documentauthor document) 

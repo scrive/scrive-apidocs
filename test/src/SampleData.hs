@@ -170,6 +170,7 @@ anUnsignedDocument = Document {
           , documenthistory = []
           , documentinvitetext = BS.empty
           , documenttrustweaverreference = Nothing
+          , documentallowedidtypes = [EmailIdentification]
           }
 aSignedDocument = Document { 
             documentid = DocumentID 123
