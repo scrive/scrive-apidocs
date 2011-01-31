@@ -62,7 +62,7 @@ activatePageView=
         <table><tbody>
             <tr>
               <td>Namn:</td>
-              <td><input type="text" name="name" autocomplete="off"></td>
+              <td><input type="text" name="name" autocomplete="off" value="$if(name)$$name$$endif$"></td>
             </tr>
             <tr>
               <td>Välj lösenord:</td>
@@ -86,10 +86,10 @@ activatePageViewNotValidLink=
         <table>
           <tr>
             <td>E-mail:</td>
-            <td><input type="email" name="email" value="" /></td>
+            <td><input type="email" name="email" value="$if(email)$$email$$endif$" /></td>
           </tr>
         </table>
-        <input type="submit" value="Skicka"  class="validateEmail">
+        <input type="submit" name="resendActivate" value="Skicka"  class="validateEmail">
       </form>
     </div>
 ####

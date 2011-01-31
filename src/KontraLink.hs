@@ -56,8 +56,7 @@ data KontraLink
     | LinkStats
     | LinkPaymentsAdmin
     | LinkUserAdmin (Maybe UserID)
-    | LinkPasswordChange SessionId MagicHash
-    | LinkActivateAccount SessionId MagicHash
+    | LinkUnloggedUserAction SessionId MagicHash String String -- email / username
     | LinkChangeSignatoryEmail DocumentID SignatoryLinkID 
     | LinkWithdrawn DocumentID 
     | LoopBack
@@ -102,8 +101,9 @@ instance Show KontraLink where
     showsPrec _ (LinkPaymentsAdmin ) = (++) $ "/adminonly/advpayments"
     showsPrec _ (LinkUserAdmin Nothing) = (++) $ "/adminonly/useradmin"
     showsPrec _ (LinkUserAdmin (Just userId)) = (++) $ "/adminonly/useradmin/"++show userId
-    showsPrec _ (LinkPasswordChange sid mh) = (++) $ "/changepassword/"++show sid++"/"++show mh
-    showsPrec _ (LinkActivateAccount sid mh) = (++) $ "/activate/"++show sid++"/"++show mh
+    showsPrec _ (LinkUnloggedUserAction sid mh email username) = (++) $ "/unlogged/"++show sid++"/"++show mh ++ 
+                                                                                       "?" ++ "email=" ++ email ++
+                                                                                       "&" ++ "name="++ username
     showsPrec _ (LinkChangeSignatoryEmail did slid ) = (++) $ "/changeemail/"++show did++"/"++show slid
     showsPrec _ (LinkWithdrawn did ) = (++) $ "/withdrawn/"++show did
     showsPrec _ LoopBack = (++) $ "/" -- this should be never used
