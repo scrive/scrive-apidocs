@@ -1,7 +1,7 @@
 ###
 landpageSignInviteView=
     <div class="centerdivnarrow">
-     <p class="headline">Dokumentet <strong>$documenttitle$</strong> undertecknat!</p>
+     <p class="headline">Du har undertecknat dokumentet <strong>$documenttitle$</strong>!</p>
      <p>En inbjudan att underteckna har nu skickats 
         till $partyListButAuthor:noescape()$.
       </p>
@@ -28,10 +28,10 @@ landpageDocumentSavedView=
       <a class="bigbutton" href="/">Starta</a>
     </div>
 #####
-landpageLoginForSaveView=    <div class="centerdivnarrow">
-     <a class="headline">Login</a>
-     <p>Ditt dokument är nu sparat. Du finner dokumentet under Avtal when you log in.</p>
-     $loginBox()$
+landpageLoginForSaveView=
+    <div class="centerdivnarrow">
+     <a class="headline">Konto har skapats</a>
+     <p>Ditt konto har skapats. En aktiveringslänk har skickats till din inkorg.</p>
     </div>
 #####
 landpageRejectedView=
