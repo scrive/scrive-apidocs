@@ -948,6 +948,7 @@ pageDocumentForAuthorContent=
 	  <img src="/theme/images/iconHand.png" class="draghandle" />
 	</span>
 	</span>
+        </div>
 	<div class="otherfields">
 	  
 	</div>
