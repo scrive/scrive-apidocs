@@ -760,7 +760,7 @@ pageDocumentForAuthorContent=
 	 
          <div id="personpane">
            <div class="signStepsBodyTitle">
-	     <span> PART 3 </span>
+	     <span> PART </span>
 	   </div>
 	   
 	   <div class="signStepsBodyIcons">
