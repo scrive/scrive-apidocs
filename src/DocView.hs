@@ -494,6 +494,7 @@ pageDocumentForAuthor ctx
      cancelMailContent <- mailCancelDocumentByAuthorContent  (ctxtemplates ctx) False Nothing ctx document author
      content <-  renderTemplateComplex (ctxtemplates ctx) "pageDocumentForAuthorContent" $  
                                                               (setAttribute "documenttitle" $ BS.toString documenttitle) .
+                                                              (setAttribute "documentid" $ show documentid) .
                                                               (setAttribute "linkissuedoc" $ show $ LinkIssueDoc documentid) .
                                                               (setAttribute "authorname" $ BS.toString $ signatoryname documentauthordetails) .
                                                               (setAttribute "authorcompany" $ BS.toString $ signatorycompany documentauthordetails ) .

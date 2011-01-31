@@ -717,7 +717,7 @@ pageDocumentForAuthorContent=
      <div id="signStepsTitleRow">
        <span id="signStepsTitleRowTextContainer">
 	 <span class="title">DOKUMENT:</span>
-	 <span class="name">$title$ | Transaction #$documentid$</span>
+	 <span class="name">$documenttitle$ | Transaction #$documentid$</span>
 	 <!-- <span class="changeName"><a href="#changeName">BYT TITEL</a></span> -->
        </span>
 						
