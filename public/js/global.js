@@ -754,10 +754,10 @@ $(document).ready(function() {
                 var child = children.filter(':visible');
                 var idx = children.index(child);
 
-		console.log(child);
+		//console.log(child);
 		var sigid = getHiddenField(child, "sigid");
                 
-		console.log("removing signatory with id: " + sigid);
+		//console.log("removing signatory with id: " + sigid);
 
 		detachFieldsForSig(sigid);
                 child.remove();
@@ -775,7 +775,7 @@ $(document).ready(function() {
             });
         $("input[name='signatoryname']", "#personpane").live('change keyup', function() {
                 var val = $(this).val();
-                console.log(val);
+                //console.log(val);
                 var div = $(this).parentsUntil("#personpane").last();
                 var idx = div.parent().children().index(div);
                 if( val=="") 

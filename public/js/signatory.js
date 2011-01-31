@@ -307,7 +307,7 @@ function docstateToHTML(){
 		    if(!cc){
 		    $(".signViewBodyRight").each(function() {
 			    var ff = $(this);
-			    console.log(s);
+			    //console.log(s);
 			    if(ff.text().indexOf(s.email) > -1) {
 				ff.find(".signViewBodyRightTextContainer").append("<span class='text'>"+f.value+"</span>");
 			    }

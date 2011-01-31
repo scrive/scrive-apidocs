@@ -163,7 +163,9 @@ function getValue(field) {
 		return s.attr("value");
 	    }
 	} else {
-	    console.log("field has no input box");
+            if(debug) {
+                console.log("field has no input box");
+            }
 	}
     } else if(isDraggableText(field)) {
 	return getHiddenValue(field, "fieldvalue");
@@ -546,7 +548,7 @@ function detachFieldsForSig(sigid) {
 }
 
 function signatoryToHTML(sig) {
-    console.log("adding signatory");
+    //console.log("adding signatory");
     var sl = $("#personpane");
     var sigid = newUUID();
     sig.id = sigid;
@@ -672,10 +674,10 @@ function signatoryToHTML(sig) {
 		    setHiddenField(f, "fieldname", fieldname);
 
 		    f.find("a.minus").click(function() {
-			    console.log(f);
+			    //console.log(f);
 			    
 			    var ff = getPlacedFieldsForField(f);
-			    console.log(ff);
+			    //console.log(ff);
 			    ff.each(function(){this.remove();});
 			    f.remove();
 			});
