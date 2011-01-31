@@ -758,6 +758,17 @@ function isPlacedField(field) {
 }
 
 function makeDropTargets() {
+  $("#signStepsContainer").droppable({ drop: function(event, ui) {
+    var field = $(ui.draggable);
+    var helper = $(ui.helper);
+    if(isPlacedField(field)) {
+      field.remove();
+      helper.remove();
+    } else {
+      updateStatus(field);
+    }
+    return false;
+  }});
     $(".pagediv").droppable({ drop: function(event, ui) {
 		var page = $(this);
 		var field = $(ui.draggable);

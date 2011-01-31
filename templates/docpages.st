@@ -47,7 +47,7 @@ creatingDocumentFrame=   <div id="signStepsContainer">
      </div>
      </div>
 
-   </div>                       
+   </div>            
     
 ######
 uploadPageContent=
@@ -687,6 +687,7 @@ pageDocumentForAuthorContent=
    <div style="display: none">
       $helpers:noescape()$
    </div>
+   <div id="signStepsWrapper">
    <div id="signStepsContainer">
      <div id="signStepsMenu">
        <div id="step1select">
@@ -888,7 +889,8 @@ pageDocumentForAuthorContent=
 						
      <!-- span>signStepsBorderBottom går upp till titelRow om man tar bort denna text. förslag på lösning? Lösning: lägg till float:left på signStepsBodyBorderBottom /johan  </span -->
      <div id="signStepsBodyBorderBottom"></div>
-   </div>			
+   </div>		
+   </div>	
     <div id="documentBox">
      <script>
        var docstate = $docstate:noescape()$;
