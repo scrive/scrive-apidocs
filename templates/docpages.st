@@ -798,15 +798,15 @@ pageDocumentForAuthorContent=
 	   <div class="options">
 	     <p>
                <span>
-               <input type="checkbox" class="addremovecheckbox flashOnOn" rel="#daystosignbox" location="#datetosigncontainer" oldlocation="#hiddenttimestuffbox" autocomplete="off" value="$if(timetosignset)$on$else$off$endif$" ></input>Aktivera förfallodatum
-                <div id="datetosigncontainer" style="padding-left:15px">  </div>
-                <span class="hidden flashMessage" > Varning: Om du väljer ett förfallodatum kan du inte återkalla inbjudan innan datumet förfallit. Detta regleras av avtalslagen.</span>
-              </span>
-	    </p>
+               <input type="checkbox" class="addremovecheckbox flashOnOn" rel="#daystosignbox" location="#datetosigncontainer" oldlocation="#hiddenttimestuffbox" autocomplete="off" value="$if(timetosignset)$on$else$off$endif$" id="daystosigncheckbox"></input>
+               <label for="daystosigncheckbox">Aktivera förfallodatum</label>
+               <div id="datetosigncontainer" style="padding-left:15px">  </div>
+               <span class="hidden flashMessage">Varning: Om du väljer ett förfallodatum kan du inte återkalla inbjudan innan datumet förfallit. Detta regleras av avtalslagen.</span>
+               </span>
+	     </p>
 	     
 	     <p>
-	       <input type="checkbox" id="b" />
-
+	       <input type="checkbox" id="b">
 	       <label for="b">Aktivera automatisk påminnelse</label>
 	     </p>
 
