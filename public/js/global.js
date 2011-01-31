@@ -92,6 +92,22 @@ function swedishString(names)
 }
 
 $(document).ready( function () {
+  // make edit bar stay at the top
+  var menu = $('#signStepsContainer');
+  var pos = menu.offset();
+  
+  $(window).scroll(function(){
+    if($(this).scrollTop() >= pos.top && !menu.hasClass('fixed')){
+      $("#signStepsWrapper").height(menu.height());
+      menu.addClass('fixed');
+    } else if($(this).scrollTop() < pos.top && menu.hasClass('fixed')){
+      $("#signStepsWrapper").height(menu.height());
+      menu.removeClass('fixed');
+    }
+  });
+  
+
+
 	// remember the last row of the table that was clicked
         var focused;
         // two alternative ways to track clicks off of a .check

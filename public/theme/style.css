@@ -978,6 +978,11 @@ input , button, a.button
     background-color:transparent
 }
 
+#signStepsContainer.fixed {
+    position: fixed;
+    top: 0px;
+    z-index: 5000;
+}
 
 /* 005 new code below */
 #signStepsContainer
@@ -1622,6 +1627,8 @@ input , button, a.button
 form {
     margin: 0px;
 }
+
+
 
 .signStepsBodyForms
 {
