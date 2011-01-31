@@ -1,7 +1,7 @@
 ###
 pageForgotPassword=
     <div class="centerdivnarrow">
-      <form action=LinkForgotPassword method="post">
+      <form action=$LinkForgotPassword()$ method="post">
         <table>
           <tr>
             <td>E-mail</td>
