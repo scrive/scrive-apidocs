@@ -1619,6 +1619,10 @@ input , button, a.button
     padding-left: 18px;
 }
 
+form {
+    margin: 0px;
+}
+
 .signStepsBodyForms
 {
     margin: 5px 0 5px 0; /* 013 changed */
