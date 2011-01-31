@@ -16,19 +16,21 @@ firstPageContent=
       </div>
     </div>
 #####
-newPasswordPage=     <form action="" method="post">
-                     <table><tbody>
-                       <tr>
-                        <td>Lösenord:</td>
-                        <td><input type="password" name="password" autocomplete="off" /></td>
-                       </tr>
-                       <tr>
-                        <td>Upprepa lösenord:</td>
-                        <td><input type="password" name="password2" autocomplete="off" /></td>
-                       </tr>
-                      </tbody></table>
-                     <input class="button" type="submit" value="Ändra lösenord"/>
-                     </form>
+newPasswordPage=     
+    Vänligen välj lösenord.
+    <form action="" method="post">
+      <table><tbody>
+          <tr>
+            <td>Nytt lösenord:</td>
+            <td><input type="password" name="password" autocomplete="off"></td>
+          </tr>
+          <tr>
+            <td>Upprepa lösenord:</td>
+            <td><input type="password" name="password2" autocomplete="off"></td>
+          </tr>
+      </tbody></table>
+      <input class="button" type="submit" value="Spara lösenord">
+    </form>
 ####
 signupPageView =
     <div class="centerdivnarrow">
