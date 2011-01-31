@@ -62,7 +62,10 @@ uploadPageContent=
               <a href="#attachFile"><span class="icon arrowUp"></span></a><a href="#attachFile"> 
               <span class="text">Ladda upp fil</span> </a> 
               <input class="multiFileInput" maxlength="1" type="file" name="doc" accept="application/pdf"
-                     style="position:relative;z-index:10;cursor:pointer;float:right;top:-10;left:10;font-size:30;opacity:0;cursor:pointer;cursor:hand" 
+                     style="position:relative;z-index:10;cursor:pointer;float:right;top:-15;left:10;font-size:xx-large;cursor:pointer;cursor:hand
+                            -ms-filter: 'progid:DXImageTransform.Microsoft.Alpha(Opacity=0)';
+                             filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=0);
+                             opacity: 0;" 
                      rel=".filelist">
             </div>
           </div>
