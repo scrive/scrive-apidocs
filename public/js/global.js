@@ -1,4 +1,10 @@
 
+if( !window.console ) {
+    window.console = 
+        { log: function() {}
+        }
+}
+
 function getUniqueId()
 {
     var rnd = Math.round(Math.random() * 1000000000);
