@@ -62,7 +62,7 @@ uploadPageContent=
               <a href="#attachFile"><span class="icon arrowUp"></span></a><a href="#attachFile"> 
               <span class="text">Ladda upp fil</span> </a> 
               <input class="multiFileInput" maxlength="1" type="file" name="doc" accept="application/pdf"
-                     style="position:relative;z-index:10;cursor:pointer;opacity:0;top:-10;left:-10;font-size:30" 
+                     style="position:relative;z-index:10;cursor:pointer;float:right;top:-10;left:10;font-size:30;opacity:0;cursor:pointer;cursor:hand" 
                      rel=".filelist">
             </div>
           </div>
