@@ -758,7 +758,18 @@ pageDocumentForAuthorContent=
          </div>
 	 
          <div id="personpane">
+           <div class="signStepsBodyTitle">
+	     <span> PART 3 </span>
+	   </div>
 	   
+	   <div class="signStepsBodyIcons">
+	     <a href="#man2" class="man"></a>
+	     <a href="#briefcase2" class="briefcase"></a>
+	     <a href="#hand2" class="hand"></a>
+	   </div>
+	   
+	   <div class="signStepsBodyForms" id="peopleDetails">
+	   </div>
          </div>
 	 
          <div id="signStepsBodyFunctions">
