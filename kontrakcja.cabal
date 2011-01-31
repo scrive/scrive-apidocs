@@ -33,7 +33,7 @@ Flag server
 
 Flag test
   Description: Build test
-  Default: False
+  Default: True
 
 Executable pdfseal
   if flag(pdfseal)
