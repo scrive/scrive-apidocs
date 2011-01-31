@@ -898,7 +898,7 @@ pageDocumentForAuthorContent=
     </div>
     <div id="templates" style="display:none;">
       <span class="customfield dragfield">
-        <input type="text" value="" class="customfieldbox" />
+        <input type="text" value="" class="customfieldbox" autocomplete="off" />
 	<a href="#minus2" class="minus"></a>
 	<img src="/theme/images/iconHand.png" class="draghandle" />
       </span>
