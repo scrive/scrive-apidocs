@@ -250,7 +250,7 @@ sendRejectEmails customMessage ctx document signalink = do
                       let semail = signatoryemail $ signatorydetails  sl
                       let sname = signatoryname $ signatorydetails  sl
                       mail <- mailDocumentRejected (ctxtemplates ctx) customMessage ctx sname document rejectorName
-                      sendMail  (ctxmailsconfig ctx) $ mail { fullnameemails = [(sname,semail)]}
+                      sendMail  (ctxmailer ctx) $ mail { fullnameemails = [(sname,semail)]}
   when (not $ any (isAuthor document) $ documentsignatorylinks document) $ 
         do
           mauthor <- query $ GetUserByUserID (unAuthor $ documentauthor document) 
@@ -259,7 +259,7 @@ sendRejectEmails customMessage ctx document signalink = do
                       let aemail =  unEmail $ useremail $ userinfo $ user
                       let aname = userfullname user
                       mail <- mailDocumentRejected (ctxtemplates ctx) customMessage ctx aname document rejectorName
-                      sendMail (ctxmailsconfig ctx) $ mail { fullnameemails = [(aname,aemail)]}
+                      sendMail (ctxmailer ctx) $ mail { fullnameemails = [(aname,aemail)]}
             Nothing -> return ()
 {- |
    Render a page of documents that a user has signed
