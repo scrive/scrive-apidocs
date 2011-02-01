@@ -187,7 +187,7 @@ showSignatoryEntryForEdit2=
 ####
 pageDocumentForViewerHelpers=
                   $signatoryentryforedit$
-                  <script> var documentid = "$documentid$";  </script>
+                  <script type="text/javascript"> var documentid = "$documentid$";  </script>
 ####
 pageDocumentForViewerContent=  
     <div>
@@ -316,7 +316,7 @@ showSignatoryLinkForSign =
 
 ####
 pageDocumentForSignHelpers=
-                  <script> var documentid = "$documentid$"; 
+                  <script type="text/javascript"> var documentid = "$documentid$"; 
                   </script>
                   <script type="text/javascript">
                    $localscripts:noescape()$
@@ -359,7 +359,7 @@ pageDocumentForSignContent=
           </div>
         </form>
         <form method="post" name="form" action=action id="dialog-confirm-sign-eleg" class="overlay">     
-          <script src="/js/bankid.js"></script>
+          <script type="text/javascript" src="/js/bankid.js"></script>
           <a href="#" class="close"> </a>                  
           <h2>Underteckna with BankID</h2>  
           <p>Är du säker att du vill underteckna dokumentet <strong><% documenttitle document %></strong>?</p>
@@ -457,7 +457,7 @@ pageDocumentForSignContent_old=
                       </div>
                   </form>
                   <form method="post" name="form" action=action id="dialog-confirm-sign-eleg" class="overlay">     
-                     <script src="/js/bankid.js"></script>
+                     <script type="text/javascript" src="/js/bankid.js"></script>
                      <a class="close"> </a>                  
                      <h2>Underteckna with E-Legitimation</h2>  
                      <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
@@ -493,7 +493,7 @@ pageDocumentForSignContent_old=
 ####
 pageDocumentForAuthorHelpers=
               <span class="templating_insert"> $signatoryEntry:noescape()$</span>,
-                  <script> var documentid = "$documentid$"; 
+                  <script type="text/javascript"> var documentid = "$documentid$"; 
                   </script>
 ####
 pageDocumentForAuthorHelpersLocalDialogs=
@@ -521,7 +521,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
         </div>
       </form>
       <form method="post" name="form" action=action id="dialog-confirm-sign-eleg" class="overlay">     
-        <script src="/js/bankid.js"></script>
+        <script type="text/javascript" src="/js/bankid.js"></script>
         <a class="close"> </a>                  
         <h2>Underteckna with E-Legitimation</h2>  
         <p>CHANGE!!!Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
@@ -566,7 +566,7 @@ pageDocumentForAuthorContent_old=
        <div id="edit-bar">
         $if(preparation)$
              <span>
-               <script type="text/javascript">
+               <script type="text/javascript" type="text/javascript">
                  $jscript:noescape()$
                </script>
               <form method="post" name="form" action="$linkissuedoc$" id="main-document-form"> 
@@ -895,10 +895,10 @@ pageDocumentForAuthorContent=
    </div>		
    </div>	
     <div id="documentBox">
-     <script>
+     <script type="text/javascript">
        var docstate = $docstate:noescape()$;
      </script>
-     <script src="/js/templates.js"></script>
+     <script src="/js/templates.js" type="text/javascript"></script>
      <div class="waiting4page"></div>
     </div>
     <div id="templates" style="display:none;">

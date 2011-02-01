@@ -39,12 +39,18 @@ wholePage=
               href="$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/ui-lightness/jquery-ui.css"
               media="screen">
         
-        <script src="$protocol$//ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js"></script>
-        <script src="$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js"></script>
-        <script src="$prefix$/js/jquery.tools.min.js"></script>
-        <script src="$prefix$/js/jquery.MultiFile.js"></script>
-        <script src="$prefix$/tiny_mce/jquery.tinymce.js"></script>
-        <script src="$prefix$/js/global.js"></script>
+        <script src="$protocol$//ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js"
+                type="text/javascript"></script>
+        <script src="$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/jquery.tools.min.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/jquery.MultiFile.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/tiny_mce/jquery.tinymce.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/global.js"
+                type="text/javascript"></script>
       </head>
       <body>
         <div id="headerWide"></div>
