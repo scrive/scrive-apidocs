@@ -269,20 +269,28 @@ changeEmailAddress =
 ####
 showSignatoryLinkForSign =
 <div class="signViewBodyRight"> 
-  <div class="signViewBodyIcons"> <a href="#man2" class="man"></a> 
+  <div class="signViewBodyIcons"> 
+    <img src="$status$">
+    $if(changeEmailAddress)$ <span style="color:#000000;position:relative;top:-3px">!</span>  $endif$
+    <a href="#man2" class="man"></a> 
     <div class="signViewBodyTitle"> <span>Part</span> </div>
   </div>
-  <div class="signViewBodyRightTextContainer">
-    <div class="text">$signatoryname$</div>
-    <div class="text">$signatoryemail$</div>
-    <div class="text">$signatorycompany$</div>
-    <span class="text">$signatorynumber$</span> 
+  <div class="signViewBodyRightTextContainer"> 
+   <div class="text">$if(signatoryname)$$signatoryname$$endif$</div>
+   <div class="text">$if(signatoryemail)$$signatoryemail$$endif$</div>
+   <div class="text">$if(signatorycompany)$$signatorycompany$$endif$</div>
+   <div class="text">$if(signatorynumber)$$signatorynumber$$endif$</div>
   </div>
-  <span class="signViewBodyForms"></span>
+
+  <span class="signViewBodyForms">
+  $message:noescape()$ <BR/>
+  $reminderForm:noescape()$
+  $changeEmailAddress:noescape()$
+  
+  </span>
 </div>
 ####
-
-showSignatoryLinkForSign =
+showSignatoryLinkForSign_ =
 <div class="$mainclass$">
   <img src="$status$">
 
@@ -978,55 +986,14 @@ pageDocumentForAuthorContentProcessed=
     <div style="display: none">
       $helpers:noescape()$
     </div>
-    <form method="post" name="form" action="$action$" id="dialog-confirm-sign" class="overlay">     
-      <a href="#" class="close"> </a>                  
-      <h2>Underteckna</h2>  
-      <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
-      <p>När $partyUnsigned:noescape()$ undertecknat blir 
-        avtalet <strong>juridiskt bindande</strong> och
-        det färdigställda avtalet skickas till din e-post.</p>
-      <div class="buttonbox">
-        <input type="hidden" name="sign" value="automatic">
-        <button class="close button" type="button"> Avbryt </button>
-        <button class="submiter button" type="button"> Underteckna </button>
-      </div>
-    </form>
-    <form method="post" name="form" action=action id="dialog-confirm-sign-eleg" class="overlay">     
-      <script type="text/javascript" src="/js/bankid.js"></script>
-      <a href="#" class="close"> </a>                  
-      <h2>Underteckna with BankID</h2>  
-      <p>Är du säker att du vill underteckna dokumentet <strong><% documenttitle document %></strong>?</p>
-      <p>När <% partyUnsignedMeAndListString magichash document %> undertecknat blir 
-        avtalet <strong>juridiskt bindande</strong> och
-        det färdigställda avtalet skickas till din e-post.</p>
-      <div class="buttonbox">
-        <input type="hidden" name="bankid" value="automatic">
-        <input type="hidden" name="signature" value="" id="signature">
-        <input type="hidden" name="transactionid" value="" id="transactionid">
-        <button class="close button" type="button"> Avbryt </button>
-        <button class="bankid button" type="button"> Underteckna with BankID</button>
-      </div>
-    </form>
-    <form method="post" name="form" action="$action$" id="dialog-confirm-cancel" class="overlay">   
-      <a href="#" class="close"> </a>     
-      <h2>Avvisa</h2>                 
-      <p>Är du säker på att du vill avvisa dokumentet <strong>$documenttitle$</strong>?</p>
-      <p>När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela <strong>$authorname$</strong>.</p>
-      <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
-        $rejectMessage:noescape()$
-      </div>
-      <div class="buttonbox">
-        <input type="hidden" name="cancel" value="automatic">
-        <button class="close button" type="button"> Avbryt </button>
-        <button class="editer button" type="button"> Skriv eget meddelande </button>
-        <button class="submiter button" type="button"> Avvisa </button>
-      </div> 
-    </form> 
   </div>
 <div id="signStepsContainer"> 
-  <div id="signStepsTitleRow"> <span id="signStepsTitleRowTextContainer"> 
-      <span class="title">DOKUMENT:</span> <span class="name">$title$ | 
-        Transaction #$docid$</span> </span> </div>
+  <div id="signStepsTitleRow"> 
+     <span id="signStepsTitleRowTextContainer"> 
+      <span class="title">DOKUMENT:</span>
+      <span class="name">$documenttitle$ | Transaction #$documentid$</span>
+     </span>
+  </div>
   <div id="signStepsBody"> 
     <div id="signViewBodyLeft" > 
       <span id="signViewBodyLeftTextContainer"> 
@@ -1039,18 +1006,7 @@ pageDocumentForAuthorContentProcessed=
     <div id="signStepsBodyBorderBottom"></div>
   </div>
 </div>
-<div id="signViewNotificationContainer"> 
-  <div id="signViewNotificationContainerLeft"> 
-    <div class="title">Scrolla ner för att skriva på </div>
-    <div class="text">Applications can no longer send you notifications on 
-      Facebook. If you like you can start receiving emails from Mocies.</div>
-  </div>
-  <div id="signViewNotificationContainerRight"> 
-    <div class="anchor">
-      <a href="#" onclick="jQuery('#signViewNotificationContainer').fadeOut('slow'); return false;">close</a>
-    </div>
-  </div>
-</div>
+
 <div id="documentBox">
   <div class="waiting4page"></div>
 </div>
@@ -1062,9 +1018,40 @@ pageDocumentForAuthorContentProcessed=
     </div>
   </div>
   <div id="signViewBottomBoxContainerRight"> 
-    <input class="button" type="submit" name="sign" value="Underteckna!" id="sign" rel="#dialog-confirm-sign">
-    <input class="bigbutton" type="submit" name="cancel" value="Avvisa" rel="#dialog-confirm-cancel" id="cancel">
-  </div>
+  $if(awaitingauthor)$
+      <input class="button" type="submit" name="sign" value="Underteckna!" id="sign" rel="#dialog-confirm-sign">
+      <input class="bigbutton" type="submit" name="cancel" value="Avvisa" rel="#dialog-confirm-cancel" id="cancel">
+      <input class="button" type="submit" name="sign" value="Underteckna!" id="sign" rel="#dialog-confirm-sign">
+  $endif$
+   $if(pending)$
+      $if(!timetosignset)$
+      <span>
+        <input class="button cancel bigbutton" type="button" name="cancel" value="Återkalla inbjudan"  rel="#cancel-by-author-dialog">    
+      </span>
+    $else$
+    <span>Du kan inte återkalla inbjudan före förfallodatum.</span>
+   $endif$   
+  $endif$      
+  $if(canberestarted)$
+   $restartForm:noescape()$
+  $endif$ 
+ </div>
 </div>
-###
+ <span class="localdialogs">
+          <form method="post" action="$linkcancel$" class="overlay" id="cancel-by-author-dialog">
+            <a class="close"> </a>
+            <h2> Återkalla inbjudan </h2>
+            <p>Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?
+              <BR>När du återkallat inbjudan kommer nedanstaende meddelande att skickas till dina motparter.
+            </p>
+            <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
+              $cancelMailContent:noescape()$
+            </div>
+            <div class="buttonbox" >
+              <button class="close button" type="button"> Avbryt </button>
+              <button class="editer button" type=""> Skriv eget meddelande </button>
+              <button class="submiter button" type="button"> Återkalla inbjudan</button>
+            </div>
+          </form>
+        </span>
 ###
