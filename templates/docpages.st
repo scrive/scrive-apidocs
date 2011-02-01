@@ -546,7 +546,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
         </div>
         <div class="buttonbox" >
           <button class="close button" type="button"> Avbryt </button>
-          <button class="editer button" type=""> Skriv eget meddelande </button>
+          <button class="editer button" type="button"> Skriv eget meddelande </button>
           <button class="close button" type="button" id="editing-invite-text-finished"> Ok </button>
         </div>
       </form>  
@@ -736,7 +736,7 @@ pageDocumentForAuthorContent=
 
          <form action="" method="post">
            <input type="hidden" name="allowedsignaturetypes"
-                  value="Email" />
+                  value="Email">
 
            <div id="signStep2Content">
              <div id="signStepsBody">
@@ -912,7 +912,7 @@ pageDocumentForAuthorContent=
   <span class="customfield dragfield">
     <input type="text" value="" class="customfieldbox" autocomplete="off" />
     <a href="#minus2" class="minus"></a>
-    <img src="/theme/images/iconHand.png" class="draghandle" />
+    <img src="/theme/images/iconHand.png" class="draghandle" alt="drag" />
   </span>
   <span class="persondetails">
     <div class="signStepsBodyTitle">
@@ -935,25 +935,29 @@ pageDocumentForAuthorContent=
 	  <span style="display:none;" class="type">author</span>
 	  <input type="text" infotext="För- & efternamn"
                  name="signatoryname" autocomplete="off" value="" />
-	  <img src="/theme/images/iconHand.png" class="draghandle" />
+	  <img src="/theme/images/iconHand.png" class="draghandle"
+	       alt="drag" />
         </span>
 	<span class='dragfield sigcomp'>
 	  <span style="display:none;" class="fieldid">company</span>
 	  <span style="display:none;" class="type">sig</span>
           <input type="text" infotext="Ev. Företagsnamn" name="signatorycompany" autocomplete="off">
-	  <img src="/theme/images/iconHand.png" class="draghandle" />
+	  <img src="/theme/images/iconHand.png" class="draghandle"
+	       alt="drag" />
         </span><br>
         <span class='dragfield sigemail'>
 	  <span style="display:none;" class="fieldid">email</span>
 	  <span style="display:none;" class="type">author</span>
 	  <input type="email" infotext="E-post" name="signatoryemail" autocomplete="off">
-	  <img src="/theme/images/iconHand.png" class="draghandle" />
+	  <img src="/theme/images/iconHand.png" class="draghandle"
+	       alt="drag" />
 	</span>
 	<span class='dragfield signum'>
 	  <span style="display:none;" class="fieldid">number</span>
 	  <span style="display:none;" class="type">sig</span>
 	  <input type="text" infotext="Org.-nr / Personnr." name="signatorynumber" autocomplete="off">
-	  <img src="/theme/images/iconHand.png" class="draghandle" />
+	  <img src="/theme/images/iconHand.png" class="draghandle" 
+               alt="drag" />
 	</span>
       </span>
     </div>
