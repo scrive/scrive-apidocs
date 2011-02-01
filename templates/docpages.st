@@ -895,10 +895,11 @@ pageDocumentForAuthorContent=
          </form>
          $pageDocumentForAuthorHelpersLocalDialogs()$
        </div>
+       <div id="signStepsBodyBorderBottom"></div>
      </div>
 						
      <!-- span>signStepsBorderBottom går upp till titelRow om man tar bort denna text. förslag på lösning? Lösning: lägg till float:left på signStepsBodyBorderBottom /johan  </span -->
-     <div id="signStepsBodyBorderBottom"></div>
+     
    </div>		
 </div>	
 <div id="documentBox">
