@@ -1944,3 +1944,40 @@ form {
     height: 23px;
     width: 23px;
 }
+
+
+#signStepsBody.personPaneLargeNumberMode span.persondetails
+{
+    display: none;
+}
+
+#signStepsBody.personPaneSmallNumberMode span.persondetails
+{
+    display: block;
+    float: left;
+}
+
+#signStepsBody.personPaneSmallNumberMode #personpane
+{
+    width: 606px;
+}
+
+#personpane 
+{
+    position: relative;
+}
+
+#signStepsBody.personPaneLargeNumberMode #signStepsBodyLeft
+{
+    display: block;
+}
+
+#signStepsBody.personPaneSmallNumberMode #signStepsBodyLeft
+{
+    display: none;
+}
+
+#signStepsBody span.persondetails.currentPerson
+{
+    display: inline;
+}

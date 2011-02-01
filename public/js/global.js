@@ -772,6 +772,19 @@ function nextStep()
     return false;
 }
 
+function checkPersonPaneMode()
+{
+    var personpane = $('#personpane');
+    var signStepsBody = $("#signStepsBody");
+	
+    if( personpane.children().size()>2 ) {
+        signStepsBody.removeClass("personPaneSmallNumberMode");
+        signStepsBody.addClass("personPaneLargeNumberMode");
+    } else {
+        signStepsBody.addClass("personPaneSmallNumberMode");
+        signStepsBody.removeClass("personPaneLargeNumberMode");
+    }
+}
 
 
 $(document).ready(function() {
@@ -785,22 +798,24 @@ $(document).ready(function() {
                 var ol = li.parent();
                 var idx = ol.children().index(li);
                 var children = $('#personpane').children();
-                children.filter(':not(:eq(' + idx + '))').hide();
-                children.filter(':eq(' + idx + ')').show();
+                children.filter(':not(:eq(' + idx + '))').removeClass("currentPerson");
+                children.filter(':eq(' + idx + ')').addClass("currentPerson");
                 return false;
             });
 
         $('#addSignatory').click(function() {
 		
 		signatoryToHTML(newsignatory());
-		$('#personpane').children().hide().last().show();
-	
+                var personpane = $('#personpane');
+	        personpane.children().removeClass("currentPerson").last().addClass("currentPerson");
+                checkPersonPaneMode();
 	    });
         $('#delSignatory').click(function() {
-                var children = $('#personpane').children();
+                var personpane = $('#personpane');
+                var children = personpane.children();
                 if( children.size()==1 )
                     return;
-                var child = children.filter(':visible');
+                var child = children.filter('.currentPerson');
                 var idx = children.index(child);
 
 		//console.log(child);
@@ -814,13 +829,14 @@ $(document).ready(function() {
                 var li = $("#peopleList li:eq(" + idx + ")");
                 li.remove();
 
-		var newidx = idx - 1;
-		if(newidx < 0) {
-		    newidx = 0;
+		var newidx = idx;
+		if(newidx >= $('#personpane').children().size() ) {
+		    newidx = $('#personpane').children().size()-1;
 		}
+                
+		personpane.children(".persondetails:eq(" + newidx + ")").addClass("currentPerson");
 
-		$("#personpane .persondetails:eq(" + newidx + ")").show();
-		
+                checkPersonPaneMode();
             });
         $("input[name='signatoryname']", "#personpane").live('change keyup', function() {
                 var val = $(this).val();
