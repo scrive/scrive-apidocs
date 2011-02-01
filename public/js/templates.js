@@ -722,6 +722,7 @@ function signatoryToHTML(sig) {
     sl.append(sigentry);
     //currentSig = sigentry;
     //    sigentry.hide();
+  $("#personpane").children().hide().first().show();
 }
 
 function placePlacementsOfSignatories(signatories) {
@@ -737,13 +738,6 @@ function placePlacementsOfSignatories(signatories) {
 		});
 	});
 }
-
-signatoryadd = function() {
-    var sig = newsignatory();
-    signatoryToHTML(sig);
-    enableInfoText();
-    return false;
-};
 
 function getLabel(x) {
     var label = $(x).find("input").attr("infotext");
