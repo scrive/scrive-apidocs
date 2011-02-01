@@ -296,7 +296,7 @@ appHandler appConf appGlobals= do
 
   let elegtrans = getELegTransactions session
   let
-   mailer | production appConf = createRealMailer cfg
+   mailer | sendMails cfg  = createRealMailer cfg
           | otherwise = createDevMailer (ourInfoEmail cfg) (ourInfoEmailNiceName cfg)
      where cfg = mailsConfig appConf
    ctx = Context
