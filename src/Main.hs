@@ -141,7 +141,7 @@ main = Log.withLogger $ do
     (Right f) -> return $ (f (appConf1))
 
   let 
-    mailer | production appConf = createRealMailer cfg
+    mailer | sendMails cfg = createRealMailer cfg
            | otherwise = createDevMailer (ourInfoEmail cfg) (ourInfoEmailNiceName cfg)
     cfg = mailsConfig appConf
     ctx = Context
