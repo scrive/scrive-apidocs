@@ -1,78 +1,80 @@
 ####    Pages for documents - main part of system
-creatingDocumentFrame=   <div id="signStepsContainer">
-     <div id="signStepsMenu">
-       <div id="step1select" $if(step1)$class="current"$endif$>
-         <a href="#" class="step1select clickArea"></a>
-         <a href="#" class="step1select step1icon">
-         </a>
-         <a href="#" class="step1select text">Ladda upp dokument</a>
-       </div>
+creatingDocumentFrame=   
+<div id="signStepsContainer">
+  <div id="signStepsMenu">
+    <div id="step1select" $if(step1)$class="current"$endif$>
+      <a href="#" class="step1select clickArea"></a>
+      <a href="#" class="step1select step1icon">
+      </a>
+      <a href="#" class="step1select text">Ladda upp dokument</a>
+    </div>
+    
+    <div id="step2select" $if(step2)$class="current"$endif$>
+      <a href="#" class="step2select clickArea"></a>
+      <a href="#" class="step2select step2icon">
+      </a>
+      <a href="#" class="step2select text">Fyll i uppgifter</a>
+    </div>
+    
+    <div id="step3select" $if(step3)$class="current"$endif$>
+      <a href="#" class="step3select clickArea"></a>
+      <a href="#" class="step3select step3icon">
+      </a>
+      <a href="#" class="step3select text">Underteckna och skicka!</a>
+    </div>
+    
+    <div id="signStepsMenuEmptyStep"></div>
+  </div>
+  
+  <div id="signStepsTitleRow">
+    <span id="signStepsTitleRowTextContainer">
+      <span class="title">DOKUMENT:</span>
+      <span class="name">$title$ | Transaction #$documentid$</span>
+    </span>
+    
+    <div class="signStepsButton $if(submitFormOnNext)$ submitStepFormOnClick $endif$">
+      <a href="#nextStep" class="clickArea"></a>
+      
+      <a href="#nextStep"><span class="icon arrowRight"></span></a><!-- 005 no whitespace here pleace, or one pixel of the button will be unclicable pixel in IE --><a href="#nextStep">
+        <span class="text">Nästa steg</span>
+      </a>
+    </div>
+  </div>
+  
+  <div id="signStepsBody"> 
+    $steps:noescape()$
+  </div>
+  <div id="signStepsBodyBorderBottom"></div>
 
-       <div id="step2select" $if(step2)$class="current"$endif$>
-         <a href="#" class="step2select clickArea"></a>
-         <a href="#" class="step2select step2icon">
-         </a>
-         <a href="#" class="step2select text">Fyll i uppgifter</a>
-       </div>
-
-       <div id="step3select" $if(step3)$class="current"$endif$>
-         <a href="#" class="step3select clickArea"></a>
-         <a href="#" class="step3select step3icon">
-         </a>
-         <a href="#" class="step3select text">Underteckna och skicka!</a>
-       </div>
-                                                
-       <div id="signStepsMenuEmptyStep"></div>
-     </div>
-                                        
-     <div id="signStepsTitleRow">
-       <span id="signStepsTitleRowTextContainer">
-         <span class="title">DOKUMENT:</span>
-         <span class="name">$title$ | Transaction #$documentid$</span>
-       </span>
-                                                
-       <div class="signStepsButton $if(submitFormOnNext)$ submitStepFormOnClick $endif$">
-         <a href="#nextStep" class="clickArea"></a>
-         
-         <a href="#nextStep"><span class="icon arrowRight"></span></a><!-- 005 no whitespace here pleace, or one pixel of the button will be unclicable pixel in IE --><a href="#nextStep">
-           <span class="text">Nästa steg</span>
-         </a>
-       </div>
-     </div>
-
-     <div id="signStepsBody"> 
-        $steps:noescape()$
-     </div>
-     <div id="signStepsBodyBorderBottom"></div>
-     </div>
-     </div>
-
-   </div>            
+</div>            
     
 ######
 uploadPageContent=
-       <div id="signStepsBodyUploadBox"> 
-       <form action="/d" method="post" enctype="multipart/form-data" class="stepForm"> 
-        <span id="signStepsBodyUploadTextContainer"> 
-          <span class="header">Välj fil och ladda upp!</span><br>
-          <span class="text">OBS! Det går endast att ladda upp .PDF</span> </span> 
-          <br>
-          <div id="signStepsButtonContainer">
-            <div class="signStepsButton" >  
-              <a href="#attachFile"><span class="icon arrowUp"></span></a><a href="#attachFile"> 
-              <span class="text">Ladda upp fil</span> </a> 
-              <input class="multiFileInput" maxlength="1" type="file" name="doc" accept="application/pdf"
-                     style="position:relative;z-index:10;cursor:pointer;float:right;top:-15;left:10;font-size:xx-large;cursor:pointer;cursor:hand
-                            -ms-filter: 'progid:DXImageTransform.Microsoft.Alpha(Opacity=0)';
-                             filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=0);
-                             opacity: 0;" 
-                     rel=".filelist">
-            </div>
-          </div>
-          <div class="filelist" style="padding-left:10px"></div>
+<div id="signStepsBodyUploadBox"> 
+  <form action="/d" method="post" enctype="multipart/form-data"
+  class="stepForm"> 
+    <div>
+      <span id="signStepsBodyUploadTextContainer"> 
+        <span class="header">Välj fil och ladda upp!</span><br>
+        <span class="text">OBS! Det går endast att ladda upp .PDF</span> 
+      </span> 
+      <br>
+      <div id="signStepsButtonContainer">
+        <div class="signStepsButton" >  
+          <a href="#attachFile"><span class="icon arrowUp"></span></a>
+          <a href="#attachFile"> <span class="text">Ladda upp fil</span> </a> 
+          <input class="multiFileInput" maxlength="1" type="file" name="doc" accept="application/pdf"
+                 style="position:relative;z-index:10;cursor:pointer;float:right;top:-15;left:10;font-size:xx-large;cursor:pointer;cursor:hand
+                        -ms-filter: 'progid:DXImageTransform.Microsoft.Alpha(Opacity=0)';
+                        filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=0);
+                        opacity: 0;" 
+                 rel=".filelist" />
         </div>
-       </form>
       </div>
+      <div class="filelist" style="padding-left:10px"></div>
+    </div>
+  </form>
+</div>
   
 ####
 pageDocumentList= 
@@ -604,7 +606,7 @@ pageDocumentForAuthorContent_old=
               </div>
               <div style="margin-top: 20px"></div>
               <span>
-              <input type="checkbox" class="addremovecheckbox flashOnOn" rel="#daystosignbox" location="#datetosigncontainer" oldlocation="#hiddenttimestuffbox" autocomplete="off" value="$if(timetosignset)$on$else$off$endif$" ></input> Välj förfallodatum
+              <input type="checkbox" class="addremovecheckbox flashOnOn" rel="#daystosignbox" location="#datetosigncontainer" oldlocation="#hiddenttimestuffbox" autocomplete="off" value="$if(timetosignset)$on$else$off$endif$" /> Välj förfallodatum
                 <div id="datetosigncontainer">  </div>
                 $if(!timetosignset)$
                 <span class="hidden flashMessage" > Varning: Om du väljer ett förfallodatum kan du inte återkalla inbjudan innan datumet förfallit. Detta regleras av avtalslagen.</span>
@@ -621,8 +623,8 @@ pageDocumentForAuthorContent_old=
               </div>
 
               <div style="height: 70px;">
-              <input class="bigbutton cross-button" type="submit" name="final" value="Underteckna" id="signinvite" rel="#dialog-confirm-signinvite"> <br />
-	      <input class="bigbutton cross-button" type="submit" name="signbankid" value="Underteckna with E-Leg" id="signbankid" rel="#dialog-confirm-sign-eleg"> <br />
+              <input class="bigbutton cross-button" type="submit" name="final" value="Underteckna" id="signinvite" rel="#dialog-confirm-signinvite"> <br>
+	      <input class="bigbutton cross-button" type="submit" name="signbankid" value="Underteckna with E-Leg" id="signbankid" rel="#dialog-confirm-sign-eleg"> <br>
               <input class="button" type="submit" name="save" value="Spara som utkast">
               </div>
               </form>
@@ -688,245 +690,251 @@ pageDocumentForAuthorContent_old=
 #####
 pageDocumentForAuthorContent=
    <div style="display: none">
-      $helpers:noescape()$
+     $helpers:noescape()$
    </div>
    <div id="signStepsWrapper">
-   <div id="signStepsContainer">
-     <div id="signStepsMenu">
-       <div id="step1select">
-         <a href="#" class="step1select clickArea"></a>
-         <a href="#" class="step1select step1icon">
-	 </a>
-	 <a href="#" class="step1select text">Ladda upp dokument</a>
+     <div id="signStepsContainer">
+       <div id="signStepsMenu">
+         <div id="step1select">
+           <a href="#" class="step1select clickArea"></a>
+           <a href="#" class="step1select step1icon"> </a>
+	   <a href="#" class="step1select text">Ladda upp dokument</a>
+         </div>
+         
+         <div id="step2select" class="current">
+	   <a href="#" class="step2select clickArea"></a>
+	   <a href="#" class="step2select step2icon"> </a>
+	   <a href="#" class="step2select text">Fyll i uppgifter</a>
+         </div>
+         
+         <div id="step3select">
+	   <a href="#" class="step3select clickArea"></a>
+	   <a href="#" class="step3select step3icon"> </a>
+	   <a href="#" class="step3select text">Underteckna och skicka!</a>
+         </div>
+	 
+         <div id="signStepsMenuEmptyStep"></div>
        </div>
-
-       <div id="step2select" class="current">
-	 <a href="#" class="step2select clickArea"></a>
-	 <a href="#" class="step2select step2icon">
-	 </a>
-	 <a href="#" class="step2select text">Fyll i uppgifter</a>
-       </div>
-
-       <div id="step3select">
-	 <a href="#" class="step3select clickArea"></a>
-	 <a href="#" class="step3select step3icon">
-	 </a>
-	 <a href="#" class="step3select text">Underteckna och skicka!</a>
-       </div>
-						
-       <div id="signStepsMenuEmptyStep"></div>
-     </div>
 					
-     <div id="signStepsTitleRow">
-       <span id="signStepsTitleRowTextContainer">
-	 <span class="title">DOKUMENT:</span>
-	 <span class="name">$documenttitle$ | Transaction #$documentid$</span>
-	 <!-- <span class="changeName"><a href="#changeName">BYT TITEL</a></span> -->
-       </span>
+       <div id="signStepsTitleRow">
+         <span id="signStepsTitleRowTextContainer">
+	   <span class="title">DOKUMENT:</span>
+	   <span class="name">$documenttitle$ | Transaction #$documentid$</span>
+	   <!-- <span class="changeName"><a href="#changeName">BYT TITEL</a></span> -->
+         </span>
 						
-       <div class="signStepsButton" id="signStepsNextButton">
-	 <a href="#nextStep" class="clickArea"></a>
+         <div class="signStepsButton" id="signStepsNextButton">
+	   <a href="#nextStep" class="clickArea"></a>
 	 
-	 <a href="#nextStep"><span class="icon arrowRight"></span></a><!-- 005 no whitespace here pleace, or one pixel of the button will be unclicable pixel in IE --><a href="#nextStep">
-	   <span class="text">Nästa steg</span>
-	 </a>
+	   <a href="#nextStep"><span class="icon arrowRight"></span></a><!-- 005 no whitespace here pleace, or one pixel of the button will be unclicable pixel in IE --><a href="#nextStep">
+	     <span class="text">Nästa steg</span>
+	   </a>
+         </div>
        </div>
-     </div>
 			
-     <div id="signStepsContentStack">
+       <div id="signStepsContentStack">
 
-     <form action="" method="post">
-       <input type="hidden" name="allowedsignaturetypes" value="Email">
+         <form action="" method="post">
+           <input type="hidden" name="allowedsignaturetypes"
+                  value="Email" />
 
-     <div id="signStep2Content">
-       <div id="signStepsBody">
-	 
-         <div id="signStepsBodyLeft">
-	   <div id="people">
-	     <div class="signStepsBodyTitle">
-	       <span>PERSONER</span>
-	     </div>
+           <div id="signStep2Content">
+             <div id="signStepsBody">
+	       
+               <div id="signStepsBodyLeft">
+	         <div id="people">
+	           <div class="signStepsBodyTitle">
+	             <span>PERSONER</span>
+	           </div>
+	           
+	           <div id="peopleList" class="signStepsBodyForms">
+                     <ol>
+                     </ol>
+	           </div>
 	     
-	     <div id="peopleList" class="signStepsBodyForms">
-               <ol>
-               </ol>
-	     </div>
-	     
-	     <!--<div class="signStepsBodyAddField partCount">
-	              <span>Visa</span>
-	              <a href="">11-20</a>,
-	              <a href="">21-30</a>
-	     </div>
-             -->
-	   </div>
-         </div>
+	           <!--<div class="signStepsBodyAddField partCount">
+	                    <span>Visa</span>
+	                    <a href="">11-20</a>,
+	                    <a href="">21-30</a>
+	           </div>
+                   -->
+	         </div>
+               </div>
 	 
-         <div id="personpane">
-           <div class="signStepsBodyTitle">
-	     <span> PART </span>
-	   </div>
-	   
-	   <div class="signStepsBodyIcons">
-	     <a href="#man2" class="man"></a>
-	     <a href="#briefcase2" class="briefcase"></a>
-	     <a href="#hand2" class="hand"></a>
-	   </div>
-	   
-	   <div class="signStepsBodyForms" id="peopleDetails">
-	   </div>
-         </div>
-	 
-         <div id="signStepsBodyFunctions">
-	   <div id="signStepsBodyFunctionsBox">
-	     <ul>
-	       <!-- 008 changed/new -->
-	       <li><a href="#add" class="plus" id="addSignatory">LÄGG TILL PERSON</a></li>
-	       <li><a href="#remove" class="minus" id="delSignatory">TA BORT PERSON</a></li>
-	       <!-- <li><a href="#save" class="floppy">SPARA SOM MALL</a></li> -->
-	       <!-- <li><a href="#download" class="arrowDown">LADDA NED SOM PDF</a></li> -->
-	     </ul>
-	   </div>
-         </div>
-       </div>
-     </div>
-
-     <div id="signStep3Content" style="display: none">
-       <div id="signStepsBody">
-	   
-	 <div id="signStepsBodyLeft" class="step3">
-	   <div class="signStepsBodyTitle">
-	     <span>DOKUMENTHANTERING</span>
-
-	   </div>
-	   <div class="options">
-	     <p>
-               <span>
-               <input type="checkbox" class="addremovecheckbox flashOnOn" rel="#daystosignbox" location="#datetosigncontainer" oldlocation="#hiddenttimestuffbox" autocomplete="off" value="$if(timetosignset)$on$else$off$endif$" id="daystosigncheckbox"></input>
-               <label for="daystosigncheckbox">Aktivera förfallodatum</label>
-               <div id="datetosigncontainer" style="padding-left:15px">  </div>
-               <span class="hidden flashMessage">Varning: Om du väljer ett förfallodatum kan du inte återkalla inbjudan innan datumet förfallit. Detta regleras av avtalslagen.</span>
-               </span>
-	     </p>
-	     
-	     <p>
-	       <input type="checkbox" id="b">
-	       <label for="b">Aktivera automatisk påminnelse</label>
-	     </p>
-
-             <!-- 
-	        <p class="signStepsBodySaveMethods">
-		  <label for="c">Lagring</label> 
-		  <select id="c">
-		    <option value="1">Standard</option>
-		    <option value="2">Trustweaver</option>
-
-		    <option value="3">Option 3</option>
-		  </select>
-	        </p>
-                -->
-	   </div>
-	 </div>
-	 
-	 
-	 <div id="signStepsBodyRight" class="step3">
-	   <div class="border left"></div>
-	   <div class="border right"></div>
-
-	   
-	   <div class="signStepsBodyTitle">
-	     <span>INBJUDAN</span>
-	   </div>
-	   
-	   <div class="signStepsBodyInvation">
-              <small><a rel="#edit-invite-text-dialog" id="editinvitetextlink" href="#" style="padding-top:3px">JUSTERA HÄLSNINGSMEDDELANDE</a></small>
-              <input type="hidden" id="invitetext" name="invitetext" value="$documentinvitetext$">
-	   </div>
-	   
-	   <!-- 015 new -->
-
-	   <div id="signStepsBodyUploadBox" class="step3">
-
-	     <span id="signStepsBodyUploadTextContainer">
-	       <span class="text">Bifoga dokument med inbjudan</span>
-	     </span>
-	     <br />
-	        
-	     <div id="signStepsButtonContainer">
-	       <div class="signStepsButton">
-		 <a href="#attachFile" class="clickArea"></a>
-		 
-		 <a href="#attachFile"><span class="icon arrowUp"></span></a><a href="#attachFile">
-                      
-		   <span class="text">Ladda upp fil</span>
-		 </a>
+               <div id="personpane">
+                 <div class="signStepsBodyTitle">
+	           <span> PART </span>
+	         </div>
+	         
+	         <div class="signStepsBodyIcons">
+	           <a href="#man2" class="man"></a>
+	           <a href="#briefcase2" class="briefcase"></a>
+	           <a href="#hand2" class="hand"></a>
+	         </div>
+	         
+	         <div class="signStepsBodyForms" id="peopleDetails">
+	         </div>
+               </div>
+	       
+               <div id="signStepsBodyFunctions">
+	         <div id="signStepsBodyFunctionsBox">
+	           <ul>
+	             <!-- 008 changed/new -->
+	             <li><a href="#add" class="plus" id="addSignatory">LÄGG TILL PERSON</a></li>
+	             <li><a href="#remove" class="minus" id="delSignatory">TA BORT PERSON</a></li>
+	             <!-- <li><a href="#save" class="floppy">SPARA SOM MALL</a></li> -->
+	             <!-- <li><a href="#download" class="arrowDown">LADDA NED SOM PDF</a></li> -->
+	           </ul>
+	         </div>
+               </div>
+             </div>
+           </div>
+           
+           <div id="signStep3Content" style="display: none">
+             <div id="signStepsBody">
+	       
+	       <div id="signStepsBodyLeft" class="step3">
+	         <div class="signStepsBodyTitle">
+	           <span>DOKUMENTHANTERING</span>
+                   
+	         </div>
+	         <div class="options">
+	           <p>
+                     <span>
+                       <input type="checkbox" 
+                              class="addremovecheckbox
+                                     flashOnOn" 
+                              rel="#daystosignbox"
+                              location="#datetosigncontainer"
+                              oldlocation="#hiddenttimestuffbox"
+                              autocomplete="off"
+                              value="$if(timetosignset)$on$else$off$endif$"
+                              id="daystosigncheckbox" />
+                       <label for="daystosigncheckbox">Aktivera förfallodatum</label>
+                       <div id="datetosigncontainer" style="padding-left:15px">  </div>
+                       <span class="hidden flashMessage">Varning: Om du väljer ett förfallodatum kan du inte återkalla inbjudan innan datumet förfallit. Detta regleras av avtalslagen.</span>
+                     </span>
+	           </p>
+	           
+	           <p>
+	             <input type="checkbox" id="b">
+	             <label for="b">Aktivera automatisk påminnelse</label>
+	           </p>
+                   
+                   <!-- 
+	              <p class="signStepsBodySaveMethods">
+		        <label for="c">Lagring</label> 
+		        <select id="c">
+		          <option value="1">Standard</option>
+		          <option value="2">Trustweaver</option>
+                          
+		          <option value="3">Option 3</option>
+		        </select>
+	              </p>
+                      -->
+	         </div>
 	       </div>
-	     </div>
-	   </div>
+	       
+	       
+	       <div id="signStepsBodyRight" class="step3">
+	         <div class="border left"></div>
+	         <div class="border right"></div>
+                 
+	         
+	         <div class="signStepsBodyTitle">
+	           <span>INBJUDAN</span>
+	         </div>
+	   
+	         <div class="signStepsBodyInvation">
+                   <small><a rel="#edit-invite-text-dialog" id="editinvitetextlink" href="#" style="padding-top:3px">JUSTERA HÄLSNINGSMEDDELANDE</a></small>
+                   <input type="hidden" id="invitetext" name="invitetext" value="$documentinvitetext$">
+	         </div>
+	   
+	         <!-- 015 new -->
 
-	 </div>
-	 <div id="signStepsBodyFunctions" class="step3">
-	   <div class="signStepsBodyTitle">
-	     <span>SIGNERING</span>
-	   </div>
-	   <div class="signStepsBodyFunctionsBox options">
-             <!--
-	        <p>
-		  <label for="d">Metod</label> 
-		  <select id="d">
-		    <option value="1">e-post</option>
-		    <option value="2">e-legitimation</option>
-		    <option value="3">Option 3</option>
-		  </select>
-	        </p>
-	        -->
-	     <!-- 013 changed sign button tag -->
-	     <input type="submit" value="" name="final" class="buttonSignLarge">
-	   </div>
-	 </div>
-	 
-       </div>			
-       </form>
-       $pageDocumentForAuthorHelpersLocalDialogs()$
-     </div>
+	         <div id="signStepsBodyUploadBox" class="step3">
+                   
+	           <span id="signStepsBodyUploadTextContainer">
+	             <span class="text">Bifoga dokument med inbjudan</span>
+	           </span>
+	           <br>
+	           
+	           <div id="signStepsButtonContainer">
+	             <div class="signStepsButton">
+		       <a href="#attachFile" class="clickArea"></a>
+		       <a href="#attachFile"><span class="icon arrowUp"></span></a>
+                       <a href="#attachFile"> <span class="text">Ladda upp fil</span> </a>
+	             </div>
+	           </div>
+	         </div>
+	       </div>
+
+	       <div id="signStepsBodyFunctions" class="step3">
+	         <div class="signStepsBodyTitle">
+	           <span>SIGNERING</span>
+	         </div>
+	         <div class="signStepsBodyFunctionsBox options">
+                   <!--
+	              <p>
+		        <label for="d">Metod</label> 
+		        <select id="d">
+		          <option value="1">e-post</option>
+		          <option value="2">e-legitimation</option>
+		          <option value="3">Option 3</option>
+		        </select>
+	              </p>
+	              -->
+	           <!-- 013 changed sign button tag -->
+	           <input type="submit" value="" name="final"
+	                  class="buttonSignLarge" />
+	         </div>
+	       </div>
+	       
+             </div>			
+           </div>
+         </form>
+         $pageDocumentForAuthorHelpersLocalDialogs()$
+       </div>
      </div>
 						
      <!-- span>signStepsBorderBottom går upp till titelRow om man tar bort denna text. förslag på lösning? Lösning: lägg till float:left på signStepsBodyBorderBottom /johan  </span -->
      <div id="signStepsBodyBorderBottom"></div>
    </div>		
-   </div>	
-    <div id="documentBox">
-     <script type="text/javascript">
-       var docstate = $docstate:noescape()$;
-     </script>
-     <script src="/js/templates.js" type="text/javascript"></script>
-     <div class="waiting4page"></div>
+</div>	
+<div id="documentBox">
+  <script type="text/javascript">
+    var docstate = $docstate:noescape()$;
+  </script>
+  <script src="/js/templates.js" type="text/javascript"></script>
+  <div class="waiting4page"></div>
+</div>
+<div id="templates" style="display:none;">
+  <span class="customfield dragfield">
+    <input type="text" value="" class="customfieldbox" autocomplete="off" />
+    <a href="#minus2" class="minus"></a>
+    <img src="/theme/images/iconHand.png" class="draghandle" />
+  </span>
+  <span class="persondetails">
+    <div class="signStepsBodyTitle">
+      <span>PART 3</span>
     </div>
-    <div id="templates" style="display:none;">
-      <span class="customfield dragfield">
-        <input type="text" value="" class="customfieldbox" autocomplete="off" />
-	<a href="#minus2" class="minus"></a>
-	<img src="/theme/images/iconHand.png" class="draghandle" />
-      </span>
-      <span class="persondetails">
-	   <div class="signStepsBodyTitle">
-	     <span>PART 3</span>
-	   </div>
-	   
-	   <!-- 008 change/new -->
-	   <div class="signStepsBodyIcons">
-	     <a href="#man2" class="man"></a>
-	     <a href="#briefcase2" class="briefcase"></a>
-	     <a href="#plus2" class="plus"></a>
-	   </div>
-	   
-	   <!-- 013 changed -->
-	   <div class="sigentry signStepsBodyForms" id="peopleDetails">
-        <input type="hidden" name="sigid" value="" />
-	<span class="fields">
+    
+    <!-- 008 change/new -->
+    <div class="signStepsBodyIcons">
+      <a href="#man2" class="man"></a>
+      <a href="#briefcase2" class="briefcase"></a>
+      <a href="#plus2" class="plus"></a>
+    </div>
+    
+    <!-- 013 changed -->
+    <div class="sigentry signStepsBodyForms" id="peopleDetails">
+      <input type="hidden" name="sigid" value="" />
+      <span class="fields">
 	<span class='dragfield signame'>
 	  <span style="display:none;" class="fieldid">name</span>
 	  <span style="display:none;" class="type">author</span>
-	  <input type="text" infotext="För- & efternamn" name="signatoryname" autocomplete="off" value="">
+	  <input type="text" infotext="För- & efternamn"
+                 name="signatoryname" autocomplete="off" value="" />
 	  <img src="/theme/images/iconHand.png" class="draghandle" />
         </span>
 	<span class='dragfield sigcomp'>
@@ -934,7 +942,7 @@ pageDocumentForAuthorContent=
 	  <span style="display:none;" class="type">sig</span>
           <input type="text" infotext="Ev. Företagsnamn" name="signatorycompany" autocomplete="off">
 	  <img src="/theme/images/iconHand.png" class="draghandle" />
-        </span><br />
+        </span><br>
         <span class='dragfield sigemail'>
 	  <span style="display:none;" class="fieldid">email</span>
 	  <span style="display:none;" class="type">author</span>
@@ -947,13 +955,11 @@ pageDocumentForAuthorContent=
 	  <input type="text" infotext="Org.-nr / Personnr." name="signatorynumber" autocomplete="off">
 	  <img src="/theme/images/iconHand.png" class="draghandle" />
 	</span>
-	</span>
-        </div>
-	<div class="otherfields">
-	  
-	</div>
       </span>
-	   </div>
-	   </span>
     </div>
+    <div class="otherfields">
+      
+    </div>
+  </span>
+</div>
 ####
