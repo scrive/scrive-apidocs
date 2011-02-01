@@ -774,9 +774,14 @@ function makeDropTargets() {
 		var field = $(ui.draggable);
 		var helper = $(ui.helper);
 
-		var top = helper.offset().top - page.offset().top + window.pageYOffset;
-		var left = helper.offset().left - page.offset().left + window.pageXOffset;
-
+                var windowScrollY = window.pageYOffset ;
+                if (windowScrollY == undefined) windowScrollY = document.body.scrollTop; 
+                var windowScrollX =  window.pageXOffset ;
+                if (windowScrollX == undefined) windowScrollX = document.body.scrollLeft; 
+                
+		var top = helper.offset().top - page.offset().top + windowScrollY;
+		var left = helper.offset().left - page.offset().left + windowScrollX;             
+                
 		var pageno = parseInt(page.attr("id").substr(4));
 
 		var sigid = getSigID(field);
