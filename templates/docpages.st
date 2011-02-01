@@ -343,7 +343,6 @@ pageDocumentForSignButtons=
 </div>
 ####
 pageDocumentForSignContent=
-<div id="signStepsContainer"> 
   <div class="localdialogs">
     <div style="display: none">
       $helpers:noescape()$
@@ -393,6 +392,7 @@ pageDocumentForSignContent=
       </div> 
     </form> 
   </div>
+<div id="signStepsContainer"> 
   <div id="signStepsTitleRow"> <span id="signStepsTitleRowTextContainer"> 
       <span class="title">DOKUMENT:</span> <span class="name">$title$ | 
         Transaction #$docid$</span> </span> </div>
