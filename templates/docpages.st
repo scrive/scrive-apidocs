@@ -706,7 +706,7 @@ pageDocumentForAuthorContentPending=
   $helpers:noescape()$
 </div>
 <div id="signStepsWrapper">
-  <div id="signStepsContainer" class="follow">
+  <div id="signStepsContainer">
     <div id="signStepsMenu">
       <div id="step1select">
         <a href="#" class="step1select clickArea"></a>
@@ -728,23 +728,7 @@ pageDocumentForAuthorContentPending=
       
       <div id="signStepsMenuEmptyStep"></div>
     </div>
-    
-    <div id="signStepsTitleRow">
-      <span id="signStepsTitleRowTextContainer">
-	<span class="title">DOKUMENT:</span>
-	<span class="name">$documenttitle$ | Transaction #$documentid$</span>
-	<!-- <span class="changeName"><a href="#changeName">BYT TITEL</a></span> -->
-      </span>
-      
-      <div class="signStepsButton" id="signStepsNextButton">
-	<a href="#nextStep" class="clickArea"></a>
-	
-	<a href="#nextStep"><span class="icon arrowRight"></span></a><!-- 005 no whitespace here pleace, or one pixel of the button will be unclicable pixel in IE --><a href="#nextStep">
-	  <span class="text">Nästa steg</span>
-	</a>
-      </div>
-    </div>
-    
+
     <div id="signStepsContentStack">
 
       <form action="" method="post">
