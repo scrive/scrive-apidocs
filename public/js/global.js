@@ -101,7 +101,7 @@ $(document).ready( function () {
   // make edit bar stay at the top
   var menu = $('#signStepsContainer');
   var pos = menu.offset();
-  
+  if (menu.hasClass("follow"))
   $(window).scroll(function(){
     if($(this).scrollTop() >= pos.top && !menu.hasClass('fixed')){
       $("#signStepsWrapper").height(menu.height());
