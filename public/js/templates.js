@@ -410,6 +410,8 @@ function docstateToHTML(){
 	    signatoryToHTML(this);
 	});
 
+    checkPersonPaneMode();
+
     $(".dragfield").each(function () {
 	    updateStatus(this);
 	});
@@ -722,7 +724,7 @@ function signatoryToHTML(sig) {
     sl.append(sigentry);
     //currentSig = sigentry;
     //    sigentry.hide();
-  $("#personpane").children().hide().first().show();
+    // $("#personpane").children().hide().first().show();
 }
 
 function placePlacementsOfSignatories(signatories) {
