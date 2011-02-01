@@ -697,7 +697,7 @@ jsArray xs = "[" ++ (joinWith ", " xs) ++ "]"
 buildDefJS :: FieldDefinition -> [Char]
 buildDefJS (FieldDefinition { fieldlabel, fieldvalue, fieldplacements }) = 
     "{ label: " ++ show fieldlabel -- show because we need quotes
-                    ++ ", value: " ++ show fieldvalue
+                    ++ ", value: " ++ jsStringFromBS fieldvalue
                     ++ ", placements: " ++ (jsArray (map buildPlacementJS fieldplacements))
                     ++ " }"
                     
@@ -712,10 +712,10 @@ buildPlacementJS (FieldPlacement { placementx, placementy, placementpage, placem
                 
 buildSigJS :: SignatoryDetails -> [Char]
 buildSigJS (SignatoryDetails { signatoryname, signatorycompany, signatorynumber, signatoryemail, signatorynameplacements, signatorycompanyplacements, signatoryemailplacements, signatorynumberplacements, signatoryotherfields }) = 
-    "{ name: " ++ show signatoryname
-                   ++ ", company: " ++ show signatorycompany
-                   ++ ", email: " ++ show signatoryemail
-                   ++ ", number: " ++ show signatorynumber
+                      "{ name: " ++ jsStringFromBS  signatoryname
+                   ++ ", company: " ++ jsStringFromBS  signatorycompany
+                   ++ ", email: " ++ jsStringFromBS signatoryemail
+                   ++ ", number: " ++ jsStringFromBS signatorynumber
                    ++ ", nameplacements: " ++ (jsArray (map buildPlacementJS signatorynameplacements))
                    ++ ", companyplacements: " ++ (jsArray (map buildPlacementJS signatorycompanyplacements))
                    ++ ", emailplacements: " ++ (jsArray (map buildPlacementJS signatoryemailplacements))
@@ -734,3 +734,11 @@ buildJS authordetails signatorydetails =
                                     
 defaultInviteMessage :: BS.ByteString
 defaultInviteMessage = BS.empty     
+
+jsStringFromBS::BS.ByteString -> String
+jsStringFromBS bs =  "\""++(encode $ BS.toString bs)++"\""
+  where  encode ('"':ss) = "\\\"" ++ (encode ss)
+         encode ('>':ss) = "\\>" ++ (encode ss)
+         encode ('<':ss) = "\\<" ++ (encode ss)
+         encode (s:ss) = s:(encode ss)
+         encode [] = []
