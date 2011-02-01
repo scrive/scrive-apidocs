@@ -400,8 +400,7 @@ pageDocumentForSignContent=
     <div id="signViewBodyLeft" > 
       <span id="signViewBodyLeftTextContainer"> 
         <span class="header">Granska</span><br>
-        <span class="text">Vänligen var noga med att granska dokumentet och 
-          kontrollera uppgifterna nedan innan du undertecknar.</span>
+        <span class="text">Vänligen var noga med att granska dokumentet och kontrollera dina och dina motparters uppgifter innan du undertecknar.</span>
       </span> 
     </div>
     $signatories:noescape()$
@@ -411,8 +410,8 @@ pageDocumentForSignContent=
 <div id="signViewNotificationContainer"> 
   <div id="signViewNotificationContainerLeft"> 
     <div class="title">Scrolla ner för att skriva på </div>
-    <div class="text">Applications can no longer send you notifications on 
-      Facebook. If you like you can start receiving emails from Mocies.</div>
+    <div class="text">Du skriver på längst ned på sidan. Bläddra ned för att skriva på.
+    </div>
   </div>
   <div id="signViewNotificationContainerRight"> 
     <div class="anchor">
@@ -426,8 +425,7 @@ pageDocumentForSignContent=
 <div id="signViewBottomBox"> 
   <div id="signViewBottomBoxContainerLeft"> 
     <div id="signViewBottomBoxContainerLeftText"> 
-      <input type="checkbox"> <span class="title">Jag intygar...</span> 
-      More text should follow
+      <input type="checkbox"> Jag intygar att jag har granskat och förstått innehållet i dokumentet. Jag intygar även att samtliga parter är korrekta och att jag har befogenhet att skriva på.
     </div>
   </div>
   <div id="signViewBottomBoxContainerRight"> 
