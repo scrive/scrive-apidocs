@@ -1763,6 +1763,7 @@ form {
     border-left: 1px solid #E2C822;
     background-color:#FFF9D7;
     position: absolute;
+    z-index: 10;
 }
 
 #signViewNotificationContainerRight
