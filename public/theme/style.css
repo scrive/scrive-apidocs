@@ -1305,10 +1305,11 @@ a.button {
 /* 013 changed */
 #signStepsBodyLeft
 {
-    width: 303px;
+    width: 279px;
     float: left;
     position: relative;
-	padding: 7px 15px 0 20px;
+    padding: 7px 0px 0 0px;
+    margin-right: 15px;
 }
 
 /* 013 changed */
@@ -1318,7 +1319,7 @@ a.button {
     width: 303px;
     float: left;
     position: relative;
-    padding: 7px 15px 0 20px;
+    padding: 7px 0px 0 0px;
 }
 
 .signViewBodyRight 
@@ -2047,6 +2048,9 @@ form {
     width: 23px;
 }
 
+#signStepsBody {
+    padding-left:20px;
+}
 
 #signStepsBody.personPaneLargeNumberMode span.persondetails
 {
