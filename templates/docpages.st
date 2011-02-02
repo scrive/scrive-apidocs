@@ -738,9 +738,9 @@ pageDocumentForAuthorContentPreparation=
     
     <div id="signStepsMenu">
       <div id="step1select">
-        <a href="#" class="step1select clickArea"></a>
-        <a href="#" class="step1select step1icon"> </a>
-	<a href="#" class="step1select text">Ladda upp dokument</a>
+        <span class="step1select clickArea"></span>
+        <span class="step1select step1icon"> </span>
+	<span class="step1select text">Ladda upp dokument</span>
       </div>
       
       <div id="step2select" class="current">
