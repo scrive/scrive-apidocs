@@ -122,16 +122,16 @@ handleViralInvite = do
     minvitedemail <- getField "invitedemail"
     case minvitedemail of
         Nothing ->
-            return LinkMain
+            return LoopBack
         Just invitedemail -> do
                     maccount <- liftIO $ createUserForViralInvite ctx (BS.fromString invitedemail)
                     if isJust maccount
                      then do
                           addFlashMsgText =<< (liftIO $ flashMessageViralInviteSent $ ctxtemplates ctx)       
-                          return LinkMain
+                          return LoopBack
                      else do
                           addFlashMsgText =<< (liftIO $ flashMessageUserWithSameEmailExists $ ctxtemplates ctx)
-                          return LinkMain
+                          return LoopBack
 
 handleRemoveSubaccounts :: Context -> Kontra KontraLink
 handleRemoveSubaccounts ctx@Context { ctxmaybeuser = Just (user), ctxhostpart } = do
