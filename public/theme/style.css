@@ -1213,15 +1213,13 @@ input , button, a.button
 #signStepsBodyUploadBox
 {
     width: 250px;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 8px;
-    margin-bottom: 8px;
+    margin: 7px auto 0 auto;;
     border-top: 1px solid #E0E0E0;
     border-right: 1px solid #E0E0E0;
     border-bottom: 1px solid #E8E5E5;
     border-left: 1px solid #E8E5E5;
     padding: 14px;
+
 }
 
 /* 015 new */
@@ -1230,6 +1228,7 @@ input , button, a.button
     width: 217px;
     text-align: center;
     margin-left: 0;
+	margin-top: 2px;
     padding: 5px 14px;
 }
 
@@ -1275,7 +1274,7 @@ input , button, a.button
     width: 303px;
     float: left;
     position: relative;
-    padding: 14px 15px 5px 20px;
+	padding: 7px 15px 0 20px;
 }
 
 /* 013 changed */
@@ -1285,7 +1284,7 @@ input , button, a.button
     width: 303px;
     float: left;
     position: relative;
-    padding: 14px 15px 5px 20px;
+    padding: 7px 15px 0 20px;
 }
 
 .signViewBodyRight 
@@ -1301,6 +1300,10 @@ input , button, a.button
     margin-top: 15px;
     margin-left: 5px;
     min-height: 126px;
+}
+
+.forauthor .signViewBodyRight{
+    min-height: 170px;
 }
 
 #signViewBodyLeft
@@ -1346,21 +1349,21 @@ input , button, a.button
 {
     background-color: #ecedf3;
     width: 1px;
-    height: 120px;
+	height: 106px;
     position: absolute;
-    top: 28px;
+	top: 12px;
 }
 
 /* 015 new */
 #signStepsBodyRight.step3 .border.left
 {
-    left: -12px;
+    left: -5px;
 }
 
 /* 015 new */
 #signStepsBodyRight.step3 .border.right
 {
-    right: 34px;
+    right: 4px;
 }
 
 /* 015 new */
@@ -1371,6 +1374,19 @@ input , button, a.button
     color: #666666;
 }
 
+
+#signStepsBodyLeft.step3 .options{
+	margin-left: 4px;
+}
+
+/* 016 new */
+#signStepsBodyLeft.step3 .options label{
+	margin-left: 3px;
+}
+
+.step3 .signStepsBodyTitle{
+	padding-top: 3px;
+ }
 /* 013 changed */
 .signStepsBodyTitle
 {
@@ -1393,12 +1409,13 @@ input , button, a.button
     height: 16px;	
 }
 
-.signViewBodyIcons
-{
-    margin-top: 0px;
-    /* width: 55px; 013 removed */
-    height: 16px;
-}
+
+/* 016 new */
+.signStepsBodyIcons span{
+	float: left;
+	margin-right: 10px;
+ }
+ 
 
 /* 008 new starts */
 .signStepsBodyIcons a,
@@ -1425,17 +1442,24 @@ input , button, a.button
 
 
 /* 015 new */
-#signStepsBodyLeft .options p,
+#signStepsBodyLeft .options p
+{
+	margin-top: 4px;
+	margin-bottom: 4px;
+}
 #signStepsBodyFunctions .options p
 {
-    margin-top: 10px;
-    margin-bottom: 10px;
-}
+	margin-top: 3px;
+	margin-bottom: 5px;
+ }
 
+.signStepsBodyFunctionsBox.options{
+	margin-left: 4px;
+}
 /* 015 new */
 .signStepsBodyInvation a
 {
-    margin: 13px 0 4px 0px;
+    margin: 5px 0 4px 4px
     display: inline-block;
     background-position: 2px 2px;
     background-image: url(images/iconPen.png);
@@ -1541,16 +1565,16 @@ input , button, a.button
 /* 013 changed */
 .signStepsBodyForms input
 {
-    padding-left: 20px;
-    width: 118px;
-    /*background-image: url(images/iconHand.png); 
-    background-repeat: no-repeat;
-    background-position: 3px 3px;*/
+    margin: 0 0 0 19px;
+	padding: 0;
+	width: 117px;
     height: 18px;
     line-height: 18px;
     font-size: 12px;
-    border-color: #6782a5;
-    margin: 3px 5px 0 0;
+    border-color: transparent;
+	outline: none;
+	background-color: transparent;
+	overflow: hidden;
 }
 
 /* For the draggable fields in signatory details */
@@ -1561,7 +1585,7 @@ input , button, a.button
 /* a class for the little hand in an input field */
 .draghandle {
   position: absolute;
-  top: 0px;
+  top: 3px;
   left: 3px;
 
 }
@@ -1577,19 +1601,34 @@ input , button, a.button
     margin: 3px 5px 0 0;
 }
 
+.signStepsBodyForms .inputWrapper{
+	background-image: url(images/iconHand.png); 
+	background-repeat: no-repeat;
+	background-position: 3px 3px;
+	-moz-border-radius: 2px;
+	-webkit-border-radius: 2px;
+	-khtml-border-radius: 2px;
+	border-radius: 2px;
+	border: 1px solid #6782a5;
+	display: inline-block;
+ 	margin: 3px 5px 0 0;
+	padding: 0;
+ }
+
 
 /* 013 changed */
 #signStepsBodyFunctionsBox ul
 {
     list-style-type: none;
-    margin: 9px 0 16px 22px;
-    padding-left: 0;
+  	margin: 9px 0 0 22px;
+ 	padding-left: 0;
+	padding-bottom: 2px;
 }
 
 /* 013 new */
 #signStepsBodyFunctionsBox ul li
 {
-    margin-bottom: 7px;
+    margin-bottom: 5px;
 }
 
 #signStepsBodyFunctionsBox ul a
@@ -1621,7 +1660,8 @@ input , button, a.button
     height: 17px;
     background-repeat: no-repeat;
     background-position: 0 3px;
-    padding-left: 18px;
+  	padding-left: 21px;
+	margin-left: 0 !important;
 }
 
 form {
@@ -1666,14 +1706,14 @@ form {
 /* 015 new */
 #signStepsBodyFunctions.step3
 {
-    padding-top: 14px;
+   padding-top: 7px;
 }
 
 /* 013 changed */
 #signStepsBodyFunctionsBox
 {
     width: 238px;
-    margin: 12px 25px 10px -5px;
+    margin: 7px 25px 0 -5px;
     
     -moz-border-radius: 2px;
     -webkit-border-radius: 2px;
@@ -1707,7 +1747,8 @@ form {
 {
     width: 264px;
     float: right;
-    padding: 10px 8px;
+	padding: 10px 8px 4px 8px;
+	margin-top: 2px;
 }
 
 /* 013 new */
@@ -1911,7 +1952,7 @@ form {
 
 #signViewBottomBoxBottom
 {
-    background-image: url("images/box2-bottom.png");
+    background-image: url(images/box2-bottom.png);
     background-repeat: no-repeat;
     float: left;
     height: 10px;

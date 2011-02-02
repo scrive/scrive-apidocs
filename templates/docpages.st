@@ -270,27 +270,27 @@ changeEmailAddress =
 showSignatoryLinkForSign =
 <div class="signViewBodyRight"> 
   <div class="signViewBodyIcons"> 
-    <img src="$status$">
+    <div class="signViewBodyTitle">  <span>Part</span>     <img src="$status$"> </div>
     $if(changeEmailAddress)$ <span style="color:#000000;position:relative;top:-3px">!</span>  $endif$
-    <a href="#man2" class="man"></a> 
-    <div class="signViewBodyTitle"> <span>Part</span> </div>
+
+    
   </div>
   <div class="signViewBodyRightTextContainer"> 
    <div class="text">$if(signatoryname)$$signatoryname$$endif$</div>
    <div class="text">$if(signatoryemail)$$signatoryemail$$endif$</div>
    <div class="text">$if(signatorycompany)$$signatorycompany$$endif$</div>
    <div class="text">$if(signatorynumber)$$signatorynumber$$endif$</div>
+   <div class="text">$reminderForm:noescape()$</div>
+   <div class="text">$changeEmailAddress:noescape()$</div>
+
   </div>
 
   <span class="signViewBodyForms">
-  $message:noescape()$ <BR/>
-  $reminderForm:noescape()$
-  $changeEmailAddress:noescape()$
-  
+
   </span>
 </div>
 ####
-showSignatoryLinkForSign_ =
+showSignatoryLinkForSignOld =
 <div class="$mainclass$">
   <img src="$status$">
 
@@ -946,7 +946,7 @@ pageDocumentForAuthorContentPending=
     <div class="sigentry signStepsBodyForms" id="peopleDetails">
       <input type="hidden" name="sigid" value="" />
       <span class="fields">
-	<span class='dragfield signame'>
+	<span class='dragfield signame inputWrapper'>
 	  <span style="display:none;" class="fieldid">name</span>
 	  <span style="display:none;" class="type">author</span>
 	  <input type="text" infotext="För- & efternamn"
@@ -954,21 +954,21 @@ pageDocumentForAuthorContentPending=
 	  <img src="/theme/images/iconHand.png" class="draghandle"
 	       alt="drag" />
         </span>
-	<span class='dragfield sigcomp'>
+	<span class='dragfield sigcomp inputWrapper'>
 	  <span style="display:none;" class="fieldid">company</span>
 	  <span style="display:none;" class="type">sig</span>
           <input type="text" infotext="Ev. Företagsnamn" name="signatorycompany" autocomplete="off">
 	  <img src="/theme/images/iconHand.png" class="draghandle"
 	       alt="drag" />
         </span><br>
-        <span class='dragfield sigemail'>
+        <span class='dragfield sigemail inputWrapper'>
 	  <span style="display:none;" class="fieldid">email</span>
 	  <span style="display:none;" class="type">author</span>
 	  <input type="email" infotext="E-post" name="signatoryemail" autocomplete="off">
 	  <img src="/theme/images/iconHand.png" class="draghandle"
 	       alt="drag" />
 	</span>
-	<span class='dragfield signum'>
+	<span class='dragfield signum inputWrapper'>
 	  <span style="display:none;" class="fieldid">number</span>
 	  <span style="display:none;" class="type">sig</span>
 	  <input type="text" infotext="Org.-nr / Personnr." name="signatorynumber" autocomplete="off">
@@ -996,7 +996,7 @@ pageDocumentForAuthorContentProcessed=
       <span class="name">$documenttitle$ | Transaction #$documentid$</span>
      </span>
   </div>
-  <div id="signStepsBody"> 
+  <div id="signStepsBody" class="forauthor"> 
     <div id="signViewBodyLeft" > 
       <span id="signViewBodyLeftTextContainer"> 
         <span class="header">Granska</span><br>
