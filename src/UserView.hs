@@ -11,6 +11,7 @@ module UserView(
     passwordChangeMail,
     newUserMail,
     inviteSubaccountMail,
+    viralInviteMail,
     mailNewAccountCreatedByAdmin,
     resetPasswordMail,
 
@@ -23,6 +24,7 @@ module UserView(
     flashMessageUserPasswordChanged,
     flashMessagePasswordChangeLinkNotValid,
     flashMessageUserWithSameEmailExists,
+    flashMessageViralInviteSent,
     flashMessageActivationLinkNotValid,
     flashMessageUserActivated,
     flashMessageUserAlreadyActivated,
@@ -120,7 +122,19 @@ inviteSubaccountMail  templates hostpart supervisorname companyname emailaddress
                                                                  ("supervisorname",BS.toString $ supervisorname),  
                                                                  ("companyname",BS.toString $ companyname),
                                                                  ("ctxhostpart",hostpart)]
-    return $ emptyMail {title=BS.fromString title, content = BS.fromString content}   
+    return $ emptyMail {title=BS.fromString title, content = BS.fromString content}  
+
+viralInviteMail :: KontrakcjaTemplates -> Context -> BS.ByteString -> KontraLink -> IO Mail
+viralInviteMail templates ctx invitedemail setpasslink = do
+    let invitername = BS.toString $ maybe BS.empty prettyName (ctxmaybeuser ctx)
+    title <- renderTemplate templates "mailViralInviteTitle" 
+                                      [("invitername", invitername)]
+    content <- wrapHTML templates =<< renderTemplate templates "mailViralInviteContent"
+                                                               [("email", BS.toString $ invitedemail),
+                                                                ("invitername", invitername),
+                                                                ("ctxhostpart", ctxhostpart ctx),
+                                                                ("passwordlink", show setpasslink)]
+    return $ emptyMail {title=BS.fromString title, content=BS.fromString content}
 
 mailNewAccountCreatedByAdmin:: KontrakcjaTemplates -> Context-> BS.ByteString -> BS.ByteString -> KontraLink ->  IO Mail
 mailNewAccountCreatedByAdmin templates ctx personname email setpasslink =    do 
@@ -157,6 +171,9 @@ flashMessagePasswordChangeLinkNotValid templates = renderTemplate templates "fla
 
 flashMessageUserWithSameEmailExists:: KontrakcjaTemplates -> IO String
 flashMessageUserWithSameEmailExists templates = renderTemplate templates "flashMessageUserWithSameEmailExists" []
+
+flashMessageViralInviteSent:: KontrakcjaTemplates -> IO String
+flashMessageViralInviteSent templates = renderTemplate templates "flashMessageViralInviteSent" []
 
 flashMessageActivationLinkNotValid:: KontrakcjaTemplates -> IO String
 flashMessageActivationLinkNotValid templates = renderTemplate templates "flashMessageActivationLinkNotValid" []

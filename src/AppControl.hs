@@ -193,6 +193,9 @@ handleRoutes = msum [
      , dir "amnesiadone" $ hget0  $ forgotPasswordDonePage
      , dir "unlogged"    $ hget2  $ UserControl.unloggedActionPage
      , dir "unlogged"    $ hpost2  $ UserControl.handleUnloggedAction
+
+     -- viral invite
+     , dir "invite"      $ hpost0 $ UserControl.handleViralInvite
      
      -- e-legitimation stuff
      {- Disabled until finished

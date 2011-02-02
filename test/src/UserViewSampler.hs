@@ -9,6 +9,7 @@ import Test.Framework.Providers.HUnit (testCase)
 import UserView
 import SamplerHelper
 import SampleData
+import KontraLink
 
 
 userViewSamples :: [Test]
@@ -19,6 +20,7 @@ userViewSamples =
                             ,testCase "password change" samplePasswordChangeMail
                             ,testCase "invite subaccount" sampleInviteSubaccountMail
                             ,testCase "new account created by admin" sampleNewAccountCreatedByAdminMail
+                            ,testCase "viral invite mail" sampleViralInviteMail
                            ]
                       ,testGroup "sample user flash messages"
                            [
@@ -27,6 +29,7 @@ userViewSamples =
                              ,testCase "password not strong" samplePasswordNotStrongFlashMsg
                              ,testCase "bad old password" sampleBadOldPasswordFlashMsg
                              ,testCase "passwords don't match" samplePasswordsDontMatchFlashMsg
+                             ,testCase "viral invite sent" sampleViralInviteSentFlashMsg
                            ]
                       ]
 
@@ -42,6 +45,10 @@ samplePasswordChangeMail =
 sampleInviteSubaccountMail =
   sampleMail "invite_subaccount" 
              (\t -> inviteSubaccountMail t aTestHost aTestName aTestCompany anotherTestEmail anotherTestName aTestLink)
+
+sampleViralInviteMail =
+  sampleMail "invite_viral"
+             (\t -> viralInviteMail t aTestCtx anotherTestEmail LinkSignup)
 
 sampleNewAccountCreatedByAdminMail =
   sampleMail "new_account_by_admin" 
@@ -62,3 +69,5 @@ sampleBadOldPasswordFlashMsg =
 samplePasswordsDontMatchFlashMsg =
   sampleFlashMsg "passwords_dont_match" flashMessagePasswordsDontMatch
 
+sampleViralInviteSentFlashMsg =
+  sampleFlashMsg "viral_invite_sent" flashMessageViralInviteSent

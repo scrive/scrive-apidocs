@@ -116,6 +116,23 @@ handleCreateSubaccount ctx@Context { ctxmaybeuser = Just (user@User { userid }),
   when (isNothing muser) $ addFlashMsgText =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
   return LinkSubaccount
 
+handleViralInvite :: Kontra KontraLink
+handleViralInvite = do
+    ctx <- get
+    minvitedemail <- getField "invitedemail"
+    case minvitedemail of
+        Nothing ->
+            return LinkMain
+        Just invitedemail -> do
+                    maccount <- liftIO $ createUserForViralInvite ctx (BS.fromString invitedemail)
+                    if isJust maccount
+                     then do
+                          addFlashMsgText =<< (liftIO $ flashMessageViralInviteSent $ ctxtemplates ctx)       
+                          return LinkMain
+                     else do
+                          addFlashMsgText =<< (liftIO $ flashMessageUserWithSameEmailExists $ ctxtemplates ctx)
+                          return LinkMain
+
 handleRemoveSubaccounts :: Context -> Kontra KontraLink
 handleRemoveSubaccounts ctx@Context { ctxmaybeuser = Just (user), ctxhostpart } = do
   subidstrings <- getDataFnM (lookInputList "doccheck")
@@ -150,12 +167,22 @@ createUser ctx hostpart fullname email maybepassword isnewuser maybesupervisor =
     Just x ->
       createUser1 ctx hostpart fullname email x isnewuser maybesupervisor
 
+createUserForViralInvite :: Context -> BS.ByteString -> IO (Maybe User)
+createUserForViralInvite ctx invitedemail =
+    do
+      muser <- createInvitedUser BS.empty invitedemail
+      case muser of
+        Just user -> do
+                      chpwdlink <- unloggedActionLink (user)
+                      mail <- viralInviteMail (ctxtemplates ctx) ctx invitedemail chpwdlink
+                      sendMail (ctxmailer ctx) $ mail { fullnameemails = [(BS.empty, invitedemail)]}
+                      return muser
+        Nothing -> return muser
+
 createNewUserByAdmin :: Context -> BS.ByteString -> BS.ByteString -> IO (Maybe User)
 createNewUserByAdmin ctx fullname email =
      do
-      password <- randomPassword
-      passwdhash <- createPassword password
-      muser <- update $ AddUser fullname email passwdhash Nothing
+      muser <- createInvitedUser fullname email
       case muser of 
        Just user -> do
                     chpwdlink <- unloggedActionLink (user)
@@ -163,6 +190,14 @@ createNewUserByAdmin ctx fullname email =
                     sendMail (ctxmailer ctx) $ mail { fullnameemails = [(fullname, email)]} 
                     return muser
        Nothing -> return muser
+
+createInvitedUser :: BS.ByteString -> BS.ByteString -> IO (Maybe User)
+createInvitedUser fullname email =
+     do
+      password <- randomPassword
+      passwdhash <- createPassword password
+      update $ AddUser fullname email passwdhash Nothing
+
 
 
 createUser1 :: Context -> String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Bool -> Maybe User -> IO (Maybe User)

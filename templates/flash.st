@@ -51,6 +51,10 @@ flashMessageUserWithSameEmailExists=
     En användare med samma e-post existerar redan.
 
 ###
+flashMessageViralInviteSent=
+    An invite has been sent.
+
+###
 flashMessageActivationLinkNotValid=
     Vi beklagar. Länken är inte längre giltig.<BR>
     Vänligen använd "Glömt lösenord" för att generera en ny länk.

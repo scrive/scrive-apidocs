@@ -178,6 +178,24 @@ inviteSubaccountMailContent=
     <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a><p>
 
     $poweredBySkrivaPaPara()$
+####
+mailViralInviteTitle=Inbjudan från $invitername$
+###
+mailViralInviteContent=
+    <p>Hej,</p>
+
+    <p>$invitername$ har bjudit in dig till ett konto på tjänsten SkrivaPå. 
+    SkrivaPå är en tjänst för att skriva på och arkivera dokument elektroniskt. 
+    Spara pengar, frustration och miljö och använd SkrivaPå istället. 
+    Du kan spara mellan 50-250kr/dokument!</p>
+
+    <p>Användarnamn:<br>
+    $email$</p>
+    
+    <p>Vänligen klicka på länken för att aktivera kontot:<br>
+    <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a><p>
+
+    $poweredBySkrivaPaPara()$
 
 ####
 mailNewAccountCreatedByAdminTitle=Nytt konto
