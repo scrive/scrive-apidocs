@@ -195,20 +195,28 @@ $signatoryentryforedit$
 <script type="text/javascript"> var documentid = "$documentid$";  </script>
 ####
 pageDocumentForViewerContent=  
-<div>
-  <div id="loading-message" style="display:none">
-    Loading pages . . .
-  </div>
-  <div id="edit-bar">
-    <script type="text/javascript" language="Javascript" src="/js/showfields.js"> 
-    </script>
-    <script type="text/javascript">
-      $localscript:noescape()$
-    </script>
-    <div id="signatorylist">
-      $signatorylist:noescape()$
+<div class="localdialogs">
+    <div style="display: none">
+      $helpers:noescape()$
     </div>
+</div>
+<div id="signStepsContainer"> 
+  <div id="signStepsTitleRow"> <span id="signStepsTitleRowTextContainer"> 
+      <span class="title">DOKUMENT:</span> <span class="name">$title$ | 
+        Transaction #$docid$</span> </span> </div>
+  <div id="signStepsBody"> 
+    <div id="signViewBodyLeft" > 
+      <span id="signViewBodyLeftTextContainer"> 
+        <span class="header">Granska</span><br>
+        <span class="text">Vänligen var noga med att granska dokumentet och kontrollera dina och dina motparters uppgifter innan du undertecknar.</span>
+      </span> 
+    </div>
+    $signatorylist:noescape()$
+    <div id="signStepsBodyBorderBottom"></div>
   </div>
+</div>
+<div id="documentBox">
+  <div class="waiting4page"></div>
 </div>
 
 ####
