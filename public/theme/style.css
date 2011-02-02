@@ -516,6 +516,7 @@ a.button
 
     line-height: 20px;
     white-space:nowrap;
+    cursor: pointer;
 }
 a.secbutton 
 {
@@ -885,6 +886,11 @@ input , button, a.button
     background-color: #FFFFFF;
     margin: 3px auto 3px 0px;
 }
+
+a.button {
+  cursor: pointer;
+}
+
 
 #signatorylist input
 {
@@ -1740,6 +1746,7 @@ form {
     display: block;
     width: 252px;
     height: 61px;
+    cursor: pointer;
 }
 
 /* 013 new */
