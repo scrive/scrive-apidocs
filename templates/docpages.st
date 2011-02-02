@@ -794,7 +794,7 @@ pageDocumentForAuthorContentPreparation=
 	      
 	      <div class="signStepsBodyIcons">
 	        <a href="#man2" class="man"></a>
-	        <a href="#briefcase2" class="briefcase"></a>
+	        <span class="briefcase"></span>
 	        <a href="#hand2" class="hand"></a>
 	      </div>
 	      
@@ -878,7 +878,7 @@ pageDocumentForAuthorContentPreparation=
 	      
 	      <!-- 015 new -->
 
-	      <div id="signStepsBodyUploadBox" class="step3">
+	      <div id="signStepsBodyUploadBox" class="step3" style="display: none;">
                 
 	        <span id="signStepsBodyUploadTextContainer">
 	          <span class="text">Bifoga dokument med inbjudan</span>
@@ -936,7 +936,7 @@ pageDocumentForAuthorContentPreparation=
   <div class="waiting4page"></div>
 </div>
 <div id="templates" style="display:none;">
-  <span class="customfield dragfield">
+  <span class="customfield dragfield inputWrapper">
     <input type="text" value="" class="customfieldbox" autocomplete="off" />
     <a href="#minus2" class="minus"></a>
     <img src="/theme/images/iconHand.png" class="draghandle" alt="drag" />
@@ -949,7 +949,7 @@ pageDocumentForAuthorContentPreparation=
     <!-- 008 change/new -->
     <div class="signStepsBodyIcons">
       <a href="#man2" class="man"></a>
-      <a href="#briefcase2" class="briefcase"></a>
+      <span class="briefcase"></span>
       <a href="#plus2" class="plus"></a>
     </div>
     
@@ -1021,6 +1021,10 @@ pageDocumentForAuthorContentPostPreparation=
 </div>
 
 <div id="documentBox">
+  <script type="text/javascript">
+    var docstate = $docstate:noescape()$;
+  </script>
+  <script type="text/javascript" src="/js/signatory.js"></script>
   <div class="waiting4page"></div>
 </div>
 <div id="signViewBottomBox"> 

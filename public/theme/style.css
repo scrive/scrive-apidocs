@@ -1453,12 +1453,13 @@ a.button {
 
 /* 008 new starts */
 .signStepsBodyIcons a,
+.signStepsBodyIcons span.briefcase,
 .signStepsBodyAddField a
 {
     display: block;
     width: 16px;
     height: 16px;
-    margin-right: 2px;
+    margin-right: 6px;
     float: left;
     background-repeat: no-repeat;
 }
@@ -1517,7 +1518,7 @@ a.button {
     background-image: url(images/iconHand.png);
 }
 
-.signStepsBodyIcons a.briefcase
+.signStepsBodyIcons .briefcase
 {
     background-image: url(images/iconBriefcase.png);
 }
@@ -1546,11 +1547,11 @@ a.button {
 
 .newfield {
     position: relative;
-    width: 245px;
+    width: 288px;
 }
 
 .newfield input.newfieldbox {
-    width: 245px;
+    width: 288px;
 }
 
 .newfield a.plus {
@@ -1559,8 +1560,18 @@ a.button {
     display: block;
     background-repeat: no-repeat;
     position: absolute;
+    right: 18px;
+    top: 6px;
+}
+
+.newfield a.minus {
+    width: 16px;
+    height: 16px;
+    display: block;
+    background-repeat: no-repeat;
+    position: absolute;
     right: 0px;
-    top: 5px;
+    top: 6px;
 }
 
 .customfield a.minus {
@@ -1569,20 +1580,33 @@ a.button {
     display: block;
     background-repeat: no-repeat;
     position: absolute;
-    right: 9px;
-    top: 0px;
+    right: 0px;
+    top: 3px;
     background-image: url(images/iconMinus.png);
 }
 
 .customfield input.customfieldbox {
-    width: 245px;
+    width: 250px;
+    border-color: transparent;
+    font-size: 12px;
+    height: 18px;
+    line-height: 18px;
+    overflow: hidden;
+    margin-left: 19px;
+    margin-right: 19px;
+    background-color: transparent;
+    margin-top: 0px;
 }
 
 .customfield {
-    width: 245px;
+    width: 288px;
+    border: 1px solid #6782A5;
+    margin: 3px 5px 0 0;
+    height: 20px;
 }
 
 .signStepsBodyAddField a.minus,
+.newfield a.minus,
 #signStepsBodyFunctionsBox ul a.minus
 {
     background-image: url(images/iconMinus.png);
@@ -1635,7 +1659,9 @@ a.button {
     margin: 3px 5px 0 0;
 }
 
-.signStepsBodyForms .inputWrapper{
+.signStepsBodyForms .inputWrapper,
+.otherfields .inputWrapper
+{
 	background-image: url(images/iconHand.png); 
 	background-repeat: no-repeat;
 	background-position: 3px 3px;
