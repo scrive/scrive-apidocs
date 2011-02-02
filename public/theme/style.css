@@ -984,7 +984,7 @@ a.button {
     background-color:transparent
 }
 
-#signStepsContainer.fixed {
+#signStepsWrapper #signStepsContainer.fixed {
     position: fixed;
     top: 0px;
     z-index: 5000;
