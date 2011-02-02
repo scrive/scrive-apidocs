@@ -23,7 +23,7 @@ pageForgotPasswordConfirm=
 pageLogin= 
     <div class="centerdivnarrow">
       <p class="headline">Logga in SkrivaPå!</p> 
-      $loginBox$
+      $loginBox()$
     </div>
 
 ###
@@ -179,8 +179,8 @@ loginBox=
             <td><input type="password" name="password" autocomplete="off"></td> 
           </tr>
 	  <tr> 
-            <td><a href="/amnesia"> Glömt lösenord</a></td>
             <td><input class="button" id="loginbtn" type="submit" name="login" value="Logga in"></td>
+            <td><a href="/amnesia"> Glömt lösenord</a></td>
 	  </tr>
         </table>
       </form>
