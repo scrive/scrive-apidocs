@@ -452,6 +452,16 @@ input[type=submit]:active, input[type=button]:active, button:active, a.button:ac
     text-align: right;
 }
 
+#inviteContainer
+{
+    position: absolute;
+    right: 250px;
+    top: 22px;
+    width: 400px;
+    text-align: left;
+    font-size: 11px;
+}
+
 
 /* 002 update values */
 .contactabout

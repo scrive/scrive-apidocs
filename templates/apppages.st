@@ -68,6 +68,15 @@ wholePage=
               $endif$
             </a> 
             $if(userfullname)$
+            <span id="inviteContainer">
+              <form action="/invite" method="post">
+                <div>
+                  <div>Why not invite a friend?</div>
+                  <div><input type="email" infotext="Användarnamn" name="invitedemail" autocomplete="off"/>
+                       <input type="submit" value="Invite" name="invite" class="button"/></div>
+                </div>
+              </form>
+            </span>
             <span id="userMenu">$userfullname$ | <a href="/account">Konto</a> | <a href="/logout">Logga ut</a></span>
             $else$
             <div id="loginContainer">
