@@ -715,7 +715,9 @@ pageDocumentForAuthorContentPending=
 	<span class="name">$documenttitle$ | Transaction #$documentid$</span>
 	<!-- <span class="changeName"><a href="#changeName">BYT TITEL</a></span> -->
       </span>
-      
+   
+
+  
       <div class="signStepsButton" id="signStepsNextButton">
 	<a href="#nextStep" class="clickArea"></a>
 	
@@ -723,6 +725,11 @@ pageDocumentForAuthorContentPending=
 	  <span class="text">Nästa steg</span>
 	</a>
       </div>
+       <div class="saveButton submitStepFormOnClick" >
+        <a href="#nextStep"><span class="icon floppyIcon"></span></a>
+        <a href="#nextStep"> <span class="text">Spara som utkast</span></a>
+      </div>
+
     </div>
     
     <div id="signStepsMenu">
@@ -749,7 +756,7 @@ pageDocumentForAuthorContentPending=
 
     <div id="signStepsContentStack">
 
-      <form action="" method="post">
+      <form action="" method="post" class="stepForm">
         <input type="hidden" name="allowedsignaturetypes"
                value="Email">
 
