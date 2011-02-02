@@ -546,21 +546,15 @@ pageDocumentForViewer ctx
                                                                                    ("signatoryentryforedit",signatoryentryforedit)]                          
       let localscript = "var docstate = " ++ (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks) ++ ";" 
       signatorylist <- fmap concat $ sequence $ map (showSignatoryLinkForSign ctx document author) allinvited
-      content <- renderTemplate (ctxtemplates ctx) "pageDocumentForViewerContent" [("localscript",localscript),
-                                                                                   ("signatorylist",signatorylist)]                          
-      showDocumentPageHelper (ctxtemplates ctx) document helpers (documenttitle) content
-
-
-showDocumentPageHelper:: KontrakcjaTemplates -> Document -> String -> BS.ByteString -> String -> IO String
-showDocumentPageHelper templates document helpers title content =
-   do 
-   docbox <- showDocumentBox templates  
-   renderTemplateComplex templates "showDocumentPageHelper" $  
+      docbox <- showDocumentBox (ctxtemplates ctx)  
+      renderTemplateComplex (ctxtemplates ctx) "pageDocumentForViewerContent" $
+                                                              (setAttribute "localscript" localscript) .
+                                                              (setAttribute "signatorylist" signatorylist). 
                                                               (setAttribute "helpers" $ helpers) .
                                                               (setAttribute "docbox" $ docbox) .
-                                                              (setAttribute "title" $ BS.toString title) .
-                                                              (setAttribute "content" $ content ) .
-                                                              (setAttribute "linkissuedocpdf" $ show (LinkIssueDocPDF document)) 
+                                                              (setAttribute "title" $ BS.toString documenttitle) .
+                                                              (setAttribute "linkissuedocpdf" $ show (LinkIssueDocPDF document)) .
+                                                              (setAttribute "docid" $ show $ documentid)
                                                               
 showSignatoryLinkForSign::Context -> Document -> User -> SignatoryLink-> IO String
 showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser,ctxtemplates})  document author siglnk@(SignatoryLink{  signatorylinkid 
