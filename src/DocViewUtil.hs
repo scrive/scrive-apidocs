@@ -64,8 +64,8 @@ partyUnsignedMeAndList magichash document =
     in me : signas
 
 partyListButAuthor :: Document -> [SignatoryDetails]
-partyListButAuthor document =
-    map signatorydetails (documentsignatorylinks document)
+partyListButAuthor document@Document{ documentauthor=Author authorid } =
+    map signatorydetails (filter ((maybe True ((/= authorid) . unSignatory)) . maybesignatory) (documentsignatorylinks document))
 
 partyListButAuthorString :: (XMLGenerator m) => Document -> GenChildList m
 partyListButAuthorString document =
