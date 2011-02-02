@@ -584,11 +584,12 @@ color: white;
     overflow: auto;
     background-color: #999;
     margin: 0 auto;
-    width: 769px;}
+    width: 960px;
+}
 
 .waiting4page
 {
-    width: 755px;
+    width: 944px;
     height: 100px;
     align: center;
     margin: 6px;
@@ -601,7 +602,7 @@ color: white;
 
 .pagejpg 
 {
-    width: 755px;
+    width: 944px;
     align: center;
     margin: 6px;
     border: 1px solid black;

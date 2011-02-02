@@ -812,7 +812,8 @@ convertPdfToJpgPages Context{ctxs3action} file@File{fileid,filename} = do
                         , "-dNOPAUSE"
                         , "-dTextAlphaBits=4"
                         , "-dGraphicsAlphaBits=4"
-                        , "-r91.361344537815126050420168067227"
+                        --, "-r91.361344537815126050420168067227"
+                        , "-r114.147521161"
                         , sourcepath
                         ]) { std_out = CreatePipe
                            , std_err = CreatePipe
