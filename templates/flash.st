@@ -52,7 +52,7 @@ flashMessageUserWithSameEmailExists=
 
 ###
 flashMessageViralInviteSent=
-    An invite has been sent.
+    Inbjudan har skickats!
 
 ###
 flashMessageActivationLinkNotValid=
