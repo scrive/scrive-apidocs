@@ -316,7 +316,7 @@ function docstateToHTML(){
 		});
 	});
 
-    if(currentsig.company.length === 0 && currentsig.companyplacements.length > 0) {
+    if(currentsig && currentsig.company.length === 0 && currentsig.companyplacements.length > 0) {
 	var cfield = buildField("Titel, företag", currentsig.company, "sig");
 	setFieldID(cfield, "sigco");
 	setSigID(cfield, currentsig.id);
@@ -326,7 +326,7 @@ function docstateToHTML(){
 	enableInfoTextOnce(cfield);
     }
 
-    if(currentsig.number.length === 0 && currentsig.numberplacements.length > 0) {
+    if(currentsig && currentsig.number.length === 0 && currentsig.numberplacements.length > 0) {
 	var nfield = buildField("Orgnr/Persnr", currentsig.number, "sig");
 	setFieldID(nfield, "signr");
 	setSigID(nfield, currentsig.id);
@@ -336,7 +336,7 @@ function docstateToHTML(){
 	enableInfoTextOnce(nfield);
     }
 
-    $(currentsig.otherfields).each(function () {
+    $(currentsig && currentsig.otherfields).each(function () {
 	    var f = this;
 	    if(f.value.length === 0){
 		ofield = buildField(f.label, f.value, "sig");
