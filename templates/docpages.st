@@ -1,6 +1,6 @@
 ####    Pages for documents - main part of system
 creatingDocumentFrame=   
-<div id="signStepsContainer" class="follow">
+<div id="signStepsContainer">
   
   <div id="signStepsTitleRow">
     <span id="signStepsTitleRowTextContainer">
@@ -404,7 +404,7 @@ pageDocumentForSignContent=
       </div> 
     </form> 
   </div>
-<div id="signStepsContainer" class="follow"> 
+<div id="signStepsContainer"> 
   <div id="signStepsTitleRow"> <span id="signStepsTitleRowTextContainer"> 
       <span class="title">DOKUMENT:</span> <span class="name">$title$ | 
         Transaction #$docid$</span> </span> </div>
