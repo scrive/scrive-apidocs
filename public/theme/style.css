@@ -1137,11 +1137,12 @@ a.button {
     font-size: 10px;
 }
 
-#signStepsTitleRow .signStepsButton
+#signStepsTitleRow .signStepsButton,
+#signStepsTitleRow .saveButton
 {
-    position: absolute;
-    right: 10px;
-    top: 1px;
+    float:right;
+    margin-right: 10px;
+    margin-top: 2px;
 }
 
 .signStepsButton
@@ -1152,6 +1153,32 @@ a.button {
     background-repeat: no-repeat;
     overflow: hidden;
     position: relative; /* 008 new */
+}
+
+.saveButton
+{
+    width: 150px;
+    height: 25px;
+    background-image: url(images/saveButton.png);
+    background-repeat: no-repeat;
+    overflow: hidden;
+    position: relative; /* 008 new */
+}
+
+
+.floppyIcon{
+    background-image: url(images/iconFloppy.png);
+}    
+
+.saveButton .icon
+{
+    width: 14px;
+    height: 14px;
+    display: inline-block;
+    background-repeat: no-repeat;
+    left: 6px;
+    top: 5px;
+    position: absolute;
 }
 
 .signStepsButton .icon
@@ -1185,7 +1212,8 @@ a.button {
     top: 5px;
 }
 
-.signStepsButton a .text
+.signStepsButton a .text,
+.saveButton a .text
 {
     font-size: 11px;
     position: absolute;
