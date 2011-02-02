@@ -1,32 +1,13 @@
 ####    Pages for documents - main part of system
 creatingDocumentFrame=   
 <div id="signStepsContainer" class="follow">
-  <div id="signStepsMenu">
-    <div id="step1select" $if(step1)$class="current"$endif$>
-      <a href="#" class="step1select clickArea"> </a>
-      <a href="#" class="step1select step1icon"> </a>
-      <a href="#" class="step1select text">Ladda upp dokument</a>
-    </div>
-    
-    <div id="step2select" $if(step2)$class="current"$endif$>
-      <a href="#" class="step2select clickArea"> </a>
-      <a href="#" class="step2select step2icon"> </a>
-      <a href="#" class="step2select text">Fyll i uppgifter</a>
-    </div>
-    
-    <div id="step3select" $if(step3)$class="current"$endif$>
-      <a href="#" class="step3select clickArea"> </a>
-      <a href="#" class="step3select step3icon"> </a>
-      <a href="#" class="step3select text">Underteckna och skicka!</a>
-    </div>
-    
-    <div id="signStepsMenuEmptyStep"></div>
-  </div>
   
   <div id="signStepsTitleRow">
     <span id="signStepsTitleRowTextContainer">
+      $if(title)$
       <span class="title">DOKUMENT:</span>
       <span class="name">$title$ | Transaction #$documentid$</span>
+      $endif$
     </span>
     
     <div class="signStepsButton $if(submitFormOnNext)$ submitStepFormOnClick $endif$">
@@ -38,6 +19,29 @@ creatingDocumentFrame=
         <span class="text">Nästa steg</span>
       </a>
     </div>
+  </div>
+
+
+  <div id="signStepsMenu">
+    <div id="step1select" $if(step1)$class="current"$endif$>
+      <span class="step1select clickArea"> </span>
+      <span class="step1select step1icon"> </span>
+      <span class="step1select text">Ladda upp dokument</span>
+    </div>
+    
+    <div id="step2select" $if(step2)$class="current"$endif$>
+      <span class="step2select clickArea"> </span>
+      <span class="step2select step2icon"> </span>
+      <span class="step2select text">Fyll i uppgifter</span>
+    </div>
+    
+    <div id="step3select" $if(step3)$class="current"$endif$>
+      <span class="step3select clickArea"> </span>
+      <span class="step3select step3icon"> </span>
+      <span class="step3select text">Underteckna och skicka!</span>
+    </div>
+    
+    <div id="signStepsMenuEmptyStep"></div>
   </div>
   
   <div id="signStepsBody"> 
@@ -696,12 +700,12 @@ pageDocumentForAuthorContent_old=
 ####
 pageDocumentForAuthorContent=
     $if(preparation)$
-       $pageDocumentForAuthorContentPending()$
+       $pageDocumentForAuthorContentPreparation()$
     $else$
-       $pageDocumentForAuthorContentProcessed()$
+       $pageDocumentForAuthorContentPostPreparation()$
     $endif$ 
 #####
-pageDocumentForAuthorContentPending=
+pageDocumentForAuthorContentPreparation=
 <div style="display: none">
   $helpers:noescape()$
 </div>
@@ -939,7 +943,7 @@ pageDocumentForAuthorContentPending=
   </span>
   <span class="persondetails">
     <div class="signStepsBodyTitle">
-      <span class="partnumber">PART 3</span>
+      <span class="partnumber">PART 1</span>
     </div>
     
     <!-- 008 change/new -->
@@ -990,7 +994,7 @@ pageDocumentForAuthorContentPending=
   </span>
 </div>
 ####
-pageDocumentForAuthorContentProcessed=
+pageDocumentForAuthorContentPostPreparation=
   <div class="localdialogs">
     <div style="display: none">
       $helpers:noescape()$
