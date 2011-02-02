@@ -836,10 +836,10 @@ pageDocumentForAuthorContentPreparation=
                            autocomplete="off"
                            value="$if(timetosignset)$on$else$off$endif$"
                            id="daystosigncheckbox" />
+                    <span class="hidden flashMessage">Varning: Om du väljer ett förfallodatum kan du inte återkalla inbjudan innan datumet förfallit. Detta regleras av avtalslagen.</span>
                     <label for="daystosigncheckbox">Aktivera förfallodatum</label>
                     <div id="datetosigncontainer" style="padding-left:15px">  </div>
-                    <span class="hidden flashMessage">Varning: Om du väljer ett förfallodatum kan du inte återkalla inbjudan innan datumet förfallit. Detta regleras av avtalslagen.</span>
-                  </span>
+                 </span>
 	        </p>
 	        
 	        <p>
