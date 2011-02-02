@@ -997,7 +997,7 @@ a.button {
 
 #signStepsWrapper #signStepsContainer.fixed {
     position: fixed;
-    top: 0px;
+    top: -53px;
     z-index: 5000;
 }
 
