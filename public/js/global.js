@@ -842,7 +842,7 @@ $(document).ready(function() {
                 
 		personpane.children(".persondetails:eq(" + newidx + ")").addClass("currentPerson");
 
-          children.each(function(idx) {
+          personpane.children().each(function(idx) {
             var p = $(this);
             p.find(".partnumber").html("PART " + (idx + 1));
           });
