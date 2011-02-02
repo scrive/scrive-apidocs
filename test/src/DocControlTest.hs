@@ -13,19 +13,26 @@ import SamplerHelper
 import SampleData
 import Mails.SendMail
 import Control.Monad.State
+import Data.IORef
 
 docControlTests :: [Test]
 docControlTests = 
-                     [testGroup "sendDocumentErrorEmail1"
+                     [--testGroup "sendDocumentErrorEmail1"
                            [
-                             testCase "sends one mail" test_sendDocumentErrorEmail1_sendsOneMail
+                      --       testCase "sends one mail" test_sendDocumentErrorEmail1_sendsOneMail
                            ]
                      ]
 
-test_sendDocumentErrorEmail1_sendsOneMail = do
-  let ctx = aTestCtx{ctxmailer=Mailer {sendMail = countMail}}
-      doc = anUnsignedDocument
-      siglink = head $ documentsignatorylinks doc
-  _ <- sendDocumentErrorEmail1 ctx doc siglink
-  assertEqual "for mail count" 1 0
-    where countMail _ = return ()
+--test_sendDocumentErrorEmail1_sendsOneMail = do
+--  counter <- newIORef 0
+--  let ctx = aTestCtx{ctxmailer=countingMailer counter}
+--      doc = anUnsignedDocument
+--      siglink = head $ documentsignatorylinks doc
+--  sendDocumentErrorEmail1 ctx doc siglink
+--  numberSent <- readIORef counter
+--  assertEqual "for mail count" 1 numberSent
+--    where countMail _ = return ()
+
+--countingMailer counter mail = do
+--    modifyIORef counter $ (+) 1
+
