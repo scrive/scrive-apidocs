@@ -201,8 +201,14 @@ pageDocumentForViewerContent=
 </div>
 <div id="signStepsContainer"> 
   <div id="signStepsTitleRow"> <span id="signStepsTitleRowTextContainer"> 
-      <span class="title">DOKUMENT:</span> <span class="name">$title$ | 
-        Transaktion #$docid$</span> </span> </div>
+   <span class="title">DOKUMENT:</span> <span class="name">$title$ | Transaktion #$docid$</span> </span> 
+     <div class="downloadButton" >
+        <a href="$linkissuedocpdf$">
+         <span class="icon arrowDownIcon"></span>
+         <span class="text">Ladda ned PDF</span>
+       </a>
+     </div>
+  </div>
   <div id="signStepsBody"> 
     <div id="signViewBodyLeft" > 
       <span id="signViewBodyLeftTextContainer"> 
@@ -414,7 +420,14 @@ pageDocumentForSignContent=
 <div id="signStepsContainer"> 
   <div id="signStepsTitleRow"> <span id="signStepsTitleRowTextContainer"> 
       <span class="title">DOKUMENT:</span> <span class="name">$title$ | 
-        Transaktion #$docid$</span> </span> </div>
+        Transaktion #$docid$</span> </span> 
+     <div class="downloadButton" >
+        <a href="$linkissuedocpdf$">
+         <span class="icon arrowDownIcon"></span>
+         <span class="text">Ladda ned PDF</span>
+       </a>
+   </div>
+  </div>
   <div id="signStepsBody"> 
     <div id="signViewBodyLeft" > 
       <span id="signViewBodyLeftTextContainer"> 
@@ -747,7 +760,6 @@ pageDocumentForAuthorContentPreparation=
         <a href="#nextStep"><span class="icon floppyIcon"></span></a>
         <a href="#nextStep"> <span class="text">Spara som utkast</span></a>
       </div>
-
     </div>
     
     <div id="signStepsMenu">
@@ -820,10 +832,10 @@ pageDocumentForAuthorContentPreparation=
 	      <div id="signStepsBodyFunctionsBox">
 	        <ul>
 	          <!-- 008 changed/new -->
-	          <li><a href="#add" class="plus" id="addSignatory">LÄGG TILL PERSON</a></li>
-	          <li><a href="#remove" class="minus" id="delSignatory">TA BORT PERSON</a></li>
+	          <li class="plus"><a href="#add"  id="addSignatory">LÄGG TILL PERSON</a></li>
+	          <li class="minus"><a href="#remove"  id="delSignatory">TA BORT PERSON</a></li>
 	          <!-- <li><a href="#save" class="floppy">SPARA SOM MALL</a></li> -->
-	          <!-- <li><a href="#download" class="arrowDown">LADDA NED SOM PDF</a></li> -->
+	          <li  class="arrowDown"><a href="$linkissuedocpdf$">LADDA NED SOM PDF</a></li>
 	        </ul>
 	      </div>
             </div>
@@ -1020,6 +1032,12 @@ pageDocumentForAuthorContentPostPreparation=
       <span class="title">DOKUMENT:</span>
       <span class="name">$documenttitle$ | Transaktion #$documentid$</span>
      </span>
+     <div class="downloadButton" >
+        <a href="$linkissuedocpdf$">
+         <span class="icon arrowDownIcon"></span>
+         <span class="text">Ladda ned PDF</span>
+       </a>
+   </div>
   </div>
   <div id="signStepsBody" class="forauthor"> 
     <div id="signViewBodyLeft" > 
