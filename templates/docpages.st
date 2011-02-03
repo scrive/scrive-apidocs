@@ -280,25 +280,25 @@ changeEmailAddress =
 ####
 showSignatoryLinkForSign =
 <div class="signViewBodyRight"> 
-  <div class="signViewBodyIcons"> 
-    <div class="signViewBodyTitle">  <span>Part</span>     <img src="$status$"> </div>
-    $if(changeEmailAddress)$ <span style="color:#000000;position:relative;top:-3px">!</span>  $endif$
-
-    
+  <div class="signViewBodyIcons"  style="position:relative;float:left;margin-top:12px;"> 
+    <div class="signViewBodyTitle">   
+     <img src="$status$"> 
+     $if(changeEmailAddress)$ <span style="color:#000000;position:relative;top:-3px">!</span>  $endif$
+    </div>
   </div>
   <div class="signViewBodyRightTextContainer"> 
-   <div class="text">$if(signatoryname)$$signatoryname$$endif$</div>
-   <div class="text">$if(signatoryemail)$$signatoryemail$$endif$</div>
-   <div class="text">$if(signatorycompany)$$signatorycompany$$endif$</div>
-   <div class="text">$if(signatorynumber)$$signatorynumber$$endif$</div>
-   <div class="text">$reminderForm:noescape()$</div>
-   <div class="text">$changeEmailAddress:noescape()$</div>
-
+   $if(signatoryname)$<div class="text"><strong>$signatoryname$</strong></div>$endif$
+   $if(signatoryemail)$<div class="text">$signatoryemail$</div>$endif$
+   $if(signatorycompany)$<div class="text">$signatorycompany$</div>$endif$
+   $if(signatorynumber)$<div class="text">$signatorynumber$</div>$endif$
+   <span class="signatoryfields">
+    $fields:{field| <div class="text"><span class="fieldlabel">$field.fieldlabel$: </span><span class="fieldvalue">$field.fieldvalue$</span></div>}$
+   </span>
+   $if(message)$<div class="text">$message:noescape()$</div>$endif$   
+   $if(reminderForm)$<div class="text">$reminderForm:noescape()$</div>$endif$
+   $if(changeEmailAddress)$<div class="text">$changeEmailAddress:noescape()$</div>$endif$   
   </div>
-
-  <span class="signViewBodyForms">
-
-  </span>
+  <span class="signViewBodyForms"></span>
 </div>
 ####
 showSignatoryLinkForSignOld =
