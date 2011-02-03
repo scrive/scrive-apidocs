@@ -191,7 +191,6 @@ showSignatoryEntryForEdit2=
 ####
 ####
 pageDocumentForViewerHelpers=
-$signatoryentryforedit$
 <script type="text/javascript"> var documentid = "$documentid$";  </script>
 ####
 pageDocumentForViewerContent=  
@@ -520,28 +519,35 @@ pageDocumentForAuthorHelpers=
 ####
 pageDocumentForAuthorHelpersLocalDialogs=
 <div class="localdialogs">
-  <form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-signinvite" rel="#main-document-form">  
+  <form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-signinvite" rel=".stepForm">  
     <a class="close"> </a>
     <h2 id="dialog-title-sign">Underteckna</h2>
-    <h2 id="dialog-title-send">Skicka inbjudan</h2>
     <div id="dialog-confirm-text-sign">
       <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
-      
       <p>När du undertecknat kommer en automatisk inbjudan att skickas till 
-        
-        <span class="Xinvited">Invited</span> med e-post.</p>
+      <span class="Xinvited">Invited</span> med e-post.</p>
     </div>
-
-    <div id="dialog-confirm-text-send">
-      <p>Du har valt en sekreterarroll och kommer själv inte att underteckna. Är du säker på att du vill skicka en inbjudan att underteckna dokumentet <strong>$documenttitle$</strong> till <span class="Xinvited">Invited</span>?</p>
-    </div>
-    
     <div class="buttonbox" >
       <input type="hidden" name="final" value="automatic">
       <button class="close button" type="button"> Avbryt </button>
       <button class="submiter button" type="button"> Underteckna </button>
     </div>
   </form>
+
+  <!--SJust sending a document is not supported yet. Kept it because someone put some work to texts -->
+  <form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-sendinvite" rel=".stepForm">  
+    <a class="close"> </a>
+    <h2 id="dialog-title-send">Skicka inbjudan</h2>
+    <div id="dialog-confirm-text-send">
+      <p>Du har valt en sekreterarroll och kommer själv inte att underteckna. Är du säker på att du vill skicka en inbjudan att underteckna dokumentet <strong>$documenttitle$</strong> till <span class="Xinvited">Invited</span>?</p>
+    </div>
+    <div class="buttonbox" >
+      <input type="hidden" name="final" value="automatic">
+      <button class="close button" type="button"> Avbryt </button>
+      <button class="submiter button" type="button"> Underteckna </button>
+    </div>
+  </form>
+
   <form method="post" name="form" action=action id="dialog-confirm-sign-eleg" class="overlay">     
     <script type="text/javascript" src="/js/bankid.js"></script>
     <a class="close"> </a>                  
@@ -919,7 +925,7 @@ pageDocumentForAuthorContentPreparation=
 	           </p>
 	           -->
 	        <!-- 013 changed sign button tag -->
-	        <input type="submit" value="" name="final"
+	        <input type="submit" id="signinvite" rel="#dialog-confirm-signinvite" value="" name="final"
 	               class="buttonSignLarge" />
 	      </div>
 	    </div>

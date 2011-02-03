@@ -243,9 +243,9 @@ $(document).ready( function () {
     $("#signinvite").overlay({  
     mask: standardDialogMask,    
     onBeforeLoad: function () { 
-           if (!emailFieldsValidation($("input[type='email']"))) return false;
-           if (!authorFieldsValidation()) return false;
-	   if (!nonZeroSignatories()) return false;
+           if (!emailFieldsValidation($(".stepForm input[type='email']"))) return false;
+          // if (!authorFieldsValidation()) return false;
+	  // if (!nonZeroSignatories()) return false;
            var mrxs = $("form input[name='signatoryname']");
            var tot = "";
            var allparties = new Array();
