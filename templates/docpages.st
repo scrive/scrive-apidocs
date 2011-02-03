@@ -437,9 +437,8 @@ pageDocumentForSignContent=
 </div>
 <div id="signViewNotificationContainer"> 
   <div id="signViewNotificationContainerLeft"> 
-    <div class="title">Scrolla ner för att skriva på </div>
-    <div class="text">Du skriver på längst ned på sidan. Bläddra ned för att skriva på.
-    </div>
+    <div class="title">Dokumentet skrivs på längst ner på sidan. </div>
+    
   </div>
   <div id="signViewNotificationContainerRight"> 
     <div class="anchor">
@@ -592,6 +591,34 @@ pageDocumentForAuthorHelpersLocalDialogs=
       <small> <a  class="datetodaystip" rel="#daystosign"> </a> </small>
     </div>
   </div>
+   <form method="post" action="$linkcancel$" class="overlay" id="cancel-by-author-dialog">
+            <a class="close"> </a>
+            <h2> Återkalla inbjudan </h2>
+            <p>Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?
+              <BR>När du återkallat inbjudan kommer nedanstaende meddelande att skickas till dina motparter.
+            </p>
+            <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
+              $cancelMailContent:noescape()$
+            </div>
+            <div class="buttonbox" >
+              <button class="close button" type="button"> Avbryt </button>
+              <button class="editer button" type=""> Skriv eget meddelande </button>
+              <button class="submiter button" type="button"> Återkalla inbjudan</button>
+            </div>
+  </form>
+  <form method="post" name="form" action="$action$" id="dialog-confirm-sign-by-author" class="overlay">     
+      <a href="#" class="close"> </a>                  
+      <h2>Underteckna</h2>  
+      <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
+      <p>När $partyUnsigned:noescape()$ undertecknat blir 
+        avtalet <strong>juridiskt bindande</strong> och
+        det färdigställda avtalet skickas till din e-post.</p>
+      <div class="buttonbox">
+        <input type="hidden" name="sign" value="automatic">
+        <button class="close button" type="button"> Avbryt </button>
+        <button class="submiter button" type="button"> Underteckna </button>
+      </div>
+  </form>
 </div>
 
 #####
@@ -1042,8 +1069,29 @@ pageDocumentForAuthorContentPostPreparation=
         <span class="text">Vänligen var noga med att granska dokumentet och 
           kontrollera uppgifterna nedan innan du undertecknar.</span>
       </span> 
+
+  <div> 
+   $if(awaitingauthor)$
+      <input class="button" type="submit" name="sign" value="Underteckna!" id="signByAuthor" rel="#dialog-confirm-sign-by-author">
+      <input class="button cancel bigbutton" type="button" name="cancel" value="Återkalla inbjudan"  rel="#cancel-by-author-dialog">   
+   $$
+   $elseif(pending)$
+      $if(!timetosignset)$
+      <span>
+        <input class="button cancel bigbutton" type="button" name="cancel" value="Återkalla inbjudan"  rel="#cancel-by-author-dialog">    
+      </span>
+    $else$
+    <span>Du kan inte återkalla inbjudan före förfallodatum.</span>
+   $endif$   
+   $endif$      
+   $if(canberestarted)$
+   $restartForm:noescape()$
+   $endif$ 
+  </div>
+
     </div>
     $signatories:noescape()$
+
     <div id="signStepsBodyBorderBottom"></div>
   </div>
 </div>
@@ -1058,48 +1106,5 @@ pageDocumentForAuthorContentPostPreparation=
   -->
   <div class="waiting4page"></div>
 </div>
-<div id="signViewBottomBox"> 
-  <div id="signViewBottomBoxContainerLeft"> 
-    <div id="signViewBottomBoxContainerLeftText"> 
-      <input type="checkbox"> <span class="title">Jag intygar...</span> 
-      More text should follow
-    </div>
-  </div>
-  <div id="signViewBottomBoxContainerRight"> 
-  $if(awaitingauthor)$
-      <input class="button" type="submit" name="sign" value="Underteckna!" id="sign" rel="#dialog-confirm-sign">
-      <input class="bigbutton" type="submit" name="cancel" value="Avvisa" rel="#dialog-confirm-cancel" id="cancel">
-      <input class="button" type="submit" name="sign" value="Underteckna!" id="sign" rel="#dialog-confirm-sign">
-  $endif$
-   $if(pending)$
-      $if(!timetosignset)$
-      <span>
-        <input class="button cancel bigbutton" type="button" name="cancel" value="Återkalla inbjudan"  rel="#cancel-by-author-dialog">    
-      </span>
-    $else$
-    <span>Du kan inte återkalla inbjudan före förfallodatum.</span>
-   $endif$   
-  $endif$      
-  $if(canberestarted)$
-   $restartForm:noescape()$
-  $endif$ 
- </div>
-</div>
- <span class="localdialogs">
-          <form method="post" action="$linkcancel$" class="overlay" id="cancel-by-author-dialog">
-            <a class="close"> </a>
-            <h2> Återkalla inbjudan </h2>
-            <p>Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?
-              <BR>När du återkallat inbjudan kommer nedanstaende meddelande att skickas till dina motparter.
-            </p>
-            <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
-              $cancelMailContent:noescape()$
-            </div>
-            <div class="buttonbox" >
-              <button class="close button" type="button"> Avbryt </button>
-              <button class="editer button" type=""> Skriv eget meddelande </button>
-              <button class="submiter button" type="button"> Återkalla inbjudan</button>
-            </div>
-          </form>
-        </span>
+$pageDocumentForAuthorHelpersLocalDialogs()$
 ###

@@ -341,8 +341,8 @@ $(document).ready( function () {
 	$("#signbankid").overlay({ mask: standardDialogMask
 		    });
     
-    $("#cancel, .cancel").overlay({	mask: standardDialogMask
-                });
+    $("#cancel, .cancel, #signByAuthor").overlay({	mask: standardDialogMask    });
+    
     $("#toscontainer").overlay({mask: standardDialogMask,
                 load: true
                 });
@@ -696,7 +696,9 @@ function prepareEditor(textarea) {
                           theme_advanced_buttons1 : "bold,italic,underline,separator,strikethrough,bullist,numlist,separator,undo,redo,separator,cut,copy,paste",
                           theme_advanced_buttons2 : "",
                           convert_urls : false,
-                          theme_advanced_toolbar_align : "left"
+                          theme_advanced_toolbar_align : "left",
+                          plugins : "noneditable"
+                                                          
                         })}
  
 standardDialogMask = "#333333"

@@ -52,7 +52,8 @@ mailRejectMailTitle=Avvisat: $documenttitle$
 mailRejectMailContent=
     <span>
       <p>Hej,</p>
-      <p>$rejectorName$ har avvisat att underteckna dokumentet <strong>$documenttitle$</strong>. Avtalsprocessen är därmed avbruten.</p>
+      <span class="mceNonEditable"><p>$rejectorName$ har avvisat att underteckna dokumentet <strong>$documenttitle$</strong>. Avtalsprocessen är därmed avbruten.
+      </p></span>
       $poweredBySkrivaPaPara()$
     </span>
 ###
