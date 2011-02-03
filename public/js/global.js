@@ -278,23 +278,21 @@ $(document).ready( function () {
     $("#editinvitetextlink").overlay({        
     mask: standardDialogMask,    
     onBeforeLoad: function () { 
+            var signedList =  jQuery(".authornamewhennotsecretary");                                                     
+            
+            // ***We don't have secretary functionality so this is disabled for now
+            //var authorSignes = jQuery("[name='authorrole']").val()!="secretary"
+            //if (authorSignes)   
+            //   signedList.html(signedList.attr("okprefix")+" <strong>"+author+"</strong>");
+            //else 
+            signedList.html(signedList.attr("alt"));
+
             var newtxt = $("#invitetext").val()
             $("#edit-invite-text-dialog textarea").val(newtxt);    
             var author = $(".authorname").text();
-	    var sigs = $(".signatorybox").not("#signatory_template");
+            var sigs = $("#personpane .persondetails");
             var partners = new Array()
             var i = 0;
-            var authorSignes = jQuery("[name='authorrole']").val()!="secretary"
-            var signedList =  jQuery(".authornamewhennotsecretary");                                                     
-            if (authorSignes)
-            {  
-               partners[0] = author;
-               i++;
-               signedList.html(signedList.attr("okprefix")+" <strong>"+author+"</strong>");
-            }
-            else {
-               signedList.html(signedList.attr("alt"));
-            }
             sigs.each(function(){
               var namefield = $("[name='signatoryname']",this);
               var mailfield =  $("[name='signatoryemail']",this)
@@ -307,7 +305,7 @@ $(document).ready( function () {
               partners[i] = res
               i++;
             })
-            $(".partylistupdate",$(this).attr("rel")).html(swedishList(partners));
+            $(".partylistupdate").html(swedishList(partners));
     }
     })   
         
