@@ -6,7 +6,7 @@ creatingDocumentFrame=
     <span id="signStepsTitleRowTextContainer">
       $if(title)$
       <span class="title">DOKUMENT:</span>
-      <span class="name">$title$ | Transaction #$documentid$</span>
+      <span class="name">$title$ | Transaktion #$documentid$</span>
       $endif$
     </span>
     
@@ -58,7 +58,7 @@ uploadPageContent=
     <div>
       <span id="signStepsBodyUploadTextContainer"> 
         <span class="header">Välj fil och ladda upp!</span><br>
-        <span class="text">OBS! Det går endast att ladda upp .PDF</span> 
+        <span class="text">OBS! Det går endast att ladda upp filer med formatet .PDF</span> 
       </span> 
       <br>
       <div id="signStepsButtonContainer">
@@ -202,7 +202,7 @@ pageDocumentForViewerContent=
 <div id="signStepsContainer"> 
   <div id="signStepsTitleRow"> <span id="signStepsTitleRowTextContainer"> 
       <span class="title">DOKUMENT:</span> <span class="name">$title$ | 
-        Transaction #$docid$</span> </span> </div>
+        Transaktion #$docid$</span> </span> </div>
   <div id="signStepsBody"> 
     <div id="signViewBodyLeft" > 
       <span id="signViewBodyLeftTextContainer"> 
@@ -414,7 +414,7 @@ pageDocumentForSignContent=
 <div id="signStepsContainer"> 
   <div id="signStepsTitleRow"> <span id="signStepsTitleRowTextContainer"> 
       <span class="title">DOKUMENT:</span> <span class="name">$title$ | 
-        Transaction #$docid$</span> </span> </div>
+        Transaktion #$docid$</span> </span> </div>
   <div id="signStepsBody"> 
     <div id="signViewBodyLeft" > 
       <span id="signViewBodyLeftTextContainer"> 
@@ -730,7 +730,7 @@ pageDocumentForAuthorContentPreparation=
     <div id="signStepsTitleRow">
       <span id="signStepsTitleRowTextContainer">
 	<span class="title">DOKUMENT:</span>
-	<span class="name">$documenttitle$ | Transaction #$documentid$</span>
+	<span class="name">$documenttitle$ | Transaktion #$documentid$</span>
 	<!-- <span class="changeName"><a href="#changeName">BYT TITEL</a></span> -->
       </span>
    
@@ -1018,7 +1018,7 @@ pageDocumentForAuthorContentPostPreparation=
   <div id="signStepsTitleRow"> 
      <span id="signStepsTitleRowTextContainer"> 
       <span class="title">DOKUMENT:</span>
-      <span class="name">$documenttitle$ | Transaction #$documentid$</span>
+      <span class="name">$documenttitle$ | Transaktion #$documentid$</span>
      </span>
   </div>
   <div id="signStepsBody" class="forauthor"> 
