@@ -492,7 +492,7 @@ pageDocumentForAuthor ctx
      invitationMailContent <- mailInvitationToSignContent (ctxtemplates ctx) False ctx document author Nothing
      restartForm <-   renderActionButton  (ctxtemplates ctx) (LinkRestart documentid) "restartButtonName"
      cancelMailContent <- mailCancelDocumentByAuthorContent  (ctxtemplates ctx) False Nothing ctx document author
-     content <-  renderTemplateComplex (ctxtemplates ctx) "pageDocumentForAuthorContent" $  
+     renderTemplateComplex (ctxtemplates ctx) "pageDocumentForAuthorContent" $  
                                                               (setAttribute "documenttitle" $ BS.toString documenttitle) .
                                                               (setAttribute "documentid" $ show documentid) .
                                                               (setAttribute "linkissuedoc" $ show $ LinkIssueDoc documentid) .
@@ -521,8 +521,6 @@ pageDocumentForAuthor ctx
                                                               (setAttribute "elegitimationonly" $ (isNothing $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)) .
                                                               (setAttribute "helpers" helpers) .
                                                               (setAttribute "docstate" (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks))
-     --showDocumentPageHelper (ctxtemplates ctx) document helpers (documenttitle)  content
-     return content
    
 
 {- |
