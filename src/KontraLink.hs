@@ -132,7 +132,8 @@ sendRedirect LoopBack = do
                          seeOther link response
 sendRedirect BackToReferer    = do
                          ref <- getField "referer"
-                         let link = fromMaybe (show LinkMain) $ ref
+                         let link' = fromMaybe (show LinkMain) $ ref
+                         let link = if (null link') then (show LinkMain) else link'
                          response <- webHSP (seeOtherXML link)
                          seeOther link response
 
