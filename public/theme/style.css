@@ -1342,7 +1342,7 @@ a.button {
 
 .signViewBodyRight 
 {
-    width: 165px;
+    width: 160px;
     float: left;
     position: relative;
     padding: 10px 0px 5px 20px;
@@ -1371,7 +1371,8 @@ a.button {
 .signViewBodyRightTextContainer
 {
     margin-top: 10px;
-    display: table;
+    width: 140px;
+    overflow:hidden;
 }
 
 .signViewBodyRightTextContainer .text
@@ -1379,6 +1380,8 @@ a.button {
     margin-top: 5px;
     margin-bottom: 7px;
     font-size: 11px;
+    overflow:hidden;
+    
 }
 
 .signViewBodyLeftTextContainer .text
