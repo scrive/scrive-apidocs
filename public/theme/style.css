@@ -1880,7 +1880,7 @@ form {
 {
     margin-top:15px;
     width: 955px;
-    height: 84px;
+    height: 70px;
     border-top: 1px solid #E2C822;
     border-right: 1px solid #E2C822;
     border-bottom: 1px solid #E2C822;
@@ -1904,16 +1904,17 @@ form {
     width: 855px;
     float: left;
     position: relative;
-    height: 84px;
+    height: 70px;
 }
 
 #signViewNotificationContainer .title
 {
     color:#595A59;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: bold;
-    margin-top: 10px;
+    margin-top: 25px;
     margin-left: 15px;
+    text-align:center; 
 }
 
 #signViewNotificationContainer .text
