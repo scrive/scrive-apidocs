@@ -279,21 +279,17 @@ reminderForm =
 changeEmailAddress =  
 <a style="cursor:pointer" class="replacebynextonclick"> Skicka inbjudan till ny adress  </a>
 <form action="$linkchangeemail$" method="POST" style="display:none">
-  <input type="text" style="width:170px" name="email" value="$signatoryemail$">
+  <input type="text" style="width:140px" name="email" value="$signatoryemail$">
   <input type="submit" style="width:100px" value="Skicka">
 </form>     
 
 ####
 showSignatoryLinkForSign =
 <div class="signViewBodyRight"> 
-  <div class="signViewBodyIcons"  style="position:relative;float:left;margin-top:12px;"> 
-    <div class="signViewBodyTitle">   
-     <img src="$status$"> 
-     $if(changeEmailAddress)$ <span style="color:#000000;position:relative;top:-3px">!</span>  $endif$
-    </div>
-  </div>
   <div class="signViewBodyRightTextContainer"> 
-   $if(signatoryname)$<div class="text"><strong>$signatoryname$</strong></div>$endif$
+   <img src="$status$" style="position:relative;top:3px;"> 
+   $if(changeEmailAddress)$ <span style="color:#000000;position:relative;left:-4px;">!</span>  $endif$
+   $if(signatoryname)$<span class="text"><strong>$signatoryname$</strong></span>$endif$
    $if(signatoryemail)$<div class="text">$signatoryemail$</div>$endif$
    $if(signatorycompany)$<div class="text">$signatorycompany$</div>$endif$
    $if(signatorynumber)$<div class="text">$signatorynumber$</div>$endif$
