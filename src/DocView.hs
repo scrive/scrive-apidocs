@@ -520,7 +520,8 @@ pageDocumentForAuthor ctx
                                                               (setAttribute "emailonly" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isNothing $ find (== ELegitimationIdentification) documentallowedidtypes)) .
                                                               (setAttribute "elegitimationonly" $ (isNothing $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)) .
                                                               (setAttribute "helpers" helpers) .
-                                                              (setAttribute "docstate" (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks))
+                                                              (setAttribute "docstate" (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks)) .
+                                                              (setAttribute "linkissuedocpdf" $ show (LinkIssueDocPDF document)) 
    
 
 {- |
