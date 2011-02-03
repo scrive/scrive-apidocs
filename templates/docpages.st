@@ -457,7 +457,7 @@ pageDocumentForSignContent=
 <div id="signViewBottomBox"> 
   <div id="signViewBottomBoxContainerLeft"> 
     <div id="signViewBottomBoxContainerLeftText"> 
-      <input type="checkbox"> Jag intygar att jag har granskat och förstått innehållet i dokumentet. Jag intygar även att samtliga parter är korrekta och att jag har befogenhet att skriva på.
+      <input type="checkbox" class="signGuard" autocomplete="off"> Jag intygar att jag har granskat och förstått innehållet i dokumentet. Jag intygar även att samtliga parter är korrekta och att jag har befogenhet att skriva på.
     </div>
   </div>
   <div id="signViewBottomBoxContainerRight"> 

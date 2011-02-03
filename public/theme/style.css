@@ -1981,6 +1981,7 @@ form {
     margin-top:2px;
     width:351px;
     display:table;
+    padding: 3px;
 }
 
 #signViewBottomBoxContainerLeftText .title
