@@ -327,7 +327,15 @@ $(document).ready( function () {
                           return false; 
                           })                      
     $("#sign").overlay({ mask: standardDialogMask,
-        onBeforeLoad: function () { if (!sigFieldsValidation()) return false;}
+        onBeforeLoad: function () {
+               if (!sigFieldsValidation()) return false;
+               var guardChecked = $(".signGuard:checked").size()>0;
+               if (!guardChecked) 
+               { $(".signGuard").parent().css("border","1px dotted red");
+                 $(".signGuard").change(function(){$(this).parent().css("border","")})
+                 return false;
+               } 
+        }
     })
 
 	$("#signbankid").overlay({ mask: standardDialogMask
@@ -855,6 +863,6 @@ $(document).ready(function() {
                     val = "(fill in)";
                 $('#peopleList li:eq(' + idx + ') a').text(val);
             });
-    });
+     });
 
 var addsignatorymutex = false;
