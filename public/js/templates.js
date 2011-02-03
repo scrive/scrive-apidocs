@@ -605,7 +605,7 @@ function signatoryToHTML(sig) {
     
     $(sig.otherfields).each(function (){
 	    var fd = this;
-	    var field = $("#templates .customfield").get(0).clone();
+	    var field = $("#templates .customfield").first().clone();
 	    //var field = buildDraggableField(fd.label, fd.value, "sig");
 	    var fieldid = newUUID();
 	    fd.id = fieldid;
@@ -635,7 +635,7 @@ function signatoryToHTML(sig) {
 	    input.keyup(magicUpdate);
 	    input.change(magicUpdate);
 
-	    d.append(field);
+	    of.append(field);
 	    //	    
 	});
 
