@@ -1186,6 +1186,9 @@ a.button {
     background-image: url(images/iconArrowDown.png);
 }
 
+.okIcon{
+    background-image: url(images/iconGreenCheck.png);
+}
 .saveButton .icon,
 .downloadButton .icon
 {
@@ -1577,15 +1580,16 @@ a.button {
     width: 288px;
 }
 
-.newfield a.plus {
+.newfield a.okIcon {
     width: 16px;
     height: 16px;
     display: block;
     background-repeat: no-repeat;
     position: absolute;
-    right: 18px;
+    right: 0px;
     top: 6px;
 }
+
 
 .newfield a.minus {
     width: 16px;
