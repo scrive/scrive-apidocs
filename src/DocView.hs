@@ -569,15 +569,15 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser,ctxtemplates})  docu
                                                             }
                                          }) =
   do
-      let wasSigned =  isJust maybesigninfo
+      let isCurrentUserAuthor = maybe False (isAuthor document) muser
+      let isCurrentSignatorAuthor = (fmap (unEmail . useremail . userinfo) muser) ==  (Just signatoryemail)      
+      let wasSigned =  isJust maybesigninfo && (not $ isCurrentSignatorAuthor && (documentstatus document == AwaitingAuthor))
       let wasSeen = isJust maybeseeninfo
       let isTimedout = documentstatus document == Timedout
       let isCanceled = documentstatus document == Canceled
       let isRejected = documentstatus document == Rejected
       -- let isWithDrawn = documentstatus document == Withdrawn
       let dontShowAnyReminder = isTimedout || isCanceled || isRejected
-      let isCurrentUserAuthor = maybe False (isAuthor document) muser
-      let isCurrentSignatorAuthor = (fmap (unEmail . useremail . userinfo) muser) ==  (Just signatoryemail)                  
       let dialogHeight =   if (wasSigned) then "400" else "600"
       let status =  caseOf
                 [
