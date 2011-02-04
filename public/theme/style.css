@@ -1479,6 +1479,7 @@ a.button {
 
 /* 008 new starts */
 .signStepsBodyIcons a,
+.signStepsBodyIcons span,
 .signStepsBodyIcons span.briefcase,
 .signStepsBodyAddField a
 {
@@ -1534,7 +1535,8 @@ a.button {
     margin-right: 6px;
 }
 
-.signStepsBodyIcons a.man
+
+.signStepsBodyIcons .man
 {
     background-image: url(images/iconMan.png);
 }
@@ -1554,12 +1556,12 @@ a.button {
     margin-right: 6px;
 }
 
-.signViewBodyIcons a.man
+.signViewBodyIcons .man
 {
     background-image: url(images/iconMan.png);
 }
 
-.signStepsBodyIcons a.plus,
+.signStepsBodyIcons .plus,
 .newfield a.plus,
 #signStepsBodyFunctionsBox ul .plus
 {
@@ -1660,6 +1662,18 @@ a.button {
 	outline: none;
 	background-color: transparent;
 	overflow: hidden;
+}
+
+.dragtext {
+    position: relative;
+    width: 138px;
+    height: 20px;
+    margin-bottom: 3px;
+    line-height: 20px;
+}
+
+.dragtext .fieldvalue {
+    margin-left: 19px;
 }
 
 /* For the draggable fields in signatory details */
@@ -1825,6 +1839,15 @@ form {
 .buttonSignLarge
 {
     background-image: url(images/buttonSignLarge.png);
+    background-repeat: no-repeat;
+    display: block;
+    width: 252px;
+    height: 61px;
+    cursor: pointer;
+}
+
+.buttonSendLarge {
+    background-image: url(images/button-send.png);
     background-repeat: no-repeat;
     display: block;
     width: 252px;
@@ -2116,4 +2139,28 @@ form {
 #signStepsBody span.persondetails.currentPerson
 {
     display: inline;
+}
+
+.partyrole {
+    display: none;
+
+    position: absolute;
+    background-color: white;
+    top: 0px;
+    left: 0px;
+    border: solid 1px;
+    padding: 4px;
+}
+
+.partyrole .closelink {
+    float: right;
+    margin-left: 4px;
+}
+
+.sigentry {
+    position: relative;
+}
+
+.persondetails {
+    width: 294px;
 }

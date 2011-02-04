@@ -557,7 +557,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
     <div class="buttonbox" >
       <input type="hidden" name="final" value="automatic">
       <button class="close button" type="button"> Avbryt </button>
-      <button class="submiter button" type="button"> Underteckna </button>
+      <button class="submiter button" type="button"> Skicka </button>
     </div>
   </form>
 
@@ -839,18 +839,66 @@ pageDocumentForAuthorContentPreparation=
             </div>
 	    
             <div id="personpane">
-              <div class="signStepsBodyTitle">
-	        <span> PART </span>
-	      </div>
-	      
-	      <div class="signStepsBodyIcons">
-	        <a href="#man2" class="man"></a>
-	        <span class="briefcase"></span>
-	        <a href="#hand2" class="hand"></a>
-	      </div>
-	      
-	      <div class="signStepsBodyForms" id="peopleDetails">
-	      </div>
+              <span class="persondetails authordetails">
+                <div class="signStepsBodyTitle">
+                  <span class="partnumber">PART 1</span>
+                </div>
+                
+                <!-- 008 change/new -->
+                <div class="signStepsBodyIcons">
+                  <a href="#man2" class="man"></a>
+                  <span class="briefcase"></span>
+                  <span class="plus"></span>
+                </div>
+                
+                <!-- 013 changed -->
+                <div class="sigentry signStepsBodyForms" id="peopleDetails">
+                  <span class="fields">
+	            <span class='dragtext authorname'>
+	              <span style="display:none;" class="fieldid">name</span>
+	              <span style="display:none;" class="type">author</span>
+	              <span class="fieldvalue"></span>
+	              <img src="/theme/images/iconHand.png" class="draghandle"
+	                   alt="drag" />
+                    </span>
+	            <span class='dragtext authorcomp'>
+	              <span style="display:none;" class="fieldid">company</span>
+	              <span style="display:none;" class="type">sig</span>
+                   
+                      <span class="fieldvalue"></span>
+	              <img src="/theme/images/iconHand.png" class="draghandle"
+	                   alt="drag" />
+                    </span><br>
+                    <span class='dragtext authoremail'>
+	              <span style="display:none;" class="fieldid">email</span>
+	              <span style="display:none;"
+	              class="type">author</span>
+                      <span class="fieldvalue"></span>
+	              <img src="/theme/images/iconHand.png" class="draghandle"
+	                   alt="drag" />
+	            </span>
+	            <span class='dragtext authornum'>
+	              <span style="display:none;" class="fieldid">number</span>
+	              <span style="display:none;"
+	              class="type">sig</span>
+                      <span class="fieldvalue"></span>
+	              <img src="/theme/images/iconHand.png" class="draghandle" 
+                           alt="drag" />
+	            </span>
+                  </span>
+                  <div class="partyrole">
+                    <a href="#" class="closelink"><small>close</small></a>
+                    <input type="radio" name="authorrole" id="authorsignatoryradio" value="signatory" checked>Undertecknare</input>
+                    <br>
+                    <input type="radio" name="authorrole" id="authorsecretaryradio" value="secretary">Sekreterare</input>
+                  </div>
+                  
+                </div>
+                <div class="otherfields">
+                  
+                </div>
+              </span>
+
             </div>
 	    
             <div id="signStepsBodyFunctions">
@@ -964,6 +1012,10 @@ pageDocumentForAuthorContentPreparation=
 	        <!-- 013 changed sign button tag -->
 	        <input type="submit" id="signinvite" rel="#dialog-confirm-signinvite" value="" name="final"
 	               class="buttonSignLarge" />
+                <input type="submit" id="sendinvite"
+	        rel="#dialog-confirm-sendinvite" value = ""
+	        name="final" class="buttonSendLarge"
+	        style="display:none;" />
 	      </div>
 	    </div>
 	    
@@ -999,7 +1051,7 @@ pageDocumentForAuthorContentPreparation=
     
     <!-- 008 change/new -->
     <div class="signStepsBodyIcons">
-      <a href="#man2" class="man"></a>
+      <span href="#man2" class="man"></span>
       <span class="briefcase"></span>
       <a href="#plus2" class="plus"></a>
     </div>
@@ -1038,6 +1090,7 @@ pageDocumentForAuthorContentPreparation=
                alt="drag" />
 	</span>
       </span>
+
     </div>
     <div class="otherfields">
       
