@@ -669,6 +669,8 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} ms
   placedsigids <- getAndConcat "placedsigid"
   placedfieldids <- getAndConcat "placedfieldid"
 
+  authorrole <- getDataFnM $ look "authorrole"
+
   -- which type of identifications are allowed
   allowedidtypes <- getDataFnM $ look "allowedsignaturetypes"
 
@@ -737,7 +739,13 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} ms
                                             (placementsByID id (BS.fromString "email"))
                                             (placementsByID id (BS.fromString "number"))
                                             (defsByID id)
-
+                           
+  let authorid = unAuthor $ documentauthor document
+  Just author <- query $ GetUserByUserID authorid
+                                            
+  let signatories2 = if authorrole == "signatory"
+                     then (signatoryDetailsFromUser author) : signatories
+                     else signatories
   -- FIXME: tell the user what happened!
   -- when (daystosign<1 || daystosign>99) mzero
 
@@ -747,7 +755,7 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} ms
   Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor document
 
   doc2 <- update $ UpdateDocument ctxtime documentid
-           signatories daystosign invitetext author docallowedidtypes
+           signatories2 daystosign invitetext author docallowedidtypes
 
   msum 
      [ do getDataFnM (look "final" `mplus` look "sign")

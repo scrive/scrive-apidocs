@@ -48,19 +48,34 @@ function placePlacements(pls, label, value, sigid, fieldid) {
 
 	    // make it draggable
 	    d.draggable({ 
-		    // this makes sure it can move between divs
-		    appendTo: "body",
-			// build a helper so it doesn't delete the original
-			helper: function (event, ui) {
-			return placementToHTML(label, value);
-		    },
-			// but we don't want to show the original so it looks like 
-			// you are dragging the original
-			start: function (event, ui) {
-			$(this).css({ display: "none" });
-		    }
-		
-		});
+	      // this makes sure it can move between divs
+	      appendTo: "body",
+              stop: function(event, ui) {
+                var field = $(ui.draggable);
+                var helper = $(ui.helper);
+                console.log("helper");
+                console.log(helper);
+                console.log(field);
+                console.log("nothing");
+                // for some reason, this needs to be helper (field is
+                // empty)
+                if(isPlacedField(helper)) {
+                  helper.remove();
+                  console.log("removed field + helper");
+                }
+              },
+	      // build a helper so it doesn't delete the original
+	      helper: function (event, ui) {
+		return placementToHTML(label, value);
+	      },
+	      // but we don't want to show the original so it looks like 
+	      // you are dragging the original
+	      start: function (event, ui) {
+		$(this).css({ display: "none" });
+	      },
+
+	      
+	    });
 	});
 }
 
@@ -187,7 +202,7 @@ function setValue(field, value) {
 	    alert("field has no input box!");
 	}
     } else if(isDraggableText(field)) {
-	setHiddenValue(field, "value", value);
+	setHiddenValue(field, "fieldvalue", value);
     } else if(isPlacedField(field)) {
 	setHiddenValue(field, "value", value);
     } else if(debug) {
@@ -314,101 +329,41 @@ function buildDraggableText(val) {
     return x;
 }
 
-// destroy the HTML that's there to sync it with the docstate
 function docstateToHTML(){
-    /*
-    // author first
-    var author = docstate.author;
+  var signatories = docstate.signatories;
+  var authoridx = -1;
+  docstate.author.signatory = false;
+  for(i = 0; i < signatories.length; i++){
+    if(signatories[i].email === docstate.author.email){
+      authoridx = i;
+      signatories[i].signatory = true;
+      break;
+    }
+  }
+  if(authoridx >= 0){
+    docstate.author = signatories[authoridx];
+    signatories.splice(authoridx, 1);
+  }
 
-    var ad = $("#authordetails");
-
-    ad.html("");
-    ad.append(newHiddenValue("sigid", "author"));
-    var fds = $("<div class='fields'></div>");
-
-    if(author.name) {
-	var aname = buildDraggableText(author.name);
-	setFieldID(aname, "name");
-	setSigID(aname, "author");
-	setFieldType(aname, "text");
-	fds.append(aname);
-    }
-    if(author.company){
-	var acomp = buildDraggableText(author.company);
-	setFieldID(acomp, "name");
-	setSigID(acomp, "author");
-	setFieldType(acomp, "text");
-	fds.append(acomp);
-    }
-    if(author.number) {
-	var anumb = buildDraggableText(author.number);
-	setFieldID(anumb, "name");
-	setSigID(anumb, "author");
-	setFieldType(anumb, "text");
-	fds.append(anumb);
-    }
-    if(author.email) {
-	var aemai = buildDraggableText(author.email);
-	setFieldID(aemai, "name");
-	setSigID(aemai, "author");
-	setFieldType(aemai, "text");
-	fds.append(aemai);
-    }
+  var sl = $("#personpane");
     
-    // other fields
 
-    $(author.otherfields).each(function (){
-	    var fd = this;
-	    fd.id = newUUID();
-	    var field = buildDraggableField(fd.label, fd.value, "author");
-	    setFieldName(field, "fieldvalue");
-	    setFieldID(field, fd.id);
-	    setSigID(field, "author");
-	    setHiddenField(field, "fieldname", fd.label);
-	    fds.append(field);
-	    placePlacements(fd.placements, fd.label, fd.value, "author", fd.id);
-	});
+  authorToHTML(docstate.author);
 
-    var newFieldLink = $("<small><a href='#'>New Field</a></small><br />");
-    newFieldLink.find("a").click(function () {
-	    var field = $("<div class='newfield'><input type='text' infotext='Type Field Name' /><input type='submit' value='ok'></div>");
-	    field.find("input[type='submit']").click(function () {
-		    var fieldname = field.find("input[type='text']").attr("value");
-		    if(fieldname == "Type Field Name" || fieldname == "") {
-			return false;
-		    }
-		    var f = buildDraggableField(fieldname, "", "author");
-		    setFieldName(f, "fieldvalue");
-		    var fieldid = newUUID();
-		    setFieldID(f, fieldid);
-		    setSigID(f, "author");
-		    setHiddenField(f, "fieldname", fieldname);
-		    fds.append(f);
-		    enableInfoText(f);
-		    updateStatus(f);
-		    field.detach();
-		    return false;
-		});
-	    fds.append(field);
-	    enableInfoText(field);
-	    return false;
-	});
+  if(signatories.length === 0){
+    signatories[0] = newsignatory();
+  }
+  
+  $(signatories).each(function () {
+    signatoryToHTML(this);
+  });
 
-    ad.append(fds);
-    ad.append(newFieldLink);
+  
 
-    placePlacements(author.nameplacements, "Avsändare namn på motpart", author.name, "author", "name");
-    placePlacements(author.companyplacements, "Avsändare  titel, företag", author.company, "author", "company");
-    placePlacements(author.numberplacements, "Avsändare Orgnr/Persnr", author.number, "author", "number");
-    placePlacements(author.emailplacements, "Avsändare personens e-mail", author.email, "author", "email");
-    */
-    var signatories = docstate.signatories;
-    var sl = $("#personpane");
-    sl.html("");
-
-    $(signatories).each(function () {
-	    signatoryToHTML(this);
-	});
+  $("#personpane").children().each(function(idx) {
+    var p = $(this);
+    p.find(".partnumber").html("PART " + (idx + 1));
+  });
 
     checkPersonPaneMode();
 
@@ -549,13 +504,222 @@ function detachFieldsForSig(sigid) {
 	});
 }
 
+
+function authorToHTML(sig) {
+  var sl = $("#personpane");
+  var sigid = "author";
+  sig.id = sigid;
+
+  var sigentry = sl.find(".authordetails");
+
+  var manlink = sigentry.find("a.man");
+
+  manlink.click(function(){
+    console.log("man click");
+    sigentry.find(".partyrole").show();
+    if(sigentry.find(".partyrole input[checked]").size() === 0){
+      sigentry.find(".partyrole input").first().attr("checked", "true");
+    }
+    return false;
+  });
+
+  sigentry.find(".partyrole .closelink").click(function(){
+    sigentry.find(".partyrole").hide();
+    return false;
+  })
+
+  if(sig.signatory) {
+    sigentry.find(".partyrole input").first().attr("checked", "true");
+  } else {
+    sigentry.find(".partyrole input").last().attr("checked", "true");
+  }
+    
+
+  var d = sigentry.find(".fields");
+  var of = sigentry.find(".otherfields");
+    
+  var aname = sigentry.find(".authorname");
+  var acomp = sigentry.find(".authorcomp");
+  var anumb = sigentry.find(".authornum");
+  var aemai = sigentry.find(".authoremail");
+
+    setSigID(aname, sigid);
+    setSigID(acomp, sigid);
+    setSigID(anumb, sigid);
+    setSigID(aemai, sigid);
+
+    setValue(aname, sig.name);
+    setValue(acomp, sig.company);
+    setValue(anumb, sig.number);
+    setValue(aemai, sig.email);
+
+  if(sig.name === "") {
+    aname.remove();
+  }
+
+  if(sig.company === "") {
+    acomp.remove();
+  }
+
+  if(sig.number === "") {
+    anumb.remove();
+  }
+
+  if(sig.email === "") {
+    aemai.remove();
+  }
+
+    sigentry.find(".dragtext").draggable({ handle: ".draghandle"
+		                            , zIndex: 10000
+		                            , appendTo: "body"
+		                            , helper: function (event) {
+		                              var field = $(this);
+		                              
+		                              return placementToHTML(getValue(field));
+	    }
+		});
+
+    
+    // other fields
+    
+    $(sig.otherfields).each(function (){
+	    var fd = this;
+	    var field = $("#templates .customfield").first().clone();
+	    var fieldid = newUUID();
+	    fd.id = fieldid;
+	    
+	    setFieldID(field, fieldid);
+	    setSigID(field, sigid);
+	    setFieldName(field, "fieldvalue");
+	    setHiddenField(field, "fieldname", fd.label);
+
+	    setInfotext(field, fd.label);
+	    setValue(field, fd.value);
+	    setFieldType(field, "sig");
+
+      field.draggable({ handle: ".draghandle"
+			, zIndex: 10000
+			, appendTo: "body"
+			, helper: function (event) {
+			  var field = $(this);
+			  var input = field.find("input");
+			  return placementToHTML(input.attr("infotext"), input.attr("value"));
+		        }
+		      });
+      
+      var input = field.find("input");
+
+      input.keydown(magicUpdate);
+      input.keyup(magicUpdate);
+      input.change(magicUpdate);
+
+      of.append(field);
+	    //	    
+    });
+
+  sigentry.find("a.plus").click(function () {
+    var field = $("<div class='newfield'><input class='newfieldbox' type='text' infotext='Type Field Name' /><a href='#' class='plus'></a><a href='#' class='minus'></a></div>");
+    field.find("a.minus").click(function() {
+      field.remove();
+      return false;
+    });
+    field.find("a.plus").click(function () {
+      fieldname = field.find("input[type='text']").attr("value");
+      if(fieldname == "Type Field Name" || fieldname == "") {
+	return false;
+      }
+      var f = $("#templates .customfield").first().clone();
+      console.log(f);
+      //var f = buildDraggableField(fieldname, "", "sig");
+      setInfotext(f, fieldname);
+      setValue(f, "");
+      setFieldType(f, "sig");
+      
+      f.draggable({ handle: ".draghandle"
+		    , zIndex: 10000
+		    , appendTo: "body"
+		    , helper: function (event) {
+		      var field = $(this);
+		      var input = field.find("input");
+		      return placementToHTML(input.attr("infotext"), input.attr("value"));
+		    }
+		  });
+      
+      var input = f.find("input");
+      
+      input.keydown(magicUpdate);
+      input.keyup(magicUpdate);
+      input.change(magicUpdate);
+
+      setFieldName(f, "fieldvalue");
+      var fieldid = newUUID();
+      setFieldID(f, fieldid);
+      setSigID(f, sigid);
+      setHiddenField(f, "fieldname", fieldname);
+
+      f.find("a.minus").click(function() {
+	//console.log(f);
+	
+	var ff = getPlacedFieldsForField(f);
+	//console.log(ff);
+	ff.each(function(){this.remove();});
+	f.remove();
+      });
+		    
+      of.append(f);
+      enableInfoTextOnce(f);
+      updateStatus(f);
+		    
+
+      field.detach();
+		    
+      return false;
+    });
+    of.append(field);
+    enableInfoTextOnce(field);
+    return false;
+  });
+    
+  $("#peopleList ol").append("<li><a href='#'>" + sig.name + " (Author)</a></li>");
+}
+
+
 function signatoryToHTML(sig) {
     //console.log("adding signatory");
     var sl = $("#personpane");
     var sigid = newUUID();
     sig.id = sigid;
 
+    if(sig.email === docstate.author.email){
+      sig.author = true;
+    }
+
     var sigentry = $('#templates .persondetails').first().clone();
+
+  if(sig.author){
+    sigentry.addClass("authorentry");
+    var manlink = $("<a class='man' href='#'> </a>");
+    manlink.click(function(){
+      sigentry.find(".partyrole").show();
+    if(sigentry.find(".partyrole input[checked]").size() === 0){
+      sigentry.find(".partyrole input").first().attr("checked", "true");
+    }
+      return false;
+    });
+
+    sigentry.find(".partyrole .closelink").click(function(){
+      sigentry.find(".partyrole").hide();
+      return false;
+    })
+
+    sigentry.find(".signStepsBodyIcons .man").remove();
+    sigentry.find(".signStepsBodyIcons").prepend(manlink);
+
+    sigentry.find(".partyrole input").first().attr("checked", "true");
+
+  }
+
+  
     
     //var sigentry = $("<div class='sigentry'></div>");
     //sigentry.append(newHiddenField("sigid", sigid));
@@ -580,13 +744,13 @@ function signatoryToHTML(sig) {
     setValue(aemai, sig.email);
 
     sigentry.find(".dragfield").draggable({ handle: ".draghandle"
-		, zIndex: 10000
-		, appendTo: "body"
-		, helper: function (event) {
-		var field = $(this);
-		var input = field.find("input");
-		
-		return placementToHTML(input.attr("infotext"), input.attr("value"));
+		                            , zIndex: 10000
+		                            , appendTo: "body"
+		                            , helper: function (event) {
+		                              var field = $(this);
+		                              var input = field.find("input");
+		                              
+		                              return placementToHTML(input.attr("infotext"), input.attr("value"));
 	    }
 		});
 
@@ -620,8 +784,8 @@ function signatoryToHTML(sig) {
 	    setFieldType(field, "sig");
 
 	    field.draggable({ handle: ".draghandle"
-			, zIndex: 10000
-			, appendTo: "body"
+			      , zIndex: 10000
+			      , appendTo: "body"
 			, helper: function (event) {
 			var field = $(this);
 			var input = field.find("input");
@@ -640,8 +804,8 @@ function signatoryToHTML(sig) {
 	});
 
     sigentry.find("a.plus").click(function () {
-	    var field = $("<div class='newfield'><input class='newfieldbox' type='text' infotext='Type Field Name' /><a href='#' class='okIcon'></a></div>");
-	    field.find("a.okIcon").click(function () {
+	    var field = $("<div class='newfield'><input class='newfieldbox' type='text' infotext='Type Field Name' /><a href='#' class='plus'></a></div>");
+	    field.find("a.plus").click(function () {
 		    fieldname = field.find("input[type='text']").attr("value");
 		    if(fieldname == "Type Field Name" || fieldname == "") {
 			return false;
@@ -757,14 +921,14 @@ function makeDropTargets() {
   $("#signStepsContainer").droppable({ drop: function(event, ui) {
     var field = $(ui.draggable);
     var helper = $(ui.helper);
+    console.log(field);
     if(isPlacedField(field)) {
       field.remove();
       helper.remove();
-    } else {
-      updateStatus(field);
     }
-    return false;
+
   }});
+
     $(".pagediv").droppable({ drop: function(event, ui) {
 		var page = $(this);
 		var field = $(ui.draggable);
@@ -785,6 +949,7 @@ function makeDropTargets() {
 		var pl = newplacement(left, top, pageno, page.width(), page.height());
 		placePlacements([pl], getLabel(field), getValue(field), sigid, fieldid);
 		
+      console.log(field);
 	
 		if(isPlacedField(field)) {
 		    field.remove();
@@ -793,7 +958,7 @@ function makeDropTargets() {
 		    updateStatus(field);
 		}
 		
-		
+		return false;
 	    }});
 
     return true;
@@ -815,6 +980,7 @@ function initializeTemplates () {
     
     makeDropTargets();
 
+  $("#personpane").children().removeClass("currentPerson").last().addClass("currentPerson");
 
     $("form").submit(function () {
 	    var form = $("form");

@@ -250,7 +250,22 @@ $(document).ready( function () {
 	    
 	});
     
- 
+  $("#sendinvite").overlay({
+    mask: standardDialogMask,
+    onBeforeLoad: function(){
+      if (!emailFieldsValidation($(".stepForm input[type='email']"))) return false;
+      // if (!authorFieldsValidation()) return false;
+      // if (!nonZeroSignatories()) return false;
+      var mrxs = $("form input[name='signatoryname']");
+      var tot = "";
+      var allparties = new Array();
+      mrxs.each(function(index) { 
+        allparties.push($(this).val());
+      });
+      tot = swedishString(allparties);
+      $(".Xinvited").html(tot);
+    }});
+
     $("#signinvite").overlay({  
     mask: standardDialogMask,    
     onBeforeLoad: function () { 
@@ -292,12 +307,14 @@ $(document).ready( function () {
             var signedList =  jQuery(".authornamewhennotsecretary");                                                     
             
             // ***We don't have secretary functionality so this is disabled for now
-            //var authorSignes = jQuery("[name='authorrole']").val()!="secretary"
-            //if (authorSignes)   
-            //   signedList.html(signedList.attr("okprefix")+" <strong>"+author+"</strong>");
-            //else 
-            signedList.html(signedList.attr("alt"));
-
+      var authorSignes = jQuery("#authorsignatoryradio").attr("checked");
+      if (authorSignes)   {
+        console.log("authorsigns");
+               signedList.html(signedList.attr("okprefix")+" <strong>"+author+"</strong>");
+      } else {
+        console.log("author doesn't sign");
+              signedList.html(signedList.attr("alt"));
+      }
             var newtxt = $("#invitetext").val()
             $("#edit-invite-text-dialog textarea").val(newtxt);    
             var author = $(".authorname").text();
@@ -472,22 +489,12 @@ $(document).ready( function () {
         });
 
     showProperSignButtons();    
-    $("#allowedbox").change(showProperSignButtons);
-    $("#authorroledropdown").change(showProperSignButtons);
+    $(".partyrole input").change(showProperSignButtons);
 
     function gettext(id) {
 	return $("#" + id).text();
     }
     
-    $("#main-document-form").submit(function () {
-	    var form = $("#main-document-form");
-	    if($("#authorroledropdown option:selected").val() === "signatory") {
-		form.append("<input type='hidden' name='signatoryname' value='"+ gettext('sauthorname') + "' />");
-		form.append("<input type='hidden' name='signatorycompany' value='"+ gettext('sauthorcompany') + "' />");
-		form.append("<input type='hidden' name='signatorynumber' value='"+ gettext('sauthornumber') + "' />");
-		form.append("<input type='hidden' name='signatoryemail' value='"+ gettext('sauthoremail') + "' />");
-	    }
-	});
     $(".submitStepFormOnClick").click( function(){
        $(".stepForm").submit(); })
     $(window).resize();
@@ -500,54 +507,13 @@ $(document).ready( function () {
 });
 
 function showProperSignButtons() {
-    if($("#allowedbox").size() > 0
-       && $("#authorroledropdown").size() > 0) {
-
-	if($("#allowedbox").val().indexOf("Email")>=0 
-	   || $("#authorroledropdown").val() == "secretary") {
-	    $("#signinvite").show();
-	} else {
-	    $("#signinvite").hide();
-	}
-
-
-	if($("#allowedbox").val().indexOf("ELeg")>=0 
-	   && $("#authorroledropdown").val() == "signatory") {
-	    $("#signbankid").show();
-	} else {
-	    $("#signbankid").hide();
-	}
-
-	$("#addsiglink").removeClass("redborder");
-	$("#authorroledropdown").removeClass("redborder");
-	if($("#authorroledropdown").val() == "signatory") {
-	    $("#signinvite").val("Underteckna");
-	    $(".buttonbox .submiter").text("Underteckna");
-	    
-	    $("#signinvite").addClass("cross-button");
-
-	    $("#dialog-title-sign").removeClass("hidden");
-	    $("#dialog-title-send").addClass("hidden");
-
-	    $("#dialog-confirm-text-sign").removeClass("hidden");
-	    $("#dialog-confirm-text-send").addClass("hidden");
-
-	} else if($("#authorroledropdown").val() == "secretary"){
-	    $("#signinvite").val("Skicka");
-	    $("#signinvite").show();
-	    $(".buttonbox .submiter").text("Skicka");
-
-	    $("#signinvite").removeClass("cross-button");
-
-	    $("#dialog-title-sign").addClass("hidden");
-	    $("#dialog-title-send").removeClass("hidden");
-
-	    $("#dialog-confirm-text-sign").addClass("hidden");
-	    $("#dialog-confirm-text-send").removeClass("hidden");
-
-	}
-
-    }
+  if($("#authorsignatoryradio").attr("checked")) {
+    $("#signinvite").show();
+    $("#sendinvite").hide();
+  } else {
+    $("#signinvite").hide();
+    $("#sendinvite").show();
+  }
 
 }
 
@@ -776,6 +742,7 @@ function showStep3()
     $('#signStep2Content').hide();
     $('#signStep3Content').show();
     $('#signStepsNextButton').hide();
+  showProperSignButtons();
     return false;
 }
 
@@ -838,9 +805,10 @@ $(document).ready(function() {
         $('#delSignatory').click(function() {
                 var personpane = $('#personpane');
                 var children = personpane.children();
-                if( children.size()==1 )
-                    return;
                 var child = children.filter('.currentPerson');
+          if(child.hasClass("authordetails")) {
+            return false;
+          }
                 var idx = children.index(child);
 
 		//console.log(child);
