@@ -1452,6 +1452,8 @@ signDocument documentid signatorylinkid1 time ipnumber msiginfo fields = do
                                   }
               else signeddocument
 
+          
+
       in case documentstatus document of
            Pending ->  Right signeddocument2
            Timedout -> Left "Förfallodatum har passerat"
