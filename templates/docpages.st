@@ -6,7 +6,9 @@ creatingDocumentFrame=
     <span id="signStepsTitleRowTextContainer">
       $if(title)$
       <span class="title">DOKUMENT:</span>
-      <span class="name">$title$ | Transaktion #$documentid$</span>
+      <span class="name">$title$</span> 
+      <span class="title"> | </span> 
+      <span class="title">  Transaktion #$documentid$ </span> 
       $endif$
     </span>
     
@@ -201,7 +203,10 @@ pageDocumentForViewerContent=
 </div>
 <div id="signStepsContainer"> 
   <div id="signStepsTitleRow"> <span id="signStepsTitleRowTextContainer"> 
-   <span class="title">DOKUMENT:</span> <span class="name">$title$ | Transaktion #$docid$</span> </span> 
+   <span class="title">DOKUMENT:</span> 
+   <span class="name">$title$ </span> 
+   <span class="title"> | </span> 
+   <span class="title">  Transaktion #$docid$ </span> 
      <div class="downloadButton" >
         <a href="$linkissuedocpdf$">
          <span class="icon arrowDownIcon"></span>
@@ -415,8 +420,7 @@ pageDocumentForSignContent=
   </div>
 <div id="signStepsContainer"> 
   <div id="signStepsTitleRow"> <span id="signStepsTitleRowTextContainer"> 
-      <span class="title">DOKUMENT:</span> <span class="name">$title$ | 
-        Transaktion #$docid$</span> </span> 
+      <span class="title">DOKUMENT:</span> <span class="name">$title$ | </span> <span class="title"> Transaktion #$docid$ </span> 
      <div class="downloadButton" >
         <a href="$linkissuedocpdf$">
          <span class="icon arrowDownIcon"></span>
@@ -766,7 +770,8 @@ pageDocumentForAuthorContentPreparation=
     <div id="signStepsTitleRow">
       <span id="signStepsTitleRowTextContainer">
 	<span class="title">DOKUMENT:</span>
-	<span class="name">$documenttitle$ | Transaktion #$documentid$</span>
+	<span class="name">$documenttitle$ | </span> 
+        <span class="title"> Transaktion #$documentid$ </span> 
 	<!-- <span class="changeName"><a href="#changeName">BYT TITEL</a></span> -->
       </span>
    
@@ -1053,7 +1058,8 @@ pageDocumentForAuthorContentPostPreparation=
   <div id="signStepsTitleRow"> 
      <span id="signStepsTitleRowTextContainer"> 
       <span class="title">DOKUMENT:</span>
-      <span class="name">$documenttitle$ | Transaktion #$documentid$</span>
+      <span class="name">$documenttitle$ |</span>
+      <span class="title"> Transaktion #$documentid$ </span> 
      </span>
      <div class="downloadButton" >
         <a href="$linkissuedocpdf$">
