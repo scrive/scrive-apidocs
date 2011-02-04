@@ -203,12 +203,12 @@ pageDocumentForViewerContent=
 </div>
 <div id="signStepsContainer"> 
   <div id="signStepsTitleRow"> <span id="signStepsTitleRowTextContainer"> 
-   <span class="title">DOKUMENT:</span> 
-   <span class="name">$title$ </span> 
-   <span class="title"> | </span> 
-   <span class="title">  Transaktion #$docid$ </span> 
+    <span class="title">DOKUMENT:</span> 
+    <span class="name">$title$ |</span> 
+    <span class="title">  Transaktion #$docid$ </span> 
+   </span>
      <div class="downloadButton" >
-        <a href="$linkissuedocpdf$">
+        <a href="$linkissuedocpdf$" target="_blank">
          <span class="icon arrowDownIcon"></span>
          <span class="text">Ladda ned PDF</span>
        </a>
@@ -421,8 +421,9 @@ pageDocumentForSignContent=
 <div id="signStepsContainer"> 
   <div id="signStepsTitleRow"> <span id="signStepsTitleRowTextContainer"> 
       <span class="title">DOKUMENT:</span> <span class="name">$title$ | </span> <span class="title"> Transaktion #$docid$ </span> 
+     </span>
      <div class="downloadButton" >
-        <a href="$linkissuedocpdf$">
+        <a href="$linkissuedocpdf$" target="_blank">
          <span class="icon arrowDownIcon"></span>
          <span class="text">Ladda ned PDF</span>
        </a>
@@ -863,7 +864,7 @@ pageDocumentForAuthorContentPreparation=
 	          <li class="plus"><a href="#add"  id="addSignatory">LÄGG TILL PERSON</a></li>
 	          <li class="minus"><a href="#remove"  id="delSignatory">TA BORT PERSON</a></li>
 	          <!-- <li><a href="#save" class="floppy">SPARA SOM MALL</a></li> -->
-	          <li  class="arrowDown"><a href="$linkissuedocpdf$">LADDA NED SOM PDF</a></li>
+	          <li  class="arrowDown"><a href="$linkissuedocpdf$" target="_blank">LADDA NED SOM PDF</a></li>
 	        </ul>
 	      </div>
             </div>
@@ -1062,7 +1063,7 @@ pageDocumentForAuthorContentPostPreparation=
       <span class="title"> Transaktion #$documentid$ </span> 
      </span>
      <div class="downloadButton" >
-        <a href="$linkissuedocpdf$">
+        <a href="$linkissuedocpdf$" target="_blank">
          <span class="icon arrowDownIcon"></span>
          <span class="text">Ladda ned PDF</span>
        </a>
