@@ -152,7 +152,18 @@ $(document).ready( function () {
                 }                     
             });
         $(".multiFileInput").each(
-            function() {$(this).MultiFile({list: $(this).attr("rel")})});
+            function() {
+               var upload = $(this);
+               var form = this.form;
+               $(this).MultiFile({
+                  list: upload.attr("rel"),
+                  onFileAppend: function() { 
+                     if (upload.hasClass("submitOnUpload")) $(form).submit() 
+                  }
+                 
+              })
+              
+            });
         // the jQuery Selectable feature 
         $("#selectable" ).selectable({
                 // links and input fields do not have click overridden
