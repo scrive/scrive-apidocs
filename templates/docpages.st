@@ -299,13 +299,15 @@ showSignatoryLinkForSign =
    $if(signatorycompany)$<div class="text">$signatorycompany$</div>$endif$
    $if(signatorynumber)$<div class="text">$signatorynumber$</div>$endif$
    <span class="signatoryfields">
-    $fields:{field| <div class="text"><span class="fieldlabel">$field.fieldlabel$: </span><span class="fieldvalue">$field.fieldvalue$</span></div>}$
+     $fields:{field| <div class="text"><span class="fieldlabel">$field.fieldlabel$: </span><span class="fieldvalue">$field.fieldvalue$</span></div>}$
    </span>
+   <span class="signViewBodyForms"></span>
    $if(message)$<div class="text">$message:noescape()$</div>$endif$   
    $if(reminderForm)$<div class="text">$reminderForm:noescape()$</div>$endif$
    $if(changeEmailAddress)$<div class="text">$changeEmailAddress:noescape()$</div>$endif$   
   </div>
-  <span class="signViewBodyForms"></span>
+  
+  
 </div>
 ####
 showSignatoryLinkForSignOld =
@@ -1135,11 +1137,13 @@ pageDocumentForAuthorContentPostPreparation=
       <script type="text/javascript" src="/js/signatory.js" ></script>
    $$
    $elseif(pending)$
+      <script type="text/javascript" src="/js/signatory.js" ></script>
       $if(!timetosignset)$
       <span>
         <input class="button cancel bigbutton" type="button" name="cancel" value="Återkalla inbjudan"  rel="#cancel-by-author-dialog">    
       </span>
     $else$
+
     <span>Du kan inte återkalla inbjudan före förfallodatum.</span>
    $endif$   
    $endif$      
