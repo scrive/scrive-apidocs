@@ -1129,7 +1129,10 @@ pageDocumentForAuthorContentPostPreparation=
   <div> 
    $if(awaitingauthor)$
       <input class="button" type="submit" name="sign" value="Underteckna!" id="signByAuthor" rel="#dialog-confirm-sign-by-author">
-      <input class="button cancel bigbutton" type="button" name="cancel" value="Återkalla inbjudan"  rel="#cancel-by-author-dialog">   
+      <input class="button cancel bigbutton" type="button"
+      name="cancel" value="Återkalla inbjudan"
+      rel="#cancel-by-author-dialog">  
+      <script type="text/javascript" src="/js/signatory.js" ></script>
    $$
    $elseif(pending)$
       $if(!timetosignset)$
@@ -1156,6 +1159,7 @@ pageDocumentForAuthorContentPostPreparation=
   <script type="text/javascript">
     var docstate = $docstate:noescape()$;
   </script>
+
   <!-- 
     I need to turn this stuff off since it brakes js now. TODO!!!!  
     <script type="text/javascript" src="/js/signatory.js"></script>
