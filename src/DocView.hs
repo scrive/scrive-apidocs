@@ -628,7 +628,9 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser,ctxtemplates})  docu
                               (setAttribute "signatorycompany" $ packToMString signatorycompany) .
                               (setAttribute "signatorynumber" $   packToMString signatorynumber) .
                               (setAttribute "signatoryemail" $    packToMString signatoryemail) .
-                              (setAttribute "fields" $ signatoryotherfields ) .
+                              (setAttribute "fields" $ if documentstatus document == Closed 
+                                                        then signatoryotherfields 
+                                                        else []) .
                               (setAttribute "message" $  message) .
                               (setAttribute "reminderForm" $ reminderForm) .
                               (setAttribute "changeEmailAddress" $  changeEmailAddress) 

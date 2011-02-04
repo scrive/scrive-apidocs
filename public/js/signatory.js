@@ -309,7 +309,11 @@ function docstateToHTML(){
 			    var ff = $(this);
 			    //console.log(s);
 			    if(ff.text().indexOf(s.email) > -1) {
-				ff.find(".signViewBodyRightTextContainer").append("<span class='text'>"+f.value+"</span>");
+                              var val = f.value;
+                              if(val === ""){
+                                val = "(unfilled)";
+                              }
+			      ff.find(".signatoryfields").append("<span class='text'>" + f.label + ": " +val+"</span>");
 			    }
 			});
 		    }
@@ -346,7 +350,16 @@ function docstateToHTML(){
 		fields.append(ofield);
 		updateStatus(ofield);
 		enableInfoTextOnce(ofield);
-	    }
+	    } else {
+	      $(".signViewBodyRight").each(function() {
+		var ff = $(this);
+		//console.log(s);
+		if(ff.text().indexOf(s.email) > -1) {
+		  ff.find(".signatoryfields").append("<span class='text'>" + f.label + ": " +f.value+"</span>");
+		}
+	      });
+
+            }
 	});
 }
 

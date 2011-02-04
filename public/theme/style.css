@@ -2164,3 +2164,9 @@ form {
 .persondetails {
     width: 294px;
 }
+
+.signViewBodyForms .dragfield input {
+    background-image: url(images/iconPen.png); 
+    background-repeat: no-repeat;
+    background-position: 3px 3px;
+}
