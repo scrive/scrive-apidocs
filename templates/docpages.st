@@ -785,11 +785,7 @@ pageDocumentForAuthorContentPreparation=
 	  <span class="text">Nästa steg</span>
 	</a>
       </div>
-       <div class="saveButton submitStepFormOnClick" >
-        <a href="#nextStep"><span class="icon floppyIcon"></span></a>
-        <a href="#nextStep"> <span class="text">Spara som utkast</span></a>
-      </div>
-    </div>
+     </div>
     
     <div id="signStepsMenu">
       <div id="step1select">
@@ -863,7 +859,7 @@ pageDocumentForAuthorContentPreparation=
 	          <!-- 008 changed/new -->
 	          <li class="plus"><a href="#add"  id="addSignatory">LÄGG TILL PERSON</a></li>
 	          <li class="minus"><a href="#remove"  id="delSignatory">TA BORT PERSON</a></li>
-	          <!-- <li><a href="#save" class="floppy">SPARA SOM MALL</a></li> -->
+	          <li  class="floppyIcon submitStepFormOnClick"><a href="#save">SPARA SOM MALL</a></li> 
 	          <li  class="arrowDown"><a href="$linkissuedocpdf$" target="_blank">LADDA NED SOM PDF</a></li>
 	        </ul>
 	      </div>
