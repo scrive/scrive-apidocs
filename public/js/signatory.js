@@ -354,7 +354,7 @@ function docstateToHTML(){
 	      $(".signViewBodyRight").each(function() {
 		var ff = $(this);
 		//console.log(s);
-		if(ff.text().indexOf(s.email) > -1) {
+		if(ff.text().indexOf(currentsig.email) > -1) {
 		  ff.find(".signatoryfields").append("<span class='text'>" + f.label + ": " +f.value+"</span>");
 		}
 	      });
