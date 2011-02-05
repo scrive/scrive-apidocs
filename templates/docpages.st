@@ -193,9 +193,69 @@ showSignatoryEntryForEdit2=
 ####
 ####
 pageDocumentForViewerHelpers=
-<script type="text/javascript"> var documentid = "$documentid$";  </script>
+<span class="templating_insert"> $signatoryEntry:noescape()$</span>,
+<script type="text/javascript"> 
+  var documentid = "$documentid$"; 
+</script>
+###
+pageDocumentForViewerContent = 
+  <div class="localdialogs">
+    <div style="display: none">
+      $helpers:noescape()$
+    </div>
+  </div>
+<div id="signStepsContainer"> 
+  <div id="signStepsTitleRow"> 
+     <span id="signStepsTitleRowTextContainer"> 
+      <span class="title">DOKUMENT:</span>
+      <span class="name">$documenttitle$ |</span>
+      <span class="title"> Transaktion #$documentid$ </span> 
+     </span>
+     <div class="downloadButton" >
+        <a href="$linkissuedocpdf$" target="_blank">
+         <span class="icon arrowDownIcon"></span>
+         <span class="text">Ladda ned PDF</span>
+       </a>
+   </div>
+  </div>
+  <div id="signStepsBody" class="forauthor"> 
+    <div id="signViewBodyLeft" > 
+      <span id="signViewBodyLeftTextContainer"> 
+        <span class="header">Granska</span><br>
+        <span class="text">Vänligen var noga med att granska dokumentet och 
+          kontrollera uppgifterna nedan innan du undertecknar.</span>
+      </span> 
+
+  <div> 
+   $if(awaitingauthor)$
+      <script type="text/javascript" src="/js/signatory.js" ></script>
+   $$
+   $elseif(pending)$
+      <script type="text/javascript" src="/js/signatory.js" ></script>
+   $endif$      
+  </div>
+
+    </div>
+    $signatories:noescape()$
+
+    <div id="signStepsBodyBorderBottom"></div>
+  </div>
+</div>
+
+<div id="documentBox">
+  <script type="text/javascript">
+    var docstate = $docstate:noescape()$;
+  </script>
+
+  <!-- 
+    I need to turn this stuff off since it brakes js now. TODO!!!!  
+    <script type="text/javascript" src="/js/signatory.js"></script>
+  -->
+  <div class="waiting4page"></div>
+</div>
+
 ####
-pageDocumentForViewerContent=  
+pageDocumentForViewerContentOLD=  
 <div class="localdialogs">
     <div style="display: none">
       $helpers:noescape()$
@@ -227,6 +287,9 @@ pageDocumentForViewerContent=
 </div>
 <div id="documentBox">
   <script type="text/javascript">$localscript:noescape()$</script>
+  $if(closed)$
+
+  
   <div class="waiting4page"></div>
 </div>
 
