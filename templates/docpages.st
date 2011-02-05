@@ -226,6 +226,7 @@ pageDocumentForViewerContent=
   </div>
 </div>
 <div id="documentBox">
+  <script type="text/javascript">$localscript:noescape()$</script>
   <div class="waiting4page"></div>
 </div>
 

@@ -804,8 +804,13 @@ function signatoryToHTML(sig) {
 	});
 
     sigentry.find("a.plus").click(function () {
-	    var field = $("<div class='newfield'><input class='newfieldbox' type='text' infotext='Type Field Name' /><a href='#' class='plus'></a></div>");
-	    field.find("a.plus").click(function () {
+      var field = $("<div class='newfield'><input class='newfieldbox' type='text' infotext='Type Field Name' /><a href='#' class='okIcon'></a><a href='#' class='minus'></a></div>");
+      field.find("a.minus").click(function() {
+        field.remove();
+        return false;
+      });
+
+      field.find("a.okIcon").click(function () {
 		    fieldname = field.find("input[type='text']").attr("value");
 		    if(fieldname == "Type Field Name" || fieldname == "") {
 			return false;
