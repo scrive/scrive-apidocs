@@ -46,6 +46,8 @@ import UserView (prettyName,UserSmallView(..))
 import Data.Typeable
 import Data.Data
 import Data.List (find)
+import Control.Monad (join)
+import Data.Maybe
 
 landpageSignInviteView ::KontrakcjaTemplates -> Document ->  IO String
 landpageSignInviteView templates  document =
@@ -492,6 +494,7 @@ pageDocumentForAuthor ctx
      invitationMailContent <- mailInvitationToSignContent (ctxtemplates ctx) False ctx document author Nothing
      restartForm <-   renderActionButton  (ctxtemplates ctx) (LinkRestart documentid) "restartButtonName"
      cancelMailContent <- mailCancelDocumentByAuthorContent  (ctxtemplates ctx) False Nothing ctx document author
+     documentinfotext <- documentInfoText (ctxtemplates ctx) document Nothing author
      renderTemplateComplex (ctxtemplates ctx) "pageDocumentForAuthorContent" $  
                                                               (setAttribute "documenttitle" $ BS.toString documenttitle) .
                                                               (setAttribute "documentid" $ show documentid) .
@@ -521,7 +524,8 @@ pageDocumentForAuthor ctx
                                                               (setAttribute "elegitimationonly" $ (isNothing $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)) .
                                                               (setAttribute "helpers" helpers) .
                                                               (setAttribute "docstate" (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks)) .
-                                                              (setAttribute "linkissuedocpdf" $ show (LinkIssueDocPDF document)) 
+                                                              (setAttribute "linkissuedocpdf" $ show (LinkIssueDocPDF document)) .
+                                                              (setAttribute "documentinfotext" $ documentinfotext)
    
 
 {- |
@@ -586,6 +590,7 @@ pageDocumentForViewer ctx
      invitationMailContent <- mailInvitationToSignContent (ctxtemplates ctx) False ctx document author Nothing
      restartForm <-   renderActionButton  (ctxtemplates ctx) (LinkRestart documentid) "restartButtonName"
      cancelMailContent <- mailCancelDocumentByAuthorContent  (ctxtemplates ctx) False Nothing ctx document author
+     documentinfotext <- documentInfoText (ctxtemplates ctx) document Nothing author
      renderTemplateComplex (ctxtemplates ctx) "pageDocumentForViewerContent" $  
                                                               (setAttribute "documenttitle" $ BS.toString documenttitle) .
                                                               (setAttribute "documentid" $ show documentid) .
@@ -615,7 +620,8 @@ pageDocumentForViewer ctx
                                                               (setAttribute "elegitimationonly" $ (isNothing $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)) .
                                                               (setAttribute "helpers" helpers) .
                                                               (setAttribute "docstate" (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks)) .
-                                                              (setAttribute "linkissuedocpdf" $ show (LinkIssueDocPDF document)) 
+                                                              (setAttribute "linkissuedocpdf" $ show (LinkIssueDocPDF document))  .
+                                                              (setAttribute "documentinfotext" $ documentinfotext)
  
                                                               
 showSignatoryLinkForSign::Context -> Document -> User -> SignatoryLink-> IO String
@@ -697,7 +703,8 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser,ctxtemplates})  docu
                               (setAttribute "message" $  message) .
                               (setAttribute "reminderForm" $ reminderForm) .
                               (setAttribute "changeEmailAddress" $  changeEmailAddress) 
-                       
+
+
 packToMString:: BS.ByteString -> Maybe String
 packToMString x = if BS.null x then Nothing else (Just $ BS.toString x) 
 
@@ -735,6 +742,7 @@ pageDocumentForSign action document ctx  invitedlink wassigned author =
                      ]  $ return ""   
                      
      partyUnsigned <- renderListTemplate (ctxtemplates ctx) $  map (BS.toString . personname') $ partyUnsignedMeAndList magichash document
+     documentinfotext <- documentInfoText (ctxtemplates ctx) document (Just invitedlink) author
      renderTemplateComplex (ctxtemplates ctx) "pageDocumentForSignContent" $
                  (setAttribute "helpers" helpers) .
                  (setAttribute "signatories" signatories) .
@@ -746,7 +754,28 @@ pageDocumentForSign action document ctx  invitedlink wassigned author =
                  (setAttribute "action" $ show action) .
                  (setAttribute "title" $ BS.toString $ documenttitle document) .
                  (setAttribute "linkissuedocpdf" $ show (LinkIssueDocPDF document)) .
-                 (setAttribute "docid" $ show $ documentid document)
+                 (setAttribute "docid" $ show $ documentid document) .
+                 (setAttribute "documentinfotext" $ documentinfotext)
+--Helper to get document after signing info text
+documentInfoText::KontrakcjaTemplates->Document->(Maybe SignatoryLink) -> User -> IO String
+documentInfoText templates document siglnk author =  
+  
+  renderTemplateComplex templates "documentInfoText" $ 
+                                                (setAttribute "notsignedbyme" $ isNothing $ join $ fmap maybesigninfo siglnk) .
+                                                (setAttribute "signedbyme" $ isJust $ join $ fmap maybesigninfo siglnk) .
+                                                (setAttribute "pending" $ documentstatus document == Pending) .
+                                                (setAttribute "cancel" $ documentstatus document ==  Canceled) .
+                                                (setAttribute "timedout" $ documentstatus document == Timedout) .
+                                                (setAttribute "rejected" $ documentstatus document == Rejected) .
+                                                (setAttribute "signed" $ documentstatus document == Closed) .
+                                                (setAttribute "awaitingauthor" $ documentstatus document == AwaitingAuthor) . 
+                                                (setAttribute "authorname" $ BS.toString $ userfullname author) 
+                                               
+                                                                                  
+
+
+
+
 
 --We keep this javascript code generation for now
 jsArray :: [[Char]] -> [Char]
