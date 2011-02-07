@@ -1,5 +1,4 @@
-{-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, NamedFieldPuns #-}
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -XOverlappingInstances -XTypeSynonymInstances #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Templates.Templates
@@ -7,49 +6,39 @@
 -- Stability   :  development
 -- Portability :  portable
 --
--- This is main templating module. Basic interface contains 
--- 'renderTemplate' and 'renderTemplateComplex' and 'setAttribute'.
--- 'renderTemplate'  takes template name and list of name<->string params maps
--- 'renderTemplateComplex' can handle passing advanced data structures to template
--- This module also provides reading template files, some checking and template info
--- 'KontrakcjaTemplates' is alias for template group, but ma be changed in a future
+-- This is main templating module. It provides basic interface for generation templates (RenderTemplate)
+-- with 'renderTemplate' function. We also provide types for templates and few functions for loading and testing
+-- 
 -----------------------------------------------------------------------------
 module Templates.Templates
-(RenderTemplate, readTemplates,renderTemplate,templateList,KontrakcjaTemplates,Templates.Templates.setAttribute,emptyTemplates) where
+(RenderTemplate, readTemplates,renderTemplate,templateList,KontrakcjaTemplates,Templates.Templates.setAttribute) where
 
-import Text.StringTemplate 
 import System.IO
 import Control.Monad
+import Control.Monad.State
 import Data.Maybe
 import Data.List
 import Data.Char
-import System.Log.Logger
-import Text.Html (stringToHtmlString)
-{-Names of template files -}
-templateFiles::[String]
-templateFiles = ["templates/landpages.st",
-                 "templates/flash.st",
-                 "templates/mails.st",
-                 "templates/utils.st",
-                 "templates/pages.st",
-                 "templates/payments.st",
-                 "templates/administration.st",
-                 "templates/userpages.st",
-                 "templates/docpages/doclist.st",
-                 "templates/docpages/doctexts.st",
-                 "templates/docpages/docview.st",
-                 "templates/apppages.st"]
+import Templates.TemplatesLoader (readTemplates,renderTemplateMain,templateList,KontrakcjaTemplate,KontrakcjaTemplates)
+import Text.StringTemplate.Base hiding (ToSElem,toSElem)
+import Text.StringTemplate.Classes hiding (ToSElem,toSElem)
+import qualified Text.StringTemplate.Classes as HST
+import qualified Text.StringTemplate (setAttribute)
+import Data.Map (fromList)
+import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString as BS
 
-type KontrakcjaTemplates =  STGroup String
-type KontrakcjaTemplate = StringTemplate String
 {- Filling template with a given name using given attributes
    It never fail, just returns empty message and writes something in the logs
-   HStringTemplate fails with UTF8 bytestrings so basic interface supports strings and lists of strings
+   Params - Templates (loaded from local files), Name of template, somethinmg that sets params value
 -}
 
 class RenderTemplate a where
   renderTemplate::KontrakcjaTemplates ->String -> a -> IO String 
- 
+
+{- Basic rendering interface 
+   It allows to pass some string attributes to templates. Usefull when working with simple templates
+ -}
 instance RenderTemplate () where
    renderTemplate ts name () = renderTemplateMain ts name ([]::[(String,String)]) id
    
@@ -60,9 +49,8 @@ instance RenderTemplate [(String, [String])] where
    renderTemplate ts name attrs = renderTemplateMain ts name attrs id
 
 
-{-This is special templating function . Use it carefull'y with setAttributes composition as last param
-  Remember that setAttributes can work with maps, data structures and other not-string stuff.
-  It should be used when template has some logic (usually iteration).See payments view for example
+{- More advanced schema allows to pass to template params for complex types.
+   This can be done by passing as last param composition of setAttributeFunction
 -}
 
 instance RenderTemplate (KontrakcjaTemplate -> KontrakcjaTemplate) where
@@ -71,82 +59,56 @@ instance RenderTemplate (KontrakcjaTemplate -> KontrakcjaTemplate) where
 
 {-Use this as (setAttributes name1 val1) . (setAttributes name2 val2) . (setAttributes name3 val3) -}
 setAttribute :: (ToSElem a) => String -> a -> KontrakcjaTemplate -> KontrakcjaTemplate
-setAttribute =  Text.StringTemplate.setAttribute
+setAttribute name value =  Text.StringTemplate.setAttribute name (toSElem value::SElem String)
 
---This is avaible only for special cases
-renderTemplateMain::(ToSElem a)=>KontrakcjaTemplates ->String->[(String, a)] -> (KontrakcjaTemplate-> KontrakcjaTemplate)->  IO String
-renderTemplateMain ts name params f = do 
-                               let ts' = setEncoderGroup stringToHtmlString ts
-                               let noescape = groupStringTemplates [("noescape", newSTMP "$it$" :: StringTemplate String)]
-                               let mt =  getStringTemplate name $ mergeSTGroups noescape ts'
-                               case mt of 
-                                  Just t -> do
-                                            let t'= f (setManyAttrib params  t)   
-                                            let (e,p,st) = checkTemplateDeep t'
-                                            when (not (null e) || not (null p) || not (null st)) $
-                                                    errorM "Happstack.Server" $ "Template " ++ name ++ " problem with message " ++(show (e,p,st)) 
-                                            return $ render t'
-                                  Nothing -> do
-                                              errorM "Happstack.Server" $ "No template named " ++ name 
-                                              return ""                                   
-readTemplates::IO KontrakcjaTemplates 
-readTemplates =   do
-                   ts <- sequence (map getTemplates templateFiles)
-                   return $ groupStringTemplates (concat ts)
+type Fields =   State ([(String,IO (SElem String))]) ()
+
+class Field a where 
+  field::String ->  a -> Fields
+
+instance (ToSElem a) => Field (IO a) where 
+  field a b = do
+             s <- get 
+             put ((a,fmap toSElem b):s)
 
 
-getTemplates::String -> IO [(String, StringTemplate String)]            
-getTemplates fp= do
-                 handle <- openFile fp ReadMode
-                 hSetEncoding handle utf8
-                 ts <- parseTemplates handle
-                 hClose handle
-                 return $ Prelude.map (fromJust) $ Prelude.filter isJust ts
+instance (ToSElem a) => Field a where 
+  field a b = do
+             s <- get 
+             put ((a,return $ toSElem b):s)
 
-parseTemplates::Handle-> IO [Maybe (String,StringTemplate String) ]
-parseTemplates handle =  do
-                     e <- hIsEOF handle
-                     if (e) 
-                      then return []
-                      else liftM2 (:) (parseTemplate handle) (parseTemplates handle)
 
-parseTemplate::Handle->IO (Maybe (String,StringTemplate String))                              
-parseTemplate handle = do
-                        ls <- parseLines handle
-                        let (name,t) = break (==  '=') $ head ls 
-                        if (null ls || null (name) || null t)
-                         then return Nothing   
-                         else do
-                              let template = intercalate "\r\n" ((tail t): (tail ls)) 
-                              return $ Just (filter isAlphaNum name,newSTMP template)
-parseLines::Handle->IO [String]                                    
-parseLines handle = do
-                     l <- hGetLine handle
-                     e <- hIsEOF handle
-                     if (e || isPrefixOf ("#") l) 
-                      then return []
-                      else fmap ((:) l) (parseLines handle)
+instance Field (Fields) where 
+  field a b =  do
+               s <- get 
+               let val = fmap (SM . fromList) $ sequence $ map packIO $ execState b [] 
+               put ((a,val):s)
 
-{- Template checker, printing info about params-}
-templateList :: IO ()
-templateList = do 
-                ts <- fmap concat $ sequence (map getTemplates templateFiles)         
-                let tsnames = map fst ts
-                let tsgroup = groupStringTemplates ts
-                sequence_ $ map (printTemplateData tsgroup) tsnames
-                
-printTemplateData::STGroup String -> String -> IO ()
-printTemplateData tsgroup name =  do 
-                                   let Just t = getStringTemplate name tsgroup
-                                   let (e,p,st) = checkTemplateDeep t
-                                   putStrLn $ name ++ ": " 
-                                   if (not $ null e) 
-                                      then putStrLn $ "PARSE ERROR " ++ (show e)
-                                      else if (not $ null st)  
-                                            then putStrLn $ "MISING SUBTEMPLATES " ++ (show st)
-                                            else 
-                                              do
-                                               sequence_ $ map (putStrLn . ("    " ++ )) p
-                                               putStrLn ""
-emptyTemplates::KontrakcjaTemplates                                               
-emptyTemplates = nullGroup                                               
+
+
+instance RenderTemplate Fields where
+   renderTemplate ts name fields = do
+                                    attrs <- sequence $ map packIO $ execState fields [] 
+                                    renderTemplateMain ts name ([]::[(String, String)]) (setManyAttrib attrs)
+   
+
+packIO::(a, IO b) -> IO (a,b)
+packIO (name,comp)= do 
+                     res <- comp
+                     return (name,res)
+                     
+                     
+                     
+
+-- | Importan Util. We overide default serialisation to support serialisation of bytestrings .
+-- | We use ByteString with UTF all the time but default is Latin-1 and we get strange chars 
+-- | after rendering
+
+class (HST.ToSElem a) => ToSElem a where
+  toSElem:: (Stringable b) => a -> SElem b
+
+instance (HST.ToSElem a) => ToSElem a where
+  toSElem = HST.toSElem
+
+instance ToSElem BS.ByteString where
+  toSElem = HST.toSElem . BS.toString                     

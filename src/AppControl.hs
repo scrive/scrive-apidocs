@@ -210,29 +210,6 @@ handleRoutes = msum [
      , fileServe [] "public"
                ]
 
-{-
-
-This is example of how to use heist. Let it be a comment until we decide either 
-we want it or remove from this file.
-
-Needed because Heist uses transformers rather than the old mtl package.
-
-import Text.Templating.Heist
-import Text.Templating.Heist.TemplateDirectory
-import qualified "monads-fd" Control.Monad.Trans as TRA
-
-instance (MonadIO m) => TRA.MonadIO (ServerPartT m) 
-    where liftIO = liftIO
-
-   dir "heist" $ path $ \name -> do
-         td <- liftIO $ newTemplateDirectory' "tpl" emptyTemplateState
-         let template = BS.fromString name
-         ts    <- liftIO $ getDirectoryTS td
-         bytes <- renderTemplate ts template
-         flip (maybe mzero) bytes $ \x -> do
-              return (toResponseBS (BS.fromString "text/html; charset=utf-8") (L.fromChunks [x]))
--}
-
 handleHomepage = do
   ctx@Context{ctxmaybeuser, ctxtemplates} <- get
   case ctxmaybeuser of
