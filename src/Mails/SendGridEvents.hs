@@ -11,13 +11,13 @@
 -- mailinfo param is set when we are sending mails. 
 -----------------------------------------------------------------------------
 module Mails.SendGridEvents(handleSendgridEvent) where
-import User
+import Kontra
 import Control.Monad.Trans
 import KontraLink
 import Misc 
 import Data.Maybe
 import qualified Mails.MailsUtil as Mail
-import DocState
+import Doc.DocState
 import Happstack.State (update,query)
 import Mails.SendMail
 import Templates.Templates

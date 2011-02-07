@@ -26,7 +26,6 @@ import qualified AppLogger as Log
 import AppState (AppState(..))
 import AppControl (appHandler,defaultAWSAction,AppConf(..),AppGlobals(..))
 import qualified Control.Concurrent (threadDelay)
-import qualified User as User
 import qualified Data.ByteString.Char8 as BS
 import System.IO
 
@@ -38,13 +37,13 @@ import qualified Control.Exception as Exception
 import Happstack.State.Saver
 import Scheduler
 import Happstack.State (update,query)
-import DocControl
-import DocState
+import Doc.DocControl
+import Doc.DocState
 import qualified Amazon as AWS
 import Mails.MailsConfig
 import Mails.SendMail
 import Templates.Templates (readTemplates,emptyTemplates)
-import User
+import Kontra
 import qualified TrustWeaver as TW
 
 {- | Getting application configuration. Reads 'kontrakcja.conf' from current directory
@@ -110,12 +109,12 @@ listenOn port = do
 initDatabaseEntries :: IO ()
 initDatabaseEntries = do
   -- create initial database entries
-  passwdhash <- User.createPassword (BS.pack "admin")
-  flip mapM_ User.initialUsers $ \email -> do
-      maybeuser <- query $ User.GetUserByEmail email
+  passwdhash <- Kontra.createPassword (BS.pack "admin")
+  flip mapM_ Kontra.initialUsers $ \email -> do
+      maybeuser <- query $ Kontra.GetUserByEmail email
       case maybeuser of
           Nothing -> do
-              update $ User.AddUser BS.empty (User.unEmail email) passwdhash Nothing
+              update $ Kontra.AddUser BS.empty (Kontra.unEmail email) passwdhash Nothing
               return ()
           Just _ -> return () -- user exist, do not add it
   

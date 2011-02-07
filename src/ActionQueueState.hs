@@ -6,7 +6,7 @@ import Happstack.State
 import Control.Monad.Reader (ask)
 import Control.Monad.State (modify)
 import Control.Monad.Trans
-import UserState
+import User.UserState
 import Happstack.Data.IxSet as IxSet
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
@@ -29,7 +29,7 @@ import Data.Maybe
 import Mails.MailsUtil
 import Control.Concurrent
 import qualified TrustWeaver as TW
-import DocState
+import Doc.DocState
 
 $(deriveAll [''Eq, ''Ord, ''Default]
   [d|

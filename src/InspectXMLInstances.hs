@@ -9,13 +9,13 @@
 -----------------------------------------------------------------------------
 
 module InspectXMLInstances() where
-import DocState
+import Doc.DocState
 import HSP
-import User
+import Kontra
 import Misc
 import MinutesTime
 import InspectXML
-import UserState
+import User.UserState
 import Payments.PaymentsState
 import Mails.MailsUtil
 import KontraLink

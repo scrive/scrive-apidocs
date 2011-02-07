@@ -1,8 +1,8 @@
 {-# OPTIONS_GHC -F -pgmFtrhsx #-}
 module KontraLink(KontraLink(..), sendRedirect ) where
 
-import UserState
-import DocState
+import User.UserState
+import Doc.DocState
 import Session
 import Happstack.Server
 import Happstack.Server.SimpleHTTP

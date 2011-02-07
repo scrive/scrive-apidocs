@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -F -pgmFtrhsx -Wall #-}
 
-module DocViewMail ( mailDocumentRemind,
+module Doc.DocViewMail ( mailDocumentRemind,
                      mailDocumentRemindContent,
                      mailDocumentRejected,
                      mailRejectMailContent,
@@ -14,18 +14,18 @@ module DocViewMail ( mailDocumentRemind,
                      mailDocumentError,
                      mailCancelDocumentByAuthor
            ) where
-import DocState
+import Doc.DocState
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
-import User
+import Kontra
 import KontraLink
 import Data.Maybe
 import Mails.SendMail(Mail,emptyMail,content,title,attachments,fullnameemails)
-import DocViewUtil
+import Doc.DocViewUtil
 import Amazon
 import Templates.Templates 
 import Templates.TemplatesUtils
-import UserView (prettyName)
+import User.UserView (prettyName)
 
 mailDocumentRemind :: KontrakcjaTemplates 
                    -> Maybe (BS.ByteString) 

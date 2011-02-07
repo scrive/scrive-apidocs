@@ -1,11 +1,11 @@
-module UserControl where
+module User.UserControl where
 import Control.Monad.State
 import Control.Monad.Trans (liftIO,MonadIO,lift)
 import Control.Monad
 import AppView
 import Data.Maybe
-import DocState
-import DocView
+import Doc.DocState
+import Doc.DocView
 import Happstack.Data.IxSet 
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.Server.HSP.HTML (webHSP)
@@ -18,9 +18,9 @@ import Session
 import System.Log.Logger
 import System.Process
 import System.Random
-import User
-import UserState
-import UserView
+import Kontra
+import User.UserState
+import User.UserView
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Lazy as LS

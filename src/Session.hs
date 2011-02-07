@@ -30,7 +30,7 @@ import Happstack.Data.IxSet
 import qualified Happstack.Data.IxSet as IxSet
 import Happstack.Server.HTTP.Types ()
 import Happstack.State 
-import UserState (UserID,FlashMessage,GetUserByUserID(GetUserByUserID), User)
+import User.UserState (UserID,FlashMessage,GetUserByUserID(GetUserByUserID), User)
 import MinutesTime
 import Happstack.Server
 import System.Random

@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -F -pgmFtrhsx -Wall #-}
-module UserView(
+module User.UserView(
    --pages
     viewSubaccounts,
     showUser,
@@ -39,8 +39,8 @@ module UserView(
 
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
-import UserState
-import User
+import User.UserState
+import Kontra
 import KontraLink
 import Mails.SendMail(Mail,emptyMail,title,content)
 import Templates.Templates 

@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -F -pgmFtrhsx #-}
 
-module User 
-    ( module UserState
+module Kontra
+    ( module User.UserState
     , Context(..)
     , isSuperUser
     , Kontra(..)
@@ -25,7 +25,7 @@ import Codec.Utils (Octet)
 import Control.Concurrent.MVar
 import Data.HMAC (hmac_sha1)
 import Data.Word
-import DocState
+import Doc.DocState
 import HSP hiding (Request)
 import Happstack.Server
 import MinutesTime
@@ -34,7 +34,7 @@ import System.IO.Unsafe
 import System.Log.Logger
 import System.Process
 import Happstack.State (query,QueryEvent)
-import UserState
+import User.UserState
 import qualified Codec.Binary.Base64 as Base64
 import qualified Data.Binary as Binary
 import qualified Data.ByteString as BS

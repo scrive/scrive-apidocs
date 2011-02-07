@@ -16,7 +16,7 @@ import Happstack.Server hiding (simpleHTTP)
 import Happstack.State (update)
 import KontraLink
 import Misc
-import User
+import Kontra
 import HSP (cdata)
 import Payments.PaymentsState
 import Payments.PaymentsView

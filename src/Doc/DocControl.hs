@@ -1,7 +1,7 @@
 {- |
    DocControl represents the controler (in MVC) of the document.
  -}
-module DocControl where
+module Doc.DocControl where
 
 import AppView
 import Control.Concurrent
@@ -14,9 +14,9 @@ import Data.List
 import Data.Maybe
 import Data.Word
 import Debug.Trace
-import DocState
-import DocView
-import DocViewMail
+import Doc.DocState
+import Doc.DocView
+import Doc.DocViewMail
 import HSP
 import Happstack.Data.IxSet 
 import Happstack.Server hiding (simpleHTTP)
@@ -32,10 +32,10 @@ import System.Directory
 import System.Exit
 import System.IO
 import System.Process
-import User
-import UserControl
-import UserState
-import UserView (prettyName)
+import Kontra
+import User.UserControl
+import User.UserState
+import User.UserView (prettyName)
 import qualified Amazon as AWS
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
@@ -895,7 +895,7 @@ handlePageOfDocument documentid = do
       if any pending b
        then notFound (toResponse "temporary unavailable (document has files pending for process)")
        else do
-              pages <- liftIO $ DocView.showFilesImages2 (ctxtemplates ctx) $ zip f b
+              pages <- liftIO $ Doc.DocView.showFilesImages2 (ctxtemplates ctx) $ zip f b
               webHSP $ return $ cdata pages
 
 {- |

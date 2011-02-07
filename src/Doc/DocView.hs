@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wall #-}
 
-module DocView( emptyDetails
+module Doc.DocView( emptyDetails
               , showFilesImages2
               , pageDocumentForAuthor
               , pageDocumentForViewer
@@ -29,19 +29,19 @@ module DocView( emptyDetails
               , isNotLinkForUserID
               , signatoryDetailsFromUser
               ) where
-import DocState
+import Doc.DocState
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
-import User
+import Kontra
 import KontraLink
 import Misc
 import MinutesTime
-import DocViewMail
-import DocViewUtil
+import Doc.DocViewMail
+import Doc.DocViewUtil
 import Templates.Templates
 import Templates.TemplatesUtils
 import Mails.MailsUtil
-import UserView (prettyName,UserSmallView(..))
+import User.UserView (prettyName,UserSmallView(..))
 import Data.Typeable
 import Data.Data
 import Data.List (find)

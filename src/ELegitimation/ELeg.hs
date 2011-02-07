@@ -3,7 +3,7 @@ module ELegitimation.ELeg where
 
 import Happstack.Data
 import Happstack.State
-import DocState
+import Doc.DocState
 import MinutesTime
 import Misc
 
