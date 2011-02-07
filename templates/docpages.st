@@ -253,43 +253,6 @@ pageDocumentForViewerContent =
 </div>
 
 ####
-pageDocumentForViewerContentOLD=  
-<div class="localdialogs">
-    <div style="display: none">
-      $helpers:noescape()$
-    </div>
-</div>
-<div id="signStepsContainer"> 
-  <div id="signStepsTitleRow"> <span id="signStepsTitleRowTextContainer"> 
-    <span class="title">DOKUMENT:</span> 
-    <span class="name">$title$ |</span> 
-    <span class="title">  Transaktion #$docid$ </span> 
-   </span>
-     <div class="downloadButton" >
-        <a href="$linkissuedocpdf$" target="_blank">
-         <span class="icon arrowDownIcon"></span>
-         <span class="text">Ladda ned PDF</span>
-       </a>
-     </div>
-  </div>
-  <div id="signStepsBody"> 
-    <div id="signViewBodyLeft" > 
-      <span id="signViewBodyLeftTextContainer"> 
-        $documentinfotext:noescape()$
-      </span> 
-    </div>
-    $signatorylist:noescape()$
-    <div id="signStepsBodyBorderBottom"></div>
-  </div>
-</div>
-<div id="documentBox">
-  <script type="text/javascript">$localscript:noescape()$</script>
-  $if(closed)$
-
-  
-  <div class="waiting4page"></div>
-</div>
-
 ####
 showDocumentPageHelper=
 <div class="docview">
@@ -371,40 +334,6 @@ showSignatoryLinkForSign =
   
 </div>
 ####
-showSignatoryLinkForSignOld =
-<div class="$mainclass$">
-  <img src="$status$">
-
-  $if(changeEmailAddress)$
-  <span style="color:#000000;position:relative;top:-3px">!</span>
-  $endif$
-
-  $if(signatoryname)$
-  $signatoryname$<BR>
-  $endif$
-
-  $if(signatorycompany)$
-  $signatorycompany$<BR>
-  $endif$
-
-  $if(signatorynumber)$
-  $signatorynumber$<BR>
-  $endif$
-
-  $if(signatoryemail)$
-  $signatoryemail$<BR>
-  $endif$
-
-  <div class="signatoryfields">
-    $fields:{field| <div><span class="fieldlabel">$field.fieldlabel$: </span><span class="fieldvalue">$field.fieldvalue$</span></div>}$
-  </div>
-  
-  $message:noescape()$
-  <BR>
-  $reminderForm:noescape()$
-  $changeEmailAddress:noescape()$
-</div>
-
 ####
 pageDocumentForSignHelpers=
 <script type="text/javascript"> var documentid = "$documentid$"; 
@@ -529,62 +458,6 @@ pageDocumentForSignContent=
 </div>
     
 ###
-
-pageDocumentForSignContent_old= 
-<span>
-  <p>Vänligen var noga med att granska dokumentet och kontrollera 
-    uppgifterna nedan innan du undertecknar.</p>   
-
-  $signatories:noescape()$
-  $messageoption:noescape()$
-  <span class="localdialogs ">
-    <form method="post" name="form" action="$action$" id="dialog-confirm-sign" class="overlay">     
-      <a class="close"> </a>                  
-      <h2>Underteckna</h2>  
-      <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
-      <p>När $partyUnsigned:noescape()$ undertecknat blir 
-        avtalet <strong>juridiskt bindande</strong> och
-        det färdigställda avtalet skickas till din e-post.</p>
-      <div class="buttonbox">
-        <input type="hidden" name="sign" value="automatic">
-        <button class="close button" type="button"> Avbryt </button>
-        <button class="submiter button" type="button"> Underteckna </button>
-      </div>
-    </form>
-    <form method="post" name="form" action=action id="dialog-confirm-sign-eleg" class="overlay">     
-      <script type="text/javascript" src="/js/bankid.js"></script>
-      <a class="close"> </a>                  
-      <h2>Underteckna with E-Legitimation</h2>  
-      <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
-      <p>När $partyUnsigned:noescape()$ undertecknat blir 
-        avtalet <strong>juridiskt bindande</strong> och
-        det färdigställda avtalet skickas till din e-post.</p>
-      <div class="buttonbox">
-        <input type="hidden" name="bankid" value="automatic">
-        <input type="hidden" name="signature" value="" id="signature">
-        <input type="hidden" name="transactionid" value="" id="transactionid">
-        <button class="close button" type="button"> Avbryt </button>
-        <button class="bankid button" type="button"> Underteckna with BankID</button>
-      </div>
-    </form>
-    <form method="post" name="form" action="$action$" id="dialog-confirm-cancel" class="overlay">   
-      <a class="close"> </a>     
-      <h2>Avvisa</h2>                 
-      <p>Är du säker på att du vill avvisa dokumentet <strong>$documenttitle$</strong>?</p>
-      <p>När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela <strong>$authorname$</strong>.</p>
-      <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
-        $rejectMessage:noescape()$
-      </div>
-      <div class="buttonbox">
-        <input type="hidden" name="cancel" value="automatic">
-        <button class="close button" type="button"> Avbryt </button>
-        <button class="editer button" type="button"> Skriv eget meddelande </button>
-        <button class="submiter button" type="button"> Avvisa </button>
-      </div> 
-    </form> 
-  </span>
-  
-</span>
 ####
 pageDocumentForAuthorHelpers=
 <span class="templating_insert"> $signatoryEntry:noescape()$</span>,
@@ -689,131 +562,6 @@ pageDocumentForAuthorHelpersLocalDialogs=
 </div>
 
 #####
-pageDocumentForAuthorContent_old=
-<div>
-  <div id="loading-message" style="display:none">
-    Loading pages . . .
-  </div>
-  <div id="edit-bar">
-    $if(preparation)$
-    <span>
-      <script type="text/javascript" type="text/javascript">
-        $jscript:noescape()$
-      </script>
-      <form method="post" name="form" action="$linkissuedoc$" id="main-document-form"> 
-        Avsändare<br>
-        <div style="margin-bottom: 10px;" id="authordetails">
-          <strong><span id="sauthorname">$authorname$<BR></span></strong>
-          <span id="sauthorcompany">$authorcompany$<BR></span>
-          <span id="sauthornumber">$authornumber$<BR></span>
-          <span id="sauthoremail">$authoremail$<BR></span>
-        </div>
-        Användarroll 
-        $if(authorhaslink)$ 
-        
-        <select name="authorrole" id="authorroledropdown">
-          <option value="signatory">Undertecknare</option>
-          <option value="secretary">Sekreterare</option>
-        </select>
-        $else$
-        <select name="authorrole" id="authorroledropdown">
-          <option value="secretary">Sekreterare</option>
-          <option value="signatory">Undertecknare</option>
-        </select> 
-        $endif$
-        
-        <br><br>
-
-        Motpart<br>
-        <div id="signatorylist">
-          $signatoriesForEdit:noescape()$
-        </div>
-        <small><a id="addsiglink" onclick="signatoryadd(); return false;" href="#">Lägg till fler</a></small>
-        <div style="margin-top: 20px">
-          <small><a rel="#edit-invite-text-dialog" id="editinvitetextlink" href="#" style="padding-top:3px">Hälsningsmeddelande</a></small>
-          <input type="hidden" id="invitetext" name="invitetext" value="$documentinvitetext$">
-        </div>
-        <div style="margin-top: 20px"></div>
-        <span>
-          <input type="checkbox" class="addremovecheckbox flashOnOn" rel="#daystosignbox" location="#datetosigncontainer" oldlocation="#hiddenttimestuffbox" autocomplete="off" value="$if(timetosignset)$on$else$off$endif$" /> Välj förfallodatum
-          <div id="datetosigncontainer">  </div>
-          $if(!timetosignset)$
-          <span class="hidden flashMessage" > Varning: Om du väljer ett förfallodatum kan du inte återkalla inbjudan innan datumet förfallit. Detta regleras av avtalslagen.</span>
-          $endif$   
-
-        </span>
-
-	<div style="display:none">
-	  <select name="allowedsignaturetypes" id="allowedbox">
-	    <option value="Email+ELeg" $if(emailelegitimation)$ selected="true" $endif$>Email and E-Legitimation (extra charge)</option>
-	    <option value="Email" $if(emailonly)$ selected="true" $endif$>Email only</option>
-	    <option value="ELeg" $if(elegitimationonly)$ selected="true" $endif$>E-Legitimation (extra charge)</option>
-	  </select>
-        </div>
-
-        <div style="height: 70px;">
-          <input class="bigbutton cross-button" type="submit" name="final" value="Underteckna" id="signinvite" rel="#dialog-confirm-signinvite"> <br>
-	  <input class="bigbutton cross-button" type="submit" name="signbankid" value="Underteckna with E-Leg" id="signbankid" rel="#dialog-confirm-sign-eleg"> <br>
-          <input class="button" type="submit" name="save" value="Spara som utkast">
-        </div>
-      </form>
-      $pageDocumentForAuthorHelpersLocalDialogs:noescape()$
-    </span>
-    $else$
-    <span>
-      $if(pending)$
-      <script type="text/javascript" language="Javascript" src="/js/showfields.js">  </script>
-      $if(anyinvitationundelivered)$
-      <p> Adressen 
-        <strong>
-          $undelivered; separator=", "$ 
-        </strong> existerar inte. Kontrollera adressen och försök igen.
-      </p>
-      $endif$
-      $endif$
-      <script type="text/javascript">
-        $jscript:noescape()$
-      </script>
-      
-      <div id="signatorylist">
-        $signatories:noescape()$
-      </div>
-      $if(awaitingauthor)$
-      <form method="post" action=""><input class="bigbutton cross-button" type="submit" name="final" value="Underteckna" id="signinvite"></form>
-      $endif$
-      $if(pending)$
-      $if(!timetosignset)$
-      <span>
-        <input class="button cancel" type="button" name="cancel" value="Återkalla inbjudan"  rel="#cancel-by-author-dialog">    
-        <span class="localdialogs">
-          <form method="post" action="$linkcancel$" class="overlay" id="cancel-by-author-dialog">
-            <a class="close"> </a>
-            <h2> Återkalla inbjudan </h2>
-            <p>Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?
-              <BR>När du återkallat inbjudan kommer nedanstaende meddelande att skickas till dina motparter.
-            </p>
-            <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
-              $cancelMailContent:noescape()$
-            </div>
-            <div class="buttonbox" >
-              <button class="close button" type="button"> Avbryt </button>
-              <button class="editer button" type=""> Skriv eget meddelande </button>
-              <button class="submiter button" type="button"> Återkalla inbjudan</button>
-            </div>
-          </form>
-        </span>
-      </span>
-      $else$
-      <span>Du kan inte återkalla inbjudan före förfallodatum.</span>
-      $endif$   
-      $endif$      
-      $if(canberestarted)$
-      $restartForm:noescape()$
-      $endif$ 
-      $endif$
-  </div>
-</div>
-
 ####
 pageDocumentForAuthorContent=
     $if(preparation)$
