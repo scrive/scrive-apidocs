@@ -4,12 +4,12 @@ import Test.HUnit (assert, assertEqual, assertFailure, Assertion(..))
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 
-import DocState
+import Doc.DocState
 import MinutesTime
 import Misc
 import Templates.Templates
 import Mails.SendMail
-import User
+import Kontra
 import Mails.MailsUtil
 import Mails.MailsConfig
 import KontraLink 

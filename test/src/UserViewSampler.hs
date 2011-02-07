@@ -6,7 +6,7 @@ import Test.HUnit (assert, assertEqual, assertFailure, Assertion(..))
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 
-import UserView
+import User.UserView
 import SamplerHelper
 import SampleData
 import KontraLink

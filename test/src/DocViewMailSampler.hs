@@ -6,7 +6,7 @@ import Test.HUnit (assert, assertEqual, assertFailure, Assertion(..))
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 
-import DocViewMail
+import Doc.DocViewMail
 import SamplerHelper
 import SampleData
 

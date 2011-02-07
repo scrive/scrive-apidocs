@@ -6,12 +6,12 @@ import Test.HUnit (assert, assertEqual, assertFailure, Assertion(..))
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 
-import DocView
+import Doc.DocView
 import SamplerHelper
 import SampleData
-import User
-import DocState
-import UserState
+import Kontra
+import Doc.DocState
+import User.UserState
 import Misc
 import AppView
 import KontraLink
