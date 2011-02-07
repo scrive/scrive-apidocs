@@ -47,6 +47,7 @@ import Data.Data
 import Data.List (find)
 import Control.Monad (join)
 import Data.Maybe
+import Doc.DocViews
 
 landpageSignInviteView ::KontrakcjaTemplates -> Document ->  IO String
 landpageSignInviteView templates  document =
@@ -63,7 +64,7 @@ landpageSendInviteView templates  document =
                                                           ("documenttitle",BS.toString $ documenttitle document )]
 
 willCreateAccountForYou::KontrakcjaTemplates -> Document->SignatoryLink->Bool->  IO String
-willCreateAccountForYou templates  _ _ False =  renderTemplate templates "willCreateAccountForYouNoAccount" ([]::[(String,String)])
+willCreateAccountForYou templates  _ _ False =  renderTemplate templates "willCreateAccountForYouNoAccount" ()
 willCreateAccountForYou templates  document siglink True = 
                                      renderTemplate templates  "willCreateAccountForYouHasAccount" 
                                                                      [("documentid",show $ unDocumentID $ documentid document),
@@ -93,16 +94,16 @@ landpageSignedView templates document@Document{documenttitle,documentstatus} sig
                                                              ("willCreateAccountForYou", willCreateAccountForYouProposal)]   
 
 landpageLoginForSaveView::KontrakcjaTemplates ->IO String
-landpageLoginForSaveView  templates  = renderTemplate templates  "landpageLoginForSaveView" []
+landpageLoginForSaveView  templates  = renderTemplate templates  "landpageLoginForSaveView" ()
 
 landpageDocumentSavedView ::KontrakcjaTemplates -> IO String
-landpageDocumentSavedView templates  = renderTemplate templates  "landpageDocumentSavedView" []
+landpageDocumentSavedView templates  = renderTemplate templates  "landpageDocumentSavedView" ()
 
 flashDocumentDraftSaved :: KontrakcjaTemplates ->IO String
-flashDocumentDraftSaved  templates  = renderTemplate templates  "flashDocumentDraftSaved" []
+flashDocumentDraftSaved  templates  = renderTemplate templates  "flashDocumentDraftSaved" ()
 
 flashDocumentRestarted :: KontrakcjaTemplates ->IO String
-flashDocumentRestarted  templates  = renderTemplate templates "flashDocumentRestarted" []
+flashDocumentRestarted  templates  = renderTemplate templates "flashDocumentRestarted" ()
 
 flashRemindMailSent :: KontrakcjaTemplates -> SignatoryLink -> IO String                                
 flashRemindMailSent templates  signlink@SignatoryLink{maybesigninfo = Nothing}  = 
@@ -112,7 +113,7 @@ flashRemindMailSent templates  signlink =
 
 
 flashMessageCanceled :: KontrakcjaTemplates -> IO String
-flashMessageCanceled templates = renderTemplate templates  "flashMessageCanceled" []
+flashMessageCanceled templates = renderTemplate templates  "flashMessageCanceled" ()
 
 
 --All doc view
@@ -180,16 +181,16 @@ documentSmallView crtime user doc = DocumentSmallView {
                                                                             
 
 pageDocumentList:: KontrakcjaTemplates -> MinutesTime -> User -> [Document] -> IO String
-pageDocumentList templates ctime user documents = renderTemplateComplex templates "pageDocumentList" $
+pageDocumentList templates ctime user documents = renderTemplate templates "pageDocumentList" $
                                                         (setAttribute "documents" $ map (documentSmallView ctime user) $ filter (not . documentdeleted) documents)
 
 
     
 showFileImages ::KontrakcjaTemplates -> File -> JpegPages -> IO String
-showFileImages templates File{fileid} (JpegPages jpgpages) = renderTemplateComplex templates "showFileImagesReady" $
+showFileImages templates File{fileid} (JpegPages jpgpages) = renderTemplate templates "showFileImagesReady" $
                                                               (setAttribute "fileid" $ show fileid) .
                                                               (setAttribute "pages" $ [1..(length jpgpages)])                                                          
-showFileImages templates _ JpegPagesPending = renderTemplate templates  "showFileImagesPending" []    
+showFileImages templates _ JpegPagesPending = renderTemplate templates  "showFileImagesPending" ()    
 showFileImages templates _ (JpegPagesError normalizelog) = renderTemplate templates  "showFileImagesError" [("normalizelog",BS.toString normalizelog)]
   
      
@@ -260,7 +261,7 @@ pageDocumentForAuthor ctx
      restartForm <-   renderActionButton  (ctxtemplates ctx) (LinkRestart documentid) "restartButtonName"
      cancelMailContent <- mailCancelDocumentByAuthorContent  (ctxtemplates ctx) False Nothing ctx document author
      documentinfotext <- documentInfoText (ctxtemplates ctx) document Nothing author
-     renderTemplateComplex (ctxtemplates ctx) "pageDocumentForAuthorContent" $  
+     renderTemplate (ctxtemplates ctx) "pageDocumentForAuthorContent" $  
                                                               (setAttribute "documenttitle" $ BS.toString documenttitle) .
                                                               (setAttribute "documentid" $ show documentid) .
                                                               (setAttribute "linkissuedoc" $ show $ LinkIssueDoc documentid) .
@@ -322,7 +323,7 @@ pageDocumentForViewer ctx
      restartForm <-   renderActionButton  (ctxtemplates ctx) (LinkRestart documentid) "restartButtonName"
      cancelMailContent <- mailCancelDocumentByAuthorContent  (ctxtemplates ctx) False Nothing ctx document author
      documentinfotext <- documentInfoText (ctxtemplates ctx) document Nothing author
-     renderTemplateComplex (ctxtemplates ctx) "pageDocumentForViewerContent" $  
+     renderTemplate (ctxtemplates ctx) "pageDocumentForViewerContent" $  
                                                               (setAttribute "documenttitle" $ BS.toString documenttitle) .
                                                               (setAttribute "documentid" $ show documentid) .
                                                               (setAttribute "linkissuedoc" $ show $ LinkIssueDoc documentid) .
@@ -391,22 +392,22 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser,ctxtemplates})  docu
       message <- caseOf
                    [
                     (wasSigned, renderTemplate ctxtemplates "signatoryMessageSigned" [("date", showDateOnly $ signtime $ fromJust maybesigninfo)]),  
-                    (isTimedout, renderTemplate ctxtemplates "signatoryMessageTimedout" []),
+                    (isTimedout, renderTemplate ctxtemplates "signatoryMessageTimedout" ()),
                     (isCanceled || isRejected, return "" ),
                     (wasSeen,  renderTemplate ctxtemplates "signatoryMessageSeen" [("date", showDateOnly $ signtime $ fromJust maybeseeninfo)])
-                   ]        (renderTemplate ctxtemplates "signatoryMessageNotSigned" [])
+                   ]        (renderTemplate ctxtemplates "signatoryMessageNotSigned" ())
       reminderText <- if (wasSigned)
-                      then renderTemplate ctxtemplates "reminderTextSigned" [] 
-                      else renderTemplate ctxtemplates "reminderTextNotSigned" []
+                      then renderTemplate ctxtemplates "reminderTextSigned" () 
+                      else renderTemplate ctxtemplates "reminderTextNotSigned" ()
       reminderSenderText <- 
                      if (wasSigned)
-                      then renderTemplate ctxtemplates "reminderSenderTextSigned" [] 
-                      else renderTemplate ctxtemplates "reminderSenderTextNotSigned" []             
-      reminderEditorText <- renderTemplate ctxtemplates "reminderEditorText" []                         
+                      then renderTemplate ctxtemplates "reminderSenderTextSigned" () 
+                      else renderTemplate ctxtemplates "reminderSenderTextNotSigned" ()             
+      reminderEditorText <- renderTemplate ctxtemplates "reminderEditorText" ()                         
       reminderDialogTitle <- return reminderText   
       reminderMessage <-  mailDocumentRemindContent ctxtemplates Nothing ctx document siglnk author
       reminderForm <- whenMaybe (isCurrentUserAuthor && (not isCurrentSignatorAuthor) && (not dontShowAnyReminder) && (invitationdeliverystatus /= Undelivered)) $
-                        renderTemplateComplex ctxtemplates "reminderForm" $  
+                        renderTemplate ctxtemplates "reminderForm" $  
                                          (setAttribute "reminderDialogTitle" $  reminderDialogTitle) .
                                          (setAttribute "signatorylinkid" $  show signatorylinkid ) .
                                          (setAttribute "reminderText" $  reminderDialogTitle) .
@@ -417,10 +418,10 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser,ctxtemplates})  docu
                                          (setAttribute "linkremind" $ show (LinkRemind document siglnk)) 
                                       
       changeEmailAddress <-  whenMaybe (isCurrentUserAuthor && (invitationdeliverystatus == Undelivered) && (not dontShowAnyReminder)) $ 
-                                renderTemplateComplex ctxtemplates "changeEmailAddress" $  
+                                renderTemplate ctxtemplates "changeEmailAddress" $  
                                          (setAttribute "linkchangeemail" $  show $ LinkChangeSignatoryEmail (documentid document) signatorylinkid) .
                                          (setAttribute "signatoryemail" $  BS.toString signatoryemail)          
-      renderTemplateComplex ctxtemplates "showSignatoryLinkForSign" $  
+      renderTemplate ctxtemplates "showSignatoryLinkForSign" $  
                               (setAttribute "mainclass" $         if isCurrentSignatorAuthor  then "author" else "signatory") .
                               (setAttribute "status" $ status) .
                               (setAttribute "signatoryname" $     packToMString signatoryname ) .
@@ -464,16 +465,16 @@ pageDocumentForSign action document ctx  invitedlink wassigned author =
      rejectMessage <- mailRejectMailContent (ctxtemplates ctx) Nothing ctx (prettyName author) document (personname invitedlink)                                                        
      signatories <- fmap concat $ sequence $ map (showSignatoryLinkForSign ctx document author) (invitedlink : allbutinvited)
      messageoption <- caseOf [ 
-                     (wassigned,                           renderTemplate (ctxtemplates ctx) "pageDocumentForSignSigned" []),  
-                     (documentstatus document == Timedout, renderTemplate (ctxtemplates ctx) "pageDocumentForSignTimedout" []),
-                     (documentstatus document == Pending,  renderTemplateComplex (ctxtemplates ctx) "pageDocumentForSignButtons" $ 
+                     (wassigned,                           renderTemplate (ctxtemplates ctx) "pageDocumentForSignSigned" ()),  
+                     (documentstatus document == Timedout, renderTemplate (ctxtemplates ctx) "pageDocumentForSignTimedout" ()),
+                     (documentstatus document == Pending,  renderTemplate (ctxtemplates ctx) "pageDocumentForSignButtons" $ 
                       (setAttribute "emailallowed" $  isJust $ find (== EmailIdentification) allowedtypes) .
                       (setAttribute "elegallowed" $ isJust $ find (== ELegitimationIdentification) allowedtypes))
                      ]  $ return ""   
                      
      partyUnsigned <- renderListTemplate (ctxtemplates ctx) $  map (BS.toString . personname') $ partyUnsignedMeAndList magichash document
      documentinfotext <- documentInfoText (ctxtemplates ctx) document (Just invitedlink) author
-     renderTemplateComplex (ctxtemplates ctx) "pageDocumentForSignContent" $
+     renderTemplate (ctxtemplates ctx) "pageDocumentForSignContent" $
                  (setAttribute "helpers" helpers) .
                  (setAttribute "signatories" signatories) .
                  (setAttribute "messageoption" messageoption) .
@@ -490,7 +491,7 @@ pageDocumentForSign action document ctx  invitedlink wassigned author =
 documentInfoText::KontrakcjaTemplates->Document->(Maybe SignatoryLink) -> User -> IO String
 documentInfoText templates document siglnk author =  
   
-  renderTemplateComplex templates "documentInfoText" $ 
+  renderTemplate templates "documentInfoText" $ 
                                                 (setAttribute "notsignedbyme" $ isNothing $ join $ fmap maybesigninfo siglnk) .
                                                 (setAttribute "signedbyme" $ isJust $ join $ fmap maybesigninfo siglnk) .
                                                 (setAttribute "pending" $ documentstatus document == Pending) .

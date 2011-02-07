@@ -96,7 +96,7 @@ remindMailNotSignedContent templates forMail customMessage ctx document signlink
                                signedlist <- if (not $ null $ partySignedList document)
                                                    then fmap Just $ renderListTemplate templates $  map (BS.toString . personname') $ partySignedList document
                                                    else return Nothing
-                               renderTemplateComplex templates "whohadsignedinfoformail" (setAttribute "signedlist" signedlist)
+                               renderTemplate templates "whohadsignedinfoformail" (setAttribute "signedlist" signedlist)
 
         footer =    if (forMail) 
                      then if (isNothing customMessage)
@@ -210,8 +210,8 @@ mailInvitationToSignContent templates forMail (Context {ctxhostpart})
                                     signedlist <- if (not $ null $ partySignedList document)
                                                        then fmap Just $ renderListTemplate templates $  map (BS.toString . personname') $ partySignedList document
                                                        else return Nothing
-                                    renderTemplateComplex templates "whohadsignedinfoformail" (setAttribute "signedlist" signedlist)
-                             else  renderTemplate templates "whohadsignedinfoforpreview" []
+                                    renderTemplate templates "whohadsignedinfoformail" (setAttribute "signedlist" signedlist)
+                             else  renderTemplate templates "whohadsignedinfoforpreview" ()
         timetosigninfo = case documenttimeouttime of 
                           Just time -> renderTemplate templates "timetosigninfo" [("time",show time )]
                           Nothing -> return ""
@@ -314,7 +314,7 @@ mailCancelDocumentByAuthorContent templates forMail customMessage ctx document a
                           replaceOnEdit' templates this with
         header   = case customMessage of 
                      Just c -> return $ BS.toString c
-                     Nothing  -> renderTemplate templates "mailCancelDocumentByAuthorStandardHeader" []
+                     Nothing  -> renderTemplate templates "mailCancelDocumentByAuthorStandardHeader" ()
         in 
           do
             header' <- header

@@ -37,11 +37,11 @@ import User.UserView
 import User.UserState
 {-| Main admin page - can go from here to other pages -}
 adminMainPage::KontrakcjaTemplates ->  IO String
-adminMainPage templates =  renderTemplateComplex templates "adminsmain" id
+adminMainPage templates =  renderTemplate templates "adminsmain" ()
 
 {-| Manage users page  - advanced, will be changed-}
 adminUsersAdvancedPage::KontrakcjaTemplates -> [User] -> AdminUsersPageParams -> IO String
-adminUsersAdvancedPage templates users params =  renderTemplateComplex templates "adminsmanageall" $
+adminUsersAdvancedPage templates users params =  renderTemplate templates "adminsmanageall" $
                                                         (setAttribute "users" $ map userSmallView $ visibleUsers params users) .
                                                         (setAttribute "letters" $ letters) .
                                                         (setAttribute "adminuserlink" $ show $ LinkUserAdmin Nothing) .
@@ -51,7 +51,7 @@ adminUsersAdvancedPage templates users params =  renderTemplateComplex templates
                                                         (setAttribute "adminlink" $ show $ LinkAdminOnly) 
 {-| Manage users page - can find user here -}
 adminUsersPage::KontrakcjaTemplates ->[User] -> AdminUsersPageParams -> IO String
-adminUsersPage templates users params = renderTemplateComplex templates "adminusers" $
+adminUsersPage templates users params = renderTemplate templates "adminusers" $
                                                         (setAttribute "adminlink" $ show $ LinkAdminOnly) . 
                                                         (setAttribute "users" $ map userSmallView $ visibleUsers params users) .
                                                         (setAttribute "letters" $ letters) .
@@ -61,7 +61,7 @@ adminUsersPage templates users params = renderTemplateComplex templates "adminus
                                                         (setAttribute "startletter" $ startletter params) 
 {-| Manage user page - can change user info and settings here -}
 adminUserPage::KontrakcjaTemplates ->User -> PaymentAccountModel -> IO String
-adminUserPage templates user paymentModel  = renderTemplateComplex templates "adminuser" $   
+adminUserPage templates user paymentModel  = renderTemplate templates "adminuser" $   
                                                         (setAttribute "adminuserslink" $ show $ LinkUserAdmin Nothing) .
                                                         (setAttribute "user" $ userAdminView user) .
                                                         (setAttribute "paymentmodel" $ getModelView paymentModel) .
@@ -69,15 +69,15 @@ adminUserPage templates user paymentModel  = renderTemplateComplex templates "ad
     
 
 allUsersTable::KontrakcjaTemplates -> [(User,Int)] -> IO String
-allUsersTable templates users =  renderTemplateComplex templates "allUsersTable" $
+allUsersTable templates users =  renderTemplate templates "allUsersTable" $
                                                         (setAttribute "users" $ map userSmallViewWithDocsCount $ users) .
                                                         (setAttribute "adminlink" $ show $ LinkAdminOnly) 
 databaseContent ::KontrakcjaTemplates -> [String] -> IO String
-databaseContent templates filenames = renderTemplateComplex templates "databaseContents" $
+databaseContent templates filenames = renderTemplate templates "databaseContents" $
                                                         (setAttribute "files" $ filenames) .
                                                         (setAttribute "adminlink" $ show $ LinkAdminOnly)
 statsPage::KontrakcjaTemplates -> Int->Int -> String -> IO String
-statsPage templates userscount docscount sysinfo = renderTemplateComplex templates "pageStats" $
+statsPage templates userscount docscount sysinfo = renderTemplate templates "pageStats" $
                                                          (setAttribute "userscount" $ userscount) .
                                                          (setAttribute "docscount" $ docscount) .
                                                          (setAttribute "sysinfo" $ sysinfo) .

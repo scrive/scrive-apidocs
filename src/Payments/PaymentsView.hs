@@ -22,11 +22,11 @@ import Text.StringTemplate.GenericStandard()
 
 {- | Payments models view. Not-editable -}
 adminView::KontrakcjaTemplates-> [PaymentAccountModel] -> IO String                                      
-adminView templates models = renderTemplateComplex templates "paymentsadminpage" $  
+adminView templates models = renderTemplate templates "paymentsadminpage" $  
                                          (setAttribute "models" $ map getModelView models) 
 {-| Payments models view . Editable -}                                         
 adminViewForSuperuser::KontrakcjaTemplates-> [PaymentAccountModel] -> IO String          
-adminViewForSuperuser templates models = renderTemplateComplex templates "paymentsadminpagesuperuser" $  
+adminViewForSuperuser templates models = renderTemplate templates "paymentsadminpagesuperuser" $  
                                          (setAttribute "models" $ map getModelView models) .
                                          (setAttribute "changeaction" $ show LinkPaymentsAdmin) 
                                          

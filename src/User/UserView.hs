@@ -50,7 +50,7 @@ import Data.Data
 import Text.StringTemplate.GenericStandard()
 
 showUser :: KontrakcjaTemplates -> User -> [User] -> IO String 
-showUser templates user viewers = renderTemplateComplex templates "showUser" $
+showUser templates user viewers = renderTemplate templates "showUser" $
                                                         (setAttribute "fullname" $ BS.toString $ userfullname user ) .
                                                         (setAttribute "email" $ BS.toString $ unEmail $ useremail $ userinfo user) .
                                                         (setAttribute "companyname" $ BS.toString $ usercompanyname $ userinfo user) .
@@ -67,7 +67,7 @@ pageAcceptTOS templates tostext =
 
   
 viewSubaccounts :: KontrakcjaTemplates -> [User] -> IO String
-viewSubaccounts templates subusers = renderTemplateComplex templates "viewSubaccounts" $
+viewSubaccounts templates subusers = renderTemplate templates "viewSubaccounts" $
                                                         (setAttribute "subusers" $ map userSmallView $ subusers) .
                                                         (setAttribute "subaccountslink" $ show LinkSubaccount) 
 
@@ -79,11 +79,11 @@ activatePageViewNotValidLink templates email = renderTemplate templates "activat
 
 
 newPasswordPageView::KontrakcjaTemplates -> IO String
-newPasswordPageView templates = renderTemplate templates "newPasswordPage" []
+newPasswordPageView templates = renderTemplate templates "newPasswordPage" ()
 
 resetPasswordMail::KontrakcjaTemplates -> String -> User -> KontraLink -> IO Mail
 resetPasswordMail templates hostname user setpasslink =  do
-           title <- renderTemplate templates "passwordChangeLinkMailTitle" []
+           title <- renderTemplate templates "passwordChangeLinkMailTitle" ()
            content <- wrapHTML templates =<< renderTemplate templates "passwordChangeLinkMailContent" 
                                                                 [("passwordlink",show setpasslink),
                                                                  ("ctxhostpart",hostname)]
@@ -92,7 +92,7 @@ resetPasswordMail templates hostname user setpasslink =  do
 newUserMail :: KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> IO Mail
 newUserMail templates hostpart emailaddress personname activatelink=
     do 
-    title <- renderTemplate templates "newUserMailTitle" []
+    title <- renderTemplate templates "newUserMailTitle" ()
     content <- wrapHTML templates =<< renderTemplate templates "newUserMailContent" [("personname",BS.toString $ personname),
                                                                  ("email",BS.toString $ emailaddress),
                                                                  ("activatelink",show activatelink),  
@@ -102,7 +102,7 @@ newUserMail templates hostpart emailaddress personname activatelink=
 passwordChangeMail ::  KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString  -> KontraLink    -> IO Mail
 passwordChangeMail templates hostpart emailaddress personname setpasslink = 
     do 
-    title <- renderTemplate templates "passwordChangeMailTitle" []
+    title <- renderTemplate templates "passwordChangeMailTitle" ()
     content <- wrapHTML templates =<< renderTemplate templates "passwordChangeMailContent" 
                                                                 [("personname",BS.toString $ personname),
                                                                  ("email",BS.toString $ emailaddress),
@@ -114,7 +114,7 @@ passwordChangeMail templates hostpart emailaddress personname setpasslink =
 inviteSubaccountMail ::  KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> BS.ByteString -> KontraLink-> IO Mail
 inviteSubaccountMail  templates hostpart supervisorname companyname emailaddress personname setpasslink = 
     do 
-    title <- renderTemplate templates "inviteSubaccountMailTitle" []
+    title <- renderTemplate templates "inviteSubaccountMailTitle" ()
     content <- wrapHTML templates =<< renderTemplate templates "inviteSubaccountMailContent" 
                                                                 [("personname",BS.toString $ personname),
                                                                  ("email",BS.toString $ emailaddress),
@@ -138,7 +138,7 @@ viralInviteMail templates ctx invitedemail setpasslink = do
 
 mailNewAccountCreatedByAdmin:: KontrakcjaTemplates -> Context-> BS.ByteString -> BS.ByteString -> KontraLink ->  IO Mail
 mailNewAccountCreatedByAdmin templates ctx personname email setpasslink =    do 
-      title <- renderTemplate templates "mailNewAccountCreatedByAdminTitle" []
+      title <- renderTemplate templates "mailNewAccountCreatedByAdminTitle" ()
       content <- wrapHTML templates =<< renderTemplate templates "mailNewAccountCreatedByAdminContent"
                                                                  [("personname",BS.toString $ personname),
                                                                  ("email",BS.toString $ email),
@@ -149,49 +149,49 @@ mailNewAccountCreatedByAdmin templates ctx personname email setpasslink =    do
     
 
 flashMessageUserDetailsSaved:: KontrakcjaTemplates -> IO String
-flashMessageUserDetailsSaved templates = renderTemplate templates "flashMessageUserDetailsSaved" [] 
+flashMessageUserDetailsSaved templates = renderTemplate templates "flashMessageUserDetailsSaved" () 
 
 flashMessageMustAcceptTOS:: KontrakcjaTemplates -> IO String
-flashMessageMustAcceptTOS templates = renderTemplate templates "flashMessageMustAcceptTOS" []
+flashMessageMustAcceptTOS templates = renderTemplate templates "flashMessageMustAcceptTOS" ()
 
 flashMessagePasswordNotStrong:: KontrakcjaTemplates -> IO String
-flashMessagePasswordNotStrong templates = renderTemplate templates "flashMessagePasswordNotStrong" []
+flashMessagePasswordNotStrong templates = renderTemplate templates "flashMessagePasswordNotStrong" ()
 
 flashMessageBadOldPassword:: KontrakcjaTemplates -> IO String
-flashMessageBadOldPassword templates= renderTemplate templates "flashMessageBadOldPassword" []
+flashMessageBadOldPassword templates= renderTemplate templates "flashMessageBadOldPassword" ()
 
 flashMessagePasswordsDontMatch:: KontrakcjaTemplates -> IO String
-flashMessagePasswordsDontMatch templates = renderTemplate templates"flashMessagePasswordsDontMatch" []
+flashMessagePasswordsDontMatch templates = renderTemplate templates"flashMessagePasswordsDontMatch" ()
 
 flashMessageUserPasswordChanged:: KontrakcjaTemplates -> IO String
-flashMessageUserPasswordChanged templates = renderTemplate templates "flashMessageUserPasswordChanged" []
+flashMessageUserPasswordChanged templates = renderTemplate templates "flashMessageUserPasswordChanged" ()
 
 flashMessagePasswordChangeLinkNotValid:: KontrakcjaTemplates -> IO String
-flashMessagePasswordChangeLinkNotValid templates = renderTemplate templates "flashMessagePasswordChangeLinkNotValid" []
+flashMessagePasswordChangeLinkNotValid templates = renderTemplate templates "flashMessagePasswordChangeLinkNotValid" ()
 
 flashMessageUserWithSameEmailExists:: KontrakcjaTemplates -> IO String
-flashMessageUserWithSameEmailExists templates = renderTemplate templates "flashMessageUserWithSameEmailExists" []
+flashMessageUserWithSameEmailExists templates = renderTemplate templates "flashMessageUserWithSameEmailExists" ()
 
 flashMessageViralInviteSent:: KontrakcjaTemplates -> IO String
-flashMessageViralInviteSent templates = renderTemplate templates "flashMessageViralInviteSent" []
+flashMessageViralInviteSent templates = renderTemplate templates "flashMessageViralInviteSent" ()
 
 flashMessageActivationLinkNotValid:: KontrakcjaTemplates -> IO String
-flashMessageActivationLinkNotValid templates = renderTemplate templates "flashMessageActivationLinkNotValid" []
+flashMessageActivationLinkNotValid templates = renderTemplate templates "flashMessageActivationLinkNotValid" ()
 
 flashMessageUserActivated:: KontrakcjaTemplates -> IO String
-flashMessageUserActivated templates = renderTemplate templates "flashMessageUserActivated" []
+flashMessageUserActivated templates = renderTemplate templates "flashMessageUserActivated" ()
 
 flashMessageUserAlreadyActivated:: KontrakcjaTemplates -> IO String
-flashMessageUserAlreadyActivated templates = renderTemplate templates "flashMessageUserAlreadyActivated" []
+flashMessageUserAlreadyActivated templates = renderTemplate templates "flashMessageUserAlreadyActivated" ()
                                                         
 flashMessageNoSuchUserExists:: KontrakcjaTemplates -> IO String                                                        
-flashMessageNoSuchUserExists templates = renderTemplate templates "flashMessageNoSuchUserExists" []
+flashMessageNoSuchUserExists templates = renderTemplate templates "flashMessageNoSuchUserExists" ()
 
 flashMessageChangePasswordEmailSend:: KontrakcjaTemplates -> IO String                                                        
-flashMessageChangePasswordEmailSend templates = renderTemplate templates "flashMessageChangePasswordEmailSend" []
+flashMessageChangePasswordEmailSend templates = renderTemplate templates "flashMessageChangePasswordEmailSend" ()
 
 flashMessageNewActivationLinkSend:: KontrakcjaTemplates -> IO String                                                        
-flashMessageNewActivationLinkSend templates = renderTemplate templates "flashMessageNewActivationLinkSend" []
+flashMessageNewActivationLinkSend templates = renderTemplate templates "flashMessageNewActivationLinkSend" ()
 {- Same as personname (username or email) from DocView but works on User -}
 prettyName::User -> BS.ByteString
 prettyName u = if (BS.null $ userfullname u)
