@@ -47,7 +47,7 @@ import Data.Data
 import Data.List (find)
 import Control.Monad (join)
 import Data.Maybe
-import Doc.DocViews
+
 
 landpageSignInviteView ::KontrakcjaTemplates -> Document ->  IO String
 landpageSignInviteView templates  document =
