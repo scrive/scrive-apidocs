@@ -17,8 +17,8 @@ import Data.ByteString.Char8 (ByteString)
 import Data.List
 import Data.Maybe
 import Debug.Trace
-import DocState
-import qualified DocView as V
+import Doc.DocState
+import qualified Doc.DocView as V
 import HSP.XML
 import Happstack.Data.IxSet ((@=),getOne,size)
 import Happstack.Server hiding (simpleHTTP)
@@ -37,18 +37,18 @@ import System.Directory
 import System.IO
 import System.IO.Unsafe
 import System.Random
-import User
-import UserControl
-import UserView as UserView
-import UserState
-import qualified UserView as V
+import Kontra
+import qualified User.UserControl as UserControl
+import User.UserView as UserView
+import User.UserState
+import qualified User.UserView as V
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as B
 import qualified Data.ByteString.Lazy  as L
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Set as Set
-import qualified DocControl as DocControl
+import qualified Doc.DocControl as DocControl
 import qualified HSP as HSP
 import qualified Data.Map as Map
 import qualified Network.AWS.Authentication as AWS
@@ -236,7 +236,7 @@ instance (MonadIO m) => TRA.MonadIO (ServerPartT m)
 handleHomepage = do
   ctx@Context{ctxmaybeuser, ctxtemplates} <- get
   case ctxmaybeuser of
-    Just user -> checkUserTOSGet $ do
+    Just user -> UserControl.checkUserTOSGet $ do
                        content <- liftIO $ V.uploadPage ctxtemplates 
                        V.renderFromBody ctx V.TopNew V.kontrakcja (cdata content)
     Nothing -> do
@@ -393,7 +393,7 @@ signupPagePost = do
             -- V.renderFromBody ctx V.TopNone V.kontrakcja (signupPageView Nothing)
             return LinkSignup
         Just email -> do
-                    maccount <- liftIO $ createUser ctx ctxhostpart BS.empty (BS.fromString email) Nothing True Nothing
+                    maccount <- liftIO $ UserControl.createUser ctx ctxhostpart BS.empty (BS.fromString email) Nothing True Nothing
                     if isJust maccount       
                      then return LinkSignupDone
                      else do

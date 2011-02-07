@@ -6,12 +6,12 @@ module AppState
     ) where
 
 import Data.Data
-import DocState
+import Doc.DocState
 import Happstack.Data
 import Happstack.State
 import Payments.PaymentsState
 import Session
-import User
+import Kontra
 import qualified Happstack.Data.IxSet as IxSet (empty,size)
 import ActionQueue
 import ActionQueueState

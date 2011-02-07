@@ -31,11 +31,11 @@ import AppView
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.State (update,query)
 import Misc
-import User
+import Kontra
 import HSP (cdata)
 import Administration.AdministrationView
 import Payments.PaymentsState
-import DocState
+import Doc.DocState
 import Data.ByteString.UTF8 (fromString,toString)
 import Data.ByteString (ByteString,empty, hGetContents)
 import qualified Data.ByteString.Lazy  as L
@@ -44,8 +44,8 @@ import Payments.PaymentsControl(readMoneyField,getPaymentChangeChange)
 import MinutesTime
 import System.Directory
 import Data.List (isPrefixOf,sort)
-import UserControl
-import UserView
+import User.UserControl
+import User.UserView
 import Data.Maybe
 import System.Process
 import System.IO (hClose)

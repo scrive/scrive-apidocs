@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -F -pgmFtrhsx -Wall #-}
 
-module DocViewUtil (   personname,
+module Doc.DocViewUtil (   personname,
                        personname',
                        partyList,
                        partyListButAuthor,
@@ -17,7 +17,7 @@ module DocViewUtil (   personname,
                        renderListTemplate,  
                        swedishListString 
            ) where
-import DocState
+import Doc.DocState
 import HSP
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS

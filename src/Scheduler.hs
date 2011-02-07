@@ -4,7 +4,7 @@ module Scheduler
     where
 
 import System.IO
-import DocState
+import Doc.DocState
 import Happstack.State (query, update)
 import Control.Monad
 import MinutesTime

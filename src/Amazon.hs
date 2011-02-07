@@ -12,7 +12,7 @@ module Amazon
     )
 where
 
-import DocState
+import Doc.DocState
 import Network.AWS.Authentication
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP

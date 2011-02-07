@@ -1,7 +1,7 @@
 module ELegitimation.BankID where
 
-import User
-import UserControl
+import Kontra
+import User.UserControl
 import System.Process
 import System.Exit
 import System.IO
@@ -10,11 +10,11 @@ import Control.Concurrent
 import Data.List
 import Happstack.Server
 import Happstack.State
-import DocState
+import Doc.DocState
 import Misc
 import Session
 import Control.Monad.State
-import DocControl
+import Doc.DocControl
 import SOAP.SOAP
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS hiding (length, drop, break)
@@ -111,7 +111,7 @@ handleSignPost docid signid magic = do
                                       return $ LinkMain
                   Right (cert, attrs) -> do
                             Context { ctxtime, ctxipnumber } <- get
-                            document@DocState.Document{ documentstatus = olddocumentstatus, documentsignatorylinks } <- queryOrFail $ GetDocumentByDocumentID docid
+                            document@Doc.DocState.Document{ documentstatus = olddocumentstatus, documentsignatorylinks } <- queryOrFail $ GetDocumentByDocumentID docid
                             fieldnames <- getAndConcat "fieldname"
                             fieldvalues <- getAndConcat "fieldvalue"
                             let fields = zip fieldnames fieldvalues

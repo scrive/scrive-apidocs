@@ -23,7 +23,6 @@ import KontraLink
 import Templates.Templates 
 import Templates.TemplatesUtils 
 import Text.StringTemplate.GenericStandard()
-import UserState
 import Data.ByteString.UTF8 (toString)
 import Data.List (isPrefixOf, isInfixOf)
 import Data.Char
@@ -34,8 +33,8 @@ import Payments.PaymentsState
 import Payments.PaymentsUtils
 import Misc
 import MinutesTime
-import UserView
-
+import User.UserView
+import User.UserState
 {-| Main admin page - can go from here to other pages -}
 adminMainPage::KontrakcjaTemplates ->  IO String
 adminMainPage templates =  renderTemplateComplex templates "adminsmain" id

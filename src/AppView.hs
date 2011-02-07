@@ -21,7 +21,7 @@ import Happstack.Server.SimpleHTTP
 import qualified HSX.XMLGenerator as HSX (XML)
 import qualified HSX.XMLGenerator
 import qualified Data.ByteString.UTF8 as BSC
-import User
+import Kontra
 import qualified Data.Map as Map
 import Misc
 import KontraLink

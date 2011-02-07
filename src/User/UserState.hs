@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -Wall #-}
-module UserState 
+module User.UserState 
     ( Email(..)
     , Friend(..)
     , DefaultMainSignatory(..)
