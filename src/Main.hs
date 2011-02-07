@@ -42,7 +42,7 @@ import Doc.DocState
 import qualified Amazon as AWS
 import Mails.MailsConfig
 import Mails.SendMail
-import Templates.Templates (readTemplates,emptyTemplates)
+import Templates.Templates (readTemplates)
 import Kontra
 import qualified TrustWeaver as TW
 
