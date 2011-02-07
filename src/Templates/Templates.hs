@@ -15,7 +15,7 @@
 -- 'KontrakcjaTemplates' is alias for template group, but ma be changed in a future
 -----------------------------------------------------------------------------
 module Templates.Templates
-    (readTemplates,renderTemplate,renderTemplate',renderTemplateComplex,templateList,KontrakcjaTemplates,Templates.Templates.setAttribute,emptyTemplates) where
+(RenderTemplate, readTemplates,renderTemplate,templateList,KontrakcjaTemplates,Templates.Templates.setAttribute,emptyTemplates) where
 
 import Text.StringTemplate 
 import System.IO
@@ -46,19 +46,28 @@ type KontrakcjaTemplate = StringTemplate String
    It never fail, just returns empty message and writes something in the logs
    HStringTemplate fails with UTF8 bytestrings so basic interface supports strings and lists of strings
 -}
-renderTemplate::KontrakcjaTemplates ->String->[(String, String)] ->  IO String
-renderTemplate ts name attrs = renderTemplateMain ts name attrs id
 
-renderTemplate'::KontrakcjaTemplates ->String->[(String, [String])] ->  IO String
-renderTemplate'  ts name attrs = renderTemplateMain ts name attrs id
+class RenderTemplate a where
+  renderTemplate::KontrakcjaTemplates ->String -> a -> IO String 
+ 
+instance RenderTemplate () where
+   renderTemplate ts name () = renderTemplateMain ts name ([]::[(String,String)]) id
+   
+instance RenderTemplate [(String, String)] where
+   renderTemplate ts name attrs = renderTemplateMain ts name attrs id
+
+instance RenderTemplate [(String, [String])] where
+   renderTemplate ts name attrs = renderTemplateMain ts name attrs id
 
 
 {-This is special templating function . Use it carefull'y with setAttributes composition as last param
   Remember that setAttributes can work with maps, data structures and other not-string stuff.
   It should be used when template has some logic (usually iteration).See payments view for example
 -}
-renderTemplateComplex::KontrakcjaTemplates ->String->(KontrakcjaTemplate -> KontrakcjaTemplate) ->  IO String
-renderTemplateComplex  ts name f = renderTemplateMain ts name ([]::[(String, String)]) f
+
+instance RenderTemplate (KontrakcjaTemplate -> KontrakcjaTemplate) where
+   renderTemplate ts name f = renderTemplateMain ts name ([]::[(String, String)]) f
+   
 
 {-Use this as (setAttributes name1 val1) . (setAttributes name2 val2) . (setAttributes name3 val3) -}
 setAttribute :: (ToSElem a) => String -> a -> KontrakcjaTemplate -> KontrakcjaTemplate

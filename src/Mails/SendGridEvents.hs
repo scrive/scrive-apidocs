@@ -72,7 +72,7 @@ handleSendgridEvent' (SendgridEvent {info=Invitation signlinkid,event= Undeliver
    case mdoc of
      Just doc -> do   
                  ctx <- get
-                 title <- liftIO $ renderTemplate (ctxtemplates ctx) "invitationMailUndeliveredTitle" []  
+                 title <- liftIO $ renderTemplate (ctxtemplates ctx) "invitationMailUndeliveredTitle" ()
                  Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor doc
                  let documentauthordetails = signatoryDetailsFromUser author
                  let fullnameemails = [(signatoryname $ documentauthordetails, signatoryemail $ documentauthordetails)]

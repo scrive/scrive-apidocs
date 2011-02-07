@@ -168,7 +168,7 @@ pageFromBody' prefix
                       }
                   topMenu title body = do
                     content <- liftIO $ renderHSPToString <div id="mainContainer"><% body %></div>
-                    wholePage <- liftIO $ renderTemplateComplex ctxtemplates "wholePage" $
+                    wholePage <- liftIO $ renderTemplate ctxtemplates "wholePage" $
                                  (setAttribute "production" ctxproduction) .
                                  (setAttribute "uploadTab" $ uploadTabInfo ctxmaybeuser topMenu) .
                                  (setAttribute "documentTab" $ documentTabInfo ctxmaybeuser topMenu) .
@@ -187,28 +187,26 @@ signupConfirmPageView :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink))
 signupConfirmPageView  =  <div>Ditt konto har skapats! Vi har skickat ett mail med dina användaruppgifter till din inkorg.</div>
         
 signupPageView :: KontrakcjaTemplates -> IO String
-signupPageView templates = renderTemplate templates "signupPageView" []
+signupPageView templates = renderTemplate templates "signupPageView" ()
 
 pageForgotPassword :: KontrakcjaTemplates -> IO String
 pageForgotPassword templates = do
-  renderTemplateComplex templates "pageForgotPassword" $
-                            id
+  renderTemplate templates "pageForgotPassword" ()
 
 pageForgotPasswordConfirm :: KontrakcjaTemplates -> IO String
 pageForgotPasswordConfirm templates = do
-  renderTemplateComplex templates "pageForgotPasswordConfirm" $
-                            id
+  renderTemplate templates "pageForgotPasswordConfirm"()
 
 pageLogin :: Context -> Maybe String -> IO String
 pageLogin ctx referer = do
-  renderTemplateComplex (ctxtemplates ctx) "pageLogin" $
+  renderTemplate (ctxtemplates ctx) "pageLogin" $
                             (setAttribute "referer" referer)
 
 
 uploadPage:: KontrakcjaTemplates -> IO String
 uploadPage templates = do
-                   uploadBox <- liftIO $ renderTemplate templates "uploadPageContent" []
-                   liftIO $ renderTemplateComplex templates "creatingDocumentFrame" $ 
+                   uploadBox <- liftIO $ renderTemplate templates "uploadPageContent" ()
+                   liftIO $ renderTemplate templates "creatingDocumentFrame" $ 
                                                        (setAttribute  "steps" uploadBox) .
                                                        (setAttribute  "step1" True) .
                                                        (setAttribute  "submitFormOnNext" True) 

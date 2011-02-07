@@ -31,7 +31,7 @@ wrapHTML templates body =  renderTemplate templates "wrapHTML" [("body",body)]
  -}
 renderActionButton :: KontrakcjaTemplates -> KontraLink -> String -> IO String
 renderActionButton templates action button = do
-  buttonname <- renderTemplate templates button []
+  buttonname <- renderTemplate templates button ()
   renderTemplate templates "actionButton" [("action", show action), ("buttonname", buttonname)]
 
 {- | 

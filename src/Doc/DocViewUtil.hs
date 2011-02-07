@@ -125,6 +125,6 @@ emailFromSignLink sl = (signatoryname $ signatorydetails sl,signatoryemail $ sig
 
 renderListTemplate:: KontrakcjaTemplates -> [String] -> IO String
 renderListTemplate templates list = if (length list > 1)
-                          then  renderTemplate' templates "morethenonelist" [("list",init list),("last", [last list])]   
-                          else  renderTemplate' templates "nomoretheneonelist" [("list",list)]   
+                          then  renderTemplate templates "morethenonelist" [("list",init list),("last", [last list])]   
+                          else  renderTemplate templates "nomoretheneonelist" [("list",list)]   
 
