@@ -283,9 +283,6 @@ pageDocumentForAuthor ctx
      signatoryEntry <- showSignatoryEntryForEdit2 (ctxtemplates ctx) "signatory_template" "" "" "" "" 
      helpers <- renderTemplate (ctxtemplates ctx) "pageDocumentForAuthorHelpers" [("documentid",show documentid),
                                                                                   ("signatoryEntry",signatoryEntry)] 
-     signatoriesForEdit <- fmap concat $ sequence $ map (showSignatoryEntryForEdit (ctxtemplates ctx)) (if (null allinvited)
-                                                                                       then [emptyDetails] 
-                                                                                       else map signatorydetails allinvited)
      signatories <- fmap concat $ sequence $ map (showSignatoryLinkForSign ctx document author) documentsignatorylinks                                                                                  
      invitationMailContent <- mailInvitationToSignContent (ctxtemplates ctx) False ctx document author Nothing
      restartForm <-   renderActionButton  (ctxtemplates ctx) (LinkRestart documentid) "restartButtonName"
@@ -303,7 +300,6 @@ pageDocumentForAuthor ctx
                                                               (setAttribute "documentinvitetext" $ documentinvitetext) .                                                                              
                                                               (setAttribute "timetosignset" $ timetosignset) .
                                                               (setAttribute "invitationMailContent" $ invitationMailContent) .             
-                                                              (setAttribute "signatoriesForEdit" $ signatoriesForEdit  ) .
                                                               (setAttribute "documentdaystosignboxvalue" $ documentdaystosignboxvalue ) .
                                                               (setAttribute "anyinvitationundelivered" $ anyInvitationUndelivered document) .
                                                               (setAttribute "undelivered" $ map (signatoryemail . signatorydetails) $ undeliveredSignatoryLinks document  ) .
@@ -352,9 +348,6 @@ pageDocumentForViewer ctx
      signatoryEntry <- showSignatoryEntryForEdit2 (ctxtemplates ctx) "signatory_template" "" "" "" "" 
      helpers <- renderTemplate (ctxtemplates ctx) "pageDocumentForViewerHelpers" [("documentid",show documentid),
                                                                                   ("signatoryEntry",signatoryEntry)] 
-     signatoriesForEdit <- fmap concat $ sequence $ map (showSignatoryEntryForEdit (ctxtemplates ctx)) (if (null allinvited)
-                                                                                       then [emptyDetails] 
-                                                                                       else map signatorydetails allinvited)
      signatories <- fmap concat $ sequence $ map (showSignatoryLinkForSign ctx document author) documentsignatorylinks                                                                                  
      invitationMailContent <- mailInvitationToSignContent (ctxtemplates ctx) False ctx document author Nothing
      restartForm <-   renderActionButton  (ctxtemplates ctx) (LinkRestart documentid) "restartButtonName"
@@ -372,7 +365,6 @@ pageDocumentForViewer ctx
                                                               (setAttribute "documentinvitetext" $ documentinvitetext) .                                                                              
                                                               (setAttribute "timetosignset" $ timetosignset) .
                                                               (setAttribute "invitationMailContent" $ invitationMailContent) .             
-                                                              (setAttribute "signatoriesForEdit" $ signatoriesForEdit  ) .
                                                               (setAttribute "documentdaystosignboxvalue" $ documentdaystosignboxvalue ) .
                                                               (setAttribute "anyinvitationundelivered" $ anyInvitationUndelivered document) .
                                                               (setAttribute "undelivered" $ map (signatoryemail . signatorydetails) $ undeliveredSignatoryLinks document  ) .
