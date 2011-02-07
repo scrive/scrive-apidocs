@@ -36,7 +36,6 @@ import User
 import KontraLink
 import Misc
 import MinutesTime
-import Data.Maybe
 import DocViewMail
 import DocViewUtil
 import Templates.Templates
@@ -185,25 +184,6 @@ pageDocumentList templates ctime user documents = renderTemplateComplex template
                                                         (setAttribute "documents" $ map (documentSmallView ctime user) $ filter (not . documentdeleted) documents)
 
 
-
-----Single document view
-showSignatoryEntryForEdit :: KontrakcjaTemplates -> DocState.SignatoryDetails -> IO String
-showSignatoryEntryForEdit templates (SignatoryDetails{signatoryname,signatorycompany,signatorynumber, signatoryemail}) = 
-    showSignatoryEntryForEdit2 templates "" 
-                                  (BS.toString signatoryname) 
-                                  (BS.toString signatorycompany) 
-                                  (BS.toString signatorynumber) 
-                                  (BS.toString signatoryemail)
-
-showSignatoryEntryForEdit2 :: KontrakcjaTemplates -> String -> String -> String -> String -> String -> IO String
-showSignatoryEntryForEdit2 templates idx signatoryname signatorycompany signatorynumber signatoryemail = 
- renderTemplateComplex templates "showSignatoryEntryForEdit2" $  
-                                                              (setAttribute "idx" $ idx) .
-                                                              (setAttribute "signatoryname" $ signatoryname) .
-                                                              (setAttribute "signatorycompany" $ signatorycompany) .
-                                                              (setAttribute "signatorynumber" $ signatorynumber) .
-                                                              (setAttribute "signatoryemail" $ signatoryemail) 
-                                                              
     
 showFileImages ::KontrakcjaTemplates -> File -> JpegPages -> IO String
 showFileImages templates File{fileid} (JpegPages jpgpages) = renderTemplateComplex templates "showFileImagesReady" $
@@ -217,10 +197,6 @@ showFilesImages2 :: KontrakcjaTemplates ->  [(File, JpegPages)] -> IO String
 showFilesImages2 templates files = do
                                     filesPages <- sequence $ map (uncurry (showFileImages templates)) files
                                     renderTemplate templates  "spanNoEscape" [("it",concat filesPages)]  
-
-
-showDocumentBox :: KontrakcjaTemplates ->  IO String
-showDocumentBox templates = renderTemplate templates  "showDocumentBox" []
 
 
 {-
@@ -273,16 +249,12 @@ pageDocumentForAuthor ctx
              author =
    let 
        authorid = userid author
-       -- the author gets his own space when he's editing
-       allinvited = filter (isNotLinkForUserID authorid) documentsignatorylinks
        authorhaslink = not $ null $ filter (not . isNotLinkForUserID authorid) documentsignatorylinks
        documentdaystosignboxvalue = maybe 7 id documentdaystosign
        timetosignset = isJust documentdaystosign --swedish low constrain
        documentauthordetails = signatoryDetailsFromUser author
    in do
-     signatoryEntry <- showSignatoryEntryForEdit2 (ctxtemplates ctx) "signatory_template" "" "" "" "" 
-     helpers <- renderTemplate (ctxtemplates ctx) "pageDocumentForAuthorHelpers" [("documentid",show documentid),
-                                                                                  ("signatoryEntry",signatoryEntry)] 
+     helpers <- renderTemplate (ctxtemplates ctx) "pageDocumentForAuthorHelpers" [("documentid",show documentid)] 
      signatories <- fmap concat $ sequence $ map (showSignatoryLinkForSign ctx document author) documentsignatorylinks                                                                                  
      invitationMailContent <- mailInvitationToSignContent (ctxtemplates ctx) False ctx document author Nothing
      restartForm <-   renderActionButton  (ctxtemplates ctx) (LinkRestart documentid) "restartButtonName"
@@ -339,15 +311,12 @@ pageDocumentForViewer ctx
    let 
        authorid = userid author
        -- the author gets his own space when he's editing
-       allinvited = filter (isNotLinkForUserID authorid) documentsignatorylinks
        authorhaslink = not $ null $ filter (not . isNotLinkForUserID authorid) documentsignatorylinks
        documentdaystosignboxvalue = maybe 7 id documentdaystosign
        timetosignset = isJust documentdaystosign --swedish low constrain
        documentauthordetails = signatoryDetailsFromUser author
    in do
-     signatoryEntry <- showSignatoryEntryForEdit2 (ctxtemplates ctx) "signatory_template" "" "" "" "" 
-     helpers <- renderTemplate (ctxtemplates ctx) "pageDocumentForViewerHelpers" [("documentid",show documentid),
-                                                                                  ("signatoryEntry",signatoryEntry)] 
+     helpers <- renderTemplate (ctxtemplates ctx) "pageDocumentForViewerHelpers" [("documentid",show documentid) ] 
      signatories <- fmap concat $ sequence $ map (showSignatoryLinkForSign ctx document author) documentsignatorylinks                                                                                  
      invitationMailContent <- mailInvitationToSignContent (ctxtemplates ctx) False ctx document author Nothing
      restartForm <-   renderActionButton  (ctxtemplates ctx) (LinkRestart documentid) "restartButtonName"

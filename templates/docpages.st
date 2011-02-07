@@ -171,29 +171,22 @@ showFileImagesError=<div class="pagejpga4 pagejpg">
       $normalizelog:noescape()$
      </div> 
 ####
-showDocumentBox=  
-<div id="documentBox">
-  <div class="pagejpga4 pagejpg">
-    <img class="waiting" src="/theme/images/wait30trans.gif">
-  </div>
-</div> 
 ###
-showSignatoryEntryForEdit2= 
-<div id="$idx$" class="signatorybox" alt="Namn på avtalspart">
-  <input name="signatoryname" type="text" value="$signatoryname$" autocomplete="off"
-         infotext="Namn på motpart"><br>
-  <input name="signatorycompany" type="text" value="$signatorycompany$" autocomplete="off"
-         infotext="Titel, företag"><br>
-  <input name="signatorynumber" type="text" value="$signatorynumber$" autocomplete="off"
-         infotext="Orgnr/Persnr"><br>
-  <input name="signatoryemail"  type="email" value="$signatoryemail$" autocomplete="off"
-         infotext="Personens e-mail"><br>
-  <small><a onclick="return signatoryremove(this.parentNode);" href="#">Ta bort</a></small>
-</div>
-####
 ####
 pageDocumentForViewerHelpers=
-<span class="templating_insert"> $signatoryEntry:noescape()$</span>,
+<span class="templating_insert"> 
+  <div id="signatory_template" class="signatorybox" alt="Namn på avtalspart">
+  <input name="signatoryname" type="text" value="" autocomplete="off"
+         infotext="Namn på motpart"><br>
+  <input name="signatorycompany" type="text" value="" autocomplete="off"
+         infotext="Titel, företag"><br>
+  <input name="signatorynumber" type="text" value="" autocomplete="off"
+         infotext="Orgnr/Persnr"><br>
+  <input name="signatoryemail"  type="email" value="" autocomplete="off"
+         infotext="Personens e-mail"><br>
+  <small><a onclick="return signatoryremove(this.parentNode);" href="#">Ta bort</a></small>
+  </div>
+</span>,
 <script type="text/javascript"> 
   var documentid = "$documentid$"; 
 </script>
@@ -460,7 +453,19 @@ pageDocumentForSignContent=
 ###
 ####
 pageDocumentForAuthorHelpers=
-<span class="templating_insert"> $signatoryEntry:noescape()$</span>,
+<span class="templating_insert"> 
+  <div id="signatory_template" class="signatorybox" alt="Namn på avtalspart">
+  <input name="signatoryname" type="text" value="" autocomplete="off"
+         infotext="Namn på motpart"><br>
+  <input name="signatorycompany" type="text" value="" autocomplete="off"
+         infotext="Titel, företag"><br>
+  <input name="signatorynumber" type="text" value="" autocomplete="off"
+         infotext="Orgnr/Persnr"><br>
+  <input name="signatoryemail"  type="email" value="" autocomplete="off"
+         infotext="Personens e-mail"><br>
+  <small><a onclick="return signatoryremove(this.parentNode);" href="#">Ta bort</a></small>
+</div>
+  </span>,
 <script type="text/javascript"> 
   var documentid = "$documentid$"; 
 </script>
