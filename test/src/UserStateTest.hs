@@ -7,7 +7,7 @@ import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 
 import StateHelper
-import UserState
+import User.UserState
 
 import Happstack.State (update, query)
 
