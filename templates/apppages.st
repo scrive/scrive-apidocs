@@ -181,7 +181,7 @@ loginBox=
         <table>
 	  <tr>
             <td>E-mail:</td> 
-            <td><input type="email" name="email" autocomplete="off" class="noflash"></td> 
+            <td><input type="email" name="email" autocomplete="off" class="noflash" value="$if(email)$$email$$endif$"></td> 
           </tr>
 	  <tr> 
             <td>Lösenord:</td> 

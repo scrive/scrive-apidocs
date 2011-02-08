@@ -64,11 +64,13 @@ landpageSendInviteView templates  document =
                                                           ("documenttitle",BS.toString $ documenttitle document )]
 
 willCreateAccountForYou::KontrakcjaTemplates -> Document->SignatoryLink->Bool->  IO String
-willCreateAccountForYou templates  _ _ False =  renderTemplate templates "willCreateAccountForYouNoAccount" ()
-willCreateAccountForYou templates  document siglink True = 
-                                     renderTemplate templates  "willCreateAccountForYouHasAccount" 
-                                                                     [("documentid",show $ unDocumentID $ documentid document),
-                                                                     ("signatorylinkid",show $ unSignatoryLinkID $ signatorylinkid siglink)]
+willCreateAccountForYou templates  document siglink hasAccount =
+     if (hasAccount)
+      then renderTemplate templates  "willCreateAccountForYouHasAccount" $ do
+               field "documentid" $ unDocumentID $ documentid document
+               field "signatorylinkid" $ unSignatoryLinkID $ signatorylinkid siglink
+      else renderTemplate templates "willCreateAccountForYouNoAccount" $  do
+               field "email" $ signatoryemail $ signatorydetails siglink   
 
 landpageRejectedView ::KontrakcjaTemplates -> Document -> IO String
 landpageRejectedView templates document =
@@ -79,19 +81,15 @@ landpageRejectedView templates document =
 
 landpageSignedView ::KontrakcjaTemplates -> Document -> SignatoryLink -> Bool -> IO String
 landpageSignedView templates document@Document{documenttitle,documentstatus} signatorylink hasaccount =
-    do
-       willCreateAccountForYouProposal <- willCreateAccountForYou templates document signatorylink (not hasaccount) 
-       if (documentstatus == Closed) 
-        then do
-              partylist <- renderListTemplate templates $ map (BS.toString . personname') $ partyList document
-              renderTemplate templates "landpageSignedViewClosed" [("partyListString", partylist),
-                                                         ("documenttitle",BS.toString $ documenttitle),
-                                                         ("willCreateAccountForYou", willCreateAccountForYouProposal)]
-        else do
-              partyunsignedlist <- renderListTemplate templates  $ map (BS.toString . personname') $ partyUnsignedList document
-              renderTemplate templates  "landpageSignedViewNotClosed"  [("partyUnsignedListString", partyunsignedlist),
-                                                             ("documenttitle",BS.toString $ documenttitle),
-                                                             ("willCreateAccountForYou", willCreateAccountForYouProposal)]   
+     if (documentstatus == Closed) 
+      then renderTemplate templates "landpageSignedViewClosed" $ do 
+                field "partyListString" $ renderListTemplate templates $ map (BS.toString . personname') $ partyList document
+                field "documenttitle" $ BS.toString $ documenttitle
+                field "willCreateAccountForYou" $ willCreateAccountForYou templates document signatorylink (not hasaccount) 
+      else renderTemplate templates "landpageSignedViewNotClosed" $ do  
+                field "partyUnsignedListString" $ renderListTemplate templates  $ map (BS.toString . personname') $ partyUnsignedList document
+                field "documenttitle" $ BS.toString $ documenttitle
+                field "willCreateAccountForYou" $ willCreateAccountForYou templates document signatorylink (not hasaccount) 
 
 landpageLoginForSaveView::KontrakcjaTemplates ->IO String
 landpageLoginForSaveView  templates  = renderTemplate templates  "landpageLoginForSaveView" ()
