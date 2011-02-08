@@ -305,30 +305,29 @@ $(document).ready( function () {
     mask: standardDialogMask,    
     onBeforeLoad: function () { 
             var signedList =  jQuery(".authornamewhennotsecretary");                                                     
-            
-            // ***We don't have secretary functionality so this is disabled for now
-      var authorSignes = jQuery("#authorsignatoryradio").attr("checked");
-      if (authorSignes)   {
-        console.log("authorsigns");
-               signedList.html(signedList.attr("okprefix")+" <strong>"+author+"</strong>");
-      } else {
-        console.log("author doesn't sign");
-              signedList.html(signedList.attr("alt"));
-      }
+            var authorSignes = jQuery("#authorsignatoryradio:checked").size()>0;
             var newtxt = $("#invitetext").val()
             $("#edit-invite-text-dialog textarea").val(newtxt);    
-            var author = $(".authorname").text();
+            var author = $(".authorname .fieldvalue").text();
             var sigs = $("#personpane .persondetails");
             var partners = new Array()
             var i = 0;
-            sigs.each(function(){
+            if (authorSignes)   {
+              signedList.html(signedList.attr("okprefix")+" <strong>"+author+"</strong>");
+              partners[i] = author;
+              i++;
+            } else {
+               signedList.html(signedList.attr("alt"));
+            }
+            //ignore first one (it is author and we added him earlier)
+            sigs.slice(1).each(function(){
               var namefield = $("[name='signatoryname']",this);
               var mailfield =  $("[name='signatoryemail']",this)
               
-              var res = $(this).attr("alt");
+              var res = namefield.val();
               if (!namefield.hasClass("grayed"))          
                  res = namefield.val();
-             else if (!mailfield.hasClass("grayed") )
+              else if (!mailfield.hasClass("grayed") )
                  res = mailfield.val(); 
               partners[i] = res
               i++;
