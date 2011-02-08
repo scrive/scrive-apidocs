@@ -101,7 +101,7 @@ instance Show KontraLink where
     showsPrec _ (LinkPaymentsAdmin ) = (++) $ "/adminonly/advpayments"
     showsPrec _ (LinkUserAdmin Nothing) = (++) $ "/adminonly/useradmin"
     showsPrec _ (LinkUserAdmin (Just userId)) = (++) $ "/adminonly/useradmin/"++show userId
-    showsPrec _ (LinkUnloggedUserAction sid mh email username) = (++) $ "/unlogged/"++show sid++"/"++show mh ++ 
+    showsPrec _ (LinkUnloggedUserAction sid mh email username) = (++) $ "/accountsetup/"++show sid++"/"++show mh ++ 
                                                                                        "?" ++ "email=" ++ email ++
                                                                                        "&" ++ "name="++ username
     showsPrec _ (LinkChangeSignatoryEmail did slid ) = (++) $ "/changeemail/"++show did++"/"++show slid
