@@ -87,7 +87,7 @@ mailInvitationToSignDefaultHeader=
       <strong>$creatorname$</strong> har bjudit in dig att underteckna dokumentet <strong>$documenttitle$</strong> online via tjänsten SkrivaPå.
     </p>
 ####
-remindMailSignedTitle=Påminnelse att underteckna  $documenttitle$
+remindMailSignedTitle=$documenttitle$
 ###
 remindMailSignedStandardHeader=
     <span>
