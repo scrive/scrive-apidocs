@@ -262,7 +262,6 @@ timetosigninfo=
 updateinglistwithauthor=
     <span>
       <span class="partylistupdate"></span>
-      <span class="hidden authorname"> $creatorname$ </span>
     </span>
 ####
 noonehadsignedtext=
