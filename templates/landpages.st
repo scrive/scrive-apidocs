@@ -38,7 +38,7 @@ landpageRejectedView=
     <div class="centerdivnarrow">
       <p class="headline">Du har avvisat dokumentet <strong>$documenttitle$</strong>.</p>
       <p>Ett meddelande har skickats till $partyList:noescape()$.</p>
-      <p><a href="/">Tillbaks till förstasidan</a></p>
+      <p><a href="/">Tillbaka till förstasidan</a></p>
     </div>
 #####
 willCreateAccountForYouNoAccount=
