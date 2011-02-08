@@ -11,7 +11,7 @@
 -- 
 -----------------------------------------------------------------------------
 module Templates.Templates
-(RenderTemplate, readTemplates,renderTemplate,templateList,KontrakcjaTemplates,Templates.Templates.setAttribute) where
+(RenderTemplate, readTemplates,renderTemplate,templateList,KontrakcjaTemplates,Templates.Templates.setAttribute, Fields, Field , field) where
 
 import System.IO
 import Control.Monad
