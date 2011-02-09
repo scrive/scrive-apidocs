@@ -251,7 +251,14 @@ pageDocumentForAuthor ctx
        authorhaslink = not $ null $ filter (not . isNotLinkForUserID authorid) documentsignatorylinks
        documentdaystosignboxvalue = maybe 7 id documentdaystosign
        timetosignset = isJust documentdaystosign --swedish low constrain
-       documentauthordetails = signatoryDetailsFromUser author
+       documentauthordetails = (signatoryDetailsFromUser author) 
+                               {
+                                 signatoryemailplacements = (authoremailplacements document)
+                               , signatorynameplacements = (authornameplacements document)
+                               , signatorycompanyplacements = (authorcompanyplacements document)
+                               , signatorynumberplacements = (authornumberplacements document)
+                               , signatoryotherfields = (authorotherfields document)
+                               }
    in do
      helpers <- renderTemplate (ctxtemplates ctx) "pageDocumentForAuthorHelpers" [("documentid",show documentid)] 
      signatories <- fmap concat $ sequence $ map (showSignatoryLinkForSign ctx document author) documentsignatorylinks                                                                                  
@@ -313,7 +320,14 @@ pageDocumentForViewer ctx
        authorhaslink = not $ null $ filter (not . isNotLinkForUserID authorid) documentsignatorylinks
        documentdaystosignboxvalue = maybe 7 id documentdaystosign
        timetosignset = isJust documentdaystosign --swedish low constrain
-       documentauthordetails = signatoryDetailsFromUser author
+       documentauthordetails = (signatoryDetailsFromUser author)
+                               {
+                                 signatoryemailplacements = (authoremailplacements document)
+                               , signatorynameplacements = (authornameplacements document)
+                               , signatorycompanyplacements = (authorcompanyplacements document)
+                               , signatorynumberplacements = (authornumberplacements document)
+                               , signatoryotherfields = (authorotherfields document)
+                               }
    in do
      helpers <- renderTemplate (ctxtemplates ctx) "pageDocumentForViewerHelpers" [("documentid",show documentid) ] 
      signatories <- fmap concat $ sequence $ map (showSignatoryLinkForSign ctx document author) documentsignatorylinks                                                                                  
