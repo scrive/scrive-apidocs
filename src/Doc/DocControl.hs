@@ -1027,8 +1027,16 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
                                   , signatoryotherfields = []
                                   })
       -}
+      authorHasSigned = (any ((maybe False ((== (userid author)) . unSignatory)) . maybesignatory) (documentsignatorylinks document))
       signatoriesdetails = map signatorydetails $ documentsignatorylinks document
-
+      authordetails = (signatoryDetailsFromUser author) 
+                      {
+                        signatorynameplacements = authornameplacements document
+                      , signatorynumberplacements = authornumberplacements document
+                      , signatoryemailplacements = authoremailplacements document
+                      , signatorycompanyplacements = authorcompanyplacements document
+                      , signatoryotherfields = authorotherfields document
+                      }
       signatories = personsFromDocument document
 
       -- oh boy, this is really network byte order!
@@ -1083,8 +1091,10 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
       
       -- document fields
 
-      fields = (concat (map fieldsFromSignatory signatoriesdetails))
-
+      fields = if authorHasSigned
+               then (concat (map fieldsFromSignatory signatoriesdetails))
+               else (concat (map fieldsFromSignatory $ authordetails : signatoriesdetails))
+                    
       config = Seal.SealSpec 
             { Seal.input = inputpath
             , Seal.output = outputpath
