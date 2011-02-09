@@ -72,7 +72,7 @@ function placePlacements(pls, label, value, sigid, fieldid) {
 	      // you are dragging the original
 	      start: function (event, ui) {
 		$(this).css({ display: "none" });
-	      },
+	      }
 
 	      
 	    });
