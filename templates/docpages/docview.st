@@ -588,7 +588,7 @@ pageDocumentForAuthorContentPreparation=
                 <div class="signStepsBodyIcons">
                   <a href="#man2" class="man"></a>
                   <span class="briefcase"></span>
-                  <span class="plus"></span>
+                  <a class="plus" href="#"></a>
                 </div>
                 
                 <!-- 013 changed -->

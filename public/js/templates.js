@@ -618,12 +618,12 @@ function authorToHTML(sig) {
     });
 
   sigentry.find("a.plus").click(function () {
-    var field = $("<div class='newfield'><input class='newfieldbox' type='text' infotext='Type Field Name' /><a href='#' class='plus'></a><a href='#' class='minus'></a></div>");
+    var field = $("<div class='newfield'><input class='newfieldbox' type='text' infotext='Type Field Name' /><a href='#' class='okIcon'></a><a href='#' class='minus'></a></div>");
     field.find("a.minus").click(function() {
       field.remove();
       return false;
     });
-    field.find("a.plus").click(function () {
+    field.find("a.okIcon").click(function () {
       fieldname = field.find("input[type='text']").attr("value");
       if(fieldname == "Type Field Name" || fieldname == "") {
 	return false;
@@ -664,6 +664,7 @@ function authorToHTML(sig) {
 	//console.log(ff);
 	ff.each(function(){this.remove();});
 	f.remove();
+        return false;
       });
 		    
       of.append(f);
@@ -811,12 +812,12 @@ function signatoryToHTML(sig) {
       });
 
       field.find("a.okIcon").click(function () {
-		    fieldname = field.find("input[type='text']").attr("value");
-		    if(fieldname == "Type Field Name" || fieldname == "") {
-			return false;
-		    }
-		    var f = $("#templates .customfield").first().clone();
-		    console.log(f);
+	fieldname = field.find("input[type='text']").attr("value");
+	if(fieldname == "Type Field Name" || fieldname == "") {
+	  return false;
+	}
+	var f = $("#templates .customfield").first().clone();
+	console.log(f);
 		    //var f = buildDraggableField(fieldname, "", "sig");
 		    setInfotext(f, fieldname);
 		    setValue(f, "");
@@ -851,6 +852,7 @@ function signatoryToHTML(sig) {
 			    //console.log(ff);
 			    ff.each(function(){this.remove();});
 			    f.remove();
+                      return false;
 			});
 		    
 		    of.append(f);
