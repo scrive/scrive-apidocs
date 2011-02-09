@@ -240,7 +240,8 @@ input[type=submit]:active, input[type=button]:active, button:active, a.button:ac
 #headerContainer,
 #headerWide
 {
-    background: url(images/darkpattern.png) repeat bottom center;
+    background: url(images/gradientextent.png) repeat-x bottom center;
+    /* background: url(images/darkpattern.png) repeat bottom center; */
 
     color: #fafafa;
     height: 90px;
