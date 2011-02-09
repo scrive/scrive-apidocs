@@ -426,6 +426,27 @@ $(deriveAll [''Default]
           , documenttrustweaverreference8 :: Maybe BS.ByteString
           }
 
+      data Document9 = Document9
+          { documentid9               :: DocumentID
+          , documenttitle9            :: BS.ByteString
+          , documentauthor9           :: Author
+          , documentsignatorylinks9   :: [SignatoryLink]  
+          , documentfiles9            :: [File]
+          , documentsealedfiles9      :: [File]
+          , documentstatus9           :: DocumentStatus
+          , documentctime9            :: MinutesTime
+          , documentmtime9            :: MinutesTime
+          , documentchargemode9       :: ChargeMode
+          , documentdaystosign9       :: Maybe Int
+          , documenttimeouttime9      :: Maybe TimeoutTime 
+          -- | If true, this Document will not appear in the document list
+          , documentdeleted9          :: Bool
+          , documenthistory9          :: [DocumentHistoryEntry]
+          , documentinvitetext9       :: BS.ByteString
+          , documenttrustweaverreference9 :: Maybe BS.ByteString
+          , documentallowedidtypes9   :: [IdentificationType]
+          }
+
       data Document = Document
           { documentid               :: DocumentID
           , documenttitle            :: BS.ByteString
@@ -445,6 +466,11 @@ $(deriveAll [''Default]
           , documentinvitetext       :: BS.ByteString
           , documenttrustweaverreference :: Maybe BS.ByteString
           , documentallowedidtypes   :: [IdentificationType]
+          , authornameplacements :: [FieldPlacement]
+          , authorcompanyplacements :: [FieldPlacement]
+          , authoremailplacements :: [FieldPlacement]
+          , authornumberplacements :: [FieldPlacement]
+          , authorotherfields :: [FieldDefinition]
           }
 
       data File0 = File0 
@@ -842,9 +868,13 @@ $(deriveSerialize ''Document8)
 instance Version Document8 where
     mode = extension 8 (Proxy :: Proxy Document7)
 
+$(deriveSerialize ''Document9)
+instance Version Document9 where
+    mode = extension 9 (Proxy :: Proxy Document8)
+
 $(deriveSerialize ''Document)
 instance Version Document where
-    mode = extension 9 (Proxy :: Proxy Document8)
+    mode = extension 10 (Proxy :: Proxy Document9)
 
 instance Migrate Document0 Document1 where
       migrate (Document0
@@ -1124,7 +1154,7 @@ instance Migrate Document7 Document8 where
                 , documenttrustweaverreference8 = Nothing
                 }
 
-instance Migrate Document8 Document where
+instance Migrate Document8 Document9 where
     migrate (Document8
                 { documentid8
                 , documenttitle8
@@ -1142,25 +1172,70 @@ instance Migrate Document8 Document where
                 , documenthistory8
                 , documentinvitetext8
                 , documenttrustweaverreference8
-                }) = Document
-                { documentid = documentid8
-                , documenttitle = documenttitle8
-                , documentauthor = documentauthor8
-                , documentsignatorylinks = documentsignatorylinks8
-                , documentfiles = documentfiles8
-                , documentsealedfiles = documentsealedfiles8
-                , documentstatus = documentstatus8
-                , documentctime = documentctime8
-                , documentmtime = documentmtime8
-                , documentchargemode = documentchargemode8
-                , documentdaystosign = documentdaystosign8
-                , documenttimeouttime = documenttimeouttime8
-                , documentdeleted = documentdeleted8
-                , documenthistory = documenthistory8
-                , documentinvitetext = documentinvitetext8
-                , documenttrustweaverreference = documenttrustweaverreference8
-                , documentallowedidtypes = [EmailIdentification]
+                }) = Document9
+                { documentid9 = documentid8
+                , documenttitle9 = documenttitle8
+                , documentauthor9 = documentauthor8
+                , documentsignatorylinks9 = documentsignatorylinks8
+                , documentfiles9 = documentfiles8
+                , documentsealedfiles9 = documentsealedfiles8
+                , documentstatus9 = documentstatus8
+                , documentctime9 = documentctime8
+                , documentmtime9 = documentmtime8
+                , documentchargemode9 = documentchargemode8
+                , documentdaystosign9 = documentdaystosign8
+                , documenttimeouttime9 = documenttimeouttime8
+                , documentdeleted9 = documentdeleted8
+                , documenthistory9 = documenthistory8
+                , documentinvitetext9 = documentinvitetext8
+                , documenttrustweaverreference9 = documenttrustweaverreference8
+                , documentallowedidtypes9 = [EmailIdentification]
                 }
+
+instance Migrate Document9 Document where
+    migrate (Document9
+                { documentid9
+                , documenttitle9
+                , documentauthor9
+                , documentsignatorylinks9
+                , documentfiles9
+                , documentsealedfiles9
+                , documentstatus9
+                , documentctime9
+                , documentmtime9
+                , documentchargemode9
+                , documentdaystosign9
+                , documenttimeouttime9
+                , documentdeleted9
+                , documenthistory9
+                , documentinvitetext9
+                , documenttrustweaverreference9
+                , documentallowedidtypes9
+                }) = Document
+                { documentid = documentid9
+                , documenttitle = documenttitle9
+                , documentauthor = documentauthor9
+                , documentsignatorylinks = documentsignatorylinks9
+                , documentfiles = documentfiles9
+                , documentsealedfiles = documentsealedfiles9
+                , documentstatus = documentstatus9
+                , documentctime = documentctime9
+                , documentmtime = documentmtime9
+                , documentchargemode = documentchargemode9
+                , documentdaystosign = documentdaystosign9
+                , documenttimeouttime = documenttimeouttime9
+                , documentdeleted = documentdeleted9
+                , documenthistory = documenthistory9
+                , documentinvitetext = documentinvitetext9
+                , documenttrustweaverreference = documenttrustweaverreference9
+                , documentallowedidtypes = documentallowedidtypes9
+                , authornameplacements = []
+                , authorcompanyplacements = []
+                , authoremailplacements = []
+                , authornumberplacements = []
+                , authorotherfields = []
+                }
+
 
 $(deriveSerialize ''DocumentStatus)
 instance Version DocumentStatus where
@@ -1311,6 +1386,11 @@ newDocument user title ctime isfree = do
           , documentsealedfiles = []
           , documenttrustweaverreference = Nothing
           , documentallowedidtypes = [EmailIdentification]
+          , authornameplacements = []
+          , authoremailplacements = []
+          , authorcompanyplacements = []
+          , authornumberplacements = []
+          , authorotherfields = []
           }
   modify $ insert doc
   return doc
