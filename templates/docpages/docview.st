@@ -647,7 +647,7 @@ pageDocumentForAuthorContentPreparation=
 	          <!-- 008 changed/new -->
 	          <li class="plus"><a href="#add"  id="addSignatory">LÄGG TILL PERSON</a></li>
 	          <li class="minus"><a href="#remove"  id="delSignatory">TA BORT PERSON</a></li>
-	          <li  class="floppyIcon submitStepFormOnClick"><a href="#save">SPARA SOM MALL</a></li> 
+	          <li  class="floppyIcon submitStepFormOnClick"><a href="#save">SPARA SOM UTKAST</a></li> 
 	          <li  class="arrowDown"><a href="$linkissuedocpdf$" target="_blank">LADDA NED SOM PDF</a></li>
 	        </ul>
 	      </div>
@@ -681,11 +681,7 @@ pageDocumentForAuthorContentPreparation=
                  </span>
 	        </p>
 	        
-	        <p>
-	          <input type="checkbox" id="b">
-	          <label for="b">Aktivera automatisk påminnelse</label>
-	        </p>
-                
+	                  
                 <!-- 
 	           <p class="signStepsBodySaveMethods">
 		     <label for="c">Lagring</label> 
