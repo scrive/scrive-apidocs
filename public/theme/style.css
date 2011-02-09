@@ -449,7 +449,7 @@ input[type=submit]:active, input[type=button]:active, button:active, a.button:ac
     position: absolute;
     right: 4px; /* 003l changed */
     top: 22px; /* 003l changed */
-    width: 200px;
+    width: 320px;
     text-align: right;
 }
 
