@@ -103,6 +103,8 @@ $(deriveAll [''Eq, ''Ord, ''Default]
                               | ELegitimationIdentification
 
       data SignatureProvider = BankIDProvider
+                             | TeliaProvider
+                             | NordeaProvider
 
       data SignatureInfo = SignatureInfo { signatureinfotext        :: String
                                          , signatureinfosignature   :: String
