@@ -67,10 +67,11 @@ willCreateAccountForYou::KontrakcjaTemplates -> Document->SignatoryLink->Bool-> 
 willCreateAccountForYou templates  document siglink hasAccount = 
     if (hasAccount)
       then renderTemplate templates  "willCreateAccountForYouHasAccount" $ do
+               field "email" $ signatoryemail $ signatorydetails siglink   
+      else renderTemplate templates "willCreateAccountForYouNoAccount" $  do
                field "documentid" $ show $ unDocumentID $ documentid document
                field "signatorylinkid" $ unSignatoryLinkID $ signatorylinkid siglink
-      else renderTemplate templates "willCreateAccountForYouNoAccount" $  do
-               field "email" $ signatoryemail $ signatorydetails siglink   
+               
               
 landpageRejectedView ::KontrakcjaTemplates -> Document -> IO String
 landpageRejectedView templates document =
