@@ -594,7 +594,7 @@ pageDocumentForAuthorContentPreparation=
                 <!-- 013 changed -->
                 <div class="sigentry signStepsBodyForms" id="peopleDetails">
                   <span class="fields">
-	            <span class='dragtext authorname'>
+                    <span class='dragtext authorname'>
 	              <span style="display:none;" class="fieldid">name</span>
 	              <span style="display:none;" class="type">author</span>
 	              <span class="fieldvalue"></span>

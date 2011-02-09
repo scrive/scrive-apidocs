@@ -2172,3 +2172,13 @@ form {
     background-repeat: no-repeat;
     background-position: 3px 3px;
 }
+
+.authorname , .authorcomp , .authoremail , .authornum {
+  width: 130px;
+  overflow: hidden;
+  margin-top:2px;
+  margin-right:2px;
+  
+  display: inline-block;
+
+}
