@@ -199,10 +199,11 @@ handleRoutes = msum [
      
      -- e-legitimation stuff
      {- Disabled until finished
-     , dir "bankid" $ dir "s" $ hget3  $ BankID.handleSign
-     , dir "bankid" $ dir "d" $ hget1  $ BankID.handleIssue
-     , dir "s" $ param "bankid" $ hpost3 $ BankID.handleSignPost
-     , dir "d" $ param "bankid" $ hpost1 $ BankID.handleIssuePost
+     , dir "bankid" $ dir "s" $ hget3  $ BankID.handleSignBankID
+     , dir "bankid" $ dir "d" $ hget1  $ BankID.handleIssueBankID
+     , dir "s" $ param "bankid" $ hpost3 $ BankID.handleSignPostBankID
+     , dir "d" $ param "bankid" $ hpost1 $ BankID.handleIssuePostBankID
+     
 
      , dir "nordea" $ dir "s" $ hget3  $ BankID.handleSignNordea
      , dir "nordea" $ dir "d" $ hget1  $ BankID.handleIssueNordea
@@ -213,7 +214,8 @@ handleRoutes = msum [
      , dir "telia" $ dir "d" $ hget1  $ BankID.handleIssueTelia
      , dir "s" $ param "telia" $ hpost3 $ BankID.handleSignPostTelia
      , dir "d" $ param "telia" $ hpost1 $ BankID.handleIssuePostTelia
-     
+     -}
+
      -- static files
      , serveHTMLFiles
      , fileServe [] "public"
