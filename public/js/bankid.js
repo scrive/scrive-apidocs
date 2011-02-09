@@ -403,7 +403,7 @@ function installNetIDIE() {
     $("body").append("<OBJECT NAME='iid' id='iid' WIDTH=0 HEIGHT=0 CLASSID='CLSID:5BF56AD2-E297-416E-BC49-00B327C4426E'></OBJECT>");
 }
 
-function hasNetIDPluginIE()
+function hasNetIDPluginIE() {
     return true;
     try { 
 	// change this activexobject
