@@ -930,8 +930,8 @@ function makeDropTargets() {
     var helper = $(ui.helper);
     console.log(field);
     if(isPlacedField(field)) {
-      field.remove();
-      helper.remove();
+      field.detach();
+      helper.detach();
     }
 
   }});
@@ -955,12 +955,10 @@ function makeDropTargets() {
 		var fieldid = getFieldID(field);
 		var pl = newplacement(left, top, pageno, page.width(), page.height());
 		placePlacements([pl], getLabel(field), getValue(field), sigid, fieldid);
-		
-      console.log(field);
 	
 		if(isPlacedField(field)) {
-		    field.remove();
-		    helper.remove();
+		    field.detach();
+		    helper.detach();
 		} else {
 		    updateStatus(field);
 		}
