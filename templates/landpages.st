@@ -41,12 +41,12 @@ landpageRejectedView=
       <p><a href="/">Tillbaka till förstasidan</a></p>
     </div>
 #####
-willCreateAccountForYouNoAccount=
+willCreateAccountForYouHasAccount=
     <p>Dokumentet har sparats till ditt konto.
       $loginBox()$
     </p>
 #####
-willCreateAccountForYouHasAccount=
+willCreateAccountForYouNoAccount=
     <p>Du kan nu spara dokumentet på SkrivaPå, då är ditt dokument säkert lagrat och dessutom
        kan du även i framtiden verifiera avtalet mot vår databas. Detta kostar ingenting.
       <form action="$LinkLandpageSaved()$" method="get">

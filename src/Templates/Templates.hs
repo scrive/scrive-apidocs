@@ -104,7 +104,7 @@ packIO (name,comp)= do
 -- | We use ByteString with UTF all the time but default is Latin-1 and we get strange chars 
 -- | after rendering
 
-class (HST.ToSElem a) => ToSElem a where
+class ToSElem a where
   toSElem:: (Stringable b) => a -> SElem b
 
 instance (HST.ToSElem a) => ToSElem a where

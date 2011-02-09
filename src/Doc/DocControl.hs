@@ -393,9 +393,6 @@ landpageSigned :: DocumentID -> SignatoryLinkID -> Kontra Response
 landpageSigned documentid signatorylinkid = do
   ctx <- get
   document <- queryOrFail $ GetDocumentByDocumentID documentid
-
-
-
   signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
   maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
   content <- liftIO $ landpageSignedView (ctxtemplates ctx) document signatorylink (isJust maybeuser)
