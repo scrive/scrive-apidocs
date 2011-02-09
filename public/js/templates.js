@@ -209,6 +209,12 @@ function setValue(field, value) {
 	console.log("unknown type: " + getFieldType(field));
     }
 }
+function setTitle(field,value)
+{
+  
+  if (value.length > 12)
+     $(field).attr("title",value);
+}
 
 function getFieldType(field) {
     return getHiddenValue(field, "type");
@@ -552,7 +558,14 @@ function authorToHTML(sig) {
     setValue(acomp, sig.company);
     setValue(anumb, sig.number);
     setValue(aemai, sig.email);
-
+    setTitle(aname, sig.name);
+    setTitle(acomp, sig.company);
+    setTitle(anumb, sig.number);
+    setTitle(aemai, sig.email);
+    
+    
+    
+    
   if(sig.name === "") {
     aname.remove();
   }
