@@ -298,7 +298,7 @@ handleSignPostNordea docid signid magic = do
                                       return $ LinkMain
                   Right (cert, attrs) -> do
                             Context { ctxtime, ctxipnumber } <- get
-                            document@DocState.Document{ documentstatus = olddocumentstatus, documentsignatorylinks } <- queryOrFail $ GetDocumentByDocumentID docid
+                            document@Doc.DocState.Document{ documentstatus = olddocumentstatus, documentsignatorylinks } <- queryOrFail $ GetDocumentByDocumentID docid
                             fieldnames <- getAndConcat "fieldname"
                             fieldvalues <- getAndConcat "fieldvalue"
                             let fields = zip fieldnames fieldvalues
@@ -485,7 +485,7 @@ handleSignPostTelia docid signid magic = do
                                       return $ LinkMain
                   Right (cert, attrs) -> do
                             Context { ctxtime, ctxipnumber } <- get
-                            document@DocState.Document{ documentstatus = olddocumentstatus, documentsignatorylinks } <- queryOrFail $ GetDocumentByDocumentID docid
+                            document@Doc.DocState.Document{ documentstatus = olddocumentstatus, documentsignatorylinks } <- queryOrFail $ GetDocumentByDocumentID docid
                             fieldnames <- getAndConcat "fieldname"
                             fieldvalues <- getAndConcat "fieldvalue"
                             let fields = zip fieldnames fieldvalues
