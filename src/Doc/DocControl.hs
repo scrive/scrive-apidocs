@@ -303,6 +303,7 @@ signDocument documentid -- ^ The DocumentID of the document to sign
 
   when (not allowsEmail) mzero
 
+
   newdocument <- update $ SignDocument documentid signatorylinkid1 ctxtime ctxipnumber Nothing fields
   case newdocument of
     Left message -> 
@@ -392,6 +393,9 @@ landpageSigned :: DocumentID -> SignatoryLinkID -> Kontra Response
 landpageSigned documentid signatorylinkid = do
   ctx <- get
   document <- queryOrFail $ GetDocumentByDocumentID documentid
+
+
+
   signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
   maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
   content <- liftIO $ landpageSignedView (ctxtemplates ctx) document signatorylink (isJust maybeuser)
@@ -743,8 +747,16 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} ms
   let authorid = unAuthor $ documentauthor document
   Just author <- query $ GetUserByUserID authorid
                                             
-  let signatories2 = if authorrole == "signatory"
-                     then (signatoryDetailsFromUser author) : signatories
+  let authordetails = (signatoryDetailsFromUser author)
+                      {
+                        signatoryemailplacements = placementsByID (BS.fromString "author") (BS.fromString "email")
+                      , signatorynameplacements = placementsByID (BS.fromString "author") (BS.fromString "name")
+                      , signatorycompanyplacements = placementsByID (BS.fromString "author") (BS.fromString "company")
+                      , signatorynumberplacements = placementsByID (BS.fromString "author") (BS.fromString "number")
+                      , signatoryotherfields = defsByID (BS.fromString "author")
+                      }
+      signatories2 = if authorrole == "signatory"
+                     then authordetails : signatories
                      else signatories
   -- FIXME: tell the user what happened!
   -- when (daystosign<1 || daystosign>99) mzero
@@ -752,10 +764,11 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} ms
   --let emails = zip signatoriesemails 
   --              (sequence $ map (query . GetUserByEmail . Email) signatoriesemails)
 
-  Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor document
+  -- author is gotten above, no?
+  -- Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor document
 
   doc2 <- update $ UpdateDocument ctxtime documentid
-           signatories2 daystosign invitetext author docallowedidtypes
+           signatories2 daystosign invitetext author authordetails docallowedidtypes
 
   msum 
      [ do getDataFnM (look "final" `mplus` look "sign")
