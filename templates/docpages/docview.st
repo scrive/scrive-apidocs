@@ -12,6 +12,7 @@ creatingDocumentFrame=
       $endif$
     </span>
     
+    <!--
     <div class="signStepsButton $if(submitFormOnNext)$ submitStepFormOnClick $endif$">
       <a href="#nextStep" class="clickArea"> </a>
       <a href="#nextStep"><span class="icon arrowRight"></span></a>
@@ -21,6 +22,7 @@ creatingDocumentFrame=
         <span class="text">Nästa steg</span>
       </a>
     </div>
+    -->
   </div>
 
 
@@ -59,8 +61,8 @@ uploadPageContent=
         class="stepForm"> 
     <div>
       <span id="signStepsBodyUploadTextContainer"> 
-        <span class="header">Välj fil och ladda upp!</span><br>
-        <span class="text">OBS! Det går endast att ladda upp filer med formatet .PDF</span> 
+        <span class="header">Välj fil att ladda upp</span><br>
+        <span class="text">OBS! Endast PDF</span> 
       </span> 
       <br>
       <div id="signStepsButtonContainer">
