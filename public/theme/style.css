@@ -1030,10 +1030,7 @@ a.button {
 #signStepsMenu div#signStepsMenuEmptyStep
 {
     border-width: 1px 1px 1px 1px;
-    border-top-color: #808080;
-    border-right-color: #bdbdbd;
-    border-bottom-color: #000000;
-    border-left-color: #808080;
+    border-color: #808080 #BDBDBD #BDBDBD #808080;
     border-style: solid;
     height: 23px;
     width: 958px;
