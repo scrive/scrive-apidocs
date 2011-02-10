@@ -97,22 +97,31 @@ function swedishString(names)
     return "<strong>" + name0 + "</strong>, " + swedishString(names);
 }
 
-$(document).ready( function () {
-  // make edit bar stay at the top
-  var menu = $('#signStepsContainer');
-  var pos = menu.offset();
-  if (menu.hasClass("follow"))
-  $(window).scroll(function(){
-    if($(this).scrollTop() >= pos.top && !menu.hasClass('fixed')){
-      $("#signStepsWrapper").height(menu.height());
-      menu.addClass('fixed');
-    } else if($(this).scrollTop() < pos.top && menu.hasClass('fixed')){
-      $("#signStepsWrapper").height(menu.height());
-      menu.removeClass('fixed');
-    }
-  });
-  
+/* 
+ * make edit bar stay at the top
+ */
+$(function () {
+  var menu = $('#signStepsContainer.follow');
+  if(menu.size() > 0) {
+    var pos = menu.offset();
+    var signStepsWrapper = $("#signStepsWrapper");
+    var documentBox = $("#documentBox");
+    $(window).scroll(function(){
+      if($(this).scrollTop() >= pos.top && !menu.hasClass('fixed')){
+        signStepsWrapper.height(menu.height());
+        menu.addClass('fixed');
+      }  else if($(this).scrollTop() < pos.top && menu.hasClass('fixed')){
+        signStepsWrapper.height(menu.height());
+        menu.removeClass('fixed');
+      }
+      if(menu.hasClass('fixed') && menu.height() + pos.top < documentBox.offset().top) {
+        signStepsWrapper.height(menu.height());
+      }
+    });
+  }
+});
 
+$(function () {
 
 	// remember the last row of the table that was clicked
         var focused;

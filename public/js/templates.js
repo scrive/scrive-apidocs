@@ -53,10 +53,6 @@ function placePlacements(pls, label, value, sigid, fieldid) {
       stop: function(event, ui) {
         var field = $(ui.draggable);
         var helper = $(ui.helper);
-        console.log("helper");
-        console.log(helper);
-        console.log(field);
-        console.log("nothing");
         // for some reason, this needs to be helper (field is
         // empty)
         if(isPlacedField(helper)) {
@@ -521,7 +517,6 @@ function authorToHTML(sig) {
   var manlink = sigentry.find("a.man");
 
   manlink.click(function(){
-    console.log("man click");
     sigentry.find(".partyrole").show();
     if(sigentry.find(".partyrole input[checked]").size() === 0){
       sigentry.find(".partyrole input").first().attr("checked", "true");
@@ -641,6 +636,8 @@ function authorToHTML(sig) {
  */
 
 $(function() {
+  var signStepsWrapper = $('#signStepsWrapper');
+  var signStepsContainer = $('#signStepsContainer');
   $('a.minus', $('#personpane')[0]).live('click', function() {
     var minus = $(this);
 
@@ -651,14 +648,16 @@ $(function() {
 
     { // this gets rid of custom fields and their placements
       var customfield = minus.parents('.customfield');
-      console.log(customfield);
       var ff = getPlacedFieldsForField(customfield);
-      console.log(ff);
       $(ff).detach();
       customfield.detach();
     }
 
-    // live must return false, I think
+    // we also need to adjust the size of the signStepsWrapper
+    if(!signStepsContainer.hasClass('fixed')) {
+      signStepsWrapper.height(signStepsContainer.height());
+    }
+
     return false;
   });
 });
@@ -749,23 +748,27 @@ $(function() {
  * It always needs to add a newfield
  */
 $(function() {
+  var signStepsWrapper = $('#signStepsWrapper');
+  var signStepsContainer = $('#signStepsContainer');
   $('a.plus', $('#personpane')[0]).live('click', function() {
     var plus = $(this);
     var persondetails = plus.parents('.persondetails');
-    console.log(persondetails);
     var otherfields = persondetails.find('.otherfields');
-    console.log(otherfields);
     var newfield = $("<div class='newfield'><input class='newfieldbox' type='text' infotext='Type Field Name' /><a href='#' class='okIcon'></a><a href='#' class='minus'></a></div>");
-
+ 
     otherfields.append(newfield);
     enableInfoTextOnce(newfield);
+    console.log("hhh");
+    // we also need to adjust the size of the signStepsWrapper
+    if(!signStepsContainer.hasClass('fixed')) {
+      signStepsWrapper.height(signStepsContainer.height());
+    }
     return false;
   });
 });
 
 
 function signatoryToHTML(sig) {
-  //console.log("adding signatory");
   var sl = $("#personpane");
   var sigid = newUUID();
   sig.id = sigid;
@@ -921,7 +924,6 @@ function makeDropTargets() {
   $("#signStepsContainer").droppable({ drop: function(event, ui) {
     var field = $(ui.draggable);
     var helper = $(ui.helper);
-    console.log(field);
     if(isPlacedField(field)) {
       field.detach();
       helper.detach();
