@@ -56,8 +56,7 @@ function placePlacements(pls, label, value, sigid, fieldid) {
         // for some reason, this needs to be helper (field is
         // empty)
         if(isPlacedField(helper)) {
-          helper.remove();
-          console.log("removed field + helper");
+          $(this).detach();
         }
       },
       // build a helper so it doesn't delete the original
@@ -758,7 +757,6 @@ $(function() {
  
     otherfields.append(newfield);
     enableInfoTextOnce(newfield);
-    console.log("hhh");
     // we also need to adjust the size of the signStepsWrapper
     if(!signStepsContainer.hasClass('fixed')) {
       signStepsWrapper.height(signStepsContainer.height());
