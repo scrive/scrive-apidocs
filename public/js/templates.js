@@ -447,6 +447,10 @@ function setSigID(field, sigid) {
 
 function getPlacedFieldsForField(field) {
   var fieldid = getFieldID(field);
+  if(!fieldid) {
+    if(debug) { console.log("not a field " + field); }
+    return $([]);
+  }
   var fields = [];
   var fieldsigid = getSigID(field);
   $(".placedfield").each(function() {
@@ -454,7 +458,7 @@ function getPlacedFieldsForField(field) {
     var fid = getFieldID(p);
     var sid = getSigID(p);
     if(fid == fieldid) {
-      fields[fields.length] = p;
+      fields[fields.length] = p[0];
     }
   });
   return $(fields);
@@ -632,10 +636,6 @@ function authorToHTML(sig) {
 
   sigentry.find("a.plus").click(function () {
     var field = $("<div class='newfield'><input class='newfieldbox' type='text' infotext='Type Field Name' /><a href='#' class='okIcon'></a><a href='#' class='minus'></a></div>");
-    field.find("a.minus").click(function() {
-      field.remove();
-      return false;
-    });
     field.find("a.okIcon").click(function () {
       fieldname = field.find("input[type='text']").attr("value");
       if(fieldname == "Type Field Name" || fieldname == "") {
@@ -670,15 +670,6 @@ function authorToHTML(sig) {
       setSigID(f, sigid);
       setHiddenField(f, "fieldname", fieldname);
 
-      f.find("a.minus").click(function() {
-	//console.log(f);
-	
-	var ff = getPlacedFieldsForField(f);
-	//console.log(ff);
-	ff.each(function(){this.remove();});
-	f.remove();
-        return false;
-      });
       
       of.append(f);
       enableInfoTextOnce(f);
@@ -697,6 +688,29 @@ function authorToHTML(sig) {
   $("#peopleList ol").append("<li><a href='#'>" + sig.name + " (Author)</a></li>");
 }
 
+// activate minus buttons
+$(function() {
+  $('a.minus', $('#personpane')[0]).live('click', function() {
+    var minus = $(this);
+
+    { // this gets rid of newfields (fields without a name yet)
+      var newfield = minus.parents('.newfield');
+      newfield.detach();
+    }
+
+    { // this gets rid of custom fields and their placements
+      var customfield = minus.parents('.customfield');
+      console.log(customfield);
+      var ff = getPlacedFieldsForField(customfield);
+      console.log(ff);
+      $(ff).detach();
+      customfield.detach();
+    }
+
+    // live must return false, I think
+    return false;
+  });
+});
 
 function signatoryToHTML(sig) {
   //console.log("adding signatory");
@@ -819,10 +833,6 @@ function signatoryToHTML(sig) {
 
   sigentry.find("a.plus").click(function () {
     var field = $("<div class='newfield'><input class='newfieldbox' type='text' infotext='Type Field Name' /><a href='#' class='okIcon'></a><a href='#' class='minus'></a></div>");
-    field.find("a.minus").click(function() {
-      field.remove();
-      return false;
-    });
 
     field.find("a.okIcon").click(function () {
       fieldname = field.find("input[type='text']").attr("value");
@@ -858,16 +868,7 @@ function signatoryToHTML(sig) {
       setSigID(f, sigid);
       setHiddenField(f, "fieldname", fieldname);
 
-      f.find("a.minus").click(function() {
-	//console.log(f);
-	
-	var ff = getPlacedFieldsForField(f);
-	//console.log(ff);
-	ff.each(function(){this.remove();});
-	f.remove();
-        return false;
-      });
-      
+ 
       of.append(f);
       enableInfoTextOnce(f);
       updateStatus(f);
