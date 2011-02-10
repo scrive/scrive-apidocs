@@ -888,9 +888,7 @@ function signatoryToHTML(sig) {
   
   $("#peopleList ol").append("<li><a href='#'>" + n + "</a></li>");
   sl.append(sigentry);
-  //currentSig = sigentry;
-  //    sigentry.hide();
-  // $("#personpane").children().hide().first().show();
+
 }
 
 function placePlacementsOfSignatories(signatories) {
@@ -971,11 +969,8 @@ function initializeTemplates () {
     return;
   }
 
-  //$("#loading-message").css({ display: "none" });
-  //$("#edit-bar").css({ display: "" });
-
   placePlacementsOfSignatories(docstate.signatories);
-  
+  placePlacementsOfSignatories([docstate.author]);
   enableInfoTextOnce();
   
   makeDropTargets();
@@ -992,8 +987,6 @@ function initializeTemplates () {
 }
 
 $(document).ready(function () {
-  //$("#loading-message").css({ display: "" });
-  //$("#edit-bar").css({ display: "none" });
   docstateToHTML();
   initializeTemplates();	
 });
