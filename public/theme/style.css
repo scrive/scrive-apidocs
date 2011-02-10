@@ -1096,7 +1096,7 @@ a.button {
 {
     background-image: url(images/darkpattern.png);
     background-repeat: repeat;
-    border-width: 1px 1px 0 1px;
+    border-width: 0px 1px 0 1px;
     border-color: #000000;
     border-style: solid;
     color: #d9d9d9;
