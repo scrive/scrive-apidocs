@@ -314,10 +314,6 @@ function buildDraggableField(info, val, type, emailp) {
 	      });
 
   var input = x.find("input");
-
-  input.keydown(magicUpdate);
-  input.keyup(magicUpdate);
-  input.change(magicUpdate);
   return x;
 }
 
@@ -626,69 +622,24 @@ function authorToHTML(sig) {
     
     var input = field.find("input");
 
-    input.keydown(magicUpdate);
-    input.keyup(magicUpdate);
-    input.change(magicUpdate);
-
     of.append(field);
     //	    
   });
 
-  sigentry.find("a.plus").click(function () {
-    var field = $("<div class='newfield'><input class='newfieldbox' type='text' infotext='Type Field Name' /><a href='#' class='okIcon'></a><a href='#' class='minus'></a></div>");
-    field.find("a.okIcon").click(function () {
-      fieldname = field.find("input[type='text']").attr("value");
-      if(fieldname == "Type Field Name" || fieldname == "") {
-	return false;
-      }
-      var f = $("#templates .customfield").first().clone();
-      console.log(f);
-      //var f = buildDraggableField(fieldname, "", "sig");
-      setInfotext(f, fieldname);
-      setValue(f, "");
-      setFieldType(f, "sig");
-      
-      f.draggable({ handle: ".draghandle"
-		    , zIndex: 10000
-		    , appendTo: "body"
-		    , helper: function (event) {
-		      var field = $(this);
-		      var input = field.find("input");
-		      return placementToHTML(input.attr("infotext"), input.attr("value"));
-		    }
-		  });
-      
-      var input = f.find("input");
-      
-      input.keydown(magicUpdate);
-      input.keyup(magicUpdate);
-      input.change(magicUpdate);
-
-      setFieldName(f, "fieldvalue");
-      var fieldid = newUUID();
-      setFieldID(f, fieldid);
-      setSigID(f, sigid);
-      setHiddenField(f, "fieldname", fieldname);
-
-      
-      of.append(f);
-      enableInfoTextOnce(f);
-      updateStatus(f);
-      
-
-      field.detach();
-      
-      return false;
-    });
-    of.append(field);
-    enableInfoTextOnce(field);
-    return false;
-  });
   
   $("#peopleList ol").append("<li><a href='#'>" + sig.name + " (Author)</a></li>");
 }
 
-// activate minus buttons
+/*
+ * Activate minus buttons within personpane.
+ * There are actually two cases for minus buttons. 
+ *
+ * The first is with a newfield (meaning a field that doesn't have a
+ * name yet).
+ *
+ * The second is with a customfield, which may also have been dragged.
+ */
+
 $(function() {
   $('a.minus', $('#personpane')[0]).live('click', function() {
     var minus = $(this);
@@ -711,6 +662,107 @@ $(function() {
     return false;
   });
 });
+
+/*
+ * We need to protect against hitting the enter key in a 
+ * field. Normally, that submits the form. We want it to do different
+ * things depending on the field.
+ */
+$(function() {
+  // newfields should enter the name
+  $('.newfield input', $('#personpane')[0]).live('keypress', function(e) {
+    if(e.keyCode == 13) {
+      var input = $(this);
+      var newfield = input.parents('.newfield');
+      createCustomField(newfield);
+      return false;
+    }
+  });
+
+  // all other inputs should not submit
+  $('input', $('#personpane')[0]).live('keypress', function(e) {
+    if(e.keyCode == 13) {
+      return false;
+    }
+  });
+});
+
+/* 
+ * We need to make the okIcon (green check) createCustomField as well
+ */
+$(function() { 
+  $('.newfield a.okIcon', $('#personpane')[0]).live('click', function() {
+    var input = $(this);
+    var newfield = input.parents('.newfield');
+    createCustomField(newfield);
+    return false;
+  });
+});
+
+function createCustomField(newfield) {
+  var fieldname = newfield.find("input[type='text']").attr("value");
+  if(fieldname == "Type Field Name" || fieldname == "") {
+    return false;
+  }
+  var customfield = $("#templates .customfield").first().clone();
+  setInfotext(customfield, fieldname);
+  setValue(customfield, "");
+  setFieldType(customfield, "sig");
+
+  customfield.draggable({ handle: ".draghandle",
+                          zIndex: 10000,
+		          appendTo: "body",
+		          helper: function (event) {
+		            var field = $(this);
+		            var input = field.find("input");
+		            return placementToHTML(input.attr("infotext"), input.attr("value"));
+		          }
+	                });
+
+  setFieldName(customfield, "fieldvalue");
+  var fieldid = newUUID();
+  var sigentry = newfield.parents('.sigentry');
+  var sigid = getHiddenField('sigid');
+  setFieldID(customfield, fieldid);
+  setSigID(customfield, sigid);
+  setHiddenField(customfield, "fieldname", fieldname);
+
+  newfield.replaceWith(customfield);
+
+  enableInfoTextOnce(customfield);
+  updateStatus(customfield);
+      
+  return false;
+}
+
+/*
+ * All fields in #personpane are editable and potentially have
+ * placedfields. magicUpdate takes care of changing all of the
+ * placedfields.
+ */
+$(function() {
+  $('.dragfield input', $('#personpane')[0]).live('keydown keyup change', magicUpdate);
+});
+
+/*
+ * The plus button exists in all .persondetails boxes
+ * It always needs to add a newfield
+ */
+$(function() {
+  $('a.plus', $('#personpane')[0]).live('click', function() {
+    var plus = $(this);
+    var persondetails = plus.parents('.persondetails');
+    console.log(persondetails);
+    var otherfields = persondetails.find('.otherfields');
+    console.log(otherfields);
+    var newfield = $("<div class='newfield'><input class='newfieldbox' type='text' infotext='Type Field Name' /><a href='#' class='okIcon'></a><a href='#' class='minus'></a></div>");
+
+    otherfields.append(newfield);
+    enableInfoTextOnce(newfield);
+    return false;
+  });
+});
+
 
 function signatoryToHTML(sig) {
   //console.log("adding signatory");
@@ -782,9 +834,6 @@ function signatoryToHTML(sig) {
 	                                  }
 		                        });
 
-  sigentry.find("input").keydown(magicUpdate);
-  sigentry.find("input").keyup(magicUpdate);
-  sigentry.find("input").change(magicUpdate);
 
   /*
     aemai.find("input").attr('id', 'othersignatoryemail');
@@ -823,79 +872,11 @@ function signatoryToHTML(sig) {
 
     var input = field.find("input");
 
-    input.keydown(magicUpdate);
-    input.keyup(magicUpdate);
-    input.change(magicUpdate);
-
     of.append(field);
     //	    
   });
 
-  sigentry.find("a.plus").click(function () {
-    var field = $("<div class='newfield'><input class='newfieldbox' type='text' infotext='Type Field Name' /><a href='#' class='okIcon'></a><a href='#' class='minus'></a></div>");
 
-    field.find("a.okIcon").click(function () {
-      fieldname = field.find("input[type='text']").attr("value");
-      if(fieldname == "Type Field Name" || fieldname == "") {
-	return false;
-      }
-      var f = $("#templates .customfield").first().clone();
-      console.log(f);
-      //var f = buildDraggableField(fieldname, "", "sig");
-      setInfotext(f, fieldname);
-      setValue(f, "");
-      setFieldType(f, "sig");
-
-      f.draggable({ handle: ".draghandle"
-		    , zIndex: 10000
-		    , appendTo: "body"
-		    , helper: function (event) {
-		      var field = $(this);
-		      var input = field.find("input");
-		      return placementToHTML(input.attr("infotext"), input.attr("value"));
-		    }
-		  });
-
-      var input = f.find("input");
-      
-      input.keydown(magicUpdate);
-      input.keyup(magicUpdate);
-      input.change(magicUpdate);
-
-      setFieldName(f, "fieldvalue");
-      var fieldid = newUUID();
-      setFieldID(f, fieldid);
-      setSigID(f, sigid);
-      setHiddenField(f, "fieldname", fieldname);
-
- 
-      of.append(f);
-      enableInfoTextOnce(f);
-      updateStatus(f);
-      
-
-      field.detach();
-      
-      return false;
-    });
-    of.append(field);
-    enableInfoTextOnce(field);
-    return false;
-  });
-  
-  
-  
-  enableInfoTextOnce(sigentry);
-
-
-  //sigentry.append(d);
-  //sigentry.append(newFieldLink);
-  //sigentry.append(removeLink);
-
-
-
-  //sigentry.hide();
-  //sigentry.slideDown("slow");
   
   var n = "Unnamed";
 
@@ -995,7 +976,7 @@ function initializeTemplates () {
 
   placePlacementsOfSignatories(docstate.signatories);
   
-  enableInfoText();
+  enableInfoTextOnce();
   
   makeDropTargets();
 
