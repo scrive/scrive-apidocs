@@ -152,9 +152,8 @@ pageDocumentForViewerContent =
 
     </div>
     $signatories:noescape()$
-
-    <div id="signStepsBodyBorderBottom"></div>
   </div>
+  <div id="signStepsBodyBorderBottom"></div>
 </div>
 
 <div id="documentBox">
@@ -347,8 +346,8 @@ pageDocumentForSignContent=
       </span> 
     </div>
     $signatories:noescape()$
-    <div id="signStepsBodyBorderBottom"></div>
   </div>
+  <div id="signStepsBodyBorderBottom"></div>
 </div>
 <div id="signViewNotificationContainer"> 
   <div id="signViewNotificationContainerLeft"> 
@@ -892,8 +891,8 @@ pageDocumentForAuthorContentPostPreparation=
     </div>
     $signatories:noescape()$
 
-    <div id="signStepsBodyBorderBottom"></div>
   </div>
+  <div id="signStepsBodyBorderBottom"></div>
 </div>
 
 <div id="documentBox">
