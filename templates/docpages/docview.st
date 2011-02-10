@@ -351,12 +351,12 @@ pageDocumentForSignContent=
 </div>
 <div id="signViewNotificationContainer"> 
   <div id="signViewNotificationContainerLeft"> 
-    <div class="title">Dokumentet skrivs på längst ner på sidan. </div>
+    <div class="title">Underteckna dokumentet längst ned på sidan.</div>
     
   </div>
   <div id="signViewNotificationContainerRight"> 
     <div class="anchor">
-      <a href="#" onclick="jQuery('#signViewNotificationContainer').fadeOut('slow'); return false;">close</a>
+      <a href="#" onclick="jQuery('#signViewNotificationContainer').fadeOut('slow'); return false;">Stäng</a>
     </div>
   </div>
 </div>
