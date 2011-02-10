@@ -84,12 +84,16 @@ Executable kontrakcja-server
  if os(windows)
    cpp-options: -DWINDOWS
  Build-depends: happstack-state, happstack-server==0.5.0.4
+ Build-depends: happstack-state==0.5.0.3, happstack-server==0.5.0.4
+ Build-depends: happstack==0.5.0.3, happstack-ixset==0.5.0.3
+ Build-depends: happstack-data==0.5.0.3
+ Build-depends: happstack-util==0.5.0.3
  Build-depends: hslogger==1.1.0
  Build-depends: time, time-extras
  Build-depends: hsx == 0.7.*, hsp == 0.5.2
- Build-depends: happstack==0.5.0.3, utf8-string, random
- Build-depends: happstack-data, extensible-exceptions, happstack-ixset, containers
- Build-depends: happstack-util, directory, process
+ Build-depends: utf8-string, random
+ Build-depends: extensible-exceptions, containers
+ Build-depends: directory, process
  Build-Depends: base >= 4 && < 5, syb, dataenc
  Build-Depends: syb-with-class, binary, old-locale, old-time
  Build-Depends: network, HTTP, bytestring
@@ -145,13 +149,16 @@ Executable kontrakcja-test
  Build-depends: test-framework, test-framework-hunit, test-framework-quickcheck2
  Build-depends: HUnit, QuickCheck
  Build-depends: filepath
- Build-depends: happstack-state, happstack-server==0.5.0.4
+ Build-depends: happstack-state==0.5.0.3, happstack-server==0.5.0.4
+ Build-depends: happstack==0.5.0.3, happstack-ixset==0.5.0.3
+ Build-depends: happstack-data==0.5.0.3
+ Build-depends: happstack-util==0.5.0.3
  Build-depends: hslogger==1.1.0
  Build-depends: time, time-extras
  Build-depends: hsx == 0.7.*, hsp == 0.5.2
- Build-depends: happstack==0.5.0.3, utf8-string, random
- Build-depends: happstack-data, extensible-exceptions, happstack-ixset, containers
- Build-depends: happstack-util, directory, process
+ Build-depends: utf8-string, random
+ Build-depends: extensible-exceptions, containers
+ Build-depends: directory, process
  Build-Depends: base >= 4 && < 5, syb, dataenc
  Build-Depends: syb-with-class, binary, old-locale, old-time
  Build-Depends: network, HTTP, bytestring
