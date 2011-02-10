@@ -499,7 +499,9 @@ pageDocumentForSign action document ctx  invitedlink wassigned author =
                  (setAttribute "title" $ BS.toString $ documenttitle document) .
                  (setAttribute "linkissuedocpdf" $ show (LinkIssueDocPDF document)) .
                  (setAttribute "docid" $ show $ documentid document) .
-                 (setAttribute "documentinfotext" $ documentinfotext)
+                 (setAttribute "documentinfotext" $ documentinfotext) .
+                 (setAttribute "showflash" $ not wassigned && documentstatus document == Pending)
+
 --Helper to get document after signing info text
 documentInfoText::KontrakcjaTemplates->Document->(Maybe SignatoryLink) -> User -> IO String
 documentInfoText templates document siglnk author =  

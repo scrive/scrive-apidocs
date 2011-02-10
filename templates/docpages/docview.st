@@ -349,6 +349,7 @@ pageDocumentForSignContent=
   </div>
   <div id="signStepsBodyBorderBottom"></div>
 </div>
+$if(showflash)$
 <div id="signViewNotificationContainer"> 
   <div id="signViewNotificationContainerLeft"> 
     <div class="title">Underteckna dokumentet längst ned på sidan.</div>
@@ -360,6 +361,7 @@ pageDocumentForSignContent=
     </div>
   </div>
 </div>
+$endif$
 <div id="documentBox">
   <div class="waiting4page"></div>
 </div>
