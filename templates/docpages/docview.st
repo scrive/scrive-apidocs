@@ -594,14 +594,14 @@ pageDocumentForAuthorContentPreparation=
                 <!-- 013 changed -->
                 <div class="sigentry signStepsBodyForms" id="peopleDetails">
                   <span class="fields">
-                    <span class='dragtext authorname'>
+                    <span class='dragtext authorname inputWrapper'>
 	              <span style="display:none;" class="fieldid">name</span>
 	              <span style="display:none;" class="type">author</span>
 	              <span class="fieldvalue"></span>
 	              <img src="/theme/images/iconHand.png" class="draghandle"
 	                   alt="drag" />
                     </span>
-	            <span class='dragtext authorcomp'>
+	            <span class='dragtext authorcomp inputWrapper'>
 	              <span style="display:none;" class="fieldid">company</span>
 	              <span style="display:none;" class="type">sig</span>
                    
@@ -609,7 +609,7 @@ pageDocumentForAuthorContentPreparation=
 	              <img src="/theme/images/iconHand.png" class="draghandle"
 	                   alt="drag" />
                     </span><br>
-                    <span class='dragtext authoremail'>
+                    <span class='dragtext authoremail inputWrapper'>
 	              <span style="display:none;" class="fieldid">email</span>
 	              <span style="display:none;"
 	              class="type">author</span>
@@ -617,7 +617,7 @@ pageDocumentForAuthorContentPreparation=
 	              <img src="/theme/images/iconHand.png" class="draghandle"
 	                   alt="drag" />
 	            </span>
-	            <span class='dragtext authornum'>
+	            <span class='dragtext authornum inputWrapper'>
 	              <span style="display:none;" class="fieldid">number</span>
 	              <span style="display:none;"
 	              class="type">sig</span>

@@ -1652,7 +1652,8 @@ a.button {
 }
 
 /* 013 changed */
-.signStepsBodyForms input
+.signStepsBodyForms input,
+.signStepsBodyForms span.fieldvalue
 {
     margin: 0 0 0 19px;
 	padding: 0;
@@ -1681,6 +1682,7 @@ a.button {
 /* For the draggable fields in signatory details */
 .dragfield {
   position: relative;
+  overflow: hidden;
 }
 
 /* a class for the little hand in an input field */
