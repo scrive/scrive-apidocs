@@ -108,14 +108,11 @@ $(function () {
     var documentBox = $("#documentBox");
     $(window).scroll(function(){
       if($(this).scrollTop() >= pos.top && !menu.hasClass('fixed')){
-        signStepsWrapper.height(menu.height());
+        signStepsWrapper.height(menu.height() - 53);
         menu.addClass('fixed');
-      }  else if($(this).scrollTop() < pos.top && menu.hasClass('fixed')){
-        signStepsWrapper.height(menu.height());
+      } else if($(this).scrollTop() < pos.top && menu.hasClass('fixed')){
+        signStepsWrapper.height(menu.height() - 11);
         menu.removeClass('fixed');
-      }
-      if(menu.hasClass('fixed') && menu.height() + pos.top < documentBox.offset().top) {
-        signStepsWrapper.height(menu.height());
       }
     });
   }
