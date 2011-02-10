@@ -14,8 +14,6 @@ creatingDocumentFrame=
     <div class="signStepsButton $if(submitFormOnNext)$ submitStepFormOnClick $endif$">
       <a href="#nextStep" class="clickArea"> </a>
       <a href="#nextStep"><span class="icon arrowRight"></span></a>
-      <!-- 005 no whitespace here pleace, or one pixel of the button
-      will be unclicable pixel in IE -->
       <a href="#nextStep">
         <span class="text">Nästa steg</span>
       </a>
