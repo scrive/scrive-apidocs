@@ -230,6 +230,8 @@ $(function () {
         }); 
 
     flashFlashMessages();
+    flashSpecialFlashMessages();
+
     /*
     $('#all').click(function() {
     });
@@ -654,6 +656,13 @@ function prepareForEdit(form){
         
     })
 }
+
+function flashSpecialFlashMessages(){
+    var flashmsgbox = $('#signViewNotificationContainer');
+    flashmsgbox.show();
+    flashmsgbox.delay(12000).fadeOut();
+}
+
 
 function flashFlashMessages(){
     var flashmsgbox = $('.flashmsgbox');
