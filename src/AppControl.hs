@@ -193,7 +193,7 @@ handleRoutes = msum [
      , dir "amnesiadone" $ hget0  $ forgotPasswordDonePage
      , dir "accountsetup"  $ hget2  $ UserControl.unloggedActionPage
      , dir "accountsetup"  $ hpost2  $ UserControl.handleUnloggedAction
-
+     , dir "requestaccount" $ hpost0 $ UserControl.handleRequestAccount
      -- viral invite
      , dir "invite"      $ hpost0 $ UserControl.handleViralInvite
      
@@ -227,9 +227,7 @@ handleHomepage = do
     Just user -> UserControl.checkUserTOSGet $ do
                        content <- liftIO $ V.uploadPage ctxtemplates 
                        V.renderFromBody ctx V.TopNew V.kontrakcja (cdata content)
-    Nothing -> do
-      text <- liftIO $ renderTemplate ctxtemplates "firstPageContent" [("signuplink",show LinkSignup)]
-      V.renderFromBody ctx V.TopNone V.kontrakcja (cdata text)
+    Nothing -> V.simpleResponse =<< (liftIO $ firstPage ctxtemplates)
 
 -- uh uh, how to do that in correct way?
 normalizeddocuments :: MVar (Map.Map FileID JpegPages)
@@ -441,7 +439,10 @@ serveHTMLFiles =  do
          
                    ms <- liftIO $ catch (fmap Just ( BS.readFile $ "html/"++fileName)) (const $ return Nothing)
                    case ms of 
-                    Just s -> V.renderFromBody ctx V.TopNone V.kontrakcja (cdata $ BS.toString $ s)
+                    Just s -> do 
+                               nocolumns  <- getField "nocolumns"
+                               content <- liftIO $ staticTemplate (ctxtemplates ctx) (isJust nocolumns) (BS.toString s)
+                               simpleResponse  content 
                     _ -> mzero
                
          else mzero
