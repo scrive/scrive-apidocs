@@ -191,6 +191,6 @@ aSignedDocument = Document {
           , documenttrustweaverreference = Nothing
           , documentallowedidtypes = [EmailIdentification]
           }
-aCustomMsg = (BS.fromString "blah blah, custom message blah")
-
+aCustomMsg = (BS.fromString aCustomMsgString)
+aCustomMsgString = "blah blah, custom message blah"
 
