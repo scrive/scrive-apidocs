@@ -556,7 +556,7 @@ a.secbutton
     font-weight: bold;
     height: 20px;
     line-height: 20px;
-    width: 120px;
+    width: 115px;
     white-space:nowrap;
 }
 
@@ -1124,14 +1124,15 @@ a.button {
     display: inline-block;
     margin: 3px 0 0 18px;
     float: left;
+    position:relative;
+    top:2px;
 }
 
 #signStepsTitleRow .title
 {
     font-size: 10px;
     margin-right: 2px;
-    position:relative;
-    top:-2px;
+
 }
 
 #signStepsTitleRow .name
@@ -1333,21 +1334,31 @@ a.okIcon {
 /* 013 changed */
 #signStepsBodyLeft
 {
-    width: 279px;
+    width: 315px;
     float: left;
     position: relative;
     padding: 7px 0px 0 0px;
     margin-right: 15px;
 }
 
+#signStepsBodyLeft.step3{
+  display:block;
+}
+#signStepsBodyRight.step3{
+   display:inline-block;
+   width: 250px;
+   margin-right: 20px;
+}
+#signStepsBodyFunctions.step3{
+   width: 290px;
+}
 /* 013 changed */
 #signStepsBodyRight,
 #personpane
 {
-    width: 303px;
-    float: left;
+    width: 326px;
     position: relative;
-    padding: 7px 0px 0 0px;
+    padding: 7px 6px 0 0px;
 }
 
 .signViewBodyRight 
@@ -1674,7 +1685,7 @@ a.okIcon {
 {
     margin: 0 0 0 19px;
 	padding: 0;
-	width: 117px;
+	width: 130px;
     height: 18px;
     line-height: 18px;
     font-size: 12px;
@@ -1740,11 +1751,19 @@ a.okIcon {
 /* 013 changed */
 #signStepsBodyFunctionsBox ul
 {
-    list-style-type: none;
+        list-style-type: none;
   	margin: 9px 0 0 22px;
  	padding-left: 0;
 	padding-bottom: 2px;
+
 }
+#signStepsBodyFunctionsBox .divider
+{
+    width:100%;
+    height:1px;
+    border-bottom:1px solid #F2F2F7;
+}
+
 
 /* 013 new */
 #signStepsBodyFunctionsBox ul li
@@ -1821,9 +1840,10 @@ form {
 
 #signStepsBodyFunctions
 {
-    width: 280px;
+    width: 250px;
     position: relative;
-    float: left;
+    float: right;
+
 }
 
 /* 015 new */
@@ -1835,13 +1855,20 @@ form {
 /* 013 changed */
 #signStepsBodyFunctionsBox
 {
-    width: 238px;
-    margin: 7px 25px 0 -5px;
+    width: 100%;
+    margin: 7px 0px 0 0px;
     
     -moz-border-radius: 2px;
     -webkit-border-radius: 2px;
     -khtml-border-radius: 2px;
     border-radius: 2px;
+}
+#signStepsBodyFunctionsBox #signStepsNextButton{
+  vertical-align:center;
+  width:100%;
+  height:40px;
+  margin:15px 30% 0 30%;
+  
 }
 
 /* 013 new */
@@ -1878,10 +1905,9 @@ form {
 /* 013 new */
 #signStepsBodyLeft #people
 {
-    width: 264px;
-    float: right;
-	padding: 10px 8px 4px 8px;
-	margin-top: 2px;
+    width: 250px;
+    padding: 10px 8px 4px 8px;
+    margin-top: 2px;
 }
 
 /* 013 new */
@@ -2122,6 +2148,7 @@ form {
 
 #signStepsBody {
     padding-left:20px;
+    padding-right:20px;
 }
 
 #signStepsBody.personPaneLargeNumberMode span.persondetails
@@ -2137,12 +2164,12 @@ form {
 
 #signStepsBody.personPaneSmallNumberMode #personpane
 {
-    width: 606px;
+    width: 660px;
 }
 
 #personpane 
 {
-    position: relative;
+    display:inline-block;
 }
 
 #signStepsBody.personPaneLargeNumberMode #signStepsBodyLeft
@@ -2181,7 +2208,7 @@ form {
 }
 
 .persondetails {
-    width: 294px;
+    width: 330px;
 }
 
 .signViewBodyForms .dragfield input {
@@ -2191,7 +2218,7 @@ form {
 }
 
 .authorname , .authorcomp , .authoremail , .authornum {
-  width: 130px;
+  width: 149px;
   overflow: hidden;
   margin-top:2px;
   margin-right:2px;
@@ -2209,4 +2236,16 @@ form {
 {
   width:54px;
   display:block;
+}
+
+.signStepsBodyIcons .man{
+  margin-top:-1px;
+}
+
+.signStepsBodyIcons .plus{
+  margin-top:1px;
+}
+
+#inviteContainer input[type=email]{
+  width:200px;
 }
