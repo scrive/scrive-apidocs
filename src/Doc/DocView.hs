@@ -529,7 +529,7 @@ jsArray xs = "[" ++ (joinWith ", " xs) ++ "]"
 
 buildDefJS :: FieldDefinition -> [Char]
 buildDefJS (FieldDefinition { fieldlabel, fieldvalue, fieldplacements }) = 
-    "{ label: " ++ show fieldlabel -- show because we need quotes
+    "{ label: " ++ jsStringFromBS fieldlabel -- show because we need quotes
                     ++ ", value: " ++ jsStringFromBS fieldvalue
                     ++ ", placements: " ++ (jsArray (map buildPlacementJS fieldplacements))
                     ++ " }"
