@@ -13,6 +13,9 @@ module AppView( TopMenu(..)
               , pageLogin
               , pageFromBody'
               , uploadPage
+              , simpleResponse 
+              , firstPage
+              , staticTemplate
               ) where 
 
 import HSP hiding (Request)
@@ -59,45 +62,6 @@ data TopMenu = TopNew | TopDocument | TopAccount | TopNone | TopEmpty
 
 kontrakcja :: [Char]
 kontrakcja = "SkrivaPå" 
-
-{-
-loginBox :: (EmbedAsAttr m (Attr [Char] [Char]),EmbedAsAttr m (Attr [Char] KontraLink)) => Maybe String -> XMLGenT m (HSX.XMLGenerator.XML m)
-loginBox referer=
-   <div>
-    <div id="login">
-     <form action=LinkLogin method="post">
-      <table>
-	<tr>
-          <td>E-mail:</td> 
-          <td><input type="email" name="email" autocomplete="off" class="noflash"/></td> 
-        </tr>
-	<tr> 
-          <td>Lösenord:</td> 
-          <td><input type="password" name="password" autocomplete="off"/></td> 
-        </tr>
-    <tr>
-          <td>
-          </td>
-          
-          <td style="display: none">
-            <input type="checkbox" id="rememberme" name="rememberme"/>
-            <label for="rememberme">Kom ihåg mig</label>
-          </td>
-    </tr>
-	<tr> 
-          <td><input class="button" id="loginbtn" type="submit" name="login" value="Logga in"/>
-              <input type="hidden" name="referer" value=(fromMaybe "" referer)/>
-           </td>
-          <td>
-           <a href=LinkForgotPassword> Glömt lösenord</a>
-          </td>
-	</tr>
-      </table>
-    </form>
-    </div>
-   </div>
--}
-
 
 pageErrorReport :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
             => Context 
@@ -221,3 +185,20 @@ uploadTabInfo _ menu = Just (show LinkMain,(menu== TopNew))
 documentTabInfo::Maybe User -> TopMenu -> Maybe (String,Bool)
 documentTabInfo Nothing _ = Nothing
 documentTabInfo _ menu = Just (show LinkIssue,(menu== TopDocument))
+
+simpleResponse::String -> Kontra Response
+simpleResponse s = ok $ toResponse $ cdata s -- change this to HtmlString from helpers package (didn't wan't to connect it one day before prelaunch)
+
+firstPage::KontrakcjaTemplates -> IO String
+firstPage templates =  renderTemplate templates "firstPage"  $ do 
+                              field "linklogin" $ show LinkLogin 
+                              field "linkforgotenpassword" $ show LinkForgotPassword
+                              field "linkrequestaccount" $ show LinkRequestAccount
+                              
+staticTemplate::KontrakcjaTemplates -> Bool ->  String -> IO String
+staticTemplate templates nocolumns content = renderTemplate templates "staticTemplate"  $ do 
+                              field "linklogin" $ show LinkLogin 
+                              field "linkforgotenpassword" $ show LinkForgotPassword
+                              field "linkrequestaccount" $ show LinkRequestAccount
+                              field "content" $ content
+                              field "nocolumns" nocolumns

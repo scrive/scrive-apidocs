@@ -282,6 +282,16 @@ handleAcceptTOSPost = do
       return LinkAcceptTOS
 
 
+handleRequestAccount :: Kontra KontraLink
+handleRequestAccount = do 
+                        ctx<- get
+                        email <- getField "email"
+                        liftIO $ sendMail (ctxmailer ctx) $ emptyMail 
+                                                                        { fullnameemails = [(BS.fromString "prelaunch@skrivapa.se",BS.fromString "prelaunch@skrivapa.se")],
+                                                                           title = BS.fromString $ "New account request",
+                                                                           content = BS.fromString $ "Request from addres " ++ (fromMaybe "" email)
+                                                                        }
+                        return LinkMain -- Something should happend here
 
 unloggedActionPage::String->String -> Kontra Response                         
 unloggedActionPage sid mh = do

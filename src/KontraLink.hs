@@ -63,6 +63,7 @@ data KontraLink
     | BackToReferer
     | LinkDaveDocument DocumentID
     | LinkFile FileID BS.ByteString
+    | LinkRequestAccount
     
 instance Show KontraLink where
     showsPrec _ LinkAbout = (++) "/about"
@@ -109,6 +110,7 @@ instance Show KontraLink where
     showsPrec _ LoopBack = (++) $ "/" -- this should be never used
     showsPrec _ BackToReferer = (++) $ "/" -- this should be never used
     showsPrec _ (LinkDaveDocument docid) = (++) ("/dave/document/" ++ show docid)
+    showsPrec _ (LinkRequestAccount) = (++) "/requestaccount"
     
 {-
 instance (EmbedAsAttr m String) => (EmbedAsAttr m KontraLink) where
