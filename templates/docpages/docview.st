@@ -100,13 +100,13 @@ pageDocumentForViewerHelpers=
 <span class="templating_insert"> 
   <div id="signatory_template" class="signatorybox" alt="Namn på avtalspart">
   <input name="signatoryname" type="text" value="" autocomplete="off"
-         infotext="Namn på motpart"><br>
+         infotext="Fullständigt namn"><br>
   <input name="signatorycompany" type="text" value="" autocomplete="off"
-         infotext="Titel, företag"><br>
+         infotext="Företag"><br>
   <input name="signatorynumber" type="text" value="" autocomplete="off"
-         infotext="Orgnr/Persnr"><br>
+         infotext="Org.nr./Pers.nr"><br>
   <input name="signatoryemail"  type="email" value="" autocomplete="off"
-         infotext="Personens e-mail"><br>
+         infotext="E-post"><br>
   <small><a onclick="return signatoryremove(this.parentNode);" href="#">Ta bort</a></small>
   </div>
 </span>,
@@ -381,13 +381,13 @@ pageDocumentForAuthorHelpers=
 <span class="templating_insert"> 
   <div id="signatory_template" class="signatorybox" alt="Namn på avtalspart">
   <input name="signatoryname" type="text" value="" autocomplete="off"
-         infotext="Namn på motpart"><br>
+         infotext="Fullständigt namn"><br>
   <input name="signatorycompany" type="text" value="" autocomplete="off"
-         infotext="Titel, företag"><br>
+         infotext="Företag"><br>
   <input name="signatorynumber" type="text" value="" autocomplete="off"
-         infotext="Orgnr/Persnr"><br>
+         infotext="Org.nr./Pers.nr"><br>
   <input name="signatoryemail"  type="email" value="" autocomplete="off"
-         infotext="Personens e-mail"><br>
+         infotext="E-post"><br>
   <small><a onclick="return signatoryremove(this.parentNode);" href="#">Ta bort</a></small>
 </div>
   </span>,
@@ -799,7 +799,7 @@ pageDocumentForAuthorContentPreparation=
 	<span class='dragfield signame inputWrapper'>
 	  <span style="display:none;" class="fieldid">name</span>
 	  <span style="display:none;" class="type">author</span>
-	  <input type="text" infotext="För- & efternamn"
+	  <input type="text" infotext="Fullständigt namn"
                  name="signatoryname" autocomplete="off" value="" />
 	  <img src="/theme/images/iconHand.png" class="draghandle"
 	       alt="drag" />
@@ -807,7 +807,7 @@ pageDocumentForAuthorContentPreparation=
 	<span class='dragfield sigcomp inputWrapper'>
 	  <span style="display:none;" class="fieldid">company</span>
 	  <span style="display:none;" class="type">sig</span>
-          <input type="text" infotext="Ev. Företagsnamn" name="signatorycompany" autocomplete="off">
+          <input type="text" infotext="Företag" name="signatorycompany" autocomplete="off">
 	  <img src="/theme/images/iconHand.png" class="draghandle"
 	       alt="drag" />
         </span><br>
@@ -821,7 +821,7 @@ pageDocumentForAuthorContentPreparation=
 	<span class='dragfield signum inputWrapper'>
 	  <span style="display:none;" class="fieldid">number</span>
 	  <span style="display:none;" class="type">sig</span>
-	  <input type="text" infotext="Org.-nr / Personnr." name="signatorynumber" autocomplete="off">
+	  <input type="text" infotext="Org.nr./Pers.nr" name="signatorynumber" autocomplete="off">
 	  <img src="/theme/images/iconHand.png" class="draghandle" 
                alt="drag" />
 	</span>

@@ -628,7 +628,7 @@ function authorToHTML(sig) {
   });
 
   
-  $("#peopleList ol").append("<li><a href='#'>" + sig.name + " (Author)</a></li>");
+  $("#peopleList ol").append("<li><a href='#'>" + sig.name + " (Avsändare)</a></li>");
 }
 
 /*
