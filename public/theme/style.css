@@ -2204,3 +2204,9 @@ form {
 {
     border:1px solid red;
 }
+
+.signStepsBodyIcons .partnumber 
+{
+  width:54px;
+  display:block;
+}

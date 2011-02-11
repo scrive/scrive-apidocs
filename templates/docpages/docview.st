@@ -581,14 +581,10 @@ pageDocumentForAuthorContentPreparation=
 	    
             <div id="personpane">
               <span class="persondetails authordetails">
-                <div class="signStepsBodyTitle">
-                  <span class="partnumber">PART 1</span>
-                </div>
-                
                 <!-- 008 change/new -->
                 <div class="signStepsBodyIcons">
+                  <span class="partnumber">PART 1</span>
                   <a href="#man2" class="man"></a>
-                  <span class="briefcase"></span>
                   <a class="plus" href="#"></a>
                 </div>
                 
@@ -789,14 +785,10 @@ pageDocumentForAuthorContentPreparation=
     <img src="/theme/images/iconHand.png" class="draghandle" alt="drag" />
   </span>
   <span class="persondetails">
-    <div class="signStepsBodyTitle">
-      <span class="partnumber">PART 1</span>
-    </div>
     
     <!-- 008 change/new -->
     <div class="signStepsBodyIcons">
-      <span href="#man2" class="man"></span>
-      <span class="briefcase"></span>
+      <span class="partnumber">PART 1</span>
       <a href="#plus2" class="plus"></a>
     </div>
     
