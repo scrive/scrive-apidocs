@@ -1515,6 +1515,9 @@ signDocument documentid signatorylinkid1 time ipnumber msiginfo fields = do
                        , signatorysignatureinfo = msiginfo
                     }
           maybesign link = link
+          authorid = unAuthor $ documentauthor signeddocument
+          allbutauthor = filter ((maybe True ((/= authorid) . unSignatory)) . maybesignatory) newsignatorylinks
+          allsignedbutauthor = all (isJust . maybesigninfo) allbutauthor
           isallsigned = all (isJust . maybesigninfo) newsignatorylinks
           
           -- Check if there are custom fields in any signatory (that is, not author)
@@ -1533,14 +1536,10 @@ signDocument documentid signatorylinkid1 time ipnumber msiginfo fields = do
 
           signeddocument2 = 
               if isallsigned
-              then signeddocument { documentstatus = if hasfields then
-                                                         AwaitingAuthor
-                                                     else
-                                                         Closed
-                                  }
-              else signeddocument
-
-          
+              then signeddocument { documentstatus = Closed }
+              else if allsignedbutauthor 
+                   then signeddocument { documentstatus = AwaitingAuthor }
+                   else signeddocument
 
       in case documentstatus document of
            Pending ->  Right signeddocument2
@@ -1570,9 +1569,12 @@ authorSignDocument documentid time ipnumber author msiginfo =
                   MinutesTime m = time 
                   authorid = userid author
                   sinfo = Just (SignInfo time ipnumber)
+                  hasfields = any ((any (not . fieldfilledbyauthor)) . (signatoryotherfields . signatorydetails)) (documentsignatorylinks document)
               in Right $ document { documenttimeouttime = timeout
                                   , documentmtime = time
-                                  , documentsignatorylinks = signWithUserID (documentsignatorylinks document) authorid sinfo msiginfo
+                                  , documentsignatorylinks = if hasfields 
+                                                             then (documentsignatorylinks document)
+                                                             else signWithUserID (documentsignatorylinks document) authorid sinfo msiginfo
                                   , documentstatus = Pending
                                   }
               
@@ -1739,9 +1741,27 @@ fragileTakeOverDocuments destuser srcuser = do
 
 --This is only for Eric functionality with awayting author
 --We should add current state checkers here (not co cancel closed documents etc.)
-closeDocument :: DocumentID -> Update Documents (Maybe Document)
-closeDocument docid = do
-  doc <- modifyDocument docid (\d -> Right $ d { documentstatus = Closed }) 
+closeDocument :: DocumentID 
+              -> MinutesTime
+              -> Word32
+              -> User
+              -> Maybe SignatureInfo
+              -> Update Documents (Maybe Document)
+closeDocument docid time ipnumber author msiginfo = do
+  doc <- modifyDocument docid 
+         (\document -> let timeout = do
+                                      days <- documentdaystosign document 
+                                      let enddate = m + (days * 24 *60)
+                                      return $ (TimeoutTime . MinutesTime ) enddate
+                           MinutesTime m = time 
+                           authorid = userid author
+                           sinfo = Just (SignInfo time ipnumber)
+                  
+                       in Right $ document { documenttimeouttime = timeout
+                                           , documentmtime = time
+                                           , documentsignatorylinks = signWithUserID (documentsignatorylinks document) authorid sinfo msiginfo
+                                           , documentstatus = Closed
+                                           })
   case doc of
     Left _ -> return Nothing
     Right d -> return $ Just d

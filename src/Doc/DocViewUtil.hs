@@ -43,7 +43,6 @@ partySignedList document =
         signas = map signatorydetails unsignalinks
     in signas
 
-
 partyUnsignedMeAndList :: MagicHash -> Document -> [SignatoryDetails]
 partyUnsignedMeAndList magichash document =
     let signalinks = documentsignatorylinks document

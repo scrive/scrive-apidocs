@@ -558,7 +558,7 @@ handleIssueShowGet docid = withUserGet $ checkUserTOSGet $ do
 handleIssueShowPost :: DocumentID -> Kontra KontraLink
 handleIssueShowPost docid = withUserPost $ do
   document <- queryOrFail $ GetDocumentByDocumentID $ docid
-  ctx@Context { ctxmaybeuser = Just user } <- get
+  ctx@Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber } <- get
   failIfNotAuthor document user
   
   -- something has to change here
@@ -573,7 +573,7 @@ handleIssueShowPost docid = withUserPost $ do
                           addFlashMsgText =<< (liftIO $ flashDocumentDraftSaved $ ctxtemplates ctx)
                           return LinkIssue
        AwaitingAuthor -> do 
-                          doc2 <- update $ CloseDocument docid 
+                          doc2 <- update $ CloseDocument docid ctxtime ctxipnumber user Nothing
                           case doc2 of
                             Nothing -> return $ LinkIssueDoc docid
                             Just d -> do 

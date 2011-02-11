@@ -289,13 +289,19 @@ mailDocumentClosedForAuthor templates (Context {ctxhostpart}) authorname  docume
 
 
 mailDocumentAwaitingForAuthor ::  KontrakcjaTemplates -> Context -> BS.ByteString -> Document  -> IO Mail
-mailDocumentAwaitingForAuthor templates (Context {ctxhostpart}) authorname  Document{documenttitle,documentid} =
+mailDocumentAwaitingForAuthor templates (Context {ctxhostpart}) authorname  document@Document{documenttitle,documentid} =
     do
+      let signatoriesSigned = partySignedList document
+      signatories <- renderTemplate templates (if length signatoriesSigned > 1
+                                                  then "morethanonelist"
+                                                  else "nomorethanonelist")
+                        [("list", map (BS.toString . personname') signatoriesSigned)]
       title <- renderTemplate templates "mailDocumentAwaitingForAuthorTitle" [("documenttitle", BS.toString documenttitle )]
       content <- renderTemplate templates "mailDocumentAwaitingForAuthorContent" [("authorname",BS.toString authorname),
                                                                         ("documenttitle", BS.toString  documenttitle ),
                                                                         ("ctxhostpart",ctxhostpart),
-                                                                        ("documentlink",ctxhostpart ++ (show $ LinkIssueDoc documentid))] 
+                                                                        ("documentlink",ctxhostpart ++ (show $ LinkIssueDoc documentid)),
+                                                                        ("signatories", signatories)] 
       content' <- wrapHTML templates content
       return $ emptyMail {title = BS.fromString title, content = BS.fromString content'}
 
