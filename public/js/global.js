@@ -252,18 +252,15 @@ $(function () {
         });
     }
 
-    $("#addsiglink").click(function(){
-	    $("#addsiglink").removeClass("redborder");
-	    $("#authorroledropdown").removeClass("redborder");
-	    
-	});
+
     
   $("#sendinvite").overlay({
     mask: standardDialogMask,
     onBeforeLoad: function(){
       if (!emailFieldsValidation($(".stepForm input[type='email']"))) return false;
-      // if (!authorFieldsValidation()) return false;
-      // if (!nonZeroSignatories()) return false;
+      if (!nonZeroSignatories()) return false;
+//      if (!authorFieldsValidation()) return false;
+
       var mrxs = $("form input[name='signatoryname']");
       var tot = "";
       var allparties = new Array();
@@ -277,9 +274,10 @@ $(function () {
     $("#signinvite").overlay({  
     mask: standardDialogMask,    
     onBeforeLoad: function () { 
-           if (!emailFieldsValidation($(".stepForm input[type='email']"))) return false;
-          // if (!authorFieldsValidation()) return false;
-	  // if (!nonZeroSignatories()) return false;
+      if (!emailFieldsValidation($(".stepForm input[type='email']"))) return false;
+      if (!nonZeroSignatories()) return false;
+//      if (!authorFieldsValidation()) return false;
+
            var mrxs = $("form input[name='signatoryname']");
            var tot = "";
            var allparties = new Array();
@@ -517,6 +515,7 @@ function showProperSignButtons() {
   if($("#authorsignatoryradio").attr("checked")) {
     $("#signinvite").show();
     $("#sendinvite").hide();
+    
   } else {
     $("#signinvite").hide();
     $("#sendinvite").show();
@@ -543,8 +542,11 @@ function authorFieldsValidation(){
     var remainingDragFields = false;
     $(".dragfield").each(function(){
 	    var field = $(this);
+      console.log(field);
 	    var s = getFillStatus(field);
+      console.log(s);
 	    var ds = getDragStatus(field);
+      console.log(ds);
 	    if(s == 'author') {
 		remainingAuthFields = true;
 	    }
@@ -604,21 +606,24 @@ function sigFieldsValidation(){
 }
 
 function nonZeroSignatories() {
-    var sigs = 0;
-    if($("#authorroledropdown option:selected").val() === "signatory"){
-	sigs = 1;
-    }
+  var sigs = 0;
+  if($("#authorsignatoryradio").attr("checked")) {
+    sigs = 1;
+  }
+  
+  // sum up all signatories (but minus author because we already
+  // counted him)
+  sigs += $("#personpane .persondetails").length - 1;
 
-    sigs += $("#signatorylist .signatorybox").length;
-    var error = (sigs === 0);
+  var error = (sigs === 0);
 
-    if(error) {
-	addFlashMessage('Det finns inga undertecknande parter för detta dokument. Vänligen lägg till undertecknande parter eller ändra din roll till "undertecknare".');
-	$("#addsiglink").addClass("redborder");
-	$("#authorroledropdown").addClass("redborder");
-	return false;
-    }
-    return true;
+  if(error) {
+    addFlashMessage('Det finns inga undertecknande parter för detta dokument. Vänligen lägg till undertecknande parter eller ändra din roll till "undertecknare".');
+    $("li.plus").addClass("redborder");
+    $(".authordetails .man").addClass("redborder");
+    return false;
+  }
+  return true;
 }
 
 function isExceptionalField(field){
@@ -803,19 +808,7 @@ $(document).ready(function() {
                 return false;
             });
 
-        $('#addSignatory').click(function() {
-		
-	  signatoryToHTML(newsignatory());
-          var personpane = $('#personpane');
-          var children = personpane.children();
-	  children.removeClass("currentPerson").last().addClass("currentPerson");
-          checkPersonPaneMode();
-          
-          children.each(function(idx) {
-            var p = $(this);
-            p.find(".partnumber").html("PART " + (idx + 1));
-          });
-	});
+
         $('#delSignatory').click(function() {
                 var personpane = $('#personpane');
                 var children = personpane.children();
@@ -860,4 +853,55 @@ $(document).ready(function() {
             });
      });
 
-var addsignatorymutex = false;
+/*
+ * The link to add a signatory.
+ *  - add a new signatory to #personpane
+ *  - make the last one the .currentPerson
+ *  - check and possibly change the mode (2 person/list mode)
+ *  - Renumber all of the parts
+ *  - Enable info text for the new part
+ *  - Remove the .redborder from the addSignatory button
+ *  - Remove the .redborder from the author's man button
+ *  - Disable more event processing
+ */
+$(function() {
+  var addsignatory = $('#addSignatory');
+  var personpane = $('#personpane');
+  var authorman = $(".authordetails .man");
+  // where the red border appears for
+  // addsig button
+  var liplus = $("li.plus"); 
+
+  addsignatory.click(function() {
+    signatoryToHTML(newsignatory());
+    var children = personpane.children();
+    var newone = children.removeClass("currentPerson").last().addClass("currentPerson");
+    checkPersonPaneMode();
+          
+    children.each(function(idx) {
+      var p = $(this);
+      p.find(".partnumber").html("PART " + (idx + 1));
+    });
+
+    enableInfoTextOnce(newone);
+    liplus.removeClass("redborder");
+    authorman.removeClass("redborder");
+    return false;
+  });
+});
+
+/*
+ * When the author selects signatory, we have to 
+ * remove the redborder for the validation error
+ * where there is only zero signatories.
+ */
+$(function() {
+  var authorman = $(".authordetails .man");
+  // where the red border appears for
+  // addsig button
+  var liplus = $("li.plus");
+  $("#authorsignatoryradio").click(function() {
+    authorman.removeClass('redborder');
+    liplus.removeClass('redborder');
+  });
+});
