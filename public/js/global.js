@@ -802,19 +802,6 @@ $(document).ready(function() {
                 return false;
             });
 
-        $('#addSignatory').click(function() {
-		
-	  signatoryToHTML(newsignatory());
-          var personpane = $('#personpane');
-          var children = personpane.children();
-	  children.removeClass("currentPerson").last().addClass("currentPerson");
-          checkPersonPaneMode();
-          
-          children.each(function(idx) {
-            var p = $(this);
-            p.find(".partnumber").html("PART " + (idx + 1));
-          });
-	});
         $('#delSignatory').click(function() {
                 var personpane = $('#personpane');
                 var children = personpane.children();
