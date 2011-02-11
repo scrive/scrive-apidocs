@@ -463,17 +463,22 @@ function updateStatus(field) {
   if(type == "author") {
     if(getPlacedFieldsForField(field).size()){
       setDragStatus(field, "placed");
-    } else {
+      //field.removeClass('redborder');
+    } else if (isStandardField(field)) {
       setDragStatus(field, "not placed");
+    } else {
+      setDragStatus(field, "must place");
     }
     if(getValue(field)) {
       setFillStatus(field, "filled");
+      field.removeClass('redborder');
     } else {
       setFillStatus(field, "author");
     }
   } else if(type == "sig") {
     if(getPlacedFieldsForField(field).size()){
       setDragStatus(field, "placed");
+      field.removeClass('redborder');
     } else if(isStandardField(field)) {
       setDragStatus(field, "not placed");
     } else {
@@ -482,11 +487,13 @@ function updateStatus(field) {
     if(getValue(field)) {
       // it's a signatory field, but it's filled out
       setFillStatus(field, "done");
+      field.removeClass('redborder');
     } else if(getPlacedFieldsForField(field).size()) {
-      // if it's placed
+      // not filled out, but it's placed
       setFillStatus(field, "sig");
+      field.removeClass('redborder');
     } else {
-      // not placed, so won't send
+      // not filled out, not placed, so it's handled above
       setFillStatus(field, "sig");
     }
   } else if(type == "text") {
@@ -512,7 +519,7 @@ function authorToHTML(sig) {
   sig.id = sigid;
 
   var sigentry = sl.find(".authordetails");
-
+//  setHiddenField(sigentry, "sigid", sigid);
   var manlink = sigentry.find("a.man");
 
   manlink.click(function(){
@@ -602,7 +609,7 @@ function authorToHTML(sig) {
 
     setInfotext(field, fd.label);
     setValue(field, fd.value);
-    setFieldType(field, "sig");
+    setFieldType(field, "author");
 
     field.draggable({ handle: ".draghandle"
 		      , zIndex: 10000
@@ -702,10 +709,18 @@ function createCustomField(newfield) {
   if(fieldname == "Type Field Name" || fieldname == "") {
     return false;
   }
+
   var customfield = $("#templates .customfield").first().clone();
   setInfotext(customfield, fieldname);
   setValue(customfield, "");
-  setFieldType(customfield, "sig");
+
+  var persondetails = newfield.parents(".persondetails");
+  console.log(persondetails);
+  if(persondetails.hasClass('authordetails')) {
+    setFieldType(customfield, 'author');
+  } else {
+    setFieldType(customfield, "sig");
+  }
 
   customfield.draggable({ handle: ".draghandle",
                           zIndex: 10000,
@@ -719,12 +734,15 @@ function createCustomField(newfield) {
 
   setFieldName(customfield, "fieldvalue");
   var fieldid = newUUID();
-  var persondetails = newfield.parents('.persondetails');
   // finding sigentry may be redundant, but it works
   // I don't want to mess it up right before the deadline
   var sigentry = persondetails.find('.sigentry');
-
-  var sigid = getHiddenField(sigentry, 'sigid');
+  var sigid = "";
+  if(persondetails.hasClass('authordetails')) {
+    sigid = "author";
+  } else {
+    sigid = getHiddenField(persondetails, 'sigid');
+  }
 
   setFieldID(customfield, fieldid);
   setSigID(customfield, sigid);
@@ -759,7 +777,7 @@ $(function() {
     var persondetails = plus.parents('.persondetails');
     var otherfields = persondetails.find('.otherfields');
     var newfield = $("<div class='newfield'><input class='newfieldbox' type='text' infotext='Type Field Name' /><a href='#' class='okIcon'>OK</a></div>");
- 
+
     otherfields.append(newfield);
     enableInfoTextOnce(newfield);
     // we also need to adjust the size of the signStepsWrapper

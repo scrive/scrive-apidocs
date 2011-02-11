@@ -259,7 +259,7 @@ $(function () {
     onBeforeLoad: function(){
       if (!emailFieldsValidation($(".stepForm input[type='email']"))) return false;
       if (!nonZeroSignatories()) return false;
-//      if (!authorFieldsValidation()) return false;
+      if (!authorFieldsValidation()) return false;
 
       var mrxs = $("form input[name='signatoryname']");
       var tot = "";
@@ -276,7 +276,7 @@ $(function () {
     onBeforeLoad: function () { 
       if (!emailFieldsValidation($(".stepForm input[type='email']"))) return false;
       if (!nonZeroSignatories()) return false;
-//      if (!authorFieldsValidation()) return false;
+      if (!authorFieldsValidation()) return false;
 
            var mrxs = $("form input[name='signatoryname']");
            var tot = "";
@@ -537,47 +537,37 @@ function showProperSignButtons() {
 }
 
 function authorFieldsValidation(){
+  var dragfields = $("#personpane .dragfield");
 
-    var remainingAuthFields = false;
-    var remainingDragFields = false;
-    $(".dragfield").each(function(){
-	    var field = $(this);
-      console.log(field);
-	    var s = getFillStatus(field);
-      console.log(s);
-	    var ds = getDragStatus(field);
-      console.log(ds);
-	    if(s == 'author') {
-		remainingAuthFields = true;
-	    }
-	    if(ds == 'must place'){
-		remainingDragFields = true;
-	    }
-	});
-    var emptyMsg = "Please fill out all of the required fields.";
-    var dragMsg = "Please drag all of the custom fields onto the document.";
-    if(remainingAuthFields){
-	var $dialog = $('<div></div>')
-	    .html(emptyMsg)
-	    .dialog({
-		    autoOpen: false,
-		    title: 'Required fields',
-		    modal: true
-		});
-	$dialog.dialog('open');
-	return false;
-    } else if(remainingDragFields){
-	var $dialog = $('<div></div>')
-	    .html(dragMsg)
-	    .dialog({
-		    autoOpen: false,
-		    title: 'Required fields',
-		    modal: true
-		});
-	$dialog.dialog('open');
-	return false;
+  // get all the fields that should be filled by author
+  var remainingAuthorFields = dragfields.filter(function() {
+    return getFillStatus($(this)) === 'author';
+  });
+
+  if(remainingAuthorFields.size() > 0) {
+    console.log(remainingAuthorFields);
+    if(remainingAuthorFields.hasClass('signame')) {
+      addFlashMessage("Du har inte skrivit in något namn på en eller flera motparter. Vänligen försök igen.");
     }
-    return true;
+    if(remainingAuthorFields.hasClass('customfield')) {
+      addFlashMessage("Du har inte namngett alla fält. Vänligen försök igen.");
+    }
+    remainingAuthorFields.addClass('redborder');
+    return false;
+  }
+
+  var remainingDragFields = dragfields.filter(function() {
+    return getDragStatus($(this)) === 'must place';
+  });
+
+  if(remainingDragFields.size() > 0) {
+    var dragMsg = "Du har inte lagt till alla skapade fält i dokumentet. Vänligen försök igen.";
+    addFlashMessage(dragMsg);
+    remainingDragFields.addClass('redborder');
+    return false;
+  }
+
+  return true;
 }
 
 function sigFieldsValidation(){
@@ -750,6 +740,9 @@ function showStep2()
     $('#signStep2Content').show();
     $('#signStep3Content').hide();
     $('#signStepsNextButton').show();
+  
+  $("#signStepsWrapper").height($('#signStepsContainer.follow').height() - 11);
+
     return false;
 }
 
