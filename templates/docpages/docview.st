@@ -515,7 +515,7 @@ pageDocumentForAuthorContentPreparation=
 	<!-- <span class="changeName"><a href="#changeName">BYT TITEL</a></span> -->
       </span>
    
-<span style="float: right; display: inline-block; margin: 6px 10px 0pt 18px;" class="submitStepFormOnClick"><a href="#save">SPARA SOM UTKAST</a></span>
+<span style="float: right; display: inline-block; margin: 6px 10px 0pt 18px;" class="submitStepFormOnClick"><a class="title" href="#save">SPARA SOM UTKAST</a></span>
   
       <!-- 
       <div class="signStepsButton" id="signStepsNextButton">
