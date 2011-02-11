@@ -111,7 +111,7 @@ $(function () {
         signStepsWrapper.height(menu.height() - 53);
         menu.addClass('fixed');
       } else if($(this).scrollTop() < pos.top && menu.hasClass('fixed')){
-        signStepsWrapper.height(menu.height() );
+        signStepsWrapper.height(menu.height() - 11);
         menu.removeClass('fixed');
       }
     });
@@ -512,7 +512,23 @@ $(function () {
 });
 
 function showProperSignButtons() {
-  if($("#authorsignatoryradio").attr("checked")) {
+  var sigfields = $(".dragfield").filter(function() {
+    var field = $(this);
+    var dragstatus = getDragStatus(field);
+    var fillstatus = getFillStatus(field);
+
+    if(!isStandardField(field) && dragstatus === 'placed' && fillstatus === 'sig') {
+      return true;
+    } else {
+      return false;
+    }
+  });
+
+  if(sigfields.size() > 0) {
+    // we're awaiting author mode
+    $("#signinvite").hide();
+    $("#sendinvite").show();
+  } else if($("#authorsignatoryradio").attr("checked")) {
     $("#signinvite").show();
     $("#sendinvite").hide();
     
@@ -741,7 +757,7 @@ function showStep2()
     $('#signStep3Content').hide();
     $('#signStepsNextButton').show();
   
-  $("#signStepsWrapper").height($('#signStepsContainer.follow').height() - 11);
+  $("#signStepsWrapper").height($('#signStepsContainer.follow').height());
 
     return false;
 }
