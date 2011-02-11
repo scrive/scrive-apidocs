@@ -515,8 +515,9 @@ pageDocumentForAuthorContentPreparation=
 	<!-- <span class="changeName"><a href="#changeName">BYT TITEL</a></span> -->
       </span>
    
-
+<span style="float: right; display: inline-block; margin: 6px 10px 0pt 18px;" class="submitStepFormOnClick"><a href="#save">SPARA SOM UTKAST</a></span>
   
+      <!-- 
       <div class="signStepsButton" id="signStepsNextButton">
 	<a href="#nextStep" class="clickArea"></a>
 	
@@ -524,6 +525,7 @@ pageDocumentForAuthorContentPreparation=
 	  <span class="text">Nästa steg</span>
 	</a>
       </div>
+      -->
      </div>
     
     <div id="signStepsMenu">
@@ -646,9 +648,16 @@ pageDocumentForAuthorContentPreparation=
 	          <!-- 008 changed/new -->
 	          <li class="plus"><a href="#add"  id="addSignatory">LÄGG TILL PERSON</a></li>
 	          <li class="minus"><a href="#remove"  id="delSignatory">TA BORT PERSON</a></li>
-	          <li  class="floppyIcon submitStepFormOnClick"><a href="#save">SPARA SOM UTKAST</a></li> 
-	          <li  class="arrowDown"><a href="$linkissuedocpdf$" target="_blank">LADDA NED SOM PDF</a></li>
+	          <!-- <li  class="floppyIcon submitStepFormOnClick"><a href="#save">SPARA SOM UTKAST</a></li> -->
+	          <!-- <li  class="arrowDown"><a href="$linkissuedocpdf$" target="_blank">LADDA NED SOM PDF</a></li> -->
 	        </ul>
+      <div class="signStepsButton" id="signStepsNextButton" style="float: right">
+	<a href="#nextStep" class="clickArea"></a>
+	
+	<a href="#nextStep"><span class="icon arrowRight"></span></a><!-- 005 no whitespace here pleace, or one pixel of the button will be unclicable pixel in IE --><a href="#nextStep">
+	  <span class="text">Nästa steg</span>
+	</a>
+      </div>
 	      </div>
             </div>
           </div>
