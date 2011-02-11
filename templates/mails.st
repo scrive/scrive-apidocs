@@ -12,14 +12,12 @@ mailCancelDocumentByAuthorContent=
     </p>
     $footer:noescape()$
 #####
-mailDocumentAwaitingForAuthorTitle=Bekräftelse: $documenttitle$
+mailDocumentAwaitingForAuthorTitle=Vänligen underteckna $documenttitle$
 ######
 mailDocumentAwaitingForAuthorContent=
     <span>
       <p>Hej <strong>$authorname$</strong>,</p>
-      <p>Dokumentet <strong>$documenttitle$</strong> has been signed by all signatories.
-        There were fields for the signatories to fill out. The contract is being held for your final review.
-        Please follow the link below to read and confirm the information for each signatory.
+      <p>Dokumentet <strong>$documenttitle$</strong> har undertecknats av $signatories$. För att avtalet skall färdigställas krävs din underskrift.
       </p>
       <a href="$documentlink$">$documenttitle$</a>
       $poweredBySkrivaPaPara()$
