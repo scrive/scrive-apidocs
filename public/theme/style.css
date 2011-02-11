@@ -409,7 +409,8 @@ input[type=submit]:active, input[type=button]:active, button:active, a.button:ac
 #mainContainer 
 {
     /* overflow: auto; 004 remove */
-    margin-bottom: 25px;
+    /* margin-bottom: 25px; */
+    margin-bottom: 0px;
     margin-top: 25px;
 }
 
@@ -1268,7 +1269,6 @@ a.okIcon {
     background-repeat: no-repeat;
     width: 960px;
     height: 11px;
-    float: left; /* 008 new */
 }
 
 /* 006 i couldnt get the real pixel sizes from the psd, please edit the sizes if needed */
