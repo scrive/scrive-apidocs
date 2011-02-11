@@ -159,23 +159,22 @@ remindMailNotSignedStandardHeader templates document signlink author =  renderTe
                                                                 ("author",BS.toString $ prettyName author),
                                                                 ("personname",BS.toString $ personname signlink) ]
                                                                              
-mailDocumentRejected :: KontrakcjaTemplates -> (Maybe BS.ByteString) -> Context -> BS.ByteString -> Document -> BS.ByteString -> IO Mail 
-mailDocumentRejected templates customMessage ctx username  document@Document{documenttitle}  rejectorName = 
+mailDocumentRejected :: KontrakcjaTemplates -> (Maybe String) -> Context -> BS.ByteString -> Document -> SignatoryLink -> IO Mail 
+mailDocumentRejected templates customMessage ctx username  document@Document{documenttitle}  rejector = 
     do
      title <- renderTemplate templates "mailRejectMailTitle"  [("documenttitle",BS.toString documenttitle)]
-     content <- wrapHTML templates =<< mailRejectMailContent templates customMessage ctx username document rejectorName
+     content <- wrapHTML templates =<< mailRejectMailContent templates customMessage ctx username document rejector
      return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
 
-mailRejectMailContent::  KontrakcjaTemplates -> (Maybe BS.ByteString) -> Context -> BS.ByteString -> Document -> BS.ByteString -> IO String  
-mailRejectMailContent templates customMessage ctx  username  document  rejectorName =   
-      do
-       c<-case customMessage of
-           Just message -> return $ BS.toString message
-           Nothing -> renderTemplate templates "mailRejectMailContent" [("username",BS.toString $ username ),
-                                                              ("documenttitle", BS.toString $ documenttitle document),
-                                                              ("rejectorName",BS.toString rejectorName),  
-                                                              ("ctxhostpart",ctxhostpart ctx)] 
-       makeEditable' templates "customtext" c                                                                         
+mailRejectMailContent::  KontrakcjaTemplates -> (Maybe String) -> Context -> BS.ByteString -> Document -> SignatoryLink -> IO String  
+mailRejectMailContent templates customMessage ctx  username  document  rejector =   
+      renderTemplate templates "mailRejectMailContent" $ do 
+           field "username" username
+           field "documenttitle" $ documenttitle document
+           field "rejectorName" $ personname rejector
+           field "ctxhostpart" $ ctxhostpart ctx
+           field "customMessage" $ customMessage
+
 
 mailDocumentError :: KontrakcjaTemplates -> Context -> Document -> IO Mail 
 mailDocumentError templates ctx document@Document{documenttitle} = 
