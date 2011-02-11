@@ -111,7 +111,7 @@ $(function () {
         signStepsWrapper.height(menu.height() - 53);
         menu.addClass('fixed');
       } else if($(this).scrollTop() < pos.top && menu.hasClass('fixed')){
-        signStepsWrapper.height(menu.height() - 11);
+        signStepsWrapper.height(menu.height() );
         menu.removeClass('fixed');
       }
     });
