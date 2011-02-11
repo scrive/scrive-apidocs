@@ -1186,8 +1186,17 @@ a.button {
 }
 
 .okIcon{
-    background-image: url(images/iconGreenCheck.png);
+    border: 1px solid black;
+    color: black;
+    background-color: white;
+    /*background-image: url(images/iconGreenCheck.png);*/
 }
+
+a.okIcon {
+    color:black;
+    text-decoration: none;
+}
+
 .saveButton .icon,
 .downloadButton .icon
 {
@@ -1574,21 +1583,33 @@ a.button {
 
 .newfield {
     position: relative;
-    width: 288px;
+    width: 140px;
+    -moz-border-radius: 2px;
+    -webkit-border-radius: 2px;
+    -khtml-border-radius: 2px;
+    border-radius: 2px;
+    border: 1px solid #6782a5;
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+    height: 22px;
 }
 
 .newfield input.newfieldbox {
-    width: 288px;
+    width: 115px;
+    border: 0;
+    margin: 0px;
 }
 
-.newfield a.okIcon {
-    width: 16px;
+#personpane .newfield a.okIcon {
+    width: 20px;
     height: 16px;
     display: block;
     background-repeat: no-repeat;
     position: absolute;
-    right: 19px;
-    top: 6px;
+    right: 2px;
+    top: 2px;
+    color: black;
 }
 
 
@@ -1608,13 +1629,13 @@ a.button {
     display: block;
     background-repeat: no-repeat;
     position: absolute;
-    right: 0px;
+    right: 2px;
     top: 3px;
     background-image: url(images/iconMinus.png);
 }
 
 .customfield input.customfieldbox {
-    width: 250px;
+    width: 95px;
     border-color: transparent;
     font-size: 12px;
     height: 18px;
@@ -1627,7 +1648,7 @@ a.button {
 }
 
 .customfield {
-    width: 288px;
+    width: 140px;
     border: 1px solid #6782A5;
     margin: 3px 5px 0 0;
     height: 20px;
@@ -1776,7 +1797,7 @@ form {
 
 .signStepsBodyForms
 {
-    margin: 5px 0 5px 0; /* 013 changed */
+    margin: 5px 0 0px 0; /* 013 changed */
 }
 
 .signViewBodyForms
