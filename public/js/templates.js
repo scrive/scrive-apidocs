@@ -719,8 +719,13 @@ function createCustomField(newfield) {
 
   setFieldName(customfield, "fieldvalue");
   var fieldid = newUUID();
-  var sigentry = newfield.parents('.sigentry');
-  var sigid = getHiddenField('sigid');
+  var persondetails = newfield.parents('.persondetails');
+  // finding sigentry may be redundant, but it works
+  // I don't want to mess it up right before the deadline
+  var sigentry = persondetails.find('.sigentry');
+
+  var sigid = getHiddenField(sigentry, 'sigid');
+
   setFieldID(customfield, fieldid);
   setSigID(customfield, sigid);
   setHiddenField(customfield, "fieldname", fieldname);
@@ -771,37 +776,9 @@ function signatoryToHTML(sig) {
   var sigid = newUUID();
   sig.id = sigid;
 
-  if(sig.email === docstate.author.email){
-    sig.author = true;
-  }
-
   var sigentry = $('#templates .persondetails').first().clone();
 
-  if(sig.author){
-    sigentry.addClass("authorentry");
-    var manlink = $("<a class='man' href='#'> </a>");
-    manlink.click(function(){
-      sigentry.find(".partyrole").show();
-      if(sigentry.find(".partyrole input[checked]").size() === 0){
-        sigentry.find(".partyrole input").first().attr("checked", "true");
-      }
-      return false;
-    });
 
-    sigentry.find(".partyrole .closelink").click(function(){
-      sigentry.find(".partyrole").hide();
-      return false;
-    })
-
-    sigentry.find(".signStepsBodyIcons .man").remove();
-    sigentry.find(".signStepsBodyIcons").prepend(manlink);
-
-    sigentry.find(".partyrole input").first().attr("checked", "true");
-
-  }
-
-  
-  
   //var sigentry = $("<div class='sigentry'></div>");
   //sigentry.append(newHiddenField("sigid", sigid));
   setHiddenField(sigentry, "sigid", sigid);
@@ -813,6 +790,9 @@ function signatoryToHTML(sig) {
   var acomp = sigentry.find(".sigcomp");
   var anumb = sigentry.find(".signum");
   var aemai = sigentry.find(".sigemail");
+  
+
+  //setSigID(sigentry, sigid);
 
   setSigID(aname, sigid);
   setSigID(acomp, sigid);
