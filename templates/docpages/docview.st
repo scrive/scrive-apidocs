@@ -521,7 +521,7 @@ pageDocumentForAuthorContentPreparation=
       <div class="signStepsButton" id="signStepsNextButton">
 	<a href="#nextStep" class="clickArea"></a>
 	
-	<a href="#nextStep"><span class="icon arrowRight"></span></a><!-- 005 no whitespace here pleace, or one pixel of the button will be unclicable pixel in IE --><a href="#nextStep">
+	<a href="#nextStep"><span class="icon arrowRight"></span></a><a href="#nextStep">
 	  <span class="text">Nästa steg</span>
 	</a>
       </div>
