@@ -105,7 +105,7 @@ postDocumentChangeAction document@Document{documentstatus, documentsignatorylink
     -- main action: sendRejectAuthorEmail
     | oldstatus == Pending && documentstatus == Rejected = do
         ctx@Context{ctxnormalizeddocuments,ctxhostpart,ctxtime} <- get
-        customMessage <- fmap (fmap concatChunks) $ getDataFn' (lookBS "customtext")  
+        customMessage <- getField "customtext"
         Log.forkIOLogWhenError ("error in sending rejection emails for document " ++ show documentid) $ do
           sendRejectEmails customMessage ctx document (fromJust msignalink)
         return ()
@@ -242,14 +242,13 @@ sendClosedAuthorEmail ctx document = do
 {- |
    Send an email to the author when the document is rejected
  -}
-sendRejectEmails :: (Maybe BS.ByteString) -> Context -> Document -> SignatoryLink -> IO ()
+sendRejectEmails :: (Maybe String) -> Context -> Document -> SignatoryLink -> IO ()
 sendRejectEmails customMessage ctx document signalink = do
-  let rejectorName = signatoryname (signatorydetails signalink)
   forM_ (documentsignatorylinks document) $ \sl ->  
                      do
                       let semail = signatoryemail $ signatorydetails  sl
                       let sname = signatoryname $ signatorydetails  sl
-                      mail <- mailDocumentRejected (ctxtemplates ctx) customMessage ctx sname document rejectorName
+                      mail <- mailDocumentRejected (ctxtemplates ctx) customMessage ctx sname document signalink
                       sendMail  (ctxmailer ctx) $ mail { fullnameemails = [(sname,semail)]}
   when (not $ any (isAuthor document) $ documentsignatorylinks document) $ 
         do
@@ -258,7 +257,7 @@ sendRejectEmails customMessage ctx document signalink = do
             Just user ->  do 
                       let aemail =  unEmail $ useremail $ userinfo $ user
                       let aname = userfullname user
-                      mail <- mailDocumentRejected (ctxtemplates ctx) customMessage ctx aname document rejectorName
+                      mail <- mailDocumentRejected (ctxtemplates ctx) customMessage ctx aname document signalink
                       sendMail (ctxmailer ctx) $ mail { fullnameemails = [(aname,aemail)]}
             Nothing -> return ()
 {- |

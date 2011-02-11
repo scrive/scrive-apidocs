@@ -475,7 +475,7 @@ pageDocumentForSign action document ctx  invitedlink wassigned author =
     in
     do 
      helpers <- renderTemplate (ctxtemplates ctx) "pageDocumentForSignHelpers" [("documentid",show (documentid document)),("localscripts",localscripts)]   
-     rejectMessage <- mailRejectMailContent (ctxtemplates ctx) Nothing ctx (prettyName author) document (personname invitedlink)                                                        
+     rejectMessage <- mailRejectMailContent (ctxtemplates ctx) Nothing ctx (prettyName author) document invitedlink                                                        
      signatories <- fmap concat $ sequence $ map (showSignatoryLinkForSign ctx document author) (invitedlink : allbutinvited)
      messageoption <- caseOf [ 
                      (wassigned,                           renderTemplate (ctxtemplates ctx) "pageDocumentForSignSigned" ()),  

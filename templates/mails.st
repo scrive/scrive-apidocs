@@ -51,11 +51,16 @@ mailRejectMailTitle=Avvisat: $documenttitle$
 ####
 mailRejectMailContent=
     <span>
+      $if(customMessage)$
+       $customMessage:noescape()$ 
+      $else$
+      <div class="editable" name="customtext">
       <p>Hej,</p>
-      <span class="mceNonEditable"><p>$rejectorName$ har avvisat att underteckna dokumentet <strong>$documenttitle$</strong>. Avtalsprocessen är därmed avbruten.
-      </p></span>
-      $poweredBySkrivaPaPara()$
-    </span>
+      </div>
+      $endif$
+      <p><strong>$rejectorName$</strong> har avvisat att underteckna dokumentet <strong>$documenttitle$</strong>. Avtalsprocessen är därmed avbruten.
+      </p>
+     </span>
 ###
 mailInvitationToSignTitle=Inbjudan från $creatorname$ till $documenttitle$
 ###
