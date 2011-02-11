@@ -700,16 +700,17 @@ function prepareEditor(textarea) {
 standardDialogMask = "#333333"
     
 $.tools.validator.addEffect("failWithFlashOnEmail", function(errors, event) {
-	var invalidEmailErrMsg = "Du har inte skrivit in en e-post eller e-posten är felaktig. Vänligen försök igen.";
-	var emptyEmailErrMsg = "Du måste ange e-post till motpart.";
-	$.each(errors, function(index, error) {
-    	var input = error.input;
-        $(input).addClass("redborder");
-        if (!$(input).hasClass("noflash")) addFlashMessage(invalidEmailErrMsg);
-	});
-
+  var invalidEmailErrMsg = "Du har inte skrivit in en e-post eller e-posten är felaktig. Vänligen försök igen.";
+  var emptyEmailErrMsg = "Du måste ange e-post till motpart.";
+  $.each(errors, function(index, error) {
+    var input = error.input;
+    $(input).parents('.inputWrapper').addClass("redborder");
+    if(!$(input).hasClass("noflash")) {
+      addFlashMessage(invalidEmailErrMsg);
+    }
+  });
 }, function(inputs)  {
-	$(inputs).removeClass("redborder");
+  $(inputs).parents('.inputWrapper').removeClass("redborder");
 });    
 
 

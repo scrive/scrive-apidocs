@@ -980,10 +980,6 @@ a.button {
     margin-bottom:10px;
 }
 
-.redborder 
-{
-    border:1px solid red;
-}
 
 .hidden 
 {
@@ -1723,8 +1719,7 @@ a.okIcon {
     margin: 3px 5px 0 0;
 }
 
-.signStepsBodyForms .inputWrapper,
-.otherfields .inputWrapper
+.inputWrapper
 {
 	background-image: url(images/iconHand.png); 
 	background-repeat: no-repeat;
@@ -2201,4 +2196,9 @@ form {
   
   display: inline-block;
 
+}
+
+.redborder 
+{
+    border:1px solid red;
 }
