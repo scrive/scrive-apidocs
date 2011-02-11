@@ -51,13 +51,28 @@ function placePlacements(pls, label, value, sigid, fieldid) {
       // this makes sure it can move between divs
       appendTo: "body",
       stop: function(event, ui) {
-        var field = $(ui.draggable);
+        var field = $(event.target);
         var helper = $(ui.helper);
+
         // for some reason, this needs to be helper (field is
         // empty)
         if(isPlacedField(helper)) {
           $(this).detach();
+          field.detach();
         }
+
+        var fieldid = getFieldID(field);
+        var needsUpdating = $('.dragfield').filter(function() {
+          var f = $(this);
+          if(getFieldID(f) == fieldid) {
+            return true;
+          } else {
+            return false;
+          }
+        });
+
+        updateStatus(needsUpdating);
+
       },
       // build a helper so it doesn't delete the original
       helper: function (event, ui) {
@@ -485,7 +500,7 @@ function updateStatus(field) {
       setDragStatus(field, "must place");
     }
     if(getValue(field)) {
-      // it's a signatory field, but it's filled out
+      // it's got a value
       setFillStatus(field, "done");
       field.removeClass('redborder');
     } else if(getPlacedFieldsForField(field).size()) {
@@ -920,10 +935,22 @@ function makeDropTargets() {
   $("#signStepsContainer").droppable({ drop: function(event, ui) {
     var field = $(ui.draggable);
     var helper = $(ui.helper);
+    var fieldid = getFieldID(field);
     if(isPlacedField(field)) {
       field.detach();
       helper.detach();
     }
+
+    var needsUpdating = $('.dragfield').filter(function() {
+          var f = $(this);
+          if(getFieldID(f) == fieldid) {
+            return true;
+          } else {
+            return false;
+          }
+        });
+
+        updateStatus(needsUpdating);
 
   }});
 
