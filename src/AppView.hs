@@ -189,12 +189,14 @@ documentTabInfo _ menu = Just (show LinkIssue,(menu== TopDocument))
 simpleResponse::String -> Kontra Response
 simpleResponse s = ok $ toResponse $ cdata s -- change this to HtmlString from helpers package (didn't wan't to connect it one day before prelaunch)
 
-firstPage::KontrakcjaTemplates -> IO String
-firstPage templates =  renderTemplate templates "firstPage"  $ do 
+firstPage::Context-> IO String
+firstPage ctx =  renderTemplate (ctxtemplates ctx) "firstPage"  $ do 
+                              contextInfoFields ctx
                               mainLinksFields
                               
-staticTemplate::KontrakcjaTemplates -> Bool ->  String -> IO String
-staticTemplate templates nocolumns content = renderTemplate templates "staticTemplate"  $ do 
+staticTemplate::Context -> Bool ->  String -> IO String
+staticTemplate ctx nocolumns content = renderTemplate (ctxtemplates ctx) "staticTemplate"  $ do 
+                              contextInfoFields ctx
                               mainLinksFields
                               field "content" $ content
                               field "nocolumns" nocolumns
@@ -203,7 +205,13 @@ staticTemplate templates nocolumns content = renderTemplate templates "staticTem
 mainLinksFields::Fields 
 mainLinksFields = do
                      field "linklogin" $ show LinkLogin 
+                     field "linklogout" $ show LinkLogout
                      field "linkforgotenpassword" $ show LinkForgotPassword
                      field "linkrequestaccount" $ show LinkRequestAccount
                      field "linkquestion" $ show LinkAskQuestion
-                    
+
+
+contextInfoFields::Context -> Fields
+contextInfoFields ctx = do 
+                         field "logged" $ isJust (ctxmaybeuser ctx)
+             

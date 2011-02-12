@@ -227,7 +227,7 @@ handleHomepage = do
     Just user -> UserControl.checkUserTOSGet $ do
                        content <- liftIO $ V.uploadPage ctxtemplates 
                        V.renderFromBody ctx V.TopNew V.kontrakcja (cdata content)
-    Nothing -> V.simpleResponse =<< (liftIO $ firstPage ctxtemplates)
+    Nothing -> V.simpleResponse =<< (liftIO $ firstPage ctx)
 
 -- uh uh, how to do that in correct way?
 normalizeddocuments :: MVar (Map.Map FileID JpegPages)
@@ -441,7 +441,7 @@ serveHTMLFiles =  do
                    case ms of 
                     Just s -> do 
                                nocolumns  <- getField "nocolumns"
-                               content <- liftIO $ staticTemplate (ctxtemplates ctx) (isJust nocolumns) (BS.toString s)
+                               content <- liftIO $ staticTemplate ctx (isJust nocolumns) (BS.toString s)
                                simpleResponse  content 
                     _ -> mzero
                
