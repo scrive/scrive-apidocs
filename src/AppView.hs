@@ -191,14 +191,19 @@ simpleResponse s = ok $ toResponse $ cdata s -- change this to HtmlString from h
 
 firstPage::KontrakcjaTemplates -> IO String
 firstPage templates =  renderTemplate templates "firstPage"  $ do 
-                              field "linklogin" $ show LinkLogin 
-                              field "linkforgotenpassword" $ show LinkForgotPassword
-                              field "linkrequestaccount" $ show LinkRequestAccount
+                              mainLinksFields
                               
 staticTemplate::KontrakcjaTemplates -> Bool ->  String -> IO String
 staticTemplate templates nocolumns content = renderTemplate templates "staticTemplate"  $ do 
-                              field "linklogin" $ show LinkLogin 
-                              field "linkforgotenpassword" $ show LinkForgotPassword
-                              field "linkrequestaccount" $ show LinkRequestAccount
+                              mainLinksFields
                               field "content" $ content
                               field "nocolumns" nocolumns
+
+
+mainLinksFields::Fields 
+mainLinksFields = do
+                     field "linklogin" $ show LinkLogin 
+                     field "linkforgotenpassword" $ show LinkForgotPassword
+                     field "linkrequestaccount" $ show LinkRequestAccount
+                     field "linkquestion" $ show LinkAskQuestion
+                    

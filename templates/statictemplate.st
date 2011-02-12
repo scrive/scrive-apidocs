@@ -52,12 +52,12 @@ staticTemplate=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.
                                         <div class="white thin box">
                                                 <h4>Hör av dig till oss!</h4>
                                                 <br />
-                                                <form method="post">
+                                                <form method="post" action="$linkquestion$">
                                                         <input type="text" name="name" value="Namn" class="infotext" /><br />
                                                         <input type="email" name="email" value="E-post" class="infotext" /><br />
                                                         <input type="tel" name="phone" value="Telefonnummer" class="infotext" /><br />
                                                         <textarea name="message" class="infotext">Meddelande</textarea>
-                                                        <a href="#" class="btn-small green2 center"><p>Skicka!</p></a>
+                                                        <a class="submit btn-small green2 center"><p>Skicka!</p></a>
                                                 </form>
                                                 <div class="hor-divider"></div>
                                                 <h4>SkrivaPå AB</h4>
