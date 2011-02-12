@@ -694,15 +694,14 @@ function flashSpecialFlashMessages(){
 }
 
 
-function flashFlashMessages(){
+function flashFlashMessages()
+{
     var flashmsgbox = $('.flashmsgbox');
-    if ($('.flashmessage',flashmsgbox).size()>0)
-     {
-      flashmsgbox.show();
-      flashmsgbox.delay(12000).fadeOut(function(){$('.flashmessage',flashmsgbox).remove()});
-      flashmsgbox.click( function() { $(this).fadeOut()  });
-     } 
+    if ($('.flashmessage',flashmsgbox).size()>0) {
+        flashmsgbox.slideDown().delay(12000).slideUp(function(){$('.flashmessage',flashmsgbox).remove()});
+    } 
 }
+
 function addFlashMessage(msg){
     var flashmsgbox = $('.flashmsgbox');    
     $('.flashmessage',flashmsgbox).remove()
