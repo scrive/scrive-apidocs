@@ -26,6 +26,7 @@ module Doc.DocState
     , AttachFile(..)
     , AttachSealedFile(..)
     , AuthorSignDocument(..)
+    , AuthorSendDocument(..)
     , RejectDocument(..)
     , FileModTime(..)
     , FileMovedToAWS(..)
@@ -1551,6 +1552,32 @@ signWithUserID (s:ss) id sinfo msiginfo
     | maybe False (((==) id) . unSignatory) (maybesignatory s) = s {maybesigninfo = sinfo, maybeseeninfo = sinfo, signatorysignatureinfo = msiginfo} : ss
     | otherwise = s : signWithUserID ss id sinfo msiginfo
 
+authorSendDocument :: DocumentID
+                   -> MinutesTime
+                   -> Word32
+                   -> User
+                   -> Maybe SignatureInfo
+                   -> Update Documents (Either String Document)
+authorSendDocument documentid time ipnumber author msiginfo =
+    modifyDocument documentid $ \document ->
+        case documentstatus document of
+          Preparation -> 
+              let timeout = do
+                             days <- documentdaystosign document 
+                             let enddate = m + (days * 24 *60)
+                             return $ (TimeoutTime . MinutesTime ) enddate
+                  MinutesTime m = time 
+                  authorid = userid author
+                  sinfo = Just (SignInfo time ipnumber)
+              in Right $ document { documenttimeouttime = timeout
+                                  , documentmtime = time
+                                  , documentstatus = Pending
+                                  }
+              
+          Timedout -> Left "Förfallodatum har passerat" -- possibly quite strange here...
+          _ ->        Left ("Bad document status: " ++ show (documentstatus document))
+
+
 -- maybe this goes away
 authorSignDocument :: DocumentID
                    -> MinutesTime
@@ -1569,12 +1596,9 @@ authorSignDocument documentid time ipnumber author msiginfo =
                   MinutesTime m = time 
                   authorid = userid author
                   sinfo = Just (SignInfo time ipnumber)
-                  hasfields = any ((any (not . fieldfilledbyauthor)) . (signatoryotherfields . signatorydetails)) (documentsignatorylinks document)
               in Right $ document { documenttimeouttime = timeout
                                   , documentmtime = time
-                                  , documentsignatorylinks = if hasfields 
-                                                             then (documentsignatorylinks document)
-                                                             else signWithUserID (documentsignatorylinks document) authorid sinfo msiginfo
+                                  , documentsignatorylinks = signWithUserID (documentsignatorylinks document) authorid sinfo msiginfo
                                   , documentstatus = Pending
                                   }
               
@@ -1935,6 +1959,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'updateDocument
                         , 'signDocument
                         , 'authorSignDocument
+                        , 'authorSendDocument
                         , 'rejectDocument
                         , 'attachFile
                         , 'attachSealedFile
