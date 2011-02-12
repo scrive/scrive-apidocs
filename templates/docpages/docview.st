@@ -81,7 +81,7 @@ uploadPageContent=
 ####
 showFileImagesReady= $pages:{pageno| 
 <div id="page$pageno$" class="pagediv">
-  <img class="pagejpg" src="/pages/$fileid$/$pageno$" width="300">
+  <img class="pagejpg" src="/pages/$fileid$/$pageno$">
 </div> 
 }$
 ####
