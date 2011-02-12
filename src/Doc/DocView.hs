@@ -505,18 +505,19 @@ pageDocumentForSign action document ctx  invitedlink wassigned author =
 
 --Helper to get document after signing info text
 documentInfoText::KontrakcjaTemplates->Document->(Maybe SignatoryLink) -> User -> IO String
-documentInfoText templates document siglnk author =  
+documentInfoText templates document siglnk author = do
+  print siglnk
   
-  renderTemplate templates "documentInfoText" $ 
-                                                (setAttribute "notsignedbyme" $ isNothing $ join $ fmap maybesigninfo siglnk) .
-                                                (setAttribute "signedbyme" $ isJust $ join $ fmap maybesigninfo siglnk) .
-                                                (setAttribute "pending" $ documentstatus document == Pending) .
-                                                (setAttribute "cancel" $ documentstatus document ==  Canceled) .
-                                                (setAttribute "timedout" $ documentstatus document == Timedout) .
-                                                (setAttribute "rejected" $ documentstatus document == Rejected) .
-                                                (setAttribute "signed" $ documentstatus document == Closed) .
-                                                (setAttribute "awaitingauthor" $ documentstatus document == AwaitingAuthor) . 
-                                                (setAttribute "authorname" $ BS.toString $ userfullname author) 
+  renderTemplate templates "documentInfoText" $ do
+    field "notsignedbyme" $ isNothing $ join $ fmap maybesigninfo siglnk
+    field "signedbyme" $ isJust $ join $ fmap maybesigninfo siglnk
+    field "pending" $ documentstatus document == Pending
+    field "cancel" $ documentstatus document ==  Canceled
+    field "timedout" $ documentstatus document == Timedout
+    field "rejected" $ documentstatus document == Rejected
+    field "signed" $ documentstatus document == Closed
+    field "awaitingauthor" $ documentstatus document == AwaitingAuthor
+    field "authorname" $ BS.toString $ userfullname author
                                                
                                                                                   
 
