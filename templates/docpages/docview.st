@@ -126,12 +126,11 @@ pageDocumentForViewerContent =
       <span class="title">DOKUMENT #$documentid$:</span>
       <span class="name">$documenttitle$</span>
      </span>
-     <div class="downloadButton" >
+     <span style="float: right; display: inline-block; margin: 8px 10px 0pt 18px;">
         <a href="$linkissuedocpdf$" target="_blank">
-         <span class="icon arrowDownIcon"></span>
-         <span class="text">Ladda ned PDF</span>
+         Ladda ned PDF
        </a>
-   </div>
+     </span>
   </div>
   <div id="signStepsBody" class="forauthor"> 
     <div id="signViewBodyLeft" > 
