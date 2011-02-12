@@ -47,7 +47,6 @@ creatingDocumentFrame=
   <div id="signStepsBody"> 
     $steps:noescape()$
   </div>
-  <div id="signStepsBodyBorderBottom"></div>
 </div>            
     
 ######
@@ -150,7 +149,6 @@ pageDocumentForViewerContent =
     </div>
     $signatories:noescape()$
   </div>
-  <div id="signStepsBodyBorderBottom"></div>
 </div>
 
 <div id="documentBox">
@@ -343,7 +341,6 @@ pageDocumentForSignContent=
     </div>
     $signatories:noescape()$
   </div>
-  <div id="signStepsBodyBorderBottom"></div>
 </div>
 $if(showflash)$
 <div id="signViewNotificationContainer"> 
@@ -753,7 +750,6 @@ pageDocumentForAuthorContentPreparation=
       </form>
       $pageDocumentForAuthorHelpersLocalDialogs()$
     </div>
-    <div id="signStepsBodyBorderBottom"></div>
   </div>
   
   <!-- span>signStepsBorderBottom går upp till titelRow om man tar bort denna text. förslag på lösning? Lösning: lägg till float:left på signStepsBodyBorderBottom /johan  </span -->
@@ -879,7 +875,6 @@ pageDocumentForAuthorContentPostPreparation=
     $signatories:noescape()$
 
   </div>
-  <div id="signStepsBodyBorderBottom"></div>
 </div>
 
 <div id="documentBox">
