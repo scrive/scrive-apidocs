@@ -1000,6 +1000,10 @@ function initializeTemplates () {
   
   makeDropTargets();
 
+  $(".dragfield, .dragtext").each(function() {
+    updateStatus($(this));
+  });
+
   $("#personpane").children().removeClass("currentPerson").last().addClass("currentPerson");
 
   $("form").submit(function () {
