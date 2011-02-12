@@ -90,6 +90,16 @@ a img
     background-color: #87879b;
 }
 
+#inviteContainer input[type=submit]:hover
+{
+    background-color: #d9dae3;
+}
+
+#inviteContainer input[type=submit]:active
+{
+    background-color: #b3b5bd;
+}
+
 #loginContainer input[type=submit]:active
 {
     background-color: #43434e;
@@ -199,12 +209,12 @@ a img
 }
 
 
-input[type=submit]:hover, input[type=button]:hover, button:hover, a.button:hover
+ input[type=button]:hover, button:hover, a.button:hover
 {
     background-color: #d9dae3;
 }
 
-input[type=submit]:active, input[type=button]:active, button:active, a.button:active
+ input[type=button]:active, button:active, a.button:active
 {
     background-color: #b3b5bd;
 }
@@ -2235,7 +2245,7 @@ form {
 
 .signStepsBodyIcons .partnumber 
 {
-  width:70px;
+  width:100px;
   display:block;
 }
 
@@ -2250,3 +2260,91 @@ form {
 #inviteContainer input[type=email]{
   width:200px;
 }
+
+
+.btn-small {
+	background: url(../img/btn-small.png) 0 0 no-repeat;
+	color: #fff;
+	display: block;
+	font: 12px "Helvetica Neue";
+	height: 34px;
+	letter-spacing: 0.2px;
+	padding-left: 16px;
+	padding-top: 0px;
+	text-decoration: none;
+	width: 152px;
+        text-align: left;
+        border: 0;
+}
+
+.btn-small p {
+    color: #fff;
+    text-shadow: #41770b 0 1px 3px;
+    margin:0px;
+}
+
+
+.btn-small.green2 {
+	background-position: -152px 0;
+}
+
+
+.btn-small.green2:hover {
+	background-position: -152px -34px;
+        background-color: transparent;
+}
+
+.btn-small.green2:active {
+	background-position: -152px -68px;
+}
+
+.btn-blue {
+	background: url(images/btn-sign-1.png) 0 0 no-repeat;
+	color: #fff;
+	display: block;
+	font: 18px "Helvetica Neue";
+	height: 47px;
+	letter-spacing: 0.5px;
+	padding-left: 20px;
+	padding-top: 0px;
+	text-decoration: none;
+	width: 222px;
+        text-align: left;
+        border: 0;
+        margin: auto;
+}
+
+.btn-blue p {
+	color: #fff;
+	text-shadow: #41770b 0 1px 3px;
+        margin:0;
+}
+
+
+.btn-blue {
+	background-position: 0px 0;
+}
+
+.btn-blue:hover {
+	background-position: 0px -47px;
+        background-color: transparent;
+}
+.btn-blue:active {
+	background-position: 0px -94px;
+}
+
+
+
+.btn-blue:deactivated {
+	background-position: -222px 0;
+}
+
+.btn-blue.deactivated:hover {
+	background-position: -222px 0;
+        background-color: transparent;
+}
+
+.btn-blue.deactivated:active {
+	background-position: -222px 0px;
+}
+

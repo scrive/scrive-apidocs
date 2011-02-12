@@ -704,8 +704,7 @@ pageDocumentForAuthorContentPreparation=
 	    <div id="signStepsBodyRight" class="step3">
 	      <div class="border left"></div>
 	      <div class="border right"></div>
-              
-	        <input type="submit" id="signinvite" rel="#dialog-confirm-signinvite" value="" name="final"
+	      <input type="submit" class="submit btn-blue center" id="signinvite" rel="#dialog-confirm-signinvite" value="SkrivaPå" name="final"
 	               class="buttonSignLarge" />              
 	      
 	      <!-- 015 new -->
@@ -740,11 +739,14 @@ pageDocumentForAuthorContentPreparation=
 	           </p>
 	           -->
 	        <!-- 013 changed sign button tag -->
-
-                <input type="submit" id="sendinvite"
-	        rel="#dialog-confirm-sendinvite" value = ""
-	        name="final" class="buttonSendLarge" />
+                
+                
 	      </div>
+                <input type="submit" id="sendinvite"
+	        rel="#dialog-confirm-sendinvite" value = "Skicka"
+	        name="final" class="submit btn-small green2 center" />
+
+
 	    </div>
 	    
           </div>			
