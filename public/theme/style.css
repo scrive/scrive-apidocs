@@ -209,12 +209,12 @@ a img
 }
 
 
- input[type=button]:hover, button:hover, a.button:hover
+ input[type=submit]:hover, button:hover, a.button:hover
 {
     background-color: #d9dae3;
 }
 
- input[type=button]:active, button:active, a.button:active
+ input[type=submit]:active, button:active, a.button:active
 {
     background-color: #b3b5bd;
 }
@@ -1158,7 +1158,7 @@ a.button {
     font-size: 10px;
 }
 
-#signStepsTitleRow .signStepsButton,
+
 #signStepsTitleRow .saveButton,
 #signStepsTitleRow .downloadButton
 {
@@ -1167,15 +1167,6 @@ a.button {
     margin-top: 2px;
 }
 
-.signStepsButton
-{
-    width: 120px;
-    height: 25px;
-    background-image: url(images/singStepsButton.png);
-    background-repeat: no-repeat;
-    overflow: hidden;
-    position: relative; /* 008 new */
-}
 
 .saveButton,
 .downloadButton
@@ -1874,6 +1865,7 @@ form {
     -khtml-border-radius: 2px;
     border-radius: 2px;
 }
+/*
 #signStepsBodyFunctionsBox #signStepsNextButton{
   vertical-align:center;
   width:100%;
@@ -1881,7 +1873,7 @@ form {
   margin:15px 30% 0 30%;
   
 }
-
+*/
 /* 013 new */
 #signStepsBodyLeft #people,
 #signStepsBodyFunctionsBox
@@ -2321,6 +2313,22 @@ form {
 }
 
 
+.btn-blue.deactivated {
+	background-position: -222px 0;
+}
+
+.btn-blue.deactivated:hover {
+	background-position: -222px 0;
+        background-color: transparent;
+}
+
+.btn-blue.deactivated:active {
+	background-position: -222px 0px;
+}
+
+
+
+
 .btn-blue {
 	background-position: 0px 0;
 }
@@ -2334,17 +2342,17 @@ form {
 }
 
 
-
-.btn-blue:deactivated {
-	background-position: -222px 0;
+a#nextstep {
+    width: 136px;
+    color: white;
+    border: 0;
+    margin: 16px;
+    display: block;
 }
 
-.btn-blue.deactivated:hover {
-	background-position: -222px 0;
-        background-color: transparent;
-}
-
-.btn-blue.deactivated:active {
-	background-position: -222px 0px;
+#nextstep span {
+    padding-top: 8px;
+    display: block;
+    
 }
 

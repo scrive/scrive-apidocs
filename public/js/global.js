@@ -274,23 +274,24 @@ $(function () {
     $("#signinvite").overlay({  
     mask: standardDialogMask,    
     onBeforeLoad: function () { 
+      if (!checkSignPossibility()) return false;
       if (!emailFieldsValidation($(".stepForm input[type='email']"))) return false;
       if (!nonZeroSignatories()) return false;
       if (!authorFieldsValidation()) return false;
 
-           var mrxs = $("form input[name='signatoryname']");
-           var tot = "";
-           var allparties = new Array();
-             mrxs.each(function(index) { 
-                     allparties.push($(this).val());
-                 });
-           tot = swedishString(allparties);
-           $(".Xinvited").html(tot);
-	    } });
+      var mrxs = $("form input[name='signatoryname']");
+      var tot = "";
+      var allparties = new Array();
+      mrxs.each(function(index) { 
+        allparties.push($(this).val());
+      });
+      tot = swedishString(allparties);
+      $(".Xinvited").html(tot);
+    } });
         
     $(".submiter").click(function(){
-                               $(this.form).submit();
-	});
+      $(this.form).submit();
+    });
 
 	$("#dialog-confirm-sign-eleg .bankid").click(function(){
 		sign2(window.location.pathname,
@@ -527,15 +528,11 @@ function showProperSignButtons() {
 
   if(sigfields.size() > 0) {
     // we're awaiting author mode
-    //$("#signinvite").hide();
-    //$("#sendinvite").show();
+    $("#signinvite").addClass("deactivated");
   } else if($("#authorsignatoryradio").attr("checked")) {
-    //$("#signinvite").show();
-    //$("#sendinvite").hide();
-    
+    $("#signinvite").removeClass("deactivated");
   } else {
-    //$("#signinvite").hide();
-    //$("#sendinvite").show();
+    $("#signinvite").addClass("deactivated");
   }
 
 }
@@ -551,6 +548,36 @@ function showProperSignButtons() {
 	  return valid;
       }
       return true;
+}
+
+function checkSignPossibility() {
+  var sigfields = $(".dragfield").filter(function() {
+    var field = $(this);
+    var dragstatus = getDragStatus(field);
+    var fillstatus = getFillStatus(field);
+    
+    if(!isStandardField(field) && dragstatus === 'placed' && fillstatus === 'sig') {
+      return true;
+    } else {
+      return false;
+    }
+  });
+  if($("#authorsecretaryradio").attr("checked")) {
+    // secretary
+    $(".authordetails .man").addClass("redborder");   
+    addFlashMessage("Du kan inte underteckna när du är sekreterare. Om du vill underteckna, gå tillbaks till steg 2 och byt roll.");
+    return false;
+  } else if(sigfields.size() > 0) {
+    // we're awaiting author mode 
+    sigfields.addClass("redborder");
+    addFlashMessage("Du kan inte underteckna när du har utplacerade fält som inte är ifyllda. Antingen skicka (och underteckna sist) eller gå tillbaks till steg 2 och åtgärda fältet.");
+    return false;
+  } else {
+    // sign is possible
+    return true;
+  }
+
+  return true;
 }
 
 function authorFieldsValidation(){

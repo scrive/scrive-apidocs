@@ -648,10 +648,11 @@ pageDocumentForAuthorContentPreparation=
 	        </ul>
       <div class="divider"></div>
       <div class="signStepsButton" id="signStepsNextButton" >
-	<a href="#nextStep" class="clickArea"></a>
+      <a href="#nextStep" id="nextstep" class="submit btn-small green2 center"><span>Nasta steg</span></a>  
+<!--
 	<a href="#nextStep"><span class="icon arrowRight"></span></a><!-- 005 no whitespace here pleace, or one pixel of the button will be unclicable pixel in IE --><a href="#nextStep">
 	  <span class="text">Nästa steg</span>
-	</a>
+	</a>-->
       </div>
 	      </div>
             </div>
@@ -704,8 +705,7 @@ pageDocumentForAuthorContentPreparation=
 	    <div id="signStepsBodyRight" class="step3">
 	      <div class="border left"></div>
 	      <div class="border right"></div>
-	      <input type="submit" class="submit btn-blue center" id="signinvite" rel="#dialog-confirm-signinvite" value="SkrivaPå" name="final"
-	               class="buttonSignLarge" />              
+	      <input type="button" class="submit btn-blue center" id="signinvite" rel="#dialog-confirm-signinvite" value="SkrivaPå" name="final" />
 	      
 	      <!-- 015 new -->
 
@@ -742,9 +742,9 @@ pageDocumentForAuthorContentPreparation=
                 
                 
 	      </div>
-                <input type="submit" id="sendinvite"
+                <input type="button" id="sendinvite"
 	        rel="#dialog-confirm-sendinvite" value = "Skicka"
-	        name="final" class="submit btn-small green2 center" />
+	        name="final"  class="submit btn-small green2 center" />
 
 
 	    </div>
