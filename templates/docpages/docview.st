@@ -662,10 +662,6 @@ pageDocumentForAuthorContentPreparation=
           <div id="signStepsBody">
 	    
 	    <div id="signStepsBodyLeft" class="step3">
-	      <div class="signStepsBodyTitle">
-	        <span>DOKUMENTHANTERING</span>
-                
-	      </div>
 	      <div class="options">
 	        <p>
                   <span>
@@ -705,10 +701,6 @@ pageDocumentForAuthorContentPreparation=
 	      <div class="border right"></div>
               
 	      
-	      <div class="signStepsBodyTitle">
-	        <span>INBJUDAN</span>
-	      </div>
-	      
 	      <div class="signStepsBodyInvation">
                 <small><a rel="#edit-invite-text-dialog" id="editinvitetextlink" href="#" style="padding-top:3px">JUSTERA HÄLSNINGSMEDDELANDE</a></small>
                 <input type="hidden" id="invitetext" name="invitetext" value="$documentinvitetext$">
@@ -734,9 +726,6 @@ pageDocumentForAuthorContentPreparation=
 	    </div>
 
 	    <div id="signStepsBodyFunctions" class="step3">
-	      <div class="signStepsBodyTitle">
-	        <span>SIGNERING</span>
-	      </div>
 	      <div class="signStepsBodyFunctionsBox options">
                 <!--
 	           <p>
