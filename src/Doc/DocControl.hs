@@ -982,8 +982,8 @@ personsFromDocument document =
 
 fieldsFromPlacement value placement =
     Seal.Field { Seal.value = value
-               , Seal.x = placementx placement
-               , Seal.y = placementy placement
+               , Seal.x = placementx placement - 7
+               , Seal.y = placementy placement - 7
                , Seal.page = placementpage placement
                , Seal.w = placementpagewidth placement
                , Seal.h = placementpageheight placement
