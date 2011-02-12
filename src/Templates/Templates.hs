@@ -112,3 +112,9 @@ instance (HST.ToSElem a) => ToSElem a where
 
 instance ToSElem BS.ByteString where
   toSElem = HST.toSElem . BS.toString                     
+
+instance Field [Fields] where 
+  field a fs =  do
+               s <- get 
+               let vals f = fmap (SM . fromList) $ sequence $ map packIO $ execState f [] 
+               put ((a,fmap LI $ mapM vals fs):s)
