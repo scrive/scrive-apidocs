@@ -365,7 +365,8 @@ $(function () {
                var guardChecked = $(".signGuard:checked").size()>0;
                if (!guardChecked) 
                { $(".signGuard").parent().css("border","1px dotted red");
-                 $(".signGuard").change(function(){$(this).parent().css("border","")})
+                 $(".signGuard").change(function(){$(this).parent().css("border","")});
+                 //addFlashMessage("need text");
                  return false;
                } 
         }
@@ -587,28 +588,20 @@ function authorFieldsValidation(){
 }
 
 function sigFieldsValidation(){
+  var remainingSigFields = $(".dragfield").filter(function() {
+    var field = $(this);
+    if(getValue(field).length === 0) {
+      return true;
+    }
+  });
 
-    var remainingSigFields = false;
-	 
-    $(".dragfield").each(function(){
-	    var field = $(this);
-	    if(getValue(field).length === 0) {
-		remainingSigFields = true;
-	    }
-	});
-    var emptyMsg = "Please fill out all of the fields.";
-    if(remainingSigFields){
-	var $dialog = $('<div></div>')
-	    .html(emptyMsg)
-	    .dialog({
-		    autoOpen: false,
-		    title: 'Required fields',
-		    modal: true
-		});
-	$dialog.dialog('open');
-	return false;
-    }	
-    return !remainingSigFields;
+  if(remainingSigFields.size() > 0) {
+    addFlashMessage("Var vänlig och fyll i all fält.");
+    remainingSigFields.addClass("redborder");
+    return false;
+  } else {
+    return true;
+  }
 }
 
 function nonZeroSignatories() {

@@ -431,30 +431,49 @@ function getPlacedFieldsForField(field) {
 // function to automatically change status icon
 // status is a function of field type and current state
 function updateStatus(field) {
-    field = $(field);
-    var type = getFieldType(field);
-    if(type == "author") {
-	if(getValue(field)) {
-	    setIcon(field, "done");
-	} else {
-	    setIcon(field, "athr");
-	}
-    } else if(type == "sig") {
-	if(getValue(field)) {
-	    // it's a signatory field, but it's filled out
-	    setIcon(field, "done");
-	} else if(getPlacedFieldsForField(field).size()) {
-	    // if it's placed
-	    setIcon(field, "sig");
-	} else {
-	    // not placed, so won't send
-	    setIcon(field, "none");
-	}
-    } else if(type == "text") {
-	// do nothing
-    } else if(debug) {
-	console.log("field has bad field type: " + getFieldName(field));
+  field = $(field);
+  var type = getFieldType(field);
+  if(type == "author") {
+    if(getPlacedFieldsForField(field).size()){
+      setDragStatus(field, "placed");
+      //field.removeClass('redborder');
+    } else if (isStandardField(field)) {
+      setDragStatus(field, "not placed");
+    } else {
+      setDragStatus(field, "must place");
     }
+    if(getValue(field)) {
+      setFillStatus(field, "filled");
+      field.removeClass('redborder');
+    } else {
+      setFillStatus(field, "author");
+    }
+  } else if(type == "sig") {
+    if(getPlacedFieldsForField(field).size()){
+      setDragStatus(field, "placed");
+      field.removeClass('redborder');
+    } else if(isStandardField(field)) {
+      setDragStatus(field, "not placed");
+    } else {
+      setDragStatus(field, "must place");
+    }
+    if(getValue(field)) {
+      // it's got a value
+      setFillStatus(field, "done");
+      field.removeClass('redborder');
+    } else if(getPlacedFieldsForField(field).size()) {
+      // not filled out, but it's placed
+      setFillStatus(field, "sig");
+      field.removeClass('redborder');
+    } else {
+      // not filled out, not placed, so it's handled above
+      setFillStatus(field, "sig");
+    }
+  } else if(type == "text") {
+    // do nothing
+  } else if(debug) {
+    console.log("field has bad field type: " + getFieldName(field));
+  }
 }
 
 function detachFieldsForSig(sigid) {
@@ -516,3 +535,38 @@ $(document).ready(function () {
 	
 	initializeTemplates();	
     });
+
+
+function getDragStatus(field){
+  if(isDraggableField(field)){
+    return getHiddenValue(field, "dragstatus");
+  } else if(debug) {
+    console.log(getFieldType(field) + " does not have an icon, cannot get");
+  }
+  return "";
+}
+
+function getFillStatus(field){
+  if(isDraggableField(field)){
+    return getHiddenValue(field, "fillstatus");
+  } else if(debug) {
+    console.log(getFieldType(field) + " does not have an icon, cannot get");
+  }
+  return "";
+}
+
+function setDragStatus(field, status) {
+  if(isDraggableField(field)) {
+    setHiddenValue(field, "dragstatus", status);
+  } else if(debug) {
+    console.log(getFieldType(field) + " does not have an icon, cannot set");
+  }
+}
+
+function setFillStatus(field, status) {
+  if(isDraggableField(field)) {
+    setHiddenValue(field, "fillstatus", status);
+  } else if(debug) {
+    console.log(getFieldType(field) + " does not have an icon, cannot set");
+  }
+}
