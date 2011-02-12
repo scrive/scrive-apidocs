@@ -705,15 +705,8 @@ pageDocumentForAuthorContentPreparation=
 	      <div class="border left"></div>
 	      <div class="border right"></div>
               
-	      
-	      <div class="signStepsBodyTitle">
-	        <span>INBJUDAN</span>
-	      </div>
-	      
-	      <div class="signStepsBodyInvation">
-                <small><a rel="#edit-invite-text-dialog" id="editinvitetextlink" href="#" style="padding-top:3px">JUSTERA HÄLSNINGSMEDDELANDE</a></small>
-                <input type="hidden" id="invitetext" name="invitetext" value="$documentinvitetext$">
-	      </div>
+	        <input type="submit" id="signinvite" rel="#dialog-confirm-signinvite" value="" name="final"
+	               class="buttonSignLarge" />              
 	      
 	      <!-- 015 new -->
 
