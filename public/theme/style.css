@@ -1330,11 +1330,10 @@ a.okIcon {
 /* 013 changed */
 #signStepsBodyLeft
 {
-    width: 315px;
+    width: 360px;
     float: left;
     position: relative;
     padding: 7px 0px 0 0px;
-    margin-right: 15px;
 }
 
 #signStepsBodyLeft.step3{
@@ -1349,14 +1348,14 @@ a.okIcon {
    width: 290px;
 }
 /* 013 changed */
-#signStepsBodyRight,
-#personpane
+/* FIXME?
+#signStepsBodyRight
 {
     width: 326px;
     position: relative;
     padding: 7px 6px 0 0px;
 }
-
+*/
 .signViewBodyRight 
 {
     width: 160px;
@@ -1626,26 +1625,6 @@ a.okIcon {
     background-image: url(images/iconMinus.png);
 }
 
-.customfield input.customfieldbox {
-    width: 95px;
-    border-color: transparent;
-    font-size: 12px;
-    height: 18px;
-    line-height: 18px;
-    overflow: hidden;
-    margin-left: 19px;
-    margin-right: 19px;
-    background-color: transparent;
-    margin-top: 0px;
-}
-
-.customfield {
-    width: 140px;
-    border: 1px solid #6782A5;
-    margin: 3px 5px 0 0;
-    height: 20px;
-}
-
 .signStepsBodyAddField a.minus,
 .newfield a.minus,
 #signStepsBodyFunctionsBox ul .minus
@@ -1667,7 +1646,6 @@ a.okIcon {
 .signStepsBodyForms .inputWrapper .fieldvalue
 {
     padding-left: 19px;
-    width: 130px;
     height: 18px;
     line-height: 18px;
     font-size: 12px;
@@ -1729,7 +1707,7 @@ a.okIcon {
     float: left;
     margin: 3px 5px 0 0;
     padding: 0;
-    width: 130px;
+    width: 161px;
     overflow: hidden;
 }
 
@@ -1827,7 +1805,7 @@ form {
 
 #signStepsBodyFunctions
 {
-    width: 250px;
+    width: 186px;
     position: relative;
     float: right;
 
@@ -2152,7 +2130,7 @@ form {
 
 #signStepsBody.personPaneSmallNumberMode #personpane
 {
-    width: 660px;
+    width: 720px;
 }
 
 #personpane 
@@ -2172,7 +2150,7 @@ form {
 
 #signStepsBody span.persondetails.currentPerson
 {
-    display: inline;
+    display: block;
 }
 
 .partyrole {
@@ -2192,7 +2170,7 @@ form {
 }
 
 .persondetails {
-    width: 330px;
+    width: 360px;
 }
 
 .signViewBodyForms .dragfield input {
