@@ -196,7 +196,7 @@ handleRoutes = msum [
      , dir "requestaccount" $ hpost0 $ UserControl.handleRequestAccount
      -- viral invite
      , dir "invite"      $ hpost0 $ UserControl.handleViralInvite
-     
+     , dir "question"    $ hpost0 $ UserControl.handleQuestion
      -- e-legitimation stuff
      {- Disabled until finished
      , dir "bankid" $ dir "s" $ hget3  $ BankID.handleSignBankID

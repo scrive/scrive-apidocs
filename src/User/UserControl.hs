@@ -293,6 +293,25 @@ handleRequestAccount = do
                                                                         }
                         return LinkMain -- Something should happend here
 
+handleQuestion :: Kontra KontraLink
+handleQuestion = do
+                  ctx<- get
+                  name <- getField "name" 
+                  email <- getField "email"
+                  phone <- getField "phone" 
+                  message <- getField "message" 
+                  let  content =   "name: "      ++ (fromMaybe "" name)    ++ "<BR/>" ++
+                                   "email: "   ++ (fromMaybe "" email)   ++ "<BR/>" ++
+                                   "phone "    ++ (fromMaybe "" phone)   ++ "<BR/>" ++
+                                   "message: " ++ (fromMaybe "" message) 
+                  liftIO $ sendMail (ctxmailer ctx) $ emptyMail 
+                                                          { fullnameemails = [(BS.fromString "info@skrivapa.se",BS.fromString "info@skrivapa.se")],
+                                                            title = BS.fromString $ "Question",
+                                                            content = BS.fromString $ content }
+                  return LinkMain
+                                                                             
+                                                
+
 unloggedActionPage::String->String -> Kontra Response                         
 unloggedActionPage sid mh = do
                       muser <- userFromExternalSessionData sid mh 
