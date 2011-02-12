@@ -1061,7 +1061,8 @@ a.button {
 }
 
 #signStepsMenu .clickArea,
-.signStepsButton .clickArea
+.signStepsButton .clickArea,
+.uploadButton .clickArea
 {
     width: 100%;
     height: 100%;
@@ -1205,6 +1206,7 @@ a.okIcon {
     position: absolute;
 }
 
+.uploadButton .icon , 
 .signStepsButton .icon
 {
     width: 11px;
@@ -1222,7 +1224,7 @@ a.okIcon {
 }
 
 /* 008 new */
-.signStepsButton .icon.arrowUp
+.uploadButton .icon.arrowUp
 {
     background-image: url(images/iconArrowUp.png);
     width: 13px;
@@ -1237,6 +1239,7 @@ a.okIcon {
 }
 
 .signStepsButton a .text,
+.uploadButton a .text,
 .saveButton a .text,
 .downloadButton a .text
 {
@@ -2305,3 +2308,12 @@ a#nextstep {
     
 }
 
+.uploadButton
+{
+    width: 120px;
+    height: 25px;
+    background-image: url(images/singStepsButton.png);
+    background-repeat: no-repeat;
+    overflow: hidden;
+    position: relative; /* 008 new */
+}
