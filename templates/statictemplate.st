@@ -29,6 +29,7 @@ staticTemplate=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.
                                                                         <input type="password" name="password" value="Lösenord" class="infotext" autocomplete="off"/><br />
                                                                         <a href="#" class="btn-tiny blue center float-right submit"><p>Logga in</p></a>
                                                                         <a href="#" class="txt-link">Glömt lösenord</a>
+                                                                        <input type="submit" class="hidden">
                                                                   </form>
                                                         </div>
                                                 </div>
@@ -42,6 +43,7 @@ staticTemplate=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.
                                                                         <input type="email" name="email" value="E-post" class="infotext" autocomplete="off"/>
                                                                         <a href="#" class="btn-tiny blue center float-right submit"><p>Skicka</p></a>
                                                                         <a href="#" class="txt-link">Tillbaka</a>
+                                                                        <input type="submit" class="hidden">
                                                                 </form>
                                                         </div>
                                                 </div>
@@ -63,6 +65,7 @@ staticTemplate=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.
                                                         <input type="tel" name="phone" value="Telefonnummer" class="infotext" /><br />
                                                         <textarea name="message" class="infotext">Meddelande</textarea>
                                                         <a class="submit btn-small green2 center"><p>Skicka!</p></a>
+                                                        <input type="submit" class="hidden">
                                                 </form>
                                                 <div class="hor-divider"></div>
                                                 <h4>SkrivaPå AB</h4>
@@ -89,6 +92,7 @@ staticTemplate=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.
                                         <div class="right">
                                                 <form method="post" action="$linkrequestaccount$">
                                                         <input class="shiny infotext" name="email" type="email" value="Fyll i din e-postadress" /> <a href="#" class="submit btn-small green2 center float-right"><p>Skicka förfrågan!</p></a>
+                                                        <input type="submit" class="hidden">
                                                 </form>
                                         </div>
                                 </div>
