@@ -607,6 +607,7 @@ color: white;
     background-color: #999;
     margin: 0 auto;
     width: 960px;
+    margin-top:10px;
 }
 
 .waiting4page
@@ -2126,7 +2127,6 @@ form {
     padding-left:19px;
     padding-right:19px;
     padding-bottom: 5px;
-    margin-bottom:10px;
     border-left: 1px solid #BDBDBD;
     border-right: 1px solid #BDBDBD;
     border-bottom: 1px solid #C0C0C0;
