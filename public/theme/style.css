@@ -913,6 +913,7 @@ a.button {
 .pagediv 
 {
     position: relative;
+    font-size: 15px; /* currently A4 is 612pt wide and for us that is 944px on screen. So to have 10pt font is to have 944px*10pt/612pt = 15px */
 }
 
 .placedfield 
