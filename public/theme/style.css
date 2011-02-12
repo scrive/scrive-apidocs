@@ -1820,9 +1820,13 @@ form {
 /* 015 new */
 #signStepsBodyFunctions.step3
 {
-   padding-top: 7px;
+   padding-top: 10px;
 }
 
+#signStepsBodyRight.step3
+{
+   padding-top: 7px;
+}
 /* 013 changed */
 #signStepsBodyFunctionsBox
 {
@@ -2119,8 +2123,15 @@ form {
 }
 
 #signStepsBody {
-    padding-left:20px;
-    padding-right:20px;
+    padding-left:19px;
+    padding-right:19px;
+    padding-bottom: 5px;
+    margin-bottom:10px;
+    border-left: 1px solid #BDBDBD;
+    border-right: 1px solid #BDBDBD;
+    border-bottom: 1px solid #C0C0C0;
+    
+    
 }
 
 #signStepsBody.personPaneLargeNumberMode span.persondetails
