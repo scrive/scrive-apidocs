@@ -33,6 +33,7 @@ wholePage=
       <head>
         <title>$title$$if(production)$$else$ (devel) $endif$</title>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <link rel="stylesheet" type="text/css" href="$prefix$/theme/newdesign.css" media="screen">
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/style.css" media="screen">
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/calendar.css" media="screen">
         <link rel="stylesheet" type="text/css" 
@@ -50,6 +51,10 @@ wholePage=
         <script src="$prefix$/tiny_mce/jquery.tinymce.js"
                 type="text/javascript"></script>
         <script src="$prefix$/js/global.js"
+                type="text/javascript"></script>
+       <script src="/js/jquery.tweet.js" 
+                type="text/javascript"></script>
+       <script src="/js/main.js" 
                 type="text/javascript"></script>
       </head>
       <body>
@@ -107,54 +112,66 @@ wholePage=
           $content:noescape()$
         </div>
       
-      
-        <div id="footerContainer">
-          <div id="footerContainer2">
-            <ul>
-              <li class="footerCategoryHeader"> 
-                SkrivaPå
-              </li>
-              <li>
-                <a href="/why.html">Fördelar</a>
-              </li>
-              <li>
-                <a href="/features.html">Funktioner</a>
-              </li>
-              <li>
-                <a href="/pricing.html">Prisplan</a>
-              </li>
-            </ul>
-
-            <ul>
-              <li class="footerCategoryHeader"> 
-                Trygghet och villkor
-              </li>
-              <li>
-                <a href="/security.html">Säkerhet</a>
-              </li>
-              <li>
-                <a href="/legal.html">Juridik</a>
-              </li>
-              <li>
-                <a href="/privacypolicy.html">Sekretesspolicy</a>
-              </li>
-              <li>
-                <a href="/termsofuse.html">Allmäna Villkor</a>
-              </li>
-            </ul>
-
-            <ul>  
-              <li class="footerCategoryHeader"> 
-                Om oss
-              </li>
-              <li>
-                <a href="/contact.html">Kontakt</a>
-              </li>
-            </ul>
-		
-	    <div id="copy">&copy; 2010 SkrivaPå</div> 
-          </div>
+   <div id="footer-container" class="newdesign">
+                        <div class="top-border"></div>
+                        <div class="spacer"></div>
+                        <div class="content">
+                                <div class="col left">
+                                        <strong>TJÄNSTEN</strong>
+                                        <ul>
+                                                <li><a href="features.html">Funktioner</a></li>
+                                                <li><a href="benefits.html">Fördelar</a></li>
+                                                <li><a href="priceplan.html?nocolumns">Prisplan</a></li>
+                                        </ul>
+                                        <br />
+                                        <strong>TRYGGHET OCH VILLKOR</strong>
+                                        <ul>
+                                                <li><a href="security.html">Säkerhet</a></li>
+                                                <li><a href="legal.html">Juridik</a></li>
+                                                <li><a href="privacypolicy.html">Sekretesspolicy</a></li>
+                                                <li><a href="terms.html">SkrivaPå Allmäna Villkor</a></li>
+                                        </ul>
+                                        <br />
+                                        <strong>SKRIVAPÅ</strong>
+                                        <ul>
+                                                <li><a href="about.html">Om SkrivaPå</a></li>
+                                                <li><a href="partners.html">Partners</a></li>
+                                                <li><a href="clients.html">Kunder</a></li>
+                                                <li><a href="board.html">Board of Advisors</a></li>
+                                        </ul>
+                                </div>
+                                <div class="col centre">
+                                        <strong>SKRIVAPÅ PÅ TWITTER</strong>
+                                        <div class="tweet">
+                                        
+                                        </div>
+                                </div>
+                                <div class="col right">
+                                        <strong>Kontakta oss för feedback, frågor & förfrågningar</strong>
+                                        <ul>
+                                                <li>
+                                                        <strong>Telefon:</strong>
+                                                        010-195 99 15
+                                                </li>
+                                                <li>
+                                                        <strong>Kontorstider:</strong>
+                                                        måndag-fredag 09-17
+                                                </li>
+                                                <li>
+                                                        <strong>Maila SkrivaPå:</strong>
+                                                        <a href="mailto:info@skrivapa.se">info@skrivapa.se</a>
+                                                </li>
+                                                <li>
+                                                        <strong>Adress:</strong>
+                                                        SkrivaPå CM AB<br />
+                                                        Saltmätargatan 19A<br />
+                                                        113 59 Stockholm
+                                                </li>
+                                        </ul>
+                                </div>
+                        </div>
         </div>
+   
         $if(production)$
         <script type="text/javascript">
           var _gaq = _gaq || [];

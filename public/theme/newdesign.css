@@ -1,0 +1,190 @@
+/* Generic CSS reset */
+.newdesign html, .newdesign  body, .newdesign  div, .newdesign  span, .newdesign  applet, .newdesign  object, .newdesign  iframe, .newdesign  h1, .newdesign  h2, .newdesign  h3, .newdesign  h4, .newdesign  h5, .newdesign  h6, .newdesign  p, .newdesign  blockquote, .newdesign  pre, .newdesign 
+a, .newdesign  abbr, .newdesign  acronym, .newdesign  address, .newdesign  big, .newdesign  cite, .newdesign  code, .newdesign  del, .newdesign  dfn, .newdesign  em, .newdesign  img, .newdesign  ins, .newdesign  kbd, .newdesign  q, .newdesign  s, .newdesign  samp, .newdesign 
+small, .newdesign  strike, .newdesign  strong, .newdesign  sub, .newdesign  sup, .newdesign  tt, .newdesign  var, .newdesign  b, .newdesign  u, .newdesign  i, .newdesign  center, .newdesign  dl, .newdesign  dt, .newdesign  dd, .newdesign  ol, .newdesign  ul, .newdesign  li, .newdesign 
+fieldset, .newdesign  form, .newdesign  label, .newdesign  legend, .newdesign  table, .newdesign  caption, .newdesign  tbody, .newdesign  tfoot, .newdesign  thead, .newdesign  tr, .newdesign  th, .newdesign  td, .newdesign 
+article, .newdesign  aside, .newdesign  canvas, .newdesign  details, .newdesign  embed, .newdesign  figure, .newdesign  figcaption, .newdesign  footer, .newdesign  header, .newdesign  hgroup, .newdesign  
+menu, .newdesign  nav, .newdesign  output, .newdesign  ruby, .newdesign  section, .newdesign  summary, .newdesign  time, .newdesign  mark, .newdesign  audio, .newdesign  video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	outline: 0;
+	/* vertical-align: baseline; */
+}
+
+body {
+  background:url("../img/bg-body.png") repeat scroll 0 0 transparent;
+}
+.newdesign {
+       color: #000000;
+       font-size:small;
+       line-height:1;
+       font-family:'Helvetica Neue','Segoe UI',arial,verdana,'lucida sans unicode',tahoma,sans-serif;
+}
+
+@font-face {
+    font-family: 'Helvetica Neue';
+    src: url('../fonts/helveticaneueltcom-bd.eot?') format('eot'),
+         url('../fonts/helveticaneueltcom-bd.woff') format('woff'),
+         url('../fonts/helveticaneueltcom-bd.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Lucida Grande';
+    src: url('../fonts/lucida_grande.eot?') format('eot'),
+         url('../fonts/lucida_grande.woff') format('woff'),
+         url('../fonts/lucida_grande.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* HTML5 display-role reset for older browsers */
+.newdesign article, .newdesign  aside, .newdesign  details, .newdesign  figcaption, .newdesign  figure, .newdesign  footer, .newdesign  header, .newdesign  hgroup, .newdesign  menu, .newdesign  nav, .newdesign section {
+	display: block;
+}
+
+.newdesign body {
+	line-height: 1;
+}
+
+.newdesign ol, .newdesign ul {
+	list-style: none;
+}
+
+.newdesign blockquote, .newdesign q {
+	quotes: none;
+}
+
+.newdesign blockquote:before, .newdesign blockquote:after, .newdesign q:before, .newdesign q:after {
+	content: '';
+	content: none;
+}
+
+.newdesign table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+
+.newdesign .content {
+margin:0 auto;
+width:940px;
+}
+
+#footer-container {
+        background: #fff;
+        height: 340px;
+        margin-top: 10px;
+}
+
+#footer-container .top-border {
+        background: url(../img/spr-border1.png) repeat-x 0 -3px;
+        height: 3px;
+}
+
+#footer-container .spacer {
+        height: 40px;
+}
+
+#footer-container .col {
+        float: left;
+}
+
+#footer-container .col strong {
+        font: 14px/22px "Copse";
+}
+
+#footer-container .left {
+        width: 240px;
+}
+
+#footer-container .centre {
+        width: 320px;
+}
+
+#footer-container .right {
+        width: 380px;
+}
+
+#footer-container .col.left ul li {
+        height: 16px;
+}
+
+#footer-container .col.left ul li a {
+        color: #539efb;
+        font: 12px "Lucida Grande";
+        text-decoration: none;
+}
+
+#footer-container .col.left ul li a:hover {
+        color: #000;
+}
+
+#footer-container .col.centre ul li {
+        margin-bottom: 20px;
+        width: 230px;
+}
+
+#footer-container .col.centre ul li p {
+        font: 12px "Lucida Grande";
+}
+
+#footer-container .col.centre ul li em {
+        color: #999;
+        font: 10px "Lucida Grande";
+        text-transform: uppercase;
+}
+
+#footer-container .col.centre ul li a {
+        color: #999;
+}
+
+#footer-container .col.centre ul li a:hover {
+        color: #000;
+}
+
+#footer-container .col.right ul li {
+        color: #999;
+        float: left;
+        font: 12px "Lucida Grande";
+        margin-top: 15px;
+        width: 160px;
+}
+
+#footer-container .col.right ul li strong {
+        color: #000;
+        display: block;
+        font: 14px "Copse";
+}
+
+#footer-container .col.right ul li a {
+        color: #999;
+        text-decoration: none;
+}
+
+#footer-container .col.right ul li a:hover {
+        color: #000;
+}
+
+
+.tweet_text {
+        color: #666;
+        font: 12px "Lucida Grande";
+}
+
+.tweet_text a {
+        text-decoration: none;
+}
+
+.tweet_text a:hover {
+        color: #000;
+}
+
+.tweet_time {
+        color: #666;
+        display: block;
+        font: 10px "Lucida Grande";
+        text-transform: uppercase;
+}

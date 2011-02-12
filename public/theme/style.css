@@ -11,7 +11,7 @@ html
 body 
 {
     /* 002 new font-family */
-    font-family: 'lucida grande', 'Segoe UI', arial, verdana, 'lucida sans unicode', tahoma, sans-serif;
+    font-family: 'Segoe UI', arial, verdana, 'lucida sans unicode', tahoma, sans-serif;
     color: #6d6e70;
     /* 003  new backgroundcolor */
     background-color: white;
@@ -30,7 +30,7 @@ a img
 #mainContainer960
 {
     width: 960px;
-    min-height: 600px;
+    min-height: 480px;
     height: auto;
     margin-left: 30px;
     margin-right: 30px;
