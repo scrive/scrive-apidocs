@@ -181,7 +181,7 @@ fieldstext fields = concatMap fieldtext fields
     pagew = 595
     pageh = 842
     topagex x w = (fromIntegral x / fromIntegral w * fromIntegral pagew)
-    topagey y h = (fromIntegral (h - y) / fromIntegral h * fromIntegral pageh) - 10 {- 10 is baseline -}
+    topagey y h = (fromIntegral (h - y) / fromIntegral h * fromIntegral pageh) - 10 + 5 {- 10 is baseline -}
 
 placeSeals :: [Field] -> RefID -> String -> RefID -> String -> RefID -> State Document ()
 placeSeals fields sealrefid sealtext paginrefid pagintext sealmarkerformrefid = do
