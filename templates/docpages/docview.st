@@ -636,19 +636,14 @@ pageDocumentForAuthorContentPreparation=
             <div id="signStepsBodyFunctions">
 	      <div id="signStepsBodyFunctionsBox">
 	        <ul>
-	          <!-- 008 changed/new -->
+
 	          <li class="plus"><a href="#add"  id="addSignatory">LÄGG TILL PERSON</a></li>
 	          <li class="minus"><a href="#remove"  id="delSignatory">TA BORT PERSON</a></li>
-	          <!-- <li  class="floppyIcon submitStepFormOnClick"><a href="#save">SPARA SOM UTKAST</a></li> -->
-	          <!-- <li  class="arrowDown"><a href="$linkissuedocpdf$" target="_blank">LADDA NED SOM PDF</a></li> -->
+
 	        </ul>
       <div class="divider"></div>
       <div class="signStepsButton" id="signStepsNextButton" >
       <a href="#nextStep" id="nextstep" class="submit btn-small green2 center"><span>Nasta steg</span></a>  
-<!--
-	<a href="#nextStep"><span class="icon arrowRight"></span></a><!-- 005 no whitespace here pleace, or one pixel of the button will be unclicable pixel in IE --><a href="#nextStep">
-	  <span class="text">Nästa steg</span>
-	</a>-->
       </div>
 	      </div>
             </div>
