@@ -76,7 +76,7 @@ wholePage=
             <span id="inviteContainer">
               <form action="/invite" method="post">
                 <div>
-                  <div>Ge bort ett premiumkonto!</div>
+                  <div>Bjud en vän på 3 månaders fri användning!</div>
                   <div><input type="email" infotext="Fyll i mottagarens e-post" name="invitedemail" autocomplete="off"/>
                        <input type="submit" value="Skicka" name="invite" class="button"/></div>
                 </div>
