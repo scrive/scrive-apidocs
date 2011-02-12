@@ -434,20 +434,21 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser,ctxtemplates})  docu
                                 renderTemplate ctxtemplates "changeEmailAddress" $  
                                          (setAttribute "linkchangeemail" $  show $ LinkChangeSignatoryEmail (documentid document) signatorylinkid) .
                                          (setAttribute "signatoryemail" $  BS.toString signatoryemail)          
-      renderTemplate ctxtemplates "showSignatoryLinkForSign" $  
-                              (setAttribute "mainclass" $         if isCurrentSignatorAuthor  then "author" else "signatory") .
-                              (setAttribute "status" $ status) .
-                              (setAttribute "signatoryname" $     packToMString signatoryname ) .
-                              (setAttribute "signatorycompany" $ packToMString signatorycompany) .
-                              (setAttribute "signatorynumber" $   packToMString signatorynumber) .
-                              (setAttribute "signatoryemail" $    packToMString signatoryemail) .
-                              (setAttribute "fields" $ if documentstatus document == Closed 
-                                                        then signatoryotherfields 
-                                                        else []) .
-                              (setAttribute "message" $  message) .
-                              (setAttribute "reminderForm" $ reminderForm) .
-                              (setAttribute "changeEmailAddress" $  changeEmailAddress) 
 
+      let  signatoryFields =  if documentstatus document == Closed then signatoryotherfields else []                                       
+      renderTemplate ctxtemplates "showSignatoryLinkForSign" $  do
+                              field "mainclass" $         if isCurrentSignatorAuthor  then "author" else "signatory"
+                              field "status" $ status
+                              field "signatoryname" $     packToMString signatoryname 
+                              field "signatorycompany" $ packToMString signatorycompany
+                              field "signatorynumber" $   packToMString signatorynumber
+                              field "signatoryemail" $    packToMString signatoryemail
+                              field "fields" $ for signatoryFields $ \sof -> do
+                                                           field "fieldlabel" (fieldlabel sof)
+                                                           field "fieldvalue" (fieldvalue sof)
+                              field "message" $  message
+                              field "reminderForm" $ reminderForm
+                              field "changeEmailAddress" $  changeEmailAddress
 
 packToMString:: BS.ByteString -> Maybe String
 packToMString x = if BS.null x then Nothing else (Just $ BS.toString x) 
