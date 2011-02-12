@@ -14,6 +14,9 @@ staticTemplate=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.
                 <div id="top-slim-container">
                         <div class="content">
                                 <a href="/" class="logo"></a>
+                                $if(logged)$
+                                <a href="$linklogout$" class="logout-button"><p>Logga ut</p></a>
+                                $else$
                                 <a href="#" class="login-button"><p>Logga in</p></a>
                                 <div class="user-container">
                                                 <div class="login-container">
@@ -43,7 +46,9 @@ staticTemplate=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.
                                                         </div>
                                                 </div>
                                         </div>
-                        </div>
+                               $endif$
+                            </div>
+                           
                 </div>
                 <div id="body-container">
                         <div class="content">
