@@ -355,7 +355,7 @@ $if(showflash)$
   </div>
   <div id="signViewNotificationContainerRight"> 
     <div class="anchor">
-      <a href="#" onclick="jQuery('#signViewNotificationContainer').fadeOut('slow'); return false;">Stäng</a>
+      <a href="#" onclick="jQuery('#signViewNotificationContainer').stop(true,true).fadeOut('slow'); return false;">Stäng</a>
     </div>
   </div>
 </div>
