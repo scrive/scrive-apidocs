@@ -604,7 +604,7 @@ pageDocumentForAuthorContentPreparation=
                       <span class="fieldvalue"></span>
 	              <img src="/theme/images/iconHand.png" class="draghandle"
 	                   alt="drag" />
-                    </span><br>
+                    </span>
                     <span class='dragtext authoremail inputWrapper'>
 	              <span style="display:none;" class="fieldid">email</span>
 	              <span style="display:none;"
@@ -621,6 +621,9 @@ pageDocumentForAuthorContentPreparation=
 	              <img src="/theme/images/iconHand.png" class="draghandle" 
                            alt="drag" />
 	            </span>
+                    <div class="otherfields">
+
+                    </div>
                   </span>
                   <div class="partyrole">
                     <a href="#" class="closelink"><small>close</small></a>
@@ -628,9 +631,6 @@ pageDocumentForAuthorContentPreparation=
                     <br>
                     <input type="radio" name="authorrole" id="authorsecretaryradio" value="secretary">Sekreterare</input>
                   </div>
-                  
-                </div>
-                <div class="otherfields">
                   
                 </div>
               </span>
@@ -816,10 +816,8 @@ pageDocumentForAuthorContentPreparation=
                alt="drag" />
 	</span>
       </span>
-
-    </div>
-    <div class="otherfields">
-      
+      <div class="otherfields">
+      </div>
     </div>
   </span>
 </div>
