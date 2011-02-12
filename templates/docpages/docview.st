@@ -62,7 +62,7 @@ uploadPageContent=
       </span> 
       <br>
       <div id="signStepsButtonContainer">
-        <div class="signStepsButton" >  
+        <div class="uploadButton" >  
           <a href="#attachFile"><span class="icon arrowUp"></span></a>
           <a href="#attachFile"> <span class="text">Ladda upp fil</span> </a> 
           <input class="multiFileInput submitOnUpload" maxlength="1" type="file" name="doc" accept="application/pdf"
