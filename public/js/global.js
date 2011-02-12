@@ -527,15 +527,15 @@ function showProperSignButtons() {
 
   if(sigfields.size() > 0) {
     // we're awaiting author mode
-    $("#signinvite").hide();
-    $("#sendinvite").show();
+    //$("#signinvite").hide();
+    //$("#sendinvite").show();
   } else if($("#authorsignatoryradio").attr("checked")) {
-    $("#signinvite").show();
-    $("#sendinvite").hide();
+    //$("#signinvite").show();
+    //$("#sendinvite").hide();
     
   } else {
-    $("#signinvite").hide();
-    $("#sendinvite").show();
+    //$("#signinvite").hide();
+    //$("#sendinvite").show();
   }
 
 }
@@ -836,11 +836,7 @@ $(document).ready(function() {
 		}
                 
 		personpane.children(".persondetails:eq(" + newidx + ")").addClass("currentPerson");
-
-          personpane.children().each(function(idx) {
-            var p = $(this);
-            p.find(".partnumber").html("PART " + (idx + 1));
-          });
+          renumberParts();
                 checkPersonPaneMode();
             });
         $("input[name='signatoryname']", "#personpane").live('change keyup', function() {
@@ -879,10 +875,7 @@ $(function() {
     var newone = children.removeClass("currentPerson").last().addClass("currentPerson");
     checkPersonPaneMode();
           
-    children.each(function(idx) {
-      var p = $(this);
-      p.find(".partnumber").html("PART " + (idx + 1));
-    });
+    renumberParts();
 
     enableInfoTextOnce(newone);
     liplus.removeClass("redborder");
@@ -890,6 +883,27 @@ $(function() {
     return false;
   });
 });
+
+function renumberParts() {
+  var personpane = $("#personpane");
+  console.log("renumber parts");
+  if($("#authorsecretaryradio").attr("checked")) {
+    console.log("sec");
+    personpane.children().each(function(idx) {
+      var p = $(this);
+      p.find(".partnumber").html("PART " + (idx));
+    });
+    console.log("dd");
+    personpane.children().first().find(".partnumber").html("SEKRETERARE");
+    console.log(personpane.children().first());
+  } else {
+    personpane.children().each(function(idx) {
+      var p = $(this);
+      p.find(".partnumber").html("PART " + (idx + 1));
+      
+    });
+  }
+}
 
 /*
  * When the author selects signatory, we have to 
@@ -904,5 +918,10 @@ $(function() {
   $("#authorsignatoryradio").click(function() {
     authorman.removeClass('redborder');
     liplus.removeClass('redborder');
+    renumberParts();
+  });
+  $("#authorsecretaryradio").click(function() {
+    
+    renumberParts();
   });
 });

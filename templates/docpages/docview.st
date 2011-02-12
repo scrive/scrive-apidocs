@@ -679,7 +679,7 @@ pageDocumentForAuthorContentPreparation=
                     <div id="datetosigncontainer" style="padding-left:15px">  </div>
                  </span>
 	        </p>
-	        
+                	        
 	                  
                 <!-- 
 	           <p class="signStepsBodySaveMethods">
@@ -693,6 +693,11 @@ pageDocumentForAuthorContentPreparation=
 	           </p>
                    -->
 	      </div>
+<div class="signStepsBodyInvation">
+                <small><a rel="#edit-invite-text-dialog" id="editinvitetextlink" href="#" style="padding-top:3px">JUSTERA HÄLSNINGSMEDDELANDE</a></small>
+                <input type="hidden" id="invitetext" name="invitetext" value="$documentinvitetext$">
+	      </div>
+              
 	    </div>
 	    
 	    
@@ -700,6 +705,10 @@ pageDocumentForAuthorContentPreparation=
 	      <div class="border left"></div>
 	      <div class="border right"></div>
               
+	      
+	      <div class="signStepsBodyTitle">
+	        <span>INBJUDAN</span>
+	      </div>
 	      
 	      <div class="signStepsBodyInvation">
                 <small><a rel="#edit-invite-text-dialog" id="editinvitetextlink" href="#" style="padding-top:3px">JUSTERA HÄLSNINGSMEDDELANDE</a></small>
@@ -738,12 +747,10 @@ pageDocumentForAuthorContentPreparation=
 	           </p>
 	           -->
 	        <!-- 013 changed sign button tag -->
-	        <input type="submit" id="signinvite" rel="#dialog-confirm-signinvite" value="" name="final"
-	               class="buttonSignLarge" />
+
                 <input type="submit" id="sendinvite"
 	        rel="#dialog-confirm-sendinvite" value = ""
-	        name="final" class="buttonSendLarge"
-	        style="display:none;" />
+	        name="final" class="buttonSendLarge" />
 	      </div>
 	    </div>
 	    
