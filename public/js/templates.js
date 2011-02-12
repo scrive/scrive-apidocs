@@ -791,7 +791,7 @@ $(function() {
     var plus = $(this);
     var persondetails = plus.parents('.persondetails');
     var otherfields = persondetails.find('.otherfields');
-    var newfield = $("<div class='newfield'><input class='newfieldbox' type='text' infotext='Type Field Name' /><a href='#' class='okIcon'>OK</a></div>");
+    var newfield = $("<div class='newfield inputWrapper'><input class='newfieldbox' type='text' infotext='Type Field Name' /><a href='#' class='okIcon'>OK</a></div>");
 
     otherfields.append(newfield);
     enableInfoTextOnce(newfield);

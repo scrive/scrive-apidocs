@@ -1084,13 +1084,7 @@ a.button {
 
 #peopleDetails
 {
-    
     min-height: 50px;
-}
-
-#peopleDetails div
-{
-    
 }
 
 #signStepsMenu div img
@@ -1589,22 +1583,8 @@ a.okIcon {
 
 }
 
-.otherfields {
-    width: 250px;
-}
-
 .newfield {
     position: relative;
-    width: 140px;
-    -moz-border-radius: 2px;
-    -webkit-border-radius: 2px;
-    -khtml-border-radius: 2px;
-    border-radius: 2px;
-    border: 1px solid #6782a5;
-    display: inline-block;
-    margin: 0;
-    padding: 0;
-    height: 22px;
 }
 
 .newfield input.newfieldbox {
@@ -1647,7 +1627,7 @@ a.okIcon {
 }
 
 .customfield input.customfieldbox {
-    width: 105px;
+    width: 95px;
     border-color: transparent;
     font-size: 12px;
     height: 18px;
@@ -1660,7 +1640,7 @@ a.okIcon {
 }
 
 .customfield {
-    width: 150px;
+    width: 140px;
     border: 1px solid #6782A5;
     margin: 3px 5px 0 0;
     height: 20px;
@@ -1682,20 +1662,23 @@ a.okIcon {
 }
 
 /* 013 changed */
-.signStepsBodyForms input,
-.signStepsBodyForms span.fieldvalue
+
+.signStepsBodyForms .inputWrapper input,
+.signStepsBodyForms .inputWrapper .fieldvalue
 {
-    margin: 0 0 0 19px;
-	padding: 0;
-	width: 130px;
+    padding-left: 19px;
+    width: 130px;
     height: 18px;
     line-height: 18px;
     font-size: 12px;
     border-color: transparent;
-	outline: none;
-	background-color: transparent;
-	overflow: hidden;
+    outline: none;
+    background-color: transparent;
+    overflow: hidden;
+    border: none;
+    margin: 0;
 }
+
 
 .dragtext {
     position: relative;
@@ -1736,18 +1719,19 @@ a.okIcon {
 
 .inputWrapper
 {
-	background-image: url(images/iconHand.png); 
-	background-repeat: no-repeat;
-	background-position: 3px 3px;
-	-moz-border-radius: 2px;
-	-webkit-border-radius: 2px;
-	-khtml-border-radius: 2px;
-	border-radius: 2px;
-	border: 1px solid #6782a5;
-	display: inline-block;
- 	margin: 3px 5px 0 0;
-	padding: 0;
- }
+    -moz-border-radius: 2px;
+    -webkit-border-radius: 2px;
+    -khtml-border-radius: 2px;
+    border-radius: 2px;
+
+    border: 1px solid #6782a5;
+    display: block;
+    float: left;
+    margin: 3px 5px 0 0;
+    padding: 0;
+    width: 130px;
+    overflow: hidden;
+}
 
 
 /* 013 changed */
@@ -1817,6 +1801,7 @@ form {
 .signStepsBodyForms
 {
     margin: 5px 0 0px 0; /* 013 changed */
+    position: relative;
 }
 
 .signViewBodyForms
@@ -2206,10 +2191,6 @@ form {
     margin-left: 4px;
 }
 
-.sigentry {
-    position: relative;
-}
-
 .persondetails {
     width: 330px;
 }
@@ -2218,16 +2199,6 @@ form {
     background-image: url(images/iconPen.png); 
     background-repeat: no-repeat;
     background-position: 3px 3px;
-}
-
-.authorname , .authorcomp , .authoremail , .authornum {
-  width: 149px;
-  overflow: hidden;
-  margin-top:2px;
-  margin-right:2px;
-  
-  display: inline-block;
-
 }
 
 .redborder 
