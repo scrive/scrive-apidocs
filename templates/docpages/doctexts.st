@@ -6,7 +6,7 @@ documentInfoText= $if(pending)$
                              Granska
                         </span><br>
                         <span class="text">
-                          Vänligen var noga med att granska dokumentet och kontrollera uppgifterna nedan innan du undertecknar.
+                          Vänligen var noga med att granska dokumentet och kontrollera parterna till höger innan du undertecknar.                          
                         </span>
 
                      $elseif(signedbyme)$
