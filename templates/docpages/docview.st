@@ -641,9 +641,8 @@ pageDocumentForAuthorContentPreparation=
 	          <li class="minus"><a href="#remove"  id="delSignatory">TA BORT PERSON</a></li>
 
 	        </ul>
-      <div class="divider"></div>
       <div class="signStepsButton" id="signStepsNextButton" >
-      <a href="#nextStep" id="nextstep" class="submit btn-small green2 center"><span>Nasta steg</span></a>  
+      <a href="#nextStep" id="nextstep" class="btn-small green2 center"><span>Nasta steg</span></a>  
       </div>
 	      </div>
             </div>
@@ -695,27 +694,10 @@ pageDocumentForAuthorContentPreparation=
 	    
 	    <div id="signStepsBodyRight" class="step3">
 	      <div class="border left"></div>
-	      <div class="border right"></div>
 	      <input type="button" class="submit btn-blue center" id="signinvite" rel="#dialog-confirm-signinvite" value="SkrivaPå" name="final" />
-	      
+	      <div class="border right"></div>
 	      <!-- 015 new -->
-
-	      <div id="signStepsBodyUploadBox" class="step3" style="display: none;">
-                
-	        <span id="signStepsBodyUploadTextContainer">
-	          <span class="text">Bifoga dokument med inbjudan</span>
-	        </span>
-	        <br>
-	        
-	        <div id="signStepsButtonContainer">
-	          <div class="signStepsButton">
-		    <a href="#attachFile" class="clickArea"></a>
-		    <a href="#attachFile"><span class="icon arrowUp"></span></a>
-                    <a href="#attachFile"> <span class="text">Ladda upp fil</span> </a>
-	          </div>
-	        </div>
-	      </div>
-	    </div>
+           </div>
 
 	    <div id="signStepsBodyFunctions" class="step3">
 	      <div class="signStepsBodyFunctionsBox options">
