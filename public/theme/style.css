@@ -782,21 +782,24 @@ img.waiting
     background-color: #FCFCFC;
 }
 
-.flashmsgbox
-{
-    background-color:#D3D3D3;
-    border:1px solid gray;
-    left:32%;
-    padding:1em;
-    position:absolute;
-    right:38%;
-    top: -4px;
-    -moz-border-radius: 4px;
-    -webkit-border-radius: 4px;
-    -khtml-border-radius: 4px;
-    border-radius: 4px;
-    display:none;
-    z-index:1;
+.flashmsgbox {
+    -moz-border-radius: 1px 1px 1px 1px;
+    background-color: white;
+    border: 1px solid #E2C822;
+    display: none;
+    height: 84px;
+    left: 0;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 10000;
+    text-align: center;
+}
+
+.flashmsgbox .flashmessage {
+    /* color: #595A59; */
+    font-size: 12px;
+    line-height: 84px;
 }
 
 /* 002 a lot of changes in #footerContainer  */
