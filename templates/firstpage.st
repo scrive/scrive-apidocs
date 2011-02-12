@@ -90,6 +90,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <em>Vi bjuder på 6 månaders fri användning nu!</em>
                                                 <form method="post" action="$linkrequestaccount$">
                                                         <input class="shiny infotext" type="email" name="email" value="Fyll i din e-postadress" /> <a href="#" class="submit btn-small green2 center"><p>Skicka förfrågan!</p></a>
+                                                        <input type="submit" class="hidden">
                                                 </form>
                                         </div>
                                 </div>
@@ -106,6 +107,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                                         <input type="password" name="password" value="Lösenord" class="infotext" autocomplete="off"/><br />
                                                                         <a href="#" class="btn-tiny blue center float-right submit"><p>Logga in</p></a>
                                                                         <a href="#" class="txt-link">Glömt lösenord</a>
+                                                                        <input type="submit" class="hidden">
                                                                 </form>
                                                         </div>
                                                 </div>
@@ -119,6 +121,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                                         <input type="email" name="email" value="E-post" class="infotext" autocomplete="off"/>
                                                                         <a href="#" class="btn-tiny blue center float-right submit"><p>Skicka</p></a>
                                                                         <a href="#" class="txt-link">Tillbaka</a>
+                                                                        <input type="submit" class="hidden">
                                                                 </form>
                                                         </div>
                                                 </div>
@@ -354,6 +357,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                         <div class="right">
                                                 <form method="post" action="$linkrequestaccount$">
                                                         <input class="shiny infotext" name="email" type="email" value="Fyll i din e-postadress" /> <a href="#" class="submit btn-small green2 center float-right"><p>Skicka förfrågan!</p></a>
+                                                        <input type="submit" class="hidden">
                                                 </form>
                                         </div>
                                 </div>

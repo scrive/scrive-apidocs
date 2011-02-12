@@ -18,7 +18,7 @@ function openModal(html, o) {
 		'height': o.height,
 		'width': o.width,
 		'margin-left': -(o.width/2),
-		'margin-top': -(o.height/2),
+		'margin-top': -(o.height/2)
 	})
 	.append('<div class="modal-header">SkrivaPå<a href="#" class="btn-tiny blue center">Stäng</a></div><div class="modal-top">' + o.topTxt + '</div><div class="modal-body">' + html + '</div><div class="modal-footer"></div></div>')
 	.appendTo('body');
