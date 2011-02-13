@@ -1969,7 +1969,7 @@ form {
     /* 002 float: left;*/
     margin-top: 30px;
     
-    background: none repeat scroll 0 0 #F2F2F2;
+    background: none repeat scroll 0 0 white;
     -moz-border-radius: 4px;
     -moz-box-sizing: border-box;
     border-color: #999999;
@@ -2385,4 +2385,10 @@ body {
 .newdesign .content {
 margin:0 auto;
 width:940px;
+}
+
+input#cancel {
+    color: #2E99D3;
+    background-color: transparent;
+    border:0;
 }
