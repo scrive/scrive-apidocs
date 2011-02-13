@@ -1936,6 +1936,10 @@ instance MayBeAuthor SignatoryLink where
                    Just s -> unSignatory s == ( unAuthor . documentauthor $ d)
                    Nothing -> False
 
+instance (MayBeAuthor a) => MayBeAuthor (Maybe a) where
+  isAuthor d (Just s) = isAuthor d s
+  isAuthor _ _ = False
+
 anyInvitationUndelivered =  not . Prelude.null . undeliveredSignatoryLinks
 undeliveredSignatoryLinks doc =  filter ((== Undelivered) . invitationdeliverystatus) $ documentsignatorylinks doc
 
