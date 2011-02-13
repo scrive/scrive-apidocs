@@ -401,7 +401,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
       <span class="Xinvited">Invited</span> med e-post.</p>
     </div>
     <div class="buttonbox" >
-      <input type="hidden" name="final" value="automatic">
+      <input type="hidden" name="sign" value="automatic">
       <button class="close button" type="button"> Avbryt </button>
       <button class="submiter button" type="button"> Underteckna </button>
     </div>
