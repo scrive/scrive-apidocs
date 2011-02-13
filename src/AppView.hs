@@ -4,7 +4,6 @@ module AppView( TopMenu(..)
               , htmlHeadBodyWrapIO
               , poweredBySkrivaPaPara
               -- , loginBox
-              , pageErrorReport
               , renderFromBody
               , pageForgotPassword
               , pageForgotPasswordConfirm
@@ -12,7 +11,6 @@ module AppView( TopMenu(..)
               , signupConfirmPageView
               , pageLogin
               , pageFromBody'
-              , uploadPage
               , simpleResponse 
               , firstPage
               , staticTemplate
@@ -63,29 +61,6 @@ data TopMenu = TopNew | TopDocument | TopAccount | TopNone | TopEmpty
 kontrakcja :: [Char]
 kontrakcja = "SkrivaPå" 
 
-pageErrorReport :: (XMLGenerator m,EmbedAsAttr m (Attr [Char] KontraLink)) 
-            => Context 
-            -> Request 
-            -> XMLGenT m (HSX.XML m)
-pageErrorReport (Context {ctxmaybeuser}) request = 
-  <div>
-   <p>Ett fel har uppstått. Det beror inte på dig. Det beror på oss. Vi tar 
-      hand om problemet så snart vi kan. Tills vi fixat problemet, vänligen 
-      försök igen genom att börja om från <a href="/">startsidan</a>.</p>
-   <hr/>
-   <p>Information useful to developers:</p>
-   <% case ctxmaybeuser of
-           Just user -> <p>Logged in as: <% user %></p>
-           Nothing -> <p>Not logged in</p>
-   %>
-   <p><% request %></p>
-   <p>HTTP Headers:</p>
-   <p><% Map.elems (rqHeaders request) %></p> 
-   <p>HTTP Cookies:</p>
-   <p><% map show $ rqCookies request %></p> 
-  </div>  
-
-
 -- * Main Implementation
 
 
@@ -125,25 +100,25 @@ pageFromBody' :: (EmbedAsChild (HSPT' IO) xml)
               -> xml
               -> HSP XML
 pageFromBody' prefix 
-              Context { ctxmaybeuser
+              ctx@Context { ctxmaybeuser
                       , ctxflashmessages
                       , ctxproduction
                       , ctxtemplates
                       }
                   topMenu title body = do
                     content <- liftIO $ renderHSPToString <div id="mainContainer"><% body %></div>
-                    wholePage <- liftIO $ renderTemplate ctxtemplates "wholePage" $
-                                 (setAttribute "production" ctxproduction) .
-                                 (setAttribute "uploadTab" $ uploadTabInfo ctxmaybeuser topMenu) .
-                                 (setAttribute "documentTab" $ documentTabInfo ctxmaybeuser topMenu) .
-                                 (setAttribute "content" content) .
-                                 (setAttribute "prefix" prefix) .
-                                 (setAttribute "flashmessages" (map (BSC.toString . unFlashMessage) ctxflashmessages)) .
-                                 (if prefix=="" then id else setAttribute "protocol" "http:") .
-                                 (setAttribute "title" title) .
-                                 (maybe (setAttribute "userfullname" False) 
-                                        (\user -> setAttribute "userfullname" (userfullname user)) 
-                                        ctxmaybeuser)
+                    wholePage <- liftIO $ renderTemplate ctxtemplates "wholePage" $ do
+                                  field "production" ctxproduction
+                                  field "uploadTab" $ uploadTabInfo ctxmaybeuser topMenu
+                                  field "documentTab" $ documentTabInfo ctxmaybeuser topMenu
+                                  field "content" content
+                                  field "prefix" prefix
+                                  field "flashmessages" $ map (BSC.toString . unFlashMessage) ctxflashmessages
+                                  field "protocol" $ if prefix=="" then "" else "http:"
+                                  field "title" title
+                                  field "userfullname" $ fmap userfullname ctxmaybeuser
+                                  mainLinksFields 
+                                  contextInfoFields ctx
                     return $ cdata wholePage
 
 
@@ -167,13 +142,7 @@ pageLogin ctx referer = do
                             (setAttribute "referer" referer)
 
 
-uploadPage:: KontrakcjaTemplates -> IO String
-uploadPage templates = do
-                   uploadBox <- liftIO $ renderTemplate templates "uploadPageContent" ()
-                   liftIO $ renderTemplate templates "creatingDocumentFrame" $ 
-                                                       (setAttribute  "steps" uploadBox) .
-                                                       (setAttribute  "step1" True) .
-                                                       (setAttribute  "submitFormOnNext" True) 
+
                                                        
                
 
@@ -209,6 +178,11 @@ mainLinksFields = do
                      field "linkforgotenpassword" $ show LinkForgotPassword
                      field "linkrequestaccount" $ show LinkRequestAccount
                      field "linkquestion" $ show LinkAskQuestion
+                     field "linkaccount" $ show LinkAccount
+                     field "linkmain" $ show LinkMain
+                     field "linkissue" $ show LinkIssue
+                     field "linkinvite" $ show LinkInvite
+                     
 
 
 contextInfoFields::Context -> Fields

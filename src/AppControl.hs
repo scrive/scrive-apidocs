@@ -224,9 +224,7 @@ handleRoutes = msum [
 handleHomepage = do
   ctx@Context{ctxmaybeuser, ctxtemplates} <- get
   case ctxmaybeuser of
-    Just user -> UserControl.checkUserTOSGet $ do
-                       content <- liftIO $ V.uploadPage ctxtemplates 
-                       V.renderFromBody ctx V.TopNew V.kontrakcja (cdata content)
+    Just user -> UserControl.checkUserTOSGet $ DocControl.showMainPage user 
     Nothing -> V.simpleResponse =<< (liftIO $ firstPage ctx)
 
 -- uh uh, how to do that in correct way?

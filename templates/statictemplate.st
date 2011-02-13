@@ -6,52 +6,18 @@ staticTemplate=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.
                 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
                 <link href='http://fonts.googleapis.com/css?family=Copse' rel='stylesheet' type='text/css'>
                 <link href="/css/main.css" rel="stylesheet" type="text/css" />
+                <link rel="stylesheet" type="text/css" href="$prefix$/theme/newdesign.css" media="screen">
                 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.0/jquery.min.js" type="text/javascript"></script>
+                <script src="$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js" type="text/javascript"></script>
                 <script src="/js/jquery.tweet.js" type="text/javascript"></script>
+                <script src="$prefix$/js/jquery.tools.min.js" type="text/javascript"></script>
                 <script src="/js/main.js" type="text/javascript"></script>
+                <script src="/js/global.js" type="text/javascript"></script>
+
+        
         </head>
         <body>
-                <div id="top-slim-container">
-                        <div class="content">
-                                <a href="/" class="logo"></a>
-                                $if(logged)$
-                                <a href="$linklogout$" class="logout-button"><p>Logga ut</p></a>
-                                $else$
-                                <a href="#" class="login-button"><p>Logga in</p></a>
-                                <div class="user-container">
-                                                <div class="login-container">
-                                                        <div class="top">
-                                                                <p>Logga in</p>
-                                                        </div>
-                                                        <div class="body">
-                                                                  <form method="post" action="$linklogin$">
-                                                                        <input type="email" name="email" value="E-post" class="infotext" autocomplete="off"/><br />
-                                                                        <input type="password" name="password" value="Lösenord" class="infotext" autocomplete="off"/><br />
-                                                                        <a href="#" class="btn-tiny blue center float-right submit"><p>Logga in</p></a>
-                                                                        <a href="#" class="txt-link">Glömt lösenord</a>
-                                                                        <input type="submit" class="hidden">
-                                                                  </form>
-                                                        </div>
-                                                </div>
-                                                <div class="recovery-container">
-                                                        <div class="top">
-                                                                <p>Lösenord</p>
-                                                        </div>
-                                                        <div class="body">
-                                                                <form method="post" action="$linkforgotenpassword$">
-                                                                        <p class="float-left">&nbsp;Skicka nytt lösenord</p>
-                                                                        <input type="email" name="email" value="E-post" class="infotext" autocomplete="off"/>
-                                                                        <a href="#" class="btn-tiny blue center float-right submit"><p>Skicka</p></a>
-                                                                        <a href="#" class="txt-link">Tillbaka</a>
-                                                                        <input type="submit" class="hidden">
-                                                                </form>
-                                                        </div>
-                                                </div>
-                                        </div>
-                               $endif$
-                            </div>
-                           
-                </div>
+                $header()$
                 <div id="body-container">
                         <div class="content">
                             $if(!nocolumns)$

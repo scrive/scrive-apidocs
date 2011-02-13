@@ -28,6 +28,7 @@ module Doc.DocView( emptyDetails
               , mailDocumentClosedForAuthor
               , isNotLinkForUserID
               , signatoryDetailsFromUser
+              , uploadPage
               ) where
 import Doc.DocState
 import qualified Data.ByteString.UTF8 as BS
@@ -518,12 +519,15 @@ documentInfoText templates document siglnk author = do
     field "signed" $ documentstatus document == Closed
     field "awaitingauthor" $ documentstatus document == AwaitingAuthor
     field "authorname" $ BS.toString $ userfullname author
-                                               
-                                                                                  
-
-
-
-
+ 
+ 
+uploadPage:: KontrakcjaTemplates -> IO String
+uploadPage templates = do
+                   uploadBox <- renderTemplate templates "uploadPageContent" ()
+                   renderTemplate templates "creatingDocumentFrame" $ 
+                                                       (setAttribute  "steps" uploadBox) .
+                                                       (setAttribute  "step1" True) .
+                                                       (setAttribute  "submitFormOnNext" True) 
 
 --We keep this javascript code generation for now
 jsArray :: [[Char]] -> [Char]

@@ -90,16 +90,6 @@ a img
     background-color: #87879b;
 }
 
-#inviteContainer input[type=submit]:hover
-{
-    background-color: #d9dae3;
-}
-
-#inviteContainer input[type=submit]:active
-{
-    background-color: #b3b5bd;
-}
-
 #loginContainer input[type=submit]:active
 {
     background-color: #43434e;
@@ -463,17 +453,6 @@ a img
     width: 320px;
     text-align: right;
 }
-
-#inviteContainer
-{
-    position: absolute;
-    right: 250px;
-    top: 22px;
-    width: 400px;
-    text-align: left;
-    font-size: 11px;
-}
-
 
 /* 002 update values */
 .contactabout
@@ -2218,11 +2197,6 @@ form {
   margin-top:1px;
 }
 
-#inviteContainer input[type=email]{
-  width:200px;
-}
-
-
 .btn-small {
 	background: url(../img/btn-small.png) 0 0 no-repeat;
 	color: #fff;
@@ -2331,4 +2305,81 @@ a#nextstep {
     background-repeat: no-repeat;
     overflow: hidden;
     position: relative; /* 008 new */
+}
+
+
+
+/* Generic CSS reset */
+.newdesign html, .newdesign  body, .newdesign  div, .newdesign  span, .newdesign  applet, .newdesign  object, .newdesign  iframe, .newdesign  h1, .newdesign  h2, .newdesign  h3, .newdesign  h4, .newdesign  h5, .newdesign  h6, .newdesign  p, .newdesign  blockquote, .newdesign  pre, .newdesign 
+a, .newdesign  abbr, .newdesign  acronym, .newdesign  address, .newdesign  big, .newdesign  cite, .newdesign  code, .newdesign  del, .newdesign  dfn, .newdesign  em, .newdesign  img, .newdesign  ins, .newdesign  kbd, .newdesign  q, .newdesign  s, .newdesign  samp, .newdesign 
+small, .newdesign  strike, .newdesign  strong, .newdesign  sub, .newdesign  sup, .newdesign  tt, .newdesign  var, .newdesign  b, .newdesign  u, .newdesign  i, .newdesign  center, .newdesign  dl, .newdesign  dt, .newdesign  dd, .newdesign  ol, .newdesign  ul, .newdesign  li, .newdesign 
+fieldset, .newdesign  form, .newdesign  label, .newdesign  legend, .newdesign  table, .newdesign  caption, .newdesign  tbody, .newdesign  tfoot, .newdesign  thead, .newdesign  tr, .newdesign  th, .newdesign  td, .newdesign 
+article, .newdesign  aside, .newdesign  canvas, .newdesign  details, .newdesign  embed, .newdesign  figure, .newdesign  figcaption, .newdesign  footer, .newdesign  header, .newdesign  hgroup, .newdesign  
+menu, .newdesign  nav, .newdesign  output, .newdesign  ruby, .newdesign  section, .newdesign  summary, .newdesign  time, .newdesign  mark, .newdesign  audio, .newdesign  video {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        outline: 0;
+        /* vertical-align: baseline; */
+}
+
+body {
+  background:url("../img/bg-body.png") repeat scroll 0 0 transparent;
+}
+.newdesign {
+       color: #000000;
+       font-size:small;
+       line-height:1;
+       font-family:'Helvetica Neue','Segoe UI',arial,verdana,'lucida sans unicode',tahoma,sans-serif;
+}
+
+@font-face {
+    font-family: 'Helvetica Neue';
+    src: url('../fonts/helveticaneueltcom-bd.eot?') format('eot'),
+         url('../fonts/helveticaneueltcom-bd.woff') format('woff'),
+         url('../fonts/helveticaneueltcom-bd.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Lucida Grande';
+    src: url('../fonts/lucida_grande.eot?') format('eot'),
+         url('../fonts/lucida_grande.woff') format('woff'),
+         url('../fonts/lucida_grande.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* HTML5 display-role reset for older browsers */
+.newdesign article, .newdesign  aside, .newdesign  details, .newdesign  figcaption, .newdesign  figure, .newdesign  footer, .newdesign  header, .newdesign  hgroup, .newdesign  menu, .newdesign  nav, .newdesign section {
+        display: block;
+}
+
+.newdesign body {
+        line-height: 1;
+}
+
+.newdesign ol, .newdesign ul {
+        list-style: none;
+}
+
+.newdesign blockquote, .newdesign q {
+        quotes: none;
+}
+
+.newdesign blockquote:before, .newdesign blockquote:after, .newdesign q:before, .newdesign q:after {
+        content: '';
+        content: none;
+}
+
+.newdesign table {
+        border-collapse: collapse;
+        border-spacing: 0;
+}
+
+
+.newdesign .content {
+margin:0 auto;
+width:940px;
 }

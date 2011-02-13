@@ -40,7 +40,7 @@ wholePage=
               href="$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/ui-lightness/jquery-ui.css"
               media="screen">
         
-        <script src="$protocol$//ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js"
+        <script src="$protocol$//ajax.googleapis.com/ajax/libs/jquery/1.5.0/jquery.js"
                 type="text/javascript"></script>
         <script src="$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js"
                 type="text/javascript"></script>
@@ -58,57 +58,14 @@ wholePage=
                 type="text/javascript"></script>
       </head>
       <body>
-        <div id="headerWide"></div>
+  
+        $header()$
         <div id="mainContainer960">
           <div class="flashmsgbox">
             $flashmessages:{ msg | <div class="flashmessage">$msg:noescape()$</div> }$
           </div>
    
-          <div id="headerContainer">
-            <a href="/">
-              $if(production)$
-              <img id="logosmall" src="/theme/images/logosmall.png" alt="Liten logga">
-              $else$
-              <span id="logosmall">Staging area</span>
-              $endif$
-            </a> 
-            $if(userfullname)$
-            <span id="inviteContainer">
-              <form action="/invite" method="post">
-                <div>
-                  <div>Bjud en vän på 3 månaders fri användning!</div>
-                  <div><input type="email" infotext="Fyll i mottagarens e-post" name="invitedemail" autocomplete="off"/>
-                       <input type="submit" value="Skicka" name="invite" class="button"/></div>
-                </div>
-              </form>
-            </span>
-            <span id="userMenu">$userfullname$ | <a href="/account">Konto</a> | <a href="/logout">Logga ut</a></span>
-            $else$
-            <div id="loginContainer">
-	      <form action="/login" method="post"> 
-	        <div> 
-	          <input type="email" infotext="Användarnamn" name="email" autocomplete="off"> 
-	          <input type="password" name="password" infotext="password" autocomplete="off"><br> 
-	          <a href="/amnesia"> Glömt lösenord</a> 
-                  <input type="submit" value="Logga in" name="login" class="button"> 
-	        </div> 
-	      </form> 
-            </div> 
-            $endif$     
-           <div id="nav">
-           $if(uploadTab + documentTab)$
-                 <ul>
-               $if(uploadTab)$
-                  <li>  <a href="$uploadTab.0$" $if(uploadTab.1)$ class="active" $endif$>Skapa avtal</a></li>
-               $endif$
-               $if(documentTab)$
-                   <li>  <a href="$documentTab.0$" $if(documentTab.1)$ class="active" $endif$>Arkiv</a></li>
-               $endif$ 
-                 </ul>
-           $endif$
-            </div>
-            <div class="clearboth"></div>
-          </div>
+         
           $content:noescape()$
         </div>
       
@@ -212,3 +169,65 @@ loginBox=
       </form>
     </div>
 
+####
+header=
+ <div id="top-slim-container" class="newdesign">
+                        <div class="content">
+                                <a href="/" class="logo"></a>
+                                $if(logged)$
+                               <span id="inviteContainer">
+                                 <form method="post" action="$linkinvite$" class="MultiFile-intercepted">
+                                 <div>
+                                  <div>
+                                       <input type="email" autocomplete="off" name="invitedemail" infotext="Bjud en vän på 3 månaders fri användning!" class="grayed">
+                                       <a class="btn-tiny blue center float-right submit" href="#"><p>Skicka</p></a>
+                                       <input type="submit" class="hidden" name="invite" value="Skicka">
+                                  </div>
+                                 </div>
+                                 </form>
+                                </span>
+                                 
+                                <a href="$linklogout$" class="logout-button"><p>Logga ut</p></a>
+                                <a href="$linkaccount$" class="document-button"><p>Konto</p></a>
+                                <a href="$linkissue$" class="document-button"><p>Arkiv</p></a>
+                                <a href="$linkmain$" class="document-button"><p>Skapa</p></a>
+
+                                $else$
+                                <a href="#" class="login-button"><p>Logga in</p></a>
+                                <div class="user-container">
+                                                <div class="login-container">
+                                                        <div class="top">
+                                                                <p>Logga in</p>
+                                                        </div>
+                                                        <div class="body">
+                                                                  <form method="post" action="$linklogin$">
+                                                                        <input type="email" name="email" value="E-post" class="infotext" autocomplete="off"/><br />
+                                                                        <input type="password" name="password" value="Lösenord" class="infotext" autocomplete="off"/><br />
+                                                                        <a href="#" class="btn-tiny blue center float-right submit"><p>Logga in</p></a>
+                                                                        <a href="#" class="txt-link">Glömt lösenord</a>
+                                                                        <input type="submit" class="hidden">
+                                                                  </form>
+                                                        </div>
+                                                </div>
+                                                <div class="recovery-container">
+                                                        <div class="top">
+                                                                <p>Lösenord</p>
+                                                        </div>
+                                                        <div class="body">
+                                                                <form method="post" action="$linkforgotenpassword$">
+                                                                        <p class="float-left">&nbsp;Skicka nytt lösenord</p>
+                                                                        <input type="email" name="email" value="E-post" class="infotext" autocomplete="off"/>
+                                                                        <a href="#" class="btn-tiny blue center float-right submit"><p>Skicka</p></a>
+                                                                        <a href="#" class="txt-link">Tillbaka</a>
+                                                                        <input type="submit" class="hidden">
+                                                                </form>
+                                                        </div>
+                                                </div>
+                               $endif$
+                            </div>
+                           
+                </div>
+
+            <div class="clearboth"></div>
+          </div>
+####
