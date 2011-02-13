@@ -2180,6 +2180,12 @@ form {
     background-position: 3px 3px;
 }
 
+.newfield input.newfieldbox {
+    background-image: url(images/iconPen.png); 
+    background-repeat: no-repeat;
+    background-position: 3px 3px;
+}
+
 .redborder 
 {
     border:1px solid red;
