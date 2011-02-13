@@ -278,7 +278,7 @@ mailDocumentClosedForSignatories templates (Context {ctxhostpart}) document@Docu
 mailDocumentClosedForAuthor ::  KontrakcjaTemplates -> Context -> BS.ByteString -> Document  -> IO Mail
 mailDocumentClosedForAuthor templates (Context {ctxhostpart}) authorname  document@Document{documenttitle} = 
     do
-     title <- renderTemplate templates "mailDocumentAwaitingForAuthorTitle" [("documenttitle",BS.toString  documenttitle )] 
+     title <- renderTemplate templates "mailDocumentClosedForAuthorTitle" [("documenttitle",BS.toString  documenttitle )] 
      partylist <- renderListTemplate templates $  map (BS.toString . personname') $ partyList document
      content <- renderTemplate templates "mailDocumentClosedForAuthorContent" [("authorname",BS.toString authorname),
                                                                      ("documenttitle", BS.toString documenttitle ),
