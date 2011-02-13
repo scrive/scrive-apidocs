@@ -516,10 +516,9 @@ $(function () {
 function showProperSignButtons() {
   var sigfields = $(".dragfield").filter(function() {
     var field = $(this);
-    var dragstatus = getDragStatus(field);
     var fillstatus = getFillStatus(field);
 
-    if(!isStandardField(field) && dragstatus === 'placed' && fillstatus === 'sig') {
+    if(!isStandardField(field) && fillstatus === 'sig') {
       return true;
     } else {
       return false;
