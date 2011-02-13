@@ -7,7 +7,7 @@ morethenonelist=
     $list:strong(); separator=", "$ och $last:strong()$
 ###
 ###
-nomoretheneonelist=
+nomorethanonelist=
     $list:strong()$
 ###
 customFooter=
