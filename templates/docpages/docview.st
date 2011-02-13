@@ -642,7 +642,7 @@ pageDocumentForAuthorContentPreparation=
 
 	        </ul>
       <div class="signStepsButton" id="signStepsNextButton" >
-      <a href="#nextStep" id="nextstep" class="btn-small green2 center"><span>Nasta steg</span></a>  
+      <a href="#nextStep" id="nextstep" class="btn-small green2 center"><span>Nästa steg</span></a>  
       </div>
 	      </div>
             </div>
