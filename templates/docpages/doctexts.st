@@ -1,6 +1,6 @@
 ##########
-documentInfoText= $if(pending)$
-
+documentInfoText=
+                $if(pending)$
                      $if(notsignedbyme)$    
                         <span class="header">
                              Granska

@@ -474,10 +474,7 @@ handleSignShow documentid
 
   let authorname = prettyName author
       invitedname = signatoryname $ signatorydetails $ invitedlink 
-  if wassigned || documentstatus document /= Pending
-   then renderFromBody ctx TopNone kontrakcja
-                       (fmap cdata $ pageDocumentForViewer ctx document author)
-   else renderFromBody ctx TopNone kontrakcja 
+  renderFromBody ctx TopNone kontrakcja 
                        (fmap cdata $ pageDocumentForSign (LinkSignDoc document invitedlink) 
                                             document ctx invitedlink wassigned author)
 

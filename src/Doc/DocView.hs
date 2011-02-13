@@ -267,7 +267,7 @@ pageDocumentForAuthor ctx
      invitationMailContent <- mailInvitationToSignContent (ctxtemplates ctx) False ctx document author Nothing
      restartForm <-   renderActionButton  (ctxtemplates ctx) (LinkRestart documentid) "restartButtonName"
      cancelMailContent <- mailCancelDocumentByAuthorContent  (ctxtemplates ctx) False Nothing ctx document author
-     documentinfotext <- documentInfoText (ctxtemplates ctx) document Nothing author
+     documentinfotext <- documentInfoText (ctxtemplates ctx) document (find (isMatchingSignatoryLink author) documentsignatorylinks) author
      renderTemplate (ctxtemplates ctx) "pageDocumentForAuthorContent" $  
                                                               (setAttribute "documenttitle" $ BS.toString documenttitle) .
                                                               (setAttribute "documentid" $ show documentid) .
@@ -506,20 +506,33 @@ pageDocumentForSign action document ctx  invitedlink wassigned author =
 
 --Helper to get document after signing info text
 documentInfoText::KontrakcjaTemplates->Document->(Maybe SignatoryLink) -> User -> IO String
-documentInfoText templates document siglnk author = do
-  print siglnk
-  
+documentInfoText templates document siglnk author =
   renderTemplate templates "documentInfoText" $ do
-    field "notsignedbyme" $ isNothing $ join $ fmap maybesigninfo siglnk
-    field "signedbyme" $ isJust $ join $ fmap maybesigninfo siglnk
+    documentInfoFields document author 
+    signedByMeFields siglnk
+    
+    
+
+documentInfoFields::Document -> User -> Fields   
+documentInfoFields  document author  = do 
+    field "authorname" $ BS.toString $ userfullname author    
+    documentStatusFields document
+    
+documentStatusFields::Document -> Fields    
+documentStatusFields document  = do    
     field "pending" $ documentstatus document == Pending
     field "cancel" $ documentstatus document ==  Canceled
     field "timedout" $ documentstatus document == Timedout
     field "rejected" $ documentstatus document == Rejected
     field "signed" $ documentstatus document == Closed
     field "awaitingauthor" $ documentstatus document == AwaitingAuthor
-    field "authorname" $ BS.toString $ userfullname author
- 
+    
+
+signedByMeFields::(Maybe SignatoryLink) -> Fields
+signedByMeFields siglnk = do 
+    field "notsignedbyme" $ (isJust siglnk) && (isNothing $ maybesigninfo $ fromJust siglnk)
+    field "signedbyme" $ (isJust siglnk) && (isJust $ maybesigninfo $ fromJust siglnk)
+    
  
 uploadPage:: KontrakcjaTemplates -> IO String
 uploadPage templates = do

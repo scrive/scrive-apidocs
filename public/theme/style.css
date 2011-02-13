@@ -1257,7 +1257,7 @@ a.okIcon {
 #signStepsBodyUploadBox
 {
     width: 250px;
-    margin: 7px auto 0 auto;;
+    margin: 7px auto 7px auto;
     border-top: 1px solid #E0E0E0;
     border-right: 1px solid #E0E0E0;
     border-bottom: 1px solid #E8E5E5;
@@ -1356,6 +1356,7 @@ a.okIcon {
     margin-top: 15px;
     margin-left: 5px;
     min-height: 126px;
+    margin-bottom: 10px;
 }
 
 .forauthor .signViewBodyRight{
