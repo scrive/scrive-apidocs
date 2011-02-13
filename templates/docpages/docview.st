@@ -831,12 +831,17 @@ pageDocumentForAuthorContentPostPreparation=
       <span id="signViewBodyLeftTextContainer"> 
         $documentinfotext:noescape()$
         $if(canberestarted)$
-       <BR/><BR/>
-       $restartForm:noescape()$
-       $endif$ 
-       </span> 
-
-
+        <BR/><BR/>
+        $restartForm:noescape()$
+        $endif$
+        $if(pending)$
+        $if(!awaitingauthor)$
+        <input class="cancel bigbutton" type="button"
+               name="cancel" value="Återkalla inbjudan" id="cancel"
+               rel="#cancel-by-author-dialog"></input>
+        $endif$
+        $endif$
+      </span> 
     </div>
     $signatories:noescape()$
 
@@ -872,11 +877,6 @@ $if(awaitingauthor)$
              rel="#cancel-by-author-dialog">  
       <script type="text/javascript" src="/js/signatory.js"
               ></script>
-      $if(canberestarted)$
-
-      $restartForm:noescape()$
-      $endif$ 
-
     </div>
   </div>
 </div>
