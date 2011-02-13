@@ -376,7 +376,20 @@ $(function () {
 	$("#signbankid").overlay({ mask: standardDialogMask
 		    });
     
-    $("#cancel, .cancel, #signByAuthor").overlay({	mask: standardDialogMask    });
+    $("#cancel, .cancel").overlay({	mask: standardDialogMask    });
+
+  $("#signByAuthor").overlay({	
+    mask: standardDialogMask,
+    onBeforeLoad: function () {
+      if (!sigFieldsValidation()) return false;
+      var guardChecked = $(".signGuard:checked").size()>0;
+      if (!guardChecked) 
+      { $(".signGuard").parent().css("border","1px dotted red");
+        $(".signGuard").change(function(){$(this).parent().css("border","")});
+        //addFlashMessage("need text");
+        return false;
+      } 
+    }});
     
     $("#toscontainer").overlay({mask: standardDialogMask,
                 load: true

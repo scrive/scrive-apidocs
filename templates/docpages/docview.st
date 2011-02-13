@@ -272,6 +272,11 @@ pageDocumentForSignButtons=
 </div>
 ####
 pageDocumentForSignContent=
+  <script type="text/javascript">
+    jQuery(function() {
+      addFlashMessage("Underteckna dokumentet längst ned på sidan.");
+    });
+  </script>
   <div class="localdialogs">
     <div style="display: none">
       $helpers:noescape()$
@@ -342,19 +347,7 @@ pageDocumentForSignContent=
     $signatories:noescape()$
   </div>
 </div>
-$if(showflash)$
-<div id="signViewNotificationContainer"> 
-  <div id="signViewNotificationContainerLeft"> 
-    <div class="title">Underteckna dokumentet längst ned på sidan.</div>
-    
-  </div>
-  <div id="signViewNotificationContainerRight"> 
-    <div class="anchor">
-      <a href="#" onclick="jQuery('#signViewNotificationContainer').stop(true,true).fadeOut('slow'); return false;">Stäng</a>
-    </div>
-  </div>
-</div>
-$endif$
+
 <div id="documentBox">
   <div class="waiting4page"></div>
 </div>
@@ -365,7 +358,9 @@ $endif$
     </div>
   </div>
   <div id="signViewBottomBoxContainerRight"> 
-    <input class="button" type="submit" name="sign" value="Underteckna!" id="sign" rel="#dialog-confirm-sign">
+  <input type="button" class="submit btn-blue center" value="SkrivaPå" id="sign" rel="#dialog-confirm-sign" name="sign" />
+<!--    <input class="button" type="submit" name="sign" value="SkrivaPå" id="sign" rel="#dialog-confirm-sign"> -->
+        <br>
     <input class="bigbutton" type="submit" name="cancel" value="Avvisa" rel="#dialog-confirm-cancel" id="cancel">
   </div>
 </div>
@@ -834,35 +829,6 @@ pageDocumentForAuthorContentPostPreparation=
         $documentinfotext:noescape()$
       </span> 
 
-  <div> 
-   $if(awaitingauthor)$
-      <BR/>
-      <BR/>
-      <input class="button" type="submit" name="sign" value="Underteckna!" id="signByAuthor" rel="#dialog-confirm-sign-by-author">
-      <input class="button cancel bigbutton" type="button"
-      name="cancel" value="Återkalla inbjudan"
-      rel="#cancel-by-author-dialog">  
-      <script type="text/javascript" src="/js/signatory.js" ></script>
-   $$
-   $elseif(pending)$
-      <script type="text/javascript" src="/js/signatory.js" ></script>
-      $if(!timetosignset)$
-      <span>
-        <BR/>
-        <BR/>
-        <input class="button cancel bigbutton" type="button" name="cancel" value="Återkalla inbjudan"  rel="#cancel-by-author-dialog">    
-      </span>
-    $else$
-
-    <span>Du kan inte återkalla inbjudan före förfallodatum.</span>
-   $endif$   
-   $endif$      
-   $if(canberestarted)$
-   <BR/>
-   <BR/>
-   $restartForm:noescape()$
-   $endif$ 
-  </div>
 
     </div>
     $signatories:noescape()$
@@ -876,10 +842,35 @@ pageDocumentForAuthorContentPostPreparation=
   </script>
 
   <!-- 
-    I need to turn this stuff off since it brakes js now. TODO!!!!  
-    <script type="text/javascript" src="/js/signatory.js"></script>
-  -->
+     I need to turn this stuff off since it brakes js now. TODO!!!!  
+     <script type="text/javascript" src="/js/signatory.js"></script>
+     -->
   <div class="waiting4page"></div>
+</div>
+<div id="signViewBottomBox"> 
+  <div id="signViewBottomBoxContainerLeft"> 
+    <div id="signViewBottomBoxContainerLeftText"> 
+      <input type="checkbox" class="signGuard" autocomplete="off"> Jag intygar att jag har granskat och förstått innehållet i dokumentet. Jag intygar även att samtliga parter är korrekta och att jag har befogenhet att skriva på.
+    </div>
+  </div>
+  $if(awaitingauthor)$
+  <div id="signViewBottomBoxContainerRight"> 
+    <div> 
+      <input type="button" class="submit btn-blue center" value="SkrivaPå" id="signByAuthor" rel="#dialog-confirm-sign-by-author" name="sign" />
+      <!--      <input class="button" type="submit" name="sign" value="Underteckna!" id="signByAuthor" rel="#dialog-confirm-sign-by-author"> -->
+      <input class="cancel bigbutton" type="button"
+             name="cancel" value="Återkalla inbjudan" id="cancel"
+             rel="#cancel-by-author-dialog">  
+      <script type="text/javascript" src="/js/signatory.js"
+              ></script>
+      $if(canberestarted)$
+
+      $restartForm:noescape()$
+      $endif$ 
+
+    </div>
+  </div>
+  $endif$      
 </div>
 $pageDocumentForAuthorHelpersLocalDialogs()$
 ###
