@@ -707,13 +707,13 @@ pageDocumentForAuthorContentPreparation=
               
 	    </div>
 	    
-	    
+	    <div class="border"></div>   
 	    <div id="signStepsBodyRight" class="step3">
-	      <div class="border left"></div>
+	 
 	      <input type="button" class="submit btn-blue center" id="signinvite" rel="#dialog-confirm-signinvite" value="SkrivaPå" name="final" />
-	      <div class="border right"></div>
 	      <!-- 015 new -->
            </div>
+           <div class="border"></div>
 
 	    <div id="signStepsBodyFunctions" class="step3">
 	      <div class="signStepsBodyFunctionsBox options">

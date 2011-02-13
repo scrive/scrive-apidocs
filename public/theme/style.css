@@ -1316,7 +1316,7 @@ a.okIcon {
 /* 013 changed */
 #signStepsBodyLeft
 {
-    width: 360px;
+    width: 260px;
     float: left;
     position: relative;
     padding: 7px 0px 0 0px;
@@ -1329,9 +1329,10 @@ a.okIcon {
    display:inline-block;
    width: 250px;
    margin-right: 20px;
+   float: left;
 }
 #signStepsBodyFunctions.step3{
-   width: 280px;
+   width: 200px;
 }
 /* 013 changed */
 /* FIXME?
@@ -1403,25 +1404,12 @@ a.okIcon {
 
 
 /* 015 new */
-.border
-{
-    background-color: #ecedf3;
-    width: 1px;
-    height: 30px;
-    padding-top:10px;
-    padding-bottom: 10px;
-}
-
-/* 015 new */
-#signStepsBodyRight.step3 .border.left
-{
- float:left;
-}
-
-/* 015 new */
-#signStepsBodyRight.step3 .border.right
-{
- float:right;
+.border {
+   background-color: #ecedf3; 
+   width: 1px;
+   height: 77px;
+   display:inline-block;
+   float:left;
 }
 
 /* 015 new */
@@ -1804,6 +1792,9 @@ form {
 {
    padding-top: 16px;
    padding-bottom: 7px;
+   padding-right:50px;
+   padding-left:70px;
+   
 }
 #signStepsBodyLeft.step3
 {
@@ -1814,7 +1805,7 @@ form {
 #signStepsBodyFunctionsBox
 {
     width: 100%;
-    margin: 7px 0px 0 0px;
+    margin: 7px 0px 5px 0px;
     
     -moz-border-radius: 2px;
     -webkit-border-radius: 2px;
@@ -2108,7 +2099,6 @@ form {
 #signStepsBody {
     padding-left:19px;
     padding-right:19px;
-    padding-bottom: 5px;
     border-left: 1px solid #BDBDBD;
     border-right: 1px solid #BDBDBD;
     border-bottom: 1px solid #C0C0C0;
@@ -2204,13 +2194,19 @@ form {
 	font: 12px "Helvetica Neue";
 	height: 34px;
 	letter-spacing: 0.2px;
-	padding-left: 16px;
+	padding-left:16px;
 	padding-top: 0px;
 	text-decoration: none;
 	width: 152px;
         text-align: left;
         border: 0;
 }
+#sendinvite.btn-small {
+       padding-left:17%;
+       padding-bottom:3px;
+}
+
+
 
 .btn-small p {
     color: #fff;
@@ -2239,12 +2235,17 @@ form {
 	font: 18px "Helvetica Neue";
 	height: 47px;
 	letter-spacing: 0.5px;
-	padding-left: 20px;
+        padding-left:20px;
 	text-decoration: none;
 	width: 222px;
         text-align: left;
         border: 0;
         margin-left: 12px;
+}
+
+#signinvite.btn-blue {
+   padding-left:20%;
+   padding-bottom:5px;
 }
 
 .btn-blue p {
@@ -2292,7 +2293,8 @@ a#nextstep {
 }
 
 #nextstep span {
-    padding-top: 8px;
+    padding-top: 10px;
+    padding-left: 20px;
     display: block;
     
 }
