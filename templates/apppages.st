@@ -179,7 +179,7 @@ header=
                                  <form method="post" action="$linkinvite$" class="MultiFile-intercepted">
                                  <div>
                                   <div>
-                                       <input type="email" autocomplete="off" name="invitedemail" infotext="Bjud en vän på 3 månaders fri användning!" class="grayed">
+                                       <input type="email" autocomplete="off" name="invitedemail" infotext="Bjud en vän på 3 månader fri användning. Skriv e-post här!" class="grayed">
                                        <a class="btn-tiny blue center float-right submit" href="#"><p>Skicka</p></a>
                                        <input type="submit" class="hidden" name="invite" value="Skicka">
                                   </div>
