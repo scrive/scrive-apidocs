@@ -11,6 +11,7 @@ mainpage=
 ####
 pageDocumentList= 
 <form method="post" action="">
+  <div class="doctablecontainer">
   <table class="doctable" cellspacing="0">
     <col>
     <col>
@@ -81,5 +82,6 @@ pageDocumentList=
       }$
     </tbody>
   </table>
+  </div>
 </form>
      
