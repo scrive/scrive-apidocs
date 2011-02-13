@@ -534,6 +534,15 @@ function showProperSignButtons() {
     $("#signinvite").addClass("deactivated");
   }
 
+  if($("#authorsecretaryradio").attr("checked")) {
+    $("#dialog-confirm-text-send").show();
+    $("#dialog-confirm-text-send-fields").hide();
+  } else {
+    $("#dialog-confirm-text-send").hide();
+    $("#dialog-confirm-text-send-fields").show();
+  }
+
+
 }
 
   function emailFieldsValidation(fields){

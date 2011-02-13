@@ -414,6 +414,15 @@ pageDocumentForAuthorHelpersLocalDialogs=
     <div id="dialog-confirm-text-send">
       <p>Du har valt en sekreterarroll och kommer själv inte att underteckna. Är du säker på att du vill skicka en inbjudan att underteckna dokumentet <strong>$documenttitle$</strong> till <span class="Xinvited">Invited</span>?</p>
     </div>
+
+    <div id="dialog-confirm-text-send-fields">
+     <p>
+Du har skapat fält för parterna att fylla i innan de undertecknar. Efter att alla har undertecknat kommer du att få ett mail med en länk till en sida på SkrivaPå där du kan granska parternas uppgifter och underteckna dokumentet.
+    </p>
+    <p>
+    Vill du skicka inbjudan att fylla i och underteckna dokumentet <strong>$documenttitle$</strong> till parterna <span class="Xinvited">Invited</span>?
+    </p>
+    </div>
     <div class="buttonbox" >
       <input type="hidden" name="final" value="automatic">
       <button class="close button" type="button"> Avbryt </button>
