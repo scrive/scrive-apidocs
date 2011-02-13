@@ -1069,20 +1069,18 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
             , Seal.histcomment = fullname ++ " granskar dokumentet online" ++ formatIP seenipnumber2
             } 
           ]
-      maxsigntime = maximum (map (fst . thd3) signatories)
-      firstHistEntries = []
-      {-
+      authorfullname = signatoryname authordetails
+      makeHistoryEntry2 (DocumentHistoryInvitationSent time ipnumber) =
           [ Seal.HistEntry
-            { Seal.histdate = show authorsigntime
-            , Seal.histcomment = Seal.fullname authorperson ++ 
-                                 " undertecknar dokumentet." ++ formatIP authorsignipnumber
-            }
-          , Seal.HistEntry
-            { Seal.histdate = show authorsigntime
-            , Seal.histcomment = "En automatisk inbjudan skickas via e-post till samtliga parter."
+            { Seal.histdate = show time 
+            , Seal.histcomment = 
+                if length signatories>1
+                   then BS.toString authorfullname ++ " skickar en inbjudan att underteckna till parterna" ++ formatIP ipnumber
+                   else BS.toString authorfullname ++ " skickar en inbjudan att underteckna till parten" ++ formatIP ipnumber
             }
           ]
-      -}
+      maxsigntime = maximum (map (fst . thd3) signatories)
+      firstHistEntries = concatMap makeHistoryEntry2 (documenthistory document)
       lastHistEntry = Seal.HistEntry
                       { Seal.histdate = show maxsigntime
                       , Seal.histcomment = "Samtliga parter har undertecknat dokumentet och avtalet är nu juridiskt bindande."
