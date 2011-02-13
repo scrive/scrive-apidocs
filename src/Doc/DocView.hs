@@ -503,14 +503,14 @@ pageDocumentForSignatory action document ctx  invitedlink wassigned author =
                  field "docid" $ show $ documentid document
                  field "documentinfotext" $ documentinfotext
                  documentInfoFields document author
-                 signedByMeFields (Just invitedlink)
+                 signedByMeFields document (Just invitedlink)
 
 --Helper to get document after signing info text
 documentInfoText::KontrakcjaTemplates->Document->(Maybe SignatoryLink) -> User -> IO String
 documentInfoText templates document siglnk author =
   renderTemplate templates "documentInfoText" $ do
     documentInfoFields document author 
-    signedByMeFields siglnk
+    signedByMeFields document siglnk
     
     
 
@@ -529,10 +529,11 @@ documentStatusFields document  = do
     field "awaitingauthor" $ documentstatus document == AwaitingAuthor
     
 
-signedByMeFields::(Maybe SignatoryLink) -> Fields
-signedByMeFields siglnk = do 
+signedByMeFields :: Document -> (Maybe SignatoryLink) -> Fields
+signedByMeFields document siglnk = do 
     field "notsignedbyme" $ (isJust siglnk) && (isNothing $ maybesigninfo $ fromJust siglnk)
     field "signedbyme" $ (isJust siglnk) && (isJust $ maybesigninfo $ fromJust siglnk)
+    field "iamauthor" $ isAuthor document siglnk
     
  
 uploadPage:: KontrakcjaTemplates -> IO String

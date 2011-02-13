@@ -2,12 +2,21 @@
 documentInfoText=
                 $if(pending)$
                      $if(notsignedbyme)$    
+                        $if(iamauthor)$
+                            <span class="header">
+                                 Väntar
+                            </span><br>
+                            <span class="text">
+                                 Du har valt att underteckna sist. Vänligen invänta övriga parters underskrift.
+                            </span>
+                        $else$
                         <span class="header">
                              Granska
                         </span><br>
                         <span class="text">
-                          Vänligen var noga med att granska dokumentet och kontrollera parterna till höger innan du undertecknar.                          
+                          Vänligen var noga med att granska dokumentet och kontrollera parterna till höger innan du undertecknar.
                         </span>
+                        $endif$
 
                      $elseif(signedbyme)$
                         <span class="header">
@@ -18,7 +27,7 @@ documentInfoText=
                         </span>
                      $else$
                          <span class="header">
-                             Ej färdigställt
+                             Väntar
                         </span><br>
                         <span class="text">
                            Du har skickat inbjudan att underteckna. Dokumentet har ännu inte undertecknats av samtliga parter.
@@ -141,19 +150,18 @@ documentInfoText=
                   $elseif(awaitingauthor)$
 
                      $if(notsignedbyme)$    
-                        <span class="header">
-                             Väntar
-                        </span><br>
-                        <span class="text">
-                           Dokumentet väntar på att undertecknas av inbjudande part.
-                        </span>
-
+                            <span class="header">
+                                 Granska
+                            </span><br>
+                            <span class="text">
+                              Vänligen kontrollera dokumentet och parternas uppgifter och underteckna längst ned.
+                            </span>
                      $elseif(signedbyme)$
                         <span class="header">
-                             Väntar
+                             Väntar på motpart
                         </span><br>
                         <span class="text">
-                           Dokumentet väntar på att undertecknas av inbjudande part.
+                            Du har undertecknat och vi inväntar övriga parter.
                         </span>
                      $else$
                         <span class="header">
