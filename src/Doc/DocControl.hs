@@ -381,7 +381,9 @@ landpageSignInvite documentid = withUserGet $ do
    The author has signed the document
  -}
 authorHasSigned :: UserID -> Document -> Bool
-authorHasSigned authorid document = not $ Data.List.null $ filter (not . isNotLinkForUserID authorid) (documentsignatorylinks document)
+authorHasSigned authorid document = not $ Data.List.null $ 
+                                    filter (\x -> not (isNotLinkForUserID authorid x) && isJust (maybesigninfo x))
+                                               (documentsignatorylinks document)
 
 {- |
    When someone has signed a document
