@@ -503,7 +503,7 @@ pageDocumentForSignatory action document ctx  invitedlink wassigned author =
                  field "docid" $ show $ documentid document
                  field "documentinfotext" $ documentinfotext
                  documentInfoFields document author
-                 signedByMeFields invitedlink
+                 signedByMeFields (Just invitedlink)
 
 --Helper to get document after signing info text
 documentInfoText::KontrakcjaTemplates->Document->(Maybe SignatoryLink) -> User -> IO String
