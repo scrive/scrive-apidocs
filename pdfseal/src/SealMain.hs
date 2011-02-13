@@ -17,6 +17,7 @@ exrotate = SealSpec
     , documentNumber = "0000001234"
     , hostpart = "http://host.skrivapa"
     , fields = []
+    , secretaries = []
     , persons = 
         [ Person 
           { fullname = "Lukas Duczko öåä ÖÅÄ"
@@ -56,6 +57,7 @@ gsnorm = SealSpec
     , documentNumber = "0000001234"
     , hostpart = "http://host.skrivapa"
     , fields = []
+    , secretaries = []
     , persons = 
         [ Person 
           { fullname = "Lukas Duczko öåä ÖÅÄ"
@@ -94,6 +96,12 @@ nda = SealSpec
     , output = "nda_sealed.pdf"
     , documentNumber = "0000001234"
     , hostpart = "http://host.skrivapa"
+    , secretaries = [Person 
+          { fullname = "Belinda Rossman (secretary)"
+          , email = "belinda@rossman.de"
+          , company = "Rossman, CO"
+          , number = "435324-222"
+          }]
     , persons = 
         [ Person 
           { fullname = "Lukas Duczko"
@@ -141,6 +149,7 @@ twod = SealSpec
     , documentNumber = "0000001234"
     , hostpart = "http://host.skrivapa"
     , fields = []
+    , secretaries = []
     , persons = 
         [ ]
     , initials = "öåä, ÖÅÄ"
@@ -153,6 +162,7 @@ twodgs = SealSpec
     , documentNumber = "0000001234"
     , hostpart = "http://host.skrivapa"
     , fields = []
+    , secretaries = []
     , persons = 
         [ ]
     , initials = "öåä, ÖÅÄ"
@@ -211,6 +221,7 @@ worddoc = SealSpec
     , documentNumber = "0000001234"
     , hostpart = "http://host.skrivapa"
     , fields = []
+    , secretaries = []
     , persons = 
         [ Person 
           { fullname = "Lukas Duczko öåä ÖÅÄ"
