@@ -297,21 +297,15 @@ logentry (HistEntry {histdate,histcomment}) =
  "ET 1 0 0 1 0 " ++ show ((-8) - length outlines * 12) ++ " cm "
 
 
-lastpage (SealSpec {documentNumber,persons,history,hostpart}) = 
+lastpage (SealSpec {documentNumber,persons,secretaries,history,hostpart}) = 
  "0.081 0.058 0.068 0 k " ++
  "/GS0 gs " ++
  "0.4 G " ++
  "581.839 14.37 -567.36 813.12 re " ++
  "S " ++
- -- "0 0 0 0 k " ++
- -- "578.853 824.603 -561.385 -807.345 re " ++
- -- "f " ++
  "0.039 0.024 0.02 0 k " ++
  "566.479 731.97 -537.601 20.16 re " ++
  "S " ++
- -- "566.479 759.33 -537.601 54.72 re " ++
- -- "f " ++
-
 
  "BT " ++
  "/TT0 1 Tf " ++
@@ -329,20 +323,19 @@ lastpage (SealSpec {documentNumber,persons,history,hostpart}) =
  "(Parter)Tj " ++
  "ET " ++
 
- {-
- "q " ++
- "0 841.89 595.28 -841.89 re " ++
- "W n " ++
- "q " ++
- "0 g " ++
- "0 Tc 0 Tw /Fm0 Do " ++
- "Q " ++
- "Q " ++
- -}
-
-
  -- every signatory on its own line, repeated every 64 pixels down
  "q " ++ concatMap signatorybox persons ++
+
+ (if secretaries/=[]
+  then
+     "1 0 0 1 0 -27 cm " ++
+     "BT " ++
+     "/TT0 1 Tf " ++
+     "0.806 0.719 0.51 0.504 k " ++
+     "12 0 0 12 39.8198 736.8555 Tm " ++
+     "(Sekreterare)Tj " ++
+     "ET " ++ concatMap signatorybox secretaries
+  else "") ++
  "1 0 0 1 0 126 cm " ++ -- compensate for 3 signatures
  
 

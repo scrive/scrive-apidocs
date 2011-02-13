@@ -24,6 +24,7 @@ data SealSpec = SealSpec
     , output :: String
     , documentNumber :: String
     , persons :: [Person]
+    , secretaries :: [Person]
     , history :: [HistEntry]
     , initials :: String
     , hostpart :: String
