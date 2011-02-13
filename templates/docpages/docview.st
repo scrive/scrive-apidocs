@@ -423,6 +423,13 @@ Du har skapat fält för parterna att fylla i innan de undertecknar. Efter att a
     Vill du skicka inbjudan att fylla i och underteckna dokumentet <strong>$documenttitle$</strong> till parterna <span class="Xinvited">Invited</span>?
     </p>
     </div>
+
+    <div id="dialog-confirm-text-send-normal">
+     <p>
+     Vill du skicka en inbjudan att underteckna dokumentet till <span class="Xinvited">Invited</span>? Efter att de har undertecknat kommer du att få ett mail med en länk till en sida på SkrivaPå där du kan underteckna dokumentet.
+     </p>
+
+    </div>
     <div class="buttonbox" >
       <input type="hidden" name="final" value="automatic">
       <button class="close button" type="button"> Avbryt </button>

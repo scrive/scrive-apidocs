@@ -537,9 +537,17 @@ function showProperSignButtons() {
   if($("#authorsecretaryradio").attr("checked")) {
     $("#dialog-confirm-text-send").show();
     $("#dialog-confirm-text-send-fields").hide();
-  } else {
+    $("#dialog-confirm-text-send-normal").hide();
+  } else if(sigfields.size() > 0) {
     $("#dialog-confirm-text-send").hide();
     $("#dialog-confirm-text-send-fields").show();
+    $("#dialog-confirm-text-send-normal").hide();
+  } else {
+    // normal
+    $("#dialog-confirm-text-send").hide();
+    $("#dialog-confirm-text-send-fields").hide();
+    $("#dialog-confirm-text-send-normal").show();
+
   }
 
 
