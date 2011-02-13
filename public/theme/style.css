@@ -1327,7 +1327,7 @@ a.okIcon {
 /* 013 changed */
 #signStepsBodyLeft
 {
-    width: 260px;
+    width: 360px;
     float: left;
     position: relative;
     padding: 7px 0px 0 0px;
@@ -1335,6 +1335,7 @@ a.okIcon {
 
 #signStepsBodyLeft.step3{
   display:block;
+  width: 260px;
 }
 #signStepsBodyRight.step3{
    display:inline-block;
