@@ -912,7 +912,7 @@ $(document).ready(function() {
                 var div = $(this).parentsUntil("#personpane").last();
                 var idx = div.parent().children().index(div);
                 if( val=="") 
-                    val = "(fill in)";
+                    val = "(Namnlös)";
                 $('#peopleList li:eq(' + idx + ') a').text(val);
             });
      });
