@@ -268,7 +268,10 @@ $(deriveAll [''Eq, ''Ord, ''Default]
       data ChargeMode = ChargeInitialFree   -- initial 5 documents are free
                       | ChargeNormal        -- value times number of people involved
 
-      data DocumentHistoryEntry = DocumentHistoryCreated
+      data DocumentHistoryEntry = DocumentHistoryCreated { dochisttime :: MinutesTime }
+                                | DocumentHistoryInvitationSent { dochisttime :: MinutesTime
+                                                                , ipnumber :: Word32
+                                                                }    -- changed state from Preparatio to Pending
    |])
 
 $(deriveAll [''Default]
@@ -1572,6 +1575,7 @@ authorSendDocument documentid time ipnumber author msiginfo =
               in Right $ document { documenttimeouttime = timeout
                                   , documentmtime = time
                                   , documentstatus = Pending
+                                  , documenthistory = documenthistory document ++ [DocumentHistoryInvitationSent time ipnumber]
                                   }
               
           Timedout -> Left "Förfallodatum har passerat" -- possibly quite strange here...
@@ -1600,6 +1604,7 @@ authorSignDocument documentid time ipnumber author msiginfo =
                                   , documentmtime = time
                                   , documentsignatorylinks = signWithUserID (documentsignatorylinks document) authorid sinfo msiginfo
                                   , documentstatus = Pending
+                                  , documenthistory = documenthistory document ++ [DocumentHistoryInvitationSent time ipnumber]
                                   }
               
           Timedout -> Left "Förfallodatum har passerat" -- possibly quite strange here...
