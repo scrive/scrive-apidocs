@@ -652,7 +652,7 @@ function sigFieldsValidation(){
   });
 
   if(remainingSigFields.size() > 0) {
-    addFlashMessage("Var vänlig och fyll i all fält.");
+    addFlashMessage("Du måste fylla i tomma fält innan du kan underteckna.");
     remainingSigFields.addClass("redborder");
     return false;
   } else {
