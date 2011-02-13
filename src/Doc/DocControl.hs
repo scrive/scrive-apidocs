@@ -475,7 +475,7 @@ handleSignShow documentid
   let authorname = prettyName author
       invitedname = signatoryname $ signatorydetails $ invitedlink 
   renderFromBody ctx TopNone kontrakcja 
-                       (fmap cdata $ pageDocumentForSign (LinkSignDoc document invitedlink) 
+                       (fmap cdata $ pageDocumentForSignatory (LinkSignDoc document invitedlink) 
                                             document ctx invitedlink wassigned author)
 
 {- |
