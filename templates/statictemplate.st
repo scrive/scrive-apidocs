@@ -50,6 +50,7 @@ staticTemplate=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.
                   $endif$
                                 <div class="clearfix"></div>
                                 <div class="spacer40"></div>
+                  $if(!logged)$    
                                 <div class="try-skrivapa">
                                         <div class="left">
                                                 <h2>6 månaders fri användning nu!</h2>
@@ -62,6 +63,7 @@ staticTemplate=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.
                                                 </form>
                                         </div>
                                 </div>
+                  $endif$ 
                         </div>
                         <div class="spacer40"></div>
                 </div>
