@@ -15,12 +15,16 @@ mailCancelDocumentByAuthorContent=
 mailDocumentAwaitingForAuthorTitle=Vänligen underteckna $documenttitle$
 ######
 mailDocumentAwaitingForAuthorContent=
-    <span>
-      <p>Hej <strong>$authorname$</strong>,</p>
-      <p>Dokumentet <strong>$documenttitle$</strong> har undertecknats av $partylist:noescape()$. För att avtalet skall färdigställas krävs din underskrift.</p>
-      <a href="$documentlink$">$documenttitle$</a>
-      $poweredBySkrivaPaPara()$
-    </span>
+    <p>Hej <strong>$authorname$</strong>,</p>
+    <p>Dokumentet <strong>$documenttitle$</strong> har undertecknats av $partylist:noescape()$.
+      Därmed är det bara du kvar innan dokumentet är färdigställt.</p>
+    <p>För att färdigställa dokumentet gör följande:<br>
+      1. Klicka på länken<br>
+      <a href="$documentlink$">$documenttitle$</a><br>
+      <br>
+      2. Granska uppgifterna<br>
+      3. Underteckna För att avtalet skall färdigställas krävs din underskrift.</p>
+    $poweredBySkrivaPaPara()$
 #####
 mailDocumentClosedForAuthorTitle=Bekräftelse: $documenttitle$
 #####
