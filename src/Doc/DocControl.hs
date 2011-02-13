@@ -1041,6 +1041,7 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
                       , signatoryotherfields = authorotherfields document
                       }
       signatories = personsFromDocument document
+      secretaries = if authorHasSigned then [] else [personFromSignatoryDetails authordetails]
 
       -- oh boy, this is really network byte order!
       formatIP :: Word32 -> String
@@ -1101,6 +1102,7 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
             , Seal.output = outputpath
             , Seal.documentNumber = paddeddocid
             , Seal.persons = persons
+            , Seal.secretaries = secretaries
             , Seal.history = history
             , Seal.initials = initials
             , Seal.hostpart = hostpart
