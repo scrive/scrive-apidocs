@@ -726,15 +726,27 @@ function flashSpecialFlashMessages(){
 function flashFlashMessages()
 {
     var flashmsgbox = $('.flashmsgbox');
-    if ($('.flashmessage',flashmsgbox).size()>0) {
-        flashmsgbox.slideDown().delay(12000).slideUp(function(){$('.flashmessage',flashmsgbox).remove()});
-    } 
+    $('.flashmessage',flashmsgbox).each(function(){
+        var fm = $(this)
+        var text = fm.html();
+        fm.html("");
+        var logo = $("<a class='logo' href='/'></a>"); /* Sorry for that but we have a deadline, also for css */
+        var center = $("<div class='flashcenter'> <table style='height:50px'> <tbody style='height:50px'> <tr><td style='height:50px' valign='middle'>" + text +"</td></tr> </tbody></table></div>")
+        var closeLink = $("<a class='flashmessageclose'> Stäng </a>").click(function(){flashmsgbox.hide();})
+        fm.append(logo);
+        fm.append(center);
+        fm.append(closeLink);
+      
+    });
+      if ($('.flashmessage',flashmsgbox).size() >0)
+         flashmsgbox.show().delay(10000).hide(function(){$(flashmsgbox).children().remove()});
+
 }
 
 function addFlashMessage(msg){
     var flashmsgbox = $('.flashmsgbox');    
-    $('.flashmessage',flashmsgbox).remove()
-    flashmsgbox.append("<span class='flashmessage' >"+msg+"</span>");
+    flashmsgbox.children().remove();
+    flashmsgbox.append("<div class='flashmessage' >"+msg+"</div>");
     flashFlashMessages();
 }   
 function prepareEditor(textarea) {
