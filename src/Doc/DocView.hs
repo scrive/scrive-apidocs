@@ -4,13 +4,13 @@ module Doc.DocView( emptyDetails
               , showFilesImages2
               , pageDocumentForAuthor
               , pageDocumentForViewer
+              , pageDocumentForSignatory
               , pageDocumentList
               , landpageSignInviteView
               , landpageSendInviteView
               , landpageSignedView
               , landpageLoginForSaveView
               , landpageDocumentSavedView
-              , pageDocumentForSign
               , flashRemindMailSent
               , flashMessageCanceled 
               , flashDocumentRestarted
@@ -454,14 +454,14 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser,ctxtemplates})  docu
 packToMString:: BS.ByteString -> Maybe String
 packToMString x = if BS.null x then Nothing else (Just $ BS.toString x) 
 
-pageDocumentForSign :: KontraLink 
+pageDocumentForSignatory :: KontraLink 
                     -> Document 
                     -> Context
                     -> SignatoryLink
                     -> Bool 
                     -> User
                     -> IO String 
-pageDocumentForSign action document ctx  invitedlink wassigned author =
+pageDocumentForSignatory action document ctx  invitedlink wassigned author =
     let
        localscripts = "var docstate = " ++ 
                       (buildJS documentauthordetails $ 
@@ -489,20 +489,21 @@ pageDocumentForSign action document ctx  invitedlink wassigned author =
                      
      partyUnsigned <- renderListTemplate (ctxtemplates ctx) $  map (BS.toString . personname') $ partyUnsignedMeAndList magichash document
      documentinfotext <- documentInfoText (ctxtemplates ctx) document (Just invitedlink) author
-     renderTemplate (ctxtemplates ctx) "pageDocumentForSignContent" $
-                 (setAttribute "helpers" helpers) .
-                 (setAttribute "signatories" signatories) .
-                 (setAttribute "messageoption" messageoption) .
-                 (setAttribute "documenttitle" $ BS.toString $ documenttitle document) .
-                 (setAttribute "authorname" $ BS.toString $ authorname) .
-                 (setAttribute "rejectMessage" rejectMessage) .
-                 (setAttribute "partyUnsigned" partyUnsigned) .
-                 (setAttribute "action" $ show action) .
-                 (setAttribute "title" $ BS.toString $ documenttitle document) .
-                 (setAttribute "linkissuedocpdf" $ show (LinkIssueDocPDF document)) .
-                 (setAttribute "docid" $ show $ documentid document) .
-                 (setAttribute "documentinfotext" $ documentinfotext) .
-                 (setAttribute "showflash" $ not wassigned && documentstatus document == Pending)
+     renderTemplate (ctxtemplates ctx) "pageDocumentForSignContent" $ do
+                 field "helpers" helpers
+                 field "signatories" signatories
+                 field "messageoption" messageoption
+                 field "documenttitle" $ BS.toString $ documenttitle document
+                 field "authorname" $ BS.toString $ authorname
+                 field "rejectMessage" rejectMessage
+                 field "partyUnsigned" partyUnsigned
+                 field "action" $ show action
+                 field "title" $ BS.toString $ documenttitle document
+                 field "linkissuedocpdf" $ show (LinkIssueDocPDF document)
+                 field "docid" $ show $ documentid document
+                 field "documentinfotext" $ documentinfotext
+                 documentInfoFields document author
+                 signedByMeFields invitedlink
 
 --Helper to get document after signing info text
 documentInfoText::KontrakcjaTemplates->Document->(Maybe SignatoryLink) -> User -> IO String

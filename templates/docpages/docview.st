@@ -272,11 +272,14 @@ pageDocumentForSignButtons=
 </div>
 ####
 pageDocumentForSignContent=
+
+  $if(notsignedbyme)$$if(pending)$
   <script type="text/javascript">
     jQuery(function() {
       addFlashMessage("Underteckna dokumentet längst ned på sidan.");
     });
   </script>
+  $endif$$endif$
   <div class="localdialogs">
     <div style="display: none">
       $helpers:noescape()$
@@ -351,6 +354,7 @@ pageDocumentForSignContent=
 <div id="documentBox">
   <div class="waiting4page"></div>
 </div>
+$if(pending)$
 <div id="signViewBottomBox"> 
   <div id="signViewBottomBoxContainerLeft"> 
     <div id="signViewBottomBoxContainerLeftText"> 
@@ -359,12 +363,11 @@ pageDocumentForSignContent=
   </div>
   <div id="signViewBottomBoxContainerRight"> 
   <input type="button" class="submit btn-blue center" value="SkrivaPå" id="sign" rel="#dialog-confirm-sign" name="sign" />
-<!--    <input class="button" type="submit" name="sign" value="SkrivaPå" id="sign" rel="#dialog-confirm-sign"> -->
         <br>
     <input class="bigbutton" type="submit" name="cancel" value="Avvisa" rel="#dialog-confirm-cancel" id="cancel">
   </div>
 </div>
-    
+$endif$    
 ###
 ####
 pageDocumentForAuthorHelpers=
@@ -827,7 +830,11 @@ pageDocumentForAuthorContentPostPreparation=
     <div id="signViewBodyLeft" > 
       <span id="signViewBodyLeftTextContainer"> 
         $documentinfotext:noescape()$
-      </span> 
+        $if(canberestarted)$
+       <BR/><BR/>
+       $restartForm:noescape()$
+       $endif$ 
+       </span> 
 
 
     </div>
@@ -847,13 +854,15 @@ pageDocumentForAuthorContentPostPreparation=
      -->
   <div class="waiting4page"></div>
 </div>
+
+$if(awaitingauthor)$
 <div id="signViewBottomBox"> 
   <div id="signViewBottomBoxContainerLeft"> 
     <div id="signViewBottomBoxContainerLeftText"> 
       <input type="checkbox" class="signGuard" autocomplete="off"> Jag intygar att jag har granskat och förstått innehållet i dokumentet. Jag intygar även att samtliga parter är korrekta och att jag har befogenhet att skriva på.
     </div>
   </div>
-  $if(awaitingauthor)$
+
   <div id="signViewBottomBoxContainerRight"> 
     <div> 
       <input type="button" class="submit btn-blue center" value="SkrivaPå" id="signByAuthor" rel="#dialog-confirm-sign-by-author" name="sign" />
@@ -870,8 +879,9 @@ pageDocumentForAuthorContentPostPreparation=
 
     </div>
   </div>
-  $endif$      
 </div>
+$endif$   
+
 $pageDocumentForAuthorHelpersLocalDialogs()$
 ###
    
