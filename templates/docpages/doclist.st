@@ -1,4 +1,14 @@
 ####
+mainpage=
+         $upload:noescape()$
+         <BR/>
+         <div class="box">
+         $doclist:noescape()$
+         </div>
+
+####
+
+####
 pageDocumentList= 
 <form method="post" action="">
   <table class="doctable" cellspacing="0">

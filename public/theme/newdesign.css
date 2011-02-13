@@ -1,78 +1,3 @@
-/* Generic CSS reset */
-.newdesign html, .newdesign  body, .newdesign  div, .newdesign  span, .newdesign  applet, .newdesign  object, .newdesign  iframe, .newdesign  h1, .newdesign  h2, .newdesign  h3, .newdesign  h4, .newdesign  h5, .newdesign  h6, .newdesign  p, .newdesign  blockquote, .newdesign  pre, .newdesign 
-a, .newdesign  abbr, .newdesign  acronym, .newdesign  address, .newdesign  big, .newdesign  cite, .newdesign  code, .newdesign  del, .newdesign  dfn, .newdesign  em, .newdesign  img, .newdesign  ins, .newdesign  kbd, .newdesign  q, .newdesign  s, .newdesign  samp, .newdesign 
-small, .newdesign  strike, .newdesign  strong, .newdesign  sub, .newdesign  sup, .newdesign  tt, .newdesign  var, .newdesign  b, .newdesign  u, .newdesign  i, .newdesign  center, .newdesign  dl, .newdesign  dt, .newdesign  dd, .newdesign  ol, .newdesign  ul, .newdesign  li, .newdesign 
-fieldset, .newdesign  form, .newdesign  label, .newdesign  legend, .newdesign  table, .newdesign  caption, .newdesign  tbody, .newdesign  tfoot, .newdesign  thead, .newdesign  tr, .newdesign  th, .newdesign  td, .newdesign 
-article, .newdesign  aside, .newdesign  canvas, .newdesign  details, .newdesign  embed, .newdesign  figure, .newdesign  figcaption, .newdesign  footer, .newdesign  header, .newdesign  hgroup, .newdesign  
-menu, .newdesign  nav, .newdesign  output, .newdesign  ruby, .newdesign  section, .newdesign  summary, .newdesign  time, .newdesign  mark, .newdesign  audio, .newdesign  video {
-	margin: 0;
-	padding: 0;
-	border: 0;
-	outline: 0;
-	/* vertical-align: baseline; */
-}
-
-body {
-  background:url("../img/bg-body.png") repeat scroll 0 0 transparent;
-}
-.newdesign {
-       color: #000000;
-       font-size:small;
-       line-height:1;
-       font-family:'Helvetica Neue','Segoe UI',arial,verdana,'lucida sans unicode',tahoma,sans-serif;
-}
-
-@font-face {
-    font-family: 'Helvetica Neue';
-    src: url('../fonts/helveticaneueltcom-bd.eot?') format('eot'),
-         url('../fonts/helveticaneueltcom-bd.woff') format('woff'),
-         url('../fonts/helveticaneueltcom-bd.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: 'Lucida Grande';
-    src: url('../fonts/lucida_grande.eot?') format('eot'),
-         url('../fonts/lucida_grande.woff') format('woff'),
-         url('../fonts/lucida_grande.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-}
-
-/* HTML5 display-role reset for older browsers */
-.newdesign article, .newdesign  aside, .newdesign  details, .newdesign  figcaption, .newdesign  figure, .newdesign  footer, .newdesign  header, .newdesign  hgroup, .newdesign  menu, .newdesign  nav, .newdesign section {
-	display: block;
-}
-
-.newdesign body {
-	line-height: 1;
-}
-
-.newdesign ol, .newdesign ul {
-	list-style: none;
-}
-
-.newdesign blockquote, .newdesign q {
-	quotes: none;
-}
-
-.newdesign blockquote:before, .newdesign blockquote:after, .newdesign q:before, .newdesign q:after {
-	content: '';
-	content: none;
-}
-
-.newdesign table {
-	border-collapse: collapse;
-	border-spacing: 0;
-}
-
-
-.newdesign .content {
-margin:0 auto;
-width:940px;
-}
-
 #footer-container {
         background: #fff;
         height: 340px;
@@ -187,4 +112,232 @@ width:940px;
         display: block;
         font: 10px "Lucida Grande";
         text-transform: uppercase;
+}
+
+.box {
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        min-height: 180px;
+        padding: 20px;
+        -moz-border-radius: 5px;
+        -webkit-border-radius: 5px;
+}
+
+
+
+/* Head Container */
+#top-slim-container {
+        background: url(../img/bg-header.png);
+        border-bottom: 1px solid #737373;
+        height: 50px;
+        min-width: 940px;
+}
+
+#top-slim-container .logo {
+        background: url(../img/logo-small.png);
+        display: block;
+        float: left;
+        height: 35px;
+        margin-top: 9px;
+        width: 137px;
+}
+
+/* Second Login Container */
+
+#top-slim-container .content {
+        position: relative;
+}
+
+#top-slim-container .login-button {
+        background: url(../img/icon-lock.png) no-repeat;
+        color: #999;
+        float: right;
+        font: 14px/18px "Helvetica Neue";
+        margin-right: 38px;
+        margin-top: 17px;
+        padding-bottom: 5px;
+        padding-left: 28px;
+        text-shadow: #000 0 1px 3px;
+        text-decoration: none;
+}
+#top-slim-container .document-button {
+        color: #999;
+        float: right;
+        font: 14px/18px "Helvetica Neue";
+        margin-top: 17px;
+        padding-bottom: 5px;
+        padding-left: 15px;
+        text-shadow: #000 0 1px 3px;
+        text-decoration: none;
+}
+
+#top-slim-container .logout-button {
+        color: #999;
+        float: right;
+        font: 14px/18px "Helvetica Neue";
+        margin-right: 38px;
+        margin-top: 17px;
+        padding-bottom: 5px;
+        padding-left: 15px;
+        text-shadow: #000 0 1px 3px;
+        text-decoration: none;
+}
+
+#top-slim-container .logout-button:hover, 
+#top-slim-container .document-button:hover,
+#top-slim-container .login-button:hover
+{
+  color: #FFFFFF;
+}  
+  
+  
+#top-slim-container .user-container {
+        top: 2px;
+}
+
+
+.user-container {
+        display: none;
+        height: 184px;
+        position: absolute;
+        right: 0;
+        top: 20px;
+        width: 192px;
+}
+
+.login-container, .recovery-container {
+        height: 154px;
+        position: absolute;
+        width: 192px;
+        z-index: 100;
+}
+
+.recovery-container {
+        display: none;
+}
+
+.login-container .top, .recovery-container .top {
+        background: #f3f3f3;
+        border-color: #3f3f3f;
+        border-radius: 25px 25px 0 0;
+        border-style: solid;
+        border-width: 1px 1px 0 1px;
+        color: #666;
+        cursor: pointer;
+        float: right;
+        font: 14px "Helvetica Neue";
+        height: 14px;
+        padding-left: 26px;
+        padding-top: 13px;
+        width: 121px;
+        z-index: 102;
+        -moz-border-radius: 25px 25px 0 0;
+        -webkit-border-radius: 25px 25px 0 0;
+}
+
+.login-container .top p, .recovery-container .top p {
+        background: url(../img/icon-lock2.png) no-repeat;
+        margin-top: 2px;
+        padding-left: 24px;
+        position: absolute;
+        width: 98px;
+        z-index: 103;
+}
+
+.login-container .body, .recovery-container .body {
+        background: #f3f3f3;
+        border-color: #3f3f3f;
+        border-radius: 5px 0px 5px 5px;
+        border-style: solid;
+        border-width: 0px 1px 1px 1px;
+        float: right;
+        padding: 10px;
+        width: 170px;
+        z-index: 101;
+        -moz-border-radius: 12px 0 12px 12px;
+        -webkit-border-radius: 5px 0px 5px 5px;
+}
+
+.login-container .body form, .recovery-container .body form {
+        font: 11px/18px "Lucida Grande";
+        margin-top: 2px;
+        text-align: center;
+        
+}
+
+.login-container .body input, .recovery-container .body input {
+        border: 1px solid #9e9e9e;
+        font: 11px "Lucida Grande";
+        margin-bottom: 3px;
+        padding: 5px 10px;
+        width: 146px;
+}
+
+.login-container a.btn-tiny, .recovery-container a.btn-tiny {
+        margin-top: 5px;
+}
+
+.login-container .body a.txt-link, .recovery-container .body a.txt-link {
+        color: #539EFB;
+        font: 10px/34px "Lucida Grande";
+        text-decoration: underline;
+}
+
+
+#top-slim-container .btn-tiny.center {
+        padding-left: 0;
+        text-align: center;
+        width: 73px;
+}
+
+#top-slim-container .btn-tiny:hover {
+        background-position: -73px -27px;
+}
+
+#top-slim-container .btn-tiny.blue {
+        background-position: 0 0;
+}
+
+#top-slim-container .btn-tiny.blue:hover {
+        background-position: 0 -27px;
+}
+
+#top-slim-container .btn-tiny {
+        background: url(../img/btn-tiny.png) -73px 0 no-repeat;
+        color: #fff;
+        display: block;
+        font: 11px "Helvetica Neue";
+        height: 19px;
+        padding-left: 10px;
+        padding-top: 7px;
+        text-decoration: none;
+        width: 63px;
+}
+
+.float-left {
+        float: left;
+}
+
+.float-right {
+        float: right;
+}
+
+#inviteContainer
+{
+    position: absolute;
+    right: 300px;
+    top: 12px;
+    width: 400px;
+    text-align: left;
+    font-size: 11px;
+    color: #FAFAFA;
+}
+
+#inviteContainer a
+{
+    margin-top:1px;
+}
+
+#inviteContainer input[type=email]{
+  width:315px;
 }

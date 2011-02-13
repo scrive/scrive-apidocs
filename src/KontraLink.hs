@@ -65,6 +65,7 @@ data KontraLink
     | LinkFile FileID BS.ByteString
     | LinkRequestAccount
     | LinkAskQuestion
+    | LinkInvite
     
 instance Show KontraLink where
     showsPrec _ LinkAbout = (++) "/about"
@@ -108,11 +109,12 @@ instance Show KontraLink where
                                                                                        "&" ++ "name="++ username
     showsPrec _ (LinkChangeSignatoryEmail did slid ) = (++) $ "/changeemail/"++show did++"/"++show slid
     showsPrec _ (LinkWithdrawn did ) = (++) $ "/withdrawn/"++show did
-    showsPrec _ LoopBack = (++) $ "/" -- this should be never used
-    showsPrec _ BackToReferer = (++) $ "/" -- this should be never used
+    showsPrec _ LoopBack = (++) $ "/" -- this should never be used
+    showsPrec _ BackToReferer = (++) $ "/" -- this should never be used
     showsPrec _ (LinkDaveDocument docid) = (++) ("/dave/document/" ++ show docid)
     showsPrec _ (LinkAskQuestion) = (++) ("/question")
     showsPrec _ (LinkRequestAccount) = (++) "/requestaccount"
+    showsPrec _ (LinkInvite) = (++) "/invite"
     
 {-
 instance (EmbedAsAttr m String) => (EmbedAsAttr m KontraLink) where

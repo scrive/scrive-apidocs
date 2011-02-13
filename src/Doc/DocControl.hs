@@ -1360,3 +1360,10 @@ checkLinkIDAndMagicHash document linkid magichash1 = do
                                                     else mzero
       Nothing -> mzero
 
+showMainPage::User -> Kontra Response
+showMainPage user =  do
+                      ctx <- get
+                      content <- liftIO $ uploadPage (ctxtemplates ctx) 
+                      renderFromBody ctx TopDocument kontrakcja $ cdata content 
+                      
+                      
