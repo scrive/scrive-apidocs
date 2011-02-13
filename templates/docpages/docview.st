@@ -354,7 +354,7 @@ pageDocumentForSignContent=
 <div id="documentBox">
   <div class="waiting4page"></div>
 </div>
-$if(pending)$
+$if(notsignedbyme)$$if(pending)$
 <div id="signViewBottomBox"> 
   <div id="signViewBottomBoxContainerLeft"> 
     <div id="signViewBottomBoxContainerLeftText"> 
@@ -367,7 +367,7 @@ $if(pending)$
     <input class="bigbutton" type="submit" name="cancel" value="Avvisa" rel="#dialog-confirm-cancel" id="cancel">
   </div>
 </div>
-$endif$    
+$endif$$endif$ 
 ###
 ####
 pageDocumentForAuthorHelpers=
