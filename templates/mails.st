@@ -17,7 +17,7 @@ mailDocumentAwaitingForAuthorTitle=Vänligen underteckna $documenttitle$
 mailDocumentAwaitingForAuthorContent=
     <span>
       <p>Hej <strong>$authorname$</strong>,</p>
-      <p>Dokumentet <strong>$documenttitle$</strong> har undertecknats av $partylist$. För att avtalet skall färdigställas krävs din underskrift.</p>
+      <p>Dokumentet <strong>$documenttitle$</strong> har undertecknats av $partylist:noescape()$. För att avtalet skall färdigställas krävs din underskrift.</p>
       <a href="$documentlink$">$documenttitle$</a>
       $poweredBySkrivaPaPara()$
     </span>
