@@ -45,6 +45,7 @@ import Mails.SendMail
 import Templates.Templates (readTemplates)
 import Kontra
 import qualified TrustWeaver as TW
+import qualified MemCache
 
 {- | Getting application configuration. Reads 'kontrakcja.conf' from current directory
      Setting production param can change default setting (not to send mails)
@@ -138,6 +139,7 @@ main = Log.withLogger $ do
     (Left e) -> do Log.server (unlines e)
                    exitFailure
     (Right f) -> return $ (f (appConf1))
+  filecache <- MemCache.new (const 0)
 
   let 
     mailer | sendMails cfg = createRealMailer cfg
@@ -166,6 +168,7 @@ main = Log.withLogger $ do
                           , TW.timeout = 30000 --30sek
                           }
             , ctxelegtransactions = error "Do not use ctxelegtransactions in actions"
+            , ctxfilecache = filecache
             }
     
 

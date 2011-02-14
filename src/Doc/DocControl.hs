@@ -49,8 +49,17 @@ import qualified SealSpec as Seal
 import qualified TrustWeaver as TW
 import qualified AppLogger as Log
 import System.IO.Temp
-import Data.Char
 
+getFileContents :: Context -> File -> IO (BS.ByteString)
+getFileContents ctx file = do
+  result <- MemCache.get (fileid file) (ctxfilecache ctx)
+  case result of
+    Just result -> return result
+    Nothing -> do
+                result <- AWS.getFileContents (ctxs3action ctx) file
+                MemCache.put (fileid file) result (ctxfilecache ctx)
+                return result
+                          
 {-
   Document state transitions are described in DocState.
 
@@ -179,7 +188,7 @@ sendInvitationEmail1 ctx document author signatorylink = do
   mail <- if hasAuthorSigned 
            then mailInvitationToSign (ctxtemplates ctx) ctx document signatorylink author
            else mailInvitationToSend (ctxtemplates ctx) ctx document signatorylink author
-  attachmentcontent <- AWS.getFileContents (ctxs3action ctx) $ head $ documentfiles document
+  attachmentcontent <- getFileContents ctx $ head $ documentfiles document
   sendMail (ctxmailer ctx) $ 
            mail { fullnameemails = [(signatoryname,signatoryemail)]
                 , attachments = [(documenttitle,attachmentcontent)]
@@ -209,7 +218,7 @@ sendClosedEmail1 ctx document signatorylink = do
                                                          , signatoryemail }} = signatorylink
       Document{documenttitle,documentid} = document
   mail <- mailDocumentClosedForSignatories (ctxtemplates ctx) ctx document signatorylink
-  attachmentcontent <- AWS.getFileContents (ctxs3action ctx) $ head $ documentsealedfiles document
+  attachmentcontent <- getFileContents ctx $ head $ documentsealedfiles document
   sendMail  (ctxmailer ctx) $ mail { fullnameemails =  [(signatoryname,signatoryemail)] , attachments = [(documenttitle,attachmentcontent)]}
 
 {- |
@@ -234,7 +243,7 @@ sendClosedAuthorEmail ctx document = do
   Just authoruser <- query $ GetUserByUserID authorid
   mail<- mailDocumentClosedForAuthor (ctxtemplates ctx) ctx (userfullname authoruser)
              document
-  attachmentcontent <- AWS.getFileContents (ctxs3action ctx) $ head $ documentsealedfiles document
+  attachmentcontent <- getFileContents ctx $ head $ documentsealedfiles document
   let Document{documenttitle,documentid} = document
       email1 = unEmail $ useremail $ userinfo authoruser
       name1 = userfullname authoruser
@@ -581,7 +590,7 @@ handleIssueShowTitleGet docid _title =
    let file = safehead "handleIssueShow" (case documentstatus document of
                                             Closed -> documentsealedfiles document
                                             _      -> documentfiles document)
-   contents <- liftIO $ AWS.getFileContents (ctxs3action ctx) file
+   contents <- liftIO $ getFileContents ctx file
    let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
    let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
    return res2
@@ -605,7 +614,7 @@ handleFileGet fileid' _title = do
    let allfiles = documentsealedfiles document ++ documentfiles document
    case filter (\file -> fileid file == fileid') allfiles of 
      [file] -> do
-       contents <- liftIO $ AWS.getFileContents (ctxs3action ctx) file
+       contents <- liftIO $ getFileContents ctx file
        let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
        let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
        return res2
@@ -806,13 +815,13 @@ gs = "gs"
 convertPdfToJpgPages :: Context
                      -> File
                      -> IO JpegPages
-convertPdfToJpgPages Context{ctxs3action} file@File{fileid,filename} = do
+convertPdfToJpgPages ctx@Context{ctxs3action} file@File{fileid,filename} = do
   tmppath1 <- getTemporaryDirectory
   let tmppath = tmppath1 ++ "/" ++ show fileid
   createDirectoryIfMissing True tmppath
   let sourcepath = tmppath ++ "/source.pdf"
 
-  content <- AWS.getFileContents ctxs3action file
+  content <- getFileContents ctx file
 
   BS.writeFile sourcepath content
 
@@ -1135,7 +1144,7 @@ sealDocument ctx@Context{ctxs3action,ctxtwconf}
   tmppath <- getTemporaryDirectory
   let tmpin = tmppath ++ "/in_" ++ show docid ++ ".pdf"
   let tmpout = tmppath ++ "/out_" ++ show docid ++ ".pdf"
-  contents <- AWS.getFileContents ctxs3action file
+  contents <- getFileContents ctx file
   BS.writeFile tmpin contents
   let config = sealSpecFromDocument hostpart document author tmpin tmpout
 
