@@ -36,8 +36,9 @@ willCreateAccountForYouHasAccount=
     </p>
 #####
 willCreateAccountForYouNoAccount=
-    <p>Du kan nu spara dokumentet på SkrivaPå, då är ditt dokument säkert lagrat och dessutom
-       kan du även i framtiden verifiera avtalet mot vår databas. Detta kostar ingenting.
+    <p>Du kan nu spara dokumentet på SkrivaPå, det kostar ingenting att lagra dokumentet
+       och just nu bjuder vi på fri användning av tjänsten i 2 månader!
+       Klicka nedan så är det klart.
       <form action="$LinkLandpageSaved()$" method="get">
         <input class="button" type="submit" value="Skapa konto">
       </form>
@@ -45,19 +46,18 @@ willCreateAccountForYouNoAccount=
 ####
 landpageSignedViewClosed=
     <div class="centerdivnarrow">
-      <p class="headline">Dokumentet är färdigställt</p>
-      <p>Du har undertecknat dokumentet <strong>$documenttitle$</strong>. Således har
-         $partyListString:noescape()$ undertecknat dokumentet och avtalet är nu juridiskt bindande.</p>
+      <p class="headline">Du har undertecknat dokumentet $documenttitle$</p>
+      <p>$partyListString:noescape()$ har nu undertecknat och dokumentet är bindande.</p>
          $willCreateAccountForYou:noescape()$
     </div>
 #####
 landpageSignedViewNotClosed=
     <div class="centerdivnarrow">
-      <p class="headline">Du har undertecknat</p>
-      <p>Du har nu undertecknat dokumentet <strong>$documenttitle$</strong>.
-         $partyUnsignedListString:noescape()$ har ännu inte undertecknat
-         dokumentet. När alla undertecknat blir avtalet juridiskt bindande och
-         en kopia av det färdigställda dokumentet skickats då till din e-post.</p>
+      <p class="headline">Du har undertecknat dokumentet $documenttitle$</p>
+
+      <p>$partyUnsignedListString:noescape()$ har ännu inte undertecknat. När alla undertecknat blir
+         dokumentet bindande och en kopia skickas till din e-post.</p>
+
          $willCreateAccountForYou:noescape()$
     </div>
 ###
