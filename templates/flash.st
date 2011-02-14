@@ -79,5 +79,6 @@ flashMessageNewActivationLinkSend=
     Vi har skickat din kontoinbjudan igen. Vänligen gå tillbaks till din inkorg och klicka på länken i mailet för att aktivera ditt konto.
 
 ###
+flashMessageUserSignupDone=Ditt konto har skapats! Vi har skickat ett mail med dina användaruppgifter till din inkorg.
 ###
 ###
