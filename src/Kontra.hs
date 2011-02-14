@@ -124,6 +124,7 @@ admins = map (Email . BS.fromString)
          [ "gracjanpolak@gmail.com"
          , "lukas@skrivapa.se"
          , "oskar@skrivapa.se"
+         , "viktor@skrivapa.se"
          ]
 
 initialUsers = map (Email . BS.fromString)
@@ -132,6 +133,7 @@ initialUsers = map (Email . BS.fromString)
          , "ericwnormand@gmail.com"
          , "oskar@skrivapa.se"
          , "kbaldyga@gmail.com"
+         , "viktor@skrivapa.se"
          ]
 
 isSuperUser (Just user) = (useremail $ userinfo user) `elem` admins 
