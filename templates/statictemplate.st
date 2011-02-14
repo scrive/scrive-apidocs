@@ -16,7 +16,7 @@ staticTemplate=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.
 
         
         </head>
-        <body>
+        <body>  $facebooklogo()$
                 $header()$
                 <div id="body-container">
                         <div class="content">

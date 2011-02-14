@@ -75,6 +75,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 </script>
         </head>
         <body>
+                $facebooklogo()$
                 <div id="wrap">
                 <div id="top-container">
                         <div class="content">
