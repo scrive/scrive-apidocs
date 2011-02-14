@@ -146,14 +146,19 @@ signupLinkEmailPart=
 newUserMailTitle=Nytt konto
 ####
 newUserMailContent=
-    <p>Hej <strong>$personname$</strong>,</p>
-    <p>Jag heter Lukas Duczko och är VD på SkrivaPå. Tack för att du har skapat ett konto hos oss. Just nu bjuder vi på 2 månaders fri användning till alla nya kunder. Vi hoppas att du kommer att bli nöjd med våra tjänster. Tveka inte att höra av dig med feedback eller bara en enkel hälsning. Din åsikt är värdefull.</p>
+    <p>Hej,</p>
+    <p>Jag heter Lukas Duczko och är VD på SkrivaPå. Tack för att du har skapat ett konto hos oss. Du har blivit speciellt 
+       inbjuden till ett kampanjkonto på SkrivaPå. Du får fri användning av tjänsten till och med 31 maj! Använd den så mycket
+       du bara kan.
+    </p> 
+    <p> Vi hoppas att du kommer att bli nöjd med våra tjänster. Tveka inte att höra av dig med feedback eller bara en enkel hälsning. 
+        Din åsikt är värdefull.
+    </p>
 
-    <p>Användarnamn:<br>
+    <p>Användarnamn:<br/>
     $email$</p>
     
-    <p>Du aktiverar ditt konto genom att klicka på länken nedan. Länken är giltig i 12 timmar.<br>
-    <br>
+    <p>Du aktiverar ditt konto genom att klicka på länken nedan. Länken är giltig i 12 timmar.<br/>
     <a href="$ctxhostpart$$activatelink$">$ctxhostpart$$activatelink$</a><p>
 
     $poweredBySkrivaPaPara()$
