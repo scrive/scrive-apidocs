@@ -335,7 +335,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                         </li>
                                                         <li class="odd"><a href="#">2-9 användare</a></li>
                                                         <li>
-                                                                <p><a href="#">20 fri e-signaturer/mån</a></p>
+                                                                <p><a href="#">20 fria e-signaturer/mån</a></p>
                                                         </li>
                                                         <li class="odd"><a href="#">1000 dok/mån</a></li>
                                                         <li class="bottom">
@@ -373,7 +373,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                         <strong>TJÄNSTEN</strong>
                                         <ul>
                                                 <li><a href="features.html">Funktioner</a></li>
-                                                <li><a href="benefits.html">Fördelar</a></li>
+                                                <!-- <li><a href="benefits.html">Fördelar</a></li> -->
                                                 <li><a href="priceplan.html?nocolumns">Prisplan</a></li>
                                         </ul>
                                         <br />
@@ -403,19 +403,19 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                         <strong>Kontakta oss för feedback, frågor & förfrågningar</strong>
                                         <ul>
                                                 <li>
-                                                        <strong>Telefon:</strong>
+                                                        <strong>Telefon</strong>
                                                         010-195 99 15
                                                 </li>
                                                 <li>
-                                                        <strong>Kontorstider:</strong>
+                                                        <strong>Kontorstider</strong>
                                                         måndag-fredag 09-17
                                                 </li>
                                                 <li>
-                                                        <strong>Maila SkrivaPå:</strong>
+                                                        <strong>Maila SkrivaPå</strong>
                                                         <a href="mailto:info@skrivapa.se">info@skrivapa.se</a>
                                                 </li>
                                                 <li>
-                                                        <strong>Adress:</strong>
+                                                        <strong>Adress</strong>
                                                         SkrivaPå CM AB<br />
                                                         Saltmätargatan 19A<br />
                                                         113 59 Stockholm

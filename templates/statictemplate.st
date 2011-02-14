@@ -75,7 +75,7 @@ staticTemplate=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.
                                         <strong>TJÄNSTEN</strong>
                                         <ul>
                                                 <li><a href="features.html">Funktioner</a></li>
-                                                <li><a href="benefits.html">Fördelar</a></li>
+                                                <!-- <li><a href="benefits.html">Fördelar</a></li> -->
                                                 <li><a href="priceplan.html?nocolumns">Prisplan</a></li>
                                         </ul>
                                         <br />
@@ -105,19 +105,19 @@ staticTemplate=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.
                                         <strong>Kontakta oss för feedback, frågor & förfrågningar</strong>
                                         <ul>
                                                 <li>
-                                                        <strong>Telefon:</strong>
+                                                        <strong>Telefon</strong>
                                                         010-195 99 15
                                                 </li>
                                                 <li>
-                                                        <strong>Kontorstider:</strong>
+                                                        <strong>Kontorstider</strong>
                                                         måndag-fredag 09-17
                                                 </li>
                                                 <li>
-                                                        <strong>Maila SkrivaPå:</strong>
+                                                        <strong>Maila SkrivaPå</strong>
                                                         info@skrivapa.se
                                                 </li>
                                                 <li>
-                                                        <strong>Adress:</strong>
+                                                        <strong>Adress</strong>
                                                         SkrivaPå CM AB<br />
                                                         Saltmätargatan 19A<br />
                                                         113 59 Stockholm
