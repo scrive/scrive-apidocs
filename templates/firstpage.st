@@ -309,19 +309,19 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <tr class="big-row">
                                                         <td>
                                                                 <p>Basfunktionalitet</p>
-                                                                <a href="priceplan.html">Läs mer</a>
+                                                                <a href="priceplan.html?nocolumns">Läs mer</a>
                                                         </td>
                                                         <td>
                                                                 <p>Basfunktionalitet</p>
-                                                                <a href="priceplan.html">Läs mer</a>
+                                                                <a href="priceplan.html?nocolumns">Läs mer</a>
                                                         </td>
                                                         <td>
                                                                 <p>Extra funktionalitet</p>
-                                                                <a href="priceplan.html">Läs mer</a>
+                                                                <a href="priceplan.html?nocolumns">Läs mer</a>
                                                         </td>
                                                         <td>
                                                                 <p>Avancerad funktionalitet</p>
-                                                                <a href="priceplan.html">Läs mer</a>
+                                                                <a href="priceplan.html?nocolumns">Läs mer</a>
                                                         </td>
                                                 </tr>
                                         </table>
@@ -340,7 +340,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                         <li class="odd"><a href="#">1000 dok/mån</a></li>
                                                         <li class="bottom">
                                                                 <p>Extra funktionalitet</p>
-                                                                <a href="priceplan.html">Läs mer</a>
+                                                                <a href="priceplan.html?nocolumns">Läs mer</a>
                                                         </li>
                                                 </ul>
                                         </div>
