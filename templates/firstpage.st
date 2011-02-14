@@ -55,7 +55,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                 jQuery('.campaign-text a, .campaign-play, #nav-container .col a').click( function(e) {
                                         e.preventDefault();
                                         
-                                        var html = '<object> <embed width="590" height="370" allowscriptaccess="always" allowfullscreen="true" type="application/x-shockwave-flash" src="https://secure.vimeo.com/moogaloop.swf?clip_id=17638316&amp;server=vimeo.com&amp;show_title=0&amp;show_byline=0&amp;show_portrait=0&amp;color=00ADEF&amp;fullscreen=1"></object>';
+                                        var html = '<object> <embed width="590" height="370" allowscriptaccess="always" allowfullscreen="true" type="application/x-shockwave-flash" src="https://secure.vimeo.com/moogaloop.swf?clip_id=19914678&amp;server=vimeo.com&amp;show_title=0&amp;show_byline=0&amp;show_portrait=0&amp;color=00ADEF&amp;fullscreen=1"></object>';
                                         
                                         openModal(html, {
                                                 width: '630',
