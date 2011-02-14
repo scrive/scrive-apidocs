@@ -51,7 +51,6 @@ mailDocumentClosedForSignatoriesContent=
 mailRejectMailTitle=Avvisat: $documenttitle$
 ####
 mailRejectMailContent=
-    <span>
       $if(customMessage)$
        $customMessage:noescape()$ 
       $else$
@@ -61,7 +60,8 @@ mailRejectMailContent=
       $endif$
       <p><strong>$rejectorName$</strong> har avvisat att underteckna dokumentet <strong>$documenttitle$</strong>. Avtalsprocessen är därmed avbruten.
       </p>
-     </span>
+      $poweredBySkrivaPaPara()$
+
 ###
 mailInvitationToSignTitle=Inbjudan från $creatorname$ till $documenttitle$
 ###
