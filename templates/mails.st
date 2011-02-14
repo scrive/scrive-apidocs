@@ -191,8 +191,10 @@ mailViralInviteTitle=Inbjudan från $invitername$
 mailViralInviteContent=
     <p>Hej,</p>
 
-    <p>$invitername$ har bjudit in dig till ett konto på tjänsten SkrivaPå. 
-    SkrivaPå är en tjänst för att skriva på och arkivera dokument elektroniskt. 
+    <p>$invitername$ har bjudit dig på två månaders fri användning av tjänsten SkrivaPå.
+    Det betyder nog att han/hon gillar vår tjänst och tror du också skulle uppskatta den också.</p>
+
+    <p>SkrivaPå är en tjänst för att skriva på och arkivera dokument elektroniskt.
     Spara pengar, frustration och miljö och använd SkrivaPå istället. 
     Du kan spara mellan 50-250kr/dokument!</p>
 
