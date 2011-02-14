@@ -4,6 +4,7 @@ staticTemplate=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.
         <head>
                 <title>SkrivaPå</title>
                 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+                $facebooklogo()$
                 <link href='http://fonts.googleapis.com/css?family=Copse' rel='stylesheet' type='text/css'>
                 <link href="/css/main.css" rel="stylesheet" type="text/css" />
                 <link rel="stylesheet" type="text/css" href="$prefix$/theme/newdesign.css" media="screen">
@@ -16,7 +17,7 @@ staticTemplate=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.
 
         
         </head>
-        <body>  $facebooklogo()$
+        <body> 
                 $header()$
                 <div id="body-container">
                         <div class="content">

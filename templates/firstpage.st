@@ -4,6 +4,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
         <head>
                 <title>SkrivaPå</title>
                 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+                $facebooklogo()$
                 <link href='http://fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css">
                 <link href="/css/main.css" rel="stylesheet" type="text/css" />
                 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.0/jquery.min.js" type="text/javascript"></script>
@@ -75,7 +76,6 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 </script>
         </head>
         <body>
-                $facebooklogo()$
                 <div id="wrap">
                 <div id="top-container">
                         <div class="content">
