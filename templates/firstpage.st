@@ -87,7 +87,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <br />
                                                 <br />
                                                 </h3>
-                                                <em>Vi bjuder på 6 månaders fri användning nu!</em>
+                                                <em>Vi bjuder på 2 månaders fri användning nu!</em>
                                                 <form method="post" action="$linkrequestaccount$">
                                                         <input class="shiny infotext" type="email" name="email" value="Fyll i din e-postadress" /> <a href="#" class="submit btn-small green2 center"><p>Skicka förfrågan!</p></a>
                                                         <input type="submit" class="hidden">
@@ -351,7 +351,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                 <div class="spacer70"></div>
                                 <div class="try-skrivapa">
                                         <div class="left">
-                                                <h2>6 månaders fri användning nu!</h2>
+                                                <h2>2 månaders fri användning nu!</h2>
                                                 <p>Allt inkluderat. Standardkonto, fria transaktioner och fri lagring.</p>
                                         </div>
                                         <div class="right">
