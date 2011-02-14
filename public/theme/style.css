@@ -2001,10 +2001,10 @@ form {
 
 #signViewBottomBoxContainerLeft
 {
-    width: 625px;
     float: left;
+    padding: 40px 0 0 98px;
     position: relative;
-    padding:10px 0 10px 25px;	
+    width: 460px;
 }
 
 #signViewBottomBoxContainerLeftIcon
@@ -2040,11 +2040,10 @@ form {
 
 #signViewBottomBoxContainerRight
 {
-    width: 300px;
     float: left;
-    position: relative;
-    margin-top:45px;
-    color:white;
+    margin-top: 42px;
+    text-align: right;
+    width: 252px;
 }
 
 #signViewBottomBoxContainerRight .button

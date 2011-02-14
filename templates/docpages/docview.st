@@ -362,9 +362,9 @@ $if(notsignedbyme)$$if(pending)$
     </div>
   </div>
   <div id="signViewBottomBoxContainerRight"> 
-  <input type="button" class="submit btn-blue center" value="SkrivaPå" id="sign" rel="#dialog-confirm-sign" name="sign" />
+  <input type="button" class="submit btn-blue center" value="     SkrivaPå" id="sign" rel="#dialog-confirm-sign" name="sign" />
         <br>
-    <input class="bigbutton" type="submit" name="cancel" value="Avvisa" rel="#dialog-confirm-cancel" id="cancel">
+    <input class="bigbutton" type="submit" name="cancel" value="Avvisa dokument" rel="#dialog-confirm-cancel" id="cancel">
   </div>
 </div>
 $endif$$endif$ 
