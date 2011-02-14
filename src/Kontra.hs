@@ -52,6 +52,7 @@ import KontraLink
 import qualified TrustWeaver as TW
 import ELegitimation.ELeg
 import Mails.SendMail
+import qualified MemCache
 
 instance Monad m => IsAttrValue m DocumentID where
     toAttrValue = toAttrValue . show
@@ -111,6 +112,7 @@ data Context = Context
     , ctxmailer              :: Mailer 
     , ctxtwconf              :: TW.TrustWeaverConf
     , ctxelegtransactions    :: [ELegTransaction]
+    , ctxfilecache           :: MemCache.MemCache FileID BS.ByteString
     }
 
 type Kontra a = ServerPartT (StateT Context IO) a
