@@ -784,8 +784,7 @@ img.waiting
 }
 
 .flashmsgbox .flashmessage {
-    /* color: #595A59; */
-    font-size: 16px;
+    font-size: 13px;
     font-weight:bold;
     width: 940px;
     margin: auto;

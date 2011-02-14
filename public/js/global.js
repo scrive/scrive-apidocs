@@ -732,11 +732,8 @@ function flashFlashMessages()
         fm.html("");
         var logo = $("<a class='logo' href='/'></a>"); /* Sorry for that but we have a deadline, also for css */
         var center = $("<div class='flashcenter'> <table style='height:50px'> <tbody style='height:50px'> <tr><td style='height:50px' valign='middle'>" + text +"</td></tr> </tbody></table></div>")
-        var closeLink = $("<a class='flashmessageclose'> Stäng </a>").click(function(){flashmsgbox.hide();})
         fm.append(logo);
         fm.append(center);
-        fm.append(closeLink);
-      
     });
       if ($('.flashmessage',flashmsgbox).size() >0)
          flashmsgbox.show().delay(10000).hide(function(){$(flashmsgbox).children().remove()});
