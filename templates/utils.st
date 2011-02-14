@@ -74,5 +74,8 @@ th=<th style="width:60px;text-align:center">$it:noescape()$</th>
 ###
 spanNoEscape=<span>$it:noescape()$</span>
 ####
-facebooklogo=<link rel="image_src" href="/img/facebooklogo.jpg" />
+facebooklogo=
+<link rel="image_src" href="https://skrivapa.se/img/facebooklogo.jpg" />
+<meta name="title" content="SkrivaPå" />
+<meta name="description" content="Dokumenthantering är tidskrävande. Tid är pengar. SkrivaPå är ett skräddarsytt redskap som optimerar dina processer. Spara 50-250kr/dokument." />
 ####
