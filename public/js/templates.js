@@ -897,7 +897,7 @@ function signatoryToHTML(sig) {
   var n = "Unnamed";
 
   if(sig.name == "") {
-    n = "(fill in)";
+    n = "(Namnlös)";
   } else {
     n = sig.name;
   }
