@@ -1972,3 +1972,21 @@ a.btn-big:active {
    -ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=0)"; 
    filter: alpha(opacity=0);                                      
 }
+
+
+/* temporary cover up */
+
+.portrait 
+{
+    display: none;
+}
+
+.portrait-image img
+{
+    display: none;
+}
+
+.partner-image img
+{
+    display: none;
+}
