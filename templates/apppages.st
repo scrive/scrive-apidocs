@@ -59,7 +59,7 @@ wholePage=
                 type="text/javascript"></script>
       </head>
       <body>
-  
+        $facebooklogo()$
         $header()$
         <div id="mainContainer960">
           <div class="flashmsgbox">
