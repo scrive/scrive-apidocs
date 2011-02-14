@@ -125,7 +125,7 @@ pageDocumentForViewerContent =
       <span class="title">DOKUMENT #$documentid$:</span>
       <span class="name">$documenttitle$</span>
      </span>
-     <span style="float: right; display: inline-block; margin: 8px 10px 0pt 18px;">
+     <span class="download">
         <a href="$linkissuedocpdf$" target="_blank">
          Ladda ned PDF
        </a>
@@ -335,7 +335,7 @@ pageDocumentForSignContent=
       <span class="title">DOKUMENT #$docid$:</span>
       <span class="name">$title$</span>
     </span>
-     <span style="float: right; display: inline-block; margin: 8px 10px 0pt 18px;">
+     <span class="download">
         <a href="$linkissuedocpdf$" target="_blank">
          Ladda ned PDF
        </a>
@@ -820,7 +820,7 @@ pageDocumentForAuthorContentPostPreparation=
       <span class="title">DOKUMENT #$documentid$:</span>
       <span class="name">$documenttitle$</span>
      </span>
-     <span style="float: right; display: inline-block; margin: 8px 10px 0pt 18px;">
+     <span class="download">
         <a href="$linkissuedocpdf$" target="_blank">
          Ladda ned PDF
        </a>
