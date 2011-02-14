@@ -386,6 +386,8 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser,ctxtemplates})  docu
       let isTimedout = documentstatus document == Timedout
       let isCanceled = documentstatus document == Canceled
       let isRejected = documentstatus document == Rejected
+      let isClosed = documentstatus document == Closed
+
       -- let isWithDrawn = documentstatus document == Withdrawn
       let dontShowAnyReminder = isTimedout || isCanceled || isRejected
       let dialogHeight =   if (wasSigned) then "400" else "600"
@@ -406,13 +408,17 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser,ctxtemplates})  docu
                     (isCanceled || isRejected, return "" ),
                     (wasSeen,  renderTemplate ctxtemplates "signatoryMessageSeen" [("date", showDateOnly $ signtime $ fromJust maybeseeninfo)])
                    ]        (renderTemplate ctxtemplates "signatoryMessageNotSigned" ())
-      reminderText <- if (wasSigned)
+      reminderText <- if (isClosed)
                       then renderTemplate ctxtemplates "reminderTextSigned" () 
-                      else renderTemplate ctxtemplates "reminderTextNotSigned" ()
+                      else if (not wasSigned)
+                           then renderTemplate ctxtemplates "reminderTextNotSigned" ()
+                           else return ""
       reminderSenderText <- 
-                     if (wasSigned)
+                     if (isClosed)
                       then renderTemplate ctxtemplates "reminderSenderTextSigned" () 
-                      else renderTemplate ctxtemplates "reminderSenderTextNotSigned" ()             
+                      else if (not wasSigned)
+                           then renderTemplate ctxtemplates "reminderSenderTextNotSigned" ()             
+                           else return ""
       reminderEditorText <- renderTemplate ctxtemplates "reminderEditorText" ()                         
       reminderDialogTitle <- return reminderText   
       reminderMessage <-  mailDocumentRemindContent ctxtemplates Nothing ctx document siglnk author
