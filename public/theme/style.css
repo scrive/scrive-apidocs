@@ -583,7 +583,7 @@ color: white;
 #documentBox 
 {
     overflow: auto;
-    background-color: #999;
+    /* background-color: #999; */
     margin: 0 auto;
     width: 960px;
     margin-top:10px;
@@ -607,7 +607,7 @@ color: white;
     width: 944px;
     align: center;
     margin: 6px;
-    border: 1px solid black;
+    border: 1px solid #777;
     background-color: #fafafa;
 }
 
