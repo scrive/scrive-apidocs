@@ -1121,7 +1121,7 @@ a.button {
 #signStepsTitleRowTextContainer
 {
     display: inline-block;
-    margin: 3px 0 0 18px;
+    margin: 1px 0 0 18px;
     float: left;
     position:relative;
     top:2px;
@@ -1131,8 +1131,17 @@ a.button {
 {
     font-size: 10px;
     margin-right: 2px;
-
 }
+
+#signStepsTitleRow .download
+{
+    font-size: 10px;
+    margin-right: 2px;
+    display: inline-block;
+    float: right;
+    margin: 8px 10px 0 18px;
+}
+
 
 #signStepsTitleRow .name
 {
