@@ -336,13 +336,12 @@ a.btn-big:active {
 }
 
 #top-container .person {
-	background: url(../img/start-person.png);
+	background: url(../img/persons.png);
 	bottom: -34px;
-	display: none;
 	height: 396px;
 	left: 340px;
 	position: relative;
-	width: 444px;
+	width: 564px;
 	z-index: 0;
 }
 
@@ -516,7 +515,7 @@ a.btn-big:active {
 	margin-left: 98px;
 	position: absolute;
 	right: -3px;
-	top: 240px;
+	top: 278px;
 	width: 306px;
 	z-index: 2;
 }
