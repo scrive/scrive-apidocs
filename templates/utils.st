@@ -74,5 +74,6 @@ th=<th style="width:60px;text-align:center">$it:noescape()$</th>
 ###
 spanNoEscape=<span>$it:noescape()$</span>
 ####
-facebooklogo=<img src="/img/facebooklogo.jpg" height="0" width="0" style="display:none"/>
+facebooklogo=
+<img width="122" height="142" class="portrait" src="/img/facebooklogo.jpg" style="display:none">
 ####
