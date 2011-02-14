@@ -137,7 +137,6 @@ handleRoutes = msum [
      , dir "landpage" $ dir "signed"     $ hget2 $ DocControl.landpageSigned 
      , dir "landpage" $ dir "rejected"   $ hget2 $ DocControl.landpageRejected
      , dir "landpage" $ dir "signedsave" $ hget2 $ DocControl.landpageSignedSave
-     , dir "landpage" $ dir "saved"      $ hget2 $ DocControl.landpageSaved --got to check this I belive it is not used. MR
            
      , dir "pagesofdoc" $ hget1 $ DocControl.handlePageOfDocument
 
