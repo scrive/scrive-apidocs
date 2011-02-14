@@ -414,6 +414,7 @@ a.btn-big:active {
 	text-shadow: #000 0 1px 3px;
 	top: 21px;
 	width: 95px;
+        z-index: 10;
 }
 
 #top-container .login-button:hover {
