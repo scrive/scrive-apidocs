@@ -53,7 +53,7 @@ staticTemplate=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.
                   $if(!logged)$    
                                 <div class="try-skrivapa">
                                         <div class="left">
-                                                <h2>6 månaders fri användning nu!</h2>
+                                                <h2>2 månaders fri användning nu!</h2>
                                                 <p>Allt inkluderat. Standardkonto, fria transaktioner och fri lagring.</p>
                                         </div>
                                         <div class="right">
