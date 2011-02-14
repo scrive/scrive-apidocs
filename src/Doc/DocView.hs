@@ -10,7 +10,6 @@ module Doc.DocView( emptyDetails
               , landpageSendInviteView
               , landpageSignedView
               , landpageLoginForSaveView
-              , landpageDocumentSavedView
               , flashRemindMailSent
               , flashMessageCanceled 
               , flashDocumentRestarted
@@ -95,9 +94,6 @@ landpageSignedView templates document@Document{documenttitle,documentstatus} sig
 
 landpageLoginForSaveView::KontrakcjaTemplates ->IO String
 landpageLoginForSaveView  templates  = renderTemplate templates  "landpageLoginForSaveView" ()
-
-landpageDocumentSavedView ::KontrakcjaTemplates -> IO String
-landpageDocumentSavedView templates  = renderTemplate templates  "landpageDocumentSavedView" ()
 
 flashDocumentDraftSaved :: KontrakcjaTemplates ->IO String
 flashDocumentDraftSaved  templates  = renderTemplate templates  "flashDocumentDraftSaved" ()

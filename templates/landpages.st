@@ -17,17 +17,6 @@ landpageSendInviteView=
       <p><a class="button" href="/">Skapa ett nytt avtal</a></p>
     </div>
 ######
-landpageDocumentSavedView=
-    <div class="centerdivnarrow">
-      <p>Ditt dokument är nu sparat. Du finner dokumentet under Arkiv när du loggar in.</p>
-      <p>Vi hoppas att du är nöjd med vår tjänst hittills och att du är nyfiken på att själv använda
-        SkrivaPå för att skriva dina avtal. Därför erbjuder vi dig som ny kund möjligheten att testa
-        tjänsten genom tre fria avtal. Dina fria avtal förbrukas endast då ett avtal undertecknats av
-        alla parter.</p>
-      <p>Börja redan nu! Ladda upp ditt avtal genom att klicka nedan.</p>
-      <a class="bigbutton" href="/">Starta</a>
-    </div>
-#####
 landpageLoginForSaveView=
     <div class="centerdivnarrow">
      <a class="headline">Konto har skapats</a>
