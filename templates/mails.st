@@ -147,9 +147,7 @@ newUserMailTitle=Nytt konto
 ####
 newUserMailContent=
     <p>Hej <strong>$personname$</strong>,</p>
-    <p>Jag heter Lukas Duczko och är VD på SkrivaPå. Tack för att du har skapat ett konto hos oss.
-       Vi hoppas att du kommer att bli nöjd med våra tjänster.
-       Tveka inte att höra av dig med feedback eller bara en enkel hälsning. Din åsikt är värdefull.</p>
+    <p>Jag heter Lukas Duczko och är VD på SkrivaPå. Tack för att du har skapat ett konto hos oss. Just nu bjuder vi på 2 månaders fri användning till alla nya kunder. Vi hoppas att du kommer att bli nöjd med våra tjänster. Tveka inte att höra av dig med feedback eller bara en enkel hälsning. Din åsikt är värdefull.</p>
 
     <p>Användarnamn:<br>
     $email$</p>
