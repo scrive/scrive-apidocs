@@ -82,7 +82,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                 <div class="left">
                                         <div class="intro-container">
                                                 <h2>Snabbt. Smidigt. Säkert.</h2>
-                                                <h3>Välkommen till framtiden. Frustrerande och kostsamma avtalsprocesser är inte längre ett måste, det är ett medvetet val.
+                                                <h3>SkrivaPå är en tjänst för att skriva på och arkivera avtal elektroniskt. Minska kostnaderna, öka omsättningen och spar på frustrationen. Välkommen till framtiden!
                                                 <br />
                                                 <br />
                                                 <br />
