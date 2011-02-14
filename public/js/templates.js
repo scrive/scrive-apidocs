@@ -961,13 +961,8 @@ function makeDropTargets() {
     var field = $(ui.draggable);
     var helper = $(ui.helper);
 
-    var windowScrollY = window.pageYOffset ;
-    if (windowScrollY == undefined) windowScrollY = (document.documentElement.scrollTop?document.documentElement.scrollTop:document.body.scrollTop); 
-    var windowScrollX =  window.pageXOffset ;
-    if (windowScrollX == undefined) windowScrollX = (document.documentElement.scrollLeft?document.documentElement.scrollLeft:document.body.scrollLeft); 
-
-    var top = helper.offset().top - page.offset().top + windowScrollY;
-    var left = helper.offset().left - page.offset().left + windowScrollX;             
+    var top = helper.offset().top - page.offset().top;
+    var left = helper.offset().left - page.offset().left;
     
     var pageno = parseInt(page.attr("id").substr(4));
 
