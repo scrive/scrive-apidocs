@@ -1338,7 +1338,7 @@ a.okIcon {
     width: 360px;
     float: left;
     position: relative;
-    padding: 7px 0px 0 0px;
+    padding: 5px 0 7px;
 }
 
 #signStepsBodyLeft.step3{
@@ -1877,7 +1877,7 @@ form {
 #signStepsBodyLeft #people
 {
     width: 250px;
-    padding: 10px 8px 4px 8px;
+    padding: 10px 8px 8px 8px;
     margin-top: 2px;
 }
 
@@ -2429,3 +2429,8 @@ input#cancel {
    right: -40px
 }
 
+.signStepsBodyForms ol
+{
+    margin-top: 4px;
+    margin-botton: 4px;
+}
