@@ -370,18 +370,31 @@ signupPageGet = do
 signupPagePost :: Kontra KontraLink
 signupPagePost = do
     ctx@Context{ctxtemplates,ctxhostpart} <- lift get
-    memail <- getField "email"
+    memail <- fmap (fmap (BS.fromString)) $ getField "email"
     case memail of
-        Nothing ->
-            -- V.renderFromBody ctx V.TopNone V.kontrakcja (signupPageView Nothing)
-            return LinkSignup
+        Nothing -> return LinkSignup
         Just email -> do
-                    maccount <- liftIO $ UserControl.createUser ctx ctxhostpart BS.empty (BS.fromString email) Nothing True Nothing
-                    if isJust maccount       
-                     then return LinkSignupDone
-                     else do
-                          addFlashMsgText =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
-                          return LinkSignup
+                        muser <- query $ GetUserByEmail $ Email $ email
+                        case  muser of
+                          Just user -> if (isNothing $ userhasacceptedtermsofservice user) 
+                                        then  
+                                         do  al <- liftIO $ unloggedActionLink user
+                                             mail <-  liftIO $ newUserMail (ctxtemplates) (ctxhostpart) email email al
+                                             liftIO $ sendMail (ctxmailer ctx) $ mail { fullnameemails = [(email,email)]}
+                                             addFlashMsgText =<< (liftIO $ flashMessageNewActivationLinkSend  (ctxtemplates)) 
+                                             return LinkSignup
+                                          else do
+                                             addFlashMsgText =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
+                                             return LinkSignup
+                          Nothing -> do
+                            maccount <- liftIO $ UserControl.createUser ctx ctxhostpart BS.empty email Nothing True Nothing
+                            if isJust maccount       
+                             then do
+                              addFlashMsgText =<< (liftIO $ flashMessageUserSignupDone ctxtemplates)
+                              return LinkSignup
+                             else do
+                              addFlashMsgText =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
+                              return LinkSignup
                     
 
 signupPageDone :: Kontra Response

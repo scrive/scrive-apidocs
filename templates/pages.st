@@ -18,22 +18,25 @@ newPasswordPage=
     </form>
 ####
 signupPageView =
-    <div class="centerdivnarrow">
-      <form action="" method="post">
-        <table>
-          <tr>
-            <td>E-mail:</td>
-            <td><input type="email" name="email" value="" /></td>
-          </tr>
-        </table>
-        <input type="submit" class="validateEmail" value="Skapa konto">
-      </form>
-    </div>
+<div class="newdesign">
+<div class="try-skrivapa">
+  <div class="left">
+       <h2>Gratis SkrivaPå till och med 31 maj!</h2>
+       <p>Allt inkluderat. Standardkonto, fria transaktioner och fri lagring.</p>
+  </div>
+  <div class="right">
+     <form action="" method="post">
+         <input type="email" value="Fyll i din e-postadress" name="email" class="shiny infotext"> <a class="submit btn-small green2 center float-right" href="#"><p>Skapa konto !</p></a>
+         <input type="submit" class="hidden">
+    </form>
+  </div>
+</div>
+</div>
 ####
 activatePageView=
-    <form action="" method="post">
+    <form action="" method="post" style="border:1px solid;border-color:#D0D0D0 #BDBDBD #C0C0C0;padding:7px;background:#ffffff">
       <h2>Vänligen acceptera användarvillkoren</h2>
-      <div style="height:480px;overflow-y:scroll;border:1px solid #EEEEEE">
+      <div style="height:480px;overflow-y:scroll;border:1px solid #EEEEEE;padding:4px">
         $tostext:noescape()$
         <br>
       </div>

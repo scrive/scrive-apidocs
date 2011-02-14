@@ -66,7 +66,7 @@ staticTemplate=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.
                   $endif$ 
                         </div>
                         <div class="spacer40"></div>
-                </div>
+            
                 <div id="footer-container">
                         <div class="top-border"></div>
                         <div class="spacer"></div>
@@ -126,6 +126,7 @@ staticTemplate=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.
                                 </div>
                         </div>
                 </div>
+           </div>
         </body>
 </html>
 ####

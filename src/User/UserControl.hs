@@ -263,7 +263,7 @@ checkUserTOSGet action =
 
 handleAcceptTOSGet = withUserGet $ do
       ctx <- get
-      tostext <- liftIO $ BS.readFile $ "html/termsofuse.html"
+      tostext <- liftIO $ BS.readFile $ "html/terms.html"
       content <- liftIO $ pageAcceptTOS (ctxtemplates ctx) tostext
       renderFromBody ctx TopNone kontrakcja $ cdata content
 
@@ -348,7 +348,7 @@ activatePage muser (name,email) = do
                    ctx <- get
                    case muser of 
                     Just user -> do    
-                                  tostext <- liftIO $ BS.readFile $ "html/termsofuse.html"
+                                  tostext <- liftIO $ BS.readFile $ "html/terms.html"
                                   content <- liftIO $ activatePageView (ctxtemplates ctx) (BS.toString tostext) name
                                   renderFromBody ctx TopNone kontrakcja $ cdata content
                     Nothing -> do 
