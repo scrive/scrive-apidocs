@@ -5,7 +5,7 @@ landpageSignInviteView=
      <p>En inbjudan att underteckna har nu skickats 
         till $partyListButAuthor:noescape()$.
       </p>
-      <p><a class="button" href="/">Skapa ett nytt avtal</a></p>
+      <p><a class="button" href="/">Skapa ett nytt dokument</a></p>
     </div>
 ######
 landpageSendInviteView=
@@ -14,7 +14,7 @@ landpageSendInviteView=
       <p>En inbjudan att underteckna har nu skickats
         till $partyListButAuthor:noescape()$.
       </p>
-      <p><a class="button" href="/">Skapa ett nytt avtal</a></p>
+      <p><a class="button" href="/">Skapa ett nytt dokument</a></p>
     </div>
 ######
 landpageLoginForSaveView=
