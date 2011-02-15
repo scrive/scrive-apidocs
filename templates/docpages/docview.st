@@ -156,10 +156,6 @@ pageDocumentForViewerContent =
     var docstate = $docstate:noescape()$;
   </script>
 
-  <!-- 
-    I need to turn this stuff off since it brakes js now. TODO!!!!  
-    <script type="text/javascript" src="/js/signatory.js"></script>
-  -->
   <div class="waiting4page"></div>
 </div>
 
@@ -853,10 +849,6 @@ pageDocumentForAuthorContentPostPreparation=
     var docstate = $docstate:noescape()$;
   </script>
 
-  <!-- 
-     I need to turn this stuff off since it brakes js now. TODO!!!!  
-     <script type="text/javascript" src="/js/signatory.js"></script>
-     -->
   <div class="waiting4page"></div>
 </div>
 
