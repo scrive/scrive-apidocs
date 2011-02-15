@@ -1567,9 +1567,7 @@ authorSendDocument documentid time ipnumber author msiginfo =
           Preparation -> 
               let timeout = do
                              days <- documentdaystosign document 
-                             let enddate = m + (days * 24 *60)
-                             return $ (TimeoutTime . MinutesTime ) enddate
-                  MinutesTime m = time 
+                             return $ TimeoutTime $ (days * 24 *60) `minutesAfter` time
                   authorid = userid author
                   sinfo = Just (SignInfo time ipnumber)
               in Right $ document { documenttimeouttime = timeout
@@ -1595,9 +1593,7 @@ authorSignDocument documentid time ipnumber author msiginfo =
           Preparation -> 
               let timeout = do
                              days <- documentdaystosign document 
-                             let enddate = m + (days * 24 *60)
-                             return $ (TimeoutTime . MinutesTime ) enddate
-                  MinutesTime m = time 
+                             return $ TimeoutTime $ (days * 24 *60) `minutesAfter` time
                   authorid = userid author
                   sinfo = Just (SignInfo time ipnumber)
               in Right $ document { documenttimeouttime = timeout
@@ -1780,9 +1776,7 @@ closeDocument docid time ipnumber author msiginfo = do
   doc <- modifyDocument docid 
          (\document -> let timeout = do
                                       days <- documentdaystosign document 
-                                      let enddate = m + (days * 24 *60)
-                                      return $ (TimeoutTime . MinutesTime ) enddate
-                           MinutesTime m = time 
+                                      return $ TimeoutTime $ (days * 24 *60) `minutesAfter` time
                            authorid = userid author
                            sinfo = Just (SignInfo time ipnumber)
                   

@@ -14,20 +14,34 @@ $(deriveAll [''Eq, ''Ord, ''Default, ''Read]
   [d|
 
    -- | Time in minutes from 1970-01-01 00:00 in UTC coordinates
-   newtype MinutesTime = MinutesTime Int
-
+   newtype MinutesTime0 = MinutesTime0 Int
+   data MinutesTime = MinutesTime {
+                                         minutes::Int,
+                                         secs::Int
+                                        }
  |])
 
+instance Version MinutesTime0
+$(deriveSerialize ''MinutesTime0)
+
+$(deriveSerialize ''MinutesTime) 
+instance Version (MinutesTime) where
+   mode = extension 1 (Proxy :: Proxy MinutesTime0)
+
+instance Migrate MinutesTime0 MinutesTime where
+      migrate (MinutesTime0 m) = MinutesTime  {minutes = m, secs = 0 }
+    
+
 instance Show MinutesTime where
-    showsPrec prec (MinutesTime mins) = 
-        let clocktime = TOD (fromIntegral mins*60) 0
+    showsPrec prec (MinutesTime mins secs) = 
+        let clocktime = TOD (fromIntegral $ mins*60 + secs) 0
             -- FIXME: use TimeZone of user
             calendartime = unsafePerformIO $ toCalendarTime clocktime
         in (++) $ formatCalendarTime defaultTimeLocale 
-               "%Y-%m-%d, %H:%M" calendartime
+               "%Y-%m-%d, %H:%M:%S" calendartime
                
-showDateOnly (MinutesTime 0) = ""
-showDateOnly (MinutesTime mins) = 
+showDateOnly (MinutesTime 0 _) = ""
+showDateOnly (MinutesTime mins _) = 
         let clocktime = TOD (fromIntegral mins*60) 0
             -- FIXME: use TimeZone of user
             calendartime = unsafePerformIO $ toCalendarTime clocktime
@@ -49,7 +63,7 @@ swedishTimeLocale = defaultTimeLocale { months =
                                             , ("dec", "dec")
                                             ] }
 
-showDateAbbrev (MinutesTime current) (MinutesTime mins) 
+showDateAbbrev (MinutesTime current _ ) (MinutesTime mins _) 
                | ctYear ct1 == ctYear ct && ctMonth ct1 == ctMonth ct && ctDay ct1 == ctDay ct =
                    formatCalendarTime swedishTimeLocale "%H:%M" ct
                | ctYear ct1 == ctYear ct =
@@ -60,13 +74,10 @@ showDateAbbrev (MinutesTime current) (MinutesTime mins)
                  ct1 = unsafePerformIO $ toCalendarTime $ TOD (fromIntegral current*60) 0
                  ct = unsafePerformIO $ toCalendarTime $ TOD (fromIntegral mins*60) 0
 
-instance Version MinutesTime
-$(deriveSerialize ''MinutesTime)
-
 getMinutesTime = (return . fromClockTime) =<< getClockTime
 
-fromClockTime (TOD secs picos) =  MinutesTime (fromIntegral $ (secs `div` 60))
-toClockTime (MinutesTime time) = (TOD (fromIntegral time * 60) 0)   
+fromClockTime (TOD secs picos) =  MinutesTime (fromIntegral $ (secs `div` 60)) (fromIntegral $ (secs `mod` 60))
+toClockTime (MinutesTime time secs) = (TOD (fromIntegral $ time * 60 + secs) 0)   
 
 toUTCTime = System.Time.toUTCTime . toClockTime
 
@@ -75,14 +86,14 @@ parseMinutesTimeMDY s = do
                       t <- parseTime defaultTimeLocale "%d-%m-%Y" s
                       startOfTime <- parseTime defaultTimeLocale "%d-%m-%Y" "01-01-1970" 
                       let val = diffDays t startOfTime  
-                      return (MinutesTime (fromIntegral $ (val *24*60)))
+                      return (MinutesTime (fromIntegral $ (val *24*60)) 0)
 
-showDateMDY (MinutesTime mins) =  let clocktime = TOD (fromIntegral mins*60) 0
-                                      calendartime = unsafePerformIO $ toCalendarTime clocktime
-                                  in formatCalendarTime defaultTimeLocale "%d-%m-%y" calendartime  
+showDateMDY (MinutesTime mins _) =  let clocktime = TOD (fromIntegral mins*60) 0
+                                        calendartime = unsafePerformIO $ toCalendarTime clocktime
+                                    in formatCalendarTime defaultTimeLocale "%d-%m-%y" calendartime  
                 
 minutesAfter::Int -> MinutesTime -> MinutesTime 
-minutesAfter i (MinutesTime i') = MinutesTime $ i + i'
+minutesAfter i (MinutesTime i' s) = MinutesTime (i + i') s
 
 startOfMonth::MinutesTime->MinutesTime
 startOfMonth t = let 
@@ -94,6 +105,6 @@ addMonths::Int ->MinutesTime -> MinutesTime
 addMonths i t = fromClockTime $ addToClockTime (noTimeDiff {tdMonth = i})  (toClockTime t)
 
 dateDiffInDays::MinutesTime->MinutesTime -> Int
-dateDiffInDays (MinutesTime ctime) (MinutesTime mtime)
+dateDiffInDays (MinutesTime ctime _) (MinutesTime mtime _)
                        | ctime>mtime = 0
                        | otherwise = (mtime - ctime) `div` (60*24)

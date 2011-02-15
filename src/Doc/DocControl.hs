@@ -997,26 +997,6 @@ fieldsFromSignatory sig =
 sealSpecFromDocument :: String -> Document -> User -> String -> String -> Seal.SealSpec
 sealSpecFromDocument hostpart document author inputpath outputpath =
   let docid = unDocumentID (documentid document)
-      {-
-        (authorsigntime,authorsignipnumber) = 
-          case documentmaybesigninfo document of
-            Nothing -> error "signtime1"
-            Just (SignInfo {signtime,signipnumber}) -> (signtime,signipnumber)
-      authordetails = documentauthordetails document
-      authorperson = if authordetails /= emptyDetails 
-                     then personFromSignatoryDetails authordetails
-                     else personFromSignatoryDetails (SignatoryDetails 
-                                  { signatoryname = userfullname author
-                                  , signatorycompany = usercompanyname $ userinfo author
-                                  , signatorynumber = usercompanynumber $ userinfo author
-                                  , signatoryemail = unEmail $ useremail $ userinfo author
-                                  , signatorynameplacements = []
-                                  , signatorycompanyplacements = []
-                                  , signatorynumberplacements = []
-                                  , signatoryemailplacements = []
-                                  , signatoryotherfields = []
-                                  })
-      -}
       authorHasSigned = (any ((maybe False ((== (userid author)) . unSignatory)) . maybesignatory) (documentsignatorylinks document))
       signatoriesdetails = map signatorydetails $ documentsignatorylinks document
       authordetails = (signatoryDetailsFromUser author) 
