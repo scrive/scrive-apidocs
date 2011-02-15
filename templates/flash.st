@@ -81,4 +81,5 @@ flashMessageNewActivationLinkSend=
 ###
 flashMessageUserSignupDone=Ditt konto har skapats! Vi har skickat ett mail med dina användaruppgifter till din inkorg.
 ###
+flashMessageAccountRequestSend=Din förfrågan är nu skickad
 ###

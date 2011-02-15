@@ -79,3 +79,10 @@ facebooklogo=
 <meta name="title" content="SkrivaPå" />
 <meta name="description" content="Dokumenthantering är tidskrävande. Tid är pengar. SkrivaPå är ett skräddarsytt redskap som optimerar dina processer. Spara 50-250kr/dokument." />
 ####
+#### Puts an invisible box with flash messages. jScripts do all show magic.
+####
+flashmessages = 
+<div class="flashmsgbox">
+            $flashmessages:{ msg | <div class="flashmessage">$msg:noescape()$</div> }$
+</div>
+####
