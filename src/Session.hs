@@ -93,15 +93,15 @@ instance Version (SessionData) where
    mode = extension 3 (Proxy :: Proxy SessionData2)
      
 instance Migrate SessionData0 SessionData1 where
-      migrate (SessionData0 {userID0 = _, flashMessages0 = _}) = SessionData1 {userID1 = Nothing, flashMessages1 = [], expires1 = MinutesTime 0}
+      migrate (SessionData0 {userID0 = _, flashMessages0 = _}) = SessionData1 {userID1 = Nothing, flashMessages1 = [], expires1 = MinutesTime 0 0}
     
 instance Migrate SessionData1 SessionData2 where
       migrate (SessionData1 {userID1 = _, flashMessages1 = _, expires1 = _})
-                             = SessionData2 {userID2 = Nothing, flashMessages2 = [], expires2 = MinutesTime 0, hash2 = MagicHash 0}
+                             = SessionData2 {userID2 = Nothing, flashMessages2 = [], expires2 = MinutesTime 0 0, hash2 = MagicHash 0}
 
 instance Migrate SessionData2 SessionData where
       migrate (SessionData2 {userID2 = _, flashMessages2 = _, expires2 = _})
-                             = SessionData {userID = Nothing, flashMessages = [], expires = MinutesTime 0, hash = MagicHash 0, elegtransactions=[]}
+                             = SessionData {userID = Nothing, flashMessages = [], expires = MinutesTime 0 0, hash = MagicHash 0, elegtransactions=[]}
     
       
 

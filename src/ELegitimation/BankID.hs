@@ -62,7 +62,7 @@ handleSignBankID docid signid magic = do
                                               , transactionmagichash = Just magic
                                               , transactionnonce = nonce
                                               }
-                       let MinutesTime time = ctxtime ctx
+                       let MinutesTime time _ = ctxtime ctx
                        return $ toResponse $ toJSON [("status", JInt 0)
                                                     ,("servertime", JString $ show $ 60 * time)
                                                     ,("nonce", JString nonce)
@@ -161,7 +161,7 @@ handleIssueBankID docid = do
                                               , transactionmagichash = Nothing
                                               , transactionnonce = nonce
                                               }
-                       let MinutesTime time = ctxtime ctx
+                       let MinutesTime time _ = ctxtime ctx
                        return $ toResponse $ toJSON [("status", JInt 0)
                                                     ,("servertime", JString $ show $ 60 * time)
                                                     ,("nonce", JString nonce)
@@ -248,7 +248,7 @@ handleSignNordea docid signid magic = do
                                               , transactionmagichash = Just magic
                                               , transactionnonce = nonce
                                               }
-                       let MinutesTime time = ctxtime ctx
+                       let MinutesTime time _ = ctxtime ctx
                        return $ toResponse $ toJSON [("status", JInt 0)
                                                     ,("servertime", JString $ show $ 60 * time)
                                                     ,("nonce", JString nonce)
@@ -347,7 +347,7 @@ handleIssueNordea docid = do
                                               , transactionmagichash = Nothing
                                               , transactionnonce = nonce
                                               }
-                       let MinutesTime time = ctxtime ctx
+                       let MinutesTime time _ = ctxtime ctx
                        return $ toResponse $ toJSON [("status", JInt 0)
                                                     ,("servertime", JString $ show $ 60 * time)
                                                     ,("nonce", JString nonce)
@@ -435,7 +435,7 @@ handleSignTelia docid signid magic = do
                                               , transactionmagichash = Just magic
                                               , transactionnonce = nonce
                                               }
-                       let MinutesTime time = ctxtime ctx
+                       let MinutesTime time _ = ctxtime ctx
                        return $ toResponse $ toJSON [("status", JInt 0)
                                                     ,("servertime", JString $ show $ 60 * time)
                                                     ,("nonce", JString nonce)
@@ -534,7 +534,7 @@ handleIssueTelia docid = do
                                               , transactionmagichash = Nothing
                                               , transactionnonce = nonce
                                               }
-                       let MinutesTime time = ctxtime ctx
+                       let MinutesTime time _ = ctxtime ctx
                        return $ toResponse $ toJSON [("status", JInt 0)
                                                     ,("servertime", JString $ show $ 60 * time)
                                                     ,("nonce", JString nonce)
