@@ -138,12 +138,7 @@ pageDocumentForViewerContent =
       </span> 
 
   <div> 
-   $if(awaitingauthor)$
-      <script type="text/javascript" src="/js/signatory.js" ></script>
-   $$
-   $elseif(pending)$
-      <script type="text/javascript" src="/js/signatory.js" ></script>
-   $endif$      
+    
   </div>
 
     </div>
@@ -158,6 +153,8 @@ pageDocumentForViewerContent =
 
   <div class="waiting4page"></div>
 </div>
+
+$signatoryScriptIfRequired()$
 
 ####
 ####
@@ -248,9 +245,6 @@ pageDocumentForSignHelpers=
 <script type="text/javascript">
   $localscripts:noescape()$
 </script>
-<script src="/js/signatory.js" > </script> 
-
-
 ######
 pageDocumentForSignSigned=<div>Du har redan undertecknat!</div>
 ####
@@ -364,6 +358,7 @@ $if(notsignedbyme)$$if(pending)$
   </div>
 </div>
 $endif$$endif$ 
+$signatoryScriptIfRequired()$
 ###
 ####
 pageDocumentForAuthorHelpers=
@@ -863,17 +858,20 @@ $if(awaitingauthor)$
   <div id="signViewBottomBoxContainerRight"> 
     <div> 
       <input type="button" class="submit btn-blue center" value="SkrivaPå" id="signByAuthor" rel="#dialog-confirm-sign-by-author" name="sign" />
-      <!--      <input class="button" type="submit" name="sign" value="Underteckna!" id="signByAuthor" rel="#dialog-confirm-sign-by-author"> -->
       <input class="cancel bigbutton" type="button"
              name="cancel" value="Återkalla inbjudan" id="cancel"
              rel="#cancel-by-author-dialog">  
-      <script type="text/javascript" src="/js/signatory.js"
-              ></script>
     </div>
   </div>
 </div>
 $endif$   
-
+$signatoryScriptIfRequired()$
 $pageDocumentForAuthorHelpersLocalDialogs()$
 ###
-   
+signatoryScriptIfRequired=   
+$if(awaitingauthor)$
+      <script type="text/javascript" src="/js/signatory.js"></script>
+$elseif(pending)$
+      <script type="text/javascript" src="/js/signatory.js"></script>
+$endif$
+####
