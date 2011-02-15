@@ -912,6 +912,10 @@ $(document).ready(function() {
                     val = "(Namnlös)";
                 $('#peopleList li:eq(' + idx + ') a').text(val);
             });
+        $('form.requestAccount').submit(function(){
+            if (!emailFieldsValidation($("input[type='email']",$(this)))) return false;
+                
+        })
      });
 
 /*

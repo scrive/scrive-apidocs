@@ -7,7 +7,19 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 $facebooklogo()$
                 <link href='http://fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css">
                 <link href="/css/main.css" rel="stylesheet" type="text/css" />
-                <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.0/jquery.min.js" type="text/javascript"></script>
+                <link href="/theme/flash.css" rel="stylesheet" type="text/css" />
+               <script src="$protocol$//ajax.googleapis.com/ajax/libs/jquery/1.5.0/jquery.js"
+                type="text/javascript"></script>
+               <script src="$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js"
+                type="text/javascript"></script>
+               <script src="$prefix$/js/jquery.tools.min.js"
+                type="text/javascript"></script>
+               <script src="$prefix$/js/jquery.MultiFile.js"
+                type="text/javascript"></script>
+               <script src="$prefix$/tiny_mce/jquery.tinymce.js"  
+                type="text/javascript"></script>
+               <script src="$prefix$/js/global.js"
+                type="text/javascript"></script>
                 <script src="/js/jquery.tweet.js" type="text/javascript"></script>
                 <script src="/js/main.js" type="text/javascript"></script>
                 <script type="text/javascript">
@@ -77,6 +89,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
         </head>
         <body>
                 <div id="wrap">
+                <div class="flashmsgbox"> </div>
                 <div id="top-container">
                         <div class="content">
                                 <div class="logo no-txt">SkrivaPå</div>
@@ -89,7 +102,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <br />
                                                 </h3>
                                                 <em>Vi bjuder på 2 månaders fri användning nu!</em>
-                                                <form method="post" action="$linkrequestaccount$">
+                                                <form method="post" action="$linkrequestaccount$" class="requestAccount">
                                                         <input class="shiny infotext" type="email" name="email" value="Fyll i din e-postadress" /> <a href="#" class="submit btn-small green2 center"><p>Skicka förfrågan!</p></a>
                                                         <input type="submit" class="hidden">
                                                 </form>
@@ -356,7 +369,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <p>Allt inkluderat. Standardkonto, fria transaktioner och fri lagring.</p>
                                         </div>
                                         <div class="right">
-                                                <form method="post" action="$linkrequestaccount$">
+                                                <form method="post" action="$linkrequestaccount$" class="requestAccount">
                                                         <input class="shiny infotext" name="email" type="email" value="Fyll i din e-postadress" /> <a href="#" class="submit btn-small green2 center float-right"><p>Skicka förfrågan!</p></a>
                                                         <input type="submit" class="hidden">
                                                 </form>

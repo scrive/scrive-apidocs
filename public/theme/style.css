@@ -765,33 +765,6 @@ img.waiting
     margin-right: auto;
     background-color: #FCFCFC;
 }
-
-.flashmsgbox {
-    -moz-border-radius: 1px 1px 1px 1px;
-    background-color: white;
-    border: 1px solid #111111;
-    display: none;
-    height: 50px;
-    left: 0;
-    position: fixed;
-    top: 0;
-    width: 100%;
-    z-index: 10000;
-    text-align: center;
-    font-size: 13pt;
-    color: #111111;
-    text-align: left;
-}
-
-.flashmsgbox .flashmessage {
-    font-size: 13px;
-    font-weight:bold;
-    width: 940px;
-    margin: auto;
-    display: block;
-}
-.flashmsgbox  .flashcenter{
-}
 /* 002 a lot of changes in #footerContainer  */
 /* 003 a lot of changes in #footerContainer  */
 #footerContainer
@@ -2418,16 +2391,6 @@ input#cancel {
     border:0;
 }
 
-.flashmessageclose{
-   color:#539EFB;
-   cursor:pointer;
-   float:right;
-   font-size:10pt;
-   font-weight:normal;
-   position:relative;
-   top:-40px;
-   right: -40px
-}
 
 .signStepsBodyForms ol
 {

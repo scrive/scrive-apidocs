@@ -133,15 +133,6 @@
         min-width: 940px;
 }
 
-.flashmsgbox .logo {
-        background: url(../img/logo-small-reverted.png);
-        display: block;
-        float: left;
-        height: 35px;
-        margin-top: 9px;
-        width: 137px;
-}
-
 #top-slim-container .logo {
         background: url(../img/logo-small.png);
         display: block;
@@ -153,8 +144,7 @@
 
 /* Second Login Container */
 
-#top-slim-container .content ,
-.flashmsgbox 
+#top-slim-container .content
 {
         position: relative;
 }
