@@ -113,7 +113,6 @@ pageFromBody' prefix
                                   field "documentTab" $ documentTabInfo ctxmaybeuser topMenu
                                   field "content" content
                                   field "prefix" prefix
-                                  field "flashmessages" $ map (BSC.toString . unFlashMessage) ctxflashmessages
                                   field "protocol" $ if prefix=="" then "" else "http:"
                                   field "title" title
                                   field "userfullname" $ fmap userfullname ctxmaybeuser
@@ -156,7 +155,10 @@ documentTabInfo Nothing _ = Nothing
 documentTabInfo _ menu = Just (show LinkIssue,(menu== TopDocument))
 
 simpleResponse::String -> Kontra Response
-simpleResponse s = ok $ toResponse $ cdata s -- change this to HtmlString from helpers package (didn't wan't to connect it one day before prelaunch)
+simpleResponse s = do 
+                   res <- ok $ toResponse $ cdata s -- change this to HtmlString from helpers package (didn't wan't to connect it one day before prelaunch)
+                   clearFlashMsgs
+                   return res
 
 firstPage::Context-> IO String
 firstPage ctx =  renderTemplate (ctxtemplates ctx) "firstPage"  $ do 
@@ -188,4 +190,5 @@ mainLinksFields = do
 contextInfoFields::Context -> Fields
 contextInfoFields ctx = do 
                          field "logged" $ isJust (ctxmaybeuser ctx)
+                         field "flashmessages" $ map (BSC.toString . unFlashMessage) (ctxflashmessages ctx)
              

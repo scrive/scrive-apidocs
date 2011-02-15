@@ -63,11 +63,7 @@ wholePage=
       <body>
         $header()$
         <div id="mainContainer960">
-          <div class="flashmsgbox">
-            $flashmessages:{ msg | <div class="flashmessage">$msg:noescape()$</div> }$
-          </div>
-   
-         
+          $flashmessages()$
           $content:noescape()$
         </div>
       

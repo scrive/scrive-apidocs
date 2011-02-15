@@ -20,7 +20,7 @@ staticTemplate=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.
         </head>
         <body> 
                 $header()$
-                <div class="flashmsgbox"> </div>
+                $flashmessages()$
                 <div id="body-container">
                         <div class="content">
                             $if(!nocolumns)$

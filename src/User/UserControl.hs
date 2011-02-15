@@ -291,6 +291,7 @@ handleRequestAccount = do
                                                                            title = BS.fromString $ "New account request",
                                                                            content = BS.fromString $ "Request from addres " ++ (fromMaybe "" email)
                                                                         }
+                        addFlashMsgText =<< (liftIO $ flashMessageAccountRequestSend (ctxtemplates ctx))                       
                         return LinkMain -- Something should happend here
 
 handleQuestion :: Kontra KontraLink
