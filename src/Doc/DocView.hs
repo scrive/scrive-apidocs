@@ -248,7 +248,6 @@ pageDocumentForAuthor ctx
        authorid = userid author
        authorhaslink = not $ null $ filter (not . isNotLinkForUserID authorid) documentsignatorylinks
        documentdaystosignboxvalue = maybe 7 id documentdaystosign
-       timetosignset = isJust documentdaystosign --swedish low constrain
        documentauthordetails = (signatoryDetailsFromUser author) 
                                {
                                  signatoryemailplacements = (authoremailplacements document)
@@ -268,13 +267,8 @@ pageDocumentForAuthor ctx
                  field "documenttitle" $ BS.toString documenttitle
                  field "documentid" $ show documentid
                  field "linkissuedoc" $ show $ LinkIssueDoc documentid
-                 field "authorname" $ BS.toString $ signatoryname documentauthordetails
-                 field "authorcompany" $ BS.toString $ signatorycompany documentauthordetails 
-                 field "authornumber" $ BS.toString $ signatorynumber documentauthordetails
-                 field "authoremail" $ BS.toString $ signatoryemail documentauthordetails
                  field "authorhaslink" $ authorhaslink                               
                  field "documentinvitetext" $ documentinvitetext                               
-                 field "timetosignset" $ timetosignset
                  field "invitationMailContent" $ invitationMailContent           
                  field "documentdaystosignboxvalue" $ documentdaystosignboxvalue 
                  field "anyinvitationundelivered" $ anyInvitationUndelivered document
@@ -314,7 +308,6 @@ pageDocumentForViewer ctx
        -- the author gets his own space when he's editing
        authorhaslink = not $ null $ filter (not . isNotLinkForUserID authorid) documentsignatorylinks
        documentdaystosignboxvalue = maybe 7 id documentdaystosign
-       timetosignset = isJust documentdaystosign --swedish low constrain
        documentauthordetails = (signatoryDetailsFromUser author)
                                {
                                  signatoryemailplacements = (authoremailplacements document)
@@ -334,13 +327,8 @@ pageDocumentForViewer ctx
                   field "documenttitle" $ BS.toString documenttitle
                   field "documentid" $ show documentid
                   field "linkissuedoc" $ show $ LinkIssueDoc documentid
-                  field "authorname" $ BS.toString $ signatoryname documentauthordetails
-                  field "authorcompany" $ BS.toString $ signatorycompany documentauthordetails 
-                  field "authornumber" $ BS.toString $ signatorynumber documentauthordetails
-                  field "authoremail" $ BS.toString $ signatoryemail documentauthordetails
                   field "authorhaslink" $ authorhaslink                                                                            
                   field "documentinvitetext" $ documentinvitetext                                                                            
-                  field "timetosignset" $ timetosignset
                   field "invitationMailContent" $ invitationMailContent             
                   field "documentdaystosignboxvalue" $ documentdaystosignboxvalue 
                   field "anyinvitationundelivered" $ anyInvitationUndelivered document
@@ -399,7 +387,6 @@ pageDocumentForSignatory action document ctx  invitedlink wassigned author =
                  field "signatories" signatories
                  field "messageoption" messageoption
                  field "documenttitle" $ BS.toString $ documenttitle document
-                 field "authorname" $ BS.toString $ authorname
                  field "rejectMessage" rejectMessage
                  field "partyUnsigned" partyUnsigned
                  field "action" $ show action
@@ -515,7 +502,8 @@ documentInfoText templates document siglnk author =
 
 documentInfoFields::Document -> User -> Fields   
 documentInfoFields  document author  = do 
-    field "authorname" $ BS.toString $ userfullname author    
+    field "authorname" $ BS.toString $ userfullname author
+    field "timetosignset" $  isJust $ documentdaystosign document
     documentStatusFields document
     
 documentStatusFields::Document -> Fields    
