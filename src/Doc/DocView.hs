@@ -264,37 +264,34 @@ pageDocumentForAuthor ctx
      restartForm <-   renderActionButton  (ctxtemplates ctx) (LinkRestart documentid) "restartButtonName"
      cancelMailContent <- mailCancelDocumentByAuthorContent  (ctxtemplates ctx) False Nothing ctx document author
      documentinfotext <- documentInfoText (ctxtemplates ctx) document (find (isMatchingSignatoryLink author) documentsignatorylinks) author
-     renderTemplate (ctxtemplates ctx) "pageDocumentForAuthorContent" $  
-                                                              (setAttribute "documenttitle" $ BS.toString documenttitle) .
-                                                              (setAttribute "documentid" $ show documentid) .
-                                                              (setAttribute "linkissuedoc" $ show $ LinkIssueDoc documentid) .
-                                                              (setAttribute "authorname" $ BS.toString $ signatoryname documentauthordetails) .
-                                                              (setAttribute "authorcompany" $ BS.toString $ signatorycompany documentauthordetails ) .
-                                                              (setAttribute "authornumber" $ BS.toString $ signatorynumber documentauthordetails) .
-                                                              (setAttribute "authoremail" $ BS.toString $ signatoryemail documentauthordetails) .
-                                                              (setAttribute "authorhaslink" $ authorhaslink) .                                                                              
-                                                              (setAttribute "documentinvitetext" $ documentinvitetext) .                                                                              
-                                                              (setAttribute "timetosignset" $ timetosignset) .
-                                                              (setAttribute "invitationMailContent" $ invitationMailContent) .             
-                                                              (setAttribute "documentdaystosignboxvalue" $ documentdaystosignboxvalue ) .
-                                                              (setAttribute "anyinvitationundelivered" $ anyInvitationUndelivered document) .
-                                                              (setAttribute "undelivered" $ map (signatoryemail . signatorydetails) $ undeliveredSignatoryLinks document  ) .
-                                                              (setAttribute "preparation" $ documentstatus == Preparation).
-                                                              (setAttribute "signatories" signatories) .
-                                                              (setAttribute "pending" $ documentstatus == Pending || documentstatus == AwaitingAuthor ) .
-                                                              (setAttribute "awaitingauthor" $ documentstatus == AwaitingAuthor ) .
-                                                              (setAttribute "canberestarted" $ documentstatus `elem` [Canceled , Timedout , Rejected]) . 
-                                                              (setAttribute "restartForm" $ restartForm) .
-                                                              (setAttribute "cancelMailContent" $ cancelMailContent)   .
-                                                              (setAttribute "linkcancel" $ show $ LinkCancel document) .
-                                                              (setAttribute "emailelegitimation" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)) .
-                                                              (setAttribute "emailonly" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isNothing $ find (== ELegitimationIdentification) documentallowedidtypes)) .
-                                                              (setAttribute "elegitimationonly" $ (isNothing $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)) .
-                                                              (setAttribute "helpers" helpers) .
-                                                              (setAttribute "docstate" (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks)) .
-                                                              (setAttribute "linkissuedocpdf" $ show (LinkIssueDocPDF document)) .
-                                                              (setAttribute "documentinfotext" $ documentinfotext)
-   
+     renderTemplate (ctxtemplates ctx) "pageDocumentForAuthorContent" $  do 
+                 field "documenttitle" $ BS.toString documenttitle
+                 field "documentid" $ show documentid
+                 field "linkissuedoc" $ show $ LinkIssueDoc documentid
+                 field "authorname" $ BS.toString $ signatoryname documentauthordetails
+                 field "authorcompany" $ BS.toString $ signatorycompany documentauthordetails 
+                 field "authornumber" $ BS.toString $ signatorynumber documentauthordetails
+                 field "authoremail" $ BS.toString $ signatoryemail documentauthordetails
+                 field "authorhaslink" $ authorhaslink                               
+                 field "documentinvitetext" $ documentinvitetext                               
+                 field "timetosignset" $ timetosignset
+                 field "invitationMailContent" $ invitationMailContent           
+                 field "documentdaystosignboxvalue" $ documentdaystosignboxvalue 
+                 field "anyinvitationundelivered" $ anyInvitationUndelivered document
+                 field "undelivered" $ map (signatoryemail . signatorydetails) $ undeliveredSignatoryLinks document 
+                 field "signatories" signatories
+                 field "canberestarted" $ documentstatus `elem` [Canceled , Timedout , Rejected] 
+                 field "restartForm" $ restartForm
+                 field "cancelMailContent" $ cancelMailContent
+                 field "linkcancel" $ show $ LinkCancel document
+                 field "emailelegitimation" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)
+                 field "emailonly" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isNothing $ find (== ELegitimationIdentification) documentallowedidtypes)
+                 field "elegitimationonly" $ (isNothing $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)
+                 field "helpers" helpers
+                 field "docstate" (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks)
+                 field "linkissuedocpdf" $ show (LinkIssueDocPDF document)
+                 field "documentinfotext" $ documentinfotext
+                 documentInfoFields document author
 
 {- |
    Show the document for Viewers (friends of author or signatory).
@@ -333,38 +330,88 @@ pageDocumentForViewer ctx
      restartForm <-   renderActionButton  (ctxtemplates ctx) (LinkRestart documentid) "restartButtonName"
      cancelMailContent <- mailCancelDocumentByAuthorContent  (ctxtemplates ctx) False Nothing ctx document author
      documentinfotext <- documentInfoText (ctxtemplates ctx) document Nothing author
-     renderTemplate (ctxtemplates ctx) "pageDocumentForViewerContent" $  
-                                                              (setAttribute "documenttitle" $ BS.toString documenttitle) .
-                                                              (setAttribute "documentid" $ show documentid) .
-                                                              (setAttribute "linkissuedoc" $ show $ LinkIssueDoc documentid) .
-                                                              (setAttribute "authorname" $ BS.toString $ signatoryname documentauthordetails) .
-                                                              (setAttribute "authorcompany" $ BS.toString $ signatorycompany documentauthordetails ) .
-                                                              (setAttribute "authornumber" $ BS.toString $ signatorynumber documentauthordetails) .
-                                                              (setAttribute "authoremail" $ BS.toString $ signatoryemail documentauthordetails) .
-                                                              (setAttribute "authorhaslink" $ authorhaslink) .                                                                              
-                                                              (setAttribute "documentinvitetext" $ documentinvitetext) .                                                                              
-                                                              (setAttribute "timetosignset" $ timetosignset) .
-                                                              (setAttribute "invitationMailContent" $ invitationMailContent) .             
-                                                              (setAttribute "documentdaystosignboxvalue" $ documentdaystosignboxvalue ) .
-                                                              (setAttribute "anyinvitationundelivered" $ anyInvitationUndelivered document) .
-                                                              (setAttribute "undelivered" $ map (signatoryemail . signatorydetails) $ undeliveredSignatoryLinks document  ) .
-                                                              (setAttribute "preparation" $ documentstatus == Preparation).
-                                                              (setAttribute "signatories" signatories) .
-                                                              (setAttribute "pending" $ documentstatus == Pending || documentstatus == AwaitingAuthor ) .
-                                                              (setAttribute "awaitingauthor" $ documentstatus == AwaitingAuthor ) .
-                                                              (setAttribute "canberestarted" $ documentstatus `elem` [Canceled , Timedout , Rejected]) . 
-                                                              (setAttribute "restartForm" $ restartForm) .
-                                                              (setAttribute "cancelMailContent" $ cancelMailContent)   .
-                                                              (setAttribute "linkcancel" $ show $ LinkCancel document) .
-                                                              (setAttribute "emailelegitimation" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)) .
-                                                              (setAttribute "emailonly" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isNothing $ find (== ELegitimationIdentification) documentallowedidtypes)) .
-                                                              (setAttribute "elegitimationonly" $ (isNothing $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)) .
-                                                              (setAttribute "helpers" helpers) .
-                                                              (setAttribute "docstate" (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks)) .
-                                                              (setAttribute "linkissuedocpdf" $ show (LinkIssueDocPDF document))  .
-                                                              (setAttribute "documentinfotext" $ documentinfotext)
+     renderTemplate (ctxtemplates ctx) "pageDocumentForViewerContent" $  do 
+                  field "documenttitle" $ BS.toString documenttitle
+                  field "documentid" $ show documentid
+                  field "linkissuedoc" $ show $ LinkIssueDoc documentid
+                  field "authorname" $ BS.toString $ signatoryname documentauthordetails
+                  field "authorcompany" $ BS.toString $ signatorycompany documentauthordetails 
+                  field "authornumber" $ BS.toString $ signatorynumber documentauthordetails
+                  field "authoremail" $ BS.toString $ signatoryemail documentauthordetails
+                  field "authorhaslink" $ authorhaslink                                                                            
+                  field "documentinvitetext" $ documentinvitetext                                                                            
+                  field "timetosignset" $ timetosignset
+                  field "invitationMailContent" $ invitationMailContent             
+                  field "documentdaystosignboxvalue" $ documentdaystosignboxvalue 
+                  field "anyinvitationundelivered" $ anyInvitationUndelivered document
+                  field "undelivered" $ map (signatoryemail . signatorydetails) $ undeliveredSignatoryLinks document 
+                  field "signatories" signatories
+                  field "canberestarted" $ documentstatus `elem` [Canceled , Timedout , Rejected]
+                  field "restartForm" $ restartForm
+                  field "cancelMailContent" $ cancelMailContent
+                  field "linkcancel" $ show $ LinkCancel document
+                  field "emailelegitimation" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)
+                  field "emailonly" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isNothing $ find (== ELegitimationIdentification) documentallowedidtypes)
+                  field "elegitimationonly" $ (isNothing $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)
+                  field "helpers" helpers
+                  field "docstate" (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks)
+                  field "linkissuedocpdf" $ show (LinkIssueDocPDF document)
+                  field "documentinfotext" $ documentinfotext
+                  documentInfoFields document author
  
-                                                              
+pageDocumentForSignatory :: KontraLink 
+                    -> Document 
+                    -> Context
+                    -> SignatoryLink
+                    -> Bool 
+                    -> User
+                    -> IO String 
+pageDocumentForSignatory action document ctx  invitedlink wassigned author =
+    let
+       localscripts = "var docstate = " ++ 
+                      (buildJS documentauthordetails $ 
+                       map signatorydetails (documentsignatorylinks document)) ++ 
+                      "; docstate['useremail'] = '" ++ 
+                      (BS.toString $ signatoryemail $ signatorydetails invitedlink) ++ 
+                      "';"       
+       magichash = signatorymagichash invitedlink
+       authorname = signatoryname documentauthordetails
+       allbutinvited = filter (/= invitedlink) (documentsignatorylinks document)
+       documentauthordetails = signatoryDetailsFromUser author
+       allowedtypes = documentallowedidtypes document
+    in
+    do 
+     helpers <- renderTemplate (ctxtemplates ctx) "pageDocumentForSignHelpers" [("documentid",show (documentid document)),("localscripts",localscripts)]   
+     rejectMessage <- mailRejectMailContent (ctxtemplates ctx) Nothing ctx (prettyName author) document invitedlink                                                        
+     signatories <- fmap concat $ sequence $ map (showSignatoryLinkForSign ctx document author) (invitedlink : allbutinvited)
+     messageoption <- caseOf [ 
+                     (wassigned,                           renderTemplate (ctxtemplates ctx) "pageDocumentForSignSigned" ()),  
+                     (documentstatus document == Timedout, renderTemplate (ctxtemplates ctx) "pageDocumentForSignTimedout" ()),
+                     (documentstatus document == Pending,  renderTemplate (ctxtemplates ctx) "pageDocumentForSignButtons" $ 
+                      (setAttribute "emailallowed" $  isJust $ find (== EmailIdentification) allowedtypes) .
+                      (setAttribute "elegallowed" $ isJust $ find (== ELegitimationIdentification) allowedtypes))
+                     ]  $ return ""   
+                     
+     partyUnsigned <- renderListTemplate (ctxtemplates ctx) $  map (BS.toString . personname') $ partyUnsignedMeAndList magichash document
+     documentinfotext <- documentInfoText (ctxtemplates ctx) document (Just invitedlink) author
+     renderTemplate (ctxtemplates ctx) "pageDocumentForSignContent" $ do
+                 field "helpers" helpers
+                 field "signatories" signatories
+                 field "messageoption" messageoption
+                 field "documenttitle" $ BS.toString $ documenttitle document
+                 field "authorname" $ BS.toString $ authorname
+                 field "rejectMessage" rejectMessage
+                 field "partyUnsigned" partyUnsigned
+                 field "action" $ show action
+                 field "title" $ BS.toString $ documenttitle document
+                 field "linkissuedocpdf" $ show (LinkIssueDocPDF document)
+                 field "docid" $ show $ documentid document
+                 field "documentinfotext" $ documentinfotext
+                 documentInfoFields document author
+                 signedByMeFields document (Just invitedlink)
+
+
+--- Display of signatory                                                             
 showSignatoryLinkForSign::Context -> Document -> User -> SignatoryLink-> IO String
 showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser,ctxtemplates})  document author siglnk@(SignatoryLink{  signatorylinkid 
                                        , maybesigninfo
@@ -456,56 +503,6 @@ showSignatoryLinkForSign ctx@(Context {ctxmaybeuser = muser,ctxtemplates})  docu
 packToMString:: BS.ByteString -> Maybe String
 packToMString x = if BS.null x then Nothing else (Just $ BS.toString x) 
 
-pageDocumentForSignatory :: KontraLink 
-                    -> Document 
-                    -> Context
-                    -> SignatoryLink
-                    -> Bool 
-                    -> User
-                    -> IO String 
-pageDocumentForSignatory action document ctx  invitedlink wassigned author =
-    let
-       localscripts = "var docstate = " ++ 
-                      (buildJS documentauthordetails $ 
-                       map signatorydetails (documentsignatorylinks document)) ++ 
-                      "; docstate['useremail'] = '" ++ 
-                      (BS.toString $ signatoryemail $ signatorydetails invitedlink) ++ 
-                      "';"       
-       magichash = signatorymagichash invitedlink
-       authorname = signatoryname documentauthordetails
-       allbutinvited = filter (/= invitedlink) (documentsignatorylinks document)
-       documentauthordetails = signatoryDetailsFromUser author
-       allowedtypes = documentallowedidtypes document
-    in
-    do 
-     helpers <- renderTemplate (ctxtemplates ctx) "pageDocumentForSignHelpers" [("documentid",show (documentid document)),("localscripts",localscripts)]   
-     rejectMessage <- mailRejectMailContent (ctxtemplates ctx) Nothing ctx (prettyName author) document invitedlink                                                        
-     signatories <- fmap concat $ sequence $ map (showSignatoryLinkForSign ctx document author) (invitedlink : allbutinvited)
-     messageoption <- caseOf [ 
-                     (wassigned,                           renderTemplate (ctxtemplates ctx) "pageDocumentForSignSigned" ()),  
-                     (documentstatus document == Timedout, renderTemplate (ctxtemplates ctx) "pageDocumentForSignTimedout" ()),
-                     (documentstatus document == Pending,  renderTemplate (ctxtemplates ctx) "pageDocumentForSignButtons" $ 
-                      (setAttribute "emailallowed" $  isJust $ find (== EmailIdentification) allowedtypes) .
-                      (setAttribute "elegallowed" $ isJust $ find (== ELegitimationIdentification) allowedtypes))
-                     ]  $ return ""   
-                     
-     partyUnsigned <- renderListTemplate (ctxtemplates ctx) $  map (BS.toString . personname') $ partyUnsignedMeAndList magichash document
-     documentinfotext <- documentInfoText (ctxtemplates ctx) document (Just invitedlink) author
-     renderTemplate (ctxtemplates ctx) "pageDocumentForSignContent" $ do
-                 field "helpers" helpers
-                 field "signatories" signatories
-                 field "messageoption" messageoption
-                 field "documenttitle" $ BS.toString $ documenttitle document
-                 field "authorname" $ BS.toString $ authorname
-                 field "rejectMessage" rejectMessage
-                 field "partyUnsigned" partyUnsigned
-                 field "action" $ show action
-                 field "title" $ BS.toString $ documenttitle document
-                 field "linkissuedocpdf" $ show (LinkIssueDocPDF document)
-                 field "docid" $ show $ documentid document
-                 field "documentinfotext" $ documentinfotext
-                 documentInfoFields document author
-                 signedByMeFields document (Just invitedlink)
 
 --Helper to get document after signing info text
 documentInfoText::KontrakcjaTemplates->Document->(Maybe SignatoryLink) -> User -> IO String
@@ -523,6 +520,7 @@ documentInfoFields  document author  = do
     
 documentStatusFields::Document -> Fields    
 documentStatusFields document  = do    
+    field "preparation" $ documentstatus document == Preparation
     field "pending" $ documentstatus document == Pending
     field "cancel" $ documentstatus document ==  Canceled
     field "timedout" $ documentstatus document == Timedout
