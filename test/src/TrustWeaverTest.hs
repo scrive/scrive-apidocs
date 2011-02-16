@@ -182,7 +182,7 @@ testSignNoSignCertificates twconf = do
 
 testRegisterAndEnableSection :: TW.TrustWeaverConf -> IO ()
 testRegisterAndEnableSection twconf = do
-  MinutesTime m <- getMinutesTime
+  MinutesTime m s <- getMinutesTime
   -- should be unique enough
   result <- TW.registerAndEnableSection twconf ("skrivapa-test-section-" ++ show m)
   case result of
@@ -193,7 +193,7 @@ testRegisterAndEnableSection twconf = do
 
 testRegisterAndEnableSectionFail :: TW.TrustWeaverConf -> IO ()
 testRegisterAndEnableSectionFail twconf = do
-  MinutesTime m <- getMinutesTime
+  MinutesTime m s <- getMinutesTime
   -- should be unique enough
   result <- TW.registerAndEnableSection twconf ("skrivapa-test-section-" ++ show m)
   case result of
@@ -222,7 +222,7 @@ testStoreAndRetrieveInvoiceFail twconf = do
     Right reference -> error "Should not happen"
                        
 testIncompleteRegisterSection twconf = do
-  MinutesTime m <- getMinutesTime
+  MinutesTime m s <- getMinutesTime
   -- should be unique enough
   result <- TW.registerSection twconf ""
   case result of
@@ -230,7 +230,7 @@ testIncompleteRegisterSection twconf = do
     Right x -> error "Should not happen"
 
 testEnableSectionUnknownName twconf = do
-  MinutesTime m <- getMinutesTime
+  MinutesTime m s <- getMinutesTime
   -- should be unique enough
   result <- TW.enableSection twconf ("a-section-name-that-is-not-there-2")
   case result of
@@ -238,7 +238,7 @@ testEnableSectionUnknownName twconf = do
     Right x -> error "Should not happen"
 
 testEnableSectionSecondTime twconf = do
-  MinutesTime m <- getMinutesTime
+  MinutesTime m s <- getMinutesTime
   -- should be unique enough
   result <- TW.enableSection twconf ("skrivapa-test-section-" ++ show m)
   case result of
