@@ -4,6 +4,7 @@ where
 
 import qualified Data.Map as Map
 import Control.Concurrent.MVar
+import System.Random
 
 
 data MemCache' k v = MemCache' (v -> Int) Int (Map.Map k v)
