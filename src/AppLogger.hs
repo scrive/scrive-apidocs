@@ -36,7 +36,10 @@ data LoggerHandle = LoggerHandle [GenericHandler Handle]
 
 
 setupLogger = do
-    createDirectoryIfMissing False "log"
+    -- under Windows createDirectoryIfMissing throws an exception if
+    -- the directory already exists, pretty ugly bug, lets just catch
+    -- and ignore the exception
+    createDirectoryIfMissing False "log" `catch` (\_ -> return ())
     
     let fmt = tfLogFormatter "%F %T" "$time $msg"
         
