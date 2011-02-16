@@ -51,7 +51,6 @@ docViewSamples = [testGroup "sample document flash messages"
                             testCase "landpage signed closed (no account)" sampleLandpageSignedClosedView_noAccount,
                             testCase "landpage signed closed (has account)" sampleLandpageSignedClosedView_hasAccount,
                             testCase "landpage login for save" sampleLandpageLoginForSaveView, 
-                            testCase "landpage document saved" sampleLandpageDocumentSavedView,
                             testCase "document for sign (logged out)" sampleDocumentViewForSign_loggedOut,
                             testCase "document for sign (logged in as author)" sampleDocumentViewForSign_loggedInAsAuthor,
                             testCase "document for sign (logged in as signatory)" sampleDocumentViewForSign_loggedInAsSignatory,
@@ -225,12 +224,6 @@ sampleLandpageLoginForSaveView =
   sampleCompleteView "landpage_login_for_save" 
                      Nothing 
                      (\templ ctx -> landpageLoginForSaveView templ)
-  
-sampleLandpageDocumentSavedView =
-  sampleCompleteView "landpage_document_saved" 
-                     Nothing 
-                     (\templ ctx -> landpageDocumentSavedView templ)
-
 
 --pageDocumentList tests go here
 sampleDocumentViewForAuthor_normal = 
@@ -313,7 +306,7 @@ sampleDocumentViewForSign name ctxmaybeuser documenttitle sigs =
         author = aTestUser
         invitedlink = head $ documentsignatorylinks document
     in
-    sampleCompleteView name ctxmaybeuser (\templ ctx -> pageDocumentForSign (LinkSignDoc document invitedlink) 
+    sampleCompleteView name ctxmaybeuser (\templ ctx -> pageDocumentForSignatory (LinkSignDoc document invitedlink) 
                                                                    document 
                                                                    ctx 
                                                                    invitedlink 
