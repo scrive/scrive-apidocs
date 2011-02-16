@@ -119,7 +119,7 @@ postDocumentChangeAction document@Document{documentstatus, documentsignatorylink
         Log.forkIOLogWhenError ("error in sending rejection emails for document " ++ show documentid) $ do
           sendRejectEmails customMessage ctx document (fromJust msignalink)
         return ()
-    -- * -> DocumentError
+    --  -> DocumentError
     | DocumentError msg <- documentstatus = do
         ctx <- get
         Log.forkIOLogWhenError ("error in sending error emails for document " ++ show documentid) $ do
@@ -290,13 +290,13 @@ handleSTable = withUserGet $ checkUserTOSGet $ do
    Method: POST
    NOTE: magichash1 is currently ignored! (though it must exist)
  -}
-signDocument :: DocumentID 
-             -> SignatoryLinkID 
-             -> MagicHash
+signDocument :: DocumentID -- ^ The DocumentID of the document to sign 
+             -> SignatoryLinkID -- ^ The SignatoryLinkID that is in the URL 
+             -> MagicHash -- ^ The MagicHash that is in the URL (NOTE: This is ignored!)
              -> Kontra KontraLink
-signDocument documentid -- ^ The DocumentID of the document to sign
-             signatorylinkid1 -- ^ The SignatoryLinkID that is in the URL
-             magichash1 -- ^ The MagicHash that is in the URL (NOTE: This is ignored!)
+signDocument documentid
+             signatorylinkid1
+             magichash1
                  = do
   Context { ctxtime, ctxipnumber } <- get
   document@Document{ documentstatus = olddocumentstatus, documentsignatorylinks } <- queryOrFail $ GetDocumentByDocumentID documentid
@@ -331,11 +331,11 @@ signDocument documentid -- ^ The DocumentID of the document to sign
  -}
 rejectDocument :: DocumentID 
                -> SignatoryLinkID 
-               -> MagicHash
+               -> MagicHash -- ^ The MagicHash that is in the URL (NOTE: This is ignored!)
                -> Kontra KontraLink
 rejectDocument documentid 
                signatorylinkid1 
-               magichash -- ^ The MagicHash that is in the URL (NOTE: This is ignored!)
+               magichash
                    = do
   ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber}) <- get
   document@Document{ documentsignatorylinks } <- queryOrFail $ GetDocumentByDocumentID documentid
