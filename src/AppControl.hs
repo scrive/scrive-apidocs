@@ -62,6 +62,7 @@ import Mails.MailsConfig
 import Mails.SendGridEvents
 import Mails.SendMail
 import System.Log.Logger (Priority(..), logM)
+import qualified MemCache
 
 data AppConf
     = AppConf { httpPort        :: Int
@@ -85,6 +86,7 @@ data AppConf
 
 data AppGlobals 
     = AppGlobals { templates       :: KontrakcjaTemplates
+                 , filecache       :: MemCache.MemCache FileID BS.ByteString
                  }
 
 {- |
@@ -308,6 +310,7 @@ appHandler appConf appGlobals= do
                           , TW.timeout = 60000
                           }
             , ctxelegtransactions = elegtrans
+            , ctxfilecache = filecache appGlobals
             }
   (res,ctx)<- toIO ctx $  
      do

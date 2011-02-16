@@ -134,12 +134,15 @@ main = Log.withLogger $ do
   args <- getArgs
   appConf1 <- readAppConfig
   templates <- readTemplates
-  let appGlobals = AppGlobals { templates = templates }
+  filecache' <- MemCache.new (BS.length) 50000000
+  let appGlobals = AppGlobals { templates = templates
+                              , filecache = filecache'
+                              }
+
   appConf <- case parseConfig args of
     (Left e) -> do Log.server (unlines e)
                    exitFailure
     (Right f) -> return $ (f (appConf1))
-  filecache <- MemCache.new (const 0)
 
   let 
     mailer | sendMails cfg = createRealMailer cfg
@@ -168,7 +171,7 @@ main = Log.withLogger $ do
                           , TW.timeout = 30000 --30sek
                           }
             , ctxelegtransactions = error "Do not use ctxelegtransactions in actions"
-            , ctxfilecache = filecache
+            , ctxfilecache = filecache'
             }
     
 
