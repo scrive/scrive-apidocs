@@ -4,6 +4,16 @@ if(!window.console) {
   };
 }
 
+function safeReady(f) {
+  $(function() {
+    try {
+      f();
+    } catch(e) {
+      console.log(e);
+    }
+  });
+}
+
 function repeatForeverWithDelay(delay) {
   return function () {
     var that = this;
@@ -81,7 +91,7 @@ function swedishString(names) {
 /* 
  * make edit bar stay at the top
  */
-$(function () {
+safeReady(function () {
   var menu = $('#signStepsContainer.follow');
   if(menu.size() > 0) {
     var pos = menu.offset();
@@ -102,7 +112,7 @@ $(function () {
 /*
  * For the arkiv view fancy selection
  */
-$(function () {
+safeReady(function () {
   var selectables = $("#selectable");
   var checks = $(".check");
   // remember the last row of the table that was clicked
@@ -205,7 +215,7 @@ $(function () {
 });
 
 
-$(function() {
+safeReady(function() {
   $(".multiFileInput").each(function() {
     var upload = $(this);
     var form = $(this.form);
@@ -220,13 +230,13 @@ $(function() {
   });
 });
 
-$(function() {
+safeReady(function() {
   flashFlashMessages();
   flashSpecialFlashMessages();
   enableInfoTextOnce();
 });
 
-$(function() {
+safeReady(function() {
   if(typeof(window.documentid) != "undefined") {
     $.ajax({ url: "/pagesofdoc/" + documentid,
              success: function(data) {
@@ -237,7 +247,7 @@ $(function() {
   }
 });
 
-$(function() {
+safeReady(function() {
   $("#sendinvite").overlay({
     mask: standardDialogMask,
     onBeforeLoad: function(){
@@ -276,14 +286,14 @@ $(function() {
   });
 });
 
-$(function() {
+safeReady(function() {
   $(".submiter").live("click", function(){
     $(this.form).submit();
   });
 });
 
 // bankid stuff
-$(function() {
+safeReady(function() {
   $("#dialog-confirm-sign-eleg .bankid").click(function(){
     sign2(window.location.pathname,
 	  "#dialog-confirm-sign-eleg",
@@ -292,7 +302,7 @@ $(function() {
   });
 });
 
-$(function() {
+safeReady(function() {
   $(".editer").live("click", function(){
     prepareForEdit($(this.form));
     $(this).hide();
@@ -300,7 +310,7 @@ $(function() {
   })
 });
 
-$(function() {
+safeReady(function() {
   $("#editinvitetextlink").overlay({        
     mask: standardDialogMask,    
     onBeforeLoad: function () { 
@@ -337,14 +347,14 @@ $(function() {
   });   
 });
 
-$(function() {
+safeReady(function() {
   $("#editing-invite-text-finished").click(function() {
     var newtxt = $("#edit-invite-text-dialog textarea").val();
     $("#invitetext").val( newtxt );
   });
 });
    
-$(function() {                      
+safeReady(function() {                      
   $(".redirectsubmitform").submit(function(){
     var newform = $($(this).attr("rel"))
     var inputs = $("input",$(this))
@@ -359,7 +369,7 @@ $(function() {
   });
 });
 
-$(function() {                      
+safeReady(function() {                      
   $("#sign").overlay({ mask: standardDialogMask,
                        onBeforeLoad: function () {
                          if (!sigFieldsValidation()) return false;
@@ -374,15 +384,15 @@ $(function() {
                      });
 });
 
-$(function() {
+safeReady(function() {
   $("#signbankid").overlay({ mask: standardDialogMask });
 });
    
-$(function() { 
+safeReady(function() { 
   $("#cancel, .cancel").overlay({	mask: standardDialogMask    });
 });
 
-$(function() {
+safeReady(function() {
   $("#signByAuthor").overlay({	
     mask: standardDialogMask,
     onBeforeLoad: function () {
@@ -397,14 +407,14 @@ $(function() {
     }});
 });
    
-$(function() { 
+safeReady(function() { 
   $("#toscontainer").overlay({
     mask: standardDialogMask,
     load: true
   });
 });
 
-$(function() {	
+safeReady(function() {	
   $("#loginbtn").click(function(){
     if(emailFieldsValidation($(":email", this.form))) {
       $(this.form).submit();
@@ -413,7 +423,7 @@ $(function() {
   });
 });
 
-$(function() {
+safeReady(function() {
   $("#createnewaccount").click(function(){
     if(emailFieldsValidation($("input[type='email']"))){
       $(this.form).submit();
@@ -422,13 +432,13 @@ $(function() {
   });
 });
    
-$(function() { 
+safeReady(function() { 
   $(".validateEmail").click(function(){
     return (emailFieldsValidation($(":email",this.form)))
   });
 });
 
-$(function() {  
+safeReady(function() {  
   $(".flashOnClick").click(function(){
     $(".flashMessage", $(this).parent()).each(function(){
       addFlashMessage($(this).html());
@@ -445,7 +455,7 @@ $(function() {
   });
 });
 
-$(function() {
+safeReady(function() {
   $(".addremovecheckbox").change(function(){
     var what = $($(this).attr("rel"));
     var location = $($(this).attr("location"));
@@ -468,7 +478,7 @@ $(function() {
     } 
   });    
 });
-$(function() {    
+safeReady(function() {    
   $(".datetodaystip").each(function() {
     var curr = $(this);
     var basictime =  new Date().getTime();
@@ -500,7 +510,7 @@ $(function() {
   });
 });
 
-$(function() {
+safeReady(function() {
   $(".datetodate").each(function() {     
     var curr = $(this);
     var basictime =  new Date().getTime();
@@ -522,7 +532,7 @@ $(function() {
   });
 });
 
-$(function() {
+safeReady(function() {
   $(".replacebynextonclick").click( function(){
     var replacement = $(this).next();
     $(this).replaceWith(replacement);
@@ -530,19 +540,19 @@ $(function() {
   });
 });
 
-$(function() {
+safeReady(function() {
   showProperSignButtons();    
   $(".partyrole input").change(showProperSignButtons);
 });
 
 
-$(function() {    
+safeReady(function() {    
   $(".submitStepFormOnClick").click(function(){
        $(".stepForm").submit(); 
   });
 });
 
-$(function() {
+safeReady(function() {
   $(window).resize();
 });
 
@@ -706,7 +716,7 @@ function isExceptionalField(field){
 }
 
 
-$(function(){
+safeReady(function(){
     $(".prepareToSendReminderMail").each(function(){
         var form = $($(this).attr("rel"));
         $(this).overlay({
@@ -755,7 +765,7 @@ function flashFlashMessages()
         fm.append(center);
     });
       if ($('.flashmessage',flashmsgbox).size() >0)
-         flashmsgbox.show().delay(10000).hide(function(){$(flashmsgbox).children().remove()});
+         flashmsgbox.show().delay(10000).hide(function(){safeReady(flashmsgbox).children().remove()});
 
 }
 
@@ -948,7 +958,7 @@ $(document).ready(function() {
  *  - Remove the .redborder from the author's man button
  *  - Disable more event processing
  */
-$(function() {
+safeReady(function() {
   var addsignatory = $('#addSignatory');
   var personpane = $('#personpane');
   var authorman = $(".authordetails .man");
@@ -997,7 +1007,7 @@ function renumberParts() {
  * remove the redborder for the validation error
  * where there is only zero signatories.
  */
-$(function() {
+safeReady(function() {
   var authorman = $(".authordetails .man");
   // where the red border appears for
   // addsig button
