@@ -184,7 +184,6 @@ handleRoutes = msum [
      , dir "login"       $ hpost0 $ handleLoginPost
      , dir "signup"      $ hget0  $ signupPageGet
      , dir "signup"      $ hpost0 $ signupPagePost
-     , dir "signupdone"  $ hget0  $ signupPageDone
      , dir "amnesia"     $ hget0  $ forgotPasswordPageGet
      , dir "amnesia"     $ hpost0 $ forgotPasswordPagePost
      , dir "amnesiadone" $ hget0  $ forgotPasswordDonePage
@@ -442,14 +441,6 @@ sendNewActivationLinkMail Context{ctxtemplates,ctxhostpart,ctxmailer} user = do
                          mail <-  liftIO $ newUserMail ctxtemplates ctxhostpart email email al
                          liftIO $ sendMail ctxmailer $ mail { fullnameemails = [(email,email)]}                    
                     
-{- |
-   Handles viewing of the signup confirmation page
--}
-signupPageDone :: Kontra Response
-signupPageDone = do
-  ctx <- get
-  V.renderFromBody ctx V.TopNone V.kontrakcja signupConfirmPageView
-
 {- |
    Handles viewing of the login page
 -}
