@@ -646,7 +646,7 @@ function authorToHTML(sig) {
  * Activate minus buttons within personpane.
  */
 
-$(function() {
+safeReady(function() {
   var signStepsWrapper = $('#signStepsWrapper');
   var signStepsContainer = $('#signStepsContainer');
   $('a.minus', $('#personpane')[0]).live('click', function() {
@@ -672,7 +672,7 @@ $(function() {
  * field. Normally, that submits the form. We want it to do different
  * things depending on the field.
  */
-$(function() {
+safeReady(function() {
   // newfields should enter the name
   $('.newfield input', $('#personpane')[0]).live('keypress', function(e) {
     if(e.keyCode == 13) {
@@ -694,7 +694,7 @@ $(function() {
 /* 
  * We need to make the okIcon (ok button) createCustomField as well
  */
-$(function() { 
+safeReady(function() { 
   $('.newfield a.okIcon', $('#personpane')[0]).live('click', function() {
     createCustomField($(this).parents('.newfield'));
     return false;
@@ -758,7 +758,7 @@ function createCustomField(newfield) {
  * placedfields. magicUpdate takes care of changing all of the
  * placedfields.
  */
-$(function() {
+safeReady(function() {
   $('.dragfield input', $('#personpane')[0]).live('keyup keydown change', magicUpdate);
 });
 
@@ -766,7 +766,7 @@ $(function() {
  * The plus button exists in all .persondetails boxes
  * It always needs to add a newfield
  */
-$(function() {
+safeReady(function() {
   var signStepsWrapper = $('#signStepsWrapper');
   var signStepsContainer = $('#signStepsContainer');
   $('a.plus', $('#personpane')[0]).live('click', function() {
@@ -985,7 +985,7 @@ function initializeTemplates () {
   });
 }
 
-$(function () {
+safeReady(function () {
   docstateToHTML();
   initializeTemplates();	
 });
