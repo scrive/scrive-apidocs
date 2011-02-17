@@ -1,12 +1,20 @@
-
-if( !window.console ) {
-    window.console = 
-        { log: function() {}
-        }
+if(!window.console) {
+  window.console = { 
+    log: function() {}
+  };
 }
 
-function getUniqueId()
-{
+function repeatForeverWithDelay(delay) {
+  return function () {
+    var that = this;
+    $(document).delay(1000).queue(function() {
+      $(this).dequeue();
+      $.ajax(that);
+    });
+  };
+}
+
+function getUniqueId() {
     var rnd = Math.round(Math.random() * 1000000000);
     while($("#" + rnd).length  >0) {
         rnd = Math.round(Math.random() * 1000000000);
@@ -14,87 +22,60 @@ function getUniqueId()
     return rnd;
 }
 
-function enableInfoText(where)
-{
-    return;
-}
-
-function enableInfoTextOnce(where)
-{
-    if( where==null ) {
-        where = $(document);
-    }
-    var selector = ':input[infotext]';
-    var inputs = $(selector, where);
+function enableInfoTextOnce(where){
+  if(!where) {
+    where = $(document);
+  }
+  var selector = ':input[infotext]';
+  var inputs = $(selector, where);
     
-    inputs.live("focus", function() { 
-            if( $(this).hasClass("grayed")) {
-                $(this).val("");
-                $(this).removeClass("grayed");
-            }
-        });
-    inputs.live("blur", function() {
-            if( $(this).val()=="" || $(this).val()==$(this).attr("infotext") ) {
-                $(this).addClass("grayed");
-                $(this).val($(this).attr("infotext"));
-            }
-        });
-    inputs.blur();
-
-    $("form").live("submit",function () {
-            var elems = $(this).find(selector + ".grayed");
-            elems.val("");
-            return true;
-        });
-}
-
-function disableInfoText(where)
-{
-    if( where==null ) {
-        where = $(document);
+  inputs.live("focus", function() { 
+    var input = $(this);
+    if(input.hasClass("grayed")) {
+      input.val("");
+      input.removeClass("grayed");
     }
-    inputs = where.filter('input[type="text"][infotext!=""]');
-    inputs.focus();
-}
-
-function signatoryadd()
-{
-    var signatorylist = $( "#signatorylist" );
-    var sig = $("#signatory_template").clone();
-    sig.removeAttr("id");
-	var emailfield = sig.find("input[type='email']");
-	emailfield.addClass("othersignatoryemail"); 
-    signatorylist.append(sig);
-    enableInfoText(sig);
-    sig.hide();
-    sig.slideDown("slow");
-    return false;
-}
-
-function signatoryremove(node)
-{
-  var sig = $(node).parent();
-  var cls = sig.data("draggableBoxClass");
-  var db = $("." + cls);
-  sig.slideUp('slow',function() { $(this).remove(); });
-  db.fadeOut('slow',function() { $(this).remove(); });
-  return false;
-}
-
-
-
-function swedishString(names)
-{ 
-    if( names.length == 0) 
-        return "";
-    if( names.length == 1) 
-        return "<strong>" + names[0] + "</strong>";
+  });
   
-    var name0 = names.shift();  
-    if( names.length == 1)
-        return "<strong>" + name0 + "</strong> och " + swedishString(names);
+  inputs.live("blur", function() {
+    var input = $(this);
+    if(input.val() == "" || input.val() == input.attr("infotext") ) {
+      input.addClass("grayed");
+      input.val(input.attr("infotext"));
+    }
+  });
+  inputs.blur();
 
-    return "<strong>" + name0 + "</strong>, " + swedishString(names);
+  $("form").live("submit", function () {
+    var elems = $(this).find(selector + ".grayed");
+    elems.val("");
+    return true;
+  });
+}
+
+// not used
+function disableInfoText(where) {
+  if(!where) {
+    where = $(document);
+  }
+  inputs = where.filter('input[type="text"][infotext!=""]');
+  inputs.focus();
+}
+
+function swedishString(names) { 
+  if(names.length === 0) {
+    return "";
+  }
+  if(names.length === 1) {
+    return "<strong>" + names[0] + "</strong>";
+  }
+  
+  var name0 = names.shift();  
+  if(names.length === 1) {
+    return "<strong>" + name0 + "</strong> och " + swedishString(names);
+  }
+
+  return "<strong>" + name0 + "</strong>, " + swedishString(names);
 }
 
 /* 
@@ -118,142 +99,145 @@ $(function () {
   }
 });
 
+/*
+ * For the arkiv view fancy selection
+ */
 $(function () {
+  var selectables = $("#selectable");
+  var checks = $(".check");
+  // remember the last row of the table that was clicked
+  var focused;
+  // two alternative ways to track clicks off of a .check
+  //$("*").not(".check").click(function(){if(this == document.activeElement) { focused = null; }});
+  // this way is cleaner since it only installs a handler on the toplevel document instead of nearly
+  // every element
 
-	// remember the last row of the table that was clicked
-        var focused;
-        // two alternative ways to track clicks off of a .check
-        //$("*").not(".check").click(function(){if(this == document.activeElement) { focused = null; }});
-        // this way is cleaner since it only installs a handler on the toplevel document instead of nearly
-        // every element
+  // when you click outside of the table, lose focus
+  $(document).click(function(event){ 
+    if($(event.target).parents("#selectable").size() === 0){ 
+      focused = null; 
+    }
+  });
 
-	// when you click outside of the table, lose focus
-        $(document).click(function(event){ 
-                if($(event.target).parents("#selectable").size() === 0){ 
-                    focused = null; 
-                }
-            });
+  // override click when shift key is held
+  $("tr", selectables).mousedown(function(event){
+    // we have a previous focus
+    // shift key is pressed
+    // check is not clicked
+    if(focused && event.shiftKey && $(event.target).filter(".check").size() === 0){
+      var startIndex = focused?checks.index(focused):null;
+      var endIndex = checks.index($(this).find(".check"));
+      var s = Math.min(startIndex, endIndex);
+      var e = Math.max(startIndex, endIndex);
+      
+      checks.slice(s, e + 1).attr("checked", true);
 
-	// override click when shift key is held
-        $("#selectable tr").mousedown(function(event){
-                if(focused && event.shiftKey && $(event.target).filter(".check").size() === 0){
-                    var checks = $(".check");
-                    var startIndex = focused?checks.index(focused):null;
-                    var endIndex = checks.index($(this).find(".check"));
-                    
-                    var s = Math.min(startIndex, endIndex);
-                    var e = Math.max(startIndex, endIndex);
- 
-                    checks.slice(s, e + 1).attr("checked", true);
+      checks.not(":checked").parents("tr").removeClass("ui-selected");
+      checks.filter(":checked").parents("tr").addClass("ui-selected");
+      
+      focused = $(checks.get(endIndex));
+      checks.get(endIndex).focus();
+      
+      // cancel all further click processing
+      // we are overriding the Selectable behavior for shift-clicks
+      return false;
+    }                     
+  });
 
-                    checks.not(":checked").parents("tr").removeClass("ui-selected");
-                    checks.filter(":checked").parents("tr").addClass("ui-selected");
 
-                    focused = $(checks.get(endIndex));
-                    checks.get(endIndex).focus();
+  // the jQuery Selectable feature 
+  selectables.selectable({
+    // links and input fields do not have click overridden
+    cancel: 'a,input',
+    
+    unselected: function(event, ui) {
+      $(ui.unselected).find(".check").attr("checked", false);
+    },
 
-                    // cancel all further click processing
-                    // we are overriding the Selectable behavior for shift-clicks
-                    return false;
-                }                     
-            });
-        $(".multiFileInput").each(
-            function() {
-               var upload = $(this);
-               var form = this.form;
-               $(this).MultiFile({
-                  list: upload.attr("rel"),
-                  onFileAppend: function() { 
-                     if (upload.hasClass("submitOnUpload")) $(form).submit() 
-                  }
-                 
-              })
-              
-            });
-        // the jQuery Selectable feature 
-        $("#selectable" ).selectable({
-                // links and input fields do not have click overridden
-                cancel: 'a,input',
-                    
-                unselected: function(event, ui) {
-                    var check = $(ui.unselected).find(".check");
-                    check.attr("checked", false);
-                },
+    selected: function(event, ui) {
+      focused = $(ui.selected).find(".check")
+        .attr("checked", true)
+        .focus();
+    }});
 
-                selected: function(event, ui) {
-                    var check = $(ui.selected).find(".check");
-                    check.attr("checked", true);
-                    check.focus();
-                    focused = check;
-                }});
-
-        $(".check:checked").parents("tr").addClass("ui-selected");
-        $(".ui-selected").find(".check").attr("checked", true);
+  $(".check:checked").parents("tr").addClass("ui-selected");
+  $(".ui-selected").find(".check").attr("checked", true);
         
-        $(".check").click(function(event) {
-                    
-                if(event.shiftKey && focused && focused.filter(".check").size() > 0 && focused.attr("checked")){
-                    var checks = $(".check");
-                    var startIndex = checks.index(focused);
-                    var endIndex = checks.index(this);
-                    
-                    var s = Math.min(startIndex, endIndex);
-                    var e = Math.max(startIndex, endIndex);
- 
-                    var checksslice = checks.slice(s, e+1);
-                    checksslice.attr("checked", true);
-                    checksslice.parents("tr").addClass("ui-selected");
-                }
-                else {
-                    if( $(this).attr("checked")) {
-                        $(this).parents("tr").addClass("ui-selected");
-                    }
-                    else {
-                        $(this).parents("tr").removeClass("ui-selected");
-                    }
-                }
-
-                focused = $(this);
-            });
-
-        $('#all').click(function() {
-            var checks = $('input:checkbox[name="doccheck"]');
-            var acc = true;
-            checks.each(function(i, val) { acc = acc && $(val).attr("checked");});
-            checks.attr("checked", !acc);
-            
-            if( !acc ) {    
-                checks.parents("tr").addClass("ui-selected");
-            } else {
-                checks.parents("tr").removeClass("ui-selected");
-            }
-        }); 
-
-    flashFlashMessages();
-    flashSpecialFlashMessages();
-
-    /*
-    $('#all').click(function() {
-    });
-    */
-    enableInfoTextOnce();
-    if(typeof(window.documentid)!= "undefined" ) {
-        $.ajax({ url: "/pagesofdoc/" + documentid,
-            success: function(data) {
-                $('#documentBox').html(data);
-            },
-            error: function () {
-                var that = this;
-                $(document).delay(1000).queue(function() {
-                        $(this).dequeue();
-                        $.ajax(that);
-                    });
-            }
-        });
+  $(".check", selectables).live("click", function(event) {
+    // shift
+    // have a saved focus
+    // focused is a check
+    // focused is checked
+    if(event.shiftKey && focused && focused.filter(".check").size() > 0 && focused.attr("checked")){
+      var startIndex = checks.index(focused);
+      var endIndex = checks.index(this);
+      
+      var s = Math.min(startIndex, endIndex);
+      var e = Math.max(startIndex, endIndex);
+      
+      var checksslice = checks.slice(s, e+1);
+      checksslice.attr("checked", true);
+      checksslice.parents("tr").addClass("ui-selected");
+    } else {
+      if($(this).attr("checked")) {
+        $(this).parents("tr").addClass("ui-selected");
+      } else {
+        $(this).parents("tr").removeClass("ui-selected");
+      }
     }
 
+    focused = $(this);
+  });
 
+  $('#all').live("click", function() {
+    var acc = checks.filter(function() {
+      return $(this).attr("checked");
+    }).size() > 0;
+
+    checks.attr("checked", !acc);
     
+    if(!acc) {    
+      checks.parents("tr").addClass("ui-selected");
+    } else {
+      checks.parents("tr").removeClass("ui-selected");
+    }
+  }); 
+});
+
+
+$(function() {
+  $(".multiFileInput").each(function() {
+    var upload = $(this);
+    var form = $(this.form);
+    upload.MultiFile({
+      list: upload.attr("rel"),
+      onFileAppend: function() { 
+        if (upload.hasClass("submitOnUpload")) {
+          form.submit();
+        }
+      }
+    });
+  });
+});
+
+$(function() {
+  flashFlashMessages();
+  flashSpecialFlashMessages();
+  enableInfoTextOnce();
+});
+
+$(function() {
+  if(typeof(window.documentid) != "undefined") {
+    $.ajax({ url: "/pagesofdoc/" + documentid,
+             success: function(data) {
+               $('#documentBox').html(data);
+             },
+             error: repeatForeverWithDelay(1000)
+           });
+  }
+});
+
+$(function() {
   $("#sendinvite").overlay({
     mask: standardDialogMask,
     onBeforeLoad: function(){
@@ -269,16 +253,17 @@ $(function () {
       });
       tot = swedishString(allparties);
       $(".Xinvited").html(tot);
-    }});
+    }
+  });
 
-    $("#signinvite").overlay({  
+  $("#signinvite").overlay({  
     mask: standardDialogMask,    
     onBeforeLoad: function () { 
       if (!checkSignPossibility()) return false;
       if (!emailFieldsValidation($(".stepForm input[type='email']"))) return false;
       if (!nonZeroSignatories()) return false;
       if (!authorFieldsValidation()) return false;
-
+      
       var mrxs = $("form input[name='signatoryname']");
       var tot = "";
       var allparties = new Array();
@@ -287,97 +272,117 @@ $(function () {
       });
       tot = swedishString(allparties);
       $(".Xinvited").html(tot);
-    } });
-        
-    $(".submiter").click(function(){
-      $(this.form).submit();
-    });
+    }
+  });
+});
 
-	$("#dialog-confirm-sign-eleg .bankid").click(function(){
-		sign2(window.location.pathname,
-		      "#dialog-confirm-sign-eleg",
-		      "/bankid" + window.location.pathname);
-		return false;
-	    });
- 
-   $(".editer").each(function() {
-                             $(this).click(function(){
-                                  prepareForEdit($(this.form));
-                                  $(this).hide();
-                                  return false;
-                                  })
-				 })   ;
-                         
-    $("#editinvitetextlink").overlay({        
+$(function() {
+  $(".submiter").live("click", function(){
+    $(this.form).submit();
+  });
+});
+
+// bankid stuff
+$(function() {
+  $("#dialog-confirm-sign-eleg .bankid").click(function(){
+    sign2(window.location.pathname,
+	  "#dialog-confirm-sign-eleg",
+	  "/bankid" + window.location.pathname);
+    return false;
+  });
+});
+
+$(function() {
+  $(".editer").live("click", function(){
+    prepareForEdit($(this.form));
+    $(this).hide();
+    return false;
+  })
+});
+
+$(function() {
+  $("#editinvitetextlink").overlay({        
     mask: standardDialogMask,    
     onBeforeLoad: function () { 
-            var signedList =  jQuery(".authornamewhennotsecretary");                                                     
-            var authorSignes = jQuery("#authorsignatoryradio:checked").size()>0;
-            var newtxt = $("#invitetext").val()
-            $("#edit-invite-text-dialog textarea").val(newtxt);    
-            var author = $(".authorname .fieldvalue").text();
-            var sigs = $("#personpane .persondetails");
-            var partners = new Array()
-            var i = 0;
-            if (authorSignes)   {
-              signedList.html(signedList.attr("okprefix")+" <strong>"+author+"</strong>");
-              partners[i] = author;
-              i++;
-            } else {
-               signedList.html(signedList.attr("alt"));
-            }
-            //ignore first one (it is author and we added him earlier)
-            sigs.slice(1).each(function(){
-              var namefield = $("[name='signatoryname']",this);
-              var mailfield =  $("[name='signatoryemail']",this)
-              
-              var res = namefield.val();
-              if (!namefield.hasClass("grayed"))          
-                 res = namefield.val();
-              else if (!mailfield.hasClass("grayed") )
-                 res = mailfield.val(); 
-              partners[i] = res
-              i++;
-            })
-            $(".partylistupdate").html(swedishList(partners));
-    }
-    })   
+      var signedList =  jQuery(".authornamewhennotsecretary");
+      var authorSignes = jQuery("#authorsignatoryradio:checked").size() > 0;
+      var newtxt = $("#invitetext").val()
+      $("#edit-invite-text-dialog textarea").val(newtxt);    
+      var author = $(".authorname .fieldvalue").text();
+      var sigs = $("#personpane .persondetails");
+      var partners = new Array()
+      var i = 0;
+      if (authorSignes)   {
+        signedList.html(signedList.attr("okprefix")+" <strong>"+author+"</strong>");
+        partners[i] = author;
+        i++;
+      } else {
+        signedList.html(signedList.attr("alt"));
+      }
+      //ignore first one (it is author and we added him earlier)
+      sigs.slice(1).each(function(){
+        var namefield = $("[name='signatoryname']",this);
+        var mailfield =  $("[name='signatoryemail']",this)
         
-    $("#editing-invite-text-finished").click(function() {
-                         var newtxt = $("#edit-invite-text-dialog textarea").val();
-                         $("#invitetext").val( newtxt );
-                     })
-                         
-    $(".redirectsubmitform").submit(function(){
-                          var newform = $($(this).attr("rel"))
-                          var inputs = $("input",$(this))
-                          $('textarea:tinymce',$(this)).each(
-                             function(){
-                             inputs = inputs.add($("<input name='"+$(this).attr('name')+"' value='"+$(this).html()+"'>"))
-                             })
-                          inputs.css("display","none");
-                          newform.append(inputs); 
-                          newform.submit();
-                          return false; 
-                          })                      
-    $("#sign").overlay({ mask: standardDialogMask,
-        onBeforeLoad: function () {
-               if (!sigFieldsValidation()) return false;
-               var guardChecked = $(".signGuard:checked").size()>0;
-               if (!guardChecked) 
-               { $(".signGuard").parent().css("border","1px dotted red");
-                 $(".signGuard").change(function(){$(this).parent().css("border","")});
-                 //addFlashMessage("need text");
-                 return false;
-               } 
-        }
-    })
+        var res = namefield.val();
+        if (!namefield.hasClass("grayed"))          
+          res = namefield.val();
+        else if (!mailfield.hasClass("grayed") )
+          res = mailfield.val(); 
+        partners[i] = res
+        i++;
+      });
+      $(".partylistupdate").html(swedishList(partners));
+    }
+  });   
+});
 
-	$("#signbankid").overlay({ mask: standardDialogMask
-		    });
-    
-    $("#cancel, .cancel").overlay({	mask: standardDialogMask    });
+$(function() {
+  $("#editing-invite-text-finished").click(function() {
+    var newtxt = $("#edit-invite-text-dialog textarea").val();
+    $("#invitetext").val( newtxt );
+  });
+});
+   
+$(function() {                      
+  $(".redirectsubmitform").submit(function(){
+    var newform = $($(this).attr("rel"))
+    var inputs = $("input",$(this))
+    $('textarea:tinymce',$(this)).each(
+      function(){
+        inputs = inputs.add($("<input name='"+$(this).attr('name')+"' value='"+$(this).html()+"'>"))
+      });
+    inputs.css("display","none");
+    newform.append(inputs); 
+    newform.submit();
+    return false; 
+  });
+});
 
+$(function() {                      
+  $("#sign").overlay({ mask: standardDialogMask,
+                       onBeforeLoad: function () {
+                         if (!sigFieldsValidation()) return false;
+                         var guardChecked = $(".signGuard:checked").size()>0;
+                         if (!guardChecked) { 
+                           $(".signGuard").parent().css("border","1px dotted red");
+                           $(".signGuard").change(function(){$(this).parent().css("border","")});
+                           //addFlashMessage("need text");
+                           return false;
+                         } 
+                       }
+                     });
+});
+
+$(function() {
+  $("#signbankid").overlay({ mask: standardDialogMask });
+});
+   
+$(function() { 
+  $("#cancel, .cancel").overlay({	mask: standardDialogMask    });
+});
+
+$(function() {
   $("#signByAuthor").overlay({	
     mask: standardDialogMask,
     onBeforeLoad: function () {
@@ -390,17 +395,14 @@ $(function () {
         return false;
       } 
     }});
-    
-    $("#toscontainer").overlay({mask: standardDialogMask,
-                load: true
-                });
-	
-    $("#loginbtn").click(function(){
-		if(emailFieldsValidation($(":email",this.form))){
-			$(this.form).submit();
-		}						  
-		return false;
-	});
+});
+   
+$(function() { 
+  $("#toscontainer").overlay({
+    mask: standardDialogMask,
+    load: true
+  });
+});
 
     $("#createnewaccount").click(function(){
 		if(emailFieldsValidation($("input[type='email']"))){
@@ -498,7 +500,7 @@ $(function () {
          else
              {  
                  date = input.val().split('-');
-                 curr.data("dateinput").setValue(date[0],date[1]-1,date[2]); 
+                 curr.data("dateinput").setValue(date[0],date[1],date[2]); 
              }
         });
     $(".replacebynextonclick").click( function(){
@@ -508,29 +510,144 @@ $(function () {
         
         });
 
-    showProperSignButtons();    
-    $(".partyrole input").change(showProperSignButtons);
-
-    function gettext(id) {
-	return $("#" + id).text();
+$(function() {
+  $("#createnewaccount").click(function(){
+    if(emailFieldsValidation($("input[type='email']"))){
+      $(this.form).submit();
     }
+    return false;
+  });
+});
+   
+$(function() { 
+  $(".validateEmail").click(function(){
+    return (emailFieldsValidation($(":email",this.form)))
+  });
+});
+
+$(function() {  
+  $(".flashOnClick").click(function(){
+    $(".flashMessage", $(this).parent()).each(function(){
+      addFlashMessage($(this).html());
+      $(this).remove();
+    });
+  });
+  
+  $(".flashOnOn").change(function(){
+    if($(this).val() == "off") {
+      $(".flashMessage", $(this).parent()).each(function(){
+        addFlashMessage($(this).html());
+      });
+    }
+  });
+});
+
+$(function() {
+  $(".addremovecheckbox").change(function(){
+    var what = $($(this).attr("rel"));
+    var location = $($(this).attr("location"));
+    var oldlocation = $($(this).attr("oldlocation"));
+    if($(this).val() == "off") {  
+      location.append(what);      
+      $(this).val("on"); 
+      $(this).attr("checked", "checked");
+    } 
+    else {
+      oldlocation.append(what);
+      $(this).val("off");
+      $(this).removeAttr("checked");
+    }    
+    return true;
+  }).each(function(){
+    if($(this).val() == "on") {
+      $($(this).attr("location")).append($($(this).attr("rel")));      
+      $(this).attr("checked","checked");
+    } 
+  });    
+});
+$(function() {    
+  $(".datetodaystip").each(function() {
+    var curr = $(this);
+    var basictime =  new Date().getTime();
+    var daysinput = $(curr.attr("rel"));
+    var localignore = true;
+    curr.dateinput({
+      format: 'dd-mm-yy',
+      change: function() {
+        if (localignore) return false;
+        var ONE_DAY = 1000 * 60 * 60 * 24;
+        var date_ms = curr.data("dateinput").getValue().getTime();
+        var difference_ms = Math.abs(date_ms - basictime);            
+        var dist = Math.floor(difference_ms/ONE_DAY) + 1;
+        daysinput.val(dist);
+        curr.text("("+curr.data("dateinput").getValue('dd-mm-yy')+")"); 
+      },
+      min:  new Date()
+    });
+    curr.data("dateinput").setValue(new Date());
+    localignore = false;
+    curr.data("dateinput").addDay(parseInt($(curr.attr("rel")).val()));
     
-    $(".submitStepFormOnClick").click( function(){
-       $(".stepForm").submit(); })
-    $(window).resize();
-    
-    //var rpxJsHost = (("https:" == document.location.protocol) ? "https://" : "http://static.");
-    //document.write(unescape("%3Cscript src='" + rpxJsHost +
-    //           "rpxnow.com/js/lib/rpx.js' type='text/javascript'%3E%3C/script%3E"));
-    //    RPXNOW.overlay = true;
-    //    RPXNOW.language_preference = 'sv';
+    daysinput.change(function(){
+      localignore = true
+      curr.data("dateinput").setValue(new Date());
+      localignore = false;
+      curr.data("dateinput").addDay(parseInt(daysinput.val()));
+    });
+  });
+});
+
+$(function() {
+  $(".datetodate").each(function() {     
+    var curr = $(this);
+    var basictime =  new Date().getTime();
+    var input = $(curr.attr("rel"));
+    curr.dateinput({
+      format:'dd-mm-yyyy',
+      change: function() {
+        input.val(curr.data("dateinput").getValue('dd-mm-yyyy'));
+        curr.text(curr.data("dateinput").getValue('dd-mm-yyyy')); 
+      },
+      min:  new Date()
+    });
+    if(input.val() == "") {
+      curr.data("dateinput").setValue(new Date());
+    } else {  
+      date = input.val().split('-');
+      curr.data("dateinput").setValue(date[0],date[1],date[2]); 
+    }
+  });
+});
+
+$(function() {
+  $(".replacebynextonclick").click( function(){
+    var replacement = $(this).next();
+    $(this).replaceWith(replacement);
+    replacement.show();
+  });
+});
+
+$(function() {
+  showProperSignButtons();    
+  $(".partyrole input").change(showProperSignButtons);
+});
+
+
+$(function() {    
+  $(".submitStepFormOnClick").click(function(){
+       $(".stepForm").submit(); 
+  });
+});
+
+$(function() {
+  $(window).resize();
 });
 
 function showProperSignButtons() {
   var sigfields = $(".dragfield").filter(function() {
     var field = $(this);
     var fillstatus = getFillStatus(field);
-
+    
     if(!isStandardField(field) && fillstatus === 'sig') {
       return true;
     } else {
@@ -566,17 +683,17 @@ function showProperSignButtons() {
 
 }
 
-  function emailFieldsValidation(fields){
-      fields = fields.filter(function(){return !isExceptionalField($(this))});
-      if(fields.length > 0){
-	  var inputs = fields.validator({
-		  effect:'failWithFlashOnEmail',
-		  formEvent: 'null'
-	      });
-	  var valid = inputs.data("validator").checkValidity();
-	  return valid;
-      }
-      return true;
+function emailFieldsValidation(fields){
+  fields = fields.filter(function(){return !isExceptionalField($(this))});
+  if(fields.length > 0){
+    var inputs = fields.validator({
+      effect:'failWithFlashOnEmail',
+      formEvent: 'null'
+    });
+    var valid = inputs.data("validator").checkValidity();
+    return valid;
+  }
+  return true;
 }
 
 function checkSignPossibility() {
@@ -609,7 +726,7 @@ function checkSignPossibility() {
   return true;
 }
 
-function authorFieldsValidation(){
+function authorFieldsValidation() {
   var dragfields = $("#personpane .dragfield");
 
   // get all the fields that should be filled by author
@@ -682,8 +799,7 @@ function nonZeroSignatories() {
 }
 
 function isExceptionalField(field){
-
-	return (field.closest("div").attr("id") == "signatory_template")
+  return (field.closest("div").attr("id") == "signatory_template")
 }
 
 
@@ -888,7 +1004,7 @@ $(document).ready(function() {
                 
 		//console.log("removing signatory with id: " + sigid);
 
-		detachFieldsForSig(sigid);
+		detachFieldsForSigID(sigid);
                 child.remove();
                 
                 var li = $("#peopleList li:eq(" + idx + ")");
@@ -993,3 +1109,4 @@ $(function() {
     renumberParts();
   });
 });
+
