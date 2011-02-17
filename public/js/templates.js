@@ -1017,6 +1017,9 @@ function invalidatePlacedFieldsCache() {
 // just before editing, invalidate the cache
 // it may be possible to cache them anew
 safeReady(function() {
-  $("input", $("#personpane")[0]).live("focus", invalidatePlacedFieldsCache);
+  $("input", $("#personpane")[0]).live("focus", function() {
+    invalidatePlacedFieldsCache();
+    getPlacedFields();
+  });
 });
 
