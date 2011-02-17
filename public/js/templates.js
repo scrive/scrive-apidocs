@@ -35,7 +35,7 @@ function placePlacements(pls, label, value, sigid, fieldid) {
     var d = placementToHTML(label, value);
     var page = $("#page" + pl.page);
     d.offset({left: pl.x, top: pl.y});
-
+    
     page.append(d);
     
     setSigID(d, sigid);
@@ -62,17 +62,11 @@ function placePlacements(pls, label, value, sigid, fieldid) {
         }
 
         var fieldid = getFieldID(field);
-        var needsUpdating = $('.dragfield').filter(function() {
-          var f = $(this);
-          if(getFieldID(f) == fieldid) {
-            return true;
-          } else {
-            return false;
-          }
+        $('.dragfield').filter(function() {
+          return getFieldID(this) === fieldid;
+        }).each(function() {
+          updateStatusForDragging(this);
         });
-
-        updateStatus(needsUpdating);
-
       },
       // build a helper so it doesn't delete the original
       helper: function (event, ui) {
@@ -81,10 +75,8 @@ function placePlacements(pls, label, value, sigid, fieldid) {
       // but we don't want to show the original so it looks like 
       // you are dragging the original
       start: function (event, ui) {
-	$(this).css({ display: "none" });
+	$(this).hide();
       }
-
-      
     });
   });
 }
@@ -143,18 +135,17 @@ function magicUpdate(){
   var fieldid = getFieldID(field);
   var value = getValue(field);
 
-  if(value == "") {
+  if(value === "") {
     value = getInfotext(field);
   }
 
-  $(".placedfield").each(function () {
-    var f = $(this);
-    if(getSigID(f) == sigid
-       && getFieldID(f) == fieldid) {
-      setValue(f, value);
-    }
+  getPlacedFields().filter(function() {
+    return getSigID(this) === sigid &&
+      getFieldID(this) === fieldid;
+  }).each(function() {
+    setValue(this, value);
   });
-  updateStatus(field);
+  updateStatusForTyping(field);
 }
 
 function isDraggableField(field){
@@ -454,36 +445,20 @@ function setSigID(field, sigid) {
 function getPlacedFieldsForField(field) {
   var fieldid = getFieldID(field);
   if(!fieldid) {
-    if(debug) { console.log("not a field " + field); }
+    console.log("not a field " + field);
     return $([]);
+  } else {
+    return getPlacedFields().filter(function() {
+      return getFieldID(this) === fieldid;
+    });
   }
-  var fields = [];
-  var fieldsigid = getSigID(field);
-  $(".placedfield").each(function() {
-    var p = $(this);
-    var fid = getFieldID(p);
-    var sid = getSigID(p);
-    if(fid == fieldid) {
-      fields[fields.length] = p[0];
-    }
-  });
-  return $(fields);
 }
 
-// function to automatically change status icon
-// status is a function of field type and current state
-function updateStatus(field) {
+function updateStatusForTyping(field) {
   field = $(field);
   var type = getFieldType(field);
+  var dragstatus = getDragStatus(field);
   if(type == "author") {
-    if(getPlacedFieldsForField(field).size()){
-      setDragStatus(field, "placed");
-      //field.removeClass('redborder');
-    } else if (isStandardField(field)) {
-      setDragStatus(field, "not placed");
-    } else {
-      setDragStatus(field, "must place");
-    }
     if(getValue(field)) {
       setFillStatus(field, "filled");
       field.removeClass('redborder');
@@ -491,19 +466,11 @@ function updateStatus(field) {
       setFillStatus(field, "author");
     }
   } else if(type == "sig") {
-    if(getPlacedFieldsForField(field).size()){
-      setDragStatus(field, "placed");
-      field.removeClass('redborder');
-    } else if(isStandardField(field)) {
-      setDragStatus(field, "not placed");
-    } else {
-      setDragStatus(field, "must place");
-    }
     if(getValue(field)) {
       // it's got a value
       setFillStatus(field, "done");
       field.removeClass('redborder');
-    } else if(getPlacedFieldsForField(field).size()) {
+    } else if(dragstatus === "placed") {
       // not filled out, but it's placed
       setFillStatus(field, "sig");
       field.removeClass('redborder');
@@ -518,15 +485,53 @@ function updateStatus(field) {
   }
 }
 
-function detachFieldsForSig(sigid) {
-  $(".placedfield").each(function () {
-    var field = $(this);
-    if(sigid == getSigID(field)){
-      field.detach();
+// function to automatically change status icon
+// status is a function of field type and current state
+function updateStatusForDragging(field) {
+  invalidatePlacedFieldsCache();
+  field = $(field);
+  var type = getFieldType(field);
+  if(type == "author") {
+    if(getPlacedFieldsForField(field).size()) {
+      setDragStatus(field, "placed");
+      //field.removeClass('redborder');
+    } else if (isStandardField(field)) {
+      setDragStatus(field, "not placed");
+    } else {
+      setDragStatus(field, "must place");
     }
-  });
+  } else if(type == "sig") {
+    if(getPlacedFieldsForField(field).size()) {
+      setDragStatus(field, "placed");
+      field.removeClass('redborder');
+    } else if(isStandardField(field)) {
+      setDragStatus(field, "not placed");
+    } else {
+      setDragStatus(field, "must place");
+    }
+  } else if(type == "text") {
+    // do nothing
+  } else if(debug) {
+    console.log("field has bad field type: " + getFieldName(field));
+  }
 }
 
+function updateStatus(field) {
+  updateStatusForDragging(field);
+  updateStatusForTyping(field);
+}
+
+function detachFieldsForSigID(sigid) {
+  getPlacedFields().filter(function () {
+    return sigid === getSigID(this);
+  }).detach();
+}
+
+function detachFieldsForFieldID(fieldid) {
+  getPlacedFields().filter(function () {
+    return fieldid === getFieldID(this);
+  }).detach();
+}
 
 function authorToHTML(sig) {
   var sl = $("#personpane");
@@ -534,7 +539,7 @@ function authorToHTML(sig) {
   sig.id = sigid;
 
   var sigentry = sl.find(".authordetails");
-//  setHiddenField(sigentry, "sigid", sigid);
+  //  setHiddenField(sigentry, "sigid", sigid);
   var manlink = sigentry.find("a.man");
 
   manlink.click(function(){
@@ -579,9 +584,6 @@ function authorToHTML(sig) {
   setTitle(anumb, sig.number);
   setTitle(aemai, sig.email);
   
-  
-  
-  
   if(sig.name === "") {
     aname.remove();
   }
@@ -601,15 +603,10 @@ function authorToHTML(sig) {
   sigentry.find(".dragtext").draggable({ handle: ".draghandle"
 		                         , zIndex: 10000
 		                         , appendTo: "body"
-		                         , helper: function (event) {
-		                           var field = $(this);
-		                           
-		                           return placementToHTML(getValue(field));
+		                         , helper: function () {
+		                           return placementToHTML(getValue(this));
 	                                 }
 		                       });
-
-  
-  // other fields
   
   $(sig.otherfields).each(function (){
     var fd = this;
@@ -642,18 +639,11 @@ function authorToHTML(sig) {
     //	    
   });
 
-  
   $("#peopleList ol").append("<li><a href='#'>" + sig.name + " (Avsändare)</a></li>");
 }
 
 /*
  * Activate minus buttons within personpane.
- * There are actually two cases for minus buttons. 
- *
- * The first is with a newfield (meaning a field that doesn't have a
- * name yet).
- *
- * The second is with a customfield, which may also have been dragged.
  */
 
 $(function() {
@@ -662,15 +652,9 @@ $(function() {
   $('a.minus', $('#personpane')[0]).live('click', function() {
     var minus = $(this);
 
-    { // this gets rid of newfields (fields without a name yet)
-      var newfield = minus.parents('.newfield');
-      newfield.detach();
-    }
-
     { // this gets rid of custom fields and their placements
       var customfield = minus.parents('.customfield');
-      var ff = getPlacedFieldsForField(customfield);
-      $(ff).detach();
+      getPlacedFieldsForField(customfield).detach();
       customfield.detach();
     }
 
@@ -708,31 +692,30 @@ $(function() {
 });
 
 /* 
- * We need to make the okIcon (green check) createCustomField as well
+ * We need to make the okIcon (ok button) createCustomField as well
  */
 $(function() { 
   $('.newfield a.okIcon', $('#personpane')[0]).live('click', function() {
-    var input = $(this);
-    var newfield = input.parents('.newfield');
-    createCustomField(newfield);
+    createCustomField($(this).parents('.newfield'));
     return false;
   });
 });
 
 function createCustomField(newfield) {
-    var thefield = newfield.find("input[type='text']");
+  var thefield = newfield.find("input[type='text']");
   var fieldname = thefield.attr("value");
   var infotext = thefield.attr("infotext");
-  if(fieldname == infotext || fieldname == "") {
+  if(fieldname === infotext || fieldname === "") {
     return false;
   }
 
   var customfield = $("#templates .customfield").first().clone();
-  setInfotext(customfield, fieldname);
-  setValue(customfield, "");
+  var input = customfield.find("input[type='text'], input[type='email']");
+  input.attr("infotext", fieldname);
+  input.val("");
 
   var persondetails = newfield.parents(".persondetails");
-  console.log(persondetails);
+  //  console.log(persondetails);
   if(persondetails.hasClass('authordetails')) {
     setFieldType(customfield, 'author');
   } else {
@@ -751,9 +734,6 @@ function createCustomField(newfield) {
 
   setFieldName(customfield, "fieldvalue");
   var fieldid = newUUID();
-  // finding sigentry may be redundant, but it works
-  // I don't want to mess it up right before the deadline
-  var sigentry = persondetails.find('.sigentry');
   var sigid = "";
   if(persondetails.hasClass('authordetails')) {
     sigid = "author";
@@ -769,7 +749,7 @@ function createCustomField(newfield) {
 
   enableInfoTextOnce(customfield);
   updateStatus(customfield);
-      
+  
   return false;
 }
 
@@ -779,7 +759,7 @@ function createCustomField(newfield) {
  * placedfields.
  */
 $(function() {
-  $('.dragfield input', $('#personpane')[0]).live('keydown keyup change', magicUpdate);
+  $('.dragfield input', $('#personpane')[0]).live('keyup keydown change', magicUpdate);
 });
 
 /*
@@ -804,7 +784,6 @@ $(function() {
     return false;
   });
 });
-
 
 function signatoryToHTML(sig) {
   var sl = $("#personpane");
@@ -892,7 +871,7 @@ function signatoryToHTML(sig) {
     //	    
   });
 
-
+  enableInfoTextOnce(sigentry);
   
   var n = "Unnamed";
 
@@ -940,20 +919,15 @@ function makeDropTargets() {
     var fieldid = getFieldID(field);
     if(isPlacedField(field)) {
       field.detach();
-      helper.detach();
+      helper.detach();  
+
+      $('.dragfield').filter(function() {
+        return getFieldID(this) === fieldid;
+      }).each(function() {
+        updateStatusForDragging(this);
+      });
     }
-
-    var needsUpdating = $('.dragfield').filter(function() {
-          var f = $(this);
-          if(getFieldID(f) == fieldid) {
-            return true;
-          } else {
-            return false;
-          }
-        });
-
-        updateStatus(needsUpdating);
-
+    return false;
   }});
 
   $(".pagediv").droppable({ drop: function(event, ui) {
@@ -975,7 +949,7 @@ function makeDropTargets() {
       field.detach();
       helper.detach();
     } else {
-      updateStatus(field);
+      updateStatusForDragging(field);
     }
     
     return false;
@@ -985,8 +959,7 @@ function makeDropTargets() {
 }
 
 function initializeTemplates () {
-
-  if($(".pagediv").size() == 0){
+  if($(".pagediv").size() === 0){
     setTimeout("initializeTemplates();", 100);
     return;
   }
@@ -1012,7 +985,7 @@ function initializeTemplates () {
   });
 }
 
-$(document).ready(function () {
+$(function () {
   docstateToHTML();
   initializeTemplates();	
 });
@@ -1025,4 +998,25 @@ function newUUID() {
     return v.toString(16);
   }).toUpperCase();
 }
+
+// this stuff keeps the editing fast
+
+var placedfieldscache = null;
+
+function getPlacedFields() {
+  if(placedfieldscache === null) {
+    placedfieldscache = $(".placedfield");
+  }
+  return placedfieldscache;
+}
+
+function invalidatePlacedFieldsCache() {
+  placedfieldscache = null;
+}
+
+// just before editing, invalidate the cache
+// it may be possible to cache them anew
+safeReady(function() {
+  $("input", $("#personpane")[0]).live("focus", invalidatePlacedFieldsCache);
+});
 
