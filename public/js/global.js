@@ -130,6 +130,7 @@ safeReady(function () {
   });
 
   // override click when shift key is held
+  // cannot be live or it doesn't override properly
   $("tr", selectables).mousedown(function(event){
     // we have a previous focus
     // shift key is pressed
