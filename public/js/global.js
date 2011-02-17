@@ -862,7 +862,7 @@ function flashFlashMessages()
         fm.append(center);
     });
       if ($('.flashmessage',flashmsgbox).size() >0)
-         flashmsgbox.show().delay(10000).hide(function(){safeReady(flashmsgbox).children().remove()});
+         flashmsgbox.show().delay(10000).hide(function(){$(flashmsgbox).children().remove()});
 
 }
 
