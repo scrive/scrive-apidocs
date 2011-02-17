@@ -1,19 +1,17 @@
+{-# OPTIONS_GHC -Wall #-}
 {- |
-   Sores the top-level application state
+   Stores the top-level application state
  -}
 module AppState 
     ( AppState
     ) where
 
-import Data.Data
 import Doc.DocState
 import Happstack.Data
 import Happstack.State
 import Payments.PaymentsState
 import Session
 import Kontra
-import qualified Happstack.Data.IxSet as IxSet (empty,size)
-import ActionQueue
 import ActionQueueState
 
 -- |top-level application state
@@ -26,7 +24,6 @@ $(deriveSerialize ''AppState)
 instance Version AppState
 
 -- |top-level application component
--- we depend on the GuestBook component
 instance Component AppState where
   type Dependencies AppState = Documents :+: Sessions :+: Users :+:PaymentAccountModels :+: Actions :+: End
   initialValue = defaultValue
@@ -34,4 +31,3 @@ instance Component AppState where
 
 -- create types for event serialization
 $(mkMethods ''AppState [])
-
