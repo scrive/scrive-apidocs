@@ -460,7 +460,7 @@ function updateStatusForTyping(field) {
   var dragstatus = getDragStatus(field);
   if(type == "author") {
     if(getValue(field)) {
-      setFillStatus(field, "filled");
+      setFillStatus(field, "done");
       field.removeClass('redborder');
     } else {
       setFillStatus(field, "author");
@@ -491,28 +491,13 @@ function updateStatusForDragging(field) {
   invalidatePlacedFieldsCache();
   field = $(field);
   var type = getFieldType(field);
-  if(type == "author") {
-    if(getPlacedFieldsForField(field).size()) {
-      setDragStatus(field, "placed");
-      //field.removeClass('redborder');
-    } else if (isStandardField(field)) {
-      setDragStatus(field, "not placed");
-    } else {
-      setDragStatus(field, "must place");
-    }
-  } else if(type == "sig") {
-    if(getPlacedFieldsForField(field).size()) {
-      setDragStatus(field, "placed");
-      field.removeClass('redborder');
-    } else if(isStandardField(field)) {
-      setDragStatus(field, "not placed");
-    } else {
-      setDragStatus(field, "must place");
-    }
-  } else if(type == "text") {
-    // do nothing
-  } else if(debug) {
-    console.log("field has bad field type: " + getFieldName(field));
+  if(getPlacedFieldsForField(field).size()) {
+    setDragStatus(field, "placed");
+    field.removeClass('redborder');
+  } else if(isStandardField(field)) {
+    setDragStatus(field, "not placed");
+  } else {
+    setDragStatus(field, "must place");
   }
 }
 
