@@ -182,8 +182,6 @@ handleRoutes = msum [
      , dir "signup"      $ hget0  $ signupPageGet
      , dir "signup"      $ hpost0 $ signupPagePost
      , dir "signupdone"  $ hget0  $ signupPageDone
-     , dir "vip"         $ hget0  $ signupVipPageGet
-     , dir "vip"         $ hpost0 $ signupVipPagePost
      , dir "amnesia"     $ hget0  $ forgotPasswordPageGet
      , dir "amnesia"     $ hpost0 $ forgotPasswordPagePost
      , dir "amnesiadone" $ hget0  $ forgotPasswordDonePage
