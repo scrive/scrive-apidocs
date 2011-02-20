@@ -140,7 +140,8 @@ anUnsignedSigLink = SignatoryLink {
              maybesignatory = Nothing,
              maybesigninfo = Nothing,
              maybeseeninfo = Nothing, 
-             invitationdeliverystatus = Unknown}
+             invitationdeliverystatus = Unknown,
+             signatorysignatureinfo = Nothing}
 someSignInfo = SignInfo {signtime = MinutesTime 123 0, signipnumber = 123}
 aSignedSigLink = SignatoryLink { 
              signatorylinkid = SignatoryLinkID 123,
