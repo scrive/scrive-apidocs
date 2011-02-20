@@ -44,7 +44,7 @@ handleUserPasswordPost = do
            Right () -> do
                         passwordhash <- liftIO $ createPassword $ BS.fromString password
                         update $ SetUserPassword user passwordhash
-                        addFlashMsgHtmlFromTemplate =<< (liftIO $ flashMessageUserDetailsSaved  (ctxtemplates ctx))
+                        addFlashMsgText =<< (liftIO $ flashMessageUserDetailsSaved  (ctxtemplates ctx))
            Left f ->  addFlashMsgText =<< (liftIO $ f (ctxtemplates ctx))
     else  addFlashMsgText =<< (liftIO $ flashMessageBadOldPassword  (ctxtemplates ctx))
   return LinkAccount
@@ -83,7 +83,7 @@ handleUserPost = do
      return ()
   
   newuser <- update $ SetUserDetails userid fullname companyname companynumber invoiceaddress
-  addFlashMsgHtmlFromTemplate =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
+  addFlashMsgText =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
 
   return LinkAccount
 
@@ -276,7 +276,7 @@ handleAcceptTOSPost = do
   if isJust tos
     then do
       update $ AcceptTermsOfService userid ctxtime
-      addFlashMsgHtmlFromTemplate =<< (liftIO $ flashMessageUserDetailsSaved  (ctxtemplates ctx))
+      addFlashMsgText =<< (liftIO $ flashMessageUserDetailsSaved  (ctxtemplates ctx))
       return LinkMain
     else do
       addFlashMsgText =<< (liftIO $ flashMessageMustAcceptTOS  (ctxtemplates ctx))
@@ -370,7 +370,7 @@ handleChangePassword muser dropSessionAction = do
                                         do
                                           passwordhash <- liftIO $ createPassword $ BS.fromString password
                                           update $ SetUserPassword user passwordhash
-                                          addFlashMsgHtmlFromTemplate =<< (liftIO $ flashMessageUserPasswordChanged  (ctxtemplates ctx))
+                                          addFlashMsgText =<< (liftIO $ flashMessageUserPasswordChanged  (ctxtemplates ctx))
                                           dropSessionAction
                                           logUserToContext $ Just user
                                           return LinkMain  
@@ -411,7 +411,7 @@ handleActivate muser dropSessionAction = do
                                             now <- liftIO getMinutesTime
                                             update $ AddFreePaymentsForInviter now user
                                             dropSessionAction
-                                            addFlashMsgHtmlFromTemplate =<< (liftIO $ flashMessageUserActivated (ctxtemplates ctx))
+                                            addFlashMsgText =<< (liftIO $ flashMessageUserActivated (ctxtemplates ctx))
                                             logUserToContext $ Just user
                                             return LinkMain 
                                            else do

@@ -4,13 +4,12 @@ module Kontra
     ( module User.UserState
     , Context(..)
     , isSuperUser
-    , Kontra(..)
+    , Kontra
     , admins
     , initialUsers
     , clearFlashMsgs
     , addELegTransaction
     , addFlashMsgText 
-    , addFlashMsgHtmlFromTemplate
     , logUserToContext
     , onlySuperUser
     , unloggedActionLink
@@ -18,41 +17,32 @@ module Kontra
     )
     where
 
-import System.Time
 import Control.Monad.Reader
 import Control.Monad.State
-import Codec.Utils (Octet)
 import Control.Concurrent.MVar
-import Data.HMAC (hmac_sha1)
 import Data.Word
 import Doc.DocState
 import HSP hiding (Request)
 import Happstack.Server
 import MinutesTime
 import Session
-import System.IO.Unsafe
-import System.Log.Logger
-import System.Process
 import Happstack.State (query,QueryEvent)
 import User.UserState
-import qualified Codec.Binary.Base64 as Base64
-import qualified Data.Binary as Binary
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
-import qualified Data.Set as Set
-import Misc (renderXMLAsBSHTML)
 import qualified Data.Map as Map
 import HSP.XML
 import qualified Network.AWS.Authentication as AWS
 import Templates.Templates  (KontrakcjaTemplates)
-import Mails.MailsConfig
+import Mails.MailsConfig()
 import KontraLink
 import qualified TrustWeaver as TW
 import ELegitimation.ELeg
 import Mails.SendMail
 import qualified MemCache
+
+-- these HSP type class instances help us express our data in xml
 
 instance Monad m => IsAttrValue m DocumentID where
     toAttrValue = toAttrValue . show
@@ -121,7 +111,10 @@ instance MonadState s m => MonadState s (ServerPartT m) where
     get = lift get
     put = lift . put
 
-
+{- |
+   A list of admin emails.
+-}
+admins :: [Email]
 admins = map (Email . BS.fromString)
          [ "gracjanpolak@gmail.com"
          , "lukas@skrivapa.se"
@@ -129,6 +122,11 @@ admins = map (Email . BS.fromString)
          , "viktor@skrivapa.se"
          ]
 
+{- |
+   A list of default user emails.  These should start out as the users
+   in a brand new system.
+-}
+initialUsers :: [Email]
 initialUsers = map (Email . BS.fromString)
          [ "gracjanpolak@gmail.com"
          , "lukas@skrivapa.se"
@@ -138,9 +136,16 @@ initialUsers = map (Email . BS.fromString)
          , "viktor@skrivapa.se"
          ]
 
+{- |
+   Whether the user is an administrator.
+-}
+isSuperUser :: Maybe User -> Bool
 isSuperUser (Just user) = (useremail $ userinfo user) `elem` admins 
 isSuperUser _ = False
 
+{- |
+   Will mzero if not logged in as a super user.
+-}
 onlySuperUser::Kontra a -> Kontra a
 onlySuperUser a =
                  do
@@ -148,30 +153,42 @@ onlySuperUser a =
                  if (isSuperUser $ ctxmaybeuser  ctx)
                   then a
                   else mzero
-                     
+          
+{- |
+   Adds an Eleg Transaction to the context.
+-}           
 addELegTransaction :: ELegTransaction -> Kontra ()
 addELegTransaction tr = do
   ctx@Context { ctxelegtransactions = currenttrans } <- get
   put $ ctx { ctxelegtransactions = (tr : currenttrans) }
 
+{- |
+   Adds a flash message to the context.
+-}  
 addFlashMsgText :: String -> Kontra ()
 addFlashMsgText msg = do
                        ctx@Context{ ctxflashmessages = flashmessages} <- get
                        put $ ctx{ ctxflashmessages =  (FlashMessage $ BS.fromString msg) : flashmessages}
-                       
+     
+{- |
+   Clears all the flash messages from the context.
+-}                  
 clearFlashMsgs:: Kontra ()                       
 clearFlashMsgs = do
                        ctx <- get
                        put $ ctx{ ctxflashmessages = []}
-                       
-addFlashMsgHtmlFromTemplate msg = do
-                       ctx@Context{ ctxflashmessages = flashmessages} <- get
-                       put $ ctx {ctxflashmessages = (FlashMessage $ BS.fromString msg) :  flashmessages} 
 
+{- |
+   Sticks the logged in user onto the context
+-}
+logUserToContext :: Maybe User -> Kontra ()
 logUserToContext user =  do
   ctx <- get
   put $ ctx { ctxmaybeuser =  user}    
 
+{- |
+   A link that can be used by un-logged in users, to do things like activate their login.
+-}
 unloggedActionLink::User -> IO KontraLink
 unloggedActionLink user =  do
                            session <- createLongTermSession (userid user)
@@ -180,9 +197,8 @@ unloggedActionLink user =  do
                                                            (BS.toString $ unEmail $ useremail $ userinfo user)
                                                            (BS.toString $ userfullname user)
                                                        
-
 {- |
-   perform a query (like with query) but if it returns Nothing, mzero; otherwise, return fromJust
+   Perform a query (like with query) but if it returns Nothing, mzero; otherwise, return fromJust
  -}
 queryOrFail :: (QueryEvent ev (Maybe res)) => ev -> Kontra res
 queryOrFail q = do
