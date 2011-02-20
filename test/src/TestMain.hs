@@ -3,6 +3,7 @@ module Main where
 import Test.Framework (defaultMain, testGroup)
 import UserStateTest
 import SchedulerTest
+import AppViewSampler
 import UserViewSampler
 import DocViewMailSampler
 import DocViewSampler
@@ -17,6 +18,7 @@ main = do
 
 tests = [testGroup "UserState" userStateTests,
          testGroup "Scheduler" schedulerTests,
+         testGroup "AppView (Sampler)" appViewSamples,
          testGroup "UserView (Sampler)" userViewSamples,
          testGroup "DocViewMail (Sampler)" docViewMailSamples,
          testGroup "DocView (Sampler)" docViewSamples,
