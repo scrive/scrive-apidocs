@@ -19,8 +19,8 @@ adminsmain=
           <td style="height:50px;width:200px"> <a href="/adminonly/useradmin"><button style="width:150px"> User Admin </button> </a></td>
         </tr>
     </tbody></table>
-    <BR>
-    <BR>
+    <br/>
+    <br/>
     <strong> Super Admin Tools Only </strong>
     <table><tbody>
         <tr>
@@ -32,17 +32,17 @@ adminsmain=
 adminsmanageall =
     $backtoadminmainlink()$
     <div><strong>SkrivaPa admin only page</strong></div>
-    <BR>
+    <br/>
     <div>
       <h3>Database files</h3>
-      <a href="/adminonly/db/">Show list of database files</a><br>
+      <a href="/adminonly/db/">Show list of database files</a><br/>
       <form method="post" action="/adminonly/cleanup">
         Database incrementally stores backups of itself. Old copies aren't useful in normal situations,
-        just in case of failure. It is good to remove old files from time to time.<br>
-        <input type="submit" value="Cleanup"><br>
+        just in case of failure. It is good to remove old files from time to time.<br/>
+        <input type="submit" value="Cleanup" /><br/>
       </form>
       <h3>Users</h3>
-      You can see <a href="/adminonly/alluserstable">big table of all users</a>.<br>
+      You can see <a href="/adminonly/alluserstable">big table of all users</a>.<br/>
       Here is a CSV version of this table: <a href="/adminonly/skrivapausers.csv">skrivapausers.csv</a>.
       <div>
         $usersfilter(link="/adminonly/advuseradmin")$
@@ -60,19 +60,19 @@ adminsmanageall =
               </td>
               <td>
                 <form method="post" action="/adminonly/become"  style="display:inline">
-                  <input type="hidden" name="user" value="$user.usvId$">
-                  <input type="submit" value="Monitor user">
+                  <input type="hidden" name="user" value="$user.usvId$" />
+                  <input type="submit" value="Monitor user" />
                 </form>
               </td>
               <td>
                 <form method="post" action="/adminonly/takeoverdocuments"  style="display:inline">
-                  <input type="hidden" name="user" value="$user.usvId$">
+                  <input type="hidden" name="user" value="$user.usvId$" />
                   <input type="submit" value="Take over"/>
                 </form>
               </td>
               <td>
                 <form method="post" action="/adminonly/deleteaccount" >
-                  <input type="hidden" name="user" value="$user.usvId$">
+                  <input type="hidden" name="user" value="$user.usvId$" />
                   <input type="submit" value="Annihilate account"/>
               </td>
               </form>
@@ -86,12 +86,12 @@ usersfilter=
     <form action="$link$" method="GET">
       <div style="border:1px solid #DDDDDD;padding:5px;margin-top:5px">
         Find user:
-        <input type="text" style="width:200px;margin-left:5px;margin-right:5px" name="search" value="$search$">
+        <input type="text" style="width:200px;margin-left:5px;margin-right:5px" name="search" value="$search$" />
         <input type="submit" value="Search"/>
     </form>
-    <BR><BR>
+    <br/><br/>
     <a href="$link$">View list of users </a>
-    <BR><BR>
+    <br/><br/>
     <form action="$link$" method="GET">
       Find by name:
       $letters:{letter |<button type="submit" name="startletter" class="transparent" value="$letter$"><a>$letter$</a> </button>}$
@@ -101,17 +101,17 @@ userspaging=
     <form action="$link$" method="GET">
       View page:
       $intervals:{interval |<button type="submit" name="page" class="transparent" value="$interval.oValue$"><a>$interval.oText$</a> </button>}$
-      <input type="hidden" name="startletter" value="$startletter$">
-      <input type="hidden" name="search" value="$search$">
+      <input type="hidden" name="startletter" value="$startletter$" />
+      <input type="hidden" name="search" value="$search$" />
     </form>
 ###
 adminusers=
     <strong>USER ADMIN</strong>
-    <BR>
+    <br/>
     $backtoadminmainlink()$
     $usersfilter(link=adminuserlink)$
     $userspaging()$
-    <BR><BR>
+    <br/><br/>
     <form>
       $users:{user| <a href="$adminuserlink$/$user.usvId$"> $user.usvFullname$ &lt;$user.usvEmail$&gt; </a>}:br()$
     </form>
@@ -119,57 +119,57 @@ adminusers=
 adminuser=
     <a href="$adminlink$">Go back to main admin page</a>
     <a style="padding-left:100px" href="$adminuserslink$">Go back to user admin page</a>
-    <BR>
-    <BR>
+    <br/>
+    <br/>
     <form action="" method="POST">
       <table><tbody>
           <tr> <th style="width:200px"></th> <th> </th></tr>
           <tr> <td style="padding-top:10px"><strong>User data</strong></td> <td> </td></tr>
           <tr> <td>First Name:</td>
             <td>
-              <input type="text" style="width:200px;margin:0" value="$user.uavuserfstname$"  name="userfstname">
+              <input type="text" style="width:200px;margin:0" value="$user.uavuserfstname$"  name="userfstname" />
             </td>
           </tr>
           <tr> <td>Secound Name:</td>
             <td>
-              <input type="text" style="width:200px;margin:0" value="$user.uavusersndname$"  name="usersndname">
+              <input type="text" style="width:200px;margin:0" value="$user.uavusersndname$"  name="usersndname" />
             </td>
           </tr>
           <tr> <td>Pers Nr:</td>
             <td>
-              <input type="text" style="width:200px;margin:0" value="$user.uavuserpersonalnumber$"  name="userpersonalnumber">
+              <input type="text" style="width:200px;margin:0" value="$user.uavuserpersonalnumber$"  name="userpersonalnumber" />
             </td>
           </tr>
           <tr> <td>Company:</td>
             <td>
-              <input type="text" style="width:200px;margin:0" value="$user.uavusercompanyname$"  name="usercompanyname">
+              <input type="text" style="width:200px;margin:0" value="$user.uavusercompanyname$"  name="usercompanyname" />
             </td>
           </tr>
           <tr> <td>Company nr:</td>
             <td>
-              <input type="text" style="width:200px;margin:0" value="$user.uavusercompanynumber$"  name="usercompanynumber">
+              <input type="text" style="width:200px;margin:0" value="$user.uavusercompanynumber$"  name="usercompanynumber" />
             </td>
           </tr>
           <tr> <td style="padding-top:10px"><strong>Location</strong></td>
             <td> </td>
           </tr>
           <tr> <td>Adress:</td>
-            <td> <input type="text" style="width:200px;margin:0" value="$user.uavuseraddress$"  name="useraddress">
+            <td> <input type="text" style="width:200px;margin:0" value="$user.uavuseraddress$"  name="useraddress" />
             </td>
           </tr>
           <tr> <td>ZIP:</td>
             <td>
-              <input type="text" style="width:200px;margin:0" value="$user.uavuserzip$"  name="userzip">
+              <input type="text" style="width:200px;margin:0" value="$user.uavuserzip$"  name="userzip" />
             </td>
           </tr>
           <tr> <td>City:</td>
             <td>
-              <input type="text" style="width:200px;margin:0" value="$user.uavusercity$"  name="usercity">
+              <input type="text" style="width:200px;margin:0" value="$user.uavusercity$"  name="usercity" />
             </td>
           </tr>
           <tr> <td>Country:</td>
             <td>
-              <input type="text" style="width:200px;margin:0" value="$user.uavusercountry$" name="usercountry">
+              <input type="text" style="width:200px;margin:0" value="$user.uavusercountry$" name="usercountry" />
             </td>
           </tr>
           <tr> <td style="padding-top:10px" ><strong>Contact</strong></td>
@@ -178,17 +178,17 @@ adminuser=
           </tr>
           <tr> <td>Phone:</td>
             <td>
-              <input type="text" style="width:200px;margin:0"  value="$user.uavuserphone$" name="userphone">
+              <input type="text" style="width:200px;margin:0"  value="$user.uavuserphone$" name="userphone" />
             </td>
           </tr>
           <tr> <td>Mobile:</td>
             <td>
-              <input type="text" style="width:200px;margin:0" value="$user.uavusermobile$" name="usermobile">
+              <input type="text" style="width:200px;margin:0" value="$user.uavusermobile$" name="usermobile" />
             </td>
           </tr>
           <tr> <td>Email:</td>
             <td>
-              <input type="text" style="width:200px;margin:0"  value="$user.uavuseremail$" name="useremail">
+              <input type="text" style="width:200px;margin:0"  value="$user.uavuseremail$" name="useremail" />
             </td>
           </tr>
           <tr>
@@ -218,12 +218,12 @@ adminuser=
           </tr>
           <tr> <td>Current account state:</td>
             <td>
-              <input type="text" style="width:40px;margin:0" value="$user.uavpaymentaccountmoney$" name="paymentaccountmoney">
+              <input type="text" style="width:40px;margin:0" value="$user.uavpaymentaccountmoney$" name="paymentaccountmoney" />
             </td>
           </tr>
           <tr> <td>Free signatures left:</td>
             <td>
-              <input type="text" style="width:40px;margin:0" value="$user.uavpaymentaccountfreesignatures$" name="paymentaccountfreesignatures">
+              <input type="text" style="width:40px;margin:0" value="$user.uavpaymentaccountfreesignatures$" name="paymentaccountfreesignatures" />
             </td>
           </tr>
           <tr> <td style="padding-top:10px" ><strong>Pricing</strong></td>
@@ -238,16 +238,16 @@ adminuser=
           <tr> <td>Temporary price:</td>
             <td>
               <span>
-                <input type="checkbox" value="$if(user.uavtmppaymentchangeenddate)$on$else$off$endif$" autocomplete="off" oldlocation="#hiddenttimestuffbox" location="#datetosigncontainer" rel="#daystosignbox" class="addremovecheckbox">
+                <input type="checkbox" value="$if(user.uavtmppaymentchangeenddate)$on$else$off$endif$" autocomplete="off" oldlocation="#hiddenttimestuffbox" location="#datetosigncontainer" rel="#daystosignbox" class="addremovecheckbox" />
                 <span id="datetosigncontainer">
                 </span>
               </span>
             </td>
           </tr>
       </tbody></table>
-      <BR>
+      <br/>
       <strong>User price plan</strong>
-      <BR><BR>
+      <br/><br/>
       <table style="text-align:left"><tbody>
           <tr>
             <th style="width:300px;"></th>
@@ -358,17 +358,17 @@ adminuser=
             ${<input type="text" style="width:45px" name="fordrafttemp" value="$user.uavtemppaymentchange.changefordraft$"/>}:td()$
           </tr>
       </tbody></table>
-      <BR>
-      <input type="submit" style="width:200px;font-weight:bold" value="Change" name="change">
+      <br/>
+      <input type="submit" style="width:200px;font-weight:bold" value="Change" name="change" />
     </form>
-    <BR>
+    <br/>
     <form method="post" action="">
-      <input type="submit" name="enabletrustweaver" style="width:600px;font-weight:bold" value="Enable TrustWeaver storage for this client (cannot be undone)">
+      <input type="submit" name="enabletrustweaver" style="width:600px;font-weight:bold" value="Enable TrustWeaver storage for this client (cannot be undone)" />
     </form>
     <div id="hiddenttimestuffbox" style="display:none">
       <span id="daystosignbox">
         <a class="datetodate date" rel="[name='tmppaymentchangeenddate']"> </a>
-        <input type="hidden" autocomplete="off" name="tmppaymentchangeenddate" value="$user.uavtmppaymentchangeenddate$">
+        <input type="hidden" autocomplete="off" name="tmppaymentchangeenddate" value="$user.uavtmppaymentchangeenddate$" />
       </span>
     </div>
 ###
@@ -407,9 +407,9 @@ pageStats=
         <tr><td>Users</td><td>$userscount$</td></tr>
         <tr><td>Documents</td><td>$docscount$</td></tr>
       </table>
-      <br>
+      <br/>
       <form method="post" action="/createuser">
-        Create user:<br>
+        Create user:<br/>
         <table>
           <tr>
             <td>Full name:</td>
@@ -419,15 +419,15 @@ pageStats=
             <td>Email address:</td>
             <td><input type="email" name="email"></td>
           </tr>
-        </table><br>
-        <input type="submit" value="Create user">
+        </table><br/>
+        <input type="submit" value="Create user" />
       </form>
-      <br>
-      Disk status:<br>
+      <br/>
+      Disk status:<br/>
       <pre>$sysinfo$</pre>
     </div>
 ####
 backtoadminmainlink=
     <a href="$adminlink$">Go back to main admin page</a>
-    <BR><BR>
+    <br/><br/>
 ####

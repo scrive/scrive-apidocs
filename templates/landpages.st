@@ -40,7 +40,7 @@ willCreateAccountForYouNoAccount=
        och just nu bjuder vi på fri användning av tjänsten i 2 månader!
        Klicka nedan så är det klart.
       <form action="$LinkLandpageSaved()$" method="get">
-        <input class="button" type="submit" value="Skapa konto">
+        <input class="button" type="submit" value="Skapa konto" />
       </form>
     </p>
 ####
