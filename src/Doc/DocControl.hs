@@ -1249,7 +1249,7 @@ handleCancel docid = withUserPost $ do
     Just doc' -> do
           sendCancelMailsForDocument customMessage ctx doc
           fm <-liftIO $ flashMessageCanceled (ctxtemplates ctx)
-          addFlashMsgHtmlFromTemplate fm
+          addFlashMsgText fm
     Nothing -> addFlashMsgText "Could not cancel"
   return (LinkIssueDoc $ documentid doc)
 
