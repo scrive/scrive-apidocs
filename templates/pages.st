@@ -14,7 +14,7 @@ newPasswordPage=
             <td><input type="password" name="password2" autocomplete="off"></td>
           </tr>
       </tbody></table>
-      <input class="button" type="submit" value="Spara lösenord">
+      <input class="button" type="submit" value="Spara lösenord" />
     </form>
 ####
 signupPageView =
@@ -26,8 +26,8 @@ signupPageView =
   </div>
   <div class="right">
      <form action="" method="post">
-         <input type="email" value="Fyll i din e-postadress" name="email" class="shiny infotext"> <a class="submit btn-small green2 center float-right" href="#"><p>Skapa konto !</p></a>
-         <input type="submit" class="hidden">
+         <input type="email" value="Fyll i din e-postadress" name="email" class="shiny infotext" /> <a class="submit btn-small green2 center float-right" href="#"><p>Skapa konto !</p></a>
+         <input type="submit" class="hidden" />
     </form>
   </div>
 </div>
@@ -38,10 +38,10 @@ activatePageView=
       <h2>Vänligen acceptera användarvillkoren</h2>
       <div style="height:480px;overflow-y:scroll;border:1px solid #EEEEEE;padding:4px">
         $tostext:noescape()$
-        <br>
+        <br/>
       </div>
-      <br>
-      <input type="checkbox" name="tos" class="addremovecheckbox" rel=".passwordAndSubmit" location=".passwordAndSubmitVisible" oldlocation=".passwordAndSubmitHidden" value="off" autocomplete="off">
+      <br/>
+      <input type="checkbox" name="tos" class="addremovecheckbox" rel=".passwordAndSubmit" location=".passwordAndSubmitVisible" oldlocation=".passwordAndSubmitHidden" value="off" autocomplete="off" />
       Jag har läst och accepterar SkrivaPå Allmänna Villkor<br/><br/>
       <div class="passwordAndSubmitVisible"> </div>
     </form>
@@ -77,7 +77,7 @@ activatePageViewNotValidLink=
             <td><input type="email" name="email" value="$if(email)$$email$$endif$" /></td>
           </tr>
         </table>
-        <input type="submit" name="resendActivate" value="Skicka"  class="validateEmail">
+        <input type="submit" name="resendActivate" value="Skicka"  class="validateEmail" />
       </form>
     </div>
 ####
@@ -85,8 +85,8 @@ errorPage=
    <div style="width:500px;margin-top:100px;border:5px solid #AAAACC;margin-left: auto;margin-right: auto;text-align:center">
      <div style="padding:30px">
        <div style="font-size:19pt;font-weight:bold" > Oops, ett fel har uppstått </div>
-       <BR>
-       <BR>
+       <br/>
+       <br/>
        <div> Oroa dig inte, vi tittar på problemet.</div>
      </div>
    </div>

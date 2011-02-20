@@ -47,11 +47,11 @@ viewSubaccounts =
       <table>
         <tr>
           <td>Namn:</td>
-          <td><input type="text" name="fullname"></td>
+          <td><input type="text" name="fullname" /></td>
         </tr>
         <tr>
           <td>E-post:</td>
-          <td><input type="email" name="email"></td>
+          <td><input type="email" name="email" /></td>
         </tr>
         <tr> 
           <td><input class="button" id="create" type="submit" name="create" value="Bjud in"/></td>
@@ -66,9 +66,9 @@ pageAcceptTOS =
       <h2>Vänligen acceptera användarvillkoren</h2>
       $tostext:noescape()$
       <br>
-      <input type="checkbox" name="tos" id="tos">Jag har läst och accepterar SkrivaPå Allmänna Villkor<br>
+      <input type="checkbox" name="tos" id="tos" />Jag har läst och accepterar SkrivaPå Allmänna Villkor<br>
       <div class="buttonbox">
-        <input class="submiter button" type="submit" value="Skicka">
+        <input class="submiter button" type="submit" value="Skicka" />
       </div>
     </form>
 ####
@@ -79,43 +79,43 @@ showUser =
         <form action="$linkaccount$" method="post">
           <table>
             <tr><td>Namn:</td>
-              <td><input type="text" name="fullname" value="$fullname$"></td>
+              <td><input type="text" name="fullname" value="$fullname$" /></td>
             </tr>
             <tr><td>E-post:</td>
               <td>$email$</td>
             </tr>
             <tr><td>Företagsnamn:</td>
-              <td><input type="text" name="companyname" value="$companyname$"></td>
+              <td><input type="text" name="companyname" value="$companyname$" /></td>
             </tr>
             <tr><td>Organisationsnummer:</td>
-              <td><input type="text" name="companynumber" value="$companynumber$"></td>
+              <td><input type="text" name="companynumber" value="$companynumber$" /></td>
             </tr>
             <tr><td>Faktureringsadress:</td>
-              <td><input type="text" name="invoiceaddress" value="$invoiceaddress$"></td>
+              <td><input type="text" name="invoiceaddress" value="$invoiceaddress$ " /></td>
             </tr>
           </table>
           <p>Du delar dina dokument med följande användare:</p>
           <ul>
             $viewers:{viewer|<li> $viewer$</li> }$
-            <li><input type="text" name="newvieweremail" infotext="Skriv e-post för att lägga till fler" size="28"></li>
+            <li><input type="text" name="newvieweremail" infotext="Skriv e-post för att lägga till fler" size="28" /></li>
           </ul>
-          <input class="button" type="submit" value="Spara ändringar">
+          <input class="button" type="submit" value="Spara ändringar" />
         </form>
       </div>
       <div>
         <form action="$linkaccountpassword$" method="post">
           <table>
             <tr><td>Nuvarande lösenord:</td>
-              <td><input type="password" name="oldpassword" autocomplete="off"></td>
+              <td><input type="password" name="oldpassword" autocomplete="off" /></td>
             </tr>
             <tr><td>Nytt lösenord:</td>
-              <td><input type="password" name="password" autocomplete="off"></td>
+              <td><input type="password" name="password" autocomplete="off" /></td>
             </tr>
             <tr><td>Upprepa nytt lösenord:</td>
-              <td><input type="password" name="password2" autocomplete="off"></td>
+              <td><input type="password" name="password2" autocomplete="off" /></td>
             </tr>
           </table>
-          <input class="button" type="submit" value="Ändra lösenord">
+          <input class="button" type="submit" value="Ändra lösenord" />
         </form>
       </div>
       <div>
