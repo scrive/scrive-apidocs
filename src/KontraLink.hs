@@ -26,7 +26,9 @@ import Control.Monad.Trans(liftIO, MonadIO,lift)
 seeOtherXML :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
 
-
+{- |
+   All the links available for responses
+-}
 data KontraLink
     = LinkAbout
     | LinkLogin
@@ -66,7 +68,10 @@ data KontraLink
     | LinkRequestAccount
     | LinkAskQuestion
     | LinkInvite
-    
+   
+{- |
+   Shows each link as a relative url
+-}
 instance Show KontraLink where
     showsPrec _ LinkAbout = (++) "/about"
     showsPrec _ LinkLogin = (++) "/login"
@@ -116,6 +121,8 @@ instance Show KontraLink where
     showsPrec _ (LinkRequestAccount) = (++) "/requestaccount"
     showsPrec _ (LinkInvite) = (++) "/invite"
     
+-- type class instances used for xml'ing the KontraLinks
+
 {-
 instance (EmbedAsAttr m String) => (EmbedAsAttr m KontraLink) where
     asAttr = asAttr . show
@@ -130,6 +137,9 @@ instance (EmbedAsChild m String) => (EmbedAsChild m KontraLink) where
 instance Monad m => IsAttrValue m KontraLink where
     toAttrValue = toAttrValue . show
 
+{-|
+   Redirects to the url relevant to the KontraLink.
+-}
 --sendRedirect :: KontraLink -> Kontra Response
 sendRedirect LoopBack = do
                          ref <- fmap (fmap BS.toString) $ getHeaderM "referer"
