@@ -5,10 +5,10 @@ staticTemplate=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.
                 <title>SkrivaPå</title>
                 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
                 $facebooklogo()$
-                <link href='$protocol$//fonts.googleapis.com/css?family=Copse' rel='stylesheet' type='text/css'>
+                <link href='http://fonts.googleapis.com/css?family=Copse' rel='stylesheet' type='text/css'>
                 <link href="/theme/flash.css" rel="stylesheet" type="text/css" />
                 <link href="/css/main.css" rel="stylesheet" type="text/css" />
-                <link rel="stylesheet" type="text/css" href="$prefix$/theme/newdesign.css" media="screen">
+                <link rel="stylesheet" type="text/css" href="$prefix$/theme/newdesign.css" media="screen" />
                 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.0/jquery.min.js" type="text/javascript"></script>
                 <script src="$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js" type="text/javascript"></script>
                 <script src="/js/jquery.tweet.js" type="text/javascript"></script>
@@ -34,7 +34,7 @@ staticTemplate=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.
                                                         <input type="tel" name="phone" value="Telefonnummer" class="infotext" /><br />
                                                         <textarea name="message" class="infotext">Meddelande</textarea>
                                                         <a class="submit btn-small green2 center"><p>Skicka!</p></a>
-                                                        <input type="submit" class="hidden">
+                                                        <input type="submit" class="hidden" />
                                                 </form>
                                                 <div class="hor-divider"></div>
                                                 <h4>SkrivaPå AB</h4>
@@ -62,7 +62,7 @@ staticTemplate=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.
                                         <div class="right">
                                                 <form method="post" action="$linkrequestaccount$" class="requestAccount">
                                                         <input class="shiny infotext" name="email" type="email" value="Fyll i din e-postadress" /> <a href="#" class="submit btn-small green2 center float-right"><p>Skicka förfrågan!</p></a>
-                                                        <input type="submit" class="hidden">
+                                                        <input type="submit" class="hidden" />
                                                 </form>
                                         </div>
                                 </div>
@@ -105,7 +105,7 @@ staticTemplate=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.
                                         </div>
                                 </div>
                                 <div class="col right">
-                                        <strong>Kontakta oss för feedback, frågor & förfrågningar</strong>
+                                        <strong>Kontakta oss för feedback, frågor &amp; förfrågningar</strong>
                                         <ul>
                                                 <li>
                                                         <strong>Telefon</strong>

@@ -13,7 +13,7 @@ nomorethanonelist=
 customFooter=
     <p>
       Hälsningar
-      <br>
+      <br/>
       $creatorname$
     </p>
 ###
@@ -43,7 +43,7 @@ replaceOnEdit=
 #####
 actionButton=
     <form method="POST" action="$action$">
-      <input type="submit" value="$buttonname$">
+      <input type="submit" value="$buttonname$" />
     </form>
 #####
 LinkLogin=/login
@@ -63,7 +63,7 @@ input=<input style="width:50px" type="$iType$" name="$iName$" value="$iValue$">
 ###
 showmoney=$main$.$rest$
 ###
-br=$it:noescape()$<br>
+br=$it:noescape()$<br/>
 ###
 span=<span>$it:noescape()$</span>
 ###

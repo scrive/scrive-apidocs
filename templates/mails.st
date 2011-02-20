@@ -18,11 +18,11 @@ mailDocumentAwaitingForAuthorContent=
     <p>Hej <strong>$authorname$</strong>,</p>
     <p>Dokumentet <strong>$documenttitle$</strong> har undertecknats av $partylist:noescape()$.
       Därmed är det bara du kvar innan dokumentet är färdigställt.</p>
-    <p>För att färdigställa dokumentet gör följande:<br>
-      1. Klicka på länken<br>
-      <a href="$documentlink$">$documenttitle$</a><br>
-      <br>
-      2. Granska uppgifterna<br>
+    <p>För att färdigställa dokumentet gör följande:<br/>
+      1. Klicka på länken<br/>
+      <a href="$documentlink$">$documenttitle$</a><br/>
+      <br/>
+      2. Granska uppgifterna<br/>
       3. Underteckna För att avtalet skall färdigställas krävs din underskrift.</p>
     $poweredBySkrivaPaPara()$
 #####
@@ -68,17 +68,17 @@ mailInvitationToSignTitle=Inbjudan från $creatorname$ till $documenttitle$
 mailInvitationToSignContent=
     $header:noescape()$
     <span>
-      <p><i>Översiktlig information</i><br>
-        Parter: $partnersinfo:noescape()$<br>
-        $whohadsignedinfo:noescape()$<br>
+      <p><i>Översiktlig information</i><br/>
+        Parter: $partnersinfo:noescape()$<br/>
+        $whohadsignedinfo:noescape()$<br/>
         $timetosigninfo:noescape()$
       </p>
-      <p><i>Så här går du vidare</i><br>
-        1. Klicka på länken <br>
-        <a href="$link$">$link$</a> <br>
-        <br>
-        2. Granska online<br>
-        3. Underteckna (eller avvisa)<br>
+      <p><i>Så här går du vidare</i><br/>
+        1. Klicka på länken <br/>
+        <a href="$link$">$link$</a> <br/>
+        <br/>
+        2. Granska online<br/>
+        3. Underteckna (eller avvisa)<br/>
         4. Färdig
       </p>
       <p>
@@ -89,7 +89,7 @@ mailInvitationToSignContent=
 ###
 mailInvitationToSignDefaultHeader=
     <p>Hej $personname$,
-      <br><br>
+      <br/><br/>
       <strong>$creatorname$</strong> har bjudit in dig att underteckna dokumentet <strong>$documenttitle$</strong> online via tjänsten SkrivaPå.
     </p>
 ####
@@ -113,16 +113,16 @@ remindMailNotSignedStandardHeader=
 remindMailNotSignedContent=
     $header:noescape()$
     <span>
-      <p><i>Översiktlig information</i><br>
-        Parter: $partnersinfo:noescape()$<br>
-        $whohadsignedinfo:noescape()$<br>
+      <p><i>Översiktlig information</i><br/>
+        Parter: $partnersinfo:noescape()$<br/>
+        $whohadsignedinfo:noescape()$<br/>
         $timetosigninfo:noescape()$
       </p>
-      <p><i>Så här går du vidare</i><br>
-        1. Klicka på länken<br>
-        <a href="$link$">$link$</a><br>
-        2. Granska online<br>
-        3. Underteckna (eller avvisa)<br>
+      <p><i>Så här går du vidare</i><br/>
+        1. Klicka på länken<br/>
+        <a href="$link$">$link$</a><br/>
+        2. Granska online<br/>
+        3. Underteckna (eller avvisa)<br/>
         4. Färdig
       </p>
       <p>
@@ -133,12 +133,12 @@ remindMailNotSignedContent=
 
 ###
 signupLinkEmailPart=
-    <p>Användarnamn:<br>
+    <p>Användarnamn:<br/>
     $email$</p>
     
-    <p>Vänligen klicka på länken för att aktivera kontot:<br>
-    <br>
-    <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a><p>
+    <p>Vänligen klicka på länken för att aktivera kontot:<br/>
+    <br/>
+    <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a></p>
 
     $poweredBySkrivaPaPara()$
 
@@ -159,7 +159,7 @@ newUserMailContent=
     $email$</p>
     
     <p>Du aktiverar ditt konto genom att klicka på länken nedan. Länken är giltig i 12 timmar.<br/>
-    <a href="$ctxhostpart$$activatelink$">$ctxhostpart$$activatelink$</a><p>
+    <a href="$ctxhostpart$$activatelink$">$ctxhostpart$$activatelink$</a></p>
 
     $poweredBySkrivaPaPara()$
 ####
@@ -167,7 +167,7 @@ passwordChangeMailTitle=Nytt lösenord
 ####
 passwordChangeMailContent=
     <p>Hej $personname$,</p>
-    <p>Du har begärt ett nytt lösenord. Vänligen klicka på länken nedan för att välja ett nytt lösenord. Länken är giltig i 12 timmar.<br>
+    <p>Du har begärt ett nytt lösenord. Vänligen klicka på länken nedan för att välja ett nytt lösenord. Länken är giltig i 12 timmar.<br/>
     <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a>
     </p>
     $poweredBySkrivaPaPara()$
@@ -181,11 +181,11 @@ inviteSubaccountMailContent=
     skriva avtal för <strong>$companyname$</strong>.
     Observera att detta konto inte är avsett för privat bruk.</p>
 
-    <p>Användarnamn:<br>
+    <p>Användarnamn:<br/>
     $email$</p>
     
-    <p>Vänligen klicka på länken för att aktivera kontot:<br>
-    <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a><p>
+    <p>Vänligen klicka på länken för att aktivera kontot:<br/>
+    <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a></p>
 
     $poweredBySkrivaPaPara()$
 ####
@@ -201,11 +201,11 @@ mailViralInviteContent=
     Spara pengar, frustration och miljö och använd SkrivaPå istället. 
     Du kan spara mellan 50-250kr/dokument!</p>
 
-    <p>Användarnamn:<br>
+    <p>Användarnamn:<br/>
     $email$</p>
     
-    <p>Vänligen klicka på länken för att aktivera kontot:<br>
-    <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a><p>
+    <p>Vänligen klicka på länken för att aktivera kontot:<br/>
+    <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a></p>
 
     $poweredBySkrivaPaPara()$
 
@@ -221,19 +221,11 @@ mailNewAccountCreatedByAdminContentHeader=
     Spara pengar, frustration och miljö och använd SkrivaPå istället. 
     Du kan spara mellan 50-250kr/dokument!</p>
 
-###
-mailNewAccountCreatedByAdminContent=
-   $if(custommessage)$
-    $custommessage:noescape()$
-    $else$
-    $mailNewAccountCreatedByAdminContentHeader()$
-    $endif$
-   
     <p>Användarnamn:<br>
     $email$</p>
     
-    <p>Vänligen klicka på länken för att aktivera kontot:<br>
-    <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a><p>
+    <p>Vänligen klicka på länken för att aktivera kontot:<br/>
+    <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a></p>
 
     $poweredBySkrivaPaPara()$
 ####
@@ -244,11 +236,11 @@ invitationMailUndeliveredContent=
       <p>Hej $authorname$,</p>
       <p>Adressen $email$ existerar inte och därför kunde vi inte leverera din inbjudan att underteckna via e-post.
 	Processen har därmed avbrutits. Gör så här om du vill börja om:</p>
-      <p>1. Kontrollera vilken som är mottagarens korrekta adress<br>
-	2. Klicka på dokumentet i ditt arkiv eller på följande länk<br>
-	<a href="$ctxhostpart$$unsigneddoclink$">$ctxhostpart$$unsigneddoclink$</a><br>
-        <br>
-        3. Klicka "Starta om"<br>
+      <p>1. Kontrollera vilken som är mottagarens korrekta adress<br/>
+	2. Klicka på dokumentet i ditt arkiv eller på följande länk<br/>
+	<a href="$ctxhostpart$$unsigneddoclink$">$ctxhostpart$$unsigneddoclink$</a><br/>
+        <br/>
+        3. Klicka "Starta om"<br/>
 	4. Skriv in rätt e-postadress och skicka igen
       </p>
       $poweredBySkrivaPaPara()$
@@ -269,7 +261,7 @@ passwordChangeLinkMailTitle=Nytt lösenord
 ###
 passwordChangeLinkMailContent=
     <p>Hej $personname$,</p>
-    <p>Du har begärt att ändra ditt lösenord på SkrivaPå. Vänligen klicka på följande länk för att gå vidare. Länken är giltig i 12 timmar.<br>
+    <p>Du har begärt att ändra ditt lösenord på SkrivaPå. Vänligen klicka på följande länk för att gå vidare. Länken är giltig i 12 timmar.<br/>
     <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a></p>
     $poweredBySkrivaPaPara()$
 ###

@@ -56,10 +56,10 @@ uploadPageContent=
         class="stepForm"> 
     <div>
       <span id="signStepsBodyUploadTextContainer"> 
-        <span class="header">Välj fil att ladda upp</span><br>
+        <span class="header">Välj fil att ladda upp</span><br/>
         <span class="text">OBS! Endast PDF</span> 
       </span> 
-      <br>
+      <br/>
       <div id="signStepsButtonContainer">
         <div class="uploadButton" >  
           <a href="#attachFile"><span class="icon arrowUp"></span></a>
@@ -99,13 +99,13 @@ pageDocumentForViewerHelpers=
 <span class="templating_insert"> 
   <div id="signatory_template" class="signatorybox" alt="Namn på avtalspart">
   <input name="signatoryname" type="text" value="" autocomplete="off"
-         infotext="Fullständigt namn"><br>
+         infotext="Fullständigt namn" /><br/>
   <input name="signatorycompany" type="text" value="" autocomplete="off"
-         infotext="Företag"><br>
+         infotext="Företag" /><br/>
   <input name="signatorynumber" type="text" value="" autocomplete="off"
-         infotext="Org.nr./Pers.nr"><br>
+         infotext="Org.nr./Pers.nr" /><br/>
   <input name="signatoryemail"  type="email" value="" autocomplete="off"
-         infotext="E-post"><br>
+         infotext="E-post" /><br/>
   <small><a onclick="return signatoryremove(this.parentNode);" href="#">Ta bort</a></small>
   </div>
 </span>,
@@ -167,7 +167,7 @@ showDocumentPageHelper=
     $docbox:noescape()$
   </div>
   <div class="docviewright"> 
-    <p><strong>$title$</strong><br>
+    <p><strong>$title$</strong><br/>
       <small><a href="$linkissuedocpdf$" target="_blank">Ladda ned PDF</a></small></p>
     $content:noescape()$
   </div>
@@ -212,8 +212,8 @@ reminderForm =
 changeEmailAddress =  
 <a style="cursor:pointer" class="replacebynextonclick"> Skicka inbjudan till ny adress  </a>
 <form action="$linkchangeemail$" method="POST" style="display:none">
-  <input type="text" style="width:140px" name="email" value="$signatoryemail$">
-  <input type="submit" style="width:100px" value="Skicka">
+  <input type="text" style="width:140px" name="email" value="$signatoryemail$" />
+  <input type="submit" style="width:100px" value="Skicka" />
 </form>     
 
 ####
@@ -253,12 +253,12 @@ pageDocumentForSignTimedout= <div>Förfallodatum har passerat!</div>
 pageDocumentForSignButtons=  
 <div>
   $if(emailallowed)$
-  <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign" rel="#dialog-confirm-sign">
+  <input class="bigbutton" type="submit" name="sign" value="Underteckna" id="sign" rel="#dialog-confirm-sign" />
   $endif$
   $if(elegallowed)$
-  <input class="bigbutton cross-button" type="submit" name="signbankid" value="Underteckna with E-Leg" id="signbankid" rel="#dialog-confirm-sign-eleg">
+  <input class="bigbutton cross-button" type="submit" name="signbankid" value="Underteckna with E-Leg" id="signbankid" rel="#dialog-confirm-sign-eleg" />
   $endif$
-  <input class="bigbutton" type="submit" name="cancel" value="Avvisa" rel="#dialog-confirm-cancel" id="cancel">
+  <input class="bigbutton" type="submit" name="cancel" value="Avvisa" rel="#dialog-confirm-cancel" id="cancel" />
 </div>
 ####
 pageDocumentForSignContent=
@@ -282,12 +282,12 @@ pageDocumentForSignContent=
         avtalet <strong>juridiskt bindande</strong> och
         det färdigställda avtalet skickas till din e-post.</p>
       <div class="buttonbox">
-        <input type="hidden" name="sign" value="automatic">
+        <input type="hidden" name="sign" value="automatic" />
         <button class="close button" type="button"> Avbryt </button>
         <button class="submiter button" type="button"> Underteckna </button>
       </div>
     </form>
-    <form method="post" name="form" action=action id="dialog-confirm-sign-eleg" class="overlay">     
+    <form method="post" name="form" action="action" id="dialog-confirm-sign-eleg" class="overlay">     
       <script type="text/javascript" src="/js/bankid.js"></script>
       <a href="#" class="close"> </a>                  
       <h2>Underteckna with BankID</h2>  
@@ -296,9 +296,9 @@ pageDocumentForSignContent=
         avtalet <strong>juridiskt bindande</strong> och
         det färdigställda avtalet skickas till din e-post.</p>
       <div class="buttonbox">
-        <input type="hidden" name="bankid" value="automatic">
-        <input type="hidden" name="signature" value="" id="signature">
-        <input type="hidden" name="transactionid" value="" id="transactionid">
+        <input type="hidden" name="bankid" value="automatic" />
+        <input type="hidden" name="signature" value="" id="signature" />
+        <input type="hidden" name="transactionid" value="" id="transactionid" />
         <button class="close button" type="button"> Avbryt </button>
         <button class="bankid button" type="button"> Underteckna with BankID</button>
       </div>
@@ -312,7 +312,7 @@ pageDocumentForSignContent=
         $rejectMessage:noescape()$
       </div>
       <div class="buttonbox">
-        <input type="hidden" name="cancel" value="automatic">
+        <input type="hidden" name="cancel" value="automatic" />
         <button class="close button" type="button"> Avbryt </button>
         <button class="editer button" type="button"> Skriv eget meddelande </button>
         <button class="submiter button" type="button"> Avvisa </button>
@@ -348,13 +348,13 @@ $if(notsignedbyme)$$if(pending)$
 <div id="signViewBottomBox"> 
   <div id="signViewBottomBoxContainerLeft"> 
     <div id="signViewBottomBoxContainerLeftText"> 
-      <input type="checkbox" class="signGuard" autocomplete="off"> Jag intygar att jag har granskat och förstått innehållet i dokumentet. Jag intygar även att samtliga parter är korrekta och att jag har befogenhet att skriva på.
+      <input type="checkbox" class="signGuard" autocomplete="off" /> Jag intygar att jag har granskat och förstått innehållet i dokumentet. Jag intygar även att samtliga parter är korrekta och att jag har befogenhet att skriva på.
     </div>
   </div>
   <div id="signViewBottomBoxContainerRight"> 
   <input type="button" class="submit btn-blue center" value="     SkrivaPå" id="sign" rel="#dialog-confirm-sign" name="sign" />
-        <br>
-    <input class="bigbutton" type="submit" name="cancel" value="Avvisa dokument" rel="#dialog-confirm-cancel" id="cancel">
+        <br/>
+    <input class="bigbutton" type="submit" name="cancel" value="Avvisa dokument" rel="#dialog-confirm-cancel" id="cancel" />
   </div>
 </div>
 $endif$$endif$ 
@@ -365,13 +365,13 @@ pageDocumentForAuthorHelpers=
 <span class="templating_insert"> 
   <div id="signatory_template" class="signatorybox" alt="Namn på avtalspart">
   <input name="signatoryname" type="text" value="" autocomplete="off"
-         infotext="Fullständigt namn"><br>
+         infotext="Fullständigt namn" /><br/>
   <input name="signatorycompany" type="text" value="" autocomplete="off"
-         infotext="Företag"><br>
+         infotext="Företag" /><br/>
   <input name="signatorynumber" type="text" value="" autocomplete="off"
-         infotext="Org.nr./Pers.nr"><br>
+         infotext="Org.nr./Pers.nr" /><br/>
   <input name="signatoryemail"  type="email" value="" autocomplete="off"
-         infotext="E-post"><br>
+         infotext="E-post" /><br/>
   <small><a onclick="return signatoryremove(this.parentNode);" href="#">Ta bort</a></small>
 </div>
   </span>,
@@ -390,7 +390,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
       <span class="Xinvited">Invited</span> med e-post.</p>
     </div>
     <div class="buttonbox" >
-      <input type="hidden" name="sign" value="automatic">
+      <input type="hidden" name="sign" value="automatic" />
       <button class="close button" type="button"> Avbryt </button>
       <button class="submiter button" type="button"> Underteckna </button>
     </div>
@@ -420,7 +420,7 @@ Du har skapat fält för parterna att fylla i innan de undertecknar. Efter att a
 
     </div>
     <div class="buttonbox" >
-      <input type="hidden" name="final" value="automatic">
+      <input type="hidden" name="final" value="automatic" />
       <button class="close button" type="button"> Avbryt </button>
       <button class="submiter button" type="button"> Skicka </button>
     </div>
@@ -435,9 +435,9 @@ Du har skapat fält för parterna att fylla i innan de undertecknar. Efter att a
       avtalet <strong>juridiskt bindande</strong> och
       det färdigställda avtalet skickas till din e-post.</p>
     <div class="buttonbox">
-      <input type="hidden" name="bankid" value="automatic">
-      <input type="hidden" name="signature" value="" id="signature">
-      <input type="hidden" name="transactionid" value="" id="transactionid">
+      <input type="hidden" name="bankid" value="automatic" />
+      <input type="hidden" name="signature" value="" id="signature" />
+      <input type="hidden" name="transactionid" value="" id="transactionid" />
       <button class="close button" type="button"> Avbryt </button>
       <button class="bankid button" type="button"> Underteckna with BankID</button>
     </div>
@@ -456,8 +456,8 @@ Du har skapat fält för parterna att fylla i innan de undertecknar. Efter att a
   </form>  
   <div class="hidden" id="hiddenttimestuffbox">
     <div id="daystosignbox">Undertecknas inom (dagar)
-      <BR>
-      <input type="text" id="daystosign" name="daystosign" value="$documentdaystosignboxvalue$" maxlength="2" size="2" autocomplete="off">
+      <br/>
+      <input type="text" id="daystosign" name="daystosign" value="$documentdaystosignboxvalue$" maxlength="2" size="2" autocomplete="off" />
       <small> <a  class="datetodaystip" rel="#daystosign"> </a> </small>
     </div>
   </div>
@@ -465,7 +465,7 @@ Du har skapat fält för parterna att fylla i innan de undertecknar. Efter att a
             <a class="close"> </a>
             <h2> Återkalla inbjudan </h2>
             <p>Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?
-              <BR>När du återkallat inbjudan kommer nedanstaende meddelande att skickas till dina motparter.
+              <br/>När du återkallat inbjudan kommer nedanstaende meddelande att skickas till dina motparter.
             </p>
             <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
               $cancelMailContent:noescape()$
@@ -484,7 +484,7 @@ Du har skapat fält för parterna att fylla i innan de undertecknar. Efter att a
         avtalet <strong>juridiskt bindande</strong> och
         det färdigställda avtalet skickas till din e-post.</p>
       <div class="buttonbox">
-        <input type="hidden" name="sign" value="automatic">
+        <input type="hidden" name="sign" value="automatic" />
         <button class="close button" type="button"> Avbryt </button>
         <button class="submiter button" type="button"> Underteckna </button>
       </div>
@@ -554,7 +554,7 @@ pageDocumentForAuthorContentPreparation=
 
       <form action="" method="post" class="stepForm">
         <input type="hidden" name="allowedsignaturetypes"
-               value="Email">
+               value="Email" />
 
         <div id="signStep2Content">
           <div id="signStepsBody">
@@ -641,7 +641,7 @@ pageDocumentForAuthorContentPreparation=
                   <div class="partyrole">
                     <a href="#" class="closelink"><small>close</small></a>
                     <input type="radio" name="authorrole" id="authorsignatoryradio" value="signatory" checked>Undertecknare</input>
-                    <br>
+                    <br/>
                     <input type="radio" name="authorrole" id="authorsecretaryradio" value="secretary">Sekreterare</input>
                   </div>
                   
@@ -703,7 +703,7 @@ pageDocumentForAuthorContentPreparation=
 	      </div>
 <div class="signStepsBodyInvation">
                 <small><a rel="#edit-invite-text-dialog" id="editinvitetextlink" href="#" style="padding-top:3px">JUSTERA HÄLSNINGSMEDDELANDE</a></small>
-                <input type="hidden" id="invitetext" name="invitetext" value="$documentinvitetext$">
+                <input type="hidden" id="invitetext" name="invitetext" value="$documentinvitetext$" />
 	      </div>
               
 	    </div>
@@ -786,21 +786,21 @@ pageDocumentForAuthorContentPreparation=
 	<span class='dragfield sigcomp inputWrapper'>
 	  <span style="display:none;" class="fieldid">company</span>
 	  <span style="display:none;" class="type">sig</span>
-          <input type="text" infotext="Företag" name="signatorycompany" autocomplete="off">
+          <input type="text" infotext="Företag" name="signatorycompany" autocomplete="off" />
 	  <img src="/theme/images/iconHand.png" class="draghandle"
 	       alt="drag" />
-        </span><br>
+        </span><br/>
         <span class='dragfield sigemail inputWrapper'>
 	  <span style="display:none;" class="fieldid">email</span>
 	  <span style="display:none;" class="type">author</span>
-	  <input type="email" infotext="E-post" name="signatoryemail" autocomplete="off">
+	  <input type="email" infotext="E-post" name="signatoryemail" autocomplete="off" />
 	  <img src="/theme/images/iconHand.png" class="draghandle"
 	       alt="drag" />
 	</span>
 	<span class='dragfield signum inputWrapper'>
 	  <span style="display:none;" class="fieldid">number</span>
 	  <span style="display:none;" class="type">sig</span>
-	  <input type="text" infotext="Org.nr./Pers.nr" name="signatorynumber" autocomplete="off">
+	  <input type="text" infotext="Org.nr./Pers.nr" name="signatorynumber" autocomplete="off" />
 	  <img src="/theme/images/iconHand.png" class="draghandle" 
                alt="drag" />
 	</span>
@@ -863,7 +863,7 @@ $if(awaitingauthor)$
 <div id="signViewBottomBox"> 
   <div id="signViewBottomBoxContainerLeft"> 
     <div id="signViewBottomBoxContainerLeftText"> 
-      <input type="checkbox" class="signGuard" autocomplete="off"> Jag intygar att jag har granskat och förstått innehållet i dokumentet. Jag intygar även att samtliga parter är korrekta och att jag har befogenhet att skriva på.
+      <input type="checkbox" class="signGuard" autocomplete="off" /> Jag intygar att jag har granskat och förstått innehållet i dokumentet. Jag intygar även att samtliga parter är korrekta och att jag har befogenhet att skriva på.
     </div>
   </div>
 
@@ -872,7 +872,7 @@ $if(awaitingauthor)$
       <input type="button" class="submit btn-blue center" value="SkrivaPå" id="signByAuthor" rel="#dialog-confirm-sign-by-author" name="sign" />
       <input class="cancel bigbutton" type="button"
              name="cancel" value="Återkalla inbjudan" id="cancel"
-             rel="#cancel-by-author-dialog">  
+             rel="#cancel-by-author-dialog" />  
     </div>
   </div>
 </div>

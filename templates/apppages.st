@@ -1,14 +1,14 @@
 ###
 pageForgotPassword=
     <div class="centerdivnarrow">
-      <form action=$LinkForgotPassword()$ method="post">
+      <form action="$LinkForgotPassword()$" method="post">
         <table>
           <tr>
             <td>E-mail</td>
-            <td><input name="email" type="email"></td>
+            <td><input name="email" type="email" /></td>
           </tr>
         </table>
-        <input type="submit" value="Skicka nytt lösenord" class="validateEmail">
+        <input type="submit" value="Skicka nytt lösenord" class="validateEmail" />
       </form>
     </div>
 
@@ -32,16 +32,16 @@ wholePage=
     <html>
       <head>
         <title>$title$$if(production)$$else$ (devel) $endif$</title>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         $facebooklogo()$
-        <link href='$protocol$//fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css">
+        <link href='http://fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css">
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/newdesign.css" media="screen">
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/style.css" media="screen">
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/calendar.css" media="screen">
         <link href="$prefix$/theme/flash.css" rel="stylesheet" type="text/css" media="screen" />
         <link rel="stylesheet" type="text/css" 
               href="$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/ui-lightness/jquery-ui.css"
-              media="screen">
+              media="screen" />
         
         <script src="$protocol$//ajax.googleapis.com/ajax/libs/jquery/1.5.0/jquery.js"
                 type="text/javascript"></script>
@@ -102,7 +102,7 @@ wholePage=
                                         </div>
                                 </div>
                                 <div class="col right">
-                                        <strong>Kontakta oss för feedback, frågor & förfrågningar</strong>
+                                        <strong>Kontakta oss för feedback, frågor &amp; förfrågningar</strong>
                                         <ul>
                                                 <li>
                                                         <strong>Telefon:</strong>
@@ -149,18 +149,18 @@ wholePage=
 loginBox=
     <div id="login">
       <form action="/login" method="post">
-        <input type="hidden" name="referer" value="$referer$">
+        <input type="hidden" name="referer" value="$referer$" />
         <table>
 	  <tr>
             <td>E-mail:</td> 
-            <td><input type="email" name="email" autocomplete="off" class="noflash" value="$if(email)$$email$$endif$"></td> 
+            <td><input type="email" name="email" autocomplete="off" class="noflash" value="$if(email)$$email$$endif$" /></td> 
           </tr>
 	  <tr> 
             <td>Lösenord:</td> 
-            <td><input type="password" name="password" autocomplete="off"></td> 
+            <td><input type="password" name="password" autocomplete="off" /></td> 
           </tr>
 	  <tr> 
-            <td><input class="button" id="loginbtn" type="submit" name="login" value="Logga in"></td>
+            <td><input class="button" id="loginbtn" type="submit" name="login" value="Logga in" /></td>
             <td><a href="/amnesia"> Glömt lösenord</a></td>
 	  </tr>
         </table>
@@ -177,9 +177,9 @@ header=
                                  <form method="post" action="$linkinvite$" class="MultiFile-intercepted">
                                  <div>
                                   <div>
-                                       <input type="email" autocomplete="off" name="invitedemail" infotext=" Bjud en vän på 2 månader fri användning. Skriv deras e-post här!" class="grayed">
+                                       <input type="email" autocomplete="off" name="invitedemail" infotext=" Bjud en vän på 2 månader fri användning. Skriv deras e-post här!" class="grayed" />
                                        <a class="btn-tiny blue center float-right submit" href="#"><p>Skicka</p></a>
-                                       <input type="submit" class="hidden" name="invite" value="Skicka">
+                                       <input type="submit" class="hidden" name="invite" value="Skicka" />
                                   </div>
                                  </div>
                                  </form>
@@ -203,7 +203,7 @@ header=
                                                                         <input type="password" name="password" value="Lösenord" class="infotext" autocomplete="off"/><br />
                                                                         <a href="#" class="btn-tiny blue center float-right submit"><p>Logga in</p></a>
                                                                         <a href="#" class="txt-link">Glömt lösenord</a>
-                                                                        <input type="submit" class="hidden">
+                                                                        <input type="submit" class="hidden" />
                                                                   </form>
                                                         </div>
                                                 </div>
@@ -217,15 +217,14 @@ header=
                                                                         <input type="email" name="email" value="E-post" class="infotext" autocomplete="off"/>
                                                                         <a href="#" class="btn-tiny blue center float-right submit"><p>Skicka</p></a>
                                                                         <a href="#" class="txt-link">Tillbaka</a>
-                                                                        <input type="submit" class="hidden">
+                                                                        <input type="submit" class="hidden" />
                                                                 </form>
                                                         </div>
                                                 </div>
+                                </div>
                                $endif$
                             </div>
                            
-                </div>
-
             <div class="clearboth"></div>
           </div>
 ####
