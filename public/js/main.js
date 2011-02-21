@@ -41,6 +41,7 @@ $(document).ready( function() {
 		e.preventDefault();
 	
 		$('.user-container').fadeToggle('fast');
+                $('.login-container').find('.body input').first().focus();
 	});
 	
 	$('.recovery-container .top, .login-container .top').click( function(e) {
