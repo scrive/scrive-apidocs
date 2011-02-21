@@ -419,11 +419,11 @@ pageStats=
             <td>Email address:</td>
             <td><input type="email" name="email"></td>
           </tr>
-        </table><br/>
-        <input type="submit" value="Create user" />
+        </table><br>
+        <input type="submit" value="Create user">
       </form>
-      <br/>
-      Disk status:<br/>
+      <br>
+      Disk status:<br>
       <pre>$sysinfo$</pre>
     </div>
 ####

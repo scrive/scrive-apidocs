@@ -84,7 +84,7 @@ toUTCTime = System.Time.toUTCTime . toClockTime
 parseMinutesTimeMDY::String -> Maybe MinutesTime
 parseMinutesTimeMDY s = do
                       t <- parseTime defaultTimeLocale "%d-%m-%Y" s
-                      startOfTime <- parseTime defaultTimeLocale "%d-%m-%Y" "01-01-1970" 
+                      startOfTime <- parseTime defaultTimeLocale "%d-%m-%Y" "01-01-1970"
                       let val = diffDays t startOfTime  
                       return (MinutesTime (fromIntegral $ (val *24*60)) 0)
 

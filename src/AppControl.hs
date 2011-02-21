@@ -184,6 +184,7 @@ handleRoutes = msum [
      , dir "login"       $ hpost0 $ handleLoginPost
      , dir "signup"      $ hget0  $ signupPageGet
      , dir "signup"      $ hpost0 $ signupPagePost
+     , dir "signupdone"  $ hget0  $ signupPageDone
      , dir "amnesia"     $ hget0  $ forgotPasswordPageGet
      , dir "amnesia"     $ hpost0 $ forgotPasswordPagePost
      , dir "amnesiadone" $ hget0  $ forgotPasswordDonePage
@@ -397,30 +398,33 @@ signupPageGet = do
     ctx <- lift get
     content <- liftIO (signupPageView $ ctxtemplates ctx)
     V.renderFromBody ctx V.TopNone V.kontrakcja $ cdata content 
-
-{- |
-   Handles submission of the signup form.
-   Normally this would create the user, (in the process mailing them an activation link),
-   but if the user already exists, we check to see if they have accepted the tos.  If they haven't,
-   then we send them a new activation link because probably the old one expired or was lost.
-   If they have then we stop the signup.
--}  
+    
 signupPagePost :: Kontra KontraLink
-signupPagePost = do
-    ctx@Context{ctxtemplates,ctxhostpart} <- lift get
-    memail <- fmap (fmap (BS.fromString)) $ getField "email"
-    case memail of
-        Nothing -> return LinkSignup
-        Just email -> do
+signupPagePost = signup False $ parseMinutesTimeMDY "31-05-2011"
+                    
+
+signupVipPagePost :: Kontra KontraLink
+signupVipPagePost = signup True $ parseMinutesTimeMDY "31-12-2011"
+                   
+signup::Bool -> (Maybe MinutesTime) -> Kontra KontraLink
+signup vip freetill =  do 
+                ctx@Context{ctxtemplates,ctxhostpart} <- lift get
+                memail <- fmap (fmap (BS.fromString)) $ getField "email"
+                case memail of
+                   Nothing -> return LoopBack
+                   Just email -> do
                         muser <- query $ GetUserByEmail $ Email $ email
                         case  muser of
                           Just user -> if (isNothing $ userhasacceptedtermsofservice user) 
-                                        then
-                                         do  sendNewActivationLinkMail ctx user
-                                             return LinkSignup
+                                        then  
+                                         do  al <- liftIO $ unloggedActionLink user
+                                             mail <-  liftIO $ newUserMail (ctxtemplates) (ctxhostpart) email email al
+                                             liftIO $ sendMail (ctxmailer ctx) $ mail { fullnameemails = [(email,email)]}
+                                             addFlashMsgText =<< (liftIO $ flashMessageNewActivationLinkSend  (ctxtemplates)) 
+                                             return LoopBack
                                           else do
                                              addFlashMsgText =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
-                                             return LinkSignup
+                                             return LoopBack
                           Nothing -> do
                             maccount <- liftIO $ UserControl.createUser ctx ctxhostpart BS.empty email Nothing True Nothing
                             if isJust maccount       
@@ -428,19 +432,17 @@ signupPagePost = do
                               addFlashMsgText =<< (liftIO $ flashMessageUserSignupDone ctxtemplates)
                               return LinkSignup
                              else do
-                              Log.error "signupPagePost - weird thing happened, GetUserByEmail and createUser both Nothing"
                               addFlashMsgText =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
                               return LinkSignup
-{- |
-   Sends a new activation link mail, which is really just a new user mail.
--}
-sendNewActivationLinkMail:: Context -> User -> Kontra ()
-sendNewActivationLinkMail Context{ctxtemplates,ctxhostpart,ctxmailer} user = do
-                         let email = unEmail $ useremail $ userinfo user
-                         al <- liftIO $ unloggedActionLink user
-                         mail <-  liftIO $ newUserMail ctxtemplates ctxhostpart email email al
-                         liftIO $ sendMail ctxmailer $ mail { fullnameemails = [(email,email)]}                    
                     
+{- |
+   Handles viewing of the signup confirmation page
+-}
+signupPageDone :: Kontra Response
+signupPageDone = do
+  ctx <- get
+  V.renderFromBody ctx V.TopNone V.kontrakcja signupConfirmPageView
+
 {- |
    Handles viewing of the login page
 -}

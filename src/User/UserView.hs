@@ -91,14 +91,17 @@ resetPasswordMail templates hostname user setpasslink =  do
                                                                  ("ctxhostpart",hostname)]
            return $ emptyMail {title=BS.fromString title, content = BS.fromString content} 
 
-newUserMail :: KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> IO Mail
-newUserMail templates hostpart emailaddress personname activatelink=
+newUserMail :: KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> Bool -> IO Mail
+newUserMail templates hostpart emailaddress personname activatelink vip=
     do 
     title <- renderTemplate templates "newUserMailTitle" ()
-    content <- wrapHTML templates =<< renderTemplate templates "newUserMailContent" [("personname",BS.toString $ personname),
-                                                                 ("email",BS.toString $ emailaddress),
-                                                                 ("activatelink",show activatelink),  
-                                                                 ("ctxhostpart",hostpart)]
+    body  <-  renderTemplate templates "newUserMailContent" $ do
+                                                              field "personname" $ BS.toString $ personname
+                                                              field "email"      $ BS.toString $ emailaddress
+                                                              field "activatelink" $ show activatelink
+                                                              field "ctxhostpart"  $ hostpart
+                                                              field "vip" vip
+    content <- wrapHTML templates body                                                          
     return $ emptyMail {title=BS.fromString title, content = BS.fromString content} 
     
 passwordChangeMail ::  KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString  -> KontraLink    -> IO Mail

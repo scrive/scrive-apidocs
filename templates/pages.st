@@ -32,6 +32,22 @@ signupPageView =
   </div>
 </div>
 </div>
+########
+signupVipPageView =
+<div class="newdesign">
+<div class="try-skrivapa">
+  <div class="left">
+       <h2>Gratis SkrivaPå till och med 31 december!</h2>
+       <p>Allt inkluderat. Standardkonto, fria transaktioner och fri lagring.</p>
+  </div>
+  <div class="right">
+     <form action="" method="post">
+         <input type="email" value="Fyll i din e-postadress" name="email" class="shiny infotext"> <a class="submit btn-small green2 center float-right" href="#"><p>Skapa konto !</p></a>
+         <input type="submit" class="hidden">
+    </form>
+  </div>
+</div>
+</div>
 ####
 activatePageView=
     <form action="" method="post" style="border:1px solid;border-color:#D0D0D0 #BDBDBD #C0C0C0;padding:7px;background:#ffffff">
