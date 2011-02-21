@@ -249,7 +249,8 @@ handleCreateUser = onlySuperUser $ do
     ctx <- get
     email <- g "email"
     fullname <- g "fullname"
-    muser <- liftIO $ createNewUserByAdmin ctx fullname email 
+    freetill <- fmap (join . (fmap parseMinutesTimeMDY)) $ getField "freetill"
+    muser <- liftIO $ createNewUserByAdmin ctx fullname email freetill
     when (isNothing muser) $ addFlashMsgText =<< (liftIO $ flashMessageUserWithSameEmailExists $ ctxtemplates ctx)
 
     -- FIXME: where to redirect?

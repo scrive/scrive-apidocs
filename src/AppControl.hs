@@ -184,6 +184,8 @@ handleRoutes = msum [
      , dir "signup"      $ hget0  $ signupPageGet
      , dir "signup"      $ hpost0 $ signupPagePost
      , dir "signupdone"  $ hget0  $ signupPageDone
+     , dir "vip"         $ hget0  $ signupVipPageGet
+     , dir "vip"         $ hpost0 $ signupVipPagePost
      , dir "amnesia"     $ hget0  $ forgotPasswordPageGet
      , dir "amnesia"     $ hpost0 $ forgotPasswordPagePost
      , dir "amnesiadone" $ hget0  $ forgotPasswordDonePage
@@ -364,35 +366,51 @@ signupPageGet = do
     content <- liftIO (signupPageView $ ctxtemplates ctx)
     V.renderFromBody ctx V.TopNone V.kontrakcja $ cdata content 
     
+signupVipPageGet :: Kontra Response
+signupVipPageGet = do
+    ctx <- lift get
+    content <- liftIO (signupVipPageView $ ctxtemplates ctx)
+    V.renderFromBody ctx V.TopNone V.kontrakcja $ cdata content 
+
+
 signupPagePost :: Kontra KontraLink
-signupPagePost = do
-    ctx@Context{ctxtemplates,ctxhostpart} <- lift get
-    memail <- fmap (fmap (BS.fromString)) $ getField "email"
-    case memail of
-        Nothing -> return LinkSignup
-        Just email -> do
+signupPagePost = signup False $ parseMinutesTimeMDY "31-05-2011"
+                    
+
+signupVipPagePost :: Kontra KontraLink
+signupVipPagePost = signup True $ parseMinutesTimeMDY "31-12-2011"
+                   
+signup::Bool -> (Maybe MinutesTime) -> Kontra KontraLink
+signup vip freetill =  do 
+                ctx@Context{ctxtemplates,ctxhostpart} <- lift get
+                memail <- fmap (fmap (BS.fromString)) $ getField "email"
+                case memail of
+                   Nothing -> return LoopBack
+                   Just email -> do
                         muser <- query $ GetUserByEmail $ Email $ email
                         case  muser of
                           Just user -> if (isNothing $ userhasacceptedtermsofservice user) 
                                         then  
                                          do  al <- liftIO $ unloggedActionLink user
-                                             mail <-  liftIO $ newUserMail (ctxtemplates) (ctxhostpart) email email al
+                                             mail <-  liftIO $ newUserMail (ctxtemplates) (ctxhostpart) email email al vip
                                              liftIO $ sendMail (ctxmailer ctx) $ mail { fullnameemails = [(email,email)]}
                                              addFlashMsgText =<< (liftIO $ flashMessageNewActivationLinkSend  (ctxtemplates)) 
-                                             return LinkSignup
+                                             return LoopBack
                                           else do
                                              addFlashMsgText =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
-                                             return LinkSignup
+                                             return LoopBack
                           Nothing -> do
-                            maccount <- liftIO $ UserControl.createUser ctx ctxhostpart BS.empty email Nothing True Nothing
-                            if isJust maccount       
-                             then do
-                              addFlashMsgText =<< (liftIO $ flashMessageUserSignupDone ctxtemplates)
-                              return LinkSignup
-                             else do
-                              addFlashMsgText =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
-                              return LinkSignup
-                    
+                            maccount <- liftIO $ UserControl.createUser ctx ctxhostpart BS.empty email Nothing True Nothing vip
+                            case maccount of      
+                             Just account ->  do
+                                               addFlashMsgText =<< (liftIO $ flashMessageUserSignupDone ctxtemplates)
+                                               when (isJust freetill) $ update $ FreeUserFromPayments account (fromJust freetill)
+                                               return LoopBack
+                             Nothing ->       do
+                                              addFlashMsgText =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
+                                              return LoopBack
+   
+
 
 signupPageDone :: Kontra Response
 signupPageDone = do

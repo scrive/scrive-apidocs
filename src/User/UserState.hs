@@ -40,6 +40,7 @@ module User.UserState
     , GetUsersByFriendUserID(..)
     , AddViewerByEmail(..)
     , GetUsersByUserIDs(..)
+    , FreeUserFromPayments(..)
 ) where
 import Happstack.Data
 import Happstack.State
@@ -745,6 +746,12 @@ setUserPaymentPolicyChange :: UserID -> Payments.UserPaymentPolicy -> Update Use
 setUserPaymentPolicyChange userid userpaymentpolicy =
     modifyUser userid $ \user -> 
             Right $ user {userpaymentpolicy = userpaymentpolicy}   
+            
+freeUserFromPayments :: User -> MinutesTime -> Update Users ()
+freeUserFromPayments u freetill =  do
+                                    _ <- modifyUser (userid u) $ \user -> 
+                                      Right $ user {userpaymentpolicy = Payments.freeTill freetill (userpaymentpolicy user) }   
+                                    return ()
 
 {- |
    Add a new viewer (friend) given the email address
@@ -801,6 +808,7 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'setUserSettings
                     , 'setUserPaymentAccount 
                     , 'setUserPaymentPolicyChange
+                    , 'freeUserFromPayments
                     , 'getUserSubaccounts
                     , 'getUsersByFriendUserID
                     , 'acceptTermsOfService

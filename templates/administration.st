@@ -401,9 +401,22 @@ pageStats=
             <td>Email address:</td>
             <td><input type="email" name="email"></td>
           </tr>
+          <tr>
+            <td>Free till:</td>
+            <td> <input type="checkbox" value="off" autocomplete="off" oldlocation="#hiddenfreetill" location="#freetillcontainer" rel="#freetillbox" class="addremovecheckbox">
+                 <span id="freetillcontainer">
+                 </span>
+           </td>
+          </tr>
         </table><br>
         <input type="submit" value="Create user">
       </form>
+     <div id="hiddenfreetill" style="display:none">
+      <span id="freetillbox">
+        <a class="datetodate date" rel="[name='freetill']"> </a>
+        <input type="hidden" autocomplete="off" name="freetill" value="">
+      </span>
+     </div>
       <br>
       Disk status:<br>
       <pre>$sysinfo$</pre>

@@ -498,7 +498,7 @@ $(function () {
          else
              {  
                  date = input.val().split('-');
-                 curr.data("dateinput").setValue(date[0],date[1],date[2]); 
+                 curr.data("dateinput").setValue(date[0],date[1]-1,date[2]); 
              }
         });
     $(".replacebynextonclick").click( function(){

@@ -8,6 +8,7 @@ module AppView( TopMenu(..)
               , pageForgotPassword
               , pageForgotPasswordConfirm
               , signupPageView
+              , signupVipPageView
               , signupConfirmPageView
               , pageLogin
               , simpleResponse 
@@ -110,6 +111,9 @@ signupConfirmPageView  =  <div>Ditt konto har skapats! Vi har skickat ett mail m
         
 signupPageView :: KontrakcjaTemplates -> IO String
 signupPageView templates = renderTemplate templates "signupPageView" ()
+
+signupVipPageView :: KontrakcjaTemplates -> IO String
+signupVipPageView templates = renderTemplate templates "signupVipPageView" ()
 
 pageForgotPassword :: KontrakcjaTemplates -> IO String
 pageForgotPassword templates = do

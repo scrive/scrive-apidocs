@@ -148,7 +148,7 @@ newUserMailTitle=Nytt konto
 newUserMailContent=
     <p>Hej,</p>
     <p>Jag heter Lukas Duczko och är VD på SkrivaPå. Tack för att du har skapat ett konto hos oss. Du har blivit speciellt 
-       inbjuden till ett kampanjkonto på SkrivaPå. Du får fri användning av tjänsten till och med 31 maj! Använd den så mycket
+       inbjuden till ett kampanjkonto på SkrivaPå. Du får fri användning av tjänsten till och med 31 $if(vip)$december$else$maj!$endif$ Använd den så mycket
        du bara kan.
     </p> 
     <p> Vi hoppas att du kommer att bli nöjd med våra tjänster. Tveka inte att höra av dig med feedback eller bara en enkel hälsning. 
