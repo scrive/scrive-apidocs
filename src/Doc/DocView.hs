@@ -256,6 +256,10 @@ pageDocumentForAuthor ctx
                                , signatorynumberplacements = (authornumberplacements document)
                                , signatoryotherfields = (authorotherfields document)
                                }
+       doc_author_name = signatoryname documentauthordetails
+       doc_author_comp = signatorycompany documentauthordetails
+       doc_author_email = signatoryemail documentauthordetails
+       doc_author_comp_nr = signatorynumber documentauthordetails
    in do
      helpers <- renderTemplate (ctxtemplates ctx) "pageDocumentForAuthorHelpers" [("documentid",show documentid)] 
      signatories <- fmap concat $ sequence $ map (showSignatoryLinkForSign ctx document author) documentsignatorylinks                                                                                  
@@ -263,7 +267,15 @@ pageDocumentForAuthor ctx
      restartForm <-   renderActionButton  (ctxtemplates ctx) (LinkRestart documentid) "restartButtonName"
      cancelMailContent <- mailCancelDocumentByAuthorContent  (ctxtemplates ctx) False Nothing ctx document author
      documentinfotext <- documentInfoText (ctxtemplates ctx) document (find (isMatchingSignatoryLink author) documentsignatorylinks) author
-     renderTemplate (ctxtemplates ctx) "pageDocumentForAuthorContent" $  do 
+     renderTemplate (ctxtemplates ctx) "pageDocumentForAuthorContent" $ do
+                 field "authorNamePresent"   $ not . BS.null $ doc_author_name
+                 field "authorCompPresent"   $ not . BS.null $ doc_author_comp
+                 field "authorEmailPresent"  $ not . BS.null $ doc_author_email
+                 field "authorCompNrPresent" $ not . BS.null $ doc_author_comp_nr
+                 field "authorName"   doc_author_name
+                 field "authorComp"   doc_author_comp
+                 field "authorEmail"  doc_author_email
+                 field "authorCompNr" doc_author_comp_nr
                  field "documenttitle" $ BS.toString documenttitle
                  field "documentid" $ show documentid
                  field "linkissuedoc" $ show $ LinkIssueDoc documentid
