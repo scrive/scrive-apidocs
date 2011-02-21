@@ -2,6 +2,7 @@
 module User.UserState 
     ( Email(..)
     , Friend(..)
+    , Inviter(..)
     , DefaultMainSignatory(..)
     , ExternalUserID(..)
     , FlashMessage(..)
@@ -33,6 +34,7 @@ module User.UserState
     , GetUserSubaccounts(..)
     , SetUserDetails(..)
     , SetUserInfo(..)
+    , SetInviter(..)
     , SetUserSettings(..)
     , SetUserPaymentAccount(..)
     , SetUserPaymentPolicyChange(..)
@@ -41,6 +43,7 @@ module User.UserState
     , AddViewerByEmail(..)
     , GetUsersByUserIDs(..)
     , FreeUserFromPayments(..)
+    , AddFreePaymentsForInviter(..)
 ) where
 import Happstack.Data
 import Happstack.State
@@ -74,6 +77,7 @@ $(deriveAll [''Eq, ''Ord, ''Default]
       -- Have to be used because of users versioning
       -- Can't be moved to Session where it belong (cycle references)
       newtype Friend = Friend { unFriend :: Int }
+      newtype Inviter = Inviter { unInviter :: Int }
       newtype DefaultMainSignatory = DefaultMainSignatory { unDMS :: Int }
       newtype FlashMessage = FlashMessage { unFlashMessage :: BS.ByteString }  deriving Read       
       newtype Email = Email { unEmail :: BS.ByteString }
@@ -109,6 +113,7 @@ $(deriveAll [''Eq, ''Ord, ''Default]
              , signeddocstorage :: Maybe TrustWeaverStorage
              , userpaymentmethod :: PaymentMethod
       }
+      
       data User = User
           { userid                        :: UserID
           , userpassword                  :: Password
@@ -121,8 +126,23 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , userpaymentpolicy             :: Payments.UserPaymentPolicy
           , userpaymentaccount            :: Payments.UserPaymentAccount
           , userfriends                   :: [Friend]
+          , userinviter                   :: Maybe Inviter
+          }
+          
+      data User8 = User8
+          { userid8                        :: UserID
+          , userpassword8                  :: Password
+          , usersupervisor8                :: Maybe SupervisorID
+          , usercanhavesubaccounts8        :: Bool
+          , useraccountsuspended8          :: Bool
+          , userhasacceptedtermsofservice8 :: Maybe MinutesTime
+          , userinfo8                      :: UserInfo
+          , usersettings8                  :: UserSettings
+          , userpaymentpolicy8             :: Payments.UserPaymentPolicy
+          , userpaymentaccount8            :: Payments.UserPaymentAccount
+          , userfriends8                   :: [Friend]
           -- should remove userdefaultmainsignatory in the next migration. just get rid of it.
-          , userdefaultmainsignatory      :: DefaultMainSignatory
+          , userdefaultmainsignatory8      :: DefaultMainSignatory
           }
 
       data User7 = User7
@@ -235,6 +255,7 @@ deriving instance Show Email
 deriving instance Show FlashMessage
 deriving instance Show Password
 deriving instance Show Friend
+deriving instance Show Inviter
 deriving instance Show DefaultMainSignatory
 
 deriving instance Read TrustWeaverStorage
@@ -433,7 +454,7 @@ instance Migrate User6 User7 where
                 , userpaymentaccount7 = Payments.emptyPaymentAccount                  
       }       
       
-instance Migrate User7 User where
+instance Migrate User7 User8 where
     migrate (User7 
              { userid7 
              , userpassword7
@@ -445,20 +466,50 @@ instance Migrate User7 User where
              , usersettings7                  
              , userpaymentpolicy7
              , userpaymentaccount7  
-             }) = User 
-                { userid                         = userid7
-                , userpassword                   = userpassword7
-                , usersupervisor                 = usersupervisor7
-                , usercanhavesubaccounts         = usercanhavesubaccounts7
-                , useraccountsuspended           = useraccountsuspended7
-                , userhasacceptedtermsofservice  = userhasacceptedtermsofservice7
-                , userinfo                       = userinfo7
-                , usersettings                   = usersettings7
-                , userpaymentpolicy              = userpaymentpolicy7
-                , userpaymentaccount             = userpaymentaccount7
-                , userfriends                    = []
-                , userdefaultmainsignatory       = DefaultMainSignatory $ unUserID userid7
+             }) = User8 
+                { userid8                         = userid7
+                , userpassword8                   = userpassword7
+                , usersupervisor8                 = usersupervisor7
+                , usercanhavesubaccounts8         = usercanhavesubaccounts7
+                , useraccountsuspended8           = useraccountsuspended7
+                , userhasacceptedtermsofservice8  = userhasacceptedtermsofservice7
+                , userinfo8                       = userinfo7
+                , usersettings8                   = usersettings7
+                , userpaymentpolicy8              = userpaymentpolicy7
+                , userpaymentaccount8             = userpaymentaccount7
+                , userfriends8                    = []
+                , userdefaultmainsignatory8       = DefaultMainSignatory $ unUserID userid7
                 }
+
+instance Migrate User8 User where
+    migrate (User8
+               { userid8                     
+                , userpassword8                
+                , usersupervisor8               
+                , usercanhavesubaccounts8        
+                , useraccountsuspended8          
+                , userhasacceptedtermsofservice8  
+                , userinfo8                     
+                , usersettings8                
+                , userpaymentpolicy8             
+                , userpaymentaccount8           
+                , userfriends8                  
+                , userdefaultmainsignatory8       
+                }) = User 
+                { userid                         = userid8
+                , userpassword                   = userpassword8
+                , usersupervisor                 = usersupervisor8
+                , usercanhavesubaccounts         = usercanhavesubaccounts8
+                , useraccountsuspended           = useraccountsuspended8
+                , userhasacceptedtermsofservice  = userhasacceptedtermsofservice8
+                , userinfo                       = userinfo8
+                , usersettings                   = usersettings8
+                , userpaymentpolicy              = userpaymentpolicy8
+                , userpaymentaccount             = userpaymentaccount8
+                , userfriends                    = userfriends8
+                , userinviter                    = Nothing
+                }
+
 
 userfullname :: User -> BS.ByteString
 userfullname u = if (BS.null $ usersndname $ userinfo u) 
@@ -520,9 +571,13 @@ $(deriveSerialize ''User7)
 instance Version User7 where
     mode = extension 7 (Proxy :: Proxy User6) 
 
+$(deriveSerialize ''User8)
+instance Version User8 where
+    mode = extension 8 (Proxy :: Proxy User7) 
+    
 $(deriveSerialize ''User)
 instance Version User where
-    mode = extension 8 (Proxy :: Proxy User7)
+    mode = extension 9 (Proxy :: Proxy User8)
 
 $(deriveSerialize ''TrustWeaverStorage )
 instance Version TrustWeaverStorage
@@ -556,6 +611,9 @@ instance Version UserID
 
 $(deriveSerialize ''Friend)
 instance Version Friend
+
+$(deriveSerialize ''Inviter)
+instance Version Inviter
 
 $(deriveSerialize ''DefaultMainSignatory)
 instance Version DefaultMainSignatory
@@ -681,7 +739,7 @@ addUser fullname email passwd maybesupervisor = do
                 , userpaymentpolicy =  Payments.basicPaymentPolicy
                 , userpaymentaccount = Payments.emptyPaymentAccount 
               , userfriends = []
-              , userdefaultmainsignatory = DefaultMainSignatory $ unUserID userid
+              , userinviter = Nothing
                  })             
         modify (updateIx (Email email) user)
         return $ Just user
@@ -724,7 +782,12 @@ setUserDetails userid fullname companyname companynumber invoiceaddress =
                                                       }
                          }                            
 
-
+setInviter :: Maybe User -> User -> Update Users ()
+setInviter inviter u = do
+                           _ <- modifyUser (userid u) $ \user -> 
+                                   Right $ user { userinviter   = fmap (Inviter.  unUserID . userid) inviter }    
+                           return ()        
+                                   
 setUserInfo :: UserID -> UserInfo -> Update Users (Either String User)
 setUserInfo userid userinfo =
     modifyUser userid $ \user -> 
@@ -779,6 +842,20 @@ acceptTermsOfService userid minutestime =
     modifyUser userid $ \user -> 
         Right $ user { userhasacceptedtermsofservice = Just minutestime }
 
+addFreePaymentsForInviter ::MinutesTime -> User -> Update Users ()
+addFreePaymentsForInviter now u = do
+                           case (userinviter u) of
+                            Nothing -> return ()   
+                            Just (Inviter iid) -> do
+                              users <- ask
+                              let minviter = getOne (users @= (UserID iid))    
+                              case minviter of
+                                Nothing -> return ()   
+                                Just inviter ->  do 
+                                                 _<- modifyUser (userid inviter) $ \user -> 
+                                                  Right $ user {userpaymentpolicy = Payments.extendFreeTmpChange now 15 (userpaymentpolicy user)}
+                                                 return ()
+                           
 -- for testing purposes
 deleteTermsOfService :: UserID -> Update Users (Either String User)
 deleteTermsOfService userid =
@@ -804,6 +881,7 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'getAllUsers
                     , 'setUserPassword
                     , 'setUserDetails
+                    , 'setInviter
                     , 'setUserInfo
                     , 'setUserSettings
                     , 'setUserPaymentAccount 
@@ -817,5 +895,6 @@ $(mkMethods ''Users [ 'getUserByUserID
                       -- the below should be only used carefully and by admins
                     , 'fragileDeleteUser
                     , 'deleteTermsOfService
+                    , 'addFreePaymentsForInviter
                     ])
 

@@ -61,12 +61,8 @@ checkPasswords p1 p2 =  if p1 == p2
 handleUserGet :: Kontra Response
 handleUserGet = do
   ctx@(Context {ctxmaybeuser = Just user}) <- get
-  mms <- query $ GetUserByUserID $ UserID $ unDMS (userdefaultmainsignatory user)
   maybefriends <- mapM (query . GetUserByUserID . UserID . unFriend) (userfriends user)
   let friends = map fromJust $ filter isJust maybefriends
-  let ms = case mms of
-             Just m -> m
-             Nothing -> user
   content <- liftIO $ showUser (ctxtemplates ctx) user friends           
   renderFromBody ctx TopAccount kontrakcja $ cdata content
 
@@ -131,6 +127,7 @@ handleViralInvite = do
                           addFlashMsgText =<< (liftIO $ flashMessageViralInviteSent $ ctxtemplates ctx)   
                           now <- liftIO $ getMinutesTime
                           update $ FreeUserFromPayments account ((60*24*60) `minutesAfter` now) 
+                          update $ SetInviter (ctxmaybeuser ctx) account
                           return LoopBack
                      Nothing -> do
                           addFlashMsgText =<< (liftIO $ flashMessageUserWithSameEmailExists $ ctxtemplates ctx)
@@ -411,6 +408,8 @@ handleActivate muser dropSessionAction = do
                                             update $ SetUserPassword user passwordhash
                                             update $ AcceptTermsOfService (userid user) (ctxtime ctx)
                                             update $ SetUserInfo (userid user) $ (userinfo user) {userfstname = BS.fromString name}
+                                            now <- liftIO getMinutesTime
+                                            update $ AddFreePaymentsForInviter now user
                                             dropSessionAction
                                             addFlashMsgText =<< (liftIO $ flashMessageUserActivated (ctxtemplates ctx))
                                             logUserToContext $ Just user
