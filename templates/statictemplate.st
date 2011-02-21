@@ -5,7 +5,7 @@ staticTemplate=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.
                 <title>SkrivaPå</title>
                 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
                 $facebooklogo()$
-                <link href='http://fonts.googleapis.com/css?family=Copse' rel='stylesheet' type='text/css'>
+                <link href='$protocol$//fonts.googleapis.com/css?family=Copse' rel='stylesheet' type='text/css'>
                 <link href="/theme/flash.css" rel="stylesheet" type="text/css" />
                 <link href="/css/main.css" rel="stylesheet" type="text/css" />
                 <link rel="stylesheet" type="text/css" href="$prefix$/theme/newdesign.css" media="screen">
