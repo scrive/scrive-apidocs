@@ -410,7 +410,7 @@ pageStats=
       <br/>
       <form method="post" action="/createuser">
         Create user:<br/>
-        <table>
+        <table style="width:600px">
           <tr>
             <td>Full name:</td>
             <td><input type="text" name="fullname"></td>

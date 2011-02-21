@@ -211,9 +211,9 @@ mailViralInviteContent=
 
 ####
 mailNewAccountCreatedByAdminTitle=Nytt konto
-
-###
-mailNewAccountCreatedByAdminContent=
+####
+mailNewAccountCreatedByAdminContentHeader=
+ 
     <p>Hej <strong>$personname$</strong>,</p>
 
     <p>$creatorname$ har bjudit in dig till ett konto på tjänsten SkrivaPå. 
@@ -221,7 +221,7 @@ mailNewAccountCreatedByAdminContent=
     Spara pengar, frustration och miljö och använd SkrivaPå istället. 
     Du kan spara mellan 50-250kr/dokument!</p>
 
-    <p>Användarnamn:<br/>
+    <p>Användarnamn:<br>
     $email$</p>
     
     <p>Vänligen klicka på länken för att aktivera kontot:<br/>
