@@ -591,37 +591,49 @@ pageDocumentForAuthorContentPreparation=
                 <!-- 013 changed -->
                 <div class="sigentry signStepsBodyForms" id="peopleDetails">
                   <span class="fields">
+                    $if(authorNamePresent)$
                     <span class='dragtext authorname inputWrapper'>
 	              <span style="display:none;" class="fieldid">name</span>
+	              <span style="display:none;" class="fieldsigid">author</span>
 	              <span style="display:none;" class="type">author</span>
-	              <span class="fieldvalue"></span>
+	              <span class="fieldvalue">$authorName$</span>
 	              <img src="/theme/images/iconHand.png" class="draghandle"
 	                   alt="drag" />
                     </span>
+                    $endif$
+                    $if(authorCompPresent)$
 	            <span class='dragtext authorcomp inputWrapper'>
 	              <span style="display:none;" class="fieldid">company</span>
+	              <span style="display:none;" class="fieldsigid">author</span>
 	              <span style="display:none;" class="type">sig</span>
                    
-                      <span class="fieldvalue"></span>
+                      <span class="fieldvalue">$authorComp$</span>
 	              <img src="/theme/images/iconHand.png" class="draghandle"
 	                   alt="drag" />
                     </span>
+                    $endif$
+                    $if(authorEmailPresent)$
                     <span class='dragtext authoremail inputWrapper'>
 	              <span style="display:none;" class="fieldid">email</span>
+	              <span style="display:none;" class="fieldsigid">author</span>
 	              <span style="display:none;"
 	              class="type">author</span>
-                      <span class="fieldvalue"></span>
+                      <span class="fieldvalue">$authorEmail$</span>
 	              <img src="/theme/images/iconHand.png" class="draghandle"
 	                   alt="drag" />
 	            </span>
+	            $endif$
+	            $if(authorCompNrPresent)$
 	            <span class='dragtext authornum inputWrapper'>
 	              <span style="display:none;" class="fieldid">number</span>
+	              <span style="display:none;" class="fieldsigid">author</span>
 	              <span style="display:none;"
 	              class="type">sig</span>
-                      <span class="fieldvalue"></span>
+                      <span class="fieldvalue">$authorCompNr$</span>
 	              <img src="/theme/images/iconHand.png" class="draghandle" 
                            alt="drag" />
 	            </span>
+	            $endif$
                     <div class="otherfields">
 
                     </div>
