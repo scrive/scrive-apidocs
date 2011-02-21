@@ -522,7 +522,7 @@ function authorToHTML(sig) {
   var sl = $("#personpane");
   var sigid = "author";
   sig.id = sigid;
-
+  
   var sigentry = sl.find(".authordetails");
   //  setHiddenField(sigentry, "sigid", sigid);
   var manlink = sigentry.find("a.man");
@@ -544,45 +544,6 @@ function authorToHTML(sig) {
     sigentry.find(".partyrole input").first().attr("checked", "true");
   } else {
     sigentry.find(".partyrole input").last().attr("checked", "true");
-  }
-  
-
-  var d = sigentry.find(".fields");
-  var of = sigentry.find(".otherfields");
-  
-  var aname = sigentry.find(".authorname");
-  var acomp = sigentry.find(".authorcomp");
-  var anumb = sigentry.find(".authornum");
-  var aemai = sigentry.find(".authoremail");
-
-  setSigID(aname, sigid);
-  setSigID(acomp, sigid);
-  setSigID(anumb, sigid);
-  setSigID(aemai, sigid);
-
-  setValue(aname, sig.name);
-  setValue(acomp, sig.company);
-  setValue(anumb, sig.number);
-  setValue(aemai, sig.email);
-  setTitle(aname, sig.name);
-  setTitle(acomp, sig.company);
-  setTitle(anumb, sig.number);
-  setTitle(aemai, sig.email);
-  
-  if(sig.name === "") {
-    aname.remove();
-  }
-
-  if(sig.company === "") {
-    acomp.remove();
-  }
-
-  if(sig.number === "") {
-    anumb.remove();
-  }
-
-  if(sig.email === "") {
-    aemai.remove();
   }
 
   sigentry.find(".dragtext").draggable({ handle: ".draghandle"
@@ -617,10 +578,8 @@ function authorToHTML(sig) {
 			return placementToHTML(input.attr("infotext"), input.attr("value"));
 		      }
 		    });
-    
-    var input = field.find("input");
 
-    of.append(field);
+    sigentry.find(".otherfields").append(field);
     //	    
   });
 
