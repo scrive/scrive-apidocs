@@ -255,6 +255,7 @@ safeReady(function() {
       if (!emailFieldsValidation($(".stepForm input[type='email']"))) return false;
       if (!nonZeroSignatories()) return false;
       if (!authorFieldsValidation()) return false;
+      fieldValidationType = "";
 
       var mrxs = $("form input[name='signatoryname']");
       var tot = "";
@@ -274,7 +275,8 @@ safeReady(function() {
       if (!emailFieldsValidation($(".stepForm input[type='email']"))) return false;
       if (!nonZeroSignatories()) return false;
       if (!authorFieldsValidation()) return false;
-      
+      fieldValidationType = "";
+
       var mrxs = $("form input[name='signatoryname']");
       var tot = "";
       var allparties = new Array();
@@ -605,8 +607,12 @@ function emailFieldsValidation(fields){
       formEvent: 'null'
     });
     var valid = inputs.data("validator").checkValidity();
+    if(!valid) {
+      fieldValidationType = "email";
+    }
     return valid;
   }
+  fieldValidationType = "";
   return true;
 }
 
@@ -640,9 +646,10 @@ function checkSignPossibility() {
   return true;
 }
 
+var fieldValidationType = "";
 function authorFieldsValidation() {
   var dragfields = $("#personpane .dragfield");
-
+  dragfields.removeClass('offending');
   // get all the fields that should be filled by author
   var remainingAuthorFields = dragfields.filter(function() {
     return getFillStatus($(this)) === 'author';
@@ -656,7 +663,8 @@ function authorFieldsValidation() {
     if(remainingAuthorFields.hasClass('customfield')) {
       addFlashMessage("Du har inte namngett alla fält. Vänligen försök igen.");
     }
-    remainingAuthorFields.addClass('redborder');
+    remainingAuthorFields.addClass('redborder').addClass('offending');
+    fieldValidationType = "fillstatus";
     return false;
   }
 
@@ -667,10 +675,12 @@ function authorFieldsValidation() {
   if(remainingDragFields.size() > 0) {
     var dragMsg = "Du har inte lagt till alla skapade fält i dokumentet. Vänligen försök igen.";
     addFlashMessage(dragMsg);
-    remainingDragFields.addClass('redborder');
+    remainingDragFields.addClass('redborder').addClass('offending');
+    fieldValidationType = "dragstatus";
     return false;
   }
 
+  fieldValidationType = "";
   return true;
 }
 
@@ -861,8 +871,7 @@ function showStep3()
     return false;
 }
 
-function nextStep()
-{
+function nextStep() {
     console.log("next step");
     if( $('#signStep1Content').is(':visible')) {
         showStep2();

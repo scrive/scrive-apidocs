@@ -65,7 +65,7 @@ function placePlacements(pls, label, value, sigid, fieldid) {
         $('.dragfield').filter(function() {
           return getFieldID(this) === fieldid;
         }).each(function() {
-          updateStatusForDragging(this);
+          updateStatus(this);
         });
       },
       // build a helper so it doesn't delete the original
@@ -458,24 +458,38 @@ function updateStatusForTyping(field) {
   field = $(field);
   var type = getFieldType(field);
   var dragstatus = getDragStatus(field);
+  var oldfillstatus = getFillStatus(field);
   if(type == "author") {
     if(getValue(field)) {
-      setFillStatus(field, "done");
-      field.removeClass('redborder');
+      if(!(oldfillstatus === "done")) {
+        setFillStatus(field, "done");
+        if(oldfillstatus === "author" && fieldValidationType === "fillstatus" && field.hasClass("offending")) {
+          field.removeClass('redborder');
+        }
+      }
     } else {
-      setFillStatus(field, "author");
+      if(!(oldfillstatus === "author")) {
+        setFillStatus(field, "author");
+        if(fieldValidationType === "fillstatus" && field.hasClass("offending")) {
+          field.addClass('redborder');
+        }
+      }
     }
   } else if(type == "sig") {
     if(getValue(field)) {
-      // it's got a value
-      setFillStatus(field, "done");
-      field.removeClass('redborder');
+      if(!(oldfillstatus === "done")) {
+        setFillStatus(field, "done");
+        if(fieldValidationType === "fillstatus" && field.hasClass("offending")) {
+          field.removeClass('redborder');
+        }
+      }
     } else if(dragstatus === "placed") {
-      // not filled out, but it's placed
-      setFillStatus(field, "sig");
-      field.removeClass('redborder');
+      if(!(oldfillstatus === "sig")) {
+        setFillStatus(field, "sig");
+      }
+    } else if(isStandardField(field)) {
+      setFillStatus(field, "done");
     } else {
-      // not filled out, not placed, so it's handled above
       setFillStatus(field, "sig");
     }
   } else if(type == "text") {
@@ -490,14 +504,29 @@ function updateStatusForTyping(field) {
 function updateStatusForDragging(field) {
   invalidatePlacedFieldsCache();
   field = $(field);
+  var olddragstatus = getDragStatus(field);
   var type = getFieldType(field);
   if(getPlacedFieldsForField(field).size()) {
-    setDragStatus(field, "placed");
-    field.removeClass('redborder');
+    if(!(olddragstatus === "placed")){
+      setDragStatus(field, "placed");
+      if(fieldValidationType === "dragstatus" && olddragstatus === "must place" && field.hasClass("offending")) {
+        field.removeClass('redborder');
+      }
+    }
   } else if(isStandardField(field)) {
-    setDragStatus(field, "not placed");
+    if(!(olddragstatus === "not placed")) {
+      setDragStatus(field, "not placed");
+      if(fieldValidationType === "dragstatus" && olddragstatus === "must place" && field.hasClass("offending")) {
+        field.removeClass('redborder');
+      }
+    }
   } else {
-    setDragStatus(field, "must place");
+    if(!(olddragstatus === "must place")) {
+      setDragStatus(field, "must place");
+      if(fieldValidationType === "dragstatus" && field.hasClass("offending")) {
+        field.addClass("redborder");
+      }
+    }
   }
 }
 
@@ -869,7 +898,7 @@ function makeDropTargets() {
       $('.dragfield').filter(function() {
         return getFieldID(this) === fieldid;
       }).each(function() {
-        updateStatusForDragging(this);
+        updateStatus(this);
       });
     }
     return false;
@@ -894,7 +923,7 @@ function makeDropTargets() {
       field.detach();
       helper.detach();
     } else {
-      updateStatusForDragging(field);
+      updateStatus(field);
     }
     
     return false;
