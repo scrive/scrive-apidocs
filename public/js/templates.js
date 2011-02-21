@@ -694,6 +694,7 @@ function createCustomField(newfield) {
   enableInfoTextOnce(customfield);
   updateStatus(customfield);
   
+  customfield.find(".customfieldbox").focus();
   return false;
 }
 
