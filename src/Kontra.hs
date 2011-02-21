@@ -134,6 +134,7 @@ initialUsers = map (Email . BS.fromString)
          , "oskar@skrivapa.se"
          , "kbaldyga@gmail.com"
          , "viktor@skrivapa.se"
+         , "andrzej@skrivapa.se"
          ]
 
 {- |
