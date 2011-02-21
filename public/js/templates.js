@@ -67,39 +67,6 @@ function placePlacements(pls, label, value, sigid, fieldid) {
     setHiddenField(d, "placedpage", String(pl.page));
     setHiddenField(d, "placedwidth", String(Math.round(page.width())));
     setHiddenField(d, "placedheight", String(Math.round(page.height())));
-
-    // make it draggable
-    d.draggable({ 
-      // this makes sure it can move between divs
-      appendTo: "body",
-      stop: function(event, ui) {
-        var field = $(event.target);
-        var helper = $(ui.helper);
-
-        // for some reason, this needs to be helper (field is
-        // empty)
-        if(isPlacedField(helper)) {
-          $(this).detach();
-          field.detach();
-        }
-
-        var fieldid = getFieldID(field);
-        $('.dragfield').filter(function() {
-          return getFieldID(this) === fieldid;
-        }).each(function() {
-          updateStatus(this);
-        });
-      },
-      // build a helper so it doesn't delete the original
-      helper: function (event, ui) {
-	return placementToHTML(label, value);
-      },
-      // but we don't want to show the original so it looks like 
-      // you are dragging the original
-      start: function (event, ui) {
-	$(this).hide();
-      }
-    });
   });
 }
 
@@ -914,7 +881,7 @@ function isPlacedField(field) {
   return $(field).hasClass("placedfield");
 }
 
-function makeDropTargets() {
+safeReady(function() {
   $("#signStepsContainer").droppable({ drop: function(event, ui) {
     var field = $(ui.draggable);
     var helper = $(ui.helper);
@@ -931,34 +898,35 @@ function makeDropTargets() {
     }
     return false;
   }});
+});
 
-  $(".pagediv").droppable({ drop: function(event, ui) {
-    var page = $(this);
-    var field = $(ui.draggable);
-    var helper = $(ui.helper);
-
-    var top = helper.offset().top - page.offset().top;
-    var left = helper.offset().left - page.offset().left;
-    
-    var pageno = parseInt(page.attr("id").substr(4));
-
-    var sigid = getSigID(field);
-    var fieldid = getFieldID(field);
-    var pl = newplacement(left, top, pageno, page.width(), page.height());
-    placePlacements([pl], getLabel(field), getValue(field), sigid, fieldid);
-    
-    if(isPlacedField(field)) {
-      field.detach();
-      helper.detach();
-    } else {
+safeReady(function() {
+  $(".pagediv", "#documentBox")
+    .liveDroppable({ drop: function(event, ui) {
+      var page = $(this);
+      var field = $(ui.draggable);
+      var helper = $(ui.helper);
+      
+      var top = helper.offset().top - page.offset().top;
+      var left = helper.offset().left - page.offset().left;
+      
+      var pageno = parseInt(page.attr("id").substr(4));
+      
+      var sigid = getSigID(field);
+      var fieldid = getFieldID(field);
+      var pl = newplacement(left, top, pageno, page.width(), page.height());
+      placePlacements([pl], getLabel(field), getValue(field), sigid, fieldid);
+      
+      if(isPlacedField(field)) {
+        field.detach();
+        helper.detach();
+      }
       updateStatus(field);
-    }
-    
-    return false;
-  }});
-
+      return false;
+    }});
+  
   return true;
-}
+});
 
 function initializeTemplates () {
   if($(".pagediv").size() === 0){
@@ -970,7 +938,7 @@ function initializeTemplates () {
   placePlacementsOfSignatories([docstate.author]);
   enableInfoTextOnce();
   
-  makeDropTargets();
+//  makeDropTargets();
 
   $(".dragfield, .dragtext").each(function() {
     updateStatus($(this));
@@ -1035,4 +1003,36 @@ safeReady(function() {
 		       return placementToHTML($(this).find(".fieldvalue").html());
 	             }
 		   });
+
+  $(".placedfield", "#documentBox")
+    .liveDraggable({ 
+      appendTo: "body",
+      stop: function(event, ui) {
+        var field = $(event.target);
+        var helper = $(ui.helper);
+        
+        // for some reason, this needs to be helper (field is
+        // empty)
+        if(isPlacedField(helper)) {
+          $(this).detach();
+          field.detach();
+        }
+        
+        var fieldid = getFieldID(field);
+        $('.dragfield').filter(function() {
+          return getFieldID(this) === fieldid;
+        }).each(function() {
+          updateStatus(this);
+        });
+      },
+      // build a helper so it doesn't delete the original
+      helper: function (event, ui) {
+        return placementToHTML($(this).find(".value").html());
+      },
+      // but we don't want to show the original so it looks like 
+      // you are dragging the original
+      start: function (event, ui) {
+	$(this).hide();
+      }
+    });
 });
