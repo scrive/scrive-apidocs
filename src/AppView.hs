@@ -8,6 +8,7 @@ module AppView( TopMenu(..)
               , pageForgotPassword
               , pageForgotPasswordConfirm
               , signupPageView
+              , signupConfirmPageView
               , pageLogin
               , simpleResponse 
               , firstPage
@@ -96,9 +97,6 @@ pageFromBody' prefix
 signupPageView :: KontrakcjaTemplates -> IO String
 signupPageView templates = renderTemplate templates "signupPageView" ()
 
-{- |
-   The contents of the password reset page.  This is read from a template.
--} 
 pageForgotPassword :: KontrakcjaTemplates -> IO String
 pageForgotPassword templates = do
   renderTemplate templates "pageForgotPassword" ()

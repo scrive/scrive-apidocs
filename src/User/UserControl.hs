@@ -30,6 +30,7 @@ import qualified Data.Set as Set
 import qualified HSP
 import Templates.Templates (KontrakcjaTemplates)
 import HSP.XML
+import MinutesTime
 
 handleUserPasswordPost :: Kontra KontraLink
 handleUserPasswordPost = do
@@ -112,7 +113,7 @@ handleCreateSubaccount :: Context -> Kontra KontraLink
 handleCreateSubaccount ctx@Context { ctxmaybeuser = Just (user@User { userid }), ctxhostpart, ctxtemplates } = do
   fullname <- g "fullname"
   email <- g "email"
-  muser <- liftIO $ createUser ctx ctxhostpart fullname email Nothing True (Just user)
+  muser <- liftIO $ createUser ctx ctxhostpart fullname email Nothing True (Just user) False
   when (isNothing muser) $ addFlashMsgText =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
   return LinkSubaccount
 
@@ -125,11 +126,13 @@ handleViralInvite = do
             return LoopBack
         Just invitedemail -> do
                     maccount <- liftIO $ createUserForViralInvite ctx (BS.fromString invitedemail)
-                    if isJust maccount
-                     then do
-                          addFlashMsgText =<< (liftIO $ flashMessageViralInviteSent $ ctxtemplates ctx)       
+                    case maccount of
+                     Just account -> do
+                          addFlashMsgText =<< (liftIO $ flashMessageViralInviteSent $ ctxtemplates ctx)   
+                          now <- liftIO $ getMinutesTime
+                          update $ FreeUserFromPayments account ((60*24*60) `minutesAfter` now) 
                           return LoopBack
-                     else do
+                     Nothing -> do
                           addFlashMsgText =<< (liftIO $ flashMessageUserWithSameEmailExists $ ctxtemplates ctx)
                           return LoopBack
 
@@ -158,14 +161,14 @@ randomPassword = do
     indexes <- liftIO $ replicateM 8 (randomRIO (0,length letters-1))
     return (BS.fromString $ map (letters!!) indexes)
 
-createUser ::  Context -> String -> BS.ByteString -> BS.ByteString -> Maybe BS.ByteString -> Bool -> Maybe User -> IO (Maybe User)
-createUser ctx hostpart fullname email maybepassword isnewuser maybesupervisor =
+createUser ::  Context -> String -> BS.ByteString -> BS.ByteString -> Maybe BS.ByteString -> Bool -> Maybe User -> Bool -> IO (Maybe User)
+createUser ctx hostpart fullname email maybepassword isnewuser maybesupervisor vip =
   case maybepassword of
     Nothing -> do
       password <- randomPassword
-      createUser1 ctx hostpart fullname email password isnewuser maybesupervisor
+      createUser1 ctx hostpart fullname email password isnewuser maybesupervisor vip
     Just x ->
-      createUser1 ctx hostpart fullname email x isnewuser maybesupervisor
+      createUser1 ctx hostpart fullname email x isnewuser maybesupervisor vip
 
 createUserForViralInvite :: Context -> BS.ByteString -> IO (Maybe User)
 createUserForViralInvite ctx invitedemail =
@@ -179,12 +182,13 @@ createUserForViralInvite ctx invitedemail =
                       return muser
         Nothing -> return muser
 
-createNewUserByAdmin :: Context -> BS.ByteString -> BS.ByteString -> IO (Maybe User)
-createNewUserByAdmin ctx fullname email =
+createNewUserByAdmin :: Context -> BS.ByteString -> BS.ByteString -> Maybe MinutesTime -> IO (Maybe User)
+createNewUserByAdmin ctx fullname email freetill =
      do
       muser <- createInvitedUser fullname email
       case muser of 
        Just user -> do
+                    when (isJust freetill) $ update $ FreeUserFromPayments user (fromJust freetill)
                     chpwdlink <- unloggedActionLink (user)
                     mail <- mailNewAccountCreatedByAdmin (ctxtemplates ctx) ctx fullname email chpwdlink
                     sendMail (ctxmailer ctx) $ mail { fullnameemails = [(fullname, email)]} 
@@ -200,8 +204,8 @@ createInvitedUser fullname email =
 
 
 
-createUser1 :: Context -> String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Bool -> Maybe User -> IO (Maybe User)
-createUser1 ctx hostpart fullname email password isnewuser maybesupervisor = do
+createUser1 :: Context -> String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Bool -> Maybe User -> Bool -> IO (Maybe User)
+createUser1 ctx hostpart fullname email password isnewuser maybesupervisor vip = do
   passwdhash <- createPassword password
   muser <- update $ AddUser fullname email passwdhash (fmap userid maybesupervisor)
   case muser of 
@@ -210,7 +214,7 @@ createUser1 ctx hostpart fullname email password isnewuser maybesupervisor = do
         mail <- case maybesupervisor of
                   Nothing -> if not isnewuser
                              then passwordChangeMail (ctxtemplates ctx) hostpart email fullname al
-                             else newUserMail (ctxtemplates ctx) hostpart email fullname al
+                             else newUserMail (ctxtemplates ctx) hostpart email fullname al vip
                   Just supervisor -> inviteSubaccountMail (ctxtemplates ctx) hostpart (prettyName  supervisor) (usercompanyname $ userinfo supervisor)
                                         email fullname al
         sendMail (ctxmailer ctx) $ mail { fullnameemails = [(fullname, email)]}
@@ -427,7 +431,7 @@ handleActivate muser dropSessionAction = do
                                                           if (isNothing $ userhasacceptedtermsofservice user) 
                                                           then  
                                                                do  al <- liftIO $ unloggedActionLink user
-                                                                   mail <-  liftIO $ newUserMail (ctxtemplates ctx) (ctxhostpart ctx) email email al
+                                                                   mail <-  liftIO $ newUserMail (ctxtemplates ctx) (ctxhostpart ctx) email email al False
                                                                    liftIO $ sendMail (ctxmailer ctx) $ mail { fullnameemails = [(email, email)]}
                                                                    addFlashMsgText =<< (liftIO $ flashMessageNewActivationLinkSend  (ctxtemplates ctx)) 
                                                                    return LinkMain
