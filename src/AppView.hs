@@ -9,7 +9,6 @@ module AppView( TopMenu(..)
               , pageForgotPasswordConfirm
               , signupPageView
               , pageLogin
-              , pageFromBody'
               , simpleResponse 
               , firstPage
               , staticTemplate
@@ -66,11 +65,6 @@ pageFromBody :: (EmbedAsChild (HSPT' IO) xml)
              -> HSP XML
 pageFromBody = pageFromBody' ""
 
-{- |
-   Renders some page body xml, into a complete page of xml.
-   This takes a static url prefix, which will be used for links. 
-   This has been exported to help with testing - which is a bit icky but useful!
--}
 pageFromBody' :: (EmbedAsChild (HSPT' IO) xml) 
               => String
               -> Context 
@@ -84,13 +78,13 @@ pageFromBody' prefix
                       , ctxproduction
                       , ctxtemplates
                       }
-                  topMenu title body = do
+             topMenu title body = do
                     content <- liftIO $ renderHSPToString <div id="mainContainer"><% body %></div>
                     wholePage <- liftIO $ renderTemplate ctxtemplates "wholePage" $ do
                                   field "production" ctxproduction
+                                  field "uploadTab" $ uploadTabInfo ctxmaybeuser topMenu
+                                  field "documentTab" $ documentTabInfo ctxmaybeuser topMenu
                                   field "content" content
-                                  field "prefix" prefix
-                                  field "protocol" $ if prefix=="" then "" else "http:"
                                   field "title" title
                                   mainLinksFields 
                                   contextInfoFields ctx
@@ -176,3 +170,4 @@ contextInfoFields::Context -> Fields
 contextInfoFields ctx = do 
                          field "logged" $ isJust (ctxmaybeuser ctx)
                          field "flashmessages" $ map (BSC.toString . unFlashMessage) (ctxflashmessages ctx)
+             

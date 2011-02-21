@@ -34,10 +34,10 @@ wholePage=
         <title>$title$$if(production)$$else$ (devel) $endif$</title>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         $facebooklogo()$
-        <link href='http://fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css" />
-        <link rel="stylesheet" type="text/css" href="$prefix$/theme/newdesign.css" media="screen" />
-        <link rel="stylesheet" type="text/css" href="$prefix$/theme/style.css" media="screen" />
-        <link rel="stylesheet" type="text/css" href="$prefix$/theme/calendar.css" media="screen" />
+        <link href='http://fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css">
+        <link rel="stylesheet" type="text/css" href="$prefix$/theme/newdesign.css" media="screen">
+        <link rel="stylesheet" type="text/css" href="$prefix$/theme/style.css" media="screen">
+        <link rel="stylesheet" type="text/css" href="$prefix$/theme/calendar.css" media="screen">
         <link href="$prefix$/theme/flash.css" rel="stylesheet" type="text/css" media="screen" />
         <link rel="stylesheet" type="text/css" 
               href="$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/ui-lightness/jquery-ui.css"
