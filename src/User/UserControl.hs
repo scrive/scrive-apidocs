@@ -182,15 +182,15 @@ createUserForViralInvite ctx invitedemail =
                       return muser
         Nothing -> return muser
 
-createNewUserByAdmin :: Context -> BS.ByteString -> BS.ByteString -> Maybe MinutesTime -> IO (Maybe User)
-createNewUserByAdmin ctx fullname email freetill =
+createNewUserByAdmin :: Context -> BS.ByteString -> BS.ByteString -> Maybe MinutesTime -> Maybe String -> IO (Maybe User)
+createNewUserByAdmin ctx fullname email freetill custommessage =
      do
       muser <- createInvitedUser fullname email
       case muser of 
        Just user -> do
                     when (isJust freetill) $ update $ FreeUserFromPayments user (fromJust freetill)
                     chpwdlink <- unloggedActionLink (user)
-                    mail <- mailNewAccountCreatedByAdmin (ctxtemplates ctx) ctx fullname email chpwdlink
+                    mail <- mailNewAccountCreatedByAdmin (ctxtemplates ctx) ctx fullname email chpwdlink custommessage
                     sendMail (ctxmailer ctx) $ mail { fullnameemails = [(fullname, email)]} 
                     return muser
        Nothing -> return muser

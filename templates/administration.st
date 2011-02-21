@@ -392,7 +392,7 @@ pageStats=
       <br>
       <form method="post" action="/createuser">
         Create user:<br>
-        <table>
+        <table style="width:600px">
           <tr>
             <td>Full name:</td>
             <td><input type="text" name="fullname"></td>
@@ -407,10 +407,18 @@ pageStats=
                  <span id="freetillcontainer">
                  </span>
            </td>
+         </tr>
+         <tr>
+            <td>Header:</td>
+            <td> <input type="button" class="editer" value="Default">
+                 <span class="editable" name="custommessage" style="display:none">$mailNewAccountCreatedByAdminContentHeader()$</span>
+
+           </td>
           </tr>
         </table><br>
         <input type="submit" value="Create user">
       </form>
+
      <div id="hiddenfreetill" style="display:none">
       <span id="freetillbox">
         <a class="datetodate date" rel="[name='freetill']"> </a>

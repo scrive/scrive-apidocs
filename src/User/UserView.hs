@@ -141,15 +141,17 @@ viralInviteMail templates ctx invitedemail setpasslink = do
                                                                 ("passwordlink", show setpasslink)]
     return $ emptyMail {title=BS.fromString title, content=BS.fromString content}
 
-mailNewAccountCreatedByAdmin:: KontrakcjaTemplates -> Context-> BS.ByteString -> BS.ByteString -> KontraLink ->  IO Mail
-mailNewAccountCreatedByAdmin templates ctx personname email setpasslink =    do 
+mailNewAccountCreatedByAdmin:: KontrakcjaTemplates -> Context-> BS.ByteString -> BS.ByteString -> KontraLink -> Maybe String ->  IO Mail
+mailNewAccountCreatedByAdmin templates ctx personname email setpasslink custommessage =  do 
       title <- renderTemplate templates "mailNewAccountCreatedByAdminTitle" ()
-      content <- wrapHTML templates =<< renderTemplate templates "mailNewAccountCreatedByAdminContent"
-                                                                 [("personname",BS.toString $ personname),
-                                                                 ("email",BS.toString $ email),
-                                                                 ("passwordlink",show setpasslink),
-                                                                 ("creatorname", BS.toString$ maybe BS.empty prettyName (ctxmaybeuser  ctx)),  
-                                                                 ("ctxhostpart",ctxhostpart ctx)]
+      body <-  renderTemplate templates "mailNewAccountCreatedByAdminContent" $ do
+                                                            field "personname" $ BS.toString $ personname
+                                                            field "email"      $ BS.toString $ email 
+                                                            field "passwordlink" $ show setpasslink
+                                                            field "creatorname" $ BS.toString$ maybe BS.empty prettyName (ctxmaybeuser  ctx)
+                                                            field "ctxhostpart" $ ctxhostpart ctx
+                                                            field "custommessage" custommessage
+      content <- wrapHTML templates  body                                                               
       return $ emptyMail {title=BS.fromString title, content = BS.fromString content}   
     
 
