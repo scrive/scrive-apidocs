@@ -48,7 +48,10 @@ instance InspectXML Author where
     inspectXML (Author x) = inspectXML x     
 instance InspectXML Friend where
     inspectXML (Friend x) = inspectXML x
--- old; should be removed
+instance InspectXML Inviter where
+    inspectXML (Inviter x) = inspectXML x
+ 
+ -- old; should be removed
 instance InspectXML DefaultMainSignatory where
     inspectXML (DefaultMainSignatory x) = inspectXML x
     
