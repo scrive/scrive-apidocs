@@ -164,9 +164,6 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "db" $ onlySuperUser $ fileServe [] "_local/kontrakcja_state"
 
      , dir "adminonly" $ dir "cleanup"           $ hpost0 $ Administration.handleDatabaseCleanup
-     , dir "adminonly" $ dir "become"            $ hpost0 $ Administration.handleBecome
-     , dir "adminonly" $ dir "takeoverdocuments" $ hpost0 $ Administration.handleTakeOverDocuments
-     , dir "adminonly" $ dir "deleteaccount"     $ hpost0 $ Administration.handleDeleteAccount
      , dir "adminonly" $ dir "alluserstable"     $ hget0  $ Administration.showAllUsersTable
      , dir "adminonly" $ dir "skrivapausers.csv" $ hget0  $ Administration.getUsersDetailsToCSV
      , dir "adminonly" $ dir "payments"          $ hget0  $ Payments.handlePaymentsModelForViewView

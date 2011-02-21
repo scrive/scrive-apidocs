@@ -19,9 +19,6 @@ module Administration.AdministrationControl(
           , getUsersDetailsToCSV
           , handleUserChange
           , handleDatabaseCleanup
-          , handleBecome
-          , handleTakeOverDocuments
-          , handleDeleteAccount
           , handleCreateUser
           , handleUserEnableTrustWeaverStorage
           , handleMigrate0
@@ -246,54 +243,6 @@ databaseCleanupWorker = do
   mapM_ (\x -> removeFile ("_local/kontrakcja_state/" ++ x)) (eventsToRemove ++ checkpointsToRemove)
   getDirectoryContents "_local/kontrakcja_state" --This can be dropped
 
-{- Administrator can became any user he want's -}
-handleBecome :: Kontra KontraLink
-handleBecome = onlySuperUser $ do
-    muserid  <- readField "user"
-    case muserid of
-        Just userid ->  do
-                         user <- liftM query GetUserByUserID userid
-                         logUserToContext user
-                         return LinkMain
-        _ -> mzero                 
-
-
-
-{- Assinging all selected user docs to current user -}
-handleTakeOverDocuments :: Kontra KontraLink
-handleTakeOverDocuments = onlySuperUser $ do
-     Context{ctxmaybeuser = Just ctxuser} <- lift $ get
-     msrcuserid  <- readField "user"
-     case (msrcuserid) of
-      Just srcuserid ->  do
-                         msrcuser <- query $ GetUserByUserID srcuserid
-                         case msrcuser of
-                          Just srcuser -> do     
-                                         update $ FragileTakeOverDocuments ctxuser srcuser
-                                         addFlashMsgText $ "Took over all documents of '" ++ toString (userfullname srcuser) ++ "'. His account is now empty and can be deleted if you wish so. Show some mercy, though."
-                                         return LoopBack
-                          Nothing -> mzero                
-      Nothing -> mzero                   
-
-{- Deleting user account, Fails if user still has any documents -}
-handleDeleteAccount :: Kontra KontraLink
-handleDeleteAccount = onlySuperUser $ do
-    muserid <- readField "user"
-    case (muserid) of
-      Just userid -> do
-                muser <- query $ GetUserByUserID userid
-                case (muser) of
-                  Just user ->  do  
-                      documents <- query $ GetDocumentsByAuthor userid
-                      if null documents
-                       then do
-                           _ <- update $ FragileDeleteUser userid
-                           addFlashMsgText ("User deleted. You will not see '" ++ toString (userfullname user) ++ "' here anymore")
-                       else
-                           addFlashMsgText ("I cannot delete user. '" ++ toString (userfullname user) ++ "' still has " ++ show (length documents) ++ " documents as author. Take over his documents, then try to delete the account again.")
-                      return LoopBack
-                  Nothing -> mzero
-      Nothing -> mzero          
 
 handleCreateUser :: Kontra KontraLink
 handleCreateUser = onlySuperUser $ do

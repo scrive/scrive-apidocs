@@ -58,24 +58,6 @@ adminsmanageall =
               <td>
                 &lt;$user.usvEmail$&gt;
               </td>
-              <td>
-                <form method="post" action="/adminonly/become"  style="display:inline">
-                  <input type="hidden" name="user" value="$user.usvId$">
-                  <input type="submit" value="Monitor user">
-                </form>
-              </td>
-              <td>
-                <form method="post" action="/adminonly/takeoverdocuments"  style="display:inline">
-                  <input type="hidden" name="user" value="$user.usvId$">
-                  <input type="submit" value="Take over"/>
-                </form>
-              </td>
-              <td>
-                <form method="post" action="/adminonly/deleteaccount" >
-                  <input type="hidden" name="user" value="$user.usvId$">
-                  <input type="submit" value="Annihilate account"/>
-              </td>
-              </form>
             </tr>
             }$
         </tbody></table>
