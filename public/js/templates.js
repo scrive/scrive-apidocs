@@ -599,9 +599,7 @@ function authorToHTML(sig) {
 			return placementToHTML(input.attr("infotext"), input.attr("value"));
 		      }
 		    });
-    
-    var input = field.find("input");
-
+                    */
     sigentry.find(".otherfields").append(field);
     //	    
   });
