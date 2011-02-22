@@ -451,7 +451,9 @@ handleLoginGet = do
     Just _ -> sendRedirect LinkMain   
     Nothing -> do 
       referer <- getField "referer"
-      content <- liftIO $ V.pageLogin ctx referer
+      reason  <- getField "reason"
+      email   <- getField "email"
+      content <- liftIO $ V.pageLogin ctx referer reason email
       V.renderFromBody ctx V.TopNone V.kontrakcja $ cdata $ content
 
 {- |
@@ -459,9 +461,8 @@ handleLoginGet = do
 -}  
 handleLoginPost :: Kontra KontraLink
 handleLoginPost = do
-  email <- getDataFnM $ look "email"
+  email  <- getDataFnM $ look "email"
   passwd <- getDataFnM $ look "password"
-  whereToGoOnFail <- fmap (maybe LinkLogin $ const LoopBack) $ getField "referer"
   
   -- check the user things here
   maybeuser <- query $ GetUserByEmail (Email $ BS.fromString email)
@@ -471,10 +472,8 @@ handleLoginPost = do
         then do
           logUserToContext maybeuser
           return BackToReferer
-        else do
-          return whereToGoOnFail
-    Nothing -> do
-          return whereToGoOnFail
+        else return $ LinkLogin (InvalidPassword email)
+    Nothing -> return $ LinkLogin InvalidEmail
 
 {- |
    Handles the logout, and sends user back to main page.
@@ -513,7 +512,7 @@ onlySuperUserGet action = do
   Context{ctxmaybeuser} <- get 
   if isSuperUser ctxmaybeuser 
    then action
-   else sendRedirect LinkLogin
+   else sendRedirect $ LinkLogin NotLoggedAsSuperUser
 
 {- |
    Used by super users to inspect a particular document.
