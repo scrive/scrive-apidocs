@@ -228,8 +228,6 @@ mailNewAccountCreatedByAdminContent=
     $else$
     $mailNewAccountCreatedByAdminContentHeader()$
     $endif$
-    <p>Användarnamn:<br/>
-    $email$</p>
    
     <p>Användarnamn:<br>
     $email$</p>
