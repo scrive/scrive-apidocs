@@ -833,7 +833,7 @@ convertPdfToJpgPages ctx@Context{ctxs3action} file@File{fileid,filename} = do
                         , "-dTextAlphaBits=4"
                         , "-dGraphicsAlphaBits=4"
                         --, "-r91.361344537815126050420168067227"
-                        , "-r114.147521161"
+                        , "-r190"
                         , sourcepath
                         ]) { std_out = CreatePipe
                            , std_err = CreatePipe
@@ -858,6 +858,12 @@ convertPdfToJpgPages ctx@Context{ctxs3action} file@File{fileid,filename} = do
                                   else return []
 
                   listofpages <- w [1..]
+                  forM_ listofpages $ \x -> do 
+                                        (_,_,_, resizer) <- createProcess $ proc "convert" ["-scale","943x1335!",pathofx x,pathofx x]
+                                        exitcode <- waitForProcess resizer
+                                        case exitcode of
+                                         ExitFailure _ -> return ()
+                                         ExitSuccess -> return ()
                   x <- mapM (\x -> BS.readFile (pathofx x)) listofpages
                   return (JpegPages x)
   -- remove the directory with all the files now
