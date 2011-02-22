@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -F -pgmFtrhsx #-}
-module KontraLink(KontraLink(..), sendRedirect ) where
+module KontraLink(KontraLink(..), LoginRedirectReason(..), sendRedirect ) where
 
 import User.UserState
 import Doc.DocState
@@ -27,11 +27,27 @@ seeOtherXML :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
 seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
 
 {- |
+   Defines the reason why we are redirected to login page
+-}
+data LoginRedirectReason = NoReason
+                         | NotLogged
+                         | NotLoggedAsSuperUser
+                         | InvalidEmail
+                         | InvalidPassword String -- ^ correct email
+
+instance Show LoginRedirectReason where
+    show NoReason = ""
+    show NotLogged = "notlogged"
+    show NotLoggedAsSuperUser = "notsu"
+    show InvalidEmail = "invemail"
+    show (InvalidPassword email) = "invpass&email=" ++ (URL.encode . UTF.encode $ email)
+
+{- |
    All the links available for responses
 -}
 data KontraLink
     = LinkAbout
-    | LinkLogin
+    | LinkLogin LoginRedirectReason
     | LinkLogout
     | LinkSignup
     | LinkForgotPassword
@@ -73,7 +89,7 @@ data KontraLink
 -}
 instance Show KontraLink where
     showsPrec _ LinkAbout = (++) "/about"
-    showsPrec _ LinkLogin = (++) "/login"
+    showsPrec _ (LinkLogin reason) = (++) $ "/login/?reason=" ++ show reason
     showsPrec _ LinkLogout = (++) "/logout"
     showsPrec _ LinkSignup = (++) "/signup"
     showsPrec _ LinkForgotPassword = (++) "/amnesia"
@@ -151,9 +167,9 @@ sendRedirect BackToReferer    = do
                          response <- webHSP (seeOtherXML link)
                          seeOther link response
 
-sendRedirect LinkLogin = do
+sendRedirect (LinkLogin reason) = do
                          curr <- fmap rqUri askRq 
-                         let link =  (show LinkLogin) ++"?referer=" ++ (URL.encode $ UTF.encode curr) 
+                         let link =  (show $ LinkLogin reason) ++ "&referer=" ++ (URL.encode $ UTF.encode curr) 
                          response <- webHSP (seeOtherXML $ link)
                          seeOther link response
 
