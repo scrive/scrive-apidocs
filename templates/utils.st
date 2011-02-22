@@ -17,6 +17,22 @@ customFooter=
       $creatorname$
     </p>
 ###
+loginPageRedirectReason=
+<div id="loginRedirectReason">
+  $if(notlogged)$
+  You are not logged in.
+  $endif$
+  $if(notsu)$
+  You are not logged in as a superuser.
+  $endif$
+  $if(invemail)$
+  Invalid e-mail address.
+  $endif$
+  $if(invpass)$
+  Invalid password.
+  $endif$
+</div>
+###
 poweredBySkrivaPaPara=
     <p>
       <small>Med vänliga hälsningar<br/><a href="$ctxhostpart$">SkrivaPå</a></small>

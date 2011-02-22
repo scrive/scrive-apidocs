@@ -60,6 +60,12 @@ a img
     color: #848484;
 }
 
+#loginRedirectReason
+{
+    margin: 10px 5px;
+    color: #880000;
+}
+
 /*input[name=final] */
 .cross-button
 {

@@ -111,10 +111,12 @@ pageForgotPasswordConfirm templates = do
 {- |
    The contents of the login page.  This is read from a template.
 -}
-pageLogin :: Context -> Maybe String -> IO String
-pageLogin ctx referer = do
+pageLogin :: Context -> Maybe String -> Maybe String -> Maybe String -> IO String
+pageLogin ctx referer reason email =
   renderTemplate (ctxtemplates ctx) "pageLogin" $
-                            (setAttribute "referer" referer)
+      setAttribute "referer" referer
+    . setAttribute (fromMaybe "" reason) reason
+    . setAttribute "email" email
 
 {- |
    Changing our pages into reponses, and clearing flash messages.
@@ -148,7 +150,7 @@ staticTemplate ctx nocolumns content = renderTemplate (ctxtemplates ctx) "static
 -}
 mainLinksFields::Fields 
 mainLinksFields = do
-                     field "linklogin" $ show LinkLogin 
+                     field "linklogin" $ show (LinkLogin NoReason)
                      field "linklogout" $ show LinkLogout
                      field "linkforgotenpassword" $ show LinkForgotPassword
                      field "linkrequestaccount" $ show LinkRequestAccount

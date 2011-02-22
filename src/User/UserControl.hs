@@ -227,7 +227,7 @@ withUserPost action = do
   ctx <- get
   case ctxmaybeuser ctx of
     Just user -> action
-    Nothing   -> return LinkLogin
+    Nothing   -> return $ LinkLogin NotLogged
 
 {- |
    Guard against a GET with no logged in user.
@@ -238,7 +238,7 @@ withUserGet action = do
   ctx <- get
   case ctxmaybeuser ctx of
     Just user -> action
-    Nothing   -> sendRedirect LinkLogin
+    Nothing   -> sendRedirect $ LinkLogin NotLogged
     
 {- | 
      Takes a document and a action
