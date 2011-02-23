@@ -17,7 +17,8 @@ module Administration.AdministrationView(
           , allUsersTable
           , databaseContent
           , statsPage
-          , AdminUsersPageParams(..)) where
+          , AdminUsersPageParams(..)
+          , StatsView(..)) where
 
 import KontraLink
 import Templates.Templates 
@@ -35,6 +36,7 @@ import Misc
 import MinutesTime
 import User.UserView
 import User.UserState
+import Doc.DocState
 {-| Main admin page - can go from here to other pages -}
 adminMainPage::KontrakcjaTemplates ->  IO String
 adminMainPage templates =  renderTemplate templates "adminsmain" ()
@@ -50,10 +52,10 @@ adminUsersAdvancedPage templates users params =  renderTemplate templates "admin
                                                         (setAttribute "startletter" $ startletter params) .
                                                         (setAttribute "adminlink" $ show $ LinkAdminOnly) 
 {-| Manage users page - can find user here -}
-adminUsersPage::KontrakcjaTemplates ->[User] -> AdminUsersPageParams -> IO String
+adminUsersPage::KontrakcjaTemplates ->[(User,DocStats)] -> AdminUsersPageParams -> IO String
 adminUsersPage templates users params = renderTemplate templates "adminusers" $
                                                         (setAttribute "adminlink" $ show $ LinkAdminOnly) . 
-                                                        (setAttribute "users" $ map userSmallView $ visibleUsers params users) .
+                                                        (setAttribute "users" $ map mkUserInfoView $ visibleUsers params users) .
                                                         (setAttribute "letters" $ letters) .
                                                         (setAttribute "adminuserlink" $ show $ LinkUserAdmin Nothing) .
                                                         (setAttribute "intervals" $ intervals $ avaibleUsers params users) .
@@ -66,22 +68,36 @@ adminUserPage templates user paymentModel  = renderTemplate templates "adminuser
                                                         (setAttribute "user" $ userAdminView user) .
                                                         (setAttribute "paymentmodel" $ getModelView paymentModel) .
                                                         (setAttribute "adminlink" $ show $ LinkAdminOnly)
-    
-
-allUsersTable::KontrakcjaTemplates -> [(User,Int)] -> IO String
+allUsersTable::KontrakcjaTemplates -> [(User,DocStats)] -> IO String
 allUsersTable templates users =  renderTemplate templates "allUsersTable" $
-                                                        (setAttribute "users" $ map userSmallViewWithDocsCount $ users) .
+                                                        (setAttribute "users" $ map mkUserInfoView $ users) .
                                                         (setAttribute "adminlink" $ show $ LinkAdminOnly) 
 databaseContent ::KontrakcjaTemplates -> [String] -> IO String
 databaseContent templates filenames = renderTemplate templates "databaseContents" $
                                                         (setAttribute "files" $ filenames) .
                                                         (setAttribute "adminlink" $ show $ LinkAdminOnly)
-statsPage::KontrakcjaTemplates -> Int->Int -> String -> IO String
-statsPage templates userscount docscount sysinfo = renderTemplate templates "pageStats" $
-                                                         (setAttribute "userscount" $ userscount) .
-                                                         (setAttribute "docscount" $ docscount) .
+statsPage::KontrakcjaTemplates -> StatsView -> String -> IO String
+statsPage templates stats sysinfo = renderTemplate templates "pageStats" $
+                                                         (setAttribute "stats" $ stats) .
                                                          (setAttribute "sysinfo" $ sysinfo) .
-                                                         (setAttribute "adminlink" $ show $ LinkAdminOnly) 
+                                                         (setAttribute "adminlink" $ show $ LinkAdminOnly)
+
+mkUserInfoView (userdetails', docstats') = UserInfoView {
+                                              userdetails = userSmallView userdetails'
+                                            , docstats = docstats'
+                                           }
+ 
+data UserInfoView = UserInfoView {
+                          userdetails :: UserSmallView,
+                          docstats :: DocStats
+                        } deriving (Data, Typeable)
+
+data StatsView = StatsView {
+                    svDoccount :: Int
+                  , svSignaturecount :: Int
+                  , svUsercount :: Int
+                } deriving (Data, Typeable)
+
 {-| Paging list as options [1..21] -> [1-5,6-10,11-15,16-20,21-21]  -}                                                      
 intervals::[a] ->  [Option]                                                      
 intervals users =  intervals' $ (filter (\x-> 0 == x `rem` pageSize) [0..((length users) - 1)]) ++ [length users]
@@ -90,25 +106,34 @@ intervals users =  intervals' $ (filter (\x-> 0 == x `rem` pageSize) [0..((lengt
     intervals' _ = []
 
 pageSize :: Int
-pageSize = 20
+pageSize = 500
+
+class UserBased a where
+  getUser :: a -> User
+
+instance UserBased User where
+  getUser = id
+
+instance UserBased (User,DocStats) where
+  getUser (user,_) = user
 
 {-| Users on current page-}
-visibleUsers::AdminUsersPageParams->[User]->[User]
+visibleUsers:: (UserBased a) => AdminUsersPageParams->[a]->[a]
 visibleUsers params@(AdminUsersPageParams {page}) = (take pageSize) . (drop page) . (avaibleUsers params)
 
 {-| filtering users by search string or first letter -}
-avaibleUsers ::AdminUsersPageParams->[User]->[User]
+avaibleUsers :: (UserBased a) => AdminUsersPageParams->[a]->[a]
 avaibleUsers (AdminUsersPageParams {search=Just searchString,startletter=Just startLetter}) =  (searchUsers searchString) . (startLetterUsers startLetter)
 avaibleUsers (AdminUsersPageParams {search=Just searchString}) =  searchUsers searchString
 avaibleUsers (AdminUsersPageParams {startletter=Just startLetter}) =  startLetterUsers startLetter
 avaibleUsers _  = id
 
-startLetterUsers ::String->[User]->[User]                
-startLetterUsers startletter = filter (\u -> (isPrefixOf (map toUpper startletter)  $ map toUpper $ toString $ userfullname  u) ||
-                                            (isPrefixOf (map toUpper startletter)  $ map toUpper $ toString $ unEmail $ useremail $ userinfo u))
-searchUsers ::String->[User]->[User]   
-searchUsers searchString =  filter (\u -> (isInfixOf (map toUpper searchString) $ map toUpper $ toString $ userfullname  u) ||
-                                            (isInfixOf (map toUpper searchString)  $ map toUpper $ toString $ unEmail $ useremail $ userinfo u))                                            
+startLetterUsers :: (UserBased a) => String->[a]->[a]                
+startLetterUsers startletter = filter (\u -> (isPrefixOf (map toUpper startletter)  $ map toUpper $ toString $ userfullname $ getUser u) ||
+                                            (isPrefixOf (map toUpper startletter)  $ map toUpper $ toString $ unEmail $ useremail $ userinfo $ getUser u))
+searchUsers :: (UserBased a) => String->[a]->[a]   
+searchUsers searchString =  filter (\u -> (isInfixOf (map toUpper searchString) $ map toUpper $ toString $ userfullname $ getUser u) ||
+                                            (isInfixOf (map toUpper searchString)  $ map toUpper $ toString $ unEmail $ useremail $ userinfo $ getUser u))                                            
 
 
 

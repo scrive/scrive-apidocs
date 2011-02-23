@@ -85,7 +85,7 @@ showAdminUsers:: Maybe String -> Kontra Response
 showAdminUsers Nothing= onlySuperUser $
                           do
                            ctx@Context {ctxtemplates} <- lift get
-                           users <- query $ GetAllUsers
+                           users <- getUsersAndStats
                            params <- getAdminUsersPageParams
                            content <- liftIO $ adminUsersPage ctxtemplates users params
                            renderFromBody ctx TopEmpty kontrakcja $ cdata content 
@@ -105,16 +105,22 @@ showAdminUsers (Just a)= onlySuperUser $
                                      paymentmodel <- update $ GetPaymentModel $ paymentaccounttype $ userpaymentpolicy user
                                      content <- liftIO $ adminUserPage ctxtemplates user paymentmodel
                                      renderFromBody ctx TopEmpty kontrakcja $ cdata content 
+
+getUsersAndStats :: Kontra [(User,DocStats)]
+getUsersAndStats = do
+    users <- query $ GetAllUsers
+    let queryStats user = do
+          docstats <- query $ GetDocumentStatsByUser user
+          return (user, docstats)
+    users2 <- mapM queryStats users
+    return users2
+
 {- Shows table of all users-}
 showAllUsersTable :: Kontra Response
 showAllUsersTable = onlySuperUser $ do
     ctx@Context {ctxtemplates} <- lift get
-    users <- query $ GetAllUsers
-    let queryNumberOfDocuments user = do
-          documents <- query $ GetDocumentsByAuthor (userid user)
-          return (user,length documents)
-    users2 <- mapM queryNumberOfDocuments users
-    content <- liftIO $ allUsersTable ctxtemplates users2
+    users <- getUsersAndStats
+    content <- liftIO $ allUsersTable ctxtemplates users
     renderFromBody ctx TopEmpty kontrakcja $ cdata  content
 
 
@@ -133,7 +139,7 @@ read_df = do
 
 showStats :: Kontra Response
 showStats = onlySuperUser $ do
-    ndocuments <- query $ GetDocumentStats
+    docstats <- query $ GetDocumentStats
     allusers <- query $ GetAllUsers
 #ifndef WINDOWS
     df <- liftIO read_df
@@ -141,7 +147,10 @@ showStats = onlySuperUser $ do
     let df = empty
 #endif
     ctx@Context {ctxtemplates} <- lift get
-    content <- liftIO $ statsPage ctxtemplates (length allusers) ndocuments (toString df)
+    let stats = StatsView { svDoccount = doccount docstats,
+                            svSignaturecount = signaturecount docstats,
+                            svUsercount = (length allusers) }
+    content <- liftIO $ statsPage ctxtemplates stats (toString df)
     renderFromBody ctx TopEmpty kontrakcja $ cdata content
 
 indexDB :: Kontra Response
