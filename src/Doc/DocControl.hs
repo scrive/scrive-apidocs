@@ -858,7 +858,7 @@ convertPdfToJpgPages ctx@Context{ctxs3action} file@File{fileid,filename} = do
 
                   listofpages <- w [1..]
                   forM_ listofpages $ \x -> do 
-                                        (_,_,_, resizer) <- createProcess $ proc "convert" ["-scale","943x1335!",pathofx x,pathofx x]
+                                        (_,_,_, resizer) <- createProcess $  proc "gm" ["convert", "-scale","943x1335!",pathofx x,pathofx x]
                                         exitcode <- waitForProcess resizer
                                         case exitcode of
                                          ExitFailure _ -> return ()
