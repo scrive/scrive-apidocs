@@ -58,24 +58,6 @@ adminsmanageall =
               <td>
                 &lt;$user.usvEmail$&gt;
               </td>
-              <td>
-                <form method="post" action="/adminonly/become"  style="display:inline">
-                  <input type="hidden" name="user" value="$user.usvId$">
-                  <input type="submit" value="Monitor user">
-                </form>
-              </td>
-              <td>
-                <form method="post" action="/adminonly/takeoverdocuments"  style="display:inline">
-                  <input type="hidden" name="user" value="$user.usvId$">
-                  <input type="submit" value="Take over"/>
-                </form>
-              </td>
-              <td>
-                <form method="post" action="/adminonly/deleteaccount" >
-                  <input type="hidden" name="user" value="$user.usvId$">
-                  <input type="submit" value="Annihilate account"/>
-              </td>
-              </form>
             </tr>
             }$
         </tbody></table>
@@ -419,11 +401,34 @@ pageStats=
             <td>Email address:</td>
             <td><input type="email" name="email"></td>
           </tr>
+          <tr>
+            <td>Free till:</td>
+            <td> <input type="checkbox" value="off" autocomplete="off" oldlocation="#hiddenfreetill" location="#freetillcontainer" rel="#freetillbox" class="addremovecheckbox">
+                 <span id="freetillcontainer">
+                 </span>
+           </td>
+         </tr>
+         <tr>
+            <td>Header:</td>
+            <td> <input type="button" class="editer" value="Default">
+                 <span class="editable" name="custommessage" style="display:none">$mailNewAccountCreatedByAdminContentHeader()$</span>
+
+           </td>
+          </tr>
         </table><br>
-        <input type="submit" value="Create user">
+        </table><br/>
+        <input type="submit" value="Create user" />
       </form>
+
+     <div id="hiddenfreetill" style="display:none">
+      <span id="freetillbox">
+        <a class="datetodate date" rel="[name='freetill']"> </a>
+        <input type="hidden" autocomplete="off" name="freetill" value="">
+      </span>
+     </div>
       <br>
       Disk status:<br>
+
       <pre>$sysinfo$</pre>
     </div>
 ####

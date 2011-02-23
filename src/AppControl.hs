@@ -50,7 +50,7 @@ import Mails.SendMail
 import System.Log.Logger (Priority(..), logM)
 import qualified AppLogger as Log (error)
 import qualified MemCache
-
+import Happstack.State (update)
 {-| 
   Defines the application's configuration.  This includes amongst other things
   the http port number, amazon, trust weaver and email configuraton,
@@ -181,7 +181,8 @@ handleRoutes = msum [
      , dir "login"       $ hpost0 $ handleLoginPost
      , dir "signup"      $ hget0  $ signupPageGet
      , dir "signup"      $ hpost0 $ signupPagePost
-     , dir "signupdone"  $ hget0  $ signupPageDone
+     , dir "vip"         $ hget0  $ signupVipPageGet
+     , dir "vip"         $ hpost0 $ signupVipPagePost
      , dir "amnesia"     $ hget0  $ forgotPasswordPageGet
      , dir "amnesia"     $ hpost0 $ forgotPasswordPagePost
      , dir "amnesiadone" $ hget0  $ forgotPasswordDonePage
@@ -395,7 +396,21 @@ signupPageGet = do
     ctx <- lift get
     content <- liftIO (signupPageView $ ctxtemplates ctx)
     V.renderFromBody ctx V.TopNone V.kontrakcja $ cdata content 
+
+{- |
+   Handles submission of the signup form.
+   Normally this would create the user, (in the process mailing them an activation link),
+   but if the user already exists, we check to see if they have accepted the tos.  If they haven't,
+   then we send them a new activation link because probably the old one expired or was lost.
+   If they have then we stop the signup.
+-}  
     
+signupVipPageGet :: Kontra Response
+signupVipPageGet = do
+    ctx <- lift get
+    content <- liftIO (signupVipPageView $ ctxtemplates ctx)
+    V.renderFromBody ctx V.TopNone V.kontrakcja $ cdata content 
+
 signupPagePost :: Kontra KontraLink
 signupPagePost = signup False $ parseMinutesTimeMDY "31-05-2011"
                     
@@ -415,7 +430,7 @@ signup vip freetill =  do
                           Just user -> if (isNothing $ userhasacceptedtermsofservice user) 
                                         then  
                                          do  al <- liftIO $ unloggedActionLink user
-                                             mail <-  liftIO $ newUserMail (ctxtemplates) (ctxhostpart) email email al
+                                             mail <-  liftIO $ newUserMail (ctxtemplates) (ctxhostpart) email email al vip
                                              liftIO $ sendMail (ctxmailer ctx) $ mail { fullnameemails = [(email,email)]}
                                              addFlashMsgText =<< (liftIO $ flashMessageNewActivationLinkSend  (ctxtemplates)) 
                                              return LoopBack
@@ -423,22 +438,24 @@ signup vip freetill =  do
                                              addFlashMsgText =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
                                              return LoopBack
                           Nothing -> do
-                            maccount <- liftIO $ UserControl.createUser ctx ctxhostpart BS.empty email Nothing True Nothing
-                            if isJust maccount       
-                             then do
-                              addFlashMsgText =<< (liftIO $ flashMessageUserSignupDone ctxtemplates)
-                              return LinkSignup
-                             else do
-                              addFlashMsgText =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
-                              return LinkSignup
-                    
+                            maccount <- liftIO $ UserControl.createUser ctx ctxhostpart BS.empty email Nothing True Nothing vip
+                            case maccount of      
+                             Just account ->  do
+                                               addFlashMsgText =<< (liftIO $ flashMessageUserSignupDone ctxtemplates)
+                                               when (isJust freetill) $ update $ FreeUserFromPayments account (fromJust freetill)
+                                               return LoopBack
+                             Nothing ->       do
+                                              addFlashMsgText =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
+                                              return LoopBack
 {- |
-   Handles viewing of the signup confirmation page
+   Sends a new activation link mail, which is really just a new user mail.
 -}
-signupPageDone :: Kontra Response
-signupPageDone = do
-  ctx <- get
-  V.renderFromBody ctx V.TopNone V.kontrakcja signupConfirmPageView
+sendNewActivationLinkMail:: Context -> User -> Kontra ()
+sendNewActivationLinkMail Context{ctxtemplates,ctxhostpart,ctxmailer} user = do
+                         let email = unEmail $ useremail $ userinfo user
+                         al <- liftIO $ unloggedActionLink user
+                         mail <-  liftIO $ newUserMail ctxtemplates ctxhostpart email email al False
+                         liftIO $ sendMail ctxmailer $ mail { fullnameemails = [(email,email)]}                      
 
 {- |
    Handles viewing of the login page
