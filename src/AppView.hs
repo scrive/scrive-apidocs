@@ -8,7 +8,7 @@ module AppView( TopMenu(..)
               , pageForgotPassword
               , pageForgotPasswordConfirm
               , signupPageView
-              , signupConfirmPageView
+              , signupVipPageView
               , pageLogin
               , simpleResponse 
               , firstPage
@@ -64,27 +64,12 @@ pageFromBody :: (EmbedAsChild (HSPT' IO) xml)
              -> String 
              -> xml
              -> HSP XML
-pageFromBody = pageFromBody' ""
-
-pageFromBody' :: (EmbedAsChild (HSPT' IO) xml) 
-              => String
-              -> Context 
-              -> TopMenu 
-              -> String 
-              -> xml
-              -> HSP XML
-pageFromBody' prefix 
-              ctx@Context { ctxmaybeuser
-                      , ctxflashmessages
-                      , ctxproduction
+pageFromBody ctx@Context { ctxmaybeuser
                       , ctxtemplates
                       }
              topMenu title body = do
                     content <- liftIO $ renderHSPToString <div id="mainContainer"><% body %></div>
                     wholePage <- liftIO $ renderTemplate ctxtemplates "wholePage" $ do
-                                  field "production" ctxproduction
-                                  field "uploadTab" $ uploadTabInfo ctxmaybeuser topMenu
-                                  field "documentTab" $ documentTabInfo ctxmaybeuser topMenu
                                   field "content" content
                                   field "title" title
                                   mainLinksFields 
@@ -96,6 +81,13 @@ pageFromBody' prefix
 -}        
 signupPageView :: KontrakcjaTemplates -> IO String
 signupPageView templates = renderTemplate templates "signupPageView" ()
+
+signupVipPageView :: KontrakcjaTemplates -> IO String
+signupVipPageView templates = renderTemplate templates "signupVipPageView" ()
+
+{- |
+   The contents of the password reset page.  This is read from a template.
+-} 
 
 pageForgotPassword :: KontrakcjaTemplates -> IO String
 pageForgotPassword templates = do
@@ -168,4 +160,7 @@ contextInfoFields::Context -> Fields
 contextInfoFields ctx = do 
                          field "logged" $ isJust (ctxmaybeuser ctx)
                          field "flashmessages" $ map (BSC.toString . unFlashMessage) (ctxflashmessages ctx)
-             
+                         field "protocol" $ if (ctxproduction ctx) then "https:" else "http:"
+                         field "prefix" ""
+                         field "production" (ctxproduction ctx)
+                         

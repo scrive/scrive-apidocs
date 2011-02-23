@@ -221,6 +221,14 @@ mailNewAccountCreatedByAdminContentHeader=
     Spara pengar, frustration och miljö och använd SkrivaPå istället. 
     Du kan spara mellan 50-250kr/dokument!</p>
 
+###
+mailNewAccountCreatedByAdminContent=
+   $if(custommessage)$
+    $custommessage:noescape()$
+    $else$
+    $mailNewAccountCreatedByAdminContentHeader()$
+    $endif$
+   
     <p>Användarnamn:<br>
     $email$</p>
     
