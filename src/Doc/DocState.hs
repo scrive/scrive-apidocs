@@ -18,6 +18,7 @@ module Doc.DocState
     , SignatoryLink(..)
     , SignatoryLinkID(..)
     , TimeoutTime(..)
+    , DocStats(..)
     , isAuthor
     , isMatchingSignatoryLink
     , anyInvitationUndelivered
@@ -33,6 +34,7 @@ module Doc.DocState
     , FragileTakeOverDocuments(..)
     , GetDocumentByDocumentID(..)
     , GetDocumentStats(..)
+    , GetDocumentStatsByUser(..)
     , GetDocuments(..)
     , GetDocumentsByAuthor(..)
     , GetDocumentsBySignatory(..)
@@ -272,6 +274,11 @@ $(deriveAll [''Eq, ''Ord, ''Default]
                                 | DocumentHistoryInvitationSent { dochisttime :: MinutesTime
                                                                 , ipnumber :: Word32
                                                                 }    -- changed state from Preparatio to Pending
+
+      data DocStats = DocStats {
+                       doccount :: Int
+                     , signaturecount :: Int
+                   }
    |])
 
 $(deriveAll [''Default]
@@ -568,6 +575,8 @@ deriving instance Show Document
 deriving instance Show DocumentStatus
 deriving instance Show ChargeMode
 deriving instance Show Author
+
+deriving instance Show DocStats
 
 deriving instance Show FieldDefinition
 deriving instance Show FieldPlacement
@@ -1247,6 +1256,9 @@ instance Version DocumentStatus where
 $(deriveSerialize ''ChargeMode)
 instance Version ChargeMode where
 
+$(deriveSerialize ''DocStats)
+instance Version DocStats where
+
 $(deriveSerialize ''File0)
 instance Version File0 where
 
@@ -1690,10 +1702,17 @@ setInvitationDeliveryStatus siglnkid status = do
                                                                 let newdoc = doc {documentsignatorylinks = newsls}           
                                                                 modify (updateIx (documentid doc) newdoc)
                                                                 return $ Just newdoc
-getDocumentStats :: Query Documents Int
+
+
+getDocumentStats :: Query Documents DocStats
 getDocumentStats = do
-  documents <- ask 
-  return (size documents)
+  documents <- ask
+  let signatureCountForDoc :: Document -> Int
+      signatureCountForDoc doc = length $ filter (isJust . maybesigninfo) (documentsignatorylinks doc)
+  return DocStats {
+                      doccount = (size documents)
+                    , signaturecount = sum $ map signatureCountForDoc (toList documents)
+                   }
 
 fileModTime :: FileID -> Query Documents MinutesTime
 fileModTime fileid = do
@@ -1723,6 +1742,18 @@ getNumberOfDocumentsOfUser user = do
   documents <- ask
   let numdoc = size (documents @= Author (userid user))
   return numdoc
+
+getDocumentStatsByUser :: User -> Query Documents DocStats
+getDocumentStatsByUser user = do
+  doccount' <- getNumberOfDocumentsOfUser user
+  sigdocs <- getDocumentsBySignatory user
+  let signaturecount' = length $ filter (isSigned . relevantSigLink) sigdocs
+      relevantSigLink :: Document -> SignatoryLink
+      relevantSigLink doc = head $ filter (isMatchingSignatoryLink user) (documentsignatorylinks doc)
+      isSigned :: SignatoryLink -> Bool
+      isSigned = isJust . maybesigninfo
+  return DocStats { doccount = doccount', 
+                    signaturecount = signaturecount' }
 
 setDocumentTimeoutTime :: DocumentID -> TimeoutTime -> Update Documents Document
 setDocumentTimeoutTime documentid timeouttime = do
@@ -1969,6 +2000,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'markDocumentSeen
                         , 'setInvitationDeliveryStatus
                         , 'getDocumentStats
+                        , 'getDocumentStatsByUser
                         , 'fileModTime
                         , 'saveDocumentForSignedUser
                         , 'getDocumentsByUser

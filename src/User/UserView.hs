@@ -36,7 +36,6 @@ module User.UserView(
     --utils  
     prettyName,
     userSmallView,
-    userSmallViewWithDocsCount,
     UserSmallView(..)) where
 
 import qualified Data.ByteString as BS
@@ -220,7 +219,7 @@ data UserSmallView = UserSmallView {
                          usvId::String,  
                          usvFullname::String,
                          usvEmail::String,
-                         usvDocsCount::String
+                         usvCompany::String
                      } deriving (Data, Typeable)
 
 {-| Conversion from 'User' to 'Option', for select box UserSmallView  -}      
@@ -228,10 +227,4 @@ userSmallView::User -> UserSmallView
 userSmallView u = UserSmallView {     usvId = (show $ userid u)
                                     , usvFullname = (BS.toString $ userfullname  u)
                                     , usvEmail = (BS.toString $ unEmail $ useremail $ userinfo u)
-                                    , usvDocsCount = "" }
-
-userSmallViewWithDocsCount::(User,Int) -> UserSmallView 
-userSmallViewWithDocsCount (u,c) = UserSmallView { usvId = (show $ userid u)
-                                                 , usvFullname = (BS.toString $ userfullname  u)
-                                                 , usvEmail = (BS.toString $ unEmail $ useremail $ userinfo u)
-                                                 , usvDocsCount = show c }
+                                    , usvCompany = (BS.toString $ usercompanyname $ userinfo $ u) }
