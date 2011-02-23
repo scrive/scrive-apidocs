@@ -94,9 +94,22 @@ adminusers=
     $usersfilter(link=adminuserlink)$
     $userspaging()$
     <br/><br/>
-    <form>
-      $users:{user| <a href="$adminuserlink$/$user.usvId$"> $user.usvFullname$ &lt;$user.usvEmail$&gt; </a>}:br()$
-    </form>
+    <table>
+        <thead>
+          <td style="width:200px">Username</td>
+          <td style="width:200px">Email</td>
+          <td style="width:200px">Company</td>
+          <td style="width:100px">Uploaded Docs</td>
+          <td style="width:100px">Signed Docs</td>
+        </thead>
+        $users:{user|<tr>
+          <td> <a href="$adminuserlink$/$user.usvId$"> $user.userdetails.usvFullname$ </a> </td>
+          <td> <a href="$adminuserlink$/$user.usvId$"> $user.userdetails.usvEmail$ </a> </td>
+          <td> $user.userdetails.usvCompany$ </td>
+          <td> $user.docstats.doccount$ </td>
+          <td> $user.docstats.signaturecount$ </td>
+        </tr>}$
+      </table>
 ###
 adminuser=
     <a href="$adminlink$">Go back to main admin page</a>
@@ -365,9 +378,9 @@ allUsersTable=
           <td>Docs</td>
         </thead>
         $users:{user|<tr>
-          <td> $user.usvFullname$  </td>
-          <td> $user.usvEmail$ </td>
-          <td> $user.usvDocsCount$ </td>
+          <td> $user.userdetails.usvFullname$  </td>
+          <td> $user.userdetails.usvEmail$ </td>
+          <td> $user.docstats.doccount$ </td>
         </tr>}$
       </table>
     </div>
@@ -386,8 +399,18 @@ pageStats=
     <div>
       <h1>Stats page</h1>
       <table>
-        <tr><td>Users</td><td>$userscount$</td></tr>
-        <tr><td>Documents</td><td>$docscount$</td></tr>
+        <thead>
+          <td style="width:50px"></td>
+          <td style="width:150px">Documents</td>
+          <td style="width:150px">Signatures</td>
+          <td style="width:150px">Users</td>
+        </thead>
+        <tr>
+          <td>Totals</td>
+          <td>$stats.svDoccount$</td>
+          <td>$stats.svSignaturecount$</td>
+          <td>$stats.svUsercount$</td>
+        </tr>
       </table>
       <br/>
       <form method="post" action="/createuser">

@@ -117,7 +117,7 @@ singLinkUserSmallView::SignatoryLink -> UserSmallView
 singLinkUserSmallView sl = UserSmallView {     usvId =  show $ signatorylinkid sl
                                              , usvFullname = BS.toString $ personname sl
                                              , usvEmail = ""
-                                             , usvDocsCount = "" }
+                                             , usvCompany = ""}
 
 data DocumentSmallView = DocumentSmallView {
                           dsvId::String,
