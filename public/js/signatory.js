@@ -509,8 +509,6 @@ function initializeTemplates ()
 
     docstateToHTML();
 	
-    enableInfoText();
-
     $("form#dialog-confirm-sign").submit(function(){
 	    var form = $(this);
 	    $(".dragfield").each(function(){
