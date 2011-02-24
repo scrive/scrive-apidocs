@@ -183,12 +183,21 @@ pageDocumentList templates ctime user documents = renderTemplate templates "page
 
     
 showFileImages ::KontrakcjaTemplates -> File -> JpegPages -> IO String
-showFileImages templates File{fileid} (JpegPages jpgpages) = renderTemplate templates "showFileImagesReady" $
-                                                              (setAttribute "fileid" $ show fileid) .
-                                                              (setAttribute "pages" $ [1..(length jpgpages)])                                                          
+
 showFileImages templates _ JpegPagesPending = renderTemplate templates  "showFileImagesPending" ()    
 showFileImages templates _ (JpegPagesError normalizelog) = renderTemplate templates  "showFileImagesError" [("normalizelog",BS.toString normalizelog)]
-  
+showFileImages templates File{fileid} (JpegPages jpgpages) = renderTemplate templates "showFileImagesReady" $ do
+                                                              field "fileid" $ show fileid
+                                                              field "images" $ map page $ zip [1,2..] jpgpages            
+                                                             where
+                                                              page::(Int,(a,Int,Int)) -> Fields
+                                                              page (x,(_,w,h)) = do
+                                                                                  field "number" x
+                                                                                  field "width" w
+                                                                                  field "height" h
+                  
+
+
      
 showFilesImages2 :: KontrakcjaTemplates ->  [(File, JpegPages)] -> IO String
 showFilesImages2 templates files = do

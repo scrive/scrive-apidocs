@@ -858,19 +858,34 @@ convertPdfToJpgPages ctx@Context{ctxs3action} file@File{fileid,filename} = do
                                   else return []
 
                   listofpages <- w [1..]
-                  forM_ listofpages $ \x -> do 
+                  x<-forM listofpages $ \x -> do 
+                                        (_,Just outhandle,_, sizechecker) <- createProcess $ ( proc "gm" ["-identify", pathofx x])  { std_out = CreatePipe}
+                                        out <-  hGetContents outhandle
+                                        let (w,h) = readSize out
+                                        exitcode <- waitForProcess sizechecker
+                                        case exitcode of
+                                         ExitFailure _ -> return ()
+                                         ExitSuccess -> return ()
                                         (_,_,_, resizer) <- createProcess $  proc "gm" ["convert", "-scale","943x1335!",pathofx x,pathofx x]
                                         exitcode <- waitForProcess resizer
                                         case exitcode of
                                          ExitFailure _ -> return ()
                                          ExitSuccess -> return ()
-                  x <- mapM (\x -> BS.readFile (pathofx x)) listofpages
+                                        content <- BS.readFile (pathofx x)                                         
+                                        return (content,w,h)
                   return (JpegPages x)
   -- remove the directory with all the files now
   -- everything as been collected, process has ended, we are done!
   removeDirectoryRecursive tmppath
   return result
-       
+  where       
+   readSize::[Char] -> (Int,Int) --Ugly and unsafe but I can't get info about output format so writing nicer parser is useless
+   readSize ('J':'P':'E':'G':' ':rest) = let 
+                                          (w,hs) = span (isDigit) rest 
+                                          h = takeWhile (isDigit) (tail hs)
+                                         in (read w,read h) 
+   readSize (r:rest) = readSize rest
+   readSize [] = (943,1335)
 {- |
    
  -}
@@ -989,13 +1004,17 @@ personsFromDocument document =
         x link = trace (show link) $ error "SignatoryLink does not have all the necessary data"
     in map x links
 
-fieldsFromPlacement value placement =
+fieldsFromPlacement value placement  =
+    let toPtt x = (x * 72 `div` 190) - 5 -- scalling and some replacing
+        w = placementpagewidth placement
+        h = placementpageheight placement 
+    in    
     Seal.Field { Seal.value = value
-               , Seal.x = placementx placement - 7
-               , Seal.y = placementy placement - 7
+               , Seal.x =  toPtt $ (placementx placement * w) `div` 943
+               , Seal.y =  toPtt $ h - ((placementy placement * h) `div` 1335)
                , Seal.page = placementpage placement
-               , Seal.w = placementpagewidth placement
-               , Seal.h = placementpageheight placement
+               , Seal.w =  w
+               , Seal.h = h
                }
 
 fieldsFromDefinition def =
@@ -1012,7 +1031,7 @@ fieldsFromSignatory sig =
     ++
     (foldl (++) [] (map fieldsFromDefinition (signatoryotherfields sig)))    
 
-sealSpecFromDocument :: String -> Document -> User -> String -> String -> Seal.SealSpec
+sealSpecFromDocument :: String -> Document -> User ->  String -> String -> Seal.SealSpec
 sealSpecFromDocument hostpart document author inputpath outputpath =
   let docid = unDocumentID (documentid document)
       authorHasSigned = (any ((maybe False ((== (userid author)) . unSignatory)) . maybesignatory) (documentsignatorylinks document))
@@ -1077,7 +1096,6 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
       history = firstHistEntries ++ sort (concatMap makeHistoryEntry signatories) ++ [lastHistEntry]
       
       -- document fields
-
       fields = if authorHasSigned
                then (concat (map fieldsFromSignatory signatoriesdetails))
                else (concat (map fieldsFromSignatory $ authordetails : signatoriesdetails))
@@ -1153,7 +1171,6 @@ sealDocument ctx@Context{ctxs3action,ctxtwconf}
   contents <- getFileContents ctx file
   BS.writeFile tmpin contents
   let config = sealSpecFromDocument hostpart document author tmpin tmpout
-
   (code,stdout,stderr) <- readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
   Log.debug $ "seal exit code " ++ show code
   Log.debug $ "seal stdout: " ++ BSL.toString stdout
@@ -1237,7 +1254,7 @@ showPage fileid pageno = do
   docmap <- liftIO $ readMVar ctxnormalizeddocuments
   case Map.lookup fileid docmap of
     Just (JpegPages pages) -> do
-      let contents = pages !! (pageno - 1)
+      let (contents,_,_) =  pages !! (pageno - 1)
       let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
       let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/jpeg") res
       let modtime = toUTCTime modminutes
