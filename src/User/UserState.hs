@@ -853,7 +853,7 @@ addFreePaymentsForInviter now u = do
                                 Nothing -> return ()   
                                 Just inviter ->  do 
                                                  _<- modifyUser (userid inviter) $ \user -> 
-                                                  Right $ user {userpaymentpolicy = Payments.extendFreeTmpChange now 15 (userpaymentpolicy user)}
+                                                  Right $ user {userpaymentpolicy = Payments.extendFreeTmpChange now 7 (userpaymentpolicy user)}
                                                  return ()
                            
 -- for testing purposes
