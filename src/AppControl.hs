@@ -51,6 +51,8 @@ import System.Log.Logger (Priority(..), logM)
 import qualified AppLogger as Log (error)
 import qualified MemCache
 import Happstack.State (update)
+import Redirect
+
 {-| 
   Defines the application's configuration.  This includes amongst other things
   the http port number, amazon, trust weaver and email configuraton,
@@ -463,14 +465,13 @@ sendNewActivationLinkMail Context{ctxtemplates,ctxhostpart,ctxmailer} user = do
 handleLoginGet :: Kontra Response
 handleLoginGet = do
   ctx <- lift get
-  case (ctxmaybeuser ctx) of
-    Just _ -> sendRedirect LinkMain   
-    Nothing -> do 
-      referer <- getField "referer"
-      reason  <- getField "reason"
-      email   <- getField "email"
-      content <- liftIO $ V.pageLogin ctx referer reason email
-      V.renderFromBody ctx V.TopNone V.kontrakcja $ cdata $ content
+  case ctxmaybeuser ctx of
+       Just _  -> sendRedirect LinkMain
+       Nothing -> do
+         referer <- getField "referer"
+         email   <- getField "email"
+         content <- liftIO $ V.pageLogin ctx referer email
+         V.renderFromBody ctx V.TopNone V.kontrakcja . cdata $ content
 
 {- |
    Handles submission of a login form.  On failure will redirect back to referer, if there is one.

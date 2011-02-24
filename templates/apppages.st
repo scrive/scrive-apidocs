@@ -148,7 +148,6 @@ wholePage=
 ####
 loginBox=
     <div id="login">
-      $loginPageRedirectReason()$
       <form action="/login" method="post">
         <input type="hidden" name="referer" value="$referer$" />
         <table>

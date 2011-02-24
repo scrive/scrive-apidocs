@@ -103,11 +103,10 @@ pageForgotPasswordConfirm templates = do
 {- |
    The contents of the login page.  This is read from a template.
 -}
-pageLogin :: Context -> Maybe String -> Maybe String -> Maybe String -> IO String
-pageLogin ctx referer reason email =
+pageLogin :: Context -> Maybe String -> Maybe String -> IO String
+pageLogin ctx referer email =
   renderTemplate (ctxtemplates ctx) "pageLogin" $
       setAttribute "referer" referer
-    . setAttribute (fromMaybe "" reason) reason
     . setAttribute "email" email
 
 {- |
