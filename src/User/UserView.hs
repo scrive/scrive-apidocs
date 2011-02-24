@@ -16,6 +16,7 @@ module User.UserView(
     resetPasswordMail,
 
     --flashmessages
+    flashMessageLoginRedirectReason,
     flashMessageUserDetailsSaved,
     flashMessageMustAcceptTOS,
     flashMessagePasswordNotStrong,
@@ -48,6 +49,7 @@ import Templates.Templates
 import Templates.TemplatesUtils
 import Data.Typeable
 import Data.Data
+import Control.Applicative ((<$>))
 import Text.StringTemplate.GenericStandard()
 
 showUser :: KontrakcjaTemplates -> User -> [User] -> IO String 
@@ -153,6 +155,16 @@ mailNewAccountCreatedByAdmin templates ctx personname email setpasslink customme
       content <- wrapHTML templates  body                                                               
       return $ emptyMail {title=BS.fromString title, content = BS.fromString content}   
     
+flashMessageLoginRedirectReason :: KontrakcjaTemplates -> LoginRedirectReason -> IO (Maybe String)
+flashMessageLoginRedirectReason templates reason =
+  case reason of
+       NoReason             -> return Nothing
+       NotLogged            -> render "notlogged"
+       NotLoggedAsSuperUser -> render "notsu"
+       InvalidEmail         -> render "invemail"
+       InvalidPassword _    -> render "invpass"
+  where
+    render msg = Just <$> (renderTemplate templates "loginPageRedirectReason" $ field msg True)
 
 flashMessageUserDetailsSaved:: KontrakcjaTemplates -> IO String
 flashMessageUserDetailsSaved templates = renderTemplate templates "flashMessageUserDetailsSaved" () 

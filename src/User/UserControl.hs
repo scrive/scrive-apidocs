@@ -19,6 +19,7 @@ import System.Log.Logger
 import System.Process
 import System.Random
 import Kontra
+import Redirect
 import User.UserState
 import User.UserView
 import qualified Data.ByteString as BS
