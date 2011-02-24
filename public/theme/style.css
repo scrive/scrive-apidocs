@@ -487,7 +487,7 @@ a img
     font-size: small;
 }
 
-#toscontainer #textOneColumn
+#toscontainer .text
 {
     height: 350px;
     overflow: auto;
