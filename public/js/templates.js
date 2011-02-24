@@ -59,14 +59,15 @@ function placePlacements(pls, label, value, sigid, fieldid) {
     d.offset({left: pl.x, top: pl.y});
     
     page.append(d);
-    
+    pagewidth = $("input[name='width']",page).val();
+    pageheight = $("input[name='height']",page).val();
     setSigID(d, sigid);
     setFieldID(d, fieldid);
     setHiddenField(d, "placedx", String(Math.round(d.position().left)));
     setHiddenField(d, "placedy", String(Math.round(d.position().top)));
     setHiddenField(d, "placedpage", String(pl.page));
-    setHiddenField(d, "placedwidth", String(Math.round(page.width())));
-    setHiddenField(d, "placedheight", String(Math.round(page.height())));
+    setHiddenField(d, "placedwidth", pagewidth);
+    setHiddenField(d, "placedheight",  pageheight);
   });
 }
 

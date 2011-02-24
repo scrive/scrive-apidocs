@@ -176,12 +176,9 @@ fieldstext fields = concatMap fieldtext fields
                    , y
                    , w
                    , h
-                   } = "q 1 0 0 1 " ++ show (topagex x w) ++ " " ++ show (topagey y h) ++ " cm " ++
+                   } = "q 1 0 0 1 " ++ show x ++ " " ++ show y ++ " cm " ++
                        "BT /SkrivaPaHelvetica 10 Tf (" ++ winAnsiPostScriptEncode val ++ ") Tj ET Q "
-    pagew = 595
-    pageh = 842
-    topagex x w = (fromIntegral x / fromIntegral w * fromIntegral pagew)
-    topagey y h = (fromIntegral (h - y) / fromIntegral h * fromIntegral pageh) - 10 + 5 {- 10 is baseline -}
+
 
 placeSeals :: [Field] -> RefID -> String -> RefID -> String -> RefID -> State Document ()
 placeSeals fields sealrefid sealtext paginrefid pagintext sealmarkerformrefid = do
