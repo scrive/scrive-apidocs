@@ -18,20 +18,18 @@ customFooter=
     </p>
 ###
 loginPageRedirectReason=
-<div id="loginRedirectReason">
-  $if(notlogged)$
+$if(notlogged)$
   You are not logged in.
-  $endif$
-  $if(notsu)$
+$endif$
+$if(notsu)$
   You are not logged in as a superuser.
-  $endif$
-  $if(invemail)$
+$endif$
+$if(invemail)$
   Invalid e-mail address.
-  $endif$
-  $if(invpass)$
+$endif$
+$if(invpass)$
   Invalid password.
-  $endif$
-</div>
+$endif$
 ###
 poweredBySkrivaPaPara=
     <p>

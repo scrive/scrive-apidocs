@@ -1,30 +1,14 @@
-{-# OPTIONS_GHC -F -pgmFtrhsx #-}
-module KontraLink(KontraLink(..), LoginRedirectReason(..), sendRedirect ) where
+{-# OPTIONS_GHC -Wall #-}
+module KontraLink(KontraLink(..), LoginRedirectReason(..)) where
 
-import User.UserState
 import Doc.DocState
-import Session
-import Happstack.Server
-import Happstack.Server.SimpleHTTP
-import qualified HSX.XMLGenerator as HSX
 import HSP
-import qualified Data.ByteString.UTF8 as BS
-import Control.Monad
-import Data.Maybe
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy.UTF8 as BSL
-import MinutesTime
-import Happstack.Server.HSP.HTML (webHSP)
-import qualified HSX.XMLGenerator as HSX (XML)
-import HSP
-import Session (SessionId)
 import Misc
+import Session (SessionId)
+import User.UserState
 import qualified Codec.Binary.Url as URL
 import qualified Codec.Binary.UTF8.String as UTF
-import Control.Monad.Trans(liftIO, MonadIO,lift)
-
-seeOtherXML :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
-seeOtherXML url = <a href=url alt="303 see other"><% url %></a>
+import qualified Data.ByteString.UTF8 as BS
 
 {- |
    Defines the reason why we are redirected to login page
@@ -34,13 +18,6 @@ data LoginRedirectReason = NoReason
                          | NotLoggedAsSuperUser
                          | InvalidEmail
                          | InvalidPassword String -- ^ correct email
-
-instance Show LoginRedirectReason where
-    show NoReason = ""
-    show NotLogged = "notlogged"
-    show NotLoggedAsSuperUser = "notsu"
-    show InvalidEmail = "invemail"
-    show (InvalidPassword email) = "invpass&email=" ++ (URL.encode . UTF.encode $ email)
 
 {- |
    All the links available for responses
@@ -89,7 +66,8 @@ data KontraLink
 -}
 instance Show KontraLink where
     showsPrec _ LinkAbout = (++) "/about"
-    showsPrec _ (LinkLogin reason) = (++) $ "/login/?reason=" ++ show reason
+    showsPrec _ (LinkLogin (InvalidPassword email)) = (++) $ "/login/?email=" ++ (URL.encode . UTF.encode $ email) ++ "&"
+    showsPrec _ (LinkLogin _) = (++) "/login/?"
     showsPrec _ LinkLogout = (++) "/logout"
     showsPrec _ LinkSignup = (++) "/signup"
     showsPrec _ LinkForgotPassword = (++) "/amnesia"
@@ -150,29 +128,3 @@ instance (EmbedAsChild m String) => (EmbedAsChild m KontraLink) where
 
 instance Monad m => IsAttrValue m KontraLink where
     toAttrValue = toAttrValue . show
-
-{-|
-   Redirects to the url relevant to the KontraLink.
--}
---sendRedirect :: KontraLink -> Kontra Response
-sendRedirect LoopBack = do
-                         ref <- fmap (fmap BS.toString) $ getHeaderM "referer"
-                         let link = fromMaybe (show LinkMain) $ ref 
-                         response <- webHSP (seeOtherXML link)
-                         seeOther link response
-sendRedirect BackToReferer    = do
-                         ref <- getField "referer"
-                         let link' = fromMaybe (show LinkMain) $ ref
-                         let link = if (null link') then (show LinkMain) else link'
-                         response <- webHSP (seeOtherXML link)
-                         seeOther link response
-
-sendRedirect (LinkLogin reason) = do
-                         curr <- fmap rqUri askRq 
-                         let link =  (show $ LinkLogin reason) ++ "&referer=" ++ (URL.encode $ UTF.encode curr) 
-                         response <- webHSP (seeOtherXML $ link)
-                         seeOther link response
-
-sendRedirect link = do  
-  response <- webHSP (seeOtherXML $ show link)
-  seeOther (show link) response
