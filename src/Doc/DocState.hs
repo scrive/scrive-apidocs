@@ -507,10 +507,14 @@ $(deriveAll [''Default]
           , filestorage     :: FileStorage
           }
 
+      data JpegPages0 = JpegPagesPending0
+                     | JpegPages0 [BS.ByteString]   
+                     | JpegPagesError0 BS.ByteString 
+      
       data JpegPages = JpegPagesPending
-                     | JpegPages [BS.ByteString]    -- FIXME: add width and height to each one
-                     | JpegPagesError BS.ByteString -- normalization error with whole log from normalizer
-                       
+                     | JpegPages [(BS.ByteString,Int,Int)]  -- Data + width + height (scaled with some resolution)
+                     | JpegPagesError BS.ByteString 
+                     
       data FileStorage = FileStorageMemory BS.ByteString
                        | FileStorageAWS BS.ByteString BS.ByteString -- ^ bucket, url inside bucket
    |])
@@ -570,6 +574,11 @@ instance Ord File where
 
 instance Show SignatoryLinkID where
     showsPrec prec (SignatoryLinkID x) = showsPrec prec x
+
+instance Show JpegPages where 
+    show JpegPagesPending = "penging"
+    show (JpegPages l) = show l   
+    show (JpegPagesError c) = "error " ++ (show c)
 
 deriving instance Show Document
 deriving instance Show DocumentStatus
@@ -1272,7 +1281,7 @@ instance Migrate File0 File1 where
                 { fileid1 = fileid0
                 , filename1 = filename0
                 , filepdf1 = filepdf0
-                , filejpgpages1 = JpegPages filejpgpages0
+                , filejpgpages1 = JpegPages $ map (\x -> (x,1000,1000)) filejpgpages0
                 }
 
 $(deriveSerialize ''File1)
@@ -1312,8 +1321,17 @@ instance Version File where
 $(deriveSerialize ''FileStorage)
 instance Version FileStorage where
 
+$(deriveSerialize ''JpegPages0)
+instance Version JpegPages0 where
+
 $(deriveSerialize ''JpegPages)
 instance Version JpegPages where
+    mode = extension 1 (Proxy :: Proxy JpegPages0)
+
+instance Migrate JpegPages0 JpegPages where
+    migrate JpegPagesPending0 = JpegPagesPending
+    migrate (JpegPagesError0 x) = JpegPagesError x
+    migrate (JpegPages0 l) = JpegPages $ map (\x -> (x,943,1335)) l
 
 $(deriveSerialize ''FileID)
 instance Version FileID where
