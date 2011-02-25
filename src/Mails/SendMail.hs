@@ -116,8 +116,8 @@ createWholeContent ourInfoEmail ourInfoEmailNiceName mail@(Mail {title,content,a
           "\r\n"
       footer = "\r\n--" ++ boundary ++ "--\r\n.\r\n"
       aheader fname = "\r\n--" ++ boundary ++ "\r\n" ++
-          "Content-Disposition: inline; filename=\"" ++ (BS.toString fname) ++".pdf\"\r\n" ++
-          "Content-Type: application/pdf; name=\"" ++ (BS.toString fname) ++ ".pdf\"\r\n" ++
+          "Content-Disposition: inline; filename=\"" ++ mailEncode fname ++".pdf\"\r\n" ++
+          "Content-Type: application/pdf; name=\"" ++ mailEncode fname ++ ".pdf\"\r\n" ++
           "Content-Transfer-Encoding: base64\r\n" ++
           "\r\n"
       attach (fname,fcontent) = BSL.fromString (aheader fname) `BSL.append` 
