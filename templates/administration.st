@@ -103,8 +103,8 @@ adminusers=
           <td style="width:100px">Signed Docs</td>
         </thead>
         $users:{user|<tr>
-          <td> <a href="$adminuserlink$/$user.usvId$"> $user.userdetails.usvFullname$ </a> </td>
-          <td> <a href="$adminuserlink$/$user.usvId$"> $user.userdetails.usvEmail$ </a> </td>
+          <td> <a href="$adminuserlink$/$user.userdetails.usvId$"> $user.userdetails.usvFullname$</a> </td>
+          <td> <a href="$adminuserlink$/$user.userdetails.usvId$"> $user.userdetails.usvEmail$ </a> </td>
           <td> $user.userdetails.usvCompany$ </td>
           <td> $user.docstats.doccount$ </td>
           <td> $user.docstats.signaturecount$ </td>
@@ -210,11 +210,6 @@ adminuser=
           </tr>
           <tr> <td style="padding-top:10px" ><strong>Special deals</strong></td>
             <td> </td>
-          </tr>
-          <tr> <td>Current account state:</td>
-            <td>
-              <input type="text" style="width:40px;margin:0" value="$user.uavpaymentaccountmoney$" name="paymentaccountmoney" />
-            </td>
           </tr>
           <tr> <td>Free signatures left:</td>
             <td>

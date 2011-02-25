@@ -163,7 +163,6 @@ data UserAdminView = UserAdminView {
                    , uavsigneddocstorage::String
                    , uavuserpaymentmethod::[Option]
                    , uavpaymentaccounttype ::[Option]
-                   , uavpaymentaccountmoney :: String
                    , uavpaymentaccountfreesignatures ::String
                    , uavtmppaymentchangeenddate ::Maybe String
                    , uavcustompaymentchange::PaymentChangeView
@@ -200,7 +199,6 @@ userAdminView u =  UserAdminView {
                                                                          (\x -> if (x == (paymentaccounttype $ userpaymentpolicy  u))
                                                                                  then soption show show x
                                                                                  else option show show x)      
-                   , uavpaymentaccountmoney  = showMoney $ paymentaccountmoney $ userpaymentaccount u
                    , uavpaymentaccountfreesignatures = show $ paymentaccountfreesignatures $ userpaymentaccount u
                    , uavtmppaymentchangeenddate = fmap (showDateOnly .  fst) $ temppaymentchange $ userpaymentpolicy  u
                    , uavtemppaymentchange = fmap (getChangeView .  snd) $ temppaymentchange $ userpaymentpolicy  u

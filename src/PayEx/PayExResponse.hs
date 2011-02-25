@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -XArrows -XViewPatterns #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  PayEx.PayExResponse
@@ -20,7 +20,7 @@ import Text.XML.HXT.DOM.TypeDefs
 import Control.Arrow
 import Control.Arrow.ArrowTree
 import Control.Arrow.ListArrow
-
+import PayEx.PayExState
 --This is wrapper for response, it supports parsing PayEx error info 
 newtype PX a = PX (Either PayExError a) deriving Show
 
@@ -45,7 +45,9 @@ instance XmlContent (PX InitResponse) where
 
 
 data CompleteResponse  = CompleteResponse {
-                                    orderStatus::String
+                                    crOrderStatus::String,
+                                    crTransactionStatus::String,
+                                    crTransactionNumber::String
                                   }
                                     deriving Show
 instance HTypeable (PX CompleteResponse) where
@@ -57,8 +59,76 @@ instance XmlContent (PX CompleteResponse) where
          proc xml -> 
                do
                 orderStatus <- fieldText "orderStatus" -< xml 
-                returnA -< CompleteResponse { orderStatus=orderStatus    }
+                transactionStatus <- fieldText' "transactionStatus" -< xml 
+                tNumber <- fieldText' "transactionNumber" -< xml 
+                returnA -< CompleteResponse { crOrderStatus=orderStatus, crTransactionStatus=transactionStatus, crTransactionNumber = tNumber    }
 
+
+
+data AutopayResponse  = AutopayResponse {
+                                    arTransactionStatus::String,
+                                    arTransactionNumber::String
+                                  }
+                                    deriving Show
+instance HTypeable (PX AutopayResponse) where
+    toHType _ = Defined "PayExCall" [] []
+    
+instance XmlContent (PX AutopayResponse) where
+    toContents _ = error "Do not serialize PayExInitResponse"
+    parseContents = payExRequest "AutoPay2" $ 
+         proc xml -> 
+               do
+                transactionStatus <- fieldText "transactionStatus" -< xml 
+                tNumber <- fieldText' "transactionNumber" -< xml 
+                returnA -< AutopayResponse { arTransactionStatus=transactionStatus, arTransactionNumber = tNumber }
+
+
+
+data CaptureResponse  = CaptureResponse {
+                                        captureStatus::String
+                                  }
+                                    deriving Show
+instance HTypeable (PX CaptureResponse) where
+    toHType _ = Defined "PayExCall" [] []
+    
+instance XmlContent (PX CaptureResponse) where
+    toContents _ = error "Do not serialize PayExInitResponse"
+    parseContents = payExRequest "Capture4" $ 
+         proc xml -> 
+               do
+                transactionStatus <- fieldText' "transactionStatus" -< xml 
+                returnA -< CaptureResponse { captureStatus=transactionStatus  }
+
+
+data CancelResponse  = CancelResponse {
+                                        cancelStatus::String
+                                  }
+                                    deriving Show
+instance HTypeable (PX CancelResponse) where
+    toHType _ = Defined "PayExCall" [] []
+    
+instance XmlContent (PX CancelResponse) where
+    toContents _ = error "Do not serialize PayExInitResponse"
+    parseContents = payExRequest "Cancel2" $ 
+         proc xml -> 
+               do
+                status <- fieldText' "transactionStatus" -< xml 
+                returnA -< CancelResponse { cancelStatus=status }
+
+data AgreementResponse  = AgreementResponse {
+                                        agreementRef::String
+                                  }
+                                    deriving Show
+instance HTypeable (PX  AgreementResponse) where
+    toHType _ = Defined "PayExCall" [] []
+    
+instance XmlContent (PX  AgreementResponse) where
+    toContents _ = error "Do not serialize  AgreementResponse"
+    parseContents = payExRequest "CreateAgreement3" $ 
+         proc xml -> 
+               do
+                ref <- fieldText "agreementRef" -< xml 
+                returnA -< AgreementResponse {  agreementRef=ref}
 
 -- | Error type - for PayEx error info
 data PayExError = PayExError {code::String,
@@ -69,7 +139,31 @@ data PayExError = PayExError {code::String,
                            } deriving Show
                            
 --Main utils 
+class CanUpdateResponse a where
+   updatePayment::a -> Payment -> Payment
 
+
+instance CanUpdateResponse (PX CompleteResponse) where
+  updatePayment (PX (Left err)) payment =  payment { paymentState = Failed ((errorCode err) ++ ":" ++ (description err)) (paymentState payment)  }
+  updatePayment (PX (Right ires)) payment =  case (crTransactionStatus ires) of
+                                              "0" ->  payment { paymentState =  Finished, transactionNumber = crTransactionNumber ires  }
+                                              _ ->  payment
+
+instance CanUpdateResponse (PX AutopayResponse) where
+  updatePayment (PX (Left err)) payment =  payment { paymentState = Failed ((errorCode err) ++ ":" ++ (description err)) (paymentState payment)  ,  triedAutopay =True}
+  updatePayment (PX (Right ires)) payment =  case (arTransactionStatus ires) of
+                                              "0" ->  payment { paymentState =  Finished, transactionNumber = arTransactionNumber ires ,  triedAutopay =True}
+                                              _ ->    payment {  triedAutopay =True }
+                                                      
+instance CanUpdateResponse (PX InitResponse) where
+  updatePayment (PX (Left err)) payment =  payment {
+                                             paymentState = Failed ((errorCode err) ++ ":" ++ (description err)) (paymentState payment)
+                                                }
+  updatePayment (PX (Right ires)) payment =  payment {
+                                                       orderRef = irOrderRef ires ,
+                                                       redirectUrl = irRedirectUrl ires,
+                                                       paymentState = Send
+                                                      }
 -- | Helper to unpack response soap insides and running real data parser
 payExRequest::String -> LA XmlTree b ->  XMLParser (PX b)  
 payExRequest rqName parser = 
@@ -98,13 +192,17 @@ payExError =  proc xml ->
                                      paramName=paramName,
                                      thirdPartyError=thirdPartyError
                                                 }
-                                                
+
+joinPayExError ::Either String (PX a) -> PX a
+joinPayExError (Right r) = r
+joinPayExError (Left  s) = PX $ Left $ PayExError {code=s,   errorCode="",  description=s, paramName="", thirdPartyError="" }
+
 --Parsing utils                                                
 fieldText::(ArrowXml a) => String -> a XmlTree String                                   
 fieldText  name =  deep (hasName name >>> (deep getText)) 
 
 fieldText'::(ArrowXml a) => String -> a XmlTree String
-fieldText' name =  deep (hasName name >>> (deep getText <+> (arr $ const ""))) 
+fieldText' name =  deep (hasName name >>> (deep getText)) <+> (arr $ const "") 
 
 
 --I can't find good lib function for escaping xml, and I need it really bad for payex

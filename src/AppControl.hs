@@ -52,7 +52,7 @@ import qualified AppLogger as Log (error)
 import qualified MemCache
 import Happstack.State (update)
 import Redirect
-
+import PayEx.PayExInterface -- Import so at least we check if it compiles
 {-| 
   Defines the application's configuration.  This includes amongst other things
   the http port number, amazon, trust weaver and email configuraton,

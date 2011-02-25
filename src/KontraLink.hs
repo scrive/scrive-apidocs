@@ -9,7 +9,7 @@ import User.UserState
 import qualified Codec.Binary.Url as URL
 import qualified Codec.Binary.UTF8.String as UTF
 import qualified Data.ByteString.UTF8 as BS
-
+import PayEx.PayExState
 {- |
    Defines the reason why we are redirected to login page
 -}
@@ -60,6 +60,7 @@ data KontraLink
     | LinkRequestAccount
     | LinkAskQuestion
     | LinkInvite
+    | LinkPayExView (Maybe PaymentId)
    
 {- |
    Shows each link as a relative url
@@ -112,6 +113,9 @@ instance Show KontraLink where
     showsPrec _ (LinkAskQuestion) = (++) ("/question")
     showsPrec _ (LinkRequestAccount) = (++) "/requestaccount"
     showsPrec _ (LinkInvite) = (++) "/invite"
+    showsPrec _ (LinkPayExView Nothing) = (++) $ "/payex"
+    showsPrec _ (LinkPayExView (Just pid)) = (++) $ "/payex/" ++ show pid
+    
     
 -- type class instances used for xml'ing the KontraLinks
 
