@@ -44,6 +44,8 @@ module User.UserState
     , GetUsersByUserIDs(..)
     , FreeUserFromPayments(..)
     , AddFreePaymentsForInviter(..)
+    , getUserPaymentSchema
+    , takeImmediatelyPayment
 ) where
 import Happstack.Data
 import Happstack.State
@@ -959,3 +961,17 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'addFreePaymentsForInviter
                     ])
 
+getUserPaymentSchema::User -> IO (Payments.PaymentScheme)
+getUserPaymentSchema User{userpaymentpolicy } = do
+                               now <- getMinutesTime
+                               model <- update $ Payments.GetPaymentModel (Payments.paymentaccounttype userpaymentpolicy ) 
+                               let paymentChange = case Payments.temppaymentchange userpaymentpolicy  of 
+                                                     Nothing -> Payments.custompaymentchange  userpaymentpolicy 
+                                                     Just (expires,tchange) -> 
+                                                        if (now < expires)    
+                                                        then Payments.custompaymentchange userpaymentpolicy 
+                                                        else Payments.mergeChanges tchange (Payments.custompaymentchange userpaymentpolicy)
+                               return $ (paymentChange,model)                                                                  
+
+takeImmediatelyPayment::User -> Bool
+takeImmediatelyPayment user = Payments.requiresImmediatelyPayment $ userpaymentpolicy user
