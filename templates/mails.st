@@ -81,11 +81,9 @@ mailInvitationToSignContent=
         3. Underteckna (eller avvisa)<br/>
         4. Färdig
       </p>
-      <p>
-	<i>Detta mail får inte vidarebefordras.</i>
-      </p>
     </span>
     $footer:noescape()$
+    $legalparagraph()$
 ###
 mailInvitationToSignDefaultHeader=
     <p>Hej $personname$,
@@ -125,11 +123,9 @@ remindMailNotSignedContent=
         3. Underteckna (eller avvisa)<br/>
         4. Färdig
       </p>
-      <p>
-	<i>Detta mail får inte vidarebefordras.</i>
-      </p>
     </span>
     $footer:noescape()$
+    $legalparagraph()$
 
 ###
 signupLinkEmailPart=
@@ -295,4 +291,14 @@ whohadsignedinfoformail=
 ####
 whohadsignedinfoforpreview=
     <span class="authornamewhennotsecretary" alt="$noonehadsignedtext()$" okprefix="Har undertecknat:"></span>
+####
+####
+legalparagraph=
+<p style="width:90%;font-size:9pt;font-style:italic;"> 
+   Detta e-postmeddelande innehåller konfidentiell information och får inte vidarebefordras.
+   Avslöjande, kopiering, distribution eller annan handling som rör informationen i 
+   meddelandet är förbjuden och kan vara olagligt. Om du felaktigt mottagit detta meddelande 
+   ber vi dig omedelbart informera avsändaren samt att därefter radera meddelandet. 
+</p>
+<BR/>
 ####
