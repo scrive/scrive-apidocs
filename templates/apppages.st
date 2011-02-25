@@ -22,7 +22,7 @@ pageForgotPasswordConfirm=
 ###
 pageLogin= 
     <div class="centerdivnarrow">
-      <p class="headline">Logga in SkrivaPå!</p> 
+      <p class="headline">Logga in</p> 
       $loginBox()$
     </div>
 
@@ -152,7 +152,7 @@ loginBox=
         <input type="hidden" name="referer" value="$referer$" />
         <table>
 	  <tr>
-            <td>E-mail:</td> 
+            <td>E-post:</td> 
             <td><input type="email" name="email" autocomplete="off" class="noflash" value="$if(email)$$email$$endif$" /></td> 
           </tr>
 	  <tr> 
