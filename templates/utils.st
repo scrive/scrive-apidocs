@@ -19,16 +19,16 @@ customFooter=
 ###
 loginPageRedirectReason=
 $if(notlogged)$
-  You are not logged in.
+  Du är inte inloggad.
 $endif$
 $if(notsu)$
-  You are not logged in as a superuser.
+  Du har inte rätt behörighet att se denna sida.
 $endif$
 $if(invemail)$
-  Invalid e-mail address.
+  Felaktig e-post.
 $endif$
 $if(invpass)$
-  Invalid password.
+  Felaktigt lösenord.
 $endif$
 ###
 poweredBySkrivaPaPara=
