@@ -338,14 +338,13 @@ getUserSettingsChange =  do
 {- | Reads params and returns function for conversion of user payment account. With no param leaves fields unchanged -}
 getUserPaymentAccountChange::Kontra (UserPaymentAccount -> UserPaymentAccount)
 getUserPaymentAccountChange =  do 
-                          mpaymentaccountmoney                 <- readMoneyField "paymentaccountmoney" 
                           mpaymentaccountfreesignatures        <- readField "paymentaccountfreesignatures" 
                           return (\UserPaymentAccount {
-                                   paymentaccountmoney
+                                   paymentAgreementRef
                                  , paymentaccountfreesignatures
                                   }
                                     -> UserPaymentAccount  {
-                                            paymentaccountmoney  = maybe' paymentaccountmoney  mpaymentaccountmoney
+                                            paymentAgreementRef  = paymentAgreementRef
                                           , paymentaccountfreesignatures = maybe' paymentaccountfreesignatures mpaymentaccountfreesignatures
                                         })        
 

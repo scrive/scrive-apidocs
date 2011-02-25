@@ -19,13 +19,16 @@ getPayExConfig = return $ PayExConfig {
                             accountNumber  ="50251179"
                           , encryptionKey ="ArxLm7bk3craUnNU2K9r"
                           , vat = 0 
-                          , returnUrl = "http://localhost"
+                          , returnUrl = "http://localhost:8000"
+                          , serverAddress = "https://test-external.payex.com"
+                          , actionPrefix = "http://external.payex.com"
                          }
-
+ 
 data PayExConfig = PayExConfig {
                      accountNumber::String,
                      encryptionKey::String,
                      vat::Integer,
-                     returnUrl::String
+                     returnUrl::String,
+                     serverAddress::String,
+                     actionPrefix::String  
                      } deriving Show
-                     
