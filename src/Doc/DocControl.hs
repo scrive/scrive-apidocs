@@ -49,9 +49,7 @@ import qualified SealSpec as Seal
 import qualified TrustWeaver as TW
 import qualified AppLogger as Log
 import System.IO.Temp
-import qualified MemCache
-import Data.Char
-import Data.Map ((!))
+
 getFileContents :: Context -> File -> IO (BS.ByteString)
 getFileContents ctx file = do
   result <- MemCache.get (fileid file) (ctxfilecache ctx)
@@ -642,7 +640,9 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} ms
   signatoriesnames <- getAndConcat "signatoryname"
   signatoriescompanies <- getAndConcat "signatorycompany"
   signatoriesnumbers <- getAndConcat "signatorynumber"
-  signatoriesemails <- getAndConcat "signatoryemail"
+  signatoriesemails' <- getAndConcat "signatoryemail"
+  let signatoriesemails = map (BSC.map toLower) signatoriesemails'
+
   -- if the post doesn't contain this one, we parse the old way
   sigids <- getAndConcat "sigid"
 
@@ -1316,7 +1316,8 @@ handleResend docid signlinkid  = withUserPost $ do
 handleChangeSignatoryEmail::String -> String -> Kontra KontraLink
 handleChangeSignatoryEmail did slid = do
                                      let mdid = maybeRead did
-                                     memail <- getField "email"
+                                     memail' <- getField "email"
+                                     let memail = fmap (fmap toLower) memail'
                                      let mslid = maybeRead slid
                                      case (mdid,mslid,memail) of
                                        (Just docid,Just slid,Just email) -> do
