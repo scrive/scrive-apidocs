@@ -35,6 +35,7 @@ import Payments.PaymentsState
 import Doc.DocState
 import Data.ByteString.UTF8 (fromString,toString)
 import Data.ByteString (ByteString,empty, hGetContents)
+import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy  as L
 import KontraLink
 import Payments.PaymentsControl(readMoneyField,getPaymentChangeChange)
@@ -47,6 +48,7 @@ import Data.Maybe
 import System.Process
 import System.IO (hClose)
 import qualified TrustWeaver as TW
+import Data.Char
 
 eitherFlash :: ServerPartT (StateT Context IO) (Either String b)
             -> ServerPartT (StateT Context IO) b
@@ -247,7 +249,8 @@ databaseCleanupWorker = do
 handleCreateUser :: Kontra KontraLink
 handleCreateUser = onlySuperUser $ do
     ctx <- get
-    email <- g "email"
+    email' <- g "email"
+    let email = BSC.map toLower email'
     fullname <- g "fullname"
     custommessage <- getField "custommessage"
     freetill <- fmap (join . (fmap parseMinutesTimeMDY)) $ getField "freetill"
