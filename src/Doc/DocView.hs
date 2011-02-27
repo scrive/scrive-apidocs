@@ -239,6 +239,11 @@ isNotLinkForUserID uid link =
               notSameUserID = uid /= linkuid
               linkuid = unSignatory $ fromJust $ maybesignatory link
 
+nothingIfEmpty s = 
+    if BS.null s
+    then Nothing
+    else Just s
+
 pageDocumentForAuthor :: Context 
              -> Document 
              -> User
@@ -254,6 +259,7 @@ pageDocumentForAuthor ctx
                               } 
              author =
    let 
+       templates = ctxtemplates ctx
        authorid = userid author
        authorhaslink = not $ null $ filter (not . isNotLinkForUserID authorid) documentsignatorylinks
        documentdaystosignboxvalue = maybe 7 id documentdaystosign
@@ -265,10 +271,19 @@ pageDocumentForAuthor ctx
                                , signatorynumberplacements = (authornumberplacements document)
                                , signatoryotherfields = (authorotherfields document)
                                }
-       doc_author_name = signatoryname documentauthordetails
-       doc_author_comp = signatorycompany documentauthordetails
-       doc_author_email = signatoryemail documentauthordetails
-       doc_author_comp_nr = signatorynumber documentauthordetails
+       doc_author_name = nothingIfEmpty $ signatoryname documentauthordetails
+       doc_author_comp = nothingIfEmpty $ signatorycompany documentauthordetails
+       doc_author_email = nothingIfEmpty $ signatoryemail documentauthordetails
+       doc_author_comp_nr = nothingIfEmpty $ signatorynumber documentauthordetails
+       doc_author_otherfields templates fields = 
+           sequence $ map (\(fd, i) ->
+                               renderTemplate templates "customfield" $ do
+                                 field "otherFieldValue" $ fieldvalue fd
+                                 field "otherFieldName"  $ fieldlabel fd
+                                 field "otherFieldID"    $ ("field" ++ show i)
+                                 field "otherFieldOwner" "author")
+                        (zip fields (iterate (+ 1) 0))
+
    in do
      helpers <- renderTemplate (ctxtemplates ctx) "pageDocumentForAuthorHelpers" [("documentid",show documentid)] 
      signatories <- fmap concat $ sequence $ map (showSignatoryLinkForSign ctx document author) documentsignatorylinks                                                                                  
@@ -276,15 +291,13 @@ pageDocumentForAuthor ctx
      restartForm <-   renderActionButton  (ctxtemplates ctx) (LinkRestart documentid) "restartButtonName"
      cancelMailContent <- mailCancelDocumentByAuthorContent  (ctxtemplates ctx) False Nothing ctx document author
      documentinfotext <- documentInfoText (ctxtemplates ctx) document (find (isMatchingSignatoryLink author) documentsignatorylinks) author
+     doc_author_customfields <- doc_author_otherfields templates $ signatoryotherfields documentauthordetails
      renderTemplate (ctxtemplates ctx) "pageDocumentForAuthorContent" $ do
-                 field "authorNamePresent"   $ not . BS.null $ doc_author_name
-                 field "authorCompPresent"   $ not . BS.null $ doc_author_comp
-                 field "authorEmailPresent"  $ not . BS.null $ doc_author_email
-                 field "authorCompNrPresent" $ not . BS.null $ doc_author_comp_nr
                  field "authorName"   doc_author_name
                  field "authorComp"   doc_author_comp
                  field "authorEmail"  doc_author_email
                  field "authorCompNr" doc_author_comp_nr
+                 field "authorOtherFields" doc_author_customfields
                  field "documenttitle" $ BS.toString documenttitle
                  field "documentid" $ show documentid
                  field "linkissuedoc" $ show $ LinkIssueDoc documentid
@@ -557,10 +570,11 @@ uploadPage templates = do
 jsArray :: [[Char]] -> [Char]
 jsArray xs = "[" ++ (joinWith ", " xs) ++ "]"
 
-buildDefJS :: FieldDefinition -> [Char]
-buildDefJS (FieldDefinition { fieldlabel, fieldvalue, fieldplacements }) = 
+buildDefJS :: FieldDefinition -> Int -> [Char]
+buildDefJS (FieldDefinition { fieldlabel, fieldvalue, fieldplacements }) i = 
     "{ label: " ++ jsStringFromBS fieldlabel -- show because we need quotes
                     ++ ", value: " ++ jsStringFromBS fieldvalue
+                    ++ ", id: 'field" ++ show i ++ "'"
                     ++ ", placements: " ++ (jsArray (map buildPlacementJS fieldplacements))
                     ++ " }"
                     
@@ -583,7 +597,7 @@ buildSigJS (SignatoryDetails { signatoryname, signatorycompany, signatorynumber,
                    ++ ", companyplacements: " ++ (jsArray (map buildPlacementJS signatorycompanyplacements))
                    ++ ", emailplacements: " ++ (jsArray (map buildPlacementJS signatoryemailplacements))
                    ++ ", numberplacements: " ++ (jsArray (map buildPlacementJS signatorynumberplacements))
-                   ++ ", otherfields: " ++ (jsArray (map buildDefJS signatoryotherfields))
+                   ++ ", otherfields: " ++ (jsArray $ zipWith buildDefJS signatoryotherfields $ iterate (+ 1) 0)
                    ++ " }"
                    
 buildJS :: SignatoryDetails -> [SignatoryDetails] -> [Char]
