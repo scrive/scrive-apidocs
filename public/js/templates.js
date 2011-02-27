@@ -299,17 +299,6 @@ function buildDraggableField(info, val, type, emailp) {
   setInfotext(x, info);
   setValue(x, val);
   setFieldType(x, type);
-/*
-  x.draggable({ handle: ".draghandle"
-		, zIndex: 10000
-		, appendTo: "body"
-		, helper: function (event) {
-		  var field = $(this);
-		  var input = field.find("input");
-		  return placementToHTML(input.attr("infotext"), input.attr("value"));
-	        }
-	      });
-              */
   var input = x.find("input");
   return x;
 }
@@ -317,16 +306,6 @@ function buildDraggableField(info, val, type, emailp) {
 // for use with author fields
 function buildDraggableText(val) {
   var x = $("<div class='dragtext'><span class='draghandle ui-icon ui-icon-arrowthick-1-w'>drag</span> <span class='fieldvalue'>" + val + "</span></div>");
-
-/*
-  x.draggable({ handle: ".draghandle"
-		, zIndex: 10000
-		, appendTo: "body"
-		, helper: function (event) {
-		  return placementToHTML("abc", val);
-	        }
-	      });
-              */
   return x;
 }
 
@@ -551,7 +530,6 @@ function authorToHTML(sig) {
   sig.id = sigid;
   
   var sigentry = sl.find(".authordetails");
-  //  setHiddenField(sigentry, "sigid", sigid);
   var manlink = sigentry.find("a.man");
 
   manlink.click(function(){
@@ -572,45 +550,6 @@ function authorToHTML(sig) {
   } else {
     sigentry.find(".partyrole input").last().attr("checked", "true");
   }
-
-/*
-  sigentry.find(".dragtext").draggable({ handle: ".draghandle"
-		                         , zIndex: 10000
-		                         , appendTo: "body"
-		                         , helper: function () {
-		                           return placementToHTML(getValue(this));
-	                                 }
-		                       });
-                                       */
-/*
-  $(sig.otherfields).each(function (){
-    var fd = this;
-    var field = $("#templates .customfield").first().clone();
-    var fieldid = newUUID();
-    fd.id = fieldid;
-    
-    setFieldID(field, fieldid);
-    setSigID(field, sigid);
-    setFieldName(field, "fieldvalue");
-    setHiddenField(field, "fieldname", fd.label);
-
-    setInfotext(field, fd.label);
-    setValue(field, fd.value);
-    setFieldType(field, "author");*/
-/*
-    field.draggable({ handle: ".draghandle"
-		      , zIndex: 10000
-		      , appendTo: "body"
-		      , helper: function (event) {
-			var field = $(this);
-			var input = field.find("input");
-			return placementToHTML(input.attr("infotext"), input.attr("value"));
-		      }
-		    });
-                    */
-//    sigentry.find(".otherfields").append(field);
-    //	    
-//  });
 
   $("#peopleList ol").append("<li><a href='#'>" + sig.name + " (Avsändare)</a></li>");
 }
@@ -695,17 +634,7 @@ function createCustomField(newfield) {
     setFieldType(customfield, "sig");
   }
 
-/*
-  customfield.draggable({ handle: ".draghandle",
-                          zIndex: 10000,
-		          appendTo: "body",
-		          helper: function (event) {
-		            var field = $(this);
-		            var input = field.find("input");
-		            return placementToHTML(input.attr("infotext"), input.attr("value"));
-		          }
-	                });
-                        */
+
   setFieldName(customfield, "fieldvalue");
   var fieldid = newUUID();
   var sigid = "";
@@ -768,8 +697,6 @@ function signatoryToHTML(sig) {
   var sigentry = $('#templates .persondetails').first().clone();
 
 
-  //var sigentry = $("<div class='sigentry'></div>");
-  //sigentry.append(newHiddenField("sigid", sigid));
   setHiddenField(sigentry, "sigid", sigid);
 
   var d = sigentry.find(".fields");
@@ -781,7 +708,6 @@ function signatoryToHTML(sig) {
   var aemai = sigentry.find(".sigemail");
   
 
-  //setSigID(sigentry, sigid);
 
   setSigID(aname, sigid);
   setSigID(acomp, sigid);
@@ -792,32 +718,12 @@ function signatoryToHTML(sig) {
   setValue(acomp, sig.company);
   setValue(anumb, sig.number);
   setValue(aemai, sig.email);
-/*
-  sigentry.find(".dragfield").draggable({ handle: ".draghandle"
-		                          , zIndex: 10000
-		                          , appendTo: "body"
-		                          , helper: function (event) {
-		                            var field = $(this);
-		                            var input = field.find("input");
-		                            
-		                            return placementToHTML(input.attr("infotext"), input.attr("value"));
-	                                  }
-		                        });
-                                        */
-
-  /*
-    aemai.find("input").attr('id', 'othersignatoryemail');
-    if(aemai.find("input").attr("value")) {
-    setIcon(aemai, "done");
-    }
-  */
   
   // other fields
   
   $(sig.otherfields).each(function (){
     var fd = this;
     var field = $("#templates .customfield").first().clone();
-    //var field = buildDraggableField(fd.label, fd.value, "sig");
     var fieldid = newUUID();
     fd.id = fieldid;
     
@@ -829,21 +735,10 @@ function signatoryToHTML(sig) {
     setInfotext(field, fd.label);
     setValue(field, fd.value);
     setFieldType(field, "sig");
-/*
-    field.draggable({ handle: ".draghandle"
-		      , zIndex: 10000
-		      , appendTo: "body"
-		      , helper: function (event) {
-			var field = $(this);
-			var input = field.find("input");
-			return placementToHTML(input.attr("infotext"), input.attr("value"));
-		      }
-		    });
-                    */
+
     var input = field.find("input");
 
     of.append(field);
-    //	    
   });
 
   enableInfoTextOnce(sigentry);
@@ -944,8 +839,6 @@ function initializeTemplates () {
   placePlacementsOfSignatories([docstate.author]);
   enableInfoTextOnce();
   
-//  makeDropTargets();
-
   $(".dragfield, .dragtext").each(function() {
     updateStatus($(this));
   });
