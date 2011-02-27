@@ -910,6 +910,7 @@ $(document).ready(function() {
                 var children = $('#personpane').children();
                 children.filter(':not(:eq(' + idx + '))').removeClass("currentPerson");
                 children.filter(':eq(' + idx + ')').addClass("currentPerson");
+          $("#signStepsWrapper").height($('#signStepsContainer.follow').height());
                 return false;
             });
 
@@ -941,6 +942,7 @@ $(document).ready(function() {
 		personpane.children(".persondetails:eq(" + newidx + ")").addClass("currentPerson");
           renumberParts();
                 checkPersonPaneMode();
+          $("#signStepsWrapper").height($('#signStepsContainer.follow').height());
             });
         $("input[name='signatoryname']", "#personpane").live('change keyup', function() {
                 var val = $(this).val();
@@ -987,6 +989,8 @@ safeReady(function() {
     enableInfoTextOnce(newone);
     liplus.removeClass("redborder");
     authorman.removeClass("redborder");
+
+    $("#signStepsWrapper").height($('#signStepsContainer.follow').height());
     return false;
   });
 });
