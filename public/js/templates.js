@@ -576,6 +576,7 @@ function authorToHTML(sig) {
 	                                 }
 		                       });
                                        */
+/*
   $(sig.otherfields).each(function (){
     var fd = this;
     var field = $("#templates .customfield").first().clone();
@@ -589,7 +590,7 @@ function authorToHTML(sig) {
 
     setInfotext(field, fd.label);
     setValue(field, fd.value);
-    setFieldType(field, "author");
+    setFieldType(field, "author");*/
 /*
     field.draggable({ handle: ".draghandle"
 		      , zIndex: 10000
@@ -601,9 +602,9 @@ function authorToHTML(sig) {
 		      }
 		    });
                     */
-    sigentry.find(".otherfields").append(field);
+//    sigentry.find(".otherfields").append(field);
     //	    
-  });
+//  });
 
   $("#peopleList ol").append("<li><a href='#'>" + sig.name + " (Avsändare)</a></li>");
 }
