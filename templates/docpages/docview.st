@@ -594,7 +594,7 @@ pageDocumentForAuthorContentPreparation=
                 <!-- 013 changed -->
                 <div class="sigentry signStepsBodyForms" id="peopleDetails">
                   <span class="fields">
-                    $if(authorNamePresent)$
+                    $if(authorName)$
                     <span class='dragtext authorname inputWrapper'>
 	              <span style="display:none;" class="fieldid">name</span>
 	              <span style="display:none;" class="fieldsigid">author</span>
@@ -604,7 +604,7 @@ pageDocumentForAuthorContentPreparation=
 	                   alt="drag" />
                     </span>
                     $endif$
-                    $if(authorCompPresent)$
+                    $if(authorComp)$
 	            <span class='dragtext authorcomp inputWrapper'>
 	              <span style="display:none;" class="fieldid">company</span>
 	              <span style="display:none;" class="fieldsigid">author</span>
@@ -615,7 +615,7 @@ pageDocumentForAuthorContentPreparation=
 	                   alt="drag" />
                     </span>
                     $endif$
-                    $if(authorEmailPresent)$
+                    $if(authorEmail)$
                     <span class='dragtext authoremail inputWrapper'>
 	              <span style="display:none;" class="fieldid">email</span>
 	              <span style="display:none;" class="fieldsigid">author</span>
@@ -626,7 +626,7 @@ pageDocumentForAuthorContentPreparation=
 	                   alt="drag" />
 	            </span>
 	            $endif$
-	            $if(authorCompNrPresent)$
+	            $if(authorCompNr)$
 	            <span class='dragtext authornum inputWrapper'>
 	              <span style="display:none;" class="fieldid">number</span>
 	              <span style="display:none;" class="fieldsigid">author</span>
@@ -638,7 +638,7 @@ pageDocumentForAuthorContentPreparation=
 	            </span>
 	            $endif$
                     <div class="otherfields">
-
+                      $authorOtherFields:noescape()$
                     </div>
                   </span>
                   <div class="partyrole">
@@ -890,3 +890,14 @@ $elseif(pending)$
       <script type="text/javascript" src="/js/signatory.js"></script>
 $endif$
 ####
+customfield=
+<span class="customfield dragfield inputWrapper">
+  <input type="text" class="customfieldbox" autocomplete="off" value="$otherFieldValue$" name="fieldvalue" infotext="$otherFieldName$" />
+  <a href="#minus2" class="minus"></a>
+  <img src="/theme/images/iconHand.png" class="draghandle" alt="drag" />
+  <input type="hidden" value="$otherFieldID$" name="fieldid">
+  <input type="hidden" value="$otherFieldOwner$" name="fieldsigid">
+  <input type="hidden" value="$otherFieldName$" name="fieldname">
+  <span class="type" style="display: none;">$otherFieldOwner$</span>
+</span>
++###
