@@ -896,7 +896,6 @@ function checkPersonPaneMode()
     }
 }
 
-
 $(document).ready(function() {
         $('#step1select a').click(showStep1);
         $('#step2select a').click(showStep2);
@@ -1047,7 +1046,7 @@ safeReady(function() {
 
 function resizeDesignBar() {
   if(signStepsContainer && signStepsWrapper) {
-    if(signStepsContainer.hasClass("fixed")) {
+    if(!signStepsContainer.hasClass("fixed")) {
       signStepsWrapper.height(signStepsContainer.height());
     }
   }
