@@ -51,6 +51,12 @@ function placementToHTML(label, value) {
 	   + "</div>");
 }
 
+function placedFieldHelper(value) {
+  return $("<div class='placedfieldhelper' style='position:absolute'>"
+	   + "<span class='value'>" + value + "</span>" 
+	   + "</div>");
+}
+
 function placePlacements(pls, label, value, sigid, fieldid) {
   $(pls).each(function () {
     var pl = this;
@@ -992,7 +998,7 @@ safeReady(function() {
 		     helper: function (event) {
 		       var field = $(this);
 		       var input = field.find("input");
-		       return placementToHTML(input.attr("infotext"), input.attr("value"));
+		       return placedFieldHelper(input.attr("value"));
 		     }
 	           });
   $(".dragtext", "#personpane")
@@ -1000,7 +1006,7 @@ safeReady(function() {
 		     zIndex: 10000,
 		     appendTo: "body",
 		     helper: function () {
-		       return placementToHTML($(this).find(".fieldvalue").html());
+		       return placedFieldHelper($(this).find(".fieldvalue").html());
 	             }
 		   });
 
@@ -1027,7 +1033,7 @@ safeReady(function() {
       },
       // build a helper so it doesn't delete the original
       helper: function (event, ui) {
-        return placementToHTML($(this).find(".value").html());
+        return placedFieldHelper($(this).find(".value").html());
       },
       // but we don't want to show the original so it looks like 
       // you are dragging the original
