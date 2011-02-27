@@ -853,7 +853,7 @@ function showStep2()
     $('#signStep3Content').hide();
     $('#signStepsNextButton').show();
   
-  $("#signStepsWrapper").height($('#signStepsContainer.follow').height());
+  resizeDesignBar();
 
     return false;
 }
@@ -910,7 +910,7 @@ $(document).ready(function() {
                 var children = $('#personpane').children();
                 children.filter(':not(:eq(' + idx + '))').removeClass("currentPerson");
                 children.filter(':eq(' + idx + ')').addClass("currentPerson");
-          $("#signStepsWrapper").height($('#signStepsContainer.follow').height());
+          resizeDesignBar();
                 return false;
             });
 
@@ -942,7 +942,7 @@ $(document).ready(function() {
 		personpane.children(".persondetails:eq(" + newidx + ")").addClass("currentPerson");
           renumberParts();
                 checkPersonPaneMode();
-          $("#signStepsWrapper").height($('#signStepsContainer.follow').height());
+          resizeDesignBar();
             });
         $("input[name='signatoryname']", "#personpane").live('change keyup', function() {
                 var val = $(this).val();
@@ -990,7 +990,7 @@ safeReady(function() {
     liplus.removeClass("redborder");
     authorman.removeClass("redborder");
 
-    $("#signStepsWrapper").height($('#signStepsContainer.follow').height());
+    resizeDesignBar();
     return false;
   });
 });
@@ -1037,3 +1037,18 @@ safeReady(function() {
   });
 });
 
+var signStepsContainer = null;
+var signStepsWrapper = null;
+
+safeReady(function() {
+  signStepsContainer = $('#signStepsContainer');
+  signStepsWrapper = $('#signStepsWrapper');
+});
+
+function resizeDesignBar() {
+  if(signStepsContainer && signStepsWrapper) {
+    if(signStepsContainer.hasClass("fixed")) {
+      signStepsWrapper.height(signStepsContainer.height());
+    }
+  }
+}
