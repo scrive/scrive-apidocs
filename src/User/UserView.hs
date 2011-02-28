@@ -55,9 +55,11 @@ import qualified Data.ByteString.UTF8 as BS
 
 showUser :: KontrakcjaTemplates -> User -> [User] -> IO String 
 showUser templates user viewers = renderTemplate templates "showUser" $
-                                                        (setAttribute "fullname" $ BS.toString $ userfullname user ) .
+                                                        (setAttribute "fname" $ BS.toString $ userfstname $ userinfo user ) .
+                                                        (setAttribute "lname" $ BS.toString $ usersndname $ userinfo user ) .
                                                         (setAttribute "email" $ BS.toString $ unEmail $ useremail $ userinfo user) .
                                                         (setAttribute "companyname" $ BS.toString $ usercompanyname $ userinfo user) .
+                                                        (setAttribute "companyposition" $ BS.toString $ usercompanyposition $ userinfo user) .
                                                         (setAttribute "companynumber" $ BS.toString $ usercompanynumber $ userinfo user) .
                                                         (setAttribute "invoiceaddress" $ BS.toString $ useraddress $ userinfo user) .
                                                         (setAttribute "viewers" $ map (BS.toString . prettyName)  viewers) .
@@ -77,16 +79,18 @@ viewSubaccounts templates subusers =
     (setAttribute "subaccountslink" $ show LinkSubaccount)
 
 
-activatePageView :: KontrakcjaTemplates -> String -> String -> IO String
-activatePageView templates tostext name =
-  renderTemplate templates "activatePageView" $ do
-    field "tostext" tostext
-    field "name" name
-
 
 activatePageView::KontrakcjaTemplates -> String -> String ->  IO String
-activatePageView templates tostext name = renderTemplate templates "activatePageView" [("tostext",tostext),("name",name)]
+activatePageView templates tostext name = 
+    renderTemplate templates "activatePageView" $ do
+        field "tostext" tostext
+        field "fname" fname
+        field "lname" $ drop 1 sname
+  where (fname,sname) = span (/= ' ') name    
 
+activatePageViewNotValidLink :: KontrakcjaTemplates -> String -> IO String
+activatePageViewNotValidLink templates email =
+  renderTemplate templates "activatePageViewNotValidLink" $ field "email" email
 
 newPasswordPageView :: KontrakcjaTemplates -> IO String
 newPasswordPageView templates =
