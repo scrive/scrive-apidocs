@@ -74,18 +74,29 @@ pageAcceptTOS =
 ####
 showUser =
     <div class="accounttable">
-      <h1>$fullname$</h1>
+      <h1>$fname$ $lname$</h1>
       <div>
         <form action="$linkaccount$" method="post">
           <table>
-            <tr><td>Namn:</td>
-              <td><input type="text" name="fullname" value="$fullname$" /></td>
+            <tr>
+              <td>Förnamn:</td>
+              <td><input type="text" name="fname" autocomplete="off" value="$fname$"></td>
             </tr>
-            <tr><td>E-post:</td>
+            <tr>
+              <td>Efternamn:</td>
+              <td><input type="text" name="lname" autocomplete="off" value="$lname$"></td>
+            </tr>
+            <tr>
+            <tr>
+              <td>E-post:</td>
               <td>$email$</td>
             </tr>
             <tr><td>Företagsnamn:</td>
               <td><input type="text" name="companyname" value="$companyname$" /></td>
+            </tr>
+            <tr>
+              <td>Position:</td>
+              <td><input type="text" name="companyposition" autocomplete="off" value="$companyposition$"></td>
             </tr>
             <tr><td>Organisationsnummer:</td>
               <td><input type="text" name="companynumber" value="$companynumber$" /></td>
