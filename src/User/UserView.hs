@@ -54,20 +54,18 @@ import qualified Data.ByteString.UTF8 as BS
 
 
 showUser :: KontrakcjaTemplates -> User -> [User] -> IO String 
-showUser templates user viewers =
-  renderTemplate templates "showUser" $
-    (setAttribute "fullname" . BS.toString $ userfullname user) .
-    (setAttribute "email" . BS.toString . unEmail . useremail $ userinfo user) .
-    (setAttribute "companyname" . BS.toString . usercompanyname $ userinfo user) .
-    (setAttribute "companynumber" . BS.toString . usercompanynumber $ userinfo user) .
-    (setAttribute "invoiceaddress" . BS.toString . useraddress $ userinfo user) .
-    (setAttribute "viewers" $ map (BS.toString . prettyName) viewers) .
-    (setAttribute "linkaccount" $ show LinkAccount) .
-    (setAttribute "linkaccountpassword" $ show LinkAccountPassword) .
-    (setAttribute "linksubaccount" $ show LinkSubaccount)
-
-
-pageAcceptTOS :: KontrakcjaTemplates -> BS.ByteString -> IO String
+showUser templates user viewers = renderTemplate templates "showUser" $
+                                                        (setAttribute "fullname" $ BS.toString $ userfullname user ) .
+                                                        (setAttribute "email" $ BS.toString $ unEmail $ useremail $ userinfo user) .
+                                                        (setAttribute "companyname" $ BS.toString $ usercompanyname $ userinfo user) .
+                                                        (setAttribute "companynumber" $ BS.toString $ usercompanynumber $ userinfo user) .
+                                                        (setAttribute "invoiceaddress" $ BS.toString $ useraddress $ userinfo user) .
+                                                        (setAttribute "viewers" $ map (BS.toString . prettyName)  viewers) .
+                                                        (setAttribute "linkaccount" $ show LinkAccount) .
+                                                        (setAttribute "linkaccountpassword" $ show LinkAccountPassword) .
+                                                        (setAttribute "linksubaccount" $ show LinkSubaccount) 
+    
+pageAcceptTOS :: KontrakcjaTemplates ->  BS.ByteString -> IO String
 pageAcceptTOS templates tostext = 
   renderTemplate templates "pageAcceptTOS" $ field "tostext" (BS.toString tostext)
 
@@ -86,9 +84,8 @@ activatePageView templates tostext name =
     field "name" name
 
 
-activatePageViewNotValidLink :: KontrakcjaTemplates -> String -> IO String
-activatePageViewNotValidLink templates email =
-  renderTemplate templates "activatePageViewNotValidLink" $ field "email" email
+activatePageView::KontrakcjaTemplates -> String -> String ->  IO String
+activatePageView templates tostext name = renderTemplate templates "activatePageView" [("tostext",tostext),("name",name)]
 
 
 newPasswordPageView :: KontrakcjaTemplates -> IO String

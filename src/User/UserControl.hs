@@ -70,8 +70,10 @@ handleUserGet = do
 handleUserPost :: Kontra KontraLink
 handleUserPost = do
   ctx@Context{ctxmaybeuser = Just user@User{userid},ctxtime} <- get
-  fullname <- g "fullname"
+  fname <- g "fname"
+  lname <- g "lname"
   companyname <- g "companyname"
+  companyposition <- g "companyposition"
   companynumber <- g "companynumber"
   invoiceaddress <- g "invoiceaddress"
   newvieweremail <- g "newvieweremail"
@@ -83,7 +85,7 @@ handleUserPost = do
        Right _  -> return ()
      return ()
   
-  newuser <- update $ SetUserDetails userid fullname companyname companynumber invoiceaddress
+  newuser <- update $ SetUserDetails userid fname lname companyname companyposition companynumber invoiceaddress
   addFlashMsgText =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
 
   return LinkAccount
@@ -397,7 +399,10 @@ handleActivate::(Maybe User) ->Kontra () -> Kontra KontraLink
 handleActivate muser dropSessionAction = do
                         ctx <- get
                         tos <- fmap ((==) $ Just "on") $ getField "tos"
-                        name <- fmap (fromMaybe "") $ getField "name"
+                        fname <- fmap (fromMaybe "") $ getField "fname"
+                        lname <- fmap (fromMaybe "") $ getField "lname"
+                        companyname <- fmap (fromMaybe "") $ getField "companyname"
+                        companytitle <- fmap (fromMaybe "") $ getField "companyposition"
                         password <- fmap (fromMaybe "") $ getField "password"
                         password2 <- fmap (fromMaybe "") $ getField "password2"
                         case muser of 
@@ -408,7 +413,11 @@ handleActivate muser dropSessionAction = do
                                             passwordhash <- liftIO $ createPassword $ BS.fromString password
                                             update $ SetUserPassword user passwordhash
                                             update $ AcceptTermsOfService (userid user) (ctxtime ctx)
-                                            update $ SetUserInfo (userid user) $ (userinfo user) {userfstname = BS.fromString name}
+                                            update $ SetUserInfo (userid user) $ (userinfo user) {userfstname = BS.fromString fname,
+                                                                                                  usersndname = BS.fromString lname,
+                                                                                                  usercompanyname  = BS.fromString  companyname, 
+                                                                                                  usercompanyposition = BS.fromString companytitle
+                                                                                                  }
                                             now <- liftIO getMinutesTime
                                             update $ AddFreePaymentsForInviter now user
                                             dropSessionAction

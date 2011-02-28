@@ -150,6 +150,7 @@ data UserAdminView = UserAdminView {
                    , uavusersndname::String
                    , uavuserpersonalnumber::String
                    , uavusercompanyname::String
+                   , uavusercompanyposition::String
                    , uavusercompanynumber::String
                    , uavuseraddress::String
                    , uavuserzip::String
@@ -176,6 +177,7 @@ userAdminView u =  UserAdminView {
                    , uavusersndname =  toString $ usersndname $ userinfo u
                    , uavuserpersonalnumber =  toString $ userpersonalnumber $ userinfo u
                    , uavusercompanyname =  toString $ usercompanyname $ userinfo u
+                   , uavusercompanyposition =  toString $ usercompanyposition $ userinfo u
                    , uavusercompanynumber =  toString $ usercompanynumber $ userinfo u
                    , uavuseraddress =  toString $ useraddress$ userinfo u
                    , uavuserzip =  toString $ userzip  $ userinfo u

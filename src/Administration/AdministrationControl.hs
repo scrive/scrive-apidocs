@@ -277,6 +277,7 @@ getUserInfoChange = do
                      musersndname        <- getField' fromString "usersndname" 
                      muserpersonalnumber <- getField' fromString "userpersonalnumber" 
                      musercompanyname    <- getField' fromString "usercompanyname" 
+                     musercompanyposition    <- getField' fromString "usercompanyposition" 
                      musercompanynumber  <- getField' fromString "usercompanynumber" 
                      museraddress        <- getField' fromString "useraddress" 
                      muserzip            <- getField' fromString "userzip" 
@@ -290,6 +291,7 @@ getUserInfoChange = do
                                   , usersndname 
                                   , userpersonalnumber
                                   , usercompanyname
+                                  , usercompanyposition
                                   , usercompanynumber 
                                   , useraddress
                                   , userzip
@@ -304,6 +306,7 @@ getUserInfoChange = do
                                           , userpersonalnumber = maybe' userpersonalnumber muserpersonalnumber
                                           , usercompanyname =  maybe' usercompanyname musercompanyname
                                           , usercompanynumber  =  maybe' usercompanynumber musercompanynumber
+                                          , usercompanyposition = maybe' usercompanyposition musercompanyposition
                                           , useraddress =  maybe' useraddress museraddress
                                           , userzip = maybe' userzip muserzip
                                           , usercity  = maybe' usercity musercity

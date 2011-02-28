@@ -140,6 +140,11 @@ adminuser=
               <input type="text" style="width:200px;margin:0" value="$user.uavusercompanyname$"  name="usercompanyname" />
             </td>
           </tr>
+          <tr> <td>Company position:</td>
+            <td>
+              <input type="text" style="width:200px;margin:0" value="$user.uavusercompanyposition$"  name="usercompanyposition" />
+            </td>
+          </tr>
           <tr> <td>Company nr:</td>
             <td>
               <input type="text" style="width:200px;margin:0" value="$user.uavusercompanynumber$"  name="usercompanynumber" />
