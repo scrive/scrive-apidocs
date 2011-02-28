@@ -65,8 +65,20 @@ activatePageView=
       <div class="passwordAndSubmit">
         <table><tbody>
             <tr>
-              <td>Namn:</td>
-              <td><input type="text" name="name" autocomplete="off" value="$if(name)$$name$$endif$"></td>
+              <td>Förnamn:</td>
+              <td><input type="text" name="fname" autocomplete="off" value="$if(fname)$$fname$$endif$"></td>
+            </tr>
+            <tr>
+              <td>Efternamn:</td>
+              <td><input type="text" name="lname" autocomplete="off" value="$if(lname)$$lname$$endif$"></td>
+            </tr>
+            <tr>
+              <td>Företag:</td>
+              <td><input type="text" name="companyname" autocomplete="off" value=""></td>
+            </tr>
+            <tr>
+              <td>Position:</td>
+              <td><input type="text" name="companyposition" autocomplete="off" value=""></td>
             </tr>
             <tr>
               <td>Välj lösenord:</td>

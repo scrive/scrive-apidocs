@@ -93,11 +93,27 @@ $(deriveAll [''Eq, ''Ord, ''Default]
       data UserAccountType = MainAccount | SubAccount
       data PaymentMethod = CreditCard | Invoice | Undefined
       data UserAccountPlan = Basic
+      data UserInfo0 = UserInfo0 {
+            userfstname0                   :: BS.ByteString
+          , usersndname0                   :: BS.ByteString
+          , userpersonalnumber0            :: BS.ByteString
+          , usercompanyname0               :: BS.ByteString
+          , usercompanynumber0             :: BS.ByteString
+          , useraddress0                   :: BS.ByteString 
+          , userzip0                       :: BS.ByteString
+          , usercity0                      :: BS.ByteString
+          , usercountry0                   :: BS.ByteString
+          , userphone0                     :: BS.ByteString
+          , usermobile0                    :: BS.ByteString
+          , useremail0                     :: Email 
+          }       
+          
       data UserInfo = UserInfo {
             userfstname                   :: BS.ByteString
           , usersndname                   :: BS.ByteString
           , userpersonalnumber            :: BS.ByteString
           , usercompanyname               :: BS.ByteString
+          , usercompanyposition           :: BS.ByteString
           , usercompanynumber             :: BS.ByteString
           , useraddress                   :: BS.ByteString 
           , userzip                       :: BS.ByteString
@@ -106,7 +122,7 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , userphone                     :: BS.ByteString
           , usermobile                    :: BS.ByteString
           , useremail                     :: Email 
-          }       
+          }        
       data UserSettings  = UserSettings {
                accounttype :: UserAccountType
              , accountplan :: UserAccountPlan
@@ -435,6 +451,7 @@ instance Migrate User6 User7 where
                                   , usersndname = BS.empty
                                   , userpersonalnumber = BS.empty
                                   , usercompanyname = usercompanyname6
+                                  , usercompanyposition = BS.empty
                                   , usercompanynumber  = usercompanynumber6
                                   , useraddress = userinvoiceaddress6
                                   , userzip = BS.empty
@@ -515,6 +532,40 @@ userfullname :: User -> BS.ByteString
 userfullname u = if (BS.null $ usersndname $ userinfo u) 
                   then (userfstname $ userinfo u) 
                   else (userfstname $ userinfo u) `BS.append` (BS.fromString " ") `BS.append` (usersndname $ userinfo u)
+
+
+  
+instance Migrate UserInfo0 UserInfo where
+    migrate (UserInfo0 {
+            userfstname0  
+          , usersndname0       
+          , userpersonalnumber0    
+          , usercompanyname0    
+          , usercompanynumber0  
+          , useraddress0  
+          , userzip0     
+          , usercity0          
+          , usercountry0   
+          , userphone0          
+          , usermobile0          
+          , useremail0        
+          }) = UserInfo {
+            userfstname = userfstname0 
+          , usersndname = usersndname0
+          , userpersonalnumber = userpersonalnumber0
+          , usercompanyname = usercompanyname0
+          , usercompanyposition = BS.empty
+          , usercompanynumber = usercompanynumber0
+          , useraddress = useraddress0
+          , userzip = userzip0
+          , usercity = usercity0
+          , usercountry = usercountry0
+          , userphone = userphone0
+          , usermobile = usermobile0
+          , useremail = useremail0
+          }   
+  
+  
   
 isPasswordStrong :: BS.ByteString -> Bool
 isPasswordStrong password
@@ -591,8 +642,13 @@ instance Version PaymentMethod
 $(deriveSerialize ''UserAccountPlan )
 instance Version UserAccountPlan 
 
+$(deriveSerialize ''UserInfo0)
+instance Version UserInfo0
+
 $(deriveSerialize ''UserInfo)
-instance Version UserInfo
+instance Version UserInfo where
+    mode = extension 1 (Proxy :: Proxy UserInfo0)
+
 
 $(deriveSerialize ''UserSettings)
 instance Version UserSettings
@@ -721,6 +777,7 @@ addUser fullname email passwd maybesupervisor = do
                                   , usersndname = BS.empty
                                   , userpersonalnumber = BS.empty
                                   , usercompanyname =  BS.empty
+                                  , usercompanyposition =  BS.empty
                                   , usercompanynumber  =  BS.empty
                                   , useraddress =  BS.empty
                                   , userzip = BS.empty
@@ -772,11 +829,15 @@ setUserDetails :: UserID
                -> BS.ByteString
                -> BS.ByteString
                -> BS.ByteString
+               -> BS.ByteString
+               -> BS.ByteString
                -> Update Users (Either String User)
-setUserDetails userid fullname companyname companynumber invoiceaddress =
+setUserDetails userid fname lname companyname companyposition companynumber invoiceaddress =
     modifyUser userid $ \user -> 
-            Right $ user { userinfo = (userinfo user) { userfstname = fullname
+            Right $ user { userinfo = (userinfo user) { userfstname = fname
+                                                      , usersndname = lname
                                                       , usercompanyname = companyname
+                                                      , usercompanyposition = companyposition
                                                       , usercompanynumber = companynumber
                                                       , useraddress = invoiceaddress
                                                       }
