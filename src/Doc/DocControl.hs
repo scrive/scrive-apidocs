@@ -49,6 +49,9 @@ import qualified SealSpec as Seal
 import qualified TrustWeaver as TW
 import qualified AppLogger as Log
 import System.IO.Temp
+import qualified MemCache
+import Data.Char
+import Data.Map ((!))
 
 getFileContents :: Context -> File -> IO (BS.ByteString)
 getFileContents ctx file = do
