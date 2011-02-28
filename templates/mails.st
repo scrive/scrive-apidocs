@@ -294,7 +294,7 @@ whohadsignedinfoforpreview=
 ####
 ####
 legalparagraph=
-<p style="width:90%;font-size:9pt;font-style:italic;"> 
+<p style="width:90%;font-size:8pt;font-style:italic;"> 
    Detta e-postmeddelande innehåller konfidentiell information och får inte vidarebefordras.
    Avslöjande, kopiering, distribution eller annan handling som rör informationen i 
    meddelandet är förbjuden och kan vara olagligt. Om du felaktigt mottagit detta meddelande 
