@@ -252,7 +252,8 @@ showFilesImages2 templates files = do
 emptyDetails :: SignatoryDetails
 emptyDetails =
   SignatoryDetails {
-      signatoryname = BS.empty
+      signatoryfstname = BS.empty
+    , signatorysndname = BS.empty
     , signatorycompany = BS.empty
     , signatorynumber = BS.empty
     , signatoryemail = BS.empty
@@ -443,8 +444,7 @@ showSignatoryLinkForSign
     , invitationdeliverystatus
     , signatorydetails =
       SignatoryDetails {
-          signatoryname
-        , signatorynumber
+        signatorynumber
         , signatorycompany
         , signatoryemail
         , signatoryotherfields
@@ -518,7 +518,7 @@ showSignatoryLinkForSign
     renderTemplate ctxtemplates "showSignatoryLinkForSign" $  do
       field "mainclass" $ if isCurrentSignatorAuthor then "author" else "signatory"
       field "status" status
-      field "signatoryname" $ packToMString signatoryname 
+      field "signatoryname" $ packToMString $ signatoryname $ signatorydetails siglnk
       field "signatorycompany" $ packToMString signatorycompany
       field "signatorynumber" $ packToMString signatorynumber
       field "signatoryemail" $ packToMString signatoryemail
@@ -622,9 +622,8 @@ buildPlacementJS FieldPlacement {
 
 
 buildSigJS :: SignatoryDetails -> [Char]
-buildSigJS SignatoryDetails {
-    signatoryname
-  , signatorycompany
+buildSigJS siglnk@(SignatoryDetails {
+  signatorycompany
   , signatorynumber
   , signatoryemail
   , signatorynameplacements
@@ -632,9 +631,9 @@ buildSigJS SignatoryDetails {
   , signatoryemailplacements
   , signatorynumberplacements
   , signatoryotherfields
-  } =
+  }) =
      "{ name: "
-  ++ jsStringFromBS  signatoryname
+  ++ jsStringFromBS  (signatoryname siglnk)
   ++ ", company: " ++ jsStringFromBS  signatorycompany
   ++ ", email: " ++ jsStringFromBS signatoryemail
   ++ ", number: " ++ jsStringFromBS signatorynumber

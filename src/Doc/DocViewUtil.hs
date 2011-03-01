@@ -1,27 +1,19 @@
-{-# OPTIONS_GHC -F -pgmFtrhsx -Wall #-}
+{-# OPTIONS_GHC -Wall #-}
 
 module Doc.DocViewUtil (   personname,
                        personname',
                        partyList,
                        partyListButAuthor,
-                       partyListString,
-                       partyListButAuthorString,
                        partySignedList,
-                       partyUnsignedListString,
                        partyUnsignedMeAndList,
-                       partyUnsignedMeAndListString,
                        partyUnsignedList,  
                        joinWith,
-                       addbr,
                        emailFromSignLink,
                        renderListTemplate,  
-                       swedishListString 
            ) where
 import Doc.DocState
-import HSP
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
-import qualified HSX.XMLGenerator as HSX
 import Misc
 import Templates.Templates 
 import Data.Maybe
@@ -49,7 +41,8 @@ partyUnsignedMeAndList magichash document =
         cond signlink = signatorymagichash signlink /= magichash &&
                         maybesigninfo signlink == Nothing
         unsignalinks = filter cond signalinks
-        me = SignatoryDetails { signatoryname = BS.fromString "du"
+        me = SignatoryDetails { signatoryfstname = BS.fromString "du"
+                              , signatorysndname = BS.empty
                               , signatorycompany = BS.empty
                               , signatorynumber = BS.empty
                               , signatoryemail = BS.empty
@@ -66,46 +59,11 @@ partyListButAuthor :: Document -> [SignatoryDetails]
 partyListButAuthor document@Document{ documentauthor=Author authorid } =
     map signatorydetails (filter ((maybe True ((/= authorid) . unSignatory)) . maybesignatory) (documentsignatorylinks document))
 
-partyListButAuthorString :: (XMLGenerator m) => Document -> GenChildList m
-partyListButAuthorString document =
-    swedishListString (map (strong . BS.toString . personname') (partyListButAuthor document))
-
-partyListString :: (XMLGenerator m) => Document -> GenChildList m
-partyListString document = 
-    swedishListString (map (strong . BS.toString . personname') (partyList document))
-
-partyUnsignedListString :: (XMLGenerator m) => Document -> GenChildList m
-partyUnsignedListString document = 
-    swedishListString (map (strong . BS.toString . personname') (partyUnsignedList document))
-
-partyUnsignedMeAndListString :: (XMLGenerator m) => MagicHash -> Document -> GenChildList m
-partyUnsignedMeAndListString magichash document =
-    swedishListString (map (strong . BS.toString . personname') (partyUnsignedMeAndList magichash document))
-
-
-swedishListString :: (XMLGenerator m) => [XMLGenT m (HSX.XML m)] -> GenChildList m
-swedishListString [] = return []
-swedishListString [x] = asChild x
-swedishListString [x, y] = do
-  list <- sequence [asChild x, asChild " och ", asChild y]
-  return (concat list)
-swedishListString (x:xs) = do
-  list <- sequence [asChild x, asChild ", "]
-  list2 <- swedishListString xs
-  return (concat list ++ list2)
   
-strong :: (XMLGenerator m) => String -> XMLGenT m (HSX.XML m)
-strong x = <strong><% x %></strong>
-                 
 joinWith::[a]->[[a]]->[a]
 joinWith _ [] = []
 joinWith _ [x] = x
 joinWith s (x:xs) = x ++ s ++ (joinWith s xs)  
-
-addbr::(HSX.XMLGen m) => BS.ByteString -> [GenChildList m]
-addbr text | BS.null text = []
-addbr text = [<% text %>, <% <br/> %>]
-
 
 {- Either a signatory name or email address. We dont want to show empty strings -}
 personname::SignatoryLink -> BS.ByteString 

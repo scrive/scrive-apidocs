@@ -152,15 +152,12 @@ sendDocumentErrorEmail ctx document = do
 sendDocumentErrorEmail1 :: Context -> Document -> SignatoryLink -> IO ()
 sendDocumentErrorEmail1 ctx document signatorylink = do
   let SignatoryLink{ signatorylinkid
-                   , signatorydetails = SignatoryDetails { signatoryname
-                                                         , signatorycompany
-                                                         , signatoryemail
-                                                         }
+                   , signatorydetails
                    , signatorymagichash } = signatorylink
       Document{documenttitle,documentid} = document
   mail <- mailDocumentError (ctxtemplates ctx) ctx document
   sendMail (ctxmailer ctx) $ 
-           mail { fullnameemails = [(signatoryname,signatoryemail)]
+           mail { fullnameemails = [(signatoryname signatorydetails,signatoryemail signatorydetails)]
                 , mailInfo = Invitation signatorylinkid
                 } 
 
@@ -180,10 +177,7 @@ sendInvitationEmails ctx document author = do
 sendInvitationEmail1 :: Context -> Document -> User -> SignatoryLink -> IO ()
 sendInvitationEmail1 ctx document author signatorylink = do
   let SignatoryLink{ signatorylinkid
-                   , signatorydetails = SignatoryDetails { signatoryname
-                                                         , signatorycompany
-                                                         , signatoryemail
-                                                         }
+                   , signatorydetails
                    , signatorymagichash } = signatorylink
       Document{documenttitle,documentid} = document
       authorid = unAuthor $ documentauthor document
@@ -193,7 +187,7 @@ sendInvitationEmail1 ctx document author signatorylink = do
            else mailInvitationToSend (ctxtemplates ctx) ctx document signatorylink author
   attachmentcontent <- getFileContents ctx $ head $ documentfiles document
   sendMail (ctxmailer ctx) $ 
-           mail { fullnameemails = [(signatoryname,signatoryemail)]
+           mail { fullnameemails = [(signatoryname signatorydetails,signatoryemail signatorydetails)]
                 , attachments = [(documenttitle,attachmentcontent)]
                 , mailInfo = Invitation signatorylinkid
                 } 
@@ -216,13 +210,12 @@ sendClosedEmail1 :: Context -> Document -> SignatoryLink -> IO ()
 sendClosedEmail1 ctx document signatorylink = do
   let SignatoryLink{ signatorylinkid
                    , signatorymagichash
-                   , signatorydetails = SignatoryDetails { signatoryname
-                                                         , signatorycompany
-                                                         , signatoryemail }} = signatorylink
+                   , signatorydetails } = signatorylink
       Document{documenttitle,documentid} = document
   mail <- mailDocumentClosedForSignatories (ctxtemplates ctx) ctx document signatorylink
   attachmentcontent <- getFileContents ctx $ head $ documentsealedfiles document
-  sendMail  (ctxmailer ctx) $ mail { fullnameemails =  [(signatoryname,signatoryemail)] , attachments = [(documenttitle,attachmentcontent)]}
+  sendMail  (ctxmailer ctx) $ mail { fullnameemails =  [(signatoryname signatorydetails,signatoryemail signatorydetails)]
+                                     , attachments = [(documenttitle,attachmentcontent)]}
 
 {- |
    Send an email to the author when the document is awaiting approval
@@ -718,6 +711,7 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} ms
                       
                  else zipWith5 sd sigids signatoriesnames signatoriescompanies signatoriesnumbers signatoriesemails 
           sdsimple n c no e = SignatoryDetails n
+                                               BS.empty
                                                c
                                                no
                                                e
@@ -727,6 +721,7 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} ms
                                                []
                                                []
           sd id n c no e = SignatoryDetails n 
+                                            BS.empty
                                             c 
                                             no 
                                             e 

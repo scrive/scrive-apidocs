@@ -15,6 +15,7 @@ module Doc.DocState
     , SignInfo(..)
     , Signatory(..)
     , SignatoryDetails(..)
+    , signatoryname
     , SignatoryLink(..)
     , SignatoryLinkID(..)
     , TimeoutTime(..)
@@ -147,8 +148,22 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , signatoryemail00     :: BS.ByteString  -- "gracjanpolak@skrivapa.se"
           }
 
+      data SignatoryDetails1 = SignatoryDetails1
+          { signatoryname1      :: BS.ByteString  -- "Gracjan Polak" 
+          , signatorycompany1   :: BS.ByteString  -- SkrivaPå
+          , signatorynumber1    :: BS.ByteString  -- 123456789
+          , signatoryemail1     :: BS.ByteString  -- "gracjanpolak@skrivapa.se"
+          -- for templates
+          , signatorynameplacements1 :: [FieldPlacement]
+          , signatorycompanyplacements1 :: [FieldPlacement]
+          , signatoryemailplacements1 :: [FieldPlacement]
+          , signatorynumberplacements1 :: [FieldPlacement]
+          , signatoryotherfields1 :: [FieldDefinition]
+          } 
+          
       data SignatoryDetails = SignatoryDetails
-          { signatoryname      :: BS.ByteString  -- "Gracjan Polak" 
+          { signatoryfstname   :: BS.ByteString  -- "Gracjan Polak" 
+          , signatorysndname   :: BS.ByteString  -- "Gracjan Polak" 
           , signatorycompany   :: BS.ByteString  -- SkrivaPå
           , signatorynumber    :: BS.ByteString  -- 123456789
           , signatoryemail     :: BS.ByteString  -- "gracjanpolak@skrivapa.se"
@@ -158,8 +173,8 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , signatoryemailplacements :: [FieldPlacement]
           , signatorynumberplacements :: [FieldPlacement]
           , signatoryotherfields :: [FieldDefinition]
-          } 
-
+          }     
+      
       data SignatoryLink0 = SignatoryLink0 
           { signatorylinkid0    :: SignatoryLinkID
           , signatoryname0      :: BS.ByteString 
@@ -690,10 +705,14 @@ instance Migrate SignInfo0 SignInfo where
 $(deriveSerialize ''SignatoryDetails0)
 instance Version SignatoryDetails0
 
-$(deriveSerialize ''SignatoryDetails)
-instance Version SignatoryDetails where
+$(deriveSerialize ''SignatoryDetails1)
+instance Version SignatoryDetails1 where
     mode = extension 1 (Proxy :: Proxy SignatoryDetails0)
 
+$(deriveSerialize ''SignatoryDetails)
+instance Version SignatoryDetails where
+    mode = extension 2 (Proxy :: Proxy SignatoryDetails1)
+    
 $(deriveSerialize ''SignatoryLink0)
 instance Version SignatoryLink0
 
@@ -717,23 +736,49 @@ $(deriveSerialize ''SignatoryLink)
 instance Version SignatoryLink where
     mode = extension 5 (Proxy :: Proxy SignatoryLink4)
     
-instance Migrate SignatoryDetails0 SignatoryDetails where
+instance Migrate SignatoryDetails0 SignatoryDetails1 where
     migrate (SignatoryDetails0
              { signatoryname00 
              , signatorycompany00
              , signatorynumber00 
              , signatoryemail00
-             }) = SignatoryDetails
-                { signatoryname = signatoryname00
-                , signatorycompany = signatorycompany00
-                , signatorynumber = signatorynumber00
-                , signatoryemail = signatoryemail00
-                , signatorynameplacements = []
-                , signatorycompanyplacements = []
-                , signatoryemailplacements = []
-                , signatorynumberplacements = []
-                , signatoryotherfields = []
+             }) = SignatoryDetails1
+                { signatoryname1 = signatoryname00
+                , signatorycompany1 = signatorycompany00
+                , signatorynumber1 = signatorynumber00
+                , signatoryemail1 = signatoryemail00
+                , signatorynameplacements1 = []
+                , signatorycompanyplacements1 = []
+                , signatoryemailplacements1 = []
+                , signatorynumberplacements1 = []
+                , signatoryotherfields1 = []
                 }
+
+
+instance Migrate SignatoryDetails1 SignatoryDetails where
+    migrate (SignatoryDetails1
+             {  signatoryname1
+                , signatorycompany1
+                , signatorynumber1
+                , signatoryemail1
+                , signatorynameplacements1
+                , signatorycompanyplacements1
+                , signatoryemailplacements1
+                , signatorynumberplacements1
+                , signatoryotherfields1
+              }) = SignatoryDetails
+                { signatoryfstname =  signatoryname1
+                , signatorysndname = BS.empty
+                , signatorycompany = signatorycompany1
+                , signatorynumber = signatorynumber1
+                , signatoryemail = signatoryemail1
+                , signatorynameplacements = signatorynameplacements1
+                , signatorycompanyplacements = signatorycompanyplacements1
+                , signatoryemailplacements = signatoryemailplacements1
+                , signatorynumberplacements = signatorynumberplacements1
+                , signatoryotherfields = signatoryotherfields1
+                }
+
 
 instance Migrate SignatoryLink0 SignatoryLink1 where
     migrate (SignatoryLink0 
@@ -747,7 +792,8 @@ instance Migrate SignatoryLink0 SignatoryLink1 where
           }) = SignatoryLink1 
           { signatorylinkid1 = signatorylinkid0
           , signatorydetails1 = SignatoryDetails 
-                               { signatoryname = signatoryname0
+                               { signatoryfstname = signatoryname0
+                               , signatorysndname = BS.empty
                                , signatorycompany = signatorycompany0
                                , signatorynumber = BS.empty
                                , signatoryemail = signatoryemail0
@@ -971,7 +1017,7 @@ instance Migrate Document2 Document3 where
           , documentdaystosign3 = documentdaystosign2
           , documenttimeouttime3 = documenttimeouttime2
           , documentdeleted3 = False
-          , documentauthordetails3 = SignatoryDetails BS.empty BS.empty BS.empty BS.empty [] [] [] [] []
+          , documentauthordetails3 = SignatoryDetails BS.empty BS.empty BS.empty BS.empty BS.empty [] [] [] [] []
           , documentmaybesigninfo3 = Nothing
           , documenthistory3 = []
           }
@@ -1336,7 +1382,6 @@ instance Migrate JpegPages0 JpegPages where
 $(deriveSerialize ''FileID)
 instance Version FileID where
 
-
 $(inferIxSet "Documents" ''Document 'noCalcs 
                  [ ''DocumentID
                  , ''Author
@@ -1348,6 +1393,12 @@ $(inferIxSet "Documents" ''Document 'noCalcs
 instance Component Documents where
   type Dependencies Documents = End
   initialValue = empty
+
+signatoryname :: SignatoryDetails -> BS.ByteString
+signatoryname s = 
+    if (BS.null $ signatorysndname s) 
+        then (signatoryfstname s) 
+        else (signatoryfstname s) `BS.append` (BS.fromString " ") `BS.append` (signatorysndname s)
 
 getDocuments:: Query Documents [Document]
 getDocuments = do
@@ -1808,7 +1859,8 @@ fragileTakeOverDocuments destuser srcuser = do
                                     where (matching, others) = partition (isMatchingSignatoryLink srcuser) siglinks 
         takeoverSigLink siglink = siglink {maybesignatory = Just (Signatory (userid destuser)),
                                            signatorydetails = takeoverSigDetails (signatorydetails siglink) }
-        takeoverSigDetails sigdetails = sigdetails {signatoryname = BS.intercalate (BS.fromString " ") [userfstname info, usersndname info],
+        takeoverSigDetails sigdetails = sigdetails {signatoryfstname = userfstname info,
+                                                    signatorysndname = usersndname info,
                                                     signatorycompany = usercompanyname info,
                                                     signatoryemail = unEmail $ useremail info }
                                         where info = userinfo destuser
@@ -1990,7 +2042,8 @@ undeliveredSignatoryLinks doc =  filter ((== Undelivered) . invitationdeliveryst
    Build a SignatoryDetails from a User with no fields
  -}
 signatoryDetailsFromUser user = 
-    SignatoryDetails { signatoryname = userfullname user
+    SignatoryDetails { signatoryfstname = userfstname $ userinfo user 
+                     , signatorysndname = usersndname $ userinfo user 
                      , signatoryemail = unEmail $ useremail $ userinfo user
                      , signatorycompany = usercompanyname $ userinfo user
                      , signatorynumber = usercompanynumber $ userinfo user
