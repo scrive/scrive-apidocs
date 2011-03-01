@@ -97,6 +97,6 @@ facebooklogo=
 ####
 flashmessages = 
 <div class="flashmsgbox">
-            $flashmessages:{ msg | <div class="flashmessage">$msg:noescape()$</div> }$
+            $flashmessages:{ flash | <div class="flash_$flash.0$"><div class="flashmessage ">$flash.1:noescape()$</div></div> }$
 </div>
 ####

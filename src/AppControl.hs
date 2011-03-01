@@ -363,11 +363,11 @@ forgotPasswordPagePost = do
                       muser <- query $ GetUserByEmail $ Email (BS.fromString email)                    
                       case muser of 
                        Nothing -> do 
-                                   addFlashMsgText =<< (liftIO $ flashMessageNoSuchUserExists $ ctxtemplates ctx)
+                                   addFlashMsg =<< (liftIO $ flashMessageNoSuchUserExists $ ctxtemplates ctx)
                                    return LoopBack
                        Just user -> do
                                      sendResetPasswordMail user
-                                     addFlashMsgText =<< (liftIO $ flashMessageChangePasswordEmailSend $ ctxtemplates ctx)
+                                     addFlashMsg =<< (liftIO $ flashMessageChangePasswordEmailSend $ ctxtemplates ctx)
                                      return LinkForgotPasswordDone
       Nothing -> return LoopBack
 
@@ -434,20 +434,20 @@ signup vip freetill =  do
                                          do  al <- liftIO $ unloggedActionLink user
                                              mail <-  liftIO $ newUserMail (ctxtemplates) (ctxhostpart) email email al vip
                                              liftIO $ sendMail (ctxmailer ctx) $ mail { fullnameemails = [(email,email)]}
-                                             addFlashMsgText =<< (liftIO $ flashMessageNewActivationLinkSend  (ctxtemplates)) 
+                                             addFlashMsg =<< (liftIO $ flashMessageNewActivationLinkSend  (ctxtemplates)) 
                                              return LoopBack
                                           else do
-                                             addFlashMsgText =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
+                                             addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
                                              return LoopBack
                           Nothing -> do
                             maccount <- liftIO $ UserControl.createUser ctx ctxhostpart BS.empty email Nothing True Nothing vip
                             case maccount of      
                              Just account ->  do
-                                               addFlashMsgText =<< (liftIO $ flashMessageUserSignupDone ctxtemplates)
+                                               addFlashMsg =<< (liftIO $ flashMessageUserSignupDone ctxtemplates)
                                                when (isJust freetill) $ update $ FreeUserFromPayments account (fromJust freetill)
                                                return LoopBack
                              Nothing ->       do
-                                              addFlashMsgText =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
+                                              addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
                                               return LoopBack
 {- |
    Sends a new activation link mail, which is really just a new user mail.

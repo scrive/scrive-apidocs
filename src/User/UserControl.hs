@@ -1,4 +1,5 @@
 module User.UserControl where
+
 import Control.Monad.State
 import Control.Monad.Trans (liftIO,MonadIO,lift)
 import Control.Monad
@@ -45,18 +46,18 @@ handleUserPasswordPost = do
            Right () -> do
                         passwordhash <- liftIO $ createPassword $ BS.fromString password
                         update $ SetUserPassword user passwordhash
-                        addFlashMsgText =<< (liftIO $ flashMessageUserDetailsSaved  (ctxtemplates ctx))
-           Left f ->  addFlashMsgText =<< (liftIO $ f (ctxtemplates ctx))
-    else  addFlashMsgText =<< (liftIO $ flashMessageBadOldPassword  (ctxtemplates ctx))
+                        addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
+           Left f ->  addFlashMsg =<< (liftIO $ f (ctxtemplates ctx))
+    else  addFlashMsg =<< (liftIO $ flashMessageBadOldPassword (ctxtemplates ctx))
   return LinkAccount
 
 
-checkPasswords::String -> String -> Either (KontrakcjaTemplates -> IO String) ()
+checkPasswords::String -> String -> Either (KontrakcjaTemplates -> IO FlashMessage) ()
 checkPasswords p1 p2 =  if p1 == p2
                         then 
                           if isPasswordStrong $ BS.fromString p1
                           then Right ()
-                          else Left  flashMessagePasswordNotStrong 
+                          else Left $ flashMessagePasswordNotStrong 
                         else Left  flashMessagePasswordsDontMatch      
                    
 handleUserGet :: Kontra Response
@@ -81,12 +82,12 @@ handleUserPost = do
   when (BS8.length newvieweremail > 0) $ do
      avereturn <- update $ AddViewerByEmail userid $ Email newvieweremail
      case avereturn of
-       Left msg -> addFlashMsgText msg
+       Left msg -> addFlashMsg $ toFlashMsg OperationFailed msg
        Right _  -> return ()
      return ()
   
   newuser <- update $ SetUserDetails userid fname lname companyname companyposition companynumber invoiceaddress
-  addFlashMsgText =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
+  addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
 
   return LinkAccount
 
@@ -113,7 +114,7 @@ handleCreateSubaccount ctx@Context { ctxmaybeuser = Just (user@User { userid }),
   fullname <- g "fullname"
   email <- g "email"
   muser <- liftIO $ createUser ctx ctxhostpart fullname email Nothing True (Just user) False
-  when (isNothing muser) $ addFlashMsgText =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
+  when (isNothing muser) $ addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
   return LinkSubaccount
 
 handleViralInvite :: Kontra KontraLink
@@ -127,13 +128,13 @@ handleViralInvite = do
                     maccount <- liftIO $ createUserForViralInvite ctx (BS.fromString invitedemail)
                     case maccount of
                      Just account -> do
-                          addFlashMsgText =<< (liftIO $ flashMessageViralInviteSent $ ctxtemplates ctx)   
+                          addFlashMsg =<< (liftIO $ flashMessageViralInviteSent $ ctxtemplates ctx)   
                           now <- liftIO $ getMinutesTime
                           update $ FreeUserFromPayments account ((60*24*60) `minutesAfter` now) 
                           update $ SetInviter (ctxmaybeuser ctx) account
                           return LoopBack
                      Nothing -> do
-                          addFlashMsgText =<< (liftIO $ flashMessageUserWithSameEmailExists $ ctxtemplates ctx)
+                          addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists $ ctxtemplates ctx)
                           return LoopBack
 
 handleRemoveSubaccounts :: Context -> Kontra KontraLink
@@ -279,10 +280,10 @@ handleAcceptTOSPost = do
   if isJust tos
     then do
       update $ AcceptTermsOfService userid ctxtime
-      addFlashMsgText =<< (liftIO $ flashMessageUserDetailsSaved  (ctxtemplates ctx))
+      addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
       return LinkMain
     else do
-      addFlashMsgText =<< (liftIO $ flashMessageMustAcceptTOS  (ctxtemplates ctx))
+      addFlashMsg =<< (liftIO $ flashMessageMustAcceptTOS (ctxtemplates ctx))
       return LinkAcceptTOS
 
 
@@ -295,7 +296,7 @@ handleRequestAccount = do
                                                                            title = BS.fromString $ "New account request",
                                                                            content = BS.fromString $ "Request from addres " ++ (fromMaybe "" email)
                                                                         }
-                        addFlashMsgText =<< (liftIO $ flashMessageAccountRequestSend (ctxtemplates ctx))                       
+                        addFlashMsg =<< (liftIO $ flashMessageAccountRequestSend (ctxtemplates ctx))                       
                         return LinkMain -- Something should happend here
 
 handleQuestion :: Kontra KontraLink
@@ -373,13 +374,13 @@ handleChangePassword muser dropSessionAction = do
                                         do
                                           passwordhash <- liftIO $ createPassword $ BS.fromString password
                                           update $ SetUserPassword user passwordhash
-                                          addFlashMsgText =<< (liftIO $ flashMessageUserPasswordChanged  (ctxtemplates ctx))
+                                          addFlashMsg =<< (liftIO $ flashMessageUserPasswordChanged  (ctxtemplates ctx))
                                           dropSessionAction
                                           logUserToContext $ Just user
                                           return LinkMain  
                                       Left f -> 
                                         do
-                                          addFlashMsgText =<< (liftIO $ f (ctxtemplates ctx))
+                                          addFlashMsg =<< (liftIO $ f (ctxtemplates ctx))
                                           return LoopBack
                                 Nothing -> return LoopBack
                                        
@@ -392,7 +393,7 @@ newPasswordPage muser (name,email)= do
                                   content <- liftIO $ newPasswordPageView (ctxtemplates ctx)
                                   renderFromBody ctx TopNone kontrakcja $ cdata content
                         Nothing -> do 
-                                 addFlashMsgText =<< (liftIO $ flashMessagePasswordChangeLinkNotValid (ctxtemplates ctx)) 
+                                 addFlashMsg =<< (liftIO $ flashMessagePasswordChangeLinkNotValid (ctxtemplates ctx)) 
                                  sendRedirect LinkMain        
                                  
 handleActivate::(Maybe User) ->Kontra () -> Kontra KontraLink
@@ -421,14 +422,14 @@ handleActivate muser dropSessionAction = do
                                             now <- liftIO getMinutesTime
                                             update $ AddFreePaymentsForInviter now user
                                             dropSessionAction
-                                            addFlashMsgText =<< (liftIO $ flashMessageUserActivated (ctxtemplates ctx))
+                                            addFlashMsg =<< (liftIO $ flashMessageUserActivated (ctxtemplates ctx))
                                             logUserToContext $ Just user
                                             return LinkMain 
                                            else do
-                                            addFlashMsgText =<< (liftIO $ flashMessageMustAcceptTOS (ctxtemplates ctx)) 
+                                            addFlashMsg =<< (liftIO $ flashMessageMustAcceptTOS (ctxtemplates ctx)) 
                                             return LoopBack
                              Left f ->  do
-                                         addFlashMsgText =<< (liftIO $ f (ctxtemplates ctx))          
+                                         addFlashMsg =<< (liftIO $ f (ctxtemplates ctx))          
                                          return LoopBack  
                          Nothing -> do 
                                      memail <- fmap (fmap BS.fromString) $ getField "email"
@@ -442,17 +443,17 @@ handleActivate muser dropSessionAction = do
                                                                do  al <- liftIO $ unloggedActionLink user
                                                                    mail <-  liftIO $ newUserMail (ctxtemplates ctx) (ctxhostpart ctx) email email al False
                                                                    liftIO $ sendMail (ctxmailer ctx) $ mail { fullnameemails = [(email, email)]}
-                                                                   addFlashMsgText =<< (liftIO $ flashMessageNewActivationLinkSend  (ctxtemplates ctx)) 
+                                                                   addFlashMsg =<< (liftIO $ flashMessageNewActivationLinkSend  (ctxtemplates ctx)) 
                                                                    return LinkMain
                                                           else do
-                                                                addFlashMsgText =<< (liftIO $ flashMessageUserAlreadyActivated (ctxtemplates ctx)) 
+                                                                addFlashMsg =<< (liftIO $ flashMessageUserAlreadyActivated (ctxtemplates ctx)) 
                                                                 return LinkMain
                                                       Nothing -> do
-                                                                 addFlashMsgText =<< (liftIO $ flashMessageNoSuchUserExists (ctxtemplates ctx)) 
+                                                                 addFlashMsg =<< (liftIO $ flashMessageNoSuchUserExists (ctxtemplates ctx)) 
                                                                  return LoopBack
                                                               
                                       Nothing -> do
-                                         addFlashMsgText =<< (liftIO $ flashMessageActivationLinkNotValid (ctxtemplates ctx)) 
+                                         addFlashMsg =<< (liftIO $ flashMessageActivationLinkNotValid (ctxtemplates ctx)) 
                                          return LinkMain   
       
 userFromExternalSessionData ::String -> String -> Kontra (Maybe User)

@@ -4,7 +4,6 @@
     background-color: white;
     border: 1px solid #111111;
     display: none;
-    height: 50px;
     left: 0;
     position: fixed;
     top: 0;
@@ -16,13 +15,28 @@
     text-align: left;
 }
 
+.flash_signingrelated {
+  background: #59b1e8;
+}
+
+.flash_operationdone {
+  background: #8dc11c;
+}
+
+.flash_operationfailed {
+  background: #e47071;
+}
+
 .flashmsgbox .flashmessage {
+    color: #fff;
     font-size: 13px;
-    font-weight:bold;
+    font-weight: bold;
     width: 940px;
+    height: 50px;
     margin: auto;
     display: block;
 }
+
 .flashmsgbox  .flashcenter{
 }
 
@@ -38,7 +52,7 @@
 }
 
 .flashmsgbox .logo {
-        background: url(../img/logo-small-reverted.png);
+        background: url(../img/logo-small.png);
         display: block;
         float: left;
         height: 35px;
