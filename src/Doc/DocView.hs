@@ -31,6 +31,7 @@ module Doc.DocView (
   , uploadPage
   ) where
 
+import Control.Applicative ((<$>))
 import Data.Data
 import Data.List (find)
 import Data.Maybe
@@ -105,29 +106,29 @@ landpageLoginForSaveView templates =
   renderTemplate templates "landpageLoginForSaveView" ()
 
 
-flashDocumentDraftSaved :: KontrakcjaTemplates -> IO String
+flashDocumentDraftSaved :: KontrakcjaTemplates -> IO FlashMessage
 flashDocumentDraftSaved templates =
-  renderTemplate templates "flashDocumentDraftSaved" ()
+  toFlashMsg SigningRelated <$> renderTemplate templates "flashDocumentDraftSaved" ()
 
 
-flashDocumentRestarted :: KontrakcjaTemplates -> IO String
+flashDocumentRestarted :: KontrakcjaTemplates -> IO FlashMessage
 flashDocumentRestarted templates =
-  renderTemplate templates "flashDocumentRestarted" ()
+  toFlashMsg OperationDone <$> renderTemplate templates "flashDocumentRestarted" ()
 
 
-flashRemindMailSent :: KontrakcjaTemplates -> SignatoryLink -> IO String                                
+flashRemindMailSent :: KontrakcjaTemplates -> SignatoryLink -> IO FlashMessage
 flashRemindMailSent templates signlink@SignatoryLink{maybesigninfo} =
-  renderTemplate templates (template_name maybesigninfo) $ do
-    field "personname" . BS.toString $ personname signlink
+  toFlashMsg OperationDone <$> (renderTemplate templates (template_name maybesigninfo) $ do
+    field "personname" . BS.toString $ personname signlink)
   where
     template_name =
       maybe "flashRemindMailSentNotSigned"
       (const "flashRemindMailSentSigned")
 
 
-flashMessageCanceled :: KontrakcjaTemplates -> IO String
+flashMessageCanceled :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageCanceled templates =
-  renderTemplate templates "flashMessageCanceled" ()
+  toFlashMsg SigningRelated <$> renderTemplate templates "flashMessageCanceled" ()
 
 
 -- All doc view

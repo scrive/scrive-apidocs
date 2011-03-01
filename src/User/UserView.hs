@@ -174,7 +174,7 @@ mailNewAccountCreatedByAdmin templates ctx personname email setpasslink customme
 
 -------------------------------------------------------------------------------
 
-flashMessageLoginRedirectReason :: KontrakcjaTemplates -> LoginRedirectReason -> IO (Maybe String)
+flashMessageLoginRedirectReason :: KontrakcjaTemplates -> LoginRedirectReason -> IO (Maybe FlashMessage)
 flashMessageLoginRedirectReason templates reason =
   case reason of
        NoReason             -> return Nothing
@@ -183,91 +183,93 @@ flashMessageLoginRedirectReason templates reason =
        InvalidEmail         -> render "invemail"
        InvalidPassword _    -> render "invpass"
   where
-    render msg = Just <$> (renderTemplate templates "loginPageRedirectReason" $ field msg True)
+    render msg = Just . toFlashMsg OperationFailed <$>
+      (renderTemplate templates "loginPageRedirectReason" $ field msg True)
 
 
-flashMessageUserDetailsSaved :: KontrakcjaTemplates -> IO String
+flashMessageUserDetailsSaved :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageUserDetailsSaved templates =
-  renderTemplate templates "flashMessageUserDetailsSaved" () 
+  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageUserDetailsSaved" () 
 
 
-flashMessageMustAcceptTOS :: KontrakcjaTemplates -> IO String
+flashMessageMustAcceptTOS :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageMustAcceptTOS templates =
-  renderTemplate templates "flashMessageMustAcceptTOS" ()
+  toFlashMsg SigningRelated <$> renderTemplate templates "flashMessageMustAcceptTOS" ()
 
 
-flashMessagePasswordNotStrong :: KontrakcjaTemplates -> IO String
+flashMessagePasswordNotStrong :: KontrakcjaTemplates -> IO FlashMessage
 flashMessagePasswordNotStrong templates =
-  renderTemplate templates "flashMessagePasswordNotStrong" ()
+  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessagePasswordNotStrong" ()
 
 
-flashMessageBadOldPassword :: KontrakcjaTemplates -> IO String
+flashMessageBadOldPassword :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageBadOldPassword templates =
-  renderTemplate templates "flashMessageBadOldPassword" ()
+  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageBadOldPassword" ()
 
 
-flashMessagePasswordsDontMatch :: KontrakcjaTemplates -> IO String
-flashMessagePasswordsDontMatch templates = renderTemplate templates"flashMessagePasswordsDontMatch" ()
+flashMessagePasswordsDontMatch :: KontrakcjaTemplates -> IO FlashMessage
+flashMessagePasswordsDontMatch templates =
+  toFlashMsg OperationFailed <$> renderTemplate templates"flashMessagePasswordsDontMatch" ()
 
 
-flashMessageUserPasswordChanged :: KontrakcjaTemplates -> IO String
+flashMessageUserPasswordChanged :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageUserPasswordChanged templates =
-  renderTemplate templates "flashMessageUserPasswordChanged" ()
+  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageUserPasswordChanged" ()
 
 
-flashMessagePasswordChangeLinkNotValid :: KontrakcjaTemplates -> IO String
+flashMessagePasswordChangeLinkNotValid :: KontrakcjaTemplates -> IO FlashMessage
 flashMessagePasswordChangeLinkNotValid templates =
-  renderTemplate templates "flashMessagePasswordChangeLinkNotValid" ()
+  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessagePasswordChangeLinkNotValid" ()
 
 
-flashMessageUserWithSameEmailExists :: KontrakcjaTemplates -> IO String
+flashMessageUserWithSameEmailExists :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageUserWithSameEmailExists templates =
-  renderTemplate templates "flashMessageUserWithSameEmailExists" ()
+  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageUserWithSameEmailExists" ()
 
 
-flashMessageViralInviteSent :: KontrakcjaTemplates -> IO String
+flashMessageViralInviteSent :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageViralInviteSent templates =
-  renderTemplate templates "flashMessageViralInviteSent" ()
+  toFlashMsg SigningRelated <$> renderTemplate templates "flashMessageViralInviteSent" ()
 
 
-flashMessageActivationLinkNotValid :: KontrakcjaTemplates -> IO String
+flashMessageActivationLinkNotValid :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageActivationLinkNotValid templates =
-  renderTemplate templates "flashMessageActivationLinkNotValid" ()
+  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageActivationLinkNotValid" ()
 
 
-flashMessageUserActivated :: KontrakcjaTemplates -> IO String
+flashMessageUserActivated :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageUserActivated templates =
-  renderTemplate templates "flashMessageUserActivated" ()
+  toFlashMsg SigningRelated <$> renderTemplate templates "flashMessageUserActivated" ()
 
 
-flashMessageUserAlreadyActivated :: KontrakcjaTemplates -> IO String
+flashMessageUserAlreadyActivated :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageUserAlreadyActivated templates =
-  renderTemplate templates "flashMessageUserAlreadyActivated" ()
+  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageUserAlreadyActivated" ()
 
 
-flashMessageNoSuchUserExists :: KontrakcjaTemplates -> IO String
+flashMessageNoSuchUserExists :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageNoSuchUserExists templates =
-  renderTemplate templates "flashMessageNoSuchUserExists" ()
+  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageNoSuchUserExists" ()
 
 
-flashMessageChangePasswordEmailSend :: KontrakcjaTemplates -> IO String
+flashMessageChangePasswordEmailSend :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageChangePasswordEmailSend templates =
-  renderTemplate templates "flashMessageChangePasswordEmailSend" ()
+  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageChangePasswordEmailSend" ()
 
 
-flashMessageNewActivationLinkSend :: KontrakcjaTemplates -> IO String
+flashMessageNewActivationLinkSend :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageNewActivationLinkSend templates =
-  renderTemplate templates "flashMessageNewActivationLinkSend" ()
+  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageNewActivationLinkSend" ()
 
 
-flashMessageUserSignupDone :: KontrakcjaTemplates -> IO String
+flashMessageUserSignupDone :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageUserSignupDone templates =
-  renderTemplate templates "flashMessageUserSignupDone" ()
+  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageUserSignupDone" ()
 
 
-flashMessageAccountRequestSend :: KontrakcjaTemplates -> IO String
+flashMessageAccountRequestSend :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageAccountRequestSend templates =
-  renderTemplate templates "flashMessageAccountRequestSend" ()
+  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageAccountRequestSend" ()
 
 -------------------------------------------------------------------------------
 

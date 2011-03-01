@@ -15,6 +15,7 @@ module AppView( TopMenu(..)
               , staticTemplate
               ) where 
 
+import Control.Arrow (first)
 import HSP hiding (Request)
 import Happstack.Server.HSP.HTML (webHSP)
 import Happstack.Server.SimpleHTTP
@@ -156,9 +157,9 @@ mainLinksFields = do
    into templates.
 -}
 contextInfoFields::Context -> Fields
-contextInfoFields ctx = do 
+contextInfoFields ctx = do
                          field "logged" $ isJust (ctxmaybeuser ctx)
-                         field "flashmessages" $ map (BSC.toString . unFlashMessage) (ctxflashmessages ctx)
+                         field "flashmessages" $ map (first show . unFlashMessage) (ctxflashmessages ctx)
                          field "protocol" $ if (ctxproduction ctx) then "https:" else "http:"
                          field "prefix" ""
                          field "production" (ctxproduction ctx)

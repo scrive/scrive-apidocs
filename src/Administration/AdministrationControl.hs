@@ -57,7 +57,7 @@ eitherFlash action = do
   x <- action
   case x of
     Left errmsg -> do
-           addFlashMsgText errmsg
+           addFlashMsg $ toFlashMsg OperationFailed errmsg
            mzero
     Right value -> return value
 
@@ -265,7 +265,7 @@ handleCreateUser = onlySuperUser $ do
     custommessage <- getField "custommessage"
     freetill <- fmap (join . (fmap parseMinutesTimeMDY)) $ getField "freetill"
     muser <- liftIO $ createNewUserByAdmin ctx fullname email freetill custommessage
-    when (isNothing muser) $ addFlashMsgText =<< (liftIO $ flashMessageUserWithSameEmailExists $ ctxtemplates ctx)
+    when (isNothing muser) $ addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists $ ctxtemplates ctx)
 
     -- FIXME: where to redirect?
     return LinkStats
