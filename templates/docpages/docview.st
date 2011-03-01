@@ -160,23 +160,6 @@ pageDocumentForViewerContent =
 $signatoryScriptIfRequired()$
 
 ####
-####
-showDocumentPageHelper=
-<div class="docview">
-  <div style="display: none">
-    $helpers:noescape()$
-  </div>
-  <div class="docviewleft">
-    $docbox:noescape()$
-  </div>
-  <div class="docviewright"> 
-    <p><strong>$title$</strong><br/>
-      <small><a href="$linkissuedocpdf$" target="_blank">Ladda ned PDF</a></small></p>
-    $content:noescape()$
-  </div>
-  <div class="clearboth"></div>
-</div>
-####
 signatoryMessageSigned=Undertecknat $date$
 ###
 signatoryMessageTimedout=Förfallodatum har passerat
@@ -311,8 +294,8 @@ pageDocumentForSignContent=
 <div id="signStepsContainer"> 
   <div id="signStepsTitleRow">
     <span id="signStepsTitleRowTextContainer"> 
-      <span class="title">DOKUMENT #$docid$:</span>
-      <span class="name">$title$</span>
+      <span class="title">DOKUMENT #$documentid$:</span>
+      <span class="name">$documenttitle$</span>
     </span>
      <span class="download">
         <a href="$linkissuedocpdf$" target="_blank">
@@ -580,45 +563,45 @@ pageDocumentForAuthorContentPreparation=
                 <!-- 013 changed -->
                 <div class="sigentry signStepsBodyForms" id="peopleDetails">
                   <span class="fields">
-                    $if(authorName)$
+                    $if(authorname)$
                     <span class='dragtext authorname inputWrapper'>
 	              <span style="display:none;" class="fieldid">name</span>
 	              <span style="display:none;" class="fieldsigid">author</span>
 	              <span style="display:none;" class="type">author</span>
-	              <span class="fieldvalue">$authorName$</span>
+	              <span class="fieldvalue">$authorname$</span>
 	              <img src="/theme/images/iconHand.png" class="draghandle"
 	                   alt="drag" />
                     </span>
                     $endif$
-                    $if(authorComp)$
+                    $if(authorcompany)$
 	            <span class='dragtext authorcomp inputWrapper'>
 	              <span style="display:none;" class="fieldid">company</span>
 	              <span style="display:none;" class="fieldsigid">author</span>
 	              <span style="display:none;" class="type">sig</span>
                    
-                      <span class="fieldvalue">$authorComp$</span>
+                      <span class="fieldvalue">$authorcompany$</span>
 	              <img src="/theme/images/iconHand.png" class="draghandle"
 	                   alt="drag" />
                     </span>
                     $endif$
-                    $if(authorEmail)$
+                    $if(authoremail)$
                     <span class='dragtext authoremail inputWrapper'>
 	              <span style="display:none;" class="fieldid">email</span>
 	              <span style="display:none;" class="fieldsigid">author</span>
 	              <span style="display:none;"
 	              class="type">author</span>
-                      <span class="fieldvalue">$authorEmail$</span>
+                      <span class="fieldvalue">$authoremail$</span>
 	              <img src="/theme/images/iconHand.png" class="draghandle"
 	                   alt="drag" />
 	            </span>
 	            $endif$
-	            $if(authorCompNr)$
+	            $if(authorcompanynumber)$
 	            <span class='dragtext authornum inputWrapper'>
 	              <span style="display:none;" class="fieldid">number</span>
 	              <span style="display:none;" class="fieldsigid">author</span>
 	              <span style="display:none;"
 	              class="type">sig</span>
-                      <span class="fieldvalue">$authorCompNr$</span>
+                      <span class="fieldvalue">$authorcompanynumber$</span>
 	              <img src="/theme/images/iconHand.png" class="draghandle" 
                            alt="drag" />
 	            </span>

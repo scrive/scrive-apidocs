@@ -463,3 +463,8 @@ readField name = fmap (join . (fmap maybeRead)) $ getDataFn' (look name)
 whenMaybe::(Functor m,Monad m) => Bool -> m a -> m (Maybe a)
 whenMaybe True  c = fmap Just c
 whenMaybe False _ = return Nothing
+
+-- | Pack value to just unless we have mzero.
+-- | Since we can not check emptyness of string in templates we want to pack it in maybe.
+nothingIfEmpty::(Eq a, Monoid a) => a -> Maybe a
+nothingIfEmpty a = if mempty == a then Nothing else Just a

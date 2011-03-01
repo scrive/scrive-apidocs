@@ -467,16 +467,13 @@ handleSignShow documentid
   document <- maybe mzero return mdocument
 
   invitedlink <- signatoryLinkFromDocumentByID document signatorylinkid1
-  let wassigned = isJust $ maybesigninfo invitedlink
-      authoruserid = unAuthor $ documentauthor document
-
+  let authoruserid = unAuthor $ documentauthor document
   author <- queryOrFail $ GetUserByUserID authoruserid
-
   let authorname = prettyName author
-      invitedname = signatoryname $ signatorydetails $ invitedlink 
+  let invitedname = signatoryname $ signatorydetails $ invitedlink 
   renderFromBody ctx TopNone kontrakcja 
                        (fmap cdata $ pageDocumentForSignatory (LinkSignDoc document invitedlink) 
-                                            document ctx invitedlink wassigned author)
+                                            document ctx invitedlink author)
 
 {- |
    How many documents does the free user have left?
