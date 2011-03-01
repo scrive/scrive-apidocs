@@ -13,6 +13,7 @@
     font-size: 13pt;
     color: #111111;
     text-align: left;
+    cursor: pointer;
 }
 
 .flash_signingrelated {
@@ -37,7 +38,8 @@
     display: block;
 }
 
-.flashmsgbox  .flashcenter{
+.flashmsgbox .flashcenter {
+  height: 50px;
 }
 
 .flashmessageclose{
@@ -52,7 +54,6 @@
 }
 
 .flashmsgbox .logo {
-        background: url(../img/logo-small.png);
         display: block;
         float: left;
         height: 35px;
