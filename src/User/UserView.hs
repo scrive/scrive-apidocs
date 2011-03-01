@@ -184,7 +184,7 @@ flashMessageLoginRedirectReason templates reason =
        InvalidPassword _    -> render "invpass"
   where
     render msg = Just . toFlashMsg OperationFailed <$>
-      (renderTemplate templates "loginPageRedirectReason" $ field msg True)
+      (renderTemplate templates "flashMessageLoginPageRedirectReason" $ field msg True)
 
 
 flashMessageUserDetailsSaved :: KontrakcjaTemplates -> IO FlashMessage
