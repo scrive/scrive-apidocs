@@ -762,30 +762,36 @@ function flashSpecialFlashMessages(){
     flashmsgbox.delay(12000).fadeOut();
 }
 
+function flashFlashMessages() {
+    var flashmsgbox = $(".flashmsgbox");
+    if ($(".flashmessage", flashmsgbox).size() > 0) {
+        // delay() and click() doesn't work correctly in document
+        // creator since clearQueue() doesn't call clearTimeout(),
+        // so we need to use setTimeout() and unregister set events
+        // with clearTimeout() if user closed flash message by himself
+        var event = setTimeout(hideFlashMessages, 10000);
+        flashmsgbox.show();
+        flashmsgbox.click(function() {
+            hideFlashMessages(event);
+        });
+    }
+}
 
-function flashFlashMessages()
-{
-    var flashmsgbox = $('.flashmsgbox');
-    $('.flashmessage',flashmsgbox).each(function(){
-        var fm = $(this)
-        var text = fm.html();
-        fm.html("");
-        var logo = $("<a class='logo' href='/'></a>"); /* Sorry for that but we have a deadline, also for css */
-        var center = $("<div class='flashcenter'> <table style='height:50px'> <tbody style='height:50px'> <tr><td style='height:50px' valign='middle'>" + text +"</td></tr> </tbody></table></div>")
-        fm.append(logo);
-        fm.append(center);
+function hideFlashMessages(event) {
+    if (event !== undefined)
+        clearTimeout(event);
+    $(".flashmsgbox").hide(function() {
+        $(this).children().remove();
     });
-      if ($('.flashmessage',flashmsgbox).size() >0)
-         flashmsgbox.show().delay(10000).hide(function(){$(flashmsgbox).children().remove()});
-
 }
 
 function addFlashMessage(msg){
     var flashmsgbox = $('.flashmsgbox');    
     flashmsgbox.children().remove();
-    flashmsgbox.append("<div class='flashmessage' >"+msg+"</div>");
+    flashmsgbox.append("<div class=\"flash_operationfailed\"><div class=\"flashmessage\"><img class=\"logo\" src=\"../img/logo-small.png\"><table class=\"flashcenter\"><tbody><tr><td>" + msg + "</td></tr> </tbody></table></div></div>");
     flashFlashMessages();
-}   
+}  
+
 function prepareEditor(textarea) {
  return textarea.tinymce({
                           script_url : '/tiny_mce/tiny_mce.js',
