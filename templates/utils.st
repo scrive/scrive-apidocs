@@ -83,6 +83,6 @@ facebooklogo=
 ####
 flashmessages = 
 <div class="flashmsgbox">
-            $flashmessages:{ flash | <div class="flash_$flash.0$"><div class="flashmessage ">$flash.1:noescape()$</div></div> }$
+            $flashmessages:{ flash | <div class="flash_$flash.0$"><div class="flashmessage"><img class="logo" src="../img/logo-small.png"><table class="flashcenter"><tbody><tr><td>$flash.1:noescape()$</td></tr> </tbody></table></div></div> }$
 </div>
 ####
