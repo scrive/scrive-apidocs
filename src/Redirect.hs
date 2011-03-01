@@ -42,7 +42,7 @@ sendRedirect (LinkLogin reason) = do
   referer <- getField "referer"
   let link = (show $ LinkLogin reason) ++ "referer=" ++ (URL.encode . UTF.encode $ fromMaybe curr referer)
   templates <- ctxtemplates <$> get
-  liftIO (flashMessageLoginRedirectReason templates reason) >>= maybe (return ()) addFlashMsgText
+  liftIO (flashMessageLoginRedirectReason templates reason) >>= maybe (return ()) addFlashMsg
   response <- webHSP (seeOtherXML $ link)
   seeOther link response
 

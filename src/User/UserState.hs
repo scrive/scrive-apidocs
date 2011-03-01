@@ -5,6 +5,7 @@ module User.UserState
     , Inviter(..)
     , DefaultMainSignatory(..)
     , ExternalUserID(..)
+    , FlashType(..)
     , FlashMessage(..)
     , Password(..)
     , TrustWeaverStorage(..)
@@ -17,6 +18,7 @@ module User.UserState
     , UserSettings(..)
     , UserID(..)
     , Users
+    , toFlashMsg
     , userfullname
     , createPassword
     , isPasswordStrong
@@ -81,10 +83,14 @@ $(deriveAll [''Eq, ''Ord, ''Default]
       newtype Friend = Friend { unFriend :: Int }
       newtype Inviter = Inviter { unInviter :: Int }
       newtype DefaultMainSignatory = DefaultMainSignatory { unDMS :: Int }
-      newtype FlashMessage = FlashMessage { unFlashMessage :: BS.ByteString }  deriving Read       
+      newtype FlashMessage = FlashMessage { unFlashMessage :: (FlashType, String) }
       newtype Email = Email { unEmail :: BS.ByteString }
       data Password = Password [Octet] [Octet] | NoPassword
       newtype SupervisorID = SupervisorID { unSupervisorID :: Int }
+      data FlashType
+        = SigningRelated
+        | OperationDone
+        | OperationFailed
       data TrustWeaverStorage = TrustWeaverStorage
           { storagetwenabled       :: Bool
           , storagetwname          :: BS.ByteString
@@ -261,6 +267,10 @@ $(deriveAll [''Eq, ''Ord, ''Default]
 
    |])
 
+instance Show FlashType where
+  show SigningRelated  = "signingrelated"
+  show OperationDone   = "operationdone"
+  show OperationFailed = "operationfailed"
 
 deriving instance Show TrustWeaverStorage
 deriving instance Show UserAccountType 
@@ -529,6 +539,8 @@ instance Migrate User8 User where
                 , userinviter                    = Nothing
                 }
 
+toFlashMsg :: FlashType -> String -> FlashMessage
+toFlashMsg type_ msg = FlashMessage (type_, msg)
 
 userfullname :: User -> BS.ByteString
 userfullname u = if (BS.null $ usersndname $ userinfo u) 
@@ -655,6 +667,9 @@ instance Version UserInfo where
 $(deriveSerialize ''UserSettings)
 instance Version UserSettings
 
+$(deriveSerialize ''FlashType)
+instance Version FlashType
+
 $(deriveSerialize ''FlashMessage)
 instance Version FlashMessage
 
@@ -708,7 +723,6 @@ instance Read SupervisorID where
 
 instance FromReqURI SupervisorID where
     fromReqURI = readM
-
 
 modifyUser :: UserID 
            -> (User -> Either String User) 

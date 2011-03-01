@@ -320,7 +320,7 @@ signDocument documentid
   case newdocument of
     Left message -> 
         do
-          addFlashMsgText message
+          addFlashMsg $ toFlashMsg OperationFailed message
           return $ LinkMain
     Right document -> 
         do 
@@ -349,7 +349,7 @@ rejectDocument documentid
   case (mdocument) of
     Left message -> 
         do
-          addFlashMsgText message
+          addFlashMsg $ toFlashMsg OperationFailed message
           return $ LinkMain
     Right document -> 
         do  
@@ -564,7 +564,7 @@ handleIssueShowPost docid = withUserPost $ do
                         then return $ LinkSignInvite docid
                         -- otherwise it was just a save
                         else do
-                          addFlashMsgText =<< (liftIO $ flashDocumentDraftSaved $ ctxtemplates ctx)
+                          addFlashMsg =<< (liftIO . flashDocumentDraftSaved $ ctxtemplates ctx)
                           return LinkIssue
        AwaitingAuthor -> do 
                           doc2 <- update $ CloseDocument docid ctxtime ctxipnumber user Nothing
@@ -1272,9 +1272,8 @@ handleCancel docid = withUserPost $ do
   case mdoc' of 
     Just doc' -> do
           sendCancelMailsForDocument customMessage ctx doc
-          fm <-liftIO $ flashMessageCanceled (ctxtemplates ctx)
-          addFlashMsgText fm
-    Nothing -> addFlashMsgText "Could not cancel"
+          addFlashMsg =<< (liftIO $ flashMessageCanceled (ctxtemplates ctx))
+    Nothing -> addFlashMsg $ toFlashMsg OperationFailed "Could not cancel"
   return (LinkIssueDoc $ documentid doc)
 
 {-
@@ -1294,7 +1293,7 @@ handleRestart docid = do
   case ctxmaybeuser ctx of
     Just user -> do
       update $ RestartDocument docid user
-      addFlashMsgText =<< (liftIO $ flashDocumentRestarted (ctxtemplates ctx))
+      addFlashMsg =<< (liftIO $ flashDocumentRestarted (ctxtemplates ctx))
       return $ LinkIssueDoc docid
     Nothing -> return $ LinkLogin NotLoggedAsSuperUser
                     
@@ -1309,7 +1308,7 @@ handleResend docid signlinkid  = withUserPost $ do
   mail <- liftIO $  mailDocumentRemind (ctxtemplates ctx) customMessage ctx doc signlink author
   liftIO $ sendMail (ctxmailer ctx) (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )],
                                                 mailInfo = Invitation $ signatorylinkid signlink })
-  addFlashMsgText =<< (liftIO $ flashRemindMailSent (ctxtemplates ctx) signlink)
+  addFlashMsg =<< (liftIO $ flashRemindMailSent (ctxtemplates ctx) signlink)
   return (LinkIssueDoc $ documentid doc)
 
 --This only works for undelivered mails. We shoulkd check if current user is author

@@ -9,7 +9,7 @@ module Kontra
     , initialUsers
     , clearFlashMsgs
     , addELegTransaction
-    , addFlashMsgText 
+    , addFlashMsg
     , logUserToContext
     , onlySuperUser
     , unloggedActionLink
@@ -66,10 +66,12 @@ instance (XMLGenerator m) => (EmbedAsChild m HeaderPair) where
          <% BS.toString name ++ ": " ++ show value  %> 
         </p> 
       %>	
+
+-- FIXME: flash type should be considered here
 instance (EmbedAsChild m HSP.XML.XML,EmbedAsAttr m (Attr [Char] [Char])) => (EmbedAsChild m FlashMessage) where
-  asChild (FlashMessage msg) = 
-     asChild (<span class="flashmessage"> <% cdata $ BS.toString msg %> </span>)
-    
+  asChild (FlashMessage (_, msg)) = 
+     asChild (<span class="flashmessage"> <% cdata msg %> </span>)
+
 #if MIN_VERSION_happstack_server(0,5,1)
 rqInputs rq = rqInputsQuery rq ++ rqInputsBody rq
 #endif
@@ -166,18 +168,16 @@ addELegTransaction tr = do
 {- |
    Adds a flash message to the context.
 -}  
-addFlashMsgText :: String -> Kontra ()
-addFlashMsgText msg = do
-                       ctx@Context{ ctxflashmessages = flashmessages} <- get
-                       put $ ctx{ ctxflashmessages =  (FlashMessage $ BS.fromString msg) : flashmessages}
-     
+addFlashMsg :: FlashMessage -> Kontra ()
+addFlashMsg flash =
+  modify (\ctx@Context{ ctxflashmessages = flashmessages } ->
+    ctx { ctxflashmessages = flash : flashmessages })
+
 {- |
    Clears all the flash messages from the context.
 -}                  
 clearFlashMsgs:: Kontra ()                       
-clearFlashMsgs = do
-                       ctx <- get
-                       put $ ctx{ ctxflashmessages = []}
+clearFlashMsgs = modify (\ctx -> ctx { ctxflashmessages = [] })
 
 {- |
    Sticks the logged in user onto the context
