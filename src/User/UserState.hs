@@ -83,6 +83,7 @@ $(deriveAll [''Eq, ''Ord, ''Default]
       newtype Friend = Friend { unFriend :: Int }
       newtype Inviter = Inviter { unInviter :: Int }
       newtype DefaultMainSignatory = DefaultMainSignatory { unDMS :: Int }
+      newtype FlashMessage0 = FlashMessage0 BS.ByteString
       newtype FlashMessage = FlashMessage { unFlashMessage :: (FlashType, String) }
       newtype Email = Email { unEmail :: BS.ByteString }
       data Password = Password [Octet] [Octet] | NoPassword
@@ -299,6 +300,10 @@ deriving instance Read PaymentMethod
 deriving instance Bounded UserAccountPlan
 deriving instance Enum UserAccountPlan
 deriving instance Read UserAccountPlan
+
+instance Migrate FlashMessage0 FlashMessage where
+    migrate (FlashMessage0 msg) =
+        toFlashMsg SigningRelated $ BS.toString msg
 
 instance Migrate User0 User1 where
     migrate (User0
@@ -670,8 +675,12 @@ instance Version UserSettings
 $(deriveSerialize ''FlashType)
 instance Version FlashType
 
+$(deriveSerialize ''FlashMessage0)
+instance Version FlashMessage0
+
 $(deriveSerialize ''FlashMessage)
-instance Version FlashMessage
+instance Version FlashMessage where
+    mode = extension 1 (Proxy :: Proxy FlashMessage0)
 
 $(deriveSerialize ''Email)
 instance Version Email
