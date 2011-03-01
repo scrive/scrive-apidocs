@@ -281,7 +281,6 @@ pageDocumentForAuthor :: Context
 pageDocumentForAuthor ctx
   document@Document {
       documentsignatorylinks
-    , documenttitle
     , documentid
     , documentstatus
     , documentdaystosign
@@ -290,11 +289,6 @@ pageDocumentForAuthor ctx
   }
   author =
    let
-       nothingIfEmpty s =
-         if BS.null s
-            then Nothing
-            else Just s
-       
        templates = ctxtemplates ctx
        authorid = userid author
        authorhaslink = not $ null $ filter (not . isNotLinkForUserID authorid) documentsignatorylinks
@@ -307,10 +301,6 @@ pageDocumentForAuthor ctx
            , signatorynumberplacements = authornumberplacements document
            , signatoryotherfields = authorotherfields document
          }
-       doc_author_name = nothingIfEmpty $ signatoryname documentauthordetails
-       doc_author_comp = nothingIfEmpty $ signatorycompany documentauthordetails
-       doc_author_email = nothingIfEmpty $ signatoryemail documentauthordetails
-       doc_author_comp_nr = nothingIfEmpty $ signatorynumber documentauthordetails
        doc_author_otherfields fields = sequence .
          map (\(fd, i) ->
            renderTemplate templates "customfield" $ do
@@ -321,13 +311,7 @@ pageDocumentForAuthor ctx
              $ zip fields ([1..]::[Int])
    in do
      renderTemplate (ctxtemplates ctx) "pageDocumentForAuthorContent" $ do
-       field "authorName"   doc_author_name
-       field "authorComp"   doc_author_comp
-       field "authorEmail"  doc_author_email
-       field "authorCompNr" doc_author_comp_nr
        field "authorOtherFields" $ doc_author_otherfields $ signatoryotherfields documentauthordetails
-       field "documenttitle" $ BS.toString documenttitle
-       field "documentid" $ show documentid
        field "linkissuedoc" $ show $ LinkIssueDoc documentid
        field "authorhaslink" $ authorhaslink
        field "documentinvitetext" $ documentinvitetext
@@ -358,7 +342,6 @@ pageDocumentForViewer :: Context -> Document -> User -> IO String
 pageDocumentForViewer ctx
   document@Document {
       documentsignatorylinks
-    , documenttitle
     , documentid
     , documentstatus
     , documentdaystosign
@@ -387,8 +370,6 @@ pageDocumentForViewer ctx
      cancelMailContent <- mailCancelDocumentByAuthorContent (ctxtemplates ctx) False Nothing ctx document author
      documentinfotext <- documentInfoText (ctxtemplates ctx) document Nothing author
      renderTemplate (ctxtemplates ctx) "pageDocumentForViewerContent" $  do
-       field "documenttitle" $ BS.toString documenttitle
-       field "documentid" $ show documentid
        field "linkissuedoc" $ show $ LinkIssueDoc documentid
        field "authorhaslink" $ authorhaslink
        field "documentinvitetext" $ documentinvitetext
@@ -415,10 +396,9 @@ pageDocumentForSignatory :: KontraLink
                     -> Document 
                     -> Context
                     -> SignatoryLink
-                    -> Bool 
                     -> User
                     -> IO String 
-pageDocumentForSignatory action document ctx invitedlink wassigned author =
+pageDocumentForSignatory action document ctx invitedlink author =
   let
       localscripts =
            "var docstate = "
@@ -427,7 +407,6 @@ pageDocumentForSignatory action document ctx invitedlink wassigned author =
         ++ (BS.toString $ signatoryemail $ signatorydetails invitedlink)
         ++ "';"
       magichash = signatorymagichash invitedlink
-      --authorname = signatoryname documentauthordetails
       allbutinvited = filter (/= invitedlink) (documentsignatorylinks document)
       documentauthordetails = signatoryDetailsFromUser author
       allowedtypes = documentallowedidtypes document
@@ -438,13 +417,10 @@ pageDocumentForSignatory action document ctx invitedlink wassigned author =
               field "documentid" . show $ documentid document
               field "localscripts" localscripts
       field "signatories" $ fmap concat $ sequence $ map (showSignatoryLinkForSign ctx document author) (invitedlink : allbutinvited)
-      field "documenttitle" $ BS.toString $ documenttitle document
       field "rejectMessage" $  mailRejectMailContent (ctxtemplates ctx) Nothing ctx (prettyName author) document invitedlink
       field "partyUnsigned" $ renderListTemplate (ctxtemplates ctx) $  map (BS.toString . personname') $ partyUnsignedMeAndList magichash document
       field "action" $ show action
-      field "title" $ BS.toString $ documenttitle document
       field "linkissuedocpdf" $ show (LinkIssueDocPDF document)
-      field "docid" $ show $ documentid document
       field "documentinfotext" $  documentInfoText (ctxtemplates ctx) document (Just invitedlink) author
       documentInfoFields document author
       signedByMeFields document (Just invitedlink)
@@ -570,7 +546,12 @@ documentInfoText templates document siglnk author =
 -- | Basic info about document , name, id ,author
 documentInfoFields :: Document -> User -> Fields
 documentInfoFields  document author = do
-  field "authorname" $ BS.toString $ userfullname author
+  field "authorname" $ nothingIfEmpty $ userfullname author
+  field "authorcompany" $ nothingIfEmpty $ usercompanyname $ userinfo author
+  field "authoremail"  $ nothingIfEmpty $ unEmail $ useremail $ userinfo author
+  field "authorcompanynumber" $ nothingIfEmpty $ usercompanynumber $ userinfo author
+  field "documenttitle" $ BS.toString $ documenttitle document
+  field "documentid" $ show $ documentid document
   field "timetosignset" $  isJust $ documentdaystosign document
   documentStatusFields document
 
