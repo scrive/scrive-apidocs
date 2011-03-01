@@ -83,3 +83,17 @@ flashMessageUserSignupDone=Ditt konto har skapats! Vi har skickat ett mail med d
 ###
 flashMessageAccountRequestSend=Din förfrågan är nu skickad
 ###
+flashMessageLoginPageRedirectReason=
+$if(notlogged)$
+  Du är inte inloggad.
+$endif$
+$if(notsu)$
+  Du har inte rätt behörighet att se denna sida.
+$endif$
+$if(invemail)$
+  Felaktig e-post.
+$endif$
+$if(invpass)$
+  Felaktigt lösenord.
+$endif$
+###

@@ -17,20 +17,6 @@ customFooter=
       $creatorname$
     </p>
 ###
-loginPageRedirectReason=
-$if(notlogged)$
-  Du är inte inloggad.
-$endif$
-$if(notsu)$
-  Du har inte rätt behörighet att se denna sida.
-$endif$
-$if(invemail)$
-  Felaktig e-post.
-$endif$
-$if(invpass)$
-  Felaktigt lösenord.
-$endif$
-###
 poweredBySkrivaPaPara=
     <p>
       <small>Med vänliga hälsningar<br/><a href="$ctxhostpart$">SkrivaPå</a></small>
