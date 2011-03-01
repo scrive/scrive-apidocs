@@ -320,40 +320,33 @@ pageDocumentForAuthor ctx
              field "otherFieldOwner" "author")
              $ zip fields ([1..]::[Int])
    in do
-     helpers <- renderTemplate templates "pageDocumentForAuthorHelpers" [("documentid",show documentid)] 
-     signatories <- fmap concat $ sequence $ map (showSignatoryLinkForSign ctx document author) documentsignatorylinks                                                                                  
-     invitationMailContent <- mailInvitationToSignContent templates False ctx document author Nothing
-     restartForm <- renderActionButton templates (LinkRestart documentid) "restartButtonName"
-     cancelMailContent <- mailCancelDocumentByAuthorContent templates False Nothing ctx document author
-     documentinfotext <- documentInfoText templates document (find (isMatchingSignatoryLink author) documentsignatorylinks) author
-     doc_author_customfields <- doc_author_otherfields $ signatoryotherfields documentauthordetails
      renderTemplate (ctxtemplates ctx) "pageDocumentForAuthorContent" $ do
        field "authorName"   doc_author_name
        field "authorComp"   doc_author_comp
        field "authorEmail"  doc_author_email
        field "authorCompNr" doc_author_comp_nr
-       field "authorOtherFields" doc_author_customfields
+       field "authorOtherFields" $ doc_author_otherfields $ signatoryotherfields documentauthordetails
        field "documenttitle" $ BS.toString documenttitle
        field "documentid" $ show documentid
        field "linkissuedoc" $ show $ LinkIssueDoc documentid
        field "authorhaslink" $ authorhaslink
        field "documentinvitetext" $ documentinvitetext
-       field "invitationMailContent" $ invitationMailContent
+       field "invitationMailContent" $  mailInvitationToSignContent templates False ctx document author Nothing
        field "documentdaystosignboxvalue" $ documentdaystosignboxvalue
        field "anyinvitationundelivered" $ anyInvitationUndelivered document
        field "undelivered" $ map (signatoryemail . signatorydetails) $ undeliveredSignatoryLinks document
-       field "signatories" signatories
+       field "signatories" $ fmap concat $ sequence $ map (showSignatoryLinkForSign ctx document author) documentsignatorylinks                    
        field "canberestarted" $ documentstatus `elem` [Canceled, Timedout, Rejected]
-       field "restartForm" $ restartForm
-       field "cancelMailContent" $ cancelMailContent
+       field "restartForm" $ renderActionButton templates (LinkRestart documentid) "restartButtonName"
+       field "cancelMailContent" $ mailCancelDocumentByAuthorContent templates False Nothing ctx document author
        field "linkcancel" $ show $ LinkCancel document
        field "emailelegitimation" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)
        field "emailonly" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isNothing $ find (== ELegitimationIdentification) documentallowedidtypes)
        field "elegitimationonly" $ (isNothing $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)
-       field "helpers" helpers
+       field "helpers" $ renderTemplate templates "pageDocumentForAuthorHelpers" [("documentid",show documentid)]
        field "docstate" (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks)
        field "linkissuedocpdf" $ show (LinkIssueDocPDF document)
-       field "documentinfotext" $ documentinfotext
+       field "documentinfotext" $ documentInfoText templates document (find (isMatchingSignatoryLink author) documentsignatorylinks) author
        documentInfoFields document author
 
 {- |
@@ -439,32 +432,20 @@ pageDocumentForSignatory action document ctx invitedlink wassigned author =
       documentauthordetails = signatoryDetailsFromUser author
       allowedtypes = documentallowedidtypes document
   in do
-    helpers <- renderTemplate (ctxtemplates ctx) "pageDocumentForSignHelpers" $ do
-      field "documentid" . show $ documentid document
-      field "localscripts" localscripts
-    rejectMessage <- mailRejectMailContent (ctxtemplates ctx) Nothing ctx (prettyName author) document invitedlink
-    signatories <- fmap concat $ sequence $ map (showSignatoryLinkForSign ctx document author) (invitedlink : allbutinvited)
-    messageoption <- caseOf [
-        (wassigned, renderTemplate (ctxtemplates ctx) "pageDocumentForSignSigned" ())
-      , (documentstatus document == Timedout, renderTemplate (ctxtemplates ctx) "pageDocumentForSignTimedout" ())
-      , (documentstatus document == Pending,  renderTemplate (ctxtemplates ctx) "pageDocumentForSignButtons" $
-          (setAttribute "emailallowed" $ isJust $ find (== EmailIdentification) allowedtypes) .
-          (setAttribute "elegallowed" $ isJust $ find (== ELegitimationIdentification) allowedtypes))
-      ] $ return ""
-    partyUnsigned <- renderListTemplate (ctxtemplates ctx) $  map (BS.toString . personname') $ partyUnsignedMeAndList magichash document
-    documentinfotext <- documentInfoText (ctxtemplates ctx) document (Just invitedlink) author
     renderTemplate (ctxtemplates ctx) "pageDocumentForSignContent" $ do
-      field "helpers" helpers
-      field "signatories" signatories
-      field "messageoption" messageoption
+      field "helpers" $ 
+          renderTemplate (ctxtemplates ctx) "pageDocumentForSignHelpers" $ do
+              field "documentid" . show $ documentid document
+              field "localscripts" localscripts
+      field "signatories" $ fmap concat $ sequence $ map (showSignatoryLinkForSign ctx document author) (invitedlink : allbutinvited)
       field "documenttitle" $ BS.toString $ documenttitle document
-      field "rejectMessage" rejectMessage
-      field "partyUnsigned" partyUnsigned
+      field "rejectMessage" $  mailRejectMailContent (ctxtemplates ctx) Nothing ctx (prettyName author) document invitedlink
+      field "partyUnsigned" $ renderListTemplate (ctxtemplates ctx) $  map (BS.toString . personname') $ partyUnsignedMeAndList magichash document
       field "action" $ show action
       field "title" $ BS.toString $ documenttitle document
       field "linkissuedocpdf" $ show (LinkIssueDocPDF document)
       field "docid" $ show $ documentid document
-      field "documentinfotext" $ documentinfotext
+      field "documentinfotext" $  documentInfoText (ctxtemplates ctx) document (Just invitedlink) author
       documentInfoFields document author
       signedByMeFields document (Just invitedlink)
 
@@ -586,14 +567,14 @@ documentInfoText templates document siglnk author =
     documentInfoFields document author
     signedByMeFields document siglnk
 
-
+-- | Basic info about document , name, id ,author
 documentInfoFields :: Document -> User -> Fields
 documentInfoFields  document author = do
   field "authorname" $ BS.toString $ userfullname author
   field "timetosignset" $  isJust $ documentdaystosign document
   documentStatusFields document
 
-
+-- | Fields indication what is a document status 
 documentStatusFields :: Document -> Fields    
 documentStatusFields document = do
   field "preparation" $ documentstatus document == Preparation
@@ -604,7 +585,7 @@ documentStatusFields document = do
   field "signed" $ documentstatus document == Closed
   field "awaitingauthor" $ documentstatus document == AwaitingAuthor
 
-
+-- | Info about what is my position on a document
 signedByMeFields :: Document -> Maybe SignatoryLink -> Fields
 signedByMeFields document siglnk = do
   field "notsignedbyme" $ (isJust siglnk) && (isNothing $ maybesigninfo $ fromJust siglnk)
