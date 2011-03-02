@@ -18,7 +18,7 @@ import Debug.Trace
 import Doc.DocState
 import Doc.DocView
 import Doc.DocViewMail
-import HSP
+import HSP hiding (catch)
 import Happstack.Data.IxSet 
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.Server.HSP.HTML (webHSP)
@@ -854,7 +854,7 @@ convertPdfToJpgPages ctx@Context{ctxs3action} file@File{fileid,filename} = do
                                   else return []
 
                   listofpages <- w [1..]
-                  x<-forM listofpages $ \x -> do 
+                  x<-forM listofpages $ \x -> (do 
                                         (_,Just outhandle,_, sizechecker) <- createProcess $ ( proc "gm" ["-identify", pathofx x])  { std_out = CreatePipe}
                                         out <-  hGetContents outhandle
                                         let (w,h) = readSize out
@@ -868,7 +868,10 @@ convertPdfToJpgPages ctx@Context{ctxs3action} file@File{fileid,filename} = do
                                          ExitFailure _ -> return ()
                                          ExitSuccess -> return ()
                                         content <- BS.readFile (pathofx x)                                         
-                                        return (content,w,h)
+                                        return (content,w,h)) `catch` (\_ -> do
+                                                                           content <- BS.readFile (pathofx x)
+                                                                           return (content,943,1335))
+
                   return (JpegPages x)
   -- remove the directory with all the files now
   -- everything as been collected, process has ended, we are done!
