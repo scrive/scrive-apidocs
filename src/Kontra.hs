@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -F -pgmFtrhsx #-}
+{-# LANGUAGE CPP #-}
 
 module Kontra
     ( module User.UserState
