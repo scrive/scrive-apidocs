@@ -10,9 +10,10 @@ function newUUID() {
 }
 
 function newsignatory() {
-    return {name: "", company: "", number: "", email: "", 
-	    nameplacements: [],
-	    companyplacements: [],
+    return {fstname: "", sndname:"", company: "", number: "", email: "", 
+	    fstnameplacements: [],
+            sndnameplacements: [],
+            companyplacements: [],
 	    numberplacements: [],
 	    emailplacements: [],
 	    otherfields: []};
@@ -122,7 +123,8 @@ function isStandardField(field) {
     if(isDraggableField(field)) {
 	var name = getFieldName(field);
 	if(name == "signatoryemail" 
-	   || name == "signatoryname"
+	   || name == "signatoryfstname"
+           || name == "signatorysndname"
 	   || name == "signatorycompany"
 	   || name == "signatorynumber") {
 	    return true;
@@ -293,7 +295,8 @@ function docstateToHTML(){
 		cc = true;
 	    }
 
-	    placePlacements(this.nameplacements, "Namn på motpart", this.name, s.id, "name");
+	    placePlacements(this.fstnameplacements, "Förnamn", this.fstname, s.id, "fstname");
+            placePlacements(this.sndnameplacements, "Efternamn", this.sndname, s.id, "sndname");
 	    placePlacements(this.emailplacements, "Personens e-mail", this.email, s.id, "email");
 	    placePlacements(this.companyplacements, "Titel, företag", this.company, s.id, "sigco");
 	    placePlacements(this.numberplacements, "Orgnr/Persnr", this.number, s.id, "signr");
