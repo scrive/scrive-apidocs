@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE ForeignFunctionInterface #-}
 
 module Misc where
 import Control.Monad(msum,liftM,mzero,guard,MonadPlus(..))
