@@ -21,10 +21,6 @@ import System.Directory
 import qualified Codec.Binary.Base64 as Base64
 import qualified Codec.Binary.QuotedPrintable as QuotedPrintable
 import Data.List
-import System.Log.Logger
-import Happstack.Util.LogFormat
-import Data.Time.Clock
-import Control.Concurrent (forkIO)
 import User.UserState 
 import Doc.DocState 
 import Mails.MailsConfig
