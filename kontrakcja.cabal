@@ -113,8 +113,7 @@ Executable kontrakcja-server
 
  Main-Is: Main.hs
 
- Extensions: CPP,
-             BangPatterns,
+ Extensions: BangPatterns,
              DeriveDataTypeable,
              FlexibleContexts,
              FlexibleInstances, 
@@ -176,8 +175,7 @@ Executable kontrakcja-test
 
  Main-is: TestMain.hs
 
- Extensions: CPP,
-             BangPatterns,
+ Extensions: BangPatterns,
              DeriveDataTypeable,
              FlexibleContexts,
              FlexibleInstances, 
