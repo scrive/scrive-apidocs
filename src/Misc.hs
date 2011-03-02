@@ -46,6 +46,7 @@ import System.Log.Logger (errorM)
 import Data.Traversable (sequenceA)
 import Control.Applicative
 import System.Directory
+import System.IO.Temp
 
 {-
 
@@ -306,9 +307,14 @@ readProcessWithExitCode'
     -> [String]                 -- ^ any arguments
     -> BSL.ByteString               -- ^ standard input
     -> IO (ExitCode,BSL.ByteString,BSL.ByteString) -- ^ exitcode, stdout, stderr
-readProcessWithExitCode' cmd args input = do
-    (Just inh, Just outh, Just errh, pid) <-
-        createProcess (proc cmd args){ std_in  = CreatePipe,
+readProcessWithExitCode' cmd args input = 
+  withSystemTempFile "process" $ \inputname inputhandle -> do
+    BSL.hPutStr inputhandle input
+    hFlush inputhandle
+    hSeek inputhandle AbsoluteSeek 0
+
+    (_, Just outh, Just errh, pid) <-
+        createProcess (proc cmd args){ std_in  = UseHandle inputhandle,
                                        std_out = CreatePipe,
                                        std_err = CreatePipe }
     outMVar <- newEmptyMVar
@@ -330,11 +336,14 @@ readProcessWithExitCode' cmd args input = do
         putMVar errM err
         putMVar outMVar ()
 
+    {-
     -- now write and flush any input
     when (not (BSL.null input)) $ C.handle ((\e -> return ()) :: (C.IOException -> IO ())) $ do 
                                             BSL.hPutStr inh input
                                             hFlush inh
                                             hClose inh -- done with stdin
+
+    -}
 
     -- wait on the output
     takeMVar outMVar
