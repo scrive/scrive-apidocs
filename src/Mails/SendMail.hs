@@ -76,7 +76,7 @@ createRealMailer config = Mailer {sendMail = reallySend}
                               , (sendgridUser config) ++":"++(sendgridPassword config)
                               , (sendgridSMTP config)
                               , "-k", "--ssl", "--mail-from"
-                              , "<"++(ourInfoEmail config)++">"]++ rcpt) wholeContent
+                              , "<"++(ourInfoEmail config)++">"]++ rcpt) wholeContentMagic
         case code of
             ExitFailure retcode -> do
                 Log.mail $ "Cannot execute ./curl to send emails, code " ++ show retcode ++ 
