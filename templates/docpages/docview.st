@@ -208,7 +208,7 @@ showSignatoryLinkForSign =
   <div class="signViewBodyRightTextContainer"> 
    <img src="$status$" style="position:relative;top:3px;"> 
    $if(changeEmailAddress)$ <span style="color:#000000;position:relative;left:-4px;">!</span>  $endif$
-   $if(signatoryname)$<span class="text"><strong>$signatoryname$</strong></span>$endif$
+   <span class="text"><strong>$signatoryfstname$ $signatorysndname$</strong></span>
    $if(signatoryemail)$<div class="text">$signatoryemail$</div>$endif$
    $if(signatorycompany)$<div class="text">$signatorycompany$</div>$endif$
    $if(signatorynumber)$<div class="text">$signatorynumber$</div>$endif$
@@ -279,7 +279,7 @@ pageDocumentForSignContent=
       <a href="#" class="close"> </a>     
       <h2>Avvisa</h2>                 
       <p>Är du säker på att du vill avvisa dokumentet <strong>$documenttitle$</strong>?</p>
-      <p>När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela <strong>$authorname$</strong>.</p>
+      <p>När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela <strong>$authorfstname$ $authorsndname$</strong>.</p>
       <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
         $rejectMessage:noescape()$
       </div>
@@ -334,19 +334,6 @@ $signatoryScriptIfRequired()$
 ###
 ####
 pageDocumentForAuthorHelpers=
-<span class="templating_insert"> 
-  <div id="signatory_template" class="signatorybox" alt="Namn på avtalspart">
-  <input name="signatoryname" type="text" value="" autocomplete="off"
-         infotext="Fullständigt namn" /><br/>
-  <input name="signatorycompany" type="text" value="" autocomplete="off"
-         infotext="Företag" /><br/>
-  <input name="signatorynumber" type="text" value="" autocomplete="off"
-         infotext="Org.nr./Pers.nr" /><br/>
-  <input name="signatoryemail"  type="email" value="" autocomplete="off"
-         infotext="E-post" /><br/>
-  <small><a onclick="return signatoryremove(this.parentNode);" href="#">Ta bort</a></small>
-</div>
-  </span>,
 <script type="text/javascript"> 
   var documentid = "$documentid$"; 
 </script>
@@ -563,14 +550,24 @@ pageDocumentForAuthorContentPreparation=
                 <!-- 013 changed -->
                 <div class="sigentry signStepsBodyForms" id="peopleDetails">
                   <span class="fields">
-                    $if(authorname)$
-                    <span class='dragtext authorname inputWrapper'>
-	              <span style="display:none;" class="fieldid">name</span>
+                    $if(authorfstname)$
+                    <span class='dragtext authorfstname inputWrapper'>
+	              <span style="display:none;" class="fieldid">fstname</span>
 	              <span style="display:none;" class="fieldsigid">author</span>
 	              <span style="display:none;" class="type">author</span>
-	              <span class="fieldvalue">$authorname$</span>
+	              <span class="fieldvalue">$authorfstname$</span>
 	              <img src="/theme/images/iconHand.png" class="draghandle"
 	                   alt="drag" />
+                    </span>
+                    $endif$
+                    $if(authorsndname)$
+                    <span class='dragtext authorsndname inputWrapper'>
+                      <span style="display:none;" class="fieldid">sndname</span>
+                      <span style="display:none;" class="fieldsigid">author</span>
+                      <span style="display:none;" class="type">author</span>
+                      <span class="fieldvalue">$authorsndname$</span>
+                      <img src="/theme/images/iconHand.png" class="draghandle"
+                           alt="drag" />
                     </span>
                     $endif$
                     $if(authorcompany)$
@@ -746,13 +743,21 @@ pageDocumentForAuthorContentPreparation=
     <div class="sigentry signStepsBodyForms" id="peopleDetails">
       <input type="hidden" name="sigid" value="" />
       <span class="fields">
-	<span class='dragfield signame inputWrapper'>
-	  <span style="display:none;" class="fieldid">name</span>
+	<span class='dragfield sigfstname inputWrapper'>
+	  <span style="display:none;" class="fieldid">fstname</span>
 	  <span style="display:none;" class="type">author</span>
-	  <input type="text" infotext="Fullständigt namn"
-                 name="signatoryname" autocomplete="off" value="" />
+	  <input type="text" infotext="Förnamn"
+                 name="signatoryfstname" autocomplete="off" value="" />
 	  <img src="/theme/images/iconHand.png" class="draghandle"
 	       alt="drag" />
+        </span>
+        <span class='dragfield sigsndname inputWrapper'>
+          <span style="display:none;" class="fieldid">sndname</span>
+          <span style="display:none;" class="type">author</span>
+          <input type="text" infotext="Efternamn"
+                 name="signatorysndname" autocomplete="off" value="" />
+          <img src="/theme/images/iconHand.png" class="draghandle"
+               alt="drag" />
         </span>
 	<span class='dragfield sigcomp inputWrapper'>
 	  <span style="display:none;" class="fieldid">company</span>

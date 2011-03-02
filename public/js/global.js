@@ -334,13 +334,11 @@ safeReady(function() {
       }
       //ignore first one (it is author and we added him earlier)
       sigs.slice(1).each(function(){
-        var namefield = $("[name='signatoryname']",this);
+        var fstnamefield = $("[name='signatoryfstname']",this);
+        var sndnamefield = $("[name='signatorysndname']",this);
         var mailfield =  $("[name='signatoryemail']",this)
-        
-        var res = namefield.val();
-        if (!namefield.hasClass("grayed"))          
-          res = namefield.val();
-        else if (!mailfield.hasClass("grayed") )
+        var res = fstnamefield.val() +" "+ sndnamefield.val();
+        if ((!mailfield.hasClass("grayed"))&&(fstnamefield.hasClass("grayed") && sndnamefield.hasClass("grayed")))
           res = mailfield.val(); 
         partners[i] = res
         i++;
@@ -657,7 +655,7 @@ function authorFieldsValidation() {
 
   if(remainingAuthorFields.size() > 0) {
     console.log(remainingAuthorFields);
-    if(remainingAuthorFields.hasClass('signame')) {
+    if(remainingAuthorFields.hasClass('sigfstname') || remainingAuthorFields.hasClass('sigsndname')) {
       addFlashMessage("Du har inte skrivit in något namn på en eller flera motparter. Vänligen försök igen.");
     }
     if(remainingAuthorFields.hasClass('customfield')) {
@@ -949,12 +947,19 @@ $(document).ready(function() {
                 checkPersonPaneMode();
           resizeDesignBar();
             });
-        $("input[name='signatoryname']", "#personpane").live('change keyup', function() {
-                var val = $(this).val();
-                //console.log(val);
+        $("input[name='signatoryfstname'], input[name='signatorysndname']", "#personpane").live('change keyup', function() {
+                var fstname = $("input[name='signatoryfstname']",$(this).parent().parent());
+                var sndname = $("input[name='signatorysndname']",$(this).parent().parent());
+                if (fstname.hasClass("grayed"))
+                  fstname = ""
+                else fstname = fstname.val();
+                if (sndname.hasClass("grayed"))
+                  sndname = ""
+                else sndname = sndname.val();
+                var val = fstname + " "+ sndname;
                 var div = $(this).parentsUntil("#personpane").last();
                 var idx = div.parent().children().index(div);
-                if( val=="") 
+                if(fstname == "" && sndname == "") 
                     val = "(Namnlös)";
                 $('#peopleList li:eq(' + idx + ') a').text(val);
             });

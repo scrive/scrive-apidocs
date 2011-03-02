@@ -149,18 +149,31 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           }
 
       data SignatoryDetails1 = SignatoryDetails1
-          { signatoryname1      :: BS.ByteString  -- "Gracjan Polak" 
-          , signatorycompany1   :: BS.ByteString  -- SkrivaPå
-          , signatorynumber1    :: BS.ByteString  -- 123456789
-          , signatoryemail1     :: BS.ByteString  -- "gracjanpolak@skrivapa.se"
-          -- for templates
+          { signatoryname1      :: BS.ByteString  
+          , signatorycompany1   :: BS.ByteString  
+          , signatorynumber1    :: BS.ByteString  
+          , signatoryemail1     :: BS.ByteString  
           , signatorynameplacements1 :: [FieldPlacement]
           , signatorycompanyplacements1 :: [FieldPlacement]
           , signatoryemailplacements1 :: [FieldPlacement]
           , signatorynumberplacements1 :: [FieldPlacement]
           , signatoryotherfields1 :: [FieldDefinition]
           } 
-          
+      
+      data SignatoryDetails2 = SignatoryDetails2
+          { signatoryfstname2   :: BS.ByteString 
+          , signatorysndname2   :: BS.ByteString 
+          , signatorycompany2   :: BS.ByteString 
+          , signatorynumber2    :: BS.ByteString 
+          , signatoryemail2     :: BS.ByteString 
+          , signatorynameplacements2 :: [FieldPlacement]
+          , signatorycompanyplacements2 :: [FieldPlacement]
+          , signatoryemailplacements2 :: [FieldPlacement]
+          , signatorynumberplacements2 :: [FieldPlacement]
+          , signatoryotherfields2 :: [FieldDefinition]
+          }     
+      
+      
       data SignatoryDetails = SignatoryDetails
           { signatoryfstname   :: BS.ByteString  -- "Gracjan Polak" 
           , signatorysndname   :: BS.ByteString  -- "Gracjan Polak" 
@@ -168,7 +181,8 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , signatorynumber    :: BS.ByteString  -- 123456789
           , signatoryemail     :: BS.ByteString  -- "gracjanpolak@skrivapa.se"
           -- for templates
-          , signatorynameplacements :: [FieldPlacement]
+          , signatoryfstnameplacements :: [FieldPlacement]
+          , signatorysndnameplacements :: [FieldPlacement]
           , signatorycompanyplacements :: [FieldPlacement]
           , signatoryemailplacements :: [FieldPlacement]
           , signatorynumberplacements :: [FieldPlacement]
@@ -473,6 +487,31 @@ $(deriveAll [''Default]
           , documentallowedidtypes9   :: [IdentificationType]
           }
 
+      data Document10 = Document10
+          { documentid10               :: DocumentID
+          , documenttitle10            :: BS.ByteString
+          , documentauthor10           :: Author
+          , documentsignatorylinks10   :: [SignatoryLink]  
+          , documentfiles10            :: [File]
+          , documentsealedfiles10      :: [File]
+          , documentstatus10           :: DocumentStatus
+          , documentctime10            :: MinutesTime
+          , documentmtime10            :: MinutesTime
+          , documentchargemode10       :: ChargeMode
+          , documentdaystosign10       :: Maybe Int
+          , documenttimeouttime10      :: Maybe TimeoutTime 
+          -- | If true, this Document will not appear in the document list
+          , documentdeleted10          :: Bool
+          , documenthistory10          :: [DocumentHistoryEntry]
+          , documentinvitetext10       :: BS.ByteString
+          , documenttrustweaverreference10 :: Maybe BS.ByteString
+          , documentallowedidtypes10   :: [IdentificationType]
+          , authornameplacements10 :: [FieldPlacement]
+          , authorcompanyplacements10 :: [FieldPlacement]
+          , authoremailplacements10 :: [FieldPlacement]
+          , authornumberplacements10 :: [FieldPlacement]
+          , authorotherfields10 :: [FieldDefinition]
+          }
       data Document = Document
           { documentid               :: DocumentID
           , documenttitle            :: BS.ByteString
@@ -492,13 +531,13 @@ $(deriveAll [''Default]
           , documentinvitetext       :: BS.ByteString
           , documenttrustweaverreference :: Maybe BS.ByteString
           , documentallowedidtypes   :: [IdentificationType]
-          , authornameplacements :: [FieldPlacement]
+          , authorfstnameplacements :: [FieldPlacement]
+          , authorsndnameplacements :: [FieldPlacement]
           , authorcompanyplacements :: [FieldPlacement]
           , authoremailplacements :: [FieldPlacement]
           , authornumberplacements :: [FieldPlacement]
           , authorotherfields :: [FieldDefinition]
           }
-
       data File0 = File0 
           { fileid0       :: FileID
           , filename0     :: BS.ByteString
@@ -709,9 +748,13 @@ $(deriveSerialize ''SignatoryDetails1)
 instance Version SignatoryDetails1 where
     mode = extension 1 (Proxy :: Proxy SignatoryDetails0)
 
+$(deriveSerialize ''SignatoryDetails2)
+instance Version SignatoryDetails2 where
+    mode = extension 2 (Proxy :: Proxy SignatoryDetails1)
+
 $(deriveSerialize ''SignatoryDetails)
 instance Version SignatoryDetails where
-    mode = extension 2 (Proxy :: Proxy SignatoryDetails1)
+    mode = extension 3 (Proxy :: Proxy SignatoryDetails2)
     
 $(deriveSerialize ''SignatoryLink0)
 instance Version SignatoryLink0
@@ -755,7 +798,7 @@ instance Migrate SignatoryDetails0 SignatoryDetails1 where
                 }
 
 
-instance Migrate SignatoryDetails1 SignatoryDetails where
+instance Migrate SignatoryDetails1 SignatoryDetails2 where
     migrate (SignatoryDetails1
              {  signatoryname1
                 , signatorycompany1
@@ -766,18 +809,47 @@ instance Migrate SignatoryDetails1 SignatoryDetails where
                 , signatoryemailplacements1
                 , signatorynumberplacements1
                 , signatoryotherfields1
-              }) = SignatoryDetails
-                { signatoryfstname =  signatoryname1
-                , signatorysndname = BS.empty
-                , signatorycompany = signatorycompany1
-                , signatorynumber = signatorynumber1
-                , signatoryemail = signatoryemail1
-                , signatorynameplacements = signatorynameplacements1
-                , signatorycompanyplacements = signatorycompanyplacements1
-                , signatoryemailplacements = signatoryemailplacements1
-                , signatorynumberplacements = signatorynumberplacements1
-                , signatoryotherfields = signatoryotherfields1
+              }) = SignatoryDetails2
+                { signatoryfstname2 =  signatoryname1
+                , signatorysndname2 = BS.empty
+                , signatorycompany2 = signatorycompany1
+                , signatorynumber2 = signatorynumber1
+                , signatoryemail2 = signatoryemail1
+                , signatorynameplacements2 = signatorynameplacements1
+                , signatorycompanyplacements2 = signatorycompanyplacements1
+                , signatoryemailplacements2 = signatoryemailplacements1
+                , signatorynumberplacements2 = signatorynumberplacements1
+                , signatoryotherfields2 = signatoryotherfields1
                 }
+
+
+instance Migrate SignatoryDetails2 SignatoryDetails where
+    migrate (SignatoryDetails2
+             {  signatoryfstname2
+                , signatorysndname2
+                , signatorycompany2
+                , signatorynumber2
+                , signatoryemail2
+                , signatorynameplacements2
+                , signatorycompanyplacements2
+                , signatoryemailplacements2
+                , signatorynumberplacements2
+                , signatoryotherfields2
+                }) = SignatoryDetails
+                { signatoryfstname =  signatoryfstname2
+                , signatorysndname = signatorysndname2
+                , signatorycompany = signatorycompany2
+                , signatorynumber = signatorynumber2
+                , signatoryemail = signatoryemail2
+                , signatoryfstnameplacements = signatorynameplacements2
+                , signatorysndnameplacements = []
+                , signatorycompanyplacements = signatorycompanyplacements2
+                , signatoryemailplacements = signatoryemailplacements2
+                , signatorynumberplacements = signatorynumberplacements2
+                , signatoryotherfields = signatoryotherfields2
+                }
+
+
 
 
 instance Migrate SignatoryLink0 SignatoryLink1 where
@@ -797,7 +869,8 @@ instance Migrate SignatoryLink0 SignatoryLink1 where
                                , signatorycompany = signatorycompany0
                                , signatorynumber = BS.empty
                                , signatoryemail = signatoryemail0
-                               , signatorynameplacements = []
+                               , signatoryfstnameplacements = []
+                               , signatorysndnameplacements = []
                                , signatorycompanyplacements = []
                                , signatoryemailplacements = []
                                , signatorynumberplacements = []
@@ -940,10 +1013,14 @@ $(deriveSerialize ''Document9)
 instance Version Document9 where
     mode = extension 9 (Proxy :: Proxy Document8)
 
-$(deriveSerialize ''Document)
-instance Version Document where
+$(deriveSerialize ''Document10)
+instance Version Document10 where
     mode = extension 10 (Proxy :: Proxy Document9)
 
+$(deriveSerialize ''Document)
+instance Version Document where
+    mode = extension 11 (Proxy :: Proxy Document10)
+    
 instance Migrate Document0 Document1 where
       migrate (Document0
           { documentid0
@@ -1017,7 +1094,7 @@ instance Migrate Document2 Document3 where
           , documentdaystosign3 = documentdaystosign2
           , documenttimeouttime3 = documenttimeouttime2
           , documentdeleted3 = False
-          , documentauthordetails3 = SignatoryDetails BS.empty BS.empty BS.empty BS.empty BS.empty [] [] [] [] []
+          , documentauthordetails3 = SignatoryDetails BS.empty BS.empty BS.empty BS.empty BS.empty [] [] [] [] [] []
           , documentmaybesigninfo3 = Nothing
           , documenthistory3 = []
           }
@@ -1260,7 +1337,7 @@ instance Migrate Document8 Document9 where
                 , documentallowedidtypes9 = [EmailIdentification]
                 }
 
-instance Migrate Document9 Document where
+instance Migrate Document9 Document10 where
     migrate (Document9
                 { documentid9
                 , documenttitle9
@@ -1279,31 +1356,80 @@ instance Migrate Document9 Document where
                 , documentinvitetext9
                 , documenttrustweaverreference9
                 , documentallowedidtypes9
-                }) = Document
-                { documentid = documentid9
-                , documenttitle = documenttitle9
-                , documentauthor = documentauthor9
-                , documentsignatorylinks = documentsignatorylinks9
-                , documentfiles = documentfiles9
-                , documentsealedfiles = documentsealedfiles9
-                , documentstatus = documentstatus9
-                , documentctime = documentctime9
-                , documentmtime = documentmtime9
-                , documentchargemode = documentchargemode9
-                , documentdaystosign = documentdaystosign9
-                , documenttimeouttime = documenttimeouttime9
-                , documentdeleted = documentdeleted9
-                , documenthistory = documenthistory9
-                , documentinvitetext = documentinvitetext9
-                , documenttrustweaverreference = documenttrustweaverreference9
-                , documentallowedidtypes = documentallowedidtypes9
-                , authornameplacements = []
-                , authorcompanyplacements = []
-                , authoremailplacements = []
-                , authornumberplacements = []
-                , authorotherfields = []
+                }) = Document10
+                { documentid10 = documentid9
+                , documenttitle10 = documenttitle9
+                , documentauthor10 = documentauthor9
+                , documentsignatorylinks10 = documentsignatorylinks9
+                , documentfiles10 = documentfiles9
+                , documentsealedfiles10 = documentsealedfiles9
+                , documentstatus10 = documentstatus9
+                , documentctime10 = documentctime9
+                , documentmtime10 = documentmtime9
+                , documentchargemode10 = documentchargemode9
+                , documentdaystosign10 = documentdaystosign9
+                , documenttimeouttime10 = documenttimeouttime9
+                , documentdeleted10 = documentdeleted9
+                , documenthistory10 = documenthistory9
+                , documentinvitetext10 = documentinvitetext9
+                , documenttrustweaverreference10 = documenttrustweaverreference9
+                , documentallowedidtypes10 = documentallowedidtypes9
+                , authornameplacements10 = []
+                , authorcompanyplacements10 = []
+                , authoremailplacements10 = []
+                , authornumberplacements10 = []
+                , authorotherfields10 = []
                 }
 
+instance Migrate Document10 Document where
+    migrate (Document10
+                { documentid10 
+                , documenttitle10 
+                , documentauthor10
+                , documentsignatorylinks10 
+                , documentfiles10 
+                , documentsealedfiles10
+                , documentstatus10
+                , documentctime10
+                , documentmtime10
+                , documentchargemode10
+                , documentdaystosign10
+                , documenttimeouttime10
+                , documentdeleted10
+                , documenthistory10
+                , documentinvitetext10
+                , documenttrustweaverreference10
+                , documentallowedidtypes10
+                , authornameplacements10
+                , authorcompanyplacements10
+                , authoremailplacements10
+                , authornumberplacements10
+                , authorotherfields10
+                }) = Document
+                { documentid = documentid10
+                , documenttitle = documenttitle10
+                , documentauthor = documentauthor10
+                , documentsignatorylinks = documentsignatorylinks10
+                , documentfiles = documentfiles10
+                , documentsealedfiles = documentsealedfiles10
+                , documentstatus = documentstatus10
+                , documentctime = documentctime10
+                , documentmtime = documentmtime10
+                , documentchargemode = documentchargemode10
+                , documentdaystosign = documentdaystosign10
+                , documenttimeouttime = documenttimeouttime10
+                , documentdeleted = documentdeleted10
+                , documenthistory = documenthistory10
+                , documentinvitetext = documentinvitetext10
+                , documenttrustweaverreference = documenttrustweaverreference10
+                , documentallowedidtypes = documentallowedidtypes10
+                , authorfstnameplacements = authornameplacements10
+                , authorsndnameplacements = []
+                , authorcompanyplacements = authorcompanyplacements10
+                , authoremailplacements =  authoremailplacements10
+                , authornumberplacements =  authornumberplacements10
+                , authorotherfields = authorotherfields10
+                }
 
 $(deriveSerialize ''DocumentStatus)
 instance Version DocumentStatus where
@@ -1471,7 +1597,8 @@ newDocument user title ctime isfree = do
           , documentsealedfiles = []
           , documenttrustweaverreference = Nothing
           , documentallowedidtypes = [EmailIdentification]
-          , authornameplacements = []
+          , authorfstnameplacements = []
+          , authorsndnameplacements = []
           , authoremailplacements = []
           , authorcompanyplacements = []
           , authornumberplacements = []
@@ -1557,7 +1684,8 @@ updateDocument time documentid signatories daystosign invitetext author authorde
                       , documentmtime = time
                       , documentinvitetext = invitetext
                       , documentallowedidtypes = idtypes
-                      , authornameplacements = signatorynameplacements authordetails
+                      , authorfstnameplacements = signatoryfstnameplacements authordetails
+                      , authorsndnameplacements = signatorysndnameplacements authordetails
                       , authoremailplacements = signatoryemailplacements authordetails
                       , authorcompanyplacements = signatorycompanyplacements authordetails
                       , authornumberplacements = signatorynumberplacements authordetails
@@ -2047,7 +2175,8 @@ signatoryDetailsFromUser user =
                      , signatoryemail = unEmail $ useremail $ userinfo user
                      , signatorycompany = usercompanyname $ userinfo user
                      , signatorynumber = usercompanynumber $ userinfo user
-                     , signatorynameplacements = []
+                     , signatoryfstnameplacements = []
+                     , signatorysndnameplacements = []
                      , signatorycompanyplacements = []
                      , signatoryemailplacements = []
                      , signatorynumberplacements = []
