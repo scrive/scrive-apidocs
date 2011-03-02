@@ -631,7 +631,8 @@ getAndConcat field = do
 updateDocument :: Context -> Document -> Maybe SignatureInfo -> Kontra Document  
 updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} msiginfo = do
   -- each signatory has these predefined fields
-  signatoriesnames <- getAndConcat "signatoryname"
+  signatoriesfstnames <- getAndConcat "signatoryfstname"
+  signatoriessndnames <- getAndConcat "signatorysndname"
   signatoriescompanies <- getAndConcat "signatorycompany"
   signatoriesnumbers <- getAndConcat "signatorynumber"
   signatoriesemails' <- getAndConcat "signatoryemail"
@@ -708,11 +709,11 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} ms
 
   let signatories = sigs where
           sigs = if sigids == [] 
-                 then zipWith4 sdsimple signatoriesnames signatoriescompanies signatoriesnumbers signatoriesemails
+                 then zipWith5 sdsimple signatoriesfstnames signatoriessndnames signatoriescompanies signatoriesnumbers signatoriesemails
                       
-                 else zipWith5 sd sigids signatoriesnames signatoriescompanies signatoriesnumbers signatoriesemails 
-          sdsimple n c no e = SignatoryDetails n
-                                               BS.empty
+                 else zipWith6 sd sigids signatoriesfstnames signatoriessndnames signatoriescompanies signatoriesnumbers signatoriesemails 
+          sdsimple n sn c no e = SignatoryDetails n
+                                               sn
                                                c
                                                no
                                                e
@@ -721,12 +722,14 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} ms
                                                []
                                                []
                                                []
-          sd id n c no e = SignatoryDetails n 
-                                            BS.empty
+                                               []
+          sd id n sn c no e = SignatoryDetails n 
+                                            sn
                                             c 
                                             no 
                                             e 
-                                            (placementsByID id (BS.fromString "name"))
+                                            (placementsByID id (BS.fromString "fstname"))
+                                            (placementsByID id (BS.fromString "sndname"))
                                             (placementsByID id (BS.fromString "company"))
                                             (placementsByID id (BS.fromString "email"))
                                             (placementsByID id (BS.fromString "number"))
@@ -738,7 +741,8 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} ms
   let authordetails = (signatoryDetailsFromUser author)
                       {
                         signatoryemailplacements = placementsByID (BS.fromString "author") (BS.fromString "email")
-                      , signatorynameplacements = placementsByID (BS.fromString "author") (BS.fromString "name")
+                      , signatoryfstnameplacements = placementsByID (BS.fromString "author") (BS.fromString "fstname")
+                      , signatorysndnameplacements = placementsByID (BS.fromString "author") (BS.fromString "sndname")
                       , signatorycompanyplacements = placementsByID (BS.fromString "author") (BS.fromString "company")
                       , signatorynumberplacements = placementsByID (BS.fromString "author") (BS.fromString "number")
                       , signatoryotherfields = defsByID (BS.fromString "author")
@@ -1020,7 +1024,9 @@ fieldsFromDefinition def =
     map (fieldsFromPlacement (BS.toString (fieldvalue def))) (fieldplacements def)
 
 fieldsFromSignatory sig = 
-    (map (fieldsFromPlacement (BS.toString (signatoryname sig))) (signatorynameplacements sig))
+    (map (fieldsFromPlacement (BS.toString (signatoryfstname sig))) (signatoryfstnameplacements sig))
+    ++
+    (map (fieldsFromPlacement (BS.toString (signatorysndname sig))) (signatorysndnameplacements sig))
     ++
     (map (fieldsFromPlacement (BS.toString (signatoryemail sig))) (signatoryemailplacements sig))
     ++
@@ -1037,7 +1043,8 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
       signatoriesdetails = map signatorydetails $ documentsignatorylinks document
       authordetails = (signatoryDetailsFromUser author) 
                       {
-                        signatorynameplacements = authornameplacements document
+                        signatoryfstnameplacements = authorfstnameplacements document
+                      , signatorysndnameplacements = authorsndnameplacements document
                       , signatorynumberplacements = authornumberplacements document
                       , signatoryemailplacements = authoremailplacements document
                       , signatorycompanyplacements = authorcompanyplacements document

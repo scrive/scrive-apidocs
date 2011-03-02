@@ -257,7 +257,8 @@ emptyDetails =
     , signatorycompany = BS.empty
     , signatorynumber = BS.empty
     , signatoryemail = BS.empty
-    , signatorynameplacements = []
+    , signatoryfstnameplacements = []
+    , signatorysndnameplacements = []
     , signatorycompanyplacements = []
     , signatorynumberplacements = []
     , signatoryemailplacements = []
@@ -298,7 +299,8 @@ pageDocumentForAuthor ctx
        documentauthordetails =
          (signatoryDetailsFromUser author) {
              signatoryemailplacements = authoremailplacements document
-           , signatorynameplacements = authornameplacements document
+           , signatoryfstnameplacements = authorfstnameplacements document
+           , signatorysndnameplacements = authorsndnameplacements document
            , signatorycompanyplacements = authorcompanyplacements document
            , signatorynumberplacements = authornumberplacements document
            , signatoryotherfields = authorotherfields document
@@ -359,7 +361,8 @@ pageDocumentForViewer ctx
         documentauthordetails =
           (signatoryDetailsFromUser author) {
             signatoryemailplacements = authoremailplacements document
-            , signatorynameplacements = authornameplacements document
+            , signatoryfstnameplacements = authorfstnameplacements document
+            , signatorysndnameplacements = authorsndnameplacements document
             , signatorycompanyplacements = authorcompanyplacements document
             , signatorynumberplacements = authornumberplacements document
             , signatoryotherfields = authorotherfields document
@@ -518,7 +521,8 @@ showSignatoryLinkForSign
     renderTemplate ctxtemplates "showSignatoryLinkForSign" $  do
       field "mainclass" $ if isCurrentSignatorAuthor then "author" else "signatory"
       field "status" status
-      field "signatoryname" $ packToMString $ signatoryname $ signatorydetails siglnk
+      field "signatoryfstname" $ packToMString $ signatoryfstname $ signatorydetails siglnk
+      field "signatorysndname" $ packToMString $ signatorysndname $ signatorydetails siglnk
       field "signatorycompany" $ packToMString signatorycompany
       field "signatorynumber" $ packToMString signatorynumber
       field "signatoryemail" $ packToMString signatoryemail
@@ -547,7 +551,8 @@ documentInfoText templates document siglnk author =
 -- | Basic info about document , name, id ,author
 documentInfoFields :: Document -> User -> Fields
 documentInfoFields  document author = do
-  field "authorname" $ nothingIfEmpty $ userfullname author
+  field "authorfstname" $ nothingIfEmpty $ userfstname $ userinfo author
+  field "authorsndname" $ nothingIfEmpty $ usersndname $ userinfo author
   field "authorcompany" $ nothingIfEmpty $ usercompanyname $ userinfo author
   field "authoremail"  $ nothingIfEmpty $ unEmail $ useremail $ userinfo author
   field "authorcompanynumber" $ nothingIfEmpty $ usercompanynumber $ userinfo author
@@ -623,21 +628,25 @@ buildPlacementJS FieldPlacement {
 
 buildSigJS :: SignatoryDetails -> [Char]
 buildSigJS siglnk@(SignatoryDetails {
-  signatorycompany
+  signatoryfstname
+  , signatorysndname
+  , signatorycompany
   , signatorynumber
   , signatoryemail
-  , signatorynameplacements
+  , signatoryfstnameplacements
+  , signatorysndnameplacements
   , signatorycompanyplacements
   , signatoryemailplacements
   , signatorynumberplacements
   , signatoryotherfields
   }) =
-     "{ name: "
-  ++ jsStringFromBS  (signatoryname siglnk)
+     "{ fstname: "  ++ jsStringFromBS  signatoryfstname
+  ++ ", sndname: " ++ jsStringFromBS  signatorysndname
   ++ ", company: " ++ jsStringFromBS  signatorycompany
   ++ ", email: " ++ jsStringFromBS signatoryemail
   ++ ", number: " ++ jsStringFromBS signatorynumber
-  ++ ", nameplacements: " ++ (jsArray (map buildPlacementJS signatorynameplacements))
+  ++ ", fstnameplacements: " ++ (jsArray (map buildPlacementJS signatoryfstnameplacements))
+  ++ ", sndnameplacements: " ++ (jsArray (map buildPlacementJS signatorysndnameplacements))
   ++ ", companyplacements: " ++ (jsArray (map buildPlacementJS signatorycompanyplacements))
   ++ ", emailplacements: " ++ (jsArray (map buildPlacementJS signatoryemailplacements))
   ++ ", numberplacements: " ++ (jsArray (map buildPlacementJS signatorynumberplacements))

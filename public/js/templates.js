@@ -7,7 +7,7 @@ var debug = false;
 
 // create a new signatory. pretty useless without calling signatoryToHTML
 function newsignatory() {
-  return {name: "", company: "", number: "", email: "", 
+  return {fstname: "",sndname:"", company: "", number: "", email: "", 
 	  nameplacements: [],
 	  companyplacements: [],
 	  numberplacements: [],
@@ -156,7 +156,8 @@ function isStandardField(field) {
   if(isDraggableField(field)) {
     var name = getFieldName(field);
     if(name == "signatoryemail" 
-       || name == "signatoryname"
+       || name == "signatoryfstname"
+       || name == "signatorysndname"
        || name == "signatorycompany"
        || name == "signatorynumber") {
       return true;
@@ -551,7 +552,7 @@ function authorToHTML(sig) {
     sigentry.find(".partyrole input").last().attr("checked", "true");
   }
 
-  $("#peopleList ol").append("<li><a href='#'>" + sig.name + " (Avsändare)</a></li>");
+  $("#peopleList ol").append("<li><a href='#'>" + sig.fstname + " "+ sig.sndname + " (Avsändare)</a></li>");
 }
 
 /*
@@ -702,23 +703,25 @@ function signatoryToHTML(sig) {
   var d = sigentry.find(".fields");
   var of = sigentry.find(".otherfields");
   
-  var aname = sigentry.find(".signame");
+  var afstname = sigentry.find(".sigfstname");
+  var asndname = sigentry.find(".sigsndname");
   var acomp = sigentry.find(".sigcomp");
   var anumb = sigentry.find(".signum");
   var aemai = sigentry.find(".sigemail");
   
 
 
-  setSigID(aname, sigid);
+  setSigID(afstname, sigid);
+  setSigID(asndname, sigid);
   setSigID(acomp, sigid);
   setSigID(anumb, sigid);
   setSigID(aemai, sigid);
 
-  setValue(aname, sig.name);
+  setValue(afstname, sig.fstname);
+  setValue(asndname, sig.sndname);
   setValue(acomp, sig.company);
   setValue(anumb, sig.number);
   setValue(aemai, sig.email);
-  
   // other fields
   
   $(sig.otherfields).each(function (){
@@ -745,10 +748,10 @@ function signatoryToHTML(sig) {
   
   var n = "Unnamed";
 
-  if(sig.name == "") {
+  if(sig.fstname == "" && sig.sndname == "") {
     n = "(Namnlös)";
   } else {
-    n = sig.name;
+    n = sig.fstname + " " + sig.sndname;
   }
   
   $("#peopleList ol").append("<li><a href='#'>" + n + "</a></li>");
@@ -759,7 +762,8 @@ function signatoryToHTML(sig) {
 function placePlacementsOfSignatories(signatories) {
   $(signatories).each(function(){
     var sig = this;
-    placePlacements(sig.nameplacements, "Namn på motpart", sig.name, sig.id, "name");
+    placePlacements(sig.fstnameplacements, "Förnamn", sig.fstname, sig.id, "fstname");
+    placePlacements(sig.sndnameplacements, "Efternamn", sig.sndname, sig.id, "sndname");
     placePlacements(sig.companyplacements, "Titel, företag", sig.company, sig.id, "company");
     placePlacements(sig.numberplacements, "Orgnr/Persnr", sig.number, sig.id, "number");
     placePlacements(sig.emailplacements, "Personens e-mail", sig.email, sig.id, "email");
