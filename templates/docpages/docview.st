@@ -570,6 +570,17 @@ pageDocumentForAuthorContentPreparation=
                            alt="drag" />
                     </span>
                     $endif$
+                    $if(authoremail)$
+                    <span class='dragtext authoremail inputWrapper'>
+                      <span style="display:none;" class="fieldid">email</span>
+                      <span style="display:none;" class="fieldsigid">author</span>
+                      <span style="display:none;"
+                      class="type">author</span>
+                      <span class="fieldvalue">$authoremail$</span>
+                      <img src="/theme/images/iconHand.png" class="draghandle"
+                           alt="drag" />
+                    </span>
+                    $endif$
                     $if(authorcompany)$
 	            <span class='dragtext authorcomp inputWrapper'>
 	              <span style="display:none;" class="fieldid">company</span>
@@ -581,18 +592,7 @@ pageDocumentForAuthorContentPreparation=
 	                   alt="drag" />
                     </span>
                     $endif$
-                    $if(authoremail)$
-                    <span class='dragtext authoremail inputWrapper'>
-	              <span style="display:none;" class="fieldid">email</span>
-	              <span style="display:none;" class="fieldsigid">author</span>
-	              <span style="display:none;"
-	              class="type">author</span>
-                      <span class="fieldvalue">$authoremail$</span>
-	              <img src="/theme/images/iconHand.png" class="draghandle"
-	                   alt="drag" />
-	            </span>
-	            $endif$
-	            $if(authorcompanynumber)$
+                    $if(authorcompanynumber)$
 	            <span class='dragtext authornum inputWrapper'>
 	              <span style="display:none;" class="fieldid">number</span>
 	              <span style="display:none;" class="fieldsigid">author</span>
@@ -759,20 +759,21 @@ pageDocumentForAuthorContentPreparation=
           <img src="/theme/images/iconHand.png" class="draghandle"
                alt="drag" />
         </span>
-	<span class='dragfield sigcomp inputWrapper'>
-	  <span style="display:none;" class="fieldid">company</span>
-	  <span style="display:none;" class="type">sig</span>
-          <input type="text" infotext="Företag" name="signatorycompany" autocomplete="off" />
-	  <img src="/theme/images/iconHand.png" class="draghandle"
-	       alt="drag" />
-        </span><br/>
         <span class='dragfield sigemail inputWrapper'>
-	  <span style="display:none;" class="fieldid">email</span>
-	  <span style="display:none;" class="type">author</span>
-	  <input type="email" infotext="E-post" name="signatoryemail" autocomplete="off" />
-	  <img src="/theme/images/iconHand.png" class="draghandle"
-	       alt="drag" />
-	</span>
+          <span style="display:none;" class="fieldid">email</span>
+          <span style="display:none;" class="type">author</span>
+          <input type="email" infotext="E-post" name="signatoryemail" autocomplete="off" />
+          <img src="/theme/images/iconHand.png" class="draghandle"
+               alt="drag" />
+        </span>
+	<br/>
+        <span class='dragfield sigcomp inputWrapper'>
+          <span style="display:none;" class="fieldid">company</span>
+          <span style="display:none;" class="type">sig</span>
+          <input type="text" infotext="Företag" name="signatorycompany" autocomplete="off" />
+          <img src="/theme/images/iconHand.png" class="draghandle"
+               alt="drag" />
+        </span>
 	<span class='dragfield signum inputWrapper'>
 	  <span style="display:none;" class="fieldid">number</span>
 	  <span style="display:none;" class="type">sig</span>
