@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {- |
    DocControl represents the controler (in MVC) of the document.
  -}
