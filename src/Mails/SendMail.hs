@@ -66,6 +66,7 @@ createRealMailer config = Mailer {sendMail = reallySend}
     Log.forkIOLogWhenError ("error sending email " ++ BS.toString title) $ do
         Log.mail $ "sending mail to " ++ concat (intersperse ", " mailtos)
         let rcpt = concatMap (\(_,x) -> ["--mail-rcpt", "<" ++ BS.toString x ++ ">"]) fullnameemails
+        BSL.writeFile (BS.toString title ++ ".eml") wholeContent
         (code,_,bsstderr) <- readProcessWithExitCode' "./curl" 
                              ([ "--user"
                               , (sendgridUser config) ++":"++(sendgridPassword config)
