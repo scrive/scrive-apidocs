@@ -66,7 +66,15 @@ createRealMailer config = Mailer {sendMail = reallySend}
     Log.forkIOLogWhenError ("error sending email " ++ BS.toString title) $ do
         Log.mail $ "sending mail to " ++ concat (intersperse ", " mailtos)
         let rcpt = concatMap (\(_,x) -> ["--mail-rcpt", "<" ++ BS.toString x ++ ">"]) fullnameemails
-        BSL.writeFile (BS.toString title ++ ".eml") wholeContent
+        -- BSL.writeFile (BS.toString title ++ ".eml") wholeContent
+
+        {- here some magic
+         - seems that readProcessWithExitCode' is not ok when we have some longer chunks
+         - in there and just likes to skip attachment
+         - effectivelly giving attachment size 0 bytes
+         - so lets force it here and see what happens
+         -}
+        let wholeContentMagic = BSL.fromChunks [BS.concat (BSL.toChunks wholeContent)]
         (code,_,bsstderr) <- readProcessWithExitCode' "./curl" 
                              ([ "--user"
                               , (sendgridUser config) ++":"++(sendgridPassword config)
