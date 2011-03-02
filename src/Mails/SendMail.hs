@@ -15,7 +15,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL  hiding (length)
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.Char8 as BSLC
-import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString.UTF8 as BS hiding (length)
 import System.Exit
 import System.Directory
 import qualified Codec.Binary.Base64 as Base64
@@ -78,7 +78,7 @@ createRealMailer config = Mailer {sendMail = reallySend}
                            " stderr: " ++ BSL.toString bsstderr
             ExitSuccess -> do
                 Log.mail $ "Curl successfully executed with mail: " ++ 
-                        (show $ mail {attachments = map (\(x,_)->(x,BS.empty) )attachments})
+                        (show $ mail {attachments = map (\(x,a)->(x,BS.fromString ("length " ++ show (BS.length a))))attachments})
     return ()   
 
 createDevMailer :: String -> String -> Mailer
