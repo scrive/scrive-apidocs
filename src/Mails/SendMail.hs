@@ -29,6 +29,7 @@ import User.UserState
 import Doc.DocState 
 import Mails.MailsConfig
 import Misc
+import qualified AppLogger as Log
 
 -- from simple utf-8 to =?UTF-8?Q?zzzzzzz?=
 -- FIXME: should do better job at checking if encoding should be applied or not
@@ -62,19 +63,22 @@ createRealMailer config = Mailer {sendMail = reallySend}
     reallySend mail@(Mail {fullnameemails,title,content,attachments,from,mailInfo}) = do
     let mailtos = createMailTos mail
         wholeContent = createWholeContent (ourInfoEmail config) (ourInfoEmailNiceName config) mail
-    tm <- getCurrentTime
-    logM "Kontrakcja.Mail" NOTICE $ formatTimeCombined tm ++ " " ++ concat (intersperse ", " mailtos)
-    _ <- forkIO $ 
-          do
-            let rcpt = concatMap (\(_,x) -> ["--mail-rcpt", "<" ++ BS.toString x ++ ">"]) fullnameemails
-            (code,_,_) <- readProcessWithExitCode' "./curl" ([ "--user"
-                                    , (sendgridUser config) ++":"++(sendgridPassword config)
-                                    , (sendgridSMTP config)
-                                    , "-k", "--ssl", "--mail-from"
-                                    , "<"++(ourInfoEmail config)++">"]++ rcpt) wholeContent
-            if (code /= ExitSuccess) 
-             then  logM "Kontrakcja.Mail" ERROR $ "Cannot execute ./curl to send emails"
-             else  logM "Kontrakcja.Mail" ERROR $ "Curl executed with mail: " ++ (show $ mail {attachments = map (\(x,_)->(x,BS.empty) )attachments})
+    Log.forkIOLogWhenError ("error sending email " ++ BS.toString title) $ do
+        Log.mail $ "sending mail to " ++ concat (intersperse ", " mailtos)
+        let rcpt = concatMap (\(_,x) -> ["--mail-rcpt", "<" ++ BS.toString x ++ ">"]) fullnameemails
+        (code,_,bsstderr) <- readProcessWithExitCode' "./curl" 
+                             ([ "--user"
+                              , (sendgridUser config) ++":"++(sendgridPassword config)
+                              , (sendgridSMTP config)
+                              , "-k", "--ssl", "--mail-from"
+                              , "<"++(ourInfoEmail config)++">"]++ rcpt) wholeContent
+        case code of
+            ExitFailure retcode -> do
+                Log.mail $ "Cannot execute ./curl to send emails, code " ++ show retcode ++ 
+                           " stderr: " ++ BSL.toString bsstderr
+            ExitSuccess -> do
+                Log.mail $ "Curl successfully executed with mail: " ++ 
+                        (show $ mail {attachments = map (\(x,_)->(x,BS.empty) )attachments})
     return ()   
 
 createDevMailer :: String -> String -> Mailer
@@ -85,8 +89,7 @@ createDevMailer ourInfoEmail ourInfoEmailNiceName = Mailer {sendMail = sendToTem
     let wholeContent = createWholeContent ourInfoEmail ourInfoEmailNiceName mail
         mailtos = createMailTos mail
         filename = tmp ++ "/Email-" ++ BS.toString (snd (head fullnameemails)) ++ ".eml"
-    tm <- getCurrentTime
-    logM "Kontrakcja.Mail" NOTICE $ formatTimeCombined tm ++ " " ++ concat (intersperse ", " mailtos) ++ "  [staging: saved to file " ++ filename ++ "]"
+    Log.mail $ concat (intersperse ", " mailtos) ++ "  [staging: saved to file " ++ filename ++ "]"
     BSL.writeFile filename wholeContent
     openDocument filename
     return ()
