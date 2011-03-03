@@ -159,7 +159,7 @@ sendDocumentErrorEmail1 ctx document signatorylink = do
   mail <- mailDocumentError (ctxtemplates ctx) ctx document
   sendMail (ctxmailer ctx) $ 
            mail { fullnameemails = [(signatoryname signatorydetails,signatoryemail signatorydetails)]
-                , mailInfo = Invitation signatorylinkid
+                , mailInfo = Invitation documentid  signatorylinkid
                 } 
 
 {- |
@@ -190,7 +190,7 @@ sendInvitationEmail1 ctx document author signatorylink = do
   sendMail (ctxmailer ctx) $ 
            mail { fullnameemails = [(signatoryname signatorydetails,signatoryemail signatorydetails)]
                 , attachments = [(documenttitle,attachmentcontent)]
-                , mailInfo = Invitation signatorylinkid
+                , mailInfo = Invitation documentid signatorylinkid
                 } 
 
 {- |
@@ -1313,7 +1313,7 @@ handleResend docid signlinkid  = withUserPost $ do
   customMessage <- fmap (fmap concatChunks) $ getDataFn' (lookBS "customtext")  
   mail <- liftIO $  mailDocumentRemind (ctxtemplates ctx) customMessage ctx doc signlink author
   liftIO $ sendMail (ctxmailer ctx) (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )],
-                                                mailInfo = Invitation $ signatorylinkid signlink })
+                                                mailInfo = Invitation  (documentid doc) (signatorylinkid signlink) })
   addFlashMsg =<< (liftIO $ flashRemindMailSent (ctxtemplates ctx) signlink)
   return (LinkIssueDoc $ documentid doc)
 

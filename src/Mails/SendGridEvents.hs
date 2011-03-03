@@ -26,7 +26,22 @@ import Control.Monad.State
 import qualified Data.ByteString.UTF8 as BS (fromString,toString)
 import Data.List (find)
 import System.Log.Logger
+
 data SendGridEventType = Delivered | Undelivered | Other deriving Show
+data SendgridEvent = SendgridEvent {
+                            event::SendGridEventType
+                          , info::MailInfo
+                     } deriving Show 
+
+-- | Handler for receving delivery info from sendgrid
+handleSendgridEvent::Kontra KontraLink
+handleSendgridEvent = do
+                          et <- readEventType                   
+                          mi <- readMailInfo
+                          let ev = SendgridEvent {event = et, info = mi}
+                          liftIO $ logM "Kontrakcja.Mail" NOTICE  $ "Sendgrid event recived " ++ (show ev)
+                          routeToHandler ev
+                          return $ LinkMain
 
 
 readEventType::Kontra SendGridEventType
@@ -44,32 +59,28 @@ readMailInfo = do
                    Just i -> return i
                    Nothing -> return None
              
-data SendgridEvent = SendgridEvent {
-                            event::SendGridEventType
-                          , info::MailInfo
-                     } deriving Show 
-handleSendgridEvent::Kontra KontraLink
-handleSendgridEvent = do
-                          et <- readEventType                   
-                          mi <- readMailInfo
-                          let ev = SendgridEvent {event = et, info = mi}
-                          liftIO $ logM "Kontrakcja.Mail" NOTICE  $ "Sendgrid event recived " ++ (show ev)
-                          handleSendgridEvent' ev
-                          return $ LinkMain
 
 
--- | Main event handling table, pattern matched for every type of mail and status
-handleSendgridEvent'::SendgridEvent -> Kontra ()
-handleSendgridEvent' (SendgridEvent {event=Other}) = return ()                        
-handleSendgridEvent' (SendgridEvent {info= None}) = return ()                        
-handleSendgridEvent' (SendgridEvent {info=Invitation signlinkid,event= Delivered}) = 
-  do
-   _ <- update $ SetInvitationDeliveryStatus signlinkid Mail.Delivered
-   return ()
-handleSendgridEvent' (SendgridEvent {info=Invitation signlinkid,event= Undelivered}) = 
-  do
-   mdoc <- update $ SetInvitationDeliveryStatus signlinkid Mail.Undelivered
-   case mdoc of
+-- | Main routing table after getting sendgrid event.
+routeToHandler::SendgridEvent -> Kontra ()
+routeToHandler (SendgridEvent {event=Other}) = return ()                        
+routeToHandler (SendgridEvent {info= None}) = return ()                        
+routeToHandler (SendgridEvent {info=Invitation docid signlinkid,event= Delivered}) = handleDeliveredInvitation docid signlinkid
+routeToHandler (SendgridEvent {info=Invitation docid signlinkid,event= Undelivered}) = handleUndeliveredInvitation docid signlinkid
+
+
+
+-- | Actions perform that are performed then
+
+handleDeliveredInvitation::DocumentID -> SignatoryLinkID  -> Kontra ()
+handleDeliveredInvitation docid signlinkid = do
+    _ <- update $ SetInvitationDeliveryStatus docid signlinkid Mail.Delivered
+    return ()
+    
+handleUndeliveredInvitation::DocumentID -> SignatoryLinkID -> Kontra ()
+handleUndeliveredInvitation docid signlinkid = do
+    mdoc <- update $ SetInvitationDeliveryStatus docid signlinkid Mail.Undelivered
+    case mdoc of
      Just doc -> do   
                  ctx <- get
                  title <- liftIO $ renderTemplate (ctxtemplates ctx) "invitationMailUndeliveredTitle" ()
@@ -88,5 +99,3 @@ handleSendgridEvent' (SendgridEvent {info=Invitation signlinkid,event= Undeliver
                     liftIO $ sendMail (ctxmailer ctx)  $  emptyMail {title=BS.fromString title,content=BS.fromString content,fullnameemails = fullnameemails}
                   Nothing -> return () 
      Nothing -> return ()                                                                                  
-
-
