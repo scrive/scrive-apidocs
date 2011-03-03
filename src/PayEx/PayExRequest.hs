@@ -84,7 +84,7 @@ instance XmlContent (PC PayExInit) where
 -- | Creating reocurring payment agreement
 data  PayExAgreement  = PayExAgreement {
                                           agreementDescription::String,
-                                          agreementMax::Money -- |  Max amount that can be changed, something arround double of max signing cost
+                                          agreementMax::Money 
                                     }
 
 instance PayExRequest PayExAgreement where 
