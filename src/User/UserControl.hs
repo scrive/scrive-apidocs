@@ -103,11 +103,9 @@ handlePostSubaccount :: Kontra KontraLink
 handlePostSubaccount = do
   ctx@Context { ctxmaybeuser = Just (user@User { userid }), ctxhostpart } <- get
   create <- getDataFn (look "create")
-  remove <- getDataFn (look "remove")
-  case (create, remove) of
-      (Just _, _) -> handleCreateSubaccount ctx
-      (_, Just _) -> handleRemoveSubaccounts ctx
-      _ -> return LinkSubaccount
+  case create of
+      (Just _) -> handleCreateSubaccount ctx
+      Nothing -> return LinkSubaccount
 
 handleCreateSubaccount :: Context -> Kontra KontraLink
 handleCreateSubaccount ctx@Context { ctxmaybeuser = Just (user@User { userid }), ctxhostpart, ctxtemplates } = do
@@ -136,25 +134,6 @@ handleViralInvite = do
                      Nothing -> do
                           addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists $ ctxtemplates ctx)
                           return LoopBack
-
-handleRemoveSubaccounts :: Context -> Kontra KontraLink
-handleRemoveSubaccounts ctx@Context { ctxmaybeuser = Just (user), ctxhostpart } = do
-  subidstrings <- getDataFnM (lookInputList "doccheck")
-  let Just subids = sequence $ map (readM . LS.toString) subidstrings
-  removed <- liftIO $ removeSubaccounts user subids
-  return LinkSubaccount
-
-removeSubaccounts :: User -> [UserID] -> IO ()
-removeSubaccounts _ [] = return ()
-removeSubaccounts user (subid:xs) = do
-    removeSubaccount user subid
-    removeSubaccounts user xs
-
-removeSubaccount user subId = do
-  Just subuser <- query $ GetUserByUserID subId
-  takeover <- update $ FragileTakeOverDocuments user subuser
-  maybeuser <- update $ FragileDeleteUser subId
-  return ()
 
 randomPassword :: IO BS.ByteString
 randomPassword = do
