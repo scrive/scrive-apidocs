@@ -129,7 +129,7 @@ handleViralInvite = do
                           addFlashMsg =<< (liftIO $ flashMessageViralInviteSent $ ctxtemplates ctx)   
                           now <- liftIO $ getMinutesTime
                           update $ FreeUserFromPayments account ((60*24*60) `minutesAfter` now) 
-                          update $ SetInviter (ctxmaybeuser ctx) account
+                          update $ SetInviteInfo (ctxmaybeuser ctx) now Viral (userid account)
                           return LoopBack
                      Nothing -> do
                           addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists $ ctxtemplates ctx)
@@ -169,6 +169,8 @@ createNewUserByAdmin ctx fullname email freetill custommessage =
       case muser of 
        Just user -> do
                     when (isJust freetill) $ update $ FreeUserFromPayments user (fromJust freetill)
+                    now <- liftIO $ getMinutesTime
+                    update $ SetInviteInfo (ctxmaybeuser ctx) now Admin (userid user)
                     chpwdlink <- unloggedActionLink (user)
                     mail <- mailNewAccountCreatedByAdmin (ctxtemplates ctx) ctx fullname email chpwdlink custommessage
                     sendMail (ctxmailer ctx) $ mail { fullnameemails = [(fullname, email)]} 

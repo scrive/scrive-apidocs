@@ -52,7 +52,7 @@ adminUsersAdvancedPage templates users params =  renderTemplate templates "admin
                                                         (setAttribute "startletter" $ startletter params) .
                                                         (setAttribute "adminlink" $ show $ LinkAdminOnly) 
 {-| Manage users page - can find user here -}
-adminUsersPage::KontrakcjaTemplates ->[(User,DocStats)] -> AdminUsersPageParams -> IO String
+adminUsersPage::KontrakcjaTemplates ->[(User,DocStats,UserStats)] -> AdminUsersPageParams -> IO String
 adminUsersPage templates users params = renderTemplate templates "adminusers" $
                                                         (setAttribute "adminlink" $ show $ LinkAdminOnly) . 
                                                         (setAttribute "users" $ map mkUserInfoView $ visibleUsers params users) .
@@ -68,7 +68,7 @@ adminUserPage templates user paymentModel  = renderTemplate templates "adminuser
                                                         (setAttribute "user" $ userAdminView user) .
                                                         (setAttribute "paymentmodel" $ getModelView paymentModel) .
                                                         (setAttribute "adminlink" $ show $ LinkAdminOnly)
-allUsersTable::KontrakcjaTemplates -> [(User,DocStats)] -> IO String
+allUsersTable::KontrakcjaTemplates -> [(User,DocStats,UserStats)] -> IO String
 allUsersTable templates users =  renderTemplate templates "allUsersTable" $
                                                         (setAttribute "users" $ map mkUserInfoView $ users) .
                                                         (setAttribute "adminlink" $ show $ LinkAdminOnly) 
@@ -82,20 +82,25 @@ statsPage templates stats sysinfo = renderTemplate templates "pageStats" $
                                                          (setAttribute "sysinfo" $ sysinfo) .
                                                          (setAttribute "adminlink" $ show $ LinkAdminOnly)
 
-mkUserInfoView (userdetails', docstats') = UserInfoView {
+mkUserInfoView :: (User, DocStats, UserStats) -> UserInfoView
+mkUserInfoView (userdetails', docstats', userstats') = UserInfoView {
                                               userdetails = userSmallView userdetails'
                                             , docstats = docstats'
+                                            , userstats = userstats'
                                            }
  
 data UserInfoView = UserInfoView {
                           userdetails :: UserSmallView,
-                          docstats :: DocStats
+                          docstats :: DocStats,
+                          userstats :: UserStats
                         } deriving (Data, Typeable)
 
 data StatsView = StatsView {
                     svDoccount :: Int
                   , svSignaturecount :: Int
                   , svUsercount :: Int
+                  , svViralinvitecount :: Int
+                  , svAdmininvitecount :: Int
                 } deriving (Data, Typeable)
 
 {-| Paging list as options [1..21] -> [1-5,6-10,11-15,16-20,21-21]  -}                                                      
@@ -114,8 +119,8 @@ class UserBased a where
 instance UserBased User where
   getUser = id
 
-instance UserBased (User,DocStats) where
-  getUser (user,_) = user
+instance UserBased (User,DocStats,UserStats) where
+  getUser (user,_,_) = user
 
 {-| Users on current page-}
 visibleUsers:: (UserBased a) => AdminUsersPageParams->[a]->[a]

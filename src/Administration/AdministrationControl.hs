@@ -109,12 +109,13 @@ showAdminUsers (Just a)= onlySuperUser $
                                      content <- liftIO $ adminUserPage ctxtemplates user paymentmodel
                                      renderFromBody ctx TopEmpty kontrakcja $ cdata content 
 
-getUsersAndStats :: Kontra [(User,DocStats)]
+getUsersAndStats :: Kontra [(User,DocStats,UserStats)]
 getUsersAndStats = do
     users <- query $ GetAllUsers
     let queryStats user = do
           docstats <- query $ GetDocumentStatsByUser user
-          return (user, docstats)
+          userstats <- query $ GetUserStatsByUser user
+          return (user, docstats, userstats)
     users2 <- mapM queryStats users
     return users2
 
@@ -143,7 +144,7 @@ read_df = do
 showStats :: Kontra Response
 showStats = onlySuperUser $ do
     docstats <- query $ GetDocumentStats
-    allusers <- query $ GetAllUsers
+    userstats <- query $ GetUserStats
 #ifndef WINDOWS
     df <- liftIO read_df
 #else
@@ -152,7 +153,9 @@ showStats = onlySuperUser $ do
     ctx@Context {ctxtemplates} <- lift get
     let stats = StatsView { svDoccount = doccount docstats,
                             svSignaturecount = signaturecount docstats,
-                            svUsercount = (length allusers) }
+                            svUsercount = usercount userstats,
+                            svViralinvitecount = viralinvitecount userstats,
+                            svAdmininvitecount = admininvitecount userstats }
     content <- liftIO $ statsPage ctxtemplates stats (toString df)
     renderFromBody ctx TopEmpty kontrakcja $ cdata content
 
