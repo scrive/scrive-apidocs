@@ -26,6 +26,7 @@ import Doc.DocState
 import Mails.MailsConfig
 import Misc
 import qualified AppLogger as Log
+import System.Time
 
 -- from simple utf-8 to =?UTF-8?Q?zzzzzzz?=
 -- FIXME: should do better job at checking if encoding should be applied or not
@@ -58,10 +59,11 @@ createRealMailer :: MailsConfig -> Mailer
 createRealMailer config = Mailer {sendMail = reallySend}
   where 
     reallySend mail@(Mail {fullnameemails,title,content,attachments,from,mailInfo}) = do
+    mailId <- createMailId
     let mailtos = createMailTos mail
-        wholeContent = createWholeContent (ourInfoEmail config) (ourInfoEmailNiceName config) mail
-    Log.forkIOLogWhenError ("error sending email " ++ BS.toString title) $ do
-        Log.mail $ "sending mail to " ++ concat (intersperse ", " mailtos)
+        wholeContent = createWholeContent (ourInfoEmail config) (ourInfoEmailNiceName config) mailId mail
+    Log.forkIOLogWhenError ("error sending email " ++  show mailId ++ " " ++  BS.toString title) $ do
+        Log.mail $ "sending mail to " ++ show mailId ++ " " ++ concat (intersperse ", " mailtos)
         let rcpt = concatMap (\(_,x) -> ["--mail-rcpt", "<" ++ BS.toString x ++ ">"]) fullnameemails
         -- BSL.writeFile (BS.toString title ++ ".eml") wholeContent
 
@@ -92,10 +94,11 @@ createDevMailer ourInfoEmail ourInfoEmailNiceName = Mailer {sendMail = sendToTem
   where 
     sendToTempFile mail@(Mail {fullnameemails}) = do
     tmp <- getTemporaryDirectory
-    let wholeContent = createWholeContent ourInfoEmail ourInfoEmailNiceName mail
+    mailId <- createMailId
+    let wholeContent = createWholeContent ourInfoEmail ourInfoEmailNiceName mailId mail
         mailtos = createMailTos mail
         filename = tmp ++ "/Email-" ++ BS.toString (snd (head fullnameemails)) ++ ".eml"
-    Log.mail $ concat (intersperse ", " mailtos) ++ "  [staging: saved to file " ++ filename ++ "]"
+    Log.mail $ show mailId ++ " " ++ concat (intersperse ", " mailtos) ++ "  [staging: saved to file " ++ filename ++ "]"
     BSL.writeFile filename wholeContent
     openDocument filename
     return ()
@@ -104,7 +107,12 @@ createMailTos mail@(Mail {fullnameemails}) =
   map fmt fullnameemails 
   where fmt (fullname,email) = mailEncode fullname ++ " <" ++ BS.toString email ++ ">"
 
-createWholeContent ourInfoEmail ourInfoEmailNiceName mail@(Mail {title,content,attachments,from,mailInfo}) =
+createMailId:: IO Integer
+createMailId = do 
+    (TOD s p ) <- getClockTime
+    return $ s *10 ^12 + p
+
+createWholeContent ourInfoEmail ourInfoEmailNiceName mailId mail@(Mail {title,content,attachments,from,mailInfo}) =
   let mailtos = createMailTos mail 
       -- FIXME: add =?UTF8?B= everywhere it is needed here
       boundary = "skrivapa-mail-12-337331046" 
@@ -116,7 +124,11 @@ createWholeContent ourInfoEmail ourInfoEmailNiceName mail@(Mail {title,content,a
           "Subject: " ++ mailEncode title ++ "\r\n" ++
           "To: " ++ concat (intersperse ", " mailtos) ++ "\r\n" ++
           fromHeader ++
-          "X-SMTPAPI:  {\"unique_args\": {\"mailinfo\": \""++(show mailInfo)++"\"} }\r\n" ++
+          "X-SMTPAPI:  {\"unique_args\": " ++ 
+                       "{\"mailinfo\": \""++(show mailInfo)++"\", "++
+                       "\"id\": \""++(show mailId)++"\"} "++
+                       
+                      "}\r\n" ++
           "MIME-Version: 1.0\r\n" ++
           "Content-Type: multipart/mixed; boundary=" ++ boundary ++ "\r\n" ++
           "\r\n"
