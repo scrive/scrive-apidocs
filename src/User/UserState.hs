@@ -3,6 +3,8 @@ module User.UserState
     ( Email(..)
     , Friend(..)
     , Inviter(..)
+    , InviteType(..)
+    , InviteInfo(..)
     , DefaultMainSignatory(..)
     , ExternalUserID(..)
     , FlashType(..)
@@ -18,6 +20,7 @@ module User.UserState
     , UserSettings(..)
     , UserID(..)
     , Users
+    , UserStats(..)
     , toFlashMsg
     , userfullname
     , createPassword
@@ -31,10 +34,11 @@ module User.UserState
     , GetUserByEmail(..)
     , GetUserByUserID(..)
     , GetUserStats(..)
+    , GetUserStatsByUser(..)
     , GetUserSubaccounts(..)
     , SetUserDetails(..)
     , SetUserInfo(..)
-    , SetInviter(..)
+    , SetInviteInfo(..)
     , SetUserSettings(..)
     , SetUserPaymentAccount(..)
     , SetUserPaymentPolicyChange(..)
@@ -55,7 +59,7 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BS (unlines) 
 import Happstack.Data.IxSet as IxSet
-import Data.Maybe(isJust,isNothing)
+import Data.Maybe(isJust,isNothing,fromJust)
 import Misc
 import Control.Monad
 import Happstack.Server.SimpleHTTP
@@ -80,6 +84,12 @@ $(deriveAll [''Eq, ''Ord, ''Default]
       -- Can't be moved to Session where it belong (cycle references)
       newtype Friend = Friend { unFriend :: Int }
       newtype Inviter = Inviter { unInviter :: Int }
+      data InviteType = Viral | Admin
+      data InviteInfo = InviteInfo 
+          { userinviter :: Inviter
+          , invitetime :: Maybe MinutesTime
+          , invitetype :: Maybe InviteType
+          }
       newtype DefaultMainSignatory = DefaultMainSignatory { unDMS :: Int }
       newtype FlashMessage0 = FlashMessage0 BS.ByteString
       newtype FlashMessage = FlashMessage { unFlashMessage :: (FlashType, String) }
@@ -149,7 +159,7 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , userpaymentpolicy             :: Payments.UserPaymentPolicy
           , userpaymentaccount            :: Payments.UserPaymentAccount
           , userfriends                   :: [Friend]
-          , userinviter                   :: Maybe Inviter
+          , userinviteinfo                :: Maybe InviteInfo
           }
           
       data User8 = User8
@@ -264,6 +274,12 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , email0           :: BS.ByteString
           }
 
+      data UserStats = UserStats 
+                       { usercount :: Int
+                       , viralinvitecount :: Int
+                       , admininvitecount :: Int
+                       }
+
    |])
 
 instance Show FlashType where
@@ -283,7 +299,10 @@ deriving instance Show FlashMessage
 deriving instance Show Password
 deriving instance Show Friend
 deriving instance Show Inviter
+deriving instance Show InviteInfo
+deriving instance Show InviteType
 deriving instance Show DefaultMainSignatory
+deriving instance Show UserStats
 
 deriving instance Read TrustWeaverStorage
 
@@ -539,7 +558,7 @@ instance Migrate User8 User where
                 , userpaymentpolicy              = userpaymentpolicy8
                 , userpaymentaccount             = userpaymentaccount8
                 , userfriends                    = userfriends8
-                , userinviter                    = Nothing
+                , userinviteinfo                 = Nothing          
                 }
 
 toFlashMsg :: FlashType -> String -> FlashMessage
@@ -695,6 +714,12 @@ instance Version Friend
 $(deriveSerialize ''Inviter)
 instance Version Inviter
 
+$(deriveSerialize ''InviteInfo)
+instance Version InviteInfo
+
+$(deriveSerialize ''InviteType)
+instance Version InviteType
+
 $(deriveSerialize ''DefaultMainSignatory)
 instance Version DefaultMainSignatory
 
@@ -703,6 +728,9 @@ instance Version SupervisorID
 
 $(deriveSerialize ''ExternalUserID)
 instance Version ExternalUserID
+
+$(deriveSerialize ''UserStats)
+instance Version UserStats
 
 instance Show ExternalUserID where
     showsPrec prec (ExternalUserID val) = showsPrec prec val
@@ -819,16 +847,39 @@ addUser fullname email passwd maybesupervisor = do
                 , userpaymentpolicy =  Payments.basicPaymentPolicy
                 , userpaymentaccount = Payments.emptyPaymentAccount 
               , userfriends = []
-              , userinviter = Nothing
+              , userinviteinfo = Nothing
                  })             
         modify (updateIx (Email email) user)
         return $ Just user
 
-getUserStats :: Query Users Int
+getUserStats :: Query Users UserStats
 getUserStats = do
   users <- ask
-  return (size users)
+  return UserStats 
+         { usercount = (size users)
+         , viralinvitecount = length $ filterByInvite (isInviteType Viral) (toList users)
+         , admininvitecount = length $ filterByInvite (isInviteType Admin) (toList users)
+         }
 
+getUserStatsByUser :: User -> Query Users UserStats
+getUserStatsByUser user = do
+  users <- ask
+  let invitedusers = filterByInvite isInvitedByUser (toList users)
+      isInvitedByUser :: InviteInfo -> Bool
+      isInvitedByUser InviteInfo{userinviter} | (unInviter userinviter) == (unUserID . userid $ user) = True
+      isInvitedByUser _ = False
+  return UserStats 
+         { usercount = 1 --sort of silly, but true
+         , viralinvitecount = length $ filterByInvite (isInviteType Viral) invitedusers
+         , admininvitecount = length $ filterByInvite (isInviteType Admin) invitedusers
+         }
+
+filterByInvite :: (InviteInfo -> Bool) -> [User] -> [User]
+filterByInvite f users = filter ((maybe False f) . userinviteinfo) users
+
+isInviteType :: InviteType -> InviteInfo -> Bool
+isInviteType desiredtype InviteInfo{invitetype} | (isJust invitetype) && ((fromJust invitetype) == desiredtype) = True
+isInviteType _ _ = False
 
 getAllUsers :: Query Users [User]
 getAllUsers = do
@@ -866,12 +917,17 @@ setUserDetails userid fname lname companyname companyposition companynumber invo
                                                       }
                          }                            
 
-setInviter :: Maybe User -> User -> Update Users ()
-setInviter inviter u = do
-                           _ <- modifyUser (userid u) $ \user -> 
-                                   Right $ user { userinviter   = fmap (Inviter.  unUserID . userid) inviter }    
-                           return ()        
-                                   
+setInviteInfo :: Maybe User -> MinutesTime -> InviteType -> UserID -> Update Users ()
+setInviteInfo minviter invitetime' invitetype' uid = do
+    let mkInviteInfo user = InviteInfo
+                            { userinviter = Inviter . unUserID . userid $ user
+                            , invitetime = Just invitetime'
+                            , invitetype = Just invitetype'
+                            }
+    _ <- modifyUser uid $ \user -> Right $ user {userinviteinfo = fmap mkInviteInfo minviter}
+    return ()
+        
+
 setUserInfo :: UserID -> UserInfo -> Update Users (Either String User)
 setUserInfo userid userinfo =
     modifyUser userid $ \user -> 
@@ -919,7 +975,7 @@ acceptTermsOfService userid minutestime =
 
 addFreePaymentsForInviter ::MinutesTime -> User -> Update Users ()
 addFreePaymentsForInviter now u = do
-                           case (userinviter u) of
+                           case (fmap userinviter $ userinviteinfo u) of
                             Nothing -> return ()   
                             Just (Inviter iid) -> do
                               users <- ask
@@ -948,10 +1004,11 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'getUsersByUserIDs
                     , 'addUser
                     , 'getUserStats
+                    , 'getUserStatsByUser
                     , 'getAllUsers
                     , 'setUserPassword
                     , 'setUserDetails
-                    , 'setInviter
+                    , 'setInviteInfo
                     , 'setUserInfo
                     , 'setUserSettings
                     , 'setUserPaymentAccount 

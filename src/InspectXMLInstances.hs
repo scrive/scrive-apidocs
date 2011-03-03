@@ -111,3 +111,6 @@ instance InspectXML SignatureProvider where
 
 instance InspectXML SignatureInfo where
     inspectXML = asChild . show
+
+instance InspectXML InviteInfo where
+    inspectXML = asChild . show

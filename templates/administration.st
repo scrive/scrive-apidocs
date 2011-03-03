@@ -99,8 +99,10 @@ adminusers=
           <td style="width:200px">Username</td>
           <td style="width:200px">Email</td>
           <td style="width:200px">Company</td>
-          <td style="width:100px">Uploaded Docs</td>
-          <td style="width:100px">Signed Docs</td>
+          <td style="width:50px">Uploaded Docs</td>
+          <td style="width:50px">Signed Docs</td>
+          <td style="width:50px">Viral Invites</td>
+          <td style="width:50px">Admin Invites</td>
         </thead>
         $users:{user|<tr>
           <td> <a href="$adminuserlink$/$user.userdetails.usvId$"> $user.userdetails.usvFullname$</a> </td>
@@ -108,6 +110,8 @@ adminusers=
           <td> $user.userdetails.usvCompany$ </td>
           <td> $user.docstats.doccount$ </td>
           <td> $user.docstats.signaturecount$ </td>
+          <td> $user.userstats.viralinvitecount$ </td>
+          <td> $user.userstats.admininvitecount$ </td>
         </tr>}$
       </table>
 ###
@@ -401,15 +405,19 @@ pageStats=
       <table>
         <thead>
           <td style="width:50px"></td>
-          <td style="width:150px">Documents</td>
-          <td style="width:150px">Signatures</td>
-          <td style="width:150px">Users</td>
+          <td style="width:100px">Documents</td>
+          <td style="width:100px">Signatures</td>
+          <td style="width:100px">Users</td>
+          <td style="width:100px">Viral Invites</td>
+          <td style="width:100px">Admin Invites</td>
         </thead>
         <tr>
           <td>Totals</td>
           <td>$stats.svDoccount$</td>
           <td>$stats.svSignaturecount$</td>
           <td>$stats.svUsercount$</td>
+          <td>$stats.svViralinvitecount$</td>
+          <td>$stats.svAdmininvitecount$</td>
         </tr>
       </table>
       <br/>
