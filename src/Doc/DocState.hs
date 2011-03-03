@@ -5,6 +5,7 @@ module Doc.DocState
     , DocumentHistoryEntry(..)
     , DocumentID(..)
     , DocumentStatus(..)
+    , DocumentType(..)
     , Documents(..)
     , FieldDefinition(..)
     , FieldPlacement(..)
@@ -295,7 +296,9 @@ $(deriveAll [''Eq, ''Ord, ''Default]
                           | Rejected
                           | AwaitingAuthor
                           | DocumentError String
-
+                          
+      data DocumentType = Contract | Template
+      
       data ChargeMode = ChargeInitialFree   -- initial 5 documents are free
                       | ChargeNormal        -- value times number of people involved
 
@@ -512,6 +515,33 @@ $(deriveAll [''Default]
           , authornumberplacements10 :: [FieldPlacement]
           , authorotherfields10 :: [FieldDefinition]
           }
+          
+      data Document11 = Document11
+          { documentid11               :: DocumentID
+          , documenttitle11            :: BS.ByteString
+          , documentauthor11           :: Author
+          , documentsignatorylinks11   :: [SignatoryLink]  
+          , documentfiles11            :: [File]
+          , documentsealedfiles11      :: [File]
+          , documentstatus11           :: DocumentStatus
+          , documentctime11            :: MinutesTime
+          , documentmtime11            :: MinutesTime
+          , documentchargemode11       :: ChargeMode
+          , documentdaystosign11       :: Maybe Int
+          , documenttimeouttime11      :: Maybe TimeoutTime 
+          , documentdeleted11          :: Bool
+          , documenthistory11          :: [DocumentHistoryEntry]
+          , documentinvitetext11       :: BS.ByteString
+          , documenttrustweaverreference11 :: Maybe BS.ByteString
+          , documentallowedidtypes11   :: [IdentificationType]
+          , authorfstnameplacements11 :: [FieldPlacement]
+          , authorsndnameplacements11 :: [FieldPlacement]
+          , authorcompanyplacements11 :: [FieldPlacement]
+          , authoremailplacements11 :: [FieldPlacement]
+          , authornumberplacements11 :: [FieldPlacement]
+          , authorotherfields11 :: [FieldDefinition]
+          }
+          
       data Document = Document
           { documentid               :: DocumentID
           , documenttitle            :: BS.ByteString
@@ -520,6 +550,7 @@ $(deriveAll [''Default]
           , documentfiles            :: [File]
           , documentsealedfiles      :: [File]
           , documentstatus           :: DocumentStatus
+          , documenttype             :: DocumentType
           , documentctime            :: MinutesTime
           , documentmtime            :: MinutesTime
           , documentchargemode       :: ChargeMode
@@ -538,6 +569,7 @@ $(deriveAll [''Default]
           , authornumberplacements :: [FieldPlacement]
           , authorotherfields :: [FieldDefinition]
           }
+          
       data File0 = File0 
           { fileid0       :: FileID
           , filename0     :: BS.ByteString
@@ -636,6 +668,7 @@ instance Show JpegPages where
 
 deriving instance Show Document
 deriving instance Show DocumentStatus
+deriving instance Show DocumentType
 deriving instance Show ChargeMode
 deriving instance Show Author
 
@@ -1017,9 +1050,13 @@ $(deriveSerialize ''Document10)
 instance Version Document10 where
     mode = extension 10 (Proxy :: Proxy Document9)
 
+$(deriveSerialize ''Document11)
+instance Version Document11 where
+    mode = extension 11 (Proxy :: Proxy Document10)
+
 $(deriveSerialize ''Document)
 instance Version Document where
-    mode = extension 11 (Proxy :: Proxy Document10)
+    mode = extension 12 (Proxy :: Proxy Document11)
     
 instance Migrate Document0 Document1 where
       migrate (Document0
@@ -1381,7 +1418,7 @@ instance Migrate Document9 Document10 where
                 , authorotherfields10 = []
                 }
 
-instance Migrate Document10 Document where
+instance Migrate Document10 Document11 where
     migrate (Document10
                 { documentid10 
                 , documenttitle10 
@@ -1405,35 +1442,90 @@ instance Migrate Document10 Document where
                 , authoremailplacements10
                 , authornumberplacements10
                 , authorotherfields10
+                }) = Document11
+                { documentid11 = documentid10
+                , documenttitle11 = documenttitle10
+                , documentauthor11 = documentauthor10
+                , documentsignatorylinks11 = documentsignatorylinks10
+                , documentfiles11 = documentfiles10
+                , documentsealedfiles11 = documentsealedfiles10
+                , documentstatus11 = documentstatus10
+                , documentctime11 = documentctime10
+                , documentmtime11 = documentmtime10
+                , documentchargemode11 = documentchargemode10
+                , documentdaystosign11 = documentdaystosign10
+                , documenttimeouttime11 = documenttimeouttime10
+                , documentdeleted11 = documentdeleted10
+                , documenthistory11 = documenthistory10
+                , documentinvitetext11 = documentinvitetext10
+                , documenttrustweaverreference11 = documenttrustweaverreference10
+                , documentallowedidtypes11 = documentallowedidtypes10
+                , authorfstnameplacements11 = authornameplacements10
+                , authorsndnameplacements11 = []
+                , authorcompanyplacements11 = authorcompanyplacements10
+                , authoremailplacements11 =  authoremailplacements10
+                , authornumberplacements11 =  authornumberplacements10
+                , authorotherfields11 = authorotherfields10
+                }
+
+instance Migrate Document11 Document where
+    migrate (Document11
+                { documentid11
+                , documenttitle11
+                , documentauthor11
+                , documentsignatorylinks11
+                , documentfiles11
+                , documentsealedfiles11
+                , documentstatus11
+                , documentctime11
+                , documentmtime11
+                , documentchargemode11
+                , documentdaystosign11
+                , documenttimeouttime11
+                , documentdeleted11
+                , documenthistory11
+                , documentinvitetext11
+                , documenttrustweaverreference11
+                , documentallowedidtypes11
+                , authorfstnameplacements11
+                , authorsndnameplacements11
+                , authorcompanyplacements11
+                , authoremailplacements11
+                , authornumberplacements11
+                , authorotherfields11
                 }) = Document
-                { documentid = documentid10
-                , documenttitle = documenttitle10
-                , documentauthor = documentauthor10
-                , documentsignatorylinks = documentsignatorylinks10
-                , documentfiles = documentfiles10
-                , documentsealedfiles = documentsealedfiles10
-                , documentstatus = documentstatus10
-                , documentctime = documentctime10
-                , documentmtime = documentmtime10
-                , documentchargemode = documentchargemode10
-                , documentdaystosign = documentdaystosign10
-                , documenttimeouttime = documenttimeouttime10
-                , documentdeleted = documentdeleted10
-                , documenthistory = documenthistory10
-                , documentinvitetext = documentinvitetext10
-                , documenttrustweaverreference = documenttrustweaverreference10
-                , documentallowedidtypes = documentallowedidtypes10
-                , authorfstnameplacements = authornameplacements10
-                , authorsndnameplacements = []
-                , authorcompanyplacements = authorcompanyplacements10
-                , authoremailplacements =  authoremailplacements10
-                , authornumberplacements =  authornumberplacements10
-                , authorotherfields = authorotherfields10
+                { documentid = documentid11
+                , documenttitle = documenttitle11
+                , documentauthor = documentauthor11
+                , documentsignatorylinks = documentsignatorylinks11
+                , documentfiles = documentfiles11
+                , documentsealedfiles = documentsealedfiles11
+                , documentstatus = documentstatus11
+                , documenttype = Contract
+                , documentctime = documentctime11
+                , documentmtime = documentmtime11
+                , documentchargemode = documentchargemode11
+                , documentdaystosign = documentdaystosign11
+                , documenttimeouttime = documenttimeouttime11
+                , documentdeleted = documentdeleted11
+                , documenthistory = documenthistory11
+                , documentinvitetext = documentinvitetext11
+                , documenttrustweaverreference = documenttrustweaverreference11
+                , documentallowedidtypes = documentallowedidtypes11
+                , authorfstnameplacements = authorfstnameplacements11
+                , authorsndnameplacements = authorsndnameplacements11
+                , authorcompanyplacements = authorcompanyplacements11
+                , authoremailplacements =  authoremailplacements11
+                , authornumberplacements =  authornumberplacements11
+                , authorotherfields = authorotherfields11
                 }
 
 $(deriveSerialize ''DocumentStatus)
 instance Version DocumentStatus where
 
+$(deriveSerialize ''DocumentType)
+instance Version DocumentType where
+    
 $(deriveSerialize ''ChargeMode)
 instance Version ChargeMode where
 
@@ -1586,6 +1678,7 @@ newDocument user title ctime isfree = do
           , documentsignatorylinks = [authorlink]
           , documentfiles = []
           , documentstatus = Preparation
+          , documenttype = Contract
           , documentctime = ctime
           , documentmtime = ctime
           , documentchargemode = if isfree then ChargeInitialFree else ChargeNormal
@@ -1673,13 +1766,15 @@ updateDocument :: MinutesTime
                -> User
                -> SignatoryDetails
                -> [IdentificationType]
-               -> Update Documents Document
-updateDocument time documentid signatories daystosign invitetext author authordetails idtypes = do
-  documents <- ask
-  let Just document = getOne (documents @= documentid)
-      authoremail = unEmail $ useremail $ userinfo author
-  signatorylinks <- sequence $ map (signLinkFromDetails [(authoremail, author)]) signatories
-  let doc2 = document { documentsignatorylinks = signatorylinks
+               -> Update Documents (Either String Document)
+updateDocument time documentid signatories daystosign invitetext author authordetails idtypes =
+    modifyDocument' documentid $ \document ->  
+        if documentstatus document == Preparation
+         then do
+             let authoremail = unEmail $ useremail $ userinfo author
+             signatorylinks <- sequence $ map (signLinkFromDetails [(authoremail, author)]) signatories
+             return $ Right $ document 
+                    { documentsignatorylinks = signatorylinks
                       , documentdaystosign = daystosign 
                       , documentmtime = time
                       , documentinvitetext = invitetext
@@ -1691,12 +1786,7 @@ updateDocument time documentid signatories daystosign invitetext author authorde
                       , authornumberplacements = signatorynumberplacements authordetails
                       , authorotherfields = signatoryotherfields authordetails
                       }
-  if documentstatus document == Preparation
-     then do
-       modify (updateIx documentid doc2)
-       return doc2
-     else
-         return document
+         else return $ Left "Document not in preparation"
                      
 timeoutDocument :: DocumentID
                 -> MinutesTime
@@ -1881,25 +1971,21 @@ markDocumentSeen documentid signatorylinkid1 time ipnumber = do
             | signatorylinkid == signatorylinkid1 && maybeseeninfo==Nothing = 
               l { maybeseeninfo = Just (SignInfo time ipnumber) }
             | otherwise = l
-      modify (updateIx documentid document')
+      modifyDocument documentid $ const Right document'
       return (Just document')
 
 
 -- | We set info about delivering invitation. On undeliver we autocancel document
-setInvitationDeliveryStatus::DocumentID -> SignatoryLinkID -> MailsDeliveryStatus -> Update Documents (Maybe Document)
+setInvitationDeliveryStatus::DocumentID -> SignatoryLinkID -> MailsDeliveryStatus -> Update Documents (Either String Document)
 setInvitationDeliveryStatus docid siglnkid status = do
-    documents <- ask 
-    case getOne (documents @= docid @= siglnkid) of   
-        Nothing -> return Nothing
-        Just doc -> do
-            let oldsls = documentsignatorylinks doc
-            let newsls = for oldsls $ \sl -> 
-                 if (signatorylinkid sl == siglnkid)
-                     then sl {invitationdeliverystatus = status}
-                     else sl
-            let newdoc = doc {documentsignatorylinks = newsls}           
-            modify (updateIx (documentid doc) newdoc)
-            return $ Just newdoc
+    modifyDocument docid $ \doc -> do
+            Right $ doc {documentsignatorylinks = map setStatus $ documentsignatorylinks doc}                    
+    where 
+        setStatus sl = 
+            if (signatorylinkid sl == siglnkid)
+                then sl {invitationdeliverystatus = status}
+                else sl 
+            
 
 
 getDocumentStats :: Query Documents DocStats
@@ -1919,12 +2005,9 @@ fileModTime fileid = do
   return (documentmtime doc)
 
 saveDocumentForSignedUser :: DocumentID -> UserID -> SignatoryLinkID 
-                          -> Update Documents (Maybe Document)
+                          -> Update Documents (Either String Document)
 saveDocumentForSignedUser documentid userid signatorylinkid1 = do
-  documents <- ask
-  case getOne (documents @= documentid) of
-    Nothing -> return Nothing
-    Just document -> do
+  modifyDocument documentid $ \document ->
       let signeddocument = document { documentsignatorylinks = newsignatorylinks }
           newsignatorylinks = map maybesign (documentsignatorylinks document)
           maybesign x@(SignatoryLink {signatorylinkid} ) 
@@ -1932,8 +2015,8 @@ saveDocumentForSignedUser documentid userid signatorylinkid1 = do
               x { maybesignatory = Just (Signatory userid)
                 }
           maybesign x = x
-      modify (updateIx documentid signeddocument)
-      return (Just signeddocument)
+      in Right signeddocument
+     
 
 getNumberOfDocumentsOfUser :: User -> Query Documents Int
 getNumberOfDocumentsOfUser user = do
@@ -1953,14 +2036,12 @@ getDocumentStatsByUser user = do
   return DocStats { doccount = doccount', 
                     signaturecount = signaturecount' }
 
-setDocumentTimeoutTime :: DocumentID -> TimeoutTime -> Update Documents Document
+setDocumentTimeoutTime :: DocumentID -> TimeoutTime -> Update Documents (Either String Document)
 setDocumentTimeoutTime documentid timeouttime = do
   -- check if document status change is a legal transition
-  documents <- ask
-  let Just document = getOne (documents @= documentid)
-  let newdoc = document { documenttimeouttime = Just timeouttime }
-  modify (updateIx documentid newdoc)
-  return newdoc
+  modifyDocument documentid $ \doc ->
+      Right $ doc{ documenttimeouttime = Just timeouttime }
+
 
 archiveDocuments :: User -> [DocumentID] -> Update Documents ()
 archiveDocuments user docidlist = do

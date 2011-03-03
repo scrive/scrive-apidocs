@@ -88,7 +88,7 @@ handleUndeliveredInvitation::DocumentID -> SignatoryLinkID -> Kontra ()
 handleUndeliveredInvitation docid signlinkid = do
     mdoc <- update $ SetInvitationDeliveryStatus docid signlinkid Mail.Undelivered
     case mdoc of
-     Just doc -> do   
+     Right doc -> do   
                  ctx <- get
                  title <- liftIO $ renderTemplate (ctxtemplates ctx) "invitationMailUndeliveredTitle" ()
                  Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor doc
@@ -105,4 +105,4 @@ handleUndeliveredInvitation docid signlinkid = do
                                                                        ]  
                     liftIO $ sendMail (ctxmailer ctx)  $  emptyMail {title=BS.fromString title,content=BS.fromString content,fullnameemails = fullnameemails}
                   Nothing -> return () 
-     Nothing -> return ()                                                                                  
+     _ -> return ()                                                                                  
