@@ -1886,19 +1886,20 @@ markDocumentSeen documentid signatorylinkid1 time ipnumber = do
 
 
 -- | We set info about delivering invitation. On undeliver we autocancel document
-setInvitationDeliveryStatus::SignatoryLinkID -> MailsDeliveryStatus -> Update Documents (Maybe Document)
-setInvitationDeliveryStatus siglnkid status = do
-                                               documents <- ask 
-                                               case getOne (documents @= siglnkid) of   
-                                                    Nothing -> return Nothing
-                                                    Just doc -> do
-                                                                let oldsls = documentsignatorylinks doc
-                                                                let newsls = for oldsls $ \sl -> if (signatorylinkid sl == siglnkid)
-                                                                                                 then sl {invitationdeliverystatus = status}
-                                                                                                 else sl
-                                                                let newdoc = doc {documentsignatorylinks = newsls}           
-                                                                modify (updateIx (documentid doc) newdoc)
-                                                                return $ Just newdoc
+setInvitationDeliveryStatus::DocumentID -> SignatoryLinkID -> MailsDeliveryStatus -> Update Documents (Maybe Document)
+setInvitationDeliveryStatus docid siglnkid status = do
+    documents <- ask 
+    case getOne (documents @= docid @= siglnkid) of   
+        Nothing -> return Nothing
+        Just doc -> do
+            let oldsls = documentsignatorylinks doc
+            let newsls = for oldsls $ \sl -> 
+                 if (signatorylinkid sl == siglnkid)
+                     then sl {invitationdeliverystatus = status}
+                     else sl
+            let newdoc = doc {documentsignatorylinks = newsls}           
+            modify (updateIx (documentid doc) newdoc)
+            return $ Just newdoc
 
 
 getDocumentStats :: Query Documents DocStats

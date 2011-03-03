@@ -46,7 +46,8 @@ data Mail =  Mail {
                mailInfo ::MailInfo 
              } deriving Show
              
-data MailInfo = Invitation SignatoryLinkID | None deriving (Show,Read)
+data MailInfo = Invitation DocumentID SignatoryLinkID 
+                | None deriving (Show,Read)
 
 emptyMail::Mail
 emptyMail = Mail { fullnameemails=[], title= BS.empty, content = BS.empty, attachments = [], from = Nothing, mailInfo=None}    
