@@ -27,30 +27,37 @@ import qualified Data.ByteString.UTF8 as BS (fromString,toString)
 import Data.List (find)
 import System.Log.Logger
 
-data SendGridEventType = Delivered | Undelivered | Other deriving Show
+data SendGridEventType = Delivered | Undelivered | Other String deriving Show
 data SendgridEvent = SendgridEvent {
-                            event::SendGridEventType
+                            mailId :: Integer
+                          , event::SendGridEventType
                           , info::MailInfo
+                         
                      } deriving Show 
 
 -- | Handler for receving delivery info from sendgrid
 handleSendgridEvent::Kontra KontraLink
 handleSendgridEvent = do
+                          mid <- readMailId
                           et <- readEventType                   
                           mi <- readMailInfo
-                          let ev = SendgridEvent {event = et, info = mi}
+                          let ev = SendgridEvent {mailId = mid, event = et, info = mi}
                           liftIO $ logM "Kontrakcja.Mail" NOTICE  $ "Sendgrid event recived " ++ (show ev)
                           routeToHandler ev
                           return $ LinkMain
 
 
+readMailId:: Kontra Integer
+readMailId = fmap (fromMaybe 0) $ readField "id"
+                  
+             
 readEventType::Kontra SendGridEventType
 readEventType = do
                   me <- getField "event"
                   liftIO $ putStrLn $ show me
                   case me of
-                    Just e ->  return $ fromMaybe Other (lookup e [("delivered", Delivered),("bounce", Undelivered), ("dropped", Undelivered)])
-                    Nothing -> return Other
+                    Just e ->  return $ fromMaybe (Other e) (lookup e [("delivered", Delivered),("bounce", Undelivered), ("dropped", Undelivered)])
+                    Nothing -> return (Other "")
                   
 readMailInfo:: Kontra MailInfo
 readMailInfo = do
@@ -63,7 +70,7 @@ readMailInfo = do
 
 -- | Main routing table after getting sendgrid event.
 routeToHandler::SendgridEvent -> Kontra ()
-routeToHandler (SendgridEvent {event=Other}) = return ()                        
+routeToHandler (SendgridEvent {event=Other _}) = return ()                        
 routeToHandler (SendgridEvent {info= None}) = return ()                        
 routeToHandler (SendgridEvent {info=Invitation docid signlinkid,event= Delivered}) = handleDeliveredInvitation docid signlinkid
 routeToHandler (SendgridEvent {info=Invitation docid signlinkid,event= Undelivered}) = handleUndeliveredInvitation docid signlinkid
