@@ -29,9 +29,7 @@ module User.UserState
 
     , AcceptTermsOfService(..)
     , AddUser(..)
-    , DeleteTermsOfService(..)
     , ExportUsersDetailsToCSV(..)
-    , FragileDeleteUser(..)
     , GetAllUsers(..)
     , GetUserByEmail(..)
     , GetUserByUserID(..)
@@ -970,15 +968,6 @@ addViewerByEmail uid vieweremail = do
                                       Right $ user { userfriends = (Friend (unUserID $ userid ms) : (userfriends user)) }
     Nothing -> return $ Left $ "Användaren existerar ej: " ++ (BS.toString $ unEmail vieweremail)
 
-
-fragileDeleteUser :: UserID -> Update Users (Maybe User)
-fragileDeleteUser userid = do
-  users <- ask
-  let maybeuser = getOne (users @= userid)
-  when (isJust maybeuser) $
-       modify (deleteIx userid)
-  return maybeuser
-
 acceptTermsOfService :: UserID -> MinutesTime -> Update Users (Either String User)
 acceptTermsOfService userid minutestime = 
     modifyUser userid $ \user -> 
@@ -998,11 +987,6 @@ addFreePaymentsForInviter now u = do
                                                   Right $ user {userpaymentpolicy = Payments.extendFreeTmpChange now 7 (userpaymentpolicy user)}
                                                  return ()
                            
--- for testing purposes
-deleteTermsOfService :: UserID -> Update Users (Either String User)
-deleteTermsOfService userid =
-    modifyUser userid $ \user -> Right $ user { userhasacceptedtermsofservice = Nothing }
-
 exportUsersDetailsToCSV :: Query Users BS.ByteString
 exportUsersDetailsToCSV = do
   users <- ask
@@ -1036,8 +1020,6 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'exportUsersDetailsToCSV
                     , 'addViewerByEmail
                       -- the below should be only used carefully and by admins
-                    , 'fragileDeleteUser
-                    , 'deleteTermsOfService
                     , 'addFreePaymentsForInviter
                     ])
 
