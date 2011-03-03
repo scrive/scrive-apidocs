@@ -38,7 +38,15 @@ function enableInfoTextOnce(where){
   }
   var selector = ':input[infotext]';
   var inputs = $(selector, where);
-    
+  
+  function setInfoText(obj) {
+    var input = $(obj);
+    if (input.val() == "" || input.val() == input.attr("infotext")) {
+      input.addClass("grayed");
+      input.val(input.attr("infotext"));
+    }
+  };
+  
   inputs.live("focus", function() { 
     var input = $(this);
     if(input.hasClass("grayed")) {
@@ -48,14 +56,13 @@ function enableInfoTextOnce(where){
   });
   
   inputs.live("blur", function() {
-    var input = $(this);
-    if(input.val() == "" || input.val() == input.attr("infotext") ) {
-      input.addClass("grayed");
-      input.val(input.attr("infotext"));
-    }
+    setInfoText(this);
   });
-  inputs.blur();
-
+  
+  inputs.each(function() {
+    setInfoText(this);
+  });
+  
   $("form").live("submit", function () {
     var elems = $(this).find(selector + ".grayed");
     elems.val("");
