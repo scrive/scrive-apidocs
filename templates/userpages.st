@@ -2,48 +2,30 @@
 viewSubaccounts =
     <form method="post" action="$subaccountslink$">
       <h1>Underkonton</h1>
+      <div class="doctablecontainer">
       <table class="doctable" cellspacing="0">
-        <col/>
-        <col/>
         <col/>
         <col/>
         <col/>
         <thead>
           <tr>
-            <td><a href="#" id="all">Alla</a></td>
-            <td></td>
             <td>Namn</td>
             <td>E-post</td>
             <td>Övrigt</td>
-            <td></td>
           </tr>
         </thead>
-        <tfoot>
-          <tr>
-            <td colspan="6" style="text-align: right; overflow: hidden;">
-              <div class="floatleft">
-                <input type="submit" class="button" name="remove" value="Ta bort"/>
-              </div>
-              <div class="clearboth"/>
-            </td>
-          </tr>
-        </tfoot>
         
         <tbody id="selectable">
           $subusers:{subuser |
-          <tr class="ui-state-default">
-            <td class="tdleft">
-              <input type="checkbox" name="doccheck" value="$subuser.usvId$" class="check" />
-            </td>
-            <td><img width="17" height="17" src=""/></td>
+          <tr>
             <td>$subuser.usvFullname$ </td>
             <td>$subuser.usvEmail$</td>
             <td> - </td>
-            <td class="tdright"></td>
           </tr>
           }$
         </tbody>
-      </table><br/>
+      </table>
+      </div><br/>
       <table>
         <tr>
           <td>Namn:</td>
