@@ -12,7 +12,7 @@
 module TrustWeaver 
     ( TrustWeaverConf(..)
     , signDocument
-    , signDocumentEx -- ^ for testing purposes
+    , signDocumentEx -- for testing purposes
     , validateDocument
     , registerAndEnableSection
     , storeInvoice
