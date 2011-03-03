@@ -760,26 +760,30 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} ms
   -- author is gotten above, no?
   -- Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor document
 
-  doc2 <- update $ UpdateDocument ctxtime documentid
+  mdoc <- update $ UpdateDocument ctxtime documentid
            signatories2 daystosign invitetext author authordetails docallowedidtypes
-
-  msum 
-     [ do getDataFnM $ look "sign"
+  case mdoc of 
+   Right doc2 ->    
+       msum 
+        [ do 
+          getDataFnM $ look "sign"
           mdocument <- update $ AuthorSignDocument documentid ctxtime ctxipnumber author msiginfo
           case mdocument of
             Left msg -> return doc2
             Right newdocument -> do
                 postDocumentChangeAction newdocument (documentstatus doc2) Nothing
                 return newdocument
-     , do getDataFnM $ look "final"
+        , do 
+          getDataFnM $ look "final"
           mdocument <- update $ AuthorSendDocument documentid ctxtime ctxipnumber author msiginfo
           case mdocument of
             Left msg -> return doc2
             Right newdocument -> do
                 postDocumentChangeAction newdocument (documentstatus doc2) Nothing
                 return newdocument
-     , return doc2
-     ]
+        , return doc2
+        ]
+   Left _ -> mzero     
     
 {- |
    Constructs a list of documents (Arkiv) to show to the user.
