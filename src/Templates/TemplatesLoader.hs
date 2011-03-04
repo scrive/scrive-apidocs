@@ -42,7 +42,8 @@ templateFiles = ["templates/landpages.st",
                  "templates/docpages/doctemplates.st",
                  "templates/contacts/contacts.st",
                  "templates/apppages.st",
-                 "templates/firstpage.st"]
+                 "templates/firstpage.st",
+                 "templates/statictemplate.st"  ]
 
 type KontrakcjaTemplates =  STGroup String
 type KontrakcjaTemplate = StringTemplate String
