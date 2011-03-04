@@ -38,10 +38,9 @@ import Happstack.Util.Common ( readM)
 import Misc (MagicHash(MagicHash))
 import ELegitimation.ELeg
 
-$( deriveAll [''Ord, ''Eq, ''Default, ''Num]
-   [d|
-       newtype SessionId = SessionId Integer
-    |])
+newtype SessionId = SessionId Integer
+    deriving (Eq, Ord, Num, Typeable, Data)
+
 
 instance Show SessionId where
     showsPrec prec (SessionId v) = showsPrec prec v
