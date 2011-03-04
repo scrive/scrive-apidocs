@@ -161,6 +161,21 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , userfriends                   :: [Friend]
           , userinviteinfo                :: Maybe InviteInfo
           }
+
+      data User9 = User9
+          { userid9                        :: UserID
+          , userpassword9                  :: Password
+          , usersupervisor9                :: Maybe SupervisorID
+          , usercanhavesubaccounts9        :: Bool
+          , useraccountsuspended9          :: Bool
+          , userhasacceptedtermsofservice9 :: Maybe MinutesTime
+          , userinfo9                      :: UserInfo
+          , usersettings9                  :: UserSettings
+          , userpaymentpolicy9             :: Payments.UserPaymentPolicy
+          , userpaymentaccount9            :: Payments.UserPaymentAccount
+          , userfriends9                   :: [Friend]
+          , userinviter9                   :: Maybe Inviter
+          }
           
       data User8 = User8
           { userid8                        :: UserID
@@ -532,7 +547,7 @@ instance Migrate User7 User8 where
                 , userdefaultmainsignatory8       = DefaultMainSignatory $ unUserID userid7
                 }
 
-instance Migrate User8 User where
+instance Migrate User8 User9 where
     migrate (User8
                { userid8                     
                 , userpassword8                
@@ -546,19 +561,54 @@ instance Migrate User8 User where
                 , userpaymentaccount8           
                 , userfriends8                  
                 , userdefaultmainsignatory8       
+                }) = User9 
+                { userid9                         = userid8
+                , userpassword9                   = userpassword8
+                , usersupervisor9                 = usersupervisor8
+                , usercanhavesubaccounts9         = usercanhavesubaccounts8
+                , useraccountsuspended9           = useraccountsuspended8
+                , userhasacceptedtermsofservice9  = userhasacceptedtermsofservice8
+                , userinfo9                       = userinfo8
+                , usersettings9                   = usersettings8
+                , userpaymentpolicy9              = userpaymentpolicy8
+                , userpaymentaccount9             = userpaymentaccount8
+                , userfriends9                    = userfriends8
+                , userinviter9                    = Nothing          
+                }
+
+instance Migrate User9 User where
+    migrate (User9
+               { userid9                     
+                , userpassword9                
+                , usersupervisor9               
+                , usercanhavesubaccounts9        
+                , useraccountsuspended9          
+                , userhasacceptedtermsofservice9  
+                , userinfo9                     
+                , usersettings9                
+                , userpaymentpolicy9             
+                , userpaymentaccount9           
+                , userfriends9                  
+                , userinviter9       
                 }) = User 
-                { userid                         = userid8
-                , userpassword                   = userpassword8
-                , usersupervisor                 = usersupervisor8
-                , usercanhavesubaccounts         = usercanhavesubaccounts8
-                , useraccountsuspended           = useraccountsuspended8
-                , userhasacceptedtermsofservice  = userhasacceptedtermsofservice8
-                , userinfo                       = userinfo8
-                , usersettings                   = usersettings8
-                , userpaymentpolicy              = userpaymentpolicy8
-                , userpaymentaccount             = userpaymentaccount8
-                , userfriends                    = userfriends8
-                , userinviteinfo                 = Nothing          
+                { userid                         = userid9
+                , userpassword                   = userpassword9
+                , usersupervisor                 = usersupervisor9
+                , usercanhavesubaccounts         = usercanhavesubaccounts9
+                , useraccountsuspended           = useraccountsuspended9
+                , userhasacceptedtermsofservice  = userhasacceptedtermsofservice9
+                , userinfo                       = userinfo9
+                , usersettings                   = usersettings9
+                , userpaymentpolicy              = userpaymentpolicy9
+                , userpaymentaccount             = userpaymentaccount9
+                , userfriends                    = userfriends9
+                , userinviteinfo                 = fmap 
+                                                     (\inviter ->  InviteInfo
+                                                         { userinviter = inviter
+                                                         , invitetime = Nothing
+                                                         , invitetype = Nothing
+                                                     })
+                                                     userinviter9
                 }
 
 toFlashMsg :: FlashType -> String -> FlashMessage
@@ -661,10 +711,14 @@ instance Version User7 where
 $(deriveSerialize ''User8)
 instance Version User8 where
     mode = extension 8 (Proxy :: Proxy User7) 
-    
+
+$(deriveSerialize ''User9)
+instance Version User9 where
+    mode = extension 9 (Proxy :: Proxy User8)
+
 $(deriveSerialize ''User)
 instance Version User where
-    mode = extension 9 (Proxy :: Proxy User8)
+    mode = extension 10 (Proxy :: Proxy User9)
 
 $(deriveSerialize ''TrustWeaverStorage )
 instance Version TrustWeaverStorage
