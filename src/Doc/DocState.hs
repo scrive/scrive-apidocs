@@ -2047,12 +2047,13 @@ getFilesThatShouldBeMovedToAmazon = do
   return (concatMap getID allFiles)
 
 
-{- Restarts document,    
-    Checks the autor and status
-    Clears sign links and stuff
-    Sets status to Pending
+{- |
+   Restarts document,    
+   Checks the author and status
+   Clears sign links and stuff
+   Sets status to Pending
     
-    It is passed a document 
+   It is passed a document 
 -} 
 restartDocument :: DocumentID -> User-> Update Documents (Either String Document)
 restartDocument docid user =
@@ -2063,16 +2064,16 @@ restartDocument docid user =
     Returns restarted version of document
     Checks the autor and status
     Clears sign links and stuff
--}
-tryToGetRestarted::Document->User-> Update Documents (Either String Document)
-tryToGetRestarted doc user= 
-                            if (documentstatus doc `notElem` [Canceled,Timedout, Rejected])
-                             then return $ Left $ "Can't restart document with " ++ (show $ documentstatus doc) ++ " status"
-                             else if (not $ isAuthor doc user)
-                                   then return $ Left $ "Can't restart document is You are not it's author"
-                                   else do 
-                                         doc' <-clearSignInfofromDoc doc user
-                                         return $ Right doc'
+ -}
+tryToGetRestarted :: Document -> User -> Update Documents (Either String Document)
+tryToGetRestarted doc user = 
+    if (documentstatus doc `notElem` [Canceled, Timedout, Rejected])
+    then return $ Left $ "Can't restart document with " ++ (show $ documentstatus doc) ++ " status"
+    else if (not $ isAuthor doc user)
+         then return $ Left $ "Can't restart document if you are not it's author"
+         else do 
+           doc' <- clearSignInfofromDoc doc user
+           return $ Right doc'
 
 
 clearSignInfofromDoc doc author = do
@@ -2147,13 +2148,13 @@ errorDocument documentid errormsg =
    The user is the author of the document
  -}
 class MayBeAuthor a where
-  isAuthor::Document->a->Bool
+  isAuthor :: Document -> a -> Bool
 
 instance MayBeAuthor User where
   isAuthor d u = isAuthor d $ userid u
   
 instance MayBeAuthor UserID where
-  isAuthor d uid = uid == ( unAuthor . documentauthor $ d)   
+  isAuthor d uid = uid == (unAuthor . documentauthor $ d)   
   
 instance MayBeAuthor SignatoryLink where
   isAuthor d sl = case maybesignatory sl of
@@ -2162,7 +2163,7 @@ instance MayBeAuthor SignatoryLink where
 
 instance (MayBeAuthor a) => MayBeAuthor (Maybe a) where
   isAuthor d (Just s) = isAuthor d s
-  isAuthor _ _ = False
+  isAuthor _ _        = False
 
 anyInvitationUndelivered =  not . Prelude.null . undeliveredSignatoryLinks
 undeliveredSignatoryLinks doc =  filter ((== Undelivered) . invitationdeliverystatus) $ documentsignatorylinks doc
