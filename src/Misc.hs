@@ -471,3 +471,12 @@ whenMaybe False _ = return Nothing
 -- | Since we can not check emptyness of string in templates we want to pack it in maybe.
 nothingIfEmpty::(Eq a, Monoid a) => a -> Maybe a
 nothingIfEmpty a = if mempty == a then Nothing else Just a
+
+
+{-|
+  Example of use
+   
+   instance Typeable Author where typeOf _ = mkTypeOf  "XX_Author"
+-}
+
+mkTypeOf name = mkTyConApp (mkTyCon name) []
