@@ -15,6 +15,7 @@ module Doc.DocView (
   , flashMessageCanceled
   , flashDocumentRestarted
   , flashDocumentDraftSaved
+  , flashAuthorSigned
   , landpageRejectedView
   , defaultInviteMessage
   , mailDocumentRemind
@@ -115,7 +116,6 @@ flashDocumentRestarted :: KontrakcjaTemplates -> IO FlashMessage
 flashDocumentRestarted templates =
   toFlashMsg OperationDone <$> renderTemplate templates "flashDocumentRestarted" ()
 
-
 flashRemindMailSent :: KontrakcjaTemplates -> SignatoryLink -> IO FlashMessage
 flashRemindMailSent templates signlink@SignatoryLink{maybesigninfo} =
   toFlashMsg OperationDone <$> (renderTemplate templates (template_name maybesigninfo) $ do
@@ -130,7 +130,10 @@ flashMessageCanceled :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageCanceled templates =
   toFlashMsg SigningRelated <$> renderTemplate templates "flashMessageCanceled" ()
 
-
+flashAuthorSigned :: KontrakcjaTemplates -> IO FlashMessage
+flashAuthorSigned templates =
+  toFlashMsg OperationDone <$> renderTemplate templates "flashAuthorSigned" ()
+  
 -- All doc view
 singLinkUserSmallView :: SignatoryLink -> UserSmallView
 singLinkUserSmallView sl =
