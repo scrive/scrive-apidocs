@@ -35,7 +35,7 @@ import MinutesTime
 import Happstack.Server
 import System.Random
 import Happstack.Util.Common ( readM)
-import Misc (MagicHash(MagicHash))
+import Misc (MagicHash(MagicHash), mkTypeOf)
 import ELegitimation.ELeg
 
 newtype SessionId = SessionId Integer
@@ -106,7 +106,9 @@ instance Migrate SessionData2 SessionData where
 
 data Session = Session {sessionId::SessionId,
                         sessionData::SessionData}
-               deriving (Ord, Eq, Show, Data, Typeable)
+               deriving (Ord, Eq, Show, Data)
+
+instance Typeable Session where typeOf _ = mkTypeOf "Session"
 
 $(deriveSerialize ''Session)
 instance Version (Session)
