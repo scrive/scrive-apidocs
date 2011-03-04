@@ -30,14 +30,16 @@ import Mails.MailsUtil
 import Control.Concurrent
 import qualified TrustWeaver as TW
 import Doc.DocState
+import Data.Data (Data)
 
-$(deriveAll [''Eq, ''Ord, ''Default]
-  [d|
-      data Action = TrustWeaverUpload String DocumentID 
-                  | AmazonUpload DocumentID FileID
+data Action = TrustWeaverUpload String DocumentID 
+            | AmazonUpload DocumentID FileID
+              deriving (Eq, Ord, Show, Typeable, Data)
 
-      data Actions = Actions [Action]
-  |])
+data Actions = Actions [Action]
+              deriving (Eq, Ord, Show, Data)
+
+instance Typeable Actions where typeOf _ = mkTypeOf "Actions"
 
 $(deriveSerialize ''Action)
 instance Version Action where
