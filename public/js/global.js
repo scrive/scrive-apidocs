@@ -255,6 +255,18 @@ safeReady(function() {
   }
 });
 
+function allparties()
+{
+      var sigs = $("form .persondetails").filter(":not(.authordetails)");
+      var allparties = new Array();
+      sigs.each(function(index) { 
+        var fstname = $("input[name='signatoryfstname']",this).val();
+        var sndname = $("input[name='signatorysndname']",this).val();  
+        allparties.push(fstname + " " + sndname);
+      });
+      return allparties;   
+}
+
 safeReady(function() {
   $("#sendinvite").overlay({
     mask: standardDialogMask,
@@ -263,14 +275,7 @@ safeReady(function() {
       if (!nonZeroSignatories()) return false;
       if (!authorFieldsValidation()) return false;
       fieldValidationType = "";
-
-      var mrxs = $("form input[name='signatoryname']");
-      var tot = "";
-      var allparties = new Array();
-      mrxs.each(function(index) { 
-        allparties.push($(this).val());
-      });
-      tot = swedishString(allparties);
+      var tot = swedishString(allparties());
       $(".Xinvited").html(tot);
     }
   });
@@ -283,14 +288,7 @@ safeReady(function() {
       if (!nonZeroSignatories()) return false;
       if (!authorFieldsValidation()) return false;
       fieldValidationType = "";
-
-      var mrxs = $("form input[name='signatoryname']");
-      var tot = "";
-      var allparties = new Array();
-      mrxs.each(function(index) { 
-        allparties.push($(this).val());
-      });
-      tot = swedishString(allparties);
+      var tot = swedishString(allparties());
       $(".Xinvited").html(tot);
     }
   });
