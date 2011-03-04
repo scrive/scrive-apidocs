@@ -11,13 +11,14 @@
 module Mails.MailsUtil(
              MailsDeliveryStatus(..)) where
 
+import Data.Data
+import Data.Typeable
 import Happstack.Data
 
 
-$(deriveAll [''Eq, ''Ord, ''Default, ''Show]
-  [d|
-     data MailsDeliveryStatus = Delivered | Undelivered | Unknown
-   |])
+data MailsDeliveryStatus = Delivered | Undelivered | Unknown
+                           deriving (Eq, Ord, Typeable, Show, Read, Data)
+
    
 $(deriveSerialize ''MailsDeliveryStatus)
 instance Version MailsDeliveryStatus  
