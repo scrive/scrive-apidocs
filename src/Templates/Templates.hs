@@ -145,7 +145,12 @@ instance Field (Fields) where
                let val = fmap (SM . fromList) $ sequence $ map packIO $ execState b [] 
                put ((a,val):s)
 
-
+instance Field [Fields] where 
+  field a fs =  do
+               s <- get 
+               let vals f = fmap (SM . fromList) $ sequence $ map packIO $ execState f [] 
+               put ((a,fmap LI $ mapM vals fs):s)
+               
 
 instance RenderTemplate Fields where
    renderTemplate ts name fields = do
@@ -163,7 +168,7 @@ packIO (name,comp)= do
 
 -- | Importan Util. We overide default serialisation to support serialisation of bytestrings .
 -- | We use ByteString with UTF all the time but default is Latin-1 and we get strange chars 
--- | after rendering
+-- | after rendering. !This will not always work with advanced structures.! So always convert to String.
 
 class ToSElem a where
   toSElem:: (Stringable b) => a -> SElem b
@@ -174,8 +179,9 @@ instance (HST.ToSElem a) => ToSElem a where
 instance ToSElem BS.ByteString where
   toSElem = HST.toSElem . BS.toString                     
 
-instance Field [Fields] where 
-  field a fs =  do
-               s <- get 
-               let vals f = fmap (SM . fromList) $ sequence $ map packIO $ execState f [] 
-               put ((a,fmap LI $ mapM vals fs):s)
+instance ToSElem (Maybe BS.ByteString) where
+  toSElem = HST.toSElem . fmap BS.toString           
+  
+instance ToSElem [BS.ByteString] where
+  toSElem = HST.toSElem . fmap BS.toString             
+  
