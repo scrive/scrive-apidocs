@@ -47,6 +47,8 @@ import Data.Traversable (sequenceA)
 import Control.Applicative
 import System.Directory
 import System.IO.Temp
+import Data.Typeable
+import Data.Data
 
 {-
 
@@ -76,9 +78,10 @@ guardFormAction button = do
   guard (isJust maybepressed)
 #endif
 
-instance (EmbedAsChild m String) => (EmbedAsChild m BSL.ByteString) where
-    asChild = asChild . BSL.toString
-
+instance (EmbedAsChild m String) => (EmbedAsChild m BSL.ByteString) 
+    where
+        asChild = asChild . BSL.toString
+              
 instance (EmbedAsChild m String) => (EmbedAsChild m BS.ByteString) where
     asChild = asChild . BS.toString
 
@@ -277,9 +280,8 @@ renderHSPToString xml = do
 
 
 
-$(deriveAll [''Eq, ''Ord, ''Default]
-  [d| newtype MagicHash = MagicHash { unMagicHash :: Word64 }
-  |])
+newtype MagicHash = MagicHash { unMagicHash :: Word64 }
+    deriving (Eq, Ord, Typeable, Data)
 
 deriving instance Random MagicHash -- use Word64 size
 
