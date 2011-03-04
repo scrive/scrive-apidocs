@@ -73,44 +73,59 @@ import qualified Data.Set as Set
 import Control.Applicative
 import MinutesTime
 import qualified Payments.PaymentsState as Payments
+import Data.Data
 
-$(deriveAll [''Eq, ''Ord, ''Default]
-  [d|
-   
-      newtype UserID = UserID { unUserID :: Int }
-      newtype ExternalUserID = ExternalUserID { unExternalUserID :: BS.ByteString }
+newtype UserID = UserID { unUserID :: Int }
+    deriving (Eq, Ord, Typeable, Data)
+newtype ExternalUserID = ExternalUserID { unExternalUserID :: BS.ByteString }
+    deriving (Eq, Ord, Typeable, Data)
       -- Leaving FlashMessage declaration here is necessity
       -- Have to be used because of users versioning
       -- Can't be moved to Session where it belong (cycle references)
-      newtype Friend = Friend { unFriend :: Int }
-      newtype Inviter = Inviter { unInviter :: Int }
-      data InviteType = Viral | Admin
-      data InviteInfo = InviteInfo 
+newtype Friend = Friend { unFriend :: Int }
+    deriving (Eq, Ord, Typeable, Data)
+newtype Inviter = Inviter { unInviter :: Int }
+    deriving (Eq, Ord, Typeable, Data)
+data InviteType = Viral | Admin
+    deriving (Eq, Ord, Typeable, Data)
+data InviteInfo = InviteInfo 
           { userinviter :: Inviter
           , invitetime :: Maybe MinutesTime
           , invitetype :: Maybe InviteType
           }
-      newtype DefaultMainSignatory = DefaultMainSignatory { unDMS :: Int }
-      newtype FlashMessage0 = FlashMessage0 BS.ByteString
-      newtype FlashMessage = FlashMessage { unFlashMessage :: (FlashType, String) }
-      newtype Email = Email { unEmail :: BS.ByteString }
-      data Password = Password [Octet] [Octet] | NoPassword
-      newtype SupervisorID = SupervisorID { unSupervisorID :: Int }
-      data FlashType
+    deriving (Eq, Ord, Typeable, Data)
+newtype DefaultMainSignatory = DefaultMainSignatory { unDMS :: Int }
+    deriving (Eq, Ord, Typeable, Data)
+newtype FlashMessage0 = FlashMessage0 BS.ByteString
+    deriving (Eq, Ord, Typeable, Data)
+newtype FlashMessage = FlashMessage { unFlashMessage :: (FlashType, String) }
+    deriving (Eq, Ord, Typeable, Data)
+newtype Email = Email { unEmail :: BS.ByteString }
+    deriving (Eq, Ord, Typeable, Data)
+data Password = Password [Octet] [Octet] | NoPassword
+    deriving (Eq, Ord, Typeable, Data)
+newtype SupervisorID = SupervisorID { unSupervisorID :: Int }
+    deriving (Eq, Ord, Typeable, Data)
+data FlashType
         = SigningRelated
         | OperationDone
         | OperationFailed
-      data TrustWeaverStorage = TrustWeaverStorage
+    deriving (Eq, Ord, Typeable, Data)
+data TrustWeaverStorage = TrustWeaverStorage
           { storagetwenabled       :: Bool
           , storagetwname          :: BS.ByteString
           , storagetwsuperadmin    :: BS.ByteString
           , storagetwsuperadminpwd :: BS.ByteString
           , storagetwsectionpath   :: BS.ByteString
           }
-      data UserAccountType = MainAccount | SubAccount
-      data PaymentMethod = CreditCard | Invoice | Undefined
-      data UserAccountPlan = Basic
-      data UserInfo0 = UserInfo0 {
+    deriving (Eq, Ord, Typeable, Data)
+data UserAccountType = MainAccount | SubAccount
+    deriving (Eq, Ord, Typeable, Data)
+data PaymentMethod = CreditCard | Invoice | Undefined
+    deriving (Eq, Ord, Typeable, Data)
+data UserAccountPlan = Basic
+    deriving (Eq, Ord, Typeable, Data)
+data UserInfo0 = UserInfo0 {
             userfstname0                   :: BS.ByteString
           , usersndname0                   :: BS.ByteString
           , userpersonalnumber0            :: BS.ByteString
@@ -124,8 +139,9 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , usermobile0                    :: BS.ByteString
           , useremail0                     :: Email 
           }       
+                 deriving (Eq, Ord, Typeable, Data)
           
-      data UserInfo = UserInfo {
+data UserInfo = UserInfo {
             userfstname                   :: BS.ByteString
           , usersndname                   :: BS.ByteString
           , userpersonalnumber            :: BS.ByteString
@@ -140,14 +156,17 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , usermobile                    :: BS.ByteString
           , useremail                     :: Email 
           }        
-      data UserSettings  = UserSettings {
+    deriving (Eq, Ord, Typeable, Data)
+
+data UserSettings  = UserSettings {
                accounttype :: UserAccountType
              , accountplan :: UserAccountPlan
              , signeddocstorage :: Maybe TrustWeaverStorage
              , userpaymentmethod :: PaymentMethod
       }
+    deriving (Eq, Ord, Typeable, Data)
       
-      data User = User
+data User = User
           { userid                        :: UserID
           , userpassword                  :: Password
           , usersupervisor                :: Maybe SupervisorID
@@ -161,8 +180,11 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , userfriends                   :: [Friend]
           , userinviteinfo                :: Maybe InviteInfo
           }
+            deriving (Eq, Ord, Data)
 
-      data User9 = User9
+instance Typeable User where typeOf _ = mkTypeOf "User"
+
+data User9 = User9
           { userid9                        :: UserID
           , userpassword9                  :: Password
           , usersupervisor9                :: Maybe SupervisorID
@@ -176,8 +198,9 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , userfriends9                   :: [Friend]
           , userinviter9                   :: Maybe Inviter
           }
+    deriving (Eq, Ord, Typeable, Data)
           
-      data User8 = User8
+data User8 = User8
           { userid8                        :: UserID
           , userpassword8                  :: Password
           , usersupervisor8                :: Maybe SupervisorID
@@ -192,8 +215,9 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           -- should remove userdefaultmainsignatory in the next migration. just get rid of it.
           , userdefaultmainsignatory8      :: DefaultMainSignatory
           }
+    deriving (Eq, Ord, Typeable, Data)
 
-      data User7 = User7
+data User7 = User7
           { userid7                        :: UserID
           , userpassword7                  :: Password
           , usersupervisor7                :: Maybe SupervisorID
@@ -205,8 +229,9 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , userpaymentpolicy7             :: Payments.UserPaymentPolicy
           , userpaymentaccount7            :: Payments.UserPaymentAccount
           }
+    deriving (Eq, Ord, Typeable, Data)
       
-      data User6 = User6
+data User6 = User6
           { userid6                        :: UserID
           , userfullname6                  :: BS.ByteString
           , useremail6                     :: Email
@@ -220,8 +245,9 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , useraccountsuspended6          :: Bool
           , userhasacceptedtermsofservice6 :: Maybe MinutesTime
           }
+    deriving (Eq, Ord, Typeable, Data)
 
-      data User5 = User5
+data User5 = User5
           { userid5                 :: UserID
           , userfullname5           :: BS.ByteString
           , useremail5              :: Email
@@ -234,8 +260,9 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , usercanhavesubaccounts5 :: Bool
           , useraccountsuspended5   :: Bool
           }
+    deriving (Eq, Ord, Typeable, Data)
           
-      data User4 = User4
+data User4 = User4
           { userid4                 :: UserID
           , userfullname4           :: BS.ByteString
           , useremail4              :: Email
@@ -248,8 +275,9 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , usercanhavesubaccounts4 :: Bool
           , useraccountsuspended4   :: Bool
           }
+    deriving (Eq, Ord, Typeable, Data)
 
-      data User3 = User3
+data User3 = User3
           { userid3             :: UserID
           , userexternalids3    :: [ExternalUserID]
           , userfullname3       :: BS.ByteString
@@ -260,8 +288,9 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , userflashmessages3  :: [FlashMessage]
           , userpassword3       :: Maybe BS.ByteString
           }
+    deriving (Eq, Ord, Typeable, Data)
 
-      data User2 = User2
+data User2 = User2
           { userid2             :: UserID
           , userexternalids2    :: [ExternalUserID]
           , userfullname2       :: BS.ByteString
@@ -271,8 +300,9 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , userinvoiceaddress2 :: BS.ByteString
           , userflashmessages2  :: [FlashMessage]
           }
+    deriving (Eq, Ord, Typeable, Data)
 
-      data User1 = User1
+data User1 = User1
           { userid1             :: UserID
           , externaluserids1    :: [ExternalUserID]
           , fullname1           :: BS.ByteString
@@ -281,21 +311,22 @@ $(deriveAll [''Eq, ''Ord, ''Default]
           , usercompanynumber1  :: BS.ByteString
           , userinvoiceaddress1 :: BS.ByteString
           }
+    deriving (Eq, Ord, Typeable, Data)
 
-      data User0 = User0
+data User0 = User0
           { userid0          :: UserID
           , externaluserids0 :: [ExternalUserID]
           , fullname0        :: BS.ByteString
           , email0           :: BS.ByteString
           }
+    deriving (Eq, Ord, Typeable, Data)
 
-      data UserStats = UserStats 
+data UserStats = UserStats 
                        { usercount :: Int
                        , viralinvitecount :: Int
                        , admininvitecount :: Int
                        }
-
-   |])
+    deriving (Eq, Ord, Typeable, Data)
 
 instance Show FlashType where
   show SigningRelated  = "signingrelated"
