@@ -108,7 +108,6 @@ Executable kontrakcja-server
  Build-Depends: html
  Build-Depends: MissingH
  Build-Depends: temporary==1.1.1
- Build-Depends: encoding
 
  Main-Is: Main.hs
 
@@ -169,7 +168,6 @@ Executable kontrakcja-test
  Build-Depends: array
  Build-Depends: html
  Build-Depends: temporary==1.1.1
- Build-Depends: encoding
 
  Main-is: TestMain.hs
 

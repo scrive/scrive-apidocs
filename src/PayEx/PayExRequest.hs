@@ -26,8 +26,8 @@ import Data.ByteString.Lazy.Char8 (pack)
 import Data.Word
 import Data.List
 import Data.Bits
-import Data.Encoding
-import Data.Encoding.ISO88591
+-- import Data.Encoding
+-- import Data.Encoding.ISO88591
 import Templates.Templates (KontrakcjaTemplates)
 import Data.Maybe
 -- | Request with configuration and something else wrapper 
@@ -210,7 +210,7 @@ setField::String->String->([Content ()],String) -> ([Content ()],String)
 setField n v (l,vs)= (l ++ [mkElemC n (toText $ escapeAmps v)], vs ++ v)
 
 addHash::String -> ([Content ()],String) -> [Content ()] 
-addHash hash (l,vs)= l ++ [ mkElemC "hash" (toText $ md5s $ Str $ encodeString ISO88591 $ vs ++ hash) ]
+addHash hash (l,vs)= l -- ++ [ mkElemC "hash" (toText $ md5s $ Str $ encodeString ISO88591 $ vs ++ hash) ]
 
 escapeAmps ('&':ss) = "&amp;"++(escapeAmps ss)
 escapeAmps (s:ss) = s:(escapeAmps ss)
