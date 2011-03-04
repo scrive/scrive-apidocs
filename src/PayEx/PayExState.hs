@@ -38,14 +38,16 @@ import Payments.PaymentsState(Money(..))
 import Misc
 import Data.List (find)
 
-$( deriveAll [''Ord, ''Eq, ''Default ]
-   [d|
-       newtype PaymentId = PaymentId {unPaymentId::Int}
-       data PaymentPosition = PaymentForSigning DocumentID |
-                              PaymentForStorage DocumentID |
-                              PaymentForAccount
-       data PaymentState =  Waiting | Send | Finished | Failed String PaymentState
-       data Payment = Payment { -- | Each payment needs to be identified uniquely 
+newtype PaymentId = PaymentId {unPaymentId::Int}
+    deriving (Eq, Ord, Typeable, Data)
+data PaymentPosition = PaymentForSigning DocumentID |
+                       PaymentForStorage DocumentID |
+                       PaymentForAccount
+                       deriving (Eq, Ord, Show, Typeable, Data)
+data PaymentState =  Waiting | Send | Finished | Failed String PaymentState
+                     deriving (Eq, Ord, Show, Typeable, Data)
+
+data Payment = Payment { -- | Each payment needs to be identified uniquely 
                                 paymentId::PaymentId,
                                 -- | State of this payment  
                                 paymentState::PaymentState,  
@@ -68,8 +70,11 @@ $( deriveAll [''Ord, ''Eq, ''Default ]
                                 -- | When were we trying to check if transaction is finished
                                 completeAttempts::[MinutesTime]
                        }        
-    
-    |])
+                  deriving (Eq, Ord, Show)
+
+instance Typeable Payment where typeOf _ = mkTypeOf "Payment"
+deriving instance Data Payment
+
 
 instance Show PaymentId where
   show = show . unPaymentId
