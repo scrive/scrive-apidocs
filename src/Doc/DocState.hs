@@ -2046,12 +2046,12 @@ setDocumentTimeoutTime documentid timeouttime = do
 archiveDocuments :: User -> [DocumentID] -> Update Documents ()
 archiveDocuments user docidlist = do
   -- FIXME: can use a fold here
-  forM_ docidlist $ \docid -> do
-      modify $ \documents -> case getOne (documents @= docid) of
-                               Just doc -> if (isAuthor doc user)
-                                            then updateIx docid (doc { documentdeleted = True }) documents
-                                            else documents
-                               Nothing -> documents
+  forM_ docidlist $ \docid -> 
+      modifyDocument docid $ \doc -> 
+          if (isAuthor doc user)
+            then Right $ doc { documentdeleted = True }
+            else Left "Not author can not delete document"
+          
       
 
 fragileTakeOverDocuments :: User -> User -> Update Documents ()
