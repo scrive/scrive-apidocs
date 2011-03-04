@@ -13,12 +13,15 @@ import Payments.PaymentsState
 import Session
 import Kontra
 import ActionQueueState
+import Data.Data
+import Data.Typeable
+import Misc
 
 -- |top-level application state
-$(deriveAll [''Show, ''Eq, ''Ord, ''Default]
-  [d|
-      data AppState = AppState 
-   |])
+data AppState = AppState 
+                deriving (Eq, Ord, Show, Data)
+   
+instance Typeable AppState where typeOf _ = mkTypeOf "AppState"
 
 $(deriveSerialize ''AppState)
 instance Version AppState
@@ -26,7 +29,7 @@ instance Version AppState
 -- |top-level application component
 instance Component AppState where
   type Dependencies AppState = Documents :+: Sessions :+: Users :+:PaymentAccountModels :+: Actions :+: End
-  initialValue = defaultValue
+  initialValue = AppState
 
 
 -- create types for event serialization
