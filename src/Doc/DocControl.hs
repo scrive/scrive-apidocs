@@ -295,7 +295,7 @@ signDocument documentid
              signatorylinkid1
              magichash1
                  = do
-  Context { ctxtime, ctxipnumber } <- get
+  Context { ctxtime, ctxipnumber, ctxtemplates } <- get
   document@Document{ documentstatus = olddocumentstatus, documentsignatorylinks } <- queryOrFail $ GetDocumentByDocumentID documentid
 
   checkLinkIDAndMagicHash document signatorylinkid1 magichash1
@@ -546,7 +546,7 @@ handleIssueShowGet docid = withUserGet $ checkUserTOSGet $ do
 handleIssueShowPost :: DocumentID -> Kontra KontraLink
 handleIssueShowPost docid = withUserPost $ do
   document <- queryOrFail $ GetDocumentByDocumentID $ docid
-  ctx@Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber } <- get
+  ctx@Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber} <- get
   failIfNotAuthor document user
   
   -- something has to change here
@@ -565,8 +565,9 @@ handleIssueShowPost docid = withUserPost $ do
                           case doc2 of
                             Nothing -> return $ LinkIssueDoc docid
                             Just d -> do 
-                                       postDocumentChangeAction d AwaitingAuthor Nothing
-                                       return LinkIssue
+                                postDocumentChangeAction d AwaitingAuthor Nothing
+                                addFlashMsg =<< (liftIO $ flashAuthorSigned $ ctxtemplates ctx)
+                                return LinkIssue
        _ -> return $ LinkIssueDoc docid
 
 {- |

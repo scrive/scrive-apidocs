@@ -81,7 +81,9 @@ flashMessageNewActivationLinkSend=
 ###
 flashMessageUserSignupDone=Ditt konto har skapats! Vi har skickat ett mail med dina användaruppgifter till din inkorg.
 ###
-flashMessageAccountRequestSend=Din förfrågan är nu skickad
+flashMessageAccountRequestSend=Din förfrågan är nu skickad.
+###
+flashAuthorSigned=Dokumentet har undertecknats.
 ###
 flashMessageLoginPageRedirectReason=
 $if(notlogged)$
