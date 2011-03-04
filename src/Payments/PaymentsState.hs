@@ -59,75 +59,95 @@ import Control.Monad.State hiding (State)
 import Happstack.Data (Default, deriveAll, )
 import Happstack.Data.IxSet as IxSet
 import Happstack.State 
-import Misc (allValues)
+import Misc (allValues, mkTypeOf)
 import MinutesTime
 import Data.Maybe
+import Data.Data
+import Data.Typeable
 
-$( deriveAll [''Ord, ''Eq, ''Default, ''Show, ''Read]
-   [d|
-      -- | Mail model for payments account
-      data PaymentAccountModel = PaymentAccountModel {  
+-- | Mail model for payments account
+data PaymentAccountModel = PaymentAccountModel {  
                                    modelAccountType::PaymentAccountType,
                                    modelPaymentForAccounts::PaymentForAccounts Money,
                                    modelPaymentForSignature::PaymentForSignature Money,
                                    modelPaymentForSignedStorage::PaymentForSignedStorage Money,  
-                                   modelPaymentForOtherStorage::PaymentForOtherStorage Money             
+                                   modelPaymentForOtherStorage::PaymentForOtherStorage Money
       }                           
-      -- | Temp change of payments
-      data PaymentChange = PaymentChange {  
+    deriving (Eq, Ord, Show, Read, Data)
+
+instance Typeable PaymentAccountModel where typeOf _ = mkTypeOf "PaymentAccountModel"
+
+-- | Temp change of payments
+data PaymentChange = PaymentChange {  
                                   changePaymentForAccounts::PaymentForAccounts (Maybe Money),
                                   changePaymentForSignature ::PaymentForSignature (Maybe Money),  
                                   changePaymentForSignedStorage::PaymentForSignedStorage (Maybe Money),  
                                   changePaymentForOtherStorage::PaymentForOtherStorage (Maybe Money)  
       }
+    deriving (Eq, Ord, Show, Read, Typeable, Data)
 
       
-      -- | Types of accounts
-      data PaymentAccountType = Private | Minimal | Medium | Maximal | Corp   
-      -- | Money values wrapper
-      data Money = Money { money:: Integer }
+-- | Types of accounts
+data PaymentAccountType = Private | Minimal | Medium | Maximal | Corp   
+    deriving (Eq, Ord, Show, Read, Typeable, Data)
+
+-- | Money values wrapper
+data Money = Money { money:: Integer }
+    deriving (Eq, Ord, Show, Read, Typeable, Data)
       
       -- | Monthly payments for account and subaccounts
-      data PaymentForAccounts value = PaymentForAccounts {
+data PaymentForAccounts value = PaymentForAccounts {
                                  forAccount::value,
                                  forSubaccount::value 
                                }
+    deriving (Eq, Ord, Show, Read, Typeable, Data)
+
       -- | Payments for each signature on document                        
-      data PaymentForSignature value = PaymentForSignature {
+data PaymentForSignature value = PaymentForSignature {
                                  forEmailSignature::value,
                                  forElegSignature::value,  
                                  forMobileSignature::value,  
                                  forCreditCardSignature::value,  
                                  forIPadSignature ::value
                                }                  
+    deriving (Eq, Ord, Show, Read, Typeable, Data)
+
       -- | Payments for storage of signed documents                       
-      data PaymentForSignedStorage value = PaymentForSignedStorage {
-                                 forAmazon::value,
-                                 forTrustWeaver::value
-                               }  
+data PaymentForSignedStorage value = PaymentForSignedStorage {
+     forAmazon::value,
+     forTrustWeaver::value
+    }  
+    deriving (Eq, Ord, Show, Read, Typeable, Data)
+
       -- | Payments for storage of of unsigned templates and drafts       
-      data PaymentForOtherStorage value  = PaymentForOtherStorage {
+data PaymentForOtherStorage value  = PaymentForOtherStorage {
                                  forTemplate::value,
                                  forDraft::value
                                }         
+    deriving (Eq, Ord, Show, Read, Typeable, Data)
+
       --  | How the user should pay for signing etc                       
-      data UserPaymentPolicy =  UserPaymentPolicy {
+data UserPaymentPolicy =  UserPaymentPolicy {
                paymentaccounttype:: PaymentAccountType
              , custompaymentchange:: PaymentChange 
              , temppaymentchange:: Maybe (MinutesTime,PaymentChange)
       }  
+    deriving (Eq, Ord, Show, Read, Typeable, Data)
+
       -- | Info about free signatures left and money for user
-      data UserPaymentAccount0 = UserPaymentAccount0 {
+data UserPaymentAccount0 = UserPaymentAccount0 {
                paymentaccountmoney0 ::Money
              , paymentaccountfreesignatures0:: Int  
 
       }
-      data UserPaymentAccount = UserPaymentAccount {
+    deriving (Eq, Ord, Show, Read, Typeable, Data)
+
+data UserPaymentAccount = UserPaymentAccount {
                paymentAgreementRef ::Maybe String
              , paymentaccountfreesignatures:: Int  
 
       }
-    |])
+    deriving (Eq, Ord, Show, Read, Typeable, Data)
     
 
                                 
