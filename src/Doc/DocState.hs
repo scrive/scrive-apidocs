@@ -95,515 +95,600 @@ import qualified Data.Map as Map
 import qualified Data.Set as Set
 import Data.Maybe
 import Mails.MailsUtil
+import Data.Data (Data)
+import qualified Data.Generics.SYB.WithClass.Derive as SYB
 
-$(deriveAll [''Eq, ''Ord, ''Default]
-  [d|
-      newtype Author = Author { unAuthor :: UserID }
-      newtype DocumentID = DocumentID { unDocumentID :: Int64 }
-      newtype SignatoryLinkID = SignatoryLinkID { unSignatoryLinkID :: Int }
-      newtype FileID = FileID { unFileID :: Int }
-      newtype TimeoutTime = TimeoutTime { unTimeoutTime :: MinutesTime }
 
-      data IdentificationType = EmailIdentification
-                              | ELegitimationIdentification
 
-      data SignatureProvider = BankIDProvider
-                             | TeliaProvider
-                             | NordeaProvider
 
-      data SignatureInfo = SignatureInfo { signatureinfotext        :: String
-                                         , signatureinfosignature   :: String
-                                         , signatureinfocertificate :: String
-                                         , signatureinfoprovider    :: SignatureProvider
-                                         }
 
-      -- added by Eric Normand for template system
-      -- Defines a new field to be placed in a contract
-      data FieldDefinition0 = FieldDefinition0
-          { fieldlabel0 :: BS.ByteString 
-          , fieldvalue0 :: BS.ByteString
-          , fieldplacements0 :: [FieldPlacement]
-          }
+-- $(deriveAll [] [d|
+--   newtype Author = Author { unAuthor :: UserID }
+--  |])
 
-      data FieldDefinition = FieldDefinition
-          { fieldlabel :: BS.ByteString 
-          , fieldvalue :: BS.ByteString
-          , fieldplacements :: [FieldPlacement]
-          , fieldfilledbyauthor :: Bool
-          }
 
-      -- defines where a field is placed
-      data FieldPlacement = FieldPlacement
-          { placementx :: Int
-          , placementy :: Int
-          , placementpage :: Int
-          , placementpagewidth :: Int
-          , placementpageheight :: Int
-          }
-      -- end of updates for template system
+newtype Author = Author { unAuthor :: UserID }
+    deriving (Eq, Ord, Typeable, Data)
 
-      data SignatoryDetails0 = SignatoryDetails0
-          { signatoryname00      :: BS.ByteString  -- "Gracjan Polak" 
-          , signatorycompany00   :: BS.ByteString  -- SkrivaPå
-          , signatorynumber00    :: BS.ByteString  -- 123456789
-          , signatoryemail00     :: BS.ByteString  -- "gracjanpolak@skrivapa.se"
-          }
+newtype DocumentID = DocumentID { unDocumentID :: Int64 }
+    deriving (Eq, Ord, Typeable, Data)
+newtype SignatoryLinkID = SignatoryLinkID { unSignatoryLinkID :: Int }
+    deriving (Eq, Ord, Typeable, Data)
+newtype FileID = FileID { unFileID :: Int }
+    deriving (Eq, Ord, Typeable, Data)
+newtype TimeoutTime = TimeoutTime { unTimeoutTime :: MinutesTime }
+    deriving (Eq, Ord, Typeable, Data)
 
-      data SignatoryDetails1 = SignatoryDetails1
-          { signatoryname1      :: BS.ByteString  
-          , signatorycompany1   :: BS.ByteString  
-          , signatorynumber1    :: BS.ByteString  
-          , signatoryemail1     :: BS.ByteString  
-          , signatorynameplacements1 :: [FieldPlacement]
-          , signatorycompanyplacements1 :: [FieldPlacement]
-          , signatoryemailplacements1 :: [FieldPlacement]
-          , signatorynumberplacements1 :: [FieldPlacement]
-          , signatoryotherfields1 :: [FieldDefinition]
-          } 
-      
-      data SignatoryDetails2 = SignatoryDetails2
-          { signatoryfstname2   :: BS.ByteString 
-          , signatorysndname2   :: BS.ByteString 
-          , signatorycompany2   :: BS.ByteString 
-          , signatorynumber2    :: BS.ByteString 
-          , signatoryemail2     :: BS.ByteString 
-          , signatorynameplacements2 :: [FieldPlacement]
-          , signatorycompanyplacements2 :: [FieldPlacement]
-          , signatoryemailplacements2 :: [FieldPlacement]
-          , signatorynumberplacements2 :: [FieldPlacement]
-          , signatoryotherfields2 :: [FieldDefinition]
-          }     
-      
-      
-      data SignatoryDetails = SignatoryDetails
-          { signatoryfstname   :: BS.ByteString  -- "Gracjan Polak" 
-          , signatorysndname   :: BS.ByteString  -- "Gracjan Polak" 
-          , signatorycompany   :: BS.ByteString  -- SkrivaPå
-          , signatorynumber    :: BS.ByteString  -- 123456789
-          , signatoryemail     :: BS.ByteString  -- "gracjanpolak@skrivapa.se"
-          -- for templates
-          , signatoryfstnameplacements :: [FieldPlacement]
-          , signatorysndnameplacements :: [FieldPlacement]
-          , signatorycompanyplacements :: [FieldPlacement]
-          , signatoryemailplacements :: [FieldPlacement]
-          , signatorynumberplacements :: [FieldPlacement]
-          , signatoryotherfields :: [FieldDefinition]
-          }     
-      
-      data SignatoryLink0 = SignatoryLink0 
-          { signatorylinkid0    :: SignatoryLinkID
-          , signatoryname0      :: BS.ByteString 
-          , signatorycompany0   :: BS.ByteString 
-          , signatoryemail0     :: BS.ByteString
-          , maybesignatory0     :: Maybe Signatory
-          , maybesigninfo0      :: Maybe SignInfo
-          , maybeseentime0      :: Maybe MinutesTime
-          }
-      data SignatoryLink1 = SignatoryLink1 
-          { signatorylinkid1    :: SignatoryLinkID
-          , signatorydetails1   :: SignatoryDetails
-          , maybesignatory1     :: Maybe Signatory
-          , maybesigninfo1      :: Maybe SignInfo
-          , maybeseentime1      :: Maybe MinutesTime
-          }
-      data SignatoryLink2 = SignatoryLink2 
-          { signatorylinkid2    :: SignatoryLinkID
-          , signatorydetails2   :: SignatoryDetails
-          , signatorymagichash2 :: MagicHash
-          , maybesignatory2     :: Maybe Signatory
-          , maybesigninfo2      :: Maybe SignInfo
-          , maybeseentime2      :: Maybe MinutesTime
-          }
-      data SignatoryLink3 = SignatoryLink3 
-          { signatorylinkid3    :: SignatoryLinkID
-          , signatorydetails3   :: SignatoryDetails
-          , signatorymagichash3 :: MagicHash
-          , maybesignatory3     :: Maybe Signatory
-          , maybesigninfo3      :: Maybe SignInfo
-          , maybeseeninfo3      :: Maybe SignInfo
-          }        
-      data SignatoryLink4 = SignatoryLink4
-          { signatorylinkid4    :: SignatoryLinkID
-          , signatorydetails4   :: SignatoryDetails
-          , signatorymagichash4 :: MagicHash
-          , maybesignatory4     :: Maybe Signatory
-          , maybesigninfo4      :: Maybe SignInfo
-          , maybeseeninfo4      :: Maybe SignInfo
-          , invitationdeliverystatus4 :: MailsDeliveryStatus
-          }
-      data SignatoryLink = SignatoryLink 
-          { signatorylinkid    :: SignatoryLinkID
-          , signatorydetails   :: SignatoryDetails
-          , signatorymagichash :: MagicHash
-          , maybesignatory     :: Maybe Signatory
-          , maybesigninfo      :: Maybe SignInfo
-          , maybeseeninfo      :: Maybe SignInfo
-          , invitationdeliverystatus :: MailsDeliveryStatus
-          , signatorysignatureinfo :: Maybe SignatureInfo
-          }    
-      data SignInfo = SignInfo
-          { signtime :: MinutesTime
-          , signipnumber :: Word32
-          }
-      data SignInfo0 = SignInfo0
-          { signtime0 :: MinutesTime
-          }
-      newtype Signatory = Signatory { unSignatory :: UserID }
-      {-
-         Document start in Preparation state.
+data IdentificationType = EmailIdentification
+                        | ELegitimationIdentification
+    deriving (Eq, Ord, Typeable, Data)
 
-         Meaning:
-         * Preparation: Only author can see it. He's still editing.
-         * Pending: People can sign document. Could be timed out.
-         * AwaitingAuthor: Everyone has signed but the author.
-         * Closed: Everybody signed. This is final state.
-         * Canceled: Author has canceled the document.
-         * Timedout: This works as autocancel and has exactly same 
-           properties.
+data SignatureProvider = BankIDProvider
+                       | TeliaProvider
+                       | NordeaProvider
+    deriving (Eq, Ord, Typeable, Data)
 
-         Transitions:
-         * Preparation to Pending: When invitations are sent.
-         * Preparation to Cancel: mail about cancel to 
-           all who have signed it already is sent.
-           TODO: Should other parties get an email?
-         * Preparation to Timedout: mail about timeout to 
-           all who have signed it already is sent.
-         * Pending to Closed: When everyone has signed. 
-           Info about closed deal is sent to everybody involved.
-         * Pending to AwaitingAuthor: When all signatories have signed and there were fields.
-           Info is sent to author.
-         * AwaitingAuthor to Closed: Author signs it.
-         * Pending to Cancel: Send no emails.
-         * Pending to Timeout: TODO: No action?
+data SignatureInfo = SignatureInfo { signatureinfotext        :: String
+                                   , signatureinfosignature   :: String
+                                   , signatureinfocertificate :: String
+                                   , signatureinfoprovider    :: SignatureProvider
+                                   }
+    deriving (Eq, Ord, Typeable, Data)
 
-         Allowed actions:
-         * Preparation: change document, change title, add/rem signatories
-         * Pending: change email of a signatory, signatory can sign
-         * AwaitingAuthor: autho can sign.
-         * Closed: nothing
-         * Canceled: edit back to Preparation
-         * Timedout: edit back to Preparation
-        
-         Archived bit:
-         * This bit just moves document out of main view.
-       -}
+-- added by Eric Normand for template system
+-- Defines a new field to be placed in a contract
+data FieldDefinition0 = FieldDefinition0
+    { fieldlabel0 :: BS.ByteString 
+    , fieldvalue0 :: BS.ByteString
+    , fieldplacements0 :: [FieldPlacement]
+    }
+    deriving (Eq, Ord, Typeable)
 
-      data DocumentStatus = Preparation 
-                          | Pending  
-                          | Closed 
-                          | Canceled 
-                          | Timedout
-                          | Rejected
-                          | AwaitingAuthor
-                          | DocumentError String
-                          
-      data DocumentType = Contract | Template
-      
-      data ChargeMode = ChargeInitialFree   -- initial 5 documents are free
-                      | ChargeNormal        -- value times number of people involved
+data FieldDefinition = FieldDefinition
+    { fieldlabel :: BS.ByteString 
+    , fieldvalue :: BS.ByteString
+    , fieldplacements :: [FieldPlacement]
+    , fieldfilledbyauthor :: Bool
+    }
+    deriving (Eq, Ord, Typeable, Data)
 
-      data DocumentHistoryEntry = DocumentHistoryCreated { dochisttime :: MinutesTime }
-                                | DocumentHistoryInvitationSent { dochisttime :: MinutesTime
-                                                                , ipnumber :: Word32
-                                                                }    -- changed state from Preparatio to Pending
+-- defines where a field is placed
+data FieldPlacement = FieldPlacement
+    { placementx :: Int
+    , placementy :: Int
+    , placementpage :: Int
+    , placementpagewidth :: Int
+    , placementpageheight :: Int
+    }
+    deriving (Eq, Ord, Typeable, Data)
+-- end of updates for template system
 
-      data DocStats = DocStats {
-                       doccount :: Int
-                     , signaturecount :: Int
-                   }
-   |])
+data SignatoryDetails0 = SignatoryDetails0
+    { signatoryname00      :: BS.ByteString  -- "Gracjan Polak" 
+    , signatorycompany00   :: BS.ByteString  -- SkrivaPå
+    , signatorynumber00    :: BS.ByteString  -- 123456789
+    , signatoryemail00     :: BS.ByteString  -- "gracjanpolak@skrivapa.se"
+    }
+    deriving (Eq, Ord, Typeable)
 
-$(deriveAll [''Default]
-  [d|
-      data Document0 = Document0
-          { documentid0               :: DocumentID
-          , documenttitle0            :: BS.ByteString
-          , documentauthor0           :: Author
-          , documentsignatorylinks0   :: [SignatoryLink]  
-          , documentfiles0            :: [File]
-          , documentstatus0           :: DocumentStatus
-          , documentctime0            :: MinutesTime
-          , documentmtime0            :: MinutesTime
-          }
-      data Document1 = Document1
-          { documentid1               :: DocumentID
-          , documenttitle1            :: BS.ByteString
-          , documentauthor1           :: Author
-          , documentsignatorylinks1   :: [SignatoryLink]  
-          , documentfiles1            :: [File]
-          , documentstatus1           :: DocumentStatus
-          , documentctime1            :: MinutesTime
-          , documentmtime1            :: MinutesTime
-          , documentchargemode1       :: ChargeMode
-          }
-      data Document2 = Document2
-          { documentid2               :: DocumentID
-          , documenttitle2            :: BS.ByteString
-          , documentauthor2           :: Author
-          , documentsignatorylinks2   :: [SignatoryLink]  
-          , documentfiles2            :: [File]
-          , documentstatus2           :: DocumentStatus
-          , documentctime2            :: MinutesTime
-          , documentmtime2            :: MinutesTime
-          , documentchargemode2       :: ChargeMode
-          , documentdaystosign2       :: Int
-          , documenttimeouttime2      :: Maybe TimeoutTime
+data SignatoryDetails1 = SignatoryDetails1
+    { signatoryname1      :: BS.ByteString  
+    , signatorycompany1   :: BS.ByteString  
+    , signatorynumber1    :: BS.ByteString  
+    , signatoryemail1     :: BS.ByteString  
+    , signatorynameplacements1 :: [FieldPlacement]
+    , signatorycompanyplacements1 :: [FieldPlacement]
+    , signatoryemailplacements1 :: [FieldPlacement]
+    , signatorynumberplacements1 :: [FieldPlacement]
+    , signatoryotherfields1 :: [FieldDefinition]
+    } 
+    deriving (Eq, Ord, Typeable)
 
-          -- we really should keep history here so we know what happened
-          }
-      data Document3 = Document3
-          { documentid3               :: DocumentID
-          , documenttitle3            :: BS.ByteString
-          , documentauthor3           :: Author
-          , documentsignatorylinks3   :: [SignatoryLink]  
-          , documentfiles3            :: [File]
-          , documentstatus3           :: DocumentStatus
-          , documentctime3            :: MinutesTime
-          , documentmtime3            :: MinutesTime
-          , documentchargemode3       :: ChargeMode
-          , documentdaystosign3       :: Int
-          , documenttimeouttime3      :: Maybe TimeoutTime
-          , documentdeleted3          :: Bool -- should not appear in list
-          , documentauthordetails3    :: SignatoryDetails
-          , documentmaybesigninfo3    :: Maybe SignInfo      -- about the author signed the document
-          , documenthistory3          :: [DocumentHistoryEntry]
+data SignatoryDetails2 = SignatoryDetails2
+    { signatoryfstname2   :: BS.ByteString 
+    , signatorysndname2   :: BS.ByteString 
+    , signatorycompany2   :: BS.ByteString 
+    , signatorynumber2    :: BS.ByteString 
+    , signatoryemail2     :: BS.ByteString 
+    , signatorynameplacements2 :: [FieldPlacement]
+    , signatorycompanyplacements2 :: [FieldPlacement]
+    , signatoryemailplacements2 :: [FieldPlacement]
+    , signatorynumberplacements2 :: [FieldPlacement]
+    , signatoryotherfields2 :: [FieldDefinition]
+    }     
+    deriving (Eq, Ord, Typeable)
 
-          -- we really should keep history here so we know what happened
-          }
-      data Document4 = Document4
-          { documentid4               :: DocumentID
-          , documenttitle4            :: BS.ByteString
-          , documentauthor4           :: Author
-          , documentsignatorylinks4   :: [SignatoryLink]  
-          , documentfiles4            :: [File]
-          , documentstatus4           :: DocumentStatus
-          , documentctime4            :: MinutesTime
-          , documentmtime4            :: MinutesTime
-          , documentchargemode4       :: ChargeMode
-          , documentdaystosign4       :: Int
-          , documenttimeouttime4      :: Maybe TimeoutTime 
-          , documentdeleted4          :: Bool -- should not appear in list
-          , documentauthordetails4    :: SignatoryDetails
-          , documentmaybesigninfo4    :: Maybe SignInfo      -- about the author signed the document |should be droped and check at runtime|
-          , documenthistory4          :: [DocumentHistoryEntry]
-          , documentinvitetext4       :: BS.ByteString
 
-          -- we really should keep history here so we know what happened
-          }
-      data Document5 = Document5
-          { documentid5               :: DocumentID
-          , documenttitle5            :: BS.ByteString
-          , documentauthor5           :: Author
-          , documentsignatorylinks5   :: [SignatoryLink]  
-          , documentfiles5            :: [File]
-          , documentsealedfiles5      :: [File]
-          , documentstatus5           :: DocumentStatus
-          , documentctime5            :: MinutesTime
-          , documentmtime5            :: MinutesTime
-          , documentchargemode5       :: ChargeMode
-          , documentdaystosign5       :: Int
-          , documenttimeouttime5      :: Maybe TimeoutTime 
-          , documentdeleted5          :: Bool -- should not appear in list
-          , documentauthordetails5    :: SignatoryDetails
-          , documentmaybesigninfo5    :: Maybe SignInfo      -- about the author signed the document |should be droped and check at runtime|
-          , documenthistory5          :: [DocumentHistoryEntry]
-          , documentinvitetext5       :: BS.ByteString
-          }
-      data Document6 = Document6
-          { documentid6               :: DocumentID
-          , documenttitle6            :: BS.ByteString
-          , documentauthor6           :: Author
-          , documentsignatorylinks6   :: [SignatoryLink]  
-          , documentfiles6            :: [File]
-          , documentsealedfiles6      :: [File]
-          , documentstatus6           :: DocumentStatus
-          , documentctime6            :: MinutesTime
-          , documentmtime6            :: MinutesTime
-          , documentchargemode6       :: ChargeMode
-          , documentdaystosign6       :: Maybe Int
-          , documenttimeouttime6      :: Maybe TimeoutTime 
-          , documentdeleted6          :: Bool -- should not appear in list
-          , documentauthordetails6    :: SignatoryDetails
-          , documentmaybesigninfo6    :: Maybe SignInfo      -- about the author signed the document 
-          , documenthistory6          :: [DocumentHistoryEntry]
-          , documentinvitetext6       :: BS.ByteString
+data SignatoryDetails = SignatoryDetails
+    { signatoryfstname   :: BS.ByteString  -- "Gracjan Polak" 
+    , signatorysndname   :: BS.ByteString  -- "Gracjan Polak" 
+    , signatorycompany   :: BS.ByteString  -- SkrivaPå
+    , signatorynumber    :: BS.ByteString  -- 123456789
+    , signatoryemail     :: BS.ByteString  -- "gracjanpolak@skrivapa.se"
+    -- for templates
+    , signatoryfstnameplacements :: [FieldPlacement]
+    , signatorysndnameplacements :: [FieldPlacement]
+    , signatorycompanyplacements :: [FieldPlacement]
+    , signatoryemailplacements :: [FieldPlacement]
+    , signatorynumberplacements :: [FieldPlacement]
+    , signatoryotherfields :: [FieldDefinition]
+    }     
+    deriving (Eq, Ord, Typeable, Data)
 
-          -- we really should keep history here so we know what happened
-          }
-      data Document7 = Document7
-          { documentid7               :: DocumentID
-          , documenttitle7            :: BS.ByteString
-          , documentauthor7           :: Author
-          , documentsignatorylinks7   :: [SignatoryLink]  
-          , documentfiles7            :: [File]
-          , documentsealedfiles7      :: [File]
-          , documentstatus7           :: DocumentStatus
-          , documentctime7            :: MinutesTime
-          , documentmtime7            :: MinutesTime
-          , documentchargemode7       :: ChargeMode
-          , documentdaystosign7       :: Maybe Int
-          , documenttimeouttime7      :: Maybe TimeoutTime 
-          -- | If true, this Document will not appear in the document list
-          , documentdeleted7          :: Bool
-          , documenthistory7          :: [DocumentHistoryEntry]
-          , documentinvitetext7       :: BS.ByteString
-          }
+data SignatoryLink0 = SignatoryLink0 
+    { signatorylinkid0    :: SignatoryLinkID
+    , signatoryname0      :: BS.ByteString 
+    , signatorycompany0   :: BS.ByteString 
+    , signatoryemail0     :: BS.ByteString
+    , maybesignatory0     :: Maybe Signatory
+    , maybesigninfo0      :: Maybe SignInfo
+    , maybeseentime0      :: Maybe MinutesTime
+    }
+    deriving (Eq, Ord, Typeable)
 
-      data Document8 = Document8
-          { documentid8               :: DocumentID
-          , documenttitle8            :: BS.ByteString
-          , documentauthor8           :: Author
-          , documentsignatorylinks8   :: [SignatoryLink]  
-          , documentfiles8            :: [File]
-          , documentsealedfiles8      :: [File]
-          , documentstatus8           :: DocumentStatus
-          , documentctime8            :: MinutesTime
-          , documentmtime8            :: MinutesTime
-          , documentchargemode8       :: ChargeMode
-          , documentdaystosign8       :: Maybe Int
-          , documenttimeouttime8      :: Maybe TimeoutTime 
-          -- | If true, this Document will not appear in the document list
-          , documentdeleted8          :: Bool
-          , documenthistory8          :: [DocumentHistoryEntry]
-          , documentinvitetext8       :: BS.ByteString
-          , documenttrustweaverreference8 :: Maybe BS.ByteString
-          }
+data SignatoryLink1 = SignatoryLink1 
+    { signatorylinkid1    :: SignatoryLinkID
+    , signatorydetails1   :: SignatoryDetails
+    , maybesignatory1     :: Maybe Signatory
+    , maybesigninfo1      :: Maybe SignInfo
+    , maybeseentime1      :: Maybe MinutesTime
+    }
+    deriving (Eq, Ord, Typeable)
 
-      data Document9 = Document9
-          { documentid9               :: DocumentID
-          , documenttitle9            :: BS.ByteString
-          , documentauthor9           :: Author
-          , documentsignatorylinks9   :: [SignatoryLink]  
-          , documentfiles9            :: [File]
-          , documentsealedfiles9      :: [File]
-          , documentstatus9           :: DocumentStatus
-          , documentctime9            :: MinutesTime
-          , documentmtime9            :: MinutesTime
-          , documentchargemode9       :: ChargeMode
-          , documentdaystosign9       :: Maybe Int
-          , documenttimeouttime9      :: Maybe TimeoutTime 
-          -- | If true, this Document will not appear in the document list
-          , documentdeleted9          :: Bool
-          , documenthistory9          :: [DocumentHistoryEntry]
-          , documentinvitetext9       :: BS.ByteString
-          , documenttrustweaverreference9 :: Maybe BS.ByteString
-          , documentallowedidtypes9   :: [IdentificationType]
-          }
+data SignatoryLink2 = SignatoryLink2 
+    { signatorylinkid2    :: SignatoryLinkID
+    , signatorydetails2   :: SignatoryDetails
+    , signatorymagichash2 :: MagicHash
+    , maybesignatory2     :: Maybe Signatory
+    , maybesigninfo2      :: Maybe SignInfo
+    , maybeseentime2      :: Maybe MinutesTime
+    }
+    deriving (Eq, Ord, Typeable)
 
-      data Document10 = Document10
-          { documentid10               :: DocumentID
-          , documenttitle10            :: BS.ByteString
-          , documentauthor10           :: Author
-          , documentsignatorylinks10   :: [SignatoryLink]  
-          , documentfiles10            :: [File]
-          , documentsealedfiles10      :: [File]
-          , documentstatus10           :: DocumentStatus
-          , documentctime10            :: MinutesTime
-          , documentmtime10            :: MinutesTime
-          , documentchargemode10       :: ChargeMode
-          , documentdaystosign10       :: Maybe Int
-          , documenttimeouttime10      :: Maybe TimeoutTime 
-          -- | If true, this Document will not appear in the document list
-          , documentdeleted10          :: Bool
-          , documenthistory10          :: [DocumentHistoryEntry]
-          , documentinvitetext10       :: BS.ByteString
-          , documenttrustweaverreference10 :: Maybe BS.ByteString
-          , documentallowedidtypes10   :: [IdentificationType]
-          , authornameplacements10 :: [FieldPlacement]
-          , authorcompanyplacements10 :: [FieldPlacement]
-          , authoremailplacements10 :: [FieldPlacement]
-          , authornumberplacements10 :: [FieldPlacement]
-          , authorotherfields10 :: [FieldDefinition]
-          }
-          
-      data Document11 = Document11
-          { documentid11               :: DocumentID
-          , documenttitle11            :: BS.ByteString
-          , documentauthor11           :: Author
-          , documentsignatorylinks11   :: [SignatoryLink]  
-          , documentfiles11            :: [File]
-          , documentsealedfiles11      :: [File]
-          , documentstatus11           :: DocumentStatus
-          , documentctime11            :: MinutesTime
-          , documentmtime11            :: MinutesTime
-          , documentchargemode11       :: ChargeMode
-          , documentdaystosign11       :: Maybe Int
-          , documenttimeouttime11      :: Maybe TimeoutTime 
-          , documentdeleted11          :: Bool
-          , documenthistory11          :: [DocumentHistoryEntry]
-          , documentinvitetext11       :: BS.ByteString
-          , documenttrustweaverreference11 :: Maybe BS.ByteString
-          , documentallowedidtypes11   :: [IdentificationType]
-          , authorfstnameplacements11 :: [FieldPlacement]
-          , authorsndnameplacements11 :: [FieldPlacement]
-          , authorcompanyplacements11 :: [FieldPlacement]
-          , authoremailplacements11 :: [FieldPlacement]
-          , authornumberplacements11 :: [FieldPlacement]
-          , authorotherfields11 :: [FieldDefinition]
-          }
-          
-      data Document = Document
-          { documentid               :: DocumentID
-          , documenttitle            :: BS.ByteString
-          , documentauthor           :: Author
-          , documentsignatorylinks   :: [SignatoryLink]  
-          , documentfiles            :: [File]
-          , documentsealedfiles      :: [File]
-          , documentstatus           :: DocumentStatus
-          , documenttype             :: DocumentType
-          , documentctime            :: MinutesTime
-          , documentmtime            :: MinutesTime
-          , documentchargemode       :: ChargeMode
-          , documentdaystosign       :: Maybe Int
-          , documenttimeouttime      :: Maybe TimeoutTime 
-          -- | If true, this Document will not appear in the document list
-          , documentdeleted          :: Bool
-          , documenthistory          :: [DocumentHistoryEntry]
-          , documentinvitetext       :: BS.ByteString
-          , documenttrustweaverreference :: Maybe BS.ByteString
-          , documentallowedidtypes   :: [IdentificationType]
-          , authorfstnameplacements :: [FieldPlacement]
-          , authorsndnameplacements :: [FieldPlacement]
-          , authorcompanyplacements :: [FieldPlacement]
-          , authoremailplacements :: [FieldPlacement]
-          , authornumberplacements :: [FieldPlacement]
-          , authorotherfields :: [FieldDefinition]
-          }
-          
-      data File0 = File0 
-          { fileid0       :: FileID
-          , filename0     :: BS.ByteString
-          , filepdf0      :: BS.ByteString 
-          , filejpgpages0 :: [BS.ByteString]
-          }
-      data File1 = File1 
-          { fileid1       :: FileID
-          , filename1     :: BS.ByteString
-          , filepdf1      :: BS.ByteString 
-          , filejpgpages1 :: JpegPages
-          }
-      data File2 = File2 
-          { fileid2       :: FileID
-          , filename2     :: BS.ByteString
-          , filepdf2      :: BS.ByteString 
-          }
-      data File = File 
-          { fileid          :: FileID
-          , filename        :: BS.ByteString
-          , filestorage     :: FileStorage
-          }
+data SignatoryLink3 = SignatoryLink3 
+    { signatorylinkid3    :: SignatoryLinkID
+    , signatorydetails3   :: SignatoryDetails
+    , signatorymagichash3 :: MagicHash
+    , maybesignatory3     :: Maybe Signatory
+    , maybesigninfo3      :: Maybe SignInfo
+    , maybeseeninfo3      :: Maybe SignInfo
+    }        
+    deriving (Eq, Ord, Typeable)
 
-      data JpegPages0 = JpegPagesPending0
-                     | JpegPages0 [BS.ByteString]   
-                     | JpegPagesError0 BS.ByteString 
-      
-      data JpegPages = JpegPagesPending
-                     | JpegPages [(BS.ByteString,Int,Int)]  -- Data + width + height (scaled with some resolution)
-                     | JpegPagesError BS.ByteString 
-                     
-      data FileStorage = FileStorageMemory BS.ByteString
-                       | FileStorageAWS BS.ByteString BS.ByteString -- ^ bucket, url inside bucket
-   |])
+data SignatoryLink4 = SignatoryLink4
+    { signatorylinkid4    :: SignatoryLinkID
+    , signatorydetails4   :: SignatoryDetails
+    , signatorymagichash4 :: MagicHash
+    , maybesignatory4     :: Maybe Signatory
+    , maybesigninfo4      :: Maybe SignInfo
+    , maybeseeninfo4      :: Maybe SignInfo
+    , invitationdeliverystatus4 :: MailsDeliveryStatus
+    }
+    deriving (Eq, Ord, Typeable)
+
+data SignatoryLink = SignatoryLink 
+    { signatorylinkid    :: SignatoryLinkID
+    , signatorydetails   :: SignatoryDetails
+    , signatorymagichash :: MagicHash
+    , maybesignatory     :: Maybe Signatory
+    , maybesigninfo      :: Maybe SignInfo
+    , maybeseeninfo      :: Maybe SignInfo
+    , invitationdeliverystatus :: MailsDeliveryStatus
+    , signatorysignatureinfo :: Maybe SignatureInfo
+    }    
+    deriving (Eq, Ord, Typeable, Data)
+
+data SignInfo = SignInfo
+    { signtime :: MinutesTime
+    , signipnumber :: Word32
+    }
+    deriving (Eq, Ord, Typeable, Data)
+
+data SignInfo0 = SignInfo0
+    { signtime0 :: MinutesTime
+    }
+    deriving (Eq, Ord, Typeable)
+
+newtype Signatory = Signatory { unSignatory :: UserID }
+    deriving (Eq, Ord, Typeable, Data)
+
+{-
+   Document start in Preparation state.
+
+   Meaning:
+   * Preparation: Only author can see it. He's still editing.
+   * Pending: People can sign document. Could be timed out.
+   * AwaitingAuthor: Everyone has signed but the author.
+   * Closed: Everybody signed. This is final state.
+   * Canceled: Author has canceled the document.
+   * Timedout: This works as autocancel and has exactly same 
+     properties.
+
+   Transitions:
+   * Preparation to Pending: When invitations are sent.
+   * Preparation to Cancel: mail about cancel to 
+     all who have signed it already is sent.
+     TODO: Should other parties get an email?
+   * Preparation to Timedout: mail about timeout to 
+     all who have signed it already is sent.
+   * Pending to Closed: When everyone has signed. 
+     Info about closed deal is sent to everybody involved.
+   * Pending to AwaitingAuthor: When all signatories have signed and there were fields.
+     Info is sent to author.
+   * AwaitingAuthor to Closed: Author signs it.
+   * Pending to Cancel: Send no emails.
+   * Pending to Timeout: TODO: No action?
+
+   Allowed actions:
+   * Preparation: change document, change title, add/rem signatories
+   * Pending: change email of a signatory, signatory can sign
+   * AwaitingAuthor: autho can sign.
+   * Closed: nothing
+   * Canceled: edit back to Preparation
+   * Timedout: edit back to Preparation
+  
+   Archived bit:
+   * This bit just moves document out of main view.
+ -}
+
+data DocumentStatus = Preparation 
+                    | Pending  
+                    | Closed 
+                    | Canceled 
+                    | Timedout
+                    | Rejected
+                    | AwaitingAuthor
+                    | DocumentError String
+    deriving (Eq, Ord, Typeable, Data)
+                    
+data DocumentType = Contract | Template
+    deriving (Eq, Ord, Typeable, Data)
+
+data ChargeMode = ChargeInitialFree   -- initial 5 documents are free
+                | ChargeNormal        -- value times number of people involved
+
+    deriving (Eq, Ord, Typeable, Data)
+
+data DocumentHistoryEntry = DocumentHistoryCreated { dochisttime :: MinutesTime }
+                          | DocumentHistoryInvitationSent { dochisttime :: MinutesTime
+                                                          , ipnumber :: Word32
+                                                          }    -- changed state from Preparatio to Pending
+    deriving (Eq, Ord, Typeable, Data)
+
+data DocStats = DocStats {
+                 doccount :: Int
+               , signaturecount :: Int
+             }
+    deriving (Eq, Ord, Typeable, Data)
+
+
+data Document0 = Document0
+    { documentid0               :: DocumentID
+    , documenttitle0            :: BS.ByteString
+    , documentauthor0           :: Author
+    , documentsignatorylinks0   :: [SignatoryLink]  
+    , documentfiles0            :: [File]
+    , documentstatus0           :: DocumentStatus
+    , documentctime0            :: MinutesTime
+    , documentmtime0            :: MinutesTime
+    }
+    deriving (Eq, Ord, Typeable)
+
+data Document1 = Document1
+    { documentid1               :: DocumentID
+    , documenttitle1            :: BS.ByteString
+    , documentauthor1           :: Author
+    , documentsignatorylinks1   :: [SignatoryLink]  
+    , documentfiles1            :: [File]
+    , documentstatus1           :: DocumentStatus
+    , documentctime1            :: MinutesTime
+    , documentmtime1            :: MinutesTime
+    , documentchargemode1       :: ChargeMode
+    }
+    deriving (Eq, Ord, Typeable)
+
+data Document2 = Document2
+    { documentid2               :: DocumentID
+    , documenttitle2            :: BS.ByteString
+    , documentauthor2           :: Author
+    , documentsignatorylinks2   :: [SignatoryLink]  
+    , documentfiles2            :: [File]
+    , documentstatus2           :: DocumentStatus
+    , documentctime2            :: MinutesTime
+    , documentmtime2            :: MinutesTime
+    , documentchargemode2       :: ChargeMode
+    , documentdaystosign2       :: Int
+    , documenttimeouttime2      :: Maybe TimeoutTime
+
+    -- we really should keep history here so we know what happened
+    }
+    deriving (Eq, Ord, Typeable)
+
+data Document3 = Document3
+    { documentid3               :: DocumentID
+    , documenttitle3            :: BS.ByteString
+    , documentauthor3           :: Author
+    , documentsignatorylinks3   :: [SignatoryLink]  
+    , documentfiles3            :: [File]
+    , documentstatus3           :: DocumentStatus
+    , documentctime3            :: MinutesTime
+    , documentmtime3            :: MinutesTime
+    , documentchargemode3       :: ChargeMode
+    , documentdaystosign3       :: Int
+    , documenttimeouttime3      :: Maybe TimeoutTime
+    , documentdeleted3          :: Bool -- should not appear in list
+    , documentauthordetails3    :: SignatoryDetails
+    , documentmaybesigninfo3    :: Maybe SignInfo      -- about the author signed the document
+    , documenthistory3          :: [DocumentHistoryEntry]
+
+    -- we really should keep history here so we know what happened
+    }
+    deriving (Eq, Ord, Typeable)
+
+data Document4 = Document4
+    { documentid4               :: DocumentID
+    , documenttitle4            :: BS.ByteString
+    , documentauthor4           :: Author
+    , documentsignatorylinks4   :: [SignatoryLink]  
+    , documentfiles4            :: [File]
+    , documentstatus4           :: DocumentStatus
+    , documentctime4            :: MinutesTime
+    , documentmtime4            :: MinutesTime
+    , documentchargemode4       :: ChargeMode
+    , documentdaystosign4       :: Int
+    , documenttimeouttime4      :: Maybe TimeoutTime 
+    , documentdeleted4          :: Bool -- should not appear in list
+    , documentauthordetails4    :: SignatoryDetails
+    , documentmaybesigninfo4    :: Maybe SignInfo      -- about the author signed the document |should be droped and check at runtime|
+    , documenthistory4          :: [DocumentHistoryEntry]
+    , documentinvitetext4       :: BS.ByteString
+
+    -- we really should keep history here so we know what happened
+    }
+    deriving (Eq, Ord, Typeable)
+
+data Document5 = Document5
+    { documentid5               :: DocumentID
+    , documenttitle5            :: BS.ByteString
+    , documentauthor5           :: Author
+    , documentsignatorylinks5   :: [SignatoryLink]  
+    , documentfiles5            :: [File]
+    , documentsealedfiles5      :: [File]
+    , documentstatus5           :: DocumentStatus
+    , documentctime5            :: MinutesTime
+    , documentmtime5            :: MinutesTime
+    , documentchargemode5       :: ChargeMode
+    , documentdaystosign5       :: Int
+    , documenttimeouttime5      :: Maybe TimeoutTime 
+    , documentdeleted5          :: Bool -- should not appear in list
+    , documentauthordetails5    :: SignatoryDetails
+    , documentmaybesigninfo5    :: Maybe SignInfo      -- about the author signed the document |should be droped and check at runtime|
+    , documenthistory5          :: [DocumentHistoryEntry]
+    , documentinvitetext5       :: BS.ByteString
+    }
+    deriving (Eq, Ord, Typeable)
+
+data Document6 = Document6
+    { documentid6               :: DocumentID
+    , documenttitle6            :: BS.ByteString
+    , documentauthor6           :: Author
+    , documentsignatorylinks6   :: [SignatoryLink]  
+    , documentfiles6            :: [File]
+    , documentsealedfiles6      :: [File]
+    , documentstatus6           :: DocumentStatus
+    , documentctime6            :: MinutesTime
+    , documentmtime6            :: MinutesTime
+    , documentchargemode6       :: ChargeMode
+    , documentdaystosign6       :: Maybe Int
+    , documenttimeouttime6      :: Maybe TimeoutTime 
+    , documentdeleted6          :: Bool -- should not appear in list
+    , documentauthordetails6    :: SignatoryDetails
+    , documentmaybesigninfo6    :: Maybe SignInfo      -- about the author signed the document 
+    , documenthistory6          :: [DocumentHistoryEntry]
+    , documentinvitetext6       :: BS.ByteString
+
+    -- we really should keep history here so we know what happened
+    }
+    deriving (Eq, Ord, Typeable)
+
+data Document7 = Document7
+    { documentid7               :: DocumentID
+    , documenttitle7            :: BS.ByteString
+    , documentauthor7           :: Author
+    , documentsignatorylinks7   :: [SignatoryLink]  
+    , documentfiles7            :: [File]
+    , documentsealedfiles7      :: [File]
+    , documentstatus7           :: DocumentStatus
+    , documentctime7            :: MinutesTime
+    , documentmtime7            :: MinutesTime
+    , documentchargemode7       :: ChargeMode
+    , documentdaystosign7       :: Maybe Int
+    , documenttimeouttime7      :: Maybe TimeoutTime 
+    -- | If true, this Document will not appear in the document list
+    , documentdeleted7          :: Bool
+    , documenthistory7          :: [DocumentHistoryEntry]
+    , documentinvitetext7       :: BS.ByteString
+    }
+    deriving (Eq, Ord, Typeable)
+
+data Document8 = Document8
+    { documentid8               :: DocumentID
+    , documenttitle8            :: BS.ByteString
+    , documentauthor8           :: Author
+    , documentsignatorylinks8   :: [SignatoryLink]  
+    , documentfiles8            :: [File]
+    , documentsealedfiles8      :: [File]
+    , documentstatus8           :: DocumentStatus
+    , documentctime8            :: MinutesTime
+    , documentmtime8            :: MinutesTime
+    , documentchargemode8       :: ChargeMode
+    , documentdaystosign8       :: Maybe Int
+    , documenttimeouttime8      :: Maybe TimeoutTime 
+    -- | If true, this Document will not appear in the document list
+    , documentdeleted8          :: Bool
+    , documenthistory8          :: [DocumentHistoryEntry]
+    , documentinvitetext8       :: BS.ByteString
+    , documenttrustweaverreference8 :: Maybe BS.ByteString
+    }
+    deriving (Eq, Ord, Typeable)
+
+data Document9 = Document9
+    { documentid9               :: DocumentID
+    , documenttitle9            :: BS.ByteString
+    , documentauthor9           :: Author
+    , documentsignatorylinks9   :: [SignatoryLink]  
+    , documentfiles9            :: [File]
+    , documentsealedfiles9      :: [File]
+    , documentstatus9           :: DocumentStatus
+    , documentctime9            :: MinutesTime
+    , documentmtime9            :: MinutesTime
+    , documentchargemode9       :: ChargeMode
+    , documentdaystosign9       :: Maybe Int
+    , documenttimeouttime9      :: Maybe TimeoutTime 
+    -- | If true, this Document will not appear in the document list
+    , documentdeleted9          :: Bool
+    , documenthistory9          :: [DocumentHistoryEntry]
+    , documentinvitetext9       :: BS.ByteString
+    , documenttrustweaverreference9 :: Maybe BS.ByteString
+    , documentallowedidtypes9   :: [IdentificationType]
+    }
+    deriving (Eq, Ord, Typeable)
+
+data Document10 = Document10
+    { documentid10               :: DocumentID
+    , documenttitle10            :: BS.ByteString
+    , documentauthor10           :: Author
+    , documentsignatorylinks10   :: [SignatoryLink]  
+    , documentfiles10            :: [File]
+    , documentsealedfiles10      :: [File]
+    , documentstatus10           :: DocumentStatus
+    , documentctime10            :: MinutesTime
+    , documentmtime10            :: MinutesTime
+    , documentchargemode10       :: ChargeMode
+    , documentdaystosign10       :: Maybe Int
+    , documenttimeouttime10      :: Maybe TimeoutTime 
+    -- | If true, this Document will not appear in the document list
+    , documentdeleted10          :: Bool
+    , documenthistory10          :: [DocumentHistoryEntry]
+    , documentinvitetext10       :: BS.ByteString
+    , documenttrustweaverreference10 :: Maybe BS.ByteString
+    , documentallowedidtypes10   :: [IdentificationType]
+    , authornameplacements10 :: [FieldPlacement]
+    , authorcompanyplacements10 :: [FieldPlacement]
+    , authoremailplacements10 :: [FieldPlacement]
+    , authornumberplacements10 :: [FieldPlacement]
+    , authorotherfields10 :: [FieldDefinition]
+    }
+    deriving (Eq, Ord, Typeable)
+    
+data Document11 = Document11
+    { documentid11               :: DocumentID
+    , documenttitle11            :: BS.ByteString
+    , documentauthor11           :: Author
+    , documentsignatorylinks11   :: [SignatoryLink]  
+    , documentfiles11            :: [File]
+    , documentsealedfiles11      :: [File]
+    , documentstatus11           :: DocumentStatus
+    , documentctime11            :: MinutesTime
+    , documentmtime11            :: MinutesTime
+    , documentchargemode11       :: ChargeMode
+    , documentdaystosign11       :: Maybe Int
+    , documenttimeouttime11      :: Maybe TimeoutTime 
+    , documentdeleted11          :: Bool
+    , documenthistory11          :: [DocumentHistoryEntry]
+    , documentinvitetext11       :: BS.ByteString
+    , documenttrustweaverreference11 :: Maybe BS.ByteString
+    , documentallowedidtypes11   :: [IdentificationType]
+    , authorfstnameplacements11 :: [FieldPlacement]
+    , authorsndnameplacements11 :: [FieldPlacement]
+    , authorcompanyplacements11 :: [FieldPlacement]
+    , authoremailplacements11 :: [FieldPlacement]
+    , authornumberplacements11 :: [FieldPlacement]
+    , authorotherfields11 :: [FieldDefinition]
+    }
+    deriving (Eq, Ord, Typeable)
+    
+data Document = Document
+    { documentid               :: DocumentID
+    , documenttitle            :: BS.ByteString
+    , documentauthor           :: Author
+    , documentsignatorylinks   :: [SignatoryLink]  
+    , documentfiles            :: [File]
+    , documentsealedfiles      :: [File]
+    , documentstatus           :: DocumentStatus
+    , documenttype             :: DocumentType
+    , documentctime            :: MinutesTime
+    , documentmtime            :: MinutesTime
+    , documentchargemode       :: ChargeMode
+    , documentdaystosign       :: Maybe Int
+    , documenttimeouttime      :: Maybe TimeoutTime 
+    -- | If true, this Document will not appear in the document list
+    , documentdeleted          :: Bool
+    , documenthistory          :: [DocumentHistoryEntry]
+    , documentinvitetext       :: BS.ByteString
+    , documenttrustweaverreference :: Maybe BS.ByteString
+    , documentallowedidtypes   :: [IdentificationType]
+    , authorfstnameplacements :: [FieldPlacement]
+    , authorsndnameplacements :: [FieldPlacement]
+    , authorcompanyplacements :: [FieldPlacement]
+    , authoremailplacements :: [FieldPlacement]
+    , authornumberplacements :: [FieldPlacement]
+    , authorotherfields :: [FieldDefinition]
+    }
+
+{-| Watch out. This instance is a bit special. It has to be
+   "Document" - as this is what database uses as table name.  Simple
+   deriving clause will create a "MyApp.MyModule.Document"!  -}
+
+instance Typeable Document where typeOf _ = mkTypeOf "Document"
+
+deriving instance Data Document
+    
+data File0 = File0 
+    { fileid0       :: FileID
+    , filename0     :: BS.ByteString
+    , filepdf0      :: BS.ByteString 
+    , filejpgpages0 :: [BS.ByteString]
+    }
+    deriving (Eq, Ord, Typeable)
+
+data File1 = File1 
+    { fileid1       :: FileID
+    , filename1     :: BS.ByteString
+    , filepdf1      :: BS.ByteString 
+    , filejpgpages1 :: JpegPages
+    }
+    deriving (Eq, Ord, Typeable)
+
+data File2 = File2 
+    { fileid2       :: FileID
+    , filename2     :: BS.ByteString
+    , filepdf2      :: BS.ByteString 
+    }
+    deriving (Eq, Ord, Typeable)
+
+data File = File 
+    { fileid          :: FileID
+    , filename        :: BS.ByteString
+    , filestorage     :: FileStorage
+    }
+    deriving (Typeable, Data)
+
+data JpegPages0 = JpegPagesPending0
+               | JpegPages0 [BS.ByteString]   
+               | JpegPagesError0 BS.ByteString 
+    deriving (Eq, Ord, Typeable)
+
+data JpegPages = JpegPagesPending
+               | JpegPages [(BS.ByteString,Int,Int)]  -- Data + width + height (scaled with some resolution)
+               | JpegPagesError BS.ByteString 
+    deriving (Eq, Ord, Typeable, Data)
+               
+data FileStorage = FileStorageMemory BS.ByteString
+                 | FileStorageAWS BS.ByteString BS.ByteString -- ^ bucket, url inside bucket
+    deriving (Eq, Ord, Typeable, Data)
+
+
 
 instance Eq Document where
     a == b = documentid a == documentid b
@@ -612,42 +697,6 @@ instance Ord Document where
     compare a b | documentid a == documentid b = EQ
                 | otherwise = compare (documentmtime b,documenttitle a,documentid a) 
                                       (documentmtime a,documenttitle b,documentid b)
-                              -- see above: we use reverse time here!
-
-instance Eq Document0 where
-    a == b = documentid0 a == documentid0 b
-
-instance Ord Document0 where
-    compare a b | documentid0 a == documentid0 b = EQ
-                | otherwise = compare (documentmtime0 b,documenttitle0 a,documentid0 a) 
-                                      (documentmtime0 a,documenttitle0 b,documentid0 b)
-                              -- see above: we use reverse time here!
-
-instance Eq Document1 where
-    a == b = documentid1 a == documentid1 b
-
-instance Ord Document1 where
-    compare a b | documentid1 a == documentid1 b = EQ
-                | otherwise = compare (documentmtime1 b,documenttitle1 a,documentid1 a) 
-                                      (documentmtime1 a,documenttitle1 b,documentid1 b)
-                              -- see above: we use reverse time here!
-
-instance Eq Document2 where
-    a == b = documentid2 a == documentid2 b
-
-instance Ord Document2 where
-    compare a b | documentid2 a == documentid2 b = EQ
-                | otherwise = compare (documentmtime2 b,documenttitle2 a,documentid2 a) 
-                                      (documentmtime2 a,documenttitle2 b,documentid2 b)
-                              -- see above: we use reverse time here!
-
-instance Eq Document3 where
-    a == b = documentid3 a == documentid3 b
-
-instance Ord Document3 where
-    compare a b | documentid3 a == documentid3 b = EQ
-                | otherwise = compare (documentmtime3 b,documenttitle3 a,documentid3 a) 
-                                      (documentmtime3 a,documenttitle3 b,documentid3 b)
                               -- see above: we use reverse time here!
 
 instance Eq File where
