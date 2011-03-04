@@ -10,16 +10,14 @@ import System.IO.Unsafe
 import System.Locale
 import Data.Time
 
-$(deriveAll [''Eq, ''Ord, ''Default, ''Read]
-  [d|
-
-   -- | Time in minutes from 1970-01-01 00:00 in UTC coordinates
-   newtype MinutesTime0 = MinutesTime0 Int
-   data MinutesTime = MinutesTime {
-                                         minutes::Int,
-                                         secs::Int
-                                        }
- |])
+-- | Time in minutes from 1970-01-01 00:00 in UTC coordinates
+newtype MinutesTime0 = MinutesTime0 Int
+       deriving (Eq, Ord, Typeable)
+data MinutesTime = MinutesTime {
+     minutes::Int,
+     secs::Int
+    }
+    deriving (Eq, Ord, Typeable, Data, Read)
 
 instance Version MinutesTime0
 $(deriveSerialize ''MinutesTime0)
