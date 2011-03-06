@@ -786,7 +786,7 @@ function isPlacedField(field) {
   return $(field).hasClass("placedfield");
 }
 
-safeReady(function() {
+/*safeReady(function() {
   $("#signStepsContainer").droppable({ drop: function(event, ui) {
     var field = $(ui.draggable);
     var helper = $(ui.helper);
@@ -803,7 +803,7 @@ safeReady(function() {
     }
     return false;
   }});
-});
+});*/
 
 safeReady(function() {
   $(".pagediv", "#documentBox")
@@ -914,10 +914,8 @@ safeReady(function() {
         var field = $(event.target);
         var helper = $(ui.helper);
         
-        // for some reason, this needs to be helper (field is
-        // empty)
-        if(isPlacedField(helper)) {
-          $(this).detach();
+        if(isPlacedField(field)) {
+          helper.detach();
           field.detach();
         }
         
