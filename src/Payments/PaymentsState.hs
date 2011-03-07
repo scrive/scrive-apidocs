@@ -95,14 +95,14 @@ data PaymentAccountType = Private | Minimal | Medium | Maximal | Corp
 data Money = Money { money:: Integer }
     deriving (Eq, Ord, Show, Read, Typeable, Data)
       
-      -- | Monthly payments for account and subaccounts
+-- | Monthly payments for account and subaccounts
 data PaymentForAccounts value = PaymentForAccounts {
                                  forAccount::value,
                                  forSubaccount::value 
                                }
     deriving (Eq, Ord, Show, Read, Typeable, Data)
 
-      -- | Payments for each signature on document                        
+-- | Payments for each signature on document                        
 data PaymentForSignature value = PaymentForSignature {
                                  forEmailSignature::value,
                                  forElegSignature::value,  
@@ -112,21 +112,21 @@ data PaymentForSignature value = PaymentForSignature {
                                }                  
     deriving (Eq, Ord, Show, Read, Typeable, Data)
 
-      -- | Payments for storage of signed documents                       
+-- | Payments for storage of signed documents                       
 data PaymentForSignedStorage value = PaymentForSignedStorage {
      forAmazon::value,
      forTrustWeaver::value
     }  
     deriving (Eq, Ord, Show, Read, Typeable, Data)
 
-      -- | Payments for storage of of unsigned templates and drafts       
+-- | Payments for storage of of unsigned templates and drafts       
 data PaymentForOtherStorage value  = PaymentForOtherStorage {
                                  forTemplate::value,
                                  forDraft::value
                                }         
     deriving (Eq, Ord, Show, Read, Typeable, Data)
 
-      --  | How the user should pay for signing etc                       
+--  | How the user should pay for signing etc                       
 data UserPaymentPolicy =  UserPaymentPolicy {
                paymentaccounttype:: PaymentAccountType
              , custompaymentchange:: PaymentChange 
@@ -134,7 +134,7 @@ data UserPaymentPolicy =  UserPaymentPolicy {
       }  
     deriving (Eq, Ord, Show, Read, Typeable, Data)
 
-      -- | Info about free signatures left and money for user
+-- | Info about free signatures left and money for user
 data UserPaymentAccount0 = UserPaymentAccount0 {
                paymentaccountmoney0 ::Money
              , paymentaccountfreesignatures0:: Int  
