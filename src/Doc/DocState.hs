@@ -182,7 +182,7 @@ fileMovedToAWS fileid' bucket url = do
   case getOne (documents @= fileid') of
     Nothing -> return $ Left "no such file id"
     Just document ->
-        modifyDocument (documentid document) $ moved
+        modifyContract (documentid document) $ moved
   where
     moved doc@Document{documentfiles,documentsealedfiles} =
         Right $ doc { documentfiles = map moved1 documentfiles
@@ -210,7 +210,7 @@ attachFile :: DocumentID
 attachFile documentid filename1 content = do
   documents <- ask
   fileid2 <- getUnique documents FileID
-  modifyDocument documentid $ \document ->
+  modifyContractOrTemplate documentid $ \document ->
       let nfile = File { fileid = fileid2
                        , filename = filename1
                        , filestorage = FileStorageMemory content
@@ -224,7 +224,7 @@ attachSealedFile :: DocumentID
 attachSealedFile documentid filename1 content = do
   documents <- ask
   fileid2 <- getUnique documents FileID
-  modifyDocument documentid $ \document ->
+  modifyContract documentid $ \document ->
       let nfile = File { fileid = fileid2
                        , filename = filename1
                        , filestorage = FileStorageMemory content
@@ -241,7 +241,7 @@ updateDocument :: MinutesTime
                -> [IdentificationType]
                -> Update Documents (Either String Document)
 updateDocument time documentid signatories daystosign invitetext author authordetails idtypes =
-    modifyDocument' documentid $ \document ->  
+    modifyContractOrTemplateWithAction documentid $ \document ->  
         if documentstatus document == Preparation
          then do
              let authoremail = unEmail $ useremail $ userinfo author
@@ -265,7 +265,7 @@ timeoutDocument :: DocumentID
                 -> MinutesTime
                 -> Update Documents (Either String Document)
 timeoutDocument documentid time = do
-  modifyDocument documentid $ \document ->
+  modifyContract documentid $ \document ->
       let
           newdocument = document { documentstatus = Timedout }
       in case documentstatus document of
@@ -280,7 +280,7 @@ signDocument :: DocumentID
              -> [(BS.ByteString, BS.ByteString)]
              -> Update Documents (Either String Document)
 signDocument documentid signatorylinkid1 time ipnumber msiginfo fields = do
-  modifyDocument documentid $ \document ->
+  modifyContract documentid $ \document ->
       let
           signeddocument = document { documentsignatorylinks = newsignatorylinks }
           newsignatorylinks = map maybesign (documentsignatorylinks document)
@@ -334,7 +334,7 @@ authorSendDocument :: DocumentID
                    -> Maybe SignatureInfo
                    -> Update Documents (Either String Document)
 authorSendDocument documentid time ipnumber author msiginfo =
-    modifyDocument documentid $ \document ->
+    modifyContract documentid $ \document ->
         case documentstatus document of
           Preparation -> 
               let timeout = do
@@ -360,7 +360,7 @@ authorSignDocument :: DocumentID
                    -> Maybe SignatureInfo
                    -> Update Documents (Either String Document)
 authorSignDocument documentid time ipnumber author msiginfo =
-    modifyDocument documentid $ \document ->
+    modifyContract documentid $ \document ->
         case documentstatus document of
           Preparation -> 
               let timeout = do
@@ -383,7 +383,7 @@ getMagicHash = getRandom
 
 setSignatoryLinks :: DocumentID -> [SignatoryLink] -> Update Documents (Either String Document)
 setSignatoryLinks docid links =
-    modifyDocument docid (\doc -> Right doc { documentsignatorylinks = links })
+    modifyContractOrTemplate docid (\doc -> Right doc { documentsignatorylinks = links })
 
 rejectDocument :: DocumentID
                -> SignatoryLinkID 
@@ -391,7 +391,7 @@ rejectDocument :: DocumentID
                -> Word32 
                -> Update Documents (Either String Document)
 rejectDocument documentid signatorylinkid1 time ipnumber = do
-  modifyDocument documentid $ \document ->
+  modifyContract documentid $ \document ->
       let
           newdocument = document { documentstatus = Rejected }
           -- FIXME: need to say who has cancelled the document
@@ -421,14 +421,14 @@ markDocumentSeen documentid signatorylinkid1 time ipnumber = do
             | signatorylinkid == signatorylinkid1 && maybeseeninfo==Nothing = 
               l { maybeseeninfo = Just (SignInfo time ipnumber) }
             | otherwise = l
-      modifyDocument documentid $ const Right document'
+      modifyContract documentid $ const Right document'
       return (Just document')
 
 
 -- | We set info about delivering invitation. On undeliver we autocancel document
 setInvitationDeliveryStatus::DocumentID -> SignatoryLinkID -> MailsDeliveryStatus -> Update Documents (Either String Document)
 setInvitationDeliveryStatus docid siglnkid status = do
-    modifyDocument docid $ \doc -> do
+    modifyContract docid $ \doc -> do
             Right $ doc {documentsignatorylinks = map setStatus $ documentsignatorylinks doc}                    
     where 
         setStatus sl = 
@@ -457,7 +457,7 @@ fileModTime fileid = do
 saveDocumentForSignedUser :: DocumentID -> UserID -> SignatoryLinkID 
                           -> Update Documents (Either String Document)
 saveDocumentForSignedUser documentid userid signatorylinkid1 = do
-  modifyDocument documentid $ \document ->
+  modifyContract documentid $ \document ->
       let signeddocument = document { documentsignatorylinks = newsignatorylinks }
           newsignatorylinks = map maybesign (documentsignatorylinks document)
           maybesign x@(SignatoryLink {signatorylinkid} ) 
@@ -489,7 +489,7 @@ getDocumentStatsByUser user = do
 setDocumentTimeoutTime :: DocumentID -> TimeoutTime -> Update Documents (Either String Document)
 setDocumentTimeoutTime documentid timeouttime = do
   -- check if document status change is a legal transition
-  modifyDocument documentid $ \doc ->
+  modifyContract documentid $ \doc ->
       Right $ doc{ documenttimeouttime = Just timeouttime }
 
 
@@ -497,7 +497,7 @@ archiveDocuments :: User -> [DocumentID] -> Update Documents ()
 archiveDocuments user docidlist = do
   -- FIXME: can use a fold here
   forM_ docidlist $ \docid -> 
-      modifyDocument docid $ \doc -> 
+     modifyContractOrTemplate docid $ \doc -> 
           if (isAuthor doc user)
             then Right $ doc { documentdeleted = True }
             else Left "Not author can not delete document"
@@ -513,7 +513,7 @@ fragileTakeOverDocuments destuser srcuser = do
   mapM_ (updateDoc takeoverAsSignatory) sigdocuments
   return ()
     where 
-        updateDoc takeover document = modifyDocument (documentid document) (\doc -> Right $ takeover doc)
+        updateDoc takeover document = modifyContractOrTemplate (documentid document) (\doc -> Right $ takeover doc)
         takeoverAsAuthor document = document { documentauthor = Author (userid destuser) }
         takeoverAsSignatory document = document { documentsignatorylinks = takeoverSigLinks (documentsignatorylinks document) }
         takeoverSigLinks siglinks = (map takeoverSigLink matching) ++ others
@@ -535,7 +535,7 @@ closeDocument :: DocumentID
               -> Maybe SignatureInfo
               -> Update Documents (Maybe Document)
 closeDocument docid time ipnumber author msiginfo = do
-  doc <- modifyDocument docid 
+  doc <- modifyContract docid 
          (\document -> let timeout = do
                                       days <- documentdaystosign document 
                                       return $ TimeoutTime $ (days * 24 *60) `minutesAfter` time
@@ -554,19 +554,12 @@ closeDocument docid time ipnumber author msiginfo = do
 --We should add current state checkers here (not co cancel closed documents etc.)
 cancelDocument :: DocumentID -> Update Documents (Maybe Document)
 cancelDocument docid = do
-  doc <- modifyDocument docid (\d -> Right $ d { documentstatus = Canceled }) 
+  doc <- modifyContract docid (\d -> Right $ d { documentstatus = Canceled }) 
   case doc of
     Left _ -> return Nothing
     Right d -> return $ Just d
 
-{-
-withdrawnDocument:: DocumentID -> Update Documents (Maybe Document)
-withdrawnDocument docid = do
-  doc <- modifyDocument docid (\d -> Right $ d { documentstatus = Withdrawn }) 
-  case doc of
-    Left _ -> return Nothing
-    Right d -> return $ Just d
--}
+
 
 getFilesThatShouldBeMovedToAmazon :: Query Documents [File]
 getFilesThatShouldBeMovedToAmazon = do
@@ -589,7 +582,7 @@ getFilesThatShouldBeMovedToAmazon = do
 -} 
 restartDocument :: DocumentID -> User-> Update Documents (Either String Document)
 restartDocument docid user =
-   modifyDocument' docid (\d -> tryToGetRestarted d user)    
+   modifyContractWithAction docid (\d -> tryToGetRestarted d user)    
 
 
 {- | 
@@ -618,7 +611,7 @@ clearSignInfofromDoc doc author = do
              }
 
 changeSignatoryEmailWhenUndelivered::DocumentID -> SignatoryLinkID -> BS.ByteString ->  Update Documents (Either String Document)
-changeSignatoryEmailWhenUndelivered did slid email = modifyDocument did $ changeEmail
+changeSignatoryEmailWhenUndelivered did slid email = modifyContract did $ changeEmail
   where changeEmail doc = let signlinks = documentsignatorylinks doc
                               mnsignlink = do
                                            sl <- find ((== slid) . signatorylinkid) signlinks
@@ -651,6 +644,12 @@ signLinkFromDetails emails details = do
                      , signatorysignatureinfo = Nothing
                      }
                      
+          where
+          findMaybeUserByEmail [] _ = Nothing
+          findMaybeUserByEmail ((email, user):eus) em 
+            | email == em = Just user
+            | otherwise   = findMaybeUserByEmail eus em
+            
 getUniqueSignatoryLinkID :: Update Documents SignatoryLinkID
 getUniqueSignatoryLinkID = do
   sg <- ask
@@ -659,14 +658,14 @@ getUniqueSignatoryLinkID = do
 
 setDocumentTrustWeaverReference :: DocumentID -> String -> Update Documents (Either String Document)
 setDocumentTrustWeaverReference documentid reference = do
-  modifyDocument documentid $ \document ->
+  modifyContract documentid $ \document ->
       let
           newdocument = document { documenttrustweaverreference = Just (BS.fromString reference) }
       in Right newdocument
   
 errorDocument :: DocumentID -> String -> Update Documents (Either String Document)
 errorDocument documentid errormsg = 
-  modifyDocument documentid $ \document ->
+  modifyContractOrTemplate documentid $ \document ->
       let
           newdocument = document { documentstatus = DocumentError errormsg }
       in Right newdocument

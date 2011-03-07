@@ -12,7 +12,26 @@
 --                      and some updates make no sense on templates.
 -----------------------------------------------------------------------------
 
-module Doc.DocStateUtils
+module Doc.DocStateUtils (
+    -- DB updates
+      insertNewDocument
+    , modifyContract
+    , modifyContractWithAction 
+    , modifyContractOrTemplate
+    , modifyContractOrTemplateWithAction 
+    
+    -- Checkers - checking properties of document
+    , MayBeAuthor(isAuthor)
+    , anyInvitationUndelivered
+    
+    -- Getters - digging some info from about document
+    , signatoryname
+    , undeliveredSignatoryLinks
+    
+    -- Other utils
+    , signatoryDetailsFromUser
+    , isMatchingSignatoryLink
+    )
 
 where
 import Happstack.Data
@@ -55,50 +74,53 @@ insertNewDocument doc =
     modify $ insert docWithId
     return docWithId
 
+-- | There are six methods for update. We want force an exact info if any operation that chandes document makes sense on templates.
 
-modifyDocument :: DocumentID 
+modifyContract :: DocumentID 
                -> (Document -> Either String Document) 
                -> Update Documents (Either String Document)
-modifyDocument docid action = modifyDocument' docid (return . action)
-                
-modifyDocument' :: DocumentID 
+modifyContract docid action = modifyContractWithAction docid (return . action)
+
+
+modifyContractOrTemplate :: DocumentID 
+               -> (Document -> Either String Document) 
+               -> Update Documents (Either String Document)
+modifyContractOrTemplate docid action = modifyContractOrTemplateWithAction docid (return . action)
+
+
+modifyContractWithAction :: DocumentID 
                -> (Document ->  Update Documents (Either String Document)) 
                -> Update Documents (Either String Document)
-modifyDocument' docid action = do
+modifyContractWithAction  = modifyDocumentWithAction isContract
+
+
+modifyContractOrTemplateWithAction:: DocumentID 
+               -> (Document ->  Update Documents (Either String Document)) 
+               -> Update Documents (Either String Document)
+modifyContractOrTemplateWithAction = modifyDocumentWithAction (const True)
+
+
+modifyDocumentWithAction :: (Document -> Bool) -> DocumentID 
+               -> (Document ->  Update Documents (Either String Document)) 
+               -> Update Documents (Either String Document)             
+               
+modifyDocumentWithAction condition docid action = do
   documents <- ask
   case getOne (documents @= docid) of
     Nothing -> return $ Left "no such document"
     Just document -> 
-        do
-        actionresult <- action document
-        case actionresult of
-          Left message -> return $ Left message
-          Right newdocument -> 
-              do
-                when (documentid newdocument /= docid) $ error "new document must have same id as old one"
-                modify (updateIx docid newdocument)
-                return $ Right newdocument
+      if (condition document)
+       then do
+             actionresult <- action document
+             case actionresult of
+                Left message -> return $ Left message
+                Right newdocument -> do
+                    when (documentid newdocument /= docid) $ error "new document must have same id as old one"
+                    modify (updateIx docid newdocument)
+                    return $ Right newdocument
+       else return $ Left "Document didn't matche condition required for this action"
 
-
--- OTHER UTILS
-
-signatoryname :: SignatoryDetails -> BS.ByteString
-signatoryname s = 
-    if (BS.null $ signatorysndname s) 
-        then (signatoryfstname s) 
-        else (signatoryfstname s) `BS.append` (BS.fromString " ") `BS.append` (signatorysndname s)
-
-       
-isMatchingSignatoryLink :: User -> SignatoryLink -> Bool
-isMatchingSignatoryLink user sigLink = signatoryMatches || emailMatches
-  where 
-  signatoryMatches = maybe False (\s -> unSignatory s == userid user)  (maybesignatory sigLink)
-  emailMatches = (signatoryemail . signatorydetails $ sigLink) == (unEmail . useremail $ userinfo user)
-  
-findMaybeUserByEmail [] _ = Nothing
-findMaybeUserByEmail ((email, user):eus) em 
-    | email == em = Just user
-    | otherwise   = findMaybeUserByEmail eus em
+-- CHECKERS
 
 {- |
    Is the user an author of the document. We may want to ask the same if we just have userid or signatorylink
@@ -123,7 +145,22 @@ instance (MayBeAuthor a) => MayBeAuthor (Maybe a) where
 
 
 anyInvitationUndelivered =  not . Prelude.null . undeliveredSignatoryLinks
+
+isContract = ((==) Contract) . documenttype
+isTemplate = ((==) Template) . documenttype
+
+-- GETTERS
+
 undeliveredSignatoryLinks doc =  filter ((== Undelivered) . invitationdeliverystatus) $ documentsignatorylinks doc
+
+signatoryname :: SignatoryDetails -> BS.ByteString
+signatoryname s = 
+    if (BS.null $ signatorysndname s) 
+        then (signatoryfstname s) 
+        else (signatoryfstname s) `BS.append` (BS.fromString " ") `BS.append` (signatorysndname s)
+
+
+-- OTHER UTILS
 
 {- |
    Build a SignatoryDetails from a User with no fields
@@ -141,3 +178,10 @@ signatoryDetailsFromUser user =
                      , signatorynumberplacements = []
                      , signatoryotherfields = []
                      }
+                     
+isMatchingSignatoryLink :: User -> SignatoryLink -> Bool
+isMatchingSignatoryLink user sigLink = signatoryMatches || emailMatches
+  where 
+  signatoryMatches = maybe False (\s -> unSignatory s == userid user)  (maybesignatory sigLink)
+  emailMatches = (signatoryemail . signatorydetails $ sigLink) == (unEmail . useremail $ userinfo user)
+  
