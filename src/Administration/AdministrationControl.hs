@@ -278,19 +278,19 @@ handleCreateUser = onlySuperUser $ do
 {- | Reads params and returns function for conversion of user info. With no param leaves fields unchanged -}  
 getUserInfoChange::Kontra (UserInfo -> UserInfo)
 getUserInfoChange = do      
-                     muserfstname        <- getField' fromString "userfstname" 
-                     musersndname        <- getField' fromString "usersndname" 
-                     muserpersonalnumber <- getField' fromString "userpersonalnumber" 
-                     musercompanyname    <- getField' fromString "usercompanyname" 
-                     musercompanyposition    <- getField' fromString "usercompanyposition" 
-                     musercompanynumber  <- getField' fromString "usercompanynumber" 
-                     museraddress        <- getField' fromString "useraddress" 
-                     muserzip            <- getField' fromString "userzip" 
-                     musercity           <- getField' fromString "usercity" 
-                     musercountry        <- getField' fromString "usercountry" 
-                     muserphone          <- getField' fromString "userphone"
-                     musermobile         <- getField' fromString "usermobile" 
-                     museremail          <- getField' (Email . fromString)  "useremail" 
+                     muserfstname        <- getFieldUTF "userfstname" 
+                     musersndname        <- getFieldUTF "usersndname" 
+                     muserpersonalnumber <- getFieldUTF "userpersonalnumber" 
+                     musercompanyname    <- getFieldUTF "usercompanyname" 
+                     musercompanyposition    <- getFieldUTF "usercompanyposition" 
+                     musercompanynumber  <- getFieldUTF "usercompanynumber" 
+                     museraddress        <- getFieldUTF "useraddress" 
+                     muserzip            <- getFieldUTF "userzip" 
+                     musercity           <- getFieldUTF "usercity" 
+                     musercountry        <- getFieldUTF "usercountry" 
+                     muserphone          <- getFieldUTF "userphone"
+                     musermobile         <- getFieldUTF "usermobile" 
+                     museremail          <- fmap (fmap Email) $ getFieldUTF "useremail" 
                      return (\UserInfo {
                                     userfstname      
                                   , usersndname 
