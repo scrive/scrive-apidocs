@@ -98,13 +98,7 @@ import Mails.MailsUtil
 import Data.Data (Data)
 import qualified Data.Generics.SYB.WithClass.Derive as SYB
 import Doc.DocStateData
-
-
-signatoryname :: SignatoryDetails -> BS.ByteString
-signatoryname s = 
-    if (BS.null $ signatorysndname s) 
-        then (signatoryfstname s) 
-        else (signatoryfstname s) `BS.append` (BS.fromString " ") `BS.append` (signatorysndname s)
+import Doc.DocStateUtils
 
 getDocuments:: Query Documents [Document]
 getDocuments = do
@@ -134,13 +128,6 @@ getDocumentsBySignatory user = do
                                    && (Preparation /= documentstatus doc)
     return $ filter involvedAsSignatory (toList documents)
        
-isMatchingSignatoryLink :: User -> SignatoryLink -> Bool
-isMatchingSignatoryLink user sigLink = signatoryMatches || emailMatches
-  where signatoryMatches = case (maybesignatory sigLink) of
-                                             Just (Signatory sigid) | sigid == (userid user) -> True
-                                             _ -> False
-        emailMatches = (signatoryemail . signatorydetails $ sigLink) == (unEmail . useremail $ userinfo user)
-
 
 getTimeoutedButPendingDocuments :: MinutesTime -> Query Documents [Document]
 getTimeoutedButPendingDocuments now = do
@@ -156,11 +143,9 @@ newDocument :: User
             -> Bool -- is free?
             -> Update Documents Document
 newDocument user title ctime isfree = do
-  documents <- ask
-  docid <- getUnique64 documents DocumentID
   authorlink <- signLinkFromDetails [(unEmail $ useremail $ userinfo user, user)] $ signatoryDetailsFromUser user
   let doc = Document
-          { documentid = docid
+          { documentid = DocumentID 0
           , documenttitle = title
           , documentauthor = Author $ userid user
           , documentsignatorylinks = [authorlink]
@@ -185,8 +170,8 @@ newDocument user title ctime isfree = do
           , authornumberplacements = []
           , authorotherfields = []
           }
-  modify $ insert doc
-  return doc
+  insertNewDocument doc
+  
 
 fileMovedToAWS :: FileID 
                -> BS.ByteString
@@ -400,29 +385,6 @@ setSignatoryLinks :: DocumentID -> [SignatoryLink] -> Update Documents (Either S
 setSignatoryLinks docid links =
     modifyDocument docid (\doc -> Right doc { documentsignatorylinks = links })
 
-modifyDocument :: DocumentID 
-               -> (Document -> Either String Document) 
-               -> Update Documents (Either String Document)
-modifyDocument docid action = modifyDocument' docid (return . action)
-                
-modifyDocument' :: DocumentID 
-               -> (Document ->  Update Documents (Either String Document)) 
-               -> Update Documents (Either String Document)
-modifyDocument' docid action = do
-  documents <- ask
-  case getOne (documents @= docid) of
-    Nothing -> return $ Left "no such document"
-    Just document -> 
-        do
-        actionresult <- action document
-        case actionresult of
-          Left message -> return $ Left message
-          Right newdocument -> 
-              do
-                when (documentid newdocument /= docid) $ error "new document must have same id as old one"
-                modify (updateIx docid newdocument)
-                return $ Right newdocument
-
 rejectDocument :: DocumentID
                -> SignatoryLinkID 
                -> MinutesTime 
@@ -550,7 +512,8 @@ fragileTakeOverDocuments destuser srcuser = do
   mapM_ (updateDoc takeoverAsAuthor) (IxSet.toList hisdocuments)
   mapM_ (updateDoc takeoverAsSignatory) sigdocuments
   return ()
-  where updateDoc takeover document = modify $ updateIx (documentid document) (takeover document)
+    where 
+        updateDoc takeover document = modifyDocument (documentid document) (\doc -> Right $ takeover doc)
         takeoverAsAuthor document = document { documentauthor = Author (userid destuser) }
         takeoverAsSignatory document = document { documentsignatorylinks = takeoverSigLinks (documentsignatorylinks document) }
         takeoverSigLinks siglinks = (map takeoverSigLink matching) ++ others
@@ -654,11 +617,6 @@ clearSignInfofromDoc doc author = do
               documentsignatorylinks = newSignLinks
              }
 
-findMaybeUserByEmail [] _ = Nothing
-findMaybeUserByEmail ((email, user):eus) em 
-    | email == em = Just user
-    | otherwise   = findMaybeUserByEmail eus em
-
 changeSignatoryEmailWhenUndelivered::DocumentID -> SignatoryLinkID -> BS.ByteString ->  Update Documents (Either String Document)
 changeSignatoryEmailWhenUndelivered did slid email = modifyDocument did $ changeEmail
   where changeEmail doc = let signlinks = documentsignatorylinks doc
@@ -692,7 +650,7 @@ signLinkFromDetails emails details = do
                      , invitationdeliverystatus = Unknown
                      , signatorysignatureinfo = Nothing
                      }
-
+                     
 getUniqueSignatoryLinkID :: Update Documents SignatoryLinkID
 getUniqueSignatoryLinkID = do
   sg <- ask
@@ -712,47 +670,6 @@ errorDocument documentid errormsg =
       let
           newdocument = document { documentstatus = DocumentError errormsg }
       in Right newdocument
-
-{- |
-   The user is the author of the document
- -}
-class MayBeAuthor a where
-  isAuthor :: Document -> a -> Bool
-
-instance MayBeAuthor User where
-  isAuthor d u = isAuthor d $ userid u
-  
-instance MayBeAuthor UserID where
-  isAuthor d uid = uid == (unAuthor . documentauthor $ d)   
-  
-instance MayBeAuthor SignatoryLink where
-  isAuthor d sl = case maybesignatory sl of
-                   Just s -> unSignatory s == ( unAuthor . documentauthor $ d)
-                   Nothing -> False
-
-instance (MayBeAuthor a) => MayBeAuthor (Maybe a) where
-  isAuthor d (Just s) = isAuthor d s
-  isAuthor _ _        = False
-
-anyInvitationUndelivered =  not . Prelude.null . undeliveredSignatoryLinks
-undeliveredSignatoryLinks doc =  filter ((== Undelivered) . invitationdeliverystatus) $ documentsignatorylinks doc
-
-{- |
-   Build a SignatoryDetails from a User with no fields
- -}
-signatoryDetailsFromUser user = 
-    SignatoryDetails { signatoryfstname = userfstname $ userinfo user 
-                     , signatorysndname = usersndname $ userinfo user 
-                     , signatoryemail = unEmail $ useremail $ userinfo user
-                     , signatorycompany = usercompanyname $ userinfo user
-                     , signatorynumber = usercompanynumber $ userinfo user
-                     , signatoryfstnameplacements = []
-                     , signatorysndnameplacements = []
-                     , signatorycompanyplacements = []
-                     , signatoryemailplacements = []
-                     , signatorynumberplacements = []
-                     , signatoryotherfields = []
-                     }
 
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocuments
