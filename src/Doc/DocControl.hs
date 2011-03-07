@@ -552,7 +552,7 @@ handleIssueShowPost docid = withUserPost $ do
   -- something has to change here
   case documentstatus document of
        Preparation -> do
-                       doc2 <- updateDocument ctx document Nothing
+                       doc2 <- handleDesignViewPost ctx document Nothing
                        if documentstatus doc2 == Pending
                         -- It went to pending, so it's been sent to signatories
                         then return $ LinkSignInvite docid
@@ -629,8 +629,8 @@ getAndConcat field = do
 {- |
    do the work necessary for saving a document being authored
  -}
-updateDocument :: Context -> Document -> Maybe SignatureInfo -> Kontra Document  
-updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} msiginfo = do
+updateDocument :: Context -> User -> Document -> Maybe SignatureInfo -> Kontra (Either String Document)
+updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documentid} msiginfo = do
   -- each signatory has these predefined fields
   signatoriesfstnames <- getAndConcat "signatoryfstname"
   signatoriessndnames <- getAndConcat "signatorysndname"
@@ -644,7 +644,7 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} ms
 
   daystosign <- readField "daystosign"
   
-  invitetext <- fmap (maybe defaultInviteMessage concatChunks) (getDataFn' $ lookBS "invitetext")
+  invitetext <- getFieldUTFWithDefault defaultInviteMessage "invitetext"
   
   -- each custom field must have this
   fieldnames <- getAndConcat "fieldname"
@@ -661,10 +661,10 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} ms
   placedsigids <- getAndConcat "placedsigid"
   placedfieldids <- getAndConcat "placedfieldid"
 
-  authorrole <- getDataFnM $ look "authorrole"
+  authorrole <- getFieldWithDefault "" "authorrole"
 
   -- which type of identifications are allowed
-  allowedidtypes <- getDataFnM $ look "allowedsignaturetypes"
+  allowedidtypes <- getFieldWithDefault "" "allowedsignaturetypes"
 
   let emailallowed = if "Email" `isInfixOf` allowedidtypes
                       then [EmailIdentification]
@@ -735,10 +735,7 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} ms
                                             (placementsByID id (BS.fromString "email"))
                                             (placementsByID id (BS.fromString "number"))
                                             (defsByID id)
-                           
-  let authorid = unAuthor $ documentauthor document
-  Just author <- query $ GetUserByUserID authorid
-                                            
+                                                                      
   let authordetails = (signatoryDetailsFromUser author)
                       {
                         signatoryemailplacements = placementsByID (BS.fromString "author") (BS.fromString "email")
@@ -760,30 +757,33 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} ms
   -- author is gotten above, no?
   -- Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor document
 
-  mdoc <- update $ UpdateDocument ctxtime documentid
+  update $ UpdateDocument ctxtime documentid
            signatories2 daystosign invitetext author authordetails docallowedidtypes
-  case mdoc of 
-   Right doc2 ->    
-       msum 
-        [ do 
-          getDataFnM $ look "sign"
-          mdocument <- update $ AuthorSignDocument documentid ctxtime ctxipnumber author msiginfo
-          case mdocument of
-            Left msg -> return doc2
-            Right newdocument -> do
-                postDocumentChangeAction newdocument (documentstatus doc2) Nothing
-                return newdocument
-        , do 
-          getDataFnM $ look "final"
-          mdocument <- update $ AuthorSendDocument documentid ctxtime ctxipnumber author msiginfo
-          case mdocument of
-            Left msg -> return doc2
-            Right newdocument -> do
-                postDocumentChangeAction newdocument (documentstatus doc2) Nothing
-                return newdocument
-        , return doc2
-        ]
-   Left _ -> mzero     
+           
+handleDesignViewPost :: Context -> Document -> Maybe SignatureInfo -> Kontra Document  
+handleDesignViewPost ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} msiginfo = do
+     let authorid = unAuthor $ documentauthor document
+     Just author <- query $ GetUserByUserID authorid
+     mudoc <- updateDocument ctx author document msiginfo
+     sign <- isFieldSet "sign"
+     send <- isFieldSet "final"
+     case (mudoc,sign,send) of 
+        (Right udoc, True, _) -> do
+            mndoc <- update $ AuthorSignDocument documentid ctxtime ctxipnumber author msiginfo
+            case mndoc of
+                Left msg -> return udoc
+                Right newdocument -> do
+                    postDocumentChangeAction newdocument (documentstatus udoc) Nothing
+                    return newdocument
+        (Right udoc, _ , True) -> do
+            mndoc <- update $ AuthorSendDocument documentid ctxtime ctxipnumber author msiginfo
+            case mndoc of
+                Left msg -> return udoc
+                Right newdocument -> do
+                    postDocumentChangeAction newdocument (documentstatus udoc) Nothing
+                    return newdocument
+        (Right udoc, _ , _) -> return udoc
+        _  -> mzero     
     
 {- |
    Constructs a list of documents (Arkiv) to show to the user.
