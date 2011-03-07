@@ -461,7 +461,11 @@ maybeRead = fmap fst . listToMaybe . reads
 maybe' a ma = maybe a id ma   
 
 getField name = getDataFn' (look name)
-getField' f name = fmap (fmap f) $ getDataFn' (look name)
+getFieldBS name = getDataFn' (lookBS name)
+getFieldUTF name = fmap (fmap BS.fromString) $ getField name
+
+getFieldWithDefault d name =  fmap (fromMaybe d) $ getField name
+getFieldBSWithDefault  d name = fmap (fromMaybe d) $ getFieldBS name
 
 readField name = fmap (join . (fmap maybeRead)) $ getDataFn' (look name)     
 
