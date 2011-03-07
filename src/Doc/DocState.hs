@@ -43,9 +43,6 @@ module Doc.DocState
     , GetMagicHash(..)
     , GetDocumentByFileID(..)
     , ErrorDocument(..)
-    , IdentificationType(..)
-    , SignatureInfo(..)
-    , SignatureProvider(..)
     )
 where
 import Happstack.Data
@@ -649,6 +646,27 @@ errorDocument documentid errormsg =
           newdocument = document { documentstatus = DocumentError errormsg }
       in Right newdocument
 
+
+getUserTemplates:: UserID -> Update Documents [Document]
+getUserTemplates userid = do 
+    documents <- ask
+    return $ toList (documents @= Author userid @= Template)
+    
+contractFromDocument :: DocumentID -> Update Documents (Either String Document)
+contractFromDocument = newFromDocument $ \doc -> 
+    doc {
+        documenttype = Contract
+      , documentstatus = Preparation
+    }
+  
+
+templateFromDocument :: DocumentID -> Update Documents (Either String Document)
+templateFromDocument = newFromDocument $ \doc -> 
+    doc {
+        documenttype = Template
+      , documentstatus = Preparation
+    }
+  
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocuments
                         , 'getDocumentsByAuthor
@@ -690,4 +708,7 @@ $(mkMethods ''Documents [ 'getDocuments
                           
                         , 'getDocumentByFileID
                         , 'errorDocument
+                        , 'getUserTemplates
+                        , 'contractFromDocument
+                        , 'templateFromDocument
                         ])
