@@ -15,6 +15,7 @@
 module Doc.DocStateUtils (
     -- DB updates
       insertNewDocument
+    , newFromDocument  
     , modifyContract
     , modifyContractWithAction 
     , modifyContractOrTemplate
@@ -74,6 +75,15 @@ insertNewDocument doc =
     modify $ insert docWithId
     return docWithId
 
+
+-- Create new document based on existing one
+newFromDocument :: (Document -> Document) -> DocumentID -> Update Documents (Either String Document)
+newFromDocument f docid = do
+    documents <- ask
+    case (getOne (documents @= docid)) of
+      Just doc -> fmap Right $ insertNewDocument $ f doc
+      Nothing -> return $ Left "No such document"
+      
 -- | There are six methods for update. We want force an exact info if any operation that chandes document makes sense on templates.
 
 modifyContract :: DocumentID 
