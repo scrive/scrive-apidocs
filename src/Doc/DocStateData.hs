@@ -1,4 +1,29 @@
-module Doc.DocStateData where
+module Doc.DocStateData(
+      Author(..)
+    , ChargeMode(..)
+    , Document(..)
+    , DocumentHistoryEntry(..)
+    , DocumentID(..)
+    , DocumentStatus(..)
+    , DocumentType(..)
+    , Documents(..)
+    , FieldDefinition(..)
+    , FieldPlacement(..)
+    , File(..)
+    , FileID(..)
+    , FileStorage(..)
+    , JpegPages(..)
+    , SignInfo(..)
+    , Signatory(..)
+    , SignatoryDetails(..)
+    , SignatoryLink(..)
+    , SignatoryLinkID(..)
+    , TimeoutTime(..)
+    , DocStats(..)
+    , SignatureInfo(..)
+    , IdentificationType(..)
+    , SignatureProvider(..)
+    ) where
 import Happstack.Data
 import Happstack.State
 import Control.Monad.Reader (ask)

@@ -1,27 +1,7 @@
 module Doc.DocState 
-    ( Author(..)
-    , ChargeMode(..)
-    , Document(..)
-    , DocumentHistoryEntry(..)
-    , DocumentID(..)
-    , DocumentStatus(..)
-    , DocumentType(..)
-    , Documents(..)
-    , FieldDefinition(..)
-    , FieldPlacement(..)
-    , File(..)
-    , FileID(..)
-    , FileStorage(..)
-    , JpegPages(..)
-    , SignInfo(..)
-    , Signatory(..)
-    , SignatoryDetails(..)
-    , signatoryname
-    , SignatoryLink(..)
-    , SignatoryLinkID(..)
-    , TimeoutTime(..)
-    , DocStats(..)
-    , isAuthor
+    ( module Doc.DocStateData
+    , isAuthor -- from Utils
+    , signatoryname -- fromUtils
     , isMatchingSignatoryLink
     , anyInvitationUndelivered
     , undeliveredSignatoryLinks
@@ -55,7 +35,6 @@ module Doc.DocState
     , UpdateDocument(..)
     , CloseDocument(..)
     , CancelDocument(..)
-    -- , WithdrawnDocument(..)
     , RestartDocument(..)
     , ChangeSignatoryEmailWhenUndelivered(..)
     , signatoryDetailsFromUser
@@ -698,7 +677,6 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'timeoutDocument
                         , 'closeDocument
                         , 'cancelDocument
-                        -- , 'withdrawnDocument
                         , 'fileMovedToAWS
 
                           -- admin only area follows
