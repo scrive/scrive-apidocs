@@ -397,9 +397,6 @@ sequenceMM = (fmap join) . sequenceA
 when_::(Monad m) => Bool -> m a -> m ()
 when_ b c =  when b $ c >> return () 
 
-maybeRead :: Read a => String -> Maybe a
-maybeRead = fmap fst . listToMaybe . reads
-
 maybe' :: a -> Maybe a -> a
 maybe' a ma = maybe a id ma   
 
@@ -432,7 +429,7 @@ getFieldUTFWithDefault  d name = fmap (fromMaybe d) $ getFieldUTF name
 
 readField
   :: (Read a, Functor f, ServerMonad f) => String -> f (Maybe a)
-readField name = fmap (join . (fmap maybeRead)) $ getDataFn' (look name)     
+readField name = fmap (join . (fmap readM)) $ getDataFn' (look name)     
 
 whenMaybe::(Functor m,Monad m) => Bool -> m a -> m (Maybe a)
 whenMaybe True  c = fmap Just c

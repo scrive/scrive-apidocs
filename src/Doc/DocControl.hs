@@ -1325,10 +1325,10 @@ handleResend docid signlinkid  = withUserPost $ do
 --This only works for undelivered mails. We shoulkd check if current user is author
 handleChangeSignatoryEmail::String -> String -> Kontra KontraLink
 handleChangeSignatoryEmail did slid = do
-                                     let mdid = maybeRead did
+                                     let mdid = readM did
                                      memail' <- getField "email"
                                      let memail = fmap (fmap toLower) memail'
-                                     let mslid = maybeRead slid
+                                     let mslid = readM slid
                                      case (mdid,mslid,memail) of
                                        (Just docid,Just slid,Just email) -> do
                                                                            ctx <- get

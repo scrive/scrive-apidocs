@@ -441,8 +441,8 @@ userFromExternalSessionData ::String -> String -> Kontra (Maybe User)
 userFromExternalSessionData sid mh = do
                                       msession <- sequenceMM $ 
                                            do
-                                            sid' <- maybeRead sid
-                                            mh' <- maybeRead mh
+                                            sid' <- readM sid
+                                            mh' <- readM mh
                                             return $ findSession sid' mh'
                                       muser <-  sequenceMM $ 
                                            do
@@ -452,4 +452,4 @@ userFromExternalSessionData sid mh = do
                                       return muser
                                       
 dropExternalSession::String -> String -> Kontra ()
-dropExternalSession sid _ = fromMaybe (return ()) $ fmap (liftIO . dropSession) (maybeRead sid)
+dropExternalSession sid _ = fromMaybe (return ()) $ fmap (liftIO . dropSession) (readM sid)
