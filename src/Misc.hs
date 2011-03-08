@@ -342,19 +342,12 @@ curl_exe = "curl.exe"
 curl_exe = "./curl"
 #endif
 
-{-| This function executes curl as external program. Args are args. The input though will
+{-| This function executes curl as external program. Args are args.
 -}
 readCurl :: [String]                 -- ^ any arguments
          -> BSL.ByteString           -- ^ standard input
          -> IO (ExitCode,BSL.ByteString,BSL.ByteString) -- ^ exitcode, stdout, stderr
-readCurl args input = do
-  tmpDir <- getTemporaryDirectory
-  C.bracket
-    (openTempFile tmpDir "skpa")
-    (\(name, handle) -> hClose handle >> removeFile name)
-    $ \(filepath,handle) -> do
-                        BSL.hPutStr handle input
-                        readProcessWithExitCode2 curl_exe args handle
+readCurl args input = readProcessWithExitCode' curl_exe args input
   
 
 -- | Run action, record failure if any. 
