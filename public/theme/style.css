@@ -911,9 +911,11 @@ a.button {
     position: absolute;
     font-family: Helvetica;
     font-size: 15px;
-    cursor: pointer;
 }
 
+.placedfieldhelper {
+    cursor: pointer;
+}
 
 /* Localized */
 

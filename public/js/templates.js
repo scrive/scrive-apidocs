@@ -46,7 +46,7 @@ function placementToHTML(label, value) {
   if(!v) {
     v = label;
   }
-  return $("<div class='placedfield' style='position:absolute'>"
+  return $("<div class='placedfield' style='cursor:pointer'>"
 	   + "<span class='value'>" + v + "</span>" 
 	   + "</div>");
 }
