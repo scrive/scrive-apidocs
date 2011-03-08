@@ -19,8 +19,6 @@ import Control.Arrow (first)
 import HSP hiding (Request)
 import Happstack.Server.HSP.HTML (webHSP)
 import Happstack.Server.SimpleHTTP
-import qualified HSX.XMLGenerator as HSX (XML)
-import qualified Data.ByteString.UTF8 as BSC
 import Kontra
 import Misc
 import KontraLink

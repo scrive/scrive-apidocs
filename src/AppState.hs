@@ -14,7 +14,6 @@ import Session
 import Kontra
 import ActionQueueState
 import Data.Data
-import Data.Typeable
 import Misc
 
 -- |top-level application state
