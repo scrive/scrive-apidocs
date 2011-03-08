@@ -1,6 +1,14 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
 
+{-| Dump bin for things that do not fit anywhere else
+
+I do not mind people sticking stuff in here. From time to time just
+please go over this file, reorganize, pull better parts to other
+modules.
+
+Keep this one as unorganized dump.
+-}
 module Misc where
 import Control.Monad(msum,liftM,mzero,guard,MonadPlus(..))
 import Control.Monad.Reader (ask,asks)
@@ -21,6 +29,8 @@ import Foreign.Ptr
 import Foreign.C.String
 import HSX.XMLGenerator
 import HSP (evalHSP, XMLMetaData(..), renderAsHTML, IsAttrValue, toAttrValue)
+import qualified HSP.XML
+import qualified HSP
 import Control.Monad.State
 import Control.Monad.Error
 import Data.Monoid
@@ -49,15 +59,9 @@ import System.Directory
 import System.IO.Temp
 import Data.Typeable
 import Data.Data
-
-{-
-
-Dump bin for things that do not fit anywhere else
-
--}
+import qualified GHC.Conc
 
 selectFormAction :: (MonadPlus m,ServerMonad m) => [(String,m a)] -> m a
-
 selectFormAction [] = mzero
 selectFormAction ((button,action):rest) = do
   maybepressed <- getDataFn (look button)
@@ -97,21 +101,21 @@ instance Monad m => IsAttrValue m BS.ByteString where
 instance Monad m => IsAttrValue m BSL.ByteString where
     toAttrValue = toAttrValue . BSL.toString
 
+concatChunks :: BSL.ByteString -> BS.ByteString
 concatChunks = BS.concat . BSL.toChunks
 
-{-
+-- | Get a unique index value in a set. Unique number is 31 bit in
+-- this function.  First argument is set, second is index constructor.
+--
+-- See also 'getUnique64'.
 getUnique
   :: (Indexable a b,
-      Data.Data.Data a,
+      Data a,
       Ord a,
-      Data.Typeable.Typeable k,
+      Typeable k,
       Monad (t GHC.Conc.STM),
-      Control.Monad.Trans.MonadTrans t) =>
-     IxSet a
-     -> (Int -> k)
-     -> happstack-state-0.4.3:Happstack.State.Types.Ev
-          (t GHC.Conc.STM) k
--}
+      MonadTrans t) =>
+     IxSet a -> (Int -> k) -> Ev (t GHC.Conc.STM) k
 getUnique ixset constr = do
   r <- getRandomR (0,0x7fffffff::Int)
   let v = constr r
@@ -119,6 +123,18 @@ getUnique ixset constr = do
      then return v
      else getUnique ixset constr
 
+-- | Get a unique index value in a set. Unique number is 31 bit in
+-- this function.  First argument is set, second is index constructor.
+--
+-- See also 'getUnique64'.
+getUnique64
+  :: (Indexable a b,
+      Data a,
+      Ord a,
+      Typeable k,
+      Monad (t GHC.Conc.STM),
+      MonadTrans t) =>
+     IxSet a -> (Int64 -> k) -> Ev (t GHC.Conc.STM) k
 getUnique64 ixset constr = do
   r <- getRandomR (0,0x7fffffffffffffff::Int64)
   let v = constr r
@@ -128,6 +144,8 @@ getUnique64 ixset constr = do
 
 
 #ifdef WINDOWS
+-- | Open external document in default application. Useful to open
+-- *.eml in email program for example.
 openDocument :: String -> IO ()
 openDocument filename = do
   withCString filename $ \filename -> do
@@ -136,69 +154,11 @@ openDocument filename = do
              
 foreign import stdcall "ShellExecuteA" shellExecute :: Ptr () -> Ptr CChar -> Ptr CChar -> Ptr () -> Ptr () -> CInt -> IO ()
 #else
--- just do nothing on unix
+-- | Open external document in default application. Useful to open
+-- *.eml in email program for example.
 openDocument :: String -> IO ()
 openDocument filename = return ()
 #endif
-
-{-
-newtype ConfigT m a = ConfigT { runConfigT :: ReaderT Config m a }
-    deriving (Functor, Applicative, Alternative, MonadPlus, Monad, MonadIO, MonadTrans)
-
-mapConfigT :: (m a -> n b) -> ConfigT m a -> ConfigT n b
-mapConfigT f (ConfigT r) = ConfigT (mapReaderT f r)
-
-class MonadConfig m where
-    askConfig   :: m Config
-    localConfig :: (Config -> Config) -> m a -> m a
-
-instance (Monad m) => MonadConfig (ConfigT m) where
-    askConfig                 = ConfigT ask
-    localConfig f (ConfigT r) = ConfigT (local f r)
-
-instance (Monad m, MonadConfig m) => MonadConfig (URLT url m) where
-    askConfig     = lift askConfig
-    localConfig f = mapURLT (localConfig f)
-
-instance (Monad m, MonadConfig m) => MonadConfig (ServerPartT m) where
-    askConfig     = lift askConfig
-    localConfig f = mapServerPartT (localConfig f)
-
-instance (Monad m, MonadConfig m) => MonadConfig (XMLGenT m) where
-    askConfig                 = lift askConfig
-    localConfig f (XMLGenT m) = XMLGenT (localConfig f m)
--}
-
-{-
-unpackErrorT:: (Monad m, Show e) => UnWebT (ErrorT e m) a -> UnWebT m a
-unpackErrorT et = do
-      eitherV <- runErrorT et
-      case eitherV of
-          Left e -> Just (Left e
-                           , Set $ Dual $ Endo $ \r -> r{rsCode = 500})
-          Right x -> x
--}
-
-unpackErrorT:: (Monad m, Show e) => UnWebT (ErrorT e m) a -> UnWebT m a
-unpackErrorT handler = do
-      eitherV <- runErrorT handler
-      return $ case eitherV of
-          Left err -> Just ( Left (toResponse ("Catastrophic failure " ++ show err))
-                           , Set $ Dual $ Endo $ \r -> r{rsCode = 500})
-          Right x -> x
-
-
-mapUnWebT :: (Functor m) => (a -> b) -> UnWebT m a -> UnWebT m b
-mapUnWebT f x = fmap (fmap (mapFst (fmap f))) x
-            where
-              mapFst f (a,b) = (f a,b)
-{-
-toIO :: forall s m a. (Monad m) => s -> ServerPartT (StateT s m) a -> ServerPartT m (a,s)
-toIO state = mapServerPartT f
-    where
-      f :: UnWebT (StateT s m) a -> UnWebT m (a,s)
-      f m = runStateT m state
--}
 
 toIO :: forall s m a . (Monad m) => s -> ServerPartT (StateT s m) a -> ServerPartT m a
 toIO state = mapServerPartT f
@@ -206,21 +166,17 @@ toIO state = mapServerPartT f
       f :: StateT s m (Maybe (Either Response a, FilterFun Response)) -> m (Maybe (Either Response a, FilterFun Response))
       f m = evalStateT m state
 
-toIO2 :: forall s m a. (Monad m, Functor m) => s -> ServerPartT (StateT s m) a -> ServerPartT m (a, s)
-toIO2 state = mapServerPartT evalStateT'
-    where
-      evalStateT' :: UnWebT (StateT s m) a -> UnWebT m (a, s)
-      evalStateT' unwebt =
-          do (m, s) <- runStateT unwebt state
-             return $ fmap (mapFst (fmap (\a -> (a, s)))) m
-      mapFst f (a,b) = (f a,b)
 
-
-
+-- | Oh boy, invent something better.
+--
+-- FIXME: this is so wrong on so many different levels
+safehead :: [Char] -> [t] -> t
 safehead s [] = error s
 safehead _ (x:_) = x
 
-
+-- | Extract data from GET or POST request. Fail with 'mzero' if param
+-- variable not present or when it cannot be read.
+getDataFnM :: (ServerMonad m, MonadPlus m) => RqData a -> m a
 getDataFnM fun = do
   m <- getDataFn fun
 #if MIN_VERSION_happstack_server(0,5,1)
@@ -231,27 +187,40 @@ getDataFnM fun = do
     Nothing -> mzero
 #endif
 
---Since we sometimes want to get Maybe and also we wont work with newer versions of happstack here is
---This should be droped when new version is globaly established
+-- | Since we sometimes want to get 'Maybe' and also we wont work with
+-- newer versions of happstack here is.  This should be droped when
+-- new version is globaly established.
+getDataFn' :: (ServerMonad m) => RqData a -> m (Maybe a)
 getDataFn' fun = do
   m <- getDataFn fun
 #if MIN_VERSION_happstack_server(0,5,1)
-  either (\_ -> Nothing) (return . Just ) m
+  either (\_ -> return Nothing) (return . Just ) m
 #else
   return m
 #endif
 
+-- | This is a nice attempt at generating database queries directly
+-- from URL parts.
+pathdb
+  :: (FromReqURI a,
+      MonadPlus m,
+      ServerMonad m,
+      MonadIO m,
+      QueryEvent a1 (Maybe t)) =>
+     (a -> a1) -> (t -> m b) -> m b
 pathdb get action = path $ \id -> do
     m <- query $ get id
     case m of
         Nothing -> mzero
         Just obj -> action obj
 
--- g :: String -> Kontra BS.ByteString 
+-- | Get param as strict ByteString instead of a lazy one.
+g :: (ServerMonad f, MonadPlus f, Functor f) =>
+     String -> f BS.ByteString
 g name = fmap concatChunks (getDataFnM (lookBS name))
 
--- | Useful inside the RqData monad.  Gets the named input parameter
--- (either from a POST or a GET)
+-- | Useful inside the 'RqData' monad.  Gets the named input parameter
+-- (either from a @POST@ or a @GET@)
 lookInputList :: String -> RqData [BSL.ByteString]
 lookInputList name
     = do 
@@ -264,34 +233,44 @@ lookInputList name
              isname _ = []
          return [value | k <- inputs, value <- isname k]
 
+-- | Render XML as a 'String' properly, i. e. with <?xml?> in the beginning.
+renderXMLAsStringHTML :: (Maybe XMLMetaData, HSP.XML.XML) -> [Char]
 renderXMLAsStringHTML (meta,content) = 
     case meta of
       Just (XMLMetaData (showDt, dt) _ pr) -> 
           (if showDt then (dt ++) else id) (pr content)
       Nothing -> renderAsHTML content
 
+-- | Render XML as a 'ByteString' properly, i. e. with <?xml?> in the beginning.
+renderXMLAsBSHTML
+  :: (Maybe XMLMetaData, HSP.XML.XML) -> BS.ByteString
 renderXMLAsBSHTML = BS.fromString . renderXMLAsStringHTML
 
+
+-- | Render HSP as a 'ByteString' properly, i. e. with <?xml?> in the beginning.
+renderHSPToByteString
+  :: HSP.HSP HSP.XML.XML -> IO BS.ByteString
 renderHSPToByteString xml = do
   fmap renderXMLAsBSHTML $ evalHSP Nothing xml
 
+-- | Render HSP as a 'String' properly, i. e. with <?xml?> in the beginning.
+renderHSPToString
+  :: HSP.HSP HSP.XML.XML -> IO String
 renderHSPToString xml = do
   fmap renderXMLAsStringHTML $ evalHSP Nothing xml
 
 
-
+-- | Opaque 'Word64' type. Used as authentication token. Useful is the 'Random' instance.
 newtype MagicHash = MagicHash { unMagicHash :: Word64 }
     deriving (Eq, Ord, Typeable, Data)
 
-deriving instance Random MagicHash -- use Word64 size
-
+deriving instance Random MagicHash
 deriving instance Serialize MagicHash
 
-instance Version MagicHash -- make it primitive
+instance Version MagicHash
 
 instance Show MagicHash where
-    -- FIXME: should be probably zero padded
-    showsPrec prec (MagicHash x) = showHex x
+    showsPrec prec (MagicHash x) = (++) (pad0 16 (showHex x ""))
     
 
 instance Read MagicHash where
@@ -303,11 +282,16 @@ instance FromReqURI MagicHash where
     fromReqURI = readM
  
 
-
+-- | Create an external process with arguments. Feed it input, collect
+-- exit code, stdout and stderr.
+--
+-- Standard input is first written to a temporary file. GHC 6.12.1
+-- seemed to have trouble doing multitasking when writing to a slow
+-- process like curl upload.
 readProcessWithExitCode'
-    :: FilePath                 -- ^ command to run
-    -> [String]                 -- ^ any arguments
-    -> BSL.ByteString               -- ^ standard input
+    :: FilePath                                    -- ^ command to run
+    -> [String]                                    -- ^ any arguments
+    -> BSL.ByteString                              -- ^ standard input
     -> IO (ExitCode,BSL.ByteString,BSL.ByteString) -- ^ exitcode, stdout, stderr
 readProcessWithExitCode' cmd args input = 
   withSystemTempFile "process" $ \inputname inputhandle -> do
@@ -360,6 +344,7 @@ readProcessWithExitCode' cmd args input =
     err <- readMVar errM
 
     return (ex, out, err)
+
 
 readProcessWithExitCode2
     :: FilePath                 -- ^ command to run
@@ -427,30 +412,42 @@ readCurl args input = do
                         readProcessWithExitCode2 curl_exe args handle
   
 
---Utils
-logErrorWithDefault::IO (Either String a) -> b -> (a -> IO b) -> IO b
+-- | Run action, record failure if any. 
+logErrorWithDefault :: IO (Either String a)  -- ^ action to run
+                    -> b                     -- ^ default value in case action failed
+                    -> (a -> IO b)           -- ^ action that uses value
+                    -> IO b                  -- ^ result
 logErrorWithDefault c d f = do
-                             c' <- c
-                             case c' of
-                              Right c'' ->  f c''
-                              Left err  ->  do 
-                                             errorM "Happstack.Server" err
-                                             return d
+    c' <- c
+    case c' of
+        Right c'' ->  f c''
+        Left err  ->  do 
+                errorM "Happstack.Server" err
+                return d
 
----I belive that this should be in prelude!!                                        
+-- | Select first alternative from a list of options.
+--
+-- Remeber LISP and its cond!
+caseOf :: [(Bool, t)] -> t -> t
 caseOf ((True,a):_) _ = a
 caseOf (_:r) d = caseOf r d
 caseOf [] d = d
 
+-- | Enumerate all values of a bounded type.
 allValues::(Bounded a, Enum a) => [a]
 allValues = enumFrom minBound
 
+-- | Just @flip map@.
+for :: [a] -> (a -> b) -> [b]
 for = flip map
-{- sequenceA says that if we maybe have (Maybe (m a)) a computation that gives a then we can get real computation that may fail m (Maybe a)
-   sequenceMM doest the same, but is aware that first computation can also fail, and so it joins two posible fails.
- -}
-sequenceMM:: (Applicative m) => Maybe (m (Maybe a)) -> m (Maybe a)
+
+-- | 'sequenceA' says that if we maybe have @(Maybe (m a))@ a computation
+-- that gives a then we can get real computation that may fail m
+-- @(Maybe a)@ 'sequenceMM' doest the same, but is aware that first
+-- computation can also fail, and so it joins two posible fails.
+sequenceMM :: (Applicative m) => Maybe (m (Maybe a)) -> m (Maybe a)
 sequenceMM = (fmap join) . sequenceA 
+
 
 when_::(Monad m) => Bool -> m a -> m ()
 when_ b c =  when b $ c >> return () 
@@ -458,34 +455,64 @@ when_ b c =  when b $ c >> return ()
 maybeRead :: Read a => String -> Maybe a
 maybeRead = fmap fst . listToMaybe . reads
 
+maybe' :: a -> Maybe a -> a
 maybe' a ma = maybe a id ma   
 
+isFieldSet :: (Functor f, ServerMonad f) => String -> f Bool
 isFieldSet name = fmap isJust $ getField name
 
+getField :: (ServerMonad m) => String -> m (Maybe String)
 getField name = getDataFn' (look name)
+
+getFieldBS :: (ServerMonad m) => String -> m (Maybe BSL.ByteString)
 getFieldBS name = getDataFn' (lookBS name)
+
+getFieldUTF
+  :: (Functor f, ServerMonad f) => String -> f (Maybe BS.ByteString)
 getFieldUTF name = fmap (fmap BS.fromString) $ getField name
 
+getFieldWithDefault
+  :: (Functor f, ServerMonad f) => String -> String -> f String
 getFieldWithDefault d name =  fmap (fromMaybe d) $ getField name
+
+getFieldBSWithDefault
+  :: (Functor f, ServerMonad f) =>
+     BSL.ByteString -> String -> f BSL.ByteString
 getFieldBSWithDefault  d name = fmap (fromMaybe d) $ getFieldBS name
+
+getFieldUTFWithDefault
+  :: (Functor f, ServerMonad f) =>
+     BS.ByteString -> String -> f BS.ByteString
 getFieldUTFWithDefault  d name = fmap (fromMaybe d) $ getFieldUTF name
 
+readField
+  :: (Read a, Functor f, ServerMonad f) => String -> f (Maybe a)
 readField name = fmap (join . (fmap maybeRead)) $ getDataFn' (look name)     
 
 whenMaybe::(Functor m,Monad m) => Bool -> m a -> m (Maybe a)
 whenMaybe True  c = fmap Just c
 whenMaybe False _ = return Nothing
 
--- | Pack value to just unless we have mzero.
--- | Since we can not check emptyness of string in templates we want to pack it in maybe.
+-- | Pack value to just unless we have 'mzero'.  Since we can not check
+-- emptyness of string in templates we want to pack it in maybe.
 nothingIfEmpty::(Eq a, Monoid a) => a -> Maybe a
 nothingIfEmpty a = if mempty == a then Nothing else Just a
 
 
-{-|
-  Example of use
-   
-   instance Typeable Author where typeOf _ = mkTypeOf  "XX_Author"
--}
+{-| This function is useful when creating 'Typeable' instance when we
+want a specific name for type.  Example of use:
 
+  > instance Typeable Author where typeOf _ = mkTypeOf "XX_Author" 
+
+-}
+mkTypeOf :: String -> TypeRep
 mkTypeOf name = mkTyConApp (mkTyCon name) []
+
+-- | Pad string with zeros at the beginning.
+pad0 :: Int         -- ^ how long should be the number
+     -> String      -- ^ the number as string
+     -> String      -- ^ zero padded number
+pad0 len str = take missing (repeat '0') ++ str
+    where
+        diff = len - length str
+        missing = if diff >= 0 then diff else 0
