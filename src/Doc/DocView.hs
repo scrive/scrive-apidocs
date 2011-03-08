@@ -334,7 +334,6 @@ pageDocumentForAuthor ctx
        field "emailelegitimation" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)
        field "emailonly" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isNothing $ find (== ELegitimationIdentification) documentallowedidtypes)
        field "elegitimationonly" $ (isNothing $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)
-       field "helpers" $ renderTemplate templates "pageDocumentForAuthorHelpers" [("documentid",show documentid)]
        field "docstate" (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks)
        field "linkissuedocpdf" $ show (LinkIssueDocPDF document)
        field "documentinfotext" $ documentInfoText templates document (find (isMatchingSignatoryLink author) documentsignatorylinks) author
