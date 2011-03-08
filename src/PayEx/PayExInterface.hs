@@ -32,6 +32,7 @@ import Data.List (isInfixOf)
 import Mails.SendMail
 import MinutesTime
 import Redirect
+import Happstack.Util.Common
 
 payexTest::Maybe String -> Kontra Response    
 payexTest Nothing = do
@@ -50,7 +51,7 @@ payexTest Nothing = do
 payexTest (Just pid) =
                    do
                     ctx <- get 
-                    mpayment <- sequenceMM $ fmap (liftIO . query . GetPayment . PaymentId) $ maybeRead pid
+                    mpayment <- sequenceMM $ fmap (liftIO . query . GetPayment . PaymentId) $ readM pid
                     case mpayment of
                      Just payment -> do
                                       payment <- if (Send == paymentState payment) 
