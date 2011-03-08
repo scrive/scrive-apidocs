@@ -52,7 +52,7 @@ function placementToHTML(label, value) {
 }
 
 function placedFieldHelper(value) {
-  return $("<div class='placedfieldhelper' style='position:absolute'>"
+  return $("<div class='placedfieldhelper'>"
 	   + "<span class='value'>" + value + "</span>" 
 	   + "</div>");
 }
@@ -786,59 +786,18 @@ function isPlacedField(field) {
   return $(field).hasClass("placedfield");
 }
 
-/*safeReady(function() {
-  $("#signStepsContainer").droppable({ drop: function(event, ui) {
-    var field = $(ui.draggable);
-    var helper = $(ui.helper);
-    var fieldid = getFieldID(field);
-    if(isPlacedField(field)) {
-      field.detach();
-      helper.detach();  
-
-      $('.dragfield').filter(function() {
-        return getFieldID(this) === fieldid;
-      }).each(function() {
-        updateStatus(this);
-      });
-    }
-    return false;
-  }});
-});*/
-
-safeReady(function() {
-  $(".pagediv", "#documentBox")
-    .liveDroppable({ drop: function(event, ui) {
-      var page = $(this);
-      var field = $(ui.draggable);
-      var helper = $(ui.helper);
-      
-      var top = helper.offset().top - page.offset().top;
-      var left = helper.offset().left - page.offset().left;
-      
-      var pageno = parseInt(page.attr("id").substr(4));
-      
-      var sigid = getSigID(field);
-      var fieldid = getFieldID(field);
-      var pl = newplacement(left, top, pageno, page.width(), page.height());
-      placePlacements([pl], getLabel(field), getValue(field), sigid, fieldid);
-      
-      if(isPlacedField(field)) {
-        field.detach();
-        helper.detach();
-      }
-      updateStatus(field);
-      return false;
-    }});
-  
-  return true;
-});
-
 function initializeTemplates () {
-  if($(".pagediv").size() === 0){
+  var pagediv = $(".pagediv");
+  if(pagediv.size() === 0){
     setTimeout("initializeTemplates();", 100);
     return;
   }
-
+  
+  // coordinate axes
+  var pagejpg = pagediv.find(".pagejpg");
+  pagejpg.append("<div class='hline'></div>");
+  pagejpg.append("<div class='vline'></div>");
+  
   placePlacementsOfSignatories(docstate.signatories);
   placePlacementsOfSignatories([docstate.author]);
   enableInfoTextOnce();
@@ -887,33 +846,93 @@ function invalidatePlacedFieldsCache() {
   placedfieldscache = null;
 }
 
+function showCoordinateAxes(helper, page) {
+    var pagejpg = page.find(".pagejpg");
+    var hline = page.find(".hline");
+    var vline = page.find(".vline");
+    hline.show();
+    vline.show();
+    helper.mousemove(function(e) {
+        hline.css({
+            top: Math.min(pagejpg.height()-1, Math.max(0, helper.offset().top - pagejpg.offset().top + helper.height() - 6)) + "px"
+        });       
+        vline.css({
+            left: Math.min(pagejpg.width()-1, Math.max(0, helper.offset().left - pagejpg.offset().left)) + "px"
+        });
+    });
+}
+
+function hideCoordinateAxes() {
+    $(".hline").hide();
+    $(".vline").hide();
+}
+
 safeReady(function() {
+  $(".pagediv", "#documentBox")
+    .liveDroppable({ drop: function(event, ui) {
+      var page = $(this);
+      var field = $(ui.draggable);
+      var helper = $(ui.helper);
+      
+      var top = helper.offset().top - page.offset().top;
+      var left = helper.offset().left - page.offset().left;
+      
+      var pageno = parseInt(page.attr("id").substr(4));
+      
+      var sigid = getSigID(field);
+      var fieldid = getFieldID(field);
+      var pl = newplacement(left, top, pageno, page.width(), page.height());
+      placePlacements([pl], getLabel(field), getValue(field), sigid, fieldid);
+      
+      if(isPlacedField(field)) {
+        field.detach();
+        helper.detach();
+      }
+      hideCoordinateAxes();
+      updateStatus(field);
+      return false;
+    }});
+
   $(".dragfield", "#personpane")
     .liveDraggable({ handle: ".draghandle",
-                     zIndex: 10000,
+
 		     appendTo: "body",
-		     helper: function (event) {
+		     helper: function(event) {
 		       var field = $(this);
 		       var input = field.find("input");
 		       return placedFieldHelper(input.attr("value"));
-		     }
+		     },
+		     start: function(event, ui) {
+                         showCoordinateAxes(ui.helper, $(".pagediv").first());
+                     },
+                     stop: function() {
+                         hideCoordinateAxes();
+                     }
 	           });
+
   $(".dragtext", "#personpane")
     .liveDraggable({ handle: ".draghandle",
-		     zIndex: 10000,
+
 		     appendTo: "body",
-		     helper: function () {
+		     helper: function() {
 		       return placedFieldHelper($(this).find(".fieldvalue").html());
-	             }
+	             },
+	             start: function(event, ui) {
+                         showCoordinateAxes(ui.helper, $(".pagediv").first());
+                     },
+                     stop: function() {
+                         hideCoordinateAxes();
+                     }
 		   });
 
   $(".placedfield", "#documentBox")
-    .liveDraggable({ 
+    .liveDraggable({
       appendTo: "body",
       stop: function(event, ui) {
         var field = $(event.target);
         var helper = $(ui.helper);
         
+        hideCoordinateAxes();
         if(isPlacedField(field)) {
           helper.detach();
           field.detach();
@@ -927,13 +946,15 @@ safeReady(function() {
         });
       },
       // build a helper so it doesn't delete the original
-      helper: function (event, ui) {
+      helper: function(event, ui) {
         return placedFieldHelper($(this).find(".value").html());
       },
       // but we don't want to show the original so it looks like 
       // you are dragging the original
-      start: function (event, ui) {
-	$(this).hide();
+      start: function(event, ui) {
+        var that = $(this);
+        that.hide();
+        showCoordinateAxes(ui.helper, that.parents(".pagediv"));
       }
     });
 });

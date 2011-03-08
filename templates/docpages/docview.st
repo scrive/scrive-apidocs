@@ -81,9 +81,10 @@ uploadPageContent=
 showFileImagesReady= $images:{image| 
 
 <div id="page$image.number$" class="pagediv">
-  <img class="pagejpg" src="/pages/$fileid$/$image.number$">
-  <input type="hidden" name="width" value="$image.width$"> 
-  <input type="hidden" name="height" value="$image.height$"> 
+  <div class="pagejpg" style="background-image: url(/pages/$fileid$/$image.number$);">
+    <input type="hidden" name="width" value="$image.width$"> 
+    <input type="hidden" name="height" value="$image.height$">
+  </div>
 </div> 
 }$
 ####
