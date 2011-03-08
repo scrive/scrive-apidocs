@@ -791,7 +791,14 @@ function hideFlashMessages(event) {
 function addFlashMessage(msg){
     var flashmsgbox = $('.flashmsgbox');    
     flashmsgbox.children().remove();
-    flashmsgbox.append("<div class=\"flash_operationfailed\"><div class=\"flashmessage\"><img class=\"logo\" src=\"../img/logo-small.png\"><table class=\"flashcenter\"><tbody><tr><td>" + msg + "</td></tr> </tbody></table></div></div>");
+    flashmsgbox.append(
+          "<div class='flash_operationfailed'>"
+        + "<div class='flashmessage'>"
+        + "<img class='logo' src='/img/logo-small.png'>"
+        + "<table class='flashcenter'>"
+        + "<tbody><tr><td>" + msg + "</td></tr></tbody>"
+        + "</table></div></div>"
+    );
     flashFlashMessages();
 }  
 
