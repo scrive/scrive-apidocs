@@ -583,7 +583,7 @@ signedByMeFields document siglnk = do
 
 
 uploadPage :: KontrakcjaTemplates -> IO String
-uploadPage templates = renderTemplate templates "uploadPageContent" ()
+uploadPage templates = renderTemplate templates "uploadPage" ()
   
 
 -- We keep this javascript code generation for now
