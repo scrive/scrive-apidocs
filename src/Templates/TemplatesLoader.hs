@@ -37,6 +37,7 @@ templateFiles = ["templates/landpages.st",
                  "templates/docpages/doctexts.st",
                  "templates/docpages/docview.st",
                  "templates/docpages/docdesign.st",
+                 "templates/docpages/docupload.st",
                  "templates/apppages.st",
                  "templates/firstpage.st",
                  "templates/statictemplate.st"  ]
