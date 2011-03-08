@@ -221,7 +221,7 @@ handleRoutes = msum [
    Goes to the front page, or to the main document upload page,
    depending on whether there is a logged in user.
 -}
-handleHomepage :: ServerPartT (StateT Context IO) Response
+handleHomepage :: Kontra Response
 handleHomepage = do
   ctx@Context{ctxmaybeuser} <- get
   case ctxmaybeuser of
@@ -558,25 +558,56 @@ daveUser userid = onlySuperUserGet $ do
 
 
 
+hpost0
+  :: Kontra KontraLink
+     -> Kontra Response
 hpost0 action = methodM POST >> do
                   (link :: KontraLink) <- action
                   sendRedirect link
 
+hpost1
+  :: (FromReqURI a) =>
+     (a -> Kontra KontraLink)
+     -> Kontra Response
 hpost1 action = path $ \a1 -> methodM POST >>  do
                   (link :: KontraLink) <- action a1
                   sendRedirect link
 
+hpost2
+  :: (FromReqURI a, FromReqURI a1) =>
+     (a -> a1 -> Kontra KontraLink)
+     -> Kontra Response
 hpost2 action = path $ \a1 -> path $ \a2 -> methodM POST >>  do
                   (link :: KontraLink) <- action a1 a2
                   sendRedirect link
 
+hpost3
+  :: (FromReqURI a, FromReqURI a1, FromReqURI a2) =>
+     (a -> a1 -> a2 -> Kontra KontraLink)
+     -> Kontra Response
 hpost3 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> methodM POST >>  do
                   (link :: KontraLink) <- action a1 a2 a3
                   sendRedirect link
 
+hget0 :: (ServerMonad m, MonadPlus m) => m b -> m b
 hget0 action = methodM GET >> action
+
+hget1
+  :: (FromReqURI a, MonadPlus m, ServerMonad m) => (a -> m b) -> m b
 hget1 action = path $ \a1 -> methodM GET >> action a1
+
+hget2
+  :: (FromReqURI a, MonadPlus m, ServerMonad m, FromReqURI a1) =>
+     (a -> a1 -> m b) -> m b
 hget2 action = path $ \a1 -> path $ \a2 -> methodM GET >> action a1 a2
+
+hget3
+  :: (FromReqURI a,
+      MonadPlus m,
+      ServerMonad m,
+      FromReqURI a1,
+      FromReqURI a2) =>
+     (a -> a1 -> a2 -> m b) -> m b
 hget3 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> methodM GET >> action a1 a2 a3
 
 {-|
