@@ -14,6 +14,7 @@ module Payments.PaymentsUtils(showMoney,readMoney) where
 import Payments.PaymentsState
 import Control.Monad
 import Misc
+import Happstack.Util.Common
 
 {-| Money printer. Since show instance is derived by storage module, we provided nicer version -}
 showMoney::Money->String  
@@ -25,7 +26,7 @@ showMoney (Money i) = if (i>=0)
 readMoney::String->Maybe Money  
 readMoney s = do
                let (m,r) = break (== '.') s 
-               main<-maybeRead m
-               rest<-(maybeRead $ drop 1 r) `mplus` (return 0)
+               main<-readM m
+               rest<-(readM $ drop 1 r) `mplus` (return 0)
                let rest' = rest * (if (main>=0) then 1 else -1)
                return $ Money (main * 100 + rest')

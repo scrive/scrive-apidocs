@@ -52,6 +52,7 @@ import System.Process
 import System.IO (hClose)
 import qualified TrustWeaver as TW
 import Data.Char
+import Happstack.Util.Common
 
 eitherFlash :: ServerPartT (StateT Context IO) (Either String b)
             -> ServerPartT (StateT Context IO) b
@@ -96,7 +97,7 @@ showAdminUsers Nothing= onlySuperUser $
 showAdminUsers (Just a)= onlySuperUser $
                          do 
                          ctx@Context {ctxtemplates} <- lift get
-                         let muserId = maybeRead a
+                         let muserId = readM a
                          case muserId of 
                            Nothing -> mzero   
                            Just userId ->    
@@ -178,7 +179,7 @@ getUsersDetailsToCSV = onlySuperUser $ do
 handleUserChange :: String -> Kontra KontraLink
 handleUserChange a = onlySuperUser $
                      do
-                     let muserId = maybeRead a
+                     let muserId = readM a
                      _ <- g "change"
                      case muserId of 
                        Nothing -> mzero   
@@ -204,7 +205,7 @@ handleUserEnableTrustWeaverStorage :: String -> Kontra KontraLink
 handleUserEnableTrustWeaverStorage a =
     onlySuperUser $
                   do
-                    let muserId = maybeRead a
+                    let muserId = readM a
                     _ <- g "enabletrustweaver"
                     case muserId of 
                        Nothing -> mzero   
@@ -419,7 +420,7 @@ getAdminUsersPageParams = do
                           search <- getDataFn' (look "search")         
                           startletter <-  getDataFn' (look "startletter")         
                           mpage <-  getDataFn' (look "page")         
-                          let mpage' = join $ fmap maybeRead mpage
+                          let mpage' = join $ fmap readM mpage
                           return $ AdminUsersPageParams {search = search, startletter=startletter, page = maybe 0 id mpage'}
                                                                           
 
