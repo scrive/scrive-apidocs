@@ -583,13 +583,8 @@ signedByMeFields document siglnk = do
 
 
 uploadPage :: KontrakcjaTemplates -> IO String
-uploadPage templates = do
-  uploadBox <- renderTemplate templates "uploadPageContent" ()
-  renderTemplate templates "creatingDocumentFrame" $
-    (setAttribute  "steps" uploadBox) .
-    (setAttribute  "step1" True) .
-    (setAttribute  "submitFormOnNext" True)
-
+uploadPage templates = renderTemplate templates "uploadPageContent" ()
+  
 
 -- We keep this javascript code generation for now
 jsArray :: [[Char]] -> [Char]
