@@ -1,5 +1,5 @@
 ####    Pages for documents - main part of system
-creatingDocumentFrame=   
+uploadPage=   
 <div id="signStepsContainer">
   
   <div id="signStepsTitleRow">
