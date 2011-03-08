@@ -583,6 +583,7 @@ color: white;
 #documentBox 
 {
     overflow: auto;
+    text-align: center;
     /* background-color: #999; */
     margin: 0 auto;
     width: 960px;
@@ -593,8 +594,6 @@ color: white;
 {
     width: 944px;
     height: 100px;
-    align: center;
-    margin: 6px;
     border: 1px solid black;
     background-color: #fafafa;
     background-image: url(images/wait30trans.gif);
@@ -605,8 +604,7 @@ color: white;
 .pagejpg 
 {
     width: 943px;
-    align: center;
-    margin: 6px;
+    height: 1335px;
     border: 1px solid #777;
     background-color: #fafafa;
 }
@@ -886,16 +884,36 @@ a.button {
     width:140px;
 }
 
-.pagediv 
+.pagediv
 {
     position: relative;
     font-size: 15px; /* currently A4 is 612pt wide and for us that is 944px on screen. So to have 10pt font is to have 944px*10pt/612pt = 15px */
+    margin: 6px;
 }
 
-.placedfield 
-{
-    position: absolute;
+.pagediv .hline {
+    width: 100%;
+    height: 1px;
+    background: #dedede;
+    position: relative;
+    display: none;
 }
+
+.pagediv .vline {
+    width: 1px;
+    height: 100%;
+    background: #dedede;
+    position: relative;
+    display: none;
+}
+
+.placedfield, .placedfieldhelper {
+    position: absolute;
+    font-family: Helvetica;
+    font-size: 15px;
+    cursor: pointer;
+}
+
 
 /* Localized */
 
@@ -1649,7 +1667,7 @@ a.okIcon {
   position: absolute;
   top: 3px;
   left: 3px;
-
+  cursor: pointer;
 }
 
 .signViewBodyForms input
