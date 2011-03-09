@@ -347,6 +347,9 @@ pageDocumentForAuthor ctx
              field "otherFieldOwner" "author")
              $ zip fields ([1..]::[Int])
    in do
+     validationinput <- if isSuperUser $ Just author
+                        then renderTemplate (ctxtemplates ctx) "validationdropdown" ()
+                        else renderTemplate (ctxtemplates ctx) "emailhidden" ()
      renderTemplate (ctxtemplates ctx) "pageDocumentForAuthorContent" $ do
        field "authorOtherFields" $ doc_author_otherfields $ signatoryotherfields documentauthordetails
        field "linkissuedoc" $ show $ LinkIssueDoc documentid
@@ -367,8 +370,7 @@ pageDocumentForAuthor ctx
        field "docstate" (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks)
        field "linkissuedocpdf" $ show (LinkIssueDocPDF document)
        field "documentinfotext" $ documentInfoText templates document (find (isMatchingSignatoryLink author) documentsignatorylinks) author
-       documentInfoFields document
-       documentAuthorInfo author
+       documentInfoFields document author
        designViewFields step
 
 renderActionButton :: KontrakcjaTemplates -> KontraLink -> String -> IO String
