@@ -44,7 +44,6 @@ import qualified Network.HTTP as HTTP
 import qualified Network.AWS.AWSConnection as AWS
 import qualified TrustWeaver as TW
 import qualified Payments.PaymentsControl as Payments
-import qualified Contacts.ContactsControl as Contacts
 import Templates.Templates (readTemplates, renderTemplate, KontrakcjaTemplates)
 import qualified Administration.AdministrationControl as Administration
 import Mails.MailsConfig
@@ -204,23 +203,10 @@ handleRoutes = msum [
      , dir "invite"      $ hpost0 $ UserControl.handleViralInvite
      , dir "question"    $ hpost0 $ UserControl.handleQuestion
      -- e-legitimation stuff
-     {- Disabled until finished
-     , dir "bankid" $ dir "s" $ hget3  $ BankID.handleSignBankID
-     , dir "bankid" $ dir "d" $ hget1  $ BankID.handleIssueBankID
-     , dir "s" $ param "bankid" $ hpost3 $ BankID.handleSignPostBankID
-     , dir "d" $ param "bankid" $ hpost1 $ BankID.handleIssuePostBankID
-     
-
-     , dir "nordea" $ dir "s" $ hget3  $ BankID.handleSignNordea
-     , dir "nordea" $ dir "d" $ hget1  $ BankID.handleIssueNordea
-     , dir "s" $ param "nordea" $ hpost3 $ BankID.handleSignPostNordea
-     , dir "d" $ param "nordea" $ hpost1 $ BankID.handleIssuePostNordea
-
-     , dir "telia" $ dir "s" $ hget3  $ BankID.handleSignTelia
-     , dir "telia" $ dir "d" $ hget1  $ BankID.handleIssueTelia
-     , dir "s" $ param "telia" $ hpost3 $ BankID.handleSignPostTelia
-     , dir "d" $ param "telia" $ hpost1 $ BankID.handleIssuePostTelia
-     -}
+     , dir "s" $ hget4  $ BankID.handleSignBankID
+     , dir "s" $ hpost3 $ BankID.handleSignPostBankID
+     , dir "d" $ hget2  $ BankID.handleIssueBankID
+     , dir "d" $ hpost1 $ BankID.handleIssuePostBankID
 
      -- static files
      , serveHTMLFiles
@@ -627,6 +613,14 @@ hpost3 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> methodM POST >>  do
                   (link :: KontraLink) <- action a1 a2 a3
                   sendRedirect link
 
+hpost4
+  :: (FromReqURI a, FromReqURI a1, FromReqURI a2, FromReqURI a3) =>
+     (a -> a1 -> a2 -> a3 -> Kontra KontraLink)
+     -> Kontra Response
+hpost4 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> path $ \a4 -> methodM POST >>  do
+                  (link :: KontraLink) <- action a1 a2 a3 a4
+                  sendRedirect link
+
 hget0 :: (ServerMonad m, MonadPlus m) => m b -> m b
 hget0 action = methodM GET >> action
 
@@ -647,6 +641,16 @@ hget3
       FromReqURI a2) =>
      (a -> a1 -> a2 -> m b) -> m b
 hget3 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> methodM GET >> action a1 a2 a3
+
+hget4
+  :: (FromReqURI a,
+      MonadPlus m,
+      ServerMonad m,
+      FromReqURI a1,
+      FromReqURI a2,
+      FromReqURI a3) =>
+     (a -> a1 -> a2 -> a3 -> m b) -> m b
+hget4 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> path $ \a4 -> methodM GET >> action a1 a2 a3 a4
 
 {-|
   Version supporting optional path param
