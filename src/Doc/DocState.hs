@@ -261,8 +261,11 @@ signDocument :: DocumentID
              -> Word32
              -> Maybe SignatureInfo
              -> [(BS.ByteString, BS.ByteString)]
+             -> Maybe BS.ByteString
+             -> Maybe BS.ByteString
+             -> Maybe BS.ByteString
              -> Update Documents (Either String Document)
-signDocument documentid signatorylinkid1 time ipnumber msiginfo fields = do
+signDocument documentid signatorylinkid1 time ipnumber msiginfo fields mfst mlst mnum = do
   modifyContract documentid $ \document ->
       let
           signeddocument = document { documentsignatorylinks = newsignatorylinks }
