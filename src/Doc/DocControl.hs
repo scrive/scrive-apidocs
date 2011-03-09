@@ -315,7 +315,7 @@ signDocument documentid
   when (not allowsEmail) mzero
 
 
-  newdocument <- update $ SignDocument documentid signatorylinkid1 ctxtime ctxipnumber Nothing fields
+  newdocument <- update $ SignDocument documentid signatorylinkid1 ctxtime ctxipnumber Nothing fields Nothing Nothing Nothing
   case newdocument of
     Left message -> 
         do
