@@ -76,3 +76,4 @@ passes, merge, ignoring later mismatches
 
 * Merge procedure
 Prefer data from ELeg
+if it's missing, take from SignatoryDetails
