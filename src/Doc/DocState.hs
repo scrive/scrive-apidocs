@@ -1,46 +1,20 @@
 module Doc.DocState 
-    ( Author(..)
-    , ChargeMode(..)
-    , Document(..)
-    , DocumentHistoryEntry(..)
-    , DocumentID(..)
-    , DocumentStatus(..)
-    , DocumentType(..)
-    , Documents(..)
-    , FieldDefinition(..)
-    , FieldPlacement(..)
-    , File(..)
-    , FileID(..)
-    , FileStorage(..)
-    , JpegPages(..)
-    , SignInfo(..)
-    , Signatory(..)
-    , SignatoryDetails(..)
-    , signatoryname
-    , SignatoryLink(..)
-    , SignatoryLinkID(..)
-    , TimeoutTime(..)
-    , DocStats(..)
-    , isAuthor
+    ( module Doc.DocStateData
+    , isAuthor -- from Utils
+    , signatoryname -- fromUtils
     , isMatchingSignatoryLink
-    , signatoryDetailsFromUser
-    , signatoryname
+    , anyInvitationUndelivered
     , undeliveredSignatoryLinks
-    -- db commands
     , ArchiveDocuments(..)
     , AttachFile(..)
     , AttachSealedFile(..)
-    , AuthorSendDocument(..)
     , AuthorSignDocument(..)
-    , CancelDocument(..)
-    , ChangeSignatoryEmailWhenUndelivered(..)
-    , CloseDocument(..)
-    , ErrorDocument(..)
+    , AuthorSendDocument(..)
+    , RejectDocument(..)
     , FileModTime(..)
     , FileMovedToAWS(..)
     , FragileTakeOverDocuments(..)
     , GetDocumentByDocumentID(..)
-    , GetDocumentByFileID(..)
     , GetDocumentStats(..)
     , GetDocumentStatsByUser(..)
     , GetDocuments(..)
@@ -48,23 +22,15 @@ module Doc.DocState
     , GetDocumentsBySignatory(..)
     , GetDocumentsByUser(..)
     , GetFilesThatShouldBeMovedToAmazon(..)
-    , GetMagicHash(..)
     , GetNumberOfDocumentsOfUser(..)
     , GetTimeoutedButPendingDocuments(..)
-    , GetUniqueSignatoryLinkID(..)
-    , IdentificationType(..)
     , MarkDocumentSeen(..)
+    , SetInvitationDeliveryStatus(..)
     , NewDocument(..)
-    , RejectDocument(..)
-    , RestartDocument(..)
     , SaveDocumentForSignedUser(..)
     , SetDocumentTimeoutTime(..)
     , SetDocumentTrustWeaverReference(..)
-    , SetInvitationDeliveryStatus(..)
-    , SetSignatoryLinks(..)
     , SignDocument(..)
-    , SignatureInfo(..)
-    , SignatureProvider(..)
     , TimeoutDocument(..)
     , UpdateDocument(..)
     , CloseDocument(..)
@@ -83,43 +49,36 @@ module Doc.DocState
     , SignatureProvider(..)
     )
 where
--- local imports
-import User.UserState
-import Misc
-import MinutesTime
-import Mails.MailsUtil
-
--- external imports
-import Control.Applicative ((<$>))
-import Control.Monad
+import Happstack.Data
+import Happstack.State
 import Control.Monad.Reader (ask)
 import Control.Monad.State (modify)
 import Control.Monad.Trans
-import Data.Int
-import Data.List (find, zipWith4, partition)
-import Data.Maybe
-import Data.Word
-import Debug.Trace
-import Happstack.Data
+import User.UserState
 import Happstack.Data.IxSet as IxSet
-import Happstack.Server.SimpleHTTP
-import Happstack.State
-import Happstack.Util.Common
-import System.Log.Logger (errorM)
-import System.Random
-import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString as BS
+import Control.Applicative ((<$>))
+import Happstack.Server.SimpleHTTP
+import Happstack.Util.Common
+import Debug.Trace
+import Misc
+import Control.Monad
+import Data.List (find)
+import MinutesTime
+import Data.List (zipWith4,partition)
+import System.Random
+import Data.Word
+import Data.Int
+import System.Log.Logger (errorM)
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import Data.Maybe
 import Mails.MailsUtil
-
-
-signatoryname :: SignatoryDetails -> BS.ByteString
-signatoryname s = 
-    if (BS.null $ signatorysndname s) 
-        then (signatoryfstname s) 
-        else (signatoryfstname s) `BS.append` (BS.fromString " ") `BS.append` (signatorysndname s)
+import Data.Data (Data)
+import qualified Data.Generics.SYB.WithClass.Derive as SYB
+import Doc.DocStateData
+import Doc.DocStateUtils
 
 getDocuments:: Query Documents [Document]
 getDocuments = do
@@ -149,21 +108,14 @@ getDocumentsBySignatory user = do
                                    && (Preparation /= documentstatus doc)
     return $ filter involvedAsSignatory (toList documents)
        
-isMatchingSignatoryLink :: User -> SignatoryLink -> Bool
-isMatchingSignatoryLink user sigLink = signatoryMatches || emailMatches
-  where signatoryMatches = case (maybesignatory sigLink) of
-                                             Just (Signatory sigid) | sigid == (userid user) -> True
-                                             _ -> False
-        emailMatches = (signatoryemail . signatorydetails $ sigLink) == (unEmail . useremail $ userinfo user)
-
 
 getTimeoutedButPendingDocuments :: MinutesTime -> Query Documents [Document]
 getTimeoutedButPendingDocuments now = do
-    docs <- ask
-    return $ (flip filter) (toList docs) 
-                $ \doc -> case (documenttimeouttime doc) of
-                    Just timeout -> (documentstatus doc) == Pending && (unTimeoutTime timeout) < now
-                    _            -> False           
+  docs <-  ask
+  return $ (flip filter) (toList docs) $ \doc -> case (documenttimeouttime doc) of
+                                                  Just timeout -> (documentstatus doc) == Pending &&(unTimeoutTime timeout) < now
+                                                  _ -> False           
+    
 
 newDocument :: User
             -> BS.ByteString
@@ -348,7 +300,7 @@ signDocument documentid signatorylinkid1 time ipnumber msiginfo fields = do
 
       in case documentstatus document of
            Pending ->  Right signeddocument2
-           Timedout -> Left "Förfallodatum har passerat"
+           Timedout -> Left "FÃ¶rfallodatum har passerat"
            _ ->        Left ("Bad document status: " ++ show (documentstatus document))
 
 signWithUserID [] _ _ _ = []
@@ -377,7 +329,7 @@ authorSendDocument documentid time ipnumber author msiginfo =
                                   , documenthistory = documenthistory document ++ [DocumentHistoryInvitationSent time ipnumber]
                                   }
               
-          Timedout -> Left "Förfallodatum har passerat" -- possibly quite strange here...
+          Timedout -> Left "FÃ¶rfallodatum har passerat" -- possibly quite strange here...
           _ ->        Left ("Bad document status: " ++ show (documentstatus document))
 
 
@@ -404,7 +356,7 @@ authorSignDocument documentid time ipnumber author msiginfo =
                                   , documenthistory = documenthistory document ++ [DocumentHistoryInvitationSent time ipnumber]
                                   }
               
-          Timedout -> Left "Förfallodatum har passerat" -- possibly quite strange here...
+          Timedout -> Left "FÃ¶rfallodatum har passerat" -- possibly quite strange here...
           _ ->        Left ("Bad document status: " ++ show (documentstatus document))
   
 getMagicHash :: Update Documents MagicHash
@@ -427,7 +379,7 @@ rejectDocument documentid signatorylinkid1 time ipnumber = do
           -- what his IP was, and time of happening
       in case documentstatus document of
            Pending ->  Right newdocument
-           Timedout -> Left "Förfallodatum har passerat"
+           Timedout -> Left "FÃ¶rfallodatum har passerat"
            _ ->        Left "Bad document status"
   
 
@@ -608,23 +560,23 @@ getFilesThatShouldBeMovedToAmazon = do
 -} 
 restartDocument :: DocumentID -> User-> Update Documents (Either String Document)
 restartDocument docid user =
-   modifyDocument' docid (\d -> tryToGetRestarted d user)    
+   modifyContractWithAction docid (\d -> tryToGetRestarted d user)    
 
 
 {- | 
     Returns restarted version of document
-    Checks the author and status
+    Checks the autor and status
     Clears sign links and stuff
  -}
 tryToGetRestarted :: Document -> User -> Update Documents (Either String Document)
 tryToGetRestarted doc user = 
     if (documentstatus doc `notElem` [Canceled, Timedout, Rejected])
-        then return $ Left $ "Can't restart document with " ++ (show $ documentstatus doc) ++ " status"
-        else if (not $ isAuthor doc user)
-                then return $ Left $ "Can't restart document if you are not it's author"
-                else do 
-                    doc' <- clearSignInfofromDoc doc user
-                    return $ Right doc'
+    then return $ Left $ "Can't restart document with " ++ (show $ documentstatus doc) ++ " status"
+    else if (not $ isAuthor doc user)
+         then return $ Left $ "Can't restart document if you are not it's author"
+         else do 
+           doc' <- clearSignInfofromDoc doc user
+           return $ Right doc'
 
 
 clearSignInfofromDoc doc author = do
