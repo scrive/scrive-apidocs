@@ -328,32 +328,17 @@ $signatoryScriptIfRequired()$
 pageDocumentForAuthorHelpersLocalDialogs=
 <div class="localdialogs">
   <form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-signinvite" rel=".stepForm">  
-    <div class="modal-container">
-        <div class="modal-header">
-            <div class="modal-icon message"></div>
-            <div class="modal-title">
-                <h2 id="dialog-title-sign">Underteckna</h2>
-            </div>
-            <a class="modal-close close"> </a>
-        </div>
-        <div class="modal-body">
-            <div class="modal-content">
-                 <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
-                 <p>När du undertecknat kommer en automatisk inbjudan att skickas till 
-                 <span class="Xinvited">Invited</span> med e-post.</p>
-            </div>
-        </div>
-        <div class="modal-footer">
-               <input type="hidden" name="sign" value="automatic" />
-                <a  class="close cancel">Avbryt</a>
-                <a href="#" class="btn-small green float-right submiter">
-                <div class="left"></div>
-                <div class="label">
-                    <p>Underteckna</p>
-                <div class="btn-symbol green arrow-left"></div></div>
-                <div class="right"></div>
-            </a>
-        </div>
+    <a class="close"> </a>
+    <h2 id="dialog-title-sign">Underteckna</h2>
+    <div id="dialog-confirm-text-sign">
+      <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
+      <p>När du undertecknat kommer en automatisk inbjudan att skickas till 
+      <span class="Xinvited">Invited</span> med e-post.</p>
+    </div>
+    <div class="buttonbox" >
+      <input type="hidden" name="sign" value="automatic" />
+      <button class="close button" type="button"> Avbryt </button>
+      <button class="submiter button" type="button"> Underteckna </button>
     </div>
   </form>
 
@@ -399,37 +384,19 @@ pageDocumentForAuthorHelpersLocalDialogs=
     </div>
   </form>
 
-  <form method="post" name="form" action=action id="dialog-confirm-sign-eleg" class="overlay">     
-    <script type="text/javascript" src="/js/bankid.js"></script>
-    <div class="modal-container">
-        <div class="modal-header">
-            <div class="modal-icon message"></div>
-            <div class="modal-title">
-                <h2>Underteckna with E-Legitimation</h2>  
-            </div>
-            <a class="modal-close close"> </a>
-        </div>
-        <div class="modal-body">
-            <div class="modal-content">
-                <p>CHANGE!!!Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
-                <p>När  undertecknat blir 
-                    avtalet <strong>juridiskt bindande</strong> och
-                    det färdigställda avtalet skickas till din e-post.</p>
-          </div>
-        </div>
-        <div class="modal-footer">
-                <input type="hidden" name="bankid" value="automatic" />
-                <input type="hidden" name="signature" value="" id="signature" />
-                <input type="hidden" name="transactionid" value="" id="transactionid" />
-                <a  class="close cancel">Avbryt</a>
-                <a href="#" class="btn-small green float-right submiter bankid">
-                <div class="left"></div>
-                <div class="label">
-                    <p> Underteckna with BankID</p>
-                <div class="btn-symbol green arrow-left"></div></div>
-                <div class="right"></div>
-            </a>
-        </div>
+  <form method="post" name="form" action="" id="dialog-confirm-sign-eleg" class="overlay">     
+    <a class="close"> </a>                  
+    <h2>Underteckna with E-Legitimation</h2>  
+    <p>CHANGE!!!Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
+    <p>När  undertecknat blir 
+      avtalet <strong>juridiskt bindande</strong> och
+      det färdigställda avtalet skickas till din e-post.</p>
+    <div class="buttonbox">
+      <input type="hidden" name="bankid" value="automatic" />
+      <input type="hidden" name="signature" value="" id="signature" />
+      <input type="hidden" name="transactionid" value="" id="transactionid" />
+      <button class="close button" type="button"> Avbryt </button>
+      <button class="bankid button" type="button"> Underteckna with BankID</button>
     </div>
   </form>  
 

@@ -4,6 +4,7 @@ pageDocumentForAuthorContentPreparation=
   <script type="text/javascript"> 
     var documentid = "$documentid$"; 
   </script>
+  <script type="text/javascript" src="/js/bankid.js"></script>
 </div>
 <div id="signStepsWrapper">
 
@@ -216,7 +217,7 @@ pageDocumentForAuthorContentPreparation=
                 <small><a rel="#edit-invite-text-dialog" id="editinvitetextlink" href="#" style="padding-top:3px">JUSTERA HÄLSNINGSMEDDELANDE</a></small>
                 <input type="hidden" id="invitetext" name="invitetext" value="$documentinvitetext$" />
               </div>
-              
+              $validationdropdown()$
         </div>
         
         <div class="border"></div>   
@@ -334,3 +335,15 @@ pageDocumentForAuthorContentPreparation=
   </span>
 </div>
 #####
+validationdropdown=
+<div>
+  Verifieringsmetod<br>
+  <select name="validationmethod"
+          id="validationdropdown">
+    <option value="email" selected>E-post</option>
+    <option value="eleg">E-Legitimation</option>
+  </select>
+</div>
+#####
+emailhidden=
+<input type="hidden" value="email" name="validationmethod" />
