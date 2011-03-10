@@ -132,7 +132,8 @@ handleRoutes = msum [
      , dir "cancel"  $ hpost1 $ DocControl.handleCancel
      
      , dir "pages"  $ hget2 $ DocControl.showPage
-
+     , dir "templates"  $ hget0 $ DocControl.getAllTemplates
+     , dir "template"  $ hpost0 $ DocControl.handleCreateFromTemplate
      , dir "landpage" $ dir "signinvite" $ hget1 $ DocControl.landpageSignInvite
      , dir "landpage" $ dir "signed"     $ hget2 $ DocControl.landpageSigned 
      , dir "landpage" $ dir "rejected"   $ hget2 $ DocControl.landpageRejected

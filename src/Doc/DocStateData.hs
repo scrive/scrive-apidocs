@@ -1604,6 +1604,7 @@ $(inferIxSet "Documents" ''Document 'noCalcs
                  , ''SignatoryLinkID
                  , ''FileID
                  , ''TimeoutTime
+                 , ''DocumentType
                  ])
 instance Component Documents where
   type Dependencies Documents = End

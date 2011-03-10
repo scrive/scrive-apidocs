@@ -85,7 +85,7 @@ import Text.StringTemplate.Base hiding (ToSElem,toSElem)
 import Text.StringTemplate.Classes hiding (ToSElem,toSElem)
 import qualified Text.StringTemplate.Classes as HST
 import qualified Text.StringTemplate (setAttribute)
-import Data.Map (fromList)
+import qualified Data.Map as Map
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 
@@ -142,14 +142,14 @@ instance (ToSElem a) => Field a where
 instance Field (Fields) where 
   field a b =  do
                s <- get 
-               let val = fmap (SM . fromList) $ sequence $ map packIO $ execState b [] 
+               let val = fmap toSElem $ sequence $ map packIO $ execState b [] 
                put ((a,val):s)
 
 instance Field [Fields] where 
   field a fs =  do
                s <- get 
-               let vals f = fmap (SM . fromList) $ sequence $ map packIO $ execState f [] 
-               put ((a,fmap LI $ mapM vals fs):s)
+               let vals f = fmap Map.fromList $ sequence $ map packIO $ execState f [] 
+               put ((a,fmap toSElem $ mapM vals fs):s)
                
 
 instance RenderTemplate Fields where
@@ -183,5 +183,14 @@ instance ToSElem (Maybe BS.ByteString) where
   toSElem = HST.toSElem . fmap BS.toString           
   
 instance ToSElem [BS.ByteString] where
-  toSElem = HST.toSElem . fmap BS.toString             
+  toSElem = toSElem . fmap BS.toString     
+  
+instance (HST.ToSElem a) => ToSElem [a] where
+  toSElem [] = SNull
+  toSElem l  = LI $ map HST.toSElem l 
+
+instance (HST.ToSElem a) => ToSElem (Map.Map String a) where
+  toSElem m = if (Map.null m)
+                then SNull   
+                else SM $ Map.map HST.toSElem m
   
