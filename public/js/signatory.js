@@ -29,7 +29,7 @@ function placementToHTML(label, value) {
 	v = label;
     }
     return $("<div class='placedfield' style='position:absolute'>"
-	     + "<span class='value'>" + v + "</span>" 
+	     + "<span class='value'>" + escapeHTML(v) + "</span>" 
 	     + "</div>");
 }
 
@@ -316,7 +316,11 @@ function docstateToHTML(){
                               if(val === ""){
                                 val = "(unfilled)";
                               }
-			      ff.find(".signatoryfields").append("<span class='text'>" + f.label + ": " +val+"</span>");
+			      ff.find(".signatoryfields").append(
+                                  "<span class='text'>"
+                                + escapeHTML(f.label)
+                                + ": " + escapeHTML(val)
+                                + "</span>");
 			    }
 			});
 		    }
