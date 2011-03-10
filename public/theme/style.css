@@ -600,7 +600,16 @@ color: white;
     background-repeat: no-repeat;
     background-position: center center;
 }
-
+.waiting4data
+{
+    margin-left:40%;
+    margin-right:40%;
+    height: 100px;
+    background-color: #fafafa;
+    background-image: url(images/wait30trans.gif);
+    background-repeat: no-repeat;
+    background-position: center center;
+}
 .pagejpg 
 {
     width: 943px;
@@ -1213,20 +1222,20 @@ a.okIcon {
     position: absolute;
 }
 
-.signStepsButton .icon.arrowRight
+.icon.arrowRight
 {
     background-image: url(images/iconArrowRight.png);
 }
 
 /* 008 new */
-.uploadButton .icon.arrowUp
+.icon.arrowUp
 {
     background-image: url(images/iconArrowUp.png);
     width: 13px;
     height: 11px;
 }
 
-.signStepsButton .icon.check
+.icon.check
 {
     background-image: url(images/iconGreenCheck.png);
     width: 14px;
@@ -1266,7 +1275,7 @@ a.okIcon {
 
 /* 006 i couldnt get the real pixel sizes from the psd, please edit the sizes if needed */
 /* step 1 */
-#signStepsBodyUploadBox
+.signStepsBodyUploadBox
 {
     width: 250px;
     margin: 7px auto 7px auto;
@@ -1278,50 +1287,46 @@ a.okIcon {
     text-align: center;
 
 }
-
-/* 015 new */
-#signStepsBodyUploadBox.step3
-{
-    width: 217px;
-    text-align: center;
-    margin-left: 0;
-	margin-top: 2px;
-    padding: 5px 14px;
-}
-
-/* 015 new */
-#signStepsBodyUploadBox.step3 #signStepsButtonContainer
-{
-    margin-left: 44px;
-    margin-top: 6px;
-}
-
 /* 008 new */
-#signStepsBodyUploadTextContainer .text
+.signStepsBodyUploadTextContainer .text
 {
     color: #666666;
 }
 
-#signStepsBodyUploadBox .header
+.signStepsBodyUploadBox .header
 {
     font-weight: bold;
     font-size: 16px;
     color: black; /* 008 new */
 }
 
-#signStepsBodyUploadBox .title
+.signStepsBodyUploadBox .title
 {
     font-size: 14px;
 }
 
-#signStepsButtonContainer
+.signStepsButtonContainer
 {
     position: relative; /* 008 new */
     margin-top: 15px;
     margin-bottom: 5px;
     margin-left: 65px;
 }
-
+/* HOW TO MAKE FILE INPUT LOOKING LIKE A BUTTON !!!! */
+input.multiFileInput { 
+    position:relative;
+    z-index:10;
+    cursor:pointer;
+    float:right;
+    top:-15;
+    left:10;
+    font-size:xx-large;
+    cursor:pointer;
+    cursor:hand
+    -ms-filter: 'progid:DXImageTransform.Microsoft.Alpha(Opacity=0)';
+    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=0);
+    opacity: 0;
+}
 
 /* 007 code below added in 007 */
 /* step 2 */

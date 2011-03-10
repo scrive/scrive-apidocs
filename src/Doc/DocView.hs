@@ -30,6 +30,7 @@ module Doc.DocView (
   , isNotLinkForUserID
   , signatoryDetailsFromUser
   , uploadPage
+  , templatesForAjax
   ) where
 
 import Control.Applicative ((<$>))
@@ -283,6 +284,7 @@ isNotLinkForUserID uid link =
 pageDocumentForAuthor :: Context 
              -> Document 
              -> User
+             -> (Maybe DesignStep)
              -> IO String
 pageDocumentForAuthor ctx
   document@Document {
@@ -293,7 +295,8 @@ pageDocumentForAuthor ctx
     , documentinvitetext
     , documentallowedidtypes
   }
-  author =
+  author 
+  step =
    let
        templates = ctxtemplates ctx
        authorid = userid author
@@ -338,6 +341,7 @@ pageDocumentForAuthor ctx
        field "linkissuedocpdf" $ show (LinkIssueDocPDF document)
        field "documentinfotext" $ documentInfoText templates document (find (isMatchingSignatoryLink author) documentsignatorylinks) author
        documentInfoFields document author
+       designViewFields step
 
 {- |
    Show the document for Viewers (friends of author or signatory).
@@ -561,6 +565,8 @@ documentInfoFields  document author = do
   field "documenttitle" $ BS.toString $ documenttitle document
   field "documentid" $ show $ documentid document
   field "timetosignset" $  isJust $ documentdaystosign document
+  field "template" $  documenttype document == Template
+  field "contract" $  documenttype document == Contract
   documentStatusFields document
 
 -- | Fields indication what is a document status 
@@ -581,11 +587,27 @@ signedByMeFields document siglnk = do
   field "signedbyme" $ (isJust siglnk) && (isJust $ maybesigninfo $ fromJust siglnk)
   field "iamauthor" $ isAuthor document siglnk
 
+designViewFields:: (Maybe DesignStep) -> Fields
+designViewFields step = do
+    case step of 
+        (Just (DesignStep3 _)) -> field "step3" True
+        (Just (DesignStep2 _)) -> field "step2" True
+        (Just (DesignStep1)) -> field "step1" True
+        _ -> field "step2" True
+        
 
 uploadPage :: KontrakcjaTemplates -> IO String
 uploadPage templates = renderTemplate templates "uploadPage" ()
   
 
+templatesForAjax::KontrakcjaTemplates -> [Document] -> IO String
+templatesForAjax templates doctemplates = 
+    renderTemplate templates "templatesForAjax" $ do
+        field "templates" $ for doctemplates $ \template -> do
+            field "name"  $ documenttitle template
+            field "id"    $ show $ documentid template
+            field "link"  $ show $ LinkIssueDoc $ documentid template
+    
 -- We keep this javascript code generation for now
 jsArray :: [[Char]] -> [Char]
 jsArray xs = "[" ++ (joinWith ", " xs) ++ "]"

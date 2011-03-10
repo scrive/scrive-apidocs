@@ -43,6 +43,9 @@ module Doc.DocState
     , GetMagicHash(..)
     , GetDocumentByFileID(..)
     , ErrorDocument(..)
+    , GetUserTemplates(..)
+    , TemplateFromDocument(..)
+    , ContractFromDocument(..)
     )
 where
 import Happstack.Data
@@ -115,10 +118,11 @@ getTimeoutedButPendingDocuments now = do
 
 newDocument :: User
             -> BS.ByteString
+            -> DocumentType
             -> MinutesTime 
             -> Bool -- is free?
             -> Update Documents Document
-newDocument user title ctime isfree = do
+newDocument user title documenttype ctime isfree = do
   authorlink <- signLinkFromDetails [(unEmail $ useremail $ userinfo user, user)] $ signatoryDetailsFromUser user
   let doc = Document
           { documentid = DocumentID 0
@@ -127,7 +131,7 @@ newDocument user title ctime isfree = do
           , documentsignatorylinks = [authorlink]
           , documentfiles = []
           , documentstatus = Preparation
-          , documenttype = Contract
+          , documenttype = documenttype
           , documentctime = ctime
           , documentmtime = ctime
           , documentchargemode = if isfree then ChargeInitialFree else ChargeNormal
@@ -427,8 +431,8 @@ getDocumentStats = do
 fileModTime :: FileID -> Query Documents MinutesTime
 fileModTime fileid = do
   documents <- ask
-  let Just doc = getOne (documents @= fileid)
-  return (documentmtime doc)
+  return $ maximum $ (MinutesTime 0 0) : (map documentmtime $ toList (documents @= fileid))
+  
 
 saveDocumentForSignedUser :: DocumentID -> UserID -> SignatoryLinkID 
                           -> Update Documents (Either String Document)
@@ -647,7 +651,7 @@ errorDocument documentid errormsg =
       in Right newdocument
 
 
-getUserTemplates:: UserID -> Update Documents [Document]
+getUserTemplates:: UserID -> Query Documents [Document]
 getUserTemplates userid = do 
     documents <- ask
     return $ toList (documents @= Author userid @= Template)
@@ -661,8 +665,8 @@ contractFromDocument = newFromDocument $ \doc ->
   
 
 templateFromDocument :: DocumentID -> Update Documents (Either String Document)
-templateFromDocument = newFromDocument $ \doc -> 
-    doc {
+templateFromDocument docid = modifyContract docid $ \doc -> 
+    Right $ doc {
         documenttype = Template
       , documentstatus = Preparation
     }
