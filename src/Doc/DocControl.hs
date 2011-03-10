@@ -514,14 +514,15 @@ handleIssueShowGet docid = withUserGet $ checkUserTOSGet $ do
   document@Document{ documentauthor } <- queryOrFail $ GetDocumentByDocumentID $ docid
   ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) <- get
   author <- queryOrFail $ GetUserByUserID $ unAuthor documentauthor
-
   let toptab = if documentstatus document == Closed
                 then TopDocument
                 else TopNone
   -- authors get a view with buttons
   if isAuthor document user
-   then renderFromBody ctx toptab kontrakcja 
-            (fmap cdata $ pageDocumentForAuthor ctx document author)
+   then do
+       step <- getDesignStep (documentid document)
+       renderFromBody ctx toptab kontrakcja 
+            (fmap cdata $ pageDocumentForAuthor ctx document author step)
    -- friends can just look (but not touch)
    else do
         friendWithSignatory <- liftIO $ isFriendWithSignatory userid document 
@@ -530,6 +531,15 @@ handleIssueShowGet docid = withUserGet $ checkUserTOSGet $ do
                   (fmap cdata $ pageDocumentForViewer ctx document author)
          -- not allowed
          else mzero
+
+getDesignStep::DocumentID -> Kontra (Maybe DesignStep)
+getDesignStep docid = do
+    step3 <- isFieldSet "step3"
+    step2 <- isFieldSet "step2"
+    case (step2,step3) of
+       (True,_) -> return $ Just $ DesignStep2 docid
+       (_,True) -> return $ Just $ DesignStep3 docid
+       _ -> return Nothing
 
 {- |
    Modify a document. Typically called with the "Underteckna" or "Save" button
@@ -547,28 +557,86 @@ handleIssueShowPost docid = withUserPost $ do
   document <- queryOrFail $ GetDocumentByDocumentID $ docid
   ctx@Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber} <- get
   failIfNotAuthor document user
-  
-  -- something has to change here
-  case documentstatus document of
-       Preparation -> do
-                       doc2 <- handleDesignViewPost ctx document Nothing
-                       if documentstatus doc2 == Pending
-                        -- It went to pending, so it's been sent to signatories
-                        then return $ LinkSignInvite docid
-                        -- otherwise it was just a save
-                        else do
-                          addFlashMsg =<< (liftIO . flashDocumentDraftSaved $ ctxtemplates ctx)
-                          return LinkIssue
-       AwaitingAuthor -> do 
-                          doc2 <- update $ CloseDocument docid ctxtime ctxipnumber user Nothing
-                          case doc2 of
-                            Nothing -> return $ LinkIssueDoc docid
-                            Just d -> do 
-                                postDocumentChangeAction d AwaitingAuthor Nothing
-                                addFlashMsg =<< (liftIO $ flashAuthorSigned $ ctxtemplates ctx)
-                                return LinkIssue
-       _ -> return $ LinkIssueDoc docid
+  let authorid = unAuthor $ documentauthor document
+  Just author <- query $ GetUserByUserID authorid
+  sign <- isFieldSet "sign"
+  send <- isFieldSet "final"
+  template <- isFieldSet "template"
+  contract <- isFieldSet "contract"
+  case (documentstatus document,sign,send,template,contract) of 
+      (Preparation, True, _,_, _ ) -> handleIssueSign document author
+      (Preparation, _ ,  True,_, _) -> handleIssueSend document author
+      (Preparation, _ , _ ,True, _) -> handleIssueSaveAsTemplate document author             
+      (Preparation, _ , _ ,_ , True) -> handleIssueChangeToContract document author                    
+      (Preparation, _ , _ ,_, _) -> handleIssueSave document author
+      (AwaitingAuthor, _ , _ ,_, _) -> handleIssueSignByAuthor document author
+      _  -> return LinkIssue 
+     
 
+handleIssueSign document author = do
+    ctx@Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber} <- get
+    mudoc <- updateDocument ctx author document Nothing
+    case mudoc of 
+        Right udoc-> do    
+            mndoc <- update $ AuthorSignDocument (documentid document) ctxtime ctxipnumber author Nothing
+            case mndoc of
+                Right newdocument -> do
+                    postDocumentChangeAction newdocument (documentstatus udoc) Nothing
+                    return $ LinkSignInvite (documentid document)
+                Left _ -> mzero
+        Left _ -> mzero               
+                  
+handleIssueSend document author = do
+    ctx@Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber} <- get
+    mudoc <- updateDocument ctx author document Nothing
+    case mudoc of 
+        Right udoc-> do
+            mndoc <- update $ AuthorSendDocument (documentid document) ctxtime ctxipnumber author Nothing
+            case mndoc of
+                Right newdocument -> do
+                    postDocumentChangeAction newdocument (documentstatus udoc) Nothing
+                    return $ LinkSignInvite (documentid document)
+                Left _ -> mzero
+        Left _ -> mzero          
+    
+handleIssueSaveAsTemplate document author = do
+    ctx <- get
+    mudoc <- updateDocument ctx author document Nothing
+    case mudoc of 
+        Right udoc -> do   
+            mndoc <- update $ TemplateFromDocument $ documentid document
+            case mndoc of
+                Right newdocument -> do
+                    return LinkIssue        
+                Left _ -> mzero
+        Left _ -> mzero            
+
+handleIssueChangeToContract document author = do
+    ctx <- get
+    mcontract <- update $ ContractFromDocument $ documentid document 
+    case mcontract of 
+        Right contract -> do   
+            mncontract <- updateDocument ctx author contract Nothing
+            case mncontract of
+                Right ncontract ->  return $ LinkDesignDoc $ DesignStep3 $ documentid ncontract                        
+                Left _ -> mzero
+        Left _ -> mzero             
+
+handleIssueSave document author = do
+    ctx <- get
+    updateDocument ctx author document Nothing
+    addFlashMsg =<< (liftIO . flashDocumentDraftSaved $ ctxtemplates ctx)
+    return LinkIssue
+
+handleIssueSignByAuthor document author = do
+    ctx@Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber} <- get
+    doc2 <- update $ CloseDocument (documentid document) ctxtime ctxipnumber user Nothing
+    case doc2 of
+        Nothing -> return $ LinkIssueDoc (documentid document)
+        Just d -> do 
+            postDocumentChangeAction d AwaitingAuthor Nothing
+            addFlashMsg =<< (liftIO $ flashAuthorSigned $ ctxtemplates ctx)
+            return LinkIssue
 {- |
    Show the document with title in the url
    URL: /d/{documentid}/{title}
@@ -758,32 +826,7 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
 
   update $ UpdateDocument ctxtime documentid
            signatories2 daystosign invitetext author authordetails docallowedidtypes
-           
-handleDesignViewPost :: Context -> Document -> Maybe SignatureInfo -> Kontra Document  
-handleDesignViewPost ctx@Context{ctxtime,ctxipnumber} document@Document{documentid} msiginfo = do
-     let authorid = unAuthor $ documentauthor document
-     Just author <- query $ GetUserByUserID authorid
-     mudoc <- updateDocument ctx author document msiginfo
-     sign <- isFieldSet "sign"
-     send <- isFieldSet "final"
-     case (mudoc,sign,send) of 
-        (Right udoc, True, _) -> do
-            mndoc <- update $ AuthorSignDocument documentid ctxtime ctxipnumber author msiginfo
-            case mndoc of
-                Left msg -> return udoc
-                Right newdocument -> do
-                    postDocumentChangeAction newdocument (documentstatus udoc) Nothing
-                    return newdocument
-        (Right udoc, _ , True) -> do
-            mndoc <- update $ AuthorSendDocument documentid ctxtime ctxipnumber author msiginfo
-            case mndoc of
-                Left msg -> return udoc
-                Right newdocument -> do
-                    postDocumentChangeAction newdocument (documentstatus udoc) Nothing
-                    return newdocument
-        (Right udoc, _ , _) -> return udoc
-        _  -> mzero     
-    
+              
 {- |
    Constructs a list of documents (Arkiv) to show to the user.
    The list contains all documents the user is an author on or
@@ -927,7 +970,7 @@ handlePageOfDocument documentid = do
       pending _                = False
       files                    = if documentstatus == Closed
                                    then documentsealedfiles
-                                   else documentfiles
+                                   else documentfiles                             
   case files of
     [] -> notFound (toResponse "temporary unavailable (document has no files)")
     f  -> do
@@ -1250,7 +1293,9 @@ handleIssueNewDocument = withUserPost $ do
           -- in our case it should be utf-8 as this is what we use everywhere
           let title = BSC.pack (basename filename) 
           freeleft <- freeLeftForUser user
-          doc <- update $ NewDocument user title ctxtime (freeleft>0)
+          template <- isFieldSet "template"
+          let doctype = if (template) then Template else Contract
+          doc <- update $ NewDocument user title doctype ctxtime (freeleft>0) 
           handleDocumentUpload (documentid doc) (concatChunks content) title
           return $ LinkIssueDoc $ documentid doc
 
@@ -1383,4 +1428,24 @@ showMainPage user =  do
                       content <- liftIO $ uploadPage (ctxtemplates ctx) 
                       renderFromBody ctx TopDocument kontrakcja $ cdata content 
                       
-                      
+getAllTemplates::Kontra Response                      
+getAllTemplates = do
+    ctx <- get 
+    allTemplates <- 
+        case (ctxmaybeuser ctx) of
+            Just user -> liftIO $ query $ GetUserTemplates (userid user)
+            Nothing ->  return []
+    content <- liftIO $ templatesForAjax (ctxtemplates ctx)  allTemplates            
+    simpleResponse content
+    
+handleCreateFromTemplate::Kontra KontraLink
+handleCreateFromTemplate = do
+     docid <- readField "template"
+     case docid of 
+         Just did -> do
+             newdoc <- update $ ContractFromDocument did
+             case newdoc of 
+                 Right newdoc -> return $ LinkIssueDoc $ documentid newdoc   
+                 Left _ -> mzero
+         Nothing -> mzero
+     

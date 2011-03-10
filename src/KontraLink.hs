@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -Wall #-}
-module KontraLink(KontraLink(..), LoginRedirectReason(..)) where
+module KontraLink(KontraLink(..), LoginRedirectReason(..), DesignStep(..)) where
 
 import Doc.DocState
 import HSP
@@ -19,6 +19,8 @@ data LoginRedirectReason = NoReason
                          | InvalidEmail
                          | InvalidPassword String -- ^ correct email
 
+data DesignStep = DesignStep1 | DesignStep2 DocumentID | DesignStep3 DocumentID   
+
 {- |
    All the links available for responses
 -}
@@ -36,6 +38,7 @@ data KontraLink
     | LinkLandpageSaved Document SignatoryLink
     | LinkSignDoc Document SignatoryLink
     | LinkIssueDoc DocumentID
+    | LinkDesignDoc DesignStep
     | LinkIssueDocPDF Document {- Which file? -}
     | LinkSubaccount
     | LinkRemind Document SignatoryLink
@@ -83,6 +86,9 @@ instance Show KontraLink where
         (++) $ "/landpage/signedsave/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink)
     showsPrec _ (LinkIssueDoc documentid) = 
         (++) $ "/d/" ++ show documentid
+    showsPrec _ (LinkDesignDoc DesignStep1) =  (++) $ "/"
+    showsPrec _ (LinkDesignDoc (DesignStep2 documentid)) = (++) $ "/d/" ++ show documentid ++ "?step2"
+    showsPrec _ (LinkDesignDoc (DesignStep3 documentid)) = (++) $ "/d/" ++ show documentid ++ "?step3"
     showsPrec _ (LinkIssueDocPDF document) = 
         (++) $ "/d/" ++ show (documentid document) ++ "/" ++ BS.toString (documenttitle document) ++ ".pdf"
     showsPrec _ (LinkFile fileid filename) = 

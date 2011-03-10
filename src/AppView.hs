@@ -113,7 +113,7 @@ pageLogin ctx referer email =
 -}
 simpleResponse::String -> Kontra Response
 simpleResponse s = do 
-                   res <- ok $ toResponse $ cdata s -- change this to HtmlString from helpers package (didn't wan't to connect it one day before prelaunch)
+                   res <- ok $ toResponse $ cdata s -- change this to HtmlString from helpers package (didn't want to connect it one day before prelaunch)
                    clearFlashMsgs
                    return res
 
