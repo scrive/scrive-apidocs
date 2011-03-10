@@ -255,6 +255,25 @@ safeReady(function() {
   }
 });
 
+function escapeHTML(s) {
+    var result = '';
+    for (var i = 0; i < s.length; ++i) {
+        if (s[i] == '&')
+            result += '&amp';
+        else if (s[i] == '\'')
+            result += '&#39;';
+        else if (s[i] == '"')
+            result += '&quot;';
+        else if (s[i] == '<')
+            result += '&lt;';
+        else if (s[i] == '>')
+            result += '&gt;';
+        else
+            result += s[i];
+    }
+    return result;
+}
+
 function allparties()
 {
       var sigs = $("form .persondetails").filter(":not(.authordetails)");
@@ -262,7 +281,7 @@ function allparties()
       sigs.each(function(index) { 
         var fstname = $("input[name='signatoryfstname']",this).val();
         var sndname = $("input[name='signatorysndname']",this).val();  
-        allparties.push(fstname + " " + sndname);
+        allparties.push(escapeHTML(fstname + " " + sndname));
       });
       return allparties;   
 }
@@ -342,7 +361,7 @@ safeReady(function() {
         var fstnamefield = $("[name='signatoryfstname']",this);
         var sndnamefield = $("[name='signatorysndname']",this);
         var mailfield =  $("[name='signatoryemail']",this)
-        var res = fstnamefield.val() +" "+ sndnamefield.val();
+        var res = escapeHTML(fstnamefield.val() + " " + sndnamefield.val());
         if ((!mailfield.hasClass("grayed"))&&(fstnamefield.hasClass("grayed") && sndnamefield.hasClass("grayed")))
           res = mailfield.val(); 
         partners[i] = res
