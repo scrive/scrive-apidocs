@@ -47,14 +47,15 @@ function placementToHTML(label, value) {
     v = label;
   }
   return $("<div class='placedfield' style='cursor:pointer'>"
-	   + "<span class='value'>" + v + "</span>" 
+           + "<span class='value'>" + escapeHTML(v) + "</span>" 
 	   + "</div>");
 }
 
-function placedFieldHelper(value) {
+function placedFieldHelper(value, noescape) {
   return $("<div class='placedfieldhelper'>"
-	   + "<span class='value'>" + value + "</span>" 
-	   + "</div>");
+           + "<span class='value'>"
+           + (noescape === true ? value : escapeHTML(value))
+           + "</span></div>");
 }
 
 function placePlacements(pls, label, value, sigid, fieldid) {
@@ -102,7 +103,9 @@ function setHiddenValue(field, label, value) {
 }
 
 function newHiddenField(name, value) {
-  return $("<input type='hidden' name='" + name + "' value='" + value + "' />");
+  return $("<input type='hidden' name='" + name
+         + "' value='" + escapeHTML(value)
+         + "' />");
 }
 
 // works on any input field, not just hidden ones
@@ -121,7 +124,7 @@ function setHiddenField(field, label, value) {
   if(s.size()){
     s.attr("value", value);
   } else {
-    field.append("<input type='hidden' name='" + label + "' value='" + value + "' />");
+      field.append(newHiddenField(label, value));
   }
 }
 
@@ -552,7 +555,9 @@ function authorToHTML(sig) {
     sigentry.find(".partyrole input").last().attr("checked", "true");
   }
 
-  $("#peopleList ol").append("<li><a href='#'>" + sig.fstname + " "+ sig.sndname + " (Avsändare)</a></li>");
+  $("#peopleList ol").append("<li><a href='#'>"
+                           + escapeHTML(sig.fstname + " " + sig.sndname)
+                           + " (Avsändare)</a></li>");
 }
 
 /*
@@ -751,7 +756,7 @@ function signatoryToHTML(sig) {
   if(sig.fstname == "" && sig.sndname == "") {
     n = "(Namnlös)";
   } else {
-    n = sig.fstname + " " + sig.sndname;
+    n = escapeHTML(sig.fstname + " " + sig.sndname);
   }
   
   $("#peopleList ol").append("<li><a href='#'>" + n + "</a></li>");
@@ -915,7 +920,8 @@ safeReady(function() {
 
 		     appendTo: "body",
 		     helper: function() {
-		       return placedFieldHelper($(this).find(".fieldvalue").html());
+                       // it's already escaped, no need to do this again
+		       return placedFieldHelper($(this).find(".fieldvalue").html(), true);
 	             },
 	             start: function(event, ui) {
                          showCoordinateAxes(ui.helper, $(".pagediv").first());
@@ -947,7 +953,8 @@ safeReady(function() {
       },
       // build a helper so it doesn't delete the original
       helper: function(event, ui) {
-        return placedFieldHelper($(this).find(".value").html());
+        // it's already escaped, no need to do this again
+        return placedFieldHelper($(this).find(".value").html(), true);
       },
       // but we don't want to show the original so it looks like 
       // you are dragging the original
