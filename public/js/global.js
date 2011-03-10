@@ -622,6 +622,7 @@ function showProperSignButtons() {
 }
 
 function emailFieldsValidation(fields){
+  fields.removeClass("noflash");
   fields = fields.filter(function(){return !isExceptionalField($(this))});
   if(fields.length > 0){
     var inputs = fields.validator({
@@ -840,10 +841,11 @@ $.tools.validator.addEffect("failWithFlashOnEmail", function(errors, event) {
   var invalidEmailErrMsg = "Du har inte skrivit in en e-post eller e-posten är felaktig. Vänligen försök igen.";
   var emptyEmailErrMsg = "Du måste ange e-post till motpart.";
   $.each(errors, function(index, error) {
-    var input = error.input;
-    $(input).parents('.inputWrapper').addClass("redborder");
-    if(!$(input).hasClass("noflash")) {
+    var input = $(error.input);
+    input.parents('.inputWrapper').addClass("redborder");
+    if(!input.hasClass("noflash")) {
       addFlashMessage(invalidEmailErrMsg);
+      input.addClass("noflash");
     }
   });
 }, function(inputs)  {
