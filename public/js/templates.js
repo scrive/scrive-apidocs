@@ -857,7 +857,7 @@ function showCoordinateAxes(helper, page) {
     var vline = page.find(".vline");
     hline.show();
     vline.show();
-    helper.mousemove(function(e) {
+    $("body").mousemove(function(e) {
         hline.css({
             top: Math.min(pagejpg.height()-1, Math.max(0, helper.offset().top - pagejpg.offset().top + helper.height() - 6)) + "px"
         });       
@@ -870,6 +870,8 @@ function showCoordinateAxes(helper, page) {
 function hideCoordinateAxes() {
     $(".hline").hide();
     $(".vline").hide();
+    // we need to unbind it so actions won't keep stacking
+    $("body").unbind("mousemove");
 }
 
 safeReady(function() {
