@@ -1,3 +1,5 @@
+###
+empty = $it.0$
 ####
 templatesForAjax= 
 
@@ -13,7 +15,7 @@ templatesForAjax=
 
       <div class="filelist" style="padding-left:10px"></div>
   </form>
-  <script> initFileInputs() ;</script>
+   <script> initFileInputs();</script>
 <!-- Table with all templates -->
   <table class="doctable" cellspacing="0">
     <col>
