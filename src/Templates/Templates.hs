@@ -184,6 +184,9 @@ instance ToSElem (Maybe BS.ByteString) where
   
 instance ToSElem [BS.ByteString] where
   toSElem = toSElem . fmap BS.toString     
+
+instance ToSElem String where
+  toSElem l = HST.toSElem l 
   
 instance (HST.ToSElem a) => ToSElem [a] where
   toSElem l  = LI $ map HST.toSElem l 
