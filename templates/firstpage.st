@@ -388,25 +388,25 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                 <div class="col left">
                                         <strong>TJÄNSTEN</strong>
                                         <ul>
-                                                <li><a href="features.html">Funktioner</a></li>
+                                                <li><a href="features.html?columns">Funktioner</a></li>
                                                 <!-- <li><a href="benefits.html">Fördelar</a></li> -->
-                                                <li><a href="priceplan.html?nocolumns">Prisplan</a></li>
+                                                <li><a href="priceplan.html">Prisplan</a></li>
                                         </ul>
                                         <br />
                                         <strong>TRYGGHET OCH VILLKOR</strong>
                                         <ul>
-                                                <li><a href="security.html">Säkerhet</a></li>
-                                                <li><a href="legal.html">Juridik</a></li>
-                                                <li><a href="privacypolicy.html">Sekretesspolicy</a></li>
-                                                <li><a href="terms.html">SkrivaPå Allmäna Villkor</a></li>
+                                                <li><a href="security.html?columns">Säkerhet</a></li>
+                                                <li><a href="legal.html?columns">Juridik</a></li>
+                                                <li><a href="privacypolicy.html?columns">Sekretesspolicy</a></li>
+                                                <li><a href="terms.html?columns">SkrivaPå Allmäna Villkor</a></li>
                                         </ul>
                                         <br />
                                         <strong>SKRIVAPÅ</strong>
                                         <ul>
-                                                <li><a href="about.html">Om SkrivaPå</a></li>
-                                                <li><a href="partners.html">Partners</a></li>
-                                                <li><a href="clients.html">Kunder</a></li>
-                                                <li><a href="board.html">Board of Advisors</a></li>
+                                                <li><a href="about.html?columns">Om SkrivaPå</a></li>
+                                                <li><a href="partners.html?columns">Partners</a></li>
+                                                <li><a href="clients.html?columns">Kunder</a></li>
+                                                <li><a href="board.html?columns">Board of Advisors</a></li>
                                         </ul>
                                 </div>
                                 <div class="col centre">
