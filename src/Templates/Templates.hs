@@ -186,11 +186,8 @@ instance ToSElem [BS.ByteString] where
   toSElem = toSElem . fmap BS.toString     
   
 instance (HST.ToSElem a) => ToSElem [a] where
-  toSElem [] = SNull
   toSElem l  = LI $ map HST.toSElem l 
 
 instance (HST.ToSElem a) => ToSElem (Map.Map String a) where
-  toSElem m = if (Map.null m)
-                then SNull   
-                else SM $ Map.map HST.toSElem m
+  toSElem m =  SM $ Map.map HST.toSElem m
   

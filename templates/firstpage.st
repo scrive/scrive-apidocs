@@ -105,7 +105,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 </h3>
                                                 <em>Vi bjuder på 2 månaders fri användning nu!</em>
                                                 <form method="post" action="$linkrequestaccount$" class="requestAccount">
-                                                        <input class="shiny infotext" type="email" name="email" value="Fyll i din e-postadress" /> <a href="#" class="submit btn-small green2 center"><p>Skicka förfrågan!</p></a>
+                                                        <input class="shiny infotext" type="email" name="email" value="Fyll i din e-postadress" /> <a href="#" class="submit new-btn-small green2 center"><p>Skicka förfrågan!</p></a>
                                                         <input type="submit" class="hidden" />
                                                 </form>
                                         </div>
@@ -372,7 +372,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                         </div>
                                         <div class="right">
                                                 <form method="post" action="$linkrequestaccount$" class="requestAccount">
-                                                        <input class="shiny infotext" name="email" type="email" value="Fyll i din e-postadress" /> <a href="#" class="submit btn-small green2 center float-right"><p>Skicka förfrågan!</p></a>
+                                                        <input class="shiny infotext" name="email" type="email" value="Fyll i din e-postadress" /> <a href="#" class="submit new-btn-small green2 center float-right"><p>Skicka förfrågan!</p></a>
                                                         <input type="submit" class="hidden" />
                                                 </form>
                                         </div>

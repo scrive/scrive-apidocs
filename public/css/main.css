@@ -35,10 +35,6 @@ article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, 
 	display: block;
 }
 
-body {
-	line-height: 1;
-}
-
 ol, ul {
 	list-style: none;
 }
@@ -95,24 +91,6 @@ table {
 	float: right;
 }
 
-.btn-small {
-	background: url(../img/btn-small.png) 0 0 no-repeat;
-	color: #fff;
-	display: block;
-	font: 12px "Helvetica Neue";
-	height: 23px;
-	letter-spacing: 0.2px;
-	padding-left: 16px;
-	padding-top: 10px;
-	text-decoration: none;
-	width: 136px;
-}
-
-.btn-small p {
-	color: #fff;
-	text-shadow: #41770b 0 1px 3px;
-}
-
 .btn-big {
 	background: url(../img/btn-big.png) 0 0 no-repeat;
 	color: #fff;
@@ -125,6 +103,26 @@ table {
 	text-decoration: none;
 	width: 182px;
 }
+
+
+.new-btn-small {
+    background: url(../img/btn-small.png) 0 0 no-repeat;
+    color: #fff;
+    display: block;
+    font: 12px "Helvetica Neue";
+    height: 23px;
+    letter-spacing: 0.2px;
+    padding-left: 16px;
+    padding-top: 10px;
+    text-decoration: none;
+    width: 136px;
+}
+
+.new-btn-small p {
+    color: #fff;
+    text-shadow: #41770b 0 1px 3px;
+}
+
 
 .btn-big p {
 	color: #fff;
@@ -143,15 +141,7 @@ table {
 	width: 63px;
 }
 
-/* Inputs */
 
-input {
-	color: #999;
-}
-
-input:focus {
-	color: #000;
-}
 
 input.shiny {
 	background: #fff;
@@ -179,47 +169,47 @@ textarea:focus {
 
 /* Buttons */
 
-a.btn-small:hover {
+a.new-btn-small:hover {
 	background-position: 0 -34px;
 }
 
-a.btn-small:active {
+a.new-btn-small:active {
 	background-position: 0 -68px;
 }
 
-a.btn-small.center {
+a.new-btn-small.center {
 	text-align: center;
 	padding-left: 0;
 	padding-right: 16px;
 	width: 135px;
 }
 
-a.btn-small.green2 {
+a.new-btn-small.green2 {
 	background-position: -152px 0;
 }
 
-a.btn-small.green2:hover {
+a.new-btn-small.green2:hover {
 	background-position: -152px -34px;
 }
 
-a.btn-small.green2:active {
+a.new-btn-small.green2:active {
 	background-position: -152px -68px;
 }
 
-a.btn-small.black {
+a.new-btn-small.black {
 	background-position: -304px 0;
 	width: 151px;
 }
 
-a.btn-small.black:hover {
+a.new-btn-small.black:hover {
 	background-position: -304px -34px;
 }
 
-a.btn-small.black:active {
+a.new-btn-small.black:active {
 	background-position: -304px -68px;
 }
 
-a.btn-small.black p {
+a.new-btn-small.black p {
 	color: #fff;
 	text-shadow: #000 0 1px 3px;
 }
@@ -1663,11 +1653,11 @@ a.btn-big:active {
 	height: 22px;
 }
 
-#body-container .big-pp-container a.btn-small, #body-container .big-pp-container .highlight-container a.btn-small {
+#body-container .big-pp-container a.new-btn-small, #body-container .big-pp-container .highlight-container a.new-btn-small {
 	color: #fff;
 }
 
-#body-container .big-pp-container a.btn-small:hover, #body-container .big-pp-container .highlight-container a.btn-small:hover {
+#body-container .big-pp-container a.new-btn-small:hover, #body-container .big-pp-container .highlight-container a.new-btn-small:hover {
 	color: #fff;
 }
 
@@ -1784,79 +1774,79 @@ a.btn-big:active {
 	height: 20px;
 }
 
-.text {
+.nicetext {
 	color: #666;
 	font: 11px "Lucida Grande";
 	padding-left: 20px;
 	padding-right: 60px;
 }
 
-.text em {
+.nicetext em {
 	text-decoration: underline;
 }
 
-.text h2 {
+.nicetext h2 {
 	color: #000;
 	font: 14px "Copse";
 }
 
-.text h3 {
+.nicetext h3 {
 	color: #000;
 	font: 13px "Copse";
 }
 
-.text h4 {
+.nicetext h4 {
 	color: #000;
 	font: 12px "Copse";
 }
 
-.text h5 {
+.nicetext h5 {
 	color: #000;
 	display: inline;
 	text-decoration: underline;
 }
 
-.text ol.numbers {
+.nicetext ol.numbers {
 	list-style-type: decimal;
 	padding-left: 20px;
 }
 
-.text ol.letters {
+.nicetext ol.letters {
 	list-style-type: lower-latin;
 	padding-left: 20px;
 }
 
-.text ul.discs {
+.nicetext ul.discs {
 	list-style-type: disc;
 	padding-left: 20px;
 }
 
-.text table {
+.nicetext table {
 	background: #000;
 	border-collapse: separate;
 	border-spacing: 1px;
 	width: 500px;
 }
 
-.text table td {
+.nicetext table td {
 	background: #f2f2f2;
 	color: #464646;
 	padding: 3px;
 	text-align: center;
 }
 
-.text table th {
+.nicetext table th {
 	background: #f2f2f2;
 	color: #000;
 	padding: 3px;
 	text-align: left;
 }
 
-.text table tr.odd td {
+.nicetext table tr.odd td {
 	background: #e2e2e2;
 }
 
-.text table td:last-child {
+.nicetext table td:last-child {
 	text-align: left;
 }
 
