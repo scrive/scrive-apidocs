@@ -39,10 +39,8 @@ wholePage=
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/style.css" media="screen">
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/calendar.css" media="screen">
         <link href="$prefix$/theme/flash.css" rel="stylesheet" type="text/css" media="screen" />
-        <link rel="stylesheet" type="text/css" 
-              href="$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/ui-lightness/jquery-ui.css"
-              media="screen" />
-        
+        <link href="/css/main.css" rel="stylesheet" type="text/css" />
+        <link rel="stylesheet" type="text/css"  href="$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/ui-lightness/jquery-ui.css"              media="screen" />
         <script src="$protocol$//ajax.googleapis.com/ajax/libs/jquery/1.5.0/jquery.js"
                 type="text/javascript"></script>
         <script src="$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js"
@@ -62,11 +60,56 @@ wholePage=
       </head>
       <body>
         $header()$
-        <div id="mainContainer960">
+        <div id="mainContainer960" >
           $flashmessages()$
+        <div id="body-container">
+         $if(!columns)$
           $content:noescape()$
-        </div>
-      
+         $else$
+         <div class="left-column">
+                                        <div class="white thin box">
+                                                <h4>Hör av dig till oss!</h4>
+                                                <br />
+                                                <form method="post" action="$linkquestion$">
+                                                        <input type="text" name="name" value="Namn" class="infotext" /><br />
+                                                        <input type="email" name="email" value="E-post" class="infotext" /><br />
+                                                        <input type="tel" name="phone" value="Telefonnummer" class="infotext" /><br />
+                                                        <textarea name="message" class="infotext">Meddelande</textarea>
+                                                        <a class="submit btn-small green2 center"><p>Skicka!</p></a>
+                                                        <input type="submit" class="hidden" />
+                                                </form>
+                                                <div class="hor-divider"></div>
+                                                <h4>SkrivaPå AB</h4>
+                                                <ul class="info-list">
+                                                        <li>Saltmätargatan 19a, 4 tr<br />
+                                                        113 59 Stockholm</li>
+                                                        <li>Telefon: 020 12 11 10<br />E-post: info@skrivapa.se</li>
+                                                </ul>
+                                        </div>
+                                </div>
+                                <div class="right-column">
+                                           $content:noescape()$
+                                </div>
+         $endif$ 
+          <div class="clearfix"></div>
+          <div class="spacer40"></div>
+                $if(showCreateAccount)$    
+                 <div class="try-skrivapa">
+                     <div class="left">
+                        <h2>2 månaders fri användning nu!</h2>
+                        <p>Allt inkluderat. Standardkonto, fria transaktioner och fri lagring.</p>
+                        </div>
+                         <div class="right">
+                            <form method="post" action="$linkrequestaccount$" class="requestAccount">
+                                   <input class="shiny infotext" name="email" type="email" value="Fyll i din e-postadress" /> <a href="#" class="submit btn-small green2 center float-right"><p>Skicka förfrågan!</p></a>
+                                   <input type="submit" class="hidden" />
+                             </form>
+                         </div>
+                    </div>
+               $endif$ 
+         </div>
+       </div>
+                
    <div id="footer-container" class="newdesign">
                         <div class="top-border"></div>
                         <div class="spacer"></div>
@@ -74,25 +117,25 @@ wholePage=
                                 <div class="col left">
                                         <strong>TJÄNSTEN</strong>
                                         <ul>
-                                                <li><a href="/features.html">Funktioner</a></li>
-                                                <li><a href="/benefits.html">Fördelar</a></li>
-                                                <li><a href="/priceplan.html?nocolumns">Prisplan</a></li>
+                                                <li><a href="/features.html?columns">Funktioner</a></li>
+                                                <li><a href="/benefits.html?columns">Fördelar</a></li>
+                                                <li><a href="/priceplan.html">Prisplan</a></li>
                                         </ul>
                                         <br />
                                         <strong>TRYGGHET OCH VILLKOR</strong>
                                         <ul>
-                                                <li><a href="/security.html">Säkerhet</a></li>
-                                                <li><a href="/legal.html">Juridik</a></li>
-                                                <li><a href="/privacypolicy.html">Sekretesspolicy</a></li>
-                                                <li><a href="/terms.html">SkrivaPå Allmäna Villkor</a></li>
+                                                <li><a href="/security.html?columns">Säkerhet</a></li>
+                                                <li><a href="/legal.html?columns">Juridik</a></li>
+                                                <li><a href="/privacypolicy.html?columns">Sekretesspolicy</a></li>
+                                                <li><a href="/terms.html?columns">SkrivaPå Allmäna Villkor</a></li>
                                         </ul>
                                         <br />
                                         <strong>SKRIVAPÅ</strong>
                                         <ul>
-                                                <li><a href="/about.html">Om SkrivaPå</a></li>
-                                                <li><a href="/partners.html">Partners</a></li>
-                                                <li><a href="/clients.html">Kunder</a></li>
-                                                <li><a href="/board.html">Board of Advisors</a></li>
+                                                <li><a href="/about.html?columns">Om SkrivaPå</a></li>
+                                                <li><a href="/partners.html?columns">Partners</a></li>
+                                                <li><a href="/clients.html?columns">Kunder</a></li>
+                                                <li><a href="/board.html?columns">Board of Advisors</a></li>
                                         </ul>
                                 </div>
                                 <div class="col centre">
