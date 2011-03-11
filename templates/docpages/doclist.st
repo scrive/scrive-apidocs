@@ -69,7 +69,7 @@ pageDocumentList=
           </span> 
           $endif$
         </td>
-        <td><a href="$document.doclink$">$document.signatories:{sig | $sig.usvFullname$};separator=", "$</a></td>
+        <td><a href="$document.doclink$">$document.signatories:{sig | $sig.name$}; separator=", "$</a></td>
         <td><a href="$document.doclink$">$document.documenttitle$</a></td>
         <td><a href="$document.doclink$"><span title="$document.mtime$">$document.mtime$</span></a></td>
         <td class="tdright">

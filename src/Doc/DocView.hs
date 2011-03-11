@@ -47,7 +47,7 @@ import MinutesTime
 import Misc
 import Templates.Templates
 import Templates.TemplatesUtils
-import User.UserView (prettyName, UserSmallView(..))
+import User.UserView (prettyName)
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 
@@ -136,22 +136,20 @@ flashAuthorSigned templates =
   toFlashMsg OperationDone <$> renderTemplate templates "flashAuthorSigned" ()
   
 -- All doc view
-singLinkUserSmallView :: SignatoryLink -> UserSmallView
-singLinkUserSmallView sl =
-  UserSmallView {
-      usvId       = show $ signatorylinkid sl
-    , usvFullname = BS.toString $ personname sl
-    , usvEmail    = ""
-    , usvCompany  = ""
-  }
-
+singlnkFields :: SignatoryLink -> Fields
+singlnkFields sl = do
+  field "id" $ show $ signatorylinkid sl
+  field "name" $ BS.toString $ personname sl
+  field "email" $  ""
+  field "company" $ ""
+  
 
 
 
 documentBasicViewFields :: MinutesTime -> User -> Document -> Fields
 documentBasicViewFields crtime user doc = do
     documentInfoFields doc
-    field "signatories" $ map singLinkUserSmallView $ documentsignatorylinks doc
+    field "signatories" $ map singlnkFields $ documentsignatorylinks doc
     field "anyinvitationundelivered" $ anyInvitationUndelivered doc
     field "statusimage" $ "/theme/images/" ++
         case documentstatus doc of
