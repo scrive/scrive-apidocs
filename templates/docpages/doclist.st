@@ -53,28 +53,28 @@ pageDocumentList=
       
       <tr class="ui-state-default">
         <td class="tdleft">
-          $if(document.dsvIsauthor)$ <input type="checkbox" name="doccheck" value="$document.dsvId$" class="check"> $endif$
+          $if(document.isauthor)$ <input type="checkbox" name="doccheck" value="$document.documentid$" class="check"> $endif$
         </td>
         <td>
-          <img width="17" height="17" src="$document.dsvStatusimage$"> 
-          $if(document.dsvAnyinvitationundelivered)$  <span style="color:#000000;position:relative;top:-3px">!</span>$endif$
+          <img width="17" height="17" src="$document.statusimage$"> 
+          $if(document.anyinvitationundelivered)$  <span style="color:#000000;position:relative;top:-3px">!</span>$endif$
           
         </td>
         <td>
-          $if(document.dsvTimeoutdaysleft)$  
-          <span title="Förfallodatum: $document.dsvTimeoutdate$">
-            <a href="$document.dsvDoclink$">
-              ($document.dsvTimeoutdaysleft$)
+          $if(document.timeoutdaysleft)$  
+          <span title="Förfallodatum: $document.timeoutdate$">
+            <a href="$document.doclink$">
+              ($document.timeoutdaysleft$)
             </a>
           </span> 
           $endif$
         </td>
-        <td><a href="$document.dsvDoclink$">$document.dsvSignatories:{sig | $sig.usvFullname$};separator=", "$</a></td>
-        <td><a href="$document.dsvDoclink$">$document.dsvTitle$</a></td>
-        <td><a href="$document.dsvDoclink$"><span title="$document.dsvMtime$">$document.dsvMtime$</span></a></td>
+        <td><a href="$document.doclink$">$document.signatories:{sig | $sig.usvFullname$};separator=", "$</a></td>
+        <td><a href="$document.doclink$">$document.documenttitle$</a></td>
+        <td><a href="$document.doclink$"><span title="$document.mtime$">$document.mtime$</span></a></td>
         <td class="tdright">
-          $if(document.dsvDavelink)$ 
-          <a href="$document.dsvDavelink$">*</a>     
+          $if(document.davelink)$ 
+          <a href="$document.davelink$">*</a>     
           $endif$
         </td>
       </tr>

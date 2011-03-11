@@ -146,62 +146,44 @@ singLinkUserSmallView sl =
   }
 
 
-data DocumentSmallView =
-  DocumentSmallView {
-      dsvId                       :: String
-    , dsvTitle                    :: String
-    , dsvSignatories              :: [UserSmallView]
-    , dsvAnyinvitationundelivered :: Bool
-    , dsvStatusimage              :: String
-    , dsvDoclink                  :: String
-    , dsvDavelink                 :: Maybe String
-    , dsvTimeoutdate              :: Maybe String
-    , dsvTimeoutdaysleft          :: Maybe String
-    , dsvMtime                    :: String
-    , dsvIsauthor                 :: Bool
-  } deriving (Data, Typeable)
 
 
-documentSmallView :: MinutesTime -> User -> Document -> DocumentSmallView
-documentSmallView crtime user doc =
-  DocumentSmallView {
-    dsvId = show $ documentid doc
-    , dsvTitle = BS.toString $ documenttitle doc
-    , dsvSignatories = map singLinkUserSmallView $ documentsignatorylinks doc
-    , dsvAnyinvitationundelivered = anyInvitationUndelivered doc
-    , dsvStatusimage = "/theme/images/" ++
-      case documentstatus doc of
-          Preparation    -> "status_draft.png"
-          Closed         -> "status_signed.png"
-          Canceled       -> "status_rejected.png"
-          Timedout       -> "status_timeout.png"
-          Rejected       -> "status_rejected.png"
-          -- Withdrawn      -> "status_rejected.png"
-          Pending        -> if anyInvitationUndelivered doc
+documentBasicViewFields :: MinutesTime -> User -> Document -> Fields
+documentBasicViewFields crtime user doc = do
+    documentInfoFields doc
+    field "signatories" $ map singLinkUserSmallView $ documentsignatorylinks doc
+    field "anyinvitationundelivered" $ anyInvitationUndelivered doc
+    field "statusimage" $ "/theme/images/" ++
+        case documentstatus doc of
+            Preparation    -> "status_draft.png"
+            Closed         -> "status_signed.png"
+            Canceled       -> "status_rejected.png"
+            Timedout       -> "status_timeout.png"
+            Rejected       -> "status_rejected.png"
+            Pending        -> if anyInvitationUndelivered doc
+                               then "status_rejected.png"
+                               else
+                                if all (isJust . maybeseeninfo) $ documentsignatorylinks doc
+                                 then "status_viewed.png"
+                                 else "status_pending.png"
+            AwaitingAuthor -> if anyInvitationUndelivered doc
                                 then "status_rejected.png"
                                 else
                                   if all (isJust . maybeseeninfo) $ documentsignatorylinks doc
                                     then "status_viewed.png"
                                     else "status_pending.png"
-          AwaitingAuthor -> if anyInvitationUndelivered doc
-                                then "status_rejected.png"
-                                else
-                                  if all (isJust . maybeseeninfo) $ documentsignatorylinks doc
-                                    then "status_viewed.png"
-                                    else "status_pending.png"
-          _              -> "status_rejected.png"
-    , dsvDoclink =
-        if (unAuthor $ documentauthor doc) == userid user || null signatorylinklist
-          then show . LinkIssueDoc $ documentid doc
-          else show $ LinkSignDoc doc (head signatorylinklist)
-    , dsvDavelink = if isSuperUser (Just user)
-                      then Just $ "/dave/document/" ++ (show documentid)
+            _              -> "status_rejected.png"
+    field "doclink" $ if (unAuthor $ documentauthor doc) == userid user || null signatorylinklist
+        then show . LinkIssueDoc $ documentid doc
+        else show $ LinkSignDoc doc (head signatorylinklist)
+    field "davelink" $ if isSuperUser (Just user)
+                      then Just $ "/dave/document/" ++ (show $ documentid doc)
                       else Nothing
-    , dsvTimeoutdate = fromTimeout show
-    , dsvTimeoutdaysleft = fromTimeout $ show . (dateDiffInDays crtime)
-    , dsvMtime = showDateAbbrev crtime (documentmtime doc)
-    , dsvIsauthor = isAuthor doc user
-  }
+    field "timeoutdate" $ fromTimeout show
+    field "timeoutdaysleft" $ fromTimeout $ show . (dateDiffInDays crtime)
+    field "mtime" $ showDateAbbrev crtime (documentmtime doc)
+    field "isauthor" $ isAuthor doc user
+  
   where
     signatorylinklist =
       filter (isMatchingSignatoryLink user) $ documentsignatorylinks doc  
@@ -214,8 +196,8 @@ documentSmallView crtime user doc =
 
 pageDocumentList :: KontrakcjaTemplates -> MinutesTime -> User -> [Document] -> IO String
 pageDocumentList templates ctime user documents =
-  renderTemplate templates "pageDocumentList" $
-    setAttribute "documents" . map (documentSmallView ctime user) $ filter (not . documentdeleted) documents
+  renderTemplate templates "pageDocumentList" $ do
+    field "documents" $ map (documentBasicViewFields ctime user) $ filter (not . documentdeleted) documents
 
 
 showFileImages :: KontrakcjaTemplates -> File -> JpegPages -> IO String
@@ -340,7 +322,8 @@ pageDocumentForAuthor ctx
        field "docstate" (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks)
        field "linkissuedocpdf" $ show (LinkIssueDocPDF document)
        field "documentinfotext" $ documentInfoText templates document (find (isMatchingSignatoryLink author) documentsignatorylinks) author
-       documentInfoFields document author
+       documentInfoFields document
+       documentAuthorInfo author
        designViewFields step
 
 {- |
@@ -400,7 +383,8 @@ pageDocumentForViewer ctx
        field "docstate" (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks)
        field "linkissuedocpdf" $ show (LinkIssueDocPDF document)
        field "documentinfotext" $ documentinfotext
-       documentInfoFields document author
+       documentInfoFields document 
+       documentAuthorInfo author
 
 
 pageDocumentForSignatory :: KontraLink 
@@ -433,7 +417,8 @@ pageDocumentForSignatory action document ctx invitedlink author =
       field "action" $ show action
       field "linkissuedocpdf" $ show (LinkIssueDocPDF document)
       field "documentinfotext" $  documentInfoText (ctxtemplates ctx) document (Just invitedlink) author
-      documentInfoFields document author
+      documentInfoFields document
+      documentAuthorInfo author
       signedByMeFields document (Just invitedlink)
 
 
@@ -551,17 +536,13 @@ packToMString x =
 documentInfoText :: KontrakcjaTemplates -> Document -> Maybe SignatoryLink -> User -> IO String
 documentInfoText templates document siglnk author =
   renderTemplate templates "documentInfoText" $ do
-    documentInfoFields document author
+    documentInfoFields document 
+    documentAuthorInfo author
     signedByMeFields document siglnk
 
 -- | Basic info about document , name, id ,author
-documentInfoFields :: Document -> User -> Fields
-documentInfoFields  document author = do
-  field "authorfstname" $ nothingIfEmpty $ userfstname $ userinfo author
-  field "authorsndname" $ nothingIfEmpty $ usersndname $ userinfo author
-  field "authorcompany" $ nothingIfEmpty $ usercompanyname $ userinfo author
-  field "authoremail"  $ nothingIfEmpty $ unEmail $ useremail $ userinfo author
-  field "authorcompanynumber" $ nothingIfEmpty $ usercompanynumber $ userinfo author
+documentInfoFields :: Document -> Fields
+documentInfoFields  document  = do
   field "documenttitle" $ BS.toString $ documenttitle document
   field "documentid" $ show $ documentid document
   field "timetosignset" $  isJust $ documentdaystosign document
@@ -569,6 +550,14 @@ documentInfoFields  document author = do
   field "contract" $  documenttype document == Contract
   documentStatusFields document
 
+documentAuthorInfo :: User -> Fields
+documentAuthorInfo author =  do
+  field "authorfstname" $ nothingIfEmpty $ userfstname $ userinfo author
+  field "authorsndname" $ nothingIfEmpty $ usersndname $ userinfo author
+  field "authorcompany" $ nothingIfEmpty $ usercompanyname $ userinfo author
+  field "authoremail"  $ nothingIfEmpty $ unEmail $ useremail $ userinfo author
+  field "authorcompanynumber" $ nothingIfEmpty $ usercompanynumber $ userinfo author
+  
 -- | Fields indication what is a document status 
 documentStatusFields :: Document -> Fields    
 documentStatusFields document = do
