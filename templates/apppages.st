@@ -75,7 +75,7 @@ wholePage=
                                                         <input type="email" name="email" value="E-post" class="infotext" /><br />
                                                         <input type="tel" name="phone" value="Telefonnummer" class="infotext" /><br />
                                                         <textarea name="message" class="infotext">Meddelande</textarea>
-                                                        <a class="submit btn-small green2 center"><p>Skicka!</p></a>
+                                                        <a class="submit new-btn-small green2 center"><p>Skicka!</p></a>
                                                         <input type="submit" class="hidden" />
                                                 </form>
                                                 <div class="hor-divider"></div>
@@ -101,7 +101,7 @@ wholePage=
                         </div>
                          <div class="right">
                             <form method="post" action="$linkrequestaccount$" class="requestAccount">
-                                   <input class="shiny infotext" name="email" type="email" value="Fyll i din e-postadress" /> <a href="#" class="submit btn-small green2 center float-right"><p>Skicka förfrågan!</p></a>
+                                   <input class="shiny infotext" name="email" type="email" value="Fyll i din e-postadress" /> <a href="#" class="submit new-btn-small green2 center float-right"><p>Skicka förfrågan!</p></a>
                                    <input type="submit" class="hidden" />
                              </form>
                          </div>
