@@ -12,7 +12,6 @@ module AppView( TopMenu(..)
               , pageLogin
               , simpleResponse 
               , firstPage
-              , staticTemplate
               ) where 
 
 import Control.Arrow (first)
@@ -25,6 +24,7 @@ import KontraLink
 import Data.Maybe
 import Templates.Templates
 import Control.Monad.Trans
+import Data.List
 
 {- |
    Defines the different sorts of things we can have at the top of the page
@@ -51,7 +51,10 @@ renderFromBody :: (EmbedAsChild (HSPT' IO) xml)
                -> xml 
                -> Kontra Response
 renderFromBody ctx topmenu title xml = do
-                                        res <- webHSP $ pageFromBody ctx topmenu title xml
+                                        htmlPage <- fmap ((isSuffixOf ".html") . concat . rqPaths)  askRq
+                                        let showCreateAccount = htmlPage && (isNothing $ ctxmaybeuser ctx)
+                                        columns <- isFieldSet "columns"
+                                        res <- webHSP $ pageFromBody ctx columns showCreateAccount title xml
                                         clearFlashMsgs
                                         return res
 {- |
@@ -59,18 +62,21 @@ renderFromBody ctx topmenu title xml = do
 -}
 pageFromBody :: (EmbedAsChild (HSPT' IO) xml) 
              =>  Context 
-             -> TopMenu 
+             -> Bool
+             -> Bool
              -> String 
              -> xml
              -> HSP XML
 pageFromBody ctx@Context { ctxmaybeuser
                       , ctxtemplates
                       }
-             topMenu title body = do
+             columns showCreateAccount title body = do
                     content <- liftIO $ renderHSPToString <div id="mainContainer"><% body %></div>
                     wholePage <- liftIO $ renderTemplate ctxtemplates "wholePage" $ do
                                   field "content" content
                                   field "title" title
+                                  field "columns" columns
+                                  field "showCreateAccount" showCreateAccount
                                   mainLinksFields 
                                   contextInfoFields ctx
                     return $ cdata wholePage
@@ -124,16 +130,6 @@ firstPage::Context-> IO String
 firstPage ctx =  renderTemplate (ctxtemplates ctx) "firstPage"  $ do 
                               contextInfoFields ctx
                               mainLinksFields
-{- |
-   Used for wrapping up static content (that's probably come from a .html file) in
-   standard way, by sticking it into a template. 
--}                              
-staticTemplate::Context -> Bool ->  String -> IO String
-staticTemplate ctx nocolumns content = renderTemplate (ctxtemplates ctx) "staticTemplate"  $ do 
-                              contextInfoFields ctx
-                              mainLinksFields
-                              field "content" $ content
-                              field "nocolumns" nocolumns
 
 {- |
    Defines the main links as fields handy for substituting into templates.

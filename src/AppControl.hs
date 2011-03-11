@@ -515,9 +515,7 @@ serveHTMLFiles =  do
                    ms <- liftIO $ catch (fmap Just ( BS.readFile $ "html/"++fileName)) (const $ return Nothing)
                    case ms of 
                     Just s -> do 
-                               nocolumns  <- getField "nocolumns"
-                               content <- liftIO $ staticTemplate ctx (isJust nocolumns) (BS.toString s)
-                               simpleResponse  content 
+                        renderFromBody ctx V.TopNone V.kontrakcja (cdata $ BS.toString s)
                     _ -> mzero
                
          else mzero
