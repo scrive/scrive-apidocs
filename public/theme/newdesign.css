@@ -414,3 +414,271 @@
         text-decoration: none;
         width: 136px;
 }
+
+.tab-table {
+	background: #f4f4f4;
+	border-radius: 0 0 5px 5px;
+	border-top: 1px solid #ccc;
+	padding: 4px;
+	-moz-border-radius: 0 0 5px 5px;
+	-webkit-border-radius: 0 0 5px 5px;
+}
+
+.tab-table table {
+	background: #fff;
+	border: 1px solid #e0e0e0;
+	font: 12px "Lucida Grande";
+	width: 100%;
+}
+
+.tab-table table th {
+	height: 40px;
+	padding-bottom: 4px;
+	padding-left: 15px;
+	text-align: left;
+	vertical-align: bottom;
+}
+
+.tab-table table th a {
+	color: #000;
+	text-decoration: none;
+}
+
+.tab-table table th a:hover {
+	color: #388add;
+}
+
+.tab-table table th em {
+	font-size: 9px;
+}
+
+.tab-table table td {
+	color: #666;
+	height: 22px;
+	margin-bottom: 1px;
+	padding-left: 15px;
+}
+
+.tab-table table tr.odd td {
+	background: #f6f6f6;
+}
+
+.tab-table table tr {
+	border-top: 1px solid #e0e0e0;
+}
+
+.tab-table table th.col1 {
+	width: 35px;
+}
+
+.tab-table table th.col2 {
+	width: 65px;
+}
+
+.tab-table table th.col3 {
+	width: 85px;
+}
+
+.tab-table table th.col4 {
+	width: 225px;
+}
+
+.tab-table .table-paginate {
+	margin-top: 10px;
+	padding: 20px;
+}
+
+.tab-table .table-paginate > a {
+	color: #fff !important;
+	margin-top: -30px;
+}
+
+.tab-table .table-paginate .pages {
+	color: #999;
+	font: 12px/18px "Lucida Grande";
+	margin: 0 auto;
+	text-align: center;
+	width: 220px;
+}
+
+.tab-table .table-paginate .pages strong {
+	color: #000;
+	display: block;
+	font: 12px/18px "Helvetica Neue";
+}
+
+.tab-table .table-paginate .pages a {
+	color: #666;
+	text-decoration: none;
+}
+
+.tab-table .table-paginate .pages a:hover {
+	color: #000;
+}
+
+.tab-table .table-statuses {
+	border: 1px solid #e0e0e0;
+	border-radius: 3px;
+	color: #666;
+	margin-top: 10px;
+	padding: 10px;
+	text-transform: uppercase;
+	-moz-border-radius: 3px;
+	-webkit-border-radius: 3px;
+}
+
+.tab-table .table-statuses .icon {
+	margin-bottom: -1px;
+}
+
+/* Tab Viewer */
+
+#tab-viewer {
+	width: 960px;
+}
+
+.tab-content h5 {
+	color: #000;
+	margin-bottom: 6px;
+}
+
+.tab-content h5 em {
+	color: #9a9a9a;
+}
+
+#tab-viewer .tab-header {
+	background: url(../img/bg-header.png);
+	border: solid #000;
+	border-width: 1px 1px 0 1px;
+	color: #fff;
+	height: 24px;
+	padding: 6px 7px 7px 20px;
+	position: relative;
+}
+
+#tab-viewer .tab-header span {
+	font: 10px "Lucida Grande";
+	text-transform: uppercase;
+}
+
+#tab-viewer .tab-header h3 {
+	display: inline;
+	font: 16px/24px "Lucida Grande";
+	text-transform: uppercase;
+}
+
+#tab-viewer .tab-header .doc-rename {
+	color: #2e99d3;
+	font: 10px "Lucida Grande";
+	text-decoration: none;
+	text-transform: uppercase;
+}
+
+#tab-viewer .tab-header .next-step {
+	right: 10px;
+	position: absolute;
+	top: 6px;
+}
+
+#tab-viewer .tabs {
+	background: #f4f4f4;
+	border: solid #808080;
+	border-width: 0 1px 1px 1px;
+	height: 24px;
+}
+
+#tab-viewer .tabs li {
+	color: #4b4b4b;
+	float: left;
+	font: 11px "Lucida Grande";
+	height: 16px;
+	padding: 4px 20px;
+}
+
+#tab-viewer .tabs li.active {
+	background: url(../img/bg-header.png);
+	color: #d9d9d9;
+	padding: 4px 50px;
+}
+
+#tab-viewer .tab-container {
+	background: #fff;
+	border: solid #808080;
+	border-width: 0 1px 1px 1px;
+	font: 10px "Lucida Grande";
+	-moz-border-radius: 0 0 5px 5px;
+	-webkit-border-radius: 0 0 5px 5px;	
+}
+
+#tab-viewer .tab-content {
+
+}
+
+#tab-viewer .tab-content .col {
+	margin: 0 20px;
+	padding: 15px 0;
+}
+
+#tab-viewer .tab-content .tab-box {
+	border: 1px solid #e6e7ef;
+	min-height: 90px;
+	padding: 10px;
+	width: 220px;
+}
+
+#tab-viewer .tab-content .tab-box a {
+	color: #2e99d3;
+	text-decoration: none;
+}
+
+#tab-viewer .tab-search {
+	border: 1px solid #e4e4e4;
+	border-radius: 3px;
+	height: 12px;
+	margin: 0 10px 0 0 !important;
+	padding: 6px;
+	width: 180px;
+	-moz-border-radius: 3px;
+	-webkit-border-radius: 3px;
+}
+
+#tab-viewer .tab-dd {
+	background: url(../img/dropdown.png) no-repeat;
+	font: 12px/24px "Lucida Grande";
+	text-indent: 9px;
+	height: 25px;
+	position: relative;
+	width: 109px;
+}
+
+#tab-viewer .tab-dd > a {
+	color: #000;
+	text-decoration: none;
+}
+
+#tab-viewer .tab-dd .tab-dd-opts {
+	background: #f7f7f7;
+	display: none;
+	left: 0;
+	position: absolute;
+	top: 25px;
+	width: 200px;
+}
+
+#tab-viewer .tab-dd .tab-dd-opts a {
+	color: #999;
+	display: block;
+	text-decoration: none;
+}
+
+#tab-viewer .tab-dd .tab-dd-opts a:hover {
+	color: #000;
+}
+
+.tab-content .vert-divider {
+	border-left: 1px solid #e6e7ef;
+	float: left;
+	height: 150px;
+	position: relative;
+	width: 1px;
+}
