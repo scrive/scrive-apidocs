@@ -325,10 +325,10 @@ a.btn-big:active {
 
 #top-container .person {
 	background: url(../img/persons.png);
-	bottom: -34px;
+	top: 34px;
 	height: 396px;
 	left: 340px;
-	position: relative;
+	position: absolute;
 	width: 564px;
 	z-index: 0;
 }
@@ -352,6 +352,7 @@ a.btn-big:active {
 	float: left;
 	position: relative;
 	width: 460px;
+    z-index: 2;
 }
 
 /* Intro text */
