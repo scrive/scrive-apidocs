@@ -53,6 +53,7 @@ import System.IO.Temp
 import qualified MemCache
 import Data.Char
 import Data.Map ((!))
+import InputValidation
 
 getFileContents :: Context -> File -> IO (BS.ByteString)
 getFileContents ctx file = do
@@ -119,9 +120,9 @@ postDocumentChangeAction document@Document{documentstatus, documentsignatorylink
     -- main action: sendRejectAuthorEmail
     | oldstatus == Pending && documentstatus == Rejected = do
         ctx@Context{ctxnormalizeddocuments,ctxhostpart,ctxtime} <- get
-        customMessage <- getField "customtext"
+        customMessage <- getCustomTextField "customtext"
         Log.forkIOLogWhenError ("error in sending rejection emails for document " ++ show documentid) $ do
-          sendRejectEmails customMessage ctx document (fromJust msignalink)
+          sendRejectEmails (fmap BS.toString customMessage) ctx document (fromJust msignalink)
         return ()
     --  -> DocumentError
     | DocumentError msg <- documentstatus = do
@@ -1304,8 +1305,8 @@ handleIssueArchive :: Kontra KontraLink
 handleIssueArchive = do
     ctx@(Context { ctxmaybeuser = Just user, ctxhostpart, ctxtime }) <- get
     something <- getDataFnM (lookInput "archive")
-    idstrings <- getDataFnM (lookInputList "doccheck")
-    let Just ids = sequence $ map (readM . BSL.toString) idstrings
+    idnumbers <- getCriticalFieldList asValidDocID "doccheck"
+    let ids = map DocumentID idnumbers
     update $ ArchiveDocuments user ids
     return LinkIssue
 
@@ -1330,7 +1331,7 @@ handleCancel docid = withUserPost $ do
   ctx@Context { ctxmaybeuser = Just user } <- get
   doc <- queryOrFail $ GetDocumentByDocumentID docid
   failIfNotAuthor doc user
-  customMessage <- fmap (fmap concatChunks) $ getDataFn' (lookBS "customtext")  
+  customMessage <- getCustomTextField "customtext"  
   mdoc' <- update $ CancelDocument(documentid doc) 
   case mdoc' of 
     Just doc' -> do
@@ -1367,26 +1368,40 @@ handleResend docid signlinkid  = withUserPost $ do
   failIfNotAuthor doc user
   signlink <- signatoryLinkFromDocumentByID doc signlinkid
   author <- queryOrFail $ GetUserByUserID $ unAuthor $ documentauthor doc
-  customMessage <- fmap (fmap concatChunks) $ getDataFn' (lookBS "customtext")  
+  customMessage <- getCustomTextField "customtext"  
   mail <- liftIO $  mailDocumentRemind (ctxtemplates ctx) customMessage ctx doc signlink author
   liftIO $ sendMail (ctxmailer ctx) (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )],
                                                 mailInfo = Invitation  (documentid doc) (signatorylinkid signlink) })
   addFlashMsg =<< (liftIO $ flashRemindMailSent (ctxtemplates ctx) signlink)
   return (LinkIssueDoc $ documentid doc)
 
+{- |
+    If the custom text field is empty then that's okay, but if it's invalid
+    then we want to fail.
+-}
+getCustomTextField :: String -> Kontra (Maybe BS.ByteString)
+getCustomTextField = getValidateAndHandle asValidInviteText customTextHandler
+  where customTextHandler :: Result BS.ByteString -> Kontra (Maybe BS.ByteString)
+        customTextHandler result =
+            flashValidationMessage result
+                >>= failIfBad
+                >>= asMaybe
+        failIfBad :: Result a -> Kontra (Result a)
+        failIfBad (Bad x) = mzero
+        failIfBad x = return x
+
 --This only works for undelivered mails. We shoulkd check if current user is author
 handleChangeSignatoryEmail::String -> String -> Kontra KontraLink
 handleChangeSignatoryEmail did slid = do
                                      let mdid = readM did
-                                     memail' <- getField "email"
-                                     let memail = fmap (fmap toLower) memail'
+                                     memail <- getOptionalField asValidEmail "email"
                                      let mslid = readM slid
                                      case (mdid,mslid,memail) of
                                        (Just docid,Just slid,Just email) -> do
                                                                            ctx <- get
                                                                            md <- query $ GetDocumentByDocumentID docid
                                                                            when ((liftM2 isAuthor md $ ctxmaybeuser ctx) /= Just True) mzero
-                                                                           mdoc <- update $ ChangeSignatoryEmailWhenUndelivered docid slid (BS.fromString email)
+                                                                           mdoc <- update $ ChangeSignatoryEmailWhenUndelivered docid slid email
                                                                            let msl =  do 
                                                                                         doc <- either (const Nothing) Just mdoc
                                                                                         find ((== slid) . signatorylinkid) $ documentsignatorylinks doc 
