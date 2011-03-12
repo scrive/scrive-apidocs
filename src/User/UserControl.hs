@@ -33,29 +33,33 @@ import qualified HSP
 import Templates.Templates (KontrakcjaTemplates)
 import HSP.XML
 import MinutesTime
+import InputValidation
 
 handleUserPasswordPost :: Kontra KontraLink
 handleUserPasswordPost = do
   ctx@Context{ctxmaybeuser = Just user@User{userid}} <- get
-  oldpassword <- fmap (fromMaybe "") $ getField "oldpassword"
-  password <- fmap (fromMaybe "") $ getField "password"
-  password2 <- fmap (fromMaybe "") $ getField "password2"
-  if verifyPassword (userpassword user) $ BS.fromString oldpassword
-    then
-          case (checkPasswords password password2) of
-           Right () -> do
-                        passwordhash <- liftIO $ createPassword $ BS.fromString password
-                        update $ SetUserPassword user passwordhash
-                        addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
-           Left f ->  addFlashMsg =<< (liftIO $ f (ctxtemplates ctx))
-    else  addFlashMsg =<< (liftIO $ flashMessageBadOldPassword (ctxtemplates ctx))
-  return LinkAccount
+  moldpassword <- getOptionalField asDirtyPassword "oldpassword"
+  mpassword <- getOptionalField asValidPassword "password"
+  mpassword2 <- getOptionalField asDirtyPassword "password2"
+  case (moldpassword, mpassword, mpassword2) of
+    (Just oldpassword, Just password, Just password2) -> do
+      if verifyPassword (userpassword user) oldpassword
+        then
+              case (checkPasswords password password2) of
+               Right () -> do
+                            passwordhash <- liftIO $ createPassword password
+                            update $ SetUserPassword user passwordhash
+                            addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
+               Left f ->  addFlashMsg =<< (liftIO $ f (ctxtemplates ctx))
+        else  addFlashMsg =<< (liftIO $ flashMessageBadOldPassword (ctxtemplates ctx))
+      return LinkAccount
+    _ -> return LinkAccount
 
 
-checkPasswords::String -> String -> Either (KontrakcjaTemplates -> IO FlashMessage) ()
+checkPasswords::BS.ByteString -> BS.ByteString -> Either (KontrakcjaTemplates -> IO FlashMessage) ()
 checkPasswords p1 p2 =  if p1 == p2
                         then 
-                          if isPasswordStrong $ BS.fromString p1
+                          if isPasswordStrong p1
                           then Right ()
                           else Left $ flashMessagePasswordNotStrong 
                         else Left  flashMessagePasswordsDontMatch      
@@ -71,26 +75,28 @@ handleUserGet = do
 handleUserPost :: Kontra KontraLink
 handleUserPost = do
   ctx@Context{ctxmaybeuser = Just user@User{userid},ctxtime} <- get
-  fname <- g "fname"
-  lname <- g "lname"
-  companyname <- g "companyname"
-  companyposition <- g "companyposition"
-  companynumber <- g "companynumber"
-  invoiceaddress <- g "invoiceaddress"
-  newvieweremail <- g "newvieweremail"
-
-  when (BS8.length newvieweremail > 0) $ do
-     avereturn <- update $ AddViewerByEmail userid $ Email newvieweremail
-     case avereturn of
-       Left msg -> addFlashMsg $ toFlashMsg OperationFailed msg
-       Right _  -> return ()
-     return ()
+  let getUserField = getDefaultedField BS.empty
+  mfname <- getUserField asValidName "fname"
+  mlname <- getUserField asValidName "lname"
+  mcompanyname <- getUserField asValidCompanyName "companyname"
+  mposition <- getUserField asValidPosition "companyposition"
+  mcompanynumber <- getUserField asValidCompanyNumber "companynumber"
+  minvoiceaddress <- getUserField asValidAddress "invoiceaddress"
+  mnewvieweremail <- getUserField asValidEmail "newvieweremail"
+  case (mfname, mlname, mcompanyname, mposition, mcompanynumber, minvoiceaddress, mnewvieweremail) of
+    (Just fname, Just lname, Just companyname, Just companyposition, Just companynumber, Just invoiceaddress, Just newvieweremail) -> do
+      when (BS8.length newvieweremail > 0) $ do
+         avereturn <- update $ AddViewerByEmail userid $ Email newvieweremail
+         case avereturn of
+           Left msg -> addFlashMsg $ toFlashMsg OperationFailed msg
+           Right _  -> return ()
+         return ()
   
-  newuser <- update $ SetUserDetails userid fname lname companyname companyposition companynumber invoiceaddress
-  addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
+      newuser <- update $ SetUserDetails userid fname lname companyname companyposition companynumber invoiceaddress
+      addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
 
-  return LinkAccount
-
+      return LinkAccount
+    _ -> return LinkAccount
 
 handleGetSubaccount :: Kontra Response
 handleGetSubaccount = do
@@ -109,21 +115,24 @@ handlePostSubaccount = do
 
 handleCreateSubaccount :: Context -> Kontra KontraLink
 handleCreateSubaccount ctx@Context { ctxmaybeuser = Just (user@User { userid }), ctxhostpart, ctxtemplates } = do
-  fullname <- g "fullname"
-  email <- g "email"
-  muser <- liftIO $ createUser ctx ctxhostpart fullname email Nothing True (Just user) False
-  when (isNothing muser) $ addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
-  return LinkSubaccount
+  mfullname <- getDefaultedField BS.empty asValidName "fullname"
+  memail <- getOptionalField asValidEmail "email"
+  case (mfullname, memail) of
+    (Just fullname, Just email) -> do
+      muser <- liftIO $ createUser ctx ctxhostpart fullname email Nothing True (Just user) False
+      when (isNothing muser) $ addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
+      return LinkSubaccount
+    _ -> return LinkSubaccount
 
 handleViralInvite :: Kontra KontraLink
 handleViralInvite = do
     ctx <- get
-    minvitedemail <- getField "invitedemail"
+    minvitedemail <- getOptionalField asValidEmail "invitedemail"
     case minvitedemail of
         Nothing ->
             return LoopBack
         Just invitedemail -> do
-                    maccount <- liftIO $ createUserForViralInvite ctx (BS.fromString invitedemail)
+                    maccount <- liftIO $ createUserForViralInvite ctx invitedemail
                     case maccount of
                      Just account -> do
                           addFlashMsg =<< (liftIO $ flashMessageViralInviteSent $ ctxtemplates ctx)   
@@ -256,46 +265,53 @@ handleAcceptTOSGet = withUserGet $ do
 handleAcceptTOSPost :: Kontra KontraLink
 handleAcceptTOSPost = do
   ctx@Context{ctxmaybeuser = Just user@User{userid},ctxtime} <- get
-  tos <- getDataFn' (look "tos")
+  tos <- getDefaultedField False asValidCheckBox "tos"
   
-  if isJust tos
-    then do
+  case tos of
+    (Just True) -> do
       update $ AcceptTermsOfService userid ctxtime
       addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
       return LinkMain
-    else do
+    (Just False) -> do
       addFlashMsg =<< (liftIO $ flashMessageMustAcceptTOS (ctxtemplates ctx))
       return LinkAcceptTOS
+    Nothing -> return LinkAcceptTOS
 
 
 handleRequestAccount :: Kontra KontraLink
 handleRequestAccount = do 
                         ctx<- get
-                        email <- getField "email"
-                        liftIO $ sendMail (ctxmailer ctx) $ emptyMail 
+                        memail <- getRequiredField asValidEmail "email"
+                        case memail of
+                          Nothing -> return LinkMain
+                          Just email -> do
+                            liftIO $ sendMail (ctxmailer ctx) $ emptyMail 
                                                                         { fullnameemails = [(BS.fromString "prelaunch@skrivapa.se",BS.fromString "prelaunch@skrivapa.se")],
                                                                            title = BS.fromString $ "New account request",
-                                                                           content = BS.fromString $ "Request from addres " ++ (fromMaybe "" email)
+                                                                           content = BS.fromString $ "Request from addres " ++ (BS.toString email)
                                                                         }
-                        addFlashMsg =<< (liftIO $ flashMessageAccountRequestSend (ctxtemplates ctx))                       
-                        return LinkMain -- Something should happend here
+                            addFlashMsg =<< (liftIO $ flashMessageAccountRequestSend (ctxtemplates ctx))                       
+                            return LinkMain -- Something should happend here
 
 handleQuestion :: Kontra KontraLink
 handleQuestion = do
                   ctx<- get
                   name <- getField "name" 
-                  email <- getField "email"
+                  memail <- getDefaultedField BS.empty asValidEmail "email"
                   phone <- getField "phone" 
-                  message <- getField "message" 
-                  let  content =   "name: "      ++ (fromMaybe "" name)    ++ "<BR/>" ++
-                                   "email: "   ++ (fromMaybe "" email)   ++ "<BR/>" ++
-                                   "phone "    ++ (fromMaybe "" phone)   ++ "<BR/>" ++
-                                   "message: " ++ (fromMaybe "" message) 
-                  liftIO $ sendMail (ctxmailer ctx) $ emptyMail 
+                  message <- getField "message"
+                  case memail of
+                    Nothing -> return LinkMain
+                    (Just email) -> do 
+                      let  content =   "name: "      ++ (fromMaybe "" name)    ++ "<BR/>" ++
+                                       "email: "   ++ (BS.toString email)   ++ "<BR/>" ++
+                                       "phone "    ++ (fromMaybe "" phone)   ++ "<BR/>" ++
+                                       "message: " ++ (fromMaybe "" message) 
+                      liftIO $ sendMail (ctxmailer ctx) $ emptyMail 
                                                           { fullnameemails = [(BS.fromString "info@skrivapa.se",BS.fromString "info@skrivapa.se")],
                                                             title = BS.fromString $ "Question",
                                                             content = BS.fromString $ content }
-                  return LinkMain
+                      return LinkMain
                                                                              
                                                 
 
@@ -344,16 +360,18 @@ activatePage muser (name,email) = do
 
 handleChangePassword::(Maybe User) -> Kontra () -> Kontra KontraLink
 handleChangePassword muser dropSessionAction = do
-                             ctx <- get
-                             case muser of 
-                                Just user -> 
-                                   do
-                                     password <- fmap (fromMaybe "") $ getField "password"
-                                     password2 <- fmap (fromMaybe "") $ getField "password2"
+                         ctx <- get
+                         case muser of 
+                            Just user -> 
+                               do
+                                 mpassword <- getOptionalField asValidPassword "password"
+                                 mpassword2 <- getOptionalField asDirtyPassword "password2"
+                                 case (mpassword, mpassword2) of
+                                   (Just password, Just password2) -> do
                                      case (checkPasswords password password2) of
                                       Right () ->
                                         do
-                                          passwordhash <- liftIO $ createPassword $ BS.fromString password
+                                          passwordhash <- liftIO $ createPassword password
                                           update $ SetUserPassword user passwordhash
                                           addFlashMsg =<< (liftIO $ flashMessageUserPasswordChanged  (ctxtemplates ctx))
                                           dropSessionAction
@@ -363,7 +381,8 @@ handleChangePassword muser dropSessionAction = do
                                         do
                                           addFlashMsg =<< (liftIO $ f (ctxtemplates ctx))
                                           return LoopBack
-                                Nothing -> return LoopBack
+                                   _ -> return LoopBack
+                            Nothing -> return LoopBack
                                        
                                          
 newPasswordPage::Maybe User -> (String,String) -> Kontra Response
@@ -379,26 +398,29 @@ newPasswordPage muser (name,email)= do
                                  
 handleActivate::(Maybe User) ->Kontra () -> Kontra KontraLink
 handleActivate muser dropSessionAction = do
-                        ctx <- get
-                        tos <- fmap ((==) $ Just "on") $ getField "tos"
-                        fname <- fmap (fromMaybe "") $ getField "fname"
-                        lname <- fmap (fromMaybe "") $ getField "lname"
-                        companyname <- fmap (fromMaybe "") $ getField "companyname"
-                        companytitle <- fmap (fromMaybe "") $ getField "companyposition"
-                        password <- fmap (fromMaybe "") $ getField "password"
-                        password2 <- fmap (fromMaybe "") $ getField "password2"
+                    ctx <- get
+                    let getUserField = getDefaultedField BS.empty
+                    mtos <- getDefaultedField False asValidCheckBox "tos"
+                    mfname <- getUserField asValidName "fname"
+                    mlname <- getUserField asValidName "lname"
+                    mcompanyname <- getUserField asValidName "companyname"
+                    mcompanyposition <- getUserField asValidName "companyposition"
+                    mpassword <- getRequiredField asValidPassword "password"
+                    mpassword2 <- getRequiredField asValidPassword "password2"
+                    case (mtos, mfname, mlname, mcompanyname, mcompanyposition, mpassword, mpassword2) of
+                      (Just tos, Just fname, Just lname, Just companyname, Just companytitle, Just password, Just password2) -> do
                         case muser of 
                          Just user -> do    
                             case (checkPasswords password password2) of
                              Right () ->  if (tos)
                                            then do  
-                                            passwordhash <- liftIO $ createPassword $ BS.fromString password
+                                            passwordhash <- liftIO $ createPassword password
                                             update $ SetUserPassword user passwordhash
                                             update $ AcceptTermsOfService (userid user) (ctxtime ctx)
-                                            update $ SetUserInfo (userid user) $ (userinfo user) {userfstname = BS.fromString fname,
-                                                                                                  usersndname = BS.fromString lname,
-                                                                                                  usercompanyname  = BS.fromString  companyname, 
-                                                                                                  usercompanyposition = BS.fromString companytitle
+                                            update $ SetUserInfo (userid user) $ (userinfo user) {userfstname = fname,
+                                                                                                  usersndname = lname,
+                                                                                                  usercompanyname  = companyname, 
+                                                                                                  usercompanyposition = companytitle
                                                                                                   }
                                             now <- liftIO getMinutesTime
                                             update $ AddFreePaymentsForInviter now user
@@ -413,7 +435,7 @@ handleActivate muser dropSessionAction = do
                                          addFlashMsg =<< (liftIO $ f (ctxtemplates ctx))          
                                          return LoopBack  
                          Nothing -> do 
-                                     memail <- fmap (fmap BS.fromString) $ getField "email"
+                                     memail <- getOptionalField asDirtyEmail "email"
                                      case memail of  
                                       Just email -> do
                                                      muser <- query $ GetUserByEmail $ Email email
@@ -436,7 +458,8 @@ handleActivate muser dropSessionAction = do
                                       Nothing -> do
                                          addFlashMsg =<< (liftIO $ flashMessageActivationLinkNotValid (ctxtemplates ctx)) 
                                          return LinkMain   
-      
+                      _ -> return LinkMain
+
 userFromExternalSessionData ::String -> String -> Kontra (Maybe User)
 userFromExternalSessionData sid mh = do
                                       msession <- sequenceMM $ 
