@@ -129,20 +129,6 @@ table {
 	text-shadow: #41770b 0 1px 3px;
 }
 
-.btn-tiny {
-	background: url(../img/btn-tiny.png) -73px 0 no-repeat;
-	color: #fff;
-	display: block;
-	font: 11px "Helvetica Neue";
-	height: 19px;
-	padding-left: 10px;
-	padding-top: 7px;
-	text-decoration: none;
-	width: 63px;
-}
-
-
-
 input.shiny {
 	background: #fff;
 	border: 1px solid #c6dade;
@@ -224,24 +210,6 @@ a.btn-big:hover {
 
 a.btn-big:active {
 	background-position: -222px -94px;
-}
-
-.btn-tiny.center {
-	padding-left: 0;
-	text-align: center;
-	width: 73px;
-}
-
-.btn-tiny:hover {
-	background-position: -73px -27px;
-}
-
-.btn-tiny.blue {
-	background-position: 0 0;
-}
-
-.btn-tiny.blue:hover {
-	background-position: 0 -27px;
 }
 
 /* Icons */

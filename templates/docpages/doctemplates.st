@@ -16,6 +16,7 @@ templatesForAjax=
       <div class="filelist" style="padding-left:10px"></div>
   </form>
    <script> initFileInputs();</script>
+<!-- Here the templates are generated -->
 <!-- Table with all templates -->
   <table class="doctable" cellspacing="0">
     <col>

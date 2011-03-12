@@ -38,6 +38,8 @@ wholePage=
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/newdesign.css" media="screen">
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/style.css" media="screen">
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/calendar.css" media="screen">
+		<link rel="stylesheet" type="text/css" href="$prefix$/theme/symbols.css" media="screen">
+		<link rel="stylesheet" type="text/css" href="$prefix$/theme/buttons.css" media="screen">
         <link href="$prefix$/theme/flash.css" rel="stylesheet" type="text/css" media="screen" />
         <link href="/css/main.css" rel="stylesheet" type="text/css" />
         <link rel="stylesheet" type="text/css"  href="$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/ui-lightness/jquery-ui.css"              media="screen" />

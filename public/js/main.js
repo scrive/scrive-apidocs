@@ -1,40 +1,105 @@
-function openModal(html, o) {
-			
-	var defaults = {
-		height: '380',
-		width: '480',
-		topTxt: ''
-	};
-	
-	if(o) $.extend(defaults, o);
-	
-	$('<div>')
-	.addClass('modal-wrap')
-	.appendTo('body');
-	
-	$('<div>')
-	.addClass('modal-container')
-	.css({
-		'height': o.height,
-		'width': o.width,
-		'margin-left': -(o.width/2),
-		'margin-top': -(o.height/2)
-	})
-	.append('<div class="modal-header">SkrivaPå<a href="#" class="btn-tiny blue center">Stäng</a></div><div class="modal-top">' + o.topTxt + '</div><div class="modal-body">' + html + '</div><div class="modal-footer"></div></div>')
-	.appendTo('body');
-	
-	$('.modal-body').css('height', (o.height - 184));
-	
-	$('.modal-container').fadeIn('fast');
-	
-	$('.modal-wrap, .modal-header a').click( function() {
-		$('.modal-container, .modal-wrap').fadeOut('fast', function() {
-			$('.modal-wrap, .modal-container').remove();
+// Alternative submit button
+(function($) {
+	$.fn.altSubmit = function() {	
+		return this.each( function() {
+			$(this).click( function(e) {
+				e.preventDefault();
+				
+				var name = $(this).attr('rel');
+				
+				$(this).parents('form').append('<input type="hidden" name="' + name + '" value="1" />').submit();
+			});
 		});
-	});
+	}
+})(jQuery);
+
+// Modal
+(function($) {
 	
-	return true;
-}
+	$.fn.modal = function(o) {	
+		var s = {
+			persistent: false,
+			source: '',
+			width: 498
+		};
+		
+		if(o) $.extend(s, o);
+		
+		var source = $(s.source);
+		var html = {
+			header: source.children('#head').html(),
+			body: source.children('#body').html()
+		}
+		
+		return this.each( function() {
+			$(this).click( function(e) {
+				e.preventDefault();
+				
+				createModal();
+			});
+		});
+		
+		function createModal() {
+			var wrap = $('<div>');
+			var container = $('<div>');
+			
+			wrap.addClass('modal-wrap').appendTo('body');
+			container.addClass('modal-container').appendTo('body');
+			
+			// Call a bunch of functions to populate the modal
+			setHeader(container);
+			setBody(container);	
+			setFooter(container);
+			setDimension(container);
+			
+			$('.modal-container').fadeIn('fast');
+			
+			// Remove the modal when clicking the white background or the close button (if persistent == false)
+			if(s.persistent == false) {
+				$('.modal-wrap, .modal-header a').click( function() {
+					$('.modal-container, .modal-wrap').fadeOut('fast', function() {
+						$('.modal-wrap, .modal-container').remove();
+					});
+				});
+			}
+		}
+		
+		// Set content for the modal header
+		function setHeader(c) {
+			c.append('<div class="modal-header">' + 
+					 '<div class="modal-icon ' + s.icon + '"></div>' + 
+					 '<div class="modal-title">' + html.header + '</div>' + 
+					 '<a href="#" class="modal-close no-txt">Stäng</a>' + 
+					 '<div class="clearfix"></div>' + 
+					 '</div>');
+			
+			c.append('<div class="modal-spacer"></div>');
+		}
+		
+		// Set content for the modal body
+		function setBody(c) {
+			c.append('<div class="modal-content">' + html.body + '</div>');
+		}
+		
+		// Set content for the modal footer
+		function setFooter(c) {
+			c.append('<div class="modal-footer">' + 
+					 '<a href="#" id="cancel">Avbryt</a>' + 
+					 '<a href="#" id="message">Skicka meddelande</a>' + 
+					 '<a href="#" class="btn-small green float-right">' + 
+					 '<div class="left"></div><div class="label">Skicka!<div class="btn-symbol arrow-right"></div></div><div class="right"></div>' + 
+					 '</a></div>');
+		}
+		
+		// Set dimensions and center the modal
+		function setDimension(c) {
+			c.css({
+				'margin-left': -(s.width/2),
+				'margin-top': -(c.height()/2),
+			})
+		}
+	}
+})(jQuery);
 
 $(document).ready( function() {
 	$('.login-button').click( function(e) {
@@ -68,7 +133,7 @@ $(document).ready( function() {
 		});
 	});
 	
-	setTimeout(function(){$('.tweet').tweet({
+	$('.tweet').tweet({
 		username: 'skrivapa',
 		count: 3,
 		loading_text: 'Laddar tweets..'
@@ -84,9 +149,16 @@ $(document).ready( function() {
 		});
 	});
 	
-	$('form a.submit').click( function(e) {
-		e.preventDefault();
-		
-		$(this).parents('form').submit();
-	});       
+	// Options dropdown on archive, sub accounts etc.
+	$('.tab-dd').click( function() {
+		$(this).children('.tab-dd-opts').toggle();
+	}).mouseleave( function() {
+		$.data(this, 'dd', setTimeout( function() {
+			$('.tab-dd').children('.tab-dd-opts').hide();
+		}, 500));
+	}).mouseenter( function() {
+		clearTimeout($.data(this, 'dd'));
+	});
+	
+	$('a.submit').altSubmit();
 });

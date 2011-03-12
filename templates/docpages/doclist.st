@@ -8,80 +8,109 @@ mainpage=
 
 ####
 
-####
+####		
 pageDocumentList= 
 <form method="post" action="">
-  <div class="doctablecontainer">
-  <table class="doctable" cellspacing="0">
-    <col>
-    <col>
-    <col>
-    <col>
-    <col>
-    <col>
-    <thead>
-      <tr>
-        <td><a href="#" id="all">Alla</a></td>
-        <td><span style="padding-left:5px">Status</span></td> 
-        <td></td>
-        <td>Parter</td>
-        <td>Dokument</td>
-        <td>Senaste handelse</td>
-        <td></td>
-      </tr>
-    </thead>
-    <tfoot>
-      <tr>
-        <td colspan="7" style="text-align: right; overflow: hidden;">
-          <div class="floatleft">
-            <input type="submit" class="button" name="archive" value="Radera">
-          </div>
-          <div class="floatright">
-            <img src="/theme/images/status_draft.png"> Utkast
-            <img src="/theme/images/status_rejected.png"> Avbrutet
-            <img src="/theme/images/status_timeout.png"> Förfallet
-            <img src="/theme/images/status_pending.png"> Skickat
-            <img src="/theme/images/status_viewed.png"> Granskat av motpart
-            <img src="/theme/images/status_signed.png"> Undertecknat
-          </div>
-          <div class="clearboth"></div>
-        </td>
-      </tr>
-    </tfoot>
-    <tbody id="selectable">
-      $documents:{document |
-      
-      <tr class="ui-state-default">
-        <td class="tdleft">
-          $if(document.isauthor)$ <input type="checkbox" name="doccheck" value="$document.documentid$" class="check"> $endif$
-        </td>
-        <td>
-          <img width="17" height="17" src="$document.statusimage$"> 
-          $if(document.anyinvitationundelivered)$  <span style="color:#000000;position:relative;top:-3px">!</span>$endif$
-          
-        </td>
-        <td>
-          $if(document.timeoutdaysleft)$  
-          <span title="Förfallodatum: $document.timeoutdate$">
-            <a href="$document.doclink$">
-              ($document.timeoutdaysleft$)
-            </a>
-          </span> 
-          $endif$
-        </td>
-        <td><a href="$document.doclink$">$document.signatories:{sig | $sig.name$}; separator=", "$</a></td>
-        <td><a href="$document.doclink$">$document.documenttitle$</a></td>
-        <td><a href="$document.doclink$"><span title="$document.mtime$">$document.mtime$</span></a></td>
-        <td class="tdright">
-          $if(document.davelink)$ 
-          <a href="$document.davelink$">*</a>     
-          $endif$
-        </td>
-      </tr>
-      
-      }$
-    </tbody>
-  </table>
-  </div>
+	<input type="hidden" name="archive" value="1" />
+	<div id="tab-viewer">
+		<div class="tab-header">
+
+		</div>
+		<ul class="tabs">
+			<li class="active">Dokument</a></li>
+			<li><a href="#">Mallar</a></li>
+			<li><a href="#">Kontakter</a></li>
+			<li><a href="#">Underkonton</a></li>
+		</ul>
+		<div class="tab-container">
+			<div class="tab-content">
+				<div class="col float-left">
+					<div class="tab-dd">
+						<a href="javascript:;"><p>Alternativ</p></a>
+						<ul class="tab-dd-opts">
+							<li><a href="javascript:;" class="submit" rel="archive">Radera</a></li>
+						</ul>
+					</div>
+				</div>
+				<div class="col float-right">
+					<input type="text" class="tab-search infotext" name="searchValue" value="Sök dokument" />
+					<a href="#" class="btn-tiny black float-right submit" rel="search"><div class="left"></div><div class="label">Sök</div><div class="right"></div></a>
+				</div>
+				<div class="clearfix"></div>
+			</div>
+			<div class="tab-table">
+				<table>
+					<thead>
+						<tr>
+							<th class="col1"><input type="checkbox" name="" /></th>
+							<th class="col2"><a href="javascript:;">Status <em>▼</em></a></th>
+							<th class="col3"><a href="javascript:;">Senaste händelse <em>▼</em></a></th>
+							<th class="col4"><a href="javascript:;">Parter <em>▼</em></a></th>
+							<th class="col5"><a href="javascript:;">Dokument <em>▼</em></a></th>
+						</tr>
+					</thead>
+					
+    				<tbody id="selectable">
+				      $documents:{document |
+						<!-- Every other row should have class="odd" -->
+      					<tr class="odd">
+							<td>$if(document.isauthor)$ <input type="checkbox" name="doccheck" value="$document.documentid$" class="check"> $endif$</td>
+							<td><div src="/" class="icon status cancelled" rel="Status: avbruten"></div>$if(document.anyinvitationundelivered)$  <span style="color:#000000;position:relative;top:-3px">!</span>$endif$</td>
+							<td>
+								<span title="$document.mtime$">$document.mtime$</span>
+								$if(document.timeoutdaysleft)$  
+						          <span title="Förfallodatum: $document.timeoutdate$">
+						            <a href="$document.doclink$">
+						              ($document.timeoutdaysleft$)
+						            </a>
+						          </span> 
+						          $endif$
+							</td>
+							<td>$document.signatories:{sig | $sig.name$}; separator=", "$</td>
+							<td>
+								$document.documenttitle$
+								$if(document.davelink)$ 
+					          	<a href="$document.davelink$">*</a>     
+					          	$endif$</td>
+						</tr>
+				      }$
+				    </tbody>
+  				</table>
+				<div class="table-statuses">
+					<div class="icon status template"></div>Mall&nbsp;
+					<div class="icon status draft"></div>Utkast&nbsp;
+					<div class="icon status cancelled"></div>Avbrutet&nbsp;
+					<div class="icon status expired"></div>Förfallet&nbsp;
+					<div class="icon status sent"></div>Skickat&nbsp;
+					<!--
+					<div class="icon status reviewed"></div>Granskat&nbsp;
+					-->
+					<div class="icon status opened"></div>Öppnat&nbsp;
+					<div class="icon status signed"></div>Signerat&nbsp;
+				</div>
+				<div class="table-paginate">
+					<div class="pages">
+						<strong>1-20 av 123</strong>
+						<<
+						<
+						1
+						<a href="#">2</a>
+						<a href="#">3</a>
+						<a href="#">4</a>
+						<a href="#">5</a>
+						<a href="#">6</a>
+						<a href="#">7</a>
+						...
+						<a href="#">31</a>
+						<a href="#">></a>
+						<a href="#">>></a>
+					</div>
+					<a href="#" class="btn-tiny black float-left"><div class="left"></div><div class="label">Bakåt<div class="btn-symbol black arrow-right"></div></div><div class="right"></div></a>
+					<a href="#" class="btn-tiny black float-right"><div class="left"></div><div class="label">Nästa<div class="btn-symbol black arrow-left"></div></div><div class="right"></div></a>
+					<div class="clearfix"></div>
+				</div>
+			</div>
+		</div>
+	</div>
 </form>
      
