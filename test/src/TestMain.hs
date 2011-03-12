@@ -9,6 +9,7 @@ import DocViewMailSampler
 import DocViewSampler
 import DocControlTest
 import TrustWeaverTest
+import InputValidationTest
 import System.IO
 
 main = do
@@ -23,5 +24,6 @@ tests = [testGroup "UserState" userStateTests,
          testGroup "DocViewMail (Sampler)" docViewMailSamples,
          testGroup "DocView (Sampler)" docViewSamples,
          testGroup "DocControl" docControlTests,
-         testGroup "TrustWeaver" trustWeaverTests
+         testGroup "TrustWeaver" trustWeaverTests,
+         testGroup "InputValidation" inputValidationTests
         ]
