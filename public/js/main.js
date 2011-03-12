@@ -68,11 +68,11 @@ $(document).ready( function() {
 		});
 	});
 	
-	$('.tweet').tweet({
+	setTimeout(function(){$('.tweet').tweet({
 		username: 'skrivapa',
 		count: 3,
 		loading_text: 'Laddar tweets..'
-	});
+	});},1000)
 	
 	$('input.infotext, textarea.infotext').each( function() {
 		var orig_value = $(this).val();
