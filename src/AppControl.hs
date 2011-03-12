@@ -54,6 +54,7 @@ import qualified MemCache
 import Happstack.State (update)
 import Redirect
 import PayEx.PayExInterface -- Import so at least we check if it compiles
+import InputValidation
 {-| 
   Defines the application's configuration.  This includes amongst other things
   the http port number, amazon, trust weaver and email configuraton,
@@ -360,10 +361,10 @@ forgotPasswordPageGet = do
 forgotPasswordPagePost :: Kontra KontraLink
 forgotPasswordPagePost = do
     ctx <- get
-    memail <- getField "email"
+    memail <- getOptionalField asValidEmail "email"
     case memail of 
       Just email -> do
-                      muser <- query $ GetUserByEmail $ Email (BS.fromString email)                    
+                      muser <- query $ GetUserByEmail $ Email email                    
                       case muser of 
                        Nothing -> do 
                                    addFlashMsg =<< (liftIO $ flashMessageNoSuchUserExists $ ctxtemplates ctx)
@@ -426,7 +427,7 @@ signupVipPagePost = signup True $ parseMinutesTimeMDY "31-12-2011"
 signup::Bool -> (Maybe MinutesTime) -> Kontra KontraLink
 signup vip freetill =  do 
                 ctx@Context{ctxtemplates,ctxhostpart} <- lift get
-                memail <- fmap (fmap (BS.fromString)) $ getField "email"
+                memail <- getOptionalField asValidEmail "email"
                 case memail of
                    Nothing -> return LoopBack
                    Just email -> do
@@ -481,19 +482,21 @@ handleLoginGet = do
 -}  
 handleLoginPost :: Kontra KontraLink
 handleLoginPost = do
-  email  <- getDataFnM $ look "email"
-  passwd <- getDataFnM $ look "password"
-  
-  -- check the user things here
-  maybeuser <- query $ GetUserByEmail (Email $ BS.fromString email)
-  case maybeuser of
-    Just User{userpassword} ->
-        if verifyPassword userpassword (BS.fromString passwd) && passwd/=""
-        then do
-          logUserToContext maybeuser
-          return BackToReferer
-        else return $ LinkLogin (InvalidPassword email)
-    Nothing -> return $ LinkLogin InvalidEmail
+  memail <- getOptionalField asDirtyEmail "email"
+  mpasswd <- getOptionalField asDirtyPassword "password"
+  case (memail, mpasswd) of
+    (Just email, Just passwd) -> do
+      -- check the user things here
+      maybeuser <- query $ GetUserByEmail (Email email)
+      case maybeuser of
+        Just User{userpassword} ->
+            if verifyPassword userpassword passwd
+            then do
+              logUserToContext maybeuser
+              return BackToReferer
+            else return $ LinkLogin (InvalidPassword $ BS.toString email)
+        Nothing -> return $ LinkLogin InvalidEmail
+    _ -> return BackToReferer
 
 {- |
    Handles the logout, and sends user back to main page.
