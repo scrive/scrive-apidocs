@@ -108,6 +108,7 @@ Executable kontrakcja-server
  Build-Depends: html
  Build-Depends: MissingH
  Build-Depends: temporary==1.1.1
+ Build-Depends: regex-posix
 
  Main-Is: Main.hs
 
@@ -168,6 +169,7 @@ Executable kontrakcja-test
  Build-Depends: array
  Build-Depends: html
  Build-Depends: temporary==1.1.1
+ Build-Depends: regex-posix
 
  Main-is: TestMain.hs
 
