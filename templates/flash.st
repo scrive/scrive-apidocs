@@ -99,3 +99,54 @@ $if(invpass)$
   Felaktigt lösenord.
 $endif$
 ###
+###
+emailFieldName=e-post
+###
+passwordFieldName=lösenord
+###
+nameFieldName=namn
+###
+companyNameFieldName=företagsnamn
+###
+companyNumberFieldName=organisationsnummer
+###
+addressFieldName=adress
+###
+positionFieldName=position
+###
+checkBoxFieldName=check box
+###
+daysToSignFieldName=days to sign
+###
+idFieldName=id
+###
+fieldNameFieldName=field name
+###
+fieldValueFieldName=field value
+###
+placeFieldName=place
+###
+inviteTextFieldName=invite text
+###
+flashMessageNeedsLetterAndDigit=$fieldnametitlecase$ must contain at least one letter and one number.
+###
+flashMessageInvalidFormat=$fieldnametitlecase$ is incorrectly formatted.
+###
+flashMessageNumberBelowMinimum=$fieldnametitlecase$ must be a minimum of $min$.
+###
+flashMessageNumberAboveMaximum=$fieldnametitlecase$ can be a maximum of $max$.
+###
+flashMessageNotAValidInteger=$fieldnametitlecase$ should be a number.
+###
+flashMessageInvalidSpaceInInput=Spaces are not allowed in $fieldnamelowercase$.
+###
+flashMessageInvalidUnprintableCharsInInput=Invalid characters found in $fieldnamelowercase$. 
+###
+flashMessageInvalidPrintableCharsInInput=Invalid character in $fieldnamelowercase$: $invalidchar$
+###
+flashMessageInputLessThanMinLength=$fieldnametitlecase$ must have a minimum of $minlength$ characters.
+###
+flashMessageInputExceedsMaxLength=$fieldnametitlecase$ has a max length of $maxlength$.
+###
+flashMessageMissingRequiredField=You're missing some required fields.
+###
