@@ -318,17 +318,26 @@ Du har skapat fält för parterna att fylla i innan de undertecknar. Efter att a
       <button class="bankid button" type="button"> Underteckna with BankID</button>
     </div>
   </form>  
-  <form method="post" name="form" action="" class="overlay" id="edit-invite-text-dialog" >  
-    <a class="close"> </a>
-    <h2>Hälsningsmeddelande</h2>
-    <div style="border:1px solid #DDDDDD;padding:3px;margin:5px"> 
-      $invitationMailContent:noescape()$
-    </div>
-    <div class="buttonbox" >
-      <button class="close button" type="button"> Avbryt </button>
-      <button class="editer button" type="button"> Skriv eget meddelande </button>
-      <button class="close button" type="button" id="editing-invite-text-finished"> Ok </button>
-    </div>
+  <form method="post" name="form" action="" class="overlay" id="edit-invite-text-dialog" >
+	<div class="modal-container">
+		<div class="modal-header">
+			<div class="modal-icon message"></div>
+			<div class="modal-title">
+				<h3>Hälsningsmeddelande</h3>
+			</div>
+			<a class="modal-close close"> </a>
+		</div>
+	    <div class="modal-body">
+			<div class="modal-content">
+	      $invitationMailContent:noescape()$
+	</div>
+	    </div>
+	    <div class="modal-footer">
+	      <button class="close button" type="button"> Avbryt </button>
+	      <button class="editer button" type="button"> Skriv eget meddelande </button>
+	      <button class="close button" type="button" id="editing-invite-text-finished"> Ok </button>
+	    </div>
+	</div>
   </form>  
   <div class="hidden" id="hiddenttimestuffbox">
     <div id="daystosignbox">Undertecknas inom (dagar)

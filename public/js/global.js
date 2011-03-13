@@ -793,7 +793,7 @@ function flashSpecialFlashMessages(){
 
 function flashFlashMessages() {
     var flashmsgbox = $(".flashmsgbox");
-    if ($(".flashmessage", flashmsgbox).size() > 0) {
+    if ($(".flash-container", flashmsgbox).size() > 0) {
         // delay() and click() doesn't work correctly in document
         // creator since clearQueue() doesn't call clearTimeout(),
         // so we need to use setTimeout() and unregister set events
@@ -814,16 +814,15 @@ function hideFlashMessages(event) {
     });
 }
 
-function addFlashMessage(msg){
+function addFlashMessage(msg, type){
     var flashmsgbox = $('.flashmsgbox');    
     flashmsgbox.children().remove();
     flashmsgbox.append(
-          "<div class='flash_operationfailed'>"
-        + "<div class='flashmessage'>"
-        + "<img class='logo' src='/img/logo-small.png'>"
-        + "<table class='flashcenter'>"
-        + "<tbody><tr><td>" + msg + "</td></tr></tbody>"
-        + "</table></div></div>"
+	  "<div class='flash-container " + type + "'>"
+        + "<div class='flash-content'>"
+		+ "<div class='skrivapa-logo float-left'></div>"
+        + "<div class='flash-icon " + type + "'></div>"
+        + "<div class='flash-body'>" + msg + "</div></div></div>"
     );
     flashFlashMessages();
 }  

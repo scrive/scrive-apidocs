@@ -17,10 +17,10 @@ pageDocumentList=
 
 		</div>
 		<ul class="tabs">
-			<li class="active">Dokument</a></li>
-			<li><a href="#">Mallar</a></li>
-			<li><a href="#">Kontakter</a></li>
-			<li><a href="#">Underkonton</a></li>
+			<li class="active"><a href="/d">Dokument</a></li>
+			<li><a href="/t">Mallar</a></li>
+			<li><a href="/contacts">Kontakter</a></li>
+			<li><a href="/account/subaccount">Underkonton</a></li>
 		</ul>
 		<div class="tab-container">
 			<div class="tab-content">
@@ -42,18 +42,18 @@ pageDocumentList=
 				<table>
 					<thead>
 						<tr>
-							<th class="col1"><input type="checkbox" name="" /></th>
-							<th class="col2"><a href="javascript:;">Status <em>▼</em></a></th>
-							<th class="col3"><a href="javascript:;">Senaste händelse <em>▼</em></a></th>
-							<th class="col4"><a href="javascript:;">Parter <em>▼</em></a></th>
-							<th class="col5"><a href="javascript:;">Dokument <em>▼</em></a></th>
+							<th style="width: px;"><input type="checkbox" name="" id="all" /></th>
+							<th style="width: px;"><a href="javascript:;">Status <em>▼</em></a></th>
+							<th style="width: px;"><a href="javascript:;">Senaste händelse <em>▼</em></a></th>
+							<th style="width: px;"><a href="javascript:;">Parter <em>▼</em></a></th>
+							<th style="width: px;"><a href="javascript:;">Dokument <em>▼</em></a></th>
 						</tr>
 					</thead>
 					
     				<tbody id="selectable">
 				      $documents:{document |
-						<!-- Every other row should have class="odd" -->
-      					<tr class="odd">
+						<!-- Every other row should have class="odd" (Begin with first row) -->
+      					<tr $if(document.oddRow)$class="odd"$endif$>
 							<td>$if(document.isauthor)$ <input type="checkbox" name="doccheck" value="$document.documentid$" class="check"> $endif$</td>
 							<td><div src="/" class="icon status cancelled" rel="Status: avbruten"></div>$if(document.anyinvitationundelivered)$  <span style="color:#000000;position:relative;top:-3px">!</span>$endif$</td>
 							<td>
@@ -66,9 +66,9 @@ pageDocumentList=
 						          </span> 
 						          $endif$
 							</td>
-							<td>$document.signatories:{sig | $sig.name$}; separator=", "$</td>
+							<td><a href="$document.doclink$">$document.signatories:{sig | $sig.name$}; separator=", "$</a></td>
 							<td>
-								$document.documenttitle$
+								<a href="$document.doclink$">$document.documenttitle$</a>
 								$if(document.davelink)$ 
 					          	<a href="$document.davelink$">*</a>     
 					          	$endif$</td>

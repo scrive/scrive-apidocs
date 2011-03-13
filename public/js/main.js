@@ -13,94 +13,6 @@
 	}
 })(jQuery);
 
-// Modal
-(function($) {
-	
-	$.fn.modal = function(o) {	
-		var s = {
-			persistent: false,
-			source: '',
-			width: 498
-		};
-		
-		if(o) $.extend(s, o);
-		
-		var source = $(s.source);
-		var html = {
-			header: source.children('#head').html(),
-			body: source.children('#body').html()
-		}
-		
-		return this.each( function() {
-			$(this).click( function(e) {
-				e.preventDefault();
-				
-				createModal();
-			});
-		});
-		
-		function createModal() {
-			var wrap = $('<div>');
-			var container = $('<div>');
-			
-			wrap.addClass('modal-wrap').appendTo('body');
-			container.addClass('modal-container').appendTo('body');
-			
-			// Call a bunch of functions to populate the modal
-			setHeader(container);
-			setBody(container);	
-			setFooter(container);
-			setDimension(container);
-			
-			$('.modal-container').fadeIn('fast');
-			
-			// Remove the modal when clicking the white background or the close button (if persistent == false)
-			if(s.persistent == false) {
-				$('.modal-wrap, .modal-header a').click( function() {
-					$('.modal-container, .modal-wrap').fadeOut('fast', function() {
-						$('.modal-wrap, .modal-container').remove();
-					});
-				});
-			}
-		}
-		
-		// Set content for the modal header
-		function setHeader(c) {
-			c.append('<div class="modal-header">' + 
-					 '<div class="modal-icon ' + s.icon + '"></div>' + 
-					 '<div class="modal-title">' + html.header + '</div>' + 
-					 '<a href="#" class="modal-close no-txt">Stäng</a>' + 
-					 '<div class="clearfix"></div>' + 
-					 '</div>');
-			
-			c.append('<div class="modal-spacer"></div>');
-		}
-		
-		// Set content for the modal body
-		function setBody(c) {
-			c.append('<div class="modal-content">' + html.body + '</div>');
-		}
-		
-		// Set content for the modal footer
-		function setFooter(c) {
-			c.append('<div class="modal-footer">' + 
-					 '<a href="#" id="cancel">Avbryt</a>' + 
-					 '<a href="#" id="message">Skicka meddelande</a>' + 
-					 '<a href="#" class="btn-small green float-right">' + 
-					 '<div class="left"></div><div class="label">Skicka!<div class="btn-symbol arrow-right"></div></div><div class="right"></div>' + 
-					 '</a></div>');
-		}
-		
-		// Set dimensions and center the modal
-		function setDimension(c) {
-			c.css({
-				'margin-left': -(s.width/2),
-				'margin-top': -(c.height()/2),
-			})
-		}
-	}
-})(jQuery);
-
 $(document).ready( function() {
 	$('.login-button').click( function(e) {
 		e.preventDefault();
@@ -132,8 +44,8 @@ $(document).ready( function() {
 			clearTimeout($.data(this, 'user'));
 		});
 	});
-	
-	$('.tweet').tweet({
+
+	setTimeout(function(){$('.tweet').tweet({
 		username: 'skrivapa',
 		count: 3,
 		loading_text: 'Laddar tweets..'
@@ -161,4 +73,54 @@ $(document).ready( function() {
 	});
 	
 	$('a.submit').altSubmit();
+	
+	$('#sub-remove-btn').live('click', function() {
+		var row = $(this).parents('tr');
+		var i = 0;
+		
+		row.nextAll().each( function() {
+			if($(this).is('.odd')) $(this).removeClass('odd');
+			else $(this).addClass('odd');
+		});
+		
+		row.siblings('.new').each( function() {
+			$(this).find('input').each( function() {
+				var oldAttr = $(this).attr('name').split('-');
+				var newAttr = oldAttr[0] + '-' + (i+1);
+			
+				$(this).attr('name', newAttr);
+			});
+			
+			i++;
+		});
+
+		row.remove();
+	});
+	
+	$('#subaccount-add-sub').click( function() {
+		var container = $('#selectable');
+		var rowClass = (container.find('tr:last').is('.odd')) ? '' : 'odd';
+		var i = container.children('.new').length+1;
+		
+		container.append('<tr class="' + rowClass + ' new">' +
+		'<td><input type="checkbox" name="subcheck" class="check" /></td>' + 
+		'<td><input type="text" name="firstname-' + i + '" value="Förnamn" class="infotext" /></td>' + 
+		'<td><input type="text" name="lastname-' + i + '" value="Efternamn" class="infotext" /></td>' + 
+		'<td><input type="text" name="position-' + i + '" value="Befattning" class="infotext" /></td>' + 
+		'<td><input type="text" name="dept-' + i + '" value="Avdelning" class="infotext" /></td>' + 
+		'<td><input type="text" name="phone-' + i + '" value="Telefonnummer" class="infotext" /></td>' + 
+		'<td><input type="text" name="email-' + i + '" value="Email" class="infotext" /></td>' + 
+		'<td><a href="javascript:;" class="icon small remove" id="sub-remove-btn"></a></td>' + 
+		'</tr>');
+		
+		$('#selectable input.infotext').each( function() {
+			var orig_value = $(this).val();
+
+			$(this).focus( function() {
+				if($(this).val() == orig_value) $(this).val('');
+			}).blur( function() {
+				if($(this).val() == '') $(this).val(orig_value);
+			});
+		});
+	});
 });
