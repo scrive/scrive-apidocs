@@ -42,6 +42,7 @@ import qualified Network.HTTP as HTTP
 import qualified Network.AWS.AWSConnection as AWS
 import qualified TrustWeaver as TW
 import qualified Payments.PaymentsControl as Payments
+import qualified Contacts.ContactsControl as Contacts
 import Templates.Templates (readTemplates, renderTemplate, KontrakcjaTemplates)
 import qualified Administration.AdministrationControl as Administration
 import Mails.MailsConfig
@@ -147,7 +148,8 @@ handleRoutes = msum [
      , dir "account" $ dir "password"   $ hpost0 $ UserControl.handleUserPasswordPost
      , dir "account" $ dir "subaccount" $ hget0  $ UserControl.handleGetSubaccount
      , dir "account" $ dir "subaccount" $ hpost0 $ UserControl.handlePostSubaccount
-
+     , dir "contacts"  $ hget0 $ Contacts.showContacts
+     , dir "contacts"  $ hpost0 $ Contacts.handleContactsChange
      , dir "accepttos" $ hget0  $ UserControl.handleAcceptTOSGet
      , dir "accepttos" $ hpost0 $ UserControl.handleAcceptTOSPost
 
