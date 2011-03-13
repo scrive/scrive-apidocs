@@ -1,3 +1,80 @@
+.flash-container {
+	background: url(../img/spr-flash-bg.png) 0 -50px repeat-x;
+	border: 2px solid #ccc;
+	border-width: 0 2px 0 2px;
+	cursor: pointer;
+	-display: none;
+	left: 0px;
+	height: 50px;
+	position: absolute;
+	right: 0;
+	top: 0;
+	z-index: 100;
+	-moz-box-shadow: -5px 2px 5px #666;
+}
+
+.flash-container:before {
+	bottom: 0;
+	content: " ";
+	left: 0;
+	position: absolute;
+	right: 0;
+	top: 0;
+	-moz-box-shadow: inset 0 0 2px #fff;
+}
+
+.flash-container.green {
+	background-position: 0 -50px;
+}
+
+.flash-container.red {
+	background-position: 0 0;
+}
+
+.flash-container.blue {
+	background-position: 0 -100px;
+}
+
+.flash-content {
+	height: 40px;
+	margin: 9px  auto 0;
+	position: relative;
+	width: 940px;
+	z-index: 101;
+}
+
+.flash-icon {
+	background: url(../img/spr-flash-icons.png);
+	float: left;
+	height: 30px;
+	margin: 1px 15px 0 30px;
+	width: 30px;
+}
+
+.flash-icon.red {
+	background-position: 0 0;
+}
+
+.flash-icon.green {
+	background-position: 0 -30px;
+}
+
+.flash-icon.blue {
+	background-position: 0 -60px;
+}
+
+.flash-body {
+	color: #fff;
+	float: left;
+	font: 12px "Helvetica Neue";
+	height: 30px;
+	margin-top: 9px;
+	width: 690px;
+}
+
+.flash-close {
+	margin-top: 3px;
+}
 
 .flashmsgbox {
     -moz-border-radius: 1px 1px 1px 1px;

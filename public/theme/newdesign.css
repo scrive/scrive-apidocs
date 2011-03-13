@@ -1,3 +1,9 @@
+.skrivapa-logo {
+	background: url(../img/logo-small.png) no-repeat;
+	height: 34px;
+	width: 137px; 
+}
+
 #footer-container {
         background: #fff;
         height: 340px;
@@ -440,12 +446,12 @@
 }
 
 .tab-table table th a {
-	color: #000;
+	color: #000 !important;
 	text-decoration: none;
 }
 
 .tab-table table th a:hover {
-	color: #388add;
+	color: #388add !important;
 }
 
 .tab-table table th em {
@@ -457,6 +463,18 @@
 	height: 22px;
 	margin-bottom: 1px;
 	padding-left: 15px;
+}
+
+.tab-table table td a {
+	color: #666 !important;
+}
+
+.tab-table table td a:hover {
+	color: #000 !important;
+}
+
+.tab-table table td input.infotext {
+	width: 98%;
 }
 
 .tab-table table tr.odd td {
@@ -595,6 +613,14 @@
 	padding: 4px 20px;
 }
 
+#tab-viewer .tabs li a {
+	color: #000;
+}
+
+#tab-viewer .tabs li.active a {
+	color: #fff;
+}
+
 #tab-viewer .tabs li.active {
 	background: url(../img/bg-header.png);
 	color: #d9d9d9;
@@ -681,4 +707,140 @@
 	height: 150px;
 	position: relative;
 	width: 1px;
+}
+/* Modal */
+
+.modal-wrap {
+	background: #fff;
+	height: 100%;
+	left: 0;
+	opacity: 0.7;
+	position: fixed;
+	top: 0;
+	width: 100%;
+	z-index: 999;
+}
+
+.modal-container {
+	background: #fff;
+	border: 1px solid #686868;
+	-display: none;
+	float: left;
+	-height: 190px;
+	position: absolute;
+	width: 640px;
+	z-index: 1000;
+}
+
+.modal-container:after {
+	border: 10px solid #000;
+	border-radius: 8px;
+	bottom: -10px;
+	content: "";
+	left: -10px;
+	opacity: 0.4;
+	position: absolute;
+	right: -10px;
+	top: -10px;
+	-moz-border-radius: 8px;
+	-webkit-border-radius: 8px;
+}
+
+.modal-container .modal-header {
+	background: url(../img/bg-header.png) #000;
+	border-bottom: 1px solid #686868;
+	padding: 20px;
+	position: relative;
+	z-index: 1001;
+}
+
+.modal-header .modal-title {
+	width: 75%;
+}
+
+.modal-container .modal-header h3 {
+	color: #fff;
+	font: 16px "Copse";
+	margin-bottom: 4px;
+}
+
+.modal-container .modal-header p {
+	color: #999;
+	font: 11px "Lucida Grande";
+}
+
+.modal-container .modal-header a {
+	position: absolute;
+	right: 20px;
+	top: 15px;
+}
+
+.modal-container .modal-spacer {
+	background: #f5f5f5;
+	border-bottom: 1px solid #d6d6d6;
+	height: 10px;
+}
+
+.modal-container .modal-content {
+	color: #454545;
+	font: 12px "Lucida Grande";
+	margin-bottom: 54px;
+	padding: 20px 20px 20px 70px;
+	position: relative;
+	z-index: 1001;
+}
+
+.modal-container .modal-content h5 {
+	color: #666;
+	font: 11px "Lucida Grande";
+	text-transform: uppercase;
+}
+
+.modal-container .modal-content strong {
+	color: #000;
+	font-weight: bold;
+}
+
+.modal-container .modal-content em {
+	font-style: italic;
+}
+
+.modal-container .modal-content object {
+	position: absolute;
+	z-index: 1001;
+}
+
+.modal-container .modal-content p {
+	margin: 16px 0;
+}
+
+.modal-container .modal-content ul li {
+	
+}
+
+.modal-container .modal-content .spacer {
+	height: 8px;
+}
+
+.modal-container .modal-footer {
+	background: #f5f5f5;
+	border-top: 1px solid #d6d6d6;
+	bottom: 1px;
+	font: 13px/34px "Helvetica Neue";
+	left: 0;
+	padding: 10px 20px;
+	position: absolute;
+	right: 0;
+	z-index: 1001;
+}
+
+.modal-container .modal-footer a#cancel {
+	color: #e91600;
+	text-decoration: none;
+	margin-right: 12px;
+}
+
+.modal-container .modal-footer a#message {
+	color: #666;
+	text-decoration: none;
 }
