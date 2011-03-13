@@ -930,11 +930,7 @@ a.button {
     z-index:10000;
     display:none;
     /* styling */
-    background-color:#FFFFFF;
-    width:675px;	
-    min-height:200px;
-    border:1px solid #666;
-    padding:5px;
+    width:640px;	
     
     /* CSS3 styling for latest browsers */
     -moz-box-shadow:0 0 90px 5px #000;
@@ -943,13 +939,13 @@ a.button {
 
 /* close button positioned on upper right corner */
 .overlay a.close {
-    background-image:url(images/close.png);
+    /*background-image:url(images/close.png);
     position:absolute;
     right:-15px;
     top:-15px;
     cursor:pointer;
     height:35px;
-    width:35px;
+    width:35px;*/
 }
 
 .overlay h2 {
