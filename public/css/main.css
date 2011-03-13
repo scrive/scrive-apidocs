@@ -311,7 +311,7 @@ a.btn-big:active {
 
 /* Top Container */
 #top-container {
-	background: url(../img/bg-header.png) repeat-x;
+	background: url(../img/bg-header.jpg) repeat-x;
 	height: 430px;
 	min-width: 940px;
 	
@@ -324,12 +324,12 @@ a.btn-big:active {
 }
 
 #top-container .person {
-	background: url(../img/persons.png);
+	background: url(../img/persons.jpg);
 	top: 34px;
 	height: 396px;
-	left: 340px;
+	left: 453px;
 	position: absolute;
-	width: 564px;
+	width: 433px;
 	z-index: 0;
 }
 
@@ -346,6 +346,7 @@ a.btn-big:active {
 	float: left;
 	position: relative;
 	width: 460px;
+        z-index: 1;
 }
 
 #top-container .right {
@@ -629,7 +630,7 @@ a.btn-big:active {
 /* Body Container */
 
 #body-container {
-	background: url(../img/bg-body.png);
+	background: url(../img/bg-body.jpg);
 	min-width: 940px;
 }
 
@@ -811,7 +812,7 @@ a.btn-big:active {
 /* Body Slide */
 
 #body-container .slide {
-	background: url(../img/bg-slide.png);
+	background: url(../img/bg-slide.jpg);
 	height: 210px;
 	position: relative;
 	width: 939px;
@@ -1192,7 +1193,7 @@ a.btn-big:active {
 
 /* Head Container */
 #top-slim-container {
-	background: url(../img/bg-header.png);
+	background: url(../img/bg-header.jpg);
 	border-bottom: 1px solid #737373;
 	height: 50px;
 	min-width: 940px;
