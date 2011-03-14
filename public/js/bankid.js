@@ -169,6 +169,7 @@ function sign1Author(ajaxurl, formselector, posturl) {
   }
   $.ajax({'url': ajaxurl,
 		  'dataType': 'json',
+          'data': {'tbs': getTBS()},
 		  'success': function(data){
 		    if(data['status'] === 0) {
 		      var tbs = data['tbs'];
@@ -362,9 +363,10 @@ function sign2Author(posturl, formselector, ajaxurl) {
   }
   $.ajax({'url': ajaxurl,
 		  'dataType': 'json',
+          'data': {'tbs': getTBS()},
 		  'success': function(data){
 		    if(data['status'] === 0) {
-		      var tbs = getTBS();
+		      var tbs = data['tbs'];
 		      var nonce = data['nonce'];
 		      var servertime = data['servertime'];
 		      var transactionid = data['transactionid'];
@@ -531,6 +533,7 @@ function netIDSignAuthor(posturl, formselector, ajaxurl) {
   }
   $.ajax({'url': ajaxurl,
 		  'dataType': 'json',
+          'data': {'tbs': getTBS()},
 		  'success': function(data){
 		    if(data['status'] === 0) {
 		      var tbs = data['tbs'];
