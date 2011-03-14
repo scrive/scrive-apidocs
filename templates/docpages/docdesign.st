@@ -12,13 +12,24 @@ pageDocumentForAuthorContentPreparation=
     
     <div id="signStepsTitleRow">
       <span id="signStepsTitleRowTextContainer">
-    <span class="title">DOKUMENT #$documentid$:</span>
-    <span class="name">$documenttitle$</span> 
+
+       $if(contract)$
+           <span class="title">DOKUMENT #$documentid$:</span>
+           <span class="name"> $documenttitle$</span> 
+       $elseif(template)$
+           <span class="title">MALL:</span>
+           <span class="name"> $documenttitle$</span> 
+       $endif$
+    
     <!-- <span class="changeName"><a href="#changeName">BYT TITEL</a></span> -->
+
       </span>
-   
+
 <span style="float: right; display: inline-block; margin: 8px 10px 0pt 18px;" class="submitStepFormOnClick"><a class="title" href="#save">SPARA SOM UTKAST</a></span>
-  
+$if(contract)$
+<span style="float: right; display: inline-block; margin: 8px 10px 0pt 18px;" class="submitStepFormOnClick" name="template"><a class="title" href="#save">SPARA SOM MALL</a></span>  
+$endif$  
+
       <!-- 
          <div class="signStepsButton" id="signStepsNextButton">
            <a href="#nextStep" class="clickArea"></a>
@@ -34,7 +45,7 @@ pageDocumentForAuthorContentPreparation=
       <div id="step1select">
         <span class="step1select clickArea"></span>
         <span class="step1select step1icon"> </span>
-    <span class="step1select text">Ladda upp dokument</span>
+        <span class="step1select text">Välj dokument</span>
       </div>
       
       <div id="step2select" class="$if(step2)$current$endif$">
@@ -222,8 +233,10 @@ pageDocumentForAuthorContentPreparation=
         
         <div class="border"></div>   
         <div id="signStepsBodyRight" class="step3">
-     
+          $if(contract)$
           <input type="button" class="submit btn-blue center" id="signinvite" rel="#dialog-confirm-signinvite" value="SkrivaPå" name="final" />
+          $endif$
+        
           <!-- 015 new -->
            </div>
            <div class="border"></div>
