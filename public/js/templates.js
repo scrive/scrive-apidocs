@@ -851,18 +851,25 @@ function invalidatePlacedFieldsCache() {
   placedfieldscache = null;
 }
 
-function showCoordinateAxes(helper, page) {
-    var pagejpg = page.find(".pagejpg");
-    var hline = page.find(".hline");
-    var vline = page.find(".vline");
+function showCoordinateAxes(helper) {
+    var hline = $(".hline");
+    var vline = $(".vline");
     hline.show();
     vline.show();
     $("body").mousemove(function(e) {
-        hline.css({
-            top: Math.min(pagejpg.height()-1, Math.max(0, helper.offset().top - pagejpg.offset().top + helper.height() - 6)) + "px"
-        });       
-        vline.css({
-            left: Math.min(pagejpg.width()-1, Math.max(0, helper.offset().left - pagejpg.offset().left)) + "px"
+        hline.each(function() {
+            var h = $(this);
+            var page = h.parents(".pagejpg");
+            h.css({
+                top: Math.min(page.height()-1, Math.max(0, helper.offset().top - page.offset().top + helper.height() - 6)) + "px"
+            });
+        });
+        vline.each(function() {
+            var v = $(this);
+            var page = v.parents(".pagejpg");
+            v.css({
+                left: Math.min(page.width()-1, Math.max(0, helper.offset().left - page.offset().left)) + "px"
+            });
         });
     });
 }
@@ -910,7 +917,7 @@ safeReady(function() {
 		       return placedFieldHelper(input.attr("value"));
 		     },
 		     start: function(event, ui) {
-                         showCoordinateAxes(ui.helper, $(".pagediv").first());
+                         showCoordinateAxes(ui.helper);
                      },
                      stop: function() {
                          hideCoordinateAxes();
@@ -926,7 +933,7 @@ safeReady(function() {
 		       return placedFieldHelper($(this).find(".fieldvalue").html(), true);
 	             },
 	             start: function(event, ui) {
-                         showCoordinateAxes(ui.helper, $(".pagediv").first());
+                         showCoordinateAxes(ui.helper);
                      },
                      stop: function() {
                          hideCoordinateAxes();
@@ -963,7 +970,7 @@ safeReady(function() {
       start: function(event, ui) {
         var that = $(this);
         that.hide();
-        showCoordinateAxes(ui.helper, that.parents(".pagediv"));
+        showCoordinateAxes(ui.helper);
       }
     });
 });
