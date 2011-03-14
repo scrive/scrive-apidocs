@@ -12,6 +12,7 @@ module AppControl
 import Control.Monad (msum, mzero)
 import Control.Monad.State
 import Control.Monad.Trans (liftIO,lift)
+import Control.Concurrent
 import AppView as V
 import Control.Concurrent
 import Data.List
@@ -484,15 +485,36 @@ handleLoginPost = do
       -- check the user things here
       maybeuser <- query $ GetUserByEmail (Email email)
       case maybeuser of
-        Just User{userpassword} ->
+        Just User{userid,userpassword,userlogininfo} ->
             if verifyPassword userpassword passwd
             then do
               logUserToContext maybeuser
               return BackToReferer
-            else return $ LinkLogin (InvalidPassword $ BS.toString email)
+            else do
+              slug <- liftIO $ getFailedLoginSlug userlogininfo
+              when (slug>0) $ liftIO . threadDelay $ slug * 1000000
+              time <- liftIO getMinutesTime
+              _ <- update $ RecordFailedLogin userid time
+              return $ LinkLogin (InvalidPassword $ BS.toString email)
         Nothing -> return $ LinkLogin InvalidEmail
     _ -> return BackToReferer
 
+{- |
+    Works out how many seconds we should wait before
+    finishing a failed login.  This will hopefully help
+    prevent brute force attacks on user passwords.
+-}
+getFailedLoginSlug :: LoginInfo -> IO Int
+getFailedLoginSlug LoginInfo{lastfailtime} = do
+    now <- getMinutesTime
+    case lastfailtime of
+        (Just lastfail) -> 
+            return $ max 0 (20 - (secs now - secs lastfail))
+        Nothing -> return 0
+    where secs (MinutesTime m s) = m * 60 + s
+
+-- last fail ---------- time
+ 
 {- |
    Handles the logout, and sends user back to main page.
 -}  

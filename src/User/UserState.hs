@@ -5,6 +5,7 @@ module User.UserState
     , Inviter(..)
     , InviteType(..)
     , InviteInfo(..)
+    , LoginInfo(..)
     , DefaultMainSignatory(..)
     , ExternalUserID(..)
     , FlashType(..)
@@ -48,6 +49,7 @@ module User.UserState
     , GetUsersByUserIDs(..)
     , FreeUserFromPayments(..)
     , AddFreePaymentsForInviter(..)
+    , RecordFailedLogin(..)
     , getUserPaymentSchema
     , takeImmediatelyPayment
 ) where
@@ -92,6 +94,10 @@ data InviteInfo = InviteInfo
           { userinviter :: Inviter
           , invitetime :: Maybe MinutesTime
           , invitetype :: Maybe InviteType
+          }
+    deriving (Eq, Ord, Typeable, Data)
+data LoginInfo = LoginInfo
+          { lastfailtime :: Maybe MinutesTime
           }
     deriving (Eq, Ord, Typeable, Data)
 newtype DefaultMainSignatory = DefaultMainSignatory { unDMS :: Int }
@@ -179,10 +185,27 @@ data User = User
           , userpaymentaccount            :: Payments.UserPaymentAccount
           , userfriends                   :: [Friend]
           , userinviteinfo                :: Maybe InviteInfo
+          , userlogininfo                 :: LoginInfo
           }
             deriving (Eq, Ord, Data)
 
 instance Typeable User where typeOf _ = mkTypeOf "User"
+
+data User10 = User10
+          { userid10                        :: UserID
+          , userpassword10                  :: Password
+          , usersupervisor10                :: Maybe SupervisorID
+          , usercanhavesubaccounts10        :: Bool
+          , useraccountsuspended10          :: Bool
+          , userhasacceptedtermsofservice10 :: Maybe MinutesTime
+          , userinfo10                      :: UserInfo
+          , usersettings10                  :: UserSettings
+          , userpaymentpolicy10             :: Payments.UserPaymentPolicy
+          , userpaymentaccount10            :: Payments.UserPaymentAccount
+          , userfriends10                   :: [Friend]
+          , userinviteinfo10                :: Maybe InviteInfo
+          }
+    deriving (Eq, Ord, Typeable, Data)
 
 data User9 = User9
           { userid9                        :: UserID
@@ -347,6 +370,7 @@ deriving instance Show Friend
 deriving instance Show Inviter
 deriving instance Show InviteInfo
 deriving instance Show InviteType
+deriving instance Show LoginInfo
 deriving instance Show DefaultMainSignatory
 deriving instance Show UserStats
 
@@ -607,7 +631,7 @@ instance Migrate User8 User9 where
                 , userinviter9                    = Nothing          
                 }
 
-instance Migrate User9 User where
+instance Migrate User9 User10 where
     migrate (User9
                { userid9                     
                 , userpassword9                
@@ -621,26 +645,59 @@ instance Migrate User9 User where
                 , userpaymentaccount9           
                 , userfriends9                  
                 , userinviter9       
-                }) = User 
-                { userid                         = userid9
-                , userpassword                   = userpassword9
-                , usersupervisor                 = usersupervisor9
-                , usercanhavesubaccounts         = usercanhavesubaccounts9
-                , useraccountsuspended           = useraccountsuspended9
-                , userhasacceptedtermsofservice  = userhasacceptedtermsofservice9
-                , userinfo                       = userinfo9
-                , usersettings                   = usersettings9
-                , userpaymentpolicy              = userpaymentpolicy9
-                , userpaymentaccount             = userpaymentaccount9
-                , userfriends                    = userfriends9
-                , userinviteinfo                 = fmap 
-                                                     (\inviter ->  InviteInfo
-                                                         { userinviter = inviter
-                                                         , invitetime = Nothing
-                                                         , invitetype = Nothing
-                                                     })
-                                                     userinviter9
+                }) = User10 
+                { userid10                         = userid9
+                , userpassword10                   = userpassword9
+                , usersupervisor10                 = usersupervisor9
+                , usercanhavesubaccounts10         = usercanhavesubaccounts9
+                , useraccountsuspended10           = useraccountsuspended9
+                , userhasacceptedtermsofservice10  = userhasacceptedtermsofservice9
+                , userinfo10                       = userinfo9
+                , usersettings10                   = usersettings9
+                , userpaymentpolicy10              = userpaymentpolicy9
+                , userpaymentaccount10             = userpaymentaccount9
+                , userfriends10                    = userfriends9
+                , userinviteinfo10                 = fmap 
+                                                       (\inviter ->  InviteInfo
+                                                           { userinviter = inviter
+                                                           , invitetime = Nothing
+                                                           , invitetype = Nothing
+                                                       })
+                                                       userinviter9
                 }
+
+instance Migrate User10 User where
+    migrate (User10
+               { userid10                     
+                , userpassword10                
+                , usersupervisor10               
+                , usercanhavesubaccounts10        
+                , useraccountsuspended10          
+                , userhasacceptedtermsofservice10  
+                , userinfo10                     
+                , usersettings10                
+                , userpaymentpolicy10             
+                , userpaymentaccount10           
+                , userfriends10                  
+                , userinviteinfo10       
+                }) = User 
+                { userid                         = userid10
+                , userpassword                   = userpassword10
+                , usersupervisor                 = usersupervisor10
+                , usercanhavesubaccounts         = usercanhavesubaccounts10
+                , useraccountsuspended           = useraccountsuspended10
+                , userhasacceptedtermsofservice  = userhasacceptedtermsofservice10
+                , userinfo                       = userinfo10
+                , usersettings                   = usersettings10
+                , userpaymentpolicy              = userpaymentpolicy10
+                , userpaymentaccount             = userpaymentaccount10
+                , userfriends                    = userfriends10
+                , userinviteinfo                 = userinviteinfo10
+                , userlogininfo                 = LoginInfo
+                                                    { lastfailtime = Nothing
+                                                    }
+                }
+
 
 toFlashMsg :: FlashType -> String -> FlashMessage
 toFlashMsg type_ msg = FlashMessage (type_, msg)
@@ -747,9 +804,13 @@ $(deriveSerialize ''User9)
 instance Version User9 where
     mode = extension 9 (Proxy :: Proxy User8)
 
+$(deriveSerialize ''User10)
+instance Version User10 where
+    mode = extension 10 (Proxy :: Proxy User9)
+
 $(deriveSerialize ''User)
 instance Version User where
-    mode = extension 10 (Proxy :: Proxy User9)
+    mode = extension 11 (Proxy :: Proxy User10)
 
 $(deriveSerialize ''TrustWeaverStorage )
 instance Version TrustWeaverStorage
@@ -804,6 +865,9 @@ instance Version InviteInfo
 
 $(deriveSerialize ''InviteType)
 instance Version InviteType
+
+$(deriveSerialize ''LoginInfo)
+instance Version LoginInfo
 
 $(deriveSerialize ''DefaultMainSignatory)
 instance Version DefaultMainSignatory
@@ -933,6 +997,9 @@ addUser fullname email passwd maybesupervisor = do
                 , userpaymentaccount = Payments.emptyPaymentAccount 
               , userfriends = []
               , userinviteinfo = Nothing
+              , userlogininfo = LoginInfo
+                                  { lastfailtime = Nothing
+                                  }
                  })             
         modify (updateIx (Email email) user)
         return $ Just user
@@ -1042,6 +1109,16 @@ freeUserFromPayments u freetill =  do
                                     return ()
 
 {- |
+    Records the time of the last failed login.
+-}
+recordFailedLogin :: UserID -> MinutesTime -> Update Users (Either String User)
+recordFailedLogin userid time = do
+  let logininfo = LoginInfo { lastfailtime = Just time 
+                            }
+  modifyUser userid $ \user ->
+                        Right $ user { userlogininfo = logininfo }
+
+{- |
    Add a new viewer (friend) given the email address
  -}
 addViewerByEmail :: UserID -> Email -> Update Users (Either String User)
@@ -1099,6 +1176,7 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'setUserPaymentAccount 
                     , 'setUserPaymentPolicyChange
                     , 'freeUserFromPayments
+                    , 'recordFailedLogin
                     , 'getUserSubaccounts
                     , 'getUsersByFriendUserID
                     , 'acceptTermsOfService
