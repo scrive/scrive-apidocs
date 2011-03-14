@@ -822,7 +822,8 @@ function addFlashMessage(msg, type){
         + "<div class='flash-content'>"
 		+ "<div class='skrivapa-logo float-left'></div>"
         + "<div class='flash-icon " + type + "'></div>"
-        + "<div class='flash-body'>" + msg + "</div></div></div>"
+        + "<div class='flash-body'>" + msg + "</div>"
+		+ "<div class='flash-close modal-close'></div></div></div>"
     );
     flashFlashMessages();
 }  

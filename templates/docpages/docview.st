@@ -324,18 +324,26 @@ Du har skapat fält för parterna att fylla i innan de undertecknar. Efter att a
 			<div class="modal-icon message"></div>
 			<div class="modal-title">
 				<h3>Hälsningsmeddelande</h3>
+				<p>Test test testest</p>
 			</div>
 			<a class="modal-close close"> </a>
 		</div>
 	    <div class="modal-body">
 			<div class="modal-content">
-	      $invitationMailContent:noescape()$
-	</div>
+	      		$invitationMailContent:noescape()$
+			</div>
 	    </div>
 	    <div class="modal-footer">
-	      <button class="close button" type="button"> Avbryt </button>
-	      <button class="editer button" type="button"> Skriv eget meddelande </button>
-	      <button class="close button" type="button" id="editing-invite-text-finished"> Ok </button>
+			<a href="javascript:;" class="close" id="cancel">Avbryt</a>
+			<a href="javascript:;" class="editer" id="message">Skriv eget meddelande</a>
+			<a href="#" class="btn-small green float-right" id="editing-invite-text-finished">
+				<div class="left"></div>
+				<div class="label">
+					<p>Ok</p>
+					<div class="btn-symbol green arrow-left"></div>
+				</div>
+				<div class="right"></div>
+			</a>
 	    </div>
 	</div>
   </form>  

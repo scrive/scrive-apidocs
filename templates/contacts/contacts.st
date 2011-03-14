@@ -33,57 +33,31 @@ contactsView=
 					<thead>
 						<tr>
 							<th style="width: 20px;"><input type="checkbox" name="" id="all" /></th>
-							<th style="width: 100px;"><a href="javascript:;">Förnamn <em>▼</em></a></th>
-							<th style="width: 120px;"><a href="javascript:;">Efternamn <em>▼</em></a></th>
-							<th style="width: 120px;"><a href="javascript:;">Företag <em>▼</em></a></th>
-							<th style="width: 100px;"><a href="javascript:;">Befattning <em>▼</em></a></th>
-							<th style="width: 100px;"><a href="javascript:;">Telefonnummer <em>▼</em></a></th>
-							<th style="width: 100px;"><a href="javascript:;">Mailadress <em>▼</em></a></th>
-							<th style="width: 30px;"></th>
+							<th style="width: 75px;"><a href="javascript:;">Förnamn <em>▼</em></a></th>
+							<th style="width: 90px;"><a href="javascript:;">Efternamn <em>▼</em></a></th>
+							<th style="width: 60px; text-align: right"><a href="javascript:;">Befattning <em>▼</em></a></th>
+							<th style="width: 160px;"><a href="javascript:;">Företag <em>▼</em></a></th>
+							<th style="width: 115px;"><a href="javascript:;">Personnummer <em>▼</em></a></th>
+							<th style="width: 110px;"><a href="javascript:;">Mailadress <em>▼</em></a></th>
+							<th style="width: 20px;"></th>
+							<th style="width: 20px;"></td>
 						</tr>
 					</thead>
 					<tbody id="selectable">
-						<tr class="odd">
-							<td><input type="checkbox" name="contactcheck" id="" class="check" /></td>
-							<td>Lukas</div></td>
-							<td>Duczko</td>
-							<td>SkrivaPå</td>
-							<td>Boss</td>
-							<td>0798765432</td>
-							<td>lukas@skrivapa.se</td>
-							<td></td>
-						</tr>
-						<tr>
-							<td><input type="checkbox" name="contactcheck" id="" class="check" /></td>
-							<td>Lukas</div></td>
-							<td>Duczko</td>
-							<td>SkrivaPå</td>
-							<td>Boss</td>
-							<td>0798765432</td>
-							<td>lukas@skrivapa.se</td>
-							<td></td>
-						</tr>
-						<tr class="odd">
-							<td><input type="checkbox" name="contactcheck" id="" class="check" /></td>
-							<td>Lukas</div></td>
-							<td>Duczko</td>
-							<td>SkrivaPå</td>
-							<td>Boss</td>
-							<td>0798765432</td>
-							<td>lukas@skrivapa.se</td>
-							<td></td>
-						</tr>
 						<!-- Every other row should have class="odd" (Begin with first row) -->
 						$contacts:{contact |
 						<tr >
 							<td><input type="checkbox" name="contactcheck" id="" class="check" /></td>
 							<td>$contact.firstName$</div></td>
 							<td>$contact.lastName$</td>
+							<td class="right">$contact.position$</td>
 							<td>$contact.company$</td>
-							<td>$contact.position$</td>
-							<td>$contact.phoneNr$</td>
+							<td>$contact.ssNr$</td>
 							<td>$contact.email$</td>
 							<td></td>
+							<td class="right">
+								<em>▼</em>
+							</td>
 						</tr>
 						}$
 					</tbody>								
@@ -105,8 +79,22 @@ contactsView=
 						<a href="#">></a>
 						<a href="#">>></a>
 					</div>
-					<a href="#" class="btn-tiny black float-left"><div class="left"></div><div class="label">Bakåt<div class="btn-symbol black arrow-right"></div></div><div class="right"></div></a>
-					<a href="#" class="btn-tiny black float-right"><div class="left"></div><div class="label">Nästa<div class="btn-symbol black arrow-left"></div></div><div class="right"></div></a>
+					<a href="#" class="btn-tiny black float-left">
+						<div class="left"></div>
+						<div class="label">
+							<div class="btn-symbol black arrow-right"></div>
+							<p>Bakåt</p>
+						</div>
+						<div class="right"></div>
+					</a>
+					<a href="#" class="btn-tiny black float-right">
+						<div class="left"></div>
+						<div class="label">
+							<p>Nästa</p>
+							<div class="btn-symbol black arrow-left"></div>
+						</div>
+						<div class="right"></div>
+					</a>
 					<div class="clearfix"></div>
 				</div>
 			</div>
