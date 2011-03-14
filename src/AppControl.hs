@@ -253,11 +253,11 @@ defaultAWSAction appConf =
 {- |
    Creates a context, routes the request, and handles the session.
 -}
-appHandler :: AppConf -> AppGlobals -> ServerPartT IO Response
-appHandler appConf appGlobals= do
+appHandler :: AppConf -> AppGlobals -> MVar (Map.Map FileID JpegPages) -> ServerPartT IO Response
+appHandler appConf appGlobals docs = do
   rq <- askRq
   session <- handleSession
-  ctx <- createContext rq session
+  ctx <- createContext rq session docs
   handle rq session ctx
   where
     handle :: Request -> Session -> Context -> ServerPartT IO Response
@@ -277,13 +277,8 @@ appHandler appConf appGlobals= do
       updateSessionWithContextData session newsessionuser newflashmessages newelegtrans
       return res
 
-    -- uh uh, how to do that in correct way?
-    normalizeddocuments :: MVar (Map.Map FileID JpegPages)
-    normalizeddocuments = unsafePerformIO $ newMVar Map.empty
-
-
-    createContext :: Request -> Session -> ServerPartT IO Context
-    createContext rq session = do
+    createContext :: Request -> Session -> MVar (Map.Map FileID JpegPages) -> ServerPartT IO Context
+    createContext rq session docs = do
       let host = maybe "skrivapa.se" BS.toString $ getHeader "host" rq
       let scheme = maybe "http" BS.toString $ getHeader "scheme" rq
       let hostpart =  scheme ++ "://" ++ host
@@ -324,7 +319,7 @@ appHandler appConf appGlobals= do
                 , ctxhostpart = hostpart
                 , ctxflashmessages = flashmessages
                 , ctxtime = minutestime
-                , ctxnormalizeddocuments = normalizeddocuments
+                , ctxnormalizeddocuments = docs
                 , ctxipnumber = peerip
                 , ctxs3action = defaultAWSAction appConf
                 , ctxproduction = production appConf
