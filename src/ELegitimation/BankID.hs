@@ -1,35 +1,32 @@
-module ELegitimation.BankID where
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 
-import Kontra
-import User.UserControl
-import System.Process
-import System.Exit
-import System.IO
-import System.Directory
-import Control.Concurrent
+module ELegitimation.BankID 
+    ( handleSignBankID
+    , handleSignPostBankID
+    , handleIssueBankID
+    , handleIssuePostBankID
+    )
+    where
+
+import Control.Monad.State
 import Data.List
+import Data.Maybe
+import Doc.DocControl
+import Doc.DocState
+import ELegitimation.ELeg
 import Happstack.Server
 import Happstack.State
-import Doc.DocState
+import Kontra
+import KontraLink
+import MinutesTime
 import Misc
-import Session
-import Control.Monad.State
-import Doc.DocControl
 import SOAP.SOAP
+import Templates.Templates
+import Text.XML.HaXml.Posn (Posn)
+import Text.XML.HaXml.XmlContent.Parser 
+import User.UserControl
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS hiding (length, drop, break)
-import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length, drop)
-import qualified Data.ByteString.Lazy as BSL
-import Data.Maybe
-
-import Text.XML.HaXml.XmlContent.Parser 
-import Text.XML.HaXml.XmlContent
-
-import KontraLink
-
-import ELegitimation.ELeg
-import MinutesTime
-import Templates.Templates
 
 {- |
    Handle the Ajax request for initiating a BankID transaction.
@@ -38,7 +35,7 @@ import Templates.Templates
  -}
 handleSignBankID :: String -> DocumentID -> SignatoryLinkID -> MagicHash -> Kontra Response
 handleSignBankID provider docid signid magic = do
-    ctx@Context { ctxtime = MinutesTime time seconds, ctxtemplates } <- get
+    Context { ctxtime = MinutesTime time seconds, ctxtemplates } <- get
 
     -- sanity check
     document <- queryOrFail $ GetDocumentByDocumentID docid
@@ -59,13 +56,13 @@ handleSignBankID provider docid signid magic = do
             case encodetbsresponse of
                 Left (ImplStatus _a _b code msg) -> 
                     return $ toResponse $ toJSON [("status", JInt code), ("msg", JString msg)]
-                Right text -> do
+                Right txt -> do
                     -- store in session
                     addELegTransaction ELegTransaction 
                                             { transactionservertime = MinutesTime time seconds
                                             , transactiontransactionid = transactionid
                                             , transactiontbs = tbs
-                                            , transactionencodedtbs = text
+                                            , transactionencodedtbs = txt
                                             , transactionsignatorylinkid = Just signid
                                             , transactiondocumentid = docid
                                             , transactionmagichash = Just magic
@@ -74,7 +71,7 @@ handleSignBankID provider docid signid magic = do
                     return $ toResponse $ toJSON [("status", JInt 0)
                                                  ,("servertime", JString $ show $ 60 * time + seconds)
                                                  ,("nonce", JString nonce)
-                                                 ,("tbs", JString text)
+                                                 ,("tbs", JString txt)
                                                  ,("transactionid", JString transactionid)]
 
 {- |
@@ -90,7 +87,7 @@ handleSignBankID provider docid signid magic = do
  -}
 handleSignPostBankID :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra KontraLink
 handleSignPostBankID docid signid magic = do
-    ctx@Context { ctxelegtransactions, ctxtime, ctxipnumber } <- get
+    Context { ctxelegtransactions, ctxtime, ctxipnumber } <- get
 
     -- POST values
     provider      <- getDataFnM $ look "eleg"
@@ -100,8 +97,7 @@ handleSignPostBankID docid signid magic = do
     fieldvalues   <- getAndConcat "fieldvalue"
 
     -- request validation
-    document@Doc.DocState.Document{ documentstatus = olddocumentstatus
-                                  , documentsignatorylinks }
+    document@Doc.DocState.Document { documentstatus = olddocumentstatus }
         <- queryOrFail $ GetDocumentByDocumentID docid
 
     checkLinkIDAndMagicHash document signid magic
@@ -110,28 +106,28 @@ handleSignPostBankID docid signid magic = do
             { signatorydetails = details } = signlinkFromDocById document signid
 
     -- valid transaction?
-    ELegTransaction { transactionsignatorylinkid = Just tsignid
-                    , transactionmagichash       = Just tmagic
+    ELegTransaction { transactionsignatorylinkid = mtsignid
+                    , transactionmagichash       = mtmagic
                     , transactiondocumentid      = tdocid
                     , transactiontbs
                     , transactionencodedtbs
                     , transactionnonce
                     } <- findTransactionByIDOrFail ctxelegtransactions transactionid
 
-    when (tsignid /= signid) mzero
-    when (tdocid  /= docid)  mzero
-    when (tmagic  /= magic)  mzero
+    when (tdocid   /= docid      ) mzero
+    when (mtsignid /= Just signid) mzero
+    when (mtmagic  /= Just magic ) mzero
     -- end validation
 
     providerCode <- providerStringToNumber provider
     -- send signature to ELeg
-    done <- verifySignature providerCode
+    res <- verifySignature providerCode
                 transactionencodedtbs
                 signature
                 transactionnonce
                 transactionid
 
-    case done of
+    case res of
         -- error state
         Left (ImplStatus _a _b code msg) -> do
             liftIO $ print $ toJSON [("status", JInt code), ("msg", JString msg)]
@@ -180,19 +176,27 @@ handleSignPostBankID docid signid magic = do
                         Left message -> do
                             addFlashMsg $ toFlashMsg OperationFailed message
                             return LinkMain -- where should we go?
-                        Right document -> do
-                            postDocumentChangeAction document olddocumentstatus (Just signid)
+                        Right document2 -> do
+                            postDocumentChangeAction document2 olddocumentstatus (Just signid)
                             return $ LinkSigned docid signid
 
 {- |
     Handle the ajax request for an eleg signature for the author.
     URL: /d/{provider}/{docid}
     Method: GET
+    
+    Validation:
+    the document absolutely must exist. If the docid is not found, 404
+    the tbs text must exist
 -}
 handleIssueBankID :: String -> DocumentID -> Kontra Response
 handleIssueBankID provider docid = withUserGet $ do
-    ctx@Context { ctxtime = MinutesTime time seconds, ctxmaybeuser = Just author, ctxtemplates } <- get
-
+    ctx@Context { ctxtime = MinutesTime time seconds
+                , ctxmaybeuser = Just author
+                } <- get
+                  
+    tbs <- getDataFnM $ look "tbs"
+    
     document <- queryOrFail $ GetDocumentByDocumentID docid
     
     failIfNotAuthor document author
@@ -203,28 +207,27 @@ handleIssueBankID provider docid = withUserGet $ do
             return $ toResponse $ toJSON [("status", JInt code), ("msg", JString msg)]
         Right (nonce, transactionid) -> do
             -- encode the text to be signed
-            tbs <- liftIO $ getTBS ctxtemplates document
             providerCode <- providerStringToNumber provider
             encodetbsresponse <- encodeTBS providerCode tbs transactionid 
             case encodetbsresponse of
                 Left (ImplStatus _a _b code msg) -> 
                     return $ toResponse $ toJSON [("status", JInt code), ("msg", JString msg)]
-                Right text -> do
+                Right txt -> do
                     -- store in session
                     addELegTransaction ELegTransaction 
-                                        { transactionservertime = ctxtime ctx
-                                        , transactiontransactionid = transactionid
-                                        , transactiontbs = tbs
-                                        , transactionencodedtbs = text
+                                        { transactionservertime      = ctxtime ctx
+                                        , transactiontransactionid   = transactionid
+                                        , transactiontbs             = tbs
+                                        , transactionencodedtbs      = txt
                                         , transactionsignatorylinkid = Nothing
-                                        , transactiondocumentid = docid
-                                        , transactionmagichash = Nothing
-                                        , transactionnonce = nonce
+                                        , transactiondocumentid      = docid
+                                        , transactionmagichash       = Nothing
+                                        , transactionnonce           = nonce
                                         }
                     return $ toResponse $ toJSON [("status", JInt 0)
                                                  ,("servertime", JString $ show $ 60 * time + seconds)
                                                  ,("nonce", JString nonce)
-                                                 ,("tbs", JString text)
+                                                 ,("tbs", JString txt)
                                                  ,("transactionid", JString transactionid)]
 
 {- |
@@ -235,53 +238,61 @@ handleIssueBankID provider docid = withUserGet $ do
      provider -- the eleg provider (bankid, nordea, telia)
      signature -- signature generated by BankID plugin
      transactionid -- the id of the transaction from the BankID Ajax request
-     fieldname -- zero or more names of fields filled out by author
-     fieldvalues -- zero or more (same as # of fieldnames) of values filled out by author
+     
+    Validation:
+    the document absolutely must exist. If the docid is not found, 404
+    the author should be logged in, otherwise 404
+    provider, signature, transactionid must exist (or 404)
+    there must be a valid eleg transaction
+        the transaction must use the same docid
+
  -}
 handleIssuePostBankID :: DocumentID -> Kontra KontraLink
 handleIssuePostBankID docid = withUserPost $ do
-    ctx@Context { ctxmaybeuser = Just author, ctxelegtransactions } <- get
+    ctx@Context { ctxmaybeuser = Just author
+                , ctxelegtransactions } <- get
 
     provider      <- getDataFnM $ look "eleg"
     signature     <- getDataFnM $ look "signature"
     transactionid <- getDataFnM $ look "transactionid"
-    fieldnames    <- getAndConcat "fieldname"
-    fieldvalues   <- getAndConcat "fieldvalue"
     
     document <- queryOrFail $ GetDocumentByDocumentID docid
     
     failIfNotAuthor document author
 
     -- valid transaction?
-    ELegTransaction { transactiondocumentid      = tdocid
+    ELegTransaction { transactiondocumentid
                     , transactiontbs
                     , transactionencodedtbs
                     , transactionnonce
                     } <- findTransactionByIDOrFail ctxelegtransactions transactionid
 
-    when (tdocid  /= docid)  mzero
+    when (transactiondocumentid /= docid)  mzero
     -- end validation
+    
+    -- document should be saved right here!
 
     providerCode <- providerStringToNumber provider
-    done <- verifySignature providerCode
+    res <- verifySignature providerCode
                 transactionencodedtbs
                 signature
                 transactionnonce
                 transactionid
 
-    case done of
+    case res of
         Left (ImplStatus _a _b code msg) -> do
             liftIO $ print $ toJSON [("status", JInt code), ("msg", JString msg)]
+            addFlashMsg $ toFlashMsg OperationFailed "Try again"
             -- change me! I should return back to the same page
             return LinkMain
-        Right (cert, attrs) -> do
+        Right (cert, _attrs) -> do
             providerType <- providerStringToType provider
-            let siginfo = SignatureInfo { signatureinfotext = transactiontbs
-                                        , signatureinfosignature = signature
+            let siginfo = SignatureInfo { signatureinfotext        = transactiontbs
+                                        , signatureinfosignature   = signature
                                         , signatureinfocertificate = cert
-                                        , signatureinfoprovider = providerType
+                                        , signatureinfoprovider    = providerType
                                         }
-            doc2 <- updateDocument ctx author document $ Just siginfo
+            _doc2 <- updateDocument ctx author document $ Just siginfo
             return $ LinkIssueDoc docid
 
 
@@ -295,10 +306,11 @@ kvJson (k, JInt v) = "\"" ++ k ++ "\" : " ++ show v
 kvJson (k, JString v) = "\"" ++ k ++ "\" : \"" ++ v ++ "\""
 
 toJSON :: [(String, JSONValue)] -> String
-toJSON kvs = "{ " ++ (concat $ intersperse ", " (map kvJson kvs)) ++ " }"
+toJSON kvs = "{ " ++ intercalate ", " (map kvJson kvs) ++ " }"
 
 -- SOAP
 
+endpoint :: String
 endpoint = "https://eidt.funktionstjanster.se:18898/osif"
 
 data ImplStatus = ImplStatus Int String Int String
@@ -306,7 +318,7 @@ data ImplStatus = ImplStatus Int String Int String
 data GenerateChallengeRequest = GenerateChallengeRequest Int String
 
 instance HTypeable (GenerateChallengeRequest) where
-    toHType x = Defined "GenerateChallengeRequest" [] []
+    toHType _x = Defined "GenerateChallengeRequest" [] []
 instance XmlContent (GenerateChallengeRequest) where
     toContents (GenerateChallengeRequest provider policy) =
         [CElem (Elem "generateChallengeRequest" 
@@ -324,7 +336,7 @@ instance XmlContent (GenerateChallengeRequest) where
 data GenerateChallengeResponse = GenerateChallengeResponse ImplStatus String String
 
 instance HTypeable (GenerateChallengeResponse) where
-    toHType x = Defined "GenerateChallengeResponse" [] []
+    toHType _x = Defined "GenerateChallengeResponse" [] []
 instance XmlContent (GenerateChallengeResponse) where
     toContents _ = error "Do not serialize GenerateChallengeResponse"
     parseContents =  do
@@ -353,7 +365,7 @@ instance XmlContent (GenerateChallengeResponse) where
 data EncodeTBSRequest = EncodeTBSRequest Int String String String
 
 instance HTypeable (EncodeTBSRequest) where
-    toHType x = Defined "EncodeTBSRequest" [] []
+    toHType _x = Defined "EncodeTBSRequest" [] []
 instance XmlContent (EncodeTBSRequest) where
     toContents (EncodeTBSRequest provider policy tbs transactionID) =
         [CElem (Elem "encodeTBSRequest" 
@@ -377,7 +389,7 @@ instance XmlContent (EncodeTBSRequest) where
 data EncodeTBSResponse = EncodeTBSResponse ImplStatus String String
 
 instance HTypeable (EncodeTBSResponse) where
-    toHType x = Defined "EncodeTBSResponse" [] []
+    toHType _x = Defined "EncodeTBSResponse" [] []
 instance XmlContent (EncodeTBSResponse) where
     toContents _ = error "Do not serialize EncodeTBSResponse"
     parseContents =  do
@@ -390,23 +402,23 @@ instance XmlContent (EncodeTBSResponse) where
                           ; errorCode <- inElementNS "errorCode" text
                           ; errorCodeDescription <- optional $ inElementNS "errorCodeDescription" text
                           ; return (ImplStatus (read errorGroup) 
-                                               (maybe "" id errorGroupDescription)
+                                               (fromMaybe "" errorGroupDescription)
                                                (read errorCode)
-                                               (maybe "" id errorCodeDescription))
+                                               (fromMaybe "" errorCodeDescription))
                           }
 
             ; text2 <- optional $ inElementNS "text" text
             ; transactionid <- optional $ inElementNS "transactionID" text
             ; return (EncodeTBSResponse status
-                                                (maybe "" id text2)
-                                                (maybe "" id transactionid))
+                                                (fromMaybe "" text2)
+                                                (fromMaybe "" transactionid))
             }
         } `adjustErr` ("in <EncodeTBSResponse>, "++)
 
 data VerifySignatureRequest = VerifySignatureRequest Int String String String String String
 
 instance HTypeable (VerifySignatureRequest) where
-    toHType x = Defined "VerifySignatureRequest" [] []
+    toHType _x = Defined "VerifySignatureRequest" [] []
 instance XmlContent (VerifySignatureRequest) where
     toContents (VerifySignatureRequest provider policy tbs signature nonce transactionID) =
         [CElem (Elem "verifySignatureRequest" 
@@ -433,8 +445,12 @@ instance XmlContent (VerifySignatureRequest) where
          ()]
     parseContents = error "Please do not parse VerifySignatureRequest"
 
+slurpAttributes :: Parser (Content Text.XML.HaXml.Posn.Posn) [(BS.ByteString, BS.ByteString)]
 slurpAttributes = slurpAttributes' []
 
+slurpAttributes' :: [(BS.ByteString, BS.ByteString)] 
+                        -> Parser (Content Text.XML.HaXml.Posn.Posn)
+                                [(BS.ByteString, BS.ByteString)]
 slurpAttributes' ls = do
   att <- optional $ inElementNS "attributes" $ do
                         name <- inElementNS "name" text
@@ -448,7 +464,7 @@ slurpAttributes' ls = do
 data VerifySignatureResponse = VerifySignatureResponse ImplStatus [(BS.ByteString, BS.ByteString)] String
 
 instance HTypeable (VerifySignatureResponse) where
-    toHType x = Defined "VerifySignatureResponse" [] []
+    toHType _x = Defined "VerifySignatureResponse" [] []
 instance XmlContent (VerifySignatureResponse) where
     toContents _ = error "Do not serialize VerifySignatureResponse"
     parseContents =  do
@@ -461,53 +477,66 @@ instance XmlContent (VerifySignatureResponse) where
                           ; errorCode <- inElementNS "errorCode" text
                           ; errorCodeDescription <- optional $ inElementNS "errorCodeDescription" text
                           ; return (ImplStatus (read errorGroup) 
-                                               (maybe "" id errorGroupDescription)
+                                               (fromMaybe "" errorGroupDescription)
                                                (read errorCode)
-                                               (maybe "" id errorCodeDescription))
+                                               (fromMaybe "" errorCodeDescription))
                           }
-            ; attributes <- slurpAttributes
-            ; transactionid <- optional $ inElementNS "transactionID" text
+            ; attrs <- slurpAttributes
+            ; _transactionid <- optional $ inElementNS "transactionID" text
             ; certificate <- optional $ inElementNS "certificate" text
-            ; return (VerifySignatureResponse status attributes (maybe "" id certificate))
+            ; return (VerifySignatureResponse status attrs (fromMaybe "" certificate))
             }
         } `adjustErr` ("in <VerifySignatureResponse>, "++)
 
 
 generateChallenge :: Kontra (Either ImplStatus (String, String))
 generateChallenge = do
-  eresponse <- liftIO $ makeSoapCallINSECURE endpoint "GenerateChallenge" $ GenerateChallengeRequest 6 "logtest004"
-  case eresponse of
-    Left msg -> do
-      liftIO $ print msg
-      error msg
-    Right (GenerateChallengeResponse (ImplStatus a b status msg) challenge transactionid) -> do
-                      if status == 0
-                         then return $ Right (challenge, transactionid)
-                         else return $ Left (ImplStatus a b status msg)
+    eresponse <- liftIO $ makeSoapCallINSECURE endpoint "GenerateChallenge" $ GenerateChallengeRequest 6 "logtest004"
+    case eresponse of
+        Left msg -> do
+            liftIO $ print msg
+            error msg
+        Right (GenerateChallengeResponse (ImplStatus a b status msg) challenge transactionid) ->
+            if status == 0
+            then return $ Right (challenge, transactionid)
+            else return $ Left (ImplStatus a b status msg)
                  
 encodeTBS :: Int -> String -> String -> Kontra (Either ImplStatus String)
 encodeTBS provider tbs transactionID = do
-  eresponse <- liftIO $ makeSoapCallINSECURE endpoint "EncodeTBS" $ EncodeTBSRequest provider "logtest004" tbs transactionID
-  case eresponse of
-    Left msg -> do
-      liftIO $ print msg
-      error msg
-    Right (EncodeTBSResponse (ImplStatus a b status msg) text c) -> do
-                      if status == 0
-                         then return $ Right text
-                         else return $ Left (ImplStatus a b status msg)
+    eresponse <- liftIO $ makeSoapCallINSECURE endpoint "EncodeTBS" $ EncodeTBSRequest provider "logtest004" tbs transactionID
+    case eresponse of
+        Left msg -> do
+            liftIO $ print msg
+            error msg
+        Right (EncodeTBSResponse (ImplStatus a b status msg) txt _c) ->
+            if status == 0
+            then return $ Right txt
+            else return $ Left (ImplStatus a b status msg)
 
-verifySignature :: Int -> String -> String -> String -> String -> Kontra (Either ImplStatus (String, [(BS.ByteString, BS.ByteString)]))
+verifySignature :: Int 
+                    -> String 
+                    -> String 
+                    -> String 
+                    -> String 
+                    -> Kontra (Either ImplStatus (String, [(BS.ByteString, BS.ByteString)]))
 verifySignature provider tbs signature nonce transactionID = do
-  eresponse <- liftIO $ makeSoapCallINSECURE endpoint "VerifySignature" $ VerifySignatureRequest provider "logtest004" tbs signature nonce transactionID
-  case eresponse of
-    Left msg -> do
-      liftIO $ print msg
-      error msg
-    Right (VerifySignatureResponse (ImplStatus a b status msg) attrs certificate) -> do
-                      if status == 0
-                         then return $ Right (certificate, attrs)
-                         else return $ Left (ImplStatus a b status msg)
+    eresponse <- liftIO $ 
+        makeSoapCallINSECURE endpoint 
+            "VerifySignature" $ 
+            VerifySignatureRequest provider 
+                "logtest004" 
+                tbs 
+                signature 
+                nonce 
+                transactionID
+    case eresponse of
+        Left msg -> do
+            liftIO $ print msg
+            error msg
+        Right (VerifySignatureResponse (ImplStatus a b status msg) attrs certificate) ->
+            if status == 0
+            then return $ Right (certificate, attrs)
+            else return $ Left (ImplStatus a b status msg)
 
 {- | Merge two bits of information, choosing b over a.
  -}                             
@@ -517,23 +546,27 @@ mergeTwo a b
     | a == BS.fromString "" = b
     | a == b  = b
     | a /= b  = b
+    | otherwise = BS.fromString "Just to please the compiler."
  
 {- | Compare signatory information from contract with that from the
      E-Legitimation provider. Returns Either and error message or the
      correct value.
  -}
-mergeInfo :: (BS.ByteString, BS.ByteString, BS.ByteString) -> (BS.ByteString, BS.ByteString, BS.ByteString) -> Either String (BS.ByteString, BS.ByteString, BS.ByteString)
+mergeInfo :: (BS.ByteString, BS.ByteString, BS.ByteString) 
+                -> (BS.ByteString, BS.ByteString, BS.ByteString) 
+                -> Either String (BS.ByteString, BS.ByteString, BS.ByteString)
 mergeInfo (contractFirst, contractLast, contractNumber) (elegFirst, elegLast, elegNumber)
-    | (not $ BS.null contractLast) &&
-      (not $ BS.null elegLast    ) &&
+    | not (BS.null contractLast) &&
+      not (BS.null elegLast    ) &&
       contractLast   /= elegLast   = Left "The last name from your E-Legitimation provider does not match your last name entered on the contract. Please notify the author."
-    | (not $ BS.null contractNumber) &&
-      (not $ BS.null elegNumber    ) &&
+    | not (BS.null contractNumber) &&
+      not (BS.null elegNumber    ) &&
       contractNumber /= elegNumber = Left "Numbers do not match."
     | otherwise                    = Right (mergeTwo contractFirst  elegFirst,
                                             mergeTwo contractLast   elegLast,
                                             mergeTwo contractNumber elegNumber)
 
+allowsIdentification :: Doc.DocState.Document -> IdentificationType -> Bool
 allowsIdentification document idtype = 
     isJust $ find (== idtype) $ documentallowedidtypes document
 
@@ -541,19 +574,20 @@ findTransactionByIDOrFail :: [ELegTransaction] -> String -> Kontra ELegTransacti
 findTransactionByIDOrFail transactions transactionsid = 
     case find ((== transactionsid) . transactiontransactionid) transactions of
       Nothing                                                         -> mzero
-      Just (ELegTransaction { transactionsignatorylinkid = Nothing }) -> mzero
-      Just (ELegTransaction { transactionmagichash       = Nothing }) -> mzero
       Just trans                                                      -> return trans
                
+getTBS :: KontrakcjaTemplates -> Doc.DocState.Document -> IO String
 getTBS templates doc =
     renderTemplate templates "tbs" $ do
         field "documentname"   $ documenttitle doc
         field "documentnumber" $ documentid doc
         field "tbssigentries"  $ getSigEntries templates doc
         
+getSigEntries :: KontrakcjaTemplates -> Doc.DocState.Document -> IO [String]        
 getSigEntries templates doc = 
-    mapM ((getSigEntry templates) . signatorydetails) $ documentsignatorylinks doc
+    mapM (getSigEntry templates . signatorydetails) $ documentsignatorylinks doc
 
+getSigEntry :: KontrakcjaTemplates -> SignatoryDetails -> IO String
 getSigEntry templates signatorydetails =
     renderTemplate templates "tbssig" $ do
         field "firstname" $ signatoryfstname signatorydetails
@@ -561,10 +595,11 @@ getSigEntry templates signatorydetails =
         field "company"   $ signatorycompany signatorydetails
         field "number"    $ signatorynumber  signatorydetails
 
+fieldvaluebyid :: BS.ByteString -> [(BS.ByteString, BS.ByteString)] -> BS.ByteString
 fieldvaluebyid _ [] = BS.fromString ""
-fieldvaluebyid id ((k, v):xs)
-    | k == id   = v
-    | otherwise = fieldvaluebyid id xs
+fieldvaluebyid fid ((k, v):xs)
+    | k == fid  = v
+    | otherwise = fieldvaluebyid fid xs
 
 providerStringToNumber :: String -> Kontra Int
 providerStringToNumber provider 
