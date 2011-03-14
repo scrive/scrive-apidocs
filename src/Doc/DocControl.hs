@@ -698,6 +698,9 @@ getAndConcat field = do
   values <- getDataFnM $ lookInputList field
   return $ map concatChunks values
 
+--mapJust :: (a -> Maybe b) -> [a] -> [b]
+mapJust f l = map fromJust $ filter isJust $ map f l
+
 {- |
    do the work necessary for saving a document being authored
  -}
@@ -719,33 +722,25 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
   invitetext <- getFieldUTFWithDefault defaultInviteMessage "invitetext"
   
   -- each custom field must have this
-  fieldnames <- getAndConcat "fieldname"
-  fieldids <- getAndConcat "fieldid"
+  fieldnames  <- getAndConcat "fieldname"
+  fieldids    <- getAndConcat "fieldid"
   fieldsigids <- getAndConcat "fieldsigid"
   fieldvalues <- getAndConcat "fieldvalue"
 
   -- each placed field must have these values
-  placedxs <- getAndConcat "placedx"
-  placedys <- getAndConcat "placedy"
-  placedpages <- getAndConcat "placedpage"
-  placedwidths <- getAndConcat "placedwidth"
-  placedheights <- getAndConcat "placedheight"
-  placedsigids <- getAndConcat "placedsigid"
+  placedxs       <- getAndConcat "placedx"
+  placedys       <- getAndConcat "placedy"
+  placedpages    <- getAndConcat "placedpage"
+  placedwidths   <- getAndConcat "placedwidth"
+  placedheights  <- getAndConcat "placedheight"
+  placedsigids   <- getAndConcat "placedsigid"
   placedfieldids <- getAndConcat "placedfieldid"
 
   authorrole <- getFieldWithDefault "" "authorrole"
+  
+  validmethods <- getAndConcat "validationmethod"
 
-  -- which type of identifications are allowed
-  allowedidtypes <- getFieldWithDefault "" "allowedsignaturetypes"
-
-  let emailallowed = if "Email" `isInfixOf` allowedidtypes
-                      then [EmailIdentification]
-                      else []
-      elegitimationallowed = if "ELeg" `isInfixOf` allowedidtypes
-                              then [ELegitimationIdentification]
-                              else []
-      
-  let docallowedidtypes = emailallowed ++ elegitimationallowed
+  let docallowedidtypes = mapJust (idmethodFromString . BS.toString) validmethods
 
   let placements = zipWith5 FieldPlacement 
                    (map (read . BS.toString) placedxs)
@@ -830,7 +825,7 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
   -- Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor document
 
   update $ UpdateDocument ctxtime documentid
-           signatories2 daystosign invitetext author authordetails docallowedidtypes
+           signatories2 daystosign invitetext author authordetails docallowedidtypes 
               
 {- |
    Constructs a list of documents (Arkiv) to show to the user.
@@ -1477,6 +1472,12 @@ showMainPage user =  do
                       content <- liftIO $ uploadPage (ctxtemplates ctx) 
                       renderFromBody ctx TopDocument kontrakcja $ cdata content 
                       
+idmethodFromString :: String -> Maybe IdentificationType
+idmethodFromString method 
+    | method == "email" = Just EmailIdentification
+    | method == "eleg"  = Just ELegitimationIdentification
+    | otherwise         = Nothing
+
 getAllTemplates::Kontra Response                      
 getAllTemplates = do
     ctx <- get 

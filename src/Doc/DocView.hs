@@ -370,7 +370,9 @@ pageDocumentForAuthor ctx
        field "docstate" (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks)
        field "linkissuedocpdf" $ show (LinkIssueDocPDF document)
        field "documentinfotext" $ documentInfoText templates document (find (isMatchingSignatoryLink author) documentsignatorylinks) author
-       documentInfoFields document author
+       documentAuthorInfo author
+       field "validationinput" validationinput
+       documentInfoFields document
        designViewFields step
 
 renderActionButton :: KontrakcjaTemplates -> KontraLink -> String -> IO String
