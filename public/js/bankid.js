@@ -591,12 +591,19 @@ safeReady(function() {
   $("#validationdropdown").change(function() {
     var d = $(this);
     var selected = d.find("option:selected").val();
+    var numberfields = $("input[name=signatorynumber]").parents(".dragfield");
     if(selected == "email") {
       elegbuttons.hide();
       signbutton.show();
+      numberfields.find(".type").html("sig");
     } else if(selected == "eleg") {
       elegbuttons.show();
       signbutton.hide();
+      numberfields.find(".type").html("author");
     }
+    numberfields.each(function() {
+      updateStatus($(this));
+    }
+    
   });
 });
