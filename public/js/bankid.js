@@ -607,3 +607,52 @@ safeReady(function() {
     
   });
 });
+
+function isAuthorSecretary() {
+  return $("#authorsecretaryradio").attr("checked");
+}
+
+function getSignatoryData() {
+  var entries = $(".sigentry");
+  var fnames = entries.find("input[name=signatoryfstname]").map(function(i, el) {
+    return el.val();
+  });
+  var lnames = entries.find("input[name=signatorysndname]").map(function(i, el) {
+    return el.val();
+  });
+  var nums   = entries.find("input[name=signatorynumber]" ).map(function(i, el) {
+    return el.val();
+  });
+
+  
+  if(isAuthorSecretary()) {
+    var authordetails = $(".authordetails");
+    fnames.push(authordetails.find(".authorfstname .fieldvalue").val()):
+    lnames.push(authordetails.find(".authorsndname .fieldvalue").val()):
+    nums  .push(authordetails.find(".authornum .fieldvalue"    ).val()):
+  }
+
+  var ret = [];
+  fnames.each(function(i) {
+    ret.push({ fname: fnames[i],
+               lname: lnames[i],
+               num:   nums  [i]});
+  });
+  return ret;
+}
+
+function generateTBS(doctitle, docid, signatories) {
+  var text = 'Du undertecknar "' + doctitle + '" med transaktionsnummer "' + docid + '". Undertecknande parter är:';
+
+  signatories.each(function() {
+    text = text + "\n" + this.fname + " " + this.lname + ", " + this.num;
+  });
+
+  return text;
+}
+
+function getTBS() {
+  return generateTBS($("#signStepsTitleRow .name").text()
+                     ,$("#signStepsTitleRow .title").text().substring(10)
+                     ,getSignatoryData());
+}
