@@ -48,7 +48,7 @@ function placePlacements(pls, label, value, sigid, fieldid) {
 }
 
 function newHiddenValue(label, value) {
-    return $("<span style='display: none' class='" + label + "'>" + value + "</span>");
+    return $("<span style='display: none' class='" + label + "'>" + escapeHTML(value) + "</span>");
 }
 
 function getHiddenValue(field, label) {
@@ -70,7 +70,7 @@ function setHiddenValue(field, label, value) {
 }
 
 function newHiddenField(name, value) {
-    return $("<input type='hidden' name='" + name + "' value='" + value + "' />");
+    return $("<input type='hidden' name='" + name + "' value='" + escapeHTML(value) + "' />");
 }
 
 function getHiddenField(field, label) {
@@ -87,7 +87,7 @@ function setHiddenField(field, label, value) {
     if(s.size()){
 	s.attr("value", value);
     } else {
-	field.append("<input type='hidden' name='" + label + "' value='" + value + "' />");
+	field.append(newHiddenField(label, value));
     }
 }
 
@@ -362,7 +362,10 @@ function docstateToHTML(){
 		var ff = $(this);
 		//console.log(s);
 		if(ff.text().indexOf(currentsig.email) > -1) {
-		  ff.find(".signatoryfields").append("<span class='text'>" + f.label + ": " +f.value+"</span>");
+		  ff.find(".signatoryfields").append("<span class='text'>"
+                                                   + escapeHTML(f.label) + ": "
+                                                   + escapeHTML(f.value)
+                                                   + "</span>");
 		}
 	      });
 
