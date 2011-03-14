@@ -186,37 +186,18 @@ pageDocumentForSignContent=
       $helpers:noescape()$
     </div>
     <form method="post" name="form" action="$action$" id="dialog-confirm-sign" class="overlay">     
-    <div class="modal-container">
-        <div class="modal-header">
-            <div class="modal-icon message"></div>
-            <div class="modal-title">
-               <h2>Underteckna</h2> 
-            </div>
-            <a class="modal-close close"> </a>
-        </div>
-        <div class="modal-body">
-            <div class="modal-content">
-                 <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
-                 <p>När $partyUnsigned:noescape()$ undertecknat blir 
-                    avtalet <strong>juridiskt bindande</strong> och
-                    det färdigställda avtalet skickas till din e-post.</p>
-            </div>
-        </div>
-        <div class="modal-footer">
-                <input type="hidden" name="sign" value="automatic" />
-                <a  class="close cancel">Avbryt</a>
-                <a href="#" class="btn-small green float-right submiter">
-                <div class="left"></div>
-                <div class="label">
-                    <p>Underteckna</p>
-                <div class="btn-symbol green arrow-left"></div></div>
-                <div class="right"></div>
-            </a>
-        </div>
-     </div>
+      <a href="#" class="close"> </a>                  
+      <h2>Underteckna</h2>  
+      <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
+      <p>När $partyUnsigned:noescape()$ undertecknat blir 
+        avtalet <strong>juridiskt bindande</strong> och
+        det färdigställda avtalet skickas till din e-post.</p>
+      <div class="buttonbox">
+        <input type="hidden" name="sign" value="automatic" />
+        <button class="close button" type="button"> Avbryt </button>
+        <button class="submiter button" type="button"> Underteckna </button>
+      </div>
     </form>
-
-
     <form method="post" name="form" action="action" id="dialog-confirm-sign-eleg" class="overlay">     
       <script type="text/javascript" src="/js/bankid.js"></script>
       <div class="modal-container">
