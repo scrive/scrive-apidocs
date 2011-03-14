@@ -147,6 +147,44 @@ function sign1(ajaxurl, formselector, posturl) {
   return false;
 }
 
+function sign1Author(ajaxurl, formselector, posturl) {
+  var good = false;
+  if($.browser.msie) {
+	if(hasIESigner1Plugin()) {
+	  good = true;
+	} else {
+	  flashNordeaMessage();
+	}
+  } else if($.browser.mozilla) {
+	if(hasMozillaSigner1Plugin()){
+	  good = true;
+	} else {
+	  flashNordeaMessage();
+	}
+  } else {
+	alert("Your browser is not supported. Please use either Internet Explorer or Firefox.");
+  }
+  if(!good){
+	return false;
+  }
+  $.ajax({'url': ajaxurl,
+		  'dataType': 'json',
+		  'success': function(data){
+		    if(data['status'] === 0) {
+		      var tbs = data['tbs'];
+		      var nonce = data['nonce'];
+		      var servertime = data['servertime'];
+		      var transactionid = data['transactionid'];
+		      sign1Success(transactionid, tbs, nonce, servertime, posturl, formselector);
+		    } else {
+		      alert("OOPS");
+		    }
+		    
+	      },
+		  error: function(){ alert("oh no!");}});
+  return false;
+}
+
 function flashNordeaMessage() {
   addFlashMessage("Du har inte Nordeas e-legitimation installerad. Du kan ladda ned Nordeas e-legitimation från Nordeas internetbank.");
 }
@@ -301,6 +339,45 @@ function sign2(posturl, formselector, ajaxurl) {
   return false;
 }
 
+
+function sign2Author(posturl, formselector, ajaxurl) {
+  var good = false;
+  if($.browser.msie) {
+	if(hasSign2PluginIE()) {
+	  good = true;
+	} else {
+	  flashBankIDMessage();
+	}
+  } else if($.browser.mozilla) {
+	if(hasSign2PluginMozilla()){
+	  good = true;
+	} else {
+	  flashBankIDMessage();
+	}
+  } else {
+	addFlashMessage("Your browser is not supported. Please use either Internet Explorer or Firefox.");
+  }
+  if(!good){
+	return false;
+  }
+  $.ajax({'url': ajaxurl,
+		  'dataType': 'json',
+		  'success': function(data){
+		    if(data['status'] === 0) {
+		      var tbs = getTBS();
+		      var nonce = data['nonce'];
+		      var servertime = data['servertime'];
+		      var transactionid = data['transactionid'];
+		      sign2Success(transactionid, tbs, nonce, servertime, posturl, formselector);
+		    } else {
+		      alert("OOPS");
+		    }
+		    
+	      },
+		  error: function(){ alert("oh no!");}});
+  return false;
+}
+
 // netid plugin
 
 function installNetIDIE() {
@@ -432,23 +509,78 @@ function netIDSign(posturl, formselector, ajaxurl) {
   return false;
 }
 
+function netIDSignAuthor(posturl, formselector, ajaxurl) {
+  var good = false;
+  if($.browser.msie) {
+	if(hasNetIDPluginIE()) {
+	  good = true;
+	} else {
+	  flashTeliaMessage();
+	}
+  } else if($.browser.mozilla) {
+	if(hasNetIDPluginMozilla()){
+	  good = true;
+	} else {
+	  flashTeliaMessage();
+	}
+  } else {
+	alert("Your browser is not supported. Please use either Internet Explorer or Firefox.");
+  }
+  if(!good){
+	return false;
+  }
+  $.ajax({'url': ajaxurl,
+		  'dataType': 'json',
+		  'success': function(data){
+		    if(data['status'] === 0) {
+		      var tbs = data['tbs'];
+		      var nonce = data['nonce'];
+		      var servertime = data['servertime'];
+		      var transactionid = data['transactionid'];
+		      netIDSuccess(transactionid, tbs, nonce, servertime, posturl, formselector);
+		    } else {
+		      alert("OOPS");
+		    }
+		    
+	      },
+		  error: function(){ alert("oh no!");}});
+  return false;
+}
+
 safeReady(function() {
-  $("button.bankid").click(function() {
+  $("button.bankid.signatory").click(function() {
     sign2("/s/bankid" + window.location.pathname.substring(2),
-	      "#dialog-confirm-sign-eleg",
+	      "#dialog-confirm-sign",
 	      "/s/bankid" + window.location.pathname.substring(2));
     return false;
   });
-  $("button.nordea").click(function() {
+  $("button.bankid.author").click(function() {
+    sign2Author("/d/bankid" + window.location.pathname.substring(2),
+	            "#dialog-confirm-sign-invite",
+	            "/d/bankid" + window.location.pathname.substring(2));
+  });
+  $("button.nordea.signatory").click(function() {
     sign1("/s/nordea" + window.location.pathname.substring(2),
-          "#dialog-confirm-sign-eleg",
+          "#dialog-confirm-sign",
           "/s/nordea" + window.location.pathname.substring(2));
     return false;
   });
-  $("button.telia").click(function() {
+  $("button.nordea.author").click(function() {
+    sign1Author("/d/nordea" + window.location.pathname.substring(2),
+                "#dialog-confirm-sign-invite",
+                "/d/nordea" + window.location.pathname.substring(2));
+    return false;
+  });
+  $("button.telia.signatory").click(function() {
     netIDSign("/s/telia" + window.location.pathname.substring(2),
-              "#dialog-confirm-sign-eleg",
+              "#dialog-confirm-sign",
               "/s/telia" + window.location.pathname.substring(2));
+    return false;
+  });
+  $("button.telia.author").click(function() {
+    netIDSignAuthor("/d/telia" + window.location.pathname.substring(2),
+                    "#dialog-confirm-sign-invite",
+                    "/d/telia" + window.location.pathname.substring(2));
     return false;
   });
 });
