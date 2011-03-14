@@ -929,6 +929,7 @@ a.button {
     /* place overlay on top of other elements */
     z-index:10000;
     display:none;
+	position: absolute !important;
     /* styling */
     width:640px;	
     
@@ -1037,13 +1038,15 @@ a.button {
 
 #signStepsMenu .text
 {
+	color: #000;
     display: inline-block;
+	font: 11px/15px "Helvetica Neue";
     margin: 5px 18px 0 2px;
 }
 
 #signStepsMenu div a
 {
-    color: #4b4b4b;
+    color: #000;
 }
 
 #signStepsMenu .clickArea,
@@ -1088,12 +1091,12 @@ a.button {
     border-width: 0px 1px 0 1px;
     border-color: #000000;
     border-style: solid;
-    color: #d9d9d9;
+    color: #fff !important;
     height: 24px;
 }
-#signStepsMenu div.current a
+#signStepsMenu div.current a, #signStepsMenu .current .text
 {
-    color: #d9d9d9;
+    color: #fff !important;
 }
 #signStepsMenu div.current img
 {
@@ -2206,20 +2209,6 @@ form {
   margin-top:1px;
 }
 
-.btn-small {
-	background: url(../img/btn-small.png) 0 0 no-repeat;
-	color: #fff;
-	display: block;
-	font: 12px "Helvetica Neue";
-	height: 34px;
-	letter-spacing: 0.2px;
-	padding-left:16px;
-	padding-top: 0px;
-	text-decoration: none;
-	width: 152px;
-        text-align: left;
-        border: 0;
-}
 #sendinvite.btn-small {
        padding-left:17%;
        padding-bottom:3px;

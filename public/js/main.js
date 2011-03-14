@@ -13,7 +13,30 @@
 	}
 })(jQuery);
 
+// tooltip
+(function($) {
+	$.fn.tooltip = function() {
+		return this.each( function() {
+			var container = $('<div>');
+			$(this).mouseenter( function(e) {
+				container
+				.appendTo('body')
+				.addClass('tooltip-container')
+				.css({
+					left: $(this).offset().left+30,
+					top: $(this).offset().top-20
+				})
+				.html('<div class="tooltip-arrow"></div><div class="tooltip-body">' + $($(this).attr('rel')).html() + '</div>');
+			}).mouseleave( function() {
+				container.remove();
+			});
+		});	
+	}
+})(jQuery);
+
 $(document).ready( function() {
+	$('.tooltip').tooltip();
+	
 	$('.login-button').click( function(e) {
 		e.preventDefault();
 	
