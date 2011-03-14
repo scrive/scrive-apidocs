@@ -33,13 +33,14 @@ viewSubaccounts =
 					<thead>
 						<tr>
 							<th style="width: 20px;"><input type="checkbox" name="" id="all" /></th>
-							<th style="width: 100px;"><a href="javascript:;">Förnamn <em>▼</em></a></th>
-							<th style="width: 120px;"><a href="javascript:;">Efternamn <em>▼</em></a></th>
-							<th style="width: 120px;"><a href="javascript:;">Befattning <em>▼</em></a></th>
-							<th style="width: 100px;"><a href="javascript:;">Avdelning <em>▼</em></a></th>
-							<th style="width: 100px;"><a href="javascript:;">Telefonnummer <em>▼</em></a></th>
-							<th style="width: 100px;"><a href="javascript:;">Mailadress <em>▼</em></a></th>
-							<th style="width: 30px;"></th>
+							<th style="width: 75px;"><a href="javascript:;">Förnamn <em>▼</em></a></th>
+							<th style="width: 90px;"><a href="javascript:;">Efternamn <em>▼</em></a></th>
+							<th style="width: 60px; text-align: right"><a href="javascript:;">Befattning <em>▼</em></a></th>
+							<th style="width: 160px;"><a href="javascript:;">Avdelning <em>▼</em></a></th>
+							<th style="width: 115px;"><a href="javascript:;">Personnummer <em>▼</em></a></th>
+							<th style="width: 110px;"><a href="javascript:;">Mailadress <em>▼</em></a></th>
+							<th style="width: 20px;"></th>
+							<th style="width: 20px;"></th>
 						</tr>
 					</thead>
 					<tbody id="selectable">
@@ -51,9 +52,12 @@ viewSubaccounts =
 							<td>$subuser.usvLastName$</td>
 							<td>$subuser.usvPosition$</td>
 							<td>$subuser.usvDept$</td>
-							<td>$subuser.usvPhoneNr$</td>
+							<td>$subuser.usvSsNr$</td>
 							<td>$subuser.usvEmail$</td>
 							<td></td>
+							<td class="right">
+								<em>▼</em>
+							</td>
 						</tr>
 						}$
 					</tbody>
@@ -75,8 +79,22 @@ viewSubaccounts =
 						<a href="#">></a>
 						<a href="#">>></a>
 					</div>
-					<a href="#" class="btn-tiny black float-left"><div class="left"></div><div class="label">Bakåt<div class="btn-symbol black arrow-right"></div></div><div class="right"></div></a>
-					<a href="#" class="btn-tiny black float-right"><div class="left"></div><div class="label">Nästa<div class="btn-symbol black arrow-left"></div></div><div class="right"></div></a>
+					<a href="#" class="btn-tiny black float-left">
+						<div class="left"></div>
+						<div class="label">
+							<div class="btn-symbol black arrow-right"></div>
+							<p>Bakåt</p>
+						</div>
+						<div class="right"></div>
+					</a>
+					<a href="#" class="btn-tiny black float-right">
+						<div class="left"></div>
+						<div class="label">
+							<p>Nästa</p>
+							<div class="btn-symbol black arrow-left"></div>
+						</div>
+						<div class="right"></div>
+					</a>
 					<div class="clearfix"></div>
 				</div>
 			</div>

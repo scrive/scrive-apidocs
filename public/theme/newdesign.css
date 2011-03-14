@@ -447,6 +447,7 @@
 
 .tab-table table th a {
 	color: #000 !important;
+	font: 12px "Helvetica Neue";
 	text-decoration: none;
 }
 
@@ -463,6 +464,15 @@
 	height: 22px;
 	margin-bottom: 1px;
 	padding-left: 15px;
+}
+
+.tab-table table td em {
+	font-size: 9px;
+}
+
+.tab-table table td.right {
+	padding-right: 12px;
+	text-align: right;
 }
 
 .tab-table table td a {
@@ -503,7 +513,7 @@
 
 .tab-table .table-paginate {
 	margin-top: 10px;
-	padding: 20px;
+	padding: 10px 20px;
 }
 
 .tab-table .table-paginate > a {
@@ -535,9 +545,11 @@
 }
 
 .tab-table .table-statuses {
+	background: #fff;
 	border: 1px solid #e0e0e0;
 	border-radius: 3px;
-	color: #666;
+	color: #999;
+	font-size: 9px;
 	margin-top: 10px;
 	padding: 10px;
 	text-transform: uppercase;
@@ -547,6 +559,7 @@
 
 .tab-table .table-statuses .icon {
 	margin-bottom: -1px;
+	margin-left: 8px;
 }
 
 /* Tab Viewer */
@@ -615,6 +628,7 @@
 
 #tab-viewer .tabs li a {
 	color: #000;
+	font: 11px "Helvetica Neue";
 }
 
 #tab-viewer .tabs li.active a {
@@ -843,4 +857,47 @@
 .modal-container .modal-footer a#message {
 	color: #666;
 	text-decoration: none;
+}
+
+.tooltip-container {
+	color: #666;
+	font: 14px "Helvetica Neue";
+	position: absolute;
+	width: 220px;
+	z-index: 101;
+}
+
+.tooltip-container .tooltip-body {
+	background: #fff;
+	margin: 5px;
+	padding: 15px 20px 14px;
+	width: 170px;
+}
+
+.tooltip-container .tooltip-body p {
+	display: inline;
+}
+
+.tooltip-container:before {
+	border: 5px solid #000;
+	border-radius: 5px;
+	bottom: 0;
+	content: " ";
+	left: 0;
+	opacity: 0.55;
+	position: absolute;
+	right: 0;
+	top: 0;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+}
+
+.tooltip-container .tooltip-arrow {
+	background: url(../img/tooltip-arrow.png);
+	height: 33px;
+	left: -17px;
+	position: absolute;
+	top: 12px;
+	width: 17px;
+	z-index: 102;
 }

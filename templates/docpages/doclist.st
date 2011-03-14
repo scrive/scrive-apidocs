@@ -42,11 +42,12 @@ pageDocumentList=
 				<table>
 					<thead>
 						<tr>
-							<th style="width: px;"><input type="checkbox" name="" id="all" /></th>
-							<th style="width: px;"><a href="javascript:;">Status <em>▼</em></a></th>
-							<th style="width: px;"><a href="javascript:;">Senaste händelse <em>▼</em></a></th>
-							<th style="width: px;"><a href="javascript:;">Parter <em>▼</em></a></th>
-							<th style="width: px;"><a href="javascript:;">Dokument <em>▼</em></a></th>
+							<th style="width: 30px;"><input type="checkbox" name="" id="all" /></th>
+							<th style="width: 50px;"><a href="javascript:;">Status <em>▼</em></a></th>
+							<th style="width: 70px;"><a href="javascript:;">Senaste händelse <em>▼</em></a></th>
+							<th style="width: 200px;"><a href="javascript:;">Parter <em>▼</em></a></th>
+							<th style="width: 400px;"><a href="javascript:;">Dokument <em>▼</em></a></th>
+							<th></th>
 						</tr>
 					</thead>
 					
@@ -55,7 +56,7 @@ pageDocumentList=
 						<!-- Every other row should have class="odd" (Begin with first row) -->
       					<tr $if(document.oddRow)$class="odd"$endif$>
 							<td>$if(document.isauthor)$ <input type="checkbox" name="doccheck" value="$document.documentid$" class="check"> $endif$</td>
-							<td><div src="/" class="icon status cancelled" rel="Status: avbruten"></div>$if(document.anyinvitationundelivered)$  <span style="color:#000000;position:relative;top:-3px">!</span>$endif$</td>
+							<td><div src="/" class="icon status cancelled tooltip" rel="#tooltip-cancelled"></div>$if(document.anyinvitationundelivered)$  <span style="color:#000000;position:relative;top:-3px">!</span>$endif$</td>
 							<td>
 								<span title="$document.mtime$">$document.mtime$</span>
 								$if(document.timeoutdaysleft)$  
@@ -71,7 +72,11 @@ pageDocumentList=
 								<a href="$document.doclink$">$document.documenttitle$</a>
 								$if(document.davelink)$ 
 					          	<a href="$document.davelink$">*</a>     
-					          	$endif$</td>
+					          	$endif$
+							</td>
+							<td class="right">
+								<em>▼</em>
+							</td>
 						</tr>
 				      }$
 				    </tbody>
@@ -105,12 +110,29 @@ pageDocumentList=
 						<a href="#">></a>
 						<a href="#">>></a>
 					</div>
-					<a href="#" class="btn-tiny black float-left"><div class="left"></div><div class="label">Bakåt<div class="btn-symbol black arrow-right"></div></div><div class="right"></div></a>
-					<a href="#" class="btn-tiny black float-right"><div class="left"></div><div class="label">Nästa<div class="btn-symbol black arrow-left"></div></div><div class="right"></div></a>
+					<a href="#" class="btn-tiny black float-left">
+						<div class="left"></div>
+						<div class="label">
+							<div class="btn-symbol black arrow-right"></div>
+							<p>Bakåt</p>
+						</div>
+						<div class="right"></div>
+					</a>
+					<a href="#" class="btn-tiny black float-right">
+						<div class="left"></div>
+						<div class="label">
+							<p>Nästa</p>
+							<div class="btn-symbol black arrow-left"></div>
+						</div>
+						<div class="right"></div>
+					</a>
 					<div class="clearfix"></div>
 				</div>
 			</div>
 		</div>
+	</div>
+	<div id="tooltip-cancelled" class="hidden">
+		<div class="icon status cancelled"></div><p>Status: avbruten</p>
 	</div>
 </form>
      
