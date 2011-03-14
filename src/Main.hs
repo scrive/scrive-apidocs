@@ -1,6 +1,6 @@
 module Main where
 
-import Control.Concurrent (MVar, forkIO, killThread)
+import Control.Concurrent (MVar, newMVar, forkIO, killThread)
 import Happstack.Util.Cron (cron)
 import Happstack.State (waitForTermination)
 import Happstack.Server
@@ -27,6 +27,7 @@ import AppState (AppState(..))
 import AppControl (appHandler,defaultAWSAction,AppConf(..),AppGlobals(..))
 import qualified Control.Concurrent (threadDelay)
 import qualified Data.ByteString.Char8 as BS
+import qualified Data.Map as Map
 import System.IO
 
 import Network.BSD
@@ -189,13 +190,15 @@ main = Log.withLogger $ do
 
                   -- start the http server
                   Exception.bracket 
-                           (do 
+                           (do
+                              -- variable for cached documents
+                              docs <- newMVar Map.empty
                               -- we need to use our own listenOn as we want to:
                               -- use only IPv4 addresses
                               -- bind only to 127.0.0.1
                               socket <- listenOn (httpPort appConf)
                               t1 <- forkIO $ simpleHTTPWithSocket socket (nullConf { port = httpPort appConf }) 
-                                    (appHandler appConf appGlobals)
+                                    (appHandler appConf appGlobals docs)
                               t2 <- forkIO $ cron 60 $ runScheduler appConf
                               return [t1,t2]
                            )
