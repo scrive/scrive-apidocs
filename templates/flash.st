@@ -106,6 +106,10 @@ passwordFieldName=lösenord
 ###
 nameFieldName=namn
 ###
+firstNameFieldName=förnamn
+###
+secondNameFieldName=efternamn
+###
 companyNameFieldName=företagsnamn
 ###
 companyNumberFieldName=organisationsnummer
@@ -120,17 +124,17 @@ daysToSignFieldName=days to sign
 ###
 idFieldName=id
 ###
-fieldNameFieldName=field name
+fieldNameFieldName=namn på fält
 ###
-fieldValueFieldName=field value
+fieldValueFieldName=värde på fält
 ###
 placeFieldName=place
 ###
 inviteTextFieldName=invite text
 ###
-flashMessageNeedsLetterAndDigit=$fieldnametitlecase$ must contain at least one letter and one number.
+flashMessageNeedsLetterAndDigit=$fieldnametitlecase$ måste innehålla åtminstone två bokstäver och två nummer.
 ###
-flashMessageInvalidFormat=$fieldnametitlecase$ is incorrectly formatted.
+flashMessageInvalidFormat=$fieldnametitlecase$ är ej korrekt formaterad.
 ###
 flashMessageNumberBelowMinimum=$fieldnametitlecase$ must be a minimum of $min$.
 ###
@@ -138,15 +142,15 @@ flashMessageNumberAboveMaximum=$fieldnametitlecase$ can be a maximum of $max$.
 ###
 flashMessageNotAValidInteger=$fieldnametitlecase$ should be a number.
 ###
-flashMessageInvalidSpaceInInput=Spaces are not allowed in $fieldnamelowercase$.
+flashMessageInvalidSpaceInInput=Blankrad är inte tillåtet i $fieldnamelowercase$.
 ###
-flashMessageInvalidUnprintableCharsInInput=Invalid characters found in $fieldnamelowercase$. 
+flashMessageInvalidUnprintableCharsInInput=$fieldnametitlecase$ innehåller ej tillåtna tecken. 
 ###
-flashMessageInvalidPrintableCharsInInput=Invalid character in $fieldnamelowercase$: $invalidchar$
+flashMessageInvalidPrintableCharsInInput=$fieldnametitlecase$ innehåller ej tillåtna tecken.
 ###
-flashMessageInputLessThanMinLength=$fieldnametitlecase$ must have a minimum of $minlength$ characters.
+flashMessageInputLessThanMinLength=$fieldnametitlecase$ måste innehålla minst $minlength$ tecken.
 ###
-flashMessageInputExceedsMaxLength=$fieldnametitlecase$ has a max length of $maxlength$.
+flashMessageInputExceedsMaxLength=$fieldnametitlecase$ får max innehålla $maxlength$ tecken.
 ###
-flashMessageMissingRequiredField=You're missing some required fields.
+flashMessageMissingRequiredField=Du har missat att fylla i ett obligatoriskt fält.
 ###
