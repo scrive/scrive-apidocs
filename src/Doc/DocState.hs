@@ -35,7 +35,6 @@ module Doc.DocState
     , UpdateDocument(..)
     , CloseDocument(..)
     , CancelDocument(..)
-    -- , WithdrawnDocument(..)
     , RestartDocument(..)
     , ChangeSignatoryEmailWhenUndelivered(..)
     , signatoryDetailsFromUser
@@ -44,6 +43,9 @@ module Doc.DocState
     , GetMagicHash(..)
     , GetDocumentByFileID(..)
     , ErrorDocument(..)
+    , GetUserTemplates(..)
+    , TemplateFromDocument(..)
+    , ContractFromDocument(..)
     , IdentificationType(..)
     , SignatureInfo(..)
     , SignatureProvider(..)
