@@ -44,6 +44,8 @@ import qualified Network.HTTP as HTTP
 import qualified Network.AWS.AWSConnection as AWS
 import qualified TrustWeaver as TW
 import qualified Payments.PaymentsControl as Payments
+import qualified Contacts.ContactsControl as Contacts
+import qualified ELegitimation.BankID as BankID
 import Templates.Templates (readTemplates, renderTemplate, KontrakcjaTemplates)
 import qualified Administration.AdministrationControl as Administration
 import Mails.MailsConfig
