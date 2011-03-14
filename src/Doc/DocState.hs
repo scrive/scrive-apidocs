@@ -300,7 +300,7 @@ signDocument documentid signatorylinkid1 time ipnumber msiginfo fields = do
 
 signWithUserID [] _ _ _ = []
 signWithUserID (s:ss) id sinfo msiginfo
-    | maybe False (((==) id) . unSignatory) (maybesignatory s) = s {maybesigninfo = sinfo, maybeseeninfo = sinfo, signatorysignatureinfo = msiginfo} : ss
+    | maybe False (((==) id) . unSignatory) (maybesignatory s) = s {maybesigninfo = sinfo, maybeseeninfo = maybe sinfo Just (maybeseeninfo s) , signatorysignatureinfo = msiginfo} : ss
     | otherwise = s : signWithUserID ss id sinfo msiginfo
 
 authorSendDocument :: DocumentID
@@ -385,20 +385,17 @@ markDocumentSeen :: DocumentID
                  -> SignatoryLinkID 
                  -> MinutesTime 
                  -> Word32
-                 -> Update Documents (Maybe Document)
+                 -> Update Documents (Either String Document)
 markDocumentSeen documentid signatorylinkid1 time ipnumber = do
-  documents <- ask
-  case getOne (documents @= documentid) of
-    Nothing -> return Nothing
-    Just document -> do
-      let document' = document { documentsignatorylinks = s }
-          s = map c (documentsignatorylinks document)
-          c l@(SignatoryLink {signatorylinkid, maybeseeninfo})
-            | signatorylinkid == signatorylinkid1 && maybeseeninfo==Nothing = 
+      modifyContract documentid $ \document ->
+          Right $ document { documentsignatorylinks = map c (documentsignatorylinks document) }
+       where
+        c l@(SignatoryLink {signatorylinkid, maybeseeninfo})
+             | signatorylinkid == signatorylinkid1 && maybeseeninfo==Nothing = 
               l { maybeseeninfo = Just (SignInfo time ipnumber) }
-            | otherwise = l
-      modifyContract documentid $ const Right document'
-      return (Just document')
+             | otherwise = l
+        
+      
 
 
 -- | We set info about delivering invitation. On undeliver we autocancel document

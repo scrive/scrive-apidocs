@@ -458,8 +458,7 @@ handleSignShow documentid
   
   mdocument <- update $ MarkDocumentSeen documentid signatorylinkid1 ctxtime ctxipnumber
   -- I believe this is redundant - Eric
-  document <- maybe mzero return mdocument
-
+  document <- either (const mzero) return mdocument
   invitedlink <- signatoryLinkFromDocumentByID document signatorylinkid1
   let authoruserid = unAuthor $ documentauthor document
   author <- queryOrFail $ GetUserByUserID authoruserid
@@ -1074,19 +1073,20 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
       paddeddocid = reverse $ take 20 $ (reverse (show docid) ++ repeat '0')
       initials = concatComma (map initialsOfPerson persons)
       initialsOfPerson (Seal.Person {Seal.fullname}) = map head (words fullname)
+      authorfullname = signatoryname authordetails
       -- 2. "Name of invited" granskar dokumentet online
-      makeHistoryEntry (Seal.Person {Seal.fullname},(seentime2,seenipnumber2),(signtime2,signipnumber2)) = 
-          [ Seal.HistEntry
-            { Seal.histdate = show signtime2
-            , Seal.histcomment = fullname ++ " undertecknar dokumentet online" ++ formatIP signipnumber2
-            }
-          , Seal.HistEntry
+      makeHistoryEntryFromSignatory (Seal.Person {Seal.fullname},(seentime2,seenipnumber2),(signtime2,signipnumber2)) = 
+          [   Seal.HistEntry
             { Seal.histdate = show seentime2
             , Seal.histcomment = fullname ++ " granskar dokumentet online" ++ formatIP seenipnumber2
             } 
+            , Seal.HistEntry
+            { Seal.histdate = show signtime2
+            , Seal.histcomment = fullname ++ " undertecknar dokumentet online" ++ formatIP signipnumber2
+            }
+      
           ]
-      authorfullname = signatoryname authordetails
-      makeHistoryEntry2 (DocumentHistoryInvitationSent time ipnumber) =
+      makeHistoryEntryFromEvent (DocumentHistoryInvitationSent time ipnumber) =
           [ Seal.HistEntry
             { Seal.histdate = show time 
             , Seal.histcomment = 
@@ -1095,16 +1095,23 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
                    else BS.toString authorfullname ++ " skickar en inbjudan att underteckna till parten" ++ formatIP ipnumber
             }
           ]
+      makeHistoryEntry = either makeHistoryEntryFromEvent makeHistoryEntryFromSignatory  
       maxsigntime = maximum (map (fst . thd3) signatories)
-      firstHistEntries = concatMap makeHistoryEntry2 (documenthistory document)
+      concatComma = concat . intersperse ", "
+      -- Hack to switch the order of events, so we put invitation send after author signing
+      makeHistory (fst@(Left (DocumentHistoryInvitationSent time _)):(snd@(Right (_,_,(signtime2,_)))):rest) = 
+          if (signtime2 == time)
+           then (makeHistoryEntry snd) ++ (makeHistoryEntry fst) ++ (makeHistory rest)
+           else (makeHistoryEntry fst) ++ (makeHistoryEntry snd) ++ (makeHistory rest)
+      makeHistory (e:es) = (makeHistoryEntry e) ++ (makeHistory es)
+      makeHistory [] = []
+      
       lastHistEntry = Seal.HistEntry
                       { Seal.histdate = show maxsigntime
                       , Seal.histcomment = "Samtliga parter har undertecknat dokumentet och avtalet är nu juridiskt bindande."
                       }
 
-      concatComma = concat . intersperse ", "
-
-      history = firstHistEntries ++ sort (concatMap makeHistoryEntry signatories) ++ [lastHistEntry]
+      history = (makeHistory $ ((map Left (documenthistory document)) ++ (map Right signatories))) ++ [lastHistEntry]
       
       -- document fields
       fields = if authorHasSigned
