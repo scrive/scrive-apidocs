@@ -489,6 +489,8 @@ handleLoginPost = do
             if verifyPassword userpassword passwd
             then do
               logUserToContext maybeuser
+              time <- liftIO getMinutesTime
+              _ <- update $ RecordSuccessfulLogin userid time
               return BackToReferer
             else do
               slug <- liftIO $ getFailedLoginSlug userlogininfo
@@ -503,13 +505,19 @@ handleLoginPost = do
     Works out how many seconds we should wait before
     finishing a failed login.  This will hopefully help
     prevent brute force attacks on user passwords.
+    Here the slug is 20s after 5 consecutive fails, and 40s after
+    10 consecutive fails.
 -}
 getFailedLoginSlug :: LoginInfo -> IO Int
-getFailedLoginSlug LoginInfo{lastfailtime} = do
+getFailedLoginSlug LoginInfo{lastfailtime,consecutivefails} = do
     now <- getMinutesTime
+    let spacing = case consecutivefails of
+                    n | (n<5) -> 0
+                    n | (n<10) -> 20
+                    _ -> 40
     case lastfailtime of
         (Just lastfail) -> 
-            return $ max 0 (20 - (secs now - secs lastfail))
+            return $ max 0 (spacing - (secs now - secs lastfail))
         Nothing -> return 0
     where secs (MinutesTime m s) = m * 60 + s
 

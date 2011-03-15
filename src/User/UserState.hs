@@ -50,6 +50,7 @@ module User.UserState
     , FreeUserFromPayments(..)
     , AddFreePaymentsForInviter(..)
     , RecordFailedLogin(..)
+    , RecordSuccessfulLogin(..)
     , getUserPaymentSchema
     , takeImmediatelyPayment
 ) where
@@ -97,7 +98,9 @@ data InviteInfo = InviteInfo
           }
     deriving (Eq, Ord, Typeable, Data)
 data LoginInfo = LoginInfo
-          { lastfailtime :: Maybe MinutesTime
+          { lastsuccesstime :: Maybe MinutesTime
+          , lastfailtime :: Maybe MinutesTime
+          , consecutivefails :: Int
           }
     deriving (Eq, Ord, Typeable, Data)
 newtype DefaultMainSignatory = DefaultMainSignatory { unDMS :: Int }
@@ -694,7 +697,9 @@ instance Migrate User10 User where
                 , userfriends                    = userfriends10
                 , userinviteinfo                 = userinviteinfo10
                 , userlogininfo                 = LoginInfo
-                                                    { lastfailtime = Nothing
+                                                    { lastsuccesstime = Nothing
+                                                    , lastfailtime = Nothing
+                                                    , consecutivefails = 0
                                                     }
                 }
 
@@ -998,8 +1003,10 @@ addUser fullname email passwd maybesupervisor = do
               , userfriends = []
               , userinviteinfo = Nothing
               , userlogininfo = LoginInfo
-                                  { lastfailtime = Nothing
-                                  }
+                                { lastsuccesstime = Nothing
+                                , lastfailtime = Nothing
+                                , consecutivefails = 0
+                                }
                  })             
         modify (updateIx (Email email) user)
         return $ Just user
@@ -1109,14 +1116,30 @@ freeUserFromPayments u freetill =  do
                                     return ()
 
 {- |
-    Records the time of the last failed login.
+    Records the details of a failed login.
 -}
 recordFailedLogin :: UserID -> MinutesTime -> Update Users (Either String User)
 recordFailedLogin userid time = do
-  let logininfo = LoginInfo { lastfailtime = Just time 
-                            }
   modifyUser userid $ \user ->
-                        Right $ user { userlogininfo = logininfo }
+                        Right $ user { userlogininfo = modifyLoginInfo $ userlogininfo user }
+  where modifyLoginInfo logininfo =
+            logininfo
+            { lastfailtime = Just time
+            , consecutivefails = (consecutivefails logininfo) + 1
+            }   
+
+{- |
+    Records the details of a successful login.
+-}
+recordSuccessfulLogin :: UserID -> MinutesTime -> Update Users (Either String User)
+recordSuccessfulLogin userid time = do
+  modifyUser userid $ \user ->
+                        Right $ user { userlogininfo = modifyLoginInfo $ userlogininfo user }
+  where modifyLoginInfo logininfo =
+            logininfo
+            { lastsuccesstime = Just time
+            , consecutivefails = 0
+            }   
 
 {- |
    Add a new viewer (friend) given the email address
@@ -1177,6 +1200,7 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'setUserPaymentPolicyChange
                     , 'freeUserFromPayments
                     , 'recordFailedLogin
+                    , 'recordSuccessfulLogin
                     , 'getUserSubaccounts
                     , 'getUsersByFriendUserID
                     , 'acceptTermsOfService
