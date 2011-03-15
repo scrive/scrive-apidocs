@@ -592,6 +592,7 @@ color: white;
 
 .waiting4page
 {
+    margin: auto;
     width: 944px;
     height: 100px;
     border: 1px solid black;
@@ -610,18 +611,12 @@ color: white;
     background-repeat: no-repeat;
     background-position: center center;
 }
-.pagejpg 
+.pagejpg
 {
     width: 943px;
     height: 1335px;
     border: 1px solid #777;
     background-color: #fafafa;
-}
-
-.pagejpga4
-{
-    height: 970px;
-    width: 755px;
 }
 
 img.waiting

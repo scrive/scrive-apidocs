@@ -14,9 +14,10 @@ showFileImagesPending=
   <img class="waiting" src="/theme/images/wait30trans.gif">
 </div>
 ####
-showFileImagesError=<div class="pagejpga4 pagejpg">
-      $normalizelog:noescape()$
-     </div> 
+showFileImagesError=
+<div class="errormsg">
+ $normalizelog:noescape()$
+</div>
 ####
 ###
 ####
