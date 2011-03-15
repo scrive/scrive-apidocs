@@ -248,7 +248,7 @@ function setInfotext(field, infotext) {
 }
 
 function buildField(info, val, type) {
-    var x = $("<div class='dragfield'><input type='text' name='fieldvalue' autocomplete='off' /></div>");
+    var x = $("<div class='dragfield' style='border: none !important;'><input type='text' name='fieldvalue' autocomplete='off' /></div>");
 
     setInfotext(x, info);
     setValue(x, val);

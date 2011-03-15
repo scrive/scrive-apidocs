@@ -2191,9 +2191,13 @@ form {
     background-position: 3px 3px;
 }
 
-.redborder 
+.redborder
 {
     border:1px solid red;
+}
+
+.redborder input {
+    border-color: red;
 }
 
 .signStepsBodyIcons .partnumber 
