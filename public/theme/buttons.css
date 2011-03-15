@@ -1,0 +1,553 @@
+/* Buttons */
+
+.btn-small, .btn-big, .btn-tiny {
+	color: #fff;
+	display: block;
+	text-decoration: none;
+}
+
+a.btn-small.center, a.btn-big.center, a.btn-tiny.center {
+	text-align: center;
+}
+
+.btn-small p, btn-big p, btn-tiny p {
+	display: inline;
+}
+
+/* Small Buttons */
+
+a.btn-small .left {
+	background-image: url(../img/spr-btn-borders.png);
+	float: left;
+	height: 33px;
+	width: 16px;
+}
+
+a.btn-small .right {
+	background-image: url(../img/spr-btn-borders.png);
+	float: left;
+	height: 33px;
+	width: 16px;
+}
+
+a.btn-small .label {
+	background: url(../img/spr-btn-bg.png) 0 0;
+	float: left;
+	font: 12px/33px "Helvetica Neue";
+	height: 33px;
+	letter-spacing: 0.2px;
+	position: relative;
+}
+
+a.btn-small label p {
+	display: inline-block;
+	padding: 0 20px;
+}
+
+/* Green Button */
+
+a.btn-small.green .left {
+	background-position: -132px 0;
+}
+
+a.btn-small.green .right {
+	background-position: -149px 0;
+}
+
+a.btn-small.green .label {
+	background-position: 0 -343px;
+	color: #fff !important;
+	text-shadow: #41770b 0 1px 3px;
+}
+
+a.btn-small.green:hover .left {
+	background-position: -132px -34px;
+}
+
+a.btn-small.green:hover .right {
+	background-position: -149px -34px;
+}
+
+a.btn-small.green:hover .label {
+	background-position: 0 -377px;
+	text-shadow: #41770b 0 1px 3px;
+}
+
+a.btn-small.green:active .left {
+	background-position: -132px -68px;
+}
+
+a.btn-small.green:active .right {
+	background-position: -149px -68px;
+}
+
+a.btn-small.green:active .label {
+	background-position: 0 -411px;
+	text-shadow: #41770b 0 1px 3px;
+}
+
+/* Blue Button */
+
+a.btn-small.blue .left {
+	background-position: -164px 0;
+}
+
+a.btn-small.blue .right {
+	background-position: -181px 0;
+}
+
+a.btn-small.blue .label {
+	background-position: 0 -241px;
+	color: #fff !important;
+	text-shadow: #3e88ce 0 1px 3px;
+}
+
+a.btn-small.blue:hover .left {
+	background-position: -164px -34px;
+}
+
+a.btn-small.blue:hover .right {
+	background-position: -181px -34px;
+}
+
+a.btn-small.blue:hover .label {
+	background-position: 0 -275px;
+}
+
+a.btn-small.blue:active .left {
+	background-position: -164px -68px;
+}
+
+a.btn-small.blue:active .right {
+	background-position: -181px -68px;
+}
+
+a.btn-small.blue:active .label {
+	background-position: 0 -309px;
+}
+
+/* Black Button */
+
+a.btn-small.black .left {
+	background-position: -196px 0;
+}
+
+a.btn-small.black .right {
+	background-position: -212px 0;
+}
+
+a.btn-small.black .label {
+	background-position: 0 -445px;
+	color: #fff !important;
+	text-shadow: #454545 0 1px 3px;
+}
+
+a.btn-small.black:hover .left {
+	background-position: -196px -34px;
+}
+
+a.btn-small.black:hover .right {
+	background-position: -212px -34px;
+}
+
+a.btn-small.black:hover .label {
+	background-position: 0 -479px;
+}
+
+a.btn-small.black:active .left {
+	background-position: -196px -68px;
+}
+
+a.btn-small.black:active .right {
+	background-position: -212px -68px;
+}
+
+a.btn-small.black:active .label {
+	background-position: 0 -513px;
+}
+
+/* Big Buttons */
+
+a.btn-big .left {
+	background-image: url(../img/spr-btn-borders.png);
+	float: left;
+	height: 46px;
+	width: 22px;
+}
+
+a.btn-big .right {
+	background-image: url(../img/spr-btn-borders.png);
+	float: left;
+	height: 46px;
+	width: 22px;
+}
+
+a.btn-big .label {
+	background: url(../img/spr-btn-bg.png) 0 0;
+	float: left;
+	font: 18px/46px "Helvetica Neue";
+	letter-spacing: 0.5px;
+	height: 46px;
+	padding: 0 40px;
+	position: relative;
+}
+
+/* Green Button */
+
+a.btn-big.green .left {
+	background-position: 0 0;
+}
+
+a.btn-big.green .right {
+	background-position: -22px 0;
+}
+
+a.btn-big.green .label {
+	background-position: 0 -689px;
+	text-shadow: #41770b 0 1px 3px;
+}
+
+a.btn-big.green:hover .left {
+	background-position: 0 -47px;
+}
+
+a.btn-big.green:hover .right {
+	background-position: -22px -47px;
+}
+
+a.btn-big.green:hover .label {
+	background-position: 0 -736px;
+	text-shadow: #41770b 0 1px 3px;
+}
+
+a.btn-big.green:active .left {
+	background-position: 0 -95px;
+}
+
+a.btn-big.green:active .right {
+	background-position: -22px -95px;
+}
+
+a.btn-big.green:active .label {
+	background-position: 0 -784px;
+	text-shadow: #41770b 0 1px 3px;
+}
+
+/* Blue Button */
+
+a.btn-big.blue .left {
+	background-position: -44px 0;
+}
+
+a.btn-big.blue .right {
+	background-position: -66px 0;
+}
+
+a.btn-big.blue .label {
+	background-position: 0 -547px;
+	text-shadow: #3e88ce 0 1px 3px;
+}
+
+a.btn-big.blue:hover .left {
+	background-position: -44px -47px;
+}
+
+a.btn-big.blue:hover .right {
+	background-position: -66px -47px;
+}
+
+a.btn-big.blue:hover .label {
+	background-position: 0 -594px;
+}
+
+a.btn-big.blue:active .left {
+	background-position: -44px -95px;
+}
+
+a.btn-big.blue:active .right {
+	background-position: -66px -95px;
+}
+
+a.btn-big.blue:active .label {
+	background-position: 0 -642px;
+}
+
+/* Black Button */
+
+a.btn-big.black .left {
+	background-position: -88px 0;
+}
+
+a.btn-big.black .right {
+	background-position: -110px 0;
+}
+
+a.btn-big.black .label {
+	background-position: 0 -831px;
+	color: #fff !important;
+	text-shadow: #454545 0 1px 3px;
+}
+
+a.btn-big.black:hover .left {
+	background-position: -88px -47px;
+}
+
+a.btn-big.black:hover .right {
+	background-position: -110px -47px;
+}
+
+a.btn-big.black:hover .label {
+	background-position: 0 -878px;
+}
+
+a.btn-big.black:active .left {
+	background-position: -88px -95px;
+}
+
+a.btn-big.black:active .right {
+	background-position: -110px -95px;
+}
+
+a.btn-big.black:active .label {
+	background-position: 0 -926px;
+}
+
+
+/* Tiny Buttons */
+
+a.btn-tiny .left {
+	background-image: url(../img/spr-btn-borders.png);
+	float: left;
+	height: 26px;
+	width: 6px;
+}
+
+a.btn-tiny .right {
+	background-image: url(../img/spr-btn-borders.png);
+	float: left;
+	height: 26px;
+	width: 6px;
+}
+
+.btn-tiny .label {
+	background: url(../img/spr-btn-bg.png) 0 0;
+	float: left;
+	font: 11px/26px "Helvetica Neue";
+	height: 26px;
+	position: relative;
+}
+
+.btn-tiny .label p {
+	display: inline-block;
+	padding: 0 10px;
+}
+
+/* Green Button */
+
+a.btn-tiny.green .left {
+	background-position: -240px 0;
+}
+
+a.btn-tiny.green .right {
+	background-position: -246px 0;
+}
+
+a.btn-tiny.green .label {
+	background-position: 0 -80px;
+	text-shadow: #41770b 0 1px 3px;
+}
+
+a.btn-tiny.green:hover .left {
+	background-position: -240px -27px;
+}
+
+a.btn-tiny.green:hover .right {
+	background-position: -246px -27px;
+}
+
+a.btn-tiny.green:hover .label {
+	background-position: 0 -107px;
+}
+
+a.btn-tiny.green:active .left {
+	background-position: -240px -54px;
+}
+
+a.btn-tiny.green:active .right {
+	background-position: -246px -54px;
+}
+
+a.btn-tiny.green:active .label {
+	background-position: 0 -134px;
+}
+
+/* Blue Button */
+
+a.btn-tiny.blue .left {
+	background-position: -228px 0;
+}
+
+a.btn-tiny.blue .right {
+	background-position: -234px 0;
+}
+
+a.btn-tiny.blue .label {
+	background-position: 0 0;
+	text-shadow: #3e88ce 0 1px 3px;
+}
+
+a.btn-tiny.blue:hover .left {
+	background-position: -228px -27px;
+}
+
+a.btn-tiny.blue:hover .right {
+	background-position: -234px -27px;
+}
+
+a.btn-tiny.blue:hover .label {
+	background-position: 0 -27px;
+}
+
+a.btn-tiny.blue:active .left {
+	background-position: -228px -54px;
+}
+
+a.btn-tiny.blue:active .right {
+	background-position: -234px -54px;
+}
+
+a.btn-tiny.blue:active .label {
+	background-position: 0 -54px;
+}
+
+/* Black Button */
+
+a.btn-tiny.black .left {
+	background-position: -252px 0;
+}
+
+a.btn-tiny.black .right {
+	background-position: -258px 0;
+}
+
+a.btn-tiny.black .label {
+	background-position: 0 -160px;
+	color: #fff !important;
+	text-shadow: #454545 0 1px 3px;
+}
+
+a.btn-tiny.black:hover .left {
+	background-position: -252px -27px;
+}
+
+a.btn-tiny.black:hover .right {
+	background-position: -258px -27px;
+}
+
+a.btn-tiny.black:hover .label {
+	background-position: 0 -187px;
+}
+
+a.btn-tiny.black:active .left {
+	background-position: -252px -54px;
+}
+
+a.btn-tiny.black:active .right {
+	background-position: -258px -54px;
+}
+
+a.btn-tiny.black:active .label {
+	background-position: 0 -214px;
+}
+
+/* Buttons Symbols */
+
+.btn-symbol {
+	background: url(../img/spr-btn-symbols.png);
+	display: inline-block;
+	height: 16px;
+	position: relative;
+	width: 16px;
+}
+
+.btn-big .btn-symbol {
+	right: -11px;
+	top: 15px;
+}
+
+.btn-small .btn-symbol {
+	right: -6px;
+	top: 4px;
+}
+
+.btn-tiny .btn-symbol {
+	right: 0;
+	top: 4px;
+}
+
+.btn-small .btn-symbol.cross {
+	background-position: -66px -1px;
+	right: -10px;
+	width: 22px;
+}
+
+.btn-big .btn-symbol.cross {
+	background-position: -66px -19px;
+	height: 22px;
+	margin-right: 4px;
+	top: 11px;
+	width: 30px;
+}
+
+.btn-symbol.none {
+	background: none;
+}
+
+.btn-symbol.green.eye {
+	background-position: 0 0;
+}
+
+.btn-symbol.green.arrow-left {
+	background-position: -16px 0;
+}
+
+.btn-symbol.green.arrow-right {
+	background-position: -32px 0;
+}
+
+.btn-symbol.green.person {
+	background-position: -48px 0;
+}
+
+.btn-symbol.blue.eye {
+	background-position: 0 -17px;
+}
+
+.btn-symbol.blue.arrow-left {
+	background-position: -16px -17px;
+}
+
+.btn-symbol.blue.arrow-right {
+	background-position: -32px -17px;
+}
+
+.btn-symbol.blue.person {
+	background-position: -48px -17px;
+}
+
+.btn-symbol.black.eye {
+	background-position: 0 -34px;
+}
+
+.btn-symbol.black.arrow-left {
+	background-position: -16px -34px;
+}
+
+.btn-symbol.black.arrow-right {
+	background-position: -32px -34px;
+	left: 0px;
+}
+
+.btn-symbol.black.person {
+	background-position: -48px -34px;
+}
