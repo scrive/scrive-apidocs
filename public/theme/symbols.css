@@ -1,0 +1,245 @@
+/* Small Icons */
+
+.icon.status, .icon.small {
+	background: url(../img/spr-icons.png) 0 0 no-repeat;
+	display: inline-block;
+	height: 15px;
+	margin-right: 4px;
+}
+
+.icon.small.private {
+	background-position: -54px 0;
+	width: 17px;
+}
+
+.icon.small.business {
+	background-position: 0 0;
+	width: 16px;
+}
+
+.icon.small.add {
+	background-position: -71px 0;
+	width: 14px;
+}
+
+.icon.small.add-multiple {
+	background-position: -71px 0;
+	width: 14px;
+}
+
+.icon.small.remove {
+	background-position: -85px 0;
+	width: 14px;
+}
+
+.icon.small.download {
+	background-position: -28px 0;
+	width: 10px;
+}
+
+.icon.small.save {
+	background-position: -99px 0;
+	width: 14px;
+}
+
+/* Status Icons */
+
+.icon.status {
+	height: 11px;
+	width: 11px;
+}
+
+.icon.draft {
+	background-position: -214px 0;
+}
+
+.icon.template {
+	background-position: -225px 0;
+}
+
+.icon.cancelled {
+	background-position: -236px 0;
+}
+
+.icon.expired {
+	background-position: -247px 0;
+}
+
+.icon.sent {
+	background-position: -258px 0;
+}
+
+.icon.opened {
+	background-position: -269px 0;
+}
+
+.icon.reviewed {
+	background-position: -280px 0;
+}
+
+.icon.signed {
+	background-position: -199px 0;
+	width: 15px;
+}
+
+/* Drag Icons */
+
+.drag-icon {
+	background: url(../img/spr-icons-drag.png) no-repeat;
+	height: 16px;
+	width: 13px;
+}
+
+.drag-icon.grey {
+	background-position: 0 0;
+}
+
+.drag-icon.red {
+	background-position: 0 -20px;
+}
+
+.drag-icon.green {
+	background-position: 0 -40px;
+}
+
+.drag-icon.blue {
+	background-position: 0 -60px;
+}
+
+/* Big Icons */
+
+.big-icon {
+	background: url(../img/icons.png) 0 0 no-repeat;
+}
+
+.big-icon.money {
+	background-position: 0 -103px;
+	height: 64px;
+	margin: 0 auto;
+	width: 64px;
+}
+
+.big-icon.watch {
+	background-position: 0 -167px;
+	height: 53px;
+	margin: 0 auto;
+	width: 53px;
+}
+
+.big-icon.globe {
+	background-position: 0 -220px;
+	height: 58px;
+	margin: 0 auto;
+	width: 55px;
+}
+
+.big-icon.seal {
+	background-position: 0 -278px;
+	height: 61px;
+	margin: 0 auto;
+	width: 63px;
+}
+
+.big-icon.safe {
+	background-position: 0 -339px;
+	height: 61px;
+	margin: 0 auto;
+	width: 64px;
+}
+
+.big-icon.face {
+	background-position: 0 -400px;
+	height: 59px;
+	margin: 0 auto;
+	width: 56px;
+}
+
+.big-icon.paper {
+	background-position: 0 -459px;
+	height: 64px;
+	margin: 0 auto;
+	width: 50px;
+}
+
+.big-icon.ipad {
+	background-position: 0 -523px;
+	height: 56px;
+	margin: 0 auto;
+	width: 73px;
+}
+
+.big-icon.one {
+	background-position: 0 0;
+	height: 34px;
+	width: 19px;
+}
+
+.big-icon.two {
+	background-position: 0 -34px;
+	height: 34px;
+	width: 30px;
+}
+
+.big-icon.three {
+	background-position: 0 -68px;
+	height: 34px;
+	width: 29px;
+}
+
+/* Lightbox Icons */
+
+.modal-icon {
+	background: url(../img/spr-icons-lb.png) no-repeat transparent;
+	float: left;
+	margin-right: 20px;
+	margin-top: 4px;
+	width: 38px;
+}
+
+.modal-icon.reminder {
+	background-position: 0 0;
+	height: 31px;
+}
+
+.modal-icon.message {
+	background-position: 0 -31px;
+	height: 31px;
+}
+
+.modal-icon.sign {
+	background-position: 0 -63px;
+	height: 30px;
+}
+
+.modal-icon.recall {
+	background-position: 0 -92px;
+	height: 25px;
+}
+
+.modal-icon.decline {
+	background-position: 0 -117px;
+	height: 30px;
+}
+
+.modal-icon.send {
+	background-position: 0 -150px;
+	height: 30px;
+}
+
+/* Lightbox Close Button */
+
+.modal-close, .flash-close {
+	background: url(../img/spr-btn-close.png) no-repeat transparent;
+	cursor: pointer;
+	display: block;
+	height: 24px;
+	width: 24px;
+}
+
+.modal-close:hover, .flash-close:hover {
+	background-position: 0 -24px;
+}
+
+.modal-close:active, .flash-close:active {
+	background-position: 0 -48px;
+}
