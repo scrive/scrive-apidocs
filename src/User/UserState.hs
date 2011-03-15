@@ -64,7 +64,6 @@ import qualified Data.ByteString.Char8 as BS (unlines)
 import Happstack.Data.IxSet as IxSet
 import Data.Maybe(isJust,isNothing,fromJust)
 import Misc
-import Control.Monad
 import Happstack.Server.SimpleHTTP
 import Happstack.Util.Common
 import Codec.Utils (Octet)
