@@ -251,7 +251,27 @@ safeReady(function() {
   if(typeof(window.documentid) != "undefined") {
     $.ajax({ url: "/pagesofdoc/" + documentid,
              success: function(data) {
-               $('#documentBox').html(data);
+               var content = $(data);
+               var errormsg = content.find(".errormsg")
+               if (errormsg.length > 0) {
+                   var errdialog = $("<div title='Error while rendering PDF'>"
+                                   + errormsg.text()
+                                   + "</div>");
+                   errdialog.dialog({
+                       open: function(event, ui) { $(".ui-dialog-titlebar-close").hide(); },
+                       modal: true,
+                       closeOnEscape: false,
+                       resizable: false,
+                       minWidth: 400,
+                       buttons: {
+                           Back : function() {
+                               window.location.href='/d';
+                           }
+                       }
+                   });
+               } else {
+                   $('#documentBox').html(content);
+               }
              },
              error: repeatForeverWithDelay(1000)
            });

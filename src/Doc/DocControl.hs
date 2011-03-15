@@ -942,15 +942,21 @@ convertPdfToJpgPages ctx@Context{ctxs3action} file@File{fileid,filename} = do
  -}
 maybeScheduleRendering :: Context 
                        -> File
+                       -> DocumentID
                        -> IO JpegPages
 maybeScheduleRendering ctx@Context{ ctxnormalizeddocuments = mvar }
-                       (file@File { fileid }) = do
+                       (file@File { fileid }) docid = do
   modifyMVar mvar $ \setoffilesrenderednow ->
       case Map.lookup fileid setoffilesrenderednow of
          Just pages -> return (setoffilesrenderednow, pages)
          Nothing -> do
            Log.forkIOLogWhenError ("error rendering file " ++ show fileid) $ do
                 jpegpages <- convertPdfToJpgPages ctx file
+                case jpegpages of
+                     JpegPagesError errmsg -> do
+                         update $ ErrorDocument docid $ BS.toString errmsg
+                         return ()
+                     _                     -> return ()
                 modifyMVar_ mvar (\setoffilesrenderednow -> return (Map.insert fileid jpegpages setoffilesrenderednow))
            return (Map.insert fileid JpegPagesPending setoffilesrenderednow, JpegPagesPending)
 
@@ -975,7 +981,7 @@ handlePageOfDocument documentid = do
   case files of
     [] -> notFound (toResponse "temporary unavailable (document has no files)")
     f  -> do
-      b <- mapM (\file -> liftIO $ maybeScheduleRendering ctx file) f
+      b <- mapM (\file -> liftIO $ maybeScheduleRendering ctx file documentid) f
       if any pending b
        then notFound (toResponse "temporary unavailable (document has files pending for process)")
        else do
