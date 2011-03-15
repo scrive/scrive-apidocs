@@ -665,6 +665,7 @@ function checkSignPossibility() {
   } else if(sigfields.size() > 0) {
     // we're awaiting author mode 
     sigfields.addClass("redborder");
+    fieldValidationType = "fillstatus";
     addFlashMessage("Du kan inte underteckna när du har utplacerade fält som inte är ifyllda. Antingen skicka (och underteckna sist) eller gå tillbaks till steg 2 och åtgärda fältet.");
     return false;
   } else {

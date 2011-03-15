@@ -460,7 +460,7 @@ function updateStatusForTyping(field) {
     if(getValue(field)) {
       if(!(oldfillstatus === "done")) {
         setFillStatus(field, "done");
-        if(fieldValidationType === "fillstatus" && field.hasClass("offending")) {
+        if(fieldValidationType === "fillstatus") {
           field.removeClass('redborder');
         }
       }
