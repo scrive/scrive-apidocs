@@ -112,6 +112,7 @@ createMailId = do
     (TOD s p ) <- getClockTime
     return $ s *10 ^12 + p
 
+createWholeContent :: String -> String -> Integer -> Mail -> BSLC.ByteString
 createWholeContent ourInfoEmail ourInfoEmailNiceName mailId mail@(Mail {title,content,attachments,from,mailInfo}) =
   let mailtos = createMailTos mail 
       -- FIXME: add =?UTF8?B= everywhere it is needed here
