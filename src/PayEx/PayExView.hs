@@ -17,10 +17,7 @@ import PayEx.PayExResponse
 import SOAP.SOAP
 import Kontra 
 import Happstack.Server
-import AppView
-import qualified HSP.XML as HSP
 import Doc.DocState
-import User.UserState
 import Payments.PaymentsState
 import Happstack.State (update,query)
 import Templates.Templates
@@ -89,3 +86,5 @@ mailNewPayment ctx user payment = do
                                                                     (setAttribute "payment" pm ) .
                                                                     (setAttribute "ctxhostpart" $ ctxhostpart ctx)
                                         return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
+
+
