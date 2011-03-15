@@ -12,7 +12,6 @@ module Mails.MailsUtil(
              MailsDeliveryStatus(..)) where
 
 import Data.Data
-import Data.Typeable
 import Happstack.Data
 
 
