@@ -87,6 +87,7 @@ Executable kontrakcja-server
  Build-depends: happstack-ixset==6.*
  Build-depends: happstack-data==6.*
  Build-depends: happstack-util==6.*
+ Build-depends: happstack-hsp==6.*
  Build-depends: hslogger==1.1.0
  Build-depends: time, time-extras
  Build-depends: hsx, hsp
