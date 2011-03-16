@@ -32,7 +32,7 @@ import Happstack.Server.HTTP.Types ()
 import Happstack.State 
 import User.UserState (UserID,FlashMessage,GetUserByUserID(GetUserByUserID), User)
 import MinutesTime
-import Happstack.Server
+import Happstack.Server (RqData, ServerMonad, FilterMonad, Response, mkCookie, addCookie, readCookieValue, withDataFn, ServerPartT, HasRqData, CookieLife(MaxAge))
 import System.Random
 import Happstack.Util.Common ( readM)
 import Misc (MagicHash(MagicHash), mkTypeOf)
