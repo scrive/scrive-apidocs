@@ -230,7 +230,7 @@ lookInputList name
 #endif
          let isname (xname,(Input value _ _)) | xname == name = [value]
              isname _ = []
-         return [value | k <- inputs, value <- isname k]
+         return [value | k <- inputs, eithervalue <- isname k, Right value <- [eithervalue]]
 
 -- | Render XML as a 'String' properly, i. e. with <?xml?> in the beginning.
 renderXMLAsStringHTML :: (Maybe XMLMetaData, HSP.XML.XML) -> [Char]
