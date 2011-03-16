@@ -1,5 +1,4 @@
-{-# OPTIONS_GHC -F -pgmFtrhsx #-}
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP, IncoherentInstances #-}
 
 module Kontra
     ( module User.UserState
@@ -43,35 +42,6 @@ import ELegitimation.ELeg
 import Mails.SendMail
 import qualified MemCache
 
--- these HSP type class instances help us express our data in xml
-
-instance Monad m => IsAttrValue m DocumentID where
-    toAttrValue = toAttrValue . show
-
-instance (EmbedAsChild m BS.ByteString) => (EmbedAsChild m Email) where
-    asChild = asChild . unEmail
-
-instance Monad m => IsAttrValue m Email where
-    toAttrValue = toAttrValue . unEmail
-
-instance Monad m => IsAttrValue m UserID where
-    toAttrValue = toAttrValue . show
-
-instance (XMLGenerator m) => (EmbedAsChild m User) where
-  asChild user = <% BS.toString (userfullname user) ++ " <" ++ 
-                 BS.toString (unEmail $ useremail $ userinfo user) ++ ">"  %>	    
-
-instance (XMLGenerator m) => (EmbedAsChild m HeaderPair) where
-  asChild (HeaderPair name value) = 
-     <% <p> 
-         <% BS.toString name ++ ": " ++ show value  %> 
-        </p> 
-      %>	
-
--- FIXME: flash type should be considered here
-instance (EmbedAsChild m HSP.XML.XML,EmbedAsAttr m (Attr [Char] [Char])) => (EmbedAsChild m FlashMessage) where
-  asChild (FlashMessage (_, msg)) = 
-     asChild (<span class="flashmessage"> <% cdata msg %> </span>)
 
 #if MIN_VERSION_happstack_server(0,5,1)
 rqInputs2 rq = do
@@ -81,22 +51,7 @@ rqInputs2 rq = do
 #else
 rqInputs2 rq = return (rqInputs rq)
 #endif
-
-instance (XMLGenerator m) => (EmbedAsChild m Request) where
-  asChild rq = <% <code>
-                  <% show (rqMethod rq) %> <% rqUri rq ++ rqQuery rq %><br/>
-                  <% map asChild1 (rqInputs rq) %>
-                 </code> %>
-    where asChild1 (name,input) = 
-              <% <span><% name %>: <% input %><br/></span> %>
-
-instance (XMLGenerator m) => (EmbedAsChild m Input) where
-  asChild (Input _value (Just filename) _contentType) = 
-       <% "File " ++ show filename %>
-  asChild (Input value _maybefilename _contentType) = 
-       <% show (concatMap BS.toString (BSL.toChunks value)) %>
-       
-    
+  
 data Context = Context 
     { ctxmaybeuser           :: Maybe User
     , ctxhostpart            :: String
@@ -115,9 +70,6 @@ data Context = Context
 
 type Kontra a = ServerPartT (StateT Context IO) a
 
-instance MonadState s m => MonadState s (ServerPartT m) where
-    get = lift get
-    put = lift . put
 
 {- |
    A list of admin emails.
