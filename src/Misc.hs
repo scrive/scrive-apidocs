@@ -61,7 +61,7 @@ import Data.Typeable
 import Data.Data
 import qualified GHC.Conc
 
-selectFormAction :: (MonadPlus m,ServerMonad m) => [(String,m a)] -> m a
+selectFormAction :: (HasRqData m, MonadIO m,MonadPlus m,ServerMonad m) => [(String,m a)] -> m a
 selectFormAction [] = mzero
 selectFormAction ((button,action):rest) = do
   maybepressed <- getDataFn (look button)
@@ -73,7 +73,7 @@ selectFormAction ((button,action):rest) = do
      else selectFormAction rest
 #endif
 
-guardFormAction :: (ServerMonad m, MonadPlus m) => String -> m ()
+guardFormAction :: (HasRqData m, MonadIO m,ServerMonad m, MonadPlus m) => String -> m ()
 guardFormAction button = do
   maybepressed <- getDataFn (look button)
 #if MIN_VERSION_happstack_server(0,5,1)
@@ -109,7 +109,7 @@ concatChunks = BS.concat . BSL.toChunks
 --
 -- See also 'getUnique64'.
 getUnique
-  :: (Indexable a b,
+  :: (Indexable a,
       Data a,
       Ord a,
       Typeable k,
@@ -128,7 +128,7 @@ getUnique ixset constr = do
 --
 -- See also 'getUnique64'.
 getUnique64
-  :: (Indexable a b,
+  :: (Indexable a,
       Data a,
       Ord a,
       Typeable k,
@@ -163,7 +163,6 @@ openDocument filename = return ()
 toIO :: forall s m a . (Monad m) => s -> ServerPartT (StateT s m) a -> ServerPartT m a
 toIO state = mapServerPartT f
     where
-      f :: StateT s m (Maybe (Either Response a, FilterFun Response)) -> m (Maybe (Either Response a, FilterFun Response))
       f m = evalStateT m state
 
 
@@ -176,7 +175,7 @@ safehead _ (x:_) = x
 
 -- | Extract data from GET or POST request. Fail with 'mzero' if param
 -- variable not present or when it cannot be read.
-getDataFnM :: (ServerMonad m, MonadPlus m) => RqData a -> m a
+getDataFnM :: (HasRqData m, MonadIO m, ServerMonad m, MonadPlus m) => RqData a -> m a
 getDataFnM fun = do
   m <- getDataFn fun
 #if MIN_VERSION_happstack_server(0,5,1)
@@ -190,7 +189,7 @@ getDataFnM fun = do
 -- | Since we sometimes want to get 'Maybe' and also we wont work with
 -- newer versions of happstack here is.  This should be droped when
 -- new version is globaly established.
-getDataFn' :: (ServerMonad m) => RqData a -> m (Maybe a)
+getDataFn' :: (HasRqData m, MonadIO m, ServerMonad m) => RqData a -> m (Maybe a)
 getDataFn' fun = do
   m <- getDataFn fun
 #if MIN_VERSION_happstack_server(0,5,1)
@@ -215,7 +214,7 @@ pathdb get action = path $ \id -> do
         Just obj -> action obj
 
 -- | Get param as strict ByteString instead of a lazy one.
-g :: (ServerMonad f, MonadPlus f, Functor f) =>
+g :: (HasRqData f, MonadIO f, ServerMonad f, MonadPlus f, Functor f) =>
      String -> f BS.ByteString
 g name = fmap concatChunks (getDataFnM (lookBS name))
 
@@ -393,35 +392,35 @@ when_ b c =  when b $ c >> return ()
 maybe' :: a -> Maybe a -> a
 maybe' a ma = maybe a id ma   
 
-isFieldSet :: (Functor f, ServerMonad f) => String -> f Bool
+isFieldSet :: (HasRqData f, MonadIO f, Functor f, ServerMonad f) => String -> f Bool
 isFieldSet name = fmap isJust $ getField name
 
-getField :: (ServerMonad m) => String -> m (Maybe String)
+getField :: (HasRqData m, MonadIO m, ServerMonad m) => String -> m (Maybe String)
 getField name = getDataFn' (look name)
 
-getFieldBS :: (ServerMonad m) => String -> m (Maybe BSL.ByteString)
+getFieldBS :: (HasRqData m, MonadIO m, ServerMonad m) => String -> m (Maybe BSL.ByteString)
 getFieldBS name = getDataFn' (lookBS name)
 
 getFieldUTF
-  :: (Functor f, ServerMonad f) => String -> f (Maybe BS.ByteString)
+  :: (HasRqData f, MonadIO f, Functor f, ServerMonad f) => String -> f (Maybe BS.ByteString)
 getFieldUTF name = fmap (fmap BS.fromString) $ getField name
 
 getFieldWithDefault
-  :: (Functor f, ServerMonad f) => String -> String -> f String
+  :: (HasRqData f, MonadIO f, Functor f, ServerMonad f) => String -> String -> f String
 getFieldWithDefault d name =  fmap (fromMaybe d) $ getField name
 
 getFieldBSWithDefault
-  :: (Functor f, ServerMonad f) =>
+  :: (HasRqData f, MonadIO f, Functor f, ServerMonad f) =>
      BSL.ByteString -> String -> f BSL.ByteString
 getFieldBSWithDefault  d name = fmap (fromMaybe d) $ getFieldBS name
 
 getFieldUTFWithDefault
-  :: (Functor f, ServerMonad f) =>
+  :: (HasRqData f, MonadIO f, Functor f, ServerMonad f) =>
      BS.ByteString -> String -> f BS.ByteString
 getFieldUTFWithDefault  d name = fmap (fromMaybe d) $ getFieldUTF name
 
 readField
-  :: (Read a, Functor f, ServerMonad f) => String -> f (Maybe a)
+  :: (HasRqData f, MonadIO f, Read a, Functor f, ServerMonad f) => String -> f (Maybe a)
 readField name = fmap (join . (fmap readM)) $ getDataFn' (look name)     
 
 whenMaybe::(Functor m,Monad m) => Bool -> m a -> m (Maybe a)
