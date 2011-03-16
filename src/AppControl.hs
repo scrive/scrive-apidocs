@@ -272,7 +272,8 @@ appHandler appConf appGlobals docs = do
       (res,ctx')<- toIO ctx $  
          do
           res <- (handleRoutes) `mplus` do
-             liftIO $ logM "Happstack.Server" ERROR $ "ERROR" ++ (showDateMDY $ ctxtime ctx)++" "++(rqUri rq) ++" "++(show rq)
+             rqcontent <- liftIO $ readMVar (rqInputsBody rq)
+             liftIO $ logM "Happstack.Server" ERROR $ "ERROR" ++ (showDateMDY $ ctxtime ctx)++" "++(rqUri rq) ++" "++(show rq) ++ " " ++ show rqcontent
              response <- V.renderFromBody ctx V.TopNone V.kontrakcja (fmap cdata $ renderTemplate (ctxtemplates ctx) "errorPage" ())
              setRsCode 404 response     
           ctx' <- get 
