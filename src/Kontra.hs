@@ -74,7 +74,12 @@ instance (EmbedAsChild m HSP.XML.XML,EmbedAsAttr m (Attr [Char] [Char])) => (Emb
      asChild (<span class="flashmessage"> <% cdata msg %> </span>)
 
 #if MIN_VERSION_happstack_server(0,5,1)
-rqInputs rq = rqInputsQuery rq ++ rqInputsBody rq
+rqInputs2 rq = do
+    let inputs = rqInputsQuery rq 
+    body <- readMVar (rqInputsBody rq)
+    return $ inputs ++ body
+#else
+rqInputs2 rq = return (rqInputs rq)
 #endif
 
 instance (XMLGenerator m) => (EmbedAsChild m Request) where
