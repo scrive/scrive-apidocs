@@ -27,7 +27,6 @@ import Data.Maybe (isNothing,isJust, fromJust)
 import Happstack.Data
 import Happstack.Data.IxSet
 import qualified Happstack.Data.IxSet as IxSet
-import Happstack.Server.HTTP.Types ()
 import Happstack.State 
 import User.UserState (UserID(..),FlashMessage,GetUserByUserID(GetUserByUserID), User, PaymentMethod(..))
 import Doc.DocState
