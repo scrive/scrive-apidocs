@@ -110,8 +110,8 @@ handlePostSubaccount = do
   ctx@Context { ctxmaybeuser = Just (user@User { userid }), ctxhostpart } <- get
   create <- getDataFn (look "create")
   case create of
-      (Just _) -> handleCreateSubaccount ctx
-      Nothing -> return LinkSubaccount
+      (Right _) -> handleCreateSubaccount ctx
+      Left _ -> return LinkSubaccount
 
 handleCreateSubaccount :: Context -> Kontra KontraLink
 handleCreateSubaccount ctx@Context { ctxmaybeuser = Just (user@User { userid }), ctxhostpart, ctxtemplates } = do
