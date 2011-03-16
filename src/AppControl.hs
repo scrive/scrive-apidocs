@@ -56,6 +56,8 @@ import Happstack.State (update)
 import Redirect
 import PayEx.PayExInterface -- Import so at least we check if it compiles
 import InputValidation
+import System.Directory
+
 {-| 
   Defines the application's configuration.  This includes amongst other things
   the http port number, amazon, trust weaver and email configuraton,
@@ -122,7 +124,7 @@ handleRoutes = msum [
      , dir "d" $ hget0  $ DocControl.handleIssueGet
      , dir "d" $ hget1  $ DocControl.handleIssueShowGet
      , dir "d" $ hget2  $ DocControl.handleIssueShowTitleGet
-     , dir "d" $ param "doc" $ hpost0 $ DocControl.handleIssueNewDocument
+     , dir "d" $ {- param "doc" $ -} hpost0 $ DocControl.handleIssueNewDocument
      , dir "d" $ param "archive" $ hpost0 $ DocControl.handleIssueArchive
      , dir "d" $ hpost1 $ DocControl.handleIssueShowPost
      , dir "df" $ hget2 $ DocControl.handleFileGet
@@ -256,6 +258,10 @@ defaultAWSAction appConf =
 -}
 appHandler :: AppConf -> AppGlobals -> MVar (Map.Map FileID JpegPages) -> ServerPartT IO Response
 appHandler appConf appGlobals docs = do
+  let quota = 10000000
+  temp <- liftIO $ getTemporaryDirectory
+  decodeBody (defaultBodyPolicy temp quota quota quota)
+
   rq <- askRq
   session <- handleSession
   ctx <- createContext rq session docs
