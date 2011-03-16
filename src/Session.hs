@@ -151,7 +151,7 @@ instance Component (Sessions) where
 
 -- Some helpers. MACID demands it before use.
 -- | Perform insert only if test is True
-testAndInsert :: (MonadState (IxSet a) m, Data a, Ord a, Indexable a b) =>(IxSet a -> Bool) -> a -> m Bool
+testAndInsert :: (MonadState (IxSet a) m, Data a, Ord a, Indexable a) =>(IxSet a -> Bool) -> a -> m Bool
 testAndInsert test a =
     maybeModify $ \ixset ->
         if test ixset
@@ -249,7 +249,7 @@ sessionAndCookieHashMatch session sci = (cookieSessionHash sci) == (hash $ sessi
 
 -- | Add a session cookie to browser.  
 startSessionCookie :: (FilterMonad Response m,ServerMonad m, MonadIO m) => Session -> m ()
-startSessionCookie session = addCookie (60*60*24) $ mkCookie "sessionId" $ show $ cookieInfoFromSession session
+startSessionCookie session = addCookie (MaxAge (60*60*24)) $ mkCookie "sessionId" $ show $ cookieInfoFromSession session
                                  
 -- | Read current session cookie from request.
 currentSessionInfoCookie:: RqData (Maybe SessionCookieInfo)
@@ -257,7 +257,7 @@ currentSessionInfoCookie = (optional (readCookieValue "sessionId"))
  where optional c = (liftM Just c) `mplus` (return Nothing)
  
 -- | Get current session based on cookies set.
-currentSession ::(MonadIO m, ServerMonad m, MonadPlus m, FilterMonad Response m) => m (Maybe Session) 
+currentSession ::(HasRqData m, MonadIO m, ServerMonad m, MonadPlus m, FilterMonad Response m) => m (Maybe Session) 
 currentSession = withDataFn currentSessionInfoCookie $ \mscd ->  
                  case mscd of
                      Just scd-> do 
