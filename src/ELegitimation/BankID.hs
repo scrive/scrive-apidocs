@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind #-}
 
 module ELegitimation.BankID 
     ( handleSignBankID
@@ -42,17 +42,21 @@ handleSignBankID provider docid signid magic = do
     checkLinkIDAndMagicHash document signid magic
 
     unless (document `allowsIdentification` ELegitimationIdentification) mzero
-
     -- request a nonce
     nonceresponse <- generateChallenge
+    liftIO $ print "after first request"
     case nonceresponse of
         Left (ImplStatus _a _b code msg) -> 
             return $ toResponse $ toJSON [("status", JInt code), ("msg", JString msg)]
         Right (nonce, transactionid) -> do
             -- encode the text to be signed
+            liftIO $ print "before"
             tbs <- liftIO $ getTBS ctxtemplates document
+            liftIO $ print tbs
+            liftIO $ print "after"
             providerCode <- providerStringToNumber  provider
             encodetbsresponse <- encodeTBS providerCode tbs transactionid 
+            liftIO $ print "after second request"
             case encodetbsresponse of
                 Left (ImplStatus _a _b code msg) -> 
                     return $ toResponse $ toJSON [("status", JInt code), ("msg", JString msg)]
@@ -577,15 +581,17 @@ findTransactionByIDOrFail transactions transactionsid =
       Just trans                                                      -> return trans
                
 getTBS :: KontrakcjaTemplates -> Doc.DocState.Document -> IO String
-getTBS templates doc =
+getTBS templates doc = do
+    entries <- getSigEntries templates doc
     renderTemplate templates "tbs" $ do
-        field "documentname"   $ documenttitle doc
-        field "documentnumber" $ documentid doc
-        field "tbssigentries"  $ getSigEntries templates doc
+        field "documentname"   $ BS.toString $ documenttitle doc
+        field "documentnumber" $ show $ documentid doc
+        field "tbssigentries"  entries
         
-getSigEntries :: KontrakcjaTemplates -> Doc.DocState.Document -> IO [String]        
-getSigEntries templates doc = 
-    mapM (getSigEntry templates . signatorydetails) $ documentsignatorylinks doc
+getSigEntries :: KontrakcjaTemplates -> Doc.DocState.Document -> IO String
+getSigEntries templates doc = do
+    s <- mapM (getSigEntry templates . signatorydetails) $ documentsignatorylinks doc
+    return $ intercalate "\n" s
 
 getSigEntry :: KontrakcjaTemplates -> SignatoryDetails -> IO String
 getSigEntry templates signatorydetails =
