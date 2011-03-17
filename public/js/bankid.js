@@ -590,7 +590,7 @@ safeReady(function() {
 
 safeReady(function() {
   var elegbuttons = $("#elegbuttons");
-  var signbutton = $("div.buttonbox button.submiter.sign");
+  var signbutton = $("#dialog-confirm-signinvite div.buttonbox button.submiter");
   $("#validationdropdown").change(function() {
     var d = $(this);
     var selected = d.find("option:selected").val();
