@@ -29,7 +29,10 @@ import Data.Maybe (isNothing,isJust, fromJust)
 import Happstack.Data
 import Happstack.Data.IxSet
 import qualified Happstack.Data.IxSet as IxSet
-import Happstack.State 
+import qualified Happstack.Server.Internal.Cookie as HSI
+import qualified Happstack.Server.Internal.Monads as HSI
+import Happstack.Server.Types (addHeader)
+import Happstack.State
 import User.UserState (UserID,FlashMessage,GetUserByUserID(GetUserByUserID), User)
 import MinutesTime
 import Happstack.Server (RqData, ServerMonad, FilterMonad, Response, mkCookie, addCookie, readCookieValue, withDataFn, ServerPartT, HasRqData, CookieLife(MaxAge))
@@ -244,7 +247,15 @@ instance Read (SessionCookieInfo) where
         sid' <- readM sid  --if need to understand that just read about list monad
         sh' <- readM (drop 1 sh)  
         return $ (SessionCookieInfo {cookieSessionId = sid', cookieSessionHash=sh'},"")
-    
+
+-- | Ripped from Happstack-Server and modified to support HttpOnly cookies
+addHttpOnlyCookie :: (MonadIO m, HSI.FilterMonad Response m) => HSI.CookieLife -> HSI.Cookie -> m ()
+addHttpOnlyCookie life cookie = do
+    l <- liftIO $ HSI.calcLife life
+    (addHeaderM "Set-Cookie") $ HSI.mkCookieHeader l cookie ++ ";HttpOnly"
+    where
+        addHeaderM a v = HSI.composeFilter $ \res-> addHeader a v res
+
 -- | Extract cookie from session.
 cookieInfoFromSession :: Session -> SessionCookieInfo
 cookieInfoFromSession s = SessionCookieInfo 
@@ -259,7 +270,7 @@ sessionAndCookieHashMatch session sci = (cookieSessionHash sci) == (hash $ sessi
 
 -- | Add a session cookie to browser.  
 startSessionCookie :: (FilterMonad Response m,ServerMonad m, MonadIO m) => Session -> m ()
-startSessionCookie session = addCookie (MaxAge (60*60*24)) $ mkCookie "sessionId" $ show $ cookieInfoFromSession session
+startSessionCookie session = addHttpOnlyCookie (MaxAge (60*60*24)) $ mkCookie "sessionId" $ show $ cookieInfoFromSession session
                                  
 -- | Read current session cookie from request.
 currentSessionInfoCookie:: RqData (Maybe SessionCookieInfo)
