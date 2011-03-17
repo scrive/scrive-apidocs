@@ -552,36 +552,36 @@ function netIDSignAuthor(posturl, formselector, ajaxurl) {
 
 safeReady(function() {
   $("button.bankid.signatory").click(function() {
-    sign2("/s/bankid" + window.location.pathname.substring(2),
+    sign2("/s" + window.location.pathname.substring(2),
 	      "#dialog-confirm-sign",
 	      "/s/bankid" + window.location.pathname.substring(2));
     return false;
   });
   $("button.bankid.author").click(function() {
-    sign2Author("/d/bankid" + window.location.pathname.substring(2),
+    sign2Author("/d" + window.location.pathname.substring(2),
 	            "#dialog-confirm-sign-invite",
 	            "/d/bankid" + window.location.pathname.substring(2));
   });
   $("button.nordea.signatory").click(function() {
-    sign1("/s/nordea" + window.location.pathname.substring(2),
+    sign1("/s" + window.location.pathname.substring(2),
           "#dialog-confirm-sign",
           "/s/nordea" + window.location.pathname.substring(2));
     return false;
   });
   $("button.nordea.author").click(function() {
-    sign1Author("/d/nordea" + window.location.pathname.substring(2),
+    sign1Author("/d" + window.location.pathname.substring(2),
                 "#dialog-confirm-sign-invite",
                 "/d/nordea" + window.location.pathname.substring(2));
     return false;
   });
   $("button.telia.signatory").click(function() {
-    netIDSign("/s/telia" + window.location.pathname.substring(2),
+    netIDSign("/s" + window.location.pathname.substring(2),
               "#dialog-confirm-sign",
               "/s/telia" + window.location.pathname.substring(2));
     return false;
   });
   $("button.telia.author").click(function() {
-    netIDSignAuthor("/d/telia" + window.location.pathname.substring(2),
+    netIDSignAuthor("/d" + window.location.pathname.substring(2),
                     "#dialog-confirm-sign-invite",
                     "/d/telia" + window.location.pathname.substring(2));
     return false;
