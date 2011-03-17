@@ -278,29 +278,33 @@ emptySessionData = do
                          , elegtransactions = []
                          }  
 
-                                                                
--- | Start session. Either retrieve old session or create a new empty session.
--- Also adds a cookie.
-startSession :: (FilterMonad Response m,ServerMonad m,  MonadIO m, MonadPlus m) => m Session
-startSession = do
-    emptySession <- liftIO $ emptySessionData
-    session <- update $ NewSession $ emptySession
-    startSessionCookie session
-    return session                   
-        
+-- | Check if session data is empty
+isSessionDataEmpty :: SessionData -> Bool
+isSessionDataEmpty SessionData{userID, flashMessages, elegtransactions} =
+       userID == Nothing
+    && Prelude.null flashMessages
+    && Prelude.null elegtransactions
+
+-- | Return ID for temporary session (not written to db)
+tempSessionID :: SessionId
+tempSessionID = SessionId $ -1
+
+-- | Return empty, temporary session
+startSession :: (FilterMonad Response m, ServerMonad m, MonadIO m, MonadPlus m) => m Session
+startSession = liftIO emptySessionData >>= return . Session tempSessionID
+
 -- | Get 'User' record from database based on userid in session       
 getUserFromSession :: Session -> ServerPartT IO (Maybe User)               
 getUserFromSession s = 
     case (userID $ sessionData s) of
         Just i -> query $ GetUserByUserID i
         _ -> return Nothing    
-                        
+
 -- | Get 'FlashMessage's to be show at this request. Does not clear
 -- flash message list though.
 getFlashMessagesFromSession :: Session -> ServerPartT IO  [FlashMessage]
 getFlashMessagesFromSession s = return $ flashMessages $ sessionData s      
-                  
-                  
+
 -- | Handles session timeout. Starts new session when old session timed out.
 handleSession :: ServerPartT IO Session                  
 handleSession = do
@@ -314,19 +318,23 @@ handleSession = do
                              startSession
                           else return session      
         Nothing -> startSession
-                   
 
--- | Updates session data.
-updateSessionWithContextData :: Session -> Maybe UserID -> [FlashMessage] -> [ELegTransaction] -> ServerPartT IO ()                                     
+-- | Updates session data. If session is temporary and new
+-- session data is non-empty, register session in the system
+-- and add a cookie.
+updateSessionWithContextData :: Session -> Maybe UserID -> [FlashMessage] -> [ELegTransaction] -> ServerPartT IO ()
 updateSessionWithContextData (Session i sd) u fm trans = do
-    now <- liftIO getMinutesTime  
-    update $ UpdateSession (Session i $ sd { userID = u
-                                           , flashMessages = fm
-                                           , expires = 60 `minutesAfter` now
-                                           , elegtransactions = trans
-                                           })
-                                    
-                                    
+    now <- liftIO getMinutesTime
+    let newsd = sd {
+        userID = u
+        , flashMessages = fm
+        , expires = 60 `minutesAfter` now
+        , elegtransactions = trans
+    }
+    if i == tempSessionID && not (isSessionDataEmpty newsd)
+       then update (NewSession newsd) >>= startSessionCookie
+       else update $ UpdateSession (Session i newsd)
+
 -- | This are special sessions used for passwords reminder links. Such links should be carefully.
 createLongTermSession :: (MonadIO m) =>  UserID -> m Session
 createLongTermSession uid = do
