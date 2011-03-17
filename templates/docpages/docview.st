@@ -173,7 +173,7 @@ pageDocumentForSignHelpers=
 ######
 ####
 pageDocumentForSignContent=
-
+  <script type="text/javascript" src="/js/bankid.js"></script>
   $if(notsignedbyme)$$if(pending)$
   <script type="text/javascript">
     jQuery(function() {
