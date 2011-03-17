@@ -630,9 +630,9 @@ function getSignatoryData() {
   
   if(isAuthorSecretary()) {
     var authordetails = $(".authordetails");
-    fnames.push(authordetails.find(".authorfstname .fieldvalue").val()):
-    lnames.push(authordetails.find(".authorsndname .fieldvalue").val()):
-    nums  .push(authordetails.find(".authornum .fieldvalue"    ).val()):
+    fnames.push(authordetails.find(".authorfstname .fieldvalue").val());
+    lnames.push(authordetails.find(".authorsndname .fieldvalue").val());
+    nums  .push(authordetails.find(".authornum .fieldvalue"    ).val());
   }
 
   var ret = [];
