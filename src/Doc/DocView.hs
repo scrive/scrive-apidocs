@@ -459,6 +459,7 @@ pageDocumentForSignatory action document ctx invitedlink author =
       allbutinvited = filter (/= invitedlink) (documentsignatorylinks document)
       documentauthordetails = signatoryDetailsFromUser author
       allowedtypes = documentallowedidtypes document
+      requiresEleg = isJust $ find (== ELegitimationIdentification) allowedtypes
   in do
     renderTemplate (ctxtemplates ctx) "pageDocumentForSignContent" $ do
       field "helpers" $ 
@@ -471,6 +472,7 @@ pageDocumentForSignatory action document ctx invitedlink author =
       field "action" $ show action
       field "linkissuedocpdf" $ show (LinkIssueDocPDF document)
       field "documentinfotext" $  documentInfoText (ctxtemplates ctx) document (Just invitedlink) author
+      field "requireseleg" requiresEleg
       documentInfoFields document
       documentAuthorInfo author
       signedByMeFields document (Just invitedlink)
