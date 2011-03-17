@@ -23,6 +23,7 @@ module Session
 
 import Control.Monad.Reader (ask)
 import Control.Monad.State hiding (State)
+import qualified Data.Foldable as F
 import Data.Generics
 import Data.Maybe (isNothing,isJust, fromJust)
 import Happstack.Data
@@ -171,6 +172,15 @@ maybeModify f =
 getSession :: SessionId -> Query Sessions (Maybe (Session))
 getSession sessionId = (return . getOne . (@= (sessionId :: SessionId))) =<< ask
 
+-- | Get the session data associated with the supplied 'UserId'.
+getSessionByUserId :: UserID -> Query Sessions (Maybe (Session))
+getSessionByUserId userid = return . F.find cmp . IxSet.toList =<< ask
+    where
+        cmp Session{sessionData = sd} =
+            case userID sd of
+                 Just uid -> uid == userid
+                 Nothing  -> False
+
 -- | Update the 'Session'.
 --
 -- FIXME: do not use gFind here as it is slow.
@@ -210,6 +220,7 @@ dropExpired now = do
 
 $(mkMethods ''Sessions 
   [ 'getSession
+  , 'getSessionByUserId
   , 'updateSession
   , 'delSession
   , 'newSession
@@ -321,7 +332,8 @@ handleSession = do
 
 -- | Updates session data. If session is temporary and new
 -- session data is non-empty, register session in the system
--- and add a cookie.
+-- and add a cookie. Is user loggs in, check whether there is
+-- an old session with his userid and throw it away.
 updateSessionWithContextData :: Session -> Maybe UserID -> [FlashMessage] -> [ELegTransaction] -> ServerPartT IO ()
 updateSessionWithContextData (Session i sd) u fm trans = do
     now <- liftIO getMinutesTime
@@ -332,7 +344,15 @@ updateSessionWithContextData (Session i sd) u fm trans = do
         , elegtransactions = trans
     }
     if i == tempSessionID && not (isSessionDataEmpty newsd)
-       then update (NewSession newsd) >>= startSessionCookie
+       then do
+           when (isNothing (userID sd) && isJust u) $ do
+               msess <- query $ GetSessionByUserId $ fromJust u
+               case msess of
+                    Just sess -> do
+                        _ <- update $ DelSession $ sessionId sess
+                        return ()
+                    Nothing   -> return ()
+           update (NewSession newsd) >>= startSessionCookie
        else update $ UpdateSession (Session i newsd)
 
 -- | This are special sessions used for passwords reminder links. Such links should be carefully.
