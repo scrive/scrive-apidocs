@@ -606,7 +606,7 @@ safeReady(function() {
     }
     numberfields.each(function() {
       updateStatus($(this));
-    }
+    });
     
   });
 });
