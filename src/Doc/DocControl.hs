@@ -1151,7 +1151,7 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
             }
       
           ]
-      makeHistoryEntryFromEvent (DocumentHistoryInvitationSent time ipnumber) =
+      makeHistoryEntryFromEvent (DocumentHistoryInvitationSent time ipnumber _) =
           [ Seal.HistEntry
             { Seal.histdate = show time 
             , Seal.histcomment = 
@@ -1164,7 +1164,7 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
       maxsigntime = maximum (map (fst . thd3) signatories)
       concatComma = concat . intersperse ", "
       -- Hack to switch the order of events, so we put invitation send after author signing
-      makeHistory (fst@(Left (DocumentHistoryInvitationSent time _)):(snd@(Right (_,_,(signtime2,_)))):rest) = 
+      makeHistory (fst@(Left (DocumentHistoryInvitationSent time _ _)):(snd@(Right (_,_,(signtime2,_)))):rest) = 
           if (signtime2 == time)
            then (makeHistoryEntry snd) ++ (makeHistoryEntry fst) ++ (makeHistory rest)
            else (makeHistoryEntry fst) ++ (makeHistoryEntry snd) ++ (makeHistory rest)
@@ -1362,10 +1362,10 @@ handleCancel docid = withUserPost $ do
   customMessage <- getCustomTextField "customtext"  
   mdoc' <- update $ CancelDocument (documentid doc) ctxtime ctxipnumber
   case mdoc' of 
-    Just doc' -> do
+    Right doc' -> do
           sendCancelMailsForDocument customMessage ctx doc
           addFlashMsg =<< (liftIO $ flashMessageCanceled (ctxtemplates ctx))
-    Nothing -> addFlashMsg $ toFlashMsg OperationFailed "Could not cancel"
+    Left errmsg -> addFlashMsg $ toFlashMsg OperationFailed errmsg
   return (LinkIssueDoc $ documentid doc)
 
 {-
