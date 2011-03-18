@@ -94,7 +94,7 @@ Executable kontrakcja-server
  Build-depends: utf8-string, random
  Build-depends: extensible-exceptions, containers
  Build-depends: directory, process
- Build-Depends: base >= 4 && < 5, syb, dataenc
+ Build-Depends: base >= 4 && < 5, syb, dataenc == 0.13.0.2
  Build-Depends: syb-with-class, binary, old-locale, old-time
  Build-Depends: network, HTTP, bytestring
  Build-Depends: Crypto == 4.2.*
@@ -144,36 +144,34 @@ Executable kontrakcja-test
    GHC-Options: -threaded
  if os(windows)
    cpp-options: -DWINDOWS
-  Build-depends: test-framework, test-framework-hunit, test-framework-quickcheck2
-  Build-depends: HUnit, QuickCheck
-  Build-depends: filepath
-  Build-depends: happstack==6.*
-  Build-depends: happstack-server==6.*
-  Build-depends: happstack-state==6.*
-  Build-depends: happstack-ixset==6.*
-  Build-depends: happstack-data==6.*
-  Build-depends: happstack-util==6.*
-  Build-depends: happstack-hsp==6.*
-  Build-depends: hslogger==1.1.0
-  Build-depends: time, time-extras
-  Build-depends: hsx, hsp
-  Build-depends: utf8-string, random
-  Build-depends: extensible-exceptions, containers
-  Build-depends: directory, process
-  Build-Depends: base >= 4 && < 5, syb, dataenc
-  Build-Depends: syb-with-class, binary, old-locale, old-time
-  Build-Depends: network, HTTP, bytestring
-  Build-Depends: HaXml == 1.20.*
-  Build-Depends: parallel == 2.2.*
-  Build-Depends: template-haskell
-  Build-Depends: mtl
-  Build-Depends: hS3
-  Build-Depends: HStringTemplate == 0.6.5
-  Build-Depends: Crypto == 4.2.*
-  Build-Depends: mmap==0.5.*
-  Build-Depends: array
-  Build-Depends: html
-  Build-Depends: temporary==1.1.1
+ Build-depends: test-framework, test-framework-hunit, test-framework-quickcheck2
+ Build-depends: HUnit, QuickCheck
+ Build-depends: filepath
+ Build-depends: happstack-state==0.5.0.3, happstack-server==0.5.0.4
+ Build-depends: happstack==0.5.0.3, happstack-ixset==0.5.0.3
+ Build-depends: happstack-data==0.5.0.3
+ Build-depends: happstack-util==0.5.0.3
+ Build-depends: hslogger==1.1.0
+ Build-depends: time, time-extras
+ Build-depends: hsx == 0.7.*, hsp == 0.5.2
+ Build-depends: utf8-string, random
+ Build-depends: extensible-exceptions, containers
+ Build-depends: directory, process
+ Build-Depends: base >= 4 && < 5, syb, dataenc
+ Build-Depends: syb-with-class, binary, old-locale, old-time
+ Build-Depends: network, HTTP, bytestring
+ Build-Depends: HaXml == 1.20.*
+ Build-Depends: parallel == 2.2.*
+ Build-Depends: template-haskell
+ Build-Depends: mtl < 2
+ Build-Depends: hS3
+ Build-Depends: HStringTemplate == 0.6.5
+ Build-Depends: Crypto == 4.2.*
+ Build-Depends: mmap==0.5.*
+ Build-Depends: array
+ Build-Depends: html
+ Build-Depends: temporary==1.1.1
+ Build-Depends: regex-posix
 
  Main-is: TestMain.hs
 
