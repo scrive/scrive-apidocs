@@ -171,16 +171,13 @@ handleSignPostBankID docid signid magic = do
                     Just newdoc <- update $ CancelDocument docid
                     return $ LinkSignDoc document siglink
                 -- we have merged the info!
-                Right (finalFirst, finalLast, finalNumber) -> do
+                Right _ -> do
                     newdocument <- update $ SignDocument docid 
                                                 signid 
                                                 ctxtime 
                                                 ctxipnumber
                                                 (Just signinfo) 
                                                 fields 
-                                                (Just finalFirst)
-                                                (Just finalLast) 
-                                                (Just finalNumber)
                     case newdocument of
                         -- signature failed
                         Left message -> do
