@@ -297,6 +297,12 @@ data ChargeMode = ChargeInitialFree   -- initial 5 documents are free
 
     deriving (Eq, Ord, Typeable, Data)
 
+data DocumentHistoryEntry0 = DocumentHistoryCreated0 { dochisttime0 :: MinutesTime }
+                          | DocumentHistoryInvitationSent0 { dochisttime0 :: MinutesTime
+                                                          , ipnumber0 :: Word32
+                                                          }    -- changed state from Preparatio to Pending
+    deriving (Eq, Ord, Typeable, Data)
+
 data DocumentHistoryEntry 
     = DocumentHistoryCreated 
       { dochisttime :: MinutesTime
@@ -1032,8 +1038,12 @@ instance Version Author
 $(deriveSerialize ''Signatory)
 instance Version Signatory where
 
+$(deriveSerialize ''DocumentHistoryEntry0)
+instance Version DocumentHistoryEntry0
+
 $(deriveSerialize ''DocumentHistoryEntry)
-instance Version DocumentHistoryEntry
+instance Version DocumentHistoryEntry where
+    mode = extension 1 (Proxy :: Proxy DocumentHistoryEntry0)
 
 $(deriveSerialize ''Document0)
 instance Version Document0 where
@@ -1086,6 +1096,14 @@ $(deriveSerialize ''Document)
 instance Version Document where
     mode = extension 12 (Proxy :: Proxy Document11)
     
+instance Migrate DocumentHistoryEntry0 DocumentHistoryEntry where
+        migrate (DocumentHistoryCreated0 { dochisttime0 }) = 
+            DocumentHistoryCreated dochisttime0
+        migrate (DocumentHistoryInvitationSent0 { dochisttime0 
+                                                , ipnumber0
+                                                }) 
+            = DocumentHistoryInvitationSent dochisttime0 ipnumber0 []
+
 instance Migrate Document0 Document1 where
       migrate (Document0
           { documentid0
