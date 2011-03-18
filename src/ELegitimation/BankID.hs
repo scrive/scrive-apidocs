@@ -281,31 +281,58 @@ handleIssuePostBankID docid = withUserPost $ do
 
 
     
-    -- document should be saved right here!
+    eudoc <- updateDocument ctx author document
+    case eudoc of 
+        Left _ -> mzero
+        Right udoc -> do
+            providerCode <- providerStringToNumber provider
+            res <- verifySignature providerCode
+                    transactionencodedtbs
+                    signature
+                    transactionnonce
+                    transactionid
 
-    providerCode <- providerStringToNumber provider
-    res <- verifySignature providerCode
-                transactionencodedtbs
-                signature
-                transactionnonce
-                transactionid
+            case res of
+                Left (ImplStatus _a _b code msg) -> do
+                    liftIO $ print $ toJSON [("status", JInt code), ("msg", JString msg)]
+                    addFlashMsg $ toFlashMsg OperationFailed "Try again"
+                    -- change me! I should return back to the same page
+                    return LinkMain
+                Right (cert, attrs) -> do
+                    providerType <- providerStringToType provider
+                    let authorinfo = userinfo author
+                        siginfo = SignatureInfo { signatureinfotext        = transactiontbs
+                                                , signatureinfosignature   = signature
+                                                , signatureinfocertificate = cert
+                                                , signatureinfoprovider    = providerType
+                                                }
 
-    case res of
-        Left (ImplStatus _a _b code msg) -> do
-            liftIO $ print $ toJSON [("status", JInt code), ("msg", JString msg)]
-            addFlashMsg $ toFlashMsg OperationFailed "Try again"
-            -- change me! I should return back to the same page
-            return LinkMain
-        Right (cert, _attrs) -> do
-            providerType <- providerStringToType provider
-            let siginfo = SignatureInfo { signatureinfotext        = transactiontbs
-                                        , signatureinfosignature   = signature
-                                        , signatureinfocertificate = cert
-                                        , signatureinfoprovider    = providerType
-                                        }
-            _doc2 <- updateDocument ctx author document $ Just siginfo
-            return $ LinkIssueDoc docid
+                    -- compare information from document (and fields) to that obtained from BankID
+                    let contractFirst  = userfstname authorinfo
+                        contractLast   = usersndname authorinfo
+                        contractNumber = userpersonalnumber authorinfo
+            
+                        elegFirst  = fieldvaluebyid (BS.fromString "First Name") attrs
+                        elegLast   = fieldvaluebyid (BS.fromString "Last Name")  attrs
+                        elegNumber = fieldvaluebyid (BS.fromString "Number")     attrs
 
+                        mfinal = mergeInfo 
+                                    (contractFirst, contractLast, contractNumber)
+                                    (elegFirst,     elegLast,     elegNumber)
+                    case mfinal of
+                        -- either number or name do not match
+                        Left msg -> do
+                            liftIO $ print msg
+                            addFlashMsg $ toFlashMsg OperationFailed msg
+                            return $ LinkIssueDoc docid
+                            -- we have merged the info!
+                        Right (finalFirst, finalLast, finalNumber) -> do
+                            mndoc <- update $ AuthorSignDocument (documentid document) ctxtime ctxipnumber author $ Just siginfo
+                            case mndoc of
+                                Left _ -> mzero
+                                Right newdocument -> do
+                                    postDocumentChangeAction newdocument (documentstatus udoc) Nothing
+                                    return $ LinkSignInvite (documentid document)
 
 -- JSON - just enough to get things working
 
