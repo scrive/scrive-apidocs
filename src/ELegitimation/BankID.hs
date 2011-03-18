@@ -153,7 +153,7 @@ handleSignPostBankID docid signid magic = do
             -- compare information from document (and fields) to that obtained from BankID
             let contractFirst  = signatoryfstname details
                 contractLast   = signatorysndname details
-                contractNumber = mergeTwo (signatorynumber details) (fieldvaluebyid (BS.fromString "signr") fields)
+                contractNumber = signatorynumber details
 
                 elegFirst  = fieldvaluebyid (BS.fromString "First Name") attrs
                 elegLast   = fieldvaluebyid (BS.fromString "Last Name")  attrs
