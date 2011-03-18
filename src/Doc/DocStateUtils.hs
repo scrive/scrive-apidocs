@@ -70,8 +70,8 @@ newFromDocument f docid = do
       Just doc -> fmap Right $ insertNewDocument $ f doc
       Nothing -> return $ Left $ "Document " ++ show docid ++ " does not exist"
       
--- | There are six methods for update. We want force an exact info if any operation that chandes document makes sense on templates.
-
+-- | There are six methods for update. We want force an exact info if
+-- any operation that changes a document makes sense on templates.
 modifyContract :: DocumentID 
                -> (Document -> Either String Document) 
                -> Update Documents (Either String Document)
