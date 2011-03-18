@@ -315,7 +315,7 @@ signDocument documentid
   when (not allowsEmail) mzero
 
 
-  newdocument <- update $ SignDocument documentid signatorylinkid1 ctxtime ctxipnumber Nothing fields Nothing Nothing Nothing
+  newdocument <- update $ SignDocument documentid signatorylinkid1 ctxtime ctxipnumber Nothing fields
   case newdocument of
     Left message -> 
         do
@@ -580,7 +580,7 @@ handleIssueShowPost docid = withUserPost $ do
 
 handleIssueSign document author = do
     ctx@Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber} <- get
-    mudoc <- updateDocument ctx author document Nothing
+    mudoc <- updateDocument ctx author document
     case mudoc of 
         Right udoc-> do    
             mndoc <- update $ AuthorSignDocument (documentid document) ctxtime ctxipnumber author Nothing
@@ -593,7 +593,7 @@ handleIssueSign document author = do
                   
 handleIssueSend document author = do
     ctx@Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber} <- get
-    mudoc <- updateDocument ctx author document Nothing
+    mudoc <- updateDocument ctx author document
     case mudoc of 
         Right udoc-> do
             mndoc <- update $ AuthorSendDocument (documentid document) ctxtime ctxipnumber author Nothing
@@ -606,7 +606,7 @@ handleIssueSend document author = do
     
 handleIssueSaveAsTemplate document author = do
     ctx <- get
-    mudoc <- updateDocument ctx author document Nothing
+    mudoc <- updateDocument ctx author document
     case mudoc of 
         Right udoc -> do   
             mndoc <- update $ TemplateFromDocument $ documentid document
@@ -621,7 +621,7 @@ handleIssueChangeToContract document author = do
     mcontract <- update $ ContractFromDocument $ documentid document 
     case mcontract of 
         Right contract -> do   
-            mncontract <- updateDocument ctx author contract Nothing
+            mncontract <- updateDocument ctx author contract
             case mncontract of
                 Right ncontract ->  return $ LinkDesignDoc $ DesignStep3 $ documentid ncontract                        
                 Left _ -> mzero
@@ -629,7 +629,7 @@ handleIssueChangeToContract document author = do
 
 handleIssueSave document author = do
     ctx <- get
-    updateDocument ctx author document Nothing
+    updateDocument ctx author document
     addFlashMsg =<< (liftIO . flashDocumentDraftSaved $ ctxtemplates ctx)
     return $ LinkContracts emptyListParams
 
@@ -704,8 +704,8 @@ mapJust f l = map fromJust $ filter isJust $ map f l
 {- |
    do the work necessary for saving a document being authored
  -}
-updateDocument :: Context -> User -> Document -> Maybe SignatureInfo -> Kontra (Either String Document)
-updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documentid} msiginfo = do
+updateDocument :: Context -> User -> Document -> Kontra (Either String Document)
+updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documentid} = do
   -- each signatory has these predefined fields
   signatoriesfstnames <- getAndConcat "signatoryfstname"
   signatoriessndnames <- getAndConcat "signatorysndname"
