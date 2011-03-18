@@ -257,7 +257,9 @@ handleIssueBankID provider docid = withUserGet $ do
 handleIssuePostBankID :: DocumentID -> Kontra KontraLink
 handleIssuePostBankID docid = withUserPost $ do
     ctx@Context { ctxmaybeuser = Just author
-                , ctxelegtransactions } <- get
+                , ctxelegtransactions 
+                , ctxtime 
+                , ctxipnumber } <- get
 
     provider      <- getDataFnM $ look "eleg"
     signature     <- getDataFnM $ look "signature"
