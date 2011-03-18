@@ -436,6 +436,13 @@ whenMaybe False _ = return Nothing
 nothingIfEmpty::(Eq a, Monoid a) => a -> Maybe a
 nothingIfEmpty a = if mempty == a then Nothing else Just a
 
+-- | Failing if inner value is empty
+joinEmpty::(MonadPlus m, Monoid a, Ord a) => m a -> m a
+joinEmpty m = do 
+                mv <- m 
+                if mv == mempty
+                 then mzero
+                 else return mv
 
 {-| This function is useful when creating 'Typeable' instance when we
 want a specific name for type.  Example of use:

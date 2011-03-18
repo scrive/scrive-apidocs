@@ -11,10 +11,12 @@ showUser =
        <div class="tab-content account">
            <div class="col">
                <div class="account-header">
-                   <h2>$fname$ $lname$</h2>
-                   <a href="javascript:;">Ladda upp ny bild...</a>
+                   <h2>$fstname$ $sndname$</h2>
+                   <!-- <a href="javascript:;">Ladda upp ny bild...</a> -->
                    <div class="image">
-                       <img src="assets/img/portrait-lukas-d.png" height="68" width="58" />
+                      $if(userimagelink)$
+                       <img src="$userimagelink$" height="68" width="58" />
+                      $endif$
                    </div>
                </div>
                <div class="account-body">
@@ -22,23 +24,23 @@ showUser =
                    <table>
                        <tr>
                            <td>Förnamn:</td>
-                           <td><input type="text" name="fname" value="$fname$" autocomplete="off" /></td>
+                           <td><input type="text" name="fstname" value="$fstname$" autocomplete="off" /></td>
                        </tr>
                        <tr>
                            <td>Efternamn:</td>
-                           <td><input type="text" name="lname" value="$lname$" autocomplete="off" /></td>
+                           <td><input type="text" name="sndname" value="$sndname$" autocomplete="off" /></td>
                        </tr>
                        <tr>
                            <td>Personnummer</td>
-                           <td><input type="text" name="socialsecuritynr" value="$socialsecuritynr$" autocomplete="off" /></td>
+                           <td><input type="text" name="personalnumber" value="$personalnumber$" autocomplete="off" /></td>
                        </tr>
                        <tr>
                            <td>E-post:</td>
-                           <td><input type="email" name="email" value="$email$" autocomplete="off" /></td>
+                           <td><input type="email" name="email" value="$email$" autocomplete="off" disabled=""/></td>
                        </tr>
                        <tr>
                            <td>Telennummer:</td>
-                           <td><input type="text" name="phonenumber" value="$phonenumber$" autocomplete="off" /></td>
+                           <td><input type="text" name="phone" value="$phone$" autocomplete="off" /></td>
                        </tr>
                        <tr>
                            <td>Befattning</td>
@@ -65,10 +67,12 @@ showUser =
            </div>
            <div class="col">
                <div class="account-header">
-                   <h2>Eventbook AB</h2>
-                   <a href="javascript:;">Ladda upp ny logotyp...</a>
+                   <h2>$companyname$</h2>
+                   <!--<a href="javascript:;">Ladda upp ny logotyp...</a> -->
                    <div class="image">
-                       <img src="assets/img/portrait-lukas-d.png" height="68" width="58" />
+                      $if(companyimagelink)$
+                       <img src="$companyimagelink$" height="68" width="58" />
+                      $endif$
                    </div>
                </div>
                <div class="account-body">
@@ -84,11 +88,11 @@ showUser =
                        </tr>
                        <tr>
                            <td>Adress:</td>
-                           <td><input type="text" name="invoiceaddress" value="$invoiceaddress$" autocomplete="off" /></td>
+                           <td><input type="text" name="address" value="$address$" autocomplete="off" /></td>
                        </tr>
                        <tr>
                            <td>Postnummer:</td>
-                           <td><input type="email" name="zipcode" value="$zipcode$" autocomplete="off" /></td>
+                           <td><input type="email" name="zip" value="$zip$" autocomplete="off" /></td>
                        </tr>
                        <tr>
                            <td>Postort:</td>
