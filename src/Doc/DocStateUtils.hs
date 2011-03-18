@@ -52,6 +52,7 @@ import Doc.DocStateData
 
 
 -- DB UPDATE UTILS
+insertNewDocument :: Document ->  Update Documents Document
 insertNewDocument doc = 
    do 
     documents <- ask
