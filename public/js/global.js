@@ -225,7 +225,7 @@ safeReady(function () {
 function initFileInputs(){
   $(".multiFileInput").each(function() {
     var upload = $(this);
-    var form = $(this.form);
+    var form = $(this).parents("form");
     upload.MultiFile({
       list: upload.attr("rel"),
       onFileAppend: function() { 
@@ -338,7 +338,7 @@ safeReady(function() {
 
 safeReady(function() {
   $(".submiter").live("click", function(){
-    $(this.form).submit();
+    $(this).parents("form").submit();
   });
 });
 
@@ -354,7 +354,7 @@ safeReady(function() {
 
 safeReady(function() {
   $(".editer").live("click", function(){
-    prepareForEdit($(this.form));
+    prepareForEdit($(this).parents("form"));
     $(this).hide();
     return false;
   })
@@ -464,8 +464,8 @@ safeReady(function() {
 
 safeReady(function() {	
   $("#loginbtn").click(function(){
-    if(emailFieldsValidation($(":email", this.form))) {
-      $(this.form).submit();
+    if(emailFieldsValidation($(":email", $(this).parents("form")))) {
+      $($(this).parents("form")).submit();
     }						  
     return false;
   });
@@ -474,7 +474,7 @@ safeReady(function() {
 safeReady(function() {
   $("#createnewaccount").click(function(){
     if(emailFieldsValidation($("input[type='email']"))){
-      $(this.form).submit();
+      $($(this).parents("form")).submit();
     }
     return false;
   });
@@ -482,14 +482,14 @@ safeReady(function() {
    
 safeReady(function() { 
   $(".validateEmail").click(function(){
-    return (emailFieldsValidation($(":email",this.form)))
+    return (emailFieldsValidation($(":email",$(this).parents("form"))))
   });
 });
 
 safeReady(function() {  
   $(".flashOnClick").click(function(){
     $(".flashMessage", $(this).parent()).each(function(){
-      addFlashMessage($(this).html());
+      addFlashMessage($(this).html(),$(this).attr("flashtype"));
       $(this).remove();
     });
   });
@@ -497,7 +497,7 @@ safeReady(function() {
   $(".flashOnOn").change(function(){
     if($(this).val() == "off") {
       $(".flashMessage", $(this).parent()).each(function(){
-        addFlashMessage($(this).html());
+        addFlashMessage($(this).html(),$(this).attr("flashtype"));
       });
     }
   });
@@ -680,13 +680,13 @@ function checkSignPossibility() {
   if($("#authorsecretaryradio").attr("checked")) {
     // secretary
     $(".authordetails .man").addClass("redborder");   
-    addFlashMessage("Du kan inte underteckna när du är sekreterare. Om du vill underteckna, gå tillbaks till steg 2 och byt roll.");
+    addFlashMessage("Du kan inte underteckna när du är sekreterare. Om du vill underteckna, gå tillbaks till steg 2 och byt roll.","red");
     return false;
   } else if(sigfields.size() > 0) {
     // we're awaiting author mode 
     sigfields.addClass("redborder");
     fieldValidationType = "fillstatus";
-    addFlashMessage("Du kan inte underteckna när du har utplacerade fält som inte är ifyllda. Antingen skicka (och underteckna sist) eller gå tillbaks till steg 2 och åtgärda fältet.");
+    addFlashMessage("Du kan inte underteckna när du har utplacerade fält som inte är ifyllda. Antingen skicka (och underteckna sist) eller gå tillbaks till steg 2 och åtgärda fältet.","red");
     return false;
   } else {
     // sign is possible
@@ -708,10 +708,10 @@ function authorFieldsValidation() {
   if(remainingAuthorFields.size() > 0) {
     console.log(remainingAuthorFields);
     if(remainingAuthorFields.hasClass('sigfstname') || remainingAuthorFields.hasClass('sigsndname')) {
-      addFlashMessage("Du har inte skrivit in något namn på en eller flera motparter. Vänligen försök igen.");
+      addFlashMessage("Du har inte skrivit in något namn på en eller flera motparter. Vänligen försök igen.","red");
     }
     if(remainingAuthorFields.hasClass('customfield')) {
-      addFlashMessage("Du har inte namngett alla fält. Vänligen försök igen.");
+      addFlashMessage("Du har inte namngett alla fält. Vänligen försök igen.","red");
     }
     remainingAuthorFields.addClass('redborder').addClass('offending');
     fieldValidationType = "fillstatus";
@@ -724,7 +724,7 @@ function authorFieldsValidation() {
 
   if(remainingDragFields.size() > 0) {
     var dragMsg = "Du har inte lagt till alla skapade fält i dokumentet. Vänligen försök igen.";
-    addFlashMessage(dragMsg);
+    addFlashMessage(dragMsg,"red");
     remainingDragFields.addClass('redborder').addClass('offending');
     fieldValidationType = "dragstatus";
     return false;
@@ -743,7 +743,7 @@ function sigFieldsValidation(){
   });
 
   if(remainingSigFields.size() > 0) {
-    addFlashMessage("Du måste fylla i tomma fält innan du kan underteckna.");
+    addFlashMessage("Du måste fylla i tomma fält innan du kan underteckna.","red");
     remainingSigFields.addClass("redborder");
     return false;
   } else {
@@ -764,7 +764,7 @@ function nonZeroSignatories() {
   var error = (sigs === 0);
 
   if(error) {
-    addFlashMessage('Det finns inga undertecknande parter för detta dokument. Vänligen lägg till undertecknande parter eller ändra din roll till "undertecknare".');
+    addFlashMessage('Det finns inga undertecknande parter för detta dokument. Vänligen lägg till undertecknande parter eller ändra din roll till "undertecknare".',"red");
     $("li.plus").addClass("redborder");
     $(".authordetails .man").addClass("redborder");
     return false;
@@ -792,7 +792,7 @@ safeReady(function(){
 function prepareForEdit(form){
     $(".editable",form).each( function(){
         
-        var textarea = $("<textarea style='width:95%;height:0px;border:0px;padding:0px;margin:0px'  name='"+$(this).attr('name')+"'> "+ $(this).html()+ "</textarea>")
+        var textarea = $("<textarea style='width:94%;height:0px;border:0px;padding:0px;margin:0px'  name='"+$(this).attr('name')+"'> "+ $(this).html()+ "</textarea>")
         var wrapper = $("<div></div>").css("min-height",($(this).height())+15+"px");
         wrapper.append(textarea);
         $(this).replaceWith(wrapper);
@@ -871,7 +871,7 @@ $.tools.validator.addEffect("failWithFlashOnEmail", function(errors, event) {
     var input = $(error.input);
     input.parents('.inputWrapper').addClass("redborder");
     if(!input.hasClass("noflash")) {
-      addFlashMessage(invalidEmailErrMsg);
+      addFlashMessage(invalidEmailErrMsg,"red");
       input.addClass("noflash");
     }
   });

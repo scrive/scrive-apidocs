@@ -310,14 +310,14 @@ a.btn-big:active {
         left:0px
 }
 
-#top-container .left {
+#top-container .leftMain {
 	float: left;
 	position: relative;
 	width: 460px;
         z-index: 1;
 }
 
-#top-container .right {
+#top-container .rightMain {
 	float: left;
 	position: relative;
 	width: 460px;

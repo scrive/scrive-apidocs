@@ -79,8 +79,12 @@ $(document).ready( function() {
 	
 		$(this).focus( function() {
 			if($(this).val() == orig_value) $(this).val('');
+            $(this).removeClass("grayed");          
 		}).blur( function() {
-			if($(this).val() == '') $(this).val(orig_value);
+			if($(this).val() == '') {
+                $(this).val(orig_value);
+                $(this).addClass("grayed");          
+            }
 		});
 	});
 	

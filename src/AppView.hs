@@ -25,7 +25,7 @@ import Data.Maybe
 import Templates.Templates
 import Control.Monad.Trans
 import Data.List
-
+import ListUtil
 {- |
    Defines the different sorts of things we can have at the top of the page
 -}
@@ -71,7 +71,7 @@ pageFromBody ctx@Context { ctxmaybeuser
                       , ctxtemplates
                       }
              columns showCreateAccount title body = do
-                    content <- liftIO $ renderHSPToString <div id="mainContainer"><% body %></div>
+                    content <- liftIO $ renderHSPToString <div class="mainContainer"><% body %></div>
                     wholePage <- liftIO $ renderTemplate ctxtemplates "wholePage" $ do
                                   field "content" content
                                   field "title" title
@@ -143,7 +143,7 @@ mainLinksFields = do
                      field "linkquestion" $ show LinkAskQuestion
                      field "linkaccount" $ show LinkAccount
                      field "linkmain" $ show LinkMain
-                     field "linkissue" $ show LinkIssue
+                     field "linkissue" $ show $ LinkContracts emptyListParams
                      field "linkinvite" $ show LinkInvite
 
 {- |
@@ -153,7 +153,12 @@ mainLinksFields = do
 contextInfoFields::Context -> Fields
 contextInfoFields ctx = do
                          field "logged" $ isJust (ctxmaybeuser ctx)
-                         field "flashmessages" $ map (first show . unFlashMessage) (ctxflashmessages ctx)
+                         field "flashmessages" $ for (ctxflashmessages ctx) $ \fm -> do
+                             field "type" $ case fst (unFlashMessage  fm) of
+                                 SigningRelated -> "blue"
+                                 OperationDone -> "green"
+                                 OperationFailed -> "red" 
+                             field "message" $ snd (unFlashMessage fm)
                          field "protocol" $ if (ctxproduction ctx) then "https:" else "http:"
                          field "prefix" ""
                          field "production" (ctxproduction ctx)
