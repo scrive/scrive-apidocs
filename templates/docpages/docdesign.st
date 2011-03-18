@@ -257,9 +257,11 @@ $endif$
                 
                 
           </div>
-                <input type="button" id="sendinvite"
-            rel="#dialog-confirm-sendinvite" value = "Skicka"
-            name="final"  class="submit btn-small green2 center" />
+          $if(contract)$
+            <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite" name="final"  class="new-btn-small green2 center">
+              <p>Skicka </p> 
+            </a>
+
           $elseif(template)$
             <a type="submit" name="contract"  class="submit new-btn-small green2 center"> 
               <p>Create contract</p> 
