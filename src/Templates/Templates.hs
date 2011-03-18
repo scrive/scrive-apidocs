@@ -142,7 +142,7 @@ instance (ToSElem a) => Field a where
 instance Field (Fields) where 
   field a b =  do
                s <- get 
-               let val = fmap toSElem $ sequence $ map packIO $ execState b [] 
+               let val = fmap (toSElem . Map.fromList) $ sequence $ map packIO $ execState b [] 
                put ((a,val):s)
 
 instance Field [Fields] where 

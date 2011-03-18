@@ -7,15 +7,15 @@
 -- Stability   :  development
 -- Portability :  portable
 --
+-- LOT OF STUFF IN THIS FILE ARE DEPRECIATED. EXCEPT ONES THAT ARE MARKED AS USEFULL TRY NOT TO USE THEM.
 -- This is main templating helper. There are some utils for rendering standard templates and
 -- standard data wrappers.
 -----------------------------------------------------------------------------
 module Templates.TemplatesUtils
-    (wrapHTML,renderActionButton,option,soption,Option(..)) where
+    (wrapHTML,option,soption,Option(..),markParity) where
 
 import Data.Data
 import Data.Typeable
-import KontraLink 
 import Templates.Templates
 
 {- Common templates - should be shared and it seams like a good place for them -}
@@ -26,13 +26,6 @@ import Templates.Templates
 wrapHTML :: KontrakcjaTemplates -> String -> IO String
 wrapHTML templates body =  renderTemplate templates "wrapHTML" [("body",body)]
 
-{- |
-   Create an HTML button that links to action with text button
- -}
-renderActionButton :: KontrakcjaTemplates -> KontraLink -> String -> IO String
-renderActionButton templates action button = do
-  buttonname <- renderTemplate templates button ()
-  renderTemplate templates "actionButton" [("action", show action), ("buttonname", buttonname)]
 
 {- | 
    Option one of standard wrappers. It holds two strings and bool. 
@@ -56,3 +49,22 @@ option f g x = Option {oValue=f x, oText=g x, oSelected = False}
 {- | Selected option easy generation-}
 soption::(a->String)->(a->String)->a->Option
 soption f g x= Option {oValue=f x, oText=g x, oSelected = True}
+
+{-| USEFULL. Marks list off fields with even and odd values. Caunts from 1!-}
+markParity::[Fields] -> [Fields]
+markParity (f0:(f1:fs)) = [markOdd f0 ,markEven f1]++markParity fs
+markParity (f:[]) = [markOdd f]
+markParity [] = []
+
+markEven::Fields -> Fields
+markEven f = do 
+    f
+    field "even" True
+    field "odd"  False
+              
+markOdd::Fields -> Fields
+markOdd f = do 
+    f
+    field "even" False
+    field "odd"  True
+              

@@ -8,6 +8,9 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 <link href='$protocol$//fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css">
                 <link href="/css/main.css" rel="stylesheet" type="text/css" />
                 <link href="/theme/flash.css" rel="stylesheet" type="text/css" />
+                <link rel="stylesheet" type="text/css" href="$prefix$/theme/symbols.css" media="screen">
+                <link rel="stylesheet" type="text/css" href="$prefix$/theme/newdesign.css" media="screen">
+                <link rel="stylesheet" type="text/css" href="$prefix$/theme/buttons.css" media="screen">
                <script src="$protocol$//ajax.googleapis.com/ajax/libs/jquery/1.5.0/jquery.js"
                 type="text/javascript"></script>
                <script src="$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js"
@@ -66,17 +69,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                         }
                         
                         jQuery(document).ready( function() {
-                                jQuery('.campaign-text a, .campaign-play, #nav-container .col a').click( function(e) {
-                                        e.preventDefault();
-                                        
-                                        var html = '<object> <embed width="590" height="370" allowscriptaccess="always" allowfullscreen="true" type="application/x-shockwave-flash" src="https://secure.vimeo.com/moogaloop.swf?clip_id=19914678&amp;server=vimeo.com&amp;show_title=0&amp;show_byline=0&amp;show_portrait=0&amp;color=00ADEF&amp;fullscreen=1"></object>';
-                                        
-                                        openModal(html, {
-                                                width: '630',
-                                                height: '540',
-                                                topTxt: '<h3>Demonstration</h3>Följande är ett demonstrationsklipp av hur man undertecknar ett dokument med vår tjänst.'
-                                        });
-                                });
+                                jQuery('.campaign-text a, .campaign-play').overlay({mask: standardDialogMask});
                                 
                                 jQuery('.slide-nav ul li').click( function() {
                                         var index = jQuery(this).index();
@@ -95,7 +88,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 <div id="top-container">
                         <div class="content">
                                 <div class="logo no-txt">SkrivaPå</div>
-                                <div class="left">
+                                <div class="leftMain">
                                         <div class="intro-container">
                                                 <h2>Snabbt. Smidigt. Säkert.</h2>
                                                 <h3>SkrivaPå är en tjänst för att skriva på och arkivera avtal elektroniskt. Minska kostnaderna, öka omsättningen och spar på frustrationen. Välkommen till framtiden!
@@ -110,7 +103,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 </form>
                                         </div>
                                 </div>
-                                <div class="right">
+                                <div class="rightMain">
                                         <a href="#" class="login-button"><p>Logga in</p></a>
                                         <div class="user-container">
                                                 <div class="login-container">
@@ -121,7 +114,10 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                                 <form method="post" action="$linklogin$">
                                                                         <input type="email" name="email" value="E-post" class="infotext" autocomplete="off"/><br />
                                                                         <input type="password" name="password" value="Lösenord" class="infotext" autocomplete="off"/><br />
-                                                                        <a href="#" class="btn-tiny blue center float-right submit"><p>Logga in</p></a>
+                                                                        <a href="#" class="btn-tiny blue center float-right submit">
+                                                                            <div class="left"> </div>     
+                                                                            <div class="label"><p>Logga in</p> </div>
+                                                                            <div class="right"/> </div></a>
                                                                         <a href="#" class="txt-link">Glömt lösenord</a>
                                                                         <input type="submit" class="hidden" />
                                                                 </form>
@@ -135,7 +131,11 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                                 <form method="post" action="$linkforgotenpassword$">
                                                                         <p class="float-left">&nbsp;Skicka nytt lösenord</p>
                                                                         <input type="email" name="email" value="E-post" class="infotext" autocomplete="off"/>
-                                                                        <a href="#" class="btn-tiny blue center float-right submit"><p>Skicka</p></a>
+                                                                        <a href="#" class="btn-tiny blue center float-right submit">
+                                                                           <div class="left"> </div>     
+                                                                            <div class="label"> <p>Skicka</p> </div>
+                                                                            <div class="right"/> </div></a>
+                                                                        </a>
                                                                         <a href="#" class="txt-link">Tillbaka</a>
                                                                         <input type="submit" class="hidden" />
                                                                 </form>
@@ -143,11 +143,11 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 </div>
                                         </div>
                                         <div class="campaign-container">
-                                                <div class="campaign-play"></div>
-                                                <div class="campaign-text">
+                                                <div class="campaign-play" rel=".campaign-play-video"></div>
+                                                <div class="campaign-text" rel=".campaign-play-video">
                                                         <blockquote>”Processerna blir betydligt smidigare. Man sparar tid helt enkelt.”</blockquote>
                                                         <em>- Lisa Renander och Julia Hamrin, VD och Säljchef på Go Enterprise, Management Consulting</em>
-                                                        <a href="#">Se demo</a>
+                                                        <a href="#" rel=".campaign-play-video">Se demo</a>
                                                 </div>
                                         </div>
                                 </div>
@@ -441,6 +441,24 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                         </div>
                 </div>
                 </div>
+            <div class="modal-container campaign-play-video" style="display:none;width:730px;height: 520px">
+                                            <div class="modal-header">
+                                                <div class="modal-icon message"></div>
+                                                    <div class="modal-title">
+                                                        <h3>Demonstration</h3>
+                                                        <p>Följande är ett demonstrationsklipp av hur man undertecknar ett dokument med vår tjänst.</p>
+                                                    </div>
+                                                <a class="modal-close close"> </a>
+                                            </div>
+                                            <div class="modal-body" >
+                                            <div class="modal-content">
+                                            <object> <embed width="590" height="370" allowscriptaccess="always" allowfullscreen="true" 
+                                                            type="application/x-shockwave-flash" 
+                                                            src="https://secure.vimeo.com/moogaloop.swf?clip_id=19914678&amp;server=vimeo.com&amp;show_title=0&amp;show_byline=0&amp;show_portrait=0&amp;color=00ADEF&amp;fullscreen=1">
+                                            </object>
+                                            </div>
+                                            </div>
+           </div>
         </body>
 </html>
 ####

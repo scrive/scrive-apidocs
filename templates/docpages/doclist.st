@@ -9,9 +9,8 @@ mainpage=
 ####
 
 ####		
-pageDocumentList= 
-<form method="post" action="">
-	<input type="hidden" name="archive" value="1" />
+pageContractsList= 
+<form method="post" action="$currentlink$">
 	<div id="tab-viewer">
 		<div class="tab-header">
 
@@ -19,7 +18,7 @@ pageDocumentList=
 		<ul class="tabs">
 			<li class="active"><a href="/d">Dokument</a></li>
 			<li><a href="/t">Mallar</a></li>
-			<li><a href="/contacts">Kontakter</a></li>
+			<!-- <li><a href="/contacts">Kontakter</a></li> -->
 			<li><a href="/account/subaccount">Underkonton</a></li>
 		</ul>
 		<div class="tab-container">
@@ -33,8 +32,12 @@ pageDocumentList=
 					</div>
 				</div>
 				<div class="col float-right">
-					<input type="text" class="tab-search infotext" name="searchValue" value="Sök dokument" />
-					<a href="#" class="btn-tiny black float-right submit" rel="search"><div class="left"></div><div class="label">Sök</div><div class="right"></div></a>
+                    $if(params.search)$ 
+                     <input type="text" class="tab-search" name="search" value="$params.search$" />
+                    $else$
+					<input type="text" class="tab-search infotext grayed" name="search" value="Sök dokument" />
+                    $endif$
+					<a href="#" class="btn-tiny black float-right submit"><div class="left"></div><div class="label">Sök</div><div class="right"></div></a>
 				</div>
 				<div class="clearfix"></div>
 			</div>
@@ -43,20 +46,54 @@ pageDocumentList=
 					<thead>
 						<tr>
 							<th style="width: 30px;"><input type="checkbox" name="" id="all" /></th>
-							<th style="width: 50px;"><a href="javascript:;">Status <em>▼</em></a></th>
-							<th style="width: 70px;"><a href="javascript:;">Senaste händelse <em>▼</em></a></th>
-							<th style="width: 200px;"><a href="javascript:;">Parter <em>▼</em></a></th>
-							<th style="width: 400px;"><a href="javascript:;">Dokument <em>▼</em></a></th>
+							<th style="width: 50px;">
+                               $if(params.sorting.statusREV)$
+                                <a href="$currentlink$&sorting=status">Status  <em> ▲</em></a>
+                               $elseif(params.sorting.status)$
+                                <a href="$currentlink$&sorting=statusREV">Status  <em style="text-color:red"> ▼</em></a>
+                               $else$
+                                <a href="$currentlink$&sorting=status">Status </a>
+                               $endif$
+                             </th>
+							<th style="width: 70px;">
+                               $if(params.sorting.timeREV)$
+                                <a href="$currentlink$&sorting=time">Senaste händelse  <em> ▲</em></a>
+                               $elseif(params.sorting.time)$
+                                <a href="$currentlink$&sorting=timeREV">Senaste händelse  <em style="text-color:red"> ▼</em></a>
+                               $else$
+                                <a href="$currentlink$&sorting=time">Senaste händelse </a>
+                               $endif$
+                            </th>
+							<th style="width: 200px;">
+                               $if(params.sorting.partnerREV)$
+                                <a href="$currentlink$&sorting=partner">Parter <em> ▲</em></a>
+                               $elseif(params.sorting.partner)$
+                                <a href="$currentlink$&sorting=partnerREV">Parter  <em style="text-color:red"> ▼</em></a>
+                               $else$
+                                <a href="$currentlink$&sorting=partner">Parter </a>
+                               $endif$
+                            </th>
+							<th style="width: 400px;">
+                               $if(params.sorting.titleREV)$
+                                <a href="$currentlink$&sorting=title">Dokument <em> ▲</em></a>
+                               $elseif(params.sorting.title)$
+                                <a href="$currentlink$&sorting=titleREV">Dokument <em style="text-color:red"> ▼</em></a>
+                               $else$
+                                <a href="$currentlink$&sorting=title">Dokument </a>
+                               $endif$
+                            </th>
 							<th></th>
 						</tr>
 					</thead>
 					
     				<tbody id="selectable">
 				      $documents:{document |
-						<!-- Every other row should have class="odd" (Begin with first row) -->
-      					<tr $if(document.oddRow)$class="odd"$endif$>
+      					<tr $if(document.odd)$class="odd"$endif$>
 							<td>$if(document.isauthor)$ <input type="checkbox" name="doccheck" value="$document.documentid$" class="check"> $endif$</td>
-							<td><div src="/" class="icon status cancelled tooltip" rel="#tooltip-cancelled"></div>$if(document.anyinvitationundelivered)$  <span style="color:#000000;position:relative;top:-3px">!</span>$endif$</td>
+							<td>
+                              <div src="/" class="icon status $document.status$ tooltip" rel="#tooltip-cancelled"></div>
+                              $if(document.anyinvitationundelivered)$  <span style="color:#000000;position:relative;top:-3px">!</span>$endif$
+                           </td>
 							<td>
 								<span title="$document.mtime$">$document.mtime$</span>
 								$if(document.timeoutdaysleft)$  
@@ -94,38 +131,45 @@ pageDocumentList=
 					<div class="icon status signed"></div>Signerat&nbsp;
 				</div>
 				<div class="table-paginate">
+                  $if(elements.firstPageAvaible)$
+                    <a href="$currentlink$&page=$elements.lastPage$" class="btn-tiny black float-left">
+                        <div class="left"></div>
+                        <div class="label">
+                            <div class="btn-symbol black arrow-right"></div>
+                            <p>Bakåt</p>
+                        </div>
+                        <div class="right"></div>
+                    </a>
+                   $endif$ 
+                   $if(elements.lastPageAvaible)$
+                    <a href="$currentlink$&page=$elements.nextPage$" class="btn-tiny black float-right">
+                        <div class="left"></div>
+                        <div class="label">
+                            <p>Nästa</p>
+                            <div class="btn-symbol black arrow-left"></div>
+                        </div>
+                        <div class="right"></div>
+                    </a>
+                   $endif$
 					<div class="pages">
-						<strong>1-20 av 123</strong>
-						<<
-						<
-						1
-						<a href="#">2</a>
-						<a href="#">3</a>
-						<a href="#">4</a>
-						<a href="#">5</a>
-						<a href="#">6</a>
-						<a href="#">7</a>
-						...
-						<a href="#">31</a>
-						<a href="#">></a>
-						<a href="#">>></a>
+                        $if(!elements.none)$
+						 <strong>$elements.min$$if(!elements.single)$-$elements.max$ $endif$ av $elements.total$</strong>
+                        $endif$
+                        $if(elements.firstPageAvaible)$
+                            <a href="$currentlink$&page=1"><<</a>
+                        $endif$
+						 $pages:{page | 
+                         $if(page.current)$
+                          $page.nr$
+                         $else$
+                          <a href="$currentlink$&page=$page.nr$">$page.nr$</a>
+                         $endif$
+                        }$
+                        $if(elements.lastPageAvaible)$
+                            <a href="$currentlink$&page=$elements.totalPages$">>></a>
+                        $endif$
+                        
 					</div>
-					<a href="#" class="btn-tiny black float-left">
-						<div class="left"></div>
-						<div class="label">
-							<div class="btn-symbol black arrow-right"></div>
-							<p>Bakåt</p>
-						</div>
-						<div class="right"></div>
-					</a>
-					<a href="#" class="btn-tiny black float-right">
-						<div class="left"></div>
-						<div class="label">
-							<p>Nästa</p>
-							<div class="btn-symbol black arrow-left"></div>
-						</div>
-						<div class="right"></div>
-					</a>
 					<div class="clearfix"></div>
 				</div>
 			</div>
