@@ -140,13 +140,18 @@ instance (MayBeAuthor a) => MayBeAuthor (Maybe a) where
   isAuthor _ _        = False
 
 
+anyInvitationUndelivered :: Document -> Bool
 anyInvitationUndelivered =  not . Prelude.null . undeliveredSignatoryLinks
 
+isContract :: Document -> Bool
 isContract = ((==) Contract) . documenttype
+
+isTemplate :: Document -> Bool
 isTemplate = ((==) Template) . documenttype
 
 -- GETTERS
 
+undeliveredSignatoryLinks :: Document -> [SignatoryLink]
 undeliveredSignatoryLinks doc =  filter ((== Undelivered) . invitationdeliverystatus) $ documentsignatorylinks doc
 
 signatoryname :: SignatoryDetails -> BS.ByteString
@@ -161,6 +166,7 @@ signatoryname s =
 {- |
    Build a SignatoryDetails from a User with no fields
  -}
+signatoryDetailsFromUser :: User -> SignatoryDetails
 signatoryDetailsFromUser user = 
     SignatoryDetails { signatoryfstname = userfstname $ userinfo user 
                      , signatorysndname = usersndname $ userinfo user 
