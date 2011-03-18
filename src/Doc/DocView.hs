@@ -226,7 +226,7 @@ docSortFunc _ = const $ const EQ
 
 
 docsPageSize :: Int
-docsPageSize = 3
+docsPageSize = 20
  
 
 --
