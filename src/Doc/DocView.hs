@@ -6,7 +6,9 @@ module Doc.DocView (
   , pageDocumentForAuthor
   , pageDocumentForViewer
   , pageDocumentForSignatory
-  , pageDocumentList
+  , docSortSearchPage
+  , pageContractsList
+  , pageTemplatesList
   , landpageSignInviteView
   , landpageSendInviteView
   , landpageSignedView
@@ -37,6 +39,8 @@ import Control.Applicative ((<$>))
 import Data.Data
 import Data.List (find)
 import Data.Maybe
+import Data.Foldable (foldMap)
+import Data.Ord
 import Doc.DocState
 import Doc.DocViewMail
 import Doc.DocViewUtil
@@ -50,7 +54,10 @@ import Templates.TemplatesUtils
 import User.UserView (prettyName)
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
-
+import Data.Char (toUpper)
+import Data.List (isInfixOf,sortBy)
+import Data.Monoid
+import ListUtil
 
 landpageSignInviteView :: KontrakcjaTemplates -> Document -> IO String
 landpageSignInviteView templates document = do
@@ -144,39 +151,40 @@ singlnkFields sl = do
   field "company" $ ""
   
 
-
+documentStatusClass ::Document -> String
+documentStatusClass doc = 
+    case documentstatus doc of
+         Preparation    -> "draft"
+         Closed         -> "signed"
+         Canceled       -> "cancelled"
+         Timedout       -> "cancelled"
+         Rejected       -> "cancelled"
+         Pending        -> if anyInvitationUndelivered doc
+                               then "cancelled"
+                               else
+                                if all (isJust . maybeseeninfo) $ documentsignatorylinks doc
+                                 then "opened"
+                                 else "sent"
+         AwaitingAuthor -> if anyInvitationUndelivered doc
+                                then "cancelled"
+                                else
+                                  if all (isJust . maybeseeninfo) $ documentsignatorylinks doc
+                                    then "opened"
+                                    else "sent"
+         _              -> "cancelled"
 
 documentBasicViewFields :: MinutesTime -> User -> Document -> Fields
 documentBasicViewFields crtime user doc = do
     documentInfoFields doc
+    field "status" $ documentStatusClass doc
     field "signatories" $ map singlnkFields $ documentsignatorylinks doc
     field "anyinvitationundelivered" $ anyInvitationUndelivered doc
-    field "statusimage" $ "/theme/images/" ++
-        case documentstatus doc of
-            Preparation    -> "status_draft.png"
-            Closed         -> "status_signed.png"
-            Canceled       -> "status_rejected.png"
-            Timedout       -> "status_timeout.png"
-            Rejected       -> "status_rejected.png"
-            Pending        -> if anyInvitationUndelivered doc
-                               then "status_rejected.png"
-                               else
-                                if all (isJust . maybeseeninfo) $ documentsignatorylinks doc
-                                 then "status_viewed.png"
-                                 else "status_pending.png"
-            AwaitingAuthor -> if anyInvitationUndelivered doc
-                                then "status_rejected.png"
-                                else
-                                  if all (isJust . maybeseeninfo) $ documentsignatorylinks doc
-                                    then "status_viewed.png"
-                                    else "status_pending.png"
-            _              -> "status_rejected.png"
-    field "doclink" $ if (unAuthor $ documentauthor doc) == userid user || null signatorylinklist
-        then show . LinkIssueDoc $ documentid doc
-        else show $ LinkSignDoc doc (head signatorylinklist)
+    field "doclink"  $ if (unAuthor $ documentauthor doc) == userid user || null signatorylinklist
+                        then show . LinkIssueDoc $ documentid doc
+                        else show $ LinkSignDoc doc (head signatorylinklist)
     field "davelink" $ if isSuperUser (Just user)
-                      then Just $ "/dave/document/" ++ (show $ documentid doc)
-                      else Nothing
+                        then Just $ "/dave/document/" ++ (show $ documentid doc)
+                        else Nothing
     field "timeoutdate" $ fromTimeout show
     field "timeoutdaysleft" $ fromTimeout $ show . (dateDiffInDays crtime)
     field "mtime" $ showDateAbbrev crtime (documentmtime doc)
@@ -192,12 +200,51 @@ documentBasicViewFields crtime user doc = do
            _                               -> Nothing
 
 
-pageDocumentList :: KontrakcjaTemplates -> MinutesTime -> User -> [Document] -> IO String
-pageDocumentList templates ctime user documents =
-  renderTemplate templates "pageDocumentList" $ do
-    field "documents" $ map (documentBasicViewFields ctime user) $ filter (not . documentdeleted) documents
+
+-- Searching, sorting and paging
+docSortSearchPage :: ListParams -> [Document] -> PagedList Document
+docSortSearchPage  = listSortSearchPage docSortFunc docSearchFunc docsPageSize
+
+docSearchFunc::SearchingFunction Document
+docSearchFunc s doc =  nameMatch doc || signMatch doc
+    where
+    match m = isInfixOf (map toUpper s) (map toUpper m)
+    nameMatch = match . BS.toString . documenttitle
+    signMatch d = any match $ map (BS.toString . personname) (documentsignatorylinks d)
+    
+   
+docSortFunc:: SortingFunction Document
+docSortFunc "status" = comparing documentStatusClass
+docSortFunc "statusREV" = rcomparing documentStatusClass
+docSortFunc "title" = comparing documenttitle
+docSortFunc "titleREV" = rcomparing documenttitle
+docSortFunc "time" = comparing documentmtime
+docSortFunc "timeREV" = rcomparing documentmtime
+docSortFunc "partner" = comparing $ (map personname) . documentsignatorylinks 
+docSortFunc "partnerREV" = rcomparing $ (map personname) . documentsignatorylinks 
+docSortFunc _ = const $ const EQ
 
 
+docsPageSize :: Int
+docsPageSize = 3
+ 
+
+--
+
+pageContractsList :: KontrakcjaTemplates -> MinutesTime -> User -> PagedList Document -> IO String
+pageContractsList templates ctime user documents =
+  renderTemplate templates "pageContractsList" $ do
+    field "documents" $ markParity $ map (documentBasicViewFields ctime user) $ list documents
+    pageListFields documents
+    field "currentlink" $ show $ LinkContracts $ params documents
+        
+
+pageTemplatesList :: KontrakcjaTemplates -> MinutesTime -> User -> PagedList Document -> IO String
+pageTemplatesList templates ctime user documents =
+ renderTemplate templates "pageTemplatesList" $ do
+    field "documents" $ markParity $ map (documentBasicViewFields ctime user) $ list documents
+    
+          
 showFileImages :: KontrakcjaTemplates -> File -> JpegPages -> IO String
 showFileImages templates _ JpegPagesPending =
   renderTemplate templates  "showFileImagesPending" ()
@@ -324,6 +371,11 @@ pageDocumentForAuthor ctx
        documentAuthorInfo author
        designViewFields step
 
+renderActionButton :: KontrakcjaTemplates -> KontraLink -> String -> IO String
+renderActionButton templates action button = do
+  buttonname <- renderTemplate templates button ()
+  renderTemplate templates "actionButton" [("action", show action), ("buttonname", buttonname)]
+  
 {- |
    Show the document for Viewers (friends of author or signatory).
    Show no buttons or other controls
@@ -542,6 +594,9 @@ documentInfoText templates document siglnk author =
 documentInfoFields :: Document -> Fields
 documentInfoFields  document  = do
   field "documenttitle" $ BS.toString $ documenttitle document
+  field "title" $ BS.toString $ documenttitle document
+  field "name" $ BS.toString $ documenttitle document
+  field "id" $ show $ documentid document
   field "documentid" $ show $ documentid document
   field "timetosignset" $  isJust $ documentdaystosign document
   field "template" $  documenttype document == Template

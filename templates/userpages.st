@@ -8,7 +8,7 @@ viewSubaccounts =
 		<ul class="tabs">
 			<li><a href="/d">Dokument</a></li>
 			<li><a href="/t">Mallar</a></li>
-			<li><a href="/contacts">Kontakter</a></li>
+			<!-- <li><a href="/contacts">Kontakter</a></li> -->
 			<li class="active"><a href="/account/subaccount">Underkonton</a></li>
 		</ul>
 		<div class="tab-container">
@@ -102,75 +102,147 @@ viewSubaccounts =
 ###
 pageAcceptTOS =
     <form method="post" action="/accepttos" id="toscontainer" class="overlay">
-      <a class="close"> </a>
-      <h2>Vänligen acceptera användarvillkoren</h2>
-      $tostext:noescape()$
-      <br>
-      <input type="checkbox" name="tos" id="tos" />Jag har läst och accepterar SkrivaPå Allmänna Villkor<br>
-      <div class="buttonbox">
-        <input class="submiter button" type="submit" value="Skicka" />
-      </div>
+    <div class="modal-container">
+        <div class="modal-header">
+            <div class="modal-icon message"></div>
+            <div class="modal-title">
+                <h2>Vänligen acceptera användarvillkoren</h2>
+            </div>
+            <a class="modal-close close"> </a>
+        </div>
+        <div class="modal-body">
+            <div class="modal-content">     
+                $tostext:noescape()$
+            </div>
+        </div>
+        <div class="modal-footer">
+            <div style="float:left"><input type="checkbox" name="tos" id="tos" />Jag har läst och accepterar SkrivaPå Allmänna Villkor<br> </div>
+            <a href="#" class="btn-small green float-right submit submiter" id="editing-invite-text-finished">
+                <div class="left"></div>
+                <div class="label">
+                    <p>Skicka</p>
+                    <div class="btn-symbol green arrow-left"></div>
+                </div>
+                <div class="right"></div>
+            </a>
+        </div>
+    </div>
     </form>
 ####
 showUser =
-    <div class="accounttable">
-      <h1>$fname$ $lname$</h1>
-      <div>
-        <form action="$linkaccount$" method="post">
-          <table>
-            <tr>
-              <td>Förnamn:</td>
-              <td><input type="text" name="fname" autocomplete="off" value="$fname$"></td>
-            </tr>
-            <tr>
-              <td>Efternamn:</td>
-              <td><input type="text" name="lname" autocomplete="off" value="$lname$"></td>
-            </tr>
-            <tr>
-            <tr>
-              <td>E-post:</td>
-              <td>$email$</td>
-            </tr>
-            <tr><td>Företagsnamn:</td>
-              <td><input type="text" name="companyname" value="$companyname$" /></td>
-            </tr>
-            <tr>
-              <td>Position:</td>
-              <td><input type="text" name="companyposition" autocomplete="off" value="$companyposition$"></td>
-            </tr>
-            <tr><td>Organisationsnummer:</td>
-              <td><input type="text" name="companynumber" value="$companynumber$" /></td>
-            </tr>
-            <tr><td>Faktureringsadress:</td>
-              <td><input type="text" name="invoiceaddress" value="$invoiceaddress$ " /></td>
-            </tr>
-          </table>
-          <p>Du delar dina dokument med följande användare:</p>
-          <ul>
-            $viewers:{viewer|<li> $viewer$</li> }$
-            <li><input type="text" name="newvieweremail" infotext="Skriv e-post för att lägga till fler" size="28" /></li>
-          </ul>
-          <input class="button" type="submit" value="Spara ändringar" />
-        </form>
-      </div>
-      <div>
-        <form action="$linkaccountpassword$" method="post">
-          <table>
-            <tr><td>Nuvarande lösenord:</td>
-              <td><input type="password" name="oldpassword" autocomplete="off" /></td>
-            </tr>
-            <tr><td>Nytt lösenord:</td>
-              <td><input type="password" name="password" autocomplete="off" /></td>
-            </tr>
-            <tr><td>Upprepa nytt lösenord:</td>
-              <td><input type="password" name="password2" autocomplete="off" /></td>
-            </tr>
-          </table>
-          <input class="button" type="submit" value="Ändra lösenord" />
-        </form>
-      </div>
-      <div>
-        <a href="$linksubaccount$">Underkonton</a>
-      </div>
-    </div>
+<form action="$linkaccount$" method="post">
+<div id="tab-viewer">
+   <div class="tab-header">
+   </div>
+   <ul class="tabs">
+       <li class="active">Konto</li>
+   </ul>
+   <div class="tab-container">
+       <div class="tab-content account">
+           <div class="col">
+               <div class="account-header">
+                   <h2>$fname$ $lname$</h2>
+                   <a href="javascript:;">Ladda upp ny bild...</a>
+                   <div class="image">
+                       <img src="assets/img/portrait-lukas-d.png" height="68" width="58" />
+                   </div>
+               </div>
+               <div class="account-body">
+                   <h2>Personliga detaljer</h2>
+                   <table>
+                       <tr>
+                           <td>Förnamn:</td>
+                           <td><input type="text" name="fname" value="$fname$" autocomplete="off" /></td>
+                       </tr>
+                       <tr>
+                           <td>Efternamn:</td>
+                           <td><input type="text" name="lname" value="$lname$" autocomplete="off" /></td>
+                       </tr>
+                       <tr>
+                           <td>Personnummer</td>
+                           <td><input type="text" name="socialsecuritynr" value="$socialsecuritynr$" autocomplete="off" /></td>
+                       </tr>
+                       <tr>
+                           <td>E-post:</td>
+                           <td><input type="email" name="email" value="$email$" autocomplete="off" /></td>
+                       </tr>
+                       <tr>
+                           <td>Telennummer:</td>
+                           <td><input type="text" name="phonenumber" value="$phonenumber$" autocomplete="off" /></td>
+                       </tr>
+                       <tr>
+                           <td>Befattning</td>
+                           <td><input type="text" name="companyposition" value="$companyposition$" autocomplete="off" /></td>
+                       </tr>
+                   </table>
+               </div>
+               <div class="account-body">
+                   <h2>Byt lösenord</h2>
+                   <table>
+                       <tr>
+                           <td>Nuvarande lösen.:</td>
+                           <td><input type="password" name="oldpassword" /></td>
+                       <tr>
+                           <td>Nytt lösenord:</td>
+                           <td><input type="password" name="password" /></td>
+                       </tr>
+                       <tr>
+                           <td>Upprepa nytt lösen.:</td>
+                           <td><input type="password" name="password2" /></td>
+                       </tr>
+                   </table>
+               </div>
+           </div>
+           <div class="col">
+               <div class="account-header">
+                   <h2>Eventbook AB</h2>
+                   <a href="javascript:;">Ladda upp ny logotyp...</a>
+                   <div class="image">
+                       <img src="assets/img/portrait-lukas-d.png" height="68" width="58" />
+                   </div>
+               </div>
+               <div class="account-body">
+                   <h2>Företagsdetaljer</h2>
+                   <table>
+                       <tr>
+                           <td>Företag:</td>
+                           <td><input type="text" name="companyname" value="$companyname$" autocomplete="off" /></td>
+                       </tr>
+                       <tr>
+                           <td>Org. nr:</td>
+                           <td><input type="text" name="companynumber" value="$companynumber$" autocomplete="off" /></td>
+                       </tr>
+                       <tr>
+                           <td>Adress:</td>
+                           <td><input type="text" name="invoiceaddress" value="$invoiceaddress$" autocomplete="off" /></td>
+                       </tr>
+                       <tr>
+                           <td>Postnummer:</td>
+                           <td><input type="email" name="zipcode" value="$zipcode$" autocomplete="off" /></td>
+                       </tr>
+                       <tr>
+                           <td>Postort:</td>
+                           <td><input type="text" name="city" value="$city$" autocomplete="off" /></td>
+                       </tr>
+                       <tr>
+                           <td>Land:</td>
+                           <td><input type="text" name="country" value="$country$" autocomplete="off" /></td>
+                       </tr>
+                   </table>
+               </div>
+           </div>
+           <div class="clearfix"></div>
+           <div class="account-footer">
+               <a href="#" class="btn-small green submit">
+                   <div class="left"></div>
+                   <div class="label">
+                       <p>Spara</p>
+                       <div class="btn-symbol arrow-right"></div>
+                   </div>
+                   <div class="right"></div>
+               </a>
+           </div>
+       </div>
+   </div>
+</div>
 ####

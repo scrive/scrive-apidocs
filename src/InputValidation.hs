@@ -56,7 +56,7 @@ import Text.XML.HaXml.Posn
 import Text.XML.HaXml.Types
 
 import Kontra
-import Misc
+import Misc hiding (getFields)
 import Templates.Templates
 
 {- |

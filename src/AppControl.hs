@@ -13,6 +13,7 @@ import Control.Monad (msum, mzero)
 import Control.Monad.State
 import Control.Monad.Trans (liftIO,lift)
 import Control.Concurrent
+import Data.Functor
 import AppView as V
 import Control.Concurrent
 import Data.List
@@ -120,12 +121,13 @@ handleRoutes = msum [
 
      --A: Because this table only contains routing logic. The logic of
      --what it does/access control is left to the handler. EN
-
-     , dir "d" $ hget0  $ DocControl.handleIssueGet
+     , dir "t" $ hget0  $ DocControl.showTemplatesList
+     , dir "d" $ hget0  $ DocControl.showContractsList
      , dir "d" $ hget1  $ DocControl.handleIssueShowGet
      , dir "d" $ hget2  $ DocControl.handleIssueShowTitleGet
      , dir "d" $ {- param "doc" $ -} hpost0 $ DocControl.handleIssueNewDocument
      , dir "d" $ param "archive" $ hpost0 $ DocControl.handleIssueArchive
+     , dir "d" $ hpost0 $ DocControl.handleContractsReload
      , dir "d" $ hpost1 $ DocControl.handleIssueShowPost
      , dir "df" $ hget2 $ DocControl.handleFileGet
 

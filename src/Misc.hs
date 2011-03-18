@@ -393,35 +393,39 @@ maybe' :: a -> Maybe a -> a
 maybe' a ma = maybe a id ma   
 
 isFieldSet :: (HasRqData f, MonadIO f, Functor f, ServerMonad f) => String -> f Bool
-isFieldSet name = fmap isJust $ getField name
+isFieldSet name = isJust <$> getField name
 
-getField :: (HasRqData m, MonadIO m, ServerMonad m) => String -> m (Maybe String)
-getField name = getDataFn' (look name)
 
-getFieldBS :: (HasRqData m, MonadIO m, ServerMonad m) => String -> m (Maybe BSL.ByteString)
+getFields :: (HasRqData m, MonadIO m, ServerMonad m,Functor m) => String -> m [String]
+getFields name = (map BSL.toString)  <$> (fromMaybe []) <$> getDataFn' (lookInputList name)
+
+getField :: (HasRqData m, MonadIO m, ServerMonad m,Functor m) => String -> m (Maybe String)
+getField name = listToMaybe . reverse <$> getFields name
+
+getFieldBS :: (HasRqData m, MonadIO m, ServerMonad m,Functor m) => String -> m (Maybe BSL.ByteString)
 getFieldBS name = getDataFn' (lookBS name)
 
 getFieldUTF
   :: (HasRqData f, MonadIO f, Functor f, ServerMonad f) => String -> f (Maybe BS.ByteString)
-getFieldUTF name = fmap (fmap BS.fromString) $ getField name
+getFieldUTF name = (fmap BS.fromString) <$> getField name
 
 getFieldWithDefault
   :: (HasRqData f, MonadIO f, Functor f, ServerMonad f) => String -> String -> f String
-getFieldWithDefault d name =  fmap (fromMaybe d) $ getField name
+getFieldWithDefault d name =   (fromMaybe d) <$> getField name
 
 getFieldBSWithDefault
   :: (HasRqData f, MonadIO f, Functor f, ServerMonad f) =>
      BSL.ByteString -> String -> f BSL.ByteString
-getFieldBSWithDefault  d name = fmap (fromMaybe d) $ getFieldBS name
+getFieldBSWithDefault  d name = (fromMaybe d) <$> getFieldBS name
 
 getFieldUTFWithDefault
   :: (HasRqData f, MonadIO f, Functor f, ServerMonad f) =>
      BS.ByteString -> String -> f BS.ByteString
-getFieldUTFWithDefault  d name = fmap (fromMaybe d) $ getFieldUTF name
+getFieldUTFWithDefault  d name = (fromMaybe d) <$> getFieldUTF name
 
 readField
   :: (HasRqData f, MonadIO f, Read a, Functor f, ServerMonad f) => String -> f (Maybe a)
-readField name = fmap (join . (fmap readM)) $ getDataFn' (look name)     
+readField name =  (join . (fmap readM)) <$> getField name
 
 whenMaybe::(Functor m,Monad m) => Bool -> m a -> m (Maybe a)
 whenMaybe True  c = fmap Just c

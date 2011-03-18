@@ -62,7 +62,7 @@ wholePage=
       </head>
       <body>
         $header()$
-        <div id="mainContainer960" >
+        <div class="mainContainer960" >
           $flashmessages()$
         <div id="body-container">
          $if(!columns)$

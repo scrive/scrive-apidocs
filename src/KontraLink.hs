@@ -10,6 +10,7 @@ import qualified Codec.Binary.Url as URL
 import qualified Codec.Binary.UTF8.String as UTF
 import qualified Data.ByteString.UTF8 as BS
 import PayEx.PayExState
+import ListUtil
 {- |
    Defines the reason why we are redirected to login page
 -}
@@ -31,7 +32,8 @@ data KontraLink
     | LinkSignup
     | LinkForgotPassword
     | LinkForgotPasswordDone
-    | LinkIssue
+    | LinkContracts ListParams
+    | LinkTemplates ListParams
     | LinkMain
     | LinkAccount
     | LinkAccountPassword
@@ -76,7 +78,8 @@ instance Show KontraLink where
     showsPrec _ LinkSignup = (++) "/signup"
     showsPrec _ LinkForgotPassword = (++) "/amnesia"
     showsPrec _ LinkForgotPasswordDone = (++) "/amnesiadone"
-    showsPrec _ LinkIssue = (++) "/d"
+    showsPrec _ (LinkContracts params) = (++) $ "/d" ++ "?" ++ show params
+    showsPrec _ (LinkTemplates params) = (++) $ "/t" ++ "?" ++ show params
     showsPrec _ LinkMain = (++) "/"
     showsPrec _ LinkAcceptTOS = (++) "/accepttos"
     showsPrec _ LinkAccount = (++) "/account"

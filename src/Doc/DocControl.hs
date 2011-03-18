@@ -54,6 +54,7 @@ import qualified MemCache
 import Data.Char
 import Data.Map ((!))
 import InputValidation
+import ListUtil
 
 getFileContents :: Context -> File -> IO (BS.ByteString)
 getFileContents ctx file = do
@@ -279,7 +280,10 @@ handleSTable = withUserGet $ checkUserTOSGet $ do
       ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxtemplates}) <- get
       let user = fromJust ctxmaybeuser
       documents <- query $ GetDocumentsBySignatory user
-      content <- liftIO $ pageDocumentList ctxtemplates ctxtime user documents
+      let notdeleted = filter (not . documentdeleted) documents
+      let contracts = filter ((==) Contract . documenttype) notdeleted
+      params <- getListParams
+      content <- liftIO $ pageContractsList ctxtemplates ctxtime user (docSortSearchPage params contracts)
       renderFromBody ctx TopNone kontrakcja $ cdata content
 
 {- |
@@ -571,7 +575,7 @@ handleIssueShowPost docid = withUserPost $ do
       (Preparation, _ , _ ,_ , True) -> handleIssueChangeToContract document author                    
       (Preparation, _ , _ ,_, _) -> handleIssueSave document author
       (AwaitingAuthor, _ , _ ,_, _) -> handleIssueSignByAuthor document author
-      _  -> return LinkIssue 
+      _  -> return $ LinkContracts emptyListParams
      
 
 handleIssueSign document author = do
@@ -608,7 +612,7 @@ handleIssueSaveAsTemplate document author = do
             mndoc <- update $ TemplateFromDocument $ documentid document
             case mndoc of
                 Right newdocument -> do
-                    return LinkIssue        
+                    return $ LinkContracts emptyListParams       
                 Left _ -> mzero
         Left _ -> mzero            
 
@@ -627,7 +631,7 @@ handleIssueSave document author = do
     ctx <- get
     updateDocument ctx author document Nothing
     addFlashMsg =<< (liftIO . flashDocumentDraftSaved $ ctxtemplates ctx)
-    return LinkIssue
+    return $ LinkContracts emptyListParams
 
 handleIssueSignByAuthor document author = do
     ctx@Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber} <- get
@@ -637,7 +641,7 @@ handleIssueSignByAuthor document author = do
         Just d -> do 
             postDocumentChangeAction d AwaitingAuthor Nothing
             addFlashMsg =<< (liftIO $ flashAuthorSigned $ ctxtemplates ctx)
-            return LinkIssue
+            return $ LinkContracts emptyListParams
 {- |
    Show the document with title in the url
    URL: /d/{documentid}/{title}
@@ -834,8 +838,8 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
    is a friend of the author.
    Duplicates are removed.
  -}
-handleIssueGet :: Kontra Response
-handleIssueGet = withUserGet $ checkUserTOSGet $ do
+showContractsList:: Kontra Response
+showContractsList= withUserGet $ checkUserTOSGet $ do
   -- Just user is safe here because we guard for logged in user
   ctx@(Context {ctxmaybeuser = Just user, ctxhostpart, ctxtime, ctxtemplates}) <- get
   mydocuments <- query $ GetDocumentsByUser user 
@@ -844,7 +848,24 @@ handleIssueGet = withUserGet $ checkUserTOSGet $ do
   -- get rid of duplicates
   let documents = nub $ mydocuments ++ concat friends'Documents
   let sorteddocuments = sortBy (\d1 d2 -> compare (documentmtime d2) (documentmtime d1)) documents
-  content <- liftIO $ pageDocumentList ctxtemplates ctxtime user sorteddocuments
+  let notdeleted = filter (not . documentdeleted) sorteddocuments
+  let contracts  = filter ((==) Contract . documenttype) notdeleted
+  params <- getListParams
+  liftIO $ putStrLn $ show params
+  content <- liftIO $ pageContractsList ctxtemplates ctxtime user (docSortSearchPage params contracts)
+  renderFromBody ctx TopDocument kontrakcja $ cdata content
+
+showTemplatesList:: Kontra Response
+showTemplatesList = withUserGet $ checkUserTOSGet $ do
+  -- Just user is safe here because we guard for logged in user
+  ctx@(Context {ctxmaybeuser = Just user, ctxhostpart, ctxtime, ctxtemplates}) <- get
+  mydocuments <- query $ GetDocumentsByUser user 
+  let documents = nub $ mydocuments
+  let sorteddocuments = sortBy (\d1 d2 -> compare (documentmtime d2) (documentmtime d1)) documents
+  let notdeleted = filter (not . documentdeleted) sorteddocuments
+  let templates = filter ((==) Template . documenttype) notdeleted
+  params <- getListParams
+  content <- liftIO $ pageTemplatesList ctxtemplates ctxtime user (docSortSearchPage params templates)
   renderFromBody ctx TopDocument kontrakcja $ cdata content
 
 {- |
@@ -1314,12 +1335,15 @@ handleIssueNewDocument = withUserPost $ do
 handleIssueArchive :: Kontra KontraLink
 handleIssueArchive = do
     ctx@(Context { ctxmaybeuser = Just user, ctxhostpart, ctxtime }) <- get
-    something <- getDataFnM (lookInput "archive")
     idnumbers <- getCriticalFieldList asValidDocID "doccheck"
+    liftIO $ putStrLn $ show idnumbers
     let ids = map DocumentID idnumbers
     update $ ArchiveDocuments user ids
-    return LinkIssue
+    return $ LinkContracts emptyListParams
 
+handleContractsReload :: Kontra KontraLink
+handleContractsReload  = fmap LinkContracts getListParamsForSearch
+    
 
 showPage :: FileID -> Int -> Kontra Response
 showPage fileid pageno = do
