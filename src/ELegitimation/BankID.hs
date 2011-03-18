@@ -578,13 +578,13 @@ verifySignature provider tbs signature nonce transactionID = do
 
 {- | Merge two bits of information, choosing b over a.
  -}                             
-mergeTwo :: BS.ByteString -> BS.ByteString -> BS.ByteString
+mergeTwo :: BS.ByteString -> BS.ByteString -> Either String BS.ByteString
 mergeTwo a b 
-    | b == BS.fromString "" = a
-    | a == BS.fromString "" = b
-    | a == b  = b
-    | a /= b  = b
-    | otherwise = BS.fromString "Just to please the compiler."
+    | b == BS.fromString "" = Right a
+    | a == BS.fromString "" = Left "Field not given"
+    | a == b  = Right b
+    | a /= b  = Left $ "'" ++ (BS.toString a) ++ "'" ++ " and " ++ "'" ++ (BS.toString b) ++ "'" ++ " do not match."
+    | otherwise = Left "Just to please the compiler."
  
 {- | Compare signatory information from contract with that from the
      E-Legitimation provider. Returns Either and error message or the
@@ -593,16 +593,15 @@ mergeTwo a b
 mergeInfo :: (BS.ByteString, BS.ByteString, BS.ByteString) 
                 -> (BS.ByteString, BS.ByteString, BS.ByteString) 
                 -> Either String (BS.ByteString, BS.ByteString, BS.ByteString)
-mergeInfo (contractFirst, contractLast, contractNumber) (elegFirst, elegLast, elegNumber)
-    | not (BS.null contractLast) &&
-      not (BS.null elegLast    ) &&
-      contractLast   /= elegLast   = Left "The last name from your E-Legitimation provider does not match your last name entered on the contract. Please notify the author."
-    | not (BS.null contractNumber) &&
-      not (BS.null elegNumber    ) &&
-      contractNumber /= elegNumber = Left "Numbers do not match."
-    | otherwise                    = Right (mergeTwo contractFirst  elegFirst,
-                                            mergeTwo contractLast   elegLast,
-                                            mergeTwo contractNumber elegNumber)
+mergeInfo (contractFirst, contractLast, contractNumber) (elegFirst, elegLast, elegNumber) =
+    let results = zipWith mergeTwo 
+                    [contractFirst, contractLast, contractNumber]
+                    [elegFirst,     elegLast,     elegNumber]
+        lefts = [x | Left x <- results]
+    in
+        if null lefts
+        then Right (contractFirst, contractLast, contractNumber)
+        else Left $ intercalate ", " lefts
 
 allowsIdentification :: Doc.DocState.Document -> IdentificationType -> Bool
 allowsIdentification document idtype = 
