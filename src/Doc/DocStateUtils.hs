@@ -68,7 +68,7 @@ newFromDocument f docid = do
     documents <- ask
     case (getOne (documents @= docid)) of
       Just doc -> fmap Right $ insertNewDocument $ f doc
-      Nothing -> return $ Left "No such document"
+      Nothing -> return $ Left $ "Document " ++ show docid ++ " does not exist"
       
 -- | There are six methods for update. We want force an exact info if any operation that chandes document makes sense on templates.
 
