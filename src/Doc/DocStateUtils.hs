@@ -32,6 +32,9 @@ module Doc.DocStateUtils (
     -- Other utils
     , signatoryDetailsFromUser
     , isMatchingSignatoryLink
+
+    -- History management
+    , appendHistory
     )
 
 where
@@ -177,3 +180,7 @@ isMatchingSignatoryLink user sigLink = signatoryMatches || emailMatches
   signatoryMatches = maybe False (\s -> unSignatory s == userid user)  (maybesignatory sigLink)
   emailMatches = (signatoryemail . signatorydetails $ sigLink) == (unEmail . useremail $ userinfo user)
   
+
+appendHistory :: Document -> [DocumentHistoryEntry] -> Document
+appendHistory document history =
+    document { documenthistory = documenthistory document ++ history }

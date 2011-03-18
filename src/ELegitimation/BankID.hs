@@ -168,7 +168,7 @@ handleSignPostBankID docid signid magic = do
                     liftIO $ print msg
                     -- send to canceled with reason msg
                     addFlashMsg $ toFlashMsg OperationFailed msg
-                    Just newdoc <- update $ CancelDocument docid
+                    Just newdoc <- update $ CancelDocument docid ctxtime ctxipnumber
                     return $ LinkSignDoc document siglink
                 -- we have merged the info!
                 Right _ -> do

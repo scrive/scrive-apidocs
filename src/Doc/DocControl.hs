@@ -1356,11 +1356,11 @@ showPage fileid pageno = do
 
 handleCancel:: DocumentID -> Kontra KontraLink
 handleCancel docid = withUserPost $ do
-  ctx@Context { ctxmaybeuser = Just user } <- get
+  ctx@Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber } <- get
   doc <- queryOrFail $ GetDocumentByDocumentID docid
   failIfNotAuthor doc user
   customMessage <- getCustomTextField "customtext"  
-  mdoc' <- update $ CancelDocument(documentid doc) 
+  mdoc' <- update $ CancelDocument (documentid doc) ctxtime ctxipnumber
   case mdoc' of 
     Just doc' -> do
           sendCancelMailsForDocument customMessage ctx doc
@@ -1384,7 +1384,7 @@ handleRestart docid = do
   ctx <- get
   case ctxmaybeuser ctx of
     Just user -> do
-      update $ RestartDocument docid user
+      update $ RestartDocument docid user (ctxtime ctx) (ctxipnumber ctx)
       addFlashMsg =<< (liftIO $ flashDocumentRestarted (ctxtemplates ctx))
       return $ LinkIssueDoc docid
     Nothing -> return $ LinkLogin NotLoggedAsSuperUser
