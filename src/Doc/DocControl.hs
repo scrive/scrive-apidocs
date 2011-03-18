@@ -329,7 +329,6 @@ signDocument documentid
 {- |
    Control rejecting the document
    URL: /s/{docid}/{signatorylinkid1}/{magichash1}
-   NOTE: magichash1 is currently ignored! (though it must exist)
  -}
 rejectDocument :: DocumentID 
                -> SignatoryLinkID 
