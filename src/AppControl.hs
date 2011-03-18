@@ -206,9 +206,9 @@ handleRoutes = msum [
      , dir "question"    $ hpost0 $ UserControl.handleQuestion
      -- e-legitimation stuff
      , dir "s" $ hget4  $ BankID.handleSignBankID
-     , dir "s" $ hpost3 $ BankID.handleSignPostBankID
+     , dir "s" $ param "eleg" $ hpost3 $ BankID.handleSignPostBankID
      , dir "d" $ hget2  $ BankID.handleIssueBankID
-     , dir "d" $ hpost1 $ BankID.handleIssuePostBankID
+     , dir "d" $ param "eleg" $ hpost1 $ BankID.handleIssuePostBankID
 
      -- static files
      , serveHTMLFiles
