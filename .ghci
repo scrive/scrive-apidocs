@@ -1,6 +1,5 @@
 :set -DMIN_VERSION_template_haskell(a,b,c)=1
-:set -DMIN_VERSION_happstack_server(a,b,c)=0
-:set -package happstack-0.5.0.3 -package happstack-ixset-0.5.0.3 -package happstack-state-0.5.0.3 -package happstack-util-0.5.0.3 -package happstack-data-0.5.0.3 -package happstack-server-0.5.0.4 -package HPDF -package hsp-0.5.2 -package hsx-0.7.0 -package hxt-8.5.4 -package mtl-1.1.0.2 -hide-package monads-fd -hide-package monads-tf
+:set -DMIN_VERSION_happstack_server(a,b,c)=1
 :set -isrc -ipdfseal/src -ipdfseal/inc
 :set -XDeriveDataTypeable
 :set -XFlexibleContexts
