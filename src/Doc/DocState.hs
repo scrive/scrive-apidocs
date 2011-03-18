@@ -68,7 +68,7 @@ import Misc
 import Control.Monad
 import Data.List (find)
 import MinutesTime
-import Data.List (zipWith4,partition)
+import Data.List (zipWith4,partition, find)
 import System.Random
 import Data.Word
 import Data.Int
@@ -266,7 +266,8 @@ signDocument documentid signatorylinkid1 time ipnumber msiginfo fields = do
   modifyContract documentid $ \document ->
       let
           signeddocument = document { documentsignatorylinks = newsignatorylinks }
-                           `appendHistory` [DocumentHistorySigned time ipnumber]
+                           `appendHistory` [DocumentHistorySigned time ipnumber (signatorydetails signatoryLink)]
+          Just signatoryLink = find (\x -> signatorylinkid x == signatorylinkid1) (documentsignatorylinks document)
           newsignatorylinks = map maybesign (documentsignatorylinks document)
           maybesign link@(SignatoryLink {signatorylinkid, signatorydetails} ) 
               | signatorylinkid == signatorylinkid1 = 
@@ -296,7 +297,7 @@ signDocument documentid signatorylinkid1 time ipnumber msiginfo fields = do
 
           signeddocument2 = 
               if isallsigned
-              then signeddocument { documentstatus = Closed }
+              then signeddocument { documentstatus = Closed } `appendHistory` [DocumentHistoryClosed time ipnumber]
               else if allsignedbutauthor 
                    then signeddocument { documentstatus = AwaitingAuthor }
                    else signeddocument
@@ -326,10 +327,11 @@ authorSendDocument documentid time ipnumber author msiginfo =
                              return $ TimeoutTime $ (days * 24 *60) `minutesAfter` time
                   authorid = userid author
                   sinfo = Just (SignInfo time ipnumber)
+                  sigdetails = map signatorydetails (documentsignatorylinks document)
               in Right $ document { documenttimeouttime = timeout
                                   , documentmtime = time
                                   , documentstatus = Pending
-                                  } `appendHistory` [DocumentHistoryInvitationSent time ipnumber]
+                                  } `appendHistory` [DocumentHistoryInvitationSent time ipnumber sigdetails]
               
           Timedout -> Left "FÃ¶rfallodatum har passerat" -- possibly quite strange here...
           _ ->        Left ("Bad document status: " ++ show (documentstatus document))
@@ -351,11 +353,12 @@ authorSignDocument documentid time ipnumber author msiginfo =
                              return $ TimeoutTime $ (days * 24 *60) `minutesAfter` time
                   authorid = userid author
                   sinfo = Just (SignInfo time ipnumber)
+                  sigdetails = map signatorydetails (documentsignatorylinks document)
                   signeddocument = document { documenttimeouttime = timeout
                                   , documentmtime = time
                                   , documentsignatorylinks = signWithUserID (documentsignatorylinks document) authorid sinfo msiginfo
                                   , documentstatus = Pending
-                                  } `appendHistory` [DocumentHistoryInvitationSent time ipnumber]
+                                  } `appendHistory` [DocumentHistoryInvitationSent time ipnumber sigdetails]
               in Right $ signeddocument
               
           Timedout -> Left "FÃ¶rfallodatum har passerat" -- possibly quite strange here...
@@ -376,7 +379,10 @@ rejectDocument :: DocumentID
 rejectDocument documentid signatorylinkid1 time ipnumber = do
   modifyContract documentid $ \document ->
       let
-          newdocument = document { documentstatus = Rejected } `appendHistory` [DocumentHistoryRejected time ipnumber]
+          signlinks = documentsignatorylinks document
+          Just sl = find ((== signatorylinkid1) . signatorylinkid) signlinks
+          newdocument = document { documentstatus = Rejected } `appendHistory` 
+                        [DocumentHistoryRejected time ipnumber (signatorydetails sl)]
       in case documentstatus document of
            Pending ->  Right newdocument
            Timedout -> Left "FÃ¶rfallodatum har passerat"
@@ -529,13 +535,14 @@ closeDocument docid time ipnumber author msiginfo = do
     Left _ -> return Nothing
     Right d -> return $ Just d
 
---We should add current state checkers here (not co cancel closed documents etc.)
-cancelDocument :: DocumentID -> MinutesTime -> Word32 -> Update Documents (Maybe Document)
+cancelDocument :: DocumentID -> MinutesTime -> Word32 -> Update Documents (Either String Document)
 cancelDocument docid time ipnumber = do
-  doc <- modifyContract docid $ \document -> Right $ document { documentstatus = Canceled } `appendHistory` [DocumentHistoryCanceled time ipnumber] 
-  case doc of
-    Left _ -> return Nothing
-    Right d -> return $ Just d
+  modifyContract docid $ \document -> 
+      do
+          case documentstatus document of
+              Pending -> Right $ document { documentstatus = Canceled } 
+                         `appendHistory` [DocumentHistoryCanceled time ipnumber] 
+              _ -> Left $ "Incalid document status " ++ show (documentstatus document) ++ " in cancelDocument"
 
 
 
