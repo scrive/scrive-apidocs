@@ -152,7 +152,6 @@ handleRoutes = msum [
      -- UserControl
      , dir "account"                    $ hget0  $ UserControl.handleUserGet
      , dir "account"                    $ hpost0 $ UserControl.handleUserPost
-     , dir "account" $ dir "password"   $ hpost0 $ UserControl.handleUserPasswordPost
      , dir "account" $ dir "subaccount" $ hget0  $ UserControl.handleGetSubaccount
      , dir "account" $ dir "subaccount" $ hpost0 $ UserControl.handlePostSubaccount
      , dir "contacts"  $ hget0 $ Contacts.showContacts
