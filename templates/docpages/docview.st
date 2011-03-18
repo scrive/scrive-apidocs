@@ -186,18 +186,67 @@ pageDocumentForSignContent=
       $helpers:noescape()$
     </div>
     <form method="post" name="form" action="$action$" id="dialog-confirm-sign" class="overlay">     
-      <a href="#" class="close"> </a>                  
-      <h2>Underteckna</h2>  
-      <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
-      <p>När $partyUnsigned:noescape()$ undertecknat blir 
-        avtalet <strong>juridiskt bindande</strong> och
-        det färdigställda avtalet skickas till din e-post.</p>
-      <div class="buttonbox">
-        <input type="hidden" name="sign" value="automatic" />
-        <button class="close button" type="button"> Avbryt </button>
-        <button class="submiter button" type="button"> Underteckna </button>
-      </div>
+    <div class="modal-container">
+        <div class="modal-header">
+            <div class="modal-icon message"></div>
+            <div class="modal-title">
+               <h2>Underteckna</h2> 
+            </div>
+            <a class="modal-close close"> </a>
+        </div>
+        <div class="modal-body">
+            <div class="modal-content">
+                 <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
+                 <p>När $partyUnsigned:noescape()$ undertecknat blir 
+                    avtalet <strong>juridiskt bindande</strong> och
+                    det färdigställda avtalet skickas till din e-post.</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+          <input type="hidden" name="sign" value="automatic" />
+          <a  class="close cancel">Avbryt</a>
+          $if(requireseleg)$
+          <span id="elegbuttons">
+            <input type="hidden" name="eleg" id="elegprovider" value=""
+                   /> 
+            <input type="hidden" name="signature" value="" id="signatureinput" />
+            <input type="hidden" name="transactionid" value="" id="transactionidinput" />
+            
+            <button class="bankid button signatory" type="button">BankID</button>
+            <button class="telia button signatory" type="button">Telia</button>
+            <button class="nordea button signatory" type="button">Nordea</button>
+          </span>
+          $else$
+          
+          <a href="#" class="btn-small green float-right submiter">
+            <div class="left"></div>
+            <div class="label">
+              <p>Underteckna</p>
+              <div class="btn-symbol green arrow-left"></div></div>
+            <div class="right"></div>
+          </a>
+          $endif$
+        </div>
+     </div>
+
     </form>
+
+  <form method="post" name="form" action="" id="dialog-confirm-sign-eleg" class="overlay">     
+    <a class="close"> </a>                  
+    <h2>Underteckna with E-Legitimation</h2>  
+    <p>CHANGE!!!Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
+    <p>När  undertecknat blir 
+      avtalet <strong>juridiskt bindande</strong> och
+      det färdigställda avtalet skickas till din e-post.</p>
+    <div class="buttonbox">
+
+      <input type="hidden" name="signature" value="" id="signatureinput" />
+      <input type="hidden" name="transactionid" value="" id="transactionidinput" />
+      <button class="close button" type="button"> Avbryt </button>
+      <button class="bankid button" type="button"> Underteckna with BankID</button>
+    </div>
+  </form>  
+
     <form method="post" name="form" action="action" id="dialog-confirm-sign-eleg" class="overlay">     
       <script type="text/javascript" src="/js/bankid.js"></script>
       <div class="modal-container">
@@ -308,105 +357,149 @@ $signatoryScriptIfRequired()$
 ####
 pageDocumentForAuthorHelpersLocalDialogs=
 <div class="localdialogs">
-  <form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-signinvite" rel=".stepForm">  
-    <a class="close"> </a>
-    <h2 id="dialog-title-sign">Underteckna</h2>
-    <div id="dialog-confirm-text-sign">
-      <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
-      <p>När du undertecknat kommer en automatisk inbjudan att skickas till 
-      <span class="Xinvited">Invited</span> med e-post.</p>
-    </div>
-    <div class="buttonbox" >
-      <input type="hidden" name="sign" value="automatic" />
-      <button class="close button" type="button"> Avbryt </button>
-      <button class="submiter button" type="button"> Underteckna </button>
-    </div>
-  </form>
-
-  <form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-sendinvite" rel=".stepForm">  
+  <form method="post" name="form" action="$linkissuedoc$"
+  class="overlay redirectsubmitform" id="dialog-confirm-signinvite"
+  rel=".stepForm">  
     <div class="modal-container">
         <div class="modal-header">
             <div class="modal-icon message"></div>
             <div class="modal-title">
-                <h2 id="dialog-title-sign">Skicka inbjudan</h2>
+                <h2 id="dialog-title-sign">Underteckna</h2>
             </div>
             <a class="modal-close close"> </a>
         </div>
         <div class="modal-body">
             <div class="modal-content">
-                <div id="dialog-confirm-text-send">
-                    <p>Du har valt en sekreterarroll och kommer själv inte att underteckna. Är du säker på att du vill skicka en inbjudan att underteckna dokumentet <strong>$documenttitle$</strong> till <span class="Xinvited">Invited</span>?</p>
-                </div>
-
-                <div id="dialog-confirm-text-send-fields">
-                    <p>Du har skapat fält för parterna att fylla i innan de undertecknar. Efter att alla har undertecknat kommer du att 
-                       få ett mail med en länk till en sida på SkrivaPå där du kan granska parternas uppgifter och underteckna dokumentet. </p>
-                    <p> Vill du skicka inbjudan att fylla i och underteckna dokumentet <strong>$documenttitle$</strong> till 
-                        <span class="Xinvited">Invited</span>?  </p>
-                </div>
-
-                <div id="dialog-confirm-text-send-normal">
-                <p> Vill du skicka en inbjudan att underteckna dokumentet till <span class="Xinvited">Invited</span>? 
-                    Efter att de har undertecknat kommer du att få ett mail med en länk till en sida på SkrivaPå där du kan underteckna dokumentet.</p>
-                </div>
+                 <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
+                 <p>När du undertecknat kommer en automatisk inbjudan att skickas till 
+                 <span class="Xinvited">Invited</span> med e-post.</p>
             </div>
         </div>
         <div class="modal-footer">
-                <input type="hidden" name="final" value="automatic" />
-                <a  class="close cancel">Avbryt</a>
-                <a href="#" class="btn-small green float-right submiter">
-                <div class="left"></div>
-                <div class="label">
-                    <p> Skicka</p>
-                <div class="btn-symbol green arrow-left"></div></div>
-                <div class="right"></div>
-            </a>
+          <input type="hidden" name="sign" value="automatic" />
+          <a  class="close cancel">Avbryt</a>
+          <a href="#" class="btn-small green float-right submiter">
+            <div class="left"></div>
+            <div class="label">
+              <p>Underteckna</p>
+              <div class="btn-symbol green arrow-left"></div></div>
+            <div class="right"></div>
+          </a>
+          <span id="elegbuttons" style="display: none;">
+            <input type="hidden" name="eleg" id="elegprovider" value="" />
+            <input type="hidden" name="signature" value="" id="signatureinput" />
+            <input type="hidden" name="transactionid" value="" id="transactionidinput" />
+            
+            <button class="bankid button author" type="button">BankID</button>
+            <button class="telia button author" type="button">Telia</button>
+            <button class="nordea button author" type="button">Nordea</button>
+          </span>
+          
         </div>
     </div>
   </form>
 
+  <form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-sendinvite" rel=".stepForm">  
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-icon message"></div>
+        <div class="modal-title">
+          <h2 id="dialog-title-sign">Skicka inbjudan</h2>
+        </div>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">
+          <div id="dialog-confirm-text-send">
+            <p>Du har valt en sekreterarroll och kommer själv inte att underteckna. Är du säker på att du vill skicka en inbjudan att underteckna dokumentet <strong>$documenttitle$</strong> till <span class="Xinvited">Invited</span>?</p>
+          </div>
+
+          <div id="dialog-confirm-text-send-fields">
+            <p>Du har skapat fält för parterna att fylla i innan de undertecknar. Efter att alla har undertecknat kommer du att 
+              få ett mail med en länk till en sida på SkrivaPå där du kan granska parternas uppgifter och underteckna dokumentet. </p>
+            <p> Vill du skicka inbjudan att fylla i och underteckna dokumentet <strong>$documenttitle$</strong> till 
+              <span class="Xinvited">Invited</span>?  </p>
+          </div>
+
+          <div id="dialog-confirm-text-send-normal">
+            <p> Vill du skicka en inbjudan att underteckna dokumentet till <span class="Xinvited">Invited</span>? 
+              Efter att de har undertecknat kommer du att få ett mail med en länk till en sida på SkrivaPå där du kan underteckna dokumentet.</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <input type="hidden" name="final" value="automatic" />
+        <a  class="close cancel">Avbryt</a>
+        <a href="#" class="btn-small green float-right submiter">
+          <div class="left"></div>
+          <div class="label">
+            <p> Skicka</p>
+            <div class="btn-symbol green arrow-left"></div></div>
+          <div class="right"></div>
+        </a>
+      </div>
+    </div>
+  </form>
+
   <form method="post" name="form" action="" id="dialog-confirm-sign-eleg" class="overlay">     
-    <a class="close"> </a>                  
-    <h2>Underteckna with E-Legitimation</h2>  
-    <p>CHANGE!!!Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
-    <p>När  undertecknat blir 
-      avtalet <strong>juridiskt bindande</strong> och
-      det färdigställda avtalet skickas till din e-post.</p>
-    <div class="buttonbox">
-      <input type="hidden" name="bankid" value="automatic" />
-      <input type="hidden" name="signature" value="" id="signature" />
-      <input type="hidden" name="transactionid" value="" id="transactionid" />
-      <button class="close button" type="button"> Avbryt </button>
-      <button class="bankid button" type="button"> Underteckna with BankID</button>
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-icon message"></div>
+        <div class="modal-title">
+          <h2>Underteckna with E-Legitimation</h2>  
+        </div>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">
+          <p>CHANGE!!!Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
+          <p>När  undertecknat blir 
+            avtalet <strong>juridiskt bindande</strong> och
+            det färdigställda avtalet skickas till din e-post.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <input type="hidden" name="bankid" value="automatic" />
+        <input type="hidden" name="signature" value="" id="signature" />
+        <input type="hidden" name="transactionid" value="" id="transactionid" />
+        <a  class="close cancel">Avbryt</a>
+        <a href="#" class="btn-small green float-right submiter bankid">
+          <div class="left"></div>
+          <div class="label">
+            <p> Underteckna with BankID</p>
+            <div class="btn-symbol green arrow-left"></div></div>
+          <div class="right"></div>
+        </a>
+      </div>
     </div>
   </form>  
 
   <form method="post" name="form" action="" class="overlay" id="edit-invite-text-dialog" >
 	<div class="modal-container">
-		<div class="modal-header">
-			<div class="modal-icon message"></div>
-			<div class="modal-title">
-				<h2>Hälsningsmeddelande</h2>
-			</div>
-			<a class="modal-close close"> </a>
+	  <div class="modal-header">
+		<div class="modal-icon message"></div>
+		<div class="modal-title">
+		  <h2>Hälsningsmeddelande</h2>
 		</div>
-	    <div class="modal-body">
-			<div class="modal-content">
-	      		$invitationMailContent:noescape()$
-			</div>
-	    </div>
-	    <div class="modal-footer">
-			<a class="close cancel">Avbryt</a>
-			<a class="editer message">Skriv eget meddelande</a>
-			<a href="#" class="btn-small green float-right close" id="editing-invite-text-finished">
-				<div class="left"></div>
-				<div class="label">
-					<p>Ok</p>
-					<div class="btn-symbol green arrow-left"></div>
-				</div>
-				<div class="right"></div>
-			</a>
-	    </div>
+		<a class="modal-close close"> </a>
+	  </div>
+	  <div class="modal-body">
+		<div class="modal-content">
+	      $invitationMailContent:noescape()$
+		</div>
+	  </div>
+	  <div class="modal-footer">
+		<a class="close cancel">Avbryt</a>
+		<a class="editer message">Skriv eget meddelande</a>
+		<a href="#" class="btn-small green float-right close" id="editing-invite-text-finished">
+		  <div class="left"></div>
+		  <div class="label">
+			<p>Ok</p>
+			<div class="btn-symbol green arrow-left"></div>
+		  </div>
+		  <div class="right"></div>
+		</a>
+	  </div>
 	</div>
   </form>  
 
@@ -418,69 +511,69 @@ pageDocumentForAuthorHelpersLocalDialogs=
     </div>
   </div>
 
-   <form method="post" action="$linkcancel$" class="overlay" id="cancel-by-author-dialog">
+  <form method="post" action="$linkcancel$" class="overlay" id="cancel-by-author-dialog">
     <div class="modal-container">
-        <div class="modal-header">
-            <div class="modal-icon message"></div>
-            <div class="modal-title">
-                 <h2> Återkalla inbjudan </h2>
-                <p>Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?
-                <br/>När du återkallat inbjudan kommer nedanstaende meddelande att skickas till dina motparter.
-            </p>
-            </div>
-            <a class="modal-close close"> </a>
+      <div class="modal-header">
+        <div class="modal-icon message"></div>
+        <div class="modal-title">
+          <h2> Återkalla inbjudan </h2>
+          <p>Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?
+            <br/>När du återkallat inbjudan kommer nedanstaende meddelande att skickas till dina motparter.
+          </p>
         </div>
-        <div class="modal-body">
-            <div class="modal-content">     
-              $cancelMailContent:noescape()$
-            </div>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">     
+          $cancelMailContent:noescape()$
         </div>
-        <div class="modal-footer">
-            <a class="close cancel">Avbryt</a>
-            <a class="editer message">Skriv eget meddelande</a>
-            <a href="#" class="btn-small green float-right submiter" id="editing-invite-text-finished">
-                <div class="left"></div>
-                <div class="label">
-                    <p>Återkalla inbjudan</p>
-                    <div class="btn-symbol green arrow-left"></div>
-                </div>
-                <div class="right"></div>
-            </a>
-        </div>
+      </div>
+      <div class="modal-footer">
+        <a class="close cancel">Avbryt</a>
+        <a class="editer message">Skriv eget meddelande</a>
+        <a href="#" class="btn-small green float-right submiter" id="editing-invite-text-finished">
+          <div class="left"></div>
+          <div class="label">
+            <p>Återkalla inbjudan</p>
+            <div class="btn-symbol green arrow-left"></div>
+          </div>
+          <div class="right"></div>
+        </a>
+      </div>
     </div>
-  
+    
   </form>
   <form method="post" name="form" action="$action$" id="dialog-confirm-sign-by-author" class="overlay">     
-   <div class="modal-container">
-        <div class="modal-header">
-            <div class="modal-icon message"></div>
-            <div class="modal-title">
-                  <h2>Underteckna</h2>   
-            </div>
-            <a class="modal-close close"> </a>
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-icon message"></div>
+        <div class="modal-title">
+          <h2>Underteckna</h2>   
         </div>
-        <div class="modal-body">
-            <div class="modal-content">     
-              <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
-              <p>När $partyUnsigned:noescape()$ undertecknat blir avtalet <strong>juridiskt bindande</strong> och
-                 det färdigställda avtalet skickas till din e-post.</p>
-            </div>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">     
+          <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
+          <p>När $partyUnsigned:noescape()$ undertecknat blir avtalet <strong>juridiskt bindande</strong> och
+            det färdigställda avtalet skickas till din e-post.</p>
         </div>
-        <div class="modal-footer">
-            <input type="hidden" name="sign" value="automatic" />
-            <a class="close cancel">Avbryt</a>
-            <a href="#" class="btn-small green float-right submiter" id="editing-invite-text-finished">
-                <div class="left"></div>
-                <div class="label">
-                    <p>Underteckna </p>
-                    <div class="btn-symbol green arrow-left"></div>
-                </div>
-                <div class="right"></div>
-            </a>
-        </div>
+      </div>
+      <div class="modal-footer">
+        <input type="hidden" name="sign" value="automatic" />
+        <a class="close cancel">Avbryt</a>
+        <a href="#" class="btn-small green float-right submiter" id="editing-invite-text-finished">
+          <div class="left"></div>
+          <div class="label">
+            <p>Underteckna </p>
+            <div class="btn-symbol green arrow-left"></div>
+          </div>
+          <div class="right"></div>
+        </a>
+      </div>
     </div>
   </form>
-</div>
+  </div>
 
 #####
 ####
