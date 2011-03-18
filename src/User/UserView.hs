@@ -54,18 +54,26 @@ import qualified Data.ByteString.UTF8 as BS
 
 
 showUser :: KontrakcjaTemplates -> User -> [User] -> IO String 
-showUser templates user viewers = renderTemplate templates "showUser" $
-                                                        (setAttribute "fname" $ BS.toString $ userfstname $ userinfo user ) .
-                                                        (setAttribute "lname" $ BS.toString $ usersndname $ userinfo user ) .
-                                                        (setAttribute "email" $ BS.toString $ unEmail $ useremail $ userinfo user) .
-                                                        (setAttribute "companyname" $ BS.toString $ usercompanyname $ userinfo user) .
-                                                        (setAttribute "companyposition" $ BS.toString $ usercompanyposition $ userinfo user) .
-                                                        (setAttribute "companynumber" $ BS.toString $ usercompanynumber $ userinfo user) .
-                                                        (setAttribute "invoiceaddress" $ BS.toString $ useraddress $ userinfo user) .
-                                                        (setAttribute "viewers" $ map (BS.toString . prettyName)  viewers) .
-                                                        (setAttribute "linkaccount" $ show LinkAccount) .
-                                                        (setAttribute "linkaccountpassword" $ show LinkAccountPassword) .
-                                                        (setAttribute "linksubaccount" $ show LinkSubaccount) 
+showUser templates user viewers = renderTemplate templates "showUser" $ do
+    field "fstname" $ BS.toString $ userfstname $ userinfo user 
+    field "sndname" $ BS.toString $ usersndname $ userinfo user 
+    field "email" $ BS.toString $ unEmail $ useremail $ userinfo user
+    field "personalnumber" $ BS.toString $ userpersonalnumber $ userinfo user
+    field "address" $ BS.toString $ useraddress $ userinfo user
+    field "city" $ BS.toString $ usercity $ userinfo user
+    field "country" $ BS.toString $ usercountry $ userinfo user
+    field "zip" $ BS.toString $ userzip $ userinfo user
+    field "phone" $ BS.toString $ userphone $ userinfo user
+    field "mobile" $ BS.toString $ usermobile $ userinfo user
+    field "companyname" $ BS.toString $ usercompanyname $ userinfo user
+    field "companyposition" $ BS.toString $ usercompanyposition $ userinfo user
+    field "companynumber" $ BS.toString $ usercompanynumber $ userinfo user
+    --field "invoiceaddress" $ BS.toString $ useraddress $ userinfo user
+    --field "viewers" $ map (BS.toString . prettyName)  viewers
+    field "userimagelink" False
+    field "companyimagelink" False
+    field "linkaccount" $ show LinkAccount
+    field "linkaccountpassword" $ show LinkAccountPassword
     
 pageAcceptTOS :: KontrakcjaTemplates ->  BS.ByteString -> IO String
 pageAcceptTOS templates tostext = 

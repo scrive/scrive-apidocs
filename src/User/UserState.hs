@@ -37,7 +37,6 @@ module User.UserState
     , GetUserStats(..)
     , GetUserStatsByUser(..)
     , GetUserSubaccounts(..)
-    , SetUserDetails(..)
     , SetUserInfo(..)
     , SetInviteInfo(..)
     , SetUserSettings(..)
@@ -1054,26 +1053,7 @@ setUserPassword user@User{userid} newpassword = do
 verifyPassword :: Password -> BS.ByteString -> Bool
 verifyPassword (Password salt hash1) password = hash1 == (hashPassword password salt)
 verifyPassword _ _ = False        
-        
-        
-setUserDetails :: UserID
-               -> BS.ByteString
-               -> BS.ByteString
-               -> BS.ByteString
-               -> BS.ByteString
-               -> BS.ByteString
-               -> BS.ByteString
-               -> Update Users (Either String User)
-setUserDetails userid fname lname companyname companyposition companynumber invoiceaddress =
-    modifyUser userid $ \user -> 
-            Right $ user { userinfo = (userinfo user) { userfstname = fname
-                                                      , usersndname = lname
-                                                      , usercompanyname = companyname
-                                                      , usercompanyposition = companyposition
-                                                      , usercompanynumber = companynumber
-                                                      , useraddress = invoiceaddress
-                                                      }
-                         }                            
+                               
 
 setInviteInfo :: Maybe User -> MinutesTime -> InviteType -> UserID -> Update Users ()
 setInviteInfo minviter invitetime' invitetype' uid = do
@@ -1191,7 +1171,6 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'getUserStatsByUser
                     , 'getAllUsers
                     , 'setUserPassword
-                    , 'setUserDetails
                     , 'setInviteInfo
                     , 'setUserInfo
                     , 'setUserSettings

@@ -3,6 +3,7 @@ module User.UserControl where
 import Control.Monad.State
 import Control.Monad.Trans (liftIO,MonadIO,lift)
 import Control.Monad
+import Data.Functor
 import AppView
 import Data.Maybe
 import Doc.DocState
@@ -35,27 +36,6 @@ import HSP.XML
 import MinutesTime
 import InputValidation
 
-handleUserPasswordPost :: Kontra KontraLink
-handleUserPasswordPost = do
-  ctx@Context{ctxmaybeuser = Just user@User{userid}} <- get
-  moldpassword <- getOptionalField asDirtyPassword "oldpassword"
-  mpassword <- getOptionalField asValidPassword "password"
-  mpassword2 <- getOptionalField asDirtyPassword "password2"
-  case (moldpassword, mpassword, mpassword2) of
-    (Just oldpassword, Just password, Just password2) -> do
-      if verifyPassword (userpassword user) oldpassword
-        then
-              case (checkPasswords password password2) of
-               Right () -> do
-                            passwordhash <- liftIO $ createPassword password
-                            update $ SetUserPassword user passwordhash
-                            addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
-               Left f ->  addFlashMsg =<< (liftIO $ f (ctxtemplates ctx))
-        else  addFlashMsg =<< (liftIO $ flashMessageBadOldPassword (ctxtemplates ctx))
-      return LinkAccount
-    _ -> return LinkAccount
-
-
 checkPasswords::BS.ByteString -> BS.ByteString -> Either (KontrakcjaTemplates -> IO FlashMessage) ()
 checkPasswords p1 p2 =  if p1 == p2
                         then 
@@ -66,37 +46,82 @@ checkPasswords p1 p2 =  if p1 == p2
                    
 handleUserGet :: Kontra Response
 handleUserGet = do
-  ctx@(Context {ctxmaybeuser = Just user}) <- get
-  maybefriends <- mapM (query . GetUserByUserID . UserID . unFriend) (userfriends user)
-  let friends = map fromJust $ filter isJust maybefriends
-  content <- liftIO $ showUser (ctxtemplates ctx) user friends           
-  renderFromBody ctx TopAccount kontrakcja $ cdata content
+  ctx <- get
+  case (ctxmaybeuser ctx) of 
+        Just user -> do
+            maybefriends <- mapM (query . GetUserByUserID . UserID . unFriend) (userfriends user)
+            let friends = map fromJust $ filter isJust maybefriends
+            content <- liftIO $ showUser (ctxtemplates ctx) user friends           
+            renderFromBody ctx TopAccount kontrakcja $ cdata content
+        Nothing -> sendRedirect $ LinkLogin NotLogged    
 
 handleUserPost :: Kontra KontraLink
 handleUserPost = do
-  ctx@Context{ctxmaybeuser = Just user@User{userid},ctxtime} <- get
-  let getUserField = getDefaultedField BS.empty
-  mfname <- getUserField asValidName "fname"
-  mlname <- getUserField asValidName "lname"
-  mcompanyname <- getUserField asValidCompanyName "companyname"
-  mposition <- getUserField asValidPosition "companyposition"
-  mcompanynumber <- getUserField asValidCompanyNumber "companynumber"
-  minvoiceaddress <- getUserField asValidAddress "invoiceaddress"
-  mnewvieweremail <- getUserField asValidEmail "newvieweremail"
-  case (mfname, mlname, mcompanyname, mposition, mcompanynumber, minvoiceaddress, mnewvieweremail) of
-    (Just fname, Just lname, Just companyname, Just companyposition, Just companynumber, Just invoiceaddress, Just newvieweremail) -> do
-      when (BS8.length newvieweremail > 0) $ do
-         avereturn <- update $ AddViewerByEmail userid $ Email newvieweremail
-         case avereturn of
-           Left msg -> addFlashMsg $ toFlashMsg OperationFailed msg
-           Right _  -> return ()
-         return ()
+  ctx <- get
+  case (ctxmaybeuser ctx) of 
+    Just user -> do
+                  infoUpdate <- getUserInfoUpdate
+                  update $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
+                  needToChangePassword <- needToChangePassword
+                  case needToChangePassword of
+                    True ->  tryToChangeUserPassword user
+                    False -> addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
+                  return LinkAccount  
+    Nothing -> return $ LinkLogin NotLogged
   
-      newuser <- update $ SetUserDetails userid fname lname companyname companyposition companynumber invoiceaddress
-      addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
+getUserInfoUpdate:: Kontra (UserInfo -> UserInfo)
+getUserInfoUpdate  = do
+    mfstname          <- getFieldUTF "fstname" 
+    msndname          <- getFieldUTF "sndname" 
+    mpersonalnumber   <- getFieldUTF "personalnumber"
+    maddress          <- getFieldUTF "address" 
+    mcity             <- getFieldUTF "city" 
+    mcountry          <- getFieldUTF "country" 
+    mzip              <- getFieldUTF "zip" 
+    mphone            <- getFieldUTF "phone" 
+    mcompanyposition  <- getFieldUTF "companyposition" 
+    mcompanynumber    <- getFieldUTF "companynumber"
+    mcompanyname      <- getFieldUTF "companyname"
+    return $ \ui -> 
+        ui {
+            userfstname = fromMaybe (userfstname ui) mfstname
+          , usersndname = fromMaybe (usersndname ui) msndname
+          , userpersonalnumber = fromMaybe (userpersonalnumber ui) mpersonalnumber
+          , usercompanyname = fromMaybe (usercompanyname ui) mcompanyname
+          , usercompanyposition = fromMaybe (usercompanyposition ui) mcompanyposition
+          , usercompanynumber = fromMaybe (usercompanynumber ui) mcompanynumber
+          , useraddress  = fromMaybe (useraddress ui) maddress
+          , userzip    = fromMaybe (userzip ui) mzip
+          , usercity  = fromMaybe (usercity ui) mcity
+          , usercountry  = fromMaybe (usercountry  ui) mcountry 
+          , userphone  = fromMaybe (userphone ui) mphone
+        }
 
-      return LinkAccount
-    _ -> return LinkAccount
+
+needToChangePassword::Kontra Bool 
+needToChangePassword = do
+  moldpassword <- joinEmpty <$> getField "oldpassword"
+  mpassword <- joinEmpty <$> getField "password"
+  mpassword2 <- joinEmpty <$> getField "password2"
+  return $ any isJust [moldpassword,mpassword,mpassword2]
+  
+tryToChangeUserPassword   :: User -> Kontra ()
+tryToChangeUserPassword user = do
+  -- Emily ussed input validation here, but I had to drop it since it missed some info  
+  ctx <- get 
+  oldpassword <- getFieldUTFWithDefault BS.empty "oldpassword"
+  password <- getFieldUTFWithDefault BS.empty "password"
+  password2 <- getFieldUTFWithDefault BS.empty "password2"
+  if verifyPassword (userpassword user) oldpassword
+    then
+      case (checkPasswords password password2) of
+          Right () -> do
+              passwordhash <- liftIO $ createPassword password
+              update $ SetUserPassword user passwordhash
+              addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
+          Left f ->  addFlashMsg =<< (liftIO $ f (ctxtemplates ctx))
+    else  addFlashMsg =<< (liftIO $ flashMessageBadOldPassword (ctxtemplates ctx))
+
 
 handleGetSubaccount :: Kontra Response
 handleGetSubaccount = do
