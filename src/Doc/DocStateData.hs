@@ -299,20 +299,25 @@ data ChargeMode = ChargeInitialFree   -- initial 5 documents are free
 
 data DocumentHistoryEntry 
     = DocumentHistoryCreated 
-      { dochisttime :: MinutesTime }
+      { dochisttime :: MinutesTime
+      }
     | DocumentHistoryInvitationSent 
       { dochisttime :: MinutesTime
       , ipnumber :: Word32
+      , dochistsignatories :: [SignatoryDetails]
       }    -- changed state from Preparatio to Pending
     | DocumentHistoryTimedOut
-      { dochisttime :: MinutesTime }
+      { dochisttime :: MinutesTime
+      }
     | DocumentHistorySigned
       { dochisttime :: MinutesTime
       , ipnumber :: Word32
+      , dochistsignatorydetails :: SignatoryDetails
       }
     | DocumentHistoryRejected
       { dochisttime :: MinutesTime
       , ipnumber :: Word32
+      , dochistsignatorydetails :: SignatoryDetails
       }
     | DocumentHistoryClosed
       { dochisttime :: MinutesTime
@@ -321,6 +326,7 @@ data DocumentHistoryEntry
     | DocumentHistoryCanceled
       { dochisttime :: MinutesTime
       , ipnumber :: Word32
+      -- , dochistsignatorydetails :: SignatoryDetails
       }
     | DocumentHistoryRestarted
       { dochisttime :: MinutesTime
