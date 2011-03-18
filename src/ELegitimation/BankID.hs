@@ -44,6 +44,7 @@ handleSignBankID provider docid signid magic = do
     unless (document `allowsIdentification` ELegitimationIdentification) mzero
     -- request a nonce
     nonceresponse <- generateChallenge
+    --nonceresponse <- return $ Right ("abacadaba", "abc")
     liftIO $ print "after first request"
     case nonceresponse of
         Left (ImplStatus _a _b code msg) -> 
@@ -56,6 +57,7 @@ handleSignBankID provider docid signid magic = do
             liftIO $ print "after"
             providerCode <- providerStringToNumber  provider
             encodetbsresponse <- encodeTBS providerCode tbs transactionid 
+            --encodetbsresponse <- return $ Right "hello"
             liftIO $ print "after second request"
             case encodetbsresponse of
                 Left (ImplStatus _a _b code msg) -> 
@@ -92,7 +94,7 @@ handleSignBankID provider docid signid magic = do
 handleSignPostBankID :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra KontraLink
 handleSignPostBankID docid signid magic = do
     Context { ctxelegtransactions, ctxtime, ctxipnumber } <- get
-
+    liftIO $ print "post!"
     -- POST values
     provider      <- getDataFnM $ look "eleg"
     signature     <- getDataFnM $ look "signature"
@@ -130,6 +132,7 @@ handleSignPostBankID docid signid magic = do
                 signature
                 transactionnonce
                 transactionid
+    --res <- return $ Right ("abca", [(BS.fromString "lastname", BS.fromString "Andersson"), (BS.fromString "firstname", BS.fromString "Agda"), (BS.fromString "personnumber", BS.fromString "111111")])
 
     case res of
         -- error state
@@ -139,6 +142,7 @@ handleSignPostBankID docid signid magic = do
             return $ LinkSignDoc document siglink
         -- successful request
         Right (cert, attrs) -> do
+            liftIO $ print attrs
             providerType <- providerStringToType provider
             let fields = zip fieldnames fieldvalues
                 signinfo = SignatureInfo { signatureinfotext = transactiontbs
@@ -159,9 +163,10 @@ handleSignPostBankID docid signid magic = do
                             (contractFirst, contractLast, contractNumber)
                             (elegFirst,     elegLast,     elegNumber)
             case mfinal of
-                -- either number or last name do not match
+                -- either number or name do not match
                 Left msg -> do
                     liftIO $ print msg
+                    -- send to canceled with reason msg
                     addFlashMsg $ toFlashMsg OperationFailed msg
                     return $ LinkSignDoc document siglink
                 -- we have merged the info!
@@ -273,6 +278,8 @@ handleIssuePostBankID docid = withUserPost $ do
 
     when (transactiondocumentid /= docid)  mzero
     -- end validation
+
+
     
     -- document should be saved right here!
 
