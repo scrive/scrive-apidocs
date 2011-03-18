@@ -297,10 +297,35 @@ data ChargeMode = ChargeInitialFree   -- initial 5 documents are free
 
     deriving (Eq, Ord, Typeable, Data)
 
-data DocumentHistoryEntry = DocumentHistoryCreated { dochisttime :: MinutesTime }
-                          | DocumentHistoryInvitationSent { dochisttime :: MinutesTime
-                                                          , ipnumber :: Word32
-                                                          }    -- changed state from Preparatio to Pending
+data DocumentHistoryEntry 
+    = DocumentHistoryCreated 
+      { dochisttime :: MinutesTime }
+    | DocumentHistoryInvitationSent 
+      { dochisttime :: MinutesTime
+      , ipnumber :: Word32
+      }    -- changed state from Preparatio to Pending
+    | DocumentHistoryTimedOut
+      { dochisttime :: MinutesTime }
+    | DocumentHistorySigned
+      { dochisttime :: MinutesTime
+      , ipnumber :: Word32
+      }
+    | DocumentHistoryRejected
+      { dochisttime :: MinutesTime
+      , ipnumber :: Word32
+      }
+    | DocumentHistoryClosed
+      { dochisttime :: MinutesTime
+      , ipnumber :: Word32
+      }
+    | DocumentHistoryCanceled
+      { dochisttime :: MinutesTime
+      , ipnumber :: Word32
+      }
+    | DocumentHistoryRestarted
+      { dochisttime :: MinutesTime
+      , ipnumber :: Word32
+      }
     deriving (Eq, Ord, Typeable, Data)
 
 data DocStats = DocStats {

@@ -152,7 +152,7 @@ newDocument user title documenttype ctime isfree = do
           , authorcompanyplacements = []
           , authornumberplacements = []
           , authorotherfields = []
-          }
+          } `appendHistory` [DocumentHistoryCreated ctime]
   insertNewDocument doc
   
 
@@ -250,7 +250,7 @@ timeoutDocument :: DocumentID
 timeoutDocument documentid time = do
   modifyContract documentid $ \document ->
       let
-          newdocument = document { documentstatus = Timedout }
+          newdocument = document { documentstatus = Timedout } `appendHistory` [DocumentHistoryTimedOut time]
       in case documentstatus document of
            Pending -> Right newdocument
            _ -> Left "Illegal document status change"
@@ -266,6 +266,7 @@ signDocument documentid signatorylinkid1 time ipnumber msiginfo fields = do
   modifyContract documentid $ \document ->
       let
           signeddocument = document { documentsignatorylinks = newsignatorylinks }
+                           `appendHistory` [DocumentHistorySigned time ipnumber]
           newsignatorylinks = map maybesign (documentsignatorylinks document)
           maybesign link@(SignatoryLink {signatorylinkid, signatorydetails} ) 
               | signatorylinkid == signatorylinkid1 = 
@@ -328,8 +329,7 @@ authorSendDocument documentid time ipnumber author msiginfo =
               in Right $ document { documenttimeouttime = timeout
                                   , documentmtime = time
                                   , documentstatus = Pending
-                                  , documenthistory = documenthistory document ++ [DocumentHistoryInvitationSent time ipnumber]
-                                  }
+                                  } `appendHistory` [DocumentHistoryInvitationSent time ipnumber]
               
           Timedout -> Left "FÃ¶rfallodatum har passerat" -- possibly quite strange here...
           _ ->        Left ("Bad document status: " ++ show (documentstatus document))
@@ -351,12 +351,12 @@ authorSignDocument documentid time ipnumber author msiginfo =
                              return $ TimeoutTime $ (days * 24 *60) `minutesAfter` time
                   authorid = userid author
                   sinfo = Just (SignInfo time ipnumber)
-              in Right $ document { documenttimeouttime = timeout
+                  signeddocument = document { documenttimeouttime = timeout
                                   , documentmtime = time
                                   , documentsignatorylinks = signWithUserID (documentsignatorylinks document) authorid sinfo msiginfo
                                   , documentstatus = Pending
-                                  , documenthistory = documenthistory document ++ [DocumentHistoryInvitationSent time ipnumber]
-                                  }
+                                  } `appendHistory` [DocumentHistoryInvitationSent time ipnumber]
+              in Right $ signeddocument
               
           Timedout -> Left "FÃ¶rfallodatum har passerat" -- possibly quite strange here...
           _ ->        Left ("Bad document status: " ++ show (documentstatus document))
@@ -376,9 +376,7 @@ rejectDocument :: DocumentID
 rejectDocument documentid signatorylinkid1 time ipnumber = do
   modifyContract documentid $ \document ->
       let
-          newdocument = document { documentstatus = Rejected }
-          -- FIXME: need to say who has cancelled the document
-          -- what his IP was, and time of happening
+          newdocument = document { documentstatus = Rejected } `appendHistory` [DocumentHistoryRejected time ipnumber]
       in case documentstatus document of
            Pending ->  Right newdocument
            Timedout -> Left "FÃ¶rfallodatum har passerat"
@@ -515,26 +513,26 @@ closeDocument :: DocumentID
               -> Maybe SignatureInfo
               -> Update Documents (Maybe Document)
 closeDocument docid time ipnumber author msiginfo = do
-  doc <- modifyContract docid 
-         (\document -> let timeout = do
+  doc <- modifyContract docid $
+          \document -> let timeout = do
                                       days <- documentdaystosign document 
                                       return $ TimeoutTime $ (days * 24 *60) `minutesAfter` time
                            authorid = userid author
                            sinfo = Just (SignInfo time ipnumber)
-                  
-                       in Right $ document { documenttimeouttime = timeout
+                           newdocument = document { documenttimeouttime = timeout
                                            , documentmtime = time
                                            , documentsignatorylinks = signWithUserID (documentsignatorylinks document) authorid sinfo msiginfo
                                            , documentstatus = Closed
-                                           })
+                                           } `appendHistory` [DocumentHistoryClosed time ipnumber]
+                       in Right $ newdocument
   case doc of
     Left _ -> return Nothing
     Right d -> return $ Just d
 
 --We should add current state checkers here (not co cancel closed documents etc.)
-cancelDocument :: DocumentID -> Update Documents (Maybe Document)
-cancelDocument docid = do
-  doc <- modifyContract docid (\d -> Right $ d { documentstatus = Canceled }) 
+cancelDocument :: DocumentID -> MinutesTime -> Word32 -> Update Documents (Maybe Document)
+cancelDocument docid time ipnumber = do
+  doc <- modifyContract docid $ \document -> Right $ document { documentstatus = Canceled } `appendHistory` [DocumentHistoryCanceled time ipnumber] 
   case doc of
     Left _ -> return Nothing
     Right d -> return $ Just d
@@ -560,9 +558,9 @@ getFilesThatShouldBeMovedToAmazon = do
     
    It is passed a document 
 -} 
-restartDocument :: DocumentID -> User-> Update Documents (Either String Document)
-restartDocument docid user =
-   modifyContractWithAction docid (\d -> tryToGetRestarted d user)    
+restartDocument :: DocumentID -> User -> MinutesTime -> Word32 -> Update Documents (Either String Document)
+restartDocument docid user time ipnumber =
+   modifyContractWithAction docid (\d -> tryToGetRestarted d user time ipnumber)    
 
 
 {- | 
@@ -570,22 +568,23 @@ restartDocument docid user =
     Checks the autor and status
     Clears sign links and stuff
  -}
-tryToGetRestarted :: Document -> User -> Update Documents (Either String Document)
-tryToGetRestarted doc user = 
+tryToGetRestarted :: Document -> User -> MinutesTime -> Word32 -> Update Documents (Either String Document)
+tryToGetRestarted doc user time ipnumber = 
     if (documentstatus doc `notElem` [Canceled, Timedout, Rejected])
     then return $ Left $ "Can't restart document with " ++ (show $ documentstatus doc) ++ " status"
     else if (not $ isAuthor doc user)
          then return $ Left $ "Can't restart document if you are not it's author"
          else do 
            doc' <- clearSignInfofromDoc doc user
-           return $ Right doc'
+           let doc'' = doc' `appendHistory` [DocumentHistoryRestarted time ipnumber]
+           return $ Right doc''
 
 
 clearSignInfofromDoc doc author = do
   let signatoriesDetails = map signatorydetails $ documentsignatorylinks doc
       authoremail = unEmail $ useremail $ userinfo author
   newSignLinks <- sequence $ map (signLinkFromDetails [(authoremail, author)]) signatoriesDetails
-  return doc {documentstatus=Preparation,
+  return doc {documentstatus = Preparation,
               documenttimeouttime = Nothing,
               documentsignatorylinks = newSignLinks
              }
