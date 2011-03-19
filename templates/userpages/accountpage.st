@@ -107,11 +107,10 @@ showUser =
            </div>
            <div class="clearfix"></div>
            <div class="account-footer">
-               <a href="#" class="btn-small green submit">
+               <a href="#" class="btn-big green submit">
                    <div class="left"></div>
                    <div class="label">
                        <p>Spara</p>
-                       <div class="btn-symbol arrow-right"></div>
                    </div>
                    <div class="right"></div>
                </a>
