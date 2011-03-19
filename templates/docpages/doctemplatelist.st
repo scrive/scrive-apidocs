@@ -6,8 +6,8 @@ pageTemplatesList=
 
         </div>
         <ul class="tabs">
-            <li class="active"><a href="/d">Dokument</a></li>
-            <li><a href="/t">Mallar</a></li>
+            <li><a href="/d">Dokument</a></li>
+            <li class="active"><a href="/t">Mallar</a></li>
             <!-- <li><a href="/contacts">Kontakter</a></li> -->
             <li><a href="/account/subaccount">Underkonton</a></li>
         </ul>
@@ -31,16 +31,7 @@ pageTemplatesList=
                     <thead>
                         <tr>
                             <th style="width: 30px;"><input type="checkbox" name="" id="all" /></th>
-                            <th style="width: 50px;">
-                               $if(params.sorting.statusREV)$
-                                <a href="$currentlink$&sorting=status">Status  <em> ▲</em></a>
-                               $elseif(params.sorting.status)$
-                                <a href="$currentlink$&sorting=statusREV">Status  <em style="text-color:red"> ▼</em></a>
-                               $else$
-                                <a href="$currentlink$&sorting=status">Status </a>
-                               $endif$
-                             </th>
-                            <th style="width: 70px;">
+                            <th style="width: 140px;">
                                $if(params.sorting.timeREV)$
                                 <a href="$currentlink$&sorting=time">Senaste händelse  <em> ▲</em></a>
                                $elseif(params.sorting.time)$
@@ -49,7 +40,7 @@ pageTemplatesList=
                                 <a href="$currentlink$&sorting=time">Senaste händelse </a>
                                $endif$
                             </th>
-                            <th style="width: 200px;">
+                            <th style="width: 300px;">
                                $if(params.sorting.partnerREV)$
                                 <a href="$currentlink$&sorting=partner">Parter <em> ▲</em></a>
                                $elseif(params.sorting.partner)$
@@ -76,10 +67,6 @@ pageTemplatesList=
                         <tr $if(document.odd)$class="odd"$endif$>
                             <td>$if(document.isauthor)$ <input type="checkbox" name="doccheck" value="$document.documentid$" class="check"> $endif$</td>
                             <td>
-                              <div src="/" class="icon status $document.status$ tooltip" rel="#tooltip-cancelled"></div>
-                              $if(document.anyinvitationundelivered)$  <span style="color:#000000;position:relative;top:-3px">!</span>$endif$
-                           </td>
-                            <td>
                                 <span title="$document.mtime$">$document.mtime$</span>
                                 $if(document.timeoutdaysleft)$  
                                   <span title="Förfallodatum: $document.timeoutdate$">
@@ -97,24 +84,12 @@ pageTemplatesList=
                                 $endif$
                             </td>
                             <td class="right">
-                                <em>▼</em>
+                               <!--  <em>▼</em> -->
                             </td>
                         </tr>
                       }$
                     </tbody>
                 </table>
-                <div class="table-statuses">
-                    <div class="icon status template"></div>Mall&nbsp;
-                    <div class="icon status draft"></div>Utkast&nbsp;
-                    <div class="icon status cancelled"></div>Avbrutet&nbsp;
-                    <div class="icon status expired"></div>Förfallet&nbsp;
-                    <div class="icon status sent"></div>Skickat&nbsp;
-                    <!--
-                    <div class="icon status reviewed"></div>Granskat&nbsp;
-                    -->
-                    <div class="icon status opened"></div>Öppnat&nbsp;
-                    <div class="icon status signed"></div>Signerat&nbsp;
-                </div>
                 $pagingFooter()$
             </div>
         </div>
