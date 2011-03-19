@@ -91,19 +91,6 @@ table {
 	float: right;
 }
 
-.btn-big {
-	background: url(../img/btn-big.png) 0 0 no-repeat;
-	color: #fff;
-	display: block;
-	font: 18px "Helvetica Neue";
-	height: 32px;
-	letter-spacing: 0.5px;
-	padding-left: 40px;
-	padding-top: 14px;
-	text-decoration: none;
-	width: 182px;
-}
-
 
 .new-btn-small {
     background: url(../img/btn-small.png) 0 0 no-repeat;
@@ -198,18 +185,6 @@ a.new-btn-small.black:active {
 a.new-btn-small.black p {
 	color: #fff;
 	text-shadow: #000 0 1px 3px;
-}
-
-a.btn-big {
-	background-position: -222px 0;
-}
-
-a.btn-big:hover {
-	background-position: -222px -47px;
-}
-
-a.btn-big:active {
-	background-position: -222px -94px;
 }
 
 /* Icons */
