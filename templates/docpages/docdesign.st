@@ -182,7 +182,7 @@ $endif$
 
                 </ul>
                 <div class="signStepsButton" id="signStepsNextButton" >
-                  <a href="#nextStep" id="nextstep" class="btn-small green2 center"><span>Nästa steg</span></a>  
+                  <a href="#nextStep" id="nextstep" class="new-btn-small green2 center"><p>Nästa steg</p></a>  
                 </div>
               </div>
             </div>
@@ -350,7 +350,7 @@ $endif$
   </span>
 </div>
 #####
-validationdropdown=
+validationdropdown= <!--
 <div>
   Verifieringsmetod<br>
   <select name="validationmethod"
@@ -358,7 +358,7 @@ validationdropdown=
     <option value="email" selected>E-post</option>
     <option value="eleg">E-Legitimation</option>
   </select>
-</div>
+</div> -->
 #####
 emailhidden=
 <input type="hidden" value="email" name="validationmethod" />
