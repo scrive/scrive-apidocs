@@ -7,7 +7,8 @@ module ELegitimation.BankID
     , handleIssuePostBankID
     )
     where
-
+    
+import qualified AppLogger as Log
 import Control.Monad.State
 import Data.List
 import Data.Maybe
@@ -21,6 +22,7 @@ import KontraLink
 import MinutesTime
 import Misc
 import SOAP.SOAP
+import System.Random
 import Templates.Templates
 import Text.XML.HaXml.Posn (Posn)
 import Text.XML.HaXml.XmlContent.Parser 
@@ -44,10 +46,14 @@ handleSignBankID provider docid signid magic = do
     unless (document `allowsIdentification` ELegitimationIdentification) mzero
     -- request a nonce
     nonceresponse <- generateChallenge
-    --nonceresponse <- return $ Right ("abacadaba", "abc")
+    --nonce1@MagicHash {} <- liftIO $ randomIO
+    --tid@MagicHash { } <- liftIO $ randomIO
+    --nonceresponse <- return $ Right (show nonce1, show tid)
     liftIO $ print "after first request"
     case nonceresponse of
-        Left (ImplStatus _a _b code msg) -> 
+        Left (ImplStatus _a _b code msg) -> do
+            liftIO $ print $ "generateChallenge failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
+            Log.debug $ "generateChallenge failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
             return $ toResponse $ toJSON [("status", JInt code), ("msg", JString msg)]
         Right (nonce, transactionid) -> do
             -- encode the text to be signed
@@ -60,7 +66,9 @@ handleSignBankID provider docid signid magic = do
             --encodetbsresponse <- return $ Right "hello"
             liftIO $ print "after second request"
             case encodetbsresponse of
-                Left (ImplStatus _a _b code msg) -> 
+                Left (ImplStatus _a _b code msg) -> do
+                    liftIO $ print $ "encodeTBS failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
+                    Log.debug $ "encodeTBS failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
                     return $ toResponse $ toJSON [("status", JInt code), ("msg", JString msg)]
                 Right txt -> do
                     -- store in session
@@ -74,6 +82,12 @@ handleSignBankID provider docid signid magic = do
                                             , transactionmagichash = Just magic
                                             , transactionnonce = nonce
                                             }
+                    Log.debug $ "encoding successful: " ++ 
+                        toJSON [("status", JInt 0)
+                            ,("servertime", JString $ show $ 60 * time + seconds)
+                            ,("nonce", JString nonce)
+                            ,("tbs", JString txt)
+                            ,("transactionid", JString transactionid)]
                     return $ toResponse $ toJSON [("status", JInt 0)
                                                  ,("servertime", JString $ show $ 60 * time + seconds)
                                                  ,("nonce", JString nonce)
@@ -94,7 +108,7 @@ handleSignBankID provider docid signid magic = do
 handleSignPostBankID :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra KontraLink
 handleSignPostBankID docid signid magic = do
     Context { ctxelegtransactions, ctxtime, ctxipnumber } <- get
-    liftIO $ print "post!"
+    liftIO $ print "eleg sign post!"
     -- POST values
     provider      <- getDataFnM $ look "eleg"
     signature     <- getDataFnM $ look "signature"
@@ -137,41 +151,48 @@ handleSignPostBankID docid signid magic = do
     case res of
         -- error state
         Left (ImplStatus _a _b code msg) -> do
-            liftIO $ print $ toJSON [("status", JInt code), ("msg", JString msg)]
-            addFlashMsg $ toFlashMsg OperationFailed $ "E-Legitimation request failed: " ++ msg
+            liftIO $ print $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
+            Log.debug $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
+            addFlashMsg $ toFlashMsg OperationFailed $ "E-Legitimation signature failed: " ++ msg
             return $ LinkSignDoc document siglink
         -- successful request
         Right (cert, attrs) -> do
             liftIO $ print attrs
+            Log.debug $ show attrs
             providerType <- providerStringToType provider
             let fields = zip fieldnames fieldvalues
-                signinfo = SignatureInfo { signatureinfotext = transactiontbs
-                                         , signatureinfosignature = signature
-                                         , signatureinfocertificate = cert
-                                         , signatureinfoprovider = providerType
-                                         }
             -- compare information from document (and fields) to that obtained from BankID
             let contractFirst  = signatoryfstname details
                 contractLast   = signatorysndname details
                 contractNumber = signatorynumber details
 
-                elegFirst  = fieldvaluebyid (BS.fromString "First Name") attrs
-                elegLast   = fieldvaluebyid (BS.fromString "Last Name")  attrs
-                elegNumber = fieldvaluebyid (BS.fromString "Number")     attrs
+                elegFirst  = fieldvaluebyid (BS.fromString "firstame") attrs
+                elegLast   = fieldvaluebyid (BS.fromString "lastname")  attrs
+                elegNumber = fieldvaluebyid (BS.fromString "personnumber")     attrs
 
                 mfinal = mergeInfo 
                             (contractFirst, contractLast, contractNumber)
                             (elegFirst,     elegLast,     elegNumber)
             case mfinal of
                 -- either number or name do not match
-                Left msg -> do
+                Left (msg, sfn, sln, spn) -> do
                     liftIO $ print msg
+                    Log.debug msg
                     -- send to canceled with reason msg
                     addFlashMsg $ toFlashMsg OperationFailed msg
-                    Right newdoc <- update $ CancelDocument docid ctxtime ctxipnumber
+                    Just newdoc <- update $ CancelDocument docid
                     return $ LinkSignDoc document siglink
                 -- we have merged the info!
-                Right _ -> do
+                Right (bfn, bln, bpn) -> do
+                    let signinfo = SignatureInfo    { signatureinfotext = transactiontbs
+                                                    , signatureinfosignature = signature
+                                                    , signatureinfocertificate = cert
+                                                    , signatureinfoprovider = providerType
+                                                    , signaturefstnameverified = bfn
+                                                    , signaturelstnameverified = bln
+                                                    , signaturepersnumverified = bpn
+                                                    }
+
                     newdocument <- update $ SignDocument docid 
                                                 signid 
                                                 ctxtime 
@@ -181,6 +202,7 @@ handleSignPostBankID docid signid magic = do
                     case newdocument of
                         -- signature failed
                         Left message -> do
+                            Log.debug $ "SignDocument failed: " ++ message
                             addFlashMsg $ toFlashMsg OperationFailed message
                             return LinkMain -- where should we go?
                         Right document2 -> do
@@ -211,6 +233,8 @@ handleIssueBankID provider docid = withUserGet $ do
     nonceresponse <- generateChallenge
     case nonceresponse of
         Left (ImplStatus _a _b code msg) -> 
+            Log.debug $ "generateChallenge failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
+            liftIO $ print $ "generateChallenge failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
             return $ toResponse $ toJSON [("status", JInt code), ("msg", JString msg)]
         Right (nonce, transactionid) -> do
             -- encode the text to be signed
@@ -218,6 +242,8 @@ handleIssueBankID provider docid = withUserGet $ do
             encodetbsresponse <- encodeTBS providerCode tbs transactionid 
             case encodetbsresponse of
                 Left (ImplStatus _a _b code msg) -> 
+                    Log.debug $ "encodeTBS failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
+                    liftIO $ print $ "encodeTBS failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
                     return $ toResponse $ toJSON [("status", JInt code), ("msg", JString msg)]
                 Right txt -> do
                     -- store in session
@@ -278,12 +304,14 @@ handleIssuePostBankID docid = withUserPost $ do
 
     when (transactiondocumentid /= docid)  mzero
     -- end validation
-
-
-    
+  
     eudoc <- updateDocument ctx author document
     case eudoc of 
-        Left _ -> mzero
+        Left msg -> do
+            Log.debug $ "updateDocument failed: " ++ msg
+            liftIO $ print $ "updateDocument failed: " ++ msg
+            addFlashMsg $ toFlashMsg OperationFailed "Could not save document."
+            return LinkMain
         Right udoc -> do
             providerCode <- providerStringToNumber provider
             res <- verifySignature providerCode
@@ -294,19 +322,14 @@ handleIssuePostBankID docid = withUserPost $ do
 
             case res of
                 Left (ImplStatus _a _b code msg) -> do
-                    liftIO $ print $ toJSON [("status", JInt code), ("msg", JString msg)]
-                    addFlashMsg $ toFlashMsg OperationFailed "Try again"
+                    liftIO $ print $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
+                    Log.debug $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
+                    addFlashMsg $ toFlashMsg OperationFailed $ "Signature verification failed with message: " ++ msg
                     -- change me! I should return back to the same page
                     return LinkMain
                 Right (cert, attrs) -> do
                     providerType <- providerStringToType provider
                     let authorinfo = userinfo author
-                        siginfo = SignatureInfo { signatureinfotext        = transactiontbs
-                                                , signatureinfosignature   = signature
-                                                , signatureinfocertificate = cert
-                                                , signatureinfoprovider    = providerType
-                                                }
-
                     -- compare information from document (and fields) to that obtained from BankID
                     let contractFirst  = userfstname authorinfo
                         contractLast   = usersndname authorinfo
@@ -320,16 +343,28 @@ handleIssuePostBankID docid = withUserPost $ do
                                     (contractFirst, contractLast, contractNumber)
                                     (elegFirst,     elegLast,     elegNumber)
                     case mfinal of
-                        -- either number or name do not match
-                        Left msg -> do
-                            liftIO $ print msg
-                            addFlashMsg $ toFlashMsg OperationFailed msg
+                        Left (msg, _, _, _) -> do
+                            liftIO $ print $ "merge failed: " ++ msg
+                            Log.debug $ "merge failed: " ++ msg
+                            addFlashMsg $ toFlashMsg OperationFailed $ "Merging information failed: " ++ msg
                             return $ LinkIssueDoc docid
                             -- we have merged the info!
-                        Right (finalFirst, finalLast, finalNumber) -> do
+                        Right (bfn, bln, bpn) -> do
+                            let signinfo = SignatureInfo    { signatureinfotext = transactiontbs
+                                                            , signatureinfosignature = signature
+                                                            , signatureinfocertificate = cert
+                                                            , signatureinfoprovider = providerType
+                                                            , signaturefstnameverified = bfn
+                                                            , signaturelstnameverified = bln
+                                                            , signaturepersnumverified = bpn
+                                                            }
+
                             mndoc <- update $ AuthorSignDocument (documentid document) ctxtime ctxipnumber author $ Just siginfo
                             case mndoc of
-                                Left _ -> mzero
+                                Left msg -> do
+                                    liftIO $ print $ "AuthorSignDocument failed: " ++ msg
+                                    Log.debug $ "AuthorSignDocument failed: " ++ msg
+                                    return LinkMain
                                 Right newdocument -> do
                                     postDocumentChangeAction newdocument (documentstatus udoc) Nothing
                                     return $ LinkSignInvite (documentid document)
@@ -575,16 +610,20 @@ verifySignature provider tbs signature nonce transactionID = do
             if status == 0
             then return $ Right (certificate, attrs)
             else return $ Left (ImplStatus a b status msg)
+            
+data MergeResult = MergeMatch
+                 | MergeKeep
+                 | MergeFail String
+                 
+isMergeFail (MergeFail _) = True
+isMergeFail _             = False
 
-{- | Merge two bits of information, choosing b over a.
- -}                             
-mergeTwo :: BS.ByteString -> BS.ByteString -> Either String BS.ByteString
-mergeTwo a b 
-    | b == BS.fromString "" = Right a
-    | a == BS.fromString "" = Left "Field not given"
-    | a == b  = Right b
-    | a /= b  = Left $ "'" ++ (BS.toString a) ++ "'" ++ " and " ++ "'" ++ (BS.toString b) ++ "'" ++ " do not match."
-    | otherwise = Left "Just to please the compiler."
+mergeTwo :: String -> BS.ByteString -> BS.ByteString -> MergeResult
+mergeTwo fieldname a b 
+    | BS.null a = MergeFail $ fieldname ++ " was blank."
+    | BS.null b = MergeKeep
+    | a == b    = MergeMatch
+    | otherwise = MergeFail $ fieldname ++ " values were different: contract showed '" ++ (BS.toString a) ++ "'" ++ " but eleg showed " ++ "'" ++ (BS.toString b) ++ "'"
  
 {- | Compare signatory information from contract with that from the
      E-Legitimation provider. Returns Either and error message or the
@@ -592,16 +631,19 @@ mergeTwo a b
  -}
 mergeInfo :: (BS.ByteString, BS.ByteString, BS.ByteString) 
                 -> (BS.ByteString, BS.ByteString, BS.ByteString) 
-                -> Either String (BS.ByteString, BS.ByteString, BS.ByteString)
+                -> Either (String, BS.ByteString, BS.ByteString, BS.ByteString) (Bool, Bool, Bool)
 mergeInfo (contractFirst, contractLast, contractNumber) (elegFirst, elegLast, elegNumber) =
-    let results = zipWith mergeTwo 
+    let results = zipWith3 mergeTwo 
+                    ["First name",  "Last name", "Person Number"]
                     [contractFirst, contractLast, contractNumber]
-                    [elegFirst,     elegLast,     elegNumber]
-        lefts = [x | Left x <- results]
+                    [elegFirst,     elegLast,     elegNumber    ]
+        fails    = map isMergeFail     results
+        failmsgs = [msg | MergeFail msg <- results]
+        matches  = map (== MergeMatch) results
     in
-        if null lefts
-        then Right (contractFirst, contractLast, contractNumber)
-        else Left $ intercalate ", " lefts
+        if any id fails
+        then Left  (intercalate "\n" failmsgs, elegFirst, elegLast, elegNumber)
+        else Right (matches !! 0, matches !! 1, matches !! 2)
 
 allowsIdentification :: Doc.DocState.Document -> IdentificationType -> Bool
 allowsIdentification document idtype = 
