@@ -263,7 +263,7 @@ $endif$
             </a>
 
           $elseif(template)$
-            <a type="submit" name="contract"  class="submit new-btn-small green2 center"> 
+            <a type="submit" name="contract" rel="contract" class="submit new-btn-small green2 center"> 
               <p>Create contract</p> 
             </a>
            $endif$

@@ -1040,3 +1040,7 @@
 	width: 17px;
 	z-index: 102;
 }
+
+a.submit{
+    cursor:pointer
+}
