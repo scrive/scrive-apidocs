@@ -233,7 +233,7 @@ header=
                                 <a href="$linklogout$" class="logout-button"><p>Logga ut</p></a>
                                 <a href="$linkaccount$" class="document-button"><p>Konto</p></a>
                                 <a href="$linkissue$" class="document-button"><p>Arkiv</p></a>
-                                <a href="$linkmain$" class="document-button"><p>Skapa</p></a>
+                                <a href="$linkmain$" class="document-button"><p>Skicka</p></a>
 
                                 $else$
                                 <a href="#" class="login-button"><p>Logga in</p></a>
