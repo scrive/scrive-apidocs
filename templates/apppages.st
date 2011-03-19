@@ -150,19 +150,19 @@ wholePage=
                                         <strong>Kontakta oss för feedback, frågor &amp; förfrågningar</strong>
                                         <ul>
                                                 <li>
-                                                        <strong>Telefon:</strong>
+                                                        <strong>Telefon</strong>
                                                         010-195 99 15
                                                 </li>
                                                 <li>
-                                                        <strong>Kontorstider:</strong>
+                                                        <strong>Kontorstider</strong>
                                                         måndag-fredag 09-17
                                                 </li>
                                                 <li>
-                                                        <strong>Maila SkrivaPå:</strong>
+                                                        <strong>Maila SkrivaPå</strong>
                                                         <a href="mailto:info@skrivapa.se">info@skrivapa.se</a>
                                                 </li>
                                                 <li>
-                                                        <strong>Adress:</strong>
+                                                        <strong>Adress</strong>
                                                         SkrivaPå CM AB<br />
                                                         Saltmätargatan 19A<br />
                                                         113 59 Stockholm
