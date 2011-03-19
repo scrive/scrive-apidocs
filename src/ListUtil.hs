@@ -15,7 +15,7 @@ module ListUtil(
             , emptyListParams
             , getListParams
             , getListParamsForSearch
-            , pageListFields
+            , pagedListFields
             , listSortSearchPage
             , SortingFunction 
             , SearchingFunction 
@@ -94,8 +94,8 @@ getListParamsForSearch = do
  
 
 {- Standard fields-} 
-pageListFields:: PagedList a-> Fields
-pageListFields (PagedList{list,pageSize,totalCount,params}) = do
+pagedListFields:: PagedList a-> Fields
+pagedListFields (PagedList{list,pageSize,totalCount,params}) = do
     field "params" $ do
         field "sorting" $ mapM_ (\sp -> field sp sp) $ sorting params
         field "search" $ join $ nothingIfEmpty <$> search params
