@@ -1326,17 +1326,30 @@ handleIssueNewDocument = withUserPost $ do
           return $ LinkIssueDoc $ documentid doc
 
 
-handleIssueArchive :: Kontra KontraLink
+handleContractArchive :: Kontra KontraLink
+handleContractArchive = do
+    handleIssueArchive
+    return $ LinkContracts emptyListParams
+
+handleTemplateArchive :: Kontra KontraLink
+handleTemplateArchive = do
+    handleIssueArchive
+    return $ LinkTemplates emptyListParams
+    
+handleIssueArchive :: Kontra ()
 handleIssueArchive = do
     ctx@(Context { ctxmaybeuser = Just user, ctxhostpart, ctxtime }) <- get
     idnumbers <- getCriticalFieldList asValidDocID "doccheck"
     liftIO $ putStrLn $ show idnumbers
     let ids = map DocumentID idnumbers
     update $ ArchiveDocuments user ids
-    return $ LinkContracts emptyListParams
+
 
 handleContractsReload :: Kontra KontraLink
 handleContractsReload  = fmap LinkContracts getListParamsForSearch
+    
+handleTemplateReload :: Kontra KontraLink
+handleTemplateReload = fmap LinkTemplates getListParamsForSearch
     
 
 showPage :: FileID -> Int -> Kontra Response

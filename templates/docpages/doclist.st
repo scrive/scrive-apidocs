@@ -50,7 +50,7 @@ pageContractsList=
                                 <a href="$currentlink$&sorting=status">Status </a>
                                $endif$
                              </th>
-							<th style="width: 70px;">
+							<th style="width: 140px;">
                                $if(params.sorting.timeREV)$
                                 <a href="$currentlink$&sorting=time">Senaste händelse  <em> ▲</em></a>
                                $elseif(params.sorting.time)$
@@ -59,7 +59,7 @@ pageContractsList=
                                 <a href="$currentlink$&sorting=time">Senaste händelse </a>
                                $endif$
                             </th>
-							<th style="width: 200px;">
+							<th style="width: 300px;">
                                $if(params.sorting.partnerREV)$
                                 <a href="$currentlink$&sorting=partner">Parter <em> ▲</em></a>
                                $elseif(params.sorting.partner)$
@@ -86,7 +86,7 @@ pageContractsList=
       					<tr $if(document.odd)$class="odd"$endif$>
 							<td>$if(document.isauthor)$ <input type="checkbox" name="doccheck" value="$document.documentid$" class="check"> $endif$</td>
 							<td>
-                              <div src="/" class="icon status $document.status$ tooltip" rel="#tooltip-cancelled"></div>
+                              <div src="/" class="icon status $document.status$ tooltip" rel="#tooltip-$document.status$"></div>
                               $if(document.anyinvitationundelivered)$  <span style="color:#000000;position:relative;top:-3px">!</span>$endif$
                            </td>
 							<td>
@@ -107,14 +107,16 @@ pageContractsList=
 					          	$endif$
 							</td>
 							<td class="right">
-								<em>▼</em>
+								<!-- <em>▼</em> -->
 							</td>
 						</tr>
 				      }$
 				    </tbody>
   				</table>
 				<div class="table-statuses">
+                    <!--
 					<div class="icon status template"></div>Mall&nbsp;
+                    -->
 					<div class="icon status draft"></div>Utkast&nbsp;
 					<div class="icon status cancelled"></div>Avbrutet&nbsp;
 					<div class="icon status expired"></div>Förfallet&nbsp;
@@ -129,8 +131,26 @@ pageContractsList=
 			</div>
 		</div>
 	</div>
-	<div id="tooltip-cancelled" class="hidden">
-		<div class="icon status cancelled"></div><p>Status: avbruten</p>
+	<div id="tooltip-draft" class="hidden">
+		<div class="icon status draft"></div><p>Status: Utkast</p>
 	</div>
+    <div id="tooltip-cancelled" class="hidden">
+        <div class="icon status cancelled"></div><p>Status: Avbrutet</p>
+    </div>
+    <div id="tooltip-expired" class="hidden">
+        <div class="icon status expired"></div><p>Status: Förfallet</p>
+    </div>
+    <div id="tooltip-sent" class="hidden">
+        <div class="icon status sent"></div><p>Status: Skickat</p>
+    </div>
+    <div id="tooltip-reviewed" class="hidden">
+        <div class="icon status reviewed"></div><p>Status: Granskat</p>
+    </div>
+    <div id="tooltip-opened" class="hidden">
+        <div class="icon status opened"></div><p>Status: Öppnat</p>
+    </div>
+    <div id="tooltip-signed" class="hidden">
+        <div class="icon status signed"></div><p>Status: Signerat</p>
+    </div>
 </form>
 ####     
