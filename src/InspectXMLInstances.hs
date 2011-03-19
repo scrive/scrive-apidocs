@@ -107,6 +107,9 @@ instance InspectXML UserPaymentAccount where
                      
 instance InspectXML IdentificationType where
     inspectXML = asChild . show
+    
+instance InspectXML CancelationReason where
+    inspectXML = asChild . show
 
 instance InspectXML SignatureProvider where
     inspectXML = asChild . show
