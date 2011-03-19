@@ -55,6 +55,7 @@ import Data.Char
 import Data.Map ((!))
 import InputValidation
 import ListUtil
+import Redirect
 
 getFileContents :: Context -> File -> IO (BS.ByteString)
 getFileContents ctx file = do
@@ -641,6 +642,7 @@ handleIssueSignByAuthor document author = do
             postDocumentChangeAction d AwaitingAuthor Nothing
             addFlashMsg =<< (liftIO $ flashAuthorSigned $ ctxtemplates ctx)
             return $ LinkContracts emptyListParams
+            
 {- |
    Show the document with title in the url
    URL: /d/{documentid}/{title}
@@ -1481,7 +1483,9 @@ checkLinkIDAndMagicHash document linkid magichash1 = do
 showMainPage::User -> Kontra Response
 showMainPage user =  do
                       ctx <- get
-                      content <- liftIO $ uploadPage (ctxtemplates ctx) 
+                      params <- getListParams
+                      showTemplates <- isFieldSet "showTemplates"
+                      content <- liftIO $ uploadPage (ctxtemplates ctx) params showTemplates
                       renderFromBody ctx TopDocument kontrakcja $ cdata content 
                       
 idmethodFromString :: String -> Maybe IdentificationType
@@ -1490,15 +1494,16 @@ idmethodFromString method
     | method == "eleg"  = Just ELegitimationIdentification
     | otherwise         = Nothing
 
-getAllTemplates::Kontra Response                      
-getAllTemplates = do
+getTemplatesForAjax::Kontra Response                      
+getTemplatesForAjax = do
     ctx <- get 
-    allTemplates <- 
-        case (ctxmaybeuser ctx) of
-            Just user -> liftIO $ query $ GetUserTemplates (userid user)
-            Nothing ->  return []
-    content <- liftIO $ templatesForAjax (ctxtemplates ctx)  allTemplates            
-    simpleResponse content
+    params <- getListParams
+    case (ctxmaybeuser ctx) of
+            Just user -> do
+                allTemplates <- liftIO $ query $ GetUserTemplates (userid user)
+                content <- liftIO $ templatesForAjax (ctxtemplates ctx) (ctxtime ctx) user $ docSortSearchPage params allTemplates            
+                simpleResponse content
+            Nothing ->  sendRedirect $ LinkLogin NotLogged
     
 handleCreateFromTemplate::Kontra KontraLink
 handleCreateFromTemplate = do

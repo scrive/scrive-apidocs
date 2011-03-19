@@ -56,7 +56,6 @@ uploadPage=
 </div> 
 </td><td>
 <div class="signStepsBodyUploadBox">  
-       <script src="/js/templatesSelection.js" type="text/javascript"></script>
     <div>
       <span id="signStepsBodyUploadTextContainer"> 
         <span class="header">Välj existerande mall</span><br/>
@@ -78,5 +77,24 @@ uploadPage=
         <div class='waiting4data'></div></div>
  </div>     
 </div>     
-   
+ <script>
+    function getTemplates(curr){
+        var location = jQuery(jQuery(curr).attr("rel"));
+        var wheretoputdata = jQuery(".waiting4data",location);
+        location.show();
+        jQuery.get("$templateslink:noescape()$" ,function(data){
+                 wheretoputdata.replaceWith(data);
+                 initInfotexts(jQuery('input.infotext'));
+                 jQuery('a.submit').altSubmit();
+        })
+    }
+
+   safeReady(function(){
+    $if(!showTemplates)$
+    jQuery(".selectTemplateButton").click(function(){getTemplates(this)})
+    $else$
+    getTemplates(jQuery(".selectTemplateButton"))
+    $endif$
+    })
+ </script>
 ####
