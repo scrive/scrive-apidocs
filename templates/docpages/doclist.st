@@ -19,7 +19,6 @@ pageContractsList=
 			<li class="active"><a href="/d">Dokument</a></li>
 			<li><a href="/t">Mallar</a></li>
 			<!-- <li><a href="/contacts">Kontakter</a></li> -->
-			<li><a href="/account/subaccount">Underkonton</a></li>
 		</ul>
 		<div class="tab-container">
 			<div class="tab-content">
