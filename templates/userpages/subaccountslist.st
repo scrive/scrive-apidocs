@@ -98,5 +98,7 @@ viewSubaccounts =
 				</table>
 				$pagingFooter()$
 			</div>
-    </form>
+         </div>
+    </div>
+</form>
 ###
