@@ -34,6 +34,23 @@
 	}
 })(jQuery);
 
+function initInfotexts(s)
+{
+        s.each(function() {
+        var orig_value = $(this).val();
+    
+        $(this).focus( function() {
+            if($(this).val() == orig_value) $(this).val('');
+            $(this).removeClass("grayed");          
+        }).blur( function() {
+            if($(this).val() == '') {
+                $(this).val(orig_value);
+                $(this).addClass("grayed");          
+            }
+        });
+    });
+}
+
 $(document).ready( function() {
 	$('.tooltip').tooltip();
 	
@@ -74,19 +91,7 @@ $(document).ready( function() {
 		loading_text: 'Laddar tweets..'
 	});},1000)
 	
-	$('input.infotext, textarea.infotext').each( function() {
-		var orig_value = $(this).val();
-	
-		$(this).focus( function() {
-			if($(this).val() == orig_value) $(this).val('');
-            $(this).removeClass("grayed");          
-		}).blur( function() {
-			if($(this).val() == '') {
-                $(this).val(orig_value);
-                $(this).addClass("grayed");          
-            }
-		});
-	});
+	initInfotexts($('input.infotext, textarea.infotext'));
 	
 	// Options dropdown on archive, sub accounts etc.
 	$('.tab-dd').click( function() {
@@ -101,53 +106,30 @@ $(document).ready( function() {
 	
 	$('a.submit').altSubmit();
 	
-	$('#sub-remove-btn').live('click', function() {
-		var row = $(this).parents('tr');
-		var i = 0;
-		
-		row.nextAll().each( function() {
-			if($(this).is('.odd')) $(this).removeClass('odd');
-			else $(this).addClass('odd');
-		});
-		
-		row.siblings('.new').each( function() {
-			$(this).find('input').each( function() {
-				var oldAttr = $(this).attr('name').split('-');
-				var newAttr = oldAttr[0] + '-' + (i+1);
-			
-				$(this).attr('name', newAttr);
-			});
-			
-			i++;
-		});
-
-		row.remove();
-	});
-	
 	$('#subaccount-add-sub').click( function() {
 		var container = $('#selectable');
 		var rowClass = (container.find('tr:last').is('.odd')) ? '' : 'odd';
-		var i = container.children('.new').length+1;
-		
-		container.append('<tr class="' + rowClass + ' new">' +
+		if (container.children('.newSubaccount').empty()) {
+		var newrow = $('<tr class="' + rowClass + ' newSubaccount">' +
 		'<td><input type="checkbox" name="subcheck" class="check" /></td>' + 
-		'<td><input type="text" name="firstname-' + i + '" value="Förnamn" class="infotext" /></td>' + 
-		'<td><input type="text" name="lastname-' + i + '" value="Efternamn" class="infotext" /></td>' + 
-		'<td><input type="text" name="position-' + i + '" value="Befattning" class="infotext" /></td>' + 
-		'<td><input type="text" name="dept-' + i + '" value="Avdelning" class="infotext" /></td>' + 
-		'<td><input type="text" name="phone-' + i + '" value="Telefonnummer" class="infotext" /></td>' + 
-		'<td><input type="text" name="email-' + i + '" value="Email" class="infotext" /></td>' + 
-		'<td><a href="javascript:;" class="icon small remove" id="sub-remove-btn"></a></td>' + 
+		'<td><input type="text" name="fstname" infotext="Förnamn" class="infotext grayed" /></td>' + 
+		'<td><input type="text" name="sndname" infotext="Efternamn" class="infotext grayed" /></td>' + 
+		'<td><input type="text" name="companyposition" infotext="Befattning" class="infotext grayed" /></td>' + 
+		'<td><input type="text" name="phone" infotext="Telefonnummer" class="infotext grayed" /></td>' + 
+		'<td><input type="text" name="email" infotext="Email" class="infotext grayed" /></td>' + 
+        '<td>' + 
+            '<a href="javascript:;" class="icon small add"></a>' + 
+            '<a href="javascript:;" class="icon small remove"></a>' +
+        '</td>' + 
 		'</tr>');
-		
-		$('#selectable input.infotext').each( function() {
-			var orig_value = $(this).val();
-
-			$(this).focus( function() {
-				if($(this).val() == orig_value) $(this).val('');
-			}).blur( function() {
-				if($(this).val() == '') $(this).val(orig_value);
-			});
-		});
+        container.append(newrow);
+        $(".add",newrow).click(function(){
+            $(this).parents("form").append("<input type='hidden' name='add' value='YES'>").submit();
+        })
+        $(".remove",newrow).click(function(){
+            newrow.remove();
+        })
+        }
+		initInfotexts($('input.infotext',newrow));
 	});
 });

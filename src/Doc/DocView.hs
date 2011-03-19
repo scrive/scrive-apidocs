@@ -235,7 +235,7 @@ pageContractsList :: KontrakcjaTemplates -> MinutesTime -> User -> PagedList Doc
 pageContractsList templates ctime user documents =
   renderTemplate templates "pageContractsList" $ do
     field "documents" $ markParity $ map (documentBasicViewFields ctime user) $ list documents
-    pageListFields documents
+    pagedListFields documents
     field "currentlink" $ show $ LinkContracts $ params documents
         
 

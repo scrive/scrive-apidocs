@@ -36,13 +36,12 @@ data KontraLink
     | LinkTemplates ListParams
     | LinkMain
     | LinkAccount
-    | LinkAccountPassword
     | LinkLandpageSaved Document SignatoryLink
     | LinkSignDoc Document SignatoryLink
     | LinkIssueDoc DocumentID
     | LinkDesignDoc DesignStep
     | LinkIssueDocPDF Document {- Which file? -}
-    | LinkSubaccount
+    | LinkSubaccount ListParams
     | LinkRemind Document SignatoryLink
     | LinkCancel Document
     | LinkRestart DocumentID
@@ -83,8 +82,7 @@ instance Show KontraLink where
     showsPrec _ LinkMain = (++) "/"
     showsPrec _ LinkAcceptTOS = (++) "/accepttos"
     showsPrec _ LinkAccount = (++) "/account"
-    showsPrec _ LinkAccountPassword = (++) "/account/password"
-    showsPrec _ LinkSubaccount = (++) "/account/subaccount"
+    showsPrec _ (LinkSubaccount params) = (++) $ "/account/subaccount" ++ "?" ++ show params
     showsPrec _ (LinkLandpageSaved document signatorylink) = 
         (++) $ "/landpage/signedsave/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink)
     showsPrec _ (LinkIssueDoc documentid) = 
