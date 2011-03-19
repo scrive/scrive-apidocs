@@ -59,6 +59,7 @@ import Redirect
 import PayEx.PayExInterface -- Import so at least we check if it compiles
 import InputValidation
 import System.Directory
+import ListUtil
 
 {-| 
   Defines the application's configuration.  This includes amongst other things
@@ -111,7 +112,7 @@ data AppGlobals
 handleRoutes :: Kontra Response
 handleRoutes = msum [
        hget0 $ handleHomepage
-
+     , hpost0 $ handleMainReaload
      , dir "s" $ hget0  $ DocControl.handleSTable
      , dir "s" $ hget3  $ DocControl.handleSignShow
      , dir "s" $ param "sign" $ hpost3 $ DocControl.signDocument
@@ -124,7 +125,9 @@ handleRoutes = msum [
      --what it does/access control is left to the handler. EN
      , dir "t" $ hget0  $ DocControl.showTemplatesList
      , dir "t" $ param "archive" $ hpost0 $ DocControl.handleTemplateArchive
+     , dir "t" $ param "template" $ hpost0  $ DocControl.handleCreateFromTemplate
      , dir "t" $ hpost0 $ DocControl.handleTemplateReload
+     
      
      , dir "d" $ hget0  $ DocControl.showContractsList
      , dir "d" $ hget1  $ DocControl.handleIssueShowGet
@@ -143,7 +146,7 @@ handleRoutes = msum [
      , dir "cancel"  $ hpost1 $ DocControl.handleCancel
      
      , dir "pages"  $ hget2 $ DocControl.showPage
-     , dir "templates"  $ hget0 $ DocControl.getAllTemplates
+     , dir "templates"  $ hget0 $ DocControl.getTemplatesForAjax
      , dir "template"  $ hpost0 $ DocControl.handleCreateFromTemplate
      , dir "landpage" $ dir "signinvite" $ hget1 $ DocControl.landpageSignInvite
      , dir "landpage" $ dir "signed"     $ hget2 $ DocControl.landpageSigned 
@@ -227,6 +230,8 @@ handleHomepage = do
     Just user -> UserControl.checkUserTOSGet $ DocControl.showMainPage user 
     Nothing -> V.simpleResponse =<< (liftIO $ firstPage ctx)
 
+handleMainReaload :: Kontra KontraLink
+handleMainReaload = LinkNew <$> getListParamsForSearch
 {- |
    Creates a default amazon configuration based on the
    given AppConf

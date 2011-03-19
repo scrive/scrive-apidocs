@@ -646,17 +646,20 @@ designViewFields step = do
         _ -> field "step2" True
         
 
-uploadPage :: KontrakcjaTemplates -> IO String
-uploadPage templates = renderTemplate templates "uploadPage" ()
+uploadPage :: KontrakcjaTemplates -> ListParams -> Bool -> IO String
+uploadPage templates params showTemplates = renderTemplate templates "uploadPage" $ do
+    field "templateslink" $ show $ LinkAjaxTemplates params
+    field "showTemplates" showTemplates
+    
+    
   
 
-templatesForAjax::KontrakcjaTemplates -> [Document] -> IO String
-templatesForAjax templates doctemplates = 
+templatesForAjax::KontrakcjaTemplates ->  MinutesTime -> User -> PagedList Document -> IO String
+templatesForAjax templates ctime user doctemplates = 
     renderTemplate templates "templatesForAjax" $ do
-        field "templates" $ for doctemplates $ \template -> do
-            field "name"  $ documenttitle template
-            field "id"    $ show $ documentid template
-            field "link"  $ show $ LinkIssueDoc $ documentid template
+        field "documents" $ markParity $ map (documentBasicViewFields ctime user) (list doctemplates)
+        field "currentlink" $ show $ LinkNew (params doctemplates)    
+        pagedListFields doctemplates
     
 -- We keep this javascript code generation for now
 jsArray :: [[Char]] -> [Char]

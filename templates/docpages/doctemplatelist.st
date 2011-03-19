@@ -94,8 +94,5 @@ pageTemplatesList=
             </div>
         </div>
     </div>
-    <div id="tooltip-cancelled" class="hidden">
-        <div class="icon status cancelled"></div><p>Status: avbruten</p>
-    </div>
 </form>
      
