@@ -51,10 +51,16 @@ import Templates.TemplatesUtils
 import Text.StringTemplate.GenericStandard()
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
-
+import ListUtil
 
 showUser :: KontrakcjaTemplates -> User -> [User] -> IO String 
 showUser templates user viewers = renderTemplate templates "showUser" $ do
+    userFields user
+    field "linkaccount" $ show LinkAccount
+
+userFields::User -> Fields
+userFields user = do
+    field "id" $ show $ userid user 
     field "fstname" $ BS.toString $ userfstname $ userinfo user 
     field "sndname" $ BS.toString $ usersndname $ userinfo user 
     field "email" $ BS.toString $ unEmail $ useremail $ userinfo user
@@ -68,23 +74,22 @@ showUser templates user viewers = renderTemplate templates "showUser" $ do
     field "companyname" $ BS.toString $ usercompanyname $ userinfo user
     field "companyposition" $ BS.toString $ usercompanyposition $ userinfo user
     field "companynumber" $ BS.toString $ usercompanynumber $ userinfo user
-    --field "invoiceaddress" $ BS.toString $ useraddress $ userinfo user
-    --field "viewers" $ map (BS.toString . prettyName)  viewers
     field "userimagelink" False
     field "companyimagelink" False
-    field "linkaccount" $ show LinkAccount
-    field "linkaccountpassword" $ show LinkAccountPassword
+    --field "invoiceaddress" $ BS.toString $ useraddress $ userinfo user
+    --field "viewers" $ map (BS.toString . prettyName)  viewers
     
 pageAcceptTOS :: KontrakcjaTemplates ->  BS.ByteString -> IO String
 pageAcceptTOS templates tostext = 
   renderTemplate templates "pageAcceptTOS" $ field "tostext" (BS.toString tostext)
 
 
-viewSubaccounts :: KontrakcjaTemplates -> [User] -> IO String
-viewSubaccounts templates subusers =
-  renderTemplate templates "viewSubaccounts" $
-    (setAttribute "subusers" $ map userSmallView $ subusers) .
-    (setAttribute "subaccountslink" $ show LinkSubaccount)
+viewSubaccounts :: KontrakcjaTemplates -> PagedList User -> IO String
+viewSubaccounts templates subusers =  
+  renderTemplate templates "viewSubaccounts" $ do
+    field "subaccounts" $ markParity $ map userFields $ list subusers
+    field "currentlink" $ show $ LinkSubaccount $ params subusers
+    pagedListFields subusers
 
 
 

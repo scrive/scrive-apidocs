@@ -1,6 +1,6 @@
 ####    Pages for users - usual from my account
 viewSubaccounts =
-<form method="post" action="$subaccountslink$">
+<form method="post" action="$currentlink$">
 	<div id="tab-viewer">
 		<div class="tab-header">
 
@@ -18,13 +18,12 @@ viewSubaccounts =
 						<a href="javascript:;"><p>Alternativ</p></a>
 						<ul class="tab-dd-opts">
 							<li><a href="javascript:;" id="subaccount-add-sub">Lägg till</a></li>
-							<li><a href="javascript:;" class="submit" rel="archive">Radera</a></li>
+							<li><a href="javascript:;" class="submit" rel="remove">Radera</a></li>
 						</ul>
 					</div>
 				</div>
 				<div class="col float-right">
-					<input type="text" class="tab-search infotext" name="searchValue" value="Sök underkonto" />
-					<a href="#" class="btn-tiny black float-right submit" rel="search"><div class="left"></div><div class="label">Sök</div><div class="right"></div></a>
+				  $searchBox(infotext='Sök underkonto')$
 				</div>
 				<div class="clearfix"></div>
 			</div>
@@ -33,70 +32,71 @@ viewSubaccounts =
 					<thead>
 						<tr>
 							<th style="width: 20px;"><input type="checkbox" name="" id="all" /></th>
-							<th style="width: 75px;"><a href="javascript:;">Förnamn <em>▼</em></a></th>
-							<th style="width: 90px;"><a href="javascript:;">Efternamn <em>▼</em></a></th>
-							<th style="width: 60px; text-align: right"><a href="javascript:;">Befattning <em>▼</em></a></th>
-							<th style="width: 160px;"><a href="javascript:;">Avdelning <em>▼</em></a></th>
-							<th style="width: 115px;"><a href="javascript:;">Personnummer <em>▼</em></a></th>
-							<th style="width: 110px;"><a href="javascript:;">Mailadress <em>▼</em></a></th>
-							<th style="width: 20px;"></th>
-							<th style="width: 20px;"></th>
+							<th style="width: 75px;">
+                              $if(params.sorting.fstnameREV)$
+                                <a href="$currentlink$&sorting=fstname">Förnamn  <em> ▲</em></a>
+                               $elseif(params.sorting.fstname)$
+                                <a href="$currentlink$&sorting=fstnameREV">Förnamn  <em> ▼</em></a>
+                               $else$
+                                <a href="$currentlink$&sorting=fstname">Förnamn  </a>
+                               $endif$
+							<th style="width: 90px;">
+                              $if(params.sorting.sndnameREV)$
+                                <a href="$currentlink$&sorting=sndname">Efternamn  <em> ▲</em></a>
+                               $elseif(params.sorting.sndname)$
+                                <a href="$currentlink$&sorting=sndnameREV">Efternamn  <em> ▼</em></a>
+                               $else$
+                                <a href="$currentlink$&sorting=sndname">Efternamn  </a>
+                               $endif$   
+                            </th>
+							<th style="width: 60px;">
+                                 $if(params.sorting.companypositionREV)$
+                                <a href="$currentlink$&sorting=companyposition">Befattning  <em> ▲</em></a>
+                               $elseif(params.sorting.companyposition)$
+                                <a href="$currentlink$&sorting=companypositionREV">Befattning  <em> ▼</em></a>
+                               $else$
+                                <a href="$currentlink$&sorting=companyposition">Befattning  </a>
+                               $endif$ 
+                            </th>
+							<th style="width: 115px;">
+                                $if(params.sorting.phoneREV)$
+                                <a href="$currentlink$&sorting=phone">Personnummer  <em> ▲</em></a>
+                               $elseif(params.sorting.phone)$
+                                <a href="$currentlink$&sorting=phoneREV">Personnummer  <em> ▼</em></a>
+                               $else$
+                                <a href="$currentlink$&sorting=phone">Personnummer </a>
+                               $endif$ 
+                            </th>
+							<th style="width: 110px;">
+                              $if(params.sorting.emailREV)$
+                                <a href="$currentlink$&sorting=email">Mailadress <em> ▲</em></a>
+                               $elseif(params.sorting.email)$
+                                <a href="$currentlink$&sorting=emailREV">Mailadress <em> ▼</em></a>
+                               $else$
+                                <a href="$currentlink$&sorting=email">Mailadress </a>
+                               $endif$ 
+                            </th>
+							<th style="width: 40px;"></th>
 						</tr>
 					</thead>
 					<tbody id="selectable">
-						$subusers:{subuser |
+						$subaccounts:{subaccount |
 						<!-- Every other row should have class="odd" (Begin with first row) -->
-						<tr $if(subusers.oddRow)$class="odd"$endif$>
-							<td><input type="checkbox" name="subcheck" value="$subuser.usvId$" class="check" /></td>
-							<td>$subuser.usvFirstName$</td>
-							<td>$subuser.usvLastName$</td>
-							<td>$subuser.usvPosition$</td>
-							<td>$subuser.usvDept$</td>
-							<td>$subuser.usvSsNr$</td>
-							<td>$subuser.usvEmail$</td>
-							<td></td>
+						<tr $if(subaccount.odd)$class="odd"$endif$>
+							<td><input type="checkbox" name="subcheck" value="$subaccount.id$" class="check" /></td>
+							<td>$subaccount.fstname$</td>
+							<td>$subaccount.sndname$</td>
+							<td>$subaccount.companyposition$</td>
+							<td>$subaccount.phone$</td>
+							<td>$subaccount.email$</td>
 							<td class="right">
-								<em>▼</em>
+								<!-- <em>▼</em> -->
 							</td>
 						</tr>
 						}$
 					</tbody>
 				</table>
-				<div class="table-paginate">
-					<div class="pages">
-						<strong>1-20 av 123</strong>
-						<<
-						<
-						1
-						<a href="#">2</a>
-						<a href="#">3</a>
-						<a href="#">4</a>
-						<a href="#">5</a>
-						<a href="#">6</a>
-						<a href="#">7</a>
-						...
-						<a href="#">31</a>
-						<a href="#">></a>
-						<a href="#">>></a>
-					</div>
-					<a href="#" class="btn-tiny black float-left">
-						<div class="left"></div>
-						<div class="label">
-							<div class="btn-symbol black arrow-right"></div>
-							<p>Bakåt</p>
-						</div>
-						<div class="right"></div>
-					</a>
-					<a href="#" class="btn-tiny black float-right">
-						<div class="left"></div>
-						<div class="label">
-							<p>Nästa</p>
-							<div class="btn-symbol black arrow-left"></div>
-						</div>
-						<div class="right"></div>
-					</a>
-					<div class="clearfix"></div>
-				</div>
+				$pagingFooter()$
 			</div>
     </form>
 ###

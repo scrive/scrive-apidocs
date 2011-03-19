@@ -35,6 +35,9 @@ import Templates.Templates (KontrakcjaTemplates)
 import HSP.XML
 import MinutesTime
 import InputValidation
+import ListUtil
+import Data.List
+import Data.Char
 
 checkPasswords::BS.ByteString -> BS.ByteString -> Either (KontrakcjaTemplates -> IO FlashMessage) ()
 checkPasswords p1 p2 =  if p1 == p2
@@ -127,27 +130,80 @@ handleGetSubaccount :: Kontra Response
 handleGetSubaccount = do
   ctx@Context { ctxmaybeuser = Just user@User { userid } } <- get
   subaccounts <- query $ GetUserSubaccounts userid
-  content <- liftIO $ viewSubaccounts (ctxtemplates ctx) (Set.toList subaccounts)
+  params <- getListParams
+  content <- liftIO $ viewSubaccounts (ctxtemplates ctx) (subaccountsSortSearchPage params $ Set.toList subaccounts)
   renderFromBody ctx TopAccount kontrakcja $ cdata content
+
+-- Searching, sorting and paging
+subaccountsSortSearchPage :: ListParams -> [User] -> PagedList User
+subaccountsSortSearchPage  = 
+    listSortSearchPage subaccountsSortFunc subaccountsSearchFunc subaccountsPageSize
+
+subaccountsSearchFunc::SearchingFunction User
+subaccountsSearchFunc s user =  userMatch user s -- split s so we support spaces
+    where
+    match s m = isInfixOf (map toUpper s) (map toUpper (BS.toString m))
+    userMatch u s =  match s (usercompanyposition $ userinfo u) || 
+                     match s (userfstname $ userinfo u) ||
+                     match s (usersndname $ userinfo u) || 
+                     match s (userpersonalnumber $ userinfo u) || 
+                     match s (unEmail $ useremail $ userinfo u) 
+    
+    
+   
+subaccountsSortFunc:: SortingFunction User
+subaccountsSortFunc "fstname" = comparing $ userfstname . userinfo
+subaccountsSortFunc "fstnameREV" = rcomparing $ userfstname . userinfo
+subaccountsSortFunc "sndname" = comparing $ usersndname . userinfo
+subaccountsSortFunc "sndnameREV" = rcomparing $ usersndname . userinfo
+subaccountsSortFunc "companyposition" = comparing $ usercompanyposition . userinfo
+subaccountsSortFunc "companypositionREV" = rcomparing $ usercompanyposition . userinfo
+subaccountsSortFunc "phone" = comparing $  userphone . userinfo
+subaccountsSortFunc "phoneREV" = rcomparing $ userphone . userinfo
+subaccountsSortFunc "email" = comparing $ useremail . userinfo
+subaccountsSortFunc "email" = rcomparing $ useremail . userinfo
+subaccountsSortFunc _ = const $ const EQ
+
+
+subaccountsPageSize :: Int
+subaccountsPageSize = 20
+ 
+----
 
 handlePostSubaccount :: Kontra KontraLink
 handlePostSubaccount = do
-  ctx@Context { ctxmaybeuser = Just (user@User { userid }), ctxhostpart } <- get
-  create <- getDataFn (look "create")
-  case create of
-      (Right _) -> handleCreateSubaccount ctx
-      Left _ -> return LinkSubaccount
-
-handleCreateSubaccount :: Context -> Kontra KontraLink
-handleCreateSubaccount ctx@Context { ctxmaybeuser = Just (user@User { userid }), ctxhostpart, ctxtemplates } = do
-  mfullname <- getDefaultedField BS.empty asValidName "fullname"
+  ctx <- get
+  case (ctxmaybeuser ctx) of
+      Just user -> do
+                    add <- isFieldSet "add"
+                    remove <- isFieldSet "remove"
+                    case (add,remove) of
+                      (True,_) -> do
+                           handleCreateSubaccount user 
+                           return $ LinkSubaccount emptyListParams
+                      (_, True) -> return $ LinkSubaccount emptyListParams
+                      _ -> LinkSubaccount <$> getListParamsForSearch
+                    
+      Nothing -> return $ LinkLogin NotLogged
+ 
+handleCreateSubaccount :: User ->  Kontra ()
+handleCreateSubaccount user = do
+  ctx <- get  
   memail <- getOptionalField asValidEmail "email"
-  case (mfullname, memail) of
-    (Just fullname, Just email) -> do
-      muser <- liftIO $ createUser ctx ctxhostpart fullname email Nothing True (Just user) False
-      when (isNothing muser) $ addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
-      return LinkSubaccount
-    _ -> return LinkSubaccount
+  fstname <- fromMaybe "" <$> getField "fstname" 
+  sndname <- fromMaybe "" <$> getField "sndname" 
+  let fullname = BS.fromString $ fstname ++ " " ++ sndname
+  case (memail) of
+    (Just email) -> do
+        muser <- liftIO $ createUser ctx (ctxhostpart ctx) fullname email Nothing True (Just user) False
+        case muser of
+            Just newuser -> do 
+                             infoUpdate <- getUserInfoUpdate
+                             liftIO $ update $ SetUserInfo (userid newuser) (infoUpdate $ userinfo newuser)
+                             return ()
+            Nothing -> addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists (ctxtemplates ctx))
+        return ()
+    _ -> return ()
 
 handleViralInvite :: Kontra KontraLink
 handleViralInvite = do
