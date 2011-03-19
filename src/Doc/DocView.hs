@@ -243,6 +243,8 @@ pageTemplatesList :: KontrakcjaTemplates -> MinutesTime -> User -> PagedList Doc
 pageTemplatesList templates ctime user documents =
  renderTemplate templates "pageTemplatesList" $ do
     field "documents" $ markParity $ map (documentBasicViewFields ctime user) $ list documents
+    pagedListFields documents
+    field "currentlink" $ show $ LinkTemplates $ params documents
     
           
 showFileImages :: KontrakcjaTemplates -> File -> JpegPages -> IO String
