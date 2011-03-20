@@ -41,7 +41,6 @@ function enableInfoTextOnce(where){
   
   function setInfoText(obj) {
     var input = $(obj);
-    console.log(input.val());
     if (input.val() == "" || input.val() == input.attr("infotext")) {
        input = input.not($(document.activeElement));
        input.addClass("grayed");
