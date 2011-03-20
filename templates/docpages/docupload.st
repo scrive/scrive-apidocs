@@ -34,7 +34,8 @@ uploadPage=
   <div id="signStepsBody"> 
  
 <!-- MAIN FORM STARTS HERE -->
-<table style="width:100%"> <tbody> <tr> <td>
+<table style="width:100%"> <tbody> <tr>
+<td>
 <div class="signStepsBodyUploadBox"> 
   <form action="/d" method="post" enctype="multipart/form-data"  class="stepForm"> 
     <div>
@@ -84,7 +85,7 @@ uploadPage=
         location.show();
         jQuery.get("$templateslink:noescape()$" ,function(data){
                  wheretoputdata.replaceWith(data);
-                 initInfotexts(jQuery('input.infotext'));
+                 enableInfoTextOnce(location);
                  jQuery('a.submit').altSubmit();
         })
     }

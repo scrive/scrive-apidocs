@@ -220,8 +220,8 @@ docSortFunc "title" = viewComparing documenttitle
 docSortFunc "titleREV" = viewComparingRev documenttitle
 docSortFunc "time" = viewComparing documentmtime
 docSortFunc "timeREV" = viewComparingRev documentmtime
-docSortFunc "partner" = viewComparing $ (map personname) . documentsignatorylinks 
-docSortFunc "partnerREV" = viewComparingRev $ (map personname) . documentsignatorylinks 
+docSortFunc "partner" = viewComparing $ BS.concat . (map personname) . documentsignatorylinks 
+docSortFunc "partnerREV" = viewComparingRev $ BS.concat . (map personname) . documentsignatorylinks 
 docSortFunc _ = const $ const EQ
 
 

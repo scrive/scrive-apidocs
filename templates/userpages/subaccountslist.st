@@ -15,7 +15,7 @@ viewSubaccounts =
 					<div class="tab-dd">
 						<a href="javascript:;"><p>Alternativ</p></a>
 						<ul class="tab-dd-opts">
-							<li><a href="javascript:;" id="subaccount-add-sub">Lägg till</a></li>
+							<li><a href="javascript:;" class="subaccount-add-sub">Lägg till</a></li>
 							<li><a href="javascript:;" class="submit" rel="remove">Radera</a></li>
 						</ul>
 					</div>
@@ -74,7 +74,7 @@ viewSubaccounts =
                                 <a href="$currentlink$&sorting=email">Mailadress </a>
                                $endif$ 
                             </th>
-							<th style="width: 40px;"></th>
+							<th style="width: 52px;text-align:right"> <a class="icon small add subaccount-add-sub"> </a></th>
 						</tr>
 					</thead>
 					<tbody id="selectable">
