@@ -1306,7 +1306,6 @@ input.multiFileInput {
     left:10;
     font-size:xx-large;
     cursor:pointer;
-    cursor:hand
     -ms-filter: 'progid:DXImageTransform.Microsoft.Alpha(Opacity=0)';
     filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=0);
     opacity: 0;
