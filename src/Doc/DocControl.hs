@@ -84,7 +84,14 @@ signlinkFromDocById doc sid = find ((== sid) . signatorylinkid) (documentsignato
    This function should always be called after changing the document.
  -}
 postDocumentChangeAction :: Document -> DocumentStatus -> Maybe SignatoryLinkID -> Kontra ()
-postDocumentChangeAction document@Document{documentstatus, documentsignatorylinks, documentid, documentauthor} oldstatus msignalinkid
+postDocumentChangeAction document@Document  { documentstatus
+                                            , documentsignatorylinks
+                                            , documentid
+                                            , documentauthor 
+                                            , documentcanceledreason
+                                            } 
+                            oldstatus 
+                            msignalinkid
     -- No status change ; no action
     | documentstatus == oldstatus = return ()
     -- Preparation -> Pending
@@ -126,6 +133,16 @@ postDocumentChangeAction document@Document{documentstatus, documentsignatorylink
         Log.forkIOLogWhenError ("error in sending rejection emails for document " ++ show documentid) $ do
           sendRejectEmails (fmap BS.toString customMessage) ctx document (fromJust msignalink)
         return ()
+    -- Pending -> Canceled
+    -- main action: if canceled because of ElegDataMismatch, send out emails
+    | oldstatus == Pending && 
+        documentstatus == Canceled && 
+        isJust documentcancelationreason &&
+        isELegDataMismatch $ fromJust documentcancelationreason = do
+            ctx <- get
+            Log.forkIOLogWhenError ("error sending cancelation emails for document " ++ show documentid) $ do
+                sendElegDataMismatchEmails ctx document
+            return ()
     --  -> DocumentError
     | DocumentError msg <- documentstatus = do
         ctx <- get
@@ -138,7 +155,25 @@ postDocumentChangeAction document@Document{documentstatus, documentsignatorylink
     | otherwise = 
          return ()
     where msignalink = maybe Nothing (signlinkFromDocById document) msignalinkid
+    
+sendElegDataMismatchEmails ctx document = do
+    let authorid = unAuthor $ documentauthor document
+        allbutauthor = filter ((maybe True ((/= authorid) . unSignatory)) . maybesignatory) 
+                            (documentsignatorylinks document)
+    forM_ allbutauthor $ sendDataMismatchEmailSignatory ctx document
+    sendDataMismatchEmailAuthor ctx document
+    
+sendDataMismatchEmailSignatory ctx document signatorylink = do
+    let SignatoryLink { signatorydetails } = signatorylink
+        Document { documenttitle, documentid } = document
+    mail <- mailMistmatchSignatory ctx document
+    sendMail (ctxmailer ctx) $ mail { fullnameemails = [(signatoryname signatorydetails, signatoryemail signatorydetails)] }
           
+sendDataMistmatchEmailAuthor ctx document = do
+    author <- queryOrFail $ GetUserByUserID $ unAuthor $ documentAuthor document
+    mail <- mailMismatchAuthor ctx document
+    sendMail (ctxmailer ctx) $ mail { fullnameemails = [(userfullname author, useremail $ userinfo author)] }
+    
 {- |
    Send emails to all of the invited parties saying that we fucked up the process.
    Say sorry about this to them.
@@ -1375,7 +1410,7 @@ handleCancel docid = withUserPost $ do
   doc <- queryOrFail $ GetDocumentByDocumentID docid
   failIfNotAuthor doc user
   customMessage <- getCustomTextField "customtext"  
-  mdoc' <- update $ CancelDocument (documentid doc) ctxtime ctxipnumber
+  mdoc' <- update $ CancelDocument(documentid doc) 
   case mdoc' of 
     Right doc' -> do
           sendCancelMailsForDocument customMessage ctx doc

@@ -336,6 +336,28 @@ mailCancelDocumentByAuthor templates customMessage ctx document@Document{documen
         attachmentcontent <- getFileContents (ctxs3action ctx) $ head $ documentfiles document          
         return $ emptyMail {title = BS.fromString title, fullnameemails =  [emailFromSignLink signlink] , content = BS.fromString content, attachments = [(documenttitle,attachmentcontent)]}
 
+mailMismatchSignatory ctx document = do
+    let Context { ctxtemplates } = ctx
+    title <- renderTemplate ctxtemplates "mailMismatchSignatoryTitle" $ do
+        field "documenttitle" $ BS.toString $ documenttitle document
+    content <- wrapHTML ctxtemplates =<< renderTemplate ctxtemplates "mailMismatchSignatoryContent" $ do
+        field "documenttitle" $ BS.toString $ documenttitle document
+    return $ emptyMail  { title = BS.fromString title
+                        , content = BS.fromString content 
+                        }
+mailMismatchAuthor ctx document = do
+    let Context { ctxtemplates } = ctx
+        Just ElegDataMismatch msg _ _ _ _ = documentcancelationreason document
+    title <- renderTemplate ctxtemplats "mailMismatchAuthorTitle" $ do
+        field "documenttitle" $ BS.toString $ documenttitle document
+    content <- wrapHTML ctxtemplates =<< renderTemplate ctxtemplates "mailMismatchAuthorContent" $ do
+        field "documenttitle" $ BS.toString $ documenttitle document
+        field "messages" $ concat $ map para $ lines msg
+    return $ emptyMail  { title = BS.fromString title
+                        , content = BS.fromString content
+                        }
+        
+para s = "<p>" ++ s ++ "</p>"
 
 makeEditable':: KontrakcjaTemplates -> String->String->IO String
 makeEditable' templates name this = renderTemplate templates "makeEditable" [("name",name),("this",this)]
