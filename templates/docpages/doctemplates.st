@@ -21,7 +21,7 @@ templatesForAjax=
 <!-- Table with all templates --> 
     <div class="tab-container">
             <div class="tab-content">
-                <div class="" style="margin-left:35%;margin-right:35%;padding:10px;width:240px">
+                <div class="" style="margin-left:33%;margin-right:33%;padding:10px;width:250px;">
                    <form action="$currentlink$" method="POST">
                       $searchBox(infotext='Sök dokument')$
                    </form>
