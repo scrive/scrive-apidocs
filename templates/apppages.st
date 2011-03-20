@@ -245,7 +245,7 @@ header=
                                                         <div class="body">
                                                                   <form method="post" action="$linklogin$">
                                                                         <input type="email" name="email" infotext="E-post" autocomplete="off"/><br />
-                                                                        <input type="password" name="password" infotext="Lösenord" autocomplete="off"/><br />
+                                                                        <input type="password" name="password" infotext="" autocomplete="off"/><br />
                                                                         <a href="#" class="btn-tiny blue center float-right submit"><p>Logga in</p></a>
                                                                         <a href="#" class="txt-link">Glömt lösenord</a>
                                                                         <input type="submit" class="hidden" />
