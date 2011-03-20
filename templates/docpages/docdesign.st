@@ -350,15 +350,15 @@ $endif$
   </span>
 </div>
 #####
-validationdropdown= <!--
-<div>
+validationdropdown=
+<div style="display:none">
   Verifieringsmetod<br>
   <select name="validationmethod"
           id="validationdropdown">
     <option value="email" selected>E-post</option>
     <option value="eleg">E-Legitimation</option>
   </select>
-</div> -->
+</div>
 #####
 emailhidden=
 <input type="hidden" value="email" name="validationmethod" />
