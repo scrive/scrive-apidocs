@@ -34,23 +34,29 @@ uploadPage=
   <div id="signStepsBody"> 
  
 <!-- MAIN FORM STARTS HERE -->
-<table style="width:100%"> <tbody> <tr>
+<table style="width:100%"> <tbody> <tr valign="top">
+<td> <div class="signStepsBodyUploadBox"> 
+    <p class="text">
+    Välj det dokument som du vill fylla i och skicka till din motpart för att skriva på.
+    Du väljer ett dokument från din dator eller från existerande mallar.
+    <p/>
+ </div>
+</td>
 <td>
 <div class="signStepsBodyUploadBox"> 
-  <form action="/d" method="post" enctype="multipart/form-data"  class="stepForm"> 
+  <form action="/d" method="post" enctype="multipart/form-data" > 
     <div>
-      <span id="signStepsBodyUploadTextContainer"> 
         <span class="header">Välj fil att ladda upp</span><br/>
         <span class="text">OBS! Endast PDF</span> 
-      </span> 
       <br/>
       <div class="signStepsButtonContainer">
-        <div class="uploadButton" >  
-          <a href="#attachFile"><span class="icon arrowUp"></span></a>
-          <a href="#attachFile"> <span class="text">Välj fil</span> </a> 
-          <input class="multiFileInput submitOnUpload" maxlength="1" type="file" name="doc" accept="application/pdf" rel=".filelist" />
-        </div>
-      </div>
+        <a class="btn-small green" style="overflow:hidden;height:34px;width:114px" >  
+          <div class="left"> </div>
+          <div class="label" style="width:80px"> Välj fil </div> 
+          <div class="right"> </div>
+          <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px" maxlength="1" type="file" name="doc" accept="application/pdf" rel=".filelist" />
+        </a>
+       </div>
       <div class="filelist" style="padding-left:10px"></div>
     </div>
   </form>
@@ -58,16 +64,15 @@ uploadPage=
 </td><td>
 <div class="signStepsBodyUploadBox">  
     <div>
-      <span id="signStepsBodyUploadTextContainer"> 
         <span class="header">Välj existerande mall</span><br/>
         <span class="text"></span> 
-      </span> 
       <br/>
-      <div class="signStepsButtonContainer">
-        <div class="uploadButton selectTemplateButton" rel=".templatedDialogContainer">  
-          <a href="#attachFile"><span class="icon arrowRight"></span></a>
-          <a href="#attachFile"> <span class="text">Välj mall</span> </a> 
-        </div>
+      <div class="signStepsButtonContainer" style="height:34px">
+        <a class="btn-small green selectTemplateButton" rel=".templatedDialogContainer">  
+          <div class="left"> </div>
+          <div class="label" style="width:80px"> Välj mall </div> 
+          <div class="right"> </div>
+        </a>
       </div>
     </div>   
 </div>
@@ -92,7 +97,10 @@ uploadPage=
 
    safeReady(function(){
     $if(!showTemplates)$
-    jQuery(".selectTemplateButton").click(function(){getTemplates(this)})
+    jQuery(".selectTemplateButton").click(function(){
+        addFlashMessage("Klicka på den mall du vill välja för att starta processen","green");
+        getTemplates(this);
+    })
     $else$
     getTemplates(jQuery(".selectTemplateButton"))
     $endif$
