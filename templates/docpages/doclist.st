@@ -114,17 +114,17 @@ pageContractsList=
   				</table>
 				<div class="table-statuses">
                     <!--
-					<div class="icon status template"></div>Mall&nbsp;
+					<div class="icon status template"></div>Mall&nbsp;</div>
                     -->
-					<div class="icon status draft"></div>Utkast&nbsp;
-					<div class="icon status cancelled"></div>Avbrutet&nbsp;
-					<div class="icon status expired"></div>Förfallet&nbsp;
-					<div class="icon status sent"></div>Skickat&nbsp;
+					<div class="icon status draft float-left"></div><div class="float-left">Utkast&nbsp;</div>
+					<div class="icon status cancelled float-left"></div><div class="float-left">Avbrutet&nbsp;</div>
+					<div class="icon status expired float-left"></div><div class="float-left">Förfallet&nbsp;</div>
+					<div class="icon status sent float-left"></div><div class="float-left">Skickat&nbsp;</div>
 					<!--
-					<div class="icon status reviewed"></div>Granskat&nbsp;
+					<div class="icon status reviewed float-left"></div><div class="float-left">Granskat&nbsp;</div>
 					-->
-					<div class="icon status opened"></div>Öppnat&nbsp;
-					<div class="icon status signed"></div>Signerat&nbsp;
+					<div class="icon status opened float-left"></div><div class="float-left">Öppnat&nbsp;</div>
+					<div class="icon status signed float-left"></div><div class="float-left">Signerat&nbsp;</div>
 				</div>
                 $pagingFooter()$
 			</div>
