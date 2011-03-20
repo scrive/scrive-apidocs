@@ -1,16 +1,14 @@
 // Alternative submit button
 (function($) {
-	$.fn.altSubmit = function() {	
-		return this.each( function() {
-			$(this).click( function(e) {
-				e.preventDefault();
-				
-				var name = $(this).attr('rel');
-				
-				$(this).parents('form').append('<input type="hidden" name="' + name + '" value="1" />').submit();
-			});
-		});
-	}
+    $.fn.altSubmit = function() {   
+        return this.each( function() {
+            $(this).click( function(e) {
+                e.preventDefault();
+                var name = $(this).attr('rel');
+                $(this).parents('form').append('<input type="hidden" name="' + name + '" value="1" />').submit();
+            });
+        });
+    }
 })(jQuery);
 
 // tooltip
@@ -33,23 +31,6 @@
 		});	
 	}
 })(jQuery);
-
-function initInfotexts(s)
-{
-        s.each(function() {
-        var orig_value = $(this).val();
-    
-        $(this).focus( function() {
-            if($(this).val() == orig_value) $(this).val('');
-            $(this).removeClass("grayed");          
-        }).blur( function() {
-            if($(this).val() == '') {
-                $(this).val(orig_value);
-                $(this).addClass("grayed");          
-            }
-        });
-    });
-}
 
 $(document).ready( function() {
 	$('.tooltip').tooltip();
@@ -91,8 +72,6 @@ $(document).ready( function() {
 		loading_text: 'Laddar tweets..'
 	});},1000)
 	
-	initInfotexts($('input.infotext, textarea.infotext'));
-	
 	// Options dropdown on archive, sub accounts etc.
 	$('.tab-dd').click( function() {
 		$(this).children('.tab-dd-opts').toggle();
@@ -106,30 +85,38 @@ $(document).ready( function() {
 	
 	$('a.submit').altSubmit();
 	
-	$('#subaccount-add-sub').click( function() {
+	$('.subaccount-add-sub').click( function() {
 		var container = $('#selectable');
-		var rowClass = (container.find('tr:last').is('.odd')) ? '' : 'odd';
-		if (container.children('.newSubaccount').empty()) {
-		var newrow = $('<tr class="' + rowClass + ' newSubaccount">' +
+		if ($('.newSubaccount',container).size()==0) {
+        var newrow = $('<tr class="odd newSubaccount">' +
 		'<td><input type="checkbox" name="subcheck" class="check" /></td>' + 
-		'<td><input type="text" name="fstname" infotext="Förnamn" class="infotext grayed" /></td>' + 
-		'<td><input type="text" name="sndname" infotext="Efternamn" class="infotext grayed" /></td>' + 
-		'<td><input type="text" name="companyposition" infotext="Befattning" class="infotext grayed" /></td>' + 
-		'<td><input type="text" name="phone" infotext="Telefonnummer" class="infotext grayed" /></td>' + 
-		'<td><input type="text" name="email" infotext="Email" class="infotext grayed" /></td>' + 
+		'<td><input type="text" name="fstname" infotext="Förnamn" value="Förnamn" class="infotext grayed" /></td>' + 
+		'<td><input type="text" name="sndname" infotext="Efternamn" value="Efternamn" class="infotext grayed" /></td>' + 
+		'<td><input type="text" name="companyposition" infotext="Befattning" value="Befattning" class="infotext grayed" /></td>' + 
+		'<td><input type="text" name="phone" infotext="Telefonnummer" value="Telefonnummer" class="infotext grayed" /></td>' + 
+		'<td><input type="text" name="email" infotext="Email" value="Email" class="infotext grayed" /></td>' + 
         '<td>' + 
-            '<a href="javascript:;" class="icon small add"></a>' + 
-            '<a href="javascript:;" class="icon small remove"></a>' +
+            '<a href="javascript:;" class="btn-tiny green add">' +
+            '<div class="left"></div>' + 
+            '<div class="label" ><div style="padding-left:5px;padding-right:5px">Ok</div> </div>' + 
+            '<div class="right"></div>' + 
+            '</a>' + 
+            '<a href="javascript:;" class="btn-tiny black remove">' +
+            '<div class="left"></div>' + 
+            '<div class="label" ><div style="padding-left:7px;padding-right:7px">-</div></div>' + 
+            '<div class="right"></div>' + 
+            '</a>' + 
         '</td>' + 
 		'</tr>');
-        container.append(newrow);
+        $("tr",container).toggleClass('odd');
+        container.prepend(newrow);
         $(".add",newrow).click(function(){
             $(this).parents("form").append("<input type='hidden' name='add' value='YES'>").submit();
         })
         $(".remove",newrow).click(function(){
-            newrow.remove();
+            $('.newSubaccount',container).remove();
+            $("tr",container).toggleClass('odd');
         })
         }
-		initInfotexts($('input.infotext',newrow));
 	});
 });
