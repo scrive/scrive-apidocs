@@ -28,8 +28,6 @@ $if(contract)$
 <span style="float: right; display: inline-block; margin: 8px 10px 0pt 18px;" class="submitStepFormOnClick"><a class="title" href="#save">SPARA SOM UTKAST</a></span>
 <span style="float: right; display: inline-block; margin: 8px 10px 0pt 18px;" class="submitStepFormOnClick" name="template"><a class="title" href="#save">SPARA SOM MALL</a></span>  
 $elseif(template)$
-<span style="float: right; display: inline-block; margin: 8px 10px 0pt 18px;" class="submitStepFormOnClick"><a class="title" href="#save">SPARA MALL</a></span>
-
 $endif$  
 
       <!-- 
@@ -47,19 +45,19 @@ $endif$
       <div id="step1select">
         <span class="step1select clickArea"></span>
         <span class="step1select step1icon"> </span>
-        <span class="step1select text">Välj dokument</span>
+        <span class="step1select text">$if(contract)$Välj dokument$elseif(template)$Välj mall$endif$</span>
       </div>
       
       <div id="step2select" class="$if(step2)$current$endif$">
         <a href="#" class="step2select clickArea"></a>
         <a href="#" class="step2select step2icon"> </a>
-        <a href="#" class="step2select text">Fyll i uppgifter</a>
+        <a href="#" class="step2select text">$if(contract)$Fyll i uppgifter$elseif(template)$Utforma mall$endif$</a>
       </div>
       
       <div id="step3select" class="$if(step3)$current$endif$">
         <a href="#" class="step3select clickArea"></a>
         <a href="#" class="step3select step3icon"> </a>
-        <a href="#" class="step3select text">Underteckna och skicka!</a>
+        <a href="#" class="step3select text">$if(contract)$Underteckna och skicka!$elseif(template)$Färdigställ och spara$endif$</a>
       </div>
       
       <div id="signStepsMenuEmptyStep"></div>
@@ -265,8 +263,8 @@ $endif$
             </a>
 
           $elseif(template)$
-            <a type="submit" name="contract" rel="contract" class="submit new-btn-small green2 center"> 
-              <p>Skapa mall</p> 
+            <a type="submit" name="save" class="submit new-btn-small green2 center"> 
+              <p>Spara mall</p> 
             </a>
            $endif$
 
