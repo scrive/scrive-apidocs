@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -XOverlappingInstances #-}
+
 {-# OPTIONS_GHC -Wall #-}
 -----------------------------------------------------------------------------
 -- |
@@ -20,8 +22,8 @@ module ListUtil(
             , SortingFunction 
             , SearchingFunction 
             , PageSize
-            , rcomparing
-            , comparing
+            , viewComparing
+            , viewComparingRev
           ) where
 import Control.Applicative ((<$>))
 import Control.Monad.Trans
@@ -45,6 +47,7 @@ import Data.Monoid
 import Happstack.Server hiding (simpleHTTP)
 import Templates.Templates
 import Network.HTTP.Base (urlEncode)
+import Data.ByteString.UTF8 (ByteString, toString)
 
 -- This part is responsible for sorting,searching and paging documents lists
 data PagedList a = PagedList{
@@ -140,9 +143,25 @@ listSortSearchPage sortFunc searchFunc pageSize params list =
 doSorting::SortingFunction a -> [String] -> [a] -> [a]
 doSorting sortFunc  = sortBy . compareList .  map sortFunc  
     where compareList l a1 a2 = foldMap (\f -> f a1 a2) l
-          
-rcomparing::(Ord a) => (b -> a) -> b -> b -> Ordering        
-rcomparing f c1 c2 = comparing f c2 c1
+
+
+class ViewOrd a where
+    viewCompare:: a -> a -> Ordering
+  
+instance ViewOrd String where
+    viewCompare = comparing (map toUpper)  
+
+instance ViewOrd ByteString where
+    viewCompare = comparing (map toUpper . BS.toString)
+    
+instance (Ord a) => ViewOrd a where
+    viewCompare = compare
+
+viewComparing:: (ViewOrd a) => (b -> a) -> b -> b -> Ordering
+viewComparing f a1 a2 = viewCompare (f a1) (f a2)
+
+viewComparingRev:: (ViewOrd a) => (b -> a) -> b -> b -> Ordering
+viewComparingRev f a1 a2 = viewCompare (f a2) (f a1)
 
 doSearching::SearchingFunction a -> Maybe String -> [a] -> [a]
 doSearching searchFunc Nothing = id

@@ -214,14 +214,14 @@ docSearchFunc s doc =  nameMatch doc || signMatch doc
     
    
 docSortFunc:: SortingFunction Document
-docSortFunc "status" = comparing documentStatusClass
-docSortFunc "statusREV" = rcomparing documentStatusClass
-docSortFunc "title" = comparing documenttitle
-docSortFunc "titleREV" = rcomparing documenttitle
-docSortFunc "time" = comparing documentmtime
-docSortFunc "timeREV" = rcomparing documentmtime
-docSortFunc "partner" = comparing $ (map personname) . documentsignatorylinks 
-docSortFunc "partnerREV" = rcomparing $ (map personname) . documentsignatorylinks 
+docSortFunc "status" = viewComparing documentStatusClass
+docSortFunc "statusREV" = viewComparingRev documentStatusClass
+docSortFunc "title" = viewComparing documenttitle
+docSortFunc "titleREV" = viewComparingRev documenttitle
+docSortFunc "time" = viewComparing documentmtime
+docSortFunc "timeREV" = viewComparingRev documentmtime
+docSortFunc "partner" = viewComparing $ (map personname) . documentsignatorylinks 
+docSortFunc "partnerREV" = viewComparingRev $ (map personname) . documentsignatorylinks 
 docSortFunc _ = const $ const EQ
 
 
