@@ -42,6 +42,6 @@ pagingFooter=	<div class="table-paginate">
 				</div>
 ###		
 searchBox=
-<input type="text" class="tab-search" name="search" value="$if(params.search)$$params.search$$endif$" infotext="$infotext$" />
+<input type="text" class="tab-search float-left" name="search" value="$if(params.search)$$params.search$$endif$" infotext="$infotext$" />
 <a href="#" class="btn-tiny black float-right submit"><div class="left"></div><div class="label">Sök</div><div class="right"></div></a>
 ###                
