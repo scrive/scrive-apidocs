@@ -166,9 +166,9 @@ handleSignPostBankID docid signid magic = do
                 contractLast   = signatorysndname details
                 contractNumber = signatorynumber details
 
-                elegFirst  = fieldvaluebyid (BS.fromString "firstame") attrs
-                elegLast   = fieldvaluebyid (BS.fromString "lastname")  attrs
-                elegNumber = fieldvaluebyid (BS.fromString "personnumber")     attrs
+                elegFirst  = fieldvaluebyid (BS.fromString "Subject.GivenName") attrs
+                elegLast   = fieldvaluebyid (BS.fromString "Subject.Surname")  attrs
+                elegNumber = fieldvaluebyid (BS.fromString "Subject.SerialNumber")     attrs
 
                 mfinal = mergeInfo 
                             (contractFirst, contractLast, contractNumber)
@@ -337,9 +337,9 @@ handleIssuePostBankID docid = withUserPost $ do
                         contractLast   = usersndname authorinfo
                         contractNumber = userpersonalnumber authorinfo
             
-                        elegFirst  = fieldvaluebyid (BS.fromString "First Name") attrs
-                        elegLast   = fieldvaluebyid (BS.fromString "Last Name")  attrs
-                        elegNumber = fieldvaluebyid (BS.fromString "Number")     attrs
+                        elegFirst  = fieldvaluebyid (BS.fromString "Subject.GivenName") attrs
+                        elegLast   = fieldvaluebyid (BS.fromString "Subject.Surname")  attrs
+                        elegNumber = fieldvaluebyid (BS.fromString "Subject.SerialNumber")     attrs
 
                         mfinal = mergeInfo 
                                     (contractFirst, contractLast, contractNumber)
