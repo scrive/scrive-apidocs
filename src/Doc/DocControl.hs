@@ -1360,8 +1360,25 @@ handleIssueNewDocument = withUserPost $ do
           -- in our case it should be utf-8 as this is what we use everywhere
           let title = BS.fromString (basename filename) 
           freeleft <- freeLeftForUser user
-          template <- isFieldSet "template"
-          let doctype = if (template) then Template else Contract
+          let doctype = Contract
+          doc <- update $ NewDocument user title doctype ctxtime (freeleft>0) 
+          handleDocumentUpload (documentid doc) (concatChunks content) title
+          return $ LinkIssueDoc $ documentid doc
+
+handleCreateNewTemplate:: Kontra KontraLink
+handleCreateNewTemplate = withUserPost $ do
+    ctx@(Context { ctxmaybeuser = Just user, ctxhostpart, ctxtime }) <- get
+    input@(Input contentspec (Just filename) _contentType) <- getDataFnM (lookInput "doc")
+    content <- case contentspec of
+        Left filepath -> liftIO $ BSL.readFile filepath
+        Right content -> return content
+    if BSL.null content
+       then do
+         handleTemplateReload
+        else do
+          let title = BS.fromString (basename filename) 
+          freeleft <- freeLeftForUser user
+          let doctype = Template
           doc <- update $ NewDocument user title doctype ctxtime (freeleft>0) 
           handleDocumentUpload (documentid doc) (concatChunks content) title
           return $ LinkIssueDoc $ documentid doc

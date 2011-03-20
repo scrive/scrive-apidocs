@@ -1,6 +1,6 @@
 ####		
 pageTemplatesList= 
-<form method="post" action="$currentlink$">
+<form method="post" action="$currentlink$" enctype="multipart/form-data" >
     <div id="tab-viewer">
         <div class="tab-header">
 
@@ -20,8 +20,19 @@ pageTemplatesList=
                         </ul>
                     </div>
                 </div>
+
                 <div class="col float-right">
                       $searchBox(infotext='Sök dokument')$
+                </div>
+
+                <div class="col" style="margin-left:44%;margin-right:44%;padding-top:15px;padding-bottom:0px">
+                    <a class="btn-small green" style="overflow:hidden;height:34px;width:114px" >  
+                        <div class="left"> </div>
+                        <div class="label"> Skapa ny mall </div> 
+                        <div class="right"> </div>
+                        <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px" maxlength="1" type="file" name="doc" accept="application/pdf" rel=".filelist" />
+                    </a>
+                <div class="filelist" style="padding-left:10px;display:none"></div> 
                 </div>
                 <div class="clearfix"></div>
             </div>
@@ -30,6 +41,7 @@ pageTemplatesList=
                     <thead>
                         <tr>
                             <th style="width: 30px;"><input type="checkbox" name="" id="all" /></th>
+                            <!-- 
                             <th style="width: 140px;">
                                $if(params.sorting.timeREV)$
                                 <a href="$currentlink$&sorting=time">Senaste händelse  <em> ▲</em></a>
@@ -48,7 +60,8 @@ pageTemplatesList=
                                 <a href="$currentlink$&sorting=partner">Parter </a>
                                $endif$
                             </th>
-                            <th style="width: 400px;">
+                            -->
+                            <th style="width: 600px;">
                                $if(params.sorting.titleREV)$
                                 <a href="$currentlink$&sorting=title">Dokument <em> ▲</em></a>
                                $elseif(params.sorting.title)$
@@ -65,17 +78,11 @@ pageTemplatesList=
                       $documents:{document |
                         <tr $if(document.odd)$class="odd"$endif$>
                             <td>$if(document.isauthor)$ <input type="checkbox" name="doccheck" value="$document.documentid$" class="check"> $endif$</td>
-                            <td>
+                            <!-- <td>
                                 <span title="$document.mtime$">$document.mtime$</span>
-                                $if(document.timeoutdaysleft)$  
-                                  <span title="Förfallodatum: $document.timeoutdate$">
-                                    <a href="$document.doclink$">
-                                      ($document.timeoutdaysleft$)
-                                    </a>
-                                  </span> 
-                                  $endif$
                             </td>
                             <td><a href="$document.doclink$">$document.signatories:{sig | $sig.name$}; separator=", "$</a></td>
+                            -->  
                             <td>
                                 <a href="$document.doclink$">$document.documenttitle$</a>
                                 $if(document.davelink)$ 

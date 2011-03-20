@@ -4,19 +4,6 @@ empty = $it.0$
 templatesForAjax= 
 
 <div class="doctablecontainer">
-<!-- Create new template button (DISABLED FOR NOW)
-  <form action="/d" method="post" enctype="multipart/form-data"  class="stepForm templateUploadForm" style="float:right;padding-top:10px;padding-right:10px"> 
-        <input type="hidden" name="template" value="template">
-        <div class="uploadButton" >  
-          <a href="#attachFile"><span class="icon arrowRight"></span></a>
-          <a href="#attachFile"> <span class="text">Skapa Ny Mall</span> </a> 
-          <input class="multiFileInput submitOnUpload" maxlength="1" type="file" name="doc" accept="application/pdf" rel="templateUploadForm .filelist" />
-        </div>
-
-      <div class="filelist" style="padding-left:10px"></div>
-  </form>
-   <script> initFileInputs();</script>
--->
 <!-- Here the templates are generated -->
 <!-- Table with all templates --> 
     <div class="tab-container">
