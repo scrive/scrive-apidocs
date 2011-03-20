@@ -32,6 +32,11 @@ module Doc.DocStateUtils (
     -- Other utils
     , signatoryDetailsFromUser
     , isMatchingSignatoryLink
+
+    -- History management
+    , appendHistory
+
+    , isELegDataMismatch
     )
 
 where
@@ -184,3 +189,10 @@ isMatchingSignatoryLink user sigLink = signatoryMatches || emailMatches
   signatoryMatches = maybe False (\s -> unSignatory s == userid user)  (maybesignatory sigLink)
   emailMatches = (signatoryemail . signatorydetails $ sigLink) == (unEmail . useremail $ userinfo user)
   
+
+appendHistory :: Document -> [DocumentHistoryEntry] -> Document
+appendHistory document history =
+    document { documenthistory = documenthistory document ++ history }
+
+isELegDataMismatch (ELegDataMismatch _ _ _ _ _) = True
+isELegDataMismatch _                            = False

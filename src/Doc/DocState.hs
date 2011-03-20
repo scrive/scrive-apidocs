@@ -152,7 +152,9 @@ newDocument user title documenttype ctime isfree = do
           , authorcompanyplacements = []
           , authornumberplacements = []
           , authorotherfields = []
-          }
+          , documentcancelationreason = Nothing
+          } `appendHistory` [DocumentHistoryCreated ctime]
+
   insertNewDocument doc
   
 
@@ -535,14 +537,15 @@ closeDocument docid time ipnumber author msiginfo = do
     Left _ -> return Nothing
     Right d -> return $ Just d
 
---We should add current state checkers here (not co cancel closed documents etc.)
-cancelDocument :: DocumentID -> Update Documents (Maybe Document)
-cancelDocument docid = do
-  doc <- modifyContract docid (\d -> Right $ d { documentstatus = Canceled }) 
-  case doc of
-    Left _ -> return Nothing
-    Right d -> return $ Just d
-
+cancelDocument :: DocumentID -> CancelationReason -> MinutesTime -> Word32 -> Update Documents (Either String Document)
+cancelDocument docid cr time ipnumber = do
+  modifyContract docid $ \document -> 
+      do
+          case documentstatus document of
+              Pending -> Right $ document { documentstatus = Canceled 
+                                            , documentcancelationreason = Just cr} 
+                         `appendHistory` [DocumentHistoryCanceled time ipnumber] 
+              _ -> Left $ "Incalid document status " ++ show (documentstatus document) ++ " in cancelDocument"
 
 
 getFilesThatShouldBeMovedToAmazon :: Query Documents [File]

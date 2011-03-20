@@ -1414,7 +1414,7 @@ handleCancel docid = withUserPost $ do
   doc <- queryOrFail $ GetDocumentByDocumentID docid
   failIfNotAuthor doc user
   customMessage <- getCustomTextField "customtext"  
-  mdoc' <- update $ CancelDocument(documentid doc) 
+  mdoc' <- update $ CancelDocument (documentid doc) ManualCancel ctxtime ctxipnumber
   case mdoc' of 
     Right doc' -> do
           sendCancelMailsForDocument customMessage ctx doc
