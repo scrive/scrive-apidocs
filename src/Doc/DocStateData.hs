@@ -78,10 +78,10 @@ data SignatureProvider = BankIDProvider
     deriving (Eq, Ord, Typeable, Data)
 
 data SignatureInfo0 = SignatureInfo0 { signatureinfotext0        :: String
-                                    , signatureinfosignature0   :: String
-                                    , signatureinfocertificate0 :: String
-                                    , signatureinfoprovider0    :: SignatureProvider
-                                    }
+                                     , signatureinfosignature0   :: String
+                                     , signatureinfocertificate0 :: String
+                                     , signatureinfoprovider0    :: SignatureProvider
+                                     }
     deriving (Eq, Ord, Typeable, Data)
 
 data SignatureInfo = SignatureInfo { signatureinfotext        :: String
