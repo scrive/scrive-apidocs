@@ -779,12 +779,8 @@ function isExceptionalField(field){
 
 safeReady(function(){
     $(".prepareToSendReminderMail").each(function(){
-        var form = $($(this).attr("rel"));
         $(this).overlay({
-                     mask: standardDialogMask,
-                     resizable: false,
-                     onClose: function(e){ return false;
-                    }
+                     mask: standardDialogMask 
                  })
     })                   
 })
