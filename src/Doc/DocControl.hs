@@ -16,6 +16,7 @@ import Data.Maybe
 import Data.Word
 import Debug.Trace
 import Doc.DocState
+import Doc.DocStateUtils
 import Doc.DocView
 import Doc.DocViewMail
 import HSP hiding (catch)
@@ -88,7 +89,7 @@ postDocumentChangeAction document@Document  { documentstatus
                                             , documentsignatorylinks
                                             , documentid
                                             , documentauthor 
-                                            , documentcanceledreason
+                                            , documentcancelationreason
                                             } 
                             oldstatus 
                             msignalinkid
@@ -138,10 +139,11 @@ postDocumentChangeAction document@Document  { documentstatus
     | oldstatus == Pending && 
         documentstatus == Canceled && 
         isJust documentcancelationreason &&
-        isELegDataMismatch $ fromJust documentcancelationreason = do
+        isELegDataMismatch (fromJust documentcancelationreason) = do
             ctx <- get
+            author <- queryOrFail $ GetUserByUserID $ unAuthor $ documentauthor
             Log.forkIOLogWhenError ("error sending cancelation emails for document " ++ show documentid) $ do
-                sendElegDataMismatchEmails ctx document
+                sendElegDataMismatchEmails ctx document author
             return ()
     --  -> DocumentError
     | DocumentError msg <- documentstatus = do
@@ -156,23 +158,25 @@ postDocumentChangeAction document@Document  { documentstatus
          return ()
     where msignalink = maybe Nothing (signlinkFromDocById document) msignalinkid
     
-sendElegDataMismatchEmails ctx document = do
+sendElegDataMismatchEmails :: Context -> Document -> User -> IO ()
+sendElegDataMismatchEmails ctx document author = do
     let authorid = unAuthor $ documentauthor document
         allbutauthor = filter ((maybe True ((/= authorid) . unSignatory)) . maybesignatory) 
                             (documentsignatorylinks document)
     forM_ allbutauthor $ sendDataMismatchEmailSignatory ctx document
-    sendDataMismatchEmailAuthor ctx document
+    sendDataMismatchEmailAuthor ctx document author
     
+sendDataMismatchEmailSignatory :: Context -> Document -> SignatoryLink -> IO ()
 sendDataMismatchEmailSignatory ctx document signatorylink = do
     let SignatoryLink { signatorydetails } = signatorylink
         Document { documenttitle, documentid } = document
-    mail <- mailMistmatchSignatory ctx document
+    mail <- mailMismatchSignatory ctx document
     sendMail (ctxmailer ctx) $ mail { fullnameemails = [(signatoryname signatorydetails, signatoryemail signatorydetails)] }
           
-sendDataMistmatchEmailAuthor ctx document = do
-    author <- queryOrFail $ GetUserByUserID $ unAuthor $ documentAuthor document
+sendDataMismatchEmailAuthor :: Context -> Document -> User -> IO ()
+sendDataMismatchEmailAuthor ctx document author = do
     mail <- mailMismatchAuthor ctx document
-    sendMail (ctxmailer ctx) $ mail { fullnameemails = [(userfullname author, useremail $ userinfo author)] }
+    sendMail (ctxmailer ctx) $ mail { fullnameemails = [(userfullname author, unEmail $ useremail $ userinfo author)] }
     
 {- |
    Send emails to all of the invited parties saying that we fucked up the process.
