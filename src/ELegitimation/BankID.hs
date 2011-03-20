@@ -386,7 +386,7 @@ toJSON kvs = "{ " ++ intercalate ", " (map kvJson kvs) ++ " }"
 -- SOAP
 
 endpoint :: String
-endpoint = "https://eidt.funktionstjanster.se:18898/osif"
+endpoint = "https://eid.funktionstjanster.se:8890/osif"
 
 data ImplStatus = ImplStatus Int String Int String
 
@@ -563,10 +563,12 @@ instance XmlContent (VerifySignatureResponse) where
             }
         } `adjustErr` ("in <VerifySignatureResponse>, "++)
 
+certfile :: String
+certfile = "certs/steria3.pem"
 
 generateChallenge :: Kontra (Either ImplStatus (String, String))
 generateChallenge = do
-    eresponse <- liftIO $ makeSoapCallINSECURE endpoint "GenerateChallenge" $ GenerateChallengeRequest 6 "logtest004"
+    eresponse <- liftIO $ makeSoapCallCA endpoint certfile "GenerateChallenge" $ GenerateChallengeRequest 6 "skrivapa9421"
     case eresponse of
         Left msg -> do
             liftIO $ print msg
@@ -578,7 +580,7 @@ generateChallenge = do
                  
 encodeTBS :: Int -> String -> String -> Kontra (Either ImplStatus String)
 encodeTBS provider tbs transactionID = do
-    eresponse <- liftIO $ makeSoapCallINSECURE endpoint "EncodeTBS" $ EncodeTBSRequest provider "logtest004" tbs transactionID
+    eresponse <- liftIO $ makeSoapCallCA endpoint certfile "EncodeTBS" $ EncodeTBSRequest provider "skrivapa9421" tbs transactionID
     case eresponse of
         Left msg -> do
             liftIO $ print msg
@@ -596,10 +598,10 @@ verifySignature :: Int
                     -> Kontra (Either ImplStatus (String, [(BS.ByteString, BS.ByteString)]))
 verifySignature provider tbs signature nonce transactionID = do
     eresponse <- liftIO $ 
-        makeSoapCallINSECURE endpoint 
+        makeSoapCallCA endpoint certfile
             "VerifySignature" $ 
             VerifySignatureRequest provider 
-                "logtest004" 
+                "skrivapa9421" 
                 tbs 
                 signature 
                 nonce 
