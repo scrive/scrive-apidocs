@@ -127,15 +127,15 @@ makeSoapCall url action cert certpwd request = do
             Right (SOAPFault soapcode string actor) -> return (Left (soapcode ++":" ++ string ++":" ++ actor))
             Left errmsg -> return (Left (errmsg ++ ": " ++ BSL.toString stdout))
 
-makeSoapCallINSECURE :: (XmlContent request, XmlContent response) =>
+makeSoapCallCA :: (XmlContent request, XmlContent response) =>
                         String -> String -> request -> IO (Either String response)
-makeSoapCallINSECURE url action request = do
+makeSoapCallCA url cert action request = do
   let input = fpsShowXml False (SOAP request)
   -- BSL.appendFile "soap.xml" input
   liftIO $ print $ BSL.toString input
   let args = [               "-k", "--verbose", "--show-error",
                -- "--cert", cert ++ ":" ++ certpwd,
-               -- "--cacert", cert,
+               "--cacert", cert,
                "--data-binary", "@-",
                "-H", "Content-Type: text/xml; charset=UTF-8",
                "-H", "Expect: 100-continue",
