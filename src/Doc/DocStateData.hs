@@ -855,7 +855,7 @@ instance Version SignatureInfo0
 
 $(deriveSerialize ''SignatureInfo)
 instance Version SignatureInfo where
-    mode = extension1 (Proxy :: Proxy SignatureInfo0)
+    mode = extension 1 (Proxy :: Proxy SignatureInfo0)
     
 instance Migrate SignatureInfo0 SignatureInfo where
     migrate (SignatureInfo0

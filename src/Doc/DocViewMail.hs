@@ -12,7 +12,9 @@ module Doc.DocViewMail ( mailDocumentRemind,
                      mailDocumentAwaitingForAuthor,
                      mailCancelDocumentByAuthorContent,
                      mailDocumentError,
-                     mailCancelDocumentByAuthor
+                     mailCancelDocumentByAuthor,
+                     mailMismatchSignatory,
+                     mailMismatchAuthor
            ) where
 import Doc.DocState
 import qualified Data.ByteString.UTF8 as BS
@@ -336,27 +338,31 @@ mailCancelDocumentByAuthor templates customMessage ctx document@Document{documen
         attachmentcontent <- getFileContents (ctxs3action ctx) $ head $ documentfiles document          
         return $ emptyMail {title = BS.fromString title, fullnameemails =  [emailFromSignLink signlink] , content = BS.fromString content, attachments = [(documenttitle,attachmentcontent)]}
 
+mailMismatchSignatory :: Context -> Document -> IO Mail
 mailMismatchSignatory ctx document = do
     let Context { ctxtemplates } = ctx
     title <- renderTemplate ctxtemplates "mailMismatchSignatoryTitle" $ do
         field "documenttitle" $ BS.toString $ documenttitle document
-    content <- wrapHTML ctxtemplates =<< renderTemplate ctxtemplates "mailMismatchSignatoryContent" $ do
-        field "documenttitle" $ BS.toString $ documenttitle document
+    content <- wrapHTML ctxtemplates =<< (renderTemplate ctxtemplates "mailMismatchSignatoryContent" $ do
+        field "documenttitle" $ BS.toString $ documenttitle document)
     return $ emptyMail  { title = BS.fromString title
                         , content = BS.fromString content 
                         }
+                        
+mailMismatchAuthor :: Context -> Document -> IO Mail
 mailMismatchAuthor ctx document = do
     let Context { ctxtemplates } = ctx
-        Just ElegDataMismatch msg _ _ _ _ = documentcancelationreason document
-    title <- renderTemplate ctxtemplats "mailMismatchAuthorTitle" $ do
+        Just (ELegDataMismatch msg _ _ _ _) = documentcancelationreason document
+    title <- renderTemplate ctxtemplates "mailMismatchAuthorTitle" $ do
         field "documenttitle" $ BS.toString $ documenttitle document
-    content <- wrapHTML ctxtemplates =<< renderTemplate ctxtemplates "mailMismatchAuthorContent" $ do
+    content <- wrapHTML ctxtemplates =<< (renderTemplate ctxtemplates "mailMismatchAuthorContent" $ do
         field "documenttitle" $ BS.toString $ documenttitle document
-        field "messages" $ concat $ map para $ lines msg
+        field "messages" $ concat $ map para $ lines msg)
     return $ emptyMail  { title = BS.fromString title
                         , content = BS.fromString content
                         }
         
+para :: String -> String
 para s = "<p>" ++ s ++ "</p>"
 
 makeEditable':: KontrakcjaTemplates -> String->String->IO String

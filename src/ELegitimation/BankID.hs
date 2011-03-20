@@ -232,7 +232,7 @@ handleIssueBankID provider docid = withUserGet $ do
 
     nonceresponse <- generateChallenge
     case nonceresponse of
-        Left (ImplStatus _a _b code msg) -> 
+        Left (ImplStatus _a _b code msg) -> do
             Log.debug $ "generateChallenge failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
             liftIO $ print $ "generateChallenge failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
             return $ toResponse $ toJSON [("status", JInt code), ("msg", JString msg)]
@@ -241,7 +241,7 @@ handleIssueBankID provider docid = withUserGet $ do
             providerCode <- providerStringToNumber provider
             encodetbsresponse <- encodeTBS providerCode tbs transactionid 
             case encodetbsresponse of
-                Left (ImplStatus _a _b code msg) -> 
+                Left (ImplStatus _a _b code msg) -> do
                     Log.debug $ "encodeTBS failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
                     liftIO $ print $ "encodeTBS failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
                     return $ toResponse $ toJSON [("status", JInt code), ("msg", JString msg)]
@@ -359,7 +359,7 @@ handleIssuePostBankID docid = withUserPost $ do
                                                             , signaturepersnumverified = bpn
                                                             }
 
-                            mndoc <- update $ AuthorSignDocument (documentid document) ctxtime ctxipnumber author $ Just siginfo
+                            mndoc <- update $ AuthorSignDocument (documentid document) ctxtime ctxipnumber author $ Just signinfo
                             case mndoc of
                                 Left msg -> do
                                     liftIO $ print $ "AuthorSignDocument failed: " ++ msg
@@ -614,6 +614,7 @@ verifySignature provider tbs signature nonce transactionID = do
 data MergeResult = MergeMatch
                  | MergeKeep
                  | MergeFail String
+     deriving (Eq, Show)
                  
 isMergeFail (MergeFail _) = True
 isMergeFail _             = False
