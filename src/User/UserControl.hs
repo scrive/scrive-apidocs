@@ -539,7 +539,7 @@ handleActivate muser dropSessionAction = do
                                       Nothing -> do
                                          addFlashMsg =<< (liftIO $ flashMessageActivationLinkNotValid (ctxtemplates ctx)) 
                                          return LinkMain   
-                      _ -> return LinkMain
+                      _ -> return LoopBack
 
 userFromExternalSessionData ::String -> String -> Kontra (Maybe User)
 userFromExternalSessionData sid mh = do
