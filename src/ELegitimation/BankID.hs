@@ -179,8 +179,10 @@ handleSignPostBankID docid signid magic = do
                     liftIO $ print msg
                     Log.debug msg
                     -- send to canceled with reason msg
-                    addFlashMsg $ toFlashMsg OperationFailed msg
-                    Just newdoc <- update $ CancelDocument docid
+                    addFlashMsg $ toFlashMsg OperationFailed $ "Document was canceled because there were fields that were not verified by the Elegitimation server: \n" ++ msg
+                    Right newdoc <- update $ CancelDocument docid (ELegDataMismatch msg signid sfn sln spn) ctxtime ctxipnumber
+                    postDocumentChangeAction newdoc olddocumentstatus (Just signid)
+                    
                     return $ LinkSignDoc document siglink
                 -- we have merged the info!
                 Right (bfn, bln, bpn) -> do
