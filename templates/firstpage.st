@@ -113,7 +113,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                         <div class="body">
                                                                 <form method="post" action="$linklogin$">
                                                                         <input type="email" name="email" infotext="E-post" autocomplete="off"/><br />
-                                                                        <input type="password" name="password" infotext="Lösenord" autocomplete="off"/><br />
+                                                                        <input type="password" name="password" infotext="" autocomplete="off"/><br />
                                                                         <a href="#" class="btn-tiny blue center float-right submit">
                                                                             <div class="left"> </div>     
                                                                             <div class="label"><p>Logga in</p> </div>
