@@ -24,10 +24,12 @@ pageDocumentForAuthorContentPreparation=
     <!-- <span class="changeName"><a href="#changeName">BYT TITEL</a></span> -->
 
       </span>
-
-<span style="float: right; display: inline-block; margin: 8px 10px 0pt 18px;" class="submitStepFormOnClick"><a class="title" href="#save">SPARA SOM UTKAST</a></span>
 $if(contract)$
+<span style="float: right; display: inline-block; margin: 8px 10px 0pt 18px;" class="submitStepFormOnClick"><a class="title" href="#save">SPARA SOM UTKAST</a></span>
 <span style="float: right; display: inline-block; margin: 8px 10px 0pt 18px;" class="submitStepFormOnClick" name="template"><a class="title" href="#save">SPARA SOM MALL</a></span>  
+$elseif(template)$
+<span style="float: right; display: inline-block; margin: 8px 10px 0pt 18px;" class="submitStepFormOnClick"><a class="title" href="#save">SPARA MALL</a></span>
+
 $endif$  
 
       <!-- 
@@ -264,7 +266,7 @@ $endif$
 
           $elseif(template)$
             <a type="submit" name="contract" rel="contract" class="submit new-btn-small green2 center"> 
-              <p>Create contract</p> 
+              <p>Skapa mall</p> 
             </a>
            $endif$
 
@@ -350,15 +352,15 @@ $endif$
   </span>
 </div>
 #####
-validationdropdown= <!--
-<div>
+validationdropdown= 
+<div style="display:none">
   Verifieringsmetod<br>
   <select name="validationmethod"
           id="validationdropdown">
     <option value="email" selected>E-post</option>
     <option value="eleg">E-Legitimation</option>
   </select>
-</div> -->
+</div> 
 #####
 emailhidden=
 <input type="hidden" value="email" name="validationmethod" />
