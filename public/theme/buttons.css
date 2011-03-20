@@ -6,6 +6,10 @@
 	text-decoration: none;
 }
 
+a.btn-small .label, a.btn-big .label, a.btn-tiny .label{
+    color: #fff;
+}
+
 a.btn-small.center, a.btn-big.center, a.btn-tiny.center {
 	text-align: center;
 }
