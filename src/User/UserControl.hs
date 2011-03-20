@@ -152,16 +152,16 @@ subaccountsSearchFunc s user =  userMatch user s -- split s so we support spaces
     
    
 subaccountsSortFunc:: SortingFunction User
-subaccountsSortFunc "fstname" = comparing $ userfstname . userinfo
-subaccountsSortFunc "fstnameREV" = rcomparing $ userfstname . userinfo
-subaccountsSortFunc "sndname" = comparing $ usersndname . userinfo
-subaccountsSortFunc "sndnameREV" = rcomparing $ usersndname . userinfo
-subaccountsSortFunc "companyposition" = comparing $ usercompanyposition . userinfo
-subaccountsSortFunc "companypositionREV" = rcomparing $ usercompanyposition . userinfo
-subaccountsSortFunc "phone" = comparing $  userphone . userinfo
-subaccountsSortFunc "phoneREV" = rcomparing $ userphone . userinfo
-subaccountsSortFunc "email" = comparing $ useremail . userinfo
-subaccountsSortFunc "email" = rcomparing $ useremail . userinfo
+subaccountsSortFunc "fstname" = viewComparing $ userfstname . userinfo
+subaccountsSortFunc "fstnameREV" = viewComparingRev $ userfstname . userinfo
+subaccountsSortFunc "sndname" = viewComparing $ usersndname . userinfo
+subaccountsSortFunc "sndnameREV" = viewComparingRev $ usersndname . userinfo
+subaccountsSortFunc "companyposition" = viewComparing $ usercompanyposition . userinfo
+subaccountsSortFunc "companypositionREV" = viewComparingRev $ usercompanyposition . userinfo
+subaccountsSortFunc "phone" = viewComparing $  userphone . userinfo
+subaccountsSortFunc "phoneREV" = viewComparingRev $ userphone . userinfo
+subaccountsSortFunc "email" = viewComparing $ useremail . userinfo
+subaccountsSortFunc "emailREV" = viewComparingRev $ useremail . userinfo
 subaccountsSortFunc _ = const $ const EQ
 
 
