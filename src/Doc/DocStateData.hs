@@ -659,7 +659,7 @@ data Document = Document
     , authoremailplacements :: [FieldPlacement]
     , authornumberplacements :: [FieldPlacement]
     , authorotherfields :: [FieldDefinition]
-    , documentcanceledreason :: Maybe CancelationReason
+    , documentcancelationreason :: Maybe CancelationReason
     }
     
 data CancelationReason =  ManualCancel
@@ -1695,9 +1695,9 @@ instance Migrate Document12 Document where
                 , authoremailplacements = authoremailplacements12
                 , authornumberplacements = authornumberplacements12
                 , authorotherfields = authorotherfields12
-                , documentcanceledreason = if documentstatus12 == Canceled
-                                            then Just ManualCancel
-                                            else Nothing
+                , documentcancelationreason = if documentstatus12 == Canceled
+                                                then Just ManualCancel
+                                                else Nothing
                 }
 
 $(deriveSerialize ''DocumentStatus)
