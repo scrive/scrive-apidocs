@@ -36,11 +36,12 @@ function enableInfoTextOnce(where){
   if(!where) {
     where = $(document);
   }
-  var selector = ':input[infotext]';
+  var selector = 'input[infotext] ,  textarea[infotext]';
   var inputs = $(selector, where);
   
   function setInfoText(obj) {
     var input = $(obj);
+    console.log(input.val());
     if (input.val() == "" || input.val() == input.attr("infotext")) {
        input = input.not($(document.activeElement));
        input.addClass("grayed");
@@ -65,7 +66,7 @@ function enableInfoTextOnce(where){
   });
   
   $("form").live("submit", function () {
-    var elems = $(this).find(selector + ".grayed");
+    var elems = $(this).find(".grayed");
     elems.val("");
     return true;
   });
@@ -76,7 +77,7 @@ function disableInfoText(where) {
   if(!where) {
     where = $(document);
   }
-  inputs = where.filter('input[type="text"][infotext!=""]');
+  inputs = where.filter('input[infotext] ,  textarea[infotext]');
   inputs.focus();
 }
 

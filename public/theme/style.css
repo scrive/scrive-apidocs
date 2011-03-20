@@ -861,7 +861,7 @@ div.clearboth
     clear: both;
 }
 
-input.grayed
+input.grayed, textarea.grayed
 {
     color: #999999;
     font-style: italic;

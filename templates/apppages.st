@@ -73,10 +73,10 @@ wholePage=
                                                 <h4>Hör av dig till oss!</h4>
                                                 <br />
                                                 <form method="post" action="$linkquestion$">
-                                                        <input type="text" name="name" value="Namn" class="infotext" /><br />
-                                                        <input type="email" name="email" value="E-post" class="infotext" /><br />
-                                                        <input type="tel" name="phone" value="Telefonnummer" class="infotext" /><br />
-                                                        <textarea name="message" class="infotext">Meddelande</textarea>
+                                                        <input type="text" name="name" infotext="Namn" /><br />
+                                                        <input type="email" name="email" infotext="E-post" /><br />
+                                                        <input type="tel" name="phone" infotext="Telefonnummer" /><br />
+                                                        <textarea name="message" infotext="Meddelande"></textarea>
                                                         <a class="submit new-btn-small green2 center"><p>Skicka!</p></a>
                                                         <input type="submit" class="hidden" />
                                                 </form>
@@ -103,7 +103,7 @@ wholePage=
                         </div>
                          <div class="right">
                             <form method="post" action="$linkrequestaccount$" class="requestAccount">
-                                   <input class="shiny infotext" name="email" type="email" value="Fyll i din e-postadress" /> <a href="#" class="submit new-btn-small green2 center float-right"><p>Skicka förfrågan!</p></a>
+                                   <input class="shiny" name="email" type="email" infotext="Fyll i din e-postadress" /> <a href="#" class="submit new-btn-small green2 center float-right"><p>Skicka förfrågan!</p></a>
                                    <input type="submit" class="hidden" />
                              </form>
                          </div>
@@ -222,7 +222,7 @@ header=
                                  <form method="post" action="$linkinvite$" class="MultiFile-intercepted">
                                  <div>
                                   <div>
-                                       <input type="email" autocomplete="off" name="invitedemail" infotext=" Bjud en vän på 2 månader fri användning. Skriv deras e-post här!" class="grayed" />
+                                       <input type="email" autocomplete="off" name="invitedemail" infotext="Bjud en vän på 2 månader fri användning. Skriv deras e-post här!"/>
                                        <a class="btn-tiny blue center float-right submit" href="#"><p>Skicka</p></a>
                                        <input type="submit" class="hidden" name="invite" value="Skicka" />
                                   </div>
@@ -244,8 +244,8 @@ header=
                                                         </div>
                                                         <div class="body">
                                                                   <form method="post" action="$linklogin$">
-                                                                        <input type="email" name="email" value="E-post" class="infotext" autocomplete="off"/><br />
-                                                                        <input type="password" name="password" value="Lösenord" class="infotext" autocomplete="off"/><br />
+                                                                        <input type="email" name="email" infotext="E-post" autocomplete="off"/><br />
+                                                                        <input type="password" name="password" infotext="Lösenord" autocomplete="off"/><br />
                                                                         <a href="#" class="btn-tiny blue center float-right submit"><p>Logga in</p></a>
                                                                         <a href="#" class="txt-link">Glömt lösenord</a>
                                                                         <input type="submit" class="hidden" />
@@ -259,7 +259,7 @@ header=
                                                         <div class="body">
                                                                 <form method="post" action="$linkforgotenpassword$">
                                                                         <p class="float-left">&nbsp;Skicka nytt lösenord</p>
-                                                                        <input type="email" name="email" value="E-post" class="infotext" autocomplete="off"/>
+                                                                        <input type="email" name="email" infotext="E-post"  autocomplete="off"/>
                                                                         <a href="#" class="btn-tiny blue center float-right submit"><p>Skicka</p></a>
                                                                         <a href="#" class="txt-link">Tillbaka</a>
                                                                         <input type="submit" class="hidden" />
