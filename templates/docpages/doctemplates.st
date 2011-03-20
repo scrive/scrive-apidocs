@@ -18,11 +18,10 @@ templatesForAjax=
    <script> initFileInputs();</script>
 -->
 <!-- Here the templates are generated -->
-<!-- Table with all templates --> <div class="tab-container">
+<!-- Table with all templates --> 
+    <div class="tab-container">
             <div class="tab-content">
-                <div class="col float-left">
-                </div>
-                <div class="col float-right">
+                <div class="" style="margin-left:35%;margin-right:35%;padding:10px;width:240px">
                    <form action="$currentlink$" method="POST">
                       $searchBox(infotext='Sök dokument')$
                    </form>
