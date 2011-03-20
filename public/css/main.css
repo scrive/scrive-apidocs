@@ -132,10 +132,6 @@ input.shiny:focus {
 	color: #000;
 }
 
-textarea {
-	color: #999;
-}
-
 textarea:focus {
 	color: #000;
 }
