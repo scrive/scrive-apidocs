@@ -126,7 +126,7 @@ handleRoutes = msum [
      , dir "t" $ hget0  $ DocControl.showTemplatesList
      , dir "t" $ param "archive" $ hpost0 $ DocControl.handleTemplateArchive
      , dir "t" $ param "template" $ hpost0  $ DocControl.handleCreateFromTemplate
-     , dir "t" $ hpost0 $ DocControl.handleTemplateReload
+     , dir "t" $ hpost0  $ DocControl.handleCreateNewTemplate
      
      
      , dir "d" $ hget0  $ DocControl.showContractsList
