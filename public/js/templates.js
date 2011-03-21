@@ -47,16 +47,13 @@ function placementToHTML(label, value) {
   if(!v) {
     v = label;
   }
-  return $("<div class='placedfield' style='cursor:pointer'>"
-           + "<span class='value'>" + escapeHTML(v) + "</span>" 
-	   + "</div>");
+  var span = $("<span class='value'>").text(v);
+  return $("<div class='placedfield' style='cursor:pointer'>").append(span);
 }
 
-function placedFieldHelper(value, noescape) {
-  return $("<div class='placedfieldhelper'>"
-           + "<span class='value'>"
-           + (noescape === true ? value : escapeHTML(value))
-           + "</span></div>");
+function placedFieldHelper(value) {
+    var span = $("<span class='value'>").text(value);
+    return $("<div class='placedfieldhelper'>").append(span);
 }
 
 function placePlacements(pls, label, value, sigid, fieldid) {
@@ -80,7 +77,7 @@ function placePlacements(pls, label, value, sigid, fieldid) {
 }
 
 function newHiddenValue(label, value) {
-  return $("<span style='display: none' class='" + label + "'>" + value + "</span>");
+    return $("<span style='display: none'>").addClass(label).text(value);
 }
 
 // getHiddenValue does not care if it's hidden
@@ -104,9 +101,7 @@ function setHiddenValue(field, label, value) {
 }
 
 function newHiddenField(name, value) {
-  return $("<input type='hidden' name='" + name
-         + "' value='" + escapeHTML(value)
-         + "' />");
+    return $("<input type='hidden'>").attr("value", value).attr("name", name);
 }
 
 // works on any input field, not just hidden ones
@@ -570,6 +565,12 @@ function authorToHTML(sig) {
     return false;
   });
 
+  if(sig.signatory) {
+    sigentry.find(".partyrole input").first().attr("checked", "true");
+  } else {
+    sigentry.find(".partyrole input").last().attr("checked", "true");
+  }
+
   $("#peopleList ol").append("<li><a href='#'>"
                            + escapeHTML(sig.fstname + " " + sig.sndname)
                            + " (Avsändare)</a></li>");
@@ -889,10 +890,10 @@ function signatoryToHTML(isMultiple, sig) {
   } else if(sig.fstname == "" && sig.sndname == "") {
     n = "(Namnlös)";
   } else {
-    n = escapeHTML(sig.fstname + " " + sig.sndname);
+    n = sig.fstname + " " + sig.sndname;
   }
   
-  $("#peopleList ol").append("<li><a href='#'>" + n + "</a></li>");
+  $("#peopleList ol").append($("<li>").append($("<a href='#'>").text(n)));
   sl.append(sigentry);
 
   sigentry.find(".multi").overlay({
@@ -1020,7 +1021,7 @@ function showCoordinateAxes(helper) {
              */
             setTimeout( function() {
                     hline.each(function() {
-                            var h = $(this);
+                           var h = $(this);
                             var page = h.parents(".pagejpg");
                             h.css({
                                     top: Math.min(page.height()-1, Math.max(0, helper.offset().top - page.offset().top + helper.height() - 4)) + "px"
@@ -1092,8 +1093,7 @@ safeReady(function() {
 
 		     appendTo: "body",
 		     helper: function() {
-                       // it's already escaped, no need to do this again
-		       return placedFieldHelper($(this).find(".fieldvalue").html(), true);
+		       return placedFieldHelper($(this).find(".fieldvalue").text());
 	             },
 	             start: function(event, ui) {
                          showCoordinateAxes(ui.helper);
@@ -1125,8 +1125,7 @@ safeReady(function() {
       },
       // build a helper so it doesn't delete the original
       helper: function(event, ui) {
-        // it's already escaped, no need to do this again
-        return placedFieldHelper($(this).find(".value").html(), true);
+        return placedFieldHelper($(this).find(".value").text());
       },
       // but we don't want to show the original so it looks like 
       // you are dragging the original
