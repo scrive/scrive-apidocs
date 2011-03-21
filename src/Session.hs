@@ -1,4 +1,5 @@
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -Werror #-}
+
 -- |Simple session support
 module Session 
     ( Sessions
@@ -24,9 +25,7 @@ module Session
 import Control.Monad.Reader (ask)
 import Control.Monad.State hiding (State)
 import qualified Data.Foldable as F
-import Data.Generics
 import Data.Maybe (isNothing,isJust, fromJust)
-import Happstack.Data
 import Happstack.Data.IxSet
 import qualified Happstack.Data.IxSet as IxSet
 import qualified Happstack.Server.Internal.Cookie as HSI
@@ -35,15 +34,16 @@ import Happstack.Server.Types (addHeader)
 import Happstack.State
 import User.UserState (UserID,FlashMessage,GetUserByUserID(GetUserByUserID), User)
 import MinutesTime
-import Happstack.Server (RqData, ServerMonad, FilterMonad, Response, mkCookie, addCookie, readCookieValue, withDataFn, ServerPartT, HasRqData, CookieLife(MaxAge))
+import Happstack.Server (RqData, ServerMonad, FilterMonad, Response, mkCookie, readCookieValue, withDataFn, ServerPartT, HasRqData, CookieLife(MaxAge))
 import System.Random
 import Happstack.Util.Common ( readM)
 import Misc (MagicHash(MagicHash), mkTypeOf)
 import ELegitimation.ELeg
+import Data.Typeable
 
 -- | Session ID is a wrapped 'Integer' really
 newtype SessionId = SessionId Integer
-    deriving (Eq, Ord, Num, Typeable, Data)
+    deriving (Eq, Ord, Num, Typeable)
 
 
 instance Show SessionId where
@@ -59,7 +59,7 @@ instance Version SessionId
   
 data SessionData0 = SessionData0 { userID0 :: Maybe UserID,
                                    flashMessages0 :: [FlashMessage]
-                                 } deriving (Ord,Eq,Show,Typeable,Data)
+                                 } deriving (Ord,Eq,Show,Typeable)
 $(deriveSerialize ''SessionData0)
 instance Version (SessionData0)
                                    
@@ -67,7 +67,7 @@ data SessionData1 = SessionData1 {
                                   userID1 :: Maybe UserID,
                                   flashMessages1 :: [FlashMessage],
                                   expires1 :: MinutesTime
-                               }  deriving (Ord,Eq,Show,Typeable,Data)
+                               }  deriving (Ord,Eq,Show,Typeable)
 
 $(deriveSerialize ''SessionData1) 
 instance Version (SessionData1) where
@@ -78,7 +78,7 @@ data SessionData2 = SessionData2 {
                                   flashMessages2 :: [FlashMessage],
                                   expires2 :: MinutesTime,
                                   hash2 :: MagicHash
-                               }  deriving (Ord,Eq,Show,Typeable,Data)                               
+                               }  deriving (Ord,Eq,Show,Typeable)                               
                                
 $(deriveSerialize ''SessionData2) 
 instance Version (SessionData2) where
@@ -92,7 +92,7 @@ data SessionData = SessionData
     , expires::MinutesTime                    -- ^ when does this session expire
     , hash::MagicHash                         -- ^ session security token
     , elegtransactions::[ELegTransaction]     -- ^ ELeg transaction stuff
-    }  deriving (Ord,Eq,Show,Typeable,Data)                               
+    }  deriving (Ord,Eq,Show,Typeable)                               
                                
 $(deriveSerialize ''SessionData) 
 instance Version (SessionData) where
@@ -134,7 +134,7 @@ instance Migrate SessionData2 SessionData where
 data Session = Session { sessionId::SessionId
                        , sessionData::SessionData
                        }
-               deriving (Ord, Eq, Show, Data)
+               deriving (Ord, Eq, Show)
 
 -- | WARNING: This needs to specify \"Session\" as full data type
 -- name.  Do not use the deriving mechanism as that one produces full
@@ -146,7 +146,14 @@ $(deriveSerialize ''Session)
 instance Version (Session)
    
 -- FIXME: Use new Happstack6 indexing here to speed up things
-$(inferIxSet "Sessions" ''Session 'noCalcs [''SessionId])
+-- $(inferIxSet "Sessions" ''Session 'noCalcs [''SessionId])
+
+type Sessions = IxSet Session
+
+instance Indexable Session where
+        empty = ixSet 
+                [ ixFun (\x -> [sessionId x])
+                ]
 
 instance Component (Sessions) where
   type Dependencies (Sessions) = End
@@ -154,7 +161,7 @@ instance Component (Sessions) where
 
 -- Some helpers. MACID demands it before use.
 -- | Perform insert only if test is True
-testAndInsert :: (MonadState (IxSet a) m, Data a, Ord a, Indexable a) =>(IxSet a -> Bool) -> a -> m Bool
+testAndInsert :: (MonadState (IxSet a) m, Typeable a, Ord a, Indexable a) =>(IxSet a -> Bool) -> a -> m Bool
 testAndInsert test a =
     maybeModify $ \ixset ->
         if test ixset
@@ -188,7 +195,7 @@ getSessionByUserId userid = return . F.find cmp . IxSet.toList =<< ask
 --
 -- FIXME: do not use gFind here as it is slow.
 updateSession :: (Session) -> Update (Sessions) ()
-updateSession session = modify (updateIx (gFind' session :: SessionId) session)
+updateSession session = modify (updateIx (sessionId session) session)
 
 -- | Delete the session associated with the 'SessionId'.
 -- Returns the deleted session.
