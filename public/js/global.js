@@ -594,15 +594,6 @@ safeReady(function() {
 });
 
 
-safeReady(function() {    
-  $(".submitStepFormOnClick").click(function(){
-       var name = $(this).attr("name");
-       var value = $(this).attr("value");
-       $(".stepForm").append("<input type='hidden' name='"+name+"' value='"+value+"'");
-       $(".stepForm").submit(); 
-  });
-});
-
 safeReady(function() {
   $(window).resize();
 });

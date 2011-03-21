@@ -5,7 +5,10 @@
             $(this).click( function(e) {
                 e.preventDefault();
                 var name = $(this).attr('rel');
-                $(this).parents('form').append('<input type="hidden" name="' + name + '" value="1" />').submit();
+                var form = $(this).parents('form');
+                if ($(this).attr('form') != undefined)
+                    form = $($(this).attr('form')); 
+                form.append('<input type="hidden" name="' + name + '" value="1" />').submit();
             });
         });
     }

@@ -63,11 +63,11 @@ pageTemplatesList=
                             -->
                             <th style="width: 600px;">
                                $if(params.sorting.titleREV)$
-                                <a href="$currentlink$&sorting=title">Dokument <em> ▲</em></a>
+                                <a href="$currentlink$&sorting=title">Mall <em> ▲</em></a>
                                $elseif(params.sorting.title)$
-                                <a href="$currentlink$&sorting=titleREV">Dokument <em style="text-color:red"> ▼</em></a>
+                                <a href="$currentlink$&sorting=titleREV">Mall <em style="text-color:red"> ▼</em></a>
                                $else$
-                                <a href="$currentlink$&sorting=title">Dokument </a>
+                                <a href="$currentlink$&sorting=title">Mall </a>
                                $endif$
                             </th>
                             <th></th>
