@@ -35,8 +35,8 @@ uploadPage=
  
 <!-- MAIN FORM STARTS HERE -->
 <table style="width:100%"> <tbody> <tr valign="top">
-<td> <div class="signStepsBodyUploadBox"> 
-    <p class="text">
+<td> <div class="signStepsBodyUploadBox" style="border:0px;text-align:left"> 
+    <p class="text" style="padding-top:20px">
     Välj det dokument som du vill fylla i och skicka till din motpart för att skriva på.
     Du väljer ett dokument från din dator eller från existerande mallar.
     <p/>
@@ -46,7 +46,7 @@ uploadPage=
 <div class="signStepsBodyUploadBox"> 
   <form action="/d" method="post" enctype="multipart/form-data" > 
     <div>
-        <span class="header">Välj fil att ladda upp</span><br/>
+        <span class="header">Välj fil från dator</span><br/>
         <span class="text">OBS! Endast PDF</span> 
       <br/>
       <div class="signStepsButtonContainer">
@@ -57,14 +57,14 @@ uploadPage=
           <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px" maxlength="1" type="file" name="doc" accept="application/pdf" rel=".filelist" />
         </a>
        </div>
-      <div class="filelist" style="padding-left:10px"></div>
+      <div class="filelist" style="padding-left:10px;display:none"></div>
     </div>
   </form>
 </div> 
 </td><td>
 <div class="signStepsBodyUploadBox">  
     <div>
-        <span class="header">Välj existerande mall</span><br/>
+        <span class="header">Välj sparad mall</span><br/>
         <span class="text"></span> 
       <br/>
       <div class="signStepsButtonContainer" style="height:34px">
