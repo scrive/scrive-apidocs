@@ -997,21 +997,26 @@ function showCoordinateAxes(helper) {
     hline.show();
     vline.show();
     $("body").mousemove(function(e) {
-        hline.each(function() {
-            var h = $(this);
-            var page = h.parents(".pagejpg");
-            h.css({
-                top: Math.min(page.height()-1, Math.max(0, helper.offset().top - page.offset().top + helper.height() - 6)) + "px"
-            });
+            /* mousemove is sometimes invoked earlier than drag helper is moved
+             * and we get stale data here. Lets use setTimeout to postpone calculations.
+             */
+            setTimeout( function() {
+                    hline.each(function() {
+                            var h = $(this);
+                            var page = h.parents(".pagejpg");
+                            h.css({
+                                    top: Math.min(page.height()-1, Math.max(0, helper.offset().top - page.offset().top + helper.height() - 4)) + "px"
+                                        });
+                        });
+                    vline.each(function() {
+                            var v = $(this);
+                            var page = v.parents(".pagejpg");
+                            v.css({
+                                    left: Math.min(page.width()-1, Math.max(0, helper.offset().left - page.offset().left)) + "px"
+                                        });
+                        });
+                }, 100);
         });
-        vline.each(function() {
-            var v = $(this);
-            var page = v.parents(".pagejpg");
-            v.css({
-                left: Math.min(page.width()-1, Math.max(0, helper.offset().left - page.offset().left)) + "px"
-            });
-        });
-    });
 }
 
 function hideCoordinateAxes() {
