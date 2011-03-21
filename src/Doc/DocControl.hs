@@ -1207,6 +1207,7 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
                    else BS.toString authorfullname ++ " skickar en inbjudan att underteckna till parten" ++ formatIP ipnumber
             }
           ]
+      makeHistoryEntryFromEvent _ = []         
       makeHistoryEntry = either makeHistoryEntryFromEvent makeHistoryEntryFromSignatory  
       maxsigntime = maximum (map (fst . thd3) signatories)
       concatComma = concat . intersperse ", "
