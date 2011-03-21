@@ -538,15 +538,16 @@ closeDocument docid time ipnumber author msiginfo = do
     Right d -> return $ Just d
 
 cancelDocument :: DocumentID -> CancelationReason -> MinutesTime -> Word32 -> Update Documents (Either String Document)
-cancelDocument docid cr time ipnumber = do
-  modifyContract docid $ \document -> 
-      do
-          case documentstatus document of
-              Pending -> Right $ document { documentstatus = Canceled 
-                                            , documentcancelationreason = Just cr} 
-                         `appendHistory` [DocumentHistoryCanceled time ipnumber] 
-              _ -> Left $ "Incalid document status " ++ show (documentstatus document) ++ " in cancelDocument"
-
+cancelDocument docid cr time ipnumber = modifyContract docid $ \document -> do
+    let canceledDocument =  document { 
+                              documentstatus = Canceled 
+                            , documentcancelationreason = Just cr} 
+                            `appendHistory` [DocumentHistoryCanceled time ipnumber] 
+    case documentstatus document of
+        Pending -> Right canceledDocument
+        AwaitingAuthor -> Right canceledDocument
+        _ -> Left $ "Incalid document status " ++ show (documentstatus document) ++ " in cancelDocument"
+  
 
 getFilesThatShouldBeMovedToAmazon :: Query Documents [File]
 getFilesThatShouldBeMovedToAmazon = do
