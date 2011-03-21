@@ -652,7 +652,7 @@ handleIssueSaveAsTemplate document author = do
             mndoc <- update $ TemplateFromDocument $ documentid document
             case mndoc of
                 Right newdocument -> do
-                    return $ LinkContracts emptyListParams       
+                    return $ LinkTemplates emptyListParams       
                 Left _ -> mzero
         Left _ -> mzero            
 
@@ -670,8 +670,13 @@ handleIssueChangeToContract document author = do
 handleIssueSave document author = do
     ctx <- get
     updateDocument ctx author document
-    addFlashMsg =<< (liftIO . flashDocumentDraftSaved $ ctxtemplates ctx)
-    return $ LinkContracts emptyListParams
+    case (documenttype document) of
+      Contract -> do
+          addFlashMsg =<< (liftIO . flashDocumentDraftSaved $ ctxtemplates ctx)
+          return $ LinkContracts emptyListParams
+      Template -> do
+          addFlashMsg =<< (liftIO . flashDocumentTemplateSaved $ ctxtemplates ctx)
+          return $ LinkTemplates emptyListParams
 
 handleIssueSignByAuthor document author = do
     ctx@Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber} <- get
