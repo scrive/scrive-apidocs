@@ -9,6 +9,8 @@ import System.Locale
 import System.IO.Unsafe
 import System.Locale
 import Data.Time
+import Happstack.State.Transaction
+import Happstack.State
 
 -- | Time in minutes from 1970-01-01 00:00 in UTC coordinates
 newtype MinutesTime0 = MinutesTime0 Int
@@ -73,6 +75,9 @@ showDateAbbrev (MinutesTime current _ ) (MinutesTime mins _)
                  ct = unsafePerformIO $ toCalendarTime $ TOD (fromIntegral mins*60) 0
 
 getMinutesTime = (return . fromClockTime) =<< getClockTime
+
+getMinuteTimeDB :: AnyEv MinutesTime
+getMinuteTimeDB = (return . fromClockTime) =<< getEventClockTime
 
 fromClockTime (TOD secs picos) =  MinutesTime (fromIntegral $ (secs `div` 60)) (fromIntegral $ (secs `mod` 60))
 toClockTime (MinutesTime time secs) = (TOD (fromIntegral $ time * 60 + secs) 0)   

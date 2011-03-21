@@ -498,12 +498,11 @@ handleSignShow documentid
                magichash1 = do
   doc1 <- queryOrFail $ GetDocumentByDocumentID documentid
   checkLinkIDAndMagicHash doc1 signatorylinkid1 magichash1
-
   ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber}) <- get
-  
-  mdocument <- update $ MarkDocumentSeen documentid signatorylinkid1 ctxtime ctxipnumber
-  -- I believe this is redundant - Eric
-  document <- either (const mzero) return mdocument
+   
+  update $ MarkDocumentSeen documentid signatorylinkid1 ctxtime ctxipnumber
+  -- Structure of this needs to be changed. MR
+  document <- queryOrFail $ GetDocumentByDocumentID documentid
   invitedlink <- signatoryLinkFromDocumentByID document signatorylinkid1
   let authoruserid = unAuthor $ documentauthor document
   author <- queryOrFail $ GetUserByUserID authoruserid
