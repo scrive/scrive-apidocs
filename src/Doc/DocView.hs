@@ -17,6 +17,7 @@ module Doc.DocView (
   , flashMessageCanceled
   , flashDocumentRestarted
   , flashDocumentDraftSaved
+  , flashDocumentTemplateSaved
   , flashAuthorSigned
   , landpageRejectedView
   , defaultInviteMessage
@@ -119,6 +120,10 @@ flashDocumentDraftSaved :: KontrakcjaTemplates -> IO FlashMessage
 flashDocumentDraftSaved templates =
   toFlashMsg SigningRelated <$> renderTemplate templates "flashDocumentDraftSaved" ()
 
+
+flashDocumentTemplateSaved :: KontrakcjaTemplates -> IO FlashMessage
+flashDocumentTemplateSaved templates =
+  toFlashMsg SigningRelated <$> renderTemplate templates "flashDocumentTemplateSaved" ()
 
 flashDocumentRestarted :: KontrakcjaTemplates -> IO FlashMessage
 flashDocumentRestarted templates =
