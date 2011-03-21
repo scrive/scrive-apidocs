@@ -444,6 +444,10 @@ joinEmpty m = do
                  then mzero
                  else return mv
 
+
+mapIf::(a -> Bool) -> (a -> a) -> [a] -> [a]
+mapIf cond f = map (\a -> if (cond a) then f a else a)
+
 {-| This function is useful when creating 'Typeable' instance when we
 want a specific name for type.  Example of use:
 
