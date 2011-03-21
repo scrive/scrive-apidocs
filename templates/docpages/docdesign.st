@@ -25,8 +25,8 @@ pageDocumentForAuthorContentPreparation=
 
       </span>
 $if(contract)$
-<span style="float: right; display: inline-block; margin: 8px 10px 0pt 18px;" class="submitStepFormOnClick"><a class="title" href="#save">SPARA SOM UTKAST</a></span>
-<span style="float: right; display: inline-block; margin: 8px 10px 0pt 18px;" class="submitStepFormOnClick" name="template"><a class="title" href="#save">SPARA SOM MALL</a></span>  
+<span style="float: right; display: inline-block; margin: 8px 10px 0pt 18px;" ><a class="submit title" form=".stepForm" >SPARA SOM UTKAST</a></span>
+<span style="float: right; display: inline-block; margin: 8px 10px 0pt 18px;" ><a class="submit title" form=".stepForm" rel="template" >SPARA SOM MALL</a></span>  
 $elseif(template)$
 $endif$  
 

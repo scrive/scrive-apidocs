@@ -19,6 +19,7 @@ templatesForAjax=
                 <table>
                     <thead>
                         <tr>
+                            <!--
                             <th style="width: 140px;">
                                $if(params.sorting.timeREV)$
                                 <a href="$currentlink$&sorting=time">Senaste händelse  <em> ▲</em></a>
@@ -37,13 +38,14 @@ templatesForAjax=
                                 <a href="$currentlink$&sorting=partner">Parter </a>
                                $endif$
                             </th>
+                           -->
                             <th style="width: 400px;">
                                $if(params.sorting.titleREV)$
-                                <a href="$currentlink$&sorting=title">Dokument <em> ▲</em></a>
+                                <a href="$currentlink$&sorting=title">Mall <em> ▲</em></a>
                                $elseif(params.sorting.title)$
-                                <a href="$currentlink$&sorting=titleREV">Dokument <em style="text-color:red"> ▼</em></a>
+                                <a href="$currentlink$&sorting=titleREV">Mall <em style="text-color:red"> ▼</em></a>
                                $else$
-                                <a href="$currentlink$&sorting=title">Dokument </a>
+                                <a href="$currentlink$&sorting=title">Mall </a>
                                $endif$
                             </th>
                             <th></th>
@@ -53,15 +55,9 @@ templatesForAjax=
                     <tbody id="selectable">
                       $documents:{document |
                         <tr $if(document.odd)$class="odd"$endif$>
+                            <!-- 
                             <td>
                                 <span title="$document.mtime$">$document.mtime$</span>
-                                $if(document.timeoutdaysleft)$  
-                                  <span title="Förfallodatum: $document.timeoutdate$">
-                                    <a href="#">
-                                      ($document.timeoutdaysleft$)
-                                    </a>
-                                  </span> 
-                                  $endif$
                             </td>
                             <td> 
                                 <form action="/t" method="POST">
@@ -69,6 +65,7 @@ templatesForAjax=
                                 <input type="hidden" name="template" value="$document.id$"/>
                                 </form> 
                             </td>
+                            -->
                             <td>
                                 <form action="/t" method="POST">
                                 <a class="submit">$document.documenttitle$</a>
