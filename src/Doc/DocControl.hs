@@ -14,6 +14,7 @@ import Data.Bits
 import Data.List
 import Data.Maybe
 import Data.Word
+import Data.Functor
 import Debug.Trace
 import Doc.DocState
 import Doc.DocStateUtils
@@ -1557,7 +1558,8 @@ getTemplatesForAjax = do
     case (ctxmaybeuser ctx) of
             Just user -> do
                 allTemplates <- liftIO $ query $ GetUserTemplates (userid user)
-                content <- liftIO $ templatesForAjax (ctxtemplates ctx) (ctxtime ctx) user $ docSortSearchPage params allTemplates            
+                let templates = filter (not . documentdeleted) allTemplates
+                content <- liftIO $ templatesForAjax (ctxtemplates ctx) (ctxtime ctx) user $ docSortSearchPage params templates            
                 simpleResponse content
             Nothing ->  sendRedirect $ LinkLogin NotLogged
     
