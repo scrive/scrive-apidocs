@@ -40,7 +40,7 @@ showUser =
                            <td><input type="email" name="email" value="$email$" autocomplete="off" disabled=""/></td>
                        </tr>
                        <tr>
-                           <td>Telennummer:</td>
+                           <td>Telefonnummer:</td>
                            <td><input type="text" name="phone" value="$phone$" autocomplete="off" /></td>
                        </tr>
                        <tr>
