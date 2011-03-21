@@ -24,7 +24,6 @@ module Session
 
 import Control.Monad.Reader (ask)
 import Control.Monad.State hiding (State)
-import qualified Data.Foldable as F
 import Data.Maybe (isNothing,isJust, fromJust)
 import Happstack.Data.IxSet
 import qualified Happstack.Data.IxSet as IxSet
@@ -87,11 +86,11 @@ instance Version (SessionData2) where
 -- | SessionData is everything we want to know about a person clicking
 -- on the other side of the wire.
 data SessionData = SessionData 
-    { userID::Maybe UserID                    -- ^ Just 'UserID' if a person is logged in
-    , flashMessages::[FlashMessage]           -- ^ 'FlashMessage's that are to be shown on next page
-    , expires::MinutesTime                    -- ^ when does this session expire
-    , hash::MagicHash                         -- ^ session security token
-    , elegtransactions::[ELegTransaction]     -- ^ ELeg transaction stuff
+    { userID           :: Maybe UserID      -- ^ Just 'UserID' if a person is logged in
+    , flashMessages    :: [FlashMessage]    -- ^ 'FlashMessage's that are to be shown on next page
+    , expires          :: MinutesTime       -- ^ when does this session expire
+    , hash             :: MagicHash         -- ^ session security token
+    , elegtransactions :: [ELegTransaction] -- ^ ELeg transaction stuff
     }  deriving (Ord,Eq,Show,Typeable)                               
                                
 $(deriveSerialize ''SessionData) 
@@ -145,14 +144,15 @@ instance Typeable Session where typeOf _ = mkTypeOf "Session"
 $(deriveSerialize ''Session)
 instance Version (Session)
    
--- FIXME: Use new Happstack6 indexing here to speed up things
--- $(inferIxSet "Sessions" ''Session 'noCalcs [''SessionId])
-
 type Sessions = IxSet Session
 
 instance Indexable Session where
         empty = ixSet 
                 [ ixFun (\x -> [sessionId x])
+                , ixFun (\x -> case userID (sessionData x) of 
+                                   Nothing -> []
+                                   Just userid -> [userid]
+                        )
                 ]
 
 instance Component (Sessions) where
@@ -180,20 +180,14 @@ maybeModify f =
 
 -- | Get the session data associated with the supplied 'SessionId'.
 getSession :: SessionId -> Query Sessions (Maybe (Session))
-getSession sessionId = (return . getOne . (@= (sessionId :: SessionId))) =<< ask
+getSession sessionId = (return . getOne . (@= sessionId)) =<< ask
 
--- | Get the session data associated with the supplied 'UserId'.
+-- | Get the session data associated with the supplied 'UserID'.
 getSessionByUserId :: UserID -> Query Sessions (Maybe (Session))
-getSessionByUserId userid = return . F.find cmp . IxSet.toList =<< ask
-    where
-        cmp Session{sessionData = sd} =
-            case userID sd of
-                 Just uid -> uid == userid
-                 Nothing  -> False
+getSessionByUserId userId = (return . getOne . (@= userId)) =<< ask
 
 -- | Update the 'Session'.
 --
--- FIXME: do not use gFind here as it is slow.
 updateSession :: (Session) -> Update (Sessions) ()
 updateSession session = modify (updateIx (sessionId session) session)
 
