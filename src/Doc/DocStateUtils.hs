@@ -51,6 +51,7 @@ import Misc
 import Control.Monad
 import Mails.MailsUtil
 import Doc.DocStateData
+import MinutesTime
 
 
 -- DB UPDATE UTILS
@@ -113,8 +114,9 @@ modifyDocumentWithAction condition docid action = do
              case actionresult of
                 Left message -> return $ Left message
                 Right newdocument -> do
+                    now <- getMinuteTimeDB
                     when (documentid newdocument /= docid) $ error "new document must have same id as old one"
-                    modify (updateIx docid newdocument)
+                    modify (updateIx docid $ newdocument {documentmtime=now})
                     return $ Right newdocument
        else return $ Left "Document didn't matche condition required for this action"
 

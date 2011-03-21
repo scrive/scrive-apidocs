@@ -398,15 +398,18 @@ markDocumentSeen :: DocumentID
                  -> SignatoryLinkID 
                  -> MinutesTime 
                  -> Word32
-                 -> Update Documents (Either String Document)
+                 -> Update Documents ()
 markDocumentSeen documentid signatorylinkid1 time ipnumber = do
-      modifyContract documentid $ \document ->
-          Right $ document { documentsignatorylinks = map c (documentsignatorylinks document) }
+    modifyContract documentid $ \document -> 
+        if (any shouldMark (documentsignatorylinks document))
+            then Right $ document { documentsignatorylinks = mapIf shouldMark mark (documentsignatorylinks document)}
+            else Left "" 
+    return ()        
        where
-        c l@(SignatoryLink {signatorylinkid, maybeseeninfo})
-             | signatorylinkid == signatorylinkid1 && maybeseeninfo==Nothing = 
-              l { maybeseeninfo = Just (SignInfo time ipnumber) }
-             | otherwise = l
+        shouldMark l = (signatorylinkid l) == signatorylinkid1 && (isNothing $ maybeseeninfo l)
+        mark l =  l { maybeseeninfo = Just (SignInfo time ipnumber) }
+                 
+             
         
       
 
