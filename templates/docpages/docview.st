@@ -615,9 +615,11 @@ pageDocumentForAuthorContentPostPreparation=
         $endif$
         $if(pending)$
         $if(!awaitingauthor)$
+        $if(!timetosignset)$
         <input class="cancel bigbutton" type="button"
                name="cancel" value="Återkalla inbjudan" id="cancel"
                rel="#cancel-by-author-dialog"></input>
+        $endif$
         $endif$
         $endif$
       </span> 
