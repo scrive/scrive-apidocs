@@ -901,7 +901,7 @@ function placePlacementsOfSignatories(signatories) {
     var sig = this;
     placePlacements(sig.fstnameplacements, "Förnamn", sig.fstname, sig.id, "fstname");
     placePlacements(sig.sndnameplacements, "Efternamn", sig.sndname, sig.id, "sndname");
-    placePlacements(sig.companyplacements, "Titel, företag", sig.company, sig.id, "company");
+    placePlacements(sig.companyplacements, "Företag", sig.company, sig.id, "company");
     placePlacements(sig.numberplacements, "Orgnr/Persnr", sig.number, sig.id, "number");
     placePlacements(sig.emailplacements, "Personens e-mail", sig.email, sig.id, "email");
     $(sig.otherfields).each(function(){
