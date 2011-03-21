@@ -25,8 +25,8 @@ pageDocumentForAuthorContentPreparation=
 
       </span>
 $if(contract)$
-<span style="float: right; display: inline-block; margin: 8px 10px 0pt 18px;" ><a class="submit title" form=".stepForm" >SPARA SOM UTKAST</a></span>
-<span style="float: right; display: inline-block; margin: 8px 10px 0pt 18px;" ><a class="submit title" form=".stepForm" rel="template" >SPARA SOM MALL</a></span>  
+<!-- <span style="float: right; display: inline-block; margin: 8px 10px 0pt 18px;" ><a class="submit title" form=".stepForm" >SPARA SOM UTKAST</a></span> 
+<span style="float: right; display: inline-block; margin: 6px 10px 0pt 18px;font-weight:bold;" ><a class="submit title" style="color:#999999" form=".stepForm" rel="template" >SPARA SOM MALL</a></span>  -->
 $elseif(template)$
 $endif$  
 
@@ -177,8 +177,8 @@ $endif$
               <div id="signStepsBodyFunctionsBox">
                 <ul>
 
-                  <li class="plus"><a href="#add"  id="addSignatory">LÄGG TILL PERSON</a></li>
-                  <li class="minus"><a href="#remove"  id="delSignatory">TA BORT PERSON</a></li>
+                  <li class="plus"><a class="designFunctionalLink" href="#add"  id="addSignatory">LÄGG TILL PERSON</a></li>
+                  <li class="minus"><a class="designFunctionalLink" href="#remove"  id="delSignatory">TA BORT PERSON</a></li>
 
                 </ul>
                 <div class="signStepsButton" id="signStepsNextButton" >
@@ -196,7 +196,8 @@ $endif$
               <div class="options">
                 <p>
                   <span>
-                    <input type="checkbox" 
+                    <input style="position:relative;top:2px" 
+                           type="checkbox" 
                            class="addremovecheckbox
                                   flashOnOn" 
                            rel="#daystosignbox"
@@ -228,6 +229,9 @@ $endif$
                 <small><a rel="#edit-invite-text-dialog" id="editinvitetextlink" href="#" style="padding-top:3px">JUSTERA HÄLSNINGSMEDDELANDE</a></small>
                 <input type="hidden" id="invitetext" name="invitetext" value="$documentinvitetext$" />
               </div>
+             <div class="signStepsBodySave">
+                <small><a class="submit title" form=".stepForm" rel="template" >SPARA SOM MALL</a></small>
+             </div>
               $validationdropdown()$
         </div>
         

@@ -1009,15 +1009,16 @@ a.button {
     position: relative;
     float: left;
     z-index: 2;
+    padding-left:16px;
 }
 
 #signStepsMenu div#signStepsMenuEmptyStep
 {
     border-width: 1px 1px 1px 1px;
-    border-color: #808080 #BDBDBD #BDBDBD #808080;
+    border-color: #BDBDBD ;
     border-style: solid;
     height: 23px;
-    width: 958px;
+    width: 942px;
     top: 0;
     left: 0;
     position: absolute;
@@ -1031,6 +1032,7 @@ a.button {
     display: inline-block;
 	font: 11px/15px "Helvetica Neue";
     margin: 5px 18px 0 2px;
+    padding-top: 1px;
 }
 
 #signStepsMenu div a
@@ -1109,7 +1111,7 @@ a.button {
     margin: 1px 0 0 18px;
     float: left;
     position:relative;
-    top:2px;
+    top:4px;
 }
 
 #signStepsTitleRow .title
@@ -1262,7 +1264,7 @@ a.okIcon {
 {
     width: 250px;
     height: 92px;
-    margin: 7px auto 7px auto;
+    margin: 30px auto 30px auto;
     border-top: 1px solid #E0E0E0;
     border-right: 1px solid #E0E0E0;
     border-bottom: 1px solid #E8E5E5;
@@ -1475,7 +1477,7 @@ input.multiFileInput {
     display: block;
     width: 16px;
     height: 16px;
-    margin-right: 6px;
+    margin-right: 15px;
     float: left;
     background-repeat: no-repeat;
 }
@@ -1510,18 +1512,31 @@ input.multiFileInput {
 /* 015 new */
 .signStepsBodyInvation a
 {
-    margin: 5px 0 4px 4px
     display: inline-block;
     background-position: 2px 2px;
     background-image: url(images/iconPen.png);
     background-repeat: no-repeat;
     padding-left: 23px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    
 }
 
+.signStepsBodySave a
+{
+    margin-top:5px;
+    padding-top:2px;
+    padding-bottom:2px;
+    display: inline-block;
+    background-position: 2px 0px;
+    background-image: url(images/iconFloppy.png);
+    background-repeat: no-repeat;
+    padding-left: 23px;
+}
 /* 013 new */
 .signStepsBodyIcons a
 {
-    margin-right: 6px;
+    margin-right: 12px;
 }
 
 
@@ -1705,14 +1720,14 @@ input.multiFileInput {
 {
     margin-bottom: 5px;
     height: 16px;
-    background-position: 0 2px;
+    background-position: 0 1px;
     background-repeat: no-repeat;
     
 }
 
 #signStepsBodyFunctionsBox ul a
 {
-    padding-left: 20px;
+    padding-left: 24px;
     background-position: 0 2px;
 }
 
@@ -1832,6 +1847,7 @@ form {
     border-right-color: #f3f4f7;
     border-bottom-color: #f0f1f5;
     border-left-color: #f2f2f7;
+    padding-bottom: 5px;
 }
 
 /* 013 new */
@@ -2098,8 +2114,7 @@ form {
 }
 
 #signStepsBody {
-    padding-left:19px;
-    padding-right:19px;
+    padding:8px 19px;
     border-left: 1px solid #BDBDBD;
     border-right: 1px solid #BDBDBD;
     border-bottom: 1px solid #C0C0C0;
@@ -2188,10 +2203,13 @@ form {
 {
   width:auto;
   display:block;
+  font-weight: bold;
+  font-size: 10pt;
+  
 }
 
 .signStepsBodyIcons .man{
-  margin-top:0px;
+  margin-top:-1px;
 }
 
 .signStepsBodyIcons .plus{
@@ -2394,4 +2412,8 @@ input#cancel {
 {
     margin-top: 4px;
     margin-botton: 4px;
+}
+
+.designFunctionalLink{
+    font-size: 8pt;
 }
