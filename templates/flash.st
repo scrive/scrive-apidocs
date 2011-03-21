@@ -3,6 +3,10 @@ flashDocumentDraftSaved=
     Du har sparat dokumentet.
 
 ######
+flashDocumentTemplateSaved=
+    Du har sparat mall.
+
+######
 flashRemindMailSentNotSigned=
     En påminnelse har skickats till $personname$
 
