@@ -329,7 +329,7 @@ handleIssuePostBankID docid = withUserPost $ do
                     Log.debug $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
                     addFlashMsg $ toFlashMsg OperationFailed $ "Signature verification failed with message: " ++ msg
                     -- change me! I should return back to the same page
-                    return LinkMain
+                    return $ LinkDesignDoc $ DesignStep3 docid
                 Right (cert, attrs) -> do
                     providerType <- providerStringToType provider
                     let authorinfo = userinfo author
@@ -349,8 +349,8 @@ handleIssuePostBankID docid = withUserPost $ do
                         Left (msg, _, _, _) -> do
                             liftIO $ print $ "merge failed: " ++ msg
                             Log.debug $ "merge failed: " ++ msg
-                            addFlashMsg $ toFlashMsg OperationFailed $ "Merging information failed: " ++ msg
-                            return $ LinkIssueDoc docid
+                            addFlashMsg $ toFlashMsg OperationFailed $ "The information from the Elegitimation server did not match your personal information: " ++ msg
+                            return $ LinkDesignDoc $ DesignStep3 docid
                             -- we have merged the info!
                         Right (bfn, bln, bpn) -> do
                             let signinfo = SignatureInfo    { signatureinfotext = transactiontbs
