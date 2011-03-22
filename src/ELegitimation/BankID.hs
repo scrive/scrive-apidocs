@@ -388,7 +388,7 @@ toJSON kvs = "{ " ++ intercalate ", " (map kvJson kvs) ++ " }"
 
 endpoint :: String
 endpoint = "https://eid.funktionstjanster.se:8890/osif"
-
+-- eid.funktionstjanster.se:8890
 data ImplStatus = ImplStatus Int String Int String
 
 data GenerateChallengeRequest = GenerateChallengeRequest Int String
