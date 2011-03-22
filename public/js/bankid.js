@@ -560,36 +560,36 @@ function netIDSignAuthor(posturl, formselector, ajaxurl) {
 }
 
 safeReady(function() {
-  $("button.bankid.signatory").click(function() {
+  $("a.bankid.signatory").click(function() {
     sign2("/s" + window.location.pathname.substring(2),
 	      "#dialog-confirm-sign",
 	      "/s/bankid" + window.location.pathname.substring(2));
     return false;
   });
-  $("button.bankid.author").click(function() {
+  $("a.bankid.author").click(function() {
     sign2Author("/d" + window.location.pathname.substring(2),
 	            "#dialog-confirm-sign-invite",
 	            "/d/bankid" + window.location.pathname.substring(2));
   });
-  $("button.nordea.signatory").click(function() {
+  $("a.nordea.signatory").click(function() {
     sign1("/s" + window.location.pathname.substring(2),
           "#dialog-confirm-sign",
           "/s/nordea" + window.location.pathname.substring(2));
     return false;
   });
-  $("button.nordea.author").click(function() {
+  $("a.nordea.author").click(function() {
     sign1Author("/d" + window.location.pathname.substring(2),
                 "#dialog-confirm-sign-invite",
                 "/d/nordea" + window.location.pathname.substring(2));
     return false;
   });
-  $("button.telia.signatory").click(function() {
+  $("a.telia.signatory").click(function() {
     netIDSign("/s" + window.location.pathname.substring(2),
               "#dialog-confirm-sign",
               "/s/telia" + window.location.pathname.substring(2));
     return false;
   });
-  $("button.telia.author").click(function() {
+  $("a.telia.author").click(function() {
     netIDSignAuthor("/d" + window.location.pathname.substring(2),
                     "#dialog-confirm-sign-invite",
                     "/d/telia" + window.location.pathname.substring(2));
@@ -597,27 +597,28 @@ safeReady(function() {
   });
 });
 
+
+
 safeReady(function() {
-  var elegbuttons = $("#elegbuttons");
-  var signbutton = $("#dialog-confirm-signinvite a.submiter");
+  var eleghidden = $(".eleghidden");
+  var signhidden = $(".signhidden");
   $("#validationdropdown").change(function() {
     var d = $(this);
     var selected = d.find("option:selected").val();
     var numberfields = $("input[name=signatorynumber]").parents(".dragfield");
     if(selected == "email") {
-      elegbuttons.hide();
-      signbutton.show();
+      eleghidden.hide();
+      signhidden.show();
       numberfields.find(".type").html("sig");
     } else if(selected == "eleg") {
-      elegbuttons.show();
-      signbutton.hide();
+      eleghidden.show();
+      signhidden.hide();
       numberfields.find(".type").html("author");
     }
     numberfields.each(function() {
       updateStatus($(this));
     });
-    
-  });
+  }).change();
 });
 
 function isAuthorSecretary() {
@@ -627,13 +628,13 @@ function isAuthorSecretary() {
 function getSignatoryData() {
   var entries = $(".sigentry");
   var fnames = entries.find("input[name=signatoryfstname]").map(function(i, el) {
-    return el.val();
+    return $(el).val();
   });
   var lnames = entries.find("input[name=signatorysndname]").map(function(i, el) {
-    return el.val();
+    return $(el).val();
   });
   var nums   = entries.find("input[name=signatorynumber]" ).map(function(i, el) {
-    return el.val();
+    return $(el).val();
   });
 
   
@@ -656,7 +657,7 @@ function getSignatoryData() {
 function generateTBS(doctitle, docid, signatories) {
   var text = 'Du undertecknar "' + doctitle + '" med transaktionsnummer "' + docid + '". Undertecknande parter är:';
 
-  signatories.each(function() {
+  $(signatories).each(function() {
     text = text + "\n" + this.fname + " " + this.lname + ", " + this.num;
   });
 
@@ -668,3 +669,4 @@ function getTBS() {
                      ,$("#signStepsTitleRow .title").text().substring(10)
                      ,getSignatoryData());
 }
+
