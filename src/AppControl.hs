@@ -504,8 +504,8 @@ handleLoginPost = do
               when (slug>0) $ liftIO . threadDelay $ slug * 1000000
               time <- liftIO getMinutesTime
               _ <- update $ RecordFailedLogin userid time
-              return $ LinkLogin (InvalidPassword $ BS.toString email)
-        Nothing -> return $ LinkLogin InvalidEmail
+              return $ LinkLogin InvalidLoginInfo
+        Nothing -> return $ LinkLogin InvalidLoginInfo
     _ -> return BackToReferer
 
 {- |

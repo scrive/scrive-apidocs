@@ -96,11 +96,8 @@ $endif$
 $if(notsu)$
   Du har inte rätt behörighet att se denna sida.
 $endif$
-$if(invemail)$
-  Felaktig e-post.
-$endif$
-$if(invpass)$
-  Felaktigt lösenord.
+$if(invloginfo)$
+  Felaktig e-post eller lösenord.
 $endif$
 ###
 ###

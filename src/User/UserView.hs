@@ -193,8 +193,7 @@ flashMessageLoginRedirectReason templates reason =
        NoReason             -> return Nothing
        NotLogged            -> render "notlogged"
        NotLoggedAsSuperUser -> render "notsu"
-       InvalidEmail         -> render "invemail"
-       InvalidPassword _    -> render "invpass"
+       InvalidLoginInfo     -> render "invloginfo"
   where
     render msg = Just . toFlashMsg OperationFailed <$>
       (renderTemplate templates "flashMessageLoginPageRedirectReason" $ field msg True)

@@ -17,8 +17,7 @@ import ListUtil
 data LoginRedirectReason = NoReason
                          | NotLogged
                          | NotLoggedAsSuperUser
-                         | InvalidEmail
-                         | InvalidPassword String -- ^ correct email
+                         | InvalidLoginInfo
 
 data DesignStep2Flag = AfterCSVUpload
 type Part = Int
@@ -79,7 +78,6 @@ data KontraLink
 -}
 instance Show KontraLink where
     showsPrec _ LinkAbout = (++) "/about"
-    showsPrec _ (LinkLogin (InvalidPassword email)) = (++) $ "/login/?email=" ++ (URL.encode . UTF.encode $ email) ++ "&"
     showsPrec _ (LinkLogin _) = (++) "/login/?"
     showsPrec _ LinkLogout = (++) "/logout"
     showsPrec _ LinkSignup = (++) "/signup"
