@@ -768,3 +768,7 @@ jsStringFromBS bs =
 getDataMismatchMessage :: Maybe CancelationReason -> Maybe String
 getDataMismatchMessage (Just (ELegDataMismatch msg _ _ _ _)) = Just msg
 getDataMismatchMessage _ = Nothing
+
+getDataMismatchSignatoryID :: Maybe CancelationReason -> Maybe SignatoryLinkID
+getDataMismatchSignatoryID (Just (ELegDataMismatch _ id _ _ _)) = Just id
+getDataMismatchSignatoryID _ = Nothing
