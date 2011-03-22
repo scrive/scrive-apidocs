@@ -45,6 +45,7 @@ import Data.Ord
 import Doc.DocState
 import Doc.DocViewMail
 import Doc.DocViewUtil
+import Doc.DocStateUtils
 import Kontra
 import KontraLink
 import Mails.MailsUtil
@@ -381,6 +382,7 @@ pageDocumentForAuthor ctx
        field "validationinput" validationinput
        documentInfoFields document
        designViewFields step
+       field "datamismatchflash" $ getDataMismatchMessage $ documentcancelationreason document
 
 renderActionButton :: KontrakcjaTemplates -> KontraLink -> String -> IO String
 renderActionButton templates action button = do
@@ -492,7 +494,9 @@ showSignatoryLinkForSign
       ctxmaybeuser = muser
     , ctxtemplates
   }
-  document
+  document@Document {
+    documentcancelationreason
+    }
   author
   siglnk@SignatoryLink {
     signatorylinkid
@@ -614,6 +618,8 @@ documentInfoFields  document  = do
   field "timetosignset" $  isJust $ documentdaystosign document
   field "template" $  documenttype document == Template
   field "contract" $  documenttype document == Contract
+  field "emailselected" $ document `allowsIdentification` EmailIdentification
+  field "elegselected" $ document `allowsIdentification` ELegitimationIdentification
   documentStatusFields document
 
 documentAuthorInfo :: User -> Fields
@@ -629,12 +635,13 @@ documentStatusFields :: Document -> Fields
 documentStatusFields document = do
   field "preparation" $ documentstatus document == Preparation
   field "pending" $ documentstatus document == Pending
-  field "cancel" $ documentstatus document ==  Canceled
+  field "cancel" $ documentstatus document == Canceled
   field "timedout" $ documentstatus document == Timedout
   field "rejected" $ documentstatus document == Rejected
   field "signed" $ documentstatus document == Closed
   field "awaitingauthor" $ documentstatus document == AwaitingAuthor
-
+  field "datamismatch" $ maybe False isELegDataMismatch $ documentcancelationreason document
+  
 -- | Info about what is my position on a document
 signedByMeFields :: Document -> Maybe SignatoryLink -> Fields
 signedByMeFields document siglnk = do
@@ -757,3 +764,7 @@ jsStringFromBS bs =
     encode ('<':ss) = "\\<" ++ (encode ss)
     encode (s:ss) = s:(encode ss)
     encode [] = []
+
+getDataMismatchMessage :: Maybe CancelationReason -> Maybe String
+getDataMismatchMessage (Just (ELegDataMismatch msg _ _ _ _)) = Just msg
+getDataMismatchMessage _ = Nothing

@@ -3,6 +3,11 @@ pageDocumentForAuthorContentPreparation=
 <div style="display: none">
   <script type="text/javascript"> 
     var documentid = "$documentid$"; 
+    $if(datamismatchflash)$
+        jQuery(function() {
+            addFlashMessage(datamismatchflash);
+        });
+    $endif$
   </script>
   <script type="text/javascript" src="/js/bankid.js"></script>
 </div>
@@ -352,11 +357,11 @@ $endif$
 #####
 validationdropdown= 
 <div style="display:none">
-  Verifieringsmetod<br>
+  <p>Verifieringsmetod</p>
   <select name="validationmethod"
           id="validationdropdown">
-    <option value="email" selected>E-post</option>
-    <option value="eleg">E-Legitimation</option>
+    <option value="email" $if(emailselected)$selected$endif$>E-post</option>
+    <option value="eleg" $if(elegselected)$selected$endif$>E-Legitimation</option>
   </select>
 </div> 
 #####
