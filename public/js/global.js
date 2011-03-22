@@ -1109,3 +1109,13 @@ function resizeDesignBar() {
     }
   }
 }
+
+safeReady(function() {
+  $("#loadinglink").overlay({
+    mask: standardDialogMask});
+});
+
+function displayLoadingOverlay(message) {
+  $("#loadingmessage").html(message);
+  $("#loadinglink").click();
+}
