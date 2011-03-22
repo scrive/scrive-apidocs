@@ -26,7 +26,7 @@ function repeatForeverWithDelay(delay) {
 
 function getUniqueId() {
     var rnd = Math.round(Math.random() * 1000000000);
-    while($("#" + rnd).length  >0) {
+    while($("#" + rnd).length  > 0) {
         rnd = Math.round(Math.random() * 1000000000);
     }
     return rnd;
@@ -230,6 +230,7 @@ function initFileInputs(){
     upload.MultiFile({
       list: upload.attr("rel"),
       onFileAppend: function() { 
+        displayLoadingOverlay("Uploading . . .");
         if (upload.hasClass("submitOnUpload")) {
           form.submit();
         }
@@ -1114,7 +1115,10 @@ function resizeDesignBar() {
 
 safeReady(function() {
   $("#loadinglink").overlay({
-    mask: standardDialogMask});
+    mask: standardDialogMask,
+    resizable: false,
+    onClose: function(e){ return false; }
+  });
 });
 
 function displayLoadingOverlay(message) {
