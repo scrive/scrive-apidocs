@@ -182,6 +182,7 @@ pageDocumentForSignContent=
   </script>
   $endif$$endif$
   <div class="localdialogs">
+    $loadingdialog()$
     <div style="display: none">
       $helpers:noescape()$
     </div>
@@ -356,6 +357,7 @@ $signatoryScriptIfRequired()$
 ####
 pageDocumentForAuthorHelpersLocalDialogs=
 <div class="localdialogs">
+  $loadingdialog()$
   <form method="post" name="form" action="$linkissuedoc$"
   class="overlay redirectsubmitform" id="dialog-confirm-signinvite"
   rel=".stepForm">  
@@ -674,4 +676,17 @@ customfield=
   <input type="hidden" value="$otherFieldName$" name="fieldname">
   <span class="type" style="display: none;">$otherFieldOwner$</span>
 </span>
-+###
+####
+loadingdialog=
+<div id="loadingdialog" class="overlay">
+  <a href="#" id="loadinglink" style="display:none;" rel="#loadingdialog"></a>
+  <div class="modal-container">
+    <div class="modal-body" style="padding:30px">
+      <center>
+        <h3 id="loadingmessage">Loading</h3> 
+        <img src="/theme/images/wait30trans.gif" style="margin:30px"/>
+      </center>
+    </div>
+  </div>
+</div>
+####
