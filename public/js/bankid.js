@@ -77,6 +77,7 @@ function sign1Success(transactionid, tbs, nonce, servertime, posturl, formselect
   }
   var sig = doSign1(tbs);
   if(sig) {
+    displayLoadingOverlay("Verifying signature . . .");
 	var form = $(formselector);
 	form.find("#signatureinput").val(sig);
 	form.find("#transactionidinput").val(transactionid);
@@ -129,6 +130,7 @@ function sign1(ajaxurl, formselector, posturl) {
   if(!good){
 	return false;
   }
+  displayLoadingOverlay("Inleder säker signering . . .");
   $.ajax({'url': ajaxurl,
 		  'dataType': 'json',
 		  'success': function(data){
@@ -167,6 +169,7 @@ function sign1Author(ajaxurl, formselector, posturl) {
   if(!good){
 	return false;
   }
+  displayLoadingOverlay("Inleder säker signering . . .");
   $.ajax({'url': ajaxurl,
 		  'dataType': 'json',
           'data': {'tbs': getTBS()},
@@ -276,6 +279,7 @@ function sign2Success(transactionid, tbs, nonce, servertime, posturl, formselect
   }
   var sig = doSign2(tbs, nonce, servertime);    
   if(sig) {
+    displayLoadingOverlay("Verifying signature . . .");
 	var form = $(formselector);
 	form.find("#signatureinput").val(sig);
 	form.find("#transactionidinput").val(transactionid);
@@ -322,6 +326,7 @@ function sign2(posturl, formselector, ajaxurl) {
   if(!good){
 	return false;
   }
+  displayLoadingOverlay("Inleder säker signering . . .");
   $.ajax({'url': ajaxurl,
 		  'dataType': 'json',
 		  'success': function(data){
@@ -361,6 +366,7 @@ function sign2Author(posturl, formselector, ajaxurl) {
   if(!good){
 	return false;
   }
+  displayLoadingOverlay("Inleder säker signering . . .");
   $.ajax({'url': ajaxurl,
 		  'dataType': 'json',
           'data': {'tbs': getTBS()},
@@ -458,6 +464,7 @@ function netIDSuccess(transactionid, tbs, nonce, servertime, posturl, formselect
   }
   var sig = doSignNetID(tbs, nonce, servertime);    
   if(sig) {
+    displayLoadingOverlay("Verifying signature . . .");
 	var form = $(formselector);
 	form.find("#signatureinput").val(sig);
 	form.find("#transactionidinput").val(transactionid);
@@ -493,6 +500,7 @@ function netIDSign(posturl, formselector, ajaxurl) {
   if(!good){
 	return false;
   }
+  displayLoadingOverlay("Inleder säker signering . . .");
   $.ajax({'url': ajaxurl,
 		  'dataType': 'json',
 		  'success': function(data){
@@ -531,6 +539,7 @@ function netIDSignAuthor(posturl, formselector, ajaxurl) {
   if(!good){
 	return false;
   }
+  displayLoadingOverlay("Inleder säker signering . . .");
   $.ajax({'url': ajaxurl,
 		  'dataType': 'json',
           'data': {'tbs': getTBS()},
