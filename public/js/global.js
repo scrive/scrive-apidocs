@@ -222,6 +222,7 @@ safeReady(function () {
     }
   }); 
 });
+
 function initFileInputs(){
   $(".multiFileInput").each(function() {
     var upload = $(this);
@@ -763,35 +764,35 @@ function nonZeroSignatories() {
   return true;
 }
 
-function isExceptionalField(field){
-  return (field.closest("div").attr("id") == "signatory_template")
+function isExceptionalField(field) {
+  return (field.closest("div").attr("id") == "signatory_template");
 }
 
 
 safeReady(function(){
     $(".prepareToSendReminderMail").each(function(){
         $(this).overlay({
-                     mask: standardDialogMask 
+                     mask: standardDialogMask,
+                     resizable: false,
+                     onClose: function(e){ return false;
+                    }
                  })
     })                   
 })
 
 function prepareForEdit(form){
-    $(".editable",form).each( function(){
-        
-        var textarea = $("<textarea style='width:94%;height:0px;border:0px;padding:0px;margin:0px'  name='"+$(this).attr('name')+"'> "+ $(this).html()+ "</textarea>")
-        var wrapper = $("<div></div>").css("min-height",($(this).height())+15+"px");
-        wrapper.append(textarea);
-        $(this).replaceWith(wrapper);
-        var editor = prepareEditor(textarea)
-            
-  }) 
-    $(".replacebynextonedit",form).each( function(){
-        var replacement = $(this).next();
-        $(this).replaceWith(replacement);
-        replacement.show();
-        
-    })
+    $(".editable",form).each(function(){
+      var textarea = $("<textarea style='width:94%;height:0px;border:0px;padding:0px;margin:0px'  name='"+$(this).attr('name')+"'> "+ $(this).html()+ "</textarea>")
+      var wrapper = $("<div></div>").css("min-height",($(this).height())+15+"px");
+      wrapper.append(textarea);
+      $(this).replaceWith(wrapper);
+      var editor = prepareEditor(textarea);
+    });
+    $(".replacebynextonedit",form).each(function(){
+      var replacement = $(this).next();
+      $(this).replaceWith(replacement);
+      replacement.show();
+    });
 }
 
 function flashSpecialFlashMessages(){
@@ -847,7 +848,8 @@ function prepareEditor(textarea) {
                           theme_advanced_toolbar_align : "left",
                           plugins : "noneditable"
                                                           
-                        })}
+ });
+}
  
 standardDialogMask = "#333333"
     
