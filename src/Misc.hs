@@ -465,3 +465,17 @@ pad0 len str = take missing (repeat '0') ++ str
     where
         diff = len - length str
         missing = if diff >= 0 then diff else 0
+
+-- | Logging left to error log
+eitherLog action = do
+  value <- action
+  case value of
+    Left errmsg -> do
+               putStrLn errmsg
+               error errmsg
+    Right value -> return value        
+
+-- | Triples
+fst3 (a,_,_) = a
+snd3 (_,b,_) = b
+thd3 (_,_,c) = c
