@@ -52,7 +52,9 @@ import Misc
 import Control.Monad
 import Mails.MailsUtil
 import Doc.DocStateData
-
+import Data.List hiding (insert)
+import Data.Maybe
+import MinutesTime
 
 -- DB UPDATE UTILS
 insertNewDocument :: Document ->  Update Documents Document
