@@ -773,13 +773,10 @@ function isExceptionalField(field) {
 safeReady(function(){
     $(".prepareToSendReminderMail").each(function(){
         $(this).overlay({
-                     mask: standardDialogMask,
-                     resizable: false,
-                     onClose: function(e){ return false;
-                    }
-                 })
-    })                   
-})
+          mask: standardDialogMask 
+        });
+    });              
+});
 
 function prepareForEdit(form){
     $(".editable",form).each(function(){
