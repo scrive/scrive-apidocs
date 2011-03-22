@@ -64,8 +64,13 @@ $endif$
         <a href="#" class="step3select step3icon"> </a>
         <a href="#" class="step3select text">$if(contract)$Underteckna och skicka!$elseif(template)$Färdigställ och spara$endif$</a>
       </div>
-      
-      <div id="signStepsMenuEmptyStep"></div>
+      <div id="signStepsMenuEmptyStep">
+            $if(contract)$
+             <div class="signStepsBodySave" style="float:right;padding-right:19px;font-weight:bold;font-size:11px">
+                <small><a class="submit" form=".stepForm" rel="template" >SPARA SOM MALL</a></small>
+             </div>
+            $endif$
+      </div>
     </div>
 
     <div id="signStepsContentStack">
@@ -234,9 +239,6 @@ $endif$
                 <small><a rel="#edit-invite-text-dialog" id="editinvitetextlink" href="#" style="padding-top:3px">JUSTERA HÄLSNINGSMEDDELANDE</a></small>
                 <input type="hidden" id="invitetext" name="invitetext" value="$documentinvitetext$" />
               </div>
-             <div class="signStepsBodySave">
-                <small><a class="submit title" form=".stepForm" rel="template" >SPARA SOM MALL</a></small>
-             </div>
               $validationdropdown()$
         </div>
         

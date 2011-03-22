@@ -1,5 +1,4 @@
 {-# OPTIONS_GHC -XOverlappingInstances #-}
-
 {-# OPTIONS_GHC -Wall #-}
 -----------------------------------------------------------------------------
 -- |
@@ -8,8 +7,24 @@
 -- Stability   :  development
 -- Portability :  portable
 --
--- Datatype for sorting,searching and filtering params for all pages with lists of elements
+-- Datatype for sorting,searching and filtering params for all pages with lists of elements. 
+-- Used for every user-visible element table in our system. We support only operations on a server.
 --
+-- HOW To
+-- 1) Define sorting rules, searchin rules and page size with types matching 
+--      type SortingFunction a = (String -> a -> a -> Ordering)
+--      type SearchingFunction a = (String -> a -> Bool)
+--      type PageSize = Int 
+-- 2) Define local aplication of 'listSortSearchPage' to them
+-- 3) Use getListParams to get current request params for sorting etc. It uses some constant names for search params
+-- 4) Call 2) 'listSortSearchPage' to get change input list to PagedList
+--      PagedList is part of list that You want to show to the user with some extra info. 
+--      Basic list is avaible by call 'list'
+-- 5) Pass this list to templates.
+-- 6) You may also want to pagedListFields. Then You will be avaible to use some utils (like paging) from listutil.st
+--    It requires a currentlink field to be set.
+--
+-- For example look in subaccounts list
 -----------------------------------------------------------------------------
 module ListUtil(
               PagedList(..)
@@ -28,26 +43,18 @@ module ListUtil(
 import Control.Applicative ((<$>))
 import Control.Monad.Trans
 import Control.Monad
-import Data.Data
-import Data.List 
 import Data.Maybe
 import Data.Foldable (foldMap)
 import Data.Ord
-import Doc.DocState
-import MinutesTime
 import Misc
 import Templates.Templates
-import Templates.TemplatesUtils
 import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BS8
 import Data.Char (toUpper)
-import Data.List (isInfixOf,sortBy)
-import Data.Monoid
+import Data.List
 import Happstack.Server hiding (simpleHTTP)
-import Templates.Templates
 import Network.HTTP.Base (urlEncode)
-import Data.ByteString.UTF8 (ByteString, toString)
+import Data.ByteString.UTF8 (ByteString)
 
 -- This part is responsible for sorting,searching and paging documents lists
 data PagedList a = PagedList{
@@ -70,6 +77,7 @@ instance Show ListParams where
         srt = map ((++) "sorting=") $ toUrl  <$> sorting params        
         toUrl = urlEncode . BS8.unpack . BS.fromString
 
+emptyListParams :: ListParams
 emptyListParams = ListParams {sorting=[], search=Nothing, page = 1}
 
 {- | Getting sorting , paging and filtering params-}
