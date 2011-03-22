@@ -143,7 +143,7 @@ changeEmailAddress =
 
 ####
 showSignatoryLinkForSign =
-<div class="signViewBodyRight"> 
+<div class="signViewBodyRight">
   <div class="signViewBodyRightTextContainer"> 
    <img src="$status$" style="position:relative;top:3px;"> 
    $if(changeEmailAddress)$ <span style="color:#000000;position:relative;left:-4px;">!</span>  $endif$
@@ -177,7 +177,11 @@ pageDocumentForSignContent=
   $if(notsignedbyme)$$if(pending)$
   <script type="text/javascript">
     jQuery(function() {
+      $if(requireseleg)$
+      addFlashMessage("Du undertecknar dokumentet längst ned. Det krävs e-legitimation för	att underteckna.");
+      $else$
       addFlashMessage("Underteckna dokumentet längst ned på sidan.");
+      $endif$
     });
   </script>
   $endif$$endif$
@@ -200,7 +204,17 @@ pageDocumentForSignContent=
                  <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
                  <p>När $partyUnsigned:noescape()$ undertecknat blir 
                     avtalet <strong>juridiskt bindande</strong> och
-                    det färdigställda avtalet skickas till din e-post.</p>
+                    det färdigställda avtalet skickas till din
+                    e-post.</p>
+                 $if(requireseleg)$
+                 <span>
+                   <h3>Välj typ av e-legitimation</h3>
+                   <p>Har du ingen e-legitimation? Du kan ladda ned en
+                     e-legitimation från din internetbank eller från
+                     Telia. <a href="http://www.telia.se/privat/produkter_tjanster/bredband/tjanster/sakerhetstjanster/e-leg.faq.page#4"
+                               target="_new">Klicka här</a> för att läsa mer.</p>
+                 </span>
+                 $endif$
             </div>
         </div>
         <div class="modal-footer">
@@ -212,10 +226,30 @@ pageDocumentForSignContent=
                    /> 
             <input type="hidden" name="signature" value="" id="signatureinput" />
             <input type="hidden" name="transactionid" value="" id="transactionidinput" />
-            
-            <button class="bankid button signatory" type="button">BankID</button>
-            <button class="telia button signatory" type="button">Telia</button>
-            <button class="nordea button signatory" type="button">Nordea</button>
+
+            <a href="#" class="btn-small green float-right signatory bankid">
+              <div class="left"></div>
+              <div class="label">
+                <p>BankID</p>
+                <div class="btn-symbol green arrow-left"></div></div>
+              <div class="right"></div>
+            </a>
+
+            <a href="#" class="btn-small green float-right signatory telia">
+              <div class="left"></div>
+              <div class="label">
+                <p>Telia</p>
+                <div class="btn-symbol green arrow-left"></div></div>
+              <div class="right"></div>
+            </a>
+
+            <a href="#" class="btn-small green float-right signatory nordea">
+              <div class="left"></div>
+              <div class="label">
+                <p>Nordea</p>
+                <div class="btn-symbol green arrow-left"></div></div>
+              <div class="right"></div>
+            </a>
           </span>
           $else$
           
@@ -230,56 +264,6 @@ pageDocumentForSignContent=
         </div>
      </div>
 
-    </form>
-
-  <form method="post" name="form" action="" id="dialog-confirm-sign-eleg" class="overlay">     
-    <a class="close"> </a>                  
-    <h2>Underteckna with E-Legitimation</h2>  
-    <p>CHANGE!!!Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
-    <p>När  undertecknat blir 
-      avtalet <strong>juridiskt bindande</strong> och
-      det färdigställda avtalet skickas till din e-post.</p>
-    <div class="buttonbox">
-
-      <input type="hidden" name="signature" value="" id="signatureinput" />
-      <input type="hidden" name="transactionid" value="" id="transactionidinput" />
-      <button class="close button" type="button"> Avbryt </button>
-      <button class="bankid button" type="button"> Underteckna with BankID</button>
-    </div>
-  </form>  
-
-    <form method="post" name="form" action="action" id="dialog-confirm-sign-eleg" class="overlay">     
-      <script type="text/javascript" src="/js/bankid.js"></script>
-      <div class="modal-container">
-          <div class="modal-header">
-            <div class="modal-icon message"></div>
-            <div class="modal-title">
-               <h2>Underteckna with BankID</h2>  
-            </div>
-            <a class="modal-close close"> </a>
-          </div>
-          <div class="modal-body">
-            <div class="modal-content">
-               <p>Är du säker att du vill underteckna dokumentet <strong><% documenttitle document %></strong>?</p>
-               <p>När <% partyUnsignedMeAndListString magichash document %> undertecknat blir 
-                avtalet <strong>juridiskt bindande</strong> och
-                det färdigställda avtalet skickas till din e-post.</p>
-            </div>
-          </div>
-          <div class="modal-footer">
-                <input type="hidden" name="bankid" value="automatic" />
-                <input type="hidden" name="signature" value="" id="signature" />
-                <input type="hidden" name="transactionid" value="" id="transactionid" />
-                <a  class="close cancel">Avbryt</a>
-                <a href="#" class="btn-small green float-right bankid">
-                <div class="left"></div>
-                <div class="label">
-                    <p>Underteckna with BankID</p>
-                <div class="btn-symbol green arrow-left"></div></div>
-                <div class="right"></div>
-            </a>
-          </div>
-        </div>
     </form>
 
     <form method="post" name="form" action="$action$" id="dialog-confirm-cancel" class="overlay">   
@@ -359,44 +343,68 @@ pageDocumentForAuthorHelpersLocalDialogs=
 <div class="localdialogs">
   $loadingdialog()$
   <form method="post" name="form" action="$linkissuedoc$"
-  class="overlay redirectsubmitform" id="dialog-confirm-signinvite"
-  rel=".stepForm">  
+        class="overlay redirectsubmitform" id="dialog-confirm-signinvite"
+        rel=".stepForm">  
     <div class="modal-container">
-        <div class="modal-header">
-            <div class="modal-icon message"></div>
-            <div class="modal-title">
-                <h2 id="dialog-title-sign">Underteckna</h2>
-            </div>
-            <a class="modal-close close"> </a>
+      <div class="modal-header">
+        <div class="modal-icon message"></div>
+        <div class="modal-title">
+          <h2 id="dialog-title-sign">Underteckna</h2>
         </div>
-        <div class="modal-body">
-            <div class="modal-content">
-                 <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
-                 <p>När du undertecknat kommer en automatisk inbjudan att skickas till 
-                 <span class="Xinvited">Invited</span> med e-post.</p>
-            </div>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">
+          <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
+          <p>När du undertecknat kommer en automatisk inbjudan att skickas till 
+            <span class="Xinvited">Invited</span> med e-post.</p>
+          <span class="eleghidden" style="display:none;">
+            <h3>Välj typ av e-legitimation</h3>
+            <p>Har du ingen e-legitimation? Du kan ladda ned en
+              e-legitimation från din internetbank eller från
+              Telia. <a href="http://www.telia.se/privat/produkter_tjanster/bredband/tjanster/sakerhetstjanster/e-leg.faq.page#4"
+                        target="_new">Klicka här</a> för att läsa mer.</p>
+          </span>
         </div>
-        <div class="modal-footer">
-          <input type="hidden" name="sign" value="automatic" />
-          <a  class="close cancel">Avbryt</a>
-          <a href="#" class="btn-small green float-right submiter">
+      </div>
+      <div class="modal-footer">
+        <input type="hidden" name="sign" value="automatic" />
+        <a  class="close cancel">Avbryt</a>
+        <a href="#" class="btn-small green float-right submiter signhidden">
+          <div class="left"></div>
+          <div class="label">
+            <p>Underteckna</p>
+            <div class="btn-symbol green arrow-left"></div></div>
+          <div class="right"></div>
+        </a>
+        <span class="eleghidden" style="display: none;">
+          <input type="hidden" name="eleg" id="elegprovider" value="" />
+          <input type="hidden" name="signature" value="" id="signatureinput" />
+          <input type="hidden" name="transactionid" value="" id="transactionidinput" />
+          <a href="#" class="btn-small green float-right author bankid">
             <div class="left"></div>
             <div class="label">
-              <p>Underteckna</p>
+              <p>BankID</p>
               <div class="btn-symbol green arrow-left"></div></div>
             <div class="right"></div>
           </a>
-          <span id="elegbuttons" style="display: none;">
-            <input type="hidden" name="eleg" id="elegprovider" value="" />
-            <input type="hidden" name="signature" value="" id="signatureinput" />
-            <input type="hidden" name="transactionid" value="" id="transactionidinput" />
-            
-            <button class="bankid button author" type="button">BankID</button>
-            <button class="telia button author" type="button">Telia</button>
-            <button class="nordea button author" type="button">Nordea</button>
-          </span>
-          
-        </div>
+          <a href="#" class="btn-small green float-right author telia">
+            <div class="left"></div>
+            <div class="label">
+              <p>Telia</p>
+              <div class="btn-symbol green arrow-left"></div></div>
+            <div class="right"></div>
+          </a>
+          <a href="#" class="btn-small green float-right author nordea">
+            <div class="left"></div>
+            <div class="label">
+              <p>Nordea</p>
+              <div class="btn-symbol green arrow-left"></div></div>
+            <div class="right"></div>
+          </a>
+        </span>
+        
+      </div>
     </div>
   </form>
 
@@ -441,39 +449,6 @@ pageDocumentForAuthorHelpersLocalDialogs=
       </div>
     </div>
   </form>
-
-  <form method="post" name="form" action="" id="dialog-confirm-sign-eleg" class="overlay">     
-    <div class="modal-container">
-      <div class="modal-header">
-        <div class="modal-icon message"></div>
-        <div class="modal-title">
-          <h2>Underteckna with E-Legitimation</h2>  
-        </div>
-        <a class="modal-close close"> </a>
-      </div>
-      <div class="modal-body">
-        <div class="modal-content">
-          <p>CHANGE!!!Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
-          <p>När  undertecknat blir 
-            avtalet <strong>juridiskt bindande</strong> och
-            det färdigställda avtalet skickas till din e-post.</p>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <input type="hidden" name="bankid" value="automatic" />
-        <input type="hidden" name="signature" value="" id="signature" />
-        <input type="hidden" name="transactionid" value="" id="transactionid" />
-        <a  class="close cancel">Avbryt</a>
-        <a href="#" class="btn-small green float-right submiter bankid">
-          <div class="left"></div>
-          <div class="label">
-            <p> Underteckna with BankID</p>
-            <div class="btn-symbol green arrow-left"></div></div>
-          <div class="right"></div>
-        </a>
-      </div>
-    </div>
-  </form>  
 
   <form method="post" name="form" action="" class="overlay" id="edit-invite-text-dialog" >
 	<div class="modal-container">
