@@ -20,6 +20,8 @@ import Doc.DocState
 import Doc.DocStateUtils
 import Doc.DocView
 import Doc.DocViewMail
+import Doc.DocSeal
+import Doc.DocStorage
 import HSP hiding (catch)
 import Happstack.Data.IxSet 
 import Happstack.Server hiding (simpleHTTP)
@@ -58,17 +60,7 @@ import Data.Map ((!))
 import InputValidation
 import ListUtil
 import Redirect
-
-getFileContents :: Context -> File -> IO (BS.ByteString)
-getFileContents ctx file = do
-  result <- MemCache.get (fileid file) (ctxfilecache ctx)
-  case result of
-    Just result -> return result
-    Nothing -> do
-                result <- AWS.getFileContents (ctxs3action ctx) file
-                MemCache.put (fileid file) result (ctxfilecache ctx)
-                return result
-                          
+                         
 {-
   Document state transitions are described in DocState.
 
@@ -428,6 +420,7 @@ landpageSignInvite documentid = withUserGet $ do
                        then landpageSignInviteView (ctxtemplates ctx) document
                        else landpageSendInviteView (ctxtemplates ctx) document
   renderFromBody ctx TopNone kontrakcja $ cdata content
+  
 
 {- |
    The author has signed the document
@@ -908,125 +901,6 @@ showTemplatesList = withUserGet $ checkUserTOSGet $ do
   content <- liftIO $ pageTemplatesList ctxtemplates ctxtime user (docSortSearchPage params templates)
   renderFromBody ctx TopDocument kontrakcja $ cdata content
 
-{- |
-   The command line for calling ghostscript
- -}
-gs :: String
-#ifdef WINDOWS
-gs = "c:\\Program Files\\gs\\gs8.60\\bin\\gswin32c.exe" 
-#else
-gs = "gs"
-#endif
-
-{- |
-   Convert PDF to jpeg images of pages
- -}
-convertPdfToJpgPages :: Context
-                     -> File
-                     -> IO JpegPages
-convertPdfToJpgPages ctx@Context{ctxs3action} file@File{fileid,filename} = do
-  tmppath1 <- getTemporaryDirectory
-  let tmppath = tmppath1 ++ "/" ++ show fileid
-  createDirectoryIfMissing True tmppath
-  let sourcepath = tmppath ++ "/source.pdf"
-
-  content <- getFileContents ctx file
-
-  BS.writeFile sourcepath content
-
-  let gsproc = (proc gs [ "-sDEVICE=jpeg" 
-                        , "-sOutputFile=" ++ tmppath ++ "/output-%d.jpg"
-                        , "-dSAFER"
-                        , "-dBATCH"
-                        , "-dNOPAUSE"
-                        , "-dTextAlphaBits=4"
-                        , "-dGraphicsAlphaBits=4"
-                        --, "-r91.361344537815126050420168067227"
-                        , "-r190"
-                        , sourcepath
-                        ]) { std_out = CreatePipe
-                           , std_err = CreatePipe
-                           }
-  (_, Just outhandle, Just errhandle, gsProcHandle) <- createProcess gsproc
-  errcontent <- BS.hGetContents errhandle
-  outcontent <- BS.hGetContents outhandle
-                 
-  exitcode <- waitForProcess gsProcHandle
-
-  result <- case exitcode of
-    ExitFailure _ -> return $ JpegPagesError (errcontent `BS.append` outcontent)
-    ExitSuccess -> do
-                  let pathofx x = tmppath ++ "/output-" ++ show x ++ ".jpg"
-                  let exists1 x = doesFileExist (pathofx x)
-                  let w (x:xs) = do
-                                 g <- exists1 x 
-                                 if g 
-                                  then do
-                                   h <- w xs
-                                   return (x:h)
-                                  else return []
-
-                  listofpages <- w [1..]
-                  x<-forM listofpages $ \x -> (do 
-                                        (_,Just outhandle,_, sizechecker) <- createProcess $ ( proc "gm" ["-identify", pathofx x])  { std_out = CreatePipe}
-                                        out <-  hGetContents outhandle
-                                        let (w,h) = readSize out
-                                        exitcode <- waitForProcess sizechecker
-                                        case exitcode of
-                                         ExitFailure _ -> return ()
-                                         ExitSuccess -> return ()
-                                        (_,_,_, resizer) <- createProcess $  proc "gm" ["convert", "-scale","943x1335!",pathofx x,pathofx x]
-                                        exitcode <- waitForProcess resizer
-                                        case exitcode of
-                                         ExitFailure _ -> return ()
-                                         ExitSuccess -> return ()
-                                        content <- BS.readFile (pathofx x)                                         
-                                        return (content,w,h)) `catch` (\_ -> do
-                                                                           content <- BS.readFile (pathofx x)
-                                                                           return (content,943,1335))
-
-                  return (JpegPages x)
-  -- remove the directory with all the files now
-  -- everything as been collected, process has ended, we are done!
-  removeDirectoryRecursive tmppath
-  return result
-  where       
-   readSize::[Char] -> (Int,Int) --Ugly and unsafe but I can't get info about output format so writing nicer parser is useless
-   readSize ('J':'P':'E':'G':' ':rest) = let 
-                                          (w,hs) = span (isDigit) rest 
-                                          h = takeWhile (isDigit) (tail hs)
-                                         in (read w,read h) 
-   readSize (r:rest) = readSize rest
-   readSize [] = (943,1335)
-{- |
-   
- -}
-maybeScheduleRendering :: Context 
-                       -> File
-                       -> DocumentID
-                       -> IO JpegPages
-maybeScheduleRendering ctx@Context{ ctxnormalizeddocuments = mvar }
-                       (file@File { fileid }) docid = do
-  modifyMVar mvar $ \setoffilesrenderednow ->
-      case Map.lookup fileid setoffilesrenderednow of
-         Just pages -> return (setoffilesrenderednow, pages)
-         Nothing -> do
-           Log.forkIOLogWhenError ("error rendering file " ++ show fileid) $ do
-                jpegpages <- convertPdfToJpgPages ctx file
-                case jpegpages of
-                     JpegPagesError errmsg -> do
-                         update $ ErrorDocument docid $ BS.toString errmsg
-                         return ()
-                     _                     -> return ()
-                modifyMVar_ mvar (\setoffilesrenderednow -> return (Map.insert fileid jpegpages setoffilesrenderednow))
-           return (Map.insert fileid JpegPagesPending setoffilesrenderednow, JpegPagesPending)
-
-{- |
-   Get some html to display the images of the files
-   URL: /pagesofdoc/{documentid}
-   Method: GET
-   FIXME: Should probably check for permissions to view
- -}
 handlePageOfDocument :: DocumentID -> Kontra Response
 handlePageOfDocument documentid = do
   document@Document {documentfiles
@@ -1048,43 +922,7 @@ handlePageOfDocument documentid = do
        else do
               pages <- liftIO $ Doc.DocView.showFilesImages2 (ctxtemplates ctx) $ zip f b
               webHSP $ return $ cdata pages
-
-{- |
-   Convert PDF to jpeg images of pages
- -}
-preprocessPDF :: BS.ByteString
-              -> IO BS.ByteString
-preprocessPDF content = withSystemTempDirectory "gs" $ \tmppath -> do
-  let sourcepath = tmppath ++ "/source.pdf"
-  let outputpath = tmppath ++ "/output.pdf"
-
-  BS.writeFile sourcepath content
-
-  let gsproc = (proc gs [ "-sDEVICE=pdfwrite" 
-                        , "-sOutputFile=" ++ outputpath 
-                        , "-dSAFER"
-                        , "-dBATCH"
-                        , "-dNOPAUSE"
-                        , sourcepath
-                        ]) { std_out = CreatePipe
-                           , std_err = CreatePipe
-                           }
-  (_, Just outhandle, Just errhandle, gsProcHandle) <- createProcess gsproc
-  errcontent <- BSL.hGetContents errhandle
-  outcontent <- BSL.hGetContents outhandle
-                 
-  exitcode <- waitForProcess gsProcHandle
-
-  result <- case exitcode of
-    ExitFailure _ -> do
-       Log.debug $ "preprocess PDF error code " ++ show exitcode
-       Log.debug $ "stdout: " ++ BSL.toString outcontent
-       Log.debug $ "stderr: " ++ BSL.toString errcontent
-       return content
-    ExitSuccess -> BS.readFile outputpath
-
-  return result
-    
+   
 handleDocumentUpload :: DocumentID -> BS.ByteString -> BS.ByteString -> Kontra ()
 handleDocumentUpload docid content1 filename = do
   ctx@Context{ctxs3action} <- get
@@ -1099,248 +937,6 @@ handleDocumentUpload docid content1 filename = do
         liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxs3action) (documentfiles document)
         return ()
   return ()
-
-personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
-personFromSignatoryDetails details =
-    Seal.Person { Seal.fullname = BS.toString $ signatoryname details 
-                , Seal.company = BS.toString $ signatorycompany details
-                , Seal.email = BS.toString $ signatoryemail details
-                , Seal.number = BS.toString $ signatorynumber details
-                }
-
-personsFromDocument :: Document -> [(Seal.Person, (MinutesTime,Word32), (MinutesTime,Word32))]
-personsFromDocument document = 
-    let
-        links = documentsignatorylinks document
-        unSignInfo (si@SignInfo { signtime, signipnumber }) = (signtime,signipnumber)
-        x (SignatoryLink{ signatorydetails
-                        , maybesigninfo = Just (si@SignInfo { signtime, signipnumber })
-                        , maybeseeninfo
-                        })
-             -- FIXME: this one should really have seentime always...
-             = (personFromSignatoryDetails signatorydetails, unSignInfo $ maybe si id maybeseeninfo, (signtime,signipnumber))
-        x link = trace (show link) $ error "SignatoryLink does not have all the necessary data"
-    in map x links
-
-fieldsFromPlacement value placement  =
-    let toPtt x = (x * 72 `div` 190) - 5 -- scalling and some replacing
-        w = placementpagewidth placement
-        h = placementpageheight placement 
-    in    
-    Seal.Field { Seal.value = value
-               , Seal.x =  toPtt $ (placementx placement * w) `div` 943
-               , Seal.y =  toPtt $ h - ((placementy placement * h) `div` 1335)
-               , Seal.page = placementpage placement
-               , Seal.w =  w
-               , Seal.h = h
-               }
-
-fieldsFromDefinition def =
-    map (fieldsFromPlacement (BS.toString (fieldvalue def))) (fieldplacements def)
-
-fieldsFromSignatory sig = 
-    (map (fieldsFromPlacement (BS.toString (signatoryfstname sig))) (signatoryfstnameplacements sig))
-    ++
-    (map (fieldsFromPlacement (BS.toString (signatorysndname sig))) (signatorysndnameplacements sig))
-    ++
-    (map (fieldsFromPlacement (BS.toString (signatoryemail sig))) (signatoryemailplacements sig))
-    ++
-    (map (fieldsFromPlacement (BS.toString (signatorycompany sig))) (signatorycompanyplacements sig))
-    ++
-    (map (fieldsFromPlacement (BS.toString (signatorynumber sig))) (signatorynumberplacements sig))
-    ++
-    (foldl (++) [] (map fieldsFromDefinition (signatoryotherfields sig)))    
-
-sealSpecFromDocument :: String -> Document -> User ->  String -> String -> Seal.SealSpec
-sealSpecFromDocument hostpart document author inputpath outputpath =
-  let docid = unDocumentID (documentid document)
-      authorHasSigned = (any ((maybe False ((== (userid author)) . unSignatory)) . maybesignatory) (documentsignatorylinks document))
-      signatoriesdetails = map signatorydetails $ documentsignatorylinks document
-      authordetails = (signatoryDetailsFromUser author) 
-                      {
-                        signatoryfstnameplacements = authorfstnameplacements document
-                      , signatorysndnameplacements = authorsndnameplacements document
-                      , signatorynumberplacements = authornumberplacements document
-                      , signatoryemailplacements = authoremailplacements document
-                      , signatorycompanyplacements = authorcompanyplacements document
-                      , signatoryotherfields = authorotherfields document
-                      }
-      signatories = personsFromDocument document
-      secretaries = if authorHasSigned then [] else [personFromSignatoryDetails authordetails]
-
-      -- oh boy, this is really network byte order!
-      formatIP :: Word32 -> String
-      formatIP 0 = ""
-      -- formatIP 0x7f000001 = ""
-      formatIP x = " (IP: " ++ show ((x `shiftR` 0) .&. 255) ++
-                   "." ++ show ((x `shiftR` 8) .&. 255) ++
-                   "." ++ show ((x `shiftR` 16) .&. 255) ++
-                   "." ++ show ((x `shiftR` 24) .&. 255) ++ ")"
-      fst3 (a,b,c) = a
-      snd3 (a,b,c) = b
-      thd3 (a,b,c) = c
-      persons = (map fst3 signatories)
-      -- persons = authorperson : (map fst3 signatories)
-      paddeddocid = reverse $ take 20 $ (reverse (show docid) ++ repeat '0')
-      initials = concatComma (map initialsOfPerson persons)
-      initialsOfPerson (Seal.Person {Seal.fullname}) = map head (words fullname)
-      authorfullname = signatoryname authordetails
-      -- 2. "Name of invited" granskar dokumentet online
-      makeHistoryEntryFromSignatory (Seal.Person {Seal.fullname},(seentime2,seenipnumber2),(signtime2,signipnumber2)) = 
-          [   Seal.HistEntry
-            { Seal.histdate = show seentime2
-            , Seal.histcomment = fullname ++ " granskar dokumentet online" ++ formatIP seenipnumber2
-            } 
-            , Seal.HistEntry
-            { Seal.histdate = show signtime2
-            , Seal.histcomment = fullname ++ " undertecknar dokumentet online" ++ formatIP signipnumber2
-            }
-      
-          ]
-      makeHistoryEntryFromEvent (DocumentHistoryInvitationSent time ipnumber _) =
-          [ Seal.HistEntry
-            { Seal.histdate = show time 
-            , Seal.histcomment = 
-                if length signatories>1
-                   then BS.toString authorfullname ++ " skickar en inbjudan att underteckna till parterna" ++ formatIP ipnumber
-                   else BS.toString authorfullname ++ " skickar en inbjudan att underteckna till parten" ++ formatIP ipnumber
-            }
-          ]
-      makeHistoryEntryFromEvent _ = []         
-      makeHistoryEntry = either makeHistoryEntryFromEvent makeHistoryEntryFromSignatory  
-      maxsigntime = maximum (map (fst . thd3) signatories)
-      concatComma = concat . intersperse ", "
-      -- Hack to switch the order of events, so we put invitation send after author signing
-      makeHistory (fst@(Left (DocumentHistoryInvitationSent time _ _)):(snd@(Right (_,_,(signtime2,_)))):rest) = 
-          if (signtime2 == time)
-           then (makeHistoryEntry snd) ++ (makeHistoryEntry fst) ++ (makeHistory rest)
-           else (makeHistoryEntry fst) ++ (makeHistoryEntry snd) ++ (makeHistory rest)
-      makeHistory (e:es) = (makeHistoryEntry e) ++ (makeHistory es)
-      makeHistory [] = []
-      
-      lastHistEntry = Seal.HistEntry
-                      { Seal.histdate = show maxsigntime
-                      , Seal.histcomment = "Samtliga parter har undertecknat dokumentet och avtalet är nu juridiskt bindande."
-                      }
-
-      history = (makeHistory $ ((map Left (documenthistory document)) ++ (map Right signatories))) ++ [lastHistEntry]
-      
-      -- document fields
-      fields = if authorHasSigned
-               then (concat (map fieldsFromSignatory signatoriesdetails))
-               else (concat (map fieldsFromSignatory $ authordetails : signatoriesdetails))
-                    
-      config = Seal.SealSpec 
-            { Seal.input = inputpath
-            , Seal.output = outputpath
-            , Seal.documentNumber = paddeddocid
-            , Seal.persons = persons
-            , Seal.secretaries = secretaries
-            , Seal.history = history
-            , Seal.initials = initials
-            , Seal.hostpart = hostpart
-            , Seal.fields = fields
-            }
-      in config
-
-eitherLog action = do
-  value <- action
-  case value of
-    Left errmsg -> do
-               putStrLn errmsg
-               error errmsg
-    Right value -> return value
-
-uploadDocumentFileToAmazon ctxs3action docid fileid1 = do
-  Just doc <- query $ GetDocumentByDocumentID docid
-  let files = documentfiles doc ++ documentsealedfiles doc
-  case filter (\x -> fileid x == fileid1) files  of
-    [file] -> do
-      AWS.uploadFile ctxs3action file
-      return ()
-    _ -> return ()
-  return ()
-
-
-uploadDocumentFilesToTrustWeaver :: TW.TrustWeaverConf 
-                                 -> String 
-                                 -> DocumentID 
-                                 -> IO ()
-uploadDocumentFilesToTrustWeaver ctxtwconf twownername documentid = do
-  Just document <- query $ GetDocumentByDocumentID documentid
-  let twdocumentid = show documentid
-  let twdocumentdate = showDateOnly (documentmtime document)
-  let File{filestorage = FileStorageMemory pdfdata} = head $ documentsealedfiles document 
-          
-  -- FIXME: we should retry here if the following fails
-  -- because of external reasons 
-  reference <- eitherLog $ TW.storeInvoice ctxtwconf twdocumentid twdocumentdate twownername pdfdata
-  update $ SetDocumentTrustWeaverReference documentid reference
-  return ()
-
-sealDocument :: Context 
-             -> MVar (Map.Map FileID JpegPages)
-             -> String
-             -> MinutesTime
-             -> User
-             -> Document
-             -> IO (Either String Document)
-sealDocument ctx@Context{ctxs3action,ctxtwconf}
-             normalizemap 
-             hostpart
-             signtime1
-             author
-             document = do
-  let (file@File {fileid,filename}) = 
-           safehead "sealDocument" $ documentfiles document
-  let docid = documentid document
-
-  tmppath <- getTemporaryDirectory
-  let tmpin = tmppath ++ "/in_" ++ show docid ++ ".pdf"
-  let tmpout = tmppath ++ "/out_" ++ show docid ++ ".pdf"
-  contents <- getFileContents ctx file
-  BS.writeFile tmpin contents
-  let config = sealSpecFromDocument hostpart document author tmpin tmpout
-  (code,stdout,stderr) <- readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
-  Log.debug $ "seal exit code " ++ show code
-  Log.debug $ "seal stdout: " ++ BSL.toString stdout
-  Log.debug $ "seal stderr: " ++ BSL.toString stderr
-
-  if code == ExitSuccess 
-     then do
-
-       newfilepdf1 <- BS.readFile tmpout
-       removeFile tmpout
-
-       newfilepdf <- 
-        if TW.signcert ctxtwconf == ""
-         then return newfilepdf1
-         else do
-           x <- TW.signDocument ctxtwconf newfilepdf1
-           case x of
-                   Left errmsg -> do
-                     -- FIXME: handle the error in a better way here
-                     putStrLn errmsg
-                     return newfilepdf1
-                   Right result -> return result
-
-       mdocument <- update $ AttachSealedFile docid filename newfilepdf
-       case mdocument of
-         Right document -> do
-          liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxs3action) (documentsealedfiles document)
-          case signeddocstorage (usersettings author) of
-           Nothing -> return ()
-           Just twsettings -> do
-                        forkIO $ uploadDocumentFilesToTrustWeaver ctxtwconf (BS.toString $ storagetwname twsettings) (documentid document)
-                        return ()
-          return $ Right document
-         Left msg -> error msg
-     else do
-        -- error handling
-        Log.error $ "seal: cannot seal document " ++ show docid ++ ", fileid " ++ show fileid
-        update $ ErrorDocument docid "could not seal document"
-        return $ Left "could not seal document"
-
 
 basename :: String -> String
 basename filename = 
@@ -1415,7 +1011,12 @@ handleContractsReload  = fmap LinkContracts getListParamsForSearch
 handleTemplateReload :: Kontra KontraLink
 handleTemplateReload = fmap LinkTemplates getListParamsForSearch
     
-
+{- |
+   Get some html to display the images of the files
+   URL: /pagesofdoc/{documentid}
+   Method: GET
+   FIXME: Should probably check for permissions to view
+ -}
 showPage :: FileID -> Int -> Kontra Response
 showPage fileid pageno = do
   Context{ctxnormalizeddocuments} <- get
