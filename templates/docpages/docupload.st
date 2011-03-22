@@ -1,5 +1,6 @@
 ####    Pages for documents - main part of system
 uploadPage=   
+$loadingdialog()$
 <div id="signStepsContainer">
   
   <div id="signStepsTitleRow">
