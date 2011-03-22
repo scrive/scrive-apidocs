@@ -14,6 +14,7 @@ import Data.List
 import Data.Maybe
 import Doc.DocControl
 import Doc.DocState
+import Doc.DocStateUtils
 import ELegitimation.ELeg
 import Happstack.Server
 import Happstack.State
@@ -650,9 +651,6 @@ mergeInfo (contractFirst, contractLast, contractNumber) (elegFirst, elegLast, el
         then Left  (intercalate "\n" failmsgs, elegFirst, elegLast, elegNumber)
         else Right (matches !! 0, matches !! 1, matches !! 2)
 
-allowsIdentification :: Doc.DocState.Document -> IdentificationType -> Bool
-allowsIdentification document idtype = 
-    isJust $ find (== idtype) $ documentallowedidtypes document
 
 findTransactionByIDOrFail :: [ELegTransaction] -> String -> Kontra ELegTransaction
 findTransactionByIDOrFail transactions transactionsid = 

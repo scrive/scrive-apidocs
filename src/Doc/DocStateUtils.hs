@@ -37,6 +37,7 @@ module Doc.DocStateUtils (
     , appendHistory
 
     , isELegDataMismatch
+    , allowsIdentification
     )
 
 where
@@ -51,7 +52,6 @@ import Misc
 import Control.Monad
 import Mails.MailsUtil
 import Doc.DocStateData
-import MinutesTime
 
 
 -- DB UPDATE UTILS
@@ -198,3 +198,7 @@ appendHistory document history =
 
 isELegDataMismatch (ELegDataMismatch _ _ _ _ _) = True
 isELegDataMismatch _                            = False
+
+allowsIdentification :: Document -> IdentificationType -> Bool
+allowsIdentification document idtype = 
+    isJust $ find (== idtype) $ documentallowedidtypes document
