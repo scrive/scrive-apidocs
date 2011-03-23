@@ -1226,6 +1226,9 @@ a.okIcon {
     width: 14px;
     top: 5px;
 }
+.signStepsButton{
+    margin: 0 0 0 22px;
+}
 
 .signStepsButton a .text,
 .uploadButton a .text,
@@ -1721,7 +1724,7 @@ input.multiFileInput {
 /* 013 changed */
 #signStepsBodyFunctionsBox ul
 {
-        list-style-type: none;
+    list-style-type: none;
   	margin: 9px 0 0 22px;
  	padding-left: 0;
 	padding-bottom: 2px;
@@ -2373,16 +2376,9 @@ a#nextstep {
     width: 136px;
     color: white;
     border: 0;
-    margin: 4px auto 4px auto;
     display: block;
 }
 
-#nextstep span {
-    padding-top: 10px;
-    padding-left: 20px;
-    display: block;
-    
-}
 
 .uploadButton
 {
