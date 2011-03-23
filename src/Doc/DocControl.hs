@@ -16,6 +16,7 @@ import Data.Maybe
 import Data.Word
 import Data.Functor
 import Debug.Trace
+import Doc.CSVUtils
 import Doc.DocState
 import Doc.DocStateUtils
 import Doc.DocView
@@ -60,7 +61,10 @@ import Data.Map ((!))
 import InputValidation
 import ListUtil
 import Redirect
-                         
+import Data.CSV
+import Text.ParserCombinators.Parsec
+
+
 {-
   Document state transitions are described in DocState.
 
@@ -573,8 +577,12 @@ getDesignStep::DocumentID -> Kontra (Maybe DesignStep)
 getDesignStep docid = do
     step3 <- isFieldSet "step3"
     step2 <- isFieldSet "step2"
+    mpart <- getOptionalField asValidNumber "part"
+    aftercsvupload <- isFieldSet "aftercsvupload"
     case (step2,step3) of
-       (True,_) -> return $ Just $ DesignStep2 docid
+       (True,_) -> return $ Just $ DesignStep2 docid mpart (if aftercsvupload 
+                                                             then (Just AfterCSVUpload) 
+                                                             else Nothing)
        (_,True) -> return $ Just $ DesignStep3 docid
        _ -> return Nothing
 
@@ -600,13 +608,15 @@ handleIssueShowPost docid = withUserPost $ do
   send <- isFieldSet "final"
   template <- isFieldSet "template"
   contract <- isFieldSet "contract"
-  case (documentstatus document,sign,send,template,contract) of 
-      (Preparation, True, _,_, _ ) -> handleIssueSign document author
-      (Preparation, _ ,  True,_, _) -> handleIssueSend document author
-      (Preparation, _ , _ ,True, _) -> handleIssueSaveAsTemplate document author             
-      (Preparation, _ , _ ,_ , True) -> handleIssueChangeToContract document author                    
-      (Preparation, _ , _ ,_, _) -> handleIssueSave document author
-      (AwaitingAuthor, _ , _ ,_, _) -> handleIssueSignByAuthor document author
+  csvupload <- isFieldSet "csvupload"
+  case (documentstatus document,sign,send,template,contract,csvupload) of 
+      (Preparation, True, _,_, _, _ ) -> handleIssueSign document author
+      (Preparation, _ ,  True,_, _, _) -> handleIssueSend document author
+      (Preparation, _ , _ ,True, _, _) -> handleIssueSaveAsTemplate document author             
+      (Preparation, _ , _ ,_ , True, _) -> handleIssueChangeToContract document author
+      (Preparation, _ , _ ,_ , _, True) -> handleIssueCSVUpload document author                    
+      (Preparation, _ , _ ,_, _, _) -> handleIssueSave document author
+      (AwaitingAuthor, _ , _ ,_, _, _) -> handleIssueSignByAuthor document author
       _  -> return $ LinkContracts emptyListParams
      
 
@@ -614,27 +624,51 @@ handleIssueSign document author = do
     ctx@Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber} <- get
     mudoc <- updateDocument ctx author document
     case mudoc of 
-        Right udoc-> do    
-            mndoc <- update $ AuthorSignDocument (documentid document) ctxtime ctxipnumber author Nothing
-            case mndoc of
-                Right newdocument -> do
-                    postDocumentChangeAction newdocument (documentstatus udoc) Nothing
-                    return $ LinkSignInvite (documentid document)
+        Right udoc-> do
+          mdocs <- splitUpDocument udoc
+          case mdocs of
+            Right docs -> do
+              mndocs <- mapM (forIndividual ctxtime ctxipnumber udoc) docs
+              case (sequence mndocs) of
+                Right (d:[]) -> return $ LinkSignInvite (documentid d)
+                Right ds -> return $ LinkContracts emptyListParams
                 Left _ -> mzero
-        Left _ -> mzero               
-                  
+            Left _ -> mzero
+        Left _ -> mzero
+    where
+      forIndividual ctxtime ctxipnumber udoc doc = do
+        mndoc <- update $ AuthorSignDocument (documentid doc) ctxtime ctxipnumber author Nothing
+        case mndoc of
+          Right newdocument -> do
+            postDocumentChangeAction newdocument (documentstatus udoc) Nothing
+            return ()
+          Left _ -> return ()
+        return mndoc
+
 handleIssueSend document author = do
     ctx@Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber} <- get
     mudoc <- updateDocument ctx author document
     case mudoc of 
         Right udoc-> do
-            mndoc <- update $ AuthorSendDocument (documentid document) ctxtime ctxipnumber author Nothing
-            case mndoc of
-                Right newdocument -> do
-                    postDocumentChangeAction newdocument (documentstatus udoc) Nothing
-                    return $ LinkSignInvite (documentid document)
+          mdocs <- splitUpDocument udoc
+          case mdocs of
+            Right docs -> do
+              mndocs <- mapM (forIndividual ctxtime ctxipnumber udoc) docs
+              case (sequence mndocs) of
+                Right (d:[]) -> return $ LinkSignInvite (documentid d)
+                Right ds -> return $ LinkContracts emptyListParams
                 Left _ -> mzero
-        Left _ -> mzero          
+            Left _ -> mzero
+        Left _ -> mzero
+    where
+      forIndividual ctxtime ctxipnumber udoc doc = do
+        mndoc <- update $ AuthorSendDocument (documentid doc) ctxtime ctxipnumber author Nothing
+        case mndoc of
+          Right newdocument -> do
+            postDocumentChangeAction newdocument (documentstatus udoc) Nothing
+            return ()
+          Left _ -> return ()
+        return mndoc
     
 handleIssueSaveAsTemplate document author = do
     ctx <- get
@@ -657,7 +691,94 @@ handleIssueChangeToContract document author = do
             case mncontract of
                 Right ncontract ->  return $ LinkDesignDoc $ DesignStep3 $ documentid ncontract                        
                 Left _ -> mzero
-        Left _ -> mzero             
+        Left _ -> mzero
+
+{- |
+    If the document has a multiple part this will pump csv values through it to create multiple docs, and then
+    save the original as a template if it isn't already.  This will make sure to clean and csv data.  It just returns
+    a list containing the original doc on it's own, if the doc hasn't got a multiple part.
+
+    I feel like this is quite dangerous to do all at once, maybe need a transaction?!
+-}
+splitUpDocument :: Document -> Kontra (Either String [Document])
+splitUpDocument doc =
+  case (documentcsvupload doc) of
+    Nothing -> return $ Right [doc]
+    (Just csvupload) ->
+      case (cleanCSVContents $ csvcontents csvupload) of
+        ((prob:_), _) -> return $ Left "data is not valid"
+        ([], CleanCSVData{csvbody}) -> do
+          mudoc <- case documenttype doc of
+                        Template -> return $ Right doc
+                        Contract -> update $ TemplateFromDocument $ documentid doc
+          case mudoc of
+            (Left x) -> return $ Left x
+            (Right udoc) -> do
+              mdocs <- mapM (createDocFromRow udoc (csvsignatoryindex csvupload)) csvbody
+              return $ sequence mdocs
+  where createDocFromRow :: Document -> Int -> [BS.ByteString] -> Kontra (Either String Document)
+        createDocFromRow udoc sigindex xs =
+          update $ ContractFromSignatoryData (documentid udoc) sigindex (item 0) (item 1) (item 2) (item 3) (item 4)
+          where item n | n<(length xs) = xs !! n
+                       | otherwise = BS.empty
+
+{- |
+   Handles a csv file upload.  This'll parse the file, and save the info
+   on the document and relevant signatory.
+-}
+handleIssueCSVUpload :: Document -> User -> Kontra KontraLink 
+handleIssueCSVUpload document author = do
+  ctx <- get             
+  mudoc <- updateDocument ctx author document
+  case mudoc of
+    Left _ -> mzero
+    Right udoc -> do
+      mcsvsigindex <- getOptionalField asValidNumber "csvsignatoryindex"
+      mcsvfile <- getCSVFile "csv"
+      case (mcsvsigindex, mcsvfile) of
+        (Nothing, Nothing) -> return $ LinkDesignDoc $ DesignStep2 (documentid udoc) Nothing Nothing
+        (Nothing, Just _) ->  do
+          Log.error "something weird happened, got csv file but there's no relevant sig index"
+          mzero
+        (Just sigindex, Nothing) -> return $ LinkDesignDoc $ DesignStep2 (documentid udoc) (Just $ sigindex + 1) Nothing 
+        (Just sigindex, Just (title, contents)) ->  do
+          let csvupload = CSVUpload 
+                          { csvtitle = title
+                          , csvcontents = contents
+                          , csvsignatoryindex = sigindex
+                          }
+          mndoc <- update $ AttachCSVUpload (documentid udoc) csvupload
+          case mndoc of
+            Left _ -> mzero
+            Right ndoc -> return $ LinkDesignDoc $ DesignStep2 (documentid ndoc) (Just $ sigindex + 1) (Just AfterCSVUpload)
+
+{- |
+    This will get and parse a csv file.  It
+    also deals with any flash messages.  It returns a pair
+    of (title, contents).
+-}
+getCSVFile :: String -> Kontra (Maybe (BS.ByteString, [[BS.ByteString]]))
+getCSVFile fieldname = do
+  input <- getDataFn' (lookInput fieldname)
+  result <- liftIO $ asCSVFile input
+  flashValidationMessage result >>= asMaybe
+  where
+    asCSVFile :: Maybe Input -> IO (Result (BS.ByteString, [[BS.ByteString]]))
+    asCSVFile input = do
+      case input of
+        Nothing -> return Empty
+        Just(Input contentspec (Just filename) _ ) -> do
+          content <- case contentspec of
+                       Left filepath -> BSL.readFile filepath
+                       Right content -> return content
+          if BSL.null content
+            then return Empty
+            else do
+              let title = BS.fromString (basename filename)
+                  mcontents = parse csvFile "" . BS.toString . concatChunks $ content
+              case mcontents of
+                 Left _ -> return $ Bad flashMessageFailedToParseCSV
+                 Right contents -> return $ Good (title, map (map BS.fromString) contents)
 
 handleIssueSave document author = do
     ctx <- get
@@ -759,6 +880,8 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
   
   invitetext <- getFieldUTFWithDefault defaultInviteMessage "invitetext"
   
+  mcsvsigindex <- getOptionalField asValidNumber "csvsignatoryindex"
+
   -- each custom field must have this
   fieldnames  <- getAndConcat "fieldname"
   fieldids    <- getAndConcat "fieldid"
@@ -863,7 +986,7 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
   -- Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor document
 
   update $ UpdateDocument ctxtime documentid
-           signatories2 daystosign invitetext author authordetails docallowedidtypes 
+           signatories2 daystosign invitetext author authordetails docallowedidtypes mcsvsigindex
               
 {- |
    Constructs a list of documents (Arkiv) to show to the user.
