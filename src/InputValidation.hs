@@ -268,13 +268,12 @@ asValidEmail input =
     Creates an email that hasn't been completely validated.  It still does handy things
     like trimming whitespace and lowercasing though.  This is useful in situations
     like checking a login.  Because it's dirty make sure you through it away,
-    and don't store it.
+    and don't store it. -- BUG DON'T LOWERCASE, poor uses registered with upper cases in their
+    addresses would be shut out!
 -}
 asDirtyEmail :: String -> Result BS.ByteString
 asDirtyEmail input =
-    stripWhitespace input
-    >>= checkIfEmpty
-    >>= mkLowerCase
+    checkIfEmpty input
     >>= mkByteString
 
 {- |
