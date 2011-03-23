@@ -65,6 +65,8 @@ instance InspectXML File where
                               
 instance InspectXML DocumentStatus where
     inspectXML = asChild . show
+instance InspectXML CSVUpload where
+    inspectXML = asChild . show
 instance InspectXML DocumentType where
     inspectXML = asChild . show
 instance InspectXML ChargeMode where

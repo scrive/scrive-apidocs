@@ -158,3 +158,19 @@ flashMessageInputExceedsMaxLength=$fieldnametitlecase$ får max innehålla $maxl
 ###
 flashMessageMissingRequiredField=Du har missat att fylla i ett obligatoriskt fält.
 ###
+flashMessageFailedToParseCSV=Misslyckad tolkning av .csv, var vänlig och kontrollera och ladda upp igen.
+###
+flashMessageNoDataInCSV=Kunde inte hitta några data i filen.
+###
+flashMessageNoDataInCSVApartFromHeader=Kunde inte hitta några data i filen, kunde bara hitta titlar.
+###
+flashMessageRowLessThanMinColCount=Raden behöver åtminstone $mincols$ kolumner.
+###
+flashMessageRowGreaterThanMaxColCount=Raden kan inte ha mer än $maxcols$ kolumner.
+###
+flashMessageFirstNameIsRequired=Förnamn krävs.
+###
+flashMessageSecondNameIsRequired=Efternamn krävs.
+###
+flashMessageEmailIsRequired=E-post krävs.
+###

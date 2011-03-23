@@ -70,9 +70,10 @@ $endif$
 
     <div id="signStepsContentStack">
 
-      <form action="" method="post" class="stepForm">
+      <form action="" method="post" enctype="multipart/form-data" class="stepForm">
         <input type="hidden" name="allowedsignaturetypes"
                value="Email" />
+        <input type="hidden" name="csvsignatoryindex" value="$csvsigindex$"/>
 
         <div id="signStep2Content" $if(!step2)$ style="display: none" $endif$>
           <div id="signStepsBody">
@@ -302,6 +303,7 @@ $endif$
     <a href="#minus2" class="minus"></a>
     <img src="/theme/images/iconHand.png" class="draghandle" alt="drag" />
   </span>
+  <span class="csvfileinfo"><a href="#" class="csvinfo" rel="#dialog-csvupload-2">$csvfilename$.csv</a></span>
   <span class="persondetails">
     
     <!-- 008 change/new -->
@@ -312,7 +314,14 @@ $endif$
     
     <!-- 013 changed -->
     <div class="sigentry signStepsBodyForms" id="peopleDetails">
+      <div class="partytype tomulti">
+        <a href="#" class="multi" rel="#dialog-csvupload-1">Massutskick</a>
+      </div>
+      <div class="partytype tosingle">
+        <a href="#" class="single">En part</a>
+      </div>
       <input type="hidden" name="sigid" value="" />
+      <input type="hidden" name="signatorytype" value="single" />
       <span class="fields">
         <span class='dragfield sigfstname inputWrapper'>
           <span style="display:none;" class="fieldid">fstname</span>

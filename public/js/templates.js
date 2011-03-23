@@ -338,8 +338,11 @@ function docstateToHTML(){
     signatories[0] = newsignatory();
   }
   
-  $(signatories).each(function () {
-    signatoryToHTML(this);
+  csvsigindex = sl.closest("form").find("input[type='hidden'][name='csvsignatoryindex']").attr("value");
+
+  $(signatories).each(function (idx) {
+    isMultiple = ("" + (idx+1)) === csvsigindex 
+    signatoryToHTML(isMultiple, this);
   });
 
   
@@ -695,7 +698,109 @@ safeReady(function() {
   });
 });
 
-function signatoryToHTML(sig) {
+safeReady(function() {
+  $('.nextproblem').live('click', function() {
+    var div = $(this).closest(".csvproblemcontainer");
+    div.removeClass("currentcsvproblem");
+    div.next().addClass("currentcsvproblem");
+  });
+});
+
+safeReady(function() {
+  $('.previousproblem').live('click', function() {
+    var div = $(this).closest(".csvproblemcontainer");
+    div.removeClass("currentcsvproblem");
+    div.prev().addClass("currentcsvproblem");
+  });
+});
+
+safeReady(function() {
+  $('.nextcsvpage').live('click', function() {
+    var div = $(this).closest(".csvpagecontainer");
+    div.removeClass("currentcsvpage");
+    div.next().addClass("currentcsvpage");
+  });
+});
+
+safeReady(function() {
+  $('.previouscsvpage').live('click', function() {
+    var div = $(this).closest(".csvpagecontainer");
+    div.removeClass("currentcsvpage");
+    div.prev().addClass("currentcsvpage");
+  });
+});
+
+function setUpCSVUpload(sigentry) {
+  var form = sigentry.closest("form");
+  var div = sigentry.closest("#personpane").find(".currentPerson");
+  var idx = div.parent().children().index(div);
+  form.find("input[type='hidden'][name='csvsignatoryindex']").removeAttr("value");
+  form.find("input[type='hidden'][name='csvsignatoryindex']").attr("value", idx);
+}
+
+function tearDownCSVUpload(sigentry) {
+    var form = sigentry.closest("form");
+    form.find("input[type='hidden'][name='csvsignatoryindex']").attr("value", "");
+}
+
+safeReady(function() {
+  $('.single', $('#personpane')[0]).live('click', function() {
+    var sigentry = $(this).closest('.persondetails');    
+    tearDownCSVUpload(sigentry);
+    sigentry.find(".partytype").hide();
+    setupAsSinglePart(sigentry);
+  });
+});
+
+function setupAsMultiplePart(sigentry) {
+  
+  var icons = sigentry.find('.signStepsBodyIcons');
+  icons.find(".man").remove();
+  var newicon = $("<a class='group' href='#'></a>");
+  
+  newicon.click(function() {
+    tosingle = sigentry.find(".tosingle");
+    if (tosingle.is(":visible")) {
+      tosingle.hide();
+    } else {
+      tosingle.show();
+    }
+    return false;
+  });
+
+  fileinfo = $("#templates").find(".csvfileinfo").clone();
+
+  newicon.insertAfter(icons.find(".partnumber"));
+  icons.append(fileinfo);
+}
+
+function setupAsSinglePart(sigentry) {
+  
+  var icons = sigentry.find('.signStepsBodyIcons');
+  icons.find(".group").remove();
+  icons.find(".csvfileinfo").remove();
+  var newicon = $("<a class='man' href='#'></a>");
+
+  newicon.click(function() {
+    tomulti = sigentry.find(".tomulti");
+    if (tomulti.is(":visible")) {
+      tomulti.hide();
+    } else {
+      var form = sigentry.closest("form");
+      csvsigindex = form.find("input[type='hidden'][name='csvsignatoryindex']").attr("value");
+      if (!(csvsigindex && csvsigindex.length>0)) {
+        tomulti.show();
+      }
+    }
+    return false;
+  });
+
+  newicon.insertAfter(icons.find(".partnumber"));
+ 
+  sigentry.find("input[name='signatoryfstname']").change();
+}
+
+function signatoryToHTML(isMultiple, sig) {
   var sl = $("#personpane");
   var sigid = newUUID();
   sig.id = sigid;
@@ -704,6 +809,13 @@ function signatoryToHTML(sig) {
 
 
   setHiddenField(sigentry, "sigid", sigid);
+  
+  if (isMultiple) {
+    setupAsMultiplePart(sigentry);
+  } else {
+    setupAsSinglePart(sigentry);
+  }
+  sigentry.find(".partytype").hide();
 
   var d = sigentry.find(".fields");
   var of = sigentry.find(".otherfields");
@@ -753,7 +865,9 @@ function signatoryToHTML(sig) {
   
   var n = "Unnamed";
 
-  if(sig.fstname == "" && sig.sndname == "") {
+  if (isMultiple) {
+    n = "Multiple part"
+  } else if(sig.fstname == "" && sig.sndname == "") {
     n = "(Namnlös)";
   } else {
     n = escapeHTML(sig.fstname + " " + sig.sndname);
@@ -762,6 +876,22 @@ function signatoryToHTML(sig) {
   $("#peopleList ol").append("<li><a href='#'>" + n + "</a></li>");
   sl.append(sigentry);
 
+  sigentry.find(".multi").overlay({
+    mask: standardDialogMask,
+    onBeforeLoad: function() {
+      setUpCSVUpload(sigentry);
+      sigentry.find(".partytype").hide();
+      return true;
+    },
+    onClose: function() {
+      tearDownCSVUpload(sigentry);
+      return true;
+    }
+  });
+
+  sigentry.find(".csvinfo").overlay({
+    mask: standardDialogMask
+  });
 }
 
 function placePlacementsOfSignatories(signatories) {
