@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -Wall #-}
-module KontraLink(KontraLink(..), LoginRedirectReason(..), DesignStep(..)) where
+module KontraLink(KontraLink(..), LoginRedirectReason(..), DesignStep(..), DesignStep2Flag(..)) where
 
 import Doc.DocState
 import HSP
@@ -20,7 +20,12 @@ data LoginRedirectReason = NoReason
                          | InvalidEmail
                          | InvalidPassword String -- ^ correct email
 
-data DesignStep = DesignStep1 | DesignStep2 DocumentID | DesignStep3 DocumentID   
+data DesignStep2Flag = AfterCSVUpload
+type Part = Int
+
+data DesignStep = DesignStep1 
+                | DesignStep2 DocumentID (Maybe Part) (Maybe DesignStep2Flag) 
+                | DesignStep3 DocumentID   
 
 {- |
    All the links available for responses
@@ -92,7 +97,9 @@ instance Show KontraLink where
     showsPrec _ (LinkIssueDoc documentid) = 
         (++) $ "/d/" ++ show documentid
     showsPrec _ (LinkDesignDoc DesignStep1) =  (++) $ "/"
-    showsPrec _ (LinkDesignDoc (DesignStep2 documentid)) = (++) $ "/d/" ++ show documentid ++ "?step2"
+    showsPrec _ (LinkDesignDoc (DesignStep2 documentid Nothing _)) = (++) $ "/d/" ++ show documentid ++ "?step2"
+    showsPrec _ (LinkDesignDoc (DesignStep2 documentid (Just part) Nothing)) = (++) $ "/d/" ++ show documentid ++ "?step2&part=" ++ show part
+    showsPrec _ (LinkDesignDoc (DesignStep2 documentid (Just part) (Just AfterCSVUpload))) = (++) $ "/d/" ++ show documentid ++ "?step2&part=" ++ show part ++ "&aftercsvupload"
     showsPrec _ (LinkDesignDoc (DesignStep3 documentid)) = (++) $ "/d/" ++ show documentid ++ "?step3"
     showsPrec _ (LinkIssueDocPDF document) = 
         (++) $ "/d/" ++ show (documentid document) ++ "/" ++ BS.toString (documenttitle document) ++ ".pdf"

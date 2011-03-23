@@ -33,6 +33,7 @@ module Doc.DocState
     , SignDocument(..)
     , TimeoutDocument(..)
     , UpdateDocument(..)
+    , AttachCSVUpload(..)
     , CloseDocument(..)
     , CancelDocument(..)
     , RestartDocument(..)
@@ -46,6 +47,7 @@ module Doc.DocState
     , GetUserTemplates(..)
     , TemplateFromDocument(..)
     , ContractFromDocument(..)
+    , ContractFromSignatoryData(..)
     , IdentificationType(..)
     , SignatureInfo(..)
     , SignatureProvider(..)
@@ -146,6 +148,7 @@ newDocument user title documenttype ctime isfree = do
           , documentsealedfiles = []
           , documenttrustweaverreference = Nothing
           , documentallowedidtypes = [EmailIdentification]
+          , documentcsvupload = Nothing
           , authorfstnameplacements = []
           , authorsndnameplacements = []
           , authoremailplacements = []
@@ -224,19 +227,25 @@ updateDocument :: MinutesTime
                -> User
                -> SignatoryDetails
                -> [IdentificationType]
+               -> Maybe Int
                -> Update Documents (Either String Document)
-updateDocument time documentid signatories daystosign invitetext author authordetails idtypes =
+updateDocument time documentid signatories daystosign invitetext author authordetails idtypes mcsvsigindex =
     modifyContractOrTemplateWithAction documentid $ \document ->  
         if documentstatus document == Preparation
          then do
              let authoremail = unEmail $ useremail $ userinfo author
              signatorylinks <- sequence $ map (signLinkFromDetails [(authoremail, author)]) signatories
+             let csvupload = case (documentcsvupload document, fmap (checkCSVSigIndex signatorylinks) mcsvsigindex) of
+                               (Just cu@CSVUpload{csvsignatoryindex}, Just (Right newsigindex)) 
+                                    | csvsignatoryindex==newsigindex -> Just cu
+                               _ -> Nothing
              return $ Right $ document 
                     { documentsignatorylinks = signatorylinks
                       , documentdaystosign = daystosign 
                       , documentmtime = time
                       , documentinvitetext = invitetext
                       , documentallowedidtypes = idtypes
+                      , documentcsvupload = csvupload
                       , authorfstnameplacements = signatoryfstnameplacements authordetails
                       , authorsndnameplacements = signatorysndnameplacements authordetails
                       , authoremailplacements = signatoryemailplacements authordetails
@@ -245,7 +254,56 @@ updateDocument time documentid signatories daystosign invitetext author authorde
                       , authorotherfields = signatoryotherfields authordetails
                       }
          else return $ Left "Document not in preparation"
-                     
+
+{- |
+    This attaches a csv upload to the document.
+-}
+attachCSVUpload :: DocumentID
+                   -> CSVUpload
+                   -> Update Documents (Either String Document)
+attachCSVUpload documentid csvupload =
+    modifyContractOrTemplateWithAction documentid $ \document ->
+        let msigindex = checkCSVSigIndex (documentsignatorylinks document) $ csvsignatoryindex csvupload in
+        case (msigindex, documentstatus document) of
+          (Left s, _) -> return $ Left s
+          (Right n, Preparation) -> return . Right $ document { documentcsvupload = Just csvupload }
+          _ -> return $ Left "Document not in preparation"
+
+checkCSVSigIndex :: [SignatoryLink] -> Int -> Either String Int
+checkCSVSigIndex sls n
+  | n==0 = Left "author can't be set from csv"
+  | n>=(length sls) = Left $ "signatory with index " ++ (show n) ++ " doesn't exist."
+  | otherwise = Right n
+
+{- |
+    Creates a new contract by pumping some values into a particular signatory.
+-}
+contractFromSignatoryData :: DocumentID
+                              -> Int 
+                              -> BS.ByteString 
+                              -> BS.ByteString 
+                              -> BS.ByteString 
+                              -> BS.ByteString 
+                              -> BS.ByteString 
+                              -> Update Documents (Either String Document)
+contractFromSignatoryData docid sigindex fstname sndname email company number = newFromDocument toNewDoc docid
+  where
+    toNewDoc :: Document -> Document
+    toNewDoc d = d { documentsignatorylinks = map snd . map toNewSigLink . zip [0..] $ (documentsignatorylinks d)
+                    , documentcsvupload = Nothing
+                    , documenttype = Contract }
+    toNewSigLink :: (Int, SignatoryLink) -> (Int, SignatoryLink)
+    toNewSigLink (i, sl)
+      | i==sigindex = (i, sl { signatorydetails = pumpData (signatorydetails sl) })
+      | otherwise = (i, sl)
+    pumpData :: SignatoryDetails -> SignatoryDetails
+    pumpData sd = sd 
+                  { signatoryfstname = fstname
+                  , signatorysndname = sndname
+                  , signatorycompany = company
+                  , signatorynumber = number
+                  , signatoryemail = email}
+
 timeoutDocument :: DocumentID
                 -> MinutesTime
                 -> Update Documents (Either String Document)
@@ -691,6 +749,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'getDocumentByDocumentID
                         , 'getTimeoutedButPendingDocuments
                         , 'updateDocument
+                        , 'attachCSVUpload
                         , 'signDocument
                         , 'authorSignDocument
                         , 'authorSendDocument
@@ -726,5 +785,6 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'errorDocument
                         , 'getUserTemplates
                         , 'contractFromDocument
+                        , 'contractFromSignatoryData
                         , 'templateFromDocument
                         ])

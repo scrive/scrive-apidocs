@@ -315,7 +315,7 @@ safeReady(function() {
   $("#sendinvite").overlay({
     mask: standardDialogMask,
     onBeforeLoad: function(){
-      if (!emailFieldsValidation($(".stepForm input[type='email']"))) return false;
+      if (!emailFieldsValidation(noMultiParts($(".stepForm input[type='email']")))) return false;
       if (!nonZeroSignatories()) return false;
       if (!authorFieldsValidation()) return false;
       fieldValidationType = "";
@@ -328,7 +328,7 @@ safeReady(function() {
     mask: standardDialogMask,    
     onBeforeLoad: function () { 
       if (!checkSignPossibility()) return false;
-      if (!emailFieldsValidation($(".stepForm input[type='email']"))) return false;
+      if (!emailFieldsValidation(noMultiParts($(".stepForm input[type='email']")))) return false;
       if (!nonZeroSignatories()) return false;
       if (!authorFieldsValidation()) return false;
       fieldValidationType = "";
@@ -695,7 +695,7 @@ function authorFieldsValidation() {
   dragfields.removeClass('offending');
   // get all the fields that should be filled by author
   var remainingAuthorFields = dragfields.filter(function() {
-    return getFillStatus($(this)) === 'author';
+    return getFillStatus($(this)) === 'author' && !isMultiPartElem($(this));
   });
 
   if(remainingAuthorFields.size() > 0) {
@@ -980,6 +980,11 @@ $(document).ready(function() {
 
 		detachFieldsForSigID(sigid);
                 child.remove();
+
+                var csvsig = personpane.closest("form").find("input[type='hidden'][name='csvsignatoryindex']"); 
+                if (idx == csvsig.attr("value")) {
+                   personpane.closest("form").find("input[type='hidden'][name='csvsignatoryindex']").removeAttr("value");
+                }
                 
                 var li = $("#peopleList li:eq(" + idx + ")");
                 li.remove();
@@ -1006,8 +1011,12 @@ $(document).ready(function() {
                 var val = fstname + " "+ sndname;
                 var div = $(this).parentsUntil("#personpane").last();
                 var idx = div.parent().children().index(div);
-                if(fstname == "" && sndname == "") 
+                if(fstname == "" && sndname == "") {
                     val = "(Namnlös)";
+                }
+                if (isMultiPartElem($(this))) {
+                    val = "Mutiple Part";
+                }
                 $('#peopleList li:eq(' + idx + ') a').text(val);
             });
         $('form.requestAccount').submit(function(){
@@ -1015,6 +1024,19 @@ $(document).ready(function() {
                 
         })
      });
+
+function noMultiParts(elems) {
+  return elems.filter(function() {
+    return !isMultiPartElem($(this));
+  });
+}
+
+function isMultiPartElem(elem) {
+  var div = elem.closest(".persondetails");
+  var idx = div.parent().children().index(div);
+  var csvsigindex = div.closest("form").find("input[type='hidden'][name='csvsignatoryindex']").attr("value");
+  return (csvsigindex==idx);
+}
 
 /*
  * The link to add a signatory.
@@ -1036,7 +1058,7 @@ safeReady(function() {
   var liplus = $("li.plus"); 
 
   addsignatory.click(function() {
-    signatoryToHTML(newsignatory());
+    signatoryToHTML(false, newsignatory());
     var children = personpane.children();
     var newone = children.removeClass("currentPerson").last().addClass("currentPerson");
     checkPersonPaneMode();

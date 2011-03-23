@@ -35,6 +35,7 @@ module InputValidation
     , asValidCheckBox
     , asValidDaysToSign
     , asValidID
+    , asValidNumber
     , asValidDocID
     , asValidFieldName
     , asValidFieldValue
@@ -443,6 +444,15 @@ asValidID input =
               (Bad msg) -> Bad msg
               Empty -> Empty
 
+{- |
+    Parses as a int.
+-}
+asValidNumber :: String -> Result Int
+asValidNumber input =
+    checkIfEmpty input
+    >>= parseAsInt fieldtemplate
+    where fieldtemplate = "idFieldName"
+
 {-|
    Creates a cleaned up place.  Which is just a positive int.
 -}
@@ -574,7 +584,7 @@ flashMessageNumberAboveMaximum fieldtemplate upperbound =
     Parses a string as an int
 -}
 parseAsInt :: String -> String -> Result Int
-parseAsInt xs fieldtemplate =
+parseAsInt fieldtemplate xs =
     case reads xs of
         (val,[]):[] -> return val
         _ -> Bad $ flashMessageNotAValidInteger fieldtemplate

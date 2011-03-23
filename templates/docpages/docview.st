@@ -342,6 +342,117 @@ $signatoryScriptIfRequired()$
 pageDocumentForAuthorHelpersLocalDialogs=
 <div class="localdialogs">
   $loadingdialog()$
+  
+  <form method="post" name="form" action="" class="overlay redirectsubmitform" id="dialog-csvupload-1" rel=".stepForm">
+    <input type="hidden" name="csvupload" value="true" />
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-icon message"></div>
+        <div class="modal-title">
+          <h2>Massutskick</h2>
+        </div>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">
+          <div>     
+            Du har nu valt att göra ett massutskick, för att genomföra detta krävs att du laddar
+            upp ett dokument med formatet .csv där kölumnerna är kommasepererade.
+          </div>
+          <div class="signStepsBodyUploadBox">
+            <div>
+              <span id="signStepsBodyUploadTextContainer"> 
+                <span class="header">Välj fil att ladda upp</span><br/>
+                <span class="text">OBS! Endast .CSV</span> 
+              </span>
+            </div>
+            <br/>
+            <div class="signStepsButtonContainer">
+              <div class="uploadButton" >  
+                <a href="#attachFile"><span class="icon arrowUp"></span></a>
+                <a href="#attachFile"> <span class="text">Välj fil</span></a> 
+                <input class="multiFileInput submitOnUpload" maxlength="1" type="file" name="csv" accept="application/csv" rel=".filelist" />
+              </div>
+              <div class="filelist" style="display:none;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+  
+  <form method="post" name="form" action="" class="overlay redirectsubmitform" id="dialog-csvupload-2" rel=".stepForm">
+    <input type="hidden" name="csvupload" value="true" />
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-icon message"></div>
+        <div class="modal-title">
+          <h2>Massutskick</h2>
+        </div>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">
+          <div class="csvproblems">
+            $csvproblems: {csvproblem |
+              <div class="csvproblemcontainer$if(csvproblem.isfirstproblem)$ currentcsvproblem$endif$">
+                <div class="csvproblemheader">
+                  $if(csvproblem.problemrow)$Row: $csvproblem.problemrow$$endif$
+                  $if(csvproblem.problemcol)$Column: $csvproblem.problemcol$$endif$
+                </div>
+                <div class="csvproblemdesc">
+                  $csvproblem.problemdesc$
+                </div>
+                <div class="csvproblemfooter">
+                  <span>$if(!csvproblem.isfirstproblem)$<a href="#" class="previousproblem"><-</a>$else$<-$endif$</span>
+                  <span>$csvproblem.problemnumber$/$csvproblemcount$</span>
+                  <span>$if(!csvproblem.islastproblem)$<a href="#" class="nextproblem">-></a>$else$->$endif$</span>
+                </div>
+              </div>
+            }$
+          </div>
+          <div class="csvdata">
+            $csvpages: {csvpage |
+              <div class="csvpagecontainer$if(csvpage.isfirstcsvpage)$ currentcsvpage$endif$">
+                <div class="csvpagecontents">
+                  <table>
+                    <theader>
+                      <tr>
+                        <th>&nbsp;</th>
+                        <th>Förnamn</th>
+                        <th>Efternamn</th>
+                        <th>E-post</th>
+                        <th>Företag</th>
+                        <th>Org.nr./Pers.nr</th>
+                      </tr>
+                    </theader>
+                    <tbody>
+                      $csvpage.csvrows: {csvrow |
+                        <tr$if(csvrow.isproblem)$ class="csvproblem"$endif$>
+                          <td>$csvrow.rownumber$</td>
+                          $csvrow.csvfields: { csvfield |
+                            <td$if(csvfield.isproblem)$ class="csvproblem"$endif$>$csvfield.value$</td>
+                          }$
+                        </tr>
+                      }$
+                    </tbody>
+                  </table>
+                </div>
+                <div class="csvpagefooter">
+                  <span>$if(!csvpage.isfirstcsvpage)$<a href="#" class="previouscsvpage"><-</a>$else$<-$endif$</span>
+                  <span>$if(!csvpage.islastcsvpage)$<a href="#" class="nextcsvpage">-></a>$else$->$endif$</span>
+                </div>
+              </div>
+            }$
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div>Something for reloading.</div>  
+      </div>
+    </div>
+  </form>
+
   <form method="post" name="form" action="$linkissuedoc$"
         class="overlay redirectsubmitform" id="dialog-confirm-signinvite"
         rel=".stepForm">  

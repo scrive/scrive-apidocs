@@ -19,6 +19,7 @@ module Doc.DocView (
   , flashDocumentDraftSaved
   , flashDocumentTemplateSaved
   , flashAuthorSigned
+  , flashMessageFailedToParseCSV
   , landpageRejectedView
   , defaultInviteMessage
   , mailDocumentRemind
@@ -42,6 +43,7 @@ import Data.List (find)
 import Data.Maybe
 import Data.Foldable (foldMap)
 import Data.Ord
+import Doc.CSVUtils
 import Doc.DocState
 import Doc.DocViewMail
 import Doc.DocViewUtil
@@ -147,6 +149,10 @@ flashMessageCanceled templates =
 flashAuthorSigned :: KontrakcjaTemplates -> IO FlashMessage
 flashAuthorSigned templates =
   toFlashMsg OperationDone <$> renderTemplate templates "flashAuthorSigned" ()
+
+flashMessageFailedToParseCSV :: KontrakcjaTemplates -> IO FlashMessage
+flashMessageFailedToParseCSV templates = 
+  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageFailedToParseCSV" ()
   
 -- All doc view
 singlnkFields :: SignatoryLink -> Fields
@@ -354,10 +360,16 @@ pageDocumentForAuthor ctx
              field "otherFieldID"    $ "field" ++ show i
              field "otherFieldOwner" "author")
              $ zip fields ([1..]::[Int])
+       mcleancsv = fmap (cleanCSVContents . csvcontents) $ documentcsvupload document
+       csvproblems = maybe [] fst mcleancsv
+       csvdata = maybe [] (csvbody . snd) mcleancsv
+       chunksize = 10
+       csvpages = chunkUp chunksize csvdata
    in do
      validationinput <- if isSuperUser $ Just author
                         then renderTemplate (ctxtemplates ctx) "validationdropdown" ()
                         else renderTemplate (ctxtemplates ctx) "emailhidden" ()
+     csvproblemfields <- sequence $ zipWith (csvProblemFields templates (length csvproblems)) [1..] csvproblems
      renderTemplate (ctxtemplates ctx) "pageDocumentForAuthorContent" $ do
        field "authorOtherFields" $ doc_author_otherfields $ signatoryotherfields documentauthordetails
        field "linkissuedoc" $ show $ LinkIssueDoc documentid
@@ -380,9 +392,64 @@ pageDocumentForAuthor ctx
        field "documentinfotext" $ documentInfoText templates document (find (isMatchingSignatoryLink author) documentsignatorylinks) author
        documentAuthorInfo author
        field "validationinput" validationinput
+       field "csvfilename" $ maybe BS.empty csvtitle . documentcsvupload $ document
+       field "csvsigindex" $ maybe BS.empty (BS.fromString . show . csvsignatoryindex) . documentcsvupload $ document
+       field "csvproblems" $ csvproblemfields
+       field "csvproblemcount" $ length csvproblems
+       field "csvpages" $ zipWith (csvPageFields csvproblems (length csvdata) 5) [0,chunksize..] csvpages
        documentInfoFields document
        designViewFields step
        field "datamismatchflash" $ getDataMismatchMessage $ documentcancelationreason document
+
+--all of this csv view stuff is a little scrappy.  sorry about that, i was trying
+--to implement a bit quickly (well, quickly for me anyway).  i'll clean up fairly soon!
+--emily 
+csvPageFields :: [CSVProblem] -> Int -> Int -> Int -> [[BS.ByteString]] -> Fields
+csvPageFields problems totalrowcount expectedcols firstrowindex xs = do
+  field "csvrows" $ zipWith (csvRowFields problems expectedcols) [firstrowindex..] xs
+  field "isfirstcsvpage" $ firstrowindex==0
+  field "islastcsvpage" $ (firstrowindex+(length xs))==totalrowcount
+
+chunkUp :: Int -> [a] -> [[a]]
+chunkUp n xs =
+  case splitAt n xs of
+    (y,[]) -> [y]
+    (y,ys) -> y : chunkUp n ys
+
+csvRowFields :: [CSVProblem] -> Int -> Int -> [BS.ByteString] -> Fields
+csvRowFields problems expectedcols rowindex xs = do
+  field "rownumber" $ rowindex + 1
+  field "csvfields" $ zipWith (csvFieldFields problems rowindex) 
+                              [0..] 
+                              (take expectedcols $ xs ++ (repeat BS.empty)) 
+  field "isproblem" $ any isRelevantProblem problems
+  where
+    isRelevantProblem CSVProblem{problemrowindex, problemcolindex} =
+      case (problemrowindex, problemcolindex) of
+        (Just r, Nothing) | rowindex==r -> True
+        _ -> False
+
+csvFieldFields :: [CSVProblem] -> Int -> Int -> BS.ByteString -> Fields
+csvFieldFields problems rowindex colindex val = do
+  field "value" $ val
+  field "isproblem" $ any isRelevantProblem problems
+  where 
+    isRelevantProblem CSVProblem{problemrowindex, problemcolindex} =
+      case (problemrowindex, problemcolindex) of
+        (Just r, Just c) | rowindex==r && colindex==c -> True
+        _ -> False
+
+csvProblemFields :: KontrakcjaTemplates -> Int -> Int -> CSVProblem -> IO Fields
+csvProblemFields templates probcount number csvproblem = do
+    flashMsg <- (problemdescription csvproblem) templates
+    let desc = snd $ unFlashMessage flashMsg
+    return $ do
+      field "problemnumber" $ number
+      field "problemrow" $ fmap (+1) $ problemrowindex csvproblem
+      field "problemcol" $ fmap (+1) $ problemcolindex csvproblem
+      field "problemdesc" $ desc
+      field "isfirstproblem" $ (number==1)
+      field "islastproblem" $ (number==probcount)
 
 renderActionButton :: KontrakcjaTemplates -> KontraLink -> String -> IO String
 renderActionButton templates action button = do
@@ -653,7 +720,7 @@ designViewFields:: (Maybe DesignStep) -> Fields
 designViewFields step = do
     case step of 
         (Just (DesignStep3 _)) -> field "step3" True
-        (Just (DesignStep2 _)) -> field "step2" True
+        (Just (DesignStep2 _ _ _ )) -> field "step2" True
         (Just (DesignStep1)) -> field "step1" True
         _ -> field "step2" True
         
