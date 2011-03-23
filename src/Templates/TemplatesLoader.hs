@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, NamedFieldPuns, NoMonomorphismRestriction #-}
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -fno-warn-orphans #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Templates.TemplatesLoader
@@ -142,4 +142,5 @@ instance  (Stringable a) => ToSElem (SElem a) where
    toSElem SNull = SNull       
 
 
+convert :: (Stringable a, Stringable b) => a -> b
 convert = stFromString . stToString
