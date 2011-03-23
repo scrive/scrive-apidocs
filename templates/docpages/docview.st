@@ -490,11 +490,12 @@ pageDocumentForAuthorHelpersLocalDialogs=
       </div>
       <div class="modal-footer">
         <input type="hidden" name="sign" value="automatic" />
-        <a  class="close cancel">Avbryt</a>
+        <a  class="close cancel" style="position:relative;top:6px;">Avbryt</a>
         <a href="#" class="btn-big blue float-right submiter signhidden">
           <div class="left"></div>
           <div class="label">
-            <span>SkrivaPå</span>
+              <span >SkrivaPå </span>
+              <span class="icon cross" style="position:relative;top:5px"></span>
           </div>
           <div class="right"></div>
         </a>

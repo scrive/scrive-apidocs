@@ -269,31 +269,31 @@ $endif$
                 
           </div>
           $if(contract)$
-           <div>
-            <input style="position:relative;top:2px" 
-                           type="checkbox" 
-                           class="switchercheckbox" 
-                           on=".sendbutton"
-                           off=".signbutton"
-                           autocomplete="off" /> Underteckna sist
+           <div style="padding-left:19px;padding-top:13px;"> 
+            <div style="padding-bottom:10px">
+            <input style="position:relative;top:2px" type="checkbox" class="switchercheckbox" on=".sendbutton" off=".signbutton" autocomplete="off" /> 
+            <label style="margin-left:3px;">Underteckna sist </label> 
             </div>
-           
-            <div class="buttons">
             <div class="sendbutton">
-            <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"  class="btn-small green center">
+            <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"  class="btn-big green center">
                <div class="left"></div>
-               <div class="label"><p>Skicka </p></div> 
+               <div class="label" style="width:120px"><p style="width:80px;display:inline-block;text-align:left;">Skicka </p>
+                <span class="btn-symbol green arrow-left" style="position:relative;top:3px;right:0px"></span></div> 
                <div class="right"></div>
             </a>
             </div>
-            <div class="signbutton">
+            <div class="signbutton" style="display:none">
                <a type="button"  id="signinvite" rel="#dialog-confirm-signinvite" class="btn-big blue center" style="float:none">
                <div class="left"></div>
-               <div class="label"><p>SkrivaPå</p></div> 
+               <div class="label" style="width:120px">
+                    <p style="width:80px;display:inline-block;text-align:left;">SkrivaPå </p>
+                    <span class="icon cross" style="position:relative;top:5px"></span>
+
+               </div> 
                <div class="right"></div>
               </a>
             </div>
-            </div>
+          </div>
           $elseif(template)$
             <a type="submit" name="save" class="submit new-btn-small green2 center"> 
               <p>Spara mall</p> 

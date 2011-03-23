@@ -1248,6 +1248,7 @@ a.okIcon {
     background-image: url(images/signStepsBodyBorder.png);
     background-repeat: repeat-y;
     overflow: hidden;
+    min-height: 100px;
 }
 
 #signStepsBodyBorderBottom
@@ -1326,12 +1327,11 @@ input.multiFileInput {
 
 #signStepsBodyLeft.step3{
   display:block;
-  width: 260px;
+  width: 306px;
 }
 #signStepsBodyRight.step3{
    display:inline-block;
-   width: 250px;
-   margin-right: 20px;
+   width: 306px;
    float: left;
 }
 
@@ -1409,9 +1409,10 @@ input.multiFileInput {
 .border {
    background-color: #ecedf3; 
    width: 1px;
-   height: 77px;
+   height: 116px;
    display:inline-block;
    float:left;
+   margin-top:-8px;
 }
 
 /* 015 new */
@@ -1814,9 +1815,8 @@ form {
 /* 015 new */
 #signStepsBodyFunctions.step3
 {
-   padding-top: 23px;
    padding-bottom: 10px;
-   width: 240px;
+   width: 306px;
    
 }
 
@@ -1824,9 +1824,7 @@ form {
 {
    padding-top: 16px;
    padding-bottom: 7px;
-   padding-right:50px;
-   padding-left:70px;
-   
+  
 }
 #signStepsBodyLeft.step3
 {
@@ -2133,7 +2131,7 @@ form {
     border-left: 1px solid #BDBDBD;
     border-right: 1px solid #BDBDBD;
     border-bottom: 1px solid #C0C0C0;
-    
+    overflow:visible;
     
 }
 
