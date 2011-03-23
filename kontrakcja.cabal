@@ -41,7 +41,7 @@ Executable pdfseal
   else
     Buildable: False
 
-  GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
+  GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind -Wall
   hs-source-dirs: pdfseal/src pdfseal/inc
   -- .hs or .lhs file containing the Main module.
   Main-is: SealMain.hs
