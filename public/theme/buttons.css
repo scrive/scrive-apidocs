@@ -51,123 +51,166 @@ a.btn-small label p {
 /* Green Button */
 
 a.btn-small.green .left {
-	background-position: -132px 0;
+	background-position: -209px 0;
 }
 
 a.btn-small.green .right {
-	background-position: -149px 0;
+	background-position: -223px 0;
 }
 
 a.btn-small.green .label {
-	background-position: 0 -343px;
+	background-position: 0 -523px;
 	color: #fff !important;
 	text-shadow: #41770b 0 1px 3px;
 }
 
 a.btn-small.green:hover .left {
-	background-position: -132px -34px;
+	background-position: -209px -34px;
 }
 
 a.btn-small.green:hover .right {
-	background-position: -149px -34px;
+	background-position: -223px -34px;
 }
 
 a.btn-small.green:hover .label {
-	background-position: 0 -377px;
+	background-position: 0 -557px;
 	text-shadow: #41770b 0 1px 3px;
 }
 
 a.btn-small.green:active .left {
-	background-position: -132px -68px;
+	background-position: -209px -68px;
 }
 
 a.btn-small.green:active .right {
-	background-position: -149px -68px;
+	background-position: -223px -68px;
 }
 
 a.btn-small.green:active .label {
-	background-position: 0 -411px;
+	background-position: 0 -591px;
 	text-shadow: #41770b 0 1px 3px;
 }
 
 /* Blue Button */
 
 a.btn-small.blue .left {
-	background-position: -164px 0;
+	background-position: -240px 0;
 }
 
 a.btn-small.blue .right {
-	background-position: -181px 0;
+	background-position: -254px 0;
 }
 
 a.btn-small.blue .label {
-	background-position: 0 -241px;
+	background-position: 0 -421px;
 	color: #fff !important;
 	text-shadow: #3e88ce 0 1px 3px;
 }
 
 a.btn-small.blue:hover .left {
-	background-position: -164px -34px;
+	background-position: -240px -34px;
 }
 
 a.btn-small.blue:hover .right {
-	background-position: -181px -34px;
+	background-position: -254px -34px;
 }
 
 a.btn-small.blue:hover .label {
-	background-position: 0 -275px;
+	background-position: 0 -455px;
 }
 
 a.btn-small.blue:active .left {
-	background-position: -164px -68px;
+	background-position: -240px -68px;
 }
 
 a.btn-small.blue:active .right {
-	background-position: -181px -68px;
+	background-position: -254px -68px;
 }
 
 a.btn-small.blue:active .label {
-	background-position: 0 -309px;
+	background-position: 0 -489px;
 }
 
 /* Black Button */
 
 a.btn-small.black .left {
-	background-position: -196px 0;
+	background-position: -272px 0;
 }
 
 a.btn-small.black .right {
-	background-position: -212px 0;
+	background-position: -288px 0;
 }
 
 a.btn-small.black .label {
-	background-position: 0 -445px;
+	background-position: 0 -625px;
 	color: #fff !important;
 	text-shadow: #454545 0 1px 3px;
 }
 
 a.btn-small.black:hover .left {
-	background-position: -196px -34px;
+	background-position: -272px -34px;
 }
 
 a.btn-small.black:hover .right {
-	background-position: -212px -34px;
+	background-position: -288px -34px;
 }
 
 a.btn-small.black:hover .label {
-	background-position: 0 -479px;
+	background-position: 0 -659px;
 }
 
 a.btn-small.black:active .left {
-	background-position: -196px -68px;
+	background-position: -272px -68px;
 }
 
 a.btn-small.black:active .right {
-	background-position: -212px -68px;
+	background-position: -288px -68px;
 }
 
 a.btn-small.black:active .label {
-	background-position: 0 -513px;
+	background-position: 0 -693px;
+}
+
+
+/* Red Button */
+
+a.btn-small.red .left {
+    background-position: -176px 0;
+}
+
+a.btn-small.red .right {
+    background-position: -192px 0;
+}
+
+a.btn-small.red .label {
+    background-position: 0 -319px;
+    color: #fff !important;
+    text-shadow: #41770b 0 1px 3px;
+}
+
+a.btn-small.red:hover .left {
+    background-position: -176px -34px;
+}
+
+a.btn-small.red:hover .right {
+    background-position: -192px -34px;
+}
+
+a.btn-small.red:hover .label {
+    background-position: 0 -353px;
+    text-shadow: #41770b 0 1px 3px;
+}
+
+a.btn-small.red:active .left {
+    background-position: -176px -68px;
+}
+
+a.btn-small.red:active .right {
+    background-position: -192px -68px;
+}
+
+a.btn-small.red:active .label {
+    background-position: 0 -387px;
+    text-shadow: #41770b 0 1px 3px;
 }
 
 /* Big Buttons */
@@ -199,123 +242,163 @@ a.btn-big .label {
 /* Green Button */
 
 a.btn-big.green .left {
-	background-position: 0 0;
+	background-position: -44px 0;
 }
 
 a.btn-big.green .right {
-	background-position: -22px 0;
+	background-position: -66px 0;
 }
 
 a.btn-big.green .label {
-	background-position: 0 -689px;
+	background-position: 0 -1011px;
 	text-shadow: #41770b 0 1px 3px;
 }
 
 a.btn-big.green:hover .left {
-	background-position: 0 -47px;
+	background-position: -44px -47px;
 }
 
 a.btn-big.green:hover .right {
-	background-position: -22px -47px;
+	background-position: -66px -47px;
 }
 
 a.btn-big.green:hover .label {
-	background-position: 0 -736px;
+	background-position: 0 -1058px;
 	text-shadow: #41770b 0 1px 3px;
 }
 
 a.btn-big.green:active .left {
-	background-position: 0 -95px;
+	background-position: -44px -95px;
 }
 
 a.btn-big.green:active .right {
-	background-position: -22px -95px;
+	background-position: -66px -95px;
 }
 
 a.btn-big.green:active .label {
-	background-position: 0 -784px;
+	background-position: 0 -1106px;
 	text-shadow: #41770b 0 1px 3px;
 }
 
 /* Blue Button */
 
 a.btn-big.blue .left {
-	background-position: -44px 0;
+	background-position: -88px 0;
 }
 
 a.btn-big.blue .right {
-	background-position: -66px 0;
+	background-position: -110px 0;
 }
 
 a.btn-big.blue .label {
-	background-position: 0 -547px;
+	background-position: 0 -869px;
 	text-shadow: #3e88ce 0 1px 3px;
 }
 
 a.btn-big.blue:hover .left {
-	background-position: -44px -47px;
+	background-position: -88px -47px;
 }
 
 a.btn-big.blue:hover .right {
-	background-position: -66px -47px;
+	background-position: -110px -47px;
 }
 
 a.btn-big.blue:hover .label {
-	background-position: 0 -594px;
+	background-position: 0 -916px;
 }
 
 a.btn-big.blue:active .left {
-	background-position: -44px -95px;
+	background-position: -88px -95px;
 }
 
 a.btn-big.blue:active .right {
-	background-position: -66px -95px;
+	background-position: -110px -95px;
 }
 
 a.btn-big.blue:active .label {
-	background-position: 0 -642px;
+	background-position: 0 -964px;
 }
 
 /* Black Button */
 
 a.btn-big.black .left {
-	background-position: -88px 0;
+	background-position: -132px 0;
 }
 
 a.btn-big.black .right {
-	background-position: -110px 0;
+	background-position: -154px 0;
 }
 
 a.btn-big.black .label {
-	background-position: 0 -831px;
+	background-position: 0 -1153px;
 	color: #fff !important;
 	text-shadow: #454545 0 1px 3px;
 }
 
 a.btn-big.black:hover .left {
-	background-position: -88px -47px;
+	background-position: -132px -47px;
 }
 
 a.btn-big.black:hover .right {
-	background-position: -110px -47px;
+	background-position: -154px -47px;
 }
 
 a.btn-big.black:hover .label {
-	background-position: 0 -878px;
+	background-position: 0 -1200px;
 }
 
 a.btn-big.black:active .left {
-	background-position: -88px -95px;
+	background-position: -132px -95px;
 }
 
 a.btn-big.black:active .right {
-	background-position: -110px -95px;
+	background-position: -154px -95px;
 }
 
 a.btn-big.black:active .label {
-	background-position: 0 -926px;
+	background-position: 0 -1248px;
 }
 
+/* Red Button */
+
+a.btn-big.red .left {
+    background-position: 0 0;
+}
+
+a.btn-big.red .right {
+    background-position: -22px 0;
+}
+
+a.btn-big.red .label {
+    background-position: 0 -727px;
+    text-shadow: #41770b 0 1px 3px;
+}
+
+a.btn-big.red:hover .left {
+    background-position: 0 -47px;
+}
+
+a.btn-big.red:hover .right {
+    background-position: -22px -47px;
+}
+
+a.btn-big.red:hover .label {
+    background-position: 0 -774px;
+    text-shadow: #41770b 0 1px 3px;
+}
+
+a.btn-big.red:active .left {
+    background-position: 0 -95px;
+}
+
+a.btn-big.red:active .right {
+    background-position: -22px -95px;
+}
+
+a.btn-big.red:active .label {
+    background-position: 0 -822px;
+    text-shadow: #41770b 0 1px 3px;
+}
 
 /* Tiny Buttons */
 
@@ -349,121 +432,160 @@ a.btn-tiny .right {
 /* Green Button */
 
 a.btn-tiny.green .left {
-	background-position: -240px 0;
+	background-position: -330px 0;
 }
 
 a.btn-tiny.green .right {
-	background-position: -246px 0;
+	background-position: -336px 0;
 }
 
 a.btn-tiny.green .label {
-	background-position: 0 -80px;
+	background-position: 0 -160px;
 	text-shadow: #41770b 0 1px 3px;
 }
 
 a.btn-tiny.green:hover .left {
-	background-position: -240px -27px;
+	background-position: -330px -27px;
 }
 
 a.btn-tiny.green:hover .right {
-	background-position: -246px -27px;
+	background-position: -336px -27px;
 }
 
 a.btn-tiny.green:hover .label {
-	background-position: 0 -107px;
+	background-position: 0 -187px;
 }
 
 a.btn-tiny.green:active .left {
-	background-position: -240px -54px;
+	background-position: -330px -54px;
 }
 
 a.btn-tiny.green:active .right {
-	background-position: -246px -54px;
+	background-position: -336px -54px;
 }
 
 a.btn-tiny.green:active .label {
-	background-position: 0 -134px;
+	background-position: 0 -214px;
 }
 
 /* Blue Button */
 
 a.btn-tiny.blue .left {
-	background-position: -228px 0;
+	background-position: -318px 0;
 }
 
 a.btn-tiny.blue .right {
-	background-position: -234px 0;
+	background-position: -322px 0;
 }
 
 a.btn-tiny.blue .label {
-	background-position: 0 0;
+	background-position: 0 -80px;
 	text-shadow: #3e88ce 0 1px 3px;
 }
 
 a.btn-tiny.blue:hover .left {
-	background-position: -228px -27px;
+	background-position: -318px -27px;
 }
 
 a.btn-tiny.blue:hover .right {
-	background-position: -234px -27px;
+	background-position: -322px -27px;
 }
 
 a.btn-tiny.blue:hover .label {
-	background-position: 0 -27px;
+	background-position: 0 -107px;
 }
 
 a.btn-tiny.blue:active .left {
-	background-position: -228px -54px;
+	background-position: -318px -54px;
 }
 
 a.btn-tiny.blue:active .right {
-	background-position: -234px -54px;
+	background-position: -322px -54px;
 }
 
 a.btn-tiny.blue:active .label {
-	background-position: 0 -54px;
+	background-position: 0 -134px;
 }
 
 /* Black Button */
 
 a.btn-tiny.black .left {
-	background-position: -252px 0;
+	background-position: -340px 0;
 }
 
 a.btn-tiny.black .right {
-	background-position: -258px 0;
+	background-position: -346px 0;
 }
 
 a.btn-tiny.black .label {
-	background-position: 0 -160px;
+	background-position: 0 -240px;
 	color: #fff !important;
 	text-shadow: #454545 0 1px 3px;
 }
 
 a.btn-tiny.black:hover .left {
-	background-position: -252px -27px;
+	background-position: -340px -27px;
 }
 
 a.btn-tiny.black:hover .right {
-	background-position: -258px -27px;
+	background-position: -346px -27px;
 }
 
 a.btn-tiny.black:hover .label {
-	background-position: 0 -187px;
+	background-position: 0 -267px;
 }
 
 a.btn-tiny.black:active .left {
-	background-position: -252px -54px;
+	background-position: -340px -53px;
 }
 
 a.btn-tiny.black:active .right {
-	background-position: -258px -54px;
+	background-position: -346px -53px;
 }
 
 a.btn-tiny.black:active .label {
-	background-position: 0 -214px;
+	background-position: 0 -293px;
 }
 
+/* Red Button */
+
+a.btn-tiny.red .left {
+    background-position: -303px 0;
+}
+
+a.btn-tiny.red .right {
+    background-position: -309px 0;
+}
+
+a.btn-tiny.red .label {
+    background-position: 0 -0px;
+    color: #fff !important;
+    text-shadow: #454545 0 1px 3px;
+}
+
+a.btn-tiny.red:hover .left {
+    background-position: -303px -27px;
+}
+
+a.btn-tiny.red:hover .right {
+    background-position: -309px -27px;
+}
+
+a.btn-tiny.red:hover .label {
+    background-position: 0 -27px;
+}
+
+a.btn-tiny.red:active .left {
+    background-position: -303px -54px;
+}
+
+a.btn-tiny.red:active .right {
+    background-position: -309px -54px;
+}
+
+a.btn-tiny.red:active .label {
+    background-position: 0 -54px;
+}
 /* Buttons Symbols */
 
 .btn-symbol {

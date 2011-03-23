@@ -66,8 +66,8 @@ $endif$
       </div>
       <div id="signStepsMenuEmptyStep">
             $if(contract)$
-             <div class="signStepsBodySave" style="float:right;padding-right:19px;font-weight:bold;font-size:11px">
-                <small><a class="submit" form=".stepForm" rel="template" >SPARA SOM MALL</a></small>
+             <div class="signStepsBodySave" style="float:right;padding-right:19px;font-size:11px">
+                <small><a class="submit" form=".stepForm" rel="template" style="color:#007CAC">SPARA SOM MALL</a></small>
              </div>
             $endif$
       </div>
@@ -209,8 +209,8 @@ $endif$
                   <span>
                     <input style="position:relative;top:2px" 
                            type="checkbox" 
-                           class="addremovecheckbox
-                                  flashOnOn" 
+                           class="addremovecheckbox flashOnOn" 
+                           flashtype="red"
                            rel="#daystosignbox"
                            location="#datetosigncontainer"
                            oldlocation="#hiddenttimestuffbox"
@@ -219,7 +219,7 @@ $endif$
                            id="daystosigncheckbox" />
                     <span class="hidden flashMessage">Varning: Om du väljer ett förfallodatum kan du inte återkalla inbjudan innan datumet förfallit. Detta regleras av avtalslagen.</span>
                     <label for="daystosigncheckbox">Aktivera förfallodatum</label>
-                    <div id="datetosigncontainer" style="padding-left:15px">  </div>
+                    <div id="datetosigncontainer" style="padding-left:20px">  </div>
                   </span>
                 </p>
                 
@@ -246,7 +246,6 @@ $endif$
         <div class="border"></div>   
         <div id="signStepsBodyRight" class="step3">
           $if(contract)$
-          <input type="button" class="submit btn-blue center" id="signinvite" rel="#dialog-confirm-signinvite" value="SkrivaPå" name="final" />
           $endif$
         
           <!-- 015 new -->
@@ -270,10 +269,31 @@ $endif$
                 
           </div>
           $if(contract)$
-            <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite" name="final"  class="new-btn-small green2 center">
-              <p>Skicka </p> 
+           <div>
+            <input style="position:relative;top:2px" 
+                           type="checkbox" 
+                           class="switchercheckbox" 
+                           on=".sendbutton"
+                           off=".signbutton"
+                           autocomplete="off" /> Underteckna sist
+            </div>
+           
+            <div class="buttons">
+            <div class="sendbutton">
+            <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"  class="btn-small green center">
+               <div class="left"></div>
+               <div class="label"><p>Skicka </p></div> 
+               <div class="right"></div>
             </a>
-
+            </div>
+            <div class="signbutton">
+               <a type="button"  id="signinvite" rel="#dialog-confirm-signinvite" class="btn-big blue center" style="float:none">
+               <div class="left"></div>
+               <div class="label"><p>SkrivaPå</p></div> 
+               <div class="right"></div>
+              </a>
+            </div>
+            </div>
           $elseif(template)$
             <a type="submit" name="save" class="submit new-btn-small green2 center"> 
               <p>Spara mall</p> 

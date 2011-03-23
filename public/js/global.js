@@ -230,7 +230,7 @@ function initFileInputs(){
     upload.MultiFile({
       list: upload.attr("rel"),
       onFileAppend: function() { 
-        displayLoadingOverlay("Uploading . . .");
+        displayLoadingOverlay("Laddar in dokumentet ...");
         if (upload.hasClass("submitOnUpload")) {
           form.submit();
         }
@@ -497,9 +497,10 @@ safeReady(function() {
   });
   
   $(".flashOnOn").change(function(){
+    var ftype = $(this).attr("flashtype");  
     if($(this).val() == "off") {
       $(".flashMessage", $(this).parent()).each(function(){
-        addFlashMessage($(this).html(),$(this).attr("flashtype"));
+        addFlashMessage($(this).html(),ftype);
       });
     }
   });
@@ -528,6 +529,25 @@ safeReady(function() {
     } 
   });    
 });
+
+safeReady(function() {
+  $(".switchercheckbox").change(function(){
+    var on = $($(this).attr("on"));
+    var off = $($(this).attr("off"));
+    if($(this).val() == "off") {  
+        on.hide();
+        off.show();
+        $(this).val("on"); 
+    } 
+    else {
+        off.hide();
+        on.show();
+        $(this).val("off");
+    }    
+    return true;
+  }).each(function(){ $(this).change()});    
+});
+
 safeReady(function() {    
   $(".datetodaystip").each(function() {
     var curr = $(this);
@@ -543,7 +563,7 @@ safeReady(function() {
         var difference_ms = Math.abs(date_ms - basictime);            
         var dist = Math.floor(difference_ms/ONE_DAY) + 1;
         daysinput.val(dist);
-        curr.text("("+curr.data("dateinput").getValue('dd-mm-yy')+")"); 
+        $(".datehere",curr).text("("+curr.data("dateinput").getValue('dd-mm-yy')+")"); 
       },
       min:  new Date()
     });
