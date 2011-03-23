@@ -193,7 +193,15 @@ $endif$
 
                 </ul>
                 <div class="signStepsButton" id="signStepsNextButton" >
-                  <a href="#nextStep" id="nextstep" class="new-btn-small green2 center"><p>Nästa steg</p></a>  
+                  <a href="#nextStep" id="nextstep" class="btn-small green center" style="display:inline-block">
+                    <div class="left"></div>
+                    <div class="label">
+                        <p style="display:inline-block;text-align:left;width:80px;">Nästa steg</p>
+                        <span style="position: relative; top: 3px; right: 0px;" class="btn-symbol green arrow-left"></span>
+                    </div>
+                    <div class="right"></div>
+                
+                  </a>  
                 </div>
               </div>
             </div>
@@ -271,10 +279,10 @@ $endif$
           $if(contract)$
            <div style="padding-left:19px;padding-top:13px;"> 
             <div style="padding-bottom:10px">
-            <input style="position:relative;top:2px" type="checkbox" class="switchercheckbox" on=".sendbutton" off=".signbutton" autocomplete="off" /> 
+            <input style="position:relative;top:2px" type="checkbox" class="switchercheckbox sendcheckbox" on=".sendbutton" off=".signbutton" autocomplete="off" value="off" /> 
             <label style="margin-left:3px;">Underteckna sist </label> 
             </div>
-            <div class="sendbutton">
+            <div class="sendbutton" style="display:none">
             <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"  class="btn-big green center">
                <div class="left"></div>
                <div class="label" style="width:120px"><p style="width:80px;display:inline-block;text-align:left;">Skicka </p>
@@ -282,7 +290,7 @@ $endif$
                <div class="right"></div>
             </a>
             </div>
-            <div class="signbutton" style="display:none">
+            <div class="signbutton">
                <a type="button"  id="signinvite" rel="#dialog-confirm-signinvite" class="btn-big blue center" style="float:none">
                <div class="left"></div>
                <div class="label" style="width:120px">

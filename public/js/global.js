@@ -542,16 +542,19 @@ safeReady(function() {
     var on = $($(this).attr("on"));
     var off = $($(this).attr("off"));
     if($(this).val() == "off") {  
-        $(this).val("on"); 
         off.hide();
         on.show();
+        $(this).val("on"); 
+        this.checked = true;
+    
     } 
     else {
         on.hide();
         off.show();
         $(this).val("off");
+        this.checked = false;
     }    
-    return true;
+    return false;
   })
 });
 
@@ -627,6 +630,18 @@ safeReady(function() {
   $(window).resize();
 });
 
+function deactivateSigninvite(){
+    var checkBox = $(".sendcheckbox");
+    if (checkBox.val()=="off")
+    { 
+       checkBox.change();
+       checkBox.attr("DISABLED","");
+    }   
+   }
+function activateSignInvite(){
+    var checkBox = $(".sendcheckbox");
+    checkBox.removeAttr("DISABLED");
+}
 function showProperSignButtons() {
   var sigfields = $(".dragfield").filter(function() {
     var field = $(this);
@@ -641,11 +656,11 @@ function showProperSignButtons() {
 
   if(sigfields.size() > 0) {
     // we're awaiting author mode
-    $("#signinvite").addClass("deactivated");
+    deactivateSigninvite(); 
   } else if($("#authorsignatoryradio").attr("checked")) {
-    $("#signinvite").removeClass("deactivated");
+    activateSignInvite();
   } else {
-    $("#signinvite").addClass("deactivated");
+    deactivateSigninvite();
   }
 
   if($("#authorsecretaryradio").attr("checked")) {
