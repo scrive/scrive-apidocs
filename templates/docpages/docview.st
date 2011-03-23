@@ -491,11 +491,11 @@ pageDocumentForAuthorHelpersLocalDialogs=
       <div class="modal-footer">
         <input type="hidden" name="sign" value="automatic" />
         <a  class="close cancel">Avbryt</a>
-        <a href="#" class="btn-small green float-right submiter signhidden">
+        <a href="#" class="btn-big blue float-right submiter signhidden">
           <div class="left"></div>
           <div class="label">
-            <p>Underteckna</p>
-            <div class="btn-symbol green arrow-left"></div></div>
+            <span>SkrivaPå</span>
+          </div>
           <div class="right"></div>
         </a>
         <span class="eleghidden" style="display: none;">
@@ -601,10 +601,13 @@ pageDocumentForAuthorHelpersLocalDialogs=
   </form>  
 
   <div class="hidden" id="hiddenttimestuffbox">
-    <div id="daystosignbox">Undertecknas inom (dagar)
-      <br/>
-      <input type="text" id="daystosign" name="daystosign" value="$documentdaystosignboxvalue$" maxlength="2" size="2" autocomplete="off" />
-      <small> <a  class="datetodaystip" rel="#daystosign"> </a> </small>
+    <div id="daystosignbox">
+    <span>
+    Undertecknas inom 
+    <input style="font-size:11px;text-align:center;" type="text" id="daystosign" name="daystosign" value="$documentdaystosignboxvalue$" maxlength="2" size="2" autocomplete="off" /> 
+    dagar
+    </span>
+    <div  class="datetodaystip signStepsBodyCalendar" rel="#daystosign"> </div> 
     </div>
   </div>
 
