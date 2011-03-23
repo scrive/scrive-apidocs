@@ -2,36 +2,33 @@
 
 module Seal where
 import PdfModel
-import System.Environment
-import Data.Maybe
-import Data.Time.Clock
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import Control.Monad.State.Strict
 import qualified Data.Map as Map
-import qualified Data.Char as Char
 import Data.List
 import Data.Char
 import Graphics.PDF.Text
-import Debug.Trace
 import Graphics.PDF
 import SealSpec
 
-winAnsiPostScriptEncode text = concatMap charEncode text
+winAnsiPostScriptEncode :: String -> String
+winAnsiPostScriptEncode text' = concatMap charEncode text'
     where
       charEncode '(' = "\\("
       charEncode ')' = "\\)"
       charEncode x = [unicodeToWinAnsi x]
 
+sealFileName :: String
 sealFileName = "files/seal3.pdf"
 
 listPageRefIDSFromPages :: Document -> RefID -> [RefID]
-listPageRefIDSFromPages document pagesrefid =
+listPageRefIDSFromPages document' pagesrefid =
     let
-       Just (Indir (Dict pages) _) = PdfModel.lookup pagesrefid document
+       Just (Indir (Dict pages) _) = PdfModel.lookup pagesrefid document'
        unKids (Ref r) = r
        list = case Prelude.lookup (BS.pack "Kids") pages of
-                Just (Array kids) -> concatMap (listPageRefIDSFromPages document . unKids) kids
+                Just (Array kids) -> concatMap (listPageRefIDSFromPages document' . unKids) kids
                 Nothing -> [pagesrefid]
     in list
 
@@ -41,34 +38,34 @@ addPageToDocument (Dict newpagevalue) = do
     document <- get
     let
         firstBody = head (documentBodies document)
-        trailer = bodyTrailer firstBody
-        Just (Ref root) = Prelude.lookup (BS.pack "Root") trailer
+        trailer' = bodyTrailer firstBody
+        Just (Ref root) = Prelude.lookup (BS.pack "Root") trailer'
         Just (Indir (Dict catalog) _) = PdfModel.lookup root document
         Just (Ref pagesrefid) = Prelude.lookup (BS.pack "Pages") catalog
         Just (Indir (Dict pages) _) = PdfModel.lookup pagesrefid document
-        unKids (Ref r) = r
+--      unKids (Ref r) = r
         newkids = case Prelude.lookup (BS.pack "Kids") pages of
                 Just (Array kids) -> Array (kids ++ [Ref newpageid])
                 Nothing -> error "this never happens"
         newcount = case Prelude.lookup (BS.pack "Count") pages of
                 Just (Number count) -> count + 1
                 Nothing -> error "this never happens either"
-        skipkeys list = filter (\(a,b) -> a/=BS.pack "Count" && a/=BS.pack "Kids") list
-        skipkeys2 list = filter (\(a,b) -> a/=BS.pack "Parent") list
+        skipkeys list = filter (\(a,_) -> a/=BS.pack "Count" && a/=BS.pack "Kids") list
+        skipkeys2 list = filter (\(a,_) -> a/=BS.pack "Parent") list
         newpagesindir = Indir (Dict ([(BS.pack "Count", Number newcount),(BS.pack "Kids",newkids)] ++ skipkeys pages)) Nothing
     setIndir pagesrefid newpagesindir
     newpageid <- addObject (Dict (skipkeys2 newpagevalue ++ [(BS.pack "Parent", Ref pagesrefid)]))
   return newpageid
 
 listPageRefIDs :: Document -> [RefID]
-listPageRefIDs document =
+listPageRefIDs document' =
     let
-        firstBody = head (documentBodies document)
-        trailer = bodyTrailer firstBody
-        Just (Ref root) = Prelude.lookup (BS.pack "Root") trailer
-        Just (Indir (Dict catalog) _) = PdfModel.lookup root document
+        firstBody = head (documentBodies document')
+        trailer' = bodyTrailer firstBody
+        Just (Ref root) = Prelude.lookup (BS.pack "Root") trailer'
+        Just (Indir (Dict catalog) _) = PdfModel.lookup root document'
         Just (Ref pagesrefid) = Prelude.lookup (BS.pack "Pages") catalog
-    in listPageRefIDSFromPages document pagesrefid
+    in listPageRefIDSFromPages document' pagesrefid
 
 getResDict :: Document -> RefID -> DictData
 getResDict doc pageid =
@@ -77,14 +74,14 @@ getResDict doc pageid =
         Just (Indir (Dict pagedict) _) = PdfModel.lookup pageid doc
         resource = case Prelude.lookup (BS.pack "Resources") pagedict of
           Nothing -> []
-          Just (Dict value) -> value
-          Just (Ref refid) -> case PdfModel.lookup refid doc of
-                                Just (Indir (Dict value) _) -> value
+          Just (Dict value') -> value'
+          Just (Ref refid') -> case PdfModel.lookup refid' doc of
+                                Just (Indir (Dict value') _) -> value'
                                 _ -> error "2"
     in resource
         
 mergeResourceBranch :: Document -> DictData -> DictData -> DictData
-mergeResourceBranch document source1 source2 = source1 ++ source2
+mergeResourceBranch _document source1 source2 = source1 ++ source2
 {-
     map merge source1
     where
@@ -100,41 +97,41 @@ mergeResourceBranch document source1 source2 = source1 ++ source2
 -}
 
 mergeResources :: Document -> DictData -> DictData -> DictData
-mergeResources document source1 source2 =
+mergeResources document' source1 source2 =
     Map.toList map3
     where
       map1 = Map.fromList source1
       map2 = Map.fromList source2
       map3 = Map.unionWith unite map1 map2
-      unite (Ref refid) x = 
-          case PdfModel.lookup refid document of
-            Just (Indir value _) -> unite value x
+      unite (Ref refid') x = 
+          case PdfModel.lookup refid' document' of
+            Just (Indir value' _) -> unite value' x
             _ -> x
-      unite x (Ref refid) = 
-          case PdfModel.lookup refid document of
-            Just (Indir value _) -> unite x value
+      unite x (Ref refid') = 
+          case PdfModel.lookup refid' document' of
+            Just (Indir value' _) -> unite x value'
             _ -> x
       unite (Dict d1) (Dict d2) =
-          Dict (mergeResourceBranch document d1 d2)
-      unite x y = x
+          Dict (mergeResourceBranch document' d1 d2)
+      unite x _ = x
 
 placeSealOnPageRefID :: RefID -> RefID -> (RefID,String) -> Document -> Document
-placeSealOnPageRefID sealrefid sealmarkerformrefid (pagerefid,sealtext) document = 
+placeSealOnPageRefID sealrefid sealmarkerformrefid (pagerefid,sealtext) document' = 
     let
         Just (Indir (Dict pagedict) pagestrem) = 
-            PdfModel.lookup pagerefid document
+            PdfModel.lookup pagerefid document'
         Just contentvalue = {- trace (show pagedict) $ -} Prelude.lookup (BS.pack "Contents") pagedict
         contentlist = case contentvalue of
                         Ref{} -> [contentvalue]
                         Array arr -> arr
 
-        ([q,qQ,rr], docx) = flip runState document $ do
-            q <- addStream (Dict []) $ BSL.pack "q "
-            qQ <- addStream (Dict []) $ BSL.pack (" Q " ++ rotationtext ++ " ")
-            rr <- addStream (Dict []) $ BSL.pack (sealtext)
-            return [q,qQ,rr]
+        ([q,qQ,rr], docx) = flip runState document' $ do
+            q' <- addStream (Dict []) $ BSL.pack "q "
+            qQ' <- addStream (Dict []) $ BSL.pack (" Q " ++ rotationtext ++ " ")
+            rr' <- addStream (Dict []) $ BSL.pack (sealtext)
+            return [q',qQ',rr']
 
-        sealpagecontents = contentsValueListFromPageID document sealrefid
+        sealpagecontents = contentsValueListFromPageID document' sealrefid
 
         rotatekey = Prelude.lookup (BS.pack "Rotate") pagedict
 
@@ -144,12 +141,12 @@ placeSealOnPageRefID sealrefid sealmarkerformrefid (pagerefid,sealtext) document
                          Just (Number 270) -> "0 -1 1 0 0 842 cm"
                          _ -> ""
 
-        sealresdict = getResDict document sealrefid
-        pageresdict = getResDict document pagerefid
-        newresdictcont1 = mergeResources document sealresdict pageresdict
+        sealresdict = getResDict document' sealrefid
+        pageresdict = getResDict document' pagerefid
+        newresdictcont1 = mergeResources document' sealresdict pageresdict
         newxobjectdict = case Prelude.lookup (BS.pack "XObject") newresdictcont1 of
                            Just (Dict w) -> Dict (w ++ [(BS.pack "SealMarkerForm",Ref sealmarkerformrefid)]) 
-                           Just (Ref r) -> case PdfModel.lookup r document of
+                           Just (Ref r) -> case PdfModel.lookup r document' of
                                              Just (Indir (Dict w) _) -> 
                                                    Dict (w ++ [(BS.pack "SealMarkerForm",Ref sealmarkerformrefid)])
                                              x -> error (show x)
@@ -169,38 +166,37 @@ placeSealOnPageRefID sealrefid sealmarkerformrefid (pagerefid,sealtext) document
         newdocument = setIndirF pagerefid newpage docx
     in newdocument
 
+fieldstext :: [Field] -> String
 fieldstext fields = concatMap fieldtext fields
   where
     fieldtext Field{ SealSpec.value = val
                    , x
                    , y
-                   , w
-                   , h
                    } = "q 1 0 0 1 " ++ show x ++ " " ++ show y ++ " cm " ++
                        "BT /SkrivaPaHelvetica 10 Tf (" ++ winAnsiPostScriptEncode val ++ ") Tj ET Q "
 
 
 placeSeals :: [Field] -> RefID -> String -> RefID -> String -> RefID -> State Document ()
-placeSeals fields sealrefid sealtext paginrefid pagintext sealmarkerformrefid = do
+placeSeals fields sealrefid sealtext paginrefid pagintext' sealmarkerformrefid = do
     pages <- gets listPageRefIDs
     let pagevalue = page_dict (Array []) (Array []) `ext` [entryna "MediaBox" [0,0,595,842]]
-    -- should optimize pagintext into one stream
+    -- should optimize pagintext' into one stream
     let findFields pageno = filter (\x -> page x == pageno) fields
     let pagintext1 pageno = fieldstext (findFields pageno)++ 
-                     pagintext ++ 
+                     pagintext' ++ 
                      " q 0.2 0 0 0.2 " ++ show ((595 - 18) / 2) ++ " 14 cm /SealMarkerForm Do Q "
 
-    modify $ \document -> foldr (placeSealOnPageRefID paginrefid sealmarkerformrefid) document 
+    modify $ \document' -> foldr (placeSealOnPageRefID paginrefid sealmarkerformrefid) document'
                           [(page,pagintext1 pageno) | (page,pageno) <- zip pages [1..]]
-    lastpage <- addPageToDocument pagevalue
-    modify $ \document -> foldr (placeSealOnPageRefID sealrefid sealmarkerformrefid) document [(lastpage,sealtext)]
+    lastpage' <- addPageToDocument pagevalue
+    modify $ \document' -> foldr (placeSealOnPageRefID sealrefid sealmarkerformrefid) document' [(lastpage',sealtext)]
 
 
 contentsValueListFromPageID :: Document -> RefID -> [RefID]
-contentsValueListFromPageID document pagerefid = 
+contentsValueListFromPageID document' pagerefid = 
     let
-        Just (Indir (Dict pagedict) pagestrem) = 
-            PdfModel.lookup pagerefid document
+        Just (Indir (Dict pagedict) _) = 
+            PdfModel.lookup pagerefid document'
         Just contentvalue = Prelude.lookup (BS.pack "Contents") pagedict
         contentlist = case contentvalue of
                         Ref r -> [r]
@@ -208,6 +204,7 @@ contentsValueListFromPageID document pagerefid =
         unRefID (Ref r) = r
     in contentlist
 
+pagintext :: SealSpec -> String
 pagintext (SealSpec{documentNumber,initials}) = 
  let
     font = PDFFont Helvetica 8
@@ -235,6 +232,7 @@ pagintext (SealSpec{documentNumber,initials}) =
  show (sioffset+siwidth+10) ++ " 18 m " ++ show (595 - 60) ++ " 18 l S " ++
  "Q "
 
+signatorybox :: Person -> String
 signatorybox (Person {fullname,company,number,email}) = 
  let
     orgnrtext = if number=="" then "" else "Org.nr. " ++ number
@@ -261,26 +259,28 @@ signatorybox (Person {fullname,company,number,email}) =
  -- "f " ++
  "1 0 0 1 0 -42 cm "
 
-makeManyLines font width text = result
+makeManyLines :: PDFFont -> PDFFloat -> String -> [String]
+makeManyLines font width text' = result
     where
     textSplit :: String -> [String]
     textSplit [] = []
     -- textSplit [x] = [[x]]
-    textSplit (text) = let (b,a1) = break (==' ') text 
-                           (s,a) = break (/=' ') a1
-                       in (b ++ s) : textSplit a  
+    textSplit (text'') = let (b,a1) = break (==' ') text''
+                             (s,a) = break (/=' ') a1
+                         in (b ++ s) : textSplit a  
     textWithLength :: String -> (PDFFloat,String)
-    textWithLength text = (textWidth font (toPDFString text),text)
-    textSplitWithLength = map textWithLength (textSplit text)
+    textWithLength text'' = (textWidth font (toPDFString text''),text'')
+    textSplitWithLength = map textWithLength (textSplit text')
     takeWhileLength :: PDFFloat -> String -> [(PDFFloat,String)] -> [String]
-    takeWhileLength len text [] = [text]
-    takeWhileLength len text all@((l,t):rest)
-                    | len + l < width = takeWhileLength (len + l) (text ++ t) rest
-                    | otherwise = text : takeWhileLength 0 "" all
-    textOutLine text = "[(" ++ winAnsiPostScriptEncode text ++ ")]TJ T* "
+    takeWhileLength _   text'' [] = [text'']
+    takeWhileLength len text'' all'@((l,t):rest)
+                    | len + l < width = takeWhileLength (len + l) (text'' ++ t) rest
+                    | otherwise = text'' : takeWhileLength 0 "" all'
+    textOutLine text'' = "[(" ++ winAnsiPostScriptEncode text'' ++ ")]TJ T* "
     textLines = takeWhileLength 0 "" textSplitWithLength
     result = map textOutLine textLines 
 
+logentry :: HistEntry -> String
 logentry (HistEntry {histdate,histcomment}) = 
  let outlines = (makeManyLines (PDFFont Helvetica_Oblique 10) 300 histcomment) in
  "BT " ++
@@ -294,6 +294,7 @@ logentry (HistEntry {histdate,histcomment}) =
  "ET 1 0 0 1 0 " ++ show ((-8) - length outlines * 12) ++ " cm "
 
 
+lastpage :: SealSpec -> String
 lastpage (SealSpec {documentNumber,persons,secretaries,history,hostpart}) = 
  "0.081 0.058 0.068 0 k " ++
  "/GS0 gs " ++
@@ -380,14 +381,15 @@ lastpage (SealSpec {documentNumber,persons,secretaries,history,hostpart}) =
  "(Sida 1 av 1)Tj " ++
  "ET " ++ rightcornerseal2 
 
+rightcornerseal2 :: String
 rightcornerseal2 = "q 1 0 0 1 491.839 14.37 cm /SealMarkerForm Do Q" 
 
 pageToForm :: RefID -> State Document RefID
-pageToForm refid = do
-    Just (Indir (Dict page) _) <- gets $ PdfModel.lookup refid
+pageToForm refid' = do
+    Just (Indir (Dict page) _) <- gets $ PdfModel.lookup refid'
     let contentsrefid = case Prelude.lookup (BS.pack "Contents") page of
-                          Just (Array [Ref contentsrefid]) -> contentsrefid
-                          Just (Ref contentsrefid) -> contentsrefid
+                          Just (Array [Ref contentsrefid']) -> contentsrefid'
+                          Just (Ref contentsrefid') -> contentsrefid'
     Just (Indir (Dict contentsdict) (Just streamdata)) <- gets $ PdfModel.lookup contentsrefid
     
     let changekeys (k,v)
@@ -395,16 +397,15 @@ pageToForm refid = do
             | k==BS.pack "Group" = [(k,v)]
             | k==BS.pack "Resources" = [(k,v)]
             | True = []
-    let value = concatMap changekeys page ++ [entry "Subtype" "Form"] ++ contentsdict
-    addStream (Dict value) streamdata
+    let value' = concatMap changekeys page ++ [entry "Subtype" "Form"] ++ contentsdict
+    addStream (Dict value') streamdata
 
 
 
+process :: SealSpec -> IO ()
 process (sealSpec@SealSpec 
     { input
     , output
-    , documentNumber
-    , persons
     , fields 
     }) = do
     Just doc <- PdfModel.parseFile input
@@ -427,8 +428,10 @@ process (sealSpec@SealSpec
 
 -- this is cheating
 -- FIXME: font encoding
+winAnsiChars :: String
 winAnsiChars = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~?€\201‚ƒ„…†‡ˆ‰Š‹Œ\215Ž\217\220‘’“”•–—˜™š›œ\235žŸ ¡¢£¤¥¦§¨©ª«¬?®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ"
 
+unicodeToWinAnsi :: Char -> Char
 unicodeToWinAnsi x = 
     case findIndex (==x) winAnsiChars of
       Just i -> chr (i + 33)

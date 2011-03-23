@@ -5,46 +5,31 @@ import Prelude hiding (String)
 import qualified Prelude as P
 import Control.Monad.State.Strict
 -- import "mtl" Control.Monad.ST
-import Data.STRef
-import Data.Array.ST
 import System.IO
-import Control.Monad
 import Control.Exception
 import Numeric
 import Data.Bits
 import Data.Word
-import Data.List
-import Data.IORef
+import Data.List(find)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as  BSL
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy.Char8 as BSLC
 import qualified Data.ByteString.Internal as BSB
 import qualified Data.IntMap as IntMap
-import qualified Data.Set as Set
-import qualified Data.Map as Map
 import Data.Maybe
 import Matrix
 import qualified ReadP as P
-import qualified Data.IntSet as IntSet
-import Control.Parallel.Strategies
 import qualified Data.Char as Char
-import qualified Prelude
 
 import System.IO.MMap
 import qualified Data.Binary.Builder as Bin
 import Data.Monoid
-import Text.Printf
-import Data.Ratio
 import Control.Monad.Writer.Class
-import qualified Control.Monad.Writer.Lazy as Lazy
 import qualified Control.Monad.Writer.Strict as Strict
-import Control.Monad.State.Class
 import qualified Control.Monad.State.Strict as Strict
-import qualified Control.Monad.State.Lazy as Lazy
 -- import Debug.Trace
 
-import GHC.Num
 
 
 type MyReadP a = P.ReadP a
@@ -145,12 +130,16 @@ instance (IsValue a) => IsValue ([(BS.ByteString,Value)] -> a) where
 valuen :: Real x => x -> Value
 valuen = Number . realToFrac
 
+array :: IsValue a => [a] -> Value
 array x = Array . map value $ x
 
+unpsname :: Value -> BS.ByteString
 unpsname (Name x ) = x
 
+string :: IsName a => a -> Value
 string x = String False . unpsname . name $ x
 
+hexstring :: IsName a => a -> Value
 hexstring x = String True . unpsname . name $ x
 
 class IsName a where
@@ -240,6 +229,7 @@ floatToDigits2 x =
 
 
 
+ss :: [Int] -> Int -> [Char]
 ss [0] 0 = "0"
 ss xs1 n
     | n<=0 = '.' : (take (-n) zeros ++ xs)
@@ -251,18 +241,20 @@ ss xs1 n
     where xs = map (\x -> Char.chr (x+Char.ord '0')) xs1
           zeros = repeat '0'
 
+showFFloat2 :: Double -> [Char]
 showFFloat2 x = result
-    where (digits,exp) = floatToDigits2 x1
+    where (digits,exp') = floatToDigits2 x1
           (x1,result) = if x < 0
-                           then (-x,'-' : ss digits exp)
-                           else (x, ss digits exp)
+                           then (-x,'-' : ss digits exp')
+                           else (x, ss digits exp')
 
 
 instance Binarize Value where
     --binarize value = Strict.evalState (Strict.execWriterT (binarizeValue value)) False -- 62s
     -- binarize value = Lazy.execWriter (Strict.evalStateT (binarizeValue value) False) -- 63s
-    binarize value = Strict.execWriter (Strict.evalStateT (binarizeValue value) False) -- 64s
+    binarize value' = Strict.execWriter (Strict.evalStateT (binarizeValue value') False) -- 64s
 
+maybeSpace :: (MonadState Bool m, MonadWriter Bin.Builder m) => m ()
 maybeSpace = do
     s <- get
     if s
@@ -270,6 +262,7 @@ maybeSpace = do
        else return ()
 
 --binarizeValue :: Value -> Control.Monad.Writer.Lazy.Writer Bin.Buffer
+binarizeValue :: (MonadWriter Bin.Builder m, MonadState Bool m) => Value -> m ()
 binarizeValue (Boolean False) = do
     maybeSpace
     tell $ bin_builder_string "false"
@@ -322,39 +315,54 @@ binarizeValue (Operator x) = do
     put True
 
 
+bin_builder_word8 :: Word8 -> Bin.Builder
 bin_builder_word8 x = Bin.singleton x
+
+bin_builder_char :: Char -> Bin.Builder
 bin_builder_char x = bin_builder_word8 (BSB.c2w x)
 
+bin_builder_word8_escape :: Word8 -> Bin.Builder
 bin_builder_word8_escape x | x<32 || isdelim x = mconcat [ Bin.singleton (BSB.c2w '\\')
                                                   , Bin.singleton (((x `div` 64) `mod` 8)  + 48)
                                                   , Bin.singleton (((x `div` 8) `mod` 8) + 48)
                                                   , Bin.singleton ((x `mod` 8) + 48)
                                                   ]
                     | otherwise = Bin.singleton x
+
+bin_builder_char_escape :: Char -> Bin.Builder
 bin_builder_char_escape x = bin_builder_word8_escape (BSB.c2w x)
 
+bin_builder_string :: P.String -> Bin.Builder
 bin_builder_string x =
     mconcat (map bin_builder_char x)
+
+bin_builder_bytestring :: BS.ByteString -> Bin.Builder
 bin_builder_bytestring x =
     mconcat (map bin_builder_word8 (BS.unpack x))
 
+bin_builder_string_escape :: P.String -> Bin.Builder
 bin_builder_string_escape x =
     mconcat (map bin_builder_char_escape x)
+
+bin_builder_bytestring_escape :: BS.ByteString -> Bin.Builder
 bin_builder_bytestring_escape x =
     mconcat (map bin_builder_word8_escape (BS.unpack x))
 
-hexencode x = BS.concatMap hex x
+hexencode :: BS.ByteString -> BS.ByteString
+hexencode = BS.concatMap hex
     where hex x = BS.pack [hex1 ((x `shiftR` 4) .&. 15),hex1 (x .&. 15)]
           hex1 a | a<10 = a + 48
                  | otherwise = a + 55
 
+binarizedictcontents :: (MonadWriter Bin.Builder m, MonadState Bool m) => [(BS.ByteString, Value)] -> m ()
 binarizedictcontents [] = return ()
 binarizedictcontents ((k,v):xs)
     = do
         binarizepair (k,v)
         binarizedictcontents xs
 
-binarizepair (a,Null) = return ()
+binarizepair :: (MonadState Bool m, MonadWriter Bin.Builder m) => (BS.ByteString, Value) -> m ()
+binarizepair (_,Null) = return ()
 binarizepair (a,b) = do
     tell $ bin_builder_char '/'
     tell $ bin_builder_bytestring a
@@ -376,12 +384,16 @@ entryn :: (IsName a,Real b) => a -> b -> (BS.ByteString,Value)
 entryn a b = entry a (realToFrac b :: Double)
 
 -- entrya :: IsName a => a -> Double -> (BS.ByteString,Value)
+entrya :: (IsValue a1, IsName a) => a -> [a1] -> (BS.ByteString, Value)
 entrya a b = entry a (array b)
 
+entryna :: (Real a1, IsName a) => a -> [a1] -> (BS.ByteString, Value)
 entryna a b = entry a (arrayn b)
 
+entrys :: (IsName a1, IsName a) => a -> a1 -> (BS.ByteString, Value)
 entrys a b = entry a (string b)
 
+showpair :: (Show t) => (BS.ByteString, t) -> [Char]
 showpair (a,b) = "/" ++ BSC.unpack a ++ " " ++ show b
 
 newtype RefID = RefID Int deriving (Eq,Ord)
@@ -392,17 +404,22 @@ instance Show RefID where
 refid :: Int -> Int -> RefID
 refid a b = RefID ((a `shiftL` 8) .|. (b .&. 255))
 
+gener :: RefID -> Int
 gener (RefID a) = a .&. 255
 
+objno :: RefID -> Int
 objno (RefID a) = a `shiftR` 8
 
 
+showref :: RefID -> [Char]
 showref v = show (objno v) ++ " " ++ show k ++ " R"
     where k = if z==255 then 65535 else z
           z = gener v
 
+dict :: (IsValue t) => [(BS.ByteString, t)] -> Value
 dict x = Dict . map (\(a,b) -> (a, value b)) $ x
 
+empty_dict :: Value
 empty_dict = Dict []
 
 documentF :: BS.ByteString -> Document
@@ -420,7 +437,7 @@ upgrade :: State Document ()
 upgrade = modify upgradeF
 
 trailerF :: DictData -> Document -> Document
-trailerF v (Document ver ((Body trailer objs):bodies)) = Document ver ((Body v objs):bodies)
+trailerF v (Document ver ((Body _ objs):bodies)) = Document ver ((Body v objs):bodies)
 
 trailer :: DictData -> State Document ()
 trailer x = modify (trailerF x)
@@ -430,7 +447,7 @@ nextFreeIdF doc = refid x 0
     where
         bodies = documentBodies doc
         x = 1 + maximum (0 : map lastofbody bodies)
-        lastofbody (Body trailer m) = maybe 0 (\((key,_),_) -> key) (IntMap.maxViewWithKey m)
+        lastofbody (Body _ m) = maybe 0 (\((key,_),_) -> key) (IntMap.maxViewWithKey m)
 
 addIndir :: Indir -> State Document RefID
 addIndir object = do
@@ -440,46 +457,46 @@ addIndir object = do
     return r
 
 addIndirF :: Indir -> Document -> (Document,RefID)
-addIndirF object doc@(Document ver ((Body trailer objs):bodies)) = (ndoc,refid)
+addIndirF object doc@(Document ver ((Body trailer' objs):bodies)) = (ndoc,refid')
     where
-        refid = nextFreeIdF doc
-        value = UsedEntry (gener refid) object
-        newbody = Body trailer (IntMap.insert (objno refid) value objs)
+        refid' = nextFreeIdF doc
+        value' = UsedEntry (gener refid') object
+        newbody = Body trailer' (IntMap.insert (objno refid') value' objs)
         ndoc = (Document ver (newbody:bodies))
 
 setIndir :: RefID -> Indir -> State Document ()
-setIndir refid indir = modify (setIndirF refid indir)
+setIndir refid' indir = modify (setIndirF refid' indir)
 
 setIndirF :: RefID -> Indir -> Document -> Document
-setIndirF refid object doc@(Document ver ((Body trailer objs):bodies)) = ndoc
+setIndirF refid' object (Document ver ((Body trailer' objs):bodies)) = ndoc
     where
-        key = objno refid
-        value = UsedEntry (gener refid) object
-        newbody = Body trailer (IntMap.insert key value objs)
+        key = objno refid'
+        value' = UsedEntry (gener refid') object
+        newbody = Body trailer' (IntMap.insert key value' objs)
         ndoc = (Document ver (newbody:bodies))
 
 setObject :: RefID -> Value -> State Document ()
-setObject refid value = setIndir refid (Indir value Nothing)
+setObject refid' value' = setIndir refid' (Indir value' Nothing)
 
 addObject :: Value -> State Document RefID
 addObject text = addIndir (Indir text Nothing)
 
 addStream :: Value -> BSL.ByteString -> State Document RefID
-addStream value@(Dict dt) strm
-    | Just x <- Prelude.lookup (BSC.pack "Length") dt =
-        addIndir (Indir value (Just strm))
+addStream value'@(Dict dt) strm
+    | Just _ <- Prelude.lookup (BSC.pack "Length") dt =
+        addIndir (Indir value' (Just strm))
     | otherwise = 
         do rec s <- addIndir (Indir (Dict (entry "Length" cl:dt)) (Just strm))
                cl <- addIndir (Indir (Number 0) Nothing)
            return s
           
-addStream value strm = error "Stream must begin with a dict"
+addStream _ _ = error "Stream must begin with a dict"
 
 lookup :: RefID -> Document -> Maybe Indir
-lookup refid (Document _ bodies) = msum (map check bodies)
+lookup refid' (Document _ bodies) = msum (map check bodies)
     where
-        check (Body _ objmap) = case IntMap.lookup (objno refid) objmap of
-                          Just (UsedEntry gen indir) -> if gen==gener refid
+        check (Body _ objmap) = case IntMap.lookup (objno refid') objmap of
+                          Just (UsedEntry gen indir) -> if gen==gener refid'
                                                            then Just indir
                                                            else Nothing
                           _ -> Nothing
@@ -489,11 +506,17 @@ lookup refid (Document _ bodies) = msum (map check bodies)
 --            -> (Int,Map.Map Int (Int,Int))
 --            -> (Int,Entry)                  -- (objno,entry)
 --            -> IO () -- (Maybe (Int,(Int,Int)))   -- objno,gener,offset
-writeObject write tell (lastlength,objnooffsetmap) ((objno1,UsedEntry gener (Indir text stream))) = do
-    pos <- tell
-    -- print (pos,objno1,gener)
+writeObject :: (Monad m, Num a) =>
+               (BS.ByteString -> m ())
+               -> m a
+               -> (IntMap.IntMap a, IntMap.IntMap a)
+               -> (IntMap.Key, Entry)
+               -> m (IntMap.IntMap a, IntMap.IntMap a)
+writeObject write tell' (lastlength,objnooffsetmap) ((objno1,UsedEntry gener' (Indir text stream))) = do
+    pos <- tell'
+    -- print (pos,objno1,gener')
     -- print text
-    write (BSC.pack (show objno1 ++ " " ++ show gener ++ " obj\n"))
+    write (BSC.pack (show objno1 ++ " " ++ show gener' ++ " obj\n"))
     case text of
         Number x -> case IntMap.lookup objno1 lastlength of
                       Just v -> write (BSC.pack (show v))
@@ -504,9 +527,9 @@ writeObject write tell (lastlength,objnooffsetmap) ((objno1,UsedEntry gener (Ind
     newlastlength <- case stream of
         Just x -> do
             write $ BSC.pack "\nstream\n"
-            b <- tell
+            b <- tell'
             mapM_ write (BSL.toChunks x)
-            e <- tell
+            e <- tell'
             write $ BSC.pack "\nendstream"
             let l = (e-b)
             let Dict dictdata = text
@@ -518,7 +541,7 @@ writeObject write tell (lastlength,objnooffsetmap) ((objno1,UsedEntry gener (Ind
     let newobjnoffsetmap = IntMap.insert objno1 pos objnooffsetmap
     return (newlastlength,newobjnoffsetmap)
 
-writeObject write tell x ((objno,_)) = return x
+writeObject _ _ x ((_,_)) = return x
 
 createXRefTable :: IntMap.IntMap Int
                 -> [(Int,Entry)]
@@ -526,21 +549,22 @@ createXRefTable :: IntMap.IntMap Int
 createXRefTable offsetmap objects =
     group (map x objects)
     where
-        x (objno,(UsedEntry gener _)) = let Just v = IntMap.lookup objno offsetmap in (objno,Right (v,gener))
-        x (objno,(FreeEntry gener)) = (objno,Left (0,gener))
+        x (objno',(UsedEntry gener' _)) = let Just v = IntMap.lookup objno' offsetmap in (objno',Right (v,gener'))
+        x (objno',(FreeEntry gener')) = (objno',Left (0,gener'))
         group [] = []
-        group (xs@((objno,_):_)) = let (a,b) = break br (zip xs [objno ..]) in (objno,map (snd . fst) a) : group (map fst b)
-        br ((objno,entry),index) = index/=objno
+        group (xs@((objno',_):_)) = let (a,b) = break br (zip xs [objno' ..]) in (objno',map (snd . fst) a) : group (map fst b)
+        br ((objno',_),index) = index/=objno'
 
 
 
+binarizeXRefTable :: (Show t2, Show t1, Show t4, Show t3, Show t) => [(t, [Either (t1, t2) (t3, t4)])] -> P.String
 binarizeXRefTable table = concatMap z table
     where
         z (off,entries) = show off ++ " " ++ show (length entries) ++ " \n" ++ concatMap binarizeXRefTableEntry entries
-        binarizeXRefTableEntry (Right (a,b)) = entry a b 'n'
-        binarizeXRefTableEntry (Left (a,b)) = entry a b 'f'
-        entry a b f = last 10 ("0000000000" ++ show a) ++ " " ++ last 5 ("00000" ++ show b) ++ " " ++ [f] ++" \n"
-        last n x = drop (length x - n) x
+        binarizeXRefTableEntry (Right (a,b)) = entry' a b 'n'
+        binarizeXRefTableEntry (Left (a,b)) = entry' a b 'f'
+        entry' a b f = last' 10 ("0000000000" ++ show a) ++ " " ++ last' 5 ("00000" ++ show b) ++ " " ++ [f] ++" \n"
+        last' n x = drop (length x - n) x
 
 
 writeBody   :: (BS.ByteString -> IO ())     -- write action
@@ -548,9 +572,9 @@ writeBody   :: (BS.ByteString -> IO ())     -- write action
             -> (Int,Int)
             -> Body                         -- (objno,entry)
             -> IO (Int,Int)
-writeBody write tell (highest,prevoffset) (Body trailer objects) = do
-    (_,r) <- foldM (writeObject write tell) (IntMap.empty,IntMap.empty) (IntMap.toList objects)
-    v <- tell
+writeBody write tell' (highest,prevoffset) (Body trailer' objects) = do
+    (_,r) <- foldM (writeObject write tell') (IntMap.empty,IntMap.empty) (IntMap.toList objects)
+    v <- tell'
     write $ BSC.pack "xref\n"
 
     let x = createXRefTable r (IntMap.toList objects)
@@ -558,7 +582,7 @@ writeBody write tell (highest,prevoffset) (Body trailer objects) = do
     let Just ((k1,_),_) =  IntMap.maxViewWithKey objects
         k = (k1+1) `max` highest
     write $ BSC.pack "trailer\n"
-    let trailernosizeprev = filter (\(x,_) -> x/=BSC.pack "Size" && x/=BSC.pack "Prev") trailer
+    let trailernosizeprev = filter (\(x',_) -> x'/=BSC.pack "Size" && x'/=BSC.pack "Prev") trailer'
     let trailersize = entryn "Size" k : trailernosizeprev
     let trailerfull = if prevoffset/=0
                            then entryn "Prev" prevoffset : trailersize
@@ -568,17 +592,19 @@ writeBody write tell (highest,prevoffset) (Body trailer objects) = do
     return (k,v)
 
 
-writeDocument write tell (Document version bodies) = do
+writeDocument :: (BS.ByteString -> IO ()) -> IO Int -> Document -> IO ()
+writeDocument write tell' (Document version bodies) = do
     write $ BSC.concat [BSC.pack "%", version, BSC.pack "\n"]
-    foldM_ (writeBody write tell) (0,0) (reverse bodies)
+    foldM_ (writeBody write tell') (0,0) (reverse bodies)
 
 
 
-writeFileX file document = do
+writeFileX :: FilePath -> Document -> IO ()
+writeFileX file document' = do
     bracket (openBinaryFile file WriteMode)
             (hClose)
-            (\handle -> writeDocument (\x -> BS.hPutStr handle x >> hFlush handle) 
-                        (liftM fromIntegral $ hTell handle) document)
+            (\handle' -> writeDocument (\x -> BS.hPutStr handle' x >> hFlush handle') 
+                        (liftM fromIntegral $ hTell handle') document')
 
 importObjects :: Document -> [RefID] -> State Document [RefID]
 importObjects doc refids = do
@@ -600,7 +626,7 @@ importObjects doc refids = do
                 solve visited2 (newrefids ++ xs)
 
         both v1@(Dict a) = let
-                l = map (\(k,x) -> let (v,r) = both x in ((k,v),r)) a
+                l = map (\(k,x) -> let (v',r') = both x in ((k,v'),r')) a
                 r = concatMap snd l
                 v = if null r then v1 else Dict (map fst l)
                 in (v,r)
@@ -633,46 +659,63 @@ importObjects doc refids = do
 
 
 
+ext :: Value -> [(BS.ByteString, Value)] -> Value
 ext (Dict d) r = Dict (r ++ d)
 
+trailer_dict :: IsValue b => b -> [(BS.ByteString, Value)]
 trailer_dict catalog = [ entry "Root" catalog ]
 
+catalog_dict :: IsValue b => b -> Value
 catalog_dict pages = dict [ entry "Type" "Catalog"
                                         , entry "Pages" pages
                                         ]
 
+page_tree_item :: (IsValue b, IsValue b1) => b -> b1 -> Value
 page_tree_item typex parent = dict [ entry "Type" typex, entry "Parent" parent ]
 
+pages_dict :: (IsValue b, Real b1, IsValue a) => b -> b1 -> [a] -> Value
 pages_dict parent count kids = page_tree_item "Pages" parent `ext` [ entryn "Count" count
                                                   , entry "Kids" (array kids)]
+
+page_dict :: (IsValue b, IsValue b1) => b -> b1 -> Value
 page_dict parent contents = page_tree_item "Page" parent `ext` [ entry "Contents" contents ]
 
+standard_font_dict :: IsValue b => b -> Value
 standard_font_dict basefont = dict [ entry "Type" "Font"
                                             , entry "Subtype" "Type1"
                                             , entry "BaseFont" basefont
                                             ]
+
+function_dict :: (Real b, Real a1) => b -> [a1] -> Value
 function_dict typex domain = dict [ entryn "FunctionType" typex, entryna "Domain" domain ]
 
+function_type4_dict :: (Real a1, Real a11) => [a1] -> [a11] -> Value
 function_type4_dict domain range = function_dict 4 domain `ext` [ entryna "Range" range
                                               ]
+function_type2_dict :: (Real a1, Real a11, Real a12, Real b) => [a1] -> [a11] -> [a12] -> b -> Value
 function_type2_dict domain c0 c1 n = function_dict 2 domain `ext` [ entryna "C0" c0
                                                                   , entryna "C1" c1
                                                                   , entryn "N" n
                                                                   ]
 
+shading_dict :: (Real b, IsValue b1) => b -> b1 -> Value
 shading_dict typex colorspace = dict [ entryn "ShadingType" typex
                               , entry  "ColorSpace" colorspace
                               ]
+
+shading_type1_dict :: (IsValue b, IsValue b1, IsValue b2) => b -> b1 -> b2 -> Value
 shading_type1_dict colorspace domain function = shading_dict 1 colorspace `ext` [
                                entry "Domain" domain
                               , entry "Function" function
                               ]
 
+shading_type2_dict :: (IsValue b, Real a1, Real a11, IsValue b1) => b -> [a1] -> [a11] -> b1 -> Value
 shading_type2_dict colorspace bbox coords function = shading_dict 2 colorspace `ext` [ entryna "BBox" bbox
                               , entryna "Coords" coords
                               , entry "Function" function
                               ]
 
+shading_type3_dict :: (IsValue b, Real a1, Real a11, IsValue b1) => b -> [a1] -> [a11] -> b1 -> Value
 shading_type3_dict colorspace bbox coords function = shading_dict 3 colorspace `ext` [
                                entryna "BBox" bbox
                               , entryna "Coords" coords
@@ -695,21 +738,26 @@ place width height xcount ycount xpos ypos content =
         ymove = fromIntegral ypos*height/fromIntegral ycount
         mshow x = showFFloat Nothing x ""
 
-
+multipage :: IsValue b => b -> Double -> Double -> Int -> Int -> [P.String] -> State Document [RefID]
 multipage parent width height xcount ycount contents = 
     mapM multipagehelper (groupN (xcount*ycount) contents)
     where
-        multipagehelper contents = do
+        multipagehelper contents' = do
             rec page <- addObject (page_dict parent pagecontents)
-                pagecontents <- addStream (empty_dict) (doconcat contents)
+                pagecontents <- addStream (empty_dict) (doconcat contents')
             return page
-        doconcat contents = BSL.fromChunks (zipWith ($) [cnts x y | y <- [ycount-1,ycount-2..0], x <- [0..xcount-1]] contents)
+        doconcat contents' = BSL.fromChunks (zipWith ($) [cnts x y | y <- [ycount-1,ycount-2..0], x <- [0..xcount-1]] contents')
         cnts x y text = BSC.pack $ place width height xcount ycount x y text
-        groupN n [] = []
+        groupN _ [] = []
         groupN n list = let (a,b) = splitAt n list in a : groupN n b
 
+indexed_array :: (IsValue a, Real x, IsValue a1) => a -> x -> a1 -> Value
 indexed_array base count indexdata = array [ value "Indexed", value base, valuen count, value indexdata ]
-separation_array name base func = array [ value "Separation", value name, value base, value func ]
+
+separation_array :: (IsValue a, IsValue a1, IsValue a2) => a -> a1 -> a2 -> Value
+separation_array name' base func = array [ value "Separation", value name', value base, value func ]
+
+devicen_array :: (IsValue a, IsValue a1, IsValue a2) => [a] -> a1 -> a2 -> Value
 devicen_array colorants base func = array [ value "DeviceN", array colorants, value base, value func ]
 
 
@@ -737,11 +785,12 @@ parse bin = do
           l300 = BS.drop (l-300) bin
 
 -- parseBodyList :: IntSet.IntSet -> BinaryData -> Int -> Maybe [(Body,IntSet.IntSet)]
+parseBodyList :: Integral a => BS.ByteString -> a -> Maybe [Body]
 parseBodyList bin start = do
-    both@(body) <- parseBody bin start
-    let Body trailer _ = body
-    rest <- case Prelude.lookup (BSC.pack "Prev") trailer of
-                Just (Number offset) -> parseBodyList bin (round offset)
+    body <- parseBody bin start
+    let Body trailer' _ = body
+    rest <- case Prelude.lookup (BSC.pack "Prev") trailer' of
+                Just (Number offset') -> parseBodyList bin (round offset')
                 _ -> return []
     return (body : rest)
 
@@ -757,49 +806,50 @@ sequence2       :: Monad m => [m a] -> m [a]
 sequence2 ms = sequence' [] ms
     where
         sequence' vs [] = return (reverse vs)
-        sequence' vs (m:ms) = m >>= (\v -> sequence' (v:vs) ms)
+        sequence' vs (m:ms') = m >>= (\v -> sequence' (v:vs) ms')
 
+mapM2 :: Monad m => (a -> m a1) -> [a] -> m [a1]
 mapM2 f xs = sequence2 (map f xs)
 
 -- the body should be the parsed body, kind of fixed point operator
+xparse :: Body -> BS.ByteString -> P.ReadP Body
 xparse body bin = do
-    parseOperatorEq "xref"
+    _ <- parseOperatorEq "xref"
     p <- P.manyRev parseXRefSection
-    parseOperatorEq "trailer"
+    _ <- parseOperatorEq "trailer"
     e <- parseDict
-    let entries = IntMap.fromList (map (\(a,b,c) -> (a,c)) (concat p))
+    let entries = IntMap.fromList (map (\(a,_,c) -> (a,c)) (concat p))
     return (Body e entries)
     where
         parseXRefSection = {-# SCC "xparse.parseXRefSection" #-} do
-            objno <- parseNatural
+            objno' <- parseNatural
             ncount <- parseNatural
             --P.count ncount (parseXRefEntry uniq nid)
-            mapM2 parseXRefEntry [objno..objno+ncount-1]
-        parseXRefEntry objno = {-# SCC "xparse.slot" #-} do
-            offset <- parseNatural
-            gener <- parseNatural
+            mapM2 parseXRefEntry [objno'..objno'+ncount-1]
+        parseXRefEntry objno' = {-# SCC "xparse.slot" #-} do
+            offset' <- parseNatural
+            gener' <- parseNatural
             nf <- parseRegular
             --mtrace "slot parsed"
             if nf==BSC.pack "f"
-               then return (objno,0,FreeEntry gener)
+               then return (objno',0,FreeEntry gener')
                else if nf==BSC.pack "n"
                     then let
-                             indir = parseIndir bin offset
-                             usedEntry = UsedEntry gener indir
-                         in return (objno,offset,usedEntry)
+                             indir = parseIndir bin offset'
+                             usedEntry = UsedEntry gener' indir
+                         in return (objno',offset',usedEntry)
                     else P.pfail
 
         findLength :: Body -> Value -> Int
-        findLength body@(Body trailer objects) (Dict d) = {-# SCC "xparse.findLength" #-}
+        findLength (Body _ objects) (Dict d) = {-# SCC "xparse.findLength" #-}
             case Prelude.lookup (BSC.pack "Length") d of
                 Just (Number v) -> (round v)
                 Just (Ref v) -> case IntMap.lookup (fromIntegral $ objno v) objects of
-                                    Just entry -> case entry of
+                                    Just entry' -> case entry' of
                                         UsedEntry _ indir -> case indir of
-                                            Indir value _ -> case value of
-                                                Number v -> round v
+                                            Indir value' _ -> case value' of
+                                                Number v' -> round v'
                                                 x -> error ("/Length not found case 5: " ++ show x)
-                                            x -> error ("/Length not found case 6: " ++ show x)
                                         x -> error ("/Length not found case 4: " ++ show x)
                                     x -> error ("/Length not found case 1: " ++ show x)
                 _ ->  error "/Length not found case 2"
@@ -821,28 +871,27 @@ xparse body bin = do
                 other -> error (show other ++ BSC.unpack (BS.take 100 dat))
         -}
         parseIndirA :: BS.ByteString -> Int -> Indir
-        parseIndirA bin off =
-            --case P.readP_to_S parseIndir1 (BS.unpack (BS.drop (fromIntegral off) bin)) of
-            case head $ P.readP_to_S parseIndir1 (BS.drop (fromIntegral off) bin) of
-                ((ntokens,Indir e Nothing),_) -> Indir e Nothing
+        parseIndirA bin' off =
+            --case P.readP_to_S parseIndir1 (BS.unpack (BS.drop (fromIntegral off) bin')) of
+            case head $ P.readP_to_S parseIndir1 (BS.drop (fromIntegral off) bin') of
+                ((_,      Indir e Nothing),_) -> Indir e Nothing
                 ((ntokens,Indir e (Just _)),_) ->
                     let len = findLength body e
-                        dt = cut (off + ntokens) len bin
+                        dt = cut (off + ntokens) len bin'
                         indir = Indir e (Just (BSL.fromChunks [dt]))
                     in indir
-                _ -> error "did not parse correctly"
         cut off len = BS.take (fromIntegral len) . BS.drop (fromIntegral off)
 
         parseIndir1 :: MyReadP (Int,Indir)
         parseIndir1 = P.countsym $ do
-            parseNatural -- should check if naturals match with reference
-            parseNatural
-            parseOperatorEq "obj"
+            _ <- parseNatural -- should check if naturals match with reference
+            _ <- parseNatural
+            _ <- parseOperatorEq "obj"
             e <- parseValue
             (parseOperatorEq "endobj" >> return (Indir e Nothing)) `mplus` withStream e
         withStream e = do
-            parseOperatorEq "stream"
-            P.munch isspacenoteol
+            _ <- parseOperatorEq "stream"
+            _ <- P.munch isspacenoteol
             (P.string (BS.pack [0x0d,0x0a]) >> return ())
                 P.<++ (P.char 0x0d >> return ())
                 P.<++ (P.char 0x0a >> return ())
@@ -853,8 +902,9 @@ xparse body bin = do
 
 
 -- | Parse body from bin starting xref at offset
+parseBody :: Integral a => BS.ByteString -> a -> Maybe Body
 parseBody bin startxref = case aparse of
-    [(body,_)] -> Just (body)
+    [(body',_)] -> Just body'
     _ -> Nothing
     where
         aparse = P.readP_to_S (xparse body bin) xref
@@ -885,6 +935,7 @@ parseNatural = do
           n9 = 48 + 9
 
 -- | Parse sequence of regular characters. This may constitute operator or number.
+parseRegular :: P.ReadP BS.ByteString
 parseRegular = do
     parseSpace
     v <- P.munch1 isregular
@@ -897,39 +948,40 @@ parseNumber = beforedot 0
         c9 = BSB.c2w '9'
         dot = BSB.c2w '.'
         beforedot :: Integer -> MyReadP Double
-        beforedot value = (do
+        beforedot value' = (do
                 c <- P.satisfy (\c -> c >= c0 && c <= c9)
-                beforedot (value*10 + fromIntegral (c - c0)))
+                beforedot (value'*10 + fromIntegral (c - c0)))
             P.+++ (do
-                P.char dot
-                afterdot value 1)
+                _ <- P.char dot
+                afterdot value' 1)
             P.+++ (do
                 v <- P.look
                 if BSC.null v
-                    then return (fromIntegral value)
+                    then return (fromIntegral value')
                     else P.pfail)
         afterdot :: Integer -> Integer -> MyReadP Double
-        afterdot value divider = (do
+        afterdot value' divider = (do
                 c <- P.satisfy (\c -> c >= c0 && c <= c9)
-                afterdot (value*10 + fromIntegral (c - c0)) (divider*10))
+                afterdot (value'*10 + fromIntegral (c - c0)) (divider*10))
             P.+++ (do
                 v <- P.look
                 if BSC.null v
-                    then return (fromIntegral value / fromIntegral divider)
+                    then return (fromIntegral value' / fromIntegral divider)
                     else P.pfail)
 
 
-mkop name
-    | name==BSC.pack "true" = Boolean True
-    | name==BSC.pack "false" = Boolean False
-    | name==BSC.pack "null" = Null
-    | [(flt,_)] <- P.readP_to_S parseNumber name = Number flt
-    | otherwise = Operator name
+mkop :: BS.ByteString -> Value
+mkop name'
+    | name'==BSC.pack "true" = Boolean True
+    | name'==BSC.pack "false" = Boolean False
+    | name'==BSC.pack "null" = Null
+    | [(flt,_)] <- P.readP_to_S parseNumber name' = Number flt
+    | otherwise = Operator name'
 
 -- | Parse operator given as 'name'.
 parseOperatorEq :: [Char] -> MyReadP BS.ByteString
-parseOperatorEq name = parseRegular >>= \x ->
-     if x==BSC.pack name
+parseOperatorEq name' = parseRegular >>= \x ->
+     if x==BSC.pack name'
          then return x
          else P.pfail
 
@@ -937,18 +989,18 @@ parseOperatorEq name = parseRegular >>= \x ->
 parseRef :: MyReadP RefID
 parseRef = do
     refno <- parseNatural
-    gener <- parseNatural
-    parseOperatorEq "R"
-    return (refid (fromIntegral refno) (fromIntegral gener))
+    gener' <- parseNatural
+    _ <- parseOperatorEq "R"
+    return (refid (fromIntegral refno) (fromIntegral gener'))
 
 
 -- | Parse string delimited by ( ) or < > (hexstring).
 parseString :: MyReadP BS.ByteString
 parseString = do
     parseSpace
-    P.char (BSB.c2w '(')
+    _ <- P.char (BSB.c2w '(')
     x <- string_p1
-    P.char (BSB.c2w ')')
+    _ <- P.char (BSB.c2w ')')
     return (BS.concat x)
     where
         string_p1 = fmap reverse $ P.manyRev (P.choice [string_char_p, string_bs_p,
@@ -970,9 +1022,9 @@ parseString = do
                                              )
                                ]
         string_string_p = do
-             P.string (o "(")
+             _ <- P.string (o "(")
              x <- string_p1
-             P.string (o ")")
+             _ <- P.string (o ")")
              return (BS.concat ([o "("] ++ x ++ [o ")"]))
         o = BSC.pack
         octDigit = P.satisfy (\x -> BSB.c2w '0' <= x && x <= BSB.c2w '7')
@@ -980,9 +1032,9 @@ parseString = do
 parseHexString :: MyReadP BS.ByteString
 parseHexString = do
     parseSpace
-    P.char (c '<')
+    _ <- P.char (c '<')
     x <- P.munch (\y -> ishexchar y || isspace y)
-    P.char (c '>')
+    _ <- P.char (c '>')
     return (BS.pack (hexdecode (filter ishexchar (BS.unpack x))))
     where
         hexdecode [] = []
@@ -998,20 +1050,20 @@ parseHexString = do
 parseArray :: MyReadP ArrayData
 parseArray = do
     parseSpace
-    P.char (BSB.c2w '[')
+    _ <- P.char (BSB.c2w '[')
     e <- P.manyRev parseValue
     parseSpace
-    P.char (BSB.c2w ']')
+    _ <- P.char (BSB.c2w ']')
     return (reverse e)
 
 -- | Parse dictionary << >>
 parseDict :: MyReadP DictData
 parseDict = do
     parseSpace
-    P.string (BSC.pack "<<")
+    _ <- P.string (BSC.pack "<<")
     e <- P.manyRev pair
     parseSpace
-    P.string (BSC.pack ">>")
+    _ <- P.string (BSC.pack ">>")
     return (e)
     where
         pair = liftM2 (,) parseName parseValue
@@ -1034,7 +1086,7 @@ parseSpace = P.munch isspace >>
 parseName :: MyReadP BS.ByteString
 parseName = do
     parseSpace
-    P.char (BSB.c2w '/')
+    _ <- P.char (BSB.c2w '/')
     s <- P.munch isregular
     return s
 

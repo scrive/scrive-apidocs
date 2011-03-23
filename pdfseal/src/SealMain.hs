@@ -1,16 +1,9 @@
 module Main where
 
 import Seal
-import PdfModel hiding (value)
-import System.Environment
-import Data.Maybe
-import Data.Time.Clock
-import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.Lazy.Char8 as BSL
-import Control.Monad.State.Strict
-import qualified Data.Map as Map
 import SealSpec
 
+exrotate :: SealSpec
 exrotate = SealSpec 
     { input = "16pages.pdf"
     , output = "16pages_sealed.pdf"
@@ -51,6 +44,7 @@ exrotate = SealSpec
                   ]
     }
 
+gsnorm :: SealSpec
 gsnorm = SealSpec 
     { input = "testfiles/gs_norm.pdf"
     , output = "testfiles/gs_norm_sealed.pdf"
@@ -91,6 +85,7 @@ gsnorm = SealSpec
                   ]
     }
 
+nda :: SealSpec
 nda = SealSpec 
     { input = "nda.pdf"
     , output = "nda_sealed.pdf"
@@ -143,6 +138,7 @@ nda = SealSpec
     }
 
 
+twod :: SealSpec
 twod = SealSpec 
     { input = "TWOD Custom Compliance Configuration Filled.pdf"
     , output = "TWOD Custom Compliance Configuration Filled and Sealed.pdf"
@@ -156,6 +152,7 @@ twod = SealSpec
       , history = []
     }
 
+twodgs :: SealSpec
 twodgs = SealSpec 
     { input = "TWOD Custom Compliance Configuration Filled from GS.pdf"
     , output = "TWOD Custom Compliance Configuration Filled from GS and Sealed.pdf"
@@ -215,6 +212,7 @@ ex_10_1 = SealSpec
     } 
 -}
 
+worddoc :: SealSpec
 worddoc = SealSpec 
     { input = "testfiles/DK Aftale inkassoservice forside 2010.pdf"
     , output = "testfiles/DK Aftale inkassoservice forside 2010 sealed.pdf"
@@ -255,6 +253,7 @@ worddoc = SealSpec
                   ]
     }
 
+main :: IO ()
 main = do
     inp <- getContents
     let spec = read inp

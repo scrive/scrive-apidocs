@@ -74,7 +74,7 @@ module ReadP
 import Control.Monad ( MonadPlus(..), liftM2, Monad, (>>), (>>=),
                        return, fail, Functor, fmap, replicateM )
 import Prelude ( (+), (-), (++), Int, Bool(..), (==), error,
-                 fromInteger, (.), (>=), compare, Ordering(..), reverse )
+                 (.), (>=), compare, Ordering(..), reverse )
 import Data.Word (Word8)
 import Data.ByteString (ByteString,length,take,takeWhile,null)
 
@@ -115,7 +115,7 @@ instance Monad (P) where
 
   (Skip n f)   >>= k = Skip n (f >>= k)
   (Look f)     >>= k = Look (\s -> f s >>= k)
-  Fail         >>= k = Fail
+  Fail         >>= _ = Fail
   (Result x p) >>= k = k x `mplus` (p >>= k)
   (Final r)    >>= k = final [ys' | (x,s) <- r, ys' <- run (k x) s]
 
@@ -226,8 +226,8 @@ R f <++ q =
   do s <- look
      probe (f return) s 0
  where
-  probe (Skip m f)     cs    n  | length cs >= m = probe f (unsafeDrop m cs) (n+m)
-  probe (Look f)       s     n = probe (f s) s n
+  probe (Skip m f')    cs    n  | length cs >= m = probe f' (unsafeDrop m cs) (n+m)
+  probe (Look f')      s     n = probe (f' s) s n
   probe p@(Result _ _) _     n = skip n >> R (p >>=)
   probe (Final r)      _     _ = R (Final r >>=)
   probe _              _     _ = q
@@ -252,10 +252,10 @@ countsym (R m) =
  where
   gath 0 _   | False  = Fail
   gath l (Skip n f)   = Skip n (gath (l+n) f)
-  gath l Fail         = Fail
+  gath _ Fail         = Fail
   gath l (Look f)     = Look (\s -> gath l (f s))
   gath l (Result k p) = k (l) `mplus` gath l p
-  gath l (Final r)    = error "do not use readS_to_P in gather or countsym!"
+  gath _ (Final _)    = error "do not use readS_to_P in gather or countsym!"
 
 -- ---------------------------------------------------------------------------
 -- Derived operations
@@ -318,9 +318,9 @@ count n p = replicateM n p
 between :: ReadP open -> ReadP close -> ReadP a -> ReadP a
 -- ^ @between open close p@ parses @open@, followed by @p@ and finally
 --   @close@. Only the value of @p@ is returned.
-between open close p = do open
+between open close p = do _ <- open
                           x <- p
-                          close
+                          _ <- close
                           return x
 
 option :: a -> ReadP a -> ReadP a
@@ -365,12 +365,12 @@ sepBy1 p sep = liftM2 (:) p (many (sep >> p))
 endBy :: ReadP a -> ReadP sep -> ReadP [a]
 -- ^ @endBy p sep@ parses zero or more occurrences of @p@, separated and ended
 --   by @sep@.
-endBy p sep = many (do x <- p ; sep ; return x)
+endBy p sep = many (do x <- p ; _ <- sep ; return x)
 
 endBy1 :: ReadP a -> ReadP sep -> ReadP [a]
 -- ^ @endBy p sep@ parses one or more occurrences of @p@, separated and ended
 --   by @sep@.
-endBy1 p sep = many1 (do x <- p ; sep ; return x)
+endBy1 p sep = many1 (do x <- p ; _ <- sep ; return x)
 
 chainr :: ReadP a -> ReadP (a -> a -> a) -> a -> ReadP a
 -- ^ @chainr p op x@ parses zero or more occurrences of @p@, separated by @op@.
