@@ -31,35 +31,16 @@ cd kontrakcja
 
 this is the first name of SkrivaPa and it is going to stay as technical name.
 
-Now it should be easy, but isn't due to a conflict of HaXml. Please do the following magic:
+Now it should be easy, do
 
-1) edit kontrakja.cabal and change HaXml from 1.20 to 1.13
-2) run cabal install; this will ultimately fail
-
-3) edit kontrakja.cabal and change HaXml back from 1.13 to 1.20
-4) run
-
-cabal install HaXml-1.20.2
-(only if it is not already installed)
-
-cabal configure -f-test
-
-and ignore a warning about using two different versions of HaXml (because we aren't really doing this)
-
-5) run
-
-cabal build
+cabal install -f-test
 
 Now run:
 
-dist/build/kontrakcja-server/kontrakcja-server
+kontrakcja-server
 
-It should say that a kontrakcja.conf file is missing and should say what content needs to be there. Just create a file with copy and paste. Then do again:
+It should say that a kontrakcja.conf file is missing and should say what content needs to be there. Just create a file with copy and paste. Then run the server again. It should say:
 
-
-dist/build/kontrakcja-server/kontrakcja-server
-
-It should say:
 Listening on port 8000...
 
 Now browse to
