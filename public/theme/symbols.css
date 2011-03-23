@@ -186,6 +186,13 @@
 	width: 29px;
 }
 
+
+.icon.cross {
+    background: url(../img/x.png) 0 0 no-repeat;
+    display: inline-block;
+    height: 22px;
+    width: 31px;
+}
 /* Lightbox Icons */
 
 .modal-icon {

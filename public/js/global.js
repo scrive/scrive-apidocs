@@ -535,17 +535,17 @@ safeReady(function() {
     var on = $($(this).attr("on"));
     var off = $($(this).attr("off"));
     if($(this).val() == "off") {  
-        on.hide();
-        off.show();
         $(this).val("on"); 
-    } 
-    else {
         off.hide();
         on.show();
+    } 
+    else {
+        on.hide();
+        off.show();
         $(this).val("off");
     }    
     return true;
-  }).each(function(){ $(this).change()});    
+  })
 });
 
 safeReady(function() {    
