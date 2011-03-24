@@ -1,0 +1,250 @@
+{-# OPTIONS_GHC -Wall #-}
+
+module ActionSchedulerState (
+      ActionID(..)
+    , ActionType(..)
+    , ActionTypeID(..)
+    , InactiveAccountState(..)
+    , ActionImportance(..)
+    , Action(..)
+    , Actions
+    , GetAction(..)
+    , GetExpiredActions(..)
+    , NewAction(..)
+    , UpdateActionType(..)
+    , UpdateActionEvalTime(..)
+    , DeleteAction(..)
+    , actionTypeID
+    , actionImportance
+    , checkTypeID
+    , checkValidity
+    , newPasswordReminder
+    , newAccountCreated
+    --, newAccountCreatedBySigning
+    ) where
+
+import Control.Applicative ((<$>))
+import Control.Monad.State (modify)
+import Control.Monad.Reader (ask)
+import Data.Typeable
+import Happstack.Data.IxSet (Indexable, IxSet, getOne, ixFun, ixSet, (@=), (@<=))
+import Happstack.State
+import System.Random (randomIO)
+import qualified Happstack.Data.IxSet as IxSet
+import Happstack.Server.SimpleHTTP (FromReqURI(..))
+import Happstack.Util.Common (readM)
+
+import Doc.DocState
+import Misc
+import MinutesTime
+import User.UserState
+
+newtype ActionID = ActionID Integer
+    deriving (Eq, Ord, Show, Typeable)
+
+instance FromReqURI ActionID where
+    fromReqURI s = ActionID <$> readM s
+
+data ActionType = TrustWeaverUpload {
+                      twuOwner :: String
+                    , twuDocID :: DocumentID
+                }
+                | AmazonUpload {
+                      auDocID  :: DocumentID
+                    , uaFileID :: FileID
+                }
+                | PasswordReminder {
+                      prUserID :: UserID
+                    , prToken  :: MagicHash
+                }
+                | AccountCreated {
+                      acUserID :: UserID
+                    , acToken  :: MagicHash
+                }
+                | AccountCreatedBySigning {
+                      acbsState  :: InactiveAccountState
+                    , acbsUserID :: UserID
+                    , acbsToken  :: MagicHash
+                }
+                  deriving (Eq, Ord, Show, Typeable)
+
+data InactiveAccountState = JustCreated
+                          | FirstReminderSent
+                          | SecondReminderSent
+                          | ThirdReminderSent
+                            deriving (Eq, Ord, Show, Typeable)
+
+-- | Used for comparing action types since we can't compare type constructors
+data ActionTypeID = TrustWeaverUploadID
+                  | AmazonUploadID
+                  | PasswordReminderID
+                  | AccountCreatedID
+                  | AccountCreatedBySigningID
+                    deriving (Eq, Ord, Show)
+
+-- | Convert ActionType to its type identifier
+actionTypeID :: ActionType -> ActionTypeID
+actionTypeID (TrustWeaverUpload _ _) = TrustWeaverUploadID
+actionTypeID (AmazonUpload _ _) = AmazonUploadID
+actionTypeID (PasswordReminder _ _) = PasswordReminderID
+actionTypeID (AccountCreated _ _) = AccountCreatedID
+actionTypeID (AccountCreatedBySigning _ _ _) = AccountCreatedBySigningID
+
+-- | Determines how often we should check if there's an action to evaluate
+data ActionImportance = UrgentAction | LeisureAction
+                    deriving (Eq, Ord, Show, Typeable)
+
+actionImportance :: ActionType -> ActionImportance
+actionImportance (TrustWeaverUpload _ _) = UrgentAction
+actionImportance (AmazonUpload _ _) = UrgentAction
+actionImportance (PasswordReminder _ _) = LeisureAction
+actionImportance (AccountCreated _ _) = LeisureAction
+actionImportance (AccountCreatedBySigning _ _ _) = LeisureAction
+
+data Action = Action {
+      actionID       :: ActionID
+    , actionType     :: ActionType
+    , actionEvalTime :: MinutesTime
+    } deriving (Eq, Ord, Show)
+
+instance Typeable Action where
+    typeOf _ = mkTypeOf "Action"
+
+$(deriveSerialize ''ActionID)
+instance Version ActionID
+
+$(deriveSerialize ''ActionType)
+instance Version ActionType
+
+$(deriveSerialize ''InactiveAccountState)
+instance Version InactiveAccountState
+
+$(deriveSerialize ''ActionImportance)
+instance Version ActionImportance
+
+$(deriveSerialize ''Action)
+instance Version Action
+
+type Actions = IxSet Action
+
+instance Indexable Action where
+    empty = ixSet
+        [ ixFun (\a -> [actionID a])
+        , ixFun (\a -> [actionEvalTime a])
+        , ixFun (\a -> [actionImportance $ actionType a])
+        ]
+
+instance Component Actions where
+    type Dependencies Actions = End
+    initialValue = IxSet.empty
+
+-- | Get action by its ID
+getAction :: ActionID -> Query Actions (Maybe Action)
+getAction aid = return . getOne . (@= aid) =<< ask
+
+-- | Get expired actions
+getExpiredActions :: ActionImportance -> MinutesTime -> Query Actions [Action]
+getExpiredActions imp now = return . IxSet.toList . (@<= now) . (@= imp) =<< ask
+
+-- | Insert new action
+newAction :: ActionType -> MinutesTime -> Update Actions Action
+newAction atype time = do
+    actions <- ask
+    aid <- ActionID <$> getRandomR (0, 1000000000)
+    case getOne $ actions @= aid of
+         Just _  -> newAction atype time
+         Nothing -> do
+             let action = Action aid atype time
+             modify $ IxSet.updateIx aid action
+             return action
+
+-- | Update action's type. Returns Nothing if there is no action with given id.
+updateActionType :: ActionID -> ActionType -> Update Actions (Maybe Action)
+updateActionType aid atype = do
+    actions <- ask
+    case getOne $ actions @= aid of
+         Nothing     -> return Nothing
+         Just action -> do
+             let new_action = action { actionType = atype }
+             modify $ IxSet.updateIx aid new_action
+             return $ Just new_action
+
+-- | Update action's expiration date. Returns Nothing
+-- if there is no action with given id.
+updateActionEvalTime :: ActionID -> MinutesTime -> Update Actions (Maybe Action)
+updateActionEvalTime aid time = do
+    actions <- ask
+    case getOne $ actions @= aid of
+         Nothing     -> return Nothing
+         Just action -> do
+             let new_action = action { actionEvalTime = time }
+             modify $ IxSet.updateIx aid new_action
+             return $ Just new_action
+
+-- | Delete existing action. Returns Nothing if there is
+-- no action with given id, otherwise deleted action.
+deleteAction :: ActionID -> Update Actions (Maybe Action)
+deleteAction aid = do
+    actions <- ask
+    case getOne $ actions @= aid of
+         Nothing     -> return Nothing
+         Just action -> do
+             modify $ IxSet.deleteIx aid
+             return $ Just action
+
+$(mkMethods ''Actions
+  [ 'getAction
+  , 'getExpiredActions
+  , 'newAction
+  , 'updateActionType
+  , 'updateActionEvalTime
+  , 'deleteAction
+  ])
+
+-- | Check if action is of given type
+checkTypeID :: ActionTypeID -> Maybe Action -> Maybe Action
+checkTypeID atypeid maction = maction >>= \action ->
+    if actionTypeID (actionType action) == atypeid
+       then Just action
+       else Nothing
+
+-- | Check if action hasn't expired yet
+checkValidity :: MinutesTime -> Maybe Action -> Maybe Action
+checkValidity now maction = maction >>= \action ->
+    if now < actionEvalTime action
+       then Just action
+       else Nothing
+
+-- | Create new 'password remainder' action
+newPasswordReminder :: User -> IO Action
+newPasswordReminder user = do
+    hash <- randomIO
+    now <- getMinutesTime
+    let action = PasswordReminder {
+          prUserID = userid user
+        , prToken  = hash
+    }
+    update $ NewAction action $ (12*60) `minutesAfter` now
+
+-- | Create new 'account created' action
+newAccountCreated :: User -> IO Action
+newAccountCreated user = do
+    hash <- randomIO
+    now <- getMinutesTime
+    let action = AccountCreated {
+          acUserID = userid user
+        , acToken  = hash
+    }
+    update $ NewAction action $ (12*60) `minutesAfter` now
+
+-- | Create new 'account created by signing' action
+{-newAccountCreatedBySigning :: User -> IO Action
+newAccountCreatedBySigning user = do
+    hash <- randomIO
+    now <- getMinutesTime
+    let action = AccountCreatedBySigning {
+          acbsState = JustCreated
+        , acbsUserID = userid user
+        , acbsToken  = hash
+    }
+    update $ NewAction action $ (24*60) `minutesAfter` now-}

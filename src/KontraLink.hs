@@ -4,7 +4,7 @@ module KontraLink(KontraLink(..), LoginRedirectReason(..), DesignStep(..), Desig
 import Doc.DocState
 import HSP
 import Misc
-import Session (SessionId)
+import ActionSchedulerState (ActionID(..))
 import User.UserState
 import qualified Codec.Binary.Url as URL
 import qualified Codec.Binary.UTF8.String as UTF
@@ -57,7 +57,7 @@ data KontraLink
     | LinkStats
     | LinkPaymentsAdmin
     | LinkUserAdmin (Maybe UserID)
-    | LinkUnloggedUserAction SessionId MagicHash String String -- email / username
+    | LinkUnloggedUserAction ActionID MagicHash String String -- email / username
     | LinkChangeSignatoryEmail DocumentID SignatoryLinkID 
     | LinkWithdrawn DocumentID 
     | LoopBack
@@ -113,7 +113,7 @@ instance Show KontraLink where
     showsPrec _ (LinkPaymentsAdmin ) = (++) $ "/adminonly/advpayments"
     showsPrec _ (LinkUserAdmin Nothing) = (++) $ "/adminonly/useradmin"
     showsPrec _ (LinkUserAdmin (Just userId)) = (++) $ "/adminonly/useradmin/"++show userId
-    showsPrec _ (LinkUnloggedUserAction sid mh email username) = (++) $ "/accountsetup/"++show sid++"/"++show mh ++ 
+    showsPrec _ (LinkUnloggedUserAction (ActionID aid) mh email username) = (++) $ "/accountsetup/" ++ show aid ++ "/" ++ show mh ++
                                                                                        "?" ++ "email=" ++ email ++
                                                                                        "&" ++ "name="++ username
     showsPrec _ (LinkChangeSignatoryEmail did slid ) = (++) $ "/changeemail/"++show did++"/"++show slid

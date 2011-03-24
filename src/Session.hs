@@ -12,7 +12,7 @@ module Session
     , getELegTransactions
     
     -- | Functions usefull when we do remember passwords emails
-    , createLongTermSession
+    --, createLongTermSession
     , findSession
     , getSessionId
     , getSessionMagicHash
@@ -368,7 +368,7 @@ updateSessionWithContextData (Session i sd) u fm trans = do
        else update $ UpdateSession (Session i newsd)
 
 -- | This are special sessions used for passwords reminder links. Such links should be carefully.
-createLongTermSession :: (MonadIO m) =>  UserID -> m Session
+{-createLongTermSession :: (MonadIO m) =>  UserID -> m Session
 createLongTermSession uid = do
     now <- liftIO $ getMinutesTime
     magicHash <- liftIO $ randomIO
@@ -379,6 +379,7 @@ createLongTermSession uid = do
                                       , elegtransactions = []
                                       }  
     update $ NewSession $ longUserSession
+    -}
 
 -- | Find session in the database. Check auth token match. Check timeout.
 findSession :: (MonadIO m) => SessionId -> MagicHash -> m (Maybe Session)
@@ -416,7 +417,7 @@ dropSession sid = (update $ DelSession sid) >> return ()
 -- | Delete all expired session from database. The param says what
 -- time we have now. All sessions that expire earlier than that are
 -- plainly forgotten.
-dropExpiredSessions :: MinutesTime -> IO ()
+dropExpiredSessions :: MonadIO m => MinutesTime -> m ()
 dropExpiredSessions = update . DropExpired
 
 -- | Get e-leg from session.

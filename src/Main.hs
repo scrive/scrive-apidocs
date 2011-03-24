@@ -36,7 +36,8 @@ import Network.Socket hiding ( accept, socketPort, recvFrom, sendTo )
 import qualified Network.Socket as Socket ( accept )
 import qualified Control.Exception as Exception
 import Happstack.State.Saver
-import Scheduler
+import ActionScheduler
+import ActionSchedulerState (ActionImportance(..))
 import Happstack.State (update,query)
 import Doc.DocControl
 import Doc.DocState
@@ -199,8 +200,9 @@ main = Log.withLogger $ do
                               socket <- listenOn (httpPort appConf)
                               t1 <- forkIO $ simpleHTTPWithSocket socket (nullConf { port = httpPort appConf }) 
                                     (appHandler appConf appGlobals docs)
-                              t2 <- forkIO $ cron 60 $ runScheduler appConf
-                              return [t1,t2]
+                              t2 <- forkIO $ cron 60 $ runScheduler (mainScheduler >> actionScheduler UrgentAction) appConf
+                              t3 <- forkIO $ cron 600 $ runScheduler (actionScheduler LeisureAction) appConf
+                              return [t1,t2,t3]
                            )
                            (mapM_ killThread) $ \_ -> Exception.bracket
                                         -- checkpoint the state once a day
