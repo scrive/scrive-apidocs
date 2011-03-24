@@ -5,9 +5,13 @@ module ELegitimation.BankID
     , handleSignPostBankID
     , handleIssueBankID
     , handleIssuePostBankID
+    , handleSignCanceledDataMismatch
     )
     where
-    
+
+import Redirect
+import HSP (cdata)
+import AppView    
 import qualified AppLogger as Log
 import Control.Monad.State
 import Data.List
@@ -184,7 +188,7 @@ handleSignPostBankID docid signid magic = do
                     Right newdoc <- update $ CancelDocument docid (ELegDataMismatch msg signid sfn sln spn) ctxtime ctxipnumber
                     postDocumentChangeAction newdoc olddocumentstatus (Just signid)
                     
-                    return $ LinkSignDoc document siglink
+                    return $ LinkSignCanceledDataMismatch docid signid
                 -- we have merged the info!
                 Right (bfn, bln, bpn) -> do
                     let signinfo = SignatureInfo    { signatureinfotext = transactiontbs
@@ -371,6 +375,27 @@ handleIssuePostBankID docid = withUserPost $ do
                                 Right newdocument -> do
                                     postDocumentChangeAction newdocument (documentstatus udoc) Nothing
                                     return $ LinkSignInvite (documentid document)
+
+handleSignCanceledDataMismatch :: DocumentID -> SignatoryLinkID -> Kontra Response
+handleSignCanceledDataMismatch docid signatorylinkid = do
+  ctx <- get
+  document <- queryOrFail $ GetDocumentByDocumentID docid
+  signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
+  let mcancelationreason = documentcancelationreason document
+  case mcancelationreason of
+    Just (ELegDataMismatch msg sid _ _ _) -> do
+        if sid /= signatorylinkid
+            then sendRedirect $ LinkSignDoc document signatorylink
+            else do
+                maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
+                content <- liftIO $ signCanceledDataMismatch (ctxtemplates ctx) document signatorylink (isJust maybeuser) msg
+                renderFromBody ctx TopEmpty kontrakcja $ cdata content
+    _ -> sendRedirect $ LinkSignDoc document signatorylink
+  
+signCanceledDataMismatch :: KontrakcjaTemplates -> Doc.DocState.Document -> SignatoryLink -> Bool -> String -> IO String
+signCanceledDataMismatch  templates document@Doc.DocState.Document{documenttitle, documentstatus} signatorylink hasaccount msg =
+    renderTemplate templates "signCanceledDataMismatch" $ do
+        field "cancelationMessage" msg
 
 -- JSON - just enough to get things working
 
