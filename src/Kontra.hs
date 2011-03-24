@@ -5,11 +5,13 @@ module Kontra
     , Context(..)
     , isSuperUser
     , Kontra
+    , KontraModal
     , admins
     , initialUsers
     , clearFlashMsgs
     , addELegTransaction
     , addFlashMsg
+    , addModal
     , logUserToContext
     , onlySuperUser
     , unloggedActionLink
@@ -69,7 +71,7 @@ data Context = Context
     }
 
 type Kontra a = ServerPartT (StateT Context IO) a
-
+type KontraModal = ReaderT KontrakcjaTemplates IO String
 
 {- |
    A list of admin emails.
@@ -136,6 +138,17 @@ addFlashMsg flash =
 -}                  
 clearFlashMsgs:: Kontra ()                       
 clearFlashMsgs = modify (\ctx -> ctx { ctxflashmessages = [] })
+
+
+{- |
+   Adds a modal from string
+-}  
+addModal :: KontraModal ->  Kontra ()
+addModal flash = do
+  ctx <- get  
+  fm <- liftIO $ runReaderT flash (ctxtemplates ctx)  
+  put $  ctx { ctxflashmessages = (FlashMessage (Modal,fm)):(ctxflashmessages ctx) }
+
 
 {- |
    Sticks the logged in user onto the context

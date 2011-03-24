@@ -26,6 +26,7 @@ import Text.Html (stringToHtmlString)
 {-Names of template files -}
 templateFiles::[String]
 templateFiles = ["templates/landpages.st",
+                 "templates/modals.st",
                  "templates/flash.st",
                  "templates/mails.st",
                  "templates/utils.st",

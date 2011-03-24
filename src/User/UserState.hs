@@ -117,6 +117,7 @@ data FlashType
         = SigningRelated
         | OperationDone
         | OperationFailed
+        | Modal
     deriving (Eq, Ord, Typeable, Data)
 data TrustWeaverStorage = TrustWeaverStorage
           { storagetwenabled       :: Bool
