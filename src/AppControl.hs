@@ -152,6 +152,7 @@ handleRoutes = msum [
      , dir "landpage" $ dir "signed"     $ hget2 $ DocControl.landpageSigned 
      , dir "landpage" $ dir "rejected"   $ hget2 $ DocControl.landpageRejected
      , dir "landpage" $ dir "signedsave" $ hget2 $ DocControl.landpageSignedSave
+     , dir "landpage" $ dir "signcanceleddatamismatch" $ hget2 $ BankID.handleSignCanceledDataMismatch
            
      , dir "pagesofdoc" $ hget1 $ DocControl.handlePageOfDocument
 
