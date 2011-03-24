@@ -246,6 +246,7 @@ safeReady(function() {
 safeReady(function() {
   flashFlashMessages();
   flashSpecialFlashMessages();
+  showModal();
   enableInfoTextOnce();
 });
 
@@ -859,6 +860,13 @@ function flashFlashMessages() {
     }
 }
 
+function showModal(){
+   var modalbox = $(".modalbox");
+   modalbox.overlay({
+        load: true,
+        mask: standardDialogMask
+   });   
+}
 function hideFlashMessages(event) {
     if (event !== undefined)
         clearTimeout(event);

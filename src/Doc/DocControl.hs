@@ -361,7 +361,10 @@ signDocument documentid
     Right document -> 
         do 
           postDocumentChangeAction document olddocumentstatus (Just signatorylinkid1)
-          return $ LinkSigned documentid signatorylinkid1
+          signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid1
+          maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
+          addModal$  modalSignedView document signatorylink (isJust maybeuser)
+          return $ LinkSignDoc document signatorylink
 
 {- |
    Control rejecting the document
@@ -389,7 +392,8 @@ rejectDocument documentid
     Right document -> 
         do  
           postDocumentChangeAction document Pending (Just signatorylinkid1)
-          return $ LinkRejected documentid signatorylinkid1
+          addModal $ modalRejectedView document
+          return $ LoopBack
 
 {- |
    Get the SignatoryLink associated with a SignatoryLinkID or mzero if not found
@@ -404,68 +408,9 @@ signatoryLinkFromDocumentByID document@Document{documentsignatorylinks} linkid =
       _ -> mzero
 
 {- |
-   The page the author sees after sending a document
-   URL: /landpage/signinvite/{documentid}
-   Method: GET
-
-   User must be author
- -}
-landpageSignInvite :: DocumentID -> Kontra Response
-landpageSignInvite documentid = withUserGet $ do
-  ctx@Context { ctxmaybeuser = Just user } <- get
-  document <- queryOrFail $ GetDocumentByDocumentID documentid
-
-  failIfNotAuthor document user
-
-  let authorid = unAuthor $ documentauthor document
-      hasAuthorSigned = authorHasSigned authorid document
-
-  content <- liftIO $ if hasAuthorSigned 
-                       then landpageSignInviteView (ctxtemplates ctx) document
-                       else landpageSendInviteView (ctxtemplates ctx) document
-  renderFromBody ctx TopNone kontrakcja $ cdata content
-  
-
-{- |
-   The author has signed the document
- -}
-authorHasSigned :: UserID -> Document -> Bool
-authorHasSigned authorid document = not $ Data.List.null $ 
-                                    filter (\x -> not (isNotLinkForUserID authorid x) && isJust (maybesigninfo x))
-                                               (documentsignatorylinks document)
-
-{- |
-   When someone has signed a document
-   URL: /landpage/signed
-   Method: GET
- -}
-landpageSigned :: DocumentID -> SignatoryLinkID -> Kontra Response
-landpageSigned documentid signatorylinkid = do
-  ctx <- get
-  document <- queryOrFail $ GetDocumentByDocumentID documentid
-  signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
-  maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
-  content <- liftIO $ landpageSignedView (ctxtemplates ctx) document signatorylink (isJust maybeuser)
-  renderFromBody ctx TopEmpty kontrakcja $ cdata content
-
-{- |
-   When someone rejects a document
-   URL: /landpage/rejected
-   Method: GET
- -}
-landpageRejected :: DocumentID -> SignatoryLinkID -> Kontra Response
-landpageRejected documentid signatorylinkid = do
-  ctx <- get
-  document <- queryOrFail $ GetDocumentByDocumentID documentid
-  signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
-  content <- liftIO $ landpageRejectedView (ctxtemplates ctx) document
-  renderFromBody ctx TopEmpty kontrakcja $ cdata content
-
-{- |
-   Here we need to save the document either under existing account or create a new account
-   send invitation email and put the document in that account
-   URL: /landpage/signedsave
-   Method: GET
+    Now just handler to put a modal and create an account
+    URL: /landpage/signedsave
+    Method: GET
 -}
 landpageSignedSave :: DocumentID -> SignatoryLinkID -> Kontra Response
 landpageSignedSave documentid signatorylinkid = do
@@ -482,9 +427,8 @@ landpageSignedSave documentid signatorylinkid = do
              Just user -> return maybeuser
   when_ (isJust muser) $ update $ SaveDocumentForSignedUser documentid (userid $ fromJust muser) signatorylinkid
   -- should redirect
-  content <- liftIO $ landpageLoginForSaveView (ctxtemplates ctx)
-  renderFromBody ctx TopEmpty kontrakcja $ cdata content
-
+  addModal modalLoginForSaveView 
+  sendRedirect $ LinkIssueDoc documentid
 
 {- |
    Show the document to be signed
@@ -619,7 +563,6 @@ handleIssueShowPost docid = withUserPost $ do
       (AwaitingAuthor, _ , _ ,_, _, _) -> handleIssueSignByAuthor document author
       _  -> return $ LinkContracts emptyListParams
      
-
 handleIssueSign document author = do
     ctx@Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber} <- get
     mudoc <- updateDocument ctx author document
@@ -630,7 +573,9 @@ handleIssueSign document author = do
             Right docs -> do
               mndocs <- mapM (forIndividual ctxtime ctxipnumber udoc) docs
               case (sequence mndocs) of
-                Right (d:[]) -> return $ LinkSignInvite (documentid d)
+                Right (d:[]) -> do
+                    addModal $ modalSignInviteView d
+                    return $ LinkIssueDoc (documentid d)
                 Right ds -> return $ LinkContracts emptyListParams
                 Left _ -> mzero
             Left _ -> mzero
@@ -655,7 +600,9 @@ handleIssueSend document author = do
             Right docs -> do
               mndocs <- mapM (forIndividual ctxtime ctxipnumber udoc) docs
               case (sequence mndocs) of
-                Right (d:[]) -> return $ LinkSignInvite (documentid d)
+                Right (d:[]) -> do
+                     addModal $ modalSendInviteView d
+                     return $  LinkIssueDoc (documentid d)
                 Right ds -> return $ LinkContracts emptyListParams
                 Left _ -> mzero
             Left _ -> mzero

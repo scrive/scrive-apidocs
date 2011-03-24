@@ -9,10 +9,10 @@ module Doc.DocView (
   , docSortSearchPage
   , pageContractsList
   , pageTemplatesList
-  , landpageSignInviteView
-  , landpageSendInviteView
-  , landpageSignedView
-  , landpageLoginForSaveView
+  , modalSignInviteView
+  , modalSendInviteView
+  , modalSignedView
+  , modalLoginForSaveView
   , flashRemindMailSent
   , flashMessageCanceled
   , flashDocumentRestarted
@@ -21,7 +21,7 @@ module Doc.DocView (
   , flashAuthorSigned
   , flashMessageFailedToParseCSV
   , flashMessageCSVHasTooManyRows
-  , landpageRejectedView
+  , modalRejectedView
   , defaultInviteMessage
   , mailDocumentRemind
   , mailDocumentRejected
@@ -63,22 +63,52 @@ import Data.Char (toUpper)
 import Data.List (isInfixOf,sortBy)
 import Data.Monoid
 import ListUtil
+import Control.Monad.Reader
 
-landpageSignInviteView :: KontrakcjaTemplates -> Document -> IO String
-landpageSignInviteView templates document = do
-  partylist <- renderListTemplate templates . map (BS.toString . personname') $ partyListButAuthor document
-  renderTemplate templates "landpageSignInviteView" $ do
+modalSignInviteView :: Document -> KontraModal
+modalSignInviteView document = do
+  templates <- ask
+  partylist <- lift $ renderListTemplate templates . map (BS.toString . personname') $ partyListButAuthor document
+  lift $ renderTemplate templates "modalSignInviteView" $ do
     field "partyListButAuthor" partylist
     field "documenttitle" . BS.toString $ documenttitle document
 
 
-landpageSendInviteView :: KontrakcjaTemplates -> Document -> IO String
-landpageSendInviteView templates document = do
-  partylist <- renderListTemplate templates . map (BS.toString . personname') $ partyListButAuthor document
-  renderTemplate templates  "landpageSendInviteView" $ do
+modalSendInviteView ::  Document -> KontraModal
+modalSendInviteView document = do
+  templates <- ask  
+  partylist <- lift $ renderListTemplate templates . map (BS.toString . personname') $ partyListButAuthor document
+  lift $ renderTemplate templates  "modalSendInviteView" $ do
     field "partyListButAuthor" partylist
     field "documenttitle" . BS.toString $ documenttitle document
 
+modalRejectedView :: Document -> KontraModal
+modalRejectedView document = do
+  templates <- ask
+  partylist <-lift $ renderListTemplate templates . map (BS.toString . personname') $ partyList document
+  lift $ renderTemplate templates "modalRejectedView" $ do
+    field "partyList" partylist
+    field "documenttitle" . BS.toString $ documenttitle document
+
+modalLoginForSaveView :: KontraModal
+modalLoginForSaveView = do
+  templates <- ask
+  lift $ renderTemplate templates "modalLoginForSaveView" ()
+
+modalSignedView ::  Document -> SignatoryLink -> Bool -> KontraModal
+modalSignedView document@Document{documenttitle, documentstatus} signatorylink hasaccount = do
+  templates <- ask   
+  if documentstatus == Closed
+     then
+       lift $ renderTemplate templates "modalSignedViewClosed" $ do
+         field "partyListString" . renderListTemplate templates . map (BS.toString . personname') $ partyList document
+         field "documenttitle" $ BS.toString $ documenttitle
+         field "willCreateAccountForYou" $ willCreateAccountForYou templates document signatorylink hasaccount
+     else
+       lift $ renderTemplate templates "modalSignedViewNotClosed" $ do
+         field "partyUnsignedListString" . renderListTemplate templates . map (BS.toString . personname') $ partyUnsignedList document
+         field "documenttitle" . BS.toString $ documenttitle
+         field "willCreateAccountForYou" $ willCreateAccountForYou templates document signatorylink hasaccount 
 
 willCreateAccountForYou :: KontrakcjaTemplates -> Document -> SignatoryLink -> Bool -> IO String
 willCreateAccountForYou templates document siglink hasAccount =
@@ -90,35 +120,6 @@ willCreateAccountForYou templates document siglink hasAccount =
        renderTemplate templates "willCreateAccountForYouNoAccount" $ do
          field "documentid" $ show $ unDocumentID $ documentid document
          field "signatorylinkid" $ unSignatoryLinkID $ signatorylinkid siglink
-
-
-landpageRejectedView :: KontrakcjaTemplates -> Document -> IO String
-landpageRejectedView templates document = do
-  partylist <-renderListTemplate templates . map (BS.toString . personname') $ partyList document
-  renderTemplate templates "landpageRejectedView" $ do
-    field "partyList" partylist
-    field "documenttitle" . BS.toString $ documenttitle document
-
-
-landpageSignedView :: KontrakcjaTemplates -> Document -> SignatoryLink -> Bool -> IO String
-landpageSignedView templates document@Document{documenttitle, documentstatus} signatorylink hasaccount =
-  if documentstatus == Closed
-     then
-       renderTemplate templates "landpageSignedViewClosed" $ do
-         field "partyListString" . renderListTemplate templates . map (BS.toString . personname') $ partyList document
-         field "documenttitle" $ BS.toString $ documenttitle
-         field "willCreateAccountForYou" $ willCreateAccountForYou templates document signatorylink hasaccount
-     else
-       renderTemplate templates "landpageSignedViewNotClosed" $ do
-         field "partyUnsignedListString" . renderListTemplate templates . map (BS.toString . personname') $ partyUnsignedList document
-         field "documenttitle" . BS.toString $ documenttitle
-         field "willCreateAccountForYou" $ willCreateAccountForYou templates document signatorylink hasaccount 
-
-
-landpageLoginForSaveView :: KontrakcjaTemplates -> IO String
-landpageLoginForSaveView templates =
-  renderTemplate templates "landpageLoginForSaveView" ()
-
 
 flashDocumentDraftSaved :: KontrakcjaTemplates -> IO FlashMessage
 flashDocumentDraftSaved templates =

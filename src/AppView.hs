@@ -152,14 +152,18 @@ mainLinksFields = do
 -}
 contextInfoFields::Context -> Fields
 contextInfoFields ctx = do
-                         field "logged" $ isJust (ctxmaybeuser ctx)
-                         field "flashmessages" $ for (ctxflashmessages ctx) $ \fm -> do
-                             field "type" $ case fst (unFlashMessage  fm) of
-                                 SigningRelated -> "blue"
-                                 OperationDone -> "green"
-                                 OperationFailed -> "red" 
-                             field "message" $ snd (unFlashMessage fm)
-                         field "protocol" $ if (ctxproduction ctx) then "https:" else "http:"
-                         field "prefix" ""
-                         field "production" (ctxproduction ctx)
-                         
+    field "logged" $ isJust (ctxmaybeuser ctx)
+    field "flashmessages" $ for (ctxflashmessages ctx) flashMessageFields
+    field "protocol" $ if (ctxproduction ctx) then "https:" else "http:"
+    field "prefix" ""
+    field "production" (ctxproduction ctx)
+
+
+flashMessageFields fm = do
+    field "type" $ case fst (unFlashMessage fm) of
+                        SigningRelated -> "blue"
+                        OperationDone -> "green"
+                        OperationFailed -> "red" 
+                        _ -> ""
+    field "message" $ snd (unFlashMessage fm)   
+    field "isModal" $ fst (unFlashMessage fm) == Modal
