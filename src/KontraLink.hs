@@ -51,9 +51,6 @@ data KontraLink
     | LinkRemind Document SignatoryLink
     | LinkCancel Document
     | LinkRestart DocumentID
-    | LinkSigned DocumentID SignatoryLinkID 
-    | LinkRejected DocumentID SignatoryLinkID 
-    | LinkSignInvite DocumentID
     | LinkAcceptTOS
     | LinkAdminOnly
     | LinkAdminOnlyIndexDB
@@ -110,9 +107,6 @@ instance Show KontraLink where
     showsPrec _ (LinkRemind document signlink) = (++) $ "/resend/"++(show $ documentid document)++"/"++(show $ signatorylinkid signlink)   
     showsPrec _ (LinkCancel document) = (++) $ "/cancel/"++(show $ documentid document)
     showsPrec _ (LinkRestart documentid) = (++) $ "/restart/"++(show  documentid)
-    showsPrec _ (LinkSigned documentid signatorylinkid) = (++) $ "/landpage/signed/" ++ show documentid ++ "/" ++ show signatorylinkid
-    showsPrec _ (LinkRejected documentid signatorylinkid) = (++) $ "/landpage/rejected/" ++ show documentid ++ "/" ++ show signatorylinkid
-    showsPrec _ (LinkSignInvite documentid) = (++) $ "/landpage/signinvite/" ++ show documentid ++ "/"
     showsPrec _ LinkAdminOnly = (++) $ "/adminonly/"
     showsPrec _ LinkAdminOnlyIndexDB = (++) $ "/adminonly/db"
     showsPrec _ LinkStats = (++) $ "/stats"

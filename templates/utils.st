@@ -84,6 +84,7 @@ facebooklogo=
 flashmessages = 
 <div class="flashmsgbox">
             $flashmessages:{ flash | 
+              $if(!flash.isModal)$
                 <div class='flash-container $flash.type$'>
                     <div class='flash-content'>
                     <div class='skrivapa-logo float-left'></div>
@@ -92,6 +93,14 @@ flashmessages =
                     <div class='flash-close modal-close'></div>
                     </div> 
                </div>
+              $endif$
             }$
 </div>
+$flashmessages:{ flash | 
+    $if(flash.isModal)$
+        <div class="modalbox overlay">
+            $flash.message:noescape()$
+        </div>
+    $endif$
+}$
 ####

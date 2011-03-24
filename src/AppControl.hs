@@ -148,9 +148,6 @@ handleRoutes = msum [
      , dir "pages"  $ hget2 $ DocControl.showPage
      , dir "templates"  $ hget0 $ DocControl.getTemplatesForAjax
      , dir "template"  $ hpost0 $ DocControl.handleCreateFromTemplate
-     , dir "landpage" $ dir "signinvite" $ hget1 $ DocControl.landpageSignInvite
-     , dir "landpage" $ dir "signed"     $ hget2 $ DocControl.landpageSigned 
-     , dir "landpage" $ dir "rejected"   $ hget2 $ DocControl.landpageRejected
      , dir "landpage" $ dir "signedsave" $ hget2 $ DocControl.landpageSignedSave
      , dir "landpage" $ dir "signcanceleddatamismatch" $ hget2 $ BankID.handleSignCanceledDataMismatch
            

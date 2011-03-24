@@ -19,6 +19,7 @@ import Data.Maybe
 import Doc.DocControl
 import Doc.DocState
 import Doc.DocStateUtils
+import Doc.DocView
 import ELegitimation.ELeg
 import Happstack.Server
 import Happstack.State
@@ -214,7 +215,10 @@ handleSignPostBankID docid signid magic = do
                             return LinkMain -- where should we go?
                         Right document2 -> do
                             postDocumentChangeAction document2 olddocumentstatus (Just signid)
-                            return $ LinkSigned docid signid
+                            signatorylink <- signatoryLinkFromDocumentByID document signid
+                            maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
+                            addModal $  modalSignedView document signatorylink (isJust maybeuser)
+                            return $ LinkSignDoc document2 signatorylink
 
 {- |
     Handle the ajax request for an eleg signature for the author.
@@ -374,7 +378,7 @@ handleIssuePostBankID docid = withUserPost $ do
                                     return LinkMain
                                 Right newdocument -> do
                                     postDocumentChangeAction newdocument (documentstatus udoc) Nothing
-                                    return $ LinkSignInvite (documentid document)
+                                    return $ LinkIssueDoc (documentid document)
 
 handleSignCanceledDataMismatch :: DocumentID -> SignatoryLinkID -> Kontra Response
 handleSignCanceledDataMismatch docid signatorylinkid = do
