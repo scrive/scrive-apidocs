@@ -14,7 +14,9 @@ module Kontra
     , addModal
     , logUserToContext
     , onlySuperUser
-    , unloggedActionLink
+    , newPasswordReminderLink
+    , newAccountCreatedLink
+    --, newAccountCreatedBySigningLink
     , queryOrFail
     , returnJustOrMZero
     )
@@ -40,6 +42,7 @@ import qualified Network.AWS.Authentication as AWS
 import Templates.Templates  (KontrakcjaTemplates)
 import Mails.MailsConfig()
 import KontraLink
+import ActionSchedulerState
 import qualified TrustWeaver as TW
 import ELegitimation.ELeg
 import Mails.SendMail
@@ -159,17 +162,30 @@ logUserToContext user =  do
   ctx <- get
   put $ ctx { ctxmaybeuser =  user}    
 
-{- |
-   A link that can be used by un-logged in users, to do things like activate their login.
--}
-unloggedActionLink::User -> IO KontraLink
-unloggedActionLink user =  do
-                           session <- createLongTermSession (userid user)
-                           return $ LinkUnloggedUserAction (getSessionId session) 
-                                                           (getSessionMagicHash session) 
-                                                           (BS.toString $ unEmail $ useremail $ userinfo user)
-                                                           (BS.toString $ userfullname user)
-                                                       
+newPasswordReminderLink :: MonadIO m => User -> m KontraLink
+newPasswordReminderLink user = do
+    action <- liftIO $ newPasswordReminder user
+    return $ LinkUnloggedUserAction (actionID action)
+                                    (prToken $ actionType action)
+                                    (BS.toString . unEmail . useremail $ userinfo user)
+                                    (BS.toString $ userfullname user)
+
+newAccountCreatedLink :: MonadIO m => User -> m KontraLink
+newAccountCreatedLink user = do
+    action <- liftIO $ newAccountCreated user
+    return $ LinkUnloggedUserAction (actionID action)
+                                    (acToken $ actionType action)
+                                    (BS.toString . unEmail . useremail $ userinfo user)
+                                    (BS.toString $ userfullname user)
+
+{-newAccountCreatedBySigningLink :: MonadIO m => User -> m KontraLink
+newAccountCreatedBySigningLink user = do
+    action <- liftIO $ newAccountCreatedBySigning user
+    return $ LinkUnloggedUserAction (actionID action)
+                                    (acbsToken $ actionType action)
+                                    (BS.toString . unEmail . useremail $ userinfo user)
+                                    (BS.toString $ userfullname user)-}
+
 {- |
    Perform a query (like with query) but if it returns Nothing, mzero; otherwise, return fromJust
  -}

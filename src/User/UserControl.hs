@@ -1,5 +1,6 @@
 module User.UserControl where
 
+import ActionSchedulerState
 import Control.Monad.State
 import Control.Monad.Trans (liftIO,MonadIO,lift)
 import Control.Monad
@@ -16,7 +17,6 @@ import Happstack.Util.Common (readM)
 import KontraLink
 import Misc
 import Mails.SendMail
-import Session
 import System.Log.Logger
 import System.Process
 import System.Random
@@ -246,7 +246,7 @@ createUserForViralInvite ctx invitedemail =
       muser <- createInvitedUser BS.empty invitedemail
       case muser of
         Just user -> do
-                      chpwdlink <- unloggedActionLink (user)
+                      chpwdlink <- newAccountCreatedLink user
                       mail <- viralInviteMail (ctxtemplates ctx) ctx invitedemail chpwdlink
                       sendMail (ctxmailer ctx) $ mail { fullnameemails = [(BS.empty, invitedemail)]}
                       return muser
@@ -261,7 +261,7 @@ createNewUserByAdmin ctx fullname email freetill custommessage =
                     when (isJust freetill) $ update $ FreeUserFromPayments user (fromJust freetill)
                     now <- liftIO $ getMinutesTime
                     update $ SetInviteInfo (ctxmaybeuser ctx) now Admin (userid user)
-                    chpwdlink <- unloggedActionLink (user)
+                    chpwdlink <- newAccountCreatedLink user
                     mail <- mailNewAccountCreatedByAdmin (ctxtemplates ctx) ctx fullname email chpwdlink custommessage
                     sendMail (ctxmailer ctx) $ mail { fullnameemails = [(fullname, email)]} 
                     return muser
@@ -282,13 +282,15 @@ createUser1 ctx hostpart fullname email password isnewuser maybesupervisor vip =
   muser <- update $ AddUser fullname email passwdhash (fmap userid maybesupervisor)
   case muser of 
    Just user -> do
-        al <- unloggedActionLink (user)
         mail <- case maybesupervisor of
                   Nothing -> if not isnewuser
-                             then passwordChangeMail (ctxtemplates ctx) hostpart email fullname al
-                             else newUserMail (ctxtemplates ctx) hostpart email fullname al vip
-                  Just supervisor -> inviteSubaccountMail (ctxtemplates ctx) hostpart (prettyName  supervisor) (usercompanyname $ userinfo supervisor)
-                                        email fullname al
+                             then passwordChangeMail (ctxtemplates ctx) hostpart email fullname =<< newPasswordReminderLink user
+                             else do
+                                 al <- newAccountCreatedLink user
+                                 newUserMail (ctxtemplates ctx) hostpart email fullname al vip
+                  Just supervisor -> do
+                      al <- newAccountCreatedLink user
+                      inviteSubaccountMail (ctxtemplates ctx) hostpart (prettyName  supervisor) (usercompanyname $ userinfo supervisor) email fullname al
         sendMail (ctxmailer ctx) $ mail { fullnameemails = [(fullname, email)]}
         return muser
    Nothing -> return muser     
@@ -393,41 +395,41 @@ handleQuestion = do
                                                             title = BS.fromString $ "Question",
                                                             content = BS.fromString $ content }
                       return LinkMain
-                                                                             
-                                                
 
-unloggedActionPage::String->String -> Kontra Response                         
-unloggedActionPage sid mh = do
-                      muser <- userFromExternalSessionData sid mh 
-                      name <- fmap  (fromMaybe "")  $ getField "name"
-                      email <- fmap  (fromMaybe "") $ getField "email"
-                      case muser of 
-                        Just user -> if (isNothing $ userhasacceptedtermsofservice user)
-                                     then activatePage muser (name,email)                           
-                                     else newPasswordPage muser  (name,email)
-                        Nothing -> do 
-                                    muserFromEmail <- query $ GetUserByEmail $ Email $ BS.fromString email
-                                    case (muserFromEmail) of 
-                                     Just userFromEmail -> if (isNothing $ userhasacceptedtermsofservice userFromEmail)
-                                                            then activatePage Nothing (name,email) 
-                                                            else newPasswordPage Nothing (name,email) 
-                                     Nothing -> newPasswordPage Nothing (name,email)              
-                  
-handleUnloggedAction::String->String -> Kontra KontraLink
-handleUnloggedAction sid mh = do
-                      muser <- userFromExternalSessionData sid mh 
-                      case muser of 
-                        Just user -> if (isNothing $ userhasacceptedtermsofservice user)
-                                     then handleActivate muser (dropExternalSession sid mh)                           
-                                     else handleChangePassword muser  (dropExternalSession sid mh)
-                        Nothing -> do
-                                     resendActivate <- getField "resendActivate"
-                                     if (isJust resendActivate)
-                                      then handleActivate Nothing (dropExternalSession sid mh)
-                                      else return LoopBack             
+unloggedActionPage :: ActionID -> MagicHash -> Kontra Response
+unloggedActionPage aid hash = do
+    muser <- getUserFromAction aid hash
+    name  <- fromMaybe "" <$> getField "name"
+    email <- fromMaybe "" <$> getField "email"
+    case muser of
+         Just user ->
+             if (isNothing $ userhasacceptedtermsofservice user)
+                then activatePage muser (name, email)
+                else newPasswordPage muser (name, email)
+         Nothing -> do
+             muserFromEmail <- query $ GetUserByEmail $ Email $ BS.fromString email
+             case muserFromEmail of
+                  Just userFromEmail ->
+                      if isNothing $ userhasacceptedtermsofservice userFromEmail
+                         then activatePage Nothing (name, email)
+                         else newPasswordPage Nothing (name, email)
+                  Nothing -> newPasswordPage Nothing (name, email)
 
+handleUnloggedAction :: ActionID -> MagicHash -> Kontra KontraLink
+handleUnloggedAction aid hash = do
+    muser <- getUserFromAction aid hash
+    case muser of
+         Just user ->
+            if isNothing $ userhasacceptedtermsofservice user
+               then handleActivate muser $ dropExistingAction aid
+               else handleChangePassword muser $ dropExistingAction aid
+         Nothing -> do
+             resendActivate <- getField "resendActivate"
+             if isJust resendActivate
+                then handleActivate Nothing $ dropExistingAction aid
+                else return LoopBack
 
-activatePage::Maybe User -> (String,String) ->  Kontra Response                                    
+activatePage::Maybe User -> (String,String) ->  Kontra Response
 activatePage muser (name,email) = do
                    ctx <- get
                    case muser of 
@@ -464,8 +466,7 @@ handleChangePassword muser dropSessionAction = do
                                           return LoopBack
                                    _ -> return LoopBack
                             Nothing -> return LoopBack
-                                       
-                                         
+
 newPasswordPage::Maybe User -> (String,String) -> Kontra Response
 newPasswordPage muser (name,email)= do
                        ctx <- get
@@ -476,7 +477,7 @@ newPasswordPage muser (name,email)= do
                         Nothing -> do 
                                  addFlashMsg =<< (liftIO $ flashMessagePasswordChangeLinkNotValid (ctxtemplates ctx)) 
                                  sendRedirect LinkMain        
-                                 
+
 handleActivate::(Maybe User) ->Kontra () -> Kontra KontraLink
 handleActivate muser dropSessionAction = do
                     ctx <- get
@@ -524,7 +525,7 @@ handleActivate muser dropSessionAction = do
                                                       Just user -> 
                                                           if (isNothing $ userhasacceptedtermsofservice user) 
                                                           then  
-                                                               do  al <- liftIO $ unloggedActionLink user
+                                                               do  al <- newAccountCreatedLink user
                                                                    mail <-  liftIO $ newUserMail (ctxtemplates ctx) (ctxhostpart ctx) email email al False
                                                                    liftIO $ sendMail (ctxmailer ctx) $ mail { fullnameemails = [(email, email)]}
                                                                    addFlashMsg =<< (liftIO $ flashMessageNewActivationLinkSend  (ctxtemplates ctx)) 
@@ -541,19 +542,27 @@ handleActivate muser dropSessionAction = do
                                          return LinkMain   
                       _ -> return LoopBack
 
-userFromExternalSessionData ::String -> String -> Kontra (Maybe User)
-userFromExternalSessionData sid mh = do
-                                      msession <- sequenceMM $ 
-                                           do
-                                            sid' <- readM sid
-                                            mh' <- readM mh
-                                            return $ findSession sid' mh'
-                                      muser <-  sequenceMM $ 
-                                           do
-                                            session <- msession
-                                            userId <- getSessionUserID session
-                                            return $ liftIO $ query $ GetUserByUserID userId
-                                      return muser
-                                      
-dropExternalSession::String -> String -> Kontra ()
-dropExternalSession sid _ = fromMaybe (return ()) $ fmap (liftIO . dropSession) (readM sid)
+getUserFromAction :: ActionID -> MagicHash -> Kontra (Maybe User)
+getUserFromAction aid hash = do
+    now <- liftIO $ getMinutesTime
+    maction <- liftIO $ checkValidity now <$> query (GetAction aid)
+    case maction of
+         Just action -> do
+             muid <- case actionType action of
+                          PasswordReminder uid token -> verifyToken token uid
+                          AccountCreated uid token    -> verifyToken token uid
+                          _                           -> return Nothing
+             case muid of
+                  Just uid -> liftIO $ query $ GetUserByUserID uid
+                  Nothing  -> return Nothing
+         Nothing     -> return Nothing
+    where
+        verifyToken token uid = return $
+            if hash == token
+               then Just uid
+               else Nothing
+
+dropExistingAction :: ActionID -> Kontra ()
+dropExistingAction aid = do
+    _ <- liftIO $ update $ DeleteAction aid
+    return ()
