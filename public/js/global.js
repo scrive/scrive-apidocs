@@ -230,7 +230,7 @@ function initFileInputs(){
     upload.MultiFile({
       list: upload.attr("rel"),
       onFileAppend: function() { 
-        displayLoadingOverlay("Uploading . . .");
+        displayLoadingOverlay("Laddar upp . . .");
         if (upload.hasClass("submitOnUpload")) {
           form.submit();
         }
