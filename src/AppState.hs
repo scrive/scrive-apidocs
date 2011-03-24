@@ -12,7 +12,7 @@ import Happstack.State
 import Payments.PaymentsState
 import Session
 import Kontra
-import ActionQueueState
+import ActionSchedulerState
 import Data.Data
 import Misc
 
