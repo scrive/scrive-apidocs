@@ -775,10 +775,17 @@ getCSVFile fieldname = do
             then return Empty
             else do
               let title = BS.fromString (basename filename)
-                  mcontents = parse csvFile "" . BS.toString . concatChunks $ content
+                  --there's a bug in the Data.CSV library I think, it wants a newline at the end of everything!
+                  mcontents = fmap (filter (\r->(not $ isEmptyRow r))) . parse csvFile "" . (++"\n") . BS.toString . concatChunks $ content
               case mcontents of
                  Left _ -> return $ Bad flashMessageFailedToParseCSV
-                 Right contents -> return $ Good (title, map (map BS.fromString) contents)
+                 Right contents 
+                   | length contents > rowlimit -> return . Bad $ flashMessageCSVHasTooManyRows rowlimit 
+                   | otherwise -> return $ Good (title, map (map BS.fromString) contents)
+    rowlimit = 500
+    isEmptyRow [] = True
+    isEmptyRow [""] = True
+    isEmptyRow _ = False
 
 handleIssueSave document author = do
     ctx <- get
