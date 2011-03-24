@@ -36,9 +36,8 @@ data CleanCSVData = CleanCSVData
 -}
 cleanCSVContents :: [[BS.ByteString]] -> ([CSVProblem], CleanCSVData)
 cleanCSVContents contents = 
-  let rows = filter (\x -> not (null x)) contents
-      (mheader, _) = lookForHeader . zipWith cleanRow [0..] $ take 1 rows
-      bodyrows = if (isJust mheader) then drop 1 rows else rows
+  let (mheader, _) = lookForHeader . zipWith cleanRow [0..] $ take 1 contents
+      bodyrows = if (isJust mheader) then drop 1 contents else contents
       rowresults = zipWith cleanRow [0..] bodyrows
       rowproblems = concat . map fst $ rowresults
       body = map snd $ rowresults

@@ -157,6 +157,9 @@ flashMessageMissingRequiredField=Du har missat att fylla i ett obligatoriskt fä
 ###
 flashMessageFailedToParseCSV=Misslyckad tolkning av .csv, var vänlig och kontrollera och ladda upp igen.
 ###
+flashMessageCSVHasTooManyRows=Vi beklagar, men vi har begränsat denna fuktion til $maxrows$ rader.
+<br/>Var vänlig kontakta vår support om du behöver infoga fler än $maxrows$ rader.
+###
 flashMessageNoDataInCSV=Kunde inte hitta några data i filen.
 ###
 flashMessageNoDataInCSVApartFromHeader=Kunde inte hitta några data i filen, kunde bara hitta titlar.

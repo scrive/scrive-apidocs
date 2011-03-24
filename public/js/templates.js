@@ -866,7 +866,7 @@ function signatoryToHTML(isMultiple, sig) {
   var n = "Unnamed";
 
   if (isMultiple) {
-    n = "Multiple part"
+    n = "Massutskick"
   } else if(sig.fstname == "" && sig.sndname == "") {
     n = "(Namnlös)";
   } else {
@@ -941,7 +941,15 @@ function initializeTemplates () {
     updateStatus($(this));
   });
 
-  $("#personpane").children().removeClass("currentPerson").last().addClass("currentPerson");
+  var people = $("#personpane").children().removeClass("currentPerson");
+  if (initialpart<1 || initialpart>people.length) {
+    people.last().addClass("currentPerson");
+  } else {
+    people.eq(initialpart - 1).addClass("currentPerson");
+    if (isaftercsvupload) {
+      people.eq(initialpart - 1).find(".csvinfo").click();
+    }
+  }
 
   $("form").submit(function () {
     var form = $("form");

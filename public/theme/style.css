@@ -2219,6 +2219,10 @@ form {
    color: red;
 }
 
+a.csvinvalid {
+   color: red;
+}
+
 .csvpagecontainer {
    display: none;
    padding: 10px;
@@ -2287,6 +2291,11 @@ form {
 
 .signStepsBodyIcons .plus{
   margin-top:1px;
+}
+
+.signStepsBodyIcons .csvinfo 
+{
+  width:150px;
 }
 
 #sendinvite.btn-small {
