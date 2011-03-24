@@ -165,10 +165,8 @@ logUserToContext user =  do
 newPasswordReminderLink :: MonadIO m => User -> m KontraLink
 newPasswordReminderLink user = do
     action <- liftIO $ newPasswordReminder user
-    return $ LinkUnloggedUserAction (actionID action)
-                                    (prToken $ actionType action)
-                                    (BS.toString . unEmail . useremail $ userinfo user)
-                                    (BS.toString $ userfullname user)
+    return $ LinkPasswordReminder (actionID action)
+                                  (prToken $ actionType action)
 
 newAccountCreatedLink :: MonadIO m => User -> m KontraLink
 newAccountCreatedLink user = do

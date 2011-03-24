@@ -57,6 +57,7 @@ data KontraLink
     | LinkStats
     | LinkPaymentsAdmin
     | LinkUserAdmin (Maybe UserID)
+    | LinkPasswordReminder ActionID MagicHash
     | LinkUnloggedUserAction ActionID MagicHash String String -- email / username
     | LinkChangeSignatoryEmail DocumentID SignatoryLinkID 
     | LinkWithdrawn DocumentID 
@@ -113,6 +114,7 @@ instance Show KontraLink where
     showsPrec _ (LinkPaymentsAdmin ) = (++) $ "/adminonly/advpayments"
     showsPrec _ (LinkUserAdmin Nothing) = (++) $ "/adminonly/useradmin"
     showsPrec _ (LinkUserAdmin (Just userId)) = (++) $ "/adminonly/useradmin/"++show userId
+    showsPrec _ (LinkPasswordReminder (ActionID aid) hash) = (++) $ "/amnesia/" ++ show aid ++ "/" ++ show hash
     showsPrec _ (LinkUnloggedUserAction (ActionID aid) mh email username) = (++) $ "/accountsetup/" ++ show aid ++ "/" ++ show mh ++
                                                                                        "?" ++ "email=" ++ email ++
                                                                                        "&" ++ "name="++ username
