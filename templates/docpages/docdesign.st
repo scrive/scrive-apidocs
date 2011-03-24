@@ -371,7 +371,7 @@ $endif$
 </div>
 #####
 validationdropdown= 
-<div style="display:none">
+<div>
   <p>Verifieringsmetod</p>
   <select name="validationmethod"
           id="validationdropdown">
