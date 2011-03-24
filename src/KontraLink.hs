@@ -72,6 +72,7 @@ data KontraLink
     | LinkAskQuestion
     | LinkInvite
     | LinkPayExView (Maybe PaymentId)
+    | LinkSignCanceledDataMismatch DocumentID SignatoryLinkID
    
 {- |
    Shows each link as a relative url
@@ -133,6 +134,7 @@ instance Show KontraLink where
     showsPrec _ (LinkInvite) = (++) "/invite"
     showsPrec _ (LinkPayExView Nothing) = (++) $ "/payex"
     showsPrec _ (LinkPayExView (Just pid)) = (++) $ "/payex/" ++ show pid
+    showsPrec _ (LinkSignCanceledDataMismatch docid sigid) = (++) $ "/landpage/signcanceleddatamismatch/" ++ show docid ++ "/" ++ show sigid
     
     
 -- type class instances used for xml'ing the KontraLinks
