@@ -387,7 +387,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
       <div class="modal-header">
         <div class="modal-icon message"></div>
         <div class="modal-title">
-          <h2>Massutskick</h2>
+          <h2>Massutskick Granska Data</h2>
         </div>
         <a class="modal-close close"> </a>
       </div>
@@ -448,7 +448,17 @@ pageDocumentForAuthorHelpersLocalDialogs=
         </div>
       </div>
       <div class="modal-footer">
-        <div>Something for reloading.</div>  
+        <span class="uploadButton float-left">  
+          <a href="#attachFile"><span class="icon arrowUp"></span></a>
+          <a href="#attachFile"><span class="text" style="top:-3px;">Välj fil</span></a> 
+          <input class="multiFileInput submitOnUpload" maxlength="1" type="file" name="csv" accept="application/csv" rel=".filelist"/>
+        </span>  
+        <span class="filelist" style="display:none;"></span>
+        <a class="btn-small green float-right close" href="#">
+          <div class="left"></div>
+          <div class="label"><p>OK</p></div>
+          <div class="right"></div>
+        </a>
       </div>
     </div>
   </form>

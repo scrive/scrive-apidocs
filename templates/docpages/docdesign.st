@@ -293,6 +293,9 @@ $endif$
 <div id="documentBox">
   <script type="text/javascript">
     var docstate = $docstate:noescape()$;
+    var csvrowcount = $csvrowcount$;
+    var initialpart = $initialpart$;
+    var isaftercsvupload = $if(isaftercsvupload)$true$else$false$endif$;
   </script>
   <script src="/js/templates.js" type="text/javascript"></script>
   <div class="waiting4page"></div>
@@ -303,7 +306,7 @@ $endif$
     <a href="#minus2" class="minus"></a>
     <img src="/theme/images/iconHand.png" class="draghandle" alt="drag" />
   </span>
-  <span class="csvfileinfo"><a href="#" class="csvinfo" rel="#dialog-csvupload-2">$csvfilename$.csv</a></span>
+  <span class="csvfileinfo"><a href="#" class="csvinfo$if(!isvalidcsv)$ csvinvalid$endif$" rel="#dialog-csvupload-2">Granska data</a></span>
   <span class="persondetails">
     
     <!-- 008 change/new -->
@@ -321,7 +324,6 @@ $endif$
         <a href="#" class="single">En part</a>
       </div>
       <input type="hidden" name="sigid" value="" />
-      <input type="hidden" name="signatorytype" value="single" />
       <span class="fields">
         <span class='dragfield sigfstname inputWrapper'>
           <span style="display:none;" class="fieldid">fstname</span>

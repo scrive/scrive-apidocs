@@ -230,7 +230,7 @@ function initFileInputs(){
     upload.MultiFile({
       list: upload.attr("rel"),
       onFileAppend: function() { 
-        displayLoadingOverlay("Uploading . . .");
+        displayLoadingOverlay("Laddar upp . . .");
         if (upload.hasClass("submitOnUpload")) {
           form.submit();
         }
@@ -304,9 +304,14 @@ function allparties()
       var sigs = $("form .persondetails").filter(":not(.authordetails)");
       var allparties = new Array();
       sigs.each(function(index) { 
-        var fstname = $("input[name='signatoryfstname']",this).val();
-        var sndname = $("input[name='signatorysndname']",this).val();  
-        allparties.push(escapeHTML(fstname + " " + sndname));
+        var fstnameelem = $("input[name='signatoryfstname']", this);
+        if (isMultiPartElem(fstnameelem)) {
+          allparties.push(csvrowcount + " Parts");
+        } else {
+          var fstname = fstnameelem.val();
+          var sndname = $("input[name='signatorysndname']",this).val();  
+          allparties.push(escapeHTML(fstname + " " + sndname));
+        }
       });
       return allparties;   
 }
@@ -315,6 +320,7 @@ safeReady(function() {
   $("#sendinvite").overlay({
     mask: standardDialogMask,
     onBeforeLoad: function(){
+      if (isInvalidCSV()) return false;
       if (!emailFieldsValidation(noMultiParts($(".stepForm input[type='email']")))) return false;
       if (!nonZeroSignatories()) return false;
       if (!authorFieldsValidation()) return false;
@@ -328,6 +334,7 @@ safeReady(function() {
     mask: standardDialogMask,    
     onBeforeLoad: function () { 
       if (!checkSignPossibility()) return false;
+      if (isInvalidCSV()) return false;
       if (!emailFieldsValidation(noMultiParts($(".stepForm input[type='email']")))) return false;
       if (!nonZeroSignatories()) return false;
       if (!authorFieldsValidation()) return false;
@@ -744,6 +751,10 @@ function sigFieldsValidation(){
   }
 }
 
+function isInvalidCSV() {
+  return $("#personpane .persondetails .csvinvalid").length > 0;
+}
+
 function nonZeroSignatories() {
   var sigs = 0;
   if($("#authorsignatoryradio").attr("checked")) {
@@ -1015,7 +1026,7 @@ $(document).ready(function() {
                     val = "(Namnlös)";
                 }
                 if (isMultiPartElem($(this))) {
-                    val = "Mutiple Part";
+                    val = "Massutskick";
                 }
                 $('#peopleList li:eq(' + idx + ') a').text(val);
             });

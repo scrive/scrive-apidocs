@@ -20,6 +20,7 @@ module Doc.DocView (
   , flashDocumentTemplateSaved
   , flashAuthorSigned
   , flashMessageFailedToParseCSV
+  , flashMessageCSVHasTooManyRows
   , landpageRejectedView
   , defaultInviteMessage
   , mailDocumentRemind
@@ -153,7 +154,11 @@ flashAuthorSigned templates =
 flashMessageFailedToParseCSV :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageFailedToParseCSV templates = 
   toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageFailedToParseCSV" ()
-  
+
+flashMessageCSVHasTooManyRows :: Int -> KontrakcjaTemplates -> IO FlashMessage
+flashMessageCSVHasTooManyRows maxrows templates = 
+  toFlashMsg OperationFailed <$> (renderTemplate templates "flashMessageCSVHasTooManyRows" $ field "maxrows" maxrows)
+
 -- All doc view
 singlnkFields :: SignatoryLink -> Fields
 singlnkFields sl = do
@@ -397,6 +402,8 @@ pageDocumentForAuthor ctx
        field "csvproblems" $ csvproblemfields
        field "csvproblemcount" $ length csvproblems
        field "csvpages" $ zipWith (csvPageFields csvproblems (length csvdata) 5) [0,chunksize..] csvpages
+       field "csvrowcount" $ length csvdata
+       field "isvalidcsv" $ null csvproblems
        documentInfoFields document
        designViewFields step
        field "datamismatchflash" $ getDataMismatchMessage $ documentcancelationreason document
@@ -723,7 +730,15 @@ designViewFields step = do
         (Just (DesignStep2 _ _ _ )) -> field "step2" True
         (Just (DesignStep1)) -> field "step1" True
         _ -> field "step2" True
-        
+    field "initialpart" $ 
+      case step of
+        (Just (DesignStep2 _ (Just part) _ )) -> part
+        _ -> 0
+    field "isaftercsvupload" $
+      case step of
+        (Just (DesignStep2 _ _ (Just AfterCSVUpload))) -> True
+        _ -> False
+
 
 uploadPage :: KontrakcjaTemplates -> ListParams -> Bool -> IO String
 uploadPage templates params showTemplates = renderTemplate templates "uploadPage" $ do
