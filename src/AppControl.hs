@@ -570,23 +570,17 @@ onlySuperUserGet action = do
 daveDocument :: DocumentID -> Kontra Response
 daveDocument documentid = onlySuperUserGet $ do
       ctx <- get
-      mdocument <- query $ GetDocumentByDocumentID documentid
-      case mdocument of
-        Nothing -> mzero
-        Just document ->
-          V.renderFromBody ctx V.TopNone V.kontrakcja $ inspectXML document
+      document <- queryOrFail $ GetDocumentByDocumentID documentid
+      V.renderFromBody ctx V.TopNone V.kontrakcja $ inspectXML document
 
 {- |
    Used by super users to inspect a particular user.
 -}
 daveUser :: UserID -> Kontra Response
 daveUser userid = onlySuperUserGet $ do 
-      ctx <- get
-      muser <- query $ GetUserByUserID userid
-      case muser of
-        Nothing -> mzero
-        Just user ->
-          V.renderFromBody ctx V.TopNone V.kontrakcja $ inspectXML user
+    ctx <- get
+    user <- queryOrFail $ GetUserByUserID userid
+    V.renderFromBody ctx V.TopNone V.kontrakcja $ inspectXML user
 
 
 
