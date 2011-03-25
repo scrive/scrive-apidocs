@@ -2201,17 +2201,29 @@ form {
     z-index: 6000
 }
 
+
+.csv-dialog-2-container {
+        width: 900px;
+        left: -130px;
+        top: -20px;
+}
+
+.csvproblemfooter {
+  padding-top: 10px;
+  padding-bottom: 40px;
+}
+
+.csvproblemcount {
+  text-align: center;
+}
+
 .csvproblemcontainer {
    display: none;
-   padding: 10px;
+   padding-right: 30px;
 }
 
 .currentcsvproblem {
    display: block;
-}
-
-.csvproblemfooter {
-   text-align: center;
 }
 
 .csvproblem {
@@ -2222,17 +2234,27 @@ a.csvinvalid {
    color: red;
 }
 
+.csvpagecontents {
+   padding-right: 100px;
+   height: 220px;
+}
+
 .csvpagecontainer {
    display: none;
-   padding: 10px;
+}
+
+.csvdata {
+   padding-bottom: 20px;
+   padding-right: 30px;
+}
+
+.csvpagefooter {
+  padding-top: 10px;
+  padding-bottom: 10px;
 }
 
 .currentcsvpage {
    display: block;
-}
-
-.csvpagefooter {
-   text-align: center;
 }
 
 .csvpagecontainer th {
@@ -2241,6 +2263,7 @@ a.csvinvalid {
    padding-bottom: 2px;
    padding-left: 5px;
    padding-right: 5px;
+   width: 100px;
 }
 
 .csvpagecontainer td {
@@ -2249,6 +2272,11 @@ a.csvinvalid {
    padding-bottom: 2px;
    padding-left: 5px;
    padding-right: 5px;
+   width: 100px;
+}
+
+.rownumbercol {
+   width: 30px;
 }
 .persondetails {
     width: 360px;

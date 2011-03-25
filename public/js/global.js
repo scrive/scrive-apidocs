@@ -644,21 +644,8 @@ function activateSignInvite(){
     checkBox.removeAttr("DISABLED");
 }
 function showProperSignButtons() {
-  var sigfields = $(".dragfield").filter(function() {
-    var field = $(this);
-    var fillstatus = getFillStatus(field);
-    
-    if(!isStandardField(field) && fillstatus === 'sig') {
-      return true;
-    } else {
-      return false;
-    }
-  });
 
-  if(sigfields.size() > 0) {
-    // we're awaiting author mode
-    deactivateSigninvite(); 
-  } else if($("#authorsignatoryradio").attr("checked")) {
+  if($("#authorsignatoryradio").attr("checked")) {
     activateSignInvite();
   } else {
     deactivateSigninvite();
@@ -667,10 +654,6 @@ function showProperSignButtons() {
   if($("#authorsecretaryradio").attr("checked")) {
     $("#dialog-confirm-text-send").show();
     $("#dialog-confirm-text-send-fields").hide();
-    $("#dialog-confirm-text-send-normal").hide();
-  } else if(sigfields.size() > 0) {
-    $("#dialog-confirm-text-send").hide();
-    $("#dialog-confirm-text-send-fields").show();
     $("#dialog-confirm-text-send-normal").hide();
   } else {
     // normal
@@ -702,27 +685,10 @@ function emailFieldsValidation(fields){
 }
 
 function checkSignPossibility() {
-  var sigfields = $(".dragfield").filter(function() {
-    var field = $(this);
-    var dragstatus = getDragStatus(field);
-    var fillstatus = getFillStatus(field);
-    
-    if(!isStandardField(field) && dragstatus === 'placed' && fillstatus === 'sig') {
-      return true;
-    } else {
-      return false;
-    }
-  });
   if($("#authorsecretaryradio").attr("checked")) {
     // secretary
     $(".authordetails .man").addClass("redborder");   
     addFlashMessage("Du kan inte underteckna när du är sekreterare. Om du vill underteckna, gå tillbaks till steg 2 och byt roll.","red");
-    return false;
-  } else if(sigfields.size() > 0) {
-    // we're awaiting author mode 
-    sigfields.addClass("redborder");
-    fieldValidationType = "fillstatus";
-    addFlashMessage("Du kan inte underteckna när du har utplacerade fält som inte är ifyllda. Antingen skicka (och underteckna sist) eller gå tillbaks till steg 2 och åtgärda fältet.","red");
     return false;
   } else {
     // sign is possible
@@ -751,18 +717,6 @@ function authorFieldsValidation() {
     }
     remainingAuthorFields.addClass('redborder').addClass('offending');
     fieldValidationType = "fillstatus";
-    return false;
-  }
-
-  var remainingDragFields = dragfields.filter(function() {
-    return getDragStatus($(this)) === 'must place';
-  });
-
-  if(remainingDragFields.size() > 0) {
-    var dragMsg = "Du har inte lagt till alla skapade fält i dokumentet. Vänligen försök igen.";
-    addFlashMessage(dragMsg,"red");
-    remainingDragFields.addClass('redborder').addClass('offending');
-    fieldValidationType = "dragstatus";
     return false;
   }
 

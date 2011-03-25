@@ -356,8 +356,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
       <div class="modal-body">
         <div class="modal-content">
           <div>     
-            Du har nu valt att göra ett massutskick, för att genomföra detta krävs att du laddar
-            upp ett dokument med formatet .csv där kölumnerna är kommasepererade.
+            Du har valt att göra ett massutskick, för att genomföra detta krävs att du laddar upp ett dokument med formatet .csv
           </div>
           <div class="signStepsBodyUploadBox">
             <div>
@@ -368,11 +367,12 @@ pageDocumentForAuthorHelpersLocalDialogs=
             </div>
             <br/>
             <div class="signStepsButtonContainer">
-              <div class="uploadButton" >  
-                <a href="#attachFile"><span class="icon arrowUp"></span></a>
-                <a href="#attachFile"> <span class="text">Välj fil</span></a> 
-                <input class="multiFileInput submitOnUpload" maxlength="1" type="file" name="csv" accept="application/csv" rel=".filelist" />
-              </div>
+              <a class="btn-small green">  
+                <div class="left"> </div>
+                <div class="label" style="width:80px"> Välj fil </div> 
+                <div class="right"> </div>
+                <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px" maxlength="1" type="file" name="csv" accept="application/csv" rel=".filelist" />
+              </a>
               <div class="filelist" style="display:none;"></div>
             </div>
           </div>
@@ -383,7 +383,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
   
   <form method="post" name="form" action="" class="overlay redirectsubmitform" id="dialog-csvupload-2" rel=".stepForm">
     <input type="hidden" name="csvupload" value="true" />
-    <div class="modal-container">
+    <div class="modal-container csv-dialog-2-container">
       <div class="modal-header">
         <div class="modal-icon message"></div>
         <div class="modal-title">
@@ -404,9 +404,27 @@ pageDocumentForAuthorHelpersLocalDialogs=
                   $csvproblem.problemdesc$
                 </div>
                 <div class="csvproblemfooter">
-                  <span>$if(!csvproblem.isfirstproblem)$<a href="#" class="previousproblem"><-</a>$else$<-$endif$</span>
-                  <span>$csvproblem.problemnumber$/$csvproblemcount$</span>
-                  <span>$if(!csvproblem.islastproblem)$<a href="#" class="nextproblem">-></a>$else$->$endif$</span>
+                  <div class="csvproblemcount">$csvproblem.problemnumber$/$csvproblemcount$</div>
+                  $if(!csvproblem.isfirstproblem)$
+                    <a class="btn-tiny black float-left previousproblem" href="#">
+                      <div class="left"></div>
+                      <div class="label">
+                        <span class="btn-symbol black arrow-right"></span>
+                        <span>Bakåt</span>
+                      </div>
+                      <div class="right"></div>
+                    </a>
+                  $endif$
+                  $if(!csvproblem.islastproblem)$
+                    <a class="btn-tiny black float-right nextproblem" href="#">
+                      <div class="left"></div>
+                      <div class="label">
+                        <span>Nästa</span>
+                        <span class="btn-symbol black arrow-left"></span>
+                      </div>
+                      <div class="right"></div>
+                    </a>
+                  $endif$
                 </div>
               </div>
             }$
@@ -418,18 +436,21 @@ pageDocumentForAuthorHelpersLocalDialogs=
                   <table>
                     <theader>
                       <tr>
-                        <th>&nbsp;</th>
+                        <th class="rownumbercol">&nbsp;</th>
                         <th>Förnamn</th>
                         <th>Efternamn</th>
                         <th>E-post</th>
                         <th>Företag</th>
                         <th>Org.nr./Pers.nr</th>
+                        $csvcustomfields: {csvcustomfield |
+                          <th>$csvcustomfield$</th>
+                        }$
                       </tr>
                     </theader>
                     <tbody>
                       $csvpage.csvrows: {csvrow |
                         <tr$if(csvrow.isproblem)$ class="csvproblem"$endif$>
-                          <td>$csvrow.rownumber$</td>
+                          <td class="rownumbercol">$csvrow.rownumber$</td>
                           $csvrow.csvfields: { csvfield |
                             <td$if(csvfield.isproblem)$ class="csvproblem"$endif$>$csvfield.value$</td>
                           }$
@@ -439,8 +460,26 @@ pageDocumentForAuthorHelpersLocalDialogs=
                   </table>
                 </div>
                 <div class="csvpagefooter">
-                  <span>$if(!csvpage.isfirstcsvpage)$<a href="#" class="previouscsvpage"><-</a>$else$<-$endif$</span>
-                  <span>$if(!csvpage.islastcsvpage)$<a href="#" class="nextcsvpage">-></a>$else$->$endif$</span>
+                  $if(!csvpage.isfirstcsvpage)$
+                    <a class="btn-tiny black float-left previouscsvpage" href="#">
+                      <div class="left"></div>
+                      <div class="label">
+                        <span class="btn-symbol black arrow-right"></span>
+                        <span>Bakåt</span>
+                      </div>
+                      <div class="right"></div>
+                    </a>
+                  $endif$
+                  $if(!csvpage.islastcsvpage)$
+                    <a class="btn-tiny black float-right nextcsvpage" href="#">
+                      <div class="left"></div>
+                      <div class="label">
+                        <span>Nästa</span>
+                        <span class="btn-symbol black arrow-left"></span>
+                      </div>
+                      <div class="right"></div>
+                    </a>
+                  $endif$
                 </div>
               </div>
             }$
@@ -448,15 +487,16 @@ pageDocumentForAuthorHelpersLocalDialogs=
         </div>
       </div>
       <div class="modal-footer">
-        <span class="uploadButton float-left">  
-          <a href="#attachFile"><span class="icon arrowUp"></span></a>
-          <a href="#attachFile"><span class="text" style="top:-3px;">Välj fil</span></a> 
-          <input class="multiFileInput submitOnUpload" maxlength="1" type="file" name="csv" accept="application/csv" rel=".filelist"/>
-        </span>  
-        <span class="filelist" style="display:none;"></span>
+        
+          <a class="cancel float-left" style="height:40px;">  
+            <div class="label"> Välj fil </div> 
+            <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px;width:50px;" maxlength="1" type="file" name="csv" accept="application/csv" rel=".filelist"/>
+          </a>
+        
+        <div class="filelist" style="display:none;"></div>
         <a class="btn-small green float-right close" href="#">
           <div class="left"></div>
-          <div class="label"><p>OK</p></div>
+          <div class="label"><p>Spara</p></div>
           <div class="right"></div>
         </a>
       </div>
