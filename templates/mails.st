@@ -303,13 +303,15 @@ legalparagraph=
 <BR/>
 ####
 mailMismatchSignatoryTitle=
-Regarding a document you were invited to sign from SkrivaPå
+Problem med matchning av personuppgifter
 ####
 mailMismatchSignatoryContent=
-<p>You were invited to sign the document called "$documenttitle$". Unfortunately, there was a problem with the personal information entered for one of the signatories. The document and all signatures on it have been invalidated and are not legally binding.
-</p>
+<p>Hej "Name of Signatory"!</p>
+<p>Du har blivit inbjuden att underteckna dokumentet "$documenttitle". Tyvärr matchar inte de angivna personuppgifterna hos en av parterna med uppgifterna på e-legitimationsservern. Därför har processen avbrutits och ett meddelande att korrigera uppgifterna har skickats till "name of author".</p>
 <p>
-The author has been notified. The author will have the opportunity to fix the problem and resend the document. You may be invited to sign the document again.
+Med Vänliga Hälsningar
+</p><p>
+SkrivaPå
 </p>
 ####
 mailMismatchAuthorTitle=

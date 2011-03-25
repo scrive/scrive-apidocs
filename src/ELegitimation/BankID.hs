@@ -185,7 +185,7 @@ handleSignPostBankID docid signid magic = do
                     liftIO $ print msg
                     Log.debug msg
                     -- send to canceled with reason msg
-                    addFlashMsg $ toFlashMsg OperationFailed $ "Document was canceled because there were fields that were not verified by the Elegitimation server: \n" ++ msg
+                    addFlashMsg $ toFlashMsg OperationFailed $ "The document was canceled because there were fields that were not verified by the Elegitimation server: \n" ++ msg
                     Right newdoc <- update $ CancelDocument docid (ELegDataMismatch msg signid sfn sln spn) ctxtime ctxipnumber
                     postDocumentChangeAction newdoc olddocumentstatus (Just signid)
                     
@@ -357,7 +357,7 @@ handleIssuePostBankID docid = withUserPost $ do
                         Left (msg, _, _, _) -> do
                             liftIO $ print $ "merge failed: " ++ msg
                             Log.debug $ "merge failed: " ++ msg
-                            addFlashMsg $ toFlashMsg OperationFailed $ "The information from the Elegitimation server did not match your personal information: " ++ msg
+                            addFlashMsg $ toFlashMsg OperationFailed $ "Dina personuppgifter matchade inte informationen från e-legitimationsservern: " ++ msg
                             return $ LinkDesignDoc $ DesignStep3 docid
                             -- we have merged the info!
                         Right (bfn, bln, bpn) -> do
@@ -375,7 +375,8 @@ handleIssuePostBankID docid = withUserPost $ do
                                 Left msg -> do
                                     liftIO $ print $ "AuthorSignDocument failed: " ++ msg
                                     Log.debug $ "AuthorSignDocument failed: " ++ msg
-                                    return LinkMain
+                                    addFlashMsg $ toFlashMsg OperationFailed $ "We could not complete the signing procedure. Please try again later."
+                                    return $ LinkDesignDoc $ DesignStep3 docid
                                 Right newdocument -> do
                                     postDocumentChangeAction newdocument (documentstatus udoc) Nothing
                                     return $ LinkIssueDoc (documentid document)
