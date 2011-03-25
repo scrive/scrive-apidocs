@@ -136,14 +136,13 @@ remindMailSignedContent :: KontrakcjaTemplates
                         -> User
                         -> IO String        
 remindMailSignedContent templates customMessage ctx document signlink author = do
-  content <- if (isNothing customMessage) 
-              then do   
-                header <- remindMailSignedStandardHeader templates document signlink author
-                skv <- renderTemplate templates "poweredBySkrivaPaPara" [("ctxhostpart",ctxhostpart  ctx)] 
-                return $ header ++ skv
-              else return $ BS.toString $ fromJust customMessage     
-  makeEditable' templates "customtext" content
-                                      
+  header <- if (isNothing customMessage)
+              then remindMailSignedStandardHeader templates document signlink author
+              else return . BS.toString $ fromJust customMessage
+  editableheader <- makeEditable' templates "customtext" header
+  skv <- renderTemplate templates "poweredBySkrivaPaPara" [("ctxhostpart",ctxhostpart ctx)]
+  return $ editableheader ++ skv
+      
 remindMailSignedStandardHeader :: KontrakcjaTemplates 
                                -> Document 
                                -> SignatoryLink 
