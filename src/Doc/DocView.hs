@@ -366,11 +366,12 @@ pageDocumentForAuthor ctx
              field "otherFieldID"    $ "field" ++ show i
              field "otherFieldOwner" "author")
              $ zip fields ([1..]::[Int])
-       mcleancsv = fmap (cleanCSVContents . csvcontents) $ documentcsvupload document
+       csvcustomfields = either (const [BS.fromString ""]) id $ getCSVCustomFields document
+       mcleancsv = fmap (cleanCSVContents (length csvcustomfields) . csvcontents) $ documentcsvupload document
        csvproblems = maybe [] fst mcleancsv
        csvdata = maybe [] (csvbody . snd) mcleancsv
-       chunksize = 10
-       csvpages = chunkUp chunksize csvdata
+       csvPageSize = 10
+       csvpages = splitCSVDataIntoPages csvPageSize csvdata
    in do
      validationinput <- if isSuperUser $ Just author
                         then renderTemplate (ctxtemplates ctx) "validationdropdown" ()
@@ -402,8 +403,9 @@ pageDocumentForAuthor ctx
        field "csvsigindex" $ maybe BS.empty (BS.fromString . show . csvsignatoryindex) . documentcsvupload $ document
        field "csvproblems" $ csvproblemfields
        field "csvproblemcount" $ length csvproblems
-       field "csvpages" $ zipWith (csvPageFields csvproblems (length csvdata) 5) [0,chunksize..] csvpages
+       field "csvpages" $ zipWith (csvPageFields csvproblems (length csvdata)) [0,csvPageSize..] csvpages
        field "csvrowcount" $ length csvdata
+       field "csvcustomfields" $ csvcustomfields
        field "isvalidcsv" $ null csvproblems
        documentInfoFields document
        designViewFields step
@@ -412,24 +414,24 @@ pageDocumentForAuthor ctx
 --all of this csv view stuff is a little scrappy.  sorry about that, i was trying
 --to implement a bit quickly (well, quickly for me anyway).  i'll clean up fairly soon!
 --emily 
-csvPageFields :: [CSVProblem] -> Int -> Int -> Int -> [[BS.ByteString]] -> Fields
-csvPageFields problems totalrowcount expectedcols firstrowindex xs = do
-  field "csvrows" $ zipWith (csvRowFields problems expectedcols) [firstrowindex..] xs
+csvPageFields :: [CSVProblem] -> Int -> Int -> [[BS.ByteString]] -> Fields
+csvPageFields problems totalrowcount firstrowindex xs = do
+  field "csvrows" $ zipWith (csvRowFields problems) [firstrowindex..] xs
   field "isfirstcsvpage" $ firstrowindex==0
   field "islastcsvpage" $ (firstrowindex+(length xs))==totalrowcount
 
-chunkUp :: Int -> [a] -> [[a]]
-chunkUp n xs =
+splitCSVDataIntoPages :: Int -> [a] -> [[a]]
+splitCSVDataIntoPages n xs =
   case splitAt n xs of
     (y,[]) -> [y]
-    (y,ys) -> y : chunkUp n ys
+    (y,ys) -> y : splitCSVDataIntoPages n ys
 
-csvRowFields :: [CSVProblem] -> Int -> Int -> [BS.ByteString] -> Fields
-csvRowFields problems expectedcols rowindex xs = do
+csvRowFields :: [CSVProblem] -> Int -> [BS.ByteString] -> Fields
+csvRowFields problems rowindex xs = do
   field "rownumber" $ rowindex + 1
   field "csvfields" $ zipWith (csvFieldFields problems rowindex) 
                               [0..] 
-                              (take expectedcols $ xs ++ (repeat BS.empty)) 
+                              xs 
   field "isproblem" $ any isRelevantProblem problems
   where
     isRelevantProblem CSVProblem{problemrowindex, problemcolindex} =

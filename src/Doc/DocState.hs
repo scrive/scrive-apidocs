@@ -284,9 +284,10 @@ contractFromSignatoryData :: DocumentID
                               -> BS.ByteString 
                               -> BS.ByteString 
                               -> BS.ByteString 
-                              -> BS.ByteString 
+                              -> BS.ByteString
+                              -> [BS.ByteString]
                               -> Update Documents (Either String Document)
-contractFromSignatoryData docid sigindex fstname sndname email company number = newFromDocument toNewDoc docid
+contractFromSignatoryData docid sigindex fstname sndname email company number fieldvalues = newFromDocument toNewDoc docid
   where
     toNewDoc :: Document -> Document
     toNewDoc d = d { documentsignatorylinks = map snd . map toNewSigLink . zip [0..] $ (documentsignatorylinks d)
@@ -302,7 +303,13 @@ contractFromSignatoryData docid sigindex fstname sndname email company number = 
                   , signatorysndname = sndname
                   , signatorycompany = company
                   , signatorynumber = number
-                  , signatoryemail = email}
+                  , signatoryemail = email
+                  , signatoryotherfields = zipWith pumpField (fieldvalues ++ repeat BS.empty) $ signatoryotherfields sd}
+    pumpField :: BS.ByteString -> FieldDefinition -> FieldDefinition
+    pumpField val fd = fd
+                       { fieldvalue = val
+                       , fieldfilledbyauthor = (not $ BS.null val)
+                       } 
 
 timeoutDocument :: DocumentID
                 -> MinutesTime
