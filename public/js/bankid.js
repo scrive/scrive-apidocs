@@ -77,7 +77,7 @@ function sign1Success(transactionid, tbs, nonce, servertime, posturl, formselect
   }
   var sig = doSign1(tbs);
   if(sig) {
-    displayLoadingOverlay("Verifying signature . . .");
+    displayLoadingOverlay("Verifierar signatur...");
 	var form = $(formselector);
 	form.find("#signatureinput").val(sig);
 	form.find("#transactionidinput").val(transactionid);
@@ -279,7 +279,7 @@ function sign2Success(transactionid, tbs, nonce, servertime, posturl, formselect
   }
   var sig = doSign2(tbs, nonce, servertime);    
   if(sig) {
-    displayLoadingOverlay("Verifying signature . . .");
+    displayLoadingOverlay("Verifierar signatur...");
 	var form = $(formselector);
 	form.find("#signatureinput").val(sig);
 	form.find("#transactionidinput").val(transactionid);
@@ -464,7 +464,7 @@ function netIDSuccess(transactionid, tbs, nonce, servertime, posturl, formselect
   }
   var sig = doSignNetID(tbs, nonce, servertime);    
   if(sig) {
-    displayLoadingOverlay("Verifying signature . . .");
+    displayLoadingOverlay("Verifierar signatur...");
 	var form = $(formselector);
 	form.find("#signatureinput").val(sig);
 	form.find("#transactionidinput").val(transactionid);

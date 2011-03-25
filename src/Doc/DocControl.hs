@@ -160,14 +160,14 @@ sendElegDataMismatchEmails ctx document author = do
     let authorid = unAuthor $ documentauthor document
         allbutauthor = filter ((maybe True ((/= authorid) . unSignatory)) . maybesignatory) 
                             (documentsignatorylinks document)
-    forM_ allbutauthor $ sendDataMismatchEmailSignatory ctx document
+    forM_ allbutauthor $ sendDataMismatchEmailSignatory ctx document author
     sendDataMismatchEmailAuthor ctx document author
     
-sendDataMismatchEmailSignatory :: Context -> Document -> SignatoryLink -> IO ()
-sendDataMismatchEmailSignatory ctx document signatorylink = do
+sendDataMismatchEmailSignatory :: Context -> Document -> User -> SignatoryLink -> IO ()
+sendDataMismatchEmailSignatory ctx document author signatorylink = do
     let SignatoryLink { signatorydetails } = signatorylink
         Document { documenttitle, documentid } = document
-    mail <- mailMismatchSignatory ctx document
+    mail <- mailMismatchSignatory ctx document (BS.toString $ prettyName author) (BS.toString $ signatoryname signatorydetails)
     sendMail (ctxmailer ctx) $ mail { fullnameemails = [(signatoryname signatorydetails, signatoryemail signatorydetails)] }
           
 sendDataMismatchEmailAuthor :: Context -> Document -> User -> IO ()
