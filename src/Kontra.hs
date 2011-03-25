@@ -15,6 +15,7 @@ module Kontra
     , logUserToContext
     , onlySuperUser
     , newPasswordReminderLink
+    , newViralInvitationSentLink
     , newAccountCreatedLink
     --, newAccountCreatedBySigningLink
     , queryOrFail
@@ -168,13 +169,18 @@ newPasswordReminderLink user = do
     return $ LinkPasswordReminder (actionID action)
                                   (prToken $ actionType action)
 
+newViralInvitationSentLink :: MonadIO m => Email -> UserID -> m KontraLink
+newViralInvitationSentLink email inviterid = do
+    action <- liftIO $ newViralInvitationSent email inviterid
+    return $ LinkViralInvitationSent (actionID action)
+                                     (visToken $ actionType action)
+
 newAccountCreatedLink :: MonadIO m => User -> m KontraLink
 newAccountCreatedLink user = do
     action <- liftIO $ newAccountCreated user
-    return $ LinkUnloggedUserAction (actionID action)
-                                    (acToken $ actionType action)
-                                    (BS.toString . unEmail . useremail $ userinfo user)
-                                    (BS.toString $ userfullname user)
+    return $ LinkAccountCreated (actionID action)
+                                (acToken $ actionType action)
+                                (BS.toString . unEmail . useremail $ userinfo user)
 
 {-newAccountCreatedBySigningLink :: MonadIO m => User -> m KontraLink
 newAccountCreatedBySigningLink user = do
