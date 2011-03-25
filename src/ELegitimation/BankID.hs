@@ -28,7 +28,6 @@ import KontraLink
 import MinutesTime
 import Misc
 import SOAP.SOAP
-import System.Random
 import Templates.Templates
 import Text.XML.HaXml.Posn (Posn)
 import Text.XML.HaXml.XmlContent.Parser 
@@ -375,7 +374,7 @@ handleIssuePostBankID docid = withUserPost $ do
                                 Left msg -> do
                                     liftIO $ print $ "AuthorSignDocument failed: " ++ msg
                                     Log.debug $ "AuthorSignDocument failed: " ++ msg
-                                    addFlashMsg $ toFlashMsg OperationFailed $ "We could not complete the signing procedure. Please try again later."
+                                    addFlashMsg $ toFlashMsg OperationFailed "We could not complete the signing procedure. Please try again later."
                                     return $ LinkDesignDoc $ DesignStep3 docid
                                 Right newdocument -> do
                                     postDocumentChangeAction newdocument (documentstatus udoc) Nothing
@@ -383,23 +382,21 @@ handleIssuePostBankID docid = withUserPost $ do
 
 handleSignCanceledDataMismatch :: DocumentID -> SignatoryLinkID -> Kontra Response
 handleSignCanceledDataMismatch docid signatorylinkid = do
-  ctx <- get
-  document <- queryOrFail $ GetDocumentByDocumentID docid
-  signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
-  let mcancelationreason = documentcancelationreason document
-  case mcancelationreason of
-    Just (ELegDataMismatch msg sid _ _ _) -> do
-        if sid /= signatorylinkid
-            then sendRedirect $ LinkSignDoc document signatorylink
-            else do
+    ctx <- get
+    document <- queryOrFail $ GetDocumentByDocumentID docid
+    signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
+    let mcancelationreason = documentcancelationreason document
+    case mcancelationreason of
+        Just (ELegDataMismatch msg sid _ _ _) 
+            | sid == signatorylinkid -> do
                 maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
-                content <- liftIO $ signCanceledDataMismatch (ctxtemplates ctx) document signatorylink (isJust maybeuser) msg
-                renderFromBody ctx TopEmpty kontrakcja $ cdata content
-    _ -> sendRedirect $ LinkSignDoc document signatorylink
+                content1 <- liftIO $ signCanceledDataMismatch (ctxtemplates ctx) document signatorylink (isJust maybeuser) msg
+                renderFromBody ctx TopEmpty kontrakcja $ cdata content1
+        _ -> sendRedirect $ LinkSignDoc document signatorylink
   
 signCanceledDataMismatch :: KontrakcjaTemplates -> Doc.DocState.Document -> SignatoryLink -> Bool -> String -> IO String
-signCanceledDataMismatch  templates document@Doc.DocState.Document{documenttitle, documentstatus} signatorylink hasaccount msg =
-    renderTemplate templates "signCanceledDataMismatch" $ do
+signCanceledDataMismatch  templates _document _signatorylink _hasaccount msg =
+    renderTemplate templates "signCanceledDataMismatch" $
         field "cancelationMessage" msg
 
 -- JSON - just enough to get things working
@@ -656,15 +653,12 @@ data MergeResult = MergeMatch
                  | MergeFail String
      deriving (Eq, Show)
                  
-isMergeFail (MergeFail _) = True
-isMergeFail _             = False
-
 mergeTwo :: String -> BS.ByteString -> BS.ByteString -> MergeResult
 mergeTwo fieldname a b 
     | BS.null a = MergeFail $ fieldname ++ " was blank."
     | BS.null b = MergeKeep
     | a == b    = MergeMatch
-    | otherwise = MergeFail $ fieldname ++ " values were different: contract showed '" ++ (BS.toString a) ++ "'" ++ " but eleg showed " ++ "'" ++ (BS.toString b) ++ "'"
+    | otherwise = MergeFail $ fieldname ++ " values were different: contract showed '" ++ BS.toString a ++ "'" ++ " but eleg showed " ++ "'" ++ BS.toString b ++ "'"
  
 {- | Compare signatory information from contract with that from the
      E-Legitimation provider. Returns Either and error message or the
@@ -678,11 +672,10 @@ mergeInfo (contractFirst, contractLast, contractNumber) (elegFirst, elegLast, el
                     ["First name",  "Last name", "Person Number"]
                     [contractFirst, contractLast, contractNumber]
                     [elegFirst,     elegLast,     elegNumber    ]
-        fails    = map isMergeFail     results
         failmsgs = [msg | MergeFail msg <- results]
         matches  = map (== MergeMatch) results
     in
-        if any id fails
+        if not $ null failmsgs
         then Left  (intercalate "\n" failmsgs, elegFirst, elegLast, elegNumber)
         else Right (matches !! 0, matches !! 1, matches !! 2)
 
