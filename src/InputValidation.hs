@@ -206,7 +206,7 @@ flashValidationMessage x = return x
 -} 
 asMaybe :: Result a -> Kontra (Maybe a)
 asMaybe (Good x) = return $ Just x
-asMaybe _ = return Nothing
+asMaybe _        = return Nothing
 
 {- |
     If the result is Empty then this uses the
@@ -214,7 +214,7 @@ asMaybe _ = return Nothing
 -}
 withDefault :: a -> Result a -> Kontra (Result a)
 withDefault d Empty = return $ Good d
-withDefault _ x = return x
+withDefault _ x     = return x
 
 {- |
     If the result is Empty then this turns it
@@ -222,11 +222,11 @@ withDefault _ x = return x
 -}
 withRequiredFlash :: Result a -> Kontra (Result a)
 withRequiredFlash Empty = return $ Bad flashMessageMissingRequiredField
-withRequiredFlash x = return x
+withRequiredFlash x     = return x
 
 flashMessageMissingRequiredField :: ValidationMessage
 flashMessageMissingRequiredField = 
-   flashMessage "flashMessageMissingRequiredField" Nothing
+    flashMessage "flashMessageMissingRequiredField" Nothing
 
 {- |
     You either get a value or a failure,
@@ -235,7 +235,7 @@ flashMessageMissingRequiredField =
 -}
 withFailure :: Result a -> Kontra a
 withFailure (Good x) = return x
-withFailure _ = mzero
+withFailure _        = mzero
 
 {- |
     Creates a clean and validated email.
@@ -302,7 +302,7 @@ flashMessageNeedsLetterAndDigit fieldtemplate =
 
 {- |
     Creates a dirty password.  This is useful when validating
-    logins for example.  Because its dirty you should make sure to throw it away,
+    logins for example.  Because it's dirty you should make sure to throw it away,
     and not store it.
 -}
 asDirtyPassword :: String -> Result BS.ByteString
@@ -391,8 +391,8 @@ asValidCheckBox input =
     >>= mkLowerCase
     >>= parseOnOrOff
     where fieldtemplate = "checkBoxFieldName"
-          parseOnOrOff val | val=="on" = return True
-                           | val=="off" = return False
+          parseOnOrOff val | val == "on"  = return True
+                           | val == "off" = return False
                            | otherwise = Bad $ flashMessageInvalidFormat fieldtemplate
 
 {-|
