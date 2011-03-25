@@ -36,6 +36,7 @@ evaluateAction action =
          TrustWeaverUpload _ _ -> error "TrustWeaverUpload not yet implemented"
          AmazonUpload _ _ -> error "AmazonUpload not yet implemented"
          PasswordReminder _ _ -> deleteAction $ actionID action
+         ViralInvitationSent _ _ _ _ -> deleteAction $ actionID action
          AccountCreated _ _ -> deleteAction $ actionID action
          AccountCreatedBySigning _ _ _ -> error "AccountCreatedBySigning not yet implemented"
     where

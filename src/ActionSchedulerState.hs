@@ -19,6 +19,7 @@ module ActionSchedulerState (
     , checkTypeID
     , checkValidity
     , newPasswordReminder
+    , newViralInvitationSent
     , newAccountCreated
     --, newAccountCreatedBySigning
     ) where
@@ -57,6 +58,12 @@ data ActionType = TrustWeaverUpload {
                       prUserID :: UserID
                     , prToken  :: MagicHash
                 }
+                | ViralInvitationSent {
+                      visEmail     :: Email
+                    , visTime      :: MinutesTime
+                    , visInviterID :: UserID
+                    , visToken     :: MagicHash
+                }
                 | AccountCreated {
                       acUserID :: UserID
                     , acToken  :: MagicHash
@@ -78,6 +85,7 @@ data InactiveAccountState = JustCreated
 data ActionTypeID = TrustWeaverUploadID
                   | AmazonUploadID
                   | PasswordReminderID
+                  | ViralInvitationSentID
                   | AccountCreatedID
                   | AccountCreatedBySigningID
                     deriving (Eq, Ord, Show)
@@ -87,6 +95,7 @@ actionTypeID :: ActionType -> ActionTypeID
 actionTypeID (TrustWeaverUpload _ _) = TrustWeaverUploadID
 actionTypeID (AmazonUpload _ _) = AmazonUploadID
 actionTypeID (PasswordReminder _ _) = PasswordReminderID
+actionTypeID (ViralInvitationSent _ _ _ _) = ViralInvitationSentID
 actionTypeID (AccountCreated _ _) = AccountCreatedID
 actionTypeID (AccountCreatedBySigning _ _ _) = AccountCreatedBySigningID
 
@@ -98,6 +107,7 @@ actionImportance :: ActionType -> ActionImportance
 actionImportance (TrustWeaverUpload _ _) = UrgentAction
 actionImportance (AmazonUpload _ _) = UrgentAction
 actionImportance (PasswordReminder _ _) = LeisureAction
+actionImportance (ViralInvitationSent _ _ _ _) = LeisureAction
 actionImportance (AccountCreated _ _) = LeisureAction
 actionImportance (AccountCreatedBySigning _ _ _) = LeisureAction
 
@@ -226,6 +236,19 @@ newPasswordReminder user = do
     }
     update $ NewAction action $ (12*60) `minutesAfter` now
 
+-- | Create new 'invitation sent' action
+newViralInvitationSent :: Email -> UserID -> IO Action
+newViralInvitationSent email inviterid = do
+    hash <- randomIO
+    now <- getMinutesTime
+    let action = ViralInvitationSent {
+          visEmail     = email
+        , visTime      = now
+        , visInviterID = inviterid
+        , visToken     = hash
+    }
+    update $ NewAction action $ (7*24*60) `minutesAfter` now
+
 -- | Create new 'account created' action
 newAccountCreated :: User -> IO Action
 newAccountCreated user = do
@@ -235,7 +258,7 @@ newAccountCreated user = do
           acUserID = userid user
         , acToken  = hash
     }
-    update $ NewAction action $ (12*60) `minutesAfter` now
+    update $ NewAction action $ (24*60) `minutesAfter` now
 
 -- | Create new 'account created by signing' action
 {-newAccountCreatedBySigning :: User -> IO Action

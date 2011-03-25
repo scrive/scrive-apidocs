@@ -423,7 +423,7 @@ landpageSignedSave documentid signatorylinkid = do
   muser <- case maybeuser of
              Nothing -> do 
                let email = signatoryemail details
-               liftIO $ createUser ctx ctxhostpart fullname email Nothing True Nothing False
+               liftIO $ createUser ctx ctxhostpart fullname email Nothing False
              Just user -> return maybeuser
   when_ (isJust muser) $ update $ SaveDocumentForSignedUser documentid (userid $ fromJust muser) signatorylinkid
   -- should redirect

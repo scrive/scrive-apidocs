@@ -58,7 +58,8 @@ data KontraLink
     | LinkPaymentsAdmin
     | LinkUserAdmin (Maybe UserID)
     | LinkPasswordReminder ActionID MagicHash
-    | LinkUnloggedUserAction ActionID MagicHash String String -- email / username
+    | LinkViralInvitationSent ActionID MagicHash
+    | LinkAccountCreated ActionID MagicHash String -- email
     | LinkChangeSignatoryEmail DocumentID SignatoryLinkID 
     | LinkWithdrawn DocumentID 
     | LoopBack
@@ -69,7 +70,6 @@ data KontraLink
     | LinkAskQuestion
     | LinkInvite
     | LinkPayExView (Maybe PaymentId)
-    | LinkSignCanceledDataMismatch DocumentID SignatoryLinkID
    
 {- |
    Shows each link as a relative url
@@ -115,9 +115,8 @@ instance Show KontraLink where
     showsPrec _ (LinkUserAdmin Nothing) = (++) $ "/adminonly/useradmin"
     showsPrec _ (LinkUserAdmin (Just userId)) = (++) $ "/adminonly/useradmin/"++show userId
     showsPrec _ (LinkPasswordReminder (ActionID aid) hash) = (++) $ "/amnesia/" ++ show aid ++ "/" ++ show hash
-    showsPrec _ (LinkUnloggedUserAction (ActionID aid) mh email username) = (++) $ "/accountsetup/" ++ show aid ++ "/" ++ show mh ++
-                                                                                       "?" ++ "email=" ++ email ++
-                                                                                       "&" ++ "name="++ username
+    showsPrec _ (LinkViralInvitationSent (ActionID aid) hash) = (++) $ "/accountsetup/" ++ show aid ++ "/" ++ show hash
+    showsPrec _ (LinkAccountCreated (ActionID aid) hash email) = (++) $ "/accountsetup/" ++ show aid ++ "/" ++ show hash ++ "?email=" ++ email
     showsPrec _ (LinkChangeSignatoryEmail did slid ) = (++) $ "/changeemail/"++show did++"/"++show slid
     showsPrec _ (LinkWithdrawn did ) = (++) $ "/withdrawn/"++show did
     showsPrec _ LoopBack = (++) $ "/" -- this should never be used
