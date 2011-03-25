@@ -61,7 +61,7 @@ import InputValidation
 import System.Directory
 import ListUtil
 
-{-| 
+{- | 
   Defines the application's configuration.  This includes amongst other things
   the http port number, amazon, trust weaver and email configuraton,
   as well as a handy boolean indicating whether this is a production or
@@ -87,7 +87,7 @@ data AppConf
               }              
       deriving (Show,Read,Eq,Ord)
 
-{-| 
+{- | 
   Global application data
 -}
 data AppGlobals 
@@ -163,7 +163,6 @@ handleRoutes = msum [
      , dir "accepttos" $ hget0  $ UserControl.handleAcceptTOSGet
      , dir "accepttos" $ hpost0 $ UserControl.handleAcceptTOSPost
 
-
      -- super user only
      , dir "stats"      $ hget0  $ Administration.showStats
      , dir "createuser" $ hpost0 $ Administration.handleCreateUser
@@ -217,19 +216,21 @@ handleRoutes = msum [
      , serveHTMLFiles
      , fileServe [] "public"
                ]
+
 {- |
    Goes to the front page, or to the main document upload page,
    depending on whether there is a logged in user.
 -}
 handleHomepage :: Kontra Response
 handleHomepage = do
-  ctx@Context{ctxmaybeuser} <- get
+  ctx@Context{ ctxmaybeuser } <- get
   case ctxmaybeuser of
     Just user -> UserControl.checkUserTOSGet $ DocControl.showMainPage user 
-    Nothing -> V.simpleResponse =<< (liftIO $ firstPage ctx)
+    Nothing   -> V.simpleResponse =<< (liftIO $ firstPage ctx)
 
 handleMainReaload :: Kontra KontraLink
 handleMainReaload = LinkNew <$> getListParamsForSearch
+
 {- |
    Creates a default amazon configuration based on the
    given AppConf
@@ -363,27 +364,27 @@ forgotPasswordPagePost = do
     ctx <- get
     memail <- getOptionalField asValidEmail "email"
     case memail of 
-      Just email -> do
-                      muser <- query $ GetUserByEmail $ Email email                    
-                      case muser of 
-                       Nothing -> do 
-                                   addFlashMsg =<< (liftIO $ flashMessageNoSuchUserExists $ ctxtemplates ctx)
-                                   return LoopBack
-                       Just user -> do
-                                     sendResetPasswordMail user
-                                     addFlashMsg =<< (liftIO $ flashMessageChangePasswordEmailSend $ ctxtemplates ctx)
-                                     return LinkForgotPasswordDone
-      Nothing -> return LoopBack
+        Just email -> do
+            muser <- query $ GetUserByEmail $ Email email                    
+            case muser of 
+                Nothing -> do 
+                    addFlashMsg =<< (liftIO $ flashMessageNoSuchUserExists $ ctxtemplates ctx)
+                    return LoopBack
+                Just user -> do
+                    sendResetPasswordMail user
+                    addFlashMsg =<< (liftIO $ flashMessageChangePasswordEmailSend $ ctxtemplates ctx)
+                    return LinkForgotPasswordDone
+        Nothing -> return LoopBack
 
 {- |
    Sends a password reset mail
 -}
 sendResetPasswordMail::User -> Kontra ()
 sendResetPasswordMail user = do
-                         ctx <- get
-                         chpwdlink <- liftIO $ unloggedActionLink user
-                         mail <-liftIO $ UserView.resetPasswordMail (ctxtemplates ctx) (ctxhostpart ctx) user chpwdlink     
-                         liftIO $ sendMail (ctxmailer ctx) $ mail { fullnameemails = [((userfullname user), (unEmail $ useremail $ userinfo user))]}    
+    ctx <- get
+    chpwdlink <- liftIO $ unloggedActionLink user
+    mail <-liftIO $ UserView.resetPasswordMail (ctxtemplates ctx) (ctxhostpart ctx) user chpwdlink     
+    liftIO $ sendMail (ctxmailer ctx) $ mail { fullnameemails = [((userfullname user), (unEmail $ useremail $ userinfo user))]}    
 
 {- |
    Handles viewing of the password reset confirmation page
@@ -419,49 +420,51 @@ signupVipPageGet = do
 
 signupPagePost :: Kontra KontraLink
 signupPagePost = signup False $ parseMinutesTimeMDY "31-05-2011"
-                    
 
 signupVipPagePost :: Kontra KontraLink
 signupVipPagePost = signup True $ parseMinutesTimeMDY "31-12-2011"
-                   
-signup::Bool -> (Maybe MinutesTime) -> Kontra KontraLink
+
+{- 
+    A comment next to LoopBack says never to use it. Is this function broken?
+-}                   
+signup :: Bool -> (Maybe MinutesTime) -> Kontra KontraLink
 signup vip freetill =  do 
-                ctx@Context{ctxtemplates,ctxhostpart} <- lift get
-                memail <- getOptionalField asValidEmail "email"
-                case memail of
-                   Nothing -> return LoopBack
-                   Just email -> do
-                        muser <- query $ GetUserByEmail $ Email $ email
-                        case  muser of
-                          Just user -> if (isNothing $ userhasacceptedtermsofservice user) 
-                                        then  
-                                         do  al <- liftIO $ unloggedActionLink user
-                                             mail <-  liftIO $ newUserMail (ctxtemplates) (ctxhostpart) email email al vip
-                                             liftIO $ sendMail (ctxmailer ctx) $ mail { fullnameemails = [(email,email)]}
-                                             addFlashMsg =<< (liftIO $ flashMessageNewActivationLinkSend  (ctxtemplates)) 
-                                             return LoopBack
-                                          else do
-                                             addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
-                                             return LoopBack
-                          Nothing -> do
-                            maccount <- liftIO $ UserControl.createUser ctx ctxhostpart BS.empty email Nothing True Nothing vip
-                            case maccount of      
-                             Just account ->  do
-                                               addFlashMsg =<< (liftIO $ flashMessageUserSignupDone ctxtemplates)
-                                               when (isJust freetill) $ update $ FreeUserFromPayments account (fromJust freetill)
-                                               return LoopBack
-                             Nothing ->       do
-                                              addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
-                                              return LoopBack
+    ctx@Context{ ctxtemplates, ctxhostpart, ctxmailer } <- lift get
+    memail <- getOptionalField asValidEmail "email"
+    case memail of
+        Nothing -> return LoopBack
+        Just email -> do
+            muser <- query $ GetUserByEmail $ Email $ email
+            case muser of
+                Just user -> if (isNothing $ userhasacceptedtermsofservice user) 
+                                then do
+                                    al <- liftIO $ unloggedActionLink user
+                                    mail <- liftIO $ newUserMail ctxtemplates ctxhostpart email email al vip
+                                    liftIO $ sendMail ctxmailer $ mail { fullnameemails = [(email, email)] }
+                                    addFlashMsg =<< (liftIO $ flashMessageNewActivationLinkSend ctxtemplates)
+                                    return LoopBack
+                                else do
+                                    addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
+                                    return LoopBack
+                Nothing -> do
+                    maccount <- liftIO $ UserControl.createUser ctx ctxhostpart BS.empty email Nothing True Nothing vip
+                    case maccount of      
+                        Just account -> do
+                            addFlashMsg =<< (liftIO $ flashMessageUserSignupDone ctxtemplates)
+                            when (isJust freetill) $ update $ FreeUserFromPayments account (fromJust freetill)
+                            return LoopBack
+                        Nothing -> do
+                            addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
+                            return LoopBack
 {- |
    Sends a new activation link mail, which is really just a new user mail.
 -}
-sendNewActivationLinkMail:: Context -> User -> Kontra ()
-sendNewActivationLinkMail Context{ctxtemplates,ctxhostpart,ctxmailer} user = do
-                         let email = unEmail $ useremail $ userinfo user
-                         al <- liftIO $ unloggedActionLink user
-                         mail <-  liftIO $ newUserMail ctxtemplates ctxhostpart email email al False
-                         liftIO $ sendMail ctxmailer $ mail { fullnameemails = [(email,email)]}                      
+sendNewActivationLinkMail :: Context -> User -> Kontra ()
+sendNewActivationLinkMail Context{ ctxtemplates, ctxhostpart, ctxmailer} user = do
+    let email = unEmail $ useremail $ userinfo user
+    al   <- liftIO $ unloggedActionLink user
+    mail <- liftIO $ newUserMail ctxtemplates ctxhostpart email email al False
+    liftIO $ sendMail ctxmailer $ mail { fullnameemails = [(email, email)] }                      
 
 {- |
    Handles viewing of the login page
@@ -482,28 +485,27 @@ handleLoginGet = do
 -}  
 handleLoginPost :: Kontra KontraLink
 handleLoginPost = do
-  memail <- getOptionalField asDirtyEmail "email"
-  mpasswd <- getOptionalField asDirtyPassword "password"
-  case (memail, mpasswd) of
-    (Just email, Just passwd) -> do
-      -- check the user things here
-      maybeuser <- query $ GetUserByEmail (Email email)
-      case maybeuser of
-        Just User{userid,userpassword,userlogininfo} ->
-            if verifyPassword userpassword passwd
-            then do
-              logUserToContext maybeuser
-              time <- liftIO getMinutesTime
-              _ <- update $ RecordSuccessfulLogin userid time
-              return BackToReferer
-            else do
-              slug <- liftIO $ getFailedLoginSlug userlogininfo
-              when (slug>0) $ liftIO . threadDelay $ slug * 1000000
-              time <- liftIO getMinutesTime
-              _ <- update $ RecordFailedLogin userid time
-              return $ LinkLogin InvalidLoginInfo
-        Nothing -> return $ LinkLogin InvalidLoginInfo
-    _ -> return BackToReferer
+    memail  <- getOptionalField asDirtyEmail    "email"
+    mpasswd <- getOptionalField asDirtyPassword "password"
+    case (memail, mpasswd) of
+        (Just email, Just passwd) -> do
+            -- check the user things here
+            maybeuser <- query $ GetUserByEmail (Email email)
+            case maybeuser of
+                Just User{ userid, userpassword } 
+                    | verifyPassword userpassword passwd -> do
+                        logUserToContext maybeuser
+                        time <- liftIO getMinutesTime
+                        _ <- update $ RecordSuccessfulLogin userid time
+                        return BackToReferer
+                Just User{ userlogininfo, userid } -> do
+                        slug <- liftIO $ getFailedLoginSlug userlogininfo
+                        when (slug > 0) $ liftIO . threadDelay $ slug * 1000000
+                        time <- liftIO getMinutesTime
+                        _ <- update $ RecordFailedLogin userid time
+                        return $ LinkLogin InvalidLoginInfo
+                Nothing -> return $ LinkLogin InvalidLoginInfo
+        _ -> return BackToReferer
 
 {- |
     Works out how many seconds we should wait before
@@ -513,16 +515,15 @@ handleLoginPost = do
     10 consecutive fails.
 -}
 getFailedLoginSlug :: LoginInfo -> IO Int
-getFailedLoginSlug LoginInfo{lastfailtime,consecutivefails} = do
+getFailedLoginSlug LoginInfo{ lastfailtime, consecutivefails } = do
     now <- getMinutesTime
     let spacing = case consecutivefails of
-                    n | (n<5) -> 0
-                    n | (n<10) -> 20
-                    _ -> 40
+                    n | (n <  5) ->  0
+                    n | (n < 10) -> 20
+                    _            -> 40
     case lastfailtime of
-        (Just lastfail) -> 
-            return $ max 0 (spacing - (secs now - secs lastfail))
-        Nothing -> return 0
+        Just lastfail -> return $ max 0 (spacing - (secs now - secs lastfail))
+        Nothing       -> return 0
     where secs (MinutesTime m s) = m * 60 + s
 
 -- last fail ---------- time
@@ -540,38 +541,36 @@ handleLogout = do
 -}
 serveHTMLFiles:: Kontra Response  
 serveHTMLFiles =  do
-        ctx <- get
-        rq <- askRq
-        let fileName = last (rqPaths rq)
-        if ((length (rqPaths rq) > 0) && isSuffixOf ".html" fileName)
-         then do
-         
-                   ms <- liftIO $ catch (fmap Just ( BS.readFile $ "html/"++fileName)) (const $ return Nothing)
-                   case ms of 
-                    Just s -> do 
-                        renderFromBody ctx V.TopNone V.kontrakcja (cdata $ BS.toString s)
-                    _ -> mzero
-               
-         else mzero
+    ctx <- get
+    rq <- askRq
+    let fileName = last (rqPaths rq)
+    if ((length (rqPaths rq) > 0) && isSuffixOf ".html" fileName)
+        then do
+            ms <- liftIO $ catch (fmap Just ( BS.readFile $ "html/"++fileName)) 
+                            (const $ return Nothing)
+            case ms of 
+                Just s -> renderFromBody ctx V.TopNone V.kontrakcja (cdata $ BS.toString s)
+                _      -> mzero
+        else mzero
 
 {- |
    Ensures logged in as a super user
 -}
 onlySuperUserGet :: Kontra Response -> Kontra Response  
 onlySuperUserGet action = do
-  Context{ctxmaybeuser} <- get 
-  if isSuperUser ctxmaybeuser 
-   then action
-   else sendRedirect $ LinkLogin NotLoggedAsSuperUser
+    Context{ ctxmaybeuser } <- get 
+    if isSuperUser ctxmaybeuser 
+        then action
+        else sendRedirect $ LinkLogin NotLoggedAsSuperUser
 
 {- |
    Used by super users to inspect a particular document.
 -}
 daveDocument :: DocumentID -> Kontra Response
 daveDocument documentid = onlySuperUserGet $ do
-      ctx <- get
-      document <- queryOrFail $ GetDocumentByDocumentID documentid
-      V.renderFromBody ctx V.TopNone V.kontrakcja $ inspectXML document
+    ctx <- get
+    document <- queryOrFail $ GetDocumentByDocumentID documentid
+    V.renderFromBody ctx V.TopNone V.kontrakcja $ inspectXML document
 
 {- |
    Used by super users to inspect a particular user.
