@@ -642,22 +642,23 @@ handleIssueChangeToContract document author = do
 
 {- |
     If the document has a multiple part this will pump csv values through it to create multiple docs, and then
-    save the original as a template if it isn't already.  This will make sure to clean and csv data.  It just returns
+    save the original as a template if it isn't already.  This will make sure to clean the csv data.  It just returns
     a list containing the original doc on it's own, if the doc hasn't got a multiple part.
 
     I feel like this is quite dangerous to do all at once, maybe need a transaction?!
 -}
 splitUpDocument :: Document -> Kontra (Either String [Document])
 splitUpDocument doc =
-  case (documentcsvupload doc) of
-    Nothing -> return $ Right [doc]
-    (Just csvupload) ->
-      case (cleanCSVContents $ csvcontents csvupload) of
+  case (documentcsvupload doc, getCSVCustomFields doc) of
+    (Just _, Left msg) -> return $ Left msg
+    (Nothing, _) -> return $ Right [doc]
+    (Just csvupload, Right csvcustomfields) ->
+      case (cleanCSVContents (length csvcustomfields) $ csvcontents csvupload) of
         ((prob:_), _) -> return $ Left "data is not valid"
         ([], CleanCSVData{csvbody}) -> do
           mudoc <- case documenttype doc of
-                        Template -> return $ Right doc
-                        Contract -> update $ TemplateFromDocument $ documentid doc
+            Template -> return $ Right doc
+            Contract -> update $ TemplateFromDocument $ documentid doc
           case mudoc of
             (Left x) -> return $ Left x
             (Right udoc) -> do
@@ -665,10 +666,9 @@ splitUpDocument doc =
               return $ sequence mdocs
   where createDocFromRow :: Document -> Int -> [BS.ByteString] -> Kontra (Either String Document)
         createDocFromRow udoc sigindex xs =
-          update $ ContractFromSignatoryData (documentid udoc) sigindex (item 0) (item 1) (item 2) (item 3) (item 4)
+          update $ ContractFromSignatoryData (documentid udoc) sigindex (item 0) (item 1) (item 2) (item 3) (item 4) (drop 5 xs)
           where item n | n<(length xs) = xs !! n
                        | otherwise = BS.empty
-
 {- |
    Handles a csv file upload.  This'll parse the file, and save the info
    on the document and relevant signatory.

@@ -3,6 +3,7 @@ module Doc.CSVUtils (
       CSVProblem(..)
     , CleanCSVData(..)
     , cleanCSVContents
+    , getCSVCustomFields
     )
 where
 
@@ -13,6 +14,7 @@ import Data.Char
 import Data.Maybe
 import Data.List
 
+import Doc.DocStateData
 import InputValidation
 import Kontra
 import Templates.Templates 
@@ -30,15 +32,32 @@ data CleanCSVData = CleanCSVData
                     , csvbody :: [[BS.ByteString]]
                     }
 
+
+{- |
+    Looks up all the custom fields for the csv upload and returns their labels.
+-}
+getCSVCustomFields :: Document -> Either String [BS.ByteString]
+getCSVCustomFields doc@Document{documentsignatorylinks} =
+  case (fmap csvsignatoryindex $ documentcsvupload doc) of
+    Nothing -> Right []
+    (Just csvsignatoryindex) ->
+      if (csvsignatoryindex<1 || csvsignatoryindex>=(length documentsignatorylinks)) then 
+          Left $ "invalid state reached, sigindex is " ++ (show csvsignatoryindex)
+      else 
+          Right $ map fieldlabel . signatoryotherfields . signatorydetails $ documentsignatorylinks !! csvsignatoryindex
+
 {- |
     Cleans up csv contents. You get a list of all the problems alongside all the data
     that's been scrubbed up as much as possible.
 -}
-cleanCSVContents :: [[BS.ByteString]] -> ([CSVProblem], CleanCSVData)
-cleanCSVContents contents = 
-  let (mheader, _) = lookForHeader . zipWith cleanRow [0..] $ take 1 contents
+cleanCSVContents :: Int -> [[BS.ByteString]] -> ([CSVProblem], CleanCSVData)
+cleanCSVContents customfieldcount contents = 
+  let mincols = 3
+      maxcols = 5 + customfieldcount
+      cleanData = zipWith (cleanRow mincols maxcols) [0..]
+      mheader = lookForHeader . cleanData $ take 1 contents
       bodyrows = if (isJust mheader) then drop 1 contents else contents
-      rowresults = zipWith cleanRow [0..] bodyrows
+      rowresults = cleanData bodyrows
       rowproblems = concat . map fst $ rowresults
       body = map snd $ rowresults
       problems = case (mheader, rowresults) of
@@ -51,20 +70,21 @@ cleanCSVContents contents =
         This looks a possible header and separates it out.  The oh so sophisticated rule this uses at the moment
         is that if the first line is invalid use it as a header!
     -}
-    lookForHeader :: [([CSVProblem], [BS.ByteString])] -> (Maybe [BS.ByteString], [([CSVProblem], [BS.ByteString])])
-    lookForHeader (((p:_), vals):xs) = (Just vals, xs)
-    lookForHeader xs = (Nothing, xs) 
+    lookForHeader :: [([CSVProblem], [BS.ByteString])] -> Maybe [BS.ByteString]
+    lookForHeader (((p:_), vals):_) = Just vals
+    lookForHeader _ = Nothing 
     {- |
         This cleans a single row of data.  It checks both the size of the row
         (meaning how many cols it has), and the values of the fields.
     -}
-    cleanRow :: Int -> [BS.ByteString] -> ([CSVProblem], [BS.ByteString])
-    cleanRow row xs = 
+    cleanRow :: Int -> Int -> Int -> [BS.ByteString] -> ([CSVProblem], [BS.ByteString])
+    cleanRow mincols maxcols row xs = 
       let fieldresults = zipWith4 cleanField (repeat row) [0..] fieldValidators xs
           fieldproblems = map (fromJust . fst) . filter (isJust . fst) $ fieldresults
-          rowsizeproblems = validateRowSize row 3 5 xs
+          rowsizeproblems = validateRowSize row mincols maxcols xs
           values = map snd fieldresults in
-      (rowsizeproblems ++ fieldproblems, values)
+      (rowsizeproblems ++ fieldproblems, fitToMaxSize values)
+      where fitToMaxSize vals = take maxcols $ vals ++ repeat BS.empty
     {- |
         We want the row to have a sensible number of columns
     -}
@@ -101,7 +121,7 @@ cleanCSVContents contents =
       , badIfEmpty flashMessageEmailIsRequired . asValidEmail
       , asValidCompanyName
       , asValidCompanyNumber
-      ]
+      ] ++ repeat asValidFieldValue
       where
         badIfEmpty :: (KontrakcjaTemplates -> IO FlashMessage) -> Result BS.ByteString -> Result BS.ByteString
         badIfEmpty msg res = 
