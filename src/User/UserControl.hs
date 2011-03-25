@@ -1,43 +1,34 @@
+{-# OPTIONS_GHC -Wall -fno-warn-unused-do-bind #-}
 module User.UserControl where
 
-import ActionSchedulerState
 import Control.Monad.State
-import Control.Monad.Trans (liftIO,MonadIO,lift)
-import Control.Monad
+import Data.Char
 import Data.Functor
-import AppView
+import Data.List
 import Data.Maybe
-import Doc.DocState
-import Doc.DocView
-import Happstack.Data.IxSet 
 import Happstack.Server hiding (simpleHTTP)
-import Happstack.Server.HSP.HTML (webHSP)
-import Happstack.State (Update,update,query)
-import Happstack.Util.Common (readM)
-import KontraLink
-import Misc
-import Mails.SendMail
-import System.Log.Logger
-import System.Process
+import Happstack.State (update, query)
+import HSP.XML
 import System.Random
-import Kontra
-import Redirect
-import User.UserState
-import User.UserView
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString.Lazy as LS
-import qualified Data.ByteString.Lazy.UTF8 as LS
-import qualified Data.ByteString.Char8 as BS8
 import qualified Data.Set as Set
-import qualified HSP
-import Templates.Templates (KontrakcjaTemplates)
-import HSP.XML
-import MinutesTime
+
+import ActionSchedulerState
+import AppView
+import Doc.DocState
 import InputValidation
+import Kontra
+import KontraLink
 import ListUtil
-import Data.List
-import Data.Char
+import Mails.SendMail
+import MinutesTime
+import Misc
+import Redirect
+import Templates.Templates (KontrakcjaTemplates)
+import User.UserState
+import User.UserView
+
 
 checkPasswords :: BS.ByteString -> BS.ByteString -> Either (KontrakcjaTemplates -> IO FlashMessage) ()
 checkPasswords p1 p2 =
@@ -61,16 +52,38 @@ handleUserGet = do
 handleUserPost :: Kontra KontraLink
 handleUserPost = do
     ctx <- get
-    case (ctxmaybeuser ctx) of 
+    case (ctxmaybeuser ctx) of
          Just user -> do
              infoUpdate <- getUserInfoUpdate
              update $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
-             needToChangePassword <- needToChangePassword
-             if needToChangePassword
+             need_to_change_password <- needToChangePassword
+             if need_to_change_password
                 then tryToChangeUserPassword user
                 else addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved $ ctxtemplates ctx)
              return LinkAccount
          Nothing -> return $ LinkLogin NotLogged
+    where
+        needToChangePassword = do
+            moldpassword <- joinEmpty <$> getField "oldpassword"
+            mpassword <- joinEmpty <$> getField "password"
+            mpassword2 <- joinEmpty <$> getField "password2"
+            return $ any isJust [moldpassword,mpassword,mpassword2]
+
+        tryToChangeUserPassword user = do
+            -- Emily ussed input validation here, but I had to drop it since it missed some info
+            ctx <- get
+            oldpassword <- getFieldUTFWithDefault BS.empty "oldpassword"
+            password <- getFieldUTFWithDefault BS.empty "password"
+            password2 <- getFieldUTFWithDefault BS.empty "password2"
+            if verifyPassword (userpassword user) oldpassword
+               then
+                   case (checkPasswords password password2) of
+                        Right () -> do
+                            passwordhash <- liftIO $ createPassword password
+                            update $ SetUserPassword user passwordhash
+                            addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
+                        Left f ->  addFlashMsg =<< (liftIO $ f (ctxtemplates ctx))
+               else addFlashMsg =<< (liftIO $ flashMessageBadOldPassword (ctxtemplates ctx))
 
 getUserInfoUpdate :: Kontra (UserInfo -> UserInfo)
 getUserInfoUpdate  = do
@@ -100,33 +113,9 @@ getUserInfoUpdate  = do
           , userphone  = fromMaybe (userphone ui) mphone
         }
 
-needToChangePassword :: Kontra Bool 
-needToChangePassword = do
-    moldpassword <- joinEmpty <$> getField "oldpassword"
-    mpassword <- joinEmpty <$> getField "password"
-    mpassword2 <- joinEmpty <$> getField "password2"
-    return $ any isJust [moldpassword,mpassword,mpassword2]
-
-tryToChangeUserPassword   :: User -> Kontra ()
-tryToChangeUserPassword user = do
-    -- Emily ussed input validation here, but I had to drop it since it missed some info
-    ctx <- get
-    oldpassword <- getFieldUTFWithDefault BS.empty "oldpassword"
-    password <- getFieldUTFWithDefault BS.empty "password"
-    password2 <- getFieldUTFWithDefault BS.empty "password2"
-    if verifyPassword (userpassword user) oldpassword
-       then
-           case (checkPasswords password password2) of
-                Right () -> do
-                    passwordhash <- liftIO $ createPassword password
-                    update $ SetUserPassword user passwordhash
-                    addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
-                Left f ->  addFlashMsg =<< (liftIO $ f (ctxtemplates ctx))
-       else addFlashMsg =<< (liftIO $ flashMessageBadOldPassword (ctxtemplates ctx))
-
 handleGetSubaccount :: Kontra Response
 handleGetSubaccount = withUserGet $ do
-    ctx@Context { ctxmaybeuser = Just user@User { userid } } <- get
+    ctx@Context{ctxmaybeuser = Just User{userid}} <- get
     subaccounts <- query $ GetUserSubaccounts userid
     params <- getListParams
     content <- liftIO $ viewSubaccounts (ctxtemplates ctx) (subaccountsSortSearchPage params $ Set.toList subaccounts)
@@ -140,12 +129,12 @@ subaccountsSortSearchPage  =
 subaccountsSearchFunc :: SearchingFunction User
 subaccountsSearchFunc s user = userMatch user s -- split s so we support spaces
     where
-        match s m = isInfixOf (map toUpper s) (map toUpper (BS.toString m))
-        userMatch u s = match s (usercompanyposition $ userinfo u)
-                     || match s (userfstname $ userinfo u)
-                     || match s (usersndname $ userinfo u)
-                     || match s (userpersonalnumber $ userinfo u)
-                     || match s (unEmail $ useremail $ userinfo u)
+        match s' m = isInfixOf (map toUpper s') (map toUpper (BS.toString m))
+        userMatch u s' = match s' (usercompanyposition $ userinfo u)
+                      || match s' (userfstname $ userinfo u)
+                      || match s' (usersndname $ userinfo u)
+                      || match s' (userpersonalnumber $ userinfo u)
+                      || match s' (unEmail $ useremail $ userinfo u)
 
 subaccountsSortFunc :: SortingFunction User
 subaccountsSortFunc "fstname" = viewComparing $ userfstname . userinfo
@@ -193,7 +182,7 @@ handleCreateSubaccount user = do
              case muser of
                   Just newuser -> do
                       infoUpdate <- getUserInfoUpdate
-                      liftIO $ update $ SetUserInfo (userid newuser) (infoUpdate $ userinfo newuser)
+                      update $ SetUserInfo (userid newuser) (infoUpdate $ userinfo newuser)
                       return ()
                   Nothing -> addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists (ctxtemplates ctx))
              return ()
@@ -269,8 +258,8 @@ withUserPost :: Kontra KontraLink -> Kontra KontraLink
 withUserPost action = do
     ctx <- get
     case ctxmaybeuser ctx of
-         Just user -> action
-         Nothing   -> return $ LinkLogin NotLogged
+         Just _  -> action
+         Nothing -> return $ LinkLogin NotLogged
 
 {- |
    Guard against a GET with no logged in user.
@@ -280,8 +269,8 @@ withUserGet :: Kontra Response -> Kontra Response
 withUserGet action = do
   ctx <- get
   case ctxmaybeuser ctx of
-    Just user -> action
-    Nothing   -> sendRedirect $ LinkLogin NotLogged
+    Just _  -> action
+    Nothing -> sendRedirect $ LinkLogin NotLogged
 
 {- | 
      Takes a document and a action
@@ -305,6 +294,7 @@ checkUserTOSGet action =
       Nothing -> sendRedirect LinkAcceptTOS
       Just _  -> action
 
+handleAcceptTOSGet :: Kontra Response
 handleAcceptTOSGet = withUserGet $ do
       ctx <- get
       tostext <- liftIO $ BS.readFile $ "html/terms.html"
@@ -397,7 +387,6 @@ handleAccountSetupGet aid hash = do
             content <- liftIO $ activatePageView (ctxtemplates ctx) (BS.toString tostext) ""
             renderFromBody ctx TopNone kontrakcja $ cdata content
 
-
 handleAccountSetupPost :: ActionID -> MagicHash -> Kontra KontraLink
 handleAccountSetupPost aid hash = do
     now <- liftIO $ getMinutesTime
@@ -407,15 +396,12 @@ handleAccountSetupPost aid hash = do
              case actionType action of
                   ViralInvitationSent email invtime inviterid token ->
                       if token == hash
-                         then do
-                             muser <- getUserForViralInvite email invtime inviterid
-                             handleActivate muser $ dropExistingAction aid
+                         then getUserForViralInvite now email invtime inviterid
+                              >>= handleActivate
                          else mzero
                   AccountCreated uid token ->
                       if token == hash
-                         then do
-                             muser <- query $ GetUserByUserID uid
-                             handleActivate muser $ dropExistingAction aid
+                         then (query $ GetUserByUserID uid) >>= handleActivate
                          else mzero
                   _ -> mzero
          Nothing -> do -- try to generate another activation link
@@ -433,8 +419,8 @@ handleAccountSetupPost aid hash = do
                      )
                  )
     where
-        handleActivate Nothing _ = mzero -- this should never happen, but in case...
-        handleActivate (Just user) drop_action = do
+        handleActivate Nothing = mzero -- this should never happen, but in case...
+        handleActivate (Just user) = do
             ctx <- get
             let getUserField = getDefaultedField BS.empty
             mtos <- getDefaultedField False asValidCheckBox "tos"
@@ -461,7 +447,7 @@ handleAccountSetupPost aid hash = do
                                      }
                                      now <- liftIO getMinutesTime
                                      update $ AddFreePaymentsForInviter now user
-                                     drop_action
+                                     dropExistingAction aid
                                      addFlashMsg =<< (liftIO $ flashMessageUserActivated $ ctxtemplates ctx)
                                      logUserToContext $ Just user
                                      return LinkMain
@@ -473,24 +459,22 @@ handleAccountSetupPost aid hash = do
                               return LoopBack
                  _ -> return LoopBack
 
-        getUserForViralInvite invitedemail invitationtime inviterid = do
+        getUserForViralInvite now invitedemail invitationtime inviterid = do
             muser <- liftIO $ createInvitedUser BS.empty $ unEmail invitedemail
             case muser of
                  Just user -> do -- user created, we need to fill in some info
                      minviter <- query $ GetUserByUserID inviterid
-                     now <- liftIO $ getMinutesTime
                      update $ FreeUserFromPayments user $ (60*24*60) `minutesAfter` now
                      update $ SetInviteInfo minviter invitationtime Viral (userid user)
                      return muser
                  Nothing -> do -- user already exists, get her
                      query $ GetUserByEmail invitedemail
 
-
 handlePasswordReminderGet :: ActionID -> MagicHash -> Kontra Response
 handlePasswordReminderGet aid hash = do
     muser <- getUserFromActionOfType PasswordReminderID aid hash
     case muser of
-         Just user -> do
+         Just _ -> do
              extendActionEvalTimeToOneDayMinimum aid
              ctx <- get
              content <- liftIO $ newPasswordPageView $ ctxtemplates ctx
@@ -500,38 +484,34 @@ handlePasswordReminderGet aid hash = do
              addFlashMsg =<< (liftIO $ flashMessagePasswordChangeLinkNotValid templates)
              sendRedirect LinkMain
 
-
 handlePasswordReminderPost :: ActionID -> MagicHash -> Kontra KontraLink
 handlePasswordReminderPost aid hash = do
     muser <- getUserFromActionOfType PasswordReminderID aid hash
     case muser of
-         Just user -> handleChangePassword' user $ dropExistingAction aid
+         Just user -> handleChangePassword user
          Nothing   -> do
              templates <- ctxtemplates <$> get
              addFlashMsg =<< (liftIO $ flashMessagePasswordChangeLinkNotValid templates)
              return LinkMain
-
-
-handleChangePassword' :: User -> Kontra () -> Kontra KontraLink
-handleChangePassword' user drop_action = do
-    templates <- ctxtemplates <$> get
-    mpassword <- getOptionalField asValidPassword "password"
-    mpassword2 <- getOptionalField asDirtyPassword "password2"
-    case (mpassword, mpassword2) of
-         (Just password, Just password2) -> do
-             case (checkPasswords password password2) of
-                  Right () -> do
-                      drop_action
-                      passwordhash <- liftIO $ createPassword password
-                      update $ SetUserPassword user passwordhash
-                      addFlashMsg =<< (liftIO $ flashMessageUserPasswordChanged templates)
-                      logUserToContext $ Just user
-                      return LinkMain
-                  Left flash -> do
-                      addFlashMsg =<< (liftIO $ flash templates)
-                      return LoopBack
-         _ -> return LoopBack
-
+    where
+        handleChangePassword user = do
+            templates <- ctxtemplates <$> get
+            mpassword <- getOptionalField asValidPassword "password"
+            mpassword2 <- getOptionalField asDirtyPassword "password2"
+            case (mpassword, mpassword2) of
+                 (Just password, Just password2) -> do
+                     case (checkPasswords password password2) of
+                          Right () -> do
+                              dropExistingAction aid
+                              passwordhash <- liftIO $ createPassword password
+                              update $ SetUserPassword user passwordhash
+                              addFlashMsg =<< (liftIO $ flashMessageUserPasswordChanged templates)
+                              logUserToContext $ Just user
+                              return LinkMain
+                          Left flash -> do
+                              addFlashMsg =<< (liftIO $ flash templates)
+                              return LoopBack
+                 _ -> return LoopBack
 
 getUserFromActionOfType :: ActionTypeID -> ActionID -> MagicHash -> Kontra (Maybe User)
 getUserFromActionOfType atypeid aid hash = do
@@ -542,7 +522,7 @@ getUserFromActionOfType atypeid aid hash = do
              if atypeid == (actionTypeID $ actionType action)
                 then getUID action >>= maybe
                          (return Nothing)
-                         (liftIO . query . GetUserByUserID)
+                         (query . GetUserByUserID)
                 else return Nothing
          Nothing -> return Nothing
     where
@@ -556,7 +536,8 @@ getUserFromActionOfType atypeid aid hash = do
                then Just uid
                else Nothing
 
-
+-- | Postpone link removal. Needed to make sure that between
+-- GET and POST requests action won't be removed from the system.
 extendActionEvalTimeToOneDayMinimum :: ActionID -> Kontra ()
 extendActionEvalTimeToOneDayMinimum aid = do
     dayAfterNow <- minutesAfter (60*24) <$> liftIO getMinutesTime
@@ -564,8 +545,7 @@ extendActionEvalTimeToOneDayMinimum aid = do
     when_ (isNothing maction) $
         update $ UpdateActionEvalTime aid dayAfterNow
 
-
 dropExistingAction :: ActionID -> Kontra ()
 dropExistingAction aid = do
-    _ <- update $ DeleteAction aid
+    update $ DeleteAction aid
     return ()
