@@ -332,51 +332,51 @@ withDocumentAuthor document action = do
 checkUserTOSGet :: Kontra Response -> Kontra Response
 checkUserTOSGet action =
   withUserGet $ do
-    ctx@(Context {ctxmaybeuser = (Just (User {userhasacceptedtermsofservice}))}) <- get
+    ctx@Context {ctxmaybeuser = (Just (User {userhasacceptedtermsofservice}))} <- get
     case userhasacceptedtermsofservice of
       Nothing -> sendRedirect LinkAcceptTOS
       Just _  -> action
 
 handleAcceptTOSGet = withUserGet $ do
-      ctx <- get
-      tostext <- liftIO $ BS.readFile $ "html/terms.html"
-      content <- liftIO $ pageAcceptTOS (ctxtemplates ctx) tostext
-      renderFromBody ctx TopNone kontrakcja $ cdata content
+    ctx@Context{ ctxtemplates } <- get
+    tostext <- liftIO $ BS.readFile $ "html/terms.html"
+    content <- liftIO $ pageAcceptTOS ctxtemplates tostext
+    renderFromBody ctx TopNone kontrakcja $ cdata content
 
 handleAcceptTOSPost :: Kontra KontraLink
-handleAcceptTOSPost = do
-  ctx@Context{ctxmaybeuser = Just user@User{userid},ctxtime} <- get
-  tos <- getDefaultedField False asValidCheckBox "tos"
+handleAcceptTOSPost = withUserPost $ do
+    ctx@Context{ ctxmaybeuser = Just user@User{ userid }, ctxtime } <- get
+    tos <- getDefaultedField False asValidCheckBox "tos"
   
-  case tos of
-    (Just True) -> do
-      update $ AcceptTermsOfService userid ctxtime
-      addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
-      return LinkMain
-    (Just False) -> do
-      addFlashMsg =<< (liftIO $ flashMessageMustAcceptTOS (ctxtemplates ctx))
-      return LinkAcceptTOS
-    Nothing -> return LinkAcceptTOS
-
+    case tos of
+        Just True -> do
+            update $ AcceptTermsOfService userid ctxtime
+            addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
+            return LinkMain
+        Just False -> do
+            addFlashMsg =<< (liftIO $ flashMessageMustAcceptTOS (ctxtemplates ctx))
+            return LinkAcceptTOS
+        Nothing -> return LinkAcceptTOS
 
 handleRequestAccount :: Kontra KontraLink
 handleRequestAccount = do 
-                        ctx<- get
-                        memail <- getRequiredField asValidEmail "email"
-                        case memail of
-                          Nothing -> return LinkMain
-                          Just email -> do
-                            liftIO $ sendMail (ctxmailer ctx) $ emptyMail 
-                                                                        { fullnameemails = [(BS.fromString "prelaunch@skrivapa.se",BS.fromString "prelaunch@skrivapa.se")],
-                                                                           title = BS.fromString $ "New account request",
-                                                                           content = BS.fromString $ "Request from addres " ++ (BS.toString email)
-                                                                        }
-                            addFlashMsg =<< (liftIO $ flashMessageAccountRequestSend (ctxtemplates ctx))                       
-                            return LinkMain -- Something should happend here
+    ctx@Context{ ctxmailer } <- get
+    memail <- getRequiredField asValidEmail "email"
+    case memail of
+        Nothing    -> return LinkMain
+        Just email -> do
+            liftIO $ sendMail ctxmailer $ emptyMail 
+                                            { fullnameemails = [( BS.fromString "prelaunch@skrivapa.se"
+                                                                , BS.fromString "prelaunch@skrivapa.se")]
+                                            , title = BS.fromString $ "New account request"
+                                            , content = BS.fromString $ "Request from addres " ++ (BS.toString email)
+                                            }
+            addFlashMsg =<< (liftIO $ flashMessageAccountRequestSend (ctxtemplates ctx))                       
+            return LinkMain -- Something should happend here
 
 handleQuestion :: Kontra KontraLink
 handleQuestion = do
-                  ctx<- get
+                  ctx <- get
                   name <- getField "name" 
                   memail <- getDefaultedField BS.empty asValidEmail "email"
                   phone <- getField "phone" 
