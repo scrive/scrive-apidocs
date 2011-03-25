@@ -338,13 +338,16 @@ mailCancelDocumentByAuthor templates customMessage ctx document@Document{documen
         attachmentcontent <- getFileContents (ctxs3action ctx) $ head $ documentfiles document          
         return $ emptyMail {title = BS.fromString title, fullnameemails =  [emailFromSignLink signlink] , content = BS.fromString content, attachments = [(documenttitle,attachmentcontent)]}
 
-mailMismatchSignatory :: Context -> Document -> IO Mail
-mailMismatchSignatory ctx document = do
+mailMismatchSignatory :: Context -> Document -> String -> String -> IO Mail
+mailMismatchSignatory ctx document authorname signame= do
     let Context { ctxtemplates } = ctx
     title <- renderTemplate ctxtemplates "mailMismatchSignatoryTitle" $ do
         field "documenttitle" $ BS.toString $ documenttitle document
+        field "authorname" authorname
+        field "signame" signame
     content <- wrapHTML ctxtemplates =<< (renderTemplate ctxtemplates "mailMismatchSignatoryContent" $ do
         field "documenttitle" $ BS.toString $ documenttitle document)
+        
     return $ emptyMail  { title = BS.fromString title
                         , content = BS.fromString content 
                         }
