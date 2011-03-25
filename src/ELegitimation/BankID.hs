@@ -34,6 +34,7 @@ import Text.XML.HaXml.XmlContent.Parser
 import User.UserControl
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS hiding (length, drop, break)
+import GHC.Word
 
 {- |
    Handle the Ajax request for initiating a BankID transaction.
@@ -668,10 +669,9 @@ mergeInfo :: (BS.ByteString, BS.ByteString, BS.ByteString)
                 -> (BS.ByteString, BS.ByteString, BS.ByteString) 
                 -> Either (String, BS.ByteString, BS.ByteString, BS.ByteString) (Bool, Bool, Bool)
 mergeInfo (contractFirst, contractLast, contractNumber) (elegFirst, elegLast, elegNumber) =
-    let results = zipWith3 mergeTwo 
-                    ["First name",  "Last name", "Person Number"]
-                    [contractFirst, contractLast, contractNumber]
-                    [elegFirst,     elegLast,     elegNumber    ]
+    let results = [ compareFirstNames contractFirst  elegFirst
+                  , compareLastNames  contractLast   elegLast
+                  , compareNumbers    contractNumber elegNumber]
         failmsgs = [msg | MergeFail msg <- results]
         matches  = map (== MergeMatch) results
     in
@@ -724,3 +724,51 @@ providerStringToType provider
     | provider == "nordea" = return NordeaProvider
     | provider == "telia"  = return TeliaProvider
     | otherwise            = mzero
+
+bsspaces :: BS.ByteString
+bsspaces = BS.fromString " \t\n"
+
+bsspace :: GHC.Word.Word8 -> Bool
+bsspace c = c `BS.elem` bsspaces
+
+bsWords str | BS.null str = []
+bsWords str = first : bsWords rest
+    where first = BS.takeWhile (not . bsspace) $ BS.dropWhile bsspace str
+          rest  = BS.dropWhile (not . bsspace) $ BS.dropWhile bsspace str
+
+compareFirstNames fnContract fnEleg 
+    | BS.null fnContract = MergeFail "First Name was blank" 
+    | BS.null fnEleg = MergeKeep
+    | otherwise = 
+        let fnsc = bsWords fnContract
+            fnse = bsWords fnEleg
+        in if not $ null $ intersect fnsc fnse
+            then MergeMatch
+            else MergeFail $ "First names do not match: \"" ++ show fnContract ++ "\" and \"" ++ show fnEleg ++ "\"."
+  
+bsdigits :: BS.ByteString    
+bsdigits = BS.fromString "0123456789"
+
+isBSDigit x = x `BS.elem` bsdigits
+
+normalizeNumber n | BS.null n = n
+normalizeNumber n
+    | isBSDigit (BS.head n) = BS.cons (BS.head n) $ normalizeNumber (BS.tail n)
+    | otherwise = normalizeNumber (BS.tail n)
+    
+compareNumbers nContract nEleg 
+    | BS.null nContract = MergeFail "Person Number was blank."
+    | BS.null nEleg = MergeKeep
+    | otherwise = 
+        let nsc = normalizeNumber nContract
+            nse = normalizeNumber nEleg
+        in caseOf [(nsc == nse,                                            MergeMatch)
+                  ,(BS.length nsc > BS.length nse && BS.drop 2 nsc == nse, MergeMatch)
+                  ,(BS.length nsc < BS.length nse && nsc == BS.drop 2 nse, MergeMatch)]
+                $ MergeFail $ "Person numbers do not match: \"" ++ show nContract ++ "\" and \"" ++ show nEleg ++ "\"."
+
+compareLastNames lnContract lnEleg 
+    | BS.null lnContract = MergeFail "Last name was blank."
+    | BS.null lnEleg = MergeKeep
+    | lnContract == lnEleg = MergeMatch
+    | otherwise = MergeFail $ "Last names do not match: \"" ++ show lnContract ++ "\" and \"" ++ show lnEleg ++"\"."
