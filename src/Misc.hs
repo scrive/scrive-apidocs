@@ -462,7 +462,7 @@ pad0 :: Int         -- ^ how long should be the number
 pad0 len str = take missing (repeat '0') ++ str
     where
         diff = len - length str
-        missing = if diff >= 0 then diff else 0
+        missing = max 0 diff
 
 -- | Logging left to error log
 eitherLog action = do
