@@ -16,6 +16,7 @@ module Kontra
     , onlySuperUser
     , unloggedActionLink
     , queryOrFail
+    , returnJustOrMZero
     )
     where
 
@@ -175,7 +176,8 @@ unloggedActionLink user =  do
 queryOrFail :: (QueryEvent ev (Maybe res)) => ev -> Kontra res
 queryOrFail q = do
   mres <- query q
-  case mres of
-    Just res -> return res
-    Nothing -> mzero
+  maybe mzero return mres
 
+-- | if it's not a just, mzero. Otherwise, return the value
+returnJustOrMZero :: Maybe a -> Kontra a
+returnJustOrMZero = maybe mzero return
