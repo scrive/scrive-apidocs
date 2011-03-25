@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -Wall -F -pgmFtrhsx #-}
-module Redirect (sendRedirect) where
+module Redirect (sendRedirect,sendSecureLoopBack) where
 
 import Control.Applicative ((<$>))
 import Control.Monad.State (get)
@@ -49,3 +49,9 @@ sendRedirect (LinkLogin reason) = do
 sendRedirect link = do
   response <- webHSP (seeOtherXML $ show link)
   seeOther (show link) response
+
+sendSecureLoopBack :: Kontra Response
+sendSecureLoopBack = do
+    link <- getSecureLink
+    response <- webHSP (seeOtherXML $ link)
+    seeOther link response
