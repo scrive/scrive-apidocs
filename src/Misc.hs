@@ -478,3 +478,22 @@ fst3 (a,_,_) = a
 snd3 (_,b,_) = b
 thd3 (_,_,c) = c
 
+-- HTTPS utils
+
+isSecure::(ServerMonad m,Functor m) => m Bool
+isSecure = do
+     (Just (BS.fromString "http") /=) <$> (getHeaderM "scheme")
+
+getHostpart::(ServerMonad m,Functor m) => m String
+getHostpart = do
+    rq <- askRq
+    let host = maybe "skrivapa.se" BS.toString $ getHeader "host" rq
+    let scheme = maybe "http" BS.toString $ getHeader "scheme" rq
+    return $ scheme ++ "://" ++ host     
+     
+getSecureLink::(ServerMonad m,Functor m) => m String
+getSecureLink = do
+    rq <- askRq
+    let host = maybe "skrivapa.se" BS.toString $ getHeader "host" rq
+    return $ "https://" ++ host ++ (rqURL rq)    
+    
