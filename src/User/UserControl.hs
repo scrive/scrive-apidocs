@@ -321,10 +321,10 @@ withUserGet action = do
 | -}
 withDocumentAuthor :: Document -> Kontra a -> Kontra a
 withDocumentAuthor document action = do
-                                     ctx <- get
-                                     case fmap (isAuthor document) (ctxmaybeuser ctx) of
-                                      Just True -> action
-                                      Nothing   -> mzero                   
+    ctx <- get
+    case fmap (isAuthor document) (ctxmaybeuser ctx) of
+        Just True -> action
+        _         -> mzero                   
 {- |
    Guard against a GET with logged in users who have not signed the TOS agreement.
    If they have not, redirect to their account page.

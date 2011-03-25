@@ -181,9 +181,7 @@ getDataFnM fun = do
 #if MIN_VERSION_happstack_server(0,5,1)
   either (\_ -> mzero) (return) m
 #else
-  case m of
-    Just x -> return x
-    Nothing -> mzero
+  maybe mzero return m
 #endif
 
 -- | Since we sometimes want to get 'Maybe' and also we wont work with
@@ -380,7 +378,7 @@ for = flip map
 
 -- | 'sequenceA' says that if we maybe have @(Maybe (m a))@ a computation
 -- that gives a then we can get real computation that may fail m
--- @(Maybe a)@ 'sequenceMM' doest the same, but is aware that first
+-- @(Maybe a)@ 'sequenceMM' does the same, but is aware that first
 -- computation can also fail, and so it joins two posible fails.
 sequenceMM :: (Applicative m) => Maybe (m (Maybe a)) -> m (Maybe a)
 sequenceMM = (fmap join) . sequenceA 
@@ -479,3 +477,4 @@ eitherLog action = do
 fst3 (a,_,_) = a
 snd3 (_,b,_) = b
 thd3 (_,_,c) = c
+
