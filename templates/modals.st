@@ -180,5 +180,57 @@ willCreateAccountForYouNoAccount=
       </form>
     </p>
 ####
-
+loginModal=
+$if(loginModal)$
+<div class="modalcontainer">
+<div class="modalbox overlay">
+<div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-icon message"></div>
+        <div class="modal-title">
+          <h1>Logga in</h1>
+        </div>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">
+            <div id="login">
+                <form action="/login" method="post">
+                    <table>
+                    <tr>
+                        <td>E-post:</td> 
+                        <td>
+                            <input type="email" name="email" autocomplete="off" class="noflash" value="$if(email)$$email$$endif$" />
+                        </td> 
+                    </tr>
+                    <tr> 
+                        <td>Lösenord:</td> 
+                        <td>
+                            <input type="password" name="password" autocomplete="off" />
+                        </td> 
+                    </tr>
+                    <tr> 
+                        <td><input class="button" id="loginbtn" type="submit" name="login" value="Logga in" /></td>
+                        <td><a href="/amnesia"> Glömt lösenord</a></td>
+                    </tr>
+                    </table>
+                    </form>
+            </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a class="btn-small green float-right close">
+          <div class="left"></div>
+          <div class="label">
+            <p>Stäng</p>
+            <div class="btn-symbol green arrow-left"></div>
+          </div>
+          <div class="right"></div>
+        </a>
+      </div>
+</div>
+</div>
+</div>
+$endif$
+####
 

@@ -64,6 +64,7 @@ wholePage=
         $header()$
         <div class="mainContainer960" >
           $flashmessages()$
+          $loginModal()$
         <div id="body-container">
          $if(!columns)$
           $content:noescape()$
