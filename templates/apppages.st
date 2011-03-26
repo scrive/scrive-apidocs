@@ -242,37 +242,7 @@ header=
 
                                 $else$
                                 <a href="#" class="login-button"><p>Logga in</p></a>
-                                <div class="user-container">
-                                                <div class="login-container">
-                                                        <div class="top">
-                                                                <p>Logga in</p>
-                                                        </div>
-                                                        <div class="body">
-                                                                  <form method="post" action="$linklogin$">
-                                                                        <input type="email" name="email" infotext="E-post" autocomplete="off"/><br />
-                                                                        <input type="password" name="password" infotext="password" autocomplete="off"/><br />
-                                                                        <a href="#" class="btn-tiny blue center float-right submit"><p>Logga in</p></a>
-                                                                        <a href="#" class="txt-link">Glömt lösenord</a>
-                                                                        <input type="submit" class="hidden" />
-                                                                  </form>
-                                                        </div>
-                                                </div>
-                                                <div class="recovery-container">
-                                                        <div class="top">
-                                                                <p>Lösenord</p>
-                                                        </div>
-                                                        <div class="body">
-                                                                <form method="post" action="$linkforgotenpassword$">
-                                                                        <p class="float-left">&nbsp;Skicka nytt lösenord</p>
-                                                                        <input type="email" name="email" infotext="E-post"  autocomplete="off"/>
-                                                                        <a href="#" class="btn-tiny blue center float-right submit"><p>Skicka</p></a>
-                                                                        <a href="#" class="txt-link">Tillbaka</a>
-                                                                        <input type="submit" class="hidden" />
-                                                                </form>
-                                                        </div>
-                                                </div>
-                                </div>
-                               $endif$
+                                $endif$
                             </div>
                            
             <div class="clearboth"></div>

@@ -495,5 +495,5 @@ getSecureLink::(ServerMonad m,Functor m) => m String
 getSecureLink = do
     rq <- askRq
     let host = maybe "skrivapa.se" BS.toString $ getHeader "host" rq
-    return $ "https://" ++ host ++ (rqURL rq)    
+    return $ "https://" ++ host ++ (rqUri rq)   ++ (rqURL rq)    
     

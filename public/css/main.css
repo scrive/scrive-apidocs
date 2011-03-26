@@ -349,65 +349,21 @@ a.new-btn-small.black p {
 	color: #fff;
 }
 
-.user-container {
-	display: none;
-	height: 184px;
-	position: absolute;
-	right: 0;
-	top: 20px;
-	width: 192px;
-}
-
-.login-container, .recovery-container {
-	height: 154px;
-	position: absolute;
-	width: 192px;
-	z-index: 100;
-}
-
 .recovery-container {
 	display: none;
-}
-
-.login-container .top, .recovery-container .top {
-	background: #f3f3f3;
-	border-color: #3f3f3f;
-	border-radius: 25px 25px 0 0;
-	border-style: solid;
-	border-width: 1px 1px 0 1px;
-	color: #666;
-	cursor: pointer;
-	float: right;
-	font: 14px "Helvetica Neue";
-	height: 14px;
-	padding-left: 26px;
-	padding-top: 13px;
-	width: 121px;
-	z-index: 102;
-	-moz-border-radius: 25px 25px 0 0;
-	-webkit-border-radius: 25px 25px 0 0;
-}
-
-.login-container .top p, .recovery-container .top p {
-	background: url(../img/icon-lock2.png) no-repeat;
-	margin-top: 2px;
-	padding-left: 24px;
-	position: absolute;
-	width: 98px;
-	z-index: 103;
 }
 
 .login-container .body, .recovery-container .body {
 	background: #f3f3f3;
 	border-color: #3f3f3f;
-	border-radius: 5px 0px 5px 5px;
+	border-radius: 5px 5px 5px 5px;
 	border-style: solid;
-	border-width: 0px 1px 1px 1px;
-	float: right;
-	padding: 10px;
-	width: 170px;
+	border-width: 1px 1px 1px 1px;
+    padding: 20px;
+    width:220px;
+    margin:20px 20px 0 120px;
 	z-index: 101;
-	-moz-border-radius: 12px 0 12px 12px;
+	-moz-border-radius: 12px 12px 12px 12px;
 	-webkit-border-radius: 5px 0px 5px 5px;
 }
 
@@ -426,8 +382,22 @@ a.new-btn-small.black p {
 	width: 146px;
 }
 
-.login-container a.btn-tiny, .recovery-container a.btn-tiny {
-	margin-top: 5px;
+.login-container .body .txt-link, .recovery-container .body .txt-link {
+    margin-bottom: 3px;
+    padding: 5px 10px;
+}
+
+.login-container .body .txt, .recovery-container .body .txt{
+    margin-left: 24px;
+    margin-bottom: 3px;
+    float: left;
+}
+
+.login-container .body .btn-tiny, .recovery-container .body .btn-tiny {
+    margin-bottom: 3px;
+    margin-right: 20px;
+    padding: 5px 10px;
+    float: right;
 }
 
 .login-container .body a.txt-link, .recovery-container .body a.txt-link {
@@ -1177,8 +1147,8 @@ a.new-btn-small.black p {
         text-decoration: none;
 }
 
-#top-slim-container .user-container {
-	top: 2px;
+.user-container {
+	height: 150px;
 }
 
 /* Content boxes */
