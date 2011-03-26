@@ -158,7 +158,7 @@ handleRoutes = msum [
      , dir "account"                    $ hpost0 $ UserControl.handleUserPost
      , dir "account" $ dir "subaccount" $ hget0  $ UserControl.handleGetSubaccount
      , dir "account" $ dir "subaccount" $ hpost0 $ UserControl.handlePostSubaccount
-     , dir "contacts"  $ hget0 $ Contacts.showContacts
+     , dir "contacts"  $ hget0  $ Contacts.showContacts
      , dir "contacts"  $ hpost0 $ Contacts.handleContactsChange
      , dir "accepttos" $ hget0  $ UserControl.handleAcceptTOSGet
      , dir "accepttos" $ hpost0 $ UserControl.handleAcceptTOSPost
@@ -201,8 +201,9 @@ handleRoutes = msum [
      , dir "amnesia"     $ hpost0 $ forgotPasswordPagePost
      , dir "amnesia"     $ hget2  $ UserControl.handlePasswordReminderGet
      , dir "amnesia"     $ hpost2 $ UserControl.handlePasswordReminderPost
-     , dir "accountsetup"  $ hget2  $ UserControl.handleAccountSetupGet
-     , dir "accountsetup"  $ hpost2  $ UserControl.handleAccountSetupPost
+     , dir "amnesiadone" $ hget0  $ forgotPasswordDonePage
+     , dir "accountsetup"  $ hget2  $ UserControl.unloggedActionPage
+     , dir "accountsetup"  $ hpost2  $ UserControl.handleUnloggedAction
      , dir "requestaccount" $ hpost0_allowHttp $ UserControl.handleRequestAccount
      -- viral invite
      , dir "invite"      $ hpost0 $ UserControl.handleViralInvite
@@ -225,11 +226,9 @@ handleRoutes = msum [
 handleHomepage :: Kontra Response
 handleHomepage = do
   ctx@Context{ ctxmaybeuser } <- get
-  loginOn <- isFieldSet "logging"
-  referer <- getField "referer"
   case ctxmaybeuser of
     Just user -> UserControl.checkUserTOSGet $ DocControl.showMainPage user 
-    Nothing   -> V.simpleResponse =<< (liftIO $ firstPage ctx loginOn referer)
+    Nothing   -> V.simpleResponse =<< (liftIO $ firstPage ctx)
 
 handleMainReaload :: Kontra KontraLink
 handleMainReaload = LinkNew <$> getListParamsForSearch
@@ -527,8 +526,8 @@ getFailedLoginSlug LoginInfo{ lastfailtime, consecutivefails } = do
 -}  
 handleLogout :: Kontra Response
 handleLogout = do
-  logUserToContext Nothing
-  sendRedirect LinkMain
+    logUserToContext Nothing
+    sendRedirect LinkMain
   
 {- |
    Serves out the static files.
@@ -578,49 +577,61 @@ daveUser userid = onlySuperUserGet $ do
 
 
 
-hpost0 :: Kontra KontraLink -> Kontra Response
-hpost0 action = methodM POST >> (https $ do
+hpost0
+  :: Kontra KontraLink
+     -> Kontra Response
+hpost0 action = methodM POST >> do
                   (link :: KontraLink) <- action
-                  sendRedirect link)
+                  sendRedirect link
 
-hpost1 :: (FromReqURI a) =>  (a -> Kontra KontraLink) -> Kontra Response
-hpost1 action = path $ \a1 -> methodM POST >>  (https $ do
+hpost1
+  :: (FromReqURI a) =>
+     (a -> Kontra KontraLink)
+     -> Kontra Response
+hpost1 action = path $ \a1 -> methodM POST >>  do
                   (link :: KontraLink) <- action a1
-                  sendRedirect link)
+                  sendRedirect link
 
-hpost2 :: (FromReqURI a, FromReqURI a1) =>   (a -> a1 -> Kontra KontraLink) -> Kontra Response
-hpost2 action = path $ \a1 -> path $ \a2 -> methodM POST >>  (https $ do
+hpost2
+  :: (FromReqURI a, FromReqURI a1) =>
+     (a -> a1 -> Kontra KontraLink)
+     -> Kontra Response
+hpost2 action = path $ \a1 -> path $ \a2 -> methodM POST >>  do
                   (link :: KontraLink) <- action a1 a2
-                  sendRedirect link)
+                  sendRedirect link
 
-hpost3 :: (FromReqURI a, FromReqURI a1, FromReqURI a2) =>  
-          (a -> a1 -> a2 -> Kontra KontraLink) 
-          -> Kontra Response
-hpost3 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> methodM POST >> (https $ do
+hpost3
+  :: (FromReqURI a, FromReqURI a1, FromReqURI a2) =>
+     (a -> a1 -> a2 -> Kontra KontraLink)
+     -> Kontra Response
+hpost3 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> methodM POST >>  do
                   (link :: KontraLink) <- action a1 a2 a3
-                  sendRedirect link)
+                  sendRedirect link
 
-hpost4 :: (FromReqURI a, FromReqURI a1, FromReqURI a2, FromReqURI a3) =>  
-          (a -> a1 -> a2 -> a3 -> Kontra KontraLink)
-           -> Kontra Response
-hpost4 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> path $ \a4 -> methodM POST >>  (https $ do
+hpost4
+  :: (FromReqURI a, FromReqURI a1, FromReqURI a2, FromReqURI a3) =>
+     (a -> a1 -> a2 -> a3 -> Kontra KontraLink)
+     -> Kontra Response
+hpost4 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> path $ \a4 -> methodM POST >>  do
                   (link :: KontraLink) <- action a1 a2 a3 a4
-                  sendRedirect link)
+                  sendRedirect link
 
 hget0 :: Kontra Response -> Kontra Response
 hget0 action = methodM GET >> (https $ action)
 
 hget1
-  :: (FromReqURI a) => (a -> Kontra Response) -> Kontra Response
-hget1 action = path $ \a1 -> methodM GET >> (https $ action a1)
+  :: (FromReqURI a, MonadPlus m, ServerMonad m) => (a -> m b) -> m b
+hget1 action = path $ \a1 -> methodM GET >> action a1
 
 hget2
-  :: (FromReqURI a, FromReqURI a1) =>
-     (a -> a1 -> Kontra Response) -> Kontra Response
-hget2 action = path $ \a1 -> path $ \a2 -> methodM GET >> (https $ action a1 a2)
+  :: (FromReqURI a, MonadPlus m, ServerMonad m, FromReqURI a1) =>
+     (a -> a1 -> m b) -> m b
+hget2 action = path $ \a1 -> path $ \a2 -> methodM GET >> action a1 a2
 
 hget3
   :: (FromReqURI a,
+      MonadPlus m,
+      ServerMonad m,
       FromReqURI a1,
       FromReqURI a2) =>
      (a -> a1 -> a2 -> Kontra Response) -> Kontra Response
@@ -628,6 +639,8 @@ hget3 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> methodM GET >> (https $
 
 hget4
   :: (FromReqURI a,
+      MonadPlus m,
+      ServerMonad m,
       FromReqURI a1,
       FromReqURI a2,
       FromReqURI a3) =>
@@ -639,8 +652,9 @@ hget4 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> path $ \a4 -> methodM G
   Usually when we want to have similar path when looking at list and when looking at element
 
  -} 
-hget1m::(Maybe String -> Kontra Response)->Kontra Response 
-hget1m action = (path $ \a1 -> methodM GET >> (action $ Just a1)) `mplus`  (methodM GET >> action Nothing)
+hget1m :: (Maybe String -> Kontra Response) -> Kontra Response 
+hget1m action = (path $ \a1 -> methodM GET >> (action $ Just a1)) 
+    `mplus` (methodM GET >> action Nothing)
 
 {- |
    Guard on the existence of a parameter.
