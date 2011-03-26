@@ -36,7 +36,7 @@ data TopMenu = TopNew | TopDocument | TopAccount | TopNone | TopEmpty
    The name of our application (the codebase is known as kontrakcja,
    and this is the pretty public name)
 -}
-kontrakcja :: [Char]
+kontrakcja :: String
 kontrakcja = "SkrivaPå" 
 
 -- * Main Implementation
@@ -54,8 +54,7 @@ renderFromBody ctx topmenu title xml = do
                                         htmlPage <- fmap ((isSuffixOf ".html") . concat . rqPaths)  askRq
                                         let showCreateAccount = htmlPage && (isNothing $ ctxmaybeuser ctx)
                                         columns <- isFieldSet "columns"
-                                        loginOn <- isFieldSet "logging"
-                                        res <- webHSP $ pageFromBody ctx columns loginOn showCreateAccount title xml
+                                        res <- webHSP $ pageFromBody ctx columns showCreateAccount title xml
                                         clearFlashMsgs
                                         return res
 {- |
@@ -72,7 +71,7 @@ pageFromBody :: (EmbedAsChild (HSPT' IO) xml)
 pageFromBody ctx@Context { ctxmaybeuser
                       , ctxtemplates
                       }
-             columns loginOn showCreateAccount title body = do
+             columns showCreateAccount title body = do
                     content <- liftIO $ renderHSPToString <div class="mainContainer"><% body %></div>
                     wholePage <- liftIO $ renderTemplate ctxtemplates "wholePage" $ do
                                   field "content" content
@@ -81,7 +80,6 @@ pageFromBody ctx@Context { ctxmaybeuser
                                   field "showCreateAccount" showCreateAccount
                                   mainLinksFields 
                                   contextInfoFields ctx
-                                  loginModal loginOn Nothing
                     return $ cdata wholePage
 
 {- |
@@ -98,8 +96,14 @@ signupVipPageView templates = renderTemplate templates "signupVipPageView" ()
 -} 
 
 pageForgotPassword :: KontrakcjaTemplates -> IO String
-pageForgotPassword templates = do
-  renderTemplate templates "pageForgotPassword" ()
+pageForgotPassword templates = renderTemplate templates "pageForgotPassword" ()
+
+{- |
+   The contents of the password reset confirmation.  This is read from a template.
+-}
+pageForgotPasswordConfirm :: KontrakcjaTemplates -> IO String
+pageForgotPasswordConfirm templates = do
+  renderTemplate templates "pageForgotPasswordConfirm" ()
 
 {- |
    The contents of the login page.  This is read from a template.
@@ -115,15 +119,17 @@ pageLogin ctx referer email =
 -}
 simpleResponse::String -> Kontra Response
 simpleResponse s = do 
-                   res <- ok $ toResponse $ cdata s -- change this to HtmlString from helpers package (didn't want to connect it one day before prelaunch)
-                   clearFlashMsgs
-                   return res
+    -- change this to HtmlString from helpers package 
+    -- (didn't want to connect it one day before prelaunch)
+    res <- ok $ toResponse $ cdata s 
+    clearFlashMsgs
+    return res
 
 {- |
    The landing page contents.  Read from template.
 -}
-firstPage::Context-> Bool -> Maybe String ->  IO String
-firstPage ctx loginOn referer =  renderTemplate (ctxtemplates ctx) "firstPage"  $ do 
+firstPage::Context-> IO String
+firstPage ctx =  renderTemplate (ctxtemplates ctx) "firstPage"  $ do 
                               contextInfoFields ctx
                               mainLinksFields
                               loginModal loginOn referer
@@ -132,15 +138,15 @@ firstPage ctx loginOn referer =  renderTemplate (ctxtemplates ctx) "firstPage"  
 -}
 mainLinksFields::Fields 
 mainLinksFields = do
-                     field "linklogin" $ show (LinkLogin NoReason)
-                     field "linklogout" $ show LinkLogout
-                     field "linkforgotenpassword" $ show LinkForgotPassword
-                     field "linkrequestaccount" $ show LinkRequestAccount
-                     field "linkquestion" $ show LinkAskQuestion
-                     field "linkaccount" $ show LinkAccount
-                     field "linkmain" $ show LinkMain
-                     field "linkissue" $ show $ LinkContracts emptyListParams
-                     field "linkinvite" $ show LinkInvite
+    field "linkaccount"          $ show LinkAccount
+    field "linkforgotenpassword" $ show LinkForgotPassword
+    field "linkinvite"           $ show LinkInvite
+    field "linkissue"            $ show (LinkContracts emptyListParams)
+    field "linklogin"            $ show (LinkLogin NoReason)
+    field "linklogout"           $ show LinkLogout
+    field "linkmain"             $ show LinkMain
+    field "linkquestion"         $ show LinkAskQuestion
+    field "linkrequestaccount"   $ show LinkRequestAccount
 
 {- |
    Defines some standard context information as fields handy for substitution
@@ -156,15 +162,11 @@ contextInfoFields ctx = do
 
 
 flashMessageFields fm = do
-    field "type" $ case fst (unFlashMessage fm) of
-                        SigningRelated -> "blue"
-                        OperationDone -> "green"
-                        OperationFailed -> "red" 
-                        _ -> ""
+    field "type" $ 
+        case fst (unFlashMessage fm) of
+            SigningRelated  -> "blue"
+            OperationDone   -> "green"
+            OperationFailed -> "red" 
+            _               -> ""
     field "message" $ snd (unFlashMessage fm)   
     field "isModal" $ fst (unFlashMessage fm) == Modal
-    
-loginModal::Bool -> Maybe String -> Fields
-loginModal on referer= do 
-    field "loginModal" $ on 
-    field "referer" $ referer 
