@@ -77,7 +77,7 @@
 	margin-top: 4px;
 }
 
-.flashmsgbox {
+.flashmsgbox{
     -moz-border-radius: 1px 1px 1px 1px;
     background-color: white;
     border: 1px solid #111111;
@@ -137,4 +137,64 @@
         height: 35px;
         margin-top: 9px;
         width: 137px;
+}
+
+.modalcontainer{
+    left: 0;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 10000;
+}
+.modalbox {
+
+}
+
+
+.overlay {
+    
+    /* place overlay on top of other elements */
+    z-index:10000;
+    display:none;
+    /* styling */
+    width:640px;    
+    
+    /* CSS3 styling for latest browsers */
+    -moz-box-shadow:0 0 90px 5px #000;
+    -webkit-box-shadow: 0 0 90px #000;  
+}
+
+/* close button positioned on upper right corner */
+.overlay a.close {
+    /*background-image:url(images/close.png);
+    position:absolute;
+    right:-15px;
+    top:-15px;
+    cursor:pointer;
+    height:35px;
+    width:35px;*/
+}
+
+.overlay h2 {
+    margin:0px;
+    padding:10px 0 10px 10px;
+    border-bottom:1px solid #333;
+    font-size:20px;
+}
+
+.overlay .buttonbox   
+{
+    float:right;
+    padding-top:10px;
+    position: absolute;
+    bottom: 7px;
+    right: 7px;
+}
+
+.overlay .buttonbox button{
+    margin-right:3px;
+}
+
+.overlay p {
+    margin:8px;
 }
