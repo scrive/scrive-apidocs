@@ -306,11 +306,12 @@ mailMismatchSignatoryTitle=
 Problem med matchning av personuppgifter
 ####
 mailMismatchSignatoryContent=
-<p>Hej "Name of Signatory"!</p>
-<p>Du har blivit inbjuden att underteckna dokumentet "$documenttitle". Tyvärr matchar inte de angivna personuppgifterna hos en av parterna med uppgifterna på e-legitimationsservern. Därför har processen avbrutits och ett meddelande att korrigera uppgifterna har skickats till "name of author".</p>
+<p>Hej $signame$!</p>
+<p>Du har blivit inbjuden att underteckna dokumentet "$documenttitle". Tyvärr matchar inte de angivna personuppgifterna hos en av parterna med uppgifterna på e-legitimationsservern. Därför har processen avbrutits och ett meddelande att korrigera uppgifterna har skickats till $authorname$.</p>
 <p>
 Med Vänliga Hälsningar
-</p><p>
+</p>
+<p>
 SkrivaPå
 </p>
 ####
@@ -319,5 +320,5 @@ Felaktiga personuppgifter
 ####
 mailMismatchAuthorContent=
 <p>Vi beklagar. Uppgifterna i din e-legitimation matchar inte dina personuppgifter.</p>
-$messages$
+$messages:noescape()$
 ####
