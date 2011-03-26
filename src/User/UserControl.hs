@@ -362,9 +362,15 @@ handleAccountSetupGet aid hash = do
                       if token == hash
                          then activationPage
                          else mzero
-                  AccountCreated _ token ->
+                  AccountCreated uid token -> do
                       if token == hash
-                         then activationPage
+                         then (query $ GetUserByUserID uid) >>= maybe mzero (\user ->
+                             if isNothing $ userhasacceptedtermsofservice user
+                                then activationPage
+                                else do
+                                    templates <- ctxtemplates <$> get
+                                    addFlashMsg =<< (liftIO $ flashMessageUserAlreadyActivated templates)
+                                    sendRedirect LinkMain)
                          else mzero
                   _  -> mzero
          Nothing -> -- action has expired, but we may be able to generate it again
@@ -396,11 +402,17 @@ handleAccountSetupPost aid hash = do
                   ViralInvitationSent email invtime inviterid token ->
                       if token == hash
                          then getUserForViralInvite now email invtime inviterid
-                              >>= handleActivate
+                              >>= maybe mzero handleActivate
                          else mzero
                   AccountCreated uid token ->
                       if token == hash
-                         then (query $ GetUserByUserID uid) >>= handleActivate
+                         then (query $ GetUserByUserID uid) >>= maybe mzero (\user ->
+                             if isNothing $ userhasacceptedtermsofservice user
+                                then handleActivate user
+                                else do
+                                    templates <- ctxtemplates <$> get
+                                    addFlashMsg =<< (liftIO $ flashMessageUserAlreadyActivated templates)
+                                    return LinkMain)
                          else mzero
                   _ -> mzero
          Nothing -> do -- try to generate another activation link
@@ -418,8 +430,7 @@ handleAccountSetupPost aid hash = do
                      )
                  )
     where
-        handleActivate Nothing = mzero -- this should never happen, but in case...
-        handleActivate (Just user) = do
+        handleActivate user = do
             ctx <- get
             let getUserField = getDefaultedField BS.empty
             mtos <- getDefaultedField False asValidCheckBox "tos"
