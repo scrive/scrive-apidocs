@@ -227,9 +227,10 @@ handleHomepage :: Kontra Response
 handleHomepage = do
   ctx@Context{ ctxmaybeuser } <- get
   loginOn <- isFieldSet "logging"
+  referer <- getField "referer"
   case ctxmaybeuser of
     Just user -> UserControl.checkUserTOSGet $ DocControl.showMainPage user 
-    Nothing   -> V.simpleResponse =<< (liftIO $ firstPage ctx loginOn)
+    Nothing   -> V.simpleResponse =<< (liftIO $ firstPage ctx loginOn referer)
 
 handleMainReaload :: Kontra KontraLink
 handleMainReaload = LinkNew <$> getListParamsForSearch

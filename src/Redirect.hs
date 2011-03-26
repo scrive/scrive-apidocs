@@ -40,11 +40,14 @@ sendRedirect BackToReferer = do
 sendRedirect (LinkLogin reason) = do
   curr <- rqUri <$> askRq
   referer <- getField "referer"
-  let link = "/?logging=YES&referer=" ++ (URL.encode . UTF.encode $ fromMaybe curr referer)
   templates <- ctxtemplates <$> get
   liftIO (flashMessageLoginRedirectReason templates reason) >>= maybe (return ()) addFlashMsg
-  response <- webHSP (seeOtherXML $ link)
-  seeOther link response
+  case reason of
+      InvalidLoginInfo -> sendRedirect LoopBack
+      _ -> do
+           let link = "/?logging=YES&referer=" ++ (URL.encode . UTF.encode $ fromMaybe curr referer)
+           response <- webHSP (seeOtherXML $ link)
+           seeOther link response
 
 sendRedirect link = do
   response <- webHSP (seeOtherXML $ show link)

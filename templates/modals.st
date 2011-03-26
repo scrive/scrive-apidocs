@@ -181,6 +181,7 @@ willCreateAccountForYouNoAccount=
     </p>
 ####
 loginModal=
+$if(!logged)$
 $if(loginModal)$
 <div class="modalcontainer">
 <div class="modalbox overlay">
@@ -197,6 +198,7 @@ $if(loginModal)$
                                                 <div class="login-container">
                                                         <div class="body">
                                                                 <form method="post" action="$linklogin$">
+                                                                        <input type="hidden" name="referer" value="$referer$" />
                                                                         <input type="email" name="email" infotext="E-post" autocomplete="off"/><br />
                                                                         <input type="password" name="password" infotext="password" autocomplete="off"/><br />
                                                                         <a href="#" class="txt-link">Glömt lösenord</a>
@@ -230,6 +232,7 @@ $if(loginModal)$
 </div>
 </div>
 </div>
+$endif$
 $endif$
 ####
 
