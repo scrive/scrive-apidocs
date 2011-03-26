@@ -40,23 +40,25 @@ $(document).ready( function() {
 	
 	$('.login-button').click( function(e) {
         var newlocation = window.location.pathname + window.location.search 
+        if (newlocation.lastIndexOf("logging") != newlocation.length - "logging".length){
         if (window.location.search == "")
           newlocation += "?logging"
         else 
           newlocation += "&logging";  
+        }
         window.location = newlocation 
     });
 	
 	$('.recovery-container .top, .login-container .top').click( function(e) {
 		e.preventDefault();
 	
-		$('.user-container').fadeToggle('fast');
+		$('.user-container').toggle();
 	});
 	
 	$('.login-container .txt-link, .recovery-container .txt-link').click( function(e) {
 		e.preventDefault();
 	
-		$('.login-container, .recovery-container').fadeToggle('fast');
+		$('.login-container, .recovery-container').toggle('fast');
 	});
 	
 	$('.user-container').each( function() {
