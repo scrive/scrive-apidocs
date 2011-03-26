@@ -383,10 +383,10 @@ forgotPasswordPagePost = do
 -}
 sendResetPasswordMail::User -> Kontra ()
 sendResetPasswordMail user = do
-                         ctx <- get
-                         chpwdlink <- liftIO $ unloggedActionLink user
-                         mail <-liftIO $ UserView.resetPasswordMail (ctxtemplates ctx) (ctxhostpart ctx) user chpwdlink     
-                         liftIO $ sendMail (ctxmailer ctx) $ mail { fullnameemails = [((userfullname user), (unEmail $ useremail $ userinfo user))]}    
+    ctx <- get
+    chpwdlink <- newPasswordReminderLink user
+    mail <-liftIO $ UserView.resetPasswordMail (ctxtemplates ctx) (ctxhostpart ctx) user chpwdlink
+    liftIO $ sendMail (ctxmailer ctx) $ mail { fullnameemails = [((userfullname user), (unEmail $ useremail $ userinfo user))] }
 
 {- |
    Handles viewing of the password reset confirmation page
@@ -430,43 +430,46 @@ signupVipPagePost = signup True $ parseMinutesTimeMDY "31-12-2011"
     A comment next to LoopBack says never to use it. Is this function broken?
 -}                   
 signup :: Bool -> (Maybe MinutesTime) -> Kontra KontraLink
-signup vip freetill =  do 
-                ctx@Context{ctxtemplates,ctxhostpart} <- lift get
-                memail <- getOptionalField asValidEmail "email"
-                case memail of
-                   Nothing -> return LoopBack
-                   Just email -> do
-                        muser <- query $ GetUserByEmail $ Email $ email
-                        case  muser of
-                          Just user -> if (isNothing $ userhasacceptedtermsofservice user) 
-                                        then  
-                                         do  al <- liftIO $ unloggedActionLink user
-                                             mail <-  liftIO $ newUserMail (ctxtemplates) (ctxhostpart) email email al vip
-                                             liftIO $ sendMail (ctxmailer ctx) $ mail { fullnameemails = [(email,email)]}
-                                             addFlashMsg =<< (liftIO $ flashMessageNewActivationLinkSend  (ctxtemplates)) 
-                                             return LoopBack
-                                          else do
-                                             addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
-                                             return LoopBack
-                          Nothing -> do
-                            maccount <- liftIO $ UserControl.createUser ctx ctxhostpart BS.empty email Nothing True Nothing vip
-                            case maccount of      
-                             Just account ->  do
-                                               addFlashMsg =<< (liftIO $ flashMessageUserSignupDone ctxtemplates)
-                                               when (isJust freetill) $ update $ FreeUserFromPayments account (fromJust freetill)
-                                               return LoopBack
-                             Nothing ->       do
-                                              addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
-                                              return LoopBack
+signup vip freetill =  do
+    ctx@Context{ctxtemplates,ctxhostpart} <- lift get
+    memail <- getOptionalField asValidEmail "email"
+    case memail of
+         Nothing -> return LoopBack
+         Just email -> do
+             muser <- query $ GetUserByEmail $ Email $ email
+             case  muser of
+                  Just user ->
+                      if isNothing $ userhasacceptedtermsofservice user
+                         then do
+                             al <- newAccountCreatedLink user
+                             mail <- liftIO $ newUserMail (ctxtemplates) (ctxhostpart) email email al vip
+                             liftIO $ sendMail (ctxmailer ctx) $ mail { fullnameemails = [(email, email)] }
+                             addFlashMsg =<< (liftIO $ flashMessageNewActivationLinkSend  (ctxtemplates))
+                             return LoopBack
+                         else do
+                             addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
+                             return LoopBack
+                  Nothing -> do
+                      maccount <- liftIO $ UserControl.createUser ctx ctxhostpart BS.empty email Nothing vip
+                      case maccount of
+                           Just account ->  do
+                               addFlashMsg =<< (liftIO $ flashMessageUserSignupDone ctxtemplates)
+                               when (isJust freetill) $
+                                   update $ FreeUserFromPayments account (fromJust freetill)
+                               return LoopBack
+                           Nothing -> do
+                               addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
+                               return LoopBack
+
 {- |
    Sends a new activation link mail, which is really just a new user mail.
 -}
 sendNewActivationLinkMail:: Context -> User -> Kontra ()
 sendNewActivationLinkMail Context{ctxtemplates,ctxhostpart,ctxmailer} user = do
-                         let email = unEmail $ useremail $ userinfo user
-                         al <- liftIO $ unloggedActionLink user
-                         mail <-  liftIO $ newUserMail ctxtemplates ctxhostpart email email al False
-                         liftIO $ sendMail ctxmailer $ mail { fullnameemails = [(email,email)]}                      
+    let email = unEmail $ useremail $ userinfo user
+    al <- newAccountCreatedLink user
+    mail <- liftIO $ newUserMail ctxtemplates ctxhostpart email email al False
+    liftIO $ sendMail ctxmailer $ mail { fullnameemails = [(email, email)] }
 
 {- |
    Handles viewing of the login page
