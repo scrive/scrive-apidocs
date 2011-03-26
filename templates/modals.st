@@ -193,40 +193,39 @@ $if(loginModal)$
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
-        <div class="modal-content">
-            <div id="login">
-                <form action="/login" method="post">
-                    <table>
-                    <tr>
-                        <td>E-post:</td> 
-                        <td>
-                            <input type="email" name="email" autocomplete="off" class="noflash" value="$if(email)$$email$$endif$" />
-                        </td> 
-                    </tr>
-                    <tr> 
-                        <td>Lösenord:</td> 
-                        <td>
-                            <input type="password" name="password" autocomplete="off" />
-                        </td> 
-                    </tr>
-                    <tr> 
-                        <td><input class="button" id="loginbtn" type="submit" name="login" value="Logga in" /></td>
-                        <td><a href="/amnesia"> Glömt lösenord</a></td>
-                    </tr>
-                    </table>
-                    </form>
-            </div>
+        <div class="modal-content"> <div class="user-container">
+                                                <div class="login-container">
+                                                        <div class="body">
+                                                                <form method="post" action="$linklogin$">
+                                                                        <input type="email" name="email" infotext="E-post" autocomplete="off"/><br />
+                                                                        <input type="password" name="password" infotext="password" autocomplete="off"/><br />
+                                                                        <a href="#" class="txt-link">Glömt lösenord</a>
+                                                                        <a href="#" class="btn-tiny blue center submit">
+                                                                            <div class="left"> </div>     
+                                                                            <div class="label"><span>Logga in</span> </div>
+                                                                            <div class="right"/> </div>
+                                                                        </a>
+                                                                        <input type="submit" class="hidden" />
+                                                                </form>
+                                                        </div>
+                                                </div>
+                                                <div class="recovery-container">
+                                                        <div class="body">
+                                                                <form method="post" action="$linkforgotenpassword$">
+                                                                        <span class="txt">Skicka nytt lösenord</span>
+                                                                        <input type="email" name="email" infotext="E-post" autocomplete="off"/>
+                                                                        <a href="#" class="txt-link">Tillbaka</a>
+                                                                        <a href="#" class="btn-tiny blue center submit">
+                                                                           <div class="left"> </div>     
+                                                                            <div class="label"> <span>Skicka</span> </div>
+                                                                            <div class="right"/> </div></a>
+                                                                        </a>
+                                                                        <input type="submit" class="hidden" />
+                                                                </form>
+                                                        </div>
+                                                </div>
+                    </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <a class="btn-small green float-right close">
-          <div class="left"></div>
-          <div class="label">
-            <p>Stäng</p>
-            <div class="btn-symbol green arrow-left"></div>
-          </div>
-          <div class="right"></div>
-        </a>
       </div>
 </div>
 </div>

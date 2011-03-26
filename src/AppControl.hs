@@ -508,7 +508,7 @@ handleLoginPost = do
                         _ <- update $ RecordFailedLogin userid time
                         return $ LinkLogin InvalidLoginInfo
                 Nothing -> return $ LinkLogin InvalidLoginInfo
-        _ -> return BackToReferer
+        _ -> return $ LinkLogin InvalidLoginInfo
 
 {- |
     Works out how many seconds we should wait before
