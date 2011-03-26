@@ -498,5 +498,5 @@ getSecureLink = do
     let fixUri = if ("/" `isSuffixOf` host && (not $ "/" `isSuffixOf` (rqUri rq)))
                   then drop 1 (rqUri rq) 
                   else (rqUri rq)  
-    return $ "https://" ++ host ++ fixUri
+    return $ "https://" ++ host ++ fixUri ++ (rqURL rq)
     
