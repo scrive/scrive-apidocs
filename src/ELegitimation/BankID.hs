@@ -35,6 +35,7 @@ import User.UserControl
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS hiding (length, drop, break)
 import GHC.Word
+import GHC.Unicode ( toLower )
 
 {- |
    Handle the Ajax request for initiating a BankID transaction.
@@ -395,7 +396,12 @@ handleSignCanceledDataMismatch docid signatorylinkid = do
                 renderFromBody ctx TopEmpty kontrakcja $ cdata content1
         _ -> sendRedirect $ LinkSignDoc document signatorylink
   
-signCanceledDataMismatch :: KontrakcjaTemplates -> Doc.DocState.Document -> SignatoryLink -> Bool -> String -> IO String
+signCanceledDataMismatch :: KontrakcjaTemplates 
+                            -> Doc.DocState.Document 
+                            -> SignatoryLink 
+                            -> Bool 
+                            -> String 
+                            -> IO String
 signCanceledDataMismatch  templates _document _signatorylink _hasaccount msg =
     renderTemplate templates "signCanceledDataMismatch" $
         field "cancelationMessage" msg
@@ -674,11 +680,9 @@ mergeInfo (contractFirst, contractLast, contractNumber) (elegFirst, elegLast, el
                   , compareNumbers    contractNumber elegNumber]
         failmsgs = [msg | MergeFail msg <- results]
         matches  = map (== MergeMatch) results
-    in
-        if not $ null failmsgs
+    in if not $ null failmsgs
         then Left  (intercalate "\n" failmsgs, elegFirst, elegLast, elegNumber)
         else Right (matches !! 0, matches !! 1, matches !! 2)
-
 
 findTransactionByIDOrFail :: [ELegTransaction] -> String -> Kontra ELegTransaction
 findTransactionByIDOrFail transactions transactionsid = 
@@ -725,23 +729,12 @@ providerStringToType provider
     | provider == "telia"  = return TeliaProvider
     | otherwise            = mzero
 
-bsspaces :: BS.ByteString
-bsspaces = BS.fromString " \t\n"
-
-bsspace :: GHC.Word.Word8 -> Bool
-bsspace c = c `BS.elem` bsspaces
-
-bsWords str | BS.null str = []
-bsWords str = first : bsWords rest
-    where first = BS.takeWhile (not . bsspace) $ BS.dropWhile bsspace str
-          rest  = BS.dropWhile (not . bsspace) $ BS.dropWhile bsspace str
-
 compareFirstNames fnContract fnEleg 
     | BS.null fnContract = MergeFail "First Name was blank" 
     | BS.null fnEleg = MergeKeep
     | otherwise = 
-        let fnsc = bsWords fnContract
-            fnse = bsWords fnEleg
+        let fnsc = words $ map toLower $ BS.toString fnContract
+            fnse = words $ map toLower $ BS.toString fnEleg
         in if not $ null $ intersect fnsc fnse
             then MergeMatch
             else MergeFail $ "First names do not match: \"" ++ show fnContract ++ "\" and \"" ++ show fnEleg ++ "\"."
@@ -758,17 +751,24 @@ normalizeNumber n
     
 compareNumbers nContract nEleg 
     | BS.null nContract = MergeFail "Person Number was blank."
-    | BS.null nEleg = MergeKeep
+    | BS.null nEleg     = MergeKeep
     | otherwise = 
         let nsc = normalizeNumber nContract
             nse = normalizeNumber nEleg
-        in caseOf [(nsc == nse,                                            MergeMatch)
-                  ,(BS.length nsc > BS.length nse && BS.drop 2 nsc == nse, MergeMatch)
-                  ,(BS.length nsc < BS.length nse && nsc == BS.drop 2 nse, MergeMatch)]
+            dif = BS.length nsc - BS.length nse
+        in caseOf [(nsc == nse,                              MergeMatch)
+                  ,(dif > 0 && BS.drop (abs dif) nsc == nse, MergeMatch)
+                  ,(dif < 0 && nsc == BS.drop (abs dif) nse, MergeMatch)]
                 $ MergeFail $ "Person numbers do not match: \"" ++ show nContract ++ "\" and \"" ++ show nEleg ++ "\"."
 
 compareLastNames lnContract lnEleg 
     | BS.null lnContract = MergeFail "Last name was blank."
     | BS.null lnEleg = MergeKeep
-    | lnContract == lnEleg = MergeMatch
+    | map toLower (BS.toString lnContract) == map toLower (BS.toString lnEleg) = MergeMatch
     | otherwise = MergeFail $ "Last names do not match: \"" ++ show lnContract ++ "\" and \"" ++ show lnEleg ++"\"."
+
+--GHC.Unicode.toLower
+-- import GHC.Unicode ( toLower )
+--import qualified Data.ByteString.Lazy.Char8 as B
+
+
