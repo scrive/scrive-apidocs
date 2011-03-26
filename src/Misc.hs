@@ -495,8 +495,8 @@ getSecureLink::(ServerMonad m,Functor m) => m String
 getSecureLink = do
     rq <- askRq
     let host = maybe "skrivapa.se" BS.toString $ getHeader "host" rq
-    let fixedUrl = if ("/" `isSuffixOf` host && "/" `isPrefixOf` (rqURL rq))
-                  then drop 1 (rqURL rq)
-                  else (rqURL rq)
-    return $ "https://" ++ host ++ fixedUrl
+    let fix a1 a2 = if ("/" `isSuffixOf` a1 && "/" `isPrefixOf` a2)
+                  then drop 1 a2
+                  else a2
+    return $ "https://" ++ host ++ fix host (rqUri rq) ++ fix (rqUri rq) (rqURL rq)
     
