@@ -26,6 +26,7 @@ import Templates.Templates
 import Control.Monad.Trans
 import Data.List
 import ListUtil
+import Data.Functor
 {- |
    Defines the different sorts of things we can have at the top of the page
 -}
@@ -54,7 +55,8 @@ renderFromBody ctx topmenu title xml = do
                                         htmlPage <- fmap ((isSuffixOf ".html") . concat . rqPaths)  askRq
                                         let showCreateAccount = htmlPage && (isNothing $ ctxmaybeuser ctx)
                                         columns <- isFieldSet "columns"
-                                        res <- webHSP $ pageFromBody ctx columns showCreateAccount title xml
+                                        loginOn <- isFieldSet "logging"
+                                        res <- webHSP $ pageFromBody ctx columns loginOn showCreateAccount title xml
                                         clearFlashMsgs
                                         return res
 {- |
@@ -64,13 +66,14 @@ pageFromBody :: (EmbedAsChild (HSPT' IO) xml)
              =>  Context 
              -> Bool
              -> Bool
+             -> Bool
              -> String 
              -> xml
              -> HSP XML
 pageFromBody ctx@Context { ctxmaybeuser
                       , ctxtemplates
                       }
-             columns showCreateAccount title body = do
+             columns loginOn showCreateAccount title body = do
                     content <- liftIO $ renderHSPToString <div class="mainContainer"><% body %></div>
                     wholePage <- liftIO $ renderTemplate ctxtemplates "wholePage" $ do
                                   field "content" content
@@ -79,6 +82,7 @@ pageFromBody ctx@Context { ctxmaybeuser
                                   field "showCreateAccount" showCreateAccount
                                   mainLinksFields 
                                   contextInfoFields ctx
+                                  loginModal loginOn
                     return $ cdata wholePage
 
 {- |
@@ -126,11 +130,11 @@ simpleResponse s = do
 {- |
    The landing page contents.  Read from template.
 -}
-firstPage::Context-> IO String
-firstPage ctx =  renderTemplate (ctxtemplates ctx) "firstPage"  $ do 
+firstPage::Context-> Bool ->  IO String
+firstPage ctx loginOn =  renderTemplate (ctxtemplates ctx) "firstPage"  $ do 
                               contextInfoFields ctx
                               mainLinksFields
-
+                              loginModal loginOn
 {- |
    Defines the main links as fields handy for substituting into templates.
 -}
@@ -167,3 +171,6 @@ flashMessageFields fm = do
                         _ -> ""
     field "message" $ snd (unFlashMessage fm)   
     field "isModal" $ fst (unFlashMessage fm) == Modal
+    
+loginModal on = do 
+    field "loginModal" $ on 

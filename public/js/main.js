@@ -39,11 +39,13 @@ $(document).ready( function() {
 	$('.tooltip').tooltip();
 	
 	$('.login-button').click( function(e) {
-		e.preventDefault();
-	
-		$('.user-container').fadeToggle('fast');
-                $('.login-container').find('.body input').first().focus();
-	});
+        var newlocation = window.location.pathname + window.location.search 
+        if (window.location.search == "")
+          newlocation += "?logging"
+        else 
+          newlocation += "&logging";  
+        window.location = newlocation 
+    });
 	
 	$('.recovery-container .top, .login-container .top').click( function(e) {
 		e.preventDefault();

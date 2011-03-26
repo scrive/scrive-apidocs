@@ -96,6 +96,7 @@ flashmessages =
               $endif$
             }$
 </div>
+<div class="modalcontainer">
 $flashmessages:{ flash | 
     $if(flash.isModal)$
         <div class="modalbox overlay">
@@ -103,4 +104,5 @@ $flashmessages:{ flash |
         </div>
     $endif$
 }$
+</div>
 ####

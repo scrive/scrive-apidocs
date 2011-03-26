@@ -226,9 +226,10 @@ handleRoutes = msum [
 handleHomepage :: Kontra Response
 handleHomepage = do
   ctx@Context{ ctxmaybeuser } <- get
+  loginOn <- isFieldSet "logging"
   case ctxmaybeuser of
     Just user -> UserControl.checkUserTOSGet $ DocControl.showMainPage user 
-    Nothing   -> V.simpleResponse =<< (liftIO $ firstPage ctx)
+    Nothing   -> V.simpleResponse =<< (liftIO $ firstPage ctx loginOn)
 
 handleMainReaload :: Kontra KontraLink
 handleMainReaload = LinkNew <$> getListParamsForSearch
