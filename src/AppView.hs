@@ -82,7 +82,7 @@ pageFromBody ctx@Context { ctxmaybeuser
                                   field "showCreateAccount" showCreateAccount
                                   mainLinksFields 
                                   contextInfoFields ctx
-                                  loginModal loginOn
+                                  loginModal loginOn Nothing
                     return $ cdata wholePage
 
 {- |
@@ -130,11 +130,11 @@ simpleResponse s = do
 {- |
    The landing page contents.  Read from template.
 -}
-firstPage::Context-> Bool ->  IO String
-firstPage ctx loginOn =  renderTemplate (ctxtemplates ctx) "firstPage"  $ do 
+firstPage::Context-> Bool -> Maybe String ->  IO String
+firstPage ctx loginOn referer =  renderTemplate (ctxtemplates ctx) "firstPage"  $ do 
                               contextInfoFields ctx
                               mainLinksFields
-                              loginModal loginOn
+                              loginModal loginOn referer
 {- |
    Defines the main links as fields handy for substituting into templates.
 -}
@@ -172,5 +172,7 @@ flashMessageFields fm = do
     field "message" $ snd (unFlashMessage fm)   
     field "isModal" $ fst (unFlashMessage fm) == Modal
     
-loginModal on = do 
+loginModal::Bool -> Maybe String -> Fields
+loginModal on referer= do 
     field "loginModal" $ on 
+    field "referer" $ referer 
