@@ -70,7 +70,8 @@ data KontraLink
     | LinkAskQuestion
     | LinkInvite
     | LinkPayExView (Maybe PaymentId)
-   
+    | LinkSignCanceledDataMismatch DocumentID SignatoryLinkID
+
 {- |
    Shows each link as a relative url
 -}

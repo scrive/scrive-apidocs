@@ -278,79 +278,78 @@ withUserGet action = do
 | -}
 withDocumentAuthor :: Document -> Kontra a -> Kontra a
 withDocumentAuthor document action = do
-                                     ctx <- get
-                                     case fmap (isAuthor document) (ctxmaybeuser ctx) of
-                                      Just True -> action
-                                      Nothing   -> mzero                   
+    ctx <- get
+    case isAuthor document <$> ctxmaybeuser ctx of
+         Just True -> action
+         _         -> mzero
+
 {- |
    Guard against a GET with logged in users who have not signed the TOS agreement.
    If they have not, redirect to their account page.
 -}
 checkUserTOSGet :: Kontra Response -> Kontra Response
-checkUserTOSGet action =
-  withUserGet $ do
-    ctx@(Context {ctxmaybeuser = (Just (User {userhasacceptedtermsofservice}))}) <- get
+checkUserTOSGet action = withUserGet $ do
+    Context{ctxmaybeuser = (Just (User{userhasacceptedtermsofservice}))} <- get
     case userhasacceptedtermsofservice of
-      Nothing -> sendRedirect LinkAcceptTOS
-      Just _  -> action
+         Nothing -> sendRedirect LinkAcceptTOS
+         Just _  -> action
 
 handleAcceptTOSGet :: Kontra Response
 handleAcceptTOSGet = withUserGet $ do
-      ctx <- get
-      tostext <- liftIO $ BS.readFile $ "html/terms.html"
-      content <- liftIO $ pageAcceptTOS (ctxtemplates ctx) tostext
-      renderFromBody ctx TopNone kontrakcja $ cdata content
+    ctx@Context{ctxtemplates} <- get
+    tostext <- liftIO $ BS.readFile $ "html/terms.html"
+    content <- liftIO $ pageAcceptTOS ctxtemplates tostext
+    renderFromBody ctx TopNone kontrakcja $ cdata content
 
 handleAcceptTOSPost :: Kontra KontraLink
-handleAcceptTOSPost = do
-  ctx@Context{ctxmaybeuser = Just user@User{userid},ctxtime} <- get
-  tos <- getDefaultedField False asValidCheckBox "tos"
-  
-  case tos of
-    (Just True) -> do
-      update $ AcceptTermsOfService userid ctxtime
-      addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
-      return LinkMain
-    (Just False) -> do
-      addFlashMsg =<< (liftIO $ flashMessageMustAcceptTOS (ctxtemplates ctx))
-      return LinkAcceptTOS
-    Nothing -> return LinkAcceptTOS
-
+handleAcceptTOSPost = withUserPost $ do
+    ctx@Context{ctxmaybeuser = Just User{userid}, ctxtime} <- get
+    tos <- getDefaultedField False asValidCheckBox "tos"
+    case tos of
+         Just True -> do
+             update $ AcceptTermsOfService userid ctxtime
+             addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
+             return LinkMain
+         Just False -> do
+             addFlashMsg =<< (liftIO $ flashMessageMustAcceptTOS (ctxtemplates ctx))
+             return LinkAcceptTOS
+         Nothing -> return LinkAcceptTOS
 
 handleRequestAccount :: Kontra KontraLink
-handleRequestAccount = do 
-                        ctx<- get
-                        memail <- getRequiredField asValidEmail "email"
-                        case memail of
-                          Nothing -> return LinkMain
-                          Just email -> do
-                            liftIO $ sendMail (ctxmailer ctx) $ emptyMail 
-                                                                        { fullnameemails = [(BS.fromString "prelaunch@skrivapa.se",BS.fromString "prelaunch@skrivapa.se")],
-                                                                           title = BS.fromString $ "New account request",
-                                                                           content = BS.fromString $ "Request from addres " ++ (BS.toString email)
-                                                                        }
-                            addFlashMsg =<< (liftIO $ flashMessageAccountRequestSend (ctxtemplates ctx))                       
-                            return LinkMain -- Something should happend here
+handleRequestAccount = do
+    ctx <- get
+    memail <- getRequiredField asValidEmail "email"
+    case memail of
+         Nothing -> return LinkMain
+         Just email -> do
+             liftIO $ sendMail (ctxmailer ctx) $ emptyMail {
+                 fullnameemails = [(BS.fromString "prelaunch@skrivapa.se", BS.fromString "prelaunch@skrivapa.se")]
+                 , title = BS.fromString $ "New account request"
+                 , content = BS.fromString $ "Request from address " ++ (BS.toString email)
+             }
+             addFlashMsg =<< (liftIO $ flashMessageAccountRequestSend $ ctxtemplates ctx)
+             return LinkMain -- Something should happend here
 
 handleQuestion :: Kontra KontraLink
 handleQuestion = do
-                  ctx<- get
-                  name <- getField "name" 
-                  memail <- getDefaultedField BS.empty asValidEmail "email"
-                  phone <- getField "phone" 
-                  message <- getField "message"
-                  case memail of
-                    Nothing -> return LinkMain
-                    (Just email) -> do 
-                      let  content =   "name: "      ++ (fromMaybe "" name)    ++ "<BR/>" ++
-                                       "email: "   ++ (BS.toString email)   ++ "<BR/>" ++
-                                       "phone "    ++ (fromMaybe "" phone)   ++ "<BR/>" ++
-                                       "message: " ++ (fromMaybe "" message) 
-                      liftIO $ sendMail (ctxmailer ctx) $ emptyMail 
-                                                          { fullnameemails = [(BS.fromString "info@skrivapa.se",BS.fromString "info@skrivapa.se")],
-                                                            title = BS.fromString $ "Question",
-                                                            content = BS.fromString $ content }
-                      return LinkMain
+    ctx <- get
+    name <- getField "name"
+    memail <- getDefaultedField BS.empty asValidEmail "email"
+    phone <- getField "phone"
+    message <- getField "message"
+    case memail of
+         Nothing -> return LinkMain
+         Just email -> do
+             let content = "name: "    ++ fromMaybe "" name ++ "<BR/>"
+                        ++ "email: "   ++ BS.toString email ++ "<BR/>"
+                        ++ "phone "    ++ fromMaybe "" phone ++ "<BR/>"
+                        ++ "message: " ++ fromMaybe "" message
+             liftIO $ sendMail (ctxmailer ctx) $ emptyMail {
+                   fullnameemails = [(BS.fromString "info@skrivapa.se",BS.fromString "info@skrivapa.se")]
+                 , title = BS.fromString $ "Question"
+                 , content = BS.fromString $ content
+             }
+             return LinkMain
 
 handleAccountSetupGet :: ActionID -> MagicHash -> Kontra Response
 handleAccountSetupGet aid hash = do
