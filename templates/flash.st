@@ -69,7 +69,7 @@ flashMessageUserActivated=
 
 ###
 flashMessageUserAlreadyActivated=
-    Du har redan aktiverat detta konto. Om du inte kommer ihåg ditt lösenord vänligen använd funktionaliteten "glömt lösenord" för att begära ett nytt lösenord.
+    Du har redan aktiverat detta konto.
 
 ###                                                        
 flashMessageNoSuchUserExists=
