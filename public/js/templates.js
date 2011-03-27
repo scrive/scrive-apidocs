@@ -544,11 +544,13 @@ function authorToHTML(sig) {
     if(sigentry.find(".partyrole input[checked]").size() === 0){
       sigentry.find(".partyrole input").first().attr("checked", "true");
     }
+    manlink.addClass("selected");
     return false;
   });
 
   sigentry.find(".partyrole .closelink").click(function(){
     sigentry.find(".partyrole").hide();
+    manlink.removeClass("selected");
     return false;
   })
 
@@ -686,7 +688,7 @@ safeReady(function() {
     var plus = $(this);
     var persondetails = plus.parents('.persondetails');
     var otherfields = persondetails.find('.otherfields');
-    var newfield = $("<div class='newfield inputWrapper'><input class='newfieldbox' type='text' infotext='Namnge fältet' /><a href='#' class='okIcon'>OK</a></div>");
+    var newfield = $("<div class='newfield inputWrapper'><input class='newfieldbox' type='text' infotext='Namnge fältet' /><a href='#' class='okIcon icon small ok'></a></div>");
 
     otherfields.append(newfield);
     enableInfoTextOnce(newfield);
