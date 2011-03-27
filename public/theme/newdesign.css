@@ -4,101 +4,6 @@
 	width: 137px; 
 }
 
-#footer-container {
-        background: #fff;
-        height: 340px;
-}
-
-#footer-container .top-border {
-        background: url(../img/spr-border1.png) repeat-x 0 -3px;
-        height: 3px;
-}
-
-#footer-container .spacer {
-        height: 40px;
-}
-
-#footer-container .col {
-        float: left;
-}
-
-#footer-container .col strong {
-        font: 14px/22px "Copse";
-}
-
-#footer-container .left {
-        width: 240px;
-}
-
-#footer-container .centre {
-        width: 320px;
-}
-
-#footer-container .right {
-        width: 380px;
-}
-
-#footer-container .col.left ul li {
-        height: 16px;
-}
-
-#footer-container .col.left ul li a {
-        color: #539efb;
-        font: 12px "Lucida Grande";
-        text-decoration: none;
-}
-
-#footer-container .col.left ul li a:hover {
-        color: #000;
-}
-
-#footer-container .col.centre ul li {
-        margin-bottom: 20px;
-        width: 230px;
-}
-
-#footer-container .col.centre ul li p {
-        font: 12px "Lucida Grande";
-}
-
-#footer-container .col.centre ul li em {
-        color: #999;
-        font: 10px "Lucida Grande";
-        text-transform: uppercase;
-}
-
-#footer-container .col.centre ul li a {
-        color: #999;
-}
-
-#footer-container .col.centre ul li a:hover {
-        color: #000;
-}
-
-#footer-container .col.right ul li {
-        color: #999;
-        float: left;
-        font: 12px "Lucida Grande";
-        margin-top: 15px;
-        width: 160px;
-}
-
-#footer-container .col.right ul li strong {
-        color: #000;
-        display: block;
-        font: 14px "Copse";
-}
-
-#footer-container .col.right ul li a {
-        color: #999;
-        text-decoration: none;
-}
-
-#footer-container .col.right ul li a:hover {
-        color: #000;
-}
-
-
 .tweet_text {
         color: #666;
         font: 12px "Lucida Grande";
@@ -237,7 +142,7 @@
 
 .newdesign .try-skrivapa {
         background: #fff;
-        border: 1px solid #70c9db;
+        border: 1px solid #35A4D6;
         border-radius: 5px;
         height: 78px;
         padding-left: 50px;
