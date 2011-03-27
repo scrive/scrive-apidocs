@@ -74,7 +74,7 @@ viewSubaccounts =
                                 <a href="$currentlink$&sorting=email">Mailadress </a>
                                $endif$ 
                             </th>
-							<th style="width: 52px;text-align:right"> <a class="icon small add subaccount-add-sub"> </a></th>
+							<th style="width: 52px;text-align:center"> <a class="icon small add subaccount-add-sub"> </a></th>
 						</tr>
 					</thead>
 					<tbody id="selectable">

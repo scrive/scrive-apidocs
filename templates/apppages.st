@@ -228,7 +228,7 @@ header=
                                  </form>
                                 </span>
                                  
-                                <a href="$linklogout$" class="logout-button"><p>Logga ut</p></a>
+                                <a href="$linklogout$" class="document-button"><p>Logga ut</p></a>
                                 <a href="$linkaccount$" class="document-button"><p>Konto</p></a>
                                 <a href="$linkissue$" class="document-button"><p>Arkiv</p></a>
                                 <a href="$linkmain$" class="document-button"><p>Skicka</p></a>

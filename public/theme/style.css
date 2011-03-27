@@ -2455,12 +2455,6 @@ body {
         border-spacing: 0;
 }
 
-
-.newdesign .content {
-margin:0 auto;
-width:940px;
-}
-
 input#cancel {
     color: #2E99D3;
     background-color: transparent;
@@ -2477,3 +2471,8 @@ input#cancel {
 .designFunctionalLink{
     font-size: 8pt;
 }
+
+.searchBox{
+    width: 238px;
+}
+
