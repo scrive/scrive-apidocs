@@ -6,7 +6,6 @@ module AppView( TopMenu(..)
               , kontrakcja
               , renderFromBody
               , pageForgotPassword
-              , pageForgotPasswordConfirm
               , signupPageView
               , signupVipPageView
               , pageLogin
@@ -101,13 +100,6 @@ signupVipPageView templates = renderTemplate templates "signupVipPageView" ()
 pageForgotPassword :: KontrakcjaTemplates -> IO String
 pageForgotPassword templates = do
   renderTemplate templates "pageForgotPassword" ()
-
-{- |
-   The contents of the password reset confirmation.  This is read from a template.
--}
-pageForgotPasswordConfirm :: KontrakcjaTemplates -> IO String
-pageForgotPasswordConfirm templates = do
-  renderTemplate templates "pageForgotPasswordConfirm" ()
 
 {- |
    The contents of the login page.  This is read from a template.
