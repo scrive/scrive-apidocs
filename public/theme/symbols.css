@@ -42,6 +42,11 @@
 	width: 14px;
 }
 
+.icon.small.ok {
+    background-position: -171px 0;
+    width: 14px;
+    height: 14px;
+}
 /* Status Icons */
 
 .icon.status {
@@ -235,7 +240,7 @@
 
 /* Lightbox Close Button */
 
-.modal-close, .flash-close {
+.modal-close, .flash-close, .popup-close {
 	background: url(../img/spr-btn-close.png) no-repeat transparent;
 	cursor: pointer;
 	display: block;
