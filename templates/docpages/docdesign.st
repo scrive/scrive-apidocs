@@ -46,7 +46,7 @@ $endif$
          -->
     </div>
     
-    <div id="signStepsMenu">
+    <div id="signStepsMenu" class="signStepsMenu">
       <div id="step1select">
         <span class="step1select clickArea"></span>
         <span class="step1select step1icon"> </span>
@@ -67,7 +67,7 @@ $endif$
       <div id="signStepsMenuEmptyStep">
             $if(contract)$
              <div class="signStepsBodySave" style="float:right;padding-right:19px;font-size:11px">
-                <small><a class="submit" form=".stepForm" rel="template" style="color:#007CAC">SPARA SOM MALL</a></small>
+                <small><a class="submit" form=".stepForm" rel="template">SPARA SOM MALL</a></small>
              </div>
             $endif$
       </div>

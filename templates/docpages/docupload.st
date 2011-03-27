@@ -10,7 +10,7 @@ $loadingdialog()$
   </div>
 
 
-  <div id="signStepsMenu">
+  <div id="signStepsMenu" class="signStepsMenu">
     <div id="step1select" class="current">
       <span class="step1select clickArea"> </span>
       <span class="step1select step1icon"> </span>
