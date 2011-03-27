@@ -1354,10 +1354,11 @@ input.multiFileInput {
 .border {
    background-color: #ecedf3; 
    width: 1px;
-   height: 116px;
+   height: 130px;
    display:inline-block;
    float:left;
    margin-top:-8px;
+   margin-bottom:-8px;
 }
 
 /* 015 new */
@@ -1396,6 +1397,11 @@ input.multiFileInput {
     width: 23px;
 }
 
+.saveTemplate
+{
+    margin-left:80px;
+    margin-top:40px;
+}
 
 .signStepsBodyIcons
 {
