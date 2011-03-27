@@ -988,7 +988,7 @@ a.button {
     padding-top: 1px;
 }
 
-#signStepsMenu div a
+.signStepsMenu div a
 {
     color: #000;
 }
@@ -1477,7 +1477,7 @@ input.multiFileInput {
     top:2px;
 }
 
-.signStepsBodySave a
+.signStepsBodySave a.submit
 {
     margin-top:5px;
     padding-top:2px;
@@ -1487,6 +1487,10 @@ input.multiFileInput {
     background-image: url(images/iconFloppy.png);
     background-repeat: no-repeat;
     padding-left: 23px;
+    color: #007CAC;
+}
+.signStepsBodySave a.submit:hover{
+    color: #000000;
 }
 /* 013 new */
 .signStepsBodyIcons a
