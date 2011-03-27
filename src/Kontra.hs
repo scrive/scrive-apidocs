@@ -114,29 +114,28 @@ isSuperUser _ = False
 {- |
    Will mzero if not logged in as a super user.
 -}
-onlySuperUser::Kontra a -> Kontra a
-onlySuperUser a =
-                 do
-                 ctx <- get
-                 if (isSuperUser $ ctxmaybeuser  ctx)
-                  then a
-                  else mzero
+onlySuperUser :: Kontra a -> Kontra a
+onlySuperUser a = do
+    ctx <- get
+    if (isSuperUser $ ctxmaybeuser ctx)
+        then a
+        else mzero
           
 {- |
    Adds an Eleg Transaction to the context.
 -}           
 addELegTransaction :: ELegTransaction -> Kontra ()
 addELegTransaction tr = do
-  ctx@Context { ctxelegtransactions = currenttrans } <- get
-  put $ ctx { ctxelegtransactions = (tr : currenttrans) }
+    ctx@Context { ctxelegtransactions = currenttrans } <- get
+    put $ ctx { ctxelegtransactions = (tr : currenttrans) }
 
 {- |
    Adds a flash message to the context.
 -}  
 addFlashMsg :: FlashMessage -> Kontra ()
 addFlashMsg flash =
-  modify (\ctx@Context{ ctxflashmessages = flashmessages } ->
-    ctx { ctxflashmessages = flash : flashmessages })
+    modify (\ctx@Context{ ctxflashmessages = flashmessages } ->
+        ctx { ctxflashmessages = flash : flashmessages })
 
 {- |
    Clears all the flash messages from the context.
@@ -161,7 +160,7 @@ addModal flash = do
 logUserToContext :: Maybe User -> Kontra ()
 logUserToContext user =  do
   ctx <- get
-  put $ ctx { ctxmaybeuser =  user}    
+  put $ ctx { ctxmaybeuser = user}    
 
 newPasswordReminderLink :: MonadIO m => User -> m KontraLink
 newPasswordReminderLink user = do
@@ -196,7 +195,7 @@ newAccountCreatedBySigningLink user = do
 queryOrFail :: (QueryEvent ev (Maybe res)) => ev -> Kontra res
 queryOrFail q = do
   mres <- query q
-  maybe mzero return mres
+  returnJustOrMZero mres
 
 -- | if it's not a just, mzero. Otherwise, return the value
 returnJustOrMZero :: Maybe a -> Kontra a
