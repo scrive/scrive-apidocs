@@ -53,12 +53,6 @@ table {
 	border-spacing: 0;
 }
 
-/* Generic styles */
-.content {
-	margin: 0 auto;
-	width: 940px;
-}
-
 .clearfix {
 	clear: both;
 	height: 3px;
@@ -251,14 +245,8 @@ a.new-btn-small.black p {
 #top-container {
 	background: url(../img/bg-header.jpg) repeat-x;
 	height: 430px;
-	min-width: 940px;
+	min-width: 960px;
 	
-}
-
-#top-container .content {
-	margin: 0 auto;
-	position: relative;
-	width: 940px;
 }
 
 #top-container .person {
@@ -1118,10 +1106,6 @@ a.new-btn-small.black p {
 
 /* Second Login Container */
 
-#top-slim-container .content {
-	position: relative;
-}
-
 #top-slim-container .login-button {
 	background: url(../img/icon-lock.png) no-repeat;
 	color: #999;
@@ -1133,18 +1117,6 @@ a.new-btn-small.black p {
 	padding-left: 28px;
 	text-shadow: #000 0 1px 3px;
 	text-decoration: none;
-}
-
-#top-slim-container .logout-button {
-        color: #999;
-        float: right;
-        font: 14px/18px "Helvetica Neue";
-        margin-right: 38px;
-        margin-top: 17px;
-        padding-bottom: 5px;
-        padding-left: 28px;
-        text-shadow: #000 0 1px 3px;
-        text-decoration: none;
 }
 
 .user-container {
