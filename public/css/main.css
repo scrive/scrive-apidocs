@@ -302,7 +302,7 @@ a.new-btn-small.black p {
 }
 
 #top-container .intro-container h2 {
-	color: #82c2eb;
+	color: #35A4D6;
 	font: 36px "Copse";
 }
 
@@ -401,7 +401,7 @@ a.new-btn-small.black p {
 }
 
 .login-container .body a.txt-link, .recovery-container .body a.txt-link {
-	color: #539EFB;
+	color: #35A4D6;
 	font: 10px/34px "Lucida Grande";
 	text-decoration: underline;
 }
@@ -452,7 +452,7 @@ a.new-btn-small.black p {
 }
 
 #top-container .campaign-container .campaign-text a {
-	color: #539EFB;
+	color: #35A4D6;
 	font: 10px/20px "Lucida Grande";
 	text-decoration: none;
 	text-transform: uppercase;
@@ -523,7 +523,7 @@ a.new-btn-small.black p {
 }
 
 #nav-container .col:hover h4 {
-	color: #4f8db4;
+	color: #137DAD;
 }
 
 #nav-container p {
@@ -532,7 +532,7 @@ a.new-btn-small.black p {
 }
 
 #nav-container .col:hover p {
-	color: #82c2eb;
+	color: #35A4D6;
 }
 
 /* Body Container */
@@ -595,7 +595,7 @@ a.new-btn-small.black p {
 }
 
 #footer-container .col.left ul li a {
-	color: #539efb;
+	color: #35A4D6;
 	font: 12px "Lucida Grande";
 	text-decoration: none;
 }
@@ -693,11 +693,11 @@ a.new-btn-small.black p {
 }
 
 #body-container .grid .col:hover h5 {
-	color: #4f8db4;
+	color: #137DAD;
 }
 
 #body-container .grid .col:hover p {
-	color: #82c2eb;
+	color: #35A4D6;
 }
 
 /* Body Left Column */
@@ -941,7 +941,7 @@ a.new-btn-small.black p {
 }
 
 #body-container .price-plan tr.big-row td a {
-	color: #539efb;
+	color: #35A4D6;
 	font: 12px "Lucida Grande";
 	text-transform: uppercase;
 }
@@ -956,7 +956,7 @@ a.new-btn-small.black p {
 #body-container .highlight-container {
 	background: #fff;
 	box-shadow: 0 0 5px #999;
-	border: 2px solid #a2e0e5;
+	border: 2px solid #35A4D6;
 	left: 460px;
 	position: absolute;
 	top: -15px;
@@ -997,7 +997,7 @@ a.new-btn-small.black p {
 }
 
 #body-container .highlight-container .highlight-rows li.top h4 {
-	color: #2d9de3;
+	color: #137DAD;
 	font: 24px "Copse";
 	line-height: 20px;
 }
@@ -1026,7 +1026,7 @@ a.new-btn-small.black p {
 }
 
 #body-container .highlight-container .highlight-rows li.bottom a {
-	color: #539efb;
+	color: #35A4D6; 
 	font: 12px "Lucida Grande";
 	text-transform: uppercase;
 }
@@ -1064,7 +1064,7 @@ a.new-btn-small.black p {
 
 #body-container .try-skrivapa {
 	background: #fff;
-	border: 1px solid #70c9db;
+	border: 1px solid #35A4D6;
 	border-radius: 5px;
 	height: 78px;
 	padding-left: 50px;
@@ -1245,7 +1245,7 @@ a.new-btn-small.black p {
 }
 
 .box .link-list a {
-	color: #539efb;
+	color: #35A4D6;
 	font: 14px "Lucida Grande";
 	text-decoration: none;
 }
@@ -1510,8 +1510,8 @@ a.new-btn-small.black p {
 }
 
 #body-container .big-pp-container tr.big-row td a {
-	border-bottom: 1px solid #539efb;
-	color: #539efb;
+	border-bottom: 1px solid #35A4D6;
+	color: #35A4D6;
 	font: 12px "Lucida Grande";
 	text-transform: uppercase;
 }
@@ -1531,7 +1531,7 @@ a.new-btn-small.black p {
 }
 
 #body-container .big-pp-container .highlight-container li {
-	color: #539EFB;
+	color: #35A4D6;
 	line-height: 21px;
 	height: 21px;
 }
@@ -1552,7 +1552,7 @@ a.new-btn-small.black p {
 }
 
 #body-container .big-pp-container .highlight-container li.top p {
-	color: #539EFB;
+	color: #35A4D6;
 	font: 13px "Copse";
 	margin-bottom: 8px;
 	margin-top: 0;
