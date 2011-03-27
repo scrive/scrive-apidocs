@@ -201,7 +201,6 @@ handleRoutes = msum [
      , dir "amnesia"     $ hpost0 $ forgotPasswordPagePost
      , dir "amnesia"     $ hget2  $ UserControl.handlePasswordReminderGet
      , dir "amnesia"     $ hpost2 $ UserControl.handlePasswordReminderPost
-     , dir "amnesiadone" $ hget0  $ forgotPasswordDonePage
      , dir "accountsetup"  $ hget2  $ UserControl.handleAccountSetupGet
      , dir "accountsetup"  $ hpost2  $ UserControl.handleAccountSetupPost
      , dir "requestaccount" $ hpost0_allowHttp $ UserControl.handleRequestAccount
@@ -374,7 +373,7 @@ forgotPasswordPagePost = do
                 Just user -> do
                     sendResetPasswordMail user
                     addFlashMsg =<< (liftIO $ flashMessageChangePasswordEmailSend $ ctxtemplates ctx)
-                    return LinkForgotPasswordDone
+                    return LinkMain
         Nothing -> return LoopBack
 
 {- |
@@ -386,15 +385,6 @@ sendResetPasswordMail user = do
     chpwdlink <- newPasswordReminderLink user
     mail <-liftIO $ UserView.resetPasswordMail (ctxtemplates ctx) (ctxhostpart ctx) user chpwdlink
     liftIO $ sendMail (ctxmailer ctx) $ mail { fullnameemails = [((userfullname user), (unEmail $ useremail $ userinfo user))] }
-
-{- |
-   Handles viewing of the password reset confirmation page
--}   
-forgotPasswordDonePage :: Kontra Response
-forgotPasswordDonePage = do
-    ctx <- lift get
-    content <- liftIO $ V.pageForgotPasswordConfirm (ctxtemplates ctx)
-    V.renderFromBody ctx V.TopNone V.kontrakcja $ cdata content
 
 {- |
    Handles viewing of the signup page

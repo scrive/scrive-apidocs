@@ -35,7 +35,6 @@ data KontraLink
     | LinkLogout
     | LinkSignup
     | LinkForgotPassword
-    | LinkForgotPasswordDone
     | LinkContracts ListParams
     | LinkTemplates ListParams
     | LinkMain 
@@ -81,7 +80,6 @@ instance Show KontraLink where
     showsPrec _ LinkLogout = (++) "/logout"
     showsPrec _ LinkSignup = (++) "/signup"
     showsPrec _ LinkForgotPassword = (++) "/amnesia"
-    showsPrec _ LinkForgotPasswordDone = (++) "/amnesiadone"
     showsPrec _ (LinkContracts params) = (++) $ "/d" ++ "?" ++ show params
     showsPrec _ (LinkTemplates params) = (++) $ "/t" ++ "?" ++ show params
     showsPrec _ LinkMain = (++) "/"

@@ -13,13 +13,6 @@ pageForgotPassword=
     </div>
 
 ###
-pageForgotPasswordConfirm=
-    <div class="centerdivnarrow">
-      <p>Ett nytt lösenord har skickats till din e-post. Du kan nu logga in med dina nya uppgifter.</p>
-      $loginBox$
-    </div>
-
-###
 pageLogin= 
     <div class="centerdivnarrow">
       <p class="headline">Logga in</p> 
