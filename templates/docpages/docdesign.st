@@ -5,7 +5,7 @@ pageDocumentForAuthorContentPreparation=
     var documentid = "$documentid$"; 
     $if(datamismatchflash)$
         jQuery(function() {
-            addFlashMessage(datamismatchflash);
+            addFlashMessage(datamismatchflash,"red");
         });
     $endif$
   </script>

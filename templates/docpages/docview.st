@@ -178,9 +178,9 @@ pageDocumentForSignContent=
   <script type="text/javascript">
     jQuery(function() {
       $if(requireseleg)$
-      addFlashMessage("Du undertecknar dokumentet längst ned. Det krävs e-legitimation för	att underteckna.");
+      addFlashMessage("Du undertecknar dokumentet längst ned. Det krävs e-legitimation för	att underteckna.","green");
       $else$
-      addFlashMessage("Underteckna dokumentet längst ned på sidan.");
+      addFlashMessage("Underteckna dokumentet längst ned på sidan.","green");
       $endif$
     });
   </script>
