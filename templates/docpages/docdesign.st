@@ -248,7 +248,6 @@ $endif$
                 <small><a rel="#edit-invite-text-dialog" id="editinvitetextlink" href="#" style="padding-top:3px">JUSTERA HÄLSNINGSMEDDELANDE</a></small>
                 <input type="hidden" id="invitetext" name="invitetext" value="$documentinvitetext$" />
               </div>
-              $validationdropdown()$
         </div>
         
         <div class="border"></div>   
@@ -277,8 +276,9 @@ $endif$
                 
           </div>
           $if(contract)$
-           <div style="padding-left:19px;padding-top:13px;"> 
-            <div style="padding-bottom:10px">
+           <div style="padding-left:19px;padding-top:5px;"> 
+            $validationdropdown()$
+            <div style="padding-bottom:8px">
             <input style="position:relative;top:2px" type="checkbox" class="switchercheckbox sendcheckbox" on=".sendbutton" off=".signbutton" autocomplete="off" value="off" /> 
             <label style="margin-left:3px;">Underteckna sist </label> 
             </div>
@@ -303,7 +303,7 @@ $endif$
             </div>
           </div>
           $elseif(template)$
-            <a type="submit" name="save" class="submit new-btn-small green2 center"> 
+            <a type="submit" name="save" class="submit new-btn-small green2 center saveTemplate"> 
               <p>Spara mall</p> 
             </a>
            $endif$
@@ -402,7 +402,7 @@ $endif$
 #####
 validationdropdown= 
 <div>
-  <p>Verifieringsmetod</p>
+  <span>Välj verifieringsmetod</span>
   <select name="validationmethod"
           id="validationdropdown">
     <option value="email" $if(emailselected)$selected$endif$>E-post</option>
