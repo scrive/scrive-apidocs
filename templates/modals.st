@@ -168,7 +168,7 @@ modalSignedViewNotClosed=
 #####
 willCreateAccountForYouHasAccount=
     <p>Dokumentet har sparats till ditt konto.
-      $loginBox()$
+       $loginModalPart()$
     </p>
 #####
 willCreateAccountForYouNoAccount=
@@ -176,8 +176,13 @@ willCreateAccountForYouNoAccount=
        och just nu bjuder vi på fri användning av tjänsten i 2 månader!
        Klicka nedan så är det klart.
       <form action="$LinkLandpageSaved()$" method="get">
-        <input class="button" type="submit" value="Skapa konto" />
+        <a class="btn-tiny blue submit">
+            <div class="left"></div>
+            <div class="label"><span>Skapa konto</span></div>
+            <div class="right"></div>
+        </a>
       </form>
+      <BR/>
     </p>
 ####
 loginModal=
@@ -194,7 +199,18 @@ $if(loginModal)$
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
-        <div class="modal-content"> <div class="user-container">
+        <div class="modal-content"> 
+                $loginModalPart()$
+        </div>
+      </div>
+</div>
+</div>
+</div>
+$endif$
+$endif$
+####
+loginModalPart=
+<div class="user-container">
                                                 <div class="login-container">
                                                         <div class="body">
                                                                 <form method="post" action="$linklogin$">
@@ -226,13 +242,6 @@ $if(loginModal)$
                                                                 </form>
                                                         </div>
                                                 </div>
-                    </div>
-        </div>
-      </div>
 </div>
-</div>
-</div>
-$endif$
-$endif$
+######
 ####
-

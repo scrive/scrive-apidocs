@@ -82,24 +82,17 @@
         text-decoration: none;
 }
 
-#top-slim-container .logout-button {
-        color: #999;
-        float: right;
-        font: 14px/18px "Helvetica Neue";
-        margin-right: 20px;
-        margin-top: 17px;
-        padding-bottom: 5px;
-        padding-left: 15px;
-        text-shadow: #000 0 1px 3px;
-        text-decoration: none;
-}
-
-#top-slim-container .logout-button:hover, 
 #top-slim-container .document-button:hover,
 #top-slim-container .login-button:hover
 {
   color: #FFFFFF;
 }  
+
+.content , .newdesign .content{
+    margin:0 auto;
+    width:960px;
+    position: relative;
+}
   
   
 #top-slim-container .user-container {
