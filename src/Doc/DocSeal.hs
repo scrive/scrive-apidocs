@@ -42,17 +42,19 @@ personFromSignatoryDetails details =
                 , Seal.number = BS.toString $ signatorynumber details
                 }
 
-personsFromDocument :: Document -> [(Seal.Person, (MinutesTime,Word32), (MinutesTime,Word32))]
+personsFromDocument :: Document -> [(Seal.Person, SignInfo, SignInfo, Bool)]
 personsFromDocument document = 
     let
         links = documentsignatorylinks document
-        unSignInfo (SignInfo { signtime, signipnumber }) = (signtime,signipnumber)
+        authorid = unAuthor $ documentauthor document
         x (SignatoryLink{ signatorydetails
-                        , maybesigninfo = Just (si@SignInfo { signtime, signipnumber })
+                        , maybesigninfo = Just signinfo
                         , maybeseeninfo
+                        , maybesignatory
                         })
              -- FIXME: this one should really have seentime always...
-             = (personFromSignatoryDetails signatorydetails, unSignInfo $ maybe si id maybeseeninfo, (signtime,signipnumber))
+             = (personFromSignatoryDetails signatorydetails, maybe signinfo id maybeseeninfo, signinfo, 
+                                           maybe False ((==) authorid) maybesignatory)
         x link = trace (show link) $ error "SignatoryLink does not have all the necessary data"
     in map x links
 
@@ -88,14 +90,22 @@ fieldsFromSignatory sig =
     ++
     (foldl (++) [] (map fieldsFromDefinition (signatoryotherfields sig)))    
 
+-- oh boy, this is really network byte order!
+formatIP :: Word32 -> String
+formatIP 0 = ""
+-- formatIP 0x7f000001 = ""
+formatIP x = " (IP: " ++ show ((x `shiftR` 0) .&. 255) ++
+                   "." ++ show ((x `shiftR` 8) .&. 255) ++
+                   "." ++ show ((x `shiftR` 16) .&. 255) ++
+                   "." ++ show ((x `shiftR` 24) .&. 255) ++ ")"
+
 sealSpecFromDocument :: String -> Document -> User ->  String -> String -> Seal.SealSpec
 sealSpecFromDocument hostpart document author inputpath outputpath =
   let docid = unDocumentID (documentid document)
       authorHasSigned = (any ((maybe False ((== (userid author)) . unSignatory)) . maybesignatory) (documentsignatorylinks document))
       signatoriesdetails = map signatorydetails $ documentsignatorylinks document
       authordetails = (signatoryDetailsFromUser author) 
-                      {
-                        signatoryfstnameplacements = authorfstnameplacements document
+                      { signatoryfstnameplacements = authorfstnameplacements document
                       , signatorysndnameplacements = authorsndnameplacements document
                       , signatorynumberplacements = authornumberplacements document
                       , signatoryemailplacements = authoremailplacements document
@@ -105,31 +115,28 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
       signatories = personsFromDocument document
       secretaries = if authorHasSigned then [] else [personFromSignatoryDetails authordetails]
 
-      -- oh boy, this is really network byte order!
-      formatIP :: Word32 -> String
-      formatIP 0 = ""
-      -- formatIP 0x7f000001 = ""
-      formatIP x = " (IP: " ++ show ((x `shiftR` 0) .&. 255) ++
-                   "." ++ show ((x `shiftR` 8) .&. 255) ++
-                   "." ++ show ((x `shiftR` 16) .&. 255) ++
-                   "." ++ show ((x `shiftR` 24) .&. 255) ++ ")"
-      persons = (map fst3 signatories)
-      -- persons = authorperson : (map fst3 signatories)
-      paddeddocid = reverse $ take 20 $ (reverse (show docid) ++ repeat '0')
+      persons = map (\(a,_,_,_) -> a) signatories
+      paddeddocid = pad0 20 (show docid)
+
       initials = concatComma (map initialsOfPerson persons)
       initialsOfPerson (Seal.Person {Seal.fullname}) = map head (words fullname)
       authorfullname = signatoryname authordetails
       -- 2. "Name of invited" granskar dokumentet online
-      makeHistoryEntryFromSignatory (Seal.Person {Seal.fullname},(seentime2,seenipnumber2),(signtime2,signipnumber2)) = 
+      makeHistoryEntryFromSignatory (Seal.Person {Seal.fullname},seen, signed, False) = 
           [   Seal.HistEntry
-            { Seal.histdate = show seentime2
-            , Seal.histcomment = fullname ++ " granskar dokumentet online" ++ formatIP seenipnumber2
+            { Seal.histdate = show (signtime seen)
+            , Seal.histcomment = fullname ++ " granskar dokumentet online" ++ formatIP (signipnumber seen)
             } 
             , Seal.HistEntry
-            { Seal.histdate = show signtime2
-            , Seal.histcomment = fullname ++ " undertecknar dokumentet online" ++ formatIP signipnumber2
+            { Seal.histdate = show (signtime signed)
+            , Seal.histcomment = fullname ++ " undertecknar dokumentet online" ++ formatIP (signipnumber signed)
             }
-      
+          ]
+      makeHistoryEntryFromSignatory (Seal.Person {Seal.fullname},seen, signed, True) = 
+          [   Seal.HistEntry
+            { Seal.histdate = show (signtime signed)
+            , Seal.histcomment = fullname ++ " undertecknar dokumentet online" ++ formatIP (signipnumber signed)
+            }
           ]
       makeHistoryEntryFromEvent (DocumentHistoryInvitationSent time ipnumber _) =
           [ Seal.HistEntry
@@ -141,39 +148,36 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
             }
           ]
       makeHistoryEntryFromEvent _ = []         
-      makeHistoryEntry = either makeHistoryEntryFromEvent makeHistoryEntryFromSignatory  
-      maxsigntime = maximum (map (fst . thd3) signatories)
+      maxsigntime = maximum (map (signtime . (\(_,_,c,_) -> c)) signatories)
       concatComma = concat . intersperse ", "
-      -- Hack to switch the order of events, so we put invitation send after author signing
-      makeHistory (invSend@(Left (DocumentHistoryInvitationSent time _ _)):(pSign@(Right (_,_,(signtime2,_)))):rest) = 
-          if (signtime2 == time)
-           then (makeHistoryEntry pSign) ++ (makeHistoryEntry invSend) ++ (makeHistory rest)
-           else (makeHistoryEntry invSend) ++ (makeHistoryEntry pSign) ++ (makeHistory rest)
-      makeHistory (e:es) = (makeHistoryEntry e) ++ (makeHistory es)
-      makeHistory [] = []
       
       lastHistEntry = Seal.HistEntry
                       { Seal.histdate = show maxsigntime
                       , Seal.histcomment = "Samtliga parter har undertecknat dokumentet och avtalet är nu juridiskt bindande."
                       }
 
-      history = (makeHistory $ ((map Left (documenthistory document)) ++ (map Right signatories))) ++ [lastHistEntry]
+      -- here we use Data.List.sort that is *stable*, so it puts
+      -- signatories actions before what happened with a document
+      histDateCompare a b = compare (Seal.histdate a) (Seal.histdate b)
+      history = sortBy histDateCompare $ (concatMap makeHistoryEntryFromSignatory signatories) ++
+                (concatMap makeHistoryEntryFromEvent (documenthistory document)) ++ 
+                [lastHistEntry]
       
       -- document fields
       fields = if authorHasSigned
-               then (concat (map fieldsFromSignatory signatoriesdetails))
-               else (concat (map fieldsFromSignatory $ authordetails : signatoriesdetails))
+               then concatMap fieldsFromSignatory signatoriesdetails
+               else concatMap fieldsFromSignatory $ authordetails : signatoriesdetails
                     
       config = Seal.SealSpec 
-            { Seal.input = inputpath
-            , Seal.output = outputpath
+            { Seal.input          = inputpath
+            , Seal.output         = outputpath
             , Seal.documentNumber = paddeddocid
-            , Seal.persons = persons
-            , Seal.secretaries = secretaries
-            , Seal.history = history
-            , Seal.initials = initials
-            , Seal.hostpart = hostpart
-            , Seal.fields = fields
+            , Seal.persons        = persons
+            , Seal.secretaries    = secretaries
+            , Seal.history        = history
+            , Seal.initials       = initials
+            , Seal.hostpart       = hostpart
+            , Seal.fields         = fields
             }
       in config
 
