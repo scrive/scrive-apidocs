@@ -82,9 +82,16 @@ $(document).ready( function() {
 	// Options dropdown on archive, sub accounts etc.
 	$('.tab-dd').click( function() {
 		$(this).children('.tab-dd-opts').toggle();
+                var button = $(this).find(".tab-dd-button");
+                if (button.hasClass("tab-dd-exp")) {
+                  button.removeClass("tab-dd-exp");
+                } else {
+                  button.addClass("tab-dd-exp");
+                }
 	}).mouseleave( function() {
 		$.data(this, 'dd', setTimeout( function() {
 			$('.tab-dd').children('.tab-dd-opts').hide();
+                        $('.tab-dd').find(".tab-dd-button").removeClass("tab-dd-exp");
 		}, 500));
 	}).mouseenter( function() {
 		clearTimeout($.data(this, 'dd'));
