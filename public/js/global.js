@@ -118,6 +118,31 @@ safeReady(function () {
 });
 
 /*
+ * For delete confirmation on lists.
+ */
+safeReady(function() {
+  $(".listDelete").overlay({
+    mask: standardDialogMask,
+    onBeforeLoad: function() {
+      var selectedrows = $(".listForm").find(".ui-selected");
+      if (selectedrows.length==0) {
+        return false;
+      } else {
+        var deletionDetails = "";
+        if (selectedrows.length==1) {
+          deletionDetails = jQuery.trim(selectedrows.find(".listname").text());
+        } else {
+          var listtype = jQuery.trim($(".listForm").find(".listtype").text().toLowerCase());
+          deletionDetails = selectedrows.length + " " + listtype;
+        }
+        $("#dialog-list-delete-confirm").find(".deletionDetails").text(deletionDetails);
+        return true;
+      }
+    }
+  });
+});
+
+/*
  * For the arkiv view fancy selection
  */
 safeReady(function () {
