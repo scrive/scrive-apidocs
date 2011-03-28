@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wall -Werror #-}
 module Doc.DocStateData(
       Author(..)
     , CancelationReason(..)
@@ -7,7 +8,7 @@ module Doc.DocStateData(
     , DocumentID(..)
     , DocumentStatus(..)
     , DocumentType(..)
-    , Documents(..)
+    , Documents
     , CSVUpload(..)
     , FieldDefinition(..)
     , FieldPlacement(..)
@@ -28,34 +29,19 @@ module Doc.DocStateData(
     ) where
 import Happstack.Data
 import Happstack.State
-import Control.Monad.Reader (ask)
-import Control.Monad.State (modify)
-import Control.Monad.Trans
 import User.UserState
 import Happstack.Data.IxSet as IxSet
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
-import Control.Applicative ((<$>))
 import Happstack.Server.SimpleHTTP
 import Happstack.Util.Common
-import Debug.Trace
 import Misc
-import Control.Monad
-import Data.List (find)
 import MinutesTime
-import Data.List (zipWith4,partition)
-import System.Random
 import Data.Word
 import Data.Int
-import System.Log.Logger (errorM)
-import qualified Data.Map as Map
-import qualified Data.Set as Set
 import Data.Maybe
 import Mails.MailsUtil
 import Data.Data (Data)
-import qualified Data.Generics.SYB.WithClass.Derive as SYB
-
-
 
 newtype Author = Author { unAuthor :: UserID }
     deriving (Eq, Ord, Typeable)
@@ -833,7 +819,7 @@ instance Read SignatoryLinkID where
                      in map make . readsPrec prec 
 
 instance Show File where
-    showsPrec prec file = (++) (BS.toString (filename file))
+    showsPrec _prec file = (++) (BS.toString (filename file))
 
 instance Show FileID where
     showsPrec prec (FileID val) = showsPrec prec val
