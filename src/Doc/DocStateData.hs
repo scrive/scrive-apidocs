@@ -1884,15 +1884,23 @@ instance Migrate JpegPages0 JpegPages where
 $(deriveSerialize ''FileID)
 instance Version FileID where
 
-$(inferIxSet "Documents" ''Document 'noCalcs 
-                 [ ''DocumentID
-                 , ''Author
-                 , ''Signatory
-                 , ''SignatoryLinkID
-                 , ''FileID
-                 , ''TimeoutTime
-                 , ''DocumentType
-                 ])
+type Documents = IxSet Document
+
+instance Indexable Document where
+        empty = ixSet [ ixFun (\x -> [documentid x])
+                      , ixFun (\x -> [documentauthor x])
+                      , ixFun (\x -> catMaybes (map maybesignatory (documentsignatorylinks x)))
+                              
+                      -- wait, wait, wait: the following is wrong, signatory link ids are valid only in 
+                      -- the scope of a signle document! FIXME
+                      , ixFun (\x -> map signatorylinkid (documentsignatorylinks x))
+                      , ixFun (\x -> map fileid (documentfiles x ++ documentsealedfiles x))
+                      , ixFun (\x -> case documenttimeouttime x of
+                                         Just time -> [time]
+                                         Nothing -> [])
+                      , ixFun (\x -> [documenttype x])
+                      ]
+                                                    
 instance Component Documents where
   type Dependencies Documents = End
   initialValue = empty
