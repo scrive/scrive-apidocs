@@ -110,7 +110,7 @@ concatChunks = BS.concat . BSL.toChunks
 -- See also 'getUnique64'.
 getUnique
   :: (Indexable a,
-      Data a,
+      Typeable a,
       Ord a,
       Typeable k,
       Monad (t GHC.Conc.STM),
@@ -129,7 +129,7 @@ getUnique ixset constr = do
 -- See also 'getUnique64'.
 getUnique64
   :: (Indexable a,
-      Data a,
+      Typeable a,
       Ord a,
       Typeable k,
       Monad (t GHC.Conc.STM),
