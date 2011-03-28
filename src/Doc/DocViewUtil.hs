@@ -58,7 +58,7 @@ partyUnsignedMeAndList magichash document =
 
 partyListButAuthor :: Document -> [SignatoryDetails]
 partyListButAuthor document@Document{ documentauthor=Author authorid } =
-    map signatorydetails (filter ((maybe True ((/= authorid) . unSignatory)) . maybesignatory) (documentsignatorylinks document))
+    map signatorydetails (filter ((maybe True (/= authorid)) . maybesignatory) (documentsignatorylinks document))
 
   
 joinWith::[a]->[[a]]->[a]

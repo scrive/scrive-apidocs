@@ -158,7 +158,7 @@ postDocumentChangeAction document@Document  { documentstatus
 sendElegDataMismatchEmails :: Context -> Document -> User -> IO ()
 sendElegDataMismatchEmails ctx document author = do
     let authorid = unAuthor $ documentauthor document
-        allbutauthor = filter ((maybe True ((/= authorid) . unSignatory)) . maybesignatory) 
+        allbutauthor = filter ((maybe True (/= authorid)) . maybesignatory) 
                             (documentsignatorylinks document)
     forM_ allbutauthor $ sendDataMismatchEmailSignatory ctx document author
     sendDataMismatchEmailAuthor ctx document author
@@ -480,7 +480,7 @@ isFriendWithSignatory uid document = do
 isFriendWithSignatoryLink :: UserID -> SignatoryLink -> IO Bool
 isFriendWithSignatoryLink uid sl = do
                                      muser1 <- query $ GetUserByEmail $ Email $ signatoryemail $ signatorydetails $  sl
-                                     muser2 <- sequenceMM $ fmap (query . GetUserByUserID . unSignatory) $ maybesignatory sl
+                                     muser2 <- sequenceMM $ fmap (query . GetUserByUserID) $ maybesignatory sl
                                      return $ (isFriendOf' uid muser1) || (isFriendOf' uid muser2)
 {- |
    Handles the request to show a document to a user.

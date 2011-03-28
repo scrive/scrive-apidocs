@@ -212,15 +212,27 @@ data SignatoryLink4 = SignatoryLink4
     }
     deriving (Eq, Ord, Typeable)
 
+data SignatoryLink5 = SignatoryLink5 
+    { signatorylinkid5          :: SignatoryLinkID
+    , signatorydetails5         :: SignatoryDetails
+    , signatorymagichash5       :: MagicHash
+    , maybesignatory5           :: Maybe Signatory
+    , maybesigninfo5            :: Maybe SignInfo
+    , maybeseeninfo5            :: Maybe SignInfo
+    , invitationdeliverystatus5 :: MailsDeliveryStatus
+    , signatorysignatureinfo5   :: Maybe SignatureInfo
+    }    
+    deriving (Eq, Ord, Typeable)
+
 data SignatoryLink = SignatoryLink 
-    { signatorylinkid    :: SignatoryLinkID
-    , signatorydetails   :: SignatoryDetails
-    , signatorymagichash :: MagicHash
-    , maybesignatory     :: Maybe Signatory
-    , maybesigninfo      :: Maybe SignInfo
-    , maybeseeninfo      :: Maybe SignInfo
+    { signatorylinkid          :: SignatoryLinkID
+    , signatorydetails         :: SignatoryDetails
+    , signatorymagichash       :: MagicHash
+    , maybesignatory           :: Maybe UserID
+    , maybesigninfo            :: Maybe SignInfo
+    , maybeseeninfo            :: Maybe SignInfo
     , invitationdeliverystatus :: MailsDeliveryStatus
-    , signatorysignatureinfo :: Maybe SignatureInfo
+    , signatorysignatureinfo   :: Maybe SignatureInfo
     }    
     deriving (Eq, Ord, Typeable)
 
@@ -940,9 +952,13 @@ $(deriveSerialize ''SignatoryLink4)
 instance Version SignatoryLink4 where
     mode = extension 4 (Proxy :: Proxy SignatoryLink3)
 
+$(deriveSerialize ''SignatoryLink5)
+instance Version SignatoryLink5 where
+    mode = extension 5 (Proxy :: Proxy SignatoryLink4)
+
 $(deriveSerialize ''SignatoryLink)
 instance Version SignatoryLink where
-    mode = extension 5 (Proxy :: Proxy SignatoryLink4)
+    mode = extension 6 (Proxy :: Proxy SignatoryLink5)
     
 instance Migrate SignatoryDetails0 SignatoryDetails1 where
     migrate (SignatoryDetails0
@@ -1101,7 +1117,7 @@ instance Migrate SignatoryLink3 SignatoryLink4 where
           , invitationdeliverystatus4 = Delivered
           }
 
-instance Migrate SignatoryLink4 SignatoryLink where
+instance Migrate SignatoryLink4 SignatoryLink5 where
     migrate (SignatoryLink4
              { signatorylinkid4
              , signatorydetails4
@@ -1110,16 +1126,38 @@ instance Migrate SignatoryLink4 SignatoryLink where
              , maybesigninfo4
              , maybeseeninfo4
              , invitationdeliverystatus4
-             }) = SignatoryLink
-             { signatorylinkid = signatorylinkid4
-             , signatorydetails = signatorydetails4
-             , signatorymagichash = signatorymagichash4
-             , maybesignatory = maybesignatory4
-             , maybesigninfo = maybesigninfo4
-             , maybeseeninfo = maybeseeninfo4
-             , invitationdeliverystatus = invitationdeliverystatus4
-             , signatorysignatureinfo = Nothing
+             }) = SignatoryLink5
+             { signatorylinkid5 = signatorylinkid4
+             , signatorydetails5 = signatorydetails4
+             , signatorymagichash5 = signatorymagichash4
+             , maybesignatory5 = maybesignatory4
+             , maybesigninfo5 = maybesigninfo4
+             , maybeseeninfo5 = maybeseeninfo4
+             , invitationdeliverystatus5 = invitationdeliverystatus4
+             , signatorysignatureinfo5 = Nothing
              }
+
+instance Migrate SignatoryLink5 SignatoryLink where
+    migrate (SignatoryLink5
+             { signatorylinkid5
+             , signatorydetails5
+             , signatorymagichash5
+             , maybesignatory5
+             , maybesigninfo5
+             , maybeseeninfo5
+             , invitationdeliverystatus5
+             , signatorysignatureinfo5
+             }) = SignatoryLink
+             { signatorylinkid = signatorylinkid5
+             , signatorydetails = signatorydetails5
+             , signatorymagichash = signatorymagichash5
+             , maybesignatory = fmap unSignatory maybesignatory5
+             , maybesigninfo = maybesigninfo5
+             , maybeseeninfo = maybeseeninfo5
+             , invitationdeliverystatus = invitationdeliverystatus5
+             , signatorysignatureinfo = signatorysignatureinfo5
+             }
+
 
 $(deriveSerialize ''SignatoryLinkID)
 instance Version SignatoryLinkID
@@ -1448,7 +1486,7 @@ instance Migrate Document6 Document7 where
                 }
                   where authorlink = SignatoryLink { maybesigninfo = documentmaybesigninfo6
                                                    , maybeseeninfo = documentmaybesigninfo6
-                                                   , maybesignatory = Just $ Signatory $ unAuthor $ documentauthor6
+                                                   , maybesignatory = Just $ unAuthor $ documentauthor6
                                                    , signatorydetails = documentauthordetails6
                                                    , invitationdeliverystatus = Delivered
                                                    , signatorymagichash = MagicHash 0
@@ -1871,18 +1909,18 @@ instance Version FileID where
 type Documents = IxSet Document
 
 instance Indexable Document where
-        empty = ixSet [ ixFun (\x -> [documentid x])
-                      , ixFun (\x -> [documentauthor x])
-                      , ixFun (\x -> catMaybes (map maybesignatory (documentsignatorylinks x)))
+        empty = ixSet [ ixFun (\x -> [documentid x] :: [DocumentID])
+                      , ixFun (\x -> [documentauthor x] :: [Author])
+                      , ixFun (\x -> (map Signatory (catMaybes (map maybesignatory (documentsignatorylinks x)))) :: [Signatory])
                               
                       -- wait, wait, wait: the following is wrong, signatory link ids are valid only in 
-                      -- the scope of a signle document! FIXME
-                      , ixFun (\x -> map signatorylinkid (documentsignatorylinks x))
-                      , ixFun (\x -> map fileid (documentfiles x ++ documentsealedfiles x))
-                      , ixFun (\x -> case documenttimeouttime x of
+                      -- the scope of a single document! FIXME
+                      , ixFun (\x -> map signatorylinkid (documentsignatorylinks x) :: [SignatoryLinkID])
+                      , ixFun (\x -> map fileid (documentfiles x ++ documentsealedfiles x) :: [FileID])
+                      , ixFun (\x -> (case documenttimeouttime x of
                                          Just time -> [time]
-                                         Nothing -> [])
-                      , ixFun (\x -> [documenttype x])
+                                         Nothing -> []) :: [TimeoutTime])
+                      , ixFun (\x -> [documenttype x] :: [DocumentType])
                       ]
                                                     
 instance Component Documents where
