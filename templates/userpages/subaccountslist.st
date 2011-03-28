@@ -1,13 +1,14 @@
 ####    Pages for users - usual from my account
 viewSubaccounts =
-<form method="post" action="$currentlink$">
+<div>
+  <form method="post" action="$currentlink$" class="listForm">
 	<div id="tab-viewer">
 		<div class="tab-header">
 
 		</div>
 		<ul class="tabs">
 		   <li><a href="/account">Konto</a></li>
-           <li class="active"><a href="/account/subaccount">Underkonton</a></li>
+           <li class="active"><a href="/account/subaccount" class="listtype">Underkonton</a></li>
 		</ul>
 		<div class="tab-container">
 			<div class="tab-content">
@@ -16,7 +17,7 @@ viewSubaccounts =
 						<a href="javascript:;"><p>Alternativ</p></a>
 						<ul class="tab-dd-opts">
 							<li><a href="javascript:;" class="subaccount-add-sub">Lägg till</a></li>
-							<li><a href="javascript:;" class="submit" rel="remove">Radera</a></li>
+							<li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">Radera</a></li>
 						</ul>
 					</div>
 				</div>
@@ -81,6 +82,9 @@ viewSubaccounts =
 						$subaccounts:{subaccount |
 						<!-- Every other row should have class="odd" (Begin with first row) -->
 						<tr $if(subaccount.odd)$class="odd"$endif$>
+                                                        <td class="listname" style="display:none;">
+                                                          $subaccount.fstname$ $subaccount.sndname$ &lt;$subaccount.email$&gt;
+                                                        </td>
 							<td><input type="checkbox" name="subcheck" value="$subaccount.id$" class="check" /></td>
 							<td>$subaccount.fstname$</td>
 							<td>$subaccount.sndname$</td>
@@ -98,5 +102,7 @@ viewSubaccounts =
 			</div>
          </div>
     </div>
-</form>
+  </form>
+  $listLocalDialogs()$
+</div>
 ###

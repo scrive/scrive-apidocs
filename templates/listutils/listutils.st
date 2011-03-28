@@ -46,4 +46,78 @@ searchBox=
 <input type="text" class="tab-search float-left" name="search" value="$if(params.search)$$params.search$$endif$" infotext="$infotext$" />
 <a href="#" class="btn-tiny black float-right submit"><div class="left"></div><div class="label">Sök</div><div class="right"></div></a>
 </div>
-###                
+###    
+####
+listLocalDialogs=
+<div class="localdialogs">
+
+  <form method="post" name="form" action="$currentlink$" class="overlay redirectsubmitform" id="dialog-list-delete-confirm" rel=".listForm">
+    <input type="hidden" name="archive" value="true" />
+    <input type="hidden" name="remove" value="true" />
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-icon message"></div>
+        <div class="modal-title">
+          <h2>Radera</h2>
+        </div>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">
+          <div>
+            Är du säker att du vill radera <span class="deletionDetails"></span>.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">        
+        <a class="cancel close float-left" style="height:40px;">  
+          <div class="label">Avbryt</div> 
+        </a>
+        <a class="btn-small green float-right submiter" href="#">
+          <div class="left"></div>
+          <div class="label"><p>OK</p></div>
+          <div class="right"></div>
+        </a>
+      </div>
+    </div>
+  </form>
+
+</div>
+####
+####
+listLocalDialogs=
+<div class="localdialogs">
+
+  <form method="post" name="form" action="$currentlink$" class="overlay redirectsubmitform" id="dialog-list-delete-confirm" rel=".listForm">
+    <input type="hidden" name="archive" value="true" />
+    <input type="hidden" name="remove" value="true" />
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-icon message"></div>
+        <div class="modal-title">
+          <h2>Radera</h2>
+        </div>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">
+          <div>
+            Är du säker att du vill radera <span class="deletionDetails"></span>.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">        
+        <a class="cancel close float-left" style="height:40px;">  
+          <div class="label">Avbryt</div> 
+        </a>
+        <a class="btn-small green float-right submiter" href="#">
+          <div class="left"></div>
+          <div class="label"><p>OK</p></div>
+          <div class="right"></div>
+        </a>
+      </div>
+    </div>
+  </form>
+
+</div>
+####           

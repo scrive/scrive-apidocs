@@ -1,13 +1,14 @@
 ####		
-pageTemplatesList= 
-<form method="post" action="$currentlink$" enctype="multipart/form-data" >
+pageTemplatesList=
+<div> 
+<form method="post" action="$currentlink$" enctype="multipart/form-data" class="listForm">
     <div id="tab-viewer">
         <div class="tab-header">
 
         </div>
         <ul class="tabs">
             <li><a href="/d">Dokument</a></li>
-            <li class="active"><a href="/t">Mallar</a></li>
+            <li class="active"><a href="/t" class="listtype">Mallar</a></li>
             <!-- <li><a href="/contacts">Kontakter</a></li> -->
         </ul>
         <div class="tab-container">
@@ -16,7 +17,7 @@ pageTemplatesList=
                     <div class="tab-dd">
                         <a href="javascript:;"><p>Alternativ</p></a>
                         <ul class="tab-dd-opts">
-                            <li><a href="javascript:;" class="submit" rel="archive">Radera</a></li>
+                            <li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">Radera</a></li>
                         </ul>
                     </div>
                 </div>
@@ -84,7 +85,7 @@ pageTemplatesList=
                             <td><a href="$document.doclink$">$document.signatories:{sig | $sig.name$}; separator=", "$</a></td>
                             -->  
                             <td>
-                                <a href="$document.doclink$">$document.documenttitle$</a>
+                                <a href="$document.doclink$" class="listname">$document.documenttitle$</a>
                                 $if(document.davelink)$ 
                                 <a href="$document.davelink$">*</a>     
                                 $endif$
@@ -101,4 +102,6 @@ pageTemplatesList=
         </div>
     </div>
 </form>
+$listLocalDialogs()$
+</div>
      
