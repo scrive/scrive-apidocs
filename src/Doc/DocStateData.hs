@@ -58,32 +58,32 @@ import qualified Data.Generics.SYB.WithClass.Derive as SYB
 
 
 newtype Author = Author { unAuthor :: UserID }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 
 newtype DocumentID = DocumentID { unDocumentID :: Int64 }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable, Data) -- Data needed by PayEx modules
 newtype SignatoryLinkID = SignatoryLinkID { unSignatoryLinkID :: Int }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 newtype FileID = FileID { unFileID :: Int }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 newtype TimeoutTime = TimeoutTime { unTimeoutTime :: MinutesTime }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 
 data IdentificationType = EmailIdentification
                         | ELegitimationIdentification
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 
 data SignatureProvider = BankIDProvider
                        | TeliaProvider
                        | NordeaProvider
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 
 data SignatureInfo0 = SignatureInfo0 { signatureinfotext0        :: String
                                      , signatureinfosignature0   :: String
                                      , signatureinfocertificate0 :: String
                                      , signatureinfoprovider0    :: SignatureProvider
                                      }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 
 data SignatureInfo = SignatureInfo { signatureinfotext        :: String
                                    , signatureinfosignature   :: String
@@ -93,7 +93,7 @@ data SignatureInfo = SignatureInfo { signatureinfotext        :: String
                                    , signaturelstnameverified :: Bool
                                    , signaturepersnumverified :: Bool
                                    }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 
 -- added by Eric Normand for template system
 -- Defines a new field to be placed in a contract
@@ -110,7 +110,7 @@ data FieldDefinition = FieldDefinition
     , fieldplacements :: [FieldPlacement]
     , fieldfilledbyauthor :: Bool
     }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 
 -- defines where a field is placed
 data FieldPlacement = FieldPlacement
@@ -120,7 +120,7 @@ data FieldPlacement = FieldPlacement
     , placementpagewidth :: Int
     , placementpageheight :: Int
     }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 -- end of updates for template system
 
 data SignatoryDetails0 = SignatoryDetails0
@@ -173,7 +173,7 @@ data SignatoryDetails = SignatoryDetails
     , signatorynumberplacements :: [FieldPlacement]
     , signatoryotherfields :: [FieldDefinition]
     }     
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 
 data SignatoryLink0 = SignatoryLink0 
     { signatorylinkid0    :: SignatoryLinkID
@@ -236,13 +236,13 @@ data SignatoryLink = SignatoryLink
     , invitationdeliverystatus :: MailsDeliveryStatus
     , signatorysignatureinfo :: Maybe SignatureInfo
     }    
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 
 data SignInfo = SignInfo
     { signtime :: MinutesTime
     , signipnumber :: Word32
     }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 
 data SignInfo0 = SignInfo0
     { signtime0 :: MinutesTime
@@ -250,7 +250,7 @@ data SignInfo0 = SignInfo0
     deriving (Eq, Ord, Typeable)
 
 newtype Signatory = Signatory { unSignatory :: UserID }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 
 {-
    Document start in Preparation state.
@@ -299,21 +299,21 @@ data DocumentStatus = Preparation
                     | Rejected
                     | AwaitingAuthor
                     | DocumentError String
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
                     
 data DocumentType = Contract | Template
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 
 data ChargeMode = ChargeInitialFree   -- initial 5 documents are free
                 | ChargeNormal        -- value times number of people involved
 
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 
 data DocumentHistoryEntry0 = DocumentHistoryCreated0 { dochisttime0 :: MinutesTime }
                           | DocumentHistoryInvitationSent0 { dochisttime0 :: MinutesTime
                                                           , ipnumber0 :: Word32
                                                           }    -- changed state from Preparatio to Pending
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 
 data DocumentHistoryEntry 
     = DocumentHistoryCreated 
@@ -350,15 +350,15 @@ data DocumentHistoryEntry
       { dochisttime :: MinutesTime
       , ipnumber :: Word32
       }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 
 data DocStats = DocStats {
                  doccount :: Int
                , signaturecount :: Int
              }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable, Data) -- Data instance used for View modules (quite incorrectly there, please remove ASAP)
 
-
+ 
 data Document0 = Document0
     { documentid0               :: DocumentID
     , documenttitle0            :: BS.ByteString
@@ -699,7 +699,7 @@ data CancelationReason =  ManualCancel
                         -- The data returned by ELeg server
                         --                 msg                    fn            ln            num
                         | ELegDataMismatch String SignatoryLinkID BS.ByteString BS.ByteString BS.ByteString
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 
 
 {-| Watch out. This instance is a bit special. It has to be
@@ -708,14 +708,12 @@ data CancelationReason =  ManualCancel
 
 instance Typeable Document where typeOf _ = mkTypeOf "Document"
 
-deriving instance Data Document
-
 data CSVUpload = CSVUpload
     { csvtitle :: BS.ByteString
     , csvcontents  :: [[BS.ByteString]]
     , csvsignatoryindex :: Int
     } 
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
     
 data File0 = File0 
     { fileid0       :: FileID
@@ -745,7 +743,7 @@ data File = File
     , filename        :: BS.ByteString
     , filestorage     :: FileStorage
     }
-    deriving (Typeable, Data)
+    deriving (Typeable)
 
 data JpegPages0 = JpegPagesPending0
                | JpegPages0 [BS.ByteString]   
@@ -755,11 +753,11 @@ data JpegPages0 = JpegPagesPending0
 data JpegPages = JpegPagesPending
                | JpegPages [(BS.ByteString,Int,Int)]  -- Data + width + height (scaled with some resolution)
                | JpegPagesError BS.ByteString 
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
                
 data FileStorage = FileStorageMemory BS.ByteString
                  | FileStorageAWS BS.ByteString BS.ByteString -- ^ bucket, url inside bucket
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 
 
 
