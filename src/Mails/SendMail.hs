@@ -136,7 +136,7 @@ createWholeContent ourInfoEmail ourInfoEmailNiceName mailId mail@(Mail {title,co
       header1 = "--" ++ boundary ++ "\r\n" ++
           "Content-type: text/html; charset=utf-8\r\n" ++
           "\r\n"
-      footer = "\r\n--" ++ boundary ++ "--\r\n.\r\n"
+      footer = "\r\n--" ++ boundary ++ "--\r\n"
       aheader fname = "\r\n--" ++ boundary ++ "\r\n" ++
           "Content-Disposition: inline; filename=\"" ++ mailEncode fname ++".pdf\"\r\n" ++
           "Content-Type: application/pdf; name=\"" ++ mailEncode fname ++ ".pdf\"\r\n" ++
