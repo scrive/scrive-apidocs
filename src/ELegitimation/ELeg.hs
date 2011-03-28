@@ -17,7 +17,7 @@ data ELegTransaction = ELegTransaction { transactiontransactionid :: String
                                              , transactiondocumentid :: DocumentID
                                              , transactionmagichash :: Maybe MagicHash
                                              }
-                     deriving (Eq, Ord, Show, Typeable, Data)
+                     deriving (Eq, Ord, Show, Typeable)
 
 $(deriveSerialize ''ELegTransaction)
 instance Version (ELegTransaction)
