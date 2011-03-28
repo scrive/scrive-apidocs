@@ -15,7 +15,9 @@ pageTemplatesList=
             <div class="tab-content">
                 <div class="col float-left">
                     <div class="tab-dd">
-                        <a href="javascript:;"><p>Alternativ</p></a>
+                        <div class="tab-dd-button">
+                          <a href="javascript:;"><p>Alternativ</p></a>
+                        </div>
                         <ul class="tab-dd-opts">
                             <li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">Radera</a></li>
                         </ul>
