@@ -238,10 +238,34 @@ docSortFunc "title" = viewComparing documenttitle
 docSortFunc "titleREV" = viewComparingRev documenttitle
 docSortFunc "time" = viewComparing documentmtime
 docSortFunc "timeREV" = viewComparingRev documentmtime
-docSortFunc "partner" = viewComparing $ BS.concat . (map personname) . documentsignatorylinks 
-docSortFunc "partnerREV" = viewComparingRev $ BS.concat . (map personname) . documentsignatorylinks 
+docSortFunc "partner" = comparePartners 
+docSortFunc "partnerREV" = revComparePartners
 docSortFunc _ = const $ const EQ
 
+revComparePartners :: Document -> Document -> Ordering
+revComparePartners doc1 doc2 = comparePartners doc2 doc1
+
+{- |
+    Special comparison for partners, because we need to compare each signatory,
+    and also then inside the signatory compare the fst and snd names separately.
+-}
+comparePartners :: Document -> Document -> Ordering
+comparePartners doc1 doc2 =
+  case (dropWhile isMatch $ zipWith compareSignatory (documentsignatorylinks doc1) (documentsignatorylinks doc2)) of
+    [] -> EQ
+    (x:_) -> x
+  where
+    isMatch :: Ordering -> Bool
+    isMatch EQ = True
+    isMatch _ = False
+    compareSignatory :: SignatoryLink -> SignatoryLink -> Ordering
+    compareSignatory sl1 sl2 =
+      let splitUp sl = span (\c -> c/=' ') . map toUpper . BS.toString $ personname sl
+          (fst1, snd1) = splitUp sl1
+          (fst2, snd2) = splitUp sl2 in
+      case (compare fst1 fst2) of
+        EQ -> compare snd1 snd2
+        x -> x
 
 docsPageSize :: Int
 docsPageSize = 20
