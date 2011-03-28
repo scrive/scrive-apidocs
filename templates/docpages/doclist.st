@@ -9,14 +9,15 @@ mainpage=
 ####
 
 ####		
-pageContractsList= 
-<form method="post" action="$currentlink$">
+pageContractsList=
+<div>
+  <form method="post" action="$currentlink$" class="listForm">
 	<div id="tab-viewer">
 		<div class="tab-header">
 
 		</div>
 		<ul class="tabs">
-			<li class="active"><a href="/d">Dokument</a></li>
+			<li class="active"><a href="/d" class="listtype">Dokument</a></li>
 			<li><a href="/t">Mallar</a></li>
 			<!-- <li><a href="/contacts">Kontakter</a></li> -->
 		</ul>
@@ -26,7 +27,7 @@ pageContractsList=
 					<div class="tab-dd">
 						<a href="javascript:;"><p>Alternativ</p></a>
 						<ul class="tab-dd-opts">
-							<li><a href="javascript:;" class="submit" rel="archive">Radera</a></li>
+							<li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">Radera</a></li>
 						</ul>
 					</div>
 				</div>
@@ -100,7 +101,7 @@ pageContractsList=
 							</td>
 							<td><a href="$document.doclink$">$document.signatories:{sig | $sig.name$}; separator=", "$</a></td>
 							<td>
-								<a href="$document.doclink$">$document.documenttitle$</a>
+								<a href="$document.doclink$" class="listname">$document.documenttitle$</a>
 								$if(document.davelink)$ 
 					          	<a href="$document.davelink$">*</a>     
 					          	$endif$
@@ -151,5 +152,7 @@ pageContractsList=
     <div id="tooltip-signed" class="hidden">
         <div class="icon status signed"></div><p>Status: Signerat</p>
     </div>
-</form>
-####     
+  </form>
+$listLocalDialogs()$
+</div>
+####
