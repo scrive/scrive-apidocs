@@ -344,7 +344,7 @@ signDocument documentid signatorylinkid1 time ipnumber msiginfo fields = do
                     }
           maybesign link = link
           authorid = unAuthor $ documentauthor signeddocument
-          allbutauthor = filter ((maybe True ((/= authorid) . unSignatory)) . maybesignatory) newsignatorylinks
+          allbutauthor = filter ((maybe True (/= authorid)) . maybesignatory) newsignatorylinks
           allsignedbutauthor = all (isJust . maybesigninfo) allbutauthor
           isallsigned = all (isJust . maybesigninfo) newsignatorylinks
           
@@ -376,7 +376,7 @@ signDocument documentid signatorylinkid1 time ipnumber msiginfo fields = do
 
 signWithUserID [] _ _ _ = []
 signWithUserID (s:ss) id sinfo msiginfo
-    | maybe False (((==) id) . unSignatory) (maybesignatory s) = s {maybesigninfo = sinfo, maybeseeninfo = maybe sinfo Just (maybeseeninfo s) , signatorysignatureinfo = msiginfo} : ss
+    | maybe False (((==) id)) (maybesignatory s) = s {maybesigninfo = sinfo, maybeseeninfo = maybe sinfo Just (maybeseeninfo s) , signatorysignatureinfo = msiginfo} : ss
     | otherwise = s : signWithUserID ss id sinfo msiginfo
 
 authorSendDocument :: DocumentID
@@ -516,7 +516,7 @@ saveDocumentForSignedUser documentid userid signatorylinkid1 = do
           newsignatorylinks = map maybesign (documentsignatorylinks document)
           maybesign x@(SignatoryLink {signatorylinkid} ) 
             | signatorylinkid == signatorylinkid1 = 
-              x { maybesignatory = Just (Signatory userid)
+              x { maybesignatory = Just (userid)
                 }
           maybesign x = x
       in Right signeddocument
@@ -572,7 +572,7 @@ fragileTakeOverDocuments destuser srcuser = do
         takeoverAsSignatory document = document { documentsignatorylinks = takeoverSigLinks (documentsignatorylinks document) }
         takeoverSigLinks siglinks = (map takeoverSigLink matching) ++ others
                                     where (matching, others) = partition (isMatchingSignatoryLink srcuser) siglinks 
-        takeoverSigLink siglink = siglink {maybesignatory = Just (Signatory (userid destuser)),
+        takeoverSigLink siglink = siglink {maybesignatory = Just (userid destuser),
                                            signatorydetails = takeoverSigDetails (signatorydetails siglink) }
         takeoverSigDetails sigdetails = sigdetails {signatoryfstname = userfstname info,
                                                     signatorysndname = usersndname info,
@@ -689,7 +689,7 @@ signLinkFromDetails emails details = do
           linkid <- getUnique sg SignatoryLinkID
           magichash <- getRandom
           let muser = findMaybeUserByEmail emails (signatoryemail details)
-              msig = maybe Nothing (Just . Signatory . userid) muser
+              msig = maybe Nothing (Just . userid) muser
           return $ SignatoryLink 
                      { signatorylinkid = linkid
                      , signatorydetails = details

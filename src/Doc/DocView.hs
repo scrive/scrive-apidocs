@@ -350,7 +350,7 @@ isNotLinkForUserID uid link =
     hasNoUserID || notSameUserID
         where hasNoUserID = isNothing $ maybesignatory link
               notSameUserID = uid /= linkuid
-              linkuid = unSignatory $ fromJust $ maybesignatory link
+              linkuid = fromJust $ maybesignatory link
 
 pageDocumentForAuthor :: Context 
              -> Document 

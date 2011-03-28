@@ -138,7 +138,7 @@ instance MayBeAuthor UserID where
   
 instance MayBeAuthor SignatoryLink where
   isAuthor d sl = case maybesignatory sl of
-                   Just s -> unSignatory s == ( unAuthor . documentauthor $ d)
+                   Just s -> s == ( unAuthor . documentauthor $ d)
                    Nothing -> False
 
 instance (MayBeAuthor a) => MayBeAuthor (Maybe a) where
@@ -190,7 +190,7 @@ signatoryDetailsFromUser user =
 isMatchingSignatoryLink :: User -> SignatoryLink -> Bool
 isMatchingSignatoryLink user sigLink = signatoryMatches || emailMatches
   where 
-  signatoryMatches = maybe False (\s -> unSignatory s == userid user)  (maybesignatory sigLink)
+  signatoryMatches = maybe False (\s -> s == userid user)  (maybesignatory sigLink)
   emailMatches = (signatoryemail . signatorydetails $ sigLink) == (unEmail . useremail $ userinfo user)
   
 

@@ -102,7 +102,7 @@ formatIP x = " (IP: " ++ show ((x `shiftR` 0) .&. 255) ++
 sealSpecFromDocument :: String -> Document -> User ->  String -> String -> Seal.SealSpec
 sealSpecFromDocument hostpart document author inputpath outputpath =
   let docid = unDocumentID (documentid document)
-      authorHasSigned = (any ((maybe False ((== (userid author)) . unSignatory)) . maybesignatory) (documentsignatorylinks document))
+      authorHasSigned = (any ((maybe False (== (userid author))) . maybesignatory) (documentsignatorylinks document))
       signatoriesdetails = map signatorydetails $ documentsignatorylinks document
       authordetails = (signatoryDetailsFromUser author) 
                       { signatoryfstnameplacements = authorfstnameplacements document
