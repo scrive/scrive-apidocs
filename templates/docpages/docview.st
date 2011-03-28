@@ -387,7 +387,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
       <div class="modal-header">
         <div class="modal-icon message"></div>
         <div class="modal-title">
-          <h2>Massutskick Granska Data</h2>
+          <h2>Massutskick: Granska Data</h2>
         </div>
         <a class="modal-close close"> </a>
       </div>
