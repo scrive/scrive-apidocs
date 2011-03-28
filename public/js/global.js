@@ -332,7 +332,7 @@ function allparties()
       sigs.each(function(index) { 
         var fstnameelem = $("input[name='signatoryfstname']", this);
         if (isMultiPartElem(fstnameelem)) {
-          allparties.push(csvrowcount + " Parts");
+          allparties.push(csvrowcount + " Parter");
         } else {
           var fstname = fstnameelem.val();
           var sndname = $("input[name='signatorysndname']",this).val();  
