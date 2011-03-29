@@ -767,7 +767,13 @@ hashPassword :: BS.ByteString -> [Octet] -> [Octet]
 hashPassword password salt =
   hash (salt ++ (BS.unpack password))
 
-$(inferIxSet "Users" ''User 'noCalcs [''UserID, ''Email, ''SupervisorID])
+type Users = IxSet User
+
+instance Indexable User where
+        empty = ixSet [ ixFun (\x -> [userid x] :: [UserID])
+                      , ixFun (\x -> [useremail $ userinfo x] :: [Email])
+                      , ixFun (\x -> maybe [] return (usersupervisor x) :: [SupervisorID])
+                      ]
 
 $(deriveSerialize ''User0)
 instance Version User0
