@@ -365,6 +365,7 @@ instance Show FlashType where
   show SigningRelated  = "signingrelated"
   show OperationDone   = "operationdone"
   show OperationFailed = "operationfailed"
+  show Modal           = "modal"
 
 deriving instance Show TrustWeaverStorage
 deriving instance Show UserAccountType 
