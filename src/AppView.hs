@@ -16,7 +16,6 @@ import Control.Arrow (first)
 import HSP hiding (Request)
 import Happstack.Server.HSP.HTML (webHSP)
 import Happstack.Server.SimpleHTTP
-import ActionSchedulerState
 import Kontra
 import Misc
 import KontraLink
@@ -123,13 +122,12 @@ simpleResponse s = do
 {- |
    The landing page contents.  Read from template.
 -}
-firstPage :: Context -> Bool -> Maybe (ActionID, MagicHash) -> Maybe String ->  IO String
-firstPage ctx loginOn passwordinfo referer = 
+firstPage :: Context -> Bool -> Maybe String ->  IO String
+firstPage ctx loginOn referer = 
     renderTemplate (ctxtemplates ctx) "firstPage"  $ do 
         contextInfoFields ctx
         mainLinksFields
         loginModal loginOn referer
-        newPasswordModal passwordinfo
 
 {- |
    Defines the main links as fields handy for substituting into templates.
@@ -172,10 +170,4 @@ flashMessageFields fm = do
 loginModal::Bool -> Maybe String -> Fields
 loginModal on referer= do 
     field "loginModal" $ on 
-    field "referer" $ referer 
-
-newPasswordModal :: Maybe (ActionID, MagicHash) -> Fields
-newPasswordModal Nothing = do
-    field "newPasswordModal" False
-newPasswordModal (Just _) = do
-    field "newPasswordModal" True
+    field "referer" $ referer

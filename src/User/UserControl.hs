@@ -469,18 +469,24 @@ handleAccountSetupPost aid hash = do
                  Nothing -> do -- user already exists, get her
                      query $ GetUserByEmail invitedemail
 
-checkPasswordReminderGet :: ActionID -> MagicHash -> Kontra (Either () ())
-checkPasswordReminderGet aid hash = do
+{- |
+    This is where we get to when the user clicks the link in their password reminder
+    email.  This'll show them the usual landing page, but with a modal dialog
+    for changing their password.
+-}
+handlePasswordReminderGet :: ActionID -> MagicHash -> Kontra Response
+handlePasswordReminderGet aid hash = do
     muser <- getUserFromActionOfType PasswordReminderID aid hash
     case muser of
          Just _ -> do
              extendActionEvalTimeToOneDayMinimum aid
              ctx <- get
-             return $ Right ()
+             addModal $ modalNewPasswordView aid hash
+             sendRedirect LinkMain
          Nothing -> do
              templates <- ctxtemplates <$> get
              addFlashMsg =<< (liftIO $ flashMessagePasswordChangeLinkNotValid templates)
-             return $ Left ()
+             sendRedirect LinkMain
 
 handlePasswordReminderPost :: ActionID -> MagicHash -> Kontra KontraLink
 handlePasswordReminderPost aid hash = do
@@ -494,8 +500,8 @@ handlePasswordReminderPost aid hash = do
     where
         handleChangePassword user = do
             templates <- ctxtemplates <$> get
-            mpassword <- getOptionalField asValidPassword "password"
-            mpassword2 <- getOptionalField asDirtyPassword "password2"
+            mpassword <- getRequiredField asValidPassword "password"
+            mpassword2 <- getRequiredField asDirtyPassword "password2"
             case (mpassword, mpassword2) of
                  (Just password, Just password2) -> do
                      case (checkPasswords password password2) of
@@ -508,8 +514,11 @@ handlePasswordReminderPost aid hash = do
                               return LinkMain
                           Left flash -> do
                               addFlashMsg =<< (liftIO $ flash templates)
-                              return LoopBack
-                 _ -> return LoopBack
+                              addModal $ modalNewPasswordView aid hash
+                              return LinkMain
+                 _ -> do
+                   addModal $ modalNewPasswordView aid hash
+                   return LinkMain
 
 getUserFromActionOfType :: ActionTypeID -> ActionID -> MagicHash -> Kontra (Maybe User)
 getUserFromActionOfType atypeid aid hash = do
