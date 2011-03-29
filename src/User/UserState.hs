@@ -77,48 +77,51 @@ import qualified Payments.PaymentsState as Payments
 import Data.Data
 
 newtype UserID = UserID { unUserID :: Int }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
+
+deriving instance Data UserID
+
 newtype ExternalUserID = ExternalUserID { unExternalUserID :: BS.ByteString }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
       -- Leaving FlashMessage declaration here is necessity
       -- Have to be used because of users versioning
       -- Can't be moved to Session where it belong (cycle references)
 newtype Friend = Friend { unFriend :: Int }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 newtype Inviter = Inviter { unInviter :: Int }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 data InviteType = Viral | Admin
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 data InviteInfo = InviteInfo 
           { userinviter :: Inviter
           , invitetime :: Maybe MinutesTime
           , invitetype :: Maybe InviteType
           }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 data LoginInfo = LoginInfo
           { lastsuccesstime :: Maybe MinutesTime
           , lastfailtime :: Maybe MinutesTime
           , consecutivefails :: Int
           }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 newtype DefaultMainSignatory = DefaultMainSignatory { unDMS :: Int }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 newtype FlashMessage0 = FlashMessage0 BS.ByteString
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 newtype FlashMessage = FlashMessage { unFlashMessage :: (FlashType, String) }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 newtype Email = Email { unEmail :: BS.ByteString }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 data Password = Password [Octet] [Octet] | NoPassword
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 newtype SupervisorID = SupervisorID { unSupervisorID :: Int }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 data FlashType
         = SigningRelated
         | OperationDone
         | OperationFailed
         | Modal
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 data TrustWeaverStorage = TrustWeaverStorage
           { storagetwenabled       :: Bool
           , storagetwname          :: BS.ByteString
@@ -126,13 +129,16 @@ data TrustWeaverStorage = TrustWeaverStorage
           , storagetwsuperadminpwd :: BS.ByteString
           , storagetwsectionpath   :: BS.ByteString
           }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 data UserAccountType = MainAccount | SubAccount
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 data PaymentMethod = CreditCard | Invoice | Undefined
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
+
+deriving instance Data PaymentMethod
+
 data UserAccountPlan = Basic
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 data UserInfo0 = UserInfo0 {
             userfstname0                   :: BS.ByteString
           , usersndname0                   :: BS.ByteString
@@ -147,7 +153,7 @@ data UserInfo0 = UserInfo0 {
           , usermobile0                    :: BS.ByteString
           , useremail0                     :: Email 
           }       
-                 deriving (Eq, Ord, Typeable, Data)
+                 deriving (Eq, Ord, Typeable)
           
 data UserInfo = UserInfo {
             userfstname                   :: BS.ByteString
@@ -164,7 +170,7 @@ data UserInfo = UserInfo {
           , usermobile                    :: BS.ByteString
           , useremail                     :: Email 
           }        
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 
 data UserSettings  = UserSettings {
                accounttype :: UserAccountType
@@ -172,7 +178,7 @@ data UserSettings  = UserSettings {
              , signeddocstorage :: Maybe TrustWeaverStorage
              , userpaymentmethod :: PaymentMethod
       }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
       
 data User = User
           { userid                        :: UserID
@@ -189,7 +195,7 @@ data User = User
           , userinviteinfo                :: Maybe InviteInfo
           , userlogininfo                 :: LoginInfo
           }
-            deriving (Eq, Ord, Data)
+            deriving (Eq, Ord)
 
 instance Typeable User where typeOf _ = mkTypeOf "User"
 
@@ -207,7 +213,7 @@ data User10 = User10
           , userfriends10                   :: [Friend]
           , userinviteinfo10                :: Maybe InviteInfo
           }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 
 data User9 = User9
           { userid9                        :: UserID
@@ -223,7 +229,7 @@ data User9 = User9
           , userfriends9                   :: [Friend]
           , userinviter9                   :: Maybe Inviter
           }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
           
 data User8 = User8
           { userid8                        :: UserID
@@ -240,7 +246,7 @@ data User8 = User8
           -- should remove userdefaultmainsignatory in the next migration. just get rid of it.
           , userdefaultmainsignatory8      :: DefaultMainSignatory
           }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 
 data User7 = User7
           { userid7                        :: UserID
@@ -254,7 +260,7 @@ data User7 = User7
           , userpaymentpolicy7             :: Payments.UserPaymentPolicy
           , userpaymentaccount7            :: Payments.UserPaymentAccount
           }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
       
 data User6 = User6
           { userid6                        :: UserID
@@ -270,7 +276,7 @@ data User6 = User6
           , useraccountsuspended6          :: Bool
           , userhasacceptedtermsofservice6 :: Maybe MinutesTime
           }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 
 data User5 = User5
           { userid5                 :: UserID
@@ -285,7 +291,7 @@ data User5 = User5
           , usercanhavesubaccounts5 :: Bool
           , useraccountsuspended5   :: Bool
           }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
           
 data User4 = User4
           { userid4                 :: UserID
@@ -300,7 +306,7 @@ data User4 = User4
           , usercanhavesubaccounts4 :: Bool
           , useraccountsuspended4   :: Bool
           }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 
 data User3 = User3
           { userid3             :: UserID
@@ -313,7 +319,7 @@ data User3 = User3
           , userflashmessages3  :: [FlashMessage]
           , userpassword3       :: Maybe BS.ByteString
           }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 
 data User2 = User2
           { userid2             :: UserID
@@ -325,7 +331,7 @@ data User2 = User2
           , userinvoiceaddress2 :: BS.ByteString
           , userflashmessages2  :: [FlashMessage]
           }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 
 data User1 = User1
           { userid1             :: UserID
@@ -336,7 +342,7 @@ data User1 = User1
           , usercompanynumber1  :: BS.ByteString
           , userinvoiceaddress1 :: BS.ByteString
           }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 
 data User0 = User0
           { userid0          :: UserID
@@ -344,14 +350,16 @@ data User0 = User0
           , fullname0        :: BS.ByteString
           , email0           :: BS.ByteString
           }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
 
 data UserStats = UserStats 
                        { usercount :: Int
                        , viralinvitecount :: Int
                        , admininvitecount :: Int
                        }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord, Typeable)
+
+deriving instance Data UserStats
 
 instance Show FlashType where
   show SigningRelated  = "signingrelated"
