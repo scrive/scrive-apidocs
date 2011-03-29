@@ -772,7 +772,7 @@ compareLastNames lnContract lnEleg
 --import qualified Data.ByteString.Lazy.Char8 as B
 
 levenshtein :: String -> String -> Int
-levenshtein s1 s2 = levenshtein' s1 s2 (length s1) (length s2)
+levenshtein s1 s2 = levenshtein' (' ':s1) (' ':s2) (length s1) (length s2)
 
 levenshtein' :: String -> String -> Int -> Int -> Int
 levenshtein' s1 s2 i j
