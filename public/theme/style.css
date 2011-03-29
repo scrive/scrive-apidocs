@@ -2478,3 +2478,9 @@ input#cancel {
 .centered {
     margin: 10%;
 }
+.signGuard{
+    position:relative;
+    top: 2px;
+    margin:2px;
+    
+}
