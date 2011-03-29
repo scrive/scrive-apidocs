@@ -182,12 +182,12 @@ newAccountCreatedLink user = do
                                 (acToken $ actionType action)
                                 (BS.toString . unEmail . useremail $ userinfo user)
 
-newAccountCreatedBySigningLink :: MonadIO m => User -> (DocumentID, SignatoryLinkID, MagicHash) -> m (KontraLink, KontraLink)
+newAccountCreatedBySigningLink :: MonadIO m => User -> (DocumentID, SignatoryLinkID) -> m (KontraLink, KontraLink)
 newAccountCreatedBySigningLink user doclinkdata = do
     action <- liftIO $ newAccountCreatedBySigning user doclinkdata
     let aid = actionID action
         token = acbsToken $ actionType action
-    return $ (LinkAccountCreatedBySigning aid token, LinkAccountCreatedBySigningRemoval doclinkdata aid token)
+    return $ (LinkAccountCreatedBySigning aid token, LinkAccountRemoval aid token)
 
 {- |
    Perform a query (like with query) but if it returns Nothing, mzero; otherwise, return fromJust

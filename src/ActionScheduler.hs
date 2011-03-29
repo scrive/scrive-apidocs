@@ -46,23 +46,23 @@ evaluateAction action =
          PasswordReminder _ _ -> deleteAction $ actionID action
          ViralInvitationSent _ _ _ _ -> deleteAction $ actionID action
          AccountCreated _ _ -> deleteAction $ actionID action
-         AccountCreatedBySigning state uid doclinkdata token -> do
+         AccountCreatedBySigning state uid (docid, _) token -> do
              let aid = actionID action
              now <- liftIO getMinutesTime
              case state of
                   JustCreated ->
-                      sendReminder mailAccountCreatedBySigningReminder FirstReminderSent ((3*24*60) `minutesAfter` now) aid uid doclinkdata token
+                      sendReminder mailAccountCreatedBySigningReminder FirstReminderSent ((3*24*60) `minutesAfter` now) aid uid docid token
                   FirstReminderSent ->
-                      sendReminder mailAccountCreatedBySigningReminder SecondReminderSent ((3*24*60) `minutesAfter` now) aid uid doclinkdata token
+                      sendReminder mailAccountCreatedBySigningReminder SecondReminderSent ((3*24*60) `minutesAfter` now) aid uid docid token
                   SecondReminderSent ->
-                      sendReminder mailAccountCreatedBySigningLastReminder ThirdReminderSent ((24*60) `minutesAfter` now) aid uid doclinkdata token
+                      sendReminder mailAccountCreatedBySigningLastReminder ThirdReminderSent ((24*60) `minutesAfter` now) aid uid docid token
                   ThirdReminderSent -> deleteAction $ actionID action
     where
         deleteAction aid = do
             _ <- update $ DeleteAction aid
             return ()
 
-        sendReminder reminder new_state new_evaltime aid uid doclinkdata@(docid, _, _) token = do
+        sendReminder reminder new_state new_evaltime aid uid docid token = do
             sd <- ask
             doctitle <- (query $ GetDocumentByDocumentID docid) >>= maybe (return BS.empty) (return . documenttitle)
             (query $ GetUserByUserID uid) >>= maybe (return ()) (\user -> do
@@ -71,7 +71,7 @@ evaluateAction action =
                     fstname = userfstname uinfo
                     sndname = usersndname uinfo
                     fullname = fstname `BS.append` BS.pack " " `BS.append` sndname
-                mail <- liftIO $ reminder (sdTemplates sd) (hostpart $ sdAppConf sd) doctitle fullname (LinkAccountCreatedBySigning aid token) (LinkAccountCreatedBySigningRemoval doclinkdata aid token)
+                mail <- liftIO $ reminder (sdTemplates sd) (hostpart $ sdAppConf sd) doctitle fullname (LinkAccountCreatedBySigning aid token) (LinkAccountRemoval aid token)
                 liftIO $ sendMail (sdMailer sd) $ mail { fullnameemails = [(fullname, unEmail email)] })
             let new_atype = (actionType action) { acbsState = new_state }
             _ <- update $ UpdateActionType aid new_atype

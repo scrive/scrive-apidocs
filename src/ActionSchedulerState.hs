@@ -78,7 +78,7 @@ data ActionType = TrustWeaverUpload {
                 | AccountCreatedBySigning {
                       acbsState         :: InactiveAccountState
                     , acbsUserID        :: UserID
-                    , acbsDocLinkDataID :: (DocumentID, SignatoryLinkID, MagicHash)
+                    , acbsDocLinkDataID :: (DocumentID, SignatoryLinkID)
                     , acbsToken         :: MagicHash
                 }
                   deriving (Eq, Ord, Show, Typeable)
@@ -269,7 +269,7 @@ newAccountCreated user = do
     update $ NewAction action $ (24*60) `minutesAfter` now
 
 -- | Create new 'account created by signing' action
-newAccountCreatedBySigning :: User -> (DocumentID, SignatoryLinkID, MagicHash) -> IO Action
+newAccountCreatedBySigning :: User -> (DocumentID, SignatoryLinkID) -> IO Action
 newAccountCreatedBySigning user doclinkdata = do
     hash <- randomIO
     now <- getMinutesTime
