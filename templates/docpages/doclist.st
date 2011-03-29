@@ -89,7 +89,7 @@ pageContractsList=
 							<td>$if(document.isauthor)$ <input type="checkbox" name="doccheck" value="$document.documentid$" class="check"> $endif$</td>
 							<td>
                               <div src="/" class="icon status $document.status$ tooltip" rel="#tooltip-$document.status$"></div>
-                              $if(document.anyinvitationundelivered)$  <span style="color:#000000;position:relative;top:-3px">!</span>$endif$
+                              $if(document.anyinvitationundelivered)$  <span style="color:#000000;">!</span>$endif$
                            </td>
 							<td>
 								<span title="$document.mtime$">$document.mtime$</span>
