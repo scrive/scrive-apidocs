@@ -92,9 +92,11 @@ data PaymentAccountType = Private | Minimal | Medium | Maximal | Corp
     deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- | Money values wrapper
-data Money = Money { money:: Integer }
+newtype Money = Money { money:: Integer }
     deriving (Eq, Ord, Show, Read, Typeable, Data)
-      
+     
+deriving instance Num Money
+ 
 -- | Monthly payments for account and subaccounts
 data PaymentForAccounts value = PaymentForAccounts {
                                  forAccount::value,
@@ -386,11 +388,3 @@ paymentForSignedStorage (a,b) = extract (changePaymentForSignedStorage a, modelP
 paymentForOtherStorage::PaymentScheme->  (forall a. PaymentForOtherStorage a -> a) -> Money
 paymentForOtherStorage (a,b) = extract (changePaymentForOtherStorage a, modelPaymentForOtherStorage b)
 
-
--- | Its a scandal that I need to derive this myself, but could not make autoderive working with Happstack.State derivations
-instance Num Money where
- (Money a) + (Money b) = Money (a + b)
- (Money a) * (Money b) = Money (a * b)
- abs (Money a) = Money (abs a)
- signum (Money a) = Money (signum a)
- fromInteger a = Money a
