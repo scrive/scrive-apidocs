@@ -1302,7 +1302,6 @@ input.multiFileInput {
 */
 .signViewBodyRight 
 {
-    width: 160px;
     float: left;
     position: relative;
     padding: 10px 0px 5px 20px;
@@ -1311,7 +1310,7 @@ input.multiFileInput {
     border-bottom: 1px solid #E8E5E5;
     border-left: 1px solid #E8E5E5;
     margin-top: 15px;
-    margin-left: 5px;
+    margin-left: 20px;
     min-height: 126px;
     margin-bottom: 10px;
 }
@@ -1322,17 +1321,17 @@ input.multiFileInput {
 
 #signViewBodyLeft
 {
-    width: 150px;
+    width: 160px;
     float: left;
     position: relative;
-    padding: 14px 15px 5px 20px;
+    padding: 14px 15px 5px 52px;
     margin-top: 20px;	
 }
 
 .signViewBodyRightTextContainer
 {
     margin-top: 10px;
-    width: 150px;
+    width: 185px;
     overflow:hidden;
 }
 
@@ -2505,4 +2504,8 @@ input#cancel {
     top: 2px;
     margin:2px;
     
+}
+.signViewBodyRightTextContainer .icon.status{
+    position: relative;
+    top: 2px;
 }

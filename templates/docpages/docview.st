@@ -139,27 +139,41 @@ reminderForm =
 </span>       
 ####
 changeEmailAddress =  
-<a style="cursor:pointer" class="replacebynextonclick"> Skicka inbjudan till ny adress  </a>
+<a class="btn-tiny blue replacebynextonclick">
+                <div class="left"></div>
+                <div class="label">
+                     Skicka inbjudan till ny adress
+                </div>
+                <div class="right"></div>
+  </a>
 <form action="$linkchangeemail$" method="POST" style="display:none">
-  <input type="text" style="width:140px" name="email" value="$signatoryemail$" />
-  <input type="submit" style="width:100px" value="Skicka" />
+  <input type="text" class="shiny" style="width:140px" name="email" value="$signatoryemail$" />
+  <a class="btn-tiny blue submit">
+                <div class="left"></div>
+                <div class="label">
+                     Skicka
+                </div>
+                <div class="right"></div>
+  </a>
 </form>     
 
 ####
 showSignatoryLinkForSign =
 <div class="signViewBodyRight">
   <div class="signViewBodyRightTextContainer"> 
-   <img src="$status$" style="position:relative;top:3px;"> 
-   $if(changeEmailAddress)$ <span style="color:#000000;position:relative;left:-4px;">!</span>  $endif$
-   <span class="header">$signatoryfstname$ $signatorysndname$</span>
-   $if(signatoryemail)$<div class="text">$signatoryemail$</div>$endif$
+   <div class="header">$signatoryfstname$ $signatorysndname$</div>
+   <div class="text">
+    <div class="icon status $status$"></div> 
+    $if(changeEmailAddress)$ <span style="color:#000000;position:relative;left:-4px;">!</span>  $endif$
+    $message:noescape()$
+   </div>
    $if(signatorycompany)$<div class="text">$signatorycompany$</div>$endif$
    $if(signatorynumber)$<div class="text">$signatorynumber$</div>$endif$
    <span class="signatoryfields">
      $fields:{field| <div class="text"><span class="fieldlabel">$field.fieldlabel$: </span><span class="fieldvalue">$field.fieldvalue$</span></div>}$
    </span>
+   $if(signatoryemail)$<div class="text">$signatoryemail$</div>$endif$
    <span class="signViewBodyForms"></span>
-   $if(message)$<div class="text">$message:noescape()$</div>$endif$   
    $if(reminderForm)$<div class="text">$reminderForm:noescape()$</div>$endif$
    $if(changeEmailAddress)$<div class="text">$changeEmailAddress:noescape()$</div>$endif$   
   </div>
@@ -760,7 +774,13 @@ pageDocumentForAuthorContentPostPreparation=
         $documentinfotext:noescape()$
         $if(canberestarted)$
         <BR/><BR/>
-        $restartForm:noescape()$
+        <form method="POST" action="/restart/$documentid$">
+          <a class="btn-tiny red submit">
+            <div class="left"></div>
+            <div class="label">Starta om dokument</div> 
+            <div class="right"></div>
+        </a> 
+        </form>
         $endif$
         $if(pending)$
         $if(!awaitingauthor)$

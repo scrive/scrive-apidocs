@@ -41,11 +41,6 @@ replaceOnEdit=
       <span style="display:none"> $with:noescape()$ </span>
     </span>
 #####
-actionButton=
-    <form method="POST" action="$action$">
-      <input type="submit" value="$buttonname$" />
-    </form>
-#####
 LinkLogin=/login
 ###
 LinkForgotPassword=/amnesia

@@ -1,5 +1,3 @@
-###
-restartButtonName=Starta om dokument
 ####
 signupPageView =
 <div class="newdesign">

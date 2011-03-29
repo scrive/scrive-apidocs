@@ -413,7 +413,6 @@ pageDocumentForAuthor ctx
        field "undelivered" $ map (signatoryemail . signatorydetails) $ undeliveredSignatoryLinks document
        field "signatories" $ fmap concat $ sequence $ map (showSignatoryLinkForSign ctx document author) documentsignatorylinks                    
        field "canberestarted" $ documentstatus `elem` [Canceled, Timedout, Rejected]
-       field "restartForm" $ renderActionButton templates (LinkRestart documentid) "restartButtonName"
        field "cancelMailContent" $ mailCancelDocumentByAuthorContent templates False Nothing ctx document author
        field "linkcancel" $ show $ LinkCancel document
        field "emailelegitimation" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)
@@ -485,12 +484,7 @@ csvProblemFields templates probcount number csvproblem = do
       field "problemdesc" $ desc
       field "isfirstproblem" $ (number==1)
       field "islastproblem" $ (number==probcount)
-
-renderActionButton :: KontrakcjaTemplates -> KontraLink -> String -> IO String
-renderActionButton templates action button = do
-  buttonname <- renderTemplate templates button ()
-  renderTemplate templates "actionButton" [("action", show action), ("buttonname", buttonname)]
-  
+ 
 {- |
    Show the document for Viewers (friends of author or signatory).
    Show no buttons or other controls
@@ -525,7 +519,6 @@ pageDocumentForViewer ctx
      helpers <- renderTemplate (ctxtemplates ctx) "pageDocumentForViewerHelpers" [("documentid", show documentid)]
      signatories <- fmap concat $ sequence $ map (showSignatoryLinkForSign ctx document author) documentsignatorylinks
      invitationMailContent <- mailInvitationToSignContent (ctxtemplates ctx) False ctx document author Nothing
-     restartForm <- renderActionButton  (ctxtemplates ctx) (LinkRestart documentid) "restartButtonName"
      cancelMailContent <- mailCancelDocumentByAuthorContent (ctxtemplates ctx) False Nothing ctx document author
      documentinfotext <- documentInfoText (ctxtemplates ctx) document Nothing author
      renderTemplate (ctxtemplates ctx) "pageDocumentForViewerContent" $  do
@@ -538,7 +531,6 @@ pageDocumentForViewer ctx
        field "undelivered" $ map (signatoryemail . signatorydetails) $ undeliveredSignatoryLinks document
        field "signatories" signatories
        field "canberestarted" $ documentstatus `elem` [Canceled, Timedout, Rejected]
-       field "restartForm" $ restartForm
        field "cancelMailContent" $ cancelMailContent
        field "linkcancel" $ show $ LinkCancel document
        field "emailelegitimation" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)
@@ -627,14 +619,14 @@ showSignatoryLinkForSign
       dontShowAnyReminder = isTimedout || isCanceled || isRejected
       dialogHeight =   if (wasSigned) then "400" else "600"
       status = caseOf [
-          (invitationdeliverystatus == Undelivered, "/theme/images/status_rejected.png")
+          (invitationdeliverystatus == Undelivered, "cancelled")
         --, (isWithDrawn,"/theme/images/status_rejected.png")
-        , (isCanceled, "/theme/images/status_rejected.png")
-        , (isRejected, "/theme/images/status_rejected.png")
-        , (isTimedout, "/theme/images/status_timeout.png")
-        , (wasSigned,  "/theme/images/status_signed.png")
-        , (wasSeen,    "/theme/images/status_viewed.png")
-        ] "/theme/images/status_pending.png"
+        , (isCanceled, "cancelled")
+        , (isRejected, "cancelled")
+        , (isTimedout, "expired")
+        , (wasSigned,  "signed")
+        , (wasSeen,    "opened ")
+        ] "sent"
       
       signatoryFields =
         if documentstatus document == Closed
@@ -664,7 +656,7 @@ showSignatoryLinkForSign
     reminderEditorText <- renderTemplate ctxtemplates "reminderEditorText" ()                         
     reminderDialogTitle <- return reminderText   
     reminderMessage <- mailDocumentRemindContent ctxtemplates Nothing ctx document siglnk author
-    reminderForm <- whenMaybe (isCurrentUserAuthor && (not isCurrentSignatorAuthor) && (not dontShowAnyReminder) && (invitationdeliverystatus /= Undelivered)) $
+    reminderForm <- whenMaybe (isCurrentUserAuthor && (not isCurrentSignatorAuthor) && (not dontShowAnyReminder) && (invitationdeliverystatus /= Undelivered) && (isClosed || not wasSigned)) $
       renderTemplate ctxtemplates "reminderForm" $
         (setAttribute "reminderDialogTitle" $  reminderDialogTitle) .
         (setAttribute "signatorylinkid" $  show signatorylinkid ) .
