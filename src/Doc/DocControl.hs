@@ -4,6 +4,7 @@
  -}
 module Doc.DocControl where
 
+import ActionSchedulerState
 import AppView
 import Control.Concurrent
 import Control.Monad
@@ -41,7 +42,7 @@ import System.Process
 import Kontra
 import User.UserControl
 import User.UserState
-import User.UserView (prettyName)
+import User.UserView (prettyName, modalAccountRemoval)
 import qualified Amazon as AWS
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
@@ -368,7 +369,7 @@ signDocument documentid
               let details = signatorydetails signatorylink
                   fullname = signatoryname details
                   email = signatoryemail details
-              muser <- liftIO $ createUserBySigning ctx (documenttitle document) fullname email (documentid, signatorylinkid1, magichash1)
+              muser <- liftIO $ createUserBySigning ctx (documenttitle document) fullname email (documentid, signatorylinkid1)
               when_ (isJust muser) $
                   update $ SaveDocumentForSignedUser documentid (userid $ fromJust muser) signatorylinkid1
           addModal $ modalSignedView document signatorylink (isJust maybeuser)
@@ -424,8 +425,8 @@ handleSignShow documentid
                magichash1 = do
   doc1 <- queryOrFail $ GetDocumentByDocumentID documentid
   checkLinkIDAndMagicHash doc1 signatorylinkid1 magichash1
-  ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber}) <- get
-   
+  ctx@(Context {ctxtemplates, ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber}) <- get
+  
   update $ MarkDocumentSeen documentid signatorylinkid1 ctxtime ctxipnumber
   -- Structure of this needs to be changed. MR
   document <- queryOrFail $ GetDocumentByDocumentID documentid
