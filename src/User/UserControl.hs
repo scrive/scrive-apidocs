@@ -373,7 +373,7 @@ handleAccountSetupGet aid hash = do
     case maction of
          Just action ->
              case actionType action of
-                  ViralInvitationSent _ _ _ token ->
+                  ViralInvitationSent _ _ _ _ token ->
                       if token == hash
                          then activationPage Nothing
                          else mzero
@@ -418,7 +418,7 @@ handleAccountSetupPost aid hash = do
     case maction of
          Just action ->
              case actionType action of
-                  ViralInvitationSent email invtime inviterid token ->
+                  ViralInvitationSent email invtime inviterid _ token ->
                       if token == hash
                          then getUserForViralInvite now email invtime inviterid
                               >>= maybe mzero handleActivate
@@ -624,9 +624,9 @@ getUserFromActionOfType atypeid aid hash = do
     where
         getUID action =
             case actionType action of
-                 PasswordReminder uid token -> verifyToken token uid
-                 AccountCreated uid token   -> verifyToken token uid
-                 _                          -> return Nothing
+                 PasswordReminder uid _ token -> verifyToken token uid
+                 AccountCreated uid token     -> verifyToken token uid
+                 _                            -> return Nothing
         verifyToken token uid = return $
             if hash == token
                then Just uid
