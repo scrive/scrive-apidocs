@@ -28,6 +28,41 @@ modalSignInviteView=
     </div>
 
 ######
+modalWelcomeToSkrivaPa=
+<div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-icon message"></div>
+        <div class="modal-title">
+          <h3>2 månader gratis!</h3>
+        </div>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">
+        <p>Som ett erbjudande bjuder vi på 2 månaders fri användning av tjänsten SkrivaPå. Med SkrivaPå kan du underteckna och arkivera avtal och andra dokument elektroniskt. Givetvis kommer det inte att kosta någonting efter de 2 fria månaderna om du väljer att inte fortsätta. Det är superenkelt att komma igång, gör så här:<p>
+
+        <p>1. Ladda upp ett dokument<br>
+        2. Fyll i motpartens uppgifter<br>
+        3. Underteckna och skicka iväg</p>
+
+        <p>Testa på dig själv först, det är faktiskt roligt!</p>
+
+        <p>Med vänliga hälsningar<br>
+        Team SkrivaPå</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a class="btn-small green float-right close">
+          <div class="left"></div>
+          <div class="label">
+            <p>Stäng fönster</p>
+            <div class="btn-symbol green arrow-left"></div>
+          </div>
+          <div class="right"></div>
+        </a>
+      </div>
+</div>
+####
 modalSendInviteView=
     <div class="modal-container">
       <div class="modal-header">
@@ -172,18 +207,9 @@ willCreateAccountForYouHasAccount=
     </p>
 #####
 willCreateAccountForYouNoAccount=
-    <p>Du kan nu spara dokumentet på SkrivaPå, det kostar ingenting att lagra dokumentet
-       och just nu bjuder vi på fri användning av tjänsten i 2 månader!
-       Klicka nedan så är det klart.
-      <form action="$LinkLandpageSaved()$" method="get">
-        <a class="btn-tiny blue submit">
-            <div class="left"></div>
-            <div class="label"><span>Skapa konto</span></div>
-            <div class="right"></div>
-        </a>
-      </form>
-      <BR/>
-    </p>
+<p>
+  Av erfarenhet från många kundsamtal vet vi att även de viktigaste dokument kan komma bort. Viktiga papper bör inte få komma bort. Därför, för din juridiska säkerhet har vi skapat ett konto åt dig på SkrivaPå där vi sparat dokumentet "$documenttitle$". Du måste dock definiera ditt lösenord inom 24h. Vi har skickat ett separat mail med en kort instruktion.
+</p>
 ####
 loginModal=
 $if(!logged)$

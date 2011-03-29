@@ -13,7 +13,13 @@ module User.UserView (
     inviteSubaccountMail,
     viralInviteMail,
     mailNewAccountCreatedByAdmin,
+    mailAccountCreatedBySigning,
+    mailAccountCreatedBySigningReminder,
+    mailAccountCreatedBySigningLastReminder,
     resetPasswordMail,
+
+    -- modals
+    modalWelcomeToSkrivaPa,
 
     -- flash messages
     flashMessageLoginRedirectReason,
@@ -44,7 +50,6 @@ module User.UserView (
     UserSmallView(..)) where
 
 import Control.Applicative ((<$>))
-import Control.Monad.Reader
 import Data.Data
 import ActionSchedulerState
 import Kontra
@@ -98,13 +103,15 @@ viewSubaccounts templates subusers =
 
 
 
-activatePageView::KontrakcjaTemplates -> String -> String ->  IO String
-activatePageView templates tostext name = 
+activatePageView::KontrakcjaTemplates -> String -> Maybe User -> IO String
+activatePageView templates tostext muser = 
     renderTemplate templates "activatePageView" $ do
         field "tostext" tostext
-        field "fname" fname
-        field "lname" $ drop 1 sname
-  where (fname,sname) = span (/= ' ') name    
+        field "fstname" $ BS.toString $ maybe BS.empty (userfstname . userinfo) muser
+        field "sndname" $ BS.toString $ maybe BS.empty (usersndname . userinfo) muser
+        field "companyname" $ BS.toString $ maybe BS.empty (usercompanyname . userinfo) muser
+        field "companyposition" $ BS.toString $ maybe BS.empty (usercompanyposition . userinfo) muser
+
 
 activatePageViewNotValidLink :: KontrakcjaTemplates -> String -> IO String
 activatePageViewNotValidLink templates email =
@@ -186,7 +193,38 @@ mailNewAccountCreatedByAdmin templates ctx personname email setpasslink customme
     ) >>= wrapHTML templates
   return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
 
+mailAccountCreatedBySigning :: KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> KontraLink -> IO Mail
+mailAccountCreatedBySigning =
+    mailAccountCreatedBySigning' "mailAccountBySigningTitle"
+                                 "mailAccountBySigningContent"
+
+mailAccountCreatedBySigningReminder :: KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> KontraLink -> IO Mail
+mailAccountCreatedBySigningReminder =
+    mailAccountCreatedBySigning' "mailAccountBySigningReminderTitle"
+                                 "mailAccountBySigningReminderContent"
+
+mailAccountCreatedBySigningLastReminder :: KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> KontraLink -> IO Mail
+mailAccountCreatedBySigningLastReminder =
+    mailAccountCreatedBySigning' "mailAccountBySigningLastReminderTitle"
+                                 "mailAccountBySigningLastReminderContent"
+
+mailAccountCreatedBySigning' :: String -> String -> KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> KontraLink -> IO Mail
+mailAccountCreatedBySigning' title_template content_template templates hostpart doctitle personname activationlink removallink = do
+    title <- renderTemplate templates title_template ()
+    content <- (renderTemplate templates content_template $ do
+        field "personname"     $ BS.toString personname
+        field "ctxhostpart"    $ hostpart
+        field "documenttitle"  $ BS.toString doctitle
+        field "activationlink" $ show activationlink
+        field "removallink"    $ show removallink
+        ) >>= wrapHTML templates
+    return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
+
 -------------------------------------------------------------------------------
+
+modalWelcomeToSkrivaPa :: KontrakcjaTemplates -> KontraModal
+modalWelcomeToSkrivaPa templates =
+    lift $ renderTemplate templates "modalWelcomeToSkrivaPa" ()
 
 flashMessageLoginRedirectReason :: KontrakcjaTemplates -> LoginRedirectReason -> IO (Maybe FlashMessage)
 flashMessageLoginRedirectReason templates reason =
