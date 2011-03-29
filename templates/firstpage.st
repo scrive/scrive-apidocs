@@ -79,6 +79,10 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                 
                                 doSlide('.slide-content');
                         });
+                        
+                        \$(document).ready(function() {
+                            \$(".login-container input[type=email]").focus();
+                        });
                 // ]]>
                 </script>
         </head>
