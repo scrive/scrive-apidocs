@@ -43,8 +43,8 @@ evaluateAction action =
     case actionType action of
          TrustWeaverUpload _ _ -> error "TrustWeaverUpload not yet implemented"
          AmazonUpload _ _ -> error "AmazonUpload not yet implemented"
-         PasswordReminder _ _ -> deleteAction $ actionID action
-         ViralInvitationSent _ _ _ _ -> deleteAction $ actionID action
+         PasswordReminder _ _ _ -> deleteAction $ actionID action
+         ViralInvitationSent _ _ _ _ _ -> deleteAction $ actionID action
          AccountCreated _ _ -> deleteAction $ actionID action
          AccountCreatedBySigning state uid (docid, _) token -> do
              let aid = actionID action

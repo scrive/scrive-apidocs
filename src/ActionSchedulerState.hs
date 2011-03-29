@@ -62,14 +62,16 @@ data ActionType = TrustWeaverUpload {
                     , uaFileID :: FileID
                 }
                 | PasswordReminder {
-                      prUserID :: UserID
-                    , prToken  :: MagicHash
+                      prUserID         :: UserID
+                    , prRemainedEmails :: Int
+                    , prToken          :: MagicHash
                 }
                 | ViralInvitationSent {
-                      visEmail     :: Email
-                    , visTime      :: MinutesTime
-                    , visInviterID :: UserID
-                    , visToken     :: MagicHash
+                      visEmail          :: Email
+                    , visTime           :: MinutesTime
+                    , visInviterID      :: UserID
+                    , visRemainedEmails :: Int
+                    , visToken          :: MagicHash
                 }
                 | AccountCreated {
                       acUserID :: UserID
@@ -102,8 +104,8 @@ data ActionTypeID = TrustWeaverUploadID
 actionTypeID :: ActionType -> ActionTypeID
 actionTypeID (TrustWeaverUpload _ _) = TrustWeaverUploadID
 actionTypeID (AmazonUpload _ _) = AmazonUploadID
-actionTypeID (PasswordReminder _ _) = PasswordReminderID
-actionTypeID (ViralInvitationSent _ _ _ _) = ViralInvitationSentID
+actionTypeID (PasswordReminder _ _ _) = PasswordReminderID
+actionTypeID (ViralInvitationSent _ _ _ _ _) = ViralInvitationSentID
 actionTypeID (AccountCreated _ _) = AccountCreatedID
 actionTypeID (AccountCreatedBySigning _ _ _ _) = AccountCreatedBySigningID
 
@@ -114,8 +116,8 @@ data ActionImportance = UrgentAction | LeisureAction
 actionImportance :: ActionType -> ActionImportance
 actionImportance (TrustWeaverUpload _ _) = UrgentAction
 actionImportance (AmazonUpload _ _) = UrgentAction
-actionImportance (PasswordReminder _ _) = LeisureAction
-actionImportance (ViralInvitationSent _ _ _ _) = LeisureAction
+actionImportance (PasswordReminder _ _ _) = LeisureAction
+actionImportance (ViralInvitationSent _ _ _ _ _) = LeisureAction
 actionImportance (AccountCreated _ _) = LeisureAction
 actionImportance (AccountCreatedBySigning _ _ _ _) = LeisureAction
 
@@ -239,8 +241,9 @@ newPasswordReminder user = do
     hash <- randomIO
     now <- getMinutesTime
     let action = PasswordReminder {
-          prUserID = userid user
-        , prToken  = hash
+          prUserID         = userid user
+        , prRemainedEmails = 0
+        , prToken          = hash
     }
     update $ NewAction action $ (12*60) `minutesAfter` now
 
@@ -250,10 +253,11 @@ newViralInvitationSent email inviterid = do
     hash <- randomIO
     now <- getMinutesTime
     let action = ViralInvitationSent {
-          visEmail     = email
-        , visTime      = now
-        , visInviterID = inviterid
-        , visToken     = hash
+          visEmail          = email
+        , visTime           = now
+        , visInviterID      = inviterid
+        , visRemainedEmails = 0
+        , visToken          = hash
     }
     update $ NewAction action $ (7*24*60) `minutesAfter` now
 
