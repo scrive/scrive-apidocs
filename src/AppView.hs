@@ -51,12 +51,15 @@ renderFromBody :: (EmbedAsChild (HSPT' IO) xml)
                -> xml 
                -> Kontra Response
 renderFromBody ctx topmenu title xml = do
-                                        htmlPage <- fmap ((isSuffixOf ".html") . concat . rqPaths)  askRq
-                                        let showCreateAccount = htmlPage && (isNothing $ ctxmaybeuser ctx)
-                                        columns <- isFieldSet "columns"
-                                        res <- webHSP $ pageFromBody ctx columns showCreateAccount title xml
-                                        clearFlashMsgs
-                                        return res
+    htmlPage <- fmap ((isSuffixOf ".html") . concat . rqPaths)  askRq
+    let showCreateAccount = htmlPage && (isNothing $ ctxmaybeuser ctx)
+    columns <- isFieldSet "columns"
+    loginOn <- isFieldSet "logging"
+    res <- webHSP $ pageFromBody ctx columns loginOn showCreateAccount title xml
+    clearFlashMsgs
+    return res
+    
+
 {- |
    Renders some page body xml into a complete page of xml
 -}
@@ -68,19 +71,25 @@ pageFromBody :: (EmbedAsChild (HSPT' IO) xml)
              -> String 
              -> xml
              -> HSP XML
-pageFromBody ctx@Context { ctxmaybeuser
-                      , ctxtemplates
-                      }
-             columns showCreateAccount title body = do
-                    content <- liftIO $ renderHSPToString <div class="mainContainer"><% body %></div>
-                    wholePage <- liftIO $ renderTemplate ctxtemplates "wholePage" $ do
-                                  field "content" content
-                                  field "title" title
-                                  field "columns" columns
-                                  field "showCreateAccount" showCreateAccount
-                                  mainLinksFields 
-                                  contextInfoFields ctx
-                    return $ cdata wholePage
+ 
+pageFromBody ctx@Context{ ctxmaybeuser
+                        , ctxtemplates
+                        }
+             columns 
+             loginOn
+             showCreateAccount 
+             title 
+             body = do
+    content <- liftIO $ renderHSPToString <div class="mainContainer"><% body %></div>
+    wholePage <- liftIO $ renderTemplate ctxtemplates "wholePage" $ do
+        field "content" content
+        field "title" title
+        field "columns" columns
+        field "showCreateAccount" showCreateAccount
+        mainLinksFields 
+        contextInfoFields ctx
+        loginModal loginOn Nothing
+    return $ cdata wholePage
 
 {- |
    The contents of the signup page.  This is read from a template.
@@ -102,8 +111,7 @@ pageForgotPassword templates = renderTemplate templates "pageForgotPassword" ()
    The contents of the password reset confirmation.  This is read from a template.
 -}
 pageForgotPasswordConfirm :: KontrakcjaTemplates -> IO String
-pageForgotPasswordConfirm templates = do
-  renderTemplate templates "pageForgotPasswordConfirm" ()
+pageForgotPasswordConfirm templates = renderTemplate templates "pageForgotPasswordConfirm" ()
 
 {- |
    The contents of the login page.  This is read from a template.
@@ -128,11 +136,13 @@ simpleResponse s = do
 {- |
    The landing page contents.  Read from template.
 -}
-firstPage::Context-> IO String
-firstPage ctx =  renderTemplate (ctxtemplates ctx) "firstPage"  $ do 
-                              contextInfoFields ctx
-                              mainLinksFields
-                              loginModal loginOn referer
+firstPage :: Context -> Bool -> Maybe String ->  IO String
+firstPage ctx loginOn referer = 
+    renderTemplate (ctxtemplates ctx) "firstPage"  $ do 
+        contextInfoFields ctx
+        mainLinksFields
+        loginModal loginOn referer
+                              
 {- |
    Defines the main links as fields handy for substituting into templates.
 -}
@@ -170,3 +180,10 @@ flashMessageFields fm = do
             _               -> ""
     field "message" $ snd (unFlashMessage fm)   
     field "isModal" $ fst (unFlashMessage fm) == Modal
+    
+loginModal::Bool -> Maybe String -> Fields
+loginModal on referer= do 
+    field "loginModal" $ on 
+    field "referer" $ referer 
+
+
