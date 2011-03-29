@@ -735,7 +735,8 @@ compareFirstNames fnContract fnEleg
     | otherwise = 
         let fnsc = words $ map toLower $ BS.toString fnContract
             fnse = words $ map toLower $ BS.toString fnEleg
-        in if not $ null $ intersect fnsc fnse
+            difs = [levenshtein a b | a <- fnsc, b <- fnse]
+        in if any (<= 1) difs
             then MergeMatch
             else MergeFail $ "First names do not match: \"" ++ show fnContract ++ "\" and \"" ++ show fnEleg ++ "\"."
   
@@ -755,20 +756,30 @@ compareNumbers nContract nEleg
     | otherwise = 
         let nsc = normalizeNumber nContract
             nse = normalizeNumber nEleg
-            dif = BS.length nsc - BS.length nse
-        in caseOf [(nsc == nse,                              MergeMatch)
-                  ,(dif > 0 && BS.drop (abs dif) nsc == nse, MergeMatch)
-                  ,(dif < 0 && nsc == BS.drop (abs dif) nse, MergeMatch)]
-                $ MergeFail $ "Person numbers do not match: \"" ++ show nContract ++ "\" and \"" ++ show nEleg ++ "\"."
+            dif = levenshtein (BS.toString nsc) (BS.toString nse)
+        in if dif <= 3
+            then MergeMatch
+            else MergeFail $ "Person numbers do not match: \"" ++ show nContract ++ "\" and \"" ++ show nEleg ++ "\"."
 
 compareLastNames lnContract lnEleg 
     | BS.null lnContract = MergeFail "Last name was blank."
     | BS.null lnEleg = MergeKeep
-    | map toLower (BS.toString lnContract) == map toLower (BS.toString lnEleg) = MergeMatch
+    | levenshtein (map toLower (BS.toString lnContract)) (map toLower (BS.toString lnEleg)) <= 1 = MergeMatch
     | otherwise = MergeFail $ "Last names do not match: \"" ++ show lnContract ++ "\" and \"" ++ show lnEleg ++"\"."
 
 --GHC.Unicode.toLower
 -- import GHC.Unicode ( toLower )
 --import qualified Data.ByteString.Lazy.Char8 as B
 
+levenshtein :: String -> String -> Int
+levenshtein s1 s2 = levenshtein' s1 s2 (length s1) (length s2)
+
+levenshtein' :: String -> String -> Int -> Int -> Int
+levenshtein' s1 s2 i j
+    | i == 0 = j
+    | j == 0 = i
+    | (s1 !! i) == (s2 !! j) = levenshtein' s1 s2 (i - 1) (j - 1)
+    | otherwise = min     (1 + levenshtein' s1 s2 (i - 1) j)       --deletion
+                    $ min (1 + levenshtein' s1 s2 i (j - 1))       --insertion
+                          (1 + levenshtein' s1 s2 (i - 1) (j - 1)) --substitution
 
