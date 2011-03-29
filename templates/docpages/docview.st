@@ -151,7 +151,7 @@ showSignatoryLinkForSign =
   <div class="signViewBodyRightTextContainer"> 
    <img src="$status$" style="position:relative;top:3px;"> 
    $if(changeEmailAddress)$ <span style="color:#000000;position:relative;left:-4px;">!</span>  $endif$
-   <span class="text"><strong>$signatoryfstname$ $signatorysndname$</strong></span>
+   <span class="header">$signatoryfstname$ $signatorysndname$</span>
    $if(signatoryemail)$<div class="text">$signatoryemail$</div>$endif$
    $if(signatorycompany)$<div class="text">$signatorycompany$</div>$endif$
    $if(signatorynumber)$<div class="text">$signatorynumber$</div>$endif$
@@ -290,11 +290,11 @@ pageDocumentForSignContent=
                 <input type="hidden" name="cancel" value="automatic" />
                 <a  class="close cancel">Avbryt</a>
                 <a  class="editer message">Skriv eget meddelande</a>
-                <a href="#" class="btn-small green float-right submiter">
+                <a href="#" class="btn-small red float-right submiter">
                     <div class="left"></div>
                     <div class="label">
                         <p>Avvisa </p>
-                    <div class="btn-symbol green arrow-left"></div></div>
+                    <div class="btn-symbol red arrow-left"></div></div>
                     <div class="right"></div>
                 </a>
         </div>
@@ -331,7 +331,7 @@ $if(notsignedbyme)$$if(pending)$
 <div id="signViewBottomBox"> 
   <div id="signViewBottomBoxContainerLeft"> 
     <div id="signViewBottomBoxContainerLeftText"> 
-      <input type="checkbox" class="signGuard" autocomplete="off" /> Jag intygar att jag har granskat och förstått innehållet i dokumentet. Jag intygar även att samtliga parter är korrekta och att jag har befogenhet att skriva på.
+     <input type="checkbox" class="signGuard" autocomplete="off" />Jag intygar att jag granskat och förstått dokumentet, att samtliga parter är korrekta och att jag har befogenhet att skriva på.
     </div>
   </div>
   <div id="signViewBottomBoxContainerRight"> 
