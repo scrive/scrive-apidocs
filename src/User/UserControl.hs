@@ -469,19 +469,18 @@ handleAccountSetupPost aid hash = do
                  Nothing -> do -- user already exists, get her
                      query $ GetUserByEmail invitedemail
 
-handlePasswordReminderGet :: ActionID -> MagicHash -> Kontra Response
-handlePasswordReminderGet aid hash = do
+checkPasswordReminderGet :: ActionID -> MagicHash -> Kontra (Either () ())
+checkPasswordReminderGet aid hash = do
     muser <- getUserFromActionOfType PasswordReminderID aid hash
     case muser of
          Just _ -> do
              extendActionEvalTimeToOneDayMinimum aid
              ctx <- get
-             content <- liftIO $ newPasswordPageView $ ctxtemplates ctx
-             renderFromBody ctx TopNone kontrakcja $ cdata content
+             return $ Right ()
          Nothing -> do
              templates <- ctxtemplates <$> get
              addFlashMsg =<< (liftIO $ flashMessagePasswordChangeLinkNotValid templates)
-             sendRedirect LinkMain
+             return $ Left ()
 
 handlePasswordReminderPost :: ActionID -> MagicHash -> Kontra KontraLink
 handlePasswordReminderPost aid hash = do

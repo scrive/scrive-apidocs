@@ -5,7 +5,6 @@
 module AppView( TopMenu(..)
               , kontrakcja
               , renderFromBody
-              , pageForgotPassword
               , signupPageView
               , signupVipPageView
               , pageLogin
@@ -17,6 +16,7 @@ import Control.Arrow (first)
 import HSP hiding (Request)
 import Happstack.Server.HSP.HTML (webHSP)
 import Happstack.Server.SimpleHTTP
+import ActionSchedulerState
 import Kontra
 import Misc
 import KontraLink
@@ -101,19 +101,6 @@ signupVipPageView :: KontrakcjaTemplates -> IO String
 signupVipPageView templates = renderTemplate templates "signupVipPageView" ()
 
 {- |
-   The contents of the password reset page.  This is read from a template.
--} 
-
-pageForgotPassword :: KontrakcjaTemplates -> IO String
-pageForgotPassword templates = renderTemplate templates "pageForgotPassword" ()
-
-{- |
-   The contents of the password reset confirmation.  This is read from a template.
--}
-pageForgotPasswordConfirm :: KontrakcjaTemplates -> IO String
-pageForgotPasswordConfirm templates = renderTemplate templates "pageForgotPasswordConfirm" ()
-
-{- |
    The contents of the login page.  This is read from a template.
 -}
 pageLogin :: Context -> Maybe String -> Maybe String -> IO String
@@ -136,13 +123,14 @@ simpleResponse s = do
 {- |
    The landing page contents.  Read from template.
 -}
-firstPage :: Context -> Bool -> Maybe String ->  IO String
-firstPage ctx loginOn referer = 
+firstPage :: Context -> Bool -> Maybe (ActionID, MagicHash) -> Maybe String ->  IO String
+firstPage ctx loginOn passwordinfo referer = 
     renderTemplate (ctxtemplates ctx) "firstPage"  $ do 
         contextInfoFields ctx
         mainLinksFields
         loginModal loginOn referer
-                              
+        newPasswordModal passwordinfo
+
 {- |
    Defines the main links as fields handy for substituting into templates.
 -}
@@ -186,4 +174,8 @@ loginModal on referer= do
     field "loginModal" $ on 
     field "referer" $ referer 
 
-
+newPasswordModal :: Maybe (ActionID, MagicHash) -> Fields
+newPasswordModal Nothing = do
+    field "newPasswordModal" False
+newPasswordModal (Just _) = do
+    field "newPasswordModal" True
