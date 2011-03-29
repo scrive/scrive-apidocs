@@ -85,6 +85,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
         <body>
                 $flashmessages()$
                 $loginModal()$
+                $newPasswordModal()$
                 <div id="wrap">
                 <div id="top-container">
                         <div class="content">

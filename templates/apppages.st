@@ -1,18 +1,4 @@
 ###
-pageForgotPassword=
-    <div class="centerdivnarrow">
-      <form action="$LinkForgotPassword()$" method="post">
-        <table>
-          <tr>
-            <td>E-mail</td>
-            <td><input name="email" type="email" /></td>
-          </tr>
-        </table>
-        <input type="submit" value="Skicka nytt lösenord" class="validateEmail" />
-      </form>
-    </div>
-
-###
 pageLogin= 
     <div class="centerdivnarrow">
       <p class="headline">Logga in</p> 
