@@ -4,7 +4,6 @@ module User.UserView (
     viewSubaccounts,
     showUser,
     pageAcceptTOS,
-    newPasswordPageView,
     activatePageView,
     activatePageViewNotValidLink,
     
@@ -104,10 +103,6 @@ activatePageView templates tostext name =
 activatePageViewNotValidLink :: KontrakcjaTemplates -> String -> IO String
 activatePageViewNotValidLink templates email =
   renderTemplate templates "activatePageViewNotValidLink" $ field "email" email
-
-newPasswordPageView :: KontrakcjaTemplates -> IO String
-newPasswordPageView templates =
-  renderTemplate templates "newPasswordPage" ()
 
 
 resetPasswordMail :: KontrakcjaTemplates -> String -> User -> KontraLink -> IO Mail

@@ -245,3 +245,55 @@ loginModalPart=
 </div>
 ######
 ####
+newPasswordModal=
+$if(!logged)$
+$if(newPasswordModal)$
+<div class="modalcontainer">
+<div class="modalbox overlay">
+<div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-icon message"></div>
+        <div class="modal-title">
+          <h1>Nytt Lösenord</h1>
+        </div>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content"> 
+                $newPasswordModalPart()$
+        </div>
+      </div>
+</div>
+</div>
+</div>
+$endif$
+$endif$
+####
+newPasswordModalPart=
+<div class="user-container">
+  <div class="login-container">
+    <div class="body">
+      <form action="$linkchangepassword$" method="post">
+        <table>
+          <tbody>
+            <tr>
+              <td>Nytt lösenord:</td>
+              <td><input type="password" name="password" autocomplete="off"></td>
+            </tr>
+            <tr>
+              <td>Upprepa lösenord:</td>
+              <td><input type="password" name="password2" autocomplete="off"></td>
+            </tr>
+          </tbody>
+        </table>
+        <a href="#" class="btn-tiny blue center submit">
+          <div class="left"> </div>     
+          <div class="label"><span>Spara</span></div>
+          <div class="right"/> </div>
+        </a>
+        <input type="submit" class="hidden" />
+      </form>
+    </div>
+  </div>
+</div>
+######
