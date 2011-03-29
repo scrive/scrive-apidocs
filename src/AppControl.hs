@@ -201,9 +201,8 @@ handleRoutes = msum [
      , dir "amnesia"     $ hpost0 $ forgotPasswordPagePost
      , dir "amnesia"     $ hget2  $ UserControl.handlePasswordReminderGet
      , dir "amnesia"     $ hpost2 $ UserControl.handlePasswordReminderPost
-     , dir "amnesiadone" $ hget0  $ forgotPasswordDonePage
-     , dir "accountsetup"  $ hget2  $ UserControl.unloggedActionPage
-     , dir "accountsetup"  $ hpost2  $ UserControl.handleUnloggedAction
+     , dir "accountsetup"  $ hget2  $ UserControl.handleAccountSetupGet
+     , dir "accountsetup"  $ hpost2  $ UserControl.handleAccountSetupPost     
      , dir "requestaccount" $ hpost0_allowHttp $ UserControl.handleRequestAccount
      -- viral invite
      , dir "invite"      $ hpost0 $ UserControl.handleViralInvite
@@ -225,10 +224,12 @@ handleRoutes = msum [
 -}
 handleHomepage :: Kontra Response
 handleHomepage = do
-  ctx@Context{ ctxmaybeuser } <- get
-  case ctxmaybeuser of
-    Just user -> UserControl.checkUserTOSGet $ DocControl.showMainPage user 
-    Nothing   -> V.simpleResponse =<< (liftIO $ firstPage ctx)
+    ctx@Context{ ctxmaybeuser } <- get
+    loginOn <- isFieldSet "logging"
+    referer <- getField "referer"
+    case ctxmaybeuser of
+        Just user -> UserControl.checkUserTOSGet $ DocControl.showMainPage user 
+        Nothing   -> V.simpleResponse =<< (liftIO $ firstPage ctx loginOn referer)
 
 handleMainReaload :: Kontra KontraLink
 handleMainReaload = LinkNew <$> getListParamsForSearch
@@ -574,77 +575,57 @@ daveUser userid = onlySuperUserGet $ do
     user <- queryOrFail $ GetUserByUserID userid
     V.renderFromBody ctx V.TopNone V.kontrakcja $ inspectXML user
 
+hpost0 :: Kontra KontraLink -> Kontra Response
+hpost0 action = methodM POST >> (https $ do
+    (link :: KontraLink) <- action
+    sendRedirect link)
 
+hpost1 :: (FromReqURI a) =>  (a -> Kontra KontraLink) -> Kontra Response
+hpost1 action = path $ \a1 -> methodM POST >>  (https $ do
+    (link :: KontraLink) <- action a1
+    sendRedirect link)
 
+hpost2 :: (FromReqURI a, FromReqURI a1) =>   (a -> a1 -> Kontra KontraLink) -> Kontra Response
+hpost2 action = path $ \a1 -> path $ \a2 -> methodM POST >>  (https $ do
+    (link :: KontraLink) <- action a1 a2
+    sendRedirect link)
 
-hpost0
-  :: Kontra KontraLink
-     -> Kontra Response
-hpost0 action = methodM POST >> do
-                  (link :: KontraLink) <- action
-                  sendRedirect link
+hpost3 :: (FromReqURI a, FromReqURI a1, FromReqURI a2) =>  
+          (a -> a1 -> a2 -> Kontra KontraLink) 
+          -> Kontra Response
+hpost3 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> methodM POST >> (https $ do
+    (link :: KontraLink) <- action a1 a2 a3
+    sendRedirect link)
 
-hpost1
-  :: (FromReqURI a) =>
-     (a -> Kontra KontraLink)
-     -> Kontra Response
-hpost1 action = path $ \a1 -> methodM POST >>  do
-                  (link :: KontraLink) <- action a1
-                  sendRedirect link
-
-hpost2
-  :: (FromReqURI a, FromReqURI a1) =>
-     (a -> a1 -> Kontra KontraLink)
-     -> Kontra Response
-hpost2 action = path $ \a1 -> path $ \a2 -> methodM POST >>  do
-                  (link :: KontraLink) <- action a1 a2
-                  sendRedirect link
-
-hpost3
-  :: (FromReqURI a, FromReqURI a1, FromReqURI a2) =>
-     (a -> a1 -> a2 -> Kontra KontraLink)
-     -> Kontra Response
-hpost3 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> methodM POST >>  do
-                  (link :: KontraLink) <- action a1 a2 a3
-                  sendRedirect link
-
-hpost4
-  :: (FromReqURI a, FromReqURI a1, FromReqURI a2, FromReqURI a3) =>
-     (a -> a1 -> a2 -> a3 -> Kontra KontraLink)
-     -> Kontra Response
-hpost4 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> path $ \a4 -> methodM POST >>  do
-                  (link :: KontraLink) <- action a1 a2 a3 a4
-                  sendRedirect link
+hpost4 :: (FromReqURI a, FromReqURI a1, FromReqURI a2, FromReqURI a3) =>  
+          (a -> a1 -> a2 -> a3 -> Kontra KontraLink)
+           -> Kontra Response
+hpost4 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> path $ \a4 -> methodM POST >>  (https $ do
+    (link :: KontraLink) <- action a1 a2 a3 a4
+    sendRedirect link)
 
 hget0 :: Kontra Response -> Kontra Response
 hget0 action = methodM GET >> (https $ action)
 
-hget1
-  :: (FromReqURI a, MonadPlus m, ServerMonad m) => (a -> m b) -> m b
-hget1 action = path $ \a1 -> methodM GET >> action a1
 
-hget2
-  :: (FromReqURI a, MonadPlus m, ServerMonad m, FromReqURI a1) =>
-     (a -> a1 -> m b) -> m b
-hget2 action = path $ \a1 -> path $ \a2 -> methodM GET >> action a1 a2
+hget1 :: (FromReqURI a) => (a -> Kontra Response) -> Kontra Response
+hget1 action = path $ \a1 -> methodM GET >> (https $ action a1)
 
-hget3
-  :: (FromReqURI a,
-      MonadPlus m,
-      ServerMonad m,
-      FromReqURI a1,
-      FromReqURI a2) =>
-     (a -> a1 -> a2 -> Kontra Response) -> Kontra Response
+hget2 :: (FromReqURI a, FromReqURI a1) =>
+     (a -> a1 -> Kontra Response) -> Kontra Response
+hget2 action = path $ \a1 -> path $ \a2 -> methodM GET >> (https $ action a1 a2)
+
+hget3 :: (FromReqURI a,
+            FromReqURI a1,
+            FromReqURI a2) =>
+            (a -> a1 -> a2 -> Kontra Response) -> Kontra Response
 hget3 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> methodM GET >> (https $ action a1 a2 a3)
 
-hget4
-  :: (FromReqURI a,
-      MonadPlus m,
-      ServerMonad m,
-      FromReqURI a1,
-      FromReqURI a2,
-      FromReqURI a3) =>
-     (a -> a1 -> a2 -> a3 -> Kontra Response) -> Kontra Response
+hget4 :: (FromReqURI a,
+            FromReqURI a1,
+            FromReqURI a2,
+            FromReqURI a3) =>
+            (a -> a1 -> a2 -> a3 -> Kontra Response) -> Kontra Response
 hget4 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> path $ \a4 -> methodM GET >> (https $ action a1 a2 a3 a4)
 
 {-|
