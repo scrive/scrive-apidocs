@@ -200,9 +200,11 @@ handleRoutes = msum [
      , dir "amnesia"     $ hpost0 $ forgotPasswordPagePost
      , dir "amnesia"     $ hget2  $ UserControl.handlePasswordReminderGet
      , dir "amnesia"     $ hpost2 $ UserControl.handlePasswordReminderPost
-     , dir "amnesiadone" $ hget0  $ forgotPasswordDonePage
-     , dir "accountsetup"  $ hget2  $ UserControl.unloggedActionPage
-     , dir "accountsetup"  $ hpost2  $ UserControl.handleUnloggedAction
+     , dir "accountsetup"  $ hget2  $ UserControl.handleAccountSetupGet
+     , dir "accountsetup"  $ hpost2  $ UserControl.handleAccountSetupPost
+     , dir "accountremoval" $ hget2  $ UserControl.handleAccountRemovalGet
+     , dir "accountremoval" $ hpost2  $ UserControl.handleAccountRemovalPost
+
      , dir "requestaccount" $ hpost0_allowHttp $ UserControl.handleRequestAccount
      -- viral invite
      , dir "invite"      $ hpost0 $ UserControl.handleViralInvite
