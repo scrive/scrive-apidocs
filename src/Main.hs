@@ -37,7 +37,7 @@ import qualified Network.Socket as Socket ( accept )
 import qualified Control.Exception as Exception
 import Happstack.State.Saver
 import ActionScheduler
-import ActionSchedulerState (ActionImportance(..))
+import ActionSchedulerState (ActionImportance(..), SchedulerData(..))
 import Happstack.State (update,query)
 import Doc.DocControl
 import Doc.DocState
@@ -200,8 +200,9 @@ main = Log.withLogger $ do
                               socket <- listenOn (httpPort appConf)
                               t1 <- forkIO $ simpleHTTPWithSocket socket (nullConf { port = httpPort appConf }) 
                                     (appHandler appConf appGlobals docs)
-                              t2 <- forkIO $ cron 60 $ runScheduler (mainScheduler >> actionScheduler UrgentAction) appConf
-                              t3 <- forkIO $ cron 600 $ runScheduler (actionScheduler LeisureAction) appConf
+                              let scheddata = SchedulerData appConf mailer templates
+                              t2 <- forkIO $ cron 60 $ runScheduler (mainScheduler >> actionScheduler UrgentAction) scheddata
+                              t3 <- forkIO $ cron 600 $ runScheduler (actionScheduler LeisureAction) scheddata
                               return [t1,t2,t3]
                            )
                            (mapM_ killThread) $ \_ -> Exception.bracket
@@ -221,6 +222,7 @@ main = Log.withLogger $ do
 defaultConf :: String -> AppConf
 defaultConf progName
     = AppConf { httpPort = 8000
+              , hostpart = "http://localhost:8000"
               , store    = "_local/" ++ progName ++ "_state"
               , static   = "public"
               , awsBucket = ""

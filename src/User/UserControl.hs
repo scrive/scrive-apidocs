@@ -230,6 +230,15 @@ createUser ctx hostpart fullname email maybesupervisor vip = do
              return muser
          Nothing -> return muser
 
+createUserBySigning :: Context -> BS.ByteString -> BS.ByteString -> BS.ByteString -> (DocumentID, SignatoryLinkID, MagicHash) -> IO (Maybe User)
+createUserBySigning Context{ctxmailer, ctxtemplates, ctxhostpart} doctitle fullname email doclinkdata =
+    createInvitedUser fullname email >>= maybe (return Nothing) (\user -> do
+        (al, rl) <- newAccountCreatedBySigningLink user doclinkdata
+        mail <- mailAccountCreatedBySigning ctxtemplates ctxhostpart doctitle fullname al rl
+        sendMail ctxmailer $ mail { fullnameemails = [(fullname, email)] }
+        return $ Just user
+    )
+
 createNewUserByAdmin :: Context -> BS.ByteString -> BS.ByteString -> Maybe MinutesTime -> Maybe String -> IO (Maybe User)
 createNewUserByAdmin ctx fullname email freetill custommessage = do
     muser <- createInvitedUser fullname email
@@ -354,19 +363,29 @@ handleQuestion = do
 handleAccountSetupGet :: ActionID -> MagicHash -> Kontra Response
 handleAccountSetupGet aid hash = do
     now <- liftIO $ getMinutesTime
-    maction <- checkValidity now <$> (query $ GetAction aid)
+    maction <- do
+        (query $ GetAction aid) >>= maybe (return Nothing) (\action -> do
+            -- action may be in state when it has expired, but hasn't yet been
+            -- transformed into next form. below code checks for that.
+            if (actionTypeID $ actionType action) == AccountCreatedBySigningID && (acbsState $ actionType action) /= ThirdReminderSent
+               then return $ Just action
+               else return $ checkValidity now $ Just action)
     case maction of
          Just action ->
              case actionType action of
                   ViralInvitationSent _ _ _ token ->
                       if token == hash
-                         then activationPage
+                         then activationPage Nothing
+                         else mzero
+                  AccountCreatedBySigning _ uid _ token -> do
+                      if token == hash
+                         then (query $ GetUserByUserID uid) >>= activationPage
                          else mzero
                   AccountCreated uid token -> do
                       if token == hash
                          then (query $ GetUserByUserID uid) >>= maybe mzero (\user ->
                              if isNothing $ userhasacceptedtermsofservice user
-                                then activationPage
+                                then activationPage $ Just user
                                 else do
                                     templates <- ctxtemplates <$> get
                                     addFlashMsg =<< (liftIO $ flashMessageUserAlreadyActivated templates)
@@ -385,11 +404,11 @@ handleAccountSetupGet aid hash = do
                      )
                  )
     where
-        activationPage = do
+        activationPage muser = do
             extendActionEvalTimeToOneDayMinimum aid
             ctx <- get
             tostext <- liftIO $ BS.readFile "html/terms.html"
-            content <- liftIO $ activatePageView (ctxtemplates ctx) (BS.toString tostext) ""
+            content <- liftIO $ activatePageView (ctxtemplates ctx) (BS.toString tostext) muser
             renderFromBody ctx TopNone kontrakcja $ cdata content
 
 handleAccountSetupPost :: ActionID -> MagicHash -> Kontra KontraLink
@@ -403,6 +422,18 @@ handleAccountSetupPost aid hash = do
                       if token == hash
                          then getUserForViralInvite now email invtime inviterid
                               >>= maybe mzero handleActivate
+                         else mzero
+                  AccountCreatedBySigning _ uid _ token ->
+                      if token == hash
+                         then do
+                             link <- (query $ GetUserByUserID uid)
+                                     >>= maybe mzero handleActivate
+                             case link of
+                                  LinkMain -> do
+                                      templates <- ctxtemplates <$> get
+                                      addModal $ modalWelcomeToSkrivaPa templates
+                                  _ -> return ()
+                             return link
                          else mzero
                   AccountCreated uid token ->
                       if token == hash

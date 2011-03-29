@@ -50,19 +50,19 @@ activatePageView=
         <table><tbody>
             <tr>
               <td>Förnamn:</td>
-              <td><input type="text" name="fname" autocomplete="off" value="$if(fname)$$fname$$endif$"></td>
+              <td><input type="text" name="fname" autocomplete="off" value="$if(fstname)$$fstname$$endif$"></td>
             </tr>
             <tr>
               <td>Efternamn:</td>
-              <td><input type="text" name="lname" autocomplete="off" value="$if(lname)$$lname$$endif$"></td>
+              <td><input type="text" name="lname" autocomplete="off" value="$if(sndname)$$sndname$$endif$"></td>
             </tr>
             <tr>
               <td>Företag:</td>
-              <td><input type="text" name="companyname" autocomplete="off" value=""></td>
+              <td><input type="text" name="companyname" autocomplete="off" value="$if(companyname)$$companyname$$endif$"></td>
             </tr>
             <tr>
               <td>Position:</td>
-              <td><input type="text" name="companyposition" autocomplete="off" value=""></td>
+              <td><input type="text" name="companyposition" autocomplete="off" value="$if(companyposition)$$companyposition$$endif$"></td>
             </tr>
             <tr>
               <td>Välj lösenord:</td>

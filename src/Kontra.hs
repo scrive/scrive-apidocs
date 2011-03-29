@@ -17,7 +17,7 @@ module Kontra
     , newPasswordReminderLink
     , newViralInvitationSentLink
     , newAccountCreatedLink
-    --, newAccountCreatedBySigningLink
+    , newAccountCreatedBySigningLink
     , queryOrFail
     , returnJustOrMZero
     )
@@ -31,6 +31,7 @@ import Doc.DocState
 import HSP hiding (Request)
 import Happstack.Server
 import MinutesTime
+import Misc
 import Session
 import Happstack.State (query,QueryEvent)
 import User.UserState
@@ -181,13 +182,12 @@ newAccountCreatedLink user = do
                                 (acToken $ actionType action)
                                 (BS.toString . unEmail . useremail $ userinfo user)
 
-{-newAccountCreatedBySigningLink :: MonadIO m => User -> m KontraLink
-newAccountCreatedBySigningLink user = do
-    action <- liftIO $ newAccountCreatedBySigning user
-    return $ LinkUnloggedUserAction (actionID action)
-                                    (acbsToken $ actionType action)
-                                    (BS.toString . unEmail . useremail $ userinfo user)
-                                    (BS.toString $ userfullname user)-}
+newAccountCreatedBySigningLink :: MonadIO m => User -> (DocumentID, SignatoryLinkID, MagicHash) -> m (KontraLink, KontraLink)
+newAccountCreatedBySigningLink user doclinkdata = do
+    action <- liftIO $ newAccountCreatedBySigning user doclinkdata
+    let aid = actionID action
+        token = acbsToken $ actionType action
+    return $ (LinkAccountCreatedBySigning aid token, LinkAccountCreatedBySigningRemoval doclinkdata aid token)
 
 {- |
    Perform a query (like with query) but if it returns Nothing, mzero; otherwise, return fromJust

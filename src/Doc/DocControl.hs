@@ -363,7 +363,15 @@ signDocument documentid
           postDocumentChangeAction document olddocumentstatus (Just signatorylinkid1)
           signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid1
           maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
-          addModal$  modalSignedView document signatorylink (isJust maybeuser)
+          when_ (isNothing maybeuser) $ do
+              ctx <- get
+              let details = signatorydetails signatorylink
+                  fullname = signatoryname details
+                  email = signatoryemail details
+              muser <- liftIO $ createUserBySigning ctx (documenttitle document) fullname email (documentid, signatorylinkid1, magichash1)
+              when_ (isJust muser) $
+                  update $ SaveDocumentForSignedUser documentid (userid $ fromJust muser) signatorylinkid1
+          addModal $ modalSignedView document signatorylink (isJust maybeuser)
           return $ LinkSignDoc document signatorylink
 
 {- |
@@ -406,29 +414,6 @@ signatoryLinkFromDocumentByID document@Document{documentsignatorylinks} linkid =
     case invitedlinks of
       [invitedlink] -> return invitedlink
       _ -> mzero
-
-{- |
-    Now just handler to put a modal and create an account
-    URL: /landpage/signedsave
-    Method: GET
--}
-landpageSignedSave :: DocumentID -> SignatoryLinkID -> Kontra Response
-landpageSignedSave documentid signatorylinkid = do
-  ctx@Context{ctxhostpart} <- get
-  document <- queryOrFail $ GetDocumentByDocumentID documentid
-  signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
-  let details = signatorydetails signatorylink
-      fullname = signatoryname details
-  maybeuser <- query $ GetUserByEmail (Email $ signatoryemail details)
-  muser <- case maybeuser of
-             Nothing -> do 
-               let email = signatoryemail details
-               liftIO $ createUser ctx ctxhostpart fullname email Nothing False
-             Just user -> return maybeuser
-  when_ (isJust muser) $ update $ SaveDocumentForSignedUser documentid (userid $ fromJust muser) signatorylinkid
-  -- should redirect
-  addModal modalLoginForSaveView 
-  sendRedirect $ LinkIssueDoc documentid
 
 {- |
    Show the document to be signed

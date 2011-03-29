@@ -69,6 +69,7 @@ import ListUtil
 -}
 data AppConf
     = AppConf { httpPort        :: Int
+              , hostpart        :: String
               , store           :: FilePath
               , static          :: FilePath 
               , awsBucket       :: String
@@ -148,7 +149,6 @@ handleRoutes = msum [
      , dir "pages"  $ hget2 $ DocControl.showPage
      , dir "templates"  $ hget0 $ DocControl.getTemplatesForAjax
      , dir "template"  $ hpost0 $ DocControl.handleCreateFromTemplate
-     , dir "landpage" $ dir "signedsave" $ hget2 $ DocControl.landpageSignedSave
      , dir "landpage" $ dir "signcanceleddatamismatch" $ hget2 $ BankID.handleSignCanceledDataMismatch
            
      , dir "pagesofdoc" $ hget1 $ DocControl.handlePageOfDocument
