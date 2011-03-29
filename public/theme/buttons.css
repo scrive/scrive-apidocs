@@ -4,6 +4,7 @@
 	color: #fff;
 	display: block;
 	text-decoration: none;
+    cursor: pointer;
 }
 
 a.btn-small .label, a.btn-big .label, a.btn-tiny .label{
@@ -436,7 +437,7 @@ a.btn-tiny.green .left {
 }
 
 a.btn-tiny.green .right {
-	background-position: -336px 0;
+	background-position: -334px 0;
 }
 
 a.btn-tiny.green .label {
@@ -449,7 +450,7 @@ a.btn-tiny.green:hover .left {
 }
 
 a.btn-tiny.green:hover .right {
-	background-position: -336px -27px;
+	background-position: -334px -27px;
 }
 
 a.btn-tiny.green:hover .label {
@@ -461,7 +462,7 @@ a.btn-tiny.green:active .left {
 }
 
 a.btn-tiny.green:active .right {
-	background-position: -336px -54px;
+	background-position: -334px -54px;
 }
 
 a.btn-tiny.green:active .label {
@@ -550,7 +551,7 @@ a.btn-tiny.black:active .label {
 /* Red Button */
 
 a.btn-tiny.red .left {
-    background-position: -303px 0;
+    background-position: -305px 0;
 }
 
 a.btn-tiny.red .right {
@@ -564,7 +565,7 @@ a.btn-tiny.red .label {
 }
 
 a.btn-tiny.red:hover .left {
-    background-position: -303px -27px;
+    background-position: -305px -27px;
 }
 
 a.btn-tiny.red:hover .right {
@@ -576,7 +577,7 @@ a.btn-tiny.red:hover .label {
 }
 
 a.btn-tiny.red:active .left {
-    background-position: -303px -54px;
+    background-position: -305px -54px;
 }
 
 a.btn-tiny.red:active .right {
@@ -676,4 +677,7 @@ a.btn-tiny.red:active .label {
 
 .btn-symbol.black.person {
 	background-position: -48px -34px;
+}
+.btn-symbol.red.arrow-left {
+background-position:-16px -51px;
 }

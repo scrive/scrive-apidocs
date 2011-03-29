@@ -2475,4 +2475,6 @@ input#cancel {
 .searchBox{
     width: 238px;
 }
-
+.centered {
+    margin: 10%;
+}

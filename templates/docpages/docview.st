@@ -103,7 +103,11 @@ reminderEditorText=Skriv eget meddelande
 ###       
 reminderForm = 
 <span>
-  <a style="cursor:pointer" class="prepareToSendReminderMail" rel="#siglnk$signatorylinkid$">  $reminderText$  </a>
+  <a  class=" btn-tiny green prepareToSendReminderMail" rel="#siglnk$signatorylinkid$">  
+    <div class="left"></div>
+    <div class="label">$reminderText$</div> 
+    <div class="right"></div>
+  </a>
   <form class="overlay" action="$linkremind$" method="POST" title="$reminderDialogTitle$" width="600" height="$dialogHeight$" id="siglnk$signatorylinkid$">
     <div class="modal-container">
         <div class="modal-header">
@@ -332,7 +336,11 @@ $if(notsignedbyme)$$if(pending)$
   </div>
   <div id="signViewBottomBoxContainerRight"> 
   <input type="button" class="submit btn-blue center" value="     SkrivaPå" id="sign" rel="#dialog-confirm-sign" name="sign" />
-  <input class="float-right" type="submit" name="cancel" value="Avvisa dokument" rel="#dialog-confirm-cancel" id="cancel" />
+  <a class="btn-tiny red float-right" name="cancel"  rel="#dialog-confirm-cancel" id="cancel">  
+                <div class="left"> </div>
+                <div class="label"> Avvisa dokument </div> 
+                <div class="right"> </div>             
+   </a>
   </div>
 </div>
 $endif$$endif$ 
@@ -672,11 +680,11 @@ pageDocumentForAuthorHelpersLocalDialogs=
       <div class="modal-footer">
         <a class="close cancel">Avbryt</a>
         <a class="editer message">Skriv eget meddelande</a>
-        <a href="#" class="btn-small green float-right submiter" id="editing-invite-text-finished">
+        <a class="btn-small red float-right submiter">
           <div class="left"></div>
           <div class="label">
             <p>Återkalla inbjudan</p>
-            <div class="btn-symbol green arrow-left"></div>
+            <div class="btn-symbol red arrow-left"></div>
           </div>
           <div class="right"></div>
         </a>
@@ -757,9 +765,11 @@ pageDocumentForAuthorContentPostPreparation=
         $if(pending)$
         $if(!awaitingauthor)$
         $if(!timetosignset)$
-        <input class="cancel bigbutton" type="button"
-               name="cancel" value="Återkalla inbjudan" id="cancel"
-               rel="#cancel-by-author-dialog"></input>
+        <a class="btn-tiny red centered" id="cancel"  name="cancel" rel="#cancel-by-author-dialog">
+            <div class="left"></div>
+            <div class="label">Återkalla inbjudan</div> 
+            <div class="right"></div>
+        </a>
         $endif$
         $endif$
         $endif$
