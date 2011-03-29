@@ -72,6 +72,7 @@ data Payment = Payment { -- | Each payment needs to be identified uniquely
                   deriving (Eq, Ord, Show)
 
 instance Typeable Payment where typeOf _ = mkTypeOf "Payment"
+
 deriving instance Data Payment
 
 

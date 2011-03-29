@@ -73,7 +73,7 @@ data PaymentAccountModel = PaymentAccountModel {
                                    modelPaymentForSignedStorage::PaymentForSignedStorage Money,  
                                    modelPaymentForOtherStorage::PaymentForOtherStorage Money
       }                           
-    deriving (Eq, Ord, Show, Read, Data)
+    deriving (Eq, Ord, Show, Read)
 
 instance Typeable PaymentAccountModel where typeOf _ = mkTypeOf "PaymentAccountModel"
 
@@ -84,25 +84,26 @@ data PaymentChange = PaymentChange {
                                   changePaymentForSignedStorage::PaymentForSignedStorage (Maybe Money),  
                                   changePaymentForOtherStorage::PaymentForOtherStorage (Maybe Money)  
       }
-    deriving (Eq, Ord, Show, Read, Typeable, Data)
+    deriving (Eq, Ord, Show, Read, Typeable)
 
       
 -- | Types of accounts
 data PaymentAccountType = Private | Minimal | Medium | Maximal | Corp   
-    deriving (Eq, Ord, Show, Read, Typeable, Data)
+    deriving (Eq, Ord, Show, Read, Typeable)
 
 -- | Money values wrapper
 newtype Money = Money { money:: Integer }
-    deriving (Eq, Ord, Show, Read, Typeable, Data)
+    deriving (Eq, Ord, Show, Read, Typeable)
      
 deriving instance Num Money
- 
+deriving instance Data Money
+
 -- | Monthly payments for account and subaccounts
 data PaymentForAccounts value = PaymentForAccounts {
                                  forAccount::value,
                                  forSubaccount::value 
                                }
-    deriving (Eq, Ord, Show, Read, Typeable, Data)
+    deriving (Eq, Ord, Show, Read, Typeable)
 
 -- | Payments for each signature on document                        
 data PaymentForSignature value = PaymentForSignature {
@@ -112,21 +113,21 @@ data PaymentForSignature value = PaymentForSignature {
                                  forCreditCardSignature::value,  
                                  forIPadSignature ::value
                                }                  
-    deriving (Eq, Ord, Show, Read, Typeable, Data)
+    deriving (Eq, Ord, Show, Read, Typeable)
 
 -- | Payments for storage of signed documents                       
 data PaymentForSignedStorage value = PaymentForSignedStorage {
      forAmazon::value,
      forTrustWeaver::value
     }  
-    deriving (Eq, Ord, Show, Read, Typeable, Data)
+    deriving (Eq, Ord, Show, Read, Typeable)
 
 -- | Payments for storage of of unsigned templates and drafts       
 data PaymentForOtherStorage value  = PaymentForOtherStorage {
                                  forTemplate::value,
                                  forDraft::value
                                }         
-    deriving (Eq, Ord, Show, Read, Typeable, Data)
+    deriving (Eq, Ord, Show, Read, Typeable)
 
 --  | How the user should pay for signing etc                       
 data UserPaymentPolicy =  UserPaymentPolicy {
@@ -134,7 +135,7 @@ data UserPaymentPolicy =  UserPaymentPolicy {
              , custompaymentchange:: PaymentChange 
              , temppaymentchange:: Maybe (MinutesTime,PaymentChange)
       }  
-    deriving (Eq, Ord, Show, Read, Typeable, Data)
+    deriving (Eq, Ord, Show, Read, Typeable)
 
 -- | Info about free signatures left and money for user
 data UserPaymentAccount0 = UserPaymentAccount0 {
@@ -142,14 +143,14 @@ data UserPaymentAccount0 = UserPaymentAccount0 {
              , paymentaccountfreesignatures0:: Int  
 
       }
-    deriving (Eq, Ord, Show, Read, Typeable, Data)
+    deriving (Eq, Ord, Show, Read, Typeable)
 
 data UserPaymentAccount = UserPaymentAccount {
                paymentAgreementRef ::Maybe String
              , paymentaccountfreesignatures:: Int  
 
       }
-    deriving (Eq, Ord, Show, Read, Typeable, Data)
+    deriving (Eq, Ord, Show, Read, Typeable)
     
 
                                 
@@ -203,7 +204,12 @@ instance Migrate UserPaymentAccount0 UserPaymentAccount  where
 deriving instance Bounded PaymentAccountType
 deriving instance Enum PaymentAccountType
 
-$(inferIxSet "PaymentAccountModels" ''PaymentAccountModel  'noCalcs [''PaymentAccountType ])  
+type PaymentAccountModels = IxSet PaymentAccountModel
+
+instance Indexable PaymentAccountModel where
+        empty = ixSet [ ixFun (\x -> [modelAccountType x] :: [PaymentAccountType])
+                      ]
+
 instance Component (PaymentAccountModels) where
   type Dependencies (PaymentAccountModels) = End
   initialValue = IxSet.empty  
