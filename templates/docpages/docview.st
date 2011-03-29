@@ -68,7 +68,9 @@ pageDocumentForViewerContent =
   </div>
 
     </div>
+    <div class="signatoriesBox">
     $signatories:noescape()$
+    </div>
   </div>
 </div>
 
@@ -334,7 +336,9 @@ pageDocumentForSignContent=
         $documentinfotext:noescape()$
       </span> 
     </div>
+    <div class="signatoriesBox">
     $signatories:noescape()$
+    </div>
   </div>
 </div>
 
@@ -795,8 +799,9 @@ pageDocumentForAuthorContentPostPreparation=
         $endif$
       </span> 
     </div>
+   <div class="signatoriesBox"> 
     $signatories:noescape()$
-
+   </div>
   </div>
 </div>
 
