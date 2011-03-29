@@ -1,7 +1,8 @@
 {-# OPTIONS_GHC -Wall #-}
 
 module ActionSchedulerState (
-      ActionID(..)
+      SchedulerData(..)
+    , ActionID(..)
     , ActionType(..)
     , ActionTypeID(..)
     , InactiveAccountState(..)
@@ -21,7 +22,7 @@ module ActionSchedulerState (
     , newPasswordReminder
     , newViralInvitationSent
     , newAccountCreated
-    --, newAccountCreatedBySigning
+    , newAccountCreatedBySigning
     ) where
 
 import Control.Applicative ((<$>))
@@ -39,6 +40,12 @@ import Doc.DocState
 import Misc
 import MinutesTime
 import User.UserState
+
+data SchedulerData a b c = SchedulerData {
+      sdAppConf   :: a
+    , sdMailer    :: b
+    , sdTemplates :: c
+}
 
 newtype ActionID = ActionID Integer
     deriving (Eq, Ord, Show, Typeable)
@@ -69,9 +76,10 @@ data ActionType = TrustWeaverUpload {
                     , acToken  :: MagicHash
                 }
                 | AccountCreatedBySigning {
-                      acbsState  :: InactiveAccountState
-                    , acbsUserID :: UserID
-                    , acbsToken  :: MagicHash
+                      acbsState         :: InactiveAccountState
+                    , acbsUserID        :: UserID
+                    , acbsDocLinkDataID :: (DocumentID, SignatoryLinkID, MagicHash)
+                    , acbsToken         :: MagicHash
                 }
                   deriving (Eq, Ord, Show, Typeable)
 
@@ -97,7 +105,7 @@ actionTypeID (AmazonUpload _ _) = AmazonUploadID
 actionTypeID (PasswordReminder _ _) = PasswordReminderID
 actionTypeID (ViralInvitationSent _ _ _ _) = ViralInvitationSentID
 actionTypeID (AccountCreated _ _) = AccountCreatedID
-actionTypeID (AccountCreatedBySigning _ _ _) = AccountCreatedBySigningID
+actionTypeID (AccountCreatedBySigning _ _ _ _) = AccountCreatedBySigningID
 
 -- | Determines how often we should check if there's an action to evaluate
 data ActionImportance = UrgentAction | LeisureAction
@@ -109,7 +117,7 @@ actionImportance (AmazonUpload _ _) = UrgentAction
 actionImportance (PasswordReminder _ _) = LeisureAction
 actionImportance (ViralInvitationSent _ _ _ _) = LeisureAction
 actionImportance (AccountCreated _ _) = LeisureAction
-actionImportance (AccountCreatedBySigning _ _ _) = LeisureAction
+actionImportance (AccountCreatedBySigning _ _ _ _) = LeisureAction
 
 data Action = Action {
       actionID       :: ActionID
@@ -261,13 +269,14 @@ newAccountCreated user = do
     update $ NewAction action $ (24*60) `minutesAfter` now
 
 -- | Create new 'account created by signing' action
-{-newAccountCreatedBySigning :: User -> IO Action
-newAccountCreatedBySigning user = do
+newAccountCreatedBySigning :: User -> (DocumentID, SignatoryLinkID, MagicHash) -> IO Action
+newAccountCreatedBySigning user doclinkdata = do
     hash <- randomIO
     now <- getMinutesTime
     let action = AccountCreatedBySigning {
-          acbsState = JustCreated
-        , acbsUserID = userid user
-        , acbsToken  = hash
+          acbsState         = JustCreated
+        , acbsUserID        = userid user
+        , acbsDocLinkDataID = doclinkdata
+        , acbsToken         = hash
     }
-    update $ NewAction action $ (24*60) `minutesAfter` now-}
+    update $ NewAction action $ (24*60) `minutesAfter` now

@@ -59,6 +59,8 @@ data KontraLink
     | LinkPasswordReminder ActionID MagicHash
     | LinkViralInvitationSent ActionID MagicHash
     | LinkAccountCreated ActionID MagicHash String -- email
+    | LinkAccountCreatedBySigning ActionID MagicHash
+    | LinkAccountCreatedBySigningRemoval (DocumentID, SignatoryLinkID, MagicHash) ActionID MagicHash
     | LinkChangeSignatoryEmail DocumentID SignatoryLinkID 
     | LinkWithdrawn DocumentID 
     | LoopBack
@@ -116,6 +118,8 @@ instance Show KontraLink where
     showsPrec _ (LinkPasswordReminder (ActionID aid) hash) = (++) $ "/amnesia/" ++ show aid ++ "/" ++ show hash
     showsPrec _ (LinkViralInvitationSent (ActionID aid) hash) = (++) $ "/accountsetup/" ++ show aid ++ "/" ++ show hash
     showsPrec _ (LinkAccountCreated (ActionID aid) hash email) = (++) $ "/accountsetup/" ++ show aid ++ "/" ++ show hash ++ "?email=" ++ email
+    showsPrec _ (LinkAccountCreatedBySigning (ActionID aid) hash) = (++) $ "/accountsetup/" ++ show aid ++ "/" ++ show hash
+    showsPrec _ (LinkAccountCreatedBySigningRemoval (docid, sigid, sigtoken) (ActionID aid) hash) = (++) $ "/s/" ++ show docid ++ "/" ++ show sigid ++ "/" ++ show sigtoken ++ "?aid=" ++ show aid ++ "&atoken=" ++ show hash
     showsPrec _ (LinkChangeSignatoryEmail did slid ) = (++) $ "/changeemail/"++show did++"/"++show slid
     showsPrec _ (LinkWithdrawn did ) = (++) $ "/withdrawn/"++show did
     showsPrec _ LoopBack = (++) $ "/" -- this should never be used

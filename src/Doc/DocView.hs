@@ -119,6 +119,7 @@ willCreateAccountForYou templates document siglink hasAccount =
      else
        renderTemplate templates "willCreateAccountForYouNoAccount" $ do
          field "documentid" $ show $ unDocumentID $ documentid document
+         field "documenttitle" $ BS.toString $ documenttitle document
          field "signatorylinkid" $ unSignatoryLinkID $ signatorylinkid siglink
 
 flashDocumentDraftSaved :: KontrakcjaTemplates -> IO FlashMessage
