@@ -56,14 +56,12 @@ module Payments.PaymentsState  (
 
 import Control.Monad.Reader (ask)
 import Control.Monad.State hiding (State)
-import Happstack.Data (Default, deriveAll, )
 import Happstack.Data.IxSet as IxSet
 import Happstack.State 
 import Misc (allValues, mkTypeOf)
 import MinutesTime
 import Data.Maybe
 import Data.Data
-import Data.Typeable
 
 -- | Mail model for payments account
 data PaymentAccountModel = PaymentAccountModel {  
@@ -191,7 +189,7 @@ instance Version UserPaymentAccount where
 
 instance Migrate UserPaymentAccount0 UserPaymentAccount  where
       migrate UserPaymentAccount0 {
-               paymentaccountmoney0 
+               paymentaccountmoney0 = _
              , paymentaccountfreesignatures0  } =  
                    UserPaymentAccount {
                        paymentAgreementRef = Nothing
