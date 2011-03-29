@@ -20,6 +20,8 @@ module User.UserView (
 
     -- modals
     modalWelcomeToSkrivaPa,
+    modalAccountRemoval,
+    modalAccountRemoved,
 
     -- flash messages
     flashMessageLoginRedirectReason,
@@ -225,6 +227,18 @@ mailAccountCreatedBySigning' title_template content_template templates hostpart 
 modalWelcomeToSkrivaPa :: KontrakcjaTemplates -> KontraModal
 modalWelcomeToSkrivaPa templates =
     lift $ renderTemplate templates "modalWelcomeToSkrivaPa" ()
+
+modalAccountRemoval :: KontrakcjaTemplates -> BS.ByteString -> KontraLink -> KontraLink -> KontraModal
+modalAccountRemoval templates doctitle activationlink removallink = do
+    lift $ renderTemplate templates "modalAccountRemoval" $ do
+        field "documenttitle"  $ BS.toString doctitle
+        field "activationlink" $ show activationlink
+        field "removallink"    $ show removallink
+
+modalAccountRemoved :: KontrakcjaTemplates -> BS.ByteString -> KontraModal
+modalAccountRemoved templates doctitle = do
+    lift $ renderTemplate templates "modalAccountRemoved" $ do
+        field "documenttitle"  $ BS.toString doctitle
 
 flashMessageLoginRedirectReason :: KontrakcjaTemplates -> LoginRedirectReason -> IO (Maybe FlashMessage)
 flashMessageLoginRedirectReason templates reason =

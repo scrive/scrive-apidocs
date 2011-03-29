@@ -230,7 +230,7 @@ createUser ctx hostpart fullname email maybesupervisor vip = do
              return muser
          Nothing -> return muser
 
-createUserBySigning :: Context -> BS.ByteString -> BS.ByteString -> BS.ByteString -> (DocumentID, SignatoryLinkID, MagicHash) -> IO (Maybe User)
+createUserBySigning :: Context -> BS.ByteString -> BS.ByteString -> BS.ByteString -> (DocumentID, SignatoryLinkID) -> IO (Maybe User)
 createUserBySigning Context{ctxmailer, ctxtemplates, ctxhostpart} doctitle fullname email doclinkdata =
     createInvitedUser fullname email >>= maybe (return Nothing) (\user -> do
         (al, rl) <- newAccountCreatedBySigningLink user doclinkdata
@@ -561,6 +561,53 @@ handlePasswordReminderPost aid hash = do
                  _ -> do
                    addModal $ modalNewPasswordView aid hash
                    return LinkMain
+
+handleAccountRemovalGet :: ActionID -> MagicHash -> Kontra Response
+handleAccountRemovalGet aid hash = do
+    getAccountCreatedBySigningIDAction aid >>= maybe mzero (\action -> do
+        let AccountCreatedBySigning _ _ (docid, sigid) token = actionType action
+        if hash == token
+           then (query $ GetDocumentByDocumentID docid) >>= maybe mzero (\doc -> do
+               let sigs = filter ((==) sigid . signatorylinkid) $ documentsignatorylinks doc
+               case sigs of
+                    [sig] -> do
+                        extendActionEvalTimeToOneDayMinimum aid
+                        templates <- ctxtemplates <$> get
+                        addModal $ modalAccountRemoval templates (documenttitle doc) (LinkAccountCreatedBySigning aid hash) (LinkAccountRemoval aid hash)
+                        sendRedirect $ LinkSignDoc doc sig
+                    _ -> mzero
+               )
+           else mzero
+        )
+
+handleAccountRemovalPost :: ActionID -> MagicHash -> Kontra KontraLink
+handleAccountRemovalPost aid hash = do
+    getAccountCreatedBySigningIDAction aid >>= maybe mzero (\action -> do
+        let AccountCreatedBySigning _ _ (docid, _) token = actionType action
+        if hash == token
+           then (query $ GetDocumentByDocumentID docid) >>= maybe mzero (\doc -> do
+               -- there should be done account and its documents removal, but
+               -- since the functionality is not there yet, we just remove
+               -- this action to prevent user from account activation and
+               -- receiving further reminders
+               dropExistingAction aid
+               templates <- ctxtemplates <$> get
+               addModal $ modalAccountRemoved templates (documenttitle doc)
+               return LinkMain)
+           else mzero
+        )
+
+getAccountCreatedBySigningIDAction :: ActionID -> Kontra (Maybe Action)
+getAccountCreatedBySigningIDAction aid =
+    (query $ GetAction aid) >>= maybe (return Nothing) (\action -> do
+        -- allow for account created by signing links only
+        if (actionTypeID $ actionType action) /= AccountCreatedBySigningID
+           then return Nothing
+           else if (acbsState $ actionType action) /= ThirdReminderSent
+                   then return $ Just action
+                   else do
+                       now <- liftIO $ getMinutesTime
+                       return $ checkValidity now $ Just action)
 
 getUserFromActionOfType :: ActionTypeID -> ActionID -> MagicHash -> Kontra (Maybe User)
 getUserFromActionOfType atypeid aid hash = do

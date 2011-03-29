@@ -63,6 +63,53 @@ modalWelcomeToSkrivaPa=
       </div>
 </div>
 ####
+modalAccountRemoval=
+<div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-icon message"></div>
+        <div class="modal-title">
+          <h3>Är du säker?</h3>
+        </div>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">
+          <p>Är du säker på att du vill att vi raderar dokumentet "$documenttitle$" och ditt konto från SkrivaPå?<p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a href="$activationlink$" class="btn-small green float-right">
+          <div class="left"></div>
+          <div class="label">
+            <p>Aktivera konto</p>
+            <div class="btn-symbol green arrow-left"></div>
+          </div>
+          <div class="right"></div>
+        </a>
+        <form method="post" action="$removallink$" name="removeaccountform"></form>
+        <a href="#" class="float-left" onclick="document.removeaccountform.submit();return false;" style="color: red; text-decoration: none">Ja</a>
+      </div>
+</div>
+###
+modalAccountRemoved=
+<div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-icon message"></div>
+        <div class="modal-title">
+          <h3>Raderat</h3>
+        </div>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">
+          <p>Din kopia av dokumentet "$documenttitle$" är nu raderat tillsammans från SkrivaPå tillsammans med ditt konto.</p>
+          <p>Med vänliga hälsningar<br>
+          Team SkrivaPå</p>
+        </div>
+      </div>
+      <div class="modal-footer"></div>
+</div>
+###
 modalSendInviteView=
     <div class="modal-container">
       <div class="modal-header">
