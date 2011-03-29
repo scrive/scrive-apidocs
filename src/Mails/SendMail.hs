@@ -18,6 +18,7 @@ import qualified Data.ByteString.Lazy.Char8 as BSLC
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import System.Exit
 import System.Directory
+import System.Random
 import qualified Codec.Binary.Base64 as Base64
 import qualified Codec.Binary.QuotedPrintable as QuotedPrintable
 import Data.List
@@ -95,9 +96,10 @@ createDevMailer ourInfoEmail ourInfoEmailNiceName = Mailer {sendMail = sendToTem
     sendToTempFile mail@(Mail {fullnameemails}) = do
     tmp <- getTemporaryDirectory
     mailId <- createMailId
+    uid <- randomRIO (1, 100000) :: IO Int
     let wholeContent = createWholeContent ourInfoEmail ourInfoEmailNiceName mailId mail
         mailtos = createMailTos mail
-        filename = tmp ++ "/Email-" ++ BS.toString (snd (head fullnameemails)) ++ ".eml"
+        filename = tmp ++ "/Email-" ++ BS.toString (snd (head fullnameemails)) ++ "-" ++ show uid ++ ".eml"
     Log.mail $ show mailId ++ " " ++ concat (intersperse ", " mailtos) ++ "  [staging: saved to file " ++ filename ++ "]"
     BSL.writeFile filename wholeContent
     openDocument filename
