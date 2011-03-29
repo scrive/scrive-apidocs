@@ -60,7 +60,6 @@ import PayEx.PayExInterface -- Import so at least we check if it compiles
 import InputValidation
 import System.Directory
 import ListUtil
-import ActionSchedulerState
 
 {- | 
   Defines the application's configuration.  This includes amongst other things
@@ -199,7 +198,7 @@ handleRoutes = msum [
      , dir "vip"         $ hget0  $ signupVipPageGet
      , dir "vip"         $ hpost0 $ signupVipPagePost
      , dir "amnesia"     $ hpost0 $ forgotPasswordPagePost
-     , dir "amnesia"     $ hget2  $ handlePasswordReminderGet
+     , dir "amnesia"     $ hget2  $ UserControl.handlePasswordReminderGet
      , dir "amnesia"     $ hpost2 $ UserControl.handlePasswordReminderPost
      , dir "accountsetup"  $ hget2  $ UserControl.handleAccountSetupGet
      , dir "accountsetup"  $ hpost2  $ UserControl.handleAccountSetupPost     
@@ -229,7 +228,7 @@ handleHomepage = do
     referer <- getField "referer"
     case ctxmaybeuser of
         Just user -> UserControl.checkUserTOSGet $ DocControl.showMainPage user 
-        Nothing   -> V.simpleResponse =<< (liftIO $ firstPage ctx loginOn Nothing referer)
+        Nothing   -> V.simpleResponse =<< (liftIO $ firstPage ctx loginOn referer)
 
 handleMainReaload :: Kontra KontraLink
 handleMainReaload = LinkNew <$> getListParamsForSearch
@@ -376,19 +375,6 @@ sendResetPasswordMail user = do
     chpwdlink <- newPasswordReminderLink user
     mail <-liftIO $ UserView.resetPasswordMail (ctxtemplates ctx) (ctxhostpart ctx) user chpwdlink
     liftIO $ sendMail (ctxmailer ctx) $ mail { fullnameemails = [((userfullname user), (unEmail $ useremail $ userinfo user))] }
-
-handlePasswordReminderGet :: ActionID -> MagicHash -> Kontra Response
-handlePasswordReminderGet aid hash = do
-  loginOn <- isFieldSet "logging"
-  if loginOn
-    then handleHomepage
-    else do
-      mres <- UserControl.checkPasswordReminderGet aid hash
-      case mres of
-        (Left _) -> handleHomepage
-        (Right _) -> do
-          ctx <- get
-          V.simpleResponse =<< (liftIO $ firstPage ctx False (Just (aid, hash)) Nothing)  
 
 {- |
    Handles viewing of the signup page

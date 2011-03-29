@@ -34,17 +34,23 @@ module User.UserView (
     flashMessageNewActivationLinkSend,
     flashMessageUserSignupDone,
     flashMessageAccountRequestSend,
-    
+
+    --modals
+    modalNewPasswordView,
+
     --utils  
     prettyName,
     userSmallView,
     UserSmallView(..)) where
 
 import Control.Applicative ((<$>))
+import Control.Monad.Reader
 import Data.Data
+import ActionSchedulerState
 import Kontra
 import KontraLink
 import Mails.SendMail(Mail, emptyMail, title, content)
+import Misc
 import Templates.Templates 
 import Templates.TemplatesUtils
 import Text.StringTemplate.GenericStandard()
@@ -277,6 +283,12 @@ flashMessageUserSignupDone templates =
 flashMessageAccountRequestSend :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageAccountRequestSend templates =
   toFlashMsg OperationDone <$> renderTemplate templates "flashMessageAccountRequestSend" ()
+
+modalNewPasswordView :: ActionID -> MagicHash -> KontraModal
+modalNewPasswordView aid hash = do
+  templates <- ask
+  lift $ renderTemplate templates "modalNewPasswordView" $ do
+            field "linkchangepassword" $ (show $ LinkPasswordReminder aid hash)
 
 -------------------------------------------------------------------------------
 
