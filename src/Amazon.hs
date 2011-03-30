@@ -23,6 +23,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import Misc (concatChunks)
 import Happstack.State (update)
+import System.FilePath ((</>))
 
 urlFromFile :: File -> String
 urlFromFile File{filename,fileid} =
@@ -30,11 +31,15 @@ urlFromFile File{filename,fileid} =
     -- does only %-escaping for 8bit values
     "file/" ++ show fileid ++ "/" ++ HTTP.urlEncode (BSC.unpack filename) ++ ".pdf"
 
-
-uploadFile ctxs3action@AWS.S3Action{ AWS.s3bucket = "" } _ = do
-  putStrLn "No uploadind as bucket is ''"
+uploadFile :: FilePath -> S3Action -> File -> IO ()
+uploadFile docstore@(_:_) ctxs3action@AWS.S3Action{ AWS.s3bucket = "" } File{ fileid, filename, filestorage = FileStorageMemory content } = do
+  let filepath = docstore </> show fileid ++ '-' : BSC.unpack filename ++ ".pdf"
+  BS.writeFile filepath content
+  putStrLn $ "Document saved as " ++ filepath
+  update $ FileMovedToDisk fileid filepath
   return ()
-uploadFile ctxs3action file@File{fileid,filestorage = FileStorageMemory content} = do
+
+uploadFile _ ctxs3action@AWS.S3Action{ AWS.s3bucket = (_:_) } file@File{fileid, filestorage = FileStorageMemory content} = do
   let action = ctxs3action { AWS.s3object = url
                            , AWS.s3operation = HTTP.PUT
                            , AWS.s3body = BSL.fromChunks [content]
@@ -55,7 +60,15 @@ uploadFile ctxs3action file@File{fileid,filestorage = FileStorageMemory content}
                 putStrLn $ "AWS failed to upload: " ++ bucket ++ "/" ++ url
                 print err 
                 return ()
-uploadFile _ _ = return ()
+
+uploadFile _ _ _ = do
+    putStrLn "No uploading/saving to disk as bucket/docstore is ''"
+    return ()
+
+
+getFileContents :: S3Action -> File -> IO BS.ByteString
+getFileContents _ File{ filestorage = FileStorageDisk filepath } =
+    BS.readFile filepath `catch` (return . const BS.empty)
 
 getFileContents s3action File{ filestorage = FileStorageMemory content, filename } = do
     -- putStrLn $ "getFileContents local " ++ BS.toString filename

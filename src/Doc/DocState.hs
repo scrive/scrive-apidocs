@@ -13,6 +13,7 @@ module Doc.DocState
     , RejectDocument(..)
     , FileModTime(..)
     , FileMovedToAWS(..)
+    , FileMovedToDisk(..)
     , FragileTakeOverDocuments(..)
     , GetDocumentByDocumentID(..)
     , GetDocumentStats(..)
@@ -165,21 +166,26 @@ fileMovedToAWS :: FileID
                -> BS.ByteString
                -> BS.ByteString
                -> Update Documents (Either String Document)
-fileMovedToAWS fileid' bucket url = do
-  documents <- ask
-  case getOne (documents @= fileid') of
-    Nothing -> return $ Left "no such file id"
-    Just document ->
-        modifyContract (documentid document) $ moved
-  where
-    moved doc@Document{documentfiles,documentsealedfiles} =
+fileMovedToAWS fileid bucket url = fileMoveTo fileid $  FileStorageAWS bucket url
+
+fileMovedToDisk :: FileID -> FilePath -> Update Documents (Either String Document)
+fileMovedToDisk fileid filepath = fileMoveTo fileid $ FileStorageDisk filepath
+
+fileMoveTo :: FileID -> FileStorage -> Update Documents (Either String Document)
+fileMoveTo fid fstorage = do
+    documents <- ask
+    case getOne (documents @= fid) of
+         Nothing -> return $ Left "no such file id"
+         Just document -> modifyContract (documentid document) $ moved
+    where
+    moved doc@Document{documentfiles, documentsealedfiles} =
         Right $ doc { documentfiles = map moved1 documentfiles
                     , documentsealedfiles = map moved1 documentsealedfiles
                     }
     moved1 file@File{ fileid
                     , filestorage = FileStorageMemory _
-                    } | fileid == fileid' =
-                                 file { filestorage = FileStorageAWS bucket url }
+                    } | fileid == fid =
+                                 file { filestorage = fstorage }
                       | otherwise = file
     moved1 file = file
 
@@ -778,6 +784,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'closeDocument
                         , 'cancelDocument
                         , 'fileMovedToAWS
+                        , 'fileMovedToDisk
 
                           -- admin only area follows
                         , 'fragileTakeOverDocuments

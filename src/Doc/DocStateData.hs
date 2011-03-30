@@ -755,6 +755,7 @@ data JpegPages = JpegPagesPending
                
 data FileStorage = FileStorageMemory BS.ByteString
                  | FileStorageAWS BS.ByteString BS.ByteString -- ^ bucket, url inside bucket
+                 | FileStorageDisk FilePath -- ^ filepath
     deriving (Eq, Ord, Typeable)
 
 
