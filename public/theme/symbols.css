@@ -198,6 +198,12 @@
     height: 22px;
     width: 31px;
 }
+
+.icon.cross.signicon {
+  position:relative;
+  top:5px;
+}
+
 /* Lightbox Icons */
 
 .modal-icon {

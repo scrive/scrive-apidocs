@@ -349,7 +349,14 @@ $if(notsignedbyme)$$if(pending)$
     </div>
   </div>
   <div id="signViewBottomBoxContainerRight"> 
-  <input type="button" class="submit btn-blue center" value="     SkrivaPå" id="sign" rel="#dialog-confirm-sign" name="sign" />
+  <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign" name="sign">
+    <div class="left"></div>
+    <div class="label" style="width:120px">
+      <span>SkrivaPå</span>
+      <span class="icon cross signicon"></span>
+    </div>
+    <div class="right"></div>
+  </a>
   <a class="btn-tiny red float-right" name="cancel"  rel="#dialog-confirm-cancel" id="cancel">  
                 <div class="left"> </div>
                 <div class="label"> Avvisa dokument </div> 
@@ -556,8 +563,8 @@ pageDocumentForAuthorHelpersLocalDialogs=
         <a href="#" class="btn-big blue float-right submiter signhidden">
           <div class="left"></div>
           <div class="label">
-              <span >SkrivaPå </span>
-              <span class="icon cross" style="position:relative;top:5px"></span>
+              <span>SkrivaPå</span>
+              <span class="icon cross signicon"></span>
           </div>
           <div class="right"></div>
         </a>
