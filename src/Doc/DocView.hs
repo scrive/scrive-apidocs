@@ -95,27 +95,29 @@ modalLoginForSaveView = do
   templates <- ask
   lift $ renderTemplate templates "modalLoginForSaveView" ()
 
-modalSignedView ::  Document -> SignatoryLink -> Bool -> KontraModal
-modalSignedView document@Document{documenttitle, documentstatus} signatorylink hasaccount = do
+modalSignedView ::  Document -> SignatoryLink -> Bool -> Bool -> KontraModal
+modalSignedView document@Document{documenttitle, documentstatus} signatorylink hasaccount isloggedin = do
   templates <- ask   
   if documentstatus == Closed
      then
        lift $ renderTemplate templates "modalSignedViewClosed" $ do
          field "partyListString" . renderListTemplate templates . map (BS.toString . personname') $ partyList document
          field "documenttitle" $ BS.toString $ documenttitle
-         field "willCreateAccountForYou" $ willCreateAccountForYou templates document signatorylink hasaccount
+         field "willCreateAccountForYou" $ willCreateAccountForYou templates document signatorylink hasaccount isloggedin
      else
        lift $ renderTemplate templates "modalSignedViewNotClosed" $ do
          field "partyUnsignedListString" . renderListTemplate templates . map (BS.toString . personname') $ partyUnsignedList document
          field "documenttitle" . BS.toString $ documenttitle
-         field "willCreateAccountForYou" $ willCreateAccountForYou templates document signatorylink hasaccount 
+         field "willCreateAccountForYou" $ willCreateAccountForYou templates document signatorylink hasaccount isloggedin
 
-willCreateAccountForYou :: KontrakcjaTemplates -> Document -> SignatoryLink -> Bool -> IO String
-willCreateAccountForYou templates document siglink hasAccount =
+willCreateAccountForYou :: KontrakcjaTemplates -> Document -> SignatoryLink -> Bool -> Bool -> IO String
+willCreateAccountForYou templates document siglink hasAccount isloggedin =
   if (hasAccount)
      then
        renderTemplate templates "willCreateAccountForYouHasAccount" $ do
          field "email" . signatoryemail $ signatorydetails siglink
+         field "isloggedin" isloggedin
+         field "linklogin" $ show (LinkLogin NoReason)
      else
        renderTemplate templates "willCreateAccountForYouNoAccount" $ do
          field "documentid" $ show $ unDocumentID $ documentid document

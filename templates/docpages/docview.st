@@ -271,11 +271,12 @@ pageDocumentForSignContent=
           </span>
           $else$
           
-          <a href="#" class="btn-small green float-right submiter">
+          <a href="#" class="btn-big blue float-right submiter">
             <div class="left"></div>
             <div class="label">
-              <p>Underteckna</p>
-              <div class="btn-symbol green arrow-left"></div></div>
+              <span>SkrivaPå</span>
+              <span class="icon cross signicon"></span>
+            </div>
             <div class="right"></div>
           </a>
           $endif$
