@@ -146,7 +146,7 @@ function sign1(ajaxurl, formselector, posturl) {
 		    }
 		    
 	      },
-		  error: function(){ alert("ajaxurl");/* what to do? */ }});
+		  error: function(){ alert(ajaxurl);/* what to do? */ }});
   return false;
 }
 
