@@ -159,7 +159,7 @@ handleSignPostBankID docid signid magic = do
         -- error state
         Left (ImplStatus _a _b code msg) -> do
             liftIO $ print $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
-            Log.debug $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
+            Log.debug $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg), ("provider", JInt providerCode), ("sig", JString $ BS.toString signature)]
             addFlashMsg $ toFlashMsg OperationFailed $ "E-Legitimation signature failed: " ++ msg
             return $ LinkSignDoc document siglink
         -- successful request
