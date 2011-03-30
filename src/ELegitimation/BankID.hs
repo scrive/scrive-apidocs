@@ -151,7 +151,9 @@ handleSignPostBankID docid signid magic = do
     res <- verifySignature providerCode
                 transactionencodedtbs
                 signature
-                transactionnonce
+                (if providerCode == 6
+                    then Just transactionnonce
+                    else Nothing)
                 transactionid
     --res <- return $ Right ("abca", [(BS.fromString "lastname", BS.fromString "Andersson"), (BS.fromString "firstname", BS.fromString "Agda"), (BS.fromString "personnumber", BS.fromString "111111")])
 
@@ -330,7 +332,9 @@ handleIssuePostBankID docid = withUserPost $ do
             res <- verifySignature providerCode
                     transactionencodedtbs
                     signature
-                    transactionnonce
+                    (if providerCode == 6
+                    then Just transactionnonce
+                    else Nothing)
                     transactionid
 
             case res of
@@ -531,15 +535,15 @@ instance XmlContent (EncodeTBSResponse) where
             }
         } `adjustErr` ("in <EncodeTBSResponse>, "++)
 
-data VerifySignatureRequest = VerifySignatureRequest Int String String String String String
+data VerifySignatureRequest = VerifySignatureRequest Int String String String (Maybe String) String
 
 instance HTypeable (VerifySignatureRequest) where
     toHType _x = Defined "VerifySignatureRequest" [] []
 instance XmlContent (VerifySignatureRequest) where
-    toContents (VerifySignatureRequest provider policy tbs signature nonce transactionID) =
+    toContents (VerifySignatureRequest provider policy tbs signature mnonce transactionID) =
         [CElem (Elem "verifySignatureRequest" 
                 [mkAttr "xmlns" "urn:www.sll.se/wsdl/soap/osif"]
-                [CElem (Elem "provider"
+                ([CElem (Elem "provider"
                                  [mkAttr "xmlns" ""]
                                  (toText $ show provider)) ()
                 ,CElem (Elem "policy"
@@ -554,10 +558,13 @@ instance XmlContent (VerifySignatureRequest) where
                 ,CElem (Elem "signature"
                                  [mkAttr "xmlns" ""]
                                  (toText signature)) ()
-                ,CElem (Elem "nonce"
-                                 [mkAttr "xmlns" ""]
-                                 (toText nonce)) ()
-                ]) 
+                                 ]
+                                 ++ if isJust mnonce
+                                        then [CElem (Elem "nonce"
+                                                [mkAttr "xmlns" ""]
+                                                (toText $ fromJust nonce)) ()]
+                                        else []
+                )
          ()]
     parseContents = error "Please do not parse VerifySignatureRequest"
 
@@ -634,10 +641,10 @@ encodeTBS provider tbs transactionID = do
 verifySignature :: Int 
                     -> String 
                     -> String 
-                    -> String 
+                    -> Maybe String 
                     -> String 
                     -> Kontra (Either ImplStatus (String, [(BS.ByteString, BS.ByteString)]))
-verifySignature provider tbs signature nonce transactionID = do
+verifySignature provider tbs signature mnonce transactionID = do
     eresponse <- liftIO $ 
         makeSoapCallCA endpoint certfile
             "VerifySignature" $ 
@@ -645,7 +652,7 @@ verifySignature provider tbs signature nonce transactionID = do
                 serviceid
                 tbs 
                 signature 
-                nonce 
+                mnonce 
                 transactionID
     case eresponse of
         Left msg -> do
