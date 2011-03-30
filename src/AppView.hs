@@ -10,9 +10,11 @@ module AppView( TopMenu(..)
               , pageLogin
               , simpleResponse 
               , firstPage
+              , modalError
               ) where 
 
 import Control.Arrow (first)
+import Control.Monad.Reader (ask)
 import HSP hiding (Request)
 import Happstack.Server.HSP.HTML (webHSP)
 import Happstack.Server.SimpleHTTP
@@ -171,3 +173,7 @@ loginModal::Bool -> Maybe String -> Fields
 loginModal on referer= do 
     field "loginModal" $ on 
     field "referer" $ referer
+
+modalError :: KontrakcjaTemplates -> KontraModal
+modalError templates =
+    lift $ renderTemplate templates "modalError" ()

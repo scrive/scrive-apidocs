@@ -233,6 +233,15 @@ handleHomepage = do
         Just user -> UserControl.checkUserTOSGet $ DocControl.showMainPage user 
         Nothing   -> V.simpleResponse =<< (liftIO $ firstPage ctx loginOn referer)
 
+{- |
+    Handles an error by displaying the home page with a modal error dialog.
+-}
+handleError :: Kontra Response
+handleError = do
+    ctx <- get
+    addModal $ V.modalError (ctxtemplates ctx)
+    sendRedirect LinkMain
+
 handleMainReaload :: Kontra KontraLink
 handleMainReaload = LinkNew <$> getListParamsForSearch
 
@@ -277,7 +286,7 @@ appHandler appConf appGlobals docs = do
              when (isJust rqcontent) $
                  liftIO $ putMVar (rqInputsBody rq) (fromJust rqcontent)
              liftIO $ logM "Happstack.Server" ERROR $ "ERROR" ++ (showDateMDY $ ctxtime ctx)++" "++(rqUri rq) ++" "++(show rq) ++ " " ++ show rqcontent
-             response <- V.renderFromBody ctx V.TopNone V.kontrakcja (fmap cdata $ renderTemplate (ctxtemplates ctx) "errorPage" ())
+             response <- handleError
              setRsCode 404 response     
           ctx' <- get 
           return (res,ctx')   
