@@ -2061,6 +2061,11 @@ form {
     margin-left:15px;
 }
 
+#signViewBottomBoxContainerRight #cancel
+{
+    padding:10px;
+}
+
 #signViewBottomBoxBottom
 {
     background-image: url(images/box2-bottom.png);

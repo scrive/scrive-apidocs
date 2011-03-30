@@ -294,8 +294,8 @@ $endif$
                <a type="button"  id="signinvite" rel="#dialog-confirm-signinvite" class="btn-big blue center" style="float:none">
                <div class="left"></div>
                <div class="label" style="width:120px">
-                    <p style="width:80px;display:inline-block;text-align:left;">SkrivaPå </p>
-                    <span class="icon cross" style="position:relative;top:5px"></span>
+                    <span>SkrivaPå </span>
+                    <span class="icon cross signicon"></span>
 
                </div> 
                <div class="right"></div>
@@ -303,8 +303,13 @@ $endif$
             </div>
           </div>
           $elseif(template)$
-            <a type="submit" name="save" class="submit new-btn-small green2 center saveTemplate"> 
-              <p>Spara mall</p> 
+            <a class="btn-small green center submiter saveTemplate">
+              <div class="left"></div>
+              <div class="label">
+                <p>Spara mall</p>
+                <span class="btn-symbol green arrow-left"></span>
+              </div>
+              <div class="right"></div>
             </a>
            $endif$
 
