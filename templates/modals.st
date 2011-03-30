@@ -354,3 +354,30 @@ newPasswordModalPart=
   </div>
 </div>
 ######
+###
+modalError=
+<div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-icon message"></div>
+        <div class="modal-title">
+          <h3>Oops, ett fel har uppstått</h3>
+        </div>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">
+          <p>Oroa dig inte, vi tittar på problemet</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a class="btn-small green float-right close">
+          <div class="left"></div>
+          <div class="label">
+            <p>Ok</p>
+            <div class="btn-symbol green arrow-left"></div>
+          </div>
+          <div class="right"></div>
+        </a>
+      </div>
+</div>
+###
