@@ -126,6 +126,7 @@ function sign1(ajaxurl, formselector, posturl) {
 	}
   } else {
 	addFlashMessage("Your browser is not supported. Please use either Internet Explorer or Firefox.");
+    alert("bad browser");
   }
   if(!good){
 	return false;
@@ -141,11 +142,11 @@ function sign1(ajaxurl, formselector, posturl) {
 		      var transactionid = data['transactionid'];
 		      sign1Success(transactionid, tbs, nonce, servertime, posturl, formselector);
 		    } else {
-
+              alert("oops");
 		    }
 		    
 	      },
-		  error: function(){ /* what to do? */ }});
+		  error: function(){ alert("ajaxurl");/* what to do? */ }});
   return false;
 }
 
