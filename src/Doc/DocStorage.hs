@@ -53,16 +53,17 @@ getFileContents ctx file = do
                 return mcontentAWS
 
 {- Upload document to Amazon -}
-uploadDocumentFileToAmazon :: AWS.S3Action
+uploadDocumentFileToAmazon :: FilePath
+                                 -> AWS.S3Action
                                  -> DocumentID 
                                  -> FileID
                                  -> IO ()
-uploadDocumentFileToAmazon ctxs3action docid fileid1 = do
+uploadDocumentFileToAmazon docstore ctxs3action docid fileid1 = do
   Just doc <- query $ GetDocumentByDocumentID docid
   let files = documentfiles doc ++ documentsealedfiles doc
   case filter (\x -> fileid x == fileid1) files  of
     [file] -> do
-      AWS.uploadFile ctxs3action file
+      AWS.uploadFile docstore ctxs3action file
       return ()
     _ -> return ()
   return ()

@@ -988,7 +988,7 @@ handlePageOfDocument documentid = do
    
 handleDocumentUpload :: DocumentID -> BS.ByteString -> BS.ByteString -> Kontra ()
 handleDocumentUpload docid content1 filename = do
-  ctx@Context{ctxs3action} <- get
+  ctx@Context{ctxdocstore, ctxs3action} <- get
   -- we need to downgrade the PDF to 1.4 that has uncompressed structure
   -- we use gs to do that of course
   content <- liftIO $ preprocessPDF content1
@@ -997,7 +997,7 @@ handleDocumentUpload docid content1 filename = do
   case result of
     Left err -> return ()
     Right document -> do
-        liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxs3action) (documentfiles document)
+        liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxdocstore ctxs3action) (documentfiles document)
         return ()
   return ()
 
