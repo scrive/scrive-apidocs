@@ -170,34 +170,55 @@ singlnkFields sl = do
   field "name" $ BS.toString $ personname sl
   field "email" $  ""
   field "company" $ ""
-  
 
-documentStatusClass ::Document -> String
+{- |
+    We want the documents to be ordered like the icons in the bottom
+    of the document list.  So this means:
+    0 Draft - 1 Cancel - 2 Fall due - 3 Sent - 4 Opened - 5 Signed
+-}
+data StatusClass = SCDraft
+                  | SCCancelled
+                  | SCTimedout
+                  | SCSent
+                  | SCOpened
+                  | SCSigned
+                  deriving (Eq, Ord)
+
+instance Show StatusClass where
+  show SCDraft = "draft"
+  show SCCancelled = "cancelled"
+  show SCTimedout = "cancelled"
+  show SCSent = "sent"
+  show SCOpened = "opened"
+  show SCSigned = "signed"
+
+
+documentStatusClass ::Document -> StatusClass
 documentStatusClass doc = 
     case documentstatus doc of
-         Preparation    -> "draft"
-         Closed         -> "signed"
-         Canceled       -> "cancelled"
-         Timedout       -> "cancelled"
-         Rejected       -> "cancelled"
+         Preparation    -> SCDraft
+         Closed         -> SCSigned
+         Canceled       -> SCCancelled
+         Timedout       -> SCTimedout
+         Rejected       -> SCCancelled
          Pending        -> if anyInvitationUndelivered doc
-                               then "cancelled"
+                               then SCCancelled
                                else
                                 if all (isJust . maybeseeninfo) $ documentsignatorylinks doc
-                                 then "opened"
-                                 else "sent"
+                                 then SCOpened
+                                 else SCSent
          AwaitingAuthor -> if anyInvitationUndelivered doc
-                                then "cancelled"
+                                then SCCancelled
                                 else
                                   if all (isJust . maybeseeninfo) $ documentsignatorylinks doc
-                                    then "opened"
-                                    else "sent"
-         _              -> "cancelled"
+                                    then SCOpened
+                                    else SCSent
+         _              -> SCCancelled
 
 documentBasicViewFields :: MinutesTime -> User -> Document -> Fields
 documentBasicViewFields crtime user doc = do
     documentInfoFields doc
-    field "status" $ documentStatusClass doc
+    field "status" $ show (documentStatusClass doc)
     field "signatories" $ map singlnkFields $ documentsignatorylinks doc
     field "anyinvitationundelivered" $ anyInvitationUndelivered doc
     field "doclink"  $ if (unAuthor $ documentauthor doc) == userid user || null signatorylinklist
@@ -235,8 +256,8 @@ docSearchFunc s doc =  nameMatch doc || signMatch doc
     
    
 docSortFunc:: SortingFunction Document
-docSortFunc "status" = viewComparing documentStatusClass
-docSortFunc "statusREV" = viewComparingRev documentStatusClass
+docSortFunc "status" = compareStatus
+docSortFunc "statusREV" = revCompareStatus
 docSortFunc "title" = viewComparing documenttitle
 docSortFunc "titleREV" = viewComparingRev documenttitle
 docSortFunc "time" = viewComparing documentmtime
@@ -244,6 +265,12 @@ docSortFunc "timeREV" = viewComparingRev documentmtime
 docSortFunc "partner" = comparePartners 
 docSortFunc "partnerREV" = revComparePartners
 docSortFunc _ = const $ const EQ
+
+revCompareStatus :: Document -> Document -> Ordering
+revCompareStatus doc1 doc2 = compareStatus doc2 doc1
+
+compareStatus :: Document -> Document -> Ordering
+compareStatus doc1 doc2 = compare (documentStatusClass doc1) (documentStatusClass doc2)
 
 revComparePartners :: Document -> Document -> Ordering
 revComparePartners doc1 doc2 = comparePartners doc2 doc1
