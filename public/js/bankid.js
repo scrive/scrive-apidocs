@@ -72,7 +72,7 @@ function sign1Success(transactionid, tbs, nonce, servertime, posturl, formselect
 	  flashNordeaMessage();
 	}
   }else {
-	alert("Unsupported browser.");
+	addFlashMessage("Unsupported browser.");
 	return false;
   }
   var sig = doSign1(tbs);
@@ -85,7 +85,7 @@ function sign1Success(transactionid, tbs, nonce, servertime, posturl, formselect
     form.attr("action", posturl);
 	form.submit();
   } else {
-	alert("could not sign");
+	addFlashMessage("could not sign");
   }
 }
 
@@ -105,7 +105,7 @@ function doSign1(tbs) {
 	  flashNordeaMessage();
 	}
   } else {
-	alert("Your browser is not supported. Please use either Internet Explorer or Firefox.");
+	addFlashMessage("Your browser is not supported. Please use either Internet Explorer or Firefox.");
   }
   return null;
 }
@@ -125,7 +125,7 @@ function sign1(ajaxurl, formselector, posturl) {
 	  flashNordeaMessage();
 	}
   } else {
-	alert("Your browser is not supported. Please use either Internet Explorer or Firefox.");
+	addFlashMessage("Your browser is not supported. Please use either Internet Explorer or Firefox.");
   }
   if(!good){
 	return false;
@@ -141,11 +141,11 @@ function sign1(ajaxurl, formselector, posturl) {
 		      var transactionid = data['transactionid'];
 		      sign1Success(transactionid, tbs, nonce, servertime, posturl, formselector);
 		    } else {
-		      alert("OOPS");
+
 		    }
 		    
 	      },
-		  error: function(){ alert("oh no!");}});
+		  error: function(){ /* what to do? */ }});
   return false;
 }
 
@@ -164,7 +164,7 @@ function sign1Author(ajaxurl, formselector, posturl) {
 	  flashNordeaMessage();
 	}
   } else {
-	alert("Your browser is not supported. Please use either Internet Explorer or Firefox.");
+	addFlashMessage("Your browser is not supported. Please use either Internet Explorer or Firefox.");
   }
   if(!good){
 	return false;
@@ -181,11 +181,11 @@ function sign1Author(ajaxurl, formselector, posturl) {
 		      var transactionid = data['transactionid'];
 		      sign1Success(transactionid, tbs, nonce, servertime, posturl, formselector);
 		    } else {
-		      alert("OOPS");
+
 		    }
 		    
 	      },
-		  error: function(){ alert("oh no!");}});
+		  error: function(){ /* what to do? */}});
   return false;
 }
 
@@ -249,7 +249,7 @@ function doSign2 (tbs, nonce, servertime) {
 	return signer2.GetParam('Signature');
   }
   else {
-	alert(res);
+	addFlashMessage("The signing plugin did not successfully sign the document.");
 	return null;
   }
 }
@@ -274,7 +274,7 @@ function sign2Success(transactionid, tbs, nonce, servertime, posturl, formselect
 	  flashBankIDMessage();
 	}
   }else {
-	alert("Unsupported browser.");
+    addFlashMessage("Bad browser");
 	return false;
   }
   var sig = doSign2(tbs, nonce, servertime);    
@@ -287,7 +287,7 @@ function sign2Success(transactionid, tbs, nonce, servertime, posturl, formselect
     form.attr("action", posturl);
 	form.submit();
   } else {
-	alert("could not sign");
+	addFlashMessage("The signing plugin did not successfully sign the document.");
   }
 }
 
@@ -337,11 +337,10 @@ function sign2(posturl, formselector, ajaxurl) {
 		      var transactionid = data['transactionid'];
 		      sign2Success(transactionid, tbs, nonce, servertime, posturl, formselector);
 		    } else {
-		      alert("OOPS");
 		    }
 		    
 	      },
-		  error: function(){ alert("oh no!");}});
+		  error: function(){ /* what to do? */}});
   return false;
 }
 
@@ -378,11 +377,10 @@ function sign2Author(posturl, formselector, ajaxurl) {
 		      var transactionid = data['transactionid'];
 		      sign2Success(transactionid, tbs, nonce, servertime, posturl, formselector);
 		    } else {
-		      alert("OOPS");
 		    }
 		    
 	      },
-		  error: function(){ alert("oh no!");}});
+		  error: function(){ /* what to do? */ }});
   return false;
 }
 
@@ -434,7 +432,7 @@ function doSignNetID (tbs, nonce, servertime) {
 	return signer.GetProperty('Signature');
   }
   else {
-	alert(res);
+    addFlashMessage("signing unsuccessful");
 	return null;
   }
 }
@@ -459,7 +457,7 @@ function netIDSuccess(transactionid, tbs, nonce, servertime, posturl, formselect
 	  flashTeliaMessage();
 	}
   }else {
-	alert("Unsupported browser.");
+	addFlashMessage("Unsupported browser.");
 	return false;
   }
   var sig = doSignNetID(tbs, nonce, servertime);    
@@ -472,7 +470,7 @@ function netIDSuccess(transactionid, tbs, nonce, servertime, posturl, formselect
     form.attr("action", posturl);
 	form.submit();
   } else {
-	alert("could not sign");
+	addFlashMessage("could not sign");
   }
 }
 
@@ -495,7 +493,7 @@ function netIDSign(posturl, formselector, ajaxurl) {
 	  flashTeliaMessage();
 	}
   } else {
-	alert("Your browser is not supported. Please use either Internet Explorer or Firefox.");
+	addFlashMessage("Your browser is not supported. Please use either Internet Explorer or Firefox.");
   }
   if(!good){
 	return false;
@@ -511,11 +509,10 @@ function netIDSign(posturl, formselector, ajaxurl) {
 		      var transactionid = data['transactionid'];
 		      netIDSuccess(transactionid, tbs, nonce, servertime, posturl, formselector);
 		    } else {
-		      alert("OOPS");
 		    }
 		    
 	      },
-		  error: function(){ alert("oh no!");}});
+		  error: function(){ /* what to do? */}});
   return false;
 }
 
@@ -534,7 +531,7 @@ function netIDSignAuthor(posturl, formselector, ajaxurl) {
 	  flashTeliaMessage();
 	}
   } else {
-	alert("Your browser is not supported. Please use either Internet Explorer or Firefox.");
+	addFlashMessage("Your browser is not supported. Please use either Internet Explorer or Firefox.");
   }
   if(!good){
 	return false;
@@ -551,11 +548,10 @@ function netIDSignAuthor(posturl, formselector, ajaxurl) {
 		      var transactionid = data['transactionid'];
 		      netIDSuccess(transactionid, tbs, nonce, servertime, posturl, formselector);
 		    } else {
-		      alert("OOPS");
 		    }
 		    
 	      },
-		  error: function(){ alert("oh no!");}});
+		  error: function(){ /* what to do? */}});
   return false;
 }
 
