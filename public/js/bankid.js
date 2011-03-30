@@ -110,7 +110,7 @@ function doSign1(tbs) {
   return null;
 }
 
-function sign1(ajaxurl, formselector, posturl) {
+function sign1(posturl, formselector, ajaxurl) {
   var good = false;
   if($.browser.msie) {
 	if(hasIESigner1Plugin()) {
