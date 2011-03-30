@@ -52,7 +52,8 @@ handleSignBankID provider docid signid magic = do
 
     unless (document `allowsIdentification` ELegitimationIdentification) mzero
     -- request a nonce
-    nonceresponse <- generateChallenge
+    providerCode <- providerStringToNumber provider
+    nonceresponse <- generateChallenge providerCode
     --nonce1@MagicHash {} <- liftIO $ randomIO
     --tid@MagicHash { } <- liftIO $ randomIO
     --nonceresponse <- return $ Right (show nonce1, show tid)
@@ -68,7 +69,6 @@ handleSignBankID provider docid signid magic = do
             tbs <- liftIO $ getTBS ctxtemplates document
             liftIO $ print tbs
             liftIO $ print "after"
-            providerCode <- providerStringToNumber  provider
             encodetbsresponse <- encodeTBS providerCode tbs transactionid 
             --encodetbsresponse <- return $ Right "hello"
             liftIO $ print "after second request"
@@ -242,7 +242,8 @@ handleIssueBankID provider docid = withUserGet $ do
     
     failIfNotAuthor document author
 
-    nonceresponse <- generateChallenge
+    providerCode <- providerStringToNumber provider
+    nonceresponse <- generateChallenge providerCode
     case nonceresponse of
         Left (ImplStatus _a _b code msg) -> do
             Log.debug $ "generateChallenge failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
@@ -250,7 +251,7 @@ handleIssueBankID provider docid = withUserGet $ do
             return $ toResponse $ toJSON [("status", JInt code), ("msg", JString msg)]
         Right (nonce, transactionid) -> do
             -- encode the text to be signed
-            providerCode <- providerStringToNumber provider
+            
             encodetbsresponse <- encodeTBS providerCode tbs transactionid 
             case encodetbsresponse of
                 Left (ImplStatus _a _b code msg) -> do
@@ -606,9 +607,9 @@ instance XmlContent (VerifySignatureResponse) where
 certfile :: String
 certfile = "certs/steria3.pem"
 
-generateChallenge :: Kontra (Either ImplStatus (String, String))
-generateChallenge = do
-    eresponse <- liftIO $ makeSoapCallCA endpoint certfile "GenerateChallenge" $ GenerateChallengeRequest 6 serviceid
+generateChallenge :: Int -> Kontra (Either ImplStatus (String, String))
+generateChallenge pid = do
+    eresponse <- liftIO $ makeSoapCallCA endpoint certfile "GenerateChallenge" $ GenerateChallengeRequest pid serviceid
     case eresponse of
         Left msg -> do
             liftIO $ print msg
