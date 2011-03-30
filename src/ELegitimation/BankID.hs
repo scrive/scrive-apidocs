@@ -562,8 +562,8 @@ instance XmlContent (VerifySignatureRequest) where
                                  ++ if isJust mnonce
                                         then [CElem (Elem "nonce"
                                                 [mkAttr "xmlns" ""]
-                                                (toText $ fromJust nonce)) ()]
-                                        else []
+                                                (toText $ fromJust mnonce)) ()]
+                                        else [])
                 )
          ()]
     parseContents = error "Please do not parse VerifySignatureRequest"
