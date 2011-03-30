@@ -338,7 +338,7 @@ signDocument documentid
              signatorylinkid1
              magichash1
                  = do
-  Context { ctxtime, ctxipnumber, ctxtemplates } <- get
+  Context { ctxtime, ctxipnumber, ctxtemplates, ctxmaybeuser } <- get
   document@Document{ documentstatus = olddocumentstatus, documentsignatorylinks } <- queryOrFail $ GetDocumentByDocumentID documentid
 
   checkLinkIDAndMagicHash document signatorylinkid1 magichash1
@@ -372,7 +372,7 @@ signDocument documentid
               muser <- liftIO $ createUserBySigning ctx (documenttitle document) fullname email (documentid, signatorylinkid1)
               when_ (isJust muser) $
                   update $ SaveDocumentForSignedUser documentid (userid $ fromJust muser) signatorylinkid1
-          addModal $ modalSignedView document signatorylink (isJust maybeuser)
+          addModal $ modalSignedView document signatorylink (isJust maybeuser) (isJust ctxmaybeuser)
           return $ LinkSignDoc document signatorylink
 
 {- |

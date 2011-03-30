@@ -250,7 +250,9 @@ modalSignedViewNotClosed=
 #####
 willCreateAccountForYouHasAccount=
     <p>Dokumentet har sparats till ditt konto.
+       $if(!isloggedin)$
        $loginModalPart()$
+       $endif$
     </p>
 #####
 willCreateAccountForYouNoAccount=
