@@ -67,6 +67,7 @@ data Context = Context
     , ctxtime                :: MinutesTime
     , ctxnormalizeddocuments :: MVar (Map.Map FileID JpegPages)
     , ctxipnumber            :: Word32
+    , ctxdocstore            :: FilePath
     , ctxs3action            :: AWS.S3Action
     , ctxproduction          :: Bool
     , ctxtemplates           :: KontrakcjaTemplates 

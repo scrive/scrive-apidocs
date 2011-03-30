@@ -188,7 +188,7 @@ sealDocument :: Context
              -> User
              -> Document
              -> IO (Either String Document)
-sealDocument ctx@Context{ctxs3action,ctxtwconf}
+sealDocument ctx@Context{ctxdocstore, ctxs3action, ctxtwconf}
              _ 
              hostpart
              _
@@ -230,7 +230,7 @@ sealDocument ctx@Context{ctxs3action,ctxtwconf}
        mnewdocument <- update $ AttachSealedFile docid filename newfilepdf
        case mnewdocument of
          Right newdocument -> do
-          _ <-liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxs3action) (documentsealedfiles newdocument)
+          _ <-liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxdocstore ctxs3action) (documentsealedfiles newdocument)
           case signeddocstorage (usersettings author) of
            Nothing -> return ()
            Just twsettings -> do

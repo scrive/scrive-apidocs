@@ -22,6 +22,7 @@ import Happstack.State
 import System.Environment (getArgs)
 import System.Exit (exitFailure)
 import System.Console.GetOpt
+import System.Directory (createDirectoryIfMissing)
 import qualified AppLogger as Log
 import AppState (AppState(..))
 import AppControl (appHandler,defaultAWSAction,AppConf(..),AppGlobals(..))
@@ -125,7 +126,7 @@ initDatabaseEntries = do
 uploadOldFilesToAmazon :: AppConf -> IO ()
 uploadOldFilesToAmazon appConf = do
   files <- query $ GetFilesThatShouldBeMovedToAmazon
-  mapM_ (AWS.uploadFile (defaultAWSAction appConf)) files
+  mapM_ (AWS.uploadFile (docstore appConf) (defaultAWSAction appConf)) files
 
 main = Log.withLogger $ do
   -- progname effects where state is stored and what the logfile is named
@@ -146,36 +147,15 @@ main = Log.withLogger $ do
                    exitFailure
     (Right f) -> return $ (f (appConf1))
 
+  -- try to create directory for storing documents locally
+  if null $ docstore appConf
+     then return ()
+     else createDirectoryIfMissing True $ docstore appConf
+
   let 
     mailer | sendMails cfg = createRealMailer cfg
            | otherwise = createDevMailer (ourInfoEmail cfg) (ourInfoEmailNiceName cfg)
     cfg = mailsConfig appConf
-    ctx = Context
-            { ctxmaybeuser = error "Do not use ctxmaybeuser in actions"
-            , ctxhostpart = error "Do not use ctxhostpart in actions"
-            , ctxflashmessages = error "Do not use ctxflashmessages in actions"
-            , ctxtime = error "The ctxtime should be set per action"
-            , ctxnormalizeddocuments = error "Do not use normalized documents in actions"
-            , ctxipnumber = error "Do not use peerip in actions"
-            , ctxs3action = defaultAWSAction appConf
-            , ctxproduction = production appConf
-            , ctxtemplates = templates
-            , ctxmailer = mailer
-            , ctxtwconf = TW.TrustWeaverConf 
-                          { TW.signcert = twSignCert appConf
-                          , TW.signcertpwd = twSignCertPwd appConf
-                          , TW.admincert = twAdminCert appConf
-                          , TW.admincertpwd = twAdminCertPwd appConf
-                          , TW.signurl = twSignUrl appConf
-                          , TW.adminurl = twAdminUrl appConf
-                          , TW.storageurl = twStorageUrl appConf
-                          , TW.retries = 4
-                          , TW.timeout = 30000 --30sek
-                          }
-            , ctxelegtransactions = error "Do not use ctxelegtransactions in actions"
-            , ctxfilecache = filecache'
-            }
-    
 
   Exception.bracket
                  -- start the state system
@@ -224,6 +204,7 @@ defaultConf progName
     = AppConf { httpPort = 8000
               , hostpart = "http://localhost:8000"
               , store    = "_local/" ++ progName ++ "_state"
+              , docstore = "_local/documents"
               , static   = "public"
               , awsBucket = ""
               , awsSecretKey = ""

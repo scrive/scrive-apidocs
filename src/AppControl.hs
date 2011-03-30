@@ -71,6 +71,7 @@ data AppConf
     = AppConf { httpPort        :: Int
               , hostpart        :: String
               , store           :: FilePath
+              , docstore        :: FilePath
               , static          :: FilePath 
               , awsBucket       :: String
               , awsAccessKey    :: String
@@ -338,6 +339,7 @@ appHandler appConf appGlobals docs = do
                 , ctxtime = minutestime
                 , ctxnormalizeddocuments = docs
                 , ctxipnumber = peerip
+                , ctxdocstore = docstore appConf
                 , ctxs3action = defaultAWSAction appConf
                 , ctxproduction = production appConf
                 , ctxtemplates = templates2
