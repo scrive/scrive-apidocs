@@ -569,11 +569,22 @@ safeReady(function() {
   $(".switchercheckbox").change(function(){
     var on = $($(this).attr("on"));
     var off = $($(this).attr("off"));
+
+    var checked = $(this).attr("checked");
+
+    if(checked) {
+      off.hide();
+      on.show();
+    } else {
+      on.hide();
+      off.show();
+    }
+/*
     if($(this).val() == "off") {  
-        off.hide();
-        on.show();
-        $(this).val("on"); 
-        this.checked = true;
+      off.hide();
+      on.show();
+      $(this).val("on"); 
+      this.checked = true;
     
     } 
     else {
@@ -582,8 +593,8 @@ safeReady(function() {
         $(this).val("off");
         this.checked = false;
     }    
-    return false;
-  })
+    return false;*/
+  });
 });
 
 safeReady(function() {    
@@ -657,25 +668,29 @@ function deactivateSigninvite(){
     if (checkBox.val()=="off")
     { 
        checkBox.change();
+       checkBox.attr("DISABLED","");
     }   
-    checkBox.attr("DISABLED","");
-    checkBox.parent().find(".usual").hide();
-    checkBox.parent().find(".secretary").show();
    }
 function activateSignInvite(){
     var checkBox = $(".sendcheckbox");
     checkBox.removeAttr("DISABLED");
-    if (checkBox.val()=="on") {
-      checkBox.change();
-    }
-    checkBox.parent().find(".usual").show();
-    checkBox.parent().find(".secretary").hide();
 }
 function showProperSignButtons() {
-
-  if($("#authorsignatoryradio").attr("checked")) {
-    activateSignInvite();
+  var checkBox = $(".sendcheckbox");
+  var numsigs = $("#personpane .persondetails").length;
+  if(numsigs > 1) {
+    if($("#authorsignatoryradio").attr("checked")) {
+      activateSignInvite();
+    } else {
+      if(!checkBox.attr("checked")) { 
+        checkBox.attr("checked", true).change();
+      }   
+      deactivateSigninvite();
+    }
   } else {
+    if(checkBox.attr("checked")) { 
+      checkBox.attr("checked", false).change();
+    }   
     deactivateSigninvite();
   }
 
@@ -955,6 +970,7 @@ function showStep3()
     $('#signStep2Content').hide();
     $('#signStep3Content').show();
     $('#signStepsNextButton').hide();
+  showProperSignButtons();
     return false;
 }
 
