@@ -13,6 +13,7 @@ module Doc.DocSeal(sealDocument) where
 
 import Control.Concurrent
 import Control.Monad.Reader
+import Data.Maybe
 import Data.Bits
 import Data.List
 import Data.Word
@@ -42,7 +43,7 @@ personFromSignatoryDetails details =
                 , Seal.number = BS.toString $ signatorynumber details
                 }
 
-personsFromDocument :: Document -> [(Seal.Person, SignInfo, SignInfo, Bool)]
+personsFromDocument :: Document -> [(Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider)]
 personsFromDocument document = 
     let
         links = documentsignatorylinks document
@@ -51,10 +52,23 @@ personsFromDocument document =
                         , maybesigninfo = Just signinfo
                         , maybeseeninfo
                         , maybesignatory
+                        , signatorysignatureinfo
                         })
              -- FIXME: this one should really have seentime always...
-             = (personFromSignatoryDetails signatorydetails, maybe signinfo id maybeseeninfo, signinfo, 
-                                           maybe False ((==) authorid) maybesignatory)
+             = ((personFromSignatoryDetails signatorydetails)
+                { Seal.emailverified = True
+                , Seal.fullnameverified = fullnameverified
+                , Seal.companyverified = False
+                , Seal.numberverified = numberverified}
+              , maybe signinfo id maybeseeninfo
+              , signinfo
+              , maybe False ((==) authorid) maybesignatory
+              , maybe Nothing (Just . signatureinfoprovider) signatorysignatureinfo)
+                  where fullnameverified = maybe False (\x -> signaturefstnameverified x
+                                                        && signaturelstnameverified x)
+                                                signatorysignatureinfo
+                        numberverified = maybe False signaturepersnumverified signatorysignatureinfo
+
         x link = trace (show link) $ error "SignatoryLink does not have all the necessary data"
     in map x links
 
@@ -98,6 +112,12 @@ formatIP x = " (IP: " ++ show ((x `shiftR` 0) .&. 255) ++
                    "." ++ show ((x `shiftR` 8) .&. 255) ++
                    "." ++ show ((x `shiftR` 16) .&. 255) ++
                    "." ++ show ((x `shiftR` 24) .&. 255) ++ ")"
+                   
+formatProvider :: SignatureProvider -> String
+formatProvider BankIDProvider = "BankID"
+formatProvider NordeaProvider = "Nordea e-legitimation"
+formatProvider TeliaProvider  = "Telia e-legitimation"
+formatProvider _ = "e-legitimation"
 
 sealSpecFromDocument :: String -> Document -> User ->  String -> String -> Seal.SealSpec
 sealSpecFromDocument hostpart document author inputpath outputpath =
@@ -115,27 +135,31 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
       signatories = personsFromDocument document
       secretaries = if authorHasSigned then [] else [personFromSignatoryDetails authordetails]
 
-      persons = map (\(a,_,_,_) -> a) signatories
+      persons = map (\(a,_,_,_,_) -> a) signatories
       paddeddocid = pad0 20 (show docid)
 
       initials = concatComma (map initialsOfPerson persons)
       initialsOfPerson (Seal.Person {Seal.fullname}) = map head (words fullname)
       authorfullname = signatoryname authordetails
       -- 2. "Name of invited" granskar dokumentet online
-      makeHistoryEntryFromSignatory (Seal.Person {Seal.fullname},seen, signed, False) = 
+      makeHistoryEntryFromSignatory (Seal.Person {Seal.fullname},seen, signed, False, mprovider) = 
           [   Seal.HistEntry
             { Seal.histdate = show (signtime seen)
             , Seal.histcomment = fullname ++ " granskar dokumentet online" ++ formatIP (signipnumber seen)
             } 
             , Seal.HistEntry
             { Seal.histdate = show (signtime signed)
-            , Seal.histcomment = fullname ++ " undertecknar dokumentet online" ++ formatIP (signipnumber signed)
+            , Seal.histcomment = if isNothing mprovider
+                                    then fullname ++ " undertecknar dokumentet online med e-post" ++ formatIP (signipnumber signed)
+                                    else fullname ++ " undertecknar dokumentet online med " ++ formatProvider (fromJust mprovider) ++ formatIP (signipnumber signed)
             }
           ]
-      makeHistoryEntryFromSignatory (Seal.Person {Seal.fullname},seen, signed, True) = 
+      makeHistoryEntryFromSignatory (Seal.Person {Seal.fullname},seen, signed, True, mprovider) = 
           [   Seal.HistEntry
             { Seal.histdate = show (signtime signed)
-            , Seal.histcomment = fullname ++ " undertecknar dokumentet online" ++ formatIP (signipnumber signed)
+            , Seal.histcomment = if isNothing mprovider
+                                    then fullname ++ " undertecknar dokumentet online med e-post" ++ formatIP (signipnumber signed)
+                                    else fullname ++ " undertecknar dokumentet online med " ++ formatProvider (fromJust mprovider) ++ formatIP (signipnumber signed)
             }
           ]
       makeHistoryEntryFromEvent (DocumentHistoryInvitationSent time ipnumber _) =
@@ -148,7 +172,7 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
             }
           ]
       makeHistoryEntryFromEvent _ = []         
-      maxsigntime = maximum (map (signtime . (\(_,_,c,_) -> c)) signatories)
+      maxsigntime = maximum (map (signtime . (\(_,_,c,_,_) -> c)) signatories)
       concatComma = concat . intersperse ", "
       
       lastHistEntry = Seal.HistEntry
