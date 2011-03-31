@@ -2562,8 +2562,8 @@ width: 340px;
     margin: 1;
     outline: medium none;
     overflow: hidden;
-    float:left;
 }
+
 .signViewBodyRight .field  .fieldvalue.grayed {
     color: #999999;
     font-style: italic;
