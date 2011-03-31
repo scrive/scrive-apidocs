@@ -272,7 +272,7 @@ function sign1Author() {
   var url = window.location.pathname.substring(2);
   var ajaxurl = "/d/nordea" + url;
   var posturl = "/d" + url;
-  var formselector = "#dialog-confirm-sign-invite";
+  var formselector = "#dialog-confirm-signinvite";
   ajaxRequest(ajaxurl, posturl, formselector, sign1Success, true);
   return false;
 }
@@ -285,7 +285,7 @@ function sign2Author() {
   var url = window.location.pathname.substring(2);
   var ajaxurl = "/d/bankid" + url;
   var posturl = "/d" + url;
-  var formselector = "#dialog-confirm-sign-invite";
+  var formselector = "#dialog-confirm-signinvite";
   ajaxRequest(ajaxurl, posturl, formselector, sign2Success, true);
   return false;
 }
@@ -298,7 +298,7 @@ function netIDSignAuthor() {
   var url = window.location.pathname.substring(2);
   var ajaxurl = "/d/telia" + url;
   var posturl = "/d" + url;
-  var formselector = "#dialog-confirm-sign-invite";
+  var formselector = "#dialog-confirm-signinvite";
   ajaxRequest(ajaxurl, posturl, formselector, netIDSuccess, true);
   return false;
 }
