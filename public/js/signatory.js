@@ -306,29 +306,29 @@ function docstateToHTML(){
         var ff = $(this);
         if((s.companyplacements.length > 0 || s.company != "") && ff.text().indexOf(s.email) > -1){
                         var val = s.company;
-                        var class = "";
+                        var c = "";
                         if(val === ""){
                                 val =  "Titel, företag";
-                                class = "grayed";
+                                c = "grayed";
                               }
                         ff.find(".signatoryfields").append(
                          "<div class='field'>"+
                             "<div class='icon lock-closed'></div>"+
-                            "<span class='fieldvalue "+class+"'>"+escapeHTML(val)+"</span>"+
+                            "<span class='fieldvalue "+c+"'>"+escapeHTML(val)+"</span>"+
                          "</div>")
                 }
                 
         if((s.numberplacements.length > 0 || s.number !="") && ff.text().indexOf(s.email) > -1){
                         var val = s.number;
-                        var class = "";
+                        var c = "";
                         if(val === ""){
                                 val =  "Orgnr/Persnr";
-                                class = "grayed";
+                                c = "grayed";
                               }
                         ff.find(".signatoryfields").append(
                          "<div class='field'>"+
                             "<div class='icon lock-closed'></div>"+
-                            "<span class='fieldvalue "+class+"'>"+escapeHTML(val)+"</span>"+
+                            "<span class='fieldvalue "+c+"'>"+escapeHTML(val)+"</span>"+
                          "</div>")
                 }
             }) 
@@ -344,15 +344,15 @@ function docstateToHTML(){
 			    
                 if(ff.text().indexOf(s.email) > -1) {
                               var val = f.value;
-                              var class = ""
+                              var c = ""
                               if(val === ""){
                                 val =  f.label;
-                                class = "grayed";
+                                c = "grayed";
                               }
 			      ff.find(".signatoryfields").append(
                          "<div class='field'>"+
                             "<div class='icon lock-closed'></div>"+
-                            "<span class='fieldvalue "+class+"'>"+escapeHTML(val)+"</span>"+
+                            "<span class='fieldvalue "+c+"'>"+escapeHTML(val)+"</span>"+
                          "</div>")
         
 			    }
@@ -397,15 +397,15 @@ function docstateToHTML(){
 		//console.log(s);
 		if(ff.text().indexOf(currentsig.email) > -1) {
              var val = f.value;
-             var class = ""
+             var c = ""
              if(val === ""){
                 val =  f.label;
-                class = "grayed";
+                c = "grayed";
              }
              ff.find(".signatoryfields").append(
                          "<div class='field'>"+
                             "<div class='icon lock-closed'></div>"+
-                            "<span class='fieldvalue "+class+"'>"+escapeHTML(val)+"</span>"+
+                            "<span class='fieldvalue "+c+"'>"+escapeHTML(val)+"</span>"+
                          "</div>");
 		}
 	      });
