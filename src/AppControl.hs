@@ -230,9 +230,10 @@ handleHomepage = do
     ctx@Context{ ctxmaybeuser } <- get
     loginOn <- isFieldSet "logging"
     referer <- getField "referer"
+    email   <- getField "email"
     case ctxmaybeuser of
         Just user -> UserControl.checkUserTOSGet $ DocControl.showMainPage user 
-        Nothing   -> V.simpleResponse =<< (liftIO $ firstPage ctx loginOn referer)
+        Nothing   -> V.simpleResponse =<< (liftIO $ firstPage ctx loginOn referer email)
 
 {- |
     Handles an error by displaying the home page with a modal error dialog.
@@ -485,6 +486,7 @@ handleLoginPost :: Kontra KontraLink
 handleLoginPost = do
     memail  <- getOptionalField asDirtyEmail    "email"
     mpasswd <- getOptionalField asDirtyPassword "password"
+    let linkemail = maybe "" BS.toString memail
     case (memail, mpasswd) of
         (Just email, Just passwd) -> do
             -- check the user things here
@@ -501,9 +503,9 @@ handleLoginPost = do
                         when (slug > 0) $ liftIO . threadDelay $ slug * 1000000
                         time <- liftIO getMinutesTime
                         _ <- update $ RecordFailedLogin userid time
-                        return $ LinkLogin InvalidLoginInfo
-                Nothing -> return $ LinkLogin InvalidLoginInfo
-        _ -> return $ LinkLogin InvalidLoginInfo
+                        return $ LinkLogin $ InvalidLoginInfo linkemail
+                Nothing -> return $ LinkLogin $ InvalidLoginInfo linkemail
+        _ -> return $ LinkLogin $ InvalidLoginInfo linkemail
 
 {- |
     Works out how many seconds we should wait before

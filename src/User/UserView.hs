@@ -245,10 +245,10 @@ modalAccountRemoved templates doctitle = do
 flashMessageLoginRedirectReason :: KontrakcjaTemplates -> LoginRedirectReason -> IO (Maybe FlashMessage)
 flashMessageLoginRedirectReason templates reason =
   case reason of
-       NoReason             -> return Nothing
+       LoginTry             -> return Nothing
        NotLogged            -> render "notlogged"
        NotLoggedAsSuperUser -> render "notsu"
-       InvalidLoginInfo     -> render "invloginfo"
+       InvalidLoginInfo _   -> render "invloginfo"
   where
     render msg = Just . toFlashMsg OperationFailed <$>
       (renderTemplate templates "flashMessageLoginPageRedirectReason" $ field msg True)
