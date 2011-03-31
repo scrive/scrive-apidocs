@@ -359,8 +359,7 @@ legalparagraph=
 </p>
 <BR/>
 ####
-mailMismatchSignatoryTitle=
-Problem med matchning av personuppgifter
+mailMismatchSignatoryTitle=Problem med matchning av personuppgifter
 ####
 mailMismatchSignatoryContent=
 <p>Hej $signame$!</p>
@@ -372,8 +371,7 @@ Med Vänliga Hälsningar
 SkrivaPå
 </p>
 ####
-mailMismatchAuthorTitle=
-Felaktiga personuppgifter
+mailMismatchAuthorTitle=Felaktiga personuppgifter
 ####
 mailMismatchAuthorContent=
 <p>Vi beklagar. Uppgifterna i din e-legitimation matchar inte dina personuppgifter.</p>
