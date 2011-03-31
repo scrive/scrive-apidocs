@@ -138,8 +138,16 @@ main = Log.withLogger $ do
   appConf1 <- readAppConfig
   templates <- readTemplates
   filecache' <- MemCache.new (BS.length) 50000000
+
+  let mailer' = case cfg of
+                   MailsSendgrid{} -> createSendgridMailer cfg
+                   MailsSendmail{} -> createSendmailMailer cfg
+                   MailsLocalOpen -> createLocalOpenMailer (ourInfoEmail cfg) (ourInfoEmailNiceName cfg)
+                 where cfg = mailsConfig appConf1
+
   let appGlobals = AppGlobals { templates = templates
                               , filecache = filecache'
+                              , mailer = mailer'
                               }
 
   appConf <- case parseConfig args of
@@ -152,10 +160,6 @@ main = Log.withLogger $ do
      then return ()
      else createDirectoryIfMissing True $ docstore appConf
 
-  let 
-    mailer | sendMails cfg = createRealMailer cfg
-           | otherwise = createDevMailer (ourInfoEmail cfg) (ourInfoEmailNiceName cfg)
-    cfg = mailsConfig appConf
 
   Exception.bracket
                  -- start the state system
@@ -180,7 +184,7 @@ main = Log.withLogger $ do
                               socket <- listenOn (httpPort appConf)
                               t1 <- forkIO $ simpleHTTPWithSocket socket (nullConf { port = httpPort appConf }) 
                                     (appHandler appConf appGlobals docs)
-                              let scheddata = SchedulerData appConf mailer templates
+                              let scheddata = SchedulerData appConf mailer' templates
                               t2 <- forkIO $ cron 60 $ runScheduler (mainScheduler >> actionScheduler UrgentAction) scheddata
                               t3 <- forkIO $ cron 600 $ runScheduler (actionScheduler LeisureAction) scheddata
                               return [t1,t2,t3]

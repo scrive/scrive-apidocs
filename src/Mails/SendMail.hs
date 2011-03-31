@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -Werror #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Mails.SendMail
@@ -10,7 +10,15 @@
 -- Structure for holding mails + sending function
 -----------------------------------------------------------------------------
 
-module Mails.SendMail(Mail(..),emptyMail,Mailer(..),createRealMailer,createDevMailer,MailInfo(..)) where
+module Mails.SendMail
+    ( Mail(..)
+    , emptyMail
+    , Mailer(..)
+    , createSendgridMailer
+    , createLocalOpenMailer
+    , createSendmailMailer
+    , MailInfo(..)
+    ) where
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL  hiding (length)
 import qualified Data.ByteString.Lazy as BSL
@@ -27,7 +35,6 @@ import Doc.DocState
 import Mails.MailsConfig
 import Misc
 import qualified AppLogger as Log
-import System.Time
 
 -- from simple utf-8 to =?UTF-8?Q?zzzzzzz?=
 -- FIXME: should do better job at checking if encoding should be applied or not
@@ -35,52 +42,52 @@ mailEncode :: BS.ByteString -> String
 mailEncode source = 
     "=?UTF-8?Q?" ++ QuotedPrintable.encode (BS.unpack source) ++ "?="
 
+-- FIXME: use words/unword here
 mailEncode1 :: String -> String
 mailEncode1 source = mailEncode (BS.fromString source)
 
--- | Structure for holding mails. If from is not set mail will be send as SkrivaPa admin (fromMails Config)
-data Mail =  Mail {
-               fullnameemails::[(BS.ByteString, BS.ByteString)], --Fullname, Email
-               title::BS.ByteString,
-               content::BS.ByteString,      
-               attachments::[(BS.ByteString,BS.ByteString)], -- list of attachments (name,content). 
-               from::Maybe User,
-               mailInfo ::MailInfo 
-             } deriving Show
+-- | Structure for holding mails. If from is not set mail will be send
+-- as SkrivaPa admin (fromMails Config).
+data Mail = Mail 
+    { fullnameemails :: [(BS.ByteString, BS.ByteString)] -- Fullname, Email
+    , title          :: BS.ByteString
+    , content        :: BS.ByteString      
+    , attachments    :: [(BS.ByteString,BS.ByteString)] -- list of attachments (name,content). 
+    , from           :: Maybe User
+    , mailInfo       :: MailInfo 
+    } deriving Show
              
 data MailInfo = Invitation DocumentID SignatoryLinkID 
                 | None deriving (Show,Read)
 
-emptyMail::Mail
-emptyMail = Mail { fullnameemails=[], title= BS.empty, content = BS.empty, attachments = [], from = Nothing, mailInfo=None}    
+emptyMail :: Mail
+emptyMail = Mail 
+            { fullnameemails = []
+            , title= BS.empty
+            , content = BS.empty
+            , attachments = []
+            , from = Nothing
+            , mailInfo = None
+            }    
 
 newtype Mailer = Mailer {sendMail :: Mail -> IO ()}
 
-createRealMailer :: MailsConfig -> Mailer
-createRealMailer config = Mailer {sendMail = reallySend}
+createSendgridMailer :: MailsConfig -> Mailer
+createSendgridMailer config = Mailer {sendMail = reallySend}
   where 
-    reallySend mail@(Mail {fullnameemails,title,content,attachments,from,mailInfo}) = do
+    reallySend mail@(Mail {fullnameemails,title,attachments}) = do
     mailId <- createMailId
     let mailtos = createMailTos mail
         wholeContent = createWholeContent (ourInfoEmail config) (ourInfoEmailNiceName config) mailId mail
     Log.forkIOLogWhenError ("error sending email " ++  show mailId ++ " " ++  BS.toString title) $ do
         Log.mail $ "sending mail to " ++ show mailId ++ " " ++ concat (intersperse ", " mailtos)
         let rcpt = concatMap (\(_,x) -> ["--mail-rcpt", "<" ++ BS.toString x ++ ">"]) fullnameemails
-        -- BSL.writeFile (BS.toString title ++ ".eml") wholeContent
-
-        {- here some magic
-         - seems that readProcessWithExitCode' is not ok when we have some longer chunks
-         - in there and just likes to skip attachment
-         - effectivelly giving attachment size 0 bytes
-         - so lets force it here and see what happens
-         -}
-        let wholeContentMagic = BSL.fromChunks [BS.concat (BSL.toChunks wholeContent)]
         (code,_,bsstderr) <- readProcessWithExitCode' "./curl" 
                              ([ "--user"
                               , (sendgridUser config) ++":"++(sendgridPassword config)
                               , (sendgridSMTP config)
                               , "-k", "--ssl", "--mail-from"
-                              , "<"++(ourInfoEmail config)++">"]++ rcpt) wholeContentMagic
+                              , "<"++(ourInfoEmail config)++">"]++ rcpt) wholeContent
         case code of
             ExitFailure retcode -> do
                 Log.mail $ "Cannot execute ./curl to send emails, code " ++ show retcode ++ 
@@ -90,8 +97,30 @@ createRealMailer config = Mailer {sendMail = reallySend}
                         (show $ mail {attachments = map (\(x,a)->(x,BS.fromString ("length " ++ show (BS.length a))))attachments})
     return ()   
 
-createDevMailer :: String -> String -> Mailer
-createDevMailer ourInfoEmail ourInfoEmailNiceName = Mailer {sendMail = sendToTempFile}
+createSendmailMailer :: MailsConfig -> Mailer
+createSendmailMailer config = Mailer {sendMail = reallySend}
+  where 
+    reallySend mail@(Mail {title,attachments}) = do
+    mailId <- createMailId
+    let mailtos = createMailTos mail
+        wholeContent = createWholeContent (ourInfoEmail config) (ourInfoEmailNiceName config) mailId mail
+    Log.forkIOLogWhenError ("error sending email " ++  show mailId ++ " " ++  BS.toString title) $ do
+        Log.mail $ "sending mail to " ++ show mailId ++ " " ++ concat (intersperse ", " mailtos)
+        (code,_,bsstderr) <- readProcessWithExitCode' "sendmail" 
+                             ([ "-t" -- get the addresses from the content
+                              , "-i" -- ignore single dots in input
+                              ]) wholeContent
+        case code of
+            ExitFailure retcode -> do
+                Log.mail $ "Cannot execute sendmail to send emails, code " ++ show retcode ++ 
+                           " stderr: " ++ BSL.toString bsstderr
+            ExitSuccess -> do
+                Log.mail $ "Successfully executed sendmail with mail: " ++ 
+                        (show $ mail {attachments = map (\(x,a)->(x,BS.fromString ("length " ++ show (BS.length a))))attachments})
+    return ()   
+
+createLocalOpenMailer :: String -> String -> Mailer
+createLocalOpenMailer ourInfoEmail ourInfoEmailNiceName = Mailer {sendMail = sendToTempFile}
   where 
     sendToTempFile mail@(Mail {fullnameemails}) = do
     tmp <- getTemporaryDirectory
@@ -105,14 +134,13 @@ createDevMailer ourInfoEmail ourInfoEmailNiceName = Mailer {sendMail = sendToTem
     openDocument filename
     return ()
 
-createMailTos mail@(Mail {fullnameemails}) =
+createMailTos :: Mail -> [String]
+createMailTos (Mail {fullnameemails}) =
   map fmt fullnameemails 
   where fmt (fullname,email) = mailEncode fullname ++ " <" ++ BS.toString email ++ ">"
 
-createMailId:: IO Integer
-createMailId = do 
-    (TOD s p ) <- getClockTime
-    return $ s *10 ^12 + p
+createMailId :: IO Integer
+createMailId = randomIO 
 
 createWholeContent :: String -> String -> Integer -> Mail -> BSLC.ByteString
 createWholeContent ourInfoEmail ourInfoEmailNiceName mailId mail@(Mail {title,content,attachments,from,mailInfo}) =
