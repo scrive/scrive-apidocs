@@ -378,6 +378,7 @@ safeReady(function() {
 });
 
 // bankid stuff
+/*
 safeReady(function() {
   $("#dialog-confirm-sign-eleg .bankid").click(function(){
     sign2(window.location.pathname,
@@ -386,6 +387,7 @@ safeReady(function() {
     return false;
   });
 });
+*/
 
 safeReady(function() {
   $(".editer").live("click", function(){
@@ -739,6 +741,9 @@ function authorFieldsValidation() {
     }
     if(remainingAuthorFields.hasClass('customfield')) {
       addFlashMessage("Du har inte namngett alla fält. Vänligen försök igen.","red");
+    }
+    if(remainingAuthorFields.hasClass('signum')) {
+      addFlashMessage("Var vänlig gå tillbaka till steg 2 och fyll i personnummer.", "red");
     }
     remainingAuthorFields.addClass('redborder').addClass('offending');
     fieldValidationType = "fillstatus";
