@@ -23,6 +23,7 @@ module User.UserState
     , Users
     , UserStats(..)
     , toFlashMsg
+    , composeFullName
     , userfullname
     , createPassword
     , isPasswordStrong
@@ -715,13 +716,15 @@ instance Migrate User10 User where
 toFlashMsg :: FlashType -> String -> FlashMessage
 toFlashMsg type_ msg = FlashMessage (type_, msg)
 
+composeFullName :: (BS.ByteString, BS.ByteString) -> BS.ByteString
+composeFullName (fstname, sndname) =
+    if BS.null sndname
+       then fstname
+       else fstname `BS.append` BS.fromString " " `BS.append` sndname
+
 userfullname :: User -> BS.ByteString
-userfullname u = if (BS.null $ usersndname $ userinfo u) 
-                  then (userfstname $ userinfo u) 
-                  else (userfstname $ userinfo u) `BS.append` (BS.fromString " ") `BS.append` (usersndname $ userinfo u)
+userfullname u = composeFullName (userfstname $ userinfo u, usersndname $ userinfo u)
 
-
-  
 instance Migrate UserInfo0 UserInfo where
     migrate (UserInfo0 {
             userfstname0  
@@ -973,12 +976,12 @@ getUserSubaccounts userid = do
   users <- ask
   return $ toSet (users @= SupervisorID (unUserID userid))
 
-addUser :: BS.ByteString 
+addUser :: (BS.ByteString, BS.ByteString)
         -> BS.ByteString 
         -> Password
         -> Maybe UserID
         -> Update Users (Maybe User)
-addUser fullname email passwd maybesupervisor = do
+addUser (fstname, sndname) email passwd maybesupervisor = do
   users <- get
   if (IxSet.size (users @= Email email) /= 0)
    then return Nothing  -- "user with same email address exists"
@@ -992,8 +995,8 @@ addUser fullname email passwd maybesupervisor = do
                  , useraccountsuspended    =  False  
                  , userhasacceptedtermsofservice = Nothing
                  , userinfo = UserInfo {
-                                    userfstname = fullname       
-                                  , usersndname = BS.empty
+                                    userfstname = fstname
+                                  , usersndname = sndname
                                   , userpersonalnumber = BS.empty
                                   , usercompanyname =  BS.empty
                                   , usercompanyposition =  BS.empty

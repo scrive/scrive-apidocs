@@ -373,7 +373,7 @@ signDocument documentid
           when_ (isNothing maybeuser) $ do
               ctx <- get
               let details = signatorydetails signatorylink
-                  fullname = signatoryname details
+                  fullname = (signatoryfstname details, signatorysndname details)
                   email = signatoryemail details
               muser <- liftIO $ createUserBySigning ctx (documenttitle document) fullname email (documentid, signatorylinkid1)
               when_ (isJust muser) $
