@@ -359,7 +359,7 @@ function isAuthorSecretary() {
 }
 
 function getSignatoryData() {
-  var entries = $(".sigentry");
+  var entries = $("#personpane .sigentry");
   var fnames = entries.find("input[name=signatoryfstname]").map(function(i, el) {
     return $(el).val();
   });
@@ -389,9 +389,13 @@ function getSignatoryData() {
 function generateTBS(doctitle, docid, signatories) {
   var text = 'Du undertecknar "' + doctitle + '" med transaktionsnummer "' + docid + '". Undertecknande parter är:';
 
-  $(signatories).each(function() {
-    text = text + "\n" + this.fname + " " + this.lname + ", " + this.num;
-  });
+  if($("a.group").size() > 0) {
+    text = text + "\n   Various signatories.";
+  } else {
+    $(signatories).each(function() {
+      text = text + "\n" + this.fname + " " + this.lname + ", " + this.num;
+    });
+  }
 
   return text;
 }
