@@ -9,6 +9,7 @@ module ELegitimation.BankID
     )
     where
 
+import ListUtil
 import Redirect
 import HSP (cdata)
 import AppView    
@@ -375,17 +376,28 @@ handleIssuePostBankID docid = withUserPost $ do
                                                             , signaturelstnameverified = bln
                                                             , signaturepersnumverified = bpn
                                                             }
-
-                            mndoc <- update $ AuthorSignDocument (documentid document) ctxtime ctxipnumber author $ Just signinfo
-                            case mndoc of
-                                Left msg -> do
-                                    liftIO $ print $ "AuthorSignDocument failed: " ++ msg
-                                    Log.debug $ "AuthorSignDocument failed: " ++ msg
-                                    addFlashMsg $ toFlashMsg OperationFailed "We could not complete the signing procedure. Please try again later."
-                                    return $ LinkDesignDoc $ DesignStep3 docid
-                                Right newdocument -> do
-                                    postDocumentChangeAction newdocument (documentstatus udoc) Nothing
-                                    return $ LinkIssueDoc (documentid document)
+                                signInd d = do
+                                    mndoc <- update $ AuthorSignDocument (documentid d) ctxtime ctxipnumber author $ Just signinfo
+                                    case mndoc of
+                                        Left msg -> do
+                                            liftIO $ print $ "AuthorSignDocument failed: " ++ msg
+                                            Log.debug $ "AuthorSignDocument failed: " ++ msg
+                                            return ()
+                                        Right newdocument -> do
+                                            postDocumentChangeAction newdocument (documentstatus udoc) Nothing
+                                            return ()
+                                    return mndoc
+                            mdocs <- splitUpDocument udoc
+                            case mdocs of
+                                Right docs -> do
+                                    mndocs <- mapM signInd docs
+                                    case (sequence mndocs) of
+                                        Right (d:[]) -> do
+                                            addModal $ modalSignInviteView d
+                                            return $ LinkIssueDoc (documentid d)
+                                        Right ds -> return $ LinkContracts emptyListParams
+                                        Left _ -> mzero
+                                Left _ -> mzero
 
 handleSignCanceledDataMismatch :: DocumentID -> SignatoryLinkID -> Kontra Response
 handleSignCanceledDataMismatch docid signatorylinkid = do
