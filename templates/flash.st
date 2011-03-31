@@ -4,7 +4,7 @@ flashDocumentDraftSaved=
 
 ######
 flashDocumentTemplateSaved=
-    Du har sparat mall.
+    Din mall är sparad.
 
 ######
 flashRemindMailSentNotSigned=
@@ -76,7 +76,7 @@ flashMessageNoSuchUserExists=
     Det finns ingen användare med denna epost. Vänligen försök igen. 
 
 ###
-flashMessageChangePasswordEmailSend=Vi har skickat ditt lösenord till din inkorg.
+flashMessageChangePasswordEmailSend=Ett nytt lösenord har blivit skickat till din e-post.
 
 ####
 flashMessageNewActivationLinkSend=
