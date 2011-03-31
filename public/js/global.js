@@ -664,16 +664,13 @@ safeReady(function() {
 });
 
 function deactivateSigninvite(){
-    var checkBox = $(".sendcheckbox");
-    if (checkBox.val()=="off")
-    { 
-       checkBox.change();
-       checkBox.attr("DISABLED","");
-    }   
-   }
+  var checkBox = $(".sendcheckbox");
+  checkBox.attr("DISABLED","");
+}
+
 function activateSignInvite(){
-    var checkBox = $(".sendcheckbox");
-    checkBox.removeAttr("DISABLED");
+  var checkBox = $(".sendcheckbox");
+  checkBox.removeAttr("DISABLED");
 }
 function showProperSignButtons() {
   var checkBox = $(".sendcheckbox");
@@ -681,16 +678,22 @@ function showProperSignButtons() {
   if(numsigs > 1) {
     if($("#authorsignatoryradio").attr("checked")) {
       activateSignInvite();
+      checkBox.parent().find(".usual").show();
+      checkBox.parent().find(".secretary").hide();
     } else {
       if(!checkBox.attr("checked")) { 
         checkBox.attr("checked", true).change();
       }   
       deactivateSigninvite();
+      checkBox.parent().find(".usual").hide();
+      checkBox.parent().find(".secretary").show();
     }
   } else {
     if(checkBox.attr("checked")) { 
       checkBox.attr("checked", false).change();
     }   
+    checkBox.parent().find(".usual").show();
+    checkBox.parent().find(".secretary").hide();
     deactivateSigninvite();
   }
 
@@ -970,6 +973,7 @@ function showStep3()
     $('#signStep2Content').hide();
     $('#signStep3Content').show();
     $('#signStepsNextButton').hide();
+
   showProperSignButtons();
     return false;
 }
