@@ -35,8 +35,8 @@ uploadFile :: FilePath -> S3Action -> File -> IO ()
 uploadFile docstore@(_:_) AWS.S3Action{AWS.s3bucket = ""} File{fileid, filename, filestorage = FileStorageMemory content} = do
     let filepath = docstore </> show fileid ++ '-' : BSC.unpack filename ++ ".pdf"
     BS.writeFile filepath content
-    putStrLn $ "Document saved as " ++ filepath
-    _ <- update $ FileMovedToDisk fileid filepath
+    putStrLn $ "Document file #" ++ show fileid ++ " saved as " ++ filepath
+    update $ FileMovedToDisk fileid filepath
     return ()
 
 uploadFile _ ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)} file@File{fileid, filestorage = FileStorageMemory content} = do
