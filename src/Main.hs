@@ -142,7 +142,7 @@ main = Log.withLogger $ do
   let mailer' = case cfg of
                    MailsSendgrid{} -> createSendgridMailer cfg
                    MailsSendmail{} -> createSendmailMailer cfg
-                   MailsLocalOpen -> createLocalOpenMailer (ourInfoEmail cfg) (ourInfoEmailNiceName cfg)
+                   MailsLocalOpen{} -> createLocalOpenMailer (ourInfoEmail cfg) (ourInfoEmailNiceName cfg)
                  where cfg = mailsConfig appConf1
 
   let appGlobals = AppGlobals { templates = templates

@@ -30,12 +30,18 @@ data MailsConfig
       , ourInfoEmailNiceName :: String
       } 
     | MailsLocalOpen
+      { ourInfoEmail         :: String
+      , ourInfoEmailNiceName :: String
+      } 
       deriving (Show, Read, Eq, Ord)
                    
 
 
 defaultMailConfig :: MailsConfig                  
 defaultMailConfig = MailsLocalOpen
+      { ourInfoEmail          = "development-system@skrivapa.se"
+      , ourInfoEmailNiceName  = "Development"
+      } 
 
 
 {-
