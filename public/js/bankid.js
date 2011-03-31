@@ -12,7 +12,7 @@ function hasIESigner1Plugin() {
 }
 
 function IEInstallSigner1Object() {
-  $('body').append("<OBJECT ID='signer' CLASSID='CLSID:6969E7D5-223A-4982-9B79-CC4FAC2D5E5E'> </OBJECT>");
+  $('body').append("<OBJECT ID='signerId' CLASSID='CLSID:6969E7D5-223A-4982-9B79-CC4FAC2D5E5E'> </OBJECT>");
 }
 
 function hasMozillaSigner1Plugin() {
@@ -29,34 +29,24 @@ function hasMozillaSigner1Plugin() {
 }
 
 function mozillaInstallSigner1Object() {
-  $('body').append('<OBJECT id="signerId" type="application/x-personal-signer" length=0 height=0>');
+  $('body').append('<OBJECT id="signerId" type="application/x-personal-signer" length=0 height=0> </OBJECT>');
 }
 
 function doSign1(tbs, posturl) {
   var signer = document.getElementById('signerId');
-  signer.SetMimeType('text/plain');
-  signer.SetCharacterEncoding('platform');
-  signer.SetFormat('PKCS7SIGNED_Attached');
-  signer.SetFileName('skrivapa.txt');
-  signer.SetWindowName('_self');
-  signer.SetDataToBeSigned(escape(tbstext));
-  signer.SetSignReturnName('SignedData');
-  signer.SetDataReturnName('UnsignedData');
-  signer.SetVersionReturnName('Version');
-  signer.SetIssuers('');
-  signer.SetSubjects('');
-  signer.SetViewData('true');
-  signer.SetIncludeCaCert('true');
-  signer.SetIncludeRootCaCert('true');
-  if (signer.Sign() == 0) {
-	return signer.GetSignature();
-  } else {
-	console.log(signer.GetErrorString());
+  if(signer) {
+    signer.SetDataToBeSigned(tbstext);
+    signer.SetIncludeCaCert('true');
+    signer.SetIncludeRootCaCert('true');
+    signer.SetBase64('true');
+    if (signer.Sign() == 0) {
+	  return unescape(signer.GetSignature());
+    } else {
+	  console.log(signer.GetErrorString());
+    }
   }
   return null;
 }
-
-
 
 function sign1Success(transactionid, tbs, nonce, servertime, posturl, formselector) {
   if($.browser.msie) {
@@ -64,16 +54,15 @@ function sign1Success(transactionid, tbs, nonce, servertime, posturl, formselect
 	  IEInstallSigner1Object();
 	} else {
       flashNordeaMessage();
+      return null;
 	}
-  } else if($.browser.mozilla) {
-	if(hasMozillaSigner1Plugin()){
+  } else {
+	if(hasMozillaSigner1Plugin()) {
 	  mozillaInstallSigner1Object();
 	} else {
 	  flashNordeaMessage();
+      return null;
 	}
-  }else {
-	addFlashMessage("Unsupported browser.");
-	return false;
   }
   var sig = doSign1(tbs);
   if(sig) {
@@ -89,27 +78,6 @@ function sign1Success(transactionid, tbs, nonce, servertime, posturl, formselect
   }
 }
 
-function doSign1(tbs) {
-  if($.browser.msie) {
-	if(hasIESigner1Plugin()) {
-	  IEInstallSigner1Object();
-	  return IESign1(tbs);
-	} else {
-	  flashNordeaMessage();
-	}
-  } else if($.browser.mozilla) {
-	if(hasMozillaSigner1Plugin()){
-	  mozillaInstallSigner1Object();
-	  return mozillaSign1(tbs);
-	} else {
-	  flashNordeaMessage();
-	}
-  } else {
-	addFlashMessage("Your browser is not supported. Please use either Internet Explorer or Firefox.");
-  }
-  return null;
-}
-
 function sign1(posturl, formselector, ajaxurl) {
   var good = false;
   if($.browser.msie) {
@@ -118,15 +86,12 @@ function sign1(posturl, formselector, ajaxurl) {
 	} else {
 	  flashNordeaMessage();
 	}
-  } else if($.browser.mozilla) {
-	if(hasMozillaSigner1Plugin()){
+  } else {
+	if(hasMozillaSigner1Plugin()) {
 	  good = true;
 	} else {
 	  flashNordeaMessage();
 	}
-  } else {
-	addFlashMessage("Your browser is not supported. Please use either Internet Explorer or Firefox.");
-    alert("bad browser");
   }
   if(!good){
 	return false;
@@ -142,11 +107,10 @@ function sign1(posturl, formselector, ajaxurl) {
 		      var transactionid = data['transactionid'];
 		      sign1Success(transactionid, tbs, nonce, servertime, posturl, formselector);
 		    } else {
-              alert("oops");
+
 		    }
-		    
 	      },
-		  error: function(){ alert(ajaxurl);/* what to do? */ }});
+		  'error': function(){ /* what to do? */ }});
   return false;
 }
 
@@ -155,19 +119,14 @@ function sign1Author(ajaxurl, formselector, posturl) {
   if($.browser.msie) {
 	if(hasIESigner1Plugin()) {
 	  good = true;
-	} else {
-	  flashNordeaMessage();
-	}
-  } else if($.browser.mozilla) {
-	if(hasMozillaSigner1Plugin()){
-	  good = true;
-	} else {
-	  flashNordeaMessage();
 	}
   } else {
-	addFlashMessage("Your browser is not supported. Please use either Internet Explorer or Firefox.");
+	if(hasMozillaSigner1Plugin()){
+	  good = true;
+	}
   }
   if(!good){
+    flashNordeaMessage();
 	return false;
   }
   displayLoadingOverlay("Inleder säker signering . . .");
@@ -235,24 +194,24 @@ function doSign2 (tbs, nonce, servertime) {
   //    var signer2 = $("#signer2").get(0);
   var signer2 = document.getElementById("signer2");
   console.log(signer2);
-  console.log("signing");
-  signer2.SetParam('TextToBeSigned', tbs);
-  console.log("from plugin: " + signer2.GetParam('TextToBeSigned'));
-  signer2.SetParam('Nonce', nonce);
-  console.log("from plugin: " + signer2.GetParam('Nonce'));
-  signer2.SetParam('ServerTime', servertime);
-  console.log("from plugin: " + signer2.GetParam('ServerTime'));
-  //    signer2.SetParam('TextToBeSigned', tbs);
-  //console.log("from plugin: " + signer2.GetParam('TextToBeSigned'));
+  if(signer2) {
+    console.log("signing");
+    signer2.SetParam('TextToBeSigned', tbs);
+    console.log("from plugin: " + signer2.GetParam('TextToBeSigned'));
+    signer2.SetParam('Nonce', nonce);
+    console.log("from plugin: " + signer2.GetParam('Nonce'));
+    signer2.SetParam('ServerTime', servertime);
+    console.log("from plugin: " + signer2.GetParam('ServerTime'));
+    //    signer2.SetParam('TextToBeSigned', tbs);
+    //console.log("from plugin: " + signer2.GetParam('TextToBeSigned'));
 
-  var res = signer2.PerformAction('Sign');
-  if (res == 0) {
-	return signer2.GetParam('Signature');
+    var res = signer2.PerformAction('Sign');
+    if (res == 0) {
+	  return signer2.GetParam('Signature');
+    }
   }
-  else {
-	addFlashMessage("The signing plugin did not successfully sign the document.");
-	return null;
-  }
+  addFlashMessage("The signing plugin did not successfully sign the document.");
+  return null;
 }
 
 function sign2Success(transactionid, tbs, nonce, servertime, posturl, formselector) {
@@ -268,15 +227,12 @@ function sign2Success(transactionid, tbs, nonce, servertime, posturl, formselect
 	} else {
       flashBankIDMessage();
 	}
-  } else if($.browser.mozilla) {
+  } else {
 	if(hasSign2PluginMozilla()){
 	  installSign2Mozilla();
 	} else {
 	  flashBankIDMessage();
 	}
-  }else {
-    addFlashMessage("Bad browser");
-	return false;
   }
   var sig = doSign2(tbs, nonce, servertime);    
   if(sig) {
@@ -293,18 +249,7 @@ function sign2Success(transactionid, tbs, nonce, servertime, posturl, formselect
 }
 
 function flashBankIDMessage() {
-  addFlashMessage("Du har inte BankID installerat. Du kan ladda ned BankID från din internetbank. Följande banker tillhandahåller BankID via internetbanken:" +
-                  "<ul>" +
-                  "<li>Handelsbanken</li>" +
-                  "<li>SEB</li>" +
-                  "<li>Swedbank</li>" +
-                  "<li>SkandiaBanken</li>" +
-                  "<li>Länsförsäkringar Bank</li>" +
-                  "<li>Danske Bank</li>" +
-                  "<li>Sparbanken Öresund</li>" +
-                  "<li>Sparbanken Syd</li>" +
-                  "<li>Ikano Bank</li>" +
-                  "</ul>");
+  addFlashMessage("Du har inte BankID installerat. Du kan ladda ned BankID från din internetbank. Följande banker tillhandahåller BankID via internetbanken.");
 }
 
 function sign2(posturl, formselector, ajaxurl) {
@@ -315,14 +260,12 @@ function sign2(posturl, formselector, ajaxurl) {
 	} else {
 	  flashBankIDMessage();
 	}
-  } else if($.browser.mozilla) {
+  } else {
 	if(hasSign2PluginMozilla()){
 	  good = true;
 	} else {
 	  flashBankIDMessage();
 	}
-  } else {
-	addFlashMessage("Your browser is not supported. Please use either Internet Explorer or Firefox.");
   }
   if(!good){
 	return false;
@@ -354,14 +297,12 @@ function sign2Author(posturl, formselector, ajaxurl) {
 	} else {
 	  flashBankIDMessage();
 	}
-  } else if($.browser.mozilla) {
+  } else {
 	if(hasSign2PluginMozilla()){
 	  good = true;
 	} else {
 	  flashBankIDMessage();
 	}
-  } else {
-	addFlashMessage("Your browser is not supported. Please use either Internet Explorer or Firefox.");
   }
   if(!good){
 	return false;
@@ -424,18 +365,22 @@ function installNetIDMozilla() {
 function doSignNetID (tbs, nonce, servertime) {
   var signer = document.getElementById("iid");
   console.log(signer);
-  console.log("signing");
-  signer.SetProperty('DataToBeSigned', tbs);
-  //    console.log("from plugin: " + signer.GetParam('TextToBeSigned'));
-  
-  var res = signer.Invoke('Sign');
-  if (res == 0) {
-	return signer.GetProperty('Signature');
+  if(signer) {
+    console.log("signing");
+    signer.SetProperty('DataToBeSigned', tbs);
+    signer.SetProperty('Base64', 'true');
+    signer.SetProperty('UrlEncode', 'false');
+    signer.SetProperty('IncludeRootCaCert', 'true');
+    signer.SetProperty('IncludeCaCert', 'true');
+    //    console.log("from plugin: " + signer.GetParam('TextToBeSigned'));
+    
+    var res = signer.Invoke('Sign');
+    if (res == 0) {
+	  return signer.GetProperty('Signature');
+    }
   }
-  else {
-    addFlashMessage("signing unsuccessful");
-	return null;
-  }
+  addFlashMessage("signing unsuccessful");
+  return null;
 }
 
 function netIDSuccess(transactionid, tbs, nonce, servertime, posturl, formselector) {
@@ -451,15 +396,12 @@ function netIDSuccess(transactionid, tbs, nonce, servertime, posturl, formselect
 	} else {
 	  flashTeliaMessage();
 	}
-  } else if($.browser.mozilla) {
+  } else {
 	if(hasNetIDPluginMozilla()){
 	  installNetIDMozilla();
 	} else {
 	  flashTeliaMessage();
 	}
-  }else {
-	addFlashMessage("Unsupported browser.");
-	return false;
   }
   var sig = doSignNetID(tbs, nonce, servertime);    
   if(sig) {
@@ -487,14 +429,12 @@ function netIDSign(posturl, formselector, ajaxurl) {
 	} else {
 	  flashTeliaMessage();
 	}
-  } else if($.browser.mozilla) {
+  } else {
 	if(hasNetIDPluginMozilla()){
 	  good = true;
 	} else {
 	  flashTeliaMessage();
 	}
-  } else {
-	addFlashMessage("Your browser is not supported. Please use either Internet Explorer or Firefox.");
   }
   if(!good){
 	return false;
@@ -525,14 +465,12 @@ function netIDSignAuthor(posturl, formselector, ajaxurl) {
 	} else {
 	  flashTeliaMessage();
 	}
-  } else if($.browser.mozilla) {
+  } else {
 	if(hasNetIDPluginMozilla()){
 	  good = true;
 	} else {
 	  flashTeliaMessage();
 	}
-  } else {
-	addFlashMessage("Your browser is not supported. Please use either Internet Explorer or Firefox.");
   }
   if(!good){
 	return false;
