@@ -90,11 +90,7 @@ uploadDocumentFilesToTrustWeaver ctxtwconf twownername documentid = do
    The command line for calling ghostscript
  -}
 gs :: String
-#ifdef WINDOWS
-gs = "c:\\Program Files\\gs\\gs8.60\\bin\\gswin32c.exe" 
-#else
 gs = "gs"
-#endif
 
 {- |
    Convert PDF to jpeg images of pages
