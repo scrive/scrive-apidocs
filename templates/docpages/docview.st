@@ -706,6 +706,7 @@ pageDocumentForAuthorContentPostPreparation=
 </div>
 
 $if(awaitingauthor)$
+<script type="text/javascript" src="/js/bankid.js"> </script>
 <div id="signViewBottomBox"> 
   <div id="signViewBottomBoxContainerLeft"> 
     <div id="signViewBottomBoxContainerLeftText"> 
