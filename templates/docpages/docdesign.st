@@ -3,11 +3,6 @@ pageDocumentForAuthorContentPreparation=
 <div style="display: none">
   <script type="text/javascript"> 
     var documentid = "$documentid$"; 
-    $if(datamismatchflash)$
-        jQuery(function() {
-            addFlashMessage("$datamismatchflash$", "red");
-        });
-    $endif$
   </script>
   <script type="text/javascript" src="/js/bankid.js"></script>
 </div>
