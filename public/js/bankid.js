@@ -107,10 +107,10 @@ function sign1(posturl, formselector, ajaxurl) {
 		      var transactionid = data['transactionid'];
 		      sign1Success(transactionid, tbs, nonce, servertime, posturl, formselector);
 		    } else {
-
+              failEleg(data.msg);
 		    }
 	      },
-		  'error': function(){ /* what to do? */ }});
+		  error: repeatForeverWithDelay(250)});
   return false;
 }
 
@@ -141,11 +141,10 @@ function sign1Author(ajaxurl, formselector, posturl) {
 		      var transactionid = data['transactionid'];
 		      sign1Success(transactionid, tbs, nonce, servertime, posturl, formselector);
 		    } else {
-
+              failEleg(data.msg);
 		    }
-		    
 	      },
-		  error: function(){ /* what to do? */}});
+		  error: repeatForeverWithDelay(250)});
   return false;
 }
 
@@ -281,13 +280,18 @@ function sign2(posturl, formselector, ajaxurl) {
 		      var transactionid = data['transactionid'];
 		      sign2Success(transactionid, tbs, nonce, servertime, posturl, formselector);
 		    } else {
+              failEleg(data.msg);
 		    }
-		    
 	      },
-		  error: function(){ /* what to do? */}});
+		  error: repeatForeverWithDelay(250)});
   return false;
 }
 
+function failEleg(msg) {
+  addFlashMessage("Eleg failed. Please try again. " + msg, "red");
+  // get rid of loading page
+  closeLoadingOverlay();
+}
 
 function sign2Author(posturl, formselector, ajaxurl) {
   var good = false;
@@ -319,10 +323,10 @@ function sign2Author(posturl, formselector, ajaxurl) {
 		      var transactionid = data['transactionid'];
 		      sign2Success(transactionid, tbs, nonce, servertime, posturl, formselector);
 		    } else {
+              failEleg(data.msg);
 		    }
-		    
 	      },
-		  error: function(){ /* what to do? */ }});
+		  error: repeatForeverWithDelay(250)});
   return false;
 }
 
@@ -450,10 +454,10 @@ function netIDSign(posturl, formselector, ajaxurl) {
 		      var transactionid = data['transactionid'];
 		      netIDSuccess(transactionid, tbs, nonce, servertime, posturl, formselector);
 		    } else {
+              failEleg(data.msg);
 		    }
-		    
 	      },
-		  error: function(){ /* what to do? */}});
+		  error: repeatForeverWithDelay(250)});
   return false;
 }
 
@@ -487,10 +491,11 @@ function netIDSignAuthor(posturl, formselector, ajaxurl) {
 		      var transactionid = data['transactionid'];
 		      netIDSuccess(transactionid, tbs, nonce, servertime, posturl, formselector);
 		    } else {
+              failEleg(data.msg);
 		    }
 		    
 	      },
-		  error: function(){ /* what to do? */}});
+		  error: repeatForeverWithDelay(250)});
   return false;
 }
 

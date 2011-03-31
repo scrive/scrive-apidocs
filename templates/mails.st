@@ -363,7 +363,11 @@ mailMismatchSignatoryTitle=Problem med matchning av personuppgifter
 ####
 mailMismatchSignatoryContent=
 <p>Hej $signame$!</p>
-<p>Du har blivit inbjuden att underteckna dokumentet "$documenttitle". Tyvärr matchar inte de angivna personuppgifterna hos en av parterna med uppgifterna på e-legitimationsservern. Därför har processen avbrutits och ett meddelande att korrigera uppgifterna har skickats till $authorname$.</p>
+
+<p>Ursäkta men $authorname$ har fyllt i felaktiga personuppifter för dig i jämförelse med ditt e-legitimaion.</p>
+
+<p>Var vänlig kontakta $authorname$ eller invänta ny inbjudan.</p>
+
 <p>
 Med Vänliga Hälsningar
 </p>
