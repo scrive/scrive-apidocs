@@ -231,9 +231,12 @@ createUser ctx hostpart names email maybesupervisor vip = do
              return muser
          Nothing -> return muser
 
-createUserBySigning :: Context -> BS.ByteString -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> (DocumentID, SignatoryLinkID) -> IO (Maybe User)
-createUserBySigning Context{ctxmailer, ctxtemplates, ctxhostpart} doctitle names email doclinkdata =
+createUserBySigning :: Context -> BS.ByteString -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> BS.ByteString -> (DocumentID, SignatoryLinkID) -> IO (Maybe User)
+createUserBySigning Context{ctxmailer, ctxtemplates, ctxhostpart} doctitle names email companyname doclinkdata =
     createInvitedUser names email >>= maybe (return Nothing) (\user -> do
+        update $ SetUserInfo (userid user) $ (userinfo user) {
+            usercompanyname = companyname
+        }
         let fullname = composeFullName names
         (al, rl) <- newAccountCreatedBySigningLink user doclinkdata
         mail <- mailAccountCreatedBySigning ctxtemplates ctxhostpart doctitle fullname al rl
@@ -525,7 +528,6 @@ handlePasswordReminderGet aid hash = do
     case muser of
          Just _ -> do
              extendActionEvalTimeToOneDayMinimum aid
-             ctx <- get
              addModal $ modalNewPasswordView aid hash
              sendRedirect LinkMain
          Nothing -> do
