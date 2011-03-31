@@ -14,10 +14,10 @@ import ListUtil
 {- |
    Defines the reason why we are redirected to login page
 -}
-data LoginRedirectReason = NoReason
+data LoginRedirectReason = LoginTry
                          | NotLogged
                          | NotLoggedAsSuperUser
-                         | InvalidLoginInfo
+                         | InvalidLoginInfo String -- email
 
 data DesignStep2Flag = AfterCSVUpload
 type Part = Int
@@ -78,7 +78,9 @@ data KontraLink
 -}
 instance Show KontraLink where
     showsPrec _ LinkAbout = (++) "/about"
-    showsPrec _ (LinkLogin _) = (++) "/login/?"
+    showsPrec _ (LinkLogin LoginTry) = (++) "/login"
+    showsPrec _ (LinkLogin (InvalidLoginInfo email)) = (++) $ "/?logging&email=" ++ (URL.encode . UTF.encode $ email)
+    showsPrec _ (LinkLogin _) = (++) "/?logging"
     showsPrec _ LinkLogout = (++) "/logout"
     showsPrec _ LinkSignup = (++) "/signup"
     showsPrec _ LinkForgotPassword = (++) "/amnesia"

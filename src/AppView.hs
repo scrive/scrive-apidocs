@@ -89,7 +89,7 @@ pageFromBody ctx@Context{ ctxmaybeuser
         field "showCreateAccount" showCreateAccount
         mainLinksFields 
         contextInfoFields ctx
-        loginModal loginOn Nothing
+        loginModal loginOn Nothing Nothing
     return $ cdata wholePage
 
 {- |
@@ -124,12 +124,12 @@ simpleResponse s = do
 {- |
    The landing page contents.  Read from template.
 -}
-firstPage :: Context -> Bool -> Maybe String ->  IO String
-firstPage ctx loginOn referer = 
+firstPage :: Context -> Bool -> Maybe String -> Maybe String ->  IO String
+firstPage ctx loginOn referer email = 
     renderTemplate (ctxtemplates ctx) "firstPage"  $ do 
         contextInfoFields ctx
         mainLinksFields
-        loginModal loginOn referer
+        loginModal loginOn referer email
 
 {- |
    Defines the main links as fields handy for substituting into templates.
@@ -140,7 +140,7 @@ mainLinksFields = do
     field "linkforgotenpassword" $ show LinkForgotPassword
     field "linkinvite"           $ show LinkInvite
     field "linkissue"            $ show (LinkContracts emptyListParams)
-    field "linklogin"            $ show (LinkLogin NoReason)
+    field "linklogin"            $ show (LinkLogin LoginTry)
     field "linklogout"           $ show LinkLogout
     field "linkmain"             $ show LinkMain
     field "linkquestion"         $ show LinkAskQuestion
@@ -169,10 +169,11 @@ flashMessageFields fm = do
     field "message" $ snd (unFlashMessage fm)   
     field "isModal" $ fst (unFlashMessage fm) == Modal
     
-loginModal::Bool -> Maybe String -> Fields
-loginModal on referer= do 
-    field "loginModal" $ on 
+loginModal::Bool -> Maybe String -> Maybe String -> Fields
+loginModal on referer email = do
+    field "loginModal" $ on
     field "referer" $ referer
+    field "email"   $ email
 
 modalError :: KontrakcjaTemplates -> KontraModal
 modalError templates =
