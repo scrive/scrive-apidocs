@@ -163,7 +163,7 @@ handleSignPostBankID docid signid magic = do
         Left (ImplStatus _a _b code msg) -> do
             liftIO $ print $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
             Log.debug $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg), ("provider", JInt providerCode), ("sig", JString signature)]
-            addFlashMsg $ toFlashMsg OperationFailed $ "E-Legitimation signature failed: " ++ msg
+            addFlashMsg $ toFlashMsg OperationFailed $ "E-legitimationstjänsten misslyckades att verifiera din signatur"
             return $ LinkSignDoc document siglink
         -- successful request
         Right (cert, attrs) -> do
@@ -189,7 +189,7 @@ handleSignPostBankID docid signid magic = do
                     liftIO $ print msg
                     Log.debug msg
                     -- send to canceled with reason msg
-                    addFlashMsg $ toFlashMsg OperationFailed $ "The document was canceled because there were fields that were not verified by the Elegitimation server: \n" ++ msg
+                    addFlashMsg $ toFlashMsg OperationFailed $ "Avtalsprocessen avbröts på grund av att det fanns information som inte svarade mot E-legitimationsservern"
                     Right newdoc <- update $ CancelDocument docid (ELegDataMismatch msg signid sfn sln spn) ctxtime ctxipnumber
                     postDocumentChangeAction newdoc olddocumentstatus (Just signid)
                     
@@ -342,7 +342,7 @@ handleIssuePostBankID docid = withUserPost $ do
                 Left (ImplStatus _a _b code msg) -> do
                     liftIO $ print $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
                     Log.debug $ "verifySignature failed: " ++ toJSON [("status", JInt code), ("msg", JString msg)]
-                    addFlashMsg $ toFlashMsg OperationFailed $ "Signature verification failed with message: " ++ msg
+                    addFlashMsg $ toFlashMsg OperationFailed "E-legitimationstjänsten misslyckades att verifiera din signatur"
                     -- change me! I should return back to the same page
                     return $ LinkDesignDoc $ DesignStep3 docid
                 Right (cert, attrs) -> do
@@ -680,13 +680,6 @@ data MergeResult = MergeMatch
                  | MergeFail String
      deriving (Eq, Show)
                  
-mergeTwo :: String -> BS.ByteString -> BS.ByteString -> MergeResult
-mergeTwo fieldname a b 
-    | BS.null a = MergeFail $ fieldname ++ " was blank."
-    | BS.null b = MergeKeep
-    | a == b    = MergeMatch
-    | otherwise = MergeFail $ fieldname ++ " values were different: contract showed '" ++ BS.toString a ++ "'" ++ " but eleg showed " ++ "'" ++ BS.toString b ++ "'"
- 
 {- | Compare signatory information from contract with that from the
      E-Legitimation provider. Returns Either and error message or the
      correct value.
@@ -750,7 +743,7 @@ providerStringToType provider
     | otherwise            = mzero
 
 compareFirstNames fnContract fnEleg 
-    | BS.null fnContract = MergeFail "First Name was blank" 
+    | BS.null fnContract = MergeFail "Du har inte fyllt i förnamn, vänligen försök igen."
     | BS.null fnEleg = MergeKeep
     | otherwise = 
         let fnsc = words $ map toLower $ BS.toString fnContract
@@ -771,7 +764,7 @@ normalizeNumber n
     | otherwise = normalizeNumber (BS.tail n)
     
 compareNumbers nContract nEleg 
-    | BS.null nContract = MergeFail "Person Number was blank."
+    | BS.null nContract = MergeFail "Du har inte fyllt i personnnummer, vänligen försök igen."
     | BS.null nEleg     = MergeKeep
     | otherwise = 
         let nsc = normalizeNumber nContract
@@ -782,7 +775,7 @@ compareNumbers nContract nEleg
             else MergeFail $ "Personnnummer matchar inte: \"" ++ BS.toString nContract ++ "\" och \"" ++ BS.toString nEleg ++ "\"."
 
 compareLastNames lnContract lnEleg 
-    | BS.null lnContract = MergeFail "Last name was blank."
+    | BS.null lnContract = MergeFail "Du har inte fyllt i efternamn, vänligen försök igen."
     | BS.null lnEleg = MergeKeep
     | levenshtein (map toLower (BS.toString lnContract)) (map toLower (BS.toString lnEleg)) <= 1 = MergeMatch
     | otherwise = MergeFail $ "Efternamn matchar inte: \"" ++ BS.toString lnContract ++ "\" och \"" ++ BS.toString lnEleg ++"\"."
