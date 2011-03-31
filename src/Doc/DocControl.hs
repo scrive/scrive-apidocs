@@ -631,6 +631,7 @@ handleIssueSaveAsTemplate document author = do
             mndoc <- update $ TemplateFromDocument $ documentid document
             case mndoc of
                 Right newdocument -> do
+                    addFlashMsg =<< (liftIO $ flashDocumentTemplateSaved $ ctxtemplates ctx)
                     return $ LinkTemplates emptyListParams       
                 Left _ -> mzero
         Left _ -> mzero            
