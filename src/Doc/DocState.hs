@@ -403,6 +403,7 @@ authorSendDocument documentid time ipnumber author msiginfo =
               in Right $ document { documenttimeouttime = timeout
                                   , documentmtime = time
                                   , documentstatus = Pending
+                                  , documentinvitetime = Just time
                                   } `appendHistory` [DocumentHistoryInvitationSent time ipnumber sigdetails]
               
           Timedout -> Left "FÃ¶rfallodatum har passerat" -- possibly quite strange here...
@@ -430,6 +431,7 @@ authorSignDocument documentid time ipnumber author msiginfo =
                                   , documentmtime = time
                                   , documentsignatorylinks = signWithUserID (documentsignatorylinks document) authorid sinfo msiginfo
                                   , documentstatus = Pending
+                                  , documentinvitetime = Just time
                                   } `appendHistory` [DocumentHistoryInvitationSent time ipnumber sigdetails]
               in Right $ signeddocument
               
