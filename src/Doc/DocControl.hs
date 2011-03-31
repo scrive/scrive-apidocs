@@ -161,19 +161,25 @@ sendElegDataMismatchEmails ctx document author = do
     let authorid = unAuthor $ documentauthor document
         allbutauthor = filter ((maybe True (/= authorid)) . maybesignatory) 
                             (documentsignatorylinks document)
-    forM_ allbutauthor $ sendDataMismatchEmailSignatory ctx document author
-    sendDataMismatchEmailAuthor ctx document author
+        Just (ELegDataMismatch msg badid _ _ _) = documentcancelationreason document
+        badsig = fromJust $ find (\sl -> badid == signatorylinkid sl) (documentsignatorylinks document)
+        badname = BS.toString $ signatoryname $ signatorydetails badsig
+    forM_ allbutauthor $ sendDataMismatchEmailSignatory ctx document author badid badname msg
+    sendDataMismatchEmailAuthor ctx document author badname
     
-sendDataMismatchEmailSignatory :: Context -> Document -> User -> SignatoryLink -> IO ()
-sendDataMismatchEmailSignatory ctx document author signatorylink = do
-    let SignatoryLink { signatorydetails } = signatorylink
+sendDataMismatchEmailSignatory :: Context -> Document -> User -> SignatoryLinkID -> String -> String -> SignatoryLink -> IO ()
+sendDataMismatchEmailSignatory ctx document author badid badname msg signatorylink = do
+    let SignatoryLink { signatorydetails, signatorylinkid } = signatorylink
         Document { documenttitle, documentid } = document
-    mail <- mailMismatchSignatory ctx document (BS.toString $ prettyName author) (BS.toString $ signatoryname signatorydetails)
+        isbad = badid == signatorylinkid
+        
+    mail <- mailMismatchSignatory ctx document (BS.toString $ prettyName author) (BS.toString $ signatoryname signatorydetails) badname msg isbad
     sendMail (ctxmailer ctx) $ mail { fullnameemails = [(signatoryname signatorydetails, signatoryemail signatorydetails)] }
           
-sendDataMismatchEmailAuthor :: Context -> Document -> User -> IO ()
-sendDataMismatchEmailAuthor ctx document author = do
-    mail <- mailMismatchAuthor ctx document
+sendDataMismatchEmailAuthor :: Context -> Document -> User -> String -> IO ()
+sendDataMismatchEmailAuthor ctx document author badname = do
+    let authorname = BS.toString $ prettyName author
+    mail <- mailMismatchAuthor ctx document authorname badname
     sendMail (ctxmailer ctx) $ mail { fullnameemails = [(userfullname author, unEmail $ useremail $ userinfo author)] }
     
 {- |

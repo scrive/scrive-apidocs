@@ -52,6 +52,7 @@ module Doc.DocState
     , IdentificationType(..)
     , SignatureInfo(..)
     , SignatureProvider(..)
+    , CancelationReason(..)
     )
 where
 import Happstack.Data
