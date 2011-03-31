@@ -354,6 +354,8 @@ function docstateToHTML(){
 
   checkPersonPaneMode();
 
+  renumberParts();
+
   $(".dragfield").each(function () {
     updateStatus(this);
   });
@@ -538,12 +540,22 @@ function authorToHTML(sig) {
   
   var sigentry = sl.find(".authordetails");
   var manlink = sigentry.find("a.man");
+  var sigcheck = sigentry.find(".partyrole input").first();
+  var seccheck = sigentry.find(".partyrole input").last();
+
+  if (sig.signatory) {
+    sigcheck.attr("checked", "true");
+  } else {
+    seccheck.attr("checked", "false");
+  }
+
+  sigentry.find(".partyrole input").change(function() {
+    showProperSignButtons();
+  });
+  showProperSignButtons();
 
   manlink.click(function(){
     sigentry.find(".partyrole").show();
-    if(sigentry.find(".partyrole input[checked]").size() === 0){
-      sigentry.find(".partyrole input").first().attr("checked", "true");
-    }
     manlink.addClass("selected");
     return false;
   });
@@ -553,12 +565,6 @@ function authorToHTML(sig) {
     manlink.removeClass("selected");
     return false;
   })
-
-  if(sig.signatory) {
-    sigentry.find(".partyrole input").first().attr("checked", "true");
-  } else {
-    sigentry.find(".partyrole input").last().attr("checked", "true");
-  }
 
   $("#peopleList ol").append("<li><a href='#'>"
                            + escapeHTML(sig.fstname + " " + sig.sndname)
