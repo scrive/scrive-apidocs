@@ -408,9 +408,15 @@ process (sealSpec@SealSpec
     , output
     , fields 
     }) = do
-    Just doc <- PdfModel.parseFile input
-    Just seal <- PdfModel.parseFile sealFileName 
-    Just sealmarker <- PdfModel.parseFile "files/sealmarker.pdf" 
+    mdoc <- PdfModel.parseFile input
+    doc <- maybe (error $ "Cannot parse input PDF " ++ input) return mdoc
+    mseal <- PdfModel.parseFile sealFileName 
+    seal <- maybe (error $ "Cannot parse seal PDF " ++ sealFileName) 
+            return mseal
+    msealmarker <- PdfModel.parseFile "files/sealmarker.pdf" 
+    sealmarker <- maybe (error $ "Cannot parse marker PDF " ++ "files/sealmarker.pdf")
+                  return msealmarker
+
     let [paginpage1, sealpage1] = listPageRefIDs seal
         [sealmarkerpage] = listPageRefIDs sealmarker 
 
