@@ -36,6 +36,7 @@ module Doc.DocView (
   , signatoryDetailsFromUser
   , uploadPage
   , templatesForAjax
+  , getDataMismatchMessage
   ) where
 
 import Control.Applicative ((<$>))

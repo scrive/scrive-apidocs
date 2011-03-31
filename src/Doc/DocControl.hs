@@ -503,9 +503,13 @@ handleIssueShowGet docid = withUserGet $ checkUserTOSGet $ do
   -- authors get a view with buttons
   if isAuthor document user
    then do
+       case getDataMismatchMessage $ documentcancelationreason document of
+           Just msg -> addFlashMsg $ toFlashMsg OperationFailed msg
+           Nothing -> return ()
+       ctx2 <- get
        step <- getDesignStep (documentid document)
-       renderFromBody ctx toptab kontrakcja 
-            (fmap cdata $ pageDocumentForAuthor ctx document author step)
+       renderFromBody ctx2 toptab kontrakcja 
+            (fmap cdata $ pageDocumentForAuthor ctx2 document author step)
    -- friends can just look (but not touch)
    else do
         friendWithSignatory <- liftIO $ isFriendWithSignatory userid document 
