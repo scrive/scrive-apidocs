@@ -167,7 +167,7 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
             }
           ]
       invitationSentEntry = Seal.HistEntry
-            { Seal.histdate = show (documentinvitetime document)
+            { Seal.histdate = show (fromJust $ documentinvitetime document)
             , Seal.histcomment = 
                 if length signatories>1
                    then BS.toString authorfullname ++ " skickar en inbjudan att underteckna till parterna"
