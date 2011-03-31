@@ -280,7 +280,9 @@ $endif$
             $validationdropdown()$
             <div style="padding-bottom:8px">
             <input id="lastcheck" style="position:relative;top:2px" type="checkbox" class="switchercheckbox sendcheckbox" on=".sendbutton" off=".signbutton" autocomplete="off" value="off" > 
-            <label style="margin-left:3px;">Underteckna sist </label> 
+            <label class="usual" style="margin-left:3px;">Underteckna sist </label>
+            <label class="secretary" style="margin-left:3px;display:none;">Ej undertecknande part</label>
+            </input>               
             </div>
             <div class="sendbutton" style="display:none">
             <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"  class="btn-big green center">
