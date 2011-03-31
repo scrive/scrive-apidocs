@@ -746,7 +746,7 @@ compareFirstNames fnContract fnEleg
             difs = [levenshtein a b | a <- fnsc, b <- fnse]
         in if any (<= 1) difs
             then MergeMatch
-            else MergeFail $ "First names do not match: \"" ++ show fnContract ++ "\" and \"" ++ show fnEleg ++ "\"."
+            else MergeFail $ "Förnamn matchar inte: \"" ++ BS.toString fnContract ++ "\" och \"" ++ BS.toString fnEleg ++ "\"."
   
 bsdigits :: BS.ByteString    
 bsdigits = BS.fromString "0123456789"
@@ -767,13 +767,13 @@ compareNumbers nContract nEleg
             dif = levenshtein (BS.toString nsc) (BS.toString nse)
         in if dif <= 3
             then MergeMatch
-            else MergeFail $ "Person numbers do not match: \"" ++ show nContract ++ "\" and \"" ++ show nEleg ++ "\"."
+            else MergeFail $ "Personnnummer matchar inte: \"" ++ BS.toString nContract ++ "\" och \"" ++ BS.toString nEleg ++ "\"."
 
 compareLastNames lnContract lnEleg 
     | BS.null lnContract = MergeFail "Last name was blank."
     | BS.null lnEleg = MergeKeep
     | levenshtein (map toLower (BS.toString lnContract)) (map toLower (BS.toString lnEleg)) <= 1 = MergeMatch
-    | otherwise = MergeFail $ "Last names do not match: \"" ++ show lnContract ++ "\" and \"" ++ show lnEleg ++"\"."
+    | otherwise = MergeFail $ "Efternamn matchar inte: \"" ++ BS.toString lnContract ++ "\" och \"" ++ BS.toString lnEleg ++"\"."
 
 --GHC.Unicode.toLower
 -- import GHC.Unicode ( toLower )
