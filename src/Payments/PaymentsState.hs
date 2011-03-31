@@ -133,7 +133,7 @@ data UserPaymentPolicy =  UserPaymentPolicy {
              , custompaymentchange :: PaymentChange
              , temppaymentchange :: Maybe (MinutesTime,PaymentChange)
       }
-    deriving (Eq, Ord, Show, Read, Typeable)
+    deriving (Eq, Ord, Show, Typeable)
 
 -- | Info about free signatures left and money for user
 data UserPaymentAccount0 = UserPaymentAccount0 {

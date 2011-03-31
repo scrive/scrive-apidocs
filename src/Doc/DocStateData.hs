@@ -5,6 +5,7 @@ module Doc.DocStateData(
     , ChargeMode(..)
     , Document(..)
     , DocumentHistoryEntry(..)
+    , DocumentLogEntry(..)
     , DocumentID(..)
     , DocumentStatus(..)
     , DocumentType(..)
@@ -26,6 +27,8 @@ module Doc.DocStateData(
     , SignatureInfo(..)
     , IdentificationType(..)
     , SignatureProvider(..)
+
+    , documentHistoryToDocumentLog
     ) where
 import Happstack.Data
 import Happstack.State
@@ -42,6 +45,8 @@ import Data.Int
 import Data.Maybe
 import Mails.MailsUtil
 import Data.Data (Data)
+import Control.Monad
+import Data.Bits
 
 newtype Author = Author { unAuthor :: UserID }
     deriving (Eq, Ord, Typeable)
@@ -225,14 +230,14 @@ data SignatoryLink5 = SignatoryLink5
     deriving (Eq, Ord, Typeable)
 
 data SignatoryLink = SignatoryLink 
-    { signatorylinkid          :: SignatoryLinkID
-    , signatorydetails         :: SignatoryDetails
-    , signatorymagichash       :: MagicHash
-    , maybesignatory           :: Maybe UserID
-    , maybesigninfo            :: Maybe SignInfo
-    , maybeseeninfo            :: Maybe SignInfo
-    , invitationdeliverystatus :: MailsDeliveryStatus
-    , signatorysignatureinfo   :: Maybe SignatureInfo
+    { signatorylinkid          :: SignatoryLinkID     -- ^ a random number id, unique in th escope of a document only
+    , signatorydetails         :: SignatoryDetails    -- ^ details of this person as filled in invitation
+    , signatorymagichash       :: MagicHash           -- ^ authentication code
+    , maybesignatory           :: Maybe UserID        -- ^ if this document has been saved to an account, that is the user id
+    , maybesigninfo            :: Maybe SignInfo      -- ^ when a person has signed this document
+    , maybeseeninfo            :: Maybe SignInfo      -- ^ when a person has first seen this document
+    , invitationdeliverystatus :: MailsDeliveryStatus -- ^ status of email delivery
+    , signatorysignatureinfo   :: Maybe SignatureInfo -- ^ info about what fields have been filled for this person
     }    
     deriving (Eq, Ord, Typeable)
 
@@ -349,6 +354,55 @@ data DocumentHistoryEntry
       , ipnumber :: Word32
       }
     deriving (Eq, Ord, Typeable)
+
+data DocumentLogEntry = DocumentLogEntry MinutesTime BS.ByteString
+    deriving (Typeable, Show)
+
+$(deriveSerialize ''DocumentLogEntry)
+instance Version DocumentLogEntry
+
+-- oh boy, this is really network byte order!
+formatIP :: Word32 -> String
+formatIP 0 = ""
+-- formatIP 0x7f000001 = ""
+formatIP x = " (IP: " ++ show ((x `shiftR` 0) .&. 255) ++
+                   "." ++ show ((x `shiftR` 8) .&. 255) ++
+                   "." ++ show ((x `shiftR` 16) .&. 255) ++
+                   "." ++ show ((x `shiftR` 24) .&. 255) ++ ")"
+
+documentHistoryToDocumentLog DocumentHistoryCreated 
+      { dochisttime
+      } = DocumentLogEntry dochisttime $ BS.fromString "Document created"
+documentHistoryToDocumentLog DocumentHistoryInvitationSent 
+      { dochisttime
+      , ipnumber
+      , dochistsignatories
+      } = DocumentLogEntry dochisttime $ BS.fromString $ "Invitations sent to signatories" ++ formatIP ipnumber
+documentHistoryToDocumentLog DocumentHistoryTimedOut
+      { dochisttime
+      } = DocumentLogEntry dochisttime $ BS.fromString "Document timed out"
+documentHistoryToDocumentLog DocumentHistorySigned
+      { dochisttime
+      , ipnumber
+      , dochistsignatorydetails
+      } = DocumentLogEntry dochisttime $ BS.fromString $ "Document signed by a signatory" ++ formatIP ipnumber
+documentHistoryToDocumentLog DocumentHistoryRejected
+      { dochisttime
+      , ipnumber
+      , dochistsignatorydetails
+      } = DocumentLogEntry dochisttime $ BS.fromString $ "Document rejected by a signatory" ++ formatIP ipnumber
+documentHistoryToDocumentLog DocumentHistoryClosed
+      { dochisttime
+      , ipnumber
+      } = DocumentLogEntry dochisttime $ BS.fromString $ "Document closed" ++ formatIP ipnumber
+documentHistoryToDocumentLog DocumentHistoryCanceled
+      { dochisttime
+      , ipnumber
+      } = DocumentLogEntry dochisttime $ BS.fromString $ "Document canceled" ++ formatIP ipnumber
+documentHistoryToDocumentLog DocumentHistoryRestarted
+      { dochisttime
+      , ipnumber
+      } = DocumentLogEntry dochisttime $ BS.fromString $ "Document restarted" ++ formatIP ipnumber
 
 data DocStats = DocStats {
                  doccount :: Int
@@ -663,34 +717,63 @@ data Document13 = Document13
     }
     deriving (Eq, Ord, Typeable)
 
+data Document14 = Document14
+    { documentid14                   :: DocumentID
+    , documenttitle14                :: BS.ByteString
+    , documentauthor14               :: Author                  -- to be moved to siglinks
+    , documentsignatorylinks14       :: [SignatoryLink]  
+    , documentfiles14                :: [File]
+    , documentsealedfiles14          :: [File]
+    , documentstatus14               :: DocumentStatus
+    , documenttype14                 :: DocumentType
+    , documentctime14                :: MinutesTime
+    , documentmtime14                :: MinutesTime
+    , documentchargemode14           :: ChargeMode              -- to be removed
+    , documentdaystosign14           :: Maybe Int    
+    , documenttimeouttime14          :: Maybe TimeoutTime 
+    , documentdeleted14              :: Bool                    -- to be moved to links
+    , documenthistory14              :: [DocumentHistoryEntry]  -- to be made into plain text 
+    , documentinvitetext14           :: BS.ByteString             
+    , documenttrustweaverreference14 :: Maybe BS.ByteString
+    , documentallowedidtypes14       :: [IdentificationType]
+    , documentcsvupload14            :: Maybe CSVUpload
+    , authorfstnameplacements14      :: [FieldPlacement]        -- the below to be moved to siglinks
+    , authorsndnameplacements14      :: [FieldPlacement]
+    , authorcompanyplacements14      :: [FieldPlacement]
+    , authoremailplacements14        :: [FieldPlacement]
+    , authornumberplacements14       :: [FieldPlacement]
+    , authorotherfields14            :: [FieldDefinition]
+    , documentcancelationreason14    :: Maybe CancelationReason -- ??
+    }
+    deriving (Eq, Ord, Typeable)
+
 data Document = Document
-    { documentid               :: DocumentID
-    , documenttitle            :: BS.ByteString
-    , documentauthor           :: Author
-    , documentsignatorylinks   :: [SignatoryLink]  
-    , documentfiles            :: [File]
-    , documentsealedfiles      :: [File]
-    , documentstatus           :: DocumentStatus
-    , documenttype             :: DocumentType
-    , documentctime            :: MinutesTime
-    , documentmtime            :: MinutesTime
-    , documentchargemode       :: ChargeMode
-    , documentdaystosign       :: Maybe Int
-    , documenttimeouttime      :: Maybe TimeoutTime 
-    -- | If true, this Document will not appear in the document list
-    , documentdeleted          :: Bool
-    , documenthistory          :: [DocumentHistoryEntry]
-    , documentinvitetext       :: BS.ByteString
+    { documentid                   :: DocumentID
+    , documenttitle                :: BS.ByteString
+    , documentauthor               :: Author                  -- to be moved to siglinks
+    , documentsignatorylinks       :: [SignatoryLink]  
+    , documentfiles                :: [File]
+    , documentsealedfiles          :: [File]
+    , documentstatus               :: DocumentStatus
+    , documenttype                 :: DocumentType
+    , documentctime                :: MinutesTime
+    , documentmtime                :: MinutesTime
+    , documentdaystosign           :: Maybe Int    
+    , documenttimeouttime          :: Maybe TimeoutTime
+    , documentinvitetime           :: Maybe MinutesTime
+    , documentdeleted              :: Bool                    -- to be moved to links
+    , documentlog                  :: [DocumentLogEntry]      -- to be made into plain text 
+    , documentinvitetext           :: BS.ByteString             
     , documenttrustweaverreference :: Maybe BS.ByteString
-    , documentallowedidtypes   :: [IdentificationType]
-    , documentcsvupload        :: Maybe CSVUpload
-    , authorfstnameplacements :: [FieldPlacement]
-    , authorsndnameplacements :: [FieldPlacement]
-    , authorcompanyplacements :: [FieldPlacement]
-    , authoremailplacements :: [FieldPlacement]
-    , authornumberplacements :: [FieldPlacement]
-    , authorotherfields :: [FieldDefinition]
-    , documentcancelationreason :: Maybe CancelationReason
+    , documentallowedidtypes       :: [IdentificationType]
+    , documentcsvupload            :: Maybe CSVUpload
+    , authorfstnameplacements      :: [FieldPlacement]        -- the below to be moved to siglinks
+    , authorsndnameplacements      :: [FieldPlacement]
+    , authorcompanyplacements      :: [FieldPlacement]
+    , authoremailplacements        :: [FieldPlacement]
+    , authornumberplacements       :: [FieldPlacement]
+    , authorotherfields            :: [FieldDefinition]
+    , documentcancelationreason    :: Maybe CancelationReason -- ??
     }
     
 data CancelationReason =  ManualCancel
@@ -1240,9 +1323,13 @@ $(deriveSerialize ''Document13)
 instance Version Document13 where
     mode = extension 13 (Proxy :: Proxy Document12)
     
+$(deriveSerialize ''Document14)
+instance Version Document14 where
+    mode = extension 14 (Proxy :: Proxy Document13)
+
 $(deriveSerialize ''Document)
 instance Version Document where
-    mode = extension 14 (Proxy :: Proxy Document13)
+    mode = extension 15 (Proxy :: Proxy Document14)
 
     
 instance Migrate DocumentHistoryEntry0 DocumentHistoryEntry where
@@ -1771,7 +1858,7 @@ instance Migrate Document12 Document13 where
                                                 else Nothing
                 }
 
-instance Migrate Document13 Document where
+instance Migrate Document13 Document14 where
     migrate (Document13
                 { documentid13
                 , documenttitle13
@@ -1798,34 +1885,95 @@ instance Migrate Document13 Document where
                 , authornumberplacements13
                 , authorotherfields13
                 , documentcancelationreason13
-                }) = Document
-                { documentid = documentid13
-                , documenttitle = documenttitle13
-                , documentauthor = documentauthor13
-                , documentsignatorylinks = documentsignatorylinks13
-                , documentfiles = documentfiles13
-                , documentsealedfiles = documentsealedfiles13
-                , documentstatus = documentstatus13
-                , documenttype = documenttype13
-                , documentctime = documentctime13
-                , documentmtime = documentmtime13
-                , documentchargemode = documentchargemode13
-                , documentdaystosign = documentdaystosign13
-                , documenttimeouttime = documenttimeouttime13
-                , documentdeleted = documentdeleted13
-                , documenthistory = documenthistory13
-                , documentinvitetext = documentinvitetext13
-                , documenttrustweaverreference = documenttrustweaverreference13
-                , documentallowedidtypes = documentallowedidtypes13
-                , documentcsvupload = Nothing
-                , authorfstnameplacements = authorfstnameplacements13
-                , authorsndnameplacements = authorsndnameplacements13
-                , authorcompanyplacements = authorcompanyplacements13
-                , authoremailplacements = authoremailplacements13
-                , authornumberplacements = authornumberplacements13
-                , authorotherfields = authorotherfields13
-                , documentcancelationreason = documentcancelationreason13
+                }) = Document14
+                { documentid14                   = documentid13
+                , documenttitle14                = documenttitle13
+                , documentauthor14               = documentauthor13
+                , documentsignatorylinks14       = documentsignatorylinks13
+                , documentfiles14                = documentfiles13
+                , documentsealedfiles14          = documentsealedfiles13
+                , documentstatus14               = documentstatus13
+                , documenttype14                 = documenttype13
+                , documentctime14                = documentctime13
+                , documentmtime14                = documentmtime13
+                , documentchargemode14           = documentchargemode13
+                , documentdaystosign14           = documentdaystosign13
+                , documenttimeouttime14          = documenttimeouttime13
+                , documentdeleted14              = documentdeleted13
+                , documenthistory14              = documenthistory13
+                , documentinvitetext14           = documentinvitetext13
+                , documenttrustweaverreference14 = documenttrustweaverreference13
+                , documentallowedidtypes14       = documentallowedidtypes13
+                , documentcsvupload14            = Nothing
+                , authorfstnameplacements14      = authorfstnameplacements13
+                , authorsndnameplacements14      = authorsndnameplacements13
+                , authorcompanyplacements14      = authorcompanyplacements13
+                , authoremailplacements14        = authoremailplacements13
+                , authornumberplacements14       = authornumberplacements13
+                , authorotherfields14            = authorotherfields13
+                , documentcancelationreason14    = documentcancelationreason13
                 }
+
+instance Migrate Document14 Document where
+    migrate (Document14
+                { documentid14
+                , documenttitle14
+                , documentauthor14
+                , documentsignatorylinks14
+                , documentfiles14
+                , documentsealedfiles14
+                , documentstatus14
+                , documenttype14
+                , documentctime14
+                , documentmtime14
+                , documentchargemode14 = _
+                , documentdaystosign14
+                , documenttimeouttime14
+                , documentdeleted14
+                , documenthistory14
+                , documentinvitetext14
+                , documenttrustweaverreference14
+                , documentallowedidtypes14
+                , documentcsvupload14
+                , authorfstnameplacements14
+                , authorsndnameplacements14
+                , authorcompanyplacements14
+                , authoremailplacements14
+                , authornumberplacements14
+                , authorotherfields14
+                , documentcancelationreason14
+                }) = Document
+                { documentid                   = documentid14
+                , documenttitle                = documenttitle14
+                , documentauthor               = documentauthor14
+                , documentsignatorylinks       = documentsignatorylinks14
+                , documentfiles                = documentfiles14
+                , documentsealedfiles          = documentsealedfiles14
+                , documentstatus               = documentstatus14
+                , documenttype                 = documenttype14
+                , documentctime                = documentctime14
+                , documentmtime                = documentmtime14
+                , documentdaystosign           = documentdaystosign14
+                , documenttimeouttime          = documenttimeouttime14
+                -- here we see if there is a time of sending invitations in the history of a document
+                , documentinvitetime           = msum $ map (\x -> case x of
+                                                                   DocumentHistoryInvitationSent time _ _ -> Just time
+                                                                   _ -> Nothing) documenthistory14
+                , documentdeleted              = documentdeleted14
+                , documentlog                  = map documentHistoryToDocumentLog documenthistory14
+                , documentinvitetext           = documentinvitetext14
+                , documenttrustweaverreference = documenttrustweaverreference14
+                , documentallowedidtypes       = documentallowedidtypes14
+                , documentcsvupload            = documentcsvupload14
+                , authorfstnameplacements      = authorfstnameplacements14
+                , authorsndnameplacements      = authorsndnameplacements14
+                , authorcompanyplacements      = authorcompanyplacements14
+                , authoremailplacements        = authoremailplacements14
+                , authornumberplacements       = authornumberplacements14
+                , authorotherfields            = authorotherfields14
+                , documentcancelationreason    = documentcancelationreason14
+                }
+
 
 $(deriveSerialize ''DocumentStatus)
 instance Version DocumentStatus where

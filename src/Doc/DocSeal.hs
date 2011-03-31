@@ -166,16 +166,14 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
                                     else fullname ++ " undertecknar dokumentet online med " ++ formatProvider (fromJust mprovider) ++ formatIP (signipnumber signed)
             }
           ]
-      makeHistoryEntryFromEvent (DocumentHistoryInvitationSent time ipnumber _) =
-          [ Seal.HistEntry
-            { Seal.histdate = show time 
+      invitationSentEntry = Seal.HistEntry
+            { Seal.histdate = show (documentinvitetime document)
             , Seal.histcomment = 
                 if length signatories>1
-                   then BS.toString authorfullname ++ " skickar en inbjudan att underteckna till parterna" ++ formatIP ipnumber
-                   else BS.toString authorfullname ++ " skickar en inbjudan att underteckna till parten" ++ formatIP ipnumber
+                   then BS.toString authorfullname ++ " skickar en inbjudan att underteckna till parterna"
+                   else BS.toString authorfullname ++ " skickar en inbjudan att underteckna till parten"
             }
-          ]
-      makeHistoryEntryFromEvent _ = []         
+
       maxsigntime = maximum (map (signtime . (\(_,_,c,_,_) -> c)) signatories)
       concatComma = concat . intersperse ", "
       
@@ -188,7 +186,7 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
       -- signatories actions before what happened with a document
       histDateCompare a b = compare (Seal.histdate a) (Seal.histdate b)
       history = sortBy histDateCompare $ (concatMap makeHistoryEntryFromSignatory signatories) ++
-                (concatMap makeHistoryEntryFromEvent (documenthistory document)) ++ 
+                [invitationSentEntry] ++
                 [lastHistEntry]
       
       -- document fields
