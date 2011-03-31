@@ -342,12 +342,12 @@ mailMismatchSignatory ctx document authorname signame badname msg isbad = do
     let Context { ctxtemplates } = ctx
     title <- renderTemplate ctxtemplates "mailMismatchSignatoryTitle" $ do
         field "documenttitle" $ BS.toString $ documenttitle document
+    content <- wrapHTML ctxtemplates =<< (renderTemplate ctxtemplates "mailMismatchSignatoryContent" $ do
+        field "documenttitle" $ BS.toString $ documenttitle document
         field "authorname" authorname
         field "signame" signame
         field "badname" badname
-        field "messages" (if isbad then Just msg else Nothing)
-    content <- wrapHTML ctxtemplates =<< (renderTemplate ctxtemplates "mailMismatchSignatoryContent" $ do
-        field "documenttitle" $ BS.toString $ documenttitle document)
+        field "messages" (if isbad then Just msg else Nothing))
         
     return $ emptyMail  { title = BS.fromString title
                         , content = BS.fromString content 
