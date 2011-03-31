@@ -93,17 +93,6 @@ pageDocumentForSignHelpers=
 ####
 pageDocumentForSignContent=
   <script type="text/javascript" src="/js/bankid.js"></script>
-  $if(notsignedbyme)$$if(pending)$
-  <script type="text/javascript">
-    jQuery(function() {
-      $if(requireseleg)$
-      addFlashMessage("Du undertecknar dokumentet längst ned. Det krävs e-legitimation för	att underteckna.","green");
-      $else$
-      addFlashMessage("Underteckna dokumentet längst ned på sidan.","green");
-      $endif$
-    });
-  </script>
-  $endif$$endif$
   <div class="localdialogs">
     $loadingdialog()$
     <div style="display: none">
