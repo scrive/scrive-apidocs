@@ -6,6 +6,10 @@ data Person =
            , company :: String
            , number :: String
            , email :: String
+           , fullnameverified :: Bool
+           , companyverified :: Bool
+           , numberverified :: Bool
+           , emailverified :: Bool
            }
     deriving (Eq,Ord,Show,Read)
 
