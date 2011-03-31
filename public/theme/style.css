@@ -951,7 +951,7 @@ a.button {
 
 #signStepsMenu
 {
-    height: 25px;
+    height: 24px;
     font-size: 11px;
     position: relative;
 }
@@ -1030,7 +1030,7 @@ a.button {
 
 #signStepsMenu div.current
 {
-    background-image: url(images/darkpattern.png);
+    background-image: url(../img/bg-header.jpg);;
     background-repeat: repeat;
     border-width: 0px 1px 0 1px;
     border-color: #000000;
@@ -1050,11 +1050,12 @@ a.button {
 #signStepsTitleRow
 {
     color: #ffffff;
-    background-image: url(images/darkpattern.png);
-    height: 28px;
-    border-width: 0 1px 0 1px;
+    background-image: url(../img/bg-header.jpg);
+    height: 24px;
+    border-width: 1px 1px 0 1px;
     border-color: #000000;
     border-style: solid;
+    padding: 6px 7px 7px 20px;
     position: relative;
 }
 
@@ -2137,7 +2138,7 @@ form {
 
 .partyrole {
     display: none;
-    width: 210px;
+    width: 220px;
     position: absolute;
     background-color: white;
     top: -2px;
@@ -2145,6 +2146,12 @@ form {
     border: solid 1px #BDBDBD;
     -moz-border-radius:3px 3px 3px 3px;
     padding: 8px;
+}
+
+.partyrole .radiolabel {
+    padding-left: 6px;
+    position: relative;
+    top: -2px;
 }
 
 .partyrole .closelink {
