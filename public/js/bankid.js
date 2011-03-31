@@ -35,7 +35,7 @@ function mozillaInstallSigner1Object() {
 function doSign1(tbs, posturl) {
   var signer = document.getElementById('signerId');
   if(signer) {
-    signer.SetDataToBeSigned(tbstext);
+    signer.SetDataToBeSigned(tbs);
     signer.SetIncludeCaCert('true');
     signer.SetIncludeRootCaCert('true');
     signer.SetBase64('true');
