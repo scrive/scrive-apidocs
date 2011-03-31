@@ -8,7 +8,6 @@ module User.UserView (
     activatePageViewNotValidLink,
     
     -- mails  
-    passwordChangeMail,
     newUserMail,
     inviteSubaccountMail,
     viralInviteMail,
@@ -144,18 +143,6 @@ newUserMail templates hostpart emailaddress personname activatelink vip = do
     field "vip"            vip
     ) >>= wrapHTML templates
   return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
-
-
-passwordChangeMail :: KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> IO Mail
-passwordChangeMail templates hostpart emailaddress personname setpasslink = do
-  title   <- renderTemplate templates "passwordChangeMailTitle" ()
-  content <- (renderTemplate templates "passwordChangeMailContent" $ do
-    field "personname"   $ BS.toString personname
-    field "email"        $ BS.toString emailaddress
-    field "passwordlink" $ show setpasslink
-    field "ctxhostpart"  $ hostpart
-    ) >>= wrapHTML templates
-  return $ emptyMail { title = BS.fromString title, content = BS.fromString content } 
 
 
 inviteSubaccountMail :: KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> BS.ByteString -> KontraLink-> IO Mail

@@ -159,15 +159,6 @@ newUserMailContent=
 
     $poweredBySkrivaPaPara()$
 ####
-passwordChangeMailTitle=Nytt lösenord
-####
-passwordChangeMailContent=
-    <p>Hej $personname$,</p>
-    <p>Du har begärt ett nytt lösenord. Vänligen klicka på länken nedan för att välja ett nytt lösenord. Länken är giltig i 12 timmar.<br/>
-    <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a>
-    </p>
-    $poweredBySkrivaPaPara()$
-####
 inviteSubaccountMailTitle=Inbjudan från $supervisorname$ till underkonto
 ####
 inviteSubaccountMailContent=
