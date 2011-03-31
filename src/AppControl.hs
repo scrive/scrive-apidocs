@@ -444,7 +444,7 @@ signup vip freetill =  do
                              addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
                              return LoopBack
                   Nothing -> do
-                      maccount <- liftIO $ UserControl.createUser ctx ctxhostpart BS.empty email Nothing vip
+                      maccount <- liftIO $ UserControl.createUser ctx ctxhostpart (BS.empty, BS.empty) email Nothing vip
                       case maccount of
                            Just account ->  do
                                addFlashMsg =<< (liftIO $ flashMessageUserSignupDone ctxtemplates)

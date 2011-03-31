@@ -425,8 +425,12 @@ pageStats=
         Create user:<br/>
         <table style="width:600px">
           <tr>
-            <td>Full name:</td>
-            <td><input type="text" name="fullname"></td>
+            <td>First name:</td>
+            <td><input type="text" name="fstname"></td>
+          </tr>
+          <tr>
+            <td>Second name:</td>
+            <td><input type="text" name="sndname"></td>
           </tr>
           <tr>
             <td>Email address:</td>

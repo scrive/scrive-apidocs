@@ -173,9 +173,9 @@ handleCreateSubaccount :: User -> Kontra ()
 handleCreateSubaccount user = do
     ctx <- get
     memail <- getOptionalField asValidEmail "email"
-    fstname <- fromMaybe "" <$> getField "fstname"
-    sndname <- fromMaybe "" <$> getField "sndname"
-    let fullname = BS.fromString $ fstname ++ " " ++ sndname
+    fstname <- maybe BS.empty BS.fromString <$> getField "fstname"
+    sndname <- maybe BS.empty BS.fromString <$> getField "sndname"
+    let fullname = (fstname, sndname)
     case memail of
          Just email -> do
              muser <- liftIO $ createUser ctx (ctxhostpart ctx) fullname email (Just user) False
@@ -213,12 +213,13 @@ randomPassword = do
     indexes <- liftIO $ replicateM 8 (randomRIO (0, length letters-1))
     return (BS.fromString $ map (letters!!) indexes)
 
-createUser :: Context -> String -> BS.ByteString -> BS.ByteString -> Maybe User -> Bool -> IO (Maybe User)
-createUser ctx hostpart fullname email maybesupervisor vip = do
+createUser :: Context -> String -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe User -> Bool -> IO (Maybe User)
+createUser ctx hostpart names email maybesupervisor vip = do
     passwdhash <- createPassword =<< randomPassword
-    muser <- update $ AddUser fullname email passwdhash (userid <$> maybesupervisor)
+    muser <- update $ AddUser names email passwdhash (userid <$> maybesupervisor)
     case muser of
          Just user -> do
+             let fullname = composeFullName names
              mail <- case maybesupervisor of
                           Nothing -> do
                               al <- newAccountCreatedLink user
@@ -230,20 +231,22 @@ createUser ctx hostpart fullname email maybesupervisor vip = do
              return muser
          Nothing -> return muser
 
-createUserBySigning :: Context -> BS.ByteString -> BS.ByteString -> BS.ByteString -> (DocumentID, SignatoryLinkID) -> IO (Maybe User)
-createUserBySigning Context{ctxmailer, ctxtemplates, ctxhostpart} doctitle fullname email doclinkdata =
-    createInvitedUser fullname email >>= maybe (return Nothing) (\user -> do
+createUserBySigning :: Context -> BS.ByteString -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> (DocumentID, SignatoryLinkID) -> IO (Maybe User)
+createUserBySigning Context{ctxmailer, ctxtemplates, ctxhostpart} doctitle names email doclinkdata =
+    createInvitedUser names email >>= maybe (return Nothing) (\user -> do
+        let fullname = composeFullName names
         (al, rl) <- newAccountCreatedBySigningLink user doclinkdata
         mail <- mailAccountCreatedBySigning ctxtemplates ctxhostpart doctitle fullname al rl
         sendMail ctxmailer $ mail { fullnameemails = [(fullname, email)] }
         return $ Just user
     )
 
-createNewUserByAdmin :: Context -> BS.ByteString -> BS.ByteString -> Maybe MinutesTime -> Maybe String -> IO (Maybe User)
-createNewUserByAdmin ctx fullname email freetill custommessage = do
-    muser <- createInvitedUser fullname email
+createNewUserByAdmin :: Context -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe MinutesTime -> Maybe String -> IO (Maybe User)
+createNewUserByAdmin ctx names email freetill custommessage = do
+    muser <- createInvitedUser names email
     case muser of
          Just user -> do
+             let fullname = composeFullName names
              when (isJust freetill) $ update $ FreeUserFromPayments user (fromJust freetill)
              now <- liftIO $ getMinutesTime
              update $ SetInviteInfo (ctxmaybeuser ctx) now Admin (userid user)
@@ -253,11 +256,11 @@ createNewUserByAdmin ctx fullname email freetill custommessage = do
              return muser
          Nothing -> return muser
 
-createInvitedUser :: BS.ByteString -> BS.ByteString -> IO (Maybe User)
-createInvitedUser fullname email = do
+createInvitedUser :: (BS.ByteString, BS.ByteString) -> BS.ByteString -> IO (Maybe User)
+createInvitedUser names email = do
     password <- randomPassword
     passwdhash <- createPassword password
-    update $ AddUser fullname email passwdhash Nothing
+    update $ AddUser names email passwdhash Nothing
 
 {- |
    Guard against a POST with no logged in user.
@@ -501,7 +504,7 @@ handleAccountSetupPost aid hash = do
                  _ -> return LoopBack
 
         getUserForViralInvite now invitedemail invitationtime inviterid = do
-            muser <- liftIO $ createInvitedUser BS.empty $ unEmail invitedemail
+            muser <- liftIO $ createInvitedUser (BS.empty, BS.empty) $ unEmail invitedemail
             case muser of
                  Just user -> do -- user created, we need to fill in some info
                      minviter <- query $ GetUserByUserID inviterid
