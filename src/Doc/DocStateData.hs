@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall -Werror #-}
+{-# OPTIONS_GHC -Wall #-}
 module Doc.DocStateData(
       Author(..)
     , CancelationReason(..)
