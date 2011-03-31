@@ -425,7 +425,12 @@ handleSignShow documentid
                magichash1 = do
   doc1 <- queryOrFail $ GetDocumentByDocumentID documentid
   checkLinkIDAndMagicHash doc1 signatorylinkid1 magichash1
-  ctx@(Context {ctxtemplates, ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber}) <- get
+  Context { ctxtemplates
+          , ctxmaybeuser
+          , ctxhostpart
+          , ctxtime
+          , ctxipnumber 
+          , ctxflashmessages } <- get
   
   update $ MarkDocumentSeen documentid signatorylinkid1 ctxtime ctxipnumber
   -- Structure of this needs to be changed. MR
@@ -435,6 +440,14 @@ handleSignShow documentid
   author <- queryOrFail $ GetUserByUserID authoruserid
   let authorname = prettyName author
   let invitedname = signatoryname $ signatorydetails $ invitedlink 
+
+  when (Data.List.null ctxflashmessages) $ do
+    let message = if document `allowsIdentification` ELegitimationIdentification
+                    then "Du undertecknar dokumentet längst ned. Det krävs e-legitimation för att underteckna."
+                    else "Underteckna dokumentet längst ned på sidan."
+    addFlashMsg $ toFlashMsg OperationDone message
+  
+  ctx <- get
   renderFromBody ctx TopNone kontrakcja 
                        (fmap cdata $ pageDocumentForSignatory (LinkSignDoc document invitedlink) 
                                             document ctx invitedlink author)
