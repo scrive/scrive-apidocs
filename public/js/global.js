@@ -647,12 +647,6 @@ safeReady(function() {
 });
 
 safeReady(function() {
-  showProperSignButtons();    
-  $(".partyrole input").change(showProperSignButtons);
-});
-
-
-safeReady(function() {
   $(window).resize();
 });
 
@@ -661,12 +655,19 @@ function deactivateSigninvite(){
     if (checkBox.val()=="off")
     { 
        checkBox.change();
-       checkBox.attr("DISABLED","");
     }   
+    checkBox.attr("DISABLED","");
+    checkBox.parent().find(".usual").hide();
+    checkBox.parent().find(".secretary").show();
    }
 function activateSignInvite(){
     var checkBox = $(".sendcheckbox");
     checkBox.removeAttr("DISABLED");
+    if (checkBox.val()=="on") {
+      checkBox.change();
+    }
+    checkBox.parent().find(".usual").show();
+    checkBox.parent().find(".secretary").hide();
 }
 function showProperSignButtons() {
 
@@ -687,8 +688,6 @@ function showProperSignButtons() {
     $("#dialog-confirm-text-send-normal").show();
 
   }
-
-
 }
 
 function emailFieldsValidation(fields){
@@ -951,7 +950,6 @@ function showStep3()
     $('#signStep2Content').hide();
     $('#signStep3Content').show();
     $('#signStepsNextButton').hide();
-  showProperSignButtons();
     return false;
 }
 
@@ -1117,7 +1115,7 @@ function renumberParts() {
       p.find(".partnumber").html("PART " + (idx));
     });
     console.log("dd");
-    personpane.children().first().find(".partnumber").html("SEKRETERARE");
+    personpane.children().first().find(".partnumber").html("EJ UNDERTECKNANDE PART");
     console.log(personpane.children().first());
   } else {
     personpane.children().each(function(idx) {
