@@ -165,18 +165,17 @@ newDocument user title documenttype ctime = do
 fileMovedToAWS :: FileID 
                -> BS.ByteString
                -> BS.ByteString
-               -> Update Documents (Either String Document)
-fileMovedToAWS fileid bucket url = fileMoveTo fileid $  FileStorageAWS bucket url
+               -> Update Documents ()
+fileMovedToAWS fileid bucket url = fileMovedTo fileid $ FileStorageAWS bucket url
 
-fileMovedToDisk :: FileID -> FilePath -> Update Documents (Either String Document)
-fileMovedToDisk fileid filepath = fileMoveTo fileid $ FileStorageDisk filepath
+fileMovedToDisk :: FileID -> FilePath -> Update Documents ()
+fileMovedToDisk fileid filepath = fileMovedTo fileid $ FileStorageDisk filepath
 
-fileMoveTo :: FileID -> FileStorage -> Update Documents (Either String Document)
-fileMoveTo fid fstorage = do
+fileMovedTo :: FileID -> FileStorage -> Update Documents ()
+fileMovedTo fid fstorage = do
     documents <- ask
-    case getOne (documents @= fid) of
-         Nothing -> return $ Left "no such file id"
-         Just document -> modifyContract (documentid document) $ moved
+    let docs = toList (documents @= fid) 
+    mapM_ (\doc -> modifyContractOrTemplate (documentid doc) moved) docs
     where
     moved doc@Document{documentfiles, documentsealedfiles} =
         Right $ doc { documentfiles = map moved1 documentfiles
