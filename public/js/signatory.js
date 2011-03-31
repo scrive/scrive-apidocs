@@ -296,12 +296,43 @@ function docstateToHTML(){
 	    }
 
 	    placePlacements(this.fstnameplacements, "Förnamn", this.fstname, s.id, "fstname");
-            placePlacements(this.sndnameplacements, "Efternamn", this.sndname, s.id, "sndname");
+        placePlacements(this.sndnameplacements, "Efternamn", this.sndname, s.id, "sndname");
 	    placePlacements(this.emailplacements, "Personens e-mail", this.email, s.id, "email");
 	    placePlacements(this.companyplacements, "Titel, företag", this.company, s.id, "sigco");
 	    placePlacements(this.numberplacements, "Orgnr/Persnr", this.number, s.id, "signr");
 
-	    
+	   if(!cc){
+        $(".signViewBodyRight").each(function() {
+        var ff = $(this);
+        if((s.companyplacements.length > 0 || s.company != "") && ff.text().indexOf(s.email) > -1){
+                        var val = s.company;
+                        var class = "";
+                        if(val === ""){
+                                val =  "Titel, företag";
+                                class = "grayed";
+                              }
+                        ff.find(".signatoryfields").append(
+                         "<div class='field'>"+
+                            "<div class='icon lock-closed'></div>"+
+                            "<span class='fieldvalue "+class+"'>"+escapeHTML(val)+"</span>"+
+                         "</div>")
+                }
+                
+        if((s.numberplacements.length > 0 || s.number !="") && ff.text().indexOf(s.email) > -1){
+                        var val = s.number;
+                        var class = "";
+                        if(val === ""){
+                                val =  "Orgnr/Persnr";
+                                class = "grayed";
+                              }
+                        ff.find(".signatoryfields").append(
+                         "<div class='field'>"+
+                            "<div class='icon lock-closed'></div>"+
+                            "<span class='fieldvalue "+class+"'>"+escapeHTML(val)+"</span>"+
+                         "</div>")
+                }
+            }) 
+        }
 
 	    $(s.otherfields).each(function () {
 		    var f = this;
@@ -310,17 +341,20 @@ function docstateToHTML(){
 		    if(!cc){
 		    $(".signViewBodyRight").each(function() {
 			    var ff = $(this);
-			    //console.log(s);
-			    if(ff.text().indexOf(s.email) > -1) {
+			    
+                if(ff.text().indexOf(s.email) > -1) {
                               var val = f.value;
+                              var class = ""
                               if(val === ""){
-                                val = "(unfilled)";
+                                val =  f.label;
+                                class = "grayed";
                               }
 			      ff.find(".signatoryfields").append(
-                                  "<span class='text'>"
-                                + escapeHTML(f.label)
-                                + ": " + escapeHTML(val)
-                                + "</span>");
+                         "<div class='field'>"+
+                            "<div class='icon lock-closed'></div>"+
+                            "<span class='fieldvalue "+class+"'>"+escapeHTML(val)+"</span>"+
+                         "</div>")
+        
 			    }
 			});
 		    }
@@ -362,10 +396,17 @@ function docstateToHTML(){
 		var ff = $(this);
 		//console.log(s);
 		if(ff.text().indexOf(currentsig.email) > -1) {
-		  ff.find(".signatoryfields").append("<span class='text'>"
-                                                   + escapeHTML(f.label) + ": "
-                                                   + escapeHTML(f.value)
-                                                   + "</span>");
+             var val = f.value;
+             var class = ""
+             if(val === ""){
+                val =  f.label;
+                class = "grayed";
+             }
+             ff.find(".signatoryfields").append(
+                         "<div class='field'>"+
+                            "<div class='icon lock-closed'></div>"+
+                            "<span class='fieldvalue "+class+"'>"+escapeHTML(val)+"</span>"+
+                         "</div>");
 		}
 	      });
 

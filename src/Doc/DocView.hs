@@ -440,7 +440,7 @@ pageDocumentForAuthor ctx
        field "documentdaystosignboxvalue" $ documentdaystosignboxvalue
        field "anyinvitationundelivered" $ anyInvitationUndelivered document
        field "undelivered" $ map (signatoryemail . signatorydetails) $ undeliveredSignatoryLinks document
-       field "signatories" $ fmap concat $ sequence $ map (showSignatoryLinkForSign ctx document author) documentsignatorylinks                    
+       field "signatories" $ map (signatoryLinkFields ctx document author Nothing) documentsignatorylinks                    
        field "canberestarted" $ documentstatus `elem` [Canceled, Timedout, Rejected]
        field "cancelMailContent" $ mailCancelDocumentByAuthorContent templates False Nothing ctx document author
        field "linkcancel" $ show $ LinkCancel document
@@ -461,6 +461,7 @@ pageDocumentForAuthor ctx
        field "csvcustomfields" $ csvcustomfields
        field "isvalidcsv" $ null csvproblems
        documentInfoFields document
+       documentViewFields document
        designViewFields step
        field "datamismatchflash" $ getDataMismatchMessage $ documentcancelationreason document
 
@@ -546,7 +547,6 @@ pageDocumentForViewer ctx
           }
    in do
      helpers <- renderTemplate (ctxtemplates ctx) "pageDocumentForViewerHelpers" [("documentid", show documentid)]
-     signatories <- fmap concat $ sequence $ map (showSignatoryLinkForSign ctx document author) documentsignatorylinks
      invitationMailContent <- mailInvitationToSignContent (ctxtemplates ctx) False ctx document author Nothing
      cancelMailContent <- mailCancelDocumentByAuthorContent (ctxtemplates ctx) False Nothing ctx document author
      documentinfotext <- documentInfoText (ctxtemplates ctx) document Nothing author
@@ -558,7 +558,7 @@ pageDocumentForViewer ctx
        field "documentdaystosignboxvalue" $ documentdaystosignboxvalue
        field "anyinvitationundelivered" $ anyInvitationUndelivered document
        field "undelivered" $ map (signatoryemail . signatorydetails) $ undeliveredSignatoryLinks document
-       field "signatories" signatories
+       field "signatories" $ map (signatoryLinkFields ctx document author Nothing) documentsignatorylinks
        field "canberestarted" $ documentstatus `elem` [Canceled, Timedout, Rejected]
        field "cancelMailContent" $ cancelMailContent
        field "linkcancel" $ show $ LinkCancel document
@@ -570,6 +570,7 @@ pageDocumentForViewer ctx
        field "linkissuedocpdf" $ show (LinkIssueDocPDF document)
        field "documentinfotext" $ documentinfotext
        documentInfoFields document 
+       documentViewFields document
        documentAuthorInfo author
 
 
@@ -588,7 +589,6 @@ pageDocumentForSignatory action document ctx invitedlink author =
         ++ (BS.toString $ signatoryemail $ signatorydetails invitedlink)
         ++ "';"
       magichash = signatorymagichash invitedlink
-      allbutinvited = filter (/= invitedlink) (documentsignatorylinks document)
       documentauthordetails = signatoryDetailsFromUser author
       allowedtypes = documentallowedidtypes document
       requiresEleg = isJust $ find (== ELegitimationIdentification) allowedtypes
@@ -598,7 +598,7 @@ pageDocumentForSignatory action document ctx invitedlink author =
           renderTemplate (ctxtemplates ctx) "pageDocumentForSignHelpers" $ do
               field "documentid" . show $ documentid document
               field "localscripts" localscripts
-      field "signatories" $ fmap concat $ sequence $ map (showSignatoryLinkForSign ctx document author) (invitedlink : allbutinvited)
+      field "signatories" $ map (signatoryLinkFields ctx document author (Just invitedlink)) (documentsignatorylinks document)
       field "rejectMessage" $  mailRejectMailContent (ctxtemplates ctx) Nothing ctx (prettyName author) document invitedlink
       field "partyUnsigned" $ renderListTemplate (ctxtemplates ctx) $  map (BS.toString . personname') $ partyUnsignedMeAndList magichash document
       field "action" $ show action
@@ -607,112 +607,64 @@ pageDocumentForSignatory action document ctx invitedlink author =
       field "requireseleg" requiresEleg
       documentInfoFields document
       documentAuthorInfo author
+      documentViewFields document
       signedByMeFields document (Just invitedlink)
 
 
 --- Display of signatory                                                             
-showSignatoryLinkForSign :: Context -> Document -> User -> SignatoryLink -> IO String
-showSignatoryLinkForSign
+signatoryLinkFields :: Context -> Document -> User -> Maybe SignatoryLink -> SignatoryLink -> Fields
+signatoryLinkFields
   ctx@Context {
       ctxmaybeuser = muser
     , ctxtemplates
   }
-  document@Document {
-    documentcancelationreason
-    }
+  document
   author
+  currentlink
   siglnk@SignatoryLink {
     signatorylinkid
     , maybesigninfo
     , maybeseeninfo
     , invitationdeliverystatus
-    , signatorydetails =
-      SignatoryDetails {
-        signatorynumber
-        , signatorycompany
-        , signatoryemail
-        , signatoryotherfields
-      }
   } =
   let
-      isCurrentUserAuthor = maybe False (isAuthor document) muser
-      isCurrentSignatorAuthor = (fmap (unEmail . useremail . userinfo) muser) == (Just signatoryemail)      
-      wasSigned =  isJust maybesigninfo && (not $ isCurrentSignatorAuthor && (documentstatus document == AwaitingAuthor))
-      wasSeen = isJust maybeseeninfo
-      isTimedout = documentstatus document == Timedout
-      isCanceled = documentstatus document == Canceled
-      isRejected = documentstatus document == Rejected
-      isClosed = documentstatus document == Closed
-
-      -- isWithDrawn = documentstatus document == Withdrawn
-      dontShowAnyReminder = isTimedout || isCanceled || isRejected
-      dialogHeight =   if (wasSigned) then "400" else "600"
-      status = caseOf [
+   isCurrentUserAuthor = maybe False (isAuthor document) muser
+   isCurrentSignatorAuthor = (unEmail . useremail . userinfo $ author) == (signatoryemail $ signatorydetails siglnk) 
+   current = (currentlink == Just siglnk) || (isNothing currentlink && (fmap (unEmail . useremail . userinfo) muser) == (Just $ signatoryemail $ signatorydetails siglnk)) 
+   wasSigned =  isJust maybesigninfo && (not $ isCurrentSignatorAuthor && (documentstatus document == AwaitingAuthor))
+   wasSeen = isJust maybeseeninfo
+   isTimedout = documentstatus document == Timedout
+   isCanceled = documentstatus document == Canceled
+   isRejected = documentstatus document == Rejected
+   isClosed = documentstatus document == Closed
+   dontShowAnyReminder = isTimedout || isCanceled || isRejected
+   status = caseOf [
           (invitationdeliverystatus == Undelivered, "cancelled")
-        --, (isWithDrawn,"/theme/images/status_rejected.png")
         , (isCanceled, "cancelled")
         , (isRejected, "cancelled")
         , (isTimedout, "expired")
         , (wasSigned,  "signed")
         , (wasSeen,    "opened ")
         ] "sent"
-      
-      signatoryFields =
-        if documentstatus document == Closed
-           then signatoryotherfields
-           else []
-  in do
-    message <- caseOf [
-        (wasSigned, renderTemplate ctxtemplates "signatoryMessageSigned" [("date", showDateOnly $ signtime $ fromJust maybesigninfo)])
-      , (isTimedout, renderTemplate ctxtemplates "signatoryMessageTimedout" ())
-      , (isCanceled || isRejected, return "" )
-      , (wasSeen, renderTemplate ctxtemplates "signatoryMessageSeen" [("date", showDateOnly $ signtime $ fromJust maybeseeninfo)])
-      ] $ renderTemplate ctxtemplates "signatoryMessageNotSigned" ()
-    reminderText <-
-      if (isClosed)
-         then renderTemplate ctxtemplates "reminderTextSigned" () 
-         else
-           if (not wasSigned)
-              then renderTemplate ctxtemplates "reminderTextNotSigned" ()
-              else return ""
-    reminderSenderText <-
-      if (isClosed)
-         then renderTemplate ctxtemplates "reminderSenderTextSigned" ()
-         else
-           if (not wasSigned)
-              then renderTemplate ctxtemplates "reminderSenderTextNotSigned" ()
-              else return ""
-    reminderEditorText <- renderTemplate ctxtemplates "reminderEditorText" ()                         
-    reminderDialogTitle <- return reminderText   
-    reminderMessage <- mailDocumentRemindContent ctxtemplates Nothing ctx document siglnk author
-    reminderForm <- whenMaybe (isCurrentUserAuthor && (not isCurrentSignatorAuthor) && (not dontShowAnyReminder) && (invitationdeliverystatus /= Undelivered) && (isClosed || not wasSigned)) $
-      renderTemplate ctxtemplates "reminderForm" $
-        (setAttribute "reminderDialogTitle" $  reminderDialogTitle) .
-        (setAttribute "signatorylinkid" $  show signatorylinkid ) .
-        (setAttribute "reminderText" $  reminderDialogTitle) .
-        (setAttribute "reminderMessage" $ reminderMessage ) .
-        (setAttribute "reminderEditorText" $ reminderEditorText) .
-        (setAttribute "reminderSenderText" $ reminderSenderText ) .
-        (setAttribute "dialogHeight" $ dialogHeight ) .
-        (setAttribute "linkremind" $ show (LinkRemind document siglnk)) 
-    changeEmailAddress <- whenMaybe (isCurrentUserAuthor && (invitationdeliverystatus == Undelivered) && (not dontShowAnyReminder)) $
-      renderTemplate ctxtemplates "changeEmailAddress" $
-        (setAttribute "linkchangeemail" $  show $ LinkChangeSignatoryEmail (documentid document) signatorylinkid) .
-        (setAttribute "signatoryemail" $  BS.toString signatoryemail)
-    renderTemplate ctxtemplates "showSignatoryLinkForSign" $  do
-      field "mainclass" $ if isCurrentSignatorAuthor then "author" else "signatory"
+    in do
+      field "current" $ current  
       field "status" status
-      field "signatoryfstname" $ packToMString $ signatoryfstname $ signatorydetails siglnk
-      field "signatorysndname" $ packToMString $ signatorysndname $ signatorydetails siglnk
-      field "signatorycompany" $ packToMString signatorycompany
-      field "signatorynumber" $ packToMString signatorynumber
-      field "signatoryemail" $ packToMString signatoryemail
-      field "fields" $ for signatoryFields $ \sof -> do
+      field "fstname" $ packToMString $ signatoryfstname $ signatorydetails siglnk
+      field "sndname" $ packToMString $ signatorysndname $ signatorydetails siglnk
+      field "company" $ packToMString $ signatorycompany $ signatorydetails siglnk
+      field "number" $ packToMString $ signatorynumber $ signatorydetails siglnk
+      field "email" $ packToMString $ signatoryemail $ signatorydetails siglnk
+      field "fields" $ for (signatoryotherfields $ signatorydetails siglnk) $ \sof -> do
         field "fieldlabel" $ fieldlabel sof
         field "fieldvalue" $ fieldvalue sof
-      field "message" message
-      field "reminderForm" reminderForm
-      field "changeEmailAddress" changeEmailAddress
+      field "allowRemindForm" $ isCurrentUserAuthor && (not isCurrentSignatorAuthor) && (not dontShowAnyReminder) && (invitationdeliverystatus /= Undelivered) && (isClosed || not wasSigned)             
+      field "linkremind" $ show (LinkRemind document siglnk)
+      field "linkchangeemail" $  show $ LinkChangeSignatoryEmail (documentid document) signatorylinkid
+      field "undeliveredEmail" $ (invitationdeliverystatus == Undelivered)
+      field "allowEmailChange" $ (isCurrentUserAuthor && (invitationdeliverystatus == Undelivered) && (not dontShowAnyReminder))
+      field "signdate" $ showDateOnly <$> signtime <$> maybesigninfo
+      field "seenddate" $ showDateOnly <$> signtime <$> maybeseeninfo
+      field "reminderMessage" $ mailDocumentRemindContent ctxtemplates Nothing ctx document siglnk author 
 
 
 packToMString :: BS.ByteString -> Maybe String
@@ -771,6 +723,12 @@ signedByMeFields document siglnk = do
   field "notsignedbyme" $ (isJust siglnk) && (isNothing $ maybesigninfo $ fromJust siglnk)
   field "signedbyme" $ (isJust siglnk) && (isJust $ maybesigninfo $ fromJust siglnk)
   field "iamauthor" $ isAuthor document siglnk
+
+
+documentViewFields:: Document -> Fields
+documentViewFields document = do
+  field "addSignatoryScript" $ documentstatus document == Preparation  || documentstatus document == AwaitingAuthor
+
 
 designViewFields:: (Maybe DesignStep) -> Fields
 designViewFields step = do
