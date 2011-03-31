@@ -41,6 +41,10 @@ personFromSignatoryDetails details =
                 , Seal.company = BS.toString $ signatorycompany details
                 , Seal.email = BS.toString $ signatoryemail details
                 , Seal.number = BS.toString $ signatorynumber details
+                , Seal.fullnameverified = False
+                , Seal.companyverified = False
+                , Seal.numberverified = False
+                , Seal.emailverified = True
                 }
 
 personsFromDocument :: Document -> [(Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider)]
