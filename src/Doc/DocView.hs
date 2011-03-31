@@ -727,7 +727,7 @@ signedByMeFields document siglnk = do
 
 documentViewFields:: Document -> Fields
 documentViewFields document = do
-  field "addSignatoryScript" $ documentstatus document == Preparation  || documentstatus document == AwaitingAuthor
+  field "addSignatoryScript" $ documentstatus document == Pending  || documentstatus document == AwaitingAuthor
 
 
 designViewFields:: (Maybe DesignStep) -> Fields
