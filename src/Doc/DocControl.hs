@@ -1148,7 +1148,7 @@ handleRestart docid = do
       update $ RestartDocument docid user (ctxtime ctx) (ctxipnumber ctx)
       addFlashMsg =<< (liftIO $ flashDocumentRestarted (ctxtemplates ctx))
       return $ LinkIssueDoc docid
-    Nothing -> return $ LinkLogin NotLoggedAsSuperUser
+    Nothing -> return $ LinkLogin NotLogged
                     
 handleResend:: DocumentID -> SignatoryLinkID -> Kontra KontraLink
 handleResend docid signlinkid  = withUserPost $ do

@@ -290,7 +290,7 @@ loginModalPart=
                                                         <div class="body">
                                                                 <form method="post" action="$linklogin$">
                                                                         <input type="hidden" name="referer" value="$referer$" />
-                                                                        <input type="email" name="email" infotext="E-post" autocomplete="off"/><br />
+                                                                        <input type="email" name="email" value="$email$" infotext="E-post" autocomplete="off"/><br />
                                                                         <input type="password" name="password" infotext="password" autocomplete="off"/><br />
                                                                         <a href="#" class="txt-link">Glömt lösenord</a>
                                                                         <a href="#" class="btn-tiny blue center submit">
