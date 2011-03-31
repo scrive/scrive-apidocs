@@ -174,9 +174,9 @@ $endif$
                   </span>
                   <div class="partyrole">
                     <a href="#" class="popup-close closelink"></a>
-                    <input type="radio" name="authorrole" id="authorsignatoryradio" value="signatory" checked>Undertecknande part</input>
+                    <input type="radio" name="authorrole" id="authorsignatoryradio" value="signatory" checked><span class="radiolabel">Undertecknande part</span></input>
                     <br/>
-                    <input type="radio" name="authorrole" id="authorsecretaryradio" value="secretary">Ej undertecknande part</input>
+                    <input type="radio" name="authorrole" id="authorsecretaryradio" value="secretary"><span class="radiolabel">Ej undertecknande part</span></input>
                   </div>
                   
                 </div>
