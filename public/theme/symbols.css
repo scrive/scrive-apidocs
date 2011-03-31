@@ -199,11 +199,18 @@
     width: 31px;
 }
 
-.icon.cross.signicon {
-  position:relative;
-  top:5px;
+.icon.lock-closed{
+    background: url(../img/lock.png) 0 0 no-repeat;
+    display: inline-block;
+    height: 16px;
+    width: 16px;
 }
-
+.icon.lock-opened{
+    background: url(../img/lock_unlock.png) 0 0 no-repeat;
+    display: inline-block;
+    height: 16px;
+    width: 16px;
+}
 /* Lightbox Icons */
 
 .modal-icon {

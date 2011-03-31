@@ -68,9 +68,7 @@ pageDocumentForViewerContent =
   </div>
 
     </div>
-    <div class="signatoriesBox">
-    $signatories:noescape()$
-    </div>
+      $signatoriesBox()$
   </div>
 </div>
 
@@ -84,106 +82,7 @@ pageDocumentForViewerContent =
 
 $signatoryScriptIfRequired()$
 
-####
-signatoryMessageSigned=Undertecknat $date$
-###
-signatoryMessageTimedout=Förfallodatum har passerat
-###
-signatoryMessageSeen=Granskat $date$
-###
-signatoryMessageNotSigned=Har ej undertecknat
-###
-reminderTextSigned=Skicka dokumentet igen
-###
-reminderTextNotSigned=Skicka påminnelse
-###
-reminderSenderTextSigned=Skicka
-###
-reminderSenderTextNotSigned=Skicka påminnelse              
-###
-reminderEditorText=Skriv eget meddelande                          
-###       
-reminderForm = 
-<span>
-  <a  class=" btn-tiny green prepareToSendReminderMail" rel="#siglnk$signatorylinkid$">  
-    <div class="left"></div>
-    <div class="label">$reminderText$</div> 
-    <div class="right"></div>
-  </a>
-  <form class="overlay" action="$linkremind$" method="POST" title="$reminderDialogTitle$" width="600" height="$dialogHeight$" id="siglnk$signatorylinkid$">
-    <div class="modal-container">
-        <div class="modal-header">
-            <div class="modal-icon message"></div>
-            <div class="modal-title">
-                  <h2> $reminderDialogTitle$ </h2>
-            </div>
-            <a class="modal-close close"> </a>
-        </div>
-        <div class="modal-body">
-            <div class="modal-content">
-                 $reminderMessage:noescape()$
-            </div>
-        </div>
-        <div class="modal-footer">
-               <input type="hidden" name="sign" value="automatic" />
-                <a  class="close cancel">Avbryt</a>
-                <a  class="editer message">$reminderEditorText$ </a>
-                <a href="#" class="btn-small green float-right submiter">
-                <div class="left"></div>
-                <div class="label">
-                     $reminderSenderText$
-                <div class="btn-symbol green arrow-left"></div></div>
-                <div class="right"></div>
-            </a>
-        </div>
-    </div>
-  </form>     
-</span>       
-####
-changeEmailAddress =  
-<a class="btn-tiny blue replacebynextonclick">
-                <div class="left"></div>
-                <div class="label">
-                     Skicka inbjudan till ny adress
-                </div>
-                <div class="right"></div>
-  </a>
-<form action="$linkchangeemail$" method="POST" style="display:none">
-  <input type="text" class="shiny" style="width:140px" name="email" value="$signatoryemail$" />
-  <a class="btn-tiny blue submit">
-                <div class="left"></div>
-                <div class="label">
-                     Skicka
-                </div>
-                <div class="right"></div>
-  </a>
-</form>     
-
-####
-showSignatoryLinkForSign =
-<div class="signViewBodyRight">
-  <div class="signViewBodyRightTextContainer"> 
-   <div class="header">$signatoryfstname$ $signatorysndname$</div>
-   <div class="text">
-    <div class="icon status $status$"></div> 
-    $if(changeEmailAddress)$ <span style="color:#000000;position:relative;left:-4px;">!</span>  $endif$
-    $message:noescape()$
-   </div>
-   $if(signatorycompany)$<div class="text">$signatorycompany$</div>$endif$
-   $if(signatorynumber)$<div class="text">$signatorynumber$</div>$endif$
-   <span class="signatoryfields">
-     $fields:{field| <div class="text"><span class="fieldlabel">$field.fieldlabel$: </span><span class="fieldvalue">$field.fieldvalue$</span></div>}$
-   </span>
-   $if(signatoryemail)$<div class="text">$signatoryemail$</div>$endif$
-   <span class="signViewBodyForms"></span>
-   $if(reminderForm)$<div class="text">$reminderForm:noescape()$</div>$endif$
-   $if(changeEmailAddress)$<div class="text">$changeEmailAddress:noescape()$</div>$endif$   
-  </div>
-  
-  
-</div>
-####
-####
+#####
 pageDocumentForSignHelpers=
 <script type="text/javascript"> var documentid = "$documentid$"; 
 </script>
@@ -337,9 +236,7 @@ pageDocumentForSignContent=
         $documentinfotext:noescape()$
       </span> 
     </div>
-    <div class="signatoriesBox">
-    $signatories:noescape()$
-    </div>
+      $signatoriesBox()$
   </div>
 </div>
 
@@ -807,9 +704,7 @@ pageDocumentForAuthorContentPostPreparation=
         $endif$
       </span> 
     </div>
-   <div class="signatoriesBox"> 
-    $signatories:noescape()$
-   </div>
+     $signatoriesBox()$
   </div>
 </div>
 
@@ -843,9 +738,7 @@ $signatoryScriptIfRequired()$
 $pageDocumentForAuthorHelpersLocalDialogs()$
 ###
 signatoryScriptIfRequired=   
-$if(awaitingauthor)$
-      <script type="text/javascript" src="/js/signatory.js"></script>
-$elseif(pending)$
+$if(addSignatoryScript)$
       <script type="text/javascript" src="/js/signatory.js"></script>
 $endif$
 ####
