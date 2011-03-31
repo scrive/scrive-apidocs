@@ -166,7 +166,7 @@ initPayment payment agreement = runWhenState payment Waiting $
                             return $ npayment
 
 startPaymentForDocument::Context -> User -> Document -> IO ()
-startPaymentForDocument ctx user document = when (documentchargemode document == ChargeNormal) $
+startPaymentForDocument ctx user document = 
                                           do
                                            payment <- createPaymentForDocument user document
                                            when (paymentState payment == Waiting) $

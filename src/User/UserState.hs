@@ -627,7 +627,7 @@ instance Migrate User8 User9 where
                 , userpaymentpolicy8             
                 , userpaymentaccount8           
                 , userfriends8                  
-                , userdefaultmainsignatory8       
+                , userdefaultmainsignatory8 = _       
                 }) = User9 
                 { userid9                         = userid8
                 , userpassword9                   = userpassword8

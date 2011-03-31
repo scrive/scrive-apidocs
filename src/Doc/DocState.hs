@@ -127,9 +127,8 @@ newDocument :: User
             -> BS.ByteString
             -> DocumentType
             -> MinutesTime 
-            -> Bool -- is free?
             -> Update Documents Document
-newDocument user title documenttype ctime isfree = do
+newDocument user title documenttype ctime = do
   authorlink <- signLinkFromDetails [(unEmail $ useremail $ userinfo user, user)] $ signatoryDetailsFromUser user
   let doc = Document
           { documentid = DocumentID 0
@@ -141,11 +140,10 @@ newDocument user title documenttype ctime isfree = do
           , documenttype = documenttype
           , documentctime = ctime
           , documentmtime = ctime
-          , documentchargemode = if isfree then ChargeInitialFree else ChargeNormal
           , documentdaystosign = Nothing
           , documenttimeouttime = Nothing
           , documentdeleted = False
-          , documenthistory = []
+          , documentlog = []
           , documentinvitetext = BS.empty
           , documentsealedfiles = []
           , documenttrustweaverreference = Nothing
@@ -158,6 +156,7 @@ newDocument user title documenttype ctime isfree = do
           , authornumberplacements = []
           , authorotherfields = []
           , documentcancelationreason = Nothing
+          , documentinvitetime = Nothing
           } `appendHistory` [DocumentHistoryCreated ctime]
 
   insertNewDocument doc
