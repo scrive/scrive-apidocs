@@ -374,6 +374,9 @@ SkrivaPå
 mailMismatchAuthorTitle=Felaktiga personuppgifter
 ####
 mailMismatchAuthorContent=
-<p>Vi beklagar. Uppgifterna i din e-legitimation matchar inte dina personuppgifter.</p>
+<p>Vi beklagar, de uppgifter du fyllt i till din motpart matchar inte personuppgifterna från din motparts e-legitimation.</p>
+
+<p><strong>Felrapport:</strong></p>
+
 $messages:noescape()$
 ####
