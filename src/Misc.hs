@@ -143,22 +143,34 @@ getUnique64 ixset constr = do
      else getUnique64 ixset constr
 
 
-#ifdef WINDOWS
 -- | Open external document in default application. Useful to open
--- *.eml in email program for example.
-openDocument :: String -> IO ()
-openDocument filename = do
-  withCString filename $ \filename -> do
-                          withCString "open" $ \open -> do
-                                        shellExecute nullPtr open filename nullPtr nullPtr 1
-             
-foreign import stdcall "ShellExecuteA" shellExecute :: Ptr () -> Ptr CChar -> Ptr CChar -> Ptr () -> Ptr () -> CInt -> IO ()
-#else
+-- *.eml in email program for example. Windows version.
+openDocumentWindows :: String -> IO ()
+openDocumentWindows filename = do
+    let cmd = "cmd"
+    let args = ["/c", filename]
+    (_, _, _, pid) <-
+        createProcess (proc cmd args){ std_in  = Inherit,
+                                       std_out = Inherit,
+                                       std_err = Inherit
+                                     }
+    return ()
+
 -- | Open external document in default application. Useful to open
--- *.eml in email program for example.
+-- *.eml in email program for example. Gnome version.
+openDocumentGnome :: String -> IO ()
+openDocumentGnome filename = do
+    let cmd = "gnome-open"
+    let args = [filename]
+    (_, _, _, pid) <-
+        createProcess (proc cmd args){ std_in  = Inherit,
+                                       std_out = Inherit,
+                                       std_err = Inherit
+                                     }
+    return ()
+
 openDocument :: String -> IO ()
-openDocument filename = return ()
-#endif
+openDocument filename = openDocumentWindows filename `catch` \e -> openDocumentGnome filename `catch` \e -> return ()             
 
 toIO :: forall s m a . (Monad m) => s -> ServerPartT (StateT s m) a -> ServerPartT m a
 toIO state = mapServerPartT f
