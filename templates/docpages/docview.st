@@ -236,7 +236,7 @@ $if(notsignedbyme)$$if(pending)$
 <div id="signViewBottomBox"> 
   <div id="signViewBottomBoxContainerLeft"> 
     <div id="signViewBottomBoxContainerLeftText"> 
-     <input type="checkbox" class="signGuard" autocomplete="off" />Jag intygar att jag granskat och förstått dokumentet, att samtliga parter är korrekta och att jag har befogenhet att skriva på.
+     <input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off" /><label for="signGuardCBox">Jag intygar att jag granskat och förstått dokumentet, att samtliga parter är korrekta och att jag har befogenhet att skriva på.</label>
     </div>
   </div>
   <div id="signViewBottomBoxContainerRight"> 
@@ -709,7 +709,7 @@ $if(awaitingauthor)$
 <div id="signViewBottomBox"> 
   <div id="signViewBottomBoxContainerLeft"> 
     <div id="signViewBottomBoxContainerLeftText"> 
-      <input type="checkbox" class="signGuard" autocomplete="off" /> Jag intygar att jag har granskat och förstått innehållet i dokumentet. Jag intygar även att samtliga parter är korrekta och att jag har befogenhet att skriva på.
+      <input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off" /><label for="signGuardCBox">Jag intygar att jag har granskat och förstått innehållet i dokumentet. Jag intygar även att samtliga parter är korrekta och att jag har befogenhet att skriva på.</label>
     </div>
   </div>
 

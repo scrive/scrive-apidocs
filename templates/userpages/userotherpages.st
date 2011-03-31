@@ -15,7 +15,7 @@ pageAcceptTOS =
             </div>
         </div>
         <div class="modal-footer">
-            <div style="float:left"><input type="checkbox" name="tos" id="tos" />Jag har läst och accepterar SkrivaPå Allmänna Villkor<br> </div>
+            <div style="float:left"><input type="checkbox" name="tos" id="tos" /> <label for="tos">Jag har läst och accepterar SkrivaPå Allmänna Villkor</label><br> </div>
             <a href="#" class="btn-small green float-right submit submiter" id="editing-invite-text-finished">
                 <div class="left"></div>
                 <div class="label">
