@@ -17,18 +17,30 @@ exrotate = SealSpec
           , email = "lukas@duczko.se öåä ÖÅÄ"
           , company = "CEO, SkrivaPa öåä ÖÅÄ"
           , number = "123456-4567 öåä ÖÅÄ"
+          , fullnameverified = False
+          , emailverified = True
+          , companyverified = False
+          , numberverified = True
           }
         , Person 
           { fullname = "Żółw Łódź öåä ÖÅÄ"
           , email = "lukas@duczko.se öåä ÖÅÄ"
           , company = "CEO, öåä ÖÅÄ"
           , number = "123456-4567 öåä ÖÅÄ"
+          , fullnameverified = False
+          , emailverified = True
+          , companyverified = False
+          , numberverified = True
           }
         , Person 
           { fullname = "Żółw Łódź öåä ÖÅÄ"
           , email = "some kind of email that is also quite long lukas@duczko.se"
           , company = "Really long company name, CEO, öåä ÖÅÄ"
           , number = "123456-4567"
+          , fullnameverified = False
+          , emailverified = True
+          , companyverified = False
+          , numberverified = True
           }
         ]
     , initials = "öåä, ÖÅÄ"
@@ -58,18 +70,30 @@ gsnorm = SealSpec
           , email = "lukas@duczko.se öåä ÖÅÄ"
           , company = "CEO, SkrivaPa öåä ÖÅÄ"
           , number = "123456-4567 öåä ÖÅÄ"
+          , fullnameverified = False
+          , emailverified = True
+          , companyverified = False
+          , numberverified = True
           }
         , Person 
           { fullname = "Żółw Łódź öåä ÖÅÄ"
           , email = "lukas@duczko.se öåä ÖÅÄ"
           , company = "CEO, öåä ÖÅÄ"
           , number = "123456-4567 öåä ÖÅÄ"
+          , fullnameverified = False
+          , emailverified = True
+          , companyverified = False
+          , numberverified = True
           }
         , Person 
           { fullname = "Żółw Łódź öåä ÖÅÄ"
           , email = "some kind of email that is also quite long lukas@duczko.se"
           , company = "Really long company name, CEO, öåä ÖÅÄ"
           , number = "123456-4567"
+          , fullnameverified = False
+          , emailverified = True
+          , companyverified = False
+          , numberverified = True
           }
         ]
     , initials = "öåä, ÖÅÄ"
@@ -96,6 +120,10 @@ nda = SealSpec
           , email = "belinda@rossman.de"
           , company = "Rossman, CO"
           , number = "435324-222"
+          , fullnameverified = False
+          , emailverified = True
+          , companyverified = False
+          , numberverified = True
           }]
     , persons = 
         [ Person 
@@ -103,18 +131,30 @@ nda = SealSpec
           , email = "lukas@duczko.se"
           , company = "CEO, SkrivaPå"
           , number = "123456-4567"
+          , fullnameverified = False
+          , emailverified = True
+          , companyverified = False
+          , numberverified = True
           }
         , Person 
           { fullname = "Lukas Duczko"
           , email = "lukas@duczko.se"
           , company = "CEO, SkrivaPå"
           , number = "123456-4567"
+          , fullnameverified = False
+          , emailverified = True
+          , companyverified = False
+          , numberverified = True
           }
         , Person 
           { fullname = "åöäÖÅÄ Lukas Duczko"
           , email = "lukas@duczko.se"
           , company = "CEO, SkrivaPå"
           , number = ""
+          , fullnameverified = False
+          , emailverified = True
+          , companyverified = False
+          , numberverified = True
           }
         
         ]
@@ -226,18 +266,30 @@ worddoc = SealSpec
           , email = "lukas@duczko.se öåä ÖÅÄ"
           , company = "CEO, SkrivaPa öåä ÖÅÄ"
           , number = "123456-4567 öåä ÖÅÄ"
+          , fullnameverified = False
+          , emailverified = True
+          , companyverified = False
+          , numberverified = True
           }
         , Person 
           { fullname = "Żółw Łódź öåä ÖÅÄ"
           , email = "lukas@duczko.se öåä ÖÅÄ"
           , company = "CEO, öåä ÖÅÄ"
           , number = "123456-4567 öåä ÖÅÄ"
+          , fullnameverified = False
+          , emailverified = True
+          , companyverified = False
+          , numberverified = True
           }
         , Person 
           { fullname = "Żółw Łódź öåä ÖÅÄ"
           , email = "some kind of email that is also quite long lukas@duczko.se"
           , company = "Really long company name, CEO, öåä ÖÅÄ"
           , number = "123456-4567"
+          , fullnameverified = False
+          , emailverified = True
+          , companyverified = False
+          , numberverified = True
           }
         ]
     , initials = "öåä, ÖÅÄ"
