@@ -79,8 +79,8 @@ instance InspectXML DocumentHistoryEntry where
     inspectXML = asChild . show
 --instance InspectXML [DocumentLogEntry] where
 --    inspectXML z = asChild <ul><% map (\x -> <li><% x %></li>) z %></ul>
-instance InspectXML DocumentLogEntry where
-    inspectXML (DocumentLogEntry time text) = asChild (show time ++ ": " ++ BS.toString text)
+--instance InspectXML DocumentLogEntry where
+--    inspectXML (DocumentLogEntry time text) = asChild (show time ++ ": " ++ BS.toString text)
 instance InspectXML MagicHash where
     inspectXML = asChild . show
 instance InspectXML Signatory where
