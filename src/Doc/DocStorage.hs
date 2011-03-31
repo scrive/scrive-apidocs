@@ -92,6 +92,32 @@ uploadDocumentFilesToTrustWeaver ctxtwconf twownername documentid = do
 gs :: String
 gs = "gs"
 
+
+resizeImageAndReturnOriginalSize filepath = do
+    (_,Just sizerouthandle,_, sizechecker) <- createProcess $ ( proc "identify" [filepath])
+                                              { std_out = CreatePipe }
+    out <-  hGetContents sizerouthandle
+    let (w,h) = readSize out
+    sizerexitcode <- waitForProcess sizechecker
+    case sizerexitcode of
+        ExitFailure _ -> return ()
+        ExitSuccess -> return ()
+    (_,_,_, resizer) <- createProcess $  proc "convert" ["-scale","943x1335!", filepath, filepath]
+    resizerexitcode <- waitForProcess resizer
+    case resizerexitcode of
+        ExitFailure _ -> return ()
+        ExitSuccess -> return ()
+    fcontent <- BS.readFile filepath
+    return (fcontent,w,h)
+  where
+   readSize::[Char] -> (Int,Int) --Ugly and unsafe but I can't get info about output format so writing nicer parser is useless
+   readSize ('J':'P':'E':'G':' ':rest) = let
+                                          (w,hs) = span (isDigit) rest
+                                          h = takeWhile (isDigit) (tail hs)
+                                         in (read w,read h)
+   readSize (_:rest) = readSize rest
+   readSize [] = (943,1335)
+
 {- |
    Convert PDF to jpeg images of pages
  -}
@@ -137,37 +163,16 @@ convertPdfToJpgPages ctx file = do
                                             then  fmap (x:) $ existingPages (x+1)
                                             else return []
                   listofpages <- existingPages (1::Integer)
-                  x<-forM listofpages $ \x -> (do 
-                                        (_,Just sizerouthandle,_, sizechecker) <- createProcess $ ( proc "gm" ["-identify", pathofx x])  { std_out = CreatePipe}
-                                        out <-  hGetContents sizerouthandle
-                                        let (w,h) = readSize out
-                                        sizerexitcode <- waitForProcess sizechecker
-                                        case sizerexitcode of
-                                         ExitFailure _ -> return ()
-                                         ExitSuccess -> return ()
-                                        (_,_,_, resizer) <- createProcess $  proc "gm" ["convert", "-scale","943x1335!",pathofx x,pathofx x]
-                                        resizerexitcode <- waitForProcess resizer
-                                        case resizerexitcode of
-                                         ExitFailure _ -> return ()
-                                         ExitSuccess -> return ()
-                                        fcontent <- BS.readFile (pathofx x)                                         
-                                        return (fcontent,w,h)) `catch` (\_ -> do
-                                                                           fcontent <- BS.readFile (pathofx x)
-                                                                           return (fcontent,943,1335))
+                  x <- forM listofpages $ \x -> resizeImageAndReturnOriginalSize (pathofx x) 
+                       `catch` \_ -> do
+                                    fcontent <- BS.readFile (pathofx x)
+                                    return (fcontent,943,1335)
 
                   return (JpegPages x)
   -- remove the directory with all the files now
   -- everything as been collected, process has ended, we are done!
   removeDirectoryRecursive tmppath
   return result
-  where       
-   readSize::[Char] -> (Int,Int) --Ugly and unsafe but I can't get info about output format so writing nicer parser is useless
-   readSize ('J':'P':'E':'G':' ':rest) = let 
-                                          (w,hs) = span (isDigit) rest 
-                                          h = takeWhile (isDigit) (tail hs)
-                                         in (read w,read h) 
-   readSize (_:rest) = readSize rest
-   readSize [] = (943,1335)
    
 {- | Shedules rendering od a file. After forked process is done, images will be put in shared memory. -}
 maybeScheduleRendering :: Context 
