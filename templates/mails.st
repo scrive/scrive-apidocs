@@ -362,12 +362,17 @@ legalparagraph=
 mailMismatchSignatoryTitle=Problem med matchning av personuppgifter
 ####
 mailMismatchSignatoryContent=
-<p>Hej $signame$!</p>
+<p>Hej $signame$</p>
 
-<p>Ursäkta men $authorname$ har fyllt i felaktiga personuppifter för dig i jämförelse med ditt e-legitimaion.</p>
+<p>Vi beklagar, men någon av de uppgifter name of author har angivit i document name matchar inte personuppgifterna hos $badname$s e-legitmation.</p>
 
-<p>Var vänlig kontakta $authorname$ eller invänta ny inbjudan.</p>
+<p>Avtalsprocessen för $documenttitle$ har därför avbrutits. Var vänliga invänta en ny inbjudan eller kontakta $authorname$.</p>
 
+$if(messages)$
+<p><strong>Felrapport:</strong></p>
+
+$messages:noescape()$
+$endif$
 <p>
 Med Vänliga Hälsningar
 </p>
@@ -378,9 +383,16 @@ SkrivaPå
 mailMismatchAuthorTitle=Felaktiga personuppgifter
 ####
 mailMismatchAuthorContent=
-<p>Vi beklagar, de uppgifter du fyllt i till din motpart matchar inte personuppgifterna från din motparts e-legitimation.</p>
+<p>Hej $authorname$</p>
+
+<p>Vi beklagar, de uppgifter du angivet i document name matchar inte personuppgifterna hos $badname$s e-legitimation.</p>
+
+<p>Avtalsprocessen för $documenttitle$ har därför avbrutits. Du kan välja att starta om avtalsprocessen och skicka en ny inbjudan till dina motparter, Ett mail har även gott ut till dina motparter som meddelat dem om att avtalsprocessen har avbrutits.</p>
 
 <p><strong>Felrapport:</strong></p>
 
 $messages:noescape()$
+
+<p>Med vänliga hälsningar</p>
+<p>SkrivaPå</p>
 ####
