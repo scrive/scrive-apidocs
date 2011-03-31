@@ -126,6 +126,7 @@ resetPasswordMail :: KontrakcjaTemplates -> String -> User -> KontraLink -> IO M
 resetPasswordMail templates hostname user setpasslink = do
   title   <- renderTemplate templates "passwordChangeLinkMailTitle" ()
   content <- (renderTemplate templates "passwordChangeLinkMailContent" $ do
+    field "personname"   $ userfullname user
     field "passwordlink" $ show setpasslink
     field "ctxhostpart"  $ hostname
     ) >>= wrapHTML templates
