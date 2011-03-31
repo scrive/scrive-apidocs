@@ -74,7 +74,7 @@ function sign1Success(transactionid, tbs, nonce, servertime, posturl, formselect
     form.attr("action", posturl);
 	form.submit();
   } else {
-	addFlashMessage("could not sign");
+	addFlashMessage("could not sign", "red");
   }
 }
 
@@ -149,7 +149,7 @@ function sign1Author(ajaxurl, formselector, posturl) {
 }
 
 function flashNordeaMessage() {
-  addFlashMessage("Du har inte Nordeas e-legitimation installerad. Du kan ladda ned Nordeas e-legitimation från Nordeas internetbank.");
+  addFlashMessage("Du har inte Nordeas e-legitimation installerad. Du kan ladda ned Nordeas e-legitimation från Nordeas internetbank.", "red");
 }
 
 // Signer2 plugin for BankID
@@ -209,7 +209,7 @@ function doSign2 (tbs, nonce, servertime) {
 	  return signer2.GetParam('Signature');
     }
   }
-  addFlashMessage("The signing plugin did not successfully sign the document.");
+  addFlashMessage("The signing plugin did not successfully sign the document.", "red");
   return null;
 }
 
@@ -243,12 +243,12 @@ function sign2Success(transactionid, tbs, nonce, servertime, posturl, formselect
     form.attr("action", posturl);
 	form.submit();
   } else {
-	addFlashMessage("The signing plugin did not successfully sign the document.");
+	addFlashMessage("The signing plugin did not successfully sign the document.", "red");
   }
 }
 
 function flashBankIDMessage() {
-  addFlashMessage("Du har inte BankID installerat. Du kan ladda ned BankID från din internetbank. Följande banker tillhandahåller BankID via internetbanken.");
+  addFlashMessage("Du har inte BankID installerat. Du kan ladda ned BankID från din internetbank. Följande banker tillhandahåller BankID via internetbanken.", "red");
 }
 
 function sign2(posturl, formselector, ajaxurl) {
@@ -383,7 +383,7 @@ function doSignNetID (tbs, nonce, servertime) {
 	  return signer.GetProperty('Signature');
     }
   }
-  addFlashMessage("signing unsuccessful");
+  addFlashMessage("signing unsuccessful", "red");
   return null;
 }
 
@@ -417,12 +417,12 @@ function netIDSuccess(transactionid, tbs, nonce, servertime, posturl, formselect
     form.attr("action", posturl);
 	form.submit();
   } else {
-	addFlashMessage("could not sign");
+	addFlashMessage("could not sign", "red");
   }
 }
 
 function flashTeliaMessage() {
-  addFlashMessage("Du har inte Telias e-legitimation installerad.");
+  addFlashMessage("Du har inte Telias e-legitimation installerad.", "red");
 }
 
 function netIDSign(posturl, formselector, ajaxurl) {
