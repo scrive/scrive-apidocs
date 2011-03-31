@@ -375,7 +375,8 @@ signDocument documentid
               let details = signatorydetails signatorylink
                   fullname = (signatoryfstname details, signatorysndname details)
                   email = signatoryemail details
-              muser <- liftIO $ createUserBySigning ctx (documenttitle document) fullname email (documentid, signatorylinkid1)
+                  company = signatorycompany details
+              muser <- liftIO $ createUserBySigning ctx (documenttitle document) fullname email company (documentid, signatorylinkid1)
               when_ (isJust muser) $
                   update $ SaveDocumentForSignedUser documentid (userid $ fromJust muser) signatorylinkid1
           addModal $ modalSignedView document signatorylink (isJust maybeuser) (isJust ctxmaybeuser)
