@@ -34,7 +34,7 @@ instance InspectXML BS.ByteString where
 
 instance InspectXML a => InspectXML [a] where
     inspectXML l = asChild $ genElement (Nothing,"ol") []
-                     (map inspectXML l)
+                     (map (asChild . genElement (Nothing,"li") [] . return . inspectXML) l)
 
 instance InspectXML a => InspectXML (Maybe a) where
     inspectXML Nothing = asChild "Nothing"
