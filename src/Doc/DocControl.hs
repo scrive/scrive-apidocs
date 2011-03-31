@@ -460,15 +460,6 @@ handleSignShow documentid
                                             document ctx invitedlink author)
 
 {- |
-   How many documents does the free user have left?
- -}
-freeLeftForUser :: User -> Kontra Int
-freeLeftForUser user = do
-  numdoc <- query $ GetNumberOfDocumentsOfUser user
-  let freeleft = if numdoc >= 5 then 0 else 5 - numdoc
-  return freeleft
-
-{- |
    The user with id uid is a friend of user.
    Should be moved to User and imported
  -}
@@ -1045,9 +1036,8 @@ handleIssueNewDocument = withUserPost $ do
           -- Happstack gives use String done by BS.unpack, so BS.pack it here
           -- in our case it should be utf-8 as this is what we use everywhere
           let title = BS.fromString (basename filename) 
-          freeleft <- freeLeftForUser user
           let doctype = Contract
-          doc <- update $ NewDocument user title doctype ctxtime (freeleft>0) 
+          doc <- update $ NewDocument user title doctype ctxtime
           handleDocumentUpload (documentid doc) (concatChunks content) title
           return $ LinkIssueDoc $ documentid doc
 
@@ -1063,9 +1053,8 @@ handleCreateNewTemplate = withUserPost $ do
          handleTemplateReload
         else do
           let title = BS.fromString (basename filename) 
-          freeleft <- freeLeftForUser user
           let doctype = Template
-          doc <- update $ NewDocument user title doctype ctxtime (freeleft>0) 
+          doc <- update $ NewDocument user title doctype ctxtime
           handleDocumentUpload (documentid doc) (concatChunks content) title
           return $ LinkIssueDoc $ documentid doc
 

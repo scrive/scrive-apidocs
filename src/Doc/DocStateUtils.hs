@@ -195,8 +195,8 @@ isMatchingSignatoryLink user sigLink = signatoryMatches || emailMatches
   
 
 appendHistory :: Document -> [DocumentHistoryEntry] -> Document
-appendHistory document history =
-    document { documenthistory = documenthistory document ++ history }
+appendHistory document history = 
+    document { documentlog = documentlog document ++ map documentHistoryToDocumentLog history }
 
 isELegDataMismatch (ELegDataMismatch _ _ _ _ _) = True
 isELegDataMismatch _                            = False
