@@ -95,6 +95,7 @@ data AppConf
 data AppGlobals 
     = AppGlobals { templates       :: KontrakcjaTemplates
                  , filecache       :: MemCache.MemCache FileID BS.ByteString
+                 , mailer          :: Mailer
                  }
 
 {- |
@@ -329,11 +330,7 @@ appHandler appConf appGlobals docs = do
                     else liftIO $ readTemplates
 
       let elegtrans = getELegTransactions session
-      let
-       mailer | sendMails cfg  = createRealMailer cfg
-              | otherwise = createDevMailer (ourInfoEmail cfg) (ourInfoEmailNiceName cfg)
-         where cfg = mailsConfig appConf
-       ctx = Context
+          ctx = Context
                 { ctxmaybeuser = muser
                 , ctxhostpart = hostpart
                 , ctxflashmessages = flashmessages
@@ -344,7 +341,7 @@ appHandler appConf appGlobals docs = do
                 , ctxs3action = defaultAWSAction appConf
                 , ctxproduction = production appConf
                 , ctxtemplates = templates2
-                , ctxmailer = mailer
+                , ctxmailer = mailer appGlobals
                 , ctxtwconf = TW.TrustWeaverConf 
                               { TW.signcert = twSignCert appConf
                               , TW.signcertpwd = twSignCertPwd appConf
