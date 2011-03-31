@@ -17,7 +17,7 @@ function safeReady(f) {
 function repeatForeverWithDelay(delay) {
   return function () {
     var that = this;
-    $(document).delay(1000).queue(function() {
+    $(document).delay(delay).queue(function() {
       $(this).dequeue();
       $.ajax(that);
     });
@@ -1171,14 +1171,21 @@ function resizeDesignBar() {
 }
 
 safeReady(function() {
-  $("#loadinglink").overlay({
+  $("#loadingdialog").overlay({
     mask: standardDialogMask,
     resizable: false,
-    onClose: function(e){ return false; }
+//    onClose: function(e){ return false; },
+    closeOnClick: false,
+    closeOnEsc: false,
+    load: false
   });
 });
 
 function displayLoadingOverlay(message) {
   $("#loadingmessage").html(message);
-  $("#loadinglink").click();
+  $("#loadingdialog").overlay().load();
+}
+
+function closeLoadingOverlay() {
+  $("#loadingdialog").overlay().close();
 }
