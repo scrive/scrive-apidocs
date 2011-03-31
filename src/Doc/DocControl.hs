@@ -441,7 +441,8 @@ handleSignShow documentid
   let authorname = prettyName author
   let invitedname = signatoryname $ signatorydetails $ invitedlink 
 
-  when (Data.List.null ctxflashmessages) $ do
+  when (Data.List.null ctxflashmessages
+        && (not (isJust $ maybesigninfo invitedlink))) $ do
     let message = if document `allowsIdentification` ELegitimationIdentification
                     then "Du undertecknar dokumentet längst ned. Det krävs e-legitimation för att underteckna."
                     else "Underteckna dokumentet längst ned på sidan."
