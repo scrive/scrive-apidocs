@@ -28,6 +28,7 @@ import Amazon
 import Templates.Templates 
 import Templates.TemplatesUtils
 import User.UserView (prettyName)
+import Misc
 
 mailDocumentRemind :: KontrakcjaTemplates 
                    -> Maybe (BS.ByteString) 
@@ -383,9 +384,6 @@ mailMismatchAuthor ctx document authorname badname bademail = do
                         , content = BS.fromString content
                         }
         
-para :: String -> String
-para s = "<p>" ++ s ++ "</p>"
-
 makeEditable':: KontrakcjaTemplates -> String->String->IO String
 makeEditable' templates name this = renderTemplate templates "makeEditable" [("name",name),("this",this)]
 
