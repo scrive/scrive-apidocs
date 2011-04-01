@@ -161,6 +161,7 @@ function doSignNetID (tbs, nonce, servertime) {
 
 // success fns
 function sign1Success(transactionid, tbs, nonce, servertime, posturl, formselector) {
+  closeLoadingOverlay();
   if($.browser.msie && hasIESigner1Plugin()) {
 	  IEInstallSigner1Object();
   } else if(hasMozillaSigner1Plugin()) {
@@ -182,6 +183,7 @@ function sign1Success(transactionid, tbs, nonce, servertime, posturl, formselect
 }
 
 function sign2Success(transactionid, tbs, nonce, servertime, posturl, formselector) {
+  closeLoadingOverlay();
   if($.browser.msie && hasSign2PluginIE()) {
 	  installSign2IE();
   } else if(hasSign2PluginMozilla()) {
@@ -203,6 +205,7 @@ function sign2Success(transactionid, tbs, nonce, servertime, posturl, formselect
 }
 
 function netIDSuccess(transactionid, tbs, nonce, servertime, posturl, formselector) {
+  closeLoadingOverlay();
   if($.browser.msie && hasNetIDPluginIE()) {
 	installNetIDIE();
   } else if(hasNetIDPluginMozilla()){
