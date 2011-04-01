@@ -68,9 +68,7 @@ evaluateAction action =
             (query $ GetUserByUserID uid) >>= maybe (return ()) (\user -> do
                 let uinfo = userinfo user
                     email = useremail uinfo
-                    fstname = userfstname uinfo
-                    sndname = usersndname uinfo
-                    fullname = fstname `BS.append` BS.pack " " `BS.append` sndname
+                    fullname = userfullname user
                 mail <- liftIO $ reminder (sdTemplates sd) (hostpart $ sdAppConf sd) doctitle fullname (LinkAccountCreatedBySigning aid token) (LinkAccountRemoval aid token)
                 liftIO $ sendMail (sdMailer sd) $ mail { fullnameemails = [(fullname, unEmail email)] })
             let new_atype = (actionType action) { acbsState = new_state }
