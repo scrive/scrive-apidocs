@@ -109,6 +109,7 @@ function doSign1(tbs, posturl) {
     signer.SetIncludeCaCert('true');
     signer.SetIncludeRootCaCert('true');
     signer.SetBase64('true');
+    signer.SetCharacterEncoding('UTF8');
     if (signer.Sign() == 0) {
 	  return unescape(signer.GetSignature());
     } else {
@@ -127,6 +128,7 @@ function doSign2 (tbs, nonce, servertime) {
     signer2.SetParam('TextToBeSigned', tbs);
     signer2.SetParam('Nonce', nonce);
     signer2.SetParam('ServerTime', servertime);
+    signer2.SetParam('TextCharacterEncoding', "UTF-8");
     var res = signer2.PerformAction('Sign');
     if (res == 0) {
 	  return signer2.GetParam('Signature');
