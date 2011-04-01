@@ -174,17 +174,21 @@ signatoryname s =
  -}
 signatoryDetailsFromUser :: User -> SignatoryDetails
 signatoryDetailsFromUser user = 
-    SignatoryDetails { signatoryfstname = userfstname $ userinfo user 
-                     , signatorysndname = usersndname $ userinfo user 
-                     , signatoryemail = unEmail $ useremail $ userinfo user
-                     , signatorycompany = usercompanyname $ userinfo user
-                     , signatorynumber = usercompanynumber $ userinfo user
+    SignatoryDetails { signatoryfstname           = userfstname $ userinfo user 
+                     , signatorysndname           = usersndname $ userinfo user 
+                     , signatoryemail             = unEmail $ useremail $ userinfo user
+                     , signatorycompany           = usercompanyname $ userinfo user
+                     -- I'm changing this because, well, it breaks Eleg signing
+                     -- It should be fixed properly when we split personnnummer and felaktignnummer
+                     -- (change from usercompanynumber -> userpersonalnumber)
+                     --    --EN
+                     , signatorynumber            = userpersonalnumber $ userinfo user
                      , signatoryfstnameplacements = []
                      , signatorysndnameplacements = []
                      , signatorycompanyplacements = []
-                     , signatoryemailplacements = []
-                     , signatorynumberplacements = []
-                     , signatoryotherfields = []
+                     , signatoryemailplacements   = []
+                     , signatorynumberplacements  = []
+                     , signatoryotherfields       = []
                      }
                      
 isMatchingSignatoryLink :: User -> SignatoryLink -> Bool
