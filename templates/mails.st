@@ -357,7 +357,7 @@ mailMismatchSignatoryContent=
 
 <p>Vi beklagar, men någon av de uppgifter name of author har angivit i document name matchar inte personuppgifterna hos $badname$s e-legitmation.</p>
 
-<p>Avtalsprocessen för $documenttitle$ har därför avbrutits. Var vänliga invänta en ny inbjudan eller kontakta $authorname$.</p>
+<p>Avtalsprocessen för <a href="$doclink$">$documenttitle$</a> har därför avbrutits. Var vänliga invänta en ny inbjudan eller kontakta <a href="mailto:$authoremail$">$authorname$</a>.</p>
 
 $if(messages)$
 <p><strong>Felrapport:</strong></p>
@@ -378,7 +378,7 @@ mailMismatchAuthorContent=
 
 <p>Vi beklagar, de uppgifter du angivet i document name matchar inte personuppgifterna hos $badname$s e-legitimation.</p>
 
-<p>Avtalsprocessen för $documenttitle$ har därför avbrutits. Du kan välja att starta om avtalsprocessen och skicka en ny inbjudan till dina motparter, Ett mail har även gott ut till dina motparter som meddelat dem om att avtalsprocessen har avbrutits.</p>
+<p>Avtalsprocessen för <a href="$doclink$">$documenttitle$</a> har därför avbrutits. Du kan välja att starta om avtalsprocessen och skicka en ny inbjudan till dina motparter, Ett mail har även gott ut till dina motparter som meddelat dem om att avtalsprocessen har avbrutits.</p>
 
 <p><strong>Felrapport:</strong></p>
 
