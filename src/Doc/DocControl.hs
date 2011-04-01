@@ -574,7 +574,7 @@ handleIssueShowPost docid = withUserPost $ do
       (Preparation, _ , _ ,_ , True, _) -> handleIssueChangeToContract document author
       (Preparation, _ , _ ,_ , _, True) -> handleIssueCSVUpload document author                    
       (Preparation, _ , _ ,_, _, _) -> handleIssueSave document author
-      (AwaitingAuthor, _ , _ ,_, _, _) -> handleIssueSignByAuthor document author
+      (AwaitingAuthor, True , _ ,_, _, _) -> handleIssueSignByAuthor document author
       _  -> return $ LinkContracts emptyListParams
      
 handleIssueSign document author = do
