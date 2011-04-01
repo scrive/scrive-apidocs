@@ -361,14 +361,17 @@ handleIssuePostBankID docid = withUserPost $ do
                         mfinal = mergeInfo 
                                     (contractFirst, contractLast, contractNumber)
                                     (elegFirst,     elegLast,     elegNumber)
+                    Log.debug $ show (contractFirst, contractLast, contractNumber)
+                    Log.debug $ show (elegFirst,     elegLast,     elegNumber)
                     case mfinal of
                         Left (msg, _, _, _) -> do
                             liftIO $ print $ "merge failed: " ++ msg
                             Log.debug $ "merge failed: " ++ msg
                             addFlashMsg $ toFlashMsg OperationFailed $ "Dina personuppgifter matchade inte informationen från e-legitimationsservern: " ++ msg
                             return $ LinkDesignDoc $ DesignStep3 docid
-                            -- we have merged the info!
+                        -- we have merged the info!
                         Right (bfn, bln, bpn) -> do
+                            Log.debug $ show mfinal
                             let signinfo = SignatureInfo    { signatureinfotext = transactiontbs
                                                             , signatureinfosignature = signature
                                                             , signatureinfocertificate = cert
