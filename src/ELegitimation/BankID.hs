@@ -37,6 +37,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS hiding (length, drop, break)
 import GHC.Word
 import GHC.Unicode ( toLower )
+import User.UserView
 
 {- |
    Handle the Ajax request for initiating a BankID transaction.
@@ -115,7 +116,11 @@ handleSignBankID provider docid signid magic = do
  -}
 handleSignPostBankID :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra KontraLink
 handleSignPostBankID docid signid magic = do
-    Context { ctxelegtransactions, ctxtime, ctxipnumber, ctxmaybeuser } <- get
+    Context { ctxelegtransactions
+            , ctxtime
+            , ctxipnumber
+            , ctxmaybeuser 
+            , ctxtemplates } <- get
     liftIO $ print "eleg sign post!"
     -- POST values
     provider      <- getDataFnM $ look "eleg"
@@ -186,14 +191,21 @@ handleSignPostBankID docid signid magic = do
             case mfinal of
                 -- either number or name do not match
                 Left (msg, sfn, sln, spn) -> do
+                    author <- queryOrFail $ GetUserByUserID $ unAuthor $ documentauthor document
+                    let authorname = prettyName author
+                        authoremail = unEmail $ useremail $ userinfo author
                     liftIO $ print msg
                     Log.debug msg
+                    txt <- liftIO $ renderTemplate ctxtemplates "signCanceledDataMismatchModal" $ do
+                        field "authorname"  authorname
+                        field "authoremail" authoremail
+                        field "message"     $ para msg
                     -- send to canceled with reason msg
-                    addFlashMsg $ toFlashMsg OperationFailed $ "Avtalsprocessen avbröts på grund av att det fanns information som inte svarade mot E-legitimationsservern"
+                    addFlashMsg $ toFlashMsg Modal txt
                     Right newdoc <- update $ CancelDocument docid (ELegDataMismatch msg signid sfn sln spn) ctxtime ctxipnumber
                     postDocumentChangeAction newdoc olddocumentstatus (Just signid)
                     
-                    return $ LinkSignCanceledDataMismatch docid signid
+                    return $ LinkSignDoc document siglink
                 -- we have merged the info!
                 Right (bfn, bln, bpn) -> do
                     let signinfo = SignatureInfo    { signatureinfotext = transactiontbs

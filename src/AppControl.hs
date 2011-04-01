@@ -160,7 +160,6 @@ handleRoutes = msum [
      , dir "pages"  $ hget2 $ DocControl.showPage
      , dir "templates"  $ hget0 $ DocControl.getTemplatesForAjax
      , dir "template"  $ hpost0 $ DocControl.handleCreateFromTemplate
-     , dir "landpage" $ dir "signcanceleddatamismatch" $ hget2 $ BankID.handleSignCanceledDataMismatch
            
      , dir "pagesofdoc" $ hget1 $ DocControl.handlePageOfDocument
 
