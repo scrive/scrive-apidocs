@@ -1037,9 +1037,9 @@ $(document).ready(function() {
 		detachFieldsForSigID(sigid);
                 child.remove();
 
-                var csvsig = personpane.closest("form").find("input[type='hidden'][name='csvsignatoryindex']"); 
-                if (idx == csvsig.attr("value")) {
-                   personpane.closest("form").find("input[type='hidden'][name='csvsignatoryindex']").removeAttr("value");
+                var csvpersonindex = personpane.closest("form").find("input[type='hidden'][name='csvpersonindex']"); 
+                if (idx == csvpersonindex.attr("value")) {
+                   personpane.closest("form").find("input[type='hidden'][name='csvpersonindex']").removeAttr("value");
                 }
                 
                 var li = $("#peopleList li:eq(" + idx + ")");
@@ -1090,8 +1090,8 @@ function noMultiParts(elems) {
 function isMultiPartElem(elem) {
   var div = elem.closest(".persondetails");
   var idx = div.parent().children().index(div);
-  var csvsigindex = div.closest("form").find("input[type='hidden'][name='csvsignatoryindex']").attr("value");
-  return (csvsigindex==idx);
+  var csvpersonindex = div.closest("form").find("input[type='hidden'][name='csvpersonindex']").attr("value");
+  return (csvpersonindex==idx);
 }
 
 /*
