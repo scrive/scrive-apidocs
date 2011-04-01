@@ -202,26 +202,25 @@ main = Log.withLogger $ do
 
                   return ())
 
+{- | Default application configuration that does nothing.
 
+sign url    "https://tseiod-dev.trustweaver.com/ts/svs.asmx"
+admin url   "https://twa-test-db.trustweaver.com/ta_hubservices/Admin/AdminService.svc"
+storage url "https://twa-test-db.trustweaver.com/ta_hubservices/Storage/StorageService.svc"
+-}
 defaultConf :: String -> AppConf
 defaultConf progName
-    = AppConf { httpPort = 8000
-              , hostpart = "http://localhost:8000"
-              , store    = "_local/" ++ progName ++ "_state"
-              , docstore = "_local/documents"
-              , static   = "public"
-              , awsBucket = ""
-              , awsSecretKey = ""
-              , awsAccessKey = ""
-              , production = False
-              , twSignCert = ""
-              , twSignCertPwd = ""
-              , twAdminCert = ""
-              , twAdminCertPwd = ""
-              , twSignUrl = ""
-              , mailsConfig = defaultMailConfig
-              , twAdminUrl = ""
-              , twStorageUrl = ""
+    = AppConf { httpPort           = 8000
+              , hostpart           = "http://localhost:8000"
+              , store              = "_local/" ++ progName ++ "_state"
+              , docstore           = "_local/documents"
+              , static             = "public"
+              , amazonConfig       = Nothing
+              , production         = False
+              , trustWeaverSign    = Nothing
+              , trustWeaverAdmin   = Nothing
+              , trustWeaverStorage = Nothing
+              , mailsConfig        = defaultMailConfig
               }
 
 opts :: [OptDescr (AppConf -> AppConf)]
@@ -242,27 +241,6 @@ opts = [ Option [] ["http-port"]
        , Option [] ["static"]      
          (ReqArg (\h c -> c {static = h}) "PATH") 
          "The directory searched for static files" 
-       , Option [] ["awsbucket"]      
-         (ReqArg (\h c -> c {awsBucket = h}) "NAME") 
-         "The bucket name to use for AWS S3 storage" 
-       , Option [] ["awssecretkey"]      
-         (ReqArg (\h c -> c {awsSecretKey = h}) "BASE64") 
-         "The AWS secret key"
-       , Option [] ["awsaccesskey"]      
-         (ReqArg (\h c -> c {awsAccessKey = h}) "BASE64") 
-         "The AWS access key" 
-       , Option [] ["twsigncert"]      
-         (ReqArg (\h c -> c {twSignCert = h}) "PATH") 
-         "The TrustWeaver *.pem file with public and private key (for signing)" 
-       , Option [] ["twsigncertpwd"]      
-         (ReqArg (\h c -> c {twSignCertPwd = h}) "STRING") 
-         "The TrustWeaver password for private key (for signing)" 
-       , Option [] ["twadmincert"]      
-         (ReqArg (\h c -> c {twAdminCert = h}) "PATH") 
-         "The TrustWeaver *.pem file with public and private key (for storage)" 
-       , Option [] ["twadmincertpwd"]      
-         (ReqArg (\h c -> c {twAdminCertPwd = h}) "STRING") 
-         "The TrustWeaver password for private key (for storage)" 
        , Option [] ["production"]    
          (NoArg (\ c -> c { production = True })) 
          "Turn on production environment"

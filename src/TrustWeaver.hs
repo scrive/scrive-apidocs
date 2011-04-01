@@ -41,15 +41,11 @@ import qualified AppLogger as Log
 import Data.List
 
 data TrustWeaverConf = TrustWeaverConf
-    { signcert          :: FilePath
-    , signcertpwd       :: String
-    , signurl           :: String
-    , admincert         :: FilePath
-    , admincertpwd      :: String
-    , adminurl          :: String
-    , storageurl        :: String
-    , retries           :: Int
-    , timeout           :: Int
+    { signConf    :: Maybe (String,String,String)
+    , adminConf   :: Maybe (String,String,String)
+    , storageConf :: Maybe (String,String,String)
+    , retries     :: Int
+    , timeout     :: Int
     } deriving (Eq,Ord,Show,Read)
 
 data SignRequest = SignRequest BS.ByteString String String
@@ -311,10 +307,10 @@ signDocument' :: TrustWeaverConf
               -> String
               -> String
               -> IO (Either String BS.ByteString)
-signDocument' TrustWeaverConf{signcert,signcertpwd,signurl} pdfdata senderTag receiverTag = do
-  result <- makeSoapCall signurl 
+signDocument' TrustWeaverConf{signConf = Just (url, cert, certpwd)} pdfdata senderTag receiverTag = do
+  result <- makeSoapCall url 
             "http://www.trustweaver.com/tsswitch#Sign"
-            signcert signcertpwd
+            cert certpwd
            (SignRequest pdfdata senderTag receiverTag)
   let extract (SignResult pdfdata') = pdfdata'
   return (fmap extract result)
@@ -334,36 +330,36 @@ signDocumentEx twconf pdfdata senderTag receiverTag = retry twconf $ signDocumen
 validateDocument' :: TrustWeaverConf
                   -> BS.ByteString
                   -> IO (Either String (String,String))
-validateDocument' TrustWeaverConf{signcert,signcertpwd,signurl} pdfdata = do
+validateDocument' TrustWeaverConf{signConf = Just (url, cert, certpwd)} pdfdata = do
 
-  result <- makeSoapCall signurl -- "https://tseiod-dev.trustweaver.com/ts/svs.asmx"
+  result <- makeSoapCall url
             "http://www.trustweaver.com/tsswitch#Validate"
-            signcert signcertpwd
+            cert certpwd
            (ValidateRequest pdfdata)
   let extract (ValidateResult result validateResult) = (result,validateResult)
   return (fmap extract result)
 
 validateDocument :: TrustWeaverConf
-                  -> BS.ByteString
-                  -> IO (Either String (String,String))
+                 -> BS.ByteString
+                 -> IO (Either String (String,String))
 validateDocument twconf = retry twconf . validateDocument' twconf
 
 registerAndEnableSection' :: TrustWeaverConf
                           -> String
                           -> IO (Either String (String,String,String))
-registerAndEnableSection' TrustWeaverConf{admincert,admincertpwd,adminurl} name = do
-  result  <- makeSoapCall adminurl
+registerAndEnableSection' TrustWeaverConf{adminConf = Just (url, cert, certpwd)} name = do
+  result  <- makeSoapCall url
             "http://www.trustweaver.com/trustarchive/admin/v1/AdminServicePort/RegisterSection"
-            admincert admincertpwd
-           (RegisterSectionRequest name)
+            cert certpwd
+            (RegisterSectionRequest name)
 
   case result of
     Left errmsg -> return $ Left errmsg
     Right RegisterSectionResponse -> do
-                result2 <- makeSoapCall adminurl
+                result2 <- makeSoapCall url
                            "http://www.trustweaver.com/trustarchive/admin/v1/AdminServicePort/EnableSection"
-                           admincert admincertpwd
-                          (EnableSectionRequest name)
+                           cert certpwd
+                           (EnableSectionRequest name)
 
                 let extract (EnableSectionResponse superAdminUsername superAdminPwd sectionPath) =
                         (superAdminUsername, superAdminPwd, sectionPath)
@@ -379,11 +375,11 @@ registerAndEnableSection twconf = retry twconf . registerAndEnableSection' twcon
 registerSection' :: TrustWeaverConf
                  -> String
                  -> IO (Either String ())
-registerSection' TrustWeaverConf{admincert,admincertpwd,adminurl} name = do
-  result  <- makeSoapCall adminurl
+registerSection' TrustWeaverConf{adminConf = Just (url, cert, certpwd)} name = do
+  result  <- makeSoapCall url
             "http://www.trustweaver.com/trustarchive/admin/v1/AdminServicePort/RegisterSection"
-            admincert admincertpwd
-           (RegisterSectionRequest name)
+            cert certpwd
+            (RegisterSectionRequest name)
 
   let extract (RegisterSectionResponse) = ()
   return (fmap extract result)
@@ -397,19 +393,19 @@ registerSection twconf = retry twconf . registerSection' twconf
 enableSection' :: TrustWeaverConf
                -> String
                -> IO (Either String (String,String,String))
-enableSection' TrustWeaverConf{admincert,admincertpwd,adminurl} name = do
-  result <- makeSoapCall adminurl
+enableSection' TrustWeaverConf{adminConf = Just (url, cert, certpwd)} name = do
+  result <- makeSoapCall url
             "http://www.trustweaver.com/trustarchive/admin/v1/AdminServicePort/EnableSection"
-            admincert admincertpwd
-           (EnableSectionRequest name)
+            cert certpwd
+            (EnableSectionRequest name)
 
   let extract (EnableSectionResponse superAdminUsername superAdminPwd sectionPath) =
           (superAdminUsername, superAdminPwd, sectionPath)
   return (fmap extract result)
 
 enableSection :: TrustWeaverConf
-                          -> String
-                          -> IO (Either String (String,String,String))
+              -> String
+              -> IO (Either String (String,String,String))
 enableSection twconf = retry twconf . enableSection' twconf
 
 
@@ -420,10 +416,10 @@ storeInvoice' :: TrustWeaverConf
              -> String 
              -> BS.ByteString 
              -> IO (Either String String)
-storeInvoice' TrustWeaverConf{admincert,admincertpwd,storageurl} documentid documentdate ownertwname pdfdata = do
-  result <- makeSoapCall storageurl
+storeInvoice' TrustWeaverConf{storageConf = Just (url, cert, certpwd)} documentid documentdate ownertwname pdfdata = do
+  result <- makeSoapCall url
             "http://www.trustweaver.com/trustarchive/storage/v1/StorageServicePort/StoreInvoice"
-            admincert admincertpwd
+            cert certpwd
            (StoreInvoiceRequest documentid documentdate ownertwname pdfdata)
   let extract (StoreInvoiceResponse referece) = referece
   return (fmap extract result)
@@ -439,10 +435,10 @@ storeInvoice twconf documentid documentdate ownertwname pdfdata = retry twconf $
 getInvoice' :: TrustWeaverConf 
            -> String 
            -> IO (Either String BS.ByteString)
-getInvoice' TrustWeaverConf{admincert,admincertpwd,storageurl} reference = do
-  result <- makeSoapCall storageurl
+getInvoice' TrustWeaverConf{storageConf = Just (url, cert, certpwd)} reference = do
+  result <- makeSoapCall url
             "http://www.trustweaver.com/trustarchive/storage/v1/StorageServicePort/GetInvoice"
-            admincert admincertpwd
+            cert certpwd
            (GetInvoiceRequest reference)
   let extract (GetInvoiceResponse pdfdata) = pdfdata
   return (fmap extract result)

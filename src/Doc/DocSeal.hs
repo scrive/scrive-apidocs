@@ -242,9 +242,9 @@ sealDocument ctx@Context{ctxdocstore, ctxs3action, ctxtwconf}
        removeFile tmpout
 
        newfilepdf <- 
-        if TW.signcert ctxtwconf == ""
-         then return newfilepdf1
-         else do
+        case TW.signConf ctxtwconf of
+         Nothing -> return newfilepdf1
+         Just x -> do
            x <- TW.signDocument ctxtwconf newfilepdf1
            case x of
                    Left errmsg -> do
