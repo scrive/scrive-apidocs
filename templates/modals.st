@@ -395,9 +395,10 @@ signCanceledDataMismatchModal=
       <div class="modal-body">
         <div class="modal-content">
              <p>Vi beklagar. Uppgifterna i din e-legitimation matchar inte dina personuppgifter.</p>
-             <p>Avtalsprocessen är därför bruten, var vänliga invänta en ny inbjudan eller kontakta <a href="mailto:$authoremail$">$authorname$</a>.</p>
+             <p>Avtalsprocessen är därför bruten, var vänliga invänta <br> 
+                en ny inbjudan eller kontakta <a href="mailto:$authoremail$">$authorname$</a>.</p>
              <p><strong>Felrapport:</strong></p>
-             $message$
+             $message:noescape()$
         </div>
       </div>
       <div class="modal-footer">
