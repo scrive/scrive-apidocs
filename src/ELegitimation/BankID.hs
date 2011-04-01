@@ -199,7 +199,7 @@ handleSignPostBankID docid signid magic = do
                     txt <- liftIO $ renderTemplate ctxtemplates "signCanceledDataMismatchModal" $ do
                         field "authorname"  authorname
                         field "authoremail" authoremail
-                        field "message"     $ para msg
+                        field "message"     $ concat $ map para $ lines msg
                     -- send to canceled with reason msg
                     addFlashMsg $ toFlashMsg Modal txt
                     Right newdoc <- update $ CancelDocument docid (ELegDataMismatch msg signid sfn sln spn) ctxtime ctxipnumber
@@ -256,7 +256,7 @@ handleIssueBankID provider docid = withUserGet $ do
     document <- queryOrFail $ GetDocumentByDocumentID docid
     
     failIfNotAuthor document author
-
+    
     providerCode <- providerStringToNumber provider
     nonceresponse <- generateChallenge providerCode
     case nonceresponse of
