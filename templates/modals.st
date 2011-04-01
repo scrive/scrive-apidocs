@@ -383,3 +383,31 @@ modalError=
       </div>
 </div>
 ###
+signCanceledDataMismatchModal=
+<div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-icon message"></div>
+        <div class="modal-title">
+          <h3>Felaktiga personuppgifter</h3>
+        </div>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">
+             <p>Vi beklagar. Uppgifterna i din e-legitimation matchar inte dina personuppgifter.</p>
+             <p>Avtalsprocessen är därför bruten, var vänliga invänta en ny inbjudan eller kontakta <a href="mailto:$authoremail$">$authorname$</a>.</p>
+             <p><strong>Felrapport:</strong></p>
+             $message$
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a class="btn-small green float-right close">
+          <div class="left"></div>
+          <div class="label">
+            <p>Ok</p>
+            <div class="btn-symbol green arrow-left"></div>
+          </div>
+          <div class="right"></div>
+        </a>
+      </div>
+</div>

@@ -512,3 +512,5 @@ getSecureLink = do
                   else a2
     return $ "https://" ++ host ++ fix host (rqUri rq) ++ fix (rqUri rq) (rqURL rq)
     
+para :: String -> String
+para s = "<p>" ++ s ++ "</p>"
