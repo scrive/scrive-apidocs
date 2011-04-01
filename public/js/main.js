@@ -36,6 +36,8 @@
 })(jQuery);
 
 $(document).ready( function() {
+        $(".login-container input[type=email]").focus();
+
 	$('.tooltip').tooltip();
 	
 	$('.login-button').click(function(e) {
