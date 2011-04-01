@@ -2603,3 +2603,8 @@ width: 340px;
 .prepareToSendReminderMail:hover{
     font-weight: bold;
 }
+
+.eleghidden .btn-small {
+    margin-left: 15px;
+    margin-right: 15px;
+}
