@@ -337,8 +337,17 @@ mailCancelDocumentByAuthor templates customMessage ctx document@Document{documen
         attachmentcontent <- getFileContents (ctxs3action ctx) $ head $ documentfiles document          
         return $ emptyMail {title = BS.fromString title, fullnameemails =  [emailFromSignLink signlink] , content = BS.fromString content, attachments = [(documenttitle,attachmentcontent)]}
 
-mailMismatchSignatory :: Context -> Document -> String -> String -> String -> String -> Bool -> IO Mail
-mailMismatchSignatory ctx document authorname signame badname msg isbad = do
+mailMismatchSignatory :: Context 
+                        -> Document 
+                        -> String 
+                        -> String 
+                        -> String 
+                        -> String 
+                        -> String
+                        -> String 
+                        -> Bool 
+                        -> IO Mail
+mailMismatchSignatory ctx document authoremail authorname doclink signame badname msg isbad = do
     let Context { ctxtemplates } = ctx
     title <- renderTemplate ctxtemplates "mailMismatchSignatoryTitle" $ do
         field "documenttitle" $ BS.toString $ documenttitle document
@@ -347,14 +356,16 @@ mailMismatchSignatory ctx document authorname signame badname msg isbad = do
         field "authorname" authorname
         field "signame" signame
         field "badname" badname
+        field "authoremail" authoremail
+        field "doclink" doclink
         field "messages" (if isbad then Just msg else Nothing))
         
     return $ emptyMail  { title = BS.fromString title
                         , content = BS.fromString content 
                         }
                         
-mailMismatchAuthor :: Context -> Document -> String -> String -> IO Mail
-mailMismatchAuthor ctx document authorname badname = do
+mailMismatchAuthor :: Context -> Document -> String -> String -> String -> IO Mail
+mailMismatchAuthor ctx document authorname badname bademail = do
     let Context { ctxtemplates } = ctx
         Just (ELegDataMismatch msg _ _ _ _) = documentcancelationreason document
     title <- renderTemplate ctxtemplates "mailMismatchAuthorTitle" $ do
@@ -363,6 +374,10 @@ mailMismatchAuthor ctx document authorname badname = do
         field "documenttitle" $ BS.toString $ documenttitle document
         field "messages" $ concat $ map para $ lines msg
         field "authorname" authorname
+        field "doclink" $ show $ LinkDesignDoc (DesignStep2 (documentid document)
+                                                            Nothing
+                                                            Nothing)
+        field "bademail" bademail
         field "badname" badname)
     return $ emptyMail  { title = BS.fromString title
                         , content = BS.fromString content
