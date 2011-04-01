@@ -47,7 +47,6 @@ module User.UserState
     , SetUserPassword(..)
     , GetUsersByFriendUserID(..)
     , AddViewerByEmail(..)
-    , GetUsersByUserIDs(..)
     , FreeUserFromPayments(..)
     , AddFreePaymentsForInviter(..)
     , RecordFailedLogin(..)
@@ -958,15 +957,6 @@ getUserByUserID userid = do
   users <- ask
   return $ getOne (users @= userid)
 
-getUsersByUserIDs :: [UserID] -> Query Users [User]
-getUsersByUserIDs [] = return []
-getUsersByUserIDs (u:us) = do
-  muser1 <- getUserByUserID u
-  users <- getUsersByUserIDs us
-  case muser1 of
-    Just user1 -> return $ [user1]
-    Nothing -> return $ []
-
 getUsersByFriendUserID :: UserID -> Query Users [User]
 getUsersByFriendUserID uid = do
   users <- ask
@@ -1194,7 +1184,6 @@ instance Component Users where
 -- create types for event serialization
 $(mkMethods ''Users [ 'getUserByUserID
                     , 'getUserByEmail
-                    , 'getUsersByUserIDs
                     , 'addUser
                     , 'getUserStats
                     , 'getUserStatsByUser
