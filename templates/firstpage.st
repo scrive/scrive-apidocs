@@ -11,9 +11,9 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 <link rel="stylesheet" type="text/css" href="$prefix$/theme/symbols.css" media="screen">
                 <link rel="stylesheet" type="text/css" href="$prefix$/theme/newdesign.css" media="screen">
                 <link rel="stylesheet" type="text/css" href="$prefix$/theme/buttons.css" media="screen">
-               <script src="$protocol$//ajax.googleapis.com/ajax/libs/jquery/1.5.0/jquery.js"
+               <script src="$protocol$//ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"
                 type="text/javascript"></script>
-               <script src="$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js"
+               <script src="$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.11/jquery-ui.min.js"
                 type="text/javascript"></script>
                <script src="$prefix$/js/jquery.tools.min.js"
                 type="text/javascript"></script>
