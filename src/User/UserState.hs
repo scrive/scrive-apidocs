@@ -785,6 +785,7 @@ instance Indexable User where
         empty = ixSet [ ixFun (\x -> [userid x] :: [UserID])
                       , ixFun (\x -> [useremail $ userinfo x] :: [Email])
                       , ixFun (\x -> maybe [] return (usersupervisor x) :: [SupervisorID])
+                      , ixFun userfriends
                       ]
 
 $(deriveSerialize ''User0)
@@ -958,9 +959,8 @@ getUserByUserID userid = do
   return $ getOne (users @= userid)
 
 getUsersByFriendUserID :: UserID -> Query Users [User]
-getUsersByFriendUserID uid = do
-  users <- ask
-  return $ filter (\u -> (unUserID uid) `elem` (map unFriend (userfriends u))) $ toList users
+getUsersByFriendUserID uid =
+  return . toList . (@= (Friend $ unUserID uid)) =<< ask
 
 getUserFriends :: UserID -> Query Users [User]
 getUserFriends uid = do
