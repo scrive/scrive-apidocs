@@ -136,27 +136,15 @@ pageDocumentForSignContent=
             <input type="hidden" name="transactionid" value="" id="transactionidinput" />
 
             <a href="#" class="btn-small green float-right signatory bankid">
-              <div class="left"></div>
-              <div class="label">
-                <p>BankID</p>
-                <div class="btn-symbol green arrow-left"></div></div>
-              <div class="right"></div>
+              <img src="/img/bankid.png" alt="BankID" />
             </a>
 
             <a href="#" class="btn-small green float-right signatory telia">
-              <div class="left"></div>
-              <div class="label">
-                <p>Telia</p>
-                <div class="btn-symbol green arrow-left"></div></div>
-              <div class="right"></div>
+              <img src="/img/telia.png" alt="Telia Eleg" />
             </a>
 
             <a href="#" class="btn-small green float-right signatory nordea">
-              <div class="left"></div>
-              <div class="label">
-                <p>Nordea</p>
-                <div class="btn-symbol green arrow-left"></div></div>
-              <div class="right"></div>
+              <img src="/img/nordea.png" alt="Nordea Eleg" />
             </a>
           </span>
           $else$
@@ -464,25 +452,13 @@ pageDocumentForAuthorHelpersLocalDialogs=
           <input type="hidden" name="signature" value="" id="signatureinput" />
           <input type="hidden" name="transactionid" value="" id="transactionidinput" />
           <a href="#" class="btn-small green float-right author bankid">
-            <div class="left"></div>
-            <div class="label">
-              <p>BankID</p>
-              <div class="btn-symbol green arrow-left"></div></div>
-            <div class="right"></div>
+              <img src="/img/bankid.png" alt="BankID" />
           </a>
           <a href="#" class="btn-small green float-right author telia">
-            <div class="left"></div>
-            <div class="label">
-              <p>Telia</p>
-              <div class="btn-symbol green arrow-left"></div></div>
-            <div class="right"></div>
+              <img src="/img/telia.png" alt="Telia Eleg" />
           </a>
           <a href="#" class="btn-small green float-right author nordea">
-            <div class="left"></div>
-            <div class="label">
-              <p>Nordea</p>
-              <div class="btn-symbol green arrow-left"></div></div>
-            <div class="right"></div>
+              <img src="/img/nordea.png" alt="Nordea Eleg" />
           </a>
         </span>
         
@@ -636,25 +612,13 @@ pageDocumentForAuthorHelpersLocalDialogs=
           <input type="hidden" name="signature" value="" id="signatureinput" />
           <input type="hidden" name="transactionid" value="" id="transactionidinput" />
           <a href="#" class="btn-small green float-right author2 bankid">
-            <div class="left"></div>
-            <div class="label">
-              <p>BankID</p>
-              <div class="btn-symbol green arrow-left"></div></div>
-            <div class="right"></div>
+              <img src="/img/bankid.png" alt="BankID" />
           </a>
           <a href="#" class="btn-small green float-right author2 telia">
-            <div class="left"></div>
-            <div class="label">
-              <p>Telia</p>
-              <div class="btn-symbol green arrow-left"></div></div>
-            <div class="right"></div>
+              <img src="/img/telia.png" alt="Telia Eleg" />
           </a>
           <a href="#" class="btn-small green float-right author2 nordea">
-            <div class="left"></div>
-            <div class="label">
-              <p>Nordea</p>
-              <div class="btn-symbol green arrow-left"></div></div>
-            <div class="right"></div>
+              <img src="/img/nordea.png" alt="Nordea Eleg" />
           </a>
         </span>
 
