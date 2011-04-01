@@ -470,6 +470,17 @@
 	-webkit-border-radius: 3px;
 }
 
+.tab-container .tab-input {
+	border: 1px solid #e4e4e4;
+	border-radius: 3px;
+	height: 17px;
+	margin: 0 10px 0 0 !important;
+	padding: 3px 6px 3px 6px;
+	width: 205px;
+	-moz-border-radius: 3px;
+	-webkit-border-radius: 3px;
+}
+
 #tab-viewer .tab-dd {
         font: 12px/24px "Lucida Grande";
 	text-indent: 9px;

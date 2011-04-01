@@ -9,6 +9,7 @@ viewSubaccounts =
 		<ul class="tabs">
 		   <li><a href="/account">Konto</a></li>
            <li class="active"><a href="/account/subaccount" class="listtype">Underkonton</a></li>
+                   <li><a href="/account/sharing">Delning</a></li>
 		</ul>
 		<div class="tab-container">
 			<div class="tab-content">

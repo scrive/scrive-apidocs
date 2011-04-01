@@ -2,6 +2,7 @@
 module User.UserView (
     -- pages
     viewSubaccounts,
+    viewFriends,
     showUser,
     pageAcceptTOS,
     activatePageView,
@@ -95,6 +96,13 @@ userFields user = do
 pageAcceptTOS :: KontrakcjaTemplates ->  BS.ByteString -> IO String
 pageAcceptTOS templates tostext = 
   renderTemplate templates "pageAcceptTOS" $ field "tostext" (BS.toString tostext)
+
+viewFriends :: KontrakcjaTemplates -> PagedList User -> IO String
+viewFriends templates friends =  
+  renderTemplate templates "viewFriends" $ do
+    field "friends" $ markParity $ map userFields $ list friends
+    field "currentlink" $ show $ LinkSharing $ params friends
+    pagedListFields friends
 
 
 viewSubaccounts :: KontrakcjaTemplates -> PagedList User -> IO String
