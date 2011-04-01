@@ -376,7 +376,7 @@ mailMismatchAuthorTitle=Felaktiga personuppgifter
 mailMismatchAuthorContent=
 <p>Hej $authorname$</p>
 
-<p>Vi beklagar, de uppgifter du angivet i document name matchar inte personuppgifterna hos $badname$s e-legitimation.</p>
+<p>Vi beklagar, de uppgifter du angivet i document name matchar inte personuppgifterna hos <a href="mailto:$bademail$">$badname$</a>s e-legitimation.</p>
 
 <p>Avtalsprocessen för <a href="$doclink$">$documenttitle$</a> har därför avbrutits. Du kan välja att starta om avtalsprocessen och skicka en ny inbjudan till dina motparter, Ett mail har även gott ut till dina motparter som meddelat dem om att avtalsprocessen har avbrutits.</p>
 
