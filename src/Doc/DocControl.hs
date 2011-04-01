@@ -503,9 +503,9 @@ handleIssueShowGet docid = withUserGet $ checkUserTOSGet $ do
   -- authors get a view with buttons
   if isAuthor document user
    then do
-       case getDataMismatchMessage $ documentcancelationreason document of
-           Just msg -> addFlashMsg $ toFlashMsg OperationFailed msg
-           Nothing -> return ()
+       case (documentstatus document, getDataMismatchMessage $ documentcancelationreason document) of
+           (Canceled, Just msg) -> addFlashMsg $ toFlashMsg OperationFailed msg
+           _ -> return ()
        ctx2 <- get
        step <- getDesignStep (documentid document)
        renderFromBody ctx2 toptab kontrakcja 
