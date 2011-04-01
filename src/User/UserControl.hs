@@ -113,6 +113,20 @@ getUserInfoUpdate  = do
           , userphone  = fromMaybe (userphone ui) mphone
         }
 
+handleGetSharing :: Kontra Response
+handleGetSharing = withUserGet $ do
+    ctx@Context{ctxmaybeuser = Just User{userid}} <- get
+    friends <- query $ GetUserFriends userid
+    params <- getListParams
+    content <- liftIO $ viewFriends (ctxtemplates ctx) (friendsSortSearchPage params friends)
+    renderFromBody ctx TopAccount kontrakcja $ cdata content
+
+-- Searching, sorting and paging
+friendsSortSearchPage :: ListParams -> [User] -> PagedList User
+friendsSortSearchPage  =
+    listSortSearchPage subaccountsSortFunc subaccountsSearchFunc subaccountsPageSize
+
+
 handleGetSubaccount :: Kontra Response
 handleGetSubaccount = withUserGet $ do
     ctx@Context{ctxmaybeuser = Just User{userid}} <- get
@@ -153,6 +167,29 @@ subaccountsPageSize :: Int
 subaccountsPageSize = 20
 
 ----
+
+handlePostSharing :: Kontra KontraLink
+handlePostSharing = do
+    ctx <- get
+    case (ctxmaybeuser ctx) of
+         Just user -> do
+             memail <- getOptionalField asValidEmail "email"
+             remove <- isFieldSet "remove"
+             case (memail,remove) of
+                  (Just email,_) -> do
+                      handleAddFriend user email
+                      return $ LinkSharing emptyListParams
+                  (_,True) -> return $ LinkSharing emptyListParams
+                  _ -> LinkSharing <$> getListParamsForSearch
+         Nothing -> return $ LinkLogin NotLogged
+
+handleAddFriend :: User -> BS.ByteString -> Kontra ()
+handleAddFriend User{userid} email = do
+    ctx <- get
+    avereturn <- update $ AddViewerByEmail userid $ Email email
+    case avereturn of
+      Left msg -> addFlashMsg $ toFlashMsg OperationFailed msg
+      Right _  -> return ()
 
 handlePostSubaccount :: Kontra KontraLink
 handlePostSubaccount = do
