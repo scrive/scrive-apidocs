@@ -1381,7 +1381,7 @@ a.new-btn-small.black p {
 }
 
 #body-container .big-pp-container {
-	background: url(../img/bg-pp-header.png) repeat-x #fff;
+	background: #fff;
 	border: 1px solid #ccc;
 	border-radius: 5px;
 	margin-top: 30px;
@@ -1398,8 +1398,9 @@ a.new-btn-small.black p {
 }
 
 #body-container .big-pp-container th {
+        background: url(../img/bg-pp-header.png);
 	border-bottom: 1px solid #ccc;
-	height: 66px;
+	height: 84px;
 }
 
 #body-container .big-pp-container th h4 {
@@ -1449,7 +1450,7 @@ a.new-btn-small.black p {
 #body-container .big-pp-container td:first-child {
 	padding-right: 9px;
 	text-align: right;
-	width: 190px;
+	width: 235px;
 }
 
 #body-container .big-pp-container td a {
@@ -1514,13 +1515,17 @@ a.new-btn-small.black p {
 
 #body-container .big-pp-container .highlight-container li.top {
 	border-bottom: 0;
-	height: 62px;
+	height: 80px;
 	padding-top: 17px;
 }
 
 #body-container .big-pp-container .highlight-container li.top h4 {
 	color: #666;
 	font: 18px "Copse";
+}
+
+#body-container .big-pp-container .highlight-container li.top em {
+    font-size: 12px;
 }
 
 #body-container .big-pp-container .highlight-container li.top p {
