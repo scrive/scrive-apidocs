@@ -346,7 +346,7 @@ handleIssuePostBankID docid = withUserPost $ do
                     -- change me! I should return back to the same page
                     return $ LinkDesignDoc $ DesignStep3 docid
                 Right (cert, attrs) -> do
-                    Log.debug attrs
+                    Log.debug $ show attrs
                     providerType <- providerStringToType provider
                     let authorinfo = userinfo author
                     -- compare information from document (and fields) to that obtained from BankID
