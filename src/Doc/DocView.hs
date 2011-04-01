@@ -358,17 +358,17 @@ showFilesImages2 templates files = do
 emptyDetails :: SignatoryDetails
 emptyDetails =
   SignatoryDetails {
-      signatoryfstname = BS.empty
-    , signatorysndname = BS.empty
-    , signatorycompany = BS.empty
-    , signatorynumber = BS.empty
-    , signatoryemail = BS.empty
+      signatoryfstname           = BS.empty
+    , signatorysndname           = BS.empty
+    , signatorycompany           = BS.empty
+    , signatorynumber            = BS.empty
+    , signatoryemail             = BS.empty
     , signatoryfstnameplacements = []
     , signatorysndnameplacements = []
     , signatorycompanyplacements = []
-    , signatorynumberplacements = []
-    , signatoryemailplacements = []
-    , signatoryotherfields = []
+    , signatorynumberplacements  = []
+    , signatoryemailplacements   = []
+    , signatoryotherfields       = []
   }
 
 {- |
