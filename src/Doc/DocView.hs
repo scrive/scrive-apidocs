@@ -422,7 +422,7 @@ pageDocumentForAuthor ctx
              field "otherFieldOwner" "author")
              $ zip fields ([1..]::[Int])
        csvcustomfields = either (const [BS.fromString ""]) id $ getCSVCustomFields document
-       mcleancsv = fmap (cleanCSVContents (length csvcustomfields) . csvcontents) $ documentcsvupload document
+       mcleancsv = fmap (cleanCSVContents documentallowedidtypes (length csvcustomfields) . csvcontents) $ documentcsvupload document
        csvproblems = maybe [] fst mcleancsv
        csvdata = maybe [] (csvbody . snd) mcleancsv
        csvPageSize = 10
@@ -454,7 +454,7 @@ pageDocumentForAuthor ctx
        documentAuthorInfo author
        field "validationinput" validationinput
        field "csvfilename" $ maybe BS.empty csvtitle . documentcsvupload $ document
-       field "csvsigindex" $ maybe BS.empty (BS.fromString . show . csvsignatoryindex) . documentcsvupload $ document
+       field "csvpersonindex" $ maybe BS.empty (BS.fromString . show) $ csvPersonIndex document
        field "csvproblems" $ csvproblemfields
        field "csvproblemcount" $ length csvproblems
        field "csvpages" $ zipWith (csvPageFields csvproblems (length csvdata)) [0,csvPageSize..] csvpages
@@ -738,7 +738,7 @@ designViewFields step = do
         (Just (DesignStep2 _ _ _ )) -> field "step2" True
         (Just (DesignStep1)) -> field "step1" True
         _ -> field "step2" True
-    field "initialpart" $ 
+    field "initialperson" $ 
       case step of
         (Just (DesignStep2 _ (Just part) _ )) -> part
         _ -> 0

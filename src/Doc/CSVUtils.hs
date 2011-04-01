@@ -4,6 +4,9 @@ module Doc.CSVUtils (
     , CleanCSVData(..)
     , cleanCSVContents
     , getCSVCustomFields
+    , csvPersonIndex
+    , personToSigIndex
+    , personToSigIndexForDoc
     )
 where
 
@@ -15,6 +18,7 @@ import Data.Maybe
 import Data.List
 
 import Doc.DocStateData
+import Doc.DocStateUtils
 import InputValidation
 import Kontra
 import Templates.Templates 
@@ -32,27 +36,51 @@ data CleanCSVData = CleanCSVData
                     , csvbody :: [[BS.ByteString]]
                     }
 
+{- |
+    This is a tiny bit messy, but it does the job of converting between the person index
+    on the client and the signatory index under the covers for the sake of the csv stuff.
+    The two could be different if the author isn't a signatory.
+-}
+csvPersonIndex :: Document -> Maybe Int
+csvPersonIndex doc = 
+  let sigindexf = if (isAuthorSignatory doc)
+                    then csvsignatoryindex
+                    else ((+1) . csvsignatoryindex) in
+  fmap sigindexf $ documentcsvupload doc
+
+personToSigIndexForDoc :: Document -> Int -> Int
+personToSigIndexForDoc doc personindex = personToSigIndex (isAuthorSignatory doc) personindex
+
+personToSigIndex :: Bool -> Int -> Int
+personToSigIndex isAuthor personIndex =
+  if isAuthor then personIndex else (personIndex - 1)
+
+isAuthorSignatory :: Document -> Bool
+isAuthorSignatory doc =
+  case (documentsignatorylinks doc) of
+    (sl:_) | isAuthor doc sl -> True
+    _ -> False
 
 {- |
     Looks up all the custom fields for the csv upload and returns their labels.
 -}
 getCSVCustomFields :: Document -> Either String [BS.ByteString]
-getCSVCustomFields doc@Document{documentsignatorylinks} =
+getCSVCustomFields doc@Document{documentauthor,documentsignatorylinks} =
   case (fmap csvsignatoryindex $ documentcsvupload doc) of
     Nothing -> Right []
     (Just csvsignatoryindex) ->
-      if (csvsignatoryindex<1 || csvsignatoryindex>=(length documentsignatorylinks)) then 
-          Left $ "invalid state reached, sigindex is " ++ (show csvsignatoryindex)
-      else 
+      case (checkCSVSigIndex (unAuthor documentauthor) documentsignatorylinks csvsignatoryindex) of
+        Left msg -> Left msg
+        Right _ ->
           Right $ map fieldlabel . signatoryotherfields . signatorydetails $ documentsignatorylinks !! csvsignatoryindex
 
 {- |
     Cleans up csv contents. You get a list of all the problems alongside all the data
     that's been scrubbed up as much as possible.
 -}
-cleanCSVContents :: Int -> [[BS.ByteString]] -> ([CSVProblem], CleanCSVData)
-cleanCSVContents customfieldcount contents = 
-  let mincols = 3
+cleanCSVContents :: [IdentificationType] -> Int -> [[BS.ByteString]] -> ([CSVProblem], CleanCSVData)
+cleanCSVContents allowedidtypes customfieldcount contents = 
+  let mincols = if isEleg then 5 else 3
       maxcols = 5 + customfieldcount
       cleanData = zipWith (cleanRow mincols maxcols) [0..]
       mheader = lookForHeader . cleanData $ take 1 contents
@@ -120,14 +148,19 @@ cleanCSVContents customfieldcount contents =
       , badIfEmpty flashMessageSecondNameIsRequired . asValidName
       , badIfEmpty flashMessageEmailIsRequired . asValidEmail
       , asValidCompanyName
-      , asValidCompanyNumber
+      , numberValidator
       ] ++ repeat asValidFieldValue
       where
+        numberValidator :: String -> Result BS.ByteString
+        numberValidator
+          | isEleg = badIfEmpty flashMessageNumberIsRequired . asValidCompanyNumber
+          | otherwise = asValidCompanyNumber
         badIfEmpty :: (KontrakcjaTemplates -> IO FlashMessage) -> Result BS.ByteString -> Result BS.ByteString
         badIfEmpty msg res = 
           case res of
             Empty -> Bad msg
             x -> x
+    isEleg = isJust $ find (== ELegitimationIdentification) allowedidtypes
     {- |
         Handy for constructing problems.
     -}
@@ -179,3 +212,7 @@ flashMessageSecondNameIsRequired templates =
 flashMessageEmailIsRequired :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageEmailIsRequired templates = 
   toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageEmailIsRequired" ()
+
+flashMessageNumberIsRequired :: KontrakcjaTemplates -> IO FlashMessage
+flashMessageNumberIsRequired templates =
+  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageNumberIsRequired" ()

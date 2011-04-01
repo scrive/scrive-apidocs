@@ -20,10 +20,10 @@ data LoginRedirectReason = LoginTry
                          | InvalidLoginInfo String -- email
 
 data DesignStep2Flag = AfterCSVUpload
-type Part = Int
+type Person = Int
 
 data DesignStep = DesignStep1 
-                | DesignStep2 DocumentID (Maybe Part) (Maybe DesignStep2Flag) 
+                | DesignStep2 DocumentID (Maybe Person) (Maybe DesignStep2Flag) 
                 | DesignStep3 DocumentID   
 
 {- |
@@ -98,8 +98,8 @@ instance Show KontraLink where
         (++) $ "/d/" ++ show documentid
     showsPrec _ (LinkDesignDoc DesignStep1) =  (++) $ "/"
     showsPrec _ (LinkDesignDoc (DesignStep2 documentid Nothing _)) = (++) $ "/d/" ++ show documentid ++ "?step2"
-    showsPrec _ (LinkDesignDoc (DesignStep2 documentid (Just part) Nothing)) = (++) $ "/d/" ++ show documentid ++ "?step2&part=" ++ show part
-    showsPrec _ (LinkDesignDoc (DesignStep2 documentid (Just part) (Just AfterCSVUpload))) = (++) $ "/d/" ++ show documentid ++ "?step2&part=" ++ show part ++ "&aftercsvupload"
+    showsPrec _ (LinkDesignDoc (DesignStep2 documentid (Just person) Nothing)) = (++) $ "/d/" ++ show documentid ++ "?step2&person=" ++ show person
+    showsPrec _ (LinkDesignDoc (DesignStep2 documentid (Just person) (Just AfterCSVUpload))) = (++) $ "/d/" ++ show documentid ++ "?step2&person=" ++ show person ++ "&aftercsvupload"
     showsPrec _ (LinkDesignDoc (DesignStep3 documentid)) = (++) $ "/d/" ++ show documentid ++ "?step3"
     showsPrec _ (LinkIssueDocPDF document) = 
         (++) $ "/d/" ++ show (documentid document) ++ "/" ++ BS.toString (documenttitle document) ++ ".pdf"

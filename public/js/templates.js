@@ -338,10 +338,10 @@ function docstateToHTML(){
     signatories[0] = newsignatory();
   }
   
-  csvsigindex = sl.closest("form").find("input[type='hidden'][name='csvsignatoryindex']").attr("value");
+  csvpersonindex = sl.closest("form").find("input[type='hidden'][name='csvpersonindex']").attr("value");
 
   $(signatories).each(function (idx) {
-    isMultiple = ("" + (idx+1)) === csvsigindex 
+    isMultiple = ("" + (idx+1)) === csvpersonindex 
     signatoryToHTML(isMultiple, this);
   });
 
@@ -742,13 +742,13 @@ function setUpCSVUpload(sigentry) {
   var form = sigentry.closest("form");
   var div = sigentry.closest("#personpane").find(".currentPerson");
   var idx = div.parent().children().index(div);
-  form.find("input[type='hidden'][name='csvsignatoryindex']").removeAttr("value");
-  form.find("input[type='hidden'][name='csvsignatoryindex']").attr("value", idx);
+  form.find("input[type='hidden'][name='csvpersonindex']").removeAttr("value");
+  form.find("input[type='hidden'][name='csvpersonindex']").attr("value", idx);
 }
 
 function tearDownCSVUpload(sigentry) {
     var form = sigentry.closest("form");
-    form.find("input[type='hidden'][name='csvsignatoryindex']").attr("value", "");
+    form.find("input[type='hidden'][name='csvpersonindex']").attr("value", "");
 }
 
 safeReady(function() {
@@ -795,8 +795,8 @@ function setupAsSinglePart(sigentry) {
       tomulti.hide();
     } else {
       var form = sigentry.closest("form");
-      csvsigindex = form.find("input[type='hidden'][name='csvsignatoryindex']").attr("value");
-      if (!(csvsigindex && csvsigindex.length>0)) {
+      csvpersonindex = form.find("input[type='hidden'][name='csvpersonindex']").attr("value");
+      if (!(csvpersonindex && csvpersonindex.length>0)) {
         tomulti.show();
       }
     }
@@ -950,12 +950,12 @@ function initializeTemplates () {
   });
 
   var people = $("#personpane").children().removeClass("currentPerson");
-  if (initialpart<1 || initialpart>people.length) {
+  if (initialperson<1 || initialperson>people.length) {
     people.last().addClass("currentPerson");
   } else {
-    people.eq(initialpart - 1).addClass("currentPerson");
+    people.eq(initialperson - 1).addClass("currentPerson");
     if (isaftercsvupload) {
-      people.eq(initialpart - 1).find(".csvinfo").click();
+      people.eq(initialperson - 1).find(".csvinfo").click();
     }
   }
 

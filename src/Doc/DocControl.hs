@@ -535,12 +535,12 @@ getDesignStep::DocumentID -> Kontra (Maybe DesignStep)
 getDesignStep docid = do
     step3 <- isFieldSet "step3"
     step2 <- isFieldSet "step2"
-    mpart <- getOptionalField asValidNumber "part"
+    mperson <- getOptionalField asValidNumber "person"
     aftercsvupload <- isFieldSet "aftercsvupload"
     case (step2,step3) of
-       (True,_) -> return $ Just $ DesignStep2 docid mpart (if aftercsvupload 
-                                                             then (Just AfterCSVUpload) 
-                                                             else Nothing)
+       (True,_) -> return $ Just $ DesignStep2 docid mperson (if aftercsvupload 
+                                                                then (Just AfterCSVUpload) 
+                                                                else Nothing)
        (_,True) -> return $ Just $ DesignStep3 docid
        _ -> return Nothing
 
@@ -668,7 +668,7 @@ splitUpDocument doc =
     (Just _, Left msg) -> return $ Left msg
     (Nothing, _) -> return $ Right [doc]
     (Just csvupload, Right csvcustomfields) ->
-      case (cleanCSVContents (length csvcustomfields) $ csvcontents csvupload) of
+      case (cleanCSVContents (documentallowedidtypes doc) (length csvcustomfields) $ csvcontents csvupload) of
         ((prob:_), _) -> return $ Left "data is not valid"
         ([], CleanCSVData{csvbody}) -> do
           mudoc <- case documenttype doc of
@@ -695,24 +695,24 @@ handleIssueCSVUpload document author = do
   case mudoc of
     Left _ -> mzero
     Right udoc -> do
-      mcsvsigindex <- getOptionalField asValidNumber "csvsignatoryindex"
+      mcsvpersonindex <- getOptionalField asValidNumber "csvpersonindex"
       mcsvfile <- getCSVFile "csv"
-      case (mcsvsigindex, mcsvfile) of
+      case (mcsvpersonindex, mcsvfile) of
         (Nothing, Nothing) -> return $ LinkDesignDoc $ DesignStep2 (documentid udoc) Nothing Nothing
         (Nothing, Just _) ->  do
-          Log.error "something weird happened, got csv file but there's no relevant sig index"
+          Log.error "something weird happened, got csv file but there's no relevant person index"
           mzero
-        (Just sigindex, Nothing) -> return $ LinkDesignDoc $ DesignStep2 (documentid udoc) (Just $ sigindex + 1) Nothing 
-        (Just sigindex, Just (title, contents)) ->  do
+        (Just personindex, Nothing) -> return $ LinkDesignDoc $ DesignStep2 (documentid udoc) (Just $ personindex + 1) Nothing 
+        (Just personindex, Just (title, contents)) ->  do
           let csvupload = CSVUpload 
                           { csvtitle = title
                           , csvcontents = contents
-                          , csvsignatoryindex = sigindex
+                          , csvsignatoryindex = personToSigIndexForDoc udoc personindex
                           }
           mndoc <- update $ AttachCSVUpload (documentid udoc) csvupload
           case mndoc of
             Left _ -> mzero
-            Right ndoc -> return $ LinkDesignDoc $ DesignStep2 (documentid ndoc) (Just $ sigindex + 1) (Just AfterCSVUpload)
+            Right ndoc -> return $ LinkDesignDoc $ DesignStep2 (documentid ndoc) (Just $ personindex + 1) (Just AfterCSVUpload)
 
 {- |
     This will get and parse a csv file.  It
@@ -849,7 +849,7 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
   
   invitetext <- getFieldUTFWithDefault defaultInviteMessage "invitetext"
   
-  mcsvsigindex <- getOptionalField asValidNumber "csvsignatoryindex"
+  mcsvpersonindex <- getOptionalField asValidNumber "csvpersonindex"
 
   -- each custom field must have this
   fieldnames  <- getAndConcat "fieldname"
@@ -942,9 +942,11 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
                       , signatorynumberplacements = placementsByID (BS.fromString "author") (BS.fromString "number")
                       , signatoryotherfields = defsByID (BS.fromString "author")
                       }
-      signatories2 = if authorrole == "signatory"
+      isauthorsig = authorrole == "signatory"
+      signatories2 = if isauthorsig
                      then authordetails : signatories
                      else signatories
+      mcsvsigindex = fmap (personToSigIndex isauthorsig) mcsvpersonindex
   -- FIXME: tell the user what happened!
   -- when (daystosign<1 || daystosign>99) mzero
 
