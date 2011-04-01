@@ -68,23 +68,20 @@ import ListUtil
   development instance.
 -}
 data AppConf
-    = AppConf { httpPort        :: Int
-              , hostpart        :: String
-              , store           :: FilePath
-              , docstore        :: FilePath
-              , static          :: FilePath 
-              , awsBucket       :: String
-              , awsAccessKey    :: String
-              , awsSecretKey    :: String
-              , production      :: Bool
-              , twSignCert      :: FilePath
-              , twSignCertPwd   :: String
-              , twAdminCert     :: FilePath
-              , twAdminCertPwd  :: String
-              , twSignUrl       :: String
-              , twAdminUrl      :: String
-              , twStorageUrl    :: String
-              , mailsConfig     :: MailsConfig
+    = AppConf { httpPort        :: Int                          -- ^ tcp port to listen on,
+                                                                -- http is 80. note: will
+                                                                -- listen only on 127.0.0.1
+                                                                -- interface
+              , hostpart        :: String                       -- ^ hostname as it should looklike in emails for example
+              , store           :: FilePath                     -- ^ where to put database files
+              , docstore        :: FilePath                     -- ^ where to put files (active if amazonConfig is Nothing)
+              , static          :: FilePath                     -- ^ static files directory
+              , amazonConfig    :: Maybe (String,String,String) -- ^ bucket, access key, secret key
+              , production      :: Bool                         -- ^ production flag, enables some production stuff, disables some development 
+              , trustWeaverSign :: Maybe (String,String,String) -- ^ TrustWeaver sign service (URL,pem file path,pem private key password)
+              , trustWeaverAdmin :: Maybe (String,String,String) -- ^ TrustWeaver admin service (URL,pem file path,pem private key password)
+              , trustWeaverStorage :: Maybe (String,String,String) -- ^ TrustWeaver storage service (URL,pem file path,pem private key password)
+              , mailsConfig     :: MailsConfig                  -- ^ mail sendout configuration
 
               }              
       deriving (Show,Read,Eq,Ord)
@@ -264,11 +261,11 @@ handleMainReaload = LinkNew <$> getListParamsForSearch
 -}
 defaultAWSAction :: AppConf -> AWS.S3Action
 defaultAWSAction appConf = 
+    let (bucket,accessKey,secretKey) = maybe ("","","") id (amazonConfig appConf)
+    in 
     AWS.S3Action 
-           { AWS.s3conn = AWS.amazonS3Connection 
-                          (awsAccessKey appConf) 
-                          (awsSecretKey appConf)
-           , AWS.s3bucket = awsBucket appConf
+           { AWS.s3conn = AWS.amazonS3Connection accessKey secretKey
+           , AWS.s3bucket = bucket
            , AWS.s3object = ""
            , AWS.s3query = ""
            , AWS.s3metadata = []
@@ -353,13 +350,9 @@ appHandler appConf appGlobals docs = do
                 , ctxtemplates = templates2
                 , ctxmailer = mailer appGlobals
                 , ctxtwconf = TW.TrustWeaverConf 
-                              { TW.signcert = twSignCert appConf
-                              , TW.signcertpwd = twSignCertPwd appConf
-                              , TW.admincert = twAdminCert appConf
-                              , TW.admincertpwd = twAdminCertPwd appConf
-                              , TW.signurl = twSignUrl appConf
-                              , TW.adminurl = twAdminUrl appConf
-                              , TW.storageurl = twStorageUrl appConf
+                              { TW.signConf = trustWeaverSign appConf
+                              , TW.adminConf = trustWeaverAdmin appConf
+                              , TW.storageConf = trustWeaverStorage appConf
                               , TW.retries = 3
                               , TW.timeout = 60000
                               }
