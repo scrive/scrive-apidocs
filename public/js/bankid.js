@@ -266,6 +266,46 @@ function netIDSign() {
   return false;
 }
 
+// for author2
+function sign1Author2() {
+  if(!checkPlugin(hasIESigner1Plugin, hasMozillaSigner1Plugin, flashNordeaMessage)) {
+    return false;
+  }
+  displayLoadingOverlay("Inleder säker signering . . .");
+  var url = window.location.pathname.substring(2);
+  var ajaxurl = "/d/nordea" + url;
+  var posturl = "/d" + url;
+  var formselector = "#dialog-confirm-sign-by-author";
+  ajaxRequest(ajaxurl, posturl, formselector, sign1Success, true);
+  return false;
+}
+
+function sign2Author2() {
+  if(!checkPlugin(hasSign2PluginIE, hasSign2PluginMozilla, flashBankIDMessage)) {
+    return false;
+  }
+  displayLoadingOverlay("Inleder säker signering . . .");
+  var url = window.location.pathname.substring(2);
+  var ajaxurl = "/d/bankid" + url;
+  var posturl = "/d" + url;
+  var formselector = "#dialog-confirm-sign-by-author";
+  ajaxRequest(ajaxurl, posturl, formselector, sign2Success, true);
+  return false;
+}
+
+function netIDSignAuthor2() {
+  if(!checkPlugin(hasNetIDPluginIE, hasNetIDPluginMozilla, flashTeliaMessage)) {
+    return false;
+  }
+  displayLoadingOverlay("Inleder säker signering . . .");
+  var url = window.location.pathname.substring(2);
+  var ajaxurl = "/d/telia" + url;
+  var posturl = "/d" + url;
+  var formselector = "#dialog-confirm-sign-by-author";
+  ajaxRequest(ajaxurl, posturl, formselector, netIDSuccess, true);
+  return false;
+}
+
 // for author
 function sign1Author() {
   if(!checkPlugin(hasIESigner1Plugin, hasMozillaSigner1Plugin, flashNordeaMessage)) {
@@ -306,6 +346,7 @@ function netIDSignAuthor() {
   return false;
 }
 
+
 function flashNordeaMessage() {
   addFlashMessage("Du har inte Nordeas e-legitimation installerad. Du kan ladda ned Nordeas e-legitimation från Nordeas internetbank.", "red");
 }
@@ -327,12 +368,15 @@ function failEleg(msg) {
 safeReady(function() {
   $("a.bankid.signatory").click(sign2);
   $("a.bankid.author").click(sign2Author);
+  $("a.bankid.author2").click(sign2Author2);
 
   $("a.nordea.signatory").click(sign1);
   $("a.nordea.author").click(sign1Author);
+  $("a.nordea.author2").click(sign1Author2);
 
   $("a.telia.signatory").click(netIDSign);
   $("a.telia.author").click(netIDSignAuthor);
+  $("a.telia.author2").click(netIDSignAuthor2);
 });
 
 safeReady(function() {

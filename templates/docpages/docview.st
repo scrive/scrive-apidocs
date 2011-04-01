@@ -623,7 +623,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
       <div class="modal-footer">
         <input type="hidden" name="sign" value="automatic" />
         <a class="close cancel">Avbryt</a>
-        <a href="#" class="btn-small green float-right submiter" id="editing-invite-text-finished">
+        <a href="#" class="btn-small green float-right submiter signhidden" id="editing-invite-text-finished">
           <div class="left"></div>
           <div class="label">
             <p>Underteckna </p>
@@ -631,6 +631,33 @@ pageDocumentForAuthorHelpersLocalDialogs=
           </div>
           <div class="right"></div>
         </a>
+        <span class="eleghidden" style="display: none;">
+          <input type="hidden" name="eleg" id="elegprovider" value="" />
+          <input type="hidden" name="signature" value="" id="signatureinput" />
+          <input type="hidden" name="transactionid" value="" id="transactionidinput" />
+          <a href="#" class="btn-small green float-right author2 bankid">
+            <div class="left"></div>
+            <div class="label">
+              <p>BankID</p>
+              <div class="btn-symbol green arrow-left"></div></div>
+            <div class="right"></div>
+          </a>
+          <a href="#" class="btn-small green float-right author2 telia">
+            <div class="left"></div>
+            <div class="label">
+              <p>Telia</p>
+              <div class="btn-symbol green arrow-left"></div></div>
+            <div class="right"></div>
+          </a>
+          <a href="#" class="btn-small green float-right author2 nordea">
+            <div class="left"></div>
+            <div class="label">
+              <p>Nordea</p>
+              <div class="btn-symbol green arrow-left"></div></div>
+            <div class="right"></div>
+          </a>
+        </span>
+
       </div>
     </div>
   </form>
