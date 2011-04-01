@@ -7,6 +7,7 @@ showUser =
    <ul class="tabs">
        <li class="active"><a href="/account">Konto</a></li>
        <li><a href="/account/subaccount">Underkonton</a></li>
+       <li><a href="/account/sharing">Delning</a></li>
    </ul>
    <div class="tab-container">
        <div class="tab-content account">

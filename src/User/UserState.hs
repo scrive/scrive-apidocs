@@ -38,6 +38,7 @@ module User.UserState
     , GetUserStats(..)
     , GetUserStatsByUser(..)
     , GetUserSubaccounts(..)
+    , GetUserFriends(..)
     , SetUserInfo(..)
     , SetInviteInfo(..)
     , SetUserSettings(..)
@@ -971,6 +972,15 @@ getUsersByFriendUserID uid = do
   users <- ask
   return $ filter (\u -> (unUserID uid) `elem` (map unFriend (userfriends u))) $ toList users
 
+getUserFriends :: UserID -> Query Users [User]
+getUserFriends uid = do
+  muser <- getUserByUserID uid
+  case muser of
+    Nothing -> return []
+    Just user -> do
+      mfriends <- sequence . map (getUserByUserID . UserID . unFriend) $ userfriends user
+      return . map fromJust . filter isJust $ mfriends
+
 getUserSubaccounts :: UserID -> Query Users (Set.Set User)
 getUserSubaccounts userid = do
   users <- ask
@@ -1200,6 +1210,7 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'recordSuccessfulLogin
                     , 'getUserSubaccounts
                     , 'getUsersByFriendUserID
+                    , 'getUserFriends
                     , 'acceptTermsOfService
                     , 'exportUsersDetailsToCSV
                     , 'addViewerByEmail
