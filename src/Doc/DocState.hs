@@ -240,7 +240,8 @@ updateDocument time documentid signatories daystosign invitetext author authorde
          then do
              let authoremail = unEmail $ useremail $ userinfo author
              signatorylinks <- sequence $ map (signLinkFromDetails [(authoremail, author)]) signatories
-             let csvupload = case (documentcsvupload document, fmap (checkCSVSigIndex signatorylinks) mcsvsigindex) of
+             let csvupload = case (documentcsvupload document, 
+                                   fmap (checkCSVSigIndex (userid author) signatorylinks) mcsvsigindex) of
                                (Just cu@CSVUpload{csvsignatoryindex}, Just (Right newsigindex)) 
                                     | csvsignatoryindex==newsigindex -> Just cu
                                _ -> Nothing
@@ -268,17 +269,13 @@ attachCSVUpload :: DocumentID
                    -> Update Documents (Either String Document)
 attachCSVUpload documentid csvupload =
     modifyContractOrTemplateWithAction documentid $ \document ->
-        let msigindex = checkCSVSigIndex (documentsignatorylinks document) $ csvsignatoryindex csvupload in
+        let msigindex = checkCSVSigIndex (unAuthor $ documentauthor document) 
+                                         (documentsignatorylinks document)
+                                         (csvsignatoryindex csvupload) in
         case (msigindex, documentstatus document) of
           (Left s, _) -> return $ Left s
           (Right n, Preparation) -> return . Right $ document { documentcsvupload = Just csvupload }
           _ -> return $ Left "Document not in preparation"
-
-checkCSVSigIndex :: [SignatoryLink] -> Int -> Either String Int
-checkCSVSigIndex sls n
-  | n==0 = Left "author can't be set from csv"
-  | n>=(length sls) = Left $ "signatory with index " ++ (show n) ++ " doesn't exist."
-  | otherwise = Right n
 
 {- |
     Creates a new contract by pumping some values into a particular signatory.

@@ -174,3 +174,5 @@ flashMessageSecondNameIsRequired=Efternamn krävs.
 ###
 flashMessageEmailIsRequired=E-post krävs.
 ###
+flashMessageNumberIsRequired=Nummer krävs.
+###

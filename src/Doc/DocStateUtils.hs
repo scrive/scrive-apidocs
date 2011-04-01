@@ -24,6 +24,7 @@ module Doc.DocStateUtils (
     -- Checkers - checking properties of document
     , MayBeAuthor(isAuthor)
     , anyInvitationUndelivered
+    , checkCSVSigIndex
     
     -- Getters - digging some info from about document
     , signatoryname
@@ -154,6 +155,16 @@ isContract = ((==) Contract) . documenttype
 
 isTemplate :: Document -> Bool
 isTemplate = ((==) Template) . documenttype
+
+checkCSVSigIndex :: UserID -> [SignatoryLink] -> Int -> Either String Int
+checkCSVSigIndex authorid sls n
+  | n<0 || n>=slcount = Left $ "signatory with index " ++ (show n) ++ " doesn't exist."
+  | n==0 && slcount>0 && isAuthor (head sls) = Left "author can't be set from csv"
+  | otherwise = Right n
+  where slcount = length $ sls
+        isAuthor sl = case maybesignatory sl of
+                        Just s -> s == authorid
+                        Nothing -> False
 
 -- GETTERS
 

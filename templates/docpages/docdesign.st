@@ -73,7 +73,7 @@ $endif$
       <form action="" method="post" enctype="multipart/form-data" class="stepForm">
         <input type="hidden" name="allowedsignaturetypes"
                value="Email" />
-        <input type="hidden" name="csvsignatoryindex" value="$csvsigindex$"/>
+        <input type="hidden" name="csvpersonindex" value="$csvpersonindex$"/>
 
         <div id="signStep2Content" $if(!step2)$ style="display: none" $endif$>
           <div id="signStepsBody">
@@ -326,7 +326,7 @@ $endif$
   <script type="text/javascript">
     var docstate = $docstate:noescape()$;
     var csvrowcount = $csvrowcount$;
-    var initialpart = $initialpart$;
+    var initialperson = $initialperson$;
     var isaftercsvupload = $if(isaftercsvupload)$true$else$false$endif$;
   </script>
   <script src="/js/templates.js" type="text/javascript"></script>
