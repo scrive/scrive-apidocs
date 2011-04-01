@@ -567,6 +567,11 @@ handleIssueShowPost docid = withUserPost $ do
   template <- isFieldSet "template"
   contract <- isFieldSet "contract"
   csvupload <- isFieldSet "csvupload"
+  -- is this routing logic or business logic? I say business, but
+  -- here it looks mixed.
+  -- I'm especially asking about AwaitingAuthor case, because I though
+  -- it was covered by SignDocument
+  --   Eric
   case (documentstatus document,sign,send,template,contract,csvupload) of 
       (Preparation, True, _,_, _, _ ) -> handleIssueSign document author
       (Preparation, _ ,  True,_, _, _) -> handleIssueSend document author
