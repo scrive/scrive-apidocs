@@ -579,6 +579,8 @@ handleIssueShowPost docid = withUserPost $ do
      
 handleIssueSign document author = do
     ctx@Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber} <- get
+    unless (document `allowsIdentification` EmailIdentification) mzero
+
     mudoc <- updateDocument ctx author document
     case mudoc of 
         Right udoc-> do
@@ -762,6 +764,7 @@ handleIssueSave document author = do
 
 handleIssueSignByAuthor document author = do
     ctx@Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber} <- get
+    unless (document `allowsIdentification` EmailIdentification) mzero
     doc2 <- update $ CloseDocument (documentid document) ctxtime ctxipnumber user Nothing
     case doc2 of
         Nothing -> return $ LinkIssueDoc (documentid document)

@@ -322,6 +322,7 @@ handleIssuePostBankID docid = withUserPost $ do
     document <- queryOrFail $ GetDocumentByDocumentID docid
     
     failIfNotAuthor document author
+    unless (document `allowsIdentification` ELegitimationIdentification) mzero
 
     -- valid transaction?
     ELegTransaction { transactiondocumentid

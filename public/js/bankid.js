@@ -173,15 +173,7 @@ function sign1Success(transactionid, tbs, nonce, servertime, posturl, formselect
       return false;
   }
   var sig = doSign1(tbs);
-  if(sig) {
-    displayLoadingOverlay("Verifierar signatur...");
-	var form = $(formselector);
-	form.find("#signatureinput").val(sig);
-	form.find("#transactionidinput").val(transactionid);
-    form.find("#elegprovider").val("nordea");
-    form.attr("action", posturl);
-	form.submit();
-  }
+  postBack(sig, "nordea", formselector, transactionid, posturl);
 }
 
 function sign2Success(transactionid, tbs, nonce, servertime, posturl, formselector) {
@@ -194,16 +186,8 @@ function sign2Success(transactionid, tbs, nonce, servertime, posturl, formselect
 	flashBankIDMessage();
     return false;
   }
-  var sig = doSign2(tbs, nonce, servertime);    
-  if(sig) {
-    displayLoadingOverlay("Verifierar signatur...");
-	var form = $(formselector);
-	form.find("#signatureinput").val(sig);
-	form.find("#transactionidinput").val(transactionid);
-    form.find("#elegprovider").val("bankid");
-    form.attr("action", posturl);
-	form.submit();
-  }
+  var sig = doSign2(tbs, nonce, servertime);   
+  postBack(sig, "bankid", formselector, transactionid, posturl); 
 }
 
 function netIDSuccess(transactionid, tbs, nonce, servertime, posturl, formselector) {
@@ -217,15 +201,7 @@ function netIDSuccess(transactionid, tbs, nonce, servertime, posturl, formselect
     return false;
   }
   var sig = doSignNetID(tbs, nonce, servertime);    
-  if(sig) {
-    displayLoadingOverlay("Verifierar signatur...");
-	var form = $(formselector);
-	form.find("#signatureinput").val(sig);
-	form.find("#transactionidinput").val(transactionid);
-    form.find("#elegprovider").val("telia");
-    form.attr("action", posturl);
-	form.submit();
-  }
+  postBack(sig, "telia", formselector, transactionid, posturl);
 }
 
 // start the signature for signatory
@@ -480,4 +456,18 @@ function ajaxRequest(ajaxurl, posturl, formselector, successfn, tbs) {
 		    }
 	      },
 		  error: repeatForeverWithDelay(250)});
+}
+
+function postBack(sig, provider, formselector, transactionid, posturl) {
+  if(sig) {
+    displayLoadingOverlay("Verifierar signatur...");
+	var form = $(formselector);
+    form.find("#signauto").attr("name", "dontsign");
+	form.find("#signatureinput").val(sig);
+	form.find("#transactionidinput").val(transactionid);
+    form.find("#elegprovider").val(provider);
+    form.find("#elegprovider").attr("name", "eleg");
+    form.attr("action", posturl);
+	form.submit();
+  }
 }

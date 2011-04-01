@@ -130,7 +130,7 @@ pageDocumentForSignContent=
           <a  class="close cancel">Avbryt</a>
           $if(requireseleg)$
           <span id="elegbuttons">
-            <input type="hidden" name="eleg" id="elegprovider" value=""
+            <input type="hidden" name="changetoeleg" id="elegprovider" value=""
                    /> 
             <input type="hidden" name="signature" value="" id="signatureinput" />
             <input type="hidden" name="transactionid" value="" id="transactionidinput" />
@@ -449,7 +449,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
         </div>
       </div>
       <div class="modal-footer">
-        <input type="hidden" name="sign" value="automatic" />
+        <input type="hidden" name="sign" value="automatic" id="signauto" />
         <a  class="close cancel" style="position:relative;top:6px;">Avbryt</a>
         <a href="#" class="btn-big blue float-right submiter signhidden">
           <div class="left"></div>
@@ -460,7 +460,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
           <div class="right"></div>
         </a>
         <span class="eleghidden" style="display: none;">
-          <input type="hidden" name="eleg" id="elegprovider" value="" />
+          <input type="hidden" name="changetoeleg" id="elegprovider" value="" />
           <input type="hidden" name="signature" value="" id="signatureinput" />
           <input type="hidden" name="transactionid" value="" id="transactionidinput" />
           <a href="#" class="btn-small green float-right author bankid">
@@ -621,7 +621,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
         </div>
       </div>
       <div class="modal-footer">
-        <input type="hidden" name="sign" value="automatic" />
+        <input type="hidden" name="sign" value="automatic" id="signauto" />
         <a class="close cancel">Avbryt</a>
         <a href="#" class="btn-small green float-right submiter signhidden" id="editing-invite-text-finished">
           <div class="left"></div>
@@ -632,7 +632,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
           <div class="right"></div>
         </a>
         <span class="eleghidden" style="display: none;">
-          <input type="hidden" name="eleg" id="elegprovider" value="" />
+          <input type="hidden" name="changetoeleg" id="elegprovider" value="" />
           <input type="hidden" name="signature" value="" id="signatureinput" />
           <input type="hidden" name="transactionid" value="" id="transactionidinput" />
           <a href="#" class="btn-small green float-right author2 bankid">
