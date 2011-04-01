@@ -87,7 +87,7 @@ modalAccountRemoval=
           <div class="right"></div>
         </a>
         <form method="post" action="$removallink$" name="removeaccountform"></form>
-        <a href="#" class="float-left" onclick="document.removeaccountform.submit();return false;" style="color: red; text-decoration: none">Ja</a>
+        <a href="#" class="float-left cancel" onclick="document.removeaccountform.submit();return false;">Ja</a>
       </div>
 </div>
 ###
@@ -107,7 +107,16 @@ modalAccountRemoved=
           Team SkrivaPå</p>
         </div>
       </div>
-      <div class="modal-footer"></div>
+      <div class="modal-footer">
+        <a class="btn-small green float-right close">
+          <div class="left"></div>
+          <div class="label">
+            <p>Ok</p>
+            <div class="btn-symbol green arrow-left"></div>
+          </div>
+          <div class="right"></div>
+        </a>
+      </div>
 </div>
 ###
 modalSendInviteView=
