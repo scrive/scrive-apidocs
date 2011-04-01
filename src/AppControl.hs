@@ -116,6 +116,15 @@ handleRoutes :: Kontra Response
 handleRoutes = msum [
        hget0_allowHttp $ handleHomepage
      , hpost0 $ handleMainReaload
+
+     -- e-legitimation stuff
+     -- I put this stuff up here because someone changed things out from under me
+     -- I will rearrange this later
+     , dir "s" $ hget4  $ BankID.handleSignBankID
+     , dir "s" $ param "eleg" $ hpost3 $ BankID.handleSignPostBankID
+     , dir "d" $ hget2  $ BankID.handleIssueBankID
+     , dir "d" $ param "eleg" $ hpost1 $ BankID.handleIssuePostBankID
+
      , dir "s" $ hget0  $ DocControl.handleSTable
      , dir "s" $ hget3  $ DocControl.handleSignShow
      , dir "s" $ param "sign" $ hpost3 $ DocControl.signDocument
