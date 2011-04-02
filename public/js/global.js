@@ -128,6 +128,11 @@ safeReady(function() {
       if (selectedrows.length==0) {
         return false;
       } else {
+        var sentoropencount = selectedrows.find(".sent").length + selectedrows.find(".open").length
+        if (sentoropencount>0) {
+          addFlashMessage("Det går inte att radera dokument som är skickade eller öppna, var vänliga återkalla dokumentet först.", "red");
+          return false;
+        }
         var deletionDetails = "";
         if (selectedrows.length==1) {
           deletionDetails = jQuery.trim(selectedrows.find(".listname").text());
@@ -136,6 +141,37 @@ safeReady(function() {
           deletionDetails = selectedrows.length + " " + listtype;
         }
         $("#dialog-list-delete-confirm").find(".deletionDetails").text(deletionDetails);
+        return true;
+      }
+    }
+  });
+});
+
+safeReady(function() {
+  $(".listRemind").overlay({
+    mask: standardDialogMask,
+    onBeforeLoad: function() {
+      var selectedrows = $(".listForm").find(".ui-selected");
+      if (selectedrows.length==0) {
+        return false;
+      } else {
+        var sentoropencount = selectedrows.find(".sent").length + selectedrows.find(".open").length;
+        if (sentoropencount!=selectedrows.length) {
+          addFlashMessage("Det går inte att skicka påminnelser för dokument som inte är skickade eller öppna.", "red");
+          return false;
+        }
+        var singlemsg = $("#dialog-list-remind-confirm").find(".singleremindmsg");
+        var multiplemsg = $("#dialog-list-remind-confirm").find(".multipleremindmsg");
+        if (selectedrows.length==1) {
+          var docname = jQuery.trim(selectedrows.find(".listname").text());
+          singlemsg.find(".docname").text(docname);
+          singlemsg.show();
+          multiplemsg.hide();
+        } else {
+          multiplemsg.find(".doccount").text(selectedrows.length);
+          singlemsg.hide();
+          multiplemsg.show();
+        }
         return true;
       }
     }

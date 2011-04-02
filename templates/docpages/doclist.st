@@ -29,6 +29,7 @@ pageContractsList=
 						        <a href="javascript:;"><p>Alternativ</p></a>
 						</div>
                                                 <ul class="tab-dd-opts">
+                                                        <li><a href="javascript:;" rel="#dialog-list-remind-confirm" class="listRemind">Skicka påminnelse</a></li>
 							<li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">Radera</a></li>
 						</ul>
 					</div>
@@ -156,5 +157,38 @@ pageContractsList=
     </div>
   </form>
 $listLocalDialogs()$
+<form method="post" name="form" action="$currentlink$" class="overlay redirectsubmitform" id="dialog-list-remind-confirm" rel=".listForm" style="display:none;">
+    <input type="hidden" name="remind" value="true" />
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-icon message"></div>
+        <div class="modal-title">
+          <h2>Skicka påminnelse</h2>
+        </div>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">
+          <div class="singleremindmsg">
+            Är du säker att du vill skicka en påminnelse til berörda parter i dokumentet <span class="docname"></span>.
+          </div>
+          <div class="multipleremindmsg">
+            Är du säker att du vill skicka en påminnelse til berörda parter för <span class="doccount"></span> dokument.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">        
+        <a class="cancel close float-left" style="height:40px;">  
+          <div class="label">Avbryt</div> 
+        </a>
+        <a class="btn-small green float-right submiter" href="#">
+          <div class="left"></div>
+          <div class="label"><p>OK</p></div>
+          <div class="right"></div>
+        </a>
+      </div>
+    </div>
+  </form>
+
 </div>
 ####

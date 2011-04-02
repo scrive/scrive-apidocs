@@ -1089,6 +1089,41 @@ handleContractArchive = do
     handleIssueArchive
     return $ LinkContracts emptyListParams
 
+{- |
+    This sends out bulk contract reminders.  The functionality is offered in the document
+    list page.  It will make sure the user is actually the author of all the documents,
+    and send out reminders only to signatories who haven't signed on documents that are 
+    pending.
+-}
+handleBulkContractRemind :: Kontra KontraLink
+handleBulkContractRemind = withUserPost $ do
+    ctx@(Context { ctxmaybeuser = Just user, ctxtemplates }) <- get
+    idnumbers <- getCriticalFieldList asValidDocID "doccheck"
+    let ids = map DocumentID idnumbers
+    remindedsiglinks <- fmap concat . sequence . map (\docid -> docRemind ctx user docid) $ ids
+    case (length remindedsiglinks) of
+      0 -> addFlashMsg =<< (liftIO $ flashMessageNoBulkRemindsSent ctxtemplates)
+      n -> addFlashMsg =<< (liftIO $ flashMessageBulkRemindsSent ctxtemplates)
+    return $ LinkContracts emptyListParams
+    where
+      docRemind :: Context -> User -> DocumentID -> Kontra [SignatoryLink]
+      docRemind ctx user docid = do
+        doc <- queryOrFail $ GetDocumentByDocumentID docid
+        failIfNotAuthor doc user
+        case (documentstatus doc) of
+          Pending -> do
+            let isElegible siglink = (isNothing $ maybesigninfo siglink) && (not $ isAuthor doc siglink)
+                unsignedsiglinks = filter isElegible $ documentsignatorylinks doc
+            sequence . map (sigRemind ctx user doc) $ unsignedsiglinks
+          _ -> return []
+      sigRemind :: Context -> User -> Document -> SignatoryLink -> Kontra SignatoryLink
+      sigRemind ctx author doc signlink = do
+        mail <- liftIO $ mailDocumentRemind (ctxtemplates ctx) Nothing ctx doc signlink author
+        liftIO $ sendMail (ctxmailer ctx) 
+                         (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )],
+                          mailInfo = Invitation  (documentid doc) (signatorylinkid signlink) })
+        return signlink
+
 handleTemplateArchive :: Kontra KontraLink
 handleTemplateArchive = do
     handleIssueArchive

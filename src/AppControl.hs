@@ -143,6 +143,7 @@ handleRoutes = msum [
      , dir "d" $ hget2  $ DocControl.handleIssueShowTitleGet
      , dir "d" $ {- param "doc" $ -} hpost0 $ DocControl.handleIssueNewDocument
      , dir "d" $ param "archive" $ hpost0 $ DocControl.handleContractArchive
+     , dir "d" $ param "remind" $ hpost0 $ DocControl.handleBulkContractRemind
      , dir "d" $ hpost0 $ DocControl.handleContractsReload
      , dir "d" $ hpost1 $ DocControl.handleIssueShowPost
      , dir "df" $ hget2 $ DocControl.handleFileGet
