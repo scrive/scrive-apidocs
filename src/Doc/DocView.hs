@@ -21,6 +21,8 @@ module Doc.DocView (
   , flashAuthorSigned
   , flashMessageFailedToParseCSV
   , flashMessageCSVHasTooManyRows
+  , flashMessageBulkRemindsSent
+  , flashMessageNoBulkRemindsSent
   , modalRejectedView
   , defaultInviteMessage
   , mailDocumentRemind
@@ -163,6 +165,14 @@ flashMessageFailedToParseCSV templates =
 flashMessageCSVHasTooManyRows :: Int -> KontrakcjaTemplates -> IO FlashMessage
 flashMessageCSVHasTooManyRows maxrows templates = 
   toFlashMsg OperationFailed <$> (renderTemplate templates "flashMessageCSVHasTooManyRows" $ field "maxrows" maxrows)
+
+flashMessageBulkRemindsSent :: KontrakcjaTemplates -> IO FlashMessage
+flashMessageBulkRemindsSent templates =
+  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageBulkRemindsSent" ()
+
+flashMessageNoBulkRemindsSent :: KontrakcjaTemplates -> IO FlashMessage
+flashMessageNoBulkRemindsSent templates =
+  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageNoBulkRemindsSent" ()
 
 -- All doc view
 singlnkFields :: SignatoryLink -> Fields
