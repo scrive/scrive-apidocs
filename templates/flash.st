@@ -176,3 +176,7 @@ flashMessageEmailIsRequired=E-post krävs.
 ###
 flashMessageNumberIsRequired=Nummer krävs.
 ###
+flashMessageBulkRemindsSent=Påminnelse har skickats till alla parter som ännu inte signerat.
+###
+flashMessageNoBulkRemindsSent=Tyvärr, det finns inga parter som återstår att underteckna.
+###
