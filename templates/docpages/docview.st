@@ -119,7 +119,7 @@ pageDocumentForSignContent=
                    <h3>Välj typ av e-legitimation</h3>
                    <p>Har du ingen e-legitimation? Du kan ladda ned en
                      e-legitimation från din internetbank eller från
-                     Telia. <a href="http://www.telia.se/privat/produkter_tjanster/bredband/tjanster/sakerhetstjanster/e-leg.faq.page#4"
+                     Telia. <a href="http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86"
                                target="_new">Klicka här</a> för att läsa mer.</p>
                  </span>
                  $endif$
@@ -431,7 +431,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
             <h3>Välj typ av e-legitimation</h3>
             <p>Har du ingen e-legitimation? Du kan ladda ned en
               e-legitimation från din internetbank eller från
-              Telia. <a href="http://www.telia.se/privat/produkter_tjanster/bredband/tjanster/sakerhetstjanster/e-leg.faq.page#4"
+              Telia. <a href="http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86"
                         target="_new">Klicka här</a> för att läsa mer.</p>
           </span>
         </div>
@@ -594,6 +594,13 @@ pageDocumentForAuthorHelpersLocalDialogs=
           <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
           <p>När $partyUnsigned:noescape()$ undertecknat blir avtalet <strong>juridiskt bindande</strong> och
             det färdigställda avtalet skickas till din e-post.</p>
+          <span class="eleghidden" style="display:none;">
+            <h3>Välj typ av e-legitimation</h3>
+            <p>Har du ingen e-legitimation? Du kan ladda ned en
+              e-legitimation från din internetbank eller från
+              Telia. <a href="http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86"
+                        target="_new">Klicka här</a> för att läsa mer.</p>
+          </span>
         </div>
       </div>
       <div class="modal-footer">
