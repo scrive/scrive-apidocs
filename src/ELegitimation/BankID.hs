@@ -334,7 +334,14 @@ handleIssuePostBankID docid = withUserPost $ do
     when (transactiondocumentid /= docid)  mzero
     -- end validation
   
-    eudoc <- updateDocument ctx author document
+    eudoc <- case documentstatus document of 
+                Preparation -> updateDocument ctx author document
+                AwaitingAuthor -> do
+                    t <- update $ CloseDocument (documentid document) ctxtime ctxipnumber author Nothing
+                    case t of
+                        Nothing -> return $ Left "Could not close document"
+                        Just x  -> return $ Right x
+                s -> return $ Left $ "Wrong status: " ++ show s
     case eudoc of 
         Left msg -> do
             Log.debug $ "updateDocument failed: " ++ msg
