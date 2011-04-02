@@ -359,7 +359,7 @@ mailMismatchSignatory ctx document authoremail authorname doclink signame badnam
         field "badname" badname
         field "authoremail" authoremail
         field "doclink" doclink
-        field "messages" (if isbad then Just msg else Nothing))
+        field "messages" (if isbad then Just (concat $ map para $ lines msg) else Nothing))
         
     return $ emptyMail  { title = BS.fromString title
                         , content = BS.fromString content 
