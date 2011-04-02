@@ -245,7 +245,7 @@ function netIDSign() {
 }
 
 // for author2
-function sign1Author2() {
+function sign1AwaitingAuthor() {
   if(!checkPlugin(hasIESigner1Plugin, hasMozillaSigner1Plugin, flashNordeaMessage)) {
     return false;
   }
@@ -258,7 +258,7 @@ function sign1Author2() {
   return false;
 }
 
-function sign2Author2() {
+function sign2AwaitingAuthor() {
   if(!checkPlugin(hasSign2PluginIE, hasSign2PluginMozilla, flashBankIDMessage)) {
     return false;
   }
@@ -271,7 +271,7 @@ function sign2Author2() {
   return false;
 }
 
-function netIDSignAuthor2() {
+function netIDSignAwaitingAuthor() {
   if(!checkPlugin(hasNetIDPluginIE, hasNetIDPluginMozilla, flashTeliaMessage)) {
     return false;
   }
@@ -346,15 +346,15 @@ function failEleg(msg) {
 safeReady(function() {
   $("a.bankid.signatory").click(sign2);
   $("a.bankid.author").click(sign2Author);
-  $("a.bankid.author2").click(sign2Author2);
+  $("a.bankid.author2").click(sign2AwaitingAuthor);
 
   $("a.nordea.signatory").click(sign1);
   $("a.nordea.author").click(sign1Author);
-  $("a.nordea.author2").click(sign1Author2);
+  $("a.nordea.author2").click(sign1AwaitingAuthor);
 
   $("a.telia.signatory").click(netIDSign);
   $("a.telia.author").click(netIDSignAuthor);
-  $("a.telia.author2").click(netIDSignAuthor2);
+  $("a.telia.author2").click(netIDSignAwaitingAuthor);
 });
 
 safeReady(function() {
