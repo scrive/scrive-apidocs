@@ -705,6 +705,9 @@ pageDocumentForAuthorContentPostPreparation=
 
 $if(awaitingauthor)$
 <script type="text/javascript" src="/js/bankid.js"> </script>
+<div style="display:none;">
+$validationdropdown()$
+</div>
 <div id="signViewBottomBox"> 
   <div id="signViewBottomBoxContainerLeft"> 
     <div id="signViewBottomBoxContainerLeftText"> 
