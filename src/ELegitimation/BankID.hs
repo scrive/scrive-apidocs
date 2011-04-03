@@ -404,7 +404,7 @@ handleIssuePostBankID docid = withUserPost $ do
                                     mndoc <- case documentstatus document of
                                                 Preparation -> update $ AuthorSignDocument (documentid d) ctxtime ctxipnumber author $ Just signinfo
                                                 AwaitingAuthor -> do
-                                                    ed <- update $ CloseDocument (documentid document) ctxtime ctxipnumber author Nothing
+                                                    ed <- update $ CloseDocument (documentid document) ctxtime ctxipnumber author $ Just signinfo
                                                     case ed of
                                                         Nothing -> return $ Left "could not close document"
                                                         Just d -> return $ Right d
