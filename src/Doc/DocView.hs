@@ -37,6 +37,7 @@ module Doc.DocView (
   , uploadPage
   , templatesForAjax
   , getDataMismatchMessage
+  , modalSignAwaitingAuthorLast
   ) where
 
 import Control.Applicative ((<$>))
@@ -65,6 +66,11 @@ import Data.List (isInfixOf,sortBy)
 import Data.Monoid
 import ListUtil
 import Control.Monad.Reader
+
+modalSignAwaitingAuthorLast :: KontraModal
+modalSignAwaitingAuthorLast = do
+    templates <- ask
+    lift $ renderTemplate templates "signAwaitingAuthorLast" ()
 
 modalSignInviteView :: Document -> KontraModal
 modalSignInviteView document = do
