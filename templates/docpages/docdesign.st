@@ -152,13 +152,13 @@ $endif$
                            alt="drag" />
                     </span>
                     $endif$
-                    $if(authorcompanynumber)$
+                    $if(authorpersonnumber)$
                     <span class='dragtext authornum inputWrapper'>
                       <span style="display:none;" class="fieldid">number</span>
                       <span style="display:none;" class="fieldsigid">author</span>
                       <span style="display:none;"
                             class="type">sig</span>
-                      <span class="fieldvalue">$authorcompanynumber$</span>
+                      <span class="fieldvalue">$authorpersonnumber$</span>
                       <img src="/theme/images/iconHand.png" class="draghandle" 
                            alt="drag" />
                     </span>
