@@ -233,7 +233,7 @@ handleSignPostBankID docid signid magic = do
                             postDocumentChangeAction document2 olddocumentstatus (Just signid)
                             signatorylink <- signatoryLinkFromDocumentByID document signid
                             maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
-                            addModal $  modalSignedView document signatorylink (isJust maybeuser) (isJust ctxmaybeuser)
+                            addModal $  modalSignedView document2 signatorylink (isJust maybeuser) (isJust ctxmaybeuser)
                             return $ LinkSignDoc document2 signatorylink
 
 {- |
