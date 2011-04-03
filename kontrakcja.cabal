@@ -111,7 +111,7 @@ Executable kontrakcja-server
  Build-Depends: html
  Build-Depends: MissingH
  Build-Depends: temporary==1.1.1
- Build-Depends: regex-posix
+ Build-Depends: regex-tdfa
  Build-Depends: parsec
 
  Main-Is: Main.hs
