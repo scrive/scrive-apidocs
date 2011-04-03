@@ -241,7 +241,7 @@ handleViralInvite = withUserPost $ do
                     addFlashMsg =<< (liftIO $ flashMessageViralInviteSent $ ctxtemplates ctx)
                     link <- newViralInvitationSentLink (Email invitedemail) (userid . fromJust $ ctxmaybeuser ctx)
                     mail <- liftIO $ viralInviteMail (ctxtemplates ctx) ctx invitedemail link
-                    liftIO $ sendMail (ctxmailer ctx) $ mail { fullnameemails = [(BS.empty, invitedemail)] }
+                    scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [(BS.empty, invitedemail)] }
                     return LoopBack
 
 randomPassword :: IO BS.ByteString
@@ -264,12 +264,12 @@ createUser ctx hostpart names email maybesupervisor vip = do
                           Just supervisor -> do
                               al <- newAccountCreatedLink user
                               inviteSubaccountMail (ctxtemplates ctx) hostpart (prettyName  supervisor) (usercompanyname $ userinfo supervisor) email fullname al
-             sendMail (ctxmailer ctx) $ mail { fullnameemails = [(fullname, email)] }
+             scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [(fullname, email)] }
              return muser
          Nothing -> return muser
 
 createUserBySigning :: Context -> BS.ByteString -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> BS.ByteString -> (DocumentID, SignatoryLinkID) -> IO (Maybe User)
-createUserBySigning Context{ctxmailer, ctxtemplates, ctxhostpart} doctitle names email companyname doclinkdata =
+createUserBySigning Context{ctxesenforcer, ctxtemplates, ctxhostpart} doctitle names email companyname doclinkdata =
     createInvitedUser names email >>= maybe (return Nothing) (\user -> do
         update $ SetUserInfo (userid user) $ (userinfo user) {
             usercompanyname = companyname
@@ -277,7 +277,7 @@ createUserBySigning Context{ctxmailer, ctxtemplates, ctxhostpart} doctitle names
         let fullname = composeFullName names
         (al, rl) <- newAccountCreatedBySigningLink user doclinkdata
         mail <- mailAccountCreatedBySigning ctxtemplates ctxhostpart doctitle fullname al rl
-        sendMail ctxmailer $ mail { fullnameemails = [(fullname, email)] }
+        scheduleEmailSendout ctxesenforcer $ mail { fullnameemails = [(fullname, email)] }
         return $ Just user
     )
 
@@ -292,7 +292,7 @@ createNewUserByAdmin ctx names email freetill custommessage = do
              update $ SetInviteInfo (ctxmaybeuser ctx) now Admin (userid user)
              chpwdlink <- newAccountCreatedLink user
              mail <- mailNewAccountCreatedByAdmin (ctxtemplates ctx) ctx fullname email chpwdlink custommessage
-             sendMail (ctxmailer ctx) $ mail { fullnameemails = [(fullname, email)]}
+             scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [(fullname, email)]}
              return muser
          Nothing -> return muser
 
@@ -374,7 +374,7 @@ handleRequestAccount = do
     case memail of
          Nothing -> return LinkMain
          Just email -> do
-             liftIO $ sendMail (ctxmailer ctx) $ emptyMail {
+             scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail {
                  fullnameemails = [(BS.fromString "prelaunch@skrivapa.se", BS.fromString "prelaunch@skrivapa.se")]
                  , title = BS.fromString $ "New account request"
                  , content = BS.fromString $ "Request from address " ++ (BS.toString email)
@@ -396,7 +396,7 @@ handleQuestion = do
                         ++ "email: "   ++ BS.toString email ++ "<BR/>"
                         ++ "phone "    ++ fromMaybe "" phone ++ "<BR/>"
                         ++ "message: " ++ fromMaybe "" message
-             liftIO $ sendMail (ctxmailer ctx) $ emptyMail {
+             scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail {
                    fullnameemails = [(BS.fromString "info@skrivapa.se",BS.fromString "info@skrivapa.se")]
                  , title = BS.fromString $ "Question"
                  , content = BS.fromString $ content
@@ -497,7 +497,7 @@ handleAccountSetupPost aid hash = do
                             ctx <- get
                             al <- newAccountCreatedLink user
                             mail <- liftIO $ newUserMail (ctxtemplates ctx) (ctxhostpart ctx) email email al False
-                            liftIO $ sendMail (ctxmailer ctx) $ mail { fullnameemails = [(email, email)] }
+                            scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [(email, email)] }
                             addFlashMsg =<< (liftIO $ flashMessageNewActivationLinkSend  (ctxtemplates ctx))
                             return LinkMain
                         else mzero
