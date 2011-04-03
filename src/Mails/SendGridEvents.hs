@@ -103,6 +103,6 @@ handleUndeliveredInvitation docid signlinkid = do
                                                                         ("unsigneddoclink", show $ LinkIssueDoc $ documentid doc),
                                                                         ("ctxhostpart",ctxhostpart ctx)  
                                                                        ]  
-                    liftIO $ sendMail (ctxmailer ctx)  $  emptyMail {title=BS.fromString title,content=BS.fromString content,fullnameemails = fullnameemails}
+                    scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail {title=BS.fromString title,content=BS.fromString content,fullnameemails = fullnameemails}
                   Nothing -> return () 
      _ -> return ()                                                                                  

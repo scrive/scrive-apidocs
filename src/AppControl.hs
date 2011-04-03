@@ -93,6 +93,8 @@ data AppGlobals
     = AppGlobals { templates       :: KontrakcjaTemplates
                  , filecache       :: MemCache.MemCache FileID BS.ByteString
                  , mailer          :: Mailer
+                 , docscache       :: MVar (Map.Map FileID JpegPages)
+                 , esenforcer      :: MVar ()
                  }
 
 {- |
@@ -277,15 +279,15 @@ defaultAWSAction appConf =
 {- |
    Creates a context, routes the request, and handles the session.
 -}
-appHandler :: AppConf -> AppGlobals -> MVar (Map.Map FileID JpegPages) -> ServerPartT IO Response
-appHandler appConf appGlobals docs = do
+appHandler :: AppConf -> AppGlobals -> ServerPartT IO Response
+appHandler appConf appGlobals = do
   let quota = 10000000
   temp <- liftIO $ getTemporaryDirectory
   decodeBody (defaultBodyPolicy temp quota quota quota)
 
   rq <- askRq
   session <- handleSession
-  ctx <- createContext rq session docs
+  ctx <- createContext rq session
   handle rq session ctx
   where
     handle :: Request -> Session -> Context -> ServerPartT IO Response
@@ -308,8 +310,8 @@ appHandler appConf appGlobals docs = do
       updateSessionWithContextData session newsessionuser newflashmessages newelegtrans
       return res
 
-    createContext :: Request -> Session -> MVar (Map.Map FileID JpegPages) -> ServerPartT IO Context
-    createContext rq session docs = do
+    createContext :: Request -> Session -> ServerPartT IO Context
+    createContext rq session = do
       hostpart <- getHostpart
       -- FIXME: we should read some headers from upstream proxy, if any
       let peerhost = case getHeader "x-real-ip" rq of
@@ -343,13 +345,13 @@ appHandler appConf appGlobals docs = do
                 , ctxhostpart = hostpart
                 , ctxflashmessages = flashmessages
                 , ctxtime = minutestime
-                , ctxnormalizeddocuments = docs
+                , ctxnormalizeddocuments = docscache appGlobals
                 , ctxipnumber = peerip
                 , ctxdocstore = docstore appConf
                 , ctxs3action = defaultAWSAction appConf
                 , ctxproduction = production appConf
                 , ctxtemplates = templates2
-                , ctxmailer = mailer appGlobals
+                , ctxesenforcer = esenforcer appGlobals
                 , ctxtwconf = TW.TrustWeaverConf 
                               { TW.signConf = trustWeaverSign appConf
                               , TW.adminConf = trustWeaverAdmin appConf
@@ -390,7 +392,7 @@ sendResetPasswordMail user = do
     ctx <- get
     chpwdlink <- newPasswordReminderLink user
     mail <-liftIO $ UserView.resetPasswordMail (ctxtemplates ctx) (ctxhostpart ctx) user chpwdlink
-    liftIO $ sendMail (ctxmailer ctx) $ mail { fullnameemails = [((userfullname user), (unEmail $ useremail $ userinfo user))] }
+    scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [((userfullname user), (unEmail $ useremail $ userinfo user))] }
 
 {- |
    Handles viewing of the signup page
@@ -438,7 +440,7 @@ signup vip freetill =  do
                          then do
                              al <- newAccountCreatedLink user
                              mail <- liftIO $ newUserMail (ctxtemplates) (ctxhostpart) email email al vip
-                             liftIO $ sendMail (ctxmailer ctx) $ mail { fullnameemails = [(email, email)] }
+                             scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [(email, email)] }
                              addFlashMsg =<< (liftIO $ flashMessageNewActivationLinkSend  (ctxtemplates))
                              return LoopBack
                          else do
@@ -460,11 +462,11 @@ signup vip freetill =  do
    Sends a new activation link mail, which is really just a new user mail.
 -}
 sendNewActivationLinkMail:: Context -> User -> Kontra ()
-sendNewActivationLinkMail Context{ctxtemplates,ctxhostpart,ctxmailer} user = do
+sendNewActivationLinkMail Context{ctxtemplates,ctxhostpart,ctxesenforcer} user = do
     let email = unEmail $ useremail $ userinfo user
     al <- newAccountCreatedLink user
     mail <- liftIO $ newUserMail ctxtemplates ctxhostpart email email al False
-    liftIO $ sendMail ctxmailer $ mail { fullnameemails = [(email, email)] }
+    scheduleEmailSendout ctxesenforcer $ mail { fullnameemails = [(email, email)] }
 
 {- |
    Handles viewing of the login page

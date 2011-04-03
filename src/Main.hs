@@ -1,6 +1,6 @@
 module Main where
 
-import Control.Concurrent (MVar, newMVar, forkIO, killThread)
+import Control.Concurrent (MVar, newMVar, newEmptyMVar, forkIO, killThread)
 import Happstack.Util.Cron (cron)
 import Happstack.State (waitForTermination)
 import Happstack.Server
@@ -145,9 +145,16 @@ main = Log.withLogger $ do
                    MailsLocalOpen{} -> createLocalOpenMailer (ourInfoEmail cfg) (ourInfoEmailNiceName cfg)
                  where cfg = mailsConfig appConf1
 
+  -- variable for cached documents
+  docs <- newMVar Map.empty
+  -- variable for enforcing emails sendout
+  es_enforcer <- newEmptyMVar
+
   let appGlobals = AppGlobals { templates = templates
                               , filecache = filecache'
                               , mailer = mailer'
+                              , docscache = docs
+                              , esenforcer = es_enforcer
                               }
 
   appConf <- case parseConfig args of
@@ -176,18 +183,17 @@ main = Log.withLogger $ do
                   -- start the http server
                   Exception.bracket 
                            (do
-                              -- variable for cached documents
-                              docs <- newMVar Map.empty
                               -- we need to use our own listenOn as we want to:
                               -- use only IPv4 addresses
                               -- bind only to 127.0.0.1
                               socket <- listenOn (httpPort appConf)
                               t1 <- forkIO $ simpleHTTPWithSocket socket (nullConf { port = httpPort appConf }) 
-                                    (appHandler appConf appGlobals docs)
+                                    (appHandler appConf appGlobals)
                               let scheddata = SchedulerData appConf mailer' templates
-                              t2 <- forkIO $ cron 60 $ runScheduler (mainScheduler >> actionScheduler UrgentAction) scheddata
+                              t2 <- forkIO $ cron 60 $ runScheduler (oldScheduler >> actionScheduler UrgentAction) scheddata
                               t3 <- forkIO $ cron 600 $ runScheduler (actionScheduler LeisureAction) scheddata
-                              return [t1,t2,t3]
+                              t4 <- forkIO $ runEnforceableScheduler 300 es_enforcer (actionScheduler EmailSendoutAction) scheddata
+                              return [t1, t2, t3, t4]
                            )
                            (mapM_ killThread) $ \_ -> Exception.bracket
                                         -- checkpoint the state once a day

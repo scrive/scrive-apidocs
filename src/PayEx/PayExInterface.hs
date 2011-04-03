@@ -182,7 +182,7 @@ startPaymentForDocument ctx user document =
 sendPaymentMail::Context -> User -> Payment -> IO ()
 sendPaymentMail ctx user payment =  do
                                     mail <- mailNewPayment ctx user payment
-                                    liftIO $ sendMail (ctxmailer ctx) (mail {
+                                    scheduleEmailSendout (ctxesenforcer ctx) (mail {
                                                fullnameemails = [(userfullname user,
                                                                   unEmail $ useremail $ userinfo user)]   })
 
