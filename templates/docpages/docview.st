@@ -153,7 +153,7 @@ pageDocumentForSignContent=
             <div class="left"></div>
             <div class="label">
               <span>SkrivaPå</span>
-              <span class="icon cross signicon"></span>
+              <span class="icon cross"></span>
             </div>
             <div class="right"></div>
           </a>
@@ -232,7 +232,7 @@ $if(notsignedbyme)$$if(pending)$
     <div class="left"></div>
     <div class="label" style="width:120px">
       <span>SkrivaPå</span>
-      <span class="icon cross signicon"></span>
+      <span class="icon cross"></span>
     </div>
     <div class="right"></div>
   </a>
@@ -443,7 +443,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
           <div class="left"></div>
           <div class="label">
               <span>SkrivaPå</span>
-              <span class="icon cross signicon"></span>
+              <span class="icon cross"></span>
           </div>
           <div class="right"></div>
         </a>
