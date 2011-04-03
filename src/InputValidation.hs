@@ -51,7 +51,7 @@ import qualified Data.ByteString.UTF8 as BS
 import Data.Char
 import Data.Int
 import Data.Maybe
-import Text.Regex.Posix ((=~))
+import Text.Regex.TDFA ((=~))
 import Text.XML.HaXml.Parse (xmlParse')
 import Text.XML.HaXml.Posn
 import Text.XML.HaXml.Types
@@ -242,18 +242,18 @@ withFailure _        = mzero
     Validating emails is bizarrely hard.  These rules define a subset of what the official rules (RFC) would allow you to have.  This is because the official rules are very liberal, and email providers in practise aren't that liberal.  So this is kind of a, hopefully, practical compromise. So officially “Abc\@def”@example.com is a valid email address, but really if a user put that in, it's got to be wrong!
     Rules:
     * It must contain an @ character
-    * Before the @ character there must appear one of more of the following: Full-stop ., Underscore _, Percentage %, Plus +, Hyphen -, ASCII letters a-z and A-Z, digits 0-9.
+    * Before the @ character there must appear one of more of the following: Full-stop ., Underscore _, Percentage %, Plus +, Hyphen -, ASCII letters a-z and A-Z, digits 0-9, and nordic chars æ, Æ, ä, Ä, ø, Ø, ö, Ö, å, Å
     * After the @ character you must have a full-stop .
     * Between the @ character and the full-stop you must have one of the following: Full-stop ., Hyphen -, ASCII letters a-z and A-Z, digits 0-9.
     * After the full-stop there must be either two, three or four characters and these can be: ASCII letters a-z and A-Z.
-    * Size: Up to 100 characters
+    * Size: Up to 200 characters
   Also emails are lowercased.  
 -}
 asValidEmail :: String -> Result BS.ByteString
 asValidEmail input = 
     stripWhitespace input
     >>= checkIfEmpty
-    >>= checkLengthIsMax 100 fieldtemplate
+    >>= checkLengthIsMax 200 fieldtemplate
     >>= checkFormat
     >>= mkLowerCase
     >>= mkByteString
@@ -262,31 +262,32 @@ asValidEmail input =
           checkFormat email | isValidFormat email = return email
                             | otherwise = Bad $ flashMessageInvalidFormat fieldtemplate
           isValidFormat :: String -> Bool
-          isValidFormat = (=~ "^[[:alnum:]._%+-]+@[[:alnum:].-]+[.][[:alpha:]]{2,4}$")
+          isValidFormat = (=~ "^[æÆäÄøØöÖåÅ[:alnum:]._%+-]+@[[:alnum:].-]+[.][[:alpha:]]{2,4}$")
 
 {- |
     Creates an email that hasn't been completely validated.  It still does handy things
     like trimming whitespace and lowercasing though.  This is useful in situations
     like checking a login.  Because it's dirty make sure you through it away,
-    and don't store it. -- BUG DON'T LOWERCASE, poor uses registered with upper cases in their
-    addresses would be shut out!
+    and don't store it.
 -}
 asDirtyEmail :: String -> Result BS.ByteString
 asDirtyEmail input =
-    checkIfEmpty input
+    stripWhitespace input
+    >>= checkIfEmpty
+    >>= mkLowerCase
     >>= mkByteString
 
 {- |
     Creates a clean and validated password.
-    White list: Alphabetic characters, Digits [0-9], Punctuation characters, and Symbols (such as $)
+    White list: Alphabetic characters, Digits [0-9], Punctuation characters, and Symbols (such as $) or spaces (to accommodate people who like to use passphrases)
     Rules: Must contain at least one Alphabetic character, and one Digit [0-9]
-    Size: At least 8 chars.  No more than 25 chars.
+    Size: At least 8 chars.  No more than 250 chars.
 -}
 asValidPassword :: String -> Result BS.ByteString
 asValidPassword input =
     checkIfEmpty input
     >>= checkLengthIsMin 8 fieldtemplate
-    >>= checkLengthIsMax 25 fieldtemplate
+    >>= checkLengthIsMax 250 fieldtemplate
     >>= checkOnly [isAlpha, isDigit, isPunctuation, isSymbol] fieldtemplate
     >>= checkContainsAlphaAndDigit
     >>= mkByteString
@@ -313,13 +314,13 @@ asDirtyPassword input =
 {- |
     Creates a clean and validated name (works for first or second)
     White list: Space, Apostrophe ', Hyphen -, Alphabetic characters
-    Size: Up to 50 chars
+    Size: Up to 100 chars
 -}
 asValidName :: String -> Result BS.ByteString 
 asValidName input =
     stripWhitespace input
     >>= checkIfEmpty
-    >>= checkLengthIsMax 50 fieldtemplate
+    >>= checkLengthIsMax 100 fieldtemplate
     >>= checkOnly (isAlpha : map (==) " \'-") fieldtemplate
     >>= mkByteString
     where fieldtemplate = "nameFieldName"
@@ -339,17 +340,16 @@ asValidCompanyName input =
     where fieldtemplate = "companyNameFieldName"
 
 {- |
-    Creates a clean and validated company number.
-    Maybe this needs to be more specific, it looks like Swedish companies may all have numbers that are composed of 6 digits, a hyphen, and then 4 digits.  So restricting to this may be more appropriate.
-    White list: Hyphen -, Digits 0-9, ASCII Letters a-z and A-Z
-    Size: From 4 to 15 chars
+    Creates a clean and validated company or individual number.
+    White list: Alphabetic characters, Numeric characters, punctuation 
+    Size: From 4 to 50 chars
 -}
 asValidCompanyNumber :: String -> Result BS.ByteString
 asValidCompanyNumber input =
     stripWhitespace input
     >>= checkIfEmpty
     >>= checkLengthIsMin 4 fieldtemplate
-    >>= checkLengthIsMax 15 fieldtemplate
+    >>= checkLengthIsMax 50 fieldtemplate
     >>= checkOnly [isDigit, (`elem` ['a'..'z']), (`elem` ['A'..'Z']), (=='-')] fieldtemplate
     >>= mkByteString
     where fieldtemplate = "companyNumberFieldName"     
@@ -465,13 +465,13 @@ asValidPlace input =
 {- |
     Creates a clean and validated field name
     White list: Space, Hyphen -, Alphabetic characters, Numeric characters
-    Size: Up to 25 chars
+    Size: Up to 50 chars
 -}
 asValidFieldName :: String -> Result BS.ByteString
 asValidFieldName input =
     stripWhitespace input
     >>= checkIfEmpty
-    >>= checkLengthIsMax 25 fieldtemplate
+    >>= checkLengthIsMax 50 fieldtemplate
     >>= checkOnly (isAlphaNum : map (==) " -") fieldtemplate
     >>= mkByteString
     where fieldtemplate = "fieldNameFieldName"
