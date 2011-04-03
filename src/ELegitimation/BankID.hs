@@ -326,7 +326,7 @@ handleIssuePostBankID docid = withUserPost $ do
     document <- queryOrFail $ GetDocumentByDocumentID docid
     
     failIfNotAuthor document author
-    unless (document `allowsIdentification` ELegitimationIdentification) mzero
+
 
     -- valid transaction?
     ELegTransaction { transactiondocumentid
@@ -337,7 +337,7 @@ handleIssuePostBankID docid = withUserPost $ do
 
     when (transactiondocumentid /= docid)  mzero
     -- end validation
-  
+    Log.debug $ "document status on post: " ++ show (documentstatus document)
     eudoc <- case documentstatus document of 
                 Preparation -> updateDocument ctx author document
                 AwaitingAuthor -> return $ Right document
@@ -349,6 +349,7 @@ handleIssuePostBankID docid = withUserPost $ do
             addFlashMsg $ toFlashMsg OperationFailed "Could not save document."
             return LinkMain
         Right udoc -> do
+            unless (udoc `allowsIdentification` ELegitimationIdentification) mzero
             providerCode <- providerStringToNumber provider
             res <- verifySignature providerCode
                     transactionencodedtbs
