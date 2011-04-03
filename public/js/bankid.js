@@ -110,6 +110,8 @@ function doSign1(tbs, posturl) {
     signer.SetIncludeRootCaCert('true');
     signer.SetBase64('true');
     signer.SetCharacterEncoding('UTF8');
+    signer.SetMimeType('text/plain;charset=UTF-8');
+    signer.SetViewData('false');
     if (signer.Sign() == 0) {
 	  return unescape(signer.GetSignature());
     } else {
