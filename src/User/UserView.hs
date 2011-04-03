@@ -37,7 +37,6 @@ module User.UserView (
     flashMessageActivationLinkNotValid,
     flashMessageUserActivated,
     flashMessageUserAlreadyActivated,
-    flashMessageNoSuchUserExists,
     flashMessageChangePasswordEmailSend,  
     flashMessageNewActivationLinkSend,
     flashMessageUserSignupDone,
@@ -308,12 +307,6 @@ flashMessageUserActivated templates =
 flashMessageUserAlreadyActivated :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageUserAlreadyActivated templates =
   toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageUserAlreadyActivated" ()
-
-
-flashMessageNoSuchUserExists :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageNoSuchUserExists templates =
-  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageNoSuchUserExists" ()
-
 
 flashMessageChangePasswordEmailSend :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageChangePasswordEmailSend templates =
