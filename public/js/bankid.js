@@ -113,10 +113,10 @@ function doSign1(tbs, posturl) {
     if (signer.Sign() == 0) {
 	  return unescape(signer.GetSignature());
     } else {
-      elegFail("Din signerings plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör; " + signer.GetErrorString());      
+      failEleg("Din signerings plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör; " + signer.GetErrorString());      
     }
   } else {
-    elegFail("Din signerings plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör.");
+    failEleg("Din signerings plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör.");
   }
   return null;
 }
@@ -133,10 +133,10 @@ function doSign2 (tbs, nonce, servertime) {
     if (res == 0) {
 	  return signer2.GetParam('Signature');
     } else {
-      elegFail("Din signerings plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör; error code: " + res);
+      failEleg("Din signerings plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör; error code: " + res);
     }
   } else {
-    elegFail("Din signerings plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör.");
+    failEleg("Din signerings plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör.");
   }
   return null;
 }
@@ -153,10 +153,10 @@ function doSignNetID (tbs, nonce, servertime) {
     if (res == 0) {
 	  return signer.GetProperty('Signature');
     } else {
-      elegFail("Din signerings plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör; error code: " + res);
+      failEleg("Din signerings plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör; error code: " + res);
     }
   } else {
-    elegFail("Din signerings plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör.");
+    failEleg("Din signerings plugin misslyckades med att signera dokumentet. Var vänlig och kontakta din e-legitimationsleverantör.");
   }
   return null;
 }
@@ -337,7 +337,6 @@ function flashTeliaMessage() {
   addFlashMessage("Du har inte Telias e-legitimation installerad.", "red");
 }
 
-
 function failEleg(msg) {
   addFlashMessage(msg, "red");
   closeLoadingOverlay();
@@ -395,11 +394,14 @@ function getSignatoryData() {
     return $(el).val();
   });
   
-  if(isAuthorSecretary()) {
+  if(!isAuthorSecretary()) {
     var authordetails = $(".authordetails");
-    fnames.push(authordetails.find(".authorfstname .fieldvalue").val());
-    lnames.push(authordetails.find(".authorsndname .fieldvalue").val());
-    nums  .push(authordetails.find(".authornum .fieldvalue"    ).val());
+    var fn = authordetails.find(".authorfstname .fieldvalue");
+    var ln = authordetails.find(".authorsndname .fieldvalue");
+    var nm = authordetails.find(".authornum .fieldvalue"    );
+    fnames.push(fn.size() > 0 ? fn.text() : "no first name"   );
+    lnames.push(ln.size() > 0 ? ln.text() : "no last name"    );
+    nums  .push(nm.size() > 0 ? nm.text() : "no personnnummer");
   }
 
   var ret = [];
