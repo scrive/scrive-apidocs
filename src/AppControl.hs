@@ -375,13 +375,13 @@ forgotPasswordPagePost = do
         Just email -> do
             muser <- query $ GetUserByEmail $ Email email                    
             case muser of 
-                Nothing -> do 
-                    addFlashMsg =<< (liftIO $ flashMessageNoSuchUserExists $ ctxtemplates ctx)
-                    return LoopBack
+                Nothing -> do
+                    return ()
                 Just user -> do
                     sendResetPasswordMail user
-                    addFlashMsg =<< (liftIO $ flashMessageChangePasswordEmailSend $ ctxtemplates ctx)
-                    return LinkMain
+                    return ()
+            addFlashMsg =<< (liftIO $ flashMessageChangePasswordEmailSend $ ctxtemplates ctx)
+            return LinkMain
         Nothing -> return LoopBack
 
 {- |

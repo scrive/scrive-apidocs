@@ -71,10 +71,6 @@ flashMessageUserActivated=
 flashMessageUserAlreadyActivated=
     Du har redan aktiverat detta konto.
 
-###                                                        
-flashMessageNoSuchUserExists=
-    Det finns ingen användare med denna epost. Vänligen försök igen. 
-
 ###
 flashMessageChangePasswordEmailSend=Ett nytt lösenord har blivit skickat till din e-post.
 
