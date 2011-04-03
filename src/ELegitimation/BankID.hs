@@ -249,11 +249,15 @@ handleIssueBankID :: String -> DocumentID -> Kontra Response
 handleIssueBankID provider docid = withUserGet $ do
     ctx@Context { ctxtime = MinutesTime time seconds
                 , ctxmaybeuser = Just author
+                , ctxtemplates
                 } <- get
                   
-    tbs <- getDataFnM $ look "tbs"
-    
     document <- queryOrFail $ GetDocumentByDocumentID docid
+    
+    tbs <- case documentstatus document of 
+        Preparation    -> getDataFnM $ look "tbs"
+        AwaitingAuthor -> liftIO $ getTBS ctxtemplates document
+        _              -> mzero
     
     failIfNotAuthor document author
     
