@@ -705,6 +705,7 @@ documentAuthorInfo author =  do
   field "authorcompany" $ nothingIfEmpty $ usercompanyname $ userinfo author
   field "authoremail"  $ nothingIfEmpty $ unEmail $ useremail $ userinfo author
   field "authorcompanynumber" $ nothingIfEmpty $ usercompanynumber $ userinfo author
+  field "authorpersonnumber" $ nothingIfEmpty $ userpersonalnumber $ userinfo author
   
 -- | Fields indication what is a document status 
 documentStatusFields :: Document -> Fields    
