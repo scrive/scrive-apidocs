@@ -2604,11 +2604,11 @@ width: 340px;
     font-weight: bold;
 }
 
-.eleghidden .btn-small {
+.eleghidden .btn-small, #elegbuttons .btn-small {
     margin-left: 15px;
     margin-right: 15px;
 }
 
-.eleghidden .nordea {
+.eleghidden .nordea, #elegbuttons .nordea {
     padding-top: 13px;
 }
