@@ -23,6 +23,7 @@ module ActionSchedulerState (
     , newViralInvitationSent
     , newAccountCreated
     , newAccountCreatedBySigning
+    , newEmailSendoutAction
     ) where
 
 import Control.Applicative ((<$>))
@@ -39,6 +40,7 @@ import Happstack.Util.Common (readM)
 import Doc.DocState
 import Misc
 import MinutesTime
+import Mails.SendMail
 import User.UserState
 
 data SchedulerData a b c = SchedulerData {
@@ -83,6 +85,9 @@ data ActionType = TrustWeaverUpload {
                     , acbsDocLinkDataID :: (DocumentID, SignatoryLinkID)
                     , acbsToken         :: MagicHash
                 }
+                | EmailSendout {
+                      esMail :: Mail
+                }
                   deriving (Eq, Ord, Show, Typeable)
 
 data InactiveAccountState = JustCreated
@@ -98,6 +103,7 @@ data ActionTypeID = TrustWeaverUploadID
                   | ViralInvitationSentID
                   | AccountCreatedID
                   | AccountCreatedBySigningID
+                  | EmailSendoutID
                     deriving (Eq, Ord, Show)
 
 -- | Convert ActionType to its type identifier
@@ -108,10 +114,13 @@ actionTypeID (PasswordReminder _ _ _) = PasswordReminderID
 actionTypeID (ViralInvitationSent _ _ _ _ _) = ViralInvitationSentID
 actionTypeID (AccountCreated _ _) = AccountCreatedID
 actionTypeID (AccountCreatedBySigning _ _ _ _) = AccountCreatedBySigningID
+actionTypeID (EmailSendout _) = EmailSendoutID
 
 -- | Determines how often we should check if there's an action to evaluate
-data ActionImportance = UrgentAction | LeisureAction
-                    deriving (Eq, Ord, Show, Typeable)
+data ActionImportance = UrgentAction
+                      | LeisureAction
+                      | EmailSendoutAction
+                        deriving (Eq, Ord, Show, Typeable)
 
 actionImportance :: ActionType -> ActionImportance
 actionImportance (TrustWeaverUpload _ _) = UrgentAction
@@ -120,6 +129,7 @@ actionImportance (PasswordReminder _ _ _) = LeisureAction
 actionImportance (ViralInvitationSent _ _ _ _ _) = LeisureAction
 actionImportance (AccountCreated _ _) = LeisureAction
 actionImportance (AccountCreatedBySigning _ _ _ _) = LeisureAction
+actionImportance (EmailSendout _) = EmailSendoutAction
 
 data Action = Action {
       actionID       :: ActionID
@@ -284,3 +294,13 @@ newAccountCreatedBySigning user doclinkdata = do
         , acbsToken         = hash
     }
     update $ NewAction action $ (24*60) `minutesAfter` now
+
+-- | Create new 'email sendout' action
+newEmailSendoutAction :: Mail -> IO ()
+newEmailSendoutAction mail = do
+    now <- getMinutesTime
+    let action = EmailSendout {
+        esMail = mail
+    }
+    _ <- update $ NewAction action $ now
+    return ()

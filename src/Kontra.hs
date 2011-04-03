@@ -18,6 +18,7 @@ module Kontra
     , newViralInvitationSentLink
     , newAccountCreatedLink
     , newAccountCreatedBySigningLink
+    , scheduleEmailSendout
     , queryOrFail
     , returnJustOrMZero
     )
@@ -43,6 +44,7 @@ import HSP.XML
 import qualified Network.AWS.Authentication as AWS
 import Templates.Templates  (KontrakcjaTemplates)
 import Mails.MailsConfig()
+import Mails.SendMail
 import KontraLink
 import ActionSchedulerState
 import qualified TrustWeaver as TW
@@ -71,7 +73,7 @@ data Context = Context
     , ctxs3action            :: AWS.S3Action
     , ctxproduction          :: Bool
     , ctxtemplates           :: KontrakcjaTemplates 
-    , ctxmailer              :: Mailer 
+    , ctxesenforcer          :: MVar ()
     , ctxtwconf              :: TW.TrustWeaverConf
     , ctxelegtransactions    :: [ELegTransaction]
     , ctxfilecache           :: MemCache.MemCache FileID BS.ByteString
@@ -189,6 +191,14 @@ newAccountCreatedBySigningLink user doclinkdata = do
     let aid = actionID action
         token = acbsToken $ actionType action
     return $ (LinkAccountCreatedBySigning aid token, LinkAccountRemoval aid token)
+
+-- | Schedule mail for send out and awake scheduler
+scheduleEmailSendout :: MonadIO m => MVar () -> Mail -> m ()
+scheduleEmailSendout enforcer mail = do
+    liftIO $ do
+        newEmailSendoutAction mail
+        tryPutMVar enforcer ()
+    return ()
 
 {- |
    Perform a query (like with query) but if it returns Nothing, mzero; otherwise, return fromJust
