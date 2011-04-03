@@ -424,12 +424,13 @@ authorSignDocument documentid time ipnumber author msiginfo =
                   authorid = userid author
                   sinfo = Just (SignInfo time ipnumber)
                   sigdetails = map signatorydetails (documentsignatorylinks document)
+                  authorOnly = Prelude.null $ tail $ documentsignatorylinks document
                   signeddocument = document { documenttimeouttime = timeout
                                   , documentmtime = time
                                   , documentsignatorylinks = signWithUserID (documentsignatorylinks document) authorid sinfo msiginfo
-                                  , documentstatus = Pending
+                                  , documentstatus = if authorOnly then Closed else Pending
                                   , documentinvitetime = Just time
-                                  } `appendHistory` [DocumentHistoryInvitationSent time ipnumber sigdetails]
+                                  } `appendHistory` ([DocumentHistoryInvitationSent time ipnumber sigdetails] ++ if authorOnly then [DocumentHistoryClosed time ipnumber] else [])
               in Right $ signeddocument
               
           Timedout -> Left "FÃ¶rfallodatum har passerat" -- possibly quite strange here...
