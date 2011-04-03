@@ -549,10 +549,12 @@ function authorToHTML(sig) {
     seccheck.attr("checked", "false");
   }
 
-  sigentry.find(".partyrole input").change(function() {
-    showProperSignButtons();
+  sigentry.find(".partyrole input").first().change(function() {
+    var checkBox = $(".sendcheckbox");
+    if(checkBox.attr("checked")) { 
+        checkBox.attr("checked", false).change();
+      } 
   });
-  showProperSignButtons();
 
   manlink.click(function(){
     sigentry.find(".partyrole").show();

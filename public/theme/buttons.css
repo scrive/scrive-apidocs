@@ -296,6 +296,11 @@ a.btn-big.blue .label {
 	text-shadow: #3e88ce 0 1px 3px;
 }
 
+a.btn-big.blue .label .icon.cross {
+  position:relative;
+  top:5px;
+}
+
 a.btn-big.blue:hover .left {
 	background-position: -88px -47px;
 }

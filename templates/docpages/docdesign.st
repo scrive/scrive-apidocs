@@ -292,7 +292,7 @@ $endif$
                <div class="left"></div>
                <div class="label" style="width:120px">
                     <span>SkrivaPå </span>
-                    <span class="icon cross signicon"></span>
+                    <span class="icon cross"></span>
 
                </div> 
                <div class="right"></div>
