@@ -444,7 +444,6 @@ function ajaxRequest(ajaxurl, posturl, formselector, successfn, tbs) {
   $.ajax({'url': ajaxurl,
 		  'dataType': 'json',
           'data': tbs?{'tbs': getTBS()}:{},
-          'contentType': "application/x-www-form-urlencoded; charset=utf-8",
           'scriptCharset': "utf-8",
 		  'success': function(data){
 		    if(data && data['status'] === 0) {
