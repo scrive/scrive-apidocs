@@ -336,11 +336,7 @@ handleIssuePostBankID docid = withUserPost $ do
   
     eudoc <- case documentstatus document of 
                 Preparation -> updateDocument ctx author document
-                AwaitingAuthor -> do
-                    t <- update $ CloseDocument (documentid document) ctxtime ctxipnumber author Nothing
-                    case t of
-                        Nothing -> return $ Left "Could not close document"
-                        Just x  -> return $ Right x
+                AwaitingAuthor -> return $ Right document
                 s -> return $ Left $ "Wrong status: " ++ show s
     case eudoc of 
         Left msg -> do
@@ -401,7 +397,14 @@ handleIssuePostBankID docid = withUserPost $ do
                                                             , signaturepersnumverified = bpn
                                                             }
                                 signInd d = do
-                                    mndoc <- update $ AuthorSignDocument (documentid d) ctxtime ctxipnumber author $ Just signinfo
+                                    mndoc <- case documentstatus document of
+                                                Preparation -> update $ AuthorSignDocument (documentid d) ctxtime ctxipnumber author $ Just signinfo
+                                                AwaitingAuthor -> do
+                                                    ed <- update $ CloseDocument (documentid document) ctxtime ctxipnumber author Nothing
+                                                    case ed of
+                                                        Nothing -> return $ Left "could not close document"
+                                                        Just d -> return $ Right d
+                                                _ -> do {Log.debug "should not have other status" ; mzero}
                                     case mndoc of
                                         Left msg -> do
                                             liftIO $ print $ "AuthorSignDocument failed: " ++ msg
