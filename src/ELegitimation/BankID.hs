@@ -425,7 +425,9 @@ handleIssuePostBankID docid = withUserPost $ do
                                     mndocs <- mapM signInd docs
                                     case (sequence mndocs) of
                                         Right (d:[]) -> do
-                                            addModal $ modalSignInviteView d
+                                            case documentstatus d of
+                                                Pending -> addModal $ modalSignInviteView d
+                                                Closed  -> addModal modalSignAwaitingAuthorLast
                                             return $ LinkIssueDoc (documentid d)
                                         Right ds -> return $ LinkContracts emptyListParams
                                         Left _ -> mzero

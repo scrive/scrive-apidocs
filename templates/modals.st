@@ -422,3 +422,30 @@ signCanceledDataMismatchModal=
       </div>
 </div>
 ###
+signAwaitingAuthorLast=
+<div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-icon message"></div>
+        <div class="modal-title">
+          <h3>Dokumentet har undertecknats</h3>
+        </div>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">
+             <p>Alla parter har nu undertecknat och dokumentet är bindande.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a class="btn-small green float-right close">
+          <div class="left"></div>
+          <div class="label">
+            <p>Ok</p>
+            <div class="btn-symbol green arrow-left"></div>
+          </div>
+          <div class="right"></div>
+        </a>
+      </div>
+</div>
+###
+
