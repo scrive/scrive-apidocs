@@ -15,6 +15,7 @@ import Control.Monad.Reader
 import Data.Maybe (isJust)
 import Happstack.State (query, update)
 import System.Log.Logger (debugM)
+import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
 
 import AppControl (AppConf(..))
@@ -27,17 +28,23 @@ import Mails.SendMail
 import Session
 import Templates.Templates (KontrakcjaTemplates)
 import User.UserView
+import qualified AppLogger as Log
 
 type SchedulerData' = SchedulerData AppConf Mailer KontrakcjaTemplates
 
 newtype ActionScheduler a = AS { unActionScheduler :: ReaderT SchedulerData' IO a }
     deriving (Monad, Functor, MonadIO, MonadReader SchedulerData')
 
-runScheduler :: ActionScheduler a -> SchedulerData' -> IO a
-runScheduler = runReaderT . unActionScheduler
+runScheduler :: ActionScheduler () -> SchedulerData' -> IO ()
+runScheduler sched sd =
+    runReaderT (unActionScheduler sched) sd `E.catch` catchEverything
+    where
+        catchEverything :: E.SomeException -> IO ()
+        catchEverything e =
+            Log.error $ "Oops, scheduler error: " ++ show e
 
 -- | Creates scheduler that may be forced to look up for actions to execute
-runEnforceableScheduler :: Int -> MVar () -> ActionScheduler a -> SchedulerData' -> IO a
+runEnforceableScheduler :: Int -> MVar () -> ActionScheduler () -> SchedulerData' -> IO ()
 runEnforceableScheduler interval enforcer sched sd = listen 0
     where
         listen delay = do
