@@ -126,7 +126,7 @@ pageDocumentForSignContent=
             </div>
         </div>
         <div class="modal-footer">
-          <input type="hidden" name="sign" value="automatic" />
+          <input type="hidden" name="sign" value="automatic" id="signauto" />
           <a  class="close cancel">Avbryt</a>
           $if(requireseleg)$
           <span id="elegbuttons">
