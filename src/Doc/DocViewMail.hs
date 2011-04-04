@@ -22,7 +22,7 @@ import qualified Data.ByteString as BS
 import Kontra
 import KontraLink
 import Data.Maybe
-import Mails.SendMail(Mail,emptyMail,content,title,attachments,fullnameemails)
+import Mails.SendMail(Mail,emptyMail,content,title,fullnameemails)
 import Doc.DocViewUtil
 import Amazon
 import Templates.Templates 
@@ -63,9 +63,8 @@ remindMailNotSigned :: KontrakcjaTemplates
                     -> IO Mail
 remindMailNotSigned templates customMessage ctx document@Document{documenttitle} signlink author = do
   title <- renderTemplate templates "remindMailNotSignedTitle" [("documenttitle",BS.toString $ documenttitle)]
-  content <- wrapHTML templates =<< remindMailNotSignedContent templates True customMessage ctx  document signlink author
-  attachmentcontent <- getFileContents (ctxs3action ctx) $ head $ documentfiles document          
-  return $ emptyMail {title = BS.fromString title, content = BS.fromString content, attachments = [(documenttitle,attachmentcontent)]}
+  content <- wrapHTML templates =<< remindMailNotSignedContent templates True customMessage ctx  document signlink author   
+  return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
 
         
         
@@ -75,8 +74,7 @@ remindMailSigned templates customMessage ctx document@Document{documenttitle}  s
                      let files = if (null $ documentsealedfiles document) then (documentfiles document) else (documentsealedfiles document)
                      title<- renderTemplate templates "remindMailSignedTitle" [("documenttitle",BS.toString $ documenttitle)]
                      content<-wrapHTML templates =<<remindMailSignedContent templates customMessage ctx  document signlink author
-                     attachmentcontent <- getFileContents (ctxs3action ctx) $ head $ files   
-                     return $ emptyMail {title = BS.fromString title, content = BS.fromString content, attachments = [(documenttitle,attachmentcontent)]}
+                     return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
 
 remindMailNotSignedContent :: KontrakcjaTemplates 
                            ->  Bool 
@@ -335,8 +333,7 @@ mailCancelDocumentByAuthor templates customMessage ctx document@Document{documen
        do
         title<- renderTemplate templates "mailCancelDocumentByAuthorTitle" [("documenttitle",BS.toString documenttitle)] 
         content <- wrapHTML templates =<< mailCancelDocumentByAuthorContent templates True customMessage ctx document author
-        attachmentcontent <- getFileContents (ctxs3action ctx) $ head $ documentfiles document          
-        return $ emptyMail {title = BS.fromString title, fullnameemails =  [emailFromSignLink signlink] , content = BS.fromString content, attachments = [(documenttitle,attachmentcontent)]}
+        return $ emptyMail {title = BS.fromString title, fullnameemails =  [emailFromSignLink signlink] , content = BS.fromString content}
 
 mailMismatchSignatory :: Context 
                         -> Document 
