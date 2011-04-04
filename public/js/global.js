@@ -890,7 +890,7 @@ function flashFlashMessages() {
         // so we need to use setTimeout() and unregister set events
         // with clearTimeout() if user closed flash message by himself
         var event = setTimeout(hideFlashMessages, 10000);
-        flashmsgbox.show();
+        flashmsgbox.slideDown(800);
         flashmsgbox.click(function() {
             hideFlashMessages(event);
         });
@@ -913,7 +913,7 @@ function showModal(){
 function hideFlashMessages(event) {
     if (event !== undefined)
         clearTimeout(event);
-    $(".flashmsgbox").hide(function() {
+    $(".flashmsgbox").slideUp(800,function() {
         $(this).children().remove();
     });
 }
