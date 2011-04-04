@@ -10,6 +10,7 @@ module Session
     , handleSession
     , updateSessionWithContextData
     , getELegTransactions
+    , getSessionXToken
     
     -- | Functions usefull when we do remember passwords emails
     --, createLongTermSession
@@ -463,3 +464,7 @@ dropExpiredSessions = update . DropExpired
 -- | Get e-leg from session.
 getELegTransactions :: Session -> [ELegTransaction]
 getELegTransactions = elegtransactions . sessionData
+
+-- | Get the xtoken from the session data
+getSessionXToken :: Session -> MagicHash
+getSessionXToken = xtoken . sessionData

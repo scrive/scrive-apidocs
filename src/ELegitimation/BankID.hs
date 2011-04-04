@@ -128,6 +128,7 @@ handleSignPostBankID docid signid magic = do
     transactionid <- getDataFnM $ look "transactionid"
     fieldnames    <- getAndConcat "fieldname"
     fieldvalues   <- getAndConcat "fieldvalue"
+    
 
     -- request validation
     document@Doc.DocState.Document { documentstatus = olddocumentstatus }
