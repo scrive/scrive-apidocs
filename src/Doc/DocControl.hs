@@ -728,7 +728,7 @@ getCSVFile :: String -> Kontra (Maybe (BS.ByteString, [[BS.ByteString]]))
 getCSVFile fieldname = do
   input <- getDataFn' (lookInput fieldname)
   result <- liftIO $ asCSVFile input
-  flashValidationMessage result >>= asMaybe
+  flashValidationMessage (Nothing, result) >>= asMaybe
   where
     asCSVFile :: Maybe Input -> IO (Result (BS.ByteString, [[BS.ByteString]]))
     asCSVFile input = do
@@ -1220,14 +1220,11 @@ handleResend docid signlinkid  = withUserPost $ do
 -}
 getCustomTextField :: String -> Kontra (Maybe BS.ByteString)
 getCustomTextField = getValidateAndHandle asValidInviteText customTextHandler
-  where customTextHandler :: Result BS.ByteString -> Kontra (Maybe BS.ByteString)
+  where customTextHandler :: (Maybe String, Result BS.ByteString) -> Kontra (Maybe BS.ByteString)
         customTextHandler result =
-            flashValidationMessage result
-                >>= failIfBad
-                >>= asMaybe
-        failIfBad :: Result a -> Kontra (Result a)
-        failIfBad (Bad x) = mzero
-        failIfBad x = return x
+                logIfBad result
+                >>= flashValidationMessage
+                >>= withFailureIfBad
 
 --This only works for undelivered mails. We shoulkd check if current user is author
 handleChangeSignatoryEmail::String -> String -> Kontra KontraLink
