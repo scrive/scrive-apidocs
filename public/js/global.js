@@ -907,7 +907,8 @@ function showModal(){
         },
         speed : 0
    });   
-   modalbox.first().data("overlay").load();
+   if (modalbox.size() >0 )
+     modalbox.first().data("overlay").load();
 }
 function hideFlashMessages(event) {
     if (event !== undefined)
