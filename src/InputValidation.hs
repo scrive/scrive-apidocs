@@ -18,11 +18,13 @@ module InputValidation
     , getValidateAndHandleList
     , getAndValidate
     , getAndValidateList
+    , logIfBad
     , flashValidationMessage
     , asMaybe
     , withDefault
     , withRequiredFlash
     , withFailure
+    , withFailureIfBad
     , asValidEmail
     , asDirtyEmail
     , asValidPassword
@@ -57,6 +59,7 @@ import Text.XML.HaXml.Posn
 import Text.XML.HaXml.Types
 
 import Kontra
+import AppLogger as Log (security)
 import Misc hiding (getFields)
 import Templates.Templates
 
@@ -64,6 +67,11 @@ import Templates.Templates
     If there's a problem this will create the appropriate FlashMessage.
 -}
 type ValidationMessage = KontrakcjaTemplates -> IO FlashMessage
+
+{- |
+    The input data.
+-}
+type Input = Maybe String
 
 {- |
     If it goes wrong we get something that we can use to display a flash message.
@@ -94,9 +102,10 @@ getOptionalFieldList :: (String -> Result a) -> String -> Kontra [Maybe a]
 getOptionalFieldList validate =
     getValidateAndHandleList validate optionalFieldHandler
 
-optionalFieldHandler :: Result a -> Kontra (Maybe a)
+optionalFieldHandler :: (Input, Result a) -> Kontra (Maybe a)
 optionalFieldHandler result =
-    flashValidationMessage result
+    logIfBad result
+    >>= flashValidationMessage
     >>= asMaybe
 
 {- |
@@ -110,9 +119,10 @@ getDefaultedFieldList :: a -> (String -> Result a) -> String -> Kontra [Maybe a]
 getDefaultedFieldList d validate =
     getValidateAndHandleList validate (defaultedFieldHandler d)
 
-defaultedFieldHandler :: a -> Result a -> Kontra (Maybe a)
+defaultedFieldHandler :: a -> (Input, Result a) -> Kontra (Maybe a)
 defaultedFieldHandler d result =
-    flashValidationMessage result
+    logIfBad result
+    >>= flashValidationMessage
     >>= withDefault d
     >>= asMaybe
 
@@ -128,9 +138,10 @@ getRequiredFieldList :: (String -> Result a) -> String -> Kontra [Maybe a]
 getRequiredFieldList validate =
     getValidateAndHandleList validate requiredFieldHandler
 
-requiredFieldHandler :: Result a -> Kontra (Maybe a)
+requiredFieldHandler :: (Input, Result a) -> Kontra (Maybe a)
 requiredFieldHandler result =
     withRequiredFlash result
+    >>= logIfBad
     >>= flashValidationMessage
     >>= asMaybe
 
@@ -147,38 +158,41 @@ getCriticalFieldList :: (String -> Result a) -> String -> Kontra [a]
 getCriticalFieldList validate =
     getValidateAndHandleList validate criticalFieldHandler
 
-criticalFieldHandler :: Result a -> Kontra a
+criticalFieldHandler :: (Input, Result a) -> Kontra a
 criticalFieldHandler result =
     withRequiredFlash result
+    >>= logIfBad
     >>= flashValidationMessage
     >>= withFailure
 
 {- |
     Gets a named field, validates it, and then handles the result.
 -}
-getValidateAndHandle :: (String -> Result a) -> (Result a -> Kontra b) -> String -> Kontra b
+getValidateAndHandle :: (String -> Result a) -> ((Input, Result a) -> Kontra b) -> String -> Kontra b
 getValidateAndHandle validate handle fieldname = do
   result <- getAndValidate validate fieldname
   handle result
 
-getValidateAndHandleList :: (String -> Result a) -> (Result a -> Kontra b) -> String -> Kontra [b]
+getValidateAndHandleList :: (String -> Result a) -> ((Input, Result a) -> Kontra b) -> String -> Kontra [b]
 getValidateAndHandleList validate handle fieldname = do
   results <- getAndValidateList validate fieldname
   mapM handle results
 
 {- |
-    Gets a named field and validates it.
+    Gets a named field and validates it.  It will return a pair of the input,
+    and output.
 -}
-getAndValidate :: (String -> Result a) -> String -> Kontra (Result a)
+getAndValidate :: (String -> Result a) -> String -> Kontra (Input, Result a)
 getAndValidate validate fieldname = do
   mrawvalue <- getField fieldname
-  let rawvalue = fromMaybe "" mrawvalue
-  return $ validate rawvalue
+  case mrawvalue of
+    Nothing -> return $ (Nothing, Empty)
+    (Just rawvalue) -> return $ (Just rawvalue, validate rawvalue)
 
-getAndValidateList :: (String -> Result a) -> String -> Kontra [Result a]
+getAndValidateList :: (String -> Result a) -> String -> Kontra [(Input, Result a)]
 getAndValidateList validate fieldname = do
   rawvalues <- getFields fieldname
-  return $ map validate rawvalues
+  return $ zip (map Just rawvalues) (map validate rawvalues)
 
 getFields :: String -> Kontra [String]
 getFields fieldname = do
@@ -191,8 +205,8 @@ getFields fieldname = do
     as the one given, I thought it might be handy to include
     just in case.
 -}
-flashValidationMessage :: Result a -> Kontra (Result a)
-flashValidationMessage x@(Bad flashmsg) = do
+flashValidationMessage :: (Input, Result a) -> Kontra (Input, Result a)
+flashValidationMessage x@(_, Bad flashmsg) = do
   Context{ctxtemplates,ctxflashmessages} <- get
   msg <- liftIO $ flashmsg ctxtemplates
   when (msg `notElem` ctxflashmessages) $ addFlashMsg msg
@@ -200,28 +214,48 @@ flashValidationMessage x@(Bad flashmsg) = do
 flashValidationMessage x = return x
 
 {- |
+    Puts any validation problem in the security log.
+    This'll at least mean we've got a record of suspicious
+    behaviour.
+-}
+logIfBad :: (Input, Result a) -> Kontra (Input, Result a)
+logIfBad x@(input, Bad flashmsg) = do
+  Context{ctxmaybeuser,ctxipnumber,ctxtemplates} <- get
+  flash <- liftIO $ flashmsg ctxtemplates
+  let username :: String
+      username = maybe "unknown" (BS.toString . unEmail . useremail . userinfo) ctxmaybeuser
+      logtext = "ip " ++ (show ctxipnumber) ++
+               " user " ++ username ++
+               " invalid input: " ++
+               " flash [" ++ (snd $ unFlashMessage flash) ++ "]" ++
+               " raw value [" ++ (show input) ++ "]"
+  _ <- liftIO $ Log.security logtext
+  return x
+logIfBad x = return x
+
+{- |
     Interprets the Result as a Maybe,
     so you get a Just for sensible input,
     but a Nothing for invalid or empty input.
 -} 
-asMaybe :: Result a -> Kontra (Maybe a)
-asMaybe (Good x) = return $ Just x
+asMaybe :: (Input, Result a) -> Kontra (Maybe a)
+asMaybe (_,Good x) = return $ Just x
 asMaybe _        = return Nothing
 
 {- |
     If the result is Empty then this uses the
     given default value.  
 -}
-withDefault :: a -> Result a -> Kontra (Result a)
-withDefault d Empty = return $ Good d
+withDefault :: a -> (Input, Result a) -> Kontra (Input, Result a)
+withDefault d (input, Empty) = return $ (input, Good d)
 withDefault _ x     = return x
 
 {- |
     If the result is Empty then this turns it
     into a Bad result with an appropriate flash message.
 -}
-withRequiredFlash :: Result a -> Kontra (Result a)
-withRequiredFlash Empty = return $ Bad flashMessageMissingRequiredField
+withRequiredFlash :: (Input, Result a) -> Kontra (Input, Result a)
+withRequiredFlash (input, Empty) = return $ (input, Bad flashMessageMissingRequiredField)
 withRequiredFlash x     = return x
 
 flashMessageMissingRequiredField :: ValidationMessage
@@ -233,9 +267,17 @@ flashMessageMissingRequiredField =
     that's it.  Which means this'll fail
     for invalid or empty input.
 -}
-withFailure :: Result a -> Kontra a
-withFailure (Good x) = return x
+withFailure :: (Input, Result a) -> Kontra a
+withFailure (_,Good x) = return x
 withFailure _        = mzero
+
+{- |
+    You get a failure for bad input.
+-}
+withFailureIfBad :: (Input, Result a) -> Kontra (Maybe a)
+withFailureIfBad (_,Good x) = return $ Just x
+withFailureIfBad (_,Bad _) = mzero
+withFailureIfBad (_,Empty) = return Nothing
 
 {- |
     Creates a clean and validated email.
