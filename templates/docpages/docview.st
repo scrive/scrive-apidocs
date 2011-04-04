@@ -16,7 +16,7 @@ showFileImagesPending=
 ####
 showFileImagesError=
 <div class="errormsg">
- $normalizelog:noescape()$
+ Vi beklagar, det var något problem med formateringen på din PDF. Vänligen kontrollera dokumentet och försök igen.
 </div>
 ####
 ###

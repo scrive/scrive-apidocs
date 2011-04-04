@@ -318,7 +318,7 @@ safeReady(function() {
                var content = $(data);
                var errormsg = content.find(".errormsg")
                if (errormsg.length > 0) {
-                   var errdialog = $("<div title='Error while rendering PDF'>"
+                   var errdialog = $("<div title='Problem med PDF'>"
                                    + errormsg.text()
                                    + "</div>");
                    errdialog.dialog({
