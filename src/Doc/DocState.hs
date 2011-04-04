@@ -400,7 +400,7 @@ authorSendDocument documentid time ipnumber author msiginfo =
               in Right $ document { documenttimeouttime = timeout
                                   , documentmtime = time
                                   , documentstatus = Pending
-                                  , documentinvitetime = Just time
+                                  , documentinvitetime = sinfo
                                   } `appendHistory` [DocumentHistoryInvitationSent time ipnumber sigdetails]
               
           Timedout -> Left "FÃ¶rfallodatum har passerat" -- possibly quite strange here...
@@ -429,7 +429,7 @@ authorSignDocument documentid time ipnumber author msiginfo =
                                   , documentmtime = time
                                   , documentsignatorylinks = signWithUserID (documentsignatorylinks document) authorid sinfo msiginfo
                                   , documentstatus = if authorOnly then Closed else Pending
-                                  , documentinvitetime = Just time
+                                  , documentinvitetime = sinfo
                                   } `appendHistory` ([DocumentHistoryInvitationSent time ipnumber sigdetails] ++ if authorOnly then [DocumentHistoryClosed time ipnumber] else [])
               in Right $ signeddocument
               

@@ -166,13 +166,20 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
                                     else fullname ++ " undertecknar dokumentet online med " ++ formatProvider (fromJust mprovider) ++ formatIP (signipnumber signed)
             }
           ]
-      invitationSentEntry = Seal.HistEntry
-            { Seal.histdate = show (fromJust $ documentinvitetime document)
-            , Seal.histcomment = 
-                if length signatories>1
-                   then BS.toString authorfullname ++ " skickar en inbjudan att underteckna till parterna"
-                   else BS.toString authorfullname ++ " skickar en inbjudan att underteckna till parten"
-            }
+      invitationSentEntry = case documentinvitetime document of
+                                Nothing -> []
+                                Just (SignInfo time ipnumber) -> 
+                                    [ Seal.HistEntry
+                                      { Seal.histdate = show time
+                                      , Seal.histcomment = 
+                                          if length signatories>1
+                                          then BS.toString authorfullname ++ 
+                                                   " skickar en inbjudan att underteckna till parterna" ++ 
+                                                   formatIP ipnumber
+                                          else BS.toString authorfullname ++ 
+                                                   " skickar en inbjudan att underteckna till parten" ++ 
+                                                   formatIP ipnumber
+                                      }]
 
       maxsigntime = maximum (map (signtime . (\(_,_,c,_,_) -> c)) signatories)
       concatComma = concat . intersperse ", "
@@ -186,7 +193,7 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
       -- signatories actions before what happened with a document
       histDateCompare a b = compare (Seal.histdate a) (Seal.histdate b)
       history = sortBy histDateCompare $ (concatMap makeHistoryEntryFromSignatory signatories) ++
-                [invitationSentEntry] ++
+                invitationSentEntry ++
                 [lastHistEntry]
       
       -- document fields
