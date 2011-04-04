@@ -43,15 +43,6 @@
         min-width: 940px;
 }
 
-#top-slim-container .logo {
-        background: url(../img/logo-small.png);
-        display: block;
-        float: left;
-        height: 35px;
-        margin-top: 9px;
-        width: 137px;
-}
-
 /* Second Login Container */
 
 #top-slim-container .content
