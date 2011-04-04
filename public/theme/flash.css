@@ -1,7 +1,5 @@
 .flash-container {
 	background: url(../img/spr-flash-bg.png) 0 -50px repeat-x;
-	border: 2px solid #ccc;
-	border-width: 0 2px 0 2px;
 	cursor: pointer;
 	-display: none;
 	left: 0px;
@@ -11,6 +9,12 @@
 	top: 0;
 	z-index: 100;
 	-moz-box-shadow: -5px 2px 5px #666;
+    text-align: center;
+    font-size: 13pt;
+    -moz-border-radius: 1px 1px 1px 1px;
+    background-color: white;
+    border-bottom: 1px solid #111111;
+    color: #111111;
 }
 
 .flash-container:before {
@@ -78,20 +82,13 @@
 }
 
 .flashmsgbox{
-    -moz-border-radius: 1px 1px 1px 1px;
-    background-color: white;
-    border: 1px solid #111111;
     display: none;
     left: 0;
     position: fixed;
     top: 0;
     width: 100%;
     z-index: 10000;
-    text-align: center;
-    font-size: 13pt;
-    color: #111111;
-    text-align: left;
-    cursor: pointer;
+    height: 50px;
 }
 
 .flash_signingrelated {
