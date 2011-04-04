@@ -687,3 +687,10 @@ dropExistingAction :: ActionID -> Kontra ()
 dropExistingAction aid = do
     update $ DeleteAction aid
     return ()
+
+guardXToken :: Kontra ()
+guardXToken = do
+    Context { ctxxtoken } <- get
+    paramtoken <- getDataFnM $ look "xtoken"
+    let (xtoken :: MagicHash) = read paramtoken
+    unless (xtoken == ctxxtoken) mzero
