@@ -273,22 +273,77 @@ loginModal=
 $if(!logged)$
 $if(loginModal)$
 <div class="modalcontainer">
-<div class="modalbox overlay">
-<div class="modal-container">
-      <div class="modal-header">
-        <div class="modal-icon message"></div>
-        <div class="modal-title">
+   <div class="modalbox overlay login-container">
+    <div class="modal-container">
+     <form method="post" action="$linklogin$">
+     <div class="modal-header">
+      <div class="modal-icon message"></div>
+      <div class="modal-title">
           <h1>Logga in</h1>
-        </div>
-        <a class="modal-close close"> </a>
       </div>
-      <div class="modal-body">
-        <div class="modal-content"> 
-                $loginModalPart()$
-        </div>
+      <a class="modal-close close"> </a>
+     </div>
+     <div class="modal-body">
+      <div class="modal-content"> 
+       <div class="body">
+         <div class=wrapper>
+           <input type="hidden" name="referer" value="$referer$" />
+           <input type="email" name="email" value="$email$" infotext="E-post" autocomplete="off"/><br />
+           <input type="password" name="password" infotext="password" autocomplete="off"/><br />
+           <input type="submit" class="hidden" />
+         </div>
+       </div>
       </div>
-</div>
-</div>
+      <div class="modal-footer">
+        <a class="close cancel">Avbryt</a>
+        <a href="#" class="txt-link message">Glömt lösenord</a>
+        <a href="#" class="btn-small blue float-right submit">
+          <div class="left"></div>
+          <div class="label">
+            <p>Logga in</p>
+          </div>
+          <div class="right"></div>
+        </a>
+      </div>
+     </div>
+     </form>
+    </div>
+  </div>
+  <div class="modalbox overlay recovery-container">
+    <div class="modal-container">
+     <form method="post" action="$linkforgotenpassword$">
+     <div class="modal-header">
+      <div class="modal-icon message"></div>
+      <div class="modal-title">
+          <h1>Glömt lösenord</h1>
+      </div>
+      <a class="modal-close close"> </a>
+     </div>
+     <div class="modal-body">
+      <div class="modal-content"> 
+       <div class="body">
+         <div class=wrapper>
+               <span class="txt">Skicka nytt lösenord</span>
+               <input type="email" name="email" infotext="E-post" autocomplete="off"/>
+               <input type="submit" class="hidden" />
+         </div>
+       </div>
+      </div>
+     <div class="modal-footer">
+        <a class="close cancel">Avbryt</a>
+        <a href="#" class="txt-link message">Logga in</a>
+        <a href="#" class="btn-small green float-right submit">
+          <div class="left"></div>
+          <div class="label">
+            <p>Skicka</p>
+          </div>
+          <div class="right"></div>
+        </a>
+      </div>
+     </div>
+     </form>
+    </div>
+ </div>
 </div>
 $endif$
 $endif$
@@ -297,35 +352,23 @@ loginModalPart=
 <div class="user-container">
                                                 <div class="login-container">
                                                         <div class="body">
+                                                           <div class="wrapper">
                                                                 <form method="post" action="$linklogin$">
                                                                         <input type="hidden" name="referer" value="$referer$" />
                                                                         <input type="email" name="email" value="$email$" infotext="E-post" autocomplete="off"/><br />
                                                                         <input type="password" name="password" infotext="password" autocomplete="off"/><br />
-                                                                        <a href="#" class="txt-link">Glömt lösenord</a>
-                                                                        <a href="#" class="btn-tiny blue center submit">
+                                                                            <a href="#" class="btn-tiny blue center submit">
                                                                             <div class="left"> </div>     
                                                                             <div class="label"><span>Logga in</span> </div>
                                                                             <div class="right"/> </div>
                                                                         </a>
+                                                                        <br /><br />
                                                                         <input type="submit" class="hidden" />
                                                                 </form>
+                                                           </div>
                                                         </div>
                                                 </div>
-                                                <div class="recovery-container">
-                                                        <div class="body">
-                                                                <form method="post" action="$linkforgotenpassword$">
-                                                                        <span class="txt">Skicka nytt lösenord</span>
-                                                                        <input type="email" name="email" infotext="E-post" autocomplete="off"/>
-                                                                        <a href="#" class="txt-link">Tillbaka</a>
-                                                                        <a href="#" class="btn-tiny blue center submit">
-                                                                           <div class="left"> </div>     
-                                                                            <div class="label"> <span>Skicka</span> </div>
-                                                                            <div class="right"/> </div></a>
-                                                                        </a>
-                                                                        <input type="submit" class="hidden" />
-                                                                </form>
-                                                        </div>
-                                                </div>
+                                              
 </div>
 ######
 ####

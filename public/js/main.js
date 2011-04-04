@@ -51,30 +51,22 @@ $(document).ready( function() {
             window.location = newlocation;
         });
 	
-	$('.recovery-container .top, .login-container .top').click( function(e) {
+	$('.recovery-container .txt-link').click( function(e) {
 		e.preventDefault();
-	
-		$('.user-container').toggle();
-	});
-	
-	$('.login-container .txt-link, .recovery-container .txt-link').click( function(e) {
+        
+        $("#exposeMask").css("display","none");
+        $('.recovery-container').data("overlay").close();
+        $("#exposeMask").css("display","block");
+        $('.login-container').data("overlay").load();
+		
+    })
+	$('.login-container .txt-link').click( function(e) {
 		e.preventDefault();
-	
-		$('.login-container, .recovery-container').toggle('fast');
-	});
-	
-	$('.user-container').each( function() {
-		$(this).mouseleave( function() {
-			if($(this).is(':visible')) {
-				/*$.data(this, 'user', setTimeout( function() {
-					$('.user-container').stop(true, true).fadeOut('fast');
-				}, 1000));*/
-			}
-		}).mouseenter( function() {
-			clearTimeout($.data(this, 'user'));
-		});
-	});
-
+        $("#exposeMask").css("display","none");
+        $('.login-container').data("overlay").close();
+        $("#exposeMask").css("display","block");
+        $('.recovery-container').data("overlay").load();
+	    })	
 	setTimeout(function(){$('.tweet').tweet({
 		username: 'skrivapa',
 		count: 3,
