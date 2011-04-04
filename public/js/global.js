@@ -900,9 +900,14 @@ function flashFlashMessages() {
 function showModal(){
    var modalbox = $(".modalbox");
    modalbox.overlay({
-        load: true,
-        mask: standardDialogMask
+        mask: {
+        color: standardDialogMask,
+        loadSpeed: 0,
+        opacity: 0.9
+        },
+        speed : 0
    });   
+   modalbox.first().data("overlay").load();
 }
 function hideFlashMessages(event) {
     if (event !== undefined)

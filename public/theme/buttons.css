@@ -98,7 +98,7 @@ a.btn-small.blue .left {
 }
 
 a.btn-small.blue .right {
-	background-position: -254px 0;
+	background-position: -256px 0;
 }
 
 a.btn-small.blue .label {
@@ -112,7 +112,7 @@ a.btn-small.blue:hover .left {
 }
 
 a.btn-small.blue:hover .right {
-	background-position: -254px -34px;
+	background-position: -256px -34px;
 }
 
 a.btn-small.blue:hover .label {
@@ -124,7 +124,7 @@ a.btn-small.blue:active .left {
 }
 
 a.btn-small.blue:active .right {
-	background-position: -254px -68px;
+	background-position: -256px -68px;
 }
 
 a.btn-small.blue:active .label {
