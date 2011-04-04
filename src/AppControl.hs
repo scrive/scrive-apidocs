@@ -52,7 +52,7 @@ import Mails.MailsConfig
 import Mails.SendGridEvents
 import Mails.SendMail
 import System.Log.Logger (Priority(..), logM)
-import qualified AppLogger as Log (error)
+import qualified AppLogger as Log (error, security)
 import qualified MemCache
 import Happstack.State (update)
 import Redirect
@@ -376,6 +376,7 @@ forgotPasswordPagePost = do
             muser <- query $ GetUserByEmail $ Email email                    
             case muser of 
                 Nothing -> do
+                    Log.security $ "ip " ++ (show $ ctxipnumber ctx) ++ " made a failed password reset request for non-existant account " ++ (BS.toString email)
                     return ()
                 Just user -> do
                     sendResetPasswordMail user
