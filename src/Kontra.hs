@@ -77,6 +77,7 @@ data Context = Context
     , ctxtwconf              :: TW.TrustWeaverConf
     , ctxelegtransactions    :: [ELegTransaction]
     , ctxfilecache           :: MemCache.MemCache FileID BS.ByteString
+    , ctxxtoken              :: MagicHash
     }
 
 type Kontra a = ServerPartT (StateT Context IO) a

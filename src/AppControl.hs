@@ -361,6 +361,7 @@ appHandler appConf appGlobals = do
                               }
                 , ctxelegtransactions = elegtrans
                 , ctxfilecache = filecache appGlobals
+                , ctxxtoken = getSessionXToken session
                 }
       return ctx
 
