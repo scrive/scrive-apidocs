@@ -1301,3 +1301,39 @@ function displayLoadingOverlay(message) {
 function closeLoadingOverlay() {
   $("#loadingdialog").overlay().close();
 }
+
+function readCookie(name) {
+  var nameEQ = name + "=";
+  var ca = document.cookie.split(';');
+  for(var i=0;i < ca.length;i++) {
+	var c = ca[i];
+	while (c.charAt(0) == ' ') {
+      c = c.substring(1);
+    }
+	if (c.indexOf(nameEQ) == 0) {
+      return c.substring(nameEQ.length);
+    }
+  }
+  return null;
+}
+
+/** 
+ * For Cross-Site Request Forgery (CSRF) Attacks
+ * 1. Grab the cookie in Javascript, which protects
+ *    against cross-domain attacks.
+ * 2. Cram it into a form before it submits.
+ * 3. This must be checked on the server.
+ *
+ * NOTE: This only protects againsts form submits. Links
+ *   do not get protected by this code.
+ */
+safeReady(function() {
+  $("form").live('submit', function() {
+    var form = $(this);
+    var tokenTag = $('<input type="hidden" name="xtoken">');
+    var token = readCookie("xtoken");
+    console.log(token);
+    tokenTag.attr("value", token);
+    form.append(tokenTag);
+  });
+});

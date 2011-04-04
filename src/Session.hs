@@ -83,6 +83,14 @@ $(deriveSerialize ''SessionData2)
 instance Version (SessionData2) where
    mode = extension 2 (Proxy :: Proxy SessionData1)
 
+data SessionData3 = SessionData3
+    { userID3           :: Maybe UserID      -- ^ Just 'UserID' if a person is logged in
+    , flashMessages3    :: [FlashMessage]    -- ^ 'FlashMessage's that are to be shown on next page
+    , expires3          :: MinutesTime       -- ^ when does this session expire
+    , hash3             :: MagicHash         -- ^ session security token
+    , elegtransactions3 :: [ELegTransaction] -- ^ ELeg transaction stuff
+    }  deriving (Ord,Eq,Show,Typeable)                               
+
 -- | SessionData is everything we want to know about a person clicking
 -- on the other side of the wire.
 data SessionData = SessionData 
@@ -91,11 +99,16 @@ data SessionData = SessionData
     , expires          :: MinutesTime       -- ^ when does this session expire
     , hash             :: MagicHash         -- ^ session security token
     , elegtransactions :: [ELegTransaction] -- ^ ELeg transaction stuff
+    , xtoken           :: MagicHash         -- ^ Random string to prevent CSRF
     }  deriving (Ord,Eq,Show,Typeable)                               
                                
+$(deriveSerialize ''SessionData3) 
+instance Version (SessionData3) where
+    mode = extension 3 (Proxy :: Proxy SessionData2)
+
 $(deriveSerialize ''SessionData) 
 instance Version (SessionData) where
-    mode = extension 3 (Proxy :: Proxy SessionData2)
+    mode = extension 4 (Proxy :: Proxy SessionData3)
      
 instance Migrate SessionData0 SessionData1 where
     migrate (SessionData0 { userID0 = _
@@ -117,17 +130,31 @@ instance Migrate SessionData1 SessionData2 where
                      , hash2 = MagicHash 0
                      }
 
-instance Migrate SessionData2 SessionData where
+instance Migrate SessionData2 SessionData3 where
     migrate (SessionData2 { userID2 = _
                           , flashMessages2 = _
                           , expires2 = _
                           }) =
-        SessionData { userID = Nothing
-                    , flashMessages = []
-                    , expires = MinutesTime 0 0
-                    , hash = MagicHash 0
-                    , elegtransactions=[]
+        SessionData3 { userID3 = Nothing
+                    , flashMessages3 = []
+                    , expires3 = MinutesTime 0 0
+                    , hash3 = MagicHash 0
+                    , elegtransactions3 = []
                     }
+                    
+instance Migrate SessionData3 SessionData where
+    migrate (SessionData3 { userID3 = _
+                          , flashMessages3 = _
+                          , expires3 = _
+                          , elegtransactions3 = _
+                          }) =
+        SessionData { userID           = Nothing
+                    , flashMessages    = []
+                    , expires          = MinutesTime 0 0
+                    , hash             = MagicHash 0
+                    , elegtransactions = []
+                    , xtoken           = MagicHash 0
+                    }                    
 
 -- | 'Session' data as we keep it in our database
 data Session = Session { sessionId::SessionId
@@ -249,6 +276,14 @@ instance Read (SessionCookieInfo) where
         sh' <- readM (drop 1 sh)  
         return $ (SessionCookieInfo {cookieSessionId = sid', cookieSessionHash=sh'},"")
 
+-- | Add a non-http only cookie
+addCookie :: (MonadIO m, HSI.FilterMonad Response m) => HSI.CookieLife -> HSI.Cookie -> m ()
+addCookie life cookie = do
+    l <- liftIO $ HSI.calcLife life
+    addHeaderM "Set-Cookie" $ HSI.mkCookieHeader l cookie
+    where
+        addHeaderM a v = HSI.composeFilter $ \res -> addHeader a v res
+
 -- | Ripped from Happstack-Server and modified to support HttpOnly cookies
 addHttpOnlyCookie :: (MonadIO m, HSI.FilterMonad Response m) => HSI.CookieLife -> HSI.Cookie -> m ()
 addHttpOnlyCookie life cookie = do
@@ -271,7 +306,9 @@ sessionAndCookieHashMatch session sci = (cookieSessionHash sci) == (hash $ sessi
 
 -- | Add a session cookie to browser.  
 startSessionCookie :: (FilterMonad Response m,ServerMonad m, MonadIO m) => Session -> m ()
-startSessionCookie session = addHttpOnlyCookie (MaxAge (60*60*24)) $ mkCookie "sessionId" $ show $ cookieInfoFromSession session
+startSessionCookie session = do
+    addHttpOnlyCookie (MaxAge (60*60*24)) $ mkCookie "sessionId" $ show $ cookieInfoFromSession session
+    addCookie (MaxAge (60*60*24)) $ mkCookie "xtoken" $ show $ xtoken $ sessionData session
                                  
 -- | Read current session cookie from request.
 currentSessionInfoCookie:: RqData (Maybe SessionCookieInfo)
@@ -280,25 +317,28 @@ currentSessionInfoCookie = (optional (readCookieValue "sessionId"))
  
 -- | Get current session based on cookies set.
 currentSession ::(HasRqData m, MonadIO m, ServerMonad m, MonadPlus m, FilterMonad Response m) => m (Maybe Session) 
-currentSession = withDataFn currentSessionInfoCookie $ \mscd ->  
-                 case mscd of
-                     Just scd-> do 
-                                 session <- query $ GetSession $ cookieSessionId scd                           
-                                 if isJust session && sessionAndCookieHashMatch (fromJust session) scd
-                                     then return session                               
-                                     else return Nothing
-                     Nothing ->  return Nothing
+currentSession = 
+    withDataFn currentSessionInfoCookie $ \mscd ->  
+        case mscd of
+            Just scd -> do 
+                session <- query $ GetSession $ cookieSessionId scd                           
+                case session of 
+                    Just s | sessionAndCookieHashMatch s scd -> return $ Just s
+                    _ -> return Nothing
+            Nothing ->  return Nothing
 
 -- | Create empty session data. It has proper timeout already set.
 emptySessionData :: IO SessionData                     
 emptySessionData = do
-    now <- getMinutesTime
-    magicHash <-  randomIO
+    now       <- getMinutesTime
+    magicHash <- randomIO
+    xhash     <- randomIO
     return $ SessionData { userID = Nothing
                          , flashMessages = []
                          , expires = 60 `minutesAfter` now
                          , hash = magicHash
                          , elegtransactions = []
+                         , xtoken = xhash
                          }  
 
 -- | Check if session data is empty
