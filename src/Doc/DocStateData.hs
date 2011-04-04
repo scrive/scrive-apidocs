@@ -760,7 +760,7 @@ data Document = Document
     , documentmtime                :: MinutesTime
     , documentdaystosign           :: Maybe Int    
     , documenttimeouttime          :: Maybe TimeoutTime
-    , documentinvitetime           :: Maybe MinutesTime
+    , documentinvitetime           :: Maybe SignInfo
     , documentdeleted              :: Bool                    -- to be moved to links
     , documentlog                  :: [DocumentLogEntry]      -- to be made into plain text 
     , documentinvitetext           :: BS.ByteString             
@@ -1957,7 +1957,7 @@ instance Migrate Document14 Document where
                 , documenttimeouttime          = documenttimeouttime14
                 -- here we see if there is a time of sending invitations in the history of a document
                 , documentinvitetime           = msum $ map (\x -> case x of
-                                                                   DocumentHistoryInvitationSent time _ _ -> Just time
+                                                                   DocumentHistoryInvitationSent time ipnumber _ -> Just (SignInfo time ipnumber)
                                                                    _ -> Nothing) documenthistory14
                 , documentdeleted              = documentdeleted14
                 , documentlog                  = map documentHistoryToDocumentLog documenthistory14
