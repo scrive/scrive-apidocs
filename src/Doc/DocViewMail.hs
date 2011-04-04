@@ -375,9 +375,9 @@ mailMismatchAuthor ctx document authorname badname bademail = do
         field "documenttitle" $ BS.toString $ documenttitle document
         field "messages" $ concat $ map para $ lines msg
         field "authorname" authorname
-        field "doclink" $ show $ LinkDesignDoc (DesignStep2 (documentid document)
+        field "doclink"  (ctxhostpart ctx ++ (show $ LinkDesignDoc (DesignStep2 (documentid document)
                                                             Nothing
-                                                            Nothing)
+                                                            Nothing)))
         field "bademail" bademail
         field "badname" badname)
     return $ emptyMail  { title = BS.fromString title
