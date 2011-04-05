@@ -1051,21 +1051,15 @@ a.button {
 {
     color: #ffffff;
     background-image: url(../img/bg-header.jpg);
-    height: 24px;
-    border-width: 1px 1px 0 1px;
-    border-color: #000000;
-    border-style: solid;
-    padding: 6px 7px 7px 20px;
+    height: 20px;
+    padding: 2px 3px 2px 20px;
     position: relative;
 }
 
 #signStepsTitleRowTextContainer
 {
     display: inline-block;
-    margin: 1px 0 0 18px;
     float: left;
-    position:relative;
-    top:4px;
 }
 
 #signStepsTitleRow .title
@@ -1081,7 +1075,7 @@ a.button {
     margin-right: 2px;
     display: inline-block;
     float: right;
-    margin: 8px 10px 0 18px;
+    margin: 4px 10px 0 18px;
     
     
 }
