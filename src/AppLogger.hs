@@ -82,7 +82,7 @@ setupLogger = do
     -- Access Log
     updateGlobalLogger
         "Happstack.Server.AccessLog.Combined"
-        (setLevel NOTICE . setHandlers [accessLog])
+        (setLevel INFO . setHandlers [accessLog])
 
     -- Mail Log
     updateGlobalLogger
