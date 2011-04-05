@@ -2606,3 +2606,9 @@ width: 340px;
 .eleghidden .nordea, #elegbuttons .nordea {
     padding-top: 13px;
 }
+
+.templatedDialogContainer{
+    display:none;
+    margin-top: 16px;
+    
+}
