@@ -272,8 +272,7 @@ sendClosedEmail1 ctx document signatorylink = do
       Document{documenttitle,documentid} = document
   mail <- mailDocumentClosedForSignatories (ctxtemplates ctx) ctx document signatorylink
   attachmentcontent <- getFileContents ctx $ head $ documentsealedfiles document
-  sendMail  (ctxmailer ctx) $ mail { fullnameemails =  [(signatoryname signatorydetails,signatoryemail signatorydetails)]
-                                     , attachments = [(documenttitle,attachmentcontent)]}
+  scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails =  [(signatoryname signatorydetails,signatoryemail signatorydetails)],attachments = [(documenttitle,attachmentcontent)]}
 
 {- |
    Send an email to the author when the document is awaiting approval
@@ -301,7 +300,8 @@ sendClosedAuthorEmail ctx document = do
   let Document{documenttitle,documentid} = document
       email1 = unEmail $ useremail $ userinfo authoruser
       name1 = userfullname authoruser
-  sendMail (ctxmailer ctx) $ mail { fullnameemails = [(name1,email1)], attachments = [(documenttitle,attachmentcontent)]}
+  scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [(name1,email1)], attachments = [(documenttitle,attachmentcontent)]}
+
 
 {- |
    Send an email to the author when the document is rejected
