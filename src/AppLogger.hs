@@ -54,7 +54,19 @@ setupLogger = do
     securityLog <- fileHandler "log/security.log" INFO >>= \lh -> return $ setFormatter lh fmt
     stdoutLog <- streamHandler stdout NOTICE
 
-    hSetEncoding (privData appLog) utf8
+    let allLoggers = [ appLog
+                     , accessLog
+                     , stdoutLog
+                     , mailLog
+                     , debugLog
+                     , errorLog
+                     , trustWeaverLog
+                     , amazonLog
+                     , securityLog
+                     ]
+
+    mapM_ (\log -> hSetEncoding (privData log) utf8) allLoggers
+    
     hSetEncoding (privData accessLog) utf8
     hSetEncoding (privData mailLog) utf8
     hSetEncoding (privData debugLog) utf8
@@ -107,16 +119,7 @@ setupLogger = do
         "Happstack.Server"
         (setLevel NOTICE . setHandlers [stdoutLog])
         
-    return $ LoggerHandle [ appLog
-                          , accessLog
-                          , stdoutLog
-                          , mailLog
-                          , debugLog
-                          , errorLog
-                          , trustWeaverLog
-                          , amazonLog
-                          , securityLog
-                          ]
+    return $ LoggerHandle allLoggers
 
 -- | Tear down the application logger; i.e. close all associated log handlers.
 teardownLogger :: LoggerHandle -> IO ()
