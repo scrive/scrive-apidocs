@@ -20,7 +20,7 @@ import Data.Word
 import Debug.Trace
 import Doc.DocState
 import Doc.DocStorage
-import Happstack.State (update)
+import Happstack.State (update, query)
 import MinutesTime
 import Misc
 import System.Directory
@@ -34,6 +34,8 @@ import qualified Data.Map as Map
 import qualified SealSpec as Seal
 import qualified TrustWeaver as TW
 import qualified AppLogger as Log
+import System.IO.Temp
+import System.IO
                          
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
 personFromSignatoryDetails details =
@@ -215,64 +217,83 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
       in config
 
 sealDocument :: Context 
-             -> MVar (Map.Map FileID JpegPages)
-             -> String
-             -> MinutesTime
              -> User
              -> Document
              -> IO (Either String Document)
-sealDocument ctx@Context{ctxdocstore, ctxs3action, ctxtwconf}
-             _ 
-             hostpart
-             _
+sealDocument ctx@Context{ctxdocstore, ctxs3action, ctxtwconf,ctxhostpart}
              author
              document = do
-  let (file@File {fileid,filename}) = 
-           safehead "sealDocument" $ documentfiles document
-  let docid = documentid document
+                 let files = documentfiles document
+                 mapM_ (sealDocumentFile ctx author document) files
+                 Just newdocument <- query $ GetDocumentByDocumentID (documentid document)
+                 _ <- liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxdocstore ctxs3action) (documentsealedfiles newdocument)
+                 return $ Right newdocument
 
-  tmppath <- getTemporaryDirectory
-  let tmpin = tmppath ++ "/in_" ++ show docid ++ ".pdf"
-  let tmpout = tmppath ++ "/out_" ++ show docid ++ ".pdf"
-  contents <- getFileContents ctx file
-  BS.writeFile tmpin contents
-  let config = sealSpecFromDocument hostpart document author tmpin tmpout
+                 
+
+{- Someday:
+
+ We have lost the ability to upload document to TrustWeaver. Resurrect
+ it someday, when somebody asks.
+
+   case signeddocstorage (usersettings author) of
+       Nothing -> return ()
+       Just twsettings -> 
+           do
+               _ <- forkIO $ uploadDocumentFilesToTrustWeaver ctxtwconf (BS.toString $ storagetwname twsettings) documentid
+               return ()
+ -}
+
+
+sealDocumentFile :: Context 
+                 -> User
+                 -> Document
+                 -> File
+                 -> IO (Either String Document)
+sealDocumentFile ctx@Context{ctxdocstore, ctxs3action, ctxtwconf, ctxhostpart}
+                 author
+                 document@Document{documentid,documenttitle}
+                 file@File {fileid,filename} =
+  withSystemTempDirectory ("seal-" ++ show documentid ++ "-" ++ show fileid ++ "-") $ \tmppath -> do
+  let tmpin = tmppath ++ "/input.pdf"
+  let tmpout = tmppath ++ "/output.pdf"
+  content <- getFileContents ctx file
+  BS.writeFile tmpin content
+  let config = sealSpecFromDocument ctxhostpart document author tmpin tmpout
   (code,stdout,stderr) <- readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
-  Log.debug $ "seal exit code " ++ show code
-  Log.debug $ "seal stdout: " ++ BSL.toString stdout
-  Log.debug $ "seal stderr: " ++ BSL.toString stderr
 
-  if code == ExitSuccess 
-     then do
+  case code of
+      ExitSuccess -> 
+          do
+              newfilepdf1 <- BS.readFile tmpout
+              newfilepdf <- 
+                  case TW.signConf ctxtwconf of
+                      Nothing -> return newfilepdf1
+                      Just x -> do
+                          x <- TW.signDocument ctxtwconf newfilepdf1
+                          case x of
+                              Left errmsg -> 
+                                  do
+                                      let msg = "Cannot TrustWeaver sign doc #" ++ show documentid ++ " file #" ++ show fileid ++ ": " ++ errmsg
+                                      Log.error $ msg 
+                                      Log.trustWeaver $ msg 
+                                      return newfilepdf1
+                              Right result -> 
+                                  do
+                                      let msg = "TrustWeaver signed doc #" ++ show documentid ++ " file #" ++ show fileid ++ ": " ++ BS.toString documenttitle
+                                      Log.trustWeaver msg
+                                      return result
 
-       newfilepdf1 <- BS.readFile tmpout
-       removeFile tmpout
-
-       newfilepdf <- 
-        case TW.signConf ctxtwconf of
-         Nothing -> return newfilepdf1
-         Just x -> do
-           x <- TW.signDocument ctxtwconf newfilepdf1
-           case x of
-                   Left errmsg -> do
-                     -- FIXME: handle the error in a better way here
-                     putStrLn errmsg
-                     return newfilepdf1
-                   Right result -> return result
-
-       mnewdocument <- update $ AttachSealedFile docid filename newfilepdf
-       case mnewdocument of
-         Right newdocument -> do
-          _ <-liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxdocstore ctxs3action) (documentsealedfiles newdocument)
-          case signeddocstorage (usersettings author) of
-           Nothing -> return ()
-           Just twsettings -> do
-                        _ <- forkIO $ uploadDocumentFilesToTrustWeaver ctxtwconf (BS.toString $ storagetwname twsettings) (documentid newdocument)
-                        return () 
-          return $ Right newdocument
-         Left msg -> error msg
-     else do
-        -- error handling
-        Log.error $ "seal: cannot seal document " ++ show docid ++ ", fileid " ++ show fileid
-        _ <- update $ ErrorDocument docid "could not seal document"
-        return $ Left "could not seal document"
+              update $ AttachSealedFile documentid filename newfilepdf
+      ExitFailure _ -> 
+          do
+              -- error handling
+              systmp <- getTemporaryDirectory
+              (path,handle) <- openTempFile systmp ("seal-failed-" ++ show documentid ++ "-" ++ show fileid ++ "-.pdf")
+              let msg = "Cannot seal document #" ++ show documentid ++ " bacause of file #" ++ show fileid
+              Log.error $ msg ++ ": " ++ path
+              Log.error $ BSL.toString stderr
+              BS.hPutStr handle content
+              hClose handle
+              _ <- update $ ErrorDocument documentid $ "Could not seal document because of file #" ++ show fileid
+              return $ Left msg
