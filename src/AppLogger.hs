@@ -112,7 +112,7 @@ setupLogger = do
     -- Error Log
     updateGlobalLogger
         "Kontrakcja.Error"
-        (setLevel NOTICE . setHandlers [errorLog])
+        (setLevel NOTICE . setHandlers [errorLog, stdoutLog])
 
     -- Server Log
     updateGlobalLogger
