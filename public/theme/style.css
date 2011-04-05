@@ -1618,8 +1618,9 @@ input.multiFileInput {
 .signStepsBodyForms .inputWrapper .fieldvalue
 {
     padding-left: 19px;
-    height: 18px;
-    line-height: 18px;
+    padding-top: 2px;
+    height: 17px;
+    line-height: 17px;
     font-size: 12px;
     border-color: transparent;
     outline: none;
@@ -1841,7 +1842,8 @@ form {
 /* 013 new */
 #signStepsBodyLeft #people
 {
-    width: 250px;
+    width: 305px;
+    min-height: 74px;
     padding: 10px 8px 8px 8px;
     margin-top: 2px;
 }
