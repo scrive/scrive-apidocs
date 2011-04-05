@@ -22,7 +22,7 @@ import qualified Data.ByteString as BS
 import Kontra
 import KontraLink
 import Data.Maybe
-import Mails.SendMail(Mail,emptyMail,content,title,fullnameemails)
+import Mails.SendMail(Mail,emptyMail,content,title,fullnameemails,attachments)
 import Doc.DocViewUtil
 import Amazon
 import Templates.Templates 
@@ -74,7 +74,8 @@ remindMailSigned templates customMessage ctx document@Document{documenttitle}  s
                      let files = if (null $ documentsealedfiles document) then (documentfiles document) else (documentsealedfiles document)
                      title<- renderTemplate templates "remindMailSignedTitle" [("documenttitle",BS.toString $ documenttitle)]
                      content<-wrapHTML templates =<<remindMailSignedContent templates customMessage ctx  document signlink author
-                     return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
+                     attachmentcontent <- getFileContents (ctxs3action ctx) $ head $ files   
+                     return $ emptyMail {title = BS.fromString title, content = BS.fromString content, attachments = [(documenttitle,attachmentcontent)]}
 
 remindMailNotSignedContent :: KontrakcjaTemplates 
                            ->  Bool 
