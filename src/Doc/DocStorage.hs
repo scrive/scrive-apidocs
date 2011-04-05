@@ -124,10 +124,7 @@ resizeImageAndReturnOriginalSize filepath = do
 convertPdfToJpgPages :: Context
                      -> File
                      -> IO JpegPages
-convertPdfToJpgPages ctx file = do
-  tmppath1 <- getTemporaryDirectory
-  let tmppath = tmppath1 ++ "/" ++ show (fileid file)
-  createDirectoryIfMissing True tmppath
+convertPdfToJpgPages ctx file = withSystemTempDirectory "pdf2jpeg" $ \tmppath -> do
   let sourcepath = tmppath ++ "/source.pdf"
 
   content <- getFileContents ctx file
@@ -169,9 +166,6 @@ convertPdfToJpgPages ctx file = do
                                     return (fcontent,943,1335)
 
                   return (JpegPages x)
-  -- remove the directory with all the files now
-  -- everything as been collected, process has ended, we are done!
-  removeDirectoryRecursive tmppath
   return result
    
 {- | Shedules rendering od a file. After forked process is done, images will be put in shared memory. -}
