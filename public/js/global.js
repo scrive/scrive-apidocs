@@ -386,6 +386,7 @@ safeReady(function() {
       if (!emailFieldsValidation(noMultiParts($(".stepForm input[type='email']")))) return false;
       if (!nonZeroSignatories()) return false;
       if (!authorFieldsValidation()) return false;
+      if (!checkSignatoriesHaveUniqueEmail()) return false;
       fieldValidationType = "";
       var tot = swedishString(allparties());
       $(".Xinvited").html(tot);
@@ -400,6 +401,7 @@ safeReady(function() {
       if (!emailFieldsValidation(noMultiParts($(".stepForm input[type='email']")))) return false;
       if (!nonZeroSignatories()) return false;
       if (!authorFieldsValidation()) return false;
+      if (!checkSignatoriesHaveUniqueEmail()) return false;
       fieldValidationType = "";
       var tot = swedishString(allparties());
       $(".Xinvited").html(tot);
@@ -407,6 +409,41 @@ safeReady(function() {
   });
 });
 
+
+function checkSignatoriesHaveUniqueEmail() {
+  var isRepetition = false;
+  var emails = $(".stepForm").find("input[type='email']");
+  emails.each(function() {
+    var emailvalue = $(this).val();
+    var matchingemails = emails.filter(function() {
+      return $(this).val()==emailvalue;
+    });
+    if (matchingemails.length>1) {
+      matchingemails.closest("span").addClass("redborder");
+      isRepetition = true;
+    }
+  });
+  
+  var isAuthorUsedAsSignatory = false;
+  var authoremail = $(".stepForm .authoremail .fieldvalue").text();
+  var emailsmatchingauthor = emails.filter(function() {
+    console.log($(this).val());
+    console.log("=");
+    console.log(authoremail);
+    return $(this).val()==authoremail;
+  });
+  if (emailsmatchingauthor.length>0) {
+    emailsmatchingauthor.closest("span").addClass("redborder");
+    isAuthorUsedAsSignatory = true;
+  }
+  
+  if (isRepetition || isAuthorUsedAsSignatory) {
+    addFlashMessage("Du kan ej använda samma e-post för mer än 1 användare", "red");
+    return false;
+  } else {
+    return true;
+  }
+}
 safeReady(function() {
   $(".submiter").live("click", function(){
     $(this).parents("form").submit();
