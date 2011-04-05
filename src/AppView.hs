@@ -56,7 +56,10 @@ renderFromBody ctx topmenu title xml = do
     let showCreateAccount = htmlPage && (isNothing $ ctxmaybeuser ctx)
     columns <- isFieldSet "columns"
     loginOn <- isFieldSet "logging"
-    res <- webHSP $ pageFromBody ctx columns loginOn showCreateAccount title xml
+    curr <- rqUri <$> askRq
+    referer <- getField "referer"
+    let loginreferer = Just $ fromMaybe curr referer
+    res <- webHSP $ pageFromBody ctx columns loginOn loginreferer Nothing showCreateAccount title xml
     clearFlashMsgs
     return res
     
@@ -68,6 +71,8 @@ pageFromBody :: (EmbedAsChild (HSPT' IO) xml)
              =>  Context 
              -> Bool
              -> Bool
+             -> Maybe String
+             -> Maybe String
              -> Bool
              -> String 
              -> xml
@@ -78,6 +83,8 @@ pageFromBody ctx@Context{ ctxmaybeuser
                         }
              columns 
              loginOn
+             referer
+             email
              showCreateAccount 
              title 
              body = do
@@ -89,7 +96,7 @@ pageFromBody ctx@Context{ ctxmaybeuser
         field "showCreateAccount" showCreateAccount
         mainLinksFields 
         contextInfoFields ctx
-        loginModal loginOn Nothing Nothing
+        loginModal loginOn referer email
     return $ cdata wholePage
 
 {- |

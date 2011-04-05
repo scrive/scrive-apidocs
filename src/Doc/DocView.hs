@@ -126,6 +126,7 @@ willCreateAccountForYou templates document siglink hasAccount isloggedin =
        renderTemplate templates "willCreateAccountForYouHasAccount" $ do
          field "email" . signatoryemail $ signatorydetails siglink
          field "isloggedin" isloggedin
+         field "referer" $ show (LinkSignDoc document siglink)
          field "linklogin" $ show (LinkLogin LoginTry)
      else
        renderTemplate templates "willCreateAccountForYouNoAccount" $ do
