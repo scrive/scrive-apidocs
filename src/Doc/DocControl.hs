@@ -115,7 +115,7 @@ postDocumentChangeAction document@Document  { documentstatus
         ctx@Context{ctxnormalizeddocuments,ctxhostpart,ctxtime} <- get
         Log.forkIOLogWhenError ("error sealing document " ++ show documentid)$ do
           Just user <- query $ GetUserByUserID (unAuthor (documentauthor))
-          enewdoc <- sealDocument ctx ctxnormalizeddocuments ctxhostpart ctxtime user document
+          enewdoc <- sealDocument ctx user document
           case enewdoc of
                Right newdoc -> sendClosedEmails ctx newdoc
                Left errmsg -> do
