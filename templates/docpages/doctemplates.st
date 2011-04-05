@@ -1,5 +1,3 @@
-###
-empty = $it.0$
 ####
 templatesForAjax= 
 
@@ -8,7 +6,8 @@ templatesForAjax=
 <!-- Table with all templates --> 
     <div class="tab-container">
             <div class="tab-content">
-                <div class="" style="margin-left:33%;margin-right:33%;padding:10px;width:250px;">
+                <div class="float-left basicinfo"> <p>Klicka på den mall du vill välja för att starta processen </p></div> 
+                <div class="float-right search" >
                    <form action="$currentlink$" method="POST">
                       $searchBox(infotext='Sök dokument')$
                    </form>

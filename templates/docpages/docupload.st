@@ -79,11 +79,13 @@ $loadingdialog()$
 </div>
 </td> </tr></tbody></table>
 <!-- MAIN FROM END HERE --> 
+</div> 
 </div>
-  <div class="templatedDialogContainer" style="display:none">
-        <div class='waiting4data'></div></div>
- </div>     
-</div>     
+</div>
+<div class="templatedDialogContainer" style="display:none">
+        <div class='waiting4data'></div>
+</div>
+       
  <script>
     function getTemplates(curr){
         var location = jQuery(jQuery(curr).attr("rel"));
@@ -99,8 +101,7 @@ $loadingdialog()$
    safeReady(function(){
     $if(!showTemplates)$
     jQuery(".selectTemplateButton").click(function(){
-        addFlashMessage("Klicka på den mall du vill välja för att starta processen","green");
-        getTemplates(this);
+       getTemplates(this);
     })
     $else$
     getTemplates(jQuery(".selectTemplateButton"))

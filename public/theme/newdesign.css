@@ -350,6 +350,20 @@
 	color: #9a9a9a;
 }
 
+.tab-content .basicinfo {
+    color: #000 !important;
+    font: 12px "Helvetica Neue";
+    text-decoration: none;
+    padding: 18px 0 0 18px;
+}
+
+.tab-content .search {
+    padding-top:11px;
+    padding-bottom:7px;
+    width:250px;
+}
+
+
 #tab-viewer .tab-header {
 	background: url(../img/bg-header.jpg);
 	border: solid #000;
