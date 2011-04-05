@@ -1,3 +1,30 @@
+//Checking 
+$(document).ready( function() {
+    if ($.browser.msie && $.browser.version < "7.0")
+    {
+       var alertModal = $("<div class='modal-container' style='height:80px'>"+
+                        "<div class='modal-body' style='padding:20px;font-size:13pt'>"+
+                        "<div class='modal-icon decline' style='margin-top:0px'></div>"+
+                        "<div>Din webbläsare, Internet Explorer 6, stöds inte längre. Vänligen uppgradera till en modern webbläsare</div>"+
+                        ""+
+                        "</div>"
+                         )
+      $("body").html("");
+      $("body").append(alertModal);
+      alertModal.overlay({
+        load: true,
+        closeOnClick: false,
+        closeOnEsc: false,
+        mask: {
+            color: '#000000',
+            loadSpeed: 0,
+            opacity: 0.90
+            }
+         });   
+    } 
+});
+
+
 // Alternative submit button
 (function($) {
     $.fn.altSubmit = function() {   
