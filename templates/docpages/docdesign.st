@@ -191,8 +191,8 @@ $endif$
                   <a href="#nextStep" id="nextstep" class="btn-small green center" style="display:inline-block">
                     <div class="left"></div>
                     <div class="label">
-                        <p style="display:inline-block;text-align:left;width:80px;">Nästa steg</p>
-                        <span style="position: relative; top: 3px; right: 0px;" class="btn-symbol green arrow-left"></span>
+                        <p style="display:inline-block;width:80px;">Nästa steg</p>
+                        <span class="btn-symbol green arrow-left"></span>
                     </div>
                     <div class="right"></div>
                 

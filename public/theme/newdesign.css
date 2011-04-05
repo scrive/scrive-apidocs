@@ -634,7 +634,7 @@
    border: 1px solid #6f89aa;
    /* color: #666; */
    font: 12px "Lucida Grande";
-   padding: 4px;
+   padding: 5px 4px 3px;
    text-transform: none;
    width: 130px;
 }
