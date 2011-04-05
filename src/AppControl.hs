@@ -588,16 +588,19 @@ daveUser userid = onlySuperUserGet $ do
 
 hpost0 :: Kontra KontraLink -> Kontra Response
 hpost0 action = methodM POST >> (https $ do
+    UserControl.guardXToken
     (link :: KontraLink) <- action
     sendRedirect link)
 
 hpost1 :: (FromReqURI a) =>  (a -> Kontra KontraLink) -> Kontra Response
 hpost1 action = path $ \a1 -> methodM POST >>  (https $ do
+    UserControl.guardXToken
     (link :: KontraLink) <- action a1
     sendRedirect link)
 
 hpost2 :: (FromReqURI a, FromReqURI a1) =>   (a -> a1 -> Kontra KontraLink) -> Kontra Response
 hpost2 action = path $ \a1 -> path $ \a2 -> methodM POST >>  (https $ do
+    UserControl.guardXToken
     (link :: KontraLink) <- action a1 a2
     sendRedirect link)
 
@@ -605,6 +608,7 @@ hpost3 :: (FromReqURI a, FromReqURI a1, FromReqURI a2) =>
           (a -> a1 -> a2 -> Kontra KontraLink) 
           -> Kontra Response
 hpost3 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> methodM POST >> (https $ do
+    UserControl.guardXToken
     (link :: KontraLink) <- action a1 a2 a3
     sendRedirect link)
 
@@ -612,6 +616,7 @@ hpost4 :: (FromReqURI a, FromReqURI a1, FromReqURI a2, FromReqURI a3) =>
           (a -> a1 -> a2 -> a3 -> Kontra KontraLink)
            -> Kontra Response
 hpost4 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> path $ \a4 -> methodM POST >>  (https $ do
+    UserControl.guardXToken
     (link :: KontraLink) <- action a1 a2 a3 a4
     sendRedirect link)
 
