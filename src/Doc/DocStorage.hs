@@ -151,7 +151,14 @@ convertPdfToJpgPages ctx file = withSystemTempDirectory "pdf2jpeg" $ \tmppath ->
   exitcode <- waitForProcess gsProcHandle
 
   result <- case exitcode of
-    ExitFailure _ -> return $ JpegPagesError (errcontent `BS.append` outcontent)
+    ExitFailure _ -> do
+        systmp <- getTemporaryDirectory
+        (path,handle) <- openTempFile systmp ("pdf2jpg-failed-" ++ show (fileid file) ++ "-.pdf")
+        Log.debug $ "Cannot pdf2jpg, source " ++ path
+        BS.hPutStr handle content
+        hClose handle
+
+        return $ JpegPagesError (errcontent `BS.append` outcontent)
     ExitSuccess -> do
                   let pathofx x = tmppath ++ "/output-" ++ show x ++ ".jpg"
                   let existingPages x = do
