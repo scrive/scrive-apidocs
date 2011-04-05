@@ -38,14 +38,27 @@ import Happstack.State
 import Mails.MailsConfig
 import Misc
 import qualified AppLogger as Log
+import Data.ByteString.Internal (c2w,w2c)
 
 -- from simple utf-8 to =?UTF-8?Q?zzzzzzz?=
--- FIXME: should do better job at checking if encoding should be applied or not
 mailEncode :: BS.ByteString -> String
-mailEncode source = 
-    "=?UTF-8?Q?" ++ QuotedPrintable.encode (BS.unpack source) ++ "?="
+mailEncode source = unwords (map encodeWord w)
+    where
+        -- here we really want to use latin1 encoding to treat chars as bytes
+        -- the QuotedPrintable encoder treats chars as bytes
+        -- overall this is UTF-8 encoded
+        --
+        -- also: this removes spaces at front, spaces at the end, double spaces
+        -- and (important!) converts \r and \n to space.
+        --
+        -- please keep these conversions as the are security measure
+        w = words (map w2c $ BS.unpack source)
+        wordNeedsEncoding word = any charNeedsEncoding word
+        -- FIXME: needs to check if this is full list of exceptions
+        charNeedsEncoding char = char <= ' ' || char >= '\x7f' || char == '='
+        encodeWord wa | wordNeedsEncoding wa = "=?UTF-8?Q?" ++ QuotedPrintable.encode (map c2w wa) ++ "?="
+                      | otherwise = wa
 
--- FIXME: use words/unword here
 mailEncode1 :: String -> String
 mailEncode1 source = mailEncode (BS.fromString source)
 
