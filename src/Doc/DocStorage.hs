@@ -123,8 +123,9 @@ resizeImageAndReturnOriginalSize filepath = do
  -}
 convertPdfToJpgPages :: Context
                      -> File
+                     -> DocumentID
                      -> IO JpegPages
-convertPdfToJpgPages ctx file = withSystemTempDirectory "pdf2jpeg" $ \tmppath -> do
+convertPdfToJpgPages ctx file docid = withSystemTempDirectory "pdf2jpeg" $ \tmppath -> do
   let sourcepath = tmppath ++ "/source.pdf"
 
   content <- getFileContents ctx file
@@ -154,7 +155,7 @@ convertPdfToJpgPages ctx file = withSystemTempDirectory "pdf2jpeg" $ \tmppath ->
     ExitFailure _ -> do
         systmp <- getTemporaryDirectory
         (path,handle) <- openTempFile systmp ("pdf2jpg-failed-" ++ show (fileid file) ++ "-.pdf")
-        Log.debug $ "Cannot pdf2jpg, source " ++ path
+        Log.error $ "Cannot pdf2jpg (doc #" ++ show docid ++ ", file #" ++ show (fileid file) ++ "): " ++ path
         BS.hPutStr handle content
         hClose handle
 
@@ -186,8 +187,8 @@ maybeScheduleRendering ctx@Context{ ctxnormalizeddocuments = mvar }
       case Map.lookup fileid setoffilesrenderednow of
          Just pages -> return (setoffilesrenderednow, pages)
          Nothing -> do
-           Log.forkIOLogWhenError ("error rendering file " ++ show fileid) $ do
-                jpegpages <- convertPdfToJpgPages ctx file
+           Log.forkIOLogWhenError ("error rendering file #" ++ show fileid ++ " of doc #" ++ show docid) $ do
+                jpegpages <- convertPdfToJpgPages ctx file docid
                 case jpegpages of
                      JpegPagesError errmsg -> do
                          _ <- update $ ErrorDocument docid $ BS.toString errmsg
@@ -198,8 +199,9 @@ maybeScheduleRendering ctx@Context{ ctxnormalizeddocuments = mvar }
 
 {- |  Convert PDF to jpeg images of pages -}
 preprocessPDF :: BS.ByteString
+              -> DocumentID
               -> IO BS.ByteString
-preprocessPDF content = withSystemTempDirectory "gs" $ \tmppath -> do
+preprocessPDF content docid = withSystemTempDirectory "preprocess_gs" $ \tmppath -> do
   let sourcepath = tmppath ++ "/source.pdf"
   let outputpath = tmppath ++ "/output.pdf"
 
@@ -222,10 +224,13 @@ preprocessPDF content = withSystemTempDirectory "gs" $ \tmppath -> do
 
   result <- case exitcode of
     ExitFailure _ -> do
-       Log.debug $ "preprocess PDF error code " ++ show exitcode
-       Log.debug $ "stdout: " ++ BSL.toString outcontent
-       Log.debug $ "stderr: " ++ BSL.toString errcontent
-       return content
-    ExitSuccess -> BS.readFile outputpath
+        systmp <- getTemporaryDirectory
+        (path,handle) <- openTempFile systmp ("preprocess-failed-" ++ show docid ++ "-.pdf")
+        Log.error $ "Cannot preprocess pdf (doc #" ++ show docid ++ "): " ++ path
+        BS.hPutStr handle content
+        hClose handle
+        return content
+    ExitSuccess -> do
+        BS.readFile outputpath
 
   return result
