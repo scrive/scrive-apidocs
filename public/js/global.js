@@ -124,7 +124,7 @@ safeReady(function() {
   $(".listDelete").overlay({
     mask: standardDialogMask,
     onBeforeLoad: function() {
-      var selectedrows = $(".listForm").find(".ui-selected");
+      var selectedrows = $(".listForm tbody tr.ui-selected");
       if (selectedrows.length==0) {
         return false;
       } else {
@@ -151,7 +151,7 @@ safeReady(function() {
   $(".listRemind").overlay({
     mask: standardDialogMask,
     onBeforeLoad: function() {
-      var selectedrows = $(".listForm").find(".ui-selected");
+      var selectedrows = $(".listForm tbody tr.ui-selected");
       if (selectedrows.length==0) {
         return false;
       } else {
