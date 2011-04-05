@@ -692,5 +692,6 @@ guardXToken :: Kontra ()
 guardXToken = do
     Context { ctxxtoken } <- get
     paramtoken <- getDataFnM $ look "xtoken"
-    let (xtoken :: MagicHash) = read paramtoken
+    liftIO $ print paramtoken
+    let (xtoken :: MagicHash) = read ((read paramtoken) :: String)
     unless (xtoken == ctxxtoken) mzero
