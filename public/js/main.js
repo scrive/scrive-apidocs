@@ -130,17 +130,9 @@ $(document).ready( function() {
 		'<td><input type="text" name="companyposition" infotext="Befattning" value="Befattning" class="infotext grayed" /></td>' + 
 		'<td><input type="text" name="phone" infotext="Telefonnummer" value="Telefonnummer" class="infotext grayed" /></td>' + 
 		'<td><input type="text" name="email" infotext="Email" value="Email" class="infotext grayed" /></td>' + 
-        '<td>' + 
-            '<a href="javascript:;" class="btn-tiny green add">' +
-            '<div class="left"></div>' + 
-            '<div class="label" ><div style="padding-left:5px;padding-right:5px">Ok</div> </div>' + 
-            '<div class="right"></div>' + 
-            '</a>' + 
-            '<a href="javascript:;" class="btn-tiny black remove">' +
-            '<div class="left"></div>' + 
-            '<div class="label" ><div style="padding-left:7px;padding-right:7px">-</div></div>' + 
-            '<div class="right"></div>' + 
-            '</a>' + 
+        '<td style="text-align:center">' + 
+            '<a href="javascript:;" class="icon small ok add"></a>' + 
+            '<a href="javascript:;" class="icon small minus remove"></a>' + 
         '</td>' + 
 		'</tr>');
         $("tr",container).toggleClass('odd');
