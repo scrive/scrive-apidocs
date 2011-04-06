@@ -313,7 +313,6 @@ function docstateToHTML(){
                               }
                         ff.find(".signatoryfields").append(
                          "<div class='field'>"+
-                            "<div class='icon lock-closed'></div>"+
                             "<span class='fieldvalue "+c+"'>"+escapeHTML(val)+"</span>"+
                          "</div>")
                 }
@@ -327,7 +326,6 @@ function docstateToHTML(){
                               }
                         ff.find(".signatoryfields").append(
                          "<div class='field'>"+
-                            "<div class='icon lock-closed'></div>"+
                             "<span class='fieldvalue "+c+"'>"+escapeHTML(val)+"</span>"+
                          "</div>")
                 }
@@ -351,7 +349,6 @@ function docstateToHTML(){
                               }
 			      ff.find(".signatoryfields").append(
                          "<div class='field'>"+
-                            "<div class='icon lock-closed'></div>"+
                             "<span class='fieldvalue "+c+"'>"+escapeHTML(val)+"</span>"+
                          "</div>")
         
@@ -404,7 +401,6 @@ function docstateToHTML(){
              }
              ff.find(".signatoryfields").append(
                          "<div class='field'>"+
-                            "<div class='icon lock-closed'></div>"+
                             "<span class='fieldvalue "+c+"'>"+escapeHTML(val)+"</span>"+
                          "</div>");
 		}
