@@ -208,6 +208,7 @@
 	border: 1px solid #e0e0e0;
 	font: 12px "Lucida Grande";
 	width: 100%;
+    table-layout: fixed;
 }
 
 .tab-table table th {
@@ -237,6 +238,7 @@
 	height: 22px;
 	margin-bottom: 1px;
 	padding-left: 15px;
+    overflow-x:hidden;
 }
 
 .tab-table table td em {
