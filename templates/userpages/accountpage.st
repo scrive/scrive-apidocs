@@ -8,6 +8,7 @@ showUser =
        <li class="active"><a href="/account">Konto</a></li>
        <li><a href="/account/subaccount">Underkonton</a></li>
        <li><a href="/account/sharing">Delning</a></li>
+       <li><a href="/account/security">Säkerhet</a></li>
    </ul>
    <div class="tab-container">
        <div class="tab-content account">
@@ -47,22 +48,6 @@ showUser =
                        <tr>
                            <td>Befattning</td>
                            <td><input type="text" name="companyposition" value="$companyposition$" autocomplete="off" /></td>
-                       </tr>
-                   </table>
-               </div>
-               <div class="account-body">
-                   <h2>Byt lösenord</h2>
-                   <table>
-                       <tr>
-                           <td>Nuvarande lösen.:</td>
-                           <td><input type="password" name="oldpassword" /></td>
-                       <tr>
-                           <td>Nytt lösenord:</td>
-                           <td><input type="password" name="password" /></td>
-                       </tr>
-                       <tr>
-                           <td>Upprepa nytt lösen.:</td>
-                           <td><input type="password" name="password2" /></td>
                        </tr>
                    </table>
                </div>

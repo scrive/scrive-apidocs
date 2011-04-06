@@ -30,12 +30,10 @@ import User.UserState
 import User.UserView
 
 
-checkPasswords :: BS.ByteString -> BS.ByteString -> Either (KontrakcjaTemplates -> IO FlashMessage) ()
-checkPasswords p1 p2 =
+checkPasswordsMatch :: BS.ByteString -> BS.ByteString -> Either (KontrakcjaTemplates -> IO FlashMessage) ()
+checkPasswordsMatch p1 p2 =
     if p1 == p2
-       then if isPasswordStrong p1
-               then Right ()
-               else Left $ flashMessagePasswordNotStrong 
+       then Right () 
        else Left  flashMessagePasswordsDontMatch      
 
 handleUserGet :: Kontra Response
@@ -43,9 +41,7 @@ handleUserGet = do
     ctx <- get
     case (ctxmaybeuser ctx) of
          Just user -> do
-             maybefriends <- mapM (query . GetUserByUserID . UserID . unFriend) (userfriends user)
-             let friends = map fromJust $ filter isJust maybefriends
-             content <- liftIO $ showUser (ctxtemplates ctx) user friends
+             content <- liftIO $ showUser (ctxtemplates ctx) user
              renderFromBody ctx TopAccount kontrakcja $ cdata content
          Nothing -> sendRedirect $ LinkLogin NotLogged    
 
@@ -56,34 +52,9 @@ handleUserPost = do
          Just user -> do
              infoUpdate <- getUserInfoUpdate
              update $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
-             need_to_change_password <- needToChangePassword
-             if need_to_change_password
-                then tryToChangeUserPassword user
-                else addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved $ ctxtemplates ctx)
+             addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved $ ctxtemplates ctx)
              return LinkAccount
          Nothing -> return $ LinkLogin NotLogged
-    where
-        needToChangePassword = do
-            moldpassword <- joinEmpty <$> getField "oldpassword"
-            mpassword <- joinEmpty <$> getField "password"
-            mpassword2 <- joinEmpty <$> getField "password2"
-            return $ any isJust [moldpassword,mpassword,mpassword2]
-
-        tryToChangeUserPassword user = do
-            -- Emily ussed input validation here, but I had to drop it since it missed some info
-            ctx <- get
-            oldpassword <- getFieldUTFWithDefault BS.empty "oldpassword"
-            password <- getFieldUTFWithDefault BS.empty "password"
-            password2 <- getFieldUTFWithDefault BS.empty "password2"
-            if verifyPassword (userpassword user) oldpassword
-               then
-                   case (checkPasswords password password2) of
-                        Right () -> do
-                            passwordhash <- liftIO $ createPassword password
-                            update $ SetUserPassword user passwordhash
-                            addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
-                        Left f ->  addFlashMsg =<< (liftIO $ f (ctxtemplates ctx))
-               else addFlashMsg =<< (liftIO $ flashMessageBadOldPassword (ctxtemplates ctx))
 
 getUserInfoUpdate :: Kontra (UserInfo -> UserInfo)
 getUserInfoUpdate  = do
@@ -112,6 +83,39 @@ getUserInfoUpdate  = do
           , usercountry  = fromMaybe (usercountry  ui) mcountry 
           , userphone  = fromMaybe (userphone ui) mphone
         }
+
+handleGetUserSecurity :: Kontra Response
+handleGetUserSecurity = do
+    ctx <- get
+    case (ctxmaybeuser ctx) of
+         Just user -> do
+             content <- liftIO $ showUserSecurity (ctxtemplates ctx) user
+             renderFromBody ctx TopAccount kontrakcja $ cdata content
+         Nothing -> sendRedirect $ LinkLogin NotLogged    
+
+handlePostUserSecurity :: Kontra KontraLink
+handlePostUserSecurity = do
+  ctx <- get
+  case (ctxmaybeuser ctx) of
+    Just user -> do
+      moldpassword <- getRequiredField asDirtyPassword "oldpassword"
+      mpassword <- getRequiredField asValidPassword "password"
+      mpassword2 <- getRequiredField asDirtyPassword "password2"
+      case (moldpassword, mpassword, mpassword2) of
+        (Just oldpassword, Just password, Just password2) ->
+          case (verifyPassword (userpassword user) oldpassword,
+                  checkPasswordsMatch password password2) of
+            (False,_) ->
+              addFlashMsg =<< (liftIO $ flashMessageBadOldPassword (ctxtemplates ctx))
+            (_, Left f) ->
+              addFlashMsg =<< (liftIO $ f (ctxtemplates ctx))
+            _ ->  do
+              passwordhash <- liftIO $ createPassword password
+              update $ SetUserPassword user passwordhash
+              addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
+        _ -> return ()
+      return LinkSecurity
+    Nothing -> return $ LinkLogin NotLogged
 
 handleGetSharing :: Kontra Response
 handleGetSharing = withUserGet $ do
@@ -516,7 +520,7 @@ handleAccountSetupPost aid hash = do
             mpassword2 <- getRequiredField asValidPassword "password2"
             case (mtos, mfname, mlname, mcompanyname, mcompanyposition, mpassword, mpassword2) of
                  (Just tos, Just fname, Just lname, Just companyname, Just companytitle, Just password, Just password2) -> do
-                     case checkPasswords password password2 of
+                     case checkPasswordsMatch password password2 of
                           Right () ->
                               if tos
                                  then do
@@ -588,7 +592,7 @@ handlePasswordReminderPost aid hash = do
             mpassword2 <- getRequiredField asDirtyPassword "password2"
             case (mpassword, mpassword2) of
                  (Just password, Just password2) -> do
-                     case (checkPasswords password password2) of
+                     case (checkPasswordsMatch password password2) of
                           Right () -> do
                               dropExistingAction aid
                               passwordhash <- liftIO $ createPassword password

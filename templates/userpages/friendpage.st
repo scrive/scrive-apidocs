@@ -10,6 +10,7 @@ viewFriends =
 		   <li><a href="/account">Konto</a></li>
                    <li><a href="/account/subaccount">Underkonton</a></li>
                    <li class="active"><a href="/account/sharing">Delning</a></li>
+                   <li><a href="/account/security">Säkerhet</a></li>
 		</ul>
                 <div class="listtype" style="display:none;">vänner</div>
 		<div class="tab-container">
