@@ -1318,7 +1318,7 @@ safeReady(function() {
     var form = $(this);
     var tokenTag = $('<input type="hidden" name="xtoken">');
     var token = readCookie("xtoken");
-    if(token.length > 0) {
+    if(token && token.length > 0) {
       console.log(token);
       tokenTag.attr("value", token);
       form.append(tokenTag);
