@@ -73,7 +73,7 @@ $loadingdialog()$
                                 <a href="$currentlink$&sorting=partner">Parter </a>
                                $endif$
                             </th>
-							<th style="width: 400px;">
+							<th style="width: 300px;">
                                $if(params.sorting.titleREV)$
                                 <a href="$currentlink$&sorting=title">Dokument <em> ▲</em></a>
                                $elseif(params.sorting.title)$

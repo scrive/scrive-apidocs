@@ -23,9 +23,6 @@ pagingFooter=	<div class="table-paginate">
                         $if(!elements.none)$
 						 <strong>$elements.min$$if(!elements.single)$-$elements.max$ $endif$ av $elements.total$</strong>
                         $endif$
-                        $if(elements.firstPageAvaible)$
-                            <a href="$currentlink$&page=1"><<</a>
-                        $endif$
 						 $pages:{page | 
                          $if(page.current)$
                           $page.nr$
@@ -33,9 +30,6 @@ pagingFooter=	<div class="table-paginate">
                           <a href="$currentlink$&page=$page.nr$">$page.nr$</a>
                          $endif$
                         }$
-                        $if(elements.lastPageAvaible)$
-                            <a href="$currentlink$&page=$elements.totalPages$">>></a>
-                        $endif$
                         
 					</div>
 					<div class="clearfix"></div>
