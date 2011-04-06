@@ -342,7 +342,6 @@ a.new-btn-small.black p {
 }
 
 .login-container .body, .recovery-container .body {
-    width:220px;
     margin:auto;
     min-height: 122px;
 }
@@ -354,7 +353,7 @@ a.new-btn-small.black p {
 	
 }
 
-.login-container .body .wrapper, .recovery-container .body .wrapper {
+.login-container .body .wrapper {
     background: #f3f3f3;
     border-color: #3f3f3f;
     border-style: solid;
@@ -366,9 +365,30 @@ a.new-btn-small.black p {
     -moz-border-radius: 5px 5px 5px 5px;
     -webkit-border-radius: 5px 5px 5px 5px;
     font: 11px "Lucida Grande";
-    width: 170px;
+    width: 240px;
     margin: auto;
     text-align: center;
+}
+
+.recovery-container .body .wrapper {
+    background: #f3f3f3;
+    border-color: #3f3f3f;
+    border-style: solid;
+    border-width: 1px 1px 1px 1px;
+    padding: 20px;
+    margin:auto;
+    z-index: 101;
+    border-radius: 5px 5px 5px 5px;
+    -moz-border-radius: 5px 5px 5px 5px;
+    -webkit-border-radius: 5px 5px 5px 5px;
+    font: 11px "Lucida Grande";
+    width: 240px;
+    margin: auto;
+    text-align: center;
+}
+
+.login-container .body .wrapper .txt {
+    padding-right: 15px;
 }
 
 .login-container .body input, .recovery-container .body input {

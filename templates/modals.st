@@ -286,10 +286,10 @@ $if(loginModal)$
      <div class="modal-body">
       <div class="modal-content"> 
        <div class="body">
-         <div class=wrapper>
+         <div class="wrapper" style="text-align:right">
            <input type="hidden" name="referer" value="$referer$" />
-           <input type="email" name="email" value="$email$" infotext="E-post" autocomplete="off"/><br />
-           <input type="password" name="password" infotext="password" autocomplete="off"/><br />
+           <span class="txt">E-post</span><input type="email" name="email" value="$email$" infotext="E-post" autocomplete="off"/><br />
+           <span class="txt">Lösenord</span><input type="password" name="password" infotext="password" autocomplete="off"/><br />
            <input type="submit" class="hidden" />
          </div>
        </div>
@@ -323,7 +323,6 @@ $if(loginModal)$
       <div class="modal-content"> 
        <div class="body">
          <div class=wrapper>
-               <span class="txt">Skicka nytt lösenord</span>
                <input type="email" name="email" infotext="E-post" autocomplete="off"/>
                <input type="submit" class="hidden" />
          </div>
@@ -335,7 +334,7 @@ $if(loginModal)$
         <a href="#" class="btn-small green float-right submit">
           <div class="left"></div>
           <div class="label">
-            <p>Skicka</p>
+            <p>Skicka nytt lösenord</p>
           </div>
           <div class="right"></div>
         </a>
