@@ -170,6 +170,8 @@ handleRoutes = msum [
      , dir "account" $ dir "subaccount" $ hpost0 $ UserControl.handlePostSubaccount
      , dir "account" $ dir "sharing" $ hget0 $ UserControl.handleGetSharing
      , dir "account" $ dir "sharing" $ hpost0 $ UserControl.handlePostSharing
+     , dir "account" $ dir "security" $ hget0 $ UserControl.handleGetUserSecurity
+     , dir "account" $ dir "security" $ hpost0 $ UserControl.handlePostUserSecurity
      , dir "contacts"  $ hget0  $ Contacts.showContacts
      , dir "contacts"  $ hpost0 $ Contacts.handleContactsChange
      , dir "accepttos" $ hget0  $ UserControl.handleAcceptTOSGet

@@ -26,7 +26,6 @@ module User.UserState
     , composeFullName
     , userfullname
     , createPassword
-    , isPasswordStrong
     , verifyPassword
 
     , AcceptTermsOfService(..)
@@ -753,14 +752,7 @@ instance Migrate UserInfo0 UserInfo where
           , userphone = userphone0
           , usermobile = usermobile0
           , useremail = useremail0
-          }   
-  
-  
-  
-isPasswordStrong :: BS.ByteString -> Bool
-isPasswordStrong password
-    | length (BS.toString password) >= 6 = True
-    | otherwise = False
+          }
 
 createPassword :: BS.ByteString -> IO Password
 createPassword password = do

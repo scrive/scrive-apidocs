@@ -26,10 +26,6 @@ flashMessageMustAcceptTOS=
 flashMessageUserDetailsSaved=
     <div>Dina kontoändringar har sparats.</div>
 
-####
-flashMessagePasswordNotStrong=
-    Det nya lösenordet ska vara minst 6 tecken
-
 ####        
 flashMessageBadOldPassword=
     Du har skrivit in fel nuvarande lösenord
