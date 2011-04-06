@@ -58,17 +58,19 @@ handleUserPost = do
 
 getUserInfoUpdate :: Kontra (UserInfo -> UserInfo)
 getUserInfoUpdate  = do
-    mfstname          <- getFieldUTF "fstname" 
-    msndname          <- getFieldUTF "sndname" 
+    -- a lot doesn't have validation rules defined, but i put in what we do have
+    let getValidField = getDefaultedField BS.empty
+    mfstname          <- getValidField asValidName "fstname" 
+    msndname          <- getValidField asValidName "sndname"
     mpersonalnumber   <- getFieldUTF "personalnumber"
-    maddress          <- getFieldUTF "address" 
-    mcity             <- getFieldUTF "city" 
-    mcountry          <- getFieldUTF "country" 
-    mzip              <- getFieldUTF "zip" 
-    mphone            <- getFieldUTF "phone" 
-    mcompanyposition  <- getFieldUTF "companyposition" 
-    mcompanynumber    <- getFieldUTF "companynumber"
-    mcompanyname      <- getFieldUTF "companyname"
+    maddress          <- getValidField asValidAddress "address"
+    mcity             <- getFieldUTF "city"
+    mcountry          <- getFieldUTF "country"
+    mzip              <- getFieldUTF "zip"
+    mphone            <- getFieldUTF "phone"
+    mcompanyposition  <- getValidField asValidPosition "companyposition"
+    mcompanynumber    <- getValidField asValidCompanyNumber "companynumber"
+    mcompanyname      <- getValidField asValidCompanyName "companyname"
     return $ \ui ->
         ui {
             userfstname = fromMaybe (userfstname ui) mfstname
