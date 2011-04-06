@@ -1,5 +1,6 @@
 ####		
 pageTemplatesList=
+$loadingdialog()$
 <div> 
 <form method="post" action="$currentlink$" enctype="multipart/form-data" class="listForm">
     <div id="tab-viewer">
@@ -29,7 +30,7 @@ pageTemplatesList=
                 </div>
 
                 <div class="col" style="margin-left:44%;margin-right:44%;padding-top:15px;padding-bottom:0px">
-                    <a class="btn-small green" style="overflow:hidden;height:34px;width:114px" >  
+                    <a class="btn-tiny green" style="overflow:hidden;height:26px;width:90px" >  
                         <div class="left"> </div>
                         <div class="label"> Skapa ny mall </div> 
                         <div class="right"> </div>
