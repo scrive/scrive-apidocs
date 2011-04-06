@@ -228,10 +228,18 @@ logIfBad x@(input, Bad flashmsg) = do
                " user " ++ username ++
                " invalid input: " ++
                " flash [" ++ (snd $ unFlashMessage flash) ++ "]" ++
-               " raw value [" ++ (show input) ++ "]"
+               " raw value info [" ++ (formatRawValueInfo input) ++ "]"
   _ <- liftIO $ Log.security logtext
   return x
 logIfBad x = return x
+
+{- |
+    Returns relevant info about the raw value, I'm scared to print it out,
+    in case reading our logs gets dangerous!
+-}
+formatRawValueInfo :: Input -> String
+formatRawValueInfo Nothing = "Nothing"
+formatRawValueInfo (Just xs) = (show $ length xs) ++ " chars"
 
 {- |
     Interprets the Result as a Maybe,
