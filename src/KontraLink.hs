@@ -41,6 +41,7 @@ data KontraLink
     | LinkNew ListParams
     | LinkAjaxTemplates ListParams
     | LinkAccount
+    | LinkSecurity
     | LinkLandpageSaved Document SignatoryLink
     | LinkSignDoc Document SignatoryLink
     | LinkIssueDoc DocumentID
@@ -94,6 +95,7 @@ instance Show KontraLink where
     showsPrec _ LinkAccount = (++) "/account"
     showsPrec _ (LinkSubaccount params) = (++) $ "/account/subaccount" ++ "?" ++ show params
     showsPrec _ (LinkSharing params) = (++) $ "/account/sharing" ++ "?" ++ show params
+    showsPrec _ LinkSecurity = (++) "/account/security"
     showsPrec _ (LinkLandpageSaved document signatorylink) = 
         (++) $ "/landpage/signedsave/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink)
     showsPrec _ (LinkIssueDoc documentid) = 

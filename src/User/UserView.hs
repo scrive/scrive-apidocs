@@ -4,6 +4,7 @@ module User.UserView (
     viewSubaccounts,
     viewFriends,
     showUser,
+    showUserSecurity,
     pageAcceptTOS,
     activatePageView,
     activatePageViewNotValidLink,
@@ -27,7 +28,6 @@ module User.UserView (
     flashMessageLoginRedirectReason,
     flashMessageUserDetailsSaved,
     flashMessageMustAcceptTOS,
-    flashMessagePasswordNotStrong,
     flashMessageBadOldPassword,
     flashMessagePasswordsDontMatch,
     flashMessageUserPasswordChanged,
@@ -66,8 +66,8 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import ListUtil
 
-showUser :: KontrakcjaTemplates -> User -> [User] -> IO String 
-showUser templates user viewers = renderTemplate templates "showUser" $ do
+showUser :: KontrakcjaTemplates -> User -> IO String 
+showUser templates user = renderTemplate templates "showUser" $ do
     userFields user
     field "linkaccount" $ show LinkAccount
 
@@ -90,7 +90,13 @@ userFields user = do
     field "userimagelink" False
     field "companyimagelink" False
     --field "invoiceaddress" $ BS.toString $ useraddress $ userinfo user
-    --field "viewers" $ map (BS.toString . prettyName)  viewers
+
+showUserSecurity :: KontrakcjaTemplates -> User -> IO String
+showUserSecurity templates user = renderTemplate templates "showUserSecurity" $ do
+    field "linksecurity" $ show LinkSecurity 
+    field "fstname" $ BS.toString $ userfstname $ userinfo user 
+    field "sndname" $ BS.toString $ usersndname $ userinfo user
+    field "userimagelink" False
     
 pageAcceptTOS :: KontrakcjaTemplates ->  BS.ByteString -> IO String
 pageAcceptTOS templates tostext = 
@@ -257,11 +263,6 @@ flashMessageUserDetailsSaved templates =
 flashMessageMustAcceptTOS :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageMustAcceptTOS templates =
   toFlashMsg SigningRelated <$> renderTemplate templates "flashMessageMustAcceptTOS" ()
-
-
-flashMessagePasswordNotStrong :: KontrakcjaTemplates -> IO FlashMessage
-flashMessagePasswordNotStrong templates =
-  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessagePasswordNotStrong" ()
 
 
 flashMessageBadOldPassword :: KontrakcjaTemplates -> IO FlashMessage
