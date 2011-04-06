@@ -235,8 +235,8 @@ a.btn-big .label {
 	float: left;
 	font: 18px/46px "Helvetica Neue";
 	letter-spacing: 0.5px;
-	height: 46px;
-	padding: 0 40px;
+	height: 44px;
+	padding: 1px 40px;
 	position: relative;
 }
 
