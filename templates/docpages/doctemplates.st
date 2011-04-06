@@ -6,7 +6,7 @@ templatesForAjax=
 <!-- Table with all templates --> 
     <div class="tab-container">
             <div class="tab-content">
-                <div class="float-left basicinfo"> <p>Klicka på den mall du vill välja för att starta processen </p></div> 
+                <div class="float-left basicinfo"> <p>Klicka på den mall du vill använda för att starta processen</p></div> 
                 <div class="float-right search" >
                    <form action="$currentlink$" method="POST">
                       $searchBox(infotext='Sök dokument')$
