@@ -1330,6 +1330,7 @@ input.multiFileInput {
     padding-right: 10px;
     padding-bottom: 10px;
     overflow:hidden;
+    padding-top:20px;
 }
 
 .signViewBodyRightTextContainer .text
