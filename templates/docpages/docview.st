@@ -555,7 +555,8 @@ pageDocumentForAuthorHelpersLocalDialogs=
         <div class="modal-title">
           <h2> Återkalla inbjudan </h2>
           <p>Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?
-            <br/>När du återkallat inbjudan kommer nedanstaende meddelande att skickas till dina motparter.
+             <br/> När du återkallat inbjudan kommer nedanstående meddelande att skickas till dina motparter.
+            
           </p>
         </div>
         <a class="modal-close close"> </a>
