@@ -204,7 +204,7 @@ handleRoutes = msum [
      -- account stuff
      , dir "logout"      $ hget0  $ handleLogout
      , dir "login"       $ hget0  $ handleLoginGet
-     , dir "login"       $ hpost0 $ handleLoginPost
+     , dir "login"       $ hpost0NoXToken $ handleLoginPost
      , dir "signup"      $ hget0  $ signupPageGet
      , dir "signup"      $ hpost0 $ signupPagePost
      , dir "vip"         $ hget0  $ signupVipPageGet
@@ -585,6 +585,11 @@ daveUser userid = onlySuperUserGet $ do
     ctx <- get
     user <- queryOrFail $ GetUserByUserID userid
     V.renderFromBody ctx V.TopNone V.kontrakcja $ inspectXML user
+
+hpost0NoXToken :: Kontra KontraLink -> Kontra Response
+hpost0NoXToken action = methodM POST >> (https $ do
+    (link :: KontraLink) <- action
+    sendRedirect link)
 
 hpost0 :: Kontra KontraLink -> Kontra Response
 hpost0 action = methodM POST >> (https $ do
