@@ -63,6 +63,10 @@ activatePageView=
               <td><input type="text" name="companyposition" autocomplete="off" value="$if(companyposition)$$companyposition$$endif$"></td>
             </tr>
             <tr>
+              <td>Telefonnummer:</td>
+              <td><input type="text" name="phone" autocomplete="off" value="$if(phone)$$phone$$endif$"></td>
+            </tr>
+            <tr>
               <td>Välj lösenord:</td>
               <td><input type="password" name="password" autocomplete="off"></td>
             </tr>
