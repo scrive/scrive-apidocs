@@ -544,20 +544,20 @@
 }
 
 #tab-viewer .account {
-   padding: 40px 70px;
+   padding: 40px 50px 20px;
 }
 
 #tab-viewer .account .col {
    float: left;
-   margin: 0 0 0 20px;
+   margin: 0 0 0 40px;
    width: 380px;
 }
 
 #tab-viewer .account-header {
    background: url(../img/bg-body-dark.png);
-   border-radius: 5px;
-       -moz-border-radius: 5px;
-       -webkit-border-radius: 5px;
+   border-radius:  5px 5px 0px 0px;
+       -moz-border-radius: 5px 5px 0px 0px;
+       -webkit-border-radius: 5px 5px 0px 0px;
    min-height: 48px;
    padding: 33px 15px 32px;
    position: relative;
@@ -606,11 +606,11 @@
 #tab-viewer .account-body {
    background: #f7f7f7;
    border: 1px solid #dedede;
-   border-radius: 5px;
-       -moz-border-radius: 5px;
-       -webkit-border-radius: 5px;
-   margin-top: 10px;
-   padding: 15px;
+   border-radius: 0px 0px 5px 5px;
+       -moz-border-radius: 0px 0px 5px 5px;
+       -webkit-border-radius: 0px 0px 5px 5px;
+   margin-top: 0px;
+   padding: 0 15px;
 }
 
 #tab-viewer .account-body h2 {
@@ -621,6 +621,7 @@
 #tab-viewer .account-body table {
    color: #999;
    margin-top: 10px;
+   margin-bottom: 10px;
    text-transform: uppercase;
 }
 
@@ -638,22 +639,13 @@
    font: 12px "Lucida Grande";
    padding: 5px 4px 3px;
    text-transform: none;
-   width: 130px;
+   width: 200px;
 }
 
 #tab-viewer .account-footer {
-   background: #f7f7f7;
-   border-radius: 0 0 5px 5px;
-       -moz-border-radius: 0 0 5px 5px;
-       -webkit-border-radius: 0 0 5px 5px;
-   border-top: 1px solid #808080;
-   bottom: -40px;
-   height: 34px;
-   left: -70px;
-   padding: 20px;
-   position: relative;
-   text-align: center;
-   width: 918px;
+    float:right;
+    margin-right:20px;
+    margin-top:10px;
 }
 
 #tab-viewer .account-footer a {
