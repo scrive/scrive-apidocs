@@ -85,10 +85,11 @@ viewSubaccounts =
 						$subaccounts:{subaccount |
 						<!-- Every other row should have class="odd" (Begin with first row) -->
 						<tr $if(subaccount.odd)$class="odd"$endif$>
-                                                        <td class="listname" style="display:none;">
+							<td><input type="checkbox" name="subcheck" value="$subaccount.id$" class="check" />
+                                                        <span class="listname" style="display:none;">
                                                           $subaccount.fstname$ $subaccount.sndname$ &lt;$subaccount.email$&gt;
-                                                        </td>
-							<td><input type="checkbox" name="subcheck" value="$subaccount.id$" class="check" /></td>
+                                                        </span>
+                            </td>
 							<td>$subaccount.fstname$</td>
 							<td>$subaccount.sndname$</td>
 							<td>$subaccount.companyposition$</td>
