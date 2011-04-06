@@ -495,6 +495,12 @@ thd3 (_,_,c) = c
 isSecure::(ServerMonad m,Functor m) => m Bool
 isSecure = do
      (Just (BS.fromString "http") /=) <$> (getHeaderM "scheme")
+     
+isHTTPS :: (ServerMonad m) => m Bool
+isHTTPS = do
+    rq <- askRq
+    let mscheme = getHeader "scheme" rq
+    return $ mscheme == Just (BS.fromString "https")
 
 getHostpart::(ServerMonad m,Functor m) => m String
 getHostpart = do

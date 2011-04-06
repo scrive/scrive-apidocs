@@ -37,7 +37,7 @@ import MinutesTime
 import Happstack.Server (RqData, ServerMonad, FilterMonad, Response, mkCookie, readCookieValue, withDataFn, ServerPartT, HasRqData, CookieLife(MaxAge))
 import System.Random
 import Happstack.Util.Common ( readM)
-import Misc (MagicHash(MagicHash), mkTypeOf)
+import Misc (MagicHash(MagicHash), mkTypeOf, isSecure, isHTTPS)
 import ELegitimation.ELeg
 import Data.Typeable
 
@@ -278,18 +278,24 @@ instance Read (SessionCookieInfo) where
         return $ (SessionCookieInfo {cookieSessionId = sid', cookieSessionHash=sh'},"")
 
 -- | Add a non-http only cookie
-addCookie :: (MonadIO m, HSI.FilterMonad Response m) => HSI.CookieLife -> HSI.Cookie -> m ()
-addCookie life cookie = do
+addCookie :: (MonadIO m, HSI.FilterMonad Response m) => Bool -> HSI.CookieLife -> HSI.Cookie -> m ()
+addCookie issecure life cookie = do
     l <- liftIO $ HSI.calcLife life
-    addHeaderM "Set-Cookie" $ HSI.mkCookieHeader l cookie
+    let secure = if issecure
+                    then ";Secure"
+                    else ""
+    addHeaderM "Set-Cookie" $ HSI.mkCookieHeader l cookie ++ secure
     where
         addHeaderM a v = HSI.composeFilter $ \res -> addHeader a v res
 
 -- | Ripped from Happstack-Server and modified to support HttpOnly cookies
-addHttpOnlyCookie :: (MonadIO m, HSI.FilterMonad Response m) => HSI.CookieLife -> HSI.Cookie -> m ()
-addHttpOnlyCookie life cookie = do
+addHttpOnlyCookie :: (MonadIO m, HSI.FilterMonad Response m) => Bool -> HSI.CookieLife -> HSI.Cookie -> m ()
+addHttpOnlyCookie issecure life cookie = do
     l <- liftIO $ HSI.calcLife life
-    (addHeaderM "Set-Cookie") $ HSI.mkCookieHeader l cookie ++ ";HttpOnly"
+    let secure = if issecure
+                    then ";Secure"
+                    else ""
+    (addHeaderM "Set-Cookie") $ HSI.mkCookieHeader l cookie ++ ";HttpOnly" ++ secure
     where
         addHeaderM a v = HSI.composeFilter $ \res-> addHeader a v res
 
@@ -306,10 +312,13 @@ sessionAndCookieHashMatch session sci = (cookieSessionHash sci) == (hash $ sessi
 
 
 -- | Add a session cookie to browser.  
-startSessionCookie :: (FilterMonad Response m,ServerMonad m, MonadIO m) => Session -> m ()
+startSessionCookie :: (FilterMonad Response m,ServerMonad m, MonadIO m, Functor m) => Session -> m ()
 startSessionCookie session = do
-    addHttpOnlyCookie (MaxAge (60*60*24)) $ mkCookie "sessionId" $ show $ cookieInfoFromSession session
-    addCookie (MaxAge (60*60*24)) $ mkCookie "xtoken" $ show $ xtoken $ sessionData session
+    issecure <- isSecure
+    ishttps  <- isHTTPS
+    when issecure $ do
+        addHttpOnlyCookie ishttps (MaxAge (60*60*24)) $ mkCookie "sessionId" $ show $ cookieInfoFromSession session
+        addCookie ishttps (MaxAge (60*60*24)) $ mkCookie "xtoken" $ show $ xtoken $ sessionData session
                                  
 -- | Read current session cookie from request.
 currentSessionInfoCookie:: RqData (Maybe SessionCookieInfo)
