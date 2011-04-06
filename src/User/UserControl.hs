@@ -28,7 +28,7 @@ import Redirect
 import Templates.Templates (KontrakcjaTemplates)
 import User.UserState
 import User.UserView
-
+import qualified AppLogger as Log
 
 checkPasswords :: BS.ByteString -> BS.ByteString -> Either (KontrakcjaTemplates -> IO FlashMessage) ()
 checkPasswords p1 p2 =
@@ -692,6 +692,7 @@ guardXToken :: Kontra ()
 guardXToken = do
     Context { ctxxtoken } <- get
     paramtoken <- getDataFnM $ look "xtoken"
-    liftIO $ print paramtoken
     let (xtoken :: MagicHash) = read ((read paramtoken) :: String)
-    unless (xtoken == ctxxtoken) mzero
+    unless (xtoken == ctxxtoken) (do 
+        Log.debug $ "xtoken failure: session: " ++ show ctxxtoken ++ " param: " ++ show xtoken
+        mzero)
