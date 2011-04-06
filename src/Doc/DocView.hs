@@ -316,7 +316,7 @@ comparePartners doc1 doc2 =
         x -> x
 
 docsPageSize :: Int
-docsPageSize = 20
+docsPageSize = 100
  
 
 --
