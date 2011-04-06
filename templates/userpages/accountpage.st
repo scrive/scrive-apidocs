@@ -5,7 +5,7 @@ showUser =
    <div class="tab-header">
    </div>
    <ul class="tabs">
-       <li class="active"><a href="/account">Konto</a></li>
+       <li class="active"><a href="/account">Användaruppgifter</a></li>
        <li><a href="/account/subaccount">Underkonton</a></li>
        <li><a href="/account/sharing">Delning</a></li>
        <li><a href="/account/security">Säkerhet</a></li>
@@ -23,7 +23,6 @@ showUser =
                    </div>
                </div>
                <div class="account-body">
-                   <h2>Personliga detaljer</h2>
                    <table>
                        <tr>
                            <td>Förnamn:</td>
@@ -63,7 +62,6 @@ showUser =
                    </div>
                </div>
                <div class="account-body">
-                   <h2>Företagsdetaljer</h2>
                    <table>
                        <tr>
                            <td>Företag:</td>
@@ -92,16 +90,17 @@ showUser =
                    </table>
                </div>
            </div>
-           <div class="clearfix"></div>
            <div class="account-footer">
-               <a href="#" class="btn-big green submit">
+                <a href="#" class="btn-small green submit">
                    <div class="left"></div>
                    <div class="label">
-                       <p>Spara</p>
+                       <p>Spara ändringar</p>
                    </div>
                    <div class="right"></div>
-               </a>
+                </a>
            </div>
+           <div class="clearfix"></div>
+           
        </div>
    </div>
 </div>
