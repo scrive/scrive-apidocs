@@ -180,7 +180,7 @@ handleRoutes = msum [
      -- super user only
      , dir "stats"      $ hget0  $ Administration.showStats
      , dir "createuser" $ hpost0 $ Administration.handleCreateUser
-     , dir "sendgrid" $ dir "events" $ hpost0 handleSendgridEvent
+     , dir "sendgrid" $ dir "events" $ hpost0NoXToken handleSendgridEvent
      , dir "adminonly" $ hget0 $ Administration.showAdminMainPage
      , dir "adminonly" $ dir "advuseradmin" $ hget0 Administration.showAdminUserAdvanced
      , dir "adminonly" $ dir "useradmin" $ hget1m Administration.showAdminUsers
@@ -208,12 +208,12 @@ handleRoutes = msum [
      , dir "login"       $ hget0  $ handleLoginGet
      , dir "login"       $ hpost0NoXToken $ handleLoginPost
      , dir "signup"      $ hget0  $ signupPageGet
-     , dir "signup"      $ hpost0 $ signupPagePost
+     , dir "signup"      $ hpost0NoXToken $ signupPagePost
      , dir "vip"         $ hget0  $ signupVipPageGet
-     , dir "vip"         $ hpost0 $ signupVipPagePost
-     , dir "amnesia"     $ hpost0 $ forgotPasswordPagePost
+     , dir "vip"         $ hpost0NoXToken $ signupVipPagePost
+     , dir "amnesia"     $ hpost0NoXToken $ forgotPasswordPagePost
      , dir "amnesia"     $ hget2  $ UserControl.handlePasswordReminderGet
-     , dir "amnesia"     $ hpost2 $ UserControl.handlePasswordReminderPost
+     , dir "amnesia"     $ hpost2NoXToken $ UserControl.handlePasswordReminderPost
      , dir "accountsetup"  $ hget2  $ UserControl.handleAccountSetupGet
      , dir "accountsetup"  $ hpost2  $ UserControl.handleAccountSetupPost
      , dir "accountremoval" $ hget2  $ UserControl.handleAccountRemovalGet
@@ -221,7 +221,7 @@ handleRoutes = msum [
 
      , dir "requestaccount" $ hpost0_allowHttp $ UserControl.handleRequestAccount
      -- viral invite
-     , dir "invite"      $ hpost0 $ UserControl.handleViralInvite
+     , dir "invite"      $ hpost0NoXToken $ UserControl.handleViralInvite
      , dir "question"    $ hpost0_allowHttp $ UserControl.handleQuestion
      -- e-legitimation stuff
      , dir "s" $ hget4  $ BankID.handleSignBankID
@@ -610,6 +610,11 @@ hpost2 action = path $ \a1 -> path $ \a2 -> methodM POST >>  (https $ do
     UserControl.guardXToken
     (link :: KontraLink) <- action a1 a2
     sendRedirect link)
+    
+hpost2NoXToken :: (FromReqURI a, FromReqURI a1) =>   (a -> a1 -> Kontra KontraLink) -> Kontra Response
+hpost2NoXToken action = path $ \a1 -> path $ \a2 -> methodM POST >>  (https $ do
+    (link :: KontraLink) <- action a1 a2
+    sendRedirect link)    
 
 hpost3 :: (FromReqURI a, FromReqURI a1, FromReqURI a2) =>  
           (a -> a1 -> a2 -> Kontra KontraLink) 
