@@ -500,7 +500,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
         <a href="#" class="btn-small green float-right submiter">
           <div class="left"></div>
           <div class="label">
-            <p> Skicka</p>
+            <span> Skicka</span>
             <div class="btn-symbol green arrow-left"></div></div>
           <div class="right"></div>
         </a>
@@ -540,8 +540,8 @@ pageDocumentForAuthorHelpersLocalDialogs=
   <div class="hidden" id="hiddenttimestuffbox">
     <div id="daystosignbox">
     <span>
-    Undertecknas inom 
-    <input style="font-size:11px;text-align:center;" type="text" id="daystosign" name="daystosign" value="$documentdaystosignboxvalue$" maxlength="2" size="2" autocomplete="off" /> 
+    Undertecknas inom
+    <input class="signStepsBodyDaysLeftInput" type="text" id="daystosign" name="daystosign" value="$documentdaystosignboxvalue$" maxlength="2" size="2" autocomplete="off" /> 
     dagar
     </span>
     <div  class="datetodaystip signStepsBodyCalendar" rel="#daystosign"> </div> 

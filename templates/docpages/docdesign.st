@@ -271,9 +271,9 @@ $endif$
                 
           </div>
           $if(contract)$
-           <div style="padding-left:19px;padding-top:5px;"> 
+           <div> 
             $validationdropdown()$
-            <div style="padding-bottom:8px">
+            <div style="padding-bottom:8px; padding-top: 2px;">
             <input id="lastcheck" style="position:relative;top:2px" type="checkbox" class="switchercheckbox sendcheckbox" on=".sendbutton" off=".signbutton" autocomplete="off" value="off" > 
             <label class="usual" style="margin-left:3px;">Underteckna sist </label>
             <label class="secretary" style="margin-left:3px;display:none;">Ej undertecknande part</label>
@@ -282,7 +282,7 @@ $endif$
             <div class="sendbutton" style="display:none">
             <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"  class="btn-big green center">
                <div class="left"></div>
-               <div class="label" style="width:120px"><p style="width:80px;display:inline-block;text-align:left;">Skicka </p>
+               <div class="label" style="width:120px"><p style="width:66px;display:inline-block;text-align:left;">Skicka </p>
                 <span class="btn-symbol green arrow-left" style="position:relative;top:3px;right:0px"></span></div> 
                <div class="right"></div>
             </a>

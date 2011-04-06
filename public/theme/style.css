@@ -1273,17 +1273,18 @@ input.multiFileInput {
     width: 360px;
     float: left;
     position: relative;
-    padding: 5px 0 7px;
 }
 
 #signStepsBodyLeft.step3{
   display:block;
-  width: 306px;
+  width: 290px;
+  padding-top: 5px;
 }
 #signStepsBodyRight.step3{
    display:inline-block;
-   width: 306px;
+   width: 310px;
    float: left;
+   padding-top: 5px;
 }
 
 /* 013 changed */
@@ -1488,6 +1489,15 @@ input.multiFileInput {
     margin-bottom: 2px;
     
 }
+
+.signStepsBodyDaysLeftInput
+{
+    font-size:11px;
+    text-align:center;
+    position:relative;
+    top:-1px
+}
+
 .signStepsBodyCalendar
 {
     display: inline-block;
@@ -1497,7 +1507,7 @@ input.multiFileInput {
     width:16px;
     height: 16px;
     position:relative;
-    top:2px;
+    top:3px;
 }
 
 .signStepsBodySave a.submit
@@ -1772,7 +1782,10 @@ form {
 #signStepsBodyFunctions.step3
 {
    padding-bottom: 10px;
-   width: 306px;
+   padding-left:20px;
+   padding-top: 5px;
+   width: 290px;
+   float:left;
    
 }
 
@@ -1782,11 +1795,7 @@ form {
    padding-bottom: 7px;
   
 }
-#signStepsBodyLeft.step3
-{
-   padding-top: 13px;
-   
-}
+
 /* 013 changed */
 #signStepsBodyFunctionsBox
 {
