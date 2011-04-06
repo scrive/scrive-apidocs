@@ -54,6 +54,7 @@ import Control.Applicative ((<$>))
 import Control.Monad.Reader
 import Control.Monad.Trans (lift)
 import Data.Data
+import Data.Maybe
 import ActionSchedulerState
 import Kontra
 import KontraLink
@@ -123,10 +124,7 @@ activatePageView::KontrakcjaTemplates -> String -> Maybe User -> IO String
 activatePageView templates tostext muser = 
     renderTemplate templates "activatePageView" $ do
         field "tostext" tostext
-        field "fstname" $ BS.toString $ maybe BS.empty (userfstname . userinfo) muser
-        field "sndname" $ BS.toString $ maybe BS.empty (usersndname . userinfo) muser
-        field "companyname" $ BS.toString $ maybe BS.empty (usercompanyname . userinfo) muser
-        field "companyposition" $ BS.toString $ maybe BS.empty (usercompanyposition . userinfo) muser
+        when (isJust muser) $ userFields $ fromJust muser
 
 
 activatePageViewNotValidLink :: KontrakcjaTemplates -> String -> IO String

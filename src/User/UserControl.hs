@@ -518,10 +518,11 @@ handleAccountSetupPost aid hash = do
             mlname <- getUserField asValidName "lname"
             mcompanyname <- getUserField asValidName "companyname"
             mcompanyposition <- getUserField asValidName "companyposition"
+            mphone <- getUserField asValidPhone "phone"
             mpassword <- getRequiredField asValidPassword "password"
             mpassword2 <- getRequiredField asValidPassword "password2"
-            case (mtos, mfname, mlname, mcompanyname, mcompanyposition, mpassword, mpassword2) of
-                 (Just tos, Just fname, Just lname, Just companyname, Just companytitle, Just password, Just password2) -> do
+            case (mtos, mfname, mlname, mcompanyname, mcompanyposition, mphone, mpassword, mpassword2) of
+                 (Just tos, Just fname, Just lname, Just companyname, Just companytitle, Just phone ,Just password, Just password2) -> do
                      case checkPasswordsMatch password password2 of
                           Right () ->
                               if tos
@@ -534,6 +535,7 @@ handleAccountSetupPost aid hash = do
                                          , usersndname = lname
                                          , usercompanyname  = companyname
                                          , usercompanyposition = companytitle
+                                         , userphone = phone
                                      }
                                      now <- liftIO getMinutesTime
                                      update $ AddFreePaymentsForInviter now user

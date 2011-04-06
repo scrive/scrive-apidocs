@@ -33,6 +33,7 @@ module InputValidation
     , asValidCompanyName
     , asValidCompanyNumber
     , asValidAddress
+    , asValidPhone
     , asValidPosition
     , asValidCheckBox
     , asValidDaysToSign
@@ -445,6 +446,15 @@ asValidCheckBox input =
                            | val == "off" = return False
                            | otherwise = Bad $ flashMessageInvalidFormat fieldtemplate
 
+
+{- | 
+    No idea how this validator should look like
+-} 
+asValidPhone :: String -> Result BS.ByteString
+asValidPhone input =
+    stripWhitespace input
+    >>= mkByteString
+    
 {-|
     Gets the cleaned up number of days to sign.
     This'll make sure you get a number in the range 1-99.
