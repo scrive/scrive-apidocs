@@ -11,7 +11,6 @@ signatoriesBox=
 ####
 signatoryBox =
 <div class="signViewBodyRight">
-  <div class="signatoryLockIcon icon $if(signatory.current)$ lock-opened $else$ lock-closed $endif$"></div>
   <div class="signViewBodyRightTextContainer"> 
    <div class="header">$signatory.fstname$ $signatory.sndname$</div>
    <div class="text">
