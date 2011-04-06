@@ -23,7 +23,6 @@ signatoryBox =
      $if(!addSignatoryScript)$
      $signatory.fields:{field|
         <div class="field" name="field.fieldlabel">
-            <div class="icon lock-closed"></div>
             <span class="fieldvalue">$field.fieldvalue$</span>
         </div>}$
      $endif$
@@ -32,20 +31,17 @@ signatoryBox =
    $if(!addSignatoryScript)$
    $if(signatory.company)$
     <div class="field">
-        <div class="icon lock-closed"></div>
         <span class="fieldvalue">$signatory.company$</span>
     </div>
    $endif$
    $if(signatory.number)$
      <div class="field">  
-      <div class="icon lock-closed"></div>
       <span class="fieldvalue">$signatory.number$</span>
      </div>
    $endif$
    $endif$
    $if(signatory.email)$
      <div class="field">
-         <div class="icon lock-closed"></div>
          <span class="fieldvalue">$signatory.email$</span>
      </div>
    $endif$
