@@ -197,7 +197,7 @@ maybeScheduleRendering ctx@Context{ ctxnormalizeddocuments = mvar }
                 modifyMVar_ mvar (\filesrenderednow -> return (Map.insert fileid jpegpages filesrenderednow))
            return (Map.insert fileid JpegPagesPending setoffilesrenderednow, JpegPagesPending)
 
-{- |  Convert PDF to jpeg images of pages -}
+{- |  Convert PDF to uncompress it. -}
 preprocessPDF :: BS.ByteString
               -> DocumentID
               -> IO BS.ByteString
