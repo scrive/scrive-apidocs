@@ -260,10 +260,10 @@
 	width: 24px;
 }
 
-.modal-close:hover, .flash-close:hover {
+.modal-close:hover, .flash-close:hover , .popup-close:hover{
 	background-position: 0 -24px;
 }
 
-.modal-close:active, .flash-close:active {
+.modal-close:active, .flash-close:active,  .popup-close:active {
 	background-position: 0 -48px;
 }
