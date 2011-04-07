@@ -1,6 +1,8 @@
 :set -DMIN_VERSION_template_haskell(a,b,c)=1
 :set -DMIN_VERSION_happstack_server(a,b,c)=1
 :set -isrc -ipdfseal/src -ipdfseal/inc
+:set -XCPP
+:set -XBangPatterns
 :set -XDeriveDataTypeable
 :set -XFlexibleContexts
 :set -XFlexibleInstances
