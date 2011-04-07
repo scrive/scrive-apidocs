@@ -29,15 +29,7 @@ $loadingdialog()$
                       $searchBox(infotext='Sök dokument')$
                 </div>
 
-                <div class="col" style="margin-left:44%;margin-right:44%;padding-top:15px;padding-bottom:0px">
-                    <a class="btn-tiny green" style="overflow:hidden;height:26px;width:90px" >  
-                        <div class="left"> </div>
-                        <div class="label"> Välj dokument </div> 
-                        <div class="right"> </div>
-                        <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px" maxlength="1" type="file" name="doc" accept="application/pdf" rel=".filelist" />
-                    </a>
-                <div class="filelist" style="padding-left:10px;display:none"></div> 
-                </div>
+     
 
 				<div class="clearfix"></div>
 			</div>
