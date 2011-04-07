@@ -2161,7 +2161,7 @@ form {
 
 .partyrole {
     display: none;
-    width: 220px;
+    width: 314px;
     position: absolute;
     background-color: white;
     top: -2px;
@@ -2169,6 +2169,7 @@ form {
     border: solid 1px #BDBDBD;
     -moz-border-radius:3px 3px 3px 3px;
     padding: 8px;
+    height: 60px;
 }
 
 .partyrole .radiolabel {
