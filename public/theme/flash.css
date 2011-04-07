@@ -163,20 +163,13 @@
 }
 
 /* close button positioned on upper right corner */
-.overlay a.close {
-    /*background-image:url(images/close.png);
-    position:absolute;
-    right:-15px;
-    top:-15px;
-    cursor:pointer;
-    height:35px;
-    width:35px;*/
+.overlay a.close.modal-close {
+    margin-top: 3px;
 }
 
-.overlay h2 {
+.overlay h1, .overlay h2, .overlay h3, .overlay h4, .overlay h5{
     margin:0px;
-    padding:10px 0 10px 10px;
-    border-bottom:1px solid #333;
+    padding: 5px 0 2px 10px;
     font-size:20px;
 }
 
@@ -191,8 +184,4 @@
 
 .overlay .buttonbox button{
     margin-right:3px;
-}
-
-.overlay p {
-    margin:8px;
 }

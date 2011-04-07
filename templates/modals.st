@@ -294,7 +294,8 @@ $if(loginModal)$
          </div>
        </div>
       </div>
-      <div class="modal-footer">
+     </div>
+     <div class="modal-footer">
         <a class="close cancel">Avbryt</a>
         <a href="#" class="txt-link message">Glömt lösenord</a>
         <a href="#" class="btn-small blue float-right submit">
@@ -304,10 +305,10 @@ $if(loginModal)$
           </div>
           <div class="right"></div>
         </a>
-      </div>
      </div>
      </form>
     </div>
+   </div>
   </div>
   <div class="modalbox overlay recovery-container">
     <div class="modal-container">
@@ -328,6 +329,7 @@ $if(loginModal)$
          </div>
        </div>
       </div>
+     </div>
      <div class="modal-footer">
         <a class="close cancel">Avbryt</a>
         <a href="#" class="txt-link message">Logga in</a>
