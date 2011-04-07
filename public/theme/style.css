@@ -1639,6 +1639,7 @@ input.multiFileInput {
     padding-left: 19px;
     padding-top: 2px;
     height: 17px;
+    line-height: 17px;
     font-size: 12px;
     border-color: transparent;
     outline: none;
