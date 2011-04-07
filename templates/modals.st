@@ -273,26 +273,26 @@ loginModal=
 $if(!logged)$
 $if(loginModal)$
 <div class="modalcontainer">
-   <div class="modalbox overlay login-container">
-    <div class="modal-container">
-     <form method="post" action="$linklogin$">
-     <div class="modal-header">
-      <div class="modal-icon message"></div>
-      <div class="modal-title">
-          <h1>Logga in</h1>
-      </div>
-      <a class="modal-close close"> </a>
+ <div class="modalbox overlay login-container">
+  <div class="modal-container">
+   <form method="post" action="$linklogin$">
+    <div class="modal-header">
+     <div class="modal-icon message"></div>
+     <div class="modal-title">
+      <h1>Logga in</h1>
      </div>
-     <div class="modal-body">
-      <div class="modal-content"> 
-       <div class="body">
-         <div class="wrapper" style="text-align:right">
+     <a class="modal-close close"> </a>
+    </div>
+    <div class="modal-body">
+     <div class="modal-content"> 
+      <div class="body">
+       <div class="wrapper" style="text-align:right">
            <input type="hidden" name="referer" value="$referer$" />
            <span class="txt">E-post</span><input type="email" name="email" value="$email$" infotext="E-post" autocomplete="off"/><br />
            <span class="txt">Lösenord</span><input type="password" name="password" infotext="password" autocomplete="off"/><br />
            <input type="submit" class="hidden" />
-         </div>
        </div>
+      </div>
       </div>
      </div>
      <div class="modal-footer">
@@ -307,30 +307,30 @@ $if(loginModal)$
         </a>
      </div>
      </form>
-    </div>
-   </div>
   </div>
-  <div class="modalbox overlay recovery-container">
-    <div class="modal-container">
-     <form method="post" action="$linkforgotenpassword$">
-     <div class="modal-header">
+ </div>
+ 
+ <div class="modalbox overlay recovery-container">
+  <div class="modal-container">
+   <form method="post" action="$linkforgotenpassword$">
+    <div class="modal-header">
       <div class="modal-icon message"></div>
       <div class="modal-title">
           <h1>Glömt lösenord</h1>
       </div>
       <a class="modal-close close"> </a>
      </div>
-     <div class="modal-body">
+    <div class="modal-body">
       <div class="modal-content"> 
        <div class="body">
-         <div class=wrapper>
+         <div class="wrapper">
                <input type="email" name="email" infotext="E-post" autocomplete="off"/>
                <input type="submit" class="hidden" />
          </div>
        </div>
       </div>
-     </div>
-     <div class="modal-footer">
+    </div>  
+    <div class="modal-footer">
         <a class="close cancel">Avbryt</a>
         <a href="#" class="txt-link message">Logga in</a>
         <a href="#" class="btn-small green float-right submit">
@@ -341,9 +341,8 @@ $if(loginModal)$
           <div class="right"></div>
         </a>
       </div>
-     </div>
-     </form>
-    </div>
+   </form>
+  </div>
  </div>
 </div>
 $endif$
