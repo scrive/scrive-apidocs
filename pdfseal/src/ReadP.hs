@@ -250,6 +250,7 @@ countsym :: ReadP a -> ReadP (Int, a)
 countsym (R m) =
   R (\k -> gath 0 (m (\a -> return (\s -> k (s,a)))))
  where
+  gath :: Int -> P (Int -> P b) -> P b
   gath 0 _   | False  = Fail
   gath l (Skip n f)   = Skip n (gath (l+n) f)
   gath _ Fail         = Fail

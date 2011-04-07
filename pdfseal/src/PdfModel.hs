@@ -564,6 +564,7 @@ binarizeXRefTable table = concatMap z table
         z (off,entries) = show off ++ " " ++ show (length entries) ++ " \n" ++ concatMap binarizeXRefTableEntry entries
         binarizeXRefTableEntry (Right (a,b)) = entry' a b 'n'
         binarizeXRefTableEntry (Left (a,b)) = entry' a b 'f'
+        entry' :: (Show a, Show b) => a -> b -> Char -> P.String
         entry' a b f = last' 10 ("0000000000" ++ show a) ++ " " ++ last' 5 ("00000" ++ show b) ++ " " ++ [f] ++" \n"
         last' n x = drop (length x - n) x
 
