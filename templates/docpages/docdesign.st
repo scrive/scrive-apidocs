@@ -2,7 +2,7 @@
 pageDocumentForAuthorContentPreparation=
 <div style="display: none">
   <script type="text/javascript"> 
-    var documentid = "$documentid$"; 
+    var documentid = "$documentid$", doctokenid = "$doctokenid$", doctokenhash = "$doctokenhash$";
   </script>
   <script type="text/javascript" src="/js/bankid.js"></script>
 </div>

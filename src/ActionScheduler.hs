@@ -114,6 +114,9 @@ evaluateAction Action{actionID, actionType = EmailSendout mail} = do
            update $ UpdateActionEvalTime actionID $ 5 `minutesAfter` now
            return ()
 
+evaluateAction Action{actionID, actionType = DocViewTicket{}} =
+    deleteAction actionID
+
 deleteAction :: ActionID -> ActionScheduler ()
 deleteAction aid = do
     update $ DeleteAction aid

@@ -459,6 +459,7 @@ handleSignShow documentid
   let authorname = prettyName author
   let invitedname = signatoryname $ signatorydetails $ invitedlink 
 
+  tokens <- getDocumentTokens ctxipnumber (userid <$> ctxmaybeuser)
   when (Data.List.null ctxflashmessages
         && (not (isJust $ maybesigninfo invitedlink))) $ do
     let message = if document `allowsIdentification` ELegitimationIdentification
@@ -468,8 +469,8 @@ handleSignShow documentid
   
   ctx <- get
   renderFromBody ctx TopNone kontrakcja 
-                       (fmap cdata $ pageDocumentForSignatory (LinkSignDoc document invitedlink) 
-                                            document ctx invitedlink author)
+                       (cdata <$> pageDocumentForSignatory (LinkSignDoc document invitedlink) 
+                                            document ctx invitedlink author tokens)
 
 {- |
    The user with id uid is a friend of user.
@@ -506,12 +507,17 @@ isFriendWithSignatoryLink uid sl = do
 handleIssueShowGet :: DocumentID -> Kontra Response
 handleIssueShowGet docid = withUserGet $ checkUserTOSGet $ do
   document@Document{ documentauthor } <- queryOrFail $ GetDocumentByDocumentID $ docid
-  ctx@(Context {ctxmaybeuser = Just (user@User{userid}), ctxhostpart}) <- get
+  ctx@Context {
+        ctxmaybeuser = Just (user@User{userid})
+      , ctxipnumber
+      , ctxhostpart
+  } <- get
   author <- queryOrFail $ GetUserByUserID $ unAuthor documentauthor
   let toptab = if documentstatus document == Closed
                 then TopDocument
                 else TopNone
   -- authors get a view with buttons
+  tokens <- getDocumentTokens ctxipnumber $ Just userid
   if isAuthor document user
    then do
        case (documentstatus document, getDataMismatchMessage $ documentcancelationreason document) of
@@ -520,13 +526,13 @@ handleIssueShowGet docid = withUserGet $ checkUserTOSGet $ do
        ctx2 <- get
        step <- getDesignStep (documentid document)
        renderFromBody ctx2 toptab kontrakcja 
-            (fmap cdata $ pageDocumentForAuthor ctx2 document author step)
+            (cdata <$> pageDocumentForAuthor ctx2 document author tokens step)
    -- friends can just look (but not touch)
    else do
         friendWithSignatory <- liftIO $ isFriendWithSignatory userid document 
         if (isFriendOf userid author || friendWithSignatory )
          then renderFromBody ctx toptab kontrakcja
-                  (fmap cdata $ pageDocumentForViewer ctx document author)
+                  (cdata <$> pageDocumentForViewer ctx document author tokens)
          -- not allowed
          else mzero
 
@@ -781,20 +787,21 @@ handleIssueSignByAuthor document author = do
    URL: /d/{documentid}/{title}
    Method: GET
  -}
-handleIssueShowTitleGet :: DocumentID -> String -> Kontra Response
-handleIssueShowTitleGet docid _title = 
-   do
-   ctx <- get
-   document@Document{ documentauthor
-                    , documentid
-                    } <- queryOrFail $ GetDocumentByDocumentID $ docid
-   let file = safehead "handleIssueShow" (case documentstatus document of
-                                            Closed -> documentsealedfiles document
-                                            _      -> documentfiles document)
-   contents <- liftIO $ getFileContents ctx file
-   let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
-   let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
-   return res2
+handleIssueShowTitleGet :: ActionID -> MagicHash -> DocumentID -> String -> Kontra Response
+handleIssueShowTitleGet aid hash docid _title = do
+    verifyDocumentTokens aid hash
+    ctx <- get
+    document@Document {
+          documentauthor
+        , documentid
+    } <- queryOrFail $ GetDocumentByDocumentID $ docid
+    let file = safehead "handleIssueShow" (case documentstatus document of
+                                                Closed -> documentsealedfiles document
+                                                _      -> documentfiles document)
+    contents <- liftIO $ getFileContents ctx file
+    let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
+        res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
+    return res2
 
 {- |
    Show the document with title in the url
@@ -997,28 +1004,31 @@ showTemplatesList = withUserGet $ checkUserTOSGet $ do
   content <- liftIO $ pageTemplatesList ctxtemplates ctxtime user (docSortSearchPage params templates)
   renderFromBody ctx TopDocument kontrakcja $ cdata content
 
-handlePageOfDocument :: DocumentID -> Kontra Response
-handlePageOfDocument documentid = do
-  document@Document {documentfiles
-                    ,documentsealedfiles
-                    ,documentstatus
-                    ,documentid} <- queryOrFail $ GetDocumentByDocumentID documentid
-  ctx@Context{ctxnormalizeddocuments} <- get
-  let pending JpegPagesPending = True
-      pending _                = False
-      files                    = if documentstatus == Closed
-                                   then documentsealedfiles
-                                   else documentfiles                             
-  case files of
-    [] -> notFound (toResponse "temporary unavailable (document has no files)")
-    f  -> do
-      b <- mapM (\file -> liftIO $ maybeScheduleRendering ctx file documentid) f
-      if any pending b
-       then notFound (toResponse "temporary unavailable (document has files pending for process)")
-       else do
-              pages <- liftIO $ Doc.DocView.showFilesImages2 (ctxtemplates ctx) $ zip f b
-              webHSP $ return $ cdata pages
-   
+handlePageOfDocument :: ActionID -> MagicHash -> DocumentID -> Kontra Response
+handlePageOfDocument aid hash documentid = do
+    verifyDocumentTokens aid hash
+    document@Document {
+          documentfiles
+        , documentsealedfiles
+        , documentstatus
+        , documentid
+    } <- queryOrFail $ GetDocumentByDocumentID documentid
+    ctx@Context{ctxmaybeuser, ctxnormalizeddocuments} <- get
+    let pending JpegPagesPending = True
+        pending _                = False
+        files                    = if documentstatus == Closed
+                                      then documentsealedfiles
+                                      else documentfiles
+    case files of
+         [] -> notFound $ toResponse "temporary unavailable (document has no files)"
+         f  -> do
+             b <- mapM (\file -> liftIO $ maybeScheduleRendering ctx file documentid) f
+             if any pending b
+                then notFound (toResponse "temporary unavailable (document has files pending for process)")
+                else do
+                    pages <- liftIO $ Doc.DocView.showFilesImages2 (ctxtemplates ctx) (aid, hash) $ zip f b
+                    webHSP $ return $ cdata pages
+
 handleDocumentUpload :: DocumentID -> BS.ByteString -> BS.ByteString -> Kontra ()
 handleDocumentUpload docid content1 filename = do
   ctx@Context{ctxdocstore, ctxs3action} <- get
@@ -1146,8 +1156,9 @@ handleTemplateReload = fmap LinkTemplates getListParamsForSearch
    Method: GET
    FIXME: Should probably check for permissions to view
  -}
-showPage :: FileID -> Int -> Kontra Response
-showPage fileid pageno = do
+showPage :: ActionID -> MagicHash -> FileID -> Int -> Kontra Response
+showPage aid hash fileid pageno = do
+  verifyDocumentTokens aid hash
   Context{ctxnormalizeddocuments} <- get
   modminutes <- query $ FileModTime fileid
   docmap <- liftIO $ readMVar ctxnormalizeddocuments
@@ -1305,4 +1316,30 @@ handleCreateFromTemplate = do
                  Right newdoc -> return $ LinkIssueDoc $ documentid newdoc   
                  Left _ -> mzero
          Nothing -> mzero
-     
+
+-- | Get existing document tokens for given user or create new and return them
+getDocumentTokens :: MonadIO m => Word32 -> Maybe UserID -> m (ActionID, MagicHash)
+getDocumentTokens ip muid = maybe createNewTicket (\uid -> do
+    now <- liftIO getMinutesTime
+    query (GetDocViewTicket now uid)
+        >>= maybe createNewTicket (useExistingTicket now)
+    ) muid
+    where
+        createNewTicket = do
+            action <- liftIO $ newDocViewTicketAction ip muid
+            return (actionID action, dvtToken $ actionType action)
+        useExistingTicket now Action{actionID, actionType} = do
+            update $ UpdateActionEvalTime actionID $ 10 `minutesAfter` now
+            update $ UpdateActionType actionID $ actionType { dvtIP = ip }
+            return (actionID, dvtToken actionType)
+
+-- | Verify if given document token is valid
+verifyDocumentTokens :: ActionID -> MagicHash -> Kontra ()
+verifyDocumentTokens aid hash = do
+    now <- liftIO getMinutesTime
+    (checkValidity now <$> (query $ GetAction aid)) >>= maybe mzero checkAction
+    where
+        checkAction action@Action{actionType = DocViewTicket ip muid token} = do
+            Context{ctxmaybeuser = muser, ctxipnumber = ctxip} <- get
+            when ((userid <$> muser) /= muid || ctxip /= ip || hash /= token) mzero
+        checkAction _ = mzero
