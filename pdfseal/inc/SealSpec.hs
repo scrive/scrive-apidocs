@@ -4,7 +4,8 @@ module SealSpec where
 data Person = 
     Person { fullname :: String
            , company :: String
-           , number :: String
+           , personalnumber :: String
+           , companynumber :: String
            , email :: String
            , fullnameverified :: Bool
            , companyverified :: Bool

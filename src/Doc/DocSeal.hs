@@ -43,7 +43,8 @@ personFromSignatoryDetails details =
                 , Seal.company = BS.toString $ signatorycompany details
                 , Seal.email = BS.toString $ signatoryemail details
                 -- | FIXME: this should be split to company/personal number
-                , Seal.number = BS.toString $ signatorypersonalnumber details
+                , Seal.personalnumber = BS.toString $ signatorypersonalnumber details
+                , Seal.companynumber = BS.toString $ signatorycompanynumber details
                 , Seal.fullnameverified = False
                 , Seal.companyverified = False
                 , Seal.numberverified = False
@@ -107,7 +108,9 @@ fieldsFromSignatory sig =
     ++
     (map (fieldsFromPlacement (BS.toString (signatorycompany sig))) (signatorycompanyplacements sig))
     ++
-    (map (fieldsFromPlacement (BS.toString (signatorypersonalnumber sig))) (signatorypersonalnumberplacements sig)) -- FIXME: this should be split to company/personal number
+    (map (fieldsFromPlacement (BS.toString (signatorypersonalnumber sig))) (signatorypersonalnumberplacements sig))
+    ++
+    (map (fieldsFromPlacement (BS.toString (signatorycompanynumber sig))) (signatorycompanynumberplacements sig))
     ++
     (foldl (++) [] (map fieldsFromDefinition (signatoryotherfields sig)))    
 
