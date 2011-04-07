@@ -44,12 +44,14 @@ partyUnsignedMeAndList magichash document =
         me = SignatoryDetails { signatoryfstname = BS.fromString "du"
                               , signatorysndname = BS.empty
                               , signatorycompany = BS.empty
-                              , signatorynumber = BS.empty
+                              , signatorypersonalnumber = BS.empty
+                              , signatorycompanynumber = BS.empty
                               , signatoryemail = BS.empty
                               , signatoryfstnameplacements = []
                               , signatorysndnameplacements = []
                               , signatorycompanyplacements = []
-                              , signatorynumberplacements = []
+                              , signatorypersonalnumberplacements = []
+                              , signatorycompanynumberplacements = []
                               , signatoryemailplacements = []
                               , signatoryotherfields = []
                               }

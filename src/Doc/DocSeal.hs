@@ -42,7 +42,8 @@ personFromSignatoryDetails details =
     Seal.Person { Seal.fullname = BS.toString $ signatoryname details 
                 , Seal.company = BS.toString $ signatorycompany details
                 , Seal.email = BS.toString $ signatoryemail details
-                , Seal.number = BS.toString $ signatorynumber details
+                -- | FIXME: this should be split to company/personal number
+                , Seal.number = BS.toString $ signatorypersonalnumber details
                 , Seal.fullnameverified = False
                 , Seal.companyverified = False
                 , Seal.numberverified = False
@@ -106,7 +107,7 @@ fieldsFromSignatory sig =
     ++
     (map (fieldsFromPlacement (BS.toString (signatorycompany sig))) (signatorycompanyplacements sig))
     ++
-    (map (fieldsFromPlacement (BS.toString (signatorynumber sig))) (signatorynumberplacements sig))
+    (map (fieldsFromPlacement (BS.toString (signatorypersonalnumber sig))) (signatorypersonalnumberplacements sig)) -- FIXME: this should be split to company/personal number
     ++
     (foldl (++) [] (map fieldsFromDefinition (signatoryotherfields sig)))    
 
@@ -133,7 +134,8 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
       authordetails = (signatoryDetailsFromUser author) 
                       { signatoryfstnameplacements = authorfstnameplacements document
                       , signatorysndnameplacements = authorsndnameplacements document
-                      , signatorynumberplacements = authornumberplacements document
+                      , signatorypersonalnumberplacements = authorpersonalnumberplacements document
+                      , signatorycompanynumberplacements = authorcompanynumberplacements document
                       , signatoryemailplacements = authoremailplacements document
                       , signatorycompanyplacements = authorcompanyplacements document
                       , signatoryotherfields = authorotherfields document

@@ -10,11 +10,12 @@ function newUUID() {
 }
 
 function newsignatory() {
-    return {fstname: "", sndname:"", company: "", number: "", email: "", 
+    return {fstname: "", sndname:"", company: "", personalnumber: "", companynumber: "", email: "", 
 	    fstnameplacements: [],
             sndnameplacements: [],
             companyplacements: [],
-	    numberplacements: [],
+	    personalnumberplacements: [],
+            companynumberplacements: [],
 	    emailplacements: [],
 	    otherfields: []};
 }
@@ -126,7 +127,8 @@ function isStandardField(field) {
 	   || name == "signatoryfstname"
            || name == "signatorysndname"
 	   || name == "signatorycompany"
-	   || name == "signatorynumber") {
+           || name == "signatorypersonalnumber"
+	   || name == "signatorycompanynumber") {
 	    return true;
 	}
     }
@@ -299,7 +301,8 @@ function docstateToHTML(){
         placePlacements(this.sndnameplacements, "Efternamn", this.sndname, s.id, "sndname");
 	    placePlacements(this.emailplacements, "Personens e-mail", this.email, s.id, "email");
 	    placePlacements(this.companyplacements, "Titel, företag", this.company, s.id, "sigco");
-	    placePlacements(this.numberplacements, "Orgnr/Persnr", this.number, s.id, "signr");
+	    placePlacements(this.personalnumberplacements, "Persnr", this.personalnumber, s.id, "sigpersnr");
+            placePlacements(this.companynumberplacements, "Orgnr", this.companynumber, s.id, "sigcompnr");
 
 	   if(!cc){
         $(".signViewBodyRight").each(function() {
@@ -317,11 +320,24 @@ function docstateToHTML(){
                          "</div>")
                 }
                 
-        if((s.numberplacements.length > 0 || s.number !="") && ff.text().indexOf(s.email) > -1){
-                        var val = s.number;
+        if((s.personalnumberplacements.length > 0 || s.personalnumber !="") && ff.text().indexOf(s.email) > -1){
+                        var val = s.personalnumber;
                         var c = "";
                         if(val === ""){
-                                val =  "Orgnr/Persnr";
+                                val =  "Persnr";
+                                c = "grayed";
+                              }
+                        ff.find(".signatoryfields").append(
+                         "<div class='field'>"+
+                            "<span class='fieldvalue "+c+"'>"+escapeHTML(val)+"</span>"+
+                         "</div>")
+                }
+
+        if((s.companynumberplacements.length > 0 || s.companynumber !="") && ff.text().indexOf(s.email) > -1){
+                        var val = s.companynumber;
+                        var c = "";
+                        if(val === ""){
+                                val =  "Orgnr";
                                 c = "grayed";
                               }
                         ff.find(".signatoryfields").append(
@@ -368,11 +384,21 @@ function docstateToHTML(){
 	enableInfoTextOnce(cfield);
     }
 
-    if(currentsig && currentsig.number.length === 0 && currentsig.numberplacements.length > 0) {
-	var nfield = buildField("Orgnr/Persnr", currentsig.number, "sig");
-	setFieldID(nfield, "signr");
+    if(currentsig && currentsig.personalnumber.length === 0 && currentsig.personalnumberplacements.length > 0) {
+        var cfield = buildField("Persnr", currentsig.company, "sig");
+        setFieldID(cfield, "sigpersnr");
+        setSigID(cfield, currentsig.id);
+        setHiddenField(cfield, "fieldname", "sigpersnr");
+        fields.append(cfield);
+        updateStatus(cfield);
+        enableInfoTextOnce(cfield);
+    }
+
+    if(currentsig && currentsig.companynumber.length === 0 && currentsig.companynumberplacements.length > 0) {
+	var nfield = buildField("Orgnr", currentsig.number, "sig");
+	setFieldID(nfield, "sigcompnr");
 	setSigID(nfield, currentsig.id);
-	setHiddenField(nfield, "fieldname", "signr");
+	setHiddenField(nfield, "fieldname", "sigcompnr");
 	fields.append(nfield);
 	updateStatus(nfield);
 	enableInfoTextOnce(nfield);
