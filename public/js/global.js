@@ -901,7 +901,7 @@ safeReady(function(){
 
 function prepareForEdit(form){
     $(".editable",form).each(function(){
-      var textarea = $("<textarea style='width:94%;height:0px;border:0px;padding:0px;margin:0px'  name='"+$(this).attr('name')+"'> "+ $(this).html()+ "</textarea>")
+      var textarea = $("<textarea style='width:470px;height:0px;border:0px;padding:0px;margin:0px'  name='"+$(this).attr('name')+"'> "+ $(this).html()+ "</textarea>")
       var wrapper = $("<div></div>").css("min-height",($(this).height())+15+"px");
       wrapper.append(textarea);
       $(this).replaceWith(wrapper);

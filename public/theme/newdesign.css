@@ -699,7 +699,7 @@
 }
 
 .modal-header .modal-title {
-	width: 85%;
+	width: 95%;
 }
 
 .modal-container .modal-header h1 {
@@ -723,6 +723,7 @@
 .modal-container .modal-header p {
 	color: #999;
 	font: 11px "Lucida Grande";
+    padding-left: 63px;
 }
 
 .modal-container .modal-header a {
@@ -740,8 +741,6 @@
 .modal-container .modal-content {
 	color: #454545;
 	font: 12px "Lucida Grande";
-	margin-bottom: 54px;
-	padding: 20px 20px 20px 20px;
 	position: relative;
 	z-index: 1001;
 }
@@ -750,6 +749,13 @@
 	color: #666;
 	font: 11px "Lucida Grande";
 	text-transform: uppercase;
+}
+.modal-body
+{
+    padding-left: 83px;
+    padding-right: 83px;
+    padding-top: 20px;
+    padding-bottom: 20px;
 }
 
 .modal-container .modal-content strong {
@@ -767,7 +773,7 @@
 }
 
 .modal-container .modal-content p {
-	margin: 12px 0;
+	margin: 10px 0;
 }
 
 .modal-container .modal-content ul li {
@@ -783,11 +789,16 @@
 	border-top: 1px solid #d6d6d6;
 	bottom: 1px;
 	font: 13px/34px "Helvetica Neue";
-	left: 0;
 	padding: 10px 20px;
-	position: absolute;
-	right: 0;
+    position: relative;
 	z-index: 1001;
+}
+
+.modal-container .modal-footer a.cancel {
+	color: #e91600;
+	text-decoration: none;
+	margin-right: 12px;
+    cursor:pointer;
 }
 
 .modal-container .modal-footer a.message {
