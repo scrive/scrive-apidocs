@@ -2,7 +2,7 @@
 showFileImagesReady= $images:{image| 
 
 <div id="page$image.number$" class="pagediv">
-  <div class="pagejpg" style="background-image: url(/pages/$fileid$/$image.number$);">
+  <div class="pagejpg" style="background-image: url(/pages/$doctokenid$/$doctokenhash$/$fileid$/$image.number$);">
     <input type="hidden" name="width" value="$image.width$"> 
     <input type="hidden" name="height" value="$image.height$">
   </div>
@@ -36,7 +36,7 @@ pageDocumentForViewerHelpers=
   </div>
 </span>,
 <script type="text/javascript"> 
-  var documentid = "$documentid$"; 
+  var documentid = "$documentid$", doctokenid = "$doctokenid$", doctokenhash = "$doctokenhash$";
 </script>
 ###
 pageDocumentForViewerContent = 
@@ -84,13 +84,12 @@ $signatoryScriptIfRequired()$
 
 #####
 pageDocumentForSignHelpers=
-<script type="text/javascript"> var documentid = "$documentid$"; 
+<script type="text/javascript"> var documentid = "$documentid$", doctokenid = "$doctokenid$", doctokenhash = "$doctokenhash$";
 </script>
 <script type="text/javascript">
   $localscripts:noescape()$
 </script>
 ######
-####
 pageDocumentForSignContent=
   <script type="text/javascript" src="/js/bankid.js"></script>
   <div class="localdialogs">
@@ -646,7 +645,7 @@ pageDocumentForAuthorContentPostPreparation=
   <div class="localdialogs">
     <div style="display: none">
       <script type="text/javascript"> 
-        var documentid = "$documentid$"; 
+        var documentid = "$documentid$", doctokenid = "$doctokenid$", doctokenhash = "$doctokenhash$";
       </script>
     </div>
   </div>
