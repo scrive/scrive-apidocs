@@ -533,9 +533,9 @@ safeReady(function() {
                          if (!sigFieldsValidation()) return false;
                          var guardChecked = $(".signGuard:checked").size()>0;
                          if (!guardChecked) { 
-                           $(".signGuard").parent().css("border","1px dotted red");
-                           $(".signGuard").change(function(){$(this).parent().css("border","")});
-                           //addFlashMessage("need text");
+                           $("#signViewBottomBoxContainerLeftText").css("border","1px dotted red");
+                           $(".signGuard").change(function(){$("#signViewBottomBoxContainerLeftText").css("border","")});
+                           addFlashMessage("För att underteckna måste du först klicka i kryssrutan", "red");
                            return false;
                          } 
                        }

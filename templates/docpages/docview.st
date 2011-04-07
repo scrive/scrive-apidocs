@@ -224,7 +224,8 @@ $if(notsignedbyme)$$if(pending)$
 <div id="signViewBottomBox"> 
   <div id="signViewBottomBoxContainerLeft"> 
     <div id="signViewBottomBoxContainerLeftText"> 
-     <input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off" /><label for="signGuardCBox">Jag intygar att jag granskat och förstått dokumentet, att samtliga parter är korrekta och att jag har befogenhet att skriva på.</label>
+     <div class="float-left"><input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off" /></div>
+     <div class="float-left" id="signGuardLabel"><label for="signGuardCBox">Jag intygar att jag granskat och förstått dokumentet, att samtliga parter är korrekta och att jag har befogenhet att skriva på.</label></div>
     </div>
   </div>
   <div id="signViewBottomBoxContainerRight"> 
@@ -236,11 +237,7 @@ $if(notsignedbyme)$$if(pending)$
     </div>
     <div class="right"></div>
   </a>
-  <a class="btn-tiny red float-right" name="cancel"  rel="#dialog-confirm-cancel" id="cancel">  
-                <div class="left"> </div>
-                <div class="label"> Avvisa dokument </div> 
-                <div class="right"> </div>             
-   </a>
+  <a class="float-right cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel">Avvisa dokument</a>
   </div>
 </div>
 $endif$$endif$ 

@@ -790,13 +790,6 @@
 	z-index: 1001;
 }
 
-.modal-container .modal-footer a.cancel {
-	color: #e91600;
-	text-decoration: none;
-	margin-right: 12px;
-    cursor:pointer;
-}
-
 .modal-container .modal-footer a.message {
 	color: #666;
 	text-decoration: none;
