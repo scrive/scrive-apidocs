@@ -9,7 +9,7 @@
 	top: 0;
 	z-index: 100;
 	-moz-box-shadow: -5px 2px 5px #666;
-    text-align: center;
+    text-align: left;
     font-size: 13pt;
     -moz-border-radius: 1px 1px 1px 1px;
     background-color: white;
@@ -43,7 +43,8 @@
 	height: 40px;
 	margin: 9px  auto 0;
 	position: relative;
-	width: 940px;
+        left: -8px;
+	width: 960px;
 	z-index: 101;
 }
 
@@ -185,3 +186,8 @@
 .overlay .buttonbox button{
     margin-right:3px;
 }
+
+.overlay p {
+    margin:8px;
+}
+
