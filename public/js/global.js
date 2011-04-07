@@ -387,6 +387,7 @@ safeReady(function() {
       if (!nonZeroSignatories()) return false;
       if (!authorFieldsValidation()) return false;
       if (!checkSignatoriesHaveUniqueEmail()) return false;
+      if (!checkAllCustomFieldsAreNamed()) return false;
       fieldValidationType = "";
       var tot = swedishString(allparties());
       $(".Xinvited").html(tot);
@@ -402,6 +403,7 @@ safeReady(function() {
       if (!nonZeroSignatories()) return false;
       if (!authorFieldsValidation()) return false;
       if (!checkSignatoriesHaveUniqueEmail()) return false;
+      if (!checkAllCustomFieldsAreNamed()) return false;
       fieldValidationType = "";
       var tot = swedishString(allparties());
       $(".Xinvited").html(tot);
@@ -813,6 +815,18 @@ function checkSignPossibility() {
   }
 
   return true;
+}
+
+function checkAllCustomFieldsAreNamed() {
+
+  unamedfields = $("#personpane .newfield");
+  unamedfields.addClass("redborder");
+  if (unamedfields.length>0) {
+    addFlashMessage("Var vänlig namnge alla skapade fält", "red");
+    return false;
+  } else {
+    return true;
+  }
 }
 
 var fieldValidationType = "";
