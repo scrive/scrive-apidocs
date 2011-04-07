@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall -fno-warn-unused-do-bind #-}
+{-# OPTIONS_GHC -Wall -Werror -fno-warn-unused-do-bind #-}
 module User.UserControl where
 
 import Control.Monad.State
@@ -191,7 +191,6 @@ handlePostSharing = do
 
 handleAddFriend :: User -> BS.ByteString -> Kontra ()
 handleAddFriend User{userid} email = do
-    ctx <- get
     avereturn <- update $ AddViewerByEmail userid $ Email email
     case avereturn of
       Left msg -> addFlashMsg $ toFlashMsg OperationFailed msg
