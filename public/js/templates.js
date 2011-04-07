@@ -7,10 +7,11 @@ var debug = false;
 
 // create a new signatory. pretty useless without calling signatoryToHTML
 function newsignatory() {
-  return {fstname: "",sndname:"", company: "", number: "", email: "", 
+  return {fstname: "",sndname:"", company: "", personalnumber: "", companynumber: "", email: "", 
 	  nameplacements: [],
 	  companyplacements: [],
-	  numberplacements: [],
+	  personalnumberplacements: [],
+          companynumberplacements: [],
 	  emailplacements: [],
 	  otherfields: []};
 }
@@ -162,7 +163,8 @@ function isStandardField(field) {
        || name == "signatoryfstname"
        || name == "signatorysndname"
        || name == "signatorycompany"
-       || name == "signatorynumber") {
+       || name == "signatorypersonalnumber"
+       || name == "signatorycompanynumber") {
       return true;
     }
   }
@@ -833,7 +835,8 @@ function signatoryToHTML(isMultiple, sig) {
   var afstname = sigentry.find(".sigfstname");
   var asndname = sigentry.find(".sigsndname");
   var acomp = sigentry.find(".sigcomp");
-  var anumb = sigentry.find(".signum");
+  var apersnumb = sigentry.find(".sigpersnum");
+  var acompnumb = sigentry.find(".sigcompnum");
   var aemai = sigentry.find(".sigemail");
   
 
@@ -841,13 +844,15 @@ function signatoryToHTML(isMultiple, sig) {
   setSigID(afstname, sigid);
   setSigID(asndname, sigid);
   setSigID(acomp, sigid);
-  setSigID(anumb, sigid);
+  setSigID(apersnumb, sigid);
+  setSigID(acompnumb, sigid);
   setSigID(aemai, sigid);
 
   setValue(afstname, sig.fstname);
   setValue(asndname, sig.sndname);
   setValue(acomp, sig.company);
-  setValue(anumb, sig.number);
+  setValue(apersnumb, sig.personalnumber);
+  setValue(acompnumb, sig.companynumber);
   setValue(aemai, sig.email);
   // other fields
   
@@ -910,7 +915,8 @@ function placePlacementsOfSignatories(signatories) {
     placePlacements(sig.fstnameplacements, "Förnamn", sig.fstname, sig.id, "fstname");
     placePlacements(sig.sndnameplacements, "Efternamn", sig.sndname, sig.id, "sndname");
     placePlacements(sig.companyplacements, "Företag", sig.company, sig.id, "company");
-    placePlacements(sig.numberplacements, "Orgnr/Persnr", sig.number, sig.id, "number");
+    placePlacements(sig.personalnumberplacements, "Persnr", sig.personalnumber, sig.id, "personalnumber");
+    placePlacements(sig.companynumberplacements, "Orgnr", sig.companynumber, sig.id, "companynumber");
     placePlacements(sig.emailplacements, "Personens e-mail", sig.email, sig.id, "email");
     $(sig.otherfields).each(function(){
       var fd = this;

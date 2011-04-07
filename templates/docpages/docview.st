@@ -28,8 +28,10 @@ pageDocumentForViewerHelpers=
          infotext="Fullständigt namn" /><br/>
   <input name="signatorycompany" type="text" value="" autocomplete="off"
          infotext="Företag" /><br/>
-  <input name="signatorynumber" type="text" value="" autocomplete="off"
-         infotext="Org.nr./Pers.nr" /><br/>
+  <input name="signatorypersonalnumber" type="text" value="" autocomplete="off"
+         infotext="Pers.nr" /><br/>
+  <input name="signatorycompanynumber" type="text" value="" autocomplete="off"
+         infotext="Org.nr" /><br/>
   <input name="signatoryemail"  type="email" value="" autocomplete="off"
          infotext="E-post" /><br/>
   <small><a onclick="return signatoryremove(this.parentNode);" href="#">Ta bort</a></small>
@@ -345,7 +347,8 @@ pageDocumentForAuthorHelpersLocalDialogs=
                         <th>Efternamn</th>
                         <th>E-post</th>
                         <th>Företag</th>
-                        <th>Org.nr./Pers.nr</th>
+                        <th>Pers. nr</th>
+                        <th>Org. nr</th>
                         $csvcustomfields: {csvcustomfield |
                           <th>$csvcustomfield$</th>
                         }$
