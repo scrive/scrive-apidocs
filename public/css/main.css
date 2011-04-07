@@ -864,7 +864,7 @@ a.new-btn-small.black p {
 	background: #fff;
 	border: 1px solid #ccc;
 	border-radius: 5px;
-	height: 228px;
+	height: 250px;
 	margin-top: 65px;
 	position: relative;
 	width: 938px;
@@ -998,7 +998,7 @@ a.new-btn-small.black p {
 }
 
 #body-container .highlight-container .highlight-rows li.top {
-	height: 88px;
+	height: 86px;
 	padding-top: 20px;
 }
 
@@ -1011,7 +1011,7 @@ a.new-btn-small.black p {
 #body-container .highlight-container .highlight-rows li.top p {
 	color: #000;
 	font: 18px "Copse";
-	margin-top: 10px;
+	margin-top: 2px;
 }
 
 #body-container .highlight-container .highlight-rows li.top em {

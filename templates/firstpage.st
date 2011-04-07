@@ -245,62 +245,60 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <tr>
                                                         <th>
                                                                 <h4>Free</h4>
-                                                                <em>För privatpersonen</em><br />
-                                                                <br />
-                                                                <p>0kr/mån</p>
+                                                                <em>För sällananvändare</em>
                                                         </th>
                                                         <th>
-                                                                <h4>Basic</h4>
-                                                                <em>För egenföretagaren</em><br />
-                                                                <br />
-                                                                <p>499kr/mån</p>
+                                                                <h4>Small</h4>
+                                                                <em>Låg volym och enkla behov</em>
                                                         </th>
                                                         <th>
-                                                                <h4>Standard</h4>
-                                                                <em>För småföretaget</em><br />
-                                                                <br />
-                                                                <p>999kr/mån</p>
+                                                                <h4>Business</h4>
+                                                                <em>Medel volym och många användningsområden</em>
                                                         </th>
                                                         <th>
-                                                                <h4>Advanced</h4>
-                                                                <em>Top of the line</em><br />
-                                                                <br />
-                                                                <p>4999kr/mån</p>
+                                                                <h4>Enterprise</h4>
+                                                                <em>Stora volymer och komplexa behov</em>
                                                         </th>
                                                 </tr>
                                                 <tr class="odd-row">
                                                         <td><a href="#">1 användare</a></td>
                                                         <td><a href="#">1 användare</a></td>
                                                         <td><a href="#">2-9 användare</a></td>
-                                                        <td><a href="#">10+ användare</a></td>
+                                                        <td><a href="#">5+ användare</a></td>
                                                 </tr>
                                                 <tr>
-                                                        <td><a href="#">0 fria e-signaturer/mån</a></td>
-                                                        <td><a href="#">10 fria e-signaturer/mån</a></td>
-                                                        <td><a href="#">20 fria e-signaturer/mån</a></td>
-                                                        <td><a href="#">200 fria e-signaturer/mån</a></td>
+                                                        <td><a href="#">3 fria signaturer</a></td>
+                                                        <td><a href="#">10 fria signaturer</a></td>
+                                                        <td><a href="#">20 fria signaturer</a></td>
+                                                        <td><a href="#">30 fria signaturer</a></td>
                                                 </tr>
                                                 <tr class="odd-row">
-                                                        <td><a href="#">100 dok/år fri lagring</a></td>
-                                                        <td><a href="#">500 dok/år fri lagring</a></td>
-                                                        <td><a href="#">1000 dok/år fri lagring</a></td>
-                                                        <td><a href="#">5000 dok/år fri lagring</a></td>
+                                                        <td><a href="#">25 dok lagring</a></td>
+                                                        <td><a href="#">250 dok lagring</a></td>
+                                                        <td><a href="#">Obegränsad lagring</a></td>
+                                                        <td><a href="#">Obegränsad lagring</a></td>
+                                                </tr>
+                                                <tr>
+                                                        <td><a href="#">Basfunktioner</a></td>
+                                                        <td><a href="#">Basfunktioner</a></td>
+                                                        <td><a href="#">Avancerade funktioner</a></td>
+                                                        <td><a href="#">Avancerade funktioner och volymredskap</a></td>
                                                 </tr>
                                                 <tr class="big-row">
                                                         <td>
-                                                                <p>Basfunktionalitet</p>
+                                                                <p>0kr</p>
                                                                 <a href="priceplan.html?nocolumns">Läs mer</a>
                                                         </td>
                                                         <td>
-                                                                <p>Basfunktionalitet</p>
+                                                                <p>149kr</p>
                                                                 <a href="priceplan.html?nocolumns">Läs mer</a>
                                                         </td>
                                                         <td>
-                                                                <p>Extra funktionalitet</p>
+                                                                <p>299kr</p>
                                                                 <a href="priceplan.html?nocolumns">Läs mer</a>
                                                         </td>
                                                         <td>
-                                                                <p>Avancerad funktionalitet</p>
+                                                                <p>449kr</p>
                                                                 <a href="priceplan.html?nocolumns">Läs mer</a>
                                                         </td>
                                                 </tr>
@@ -309,17 +307,17 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <div class="ribbon"></div>
                                                 <ul class="highlight-rows">
                                                         <li class="top">
-                                                                <h4>Standard</h4>
-                                                                <em>För småföretaget</em><br />
-                                                                <p>999kr/mån</p>
+                                                                <h4>Business</h4>
+                                                                <p><em>Medel volym och många användningsområden</em></p>
                                                         </li>
                                                         <li class="odd"><a href="#">2-9 användare</a></li>
                                                         <li>
-                                                                <p><a href="#">20 fria e-signaturer/mån</a></p>
+                                                                <p><a href="#">20 fria signaturer</a></p>
                                                         </li>
-                                                        <li class="odd"><a href="#">1000 dok/mån</a></li>
+                                                        <li class="odd"><a href="#">Obegränsad lagring</a></li>
+                                                        <li><a href="#">Extra funktionalitet</a></li>
                                                         <li class="bottom">
-                                                                <p>Extra funktionalitet</p>
+                                                                <p>299kr</p>
                                                                 <a href="priceplan.html?nocolumns">Läs mer</a>
                                                         </li>
                                                 </ul>
