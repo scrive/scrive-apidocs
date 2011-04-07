@@ -375,17 +375,19 @@ showFilesImages2 templates files = do
 emptyDetails :: SignatoryDetails
 emptyDetails =
   SignatoryDetails {
-      signatoryfstname           = BS.empty
-    , signatorysndname           = BS.empty
-    , signatorycompany           = BS.empty
-    , signatorynumber            = BS.empty
-    , signatoryemail             = BS.empty
-    , signatoryfstnameplacements = []
-    , signatorysndnameplacements = []
-    , signatorycompanyplacements = []
-    , signatorynumberplacements  = []
-    , signatoryemailplacements   = []
-    , signatoryotherfields       = []
+      signatoryfstname                  = BS.empty
+    , signatorysndname                  = BS.empty
+    , signatorycompany                  = BS.empty
+    , signatorypersonalnumber           = BS.empty
+    , signatorycompanynumber            = BS.empty
+    , signatoryemail                    = BS.empty
+    , signatoryfstnameplacements        = []
+    , signatorysndnameplacements        = []
+    , signatorycompanyplacements        = []
+    , signatorypersonalnumberplacements = []
+    , signatorycompanynumberplacements  = []
+    , signatoryemailplacements          = []
+    , signatoryotherfields              = []
   }
 
 {- |
@@ -427,7 +429,8 @@ pageDocumentForAuthor ctx
            , signatoryfstnameplacements = authorfstnameplacements document
            , signatorysndnameplacements = authorsndnameplacements document
            , signatorycompanyplacements = authorcompanyplacements document
-           , signatorynumberplacements = authornumberplacements document
+           , signatorypersonalnumberplacements = authorpersonalnumberplacements document
+           , signatorycompanynumberplacements = authorcompanynumberplacements document
            , signatoryotherfields = authorotherfields document
          }
        doc_author_otherfields fields = sequence .
@@ -560,7 +563,8 @@ pageDocumentForViewer ctx
             , signatoryfstnameplacements = authorfstnameplacements document
             , signatorysndnameplacements = authorsndnameplacements document
             , signatorycompanyplacements = authorcompanyplacements document
-            , signatorynumberplacements = authornumberplacements document
+            , signatorypersonalnumberplacements = authorpersonalnumberplacements document
+            , signatorycompanynumberplacements = authorcompanynumberplacements document
             , signatoryotherfields = authorotherfields document
           }
    in do
@@ -670,7 +674,8 @@ signatoryLinkFields
       field "fstname" $ packToMString $ signatoryfstname $ signatorydetails siglnk
       field "sndname" $ packToMString $ signatorysndname $ signatorydetails siglnk
       field "company" $ packToMString $ signatorycompany $ signatorydetails siglnk
-      field "number" $ packToMString $ signatorynumber $ signatorydetails siglnk
+      field "personalnumber" $ packToMString $ signatorypersonalnumber $ signatorydetails siglnk
+      field "companynumber"  $ packToMString $ signatorycompanynumber $ signatorydetails siglnk
       field "email" $ packToMString $ signatoryemail $ signatorydetails siglnk
       field "fields" $ for (signatoryotherfields $ signatorydetails siglnk) $ \sof -> do
         field "fieldlabel" $ fieldlabel sof
@@ -721,8 +726,8 @@ documentAuthorInfo author =  do
   field "authorsndname" $ nothingIfEmpty $ usersndname $ userinfo author
   field "authorcompany" $ nothingIfEmpty $ usercompanyname $ userinfo author
   field "authoremail"  $ nothingIfEmpty $ unEmail $ useremail $ userinfo author
-  field "authorcompanynumber" $ nothingIfEmpty $ usercompanynumber $ userinfo author
   field "authorpersonnumber" $ nothingIfEmpty $ userpersonalnumber $ userinfo author
+  field "authorcompanynumber" $ nothingIfEmpty $ usercompanynumber $ userinfo author
   
 -- | Fields indication what is a document status 
 documentStatusFields :: Document -> Fields    
@@ -823,25 +828,29 @@ buildSigJS siglnk@(SignatoryDetails {
   signatoryfstname
   , signatorysndname
   , signatorycompany
-  , signatorynumber
+  , signatorypersonalnumber
+  , signatorycompanynumber
   , signatoryemail
   , signatoryfstnameplacements
   , signatorysndnameplacements
   , signatorycompanyplacements
   , signatoryemailplacements
-  , signatorynumberplacements
+  , signatorypersonalnumberplacements
+  , signatorycompanynumberplacements
   , signatoryotherfields
   }) =
      "{ fstname: "  ++ jsStringFromBS  signatoryfstname
   ++ ", sndname: " ++ jsStringFromBS  signatorysndname
   ++ ", company: " ++ jsStringFromBS  signatorycompany
   ++ ", email: " ++ jsStringFromBS signatoryemail
-  ++ ", number: " ++ jsStringFromBS signatorynumber
+  ++ ", personalnumber: " ++ jsStringFromBS signatorypersonalnumber
+  ++ ", companynumber: " ++ jsStringFromBS signatorycompanynumber
   ++ ", fstnameplacements: " ++ (jsArray (map buildPlacementJS signatoryfstnameplacements))
   ++ ", sndnameplacements: " ++ (jsArray (map buildPlacementJS signatorysndnameplacements))
   ++ ", companyplacements: " ++ (jsArray (map buildPlacementJS signatorycompanyplacements))
   ++ ", emailplacements: " ++ (jsArray (map buildPlacementJS signatoryemailplacements))
-  ++ ", numberplacements: " ++ (jsArray (map buildPlacementJS signatorynumberplacements))
+  ++ ", personalnumberplacements: " ++ (jsArray (map buildPlacementJS signatorypersonalnumberplacements))
+  ++ ", companynumberplacements: " ++ (jsArray (map buildPlacementJS signatorycompanynumberplacements))
   ++ ", otherfields: " ++ (jsArray $ zipWith buildDefJS signatoryotherfields [1..])
   ++ " }"
 

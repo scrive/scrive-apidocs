@@ -687,7 +687,7 @@ splitUpDocument doc =
               return $ sequence mdocs
   where createDocFromRow :: Document -> Int -> [BS.ByteString] -> Kontra (Either String Document)
         createDocFromRow udoc sigindex xs =
-          update $ ContractFromSignatoryData (documentid udoc) sigindex (item 0) (item 1) (item 2) (item 3) (item 4) (drop 5 xs)
+          update $ ContractFromSignatoryData (documentid udoc) sigindex (item 0) (item 1) (item 2) (item 3) (item 4) (item 5) (drop 6 xs)
           where item n | n<(length xs) = xs !! n
                        | otherwise = BS.empty
 {- |
@@ -845,7 +845,8 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
   signatoriesfstnames <- getAndConcat "signatoryfstname"
   signatoriessndnames <- getAndConcat "signatorysndname"
   signatoriescompanies <- getAndConcat "signatorycompany"
-  signatoriesnumbers <- getAndConcat "signatorynumber"
+  signatoriespersonalnumbers <- getAndConcat "signatorypersonalnumber"
+  signatoriescompanynumbers <- getAndConcat "signatorycompanynumber"
   signatoriesemails' <- getAndConcat "signatoryemail"
   let signatoriesemails = map (BSC.map toLower) signatoriesemails'
 
@@ -919,30 +920,17 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
 
   let signatories = sigs where
           sigs = if sigids == [] 
-                 then zipWith5 sdsimple signatoriesfstnames signatoriessndnames signatoriescompanies signatoriesnumbers signatoriesemails
+                 then zipWith6 sdsimple signatoriesfstnames signatoriessndnames signatoriescompanies signatoriespersonalnumbers signatoriescompanynumbers signatoriesemails
                       
-                 else zipWith6 sd sigids signatoriesfstnames signatoriessndnames signatoriescompanies signatoriesnumbers signatoriesemails 
-          sdsimple n sn c no e = SignatoryDetails n
-                                               sn
-                                               c
-                                               no
-                                               e
-                                               []
-                                               []
-                                               []
-                                               []
-                                               []
-                                               []
-          sd id n sn c no e = SignatoryDetails n 
-                                            sn
-                                            c 
-                                            no 
-                                            e 
+                 else zipWith7 sd sigids signatoriesfstnames signatoriessndnames signatoriescompanies signatoriespersonalnumbers signatoriescompanynumbers signatoriesemails 
+          sdsimple n sn c pno cno e = SignatoryDetails n sn c pno cno e [] [] [] [] [] [] []
+          sd id n sn c pno cno e = SignatoryDetails n sn c pno cno e
                                             (placementsByID id (BS.fromString "fstname"))
                                             (placementsByID id (BS.fromString "sndname"))
                                             (placementsByID id (BS.fromString "company"))
                                             (placementsByID id (BS.fromString "email"))
-                                            (placementsByID id (BS.fromString "number"))
+                                            (placementsByID id (BS.fromString "personalnumber"))
+                                            (placementsByID id (BS.fromString "companynumber"))
                                             (defsByID id)
                                                                       
   let authordetails = (signatoryDetailsFromUser author)
@@ -951,7 +939,8 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
                       , signatoryfstnameplacements = placementsByID (BS.fromString "author") (BS.fromString "fstname")
                       , signatorysndnameplacements = placementsByID (BS.fromString "author") (BS.fromString "sndname")
                       , signatorycompanyplacements = placementsByID (BS.fromString "author") (BS.fromString "company")
-                      , signatorynumberplacements = placementsByID (BS.fromString "author") (BS.fromString "number")
+                      , signatorypersonalnumberplacements = placementsByID (BS.fromString "author") (BS.fromString "personalnumber")
+                      , signatorycompanynumberplacements = placementsByID (BS.fromString "author") (BS.fromString "companynumber")
                       , signatoryotherfields = defsByID (BS.fromString "author")
                       }
       isauthorsig = authorrole == "signatory"

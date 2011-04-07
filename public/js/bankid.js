@@ -364,7 +364,7 @@ safeReady(function() {
   $("#validationdropdown").change(function() {
     var d = $(this);
     var selected = d.find("option:selected").val();
-    var numberfields = $("input[name=signatorynumber]").parents(".dragfield");
+    var numberfields = $("input[name=signatorypersonalnumber]").parents(".dragfield");
     if(selected == "email") {
       eleghidden.hide();
       signhidden.show();
@@ -392,7 +392,7 @@ function getSignatoryData() {
   var lnames = entries.find("input[name=signatorysndname]").map(function(i, el) {
     return $(el).val();
   });
-  var nums   = entries.find("input[name=signatorynumber]" ).map(function(i, el) {
+  var nums   = entries.find("input[name=signatorypersonalnumber]" ).map(function(i, el) {
     return $(el).val();
   });
   
@@ -400,7 +400,7 @@ function getSignatoryData() {
     var authordetails = $(".authordetails");
     var fn = authordetails.find(".authorfstname .fieldvalue");
     var ln = authordetails.find(".authorsndname .fieldvalue");
-    var nm = authordetails.find(".authornum .fieldvalue"    );
+    var nm = authordetails.find(".authorpersnum .fieldvalue"  );
     fnames.push(fn.size() > 0 ? fn.text() : "no first name"   );
     lnames.push(ln.size() > 0 ? ln.text() : "no last name"    );
     nums  .push(nm.size() > 0 ? nm.text() : "no personnnummer");

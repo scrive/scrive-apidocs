@@ -153,7 +153,8 @@ newDocument user title documenttype ctime = do
           , authorsndnameplacements = []
           , authoremailplacements = []
           , authorcompanyplacements = []
-          , authornumberplacements = []
+          , authorpersonalnumberplacements = []
+          , authorcompanynumberplacements = []
           , authorotherfields = []
           , documentcancelationreason = Nothing
           , documentinvitetime = Nothing
@@ -256,7 +257,8 @@ updateDocument time documentid signatories daystosign invitetext author authorde
                       , authorsndnameplacements = signatorysndnameplacements authordetails
                       , authoremailplacements = signatoryemailplacements authordetails
                       , authorcompanyplacements = signatorycompanyplacements authordetails
-                      , authornumberplacements = signatorynumberplacements authordetails
+                      , authorpersonalnumberplacements = signatorypersonalnumberplacements authordetails
+                      , authorcompanynumberplacements = signatorycompanynumberplacements authordetails
                       , authorotherfields = signatoryotherfields authordetails
                       }
          else return $ Left "Document not in preparation"
@@ -287,9 +289,10 @@ contractFromSignatoryData :: DocumentID
                               -> BS.ByteString 
                               -> BS.ByteString 
                               -> BS.ByteString
+                              -> BS.ByteString
                               -> [BS.ByteString]
                               -> Update Documents (Either String Document)
-contractFromSignatoryData docid sigindex fstname sndname email company number fieldvalues = newFromDocument toNewDoc docid
+contractFromSignatoryData docid sigindex fstname sndname email company personalnumber companynumber fieldvalues = newFromDocument toNewDoc docid
   where
     toNewDoc :: Document -> Document
     toNewDoc d = d { documentsignatorylinks = map snd . map toNewSigLink . zip [0..] $ (documentsignatorylinks d)
@@ -304,7 +307,8 @@ contractFromSignatoryData docid sigindex fstname sndname email company number fi
                   { signatoryfstname = fstname
                   , signatorysndname = sndname
                   , signatorycompany = company
-                  , signatorynumber = number
+                  , signatorypersonalnumber = personalnumber
+                  , signatorycompanynumber = companynumber
                   , signatoryemail = email
                   , signatoryotherfields = zipWith pumpField (fieldvalues ++ repeat BS.empty) $ signatoryotherfields sd}
     pumpField :: BS.ByteString -> FieldDefinition -> FieldDefinition
@@ -356,7 +360,8 @@ signDocument documentid signatorylinkid1 time ipnumber msiginfo fields = do
           updateWithFields [] sd = sd
           updateWithFields ((name, value):fs) sd 
               | name == BS.fromString "sigco" = updateWithFields fs sd { signatorycompany = value }
-              | name == BS.fromString "signr" = updateWithFields fs sd { signatorynumber = value }
+              | name == BS.fromString "sigpersnr" = updateWithFields fs sd { signatorypersonalnumber = value }
+              | name == BS.fromString "sigcompnr" = updateWithFields fs sd { signatorycompanynumber = value }
               | otherwise = updateWithFields fs sd { signatoryotherfields = updateOtherFields name value (signatoryotherfields sd) }
 
           updateOtherFields _    _     []      = []

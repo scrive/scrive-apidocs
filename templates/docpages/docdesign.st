@@ -153,12 +153,23 @@ $endif$
                     </span>
                     $endif$
                     $if(authorpersonnumber)$
-                    <span class='dragtext authornum inputWrapper'>
-                      <span style="display:none;" class="fieldid">number</span>
+                    <span class='dragtext authorpersnum inputWrapper'>
+                      <span style="display:none;" class="fieldid">personalnumber</span>
                       <span style="display:none;" class="fieldsigid">author</span>
                       <span style="display:none;"
                             class="type">sig</span>
                       <span class="fieldvalue">$authorpersonnumber$</span>
+                      <img src="/theme/images/iconHand.png" class="draghandle" 
+                           alt="drag" />
+                    </span>
+                    $endif$
+                    $if(authorcompanynumber)$
+                    <span class='dragtext authorcompnum inputWrapper'>
+                      <span style="display:none;" class="fieldid">companynumber</span>
+                      <span style="display:none;" class="fieldsigid">author</span>
+                      <span style="display:none;"
+                            class="type">sig</span>
+                      <span class="fieldvalue">$authorcompanynumber$</span>
                       <img src="/theme/images/iconHand.png" class="draghandle" 
                            alt="drag" />
                     </span>
@@ -388,10 +399,17 @@ $endif$
           <img src="/theme/images/iconHand.png" class="draghandle"
                alt="drag" />
         </span>
-        <span class='dragfield signum inputWrapper'>
-          <span style="display:none;" class="fieldid">number</span>
+        <span class='dragfield sigpersnum inputWrapper'>
+          <span style="display:none;" class="fieldid">personalnumber</span>
           <span style="display:none;" class="type">sig</span>
-          <input type="text" infotext="Org.nr./Pers.nr" name="signatorynumber" autocomplete="off" />
+          <input type="text" infotext="Pers. nr" name="signatorypersonalnumber" autocomplete="off" />
+          <img src="/theme/images/iconHand.png" class="draghandle" 
+               alt="drag" />
+        </span>
+        <span class='dragfield sigcompnum inputWrapper'>
+          <span style="display:none;" class="fieldid">companynumber</span>
+          <span style="display:none;" class="type">sig</span>
+          <input type="text" infotext="Org. nr" name="signatorycompanynumber" autocomplete="off" />
           <img src="/theme/images/iconHand.png" class="draghandle" 
                alt="drag" />
         </span>

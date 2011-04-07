@@ -179,7 +179,7 @@ handleSignPostBankID docid signid magic = do
             -- compare information from document (and fields) to that obtained from BankID
             let contractFirst  = signatoryfstname details
                 contractLast   = signatorysndname details
-                contractNumber = signatorynumber details
+                contractNumber = signatorypersonalnumber details
 
                 elegFirst  = fieldvaluebyid (BS.fromString "Subject.GivenName") attrs
                 elegLast   = fieldvaluebyid (BS.fromString "Subject.Surname")  attrs
@@ -754,7 +754,7 @@ getSigEntry templates signatorydetails =
         field "firstname" $ signatoryfstname signatorydetails
         field "lastname"  $ signatorysndname signatorydetails
         field "company"   $ signatorycompany signatorydetails
-        field "number"    $ signatorynumber  signatorydetails
+        field "number"    $ signatorypersonalnumber signatorydetails
 
 fieldvaluebyid :: BS.ByteString -> [(BS.ByteString, BS.ByteString)] -> BS.ByteString
 fieldvaluebyid _ [] = BS.fromString ""

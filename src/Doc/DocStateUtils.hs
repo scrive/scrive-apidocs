@@ -193,13 +193,15 @@ signatoryDetailsFromUser user =
                      -- It should be fixed properly when we split personnnummer and felaktignnummer
                      -- (change from usercompanynumber -> userpersonalnumber)
                      --    --EN
-                     , signatorynumber            = userpersonalnumber $ userinfo user
-                     , signatoryfstnameplacements = []
-                     , signatorysndnameplacements = []
-                     , signatorycompanyplacements = []
-                     , signatoryemailplacements   = []
-                     , signatorynumberplacements  = []
-                     , signatoryotherfields       = []
+                     , signatorypersonalnumber    = userpersonalnumber $ userinfo user
+                     , signatorycompanynumber     = usercompanynumber $ userinfo user
+                     , signatoryfstnameplacements        = []
+                     , signatorysndnameplacements        = []
+                     , signatorycompanyplacements        = []
+                     , signatoryemailplacements          = []
+                     , signatorypersonalnumberplacements = []
+                     , signatorycompanynumberplacements  = []
+                     , signatoryotherfields              = []
                      }
                      
 isMatchingSignatoryLink :: User -> SignatoryLink -> Bool
