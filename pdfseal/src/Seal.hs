@@ -233,9 +233,9 @@ pagintext (SealSpec{documentNumber,initials}) =
  "Q "
 
 signatorybox :: Person -> String
-signatorybox (Person {fullname,company,number,email}) = 
+signatorybox (Person {fullname,company,companynumber,email}) = 
  let
-    orgnrtext = if number=="" then "" else "Org.nr. " ++ number
+    orgnrtext = if companynumber=="" then "" else "Org.nr. " ++ companynumber
     orgnroffset = textWidth (PDFFont Helvetica 10) (toPDFString orgnrtext)
     emailoffset = textWidth (PDFFont Helvetica_Oblique 10) (toPDFString email)
     rightmargin = 595 - 46.5522
