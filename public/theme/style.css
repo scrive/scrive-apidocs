@@ -421,6 +421,14 @@ a img
     text-decoration: none;
 }
 
+.mainContainer a.cancel {
+  color: #E91600;
+  cursor: pointer;
+  margin-right: 12px;
+  text-decoration: none;
+  font: 13px/34px "Helvetica Neue";
+}
+
 .mainContainer .headline 
 {
     font-weight: bold;
@@ -2022,6 +2030,15 @@ form {
     color: #666666;
     width:100%;
     display:table-row;
+}
+
+#signViewBottomBoxContainerLeftText #signGuardLabel
+{
+    width:280px;
+    padding-left:4px;
+    padding-top:3px;
+    padding-right:4px;
+    padding-bottom:3px;
 }
 
 #signViewBottomBoxContainerRight
