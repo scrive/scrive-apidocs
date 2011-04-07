@@ -798,6 +798,11 @@
     padding-bottom:10px;
     
 }
+
+.modal-container .modal-footer .btn-small{
+    padding-bottom:10px;
+    
+}
 .modal-container .modal-footer a.cancel {
 	color: #e91600;
 	text-decoration: none;

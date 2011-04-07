@@ -10,12 +10,7 @@ morethenonelist=
 nomorethanonelist=
     $list:strong()$
 ###
-customFooter=
-    <p>
-      Hälsningar
-      <br/>
-      $creatorname$
-    </p>
+customFooter= <span/>
 ###
 poweredBySkrivaPaPara=
     <p>
