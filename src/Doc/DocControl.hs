@@ -861,7 +861,7 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
 
   daystosign <- readField "daystosign"
   
-  invitetext <- getFieldUTFWithDefault defaultInviteMessage "invitetext"
+  invitetext <- fmap (fromMaybe defaultInviteMessage) $ getCustomTextField "invitetext"
   
   mcsvpersonindex <- getOptionalField asValidNumber "csvpersonindex"
 

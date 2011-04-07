@@ -993,8 +993,8 @@ function prepareEditor(textarea) {
                           theme_advanced_buttons2 : "",
                           convert_urls : false,
                           theme_advanced_toolbar_align : "left",
-                          plugins : "noneditable"
-                                                          
+                          plugins : "noneditable,paste",
+                          valid_elements : "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul"
  });
 }
  
