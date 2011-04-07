@@ -75,7 +75,7 @@ Executable kontrakcja-server
 
  hs-source-dirs: src pdfseal/inc
 
- GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind
+ GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind -Wall
  if !os(windows)
    -- don't do threaded on Windows because it uses blocking listen and accept
    GHC-Options: -threaded
