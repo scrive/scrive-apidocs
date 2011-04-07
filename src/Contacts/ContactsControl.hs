@@ -1,5 +1,3 @@
-{-# LANGUAGE CPP #-}
-
 -----------------------------------------------------------------------------
 -- |           MOCKUP!!!!!!!
 -- Module      :  Administration.AdministrationControl
