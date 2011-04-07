@@ -558,7 +558,8 @@ asValidFieldValue input =
     The only XML tags allowed are: br, p, strong, em, ul, li, ol, and span.
     The only attribute allowed is the style attribute on a span tag.
     This style attribute is only allowed to have the value “text-decoration: underline;” or “text-decoration: line-through;”.
-    XML comments are not allowed.
+    XML comments are allowed, because you tend to get from tinymce when people paste from Word.  I can get tinymce to
+    filter all the tags nicely, but have failed here.  When I have time I'll either figure it out, or filter here.
     Size:  up to 800 chars
 -}
 asValidInviteText :: String -> Result BS.ByteString
@@ -583,6 +584,7 @@ asValidInviteText input =
               | otherwise = bad
           checkContent x@(CString _ _ _) = return x 
           checkContent x@(CRef _ _) = return x
+          checkContent x@(CMisc (Comment _) _) = return x
           checkContent _ = bad
           isValidChild :: Content Posn -> Bool
           isValidChild c =
