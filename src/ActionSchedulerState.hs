@@ -11,6 +11,7 @@ module ActionSchedulerState (
     , Actions
     , GetAction(..)
     , GetExpiredActions(..)
+    , GetDocViewTicket(..)
     , NewAction(..)
     , UpdateActionType(..)
     , UpdateActionEvalTime(..)
@@ -24,13 +25,15 @@ module ActionSchedulerState (
     , newAccountCreated
     , newAccountCreatedBySigning
     , newEmailSendoutAction
+    , newDocViewTicketAction
     ) where
 
 import Control.Applicative ((<$>))
 import Control.Monad.State (modify)
 import Control.Monad.Reader (ask)
 import Data.Typeable
-import Happstack.Data.IxSet (Indexable, IxSet, getOne, ixFun, ixSet, (@=), (@<=))
+import Data.Word
+import Happstack.Data.IxSet (Indexable, IxSet, getOne, ixFun, ixSet, (@=), (@<=), (@>))
 import Happstack.State
 import System.Random (randomIO)
 import qualified Happstack.Data.IxSet as IxSet
@@ -91,6 +94,11 @@ data ActionType = TrustWeaverUpload {
                 | EmailSendout {
                       esMail :: Mail
                 }
+                | DocViewTicket {
+                      dvtIP     :: Word32
+                    , dvtUserID :: Maybe UserID
+                    , dvtToken  :: MagicHash
+                }
                   deriving (Eq, Ord, Show, Typeable)
 
 data InactiveAccountState = JustCreated
@@ -107,7 +115,8 @@ data ActionTypeID = TrustWeaverUploadID
                   | AccountCreatedID
                   | AccountCreatedBySigningID
                   | EmailSendoutID
-                    deriving (Eq, Ord, Show)
+                  | DocViewTicketID
+                    deriving (Eq, Ord, Show, Typeable)
 
 -- | Convert ActionType to its type identifier
 actionTypeID :: ActionType -> ActionTypeID
@@ -118,6 +127,7 @@ actionTypeID (ViralInvitationSent _ _ _ _ _) = ViralInvitationSentID
 actionTypeID (AccountCreated _ _) = AccountCreatedID
 actionTypeID (AccountCreatedBySigning _ _ _ _) = AccountCreatedBySigningID
 actionTypeID (EmailSendout _) = EmailSendoutID
+actionTypeID (DocViewTicket _ _ _) = DocViewTicketID
 
 -- | Determines how often we should check if there's an action to evaluate
 data ActionImportance = UrgentAction
@@ -133,6 +143,7 @@ actionImportance (ViralInvitationSent _ _ _ _ _) = LeisureAction
 actionImportance (AccountCreated _ _) = LeisureAction
 actionImportance (AccountCreatedBySigning _ _ _ _) = LeisureAction
 actionImportance (EmailSendout _) = EmailSendoutAction
+actionImportance (DocViewTicket _ _ _) = LeisureAction
 
 data Action = Action {
       actionID       :: ActionID
@@ -165,6 +176,13 @@ instance Indexable Action where
         [ ixFun (\a -> [actionID a])
         , ixFun (\a -> [actionEvalTime a])
         , ixFun (\a -> [actionImportance $ actionType a])
+        , ixFun (\a -> [actionTypeID $ actionType a])
+        , ixFun (\a -> case actionType a of
+                            PasswordReminder uid _ _          -> [uid]
+                            AccountCreated uid _              -> [uid]
+                            AccountCreatedBySigning _ uid _ _ -> [uid]
+                            DocViewTicket _ (Just uid) _      -> [uid]
+                            _                                 -> [])
         ]
 
 instance Component Actions where
@@ -178,6 +196,11 @@ getAction aid = return . getOne . (@= aid) =<< ask
 -- | Get expired actions
 getExpiredActions :: ActionImportance -> MinutesTime -> Query Actions [Action]
 getExpiredActions imp now = return . IxSet.toList . (@<= now) . (@= imp) =<< ask
+
+-- | Get valid doc view ticket
+getDocViewTicket :: MinutesTime -> UserID -> Query Actions (Maybe Action)
+getDocViewTicket now uid =
+    return . getOne . (@> now) . (@= uid) . (@= DocViewTicketID) =<< ask
 
 -- | Insert new action
 newAction :: ActionType -> MinutesTime -> Update Actions Action
@@ -228,6 +251,7 @@ deleteAction aid = do
 $(mkMethods ''Actions
   [ 'getAction
   , 'getExpiredActions
+  , 'getDocViewTicket
   , 'newAction
   , 'updateActionType
   , 'updateActionEvalTime
@@ -307,3 +331,15 @@ newEmailSendoutAction mail = do
     }
     _ <- update $ NewAction action $ now
     return ()
+
+-- | Create new 'doc view ticket' action used to allow users to see doc jpg/pdf.
+newDocViewTicketAction :: Word32 -> Maybe UserID -> IO Action
+newDocViewTicketAction ip muid = do
+    hash <- randomIO
+    now <- getMinutesTime
+    let action = DocViewTicket {
+          dvtIP     = ip
+        , dvtUserID = muid
+        , dvtToken  = hash
+    }
+    update $ NewAction action $ 10 `minutesAfter` now

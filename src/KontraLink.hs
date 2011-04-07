@@ -46,7 +46,7 @@ data KontraLink
     | LinkSignDoc Document SignatoryLink
     | LinkIssueDoc DocumentID
     | LinkDesignDoc DesignStep
-    | LinkIssueDocPDF Document {- Which file? -}
+    | LinkIssueDocPDF (ActionID, MagicHash) Document {- Which file? -}
     | LinkSubaccount ListParams
     | LinkSharing ListParams
     | LinkRemind Document SignatoryLink
@@ -105,8 +105,8 @@ instance Show KontraLink where
     showsPrec _ (LinkDesignDoc (DesignStep2 documentid (Just person) Nothing)) = (++) $ "/d/" ++ show documentid ++ "?step2&person=" ++ show person
     showsPrec _ (LinkDesignDoc (DesignStep2 documentid (Just person) (Just AfterCSVUpload))) = (++) $ "/d/" ++ show documentid ++ "?step2&person=" ++ show person ++ "&aftercsvupload"
     showsPrec _ (LinkDesignDoc (DesignStep3 documentid)) = (++) $ "/d/" ++ show documentid ++ "?step3"
-    showsPrec _ (LinkIssueDocPDF document) = 
-        (++) $ "/d/" ++ show (documentid document) ++ "/" ++ BS.toString (documenttitle document) ++ ".pdf"
+    showsPrec _ (LinkIssueDocPDF (aid, hash) document) = 
+        (++) $ "/d/" ++ show aid ++ "/" ++ show hash ++ "/" ++ show (documentid document) ++ "/" ++ BS.toString (documenttitle document) ++ ".pdf"
     showsPrec _ (LinkFile fileid filename) = 
         (++) $ "/df/" ++ show fileid ++ "/" ++ BS.toString filename
     showsPrec _ (LinkSignDoc document signatorylink) = 
