@@ -26,7 +26,6 @@ import MinutesTime
 import Misc
 import Redirect
 import Templates.Templates (KontrakcjaTemplates)
-import User.UserState
 import User.UserView
 
 
