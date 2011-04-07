@@ -1,4 +1,5 @@
-{-# OPTIONS_GHC -fglasgow-exts -funbox-strict-fields #-}
+{-# LANGUAGE DoRec #-}
+{-# OPTIONS_GHC -funbox-strict-fields #-}
 
 module PdfModel where
 import Prelude hiding (String)
