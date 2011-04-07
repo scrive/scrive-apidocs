@@ -2,7 +2,7 @@
 
 module ActionSchedulerState (
       SchedulerData(..)
-    , ActionID(..)
+    , ActionID
     , ActionType(..)
     , ActionTypeID(..)
     , InactiveAccountState(..)
@@ -50,7 +50,10 @@ data SchedulerData a b c = SchedulerData {
 }
 
 newtype ActionID = ActionID Integer
-    deriving (Eq, Ord, Show, Typeable)
+    deriving (Eq, Ord, Typeable)
+
+instance Show ActionID where
+    show (ActionID aid) = show aid
 
 instance FromReqURI ActionID where
     fromReqURI s = ActionID <$> readM s
