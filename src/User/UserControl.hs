@@ -8,6 +8,7 @@ import Data.List
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.State (update, query)
+import Happstack.Util.Common (readM)
 import HSP.XML
 import System.Random
 import qualified Data.ByteString as BS
@@ -698,8 +699,15 @@ dropExistingAction aid = do
 guardXToken :: Kontra ()
 guardXToken = do
     Context { ctxxtoken } <- get
-    paramtoken <- getDataFnM $ look "xtoken"
-    let (xtoken :: MagicHash) = read ((read paramtoken) :: String)
-    unless (xtoken == ctxxtoken) (do 
-        Log.debug $ "xtoken failure: session: " ++ show ctxxtoken ++ " param: " ++ show xtoken
-        mzero)
+    (readM <$> getDataFnM (look "xtoken")) >>= maybe mzero (\xtokenstr -> do
+        maybe (readError xtokenstr) (\xtoken -> do
+            unless (xtoken == ctxxtoken) (do
+                Log.debug $ "xtoken failure: session: " ++ show ctxxtoken
+                          ++ " param: " ++ show xtoken
+                mzero)
+            ) $ readM xtokenstr
+        )
+    where
+        readError v = do
+            Log.debug $ "couldn't read xtoken value: " ++ v
+            mzero
