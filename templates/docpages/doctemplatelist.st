@@ -15,7 +15,7 @@ $loadingdialog()$
         <div class="tab-container">
             <div class="tab-content">
                 <div class="col float-left">
-                    <div class="tab-dd">
+                    <div class="tab-dd float-left">
                         <div class="tab-dd-button">
                           <a href="javascript:;"><p>Alternativ</p></a>
                         </div>
@@ -23,20 +23,19 @@ $loadingdialog()$
                             <li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">Radera</a></li>
                         </ul>
                     </div>
-                </div>
 
-                <div class="col float-right">
-                      $searchBox(infotext='Sök dokument')$
-                </div>
-
-                <div class="col" style="margin-left:44%;margin-right:44%;padding-top:15px;padding-bottom:0px">
-                    <a class="btn-tiny green" style="overflow:hidden;height:26px;width:90px" >  
+                    <a class="btn-tiny green float-left" style="overflow:hidden;height:26px;width:92px;margin-left: 20px;" >  
                         <div class="left"> </div>
                         <div class="label"> Skapa ny mall </div> 
                         <div class="right"> </div>
                         <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px" maxlength="1" type="file" name="doc" accept="application/pdf" rel=".filelist" />
                     </a>
-                <div class="filelist" style="padding-left:10px;display:none"></div> 
+                    <div class="filelist" style="padding-left:10px;display:none"></div> 
+
+                </div>
+
+                <div class="col float-right">
+                      $searchBox(infotext='Sök dokument')$
                 </div>
                 <div class="clearfix"></div>
             </div>
