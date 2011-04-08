@@ -716,12 +716,15 @@ $validationdropdown()$
   </div>
 
   <div id="signViewBottomBoxContainerRight"> 
-    <div> 
-      <input type="button" class="submit btn-blue center" value="SkrivaPå" id="signByAuthor" rel="#dialog-confirm-sign-by-author" name="sign" />
-      <input class="cancel bigbutton" type="button"
-             name="cancel" value="Återkalla inbjudan" id="cancel"
-             rel="#cancel-by-author-dialog" />  
+  <a class="btn-big blue center submiter" value="SkrivaPå" id="signByAuthor" rel="#dialog-confirm-sign-by-author" name="sign">
+    <div class="left"></div>
+    <div class="label" style="width:120px">
+      <span>SkrivaPå</span>
+      <span class="icon cross"></span>
     </div>
+    <div class="right"></div>
+  </a>
+  <a class="float-right cancel" name="cancel" id="cancel" rel="#cancel-by-author-dialog"  id="cancel">Återkalla inbjudan</a>
   </div>
 </div>
 $endif$   
