@@ -632,6 +632,10 @@ safeReady(function() {
     createCustomField($(this).parents('.newfield'));
     return false;
   });
+  $('.newfield a.minusIcon', $('#personpane')[0]).live('click', function() {
+    $(this).parents(".newfield").remove();
+    return false;
+  });
 });
 
 function createCustomField(newfield) {
@@ -698,7 +702,7 @@ safeReady(function() {
     var plus = $(this);
     var persondetails = plus.parents('.persondetails');
     var otherfields = persondetails.find('.otherfields');
-    var newfield = $("<div class='newfield inputWrapper'><input class='newfieldbox' type='text' infotext='Namnge fältet' /><a href='#' class='okIcon icon small ok'></a></div>");
+    var newfield = $("<div class='newfield inputWrapper'><input class='newfieldbox' type='text' infotext='Namnge fältet' /><a href='#' class='minusIcon icon small remove'></a><a href='#' class='okIcon icon small ok'></a></div>");
 
     otherfields.append(newfield);
     enableInfoTextOnce(newfield);
