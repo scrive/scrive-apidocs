@@ -120,14 +120,14 @@ handleRoutes = msum [
      -- I put this stuff up here because someone changed things out from under me
      -- I will rearrange this later
      , dir "s" $ hget4  $ BankID.handleSignBankID
-     , dir "s" $ param "eleg" $ hpost3 $ BankID.handleSignPostBankID
+     , dir "s" $ param "eleg" $ hpost3NoXToken $ BankID.handleSignPostBankID
      , dir "d" $ hget2  $ BankID.handleIssueBankID
      , dir "d" $ param "eleg" $ hpost1 $ BankID.handleIssuePostBankID
 
      , dir "s" $ hget0  $ DocControl.handleSTable
      , dir "s" $ hget3  $ DocControl.handleSignShow
-     , dir "s" $ param "sign" $ hpost3 $ DocControl.signDocument
-     , dir "s" $ param "cancel" $ hpost3 $ DocControl.rejectDocument
+     , dir "s" $ param "sign" $ hpost3NoXToken $ DocControl.signDocument
+     , dir "s" $ param "cancel" $ hpost3NoXToken $ DocControl.rejectDocument
      
      --Q: This all needs to be done by author. Why we dont check it
      --here? MR
@@ -622,6 +622,15 @@ hpost3 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> methodM POST >> (https
     UserControl.guardXToken
     (link :: KontraLink) <- action a1 a2 a3
     sendRedirect link)
+
+
+hpost3NoXToken  :: (FromReqURI a, FromReqURI a1, FromReqURI a2) =>  
+          (a -> a1 -> a2 -> Kontra KontraLink) 
+          -> Kontra Response
+hpost3NoXToken  action = path $ \a1 -> path $ \a2 -> path $ \a3 -> methodM POST >> (https $ do
+    (link :: KontraLink) <- action a1 a2 a3
+    sendRedirect link)
+
 
 hpost4 :: (FromReqURI a, FromReqURI a1, FromReqURI a2, FromReqURI a3) =>  
           (a -> a1 -> a2 -> a3 -> Kontra KontraLink)
