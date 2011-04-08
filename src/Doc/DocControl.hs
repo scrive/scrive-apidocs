@@ -842,6 +842,85 @@ getAndConcat field = do
 --mapJust :: (a -> Maybe b) -> [a] -> [b]
 mapJust f l = map fromJust $ filter isJust $ map f l
 
+filterPlacementsByID placements sigid fieldid =
+    [x | (s, f, x) <- placements, s == sigid, f == fieldid]
+
+--filterFieldDefs
+
+mungeFields author
+            signatoriesemails
+            signatoriescompanies
+            signatoriespersonalnumbers
+            signatoriescompanynumbers
+            sigids
+            signatoriesfstnames
+            signatoriessndnames
+            fieldids
+            fieldnames
+            fieldvalues
+            fieldsigids
+            placedsigids
+            placedfieldids
+            placedxs
+            placedys
+            placedpages
+            placedwidths
+            placedheights = do
+  placedxsf      <- mapM (readM . BS.toString) placedxs
+  placedysf      <- mapM (readM . BS.toString) placedys
+  placedpagesf   <- mapM (readM . BS.toString) placedpages
+  placedwidthsf  <- mapM (readM . BS.toString) placedwidths
+  placedheightsf <- mapM (readM . BS.toString) placedheights
+  let placements = zipWith5 FieldPlacement 
+                    placedxsf
+                    placedysf
+                    placedpagesf
+                    placedwidthsf
+                    placedheightsf
+                   
+  let pls = zip3 placedsigids placedfieldids placements
+  let fielddefs = zipWith4 fd fieldnames fieldvalues fieldids fieldsigids where
+          fd fn fv id sigid = (sigid,
+                                 FieldDefinition { fieldlabel = fn, 
+                                                   fieldvalue = fv,
+                                                   fieldplacements = filterPlacementsByID pls sigid id,
+                                                   fieldfilledbyauthor = (BS.length fv > 0)
+                                                 })
+
+  let defsByID sigid = 
+          map snd (filter (sid sigid) fielddefs) where
+              sid id (id2, _) 
+                  | id == id2 = True
+                  | otherwise = False
+
+
+  let signatories = sigs where
+          sigs = if sigids == [] 
+                 then zipWith6 sdsimple signatoriesfstnames signatoriessndnames signatoriescompanies signatoriespersonalnumbers signatoriescompanynumbers signatoriesemails
+                      
+                 else zipWith7 sd sigids signatoriesfstnames signatoriessndnames signatoriescompanies signatoriespersonalnumbers signatoriescompanynumbers signatoriesemails 
+          sdsimple n sn c pno cno e = SignatoryDetails n sn c pno cno e [] [] [] [] [] [] []
+          sd id n sn c pno cno e = SignatoryDetails n sn c pno cno e
+                                            (filterPlacementsByID pls id (BS.fromString "fstname"))
+                                            (filterPlacementsByID pls id (BS.fromString "sndname"))
+                                            (filterPlacementsByID pls id (BS.fromString "company"))
+                                            (filterPlacementsByID pls id (BS.fromString "email"))
+                                            (filterPlacementsByID pls id (BS.fromString "personalnumber"))
+                                            (filterPlacementsByID pls id (BS.fromString "companynumber"))
+                                            (defsByID id)
+                                                                      
+  let authordetails = (signatoryDetailsFromUser author)
+                      {
+                        signatoryemailplacements = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "email")
+                      , signatoryfstnameplacements = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "fstname")
+                      , signatorysndnameplacements = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "sndname")
+                      , signatorycompanyplacements = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "company")
+                      , signatorypersonalnumberplacements = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "personalnumber")
+                      , signatorycompanynumberplacements = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "companynumber")
+                      , signatoryotherfields = defsByID (BS.fromString "author")
+                      }
+  return (authordetails, signatories)
+
 {- |
    Save a document.
    
@@ -887,71 +966,28 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
   validmethods <- getAndConcat "validationmethod"
 
   let docallowedidtypes = mapJust (idmethodFromString . BS.toString) validmethods
-
-  placedxsf      <- mapM (readM . BS.toString) placedxs
-  placedysf      <- mapM (readM . BS.toString) placedys
-  placedpagesf   <- mapM (readM . BS.toString) placedpages
-  placedwidthsf  <- mapM (readM . BS.toString) placedwidths
-  placedheightsf <- mapM (readM . BS.toString) placedheights
-  let placements = zipWith5 FieldPlacement 
-                    placedxsf
-                    placedysf
-                    placedpagesf
-                    placedwidthsf
-                    placedheightsf
-                   
-  let pls = zipWith3 m placedsigids placedfieldids placements where
-          m s f p = (s, f, p)
-
-  let placementsByID sigid fieldid = 
-          map plac (filter sameids pls) where
-              sameids (sigid2, fieldid2, _)
-                  | sigid == sigid2 && fieldid == fieldid2 = True
-                  | otherwise                              = False
-              plac (_, _, x) = x
-
-  let fielddefs = zipWith4 fd fieldnames fieldvalues fieldids fieldsigids where
-          
-          fd fn fv id sigid = (sigid,
-                                 FieldDefinition { fieldlabel = fn, 
-                                                   fieldvalue = fv,
-                                                   fieldplacements = placementsByID sigid id,
-                                                   fieldfilledbyauthor = (BS.length fv > 0)
-                                                 })
-
-  let defsByID sigid = 
-          map snd (filter (sid sigid) fielddefs) where
-              sid id (id2, _) 
-                  | id == id2 = True
-                  | otherwise = False
-
-
-  let signatories = sigs where
-          sigs = if sigids == [] 
-                 then zipWith6 sdsimple signatoriesfstnames signatoriessndnames signatoriescompanies signatoriespersonalnumbers signatoriescompanynumbers signatoriesemails
-                      
-                 else zipWith7 sd sigids signatoriesfstnames signatoriessndnames signatoriescompanies signatoriespersonalnumbers signatoriescompanynumbers signatoriesemails 
-          sdsimple n sn c pno cno e = SignatoryDetails n sn c pno cno e [] [] [] [] [] [] []
-          sd id n sn c pno cno e = SignatoryDetails n sn c pno cno e
-                                            (placementsByID id (BS.fromString "fstname"))
-                                            (placementsByID id (BS.fromString "sndname"))
-                                            (placementsByID id (BS.fromString "company"))
-                                            (placementsByID id (BS.fromString "email"))
-                                            (placementsByID id (BS.fromString "personalnumber"))
-                                            (placementsByID id (BS.fromString "companynumber"))
-                                            (defsByID id)
-                                                                      
-  let authordetails = (signatoryDetailsFromUser author)
-                      {
-                        signatoryemailplacements = placementsByID (BS.fromString "author") (BS.fromString "email")
-                      , signatoryfstnameplacements = placementsByID (BS.fromString "author") (BS.fromString "fstname")
-                      , signatorysndnameplacements = placementsByID (BS.fromString "author") (BS.fromString "sndname")
-                      , signatorycompanyplacements = placementsByID (BS.fromString "author") (BS.fromString "company")
-                      , signatorypersonalnumberplacements = placementsByID (BS.fromString "author") (BS.fromString "personalnumber")
-                      , signatorycompanynumberplacements = placementsByID (BS.fromString "author") (BS.fromString "companynumber")
-                      , signatoryotherfields = defsByID (BS.fromString "author")
-                      }
-      isauthorsig = authorrole == "signatory"
+  
+  -- I hope this is just temporary; but it's just a lot of data and a lot of work to combine.
+  (authordetails, signatories) <- mungeFields author
+                                        signatoriesemails
+                                        signatoriescompanies
+                                        signatoriespersonalnumbers
+                                        signatoriescompanynumbers
+                                        sigids
+                                        signatoriesfstnames
+                                        signatoriessndnames
+                                        fieldids
+                                        fieldnames
+                                        fieldvalues
+                                        fieldsigids
+                                        placedsigids
+                                        placedfieldids
+                                        placedxs
+                                        placedys
+                                        placedpages
+                                        placedwidths
+                                        placedheights
+  let isauthorsig = authorrole == "signatory"
       signatories2 = if isauthorsig
                      then authordetails : signatories
                      else signatories
