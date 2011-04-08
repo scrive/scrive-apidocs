@@ -205,7 +205,7 @@ data StatusClass = SCDraft
 instance Show StatusClass where
   show SCDraft = "draft"
   show SCCancelled = "cancelled"
-  show SCTimedout = "cancelled"
+  show SCTimedout = "expired"
   show SCSent = "sent"
   show SCOpened = "opened"
   show SCSigned = "signed"
@@ -657,16 +657,16 @@ signatoryLinkFields
    isClosed = documentstatus document == Closed
    dontShowAnyReminder = isTimedout || isCanceled || isRejected
    status = caseOf [
-          (invitationdeliverystatus == Undelivered, "cancelled")
-        , (isCanceled, "cancelled")
-        , (isRejected, "cancelled")
-        , (isTimedout, "expired")
-        , (wasSigned,  "signed")
-        , (wasSeen,    "opened ")
-        ] "sent"
+          (invitationdeliverystatus == Undelivered,  SCCancelled)
+        , (isCanceled, SCCancelled)
+        , (isRejected, SCCancelled)
+        , (isTimedout, SCTimedout)
+        , (wasSigned,  SCSigned)
+        , (wasSeen,    SCOpened)
+        ] SCSent       
     in do
       field "current" $ current  
-      field "status" status
+      field "status" $ show status
       field "fstname" $ packToMString $ signatoryfstname $ signatorydetails siglnk
       field "sndname" $ packToMString $ signatorysndname $ signatorydetails siglnk
       field "company" $ packToMString $ signatorycompany $ signatorydetails siglnk
