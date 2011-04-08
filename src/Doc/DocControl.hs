@@ -886,12 +886,17 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
 
   let docallowedidtypes = mapJust (idmethodFromString . BS.toString) validmethods
 
+  placedxsf <- mapM (readM . BS.toString) placedxs
+  placedysf <- mapM (readM . BS.toString) placedys
+  placedpagesf <- mapM (readM . BS.toString) placedpages
+  placedwidthsf <- mapM (readM . BS.toString) placedwidths
+  placedheightsf <- mapM (readM . BS.toString) placedheights
   let placements = zipWith5 FieldPlacement 
-                   (map (read . BS.toString) placedxs)
-                   (map (read . BS.toString) placedys)
-                   (map (read . BS.toString) placedpages)
-                   (map (read . BS.toString) placedwidths)
-                   (map (read . BS.toString) placedheights)
+                    placedxsf
+                    placedysf
+                    placedpagesf
+                    placedwidthsf
+                    placedheightsf
                    
   let pls = zipWith3 m placedsigids placedfieldids placements where
           m s f p = (s, f, p)
