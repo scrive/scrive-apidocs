@@ -172,7 +172,16 @@ documentInfoText=
                         </span>
                      $endif$
 
-
+                  $else$ 
+                        <span class="header">
+                             Problem
+                        </span><br>
+                        <span class="text">
+                              Ledsen, det har uppstått ett problem med att rendera sigillet på PDF:en.
+                              Våra tekniker tittar på detta just nu. Om problemet upprepar sig var
+                              vänlig kontakta <a>support@skrivapa.se</a>
+                        </span>
+                  
                   $endif$
 ######                  
                 
