@@ -228,15 +228,16 @@ a img
     background-color: #fafafa;
 }
 
-#selectable .ui-selecting 
+#selectable .ui-selecting, #selectable .ui-selecting td 
 { 
     background: #e6e6e6; 
 }
 
-#selectable .ui-selected
+#selectable .ui-selected, #selectable .ui-selected td
 {
     background: #e0e0e0;
 }
+
 
 #headerContainer,
 #headerWide
