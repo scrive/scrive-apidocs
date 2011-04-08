@@ -245,19 +245,19 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <tr>
                                                         <th>
                                                                 <h4>Free</h4>
-                                                                <em>För sällananvändare</em>
+                                                                <p>För sällananvändare</p>
                                                         </th>
                                                         <th>
                                                                 <h4>Small</h4>
-                                                                <em>Låg volym och enkla behov</em>
+                                                                <p>Låg volym och enkla behov</p>
                                                         </th>
                                                         <th>
                                                                 <h4>Business</h4>
-                                                                <em>Medel volym och många användningsområden</em>
+                                                                <p>Medel volym och många användningsområden</p>
                                                         </th>
                                                         <th>
                                                                 <h4>Enterprise</h4>
-                                                                <em>Stora volymer och komplexa behov</em>
+                                                                <p>Stora volymer och komplexa behov</p>
                                                         </th>
                                                 </tr>
                                                 <tr class="odd-row">
@@ -287,22 +287,22 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <tr class="big-row">
                                                         <td>
                                                                 <h4>0kr</h4>
-                                                                <p>Per användare och måna</p>
+                                                                <p>Per användare och månad</p>
                                                                 <a href="priceplan.html?nocolumns">Läs mer</a>
                                                         </td>
                                                         <td>
                                                                 <h4>149kr</h4>
-                                                                <p>Per användare och måna</p>
+                                                                <p>Per användare och månad</p>
                                                                 <a href="priceplan.html?nocolumns">Läs mer</a>
                                                         </td>
                                                         <td>
                                                                 <h4>299kr</h4>
-                                                                <p>Per användare och måna</p>
+                                                                <p>Per användare och månad</p>
                                                                 <a href="priceplan.html?nocolumns">Läs mer<a>                                                   
                                                         </td>
                                                         <td>
                                                                 <h4>449kr</h4>
-                                                                <p>Per användare och måna</p>
+                                                                <p>Per användare och månad</p>
                                                                 <a href="priceplan.html?nocolumns">Läs mer</a>
                                                         </td>
                                                 </tr>
@@ -312,7 +312,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <ul class="highlight-rows">
                                                         <li class="top">
                                                                 <h4>Business</h4>
-                                                                <p><em>Medel volym och många användningsområden</em></p>
+                                                                <p>Medel volym och många användningsområden</p>
                                                         </li>
                                                         <li class="odd"><a href="#">2-9 användare</a></li>
                                                         <li>
@@ -322,7 +322,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                         <li><a href="#">Avancerade funktioner</a></li>
                                                         <li class="bottom">
                                                                 <h4>299kr</h4>
-                                                                <p>Per användare och måna</p>
+                                                                <p>Per användare och månad</p>
                                                                 <a href="priceplan.html?nocolumns">Läs mer<a>   
                                                         </li>
                                                 </ul>
