@@ -837,17 +837,19 @@ getAndConcat field = do
 mapJust f l = map fromJust $ filter isJust $ map f l
 
 {- |
-   do the work necessary for saving a document being authored
+   Save a document.
+   
+   NOTE: This function is getting long. I am refactoring it --Eric
  -}
 updateDocument :: Context -> User -> Document -> Kontra (Either String Document)
 updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documentid} = do
   -- each signatory has these predefined fields
-  signatoriesfstnames <- getAndConcat "signatoryfstname"
-  signatoriessndnames <- getAndConcat "signatorysndname"
-  signatoriescompanies <- getAndConcat "signatorycompany"
+  signatoriesfstnames        <- getAndConcat "signatoryfstname"
+  signatoriessndnames        <- getAndConcat "signatorysndname"
+  signatoriescompanies       <- getAndConcat "signatorycompany"
   signatoriespersonalnumbers <- getAndConcat "signatorypersonalnumber"
-  signatoriescompanynumbers <- getAndConcat "signatorycompanynumber"
-  signatoriesemails' <- getAndConcat "signatoryemail"
+  signatoriescompanynumbers  <- getAndConcat "signatorycompanynumber"
+  signatoriesemails'         <- getAndConcat "signatoryemail"
   let signatoriesemails = map (BSC.map toLower) signatoriesemails'
 
   -- if the post doesn't contain this one, we parse the old way
@@ -880,10 +882,10 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
 
   let docallowedidtypes = mapJust (idmethodFromString . BS.toString) validmethods
 
-  placedxsf <- mapM (readM . BS.toString) placedxs
-  placedysf <- mapM (readM . BS.toString) placedys
-  placedpagesf <- mapM (readM . BS.toString) placedpages
-  placedwidthsf <- mapM (readM . BS.toString) placedwidths
+  placedxsf      <- mapM (readM . BS.toString) placedxs
+  placedysf      <- mapM (readM . BS.toString) placedys
+  placedpagesf   <- mapM (readM . BS.toString) placedpages
+  placedwidthsf  <- mapM (readM . BS.toString) placedwidths
   placedheightsf <- mapM (readM . BS.toString) placedheights
   let placements = zipWith5 FieldPlacement 
                     placedxsf
