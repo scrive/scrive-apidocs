@@ -1585,14 +1585,23 @@ input.multiFileInput {
 }
 
 .newfield input.newfieldbox {
-    width: 115px;
+    width: 101px;
     border: 0;
     margin: 0px;
 }
 
 #personpane .newfield a.okIcon {
     float:right;
-    margin:3px;
+    margin-top:3px;
+    margin-right:0px;
+    margin-left:0px;
+}
+#personpane .newfield a.minusIcon {
+    float:right;
+    margin-top:3px;
+    margin-right:3px;
+    margin-left:3px;
+    
 }
 
 
