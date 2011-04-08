@@ -1324,10 +1324,10 @@ input.multiFileInput {
 
 #signViewBodyLeft
 {
-    width: 160px;
+    width: 230px;
     float: left;
     position: relative;
-    padding: 14px 15px 5px 52px;
+    padding: 14px 0px 5px 0px;
     margin-top: 20px;	
 }
 
