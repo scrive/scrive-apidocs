@@ -892,11 +892,6 @@ a.new-btn-small.black p {
 
 #body-container .price-plan th p {
 	color: #999;
-	font: 17px "Copse";
-}
-
-#body-container .price-plan th em {
-	color: #999;
 	font: italic 14px "Georgia";
 }
 
@@ -935,7 +930,7 @@ a.new-btn-small.black p {
 }
 
 #body-container .price-plan tr.odd-row td {
-	background: url(../img/bg-odd-row.png);
+	background: #F7F7F7;
 }
 
 #body-container .price-plan tr.big-row {
@@ -948,12 +943,13 @@ a.new-btn-small.black p {
 
 #body-container .price-plan tr.big-row h4 {
         color: #666;
-	font: 14px "Copse";
+	font: 16px "Georgia";
+        font-weight: bold;
 }
 
 #body-container .price-plan tr.big-row td a {
 	color: #35A4D6;
-	font: 12px "Lucida Grande";
+	font: 10px "Lucida Grande";
 	text-transform: uppercase;
 }
 
@@ -970,7 +966,7 @@ a.new-btn-small.black p {
 	border: 2px solid #35A4D6;
 	left: 460px;
 	position: absolute;
-	top: -15px;
+	top: -13px;
 	width: 245px;
 	z-index: 2;
 	-moz-border-radius: 7px;
@@ -1004,7 +1000,7 @@ a.new-btn-small.black p {
 
 #body-container .highlight-container .highlight-rows li.top {
 	height: 86px;
-	padding-top: 20px;
+	padding-top: 25px;
 }
 
 #body-container .highlight-container .highlight-rows li.top h4 {
@@ -1014,14 +1010,9 @@ a.new-btn-small.black p {
 }
 
 #body-container .highlight-container .highlight-rows li.top p {
-	color: #000;
-	font: 18px "Copse";
-	margin-top: 2px;
-}
-
-#body-container .highlight-container .highlight-rows li.top em {
 	color: #666;
 	font: italic 14px "Georgia";
+	margin-top: 2px;
 }
 
 #body-container .highlight-container .highlight-rows li.odd {
@@ -1039,12 +1030,13 @@ a.new-btn-small.black p {
 #body-container .highlight-container .highlight-rows li.bottom h4 {
         color: #666;
         font-style: normal;
+        font-size: 18px;
 }
 
 
 #body-container .highlight-container .highlight-rows li.bottom a {
 	color: #35A4D6; 
-	font: 12px "Lucida Grande";
+	font: 10px "Lucida Grande";
 	text-transform: uppercase;
 }
 
@@ -1444,9 +1436,17 @@ a.new-btn-small.black p {
 	font: 18px "Copse";
 }
 
+#body-container .big-pp-container th h3 {
+	color: #fff;
+	font: 22px "Copse";
+        text-align: left;
+        padding-left: 50px;
+}
+
 #body-container .big-pp-container th p {
 	color: #999;
-	font: 12px "Lucida Grande";
+	font: 12px "Georgia";
+        font-weight: bold;
 }
 
 #body-container .big-pp-container th em {
@@ -1472,7 +1472,11 @@ a.new-btn-small.black p {
 }
 
 #body-container .big-pp-container tr {
-	height: 22px;
+	height: 26px;
+}
+
+#body-container .big-pp-container tr.spacer {
+	height: 5px;
 }
 
 #body-container .big-pp-container td {
@@ -1485,8 +1489,9 @@ a.new-btn-small.black p {
 
 #body-container .big-pp-container td:first-child {
 	padding-right: 9px;
-	text-align: right;
+	text-align: left;
 	width: 235px;
+        padding-left: 50px;
 }
 
 #body-container .big-pp-container td a {
@@ -1499,7 +1504,7 @@ a.new-btn-small.black p {
 }
 
 #body-container .big-pp-container tr.odd-row td {
-	background: url(../img/bg-odd-row.png);
+	background: #F7F7F7;
 }
 
 #body-container .big-pp-container tr.btn-row td {
@@ -1531,18 +1536,18 @@ a.new-btn-small.black p {
 }
 
 #body-container .big-pp-container .highlight-container {
-	left: 562px;
-	width: 203px;
+	left: 596px;
+	width: 181px;
 }
 
 #body-container .big-pp-container .highlight-rows {
-	width: 183px;
+        padding: 0 4px;
+	width: 173px;
 }
 
 #body-container .big-pp-container .highlight-container li {
-	color: #35A4D6;
-	line-height: 21px;
-	height: 21px;
+	color: #666;
+	height: 25px;
 }
 
 #body-container .big-pp-container .highlight-container li a {
@@ -1550,14 +1555,14 @@ a.new-btn-small.black p {
 }
 
 #body-container .big-pp-container .highlight-container li.top {
-	border-bottom: 0;
 	height: 80px;
 	padding-top: 17px;
 }
 
 #body-container .big-pp-container .highlight-container li.top h4 {
 	color: #666;
-	font: 18px "Copse";
+	font: 20px "Copse";
+        padding-top: 10px;
 }
 
 #body-container .big-pp-container .highlight-container li.top em {
@@ -1566,9 +1571,10 @@ a.new-btn-small.black p {
 
 #body-container .big-pp-container .highlight-container li.top p {
 	color: #35A4D6;
-	font: 13px "Copse";
+	font: 14px "Georgia";
 	margin-bottom: 8px;
 	margin-top: 0;
+        font-weight: bold;
 }
 
 #body-container .big-pp-container .highlight-container li.bottom {
