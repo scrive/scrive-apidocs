@@ -179,7 +179,7 @@ documentInfoText=
                         <span class="text">
                               Ledsen, det har uppstått ett problem med att rendera sigillet på PDF:en.
                               Våra tekniker tittar på detta just nu. Om problemet upprepar sig var
-                              vänlig kontakta <a>support@skrivapa.se</a>
+                              vänlig kontakta <a href="mailto:support@skrivapa.se">support@skrivapa.se</a>
                         </span>
                   
                   $endif$
