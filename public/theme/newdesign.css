@@ -727,7 +727,8 @@
 .modal-container .modal-header p {
 	color: #999;
 	font: 11px "Lucida Grande";
-    padding-left: 63px;
+    padding-left: 50px;
+    line-height: 11px;
 }
 
 .modal-container .modal-header a {
