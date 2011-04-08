@@ -273,32 +273,36 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                         <td><a href="#">30 fria signaturer</a></td>
                                                 </tr>
                                                 <tr class="odd-row">
-                                                        <td><a href="#">25 dok lagring</a></td>
-                                                        <td><a href="#">250 dok lagring</a></td>
+                                                        <td><a href="#">50 dok lagring</a></td>
+                                                        <td><a href="#">500 dok lagring</a></td>
                                                         <td><a href="#">Obegränsad lagring</a></td>
                                                         <td><a href="#">Obegränsad lagring</a></td>
                                                 </tr>
                                                 <tr>
                                                         <td><a href="#">Basfunktioner</a></td>
-                                                        <td><a href="#">Basfunktioner</a></td>
+                                                        <td><a href="#">Basfunktioner +</a></td>
                                                         <td><a href="#">Avancerade funktioner</a></td>
-                                                        <td><a href="#">Avancerade funktioner och volymredskap</a></td>
+                                                        <td><a href="#">Avancerade funktioner +</a></td>
                                                 </tr>
                                                 <tr class="big-row">
                                                         <td>
-                                                                <p>0kr</p>
+                                                                <h4>0kr</h4>
+                                                                <p>Per användare och måna</p>
                                                                 <a href="priceplan.html?nocolumns">Läs mer</a>
                                                         </td>
                                                         <td>
-                                                                <p>149kr</p>
+                                                                <h4>149kr</h4>
+                                                                <p>Per användare och måna</p>
                                                                 <a href="priceplan.html?nocolumns">Läs mer</a>
                                                         </td>
                                                         <td>
-                                                                <p>299kr</p>
-                                                                <a href="priceplan.html?nocolumns">Läs mer</a>
+                                                                <h4>299kr</h4>
+                                                                <p>Per användare och måna</p>
+                                                                <a href="priceplan.html?nocolumns">Läs mer<a>                                                   
                                                         </td>
                                                         <td>
-                                                                <p>449kr</p>
+                                                                <h4>449kr</h4>
+                                                                <p>Per användare och måna</p>
                                                                 <a href="priceplan.html?nocolumns">Läs mer</a>
                                                         </td>
                                                 </tr>
@@ -315,10 +319,11 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                                 <p><a href="#">20 fria signaturer</a></p>
                                                         </li>
                                                         <li class="odd"><a href="#">Obegränsad lagring</a></li>
-                                                        <li><a href="#">Extra funktionalitet</a></li>
+                                                        <li><a href="#">Avancerade funktioner</a></li>
                                                         <li class="bottom">
-                                                                <p>299kr</p>
-                                                                <a href="priceplan.html?nocolumns">Läs mer</a>
+                                                                <h4>299kr</h4>
+                                                                <p>Per användare och måna</p>
+                                                                <a href="priceplan.html?nocolumns">Läs mer<a>   
                                                         </li>
                                                 </ul>
                                         </div>
@@ -326,6 +331,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                 <div class="drop-shadow-container">
                                         <div class="drop-shadow"></div>
                                 </div>
+                                <div id="price-plan-annotation">* Alla priser är exkl moms</div>
                                 <div class="spacer70"></div>
                                 <div class="try-skrivapa">
                                         <div class="left">
