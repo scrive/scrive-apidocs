@@ -1090,6 +1090,7 @@ a.button {
 
 #signStepsTitleRow .download a{
     color: #999999;  
+    text-transform: uppercase;
 }
 
 
