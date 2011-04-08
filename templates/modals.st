@@ -324,7 +324,7 @@ $if(loginModal)$
       <div class="modal-content"> 
        <div class="body">
          <div class="wrapper">
-               <input type="email" name="email" infotext="E-post" autocomplete="off"/>
+               <span class="txt">E-post</span><input type="email" name="email" infotext="E-post" autocomplete="off"/>
                <input type="submit" class="hidden" />
          </div>
        </div>
