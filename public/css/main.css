@@ -387,7 +387,7 @@ a.new-btn-small.black p {
     text-align: center;
 }
 
-.login-container .body .wrapper .txt {
+.login-container .body .wrapper .txt, .recovery-container .body .wrapper .txt {
     padding-right: 15px;
 }
 
