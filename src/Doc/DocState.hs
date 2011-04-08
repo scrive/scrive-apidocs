@@ -709,6 +709,8 @@ signLinkFromDetails emails details = do
                      , maybeseeninfo  = Nothing
                      , invitationdeliverystatus = Unknown
                      , signatorysignatureinfo = Nothing
+                     , signatoryroles = [SignatoryPartner]
+                     , signatorylinkdeleted = False
                      }
                      
           where

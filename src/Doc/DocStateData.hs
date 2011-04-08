@@ -27,6 +27,7 @@ module Doc.DocStateData(
     , SignatureInfo(..)
     , IdentificationType(..)
     , SignatureProvider(..)
+    , SignatoryRole(..)
 
     , documentHistoryToDocumentLog
     ) where
@@ -247,6 +248,18 @@ data SignatoryLink5 = SignatoryLink5
     }    
     deriving (Eq, Ord, Typeable)
 
+data SignatoryLink6 = SignatoryLink6 
+    { signatorylinkid6          :: SignatoryLinkID     -- ^ a random number id, unique in th escope of a document only
+    , signatorydetails6         :: SignatoryDetails    -- ^ details of this person as filled in invitation
+    , signatorymagichash6       :: MagicHash           -- ^ authentication code
+    , maybesignatory6           :: Maybe UserID        -- ^ if this document has been saved to an account, that is the user id
+    , maybesigninfo6            :: Maybe SignInfo      -- ^ when a person has signed this document
+    , maybeseeninfo6            :: Maybe SignInfo      -- ^ when a person has first seen this document
+    , invitationdeliverystatus6 :: MailsDeliveryStatus -- ^ status of email delivery
+    , signatorysignatureinfo6   :: Maybe SignatureInfo -- ^ info about what fields have been filled for this person
+    }    
+    deriving (Eq, Ord, Typeable)
+
 data SignatoryLink = SignatoryLink 
     { signatorylinkid          :: SignatoryLinkID     -- ^ a random number id, unique in th escope of a document only
     , signatorydetails         :: SignatoryDetails    -- ^ details of this person as filled in invitation
@@ -256,8 +269,17 @@ data SignatoryLink = SignatoryLink
     , maybeseeninfo            :: Maybe SignInfo      -- ^ when a person has first seen this document
     , invitationdeliverystatus :: MailsDeliveryStatus -- ^ status of email delivery
     , signatorysignatureinfo   :: Maybe SignatureInfo -- ^ info about what fields have been filled for this person
+    , signatoryroles           :: [SignatoryRole]
+    , signatorylinkdeleted     :: Bool
     }    
     deriving (Eq, Ord, Typeable)
+
+data SignatoryRole = SignatoryPartner | SignatoryAuthor
+    deriving (Eq, Ord, Typeable, Show)
+
+instance Version SignatoryRole
+
+
 
 data SignInfo = SignInfo
     { signtime :: MinutesTime
@@ -1094,9 +1116,13 @@ $(deriveSerialize ''SignatoryLink5)
 instance Version SignatoryLink5 where
     mode = extension 5 (Proxy :: Proxy SignatoryLink4)
 
+$(deriveSerialize ''SignatoryLink6)
+instance Version SignatoryLink6 where
+    mode = extension 6 (Proxy :: Proxy SignatoryLink5)
+
 $(deriveSerialize ''SignatoryLink)
 instance Version SignatoryLink where
-    mode = extension 6 (Proxy :: Proxy SignatoryLink5)
+    mode = extension 7 (Proxy :: Proxy SignatoryLink6)
     
 instance Migrate SignatoryDetails0 SignatoryDetails1 where
     migrate (SignatoryDetails0
@@ -1305,7 +1331,7 @@ instance Migrate SignatoryLink4 SignatoryLink5 where
              , signatorysignatureinfo5 = Nothing
              }
 
-instance Migrate SignatoryLink5 SignatoryLink where
+instance Migrate SignatoryLink5 SignatoryLink6 where
     migrate (SignatoryLink5
              { signatorylinkid5
              , signatorydetails5
@@ -1315,16 +1341,39 @@ instance Migrate SignatoryLink5 SignatoryLink where
              , maybeseeninfo5
              , invitationdeliverystatus5
              , signatorysignatureinfo5
-             }) = SignatoryLink
-             { signatorylinkid = signatorylinkid5
-             , signatorydetails = signatorydetails5
-             , signatorymagichash = signatorymagichash5
-             , maybesignatory = fmap unSignatory maybesignatory5
-             , maybesigninfo = maybesigninfo5
-             , maybeseeninfo = maybeseeninfo5
-             , invitationdeliverystatus = invitationdeliverystatus5
-             , signatorysignatureinfo = signatorysignatureinfo5
+             }) = SignatoryLink6
+             { signatorylinkid6 = signatorylinkid5
+             , signatorydetails6 = signatorydetails5
+             , signatorymagichash6 = signatorymagichash5
+             , maybesignatory6 = fmap unSignatory maybesignatory5
+             , maybesigninfo6 = maybesigninfo5
+             , maybeseeninfo6 = maybeseeninfo5
+             , invitationdeliverystatus6 = invitationdeliverystatus5
+             , signatorysignatureinfo6 = signatorysignatureinfo5
              }
+
+instance Migrate SignatoryLink6 SignatoryLink where
+    migrate (SignatoryLink6 
+             { signatorylinkid6
+             , signatorydetails6
+             , signatorymagichash6
+             , maybesignatory6
+             , maybesigninfo6
+             , maybeseeninfo6
+             , invitationdeliverystatus6
+             , signatorysignatureinfo6
+             }) = SignatoryLink
+                { signatorylinkid           = signatorylinkid6
+                , signatorydetails          = signatorydetails6
+                , signatorymagichash        = signatorymagichash6
+                , maybesignatory            = maybesignatory6
+                , maybesigninfo             = maybesigninfo6
+                , maybeseeninfo             = maybeseeninfo6
+                , invitationdeliverystatus  = invitationdeliverystatus6
+                , signatorysignatureinfo    = signatorysignatureinfo6
+                , signatorylinkdeleted      = False
+                , signatoryroles            = [SignatoryPartner]
+                }
 
 
 $(deriveSerialize ''SignatoryLinkID)
@@ -2219,3 +2268,5 @@ instance Indexable Document where
 instance Component Documents where
   type Dependencies Documents = End
   initialValue = empty
+
+$(deriveSerialize ''SignatoryRole)
