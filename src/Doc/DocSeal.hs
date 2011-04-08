@@ -298,6 +298,7 @@ sealDocumentFile ctx@Context{ctxdocstore, ctxs3action, ctxtwconf, ctxhostpart}
               let msg = "Cannot seal document #" ++ show documentid ++ " bacause of file #" ++ show fileid
               Log.error $ msg ++ ": " ++ path
               Log.error $ BSL.toString stderr
+              Log.error $ "Sealing configuration: " ++ show config
               BS.hPutStr handle content
               hClose handle
               _ <- update $ ErrorDocument documentid $ "Could not seal document because of file #" ++ show fileid
