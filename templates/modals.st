@@ -392,6 +392,7 @@ newPasswordModalPart=
 <div class="user-container">
   <div class="login-container">
     <div class="body">
+     <div class="wrapper">
       <form action="$linkchangepassword$" method="post">
         <div class="txt">Nytt lösenord:</div>
         <input type="password" name="password" autocomplete="off" />
@@ -404,6 +405,7 @@ newPasswordModalPart=
         </a>
         <input type="submit" class="hidden"/>
       </form>
+     </div>
     </div>
   </div>
 </div>
