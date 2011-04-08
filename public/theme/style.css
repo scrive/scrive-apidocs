@@ -2645,3 +2645,7 @@ width: 340px;
     margin-top: 16px;
     
 }
+
+a#cancel {
+    width: 140px;
+}
