@@ -669,7 +669,7 @@ pageDocumentForAuthorContentPostPreparation=
         $if(canberestarted)$
         <BR/><BR/>
         <form method="POST" action="/restart/$documentid$">
-          <a class="btn-tiny red submit">
+          <a class="btn-small red submit">
             <div class="left"></div>
             <div class="label">Starta om dokument</div> 
             <div class="right"></div>
@@ -679,7 +679,7 @@ pageDocumentForAuthorContentPostPreparation=
         $if(pending)$
         $if(!awaitingauthor)$
         $if(!timetosignset)$
-        <a class="btn-tiny red centered" id="cancel"  name="cancel" rel="#cancel-by-author-dialog">
+        <a class="btn-small red centered" id="cancel"  name="cancel" rel="#cancel-by-author-dialog">
             <div class="left"></div>
             <div class="label">Återkalla inbjudan</div> 
             <div class="right"></div>
