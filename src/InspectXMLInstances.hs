@@ -63,6 +63,8 @@ instance InspectXML File where
           , filestorage
           })= asChild <a href=(show $ LinkFile fileid filename)><% show fileid ++ "/" ++ BS.toString filename %></a>
                               
+instance InspectXML SignatoryRole where
+    inspectXML = asChild . show
 instance InspectXML DocumentStatus where
     inspectXML = asChild . show
 instance InspectXML CSVUpload where
