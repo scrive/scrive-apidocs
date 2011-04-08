@@ -1333,9 +1333,9 @@ input.multiFileInput {
 
 .signViewBodyRightTextContainer
 {
-    width: 280px;
-    padding-left: 25px;
-    padding-right: 10px;
+    width: 226px;
+    padding-left: 45px;
+    padding-right: 44px;
     padding-bottom: 10px;
     overflow:hidden;
     padding-top:20px;
@@ -2560,7 +2560,7 @@ width: 340px;
     margin: 1px 0px 3px 0;
     overflow: hidden;
     padding: 0;
-    width: 240px;
+    width: 220px;
     height: 20px;
     line-height: 20px;
     -moz-border-radius: 2px 2px 2px 2px;
