@@ -874,7 +874,7 @@ a.new-btn-small.black p {
 }
 
 #body-container .price-plan {
-	height: 228px;
+	height: 254px;
 	position: absolute;
 	width: 938px;
 	z-index: 1;
@@ -944,6 +944,11 @@ a.new-btn-small.black p {
 
 #body-container .price-plan tr.big-row td {
 	font: italic 14px "Georgia";
+}
+
+#body-container .price-plan tr.big-row h4 {
+        color: #666;
+	font: 14px "Copse";
 }
 
 #body-container .price-plan tr.big-row td a {
@@ -1026,10 +1031,16 @@ a.new-btn-small.black p {
 #body-container .highlight-container .highlight-rows li.bottom {
 	color: #999;
 	font: italic 14px "Georgia";
-	height: 55px;
-	line-height: 20px;
+	height: 70px;
+	line-height: 18px;
 	padding-top: 15px;
 }
+
+#body-container .highlight-container .highlight-rows li.bottom h4 {
+        color: #666;
+        font-style: normal;
+}
+
 
 #body-container .highlight-container .highlight-rows li.bottom a {
 	color: #35A4D6; 
@@ -1044,6 +1055,12 @@ a.new-btn-small.black p {
 
 #body-container .highlight-container .highlight-rows li:last-child {
 	border: 0;
+}
+
+#price-plan-annotation {
+        color: #999;
+        font: italic 12px "Georgia";
+        padding: 10px;
 }
 
 /* Highlight Ribbon */
