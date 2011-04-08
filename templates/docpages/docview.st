@@ -607,14 +607,16 @@ pageDocumentForAuthorHelpersLocalDialogs=
       <div class="modal-footer">
         <input type="hidden" name="sign" value="automatic" id="signauto" />
         <a class="close cancel">Avbryt</a>
-        <a href="#" class="btn-small green float-right submiter signhidden" id="editing-invite-text-finished">
-          <div class="left"></div>
-          <div class="label">
-            <p>Underteckna </p>
-            <div class="btn-symbol green arrow-left"></div>
-          </div>
-          <div class="right"></div>
+
+        <a href="#" class="btn-big blue float-right submiter signhidden" id="editing-invite-text-finished">
+            <div class="left"></div>
+            <div class="label">
+              <span>SkrivaPå</span>
+              <span class="icon cross"></span>
+            </div>
+            <div class="right"></div>
         </a>
+
         <span class="eleghidden" style="display: none;">
           <input type="hidden" name="changetoeleg" id="elegprovider" value="" />
           <input type="hidden" name="signature" value="" id="signatureinput" />
