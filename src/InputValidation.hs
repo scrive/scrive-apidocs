@@ -492,16 +492,10 @@ asValidDocID input =
 -}
 asValidID :: String -> Result BS.ByteString
 asValidID input =
-    checkIfEmpty input
-    >>= checkCanParseAsInt
-    >>= mkByteString
-    where fieldtemplate = "idFieldName"
-          checkCanParseAsInt :: String -> Result String
-          checkCanParseAsInt xs = 
-            case parseAsInt xs fieldtemplate of
-              (Good _) -> Good xs
-              (Bad msg) -> Bad msg
-              Empty -> Empty
+    asValidNumber input
+    >>= useInput input
+    where useInput :: String -> Int -> Result BS.ByteString
+          useInput xs _ = return $ BS.fromString xs
 
 {- |
     Parses as a int.
