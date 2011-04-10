@@ -32,7 +32,6 @@ inputValidationTests =
         , testProperty "whitespace only is counted as empty" propDirtyEmailWhitespaceIsEmpty ]
     , testGroup "asValidPassword"
         [ testProperty "must be at least 8 chars" propValidPasswordMustBeAtLeast8Chars
-        , testProperty "not more than 25 chars" propValidPasswordNotMoreThan25Chars
         , testCase "null is counted as empty" testValidPasswordNullIsEmpty
         , testProperty "can only contain alpha, digit or punctuation" 
                        propValidPasswordOnlyAlphaDigitPuncAndSymbol
@@ -61,7 +60,6 @@ inputValidationTests =
         , testProperty "can only contain hyphen, digits [0-9] or ascii chars [A-Z] [a-z]" 
                        propValidCompanyNumberRestrictsChars
         , testProperty "must be at least 8 chars" propValidCompanyNumberMustBeAtLeast4Chars
-        , testProperty "must not be more than 15 chars" propValidCompanyNumberNotMoreThan15Chars
         , testProperty "good examples pass" propValidCompanyNumberGoodExamples ]
     , testGroup "asValidAddress"
         [ testProperty "strips surrounding whitespace" propValidAddressStripsWhitespace
@@ -189,10 +187,6 @@ propValidPasswordMustBeAtLeast8Chars :: [PasswordChar] -> Property
 propValidPasswordMustBeAtLeast8Chars xs = 
     propIsMinSize asValidPassword 8 $ map pc xs
 
-propValidPasswordNotMoreThan25Chars :: [PasswordChar] -> Property
-propValidPasswordNotMoreThan25Chars xs =
-    propIsMaxSize asValidPassword 25 $ map pc xs
-
 testValidPasswordNullIsEmpty :: Assertion
 testValidPasswordNullIsEmpty = testNullIsEmpty asValidPassword
 
@@ -298,10 +292,6 @@ propValidCompanyNumberMustBeAtLeast4Chars :: [CompanyNumberChar] -> Property
 propValidCompanyNumberMustBeAtLeast4Chars xs = 
     propIsMinSize asValidCompanyNumber 4 $ map cn xs
 
-propValidCompanyNumberNotMoreThan15Chars :: [CompanyNumberChar] -> Property
-propValidCompanyNumberNotMoreThan15Chars xs =
-    propIsMaxSize asValidCompanyNumber 15 $ map cn xs
-
 propValidCompanyNumberGoodExamples :: [CompanyNumberChar] -> Property
 propValidCompanyNumberGoodExamples ns =
     let xs = map cn ns in
@@ -406,7 +396,7 @@ propValidDaysToSignIsMax99 n =
 
 propValidDaysToSignMustBeInt :: String -> Property
 propValidDaysToSignMustBeInt xs =
-    not (all isDigit xs)
+    not (all isDigit xs) && not (isEmptyInput xs)
     ==> isBad $ asValidDaysToSign xs
 
 propValidDaysToSignGoodExamples :: Int -> Property
@@ -436,7 +426,7 @@ propValidIDMustBeInt xs =
 
 propValidIDGoodExamples :: Int -> Property
 propValidIDGoodExamples n = 
-    True ==> isGood . asValidID $ show n
+    (n>(-999999999) && n<999999999) ==> isGood . asValidID $ show n
 
 testValidPlaceNullIsEmpty :: Assertion
 testValidPlaceNullIsEmpty = testNullIsEmpty asValidPlace
@@ -518,7 +508,6 @@ testValidInviteTextBadExamples :: Assertion
 testValidInviteTextBadExamples = do
     let badexamples = ["<p><a>blah</a></p>",
                        "<script>blah</script>",
-                       "<p><!-- comment --></p>",
                        "<p><span></p></span>",
                        "<span style=\"blah\">blah</span>",
                        "<span x=\"y\">blah</span>",
@@ -529,6 +518,7 @@ testValidInviteTextGoodExamples :: Assertion
 testValidInviteTextGoodExamples = do
     let goodexamples = [ "<p>blah</p>"
                        , "<span>blah</span>"
+                       , "<p><!-- comment --></p>"
                        , "<ol>blah</ol>"
                        , "<ul>blah</ul>"
                        , "<em>blah</em>"
@@ -552,11 +542,6 @@ propJustAllowed f ps xs =
 propIsMinSize :: (String -> Result BS.ByteString) -> Int -> String -> Property
 propIsMinSize f n xs =
     length xs < n && length xs > 0
-    ==> isBad $ f xs
-
-propIsMaxSize :: (String -> Result BS.ByteString) -> Int -> String -> Property
-propIsMaxSize f n xs =
-    length xs > n
     ==> isBad $ f xs
 
 propStripWhitespace :: (String -> Result BS.ByteString) -> [WhitespaceChar] -> String -> Property

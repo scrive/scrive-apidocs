@@ -72,25 +72,29 @@ Retrieving Invoices from TrustWeaver-Archiving™ (test case F1.8) [OK]
 -}
 
 twconf = TW.TrustWeaverConf
-    { TW.signcert = "certs/dev.pem"
-    , TW.signcertpwd = "abcd1234"
-    , TW.admincert = "certs/dev-admin.pem"
-    , TW.admincertpwd = "abcd1234"
-    , TW.signurl = "https://tseiod-dev.trustweaver.com/ts/svs.asmx"
-    , TW.adminurl = "https://twa-test-db.trustweaver.com/ta_hubservices/Admin/AdminService.svc"
-    , TW.storageurl = "https://twa-test-db.trustweaver.com/ta_hubservices/Storage/StorageService.svc"
+    { TW.signConf = Just ("https://tseiod-dev.trustweaver.com/ts/svs.asmx",
+                          "certs/dev.pem",
+                          "abcd1234")
+    , TW.adminConf = Just ("https://twa-test-db.trustweaver.com/ta_hubservices/Admin/AdminService.svc",
+                           "certs/dev-admin.pem",
+                           "abcd1234")
+    , TW.storageConf = Just ("https://twa-test-db.trustweaver.com/ta_hubservices/Storage/StorageService.svc",
+                             "",
+                             "")
     , TW.retries = 1
     , TW.timeout = 10
     }
 
 twconf_bad = TW.TrustWeaverConf
-    { TW.signcert = "certs/dev.pem"
-    , TW.signcertpwd = "abcd1234"
-    , TW.admincert = "certs/dev-admin.pem"
-    , TW.admincertpwd = "abcd1234"
-    , TW.signurl = "https://tseiod-dev.trustweaver.com/ts/svs.asmx-"
-    , TW.adminurl = "https://twa-test-db.trustweaver.com/ta_hubservices/Admin/AdminService.svc-"
-    , TW.storageurl = "https://twa-test-db.trustweaver.com/ta_hubservices/Storage/StorageService.svc-"
+    { TW.signConf = Just ("https://tseiod-dev.trustweaver.com/ts/svs.asmx-",
+                          "certs/dev.pem",
+                          "abcd1234")
+    , TW.adminConf = Just ("https://twa-test-db.trustweaver.com/ta_hubservices/Admin/AdminService.svc-",
+                           "certs/dev-admin.pem",
+                           "abcd1234")
+    , TW.storageConf = Just ("https://twa-test-db.trustweaver.com/ta_hubservices/Storage/StorageService.svc-",
+                             "",
+                             "")
     , TW.retries = 1
     , TW.timeout = 10
     }
