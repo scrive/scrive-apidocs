@@ -88,10 +88,12 @@ reminderForm =
             </div>
         </div>
         <div class="modal-footer">
-               <input type="hidden" name="sign" value="automatic" />
+           <input type="hidden" name="sign" value="automatic" />
+           <div class="float-left">
                 <a  class="close cancel">Avbryt</a>
                 <a  class="editer message"> Skriv eget meddelande </a>
-                <a href="#" class="btn-small green float-right submiter">
+           </div>
+           <a href="#" class="btn-small green float-right submiter">
                 <div class="left"></div>
                 <div class="label">
                    $if(signatory.signdate)$ Skicka $else$ Skicka påminnelse $endif$

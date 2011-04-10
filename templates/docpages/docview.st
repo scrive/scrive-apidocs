@@ -126,9 +126,9 @@ pageDocumentForSignContent=
                  $endif$
             </div>
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer$if(!requireseleg)$ larger$endif$">
           <input type="hidden" name="sign" value="automatic" id="signauto" />
-          <a  class="close cancel">Avbryt</a>
+          <a  class="close cancel float-left">Avbryt</a>
           $if(requireseleg)$
           <span id="elegbuttons">
             <input type="hidden" name="changetoeleg" id="elegprovider" value=""
@@ -182,8 +182,10 @@ pageDocumentForSignContent=
         </div>
         <div class="modal-footer">
                 <input type="hidden" name="cancel" value="automatic" />
-                <a  class="close cancel">Avbryt</a>
-                <a  class="editer message">Skriv eget meddelande</a>
+                <div class="float-left">
+                  <a  class="close cancel">Avbryt</a>
+                  <a  class="editer message">Skriv eget meddelande</a>
+                </div>
                 <a href="#" class="btn-small red float-right submiter">
                     <div class="left"></div>
                     <div class="label">
@@ -395,12 +397,12 @@ pageDocumentForAuthorHelpersLocalDialogs=
       </div>
       <div class="modal-footer">
         
-          <a class="cancel float-left" style="height:40px;">  
-            <div class="label"> Välj fil </div> 
-            <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px;width:50px;" maxlength="1" type="file" name="csv" accept="application/csv" rel=".filelist"/>
-          </a>
+        <a class="cancel float-left" style="height:40px;">  
+          <div class="label"> Välj fil </div> 
+          <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px;width:50px;" maxlength="1" type="file" name="csv" accept="application/csv" rel=".filelist"/>
+          <div class="filelist" style="display:none;"></div>
+        </a>
         
-        <div class="filelist" style="display:none;"></div>
         <a class="btn-small green float-right close" href="#">
           <div class="left"></div>
           <div class="label"><p>Spara</p></div>
@@ -437,7 +439,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
       </div>
       <div class="modal-footer">
         <input type="hidden" name="sign" value="automatic" id="signauto" />
-        <a  class="close cancel" style="position:relative;top:6px;">Avbryt</a>
+        <a  class="close cancel float-left" style="position:relative;top:6px;">Avbryt</a>
         <a href="#" class="btn-big blue float-right submiter signhidden">
           <div class="left"></div>
           <div class="label">
@@ -495,7 +497,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
       </div>
       <div class="modal-footer">
         <input type="hidden" name="final" value="automatic" />
-        <a  class="close cancel">Avbryt</a>
+        <a  class="close cancel float-left">Avbryt</a>
         <a href="#" class="btn-small green float-right submiter">
           <div class="left"></div>
           <div class="label">
@@ -522,8 +524,10 @@ pageDocumentForAuthorHelpersLocalDialogs=
 		</div>
 	  </div>
 	  <div class="modal-footer">
+            <div class="float-left">
 		<a class="close cancel">Avbryt</a>
 		<a class="editer message">Skriv eget meddelande</a>
+            </div>
 		<a href="#" class="btn-small green float-right close" id="editing-invite-text-finished">
 		  <div class="left"></div>
 		  <div class="label">
@@ -566,8 +570,10 @@ pageDocumentForAuthorHelpersLocalDialogs=
         </div>
       </div>
       <div class="modal-footer">
-        <a class="close cancel">Avbryt</a>
-        <a class="editer message">Skriv eget meddelande</a>
+        <div class="float-left">
+          <a class="close cancel">Avbryt</a>
+          <a class="editer message">Skriv eget meddelande</a>
+        </div>
         <a class="btn-small red float-right submiter">
           <div class="left"></div>
           <div class="label">
@@ -605,7 +611,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
       </div>
       <div class="modal-footer">
         <input type="hidden" name="sign" value="automatic" id="signauto" />
-        <a class="close cancel">Avbryt</a>
+        <a class="close cancel float-left">Avbryt</a>
 
         <a href="#" class="btn-big blue float-right submiter signhidden" id="editing-invite-text-finished">
             <div class="left"></div>
