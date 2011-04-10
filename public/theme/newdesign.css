@@ -652,6 +652,10 @@
     margin-top:10px;
 }
 
+#tab-viewer .col .account-footer {
+    margin-right: 5px;
+}
+
 #tab-viewer .account-footer a {
    display: inline-block;
    margin: 0 auto;
