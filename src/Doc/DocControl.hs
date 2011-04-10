@@ -781,7 +781,7 @@ handleIssueSignByAuthor document author = do
         Just d -> do 
             postDocumentChangeAction d AwaitingAuthor Nothing
             addFlashMsg =<< (liftIO $ flashAuthorSigned $ ctxtemplates ctx)
-            return $ LinkContracts emptyListParams
+            return $ LinkIssueDoc (documentid document)
             
 {- |
    Show the document with title in the url
