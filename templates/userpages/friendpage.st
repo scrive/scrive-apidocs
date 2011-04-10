@@ -8,9 +8,9 @@ viewFriends =
 		</div>
 		<ul class="tabs">
 		   <li><a href="/account">Användaruppgifter</a></li>
+                   <li><a href="/account/security">Lösenord</a></li>
                    <li><a href="/account/subaccount">Underkonton</a></li>
                    <li class="active"><a href="/account/sharing">Delning</a></li>
-                   <li><a href="/account/security">Säkerhet</a></li>
 		</ul>
                 <div class="listtype" style="display:none;">vänner</div>
 		<div class="tab-container">

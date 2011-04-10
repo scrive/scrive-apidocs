@@ -8,9 +8,9 @@ viewSubaccounts =
 		</div>
 		<ul class="tabs">
 		   <li><a href="/account">Användaruppgifter</a></li>
+                   <li><a href="/account/security">Lösenord</a></li>
            <li class="active"><a href="/account/subaccount" class="listtype">Underkonton</a></li>
                    <li><a href="/account/sharing">Delning</a></li>
-                   <li><a href="/account/security">Säkerhet</a></li>
 		</ul>
 		<div class="tab-container">
 			<div class="tab-content">
