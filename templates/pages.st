@@ -39,7 +39,7 @@ activatePageView=
         <br/>
       </div>
       <br/>
-      <input type="checkbox" id="tosCBox" name="tos" class="addremovecheckbox" rel=".passwordAndSubmit" location=".passwordAndSubmitVisible" oldlocation=".passwordAndSubmitHidden" value="off" autocomplete="off" />
+      <input type="checkbox" id="tosCBox" name="tos" class="addremovecheckbox notForIE7" rel=".passwordAndSubmit" location=".passwordAndSubmitVisible" oldlocation=".passwordAndSubmitHidden" value="off" autocomplete="off" />
       <label for="tosCBox">Jag har läst och accepterar SkrivaPå Allmänna Villkor</label><br/><br/>
       <div class="passwordAndSubmitVisible"> </div>
     </form>

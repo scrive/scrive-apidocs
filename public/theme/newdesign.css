@@ -800,6 +800,14 @@
     height: 34px;
 }
 
+.modal-container .modal-footer.larger {
+    height: 46px;
+}
+
+.modal-container .modal-footer.larger a.cancel {
+    padding-top:6px;
+}
+
 .modal-container .modal-footer .btn-big{
     padding-bottom:10px;
     
