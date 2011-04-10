@@ -117,6 +117,7 @@ input.shiny {
 	height: 14px;
 	padding: 8px;
 	width: 202px;
+        margin: 0px;
 	-moz-border-radius: 4px;
 	-webkit-border-radius: 4px;
 }

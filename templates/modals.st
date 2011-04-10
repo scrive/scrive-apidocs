@@ -296,9 +296,11 @@ $if(loginModal)$
       </div>
      </div>
      <div class="modal-footer">
-        <a class="close cancel">Avbryt</a>
-        <a href="#" class="txt-link message">Glömt lösenord</a>
-        <a href="#" class="btn-small blue float-right submit">
+        <div class="float-left">
+          <a class="close cancel">Avbryt</a>
+          <a href="#" class="txt-link message">Glömt lösenord</a>
+        </div>
+        <a href="#" class="btn-small blue float-right submit notForIE7">
           <div class="left"></div>
           <div class="label">
             <p>Logga in</p>
@@ -331,8 +333,10 @@ $if(loginModal)$
       </div>
     </div>  
     <div class="modal-footer">
-        <a class="close cancel">Avbryt</a>
-        <a href="#" class="txt-link message">Logga in</a>
+        <div class="float-left">
+          <a class="close cancel">Avbryt</a>
+          <a href="#" class="txt-link message">Logga in</a>
+        </div>
         <a href="#" class="btn-small green float-right submit">
           <div class="left"></div>
           <div class="label">
@@ -357,7 +361,7 @@ loginModalPart=
                                                                         <input type="hidden" name="referer" value="$referer$" />
                                                                         <input type="email" name="email" value="$email$" infotext="E-post" autocomplete="off"/><br />
                                                                         <input type="password" name="password" infotext="password" autocomplete="off"/><br />
-                                                                            <a href="#" class="btn-tiny blue center submit">
+                                                                            <a href="#" class="btn-tiny blue center submit notForIE7">
                                                                             <div class="left"> </div>     
                                                                             <div class="label"><span>Logga in</span> </div>
                                                                             <div class="right"/> </div>

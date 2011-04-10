@@ -62,6 +62,29 @@ $(document).ready( function() {
 	}
 })(jQuery);
 
+function flashIfIE7() {
+  if ($.browser.msie && $.browser.version < "8.0") {
+    addFlashMessage("We're sorry, we only support Internet Explorer 7 for the basic functionality that does not require an account.  Please upgrade your browser to proceed.", "red");
+    return true;
+  } else {
+    return false;
+  }
+}
+
+$(document).ready( function() {
+  var restricted = $(".notForIE7");
+  if (restricted.length>0) {
+    if (flashIfIE7()) {
+      restricted.removeClass("submit");
+      restricted.removeClass("submitter");
+      restricted.click(function () {
+        flashIfIE7();
+        return false;
+      });
+    }
+  }
+});
+
 $(document).ready( function() {
         $(".login-container input[type=email]").focus();
 

@@ -329,7 +329,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                         <li class="bottom">
                                                                 <h4>499kr</h4>
                                                                 <p>Per användare och månad</p>
-                                                                <a href="priceplan.html?nocolumns">Läs mer<a>   
+                                                                <a href="priceplan.html?nocolumns">Läs mer</a>   
                                                         </li>
                                                 </ul>
                                         </div>
@@ -346,8 +346,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                         </div>
                                         <div class="right">
                                                 <form method="post" action="$linkrequestaccount$" class="requestAccount">
-                                                        <a href="#" class="submit new-btn-small green2 center float-right"><p>Skicka förfrågan!</p></a>
-                                                        <input class="shiny" name="email" type="email" infotext="Fyll i din e-postadress" />
+                                                        <input class="shiny" name="email" type="email" infotext="Fyll i din e-postadress" /> <a href="#" class="submit new-btn-small green2 center float-right"><p>Skicka förfrågan!</p></a>
                                                         <input type="submit" class="hidden" />
                                                 </form>
                                         </div>

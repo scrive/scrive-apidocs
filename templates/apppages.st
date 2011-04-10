@@ -83,7 +83,7 @@ wholePage=
                         </div>
                          <div class="right">
                             <form method="post" action="$linkrequestaccount$" class="requestAccount">
-                                   <input class="shiny" name="email" type="email" infotext="Fyll i din e-postadress" /> <a href="#" class="submit new-btn-small green2 center float-right"><p>Skicka förfrågan!</p></a>
+                                   <input class="shiny float-left" name="email" type="email" infotext="Fyll i din e-postadress" /> <a href="#" class="submit new-btn-small green2 center float-right"><p>Skicka förfrågan!</p></a>
                                    <input type="submit" class="hidden" />
                              </form>
                          </div>
@@ -185,7 +185,7 @@ loginBox=
             <td><input type="password" name="password" autocomplete="off" /></td> 
           </tr>
 	  <tr> 
-            <td><input class="button" id="loginbtn" type="submit" name="login" value="Logga in" /></td>
+            <td><input class="button notForIE7" id="loginbtn" type="submit" name="login" value="Logga in" /></td>
             <td><a href="/amnesia"> Glömt lösenord</a></td>
 	  </tr>
         </table>
