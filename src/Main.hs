@@ -97,15 +97,15 @@ stateProxy = Proxy
    Lets make it use IPv4 only
 -}
 
-listenOn :: Int -> IO Socket
-listenOn port = do
+listenOn :: HostAddress -> PortNumber -> IO Socket
+listenOn iface port = do
     proto <- getProtocolNumber "tcp"
     Exception.bracketOnError
         (socket AF_INET Stream proto)
         (sClose)
         (\sock -> do
             setSocketOption sock ReuseAddr 1
-            bindSocket sock (SockAddrInet (fromIntegral port) 0x0100007F)
+            bindSocket sock (SockAddrInet port iface)
             listen sock maxListenQueue
             return sock
         )
@@ -183,11 +183,9 @@ main = Log.withLogger $ do
                   -- start the http server
                   Exception.bracket 
                            (do
-                              -- we need to use our own listenOn as we want to:
-                              -- use only IPv4 addresses
-                              -- bind only to 127.0.0.1
-                              socket <- listenOn (httpPort appConf)
-                              t1 <- forkIO $ simpleHTTPWithSocket socket (nullConf { port = httpPort appConf }) 
+                              let (iface,port) = httpBindAddress appConf
+                              socket <- listenOn iface (fromIntegral port)
+                              t1 <- forkIO $ simpleHTTPWithSocket socket (nullConf { port = fromIntegral port }) 
                                     (appHandler appConf appGlobals)
                               let scheddata = SchedulerData appConf mailer' templates
                               t2 <- forkIO $ cron 60 $ runScheduler (oldScheduler >> actionScheduler UrgentAction) scheddata
@@ -216,7 +214,7 @@ storage url "https://twa-test-db.trustweaver.com/ta_hubservices/Storage/StorageS
 -}
 defaultConf :: String -> AppConf
 defaultConf progName
-    = AppConf { httpPort           = 8000
+    = AppConf { httpBindAddress    = (0x0100007f, 8000)
               , hostpart           = "http://localhost:8000"
               , store              = "_local/" ++ progName ++ "_state"
               , docstore           = "_local/documents"
@@ -230,9 +228,7 @@ defaultConf progName
               }
 
 opts :: [OptDescr (AppConf -> AppConf)]
-opts = [ Option [] ["http-port"]  
-         (ReqArg (\h c -> c { httpPort = read h}) "port") 
-         "port to bind http server"
+opts = [ 
        {-
        , Option [] ["no-validate"] 
          (NoArg (\ c -> c { httpConf = (httpConf c) { validator = Nothing } })) 
@@ -241,7 +237,7 @@ opts = [ Option [] ["http-port"]
          (NoArg (\ c -> c { httpConf = (httpConf c) { validator = Just wdgHTMLValidator } })) 
          "Turn on HTML validation"
        -}
-       , Option [] ["store"]       
+          Option [] ["store"]       
          (ReqArg (\h c -> c {store = h}) "PATH") 
          "The directory used for database storage."
        , Option [] ["static"]      
