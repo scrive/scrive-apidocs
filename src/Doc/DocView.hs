@@ -621,6 +621,7 @@ pageDocumentForSignatory action document ctx invitedlink author tokens =
       field "linkissuedocpdf" $ show (LinkIssueDocPDF tokens document)
       field "documentinfotext" $  documentInfoText (ctxtemplates ctx) document (Just invitedlink) author
       field "requireseleg" requiresEleg
+      documentTokens tokens
       documentInfoFields document
       documentAuthorInfo author
       documentViewFields document
