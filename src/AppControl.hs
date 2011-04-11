@@ -60,6 +60,7 @@ import PayEx.PayExInterface -- Import so at least we check if it compiles
 import InputValidation
 import System.Directory
 import ListUtil
+import Data.Word
 
 {- | 
   Defines the application's configuration.  This includes amongst other things
@@ -68,10 +69,9 @@ import ListUtil
   development instance.
 -}
 data AppConf
-    = AppConf { httpPort        :: Int                          -- ^ tcp port to listen on,
-                                                                -- http is 80. note: will
-                                                                -- listen only on 127.0.0.1
-                                                                -- interface
+    = AppConf { httpBindAddress :: (Word32, Word16)  -- ^ tcp address to bind to and port to listen on
+                                                  -- (0x0100007f, 8000) localhost:8000 (default)
+                                                  -- (0, 80)   all interfaces port 80
               , hostpart        :: String                       -- ^ hostname as it should looklike in emails for example
               , store           :: FilePath                     -- ^ where to put database files
               , docstore        :: FilePath                     -- ^ where to put files (active if amazonConfig is Nothing)
