@@ -1,4 +1,6 @@
 {-# OPTIONS_GHC -Wall #-}
+{-# IncoherentInstances #-}
+
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Doc.DocStateUtils
@@ -6,7 +8,7 @@
 -- Stability   :  development
 -- Portability :  portable
 --
--- This module provides  low operations modify document interface and some utils for working with documents
+-- This module provides  low level interface for document modifications and some utils
 -- Reasons for that: 1) growing number of operations in DocState 
 --                   2) Stopping devs from iusing modify function since there is a split to templates and docs 
 --                      and some updates make no sense on templates.
@@ -16,15 +18,17 @@ module Doc.DocStateUtils (
     -- DB updates
       insertNewDocument
     , newFromDocument  
-    , modifyContract
-    , modifyContractWithAction 
-    , modifyContractOrTemplate
-    , modifyContractOrTemplateWithAction 
+    , modifySignable
+    , modifySignableWithAction 
+    , modifySignableOrTemplate
+    , modifySignableOrTemplateWithAction 
     
     -- Checkers - checking properties of document
-    , MayBeAuthor(isAuthor)
+    , sameUser
+    , isAuthor
     , anyInvitationUndelivered
     , checkCSVSigIndex
+    , isTemplate
     
     -- Getters - digging some info from about document
     , signatoryname
@@ -78,28 +82,28 @@ newFromDocument f docid = do
       
 -- | There are six methods for update. We want force an exact info if
 -- any operation that changes a document makes sense on templates.
-modifyContract :: DocumentID 
+modifySignable :: DocumentID 
                -> (Document -> Either String Document) 
                -> Update Documents (Either String Document)
-modifyContract docid action = modifyContractWithAction docid (return . action)
+modifySignable docid action = modifySignableWithAction docid (return . action)
 
 
-modifyContractOrTemplate :: DocumentID 
+modifySignableOrTemplate :: DocumentID 
                -> (Document -> Either String Document) 
                -> Update Documents (Either String Document)
-modifyContractOrTemplate docid action = modifyContractOrTemplateWithAction docid (return . action)
+modifySignableOrTemplate docid action = modifySignableOrTemplateWithAction docid (return . action)
 
 
-modifyContractWithAction :: DocumentID 
+modifySignableWithAction :: DocumentID 
                -> (Document ->  Update Documents (Either String Document)) 
                -> Update Documents (Either String Document)
-modifyContractWithAction  = modifyDocumentWithAction isContract
+modifySignableWithAction  = modifyDocumentWithAction isSignable
 
 
-modifyContractOrTemplateWithAction:: DocumentID 
+modifySignableOrTemplateWithAction:: DocumentID 
                -> (Document ->  Update Documents (Either String Document)) 
                -> Update Documents (Either String Document)
-modifyContractOrTemplateWithAction = modifyDocumentWithAction (const True)
+modifySignableOrTemplateWithAction = modifyDocumentWithAction (const True)
 
 
 modifyDocumentWithAction :: (Document -> Bool) -> DocumentID 
@@ -125,27 +129,40 @@ modifyDocumentWithAction condition docid action = do
 
 -- CHECKERS
 
+{- | 
+  We introduce some types that basicly describes the user. No we want a unified way of comparring them.   
+-}
+class MaybeUser u where
+  getUserID:: u -> Maybe UserID
+  
+instance MaybeUser SignatoryLink where
+  getUserID  = maybesignatory
+  
+instance MaybeUser  Author where
+  getUserID = Just . unAuthor 
+
+instance MaybeUser User where
+  getUserID = Just . userid 
+
+instance MaybeUser UserID where
+  getUserID = Just
+
+instance (MaybeUser u) => MaybeUser (Maybe u) where
+  getUserID  = join . (fmap getUserID)
+
+
+{- |  And this is a function for comparison -}
+sameUser::(MaybeUser u1, MaybeUser u2) =>  u1 ->  u2 -> Bool  
+sameUser u1 u2 = getUserID u1 == getUserID u2
+
+{- |   And checking for being an author of a document -}
+isAuthor::(MaybeUser u) => Document -> u -> Bool
+isAuthor d u = getUserID u ==  getUserID (documentauthor d) 
+
+
 {- |
-   Is the user an author of the document. We may want to ask the same if we just have userid or signatorylink
- -}
-class MayBeAuthor a where
-  isAuthor :: Document -> a -> Bool
-
-instance MayBeAuthor User where
-  isAuthor d u = isAuthor d $ userid u
-  
-instance MayBeAuthor UserID where
-  isAuthor d uid = uid == (unAuthor . documentauthor $ d)   
-  
-instance MayBeAuthor SignatoryLink where
-  isAuthor d sl = case maybesignatory sl of
-                   Just s -> s == ( unAuthor . documentauthor $ d)
-                   Nothing -> False
-
-instance (MayBeAuthor a) => MayBeAuthor (Maybe a) where
-  isAuthor d (Just s) = isAuthor d s
-  isAuthor _ _        = False
-
+  Some info utils about state of document
+-}
 
 anyInvitationUndelivered :: Document -> Bool
 anyInvitationUndelivered =  not . Prelude.null . undeliveredSignatoryLinks
@@ -153,18 +170,22 @@ anyInvitationUndelivered =  not . Prelude.null . undeliveredSignatoryLinks
 isContract :: Document -> Bool
 isContract = ((==) Contract) . documenttype
 
+isOffer :: Document -> Bool 
+isOffer = ((==) Offer) . documenttype
+
 isTemplate :: Document -> Bool
-isTemplate = ((==) Template) . documenttype
+isTemplate d = (documenttype d == ContractTemplate) || (documenttype d == OfferTemplate)
+
+isSignable :: Document -> Bool 
+isSignable = not . isTemplate
+
 
 checkCSVSigIndex :: UserID -> [SignatoryLink] -> Int -> Either String Int
 checkCSVSigIndex authorid sls n
   | n<0 || n>=slcount = Left $ "signatory with index " ++ (show n) ++ " doesn't exist."
-  | n==0 && slcount>0 && isAuthor (head sls) = Left "author can't be set from csv"
+  | n==0 && slcount>0 && sameUser authorid (head sls) = Left "author can't be set from csv"
   | otherwise = Right n
   where slcount = length $ sls
-        isAuthor sl = case maybesignatory sl of
-                        Just s -> s == authorid
-                        Nothing -> False
 
 -- GETTERS
 
@@ -205,10 +226,8 @@ signatoryDetailsFromUser user =
                      }
                      
 isMatchingSignatoryLink :: User -> SignatoryLink -> Bool
-isMatchingSignatoryLink user sigLink = signatoryMatches || emailMatches
-  where 
-  signatoryMatches = maybe False (\s -> s == userid user)  (maybesignatory sigLink)
-  emailMatches = (signatoryemail . signatorydetails $ sigLink) == (unEmail . useremail $ userinfo user)
+isMatchingSignatoryLink user sigLink =  sameUser user sigLink || 
+    (signatoryemail . signatorydetails $ sigLink) == (unEmail . useremail $ userinfo user)
   
 
 appendHistory :: Document -> [DocumentHistoryEntry] -> Document
