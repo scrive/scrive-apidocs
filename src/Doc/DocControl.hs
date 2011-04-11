@@ -935,20 +935,20 @@ makeSignatories placements fielddefs
                 signatoriesfstnames
                 signatoriessndnames
     | sigids == [] = zipWith6 makeSignatoryNoPlacements 
+                        signatoriesfstnames
+                        signatoriessndnames
                         signatoriesemails
                         signatoriescompanies
                         signatoriespersonalnumbers
                         signatoriescompanynumbers
-                        signatoriesfstnames
-                        signatoriessndnames
     | otherwise    = zipWith7 (makeSignatory placements fielddefs)
                         sigids
+                        signatoriesfstnames
+                        signatoriessndnames
                         signatoriesemails
                         signatoriescompanies
                         signatoriespersonalnumbers
                         signatoriescompanynumbers
-                        signatoriesfstnames
-                        signatoriessndnames
 
 
 makeAuthorDetails pls fielddefs author = 
