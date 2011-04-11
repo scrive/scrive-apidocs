@@ -198,13 +198,13 @@ testAndInsert test a =
 
 -- | this should be sent upstream to mtl
 maybeModify :: (MonadState s m) => (s -> Maybe s) -> m Bool
-maybeModify f =
-    do state <- get
-       case f state of
+maybeModify f = do
+    s <- get
+    case f s of
          Nothing -> return False
-         (Just state') -> 
-             do put state' 
-                return True
+         Just s' -> do
+             put s'
+             return True
 
 -- | Get the session data associated with the supplied 'SessionId'.
 getSession :: SessionId -> Query Sessions (Maybe (Session))
