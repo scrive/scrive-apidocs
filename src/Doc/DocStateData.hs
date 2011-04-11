@@ -175,13 +175,13 @@ data SignatoryDetails = SignatoryDetails
     , signatorycompanynumber  :: BS.ByteString  -- 123456789
     , signatoryemail          :: BS.ByteString  -- "gracjanpolak@skrivapa.se"
     -- for templates
-    , signatoryfstnameplacements :: [FieldPlacement]
-    , signatorysndnameplacements :: [FieldPlacement]
-    , signatorycompanyplacements :: [FieldPlacement]
-    , signatoryemailplacements :: [FieldPlacement]
+    , signatoryfstnameplacements        :: [FieldPlacement]
+    , signatorysndnameplacements        :: [FieldPlacement]
+    , signatorycompanyplacements        :: [FieldPlacement]
+    , signatoryemailplacements          :: [FieldPlacement]
     , signatorypersonalnumberplacements :: [FieldPlacement]
-    , signatorycompanynumberplacements :: [FieldPlacement]
-    , signatoryotherfields :: [FieldDefinition]
+    , signatorycompanynumberplacements  :: [FieldPlacement]
+    , signatoryotherfields              :: [FieldDefinition]
     }
     deriving (Eq, Ord, Typeable)
 
