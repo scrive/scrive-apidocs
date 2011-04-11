@@ -589,8 +589,7 @@ handleIssueShowPost docid = withUserPost $ do
      
 handleIssueSign document author = do
     ctx@Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber} <- get
-    unless (document `allowsIdentification` EmailIdentification) mzero
-
+    -- unless (document `allowsIdentification` EmailIdentification) mzero | This need to be refactored | Breaks templates
     mudoc <- updateDocument ctx author document
     case mudoc of 
         Right udoc-> do
