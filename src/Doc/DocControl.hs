@@ -657,7 +657,7 @@ handleIssueSaveAsTemplate document author = do
 
 handleIssueChangeToContract document author = do
     ctx <- get
-    mcontract <- update $ ContractFromDocument $ documentid document 
+    mcontract <- update $ SignableFromDocument $ documentid document 
     case mcontract of 
         Right contract -> do   
             mncontract <- updateDocument ctx author contract
@@ -682,9 +682,9 @@ splitUpDocument doc =
       case (cleanCSVContents (documentallowedidtypes doc) (length csvcustomfields) $ csvcontents csvupload) of
         ((prob:_), _) -> return $ Left "data is not valid"
         ([], CleanCSVData{csvbody}) -> do
-          mudoc <- case documenttype doc of
-            Template -> return $ Right doc
-            Contract -> update $ TemplateFromDocument $ documentid doc
+          mudoc <- if (isTemplate doc)
+                    then return $ Right doc
+                    else update $ TemplateFromDocument $ documentid doc
           case mudoc of
             (Left x) -> return $ Left x
             (Right udoc) -> do
@@ -763,14 +763,14 @@ getCSVFile fieldname = do
 handleIssueSave document author = do
     ctx <- get
     updateDocument ctx author document
-    case (documenttype document) of
-      Contract -> do
-          addFlashMsg =<< (liftIO . flashDocumentDraftSaved $ ctxtemplates ctx)
-          return $ LinkContracts emptyListParams
-      Template -> do
+    if (isTemplate document) 
+     then do
           addFlashMsg =<< (liftIO . flashDocumentTemplateSaved $ ctxtemplates ctx)
           return $ LinkTemplates emptyListParams
-
+     else do
+          addFlashMsg =<< (liftIO . flashDocumentDraftSaved $ ctxtemplates ctx)
+          return $ LinkContracts emptyListParams
+     
 handleIssueSignByAuthor document author = do
     ctx@Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber} <- get
     unless (document `allowsIdentification` EmailIdentification) mzero
@@ -999,7 +999,7 @@ showTemplatesList = withUserGet $ checkUserTOSGet $ do
   let documents = nub $ mydocuments
   let sorteddocuments = sortBy (\d1 d2 -> compare (documentmtime d2) (documentmtime d1)) documents
   let notdeleted = filter (not . documentdeleted) sorteddocuments
-  let templates = filter ((==) Template . documenttype) notdeleted
+  let templates = filter isTemplate notdeleted
   params <- getListParams
   content <- liftIO $ pageTemplatesList ctxtemplates ctxtime user (docSortSearchPage params templates)
   renderFromBody ctx TopDocument kontrakcja $ cdata content
@@ -1084,7 +1084,7 @@ handleCreateNewTemplate = withUserPost $ do
          handleTemplateReload
         else do
           let title = BS.fromString (basename filename) 
-          let doctype = Template
+          let doctype = ContractTemplate
           doc <- update $ NewDocument user title doctype ctxtime
           handleDocumentUpload (documentid doc) (concatChunks content) title
           return $ LinkIssueDoc $ documentid doc
@@ -1311,7 +1311,7 @@ handleCreateFromTemplate = do
      docid <- readField "template"
      case docid of 
          Just did -> do
-             newdoc <- update $ ContractFromDocument did
+             newdoc <- update $ SignableFromDocument did
              case newdoc of 
                  Right newdoc -> return $ LinkIssueDoc $ documentid newdoc   
                  Left _ -> mzero

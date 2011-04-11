@@ -322,8 +322,9 @@ data DocumentStatus = Preparation
                     | DocumentError String
     deriving (Eq, Ord, Typeable)
                     
-data DocumentType = Contract | Template
+data DocumentType = Contract | ContractTemplate | Offer | OfferTemplate
     deriving (Eq, Ord, Typeable)
+
 
 data ChargeMode = ChargeInitialFree   -- initial 5 documents are free
                 | ChargeNormal        -- value times number of people involved

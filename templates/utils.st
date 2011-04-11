@@ -96,3 +96,17 @@ $flashmessages:{ flash |
 }$
 </div>
 ####
+####
+loadingdialog=
+<div id="loadingdialog" class="overlay">
+  <a href="#" id="loadinglink" style="display:none;" rel="#loadingdialog"></a>
+  <div class="modal-container">
+    <div class="modal-body" style="padding:30px">
+      <center>
+        <h3 id="loadingmessage">Loading</h3> 
+        <img src="/theme/images/wait30trans.gif" style="margin:30px"/>
+      </center>
+    </div>
+  </div>
+</div>
+####

@@ -571,7 +571,6 @@ pageDocumentForViewer ctx
             , signatoryotherfields = authorotherfields document
           }
    in do
-     helpers <- renderTemplate (ctxtemplates ctx) "pageDocumentForViewerHelpers" [("documentid", show documentid)]
      invitationMailContent <- mailInvitationToSignContent (ctxtemplates ctx) False ctx document author Nothing
      cancelMailContent <- mailCancelDocumentByAuthorContent (ctxtemplates ctx) False Nothing ctx document author
      documentinfotext <- documentInfoText (ctxtemplates ctx) document Nothing author
@@ -590,7 +589,6 @@ pageDocumentForViewer ctx
        field "emailelegitimation" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)
        field "emailonly" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isNothing $ find (== ELegitimationIdentification) documentallowedidtypes)
        field "elegitimationonly" $ (isNothing $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)
-       field "helpers" helpers
        field "docstate" (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks)
        field "linkissuedocpdf" $ show (LinkIssueDocPDF tokens document)
        field "documentinfotext" $ documentinfotext
@@ -621,11 +619,7 @@ pageDocumentForSignatory action document ctx invitedlink author tokens =
       requiresEleg = isJust $ find (== ELegitimationIdentification) allowedtypes
   in do
     renderTemplate (ctxtemplates ctx) "pageDocumentForSignContent" $ do
-      field "helpers" $ 
-          renderTemplate (ctxtemplates ctx) "pageDocumentForSignHelpers" $ do
-              documentTokens tokens
-              field "documentid" . show $ documentid document
-              field "localscripts" localscripts
+      field "localscripts" localscripts
       field "signatories" $ map (signatoryLinkFields ctx document author (Just invitedlink)) (documentsignatorylinks document)
       field "rejectMessage" $  mailRejectMailContent (ctxtemplates ctx) Nothing ctx (prettyName author) document invitedlink
       field "partyUnsigned" $ renderListTemplate (ctxtemplates ctx) $  map (BS.toString . personname') $ partyUnsignedMeAndList magichash document
@@ -726,7 +720,7 @@ documentInfoFields  document  = do
   field "id" $ show $ documentid document
   field "documentid" $ show $ documentid document
   field "timetosignset" $  isJust $ documentdaystosign document
-  field "template" $  documenttype document == Template
+  field "template" $  isTemplate document
   field "contract" $  documenttype document == Contract
   field "emailselected" $ document `allowsIdentification` EmailIdentification
   field "elegselected" $ document `allowsIdentification` ELegitimationIdentification
@@ -787,9 +781,7 @@ uploadPage :: KontrakcjaTemplates -> ListParams -> Bool -> IO String
 uploadPage templates params showTemplates = renderTemplate templates "uploadPage" $ do
     field "templateslink" $ show $ LinkAjaxTemplates params
     field "showTemplates" showTemplates
-    
-    
-  
+       
 
 templatesForAjax::KontrakcjaTemplates ->  MinutesTime -> User -> PagedList Document -> IO String
 templatesForAjax templates ctime user doctemplates = 
