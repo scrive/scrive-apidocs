@@ -44,7 +44,7 @@ pageDocumentForViewerHelpers=
 pageDocumentForViewerContent = 
   <div class="localdialogs">
     <div style="display: none">
-      $helpers:noescape()$
+      $pageDocumentForViewerHelpers()$
     </div>
   </div>
 <div id="signStepsContainer"> 
@@ -84,20 +84,17 @@ pageDocumentForViewerContent =
 
 $signatoryScriptIfRequired()$
 
-#####
-pageDocumentForSignHelpers=
-<script type="text/javascript"> var documentid = "$documentid$", doctokenid = "$doctokenid$", doctokenhash = "$doctokenhash$";
-</script>
-<script type="text/javascript">
-  $localscripts:noescape()$
-</script>
+
 ######
 pageDocumentForSignContent=
   <script type="text/javascript" src="/js/bankid.js"></script>
   <div class="localdialogs">
     $loadingdialog()$
     <div style="display: none">
-      $helpers:noescape()$
+        <script type="text/javascript"> var documentid = "$documentid$", doctokenid = "$doctokenid$", doctokenhash = "$doctokenhash$"; </script>
+        <script type="text/javascript">
+            $localscripts:noescape()$
+        </script>
     </div>
     <form method="post" name="form" action="$action$" id="dialog-confirm-sign" class="overlay">     
     <div class="modal-container">
@@ -755,17 +752,4 @@ customfield=
   <input type="hidden" value="$otherFieldName$" name="fieldname">
   <span class="type" style="display: none;">$otherFieldOwner$</span>
 </span>
-####
-loadingdialog=
-<div id="loadingdialog" class="overlay">
-  <a href="#" id="loadinglink" style="display:none;" rel="#loadingdialog"></a>
-  <div class="modal-container">
-    <div class="modal-body" style="padding:30px">
-      <center>
-        <h3 id="loadingmessage">Loading</h3> 
-        <img src="/theme/images/wait30trans.gif" style="margin:30px"/>
-      </center>
-    </div>
-  </div>
-</div>
 ####
