@@ -845,12 +845,12 @@ mapJust f ls = [l | Just l <- map f ls]
 
 makePlacements :: [BS.ByteString]
                -> [BS.ByteString]
-               -> [Integer]
-               -> [Integer]
-               -> [Integer]
-               -> [Integer]
-               -> [Integer]                                
-               -> [(BS.ByteString, BS.ByteString, FieldPlacement)]
+               -> [BS.ByteString]
+               -> [BS.ByteString]
+               -> [BS.ByteString]
+               -> [BS.ByteString]
+               -> [BS.ByteString]
+               -> Kontra [(BS.ByteString, BS.ByteString, FieldPlacement)]
                   
 makePlacements placedsigids
                     placedfieldids
@@ -895,7 +895,7 @@ makeFieldDefs placements = zipWith4 (fieldDefAndSigID placements)
 
 filterFieldDefsByID :: [(BS.ByteString, FieldDefinition)] 
                     -> BS.ByteString 
-                    -> [(BS.ByteString, FieldDefinition)]
+                    -> [FieldDefinition]
 filterFieldDefsByID fielddefs sigid = 
     [x | (s, x) <- fielddefs, s == sigid]
     
@@ -950,68 +950,8 @@ makeSignatories placements fielddefs
                         signatoriesfstnames
                         signatoriessndnames
 
-mungeFields author
-            signatoriesemails
-            signatoriescompanies
-            signatoriespersonalnumbers
-            signatoriescompanynumbers
-            sigids
-            signatoriesfstnames
-            signatoriessndnames
-            fieldids
-            fieldnames
-            fieldvalues
-            fieldsigids
-            placedsigids
-            placedfieldids
-            placedxs
-            placedys
-            placedpages
-            placedwidths
-            placedheights = do
-  placedxsf      <- mapM (readM . BS.toString) placedxs
-  placedysf      <- mapM (readM . BS.toString) placedys
-  placedpagesf   <- mapM (readM . BS.toString) placedpages
-  placedwidthsf  <- mapM (readM . BS.toString) placedwidths
-  placedheightsf <- mapM (readM . BS.toString) placedheights
-  let placements = zipWith5 FieldPlacement 
-                    placedxsf
-                    placedysf
-                    placedpagesf
-                    placedwidthsf
-                    placedheightsf
-                   
-  let pls = zip3 placedsigids placedfieldids placements
-  let fielddefs = makeFieldDefs pls fieldnames fieldvalues fieldids fieldsigids
 
-  let signatories = sigs where
-          sigs = if sigids == [] 
-                 then zipWith6 sdsimple signatoriesfstnames signatoriessndnames signatoriescompanies signatoriespersonalnumbers signatoriescompanynumbers signatoriesemails
-                      
-                 else zipWith7 sd sigids signatoriesfstnames signatoriessndnames signatoriescompanies signatoriespersonalnumbers signatoriescompanynumbers signatoriesemails 
-          sdsimple n sn c pno cno e = SignatoryDetails n sn c pno cno e [] [] [] [] [] [] []
-          sd id n sn c pno cno e = SignatoryDetails n sn c pno cno e
-                                            (filterPlacementsByID pls id (BS.fromString "fstname"))
-                                            (filterPlacementsByID pls id (BS.fromString "sndname"))
-                                            (filterPlacementsByID pls id (BS.fromString "company"))
-                                            (filterPlacementsByID pls id (BS.fromString "email"))
-                                            (filterPlacementsByID pls id (BS.fromString "personalnumber"))
-                                            (filterPlacementsByID pls id (BS.fromString "companynumber"))
-                                            (filterFieldDefsByID fielddefs id)
-                                                                      
-  let authordetails = (signatoryDetailsFromUser author)
-                      {
-                        signatoryemailplacements = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "email")
-                      , signatoryfstnameplacements = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "fstname")
-                      , signatorysndnameplacements = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "sndname")
-                      , signatorycompanyplacements = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "company")
-                      , signatorypersonalnumberplacements = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "personalnumber")
-                      , signatorycompanynumberplacements = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "companynumber")
-                      , signatoryotherfields = filterFieldDefsByID fielddefs (BS.fromString "author")
-                      }
-  return (authordetails, signatories)
-
-makeAuthorDetails pls fielddefs = 
+makeAuthorDetails pls fielddefs author = 
     (signatoryDetailsFromUser author)
     { signatoryemailplacements = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "email")
     , signatoryfstnameplacements = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "fstname")
@@ -1091,7 +1031,7 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
                         signatoriesfstnames
                         signatoriessndnames
                         
-  let authordetails = makeAuthorDetails placements fielddefs
+  let authordetails = makeAuthorDetails placements fielddefs author
                         
   let isauthorsig = authorrole == "signatory"
       signatories2 = if isauthorsig
