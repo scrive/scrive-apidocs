@@ -103,7 +103,7 @@ Executable kontrakcja-server
  Build-Depends: parallel == 2.2.*
  Build-Depends: HStringTemplate >= 0.6.5
  Build-Depends: template-haskell
- Build-Depends: mtl == 1.*
+ Build-Depends: mtl == 2.*
  Build-Depends: hS3
  Build-Depends: hxt
  Build-Depends: mmap==0.5.*
@@ -170,7 +170,7 @@ Executable kontrakcja-test
  Build-Depends: parallel == 2.2.*
  Build-Depends: HStringTemplate >= 0.6.5
  Build-Depends: template-haskell
- Build-Depends: mtl == 1.*
+ Build-Depends: mtl == 2.*
  Build-Depends: hS3
  Build-Depends: hxt
  Build-Depends: mmap==0.5.*
