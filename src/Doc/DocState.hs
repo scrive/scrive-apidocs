@@ -106,13 +106,22 @@ getDocumentsByUser user = do
     authoredDocs <- getDocumentsByAuthor $ userid user
     signatoryDocs <- getDocumentsBySignatory $ user
     return $ authoredDocs ++ signatoryDocs
+    
+filterSignatoryLinksByUser doc user = 
+    [sl | sl <- documentsignatorylinks doc
+        , isMatchingSignatoryLink user sl     -- user must match
+        , not $ signatorylinkdeleted sl    ]  -- filter out deleted links
+    
+signatoryCanView user doc = 
+    let usersiglinks = filterSignatoryLinksByUser doc user
+        isnotpreparation = Preparation /= documentstatus doc
+        hasLink = not $ Prelude.null usersiglinks
+    in isnotpreparation && hasLink
 
 getDocumentsBySignatory :: User -> Query Documents [Document]
 getDocumentsBySignatory user = do
     documents <- ask
-    let involvedAsSignatory doc = (any (isMatchingSignatoryLink user) $ documentsignatorylinks doc)
-                                   && (Preparation /= documentstatus doc)
-    return $ filter involvedAsSignatory (toList documents)
+    return $ filter (signatoryCanView user) (toList documents)
        
 
 getTimeoutedButPendingDocuments :: MinutesTime -> Query Documents [Document]
