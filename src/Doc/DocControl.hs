@@ -526,10 +526,10 @@ handleIssueShowGet docid = withUserGet $ checkUserTOSGet $ do
         ctx2 <- get   
         step <- getDesignStep (documentid document)
         case (documentstatus document) of
-           Pending -> renderFromBody ctx2 toptab kontrakcja 
+           Preparation -> renderFromBody ctx2 toptab kontrakcja 
                             (cdata <$> pageDocumentDesign ctx2 document author tokens step)
            _ ->  renderFromBody ctx2 toptab kontrakcja 
-                            (cdata <$> pageDocumentForAuthor ctx2 document author tokens step)                
+                            (cdata <$> pageDocumentForAuthor ctx2 document author tokens)                
    -- friends can just look (but not touch)
    else do
         friendWithSignatory <- liftIO $ isFriendWithSignatory userid document 
