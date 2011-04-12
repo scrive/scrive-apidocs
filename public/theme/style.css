@@ -1210,6 +1210,7 @@ a.button {
     background-repeat: repeat-y;
     overflow: hidden;
     min-height: 100px;
+
 }
 
 #signStepsBodyBorderBottom
@@ -1315,9 +1316,11 @@ input.multiFileInput {
     border-bottom: 1px solid #E8E5E5;
     border-left: 1px solid #E8E5E5;
     margin-top: 15px;
-    margin-left: 20px;
+    margin-left: 35px;
     min-height: 140px;
     margin-bottom: 10px;
+    margin-right: 0px;
+    width: 268px;
 }
 
 .forauthor .signViewBodyRight{
@@ -1326,7 +1329,7 @@ input.multiFileInput {
 
 #signViewBodyLeft
 {
-    width: 230px;
+    width: 270px;
     float: left;
     position: relative;
     padding: 14px 0px 5px 0px;
@@ -1335,9 +1338,10 @@ input.multiFileInput {
 
 .signViewBodyRightTextContainer
 {
-    width: 226px;
-    padding-left: 45px;
-    padding-right: 44px;
+    width: 218px;
+    padding-left: 25px;
+    padding-right: 25px;
+    padding-right: 20px;
     padding-bottom: 10px;
     overflow:hidden;
     padding-top:20px;
@@ -1349,7 +1353,6 @@ input.multiFileInput {
     margin-bottom: 7px;
     font-size: 11px;
     overflow:hidden;
-    
 }
 
 .signViewBodyLeftTextContainer .text
@@ -1357,6 +1360,12 @@ input.multiFileInput {
     margin-top: 5px;
     color: #666666;
     font-size: 11px; 
+}
+
+#signViewBodyLeftTextContainer .btn-small
+{
+    margin-top:16px;
+    margin-left: 0px;
 }
 
 #signViewBodyLeft .header
@@ -2127,11 +2136,11 @@ form {
 }
 
 #signStepsBody {
-    padding:8px 19px;
+    padding:8px 39px;
     border-left: 1px solid #BDBDBD;
     border-right: 1px solid #BDBDBD;
     border-bottom: 1px solid #C0C0C0;
-    
+    width: 880px;
 }
 
 #signStepsBody.personPaneLargeNumberMode span.persondetails
@@ -2558,8 +2567,8 @@ width: 340px;
 }
 
 .otherSignatoriesBox{
-float:right;    
-width: 340px;    
+/*float:right;    */
+/*width: 340px;    */
 }
 .signatoryLockIcon{
  margin-right: 5px;   
@@ -2572,7 +2581,7 @@ width: 340px;
     margin: 1px 0px 3px 0;
     overflow: hidden;
     padding: 0;
-    width: 220px;
+    width: 212px;
     height: 20px;
     line-height: 20px;
     -moz-border-radius: 2px 2px 2px 2px;
@@ -2621,24 +2630,29 @@ width: 340px;
 .reminderForSignedIcon  {
     background: url(../img/remind.png) 0 0 no-repeat;
     display: inline-block;
-    height: 32px;
-    width: 32px;
+    height: 16px;
+    width: 16px;
     float:left;
 }
 .reminderForSendIcon {
     background: url(../img/senddoc.png) 0 0 no-repeat;
     display: inline-block;
-    height: 32px;
-    width: 32px;
+    height: 16px;
+    width: 16px;
     float:left;
 }
 .sendLinkText{
-    padding-top: 8px;
-    padding-left:5px;
+    padding-top: 2px;
+    padding-left:4px;
     float:left;
     text-transform: uppercase;
     font-size: 10px;
 }
+
+.prepareToSendReminderMail {
+    padding-top: 6px;
+}
+
 .prepareToSendReminderMail:hover{
     font-weight: bold;
 }

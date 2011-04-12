@@ -36,7 +36,7 @@ pageDocumentForAuthor=
         $if(pending)$
         $if(!awaitingauthor)$
         $if(!timetosignset)$
-        <a class="btn-small red centered" id="cancel"  name="cancel" rel="#cancel-by-author-dialog">
+        <a class="btn-small red" id="cancel"  name="cancel" rel="#cancel-by-author-dialog">
             <div class="left"></div>
             <div class="label">Återkalla inbjudan</div> 
             <div class="right"></div>
