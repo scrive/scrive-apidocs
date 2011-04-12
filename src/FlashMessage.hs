@@ -26,7 +26,7 @@ updateFlashCookie aesconf oldflashes newflashes =
 
 toCookieValue :: AESConf -> [FlashMessage] -> String
 toCookieValue conf flashes =
-    BS.unpack . (flip BS.append $ BS.pack "lol") . B64.encode . aesEncrypt conf . BSU.fromString $ show flashes
+    BS.unpack . B64.encode . aesEncrypt conf . BSU.fromString $ show flashes
 
 fromCookieValue :: AESConf -> String -> Maybe [FlashMessage]
 fromCookieValue conf flashesdata = do
