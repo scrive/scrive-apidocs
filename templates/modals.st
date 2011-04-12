@@ -78,16 +78,16 @@ modalAccountRemoval=
         </div>
       </div>
       <div class="modal-footer">
-        <a href="$activationlink$" class="btn-small green float-right">
+        <form method="post" action="$removallink$" id="removeaccountform"></form>
+        <a href="#" onclick="\$('#removeaccountform').submit();" class="btn-small red float-right">
           <div class="left"></div>
           <div class="label">
-            <p>Aktivera konto</p>
-            <div class="btn-symbol green arrow-left"></div>
+            <p>Radera konto</p>
+            <div class="btn-symbol red arrow-left"></div>
           </div>
           <div class="right"></div>
         </a>
-        <form method="post" action="$removallink$" name="removeaccountform"></form>
-        <a href="#" class="float-left cancel" onclick="document.removeaccountform.submit();return false;">Ja</a>
+        <a href="$activationlink$" class="float-left" style="color: #5eb30c; text-decoration: none">Aktiviera konto</a>
       </div>
 </div>
 ###
