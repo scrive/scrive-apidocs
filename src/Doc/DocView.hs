@@ -3,6 +3,7 @@
 module Doc.DocView (
     emptyDetails
   , showFilesImages2
+  , pageDocumentDesign 
   , pageDocumentForAuthor
   , pageDocumentForViewer
   , pageDocumentForSignatory
@@ -398,13 +399,13 @@ isNotLinkForUserID uid link =
               notSameUserID = uid /= linkuid
               linkuid = fromJust $ maybesignatory link
 
-pageDocumentForAuthor :: Context 
+pageDocumentDesign :: Context 
              -> Document 
              -> User
              -> (ActionID, MagicHash)
              -> (Maybe DesignStep)
              -> IO String
-pageDocumentForAuthor ctx
+pageDocumentDesign ctx
   document@Document {
       documentsignatorylinks
     , documentid
@@ -532,6 +533,94 @@ csvProblemFields templates probcount number csvproblem = do
       field "problemdesc" $ desc
       field "isfirstproblem" $ (number==1)
       field "islastproblem" $ (number==probcount)
+ 
+{- | Showing document to author after we are done with design -}
+
+pageDocumentForAuthor :: Context 
+             -> Document 
+             -> User
+             -> (ActionID, MagicHash)
+             -> (Maybe DesignStep)
+             -> IO String
+pageDocumentForAuthor ctx
+  document@Document {
+      documentsignatorylinks
+    , documentid
+    , documentstatus
+    , documentdaystosign
+    , documentinvitetext
+    , documentallowedidtypes
+  }
+  author tokens step =
+   let
+       templates = ctxtemplates ctx
+       authorid = userid author
+       authorhaslink = not $ null $ filter (not . isNotLinkForUserID authorid) documentsignatorylinks
+       documentdaystosignboxvalue = maybe 7 id documentdaystosign
+       documentauthordetails =
+         (signatoryDetailsFromUser author) {
+             signatoryemailplacements = authoremailplacements document
+           , signatoryfstnameplacements = authorfstnameplacements document
+           , signatorysndnameplacements = authorsndnameplacements document
+           , signatorycompanyplacements = authorcompanyplacements document
+           , signatorypersonalnumberplacements = authorpersonalnumberplacements document
+           , signatorycompanynumberplacements = authorcompanynumberplacements document
+           , signatoryotherfields = authorotherfields document
+         }
+       doc_author_otherfields fields = sequence .
+         map (\(fd, i) ->
+           renderTemplate templates "customfield" $ do
+             field "otherFieldValue" $ fieldvalue fd
+             field "otherFieldName"  $ fieldlabel fd
+             field "otherFieldID"    $ "field" ++ show i
+             field "otherFieldOwner" "author")
+             $ zip fields ([1..]::[Int])
+       csvcustomfields = either (const [BS.fromString ""]) id $ getCSVCustomFields document
+       mcleancsv = fmap (cleanCSVContents documentallowedidtypes (length csvcustomfields) . csvcontents) $ documentcsvupload document
+       csvproblems = maybe [] fst mcleancsv
+       csvdata = maybe [] (csvbody . snd) mcleancsv
+       csvPageSize = 10
+       csvpages = splitCSVDataIntoPages csvPageSize csvdata
+   in do
+     validationinput <- if isSuperUser $ Just author
+                        then renderTemplate (ctxtemplates ctx) "validationdropdown" ()
+                        else renderTemplate (ctxtemplates ctx) "emailhidden" ()
+     csvproblemfields <- sequence $ zipWith (csvProblemFields templates (length csvproblems)) [1..] csvproblems
+     renderTemplate (ctxtemplates ctx) "pageDocumentForAuthorContent" $ do
+       field "authorOtherFields" $ doc_author_otherfields $ signatoryotherfields documentauthordetails
+       field "linkissuedoc" $ show $ LinkIssueDoc documentid
+       field "authorhaslink" $ authorhaslink
+       field "documentinvitetext" $ documentinvitetext
+       field "invitationMailContent" $  mailInvitationToSignContent templates False ctx document author Nothing
+       field "documentdaystosignboxvalue" $ documentdaystosignboxvalue
+       field "anyinvitationundelivered" $ anyInvitationUndelivered document
+       field "undelivered" $ map (signatoryemail . signatorydetails) $ undeliveredSignatoryLinks document
+       field "signatories" $ map (signatoryLinkFields ctx document author Nothing) documentsignatorylinks                    
+       field "canberestarted" $ documentstatus `elem` [Canceled, Timedout, Rejected]
+       field "cancelMailContent" $ mailCancelDocumentByAuthorContent templates False Nothing ctx document author
+       field "linkcancel" $ show $ LinkCancel document
+       field "emailelegitimation" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)
+       field "emailonly" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isNothing $ find (== ELegitimationIdentification) documentallowedidtypes)
+       field "elegitimationonly" $ (isNothing $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)
+       field "docstate" (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks)
+       field "linkissuedocpdf" $ show (LinkIssueDocPDF tokens document)
+       field "documentinfotext" $ documentInfoText templates document (find (isMatchingSignatoryLink author) documentsignatorylinks) author
+       documentAuthorInfo author
+       field "validationinput" validationinput
+       field "csvfilename" $ maybe BS.empty csvtitle . documentcsvupload $ document
+       field "csvpersonindex" $ maybe BS.empty (BS.fromString . show) $ csvPersonIndex document
+       field "csvproblems" $ csvproblemfields
+       field "csvproblemcount" $ length csvproblems
+       field "csvpages" $ zipWith (csvPageFields csvproblems (length csvdata)) [0,csvPageSize..] csvpages
+       field "csvrowcount" $ length csvdata
+       field "csvcustomfields" $ csvcustomfields
+       field "isvalidcsv" $ null csvproblems
+       documentTokens tokens
+       documentInfoFields document
+       documentViewFields document
+       designViewFields step
+       field "datamismatchflash" $ getDataMismatchMessage $ documentcancelationreason document
+ 
  
 {- |
    Show the document for Viewers (friends of author or signatory).

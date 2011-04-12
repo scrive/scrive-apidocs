@@ -520,13 +520,16 @@ handleIssueShowGet docid = withUserGet $ checkUserTOSGet $ do
   tokens <- getDocumentTokens ctxipnumber $ Just userid
   if isAuthor document user
    then do
-       case (documentstatus document, getDataMismatchMessage $ documentcancelationreason document) of
-           (Canceled, Just msg) -> addFlashMsg $ toFlashMsg OperationFailed msg
-           _ -> return ()
-       ctx2 <- get
-       step <- getDesignStep (documentid document)
-       renderFromBody ctx2 toptab kontrakcja 
-            (cdata <$> pageDocumentForAuthor ctx2 document author tokens step)
+        let mMismatchMessage = getDataMismatchMessage $ documentcancelationreason document
+        when ((documentstatus document == Canceled) && (isJust mMismatchMessage)) 
+           (addFlashMsg $ toFlashMsg OperationFailed (fromJust mMismatchMessage))
+        ctx2 <- get   
+        step <- getDesignStep (documentid document)
+        case (documentstatus document) of
+           Pending -> renderFromBody ctx2 toptab kontrakcja 
+                            (cdata <$> pageDocumentDesign ctx2 document author tokens step)
+           _ ->  renderFromBody ctx2 toptab kontrakcja 
+                            (cdata <$> pageDocumentForAuthor ctx2 document author tokens step)                
    -- friends can just look (but not touch)
    else do
         friendWithSignatory <- liftIO $ isFriendWithSignatory userid document 
