@@ -5,13 +5,14 @@ module Session
     ( Sessions
     , Session 
     , SessionId
-    , getFlashMessagesFromSession
     , getUserFromSession
     , handleSession
     , updateSessionWithContextData
     , getELegTransactions
     , getSessionXToken
     
+    -- | Cookies related stuff
+    , addHttpOnlyCookie
     -- | Functions usefull when we do remember passwords emails
     --, createLongTermSession
     , findSession
@@ -90,27 +91,39 @@ data SessionData3 = SessionData3
     , expires3          :: MinutesTime       -- ^ when does this session expire
     , hash3             :: MagicHash         -- ^ session security token
     , elegtransactions3 :: [ELegTransaction] -- ^ ELeg transaction stuff
-    }  deriving (Ord,Eq,Show,Typeable)                               
+    } deriving (Ord,Eq,Show,Typeable)
+
+data SessionData4 = SessionData4
+    { userID4           :: Maybe UserID      -- ^ Just 'UserID' if a person is logged in
+    , flashMessages4    :: [FlashMessage]    -- ^ 'FlashMessage's that are to be shown on next page
+    , expires4          :: MinutesTime       -- ^ when does this session expire
+    , hash4             :: MagicHash         -- ^ session security token
+    , elegtransactions4 :: [ELegTransaction] -- ^ ELeg transaction stuff
+    , xtoken4           :: MagicHash         -- ^ Random string to prevent CSRF
+    } deriving (Ord,Eq,Show,Typeable)
 
 -- | SessionData is everything we want to know about a person clicking
 -- on the other side of the wire.
 data SessionData = SessionData 
     { userID           :: Maybe UserID      -- ^ Just 'UserID' if a person is logged in
-    , flashMessages    :: [FlashMessage]    -- ^ 'FlashMessage's that are to be shown on next page
     , expires          :: MinutesTime       -- ^ when does this session expire
     , hash             :: MagicHash         -- ^ session security token
     , elegtransactions :: [ELegTransaction] -- ^ ELeg transaction stuff
     , xtoken           :: MagicHash         -- ^ Random string to prevent CSRF
-    }  deriving (Ord,Eq,Show,Typeable)                               
-                               
+    } deriving (Ord,Eq,Show,Typeable)
+
 $(deriveSerialize ''SessionData3) 
 instance Version (SessionData3) where
     mode = extension 3 (Proxy :: Proxy SessionData2)
 
+$(deriveSerialize ''SessionData4) 
+instance Version (SessionData4) where
+    mode = extension 4 (Proxy :: Proxy SessionData3)
+
 $(deriveSerialize ''SessionData) 
 instance Version (SessionData) where
-    mode = extension 4 (Proxy :: Proxy SessionData3)
-     
+    mode = extension 5 (Proxy :: Proxy SessionData4)
+
 instance Migrate SessionData0 SessionData1 where
     migrate (SessionData0 { userID0 = _
                           , flashMessages0 = _
@@ -143,19 +156,28 @@ instance Migrate SessionData2 SessionData3 where
                     , elegtransactions3 = []
                     }
                     
-instance Migrate SessionData3 SessionData where
+instance Migrate SessionData3 SessionData4 where
     migrate (SessionData3 { userID3 = _
                           , flashMessages3 = _
                           , expires3 = _
                           , elegtransactions3 = _
                           }) =
+        SessionData4 { userID4           = Nothing
+                    , flashMessages4    = []
+                    , expires4          = MinutesTime 0 0
+                    , hash4             = MagicHash 0
+                    , elegtransactions4 = []
+                    , xtoken4           = MagicHash 0
+                    }
+
+instance Migrate SessionData4 SessionData where
+    migrate SessionData4{} =
         SessionData { userID           = Nothing
-                    , flashMessages    = []
                     , expires          = MinutesTime 0 0
                     , hash             = MagicHash 0
                     , elegtransactions = []
                     , xtoken           = MagicHash 0
-                    }                    
+                    }
 
 -- | 'Session' data as we keep it in our database
 data Session = Session { sessionId::SessionId
@@ -327,10 +349,10 @@ currentSessionInfoCookie = (optional (readCookieValue "sessionId"))
  
 -- | Get current session based on cookies set.
 currentSession ::(HasRqData m, MonadIO m, ServerMonad m, MonadPlus m, FilterMonad Response m) => m (Maybe Session) 
-currentSession = 
-    withDataFn currentSessionInfoCookie $ \mscd ->  
+currentSession =
+    withDataFn currentSessionInfoCookie $ \mscd ->
         case mscd of
-            Just scd -> do 
+            Just scd -> do
                 session <- query $ GetSession $ cookieSessionId scd                           
                 case session of 
                     Just s | sessionAndCookieHashMatch s scd -> return $ Just s
@@ -344,7 +366,6 @@ emptySessionData = do
     magicHash <- randomIO
     xhash     <- randomIO
     return $ SessionData { userID = Nothing
-                         , flashMessages = []
                          , expires = 60 `minutesAfter` now
                          , hash = magicHash
                          , elegtransactions = []
@@ -353,9 +374,8 @@ emptySessionData = do
 
 -- | Check if session data is empty
 isSessionDataEmpty :: SessionData -> Bool
-isSessionDataEmpty SessionData{userID, flashMessages, elegtransactions} =
+isSessionDataEmpty SessionData{userID, elegtransactions} =
        userID == Nothing
-    && Prelude.null flashMessages
     && Prelude.null elegtransactions
 
 -- | Return ID for temporary session (not written to db)
@@ -372,11 +392,6 @@ getUserFromSession s =
     case (userID $ sessionData s) of
         Just i -> query $ GetUserByUserID i
         _ -> return Nothing    
-
--- | Get 'FlashMessage's to be show at this request. Does not clear
--- flash message list though.
-getFlashMessagesFromSession :: Session -> ServerPartT IO  [FlashMessage]
-getFlashMessagesFromSession s = return $ flashMessages $ sessionData s      
 
 -- | Handles session timeout. Starts new session when old session timed out.
 handleSession :: ServerPartT IO Session                  
@@ -396,12 +411,11 @@ handleSession = do
 -- session data is non-empty, register session in the system
 -- and add a cookie. Is user loggs in, check whether there is
 -- an old session with his userid and throw it away.
-updateSessionWithContextData :: Session -> Maybe UserID -> [FlashMessage] -> [ELegTransaction] -> ServerPartT IO ()
-updateSessionWithContextData (Session i sd) u fm trans = do
+updateSessionWithContextData :: Session -> Maybe UserID -> [ELegTransaction] -> ServerPartT IO ()
+updateSessionWithContextData (Session i sd) u trans = do
     now <- liftIO getMinutesTime
     let newsd = sd {
         userID = u
-        , flashMessages = fm
         , expires = 60 `minutesAfter` now
         , elegtransactions = trans
     }

@@ -16,6 +16,7 @@ import Control.Concurrent
 import Data.Functor
 import AppView as V
 import Control.Concurrent
+import Crypto
 import Data.List
 import Data.Maybe
 import Doc.DocState
@@ -52,6 +53,7 @@ import Mails.MailsConfig
 import Mails.SendGridEvents
 import Mails.SendMail
 import System.Log.Logger (Priority(..), logM)
+import qualified FlashMessage as F
 import qualified AppLogger as Log (error, security)
 import qualified MemCache
 import Happstack.State (update)
@@ -82,7 +84,7 @@ data AppConf
               , trustWeaverAdmin :: Maybe (String,String,String) -- ^ TrustWeaver admin service (URL,pem file path,pem private key password)
               , trustWeaverStorage :: Maybe (String,String,String) -- ^ TrustWeaver storage service (URL,pem file path,pem private key password)
               , mailsConfig     :: MailsConfig                  -- ^ mail sendout configuration
-
+              , aesConfig       :: AESConf                     -- ^ aes key/iv for encryption
               }              
       deriving (Show,Read,Eq,Ord)
 
@@ -309,7 +311,8 @@ appHandler appConf appGlobals = do
       let newsessionuser = fmap userid $ ctxmaybeuser ctx'  
       let newflashmessages = ctxflashmessages ctx'
       let newelegtrans = ctxelegtransactions ctx'
-      updateSessionWithContextData session newsessionuser newflashmessages newelegtrans
+      F.updateFlashCookie (aesConfig appConf) (ctxflashmessages ctx) newflashmessages
+      updateSessionWithContextData session newsessionuser newelegtrans
       return res
 
     createContext :: Request -> Session -> ServerPartT IO Context
@@ -334,7 +337,13 @@ appHandler appConf appGlobals = do
 
       minutestime <- liftIO $ getMinutesTime
       muser <- getUserFromSession session
-      flashmessages <- getFlashMessagesFromSession session          
+      flashmessages <- withDataFn F.flashDataFromCookie $ maybe (return []) $ \fval ->
+          case F.fromCookieValue (aesConfig appConf) fval of
+               Just flashes -> return flashes
+               Nothing -> do
+                   Log.error $ "Couldn't read flash messages from value: " ++ fval
+                   F.removeFlashCookie
+                   return []
 
       -- do reload templates in non-production code
       templates2 <- if production appConf
