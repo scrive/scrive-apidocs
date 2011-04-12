@@ -1225,14 +1225,14 @@ a.button {
 /* step 1 */
 .signStepsBodyUploadBox
 {
-    width: 250px;
+    width: 200px;
     height: 92px;
-    margin: 30px auto 30px auto;
+    margin: 15px auto 15px auto;
     border-top: 1px solid #E0E0E0;
     border-right: 1px solid #E0E0E0;
     border-bottom: 1px solid #E8E5E5;
     border-left: 1px solid #E8E5E5;
-    padding: 14px;
+    padding: 10px;
     text-align: center;
 
 }
@@ -1259,7 +1259,7 @@ a.button {
     position: relative; /* 008 new */
     margin-top: 15px;
     margin-bottom: 5px;
-    margin-left: 65px;
+    margin-left: 45px;
 }
 /* HOW TO MAKE FILE INPUT LOOKING LIKE A BUTTON !!!! */
 input.multiFileInput { 

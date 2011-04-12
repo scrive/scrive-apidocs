@@ -36,8 +36,8 @@ $loadingdialog()$
  
 <!-- MAIN FORM STARTS HERE -->
 <table style="width:100%"> <tbody> <tr valign="top">
-<td> <div class="signStepsBodyUploadBox" style="border:0px;text-align:left"> 
-    <p class="text" style="padding-top:20px">
+<td> <div class="signStepsBodyUploadBox" style="border:0px;text-align:left;width: 150px"> 
+    <p class="text" style="padding-top:0px">
     Välj det dokument som du vill fylla i och skicka till din motpart för att skriva på.
     Du väljer ett dokument från din dator eller från existerande mallar.
     <p/>
@@ -62,7 +62,30 @@ $loadingdialog()$
     </div>
   </form>
 </div> 
-</td><td>
+</td>
+<td>
+<div class="signStepsBodyUploadBox"> 
+  <form action="/d" method="post" enctype="multipart/form-data" > 
+    <input type="hidden" name="offer" value="YES">
+    <div>
+        <span class="header">New offer</span><br/>
+        <span class="text">OBS! Endast PDF</span> 
+      <br/>
+      <div class="signStepsButtonContainer">
+        <a class="btn-small green" style="overflow:hidden;height:34px;width:114px" >  
+          <div class="left"> </div>
+          <div class="label" style="width:80px"> Välj fil </div> 
+          <div class="right"> </div>
+          <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px" maxlength="1" type="file" name="doc" accept="application/pdf" rel=".filelist" />
+        </a>
+       </div>
+      <div class="filelist" style="padding-left:10px;display:none"></div>
+    </div>
+  </form>
+</div> 
+</td>
+
+<td>
 <div class="signStepsBodyUploadBox">  
     <div>
         <span class="header">Välj sparad mall</span><br/>

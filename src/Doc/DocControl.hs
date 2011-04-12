@@ -1158,8 +1158,9 @@ handleIssueNewDocument = withUserPost $ do
           -- FIXME: here we have encoding issue
           -- Happstack gives use String done by BS.unpack, so BS.pack it here
           -- in our case it should be utf-8 as this is what we use everywhere
+          offer <- isFieldSet "offer"               
           let title = BS.fromString (basename filename) 
-          let doctype = Contract
+          let doctype = if (offer) then Offer else Contract
           doc <- update $ NewDocument user title doctype ctxtime
           handleDocumentUpload (documentid doc) (concatChunks content) title
           return $ LinkIssueDoc $ documentid doc
