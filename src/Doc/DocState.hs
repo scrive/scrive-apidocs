@@ -138,7 +138,10 @@ newDocument :: User
             -> MinutesTime 
             -> Update Documents Document
 newDocument user title documenttype ctime = do
-  authorlink <- signLinkFromDetails [(unEmail $ useremail $ userinfo user, user)] $ signatoryDetailsFromUser user
+  authorlink <- signLinkFromDetails [(unEmail $ useremail $ userinfo user, user)]
+                (signatoryDetailsFromUser user) 
+                [SignatoryPartner]
+
   let doc = Document
           { documentid = DocumentID 0
           , documenttitle = title
@@ -236,7 +239,7 @@ attachSealedFile documentid filename1 content = do
 
 updateDocument :: MinutesTime
                -> DocumentID
-               -> [SignatoryDetails]
+               -> [(SignatoryDetails,[SignatoryRole])]
                -> Maybe Int
                -> BS.ByteString
                -> User
@@ -249,7 +252,7 @@ updateDocument time documentid signatories daystosign invitetext author authorde
         if documentstatus document == Preparation
          then do
              let authoremail = unEmail $ useremail $ userinfo author
-             signatorylinks <- sequence $ map (signLinkFromDetails [(authoremail, author)]) signatories
+             signatorylinks <- sequence $ map (uncurry $ signLinkFromDetails [(authoremail, author)]) signatories
              let csvupload = case (documentcsvupload document, 
                                    fmap (checkCSVSigIndex (userid author) signatorylinks) mcsvsigindex) of
                                (Just cu@CSVUpload{csvsignatoryindex}, Just (Right newsigindex)) 
@@ -678,9 +681,9 @@ tryToGetRestarted doc user time ipnumber =
 
 
 clearSignInfofromDoc doc author = do
-  let signatoriesDetails = map signatorydetails $ documentsignatorylinks doc
+  let signatoriesDetails = map (\x -> (signatorydetails x, signatoryroles x)) $ documentsignatorylinks doc
       authoremail = unEmail $ useremail $ userinfo author
-  newSignLinks <- sequence $ map (signLinkFromDetails [(authoremail, author)]) signatoriesDetails
+  newSignLinks <- sequence $ map (uncurry $ signLinkFromDetails [(authoremail, author)]) signatoriesDetails
   return doc {documentstatus = Preparation,
               documenttimeouttime = Nothing,
               documentsignatorylinks = newSignLinks
@@ -703,7 +706,8 @@ changeSignatoryEmailWhenUndelivered did slid email = modifySignable did $ change
                            Nothing -> Left "We could not find signatory"            
                      
 --UTILS - have to be put before creating action constructors
-signLinkFromDetails emails details = do
+
+signLinkFromDetails emails details roles = do
           sg <- ask
           linkid <- getUnique sg SignatoryLinkID
           magichash <- getRandom
@@ -718,7 +722,7 @@ signLinkFromDetails emails details = do
                      , maybeseeninfo  = Nothing
                      , invitationdeliverystatus = Unknown
                      , signatorysignatureinfo = Nothing
-                     , signatoryroles = [SignatoryPartner]
+                     , signatoryroles = roles
                      , signatorylinkdeleted = False
                      }
                      

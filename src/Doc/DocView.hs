@@ -453,7 +453,7 @@ pageDocumentDesign ctx
        field "documentinvitetext" $ documentinvitetext
        field "invitationMailContent" $  mailInvitationToSignContent templates False ctx document author Nothing
        field "documentdaystosignboxvalue" $ documentdaystosignboxvalue              
-       field "docstate" (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks)
+       field "docstate" (buildJS documentauthordetails documentsignatorylinks)
        documentAuthorInfo author
        field "csvproblems" $ csvproblemfields
        field "csvproblemcount" $ length csvproblems
@@ -552,7 +552,7 @@ pageDocumentForAuthor ctx
        field "canberestarted" $ documentstatus `elem` [Canceled, Timedout, Rejected]
        field "cancelMailContent" $ mailCancelDocumentByAuthorContent templates False Nothing ctx document author
        field "linkcancel" $ show $ LinkCancel document
-       field "docstate" (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks)
+       field "docstate" (buildJS documentauthordetails documentsignatorylinks)
        field "linkissuedocpdf" $ show (LinkIssueDocPDF tokens document)
        field "documentinfotext" $ documentInfoText templates document (find (isMatchingSignatoryLink author) documentsignatorylinks) author
        documentAuthorInfo author
@@ -610,7 +610,7 @@ pageDocumentForViewer ctx
        field "emailelegitimation" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)
        field "emailonly" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isNothing $ find (== ELegitimationIdentification) documentallowedidtypes)
        field "elegitimationonly" $ (isNothing $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)
-       field "docstate" (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks)
+       field "docstate" (buildJS documentauthordetails documentsignatorylinks)
        field "linkissuedocpdf" $ show (LinkIssueDocPDF tokens document)
        field "documentinfotext" $ documentinfotext
        documentTokens tokens
@@ -630,7 +630,7 @@ pageDocumentForSignatory action document ctx invitedlink author tokens =
   let
       localscripts =
            "var docstate = "
-        ++ (buildJS documentauthordetails $ map signatorydetails (documentsignatorylinks document))
+        ++ (buildJS documentauthordetails $ documentsignatorylinks document)
         ++ "; docstate['useremail'] = '"
         ++ (BS.toString $ signatoryemail $ signatorydetails invitedlink)
         ++ "';"
@@ -670,6 +670,7 @@ signatoryLinkFields
     , maybesigninfo
     , maybeseeninfo
     , invitationdeliverystatus
+    , signatoryroles
   } =
   let
    isCurrentUserAuthor = maybe False (isAuthor document) muser
@@ -710,7 +711,9 @@ signatoryLinkFields
       field "signdate" $ showDateOnly <$> signtime <$> maybesigninfo
       field "seenddate" $ showDateOnly <$> signtime <$> maybeseeninfo
       field "reminderMessage" $ mailDocumentRemindContent ctxtemplates Nothing ctx document siglnk author 
-
+      field "role" $ if SignatoryPartner `elem` signatoryroles
+                     then "signatory"
+                     else "viewer"
 
 packToMString :: BS.ByteString -> Maybe String
 packToMString x =
@@ -849,8 +852,20 @@ buildPlacementJS FieldPlacement {
   ++ " }"
 
 
+buildSigLinkJS :: SignatoryLink -> [Char]
+buildSigLinkJS (SignatoryLink {signatorydetails, signatoryroles}) = 
+    "{" ++ 
+    buildSigJS' signatorydetails ++ 
+    ", role: " ++ (if SignatoryPartner `elem` signatoryroles 
+                 then "\"signatory\""
+                 else "\"viewer\"") ++
+    "}"
+
 buildSigJS :: SignatoryDetails -> [Char]
-buildSigJS (SignatoryDetails {
+buildSigJS details = "{" ++ buildSigJS' details ++ "}"
+
+buildSigJS' :: SignatoryDetails -> [Char]
+buildSigJS' (SignatoryDetails {
   signatoryfstname
   , signatorysndname
   , signatorycompany
@@ -865,7 +880,7 @@ buildSigJS (SignatoryDetails {
   , signatorycompanynumberplacements
   , signatoryotherfields
   }) =
-     "{ fstname: "  ++ jsStringFromBS  signatoryfstname
+     "fstname: "  ++ jsStringFromBS  signatoryfstname
   ++ ", sndname: " ++ jsStringFromBS  signatorysndname
   ++ ", company: " ++ jsStringFromBS  signatorycompany
   ++ ", email: " ++ jsStringFromBS signatoryemail
@@ -878,10 +893,8 @@ buildSigJS (SignatoryDetails {
   ++ ", personalnumberplacements: " ++ (jsArray (map buildPlacementJS signatorypersonalnumberplacements))
   ++ ", companynumberplacements: " ++ (jsArray (map buildPlacementJS signatorycompanynumberplacements))
   ++ ", otherfields: " ++ (jsArray $ zipWith buildDefJS signatoryotherfields [1..])
-  ++ " }"
 
-
-buildJS :: SignatoryDetails -> [SignatoryDetails] -> [Char]
+buildJS :: SignatoryDetails -> [SignatoryLink] -> [Char]
 buildJS authordetails signatorydetails =
      "{ signatories: "
   ++ sigs
@@ -890,7 +903,7 @@ buildJS authordetails signatorydetails =
   where
     sigs =
       if (length signatorydetails) > 0
-         then jsArray (map buildSigJS signatorydetails)
+         then jsArray (map buildSigLinkJS signatorydetails)
          else jsArray [(buildSigJS emptyDetails)]
 
 
