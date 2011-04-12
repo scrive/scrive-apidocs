@@ -628,12 +628,12 @@ handleIssueSend document author = do
           case mdocs of
             Right docs -> do
               mndocs <- mapM (forIndividual ctxtime ctxipnumber udoc) docs
-              case (sequence mndocs) of
-                Right (d:[]) -> do
-                     addModal $ modalSendInviteView d
-                     return $  LinkIssueDoc (documentid d)
-                Right ds -> return $ LinkContracts emptyListParams
-                Left _ -> mzero
+              case (lefts mndocs, rights mndocs) of
+                ([],d:[]) -> do
+                    addModal $ modalSignInviteView d
+                    return $ LinkIssueDoc (documentid d)
+                ([],ds) -> return $ LinkContracts emptyListParams
+                _ -> mzero
             Left _ -> mzero
         Left _ -> mzero
     where
@@ -693,7 +693,7 @@ splitUpDocument doc =
             (Left x) -> return $ Left x
             (Right udoc) -> do
               mdocs <- mapM (createDocFromRow udoc (csvsignatoryindex csvupload)) csvbody
-              return $ sequence mdocs
+              return $ if Data.List.null (lefts mdocs) then Right (rights mdocs) else Left . head . lefts $ mdocs
   where createDocFromRow :: Document -> Int -> [BS.ByteString] -> Kontra (Either String Document)
         createDocFromRow udoc sigindex xs =
           update $ ContractFromSignatoryData (documentid udoc) sigindex (item 0) (item 1) (item 2) (item 3) (item 4) (item 5) (drop 6 xs)
