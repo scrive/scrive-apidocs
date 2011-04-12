@@ -128,7 +128,7 @@ safeReady(function() {
       if (selectedrows.length==0) {
         return false;
       } else {
-        var sentoropencount = selectedrows.find(".sent").length + selectedrows.find(".open").length
+        var sentoropencount = selectedrows.find(".sent").length + selectedrows.find(".opened").length
         if (sentoropencount>0) {
           addFlashMessage("Det går inte att radera dokument som är skickade eller öppna, var vänliga återkalla dokumentet först.", "red");
           return false;
@@ -155,7 +155,7 @@ safeReady(function() {
       if (selectedrows.length==0) {
         return false;
       } else {
-        var sentoropencount = selectedrows.find(".sent").length + selectedrows.find(".open").length;
+        var sentoropencount = selectedrows.find(".sent").length + selectedrows.find(".opened").length;
         if (sentoropencount!=selectedrows.length) {
           addFlashMessage("Det går inte att skicka påminnelser för dokument som inte är skickade eller öppna.", "red");
           return false;
