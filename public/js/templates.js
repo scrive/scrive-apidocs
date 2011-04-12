@@ -568,7 +568,7 @@ function authorToHTML(sig) {
     sigentry.find(".partyrole").hide();
     manlink.removeClass("selected");
     return false;
-  })
+  });
 
   $("#peopleList ol").append("<li><a href='#'>"
                            + escapeHTML(sig.fstname + " " + sig.sndname)

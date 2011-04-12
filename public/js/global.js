@@ -1161,6 +1161,9 @@ $(document).ready(function() {
                 var val = fstname + " "+ sndname;
                 var div = $(this).parentsUntil("#personpane").last();
                 var idx = div.parent().children().index(div);
+                if (idx<0) {
+                   return;
+                }
                 if(fstname == "" && sndname == "") {
                     val = "(Namnlös)";
                 }
