@@ -49,7 +49,7 @@ Executable pdfseal
   -- Packages needed in order to build this package.
   Build-depends: base, mmap==0.5.*, parallel, array
   Build-Depends: HPDF
-  Build-Depends: mtl
+  Build-Depends: mtl == 2.*
   Extensions: CPP,
               BangPatterns,
               DeriveDataTypeable,
@@ -105,7 +105,7 @@ Executable kontrakcja-server
  Build-Depends: parallel == 2.2.*
  Build-Depends: HStringTemplate >= 0.6.5
  Build-Depends: template-haskell
- Build-Depends: mtl == 1.*
+ Build-Depends: mtl == 2.*
  Build-Depends: hS3
  Build-Depends: hxt
  Build-Depends: mmap==0.5.*
@@ -172,7 +172,7 @@ Executable kontrakcja-test
  Build-Depends: parallel == 2.2.*
  Build-Depends: HStringTemplate >= 0.6.5
  Build-Depends: template-haskell
- Build-Depends: mtl == 1.*
+ Build-Depends: mtl == 2.*
  Build-Depends: hS3
  Build-Depends: hxt
  Build-Depends: mmap==0.5.*
