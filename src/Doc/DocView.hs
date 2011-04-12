@@ -43,13 +43,13 @@ module Doc.DocView (
   , modalSignAwaitingAuthorLast
   ) where
 
-import ActionSchedulerState (ActionID(..))
+import ActionSchedulerState (ActionID)
 import Control.Applicative ((<$>))
-import Data.Data
-import Data.List (find)
+import Data.List (find, isInfixOf)
 import Data.Maybe
-import Data.Foldable (foldMap)
-import Data.Ord
+import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString as BS
+import Data.Char (toUpper)
 import Doc.CSVUtils
 import Doc.DocState
 import Doc.DocViewMail
@@ -63,11 +63,6 @@ import Misc
 import Templates.Templates
 import Templates.TemplatesUtils
 import User.UserView (prettyName)
-import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString as BS
-import Data.Char (toUpper)
-import Data.List (isInfixOf,sortBy)
-import Data.Monoid
 import ListUtil
 import Control.Monad.Reader
 
@@ -415,7 +410,6 @@ pageDocumentDesign ctx
   document@Document {
       documentsignatorylinks
     , documentid
-    , documentstatus
     , documentdaystosign
     , documentinvitetext
     , documentallowedidtypes
@@ -451,33 +445,16 @@ pageDocumentDesign ctx
        csvPageSize = 10
        csvpages = splitCSVDataIntoPages csvPageSize csvdata
    in do
-     validationinput <- if isSuperUser $ Just author
-                        then renderTemplate (ctxtemplates ctx) "validationdropdown" ()
-                        else renderTemplate (ctxtemplates ctx) "emailhidden" ()
      csvproblemfields <- sequence $ zipWith (csvProblemFields templates (length csvproblems)) [1..] csvproblems
-     renderTemplate (ctxtemplates ctx) "pageDocumentForAuthorContent" $ do
+     renderTemplate (ctxtemplates ctx) "pageDocumentDesign" $ do
        field "authorOtherFields" $ doc_author_otherfields $ signatoryotherfields documentauthordetails
        field "linkissuedoc" $ show $ LinkIssueDoc documentid
        field "authorhaslink" $ authorhaslink
        field "documentinvitetext" $ documentinvitetext
        field "invitationMailContent" $  mailInvitationToSignContent templates False ctx document author Nothing
-       field "documentdaystosignboxvalue" $ documentdaystosignboxvalue
-       field "anyinvitationundelivered" $ anyInvitationUndelivered document
-       field "undelivered" $ map (signatoryemail . signatorydetails) $ undeliveredSignatoryLinks document
-       field "signatories" $ map (signatoryLinkFields ctx document author Nothing) documentsignatorylinks                    
-       field "canberestarted" $ documentstatus `elem` [Canceled, Timedout, Rejected]
-       field "cancelMailContent" $ mailCancelDocumentByAuthorContent templates False Nothing ctx document author
-       field "linkcancel" $ show $ LinkCancel document
-       field "emailelegitimation" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)
-       field "emailonly" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isNothing $ find (== ELegitimationIdentification) documentallowedidtypes)
-       field "elegitimationonly" $ (isNothing $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)
+       field "documentdaystosignboxvalue" $ documentdaystosignboxvalue              
        field "docstate" (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks)
-       field "linkissuedocpdf" $ show (LinkIssueDocPDF tokens document)
-       field "documentinfotext" $ documentInfoText templates document (find (isMatchingSignatoryLink author) documentsignatorylinks) author
        documentAuthorInfo author
-       field "validationinput" validationinput
-       field "csvfilename" $ maybe BS.empty csvtitle . documentcsvupload $ document
-       field "csvpersonindex" $ maybe BS.empty (BS.fromString . show) $ csvPersonIndex document
        field "csvproblems" $ csvproblemfields
        field "csvproblemcount" $ length csvproblems
        field "csvpages" $ zipWith (csvPageFields csvproblems (length csvdata)) [0,csvPageSize..] csvpages
@@ -488,7 +465,6 @@ pageDocumentDesign ctx
        documentInfoFields document
        documentViewFields document
        designViewFields step
-       field "datamismatchflash" $ getDataMismatchMessage $ documentcancelationreason document
 
 --all of this csv view stuff is a little scrappy.  sorry about that, i was trying
 --to implement a bit quickly (well, quickly for me anyway).  i'll clean up fairly soon!
@@ -546,23 +522,18 @@ pageDocumentForAuthor :: Context
              -> Document 
              -> User
              -> (ActionID, MagicHash)
-             -> (Maybe DesignStep)
              -> IO String
 pageDocumentForAuthor ctx
   document@Document {
       documentsignatorylinks
     , documentid
     , documentstatus
-    , documentdaystosign
-    , documentinvitetext
-    , documentallowedidtypes
   }
-  author tokens step =
+  author tokens =
    let
        templates = ctxtemplates ctx
        authorid = userid author
        authorhaslink = not $ null $ filter (not . isNotLinkForUserID authorid) documentsignatorylinks
-       documentdaystosignboxvalue = maybe 7 id documentdaystosign
        documentauthordetails =
          (signatoryDetailsFromUser author) {
              signatoryemailplacements = authoremailplacements document
@@ -573,61 +544,22 @@ pageDocumentForAuthor ctx
            , signatorycompanynumberplacements = authorcompanynumberplacements document
            , signatoryotherfields = authorotherfields document
          }
-       doc_author_otherfields fields = sequence .
-         map (\(fd, i) ->
-           renderTemplate templates "customfield" $ do
-             field "otherFieldValue" $ fieldvalue fd
-             field "otherFieldName"  $ fieldlabel fd
-             field "otherFieldID"    $ "field" ++ show i
-             field "otherFieldOwner" "author")
-             $ zip fields ([1..]::[Int])
-       csvcustomfields = either (const [BS.fromString ""]) id $ getCSVCustomFields document
-       mcleancsv = fmap (cleanCSVContents documentallowedidtypes (length csvcustomfields) . csvcontents) $ documentcsvupload document
-       csvproblems = maybe [] fst mcleancsv
-       csvdata = maybe [] (csvbody . snd) mcleancsv
-       csvPageSize = 10
-       csvpages = splitCSVDataIntoPages csvPageSize csvdata
    in do
-     validationinput <- if isSuperUser $ Just author
-                        then renderTemplate (ctxtemplates ctx) "validationdropdown" ()
-                        else renderTemplate (ctxtemplates ctx) "emailhidden" ()
-     csvproblemfields <- sequence $ zipWith (csvProblemFields templates (length csvproblems)) [1..] csvproblems
-     renderTemplate (ctxtemplates ctx) "pageDocumentForAuthorContent" $ do
-       field "authorOtherFields" $ doc_author_otherfields $ signatoryotherfields documentauthordetails
+     renderTemplate (ctxtemplates ctx) "pageDocumentForAuthor" $ do
        field "linkissuedoc" $ show $ LinkIssueDoc documentid
        field "authorhaslink" $ authorhaslink
-       field "documentinvitetext" $ documentinvitetext
-       field "invitationMailContent" $  mailInvitationToSignContent templates False ctx document author Nothing
-       field "documentdaystosignboxvalue" $ documentdaystosignboxvalue
-       field "anyinvitationundelivered" $ anyInvitationUndelivered document
-       field "undelivered" $ map (signatoryemail . signatorydetails) $ undeliveredSignatoryLinks document
        field "signatories" $ map (signatoryLinkFields ctx document author Nothing) documentsignatorylinks                    
        field "canberestarted" $ documentstatus `elem` [Canceled, Timedout, Rejected]
        field "cancelMailContent" $ mailCancelDocumentByAuthorContent templates False Nothing ctx document author
        field "linkcancel" $ show $ LinkCancel document
-       field "emailelegitimation" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)
-       field "emailonly" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isNothing $ find (== ELegitimationIdentification) documentallowedidtypes)
-       field "elegitimationonly" $ (isNothing $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)
        field "docstate" (buildJS documentauthordetails $ map signatorydetails documentsignatorylinks)
        field "linkissuedocpdf" $ show (LinkIssueDocPDF tokens document)
        field "documentinfotext" $ documentInfoText templates document (find (isMatchingSignatoryLink author) documentsignatorylinks) author
        documentAuthorInfo author
-       field "validationinput" validationinput
-       field "csvfilename" $ maybe BS.empty csvtitle . documentcsvupload $ document
-       field "csvpersonindex" $ maybe BS.empty (BS.fromString . show) $ csvPersonIndex document
-       field "csvproblems" $ csvproblemfields
-       field "csvproblemcount" $ length csvproblems
-       field "csvpages" $ zipWith (csvPageFields csvproblems (length csvdata)) [0,csvPageSize..] csvpages
-       field "csvrowcount" $ length csvdata
-       field "csvcustomfields" $ csvcustomfields
-       field "isvalidcsv" $ null csvproblems
        documentTokens tokens
        documentInfoFields document
        documentViewFields document
-       designViewFields step
-       field "datamismatchflash" $ getDataMismatchMessage $ documentcancelationreason document
- 
- 
+
 {- |
    Show the document for Viewers (friends of author or signatory).
    Show no buttons or other controls
@@ -918,7 +850,7 @@ buildPlacementJS FieldPlacement {
 
 
 buildSigJS :: SignatoryDetails -> [Char]
-buildSigJS siglnk@(SignatoryDetails {
+buildSigJS (SignatoryDetails {
   signatoryfstname
   , signatorysndname
   , signatorycompany
@@ -979,7 +911,3 @@ jsStringFromBS bs =
 getDataMismatchMessage :: Maybe CancelationReason -> Maybe String
 getDataMismatchMessage (Just (ELegDataMismatch msg _ _ _ _)) = Just msg
 getDataMismatchMessage _ = Nothing
-
-getDataMismatchSignatoryID :: Maybe CancelationReason -> Maybe SignatoryLinkID
-getDataMismatchSignatoryID (Just (ELegDataMismatch _ id _ _ _)) = Just id
-getDataMismatchSignatoryID _ = Nothing

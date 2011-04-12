@@ -1,13 +1,5 @@
 ####
-pageDocumentForAuthorContent=
-    $if(preparation)$
-       $pageDocumentForAuthorContentPreparation()$
-    $else$
-       $pageDocumentForAuthorContentPostPreparation()$
-    $endif$ 
-#####
-####
-pageDocumentForAuthorContentPostPreparation=
+pageDocumentForAuthor=
   <div class="localdialogs">
     <div style="display: none">
       <script type="text/javascript"> 
