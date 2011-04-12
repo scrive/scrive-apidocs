@@ -411,11 +411,11 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 </div>
             <div class="modal-container campaign-play-video" style="display:none;width:730px;height: 520px">
                                             <div class="modal-header">
-                                                <div class="modal-icon message"></div>
-                                                    <div class="modal-title">
+                                                <span class="modal-icon message"></span>
+                                                    <span class="modal-title">
                                                         <h3>Demonstration</h3>
                                                         <p>Följande är ett demonstrationsklipp av hur man undertecknar ett dokument med vår tjänst.</p>
-                                                    </div>
+                                                    </span>
                                                 <a class="modal-close close"> </a>
                                             </div>
                                             <div class="modal-body" >

@@ -446,10 +446,10 @@ pageDocumentForAuthorHelpersLocalDialogs=
     <input type="hidden" name="csvupload" value="true" />
     <div class="modal-container">
       <div class="modal-header">
-        <div class="modal-icon message"></div>
-        <div class="modal-title">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
           <h2>Massutskick</h2>
-        </div>
+        </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
@@ -484,10 +484,10 @@ pageDocumentForAuthorHelpersLocalDialogs=
     <input type="hidden" name="csvupload" value="true" />
     <div class="modal-container csv-dialog-2-container">
       <div class="modal-header">
-        <div class="modal-icon message"></div>
-        <div class="modal-title">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
           <h2>Massutskick: Granska Data</h2>
-        </div>
+        </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
@@ -608,10 +608,10 @@ pageDocumentForAuthorHelpersLocalDialogs=
         rel=".stepForm">  
     <div class="modal-container">
       <div class="modal-header">
-        <div class="modal-icon message"></div>
-        <div class="modal-title">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
           <h2 id="dialog-title-sign">Underteckna</h2>
-        </div>
+        </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
@@ -661,10 +661,10 @@ pageDocumentForAuthorHelpersLocalDialogs=
   <form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-sendinvite" rel=".stepForm">  
     <div class="modal-container">
       <div class="modal-header">
-        <div class="modal-icon message"></div>
-        <div class="modal-title">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
           <h2 id="dialog-title-sign">Skicka inbjudan</h2>
-        </div>
+        </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
@@ -703,10 +703,10 @@ pageDocumentForAuthorHelpersLocalDialogs=
   <form method="post" name="form" action="" class="overlay" id="edit-invite-text-dialog" >
     <div class="modal-container">
       <div class="modal-header">
-        <div class="modal-icon message"></div>
-        <div class="modal-title">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
           <h2>Hälsningsmeddelande</h2>
-        </div>
+        </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">

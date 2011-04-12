@@ -2,10 +2,10 @@
 modalSignInviteView=
     <div class="modal-container">
       <div class="modal-header">
-        <div class="modal-icon message"></div>
-        <div class="modal-title">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
           <h3>Du har undertecknat dokumentet <strong>$documenttitle$</strong>!</h3>
-        </div>
+        </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
@@ -31,10 +31,10 @@ modalSignInviteView=
 modalWelcomeToSkrivaPa=
 <div class="modal-container">
       <div class="modal-header">
-        <div class="modal-icon message"></div>
-        <div class="modal-title">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
           <h3>2 månader gratis!</h3>
-        </div>
+        </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
@@ -66,10 +66,10 @@ modalWelcomeToSkrivaPa=
 modalAccountRemoval=
 <div class="modal-container">
       <div class="modal-header">
-        <div class="modal-icon message"></div>
-        <div class="modal-title">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
           <h3>Är du säker?</h3>
-        </div>
+        </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
@@ -94,10 +94,10 @@ modalAccountRemoval=
 modalAccountRemoved=
 <div class="modal-container">
       <div class="modal-header">
-        <div class="modal-icon message"></div>
-        <div class="modal-title">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
           <h3>Raderat</h3>
-        </div>
+        </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
@@ -122,10 +122,10 @@ modalAccountRemoved=
 modalSendInviteView=
     <div class="modal-container">
       <div class="modal-header">
-        <div class="modal-icon message"></div>
-        <div class="modal-title">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
           <h3>Dokumentet <strong>$documenttitle$</strong> skickat!</h3>
-        </div>
+        </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
@@ -151,10 +151,10 @@ modalSendInviteView=
 modalLoginForSaveView=
     <div class="modal-container">
       <div class="modal-header">
-        <div class="modal-icon message"></div>
-        <div class="modal-title">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
           <h3>Konto har skapats</h3>
-        </div>
+        </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
@@ -178,10 +178,10 @@ modalLoginForSaveView=
 modalRejectedView=
 <div class="modal-container">
       <div class="modal-header">
-        <div class="modal-icon message"></div>
-        <div class="modal-title">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
           <h3>Du har avvisat dokumentet $documenttitle$</h3>
-        </div>
+        </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
@@ -205,10 +205,10 @@ modalRejectedView=
 modalSignedViewClosed=
 <div class="modal-container">
       <div class="modal-header">
-        <div class="modal-icon message"></div>
-        <div class="modal-title">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
           <h3>Du har undertecknat dokumentet $documenttitle$</h3>
-        </div>
+        </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
@@ -232,10 +232,10 @@ modalSignedViewClosed=
 modalSignedViewNotClosed=
 <div class="modal-container">
       <div class="modal-header">
-        <div class="modal-icon message"></div>
-        <div class="modal-title">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
           <h3>Du har undertecknat dokumentet $documenttitle$</h3>
-        </div>
+        </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
@@ -277,10 +277,10 @@ $if(loginModal)$
   <div class="modal-container">
    <form method="post" action="$linklogin$">
     <div class="modal-header">
-     <div class="modal-icon message"></div>
-     <div class="modal-title">
+     <span class="modal-icon message"></span>
+     <span class="modal-title">
       <h1>Logga in</h1>
-     </div>
+     </span>
      <a class="modal-close close"> </a>
     </div>
     <div class="modal-body">
@@ -316,10 +316,10 @@ $if(loginModal)$
   <div class="modal-container">
    <form method="post" action="$linkforgotenpassword$">
     <div class="modal-header">
-      <div class="modal-icon message"></div>
-      <div class="modal-title">
+      <span class="modal-icon message"></span>
+      <span class="modal-title">
           <h1>Glömt lösenord</h1>
-      </div>
+      </span>
       <a class="modal-close close"> </a>
      </div>
     <div class="modal-body">
@@ -378,10 +378,10 @@ loginModalPart=
 modalNewPasswordView=
 <div class="modal-container">
       <div class="modal-header">
-        <div class="modal-icon message"></div>
-        <div class="modal-title">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
           <h1>Nytt Lösenord</h1>
-        </div>
+        </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
@@ -417,10 +417,10 @@ newPasswordModalPart=
 modalError=
 <div class="modal-container">
       <div class="modal-header">
-        <div class="modal-icon message"></div>
-        <div class="modal-title">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
           <h3>Oops, ett fel har uppstått</h3>
-        </div>
+        </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
@@ -443,10 +443,10 @@ modalError=
 signCanceledDataMismatchModal=
 <div class="modal-container">
       <div class="modal-header">
-        <div class="modal-icon message"></div>
-        <div class="modal-title">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
           <h3>Felaktiga personuppgifter</h3>
-        </div>
+        </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
@@ -473,10 +473,10 @@ signCanceledDataMismatchModal=
 signAwaitingAuthorLast=
 <div class="modal-container">
       <div class="modal-header">
-        <div class="modal-icon message"></div>
-        <div class="modal-title">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
           <h3>Dokumentet har undertecknats</h3>
-        </div>
+        </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
