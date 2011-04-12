@@ -741,7 +741,8 @@ documentInfoFields  document  = do
   field "documentid" $ show $ documentid document
   field "timetosignset" $  isJust $ documentdaystosign document
   field "template" $  isTemplate document
-  field "contract" $  documenttype document == Contract
+  field "contract" $  isContract document
+  field "offer" $  isOffer document
   field "emailselected" $ document `allowsIdentification` EmailIdentification
   field "elegselected" $ document `allowsIdentification` ELegitimationIdentification
   documentStatusFields document

@@ -12,55 +12,61 @@ pageDocumentDesign=
     
     <div id="signStepsTitleRow">
       <span id="signStepsTitleRowTextContainer">
-
-       $if(contract)$
-           <span class="title">DOKUMENT #$documentid$:</span>
-           <span class="name"> $documenttitle$</span> 
-       $elseif(template)$
+       $if(template)$
            <span class="title">MALL:</span>
            <span class="name"> $documenttitle$</span> 
+       $elseif(offer)$
+           <span class="title">OFFERT #$documentid$:</span>
+           <span class="name"> $documenttitle$</span> 
+       $elseif(contract)$
+           <span class="title">DOKUMENT #$documentid$:</span>
+           <span class="name"> $documenttitle$</span> 
        $endif$
-    
-    <!-- <span class="changeName"><a href="#changeName">BYT TITEL</a></span> -->
-
       </span>
-$if(contract)$
-<!-- <span style="float: right; display: inline-block; margin: 8px 10px 0pt 18px;" ><a class="submit title" form=".stepForm" >SPARA SOM UTKAST</a></span> 
-<span style="float: right; display: inline-block; margin: 6px 10px 0pt 18px;font-weight:bold;" ><a class="submit title" style="color:#999999" form=".stepForm" rel="template" >SPARA SOM MALL</a></span>  -->
-$elseif(template)$
-$endif$  
-
-      <!-- 
-         <div class="signStepsButton" id="signStepsNextButton">
-           <a href="#nextStep" class="clickArea"></a>
-           
-           <a href="#nextStep"><span class="icon arrowRight"></span></a><a href="#nextStep">
-             <span class="text">Nästa steg</span>
-           </a>
-         </div>
-         -->
-    </div>
+   </div>
     
     <div id="signStepsMenu" class="signStepsMenu">
       <div id="step1select">
         <span class="step1select clickArea"></span>
         <span class="step1select step1icon"> </span>
-        <span class="step1select text">$if(contract)$Välj dokument$elseif(template)$Välj mall$endif$</span>
+        <span class="step1select text">
+            $if(template)$
+                Välj mall
+            $else$
+                Välj dokument
+            $endif$
+        </span>
       </div>
       
       <div id="step2select" class="$if(step2)$current$endif$">
         <a href="#" class="step2select clickArea"></a>
         <a href="#" class="step2select step2icon"> </a>
-        <a href="#" class="step2select text">$if(contract)$Fyll i uppgifter$elseif(template)$Utforma mall$endif$</a>
+        <a href="#" class="step2select text">
+            $if(template)$
+                Utforma mall
+            $elseif(contract)$
+                Fyll i uppgifter
+            $elseif(offer)$
+                Fyll i uppgifter &amp; Skicka!
+            $endif$
+        </a>  
       </div>
-      
+      $if(contract)$
+      <!-- Offers don't have step 3 -->
       <div id="step3select" class="$if(step3)$current$endif$">
         <a href="#" class="step3select clickArea"></a>
         <a href="#" class="step3select step3icon"> </a>
-        <a href="#" class="step3select text">$if(contract)$Underteckna och skicka!$elseif(template)$Färdigställ och spara$endif$</a>
+        <a href="#" class="step3select text">
+            $if(template)$
+                Färdigställ och spara
+            $else$
+                Underteckna och skicka!
+            $endif$
+        </a>
       </div>
+      $endif$
       <div id="signStepsMenuEmptyStep">
-            $if(contract)$
+            $if(!template)$
              <div class="signStepsBodySave" style="float:right;padding-right:19px;font-size:11px">
                 <small><a class="submit" form=".stepForm" rel="template">SPARA SOM MALL</a></small>
              </div>
@@ -213,8 +219,9 @@ $endif$
             </div>
           </div>
         </div>
-        
+        $if(contract)$
         <div id="signStep3Content" $if(!step3)$ style="display: none" $endif$>
+
           <div id="signStepsBody">
             
             <div id="signStepsBodyLeft" class="step3">
@@ -257,10 +264,7 @@ $endif$
         </div>
         
         <div class="border"></div>   
-        <div id="signStepsBodyRight" class="step3">
-          $if(contract)$
-          $endif$
-        
+        <div id="signStepsBodyRight" class="step3">      
           <!-- 015 new -->
            </div>
            <div class="border"></div>
@@ -281,7 +285,16 @@ $endif$
                 
                 
           </div>
-          $if(contract)$
+          $if(template)$
+            <a class="btn-small green center submiter saveTemplate">
+              <div class="left"></div>
+              <div class="label">
+                <p>Spara mall</p>
+                <span class="btn-symbol green arrow-left"></span>
+              </div>
+              <div class="right"></div>
+            </a>
+          $else$
            <div> 
             $validationdropdown()$
             <div style="padding-bottom:8px; padding-top: 2px;">
@@ -304,32 +317,22 @@ $endif$
                <div class="label" style="width:120px">
                     <span>SkrivaPå </span>
                     <span class="icon cross"></span>
-
                </div> 
                <div class="right"></div>
               </a>
             </div>
           </div>
-          $elseif(template)$
-            <a class="btn-small green center submiter saveTemplate">
-              <div class="left"></div>
-              <div class="label">
-                <p>Spara mall</p>
-                <span class="btn-symbol green arrow-left"></span>
-              </div>
-              <div class="right"></div>
-            </a>
-           $endif$
+          $endif$
 
             </div>
             
           </div>            
         </div>
-      </form>
+        $endif$
+       </form>
     </div>
   </div>
   $pageDocumentForAuthorHelpersLocalDialogs()$
-  <!-- span>signStepsBorderBottom går upp till titelRow om man tar bort denna text. förslag på lösning? Lösning: lägg till float:left på signStepsBodyBorderBottom /johan  </span -->
   
 </div>      
 </div>  
