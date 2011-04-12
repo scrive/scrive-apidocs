@@ -1,401 +1,4 @@
 ####
-pageDocumentForAuthorHelpersLocalDialogs=
-<div class="localdialogs">
-  $loadingdialog()$
-  
-  <form method="post" name="form" action="" class="overlay redirectsubmitform" id="dialog-csvupload-1" rel=".stepForm">
-    <input type="hidden" name="csvupload" value="true" />
-    <div class="modal-container">
-      <div class="modal-header">
-        <div class="modal-icon message"></div>
-        <div class="modal-title">
-          <h2>Massutskick</h2>
-        </div>
-        <a class="modal-close close"> </a>
-      </div>
-      <div class="modal-body">
-        <div class="modal-content">
-          <div>     
-            Du har valt att göra ett massutskick, för att genomföra detta krävs att du laddar upp ett dokument med formatet .csv
-          </div>
-          <div class="signStepsBodyUploadBox">
-            <div>
-              <span id="signStepsBodyUploadTextContainer"> 
-                <span class="header">Välj fil att ladda upp</span><br/>
-                <span class="text">OBS! Endast .CSV</span> 
-              </span>
-            </div>
-            <br/>
-            <div class="signStepsButtonContainer">
-              <a class="btn-small green">  
-                <div class="left"> </div>
-                <div class="label" style="width:80px"> Välj fil </div> 
-                <div class="right"> </div>
-                <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px" maxlength="1" type="file" name="csv" accept="application/csv" rel=".filelist" />
-              </a>
-              <div class="filelist" style="display:none;"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </form>
-  
-  <form method="post" name="form" action="" class="overlay redirectsubmitform" id="dialog-csvupload-2" rel=".stepForm">
-    <input type="hidden" name="csvupload" value="true" />
-    <div class="modal-container csv-dialog-2-container">
-      <div class="modal-header">
-        <div class="modal-icon message"></div>
-        <div class="modal-title">
-          <h2>Massutskick: Granska Data</h2>
-        </div>
-        <a class="modal-close close"> </a>
-      </div>
-      <div class="modal-body">
-        <div class="modal-content">
-          <div class="csvproblems">
-            $csvproblems: {csvproblem |
-              <div class="csvproblemcontainer$if(csvproblem.isfirstproblem)$ currentcsvproblem$endif$">
-                <div class="csvproblemheader">
-                  $if(csvproblem.problemrow)$Row: $csvproblem.problemrow$$endif$
-                  $if(csvproblem.problemcol)$Column: $csvproblem.problemcol$$endif$
-                </div>
-                <div class="csvproblemdesc">
-                  $csvproblem.problemdesc$
-                </div>
-                <div class="csvproblemfooter">
-                  <div class="csvproblemcount">$csvproblem.problemnumber$/$csvproblemcount$</div>
-                  $if(!csvproblem.isfirstproblem)$
-                    <a class="btn-tiny black float-left previousproblem" href="#">
-                      <div class="left"></div>
-                      <div class="label">
-                        <span class="btn-symbol black arrow-right"></span>
-                        <span>Bakåt</span>
-                      </div>
-                      <div class="right"></div>
-                    </a>
-                  $endif$
-                  $if(!csvproblem.islastproblem)$
-                    <a class="btn-tiny black float-right nextproblem" href="#">
-                      <div class="left"></div>
-                      <div class="label">
-                        <span>Nästa</span>
-                        <span class="btn-symbol black arrow-left"></span>
-                      </div>
-                      <div class="right"></div>
-                    </a>
-                  $endif$
-                </div>
-              </div>
-            }$
-          </div>
-          <div class="csvdata">
-            $csvpages: {csvpage |
-              <div class="csvpagecontainer$if(csvpage.isfirstcsvpage)$ currentcsvpage$endif$">
-                <div class="csvpagecontents">
-                  <table>
-                    <theader>
-                      <tr>
-                        <th class="rownumbercol">&nbsp;</th>
-                        <th>Förnamn</th>
-                        <th>Efternamn</th>
-                        <th>E-post</th>
-                        <th>Företag</th>
-                        <th>Pers. nr</th>
-                        <th>Org. nr</th>
-                        $csvcustomfields: {csvcustomfield |
-                          <th>$csvcustomfield$</th>
-                        }$
-                      </tr>
-                    </theader>
-                    <tbody>
-                      $csvpage.csvrows: {csvrow |
-                        <tr$if(csvrow.isproblem)$ class="csvproblem"$endif$>
-                          <td class="rownumbercol">$csvrow.rownumber$</td>
-                          $csvrow.csvfields: { csvfield |
-                            <td$if(csvfield.isproblem)$ class="csvproblem"$endif$>$csvfield.value$</td>
-                          }$
-                        </tr>
-                      }$
-                    </tbody>
-                  </table>
-                </div>
-                <div class="csvpagefooter">
-                  $if(!csvpage.isfirstcsvpage)$
-                    <a class="btn-tiny black float-left previouscsvpage" href="#">
-                      <div class="left"></div>
-                      <div class="label">
-                        <span class="btn-symbol black arrow-right"></span>
-                        <span>Bakåt</span>
-                      </div>
-                      <div class="right"></div>
-                    </a>
-                  $endif$
-                  $if(!csvpage.islastcsvpage)$
-                    <a class="btn-tiny black float-right nextcsvpage" href="#">
-                      <div class="left"></div>
-                      <div class="label">
-                        <span>Nästa</span>
-                        <span class="btn-symbol black arrow-left"></span>
-                      </div>
-                      <div class="right"></div>
-                    </a>
-                  $endif$
-                </div>
-              </div>
-            }$
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        
-        <a class="cancel float-left" style="height:40px;">  
-          <div class="label"> Välj fil </div> 
-          <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px;width:50px;" maxlength="1" type="file" name="csv" accept="application/csv" rel=".filelist"/>
-          <div class="filelist" style="display:none;"></div>
-        </a>
-        
-        <a class="btn-small green float-right close" href="#">
-          <div class="left"></div>
-          <div class="label"><p>Spara</p></div>
-          <div class="right"></div>
-        </a>
-      </div>
-    </div>
-  </form>
-
-  <form method="post" name="form" action="$linkissuedoc$"
-        class="overlay redirectsubmitform" id="dialog-confirm-signinvite"
-        rel=".stepForm">  
-    <div class="modal-container">
-      <div class="modal-header">
-        <div class="modal-icon message"></div>
-        <div class="modal-title">
-          <h2 id="dialog-title-sign">Underteckna</h2>
-        </div>
-        <a class="modal-close close"> </a>
-      </div>
-      <div class="modal-body">
-        <div class="modal-content">
-          <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
-          <p>När du undertecknat kommer en automatisk inbjudan att skickas till 
-            <span class="Xinvited">Invited</span> med e-post.</p>
-          <span class="eleghidden" style="display:none;">
-            <h3>Välj typ av e-legitimation</h3>
-            <p>Har du ingen e-legitimation? Du kan ladda ned en
-              e-legitimation från din internetbank eller från
-              Telia. <a href="http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86"
-                        target="_new">Klicka här</a> för att läsa mer.</p>
-          </span>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <input type="hidden" name="sign" value="automatic" id="signauto" />
-        <a  class="close cancel float-left" style="position:relative;top:6px;">Avbryt</a>
-        <a href="#" class="btn-big blue float-right submiter signhidden">
-          <div class="left"></div>
-          <div class="label">
-              <span>SkrivaPå</span>
-              <span class="icon cross"></span>
-          </div>
-          <div class="right"></div>
-        </a>
-        <span class="eleghidden" style="display: none;">
-          <input type="hidden" name="changetoeleg" id="elegprovider" value="" />
-          <input type="hidden" name="signature" value="" id="signatureinput" />
-          <input type="hidden" name="transactionid" value="" id="transactionidinput" />
-          <a href="#" class="btn-small green float-right author bankid">
-              <img src="/img/bankid.png" alt="BankID" />
-          </a>
-          <a href="#" class="btn-small green float-right author telia">
-              <img src="/img/telia.png" alt="Telia Eleg" />
-          </a>
-          <a href="#" class="btn-small green float-right author nordea">
-              <img src="/img/nordea.png" alt="Nordea Eleg" />
-          </a>
-        </span>
-        
-      </div>
-    </div>
-  </form>
-
-  <form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-sendinvite" rel=".stepForm">  
-    <div class="modal-container">
-      <div class="modal-header">
-        <div class="modal-icon message"></div>
-        <div class="modal-title">
-          <h2 id="dialog-title-sign">Skicka inbjudan</h2>
-        </div>
-        <a class="modal-close close"> </a>
-      </div>
-      <div class="modal-body">
-        <div class="modal-content">
-          <div id="dialog-confirm-text-send">
-            <p>Du har valt en sekreterarroll och kommer själv inte att underteckna. Är du säker på att du vill skicka en inbjudan att underteckna dokumentet <strong>$documenttitle$</strong> till <span class="Xinvited">Invited</span>?</p>
-          </div>
-
-          <div id="dialog-confirm-text-send-fields">
-            <p>Du har skapat fält för parterna att fylla i innan de undertecknar. Efter att alla har undertecknat kommer du att 
-              få ett mail med en länk till en sida på SkrivaPå där du kan granska parternas uppgifter och underteckna dokumentet. </p>
-            <p> Vill du skicka inbjudan att fylla i och underteckna dokumentet <strong>$documenttitle$</strong> till 
-              <span class="Xinvited">Invited</span>?  </p>
-          </div>
-
-          <div id="dialog-confirm-text-send-normal">
-            <p> Vill du skicka en inbjudan att underteckna dokumentet till <span class="Xinvited">Invited</span>? 
-              Efter att de har undertecknat kommer du att få ett mail med en länk till en sida på SkrivaPå där du kan underteckna dokumentet.</p>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <input type="hidden" name="final" value="automatic" />
-        <a  class="close cancel float-left">Avbryt</a>
-        <a href="#" class="btn-small green float-right submiter">
-          <div class="left"></div>
-          <div class="label">
-            <span> Skicka</span>
-            <div class="btn-symbol green arrow-left"></div></div>
-          <div class="right"></div>
-        </a>
-      </div>
-    </div>
-  </form>
-
-  <form method="post" name="form" action="" class="overlay" id="edit-invite-text-dialog" >
-	<div class="modal-container">
-	  <div class="modal-header">
-		<div class="modal-icon message"></div>
-		<div class="modal-title">
-		  <h2>Hälsningsmeddelande</h2>
-		</div>
-		<a class="modal-close close"> </a>
-	  </div>
-	  <div class="modal-body">
-		<div class="modal-content">
-	      $invitationMailContent:noescape()$
-		</div>
-	  </div>
-	  <div class="modal-footer">
-            <div class="float-left">
-		<a class="close cancel">Avbryt</a>
-		<a class="editer message">Skriv eget meddelande</a>
-            </div>
-		<a href="#" class="btn-small green float-right close" id="editing-invite-text-finished">
-		  <div class="left"></div>
-		  <div class="label">
-			<p>Ok</p>
-			<div class="btn-symbol green arrow-left"></div>
-		  </div>
-		  <div class="right"></div>
-		</a>
-	  </div>
-	</div>
-  </form>  
-
-  <div class="hidden" id="hiddenttimestuffbox">
-    <div id="daystosignbox">
-    <span>
-    Undertecknas inom
-    <input class="signStepsBodyDaysLeftInput" type="text" id="daystosign" name="daystosign" value="$documentdaystosignboxvalue$" maxlength="2" size="2" autocomplete="off" /> 
-    dagar
-    </span>
-    <div  class="datetodaystip signStepsBodyCalendar" rel="#daystosign"> </div> 
-    </div>
-  </div>
-
-  <form method="post" action="$linkcancel$" class="overlay" id="cancel-by-author-dialog">
-    <div class="modal-container">
-      <div class="modal-header">
-        <div class="modal-icon message"></div>
-        <div class="modal-title">
-          <h2> Återkalla inbjudan </h2>
-          <p>Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?
-             <br/> När du återkallat inbjudan kommer nedanstående meddelande att skickas till dina motparter.
-            
-          </p>
-        </div>
-        <a class="modal-close close"> </a>
-      </div>
-      <div class="modal-body">
-        <div class="modal-content">     
-          $cancelMailContent:noescape()$
-        </div>
-      </div>
-      <div class="modal-footer">
-        <div class="float-left">
-          <a class="close cancel">Avbryt</a>
-          <a class="editer message">Skriv eget meddelande</a>
-        </div>
-        <a class="btn-small red float-right submiter">
-          <div class="left"></div>
-          <div class="label">
-            <p>Återkalla inbjudan</p>
-            <div class="btn-symbol red arrow-left"></div>
-          </div>
-          <div class="right"></div>
-        </a>
-      </div>
-    </div>
-    
-  </form>
-  <form method="post" name="form" action="$action$" id="dialog-confirm-sign-by-author" class="overlay">     
-    <div class="modal-container">
-      <div class="modal-header">
-        <div class="modal-icon message"></div>
-        <div class="modal-title">
-          <h2>Underteckna</h2>   
-        </div>
-        <a class="modal-close close"> </a>
-      </div>
-      <div class="modal-body">
-        <div class="modal-content">     
-          <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
-          <p>När $partyUnsigned:noescape()$ undertecknat blir avtalet <strong>juridiskt bindande</strong> och
-            det färdigställda avtalet skickas till din e-post.</p>
-          <span class="eleghidden" style="display:none;">
-            <h3>Välj typ av e-legitimation</h3>
-            <p>Har du ingen e-legitimation? Du kan ladda ned en
-              e-legitimation från din internetbank eller från
-              Telia. <a href="http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86"
-                        target="_new">Klicka här</a> för att läsa mer.</p>
-          </span>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <input type="hidden" name="sign" value="automatic" id="signauto" />
-        <a class="close cancel float-left">Avbryt</a>
-
-        <a href="#" class="btn-big blue float-right submiter signhidden" id="editing-invite-text-finished">
-            <div class="left"></div>
-            <div class="label">
-              <span>SkrivaPå</span>
-              <span class="icon cross"></span>
-            </div>
-            <div class="right"></div>
-        </a>
-
-        <span class="eleghidden" style="display: none;">
-          <input type="hidden" name="changetoeleg" id="elegprovider" value="" />
-          <input type="hidden" name="signature" value="" id="signatureinput" />
-          <input type="hidden" name="transactionid" value="" id="transactionidinput" />
-          <a href="#" class="btn-small green float-right author2 bankid">
-              <img src="/img/bankid.png" alt="BankID" />
-          </a>
-          <a href="#" class="btn-small green float-right author2 telia">
-              <img src="/img/telia.png" alt="Telia Eleg" />
-          </a>
-          <a href="#" class="btn-small green float-right author2 nordea">
-              <img src="/img/nordea.png" alt="Nordea Eleg" />
-          </a>
-        </span>
-
-      </div>
-    </div>
-  </form>
-  </div>
-
-#####
-####
 pageDocumentForAuthorContent=
     $if(preparation)$
        $pageDocumentForAuthorContentPreparation()$
@@ -489,6 +92,96 @@ $validationdropdown()$
   </div>
 </div>
 $endif$   
+<div class="localdialogs">
+ <form method="post" action="$linkcancel$" class="overlay" id="cancel-by-author-dialog">
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-icon message"></div>
+        <div class="modal-title">
+          <h2> Återkalla inbjudan </h2>
+          <p>Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?
+             <br/> När du återkallat inbjudan kommer nedanstående meddelande att skickas till dina motparter.
+            
+          </p>
+        </div>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">     
+          $cancelMailContent:noescape()$
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="float-left">
+          <a class="close cancel">Avbryt</a>
+          <a class="editer message">Skriv eget meddelande</a>
+        </div>
+        <a class="btn-small red float-right submiter">
+          <div class="left"></div>
+          <div class="label">
+            <p>Återkalla inbjudan</p>
+            <div class="btn-symbol red arrow-left"></div>
+          </div>
+          <div class="right"></div>
+        </a>
+      </div>
+    </div>
+    
+  </form>
+  <form method="post" name="form" action="$action$" id="dialog-confirm-sign-by-author" class="overlay">     
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-icon message"></div>
+        <div class="modal-title">
+          <h2>Underteckna</h2>   
+        </div>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">     
+          <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
+          <p>När $partyUnsigned:noescape()$ undertecknat blir avtalet <strong>juridiskt bindande</strong> och
+            det färdigställda avtalet skickas till din e-post.</p>
+          <span class="eleghidden" style="display:none;">
+            <h3>Välj typ av e-legitimation</h3>
+            <p>Har du ingen e-legitimation? Du kan ladda ned en
+              e-legitimation från din internetbank eller från
+              Telia. <a href="http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86"
+                        target="_new">Klicka här</a> för att läsa mer.</p>
+          </span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <input type="hidden" name="sign" value="automatic" id="signauto" />
+        <a class="close cancel float-left">Avbryt</a>
+
+        <a href="#" class="btn-big blue float-right submiter signhidden" id="editing-invite-text-finished">
+            <div class="left"></div>
+            <div class="label">
+              <span>SkrivaPå</span>
+              <span class="icon cross"></span>
+            </div>
+            <div class="right"></div>
+        </a>
+
+        <span class="eleghidden" style="display: none;">
+          <input type="hidden" name="changetoeleg" id="elegprovider" value="" />
+          <input type="hidden" name="signature" value="" id="signatureinput" />
+          <input type="hidden" name="transactionid" value="" id="transactionidinput" />
+          <a href="#" class="btn-small green float-right author2 bankid">
+              <img src="/img/bankid.png" alt="BankID" />
+          </a>
+          <a href="#" class="btn-small green float-right author2 telia">
+              <img src="/img/telia.png" alt="Telia Eleg" />
+          </a>
+          <a href="#" class="btn-small green float-right author2 nordea">
+              <img src="/img/nordea.png" alt="Nordea Eleg" />
+          </a>
+        </span>
+
+      </div>
+    </div>
+  </form>
+</div>
 $signatoryScriptIfRequired()$
-$pageDocumentForAuthorHelpersLocalDialogs()$
 ####
