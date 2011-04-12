@@ -2,6 +2,8 @@ module Doc.DocState
     ( module Doc.DocStateData
     , isAuthor -- from Utils
     , isTemplate -- fromUtils
+    , isContract -- fromUtils
+    , isOffer -- fromUtils
     , signatoryname -- fromUtils
     , isMatchingSignatoryLink
     , anyInvitationUndelivered

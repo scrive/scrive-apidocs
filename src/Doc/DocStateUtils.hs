@@ -29,7 +29,8 @@ module Doc.DocStateUtils (
     , anyInvitationUndelivered
     , checkCSVSigIndex
     , isTemplate
-    
+    , isContract
+    , isOffer
     -- Getters - digging some info from about document
     , signatoryname
     , undeliveredSignatoryLinks
@@ -168,10 +169,10 @@ anyInvitationUndelivered :: Document -> Bool
 anyInvitationUndelivered =  not . Prelude.null . undeliveredSignatoryLinks
 
 isContract :: Document -> Bool
-isContract = ((==) Contract) . documenttype
+isContract d =  (documenttype d == ContractTemplate) || (documenttype d == Contract)
 
 isOffer :: Document -> Bool 
-isOffer = ((==) Offer) . documenttype
+isOffer = not . isContract
 
 isTemplate :: Document -> Bool
 isTemplate d = (documenttype d == ContractTemplate) || (documenttype d == OfferTemplate)
