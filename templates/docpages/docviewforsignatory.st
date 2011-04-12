@@ -12,10 +12,10 @@ pageDocumentForSignContent=
     <form method="post" name="form" action="$action$" id="dialog-confirm-sign" class="overlay">     
     <div class="modal-container">
         <div class="modal-header">
-            <div class="modal-icon message"></div>
-            <div class="modal-title">
+            <span class="modal-icon message"></span>
+            <span class="modal-title">
                <h2>Underteckna</h2> 
-            </div>
+            </span>
             <a class="modal-close close"> </a>
         </div>
         <div class="modal-body">
@@ -77,12 +77,12 @@ pageDocumentForSignContent=
     <form method="post" name="form" action="$action$" id="dialog-confirm-cancel" class="overlay">   
     <div class="modal-container">
         <div class="modal-header">
-            <div class="modal-icon message"></div>
-            <div class="modal-title">
+            <span class="modal-icon message"></span>
+            <span class="modal-title">
                <h2>Avvisa</h2>   
                 <p>Är du säker på att du vill avvisa dokumentet <strong>$documenttitle$</strong>?</p>
                 <p>När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela <strong>$authorfstname$ $authorsndname$</strong>.</p>
-            </div>
+            </span>
             <a class="modal-close close"> </a>
         </div>
         <div class="modal-body">
