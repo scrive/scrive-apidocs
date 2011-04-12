@@ -354,25 +354,24 @@ $endif$
 ####
 loginModalPart=
 <div class="user-container">
-                                                <div class="login-container">
-                                                        <div class="body">
-                                                           <div class="wrapper">
-                                                                <form method="post" action="$linklogin$">
-                                                                        <input type="hidden" name="referer" value="$referer$" />
-                                                                        <input type="email" name="email" value="$email$" infotext="E-post" autocomplete="off"/><br />
-                                                                        <input type="password" name="password" infotext="password" autocomplete="off"/><br />
-                                                                            <a href="#" class="btn-tiny blue center submit notForIE7">
-                                                                            <div class="left"> </div>     
-                                                                            <div class="label"><span>Logga in</span> </div>
-                                                                            <div class="right"/> </div>
-                                                                        </a>
-                                                                        <br /><br />
-                                                                        <input type="submit" class="hidden" />
-                                                                </form>
-                                                           </div>
-                                                        </div>
-                                                </div>
-                                              
+ <div class="login-container">
+  <div class="body">
+   <div class="wrapper">
+    <form method="post" action="$linklogin$">
+      <input type="hidden" name="referer" value="$referer$" />
+      <input type="email" name="email" value="$email$" infotext="E-post" autocomplete="off"/><br />
+      <input type="password" name="password" infotext="password" autocomplete="off"/><br />
+      <a href="#" class="btn-tiny blue center submit notForIE7">
+        <div class="left"> </div>     
+        <div class="label"><span>Logga in</span> </div>
+        <div class="right"/> </div>
+      </a>
+      <br /><br />
+      <input type="submit" class="hidden" />
+    </form>
+   </div>
+  </div>
+ </div>
 </div>
 ######
 ####
