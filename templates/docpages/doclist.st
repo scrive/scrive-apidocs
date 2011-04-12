@@ -155,10 +155,10 @@ $listLocalDialogs()$
     <input type="hidden" name="remind" value="true" />
     <div class="modal-container">
       <div class="modal-header">
-        <div class="modal-icon message"></div>
-        <div class="modal-title">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
           <h2>Skicka påminnelse</h2>
-        </div>
+        </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">

@@ -96,14 +96,14 @@ $endif$
  <form method="post" action="$linkcancel$" class="overlay" id="cancel-by-author-dialog">
     <div class="modal-container">
       <div class="modal-header">
-        <div class="modal-icon message"></div>
-        <div class="modal-title">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
           <h2> Återkalla inbjudan </h2>
           <p>Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?
              <br/> När du återkallat inbjudan kommer nedanstående meddelande att skickas till dina motparter.
             
           </p>
-        </div>
+        </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
@@ -131,10 +131,10 @@ $endif$
   <form method="post" name="form" action="$action$" id="dialog-confirm-sign-by-author" class="overlay">     
     <div class="modal-container">
       <div class="modal-header">
-        <div class="modal-icon message"></div>
-        <div class="modal-title">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
           <h2>Underteckna</h2>   
-        </div>
+        </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">

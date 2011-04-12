@@ -3,10 +3,10 @@ pageAcceptTOS =
     <form method="post" action="/accepttos" id="toscontainer" class="overlay">
     <div class="modal-container">
         <div class="modal-header">
-            <div class="modal-icon message"></div>
-            <div class="modal-title">
+            <span class="modal-icon message"></span>
+            <span class="modal-title">
                 <h2>Vänligen acceptera användarvillkoren</h2>
-            </div>
+            </span>
             <a class="modal-close close"> </a>
         </div>
         <div class="modal-body">
