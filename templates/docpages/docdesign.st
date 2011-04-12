@@ -1,5 +1,5 @@
 #####
-pageDocumentForAuthorContentPreparation=
+pageDocumentDesign=
 <div style="display: none">
   <script type="text/javascript"> 
     var documentid = "$documentid$", doctokenid = "$doctokenid$", doctokenhash = "$doctokenhash$";
