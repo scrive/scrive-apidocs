@@ -31,6 +31,7 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.Map as Map
 import System.IO
 
+import Crypto
 import Network.BSD
 import Network (PortID(..))
 import Network.Socket hiding ( accept, socketPort, recvFrom, sendTo )
@@ -64,6 +65,9 @@ readAppConfig = read `catch` printDefault
         conf <- readIO c
         hClose h
         Log.server $ "App config file " ++ filepath ++" read and parsed"
+        case verifyAESConf $ aesConfig conf of
+             Left err -> error err
+             _        -> return ()
         return conf
       printDefault ex = do
         Log.server $ "No app config provided. Exiting now. Error: " ++ show ex
@@ -225,6 +229,10 @@ defaultConf progName
               , trustWeaverAdmin   = Nothing
               , trustWeaverStorage = Nothing
               , mailsConfig        = defaultMailConfig
+              , aesConfig          = AESConf {
+                    aesKey = BS.pack "}>\230\206>_\222\STX\218\SI\159i\DC1H\DC3Q\ENQK\r\169\183\133bu\211\NUL\251s|\207\245J"
+                  , aesIV = BS.pack "\205\168\250\172\CAN\177\213\EOT\254\190\157SY3i\160"
+                  }
               }
 
 opts :: [OptDescr (AppConf -> AppConf)]

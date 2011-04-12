@@ -361,12 +361,7 @@ data UserStats = UserStats
 
 deriving instance Data UserStats
 
-instance Show FlashType where
-  show SigningRelated  = "signingrelated"
-  show OperationDone   = "operationdone"
-  show OperationFailed = "operationfailed"
-  show Modal           = "modal"
-
+deriving instance Show FlashType
 deriving instance Show TrustWeaverStorage
 deriving instance Show UserAccountType 
 deriving instance Show PaymentMethod
@@ -385,6 +380,8 @@ deriving instance Show LoginInfo
 deriving instance Show DefaultMainSignatory
 deriving instance Show UserStats
 
+deriving instance Read FlashType
+deriving instance Read FlashMessage
 deriving instance Read TrustWeaverStorage
 
 deriving instance Bounded UserAccountType
