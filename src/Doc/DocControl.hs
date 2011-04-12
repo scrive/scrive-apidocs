@@ -24,6 +24,7 @@ import Doc.DocView
 import Doc.DocViewMail
 import Doc.DocSeal
 import Doc.DocStorage
+import Data.Either
 import HSP hiding (catch)
 import Happstack.Data.IxSet 
 import Happstack.Server hiding (simpleHTTP)
@@ -600,12 +601,12 @@ handleIssueSign document author = do
           case mdocs of
             Right docs -> do
               mndocs <- mapM (forIndividual ctxtime ctxipnumber udoc) docs
-              case (sequence mndocs) of
-                Right (d:[]) -> do
+              case (lefts mndocs, rights mndocs) of
+                ([],d:[]) -> do
                     addModal $ modalSignInviteView d
                     return $ LinkIssueDoc (documentid d)
-                Right ds -> return $ LinkContracts emptyListParams
-                Left _ -> mzero
+                ([],ds) -> return $ LinkContracts emptyListParams
+                _ -> mzero
             Left _ -> mzero
         Left _ -> mzero
     where
