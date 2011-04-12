@@ -478,11 +478,11 @@ safeReady(function() {
     onBeforeLoad: function () { 
       var signedList =  jQuery(".authornamewhennotsecretary");
       var authorSignes = jQuery("#authorsignatoryradio:checked").size() > 0;
-      var newtxt = $("#invitetext").val()
+      var newtxt = $("#invitetext").val();
       $("#edit-invite-text-dialog textarea").val(newtxt);    
       var author = $(".authorname .fieldvalue").text();
       var sigs = $("#personpane .persondetails");
-      var partners = new Array()
+      var partners = new Array();
       var i = 0;
       if (authorSignes)   {
         signedList.html(signedList.attr("okprefix")+" <strong>"+author+"</strong>");
@@ -499,7 +499,7 @@ safeReady(function() {
         var res = escapeHTML(fstnamefield.val() + " " + sndnamefield.val());
         if ((!mailfield.hasClass("grayed"))&&(fstnamefield.hasClass("grayed") && sndnamefield.hasClass("grayed")))
           res = mailfield.val(); 
-        partners[i] = res
+        partners[i] = res;
         i++;
       });
       $(".partylistupdate").html(swedishList(partners));
@@ -516,8 +516,8 @@ safeReady(function() {
    
 safeReady(function() {                      
   $(".redirectsubmitform").submit(function(){
-    var newform = $($(this).attr("rel"))
-    var inputs = $("input",$(this))
+    var newform = $($(this).attr("rel"));
+    var inputs = $("input",$(this));
     $('textarea:tinymce',$(this)).each(
       function(){
         inputs = inputs.add($("<input name='"+$(this).attr('name')+"' value='"+$(this).html()+"'>"))
@@ -1016,8 +1016,7 @@ $.tools.validator.addEffect("failWithFlashOnEmail", function(errors, event) {
 });    
 
 
-function swedishList(list)
-{
+function swedishList(list) {
   var res = strong(list[0]);
   for(i=1;i<list.length;i++)
   {
@@ -1029,7 +1028,10 @@ function swedishList(list)
   }
   return res;
 }
-function strong(l) {return "<strong>"+l+"</strong>"}
+
+function strong(l) {
+  return "<strong>"+l+"</strong>";
+}
 
 function showStep1()
 {
