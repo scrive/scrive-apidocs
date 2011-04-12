@@ -930,6 +930,7 @@ makeSignatory pls fds sid sfn  ssn  se  sc  spn  scn =
     , signatoryotherfields              = filterFieldDefsByID  fds sid
     }
     
+
 makeSignatories placements fielddefs
                 sigids
                 signatoriesemails
@@ -981,6 +982,8 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
   signatoriescompanynumbers  <- getAndConcat "signatorycompanynumber"
   signatoriesemails'         <- getAndConcat "signatoryemail"
   let signatoriesemails = map (BSC.map toLower) signatoriesemails'
+  signatoriesroles           <- getAndConcat "signatoryrole"
+  liftIO $ print signatoriesroles
 
   -- if the post doesn't contain this one, we parse the old way
   sigids <- getAndConcat "sigid"
@@ -1039,8 +1042,11 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
                         
   let isauthorsig = authorrole == "signatory"
       signatories2 = if isauthorsig
-                     then authordetails : signatories
-                     else signatories
+                     then (authordetails,[SignatoryPartner]) : zip signatories roles2
+                     else zip signatories roles2
+      roles2 = map guessRoles signatoriesroles
+      guessRoles x | x == BS.fromString "viewer" = []
+                   | otherwise = [SignatoryPartner]
       mcsvsigindex = fmap (personToSigIndex isauthorsig) mcsvpersonindex
   -- FIXME: tell the user what happened!
   -- when (daystosign<1 || daystosign>99) mzero
