@@ -359,6 +359,10 @@ pageDocumentDesign=
     <div class="signStepsBodyIcons">
       <span class="partnumber">PART 1</span>
       <a href="#plus2" class="plus"></a>
+      <select name="signatoryrole">
+         <option value="signatory">Signatory</option>
+         <option value="viewer">Viewer</option>
+      </select>
     </div>
     
     <!-- 013 changed -->
