@@ -363,8 +363,9 @@ signDocument documentid signatorylinkid1 time ipnumber msiginfo fields = do
           maybesign link = link
           authorid = unAuthor $ documentauthor signeddocument
           allbutauthor = filter ((maybe True (/= authorid)) . maybesignatory) newsignatorylinks
-          allsignedbutauthor = all (isJust . maybesigninfo) allbutauthor
-          isallsigned = all (isJust . maybesigninfo) newsignatorylinks
+          signatoryHasSigned x = not (SignatoryPartner `elem` signatoryroles x) || isJust (maybesigninfo x)
+          allsignedbutauthor = all signatoryHasSigned allbutauthor
+          isallsigned = all signatoryHasSigned newsignatorylinks
           
           -- Check if there are custom fields in any signatory (that is, not author)
           hasfields = any ((any (not . fieldfilledbyauthor)) . (signatoryotherfields . signatorydetails)) (documentsignatorylinks document)
