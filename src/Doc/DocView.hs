@@ -660,6 +660,9 @@ signatoryLinkFields
    isRejected = documentstatus document == Rejected
    isClosed = documentstatus document == Closed
    dontShowAnyReminder = isTimedout || isCanceled || isRejected
+   datamismatch = case documentcancelationreason document of
+                    Just (ELegDataMismatch _ sid _ _ _) -> sid == signatorylinkid
+                    _                                   -> False
    status = caseOf [
           (invitationdeliverystatus == Undelivered,  SCCancelled)
         , (isCanceled, SCCancelled)
@@ -686,6 +689,7 @@ signatoryLinkFields
       field "undeliveredEmail" $ (invitationdeliverystatus == Undelivered)
       field "allowEmailChange" $ (isCurrentUserAuthor && (invitationdeliverystatus == Undelivered) && (not dontShowAnyReminder))
       field "signdate" $ showDateOnly <$> signtime <$> maybesigninfo
+      field "datamismatch" datamismatch
       field "seenddate" $ showDateOnly <$> signtime <$> maybeseeninfo
       field "reminderMessage" $ mailDocumentRemindContent ctxtemplates Nothing ctx document siglnk author 
 
@@ -740,12 +744,16 @@ documentStatusFields :: Document -> Fields
 documentStatusFields document = do
   field "preparation" $ documentstatus document == Preparation
   field "pending" $ documentstatus document == Pending
-  field "cancel" $ documentstatus document == Canceled
+  field "cancel" $ (documentstatus document == Canceled 
+      && documentcancelationreason document == Just ManualCancel)
   field "timedout" $ documentstatus document == Timedout
   field "rejected" $ documentstatus document == Rejected
   field "signed" $ documentstatus document == Closed
   field "awaitingauthor" $ documentstatus document == AwaitingAuthor
-  field "datamismatch" $ maybe False isELegDataMismatch $ documentcancelationreason document
+  field "datamismatch" $ (documentstatus document == Canceled 
+      && case documentcancelationreason document of
+           Just (ELegDataMismatch _ _ _ _ _) -> True
+           _ -> False)
   
 -- | Info about what is my position on a document
 signedByMeFields :: Document -> Maybe SignatoryLink -> Fields

@@ -62,6 +62,49 @@ documentInfoText=
  
                      $endif$
  
+                  $elseif(datamismatch)$
+
+                     $if(notsignedbyme)$    
+                        <span class="header">
+                             Avtalsprocessen avbruten
+                        </span><br>
+                        <span class="text">
+                        
+                                Avtalsprocessen är avbruten på grund
+                                av felaktig matchning mellan en
+                                undertecknande part och dennes
+                                e-legitimation.
+
+                        </span>
+
+                     $elseif(signedbyme)$
+                        <span class="header">
+                             Avtalsprocessen avbruten
+                        </span><br>
+                        <span class="text">
+
+                              Avtalsprocessen är avbruten på grund av
+                              felaktig matchning mellan en
+                              undertecknande part och dennes
+                              e-legitimation.
+
+                        </span>
+
+                     $else$
+                        <span class="header">
+                             Avtalsprocessen avbruten
+                        </span><br>
+                        <span class="text">
+
+                              Avtalsprocessen är avbruten på grund av
+                              felaktig matchning mellan en
+                              undertecknande part och dennes
+                              e-legitimation.
+
+                        </span>
+ 
+                     $endif$
+ 
                  $elseif(timedout)$
 
                      $if(notsignedbyme)$    
