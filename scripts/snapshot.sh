@@ -7,8 +7,12 @@ cd /tmp
 echo "Copying repo"
 cp -r $repo $filename
 rm -rf $filename/_local
+rm -rf $filename/_darcs
+rm -rf $filename/dist
 echo "Zipping repo"
 tar zcf $filename.tar.gz $filename
+ls -lh $filename.tar.gz
+exit 0
 #sign with trustweaver
 twcert=/home/eric/haskell/kontrakcja/certs/credentials.pem
 twcertpwd=jhdaEo5LLejh
