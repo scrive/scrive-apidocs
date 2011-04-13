@@ -285,18 +285,25 @@ a.new-btn-small.black p {
 /* Intro text */
 
 #top-container .intro-container {
-	margin-top: 150px;
+	margin-top: 140px;
 	width: 480px;
 }
 
 #top-container .intro-container h2 {
-	color: #35A4D6;
+	color: #FFFFFF;
 	font: 36px "Copse";
 }
 
 #top-container .intro-container h3 {
+	color: #DDDDDD;
+	font: 13px "Lucida Grande";
+}
+
+#top-container .intro-container form {
 	color: #fff;
 	font: 14px "Lucida Grande";
+    padding-top:10px;
+
 }
 
 #top-container .intro-container em {
@@ -307,11 +314,12 @@ a.new-btn-small.black p {
 }
 
 #top-container .intro-container a {
-	margin-top: 6px;
+    margin-left: 5px;
+    display: inline-block;
 }
 
 #top-container .intro-container input {
-	width: 277px;
+	width: 200px;
 }
 
 /* Login Container */
@@ -437,7 +445,7 @@ a.new-btn-small.black p {
 
 #top-container .campaign-container .campaign-text {
 	margin-left: 15px;
-	margin-top: 11px;
+	margin-top: 23px;
 }
 
 #top-container .campaign-play:hover {
@@ -446,8 +454,8 @@ a.new-btn-small.black p {
 
 #top-container .campaign-container .campaign-text blockquote {
 	color: #fff;
-	font: italic 13px/13px "Lucida Grande";
-	width: 240px;
+	font: italic 14px/14px "Lucida Grande";
+	width: 270px;
 }
 
 #top-container .campaign-container .campaign-text em {
@@ -864,7 +872,7 @@ a.new-btn-small.black p {
 	background: #fff;
 	border: 1px solid #ccc;
 	border-radius: 5px;
-	height: 250px;
+	height: 266px;
 	margin-top: 65px;
 	position: relative;
 	width: 938px;
@@ -984,8 +992,8 @@ a.new-btn-small.black p {
 	border-bottom: 1px solid #ccc;
 	color: #999;
 	font: 12px "Lucida Grande";
-	height: 27px;
-	line-height: 27px;
+	height: 21px;
+	line-height: 21px;
 	text-align: center;
 }
 
@@ -999,7 +1007,7 @@ a.new-btn-small.black p {
 }
 
 #body-container .highlight-container .highlight-rows li.top {
-	height: 86px;
+	height: 78px;
 	padding-top: 25px;
 }
 
@@ -1012,7 +1020,7 @@ a.new-btn-small.black p {
 #body-container .highlight-container .highlight-rows li.top p {
 	color: #666;
 	font: italic 14px "Georgia";
-	margin-top: 2px;
+	margin-top: 4px;
 }
 
 #body-container .highlight-container .highlight-rows li.odd {
@@ -1049,7 +1057,7 @@ a.new-btn-small.black p {
 	border: 0;
 }
 
-#price-plan-annotation {
+.price-plan-annotation {
         color: #999;
         font: italic 12px "Georgia";
         padding: 10px;
@@ -1385,7 +1393,7 @@ a.new-btn-small.black p {
 #body-container .big-price-plan {
 	padding-left: 4px;
 	padding-top: 20px;
-	width: 780px;
+	width: 860px;
 }
 
 #body-container .big-price-plan h1 {
