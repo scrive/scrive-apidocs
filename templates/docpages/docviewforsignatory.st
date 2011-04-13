@@ -120,7 +120,7 @@ pageDocumentForSignContent=
        </a>
      </span>
   </div>
-  <div id="signStepsBody"> 
+  <div id="signStepsBody" class="ericfix"> 
     <div id="signViewBodyLeft" > 
       <span id="signViewBodyLeftTextContainer"> 
         $documentinfotext:noescape()$

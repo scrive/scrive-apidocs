@@ -2136,10 +2136,14 @@ form {
 }
 
 #signStepsBody {
-    padding:8px 39px;
+    padding:8px 19px;
     border-left: 1px solid #BDBDBD;
     border-right: 1px solid #BDBDBD;
     border-bottom: 1px solid #C0C0C0;
+}
+
+#signStepsBody.ericfix {
+    padding: 8px 39px;
     width: 880px;
 }
 

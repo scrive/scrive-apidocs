@@ -27,7 +27,7 @@ pageDocumentForAuthorContentPostPreparation=
        </a>
      </span>
   </div>
-  <div id="signStepsBody" class="forauthor"> 
+  <div id="signStepsBody" class="ericfix forauthor"> 
     <div id="signViewBodyLeft" > 
       <span id="signViewBodyLeftTextContainer"> 
         $documentinfotext:noescape()$
