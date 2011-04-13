@@ -346,7 +346,8 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                         </div>
                                         <div class="right">
                                                 <form method="post" action="$linkrequestaccount$" class="requestAccount">
-                                                        <input class="shiny" name="email" type="email" infotext="Fyll i din e-postadress" /> <a href="#" class="submit new-btn-small green2 center float-right"><p>Skicka förfrågan!</p></a>
+                                                        <a href="#" class="submit new-btn-small green2 center float-right"><p>Skicka förfrågan!</p></a>
+                                                        <input class="shiny float-left" name="email" type="email" infotext="Fyll i din e-postadress" />
                                                         <input type="submit" class="hidden" />
                                                 </form>
                                         </div>
