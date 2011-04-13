@@ -38,6 +38,7 @@ import qualified Data.ByteString.UTF8 as BS hiding (length, drop, break)
 import GHC.Word
 import GHC.Unicode ( toLower )
 import User.UserView
+import Data.Either (lefts, rights)
 
 {- |
    Handle the Ajax request for initiating a BankID transaction.
@@ -424,14 +425,14 @@ handleIssuePostBankID docid = withUserPost $ do
                             case mdocs of
                                 Right docs -> do
                                     mndocs <- mapM signInd docs
-                                    case (sequence mndocs) of
-                                        Right (d:[]) -> do
+                                    case (lefts mndocs, rights mndocs) of
+                                        ([], [d]) -> do
                                             case documentstatus d of
                                                 Pending -> addModal $ modalSignInviteView d
                                                 Closed  -> addModal modalSignAwaitingAuthorLast
                                             return $ LinkIssueDoc (documentid d)
-                                        Right ds -> return $ LinkContracts emptyListParams
-                                        Left _ -> mzero
+                                        ([], ds) -> return $ LinkContracts emptyListParams
+                                        _ -> mzero
                                 Left _ -> mzero
 
 handleSignCanceledDataMismatch :: DocumentID -> SignatoryLinkID -> Kontra Response
