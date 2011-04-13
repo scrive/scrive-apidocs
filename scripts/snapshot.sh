@@ -7,6 +7,7 @@ zipfile=$filename.tar.gz
 cd /tmp
 echo "Copying repo"
 cp -r $repo $filename
+echo "Deleting unneeded files"
 rm -rf $filename/_local
 rm -rf $filename/_darcs
 rm -rf $filename/dist
