@@ -19,25 +19,30 @@ import Templates.Templates
 import Data.Maybe
 
 partyList :: Document -> [SignatoryDetails]
-partyList document = map signatorydetails (documentsignatorylinks document)
+partyList document = map signatorydetails $ filter isSignatory (documentsignatorylinks document)
+    where
+        isSignatory person = SignatoryPartner `elem` signatoryroles person
 
 partyUnsignedList :: Document -> [SignatoryDetails]
 partyUnsignedList document =
-    let signalinks = documentsignatorylinks document
+    let signalinks = filter isSignatory $ documentsignatorylinks document
         unsignalinks = filter (isNothing . maybesigninfo) signalinks
         signas = map signatorydetails unsignalinks
+        isSignatory person = SignatoryPartner `elem` signatoryroles person
     in signas
 
 partySignedList :: Document -> [SignatoryDetails]
 partySignedList document =
-    let signalinks = documentsignatorylinks document
+    let signalinks = filter isSignatory $ documentsignatorylinks document
         unsignalinks = filter (isJust . maybesigninfo) signalinks
         signas = map signatorydetails unsignalinks
+        isSignatory person = SignatoryPartner `elem` signatoryroles person
     in signas
 
 partyUnsignedMeAndList :: MagicHash -> Document -> [SignatoryDetails]
 partyUnsignedMeAndList magichash document =
-    let signalinks = documentsignatorylinks document
+    let signalinks = filter isSignatory $ documentsignatorylinks document
+        isSignatory person = SignatoryPartner `elem` signatoryroles person
         cond signlink = signatorymagichash signlink /= magichash &&
                         maybesigninfo signlink == Nothing
         unsignalinks = filter cond signalinks
@@ -60,8 +65,10 @@ partyUnsignedMeAndList magichash document =
 
 partyListButAuthor :: Document -> [SignatoryDetails]
 partyListButAuthor document@Document{ documentauthor=Author authorid } =
-    map signatorydetails (filter ((maybe True (/= authorid)) . maybesignatory) (documentsignatorylinks document))
-
+    map signatorydetails (filter (not . isAuthor) $ filter isSignatory $ documentsignatorylinks document)
+    where
+        isSignatory person = SignatoryPartner `elem` signatoryroles person
+        isAuthor = maybe True (/= authorid) . maybesignatory
   
 joinWith::[a]->[[a]]->[a]
 joinWith _ [] = []

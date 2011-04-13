@@ -54,7 +54,8 @@ personFromSignatoryDetails details =
 personsFromDocument :: Document -> [(Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider)]
 personsFromDocument document = 
     let
-        links = documentsignatorylinks document
+        isSignatory person = SignatoryPartner `elem` signatoryroles person
+        links = filter isSignatory $ documentsignatorylinks document
         authorid = unAuthor $ documentauthor document
         x (SignatoryLink{ signatorydetails
                         , maybesigninfo = Just signinfo
@@ -133,7 +134,8 @@ sealSpecFromDocument :: String -> Document -> User ->  String -> String -> Seal.
 sealSpecFromDocument hostpart document author inputpath outputpath =
   let docid = unDocumentID (documentid document)
       authorHasSigned = (any ((maybe False (== (userid author))) . maybesignatory) (documentsignatorylinks document))
-      signatoriesdetails = map signatorydetails $ documentsignatorylinks document
+      isSignatory x = SignatoryPartner `elem` signatoryroles x
+      signatoriesdetails = map signatorydetails $ filter isSignatory $ documentsignatorylinks document
       authordetails = (signatoryDetailsFromUser author) 
                       { signatoryfstnameplacements = authorfstnameplacements document
                       , signatorysndnameplacements = authorsndnameplacements document
