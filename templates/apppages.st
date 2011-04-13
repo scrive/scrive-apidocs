@@ -63,9 +63,9 @@ wholePage=
                                                 <div class="hor-divider"></div>
                                                 <h4>SkrivaPå AB</h4>
                                                 <ul class="info-list">
-                                                        <li>Saltmätargatan 19a, 4 tr<br />
+                                                        <li>Saltmätargatan 19<br />
                                                         113 59 Stockholm</li>
-                                                        <li>Telefon: 020 12 11 10<br />E-post: info@skrivapa.se</li>
+                                                        <li>Telefon: 010-195 99 15<br />E-post: info@skrivapa.se</li>
                                                 </ul>
                                         </div>
                                 </div>
@@ -99,8 +99,8 @@ wholePage=
                                 <div class="col left">
                                         <strong>TJÄNSTEN</strong>
                                         <ul>
-                                                <li><a href="/features.html?columns">Funktioner</a></li>
-                                                <li><a href="/benefits.html?columns">Fördelar</a></li>
+                                                <!--<li><a href="/features.html?columns">Funktioner</a></li> -->
+                                                <!--<li><a href="/benefits.html?columns">Fördelar</a></li> -->
                                                 <li><a href="/priceplan.html">Prisplan</a></li>
                                         </ul>
                                         <br />
@@ -117,7 +117,7 @@ wholePage=
                                                 <li><a href="/about.html?columns">Om SkrivaPå</a></li>
                                                 <li><a href="/partners.html?columns">Partners</a></li>
                                                 <li><a href="/clients.html?columns">Kunder</a></li>
-                                                <li><a href="/board.html?columns">Board of Advisors</a></li>
+                                                <!--<li><a href="/board.html?columns">Board of Advisors</a></li>-->
                                         </ul>
                                 </div>
                                 <div class="col centre">
@@ -144,7 +144,7 @@ wholePage=
                                                 <li>
                                                         <strong>Adress</strong>
                                                         SkrivaPå CM AB<br />
-                                                        Saltmätargatan 19A<br />
+                                                        Saltmätargatan 19<br />
                                                         113 59 Stockholm
                                                 </li>
                                         </ul>
