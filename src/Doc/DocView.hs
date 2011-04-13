@@ -538,11 +538,12 @@ pageDocumentForAuthor ctx
            , signatorycompanynumberplacements = authorcompanynumberplacements document
            , signatoryotherfields = authorotherfields document
          }
+       isSignatory person = SignatoryPartner `elem` signatoryroles person
    in do
      renderTemplate (ctxtemplates ctx) "pageDocumentForAuthor" $ do
        field "linkissuedoc" $ show $ LinkIssueDoc documentid
        field "authorhaslink" $ authorhaslink
-       field "signatories" $ map (signatoryLinkFields ctx document author Nothing) documentsignatorylinks                    
+       field "signatories" $ map (signatoryLinkFields ctx document author Nothing) $ filter isSignatory documentsignatorylinks                    
        field "canberestarted" $ documentstatus `elem` [Canceled, Timedout, Rejected]
        field "cancelMailContent" $ mailCancelDocumentByAuthorContent templates False Nothing ctx document author
        field "linkcancel" $ show $ LinkCancel document
@@ -585,6 +586,7 @@ pageDocumentForViewer ctx
             , signatorycompanynumberplacements = authorcompanynumberplacements document
             , signatoryotherfields = authorotherfields document
           }
+        isSignatory person = SignatoryPartner `elem` signatoryroles person
    in do
      invitationMailContent <- mailInvitationToSignContent (ctxtemplates ctx) False ctx document author Nothing
      cancelMailContent <- mailCancelDocumentByAuthorContent (ctxtemplates ctx) False Nothing ctx document author
@@ -597,7 +599,7 @@ pageDocumentForViewer ctx
        field "documentdaystosignboxvalue" $ documentdaystosignboxvalue
        field "anyinvitationundelivered" $ anyInvitationUndelivered document
        field "undelivered" $ map (signatoryemail . signatorydetails) $ undeliveredSignatoryLinks document
-       field "signatories" $ map (signatoryLinkFields ctx document author Nothing) documentsignatorylinks
+       field "signatories" $ map (signatoryLinkFields ctx document author Nothing) $ filter isSignatory documentsignatorylinks
        field "canberestarted" $ documentstatus `elem` [Canceled, Timedout, Rejected]
        field "cancelMailContent" $ cancelMailContent
        field "linkcancel" $ show $ LinkCancel document
@@ -632,10 +634,11 @@ pageDocumentForSignatory action document ctx invitedlink author tokens =
       documentauthordetails = signatoryDetailsFromUser author
       allowedtypes = documentallowedidtypes document
       requiresEleg = isJust $ find (== ELegitimationIdentification) allowedtypes
+      isSignatory person = SignatoryPartner `elem` signatoryroles person
   in do
     renderTemplate (ctxtemplates ctx) "pageDocumentForSignContent" $ do
       field "localscripts" localscripts
-      field "signatories" $ map (signatoryLinkFields ctx document author (Just invitedlink)) (documentsignatorylinks document)
+      field "signatories" $ map (signatoryLinkFields ctx document author (Just invitedlink)) $ filter isSignatory (documentsignatorylinks document)
       field "rejectMessage" $  mailRejectMailContent (ctxtemplates ctx) Nothing ctx (prettyName author) document invitedlink
       field "partyUnsigned" $ renderListTemplate (ctxtemplates ctx) $  map (BS.toString . personname') $ partyUnsignedMeAndList magichash document
       field "action" $ show action
