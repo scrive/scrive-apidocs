@@ -772,48 +772,49 @@ safeReady(function() {
 function setupAsMultiplePart(sigentry) {
   
   var icons = sigentry.find('.signStepsBodyIcons');
-  icons.find(".man").remove();
-  var newicon = $("<a class='group' href='#'></a>");
+  var icon = icons.find(".csv");
+
+  icon.removeClass('csv').addClass('group');
   
-  newicon.click(function() {
-    tosingle = sigentry.find(".tosingle");
-    if (tosingle.is(":visible")) {
-      tosingle.hide();
-    } else {
-      tosingle.show();
-    }
-    return false;
-  });
+  icon.click(function() {
+          icon.unbind('click', this);
+          tosingle = sigentry.find(".tosingle");
+          if (tosingle.is(":visible")) {
+              tosingle.hide();
+          } else {
+              tosingle.show();
+          }
+          return false;
+      });
 
   fileinfo = $("#templates").find(".csvfileinfo").clone();
-
-  newicon.insertAfter(icons.find(".partnumber"));
   icons.append(fileinfo);
 }
 
 function setupAsSinglePart(sigentry) {
   if (offer) return false;
   var icons = sigentry.find('.signStepsBodyIcons');
-  icons.find(".group").remove();
+  var icon = icons.find(".group");
   icons.find(".csvfileinfo").remove();
-  var newicon = $("<a class='man' href='#'></a>");
 
-  newicon.click(function() {
-    tomulti = sigentry.find(".tomulti");
-    if (tomulti.is(":visible")) {
-      tomulti.hide();
-    } else {
-      var form = sigentry.closest("form");
-      csvpersonindex = form.find("input[type='hidden'][name='csvpersonindex']").attr("value");
-      if (!(csvpersonindex && csvpersonindex.length>0)) {
-        tomulti.show();
-      }
-    }
-    return false;
-  });
+  icon.click(function() {
+          icon.unbind('click', this);
+          tomulti = sigentry.find(".tomulti");
+          if (tomulti.is(":visible")) {
+              tomulti.hide();
+          } else {
+              var form = sigentry.closest("form");
+              csvpersonindex = form.find("input[type='hidden'][name='csvpersonindex']").attr("value");
+              if (!(csvpersonindex && csvpersonindex.length>0)) {
+                  tomulti.show();
+              }
+          }
+          return false;
+      });
+  
 
-  newicon.insertAfter(icons.find(".partnumber"));
- 
+  icon.removeClass("group").addClass("single");
+
   sigentry.find("input[name='signatoryfstname']").change();
 }
 
@@ -824,7 +825,6 @@ function signatoryToHTML(isMultiple, sig) {
 
   var sigentry = $('#templates .persondetails').first().clone();
 
-
   setHiddenField(sigentry, "sigid", sigid);
   
   if (isMultiple) {
@@ -833,6 +833,21 @@ function signatoryToHTML(isMultiple, sig) {
     setupAsSinglePart(sigentry);
   }
   sigentry.find(".partytype").hide();
+
+  var manlink = sigentry.find("a.man");
+
+  manlink.click(function(){
+    sigentry.find(".partyrole").show();
+    manlink.addClass("selected");
+    return false;
+  });
+
+  sigentry.find(".partyrole .closelink").click(function(){
+    sigentry.find(".partyrole").hide();
+    manlink.removeClass("selected");
+    return false;
+  });
+
 
   var d = sigentry.find(".fields");
   var of = sigentry.find(".otherfields");
