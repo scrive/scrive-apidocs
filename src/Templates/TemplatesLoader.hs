@@ -84,16 +84,15 @@ renderTemplateMain ts name params f = do
 
 readTemplates :: IO KontrakcjaTemplates 
 readTemplates = do
-    ts <- sequence (map getTemplates templateFiles)
+    ts <- mapM getTemplates templateFiles
     return $ groupStringTemplates (concat ts)
 
 getTemplates :: String -> IO [(String, StringTemplate String)]            
-getTemplates fp = do
-    handle <- openFile fp ReadMode
-    hSetEncoding handle utf8
-    ts <- parseTemplates handle
-    hClose handle
-    return $ Prelude.map (fromJust) $ Prelude.filter isJust ts
+getTemplates fp = 
+    withFile fp ReadMode $ \handle -> do
+        hSetEncoding handle utf8
+        ts <- parseTemplates handle
+        return $ catMaybes ts
 
 parseTemplates :: Handle -> IO [Maybe (String,StringTemplate String)]
 parseTemplates handle = do
