@@ -88,13 +88,13 @@ modalWelcomeToSkrivaPa=
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
-          <h3>2 månader gratis!</h3>
+          <h3>1 månad gratis!</h3>
         </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
         <div class="modal-content">
-        <p>Som ett erbjudande bjuder vi på 2 månaders fri användning av tjänsten SkrivaPå. Med SkrivaPå kan du underteckna och arkivera avtal och andra dokument elektroniskt. Givetvis kommer det inte att kosta någonting efter de 2 fria månaderna om du väljer att inte fortsätta. Det är superenkelt att komma igång, gör så här:<p>
+        <p>Som ett erbjudande bjuder vi på 1 månads fri användning av tjänsten SkrivaPå. Med SkrivaPå kan du underteckna och arkivera avtal och andra dokument elektroniskt. Givetvis kommer det inte att kosta någonting efter de 1 fria månadna om du väljer att inte fortsätta. Det är superenkelt att komma igång, gör så här:<p>
 
         <p>1. Ladda upp ett dokument<br>
         2. Fyll i motpartens uppgifter<br>
