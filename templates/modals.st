@@ -204,58 +204,95 @@ modalRejectedView=
 ####
 modalSignedViewClosed=
 <div class="modal-container">
-      <div class="modal-header">
-        <span class="modal-icon message"></span>
-        <span class="modal-title">
-          <h3>Du har undertecknat dokumentet $documenttitle$</h3>
-        </span>
-        <a class="modal-close close"> </a>
+  <form method="post" action="$linklogin$">
+    <div class="modal-header">
+      <span class="modal-icon message"></span>
+      <span class="modal-title">
+        <h3>Du har undertecknat dokumentet $documenttitle$</h3>
+      </span>
+      <a class="modal-close close"> </a>
+    </div>
+    <div class="modal-body">
+      <div class="modal-content">
+        <p>$partyListString:noescape()$ har nu undertecknat och dokumentet är bindande.</p>
+        $willCreateAccountForYou()$
       </div>
-      <div class="modal-body">
-        <div class="modal-content">
-         <p>$partyListString:noescape()$ har nu undertecknat och dokumentet är bindande.</p>
-         $willCreateAccountForYou:noescape()$
+    </div>
+    <div class="modal-footer">
+      $if(hasaccount)$
+      <a class="float-left close text-link message">
+          Stäng
+      </a>
+      <a href="#" class="btn-small blue float-right submit notForIE7">
+        <div class="left"></div>
+        <div class="label">
+          <p>Logga in</p>
         </div>
-      </div>
-      <div class="modal-footer">
-        <a class="btn-small green float-right close">
-          <div class="left"></div>
-          <div class="label">
-            <p>Stäng</p>
-            <div class="btn-symbol green arrow-left"></div>
-          </div>
-          <div class="right"></div>
-        </a>
-      </div>
+        <div class="right"></div>
+      </a>
+      $else$
+      <a class="btn-small green float-right close">
+        <div class="left"></div>
+        <div class="label">
+          <p>Stäng</p>
+          <div class="btn-symbol green arrow-left"></div>
+        </div>
+        <div class="right"></div>
+      </a>
+      $endif$
+    </div>
+  </form>
 </div>
 #####
 modalSignedViewNotClosed=
 <div class="modal-container">
-      <div class="modal-header">
-        <span class="modal-icon message"></span>
-        <span class="modal-title">
-          <h3>Du har undertecknat dokumentet $documenttitle$</h3>
-        </span>
-        <a class="modal-close close"> </a>
+  <form method="post" action="$linklogin$">
+    <div class="modal-header">
+      <span class="modal-icon message"></span>
+      <span class="modal-title">
+        <h3>Du har undertecknat dokumentet $documenttitle$</h3>
+      </span>
+      <a class="modal-close close"> </a>
+    </div>
+    <div class="modal-body">
+      <div class="modal-content">
+        <p>$partyUnsignedListString:noescape()$ har ännu inte undertecknat. När alla undertecknat blir
+          dokumentet bindande och en kopia skickas till din e-post.</p>
+        $willCreateAccountForYou()$
       </div>
-      <div class="modal-body">
-        <div class="modal-content">
-         <p>$partyUnsignedListString:noescape()$ har ännu inte undertecknat. När alla undertecknat blir
-         dokumentet bindande och en kopia skickas till din e-post.</p>
-         $willCreateAccountForYou:noescape()$
+    </div>
+    <div class="modal-footer">
+      $if(hasaccount)$
+      <a class="float-left close text-link message">
+          Stäng
+      </a>
+      <a href="#" class="btn-small blue float-right submit notForIE7">
+        <div class="left"></div>
+        <div class="label">
+          <p>Logga in</p>
         </div>
-      </div>
-      <div class="modal-footer">
-        <a class="btn-small green float-right close">
-          <div class="left"></div>
-          <div class="label">
-            <p>Stäng</p>
-            <div class="btn-symbol green arrow-left"></div>
-          </div>
-          <div class="right"></div>
-        </a>
-      </div>
+        <div class="right"></div>
+      </a>
+      $else$
+      <a class="btn-small green float-right close">
+        <div class="left"></div>
+        <div class="label">
+          <p>Stäng</p>
+          <div class="btn-symbol green arrow-left"></div>
+        </div>
+        <div class="right"></div>
+      </a>
+      $endif$
+    </div>
+  </form>
 </div>
+#####
+willCreateAccountForYou=
+        $if(hasaccount)$
+        $willCreateAccountForYouHasAccount()$
+        $else$
+        $willCreateAccountForYouNoAccount()$
+        $endif$
 #####
 willCreateAccountForYouHasAccount=
     <p>Dokumentet har sparats till ditt konto.
@@ -354,24 +391,16 @@ $endif$
 ####
 loginModalPart=
 <div class="user-container">
- <div class="login-container">
-  <div class="body">
-   <div class="wrapper">
-    <form method="post" action="$linklogin$">
-      <input type="hidden" name="referer" value="$referer$" />
-      <input type="email" name="email" value="$email$" infotext="E-post" autocomplete="off"/><br />
-      <input type="password" name="password" infotext="password" autocomplete="off"/><br />
-      <a href="#" class="btn-tiny blue center submit notForIE7">
-        <div class="left"> </div>     
-        <div class="label"><span>Logga in</span> </div>
-        <div class="right"/> </div>
-      </a>
-      <br /><br />
-      <input type="submit" class="hidden" />
-    </form>
-   </div>
+  <div class="login-container">
+    <div class="body">
+      <div class="wrapper" style="text-align:right">
+        <input type="hidden" name="referer" value="$referer$" />
+        <span class="txt">E-post</span><input type="email" name="email" value="$email$" infotext="E-post" autocomplete="off"/><br />
+        <span class="txt">Lösenord</span><input type="password" name="password" infotext="password" autocomplete="off"/><br />
+        <input type="submit" class="hidden" />
+      </div>
+    </div>
   </div>
- </div>
 </div>
 ######
 ####

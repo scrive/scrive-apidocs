@@ -109,27 +109,21 @@ modalSignedView document@Document{documenttitle, documentstatus} signatorylink h
        lift $ renderTemplate templates "modalSignedViewClosed" $ do
          field "partyListString" . renderListTemplate templates . map (BS.toString . personname') $ partyList document
          field "documenttitle" $ BS.toString $ documenttitle
-         field "willCreateAccountForYou" $ willCreateAccountForYou templates document signatorylink hasaccount isloggedin
+         field "hasaccount" hasaccount
+         field "isloggedin" isloggedin
+         field "referer" $ show (LinkSignDoc document signatorylink)
+         field "email" . signatoryemail $ signatorydetails signatorylink
+         field "linklogin" $ show (LinkLogin LoginTry)         
      else
        lift $ renderTemplate templates "modalSignedViewNotClosed" $ do
          field "partyUnsignedListString" . renderListTemplate templates . map (BS.toString . personname') $ partyUnsignedList document
          field "documenttitle" . BS.toString $ documenttitle
-         field "willCreateAccountForYou" $ willCreateAccountForYou templates document signatorylink hasaccount isloggedin
-
-willCreateAccountForYou :: KontrakcjaTemplates -> Document -> SignatoryLink -> Bool -> Bool -> IO String
-willCreateAccountForYou templates document siglink hasAccount isloggedin =
-  if (hasAccount)
-     then
-       renderTemplate templates "willCreateAccountForYouHasAccount" $ do
-         field "email" . signatoryemail $ signatorydetails siglink
+         field "hasaccount" hasaccount
          field "isloggedin" isloggedin
-         field "referer" $ show (LinkSignDoc document siglink)
-         field "linklogin" $ show (LinkLogin LoginTry)
-     else
-       renderTemplate templates "willCreateAccountForYouNoAccount" $ do
-         field "documentid" $ show $ unDocumentID $ documentid document
-         field "documenttitle" $ BS.toString $ documenttitle document
-         field "signatorylinkid" $ unSignatoryLinkID $ signatorylinkid siglink
+         field "referer" $ show (LinkSignDoc document signatorylink)         
+         field "email" . signatoryemail $ signatorydetails signatorylink
+         field "linklogin" $ show (LinkLogin LoginTry)         
+         
 
 flashDocumentDraftSaved :: KontrakcjaTemplates -> IO FlashMessage
 flashDocumentDraftSaved templates =
