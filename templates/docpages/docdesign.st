@@ -2,7 +2,7 @@
 pageDocumentDesign=
 <div style="display: none">
   <script type="text/javascript"> 
-    var documentid = "$documentid$", doctokenid = "$doctokenid$", doctokenhash = "$doctokenhash$";
+    var documentid = "$documentid$";
   </script>
   <script type="text/javascript" src="/js/bankid.js"></script>
 </div>
