@@ -102,8 +102,13 @@ Våra kunder och våra kunders kunder älskar enkelheten.</p>
                         <p>1 månad full funktionalitet utan kostnad. Inga förpliktelser.</p>
                         </div>
                          <div class="right">
-                            <form method="post" action="$linkrequestaccount$" class="requestAccount">
-                                   <input class="shiny float-left" name="email" type="email" infotext="Fyll i din e-postadress" /> <a href="#" class="submit new-btn-small green2 center float-right"><p>Skicka förfrågan!</p></a>
+                            <form method="post" action="/signup" class="requestAccount">
+                                   <input class="shiny float-left"
+                                   name="email" type="email"
+                                   infotext="Fyll i din e-postadress"
+                                   /> <a href="#" class="submit
+                                   new-btn-small green2 center
+                                   float-right"><p>Skapa konto!</p></a>
                                    <input type="submit" class="hidden" />
                              </form>
                          </div>
