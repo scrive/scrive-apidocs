@@ -337,8 +337,8 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                 <div class="spacer70"></div>
                                 <div class="try-skrivapa">
                                         <div class="left">
-                                                <h2>2 månaders fri användning nu!</h2>
-                                                <p>Allt inkluderat. Standardkonto, fria transaktioner och fri lagring.</p>
+                                                <h2>Skapa konto nu!</h2>
+                                                <p>1 månad full funktionalitet utan kostnad. Inga förpliktelser.</p>
                                         </div>
                                         <div class="right">
                                                 <form method="post" action="/signup" class="requestAccount">
