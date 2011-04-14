@@ -206,17 +206,26 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                         <div class="slide-container">
                                                 <h3>Kunder berättar</h3>
                                                 <div class="slide-content active">
-                                                        <img src="/img/about-lukas-d.png" height="142" width="122" class="portrait" />
+									<div class="portrait-image">
+										<img src="/img/portrait-lukas-d.png" />
+									</div>
+
                                                         <blockquote>”Skönt. Snabbare vändor med kund och man slipper arkivera papper.”</blockquote>
                                                         <em>Mikael Green, VD, Account Factory, Redovisningsbyrå</em>
                                                 </div>
                                                 <div class="slide-content">
-                                                        <img src="/img/about-lukas-d.png" height="142" width="122" class="portrait" />
+									<div class="portrait-image">
+										<img src="/img/portrait-lukas-d.png" />
+									</div>
+
                                                         <blockquote>”Man har mycket bättre koll på de avtal som ingåtts. Det är grejen tycker jag.”</blockquote>
                                                         <em>Alexis Barnekow, Försäljningschef, Green Hat People, Teambuilding Events</em>
                                                 </div>
                                                 <div class="slide-content">
-                                                        <img src="/img/about-lukas-d.png" height="142" width="122" class="portrait" />
+									<div class="portrait-image">
+										<img src="/img/portrait-lukas-d.png" />
+									</div>
+
                                                         <blockquote>”Smart lösning.”</blockquote>
                                                         <em>Christoffer Lindquist, VD, Eventbook, Eventpartner</em>
                                                 </div>
@@ -292,15 +301,15 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 </tr>
                                                 <tr class="big-row">
                                                         <td>
-                                                                <h4>0kr</h4>
+                                                                <h4>Vi bjuder</h4>
                                                                 <a href="priceplan.html?nocolumns">Läs mer</a>
                                                         </td>
                                                         <td>
-                                                                <h4>299kr</h4>
+                                                                <h4>299kr/mån</h4>
                                                                 <a href="priceplan.html?nocolumns">Läs mer</a>
                                                         </td>
                                                         <td>
-                                                                <h4>499kr</h4>
+                                                                <h4>499kr/mån</h4>
                                                                 <a href="priceplan.html?nocolumns">Läs mer<a>                                                   
                                                         </td>
                                                         <td>
@@ -324,7 +333,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                         <li><a href="#">Dela arkiv</a></li>
                                                         <li class="odd"><a href="/priceplan.html?nocolumns">Avancerade funktioner</a></li>
                                                         <li class="bottom">
-                                                                <h4>499kr</h4>
+                                                                <h4>499kr/mån</h4>
                                                                 <a href="priceplan.html?nocolumns">Läs mer</a>   
                                                         </li>
                                                 </ul>

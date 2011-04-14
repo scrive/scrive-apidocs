@@ -753,7 +753,7 @@ a.new-btn-small.black p {
 	display: none;
 	height: 180px;
 	position: absolute;
-	width: 449px;
+	width: 420px;
 }
 
 #body-container .slide .slide-content:first-child {
@@ -826,7 +826,7 @@ a.new-btn-small.black p {
 }
 
 #body-container .slide .slide-nav {
-	bottom: 50px;
+	bottom: 30px;
 	left: 250px;
 	position: absolute;
 }
@@ -987,6 +987,7 @@ a.new-btn-small.black p {
 #body-container .highlight-container .highlight-rows {
 	padding: 0 10px;
 	width: 224px;
+    height: 290px;
 }
 
 #body-container .highlight-container .highlight-rows li {
@@ -1822,7 +1823,7 @@ a.new-btn-small.black p {
 
 .portrait 
 {
-    display: none;
+ display:none;
 }
 
 .portrait-image img
@@ -1839,4 +1840,59 @@ input.grayed, textarea.grayed
 {
     color: #999999;
     font-style: italic;
+}
+
+.bottom {
+    margin-top: 5px;
+}
+
+
+
+
+.slide-content .portrait-image {
+	background: #fff;
+	border: 1px solid #ccc;
+	border-radius: 3px;
+	float: left;
+	height: 150px;
+	margin-right: 20px;
+	position: relative;
+	width: 127px;
+	-moz-border-radius: 3px;
+	-webkit-border-radius: 3px;
+}
+
+.slide-content .portrait-image:before {
+	bottom: 3px;
+	box-shadow: inset 0 0 5px #000;
+	content: "";
+	left: 3px;
+	opacity: 0.5;
+	position: absolute;
+	right: 3px;
+	top: 3px;
+	-moz-box-shadow: inset 0 0 5px #000;
+	-webkit-box-shadow: inset 0 0 5px #000;
+}
+
+.slide-content .portrait-image:after {
+	bottom: 0px;
+	box-shadow: 0 0 5px #000;
+	content: "";
+	left: 0px;
+	opacity: 0.5;
+	position: absolute;
+	right: 0px;
+	top: 0px;
+	-moz-box-shadow: 0 0 5px #000;
+	-webkit-box-shadow: 0 0 5px #000;
+}
+
+.box .about-container li .portrait-image img {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	right: 0;
+	left: 0;
+	margin: auto;
 }
