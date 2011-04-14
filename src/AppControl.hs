@@ -148,7 +148,7 @@ handleRoutes = msum [
      
      , dir "d" $ hget0  $ DocControl.showContractsList
      , dir "d" $ hget1  $ DocControl.handleIssueShowGet
-     , dir "d" $ hget4  $ DocControl.handleIssueShowTitleGet
+     , dir "d" $ hget2  $ DocControl.handleIssueShowTitleGet
      , dir "d" $ {- param "doc" $ -} hpost0 $ DocControl.handleIssueNewDocument
      , dir "d" $ param "archive" $ hpost0 $ DocControl.handleContractArchive
      , dir "d" $ param "remind" $ hpost0 $ DocControl.handleBulkContractRemind
@@ -163,11 +163,11 @@ handleRoutes = msum [
      , dir "restart" $ hpost1 $ DocControl.handleRestart
      , dir "cancel"  $ hpost1 $ DocControl.handleCancel
      
-     , dir "pages"  $ hget4 $ DocControl.showPage
+     , dir "pages"  $ hget2 $ DocControl.showPage
      , dir "templates"  $ hget0 $ DocControl.getTemplatesForAjax
      , dir "template"  $ hpost0 $ DocControl.handleCreateFromTemplate
            
-     , dir "pagesofdoc" $ hget3 $ DocControl.handlePageOfDocument
+     , dir "pagesofdoc" $ hget1 $ DocControl.handlePageOfDocument
 
      -- UserControl
      , dir "account"                    $ hget0  $ UserControl.handleUserGet

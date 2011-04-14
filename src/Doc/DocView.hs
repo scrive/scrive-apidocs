@@ -350,19 +350,18 @@ pageOffersList templates ctime user documents =
     pagedListFields documents
     field "currentlink" $ show $ LinkOffers $ params documents
 
-showFileImages :: KontrakcjaTemplates -> (ActionID, MagicHash) -> File -> JpegPages -> IO String
-showFileImages templates _ _ JpegPagesPending =
+showFileImages :: KontrakcjaTemplates -> File -> JpegPages -> IO String
+showFileImages templates _ JpegPagesPending =
   renderTemplate templates  "showFileImagesPending" ()
 
-showFileImages templates _ _ (JpegPagesError normalizelog) =
+showFileImages templates _ (JpegPagesError normalizelog) =
   renderTemplate templates "showFileImagesError" $ do
     field "normalizelog" $ BS.toString normalizelog
 
-showFileImages templates tokens File{fileid} (JpegPages jpgpages) =
+showFileImages templates File{fileid} (JpegPages jpgpages) =
   renderTemplate templates "showFileImagesReady" $ do
     field "fileid" $ show fileid
     field "images" . map page $ zip [1,2..] jpgpages
-    documentTokens tokens
   where
     page :: (Int,(a,Int,Int)) -> Fields
     page (x,(_,w,h)) = do
@@ -371,9 +370,9 @@ showFileImages templates tokens File{fileid} (JpegPages jpgpages) =
       field "height" h
 
 
-showFilesImages2 :: KontrakcjaTemplates -> (ActionID, MagicHash) -> [(File, JpegPages)] -> IO String
-showFilesImages2 templates tokens files = do
-  filesPages <- sequence $ map (uncurry (showFileImages templates tokens)) files
+showFilesImages2 :: KontrakcjaTemplates -> [(File, JpegPages)] -> IO String
+showFilesImages2 templates files = do
+  filesPages <- sequence $ map (uncurry (showFileImages templates)) files
   renderTemplate templates  "spanNoEscape" $ field "it" (concat filesPages)
 
 
@@ -419,7 +418,6 @@ isNotLinkForUserID uid link =
 pageDocumentDesign :: Context 
              -> Document 
              -> User
-             -> (ActionID, MagicHash)
              -> (Maybe DesignStep)
              -> IO String
 pageDocumentDesign ctx
@@ -430,7 +428,7 @@ pageDocumentDesign ctx
     , documentinvitetext
     , documentallowedidtypes
   }
-  author tokens step =
+  author step =
    let
        templates = ctxtemplates ctx
        authorid = userid author
@@ -477,7 +475,6 @@ pageDocumentDesign ctx
        field "csvrowcount" $ length csvdata
        field "csvcustomfields" $ csvcustomfields
        field "isvalidcsv" $ null csvproblems
-       documentTokens tokens
        documentInfoFields document
        documentViewFields document
        designViewFields step
@@ -537,7 +534,6 @@ csvProblemFields templates probcount number csvproblem = do
 pageDocumentForAuthor :: Context 
              -> Document 
              -> User
-             -> (ActionID, MagicHash)
              -> IO String
 pageDocumentForAuthor ctx
   document@Document {
@@ -545,7 +541,7 @@ pageDocumentForAuthor ctx
     , documentid
     , documentstatus
   }
-  author tokens =
+  author =
    let
        templates = ctxtemplates ctx
        authorid = userid author
@@ -570,10 +566,9 @@ pageDocumentForAuthor ctx
        field "cancelMailContent" $ mailCancelDocumentByAuthorContent templates False Nothing ctx document author
        field "linkcancel" $ show $ LinkCancel document
        field "docstate" (buildJS documentauthordetails documentsignatorylinks)
-       field "linkissuedocpdf" $ show (LinkIssueDocPDF tokens document)
+       field "linkissuedocpdf" $ show (LinkIssueDocPDF document)
        field "documentinfotext" $ documentInfoText templates document (find (isMatchingSignatoryLink author) documentsignatorylinks) author
        documentAuthorInfo author
-       documentTokens tokens
        documentInfoFields document
        documentViewFields document
 
@@ -582,7 +577,7 @@ pageDocumentForAuthor ctx
    Show no buttons or other controls
  -}                                                                                                          
 
-pageDocumentForViewer :: Context -> Document -> User -> (ActionID, MagicHash) -> IO String
+pageDocumentForViewer :: Context -> Document -> User -> IO String
 pageDocumentForViewer ctx
   document@Document {
       documentsignatorylinks
@@ -592,7 +587,7 @@ pageDocumentForViewer ctx
     , documentinvitetext
     , documentallowedidtypes
   }
-  author tokens =
+  author =
     let
         authorid = userid author
         -- the author gets his own space when he's editing
@@ -629,9 +624,8 @@ pageDocumentForViewer ctx
        field "emailonly" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isNothing $ find (== ELegitimationIdentification) documentallowedidtypes)
        field "elegitimationonly" $ (isNothing $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)
        field "docstate" (buildJS documentauthordetails documentsignatorylinks)
-       field "linkissuedocpdf" $ show (LinkIssueDocPDF tokens document)
+       field "linkissuedocpdf" $ show (LinkIssueDocPDF document)
        field "documentinfotext" $ documentinfotext
-       documentTokens tokens
        documentInfoFields document 
        documentViewFields document
        documentAuthorInfo author
@@ -642,9 +636,8 @@ pageDocumentForSignatory :: KontraLink
                     -> Context
                     -> SignatoryLink
                     -> User
-                    -> (ActionID, MagicHash)
                     -> IO String 
-pageDocumentForSignatory action document ctx invitedlink author tokens =
+pageDocumentForSignatory action document ctx invitedlink author =
   let
       localscripts =
            "var docstate = "
@@ -664,10 +657,9 @@ pageDocumentForSignatory action document ctx invitedlink author tokens =
       field "rejectMessage" $  mailRejectMailContent (ctxtemplates ctx) Nothing ctx (prettyName author) document invitedlink
       field "partyUnsigned" $ renderListTemplate (ctxtemplates ctx) $  map (BS.toString . personname') $ partyUnsignedMeAndList magichash document
       field "action" $ show action
-      field "linkissuedocpdf" $ show (LinkIssueDocPDF tokens document)
+      field "linkissuedocpdf" $ show (LinkIssueDocPDF document)
       field "documentinfotext" $  documentInfoText (ctxtemplates ctx) document (Just invitedlink) author
       field "requireseleg" requiresEleg
-      documentTokens tokens
       documentInfoFields document
       documentAuthorInfo author
       documentViewFields document
@@ -752,12 +744,6 @@ documentInfoText templates document siglnk author =
     documentInfoFields document 
     documentAuthorInfo author
     signedByMeFields document siglnk
-
--- | Tokens for allowing user to fetch document in jpg/pdf
-documentTokens :: (ActionID, MagicHash) -> Fields
-documentTokens (aid, hash) = do
-    field "doctokenid"   $ show aid
-    field "doctokenhash" $ show hash
 
 -- | Basic info about document , name, id ,author
 documentInfoFields :: Document -> Fields
