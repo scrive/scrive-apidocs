@@ -146,22 +146,42 @@ signupLinkEmailPart=
 newUserMailTitle=Nytt konto
 ####
 newUserMailContent=
-    <p>Hej,</p>
-    <p>Jag heter Lukas Duczko och är VD på SkrivaPå. Tack för att du har skapat ett konto hos oss. Du har blivit speciellt 
-       inbjuden till ett kampanjkonto på SkrivaPå. Du får fri användning av tjänsten till och med 31 $if(vip)$december$else$maj!$endif$ Använd den så mycket
-       du bara kan.
-    </p> 
-    <p> Vi hoppas att du kommer att bli nöjd med våra tjänster. Tveka inte att höra av dig med feedback eller bara en enkel hälsning. 
-        Din åsikt är värdefull.
-    </p>
+<p>Hej,</p>
+<p>
 
-    <p>Användarnamn:<br/>
-    $email$</p>
-    
-    <p>Du aktiverar ditt konto genom att klicka på länken nedan. Länken är giltig i 12 timmar.<br/>
-    <a href="$ctxhostpart$$activatelink$">$ctxhostpart$$activatelink$</a></p>
+  Jag heter Lukas Duczko och är VD på SkrivaPå. Tack för att du har
+  skapat ett konto hos oss. När du aktiverat ditt konto kommer du
+  kunna använda tjänsten med full funktionalitet med kontoplanen
+  Business i 1 månad utan kostnad. Väljer du att inte fortsätta med en
+  betald kontoplan efter testperioden behåller du givetvis tillgång
+  till samtliga dina dokument på SkrivaPå och kan fortsätta använda
+  tjänsten genom vår fria kontoplan Free.
 
-    $poweredBySkrivaPaPara()$
+</p>
+<p> 
+
+  Vi hoppas att du kommer att bli nöjd med våra tjänster. Tveka inte
+  att höra av dig med feedback eller bara en enkel hälsning. Din åsikt
+  är värdefull.
+
+</p>
+<p>
+
+  Användarnamn:<br/>
+  $email$
+
+</p>
+
+<p>
+
+  Du aktiverar ditt konto genom att klicka på länken nedan. Länken är
+  giltig i 12 timmar.<br/>
+  
+  <a href="$ctxhostpart$$activatelink$">$ctxhostpart$$activatelink$</a>
+
+</p>
+
+$poweredBySkrivaPaPara()$
 ####
 inviteSubaccountMailTitle=Inbjudan från $supervisorname$ till underkonto
 ####
