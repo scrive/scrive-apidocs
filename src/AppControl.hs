@@ -433,7 +433,9 @@ signupVipPageGet = do
     V.renderFromBody ctx V.TopNone V.kontrakcja $ cdata content 
 
 signupPagePost :: Kontra KontraLink
-signupPagePost = signup False $ parseMinutesTimeMDY "31-05-2011"
+signupPagePost = do
+    Context { ctxtime = MinutesTime time seconds } <- get
+    signup False $ Just (MinutesTime (time + 60 * 24 * 31) seconds)
 
 signupVipPagePost :: Kontra KontraLink
 signupVipPagePost = signup True $ parseMinutesTimeMDY "31-12-2011"
