@@ -1235,9 +1235,9 @@ function renumberParts() {
 
   var idx = 1;
   persondetails.each(function () {
-          var authorrole = $(this).find("input[name='authorrole'][value='signatory']");
-          var signatoryrole = $(this).find("input[name='signatoryrole'][value='signatory']");
-          var isSignatory = authorrole.attr("checked") || signatoryrole.attr("checked");
+          var authorrole = $(this).find("input:radio[value='signatory']:checked");
+          var signatoryrole = $(this).find("input:radio[value='signatory']:checked");
+          var isSignatory = (authorrole.length + signatoryrole.length)>0;
           if( isSignatory ) {
               $(this).find(".partnumber").text("PART " + idx);
               idx = idx + 1;

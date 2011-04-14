@@ -469,9 +469,10 @@ pageDocumentDesign=
       </div>
       <div class="partyrole">
         <a href="#" class="popup-close closelink"></a>
-        <input type="radio" name="signatoryrole" value="signatory" checked><span class="radiolabel">Undertecknande part</span></input>
+        <input type="hidden" name="signatoryrole" value="signatory"> </input>
+        <input type="radio" value="signatory" checked="true"><span class="radiolabel">Undertecknande part</span></input>
         <br/>
-        <input type="radio" name="signatoryrole" value="viewer"><span class="radiolabel">Ej undertecknande part</span></input>
+        <input type="radio" value="nonsignatory"><span class="radiolabel">Ej undertecknande part</span></input>
       </div>
     </div>
   </span>
