@@ -537,8 +537,8 @@ function authorToHTML(sig) {
   
   var sigentry = sl.find(".authordetails");
   var manlink = sigentry.find("a.man");
-  var sigcheck = sigentry.find(".partyrole input").first();
-  var seccheck = sigentry.find(".partyrole input").last();
+  var sigcheck = sigentry.find(".partyrole input:radio").first();
+  var seccheck = sigentry.find(".partyrole input:radio").last();
 
   if (sig.signatory) {
     sigcheck.attr("checked", "true");
@@ -546,7 +546,7 @@ function authorToHTML(sig) {
     seccheck.attr("checked", "false");
   }
 
-  sigentry.find(".partyrole input").first().change(function() {
+  sigentry.find(".partyrole input:radio").first().change(function() {
     var checkBox = $(".sendcheckbox");
     if(checkBox.attr("checked")) { 
         checkBox.attr("checked", false).change();
@@ -566,9 +566,9 @@ function authorToHTML(sig) {
   });
 
   if(sig.signatory) {
-    sigentry.find(".partyrole input").first().attr("checked", "true");
+    sigentry.find(".partyrole input:radio").first().attr("checked", "true");
   } else {
-    sigentry.find(".partyrole input").last().attr("checked", "true");
+    sigentry.find(".partyrole input:radio").last().attr("checked", "true");
   }
 
   $("#peopleList ol").append("<li><a href='#'>"
@@ -847,6 +847,19 @@ function signatoryToHTML(isMultiple, sig) {
     manlink.removeClass("selected");
     return false;
   });
+
+  var radiobuttons = sigentry.find(".partyrole input:radio");
+  radiobuttons.change(function() {
+          if( $(this).attr("checked")) {
+              sigentry.find(".partyrole input:hidden").val($(this).attr("value"));
+              var that = this;
+              radiobuttons.each( function() {
+                      if( that!=this ) {
+                          $(this).attr("checked",false);
+                      }
+                  });
+          }
+      });
 
 
   var d = sigentry.find(".fields");

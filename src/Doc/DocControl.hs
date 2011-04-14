@@ -1049,8 +1049,8 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
                      then (authordetails,[SignatoryPartner]) : zip signatories roles2
                      else zip signatories roles2
       roles2 = map guessRoles signatoriesroles
-      guessRoles x | x == BS.fromString "viewer" = []
-                   | otherwise = [SignatoryPartner]
+      guessRoles x | x == BS.fromString "signatory" = [SignatoryPartner]
+                   | otherwise = []
       mcsvsigindex = fmap (personToSigIndex isauthorsig) mcsvpersonindex
   -- FIXME: tell the user what happened!
   -- when (daystosign<1 || daystosign>99) mzero
