@@ -261,10 +261,10 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                         </th>
                                                 </tr>
                                                 <tr class="odd-row">
-                                                        <td><a href="#">1 användare</a></td>
-                                                        <td><a href="#">1 användare</a></td>
-                                                        <td><a href="#">2-9 användare</a></td>
-                                                        <td><a href="#">Obegränsat antal användare</a></td>
+                                                        <td><a href="/priceplan.html?nocolumns">1 användare</a></td>
+                                                        <td><a href="/priceplan.html?nocolumns">3 användare</a></td>
+                                                        <td><a href="/priceplan.html?nocolumns">9 användare</a></td>
+                                                        <td><a href="/priceplan.html?nocolumns">Obegränsat antal användare</a></td>
                                                 </tr>
                                                 <tr>
                                                         <td><a href="/priceplan.html?nocolumns">3 fria signaturer/mån</a></td>
@@ -316,7 +316,8 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                                 <h4>Business</h4>
                                                                 <p>Medel volym och många användningsområden</p>
                                                         </li>
-                                                        <li class="odd"><a href="#">2-9 användare</a></li>
+                                                        <li class="odd"><a href="/priceplan.html?nocolumns">9 användare</a></li>
+
                                                         <li>
                                                                 <p><a href="/priceplan.html?nocolumns">25 fria signaturer/mån</a></p>
                                                         </li>
