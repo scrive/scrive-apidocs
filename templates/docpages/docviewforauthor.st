@@ -3,7 +3,7 @@ pageDocumentForAuthor=
   <div class="localdialogs">
     <div style="display: none">
       <script type="text/javascript"> 
-        var documentid = "$documentid$", doctokenid = "$doctokenid$", doctokenhash = "$doctokenhash$";
+        var documentid = "$documentid$";
       </script>
     </div>
   </div>
