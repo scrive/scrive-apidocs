@@ -70,7 +70,7 @@ mailInvitationToSignContent=
     <span>
       <p><i>Översiktlig information</i><br/>
         Parter: $partnersinfo:noescape()$<br/>
-        $whohadsignedinfo:noescape()$<br/>
+        $if(!offer)$ $whohadsignedinfo:noescape()$<br/> $endif$
         $timetosigninfo:noescape()$
       </p>
       <p><i>Så här går du vidare</i><br/>
@@ -78,7 +78,11 @@ mailInvitationToSignContent=
         <a href="$link$">$link$</a> <br/>
         <br/>
         2. Granska online<br/>
-        3. Underteckna (eller avvisa)<br/>
+        $if(offer)$ 
+            3. Godkänna (eller avvisa)<br/> 
+        $else$ 
+            3. Underteckna (eller avvisa)<br/> 
+        $endif$
         4. Färdig
       </p>
     </span>

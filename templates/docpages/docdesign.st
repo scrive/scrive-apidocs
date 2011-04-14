@@ -109,7 +109,7 @@ pageDocumentDesign=
                 <!-- 008 change/new -->
                 <div class="signStepsBodyIcons">
                   <span class="partnumber">PART 1</span>
-                  <a href="#man2" class="man"></a>
+                  $if(contract)$<a href="#man2" class="man"></a>$endif$
                   <a class="plus" href="#"></a>
                 </div>
                 
@@ -186,7 +186,7 @@ pageDocumentDesign=
                   </span>
                   <div class="partyrole">
                     <a href="#" class="popup-close closelink"></a>
-                    <input type="radio" name="authorrole" id="authorsignatoryradio" value="signatory" checked><span class="radiolabel">Undertecknande part</span></input>
+                    <input type="radio" name="authorrole" id="authorsignatoryradio" value="signatory"><span class="radiolabel">Undertecknande part</span></input>
                     <br/>
                     <input type="radio" name="authorrole" id="authorsecretaryradio" value="secretary"><span class="radiolabel">Ej undertecknande part</span></input>
                   </div>
@@ -198,11 +198,10 @@ pageDocumentDesign=
             
             <div id="signStepsBodyFunctions">
               <div id="signStepsBodyFunctionsBox">
+                $if(contract)$
                 <ul>
-
                   <li class="plus"><a class="designFunctionalLink" href="#add"  id="addSignatory">LÄGG TILL PERSON</a></li>
                   <li class="minus"><a class="designFunctionalLink" href="#remove"  id="delSignatory">TA BORT PERSON</a></li>
-
                 </ul>
                 <div class="signStepsButton" id="signStepsNextButton" >
                   <a href="#nextStep" id="nextstep" class="btn-small green center" style="display:inline-block">
@@ -212,13 +211,56 @@ pageDocumentDesign=
                         <span class="btn-symbol green arrow-left"></span>
                     </div>
                     <div class="right"></div>
-                
                   </a>  
                 </div>
-              </div>
+                $elseif(offer)$
+
+                <div>
+                     <input style="position:relative;top:2px" type="checkbox" class="addremovecheckbox flashOnOn" flashtype="red"
+                           rel="#daystosignbox"
+                           location="#datetosigncontainer"
+                           oldlocation="#hiddenttimestuffbox"
+                           autocomplete="off"
+                           value="$if(timetosignset)$on$else$off$endif$"
+                           id="daystosigncheckbox" />
+                     <span class="hidden flashMessage">Väljer du ett giltighetsdatum så kan du ej återkalla offerten.</span>
+                     <label for="daystosigncheckbox">Giltig t.o.m.</label>
+                     <div id="datetosigncontainer" style="padding-left:20px">  </div>
+                </div>
+
+                <div class="signStepsBodyInvation">
+                 <small><a rel="#edit-invite-text-dialog" id="editinvitetextlink" href="#" style="padding-top:3px">JUSTERA HÄLSNINGSMEDDELANDE</a></small>
+                 <input type="hidden" id="invitetext" name="invitetext" value="$documentinvitetext$" />
+                </div>
+                 
+                 $if(template)$
+                 <div class="signStepButton" style="display:inline-block;padding-top:4px;">
+                    <a class="btn-small green center submiter">
+                    <div class="left"></div>
+                    <div class="label">
+                    <span>Spara mall</span>
+                    <span class="btn-symbol green arrow-left"></span>
+                    </div>
+                    <div class="right"></div>
+                    </a>
+                 </div>
+                 $else$
+                 <div class="signStepButton" style="display:inline-block;padding-top:4px;">
+                   <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"  class="btn-big green center">
+                    <div class="left"></div>
+                    <div class="label" style="padding-left:20px;padding-right:20px"><span >Skicka </span>
+                    <span class="btn-symbol green arrow-left" style="position:relative;top:3px;right:0px"></span></div> 
+                    <div class="right"></div>
+                  </a>
+                 </div>
+                 $endif$
+                $endif$
+             </div>
             </div>
           </div>
         </div>
+
+
         $if(contract)$
         <div id="signStep3Content" $if(!step3)$ style="display: none" $endif$>
 
@@ -342,6 +384,7 @@ pageDocumentDesign=
     var csvrowcount = $csvrowcount$;
     var initialperson = $initialperson$;
     var isaftercsvupload = $if(isaftercsvupload)$true$else$false$endif$;
+    var offer = $if(offer)$true$else$false$endif$;
   </script>
   <script src="/js/templates.js" type="text/javascript"></script>
   <div class="waiting4page"></div>
@@ -359,10 +402,14 @@ pageDocumentDesign=
     <div class="signStepsBodyIcons">
       <span class="partnumber">PART 1</span>
       <a href="#plus2" class="plus"></a>
+      $if(contract)$
       <select name="signatoryrole">
          <option value="signatory">Signatory</option>
          <option value="viewer">Viewer</option>
       </select>
+      $elseif(offer)$
+      <input type="hidden" name="signatoryrole" value="signatory">
+      $endif$
     </div>
     
     <!-- 013 changed -->
@@ -672,10 +719,10 @@ pageDocumentForAuthorHelpersLocalDialogs=
       </div>
       <div class="modal-body">
         <div class="modal-content">
+         $if(contract)$ 
           <div id="dialog-confirm-text-send">
             <p>Du har valt en sekreterarroll och kommer själv inte att underteckna. Är du säker på att du vill skicka en inbjudan att underteckna dokumentet <strong>$documenttitle$</strong> till <span class="Xinvited">Invited</span>?</p>
           </div>
-
           <div id="dialog-confirm-text-send-fields">
             <p>Du har skapat fält för parterna att fylla i innan de undertecknar. Efter att alla har undertecknat kommer du att 
               få ett mail med en länk till en sida på SkrivaPå där du kan granska parternas uppgifter och underteckna dokumentet. </p>
@@ -687,6 +734,11 @@ pageDocumentForAuthorHelpersLocalDialogs=
             <p> Vill du skicka en inbjudan att underteckna dokumentet till <span class="Xinvited">Invited</span>? 
               Efter att de har undertecknat kommer du att få ett mail med en länk till en sida på SkrivaPå där du kan underteckna dokumentet.</p>
           </div>
+          $elseif(offer)$
+            <div id="dialog-confirm-text-send">
+              <p>Some new text that I cent get from spec <strong>$documenttitle$</strong> till <span class="Xinvited">Invited</span>?</p>
+            </div>
+          $endif$
         </div>
       </div>
       <div class="modal-footer">

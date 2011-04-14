@@ -791,7 +791,7 @@ function setupAsMultiplePart(sigentry) {
 }
 
 function setupAsSinglePart(sigentry) {
-  
+  if (offer) return false;
   var icons = sigentry.find('.signStepsBodyIcons');
   icons.find(".group").remove();
   icons.find(".csvfileinfo").remove();
