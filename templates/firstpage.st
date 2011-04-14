@@ -262,8 +262,8 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 </tr>
                                                 <tr class="odd-row">
                                                         <td><a href="#">1 användare</a></td>
-                                                        <td><a href="#">1 användare</a></td>
-                                                        <td><a href="#">2-9 användare</a></td>
+                                                        <td><a href="#">3 användare</a></td>
+                                                        <td><a href="#">9 användare</a></td>
                                                         <td><a href="#">Obegränsat antal användare</a></td>
                                                 </tr>
                                                 <tr>
@@ -293,17 +293,14 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <tr class="big-row">
                                                         <td>
                                                                 <h4>0kr</h4>
-                                                                <p>Per användare och månad</p>
                                                                 <a href="priceplan.html?nocolumns">Läs mer</a>
                                                         </td>
                                                         <td>
                                                                 <h4>299kr</h4>
-                                                                <p>Per användare och månad</p>
                                                                 <a href="priceplan.html?nocolumns">Läs mer</a>
                                                         </td>
                                                         <td>
                                                                 <h4>499kr</h4>
-                                                                <p>Per användare och månad</p>
                                                                 <a href="priceplan.html?nocolumns">Läs mer<a>                                                   
                                                         </td>
                                                         <td>
@@ -319,7 +316,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                                 <h4>Business</h4>
                                                                 <p>Medel volym och många användningsområden</p>
                                                         </li>
-                                                        <li class="odd"><a href="#">2-9 användare</a></li>
+                                                        <li class="odd"><a href="#">9 användare</a></li>
                                                         <li>
                                                                 <p><a href="#">25 fria signaturer/mån</a></p>
                                                         </li>
@@ -328,7 +325,6 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                         <li class="odd"><a href="#">Avancerade funktioner</a></li>
                                                         <li class="bottom">
                                                                 <h4>499kr</h4>
-                                                                <p>Per användare och månad</p>
                                                                 <a href="priceplan.html?nocolumns">Läs mer</a>   
                                                         </li>
                                                 </ul>
