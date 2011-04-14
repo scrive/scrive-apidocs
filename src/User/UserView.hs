@@ -41,7 +41,8 @@ module User.UserView (
     flashMessageNewActivationLinkSend,
     flashMessageUserSignupDone,
     flashMessageAccountRequestSend,
-
+    flashMessageThanksForTheQuestion,
+    
     --modals
     modalNewPasswordView,
 
@@ -240,6 +241,10 @@ modalAccountRemoved :: KontrakcjaTemplates -> BS.ByteString -> KontraModal
 modalAccountRemoved templates doctitle = do
     lift $ renderTemplate templates "modalAccountRemoved" $ do
         field "documenttitle"  $ BS.toString doctitle
+
+flashMessageThanksForTheQuestion :: KontrakcjaTemplates -> IO FlashMessage
+flashMessageThanksForTheQuestion templates =
+    toFlashMsg OperationDone <$> renderTemplate templates "flashMessageThanksForTheQuestion" ()
 
 flashMessageLoginRedirectReason :: KontrakcjaTemplates -> LoginRedirectReason -> IO (Maybe FlashMessage)
 flashMessageLoginRedirectReason templates reason =
