@@ -168,17 +168,28 @@ isAuthor d u = getUserID u ==  getUserID (documentauthor d)
 anyInvitationUndelivered :: Document -> Bool
 anyInvitationUndelivered =  not . Prelude.null . undeliveredSignatoryLinks
 
-isContract :: Document -> Bool
-isContract d =  (documenttype d == ContractTemplate) || (documenttype d == Contract)
+class MaybeTemplate a where
+   isTemplate :: a -> Bool
+   isSignable :: a -> Bool 
+   isSignable = not . isTemplate
 
-isOffer :: Document -> Bool 
-isOffer = not . isContract
+class MaybeContractOrOffer a where
+   isContract :: a -> Bool 
+   isOffer :: a -> Bool 
+   isOffer = not . isContract
+   
+instance  MaybeTemplate DocumentType where
+   isTemplate t = (t == ContractTemplate) || (t == OfferTemplate) 
+   
+instance  MaybeContractOrOffer DocumentType where
+   isContract t =  (t == ContractTemplate) || (t == Contract)
 
-isTemplate :: Document -> Bool
-isTemplate d = (documenttype d == ContractTemplate) || (documenttype d == OfferTemplate)
-
-isSignable :: Document -> Bool 
-isSignable = not . isTemplate
+instance  MaybeTemplate Document where
+   isTemplate =  isTemplate . documenttype
+   
+instance  MaybeContractOrOffer Document where
+   isContract =  isContract . documenttype
+ 
 
 
 checkCSVSigIndex :: UserID -> [SignatoryLink] -> Int -> Either String Int

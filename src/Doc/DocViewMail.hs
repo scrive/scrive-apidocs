@@ -238,13 +238,15 @@ mailInvitationToSignContent templates forMail (Context {ctxhostpart})
             partnersinfo' <- partnersinfo
             whohadsignedinfo' <- whohadsignedinfo
             timetosigninfo' <- timetosigninfo
-            renderTemplate templates "mailInvitationToSignContent" [("header",editableHeader),
-                                                                ("footer",footer'),
-                                                                ("timetosigninfo",timetosigninfo'),
-                                                                ("partnersinfo",partnersinfo'),  
-                                                                ("whohadsignedinfo", whohadsignedinfo'),
-                                                                ("documenttitle",BS.toString documenttitle),
-                                                                ("link",link)]    
+            renderTemplate templates "mailInvitationToSignContent" $ do
+                field "header" editableHeader
+                field "footer" footer'
+                field "timetosigninfo" timetosigninfo'
+                field "partnersinfo" partnersinfo'
+                field "whohadsignedinfo" whohadsignedinfo'
+                field "documenttitle" $ BS.toString documenttitle
+                field "offer" $ isOffer document
+                field "link" link    
                                                                 
 mailInvitationToSign::  KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> User -> IO Mail
 mailInvitationToSign templates ctx document@Document{documenttitle} signaturelink author = 

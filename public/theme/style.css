@@ -1281,7 +1281,7 @@ input.multiFileInput {
 /* 013 changed */
 #signStepsBodyLeft
 {
-    width: 360px;
+    width: 350px;
     float: left;
     position: relative;
 }
@@ -1717,7 +1717,6 @@ input.multiFileInput {
 #signStepsBodyFunctionsBox ul
 {
     list-style-type: none;
-  	margin: 9px 0 0 22px;
  	padding-left: 0;
 	padding-bottom: 2px;
 
@@ -1801,7 +1800,7 @@ form {
 
 #signStepsBodyFunctions
 {
-    width: 186px;
+    width: 216px;
     position: relative;
     float: right;
 
@@ -1828,9 +1827,9 @@ form {
 /* 013 changed */
 #signStepsBodyFunctionsBox
 {
-    width: 100%;
-    margin: 7px 0px 5px 0px;
-    
+    margin: 7px 5px 0px;
+    padding-left: 22px;
+    padding-top: 9px;
     -moz-border-radius: 2px;
     -webkit-border-radius: 2px;
     -khtml-border-radius: 2px;
@@ -2160,7 +2159,7 @@ form {
 
 #signStepsBody.personPaneSmallNumberMode #personpane
 {
-    width: 720px;
+    width: 700px;
 }
 
 #personpane 
@@ -2297,7 +2296,7 @@ a.csvinvalid {
    width: 30px;
 }
 .persondetails {
-    width: 360px;
+    width: 350px;
 }
 
 .signViewBodyForms .dragfield input {
