@@ -26,7 +26,7 @@ import Control.Monad
 import Data.Maybe
 import Data.List
 import Data.Char
-import System.Log.Logger
+import AppLogger as Log
 import Text.Html (stringToHtmlString)
 
 {-Names of template files -}
@@ -77,10 +77,10 @@ renderTemplateMain ts name params f = do
                 let t'= f (setManyAttrib params  t)   
                 let (e,p,st) = checkTemplateDeep t'
                 when (not (null e) || not (null p) || not (null st)) $
-                     errorM "Happstack.Server" $ "Template " ++ name ++ " problem with message " ++ (show (e,p,st)) 
+                     Log.error $ "Template " ++ name ++ " problem with message " ++ (show (e,p,st)) 
                 return $ render t'
         Nothing -> do
-                errorM "Happstack.Server" $ "No template named " ++ name 
+                Log.error $ "No template named " ++ name 
                 return ""                                   
 
 readTemplates :: IO KontrakcjaTemplates 
