@@ -366,15 +366,18 @@ function allparties()
       var sigs = $("form .persondetails").filter(":not(.authordetails)");
       var allparties = new Array();
       sigs.each(function(index) { 
-        var fstnameelem = $("input[name='signatoryfstname']", this);
-        if (isMultiPartElem(fstnameelem)) {
-          allparties.push(csvrowcount + " Parter");
-        } else {
-          var fstname = fstnameelem.val();
-          var sndname = $("input[name='signatorysndname']",this).val();  
-          allparties.push(escapeHTML(fstname + " " + sndname));
-        }
-      });
+              if( $("input:radio:first:checked",this).length>0 ) {
+
+                  var fstnameelem = $("input[name='signatoryfstname']", this);
+                  if (isMultiPartElem(fstnameelem)) {
+                      allparties.push(csvrowcount + " Parter");
+                  } else {
+                      var fstname = fstnameelem.val();
+                      var sndname = $("input[name='signatorysndname']",this).val();  
+                      allparties.push(escapeHTML(fstname + " " + sndname));
+                  }
+              }
+          });
       return allparties;   
 }
 
@@ -483,25 +486,28 @@ safeReady(function() {
       var author = $(".authorname .fieldvalue").text();
       var sigs = $("#personpane .persondetails");
       var partners = new Array();
-      var i = 0;
+
       if (authorSignes)   {
         signedList.html(signedList.attr("okprefix")+" <strong>"+author+"</strong>");
-        partners[i] = author;
+        partners.push(author);
         i++;
       } else {
         signedList.html(signedList.attr("alt"));
       }
       //ignore first one (it is author and we added him earlier)
       sigs.slice(1).each(function(){
-        var fstnamefield = $("[name='signatoryfstname']",this);
-        var sndnamefield = $("[name='signatorysndname']",this);
-        var mailfield =  $("[name='signatoryemail']",this)
-        var res = escapeHTML(fstnamefield.val() + " " + sndnamefield.val());
-        if ((!mailfield.hasClass("grayed"))&&(fstnamefield.hasClass("grayed") && sndnamefield.hasClass("grayed")))
-          res = mailfield.val(); 
-        partners[i] = res;
-        i++;
-      });
+              if( $("input:radio:first:checked",this).length>0 ) {
+                  var fstnamefield = $("input[name='signatoryfstname']",this);
+                  var sndnamefield = $("input[name='signatorysndname']",this);
+                  var mailfield =  $("input[name='signatoryemail']",this)
+                      var res = escapeHTML(fstnamefield.val() + " " + sndnamefield.val());
+                  if ((!mailfield.hasClass("grayed")) && 
+                      (fstnamefield.hasClass("grayed") && 
+                       sndnamefield.hasClass("grayed")))
+                      res = mailfield.val(); 
+                  partners.push(res);
+              }
+          });
       $(".partylistupdate").html(swedishList(partners));
     }
   });   
