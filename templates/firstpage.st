@@ -99,8 +99,8 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 </h3>
                                                 <h2>Skapa konto nu!</h2>
                                                 <h3>1 månad full funktionalitet utan kostnad. Inga förpliktelser.</h3>
-                                                <form method="post" action="$linkrequestaccount$" class="requestAccount">
-                                                        <input class="shiny" type="email" name="email" infotext="Fyll i din e-postadress" /> <a href="#" class="submit new-btn-small green2 center"><p>Skicka förfrågan!</p></a>
+                                                <form method="post" action="/signup" class="requestAccount">
+                                                        <input class="shiny" type="email" name="email" infotext="Fyll i din e-postadress" /> <a href="#" class="submit new-btn-small green2 center"><p>Skapa konto!</p></a>
                                                         <input type="submit" class="hidden" />
                                                 </form>
                                         </div>
@@ -341,8 +341,8 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <p>Allt inkluderat. Standardkonto, fria transaktioner och fri lagring.</p>
                                         </div>
                                         <div class="right">
-                                                <form method="post" action="$linkrequestaccount$" class="requestAccount">
-                                                        <a href="#" class="submit new-btn-small green2 center float-right"><p>Skicka förfrågan!</p></a>
+                                                <form method="post" action="/signup" class="requestAccount">
+                                                        <a href="#" class="submit new-btn-small green2 center float-right"><p>Skapa konto!</p></a>
                                                         <input class="shiny float-left" name="email" type="email" infotext="Fyll i din e-postadress" />
                                                         <input type="submit" class="hidden" />
                                                 </form>
