@@ -9,6 +9,7 @@ $loadingdialog()$
 		</div>
 		<ul class="tabs">
 			<li class="active"><a href="/d" class="listtype">Dokument</a></li>
+            <li><a href="/o">Offerter</a></li>
 			<li><a href="/t">Mallar</a></li>
 			<!-- <li><a href="/contacts">Kontakter</a></li> -->
 		</ul>

@@ -47,7 +47,11 @@ signatoryBox =
 ####
 signatoryMessage=
 $if(signatory.signdate)$
+    $if(contract)$  
         Undertecknat $signatory.signdate$
+    $elseif(offer)$
+        Godkänt  $signatory.signdate$
+    $endif$
 $elseif(signatory.datamismatch)$
         Felaktig e-legitmation
 $elseif(timedout)$
@@ -57,9 +61,13 @@ $elseif(cancel)$
 $elseif(datamismatch)$
 
 $elseif(signatory.seendate)$        
-Granskat $signatory.seendate$
+    Granskat $signatory.seendate$
 $else$
-Har ej undertecknat
+    $if(contract)$  
+        Har ej undertecknat
+    $elseif(offer)$
+        Har ej godkänt
+    $endif$
 $endif$
                
 ###       
