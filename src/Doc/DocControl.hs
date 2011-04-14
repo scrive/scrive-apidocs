@@ -355,7 +355,7 @@ signDocument :: DocumentID -- ^ The DocumentID of the document to sign
 signDocument documentid
              signatorylinkid1
              magichash1
-                 = do
+                 = do            
   Context { ctxtime, ctxipnumber, ctxtemplates, ctxmaybeuser } <- get
   document@Document{ documentstatus = olddocumentstatus, documentsignatorylinks } <- queryOrFail $ GetDocumentByDocumentID documentid
 
@@ -391,7 +391,9 @@ signDocument documentid
               muser <- liftIO $ createUserBySigning ctx (documenttitle document) fullname email company (documentid, signatorylinkid1)
               when_ (isJust muser) $
                   update $ SaveDocumentForSignedUser documentid (userid $ fromJust muser) signatorylinkid1
-          addModal $ modalSignedView document signatorylink (isJust maybeuser) (isJust ctxmaybeuser)
+          if (isContract document)
+            then addModal $ modalSignedView document signatorylink (isJust maybeuser) (isJust ctxmaybeuser)
+            else addModal $ modalOfferSigned document
           return $ LinkSignDoc document signatorylink
 
 {- |
@@ -630,7 +632,9 @@ handleIssueSend document author = do
               mndocs <- mapM (forIndividual ctxtime ctxipnumber udoc) docs
               case (lefts mndocs, rights mndocs) of
                 ([],d:[]) -> do
-                    addModal $ modalSignInviteView d
+                    if (isOffer d) 
+                     then addModal $ modalOfferCreated d
+                     else addModal $ modalSignInviteView d
                     return $ LinkIssueDoc (documentid d)
                 ([],ds) -> return $ LinkContracts emptyListParams
                 _ -> mzero
@@ -1329,25 +1333,24 @@ getCustomTextField = getValidateAndHandle asValidInviteText customTextHandler
 --This only works for undelivered mails. We shoulkd check if current user is author
 handleChangeSignatoryEmail::String -> String -> Kontra KontraLink
 handleChangeSignatoryEmail did slid = do
-                                     let mdid = readM did
-                                     memail <- getOptionalField asValidEmail "email"
-                                     let mslid = readM slid
-                                     case (mdid,mslid,memail) of
-                                       (Just docid,Just slid,Just email) -> do
-                                                                           ctx <- get
-                                                                           md <- query $ GetDocumentByDocumentID docid
-                                                                           when ((liftM2 isAuthor md $ ctxmaybeuser ctx) /= Just True) mzero
-                                                                           mdoc <- update $ ChangeSignatoryEmailWhenUndelivered docid slid email
-                                                                           let msl =  do 
-                                                                                        doc <- either (const Nothing) Just mdoc
-                                                                                        find ((== slid) . signatorylinkid) $ documentsignatorylinks doc 
-                                                                           case (mdoc,msl,ctxmaybeuser ctx) of 
-                                                                            (Right doc,Just sl,Just user) -> do
-                                                                                             liftIO $ sendInvitationEmail1 ctx doc user sl
-                                                                                             return $ LinkIssueDoc $ docid                                           
-                                                                            _ -> return LinkMain  
-                                                                           
-                                       _ -> return LinkMain  
+    let mdid = readM did
+    memail <- getOptionalField asValidEmail "email"
+    let mslid = readM slid
+    case (mdid,mslid,memail) of
+     (Just docid,Just slid,Just email) -> do
+         ctx <- get
+         md <- query $ GetDocumentByDocumentID docid
+         when ((liftM2 isAuthor md $ ctxmaybeuser ctx) /= Just True) mzero
+         mdoc <- update $ ChangeSignatoryEmailWhenUndelivered docid slid email
+         let msl =  do 
+                    doc <- either (const Nothing) Just mdoc
+                    find ((== slid) . signatorylinkid) $ documentsignatorylinks doc 
+         case (mdoc,msl,ctxmaybeuser ctx) of 
+              (Right doc,Just sl,Just user) -> do
+                    liftIO $ sendInvitationEmail1 ctx doc user sl
+                    return $ LinkIssueDoc $ docid                                           
+              _ -> return LinkMain                                                               
+     _ -> return LinkMain  
                                      
 
 sendCancelMailsForDocument:: (Maybe BS.ByteString) -> Context -> Document -> Kontra ()

@@ -14,6 +14,10 @@ module Doc.DocView (
   , modalSendInviteView
   , modalSignedView
   , modalLoginForSaveView
+  , modalOfferCreated
+  , modalOfferSigned
+  , modalSignAwaitingAuthorLast
+  , modalRejectedView
   , flashRemindMailSent
   , flashMessageCanceled
   , flashDocumentRestarted
@@ -24,7 +28,6 @@ module Doc.DocView (
   , flashMessageCSVHasTooManyRows
   , flashMessageBulkRemindsSent
   , flashMessageNoBulkRemindsSent
-  , modalRejectedView
   , defaultInviteMessage
   , mailDocumentRemind
   , mailDocumentRejected
@@ -40,7 +43,6 @@ module Doc.DocView (
   , uploadPage
   , templatesForAjax
   , getDataMismatchMessage
-  , modalSignAwaitingAuthorLast
   ) where
 
 import ActionSchedulerState (ActionID)
@@ -124,6 +126,19 @@ modalSignedView document@Document{documenttitle, documentstatus} signatorylink h
          field "email" . signatoryemail $ signatorydetails signatorylink
          field "linklogin" $ show (LinkLogin LoginTry)         
          
+modalOfferCreated::  Document -> KontraModal
+modalOfferCreated document = do
+    templates <- ask   
+    lift $ renderTemplate templates "modalOfferCreated" $ do
+        field "documenttitle" . BS.toString $ documenttitle document      
+        field "signatory" . listToMaybe $ map (BS.toString . personname') $ partyList document
+        
+modalOfferSigned::  Document -> KontraModal
+modalOfferSigned document = do
+    templates <- ask   
+    lift $ renderTemplate templates "modalOfferSigned" $ do
+        field "documenttitle" . BS.toString $ documenttitle document      
+        field "signatory" . listToMaybe $ map (BS.toString . personname') $ partyList document        
 
 flashDocumentDraftSaved :: KontrakcjaTemplates -> IO FlashMessage
 flashDocumentDraftSaved templates =
