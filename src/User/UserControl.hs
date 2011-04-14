@@ -395,7 +395,7 @@ handleQuestion = do
     phone <- getField "phone"
     message <- getField "message"
     case memail of
-         Nothing -> return LinkMain
+         Nothing -> return LoopBack
          Just email -> do
              let content = "name: "    ++ fromMaybe "" name ++ "<BR/>"
                         ++ "email: "   ++ BS.toString email ++ "<BR/>"
@@ -406,7 +406,8 @@ handleQuestion = do
                  , title = BS.fromString $ "Question"
                  , content = BS.fromString $ content
              }
-             return LinkMain
+             addFlashMsg =<< (liftIO $ flashMessageThanksForTheQuestion $ ctxtemplates ctx)
+             return LoopBack
 
 handleAccountSetupGet :: ActionID -> MagicHash -> Kontra Response
 handleAccountSetupGet aid hash = do

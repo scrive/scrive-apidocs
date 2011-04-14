@@ -172,3 +172,5 @@ flashMessageBulkRemindsSent=Påminnelse har skickats till alla parter som ännu 
 ###
 flashMessageNoBulkRemindsSent=Tyvärr, det finns inga parter som återstår att underteckna.
 ###
+flashMessageThanksForTheQuestion=Ditt meddelande har skickats! Vi återkommer inom 24h.
+###
