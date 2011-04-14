@@ -262,33 +262,33 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 </tr>
                                                 <tr class="odd-row">
                                                         <td><a href="#">1 användare</a></td>
-                                                        <td><a href="#">3 användare</a></td>
-                                                        <td><a href="#">9 användare</a></td>
+                                                        <td><a href="#">1 användare</a></td>
+                                                        <td><a href="#">2-9 användare</a></td>
                                                         <td><a href="#">Obegränsat antal användare</a></td>
                                                 </tr>
                                                 <tr>
-                                                        <td><a href="#">3 fria signaturer/mån</a></td>
-                                                        <td><a href="#">15 fria signaturer/mån</a></td>
-                                                        <td><a href="#">25 fria signaturer/mån</a></td>
-                                                        <td><a href="#">Min 1000 signaturer/år</a></td>
+                                                        <td><a href="/priceplan.html?nocolumns">3 fria signaturer/mån</a></td>
+                                                        <td><a href="/priceplan.html?nocolumns">15 fria signaturer/mån</a></td>
+                                                        <td><a href="/priceplan.html?nocolumns">25 fria signaturer/mån</a></td>
+                                                        <td><a href="/priceplan.html?nocolumns">Min 1000 signaturer/år</a></td>
                                                 </tr>
                                                 <tr class="odd-row">
-                                                        <td><a href="#">50 dok lagring</a></td>
-                                                        <td><a href="#">500 dok lagring</a></td>
-                                                        <td><a href="#">Obegränsad lagring</a></td>
-                                                        <td><a href="#">Obegränsad lagring</a></td>
+                                                        <td><a href="/priceplan.html?nocolumns">50 dok lagring</a></td>
+                                                        <td><a href="/priceplan.html?nocolumns">500 dok lagring</a></td>
+                                                        <td><a href="/priceplan.html?nocolumns">Obegränsad lagring</a></td>
+                                                        <td><a href="/priceplan.html?nocolumns">Obegränsad lagring</a></td>
                                                 </tr>
                                                 <tr>
-                                                        <td><a href="#">Individuellt arkiv</a></td>
-                                                        <td><a href="#">Individuellt arkiv</a></td>
-                                                        <td><a href="#">Dela arkiv</a></td>
-                                                        <td><a href="#">Dela arkiv</a></td>
+                                                        <td><a href="/priceplan.html?nocolumns">Individuellt arkiv</a></td>
+                                                        <td><a href="/priceplan.html?nocolumns">Individuellt arkiv</a></td>
+                                                        <td><a href="/priceplan.html?nocolumns">Dela arkiv</a></td>
+                                                        <td><a href="/priceplan.html?nocolumns">Dela arkiv</a></td>
                                                 </tr>
                                                 <tr class="odd-row">
-                                                        <td><a href="#">Basfunktioner</a></td>
-                                                        <td><a href="#">Basfunktioner +</a></td>
-                                                        <td><a href="#">Avancerade funktioner</a></td>
-                                                        <td><a href="#">Avancerade funktioner +</a></td>
+                                                        <td><a href="/priceplan.html?nocolumns">Basfunktioner</a></td>
+                                                        <td><a href="/priceplan.html?nocolumns">Basfunktioner +</a></td>
+                                                        <td><a href="/priceplan.html?nocolumns">Avancerade funktioner</a></td>
+                                                        <td><a href="/priceplan.html?nocolumns">Avancerade funktioner +</a></td>
                                                 </tr>
                                                 <tr class="big-row">
                                                         <td>
@@ -316,13 +316,13 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                                 <h4>Business</h4>
                                                                 <p>Medel volym och många användningsområden</p>
                                                         </li>
-                                                        <li class="odd"><a href="#">9 användare</a></li>
+                                                        <li class="odd"><a href="#">2-9 användare</a></li>
                                                         <li>
-                                                                <p><a href="#">25 fria signaturer/mån</a></p>
+                                                                <p><a href="/priceplan.html?nocolumns">25 fria signaturer/mån</a></p>
                                                         </li>
-                                                        <li class="odd"><a href="#">Obegränsad lagring</a></li>
+                                                        <li class="odd"><a href="/priceplan.html?nocolumns">Obegränsad lagring</a></li>
                                                         <li><a href="#">Dela arkiv</a></li>
-                                                        <li class="odd"><a href="#">Avancerade funktioner</a></li>
+                                                        <li class="odd"><a href="/priceplan.html?nocolumns">Avancerade funktioner</a></li>
                                                         <li class="bottom">
                                                                 <h4>499kr</h4>
                                                                 <a href="priceplan.html?nocolumns">Läs mer</a>   
