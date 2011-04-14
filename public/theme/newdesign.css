@@ -833,6 +833,7 @@
 	color: #666;
 	text-decoration: none;
     cursor:pointer;
+    margin-left: 6px;
 }
 
 .tooltip-container {
