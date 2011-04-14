@@ -53,7 +53,8 @@ renderFromBody :: (EmbedAsChild (HSPT' IO) xml)
                -> Kontra Response
 renderFromBody ctx topmenu title xml = do
     htmlPage <- fmap ((isSuffixOf ".html") . concat . rqPaths)  askRq
-    let showCreateAccount = htmlPage && (isNothing $ ctxmaybeuser ctx)
+    priceplan <- fmap ((isSuffixOf "priceplan.html") . concat . rqPaths) askRq
+    let showCreateAccount = priceplan && htmlPage && (isNothing $ ctxmaybeuser ctx) 
     columns <- isFieldSet "columns"
     loginOn <- isFieldSet "logging"
     curr <- rqUri <$> askRq
