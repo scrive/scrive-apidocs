@@ -1230,24 +1230,22 @@ safeReady(function() {
 });
 
 function renumberParts() {
-  var personpane = $("#personpane");
   console.log("renumber parts");
-  if($("#authorsecretaryradio").attr("checked")) {
-    console.log("sec");
-    personpane.children().each(function(idx) {
-      var p = $(this);
-      p.find(".partnumber").html("PART " + (idx));
-    });
-    console.log("dd");
-    personpane.children().first().find(".partnumber").html("EJ UNDERTECKNANDE PART");
-    console.log(personpane.children().first());
-  } else {
-    personpane.children().each(function(idx) {
-      var p = $(this);
-      p.find(".partnumber").html("PART " + (idx + 1));
-      
-    });
-  }
+  var persondetails = $("#personpane .persondetails");
+
+  var idx = 1;
+  persondetails.each(function () {
+          var authorrole = $(this).find("input[name='authorrole'][value='signatory']");
+          var signatoryrole = $(this).find("input[name='signatoryrole'][value='signatory']");
+          var isSignatory = authorrole.attr("checked") || signatoryrole.attr("checked");
+          if( isSignatory ) {
+              $(this).find(".partnumber").text("PART " + idx);
+              idx = idx + 1;
+          }
+          else {
+              $(this).find(".partnumber").text("EJ UNDERTECKNANDE PART");
+          }
+      });
 }
 
 /*
@@ -1260,15 +1258,13 @@ safeReady(function() {
   // where the red border appears for
   // addsig button
   var liplus = $("li.plus");
-  $("#authorsignatoryradio").click(function() {
-    authorman.removeClass('redborder');
-    liplus.removeClass('redborder');
-    renumberParts();
-  });
-  $("#authorsecretaryradio").click(function() {
-    
-    renumberParts();
-  });
+  $(".partyrole input", "#personpane").live("change", function() {
+          if( $(this).attr("checked")) {
+              authorman.removeClass('redborder');
+              liplus.removeClass('redborder');
+              renumberParts();
+          }
+      });
 });
 
 var signStepsContainer = null;
