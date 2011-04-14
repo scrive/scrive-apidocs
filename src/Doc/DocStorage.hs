@@ -86,13 +86,6 @@ uploadDocumentFilesToTrustWeaver ctxtwconf twownername documentid = do
   return ()
 
 
-{- |
-   The command line for calling ghostscript
- -}
-gs :: String
-gs = "gs"
-
-
 resizeImageAndReturnOriginalSize filepath = do
     (_,Just sizerouthandle,_, sizechecker) <- createProcess $ ( proc "identify" [filepath])
                                               { std_out = CreatePipe }
@@ -132,7 +125,8 @@ convertPdfToJpgPages ctx file docid = withSystemTempDirectory "pdf2jpeg" $ \tmpp
 
   BS.writeFile sourcepath content
 
-  let gsproc = (proc gs [ "-sDEVICE=jpeg" 
+  let gs = ctxgscmd ctx
+      gsproc = (proc gs [ "-sDEVICE=jpeg" 
                         , "-sOutputFile=" ++ tmppath ++ "/output-%d.jpg"
                         , "-dSAFER"
                         , "-dBATCH"
@@ -198,16 +192,18 @@ maybeScheduleRendering ctx@Context{ ctxnormalizeddocuments = mvar }
            return (Map.insert fileid JpegPagesPending setoffilesrenderednow, JpegPagesPending)
 
 {- |  Convert PDF to uncompress it. -}
-preprocessPDF :: BS.ByteString
+preprocessPDF :: Context
+              -> BS.ByteString
               -> DocumentID
               -> IO BS.ByteString
-preprocessPDF content docid = withSystemTempDirectory "preprocess_gs" $ \tmppath -> do
+preprocessPDF ctx content docid = withSystemTempDirectory "preprocess_gs" $ \tmppath -> do
   let sourcepath = tmppath ++ "/source.pdf"
   let outputpath = tmppath ++ "/output.pdf"
 
   BS.writeFile sourcepath content
 
-  let gsproc = (proc gs [ "-sDEVICE=pdfwrite" 
+  let gs = ctxgscmd ctx
+      gsproc = (proc gs [ "-sDEVICE=pdfwrite" 
                         , "-sOutputFile=" ++ outputpath 
                         , "-dSAFER"
                         , "-dBATCH"
