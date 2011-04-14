@@ -244,6 +244,7 @@ pageDocumentDesign=
                     </a>
                  </div>
                  $else$
+                 <input type="hidden" value="email" name="validationmethod" />
                  <div class="signStepButton" style="display:inline-block;padding-top:4px;">
                    <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"  class="btn-big green center">
                     <div class="left"></div>

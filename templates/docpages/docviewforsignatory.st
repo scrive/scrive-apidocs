@@ -14,12 +14,17 @@ pageDocumentForSignContent=
         <div class="modal-header">
             <span class="modal-icon message"></span>
             <span class="modal-title">
-               <h2>Underteckna</h2> 
+              $if(contract)$ 
+                <h2>Underteckna</h2>  
+              $elseif(offer)$
+                <h2>Godkänn</h2>  
+              $endif$
             </span>
             <a class="modal-close close"> </a>
         </div>
         <div class="modal-body">
             <div class="modal-content">
+              $if(contract)$
                  <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
                  <p>När $partyUnsigned:noescape()$ undertecknat blir 
                     avtalet <strong>juridiskt bindande</strong> och
@@ -34,11 +39,15 @@ pageDocumentForSignContent=
                                target="_new">Klicka här</a> för att läsa mer.</p>
                  </span>
                  $endif$
+              $elseif(offer)$
+                 <p>Är du säker att du vill godkänna offerten <strong>$documenttitle$</strong>?</p>
+              $endif$
             </div>
         </div>
         <div class="modal-footer$if(!requireseleg)$ larger$endif$">
           <input type="hidden" name="sign" value="automatic" id="signauto" />
           <a  class="close cancel float-left">Avbryt</a>
+          $if(contract)$
           $if(requireseleg)$
           <span id="elegbuttons">
             <input type="hidden" name="changetoeleg" id="elegprovider" value=""
@@ -69,6 +78,15 @@ pageDocumentForSignContent=
             <div class="right"></div>
           </a>
           $endif$
+          $elseif(offer)$
+          <a href="#" class="btn-big green float-right submiter">
+            <div class="left"></div>
+            <div class="label">
+              <span>Godkänn offert</span>
+            </div>
+            <div class="right"></div>
+          </a>
+         $endif$
         </div>
      </div>
 
@@ -138,10 +156,15 @@ $if(notsignedbyme)$$if(pending)$
   <div id="signViewBottomBoxContainerLeft"> 
     <div id="signViewBottomBoxContainerLeftText"> 
      <div class="float-left"><input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off" /></div>
-     <div class="float-left" id="signGuardLabel"><label for="signGuardCBox">Jag intygar att jag granskat och förstått dokumentet, att samtliga parter är korrekta och att jag har befogenhet att skriva på.</label></div>
+     $if(contract)$
+      <div class="float-left" id="signGuardLabel"><label for="signGuardCBox">Jag intygar att jag granskat och förstått dokumentet, att samtliga parter är korrekta och att jag har befogenhet att skriva på.</label></div>
+     $elseif(offer)$ 
+      <div class="float-left" id="signGuardLabel"><label for="signGuardCBox">Jag intygar att jag granskat och förstått dokumentet, att samtliga parter är korrekta och att jag har befogenhet att godkänt.</label></div>
+     $endif$ 
     </div>
   </div>
   <div id="signViewBottomBoxContainerRight"> 
+  $if(contract)$
   <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign" name="sign">
     <div class="left"></div>
     <div class="label" style="width:120px">
@@ -151,6 +174,16 @@ $if(notsignedbyme)$$if(pending)$
     <div class="right"></div>
   </a>
   <a class="float-right cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel">Avvisa dokument</a>
+  $elseif(offer)$ 
+  <a class="btn-big green center submiter" id="sign" rel="#dialog-confirm-sign" name="sign">
+    <div class="left"></div>
+    <div class="label" style="width:140px;padding-left:20px;padding-right:20px;">
+      <span>Godkänn offert</span>
+    </div>
+    <div class="right"></div>
+  </a>
+  <a class="float-right cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel">Avvisa offert</a>
+  $endif$
   </div>
 </div>
 $endif$$endif$ 

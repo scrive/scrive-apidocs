@@ -26,7 +26,62 @@ modalSignInviteView=
         </a>
       </div>
     </div>
-
+###
+modalOfferCreated=
+    <div class="modal-container">
+      <div class="modal-header">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
+          <h3>Offerten <strong>$documenttitle$</strong> skickat!</h3>
+        </span>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">
+          <p>Offerten har nu skickats till $signatory$.
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a class="btn-small green float-right close">
+          <div class="left"></div>
+          <div class="label">
+            <p>Stäng</p>
+            <div class="btn-symbol green arrow-left"></div>
+          </div>
+          <div class="right"></div>
+        </a>
+      </div>
+    </div>
+######
+modalOfferSigned=
+    <div class="modal-container">
+      <div class="modal-header">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
+          <h3>Du har nu godkänt offerten <strong>$documenttitle$</strong></h3>
+        </span>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">
+          <p>$signatory$ har godkänt offerten.
+          </p>
+          <p>Offerten har sparats till ditt konto.
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a class="btn-small green float-right close">
+          <div class="left"></div>
+          <div class="label">
+            <p>Stäng</p>
+            <div class="btn-symbol green arrow-left"></div>
+          </div>
+          <div class="right"></div>
+        </a>
+      </div>
+    </div>
 ######
 modalWelcomeToSkrivaPa=
 <div class="modal-container">
