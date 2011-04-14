@@ -1126,7 +1126,7 @@ handleDocumentUpload docid content1 filename = do
   ctx@Context{ctxdocstore, ctxs3action} <- get
   -- we need to downgrade the PDF to 1.4 that has uncompressed structure
   -- we use gs to do that of course
-  content <- liftIO $ preprocessPDF content1 docid
+  content <- liftIO $ preprocessPDF ctx content1 docid
 
   result <- update $ AttachFile docid filename content
   case result of

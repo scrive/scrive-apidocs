@@ -224,6 +224,7 @@ defaultConf progName
               , docstore           = "_local/documents"
               , static             = "public"
               , amazonConfig       = Nothing
+              , gsCmd              = "gs"
               , production         = False
               , trustWeaverSign    = Nothing
               , trustWeaverAdmin   = Nothing
