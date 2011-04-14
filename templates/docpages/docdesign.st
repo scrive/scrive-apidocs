@@ -189,8 +189,7 @@ pageDocumentDesign=
                     <input type="radio" name="authorrole" id="authorsignatoryradio" value="signatory"><span class="radiolabel">Undertecknande part</span></input>
                     <br/>
                     <input type="radio" name="authorrole" id="authorsecretaryradio" value="secretary"><span class="radiolabel">Ej undertecknande part</span></input>
-                  </div>
-                  
+                  </div>                  
                 </div>
               </span>
 
@@ -402,14 +401,10 @@ pageDocumentDesign=
     <div class="signStepsBodyIcons">
       <span class="partnumber">PART 1</span>
       <a href="#plus2" class="plus"></a>
-      $if(contract)$
       <select name="signatoryrole">
          <option value="signatory">Signatory</option>
          <option value="viewer">Viewer</option>
       </select>
-      $elseif(offer)$
-      <input type="hidden" name="signatoryrole" value="signatory">
-      $endif$
     </div>
     
     <!-- 013 changed -->
@@ -420,6 +415,7 @@ pageDocumentDesign=
       <div class="partytype tosingle">
         <a href="#" class="single">En part</a>
       </div>
+
       <input type="hidden" name="sigid" value="" />
       <span class="fields">
         <span class='dragfield sigfstname inputWrapper'>
@@ -469,6 +465,12 @@ pageDocumentDesign=
         </span>
       </span>
       <div class="otherfields">
+      </div>
+      <div class="partyrole">
+        <a href="#" class="popup-close closelink"></a>
+        <input type="radio" name="signatoryrole" value="signatory" checked><span class="radiolabel">Undertecknande part</span></input>
+        <br/>
+        <input type="radio" name="signatoryrole" value="viewer"><span class="radiolabel">Ej undertecknande part</span></input>
       </div>
     </div>
   </span>

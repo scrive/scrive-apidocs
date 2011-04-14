@@ -1561,6 +1561,16 @@ input.multiFileInput {
     background-image: url(images/iconGroup.png);
 }
 
+.signStepsBodyIcons .single
+{
+    background-image: url(images/iconGroup.png);
+}
+
+.signStepsBodyIcons .csv
+{
+    background-image: url(images/iconGroup.png);
+}
+
 .signStepsBodyIcons a.hand
 {
     background-image: url(images/iconHand.png);
