@@ -212,8 +212,8 @@ handleRoutes = msum [
      , dir "login"       $ hpost0NoXToken $ handleLoginPost
      , dir "signup"      $ hget0  $ signupPageGet
      , dir "signup"      $ hpost0NoXToken $ signupPagePost
-     , dir "vip"         $ hget0  $ signupVipPageGet
-     , dir "vip"         $ hpost0NoXToken $ signupVipPagePost
+     --, dir "vip"         $ hget0  $ signupVipPageGet
+     --, dir "vip"         $ hpost0NoXToken $ signupVipPagePost
      , dir "amnesia"     $ hpost0NoXToken $ forgotPasswordPagePost
      , dir "amnesia"     $ hget2  $ UserControl.handlePasswordReminderGet
      , dir "amnesia"     $ hpost2NoXToken $ UserControl.handlePasswordReminderPost
