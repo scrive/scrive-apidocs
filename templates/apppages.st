@@ -98,8 +98,8 @@ Våra kunder och våra kunders kunder älskar enkelheten.</p>
                 $if(showCreateAccount)$    
                  <div class="try-skrivapa">
                      <div class="left">
-                        <h2>2 månaders fri användning nu!</h2>
-                        <p>Allt inkluderat. Standardkonto, fria transaktioner och fri lagring.</p>
+                        <h2>Skapa konto nu!</h2>
+                        <p>1 månad full funktionalitet utan kostnad. Inga förpliktelser.</p>
                         </div>
                          <div class="right">
                             <form method="post" action="$linkrequestaccount$" class="requestAccount">
