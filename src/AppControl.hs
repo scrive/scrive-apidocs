@@ -79,6 +79,7 @@ data AppConf
               , docstore        :: FilePath                     -- ^ where to put files (active if amazonConfig is Nothing)
               , static          :: FilePath                     -- ^ static files directory
               , amazonConfig    :: Maybe (String,String,String) -- ^ bucket, access key, secret key
+              , gsCmd           :: String
               , production      :: Bool                         -- ^ production flag, enables some production stuff, disables some development 
               , trustWeaverSign :: Maybe (String,String,String) -- ^ TrustWeaver sign service (URL,pem file path,pem private key password)
               , trustWeaverAdmin :: Maybe (String,String,String) -- ^ TrustWeaver admin service (URL,pem file path,pem private key password)
@@ -360,6 +361,7 @@ appHandler appConf appGlobals = do
                 , ctxipnumber = peerip
                 , ctxdocstore = docstore appConf
                 , ctxs3action = defaultAWSAction appConf
+                , ctxgscmd = gsCmd appConf
                 , ctxproduction = production appConf
                 , ctxtemplates = templates2
                 , ctxesenforcer = esenforcer appGlobals

@@ -71,6 +71,7 @@ data Context = Context
     , ctxipnumber            :: Word32
     , ctxdocstore            :: FilePath
     , ctxs3action            :: AWS.S3Action
+    , ctxgscmd               :: String
     , ctxproduction          :: Bool
     , ctxtemplates           :: KontrakcjaTemplates 
     , ctxesenforcer          :: MVar ()
