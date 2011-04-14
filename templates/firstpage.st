@@ -317,7 +317,6 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                                 <p>Medel volym och många användningsområden</p>
                                                         </li>
                                                         <li class="odd"><a href="/priceplan.html?nocolumns">9 användare</a></li>
-
                                                         <li>
                                                                 <p><a href="/priceplan.html?nocolumns">25 fria signaturer/mån</a></p>
                                                         </li>
