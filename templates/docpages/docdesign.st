@@ -402,10 +402,13 @@ pageDocumentDesign=
     <div class="signStepsBodyIcons">
       <span class="partnumber">PART 1</span>
       <a href="#plus2" class="plus"></a>
-      <select name="signatoryrole">
-         <option value="signatory">Signatory</option>
-         <option value="viewer">Viewer</option>
-      </select>
+      $if(contract)$
+      <a href="#" class="man"></a>
+      <a href="#" class="group"></a>
+      <a href="#" class="plus"></a>
+      $elseif(offer)$
+      <input type="hidden" name="signatoryrole" value="signatory">
+      $endif$
     </div>
     
     <!-- 013 changed -->
