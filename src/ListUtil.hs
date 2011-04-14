@@ -43,7 +43,6 @@ module ListUtil(
 import Control.Applicative ((<$>))
 import Control.Monad.Trans
 import Control.Monad
-import Data.Data
 import Data.List 
 import Data.Maybe
 import Data.Foldable (foldMap)
@@ -53,8 +52,6 @@ import Templates.Templates
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Char8 as BS8
 import Data.Char (toUpper)
-import Data.List (isInfixOf,sortBy)
-import Data.Monoid
 import Happstack.Server hiding (simpleHTTP)
 import Network.HTTP.Base (urlEncode)
 import Data.ByteString.UTF8 (ByteString)
