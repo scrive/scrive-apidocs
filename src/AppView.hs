@@ -53,13 +53,12 @@ renderFromBody :: (EmbedAsChild (HSPT' IO) xml)
                -> Kontra Response
 renderFromBody ctx topmenu title xml = do
     htmlPage <- fmap ((isSuffixOf ".html") . concat . rqPaths)  askRq
-    priceplan <- fmap ((isSuffixOf "priceplan.html") . concat . rqPaths) askRq
-    let showCreateAccount = priceplan && htmlPage && (isNothing $ ctxmaybeuser ctx) 
     columns <- isFieldSet "columns"
     loginOn <- isFieldSet "logging"
     curr <- rqUri <$> askRq
     referer <- getField "referer"
     let loginreferer = Just $ fromMaybe curr referer
+    let showCreateAccount = (not columns) && htmlPage && (isNothing $ ctxmaybeuser ctx) 
     res <- webHSP $ pageFromBody ctx columns loginOn loginreferer Nothing showCreateAccount title xml
     clearFlashMsgs
     return res
