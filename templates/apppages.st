@@ -49,24 +49,44 @@ wholePage=
           $content:noescape()$
          $else$
          <div class="left-column">
-                                        <div class="white thin box">
-                                                <h4>Hör av dig till oss!</h4>
+<div class="white thin box">
+                                                <h4>Avtala redan idag!</h4>
+<br />
+<p>SkrivaPå är en tjänst för att skriva på och arkivera avtal elektroniskt. 
+Våra kunder och våra kunders kunder älskar enkelheten.</p>
+<br />
+<p>Vi bjuder på 1 månad full funktionalitet utan kostnad. Inga förpliktelser.</p>
                                                 <br />
-                                                <form method="post" action="$linkquestion$">
+                                                <form method="post"
+                                                action="/signup" class="requestAccount">
+                                                        <input type="email"
+                                                        name="email"
+                                                        infotext="E-post"
+                                                        /><br /><br />
+
+                                                        <a class="submit new-btn-small green2 center"><p>Skapa konto</p></a>
+                                                        <input type="submit" class="hidden" />
+                                                </form>
+                                        </div>
+                                        <br />
+                                        <div class="white thin box">
+                                                <h4>Frågor? Kontakta oss!</h4>
+                                                <br />
+
+                                                <p>Telefon: 010-195 99 15</p>
+                                                <p>E-post: info@skrivapa.se</p>
+                                                
+                                                <br />
+                                                <form method="post"
+                                                      action="$linkquestion$">
                                                         <input type="text" name="name" infotext="Namn" /><br />
                                                         <input type="email" name="email" infotext="E-post" /><br />
                                                         <input type="tel" name="phone" infotext="Telefonnummer" /><br />
-                                                        <textarea name="message" infotext="Meddelande"></textarea>
+                                                        <textarea name="message" infotext="Meddelande" style="height:42px;"></textarea>
                                                         <a class="submit new-btn-small green2 center"><p>Skicka!</p></a>
                                                         <input type="submit" class="hidden" />
                                                 </form>
-                                                <div class="hor-divider"></div>
-                                                <h4>SkrivaPå AB</h4>
-                                                <ul class="info-list">
-                                                        <li>Saltmätargatan 19<br />
-                                                        113 59 Stockholm</li>
-                                                        <li>Telefon: 010-195 99 15<br />E-post: info@skrivapa.se</li>
-                                                </ul>
+
                                         </div>
                                 </div>
                                 <div class="right-column">
