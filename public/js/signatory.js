@@ -266,15 +266,8 @@ function buildField(info, val, type) {
 
 function docstateToHTML(){
     var useremail = docstate['useremail'];
-    /*
+    
     var author = docstate.author;
-
-    placePlacements(author.nameplacements, "Namn", author.name, "author", "name");
-    placePlacements(author.emailplacements, "email", author.email, "author", "email");
-    placePlacements(author.companyplacements, "company", author.company, "author", "sigco");
-    placePlacements(author.numberplacements, "number", author.number, "author", "signr");
-
-    */
     var currentsig;
     var currentsigdiv = $("<span />");
 
@@ -287,6 +280,19 @@ function docstateToHTML(){
 
     var fields = currentsigdiv.find(".signViewBodyForms");
 
+  var authorIsInSiglist = $(docstate.signatories).filter(function() {
+    return this.email === author.email;
+  }).size() > 0;
+
+  if(!authorIsInSiglist) {
+	placePlacements(author.fstnameplacements, "Förnamn", author.fstname, "author", "fstname");
+    placePlacements(author.sndnameplacements, "Efternamn", author.sndname, "author", "sndname");
+	placePlacements(author.emailplacements, "Personens e-mail", author.email, "author", "email");
+	placePlacements(author.companyplacements, "Titel, företag", author.company, "author", "sigco");
+	placePlacements(author.personalnumberplacements, "Persnr", author.personalnumber, "author", "sigpersnr");
+    placePlacements(author.companynumberplacements, "Orgnr", author.companynumber, "author", "sigcompnr");
+
+  }
 
     $(docstate.signatories).each(function() {
 	    var s = this;
