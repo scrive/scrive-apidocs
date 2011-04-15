@@ -63,6 +63,8 @@ mailRejectMailContent=
       $poweredBySkrivaPaPara()$
 
 ###
+mailInvitationToViewTitle=Inbjudan från $creatorname$ till $documenttitle$
+###
 mailInvitationToSignTitle=Inbjudan från $creatorname$ till $documenttitle$
 ###
 mailInvitationToSignContent=
