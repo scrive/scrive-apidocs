@@ -350,29 +350,32 @@ pageOffersList templates ctime user documents =
     pagedListFields documents
     field "currentlink" $ show $ LinkOffers $ params documents
 
-showFileImages :: KontrakcjaTemplates -> File -> JpegPages -> IO String
-showFileImages templates _ JpegPagesPending =
+showFileImages :: KontrakcjaTemplates -> DocumentID -> Maybe (SignatoryLinkID, MagicHash) -> File -> JpegPages -> IO String
+showFileImages templates _ _ _ JpegPagesPending =
   renderTemplate templates  "showFileImagesPending" ()
 
-showFileImages templates _ (JpegPagesError normalizelog) =
+showFileImages templates _ _ _ (JpegPagesError normalizelog) =
   renderTemplate templates "showFileImagesError" $ do
     field "normalizelog" $ BS.toString normalizelog
 
-showFileImages templates File{fileid} (JpegPages jpgpages) =
+showFileImages templates docid mtokens File{fileid} (JpegPages jpgpages) =
   renderTemplate templates "showFileImagesReady" $ do
-    field "fileid" $ show fileid
+    field "pageurl" $ "/pages/" ++ pageurl mtokens
     field "images" . map page $ zip [1,2..] jpgpages
   where
+    pageurl Nothing =  show docid ++ "/" ++ show fileid
+    pageurl (Just (siglinkid, sigmagichash)) =
+           show docid ++ "/" ++ show siglinkid ++ "/"
+        ++ show sigmagichash ++ "/" ++ show fileid
     page :: (Int,(a,Int,Int)) -> Fields
     page (x,(_,w,h)) = do
       field "number" x
       field "width" w
       field "height" h
 
-
-showFilesImages2 :: KontrakcjaTemplates -> [(File, JpegPages)] -> IO String
-showFilesImages2 templates files = do
-  filesPages <- sequence $ map (uncurry (showFileImages templates)) files
+showFilesImages2 :: KontrakcjaTemplates -> DocumentID -> Maybe (SignatoryLinkID, MagicHash) -> [(File, JpegPages)] -> IO String
+showFilesImages2 templates docid mtokens files = do
+  filesPages <- sequence $ map (uncurry (showFileImages templates docid mtokens)) files
   renderTemplate templates  "spanNoEscape" $ field "it" (concat filesPages)
 
 
@@ -566,7 +569,7 @@ pageDocumentForAuthor ctx
        field "cancelMailContent" $ mailCancelDocumentByAuthorContent templates False Nothing ctx document author
        field "linkcancel" $ show $ LinkCancel document
        field "docstate" (buildJS documentauthordetails documentsignatorylinks)
-       field "linkissuedocpdf" $ show (LinkIssueDocPDF document)
+       field "linkissuedocpdf" $ show (LinkIssueDocPDF Nothing document)
        field "documentinfotext" $ documentInfoText templates document (find (isMatchingSignatoryLink author) documentsignatorylinks) author
        documentAuthorInfo author
        documentInfoFields document
@@ -624,7 +627,7 @@ pageDocumentForViewer ctx
        field "emailonly" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isNothing $ find (== ELegitimationIdentification) documentallowedidtypes)
        field "elegitimationonly" $ (isNothing $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)
        field "docstate" (buildJS documentauthordetails documentsignatorylinks)
-       field "linkissuedocpdf" $ show (LinkIssueDocPDF document)
+       field "linkissuedocpdf" $ show (LinkIssueDocPDF Nothing document)
        field "documentinfotext" $ documentinfotext
        documentInfoFields document 
        documentViewFields document
@@ -657,9 +660,11 @@ pageDocumentForSignatory action document ctx invitedlink author =
       field "rejectMessage" $  mailRejectMailContent (ctxtemplates ctx) Nothing ctx (prettyName author) document invitedlink
       field "partyUnsigned" $ renderListTemplate (ctxtemplates ctx) $  map (BS.toString . personname') $ partyUnsignedMeAndList magichash document
       field "action" $ show action
-      field "linkissuedocpdf" $ show (LinkIssueDocPDF document)
+      field "linkissuedocpdf" $ show (LinkIssueDocPDF (Just invitedlink) document)
       field "documentinfotext" $  documentInfoText (ctxtemplates ctx) document (Just invitedlink) author
       field "requireseleg" requiresEleg
+      field "siglinkid" $ show $ signatorylinkid invitedlink
+      field "sigmagichash" $ show $ signatorymagichash invitedlink
       documentInfoFields document
       documentAuthorInfo author
       documentViewFields document

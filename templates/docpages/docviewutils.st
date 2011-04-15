@@ -2,7 +2,7 @@
 showFileImagesReady= $images:{image| 
 
 <div id="page$image.number$" class="pagediv">
-  <div class="pagejpg" style="background-image: url(/pages/$doctokenid$/$doctokenhash$/$fileid$/$image.number$);">
+  <div class="pagejpg" style="background-image: url($pageurl$/$image.number$);">
     <input type="hidden" name="width" value="$image.width$"> 
     <input type="hidden" name="height" value="$image.height$">
   </div>

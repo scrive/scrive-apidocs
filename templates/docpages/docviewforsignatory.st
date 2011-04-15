@@ -4,7 +4,7 @@ pageDocumentForSignContent=
   <div class="localdialogs">
     $loadingdialog()$
     <div style="display: none">
-        <script type="text/javascript"> var documentid = "$documentid$"; </script>
+        <script type="text/javascript"> var documentid = "$documentid$", siglinkid = "$siglinkid$", sigmagichash = "$sigmagichash$"; </script>
         <script type="text/javascript">
             $localscripts:noescape()$
         </script>

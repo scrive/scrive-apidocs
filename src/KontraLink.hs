@@ -4,7 +4,7 @@ module KontraLink(KontraLink(..), LoginRedirectReason(..), DesignStep(..), Desig
 import Doc.DocState
 import HSP
 import Misc
-import ActionSchedulerState (ActionID(..))
+import ActionSchedulerState (ActionID)
 import User.UserState
 import qualified Codec.Binary.Url as URL
 import qualified Codec.Binary.UTF8.String as UTF
@@ -47,7 +47,7 @@ data KontraLink
     | LinkSignDoc Document SignatoryLink
     | LinkIssueDoc DocumentID
     | LinkDesignDoc DesignStep
-    | LinkIssueDocPDF Document {- Which file? -}
+    | LinkIssueDocPDF (Maybe SignatoryLink) Document {- Which file? -}
     | LinkSubaccount ListParams
     | LinkSharing ListParams
     | LinkRemind Document SignatoryLink
@@ -107,8 +107,10 @@ instance Show KontraLink where
     showsPrec _ (LinkDesignDoc (DesignStep2 documentid (Just person) Nothing)) = (++) $ "/d/" ++ show documentid ++ "?step2&person=" ++ show person
     showsPrec _ (LinkDesignDoc (DesignStep2 documentid (Just person) (Just AfterCSVUpload))) = (++) $ "/d/" ++ show documentid ++ "?step2&person=" ++ show person ++ "&aftercsvupload"
     showsPrec _ (LinkDesignDoc (DesignStep3 documentid)) = (++) $ "/d/" ++ show documentid ++ "?step3"
-    showsPrec _ (LinkIssueDocPDF document) = 
+    showsPrec _ (LinkIssueDocPDF Nothing document) = 
         (++) $ "/d/" ++ show (documentid document) ++ "/" ++ BS.toString (documenttitle document) ++ ".pdf"
+    showsPrec _ (LinkIssueDocPDF (Just SignatoryLink{signatorylinkid, signatorymagichash}) document) = 
+        (++) $ "/d/" ++ show (documentid document) ++ "/" ++ show signatorylinkid ++ "/" ++ show signatorymagichash ++ "/" ++ BS.toString (documenttitle document) ++ ".pdf"
     showsPrec _ (LinkFile fileid filename) = 
         (++) $ "/df/" ++ show fileid ++ "/" ++ BS.toString filename
     showsPrec _ (LinkSignDoc document signatorylink) = 
