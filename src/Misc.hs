@@ -60,6 +60,7 @@ import System.IO.Temp
 import Data.Typeable
 import Data.Data
 import qualified GHC.Conc
+import qualified Codec.Binary.Url as URL
 
 selectFormAction :: (HasRqData m, MonadIO m,MonadPlus m,ServerMonad m) => [(String,m a)] -> m a
 selectFormAction [] = mzero
@@ -520,3 +521,21 @@ getSecureLink = do
     
 para :: String -> String
 para s = "<p>" ++ s ++ "</p>"
+
+encodeString :: String -> String
+encodeString = URL.encode . map (toEnum . ord)
+
+qs :: [(String, Either a String)] -> String
+qs qsPairs = 
+    let relevantPairs = [ (k, v) | (k, Right v) <- qsPairs ]
+        empties       = [ encodeString k | (k, "") <- relevantPairs ]
+        withValues    = [ encodeString k ++ "=" ++ encodeString v | (k, v) <- relevantPairs, length v > 0 ]
+    in if Data.List.null relevantPairs
+        then ""
+        else "?" ++ intercalate "&" (empties ++ withValues)
+
+querystring :: (ServerMonad m, HasRqData m, MonadIO m) => m String
+querystring = do
+    qsPairs <- queryString lookPairs
+    return $ qs qsPairs
+
