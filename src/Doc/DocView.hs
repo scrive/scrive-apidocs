@@ -10,6 +10,7 @@ module Doc.DocView (
   , docSortSearchPage
   , pageContractsList
   , pageTemplatesList
+  , pageOffersList
   , modalSignInviteView
   , modalSendInviteView
   , modalSignedView
@@ -342,7 +343,13 @@ pageTemplatesList templates ctime user documents =
     pagedListFields documents
     field "currentlink" $ show $ LinkTemplates $ params documents
     
-          
+pageOffersList :: KontrakcjaTemplates -> MinutesTime -> User -> PagedList Document -> IO String
+pageOffersList templates ctime user documents =
+  renderTemplate templates "pageOffersList" $ do
+    field "documents" $ markParity $ map (documentBasicViewFields ctime user) $ list documents
+    pagedListFields documents
+    field "currentlink" $ show $ LinkOffers $ params documents
+
 showFileImages :: KontrakcjaTemplates -> (ActionID, MagicHash) -> File -> JpegPages -> IO String
 showFileImages templates _ _ JpegPagesPending =
   renderTemplate templates  "showFileImagesPending" ()
