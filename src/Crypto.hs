@@ -31,9 +31,11 @@ aesEncrypt :: AESConf -> ByteString -> ByteString
 aesEncrypt AESConf{aesKey = bskey, aesIV = iv} = 
     AES.encryptCBC (initKey bskey) iv . align16
 
-aesDecrypt :: AESConf -> ByteString -> ByteString
-aesDecrypt AESConf{aesKey = bskey, aesIV = iv} =
-    unalign16 . AES.decryptCBC (initKey bskey) iv
+aesDecrypt :: AESConf -> ByteString -> Maybe ByteString
+aesDecrypt AESConf{aesKey = bskey, aesIV = iv} s =
+    if BS.length s `mod` 16 == 0
+       then Just $ unalign16 $ AES.decryptCBC (initKey bskey) iv s
+       else Nothing
 
 initKey :: ByteString -> AES.Key
 initKey bskey =

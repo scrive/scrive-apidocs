@@ -31,7 +31,7 @@ toCookieValue conf flashes =
 fromCookieValue :: AESConf -> String -> Maybe [FlashMessage]
 fromCookieValue conf flashesdata = do
     case B64.decode $ BS.pack flashesdata of
-         Right s -> readM . BSU.toString $ aesDecrypt conf s
+         Right s -> aesDecrypt conf s >>= readM . BSU.toString
          _       -> Nothing
 
 addFlashCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m, Functor m) => String -> m ()
