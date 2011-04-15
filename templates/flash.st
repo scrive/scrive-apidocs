@@ -55,6 +55,12 @@ flashMessageViralInviteSent=
     Inbjudan har skickats!
 
 ###
+flashMessageOtherUserSentInvitation=
+    Invitation has already been sent by a different user.
+###
+flashMessageNoRemainedInvitationEmails=
+    You have already sent 10 invitations to this e-mail address, please try again later.
+###
 flashMessageActivationLinkNotValid=
     Vi beklagar. Länken är inte längre giltig.<BR>
     Vänligen använd "Glömt lösenord" för att generera en ny länk.
@@ -69,7 +75,9 @@ flashMessageUserAlreadyActivated=
 
 ###
 flashMessageChangePasswordEmailSend=Ett nytt lösenord har blivit skickat till din e-post.
-
+###
+flashMessageNoRemainedPasswordReminderEmails=
+    You have already requested password change 10 times, please try again later.
 ####
 flashMessageNewActivationLinkSend=
     Vi har skickat din kontoinbjudan igen. Vänligen gå tillbaks till din inkorg och klicka på länken i mailet för att aktivera ditt konto.

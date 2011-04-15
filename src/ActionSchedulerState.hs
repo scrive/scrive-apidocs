@@ -11,6 +11,8 @@ module ActionSchedulerState (
     , Actions
     , GetAction(..)
     , GetExpiredActions(..)
+    , GetPasswordReminder(..)
+    , GetViralInvitationByEmail(..)
     , NewAction(..)
     , UpdateActionType(..)
     , UpdateActionEvalTime(..)
@@ -166,6 +168,16 @@ instance Indexable Action where
         [ ixFun (\a -> [actionID a])
         , ixFun (\a -> [actionEvalTime a])
         , ixFun (\a -> [actionImportance $ actionType a])
+        , ixFun (\a -> [actionTypeID $ actionType a])
+        , ixFun (\a -> case actionType a of
+                            ViralInvitationSent email _ _ _ _ -> [email]
+                            _                                 -> [])
+        , ixFun (\a -> case actionType a of
+                            PasswordReminder uid _ _          -> [uid]
+                            ViralInvitationSent _ _ uid _ _   -> [uid]
+                            AccountCreated uid _              -> [uid]
+                            AccountCreatedBySigning _ uid _ _ -> [uid]
+                            _                                 -> [])
         ]
 
 instance Component Actions where
@@ -179,6 +191,16 @@ getAction aid = return . getOne . (@= aid) =<< ask
 -- | Get expired actions
 getExpiredActions :: ActionImportance -> MinutesTime -> Query Actions [Action]
 getExpiredActions imp now = return . IxSet.toList . (@<= now) . (@= imp) =<< ask
+
+-- | Get password reminder action by user id
+getPasswordReminder :: UserID -> Query Actions (Maybe Action)
+getPasswordReminder uid =
+    return . getOne . (@= uid) . (@= PasswordReminderID) =<< ask
+
+-- | Get viral invitation action by invited person's email address
+getViralInvitationByEmail :: Email -> Query Actions (Maybe Action)
+getViralInvitationByEmail email =
+    return . getOne . (@= email) . (@= ViralInvitationSentID) =<< ask
 
 -- | Insert new action
 newAction :: ActionType -> MinutesTime -> Update Actions Action
@@ -229,6 +251,8 @@ deleteAction aid = do
 $(mkMethods ''Actions
   [ 'getAction
   , 'getExpiredActions
+  , 'getPasswordReminder
+  , 'getViralInvitationByEmail
   , 'newAction
   , 'updateActionType
   , 'updateActionEvalTime
@@ -256,7 +280,7 @@ newPasswordReminder user = do
     now <- getMinutesTime
     let action = PasswordReminder {
           prUserID         = userid user
-        , prRemainedEmails = 0
+        , prRemainedEmails = 9
         , prToken          = hash
     }
     update $ NewAction action $ (12*60) `minutesAfter` now
@@ -270,7 +294,7 @@ newViralInvitationSent email inviterid = do
           visEmail          = email
         , visTime           = now
         , visInviterID      = inviterid
-        , visRemainedEmails = 0
+        , visRemainedEmails = 9
         , visToken          = hash
     }
     update $ NewAction action $ (7*24*60) `minutesAfter` now
