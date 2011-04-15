@@ -7,7 +7,8 @@ module Crypto (
     ) where
 
 import Data.ByteString (ByteString)
-import qualified Codec.Crypto.AES as AES
+import Data.Word
+import qualified Crypto.Cipher.AES as AES
 import qualified Data.ByteString as BS
 
 data AESConf = AESConf {
@@ -27,9 +28,27 @@ verifyAESConf (AESConf key iv) =
         iv_len  = BS.length iv
 
 aesEncrypt :: AESConf -> ByteString -> ByteString
-aesEncrypt AESConf{aesKey = key, aesIV = iv} =
-    AES.crypt' AES.CFB key iv AES.Encrypt
+aesEncrypt AESConf{aesKey = bskey, aesIV = iv} = 
+    AES.encryptCBC (initKey bskey) iv . align16
 
 aesDecrypt :: AESConf -> ByteString -> ByteString
-aesDecrypt AESConf{aesKey = key, aesIV = iv} =
-    AES.crypt' AES.CFB key iv AES.Decrypt
+aesDecrypt AESConf{aesKey = bskey, aesIV = iv} =
+    unalign16 . AES.decryptCBC (initKey bskey) iv
+
+initKey :: ByteString -> AES.Key
+initKey bskey =
+    case AES.initKey256 bskey of
+         Right key -> key
+         Left err  -> error $ "This should never happen: " ++ err
+
+alignByte :: Word8
+alignByte = 1
+
+align16 :: ByteString -> ByteString
+align16 s =
+    case BS.length s `mod` 16 of
+         0 -> s
+         n -> BS.replicate (16-n) alignByte `BS.append` s
+
+unalign16 :: ByteString -> ByteString
+unalign16 = BS.dropWhile (== alignByte)
