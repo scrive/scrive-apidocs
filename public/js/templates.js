@@ -760,61 +760,20 @@ function tearDownCSVUpload(sigentry) {
     form.find("input[type='hidden'][name='csvpersonindex']").attr("value", "");
 }
 
-safeReady(function() {
-  $('.single', $('#personpane')[0]).live('click', function() {
-    var sigentry = $(this).closest('.persondetails');    
-    tearDownCSVUpload(sigentry);
-    sigentry.find(".partytype").hide();
-    setupAsSinglePart(sigentry);
-  });
-});
-
 function setupAsMultiplePart(sigentry) {
   
   var icons = sigentry.find('.signStepsBodyIcons');
-  var icon = icons.find(".csv");
-
-  icon.removeClass('csv').addClass('group');
-  
-  icon.click(function() {
-          icon.unbind('click', this);
-          tosingle = sigentry.find(".tosingle");
-          if (tosingle.is(":visible")) {
-              tosingle.hide();
-          } else {
-              tosingle.show();
-          }
-          return false;
-      });
-
+  icons.find(".multi").hide();
+  icons.find(".single").show();
   fileinfo = $("#templates").find(".csvfileinfo").clone();
   icons.append(fileinfo);
 }
 
 function setupAsSinglePart(sigentry) {
-  if (offer) return false;
   var icons = sigentry.find('.signStepsBodyIcons');
-  var icon = icons.find(".group");
+  icons.find(".multi").show();
+  icons.find(".single").hide();
   icons.find(".csvfileinfo").remove();
-
-  icon.click(function() {
-          icon.unbind('click', this);
-          tomulti = sigentry.find(".tomulti");
-          if (tomulti.is(":visible")) {
-              tomulti.hide();
-          } else {
-              var form = sigentry.closest("form");
-              csvpersonindex = form.find("input[type='hidden'][name='csvpersonindex']").attr("value");
-              if (!(csvpersonindex && csvpersonindex.length>0)) {
-                  tomulti.show();
-              }
-          }
-          return false;
-      });
-  
-
-  icon.removeClass("group").addClass("single");
-
   sigentry.find("input[name='signatoryfstname']").change();
 }
 
@@ -832,7 +791,6 @@ function signatoryToHTML(isMultiple, sig) {
   } else {
     setupAsSinglePart(sigentry);
   }
-  sigentry.find(".partytype").hide();
 
   var manlink = sigentry.find("a.man");
 
@@ -927,9 +885,13 @@ function signatoryToHTML(isMultiple, sig) {
   sigentry.find(".multi").overlay({
     mask: standardDialogMask,
     onBeforeLoad: function() {
-      setUpCSVUpload(sigentry);
-      sigentry.find(".partytype").hide();
-      return true;
+      csvpersonindex = $("form").find("input[type='hidden'][name='csvpersonindex']").attr("value");
+      if (!(csvpersonindex && csvpersonindex.length>0)) {
+        setUpCSVUpload(sigentry);
+        return true;
+      } else {
+        return false;
+      }
     },
     onClose: function() {
       tearDownCSVUpload(sigentry);
