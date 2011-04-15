@@ -794,7 +794,17 @@ handleIssueSignByAuthor document author = do
    Method: GET
  -}
 handleIssueShowTitleGet :: DocumentID -> String -> Kontra Response
-handleIssueShowTitleGet docid _title = do
+handleIssueShowTitleGet docid = withAuthorOrFriend docid
+    . checkUserTOSGet . handleIssueShowTitleGet' docid
+
+handleIssueShowTitleGetForSignatory :: DocumentID -> SignatoryLinkID -> MagicHash -> String -> Kontra Response
+handleIssueShowTitleGetForSignatory docid siglinkid sigmagichash title = do
+    doc <- queryOrFail $ GetDocumentByDocumentID docid
+    checkLinkIDAndMagicHash doc siglinkid sigmagichash
+    handleIssueShowTitleGet' docid title
+
+handleIssueShowTitleGet' :: DocumentID -> String -> Kontra Response
+handleIssueShowTitleGet' docid _title = do
     ctx <- get
     document@Document {
           documentauthor
@@ -807,6 +817,21 @@ handleIssueShowTitleGet docid _title = do
     let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
         res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
     return res2
+
+-- | Check if current user is author or friend so he can view the document
+withAuthorOrFriend :: DocumentID -> Kontra Response -> Kontra Response
+withAuthorOrFriend docid action = withUserGet $ do
+    doc@Document{documentauthor} <- queryOrFail $ GetDocumentByDocumentID $ docid
+    ctx@Context {
+          ctxmaybeuser = Just user@User{userid}
+        , ctxipnumber
+        , ctxhostpart
+    } <- get
+    author <- queryOrFail $ GetUserByUserID $ unAuthor documentauthor
+    friendWithSignatory <- liftIO $ isFriendWithSignatory userid doc
+    if isAuthor doc user || userid `isFriendOf` author || friendWithSignatory
+       then action
+       else mzero
 
 {- |
    Show the document with title in the url
@@ -1097,9 +1122,18 @@ showTemplatesList = withUserGet $ checkUserTOSGet $ do
   content <- liftIO $ pageTemplatesList ctxtemplates ctxtime user (docSortSearchPage params templates)
   renderFromBody ctx TopDocument kontrakcja $ cdata content
 
-handlePageOfDocument :: ActionID -> MagicHash -> DocumentID -> Kontra Response
-handlePageOfDocument aid hash documentid = do
-    verifyDocumentTokens aid hash
+handlePageOfDocument :: DocumentID -> Kontra Response
+handlePageOfDocument docid = withAuthorOrFriend docid
+    . checkUserTOSGet $ handlePageOfDocument' docid Nothing
+
+handlePageOfDocumentForSignatory :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra Response
+handlePageOfDocumentForSignatory docid siglinkid sigmagichash = do
+    doc <- queryOrFail $ GetDocumentByDocumentID docid
+    checkLinkIDAndMagicHash doc siglinkid sigmagichash
+    handlePageOfDocument' docid $ Just (siglinkid, sigmagichash)
+
+handlePageOfDocument' :: DocumentID -> Maybe (SignatoryLinkID, MagicHash) -> Kontra Response
+handlePageOfDocument' documentid mtokens = do
     document@Document {
           documentfiles
         , documentsealedfiles
@@ -1119,8 +1153,25 @@ handlePageOfDocument aid hash documentid = do
              if any pending b
                 then notFound (toResponse "temporary unavailable (document has files pending for process)")
                 else do
-                    pages <- liftIO $ Doc.DocView.showFilesImages2 (ctxtemplates ctx) $ zip f b
+                    pages <- liftIO $ Doc.DocView.showFilesImages2 (ctxtemplates ctx) documentid mtokens $ zip f b
                     webHSP $ return $ cdata pages
+
+showOfferList:: Kontra Response
+showOfferList= withUserGet $ checkUserTOSGet $ do
+    -- Just user is safe here because we guard for logged in user
+    ctx@(Context {ctxmaybeuser = Just user, ctxhostpart, ctxtime, ctxtemplates}) <- get
+    mydocuments <- query $ GetDocumentsByUser user 
+    usersICanView <- query $ GetUsersByFriendUserID $ userid user
+    friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
+    -- get rid of duplicates
+    let documents = nub $ mydocuments ++ concat friends'Documents
+    let sorteddocuments = sortBy (\d1 d2 -> compare (documentmtime d2) (documentmtime d1)) documents
+    let notdeleted = filter (not . documentdeleted) sorteddocuments
+    let contracts  = filter ((==) Offer . documenttype) notdeleted
+    params <- getListParams
+    liftIO $ putStrLn $ show params
+    content <- liftIO $ pageOffersList ctxtemplates ctxtime user (docSortSearchPage params contracts)
+    renderFromBody ctx TopDocument kontrakcja $ cdata content
 
 handleDocumentUpload :: DocumentID -> BS.ByteString -> BS.ByteString -> Kontra ()
 handleDocumentUpload docid content1 filename = do
@@ -1258,8 +1309,18 @@ handleOffersReload = fmap LinkOffers getListParamsForSearch
    Method: GET
    FIXME: Should probably check for permissions to view
  -}
-showPage :: FileID -> Int -> Kontra Response
-showPage fileid pageno = do
+showPage :: DocumentID -> FileID -> Int -> Kontra Response
+showPage docid fileid = withAuthorOrFriend docid
+    . checkUserTOSGet . showPage' fileid
+
+showPageForSignatory :: DocumentID -> SignatoryLinkID -> MagicHash -> FileID -> Int -> Kontra Response
+showPageForSignatory docid siglinkid sigmagichash fileid pageno = do
+    doc <- queryOrFail $ GetDocumentByDocumentID docid
+    checkLinkIDAndMagicHash doc siglinkid sigmagichash
+    showPage' fileid pageno
+
+showPage' :: FileID -> Int -> Kontra Response
+showPage' fileid pageno = do
   Context{ctxnormalizeddocuments} <- get
   modminutes <- query $ FileModTime fileid
   docmap <- liftIO $ readMVar ctxnormalizeddocuments
