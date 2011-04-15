@@ -401,24 +401,19 @@ pageDocumentDesign=
     <!-- 008 change/new -->
     <div class="signStepsBodyIcons">
       <span class="partnumber">PART 1</span>
-      <a href="#plus2" class="plus"></a>
       $if(contract)$
       <a href="#" class="man"></a>
-      <a href="#" class="group"></a>
+      <a href="#" class="csv multi" rel="#dialog-csvupload-1"></a>
+      <span class="csv single" style="display:none;"></span>
       <a href="#" class="plus"></a>
       $elseif(offer)$
       <input type="hidden" name="signatoryrole" value="signatory">
+      <a href="#" class="plus"></a>
       $endif$
     </div>
     
     <!-- 013 changed -->
     <div class="sigentry signStepsBodyForms" id="peopleDetails">
-      <div class="partytype tomulti">
-        <a href="#" class="multi" rel="#dialog-csvupload-1">Massutskick</a>
-      </div>
-      <div class="partytype tosingle">
-        <a href="#" class="single">En part</a>
-      </div>
 
       <input type="hidden" name="sigid" value="" />
       <span class="fields">
