@@ -233,10 +233,17 @@ mailInvitationToSignOrViewContent templates forMail (Context {ctxhostpart})
                           with <- renderTemplate templates "customFooter" [("creatorname",creatorname)] 
                           replaceOnEdit' templates this with            
         header   =  if (BS.null documentinvitetext) 
-                     then renderTemplate templates "mailInvitationToSignDefaultHeader" [("creatorname",creatorname)
-                                                                                       ,("personname",personname1)
-                                                                                       ,("documenttitle",BS.toString documenttitle) 
-                                                                                       ]  
+                     then if issignatory || not forMail 
+                          then renderTemplate templates "mailInvitationToSignDefaultHeader" 
+                                   [("creatorname",creatorname)
+                                   ,("personname",personname1)
+                                   ,("documenttitle",BS.toString documenttitle) 
+                                   ]  
+                          else renderTemplate templates "mailInvitationToViewDefaultHeader" 
+                                   [("creatorname",creatorname)
+                                   ,("personname",personname1)
+                                   ,("documenttitle",BS.toString documenttitle) 
+                                   ]  
                      else return $ BS.toString documentinvitetext      
            
    in  do
