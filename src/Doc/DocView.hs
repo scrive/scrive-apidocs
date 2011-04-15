@@ -468,7 +468,7 @@ pageDocumentDesign ctx
        field "linkissuedoc" $ show $ LinkIssueDoc documentid
        field "authorhaslink" $ authorhaslink
        field "documentinvitetext" $ documentinvitetext
-       field "invitationMailContent" $  mailInvitationToSignContent templates False ctx document author Nothing
+       field "invitationMailContent" $  mailInvitationToSignOrViewContent templates False ctx document author Nothing
        field "documentdaystosignboxvalue" $ documentdaystosignboxvalue              
        field "docstate" (buildJS documentauthordetails documentsignatorylinks)
        documentAuthorInfo author
@@ -608,7 +608,7 @@ pageDocumentForViewer ctx
           }
         isSignatory person = SignatoryPartner `elem` signatoryroles person
    in do
-     invitationMailContent <- mailInvitationToSignContent (ctxtemplates ctx) False ctx document author Nothing
+     invitationMailContent <- mailInvitationToSignOrViewContent (ctxtemplates ctx) False ctx document author Nothing
      cancelMailContent <- mailCancelDocumentByAuthorContent (ctxtemplates ctx) False Nothing ctx document author
      documentinfotext <- documentInfoText (ctxtemplates ctx) document Nothing author
      renderTemplate (ctxtemplates ctx) "pageDocumentForViewerContent" $  do

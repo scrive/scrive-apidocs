@@ -7,8 +7,9 @@ module Doc.DocViewMail ( mailDocumentRemind,
                      mailDocumentClosedForAuthor, 
                      mailDocumentClosedForSignatories,
                      mailInvitationToSign,
-                     mailInvitationToSignContent,
+                     mailInvitationToSignOrViewContent,
                      mailInvitationToSend,
+                     mailInvitationToView,
                      mailDocumentAwaitingForAuthor,
                      mailCancelDocumentByAuthorContent,
                      mailDocumentError,
@@ -192,14 +193,21 @@ mailDocumentErrorContent templates ctx document =
     ("documenttitle", BS.toString $ documenttitle document),
     ("ctxhostpart", ctxhostpart ctx)] 
 
-mailInvitationToSignContent ::  KontrakcjaTemplates -> Bool -> Context  -> Document -> User -> (Maybe SignatoryLink) -> IO String        
-mailInvitationToSignContent templates forMail (Context {ctxhostpart}) 
+mailInvitationToSignOrViewContent :: KontrakcjaTemplates 
+                                  -> Bool 
+                                  -> Context
+                                  -> Document
+                                  -> User
+                                  -> Maybe SignatoryLink
+                                  -> IO String        
+mailInvitationToSignOrViewContent templates forMail (Context {ctxhostpart}) 
                   document@Document{documenttimeouttime, documentinvitetext,documenttitle} 
                   author
                   signaturelink = 
     let link = case (signaturelink) of
                 Just signaturelink' -> ctxhostpart ++ show (LinkSignDoc document signaturelink')
                 Nothing -> ctxhostpart ++ "/s/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
+        issignatory = maybe True ((SignatoryPartner `elem`) . signatoryroles) signaturelink
         personname1 = maybe "" (BS.toString . signatoryname . signatorydetails) signaturelink
         creatorname = BS.toString $ prettyName author
         partnersinfo = if (forMail) 
@@ -247,13 +255,14 @@ mailInvitationToSignContent templates forMail (Context {ctxhostpart})
                 field "documenttitle" $ BS.toString documenttitle
                 field "offer" $ isOffer document
                 field "link" link    
+                field "issignatory" issignatory
                                                                 
 mailInvitationToSign::  KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> User -> IO Mail
 mailInvitationToSign templates ctx document@Document{documenttitle} signaturelink author = 
                  do  
                    title <- renderTemplate templates "mailInvitationToSignTitle" [("documenttitle",BS.toString  documenttitle ),
                                                                         ("creatorname",BS.toString $ prettyName author)] 
-                   content <- wrapHTML templates =<< mailInvitationToSignContent templates True ctx document author (Just signaturelink)
+                   content <- wrapHTML templates =<< mailInvitationToSignOrViewContent templates True ctx document author (Just signaturelink)
                    return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
 
 
@@ -262,8 +271,17 @@ mailInvitationToSend templates ctx document@Document{documenttitle} signaturelin
                  do  
                    title <- renderTemplate templates "mailInvitationToSignTitle" [("documenttitle",BS.toString  documenttitle ),
                                                                         ("creatorname",BS.toString $ prettyName author)] 
-                   content <- wrapHTML templates =<< mailInvitationToSignContent templates True ctx document author (Just signaturelink)
+                   content <- wrapHTML templates =<< mailInvitationToSignOrViewContent templates True ctx document author (Just signaturelink)
                    return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
+
+mailInvitationToView ::  KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> User -> IO Mail
+mailInvitationToView templates ctx document@Document{documenttitle} signaturelink author = 
+    do  
+        title <- renderTemplate templates "mailInvitationToViewTitle" 
+                 [("documenttitle",BS.toString  documenttitle ),
+                  ("creatorname",BS.toString $ prettyName author)] 
+        content <- wrapHTML templates =<< mailInvitationToSignOrViewContent templates True ctx document author (Just signaturelink)
+        return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
 
   
     

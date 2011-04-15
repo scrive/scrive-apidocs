@@ -67,28 +67,36 @@ mailInvitationToSignTitle=Inbjudan från $creatorname$ till $documenttitle$
 ###
 mailInvitationToSignContent=
     $header:noescape()$
-    <span>
-      <p><i>Översiktlig information</i><br/>
-        Parter: $partnersinfo:noescape()$<br/>
-        $if(!offer)$ $whohadsignedinfo:noescape()$<br/> $endif$
-        $timetosigninfo:noescape()$
-      </p>
-      <p><i>Så här går du vidare</i><br/>
-        1. Klicka på länken <br/>
-        <a href="$link$">$link$</a> <br/>
-        <br/>
-        2. Granska online<br/>
-        $if(offer)$ 
-            3. Godkänna (eller avvisa)<br/> 
-        $else$ 
-            3. Underteckna (eller avvisa)<br/> 
-        $endif$
-        4. Färdig
-      </p>
-    </span>
+    <p><i>Översiktlig information</i><br/>
+      Parter: $partnersinfo:noescape()$<br/>
+      $if(!offer)$ $whohadsignedinfo:noescape()$<br/> $endif$
+      $timetosigninfo:noescape()$
+    </p>
+    $if(issignatory)$
+    <p><i>Så här går du vidare</i><br/>
+      1. Klicka på länken <br/>
+      <a href="$link$">$link$</a> <br/>
+      <br/>
+      2. Granska online<br/>
+      $if(offer)$ 
+      3. Godkänna (eller avvisa)<br/> 
+      $else$ 
+      3. Underteckna (eller avvisa)<br/> 
+      $endif$
+      4. Färdig
+    </p>
+    $else$
+    Du har endast behörighet att se detta dokument
+    Klicka på länken nedan för att se dokumentet:
+    <br/> 
+    <a href="$link$">$link$</a> <br/>
+    <br/>
+    $endif$
     $footer:noescape()$
     $legalparagraph()$
 ###
+
+
 mailInvitationToSignDefaultHeader=
     <p>Hej $personname$,
       <br/><br/>
