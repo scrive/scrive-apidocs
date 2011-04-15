@@ -165,13 +165,13 @@ handleRoutes = msum [
      , dir "restart" $ hpost1 $ DocControl.handleRestart
      , dir "cancel"  $ hpost1 $ DocControl.handleCancel
      
-     , dir "pages"  $ hget3 $ DocControl.showPage
-     , dir "pages"  $ hget5 $ DocControl.showPageForSignatory
-     , dir "templates"  $ hget0 $ DocControl.getTemplatesForAjax
+     , dir "pages"  $ hget3 $ ajax $ DocControl.showPage
+     , dir "pages"  $ hget5 $ ajax $ DocControl.showPageForSignatory 
+     , dir "templates"  $ hget0 $ ajax $ DocControl.getTemplatesForAjax
      , dir "template"  $ hpost0 $ DocControl.handleCreateFromTemplate
            
-     , dir "pagesofdoc" $ hget1 $ DocControl.handlePageOfDocument
-     , dir "pagesofdoc" $ hget3 $ DocControl.handlePageOfDocumentForSignatory
+     , dir "pagesofdoc" $ hget1 $ ajax $ DocControl.handlePageOfDocument
+     , dir "pagesofdoc" $ hget3 $ ajax $ DocControl.handlePageOfDocumentForSignatory
 
      -- UserControl
      , dir "account"                    $ hget0  $ UserControl.handleUserGet
@@ -256,7 +256,10 @@ handleHomepage = do
     email   <- getField "email"
     case ctxmaybeuser of
         Just user -> UserControl.checkUserTOSGet $ DocControl.showMainPage user 
-        Nothing   -> V.simpleResponse =<< (liftIO $ firstPage ctx loginOn referer email)
+        Nothing   -> do
+                        resp <- V.simpleResponse =<< (liftIO $ firstPage ctx loginOn referer email)
+                        clearFlashMsgs
+                        return resp
 
 {- |
     Handles an error by displaying the home page with a modal error dialog.
@@ -738,4 +741,42 @@ allowHttp action = do
     if (secure || (not $ loging || logged))
        then action
        else sendSecureLoopBack
-             
+
+
+{- Use this to mark that request will try to get data from our service and embed it on our website
+   It returns a script that if embeded on site will force redirect to main page
+   Ajax request should not contain redirect
+-}
+wrapAjax :: Kontra Response -> Kontra Response
+wrapAjax action = noRedirect action `mplus` ajaxError -- Soft redirects should be supported here, ask MR
+
+noRedirect::Kontra Response -> Kontra Response
+noRedirect action = do 
+                  response <- action
+                  if (rsCode response /= 303)
+                   then return response
+                   else mzero
+                  
+
+class Ajaxable a where
+    ajax :: a -> a
+    
+instance Ajaxable (Kontra Response) where
+    ajax f = wrapAjax f
+    
+instance Ajaxable (a -> Kontra Response) where
+    ajax f a = wrapAjax (f a) 
+    
+instance Ajaxable (a-> b -> Kontra Response) where
+    ajax f a b = wrapAjax (f a b)
+    
+instance Ajaxable (a-> b-> c-> Kontra Response) where
+    ajax f a b c = wrapAjax (f a b c) 
+    
+instance Ajaxable (a-> b-> c-> d ->Kontra Response) where
+    ajax f a b c d= wrapAjax (f a b c d )
+
+instance Ajaxable (a-> b-> c-> d -> e -> Kontra Response) where
+    ajax f a b c d e= wrapAjax (f a b c d e) 
+
+
