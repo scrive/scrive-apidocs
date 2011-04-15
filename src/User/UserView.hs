@@ -34,10 +34,13 @@ module User.UserView (
     flashMessagePasswordChangeLinkNotValid,
     flashMessageUserWithSameEmailExists,
     flashMessageViralInviteSent,
+    flashMessageOtherUserSentInvitation,
+    flashMessageNoRemainedInvitationEmails,
     flashMessageActivationLinkNotValid,
     flashMessageUserActivated,
     flashMessageUserAlreadyActivated,
     flashMessageChangePasswordEmailSend,  
+    flashMessageNoRemainedPasswordReminderEmails,
     flashMessageNewActivationLinkSend,
     flashMessageUserSignupDone,
     flashMessageAccountRequestSend,
@@ -297,6 +300,13 @@ flashMessageViralInviteSent :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageViralInviteSent templates =
   toFlashMsg SigningRelated <$> renderTemplate templates "flashMessageViralInviteSent" ()
 
+flashMessageOtherUserSentInvitation :: KontrakcjaTemplates -> IO FlashMessage
+flashMessageOtherUserSentInvitation templates =
+    toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageOtherUserSentInvitation" ()
+
+flashMessageNoRemainedInvitationEmails :: KontrakcjaTemplates -> IO FlashMessage
+flashMessageNoRemainedInvitationEmails templates =
+    toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageNoRemainedInvitationEmails" ()
 
 flashMessageActivationLinkNotValid :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageActivationLinkNotValid templates =
@@ -316,6 +326,9 @@ flashMessageChangePasswordEmailSend :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageChangePasswordEmailSend templates =
   toFlashMsg OperationDone <$> renderTemplate templates "flashMessageChangePasswordEmailSend" ()
 
+flashMessageNoRemainedPasswordReminderEmails :: KontrakcjaTemplates -> IO FlashMessage
+flashMessageNoRemainedPasswordReminderEmails templates =
+    toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageNoRemainedPasswordReminderEmails" ()
 
 flashMessageNewActivationLinkSend :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageNewActivationLinkSend templates =

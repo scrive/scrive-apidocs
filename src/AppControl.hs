@@ -9,6 +9,7 @@ module AppControl
     ) where
 
 --import ELegitimation.BankID as BankID
+import ActionSchedulerState
 import Control.Monad (msum, mzero)
 import Control.Monad.State
 import Control.Monad.Trans (liftIO,lift)
@@ -390,27 +391,31 @@ forgotPasswordPagePost = do
     memail <- getOptionalField asValidEmail "email"
     case memail of 
         Just email -> do
-            muser <- query $ GetUserByEmail $ Email email                    
+            muser <- query $ GetUserByEmail $ Email email
             case muser of 
                 Nothing -> do
                     Log.security $ "ip " ++ (show $ ctxipnumber ctx) ++ " made a failed password reset request for non-existant account " ++ (BS.toString email)
-                    return ()
                 Just user -> do
-                    sendResetPasswordMail user
-                    return ()
+                    now <- liftIO getMinutesTime
+                    minv <- checkValidity now <$> (query $ GetPasswordReminder $ userid user)
+                    case minv of
+                         Just Action{actionID, actionType} -> do
+                             case prRemainedEmails actionType of
+                                  0 -> do
+                                      addFlashMsg =<< (liftIO $ flashMessageNoRemainedPasswordReminderEmails $ ctxtemplates ctx)
+                                  n -> do
+                                      update $ UpdateActionType actionID $ actionType { prRemainedEmails = n-1 }
+                                      sendResetPasswordMail ctx (LinkPasswordReminder actionID $ prToken actionType) user
+                         Nothing -> do
+                             link <- newPasswordReminderLink user
+                             sendResetPasswordMail ctx link user
             addFlashMsg =<< (liftIO $ flashMessageChangePasswordEmailSend $ ctxtemplates ctx)
             return LinkMain
         Nothing -> return LoopBack
-
-{- |
-   Sends a password reset mail
--}
-sendResetPasswordMail::User -> Kontra ()
-sendResetPasswordMail user = do
-    ctx <- get
-    chpwdlink <- newPasswordReminderLink user
-    mail <-liftIO $ UserView.resetPasswordMail (ctxtemplates ctx) (ctxhostpart ctx) user chpwdlink
-    scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [((userfullname user), (unEmail $ useremail $ userinfo user))] }
+    where
+        sendResetPasswordMail ctx link user = do
+            mail <- liftIO $ UserView.resetPasswordMail (ctxtemplates ctx) (ctxhostpart ctx) user link
+            scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [((userfullname user), (unEmail $ useremail $ userinfo user))] }
 
 {- |
    Handles viewing of the signup page
