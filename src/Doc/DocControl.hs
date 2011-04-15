@@ -238,13 +238,18 @@ sendInvitationEmail1 :: Context -> Document -> User -> SignatoryLink -> IO ()
 sendInvitationEmail1 ctx document author signatorylink = do
   let SignatoryLink{ signatorylinkid
                    , signatorydetails
-                   , signatorymagichash } = signatorylink
+                   , signatorymagichash
+                   , signatoryroles } = signatorylink
       Document{documenttitle,documentid} = document
       authorid = unAuthor $ documentauthor document
-      hasAuthorSigned = not $ Data.List.null $ filter (not . isNotLinkForUserID authorid) (documentsignatorylinks document)
-  mail <- if hasAuthorSigned 
-           then mailInvitationToSign (ctxtemplates ctx) ctx document signatorylink author
-           else mailInvitationToSend (ctxtemplates ctx) ctx document signatorylink author
+      hasAuthorSigned = any (not . isNotLinkForUserID authorid) (documentsignatorylinks document)
+      isSignatory = SignatoryPartner `elem` signatoryroles
+  mail <- if isSignatory
+          then if hasAuthorSigned 
+               then mailInvitationToSign (ctxtemplates ctx) ctx document signatorylink author
+               else mailInvitationToSend (ctxtemplates ctx) ctx document signatorylink author
+          else mailInvitationToView (ctxtemplates ctx) ctx document signatorylink author
+
   attachmentcontent <- getFileContents ctx $ head $ documentfiles document
   scheduleEmailSendout (ctxesenforcer ctx) $ 
            mail { fullnameemails = [(signatoryname signatorydetails,signatoryemail signatorydetails)]
