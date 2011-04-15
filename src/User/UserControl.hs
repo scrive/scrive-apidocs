@@ -232,22 +232,37 @@ handleCreateSubaccount user = do
 
 handleViralInvite :: Kontra KontraLink
 handleViralInvite = withUserPost $ do
-    minvitedemail <- getOptionalField asValidEmail "invitedemail"
-    case minvitedemail of
-         Nothing -> return LoopBack
-         Just invitedemail -> do
-             ctx <- get
-             muser <- query $ GetUserByEmail $ Email invitedemail
-             if isJust muser
-                then do
-                    addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists $ ctxtemplates ctx)
-                    return LoopBack
-                else do
-                    addFlashMsg =<< (liftIO $ flashMessageViralInviteSent $ ctxtemplates ctx)
-                    link <- newViralInvitationSentLink (Email invitedemail) (userid . fromJust $ ctxmaybeuser ctx)
-                    mail <- liftIO $ viralInviteMail (ctxtemplates ctx) ctx invitedemail link
-                    scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [(BS.empty, invitedemail)] }
-                    return LoopBack
+    getOptionalField asValidEmail "invitedemail" >>= maybe (return ()) (\invitedemail -> do
+        ctx@Context{ctxmaybeuser = Just user} <- get
+        muser <- query $ GetUserByEmail $ Email invitedemail
+        if isJust muser
+           then do
+               addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists $ ctxtemplates ctx)
+           else do
+               now <- liftIO getMinutesTime
+               minv <- checkValidity now <$> (query $ GetViralInvitationByEmail $ Email invitedemail)
+               case minv of
+                    Just Action{actionID, actionType} -> do
+                        if visInviterID actionType == userid user
+                           then do
+                               case visRemainedEmails actionType of
+                                    0 -> do
+                                        addFlashMsg =<< (liftIO $ flashMessageNoRemainedInvitationEmails $ ctxtemplates ctx)
+                                    n -> do
+                                        update $ UpdateActionType actionID $ actionType { visRemainedEmails = n-1 }
+                                        sendInvitation ctx (LinkViralInvitationSent actionID $ visToken actionType) invitedemail
+                           else do
+                               addFlashMsg =<< (liftIO $ flashMessageOtherUserSentInvitation $ ctxtemplates ctx)
+                    Nothing -> do
+                        link <- newViralInvitationSentLink (Email invitedemail) (userid . fromJust $ ctxmaybeuser ctx)
+                        sendInvitation ctx link invitedemail
+        )
+    return LoopBack
+    where
+        sendInvitation ctx link invitedemail = do
+            addFlashMsg =<< (liftIO $ flashMessageViralInviteSent $ ctxtemplates ctx)
+            mail <- liftIO $ viralInviteMail (ctxtemplates ctx) ctx invitedemail link
+            scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [(BS.empty, invitedemail)] }
 
 randomPassword :: IO BS.ByteString
 randomPassword = do
