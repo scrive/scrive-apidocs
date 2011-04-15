@@ -150,6 +150,7 @@ handleRoutes = msum [
      , dir "d" $ hget0  $ DocControl.showContractsList
      , dir "d" $ hget1  $ DocControl.handleIssueShowGet
      , dir "d" $ hget2  $ DocControl.handleIssueShowTitleGet
+     , dir "d" $ hget4  $ DocControl.handleIssueShowTitleGetForSignatory
      , dir "d" $ {- param "doc" $ -} hpost0 $ DocControl.handleIssueNewDocument
      , dir "d" $ param "archive" $ hpost0 $ DocControl.handleContractArchive
      , dir "d" $ param "remind" $ hpost0 $ DocControl.handleBulkContractRemind
@@ -164,11 +165,13 @@ handleRoutes = msum [
      , dir "restart" $ hpost1 $ DocControl.handleRestart
      , dir "cancel"  $ hpost1 $ DocControl.handleCancel
      
-     , dir "pages"  $ hget2 $ DocControl.showPage
+     , dir "pages"  $ hget3 $ DocControl.showPage
+     , dir "pages"  $ hget5 $ DocControl.showPageForSignatory
      , dir "templates"  $ hget0 $ DocControl.getTemplatesForAjax
      , dir "template"  $ hpost0 $ DocControl.handleCreateFromTemplate
            
      , dir "pagesofdoc" $ hget1 $ DocControl.handlePageOfDocument
+     , dir "pagesofdoc" $ hget3 $ DocControl.handlePageOfDocumentForSignatory
 
      -- UserControl
      , dir "account"                    $ hget0  $ UserControl.handleUserGet
@@ -685,6 +688,15 @@ hget4 :: (FromReqURI a,
             FromReqURI a3) =>
             (a -> a1 -> a2 -> a3 -> Kontra Response) -> Kontra Response
 hget4 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> path $ \a4 -> methodM GET >> (https $ action a1 a2 a3 a4)
+
+hget5 :: (FromReqURI a,
+          FromReqURI a1,
+          FromReqURI a2,
+          FromReqURI a3,
+          FromReqURI a4) =>
+          (a -> a1 -> a2 -> a3 -> a4 -> Kontra Response)
+          -> Kontra Response
+hget5 action = path $ do \a1 -> path $ \a2 -> path $ \a3 -> path $ \a4 -> path $ \a5 -> methodM GET >> (https $ action a1 a2 a3 a4 a5)
 
 {-|
   Version supporting optional path param

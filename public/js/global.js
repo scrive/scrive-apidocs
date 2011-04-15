@@ -313,7 +313,13 @@ safeReady(function() {
 
 safeReady(function() {
   if(typeof(window.documentid) != "undefined") {
-    $.ajax({ url: "/pagesofdoc/" + window.doctokenid + "/" + window.doctokenhash + "/" + documentid,
+    var myurl;
+    if (typeof(window.siglinkid) != "undefined"
+    &&  typeof(window.sigmagichash) != "undefined")
+        myurl = "/pagesofdoc/" + documentid + "/" + siglinkid + "/" + sigmagichash;
+    else
+        myurl = "/pagesofdoc/" + documentid;
+    $.ajax({ url: myurl,
              success: function(data) {
                var content = $(data);
                var errormsg = content.find(".errormsg")
