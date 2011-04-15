@@ -85,6 +85,7 @@ $validationdropdown()$
 </div>
 $endif$   
 <div class="localdialogs">
+$loadingdialog()$
  <form method="post" action="$linkcancel$" class="overlay" id="cancel-by-author-dialog">
     <div class="modal-container">
       <div class="modal-header">
