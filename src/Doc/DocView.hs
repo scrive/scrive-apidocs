@@ -478,6 +478,7 @@ pageDocumentDesign ctx
        field "csvrowcount" $ length csvdata
        field "csvcustomfields" $ csvcustomfields
        field "isvalidcsv" $ null csvproblems
+       field "csvpersonindex" $ csvPersonIndex document
        documentInfoFields document
        documentViewFields document
        designViewFields step
