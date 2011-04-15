@@ -27,6 +27,7 @@ import Control.Monad.Trans
 import Data.List
 import ListUtil
 import Data.Functor
+
 {- |
    Defines the different sorts of things we can have at the top of the page
 -}
@@ -57,7 +58,10 @@ renderFromBody ctx topmenu title xml = do
     loginOn <- isFieldSet "logging"
     curr <- rqUri <$> askRq
     referer <- getField "referer"
-    let loginreferer = Just $ fromMaybe curr referer
+    qs <- querystring
+    liftIO $ print curr
+    liftIO $ print referer
+    let loginreferer = Just $ fromMaybe (curr ++ qs) referer
     let showCreateAccount = (not columns) && htmlPage && (isNothing $ ctxmaybeuser ctx) 
     res <- webHSP $ pageFromBody ctx columns loginOn loginreferer Nothing showCreateAccount title xml
     clearFlashMsgs
