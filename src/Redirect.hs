@@ -28,14 +28,14 @@ sendRedirect LoopBack = do
   referer <- fmap BS.toString <$> getHeaderM "referer"
   let link = fromMaybe (show LinkMain) referer
   response <- webHSP (seeOtherXML link)
-  seeOther link response
+  seeOther link =<< setRsCode 303  response
 
 sendRedirect BackToReferer = do
   referer <- getField "referer"
   let link' = fromMaybe (show LinkMain) referer
   let link  = if (null link') then (show LinkMain) else link'
   response <- webHSP (seeOtherXML link)
-  seeOther link response
+  seeOther link =<< setRsCode 303  response
 
 sendRedirect link@(LinkLogin reason) = do
   curr <- rqUri <$> askRq
@@ -44,14 +44,14 @@ sendRedirect link@(LinkLogin reason) = do
   liftIO (flashMessageLoginRedirectReason templates reason) >>= maybe (return ()) addFlashMsg
   let link' = show link ++ "&referer=" ++ (URL.encode . UTF.encode $ fromMaybe curr referer)
   response <- webHSP (seeOtherXML $ link')
-  seeOther link' response
+  seeOther link' =<< setRsCode 303  response
 
 sendRedirect link = do
   response <- webHSP (seeOtherXML $ show link)
-  seeOther (show link) response
+  seeOther (show link) =<< setRsCode 303  response
 
 sendSecureLoopBack :: Kontra Response
 sendSecureLoopBack = do
     link <- getSecureLink
     response <- webHSP (seeOtherXML $ link)
-    seeOther link response
+    seeOther link =<< setRsCode 303  response

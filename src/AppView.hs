@@ -9,6 +9,7 @@ module AppView( TopMenu(..)
               , signupVipPageView
               , pageLogin
               , simpleResponse 
+              , ajaxError
               , firstPage
               , modalError
               ) where 
@@ -125,13 +126,12 @@ pageLogin ctx referer email =
    Changing our pages into reponses, and clearing flash messages.
 -}
 simpleResponse::String -> Kontra Response
-simpleResponse s = do 
+simpleResponse s = ok $ toResponse $ cdata s 
     -- change this to HtmlString from helpers package 
     -- (didn't want to connect it one day before prelaunch)
-    res <- ok $ toResponse $ cdata s 
-    clearFlashMsgs
-    return res
 
+ajaxError::Kontra Response
+ajaxError = simpleResponse "<script>window.location='/'</script>"
 {- |
    The landing page contents.  Read from template.
 -}
