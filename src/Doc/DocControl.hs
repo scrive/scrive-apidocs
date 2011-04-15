@@ -542,7 +542,7 @@ handleIssueShowGet docid = withUserGet $ checkUserTOSGet $ do
         let mMismatchMessage = getDataMismatchMessage $ documentcancelationreason document
         when ((documentstatus document == Canceled) && (isJust mMismatchMessage)) 
            (addFlashMsg $ toFlashMsg OperationFailed (fromJust mMismatchMessage))
-        ctx2 <- get   
+        ctx2 <- get   -- need to get new context because we may have added flash msg
         step <- getDesignStep (documentid document)
         case (documentstatus document) of
            Preparation -> renderFromBody ctx2 toptab kontrakcja 
