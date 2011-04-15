@@ -1100,6 +1100,24 @@ showTemplatesList = withUserGet $ checkUserTOSGet $ do
   content <- liftIO $ pageTemplatesList ctxtemplates ctxtime user (docSortSearchPage params templates)
   renderFromBody ctx TopDocument kontrakcja $ cdata content
 
+showOfferList:: Kontra Response
+showOfferList= withUserGet $ checkUserTOSGet $ do
+  -- Just user is safe here because we guard for logged in user
+  ctx@(Context {ctxmaybeuser = Just user, ctxhostpart, ctxtime, ctxtemplates}) <- get
+  mydocuments <- query $ GetDocumentsByUser user 
+  usersICanView <- query $ GetUsersByFriendUserID $ userid user
+  friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
+  -- get rid of duplicates
+  let documents = nub $ mydocuments ++ concat friends'Documents
+  let sorteddocuments = sortBy (\d1 d2 -> compare (documentmtime d2) (documentmtime d1)) documents
+  let notdeleted = filter (not . documentdeleted) sorteddocuments
+  let contracts  = filter ((==) Offer . documenttype) notdeleted
+  params <- getListParams
+  liftIO $ putStrLn $ show params
+  content <- liftIO $ pageOffersList ctxtemplates ctxtime user (docSortSearchPage params contracts)
+  renderFromBody ctx TopDocument kontrakcja $ cdata content
+  
+  
 handlePageOfDocument :: ActionID -> MagicHash -> DocumentID -> Kontra Response
 handlePageOfDocument aid hash documentid = do
     verifyDocumentTokens aid hash
@@ -1192,6 +1210,11 @@ handleContractArchive = do
     handleIssueArchive
     return $ LinkContracts emptyListParams
 
+handleOffersArchive :: Kontra KontraLink
+handleOffersArchive =  do
+    handleIssueArchive
+    return $ LinkContracts emptyListParams   
+
 {- |
     This sends out bulk contract reminders.  The functionality is offered in the document
     list page.  It will make sure the user is actually the author of all the documents,
@@ -1246,7 +1269,10 @@ handleContractsReload  = fmap LinkContracts getListParamsForSearch
     
 handleTemplateReload :: Kontra KontraLink
 handleTemplateReload = fmap LinkTemplates getListParamsForSearch
-    
+
+handleOffersReload :: Kontra KontraLink
+handleOffersReload = fmap LinkOffers getListParamsForSearch
+
 {- |
    Get some html to display the images of the files
    URL: /pagesofdoc/{documentid}

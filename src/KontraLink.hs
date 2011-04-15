@@ -37,6 +37,7 @@ data KontraLink
     | LinkForgotPassword
     | LinkContracts ListParams
     | LinkTemplates ListParams
+    | LinkOffers ListParams
     | LinkMain 
     | LinkNew ListParams
     | LinkAjaxTemplates ListParams
@@ -88,6 +89,7 @@ instance Show KontraLink where
     showsPrec _ LinkForgotPassword = (++) "/amnesia"
     showsPrec _ (LinkContracts params) = (++) $ "/d" ++ "?" ++ show params
     showsPrec _ (LinkTemplates params) = (++) $ "/t" ++ "?" ++ show params
+    showsPrec _ (LinkOffers params) = (++) $ "/o" ++ "?" ++ show params
     showsPrec _ LinkMain = (++) "/"
     showsPrec _ (LinkNew params) = (++) $ "/" ++ "?showTemplates=Yes&" ++ show params
     showsPrec _ (LinkAjaxTemplates params) = (++) $ "/templates" ++ "?" ++ show params
