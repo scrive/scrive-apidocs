@@ -68,7 +68,7 @@ partyListButAuthor document@Document{ documentauthor=Author authorid } =
     map signatorydetails $ filter (isNotAuthor) $ filter isSignatory $ documentsignatorylinks document
     where
         isSignatory person = SignatoryPartner `elem` signatoryroles person
-        isNotAuthor = maybe False (/= authorid) . maybesignatory
+        isNotAuthor = maybe True (/= authorid) . maybesignatory
   
 joinWith::[a]->[[a]]->[a]
 joinWith _ [] = []
