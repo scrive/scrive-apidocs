@@ -4,6 +4,7 @@ module Doc.DocState
     , isTemplate -- fromUtils
     , isContract -- fromUtils
     , isOffer -- fromUtils
+    , matchingType -- fromUtils
     , signatoryname -- fromUtils
     , isMatchingSignatoryLink
     , anyInvitationUndelivered

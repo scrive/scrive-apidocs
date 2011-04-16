@@ -822,17 +822,20 @@ designViewFields step = do
         _ -> False
 
 
-uploadPage :: KontrakcjaTemplates -> ListParams -> Bool -> IO String
-uploadPage templates params showTemplates = renderTemplate templates "uploadPage" $ do
-    field "templateslink" $ show $ LinkAjaxTemplates params
+uploadPage :: KontrakcjaTemplates -> ListParams -> (Maybe DocumentType) -> Bool -> IO String
+uploadPage templates params mdoctype showTemplates = renderTemplate templates "uploadPage" $ do
+    field "typeselected" $ isJust mdoctype
+    field "contract" $ mdoctype == Just Contract
+    field "offer" $ mdoctype == Just Offer
+    field "templateslink" $  (\t -> show (LinkAjaxTemplates t params)) <$> mdoctype
     field "showTemplates" showTemplates
        
 
-templatesForAjax::KontrakcjaTemplates ->  MinutesTime -> User -> PagedList Document -> IO String
-templatesForAjax templates ctime user doctemplates = 
+templatesForAjax::KontrakcjaTemplates ->  MinutesTime -> User -> DocumentType -> PagedList Document -> IO String
+templatesForAjax templates ctime user doctype doctemplates = 
     renderTemplate templates "templatesForAjax" $ do
         field "documents" $ markParity $ map (documentBasicViewFields ctime user) (list doctemplates)
-        field "currentlink" $ show $ LinkNew (params doctemplates)    
+        field "currentlink" $ show $ LinkNew (Just doctype) (params doctemplates)    
         pagedListFields doctemplates
     
 -- We keep this javascript code generation for now

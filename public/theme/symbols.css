@@ -268,3 +268,22 @@
 .modal-close:active, .flash-close:active,  .popup-close:active {
 	background-position: 0 -48px;
 }
+
+
+.contracticon {
+    background: url(../img/Dokument.png) no-repeat transparent;
+    height: 128px;
+    margin:auto;
+    width: 128px;
+    background-position: 5px 0px;
+    display: block;
+}
+
+.offericon {
+    background: url(../img/Offer.png) no-repeat transparent;
+    height: 128px;
+    margin:auto;
+    width: 128px;
+    background-position: 5px 0px;
+    display: block;
+}
