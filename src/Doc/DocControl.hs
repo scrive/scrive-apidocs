@@ -1451,9 +1451,13 @@ showMainPage user =  do
                       ctx <- get
                       params <- getListParams
                       showTemplates <- isFieldSet "showTemplates"
-                      content <- liftIO $ uploadPage (ctxtemplates ctx) params showTemplates
+                      mdoctype <- getDocType
+                      content <- liftIO $ uploadPage (ctxtemplates ctx) params mdoctype showTemplates
                       renderFromBody ctx TopDocument kontrakcja $ cdata content 
-                      
+
+getDocType::Kontra (Maybe DocumentType)
+getDocType = readField "doctype"
+
 idmethodFromString :: String -> Maybe IdentificationType
 idmethodFromString method 
     | method == "email" = Just EmailIdentification
@@ -1464,13 +1468,16 @@ getTemplatesForAjax::Kontra Response
 getTemplatesForAjax = do
     ctx <- get 
     params <- getListParams
-    case (ctxmaybeuser ctx) of
-            Just user -> do
+    mdoctype <- getDocType
+    case (ctxmaybeuser ctx,mdoctype) of
+            (Just user, Just doctype) -> do
                 allTemplates <- liftIO $ query $ GetUserTemplates (userid user)
                 let templates = filter (not . documentdeleted) allTemplates
-                content <- liftIO $ templatesForAjax (ctxtemplates ctx) (ctxtime ctx) user $ docSortSearchPage params templates            
+                let templatesOfGoodType =  filter (matchingType doctype) templates
+                content <- liftIO $ templatesForAjax (ctxtemplates ctx) (ctxtime ctx) user doctype $ docSortSearchPage params templatesOfGoodType
                 simpleResponse content
-            Nothing ->  sendRedirect $ LinkLogin NotLogged
+            (Nothing,_) ->  sendRedirect $ LinkLogin NotLogged
+            _ -> mzero
     
 handleCreateFromTemplate::Kontra KontraLink
 handleCreateFromTemplate = do
