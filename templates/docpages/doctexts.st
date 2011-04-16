@@ -30,7 +30,11 @@ documentInfoText=
                              Väntar
                         </span><br>
                         <span class="text">
-                           Du har skickat inbjudan att underteckna. Dokumentet har ännu inte undertecknats av samtliga parter.
+                           $if(contract)$ 
+                              Du har skickat inbjudan att underteckna. Dokumentet har ännu inte undertecknats av samtliga parter.
+                           $elseif(offer)$
+                              Du har skickat offerten. Offerten har ännu inte godkänts av din motpart.
+                           $endif$
                         </span>
                      $endif$
 
@@ -169,7 +173,11 @@ documentInfoText=
                              Färdigställt
                         </span><br>
                         <span class="text">
+                          $if(contract)$  
                            Samtliga parter har undertecknat dokumentet.
+                          $elseif(offer)$
+                            Samtliga parter godkänt offerten
+                          $endif$
                         </span>
 
                      $elseif(signedbyme)$
@@ -177,7 +185,11 @@ documentInfoText=
                              Färdigställt
                         </span><br>
                         <span class="text">
+                           $if(contract)$  
                            Samtliga parter har undertecknat dokumentet.
+                          $elseif(offer)$
+                            Samtliga parter godkänt offerten
+                          $endif$
                         </span>
 
                      $else$
@@ -185,7 +197,11 @@ documentInfoText=
                              Färdigställt
                         </span><br>
                         <span class="text">
+                           $if(contract)$  
                            Samtliga parter har undertecknat dokumentet.
+                          $elseif(offer)$
+                           Samtliga parter godkänt offerten
+                          $endif$
                         </span>
 
                      $endif$

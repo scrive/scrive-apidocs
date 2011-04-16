@@ -469,9 +469,12 @@ handleSignShow documentid
 
   when (Data.List.null ctxflashmessages
         && (not (isJust $ maybesigninfo invitedlink))) $ do
-    let message = if document `allowsIdentification` ELegitimationIdentification
-                    then "Du undertecknar dokumentet längst ned. Det krävs e-legitimation för att underteckna."
-                    else "Underteckna dokumentet längst ned på sidan."
+    let message = if (isContract document ) -- Move all to flash messages in docView !!!!!!!!
+                   then 
+                    if document `allowsIdentification` ELegitimationIdentification
+                     then "Du undertecknar dokumentet längst ned. Det krävs e-legitimation för att underteckna."
+                     else "Underteckna dokumentet längst ned på sidan."
+                    else  "Godkänn offerten längst ned på sidan"
     addFlashMsg $ toFlashMsg OperationDone message
   
   ctx <- get
