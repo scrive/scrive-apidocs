@@ -7,8 +7,12 @@ mailCancelDocumentByAuthorStandardHeader=
 mailCancelDocumentByAuthorContent=
     $header:noescape()$
     <p>
+      $if(contract)$
       <strong>$creatorname$</strong> har valt att återkalla sin inbjudan att underteckna dokument $documenttitle$.
       Därmed är avtalsprocessen avbruten och du kan inte längre underteckna dokumentet.
+      $elseif(offer)$
+       <strong>$creatorname$</strong>  har valt att återkalla sin inbjudan att godkänna offerten $documenttitle$
+      $endif$
     </p>
     $footer:noescape()$
 #####
@@ -31,9 +35,14 @@ mailDocumentClosedForAuthorTitle=Bekräftelse: $documenttitle$
 mailDocumentClosedForAuthorContent=
     <span>
       <p>Hej <strong>$authorname$</strong>,</p>
-      <p>Dokumentet <strong>$documenttitle$</strong> har undertecknats
-        av $partylist:noescape()$. Avtalet är nu bindande.</p>
-      <p>Det färdigställda dokumentet bifogas med detta mail.</p>
+       $if(contract)$
+       <p>Dokumentet <strong>$documenttitle$</strong> har undertecknats
+         av $partylist:noescape()$. Avtalet är nu bindande.</p>
+       <p>Det färdigställda dokumentet bifogas med detta mail.</p>
+       $elseif(offer)$
+       <p>Offerten <strong>$documenttitle$</strong> har godkänts av $partylist:noescape()$.</p>
+       <p>Den färdigställda offerten bifogas med detta mail.</p>
+      $endif$
       $poweredBySkrivaPaPara()$
     </span>
 #####
@@ -42,9 +51,14 @@ mailDocumentClosedForSignatoriesTitle=Bekräftelse: $documenttitle$
 mailDocumentClosedForSignatoriesContent=
     <span>
       <p>Hej <strong>$personname$</strong>,</p>
-      <p>Dokumentet <strong>$documenttitle$</strong> har undertecknats
-        av $partylist:noescape()$. Avtalet är nu bindande.</p>
-      <p>Det färdigställda dokumentet bifogas med detta mail.</p>
+      $if(contract)$
+       <p>Dokumentet <strong>$documenttitle$</strong> har undertecknats
+         av $partylist:noescape()$. Avtalet är nu bindande.</p>
+       <p>Det färdigställda dokumentet bifogas med detta mail.</p>
+      $elseif(offer)$
+       <p>Offerten <strong>$documenttitle$</strong> har godkänts av $partylist:noescape()$.</p>
+       <p>Den färdigställda offerten bifogas med detta mail.</p>
+      $endif$ 
       $poweredBySkrivaPaPara()$
     </span>
 ####
@@ -58,8 +72,15 @@ mailRejectMailContent=
       <p>Hej,</p>
       </div>
       $endif$
-      <p><strong>$rejectorName$</strong> har avvisat att underteckna dokumentet <strong>$documenttitle$</strong>. Avtalsprocessen är därmed avbruten.
+      $if(contract)$
+      <p>
+        <strong>$rejectorName$</strong> har avvisat att underteckna dokumentet <strong>$documenttitle$</strong>. Avtalsprocessen är därmed avbruten.
       </p>
+      $elseif(offer)$
+      <p>
+        <strong>$rejectorName$</strong> har avvisat att godkänna offerten <strong>$documenttitle$</strong>.
+      </p>
+      $endif$
       $poweredBySkrivaPaPara()$
 
 ###
@@ -125,7 +146,11 @@ remindMailNotSignedTitle=Påminnelse att underteckna  $documenttitle$
 remindMailNotSignedStandardHeader=
     <span>
       <p>Hej <strong>$personname$</strong></p>
+      $if(contract)$ 
       <p><strong>$author$</strong> vill påminna dig om att du inte undertecknat dokument <strong>$documenttitle$</strong> ännu.</p>
+      $elseif(offer)$
+      <p><strong>$author$</strong> vill påminna dig om att du inte godkänt offerten <strong>$documenttitle$</strong> ännu.</p>
+      $endif$
     </span>
 #####
 remindMailNotSignedContent=
@@ -133,14 +158,18 @@ remindMailNotSignedContent=
     <span>
       <p><i>Översiktlig information</i><br/>
         Parter: $partnersinfo:noescape()$<br/>
-        $whohadsignedinfo:noescape()$<br/>
+        $if(!offer)$ $whohadsignedinfo:noescape()$<br/> $endif$
         $timetosigninfo:noescape()$
       </p>
       <p><i>Så här går du vidare</i><br/>
         1. Klicka på länken<br/>
         <a href="$link$">$link$</a><br/>
         2. Granska online<br/>
-        3. Underteckna (eller avvisa)<br/>
+        $if(offer)$ 
+           3. Godkänna (eller avvisa)<br/> 
+        $else$ 
+           3. Underteckna (eller avvisa)<br/> 
+        $endif$
         4. Färdig
       </p>
     </span>

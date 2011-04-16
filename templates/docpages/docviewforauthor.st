@@ -92,10 +92,14 @@ $loadingdialog()$
         <span class="modal-icon message"></span>
         <span class="modal-title">
           <h2> Återkalla inbjudan </h2>
+          $if(contract)$ 
           <p>Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?
-             <br/> När du återkallat inbjudan kommer nedanstående meddelande att skickas till dina motparter.
-            
+          <br/> När du återkallat inbjudan kommer nedanstående meddelande att skickas till dina motparter.
+          $elseif(offer)$
+          <p>Är du säker att du vill återkalla din inbjudan att godkänna offerten?
+          <br/> När du återkallat inbjudan kommer nedanstående meddelande att skickas till dina motparter.
           </p>
+          $endif$ 
         </span>
         <a class="modal-close close"> </a>
       </div>
