@@ -943,6 +943,7 @@ instance Show JpegPages where
 deriving instance Show Document
 deriving instance Show DocumentStatus
 deriving instance Show DocumentType
+deriving instance Read DocumentType
 deriving instance Show CSVUpload
 deriving instance Show ChargeMode
 deriving instance Show Author

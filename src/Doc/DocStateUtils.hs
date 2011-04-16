@@ -31,6 +31,7 @@ module Doc.DocStateUtils (
     , isTemplate
     , isContract
     , isOffer
+    , matchingType
     -- Getters - digging some info from about document
     , signatoryname
     , undeliveredSignatoryLinks
@@ -190,6 +191,8 @@ instance  MaybeTemplate Document where
 instance  MaybeContractOrOffer Document where
    isContract =  isContract . documenttype
  
+matchingType::(MaybeContractOrOffer a, MaybeContractOrOffer b) => a -> b -> Bool
+matchingType a b = (isContract a && isContract b) || (isOffer a && isOffer b)
 
 
 checkCSVSigIndex :: UserID -> [SignatoryLink] -> Int -> Either String Int

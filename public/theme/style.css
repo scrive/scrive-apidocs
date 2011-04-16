@@ -1213,6 +1213,20 @@ a.button {
 
 }
 
+.postSignStepBody {
+    margin-top: 16px;
+    padding:8px 19px;
+    border-left: 1px solid #BDBDBD;
+    border-right: 1px solid #BDBDBD;
+    border-bottom: 1px solid #C0C0C0;
+    border-top: 1px solid #C0C0C0;
+    color: #414241;
+    background-image: url(images/signStepsBodyBorder.png);
+    background-repeat: repeat-y;
+    overflow: hidden;
+    min-height: 100px;
+}
+
 #signStepsBodyBorderBottom
 {
     background-image: url(images/signStepsBodyBorderBottom.png);
@@ -1236,6 +1250,31 @@ a.button {
     text-align: center;
 
 }
+
+.documentTypeBox
+{
+    width: 200px;
+    height: 130px;
+    margin: 15px auto 15px auto;
+    border-top: 1px solid #E0E0E0;
+    border-right: 1px solid #E0E0E0;
+    border-bottom: 1px solid #E8E5E5;
+    border-left: 1px solid #E8E5E5;
+    padding: 10px;
+    text-align: center;
+
+}
+.documentTypeBox.selected{
+    
+    border: 1px solid #CCCCFF;
+    background-color: #F0F0FF
+    
+}
+
+.documentTypeBox a{
+    background-color:transparent;
+}
+
 /* 008 new */
 .signStepsBodyUploadTextContainer .text
 {

@@ -271,7 +271,8 @@ handleError = do
     sendRedirect LinkMain
 
 handleMainReaload :: Kontra KontraLink
-handleMainReaload = LinkNew <$> getListParamsForSearch
+handleMainReaload = do
+    liftM2 LinkNew DocControl.getDocType getListParamsForSearch
 
 {- |
    Creates a default amazon configuration based on the

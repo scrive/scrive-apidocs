@@ -39,8 +39,8 @@ data KontraLink
     | LinkTemplates ListParams
     | LinkOffers ListParams
     | LinkMain 
-    | LinkNew ListParams
-    | LinkAjaxTemplates ListParams
+    | LinkNew (Maybe DocumentType) ListParams
+    | LinkAjaxTemplates DocumentType ListParams
     | LinkAccount
     | LinkSecurity
     | LinkLandpageSaved Document SignatoryLink
@@ -91,8 +91,8 @@ instance Show KontraLink where
     showsPrec _ (LinkTemplates params) = (++) $ "/t" ++ "?" ++ show params
     showsPrec _ (LinkOffers params) = (++) $ "/o" ++ "?" ++ show params
     showsPrec _ LinkMain = (++) "/"
-    showsPrec _ (LinkNew params) = (++) $ "/" ++ "?showTemplates=Yes&" ++ show params
-    showsPrec _ (LinkAjaxTemplates params) = (++) $ "/templates" ++ "?" ++ show params
+    showsPrec _ (LinkNew mdoctype params) = (++) $ "/" ++ "?showTemplates=Yes&" ++ "doctype="++ (maybe "" show mdoctype) ++"&"++ show params
+    showsPrec _ (LinkAjaxTemplates doctype params) = (++) $ "/templates?" ++ "doctype="++ show doctype ++"&"++ show params
     showsPrec _ LinkAcceptTOS = (++) "/accepttos"
     showsPrec _ LinkAccount = (++) "/account"
     showsPrec _ (LinkSubaccount params) = (++) $ "/account/subaccount" ++ "?" ++ show params
