@@ -246,9 +246,9 @@ pageDocumentDesign=
                  $else$
                  <input type="hidden" value="email" name="validationmethod" />
                  <div class="signStepButton" style="display:inline-block;padding-top:4px;">
-                   <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"  class="btn-big green center">
+                   <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"  class="btn-small green center">
                     <div class="left"></div>
-                    <div class="label" style="padding-left:20px;padding-right:20px"><span >Skicka </span>
+                    <div class="label" style=""><span >Skicka </span>
                     <span class="btn-symbol green arrow-left" style="position:relative;top:3px;right:0px"></span></div> 
                     <div class="right"></div>
                   </a>
@@ -738,7 +738,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
           </div>
           $elseif(offer)$
             <div id="dialog-confirm-text-send">
-              <p>Some new text that I cent get from spec <strong>$documenttitle$</strong> till <span class="Xinvited">Invited</span>?</p>
+              <p>Är du säker på att du vill skicka en inbjudan att godkänna offerten <strong>$documenttitle$</strong> till <span class="Xinvited">Invited</span>?</p>
             </div>
           $endif$
         </div>
@@ -791,7 +791,11 @@ pageDocumentForAuthorHelpersLocalDialogs=
   <div class="hidden" id="hiddenttimestuffbox">
     <div id="daystosignbox">
     <span>
-    Undertecknas inom
+    $if(contract)$
+        Undertecknas inom 
+    $elseif(offer)$
+        Godkänns inom
+    $endif$
     <input class="signStepsBodyDaysLeftInput" type="text" id="daystosign" name="daystosign" value="$documentdaystosignboxvalue$" maxlength="2" size="2" autocomplete="off" /> 
     dagar
     </span>
