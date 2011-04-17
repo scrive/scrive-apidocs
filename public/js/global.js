@@ -899,12 +899,12 @@ function nonZeroSignatories() {
   
   // sum up all signatories (but minus author because we already
   // counted him)
-  sigs += $("#personpane .persondetails").length - 1;
+  sigs += $("#personpane .persondetails input:hidden[name='signatoryrole' and value='signatory']").length - 1;
 
   var error = (sigs === 0);
 
   if(error) {
-    addFlashMessage('Det finns inga undertecknande parter för detta dokument. Vänligen lägg till undertecknande parter eller ändra din roll till "undertecknare".',"red");
+    addFlashMessage('Du måste ha minst en undertecknande part.',"red");
     $("li.plus").addClass("redborder");
     $(".authordetails .man").addClass("redborder");
     return false;
