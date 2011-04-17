@@ -794,7 +794,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
     $if(contract)$
         Undertecknas inom 
     $elseif(offer)$
-        Godkänns inom
+        Bekräftas inom
     $endif$
     <input class="signStepsBodyDaysLeftInput" type="text" id="daystosign" name="daystosign" value="$documentdaystosignboxvalue$" maxlength="2" size="2" autocomplete="off" /> 
     dagar
