@@ -118,8 +118,6 @@ mailInvitationToSignContent=
     $footer:noescape()$
     $legalparagraph()$
 ###
-
-
 mailInvitationToSignDefaultHeader=
     <p>Hej $personname$,
       <br/><br/>
