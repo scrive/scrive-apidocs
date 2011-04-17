@@ -899,7 +899,7 @@ function nonZeroSignatories() {
   
   // sum up all signatories (but minus author because we already
   // counted him)
-  sigs += $("#personpane .persondetails input:hidden[name='signatoryrole' and value='signatory']").length - 1;
+  sigs += $("#personpane .persondetails input:hidden[name='signatoryrole'][value='signatory']").length - 1;
 
   var error = (sigs === 0);
 
