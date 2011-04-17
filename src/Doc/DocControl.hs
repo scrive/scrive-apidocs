@@ -466,21 +466,31 @@ handleSignShow documentid
   author <- queryOrFail $ GetUserByUserID authoruserid
   let authorname = prettyName author
   let invitedname = signatoryname $ signatorydetails $ invitedlink 
+  let isSignatory = SignatoryPartner `elem` signatoryroles invitedlink
 
   when (Data.List.null ctxflashmessages
         && (not (isJust $ maybesigninfo invitedlink))) $ do
-    let message = if (isContract document ) -- Move all to flash messages in docView !!!!!!!!
-                   then 
-                    if document `allowsIdentification` ELegitimationIdentification
-                     then "Du undertecknar dokumentet längst ned. Det krävs e-legitimation för att underteckna."
-                     else "Underteckna dokumentet längst ned på sidan."
-                    else  "Godkänn offerten längst ned på sidan"
+
+    let message = if isSignatory
+                  then if (isContract document ) -- Move all to flash messages in docView !!!!!!!!
+                       then 
+                           if document `allowsIdentification` ELegitimationIdentification
+                           then "Du undertecknar dokumentet längst ned. Det krävs e-legitimation för att underteckna."
+                           else "Underteckna dokumentet längst ned på sidan."
+                       else  "Godkänn offerten längst ned på sidan"
+                  else "Du har endast rättigheter att se detta dokument"
+
     addFlashMsg $ toFlashMsg OperationDone message
   
   ctx <- get
-  renderFromBody ctx TopNone kontrakcja 
-                       (cdata <$> pageDocumentForSignatory (LinkSignDoc document invitedlink) 
-                                            document ctx invitedlink author)
+
+  if isSignatory
+     then renderFromBody ctx TopNone kontrakcja 
+              (cdata <$> pageDocumentForSignatory (LinkSignDoc document invitedlink) 
+                    document ctx invitedlink author)
+     else renderFromBody ctx TopNone kontrakcja 
+              (cdata <$> pageDocumentForViewer ctx document author (Just invitedlink))
+
 
 {- |
    The user with id uid is a friend of user.
@@ -544,7 +554,7 @@ handleIssueShowGet docid = withUserGet $ checkUserTOSGet $ do
         friendWithSignatory <- liftIO $ isFriendWithSignatory userid document 
         if (isFriendOf userid author || friendWithSignatory )
          then renderFromBody ctx toptab kontrakcja
-                  (cdata <$> pageDocumentForViewer ctx document author)
+                  (cdata <$> pageDocumentForViewer ctx document author Nothing)
          -- not allowed
          else mzero
 

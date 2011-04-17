@@ -581,7 +581,7 @@ pageDocumentForAuthor ctx
    Show no buttons or other controls
  -}                                                                                                          
 
-pageDocumentForViewer :: Context -> Document -> User -> IO String
+pageDocumentForViewer :: Context -> Document -> User -> Maybe SignatoryLink -> IO String
 pageDocumentForViewer ctx
   document@Document {
       documentsignatorylinks
@@ -591,7 +591,7 @@ pageDocumentForViewer ctx
     , documentinvitetext
     , documentallowedidtypes
   }
-  author =
+  author msignlink =
     let
         authorid = userid author
         -- the author gets his own space when he's editing
@@ -628,7 +628,12 @@ pageDocumentForViewer ctx
        field "emailonly" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isNothing $ find (== ELegitimationIdentification) documentallowedidtypes)
        field "elegitimationonly" $ (isNothing $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)
        field "docstate" (buildJS documentauthordetails documentsignatorylinks)
-       field "linkissuedocpdf" $ show (LinkIssueDocPDF Nothing document)
+       case msignlink of
+           Nothing -> return ()
+           Just siglink -> do
+                          field "siglinkid" $ show $ signatorylinkid siglink
+                          field "sigmagichash" $ show $ signatorymagichash siglink
+       field "linkissuedocpdf" $ show (LinkIssueDocPDF msignlink document)
        field "documentinfotext" $ documentinfotext
        documentInfoFields document 
        documentViewFields document

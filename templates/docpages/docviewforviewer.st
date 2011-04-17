@@ -17,6 +17,9 @@ pageDocumentForViewerHelpers=
 </span>,
 <script type="text/javascript"> 
   var documentid = "$documentid$";
+  $if(siglinkid)$
+  var siglinkid = "$siglinkid$", sigmagichash = "$sigmagichash$";
+  $endif$
 </script>
 ###
 pageDocumentForViewerContent = 
