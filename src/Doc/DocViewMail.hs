@@ -153,10 +153,12 @@ remindMailSignedStandardHeader :: KontrakcjaTemplates
                                -> User 
                                -> IO String
 remindMailSignedStandardHeader templates document signlink author = 
-    renderTemplate templates "remindMailSignedStandardHeader" 
-                       [("documenttitle", BS.toString $ documenttitle document),
-                        ("author", BS.toString $ prettyName author),
-                        ("personname", BS.toString $ personname signlink) ]
+    renderTemplate templates "remindMailSignedStandardHeader" $ do 
+                       field "documenttitle" $  BS.toString $ documenttitle document
+                       field "author" $ BS.toString $ prettyName author
+                       field "personname" $ BS.toString $ personname signlink
+                       field "offer" $ isOffer document
+                       field "contract" $ isContract document
                                                
 remindMailNotSignedStandardHeader::  KontrakcjaTemplates -> Document -> SignatoryLink -> User -> IO String
 remindMailNotSignedStandardHeader templates document signlink author =  
@@ -242,11 +244,13 @@ mailInvitationToSignOrViewContent templates forMail (Context {ctxhostpart})
                           replaceOnEdit' templates this with            
         header   =  if (BS.null documentinvitetext) 
                      then if issignatory || not forMail 
-                          then renderTemplate templates "mailInvitationToSignDefaultHeader" 
-                                   [("creatorname",creatorname)
-                                   ,("personname",personname1)
-                                   ,("documenttitle",BS.toString documenttitle) 
-                                   ]  
+                          then renderTemplate templates "mailInvitationToSignDefaultHeader" $ do
+                                   field "creatorname" $ creatorname
+                                   field"personname" $ personname1
+                                   field "documenttitle" $ BS.toString documenttitle
+                                   field "offer" $ isOffer document
+                                   field "contract" $ isContract document
+                                     
                           else renderTemplate templates "mailInvitationToViewDefaultHeader" 
                                    [("creatorname",creatorname)
                                    ,("personname",personname1)
@@ -269,6 +273,7 @@ mailInvitationToSignOrViewContent templates forMail (Context {ctxhostpart})
                 field "whohadsignedinfo" whohadsignedinfo'
                 field "documenttitle" $ BS.toString documenttitle
                 field "offer" $ isOffer document
+                field "contract" $ isContract document
                 field "link" link    
                 field "issignatory" issignatory
                                                                 

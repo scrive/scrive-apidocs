@@ -150,9 +150,11 @@ flashDocumentTemplateSaved :: KontrakcjaTemplates -> IO FlashMessage
 flashDocumentTemplateSaved templates =
   toFlashMsg SigningRelated <$> renderTemplate templates "flashDocumentTemplateSaved" ()
 
-flashDocumentRestarted :: KontrakcjaTemplates -> IO FlashMessage
-flashDocumentRestarted templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashDocumentRestarted" ()
+flashDocumentRestarted :: KontrakcjaTemplates -> Document -> IO FlashMessage
+flashDocumentRestarted templates document =
+  fmap (toFlashMsg OperationDone) $ 
+      renderTemplate templates "flashDocumentRestarted" $ do
+      documentInfoFields document
 
 flashRemindMailSent :: KontrakcjaTemplates -> SignatoryLink -> IO FlashMessage
 flashRemindMailSent templates signlink@SignatoryLink{maybesigninfo} =
@@ -164,9 +166,11 @@ flashRemindMailSent templates signlink@SignatoryLink{maybesigninfo} =
       (const "flashRemindMailSentSigned")
 
 
-flashMessageCanceled :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageCanceled templates =
-  toFlashMsg SigningRelated <$> renderTemplate templates "flashMessageCanceled" ()
+flashMessageCanceled :: KontrakcjaTemplates -> Document -> IO FlashMessage
+flashMessageCanceled templates document =
+  fmap (toFlashMsg SigningRelated) $ 
+    renderTemplate templates "flashMessageCanceled" $ do
+      documentInfoFields document
 
 flashAuthorSigned :: KontrakcjaTemplates -> IO FlashMessage
 flashAuthorSigned templates =
@@ -653,7 +657,8 @@ pageDocumentForSignatory action document ctx invitedlink author =
         ++ (buildJS documentauthordetails $ documentsignatorylinks document)
         ++ "; docstate['useremail'] = '"
         ++ (BS.toString $ signatoryemail $ signatorydetails invitedlink)
-        ++ "';"
+        ++ "'; offer = " ++ if (isOffer document) then "true" else"false"
+        ++ ";"
       magichash = signatorymagichash invitedlink
       documentauthordetails = signatoryDetailsFromUser author
       allowedtypes = documentallowedidtypes document

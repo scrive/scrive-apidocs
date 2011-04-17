@@ -738,7 +738,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
           </div>
           $elseif(offer)$
             <div id="dialog-confirm-text-send">
-              <p>Är du säker på att du vill skicka en inbjudan att godkänna offerten <strong>$documenttitle$</strong> till <span class="Xinvited">Invited</span>?</p>
+              <p>Är du säker på att du vill skicka en inbjudan att bekräfta offerten <strong>$documenttitle$</strong> till <span class="Xinvited">Invited</span>?</p>
             </div>
           $endif$
         </div>

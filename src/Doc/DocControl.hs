@@ -477,7 +477,7 @@ handleSignShow documentid
                            if document `allowsIdentification` ELegitimationIdentification
                            then "Du undertecknar dokumentet längst ned. Det krävs e-legitimation för att underteckna."
                            else "Underteckna dokumentet längst ned på sidan."
-                       else  "Godkänn offerten längst ned på sidan"
+                       else  "Bekräfta offerten längst ned på sidan"
                   else "Du har endast rättigheter att se detta dokument"
 
     addFlashMsg $ toFlashMsg OperationDone message
@@ -1362,7 +1362,7 @@ handleCancel docid = withUserPost $ do
   case mdoc' of 
     Right doc' -> do
           sendCancelMailsForDocument customMessage ctx doc
-          addFlashMsg =<< (liftIO $ flashMessageCanceled (ctxtemplates ctx))
+          addFlashMsg =<< (liftIO $ flashMessageCanceled (ctxtemplates ctx) doc')
     Left errmsg -> addFlashMsg $ toFlashMsg OperationFailed errmsg
   return (LinkIssueDoc $ documentid doc)
 
@@ -1380,12 +1380,14 @@ handleWithdrawn docid = do
 handleRestart:: DocumentID -> Kontra KontraLink
 handleRestart docid = do
   ctx <- get
-  case ctxmaybeuser ctx of
-    Just user -> do
+  mdoc <- query $ GetDocumentByDocumentID docid
+  case (ctxmaybeuser ctx,mdoc) of
+    (Just user,Just doc) -> do
       update $ RestartDocument docid user (ctxtime ctx) (ctxipnumber ctx)
-      addFlashMsg =<< (liftIO $ flashDocumentRestarted (ctxtemplates ctx))
+      addFlashMsg =<< (liftIO $ flashDocumentRestarted (ctxtemplates ctx) doc)
       return $ LinkIssueDoc docid
-    Nothing -> return $ LinkLogin NotLogged
+    (Nothing,Just doc) -> return $ LinkLogin NotLogged
+    _ -> mzero
                     
 handleResend:: DocumentID -> SignatoryLinkID -> Kontra KontraLink
 handleResend docid signlinkid  = withUserPost $ do

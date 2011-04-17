@@ -17,7 +17,7 @@ pageDocumentForSignContent=
               $if(contract)$ 
                 <h2>Underteckna</h2>  
               $elseif(offer)$
-                <h2>Godkänn</h2>  
+                <h2>Bekräfta</h2>  
               $endif$
             </span>
             <a class="modal-close close"> </a>
@@ -40,7 +40,7 @@ pageDocumentForSignContent=
                  </span>
                  $endif$
               $elseif(offer)$
-                 <p>Är du säker att du vill godkänna offerten <strong>$documenttitle$</strong>?</p>
+                 <p>Är du säker att du vill bekräfta offerten <strong>$documenttitle$</strong>?</p>
               $endif$
             </div>
         </div>
@@ -79,10 +79,10 @@ pageDocumentForSignContent=
           </a>
           $endif$
           $elseif(offer)$
-          <a href="#" class="btn-big green float-right submiter">
+          <a href="#" class="btn-big blue float-right submiter">
             <div class="left"></div>
             <div class="label">
-              <span>Godkänn offert</span>
+              <span>Bekräfta</span>
             </div>
             <div class="right"></div>
           </a>
@@ -164,7 +164,7 @@ $if(notsignedbyme)$$if(pending)$
      $if(contract)$
       <div class="float-left" id="signGuardLabel"><label for="signGuardCBox">Jag intygar att jag granskat och förstått dokumentet, att samtliga parter är korrekta och att jag har befogenhet att skriva på.</label></div>
      $elseif(offer)$ 
-      <div class="float-left" id="signGuardLabel"><label for="signGuardCBox">Jag intygar att jag granskat och förstått dokumentet, att samtliga parter är korrekta och att jag har befogenhet att godkänt.</label></div>
+      <div class="float-left" id="signGuardLabel"><label for="signGuardCBox">Jag intygar att jag granskat och förstått offerten och att jag har befogenhet att bekräfta.</label></div>
      $endif$ 
     </div>
   </div>
@@ -180,10 +180,10 @@ $if(notsignedbyme)$$if(pending)$
   </a>
   <a class="float-right cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel">Avvisa dokument</a>
   $elseif(offer)$ 
-  <a class="btn-big green center submiter" id="sign" rel="#dialog-confirm-sign" name="sign">
+  <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign" name="sign">
     <div class="left"></div>
     <div class="label" style="width:140px;padding-left:20px;padding-right:20px;">
-      <span>Godkänn offert</span>
+      <span>Bekräfta</span>
     </div>
     <div class="right"></div>
   </a>
