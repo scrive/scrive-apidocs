@@ -228,7 +228,7 @@ pageDocumentDesign=
                 </div>
 
                 <div class="signStepsBodyInvation">
-                 <small><a rel="#edit-invite-text-dialog" id="editinvitetextlink" href="#" style="padding-top:3px">JUSTERA HÄLSNINGSMEDDELANDE</a></small>
+                 <small><a rel="#edit-invite-text-dialog" id="editinvitetextlink" href="#" style="padding-top:3px">HÄLSNINGSMEDDELANDE</a></small>
                  <input type="hidden" id="invitetext" name="invitetext" value="$documentinvitetext$" />
                 </div>
                  
