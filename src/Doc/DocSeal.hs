@@ -154,25 +154,27 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
       initials = concatComma (map initialsOfPerson persons)
       initialsOfPerson (Seal.Person {Seal.fullname}) = map head (words fullname)
       authorfullname = signatoryname authordetails
-      -- 2. "Name of invited" granskar dokumentet online
+      signedtext = if (isContract document) then " undertecknar dokumentet " else " bekräftar offerten " 
+      seentext   =  if (isContract document) then " granskar dokumentet "  else " granskar offerten "                       
+      invitationsendtext = if (isContract document) then " skickar en inbjudan att underteckna till " else " skickar en offert att bekräfta till "                 
       makeHistoryEntryFromSignatory (Seal.Person {Seal.fullname},seen, signed, False, mprovider) = 
           [   Seal.HistEntry
             { Seal.histdate = show (signtime seen)
-            , Seal.histcomment = fullname ++ " granskar dokumentet online" ++ formatIP (signipnumber seen)
+            , Seal.histcomment = fullname ++ seentext ++"online" ++ formatIP (signipnumber seen)
             } 
             , Seal.HistEntry
             { Seal.histdate = show (signtime signed)
             , Seal.histcomment = if isNothing mprovider
-                                    then fullname ++ " undertecknar dokumentet online med e-post" ++ formatIP (signipnumber signed)
-                                    else fullname ++ " undertecknar dokumentet online med " ++ formatProvider (fromJust mprovider) ++ formatIP (signipnumber signed)
+                                    then fullname ++ signedtext++"online med e-post" ++ formatIP (signipnumber signed)
+                                    else fullname ++ signedtext++"online med " ++ formatProvider (fromJust mprovider) ++ formatIP (signipnumber signed)
             }
           ]
       makeHistoryEntryFromSignatory (Seal.Person {Seal.fullname},seen, signed, True, mprovider) = 
           [   Seal.HistEntry
             { Seal.histdate = show (signtime signed)
             , Seal.histcomment = if isNothing mprovider
-                                    then fullname ++ " undertecknar dokumentet online med e-post" ++ formatIP (signipnumber signed)
-                                    else fullname ++ " undertecknar dokumentet online med " ++ formatProvider (fromJust mprovider) ++ formatIP (signipnumber signed)
+                                    then fullname ++ signedtext ++ "online med e-post" ++ formatIP (signipnumber signed)
+                                    else fullname ++ signedtext ++ "online med " ++ formatProvider (fromJust mprovider) ++ formatIP (signipnumber signed)
             }
           ]
       invitationSentEntry = case documentinvitetime document of
@@ -183,10 +185,10 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
                                       , Seal.histcomment = 
                                           if length signatories>1
                                           then BS.toString authorfullname ++ 
-                                                   " skickar en inbjudan att underteckna till parterna" ++ 
+                                                   invitationsendtext++"parterna" ++ 
                                                    formatIP ipnumber
                                           else BS.toString authorfullname ++ 
-                                                   " skickar en inbjudan att underteckna till parten" ++ 
+                                                   invitationsendtext++"parten" ++ 
                                                    formatIP ipnumber
                                       }]
 
@@ -195,7 +197,9 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
       
       lastHistEntry = Seal.HistEntry
                       { Seal.histdate = show maxsigntime
-                      , Seal.histcomment = "Samtliga parter har undertecknat dokumentet och avtalet är nu juridiskt bindande."
+                      , Seal.histcomment = if (isContract document)   
+                                            then "Samtliga parter har undertecknat dokumentet och avtalet är nu juridiskt bindande."
+                                            else "Samligta parter har bekräftat offerten."    
                       }
 
       -- here we use Data.List.sort that is *stable*, so it puts

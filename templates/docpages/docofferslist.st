@@ -123,7 +123,7 @@ $loadingdialog()$
 					<div class="icon status reviewed float-left"></div><div class="float-left">Granskat&nbsp;</div>
 					-->
 					<div class="icon status opened float-left"></div><div class="float-left">Öppnat&nbsp;</div>
-					<div class="icon status signed float-left"></div><div class="float-left">Signerat&nbsp;</div>
+					<div class="icon status signed float-left"></div><div class="float-left">Bekräftat&nbsp;</div>
 				</div>
                 $pagingFooter()$
 			</div>
@@ -148,7 +148,7 @@ $loadingdialog()$
         <div class="icon status opened"></div><p>Status: Öppnat</p>
     </div>
     <div id="tooltip-signed" class="hidden">
-        <div class="icon status signed"></div><p>Status: Signerat</p>
+        <div class="icon status signed"></div><p>Status: Bekräftat</p>
     </div>
   </form>
 $listLocalDialogs()$

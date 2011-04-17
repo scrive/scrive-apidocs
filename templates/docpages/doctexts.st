@@ -14,7 +14,7 @@ documentInfoText=
                              Granska
                         </span><br>
                         <span class="text">
-                          Vänligen var noga med att granska dokumentet och kontrollera parterna till höger innan du undertecknar.
+                                Vänligen var noga med att granska offerten innan du bekräftar.
                         </span>
                         $endif$
 
@@ -33,7 +33,7 @@ documentInfoText=
                            $if(contract)$ 
                               Du har skickat inbjudan att underteckna. Dokumentet har ännu inte undertecknats av samtliga parter.
                            $elseif(offer)$
-                              Du har skickat offerten. Offerten har ännu inte godkänts av din motpart.
+                              Du har skickat offerten. Offerten har ännu inte bekräftats av din motpart.
                            $endif$
                         </span>
                      $endif$
@@ -176,7 +176,7 @@ documentInfoText=
                           $if(contract)$  
                            Samtliga parter har undertecknat dokumentet.
                           $elseif(offer)$
-                            Samtliga parter godkänt offerten
+                            Samtliga parter har bekräftat offerten.
                           $endif$
                         </span>
 
@@ -188,7 +188,7 @@ documentInfoText=
                            $if(contract)$  
                            Samtliga parter har undertecknat dokumentet.
                           $elseif(offer)$
-                            Samtliga parter godkänt offerten
+                           Samtliga parter har bekräftat offerten.
                           $endif$
                         </span>
 
@@ -200,7 +200,7 @@ documentInfoText=
                            $if(contract)$  
                            Samtliga parter har undertecknat dokumentet.
                           $elseif(offer)$
-                           Samtliga parter godkänt offerten
+                           Samtliga parter har bekräftat offerten.
                           $endif$
                         </span>
 

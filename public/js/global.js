@@ -549,7 +549,10 @@ safeReady(function() {
                          if (!guardChecked) { 
                            $("#signViewBottomBoxContainerLeftText").css("border","1px dotted red");
                            $(".signGuard").change(function(){$("#signViewBottomBoxContainerLeftText").css("border","")});
-                           addFlashMessage("För att underteckna måste du först klicka i kryssrutan", "red");
+                           if (offer)
+                               addFlashMessage("För att bekräfta måste du först klicka i kryssrutan", "red");
+                           else 
+                               addFlashMessage("För att underteckna måste du först klicka i kryssrutan", "red");
                            return false;
                          } 
                        }
@@ -893,13 +896,12 @@ function isInvalidCSV() {
 
 function nonZeroSignatories() {
   var sigs = 0;
+  // sum up all signatories  
+  sigs += $("#personpane .persondetails input:hidden[name='signatoryrole'][value='signatory']").length;
+  // add author if a signatory
   if($("#authorsignatoryradio").attr("checked")) {
-    sigs = 1;
+    sigs++;
   }
-  
-  // sum up all signatories (but minus author because we already
-  // counted him)
-  sigs += $("#personpane .persondetails input:hidden[name='signatoryrole'][value='signatory']").length - 1;
 
   var error = (sigs === 0);
 
@@ -1255,7 +1257,9 @@ function renumberParts() {
               idx = idx + 1;
           }
           else {
-              $(this).find(".partnumber").text("EJ UNDERTECKNANDE PART");
+              var text = "EJ UNDERTECKNANDE PART";
+              if (offer) text = "AVSÄNDARE";
+              $(this).find(".partnumber").text(text);
           }
       });
 }

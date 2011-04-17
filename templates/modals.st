@@ -59,13 +59,13 @@ modalOfferSigned=
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
-          <h3>Du har nu godkänt offerten <strong>$documenttitle$</strong></h3>
+          <h3>Du har nu bekräftat offerten <strong>$documenttitle$</strong></h3>
         </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
         <div class="modal-content">
-          <p>$signatory$ har godkänt offerten.
+          <p>$signatory$ har bekräftat offerten.
           </p>
           <p>Offerten har sparats till ditt konto.
           </p>
