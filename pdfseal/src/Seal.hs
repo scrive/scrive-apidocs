@@ -331,7 +331,7 @@ lastpage (SealSpec {documentNumber,persons,secretaries,history,hostpart}) =
      "/TT0 1 Tf " ++
      "0.806 0.719 0.51 0.504 k " ++
      "12 0 0 12 39.8198 736.8555 Tm " ++
-     "(Sekreterare)Tj " ++
+     "(Ej undertecknande part)Tj " ++
      "ET " ++ concatMap signatorybox secretaries
   else "") ++
  "1 0 0 1 0 126 cm " ++ -- compensate for 3 signatures
