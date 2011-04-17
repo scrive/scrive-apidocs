@@ -96,7 +96,7 @@ $loadingdialog()$
           <p>Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?
           <br/> När du återkallat inbjudan kommer nedanstående meddelande att skickas till dina motparter.
           $elseif(offer)$
-          <p>Är du säker att du vill återkalla din inbjudan att godkänna offerten?
+          <p>Är du säker att du vill återkalla din inbjudan att bekräfta offerten?
           <br/> När du återkallat inbjudan kommer nedanstående meddelande att skickas till dina motparter.
           </p>
           $endif$ 

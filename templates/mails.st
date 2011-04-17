@@ -11,7 +11,7 @@ mailCancelDocumentByAuthorContent=
       <strong>$creatorname$</strong> har valt att återkalla sin inbjudan att underteckna dokument $documenttitle$.
       Därmed är avtalsprocessen avbruten och du kan inte längre underteckna dokumentet.
       $elseif(offer)$
-       <strong>$creatorname$</strong>  har valt att återkalla sin inbjudan att godkänna offerten $documenttitle$
+       <strong>$creatorname$</strong>  har valt att återkalla sin inbjudan att bekräfta offerten $documenttitle$
       $endif$
     </p>
     $footer:noescape()$
@@ -40,7 +40,7 @@ mailDocumentClosedForAuthorContent=
          av $partylist:noescape()$. Avtalet är nu bindande.</p>
        <p>Det färdigställda dokumentet bifogas med detta mail.</p>
        $elseif(offer)$
-       <p>Offerten <strong>$documenttitle$</strong> har godkänts av $partylist:noescape()$.</p>
+       <p>Offerten <strong>$documenttitle$</strong> har bekräftats av $partylist:noescape()$.</p>
        <p>Den färdigställda offerten bifogas med detta mail.</p>
       $endif$
       $poweredBySkrivaPaPara()$
@@ -56,7 +56,7 @@ mailDocumentClosedForSignatoriesContent=
          av $partylist:noescape()$. Avtalet är nu bindande.</p>
        <p>Det färdigställda dokumentet bifogas med detta mail.</p>
       $elseif(offer)$
-       <p>Offerten <strong>$documenttitle$</strong> har godkänts av $partylist:noescape()$.</p>
+       <p>Offerten <strong>$documenttitle$</strong> har bekräftats av $partylist:noescape()$.</p>
        <p>Den färdigställda offerten bifogas med detta mail.</p>
       $endif$ 
       $poweredBySkrivaPaPara()$
@@ -78,7 +78,7 @@ mailRejectMailContent=
       </p>
       $elseif(offer)$
       <p>
-        <strong>$rejectorName$</strong> har avvisat att godkänna offerten <strong>$documenttitle$</strong>.
+        <strong>$rejectorName$</strong> har avvisat offerten <strong>$documenttitle$</strong>.
       </p>
       $endif$
       $poweredBySkrivaPaPara()$
@@ -102,7 +102,7 @@ mailInvitationToSignContent=
       <br/>
       2. Granska online<br/>
       $if(offer)$ 
-      3. Godkänna (eller avvisa)<br/> 
+      3. Bekräfta (eller avvisa)<br/> 
       $else$ 
       3. Underteckna (eller avvisa)<br/> 
       $endif$
@@ -121,7 +121,13 @@ mailInvitationToSignContent=
 mailInvitationToSignDefaultHeader=
     <p>Hej $personname$,
       <br/><br/>
-      <strong>$creatorname$</strong> har bjudit in dig att underteckna dokumentet <strong>$documenttitle$</strong> online via tjänsten SkrivaPå.
+      <strong>$creatorname$</strong> har bjudit in dig att 
+      $if(contract)$
+        underteckna dokumentet 
+      $elseif(offer)$
+        bekräfta offerten
+      $endif$
+      <strong>$documenttitle$</strong> online via tjänsten SkrivaPå.
     </p>
 ####
 mailInvitationToViewDefaultHeader=
@@ -135,8 +141,13 @@ remindMailSignedTitle=$documenttitle$
 remindMailSignedStandardHeader=
     <span>
       <p>Hej <strong>$personname$</strong></p>
+      $if(contract)$
       <p><strong>$author$</strong> har begärt att vi ska skicka dokumentet <strong>$documenttitle$</strong>
         till dig som du har undertecknat via tjänsten SkrivaPå. Dokumentet bifogas med detta mail.</p>
+      $elseif(offer)$
+      <p><strong>$author$</strong> har begärt att vi ska skicka offerten  <strong>$documenttitle$</strong>
+        till dig som du har bekräftat via tjänsten SkrivaPå. Offerten bifogas med detta mail.</p>
+      $endif$
     </span>
 ####
 remindMailNotSignedTitle=Påminnelse att underteckna  $documenttitle$
@@ -147,7 +158,7 @@ remindMailNotSignedStandardHeader=
       $if(contract)$ 
       <p><strong>$author$</strong> vill påminna dig om att du inte undertecknat dokument <strong>$documenttitle$</strong> ännu.</p>
       $elseif(offer)$
-      <p><strong>$author$</strong> vill påminna dig om att du inte godkänt offerten <strong>$documenttitle$</strong> ännu.</p>
+      <p><strong>$author$</strong> vill påminna dig om att du inte bekräftat offerten <strong>$documenttitle$</strong> ännu.</p>
       $endif$
     </span>
 #####
@@ -164,7 +175,7 @@ remindMailNotSignedContent=
         <a href="$link$">$link$</a><br/>
         2. Granska online<br/>
         $if(offer)$ 
-           3. Godkänna (eller avvisa)<br/> 
+           3. Bekräfta (eller avvisa)<br/> 
         $else$ 
            3. Underteckna (eller avvisa)<br/> 
         $endif$

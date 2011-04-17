@@ -50,7 +50,7 @@ $if(signatory.signdate)$
     $if(contract)$  
         Undertecknat $signatory.signdate$
     $elseif(offer)$
-        Godkänt  $signatory.signdate$
+        Bekräftat $signatory.signdate$
     $endif$
 $elseif(signatory.datamismatch)$
         Felaktig e-legitmation
@@ -66,7 +66,7 @@ $else$
     $if(contract)$  
         Har ej undertecknat
     $elseif(offer)$
-        Har ej godkänt
+        Har ej bekräftat
     $endif$
 $endif$
                
