@@ -8,8 +8,8 @@ $loadingdialog()$
 
 		</div>
 		<ul class="tabs">
-			<li><a href="/d" class="listtype">Dokument</a></li>
-            <li class="active"><a href="/o">Offerter</a></li>
+			<li><a href="/d">Dokument</a></li>
+            <li class="active"><a href="/o" class="listtype">Offerter</a></li>
 			<li><a href="/t">Mallar</a></li>
 			<!-- <li><a href="/contacts">Kontakter</a></li> -->
 		</ul>
@@ -165,10 +165,10 @@ $listLocalDialogs()$
       <div class="modal-body">
         <div class="modal-content">
           <div class="singleremindmsg">
-            Är du säker att du vill skicka en påminnelse til berörda parter i dokumentet <span class="docname"></span>.
+            Är du säker att du vill skicka en påminnelse til berörda parter i offerter <span class="docname"></span>.
           </div>
           <div class="multipleremindmsg">
-            Är du säker att du vill skicka en påminnelse til berörda parter för <span class="doccount"></span> dokument.
+            Är du säker att du vill skicka en påminnelse til berörda parter för <span class="doccount"></span> offerter.
           </div>
         </div>
       </div>
