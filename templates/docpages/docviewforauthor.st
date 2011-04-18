@@ -67,7 +67,7 @@ $validationdropdown()$
   <div id="signViewBottomBoxContainerLeft">
     <div id="signViewBottomBoxContainerLeftText"> 
      <div class="float-left"><input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off" /></div>
-     <div class="float-left" id="signGuardLabel"><label for="signGuardCBox">Jag intygar att jag har granskat och förstått innehållet i dokumentet. Jag intygar även att samtliga parter är korrekta och att jag har befogenhet att skriva på.</label></div>
+     <div class="float-left" id="signGuardLabel"><label for="signGuardCBox">Jag intygar att jag granskat och förstått dokumentet, att samtliga parter är korrekta och att jag har befogenhet att skriva på.</label></div>
     </div>
   </div>
 
