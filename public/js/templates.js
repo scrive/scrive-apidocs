@@ -761,7 +761,7 @@ function tearDownCSVUpload(sigentry) {
 }
 
 function setupAsMultiplePart(sigentry) {
-  
+  sigentry.addClass("multipart");
   var icons = sigentry.find('.signStepsBodyIcons');
   icons.find(".multi").hide();
   icons.find(".single").show();
@@ -770,6 +770,7 @@ function setupAsMultiplePart(sigentry) {
 }
 
 function setupAsSinglePart(sigentry) {
+  sigentry.removeClass("multipart");
   var icons = sigentry.find('.signStepsBodyIcons');
   icons.find(".multi").show();
   icons.find(".single").hide();

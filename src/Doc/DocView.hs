@@ -34,6 +34,7 @@ module Doc.DocView (
   , flashMessageContractArchiveDone
   , flashMessageOfferArchiveDone
   , flashMessageTemplateArchiveDone
+  , flashMessageInvalidCSV
   , defaultInviteMessage
   , mailDocumentRemind
   , mailDocumentRejected
@@ -216,6 +217,10 @@ flashMessageOfferArchiveDone templates =
 flashMessageTemplateArchiveDone :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageTemplateArchiveDone templates =
   toFlashMsg OperationDone <$> renderTemplate templates "flashMessageTemplateArchiveDone" ()
+
+flashMessageInvalidCSV :: KontrakcjaTemplates -> IO FlashMessage
+flashMessageInvalidCSV templates =
+  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageInvalidCSV" ()
 
 
 -- All doc view
