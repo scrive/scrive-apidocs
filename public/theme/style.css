@@ -1239,7 +1239,7 @@ a.button {
 /* step 1 */
 .signStepsBodyUploadBox
 {
-    width: 200px;
+    width: 240px;
     height: 92px;
     margin: 15px auto 15px auto;
     border-top: 1px solid #E0E0E0;
@@ -1251,9 +1251,10 @@ a.button {
 
 }
 
+
 .documentTypeBox
 {
-    width: 200px;
+    width: 240px;
     height: 130px;
     margin: 15px auto 15px auto;
     border-top: 1px solid #E0E0E0;
@@ -1264,7 +1265,7 @@ a.button {
     text-align: center;
 
 }
-.documentTypeBox.selected{
+.documentTypeBox.selected, .signStepsBodyUploadBox.selected{
     
     border: 1px solid #CCCCFF;
     background-color: #F0F0FF
@@ -1298,7 +1299,7 @@ a.button {
     position: relative; /* 008 new */
     margin-top: 15px;
     margin-bottom: 5px;
-    margin-left: 45px;
+    margin-left: 65px;
 }
 /* HOW TO MAKE FILE INPUT LOOKING LIKE A BUTTON !!!! */
 input.multiFileInput { 
@@ -1553,7 +1554,8 @@ input.multiFileInput {
     font-size:11px;
     text-align:center;
     position:relative;
-    top:-1px
+    top:-1px;
+    width:20px;
 }
 
 .signStepsBodyCalendar
