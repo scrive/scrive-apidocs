@@ -701,7 +701,10 @@
 .modal-container .modal-header {
 	background: url(../img/bg-header.jpg) #000;
 	border-bottom: 0px solid #686868;
-	padding: 20px;
+	padding-left: 20px;
+        padding-top: 20px;
+        padding-bottom: 20px;
+        padding-right: 50px;
 	position: relative;
 	z-index: 1001;
 }
