@@ -91,9 +91,14 @@ mailInvitationToSignTitle=Inbjudan från $creatorname$ till $documenttitle$
 mailInvitationToSignContent=
     $header:noescape()$
     <p><i>Översiktlig information</i><br/>
-      Parter: $partnersinfo:noescape()$<br/>
-      $if(!offer)$ $whohadsignedinfo:noescape()$<br/> $endif$
-      $timetosigninfo:noescape()$
+      $if(!offer)$
+       Parter: $partnersinfo:noescape()$<br/>
+       $whohadsignedinfo:noescape()$<br/>
+       $timetosigninfo:noescape()$
+      $else$
+       Avsändare: $partnersinfo:noescape()$<br/>
+       $timetosigninfo:noescape()$
+      $endif$
     </p>
     $if(issignatory)$
     <p><i>Så här går du vidare</i><br/>
@@ -121,13 +126,11 @@ mailInvitationToSignContent=
 mailInvitationToSignDefaultHeader=
     <p>Hej $personname$,
       <br/><br/>
-      <strong>$creatorname$</strong> har bjudit in dig att 
       $if(contract)$
-        underteckna dokumentet 
+       <strong>$creatorname$</strong> har bjudit in dig att underteckna dokumentet <strong>$documenttitle$</strong> online via tjänsten SkrivaPå.
       $elseif(offer)$
-        bekräfta offerten
+       <strong>$creatorname$</strong> har skickat offerten <strong>$documenttitle$</strong> till dig. Du bekräftar offerten genom att följa instruktionerna nedan.
       $endif$
-      <strong>$documenttitle$</strong> online via tjänsten SkrivaPå.
     </p>
 ####
 mailInvitationToViewDefaultHeader=

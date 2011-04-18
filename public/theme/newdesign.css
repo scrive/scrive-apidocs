@@ -353,10 +353,11 @@
 }
 
 .tab-content .basicinfo {
-    color: #000 !important;
+    color: #414241 !important;
     font: 12px "Helvetica Neue";
     text-decoration: none;
-    padding: 18px 0 0 18px;
+    padding: 48px 0 40px 50px;
+    width: 230px;
 }
 
 .tab-content .search {
