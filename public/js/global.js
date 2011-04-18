@@ -886,7 +886,7 @@ function authorFieldsValidation() {
     if(remainingAuthorFields.hasClass('customfield')) {
       addFlashMessage("Du har inte namngett alla fält. Vänligen försök igen.","red");
     }
-    if(remainingAuthorFields.hasClass('signum')) {
+    if(remainingAuthorFields.hasClass('sigpersnum')) {
       addFlashMessage("Var vänlig gå tillbaka till steg 2 och fyll i personnummer.", "red");
     }
     remainingAuthorFields.addClass('redborder').addClass('offending');
