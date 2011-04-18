@@ -19,19 +19,20 @@ showUserSecurity =
                <div class="account-body">
                    <table>
                        <tr>
-                           <td>Nuvarande lösen.:</td>
+                           <td>Nuvarande lösenord:</td>
                            <td><input type="password" name="oldpassword" /></td>
                        <tr>
                            <td>Nytt lösenord:</td>
                            <td><input type="password" name="password" /></td>
                        </tr>
                        <tr>
-                           <td>Upprepa nytt lösen.:</td>
+                           <td>Upprepa nytt lösenord:</td>
                            <td><input type="password" name="password2" /></td>
                        </tr>
                    </table>
                </div>
              <div class="account-footer">
+                <input type="submit" class="hidden"/>
                 <a href="#" class="btn-small green submit">
                    <div class="left"></div>
                    <div class="label">
