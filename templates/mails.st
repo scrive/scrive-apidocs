@@ -2,7 +2,12 @@
 mailCancelDocumentByAuthorTitle=Återkallelsenotis: $documenttitle$
 ####
 mailCancelDocumentByAuthorStandardHeader=
-    <p>Hej, </p>
+    $if(contract)$
+        <p>Hej, </p>
+    $elseif(offer)$
+        <p>Hej, $partylist$ </p>
+    $endif$
+
 ######
 mailCancelDocumentByAuthorContent=
     $header:noescape()$
@@ -11,7 +16,7 @@ mailCancelDocumentByAuthorContent=
       <strong>$creatorname$</strong> har valt att återkalla sin inbjudan att underteckna dokument $documenttitle$.
       Därmed är avtalsprocessen avbruten och du kan inte längre underteckna dokumentet.
       $elseif(offer)$
-       <strong>$creatorname$</strong>  har valt att återkalla sin inbjudan att bekräfta offerten $documenttitle$
+       <strong>$creatorname$</strong>   har valt att återkalla offerten  $documenttitle$.
       $endif$
     </p>
     $footer:noescape()$
@@ -40,9 +45,9 @@ mailDocumentClosedForAuthorContent=
          av $partylist:noescape()$. Avtalet är nu bindande.</p>
        <p>Det färdigställda dokumentet bifogas med detta mail.</p>
        $elseif(offer)$
-       <p>Offerten <strong>$documenttitle$</strong> har bekräftats av $partylist:noescape()$.</p>
-       <p>Den färdigställda offerten bifogas med detta mail.</p>
-      $endif$
+         <p>Offerten <strong>$documenttitle$</strong> har accepterats av $partylist:noescape()$ och SkrivaPå har utfärdat ett verifikat för accepten. </p>
+         <p>Bifogat med detta mail finner du en PDF med offerten och verifikatet.</p>
+       $endif$
       $poweredBySkrivaPaPara()$
     </span>
 #####
@@ -56,8 +61,9 @@ mailDocumentClosedForSignatoriesContent=
          av $partylist:noescape()$. Avtalet är nu bindande.</p>
        <p>Det färdigställda dokumentet bifogas med detta mail.</p>
       $elseif(offer)$
-       <p>Offerten <strong>$documenttitle$</strong> har bekräftats av $partylist:noescape()$.</p>
-       <p>Den färdigställda offerten bifogas med detta mail.</p>
+       <p>Offerten <strong>$documenttitle$</strong> har accepterats av $partylist:noescape()$ och SkrivaPå har utfärdat ett verifikat för accepten. </p>
+       <p>Bifogat med detta mail finner du en PDF med offerten och verifikatet.</p>
+
       $endif$ 
       $poweredBySkrivaPaPara()$
     </span>
@@ -90,24 +96,27 @@ mailInvitationToSignTitle=Inbjudan från $creatorname$ till $documenttitle$
 ###
 mailInvitationToSignContent=
     $header:noescape()$
-    <p><i>Översiktlig information</i><br/>
-      $if(!offer)$
+    $if(!offer)$
+      <p>
+       <i>Översiktlig information</i><br/>
        Parter: $partnersinfo:noescape()$<br/>
        $whohadsignedinfo:noescape()$<br/>
        $timetosigninfo:noescape()$
-      $else$
+    
        Avsändare: $partnersinfo:noescape()$<br/>
        $timetosigninfo:noescape()$
-      $endif$
-    </p>
+      </p>
+    $endif$
     $if(issignatory)$
-    <p><i>Så här går du vidare</i><br/>
+    <p>
+      $if(!offer)$
+        <i>Så här går du vidare</i><br/>
+      $endif$
       1. Klicka på länken <br/>
-      <a href="$link$">$link$</a> <br/>
-      <br/>
+      <a href="$link$">$link$</a><br/>
       2. Granska online<br/>
       $if(offer)$ 
-      3. Bekräfta (eller avvisa)<br/> 
+      3. Acceptera offert (eller avvisa)<br/> 
       $else$ 
       3. Underteckna (eller avvisa)<br/> 
       $endif$
@@ -129,7 +138,8 @@ mailInvitationToSignDefaultHeader=
       $if(contract)$
        <strong>$creatorname$</strong> har bjudit in dig att underteckna dokumentet <strong>$documenttitle$</strong> online via tjänsten SkrivaPå.
       $elseif(offer)$
-       <strong>$creatorname$</strong> har skickat offerten <strong>$documenttitle$</strong> till dig. Du bekräftar offerten genom att följa instruktionerna nedan.
+      <strong>$creatorname$</strong> har skickat offerten <strong>$documenttitle$</strong>  till dig och önskar din accept.
+      Acceptera offerten genom att följa instruktionerna nedan.
       $endif$
     </p>
 ####
@@ -161,24 +171,30 @@ remindMailNotSignedStandardHeader=
       $if(contract)$ 
       <p><strong>$author$</strong> vill påminna dig om att du inte undertecknat dokument <strong>$documenttitle$</strong> ännu.</p>
       $elseif(offer)$
-      <p><strong>$author$</strong> vill påminna dig om att du inte bekräftat offerten <strong>$documenttitle$</strong> ännu.</p>
+      <p><strong>$author$</strong> vill påminna dig om att du inte accepterat offerten <strong>$documenttitle$</strong> ännu.
+        Acceptera offerten genom att följa instruktionerna nedan.
+      </p>
+
       $endif$
     </span>
 #####
 remindMailNotSignedContent=
     $header:noescape()$
     <span>
+      $if(!offer)$ 
       <p><i>Översiktlig information</i><br/>
         Parter: $partnersinfo:noescape()$<br/>
-        $if(!offer)$ $whohadsignedinfo:noescape()$<br/> $endif$
+        $whohadsignedinfo:noescape()$<br/> 
         $timetosigninfo:noescape()$
       </p>
-      <p><i>Så här går du vidare</i><br/>
+      $endif$
+      <p>
+        $if(!offer)$ <i>Så här går du vidare</i><br/> $endif$
         1. Klicka på länken<br/>
         <a href="$link$">$link$</a><br/>
         2. Granska online<br/>
         $if(offer)$ 
-           3. Bekräfta (eller avvisa)<br/> 
+           3.  Acceptera offert (eller avvisa)<br/> 
         $else$ 
            3. Underteckna (eller avvisa)<br/> 
         $endif$
