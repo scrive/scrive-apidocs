@@ -50,23 +50,26 @@ $if(signatory.signdate)$
     $if(contract)$  
         Undertecknat $signatory.signdate$
     $elseif(offer)$
-        Bekräftat $signatory.signdate$
+       Accepterat offert $signatory.signdate$
     $endif$
 $elseif(signatory.datamismatch)$
         Felaktig e-legitmation
 $elseif(timedout)$
         Förfallodatum har passerat
 $elseif(cancel)$
-
+     $if(contract)$  
+     $elseif(offer)$
+          Offert återkallad
+     $endif$
 $elseif(datamismatch)$
 
 $elseif(signatory.seendate)$        
     Granskat $signatory.seendate$
 $else$
     $if(contract)$  
-        Har ej undertecknat
+        Har ej granskat
     $elseif(offer)$
-        Har ej bekräftat
+        Har ej granskat
     $endif$
 $endif$
                

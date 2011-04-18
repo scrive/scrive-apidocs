@@ -34,7 +34,13 @@ pageDocumentForAuthor=
         <form method="POST" action="/restart/$documentid$">
           <a class="btn-small red submit">
             <div class="left"></div>
-            <div class="label">Starta om dokument</div> 
+            <div class="label">
+                $if(contract)$
+                    Starta om dokument
+                $elseif(offer)$
+                    Starta om offert
+                $endif$
+            </div> 
             <div class="right"></div>
         </a> 
         </form>
@@ -103,13 +109,12 @@ $loadingdialog()$
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
-          <h2> Återkalla inbjudan </h2>
+          <h2> $if(contract)$ Återkalla inbjudan $elseif(offer)$ Är du säker att du vill återkalla offerten? $endif$</h2>
           $if(contract)$ 
           <p>Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?
           <br/> När du återkallat inbjudan kommer nedanstående meddelande att skickas till dina motparter.
           $elseif(offer)$
-          <p>Är du säker att du vill återkalla din inbjudan att bekräfta offerten?
-          <br/> När du återkallat inbjudan kommer nedanstående meddelande att skickas till dina motparter.
+          <p> När du återkallat offerten kommer nedanstående meddelande att skickas till din motpart.
           </p>
           $endif$ 
         </span>
