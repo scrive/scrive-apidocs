@@ -275,6 +275,7 @@ modalSignedViewClosed=
     </div>
     <div class="modal-footer">
       $if(hasaccount)$
+      $if(!isloggedin)$
       <a class="float-left close text-link message">
           Stäng
       </a>
@@ -285,6 +286,16 @@ modalSignedViewClosed=
         </div>
         <div class="right"></div>
       </a>
+      $else$
+      <a class="btn-small green float-right close">
+        <div class="left"></div>
+        <div class="label">
+          <p>Stäng</p>
+          <div class="btn-symbol green arrow-left"></div>
+        </div>
+        <div class="right"></div>
+      </a>
+      $endif$
       $else$
       <a class="btn-small green float-right close">
         <div class="left"></div>
