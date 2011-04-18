@@ -627,7 +627,7 @@ handleIssueSign document author = do
                     return $ LinkIssueDoc (documentid d)
                 ([],ds) -> return $ LinkContracts emptyListParams
                 _ -> mzero
-            Left _ -> mzero
+            Left link -> return link
         Left _ -> mzero
     where
       forIndividual ctxtime ctxipnumber udoc doc = do
@@ -656,7 +656,7 @@ handleIssueSend document author = do
                     return $ LinkIssueDoc (documentid d)
                 ([],ds) -> return $ LinkContracts emptyListParams
                 _ -> mzero
-            Left _ -> mzero
+            Left link -> return link
         Left _ -> mzero
     where
       forIndividual ctxtime ctxipnumber udoc doc = do
@@ -699,23 +699,28 @@ handleIssueChangeToContract document author = do
 
     I feel like this is quite dangerous to do all at once, maybe need a transaction?!
 -}
-splitUpDocument :: Document -> Kontra (Either String [Document])
+splitUpDocument :: Document -> Kontra (Either KontraLink [Document])
 splitUpDocument doc =
   case (documentcsvupload doc, getCSVCustomFields doc) of
-    (Just _, Left msg) -> return $ Left msg
+    (Just _, Left msg) -> mzero
     (Nothing, _) -> return $ Right [doc]
     (Just csvupload, Right csvcustomfields) ->
       case (cleanCSVContents (documentallowedidtypes doc) (length csvcustomfields) $ csvcontents csvupload) of
-        ((prob:_), _) -> return $ Left "data is not valid"
+        ((prob:_), _) -> do
+          Context{ctxtemplates} <- get
+          addFlashMsg =<< (liftIO $ flashMessageInvalidCSV ctxtemplates)
+          return $ Left $ LinkDesignDoc $ DesignStep2 (documentid doc) (fmap (+1) (csvPersonIndex doc)) (Just AfterCSVUpload)
         ([], CleanCSVData{csvbody}) -> do
           mudoc <- if (isTemplate doc)
                     then return $ Right doc
                     else update $ TemplateFromDocument $ documentid doc
           case mudoc of
-            (Left x) -> return $ Left x
+            (Left x) -> mzero
             (Right udoc) -> do
               mdocs <- mapM (createDocFromRow udoc (csvsignatoryindex csvupload)) csvbody
-              return $ if Data.List.null (lefts mdocs) then Right (rights mdocs) else Left . head . lefts $ mdocs
+              if Data.List.null (lefts mdocs)
+                then return $ Right (rights mdocs) 
+                else mzero
   where createDocFromRow :: Document -> Int -> [BS.ByteString] -> Kontra (Either String Document)
         createDocFromRow udoc sigindex xs =
           update $ ContractFromSignatoryData (documentid udoc) sigindex (item 0) (item 1) (item 2) (item 3) (item 4) (item 5) (drop 6 xs)

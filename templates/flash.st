@@ -186,9 +186,9 @@ flashMessageBulkContractRemindsSent=Påminnelse har skickats till alla parter so
 ###
 flashMessageNoBulkContractRemindsSent=Tyvärr, det finns inga parter som återstår att underteckna.
 ###
-flashMessageBulkOfferRemindsSent=Påminnelse har skickats till alla parter som ännu inte signerat.
+flashMessageBulkOfferRemindsSent=Påminnelse har skickats till alla mottagare som ännu inte accepterat.
 ###
-flashMessageNoBulkOfferRemindsSent=Tyvärr, det finns inga parter som återstår att underteckna.
+flashMessageNoBulkOfferRemindsSent=Tyvärr, det finns inga mottagare som återstår att acceptera.
 ###
 flashMessageContractArchiveDone=Valda dokument har blivit raderade.
 ###
@@ -197,4 +197,6 @@ flashMessageOfferArchiveDone=Valda offerter har blivit raderade.
 flashMessageTemplateArchiveDone=Valda mallar har blivit raderade.
 ###
 flashMessageThanksForTheQuestion=Ditt meddelande har skickats! Vi återkommer inom 24h.
+###
+flashMessageInvalidCSV=There's a problem with your .csv data, please check and upload again.
 ###

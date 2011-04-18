@@ -1275,6 +1275,8 @@ safeReady(function() {
 });
 
 function renumberParts() {
+  updateCsvPersonIndex();
+
   console.log("renumber parts");
   var persondetails = $("#personpane .persondetails");
 
@@ -1296,6 +1298,18 @@ function renumberParts() {
               $(this).find(".partnumber").text(text);
           }
       });
+}
+
+function updateCsvPersonIndex() {
+  var input = $("form").find("input[type='hidden'][name='csvpersonindex']");
+  var multipart = $("#personpane .multipart");
+  if (multipart.length<1) {
+    input.removeAttr("value");
+  } else {
+    var idx = multipart.parent().children().index(multipart);
+    console.log("multipart is now " + idx);
+    input.attr("value", idx);
+  }
 }
 
 /*
