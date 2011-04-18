@@ -1286,7 +1286,10 @@ function renumberParts() {
           var signatoryrole = $(this).find("input:radio[value='signatory']:checked");
           var isSignatory = (authorrole.length + signatoryrole.length)>0;
           if( isSignatory ) {
-              $(this).find(".partnumber").text("PART " + idx);
+              if (offer)
+                  $(this).find(".partnumber").text("MOTTAGARE");
+              else    
+                  $(this).find(".partnumber").text("PART " + idx);
               idx = idx + 1;
           }
           else {

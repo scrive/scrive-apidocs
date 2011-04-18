@@ -32,8 +32,10 @@ pageDocumentDesign=
         <span class="step1select text">
             $if(template)$
                 Välj mall
-            $else$
+            $elseif(contract)$
                 Välj dokument
+            $elseif(offer)$
+                Välj offert
             $endif$
         </span>
       </div>
@@ -211,9 +213,9 @@ pageDocumentDesign=
             </div>
             
             <div id="signStepsBodyFunctions">
-              $if(advanced)$
               <div id="signStepsBodyFunctionsBox">
                 $if(contract)$
+               <div id="signStepsBodyFunctionsBox">
                 <ul>
                   <li class="plus"><a class="designFunctionalLink" href="#add"  id="addSignatory">LÄGG TILL PERSON</a></li>
                   <li class="minus"><a class="designFunctionalLink" href="#remove"  id="delSignatory">TA BORT PERSON</a></li>
@@ -228,19 +230,20 @@ pageDocumentDesign=
                     <div class="right"></div>
                   </a>  
                 </div>
+               </div> 
                 $elseif(offer)$
-
+              <div id="signStepsBodyFunctionsBox" style="padding-left:17px;">
                 <div>
-                     <input style="position:relative;top:2px" type="checkbox" class="addremovecheckbox flashOnOn" flashtype="red"
+                     <input style="position:relative;top:2px;left:2px;margin-right:5px;" type="checkbox" class="addremovecheckbox flashOnOn" flashtype="red"
                            rel="#daystosignbox"
                            location="#datetosigncontainer"
                            oldlocation="#hiddenttimestuffbox"
                            autocomplete="off"
                            value="$if(timetosignset)$on$else$off$endif$"
                            id="daystosigncheckbox" />
-                     <span class="hidden flashMessage">Väljer du ett giltighetsdatum så kan du ej återkalla offerten.</span>
-                     <label for="daystosigncheckbox">Giltig t.o.m.</label>
-                     <div id="datetosigncontainer" style="padding-left:20px">  </div>
+                     <span class="hidden flashMessage">Observera! Du kan ej återkalla offerten om du väljer ett förfallodatum. Detta regleras av avtalslagen.</span>
+                     <label for="daystosigncheckbox">Förfallodatum</label>
+                     <div id="datetosigncontainer" $if(contract)$ style="padding-left:20px" $endif$>  </div>
                 </div>
 
                 <div class="signStepsBodyInvation">
@@ -264,12 +267,13 @@ pageDocumentDesign=
                  <div class="signStepButton" style="display:inline-block;padding-top:4px;">
                    <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"  class="btn-small green center">
                     <div class="left"></div>
-                    <div class="label" style=""><span >Skicka </span>
-                    <span class="btn-symbol green arrow-left" style="position:relative;top:3px;right:0px"></span></div> 
+                    <div class="label" style=""><span > Skicka offert</span>
+                    <span class="btn-symbol green arrow-left" ></span></div> 
                     <div class="right"></div>
                   </a>
                  </div>
                  $endif$
+              </div>
                 $endif$
              </div>
              $elseif(basic)$
@@ -802,7 +806,13 @@ pageDocumentForAuthorHelpersLocalDialogs=
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
-          <h2 id="dialog-title-sign">Skicka inbjudan</h2>
+          <h2 id="dialog-title-sign">
+               $if(contract)$
+                Skicka inbjudan
+               $elseif(offer)$
+                Skicka offert
+               $endif$
+          </h2>
         </span>
         <a class="modal-close close"> </a>
       </div>
@@ -825,7 +835,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
           </div>
           $elseif(offer)$
             <div id="dialog-confirm-text-send">
-              <p>Är du säker på att du vill skicka en inbjudan att bekräfta offerten <strong>$documenttitle$</strong> till <span class="Xinvited">Invited</span>?</p>
+              <p>Är du säker på att du vill skicka offerten <strong>$documenttitle$</strong> till <span class="Xinvited">Invited</span>?</p>
             </div>
           $endif$
         </div>
@@ -877,16 +887,19 @@ pageDocumentForAuthorHelpersLocalDialogs=
 
   <div class="hidden" id="hiddenttimestuffbox">
     <div id="daystosignbox">
-    <span>
+
     $if(contract)$
-        Undertecknas inom 
+         <span> 
+            Undertecknas inom   <input class="signStepsBodyDaysLeftInput" type="text" id="daystosign" name="daystosign" value="$documentdaystosignboxvalue$" maxlength="2" size="2" autocomplete="off" />     dagar
+         </span>
+        <div  class="datetodaystip signStepsBodyCalendar" rel="#daystosign"> </div> 
     $elseif(offer)$
-        Bekräftas inom
+         <div  class="datetodaystip signStepsBodyCalendar" style="width:13px;" rel="#daystosign"> </div>
+         <span> 
+            Bekräftas inom   <input class="signStepsBodyDaysLeftInput" type="text" id="daystosign" name="daystosign" value="$documentdaystosignboxvalue$" maxlength="2" size="2" autocomplete="off" />  dagar
+         </span>
     $endif$
-    <input class="signStepsBodyDaysLeftInput" type="text" id="daystosign" name="daystosign" value="$documentdaystosignboxvalue$" maxlength="2" size="2" autocomplete="off" /> 
-    dagar
-    </span>
-    <div  class="datetodaystip signStepsBodyCalendar" rel="#daystosign"> </div> 
+  
     </div>
   </div>
   </div>

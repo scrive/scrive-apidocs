@@ -134,7 +134,13 @@ pageDocumentForSignContent=
 <div id="signStepsContainer"> 
   <div id="signStepsTitleRow">
     <span id="signStepsTitleRowTextContainer"> 
-      <span class="title">DOKUMENT #$documentid$:</span>
+      <span class="title">
+        $if(contract)$ 
+            DOKUMENT #$documentid$:
+        $elseif(offer)$
+            OFFERT #$documentid$:
+        $endif$
+     </span>
       <span class="name">$documenttitle$</span>
     </span>
      <span class="download">

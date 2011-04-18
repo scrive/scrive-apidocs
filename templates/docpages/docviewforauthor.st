@@ -10,7 +10,13 @@ pageDocumentForAuthor=
 <div id="signStepsContainer"> 
   <div id="signStepsTitleRow"> 
      <span id="signStepsTitleRowTextContainer"> 
-      <span class="title">DOKUMENT #$documentid$:</span>
+      <span class="title">
+        $if(contract)$ 
+            DOKUMENT #$documentid$:
+        $elseif(offer)$
+            OFFERT #$documentid$:
+        $endif$
+      </span>
       <span class="name">$documenttitle$</span>
      </span>
      <span class="download">
@@ -38,7 +44,13 @@ pageDocumentForAuthor=
         $if(!timetosignset)$
         <a class="btn-small red" id="cancel"  name="cancel" rel="#cancel-by-author-dialog">
             <div class="left"></div>
-            <div class="label">Återkalla inbjudan</div> 
+            <div class="label">
+                $if(contract)$
+                    Återkalla inbjudan
+                $elseif(offer)$
+                    Återkalla offert
+                $endif$ 
+            </div> 
             <div class="right"></div>
         </a>
         $endif$
@@ -116,7 +128,12 @@ $loadingdialog()$
         <a class="btn-small red float-right submiter">
           <div class="left"></div>
           <div class="label">
-            <p>Återkalla inbjudan</p>
+            <p> $if(contract)$
+                    Återkalla inbjudan
+                $elseif(offer)$
+                    Återkalla offert
+                $endif$ 
+            </p>
             <div class="btn-symbol red arrow-left"></div>
           </div>
           <div class="right"></div>

@@ -37,8 +37,9 @@ $loadingdialog()$
 <!-- MAIN FORM STARTS HERE -->
 <table style="width:100%"> <tbody> <tr valign="top">
  <td>
-   <div class="signStepsBodyUploadBox" style="border:0px;text-align:left;width: 180px"> 
-    <p class="text" style="padding-top:0px">
+   <div class="signStepsBodyUploadBox" style="border:0px;text-align:left;width: 250px;font-weight:bold"> 
+    <p class="text" style="padding-top:40px">
+       Vilken typ av dokument vill du skicka? Klicka på dokumentsymbolen för att gå vidare.
     <p/>
    </div>
  </td>
@@ -62,11 +63,16 @@ $loadingdialog()$
 $if(typeselected)$
 <div class="postSignStepBody">
 <table style="width:100%"> <tbody> <tr valign="top">
-<td> <div class="signStepsBodyUploadBox" style="border:0px;text-align:left;width: 180px"> 
-    <p class="text" style="padding-top:0px">
-    Välj det dokument som du vill fylla i och skicka till din motpart för att skriva på.
-    Du väljer ett dokument från din dator eller från existerande mallar.
+<td> <div class="signStepsBodyUploadBox" style="border:0px;text-align:left;width: 250px;font-weight:bold"> 
+    $if(contract)$
+    <p class="text" style="padding-top:30px">
+        Välj det dokument som du vill skicka till din motpart för påskrift.
     <p/>
+    $elseif(offer)$
+    <p class="text" style="padding-top:30px">
+        Välj den offert som du vill skicka till din motpart.
+    <p/>
+    $endif$
  </div>
 </td>
 <td>
@@ -95,10 +101,10 @@ $if(typeselected)$
 </td>
 
 <td>
-<div class="signStepsBodyUploadBox">  
+<div class="signStepsBodyUploadBox $if(showTemplates)$ selected $endif$">  
     <div>
-        <span class="header">Välj sparad mall</span><br/>
-        <span class="text"></span> 
+        <span class="header">Välj mall</span><br/>
+        <span class="text">Sparad på SkrivaPå</span> 
       <br/>
       <div class="signStepsButtonContainer" style="height:34px">
         <a class="btn-small green selectTemplateButton" rel=".templatedDialogContainer">  
@@ -123,6 +129,7 @@ $if(typeselected)$
        
  <script>
     function getTemplates(curr){
+        jQuery(curr).parent(".signStepsBodyUploadBox").addClass("selected");
         var location = jQuery(jQuery(curr).attr("rel"));
         var wheretoputdata = jQuery(".waiting4data",location);
         location.show();

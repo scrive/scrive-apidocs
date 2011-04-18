@@ -32,7 +32,7 @@ modalOfferCreated=
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
-          <h3>Offerten <strong>$documenttitle$</strong> skickat!</h3>
+          <h3>Offerten <strong>$documenttitle$</strong> skickad!</h3>
         </span>
         <a class="modal-close close"> </a>
       </div>
