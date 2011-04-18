@@ -1299,30 +1299,64 @@ handleCreateNewTemplate = withUserPost $ do
 
 handleContractArchive :: Kontra KontraLink
 handleContractArchive = do
+    ctx@(Context { ctxtemplates }) <- get
     handleIssueArchive
+    addFlashMsg =<< (liftIO $ flashMessageContractArchiveDone ctxtemplates)
     return $ LinkContracts emptyListParams
 
 handleOffersArchive :: Kontra KontraLink
 handleOffersArchive =  do
+    ctx@(Context { ctxtemplates }) <- get
     handleIssueArchive
-    return $ LinkContracts emptyListParams   
+    addFlashMsg =<< (liftIO $ flashMessageOfferArchiveDone ctxtemplates)
+    return $ LinkOffers emptyListParams   
 
-{- |
-    This sends out bulk contract reminders.  The functionality is offered in the document
-    list page.  It will make sure the user is actually the author of all the documents,
-    and send out reminders only to signatories who haven't signed on documents that are 
-    pending.
--}
+handleTemplateArchive :: Kontra KontraLink
+handleTemplateArchive = do
+    ctx@(Context { ctxtemplates }) <- get
+    handleIssueArchive
+    addFlashMsg =<< (liftIO $ flashMessageTemplateArchiveDone ctxtemplates)
+    return $ LinkTemplates emptyListParams
+    
+handleIssueArchive :: Kontra ()
+handleIssueArchive = do
+    ctx@(Context { ctxmaybeuser = Just user, ctxhostpart, ctxtime }) <- get
+    idnumbers <- getCriticalFieldList asValidDocID "doccheck"
+    liftIO $ putStrLn $ show idnumbers
+    let ids = map DocumentID idnumbers
+    update $ ArchiveDocuments user ids
+
 handleBulkContractRemind :: Kontra KontraLink
 handleBulkContractRemind = withUserPost $ do
-    ctx@(Context { ctxmaybeuser = Just user, ctxtemplates }) <- get
+    ctx@(Context { ctxtemplates }) <- get
+    remindedsiglinks <- handleIssueBulkRemind
+    case (length remindedsiglinks) of
+      0 -> addFlashMsg =<< (liftIO $ flashMessageNoBulkContractRemindsSent ctxtemplates)
+      n -> addFlashMsg =<< (liftIO $ flashMessageBulkContractRemindsSent ctxtemplates)
+    return $ LinkContracts emptyListParams
+
+handleBulkOfferRemind :: Kontra KontraLink
+handleBulkOfferRemind =  withUserPost $ do
+    ctx@(Context { ctxtemplates }) <- get
+    remindedsiglinks <- handleIssueBulkRemind
+    case (length remindedsiglinks) of
+      0 -> addFlashMsg =<< (liftIO $ flashMessageNoBulkOfferRemindsSent ctxtemplates)
+      n -> addFlashMsg =<< (liftIO $ flashMessageBulkOfferRemindsSent ctxtemplates)
+    return $ LinkOffers emptyListParams   
+
+{- |
+    This sends out bulk reminders.  The functionality is offered in the document
+    and offers list page.  It will make sure the user is actually the author of everything,
+    and send out reminders only to signatories who haven't accepted or signed on those that are 
+    pending.  This returns all the signatory links that were reminded.
+-}
+handleIssueBulkRemind :: Kontra [SignatoryLink]
+handleIssueBulkRemind = do
+    ctx@(Context { ctxmaybeuser = Just user }) <- get
     idnumbers <- getCriticalFieldList asValidDocID "doccheck"
     let ids = map DocumentID idnumbers
     remindedsiglinks <- fmap concat . sequence . map (\docid -> docRemind ctx user docid) $ ids
-    case (length remindedsiglinks) of
-      0 -> addFlashMsg =<< (liftIO $ flashMessageNoBulkRemindsSent ctxtemplates)
-      n -> addFlashMsg =<< (liftIO $ flashMessageBulkRemindsSent ctxtemplates)
-    return $ LinkContracts emptyListParams
+    return remindedsiglinks
     where
       docRemind :: Context -> User -> DocumentID -> Kontra [SignatoryLink]
       docRemind ctx user docid = do
@@ -1341,20 +1375,6 @@ handleBulkContractRemind = withUserPost $ do
                          (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )],
                           mailInfo = Invitation  (documentid doc) (signatorylinkid signlink) })
         return signlink
-
-handleTemplateArchive :: Kontra KontraLink
-handleTemplateArchive = do
-    handleIssueArchive
-    return $ LinkTemplates emptyListParams
-    
-handleIssueArchive :: Kontra ()
-handleIssueArchive = do
-    ctx@(Context { ctxmaybeuser = Just user, ctxhostpart, ctxtime }) <- get
-    idnumbers <- getCriticalFieldList asValidDocID "doccheck"
-    liftIO $ putStrLn $ show idnumbers
-    let ids = map DocumentID idnumbers
-    update $ ArchiveDocuments user ids
-
 
 handleContractsReload :: Kontra KontraLink
 handleContractsReload  = fmap LinkContracts getListParamsForSearch

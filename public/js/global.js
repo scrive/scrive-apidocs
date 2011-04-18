@@ -130,7 +130,12 @@ safeReady(function() {
       } else {
         var sentoropencount = selectedrows.find(".sent").length + selectedrows.find(".opened").length
         if (sentoropencount>0) {
-          addFlashMessage("Det går inte att radera dokument som är skickade eller öppna, var vänliga återkalla dokumentet först.", "red");
+          var listtype = jQuery.trim($(".listForm").find(".listtype").text().toLowerCase());
+          if (listtype=="dokument") {
+            addFlashMessage("Det går inte att radera dokument som är skickade eller öppna, var vänliga återkalla dokumentet först.", "red");
+          } else {
+            addFlashMessage("Det går inte att radera offer som är skickade eller öppna, var vänliga återkalla offerter först.", "red");
+          }
           return false;
         }
         var deletionDetails = "";
@@ -157,7 +162,8 @@ safeReady(function() {
       } else {
         var sentoropencount = selectedrows.find(".sent").length + selectedrows.find(".opened").length;
         if (sentoropencount!=selectedrows.length) {
-          addFlashMessage("Det går inte att skicka påminnelser för dokument som inte är skickade eller öppna.", "red");
+          var listtype = jQuery.trim($(".listForm").find(".listtype").text().toLowerCase());
+          addFlashMessage("Det går inte att skicka påminnelser för " + listtype + " som inte är skickade eller öppna.", "red");
           return false;
         }
         var singlemsg = $("#dialog-list-remind-confirm").find(".singleremindmsg");
