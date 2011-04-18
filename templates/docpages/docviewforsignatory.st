@@ -17,7 +17,7 @@ pageDocumentForSignContent=
               $if(contract)$ 
                 <h2>Underteckna</h2>  
               $elseif(offer)$
-                <h2>Bekräfta</h2>  
+                <h2>Är du säker att du vill bekräfta?</h2>  
               $endif$
             </span>
             <a class="modal-close close"> </a>
@@ -40,7 +40,7 @@ pageDocumentForSignContent=
                  </span>
                  $endif$
               $elseif(offer)$
-                 <p>Är du säker att du vill bekräfta offerten <strong>$documenttitle$</strong>?</p>
+                 <p> Genom att klicka "bekräfta" gör du en accept av offerten <strong>$documenttitle$</strong>.</p>
               $endif$
             </div>
         </div>
@@ -83,6 +83,7 @@ pageDocumentForSignContent=
             <div class="left"></div>
             <div class="label">
               <span>Bekräfta</span>
+              <span class="icon cross"></span>
             </div>
             <div class="right"></div>
           </a>
@@ -97,13 +98,13 @@ pageDocumentForSignContent=
         <div class="modal-header">
             <span class="modal-icon message"></span>
             <span class="modal-title">
-               <h2>Avvisa</h2>   
+               <h2>  $if(contract)$ Avvisa $elseif(offer)$ Är du säker på att du vill avvisa?$endif$</h2>   
                 $if(contract)$
-                <p>Är du säker på att du vill avvisa dokumentet <strong>$documenttitle$</strong>?</p>
                 <p>När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela <strong>$authorfstname$ $authorsndname$</strong>.</p>
                 $elseif(offer)$
-                <p>Är du säker på att du vill avvisa offerten <strong>$documenttitle$</strong>?</p>
-                <p>När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela <strong>$authorfstname$ $authorsndname$</strong>.</p>
+                <p> När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela <strong>$authorfstname$ $authorsndname$</strong>. 
+                    Du kan granska meddelandet nedan och justera innehållet genom att klicka på "skriv eget meddelande".
+                </p>
                 $endif$
             </span>
             <a class="modal-close close"> </a>
@@ -164,18 +165,14 @@ pageDocumentForSignContent=
 </div>
 $if(notsignedbyme)$$if(pending)$
 <div id="signViewBottomBox"> 
+  $if(contract)$
   <div id="signViewBottomBoxContainerLeft"> 
     <div id="signViewBottomBoxContainerLeftText"> 
-     <div class="float-left"><input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off" /></div>
-     $if(contract)$
+     <div class="float-left"><input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off"/></div>
       <div class="float-left" id="signGuardLabel"><label for="signGuardCBox">Jag intygar att jag granskat och förstått dokumentet, att samtliga parter är korrekta och att jag har befogenhet att skriva på.</label></div>
-     $elseif(offer)$ 
-      <div class="float-left" id="signGuardLabel"><label for="signGuardCBox">Jag intygar att jag granskat och förstått offerten och att jag har befogenhet att bekräfta.</label></div>
-     $endif$ 
     </div>
   </div>
   <div id="signViewBottomBoxContainerRight"> 
-  $if(contract)$
   <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign" name="sign">
     <div class="left"></div>
     <div class="label" style="width:120px">
@@ -185,17 +182,35 @@ $if(notsignedbyme)$$if(pending)$
     <div class="right"></div>
   </a>
   <a class="float-right cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel">Avvisa dokument</a>
-  $elseif(offer)$ 
-  <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign" name="sign">
+  
+ $elseif(offer)$
+  <div id="signViewBottomBoxContainerLeft"> 
+    <input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off" style="display:none" checked/>
+    <div id="signViewBottomBoxContainerLeftText"> 
+     <div class="float-left">
+     <a class="float-right btn-small red" name="cancel" rel="#dialog-confirm-cancel" style="padding-top:12px;" id="cancel">
+        <div class="left"></div>
+        <div class="label">
+            <span>Avvisa</span>
+            <div class="btn-symbol red arrow-left"></div>
+        </div>
+        <div class="right"></div>
+    </a>
+
+    </div>
+    </div>
+  </div>
+  <div id="signViewBottomBoxContainerRight" style="float:right;padding-right:78px"> 
+  <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign" name="sign" style="padding-top:8px;">
     <div class="left"></div>
     <div class="label" style="width:140px;padding-left:20px;padding-right:20px;">
       <span>Bekräfta</span>
+      <span class="icon cross"></span>
     </div>
     <div class="right"></div>
   </a>
-  <a class="float-right cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel">Avvisa offert</a>
-  $endif$
   </div>
+ $endif$  
 </div>
 $endif$$endif$ 
 $signatoryScriptIfRequired()$

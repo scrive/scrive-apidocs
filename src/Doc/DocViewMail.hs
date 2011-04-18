@@ -363,7 +363,10 @@ mailCancelDocumentByAuthorContent templates forMail customMessage ctx document a
                           replaceOnEdit' templates this with
         header   = case customMessage of 
                      Just c -> return $ BS.toString c
-                     Nothing  -> renderTemplate templates "mailCancelDocumentByAuthorStandardHeader" ()
+                     Nothing  -> renderTemplate templates "mailCancelDocumentByAuthorStandardHeader" $ do
+                                    field "partylist" $ map (BS.toString . personname') $ partyList document
+                                    field "offer" $ isOffer document
+                                    field "contract" $ isContract document
         in 
           do
             header' <- header

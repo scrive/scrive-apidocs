@@ -145,7 +145,8 @@ modalOfferSigned document = do
     templates <- ask   
     lift $ renderTemplate templates "modalOfferSigned" $ do
         field "documenttitle" . BS.toString $ documenttitle document      
-        field "signatory" . listToMaybe $ map (BS.toString . personname') $ partyList document        
+        field "signatory" . listToMaybe $ map (BS.toString . signatoryemail ) $ partyList document        
+        
 
 flashDocumentDraftSaved :: KontrakcjaTemplates -> IO FlashMessage
 flashDocumentDraftSaved templates =
@@ -618,7 +619,7 @@ pageDocumentForAuthor ctx
        field "linkcancel" $ show $ LinkCancel document
        field "docstate" (buildJS documentauthordetails documentsignatorylinks)
        field "linkissuedocpdf" $ show (LinkIssueDocPDF Nothing document)
-       field "documentinfotext" $ documentInfoText templates document (find (isMatchingSignatoryLink author) documentsignatorylinks) author
+       field "documentinfotext" $ documentInfoText ctx document (find (isMatchingSignatoryLink author) documentsignatorylinks) author
        documentAuthorInfo author
        documentInfoFields document
        documentViewFields document
@@ -658,7 +659,7 @@ pageDocumentForViewer ctx
    in do
      invitationMailContent <- mailInvitationToSignOrViewContent (ctxtemplates ctx) False ctx document author Nothing
      cancelMailContent <- mailCancelDocumentByAuthorContent (ctxtemplates ctx) False Nothing ctx document author
-     documentinfotext <- documentInfoText (ctxtemplates ctx) document Nothing author
+     documentinfotext <- documentInfoText ctx document Nothing author
      renderTemplate (ctxtemplates ctx) "pageDocumentForViewerContent" $  do
        field "linkissuedoc" $ show $ LinkIssueDoc documentid
        field "authorhaslink" $ authorhaslink
@@ -715,7 +716,7 @@ pageDocumentForSignatory action document ctx invitedlink author =
       field "partyUnsigned" $ renderListTemplate (ctxtemplates ctx) $  map (BS.toString . personname') $ partyUnsignedMeAndList magichash document
       field "action" $ show action
       field "linkissuedocpdf" $ show (LinkIssueDocPDF (Just invitedlink) document)
-      field "documentinfotext" $  documentInfoText (ctxtemplates ctx) document (Just invitedlink) author
+      field "documentinfotext" $  documentInfoText ctx document (Just invitedlink) author
       field "requireseleg" requiresEleg
       field "siglinkid" $ show $ signatorylinkid invitedlink
       field "sigmagichash" $ show $ signatorymagichash invitedlink
@@ -797,11 +798,12 @@ packToMString x =
 
 
 -- Helper to get document after signing info text
-documentInfoText :: KontrakcjaTemplates -> Document -> Maybe SignatoryLink -> User -> IO String
-documentInfoText templates document siglnk author =
-  renderTemplate templates "documentInfoText" $ do
+documentInfoText :: Context -> Document -> Maybe SignatoryLink -> User -> IO String
+documentInfoText ctx document siglnk author =
+  renderTemplate (ctxtemplates ctx) "documentInfoText" $ do
     documentInfoFields document 
     documentAuthorInfo author
+    field "signatories" $ map (signatoryLinkFields ctx document author Nothing) $ documentsignatorylinks document
     signedByMeFields document siglnk
 
 -- | Basic info about document , name, id ,author

@@ -14,7 +14,11 @@ documentInfoText=
                              Granska
                         </span><br>
                         <span class="text">
+                            $if(contract)$
+                                Vänligen var noga med att granska dokumentet och kontrollera parterna till höger innan du undertecknar.
+                            $elseif(offer)$
                                 Vänligen var noga med att granska offerten innan du bekräftar.
+                            $endif$
                         </span>
                         $endif$
 
@@ -27,43 +31,33 @@ documentInfoText=
                         </span>
                      $else$
                          <span class="header">
-                             Väntar
+                           $if(contract)$  Väntar $elseif(offer)$  Väntar på accept $endif$
                         </span><br>
                         <span class="text">
                            $if(contract)$ 
                               Du har skickat inbjudan att underteckna. Dokumentet har ännu inte undertecknats av samtliga parter.
                            $elseif(offer)$
-                              Du har skickat offerten. Offerten har ännu inte bekräftats av din motpart.
+                              Du har skickat offerten. Offerten har ännu inte accepterats av mottagaren.
                            $endif$
                         </span>
                      $endif$
 
                   $elseif(cancel)$
 
-                     $if(notsignedbyme)$    
+                     $if(contract)$    
                         <span class="header">
                              Dokument återkallat
                         </span><br>
                         <span class="text">
                            $authorname$  har återkallat sin inbjudan att underteckna dokumentet.
                         </span>
-
-                     $elseif(signedbyme)$
+                     $elseif(offer)$    
                         <span class="header">
-                             Dokument återkallat
+                           Offert återkallad
                         </span><br>
                         <span class="text">
-                           $authorname$ har återkallat sin inbjudan att underteckna dokumentet.
+                           $authorname$ har återkallat offerten. Den går således inte att acceptera.
                         </span>
-
-                     $else$
-                        <span class="header">
-                             Dokument återkallat
-                        </span><br>
-                        <span class="text">
-                           $authorname$ har återkallat sin inbjudan att underteckna dokumentet.
-                        </span>
- 
                      $endif$
  
                   $elseif(datamismatch)$
@@ -167,46 +161,24 @@ documentInfoText=
                      $endif$
 
                   $elseif(signed)$
-
-                     $if(notsignedbyme)$    
+                        $if(contract)$  
                         <span class="header">
                              Färdigställt
                         </span><br>
                         <span class="text">
-                          $if(contract)$  
                            Samtliga parter har undertecknat dokumentet.
-                          $elseif(offer)$
-                            Samtliga parter har bekräftat offerten.
-                          $endif$
                         </span>
-
-                     $elseif(signedbyme)$
+                        $elseif(offer)$
                         <span class="header">
-                             Färdigställt
+                             Offert accepterad
                         </span><br>
                         <span class="text">
-                           $if(contract)$  
-                           Samtliga parter har undertecknat dokumentet.
-                          $elseif(offer)$
-                           Samtliga parter har bekräftat offerten.
-                          $endif$
+                         $signatories:{signatory | $signatory.fstname$ $signatory.sndname$}$
+                         har accepterat offerten $documenttitle$  från $authorfstname$ $authorsndname$ .
+
                         </span>
-
-                     $else$
-                        <span class="header">
-                             Färdigställt
-                        </span><br>
-                        <span class="text">
-                           $if(contract)$  
-                           Samtliga parter har undertecknat dokumentet.
-                          $elseif(offer)$
-                           Samtliga parter har bekräftat offerten.
-                          $endif$
-                        </span>
-
-                     $endif$
-
-                  $elseif(awaitingauthor)$
+                        $endif$
+                 $elseif(awaitingauthor)$
 
                      $if(notsignedbyme)$    
                             <span class="header">
