@@ -260,8 +260,8 @@ updateDocument time documentid signatories daystosign invitetext author authorde
              signatorylinks <- sequence $ map (uncurry $ signLinkFromDetails [(authoremail, author)]) signatories
              let csvupload = case (documentcsvupload document, 
                                    fmap (checkCSVSigIndex (userid author) signatorylinks) mcsvsigindex) of
-                               (Just cu@CSVUpload{csvsignatoryindex}, Just (Right newsigindex)) 
-                                    | csvsignatoryindex==newsigindex -> Just cu
+                               (Just cu, Just (Right newsigindex)) 
+                                 -> Just cu{csvsignatoryindex=newsigindex}
                                _ -> Nothing
              return $ Right $ document 
                     { documentsignatorylinks = signatorylinks

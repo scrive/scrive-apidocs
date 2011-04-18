@@ -433,7 +433,7 @@ handleIssuePostBankID docid = withUserPost $ do
                                             return $ LinkIssueDoc (documentid d)
                                         ([], ds) -> return $ LinkContracts emptyListParams
                                         _ -> mzero
-                                Left _ -> mzero
+                                Left link -> return link
 
 handleSignCanceledDataMismatch :: DocumentID -> SignatoryLinkID -> Kontra Response
 handleSignCanceledDataMismatch docid signatorylinkid = do
