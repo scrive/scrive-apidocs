@@ -27,8 +27,13 @@ module Doc.DocView (
   , flashAuthorSigned
   , flashMessageFailedToParseCSV
   , flashMessageCSVHasTooManyRows
-  , flashMessageBulkRemindsSent
-  , flashMessageNoBulkRemindsSent
+  , flashMessageBulkContractRemindsSent
+  , flashMessageNoBulkContractRemindsSent
+  , flashMessageBulkOfferRemindsSent
+  , flashMessageNoBulkOfferRemindsSent
+  , flashMessageContractArchiveDone
+  , flashMessageOfferArchiveDone
+  , flashMessageTemplateArchiveDone
   , defaultInviteMessage
   , mailDocumentRemind
   , mailDocumentRejected
@@ -184,13 +189,34 @@ flashMessageCSVHasTooManyRows :: Int -> KontrakcjaTemplates -> IO FlashMessage
 flashMessageCSVHasTooManyRows maxrows templates = 
   toFlashMsg OperationFailed <$> (renderTemplate templates "flashMessageCSVHasTooManyRows" $ field "maxrows" maxrows)
 
-flashMessageBulkRemindsSent :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageBulkRemindsSent templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageBulkRemindsSent" ()
+flashMessageBulkContractRemindsSent :: KontrakcjaTemplates -> IO FlashMessage
+flashMessageBulkContractRemindsSent templates =
+  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageBulkContractRemindsSent" ()
 
-flashMessageNoBulkRemindsSent :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageNoBulkRemindsSent templates =
-  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageNoBulkRemindsSent" ()
+flashMessageNoBulkContractRemindsSent :: KontrakcjaTemplates -> IO FlashMessage
+flashMessageNoBulkContractRemindsSent templates =
+  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageNoBulkContractRemindsSent" ()
+
+flashMessageBulkOfferRemindsSent :: KontrakcjaTemplates -> IO FlashMessage
+flashMessageBulkOfferRemindsSent templates =
+  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageBulkOfferRemindsSent" ()
+
+flashMessageNoBulkOfferRemindsSent :: KontrakcjaTemplates -> IO FlashMessage
+flashMessageNoBulkOfferRemindsSent templates =
+  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageNoBulkOfferRemindsSent" ()
+
+flashMessageContractArchiveDone :: KontrakcjaTemplates -> IO FlashMessage
+flashMessageContractArchiveDone templates =
+  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageContractArchiveDone" ()
+
+flashMessageOfferArchiveDone :: KontrakcjaTemplates -> IO FlashMessage
+flashMessageOfferArchiveDone templates =
+  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageOfferArchiveDone" ()
+
+flashMessageTemplateArchiveDone :: KontrakcjaTemplates -> IO FlashMessage
+flashMessageTemplateArchiveDone templates =
+  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageTemplateArchiveDone" ()
+
 
 -- All doc view
 singlnkFields :: SignatoryLink -> Fields

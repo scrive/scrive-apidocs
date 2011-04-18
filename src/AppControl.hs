@@ -144,7 +144,8 @@ handleRoutes = msum [
      , dir "t" $ hpost0  $ DocControl.handleCreateNewTemplate
      
      , dir "o" $ hget0  $ DocControl.showOfferList
-     , dir "o" $ param "archive" $ hpost0  $ DocControl.handleContractArchive
+     , dir "o" $ param "archive" $ hpost0  $ DocControl.handleOffersArchive
+     , dir "o" $ param "remind" $ hpost0 $ DocControl.handleBulkOfferRemind
      , dir "o" $ hpost0 $ DocControl.handleOffersReload
      
      , dir "d" $ hget0  $ DocControl.showContractsList
