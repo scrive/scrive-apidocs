@@ -278,8 +278,9 @@ documentStatusClass doc =
 documentBasicViewFields :: MinutesTime -> User -> Document -> Fields
 documentBasicViewFields crtime user doc = do
     documentInfoFields doc
+    let isSignatory = (SignatoryPartner `elem`) . signatoryroles
     field "status" $ show (documentStatusClass doc)
-    field "signatories" $ map singlnkFields $ documentsignatorylinks doc
+    field "signatories" $ map singlnkFields $ filter isSignatory $ documentsignatorylinks doc
     field "anyinvitationundelivered" $ anyInvitationUndelivered doc
     field "doclink"  $ if (unAuthor $ documentauthor doc) == userid user || null signatorylinklist
                         then show . LinkIssueDoc $ documentid doc
