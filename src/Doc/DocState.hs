@@ -153,6 +153,7 @@ newDocument user title documenttype ctime = do
           , documentfiles = []
           , documentstatus = Preparation
           , documenttype = documenttype
+          , documentfunctionality = AdvancedFunctionality
           , documentctime = ctime
           , documentmtime = ctime
           , documentdaystosign = Nothing
@@ -249,8 +250,9 @@ updateDocument :: MinutesTime
                -> SignatoryDetails
                -> [IdentificationType]
                -> Maybe Int
+               -> DocumentFunctionality
                -> Update Documents (Either String Document)
-updateDocument time documentid signatories daystosign invitetext author authordetails idtypes mcsvsigindex =
+updateDocument time documentid signatories daystosign invitetext author authordetails idtypes mcsvsigindex docfunctionality =
     modifySignableOrTemplateWithAction documentid $ \document ->  
         if documentstatus document == Preparation
          then do
@@ -268,6 +270,7 @@ updateDocument time documentid signatories daystosign invitetext author authorde
                       , documentinvitetext = invitetext
                       , documentallowedidtypes = idtypes
                       , documentcsvupload = csvupload
+                      , documentfunctionality = docfunctionality
                       , authorfstnameplacements = signatoryfstnameplacements authordetails
                       , authorsndnameplacements = signatorysndnameplacements authordetails
                       , authoremailplacements = signatoryemailplacements authordetails

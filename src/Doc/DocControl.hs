@@ -594,19 +594,21 @@ handleIssueShowPost docid = withUserPost $ do
   template <- isFieldSet "template"
   contract <- isFieldSet "contract"
   csvupload <- isFieldSet "csvupload"
+  switchtoadvanced <- isFieldSet "changefunctionality"
   -- is this routing logic or business logic? I say business, but
   -- here it looks mixed.
   -- I'm especially asking about AwaitingAuthor case, because I though
   -- it was covered by SignDocument
   --   Eric
-  case (documentstatus document,sign,send,template,contract,csvupload) of 
-      (Preparation, True, _,_, _, _ ) -> handleIssueSign document author
-      (Preparation, _ ,  True,_, _, _) -> handleIssueSend document author
-      (Preparation, _ , _ ,True, _, _) -> handleIssueSaveAsTemplate document author             
-      (Preparation, _ , _ ,_ , True, _) -> handleIssueChangeToContract document author
-      (Preparation, _ , _ ,_ , _, True) -> handleIssueCSVUpload document author                    
-      (Preparation, _ , _ ,_, _, _) -> handleIssueSave document author
-      (AwaitingAuthor, True , _ ,_, _, _) -> handleIssueSignByAuthor document author
+  case (documentstatus document,sign,send,template,contract,csvupload,switchtoadvanced) of 
+      (Preparation, True, _,_, _, _ , _) -> handleIssueSign document author
+      (Preparation, _ ,  True,_, _, _, _) -> handleIssueSend document author
+      (Preparation, _ , _ ,True, _, _, _) -> handleIssueSaveAsTemplate document author             
+      (Preparation, _ , _ ,_ , True, _, _) -> handleIssueChangeToContract document author
+      (Preparation, _ , _ ,_ , _, True, _) -> handleIssueCSVUpload document author
+      (Preparation, _ , _ ,_ , _, _, True) -> handleIssueChangeFunctionality document author                    
+      (Preparation, _ , _ ,_, _, _, _) -> handleIssueSave document author
+      (AwaitingAuthor, True , _ ,_, _, _, _) -> handleIssueSignByAuthor document author
       _  -> return $ LinkContracts emptyListParams
      
 handleIssueSign document author = do
@@ -748,6 +750,17 @@ handleIssueCSVUpload document author = do
           case mndoc of
             Left _ -> mzero
             Right ndoc -> return $ LinkDesignDoc $ DesignStep2 (documentid ndoc) (Just $ personindex + 1) (Just AfterCSVUpload)
+
+{- |
+    Deals with a switch to the document's functionality.
+-}
+handleIssueChangeFunctionality :: Document -> User -> Kontra KontraLink
+handleIssueChangeFunctionality document author = do
+  ctx <- get
+  mudoc <- updateDocument ctx author document
+  case mudoc of
+    Left _ -> mzero
+    Right udoc -> return $ LinkDesignDoc $ DesignStep2 (documentid udoc) Nothing Nothing
 
 {- |
     This will get and parse a csv file.  It
@@ -1011,13 +1024,33 @@ makeAuthorDetails pls fielddefs author =
     , signatoryotherfields = filterFieldDefsByID fielddefs (BS.fromString "author")
     }
 
+asValidDocumentFunctionality :: User -> DocumentFunctionality -> String -> Result DocumentFunctionality
+asValidDocumentFunctionality user oldfunc input =
+  parseDocFunctionality input
+  >>= checkAllowed user oldfunc
+  where
+    parseDocFunctionality :: String -> Result DocumentFunctionality
+    parseDocFunctionality xs
+        | xs==(show AdvancedFunctionality) = return AdvancedFunctionality
+        | otherwise = return BasicFunctionality
+    {- |
+        Not much of an implementation yet, but this is a placeholder for somewhere
+        to validate that the user is actually allowed to change the document functionality
+        in this way.
+    -}
+    checkAllowed :: User -> DocumentFunctionality -> DocumentFunctionality -> Result DocumentFunctionality
+    checkAllowed _ oldfunc newfunc
+      | oldfunc==newfunc = return newfunc
+      | otherwise = return newfunc --probably want to check what sort of account the user has here
+
+
 {- |
    Save a document.
    
    NOTE: This function is getting long. I am refactoring it --Eric
  -}
 updateDocument :: Context -> User -> Document -> Kontra (Either String Document)
-updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documentid} = do
+updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documentid,documentfunctionality} = do
   -- each signatory has these predefined fields
   signatoriesfstnames        <- getAndConcat "signatoryfstname"
   signatoriessndnames        <- getAndConcat "signatorysndname"
@@ -1054,6 +1087,7 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
   placedfieldids <- getAndConcat "placedfieldid"
 
   authorrole <- getFieldWithDefault "" "authorrole"
+  docfunctionality <- getCriticalField (asValidDocumentFunctionality author documentfunctionality) "docfunctionality"
   
   validmethods <- getAndConcat "validationmethod"
 
@@ -1085,13 +1119,23 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
   let authordetails = makeAuthorDetails placements fielddefs author
                         
   let isauthorsig = authorrole == "signatory"
-      signatories2 = if isauthorsig
-                     then (authordetails,[SignatoryPartner]) : zip signatories roles2
-                     else zip signatories roles2
+      isbasic = docfunctionality == BasicFunctionality
+      signatories2 =
+        case (isbasic, isauthorsig) of
+        (True, _) -> zip (authordetails : take 1 signatories) (repeat [SignatoryPartner])
+        (_, True) -> (authordetails,[SignatoryPartner]) : zip signatories roles2
+        (_, False) -> zip signatories roles2
       roles2 = map guessRoles signatoriesroles
       guessRoles x | x == BS.fromString "signatory" = [SignatoryPartner]
                    | otherwise = []
-      mcsvsigindex = fmap (personToSigIndex isauthorsig) mcsvpersonindex
+      mcsvsigindex = 
+        if isbasic
+        then Nothing
+        else fmap (personToSigIndex isauthorsig) mcsvpersonindex
+      docallowedidtypes2 =
+        if isbasic
+        then [EmailIdentification]
+        else docallowedidtypes
   -- FIXME: tell the user what happened!
   -- when (daystosign<1 || daystosign>99) mzero
 
@@ -1102,7 +1146,7 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
   -- Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor document
 
   update $ UpdateDocument ctxtime documentid
-           signatories2 daystosign invitetext author authordetails docallowedidtypes mcsvsigindex
+           signatories2 daystosign invitetext author authordetails docallowedidtypes2 mcsvsigindex docfunctionality
               
 {- |
    Constructs a list of documents (Arkiv) to show to the user.

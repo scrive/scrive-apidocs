@@ -3,7 +3,7 @@
 module Doc.DocView (
     emptyDetails
   , showFilesImages2
-  , pageDocumentDesign 
+  , pageDocumentDesign
   , pageDocumentForAuthor
   , pageDocumentForViewer
   , pageDocumentForSignatory
@@ -434,6 +434,7 @@ pageDocumentDesign ctx
     , documentdaystosign
     , documentinvitetext
     , documentallowedidtypes
+    , documentfunctionality
   }
   author step =
    let
@@ -459,14 +460,8 @@ pageDocumentDesign ctx
              field "otherFieldID"    $ "field" ++ show i
              field "otherFieldOwner" "author")
              $ zip fields ([1..]::[Int])
-       csvcustomfields = either (const [BS.fromString ""]) id $ getCSVCustomFields document
-       mcleancsv = fmap (cleanCSVContents documentallowedidtypes (length csvcustomfields) . csvcontents) $ documentcsvupload document
-       csvproblems = maybe [] fst mcleancsv
-       csvdata = maybe [] (csvbody . snd) mcleancsv
-       csvPageSize = 10
-       csvpages = splitCSVDataIntoPages csvPageSize csvdata
    in do
-     csvproblemfields <- sequence $ zipWith (csvProblemFields templates (length csvproblems)) [1..] csvproblems
+     csvfields <- documentCsvFields templates document
      renderTemplate (ctxtemplates ctx) "pageDocumentDesign" $ do
        field "authorOtherFields" $ doc_author_otherfields $ signatoryotherfields documentauthordetails
        field "linkissuedoc" $ show $ LinkIssueDoc documentid
@@ -476,20 +471,36 @@ pageDocumentDesign ctx
        field "documentdaystosignboxvalue" $ documentdaystosignboxvalue              
        field "docstate" (buildJS documentauthordetails documentsignatorylinks)
        documentAuthorInfo author
-       field "csvproblems" $ csvproblemfields
-       field "csvproblemcount" $ length csvproblems
-       field "csvpages" $ zipWith (csvPageFields csvproblems (length csvdata)) [0,csvPageSize..] csvpages
-       field "csvrowcount" $ length csvdata
-       field "csvcustomfields" $ csvcustomfields
-       field "isvalidcsv" $ null csvproblems
-       field "csvpersonindex" $ csvPersonIndex document
+       csvfields
+       documentFunctionalityFields document
        documentInfoFields document
        documentViewFields document
        designViewFields step
 
---all of this csv view stuff is a little scrappy.  sorry about that, i was trying
---to implement a bit quickly (well, quickly for me anyway).  i'll clean up fairly soon!
---emily 
+documentFunctionalityFields :: Document -> Fields
+documentFunctionalityFields Document{documentfunctionality} = do
+  field "docfunctionality" $ show documentfunctionality
+  field "basic" $ documentfunctionality==BasicFunctionality
+  field "advanced" $ documentfunctionality==AdvancedFunctionality
+
+documentCsvFields :: KontrakcjaTemplates -> Document -> IO Fields
+documentCsvFields templates document@Document{documentallowedidtypes, documentcsvupload} =  do
+  let csvcustomfields = either (const [BS.fromString ""]) id $ getCSVCustomFields document
+      mcleancsv = fmap (cleanCSVContents documentallowedidtypes (length csvcustomfields) . csvcontents) $ documentcsvupload
+      csvproblems = maybe [] fst mcleancsv
+      csvdata = maybe [] (csvbody . snd) mcleancsv
+      csvPageSize = 10
+      csvpages = splitCSVDataIntoPages csvPageSize csvdata
+  csvproblemfields <- sequence $ zipWith (csvProblemFields templates (length csvproblems)) [1..] csvproblems   
+  return $ do
+    field "csvproblems" $ csvproblemfields
+    field "csvproblemcount" $ length csvproblems
+    field "csvpages" $ zipWith (csvPageFields csvproblems (length csvdata)) [0,csvPageSize..] csvpages
+    field "csvrowcount" $ length csvdata
+    field "csvcustomfields" $ csvcustomfields
+    field "isvalidcsv" $ null csvproblems
+    field "csvpersonindex" $ csvPersonIndex document
+ 
 csvPageFields :: [CSVProblem] -> Int -> Int -> [[BS.ByteString]] -> Fields
 csvPageFields problems totalrowcount firstrowindex xs = do
   field "csvrows" $ zipWith (csvRowFields problems) [firstrowindex..] xs

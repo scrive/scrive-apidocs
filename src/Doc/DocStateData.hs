@@ -9,6 +9,7 @@ module Doc.DocStateData(
     , DocumentID(..)
     , DocumentStatus(..)
     , DocumentType(..)
+    , DocumentFunctionality(..)
     , Documents
     , CSVUpload(..)
     , FieldDefinition(..)
@@ -347,6 +348,8 @@ data DocumentStatus = Preparation
 data DocumentType = Contract | ContractTemplate | Offer | OfferTemplate
     deriving (Eq, Ord, Typeable)
 
+data DocumentFunctionality = BasicFunctionality | AdvancedFunctionality
+    deriving (Eq, Ord, Typeable)
 
 data ChargeMode = ChargeInitialFree   -- initial 5 documents are free
                 | ChargeNormal        -- value times number of people involved
@@ -818,6 +821,37 @@ data Document15 = Document15
     }
     deriving Typeable
 
+data Document16 = Document16
+    { documentid16                     :: DocumentID
+    , documenttitle16                  :: BS.ByteString
+    , documentauthor16                 :: Author                  -- to be moved to siglinks
+    , documentsignatorylinks16         :: [SignatoryLink]  
+    , documentfiles16                  :: [File]
+    , documentsealedfiles16            :: [File]
+    , documentstatus16                 :: DocumentStatus
+    , documenttype16                   :: DocumentType
+    , documentctime16                  :: MinutesTime
+    , documentmtime16                  :: MinutesTime
+    , documentdaystosign16             :: Maybe Int    
+    , documenttimeouttime16            :: Maybe TimeoutTime
+    , documentinvitetime16             :: Maybe SignInfo
+    , documentdeleted16                :: Bool                    -- to be moved to links
+    , documentlog16                    :: [DocumentLogEntry]      -- to be made into plain text 
+    , documentinvitetext16             :: BS.ByteString             
+    , documenttrustweaverreference16   :: Maybe BS.ByteString
+    , documentallowedidtypes16         :: [IdentificationType]
+    , documentcsvupload16              :: Maybe CSVUpload
+    , authorfstnameplacements16        :: [FieldPlacement]        -- the below to be moved to siglinks
+    , authorsndnameplacements16        :: [FieldPlacement]
+    , authorcompanyplacements16        :: [FieldPlacement]
+    , authoremailplacements16          :: [FieldPlacement]
+    , authorpersonalnumberplacements16 :: [FieldPlacement]
+    , authorcompanynumberplacements16  :: [FieldPlacement]
+    , authorotherfields16              :: [FieldDefinition]
+    , documentcancelationreason16      :: Maybe CancelationReason -- ??
+    }
+    deriving Typeable
+
 data Document = Document
     { documentid                     :: DocumentID
     , documenttitle                  :: BS.ByteString
@@ -827,6 +861,7 @@ data Document = Document
     , documentsealedfiles            :: [File]
     , documentstatus                 :: DocumentStatus
     , documenttype                   :: DocumentType
+    , documentfunctionality          :: DocumentFunctionality
     , documentctime                  :: MinutesTime
     , documentmtime                  :: MinutesTime
     , documentdaystosign             :: Maybe Int    
@@ -944,6 +979,7 @@ deriving instance Show Document
 deriving instance Show DocumentStatus
 deriving instance Show DocumentType
 deriving instance Read DocumentType
+deriving instance Show DocumentFunctionality
 deriving instance Show CSVUpload
 deriving instance Show ChargeMode
 deriving instance Show Author
@@ -1465,9 +1501,13 @@ $(deriveSerialize ''Document15)
 instance Version Document15 where
     mode = extension 15 (Proxy :: Proxy Document14)
 
+$(deriveSerialize ''Document16)
+instance Version Document16 where
+    mode = extension 16 (Proxy :: Proxy Document15)
+
 $(deriveSerialize ''Document)
 instance Version Document where
-    mode = extension 16 (Proxy :: Proxy Document15)
+    mode = extension 17 (Proxy :: Proxy Document16)
 
 instance Migrate DocumentHistoryEntry0 DocumentHistoryEntry where
         migrate (DocumentHistoryCreated0 { dochisttime0 }) = 
@@ -2111,7 +2151,7 @@ instance Migrate Document14 Document15 where
                 , documentcancelationreason15    = documentcancelationreason14
                 }
 
-instance Migrate Document15 Document where
+instance Migrate Document15 Document16 where
     migrate (Document15
                 { documentid15
                 , documenttitle15
@@ -2139,34 +2179,94 @@ instance Migrate Document15 Document where
                 , authornumberplacements15
                 , authorotherfields15
                 , documentcancelationreason15
+                }) = Document16
+                { documentid16                     = documentid15
+                , documenttitle16                  = documenttitle15
+                , documentauthor16                 = documentauthor15
+                , documentsignatorylinks16         = documentsignatorylinks15
+                , documentfiles16                  = documentfiles15
+                , documentsealedfiles16            = documentsealedfiles15
+                , documentstatus16                 = documentstatus15
+                , documenttype16                   = documenttype15
+                , documentctime16                  = documentctime15
+                , documentmtime16                  = documentmtime15
+                , documentdaystosign16             = documentdaystosign15
+                , documenttimeouttime16            = documenttimeouttime15
+                , documentinvitetime16             = documentinvitetime15
+                , documentdeleted16                = documentdeleted15
+                , documentlog16                    = documentlog15
+                , documentinvitetext16             = documentinvitetext15
+                , documenttrustweaverreference16   = documenttrustweaverreference15
+                , documentallowedidtypes16         = documentallowedidtypes15
+                , documentcsvupload16              = documentcsvupload15
+                , authorfstnameplacements16        = authorfstnameplacements15
+                , authorsndnameplacements16        = authorsndnameplacements15
+                , authorcompanyplacements16        = authorcompanyplacements15
+                , authoremailplacements16          = authoremailplacements15
+                , authorpersonalnumberplacements16 = authornumberplacements15
+                , authorcompanynumberplacements16  = []
+                , authorotherfields16              = authorotherfields15
+                , documentcancelationreason16      = documentcancelationreason15
+                }
+
+instance Migrate Document16 Document where
+    migrate (Document16
+                { documentid16
+                , documenttitle16
+                , documentauthor16
+                , documentsignatorylinks16
+                , documentfiles16
+                , documentsealedfiles16
+                , documentstatus16
+                , documenttype16
+                , documentctime16
+                , documentmtime16
+                , documentdaystosign16
+                , documenttimeouttime16
+                , documentinvitetime16
+                , documentdeleted16
+                , documentlog16
+                , documentinvitetext16
+                , documenttrustweaverreference16
+                , documentallowedidtypes16
+                , documentcsvupload16
+                , authorfstnameplacements16
+                , authorsndnameplacements16
+                , authorcompanyplacements16
+                , authoremailplacements16
+                , authorpersonalnumberplacements16
+                , authorcompanynumberplacements16
+                , authorotherfields16
+                , documentcancelationreason16
                 }) = Document
-                { documentid                     = documentid15
-                , documenttitle                  = documenttitle15
-                , documentauthor                 = documentauthor15
-                , documentsignatorylinks         = documentsignatorylinks15
-                , documentfiles                  = documentfiles15
-                , documentsealedfiles            = documentsealedfiles15
-                , documentstatus                 = documentstatus15
-                , documenttype                   = documenttype15
-                , documentctime                  = documentctime15
-                , documentmtime                  = documentmtime15
-                , documentdaystosign             = documentdaystosign15
-                , documenttimeouttime            = documenttimeouttime15
-                , documentinvitetime             = documentinvitetime15
-                , documentdeleted                = documentdeleted15
-                , documentlog                    = documentlog15
-                , documentinvitetext             = documentinvitetext15
-                , documenttrustweaverreference   = documenttrustweaverreference15
-                , documentallowedidtypes         = documentallowedidtypes15
-                , documentcsvupload              = documentcsvupload15
-                , authorfstnameplacements        = authorfstnameplacements15
-                , authorsndnameplacements        = authorsndnameplacements15
-                , authorcompanyplacements        = authorcompanyplacements15
-                , authoremailplacements          = authoremailplacements15
-                , authorpersonalnumberplacements = authornumberplacements15
-                , authorcompanynumberplacements  = []
-                , authorotherfields              = authorotherfields15
-                , documentcancelationreason      = documentcancelationreason15
+                { documentid                     = documentid16
+                , documenttitle                  = documenttitle16
+                , documentauthor                 = documentauthor16
+                , documentsignatorylinks         = documentsignatorylinks16
+                , documentfiles                  = documentfiles16
+                , documentsealedfiles            = documentsealedfiles16
+                , documentstatus                 = documentstatus16
+                , documenttype                   = documenttype16
+                , documentfunctionality          = AdvancedFunctionality
+                , documentctime                  = documentctime16
+                , documentmtime                  = documentmtime16
+                , documentdaystosign             = documentdaystosign16
+                , documenttimeouttime            = documenttimeouttime16
+                , documentinvitetime             = documentinvitetime16
+                , documentdeleted                = documentdeleted16
+                , documentlog                    = documentlog16
+                , documentinvitetext             = documentinvitetext16
+                , documenttrustweaverreference   = documenttrustweaverreference16
+                , documentallowedidtypes         = documentallowedidtypes16
+                , documentcsvupload              = documentcsvupload16
+                , authorfstnameplacements        = authorfstnameplacements16
+                , authorsndnameplacements        = authorsndnameplacements16
+                , authorcompanyplacements        = authorcompanyplacements16
+                , authoremailplacements          = authoremailplacements16
+                , authorpersonalnumberplacements = authorpersonalnumberplacements16
+                , authorcompanynumberplacements  = authorcompanynumberplacements16
+                , authorotherfields              = authorotherfields16
+                , documentcancelationreason      = documentcancelationreason16
                 }
 
 $(deriveSerialize ''DocumentStatus)
@@ -2174,6 +2274,9 @@ instance Version DocumentStatus where
 
 $(deriveSerialize ''DocumentType)
 instance Version DocumentType where
+
+$(deriveSerialize ''DocumentFunctionality)
+instance Version DocumentFunctionality where
     
 $(deriveSerialize ''ChargeMode)
 instance Version ChargeMode where

@@ -44,6 +44,8 @@ pageDocumentDesign=
         <a href="#" class="step2select text">
             $if(template)$
                 Utforma mall
+            $elseif(basic)$
+                Fyll i uppgifter &amp; Skicka!
             $elseif(contract)$
                 Fyll i uppgifter
             $elseif(offer)$
@@ -51,8 +53,8 @@ pageDocumentDesign=
             $endif$
         </a>  
       </div>
-      $if(contract)$
-      <!-- Offers don't have step 3 -->
+      $if(contract)$$if(advanced)$
+      <!-- Offers and basic functionality don't have step 3 -->
       <div id="step3select" class="$if(step3)$current$endif$">
         <a href="#" class="step3select clickArea"></a>
         <a href="#" class="step3select step3icon"> </a>
@@ -64,12 +66,23 @@ pageDocumentDesign=
             $endif$
         </a>
       </div>
-      $endif$
+      $endif$$endif$
       <div id="signStepsMenuEmptyStep">
             $if(!template)$
-             <div class="signStepsBodySave" style="float:right;padding-right:19px;font-size:11px">
-                <small><a class="submit" form=".stepForm" rel="template">SPARA SOM MALL</a></small>
-             </div>
+             $if(advanced)$
+               <div class="signStepsBodySave" style="float:right;padding-right:19px;font-size:11px">
+                 <small><a class="submit" form=".stepForm" rel="template">SPARA SOM MALL</a></small>
+               </div>
+               $if(contract)$
+                 <div class="signStepsFunctionalityChange">
+                   <small><a id="tobasic" rel="#dialog-confirm-basic">ENKEL FUNKTIONALITET</a></small>
+                 </div>
+               $endif$
+             $elseif(contract)$
+               <div class="signStepsFunctionalityChange">
+                 <small><a id="toadvanced" rel="#dialog-confirm-advanced">ADVANCERAD FUNKTIONALITET</a></small>
+               </div>
+             $endif$
             $endif$
       </div>
     </div>
@@ -80,10 +93,11 @@ pageDocumentDesign=
         <input type="hidden" name="allowedsignaturetypes"
                value="Email" />
         <input type="hidden" name="csvpersonindex" value="$csvpersonindex$"/>
+        <input type="hidden" name="docfunctionality" value="$docfunctionality$"/>
 
         <div id="signStep2Content" $if(!step2)$ style="display: none" $endif$>
           <div id="signStepsBody">
-            
+            $if(advanced)$
             <div id="signStepsBodyLeft">
               <div id="people">
                 <div class="signStepsBodyTitle">
@@ -103,13 +117,14 @@ pageDocumentDesign=
                 -->
               </div>
             </div>
+            $endif$
             
             <div id="personpane">
               <span class="persondetails authordetails">
                 <!-- 008 change/new -->
                 <div class="signStepsBodyIcons">
                   <span class="partnumber">PART 1</span>
-                  $if(contract)$<a href="#man2" class="man"></a>$endif$
+                  $if(contract)$$if(advanced)$<a href="#man2" class="man"></a>$endif$$endif$
                   <a class="plus" href="#"></a>
                 </div>
                 
@@ -196,6 +211,7 @@ pageDocumentDesign=
             </div>
             
             <div id="signStepsBodyFunctions">
+              $if(advanced)$
               <div id="signStepsBodyFunctionsBox">
                 $if(contract)$
                 <ul>
@@ -256,12 +272,26 @@ pageDocumentDesign=
                  $endif$
                 $endif$
              </div>
+             $elseif(basic)$
+             <div class="basicfunctionpanel" style="padding-top:7px;">
+               <div class="signbutton float-left" style="padding-top:46px">
+                 <a type="button" id="signinvite" rel="#dialog-confirm-signinvite" class="btn-big blue center">
+                   <div class="left"></div>
+                   <div class="label" style="width:120px;padding-left:28px;padding-right:24px;">
+                     <span>SkrivaPå </span>
+                     <span class="icon cross"></span>
+                   </div> 
+                   <div class="right"></div>
+                 </a>
+               </div>
+             </div>
+             $endif$
             </div>
           </div>
         </div>
 
 
-        $if(contract)$
+        $if(advanced)$$if(contract)$
         <div id="signStep3Content" $if(!step3)$ style="display: none" $endif$>
 
           <div id="signStepsBody">
@@ -370,7 +400,7 @@ pageDocumentDesign=
             
           </div>            
         </div>
-        $endif$
+        $endif$$endif$
        </form>
     </div>
   </div>
@@ -401,15 +431,16 @@ pageDocumentDesign=
     <!-- 008 change/new -->
     <div class="signStepsBodyIcons">
       <span class="partnumber">PART 1</span>
-      $if(contract)$
-      <a href="#" class="man"></a>
-      <a href="#" class="csv multi" rel="#dialog-csvupload-1"></a>
-      <span class="csv single" style="display:none;"></span>
-      <a href="#" class="plus"></a>
-      $elseif(offer)$
-      <input type="hidden" name="signatoryrole" value="signatory">
-      <a href="#" class="plus"></a>
+      $if(advanced)$
+        $if(contract)$
+        <a href="#" class="man"></a>
+        <a href="#" class="csv multi" rel="#dialog-csvupload-1"></a>
+        <span class="csv single" style="display:none;"></span>
+        $elseif(offer)$
+        <input type="hidden" name="signatoryrole" value="signatory">
+        $endif$
       $endif$
+      <a href="#" class="plus"></a>
     </div>
     
     <!-- 013 changed -->
@@ -649,6 +680,62 @@ pageDocumentForAuthorHelpersLocalDialogs=
         <a class="btn-small green float-right close" href="#">
           <div class="left"></div>
           <div class="label"><p>Spara</p></div>
+          <div class="right"></div>
+        </a>
+      </div>
+    </div>
+  </form>
+
+  <form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-advanced" rel=".stepForm">
+    <input type="hidden" name="changefunctionality" value="true" /> 
+    <div class="modal-container">
+      <div class="modal-header">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
+          <h2 id="dialog-title">Avancerad Funktionalitet</h2>
+        </span>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">
+          <p>Är du säker?</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a  class="close cancel float-left">Avbryt</a>
+        <a href="#" class="btn-small green float-right submiter toadvanced">
+          <div class="left"></div>
+          <div class="label">
+            <span>Ok</span>
+          </div>
+          <div class="right"></div>
+        </a>
+      </div>
+    </div>
+  </form>
+
+  <form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-basic" rel=".stepForm">
+    <input type="hidden" name="changefunctionality" value="true" /> 
+    <div class="modal-container">
+      <div class="modal-header">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
+          <h2 id="dialog-title">Enkel Funktionalitet</h2>
+        </span>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">
+          <p>Är du säker?</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a  class="close cancel float-left">Avbryt</a>
+        <a href="#" class="btn-small green float-right submiter tobasic">
+          <div class="left"></div>
+          <div class="label">
+            <span>Ok</span>
+          </div>
           <div class="right"></div>
         </a>
       </div>

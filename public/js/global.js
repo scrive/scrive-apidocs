@@ -420,6 +420,25 @@ safeReady(function() {
   });
 });
 
+safeReady(function() {
+  $("#tobasic").overlay({
+    mask: standardDialogMask
+  });
+
+  $("#toadvanced").overlay({
+    mask: standardDialogMask
+  });
+
+  $("#dialog-confirm-basic .tobasic").click(function() {
+    $("form input[type='hidden'][name='docfunctionality']").attr("value", "BasicFunctionality");
+    return true;
+  });
+
+  $("#dialog-confirm-advanced .toadvanced").click(function() {
+    $("form input[type='hidden'][name='docfunctionality']").attr("value", "AdvancedFunctionality");
+    return true;
+  });
+});
 
 function checkSignatoriesHaveUniqueEmail() {
   var isRepetition = false;

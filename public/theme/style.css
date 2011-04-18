@@ -1568,6 +1568,30 @@ input.multiFileInput {
     top:3px;
 }
 
+#signStepsMenu .signStepsFunctionalityChange
+{
+    float:right;
+    padding-right:19px;
+    font-size:11px;
+}
+
+.signStepsMenu .signStepsFunctionalityChange a
+{
+    margin-top:5px;
+    padding-top:2px;
+    padding-bottom:2px;
+    display: inline-block;
+    background-position: 2px 0px;
+    background-repeat: no-repeat;
+    padding-left: 23px;
+    color: #007CAC;
+    cursor: pointer;
+}
+
+.signStepsMenu .signStepsFunctionalityChange a:hover{
+    color: #000000;
+}
+
 .signStepsBodySave a.submit
 {
     margin-top:5px;
