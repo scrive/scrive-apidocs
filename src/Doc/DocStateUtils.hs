@@ -123,11 +123,69 @@ modifyDocumentWithAction condition docid action = do
              case actionresult of
                 Left message -> return $ Left message
                 Right newdocument -> do
-                    now <- getMinuteTimeDB
-                    when (documentid newdocument /= docid) $ error "new document must have same id as old one"
-                    modify (updateIx docid $ newdocument {documentmtime=now})
-                    return $ Right newdocument
+                    case (checkFeatureSupport newdocument) of
+                      (Left msg) -> return $ Left msg
+                      (Right _) -> do
+                        now <- getMinuteTimeDB
+                        when (documentid newdocument /= docid) $ error "new document must have same id as old one"
+                        modify (updateIx docid $ newdocument {documentmtime=now})
+                        return $ Right newdocument
        else return $ Left "Document didn't matche condition required for this action"
+
+-- Feature checking
+
+data Feature = CSVUse
+               | ElegUse
+               | MultiplePartiesUse
+               | SecretaryUse
+               | SpecialRoleUse
+
+{- |
+    This bit ensures that all the features used by a document
+    are valid for it's documentfunctionality. It's hoped 
+    that without bugs or hacks this should never fail.
+-}
+checkFeatureSupport :: Document -> Either String ()
+checkFeatureSupport doc =
+  case (all (checkSupport doc) features) of
+    False -> Left "features are not supported"
+    True -> Right ()
+  where
+    features = [CSVUse, ElegUse, MultiplePartiesUse, SecretaryUse, SpecialRoleUse]
+    {-|
+       Checks that any features in use are supported.
+    -}
+    checkSupport :: Document -> Feature -> Bool
+    checkSupport doc@Document{documentfunctionality} feature =
+        case (isRequired feature doc, isSupported feature documentfunctionality) of
+          (True, False) -> False
+          _ -> True
+    {-|
+       Determines whether a feature is in use for a document.
+    -}
+    isRequired :: Feature -> Document -> Bool
+    isRequired CSVUse Document{documentcsvupload} = 
+      isJust documentcsvupload
+    isRequired ElegUse Document{documentallowedidtypes} = 
+      isJust $ find (== ELegitimationIdentification) documentallowedidtypes
+    isRequired MultiplePartiesUse Document{documentsignatorylinks} = 
+      (length documentsignatorylinks) > 2
+    isRequired SecretaryUse doc@Document{documentsignatorylinks} = 
+      and . map (\sl -> not $ isAuthor doc sl) $ documentsignatorylinks
+    isRequired SpecialRoleUse doc@Document{documentsignatorylinks} =
+      and . map isSpecialRole $ documentsignatorylinks
+      where 
+        isSpecialRole :: SignatoryLink -> Bool
+        isSpecialRole SignatoryLink{signatoryroles} =
+          case signatoryroles of
+            [SignatoryPartner] -> False
+            _ -> True
+    {-|
+       Defines which Feature is supported by each type of DocumentFunctionality.
+    -}
+    isSupported :: Feature -> DocumentFunctionality -> Bool
+    isSupported _ AdvancedFunctionality = True
+    isSupported _ BasicFunctionality = False
 
 -- CHECKERS
 
