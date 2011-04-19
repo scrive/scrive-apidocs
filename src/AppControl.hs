@@ -65,6 +65,7 @@ import InputValidation
 import System.Directory
 import ListUtil
 import Data.Word
+import System.Time
 
 {- | 
   Defines the application's configuration.  This includes amongst other things
@@ -95,7 +96,7 @@ data AppConf
   Global application data
 -}
 data AppGlobals 
-    = AppGlobals { templates       :: KontrakcjaTemplates
+    = AppGlobals { templates       :: MVar (ClockTime, KontrakcjaTemplates)
                  , filecache       :: MemCache.MemCache FileID BS.ByteString
                  , mailer          :: Mailer
                  , docscache       :: MVar (Map.Map FileID JpegPages)
@@ -295,20 +296,16 @@ defaultAWSAction appConf =
            }
 
 
-lastTemplateModTime = unsafePerformIO $ do
-    modtime <- getTemplatesModTime
-    newMVar modtime
                       
-maybeReadTemplates oldTemplates = 
-    modifyMVar lastTemplateModTime $ \modtime -> do
+maybeReadTemplates mvar = modifyMVar mvar $ \(modtime,templates) -> do
         modtime' <- getTemplatesModTime
         if modtime /= modtime'
             then do 
                 Log.debug $ "Reloading templates"
-                newTemplates <- readTemplates
-                return (modtime', newTemplates)
-            else return (modtime, oldTemplates)
-        
+                templates' <- readTemplates
+                return ((modtime', templates'), templates')
+            else return ((modtime, templates), templates)
+ 
 {- |
    Creates a context, routes the request, and handles the session.
 -}
@@ -375,9 +372,7 @@ appHandler appConf appGlobals = do
                    return []
 
       -- do reload templates in non-production code
-      templates2 <- if production appConf
-                    then return $ templates appGlobals
-                    else liftIO $ maybeReadTemplates (templates appGlobals)
+      templates2 <- liftIO $ maybeReadTemplates (templates appGlobals)
 
       let elegtrans = getELegTransactions session
           ctx = Context
