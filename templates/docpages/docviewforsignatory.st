@@ -82,7 +82,7 @@ pageDocumentForSignContent=
           <a href="#" class="btn-big blue float-right submiter">
             <div class="left"></div>
             <div class="label">
-              <span>Bekräfta</span>
+              <span>Acceptera offert</span>
               <span class="icon cross"></span>
             </div>
             <div class="right"></div>
@@ -200,11 +200,11 @@ $if(notsignedbyme)$$if(pending)$
     </div>
     </div>
   </div>
-  <div id="signViewBottomBoxContainerRight" style="float:right;padding-right:78px"> 
+  <div id="signViewBottomBoxContainerRight" style="float:right;padding-right:78px;width:300px;"> 
   <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign" name="sign" style="padding-top:8px;">
     <div class="left"></div>
-    <div class="label" style="width:140px;padding-left:20px;padding-right:20px;">
-      <span>Bekräfta</span>
+    <div class="label" style="padding-left:20px;padding-right:20px;">
+      <span>Acceptera offert</span>
       <span class="icon cross"></span>
     </div>
     <div class="right"></div>

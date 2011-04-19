@@ -45,8 +45,8 @@ mailDocumentClosedForAuthorContent=
          av $partylist:noescape()$. Avtalet är nu bindande.</p>
        <p>Det färdigställda dokumentet bifogas med detta mail.</p>
        $elseif(offer)$
-         <p>Offerten <strong>$documenttitle$</strong> har accepterats av $partylist:noescape()$ och SkrivaPå har utfärdat ett verifikat för accepten. </p>
-         <p>Bifogat med detta mail finner du en PDF med offerten och verifikatet.</p>
+         <p>Offerten <strong>$documenttitle$</strong> har accepterats av $partylist:noescape()$ och SkrivaPå har utfärdat ett verifikat för accepten. 
+         Bifogat med detta mail finner du en PDF med offerten och verifikatet.</p>
        $endif$
       $poweredBySkrivaPaPara()$
     </span>
@@ -158,8 +158,8 @@ remindMailSignedStandardHeader=
       <p><strong>$author$</strong> har begärt att vi ska skicka dokumentet <strong>$documenttitle$</strong>
         till dig som du har undertecknat via tjänsten SkrivaPå. Dokumentet bifogas med detta mail.</p>
       $elseif(offer)$
-      <p><strong>$author$</strong> har begärt att vi ska skicka offerten  <strong>$documenttitle$</strong>
-        till dig som du har bekräftat via tjänsten SkrivaPå. Offerten bifogas med detta mail.</p>
+      <p><strong>$author$</strong> har  har begärt att vi ska skicka offerten  <strong>$documenttitle$</strong>
+        dig som du har accepterat via tjänsten SkrivaPå. Offerten bifogas med detta mail.</p>
       $endif$
     </span>
 ####

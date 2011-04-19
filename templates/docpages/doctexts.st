@@ -11,13 +11,13 @@ documentInfoText=
                             </span>
                         $else$
                         <span class="header">
-                             Granska
+                              $if(contract)$Granska $elseif(offer)$ Granska innan accept $endif$
                         </span><br>
                         <span class="text">
                             $if(contract)$
                                 Vänligen var noga med att granska dokumentet och kontrollera parterna till höger innan du undertecknar.
                             $elseif(offer)$
-                                Vänligen var noga med att granska offerten innan du bekräftar.
+                                Vänligen var noga med att granska offerten innan du accepterar.
                             $endif$
                         </span>
                         $endif$

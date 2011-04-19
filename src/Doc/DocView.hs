@@ -784,7 +784,7 @@ signatoryLinkFields
       field "allowEmailChange" $ (isCurrentUserAuthor && (invitationdeliverystatus == Undelivered) && (not dontShowAnyReminder))
       field "signdate" $ showDateOnly <$> signtime <$> maybesigninfo
       field "datamismatch" datamismatch
-      field "seenddate" $ showDateOnly <$> signtime <$> maybeseeninfo
+      field "seendate" $ showDateOnly <$> signtime <$> maybeseeninfo
       field "reminderMessage" $ mailDocumentRemindContent ctxtemplates Nothing ctx document siglnk author 
       field "role" $ if SignatoryPartner `elem` signatoryroles
                      then "signatory"
@@ -890,7 +890,9 @@ templatesForAjax::KontrakcjaTemplates ->  MinutesTime -> User -> DocumentType ->
 templatesForAjax templates ctime user doctype doctemplates = 
     renderTemplate templates "templatesForAjax" $ do
         field "documents" $ markParity $ map (documentBasicViewFields ctime user) (list doctemplates)
-        field "currentlink" $ show $ LinkNew (Just doctype) (params doctemplates)    
+        field "currentlink" $ show $ LinkNew (Just doctype) (params doctemplates)  
+        field "contract" $ doctype == Contract
+        field "offer" $ doctype == Offer
         pagedListFields doctemplates
     
 -- We keep this javascript code generation for now

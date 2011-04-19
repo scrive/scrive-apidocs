@@ -6,7 +6,10 @@ templatesForAjax=
 <!-- Table with all templates --> 
     <div class="tab-container">
             <div class="tab-content" style="background-color:#FFFFFF">
-                <div class="float-left basicinfo"> <p>Klicka på den mall du vill använda för att starta processen</p></div> 
+                <div class="float-left basicinfo"> 
+                    <p>Klicka på den mall du vill använda för att starta processen</p>
+                    <a class="backicon float-left" href="/?doctype=$if(contract)$Contract$elseif(offer)$Offer$endif$"></a>      
+                </div> 
                 <div class="float-right search" style="margin-top: 30px;margin-right:30px;">
                    <form action="$currentlink$" method="POST">
                       $searchBox(infotext='Sök  mall')$
