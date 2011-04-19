@@ -61,14 +61,13 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BS (unlines) 
 import Happstack.Data.IxSet as IxSet
-import Data.Maybe(isJust,isNothing,fromJust)
+import Data.Maybe(isJust,fromJust)
 import Misc
 import Happstack.Server.SimpleHTTP
 import Happstack.Util.Common
 import Codec.Utils (Octet)
 import Data.Digest.SHA256 (hash)
 import System.Random
-import System.IO.Unsafe
 import Data.List
 import qualified Data.Set as Set
 import Control.Applicative
