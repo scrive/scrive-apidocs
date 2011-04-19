@@ -25,8 +25,8 @@ import Mails.SendMail
 positionInfo::KontrakcjaTemplates -> (PaymentPosition,Money) -> IO String
 positionInfo templates (PaymentForSigning did,money) = do
                                         mtitle <- fmap (fmap $ BS.toString . documenttitle) $ query $ GetDocumentByDocumentID did
-                                        renderTemplate templates "paymentForSigningPosition" 
-                                                                     (setAttribute "documenttitle" mtitle)
+                                        renderTemplate templates "paymentForSigningPosition" $ do
+                                                                     field "documenttitle" mtitle
 
 
 data PaymentView = PaymentView
@@ -63,21 +63,23 @@ toPaymentView templates payment = do
 viewPayment::KontrakcjaTemplates -> Payment -> IO String
 viewPayment templates payment = do
                                  pm <- toPaymentView templates payment
-                                 renderTemplate templates "paymentView" (setAttribute "payment" pm)
+                                 renderTemplate templates "paymentView" $ do
+                                     field "payment" pm
 
 viewPayments::KontrakcjaTemplates -> [Payment] -> IO String
 viewPayments templates payments = do
                                    pms <- sequence $ map (toPaymentView templates) payments
-                                   renderTemplate templates "paymentsView" (setAttribute "payments" pms ) 
+                                   renderTemplate templates "paymentsView" $ do
+                                       field "payments" pms
 
 
 mailNewPayment::Context -> User -> Payment -> IO Mail
 mailNewPayment ctx user payment = do
                                         pm <- toPaymentView (ctxtemplates ctx) payment 
                                         title <- renderTemplate (ctxtemplates ctx) "mailNewPaymentTitle" () 
-                                        content <- renderTemplate (ctxtemplates ctx) "mailNewPaymentContent" $ 
-                                                                    (setAttribute "payment" pm ) .
-                                                                    (setAttribute "ctxhostpart" $ ctxhostpart ctx)
+                                        content <- renderTemplate (ctxtemplates ctx) "mailNewPaymentContent" $ do
+                                                       field "payment" pm
+                                                       field "ctxhostpart" $ ctxhostpart ctx
                                         return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
 
 

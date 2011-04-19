@@ -99,7 +99,8 @@ remindMailNotSignedContent templates forMail customMessage ctx document signlink
                                signedlist <- if (not $ null $ partySignedList document)
                                                    then fmap Just $ renderListTemplate templates $  map (BS.toString . personname') $ partySignedList document
                                                    else return Nothing
-                               renderTemplate templates "whohadsignedinfoformail" (setAttribute "signedlist" signedlist)
+                               renderTemplate templates "whohadsignedinfoformail" $ do
+                                   field "signedlist" signedlist
 
         footer =    if (forMail) 
                      then if (isNothing customMessage)
@@ -228,8 +229,9 @@ mailInvitationToSignOrViewContent templates forMail (Context {ctxhostpart})
                                     signedlist <- if (not $ null $ partySignedList document)
                                                        then fmap Just $ renderListTemplate templates $  map (BS.toString . personname') $ partySignedList document
                                                        else return Nothing
-                                    renderTemplate templates "whohadsignedinfoformail" (setAttribute "signedlist" signedlist)
-                             else  renderTemplate templates "whohadsignedinfoforpreview" ()
+                                    renderTemplate templates "whohadsignedinfoformail" $ do
+                                        field "signedlist" signedlist
+                             else  renderTemplate templates "whohadsignedinfoforpreview" [("asdf","asdf")]
         timetosigninfo = case documenttimeouttime of 
                           Just time -> renderTemplate templates "timetosigninfo" [("time",show time )]
                           Nothing -> return ""
