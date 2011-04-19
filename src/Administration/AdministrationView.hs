@@ -43,44 +43,55 @@ adminMainPage templates =  renderTemplate templates "adminsmain" ()
 
 {-| Manage users page  - advanced, will be changed-}
 adminUsersAdvancedPage::KontrakcjaTemplates -> [User] -> AdminUsersPageParams -> IO String
-adminUsersAdvancedPage templates users params =  renderTemplate templates "adminsmanageall" $
-                                                        (setAttribute "users" $ map userSmallView $ visibleUsers params users) .
-                                                        (setAttribute "letters" $ letters) .
-                                                        (setAttribute "adminuserlink" $ show $ LinkUserAdmin Nothing) .
-                                                        (setAttribute "intervals" $ intervals $ avaibleUsers params users) .
-                                                        (setAttribute "search" $ search params) . 
-                                                        (setAttribute "startletter" $ startletter params) .
-                                                        (setAttribute "adminlink" $ show $ LinkAdminOnly) 
+adminUsersAdvancedPage templates users params =
+    renderTemplate templates "adminsmanageall" $ do
+        field "users" $ map userSmallView $ visibleUsers params users
+        field "letters" $ letters
+        field "adminuserlink" $ show $ LinkUserAdmin Nothing
+        field "intervals" $ intervals $ avaibleUsers params users
+        field "search" $ search params
+        field "startletter" $ startletter params
+        field "adminlink" $ show $ LinkAdminOnly
+
 {-| Manage users page - can find user here -}
 adminUsersPage::KontrakcjaTemplates ->[(User,DocStats,UserStats)] -> AdminUsersPageParams -> IO String
-adminUsersPage templates users params = renderTemplate templates "adminusers" $
-                                                        (setAttribute "adminlink" $ show $ LinkAdminOnly) . 
-                                                        (setAttribute "users" $ map mkUserInfoView $ visibleUsers params users) .
-                                                        (setAttribute "letters" $ letters) .
-                                                        (setAttribute "adminuserlink" $ show $ LinkUserAdmin Nothing) .
-                                                        (setAttribute "intervals" $ intervals $ avaibleUsers params users) .
-                                                        (setAttribute "search" $ search params) . 
-                                                        (setAttribute "startletter" $ startletter params) 
+adminUsersPage templates users params =
+    renderTemplate templates "adminusers" $ do
+        field "adminlink" $ show $ LinkAdminOnly
+        field "users" $ map mkUserInfoView $ visibleUsers params users
+        field "letters" $ letters
+        field "adminuserlink" $ show $ LinkUserAdmin Nothing
+        field "intervals" $ intervals $ avaibleUsers params users
+        field "search" $ search params
+        field "startletter" $ startletter params
+
 {-| Manage user page - can change user info and settings here -}
 adminUserPage::KontrakcjaTemplates ->User -> PaymentAccountModel -> IO String
-adminUserPage templates user paymentModel  = renderTemplate templates "adminuser" $   
-                                                        (setAttribute "adminuserslink" $ show $ LinkUserAdmin Nothing) .
-                                                        (setAttribute "user" $ userAdminView user) .
-                                                        (setAttribute "paymentmodel" $ getModelView paymentModel) .
-                                                        (setAttribute "adminlink" $ show $ LinkAdminOnly)
+adminUserPage templates user paymentModel =
+    renderTemplate templates "adminuser" $ do
+        field "adminuserslink" $ show $ LinkUserAdmin Nothing
+        field "user" $ userAdminView user
+        field "paymentmodel" $ getModelView paymentModel
+        field "adminlink" $ show $ LinkAdminOnly
+
 allUsersTable::KontrakcjaTemplates -> [(User,DocStats,UserStats)] -> IO String
-allUsersTable templates users =  renderTemplate templates "allUsersTable" $
-                                                        (setAttribute "users" $ map mkUserInfoView $ users) .
-                                                        (setAttribute "adminlink" $ show $ LinkAdminOnly) 
+allUsersTable templates users =
+    renderTemplate templates "allUsersTable" $ do
+        field "users" $ map mkUserInfoView $ users
+        field "adminlink" $ show $ LinkAdminOnly
+
 databaseContent ::KontrakcjaTemplates -> [String] -> IO String
-databaseContent templates filenames = renderTemplate templates "databaseContents" $
-                                                        (setAttribute "files" $ filenames) .
-                                                        (setAttribute "adminlink" $ show $ LinkAdminOnly)
+databaseContent templates filenames =
+    renderTemplate templates "databaseContents" $ do
+        field "files" $ filenames
+        field "adminlink" $ show $ LinkAdminOnly
+
 statsPage::KontrakcjaTemplates -> StatsView -> String -> IO String
-statsPage templates stats sysinfo = renderTemplate templates "pageStats" $
-                                                         (setAttribute "stats" $ stats) .
-                                                         (setAttribute "sysinfo" $ sysinfo) .
-                                                         (setAttribute "adminlink" $ show $ LinkAdminOnly)
+statsPage templates stats sysinfo =
+    renderTemplate templates "pageStats" $ do
+        field "stats" $ stats
+        field "sysinfo" $ sysinfo
+        field "adminlink" $ show $ LinkAdminOnly
 
 mkUserInfoView :: (User, DocStats, UserStats) -> UserInfoView
 mkUserInfoView (userdetails', docstats', userstats') = UserInfoView {

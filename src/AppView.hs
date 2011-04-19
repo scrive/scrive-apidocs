@@ -118,9 +118,9 @@ signupVipPageView templates = renderTemplate templates "signupVipPageView" ()
 -}
 pageLogin :: Context -> Maybe String -> Maybe String -> IO String
 pageLogin ctx referer email =
-  renderTemplate (ctxtemplates ctx) "pageLogin" $
-      setAttribute "referer" referer
-    . setAttribute "email" email
+  renderTemplate (ctxtemplates ctx) "pageLogin" $ do
+      field "referer" referer
+      field "email" email
 
 {- |
    Changing our pages into reponses, and clearing flash messages.
