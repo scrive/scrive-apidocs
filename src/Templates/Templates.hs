@@ -6,8 +6,10 @@
 -- Stability   :  development
 -- Portability :  portable
 --
--- This is main templating module. It provides basic interface for generation templates (RenderTemplate)
--- with 'renderTemplate' function. We also provide types for templates and few functions for loading and testing
+-- This is main templating module. It provides basic interface for
+-- generation templates (RenderTemplate) with 'renderTemplate'
+-- function. We also provide types for templates and few functions for
+-- loading and testing
 -- 
 -- HOW TO USE TEMPLATING SYSTEM
 --
@@ -27,13 +29,15 @@
 --       Last one is some for of list of params.
 --       As a result you get IO String. 
 --        If template will fail You will get error info inside. But this is only for syntax errors.
---        If You will forget a param  there will be info in log, and template set param value to something empty.
+--        If You will forget a param there will be info in log, and template set param value to something empty.
 --
 --
 -- FIELDS
 --
--- Current policy is to use fields. You can find usage of [(String,String)] as params and also composition of setAttribute functions in a code.
--- This are old concepts and will be droped at some point.
+-- Current policy is to use fields. You can find usage of
+-- [(String,String)] as params and also composition of setAttribute
+-- functions in a code.  This are old concepts and will be droped at
+-- some point.
 --
 -- How to user fields:
 --  - there is one function ('field') that sets one field
@@ -99,19 +103,18 @@ import qualified Data.Map as Map
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 
-{- Filling template with a given name using given attributes
+{-| Filling template with a given name using given attributes
    It never fail, just returns empty message and writes something in the logs
    Params - Templates (loaded from local files), Name of template, somethinmg that sets params value
 -}
-
 class RenderTemplate a where
-  renderTemplate::KontrakcjaTemplates ->String -> a -> IO String 
+  renderTemplate :: KontrakcjaTemplates -> String -> a -> IO String 
 
-{- Basic rendering interface 
+{-| Basic rendering interface 
    It allows to pass some string attributes to templates. Usefull when working with simple templates
  -}
 instance RenderTemplate () where
-   renderTemplate ts name () = renderTemplateMain ts name ([]::[(String,String)]) id
+   renderTemplate ts name () = renderTemplateMain ts name ([] :: [(String,String)]) id
    
 instance RenderTemplate [(String, String)] where
    renderTemplate ts name attrs = renderTemplateMain ts name attrs id
@@ -120,58 +123,59 @@ instance RenderTemplate [(String, [String])] where
    renderTemplate ts name attrs = renderTemplateMain ts name attrs id
 
 
-{- More advanced schema allows to pass to template params for complex types.
+{-| More advanced schema allows to pass to template params for complex types.
    This can be done by passing as last param composition of setAttributeFunction
 -}
 
 instance RenderTemplate (KontrakcjaTemplate -> KontrakcjaTemplate) where
-   renderTemplate ts name f = renderTemplateMain ts name ([]::[(String, String)]) f
+   renderTemplate ts name f = renderTemplateMain ts name ([] :: [(String, String)]) f
    
 
-{-Use this as (setAttributes name1 val1) . (setAttributes name2 val2) . (setAttributes name3 val3) -}
+{-| Use this as (setAttributes name1 val1) . (setAttributes name2 val2) . (setAttributes name3 val3) -}
 setAttribute :: (ToSElem a) => String -> a -> KontrakcjaTemplate -> KontrakcjaTemplate
-setAttribute name value =  Text.StringTemplate.setAttribute name (toSElem value::SElem String)
+setAttribute name value =  Text.StringTemplate.setAttribute name (toSElem value :: SElem String)
 
-type Fields =   State ([(String,IO (SElem String))]) ()
+type Fields = State ([(String,IO (SElem String))]) ()
 
 class Field a where 
-  field::String ->  a -> Fields
+  field :: String -> a -> Fields
 
 instance (ToSElem a) => Field (IO a) where 
   field a b = do
-             s <- get 
-             put ((a,fmap toSElem b):s)
+        s <- get 
+        put ((a,fmap toSElem b):s)
 
 
 instance (ToSElem a) => Field a where 
   field a b = do
-             s <- get 
-             put ((a,return $ toSElem b):s)
+        s <- get 
+        put ((a,return $ toSElem b):s)
 
 
 instance Field (Fields) where 
   field a b =  do
-               s <- get 
-               let val = fmap (toSElem . Map.fromList) $ sequence $ map packIO $ execState b [] 
-               put ((a,val):s)
+        s <- get 
+        let val = fmap (toSElem . Map.fromList) $ sequence $ map packIO $ execState b [] 
+        put ((a,val):s)
 
 instance Field [Fields] where 
   field a fs =  do
-               s <- get 
-               let vals f = fmap Map.fromList $ sequence $ map packIO $ execState f [] 
-               put ((a,fmap toSElem $ mapM vals fs):s)
+        s <- get 
+        let vals f = fmap Map.fromList $ sequence $ map packIO $ execState f [] 
+        put ((a,fmap toSElem $ mapM vals fs):s)
                
 
 instance RenderTemplate Fields where
-   renderTemplate ts name fields = do
-                                    attrs <- sequence $ map packIO $ execState fields [] 
-                                    renderTemplateMain ts name ([]::[(String, String)]) (setManyAttrib attrs)
+   renderTemplate ts name fields = 
+       do
+           attrs <- sequence $ map packIO $ execState fields [] 
+           renderTemplateMain ts name ([] :: [(String, String)]) (setManyAttrib attrs)
    
 
-packIO::(a, IO b) -> IO (a,b)
+packIO :: (a, IO b) -> IO (a,b)
 packIO (name,comp)= do 
-                     res <- comp
-                     return (name,res)
+    res <- comp
+    return (name,res)
                      
                      
                      
@@ -181,7 +185,7 @@ packIO (name,comp)= do
 -- | after rendering. !This will not always work with advanced structures.! So always convert to String.
 
 class ToSElem a where
-  toSElem:: (Stringable b) => a -> SElem b
+  toSElem :: (Stringable b) => a -> SElem b
 
 instance (HST.ToSElem a) => ToSElem a where
   toSElem = HST.toSElem
@@ -203,4 +207,3 @@ instance (HST.ToSElem a) => ToSElem [a] where
 
 instance (HST.ToSElem a) => ToSElem (Map.Map String a) where
   toSElem m =  SM $ Map.map HST.toSElem m
-  
