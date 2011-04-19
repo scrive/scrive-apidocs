@@ -468,89 +468,62 @@ instance Indexable User where
                       ]
 
 
-$(deriveSerialize ''User8)
 instance Version User8 where
     mode = extension 8 (Proxy :: Proxy ()) 
 
-$(deriveSerialize ''User9)
 instance Version User9 where
     mode = extension 9 (Proxy :: Proxy User8)
 
-$(deriveSerialize ''User10)
 instance Version User10 where
     mode = extension 10 (Proxy :: Proxy User9)
 
-$(deriveSerialize ''User)
 instance Version User where
     mode = extension 11 (Proxy :: Proxy User10)
 
-$(deriveSerialize ''TrustWeaverStorage )
 instance Version TrustWeaverStorage
 
-$(deriveSerialize ''UserAccountType )
 instance Version UserAccountType 
 
-$(deriveSerialize ''PaymentMethod)
 instance Version PaymentMethod
 
-$(deriveSerialize ''UserAccountPlan )
 instance Version UserAccountPlan 
 
-$(deriveSerialize ''UserInfo0)
 instance Version UserInfo0
 
-$(deriveSerialize ''UserInfo)
 instance Version UserInfo where
     mode = extension 1 (Proxy :: Proxy UserInfo0)
 
-
-$(deriveSerialize ''UserSettings)
 instance Version UserSettings
 
-$(deriveSerialize ''FlashType)
 instance Version FlashType
 
-$(deriveSerialize ''FlashMessage0)
 instance Version FlashMessage0
 
-$(deriveSerialize ''FlashMessage)
 instance Version FlashMessage where
     mode = extension 1 (Proxy :: Proxy FlashMessage0)
 
-$(deriveSerialize ''Email)
 instance Version Email
 
-$(deriveSerialize ''Password)
 instance Version Password
 
-$(deriveSerialize ''UserID)
 instance Version UserID
 
-$(deriveSerialize ''Friend)
 instance Version Friend
 
-$(deriveSerialize ''Inviter)
 instance Version Inviter
 
-$(deriveSerialize ''InviteInfo)
 instance Version InviteInfo
 
-$(deriveSerialize ''InviteType)
 instance Version InviteType
 
-$(deriveSerialize ''LoginInfo)
 instance Version LoginInfo
 
-$(deriveSerialize ''DefaultMainSignatory)
 instance Version DefaultMainSignatory
 
-$(deriveSerialize ''SupervisorID)
 instance Version SupervisorID
 
-$(deriveSerialize ''ExternalUserID)
 instance Version ExternalUserID
 
-$(deriveSerialize ''UserStats)
 instance Version UserStats
 
 instance Show ExternalUserID where
@@ -826,10 +799,29 @@ exportUsersDetailsToCSV = do
       content = BS.intercalate (BS.fromString ",") <$> fields
   return $ BS.unlines $ content <$> (toList users)
 
-instance Component Users where
-  type Dependencies Users = End
-  initialValue = IxSet.empty
   
+getUserPaymentSchema::User -> IO (Payments.PaymentScheme)
+getUserPaymentSchema User{userpaymentpolicy } = do
+                               now <- getMinutesTime
+                               model <- update $ Payments.GetPaymentModel (Payments.paymentaccounttype userpaymentpolicy ) 
+                               let paymentChange = case Payments.temppaymentchange userpaymentpolicy  of 
+                                                     Nothing -> Payments.custompaymentchange  userpaymentpolicy 
+                                                     Just (expires,tchange) -> 
+                                                        if (now < expires)    
+                                                        then Payments.custompaymentchange userpaymentpolicy 
+                                                        else Payments.mergeChanges tchange (Payments.custompaymentchange userpaymentpolicy)
+                               return $ (paymentChange,model)                                                                  
+
+takeImmediatelyPayment::User -> Bool
+takeImmediatelyPayment user = Payments.requiresImmediatelyPayment $ userpaymentpolicy user
+
+{- 
+
+Template Haskell derivations should be kept at the end of the file
+
+-}
+
+
 -- create types for event serialization
 $(mkMethods ''Users [ 'getUserByUserID
                     , 'getUserByEmail
@@ -856,17 +848,34 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'addFreePaymentsForInviter
                     ])
 
-getUserPaymentSchema::User -> IO (Payments.PaymentScheme)
-getUserPaymentSchema User{userpaymentpolicy } = do
-                               now <- getMinutesTime
-                               model <- update $ Payments.GetPaymentModel (Payments.paymentaccounttype userpaymentpolicy ) 
-                               let paymentChange = case Payments.temppaymentchange userpaymentpolicy  of 
-                                                     Nothing -> Payments.custompaymentchange  userpaymentpolicy 
-                                                     Just (expires,tchange) -> 
-                                                        if (now < expires)    
-                                                        then Payments.custompaymentchange userpaymentpolicy 
-                                                        else Payments.mergeChanges tchange (Payments.custompaymentchange userpaymentpolicy)
-                               return $ (paymentChange,model)                                                                  
+$(deriveSerializeFor [ ''User
+                     , ''User10
+                     , ''User9
+                     , ''User8
 
-takeImmediatelyPayment::User -> Bool
-takeImmediatelyPayment user = Payments.requiresImmediatelyPayment $ userpaymentpolicy user
+                     , ''TrustWeaverStorage
+                     , ''UserAccountType
+                     , ''PaymentMethod
+                     , ''UserInfo0
+                     , ''FlashMessage0
+                     , ''UserStats
+                     , ''Email
+                     , ''InviteType
+                     , ''LoginInfo
+                     , ''InviteInfo
+                     , ''Friend
+                     , ''UserSettings
+                     , ''UserInfo
+                     , ''SupervisorID
+                     , ''Password
+                     , ''UserID
+                     , ''Inviter
+                     , ''DefaultMainSignatory
+                     , ''UserAccountPlan
+                     , ''FlashMessage
+                     , ''FlashType
+                     ])
+
+instance Component Users where
+  type Dependencies Users = End
+  initialValue = IxSet.empty
