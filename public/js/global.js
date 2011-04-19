@@ -875,7 +875,9 @@ function authorFieldsValidation() {
   dragfields.removeClass('offending');
   // get all the fields that should be filled by author
   var remainingAuthorFields = dragfields.filter(function() {
-    return getFillStatus($(this)) === 'author' && !isMultiPartElem($(this));
+    return getFillStatus($(this)) === 'author' && 
+      !isMultiPartElem($(this)) &&
+      $(this).parents(".sigentry").find(".partyrole input:radio[value=signatory]").attr("checked");
   });
 
   if(remainingAuthorFields.size() > 0) {
