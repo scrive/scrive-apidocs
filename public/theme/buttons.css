@@ -619,7 +619,8 @@ a.btn-tiny.red:active .label {
 
 .btn-small .btn-symbol.cross {
 	background-position: -66px -1px;
-	right: -10px;
+	right: 5px;
+        top: 5px;
 	width: 22px;
 }
 
