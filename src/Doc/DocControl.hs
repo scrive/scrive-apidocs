@@ -477,7 +477,7 @@ handleSignShow documentid
                            if document `allowsIdentification` ELegitimationIdentification
                            then "Du undertecknar dokumentet längst ned. Det krävs e-legitimation för att underteckna."
                            else "Underteckna dokumentet längst ned på sidan."
-                       else  "Bekräfta offerten längst ned på sidan"
+                       else  "Du kan acceptera offerten längst ned på sidan."
                   else "Du har endast rättigheter att se detta dokument"
 
     addFlashMsg $ toFlashMsg OperationDone message

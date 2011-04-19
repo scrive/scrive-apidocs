@@ -663,12 +663,20 @@ img.waiting
     border-right:1px solid #BDBDBD;
     width:958px;
 }
+#signStepsContainer .doctablecontainer {
+    width:918px;
+}
+
 .doctable {
     
     border-collapse:collapse;
     padding: 10px; 
     width:938px;
     margin: 10px auto 10px;
+}
+
+#signStepsContainer .doctable {
+    width:898px;
 }
 
 .doctable td
@@ -1214,17 +1222,6 @@ a.button {
 }
 
 .postSignStepBody {
-    margin-top: 16px;
-    padding:8px 19px;
-    border-left: 1px solid #BDBDBD;
-    border-right: 1px solid #BDBDBD;
-    border-bottom: 1px solid #C0C0C0;
-    border-top: 1px solid #C0C0C0;
-    color: #414241;
-    background-image: url(images/signStepsBodyBorder.png);
-    background-repeat: repeat-y;
-    overflow: hidden;
-    min-height: 100px;
 }
 
 #signStepsBodyBorderBottom

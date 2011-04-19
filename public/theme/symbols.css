@@ -287,3 +287,12 @@
     background-position: 5px 0px;
     display: block;
 }
+
+.backicon {
+    background: url(../img/back.png) no-repeat transparent;
+    height: 16px;
+    margin:auto;
+    width: 16px;
+    background-position: 0px 0px;
+    display: block;
+}

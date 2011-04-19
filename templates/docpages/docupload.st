@@ -35,7 +35,8 @@ $loadingdialog()$
   <div id="signStepsBody"> 
  
 <!-- MAIN FORM STARTS HERE -->
-<table style="width:100%"> <tbody> <tr valign="top">
+$if(!typeselected)$
+<table style="width:100%" > <tbody> <tr valign="top">
  <td>
    <div class="signStepsBodyUploadBox" style="border:0px;text-align:left;width: 250px;font-weight:bold"> 
     <p class="text" style="padding-top:40px">
@@ -55,12 +56,9 @@ $loadingdialog()$
   </td>
 </tr></tbody></table>
 <!-- MAIN FROM END HERE --> 
-</div> 
-</div>
-</div>
 
 <!-- START: Form to select new upload or template  -->
-$if(typeselected)$
+$elseif(!showTemplates)$
 <div class="postSignStepBody">
 <table style="width:100%"> <tbody> <tr valign="top">
 <td> <div class="signStepsBodyUploadBox" style="border:0px;text-align:left;width: 250px;font-weight:bold"> 
@@ -73,6 +71,7 @@ $if(typeselected)$
         Välj den offert som du vill skicka till din motpart.
     <p/>
     $endif$
+    <a class="backicon float-left" href="/"></a>
  </div>
 </td>
 <td>
@@ -107,7 +106,7 @@ $if(typeselected)$
         <span class="text">Sparad på SkrivaPå</span> 
       <br/>
       <div class="signStepsButtonContainer" style="height:34px">
-        <a class="btn-small green selectTemplateButton" rel=".templatedDialogContainer">  
+        <a class="btn-small green selectTemplateButton" href="/?doctype=$if(contract)$Contract$elseif(offer)$Offer$endif$&amp;showTemplates=YES">  
           <div class="left"> </div>
           <div class="label" style="width:80px"> Välj mall </div> 
           <div class="right"> </div>
@@ -116,21 +115,17 @@ $if(typeselected)$
     </div>   
 </div>
 </td> </tr></tbody></table>
-
 </div>
 <!-- END: Form to select new upload or template -->
-
-
-
+$else$
 
 <div class="templatedDialogContainer" style="display:none">
         <div class='waiting4data'></div>
 </div>
        
  <script>
-    function getTemplates(curr){
-        jQuery(curr).parent(".signStepsBodyUploadBox").addClass("selected");
-        var location = jQuery(jQuery(curr).attr("rel"));
+   safeReady(function(){
+      var location = jQuery(".templatedDialogContainer");
         var wheretoputdata = jQuery(".waiting4data",location);
         location.show();
         jQuery.get("$templateslink:noescape()$" ,function(data){
@@ -138,18 +133,11 @@ $if(typeselected)$
                  enableInfoTextOnce(location);
                  jQuery('a.submit').altSubmit();
         })
-    }
-
-   safeReady(function(){
-    $if(!showTemplates)$
-    jQuery(".selectTemplateButton").click(function(){
-       getTemplates(this);
-    })
-    $else$
-    getTemplates(jQuery(".selectTemplateButton"))
-    $endif$
     })
  </script>
 
 $endif$
+</div> 
+</div>
+</div>
 ####
