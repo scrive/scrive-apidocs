@@ -939,6 +939,31 @@ function initializeTemplates () {
     setTimeout("initializeTemplates();", 100);
     return;
   }
+
+  $(".pagediv").droppable({ drop: function(event, ui) {
+      var page = $(this);
+      var field = $(ui.draggable);
+      var helper = $(ui.helper);
+      
+      var top = helper.offset().top - page.offset().top;
+      var left = helper.offset().left - page.offset().left;
+      
+      var pageno = parseInt(page.attr("id").substr(4));
+      
+      var sigid = getSigID(field);
+      var fieldid = getFieldID(field);
+      var pl = newplacement(left, top, pageno, page.width(), page.height());
+      placePlacements([pl], getLabel(field), getValue(field), sigid, fieldid);
+      
+      if(isPlacedField(field)) {
+        field.detach();
+        helper.detach();
+      }
+      hideCoordinateAxes();
+      updateStatus(field);
+      return false;
+    }});
+
   
   // coordinate axes
   var pagejpg = pagediv.find(".pagejpg");
@@ -1037,30 +1062,6 @@ function hideCoordinateAxes() {
 }
 
 safeReady(function() {
-  $(".pagediv", "#documentBox")
-    .liveDroppable({ drop: function(event, ui) {
-      var page = $(this);
-      var field = $(ui.draggable);
-      var helper = $(ui.helper);
-      
-      var top = helper.offset().top - page.offset().top;
-      var left = helper.offset().left - page.offset().left;
-      
-      var pageno = parseInt(page.attr("id").substr(4));
-      
-      var sigid = getSigID(field);
-      var fieldid = getFieldID(field);
-      var pl = newplacement(left, top, pageno, page.width(), page.height());
-      placePlacements([pl], getLabel(field), getValue(field), sigid, fieldid);
-      
-      if(isPlacedField(field)) {
-        field.detach();
-        helper.detach();
-      }
-      hideCoordinateAxes();
-      updateStatus(field);
-      return false;
-    }});
 
   $(".dragfield", "#personpane")
     .liveDraggable({ handle: ".draghandle",
