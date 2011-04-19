@@ -29,8 +29,10 @@ import Session
 import Templates.Templates (KontrakcjaTemplates)
 import User.UserView
 import qualified AppLogger as Log
+import Control.Concurrent.MVar
+import System.Time
 
-type SchedulerData' = SchedulerData AppConf Mailer KontrakcjaTemplates
+type SchedulerData' = SchedulerData AppConf Mailer (MVar (ClockTime, KontrakcjaTemplates))
 
 newtype ActionScheduler a = AS { unActionScheduler :: ReaderT SchedulerData' IO a }
     deriving (Monad, Functor, MonadIO, MonadReader SchedulerData')
@@ -96,7 +98,8 @@ evaluateAction action@Action{actionID, actionType = AccountCreatedBySigning stat
                 let uinfo = userinfo user
                     email = useremail uinfo
                     fullname = userfullname user
-                mail <- liftIO $ reminder (sdTemplates sd) (hostpart $ sdAppConf sd) doctitle fullname (LinkAccountCreatedBySigning actionID token) (LinkAccountRemoval actionID token)
+                (_,templates) <- liftIO $ readMVar (sdTemplates sd)
+                mail <- liftIO $ reminder templates (hostpart $ sdAppConf sd) doctitle fullname (LinkAccountCreatedBySigning actionID token) (LinkAccountRemoval actionID token)
                 liftIO $ sendMail (sdMailer sd) $ mail { fullnameemails = [(fullname, unEmail email)] }
                 return ())
             let new_atype = (actionType action) { acbsState = new_state }
