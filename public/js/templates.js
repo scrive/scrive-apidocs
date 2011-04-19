@@ -34,6 +34,7 @@ function newsignatory() {
 })(jQuery);
 
 // a way to make drop live
+// not used
 (function ($) {
   jQuery.fn.liveDroppable = function (opts) {
     this.live("mouseover", function() {
