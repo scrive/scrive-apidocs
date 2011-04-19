@@ -10,20 +10,13 @@
 --  View module for payments.
 -----------------------------------------------------------------------------
 module PayEx.PayExView(viewPayment,viewPayments,mailNewPayment) where
-import Control.Monad.State
 import PayEx.PayExState
-import PayEx.PayExRequest
-import PayEx.PayExResponse
-import SOAP.SOAP
 import Kontra 
-import Happstack.Server
 import Doc.DocState
 import Payments.PaymentsState
 import Happstack.State (update,query)
 import Templates.Templates
-import Text.XML.HaXml.XmlContent.Parser (XmlContent)
 import KontraLink
-import Misc
 import qualified Data.ByteString.UTF8 as BS
 import Data.Typeable
 import Data.Data
