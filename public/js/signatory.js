@@ -310,7 +310,7 @@ function docstateToHTML(){
 	    placePlacements(this.personalnumberplacements, "Pers. nr", this.personalnumber, s.id, "sigpersnr");
             placePlacements(this.companynumberplacements, "Org. nr", this.companynumber, s.id, "sigcompnr");
 
-	   if(!cc){
+	  if(!cc){
         $(".signViewBodyRight").each(function() {
         var ff = $(this);
         if((s.companyplacements.length > 0 || s.company != "") && ff.text().indexOf(s.email) > -1){
@@ -323,10 +323,10 @@ function docstateToHTML(){
                         ff.find(".signatoryfields").append(
                          "<div class='field'>"+
                             "<span class='fieldvalue "+c+"'>"+escapeHTML(val)+"</span>"+
-                         "</div>")
-                }
+                            "</div>");
+        }
                 
-        if((s.personalnumberplacements.length > 0 || s.personalnumber !="") && ff.text().indexOf(s.email) > -1){
+          if((s.personalnumberplacements.length > 0 || s.personalnumber !="") && ff.text().indexOf(s.email) > -1){
                         var val = s.personalnumber;
                         var c = "";
                         if(val === ""){
@@ -336,7 +336,7 @@ function docstateToHTML(){
                         ff.find(".signatoryfields").append(
                          "<div class='field'>"+
                             "<span class='fieldvalue "+c+"'>"+escapeHTML(val)+"</span>"+
-                         "</div>")
+                            "</div>");
                 }
 
         if((s.companynumberplacements.length > 0 || s.companynumber !="") && ff.text().indexOf(s.email) > -1){
@@ -349,7 +349,7 @@ function docstateToHTML(){
                         ff.find(".signatoryfields").append(
                          "<div class='field'>"+
                             "<span class='fieldvalue "+c+"'>"+escapeHTML(val)+"</span>"+
-                         "</div>")
+                            "</div>");
                 }
             }) 
         }
@@ -379,8 +379,20 @@ function docstateToHTML(){
 		    }
 		});
 	});
+  if(currentsig){
+    if(currentsig.company.length > 0) {
+                        var val = currentsig.company;
+                        var c = "";
+                        if(val === ""){
+                                val =  "Titel, företag";
+                                c = "grayed";
+                              }
+                        currentsigdiv.find(".signatoryfields").append(
+                         "<div class='field'>"+
+                            "<span class='fieldvalue "+c+"'>"+escapeHTML(val)+"</span>"+
+                            "</div>");
 
-    if(currentsig && currentsig.company.length === 0 && currentsig.companyplacements.length > 0) {
+    } else if(currentsig.companyplacements.length > 0) {
 	var cfield = buildField("Titel, företag", currentsig.company, "sig");
 	setFieldID(cfield, "sigco");
 	setSigID(cfield, currentsig.id);
@@ -390,7 +402,19 @@ function docstateToHTML(){
 	enableInfoTextOnce(cfield);
     }
 
-    if(currentsig && currentsig.personalnumber.length === 0 && currentsig.personalnumberplacements.length > 0) {
+    if(currentsig.personalnumber.length > 0) {
+                              var val = currentsig.personalnumber;
+                        var c = "";
+                        if(val === ""){
+                                val =  "Pers. nr";
+                                c = "grayed";
+                              }
+                        currentsigdiv.find(".signatoryfields").append(
+                         "<div class='field'>"+
+                            "<span class='fieldvalue "+c+"'>"+escapeHTML(val)+"</span>"+
+                            "</div>");
+
+    } else if(currentsig.personalnumberplacements.length > 0) {
         var cfield = buildField("Pers. nr", currentsig.company, "sig");
         setFieldID(cfield, "sigpersnr");
         setSigID(cfield, currentsig.id);
@@ -400,7 +424,19 @@ function docstateToHTML(){
         enableInfoTextOnce(cfield);
     }
 
-    if(currentsig && currentsig.companynumber.length === 0 && currentsig.companynumberplacements.length > 0) {
+    if(currentsig.companynumber.length > 0) {
+                        var val = currentsig.companynumber;
+                        var c = "";
+                        if(val === ""){
+                                val =  "Org. nr";
+                                c = "grayed";
+                              }
+                        currentsigdiv.find(".signatoryfields").append(
+                         "<div class='field'>"+
+                            "<span class='fieldvalue "+c+"'>"+escapeHTML(val)+"</span>"+
+                            "</div>");
+
+    }else if(currentsig.companynumberplacements.length > 0) {
 	var nfield = buildField("Org. nr", currentsig.number, "sig");
 	setFieldID(nfield, "sigcompnr");
 	setSigID(nfield, currentsig.id);
@@ -410,7 +446,7 @@ function docstateToHTML(){
 	enableInfoTextOnce(nfield);
     }
 
-    $(currentsig && currentsig.otherfields).each(function () {
+    $(currentsig.otherfields).each(function () {
 	    var f = this;
 	    if(f.value.length === 0){
 		ofield = buildField(f.label, f.value, "sig");
@@ -440,6 +476,7 @@ function docstateToHTML(){
 
             }
 	});
+  }
 }
 
 function getIcon(field){
