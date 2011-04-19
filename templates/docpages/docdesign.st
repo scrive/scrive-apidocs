@@ -213,7 +213,7 @@ pageDocumentDesign=
             </div>
             
             <div id="signStepsBodyFunctions">
-              <div id="signStepsBodyFunctionsBox">
+              $if(advanced)$
                 $if(contract)$
                <div id="signStepsBodyFunctionsBox">
                 <ul>
