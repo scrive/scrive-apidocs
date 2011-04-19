@@ -198,5 +198,5 @@ flashMessageTemplateArchiveDone=Valda mallar har blivit raderade.
 ###
 flashMessageThanksForTheQuestion=Ditt meddelande har skickats! Vi återkommer inom 24h.
 ###
-flashMessageInvalidCSV=There's a problem with your .csv data, please check and upload again.
+flashMessageInvalidCSV=Det uppstod ett problem med datan i din .csv. Var vänling och kontrollera och ladda upp igen.
 ###
