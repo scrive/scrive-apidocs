@@ -297,25 +297,6 @@ function setInfotext(field, infotext) {
   }
 }
 
-function buildDraggableField(info, val, type, emailp) {
-  var x = $("<div class='dragfield'><span class='draghandle ui-icon ui-icon-arrowthick-1-w'>drag</span><input type='text' autocomplete='off' /><span class='dragstatus'></span> <span class='fillstatus'></span></div>");
-  if(emailp) {
-    x = $("<div class='dragfield'><span class='draghandle ui-icon ui-icon-arrowthick-1-w'>drag</span><input type='email' autocomplete='off' /><span class='dragstatus'></span> <span class='fillstatus'></span></div>");
-  }
-
-
-  setInfotext(x, info);
-  setValue(x, val);
-  setFieldType(x, type);
-  var input = x.find("input");
-  return x;
-}
-
-// for use with author fields
-function buildDraggableText(val) {
-  var x = $("<div class='dragtext'><span class='draghandle ui-icon ui-icon-arrowthick-1-w'>drag</span> <span class='fieldvalue'>" + val + "</span></div>");
-  return x;
-}
 
 function docstateToHTML(){
   var signatories = docstate.signatories;
