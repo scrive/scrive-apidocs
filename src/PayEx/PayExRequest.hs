@@ -10,22 +10,14 @@
 --  some config or other data that PayEx requeires
 -----------------------------------------------------------------------------
 module PayEx.PayExRequest where
-import Control.Monad.State
 import Payments.PaymentsState
 import PayEx.PayExState
 import PayEx.PayExConfig
 import Text.XML.HaXml.XmlContent.Parser  hiding (content)
-import Kontra
 import Happstack.Server
-import Data.Hash.MD5 hiding (md5)
 import Control.Category hiding ((.))
 import Data.Monoid
 import KontraLink
-import Data.ByteString (unpack)
-import Data.ByteString.Lazy.Char8 (pack)
-import Data.Word
-import Data.List
-import Data.Bits
 -- import Data.Encoding
 -- import Data.Encoding.ISO88591
 import Templates.Templates (KontrakcjaTemplates)
