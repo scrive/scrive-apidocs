@@ -8,34 +8,34 @@ var debug = false;
 // create a new signatory. pretty useless without calling signatoryToHTML
 function newsignatory() {
   return {fstname: "",sndname:"", company: "", personalnumber: "", companynumber: "", email: "", 
-	  nameplacements: [],
-	  companyplacements: [],
-	  personalnumberplacements: [],
+	      nameplacements: [],
+	      companyplacements: [],
+	      personalnumberplacements: [],
           companynumberplacements: [],
-	  emailplacements: [],
-	  otherfields: []};
+	      emailplacements: [],
+	      otherfields: []};
 }
 
 // a way to make drag live
 (function ($) {
-   jQuery.fn.liveDraggable = function (opts) {
-      this.live("mouseover", function() {
-         if (!$(this).data("draginit")) {
-            $(this).data("draginit", true).draggable(opts);
-         }
-      });
-   };
+  jQuery.fn.liveDraggable = function (opts) {
+    this.live("mouseover", function() {
+      if (!$(this).data("draginit")) {
+        $(this).data("draginit", true).draggable(opts);
+      }
+    });
+  };
 })(jQuery);
 
 // a way to make drop live
 (function ($) {
-   jQuery.fn.liveDroppable = function (opts) {
-      this.live("mouseover", function() {
-         if (!$(this).data("dropinit")) {
-            $(this).data("dropinit", true).droppable(opts);
-         }
-      });
-   };
+  jQuery.fn.liveDroppable = function (opts) {
+    this.live("mouseover", function() {
+      if (!$(this).data("dropinit")) {
+        $(this).data("dropinit", true).droppable(opts);
+      }
+    });
+  };
 })(jQuery);
 
 function newplacement(x, y, page, w, h) {
@@ -52,8 +52,8 @@ function placementToHTML(label, value) {
 }
 
 function placedFieldHelper(value) {
-    var span = $("<span class='value'>").text(value);
-    return $("<div class='placedfieldhelper'>").append(span);
+  var span = $("<span class='value'>").text(value);
+  return $("<div class='placedfieldhelper'>").append(span);
 }
 
 function placePlacements(pls, label, value, sigid, fieldid) {
@@ -77,7 +77,7 @@ function placePlacements(pls, label, value, sigid, fieldid) {
 }
 
 function newHiddenValue(label, value) {
-    return $("<span style='display: none'>").addClass(label).text(value);
+  return $("<span style='display: none'>").addClass(label).text(value);
 }
 
 // getHiddenValue does not care if it's hidden
@@ -101,7 +101,7 @@ function setHiddenValue(field, label, value) {
 }
 
 function newHiddenField(name, value) {
-    return $("<input type='hidden'>").attr("value", value).attr("name", name);
+  return $("<input type='hidden'>").attr("value", value).attr("name", name);
 }
 
 // works on any input field, not just hidden ones
@@ -120,7 +120,7 @@ function setHiddenField(field, label, value) {
   if(s.size()){
     s.attr("value", value);
   } else {
-      field.append(newHiddenField(label, value));
+    field.append(newHiddenField(label, value));
   }
 }
 
@@ -171,9 +171,9 @@ function getValue(field) {
     var s = $(field).find("input[type='text'], input[type='email']");
     if(s.size()) {
       if(s.attr("value") == s.attr("infotext")) {
-	return "";
+	    return "";
       } else {
-	return s.attr("value");
+	    return s.attr("value");
       }
     } else {
       if(debug) {
@@ -549,8 +549,8 @@ function authorToHTML(sig) {
   sigentry.find(".partyrole input:radio").first().change(function() {
     var checkBox = $(".sendcheckbox");
     if(checkBox.attr("checked")) { 
-        checkBox.attr("checked", false).change();
-      } 
+      checkBox.attr("checked", false).change();
+    } 
   });
 
   manlink.click(function(){
@@ -572,8 +572,8 @@ function authorToHTML(sig) {
   }
 
   $("#peopleList ol").append("<li><a href='#'>"
-                           + escapeHTML(sig.fstname + " " + sig.sndname)
-                           + " (Avsändare)</a></li>");
+                             + escapeHTML(sig.fstname + " " + sig.sndname)
+                             + " (Avsändare)</a></li>");
 }
 
 /*
@@ -761,8 +761,8 @@ function setUpCSVUpload(sigentry) {
 }
 
 function tearDownCSVUpload(sigentry) {
-    var form = sigentry.closest("form");
-    form.find("input[type='hidden'][name='csvpersonindex']").attr("value", "");
+  var form = sigentry.closest("form");
+  form.find("input[type='hidden'][name='csvpersonindex']").attr("value", "");
 }
 
 function setupAsMultiplePart(sigentry) {
@@ -814,16 +814,16 @@ function signatoryToHTML(isMultiple, sig) {
 
   var radiobuttons = sigentry.find(".partyrole input:radio");
   radiobuttons.change(function() {
-          if( $(this).attr("checked")) {
-              sigentry.find(".partyrole input:hidden").val($(this).attr("value"));
-              var that = this;
-              radiobuttons.each( function() {
-                      if( that!=this ) {
-                          $(this).attr("checked",false);
-                      }
-                  });
-          }
+    if( $(this).attr("checked")) {
+      sigentry.find(".partyrole input:hidden").val($(this).attr("value"));
+      var that = this;
+      radiobuttons.each( function() {
+        if( that!=this ) {
+          $(this).attr("checked",false);
+        }
       });
+    }
+  });
 
 
   var d = sigentry.find(".fields");
@@ -946,28 +946,28 @@ function initializeTemplates () {
   }
 
   $(".pagediv").droppable({ drop: function(event, ui) {
-      var page = $(this);
-      var field = $(ui.draggable);
-      var helper = $(ui.helper);
-      
-      var top = helper.offset().top - page.offset().top;
-      var left = helper.offset().left - page.offset().left;
-      
-      var pageno = parseInt(page.attr("id").substr(4));
-      
-      var sigid = getSigID(field);
-      var fieldid = getFieldID(field);
-      var pl = newplacement(left, top, pageno, page.width(), page.height());
-      placePlacements([pl], getLabel(field), getValue(field), sigid, fieldid);
-      
-      if(isPlacedField(field)) {
-        field.detach();
-        helper.detach();
-      }
-      hideCoordinateAxes();
-      updateStatus(field);
-      return false;
-    }});
+    var page = $(this);
+    var field = $(ui.draggable);
+    var helper = $(ui.helper);
+    
+    var top = helper.offset().top - page.offset().top;
+    var left = helper.offset().left - page.offset().left;
+    
+    var pageno = parseInt(page.attr("id").substr(4));
+    
+    var sigid = getSigID(field);
+    var fieldid = getFieldID(field);
+    var pl = newplacement(left, top, pageno, page.width(), page.height());
+    placePlacements([pl], getLabel(field), getValue(field), sigid, fieldid);
+    
+    if(isPlacedField(field)) {
+      field.detach();
+      helper.detach();
+    }
+    hideCoordinateAxes();
+    updateStatus(field);
+    return false;
+  }});
 
   
   // coordinate axes
@@ -1032,38 +1032,38 @@ function invalidatePlacedFieldsCache() {
 }
 
 function showCoordinateAxes(helper) {
-    var hline = $(".hline");
-    var vline = $(".vline");
-    hline.show();
-    vline.show();
-    $("body").mousemove(function(e) {
-            /* mousemove is sometimes invoked earlier than drag helper is moved
-             * and we get stale data here. Lets use setTimeout to postpone calculations.
-             */
-            setTimeout( function() {
-                    hline.each(function() {
-                           var h = $(this);
-                            var page = h.parents(".pagejpg");
-                            h.css({
-                                    top: Math.min(page.height()-1, Math.max(0, helper.offset().top - page.offset().top + helper.height() - 4)) + "px"
-                                        });
-                        });
-                    vline.each(function() {
-                            var v = $(this);
-                            var page = v.parents(".pagejpg");
-                            v.css({
-                                    left: Math.min(page.width()-1, Math.max(0, helper.offset().left - page.offset().left)) + "px"
-                                        });
-                        });
-                }, 100);
+  var hline = $(".hline");
+  var vline = $(".vline");
+  hline.show();
+  vline.show();
+  $("body").mousemove(function(e) {
+    /* mousemove is sometimes invoked earlier than drag helper is moved
+     * and we get stale data here. Lets use setTimeout to postpone calculations.
+     */
+    setTimeout( function() {
+      hline.each(function() {
+        var h = $(this);
+        var page = h.parents(".pagejpg");
+        h.css({
+          top: Math.min(page.height()-1, Math.max(0, helper.offset().top - page.offset().top + helper.height() - 4)) + "px"
         });
+      });
+      vline.each(function() {
+        var v = $(this);
+        var page = v.parents(".pagejpg");
+        v.css({
+          left: Math.min(page.width()-1, Math.max(0, helper.offset().left - page.offset().left)) + "px"
+        });
+      });
+    }, 100);
+  });
 }
 
 function hideCoordinateAxes() {
-    $(".hline").hide();
-    $(".vline").hide();
-    // we need to unbind it so actions won't keep stacking
-    $("body").unbind("mousemove");
+  $(".hline").hide();
+  $(".vline").hide();
+  // we need to unbind it so actions won't keep stacking
+  $("body").unbind("mousemove");
 }
 
 safeReady(function() {
@@ -1071,34 +1071,34 @@ safeReady(function() {
   $(".dragfield", "#personpane")
     .liveDraggable({ handle: ".draghandle",
 
-		     appendTo: "body",
-		     helper: function(event) {
-		       var field = $(this);
-		       var input = field.find("input");
-		       return placedFieldHelper(input.attr("value"));
-		     },
-		     start: function(event, ui) {
-                         showCoordinateAxes(ui.helper);
+		             appendTo: "body",
+		             helper: function(event) {
+		               var field = $(this);
+		               var input = field.find("input");
+		               return placedFieldHelper(input.attr("value"));
+		             },
+		             start: function(event, ui) {
+                       showCoordinateAxes(ui.helper);
                      },
                      stop: function() {
-                         hideCoordinateAxes();
+                       hideCoordinateAxes();
                      }
-	           });
+	               });
 
   $(".dragtext", "#personpane")
     .liveDraggable({ handle: ".draghandle",
 
-		     appendTo: "body",
-		     helper: function() {
-		       return placedFieldHelper($(this).find(".fieldvalue").text());
-	             },
-	             start: function(event, ui) {
-                         showCoordinateAxes(ui.helper);
+		             appendTo: "body",
+		             helper: function() {
+		               return placedFieldHelper($(this).find(".fieldvalue").text());
+	                 },
+	                 start: function(event, ui) {
+                       showCoordinateAxes(ui.helper);
                      },
                      stop: function() {
-                         hideCoordinateAxes();
+                       hideCoordinateAxes();
                      }
-		   });
+		           });
 
   $(".placedfield", "#documentBox")
     .liveDraggable({
