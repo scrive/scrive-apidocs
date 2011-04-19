@@ -80,14 +80,34 @@ reminderForm =
 <span>
   <a  class=" btn-tiny green prepareToSendReminderMail" rel="#siglnk$signatorylinkid$">  
     <div class="$if(signatory.signdate)$ reminderForSignedIcon $else$ reminderForSendIcon $endif$"></div>
-    <div class="sendLinkText">$if(signatory.signdate)$ Skicka dokumentet igen $else$ Skicka påminnelse $endif$</div> 
+    <div class="sendLinkText">
+        $if(signatory.signdate)$
+            $if(contract)$
+                Skicka dokumentet igen 
+            $elseif(offer)$
+                Skicka offert igen
+            $endif$
+        $else$ 
+            Skicka påminnelse 
+        $endif$
+    </div> 
   </a>
   <form class="overlay" action="$signatory.linkremind$" method="POST" id="siglnk$signatorylinkid$">
     <div class="modal-container">
         <div class="modal-header">
             <span class="modal-icon message"></span>
             <span class="modal-title">
-                  <h2> $if(signatory.signdate)$ Skicka dokumentet igen $else$ Skicka påminnelse $endif$ </h2>
+                  <h2> 
+                    $if(signatory.signdate)$
+                        $if(contract)$
+                            Skicka dokumentet igen 
+                        $elseif(offer)$
+                            Skicka offert igen
+                        $endif$
+                    $else$ 
+                        Skicka påminnelse 
+                    $endif$
+                  </h2>
             </span>
             <a class="modal-close close"> </a>
         </div>
