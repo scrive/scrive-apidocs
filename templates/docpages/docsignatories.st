@@ -6,12 +6,7 @@ signatoriesBox=
 signatoryBox =
 <div class="signViewBodyRight">
   <div class="signViewBodyRightTextContainer"> 
-   <div class="header">$signatory.fstname$ $signatory.sndname$</div>
-   <div class="text">
-    <div class="icon status $signatory.status$"></div> 
-    $if(signatory.undeliveredEmail)$ <span style="color:#000000;position:relative;left:-4px;">!</span>  $endif$
-    $signatoryMessage()$
-   </div>
+  <div class="header">$signatory.fstname$ $signatory.sndname$</div>
    <span class="signatoryfields">
      $if(!addSignatoryScript)$
      $signatory.fields:{field|
@@ -38,6 +33,11 @@ signatoryBox =
          <span class="fieldvalue">$signatory.email$</span>
      </div>
    $endif$
+   <div class="text">
+    <div class="icon status $signatory.status$"></div> 
+    $if(signatory.undeliveredEmail)$ <span style="color:#000000;position:relative;left:-4px;">!</span>  $endif$
+    <span class="textstatus">$signatoryMessage()$</span>
+   </div>
    $if(signatory.allowRemindForm)$ $reminderForm()$ $endif$
    $if(signatory.allowEmailChange)$ $changeEmailForm()$ $endif$   
   </div>

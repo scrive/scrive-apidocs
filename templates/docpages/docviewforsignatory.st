@@ -15,7 +15,7 @@ pageDocumentForSignContent=
             <span class="modal-icon message"></span>
             <span class="modal-title">
               $if(contract)$ 
-                <h2>Underteckna</h2>  
+                <h2>Är du säker att du vill underteckna?</h2>  
               $elseif(offer)$
                 <h2>Är du säker att du vill bekräfta?</h2>  
               $endif$
@@ -25,7 +25,6 @@ pageDocumentForSignContent=
         <div class="modal-body">
             <div class="modal-content">
               $if(contract)$
-                 <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
                  <p>När $partyUnsigned:noescape()$ undertecknat blir 
                     avtalet <strong>juridiskt bindande</strong> och
                     det färdigställda avtalet skickas till din
@@ -44,7 +43,7 @@ pageDocumentForSignContent=
               $endif$
             </div>
         </div>
-        <div class="modal-footer$if(!requireseleg)$ larger$endif$">
+        <div class="modal-footer">
           <input type="hidden" name="sign" value="automatic" id="signauto" />
           <a  class="close cancel float-left">Avbryt</a>
           $if(contract)$
@@ -69,21 +68,21 @@ pageDocumentForSignContent=
           </span>
           $else$
           
-          <a href="#" class="btn-big blue float-right submiter">
+          <a href="#" class="btn-small blue float-right submiter">
             <div class="left"></div>
             <div class="label">
-              <span>SkrivaPå</span>
-              <span class="icon cross"></span>
+              <p>SkrivaPå</p>
+              <span class="btn-symbol cross"></span>
             </div>
             <div class="right"></div>
           </a>
           $endif$
           $elseif(offer)$
-          <a href="#" class="btn-big blue float-right submiter">
+          <a href="#" class="btn-small blue float-right submiter">
             <div class="left"></div>
             <div class="label">
-              <span>Acceptera offert</span>
-              <span class="icon cross"></span>
+              <p>Acceptera offert</p>
+              <span class="btn-symbol cross"></span>
             </div>
             <div class="right"></div>
           </a>
@@ -166,11 +165,20 @@ pageDocumentForSignContent=
 $if(notsignedbyme)$$if(pending)$
 <div id="signViewBottomBox"> 
   $if(contract)$
-  <div id="signViewBottomBoxContainerLeft"> 
-    <div id="signViewBottomBoxContainerLeftText"> 
-     <div class="float-left"><input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off"/></div>
-      <div class="float-left" id="signGuardLabel"><label for="signGuardCBox">Jag intygar att jag granskat och förstått dokumentet, att samtliga parter är korrekta och att jag har befogenhet att skriva på.</label></div>
-    </div>
+  <div id="signViewBottomBoxContainerLeft">
+   <a class="float-right btn-small red cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel">
+    <div class="left"></div>
+    <div class="label">Avvisa dokument</div>
+    <div class="right"></div>
+   </a>
+  </div>
+  <div id="signViewBottomBoxContainerMiddle"> 
+   <div class="float-left"><input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off"/></div>
+    <div class="float-left" id="signGuardLabel"><label for="signGuardCBox">Jag intygar att:
+     <br>1. Samtliga undertecknande parter är korrekta.
+     <br>2. Att jag granskat och förstått dokumentet.
+     <br>3. Att jag har befogenhet att skriva på dokumentet.
+   </ul></label></div>
   </div>
   <div id="signViewBottomBoxContainerRight"> 
   <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign" name="sign">
@@ -181,27 +189,19 @@ $if(notsignedbyme)$$if(pending)$
     </div>
     <div class="right"></div>
   </a>
-  <a class="float-right cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel">Avvisa dokument</a>
-  
  $elseif(offer)$
-  <div id="signViewBottomBoxContainerLeft"> 
-    <input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off" style="display:none" checked/>
-    <div id="signViewBottomBoxContainerLeftText"> 
-     <div class="float-left">
-     <a class="float-right btn-small red" name="cancel" rel="#dialog-confirm-cancel" style="padding-top:12px;" id="cancel">
-        <div class="left"></div>
-        <div class="label">
-            <span>Avvisa</span>
-            <div class="btn-symbol red arrow-left"></div>
-        </div>
-        <div class="right"></div>
-    </a>
-
-    </div>
-    </div>
+  <div id="signViewBottomBoxContainerLeft">
+   <a class="float-right btn-small red cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel">
+    <div class="left"></div>
+    <div class="label">Avvisa</div>
+    <div class="right"></div>
+   </a>
   </div>
-  <div id="signViewBottomBoxContainerRight" style="float:right;padding-right:78px;width:300px;"> 
-  <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign" name="sign" style="padding-top:8px;">
+  <div id="signViewBottomBoxContainerMiddle"> 
+    <input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off" style="display:none" checked="checked" />
+  </div>
+  <div id="signViewBottomBoxContainerRight"> 
+  <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign" name="sign">
     <div class="left"></div>
     <div class="label" style="padding-left:20px;padding-right:20px;">
       <span>Acceptera offert</span>

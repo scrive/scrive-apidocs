@@ -86,19 +86,19 @@ modalWelcomeToSkrivaPa=
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
-          <h3>1 månad gratis!</h3>
+          <h3>Vi bjuder på 1 fri månad med SkrivaPå!</h3>
         </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
         <div class="modal-content">
-        <p>Som ett erbjudande bjuder vi på 1 månads fri användning av tjänsten SkrivaPå. Med SkrivaPå kan du underteckna och arkivera avtal och andra dokument elektroniskt. Givetvis kommer det inte att kosta någonting efter de 1 fria månadna om du väljer att inte fortsätta. Det är superenkelt att komma igång, gör så här:<p>
+        <p>Med SkrivaPå kan du skriva på och arkivera dokument elektroniskt. Tjänsten går att använda för avtal, offerter och även andra typer av dokument. Givetvis kommer det inte att kosta någonting efter den fria månaden om du väljer att inte fortsätta. Det är superenkelt att komma igång, gör så här:<p>
 
         <p>1. Ladda upp ett dokument<br>
         2. Fyll i motpartens uppgifter<br>
         3. Underteckna och skicka iväg</p>
 
-        <p>Testa på dig själv först, det är faktiskt roligt!</p>
+        <p>Tips: Testa med dig själv först.</p>
 
         <p>Med vänliga hälsningar<br>
         Team SkrivaPå</p>
@@ -108,7 +108,7 @@ modalWelcomeToSkrivaPa=
         <a class="btn-small green float-right close">
           <div class="left"></div>
           <div class="label">
-            <p>Stäng fönster</p>
+            <p>Välkommen!</p>
             <div class="btn-symbol green arrow-left"></div>
           </div>
           <div class="right"></div>
@@ -127,7 +127,7 @@ modalAccountRemoval=
       </div>
       <div class="modal-body">
         <div class="modal-content">
-          <p>Är du säker på att du vill att vi raderar dokumentet "$documenttitle$" och ditt konto från SkrivaPå?<p>
+          <p>Är du säker på att du vill radera dokumentet "Non Disclosure and Immaterial Rights Agreement" och ditt konto från SkrivaPå?<p>
         </div>
       </div>
       <div class="modal-footer">
@@ -140,7 +140,7 @@ modalAccountRemoval=
           </div>
           <div class="right"></div>
         </a>
-        <a href="$activationlink$" class="float-left" style="color: #5eb30c; text-decoration: none">Aktiviera konto</a>
+        <a href="$activationlink$" class="float-left" style="color: #5eb30c; text-decoration: none">Aktivera konto</a>
       </div>
 </div>
 ###
@@ -257,7 +257,6 @@ modalRejectedView=
 ####
 modalSignedViewClosed=
 <div class="modal-container">
-  <form method="post" action="$linklogin$">
     <div class="modal-header">
       <span class="modal-icon message"></span>
       <span class="modal-title">
@@ -267,7 +266,7 @@ modalSignedViewClosed=
     </div>
     <div class="modal-body">
       <div class="modal-content">
-        <p>$partyListString:noescape()$ har nu undertecknat och dokumentet är bindande.</p>
+        <p>$partyListString:noescape()$ har nu undertecknat och dokumentet är bindande. Ett exemplar av det färdigställda dokumentet har skickats till din inkorg.</p>
         $willCreateAccountForYou()$
       </div>
     </div>
@@ -277,7 +276,7 @@ modalSignedViewClosed=
       <a class="float-left close text-link message">
           Stäng
       </a>
-      <a href="#" class="btn-small blue float-right submit notForIE7">
+      <a href="#" class="btn-small blue float-right login-button notForIE7">
         <div class="left"></div>
         <div class="label">
           <p>Logga in</p>
@@ -305,12 +304,10 @@ modalSignedViewClosed=
       </a>
       $endif$
     </div>
-  </form>
 </div>
 #####
 modalSignedViewNotClosed=
 <div class="modal-container">
-  <form method="post" action="$linklogin$">
     <div class="modal-header">
       <span class="modal-icon message"></span>
       <span class="modal-title">
@@ -330,7 +327,7 @@ modalSignedViewNotClosed=
       <a class="float-left close text-link message">
           Stäng
       </a>
-      <a href="#" class="btn-small blue float-right submit notForIE7">
+      <a href="#" class="btn-small blue float-right login-button notForIE7">
         <div class="left"></div>
         <div class="label">
           <p>Logga in</p>
@@ -348,28 +345,16 @@ modalSignedViewNotClosed=
       </a>
       $endif$
     </div>
-  </form>
 </div>
 #####
 willCreateAccountForYou=
         $if(hasaccount)$
         $willCreateAccountForYouHasAccount()$
-        $else$
-        $willCreateAccountForYouNoAccount()$
         $endif$
 #####
 willCreateAccountForYouHasAccount=
-    <p>Dokumentet har sparats till ditt konto.
-       $if(!isloggedin)$
-       $loginModalPart()$
-       $endif$
-    </p>
+  <p>Dokumentet har också sparats till ditt konto med användarnamn <span style="color:#007CAC">$email$</span></p>
 #####
-willCreateAccountForYouNoAccount=
-<p>
-  Av erfarenhet från många kundsamtal vet vi att även de viktigaste dokument kan komma bort. Viktiga papper bör inte få komma bort. Därför, för din juridiska säkerhet har vi skapat ett konto åt dig på SkrivaPå där vi sparat dokumentet "$documenttitle$". Du måste dock definiera ditt lösenord inom 24h. Vi har skickat ett separat mail med en kort instruktion.
-</p>
-####
 loginModal=
 $if(!logged)$
 $if(loginModal)$

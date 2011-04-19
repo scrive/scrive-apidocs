@@ -63,22 +63,27 @@
 
 .icon.cancelled {
 	background-position: -236px 0;
+        margin-right: 7px;
 }
 
 .icon.expired {
 	background-position: -247px 0;
+        margin-right: 7px;
 }
 
 .icon.sent {
 	background-position: -258px 0;
+        margin-right: 7px;
 }
 
 .icon.opened {
 	background-position: -269px 0;
+        margin-right: 7px;
 }
 
 .icon.reviewed {
 	background-position: -280px 0;
+        margin-right: 7px;
 }
 
 .icon.signed {

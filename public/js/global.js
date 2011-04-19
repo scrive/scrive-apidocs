@@ -572,9 +572,9 @@ safeReady(function() {
                          if (!sigFieldsValidation()) return false;
                          var guardChecked = $(".signGuard:checked").size()>0;
                          if (!guardChecked) { 
-                           $("#signViewBottomBoxContainerLeftText").css("border","1px dotted red");
-                           $(".signGuard").change(function(){$("#signViewBottomBoxContainerLeftText").css("border","")});
-                           if (offer)
+                           $("#signGuardLabel").css("border","1px dotted red");
+                           $(".signGuard").change(function(){$("#signGuardLabel").css("border","")});
+                           if (typeof(offer) !== "undefined" && offer)
                                addFlashMessage("För att bekräfta måste du först klicka i kryssrutan", "red");
                            else 
                                addFlashMessage("För att underteckna måste du först klicka i kryssrutan", "red");
