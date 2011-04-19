@@ -30,6 +30,7 @@ import qualified Control.Concurrent (threadDelay)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Map as Map
 import System.IO
+import Control.Concurrent.MVar
 
 import Crypto
 import Network.BSD
@@ -46,7 +47,7 @@ import Doc.DocState
 import qualified Amazon as AWS
 import Mails.MailsConfig
 import Mails.SendMail
-import Templates.Templates (readTemplates)
+import Templates.Templates (readTemplates, getTemplatesModTime)
 import Kontra
 import qualified TrustWeaver as TW
 import qualified MemCache
@@ -140,7 +141,10 @@ main = Log.withLogger $ do
 
   args <- getArgs
   appConf1 <- readAppConfig
-  templates <- readTemplates
+  templates' <- readTemplates
+  templateModTime <- getTemplatesModTime
+  templates <- newMVar (templateModTime, templates')
+
   filecache' <- MemCache.new (BS.length) 50000000
 
   let mailer' = case cfg of
