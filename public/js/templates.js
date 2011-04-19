@@ -635,6 +635,11 @@ safeReady(function() {
   });
   $('.newfield a.minusIcon', $('#personpane')[0]).live('click', function() {
     $(this).parents(".newfield").remove();
+    // we also need to adjust the size of the signStepsWrapper
+    if(!signStepsContainer.hasClass('fixed')) {
+      signStepsWrapper.height(signStepsContainer.height());
+    }
+
     return false;
   });
 });
