@@ -8,7 +8,7 @@ var debug = false;
 // create a new signatory. pretty useless without calling signatoryToHTML
 function newsignatory() {
   return {fstname: "",
-          sndname:"", 
+          sndname: "", 
           company: "", 
           personalnumber: "", 
           companynumber: "", 
