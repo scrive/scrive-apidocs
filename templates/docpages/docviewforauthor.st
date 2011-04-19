@@ -82,15 +82,23 @@ $if(awaitingauthor)$
 $validationdropdown()$
 </div>
 <div id="signViewBottomBox"> 
-  <div id="signViewBottomBoxContainerLeft">
-    <div id="signViewBottomBoxContainerLeftText"> 
-     <div class="float-left"><input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off" /></div>
-     <div class="float-left" id="signGuardLabel"><label for="signGuardCBox">Jag intygar att jag granskat och förstått dokumentet, att samtliga parter är korrekta och att jag har befogenhet att skriva på.</label></div>
-    </div>
+    <div id="signViewBottomBoxContainerLeft">
+   <a class="float-right btn-small red cancel" name="cancel" rel="#cancel-by-author-dialog" id="cancel">
+    <div class="left"></div>
+    <div class="label">Avvisa dokument</div>
+    <div class="right"></div>
+   </a>
   </div>
-
+  <div id="signViewBottomBoxContainerMiddle"> 
+   <div class="float-left"><input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off"/></div>
+    <div class="float-left" id="signGuardLabel"><label for="signGuardCBox">Jag intygar att:
+     <br>1. Samtliga undertecknande parter är korrekta.
+     <br>2. Att jag granskat och förstått dokumentet.
+     <br>3. Att jag har befogenhet att skriva på dokumentet.
+   </ul></label></div>
+  </div>
   <div id="signViewBottomBoxContainerRight"> 
-  <a class="btn-big blue center submiter" value="SkrivaPå" id="signByAuthor" rel="#dialog-confirm-sign-by-author" name="sign">
+  <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign-by-author" name="sign">
     <div class="left"></div>
     <div class="label" style="width:120px">
       <span>SkrivaPå</span>
@@ -98,8 +106,6 @@ $validationdropdown()$
     </div>
     <div class="right"></div>
   </a>
-  <a class="float-right cancel" name="cancel" id="cancel" rel="#cancel-by-author-dialog"  id="cancel">Återkalla inbjudan</a>
-  </div>
 </div>
 $endif$   
 <div class="localdialogs">
@@ -174,11 +180,11 @@ $loadingdialog()$
         <input type="hidden" name="sign" value="automatic" id="signauto" />
         <a class="close cancel float-left">Avbryt</a>
 
-        <a href="#" class="btn-big blue float-right submiter signhidden" id="editing-invite-text-finished">
+        <a href="#" class="btn-small blue float-right submiter signhidden" id="editing-invite-text-finished">
             <div class="left"></div>
             <div class="label">
-              <span>SkrivaPå</span>
-              <span class="icon cross"></span>
+              <p>SkrivaPå</p>
+              <span class="btn-symbol cross"></span>
             </div>
             <div class="right"></div>
         </a>

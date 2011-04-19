@@ -1389,8 +1389,8 @@ input.multiFileInput {
 
 .signViewBodyRightTextContainer .text
 {
-    margin-top: 5px;
-    margin-bottom: 7px;
+    margin-top: 10px;
+    margin-left: 3px;
     font-size: 11px;
     overflow:hidden;
 }
@@ -2092,45 +2092,19 @@ form {
 #signViewBottomBoxContainerLeft
 {
     float: left;
-    padding: 40px 0 0 98px;
+    padding: 53px 0 0 80px;
+}
+
+#signViewBottomBoxContainerMiddle
+{
+    float: left;
+    padding: 30px 0 0 30px;
     position: relative;
-    width: 460px;
 }
 
-#signViewBottomBoxContainerLeftIcon
+#signViewBottomBoxContainerMiddle #signGuardLabel
 {
-    float:left;
-    width: 30px;
-}
-
-#signViewBottomBoxContainerLeftText
-{
-    float:left;
-    margin-top:2px;
-    width:351px;
-    display:table;
-    padding: 3px;
-}
-
-#signViewBottomBoxContainerLeftText .title
-{
-    font-size:16px;
-    color: black;
-    width:100%;
-}
-
-#signViewBottomBoxContainerLeftText .text
-{
-    margin-top:20px;
-    font-size:12px;
-    color: #666666;
-    width:100%;
-    display:table-row;
-}
-
-#signViewBottomBoxContainerLeftText #signGuardLabel
-{
-    width:280px;
+    width:300px;
     padding-left:4px;
     padding-top:3px;
     padding-right:4px;
@@ -2139,10 +2113,8 @@ form {
 
 #signViewBottomBoxContainerRight
 {
-    float: left;
-    margin-top: 42px;
-    text-align: right;
-    width: 252px;
+    float: right;
+    padding: 48px 80px 0 0;
 }
 
 #signViewBottomBoxContainerRight .button
@@ -2152,27 +2124,6 @@ form {
     display: block;
     width: 167px;
     height: 43px;
-}
-
-#signViewBottomBoxContainerRight .linkText
-{
-    display: block;
-    font-size: 16px;
-    height: 40px;
-    line-height: 40px;
-    text-decoration: none;
-    vertical-align: center;
-    text-align: center;
-
-    color: white; /* 003l new/changed */
-    font-weight: bold; /* 003l new */
-    width: 151px;
-    margin-left:15px;
-}
-
-#signViewBottomBoxContainerRight #cancel
-{
-    padding:10px;
 }
 
 #signViewBottomBoxBottom
@@ -2635,6 +2586,10 @@ input#cancel {
     top: 2px;
 }
 
+.signViewBodyRightTextContainer .textstatus {
+    margin-left: 3px;
+}
+
 .signatoriesBox {
 float: right;
 width: 690px;
@@ -2665,6 +2620,10 @@ width: 340px;
     line-height: 20px;
     -moz-border-radius: 2px 2px 2px 2px;
     padding-left: 4px;
+}
+
+.signViewBodyRight .header {
+    margin-bottom: 10px;
 }
 
 .signViewBodyForms input
@@ -2707,22 +2666,21 @@ width: 340px;
 }
 
 .reminderForSignedIcon  {
-    background: url(../img/remind.png) 0 0 no-repeat;
-    display: inline-block;
-    height: 16px;
-    width: 16px;
-    float:left;
-}
-.reminderForSendIcon {
     background: url(../img/senddoc.png) 0 0 no-repeat;
     display: inline-block;
     height: 16px;
     width: 16px;
     float:left;
 }
+.reminderForSendIcon {
+    background: url(../img/remind.png) 0 0 no-repeat;
+    display: inline-block;
+    height: 16px;
+    width: 16px;
+    float:left;
+}
 .sendLinkText{
-    padding-top: 2px;
-    padding-left:4px;
+    padding-left:11px;
     float:left;
     text-transform: uppercase;
     font-size: 10px;
