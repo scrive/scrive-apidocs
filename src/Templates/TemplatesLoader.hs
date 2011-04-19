@@ -15,6 +15,7 @@ module Templates.TemplatesLoader
     , renderTemplateMain
     , templateList
     , readTemplates
+    , getTemplatesModTime
     ) where
 
 import Text.StringTemplate 
@@ -27,6 +28,8 @@ import Data.List
 import Data.Char
 import AppLogger as Log
 import Text.Html (stringToHtmlString)
+import System.Directory
+import Time
 
 {-Names of template files -}
 templateFiles :: [String]
@@ -83,6 +86,11 @@ renderTemplateMain ts name params f = do
                 Log.error $ "No template named " ++ name 
                 return ""                                   
 
+getTemplatesModTime :: IO ClockTime
+getTemplatesModTime = do
+    mtimes <- mapM getModificationTime templateFiles
+    return (maximum mtimes)
+
 readTemplates :: IO KontrakcjaTemplates 
 readTemplates = do
     ts <- mapM getTemplates templateFiles
@@ -136,14 +144,14 @@ printTemplateData tsgroup name = do
     if (not $ null e) 
         then putStrLn $ "PARSE ERROR " ++ (show e)
         else if (not $ null st)  
-             then putStrLn $ "MISING SUBTEMPLATES " ++ (show st)
+             then putStrLn $ "MISSING SUBTEMPLATES " ++ (show st)
              else do
                  sequence_ $ map (putStrLn . ("    " ++ )) p
                  putStrLn ""    
 
 
 
-{- For some reasons we SElem a is not of class ToSElem -}
+{- For some reasons the SElem a is not of class ToSElem -}
 instance (Stringable a) => ToSElem (SElem a) where
    toSElem (STR a) = (STR a)    
    toSElem (BS a) = (BS a)    
