@@ -214,12 +214,6 @@ function setValue(field, value) {
     console.log("unknown type: " + getFieldType(field));
   }
 }
-function setTitle(field,value)
-{
-  
-  if (value.length > 12)
-    $(field).attr("title",value);
-}
 
 function getFieldType(field) {
   return getHiddenValue(field, "type");
