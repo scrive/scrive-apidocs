@@ -29,7 +29,7 @@ import Data.Char
 import AppLogger as Log
 import Text.Html (stringToHtmlString)
 import System.Directory
-import Time
+import System.Time
 
 {-Names of template files -}
 templateFiles :: [String]
