@@ -7,13 +7,19 @@ var debug = false;
 
 // create a new signatory. pretty useless without calling signatoryToHTML
 function newsignatory() {
-  return {fstname: "",sndname:"", company: "", personalnumber: "", companynumber: "", email: "", 
+  return {fstname: "",
+          sndname:"", 
+          company: "", 
+          personalnumber: "", 
+          companynumber: "", 
+          email: "", 
 	      nameplacements: [],
 	      companyplacements: [],
 	      personalnumberplacements: [],
           companynumberplacements: [],
 	      emailplacements: [],
-	      otherfields: []};
+	      otherfields: []
+         };
 }
 
 // a way to make drag live
