@@ -48,14 +48,15 @@ import qualified TrustWeaver as TW
 import qualified Payments.PaymentsControl as Payments
 import qualified Contacts.ContactsControl as Contacts
 import qualified ELegitimation.BankID as BankID
-import Templates.Templates (readTemplates, renderTemplate, KontrakcjaTemplates)
+import Templates.Templates (readTemplates, renderTemplate, KontrakcjaTemplates, getTemplatesModTime)
 import qualified Administration.AdministrationControl as Administration
+import Control.Concurrent.MVar
 import Mails.MailsConfig
 import Mails.SendGridEvents
 import Mails.SendMail
 import System.Log.Logger (Priority(..), logM)
 import qualified FlashMessage as F
-import qualified AppLogger as Log (error, security)
+import qualified AppLogger as Log (error, security, debug)
 import qualified MemCache
 import Happstack.State (update)
 import Redirect
@@ -293,6 +294,21 @@ defaultAWSAction appConf =
            , AWS.s3operation = HTTP.GET
            }
 
+
+lastTemplateModTime = unsafePerformIO $ do
+    modtime <- getTemplatesModTime
+    newMVar modtime
+                      
+maybeReadTemplates oldTemplates = 
+    modifyMVar lastTemplateModTime $ \modtime -> do
+        modtime' <- getTemplatesModTime
+        if modtime /= modtime'
+            then do 
+                Log.debug $ "Reloading templates"
+                newTemplates <- readTemplates
+                return (modtime', newTemplates)
+            else return (modtime, oldTemplates)
+        
 {- |
    Creates a context, routes the request, and handles the session.
 -}
@@ -361,7 +377,7 @@ appHandler appConf appGlobals = do
       -- do reload templates in non-production code
       templates2 <- if production appConf
                     then return $ templates appGlobals
-                    else liftIO $ readTemplates
+                    else liftIO $ maybeReadTemplates (templates appGlobals)
 
       let elegtrans = getELegTransactions session
           ctx = Context

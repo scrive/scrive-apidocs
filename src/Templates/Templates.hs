@@ -72,7 +72,17 @@
 --  Always change ByteString to String. We have a problems with encoding, so please watch for this.
 -----------------------------------------------------------------------------
 module Templates.Templates
-(RenderTemplate, readTemplates,renderTemplate,templateList,KontrakcjaTemplates,Templates.Templates.setAttribute, Fields, Field , field) where
+    ( RenderTemplate
+    , readTemplates
+    , renderTemplate
+    , templateList
+    , KontrakcjaTemplates
+    , Templates.Templates.setAttribute
+    , Fields
+    , Field
+    , field
+    , getTemplatesModTime
+    ) where
 
 import System.IO
 import Control.Monad
@@ -80,7 +90,7 @@ import Control.Monad.State
 import Data.Maybe
 import Data.List
 import Data.Char
-import Templates.TemplatesLoader (readTemplates,renderTemplateMain,templateList,KontrakcjaTemplate,KontrakcjaTemplates)
+import Templates.TemplatesLoader (readTemplates,renderTemplateMain,templateList,KontrakcjaTemplate,KontrakcjaTemplates,getTemplatesModTime)
 import Text.StringTemplate.Base hiding (ToSElem,toSElem)
 import Text.StringTemplate.Classes hiding (ToSElem,toSElem)
 import qualified Text.StringTemplate.Classes as HST
