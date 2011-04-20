@@ -17,7 +17,7 @@ pageDocumentForSignContent=
               $if(contract)$ 
                 <h2>Är du säker att du vill underteckna?</h2>  
               $elseif(offer)$
-                <h2>Är du säker att du vill bekräfta?</h2>  
+                <h2>Är du säker att du vill acceptera offerten?</h2>  
               $endif$
             </span>
             <a class="modal-close close"> </a>
@@ -39,7 +39,7 @@ pageDocumentForSignContent=
                  </span>
                  $endif$
               $elseif(offer)$
-                 <p> Genom att klicka "bekräfta" gör du en accept av offerten <strong>$documenttitle$</strong>.</p>
+                 <p> Genom att klicka på "acceptera offert" kommer du att acceptera offerten <strong>$documenttitle$</strong>. När du accepterat offerten skickas en bekräftelse till din och avsändarens inkorg.</p>
               $endif$
             </div>
         </div>
