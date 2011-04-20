@@ -143,6 +143,12 @@ getUnique64 ixset constr = do
      then return v
      else getUnique64 ixset constr
 
+-- | Generate random string of specified length that contains allowed chars
+randomString :: Int -> [Char] -> IO String
+randomString n allowed_chars =
+    sequence $ replicate n $ ((!!) allowed_chars <$> randomRIO (0, len))
+    where
+        len = length allowed_chars - 1
 
 -- | Open external document in default application. Useful to open
 -- *.eml in email program for example. Windows version.
