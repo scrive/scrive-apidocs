@@ -61,15 +61,16 @@ tar zcf "$finalfile" "$signedmime" "$zipfile"
 echo "Pushing to amazon"
 s3cmd -c "$repo/scripts/s3cfg" --acl-private put "$finalfile" s3://skrivapa-snapshots
 #check hash from amazon
-echo "Checking amazon md5 sum"
-md5amazon=`s3cmd -c "$repo/scripts/s3cfg" info "s3://skrivapa-snapshots/$finalfile" |grep MD5|awk "{print $3}"`
-echo $md5amazon
-md5local=`md5sum "$finalfile" | awk 'BEGIN { FS = " +" } ; { print $1 }'`
-if [ "$md5amazon" = "$md5local" ]
-then
-    echo "MD5 sum matches!"
+echo "Not checking amazon sum"
+#echo "Checking amazon md5 sum"
+#md5amazon=`s3cmd -c "$repo/scripts/s3cfg" info "s3://skrivapa-snapshots/$finalfile" |grep MD5|awk "{print $3}"`
+#echo $md5amazon
+#md5local=`md5sum "$finalfile" | awk 'BEGIN { FS = " +" } ; { print $1 }'`
+#if [ "$md5amazon" = "$md5local" ]
+#then
+#    echo "MD5 sum matches!"
     #clean up
     rm "$zipfile" "$finalfile" "$hashdoc" "$mimefile" "$soaprequest" "$soapresponse" "$signed64" "$signedmime"
     exit 0
-fi
+#fi
 echo "Something went wrong. Try again."
