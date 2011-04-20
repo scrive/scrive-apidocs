@@ -2,7 +2,7 @@
 
 #repo=production
 repo=/home/admin/staging
-date=`date -u "+%Y%m%d%k%M%S%z"`
+date=`date -u "+%Y%m%d%I%M%S%z"`
 filename=kontrakcja-snapshot-$date
 zipfile=$filename.tar.gz
 cd /tmp
