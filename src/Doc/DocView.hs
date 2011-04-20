@@ -77,8 +77,7 @@ import Control.Monad.Reader
 
 modalSignAwaitingAuthorLast :: KontraModal
 modalSignAwaitingAuthorLast = do
-    templates <- ask
-    lift $ renderTemplate templates "signAwaitingAuthorLast" ()
+    renderTemplateM "signAwaitingAuthorLast" ()
 
 modalSignInviteView :: Document -> KontraModal
 modalSignInviteView document = do

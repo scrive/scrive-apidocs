@@ -76,11 +76,11 @@
 --  Always change ByteString to String. We have a problems with encoding, so please watch for this.
 -----------------------------------------------------------------------------
 module Templates.Templates
-    ( RenderTemplate
+    ( RenderTemplate(..)
     , readTemplates
-    , renderTemplate
     , templateList
     , KontrakcjaTemplates
+    , TemplatesMonad(..)
     , Fields
     , Field
     , field
@@ -102,16 +102,23 @@ import qualified Data.Map as Map
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 
-{-| Filling template with a given name using given attributes
-   It never fail, just returns empty message and writes something in the logs
-   Params - Templates (loaded from local files), Name of template, somethinmg that sets params value
--}
+class (MonadIO a) => TemplatesMonad a where
+        getTemplates :: a KontrakcjaTemplates
+
+-- | Filling template with a given name using given attributes.  It
+-- never fail, just returns empty message and writes something in the
+-- logs.  Params - Templates (loaded from local files), Name of
+-- template, something that sets params value.
 class RenderTemplate a where
   renderTemplate :: KontrakcjaTemplates -> String -> a -> IO String 
+  renderTemplateM :: (TemplatesMonad m) => String -> a -> m String
+  renderTemplateM name value = do
+        templates <- getTemplates
+        liftIO $ renderTemplate templates name value
 
-{-| Basic rendering interface 
-   It allows to pass some string attributes to templates. Usefull when working with simple templates
- -}
+
+-- | Basic rendering interface It allows to pass some string
+-- attributes to templates. Usefull when working with simple templates.
 instance RenderTemplate () where
    renderTemplate ts name () = renderTemplateMain ts name ([] :: [(String,String)]) id
    
