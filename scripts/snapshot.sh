@@ -59,10 +59,10 @@ base64 -d "$signed64" > "$signedmime"
 tar zcf "$finalfile" "$signedmime" "$zipfile"
 #push to amazon
 echo "Pushing to amazon"
-s3cmd --acl-private put "$finalfile" s3://skrivapa-snapshots
+s3cmd -c "$repo/scripts/s3cfg" --acl-private put "$finalfile" s3://skrivapa-snapshots
 #check hash from amazon
 echo "Checking amazon md5 sum"
-md5amazon=`s3cmd info "s3://skrivapa-snapshots/$finalfile" |grep MD5|awk "{print $3}"`
+md5amazon=`s3cmd -c "$repo/scripts/s3cfg" info "s3://skrivapa-snapshots/$finalfile" |grep MD5|awk "{print $3}"`
 echo $md5amazon
 md5local=`md5sum "$finalfile" | awk 'BEGIN { FS = " +" } ; { print $1 }'`
 if [ "$md5amazon" = "$md5local" ]
