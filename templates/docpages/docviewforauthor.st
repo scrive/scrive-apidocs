@@ -89,13 +89,15 @@ $validationdropdown()$
     <div class="right"></div>
    </a>
   </div>
-  <div id="signViewBottomBoxContainerMiddle"> 
-   <div class="float-left"><input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off"/></div>
-    <div class="float-left" id="signGuardLabel"><label for="signGuardCBox">Jag intygar att:
-     <br>1. Samtliga undertecknande parter är korrekta.
-     <br>2. Att jag granskat och förstått dokumentet.
-     <br>3. Att jag har befogenhet att skriva på dokumentet.
-   </ul></label></div>
+  <div id="signViewBottomBoxContainerMiddle">
+   <div id="signGuardField">
+    <div class="float-left"><input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off"/></div>
+     <div class="float-left" id="signGuardLabel"><label for="signGuardCBox">Jag intygar att:
+      <br>1. Samtliga undertecknande parter är korrekta.
+      <br>2. Att jag granskat och förstått dokumentet.
+      <br>3. Att jag har befogenhet att skriva på dokumentet.
+    </ul></label></div>
+   </div>
   </div>
   <div id="signViewBottomBoxContainerRight"> 
   <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign-by-author" name="sign">

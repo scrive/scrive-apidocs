@@ -572,8 +572,8 @@ safeReady(function() {
                          if (!sigFieldsValidation()) return false;
                          var guardChecked = $(".signGuard:checked").size()>0;
                          if (!guardChecked) { 
-                           $("#signGuardLabel").css("border","1px dotted red");
-                           $(".signGuard").change(function(){$("#signGuardLabel").css("border","")});
+                           $("#signGuardField").css("border","1px dotted red");
+                           $(".signGuard").change(function(){$("#signGuardField").css("border","")});
                            if (typeof(offer) !== "undefined" && offer)
                                addFlashMessage("För att bekräfta måste du först klicka i kryssrutan", "red");
                            else 
