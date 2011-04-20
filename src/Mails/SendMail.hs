@@ -30,6 +30,7 @@ import System.Directory
 import System.Random
 import qualified Codec.Binary.Base64 as Base64
 import qualified Codec.Binary.QuotedPrintable as QuotedPrintable
+import Control.Applicative
 import Control.Arrow (first)
 import Data.Char (isSpace, toLower)
 import Data.List
@@ -103,8 +104,9 @@ createSendgridMailer config = Mailer{sendMail = reallySend}
     where
         reallySend mail@(Mail {fullnameemails, title, attachments}) = do
             mailId <- createMailId
+            boundaries <- createBoundaries
             let mailtos = createMailTos mail
-                wholeContent = createWholeContent (ourInfoEmail config) (ourInfoEmailNiceName config) mailId mail
+                wholeContent = createWholeContent boundaries (ourInfoEmail config) (ourInfoEmailNiceName config) mailId mail
                 rcpt = concatMap (\(_,x) -> ["--mail-rcpt", "<" ++ BS.toString x ++ ">"]) fullnameemails
                 curlargs =
                     [ "--user"
@@ -128,8 +130,9 @@ createSendmailMailer config = Mailer{sendMail = reallySend}
     where
         reallySend mail@(Mail {title,attachments}) = do
             mailId <- createMailId
+            boundaries <- createBoundaries
             let mailtos = createMailTos mail
-                wholeContent = createWholeContent (ourInfoEmail config) (ourInfoEmailNiceName config) mailId mail
+                wholeContent = createWholeContent boundaries (ourInfoEmail config) (ourInfoEmailNiceName config) mailId mail
                 sendmailargs =
                     [ "-t" -- get the addresses from the content
                     , "-i" -- ignore single dots in input
@@ -150,8 +153,9 @@ createLocalOpenMailer ourInfoEmail ourInfoEmailNiceName = Mailer{sendMail = send
         sendToTempFile mail@(Mail {fullnameemails}) = do
             tmp <- getTemporaryDirectory
             mailId <- createMailId
+            boundaries <- createBoundaries
             uid <- randomRIO (1, 100000) :: IO Int
-            let wholeContent = createWholeContent ourInfoEmail ourInfoEmailNiceName mailId mail
+            let wholeContent = createWholeContent boundaries ourInfoEmail ourInfoEmailNiceName mailId mail
                 mailtos = createMailTos mail
                 filename = tmp ++ "/Email-" ++ BS.toString (snd $ head fullnameemails) ++ "-" ++ show uid ++ ".eml"
             Log.mail $ show mailId ++ " " ++ concat (intersperse ", " mailtos) ++ "  [staging: saved to file " ++ filename ++ "]"
@@ -167,12 +171,15 @@ createMailTos (Mail {fullnameemails}) =
 createMailId :: IO Integer
 createMailId = randomIO 
 
-createWholeContent :: String -> String -> Integer -> Mail -> BSLC.ByteString
-createWholeContent ourInfoEmail ourInfoEmailNiceName mailId mail@(Mail {title,content,attachments,from,mailInfo}) =
+createBoundaries :: IO (String, String)
+createBoundaries = (,) <$> f <*> f
+    where
+        f = randomString 32 $ ['0'..'9'] ++ ['a'..'z']
+
+createWholeContent :: (String, String) -> String -> String -> Integer -> Mail -> BSLC.ByteString
+createWholeContent (boundaryMixed, boundaryAlternative) ourInfoEmail ourInfoEmailNiceName mailId mail@(Mail {title,content,attachments,from,mailInfo}) =
   let mailtos = createMailTos mail 
       -- FIXME: add =?UTF8?B= everywhere it is needed here
-      boundaryMixed = "skrivapa-mail-12-33733104-6"
-      boundaryAlternative = "skrivapa-mail-12-33733104-8"
       fromHeader =  case from of 
                 Nothing -> "From: " ++ mailEncode1 ourInfoEmailNiceName ++ " <" ++ ourInfoEmail ++ ">\r\n"
                 Just user -> "From: " ++ (mailEncode1 $ BS.toString $ userfullname user) ++ " <"++(BS.toString $ unEmail $ useremail $ userinfo user )++ ">\r\n"
