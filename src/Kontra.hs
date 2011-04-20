@@ -42,7 +42,7 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
 import HSP.XML
 import qualified Network.AWS.Authentication as AWS
-import Templates.Templates  (KontrakcjaTemplates)
+import Templates.Templates  (KontrakcjaTemplates, TemplatesMonad(..))
 import Mails.MailsConfig()
 import Mails.SendMail
 import KontraLink
@@ -83,6 +83,15 @@ data Context = Context
 
 type Kontra a = ServerPartT (StateT Context IO) a
 type KontraModal = ReaderT KontrakcjaTemplates IO String
+
+instance TemplatesMonad (ServerPartT (StateT Context IO)) where
+        getTemplates = do
+            ctx <- get
+            return (ctxtemplates ctx)
+
+instance TemplatesMonad (ReaderT KontrakcjaTemplates IO) where
+        getTemplates = ask
+
 
 {- |
    A list of admin emails.
