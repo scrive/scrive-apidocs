@@ -2,7 +2,7 @@
 
 repo=$1
 prefix=$2
-date=`date -u --rfc-3339=seconds`
+date=`date -u "+%Y-%m-%d-%H-%M-%S%z"`
 filename=$prefix-$date
 zipfile=$filename.tar.gz
 cd /tmp
@@ -41,13 +41,13 @@ twcertpwd=jhdaEo5LLejh
 twurl=https://tseiod.trustweaver.com/ts/svs.asmx
 echo "Signing with trustweaver"
 soapresponse=response-$date.xml
-curl -X POST --verbose --show-error \
-    --cert $twcert:$twcertpwd --cacert $twcert \
-    --data-binary "@$soaprequest" \
-    -H "Content-Type: text/xml; charset=UTF-8" \
-    -H "Expect: 100-continue" \
+curl -X POST --verbose --show-error                           \
+    --cert $twcert:$twcertpwd --cacert $twcert                \
+    --data-binary "@$soaprequest"                             \
+    -H "Content-Type: text/xml; charset=UTF-8"                \
+    -H "Expect: 100-continue"                                 \
     -H "SOAPAction: http://www.trustweaver.com/tsswitch#Sign" \
-    -o "$soapresponse" \
+    -o "$soapresponse"                                        \
     $twurl
 echo "Parsing XML"
 signed64=signed-$date.b64
