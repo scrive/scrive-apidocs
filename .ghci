@@ -1,5 +1,6 @@
 :set -DMIN_VERSION_template_haskell(a,b,c)=1
 :set -DMIN_VERSION_happstack_server(a,b,c)=1
+:set -hide-package monads-tf
 :set -isrc -ipdfseal/src -ipdfseal/inc
 :set -XBangPatterns
 :set -XDeriveDataTypeable
