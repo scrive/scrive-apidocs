@@ -375,7 +375,7 @@ pageDocumentDesign=
             $validationdropdown()$
             <div style="padding-bottom:8px; padding-top: 2px;">
             <input id="lastcheck" style="position:relative;top:2px" type="checkbox" class="switchercheckbox sendcheckbox" on=".sendbutton" off=".signbutton" autocomplete="off" value="off" > 
-            <label class="usual" style="margin-left:3px;">Underteckna sist </label>
+            <label for="lastcheck" class="usual" style="margin-left:3px;">Underteckna sist </label>
             <label class="secretary" style="margin-left:3px;display:none;">Ej undertecknande part</label>
             </input>               
             </div>
