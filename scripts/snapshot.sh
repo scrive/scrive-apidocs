@@ -34,7 +34,7 @@ curl -X POST --verbose --show-error \
     -H "Content-Type: text/xml; charset=UTF-8" \
     -H "Expect: 100-continue" \
     -H "SOAPAction: http://www.trustweaver.com/tsswitch#Sign" \
-    -o "soapresponse.xml"
+    -o "soapresponse.xml" \
     $twurl
 echo "Parsing XML"
 # do it! (output to /tmp/signed.b64)
