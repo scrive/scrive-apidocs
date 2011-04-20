@@ -16,7 +16,7 @@ cd /tmp
 #rm -f $filename/*.dll
 #rm -f $filename/*.exe
 echo "Zipping repo"
-tar zcf $zipfile --exclude=_local* --exclude=_darcs* --exclude=dist* --exclude=selenium-test* --exclude=*.dll --exclude=*.exe --exclude=log* --exclude=.hpc* $repo
+tar zcf $zipfile --exclude=_local* --exclude=_darcs* --exclude=dist* --exclude=selenium-test* --exclude=*.dll --exclude=*.exe --exclude=log* --exclude=.hpc* --exclude=*.png --exclude=*.jpg $repo
 ls -lh $zipfile
 #sign with trustweaver
 echo "Building soap message"
