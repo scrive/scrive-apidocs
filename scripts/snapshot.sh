@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #repo=production
-repo=/home/eric/haskell/kontrakcja
+repo=/home/admin/staging
 date=`date -u "+%Y%m%d%k%M%S%z"`
 filename=kontrakcja-snapshot-$date
 zipfile=$filename.tar.gz
@@ -21,10 +21,10 @@ ls -lh $zipfile
 #sign with trustweaver
 echo "Building soap message"
 echo "Multipart MIME"
-python genmime.py < $zipfile
+python $repo/scripts/genmime.py < $zipfile
 echo "Constructing SOAP Message"
-cat head /tmp/mime.txt bottom > soaprequest.xml
-twcert=/home/eric/haskell/kontrakcja/certs/credentials.pem
+cat $repo/scripts/head mime.txt $rep/scripts/bottom > soaprequest.xml
+twcert=$repo/certs/credentials.pem
 twcertpwd=jhdaEo5LLejh
 twurl=https://tseiod.trustweaver.com/ts/svs.asmx
 echo "Signing with trustweaver"
@@ -34,14 +34,14 @@ curl -X POST --verbose --show-error \
     -H "Content-Type: text/xml; charset=UTF-8" \
     -H "Expect: 100-continue" \
     -H "SOAPAction: http://www.trustweaver.com/tsswitch#Sign" \
-    -o "/tmp/soapresponse.xml"
+    -o "soapresponse.xml"
     $twurl
 echo "Parsing XML"
 # do it! (output to /tmp/signed.b64)
-python parsesignresponse.py < /tmp/soapresponse.xml
+python $repo/scripts/parsesignresponse.py < soapresponse.xml
 echo "Decoding base64 and rezipping"
 finalfile=kontrakcja-signed-$date.tar.gz
-base64 -d /tmp/signed.b64 | tar zcf finalfile
+base64 -d signed.b64 | tar zcf finalfile
 #push to amazon
 echo "Pushing to amazon"
 s3cmd --acl-private put $finalfile s3://skrivapa-snapshots
