@@ -3,8 +3,7 @@
 repo=$1
 prefix=$2
 date=`date -u "+%Y-%m-%d-%H-%M-%S%z"`
-filename=$prefix-$date
-zipfile=$filename.tar.gz
+zipfile=$prefix-$date.tar.gz
 cd /tmp
 echo "Zipping repo"
 tar zcf "$zipfile"                    \
@@ -25,7 +24,7 @@ echo "Generating signature hash"
 hashdoc=hash-$date.txt
 echo "Date: $date" > "$hashdoc"
 echo "Filename: $zipfile" >> "$hashdoc"
-m=`md5sum $filename | awk 'BEGIN { FS = " +" } ; { print $1 }'`
+m=`md5sum $zipfile | awk 'BEGIN { FS = " +" } ; { print $1 }'`
 echo "MD5SUM: $m" >> "$hashdoc"
 
 #sign with trustweaver
