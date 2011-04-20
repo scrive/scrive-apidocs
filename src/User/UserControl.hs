@@ -10,7 +10,6 @@ import Happstack.Server hiding (simpleHTTP)
 import Happstack.State (update, query)
 import Happstack.Util.Common (readM)
 import HSP.XML
-import System.Random
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Set as Set
@@ -265,10 +264,8 @@ handleViralInvite = withUserPost $ do
             scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [(BS.empty, invitedemail)] }
 
 randomPassword :: IO BS.ByteString
-randomPassword = do
-    let letters = ['a'..'z'] ++ ['0'..'9'] ++ ['A'..'Z']
-    indexes <- liftIO $ replicateM 8 (randomRIO (0, length letters-1))
-    return (BS.fromString $ map (letters!!) indexes)
+randomPassword =
+    BS.fromString <$> randomString 8 (['0'..'9'] ++ ['A'..'Z'] ++ ['a'..'z'])
 
 createUser :: Context -> String -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe User -> Bool -> IO (Maybe User)
 createUser ctx hostpart names email maybesupervisor vip = do
