@@ -2669,12 +2669,14 @@ width: 340px;
 }
 .reminderForSendIcon {
     background: url(../img/remind.png) 0 0 no-repeat;
+    margin-top: 2px;
     display: inline-block;
     height: 16px;
     width: 16px;
     float:left;
 }
 .sendLinkText{
+    padding-top: 1px;
     padding-left:11px;
     float:left;
     text-transform: uppercase;
