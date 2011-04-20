@@ -81,7 +81,6 @@ module Templates.Templates
     , renderTemplate
     , templateList
     , KontrakcjaTemplates
-    , Templates.Templates.setAttribute
     , Fields
     , Field
     , field
@@ -130,10 +129,6 @@ instance RenderTemplate [(String, [String])] where
 instance RenderTemplate (KontrakcjaTemplate -> KontrakcjaTemplate) where
    renderTemplate ts name f = renderTemplateMain ts name ([] :: [(String, String)]) f
    
-
-{-| Use this as (setAttributes name1 val1) . (setAttributes name2 val2) . (setAttributes name3 val3) -}
-setAttribute :: (ToSElem a) => String -> a -> KontrakcjaTemplate -> KontrakcjaTemplate
-setAttribute name value =  Text.StringTemplate.setAttribute name (toSElem value :: SElem String)
 
 type Fields = State ([(String,IO (SElem String))]) ()
 
