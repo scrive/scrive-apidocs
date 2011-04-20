@@ -22,10 +22,11 @@ ls -lh "$zipfile"
 
 echo "Generating signature hash"
 hashdoc=hash-$date.txt
-echo "Date: $date" > "$hashdoc"
-echo "Filename: $zipfile" >> "$hashdoc"
 m=`md5sum $zipfile | awk 'BEGIN { FS = " +" } ; { print $1 }'`
-echo "MD5SUM: $m" >> "$hashdoc"
+echo "SkrivaPa Code Snapshot" >  "$hashdoc"
+echo "Date: $date"            >> "$hashdoc"
+echo "Filename: $zipfile"     >> "$hashdoc"
+echo "MD5SUM: $m"             >> "$hashdoc"
 
 #sign with trustweaver
 echo "Building soap message"
