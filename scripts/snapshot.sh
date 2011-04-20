@@ -40,17 +40,17 @@ echo "Parsing XML"
 # do it! (output to /tmp/signed.b64)
 python $repo/scripts/parsesignresponse.py < soapresponse.xml
 echo "Decoding base64 and rezipping"
-finalfile=kontrakcja-signed-$date.tar.gz
-base64 -d signed.b64 | tar zcf finalfile
+finalfile=kontrakcja-signed-$date.mime.gz
+base64 -d signed.b64 | gzip > $finalfile
 #push to amazon
 echo "Pushing to amazon"
 s3cmd --acl-private put $finalfile s3://skrivapa-snapshots
 #check hash from amazon
 echo "Checking amazon md5 sum"
-md5amazon=`s3cmd info s3://skrivapa-snapshots/$zipfile|grep MD5|awk "{print $3}"`
+md5amazon=`s3cmd info s3://skrivapa-snapshots/$finalfile|grep MD5|awk "{print $3}"`
 echo $md5amazon
 md5local=`md5sum $finalfile | awk 'BEGIN { FS = " +" } ; { print $1 }'`
-if [$md5amazon==$md5local]
+if [ "$md5amazon" = "$md5local" ]
 then
     echo "MD5 sum matches!"
     #clean up
