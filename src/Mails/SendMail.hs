@@ -30,12 +30,15 @@ import System.Directory
 import System.Random
 import qualified Codec.Binary.Base64 as Base64
 import qualified Codec.Binary.QuotedPrintable as QuotedPrintable
+import Control.Arrow (first)
+import Data.Char (isSpace, toLower)
 import Data.List
 import Data.Typeable
 import User.UserState 
 import Doc.DocState
 import Happstack.State
 import Mails.MailsConfig
+import Text.HTML.TagSoup
 import Misc
 import qualified AppLogger as Log
 import Data.ByteString.Internal (c2w,w2c)
@@ -168,11 +171,12 @@ createWholeContent :: String -> String -> Integer -> Mail -> BSLC.ByteString
 createWholeContent ourInfoEmail ourInfoEmailNiceName mailId mail@(Mail {title,content,attachments,from,mailInfo}) =
   let mailtos = createMailTos mail 
       -- FIXME: add =?UTF8?B= everywhere it is needed here
-      boundary = "skrivapa-mail-12-337331046" 
+      boundaryMixed = "skrivapa-mail-12-33733104-6"
+      boundaryAlternative = "skrivapa-mail-12-33733104-8"
       fromHeader =  case from of 
                 Nothing -> "From: " ++ mailEncode1 ourInfoEmailNiceName ++ " <" ++ ourInfoEmail ++ ">\r\n"
                 Just user -> "From: " ++ (mailEncode1 $ BS.toString $ userfullname user) ++ " <"++(BS.toString $ unEmail $ useremail $ userinfo user )++ ">\r\n"
-      header = 
+      headerEmail = 
           -- FIXME: encoded word should not be longer than 75 bytes including everything
           "Subject: " ++ mailEncode title ++ "\r\n" ++
           "To: " ++ concat (intersperse ", " mailtos) ++ "\r\n" ++
@@ -183,24 +187,107 @@ createWholeContent ourInfoEmail ourInfoEmailNiceName mailId mail@(Mail {title,co
                        
                       "}\r\n" ++
           "MIME-Version: 1.0\r\n" ++
-          "Content-Type: multipart/mixed; boundary=" ++ boundary ++ "\r\n" ++
+          "Content-Type: multipart/mixed; boundary=" ++ boundaryMixed ++ "\r\n" ++
           "\r\n"
-      header1 = "--" ++ boundary ++ "\r\n" ++
+      headerContent = "--" ++ boundaryMixed ++ "\r\n" ++
+          "Content-Type: multipart/alternative; boundary=" ++ boundaryAlternative ++ "\r\n" ++ "\r\n"
+      headerContentText = "--" ++ boundaryAlternative ++ "\r\n" ++
+          "Content-type: text/plain; charset=utf-8\r\n" ++
+          "\r\n"
+      headerContentHtml = "--" ++ boundaryAlternative ++ "\r\n" ++
           "Content-type: text/html; charset=utf-8\r\n" ++
           "\r\n"
-      footer = "\r\n--" ++ boundary ++ "--\r\n"
-      aheader fname = "\r\n--" ++ boundary ++ "\r\n" ++
+      footerContent = "\r\n--" ++ boundaryAlternative ++ "--\r\n"
+      footerEmail = "\r\n--" ++ boundaryMixed ++ "--\r\n"
+      headerAttach fname = "\r\n--" ++ boundaryMixed ++ "\r\n" ++
           "Content-Disposition: inline; filename=\"" ++ mailEncode fname ++".pdf\"\r\n" ++
           "Content-Type: application/pdf; name=\"" ++ mailEncode fname ++ ".pdf\"\r\n" ++
           "Content-Transfer-Encoding: base64\r\n" ++
           "\r\n"
-      attach (fname,fcontent) = BSL.fromString (aheader fname) `BSL.append` 
+      attach (fname,fcontent) = BSL.fromString (headerAttach fname) `BSL.append` 
                                 (BSLC.pack $ concat $ intersperse "\r\n" $ Base64.chop 72 $ Base64.encode $ BS.unpack fcontent)
       wholeContent = BSL.concat $ 
-                     [ BSL.fromString header
-                     , BSL.fromString header1
+                     [ BSL.fromString headerEmail
+                     , BSL.fromString headerContent
+                     , BSL.fromString headerContentText
+                     , BSL.fromString $ htmlToTxt $ BS.toString content
+                     , BSL.fromString headerContentHtml
                      , BSL.fromChunks [content]
+                     , BSL.fromString footerContent
                      ] ++ map attach attachments ++
-                     [ BSL.fromString footer
+                     [ BSL.fromString footerEmail
                      ]
   in wholeContent
+
+-- | Convert e-mail from html to txt
+htmlToTxt :: String -> String
+htmlToTxt = dropWhile isSpace . toText . removeWSAfterNL . reduceWS .
+    replaceLinks . concatTexts . filterUnneeded . lowerTags . parseTags
+    where
+        toText = concat . foldr (\t ts -> f t : ts) []
+            where
+                f (TagText s)   = s
+                f (TagOpen t _) = fromTag t
+                f (TagClose t)  = fromTag t
+                f _             = ""
+
+                fromTag t =
+                    case t of
+                        "b"      -> "*"
+                        "br"     -> "\r\n"
+                        "i"      -> "_"
+                        "p"      -> "\r\n"
+                        "strong" -> "*"
+                        _        -> ""
+
+        replaceLinks [] = []
+        replaceLinks (t@(TagOpen "a" attrs):ts) =
+            case "href" `lookup` attrs of
+                 Just link -> TagText link : replaceLinks (drop 1 $ dropWhile (/= (TagClose "a")) ts)
+                 Nothing   -> t : replaceLinks ts
+        replaceLinks (t:ts) = t : replaceLinks ts
+
+        removeWSAfterNL = foldr f []
+            where
+                f t ts@((TagText s):ts') =
+                    case t of
+                         TagOpen el _ -> g el
+                         TagClose el  -> g el
+                         _            -> t : ts
+                    where
+                        g el =
+                            if el `elem` ["p", "br"]
+                               then t : TagText (dropWhile isSpace s) : ts'
+                               else t : ts
+                f t ts = t : ts
+
+        reduceWS = map f
+            where
+                f (TagText s) = TagText $ omitWS s
+                f t = t
+
+                omitWS [] = []
+                omitWS (x:xs) =
+                    if isSpace x
+                       then ' ' : omitWS (dropWhile isSpace xs)
+                       else x   : omitWS xs
+
+        concatTexts = foldr f []
+            where
+                f (TagText s) ((TagText s'):ts) = TagText (s ++ s') : ts
+                f t ts = t : ts
+
+        filterUnneeded = filter f
+            where
+                f (TagText s)   = not $ all isSpace s
+                f (TagOpen t _) = t `elem` ["a", "b", "i", "p", "strong"]
+                f (TagClose t)  = t `elem` ["a", "b", "br", "i", "p", "strong"]
+                f _             = False
+
+        lowerTags = map f
+            where
+                f (TagOpen t attrs) = TagOpen (lowerCase t) $ map (first lowerCase) attrs
+                f (TagClose t) = TagClose (lowerCase t)
+                f t = t
+
+                lowerCase = map toLower

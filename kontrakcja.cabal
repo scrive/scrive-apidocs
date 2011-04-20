@@ -83,6 +83,7 @@ Executable kontrakcja-server
    cpp-options: -DWINDOWS
  Build-depends: filepath
  Build-depends: base64-bytestring
+ Build-depends: tagsoup
  Build-depends: cryptocipher==0.2.8
  Build-depends: happstack==6.*
  Build-depends: happstack-server==6.*
