@@ -65,6 +65,7 @@ import ListUtil
 import Redirect
 import Data.CSV
 import Text.ParserCombinators.Parsec
+import Codec.Text.IConv
 
 
 {-
@@ -791,7 +792,7 @@ getCSVFile fieldname = do
             else do
               let title = BS.fromString (basename filename)
                   --there's a bug in the Data.CSV library I think, it wants a newline at the end of everything!
-                  mcontents = fmap (filter (\r->(not $ isEmptyRow r))) . parse csvFile "" . (++"\n") . BS.toString . concatChunks $ content
+                  mcontents = fmap (filter (\r->(not $ isEmptyRow r))) . parse csvFile "" . (++"\n") . decodeByteString $ content
               case mcontents of
                  Left _ -> return $ Bad flashMessageFailedToParseCSV
                  Right contents 
@@ -801,6 +802,35 @@ getCSVFile fieldname = do
     isEmptyRow [] = True
     isEmptyRow [""] = True
     isEmptyRow _ = False
+    {- |
+        Excel especially will chuck out data in funky char encodings
+        so we're going to look to see if some alternative ones "work better" 
+        than UTF-8.  Otherwise we'll use UTF-8.  The problem is determining
+        which "works better" because they will normally all decode without an error,
+        it's just it'll be a load of rubbish for a human.
+    -}
+    decodeByteString :: BSL.ByteString -> String
+    decodeByteString bs = 
+      guessBest . map  (BS.toString . concatChunks) . lefts $ (Left bs) : map (\enc -> convertStrictly enc "UTF-8" bs) alternativeEncodings
+    {- |
+        I picked these because these seem to be what Excel 2007 is outputting on my Windows machine if you choose to Save As ...
+         CSV (Comma delimited) -> ISO8859-1
+         CSV (MS-DOS) -> CP437
+         CSV (Macintosh) -> MAC
+        The MAC encoding seemed to cover the files Viktor sent me from his Mac too.
+    -}
+    alternativeEncodings = ["ISO8859-1","CP437","MAC"]
+    {- |
+        Guesses the best string by looking at it, there's not much else you can do really.
+        This goes for the one with the most nordic chars in.  This also goes for things
+        earlier in the list over those later in the list, because of the way maximumBy works.
+    -}
+    guessBest :: [String] -> String
+    guessBest = maximumBy nordicCharCountOrdering
+    nordicCharCountOrdering :: String -> String -> Ordering
+    nordicCharCountOrdering a b = compare (nordicCharCount a) (nordicCharCount b)
+    nordicCharCount = length . filter (\c -> c `elem` "äÄöÖåÅ")
+    
 
 handleIssueSave document author = do
     ctx <- get
