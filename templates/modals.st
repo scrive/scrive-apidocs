@@ -38,7 +38,7 @@ modalOfferCreated=
       </div>
       <div class="modal-body">
         <div class="modal-content">
-          <p> Offerten <strong>$documenttitle$</strong> har nu skickats till <strong>$documenttitle$</strong>. 
+          <p> Offerten <strong>$documenttitle$</strong> har nu skickats till <strong>$signatory$</strong>. 
           </p>
         </div>
       </div>
