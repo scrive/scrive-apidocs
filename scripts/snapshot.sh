@@ -1,62 +1,75 @@
 #!/bin/bash
 
-#repo=production
-repo=/home/admin/staging
-date=`date -u "+%Y%m%d%I%M%S%z"`
-filename=kontrakcja-snapshot-$date
+repo=$1
+prefix=$2
+date=`date -u -rfc-3339=seconds`
+filename=$prefix-$date
 zipfile=$filename.tar.gz
 cd /tmp
-#echo "Copying repo"
-#cp -r $repo $filename
-#echo "Deleting unneeded files"
-#rm -rf $filename/_local
-#rm -rf $filename/_darcs
-#rm -rf $filename/dist
-#rm -rf $filename/selenium-test
-#rm -f $filename/*.dll
-#rm -f $filename/*.exe
 echo "Zipping repo"
-tar zcf $zipfile --exclude=_local* --exclude=_darcs* --exclude=dist* --exclude=selenium-test* --exclude=*.dll --exclude=*.exe --exclude=log* --exclude=.hpc* --exclude=*.png --exclude=*.jpg --exclude=_locakal_ticket_backup* $repo/
-ls -lh $zipfile
+tar zcf "$zipfile"                    \
+    --exclude=_local*                 \
+    --exclude=_darcs*                 \
+    --exclude=dist*                   \
+    --exclude=selenium-test*          \
+    --exclude=*.dll                   \
+    --exclude=*.exe                   \
+    --exclude=log*                    \
+    --exclude=*.log                   \
+    --exclude=.hpc*                   \
+    --exclude=_locakal_ticket_backup* \
+    $repo/
+ls -lh "$zipfile"
+
+echo "Generating signature hash"
+hashdoc=hash-$date.txt
+echo "Date: $date" > "$hashdoc"
+echo "Filename: $zipfile" >> "$hashdoc"
+m=`md5sum $filename | awk 'BEGIN { FS = " +" } ; { print $1 }'`
+echo "MD5SUM: $m" >> "$hashdoc"
+
 #sign with trustweaver
 echo "Building soap message"
 echo "Multipart MIME"
-python $repo/scripts/genmime.py $zipfile
+mimefile=hash-$date.mime
+python $repo/scripts/genmime.py "$hashdoc" "$mimefile"
 echo "Constructing SOAP Message"
-cat $repo/scripts/top mime.txt $repo/scripts/bottom > soaprequest.xml
+soaprequest=request-$date.xml
+base64 "$hashdoc" | cat $repo/scripts/top - $repo/scripts/bottom > "$soaprequest"
 twcert=$repo/certs/credentials.pem
 twcertpwd=jhdaEo5LLejh
 twurl=https://tseiod.trustweaver.com/ts/svs.asmx
 echo "Signing with trustweaver"
+soapresponse=response-$date.xml
 curl -X POST --verbose --show-error \
     --cert $twcert:$twcertpwd --cacert $twcert \
-    --data-binary @/tmp/soaprequest.xml \
+    --data-binary "@$soaprequest"
     -H "Content-Type: text/xml; charset=UTF-8" \
     -H "Expect: 100-continue" \
     -H "SOAPAction: http://www.trustweaver.com/tsswitch#Sign" \
-    -o "soapresponse.xml" \
+    -o "$soapresponse" \
     $twurl
 echo "Parsing XML"
-# do it! (output to /tmp/signed.b64)
-python $repo/scripts/parsesignresponse.py < soapresponse.xml
+signed64=signed-$date.b64
+python $repo/scripts/parsesignresponse.py "$soapresponse" "$signed64"
 echo "Decoding base64 and rezipping"
-finalfile=kontrakcja-signed-$date.mime.gz
-base64 -d signed.b64 | gzip > $finalfile
+finalfile=kontrakcja-signed-$date.tar.gz
+signedmime=signed-$date.mime
+base64 -d "$signed64" > "$signedmime"
+tar zcf "$finalfile" "$signedmime" "$zipfile"
 #push to amazon
 echo "Pushing to amazon"
-s3cmd --acl-private put $finalfile s3://skrivapa-snapshots
+s3cmd --acl-private put "$finalfile" s3://skrivapa-snapshots
 #check hash from amazon
 echo "Checking amazon md5 sum"
-md5amazon=`s3cmd info s3://skrivapa-snapshots/$finalfile|grep MD5|awk "{print $3}"`
+md5amazon=`s3cmd info "s3://skrivapa-snapshots/$finalfile" |grep MD5|awk "{print $3}"`
 echo $md5amazon
-md5local=`md5sum $finalfile | awk 'BEGIN { FS = " +" } ; { print $1 }'`
+md5local=`md5sum "$finalfile" | awk 'BEGIN { FS = " +" } ; { print $1 }'`
 if [ "$md5amazon" = "$md5local" ]
 then
     echo "MD5 sum matches!"
     #clean up
-    rm -r $filename
-    rm $zipfile
-    rm $finalfile
+    rm "$zipfile" "$finalfile" "$hashdoc" "$mimefile" "$soaprequest" "$soapresponse" "$signed64" "$signedmime"
     exit 0
 fi
 echo "Something went wrong. Try again."
