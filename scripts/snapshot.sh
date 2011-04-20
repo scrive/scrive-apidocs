@@ -21,7 +21,7 @@ ls -lh $zipfile
 #sign with trustweaver
 echo "Building soap message"
 echo "Multipart MIME"
-python $repo/scripts/genmime.py < $zipfile
+python $repo/scripts/genmime.py $zipfile
 echo "Constructing SOAP Message"
 cat $repo/scripts/top mime.txt $repo/scripts/bottom > soaprequest.xml
 twcert=$repo/certs/credentials.pem
