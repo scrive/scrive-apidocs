@@ -6,17 +6,17 @@ date=`date -u "+%Y%m%d%I%M%S%z"`
 filename=kontrakcja-snapshot-$date
 zipfile=$filename.tar.gz
 cd /tmp
-echo "Copying repo"
-cp -r $repo $filename
-echo "Deleting unneeded files"
-rm -rf $filename/_local
-rm -rf $filename/_darcs
-rm -rf $filename/dist
-rm -rf $filename/selenium-test
-rm -f $filename/*.dll
-rm -f $filename/*.exe
+#echo "Copying repo"
+#cp -r $repo $filename
+#echo "Deleting unneeded files"
+#rm -rf $filename/_local
+#rm -rf $filename/_darcs
+#rm -rf $filename/dist
+#rm -rf $filename/selenium-test
+#rm -f $filename/*.dll
+#rm -f $filename/*.exe
 echo "Zipping repo"
-tar zcf $zipfile $filename
+tar zcf $zipfile --exclude=_local* --exclude=_darcs* --exclude=dist* --exclude=selenium-test* --exclude=*.dll --exclude=*.exe --exclude=log* --exclude=.hpc* $repo
 ls -lh $zipfile
 #sign with trustweaver
 echo "Building soap message"
