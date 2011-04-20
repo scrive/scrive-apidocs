@@ -23,7 +23,7 @@ echo "Building soap message"
 echo "Multipart MIME"
 python $repo/scripts/genmime.py < $zipfile
 echo "Constructing SOAP Message"
-cat $repo/scripts/top mime.txt $rep/scripts/bottom > soaprequest.xml
+cat $repo/scripts/top mime.txt $repo/scripts/bottom > soaprequest.xml
 twcert=$repo/certs/credentials.pem
 twcertpwd=jhdaEo5LLejh
 twurl=https://tseiod.trustweaver.com/ts/svs.asmx
