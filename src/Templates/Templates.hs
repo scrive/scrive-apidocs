@@ -89,7 +89,7 @@ module Templates.Templates
 
 import System.IO
 import Control.Monad
-import Control.Monad.State
+import Control.Monad.State.Strict
 import Data.Maybe
 import Data.List
 import Data.Char
