@@ -225,9 +225,9 @@ pathdb get action = path $ \id -> do
         Just obj -> action obj
 
 -- | Get param as strict ByteString instead of a lazy one.
-g :: (HasRqData f, MonadIO f, ServerMonad f, MonadPlus f, Functor f) =>
+getAsStrictBS :: (HasRqData f, MonadIO f, ServerMonad f, MonadPlus f, Functor f) =>
      String -> f BS.ByteString
-g name = fmap concatChunks (getDataFnM (lookBS name))
+getAsStrictBS name = fmap concatChunks (getDataFnM (lookBS name))
 
 -- | Useful inside the 'RqData' monad.  Gets the named input parameter
 -- (either from a @POST@ or a @GET@)

@@ -180,7 +180,7 @@ handleUserChange :: String -> Kontra KontraLink
 handleUserChange a = onlySuperUser $
                      do
                      let muserId = readM a
-                     _ <- g "change"
+                     _ <- getAsStrictBS "change"
                      case muserId of 
                        Nothing -> mzero   
                        Just userId ->    
@@ -206,7 +206,7 @@ handleUserEnableTrustWeaverStorage a =
     onlySuperUser $
                   do
                     let muserId = readM a
-                    _ <- g "enabletrustweaver"
+                    _ <- getAsStrictBS "enabletrustweaver"
                     case muserId of 
                        Nothing -> mzero   
                        Just userId ->    
@@ -265,10 +265,10 @@ databaseCleanupWorker = do
 handleCreateUser :: Kontra KontraLink
 handleCreateUser = onlySuperUser $ do
     ctx <- get
-    email' <- g "email"
+    email' <- getAsStrictBS "email"
     let email = BSC.map toLower email'
-    fstname <- g "fstname"
-    sndname <- g "sndname"
+    fstname <- getAsStrictBS "fstname"
+    sndname <- getAsStrictBS "sndname"
     custommessage <- getField "custommessage"
     freetill <- fmap (join . (fmap parseMinutesTimeMDY)) $ getField "freetill"
     muser <- liftIO $ createNewUserByAdmin ctx (fstname, sndname) email freetill custommessage
