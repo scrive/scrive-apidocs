@@ -81,7 +81,7 @@ $loadingdialog()$
 			
     		<tbody id="selectable">
 			  $documents:{document |
-      		  <tr $if(document.odd)$class="odd"$endif$>
+      		  <tr class="$if(document.odd)$odd$endif$ $if(document.isviewer)$viewer$endif$" >
 				<td><input type="checkbox" name="doccheck" value="$document.documentid$" class="check"></td>
 				<td>
                   <div src="/" class="icon status $document.status$ tooltip" rel="#tooltip-$document.status$"></div>
