@@ -590,12 +590,14 @@ archiveDocuments user docidlist = do
      modifySignableOrTemplate docid $ \doc -> 
           if (isAuthor doc user)
             then Right $ doc { documentdeleted = True }
-            else if Closed   == documentstatus doc
-                 || Canceled == documentstatus doc
-                 || Timedout == documentstatus doc
-                 || Rejected == documentstatus doc
+            else if isViewer doc user
                  then Right $ deleteForUserID user doc
-                 else Left "Not author can not delete document"
+                 else if Closed   == documentstatus doc
+                          || Canceled == documentstatus doc
+                          || Timedout == documentstatus doc
+                          || Rejected == documentstatus doc
+                      then Right $ deleteForUserID user doc
+                      else Left "Not author can not delete document"
           
       
 

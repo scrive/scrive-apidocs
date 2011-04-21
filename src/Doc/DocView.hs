@@ -294,7 +294,7 @@ documentBasicViewFields crtime user doc = do
     field "timeoutdaysleft" $ fromTimeout $ show . (dateDiffInDays crtime)
     field "mtime" $ showDateAbbrev crtime (documentmtime doc)
     field "isauthor" $ isAuthor doc user
-
+    field "isviewer" $ isViewer doc user
   where
     signatorylinklist =
       filter (isMatchingSignatoryLink user) $ documentsignatorylinks doc  

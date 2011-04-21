@@ -128,7 +128,8 @@ safeReady(function() {
       if (selectedrows.length==0) {
         return false;
       } else {
-        var sentoropencount = selectedrows.find(".sent").length + selectedrows.find(".opened").length
+        var sentoropencount = selectedrows.not(".viewer").find(".sent").length 
+          + selectedrows.not(".viewer").find(".opened").length;
         if (sentoropencount>0) {
           var listtype = jQuery.trim($(".listForm").find(".listtype").text().toLowerCase());
           if (listtype=="dokument") {

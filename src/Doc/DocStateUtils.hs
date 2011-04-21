@@ -26,6 +26,7 @@ module Doc.DocStateUtils (
     -- Checkers - checking properties of document
     , sameUser
     , isAuthor
+    , isViewer
     , anyInvitationUndelivered
     , checkCSVSigIndex
     , isTemplate
@@ -45,6 +46,7 @@ module Doc.DocStateUtils (
 
     , isELegDataMismatch
     , allowsIdentification
+    
     )
 
 where
@@ -313,3 +315,9 @@ isELegDataMismatch _                            = False
 allowsIdentification :: Document -> IdentificationType -> Bool
 allowsIdentification document idtype = 
     isJust $ find (== idtype) $ documentallowedidtypes document
+
+isViewer doc user = any f $ documentsignatorylinks doc
+    where f link = (Just (userid user)  == maybesignatory link 
+                    || (unEmail $ useremail $ userinfo user) == (signatoryemail $ signatorydetails link))
+                   && signatoryroles link == []
+
