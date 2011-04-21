@@ -82,7 +82,7 @@ $loadingdialog()$
     		<tbody id="selectable">
 			  $documents:{document |
       		  <tr $if(document.odd)$class="odd"$endif$>
-				<td>$if(document.isauthor)$ <input type="checkbox" name="doccheck" value="$document.documentid$" class="check"> $endif$</td>
+				<td><input type="checkbox" name="doccheck" value="$document.documentid$" class="check"></td>
 				<td>
                   <div src="/" class="icon status $document.status$ tooltip" rel="#tooltip-$document.status$"></div>
                   $if(document.anyinvitationundelivered)$  <span style="color:#000000;">!</span>$endif$
