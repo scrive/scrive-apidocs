@@ -220,7 +220,7 @@ handleRoutes = msum [
      , dir "logout"      $ hget0  $ handleLogout
      , dir "login"       $ hget0  $ handleLoginGet
      , dir "login"       $ hpost0NoXToken $ handleLoginPost
-     , dir "signup"      $ hget0  $ signupPageGet
+     --, dir "signup"      $ hget0  $ signupPageGet
      , dir "signup"      $ hpost0NoXToken $ signupPagePost
      --, dir "vip"         $ hget0  $ signupVipPageGet
      --, dir "vip"         $ hpost0NoXToken $ signupVipPagePost
