@@ -50,6 +50,8 @@ module Doc.DocView (
   , uploadPage
   , templatesForAjax
   , getDataMismatchMessage
+  , documentInfoFields
+  , documentAuthorInfo
   ) where
 
 import ActionSchedulerState (ActionID)
