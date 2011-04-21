@@ -702,7 +702,15 @@ pageDocumentForSignatory action document ctx invitedlink author =
         ++ "'; offer = " ++ if (isOffer document) then "true" else"false"
         ++ ";"
       magichash = signatorymagichash invitedlink
-      documentauthordetails = signatoryDetailsFromUser author
+      documentauthordetails = (signatoryDetailsFromUser author) {
+            signatoryemailplacements = authoremailplacements document
+            , signatoryfstnameplacements = authorfstnameplacements document
+            , signatorysndnameplacements = authorsndnameplacements document
+            , signatorycompanyplacements = authorcompanyplacements document
+            , signatorypersonalnumberplacements = authorpersonalnumberplacements document
+            , signatorycompanynumberplacements = authorcompanynumberplacements document
+            , signatoryotherfields = authorotherfields document
+          }
       allowedtypes = documentallowedidtypes document
       requiresEleg = isJust $ find (== ELegitimationIdentification) allowedtypes
       isSignatory person = SignatoryPartner `elem` signatoryroles person

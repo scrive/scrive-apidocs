@@ -292,6 +292,11 @@ function docstateToHTML(){
 	placePlacements(author.personalnumberplacements, "Pers. nr", author.personalnumber, "author", "sigpersnr");
     placePlacements(author.companynumberplacements, "Org. nr", author.companynumber, "author", "sigcompnr");
 
+	$(author.otherfields).each(function () {
+	  var f = this;
+	  f.id = newUUID();
+	  placePlacements(f.placements, f.label, f.value, "author", f.id);
+    });
   }
 
     $(docstate.signatories).each(function() {
