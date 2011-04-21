@@ -288,7 +288,7 @@ function docstateToHTML(){
 	placePlacements(author.fstnameplacements, "Förnamn", author.fstname, "author", "fstname");
     placePlacements(author.sndnameplacements, "Efternamn", author.sndname, "author", "sndname");
 	placePlacements(author.emailplacements, "Personens e-mail", author.email, "author", "email");
-	placePlacements(author.companyplacements, "Titel, företag", author.company, "author", "sigco");
+	placePlacements(author.companyplacements, "Företag", author.company, "author", "sigco");
 	placePlacements(author.personalnumberplacements, "Pers. nr", author.personalnumber, "author", "sigpersnr");
     placePlacements(author.companynumberplacements, "Org. nr", author.companynumber, "author", "sigcompnr");
 
@@ -306,7 +306,7 @@ function docstateToHTML(){
 	    placePlacements(this.fstnameplacements, "Förnamn", this.fstname, s.id, "fstname");
         placePlacements(this.sndnameplacements, "Efternamn", this.sndname, s.id, "sndname");
 	    placePlacements(this.emailplacements, "Personens e-mail", this.email, s.id, "email");
-	    placePlacements(this.companyplacements, "Titel, företag", this.company, s.id, "sigco");
+	    placePlacements(this.companyplacements, "Företag", this.company, s.id, "sigco");
 	    placePlacements(this.personalnumberplacements, "Pers. nr", this.personalnumber, s.id, "sigpersnr");
             placePlacements(this.companynumberplacements, "Org. nr", this.companynumber, s.id, "sigcompnr");
 
@@ -317,7 +317,7 @@ function docstateToHTML(){
                         var val = s.company;
                         var c = "";
                         if(val === ""){
-                                val =  "Titel, företag";
+                                val =  "Företag";
                                 c = "grayed";
                               }
                         ff.find(".signatoryfields").append(
@@ -384,7 +384,7 @@ function docstateToHTML(){
                         var val = currentsig.company;
                         var c = "";
                         if(val === ""){
-                                val =  "Titel, företag";
+                                val =  "Företag";
                                 c = "grayed";
                               }
                         currentsigdiv.find(".signatoryfields").append(
@@ -393,7 +393,7 @@ function docstateToHTML(){
                             "</div>");
 
     } else if(currentsig.companyplacements.length > 0) {
-	var cfield = buildField("Titel, företag", currentsig.company, "sig");
+	var cfield = buildField("Företag", currentsig.company, "sig");
 	setFieldID(cfield, "sigco");
 	setSigID(cfield, currentsig.id);
 	setHiddenField(cfield, "fieldname", "sigco");
