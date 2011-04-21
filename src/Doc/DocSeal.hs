@@ -191,6 +191,7 @@ sealSpecFromDocument templates hostpart document author inputpath outputpath =
                                        documentInfoFields document
                                        documentAuthorInfo author
                                        field "oneSignatory"  (length signatories>1)
+                                       field "personname" $  listToMaybe $ map  (BS.toString . signatoryname)  signatoriesdetails
                                        field "ip" $ formatIP ipnumber
                                    return  [ Seal.HistEntry
                                       { Seal.histdate = show time
@@ -202,9 +203,11 @@ sealSpecFromDocument templates hostpart document author inputpath outputpath =
       
       lastHistEntry = do
                        desc <- renderTemplate templates "lastHistEntry" (documentInfoFields document)
-                       return $ [Seal.HistEntry
+                       return $ if (isContract document)
+                                then [Seal.HistEntry
                                 { Seal.histdate = show maxsigntime
                                 , Seal.histcomment = pureString desc}]
+                                else []
 
       -- document fields
       fields = if authorHasSigned
