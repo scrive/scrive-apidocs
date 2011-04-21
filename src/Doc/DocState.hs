@@ -575,6 +575,13 @@ setDocumentTimeoutTime documentid timeouttime = do
   modifySignable documentid $ \doc ->
       Right $ doc{ documenttimeouttime = Just timeouttime }
 
+deleteForUserID user document = 
+    document { documentsignatorylinks = map deleteForUserID' (documentsignatorylinks document) }
+        where deleteForUserID' link
+                  | Just (userid user) == maybesignatory link = link { signatorylinkdeleted = True }
+                  | (unEmail $ useremail $ userinfo user) 
+                    == (signatoryemail $ signatorydetails link) = link { signatorylinkdeleted = True }
+                  | otherwise                          = link
 
 archiveDocuments :: User -> [DocumentID] -> Update Documents ()
 archiveDocuments user docidlist = do
@@ -583,7 +590,12 @@ archiveDocuments user docidlist = do
      modifySignableOrTemplate docid $ \doc -> 
           if (isAuthor doc user)
             then Right $ doc { documentdeleted = True }
-            else Left "Not author can not delete document"
+            else if Closed   == documentstatus doc
+                 || Canceled == documentstatus doc
+                 || Timedout == documentstatus doc
+                 || Rejected == documentstatus doc
+                 then Right $ deleteForUserID user doc
+                 else Left "Not author can not delete document"
           
       
 

@@ -1359,6 +1359,8 @@ handleIssueArchive = do
     idnumbers <- getCriticalFieldList asValidDocID "doccheck"
     liftIO $ putStrLn $ show idnumbers
     let ids = map DocumentID idnumbers
+    docs <- mapM (query . GetDocumentByDocumentID) ids
+    liftIO $ print docs
     update $ ArchiveDocuments user ids
 
 handleBulkContractRemind :: Kontra KontraLink
