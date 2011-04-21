@@ -1,7 +1,7 @@
 ####
 signatoriesBox=  
-        $signatories:{signatory| $if(signatory.current)$$signatoryBox()$$endif$}$
-        $signatories:{signatory| $if(!signatory.current)$$signatoryBox()$$endif$}$
+        <div class="float-left signViewBodyBox">$signatories:{signatory| $if(signatory.current)$$signatoryBox()$$endif$}$</div>
+        <div class="float-right signViewBodyBox"> $signatories:{signatory| $if(!signatory.current)$$signatoryBox()$$endif$}$ </div>
 ####
 signatoryBox =
 <div class="signViewBodyRight">

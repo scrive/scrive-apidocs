@@ -1346,7 +1346,7 @@ input.multiFileInput {
 */
 .signViewBodyRight 
 {
-    float: left;
+    float: right;
     position: relative;
     border-top: 1px solid #E0E0E0;
     border-right: 1px solid #E0E0E0;
@@ -1358,6 +1358,10 @@ input.multiFileInput {
     margin-bottom: 10px;
     margin-right: 0px;
     width: 268px;
+}
+
+.signViewBodyBox {
+    width: 300px;
 }
 
 .forauthor .signViewBodyRight{
