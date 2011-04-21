@@ -4,7 +4,7 @@ $if(contract)$
 SealingTexts
     {   verificationTitle="Verifikat"
       , docPrefix="Dok.nr."
-      , signedText="Undertecknat:"
+      , signedText="Undertecknat"
       , partnerText="Parter"
       , secretaryText="Ej undertecknande part"
       , orgNumberText="Org.nr. "
@@ -12,25 +12,25 @@ SealingTexts
       , dateText="Datum"
       , historyText="Händelser"
       , verificationFooter=[
-          "Detta verifikat är utfärdat av SkrivaPå CM AB och styrker att dokument nummer $documenttitle$ har undertecknats"
+          "Detta verifikat är utfärdat av SkrivaPå CM AB och styrker att dokument nummer $documentid$ har undertecknats"
         , "av parterna och är juridiskt bindande. Kursiverad information är säkert verifierad genom vår tjänst."
         , "Kontrollera dokumentet mot vår databas genom följande länk: $hostpart$/d/$documentid$."]
     }
 $elseif(offer)$
 SealingTexts
-    {   verificationTitle="Verifikat"
-      , docPrefix="Dok.nr."
-      , signedText="Undertecknat:"
-      , partnerText="Parter"
-      , secretaryText="Ej undertecknande part"
+    {   verificationTitle="Acceptverifikat"
+      , docPrefix="Offert nummer"
+      , signedText="Offert accepterad"
+      , partnerText="Mottagare"
+      , secretaryText="Avsändare"
       , orgNumberText="Org.nr. "
       , eventsText="Registrerade händelser"
       , dateText="Datum"
       , historyText="Händelser"
       , verificationFooter=[
-          "Detta verifikat är utfärdat av SkrivaPå CM AB och styrker att dokument nummer $documenttitle$ har undertecknats"
-        , "av parterna och är juridiskt bindande. Kursiverad information är säkert verifierad genom vår tjänst."
-        , "Kontrollera dokumentet mot vår databas genom följande länk: $hostpart$/d/$documentid$."]
+          "Detta verifikat är utfärdat av SkrivaPå CM AB och bekräftar att offert nummer $documentid$ har skickats"
+        , "av avsändaren och accepterats av mottagaren. Kursiverad information är verifierad genom vår tjänst."
+        , "Du kan kontrollera offerten mot vår databas genom följande länk: $hostpart$/d/$documentid$."]
     }
 $endif$
 #####
@@ -45,13 +45,15 @@ invitationSentEntry=
     $authorfstname$ $authorsndname$ 
     $if(contract)$
         skickar en inbjudan att underteckna till
+        $if(oneSignatory)$
+            parterna
+        $else$
+            parten
+        $endif$ 
     $elseif(offer)$
-        skickar en offert att bekräfta till
+        skickar offerten till $personname$
     $endif$ 
-    $if(oneSignatory)$
-        parterna
-    $else$
-        parten$endif$ 
+    
     $ip$
 ###
 seenHistEntry=
@@ -59,37 +61,27 @@ seenHistEntry=
     $if(contract)$
         granskar dokumentet
     $elseif(offer)$
-        granskar offerten
+        granskar offerten 
     $endif$ 
         online $seenip$
 ####
 signHistEntry=
     $personname$ 
-    $if(contract)$
-        undertecknar dokumentet
-    $elseif(offer)$
-        bekräftar offerten
-    $endif$ 
-
-        online med 
-
-    $if(!provider)$
+    $if(offer)$
+        accepterar offerten online
+    $elseif(contract)$
+        undertecknar dokumentet online med 
+        $if(!provider)$
             e-post
-    $elseif(bankid)$
+        $elseif(bankid)$
             BankID
-    $elseif(norder)$
+        $elseif(norder)$
             Nordea e-legitimation
-    $elseif(telia)$
+        $elseif(telia)$
             Telia e-legitimation
-    $else$
+        $else$
             e-legitimation
-    $endif$
-
+        $endif$
+    $endif$ 
     $signip$
 ###
-signHistEntryMethod=
-   
-###
-
-
-
