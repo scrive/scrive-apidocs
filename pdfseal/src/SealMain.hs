@@ -57,6 +57,7 @@ exrotate = SealSpec
                               , histcomment = "Really soon now öåä ÖÅÄ"
                               }
                   ]
+    , staticTexts = sampleSealingTexts                           
     }
 
 gsnorm :: SealSpec
@@ -113,6 +114,7 @@ gsnorm = SealSpec
                               , histcomment = "Really soon now öåä ÖÅÄ"
                               }
                   ]
+    , staticTexts = sampleSealingTexts                           
     }
 
 nda :: SealSpec
@@ -185,6 +187,7 @@ nda = SealSpec
                , Field {value = "Gracjan Polak", x = 7, y = 1058, page = 1, w = 770, h = 1085}
                , Field {value = "Gracjan Polak", x = 681, y = 1058, page = 1, w = 770, h = 1085}
                , Field {value = "gracjan@mail.com", x = 121, y = 347, page = 1,w = 770, h = 1085}]
+    , staticTexts = sampleSealingTexts                        
     }
 
 
@@ -200,6 +203,7 @@ twod = SealSpec
         [ ]
     , initials = "öåä, ÖÅÄ"
       , history = []
+    , staticTexts = sampleSealingTexts         
     }
 
 twodgs :: SealSpec
@@ -214,6 +218,7 @@ twodgs = SealSpec
         [ ]
     , initials = "öåä, ÖÅÄ"
       , history = []
+    , staticTexts = sampleSealingTexts         
     }
 
 {-
@@ -227,6 +232,7 @@ ex1 = SealSpec
         , SealPerson "Gracjan Polak" "CTO skrivaPa, Stockholm, 2010-05-31"
         , SealPerson "Gracjan 2 Wolak" "CTO skrivaPa, Stockholm, 2010-05-31"
         ]
+    , staticTexts = sampleSealingTexts           
     }
 
 ex_all = [ SealSpec 
@@ -243,6 +249,7 @@ ex_all = [ SealSpec
         , SealPerson "Gracjan 6 Polak" "CTO skrivaPa, Stockholm, 2010-05-31"
         , SealPerson "Gracjan 7 Polak" "CTO skrivaPa, Stockholm, 2010-05-31"
         ]
+    , staticTexts = sampleSealingTexts           
     } | i <- [1..10]]
 
 ex_10_1 = SealSpec 
@@ -259,6 +266,7 @@ ex_10_1 = SealSpec
         , SealPerson "Gracjan 6 Polak" "CTO skrivaPa, Stockholm, 2010-05-31"
         , SealPerson "Gracjan 7 Polak" "CTO skrivaPa, Stockholm, 2010-05-31"
         ]
+    , staticTexts = sampleSealingTexts       
     } 
 -}
 
@@ -316,6 +324,24 @@ worddoc = SealSpec
                               , histcomment = "Really soon now öåä ÖÅÄ"
                               }
                   ]
+     , staticTexts = sampleSealingTexts                  
+    }
+
+sampleSealingTexts::SealingTexts
+sampleSealingTexts = SealingTexts
+    {   verificationTitle="Verifikat"
+      , docPrefix="Dok.nr."
+      , signedText="Undertecknat:"
+      , partnerText="Parter"
+      , secretaryText="Ej undertecknande part"
+      , orgNumberText="Org.nr. "
+      , eventsText="Registrerade händelser"
+      , dateText="Datum"
+      , historyText="Händelser"
+      , verificationFooter=[
+          "Detta verifikat är utfärdat av SkrivaPå CM AB och styrker att dokument nummer $documenttitle$ har undertecknats"
+        , "av parterna och är juridiskt bindande. Kursiverad information är säkert verifierad genom vår tjänst."
+        , "Kontrollera dokumentet mot vår databas genom följande länk: $hostpart$/d/$documentid$."]
     }
 
 main :: IO ()

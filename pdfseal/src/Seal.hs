@@ -205,16 +205,16 @@ contentsValueListFromPageID document' pagerefid =
     in contentlist
 
 pagintext :: SealSpec -> String
-pagintext (SealSpec{documentNumber,initials}) = 
+pagintext (SealSpec{documentNumber,initials,staticTexts }) = 
  let
     font = PDFFont Helvetica 8
     docnrwidth = textWidth font (toPDFString docnrtext)
     docnroffset = center - 20 - docnrwidth
     center = 595/2
-    signedinitials = "Undertecknat: " ++ winAnsiPostScriptEncode initials 
+    signedinitials = (signedText staticTexts) ++": " ++ winAnsiPostScriptEncode initials 
     siwidth = textWidth font (toPDFString signedinitials)
     sioffset = center + 20
-    docnrtext = "Dok.nr. " ++ documentNumber
+    docnrtext = (docPrefix staticTexts) ++ " "++ documentNumber
     
  in
  "q 1 0 0 1 0 5 cm " ++
@@ -232,10 +232,10 @@ pagintext (SealSpec{documentNumber,initials}) =
  show (sioffset+siwidth+10) ++ " 18 m " ++ show (595 - 60) ++ " 18 l S " ++
  "Q "
 
-signatorybox :: Person -> String
-signatorybox (Person {fullname,company,companynumber,email}) = 
+signatorybox :: SealingTexts -> Person -> String
+signatorybox sealingTexts (Person {fullname,company,companynumber,email}) = 
  let
-    orgnrtext = if companynumber=="" then "" else "Org.nr. " ++ companynumber
+    orgnrtext = if companynumber=="" then "" else (orgNumberText sealingTexts) ++ " " ++ companynumber
     orgnroffset = textWidth (PDFFont Helvetica 10) (toPDFString orgnrtext)
     emailoffset = textWidth (PDFFont Helvetica_Oblique 10) (toPDFString email)
     rightmargin = 595 - 46.5522
@@ -295,7 +295,7 @@ logentry (HistEntry {histdate,histcomment}) =
 
 
 lastpage :: SealSpec -> String
-lastpage (SealSpec {documentNumber,persons,secretaries,history,hostpart}) = 
+lastpage (SealSpec {documentNumber,persons,secretaries,history,hostpart,staticTexts}) = 
  "0.081 0.058 0.068 0 k " ++
  "/GS0 gs " ++
  "0.4 G " ++
@@ -310,19 +310,19 @@ lastpage (SealSpec {documentNumber,persons,secretaries,history,hostpart}) =
 
  "0.806 0.719 0.51 0.504 k " ++
  "21 0 0 21 39.8198 787.9463 Tm " ++
- "(Verifikat)Tj " ++
+ "("++verificationTitle staticTexts++")Tj " ++
 
  "0.546 0.469 0.454 0.113 k " ++
  "12 0 0 12 39.8198 766.9555 Tm " ++
- "[(Dok.nr)55(. " ++ winAnsiPostScriptEncode documentNumber ++ ")]TJ " ++
+ "[("++docPrefix staticTexts++")55( " ++ winAnsiPostScriptEncode documentNumber ++ ")]TJ " ++
 
  "0.806 0.719 0.51 0.504 k " ++
  "12 0 0 12 39.8198 736.8555 Tm " ++
- "(Parter)Tj " ++
+ "("++(partnerText  staticTexts)++")Tj " ++
  "ET " ++
 
  -- every signatory on its own line, repeated every 64 pixels down
- "q " ++ concatMap signatorybox persons ++
+ "q " ++ concatMap (signatorybox staticTexts) persons ++
 
  (if secretaries/=[]
   then
@@ -331,8 +331,8 @@ lastpage (SealSpec {documentNumber,persons,secretaries,history,hostpart}) =
      "/TT0 1 Tf " ++
      "0.806 0.719 0.51 0.504 k " ++
      "12 0 0 12 39.8198 736.8555 Tm " ++
-     "(Ej undertecknande part)Tj " ++
-     "ET " ++ concatMap signatorybox secretaries
+     "("++(secretaryText staticTexts)++")Tj " ++
+     "ET " ++ concatMap (signatorybox staticTexts) secretaries
   else "") ++
  "1 0 0 1 0 126 cm " ++ -- compensate for 3 signatures
  
@@ -349,12 +349,13 @@ lastpage (SealSpec {documentNumber,persons,secretaries,history,hostpart}) =
  "/TT0 1 Tf " ++
  "0 Tc 0 Tw " ++
  "12 0 0 12 40 571.9502 Tm " ++
- "[(Registrerade händelser)]TJ " ++
+ "[("++(eventsText staticTexts)++")]TJ " ++
  "11 0 0 11 40 546.3926 Tm " ++
- "(Datum)Tj " ++
+ "("++(dateText staticTexts)++")Tj " ++
  "11 0 0 11 225 546.3926 Tm " ++
- "(Händelser)Tj " ++
+ "("++(historyText staticTexts)++")Tj " ++
  "ET " ++ 
+
 
  -- logentry
  concatMap logentry history ++
@@ -370,12 +371,7 @@ lastpage (SealSpec {documentNumber,persons,secretaries,history,hostpart}) =
  "/TT0 1 Tf " ++
  "8 0 0 8 39.8198 74.2334 Tm " ++
  "1.2 TL " ++
- "[(Detta verifikat är utfärdat av SkrivaPå CM AB och styrker att dokument nummer " ++ documentNumber ++ 
- " har undertecknats)]TJ " ++
- "T* " ++
- "[(av parterna och är juridiskt bindande. Kursiverad information är säkert verifierad genom vår tjänst.)]TJ " ++
- "T* " ++
- "[(Kontrollera dokumentet mot vår databas genom följande länk: " ++ hostpart ++ "/d/" ++ documentNumber ++ ".)]TJ " ++
+ intercalate "T* " (map (\t -> "[(" ++ t ++ ")]TJ ") (verificationFooter staticTexts)) ++
  "0.546 0.469 0.454 0.113 k " ++
  "10 0 0 10 46.5522 31.5469 Tm " ++
  "(Sida 1 av 1)Tj " ++

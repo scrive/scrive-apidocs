@@ -17,15 +17,18 @@ import Data.Maybe
 import Data.Bits
 import Data.List
 import Data.Word
+import Data.Ord
 import Debug.Trace
 import Doc.DocState
 import Doc.DocStorage
+import Doc.DocView
 import Happstack.State (update, query)
 import MinutesTime
 import Misc
 import System.Directory
 import System.Exit
 import Kontra
+import Templates.Templates
 import qualified Amazon as AWS
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
@@ -35,7 +38,7 @@ import qualified SealSpec as Seal
 import qualified TrustWeaver as TW
 import qualified AppLogger as Log
 import System.IO.Temp
-import System.IO
+import System.IO                       
                          
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
 personFromSignatoryDetails details =
@@ -50,6 +53,17 @@ personFromSignatoryDetails details =
                 , Seal.numberverified = False
                 , Seal.emailverified = True
                 }
+
+personFields::(Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider) -> Fields
+personFields  (person, signinfo,seeninfo, _ , mprovider) = do 
+   field "personname" $ Seal.fullname person
+   field "signip" $  formatIP (signipnumber signinfo)
+   field "seenip" $  formatIP (signipnumber signinfo)
+   field "provider" $ isJust mprovider
+   field "bankid" $ mprovider == Just BankIDProvider
+   field "nordea" $ mprovider == Just NordeaProvider
+   field "telia"  $ mprovider == Just TeliaProvider
+
 
 personsFromDocument :: Document -> [(Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider)]
 personsFromDocument document = 
@@ -130,8 +144,8 @@ formatProvider NordeaProvider = "Nordea e-legitimation"
 formatProvider TeliaProvider  = "Telia e-legitimation"
 formatProvider _ = "e-legitimation"
 
-sealSpecFromDocument :: String -> Document -> User ->  String -> String -> Seal.SealSpec
-sealSpecFromDocument hostpart document author inputpath outputpath =
+sealSpecFromDocument :: KontrakcjaTemplates -> String -> Document -> User ->  String -> String -> IO Seal.SealSpec
+sealSpecFromDocument templates hostpart document author inputpath outputpath =
   let docid = unDocumentID (documentid document)
       authorHasSigned = (any ((maybe False (== (userid author))) . maybesignatory) (documentsignatorylinks document))
       isSignatory x = SignatoryPartner `elem` signatoryroles x
@@ -153,68 +167,62 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
 
       initials = concatComma (map initialsOfPerson persons)
       initialsOfPerson (Seal.Person {Seal.fullname}) = map head (words fullname)
-      authorfullname = signatoryname authordetails
-      signedtext = if (isContract document) then " undertecknar dokumentet " else " bekräftar offerten " 
-      seentext   =  if (isContract document) then " granskar dokumentet "  else " granskar offerten "                       
-      invitationsendtext = if (isContract document) then " skickar en inbjudan att underteckna till " else " skickar en offert att bekräfta till "                 
-      makeHistoryEntryFromSignatory (Seal.Person {Seal.fullname},seen, signed, False, mprovider) = 
-          [   Seal.HistEntry
-            { Seal.histdate = show (signtime seen)
-            , Seal.histcomment = fullname ++ seentext ++"online" ++ formatIP (signipnumber seen)
-            } 
-            , Seal.HistEntry
-            { Seal.histdate = show (signtime signed)
-            , Seal.histcomment = if isNothing mprovider
-                                    then fullname ++ signedtext++"online med e-post" ++ formatIP (signipnumber signed)
-                                    else fullname ++ signedtext++"online med " ++ formatProvider (fromJust mprovider) ++ formatIP (signipnumber signed)
-            }
-          ]
-      makeHistoryEntryFromSignatory (Seal.Person {Seal.fullname},seen, signed, True, mprovider) = 
-          [   Seal.HistEntry
-            { Seal.histdate = show (signtime signed)
-            , Seal.histcomment = if isNothing mprovider
-                                    then fullname ++ signedtext ++ "online med e-post" ++ formatIP (signipnumber signed)
-                                    else fullname ++ signedtext ++ "online med " ++ formatProvider (fromJust mprovider) ++ formatIP (signipnumber signed)
-            }
-          ]
+      makeHistoryEntryFromSignatory personInfo@(_ ,seen, signed, isAuthor, _)  = do
+          seenDesc <- renderTemplate templates "seenHistEntry" $ do
+                        personFields personInfo
+                        documentInfoFields document
+          let seenEvent = Seal.HistEntry 
+                            { Seal.histdate = show (signtime seen)
+                            , Seal.histcomment = pureString seenDesc} 
+          signDesc <- renderTemplate templates "signHistEntry" $ do
+                        personFields personInfo
+                        documentInfoFields document
+          let signEvent = Seal.HistEntry
+                            { Seal.histdate = show (signtime signed)
+                            , Seal.histcomment = pureString signDesc}      
+          return $ if (isAuthor) 
+                    then [signEvent]
+                    else [seenEvent,signEvent]
       invitationSentEntry = case documentinvitetime document of
-                                Nothing -> []
-                                Just (SignInfo time ipnumber) -> 
-                                    [ Seal.HistEntry
+                                Nothing -> return []
+                                Just (SignInfo time ipnumber) -> do
+                                   desc <-  renderTemplate templates "invitationSentEntry" $ do
+                                       documentInfoFields document
+                                       documentAuthorInfo author
+                                       field "oneSignatory"  (length signatories>1)
+                                       field "ip" $ formatIP ipnumber
+                                   return  [ Seal.HistEntry
                                       { Seal.histdate = show time
-                                      , Seal.histcomment = 
-                                          if length signatories>1
-                                          then BS.toString authorfullname ++ 
-                                                   invitationsendtext++"parterna" ++ 
-                                                   formatIP ipnumber
-                                          else BS.toString authorfullname ++ 
-                                                   invitationsendtext++"parten" ++ 
-                                                   formatIP ipnumber
+                                      , Seal.histcomment = pureString desc 
                                       }]
 
       maxsigntime = maximum (map (signtime . (\(_,_,c,_,_) -> c)) signatories)
       concatComma = concat . intersperse ", "
       
-      lastHistEntry = Seal.HistEntry
-                      { Seal.histdate = show maxsigntime
-                      , Seal.histcomment = if (isContract document)   
-                                            then "Samtliga parter har undertecknat dokumentet och avtalet är nu juridiskt bindande."
-                                            else "Samligta parter har bekräftat offerten."    
-                      }
+      lastHistEntry = do
+                       desc <- renderTemplate templates "lastHistEntry" (documentInfoFields document)
+                       return $ [Seal.HistEntry
+                                { Seal.histdate = show maxsigntime
+                                , Seal.histcomment = pureString desc}]
 
-      -- here we use Data.List.sort that is *stable*, so it puts
-      -- signatories actions before what happened with a document
-      histDateCompare a b = compare (Seal.histdate a) (Seal.histdate b)
-      history = sortBy histDateCompare $ (concatMap makeHistoryEntryFromSignatory signatories) ++
-                invitationSentEntry ++
-                [lastHistEntry]
-      
       -- document fields
       fields = if authorHasSigned
                then concatMap fieldsFromSignatory signatoriesdetails
                else concatMap fieldsFromSignatory $ authordetails : signatoriesdetails
                     
-      config = Seal.SealSpec 
+    
+  in do    
+      events <- fmap concat $ sequence $ 
+                    (map makeHistoryEntryFromSignatory signatories) ++
+                    [invitationSentEntry] ++
+                    [lastHistEntry]
+      -- here we use Data.List.sort that is *stable*, so it puts
+      -- signatories actions before what happened with a document
+      let history = sortBy (comparing Seal.histdate) events
+      staticTexts <- renderTemplate templates "sealingtexts" $ do
+                        documentInfoFields document
+                        field "hostpart" hostpart
+      return $ Seal.SealSpec 
             { Seal.input          = inputpath
             , Seal.output         = outputpath
             , Seal.documentNumber = paddeddocid
@@ -224,8 +232,8 @@ sealSpecFromDocument hostpart document author inputpath outputpath =
             , Seal.initials       = initials
             , Seal.hostpart       = hostpart
             , Seal.fields         = fields
+            , Seal.staticTexts    = read staticTexts -- this should never fail since we control templates
             }
-      in config
 
 sealDocument :: Context 
              -> User
@@ -261,7 +269,7 @@ sealDocumentFile :: Context
                  -> Document
                  -> File
                  -> IO (Either String Document)
-sealDocumentFile ctx@Context{ctxdocstore, ctxs3action, ctxtwconf, ctxhostpart}
+sealDocumentFile ctx@Context{ctxdocstore, ctxs3action, ctxtwconf, ctxhostpart, ctxtemplates}
                  author
                  document@Document{documentid,documenttitle}
                  file@File {fileid,filename} =
@@ -270,7 +278,7 @@ sealDocumentFile ctx@Context{ctxdocstore, ctxs3action, ctxtwconf, ctxhostpart}
   let tmpout = tmppath ++ "/output.pdf"
   content <- getFileContents ctx file
   BS.writeFile tmpin content
-  let config = sealSpecFromDocument ctxhostpart document author tmpin tmpout
+  config <- sealSpecFromDocument ctxtemplates ctxhostpart document author tmpin tmpout
   (code,stdout,stderr) <- readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
 
   case code of
