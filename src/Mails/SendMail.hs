@@ -21,6 +21,7 @@ module Mails.SendMail (
     ) where
 
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy.UTF8 as BSL  hiding (length)
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.Char8 as BSLC
@@ -28,7 +29,7 @@ import qualified Data.ByteString.UTF8 as BS hiding (length)
 import System.Exit
 import System.Directory
 import System.Random
-import qualified Codec.Binary.Base64 as Base64
+import qualified Data.ByteString.Base64 as Base64
 import qualified Codec.Binary.QuotedPrintable as QuotedPrintable
 import Control.Applicative
 import Control.Arrow (first)
@@ -212,7 +213,7 @@ createWholeContent (boundaryMixed, boundaryAlternative) ourInfoEmail ourInfoEmai
           "Content-Transfer-Encoding: base64\r\n" ++
           "\r\n"
       attach (fname,fcontent) = BSL.fromString (headerAttach fname) `BSL.append` 
-                                (BSLC.pack $ concat $ intersperse "\r\n" $ Base64.chop 72 $ Base64.encode $ BS.unpack fcontent)
+                                BSL.fromChunks [Base64.joinWith (BSC.pack "\r\n") 72 $ Base64.encode fcontent]
       wholeContent = BSL.concat $ 
                      [ BSL.fromString headerEmail
                      , BSL.fromString headerContent
