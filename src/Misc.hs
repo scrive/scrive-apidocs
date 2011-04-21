@@ -545,3 +545,5 @@ querystring = do
     qsPairs <- queryString lookPairs
     return $ qs qsPairs
 
+pureString::String -> String
+pureString s = unwords $ words $ filter (not . isControl) s
