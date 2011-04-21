@@ -454,43 +454,47 @@ loginModalPart=
 ######
 ####
 modalNewPasswordView=
-<div class="modal-container">
-      <div class="modal-header">
-        <span class="modal-icon message"></span>
-        <span class="modal-title">
-          <h1>Nytt Lösenord</h1>
-        </span>
-        <a class="modal-close close"> </a>
-      </div>
-      <div class="modal-body">
-        <div class="modal-content"> 
-                $newPasswordModalPart()$
-        </div>
-      </div>
-</div>
-####
-newPasswordModalPart=
-<div class="user-container">
-  <div class="login-container">
-    <div class="body">
-     <div class="wrapper">
-      <form action="$linkchangepassword$" method="post">
-        <div class="txt">Nytt lösenord:</div>
-        <input type="password" name="password" autocomplete="off" />
-        <div class="txt">Upprepa lösenord:</div>
-        <input type="password" name="password2" autocomplete="off" />
-        <a href="#" class="btn-tiny blue submit">
-          <div class="left"> </div>     
-          <div class="label"><span>Spara</span></div>
-          <div class="right"/> </div>
-        </a>
-        <input type="submit" class="hidden"/>
-      </form>
-     </div>
-    </div>
+<form action="$linkchangepassword$" method="post">
+ <div class="modal-container">
+  <div class="modal-header">
+    <span class="modal-icon message"></span>
+    <span class="modal-title">
+      <h1>Nytt Lösenord</h1>
+    </span>
+    <a class="modal-close close"> </a>
   </div>
-</div>
-######
+  <div class="modal-body">   
+   <div class="modal-content"> 
+    <div class="recovery-container">
+       <div class="body">
+        <div class="wrapper" style="text-align: right;">
+             <span class="txt">Nytt lösenord:</span>
+             <input type="password" name="password" autocomplete="off" />
+             <BR/> 
+             <span class="txt">Upprepa lösenord:</span>
+             <input type="password" name="password2" autocomplete="off" />
+             <BR/>
+             <input type="submit" class="hidden"/>
+         </div>
+       </div>
+    </div>
+   </div>
+  </div>
+  <div class="modal-footer">
+        <div class="float-left">
+          <a class="close cancel">Avbryt</a>
+        </div>
+        <a href="#" class="btn-small blue float-right submit">
+          <div class="left"></div>
+          <div class="label">
+            <p>Spara</p>
+          </div>
+          <div class="right"></div>
+        </a>
+     </div>
+ </div>
+</form>
+####
 ###
 modalError=
 <div class="modal-container">
