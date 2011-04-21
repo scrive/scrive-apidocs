@@ -346,20 +346,9 @@ a.new-btn-small.black p {
 	color: #fff;
 }
 
-.recovery-container {
-	display: none;
-}
-
 .login-container .body, .recovery-container .body {
     margin:auto;
     min-height: 122px;
-}
-
-.login-container .body form, .recovery-container .body form {
-	font: 11px/18px "Lucida Grande";
-	margin-top: 2px;
-	text-align: center;
-	
 }
 
 .login-container .body .wrapper {
@@ -391,7 +380,7 @@ a.new-btn-small.black p {
     -moz-border-radius: 5px 5px 5px 5px;
     -webkit-border-radius: 5px 5px 5px 5px;
     font: 11px "Lucida Grande";
-    width: 240px;
+    width: 300px;
     margin: auto;
     text-align: center;
 }
