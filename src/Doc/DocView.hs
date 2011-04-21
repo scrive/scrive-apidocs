@@ -280,7 +280,6 @@ documentStatusClass doc =
 documentBasicViewFields :: MinutesTime -> User -> Document -> Fields
 documentBasicViewFields crtime user doc = do
     documentInfoFields doc
-    let isSignatory = (SignatoryPartner `elem`) . signatoryroles
     field "status" $ show (documentStatusClass doc)
     field "signatories" $ map singlnkFields $ filter isSignatory $ documentsignatorylinks doc
     field "anyinvitationundelivered" $ anyInvitationUndelivered doc
@@ -476,16 +475,6 @@ pageDocumentDesign ctx
        authorid = userid author
        authorhaslink = not $ null $ filter (not . isNotLinkForUserID authorid) documentsignatorylinks
        documentdaystosignboxvalue = maybe 7 id documentdaystosign
-       documentauthordetails =
-         (signatoryDetailsFromUser author) {
-             signatoryemailplacements = authoremailplacements document
-           , signatoryfstnameplacements = authorfstnameplacements document
-           , signatorysndnameplacements = authorsndnameplacements document
-           , signatorycompanyplacements = authorcompanyplacements document
-           , signatorypersonalnumberplacements = authorpersonalnumberplacements document
-           , signatorycompanynumberplacements = authorcompanynumberplacements document
-           , signatoryotherfields = authorotherfields document
-         }
        doc_author_otherfields fields = sequence .
          map (\(fd, i) ->
            renderTemplate templates "customfield" $ do
@@ -497,13 +486,13 @@ pageDocumentDesign ctx
    in do
      csvfields <- documentCsvFields templates document
      renderTemplate (ctxtemplates ctx) "pageDocumentDesign" $ do
-       field "authorOtherFields" $ doc_author_otherfields $ signatoryotherfields documentauthordetails
+       field "authorOtherFields" $ doc_author_otherfields $ signatoryotherfields $ documentauthordetails author document
        field "linkissuedoc" $ show $ LinkIssueDoc documentid
        field "authorhaslink" $ authorhaslink
        field "documentinvitetext" $ documentinvitetext
        field "invitationMailContent" $  mailInvitationToSignOrViewContent templates False ctx document author Nothing
        field "documentdaystosignboxvalue" $ documentdaystosignboxvalue              
-       field "docstate" (buildJS documentauthordetails documentsignatorylinks)
+       field "docstate" (buildJS (documentauthordetails author document) documentsignatorylinks)
        documentAuthorInfo author
        csvfields
        documentFunctionalityFields author document
@@ -598,26 +587,16 @@ pageDocumentForAuthor ctx
        templates = ctxtemplates ctx
        authorid = userid author
        authorhaslink = not $ null $ filter (not . isNotLinkForUserID authorid) documentsignatorylinks
-       documentauthordetails =
-         (signatoryDetailsFromUser author) {
-             signatoryemailplacements = authoremailplacements document
-           , signatoryfstnameplacements = authorfstnameplacements document
-           , signatorysndnameplacements = authorsndnameplacements document
-           , signatorycompanyplacements = authorcompanyplacements document
-           , signatorypersonalnumberplacements = authorpersonalnumberplacements document
-           , signatorycompanynumberplacements = authorcompanynumberplacements document
-           , signatoryotherfields = authorotherfields document
-         }
        isSignatory person = SignatoryPartner `elem` signatoryroles person
    in do
      renderTemplate (ctxtemplates ctx) "pageDocumentForAuthor" $ do
        field "linkissuedoc" $ show $ LinkIssueDoc documentid
        field "authorhaslink" $ authorhaslink
-       field "signatories" $ map (signatoryLinkFields ctx document author Nothing) $ filter isSignatory documentsignatorylinks                    
+       field "signatories" $ map (signatoryLinkFields ctx document author Nothing) $ signatoriesWithSecretary author document               
        field "canberestarted" $ documentstatus `elem` [Canceled, Timedout, Rejected]
        field "cancelMailContent" $ mailCancelDocumentByAuthorContent templates False Nothing ctx document author
        field "linkcancel" $ show $ LinkCancel document
-       field "docstate" (buildJS documentauthordetails documentsignatorylinks)
+       field "docstate" (buildJS (documentauthordetails author document) documentsignatorylinks)
        field "linkissuedocpdf" $ show (LinkIssueDocPDF Nothing document)
        field "documentinfotext" $ documentInfoText ctx document (find (isMatchingSignatoryLink author) documentsignatorylinks) author
        documentAuthorInfo author
@@ -645,16 +624,6 @@ pageDocumentForViewer ctx
         -- the author gets his own space when he's editing
         authorhaslink = not $ null $ filter (not . isNotLinkForUserID authorid) documentsignatorylinks
         documentdaystosignboxvalue = maybe 7 id documentdaystosign
-        documentauthordetails =
-          (signatoryDetailsFromUser author) {
-            signatoryemailplacements = authoremailplacements document
-            , signatoryfstnameplacements = authorfstnameplacements document
-            , signatorysndnameplacements = authorsndnameplacements document
-            , signatorycompanyplacements = authorcompanyplacements document
-            , signatorypersonalnumberplacements = authorpersonalnumberplacements document
-            , signatorycompanynumberplacements = authorcompanynumberplacements document
-            , signatoryotherfields = authorotherfields document
-          }
         isSignatory person = SignatoryPartner `elem` signatoryroles person
    in do
      invitationMailContent <- mailInvitationToSignOrViewContent (ctxtemplates ctx) False ctx document author Nothing
@@ -668,14 +637,14 @@ pageDocumentForViewer ctx
        field "documentdaystosignboxvalue" $ documentdaystosignboxvalue
        field "anyinvitationundelivered" $ anyInvitationUndelivered document
        field "undelivered" $ map (signatoryemail . signatorydetails) $ undeliveredSignatoryLinks document
-       field "signatories" $ map (signatoryLinkFields ctx document author Nothing) $ filter isSignatory documentsignatorylinks
+       field "signatories" $ map (signatoryLinkFields ctx document author Nothing) $ signatoriesWithSecretary author document
        field "canberestarted" $ documentstatus `elem` [Canceled, Timedout, Rejected]
        field "cancelMailContent" $ cancelMailContent
        field "linkcancel" $ show $ LinkCancel document
        field "emailelegitimation" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)
        field "emailonly" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isNothing $ find (== ELegitimationIdentification) documentallowedidtypes)
        field "elegitimationonly" $ (isNothing $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)
-       field "docstate" (buildJS documentauthordetails documentsignatorylinks)
+       field "docstate" (buildJS (documentauthordetails author document) documentsignatorylinks)
        case msignlink of
            Nothing -> return ()
            Just siglink -> do
@@ -698,28 +667,19 @@ pageDocumentForSignatory action document ctx invitedlink author =
   let
       localscripts =
            "var docstate = "
-        ++ (buildJS documentauthordetails $ documentsignatorylinks document)
+        ++ (buildJS (documentauthordetails author document) $ documentsignatorylinks document)
         ++ "; docstate['useremail'] = '"
         ++ (BS.toString $ signatoryemail $ signatorydetails invitedlink)
         ++ "'; offer = " ++ if (isOffer document) then "true" else"false"
         ++ ";"
       magichash = signatorymagichash invitedlink
-      documentauthordetails = (signatoryDetailsFromUser author) {
-            signatoryemailplacements = authoremailplacements document
-            , signatoryfstnameplacements = authorfstnameplacements document
-            , signatorysndnameplacements = authorsndnameplacements document
-            , signatorycompanyplacements = authorcompanyplacements document
-            , signatorypersonalnumberplacements = authorpersonalnumberplacements document
-            , signatorycompanynumberplacements = authorcompanynumberplacements document
-            , signatoryotherfields = authorotherfields document
-          }
       allowedtypes = documentallowedidtypes document
       requiresEleg = isJust $ find (== ELegitimationIdentification) allowedtypes
       isSignatory person = SignatoryPartner `elem` signatoryroles person
   in do
     renderTemplate (ctxtemplates ctx) "pageDocumentForSignContent" $ do
       field "localscripts" localscripts
-      field "signatories" $ map (signatoryLinkFields ctx document author (Just invitedlink)) $ filter isSignatory (documentsignatorylinks document)
+      field "signatories" $ map (signatoryLinkFields ctx document author (Just invitedlink)) $ signatoriesWithSecretary author document
       field "rejectMessage" $  mailRejectMailContent (ctxtemplates ctx) Nothing ctx (prettyName author) document invitedlink
       field "partyUnsigned" $ renderListTemplate (ctxtemplates ctx) $  map (BS.toString . personname') $ partyUnsignedMeAndList magichash document
       field "action" $ show action
@@ -794,9 +754,10 @@ signatoryLinkFields
       field "datamismatch" datamismatch
       field "seendate" $ showDateOnly <$> signtime <$> maybeseeninfo
       field "reminderMessage" $ mailDocumentRemindContent ctxtemplates Nothing ctx document siglnk author 
-      field "role" $ if SignatoryPartner `elem` signatoryroles
+      field "role" $ if isSignatory siglnk
                      then "signatory"
                      else "viewer"
+      field "secretary"  $ (isAuthor document siglnk) &&  not (isSignatory siglnk)                       
 
 packToMString :: BS.ByteString -> Maybe String
 packToMString x =
@@ -804,7 +765,45 @@ packToMString x =
      then Nothing
      else Just $ BS.toString x
 
+isSignatory:: SignatoryLink -> Bool
+isSignatory = (SignatoryPartner `elem`) . signatoryroles
+    
+documentWithSecretary:: Document-> Bool
+documentWithSecretary doc = not $ any (\sl -> isAuthor doc sl && isSignatory sl ) $ documentsignatorylinks doc
 
+documentauthordetails :: User -> Document -> SignatoryDetails
+documentauthordetails author document=
+          (signatoryDetailsFromUser author) {
+            signatoryemailplacements = authoremailplacements document
+            , signatoryfstnameplacements = authorfstnameplacements document
+            , signatorysndnameplacements = authorsndnameplacements document
+            , signatorycompanyplacements = authorcompanyplacements document
+            , signatorypersonalnumberplacements = authorpersonalnumberplacements document
+            , signatorycompanynumberplacements = authorcompanynumberplacements document
+            , signatoryotherfields = authorotherfields document
+          }
+          
+secretarySignatoryLink :: User -> Document -> Maybe SignatoryLink 
+secretarySignatoryLink author doc = 
+    if (documentWithSecretary doc)
+     then Just $ SignatoryLink 
+          {   signatorylinkid  = SignatoryLinkID 0
+            , signatorydetails  = documentauthordetails author doc
+            , signatorymagichash = MagicHash 0 
+            , maybesignatory = Just $ userid author
+            , maybesigninfo = Nothing
+            , maybeseeninfo = Nothing
+            , invitationdeliverystatus = Unknown
+            , signatorysignatureinfo  = Nothing
+            , signatoryroles  = []
+            , signatorylinkdeleted = False
+        }   
+     else Nothing  
+signatoriesWithSecretary::User -> Document -> [SignatoryLink] 
+signatoriesWithSecretary author doc =
+    (filter isSignatory $ documentsignatorylinks doc) ++ 
+    (maybeToList $ secretarySignatoryLink author doc) 
+    
 -- Helper to get document after signing info text
 documentInfoText :: Context -> Document -> Maybe SignatoryLink -> User -> IO String
 documentInfoText ctx document siglnk author =
