@@ -22,9 +22,14 @@ signatoryBox =
         <span class="fieldvalue">$signatory.company$</span>
     </div>
    $endif$
-   $if(signatory.number)$
+   $if(signatory.personalnumber)$
      <div class="field">  
-      <span class="fieldvalue">$signatory.number$</span>
+      <span class="fieldvalue">$signatory.personalnumber$</span>
+     </div>
+   $endif$
+   $if(signatory.companynumber)$
+     <div class="field">  
+      <span class="fieldvalue">$signatory.companynumber$</span>
      </div>
    $endif$
    $endif$
