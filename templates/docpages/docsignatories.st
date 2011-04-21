@@ -38,6 +38,7 @@ signatoryBox =
          <span class="fieldvalue">$signatory.email$</span>
      </div>
    $endif$
+   $if(!signatory.secretary)$ 
    <div class="text">
     <div class="icon status $signatory.status$"></div> 
     $if(signatory.undeliveredEmail)$ <span style="color:#000000;position:relative;left:-4px;">!</span>  $endif$
@@ -45,6 +46,9 @@ signatoryBox =
    </div>
    $if(signatory.allowRemindForm)$ $reminderForm()$ $endif$
    $if(signatory.allowEmailChange)$ $changeEmailForm()$ $endif$   
+  $else$
+    <div class="text"> $secretaryMessage()$ </div>
+  $endif$
   </div>
 </div>
 ####
@@ -77,8 +81,13 @@ $else$
         Har ej granskat
     $endif$
 $endif$
-               
 ###       
+secretaryMessage = 
+    $if(contract)$  
+       Avsändare: Ej undertecknande part
+    $elseif(offer)$
+       Avsändare
+    $endif$
 ### FORM and button for reminding message
 ###
 reminderForm = 
