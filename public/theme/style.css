@@ -948,6 +948,18 @@ a.button {
     height:0px;
     width:0px;
 }
+
+/** 
+   If you have display:none; for an input submit in Chrome it
+   will not submit when you press enter.  This is a hacky
+   way of getting round this. 
+**/
+input[type=submit].hidden
+{
+    display: inherit;
+    visibility: hidden;
+}
+
 .transparent
 {
     border:0;
