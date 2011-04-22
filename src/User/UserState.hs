@@ -670,6 +670,7 @@ addUser (fstname, sndname) email passwd maybesupervisor = do
                                   , accountplan = Basic
                                   , signeddocstorage = Nothing
                                   , userpaymentmethod = Undefined
+                                  , preferreddesignmode = Nothing
                                   }                   
                 , userpaymentpolicy =  Payments.basicPaymentPolicy
                 , userpaymentaccount = Payments.emptyPaymentAccount 
