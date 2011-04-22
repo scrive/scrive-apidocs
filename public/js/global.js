@@ -1303,7 +1303,10 @@ function renumberParts() {
           var authorrole = $(this).find("input:radio[value='signatory']:checked");
           var signatoryrole = $(this).find("input:radio[value='signatory']:checked");
           var isSignatory = (authorrole.length + signatoryrole.length)>0;
-          if( isSignatory ) {
+          var isMultiPart = isMultiPartElem($(this));
+          if (isMultiPart) {
+             $(this).find(".partnumber").text("MASSUTSKICK");
+          } else if( isSignatory ) {
               if (offer)
                   $(this).find(".partnumber").text("MOTTAGARE");
               else    
