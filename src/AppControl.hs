@@ -36,7 +36,8 @@ import Kontra
 import qualified User.UserControl as UserControl
 import User.UserView as UserView
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy  as L
+import qualified Data.ByteString.Lazy as L
+import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Doc.DocControl as DocControl
 import qualified HSP as HSP
@@ -66,6 +67,7 @@ import System.Directory
 import ListUtil
 import Data.Word
 import System.Time
+import Happstack.Server.Internal.Cookie
 
 {- | 
   Defines the application's configuration.  This includes amongst other things
@@ -306,6 +308,27 @@ maybeReadTemplates mvar = modifyMVar mvar $ \(modtime,templates) -> do
                 return ((modtime', templates'), templates')
             else return ((modtime, templates), templates)
  
+showNamedHeader (_nm,hd) = BS.toString (hName hd) ++ ": [" ++ 
+                      concat (intersperse ", " (map (show . BS.toString) (hValue hd))) ++ "]" 
+
+showNamedCookie (name,cookie) = name ++ ": " ++ mkCookieHeader Nothing cookie 
+
+showNamedInput (name,input) = name ++ ": " ++ case inputFilename input of
+                                                  Just filename -> filename
+                                                  _ -> case inputValue input of
+                                                           Left tmpfilename -> "<<content in /tmp>>"
+                                                           Right value -> show (BSL.toString value) 
+                              
+
+showRequest rq maybeInputsBody = 
+    show (rqMethod rq) ++ " " ++ rqUri rq ++ rqQuery rq ++ "\n" ++
+    "post variables:\n" ++
+    maybe "" (unlines . map showNamedInput) maybeInputsBody ++
+    "http headers:\n" ++
+    (unlines $ map showNamedHeader (Map.toList $ rqHeaders rq)) ++
+    "http cookies:\n" ++
+    (unlines $ map showNamedCookie (rqCookies rq))
+    
 {- |
    Creates a context, routes the request, and handles the session.
 -}
@@ -328,7 +351,7 @@ appHandler appConf appGlobals = do
              rqcontent <- liftIO $ tryTakeMVar (rqInputsBody rq)
              when (isJust rqcontent) $
                  liftIO $ putMVar (rqInputsBody rq) (fromJust rqcontent)
-             liftIO $ logM "Happstack.Server" ERROR $ "ERROR" ++ (showDateMDY $ ctxtime ctx)++" "++(rqUri rq) ++" "++(show rq) ++ " " ++ show rqcontent
+             Log.error $ showRequest rq rqcontent
              response <- handleError
              setRsCode 404 response     
           ctx' <- get 
