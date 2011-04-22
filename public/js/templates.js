@@ -54,13 +54,15 @@ function placementToHTML(label, value) {
   if(!v) {
     v = label;
   }
-  var span = $("<span class='value'>").text(v);
-  return $("<div class='placedfield' style='cursor:pointer'>").append(span);
+  var d = $("<div class='placedfield' style='cursor:pointer'><span class='value'></span></div>");
+  $(".value",d).text(v);
+  return d;
 }
 
 function placedFieldHelper(value) {
-  var span = $("<span class='value'>").text(value);
-  return $("<div class='placedfieldhelper'>").append(span);
+  var d = $("<div class='placedfieldhelper'><span class='value'></span></div>");
+  $(".value",d).text(value);
+  return d;
 }
 
 function placePlacements(pls, label, value, sigid, fieldid) {
@@ -69,22 +71,22 @@ function placePlacements(pls, label, value, sigid, fieldid) {
     var d = placementToHTML(label, value);
     var page = $("#page" + pl.page);
     d.offset({left: pl.x, top: pl.y});
-    
     page.append(d);
     pagewidth = $("input[name='width']",page).val();
     pageheight = $("input[name='height']",page).val();
     setSigID(d, sigid);
     setFieldID(d, fieldid);
-    setHiddenField(d, "placedx", String(Math.round(d.position().left)));
-    setHiddenField(d, "placedy", String(Math.round(d.position().top)));
+    setHiddenField(d, "placedx", String(Math.round(pl.x)));
+    setHiddenField(d, "placedy", String(Math.round(pl.y)));
     setHiddenField(d, "placedpage", String(pl.page));
     setHiddenField(d, "placedwidth", pagewidth);
     setHiddenField(d, "placedheight",  pageheight);
+    d.css("position","absolute");
   });
 }
 
 function newHiddenValue(label, value) {
-  return $("<span style='display: none'>").addClass(label).text(value);
+  return $("<span style='display: none'></span>").addClass(label).text(value);
 }
 
 // getHiddenValue does not care if it's hidden
@@ -108,7 +110,7 @@ function setHiddenValue(field, label, value) {
 }
 
 function newHiddenField(name, value) {
-  return $("<input type='hidden'>").attr("value", value).attr("name", name);
+  return $("<input type='hidden'/>").attr("value", value).attr("name", name);
 }
 
 // works on any input field, not just hidden ones
@@ -864,7 +866,7 @@ function signatoryToHTML(isMultiple, sig) {
     n = sig.fstname + " " + sig.sndname;
   }
   
-  $("#peopleList ol").append($("<li>").append($("<a href='#'>").text(n)));
+  $("#peopleList ol").append($("<li>").append($("<a href='#'></a>").text(n)));
   sl.append(sigentry);
 
   sigentry.find(".csv.single").overlay({
