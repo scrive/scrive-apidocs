@@ -759,6 +759,8 @@ handleIssueCSVUpload document author = do
 
 {- |
     Deals with a switch to the document's functionality.
+    This'll also update the user preferences that they set up
+    in the switch confirmation dialog.
 -}
 handleIssueChangeFunctionality :: Document -> User -> Kontra KontraLink
 handleIssueChangeFunctionality document author = do
@@ -766,7 +768,25 @@ handleIssueChangeFunctionality document author = do
   mudoc <- updateDocument ctx author document
   case mudoc of
     Left _ -> mzero
-    Right udoc -> return $ LinkDesignDoc $ DesignStep2 (documentid udoc) Nothing Nothing
+    Right udoc -> do
+      muser <- handlePreferenceChange $ userid author
+      case muser of
+        Left _ -> mzero
+        Right _ -> return $ LinkDesignDoc $ DesignStep2 (documentid udoc) Nothing Nothing
+  where
+    handlePreferenceChange :: UserID -> Kontra (Either String User)
+    handlePreferenceChange userid = do
+      toBasic <- isFieldSet "tobasic"
+      toAdvanced <- isFieldSet "toadvanced"
+      case (toBasic, toAdvanced) of
+        (True, _) -> setPreferredMode $ Just BasicMode
+        (_, True) -> setPreferredMode $ Just AdvancedMode
+        _ -> setPreferredMode Nothing
+      where 
+        setPreferredMode :: Maybe DesignMode -> Kontra (Either String User)
+        setPreferredMode designmode = do
+          muser <- update $ SetPreferredDesignMode userid designmode
+          return muser
 
 {- |
     This will get and parse a csv file.  It
@@ -1122,6 +1142,7 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
   placedfieldids <- getAndConcat "placedfieldid"
 
   authorrole <- getFieldWithDefault "" "authorrole"
+  
   docfunctionality <- getCriticalField (asValidDocumentFunctionality author documentfunctionality) "docfunctionality"
   
   validmethods <- getAndConcat "validationmethod"
@@ -1154,23 +1175,13 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
   let authordetails = makeAuthorDetails placements fielddefs author
                         
   let isauthorsig = authorrole == "signatory"
-      isbasic = docfunctionality == BasicFunctionality
-      signatories2 =
-        case (isbasic, isauthorsig) of
-        (True, _) -> zip (authordetails : take 1 signatories) (repeat [SignatoryPartner])
-        (_, True) -> (authordetails,[SignatoryPartner]) : zip signatories roles2
-        (_, False) -> zip signatories roles2
+      signatories2 = if isauthorsig
+                       then (authordetails,[SignatoryPartner]) : zip signatories roles2
+                       else zip signatories roles2
       roles2 = map guessRoles signatoriesroles
       guessRoles x | x == BS.fromString "signatory" = [SignatoryPartner]
                    | otherwise = []
-      mcsvsigindex = 
-        if isbasic
-        then Nothing
-        else fmap (personToSigIndex isauthorsig) mcsvpersonindex
-      docallowedidtypes2 =
-        if isbasic
-        then [EmailIdentification]
-        else docallowedidtypes
+      mcsvsigindex = fmap (personToSigIndex isauthorsig) mcsvpersonindex
   -- FIXME: tell the user what happened!
   -- when (daystosign<1 || daystosign>99) mzero
 
@@ -1178,10 +1189,19 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
   --              (sequence $ map (query . GetUserByEmail . Email) signatoriesemails)
 
   -- author is gotten above, no?
-  -- Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor document
+  -- Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor documentis
 
-  update $ UpdateDocument ctxtime documentid
-           signatories2 daystosign invitetext author authordetails docallowedidtypes2 mcsvsigindex docfunctionality
+  if docfunctionality == BasicFunctionality
+    then do
+     --if they are switching to basic we want to lose information
+     let basicauthordetails = removeFieldsAndPlacements authordetails
+         basicsignatories = zip (basicauthordetails : take 1 (map removeFieldsAndPlacements signatories)) (repeat [SignatoryPartner])
+     update $ UpdateDocument ctxtime documentid 
+                basicsignatories Nothing invitetext author basicauthordetails docallowedidtypes Nothing docfunctionality
+    else do
+     update $ UpdateDocument ctxtime documentid
+           signatories2  daystosign invitetext author authordetails docallowedidtypes mcsvsigindex docfunctionality
+
               
 {- |
    Constructs a list of documents (Arkiv) to show to the user.

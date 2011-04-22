@@ -40,6 +40,8 @@ module Doc.DocStateUtils (
     -- Other utils
     , signatoryDetailsFromUser
     , isMatchingSignatoryLink
+    , removeFieldsAndPlacements
+    
 
     -- History management
     , appendHistory
@@ -136,11 +138,22 @@ modifyDocumentWithAction condition docid action = do
 
 -- Feature checking
 
+{- |
+    These features are either available for AdvancedFunctionality
+    or not available for BasicFunctionality.  I split them into individual
+    features because I thought it made the code for checking each of them
+    easier to write, not because I thought we'd be needing that level of
+    granuality particularly.
+-}
 data Feature = CSVUse
-               | ElegUse
+               | DaysToSignUse
                | MultiplePartiesUse
                | SecretaryUse
                | SpecialRoleUse
+               | AuthorCustomFieldUse
+               | AuthorPlacementUse
+               | SigCustomFieldUse
+               | SigPlacementUse
 
 {- |
     This bit ensures that all the features used by a document
@@ -153,7 +166,8 @@ checkFeatureSupport doc =
     False -> Left "features are not supported"
     True -> Right ()
   where
-    features = [CSVUse, ElegUse, MultiplePartiesUse, SecretaryUse, SpecialRoleUse]
+    features = [CSVUse, DaysToSignUse, MultiplePartiesUse, SecretaryUse, SpecialRoleUse,
+                AuthorCustomFieldUse, AuthorPlacementUse, SigCustomFieldUse]
     {-|
        Checks that any features in use are supported.
     -}
@@ -168,8 +182,8 @@ checkFeatureSupport doc =
     isRequired :: Feature -> Document -> Bool
     isRequired CSVUse Document{documentcsvupload} = 
       isJust documentcsvupload
-    isRequired ElegUse Document{documentallowedidtypes} = 
-      isJust $ find (== ELegitimationIdentification) documentallowedidtypes
+    isRequired DaysToSignUse Document{documentdaystosign} = 
+      isJust documentdaystosign
     isRequired MultiplePartiesUse Document{documentsignatorylinks} = 
       (length documentsignatorylinks) > 2
     isRequired SecretaryUse doc@Document{documentsignatorylinks} = 
@@ -182,6 +196,41 @@ checkFeatureSupport doc =
           case signatoryroles of
             [SignatoryPartner] -> False
             _ -> True
+    isRequired AuthorCustomFieldUse doc@Document{authorotherfields} = not $ Data.List.null authorotherfields
+    isRequired AuthorPlacementUse doc@Document{
+                                      authorfstnameplacements
+                                    , authorsndnameplacements
+                                    , authorcompanyplacements
+                                    , authoremailplacements
+                                    , authorpersonalnumberplacements
+                                    , authorcompanynumberplacements} =
+      any (not . Data.List.null) 
+                       [ authorfstnameplacements
+                       , authorsndnameplacements
+                       , authorcompanyplacements
+                       , authoremailplacements
+                       , authorpersonalnumberplacements
+                       , authorcompanynumberplacements]
+    isRequired SigCustomFieldUse doc@Document{documentsignatorylinks} =
+      any (not . Data.List.null . signatoryotherfields . signatorydetails) documentsignatorylinks
+    isRequired SigPlacementUse doc@Document{documentsignatorylinks} =
+      any (isPlacement . signatorydetails) documentsignatorylinks
+      where isPlacement :: SignatoryDetails -> Bool
+            isPlacement SignatoryDetails{ 
+                             signatoryfstnameplacements
+                           , signatorysndnameplacements
+                           , signatorycompanyplacements
+                           , signatoryemailplacements
+                           , signatorypersonalnumberplacements
+                           , signatorycompanynumberplacements } =
+              any (not . Data.List.null) 
+                               [ signatoryfstnameplacements
+                               , signatorysndnameplacements
+                               , signatorycompanyplacements
+                               , signatoryemailplacements
+                               , signatorypersonalnumberplacements
+                               , signatorycompanynumberplacements ]
+
     {-|
        Defines which Feature is supported by each type of DocumentFunctionality.
     -}
@@ -321,3 +370,16 @@ isViewer doc user = any f $ documentsignatorylinks doc
                     || (unEmail $ useremail $ userinfo user) == (signatoryemail $ signatorydetails link))
                    && signatoryroles link == []
 
+{- |
+    Removes the field placements and the custom fields.
+-}
+removeFieldsAndPlacements :: SignatoryDetails -> SignatoryDetails
+removeFieldsAndPlacements sd = sd {
+      signatoryfstnameplacements = []
+    , signatorysndnameplacements = []
+    , signatorycompanyplacements = []
+    , signatoryemailplacements = []
+    , signatorypersonalnumberplacements = []
+    , signatorycompanynumberplacements = []
+    , signatoryotherfields = []
+  }
