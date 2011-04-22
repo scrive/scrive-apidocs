@@ -505,16 +505,15 @@ pageDocumentDesign ctx
        field "docstate" (buildJS documentauthordetails documentsignatorylinks)
        documentAuthorInfo author
        csvfields
-       documentFunctionalityFields document
+       documentFunctionalityFields author document
        documentInfoFields document
        documentViewFields document
        designViewFields step
 
-documentFunctionalityFields :: Document -> Fields
-documentFunctionalityFields Document{documentfunctionality} = do
+documentFunctionalityFields :: User -> Document -> Fields
+documentFunctionalityFields User{usersettings} Document{documenttype, documentfunctionality} = do
   field "docfunctionality" $ show documentfunctionality
-  field "basic" $ documentfunctionality==BasicFunctionality
-  field "advanced" $ documentfunctionality==AdvancedFunctionality
+  field "basiccontract" $ documenttype==Contract && documentfunctionality==BasicFunctionality
 
 documentCsvFields :: KontrakcjaTemplates -> Document -> IO Fields
 documentCsvFields templates document@Document{documentallowedidtypes, documentcsvupload} =  do

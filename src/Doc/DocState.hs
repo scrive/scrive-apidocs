@@ -134,6 +134,13 @@ getTimeoutedButPendingDocuments now = do
                                                   Just timeout -> (documentstatus doc) == Pending &&(unTimeoutTime timeout) < now
                                                   _ -> False           
     
+newDocumentFunctionality :: DocumentType -> User -> DocumentFunctionality
+newDocumentFunctionality documenttype user = 
+  case (documenttype==Contract, preferreddesignmode $ usersettings user) of
+    (False, _) -> AdvancedFunctionality
+    (True, Nothing) -> AdvancedFunctionality
+    (True, Just AdvancedMode) -> AdvancedFunctionality
+    (True, Just BasicMode) -> BasicFunctionality
 
 newDocument :: User
             -> BS.ByteString
@@ -153,7 +160,7 @@ newDocument user title documenttype ctime = do
           , documentfiles = []
           , documentstatus = Preparation
           , documenttype = documenttype
-          , documentfunctionality = AdvancedFunctionality
+          , documentfunctionality = newDocumentFunctionality documenttype user
           , documentctime = ctime
           , documentmtime = ctime
           , documentdaystosign = Nothing

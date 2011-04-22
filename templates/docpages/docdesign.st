@@ -46,7 +46,7 @@ pageDocumentDesign=
         <a href="#" class="step2select text">
             $if(template)$
                 Utforma mall
-            $elseif(basic)$
+            $elseif(basiccontract)$
                 Fyll i uppgifter &amp; Skicka!
             $elseif(contract)$
                 Fyll i uppgifter
@@ -55,8 +55,8 @@ pageDocumentDesign=
             $endif$
         </a>  
       </div>
-      $if(contract)$$if(advanced)$
-      <!-- Offers and basic functionality don't have step 3 -->
+      $if(contract)$$if(!basiccontract)$
+      <!-- Offers and basic contracts don't have step 3 -->
       <div id="step3select" class="$if(step3)$current$endif$">
         <a href="#" class="step3select clickArea"></a>
         <a href="#" class="step3select step3icon"> </a>
@@ -70,22 +70,23 @@ pageDocumentDesign=
       </div>
       $endif$$endif$
       <div id="signStepsMenuEmptyStep">
-            $if(!template)$
-             $if(advanced)$
-               <div class="signStepsBodySave" style="float:right;padding-right:19px;font-size:11px">
+             $if(!template)$$if(!basiccontract)$
+              <div class="signStepsBodySave extraLink">
                  <small><a class="submit" form=".stepForm" rel="template">SPARA SOM MALL</a></small>
-               </div>
-               $if(contract)$
-                 <div class="signStepsFunctionalityChange">
-                   <small><a id="tobasic" rel="#dialog-confirm-basic">ENKEL FUNKTIONALITET</a></small>
-                 </div>
-               $endif$
-             $elseif(contract)$
-               <div class="signStepsFunctionalityChange">
-                 <small><a id="toadvanced" rel="#dialog-confirm-advanced">ADVANCERAD FUNKTIONALITET</a></small>
-               </div>
-             $endif$
-            $endif$
+              </div>
+             $endif$$endif$
+
+             $if(!template)$$if(contract)$
+                $if(basiccontract)$
+                  <div class="signStepsFunctionalityChange  extraLink">
+                   <small><a id="toadvanced" class="switchIcon" rel="#dialog-confirm-advanced" style="padding-right:19px;">BYT TILL AVANCERAD PROCESS</a></small>
+                  </div>
+                $else$
+                  <div class="signStepsFunctionalityChange extraLink">
+                   <small><a id="tobasic" class="switchIcon" rel="#dialog-confirm-basic">BYT TILL FÖRENKLAD PROCESS</a></small>
+                  </div>
+                $endif$
+              $endif$$endif$
       </div>
     </div>
 
@@ -99,7 +100,7 @@ pageDocumentDesign=
 
         <div id="signStep2Content" $if(!step2)$ style="display: none" $endif$>
           <div id="signStepsBody">
-            $if(advanced)$
+            $if(!basiccontract)$
             <div id="signStepsBodyLeft">
               <div id="people">
                 <div class="signStepsBodyTitle">
@@ -126,12 +127,16 @@ pageDocumentDesign=
                 <!-- 008 change/new -->
                 <div class="signStepsBodyIcons">
                   <span class="partnumber">PART 1</span>
-                  $if(contract)$$if(advanced)$<a href="#man2" class="man"></a>$endif$$endif$
-                  <a class="plus" href="#"></a>
+                  $if(!basiccontract)$
+                    $if(contract)$
+                      <a href="#man2" class="man"></a>
+                    $endif$
+                    <a class="plus" href="#"></a>
+                  $endif$
                 </div>
                 
                 <!-- 013 changed -->
-                <div class="sigentry signStepsBodyForms" id="peopleDetails">
+                <div class="sigentry signStepsBodyForms $if(basiccontract)$dragDisabled$endif$" id="peopleDetails">
                   <span class="fields">
                     $if(authorfstname)$
                     <span class='dragtext authorfstname inputWrapper'>
@@ -139,8 +144,7 @@ pageDocumentDesign=
                       <span style="display:none;" class="fieldsigid">author</span>
                       <span style="display:none;" class="type">author</span>
                       <span class="fieldvalue">$authorfstname$</span>
-                      <img src="/theme/images/iconHand.png" class="draghandle"
-                           alt="drag" />
+                      $dragndropIcon()$
                     </span>
                     $endif$
                     $if(authorsndname)$
@@ -149,8 +153,7 @@ pageDocumentDesign=
                       <span style="display:none;" class="fieldsigid">author</span>
                       <span style="display:none;" class="type">author</span>
                       <span class="fieldvalue">$authorsndname$</span>
-                      <img src="/theme/images/iconHand.png" class="draghandle"
-                           alt="drag" />
+                      $dragndropIcon()$
                     </span>
                     $endif$
                     $if(authoremail)$
@@ -160,8 +163,7 @@ pageDocumentDesign=
                       <span style="display:none;"
                             class="type">author</span>
                       <span class="fieldvalue">$authoremail$</span>
-                      <img src="/theme/images/iconHand.png" class="draghandle"
-                           alt="drag" />
+                      $dragndropIcon()$
                     </span>
                     $endif$
                     $if(authorcompany)$
@@ -171,8 +173,7 @@ pageDocumentDesign=
                       <span style="display:none;" class="type">sig</span>
                       
                       <span class="fieldvalue">$authorcompany$</span>
-                      <img src="/theme/images/iconHand.png" class="draghandle"
-                           alt="drag" />
+                      $dragndropIcon()$
                     </span>
                     $endif$
                     $if(authorpersonnumber)$
@@ -182,8 +183,7 @@ pageDocumentDesign=
                       <span style="display:none;"
                             class="type">sig</span>
                       <span class="fieldvalue">$authorpersonnumber$</span>
-                      <img src="/theme/images/iconHand.png" class="draghandle" 
-                           alt="drag" />
+                      $dragndropIcon()$
                     </span>
                     $endif$
                     $if(authorcompanynumber)$
@@ -193,8 +193,7 @@ pageDocumentDesign=
                       <span style="display:none;"
                             class="type">sig</span>
                       <span class="fieldvalue">$authorcompanynumber$</span>
-                      <img src="/theme/images/iconHand.png" class="draghandle" 
-                           alt="drag" />
+                      $dragndropIcon()$
                     </span>
                     $endif$
                     <div class="otherfields">
@@ -213,7 +212,7 @@ pageDocumentDesign=
             </div>
             
             <div id="signStepsBodyFunctions">
-              $if(advanced)$
+              $if(!basiccontract)$
                 $if(contract)$
                <div id="signStepsBodyFunctionsBox">
                 <ul>
@@ -276,14 +275,26 @@ pageDocumentDesign=
               </div>
                 $endif$
              </div>
-             $elseif(basic)$
-             <div class="basicfunctionpanel" style="padding-top:7px;">
-               <div class="signbutton float-left" style="padding-top:46px">
-                 <a type="button" id="signinvite" rel="#dialog-confirm-signinvite" class="btn-big blue center">
+             $elseif(basiccontract)$
+             <div id="signStepsBodyFunctionsBox">
+               <div>
+                 <div style="padding-bottom:2px;padding-left:1px;">Välj verifieringsmetod</div>
+                 <select name="validationmethod"
+                         id="validationdropdown">
+                   <option value="email" $if(emailselected)$selected$endif$>E-post</option>
+                   <option value="eleg" $if(elegselected)$selected$endif$>E-Legitimation</option>
+                 </select>
+               </div>
+               <div class="signStepsBodyInvation" style="padding-top:7px;padding-bottom:9px;" class="center">
+                 <small><a rel="#edit-invite-text-dialog" id="editinvitetextlink" href="#" style="padding-top:3px;">HÄLSNINGSMEDDELANDE</a></small>
+                 <input type="hidden" id="invitetext" name="invitetext" value="$documentinvitetext$" />
+               </div>
+               <div class="signbutton" style="display:inline-block;">
+                 <a type="button" id="signinvite" rel="#dialog-confirm-signinvite" class="btn-small blue center">
                    <div class="left"></div>
-                   <div class="label" style="width:120px;padding-left:28px;padding-right:24px;">
-                     <span>SkrivaPå </span>
-                     <span class="icon cross"></span>
+                   <div class="label" style="width:134px;">
+                     <span style="padding-left:9px;padding-right:9px">SkrivaPå</span>
+                     <span class="btn-symbol cross"></span>
                    </div> 
                    <div class="right"></div>
                  </a>
@@ -295,7 +306,7 @@ pageDocumentDesign=
         </div>
 
 
-        $if(advanced)$$if(contract)$
+        $if(!basiccontract)$$if(contract)$
         <div id="signStep3Content" $if(!step3)$ style="display: none" $endif$>
 
           <div id="signStepsBody">
@@ -435,20 +446,21 @@ pageDocumentDesign=
     <!-- 008 change/new -->
     <div class="signStepsBodyIcons">
       <span class="partnumber">PART 1</span>
-      $if(advanced)$
+      $if(!basiccontract)$
         $if(contract)$
         <a href="#" class="man"></a>
         <a href="#" class="csv multi" rel="#dialog-csvupload-1"></a>
         <span class="csv single" style="display:none;"></span>
+        <a href="#" class="plus"></a>
         $elseif(offer)$
         <input type="hidden" name="signatoryrole" value="signatory">
+        <a href="#" class="plus"></a>
         $endif$
       $endif$
-      <a href="#" class="plus"></a>
     </div>
     
     <!-- 013 changed -->
-    <div class="sigentry signStepsBodyForms" id="peopleDetails">
+    <div class="sigentry signStepsBodyForms $if(basiccontract)$dragDisabled$endif$" id="peopleDetails">
 
       <input type="hidden" name="sigid" value="" />
       <span class="fields">
@@ -457,45 +469,39 @@ pageDocumentDesign=
           <span style="display:none;" class="type">author</span>
           <input type="text" infotext="Förnamn"
                  name="signatoryfstname" autocomplete="off" value="" />
-          <img src="/theme/images/iconHand.png" class="draghandle"
-               alt="drag" />
+          $dragndropIcon()$
         </span>
         <span class='dragfield sigsndname inputWrapper'>
           <span style="display:none;" class="fieldid">sndname</span>
           <span style="display:none;" class="type">author</span>
           <input type="text" infotext="Efternamn"
                  name="signatorysndname" autocomplete="off" value="" />
-          <img src="/theme/images/iconHand.png" class="draghandle"
-               alt="drag" />
+          $dragndropIcon()$
         </span>
         <span class='dragfield sigemail inputWrapper'>
           <span style="display:none;" class="fieldid">email</span>
           <span style="display:none;" class="type">author</span>
           <input type="email" infotext="E-post" name="signatoryemail" autocomplete="off" />
-          <img src="/theme/images/iconHand.png" class="draghandle"
-               alt="drag" />
+          $dragndropIcon()$
         </span>
         <br/>
         <span class='dragfield sigcomp inputWrapper'>
           <span style="display:none;" class="fieldid">company</span>
           <span style="display:none;" class="type">sig</span>
           <input type="text" infotext="Företag" name="signatorycompany" autocomplete="off" />
-          <img src="/theme/images/iconHand.png" class="draghandle"
-               alt="drag" />
+          $dragndropIcon()$
         </span>
         <span class='dragfield sigpersnum inputWrapper'>
           <span style="display:none;" class="fieldid">personalnumber</span>
           <span style="display:none;" class="type">sig</span>
           <input type="text" infotext="Pers. nr" name="signatorypersonalnumber" autocomplete="off" />
-          <img src="/theme/images/iconHand.png" class="draghandle" 
-               alt="drag" />
+          $dragndropIcon()$
         </span>
         <span class='dragfield sigcompnum inputWrapper'>
           <span style="display:none;" class="fieldid">companynumber</span>
           <span style="display:none;" class="type">sig</span>
           <input type="text" infotext="Org. nr" name="signatorycompanynumber" autocomplete="off" />
-          <img src="/theme/images/iconHand.png" class="draghandle" 
-               alt="drag" />
+          $dragndropIcon()$
         </span>
       </span>
       <div class="otherfields">
@@ -511,6 +517,8 @@ pageDocumentDesign=
   </span>
 </div>
 ####
+####
+dragndropIcon=$if(!basiccontract)$<img src="/theme/images/iconHand.png" class="draghandle" alt="drag" />$endif$
 #####
 validationdropdown= 
 <div>
@@ -691,18 +699,19 @@ pageDocumentForAuthorHelpersLocalDialogs=
   </form>
 
   <form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-advanced" rel=".stepForm">
-    <input type="hidden" name="changefunctionality" value="true" /> 
+    <input type="hidden" name="changefunctionality" value="true" />
+    <input type="hidden" name="toadvanced" value="true" />
     <div class="modal-container">
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
-          <h2 id="dialog-title">Avancerad Funktionalitet</h2>
+          <h2 id="dialog-title">Vill du byta till avancerad process?</h2>
         </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
         <div class="modal-content">
-          <p>Är du säker?</p>
+          <p>Du kan byta till avancerad process för att ta del av mer avancerade funktioner så som förfallodatum, mallar, massutskick mm. Denna process tillhör betalplanerna Business och Enterprise, även vid fri testperiod.</p>
         </div>
       </div>
       <div class="modal-footer">
@@ -710,7 +719,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
         <a href="#" class="btn-small green float-right submiter toadvanced">
           <div class="left"></div>
           <div class="label">
-            <span>Ok</span>
+            <span>Byt process</span>
           </div>
           <div class="right"></div>
         </a>
@@ -719,18 +728,19 @@ pageDocumentForAuthorHelpersLocalDialogs=
   </form>
 
   <form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-basic" rel=".stepForm">
-    <input type="hidden" name="changefunctionality" value="true" /> 
+    <input type="hidden" name="changefunctionality" value="true" />
+    <input type="hidden" name="tobasic" value="true" />
     <div class="modal-container">
       <div class="modal-header">
         <span class="modal-icon message"></span>
         <span class="modal-title">
-          <h2 id="dialog-title">Enkel Funktionalitet</h2>
+          <h2 id="dialog-title">Vill du byta till förenklad process?</h2>
         </span>
         <a class="modal-close close"> </a>
       </div>
       <div class="modal-body">
         <div class="modal-content">
-          <p>Är du säker?</p>
+          <p>Du kan byta till förenklad process för att göra processen ännu smidigare. Vid betalplan Business eller Enterprise kan du givetvis byta tillbaks när du vill, även vid fri testperiod.</p>
         </div>
       </div>
       <div class="modal-footer">
@@ -738,7 +748,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
         <a href="#" class="btn-small green float-right submiter tobasic">
           <div class="left"></div>
           <div class="label">
-            <span>Ok</span>
+            <span>Byt process</span>
           </div>
           <div class="right"></div>
         </a>

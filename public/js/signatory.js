@@ -113,11 +113,11 @@ function magicUpdate(){
 }
 
 function isDraggableField(field){
-    return $(field).hasClass("dragfield");
+    return $(field).hasClass("dragfield") && !$(field).parents("sigentry").hasClass("dragDisabled");;
 }
 
 function isDraggableText(field){
-    return $(field).hasClass("dragtext");
+    return $(field).hasClass("dragtext") && !$(field).parents("sigentry").hasClass("dragDisabled");
 }
 
 function isStandardField(field) {

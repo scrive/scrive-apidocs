@@ -19,6 +19,7 @@ module User.UserState
     , User(..)
     , UserInfo(..)
     , UserSettings(..)
+    , DesignMode(..)
     , UserID(..)
     , Users
     , UserStats(..)
@@ -41,6 +42,7 @@ module User.UserState
     , SetUserInfo(..)
     , SetInviteInfo(..)
     , SetUserSettings(..)
+    , SetPreferredDesignMode(..)
     , SetUserPaymentAccount(..)
     , SetUserPaymentPolicyChange(..)
     , SetUserPassword(..)
@@ -172,12 +174,24 @@ data UserInfo = UserInfo {
           }        
     deriving (Eq, Ord, Typeable)
 
+data UserSettings0  = UserSettings0 {
+               accounttype0 :: UserAccountType
+             , accountplan0 :: UserAccountPlan
+             , signeddocstorage0 :: Maybe TrustWeaverStorage
+             , userpaymentmethod0 :: PaymentMethod
+      }
+    deriving (Eq, Ord, Typeable)
+
 data UserSettings  = UserSettings {
                accounttype :: UserAccountType
              , accountplan :: UserAccountPlan
              , signeddocstorage :: Maybe TrustWeaverStorage
              , userpaymentmethod :: PaymentMethod
+             , preferreddesignmode :: Maybe DesignMode
       }
+    deriving (Eq, Ord, Typeable)
+
+data DesignMode = BasicMode | AdvancedMode
     deriving (Eq, Ord, Typeable)
       
 data User = User
@@ -368,6 +382,7 @@ deriving instance Show PaymentMethod
 deriving instance Show UserAccountPlan 
 deriving instance Show UserInfo
 deriving instance Show UserSettings
+deriving instance Show DesignMode
 deriving instance Show User
 deriving instance Show Email
 deriving instance Show FlashMessage
@@ -751,6 +766,20 @@ instance Migrate UserInfo0 UserInfo where
           , useremail = useremail0
           }
 
+instance Migrate UserSettings0 UserSettings where
+    migrate (UserSettings0 {
+            accounttype0
+          , accountplan0
+          , signeddocstorage0
+          , userpaymentmethod0
+          }) = UserSettings {
+            accounttype = accounttype0
+          , accountplan = accountplan0
+          , signeddocstorage = signeddocstorage0
+          , userpaymentmethod = userpaymentmethod0
+          , preferreddesignmode = Nothing
+          }
+
 createPassword :: BS.ByteString -> IO Password
 createPassword password = do
   salt <- makeSalt
@@ -833,7 +862,12 @@ instance Version UserInfo0
 instance Version UserInfo where
     mode = extension 1 (Proxy :: Proxy UserInfo0)
 
-instance Version UserSettings
+instance Version UserSettings0
+
+instance Version UserSettings where
+    mode = extension 1 (Proxy :: Proxy UserSettings0)
+
+instance Version DesignMode
 
 instance Version FlashType
 
@@ -1055,7 +1089,12 @@ setUserInfo userid userinfo =
 setUserSettings :: UserID -> UserSettings -> Update Users (Either String User)
 setUserSettings userid usersettings =
     modifyUser userid $ \user -> 
-            Right $ user { usersettings = usersettings }   
+            Right $ user { usersettings = usersettings }
+
+setPreferredDesignMode :: UserID -> Maybe DesignMode -> Update Users (Either String User)
+setPreferredDesignMode userid designmode =
+    modifyUser userid $ \user ->
+            Right $ user { usersettings = (usersettings user){ preferreddesignmode = designmode } }
 
 
 setUserPaymentAccount :: UserID -> Payments.UserPaymentAccount -> Update Users (Either String User)
@@ -1173,6 +1212,7 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'setInviteInfo
                     , 'setUserInfo
                     , 'setUserSettings
+                    , 'setPreferredDesignMode
                     , 'setUserPaymentAccount 
                     , 'setUserPaymentPolicyChange
                     , 'freeUserFromPayments
@@ -1205,6 +1245,8 @@ $(deriveSerializeFor [ ''User
                      , ''InviteInfo
                      , ''Friend
                      , ''UserSettings
+                     , ''UserSettings0
+                     , ''DesignMode
                      , ''UserInfo
                      , ''SupervisorID
                      , ''Password
