@@ -1,6 +1,7 @@
 #!/bin/bash
 
-repo=$1
+repo=$3
+tocopy=$1
 prefix=$2
 date=`date -u "+%Y-%m-%d-%H-%M-%S%z"`
 zipfile=$prefix-$date.tar.gz
@@ -17,7 +18,7 @@ tar zcf "$zipfile"                    \
     --exclude=*.log                   \
     --exclude=.hpc*                   \
     --exclude=_locakal_ticket_backup* \
-    $repo/
+    $tocopy/
 ls -lh "$zipfile"
 
 echo "Generating signature hash"
