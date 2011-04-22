@@ -626,7 +626,9 @@ handleIssueSign document author = do
                 ([],d:[]) -> do
                     addModal $ modalSignInviteView d
                     return $ LinkIssueDoc (documentid d)
-                ([],ds) -> return $ LinkContracts emptyListParams
+                ([],ds) -> do 
+                    addFlashMsg =<< (liftIO $ flashMessageCSVSent (length ds) (ctxtemplates ctx))
+                    return $ LinkContracts emptyListParams
                 _ -> mzero
             Left link -> return link
         Left _ -> mzero
@@ -655,7 +657,9 @@ handleIssueSend document author = do
                      then addModal $ modalOfferCreated d
                      else addModal $ modalSignInviteView d
                     return $ LinkIssueDoc (documentid d)
-                ([],ds) -> return $ LinkContracts emptyListParams
+                ([],ds) -> do 
+                    addFlashMsg =<< (liftIO $ flashMessageCSVSent (length ds) (ctxtemplates ctx))
+                    return $ LinkContracts emptyListParams
                 _ -> mzero
             Left link -> return link
         Left _ -> mzero
