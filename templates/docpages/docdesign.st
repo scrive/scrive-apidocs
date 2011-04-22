@@ -449,8 +449,8 @@ pageDocumentDesign=
       $if(!basiccontract)$
         $if(contract)$
         <a href="#" class="man"></a>
-        <a href="#" class="csv multi" rel="#dialog-csvupload-1"></a>
-        <span class="csv single" style="display:none;"></span>
+        <a href="#" class="csv single" rel="#dialog-csvupload-1"></a>
+        <a href="#" class="csv multi" rel="#dialog-csvupload-2" style="display:none;"></a>
         <a href="#" class="plus"></a>
         $elseif(offer)$
         <input type="hidden" name="signatoryrole" value="signatory">
