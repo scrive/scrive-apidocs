@@ -200,3 +200,5 @@ flashMessageThanksForTheQuestion=Ditt meddelande har skickats! Vi återkommer in
 ###
 flashMessageInvalidCSV=Det uppstod ett problem med datan i din .csv. Var vänling och kontrollera och ladda upp igen.
 ###
+flashMessageCSVSent=Dokumentet är skickat till $doccount$ parter.
+###
