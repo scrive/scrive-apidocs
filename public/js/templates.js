@@ -750,18 +750,15 @@ function tearDownCSVUpload(sigentry) {
 function setupAsMultiplePart(sigentry) {
   sigentry.addClass("multipart");
   var icons = sigentry.find('.signStepsBodyIcons');
-  icons.find(".multi").hide();
-  icons.find(".single").show();
-  fileinfo = $("#templates").find(".csvfileinfo").clone();
-  icons.append(fileinfo);
+  icons.find(".csv.single").hide();
+  icons.find(".csv.multi").show();
 }
 
 function setupAsSinglePart(sigentry) {
   sigentry.removeClass("multipart");
   var icons = sigentry.find('.signStepsBodyIcons');
-  icons.find(".multi").show();
-  icons.find(".single").hide();
-  icons.find(".csvfileinfo").remove();
+  icons.find(".csv.single").show();
+  icons.find(".csv.multi").hide();
   sigentry.find("input[name='signatoryfstname']").change();
 }
 
@@ -870,7 +867,7 @@ function signatoryToHTML(isMultiple, sig) {
   $("#peopleList ol").append($("<li>").append($("<a href='#'>").text(n)));
   sl.append(sigentry);
 
-  sigentry.find(".multi").overlay({
+  sigentry.find(".csv.single").overlay({
     mask: standardDialogMask,
     onBeforeLoad: function() {
       csvpersonindex = $("form").find("input[type='hidden'][name='csvpersonindex']").attr("value");
@@ -887,7 +884,7 @@ function signatoryToHTML(isMultiple, sig) {
     }
   });
 
-  sigentry.find(".csvinfo").overlay({
+  sigentry.find(".csv.multi").overlay({
     mask: standardDialogMask
   });
 }
@@ -971,7 +968,7 @@ function initializeTemplates () {
   } else {
     people.eq(initialperson - 1).addClass("currentPerson");
     if (isaftercsvupload) {
-      people.eq(initialperson - 1).find(".csvinfo").click();
+      people.eq(initialperson - 1).find(".csv.multi").click();
     }
   }
 
