@@ -1,42 +1,41 @@
 .flash-container {
-	background: url(../img/spr-flash-bg.png) 0 -50px repeat-x;
-	cursor: pointer;
-	-display: none;
-	left: 0px;
-	height: 50px;
-	position: absolute;
-	right: 0;
-	top: 0;
-	z-index: 100;
-	-moz-box-shadow: -5px 2px 5px #666;
+    background: url(../img/spr-flash-bg.png) 0 -50px repeat-x;
+    cursor: pointer;
+    -display: none;
+    left: 0px;
+    height: 50px;
+    position: absolute;
+    right: 0;
+    top: 0;
+    z-index: 100;
+    -moz-box-shadow: -5px 2px 5px #666;
     text-align: left;
     font-size: 13pt;
     -moz-border-radius: 1px 1px 1px 1px;
-    background-color: white;
     border-bottom: 1px solid #111111;
     color: #111111;
 }
 
 .flash-container:before {
-	bottom: 0;
-	content: " ";
-	left: 0;
-	position: absolute;
-	right: 0;
-	top: 0;
-	-moz-box-shadow: inset 0 0 2px #fff;
+    bottom: 0;
+    content: " ";
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    -moz-box-shadow: inset 0 0 2px #fff;
 }
 
 .flash-container.green {
-	background-position: 0 -50px;
+    background-position: 0 -50px;
 }
 
 .flash-container.red {
-	background-position: 0 0;
+    background-position: 0 0;
 }
 
 .flash-container.blue {
-	background-position: 0 -100px;
+    background-position: 0 -100px;
 }
 
 .flash-content {
