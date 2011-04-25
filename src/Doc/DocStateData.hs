@@ -661,7 +661,7 @@ data Document = Document
     , authorpersonalnumberplacements :: [FieldPlacement]
     , authorcompanynumberplacements  :: [FieldPlacement]
     , authorotherfields              :: [FieldDefinition]
-    , documentcancelationreason      :: Maybe CancelationReason -- ??
+    , documentcancelationreason      :: Maybe CancelationReason -- When a document is cancelled, there are two (for the moment) possible explanations. Manually cancelled by the author and automatically cancelled by the eleg service because the wrong person was signing.
     }
 
 data CancelationReason =  ManualCancel
