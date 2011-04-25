@@ -290,8 +290,8 @@ mailAccountBySigningContent=
 2. Välj lösenord och acceptera villkoren (inga kostnader, inga förpliktelser)<br>
 3. Färdig</p>
 
-<p>Av säkerhetsskäl inaktiveras länken inom 24h:<br>
-<a href="$ctxhostpart$$activationlink$">$ctxhostpart$$activationlink$</a></p>
+<p>Av säkerhetsskäl inaktiveras länken inom 24h: <br>
+<a href="https://$ctxhostpart$$activationlink$">$ctxhostpart$$activationlink$</a></p>
 
 $poweredBySkrivaPaPara()$
 
@@ -309,8 +309,8 @@ mailAccountBySigningReminderContent=
 2. Välj lösenord och acceptera villkoren (inga kostnader, inga förpliktelser)<br>
 3. Färdig</p>
 
-<p>Av säkerhetsskäl inaktiveras länken inom 72h:<br>
-<a href="$ctxhostpart$$activationlink$">$ctxhostpart$$activationlink$</a></p>
+<p>Av säkerhetsskäl inaktiveras länken inom 72h: <br>
+<a href="https://$ctxhostpart$$activationlink$">$ctxhostpart$$activationlink$</a></p>
 
 $poweredBySkrivaPaPara()$
 
