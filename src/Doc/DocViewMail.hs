@@ -278,6 +278,7 @@ mailInvitationToSignOrViewContent templates forMail (Context {ctxhostpart})
                 field "contract" $ isContract document
                 field "link" link    
                 field "issignatory" issignatory
+                field "creatorname" creatorname
                                                                 
 mailInvitationToSign::  KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> User -> IO Mail
 mailInvitationToSign templates ctx document@Document{documenttitle} signaturelink author = 
