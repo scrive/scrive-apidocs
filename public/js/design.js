@@ -69,12 +69,15 @@
       var i = pls.indexOf(this);
       pls.splice(i, i);
       this.div.detach();
+      return this;
     },
     detach: function() {
       this.div.detach();
+      return this;
     },
     attach: function() {
       $("#page" + this.getPage()).append(this.div);
+      return this;
     }
   };
 
@@ -98,6 +101,7 @@
       var placement = newPlacement();
       placement.setFieldMaster(this);
       this.getPlacements().push(placement);
+      return placement;
     },
     updateValue: function() {
       this.div.find("input").val(this.getValue());
@@ -122,6 +126,7 @@
       for(var i = 0, var l = pls.length; i < l; i++) {
         pls.detach();
       }
+      return this;
     },
     detach: function() {
       this.div.detach();
@@ -129,6 +134,7 @@
       for(var i = 0, var l = pls.length; i < l; i++) {
         pls.detach();
       }
+      return this;
     },
     attach: function() {
       this.getSignatoryMaster().div.find("signatories").append(this.div);
@@ -136,6 +142,7 @@
       for(var i = 0, var l = pls.length; i < l; i++) {
         pls.attach();
       }
+      return this;
     },
     updateSignatoryMaster: function() {
       this.getSignatoryMaster().div.find("signatories").append(this.div);
@@ -144,18 +151,41 @@
 
   addGettersAndSetters(fieldPrototype, ["Value", "InfoText", "Status", "Type", "SignatoryMaster"]);
 
-  var createField = function() {
-    return { parent: fieldPrototype };
+  var newField = function() {
+    var ret = { parent: fieldPrototype };
+    ret.div = $('<div class="field"></div>');
+    return ret;
   };
 
   var signatoryPrototype = {
-    parent = modelPrototype
+    parent = modelPrototype,
+    addField: function() {
+      var field = newField();
+      field.setSignatoryMaster(this);
+      this.getFields().push(field);
+      return field;
+    }
   };
 
-  addGettersAndSetters(signatoryPrototype, ["Title"]);
+  addGettersAndSetters(signatoryPrototype, ["Title", "Secretary", "Signatory", "Fields"]);
 
   var createSignatory = function() {
-    return { parent: signatoryPrototype };
+    var ret = { parent: signatoryPrototype };
+    ret.div = $("");
+    ret.setFields([]);
+    return ret;
+  };
+
+  var statePrototype = {
+    parent: modelPrototype,
+  };
+
+  addGettersAndSetters(signatoryPrototype, ["Author", "Secretaries"]);
+
+  var createState = function() {
+    var ret = { parent: statePrototype };
+    ret.div = $(".signatories");
+    return ret;
   };
 
   // State of the document //
