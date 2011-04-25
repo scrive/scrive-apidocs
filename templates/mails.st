@@ -103,7 +103,7 @@ mailInvitationToSignContent=
        $whohadsignedinfo:noescape()$<br/>
        $timetosigninfo:noescape()$
     
-       Avsändare: $partnersinfo:noescape()$<br/>
+       Avsändare: <strong>$creatorname$</strong><br/>
        $timetosigninfo:noescape()$
       </p>
     $endif$
