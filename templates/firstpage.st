@@ -422,7 +422,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                         </div>
                 </div>
                 </div>
-            <div class="modal-container campaign-play-video" style="display:none;width:900px;height: 625px">
+            <div class="modal-container campaign-play-video" style="display:none;width:653px;height: 475px">
                                             <div class="modal-header">
                                                 <span class="modal-icon message"></span>
                                                     <span class="modal-title">
@@ -433,7 +433,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                             </div>
                                             <div class="modal-body" style="padding:0px">
                                             <div class="modal-content">
-<iframe src="http://player.vimeo.com/video/22397410?title=0&amp;byline=0&amp;portrait=0&amp;color=ffffff" width="900" height="551" frameborder="0"></iframe>
+<iframe src="http://player.vimeo.com/video/22397410?title=0&amp;byline=0&amp;portrait=0&amp;color=ffffff" width="653" height="400" frameborder="0"></iframe>
 
                                             </div>
                                             </div>
