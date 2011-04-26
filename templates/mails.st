@@ -291,7 +291,7 @@ mailAccountBySigningContent=
 3. Färdig</p>
 
 <p>Av säkerhetsskäl inaktiveras länken inom 24h: <br>
-<a href="https://$ctxhostpart$$activationlink$">$ctxhostpart$$activationlink$</a></p>
+<a href="$ctxhostpart$$activationlink$">$ctxhostpart$$activationlink$</a></p>
 
 $poweredBySkrivaPaPara()$
 
@@ -310,7 +310,7 @@ mailAccountBySigningReminderContent=
 3. Färdig</p>
 
 <p>Av säkerhetsskäl inaktiveras länken inom 72h: <br>
-<a href="https://$ctxhostpart$$activationlink$">$ctxhostpart$$activationlink$</a></p>
+<a href="$ctxhostpart$$activationlink$">$ctxhostpart$$activationlink$</a></p>
 
 $poweredBySkrivaPaPara()$
 
