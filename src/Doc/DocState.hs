@@ -35,6 +35,7 @@ module Doc.DocState
     , SaveDocumentForSignedUser(..)
     , SetDocumentTimeoutTime(..)
     , SetDocumentTrustWeaverReference(..)
+    , ShareDocuments(..)
     , SignDocument(..)
     , TimeoutDocument(..)
     , UpdateDocument(..)
@@ -50,8 +51,10 @@ module Doc.DocState
     , GetDocumentByFileID(..)
     , ErrorDocument(..)
     , GetUserTemplates(..)
+    , GetSharedTemplates(..)
     , TemplateFromDocument(..)
     , SignableFromDocument(..)
+    , SignableFromSharedDocument(..)
     , ContractFromSignatoryData(..)
     , IdentificationType(..)
     , SignatureInfo(..)
@@ -181,6 +184,7 @@ newDocument user title documenttype ctime = do
           , authorotherfields = []
           , documentcancelationreason = Nothing
           , documentinvitetime = Nothing
+          , documentsharing = Private
           } `appendHistory` [DocumentHistoryCreated ctime]
 
   insertNewDocument doc
@@ -322,25 +326,14 @@ contractFromSignatoryData docid sigindex fstname sndname email company personaln
     toNewDoc :: Document -> Document
     toNewDoc d = d { documentsignatorylinks = map snd . map toNewSigLink . zip [0..] $ (documentsignatorylinks d)
                     , documentcsvupload = Nothing
-                    , documenttype = Contract }
+                    , documenttype = Contract 
+                    , documentsharing = Private }
     toNewSigLink :: (Int, SignatoryLink) -> (Int, SignatoryLink)
     toNewSigLink (i, sl)
-      | i==sigindex = (i, sl { signatorydetails = pumpData (signatorydetails sl) })
+      | i==sigindex = (i, pumpData sl)
       | otherwise = (i, sl)
-    pumpData :: SignatoryDetails -> SignatoryDetails
-    pumpData sd = sd 
-                  { signatoryfstname = fstname
-                  , signatorysndname = sndname
-                  , signatorycompany = company
-                  , signatorypersonalnumber = personalnumber
-                  , signatorycompanynumber = companynumber
-                  , signatoryemail = email
-                  , signatoryotherfields = zipWith pumpField (fieldvalues ++ repeat BS.empty) $ signatoryotherfields sd}
-    pumpField :: BS.ByteString -> FieldDefinition -> FieldDefinition
-    pumpField val fd = fd
-                       { fieldvalue = val
-                       , fieldfilledbyauthor = (not $ BS.null val)
-                       } 
+    pumpData :: SignatoryLink -> SignatoryLink
+    pumpData siglink = replaceSignatoryData siglink fstname sndname email company personalnumber companynumber fieldvalues
 
 timeoutDocument :: DocumentID
                 -> MinutesTime
@@ -605,8 +598,14 @@ archiveDocuments user docidlist = do
                           || Rejected == documentstatus doc
                       then Right $ deleteForUserID user doc
                       else Left "Not author can not delete document"
-          
-      
+
+shareDocuments :: User -> [DocumentID] -> Update Documents ()
+shareDocuments user docidlist = do
+  forM_ docidlist $ \docid ->
+    modifySignableOrTemplate docid $ \doc ->
+        if (isAuthor doc user)
+          then Right $ doc { documentsharing = Shared }
+          else Left $ "Can't share document unless you are the author"
 
 fragileTakeOverDocuments :: User -> User -> Update Documents ()
 fragileTakeOverDocuments destuser srcuser = do
@@ -785,7 +784,18 @@ getUserTemplates:: UserID -> Query Documents [Document]
 getUserTemplates userid = do 
     documents <- ask
     let mydocuments = (documents @= Author userid )
-    return $ toList $ (mydocuments @= OfferTemplate) ||| (mydocuments @= ContractTemplate)
+    return $ toList $ justTemplates mydocuments
+
+{- |
+    The shared templates for the given users.
+-}
+getSharedTemplates :: [UserID] -> Query Documents [Document]
+getSharedTemplates userids = do
+    documents <- ask
+    let userdocs = documents @+ (map Author userids)
+    return . filter ((== Shared) . documentsharing) . toList $ justTemplates userdocs
+
+justTemplates docs = (docs @= OfferTemplate) ||| (docs @= ContractTemplate)
     
 signableFromDocument :: DocumentID -> Update Documents (Either String Document)
 signableFromDocument = newFromDocument $ \doc -> 
@@ -796,8 +806,75 @@ signableFromDocument = newFromDocument $ \doc ->
                              else if (documenttype doc == ContractTemplate)
                                     then Contract
                                     else documenttype doc
+        , documentsharing = Private
     }
-  
+
+signableFromSharedDocument :: User -> DocumentID -> Update Documents (Either String Document)
+signableFromSharedDocument user = newFromDocument $ \doc -> 
+    doc {
+          documentstatus = Preparation
+        , documenttype =  if (documenttype doc == OfferTemplate) 
+                             then Offer
+                             else if (documenttype doc == ContractTemplate)
+                                    then Contract
+                                    else documenttype doc
+        , documentsharing = Private
+        , documentauthor = Author $ userid user
+        , documentsignatorylinks = map (replaceAuthorSigLink user doc) (documentsignatorylinks doc)
+        , authorotherfields =  map (\fd -> fd { fieldvalue = BS.empty, fieldfilledbyauthor = False }) (authorotherfields doc) 
+    }
+    where replaceAuthorSigLink :: User -> Document -> SignatoryLink -> SignatoryLink
+          replaceAuthorSigLink user doc sl 
+            | isAuthor doc sl = replaceSignatoryUser sl user
+            | otherwise = sl
+
+{- |
+    Replaces signatory data with given user's data.
+-}
+replaceSignatoryUser :: SignatoryLink
+                        -> User
+                        -> SignatoryLink
+replaceSignatoryUser siglink user =
+  let newsl = replaceSignatoryData 
+                       siglink
+                       (userfstname $ userinfo user)
+                       (usersndname $ userinfo user)
+                       (unEmail $ useremail $ userinfo user)
+                       (usercompanyname $ userinfo user)
+                       (userpersonalnumber $ userinfo user)
+                       (usercompanynumber $ userinfo user)
+                       [] in
+  newsl { maybesignatory = fmap (const $ userid user) (maybesignatory newsl) }
+
+{- |
+    Pumps data into a signatory link
+-}
+replaceSignatoryData :: SignatoryLink 
+                        -> BS.ByteString 
+                        -> BS.ByteString 
+                        -> BS.ByteString 
+                        -> BS.ByteString 
+                        -> BS.ByteString
+                        -> BS.ByteString
+                        -> [BS.ByteString]
+                        -> SignatoryLink
+replaceSignatoryData siglink fstname sndname email company personalnumber companynumber fieldvalues =
+  siglink { signatorydetails = pumpData (signatorydetails siglink) }
+  where
+    pumpData :: SignatoryDetails -> SignatoryDetails
+    pumpData sd = sd 
+                  { signatoryfstname = fstname
+                  , signatorysndname = sndname
+                  , signatorycompany = company
+                  , signatorypersonalnumber = personalnumber
+                  , signatorycompanynumber = companynumber
+                  , signatoryemail = email
+                  , signatoryotherfields = zipWith pumpField (fieldvalues ++ repeat BS.empty) $ signatoryotherfields sd}
+    pumpField :: BS.ByteString -> FieldDefinition -> FieldDefinition
+    pumpField val fd = fd
+                       { fieldvalue = val
+                       , fieldfilledbyauthor = (not $ BS.null val)
+                       } 
 
 templateFromDocument :: DocumentID -> Update Documents (Either String Document)
 templateFromDocument docid = modifySignable docid $ \doc -> 
@@ -837,6 +914,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'setDocumentTimeoutTime
                         , 'setDocumentTrustWeaverReference
                         , 'archiveDocuments
+                        , 'shareDocuments
                         , 'timeoutDocument
                         , 'closeDocument
                         , 'cancelDocument
@@ -855,7 +933,9 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'getDocumentByFileID
                         , 'errorDocument
                         , 'getUserTemplates
+                        , 'getSharedTemplates
                         , 'signableFromDocument
+                        , 'signableFromSharedDocument
                         , 'contractFromSignatoryData
                         , 'templateFromDocument
                         ])

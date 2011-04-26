@@ -75,6 +75,8 @@ instance InspectXML DocumentFunctionality where
     inspectXML = asChild . show
 instance InspectXML ChargeMode where
     inspectXML = asChild . show
+instance InspectXML DocumentSharing where
+    inspectXML = asChild . show
 instance InspectXML TimeoutTime where
     inspectXML = asChild . show
 instance InspectXML SignInfo where

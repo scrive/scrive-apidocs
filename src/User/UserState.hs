@@ -38,6 +38,7 @@ module User.UserState
     , GetUserStats(..)
     , GetUserStatsByUser(..)
     , GetUserSubaccounts(..)
+    , GetUserRelatedAccounts(..)
     , GetUserFriends(..)
     , SetUserInfo(..)
     , SetInviteInfo(..)
@@ -63,7 +64,7 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BS (unlines) 
 import Happstack.Data.IxSet as IxSet
-import Data.Maybe(isJust,fromJust)
+import Data.Maybe(isJust,fromJust,maybe)
 import Misc
 import Happstack.Server.SimpleHTTP
 import Happstack.Util.Common
@@ -632,6 +633,24 @@ getUserSubaccounts userid = do
   users <- ask
   return $ toSet (users @= SupervisorID (unUserID userid))
 
+{- |
+    Gets all the users that are related to the indicated user.
+    They are related if they have the same supervisor,
+    or are a supervisor, or are a subaccount (so if a parent, child or sibling).
+-}
+getUserRelatedAccounts :: UserID -> Query Users [User]
+getUserRelatedAccounts userid = do
+  muser <- getUserByUserID userid
+  case muser of
+    Nothing -> return []
+    Just (user@User{usersupervisor}) -> do
+      users <- ask
+      let subaccounts = users @= SupervisorID (unUserID userid)
+          superaccounts = maybe IxSet.empty (\SupervisorID{unSupervisorID} -> users @= UserID unSupervisorID) usersupervisor
+          siblingaccounts = maybe IxSet.empty (\supervisor -> users @= supervisor) usersupervisor
+      return . toList $ subaccounts ||| superaccounts ||| siblingaccounts
+
+
 addUser :: (BS.ByteString, BS.ByteString)
         -> BS.ByteString 
         -> Password
@@ -880,6 +899,7 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'recordFailedLogin
                     , 'recordSuccessfulLogin
                     , 'getUserSubaccounts
+                    , 'getUserRelatedAccounts
                     , 'getUsersByFriendUserID
                     , 'getUserFriends
                     , 'acceptTermsOfService
