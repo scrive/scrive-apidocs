@@ -762,7 +762,8 @@ signatoryLinkFields
       field "role" $ if isSignatory siglnk
                      then "signatory"
                      else "viewer"
-      field "secretary"  $ (isAuthor document siglnk) &&  not (isSignatory siglnk)                       
+      field "secretary"  $ (isAuthor document siglnk) &&  not (isSignatory siglnk)              
+      field "author" $ (isAuthor document siglnk)
 
 packToMString :: BS.ByteString -> Maybe String
 packToMString x =

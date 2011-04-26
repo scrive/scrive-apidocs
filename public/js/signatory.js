@@ -283,7 +283,6 @@ function docstateToHTML(){
   var authorIsInSiglist = $(docstate.signatories).filter(function() {
     return this.email === author.email;
   }).size() > 0;
-
   if(!authorIsInSiglist) {
 	placePlacements(author.fstnameplacements, "Förnamn", author.fstname, "author", "fstname");
     placePlacements(author.sndnameplacements, "Efternamn", author.sndname, "author", "sndname");
@@ -292,10 +291,62 @@ function docstateToHTML(){
 	placePlacements(author.personalnumberplacements, "Pers. nr", author.personalnumber, "author", "sigpersnr");
     placePlacements(author.companynumberplacements, "Org. nr", author.companynumber, "author", "sigcompnr");
 
+
+    if(author.companyplacements.length > 0 || author.company != ""){
+                        var val = author.company;
+                        var c = "";
+                        if(val === ""){
+                                val =  "Företag";
+                                c = "grayed";
+                              }
+                        $(".signViewBodyRight.author").find(".signatoryfields").append(
+                         "<div class='field'>"+
+                            "<span class='fieldvalue "+c+"'>"+escapeHTML(val)+"</span>"+
+                            "</div>");
+      }
+                
+     if(author.personalnumberplacements.length > 0 || author.personalnumber !=""){
+                        var val = author.personalnumber;
+                        var c = "";
+                        if(val === ""){
+                                val =  "Pers. nr";
+                                c = "grayed";
+                              }
+                        $(".signViewBodyRight.author").find(".signatoryfields").append(
+                         "<div class='field'>"+
+                            "<span class='fieldvalue "+c+"'>"+escapeHTML(val)+"</span>"+
+                            "</div>");
+                }
+
+     if(author.companynumberplacements.length > 0 || author.companynumber !="") {
+                        var val = author.companynumber;
+                        var c = "";
+                        if(val === ""){
+                                val =  "Org. nr";
+                                c = "grayed";
+                              }
+                        $(".signViewBodyRight.author").find(".signatoryfields").append(
+                         "<div class='field'>"+
+                            "<span class='fieldvalue "+c+"'>"+escapeHTML(val)+"</span>"+
+                            "</div>");
+                }
+    
+    
 	$(author.otherfields).each(function () {
 	  var f = this;
 	  f.id = newUUID();
 	  placePlacements(f.placements, f.label, f.value, "author", f.id);
+      var val = f.value;
+      var c = ""
+      if(val === ""){
+         val =  f.label;
+         c = "grayed";
+      }
+      $(".signViewBodyRight.author").find(".signatoryfields").append(
+          "<div class='field'>"+
+              "<span class='fieldvalue "+c+"'>"+escapeHTML(val)+"</span>"+
+          "</div>")
+        
     });
   }
 
