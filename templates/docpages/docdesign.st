@@ -214,7 +214,7 @@ pageDocumentDesign=
             <div id="signStepsBodyFunctions">
               $if(!basiccontract)$
                 $if(contract)$
-               <div id="signStepsBodyFunctionsBox">
+                 <div id="signStepsBodyFunctionsBox">
                 <ul>
                   <li class="plus"><a class="designFunctionalLink" href="#add"  id="addSignatory">LÄGG TILL PERSON</a></li>
                   <li class="minus"><a class="designFunctionalLink" href="#remove"  id="delSignatory">TA BORT PERSON</a></li>
@@ -231,7 +231,7 @@ pageDocumentDesign=
                 </div>
                </div> 
                 $elseif(offer)$
-              <div id="signStepsBodyFunctionsBox" style="padding-left:17px;">
+                 <div id="signStepsBodyFunctionsBox" style="padding-left:17px;">
                 <div>
                      <input style="position:relative;top:2px;left:2px;margin-right:5px;" type="checkbox" class="addremovecheckbox flashOnOn" flashtype="red"
                            rel="#daystosignbox"
@@ -274,9 +274,8 @@ pageDocumentDesign=
                  $endif$
               </div>
                 $endif$
-             </div>
-             $elseif(basiccontract)$
-             <div id="signStepsBodyFunctionsBox">
+              $elseif(basiccontract)$
+                 <div id="signStepsBodyFunctionsBox">
                <div>
                  <div style="padding-bottom:2px;padding-left:1px;">Välj verifieringsmetod</div>
                  <select name="validationmethod"
@@ -300,11 +299,10 @@ pageDocumentDesign=
                  </a>
                </div>
              </div>
-             $endif$
-            </div>
+              $endif$
+             </div>
           </div>
-        </div>
-
+        </div>  
 
         $if(!basiccontract)$$if(contract)$
         <div id="signStep3Content" $if(!step3)$ style="display: none" $endif$>
