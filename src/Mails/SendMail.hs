@@ -288,8 +288,8 @@ htmlToTxt = dropWhile isSpace . toText . removeWSAfterNL . reduceWS .
         filterUnneeded = filter f
             where
                 f (TagText s)   = not $ all isSpace s
-                f (TagOpen t _) = t `elem` ["a", "b", "i", "p", "strong"]
-                f (TagClose t)  = t `elem` ["a", "b", "br", "i", "p", "strong"]
+                f (TagOpen t _) = t `elem` ["a", "b", "br", "i", "p", "strong"]
+                f (TagClose t)  = t `elem` ["a", "b", "i", "p", "strong"]
                 f _             = False
 
         lowerTags = map f
