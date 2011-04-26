@@ -97,16 +97,15 @@ personsFromDocument document =
 
 fieldsFromPlacement :: String -> FieldPlacement -> Seal.Field
 fieldsFromPlacement value placement  =
-    let toPtt x = (x * 72 `div` 190) - 5 -- scalling and some replacing
-        w = placementpagewidth placement
+    let w = placementpagewidth placement
         h = placementpageheight placement 
     in    
     Seal.Field { Seal.value = value
-               , Seal.x =  toPtt $ (placementx placement * w) `div` 943
-               , Seal.y =  toPtt $ h - ((placementy placement * h) `div` 1335)
-               , Seal.page = placementpage placement
-               , Seal.w =  w
-               , Seal.h = h
+               , Seal.x     = placementx placement
+               , Seal.y     = placementy placement
+               , Seal.page  = placementpage placement
+               , Seal.w     = w
+               , Seal.h     = h
                }
                
 fieldsFromDefinition :: FieldDefinition -> [Seal.Field]

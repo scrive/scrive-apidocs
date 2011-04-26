@@ -166,25 +166,39 @@ placeSealOnPageRefID sealrefid sealmarkerformrefid (pagerefid,sealtext) document
         newdocument = setIndirF pagerefid newpage docx
     in newdocument
 
-fieldstext :: [Field] -> String
-fieldstext fields = concatMap fieldtext fields
+-- FIXME: here we still have font size problem. On the page it appears
+-- as some pt size font. We need to translate that size into PDF pt
+-- size. For now pretend we are using 10pt font.
+--
+-- For next generations: the coordinate space in PDF is in printer's
+-- points and bottom left corner is (0,0). Grows right and
+-- upwards. Fonts are also strange: the y=0 is on font baseline. Read
+-- about this one, before you change what is below.
+fieldstext :: Int -> Int -> [Field] -> String
+fieldstext pagew pageh fields = concatMap fieldtext fields
   where
+    fontBaseline = 7
     fieldtext Field{ SealSpec.value = val
                    , x
                    , y
-                   } = "q 1 0 0 1 " ++ show x ++ " " ++ show y ++ " cm " ++
+                   , w
+                   , h
+                   } = "q 1 0 0 1 " ++ show (fromIntegral (x * pagew) / fromIntegral w) ++ " " ++ 
+                       show (fromIntegral ((h - y) * pageh) / fromIntegral h - fontBaseline) ++ " cm " ++
                        "BT /SkrivaPaHelvetica 10 Tf (" ++ winAnsiPostScriptEncode val ++ ") Tj ET Q "
 
 
 placeSeals :: [Field] -> RefID -> String -> RefID -> String -> RefID -> State Document ()
 placeSeals fields sealrefid sealtext paginrefid pagintext' sealmarkerformrefid = do
     pages <- gets listPageRefIDs
-    let pagevalue = page_dict (Array []) (Array []) `ext` [entryna "MediaBox" [0,0,595,842]]
+    let pagew = 595
+        pageh = 842
+    let pagevalue = page_dict (Array []) (Array []) `ext` [entryna "MediaBox" [0,0,pagew,pageh]]
     -- should optimize pagintext' into one stream
     let findFields pageno = filter (\x -> page x == pageno) fields
-    let pagintext1 pageno = fieldstext (findFields pageno)++ 
+    let pagintext1 pageno = fieldstext pagew pageh (findFields pageno)++ 
                      pagintext' ++ 
-                     " q 0.2 0 0 0.2 " ++ show ((595 - 18) / 2) ++ " 14 cm /SealMarkerForm Do Q "
+                     " q 0.2 0 0 0.2 " ++ show (fromIntegral (pagew - 18) / 2) ++ " 14 cm /SealMarkerForm Do Q "
 
     modify $ \document' -> foldr (placeSealOnPageRefID paginrefid sealmarkerformrefid) document'
                           [(page,pagintext1 pageno) | (page,pageno) <- zip pages [1..]]
