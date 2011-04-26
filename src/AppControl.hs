@@ -144,6 +144,7 @@ handleRoutes = msum [
      --what it does/access control is left to the handler. EN
      , dir "t" $ hget0  $ DocControl.showTemplatesList
      , dir "t" $ param "archive" $ hpost0 $ DocControl.handleTemplateArchive
+     , dir "t" $ param "share" $ hpost0 $ DocControl.handleTemplateShare
      , dir "t" $ param "template" $ hpost0  $ DocControl.handleCreateFromTemplate
      , dir "t" $ hpost0  $ DocControl.handleCreateNewTemplate
      

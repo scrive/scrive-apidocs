@@ -202,3 +202,5 @@ flashMessageInvalidCSV=Det uppstod ett problem med datan i din .csv. Var vänlin
 ###
 flashMessageCSVSent=Dokumentet är skickat till $doccount$ parter.
 ###
+flashMessageTemplateShareDone=Template has been shared.
+###

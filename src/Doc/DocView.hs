@@ -36,6 +36,7 @@ module Doc.DocView (
   , flashMessageTemplateArchiveDone
   , flashMessageInvalidCSV
   , flashMessageCSVSent
+  , flashMessageTemplateShareDone
   , defaultInviteMessage
   , mailDocumentRemind
   , mailDocumentRejected
@@ -229,6 +230,9 @@ flashMessageCSVSent :: Int -> KontrakcjaTemplates -> IO FlashMessage
 flashMessageCSVSent doccount templates =
   toFlashMsg OperationDone <$> (renderTemplate templates "flashMessageCSVSent" $ field "doccount" doccount)
 
+flashMessageTemplateShareDone :: KontrakcjaTemplates -> IO FlashMessage
+flashMessageTemplateShareDone templates =
+  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageTemplateShareDone" ()
 
 -- All doc view
 singlnkFields :: SignatoryLink -> Fields
@@ -299,6 +303,7 @@ documentBasicViewFields crtime user doc = do
     field "mtime" $ showDateAbbrev crtime (documentmtime doc)
     field "isauthor" $ isAuthor doc user
     field "isviewer" $ isViewer doc user
+    field "isshared" $ (documentsharing doc)==Shared
   where
     signatorylinklist =
       filter (isMatchingSignatoryLink user) $ documentsignatorylinks doc  

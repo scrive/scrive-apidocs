@@ -22,6 +22,7 @@ $loadingdialog()$
                         </div>
                         <ul class="tab-dd-opts">
                             <li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">Radera</a></li>
+                            <li><a href="javascript:;" rel="#dialog-list-share-confirm" class="listShare">Dela</a></li>
                         </ul>
                     </div>
 
@@ -74,6 +75,7 @@ $loadingdialog()$
                                 <a href="$currentlink$&sorting=title">Mall </a>
                                $endif$
                             </th>
+                            <th style="width: 100px;"></th>
                             <th></th>
                         </tr>
                     </thead>
@@ -93,6 +95,9 @@ $loadingdialog()$
                                 <a href="$document.davelink$">*</a>     
                                 $endif$
                             </td>
+                            <td>
+                                $if(document.isshared)$Shared$endif$
+                            </td>
                             <td class="right">
                                <!--  <em>▼</em> -->
                             </td>
@@ -104,7 +109,34 @@ $loadingdialog()$
             </div>
         </div>
     </div>
-</form>
-$listLocalDialogs()$
+  </form>
+  $listLocalDialogs()$
+  <form method="post" name="form" action="$currentlink$" class="overlay redirectsubmitform" id="dialog-list-share-confirm" rel=".listForm" style="display:none;">
+    <input type="hidden" name="share" value="true" />
+    <div class="modal-container">
+      <div class="modal-header">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
+          <h2>Dela</h2>
+        </span>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">
+          <p>Vill du dela detta med alla i din organisation.</p>
+        </div>
+      </div>
+      <div class="modal-footer">        
+        <a class="cancel close float-left" style="height:40px;">  
+          <div class="label">Avbryt</div> 
+        </a>
+        <a class="btn-small green float-right submiter" href="#">
+          <div class="left"></div>
+          <div class="label"><p>OK</p></div>
+          <div class="right"></div>
+        </a>
+      </div>
+    </div>
+  </form>
 </div>
      
