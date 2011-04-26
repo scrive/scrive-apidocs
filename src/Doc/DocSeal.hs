@@ -83,7 +83,7 @@ personsFromDocument document =
 
 fieldsFromPlacement :: String -> FieldPlacement -> Seal.Field
 fieldsFromPlacement value placement  =
-    let toPtt x = (x * 72 `div` 190) - 5 -- scalling and some replacing
+    let toPtt x = (x * 72 `div` 190)
         w = placementpagewidth placement
         h = placementpageheight placement 
     in    
