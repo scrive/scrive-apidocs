@@ -1387,6 +1387,21 @@ handleIssueArchive = do
     liftIO $ print docs
     update $ ArchiveDocuments user ids
 
+handleTemplateShare :: Kontra KontraLink
+handleTemplateShare = withUserPost $ do
+    ctx@(Context { ctxtemplates }) <- get
+    handleIssueShare
+    addFlashMsg =<< (liftIO $ flashMessageTemplateShareDone ctxtemplates)
+    return $ LinkTemplates emptyListParams
+
+handleIssueShare :: Kontra ()
+handleIssueShare = do
+    ctx@(Context { ctxmaybeuser = Just user }) <- get
+    idnumbers <- getCriticalFieldList asValidDocID "doccheck"
+    let ids = map DocumentID idnumbers
+    docs <- mapM (query . GetDocumentByDocumentID) ids
+    update $ ShareDocuments user ids
+    
 handleBulkContractRemind :: Kontra KontraLink
 handleBulkContractRemind = withUserPost $ do
     ctx@(Context { ctxtemplates }) <- get
@@ -1611,7 +1626,10 @@ getTemplatesForAjax = do
     mdoctype <- getDocType
     case (ctxmaybeuser ctx,mdoctype) of
             (Just user, Just doctype) -> do
-                allTemplates <- liftIO $ query $ GetUserTemplates (userid user)
+                userTemplates <- liftIO $ query $ GetUserTemplates (userid user)
+                relatedUsers <- liftIO $ query $ GetUserRelatedAccounts (userid user)
+                sharedTemplates <- liftIO $ query $ GetSharedTemplates (map userid relatedUsers)
+                let allTemplates = userTemplates ++ sharedTemplates
                 let templates = filter (not . documentdeleted) allTemplates
                 let templatesOfGoodType =  filter (matchingType doctype) templates
                 content <- liftIO $ templatesForAjax (ctxtemplates ctx) (ctxtime ctx) user doctype $ docSortSearchPage params templatesOfGoodType
@@ -1620,12 +1638,25 @@ getTemplatesForAjax = do
             _ -> mzero
     
 handleCreateFromTemplate::Kontra KontraLink
-handleCreateFromTemplate = do
+handleCreateFromTemplate = withUserPost $ do
+     ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxtemplates}) <- get
      docid <- readField "template"
      case docid of 
          Just did -> do
-             newdoc <- update $ SignableFromDocument did
-             case newdoc of 
-                 Right newdoc -> return $ LinkIssueDoc $ documentid newdoc   
+             let user = fromJust ctxmaybeuser
+             document@Document{ documentauthor } <- queryOrFail $ GetDocumentByDocumentID $ did
+             isShared <- isShared user document
+             newdoc <- case (isAuthor document user, isShared) of
+                         (True, _) -> update $ SignableFromDocument did
+                         (_, True) -> update $ SignableFromSharedDocument user did
+                         _ -> mzero
+             case newdoc of
+                 Right newdoc -> return $ LinkIssueDoc $ documentid newdoc
                  Left _ -> mzero
          Nothing -> mzero
+     where
+       isShared :: User -> Document -> Kontra Bool
+       isShared user document = do
+         relatedaccounts <- query $ GetUserRelatedAccounts (userid user)
+         return $ ((documentsharing document) == Shared)
+                  && ((unAuthor $ documentauthor document) `elem` (map userid relatedaccounts))

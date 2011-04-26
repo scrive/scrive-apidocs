@@ -186,6 +186,23 @@ safeReady(function() {
 });
 
 /*
+ * For share confirmation on lists.
+ */
+safeReady(function() {
+  $(".listShare").overlay({
+    mask: standardDialogMask,
+    onBeforeLoad: function() {
+      var selectedrows = $(".listForm tbody tr.ui-selected");
+      if (selectedrows.length==0) {
+        return false;
+      } else {
+        return true;
+      }
+    }
+  });
+});
+
+/*
  * For the arkiv view fancy selection
  */
 safeReady(function () {
