@@ -50,8 +50,7 @@ Executable pdfseal
   Build-depends: base, mmap==0.5.*, parallel, array
   Build-Depends: HPDF
   Build-Depends: mtl == 2.*
-  Extensions: CPP,
-              BangPatterns,
+  Extensions: BangPatterns,
               DeriveDataTypeable,
               FlexibleContexts,
               FlexibleInstances, 
