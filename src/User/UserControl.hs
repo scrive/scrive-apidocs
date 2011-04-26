@@ -120,10 +120,10 @@ handlePostUserSecurity = do
 
 handleGetSharing :: Kontra Response
 handleGetSharing = withUserGet $ do
-    ctx@Context{ctxmaybeuser = Just User{userid}} <- get
+    ctx@Context{ctxmaybeuser = Just user@User{userid}} <- get
     friends <- query $ GetUserFriends userid
     params <- getListParams
-    content <- liftIO $ viewFriends (ctxtemplates ctx) (friendsSortSearchPage params friends)
+    content <- liftIO $ viewFriends (ctxtemplates ctx) (friendsSortSearchPage params friends) user
     renderFromBody ctx TopAccount kontrakcja $ cdata content
 
 -- Searching, sorting and paging
@@ -211,7 +211,7 @@ handlePostSubaccount = do
          Nothing -> return $ LinkLogin NotLogged
 
 handleCreateSubaccount :: User -> Kontra ()
-handleCreateSubaccount user = do
+handleCreateSubaccount user = when (isAbleToHaveSubaccounts user) $ do
     ctx <- get
     memail <- getOptionalField asValidEmail "email"
     fstname <- maybe BS.empty BS.fromString <$> getField "fstname"
