@@ -14,13 +14,23 @@ data Person =
            }
     deriving (Eq,Ord,Show,Read)
 
+-- | Field coordinates are in screen coordinate space. That means:
+-- 
+-- * upper left corner is (0,0) 
+-- * units are pixels 
+-- * (x,y) are coordinates of upper left corner of a field. 
+--
+-- It is for pdfseal program to recalculate pixel coordinates into
+-- correct PDF pt coordinates. pdfseal will use pixel wise (w,h) to
+-- translate (x,y).  pdfseal is also responsible to take into account
+-- PDF's way of baseline calculation for font used.
 data Field =
-    Field { value :: String
-          , x :: Int
-          , y :: Int
-          , page :: Int
-          , w :: Int
-          , h :: Int 
+    Field { value :: String -- ^ text to put into a field
+          , x     :: Int    -- ^ left coordinate of field
+          , y     :: Int    -- ^ upper coordinate of field in screen coordinate space
+          , page  :: Int    -- ^ on which page should the field be placed
+          , w     :: Int    -- ^ page width in pixels
+          , h     :: Int    -- ^ page height in pixels
           }
     deriving (Eq, Ord, Show, Read)
 
