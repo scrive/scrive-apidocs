@@ -176,8 +176,25 @@ openDocumentGnome filename = do
                                      }
     return ()
 
+-- | Open external document in default application. Useful to open
+-- *.eml in email program for example. Mac version.
+openDocumentMac :: String -> IO ()
+openDocumentMac filename = do
+    let cmd = "open"
+    let args = [filename]
+    (_, _, _, pid) <-
+        createProcess (proc cmd args){ std_in  = Inherit,
+                                       std_out = Inherit,
+                                       std_err = Inherit
+                                     }
+    return ()
+
 openDocument :: String -> IO ()
-openDocument filename = openDocumentWindows filename `catch` \e -> openDocumentGnome filename `catch` \e -> return ()             
+openDocument filename = 
+  openDocumentMac filename `catch` (\e -> 
+  openDocumentWindows filename `catch` (\e -> 
+  openDocumentGnome filename `catch` (\e -> 
+  return ())))
 
 toIO :: forall s m a . (Monad m) => s -> ServerPartT (StateT s m) a -> ServerPartT m a
 toIO state = mapServerPartT f
