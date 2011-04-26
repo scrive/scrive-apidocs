@@ -4,7 +4,7 @@ signatoriesBox=
         <div class="float-right signViewBodyBox"> $signatories:{signatory| $if(!signatory.current)$$signatoryBox()$$endif$}$ </div>
 ####
 signatoryBox =
-<div class="signViewBodyRight">
+<div class="signViewBodyRight  $if(signatory.author)$author$endif$">
   <div class="signViewBodyRightTextContainer"> 
   <div class="header">$signatory.fstname$ $signatory.sndname$</div>
    <span class="signatoryfields">
