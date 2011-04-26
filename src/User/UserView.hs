@@ -95,6 +95,7 @@ userFields user = do
     field "userimagelink" False
     field "companyimagelink" False
     --field "invoiceaddress" $ BS.toString $ useraddress $ userinfo user
+    menuFields user
 
 showUserSecurity :: KontrakcjaTemplates -> User -> IO String
 showUserSecurity templates user = renderTemplate templates "showUserSecurity" $ do
@@ -102,18 +103,23 @@ showUserSecurity templates user = renderTemplate templates "showUserSecurity" $ 
     field "fstname" $ BS.toString $ userfstname $ userinfo user 
     field "sndname" $ BS.toString $ usersndname $ userinfo user
     field "userimagelink" False
+    menuFields user
     
 pageAcceptTOS :: KontrakcjaTemplates ->  BS.ByteString -> IO String
 pageAcceptTOS templates tostext = 
   renderTemplate templates "pageAcceptTOS" $ field "tostext" (BS.toString tostext)
 
-viewFriends :: KontrakcjaTemplates -> PagedList User -> IO String
-viewFriends templates friends =  
+viewFriends :: KontrakcjaTemplates -> PagedList User -> User -> IO String
+viewFriends templates friends user =  
   renderTemplate templates "viewFriends" $ do
     field "friends" $ markParity $ map userFields $ list friends
     field "currentlink" $ show $ LinkSharing $ params friends
+    menuFields user
     pagedListFields friends
 
+menuFields :: User -> Fields
+menuFields user = do
+    field "issubaccounts" $ isAbleToHaveSubaccounts user
 
 viewSubaccounts :: KontrakcjaTemplates -> PagedList User -> IO String
 viewSubaccounts templates subusers =  
@@ -121,8 +127,6 @@ viewSubaccounts templates subusers =
     field "subaccounts" $ markParity $ map userFields $ list subusers
     field "currentlink" $ show $ LinkSubaccount $ params subusers
     pagedListFields subusers
-
-
 
 activatePageView::KontrakcjaTemplates -> String -> Maybe User -> IO String
 activatePageView templates tostext muser = 

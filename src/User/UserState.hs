@@ -28,6 +28,7 @@ module User.UserState
     , userfullname
     , createPassword
     , verifyPassword
+    , isAbleToHaveSubaccounts
 
     , AcceptTermsOfService(..)
     , AddUser(..)
@@ -72,6 +73,7 @@ import Codec.Utils (Octet)
 import Data.Digest.SHA256 (hash)
 import System.Random
 import Data.List
+import Data.Maybe (isNothing)
 import qualified Data.Set as Set
 import Control.Applicative
 import MinutesTime
@@ -198,7 +200,6 @@ data User = User
           { userid                        :: UserID
           , userpassword                  :: Password
           , usersupervisor                :: Maybe SupervisorID
-          , usercanhavesubaccounts        :: Bool
           , useraccountsuspended          :: Bool
           , userhasacceptedtermsofservice :: Maybe MinutesTime
           , userinfo                      :: UserInfo
@@ -212,6 +213,23 @@ data User = User
             deriving (Eq, Ord)
 
 instance Typeable User where typeOf _ = mkTypeOf "User"
+
+data User11 = User11
+          { userid11                        :: UserID
+          , userpassword11                  :: Password
+          , usersupervisor11                :: Maybe SupervisorID
+          , usercanhavesubaccounts11        :: Bool
+          , useraccountsuspended11          :: Bool
+          , userhasacceptedtermsofservice11 :: Maybe MinutesTime
+          , userinfo11                      :: UserInfo
+          , usersettings11                  :: UserSettings
+          , userpaymentpolicy11             :: Payments.UserPaymentPolicy
+          , userpaymentaccount11            :: Payments.UserPaymentAccount
+          , userfriends11                   :: [Friend]
+          , userinviteinfo11                :: Maybe InviteInfo
+          , userlogininfo11                 :: LoginInfo
+          }
+    deriving (Eq, Ord, Typeable)
 
 data User10 = User10
           { userid10                        :: UserID
@@ -380,7 +398,7 @@ instance Migrate User9 User10 where
                                                        userinviter9
                 }
 
-instance Migrate User10 User where
+instance Migrate User10 User11 where
     migrate (User10
                { userid10                     
                 , userpassword10                
@@ -394,24 +412,54 @@ instance Migrate User10 User where
                 , userpaymentaccount10           
                 , userfriends10                  
                 , userinviteinfo10       
-                }) = User 
-                { userid                         = userid10
-                , userpassword                   = userpassword10
-                , usersupervisor                 = usersupervisor10
-                , usercanhavesubaccounts         = usercanhavesubaccounts10
-                , useraccountsuspended           = useraccountsuspended10
-                , userhasacceptedtermsofservice  = userhasacceptedtermsofservice10
-                , userinfo                       = userinfo10
-                , usersettings                   = usersettings10
-                , userpaymentpolicy              = userpaymentpolicy10
-                , userpaymentaccount             = userpaymentaccount10
-                , userfriends                    = userfriends10
-                , userinviteinfo                 = userinviteinfo10
-                , userlogininfo                 = LoginInfo
+                }) = User11 
+                { userid11                         = userid10
+                , userpassword11                   = userpassword10
+                , usersupervisor11                 = usersupervisor10
+                , usercanhavesubaccounts11         = usercanhavesubaccounts10
+                , useraccountsuspended11           = useraccountsuspended10
+                , userhasacceptedtermsofservice11  = userhasacceptedtermsofservice10
+                , userinfo11                       = userinfo10
+                , usersettings11                   = usersettings10
+                , userpaymentpolicy11              = userpaymentpolicy10
+                , userpaymentaccount11             = userpaymentaccount10
+                , userfriends11                    = userfriends10
+                , userinviteinfo11                 = userinviteinfo10
+                , userlogininfo11                 = LoginInfo
                                                     { lastsuccesstime = Nothing
                                                     , lastfailtime = Nothing
                                                     , consecutivefails = 0
                                                     }
+                }
+
+instance Migrate User11 User where
+    migrate (User11
+               { userid11                     
+                , userpassword11                
+                , usersupervisor11               
+                , usercanhavesubaccounts11        
+                , useraccountsuspended11          
+                , userhasacceptedtermsofservice11  
+                , userinfo11                     
+                , usersettings11                
+                , userpaymentpolicy11             
+                , userpaymentaccount11           
+                , userfriends11                  
+                , userinviteinfo11
+                , userlogininfo11       
+                }) = User 
+                { userid                         = userid11
+                , userpassword                   = userpassword11
+                , usersupervisor                 = usersupervisor11
+                , useraccountsuspended           = useraccountsuspended11
+                , userhasacceptedtermsofservice  = userhasacceptedtermsofservice11
+                , userinfo                       = userinfo11
+                , usersettings                   = usersettings11
+                , userpaymentpolicy              = userpaymentpolicy11
+                , userpaymentaccount             = userpaymentaccount11
+                , userfriends                    = userfriends11
+                , userinviteinfo                 = userinviteinfo11
+                , userlogininfo                  = userlogininfo11
                 }
 
 
@@ -471,6 +519,9 @@ instance Migrate UserSettings0 UserSettings where
           , preferreddesignmode = Nothing
           }
 
+isAbleToHaveSubaccounts :: User -> Bool
+isAbleToHaveSubaccounts user = isNothing $ usersupervisor user
+
 createPassword :: BS.ByteString -> IO Password
 createPassword password = do
   salt <- makeSalt
@@ -507,8 +558,11 @@ instance Version User9 where
 instance Version User10 where
     mode = extension 10 (Proxy :: Proxy User9)
 
-instance Version User where
+instance Version User11 where
     mode = extension 11 (Proxy :: Proxy User10)
+
+instance Version User where
+    mode = extension 12 (Proxy :: Proxy User11)
 
 instance Version TrustWeaverStorage
 
@@ -665,8 +719,7 @@ addUser (fstname, sndname) email passwd maybesupervisor = do
         let user = (User {  
                    userid                  =  userid
                  , userpassword            =  passwd
-                 , usersupervisor          =  fmap (SupervisorID . unUserID) maybesupervisor
-                 , usercanhavesubaccounts  =  True 
+                 , usersupervisor          =  fmap (SupervisorID . unUserID) maybesupervisor 
                  , useraccountsuspended    =  False  
                  , userhasacceptedtermsofservice = Nothing
                  , userinfo = UserInfo {
@@ -910,6 +963,7 @@ $(mkMethods ''Users [ 'getUserByUserID
                     ])
 
 $(deriveSerializeFor [ ''User
+                     , ''User11
                      , ''User10
                      , ''User9
                      , ''User8
