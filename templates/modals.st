@@ -255,7 +255,45 @@ modalRejectedView=
 </div>
 #####
 ####
-modalSignedViewClosed=
+modalSignedViewClosedHasAccountNotLoggedIn=
+<div class="modal-container">
+  <form method="post" action="$linklogin$">
+    <div class="modal-header">
+      <span class="modal-icon message"></span>
+      <span class="modal-title">
+        <h3>Du har undertecknat dokumentet $documenttitle$</h3>
+      </span>
+      <a class="modal-close close"> </a>
+    </div>
+    <div class="modal-body">
+      <div class="modal-content">
+        <p>
+          $partyListString:noescape()$ har nu undertecknat och
+          dokumentet är bindande.
+        </p>
+        <p>
+          Dokumentet har sparats till ditt konto.
+        </p>
+        $loginModalPart()$
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="float-left">
+        <a class="close cancel">Avbryt</a>
+        <a href="#" class="txt-link message">Glömt lösenord</a>
+      </div>
+      <a href="#" class="btn-small blue float-right submit notForIE7">
+        <div class="left"></div>
+        <div class="label">
+          <p>Logga in</p>
+        </div>
+        <div class="right"></div>
+      </a>
+    </div>
+  </form>
+</div>
+####
+modalSignedViewClosedHasAccountLoggedIn=
 <div class="modal-container">
   <div class="modal-header">
     <span class="modal-icon message"></span>
@@ -266,24 +304,16 @@ modalSignedViewClosed=
   </div>
   <div class="modal-body">
     <div class="modal-content">
-      <p>$partyListString:noescape()$ har nu undertecknat och dokumentet är bindande. Ett exemplar av det färdigställda dokumentet har skickats till din inkorg.</p>
-      $willCreateAccountForYou()$
+      <p>
+        $partyListString:noescape()$ har nu undertecknat och
+        dokumentet är bindande.
+      </p>
+      <p>
+        Dokumentet har sparats till ditt konto.
+      </p>
     </div>
   </div>
   <div class="modal-footer">
-    $if(hasaccount)$
-    $if(!isloggedin)$
-    <a class="float-left close text-link message">
-      Stäng
-    </a>
-    <a href="#" class="btn-small blue float-right login-button notForIE7">
-      <div class="left"></div>
-      <div class="label">
-        <p>Logga in</p>
-      </div>
-      <div class="right"></div>
-    </a>
-    $else$
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
@@ -292,19 +322,48 @@ modalSignedViewClosed=
       </div>
       <div class="right"></div>
     </a>
-    $endif$
-    $else$
-    <a class="btn-small green float-right close">
-      <div class="left"></div>
-      <div class="label">
-        <p>Stäng</p>
-        <div class="btn-symbol green arrow-left"></div>
-      </div>
-      <div class="right"></div>
-    </a>
-    $endif$
   </div>
 </div>
+####
+modalSignedViewClosedNoAccount=
+<div class="modal-container">
+  <div class="modal-header">
+    <span class="modal-icon message"></span>
+    <span class="modal-title">
+      <h3>Du har undertecknat dokumentet $documenttitle$</h3>
+    </span>
+    <a class="modal-close close"> </a>
+  </div>
+  <div class="modal-body">
+    <div class="modal-content">
+      <p>
+        $partyListString:noescape()$ har nu undertecknat och
+        dokumentet är bindande.
+      </p>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <a class="btn-small green float-right close">
+      <div class="left"></div>
+      <div class="label">
+        <p>Stäng</p>
+        <div class="btn-symbol green arrow-left"></div>
+      </div>
+      <div class="right"></div>
+    </a>
+  </div>
+</div>
+####
+modalSignedViewClosed=
+$if(hasaccount)$
+$if(isloggedin)$
+$modalSignedViewClosedHasAccountLoggedIn()$
+$else$
+$modalSignedViewClosedHasAccountNotLoggedIn()$
+$endif$
+$else$
+$modalSignedViewClosedNoAccount()$
+$endif$
 #####
 modalSignedViewNotClosed=
 <div class="modal-container">
@@ -317,8 +376,11 @@ modalSignedViewNotClosed=
   </div>
   <div class="modal-body">
     <div class="modal-content">
-      <p>$partyUnsignedListString:noescape()$ har ännu inte undertecknat. När alla undertecknat blir
-        dokumentet bindande och en kopia skickas till din e-post.</p>
+      <p>
+        $partyUnsignedListString:noescape()$ har ännu inte
+        undertecknat. När alla undertecknat blir dokumentet bindande
+        och en kopia skickas till din e-post.
+      </p>
       $willCreateAccountForYou()$
     </div>
   </div>
@@ -353,7 +415,10 @@ $willCreateAccountForYouHasAccount()$
 $endif$
 #####
 willCreateAccountForYouHasAccount=
-<p>Dokumentet har också sparats till ditt konto med användarnamn <span style="color:#007CAC">$email$</span></p>
+<p>
+  Dokumentet har sparats till ditt konto.
+</p>
+$loginModalPart()$
 #####
 loginModal=
 $if(!logged)$
