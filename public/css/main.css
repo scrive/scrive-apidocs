@@ -1651,6 +1651,134 @@ a.new-btn-small.black p {
 	-webkit-border-radius: 3px;
 }
 
+.group-portrait-image {
+	background: #fff;
+	border: 1px solid #ccc;
+	border-radius: 3px;
+	float: left;
+	height: 433px;
+	margin-right: 20px;
+	position: relative;
+	width: 640px;
+	-moz-border-radius: 3px;
+	-webkit-border-radius: 3px;
+}
+
+.group-portrait-image::after {
+bottom: 0px;
+box-shadow: 0 0 5px black;
+content: "";
+left: 0px;
+opacity: 0.5;
+position: absolute;
+right: 0px;
+top: 0px;
+-moz-box-shadow: 0 0 5px black;
+-webkit-box-shadow: 0 0 5px black;
+}
+
+.group-portrait-image a {
+     display: block;
+     position: relative;
+     left: 10px;
+     top: 10px;
+     height: 413px;
+     width: 620px;
+     margin-right: 0px;
+     z-index:9999;
+}
+
+.box .about-container li .portrait-image a {
+     display: block;
+     position: relative;
+     left: 10px;
+     top: 10px;
+     height: 150px;
+     width: 107px;
+     margin-right: 0px;
+     z-index:9999;
+}
+
+.group-portrait-image a.group {
+      background: url(../img/group-portrait-1.jpg) center no-repeat;      
+}
+
+.group-portrait-image a.group:hover {
+      background: url(../img/group-portrait-2.jpg) center no-repeat;      
+}
+
+.portrait-image a.lukas {
+      background: url(../img/lukas-portrait-1.jpg) center no-repeat;      
+}
+
+.portrait-image a.lukas:hover {
+      background: url(../img/lukas-portrait-2.jpg) center no-repeat;      
+}
+
+.portrait-image a.gracjan {
+      background: url(../img/gracjan-portrait-1.jpg) center no-repeat;      
+}
+
+.portrait-image a.gracjan:hover {
+      background: url(../img/gracjan-portrait-2.jpg) center no-repeat;      
+}
+
+.portrait-image a.viktor {
+      background: url(../img/viktor-portrait-1.jpg) center no-repeat;      
+}
+
+.portrait-image a.viktor:hover {
+      background: url(../img/viktor-portrait-2.jpg) center no-repeat;
+}
+
+.portrait-image a.mariusz {
+      background: url(../img/mariusz-portrait-1.jpg) center no-repeat;      
+}
+
+.portrait-image a.mariusz:hover {
+      background: url(../img/mariusz-portrait-2.jpg) center no-repeat;
+}
+
+.portrait-image a.eric {
+      background: url(../img/missing-portrait.png) center no-repeat;      
+}
+
+.portrait-image a.eric:hover {
+      background: url(../img/missing-portrait.png) center no-repeat;
+}
+
+.portrait-image a.emily {
+      background: url(../img/emily-portrait-1.jpg) center no-repeat;      
+}
+
+.portrait-image a.emily:hover {
+      background: url(../img/emily-portrait-2.jpg) center no-repeat;
+}
+
+.portrait-image a.oskar {
+      background: url(../img/missing-portrait.png) center no-repeat;      
+}
+
+.portrait-image a.oskar:hover {
+      background: url(../img/missing-portrait.png) center no-repeat;
+}
+
+.portrait-image a.nazli {
+      background: url(../img/nazli-portrait-1.jpg) center no-repeat;      
+}
+
+.portrait-image a.nazli:hover {
+      background: url(../img/nazli-portrait-2.jpg) center no-repeat;
+}
+
+.portrait-image a.belle {
+      background: url(../img/missing-portrait.png) center no-repeat;      
+}
+
+.portrait-image a.belle:hover {
+      background: url(../img/missing-portrait.png) center no-repeat;
+}
+
 .box .about-container li .portrait-image:before {
 	bottom: 3px;
 	box-shadow: inset 0 0 5px #000;
@@ -1820,24 +1948,6 @@ a.new-btn-small.black p {
    opacity:0;
    -ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=0)"; 
    filter: alpha(opacity=0);                                      
-}
-
-
-/* temporary cover up */
-
-.portrait 
-{
- display:none;
-}
-
-.portrait-image img
-{
-    display: none;
-}
-
-.partner-image img
-{
-    display: none;
 }
 
 input.grayed, textarea.grayed
