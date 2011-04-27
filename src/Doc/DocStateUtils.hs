@@ -38,6 +38,7 @@ module Doc.DocStateUtils (
     , undeliveredSignatoryLinks
     
     -- Other utils
+    , documentcurrentsignorder
     , signatoryDetailsFromUser
     , isMatchingSignatoryLink
     , removeFieldsAndPlacements
@@ -325,6 +326,21 @@ signatoryname s =
 
 -- OTHER UTILS
 
+-- | Indicates which signatories were activated (received
+-- invitation email). All signatories with sign order
+-- not greater than current sign order of the document
+-- are considered to be activated.
+documentcurrentsignorder :: Document -> SignOrder
+documentcurrentsignorder doc =
+    case filter notSigned sigs of
+         [] -> maximum $ map signorder sigs
+         xs -> minimum $ map signorder xs
+    where
+        signorder = signatorysignorder . signatorydetails
+        sigs = documentsignatorylinks doc
+        notSigned siglnk = isNothing (maybesigninfo siglnk)
+            && signorder siglnk > SignOrder 0 -- we omit author
+
 {- |
    Build a SignatoryDetails from a User with no fields
  -}
@@ -334,10 +350,7 @@ signatoryDetailsFromUser user =
                      , signatorysndname           = usersndname $ userinfo user 
                      , signatoryemail             = unEmail $ useremail $ userinfo user
                      , signatorycompany           = usercompanyname $ userinfo user
-                     -- I'm changing this because, well, it breaks Eleg signing
-                     -- It should be fixed properly when we split personnnummer and felaktignnummer
-                     -- (change from usercompanynumber -> userpersonalnumber)
-                     --    --EN
+                     , signatorysignorder         = SignOrder 1
                      , signatorypersonalnumber    = userpersonalnumber $ userinfo user
                      , signatorycompanynumber     = usercompanynumber $ userinfo user
                      , signatoryfstnameplacements        = []

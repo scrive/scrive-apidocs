@@ -196,7 +196,7 @@ pageDocumentDesign=
                       $dragndropIcon()$
                     </span>
                     $endif$
-                    <div class="otherfields">
+                     <div class="otherfields">
                       $authorOtherFields:noescape()$
                     </div>
                   </span>
@@ -500,6 +500,11 @@ pageDocumentDesign=
           <span style="display:none;" class="type">sig</span>
           <input type="text" infotext="Org. nr" name="signatorycompanynumber" autocomplete="off" />
           $dragndropIcon()$
+        </span>
+        <span class='dragfield sigsignord'>
+          <span style="display:none;" class="fieldid">signorder</span>
+          <span style="display:none;" class="type">sig</span>
+          <input type="text" infotext="Signing order" name="signatorysignorder" autocomplete="off" style="width: 86px;" />
         </span>
       </span>
       <div class="otherfields">

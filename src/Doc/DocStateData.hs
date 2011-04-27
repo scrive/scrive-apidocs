@@ -27,6 +27,7 @@ module Doc.DocStateData(
     , TimeoutTime(..)
     , DocStats(..)
     , SignatureInfo(..)
+    , SignOrder(..)
     , IdentificationType(..)
     , SignatureProvider(..)
     , SignatoryRole(..)
@@ -62,6 +63,11 @@ newtype FileID = FileID { unFileID :: Int }
     deriving (Eq, Ord, Typeable)
 newtype TimeoutTime = TimeoutTime { unTimeoutTime :: MinutesTime }
     deriving (Eq, Ord, Typeable)
+newtype SignOrder = SignOrder { unSignOrder :: Integer }
+    deriving (Eq, Ord, Typeable)
+
+instance Show SignOrder where
+    show (SignOrder n) = show n
 
 data IdentificationType = EmailIdentification
                         | ELegitimationIdentification
@@ -169,6 +175,24 @@ data SignatoryDetails3 = SignatoryDetails3
     }
     deriving (Eq, Ord, Typeable)
 
+data SignatoryDetails4 = SignatoryDetails4
+    { signatoryfstname4        :: BS.ByteString  -- "Gracjan" 
+    , signatorysndname4        :: BS.ByteString  -- "Polak" 
+    , signatorycompany4        :: BS.ByteString  -- SkrivaPå
+    , signatorypersonalnumber4 :: BS.ByteString  -- 123456789
+    , signatorycompanynumber4  :: BS.ByteString  -- 123456789
+    , signatoryemail4          :: BS.ByteString  -- "gracjanpolak@skrivapa.se"
+    -- for templates
+    , signatoryfstnameplacements4        :: [FieldPlacement]
+    , signatorysndnameplacements4        :: [FieldPlacement]
+    , signatorycompanyplacements4        :: [FieldPlacement]
+    , signatoryemailplacements4          :: [FieldPlacement]
+    , signatorypersonalnumberplacements4 :: [FieldPlacement]
+    , signatorycompanynumberplacements4  :: [FieldPlacement]
+    , signatoryotherfields4              :: [FieldDefinition]
+    }
+    deriving (Eq, Ord, Typeable)
+
 data SignatoryDetails = SignatoryDetails
     { signatoryfstname        :: BS.ByteString  -- "Gracjan" 
     , signatorysndname        :: BS.ByteString  -- "Polak" 
@@ -176,6 +200,8 @@ data SignatoryDetails = SignatoryDetails
     , signatorypersonalnumber :: BS.ByteString  -- 123456789
     , signatorycompanynumber  :: BS.ByteString  -- 123456789
     , signatoryemail          :: BS.ByteString  -- "gracjanpolak@skrivapa.se"
+    -- for ordered signing
+    , signatorysignorder      :: SignOrder
     -- for templates
     , signatoryfstnameplacements        :: [FieldPlacement]
     , signatorysndnameplacements        :: [FieldPlacement]
@@ -674,7 +700,7 @@ data Document = Document
     { documentid                     :: DocumentID
     , documenttitle                  :: BS.ByteString
     , documentauthor                 :: Author                  -- to be moved to siglinks
-    , documentsignatorylinks         :: [SignatoryLink]  
+    , documentsignatorylinks         :: [SignatoryLink]
     , documentfiles                  :: [File]
     , documentsealedfiles            :: [File]
     , documentstatus                 :: DocumentStatus
@@ -686,8 +712,8 @@ data Document = Document
     , documenttimeouttime            :: Maybe TimeoutTime
     , documentinvitetime             :: Maybe SignInfo
     , documentdeleted                :: Bool                    -- to be moved to links
-    , documentlog                    :: [DocumentLogEntry]      -- to be made into plain text 
-    , documentinvitetext             :: BS.ByteString             
+    , documentlog                    :: [DocumentLogEntry]      -- to be made into plain text
+    , documentinvitetext             :: BS.ByteString
     , documenttrustweaverreference   :: Maybe BS.ByteString
     , documentallowedidtypes         :: [IdentificationType]
     , documentcsvupload              :: Maybe CSVUpload
@@ -891,6 +917,9 @@ $(deriveSerialize ''SignInfo)
 instance Version SignInfo where
     mode = extension 1 (Proxy :: Proxy SignInfo0)
 
+$(deriveSerialize ''SignOrder)
+instance Version SignOrder
+
 $(deriveSerialize ''IdentificationType)
 instance Version IdentificationType
 
@@ -946,10 +975,14 @@ $(deriveSerialize ''SignatoryDetails3)
 instance Version SignatoryDetails3 where
     mode = extension 3 (Proxy :: Proxy SignatoryDetails2)
 
+$(deriveSerialize ''SignatoryDetails4)
+instance Version SignatoryDetails4 where
+    mode = extension 4 (Proxy :: Proxy SignatoryDetails3)
+
 $(deriveSerialize ''SignatoryDetails)
 instance Version SignatoryDetails where
-    mode = extension 4 (Proxy :: Proxy SignatoryDetails3)
-    
+    mode = extension 5 (Proxy :: Proxy SignatoryDetails4)
+
 $(deriveSerialize ''SignatoryLink0)
 instance Version SignatoryLink0
 
@@ -1052,7 +1085,7 @@ instance Migrate SignatoryDetails2 SignatoryDetails3 where
                 }
 
 
-instance Migrate SignatoryDetails3 SignatoryDetails where
+instance Migrate SignatoryDetails3 SignatoryDetails4 where
     migrate (SignatoryDetails3
              {  signatoryfstname3
                 , signatorysndname3
@@ -1065,22 +1098,53 @@ instance Migrate SignatoryDetails3 SignatoryDetails where
                 , signatoryemailplacements3
                 , signatorynumberplacements3
                 , signatoryotherfields3
-                }) = SignatoryDetails
-                { signatoryfstname =  signatoryfstname3
-                , signatorysndname = signatorysndname3
-                , signatorycompany = signatorycompany3
-                , signatorypersonalnumber = signatorynumber3
-                , signatorycompanynumber = BS.empty
-                , signatoryemail = signatoryemail3
-                , signatoryfstnameplacements = signatoryfstnameplacements3
-                , signatorysndnameplacements = signatorysndnameplacements3
-                , signatorycompanyplacements = signatorycompanyplacements3
-                , signatoryemailplacements = signatoryemailplacements3
-                , signatorypersonalnumberplacements = signatorynumberplacements3
-                , signatorycompanynumberplacements = []
-                , signatoryotherfields = signatoryotherfields3
+                }) = SignatoryDetails4
+                { signatoryfstname4 =  signatoryfstname3
+                , signatorysndname4 = signatorysndname3
+                , signatorycompany4 = signatorycompany3
+                , signatorypersonalnumber4 = signatorynumber3
+                , signatorycompanynumber4 = BS.empty
+                , signatoryemail4 = signatoryemail3
+                , signatoryfstnameplacements4 = signatoryfstnameplacements3
+                , signatorysndnameplacements4 = signatorysndnameplacements3
+                , signatorycompanyplacements4 = signatorycompanyplacements3
+                , signatoryemailplacements4 = signatoryemailplacements3
+                , signatorypersonalnumberplacements4 = signatorynumberplacements3
+                , signatorycompanynumberplacements4 = []
+                , signatoryotherfields4 = signatoryotherfields3
                 }
 
+instance Migrate SignatoryDetails4 SignatoryDetails where
+    migrate (SignatoryDetails4
+             {  signatoryfstname4
+                , signatorysndname4
+                , signatorycompany4
+                , signatorypersonalnumber4
+                , signatorycompanynumber4
+                , signatoryemail4
+                , signatoryfstnameplacements4
+                , signatorysndnameplacements4
+                , signatorycompanyplacements4
+                , signatoryemailplacements4
+                , signatorypersonalnumberplacements4
+                , signatorycompanynumberplacements4
+                , signatoryotherfields4
+                }) = SignatoryDetails
+                { signatoryfstname = signatoryfstname4
+                , signatorysndname = signatorysndname4
+                , signatorycompany = signatorycompany4
+                , signatorypersonalnumber = signatorypersonalnumber4
+                , signatorycompanynumber = signatorycompanynumber4
+                , signatoryemail = signatoryemail4
+                , signatorysignorder = SignOrder 1
+                , signatoryfstnameplacements = signatoryfstnameplacements4
+                , signatorysndnameplacements = signatorysndnameplacements4
+                , signatorycompanyplacements = signatorycompanyplacements4
+                , signatoryemailplacements = signatoryemailplacements4
+                , signatorypersonalnumberplacements = signatorypersonalnumberplacements4
+                , signatorycompanynumberplacements = signatorycompanynumberplacements4
+                , signatoryotherfields = signatoryotherfields4
+                }
 
 instance Migrate SignatoryLink0 SignatoryLink1 where
     migrate (SignatoryLink0 

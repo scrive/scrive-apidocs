@@ -6,6 +6,7 @@ module Doc.DocControl where
 
 import ActionSchedulerState
 import AppView
+import Control.Applicative
 import Control.Concurrent
 import Control.Monad
 import Control.Monad.Reader
@@ -84,17 +85,22 @@ signlinkFromDocById doc sid = find ((== sid) . signatorylinkid) (documentsignato
    Perform the appropriate action when transitioning between documentstatuses.
    This function should always be called after changing the document.
  -}
-postDocumentChangeAction :: Document -> DocumentStatus -> Maybe SignatoryLinkID -> Kontra ()
+postDocumentChangeAction :: Document -> Document -> Maybe SignatoryLinkID -> Kontra ()
 postDocumentChangeAction document@Document  { documentstatus
                                             , documentsignatorylinks
                                             , documentid
                                             , documentauthor 
                                             , documentcancelationreason
                                             } 
-                            oldstatus 
+                      olddocument@Document  { documentstatus = oldstatus }
                             msignalinkid
-    -- No status change ; no action
-    | documentstatus == oldstatus = return ()
+    -- No status change ; 
+    | documentstatus == oldstatus =
+        -- if sign order has changed, we need to send another invitations
+        when (documentcurrentsignorder document /= documentcurrentsignorder olddocument) $ do
+            ctx <- get
+            Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor
+            liftIO $ sendInvitationEmails ctx document author
     -- Preparation -> Pending
     -- main action: sendInvitationEmails
     | oldstatus == Preparation && documentstatus == Pending = do
@@ -157,19 +163,21 @@ postDocumentChangeAction document@Document  { documentstatus
     | otherwise = 
          return ()
     where msignalink = maybe Nothing (signlinkFromDocById document) msignalinkid
-    
+
 sendElegDataMismatchEmails :: Context -> Document -> User -> IO ()
 sendElegDataMismatchEmails ctx document author = do
     let authorid = unAuthor $ documentauthor document
-        allbutauthor = filter ((maybe True (/= authorid)) . maybesignatory) 
-                            (documentsignatorylinks document)
+        activatedbutauthor =
+            (&&) <$> activatedSignatories (documentcurrentsignorder document)
+                 <*> (maybe True (/= authorid)) . maybesignatory
+        signlinks = filter activatedbutauthor (documentsignatorylinks document)
         Just (ELegDataMismatch msg badid _ _ _) = documentcancelationreason document
         badsig = fromJust $ find (\sl -> badid == signatorylinkid sl) (documentsignatorylinks document)
         badname  = BS.toString $ signatoryname $ signatorydetails badsig
         bademail = BS.toString $ signatoryemail $ signatorydetails badsig
-    forM_ allbutauthor $ sendDataMismatchEmailSignatory ctx document author badid badname msg
+    forM_ signlinks $ sendDataMismatchEmailSignatory ctx document author badid badname msg
     sendDataMismatchEmailAuthor ctx document author badname bademail
-    
+
 sendDataMismatchEmailSignatory :: Context -> Document -> User -> SignatoryLinkID -> String -> String -> SignatoryLink -> IO ()
 sendDataMismatchEmailSignatory ctx document author badid badname msg signatorylink = do
     let SignatoryLink { signatorydetails, signatorylinkid } = signatorylink
@@ -228,8 +236,12 @@ sendDocumentErrorEmail1 ctx document signatorylink = do
  -}
 sendInvitationEmails :: Context -> Document -> User -> IO ()
 sendInvitationEmails ctx document author = do
-  let signlinks = filter (isNotLinkForUserID $ userid author) $ documentsignatorylinks document
+  let signlinks = filter activatedSigsAndNotAuthor $ documentsignatorylinks document
   forM_ signlinks (sendInvitationEmail1 ctx document author)
+  where
+      activatedSigsAndNotAuthor =
+          (&&) <$> activatedSignatories (documentcurrentsignorder document) 
+               <*> isNotLinkForUserID (userid author)
 
 {- |
    Helper function to send emails to invited parties
@@ -256,6 +268,12 @@ sendInvitationEmail1 ctx document author signatorylink = do
            mail { fullnameemails = [(signatoryname signatorydetails,signatoryemail signatorydetails)]
                 , mailInfo = Invitation documentid signatorylinkid
                 }
+
+-- | Get signatories that has been 'activated',
+-- i.e. link to sign view was sent to them
+activatedSignatories :: SignOrder -> SignatoryLink -> Bool
+activatedSignatories signorder siglink = 
+    signorder >= (signatorysignorder $ signatorydetails siglink)
 
 {- |
    Send emails to all parties when a document is closed.
@@ -309,13 +327,13 @@ sendClosedAuthorEmail ctx document = do
       name1 = userfullname authoruser
   scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [(name1,email1)], attachments = [(documenttitle,attachmentcontent)]}
 
-
 {- |
    Send an email to the author when the document is rejected
  -}
 sendRejectEmails :: (Maybe String) -> Context -> Document -> SignatoryLink -> IO ()
 sendRejectEmails customMessage ctx document signalink = do
-  forM_ (documentsignatorylinks document) $ \sl ->  
+  let activated_signatories = filter (activatedSignatories $ documentcurrentsignorder document) $ documentsignatorylinks document
+  forM_ activated_signatories $ \sl ->  
                      do
                       let semail = signatoryemail $ signatorydetails  sl
                       let sname = signatoryname $ signatorydetails  sl
@@ -363,15 +381,15 @@ signDocument documentid
              magichash1
                  = do            
   Context { ctxtime, ctxipnumber, ctxtemplates, ctxmaybeuser } <- get
-  document@Document{ documentstatus = olddocumentstatus, documentsignatorylinks } <- queryOrFail $ GetDocumentByDocumentID documentid
+  olddocument@Document{ documentsignatorylinks } <- queryOrFail $ GetDocumentByDocumentID documentid
 
-  checkLinkIDAndMagicHash document signatorylinkid1 magichash1
+  checkLinkIDAndMagicHash olddocument signatorylinkid1 magichash1
 
   fieldnames <- getAndConcat "fieldname"
   fieldvalues <- getAndConcat "fieldvalue"
   let fields = zip fieldnames fieldvalues
 
-  let allowedidtypes = documentallowedidtypes document
+  let allowedidtypes = documentallowedidtypes olddocument
       allowsEmail = isJust $ find (== EmailIdentification) allowedidtypes
 
   when (not allowsEmail) mzero
@@ -385,7 +403,7 @@ signDocument documentid
           return $ LinkMain
     Right document -> 
         do 
-          postDocumentChangeAction document olddocumentstatus (Just signatorylinkid1)
+          postDocumentChangeAction document olddocument (Just signatorylinkid1)
           signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid1
           maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
           when_ (isNothing maybeuser) $ do
@@ -415,9 +433,9 @@ rejectDocument documentid
                magichash
                    = do
   ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber}) <- get
-  document@Document{ documentsignatorylinks } <- queryOrFail $ GetDocumentByDocumentID documentid
+  olddocument@Document{ documentsignatorylinks } <- queryOrFail $ GetDocumentByDocumentID documentid
 
-  checkLinkIDAndMagicHash document signatorylinkid1 magichash
+  checkLinkIDAndMagicHash olddocument signatorylinkid1 magichash
 
   mdocument <- update $ RejectDocument documentid signatorylinkid1 ctxtime ctxipnumber
   case (mdocument) of
@@ -427,7 +445,7 @@ rejectDocument documentid
           return $ LinkMain
     Right document -> 
         do  
-          postDocumentChangeAction document Pending (Just signatorylinkid1)
+          postDocumentChangeAction document olddocument (Just signatorylinkid1)
           addModal $ modalRejectedView document
           return $ LoopBack
 
@@ -538,6 +556,7 @@ handleIssueShowGet docid = withUserGet $ checkUserTOSGet $ do
                 then TopDocument
                 else TopNone
   -- authors get a view with buttons
+  liftIO $ print $ documentcurrentsignorder document
   if isAuthor document user
    then do
         let mMismatchMessage = getDataMismatchMessage $ documentcancelationreason document
@@ -611,7 +630,7 @@ handleIssueShowPost docid = withUserPost $ do
       (Preparation, _ , _ ,_, _, _, _) -> handleIssueSave document author
       (AwaitingAuthor, True , _ ,_, _, _, _) -> handleIssueSignByAuthor document author
       _  -> return $ LinkContracts emptyListParams
-     
+
 handleIssueSign document author = do
     ctx@Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber} <- get
     -- unless (document `allowsIdentification` EmailIdentification) mzero | This need to be refactored | Breaks templates
@@ -637,7 +656,7 @@ handleIssueSign document author = do
         mndoc <- update $ AuthorSignDocument (documentid doc) ctxtime ctxipnumber author Nothing
         case mndoc of
           Right newdocument -> do
-            postDocumentChangeAction newdocument (documentstatus udoc) Nothing
+            postDocumentChangeAction newdocument udoc Nothing
             return ()
           Left _ -> return ()
         return mndoc
@@ -668,7 +687,7 @@ handleIssueSend document author = do
         mndoc <- update $ AuthorSendDocument (documentid doc) ctxtime ctxipnumber author Nothing
         case mndoc of
           Right newdocument -> do
-            postDocumentChangeAction newdocument (documentstatus udoc) Nothing
+            postDocumentChangeAction newdocument udoc Nothing
             return ()
           Left _ -> return ()
         return mndoc
@@ -874,7 +893,7 @@ handleIssueSignByAuthor document author = do
     case doc2 of
         Nothing -> return $ LinkIssueDoc (documentid document)
         Just d -> do 
-            postDocumentChangeAction d AwaitingAuthor Nothing
+            postDocumentChangeAction d document Nothing
             addFlashMsg =<< (liftIO $ flashAuthorSigned $ ctxtemplates ctx)
             return $ LinkIssueDoc (documentid document)
             
@@ -1019,13 +1038,14 @@ filterFieldDefsByID :: [(BS.ByteString, FieldDefinition)]
 filterFieldDefsByID fielddefs sigid = 
     [x | (s, x) <- fielddefs, s == sigid]
     
-makeSignatoryNoPlacements sfn ssn se sc spn scn = 
+makeSignatoryNoPlacements sfn ssn se sso sc spn scn = 
     SignatoryDetails { signatoryfstname = sfn
                      , signatorysndname = ssn
                      , signatorycompany = sc
                      , signatorypersonalnumber = spn
                      , signatorycompanynumber = scn
                      , signatoryemail = se
+                     , signatorysignorder = sso
                      , signatoryfstnameplacements = []
                      , signatorysndnameplacements = []
                      , signatorycompanyplacements = []
@@ -1035,8 +1055,8 @@ makeSignatoryNoPlacements sfn ssn se sc spn scn =
                      , signatoryotherfields = []
                      }
                      
-makeSignatory pls fds sid sfn  ssn  se  sc  spn  scn =
-    (makeSignatoryNoPlacements sfn ssn se sc spn scn)
+makeSignatory pls fds sid sfn  ssn  se  sso  sc  spn  scn =
+    (makeSignatoryNoPlacements sfn ssn se sso sc spn scn)
     { signatoryfstnameplacements        = filterPlacementsByID pls sid (BS.fromString "fstname")
     , signatorysndnameplacements        = filterPlacementsByID pls sid (BS.fromString "sndname")
     , signatorycompanyplacements        = filterPlacementsByID pls sid (BS.fromString "company")
@@ -1050,26 +1070,33 @@ makeSignatory pls fds sid sfn  ssn  se  sc  spn  scn =
 makeSignatories placements fielddefs
                 sigids
                 signatoriesemails
+                signatoriessignorders
                 signatoriescompanies
                 signatoriespersonalnumbers
                 signatoriescompanynumbers
                 signatoriesfstnames
                 signatoriessndnames
-    | sigids == [] = zipWith6 makeSignatoryNoPlacements 
+    | sigids == [] = zipWith7 makeSignatoryNoPlacements 
                         signatoriesfstnames
                         signatoriessndnames
                         signatoriesemails
+                        signatoriessignorders
                         signatoriescompanies
                         signatoriespersonalnumbers
                         signatoriescompanynumbers
-    | otherwise    = zipWith7 (makeSignatory placements fielddefs)
+    | otherwise    = zipWith8 (makeSignatory placements fielddefs)
                         sigids
                         signatoriesfstnames
                         signatoriessndnames
                         signatoriesemails
+                        signatoriessignorders
                         signatoriescompanies
                         signatoriespersonalnumbers
                         signatoriescompanynumbers
+    where
+        zipWith8 z (a:as) (b:bs) (c:cs) (d:ds) (e:es) (f:fs) (g:gs) (h:hs)
+            = z a b c d e f g h : zipWith8 z as bs cs ds es fs gs hs
+        zipWith8 _ _ _ _ _ _ _ _ _ = []
 
 
 makeAuthorDetails pls fielddefs author = 
@@ -1116,10 +1143,11 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
   signatoriescompanies       <- getAndConcat "signatorycompany"
   signatoriespersonalnumbers <- getAndConcat "signatorypersonalnumber"
   signatoriescompanynumbers  <- getAndConcat "signatorycompanynumber"
-  signatoriesemails'         <- getAndConcat "signatoryemail"
-  let signatoriesemails = map (BSC.map toLower) signatoriesemails'
+  signatoriesemails          <- map (BSC.map toLower) <$> getAndConcat "signatoryemail"
+  signatoriessignorders      <- map (SignOrder . fromMaybe 1 . fmap (max 1 . fst) . BSC.readInteger) <$> getAndConcat "signatorysignorder" -- a little filtering here, but we want signatories to have sign order > 0
   signatoriesroles           <- getAndConcat "signatoryrole"
   liftIO $ print signatoriesroles
+  liftIO $ print signatoriessignorders
 
   -- if the post doesn't contain this one, we parse the old way
   sigids <- getAndConcat "sigid"
@@ -1170,13 +1198,14 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
   let signatories = makeSignatories placements fielddefs 
                         sigids
                         signatoriesemails
+                        signatoriessignorders
                         signatoriescompanies
                         signatoriespersonalnumbers
                         signatoriescompanynumbers
                         signatoriesfstnames
                         signatoriessndnames
                         
-  let authordetails = makeAuthorDetails placements fielddefs author
+  let authordetails = (makeAuthorDetails placements fielddefs author) { signatorysignorder = SignOrder 0 } -- author has sign order set to 0 since he is 'the host' of the document
                         
   let isauthorsig = authorrole == "signatory"
       signatories2 = if isauthorsig
@@ -1580,8 +1609,9 @@ handleChangeSignatoryEmail did slid = do
 
 sendCancelMailsForDocument:: (Maybe BS.ByteString) -> Context -> Document -> Kontra ()
 sendCancelMailsForDocument customMessage ctx document = do
+  let activated_signatories = filter (activatedSignatories $ documentcurrentsignorder document) $ documentsignatorylinks document
   Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor document
-  liftIO $ forM_ (documentsignatorylinks document) (scheduleEmailSendout (ctxesenforcer ctx) <=< (mailCancelDocumentByAuthor (ctxtemplates ctx) customMessage ctx document author))
+  liftIO $ forM_ activated_signatories (scheduleEmailSendout (ctxesenforcer ctx) <=< (mailCancelDocumentByAuthor (ctxtemplates ctx) customMessage ctx document author))
 
 failIfNoDocument :: DocumentID -> Kontra ()
 failIfNoDocument docid = do
