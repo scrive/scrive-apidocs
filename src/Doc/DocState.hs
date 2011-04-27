@@ -604,13 +604,14 @@ archiveDocuments user docidlist = do
                       then Right $ deleteForUserID user doc
                       else Left "Not author can not delete document"
 
-shareDocuments :: User -> [DocumentID] -> Update Documents ()
+shareDocuments :: User -> [DocumentID] -> Update Documents (Either String [Document])
 shareDocuments user docidlist = do
-  forM_ docidlist $ \docid ->
+  mdocs <- forM docidlist $ \docid ->
     modifySignableOrTemplate docid $ \doc ->
         if (isAuthor doc user)
           then Right $ doc { documentsharing = Shared }
           else Left $ "Can't share document unless you are the author"
+  return $ sequence mdocs
 
 fragileTakeOverDocuments :: User -> User -> Update Documents ()
 fragileTakeOverDocuments destuser srcuser = do
