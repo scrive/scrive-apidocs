@@ -36,7 +36,8 @@ module Doc.DocView (
   , flashMessageTemplateArchiveDone
   , flashMessageInvalidCSV
   , flashMessageCSVSent
-  , flashMessageTemplateShareDone
+  , flashMessageSingleTemplateShareDone
+  , flashMessageMultipleTemplateShareDone
   , defaultInviteMessage
   , mailDocumentRemind
   , mailDocumentRejected
@@ -230,9 +231,14 @@ flashMessageCSVSent :: Int -> KontrakcjaTemplates -> IO FlashMessage
 flashMessageCSVSent doccount templates =
   toFlashMsg OperationDone <$> (renderTemplate templates "flashMessageCSVSent" $ field "doccount" doccount)
 
-flashMessageTemplateShareDone :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageTemplateShareDone templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageTemplateShareDone" ()
+flashMessageSingleTemplateShareDone :: BS.ByteString -> KontrakcjaTemplates -> IO FlashMessage
+flashMessageSingleTemplateShareDone docname templates =
+  toFlashMsg OperationDone <$> (renderTemplate templates "flashMessageSingleTemplateShareDone" $ field "docname" docname)
+
+flashMessageMultipleTemplateShareDone :: KontrakcjaTemplates -> IO FlashMessage
+flashMessageMultipleTemplateShareDone templates =
+  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageMultipleTemplateShareDone" ()
+
 
 -- All doc view
 singlnkFields :: SignatoryLink -> Fields

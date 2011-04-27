@@ -1420,17 +1420,21 @@ handleIssueArchive = do
 handleTemplateShare :: Kontra KontraLink
 handleTemplateShare = withUserPost $ do
     ctx@(Context { ctxtemplates }) <- get
-    handleIssueShare
-    addFlashMsg =<< (liftIO $ flashMessageTemplateShareDone ctxtemplates)
+    docs <- handleIssueShare
+    case docs of
+      (d:[]) -> addFlashMsg =<< (liftIO $ flashMessageSingleTemplateShareDone (documenttitle d) ctxtemplates)
+      _ -> addFlashMsg =<< (liftIO $ flashMessageMultipleTemplateShareDone ctxtemplates) 
     return $ LinkTemplates emptyListParams
 
-handleIssueShare :: Kontra ()
+handleIssueShare :: Kontra [Document]
 handleIssueShare = do
     ctx@(Context { ctxmaybeuser = Just user }) <- get
     idnumbers <- getCriticalFieldList asValidDocID "doccheck"
     let ids = map DocumentID idnumbers
-    docs <- mapM (query . GetDocumentByDocumentID) ids
-    update $ ShareDocuments user ids
+    mdocs <- update $ ShareDocuments user ids
+    case mdocs of
+      Left msg -> mzero
+      Right docs -> return docs
     
 handleBulkContractRemind :: Kontra KontraLink
 handleBulkContractRemind = withUserPost $ do
