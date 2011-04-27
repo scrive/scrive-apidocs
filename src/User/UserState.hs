@@ -48,6 +48,7 @@ module User.UserState
     , SetUserPaymentAccount(..)
     , SetUserPaymentPolicyChange(..)
     , SetUserPassword(..)
+    , SetUserSupervisor(..)
     , GetUsersByFriendUserID(..)
     , AddViewerByEmail(..)
     , FreeUserFromPayments(..)
@@ -757,6 +758,15 @@ addUser (fstname, sndname) email passwd maybesupervisor = do
         modify (updateIx (Email email) user)
         return $ Just user
 
+setUserSupervisor :: UserID -> UserID -> Update Users (Either String User)
+setUserSupervisor userid supervisorid = do
+    modifyUser userid $ \user -> 
+      if userid == supervisorid
+         then Left "cannot be supervisor of yourself"
+         else case usersupervisor user of
+                 Just x -> Left "user already has supervisor"
+                 Nothing -> Right $ user { usersupervisor = Just $ SupervisorID $ unUserID supervisorid}
+  
 getUserStats :: Query Users UserStats
 getUserStats = do
   users <- ask
@@ -960,6 +970,7 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'addViewerByEmail
                       -- the below should be only used carefully and by admins
                     , 'addFreePaymentsForInviter
+                    , 'setUserSupervisor
                     ])
 
 $(deriveSerializeFor [ ''User
