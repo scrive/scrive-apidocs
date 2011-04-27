@@ -480,16 +480,6 @@ $else$
 $modalSignedViewNotClosedNoAccount()$
 $endif$
 #####
-willCreateAccountForYou=
-$if(hasaccount)$
-$willCreateAccountForYouHasAccount()$
-$endif$
-#####
-willCreateAccountForYouHasAccount=
-<p>
-  Dokumentet har sparats till ditt konto.
-</p>
-$loginModalPart()$
 #####
 loginModal=
 $if(!logged)$
