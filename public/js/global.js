@@ -1245,9 +1245,7 @@ function noMultiParts(elems) {
 
 function isMultiPartElem(elem) {
   var div = elem.closest(".persondetails");
-  var idx = div.parent().children().index(div);
-  var csvpersonindex = div.closest("form").find("input[type='hidden'][name='csvpersonindex']").attr("value");
-  return (csvpersonindex==idx);
+  return elem.hasClass("multipart");
 }
 
 /*
