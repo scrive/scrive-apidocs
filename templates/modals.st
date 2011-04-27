@@ -495,6 +495,90 @@ modalNewPasswordView=
  </div>
 </form>
 ####
+modalInviteUserAsSubaccount=
+<form action="" method="post">
+  <input type="hidden" name="takeover" value="really" />
+  <input type="hidden" name="email" value="$email$" />
+  <input type="hidden" name="fstname" value="$fstname$" />
+  <input type="hidden" name="sndname" value="$sndname$" />
+  <div class="modal-container">
+    <div class="modal-header">
+      <span class="modal-icon message"></span>
+      <span class="modal-title">
+	<h1>Skicka förfrågan?</h1>
+      </span>
+      <a class="modal-close close"> </a>
+    </div>
+    <div class="modal-body">   
+      <div class="modal-content"> 
+	<div class="recovery-container">
+	  <div class="body">
+	    <p>Skicka en förfrågan till användaren att bli ett underkonto
+	      under ditt konto. Det betyder att du blir
+	      huvudkonto och kommer att ta över ägarskapet över samtliga underkontots dokument. 
+	    </p>
+	    <p>
+	      Är du säker att du vill skicka förfrågan till användaren att bli
+	      underkonto?
+	    </p>
+	  </div>
+	</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="float-left">
+	<a class="close cancel">Avbryt</a>
+      </div>
+      <a href="#" class="btn-small blue float-right submit">
+	<div class="left"></div>
+	<div class="label">
+	  <p>Skicka förfrågan</p>
+	</div>
+	<div class="right"></div>
+      </a>
+    </div>
+  </div>
+</form>
+####
+####
+modalDoYouWantToBeSubaccount=
+<form action="" method="post">
+ <div class="modal-container">
+    <div class="modal-header">
+      <span class="modal-icon message"></span>
+      <span class="modal-title">
+	<h1>Vill du acceptera att bli underkonto?</h1>
+      </span>
+      <a class="modal-close close"> </a>
+    </div>
+    <div class="modal-body">   
+      <div class="modal-content"> 
+	<div class="recovery-container">
+	  <div class="body">
+	    <p>Om du accepterar blir du underkonto till huvudkontot
+	    $supervisor.fullnamePlusEmail$ och huvudkontot tar över
+	    ägarskapet över samtliga dokument i ditt konto.  Är du
+	    säker att du vill acceptera?
+	    </p>
+	  </div>
+	</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="float-left">
+	<a class="close cancel">Avbryt</a>
+      </div>
+      <a href="#" class="btn-small blue float-right submit">
+	<div class="left"></div>
+	<div class="label">
+	  <p>Acceptera</p>
+	</div>
+	<div class="right"></div>
+      </a>
+    </div>
+  </div>
+</form>
+####
 ###
 modalError=
 <div class="modal-container">

@@ -484,3 +484,28 @@ $messages:noescape()$
 <p>Med vänliga hälsningar</p>
 <p>SkrivaPå</p>
 ####
+mailInviteUserAsSubaccountTitle=Förfrågan att göra till underkonto
+###
+mailInviteUserAsSubaccountContent=
+  <p>Hej $invited.fullnameOrEmail$,</p>
+  <p>Användaren $supervisor.fullnamePlusEmail$ har
+ begärt att få bli huvudkonto till ditt konto. Om du accepterar blir
+ du underkonto. Du kommer fortfarande att kunna se och administrera
+ dina avtal som vanligt, dock tar huvudkontot över ägarskapet över
+ samtliga dokument i ditt konto. </p>
+
+ <p>Vänligen iaktta försiktighet innan du accepterar. Särskilt om du
+  har privata dokument på ditt konto.</p>
+
+
+ <p>Så här går du vidare</p>
+ <ul>
+ <li>Kontrollera att du inte har några privata dokument i kontoarkiven</li>
+ <li>Spara ned samtliga privata dokument till din dator</li>
+ <li>Klicka på länken nedan</li>
+ <li>Läs meddelandet online</li>
+ <li>Acceptera</li>
+ <li>Ditt konto är nu underkonto</li>
+
+ <p><a href="$hostpart$/account/bsa/$supervisor.id$">Detta är länken nedan</a></p>
+  $poweredBySkrivaPaPara()$

@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall -Werror -fno-warn-unused-do-bind #-}
+{-# OPTIONS_GHC -Wall -fno-warn-unused-do-bind #-}
 module User.UserControl where
 
 import Control.Monad.State
@@ -202,32 +202,48 @@ handlePostSubaccount = do
          Just user -> do
              add <- isFieldSet "add"
              remove <- isFieldSet "remove"
-             case (add,remove) of
-                  (True,_) -> do
+             takeover <- isFieldSet "takeover"
+             case (add,remove,takeover) of
+                  (True, _, _) -> do
                       handleCreateSubaccount user
                       return $ LinkSubaccount emptyListParams
-                  (_, True) -> return $ LinkSubaccount emptyListParams
+                  (_, True, _) -> return $ LinkSubaccount emptyListParams
+                  (_, _, True) -> do
+                      memail <- getOptionalField asValidEmail "email"
+                      handleTakeOverSubaccount (fromJust memail)
+                      return $ LinkSubaccount emptyListParams
                   _ -> LinkSubaccount <$> getListParamsForSearch
          Nothing -> return $ LinkLogin NotLogged
 
+  
+handleTakeOverSubaccount :: BS.ByteString -> Kontra ()
+handleTakeOverSubaccount email = do
+  ctx@Context{ctxmaybeuser = Just supervisor} <- get
+  Just invited <- liftIO $ query $ GetUserByEmail (Email email)
+  mail <- mailInviteUserAsSubaccount ctx invited supervisor
+  scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [(userfullname invited, email)] }
+  addFlashMsg =<< (liftIO $ flashMessageUserInvitedAsSubaccount (ctxtemplates ctx))
+  
+  
 handleCreateSubaccount :: User -> Kontra ()
 handleCreateSubaccount user = when (isAbleToHaveSubaccounts user) $ do
     ctx <- get
     memail <- getOptionalField asValidEmail "email"
-    fstname <- maybe BS.empty BS.fromString <$> getField "fstname"
-    sndname <- maybe BS.empty BS.fromString <$> getField "sndname"
-    let fullname = (fstname, sndname)
+    fstname <- maybe "" id <$> getField "fstname"
+    sndname <- maybe "" id <$> getField "sndname"
+    let fullname = (BS.fromString fstname, BS.fromString sndname)
     case memail of
-         Just email -> do
-             muser <- liftIO $ createUser ctx (ctxhostpart ctx) fullname email (Just user) False
-             case muser of
-                  Just newuser -> do
-                      infoUpdate <- getUserInfoUpdate
-                      update $ SetUserInfo (userid newuser) (infoUpdate $ userinfo newuser)
-                      return ()
-                  Nothing -> addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists (ctxtemplates ctx))
-             return ()
-         _ -> return ()
+      Just email -> do
+        muser <- liftIO $ createUser ctx (ctxhostpart ctx) fullname email (Just user) False
+        case muser of
+          Just newuser -> do
+            infoUpdate <- getUserInfoUpdate
+            update $ SetUserInfo (userid newuser) (infoUpdate $ userinfo newuser)
+            return ()
+          Nothing -> do
+            addModal $ modalInviteUserAsSubaccount fstname sndname (BS.toString email)
+            return ()
+      _ -> return ()
 
 handleViralInvite :: Kontra KontraLink
 handleViralInvite = withUserPost $ do
@@ -420,6 +436,31 @@ handleQuestion = do
              }
              addFlashMsg =<< (liftIO $ flashMessageThanksForTheQuestion $ ctxtemplates ctx)
              return LoopBack
+
+handleGetBecomeSubaccountOf :: UserID -> Kontra Response
+handleGetBecomeSubaccountOf supervisorid = withUserGet $ do
+  addModal $ modalDoYouWantToBeSubaccount 
+  ctx@Context{ctxmaybeuser = Just user} <- get
+  content <- liftIO $ showUser (ctxtemplates ctx) user
+  renderFromBody ctx TopAccount kontrakcja $ cdata content
+    
+handlePostBecomeSubaccountOf :: UserID -> Kontra KontraLink
+handlePostBecomeSubaccountOf supervisorid = withUserPost $ do
+  ctx@Context{ctxmaybeuser = Just user} <- get
+  if userid user /= supervisorid
+     then do
+          result <- update $ SetUserSupervisor (userid user) supervisorid
+          case result of
+            Left errmsg -> do
+              let msg = "Cannot become subaccount of " ++ show supervisorid ++ ": " ++ msg
+              Log.debug $ msg
+              addFlashMsg $ toFlashMsg OperationFailed msg
+            Right _ -> do
+              Just supervisor <- query $ GetUserByUserID supervisorid
+              addFlashMsg =<< (liftIO $ flashMessageUserHasBecomeSubaccount (ctxtemplates ctx) supervisor)
+          return LinkAccount
+     else do     
+          return LinkAccount
 
 handleAccountSetupGet :: ActionID -> MagicHash -> Kontra Response
 handleAccountSetupGet aid hash = do

@@ -204,3 +204,9 @@ flashMessageCSVSent=Dokumentet är skickat till $doccount$ parter.
 ###
 flashMessageTemplateShareDone=Template has been shared.
 ###
+flashMessageUserInvitedAsSubaccount=Din förfrågan har skickats!
+###
+flashMessageUserHasBecomeSubaccount=Du är nu underkonto under
+huvudkontot $supervisor.fullnamePlusEmail$ och rättigheterna till dina
+dokument har överförts till huvudkontot.
+###
