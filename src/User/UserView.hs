@@ -18,11 +18,15 @@ module User.UserView (
     mailAccountCreatedBySigningReminder,
     mailAccountCreatedBySigningLastReminder,
     resetPasswordMail,
+    
+    mailInviteUserAsSubaccount,
 
     -- modals
     modalWelcomeToSkrivaPa,
     modalAccountRemoval,
     modalAccountRemoved,
+    modalInviteUserAsSubaccount,
+    modalDoYouWantToBeSubaccount,
 
     -- flash messages
     flashMessageLoginRedirectReason,
@@ -45,6 +49,8 @@ module User.UserView (
     flashMessageUserSignupDone,
     flashMessageAccountRequestSend,
     flashMessageThanksForTheQuestion,
+    flashMessageUserInvitedAsSubaccount,
+    flashMessageUserHasBecomeSubaccount,    
     
     --modals
     modalNewPasswordView,
@@ -76,8 +82,14 @@ showUser templates user = renderTemplate templates "showUser" $ do
     userFields user
     field "linkaccount" $ show LinkAccount
 
-userFields::User -> Fields
+userFields :: User -> Fields
 userFields user = do
+    let fullname = unwords $ filter (not . null) $ [ BS.toString $ userfstname $ userinfo user, 
+                                                                      BS.toString $ usersndname $ userinfo user]
+        fullnameOrEmail = if null fullname then BS.toString $ unEmail $ useremail $ userinfo user
+                          else fullname
+        fullnamePlusEmail = if null fullname then "<" ++ (BS.toString $ unEmail $ useremail $ userinfo user) ++ ">"
+                            else fullname ++ " <" ++ (BS.toString $ unEmail $ useremail $ userinfo user) ++ ">"
     field "id" $ show $ userid user 
     field "fstname" $ BS.toString $ userfstname $ userinfo user 
     field "sndname" $ BS.toString $ usersndname $ userinfo user 
@@ -94,6 +106,10 @@ userFields user = do
     field "companynumber" $ BS.toString $ usercompanynumber $ userinfo user
     field "userimagelink" False
     field "companyimagelink" False
+    field "fullname" $ fullname
+    field "fullnameOrEmail" $ fullnameOrEmail
+    field "fullnamePlusEmail" $ fullnamePlusEmail
+    
     --field "invoiceaddress" $ BS.toString $ useraddress $ userinfo user
     menuFields user
 
@@ -231,7 +247,25 @@ mailAccountCreatedBySigning' title_template content_template templates hostpart 
         ) >>= wrapHTML templates
     return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
 
+mailInviteUserAsSubaccount :: (TemplatesMonad m) => Context -> User -> User -> m Mail
+mailInviteUserAsSubaccount ctx invited supervisor = do
+    templates <- getTemplates
+    title <- renderTemplateM "mailInviteUserAsSubaccountTitle" ()
+    content <- (liftIO $ renderTemplate templates "mailInviteUserAsSubaccountContent" $ do
+                   field "hostpart" (ctxhostpart ctx)
+                   field "supervisor" $ userFields supervisor
+                   field "invited" $ userFields invited
+        ) >>= (liftIO . wrapHTML templates)
+    return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
+
 -------------------------------------------------------------------------------
+
+modalInviteUserAsSubaccount :: String -> String -> String -> KontraModal
+modalInviteUserAsSubaccount fstname sndname email =
+    renderTemplateM "modalInviteUserAsSubaccount" $ do
+      field "email" email
+      field "fstname" fstname
+      field "sndname" sndname
 
 modalWelcomeToSkrivaPa :: KontrakcjaTemplates -> KontraModal
 modalWelcomeToSkrivaPa templates =
@@ -289,6 +323,11 @@ flashMessageUserPasswordChanged :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageUserPasswordChanged templates =
   toFlashMsg OperationDone <$> renderTemplate templates "flashMessageUserPasswordChanged" ()
 
+flashMessageUserHasBecomeSubaccount :: KontrakcjaTemplates -> User -> IO FlashMessage
+flashMessageUserHasBecomeSubaccount templates supervisor =
+  toFlashMsg OperationDone <$> (renderTemplate templates "flashMessageUserHasBecomeSubaccount" $ do
+    field "supervisor" $ userFields supervisor)
+
 
 flashMessagePasswordChangeLinkNotValid :: KontrakcjaTemplates -> IO FlashMessage
 flashMessagePasswordChangeLinkNotValid templates =
@@ -343,6 +382,10 @@ flashMessageUserSignupDone :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageUserSignupDone templates =
   toFlashMsg OperationDone <$> renderTemplate templates "flashMessageUserSignupDone" ()
 
+flashMessageUserInvitedAsSubaccount :: KontrakcjaTemplates -> IO FlashMessage
+flashMessageUserInvitedAsSubaccount templates =
+  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageUserInvitedAsSubaccount" ()
+
 
 flashMessageAccountRequestSend :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageAccountRequestSend templates =
@@ -354,6 +397,11 @@ modalNewPasswordView aid hash = do
   lift $ renderTemplate templates "modalNewPasswordView" $ do
             field "linkchangepassword" $ (show $ LinkPasswordReminder aid hash)
 
+modalDoYouWantToBeSubaccount :: KontraModal
+modalDoYouWantToBeSubaccount = do
+  renderTemplateM "modalDoYouWantToBeSubaccount" $ ()
+    
+    
 -------------------------------------------------------------------------------
 
 {- Same as personname (username or email) from DocView but works on User -}
