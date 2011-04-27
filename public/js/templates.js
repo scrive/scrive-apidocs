@@ -12,7 +12,8 @@ function newsignatory() {
           company: "", 
           personalnumber: "", 
           companynumber: "", 
-          email: "", 
+          email: "",
+          signorder: 1,
 	      nameplacements: [],
 	      companyplacements: [],
 	      personalnumberplacements: [],
@@ -163,7 +164,8 @@ function isDraggableText(field){
 function isStandardField(field) {
   if(isDraggableField(field)) {
     var name = getFieldName(field);
-    if(name == "signatoryemail" 
+    if(name == "signatoryemail"
+       || name == "signatorysignorder"
        || name == "signatoryfstname"
        || name == "signatorysndname"
        || name == "signatorycompany"
@@ -816,6 +818,7 @@ function signatoryToHTML(isMultiple, sig) {
   var apersnumb = sigentry.find(".sigpersnum");
   var acompnumb = sigentry.find(".sigcompnum");
   var aemai = sigentry.find(".sigemail");
+  var asignord = sigentry.find(".sigsignord");
   
 
 
@@ -825,6 +828,7 @@ function signatoryToHTML(isMultiple, sig) {
   setSigID(apersnumb, sigid);
   setSigID(acompnumb, sigid);
   setSigID(aemai, sigid);
+  setSigID(asignord, sigid);
 
   setValue(afstname, sig.fstname);
   setValue(asndname, sig.sndname);
@@ -832,6 +836,7 @@ function signatoryToHTML(isMultiple, sig) {
   setValue(apersnumb, sig.personalnumber);
   setValue(acompnumb, sig.companynumber);
   setValue(aemai, sig.email);
+  setValue(asignord, sig.signorder);
   // other fields
   
   $(sig.otherfields).each(function (){
@@ -900,6 +905,7 @@ function placePlacementsOfSignatories(signatories) {
     placePlacements(sig.personalnumberplacements, "Persnr", sig.personalnumber, sig.id, "personalnumber");
     placePlacements(sig.companynumberplacements, "Orgnr", sig.companynumber, sig.id, "companynumber");
     placePlacements(sig.emailplacements, "Personens e-mail", sig.email, sig.id, "email");
+    placePlacements([], "Sign order", sig.signorder, sig.id, "signorder");
     $(sig.otherfields).each(function(){
       var fd = this;
       placePlacements(fd.placements, fd.label, fd.value, sig.id, fd.id);

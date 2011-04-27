@@ -122,7 +122,8 @@ signatoryCanView user doc =
     let usersiglinks = filterSignatoryLinksByUser doc user
         isnotpreparation = Preparation /= documentstatus doc
         hasLink = not $ Prelude.null usersiglinks
-    in isnotpreparation && hasLink
+        signatoryActivated = all ((>=) (documentcurrentsignorder doc) . signatorysignorder . signatorydetails) usersiglinks
+    in isnotpreparation && hasLink && signatoryActivated
 
 getDocumentsBySignatory :: User -> Query Documents [Document]
 getDocumentsBySignatory user = do
@@ -356,8 +357,9 @@ signDocument :: DocumentID
 signDocument documentid signatorylinkid1 time ipnumber msiginfo fields = do
   modifySignable documentid $ \document ->
       let
-          signeddocument = document { documentsignatorylinks = newsignatorylinks }
-                           `appendHistory` [DocumentHistorySigned time ipnumber (signatorydetails signatoryLink)]
+          signeddocument = document {
+                documentsignatorylinks = newsignatorylinks
+          } `appendHistory` [DocumentHistorySigned time ipnumber (signatorydetails signatoryLink)]
           Just signatoryLink = find (\x -> signatorylinkid x == signatorylinkid1) (documentsignatorylinks document)
           newsignatorylinks = map maybesign (documentsignatorylinks document)
           maybesign link@(SignatoryLink {signatorylinkid, signatorydetails} ) 
@@ -367,6 +369,7 @@ signDocument documentid signatorylinkid1 time ipnumber msiginfo fields = do
                        , signatorysignatureinfo = msiginfo
                     }
           maybesign link = link
+
           authorid = unAuthor $ documentauthor signeddocument
           allbutauthor = filter ((maybe True (/= authorid)) . maybesignatory) newsignatorylinks
           signatoryHasSigned x = not (SignatoryPartner `elem` signatoryroles x) || isJust (maybesigninfo x)
@@ -420,7 +423,8 @@ authorSendDocument documentid time ipnumber author msiginfo =
                              return $ TimeoutTime $ (days * 24 *60) `minutesAfter` time
                   authorid = userid author
                   sinfo = Just (SignInfo time ipnumber)
-                  sigdetails = map signatorydetails (documentsignatorylinks document)
+                  siglinks = documentsignatorylinks document
+                  sigdetails = map signatorydetails siglinks
               in Right $ document { documenttimeouttime = timeout
                                   , documentmtime = time
                                   , documentstatus = Pending
@@ -449,9 +453,10 @@ authorSignDocument documentid time ipnumber author msiginfo =
                   sinfo = Just (SignInfo time ipnumber)
                   sigdetails = map signatorydetails (documentsignatorylinks document)
                   authorOnly = Prelude.null $ tail $ documentsignatorylinks document
+                  newsiglinks = signWithUserID (documentsignatorylinks document) authorid sinfo msiginfo
                   signeddocument = document { documenttimeouttime = timeout
                                   , documentmtime = time
-                                  , documentsignatorylinks = signWithUserID (documentsignatorylinks document) authorid sinfo msiginfo
+                                  , documentsignatorylinks = newsiglinks
                                   , documentstatus = if authorOnly then Closed else Pending
                                   , documentinvitetime = sinfo
                                   } `appendHistory` ([DocumentHistoryInvitationSent time ipnumber sigdetails] ++ if authorOnly then [DocumentHistoryClosed time ipnumber] else [])

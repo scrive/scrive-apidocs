@@ -132,8 +132,7 @@ handleSignPostBankID docid signid magic = do
     
 
     -- request validation
-    document@Doc.DocState.Document { documentstatus = olddocumentstatus }
-        <- queryOrFail $ GetDocumentByDocumentID docid
+    document <- queryOrFail $ GetDocumentByDocumentID docid
 
     checkLinkIDAndMagicHash document signid magic
     unless (document `allowsIdentification` ELegitimationIdentification) mzero
@@ -205,7 +204,7 @@ handleSignPostBankID docid signid magic = do
                     -- send to canceled with reason msg
                     addFlashMsg $ toFlashMsg Modal txt
                     Right newdoc <- update $ CancelDocument docid (ELegDataMismatch msg signid sfn sln spn) ctxtime ctxipnumber
-                    postDocumentChangeAction newdoc olddocumentstatus (Just signid)
+                    postDocumentChangeAction newdoc document (Just signid)
                     
                     return $ LinkSignDoc document siglink
                 -- we have merged the info!
@@ -232,7 +231,7 @@ handleSignPostBankID docid signid magic = do
                             addFlashMsg $ toFlashMsg OperationFailed message
                             return LinkMain -- where should we go?
                         Right document2 -> do
-                            postDocumentChangeAction document2 olddocumentstatus (Just signid)
+                            postDocumentChangeAction document2 document (Just signid)
                             signatorylink <- signatoryLinkFromDocumentByID document signid
                             maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
                             addModal $  modalSignedView document2 signatorylink (isJust maybeuser) (isJust ctxmaybeuser)
@@ -418,7 +417,7 @@ handleIssuePostBankID docid = withUserPost $ do
                                             Log.debug $ "AuthorSignDocument failed: " ++ msg
                                             return ()
                                         Right newdocument -> do
-                                            postDocumentChangeAction newdocument (documentstatus udoc) Nothing
+                                            postDocumentChangeAction newdocument udoc Nothing
                                             return ()
                                     return mndoc
                             mdocs <- splitUpDocument udoc
