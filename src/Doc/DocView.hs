@@ -310,6 +310,7 @@ documentBasicViewFields crtime user doc = do
     field "isauthor" $ isAuthor doc user
     field "isviewer" $ isViewer doc user
     field "isshared" $ (documentsharing doc)==Shared
+    field "isoffer" $ isOffer doc
   where
     signatorylinklist =
       filter (isMatchingSignatoryLink user) $ documentsignatorylinks doc  

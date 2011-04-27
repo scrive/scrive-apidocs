@@ -46,7 +46,6 @@ $loadingdialog()$
                     <thead>
                         <tr>
                             <th style="width: 30px;"><input type="checkbox" name="" id="all" /></th>
-                            <!-- 
                             <th style="width: 140px;">
                                $if(params.sorting.timeREV)$
                                 <a href="$currentlink$&sorting=time">Senaste händelse  <em> ▲</em></a>
@@ -56,7 +55,8 @@ $loadingdialog()$
                                 <a href="$currentlink$&sorting=time">Senaste händelse </a>
                                $endif$
                             </th>
-                            <th style="width: 300px;">
+                            <!--
+                            <th style="width: 200px;">
                                $if(params.sorting.partnerREV)$
                                 <a href="$currentlink$&sorting=partner">Parter <em> ▲</em></a>
                                $elseif(params.sorting.partner)$
@@ -66,7 +66,16 @@ $loadingdialog()$
                                $endif$
                             </th>
                             -->
-                            <th style="width: 600px;">
+                            <th style="width: 100px;">
+                              $if(params.sorting.typeREV)$
+                                <a href="$currentlink$&sorting=type">Typ <em> ▲</em></a>
+                               $elseif(params.sorting.type)$
+                                <a href="$currentlink$&sorting=typeREV">Typ <em style="text-color:red"> ▼</em></a>
+                               $else$
+                                <a href="$currentlink$&sorting=type">Typ </a>
+                               $endif$
+                            </th>
+                            <th style="width: 400px;">
                                $if(params.sorting.titleREV)$
                                 <a href="$currentlink$&sorting=title">Mall <em> ▲</em></a>
                                $elseif(params.sorting.title)$
@@ -84,11 +93,15 @@ $loadingdialog()$
                       $documents:{document |
                         <tr $if(document.odd)$class="odd"$endif$>
                             <td>$if(document.isauthor)$ <input type="checkbox" name="doccheck" value="$document.documentid$" class="check"> $endif$</td>
-                            <!-- <td>
+                            <td>
                                 <span title="$document.mtime$">$document.mtime$</span>
                             </td>
+                            <!--
                             <td><a href="$document.doclink$">$document.signatories:{sig | $sig.name$}; separator=", "$</a></td>
-                            -->  
+                            -->
+                            <td>
+                                <span>$if(document.isoffer)$Offert$else$Avtal$endif$</span>
+                            </td>  
                             <td>
                                 <a href="$document.doclink$" class="listname">$document.documenttitle$</a>
                                 $if(document.davelink)$ 
