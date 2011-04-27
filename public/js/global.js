@@ -943,21 +943,15 @@ function nonZeroSignatories() {
   var sigs = 0;
   // sum up all signatories  
   sigs += $("#personpane .persondetails input:hidden[name='signatoryrole'][value='signatory']").length;
-  // add author if a signatory
-  if($("#authorsignatoryradio").attr("checked")) {
-    sigs++;
-  }
+  // don't add author if a signatory; this requires at least 1
+  // non-author signatory
 
-  // sum up all signatories (but minus author because we already
-  // counted him)
-  //sigs += $("#personpane .persondetails input:hidden[name='signatoryrole'][value='signatory']").length - sigs;
 
   var error = (sigs === 0);
 
   if(error) {
     addFlashMessage('Du måste ha minst en undertecknande part.',"red");
     $("li.plus").addClass("redborder");
-    $(".authordetails .man").addClass("redborder");
     return false;
   }
   return true;
