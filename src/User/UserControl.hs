@@ -137,7 +137,7 @@ handleGetSubaccount = withUserGet $ do
     ctx@Context{ctxmaybeuser = Just User{userid}} <- get
     subaccounts <- query $ GetUserSubaccounts userid
     params <- getListParams
-    content <- liftIO $ viewSubaccounts (ctxtemplates ctx) (subaccountsSortSearchPage params $ Set.toList subaccounts)
+    content <- viewSubaccounts (subaccountsSortSearchPage params $ Set.toList subaccounts)
     renderFromBody ctx TopAccount kontrakcja $ cdata content
 
 -- Searching, sorting and paging
