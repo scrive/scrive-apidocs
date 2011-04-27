@@ -62,7 +62,7 @@ function placementToHTML(label, value) {
 
 function placedFieldHelper(value) {
   var d = $("<div class='placedfieldhelper'><span class='value'></span></div>");
-  $(".value",d).text(value);
+  $(".value", d).text(value);
   return d;
 }
 
@@ -1018,32 +1018,38 @@ function invalidatePlacedFieldsCache() {
   placedfieldscache = null;
 }
 
+function moveCoordinateAxes(helper) {
+  var hline = $(".hline");
+  var vline = $(".vline");
+  hline.each(function() {
+    var h = $(this);
+    var page = h.parents(".pagejpg");
+    h.css({
+      top: Math.min(page.height() - 1, 
+                    Math.max(0, 
+                             helper.offset().top - page.offset().top + helper.height() - 4)) 
+        + "px"
+    });
+  });
+  vline.each(function() {
+    var v = $(this);
+    var page = v.parents(".pagejpg");
+    v.css({
+      left: Math.min(page.width() - 1, 
+                     Math.max(0, 
+                              helper.offset().left - page.offset().left)) 
+        + "px"
+    });
+  });
+}
+
 function showCoordinateAxes(helper) {
   var hline = $(".hline");
   var vline = $(".vline");
   hline.show();
   vline.show();
-  $("body").mousemove(function(e) {
-    /* mousemove is sometimes invoked earlier than drag helper is moved
-     * and we get stale data here. Lets use setTimeout to postpone calculations.
-     */
-    setTimeout( function() {
-      hline.each(function() {
-        var h = $(this);
-        var page = h.parents(".pagejpg");
-        h.css({
-          top: Math.min(page.height()-1, Math.max(0, helper.offset().top - page.offset().top + helper.height() - 4)) + "px"
-        });
-      });
-      vline.each(function() {
-        var v = $(this);
-        var page = v.parents(".pagejpg");
-        v.css({
-          left: Math.min(page.width()-1, Math.max(0, helper.offset().left - page.offset().left)) + "px"
-        });
-      });
-    }, 100);
-  });
+  $("body").mousemove(function() { setTimeout(function() { moveCoordinateAxes(helper); },
+                                              100); });
 }
 
 function hideCoordinateAxes() {
@@ -1069,6 +1075,9 @@ safeReady(function() {
                      },
                      stop: function() {
                        hideCoordinateAxes();
+                     },
+                     drag: function(event, ui) {
+                       moveCoordinateAxes(ui.helper);
                      }
 	               });
 
@@ -1084,6 +1093,9 @@ safeReady(function() {
                      },
                      stop: function() {
                        hideCoordinateAxes();
+                     },
+                     drag: function(event, ui) {
+                       moveCoordinateAxes(ui.helper);
                      }
 		           });
 
@@ -1117,6 +1129,9 @@ safeReady(function() {
         var that = $(this);
         that.hide();
         showCoordinateAxes(ui.helper);
+      },
+      drag: function(event, ui) {
+        moveCoordinateAxes(ui.helper);
       }
     });
 });
