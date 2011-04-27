@@ -137,9 +137,9 @@ menuFields :: User -> Fields
 menuFields user = do
     field "issubaccounts" $ isAbleToHaveSubaccounts user
 
-viewSubaccounts :: KontrakcjaTemplates -> PagedList User -> IO String
-viewSubaccounts templates subusers =  
-  renderTemplate templates "viewSubaccounts" $ do
+viewSubaccounts :: (TemplatesMonad m) => PagedList User -> m String
+viewSubaccounts subusers =  
+  renderTemplateM "viewSubaccounts" $ do
     field "subaccounts" $ markParity $ map userFields $ list subusers
     field "currentlink" $ show $ LinkSubaccount $ params subusers
     pagedListFields subusers
