@@ -96,7 +96,7 @@ $loadingdialog()$
                                 $endif$
                             </td>
                             <td>
-                                $if(document.isshared)$Shared$endif$
+                                $if(document.isshared)$Delad$endif$
                             </td>
                             <td class="right">
                                <!--  <em>▼</em> -->

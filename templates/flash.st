@@ -202,7 +202,9 @@ flashMessageInvalidCSV=Det uppstod ett problem med datan i din .csv. Var vänlin
 ###
 flashMessageCSVSent=Dokumentet är skickat till $doccount$ parter.
 ###
-flashMessageTemplateShareDone=Template has been shared.
+flashMessageSingleTemplateShareDone=$docname$ har blivit delad inom din organisation.
+###
+flashMessageMultipleTemplateShareDone=Valda mallar har blivit delade inom din organisation.
 ###
 flashMessageUserInvitedAsSubaccount=Din förfrågan har skickats!
 ###
