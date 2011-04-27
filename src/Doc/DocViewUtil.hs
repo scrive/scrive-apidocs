@@ -52,6 +52,7 @@ partyUnsignedMeAndList magichash document =
                               , signatorypersonalnumber = BS.empty
                               , signatorycompanynumber = BS.empty
                               , signatoryemail = BS.empty
+                              , signatorysignorder = SignOrder 1
                               , signatoryfstnameplacements = []
                               , signatorysndnameplacements = []
                               , signatorycompanyplacements = []

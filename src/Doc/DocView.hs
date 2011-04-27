@@ -444,6 +444,7 @@ emptyDetails =
     , signatorypersonalnumber           = BS.empty
     , signatorycompanynumber            = BS.empty
     , signatoryemail                    = BS.empty
+    , signatorysignorder                = SignOrder 1
     , signatoryfstnameplacements        = []
     , signatorysndnameplacements        = []
     , signatorycompanyplacements        = []
@@ -716,6 +717,7 @@ signatoryLinkFields
   currentlink
   siglnk@SignatoryLink {
     signatorylinkid
+    , signatorydetails
     , maybesigninfo
     , maybeseeninfo
     , invitationdeliverystatus
@@ -723,14 +725,15 @@ signatoryLinkFields
   } =
   let
    isCurrentUserAuthor = maybe False (isAuthor document) muser
-   isCurrentSignatorAuthor = (unEmail . useremail . userinfo $ author) == (signatoryemail $ signatorydetails siglnk) 
-   current = (currentlink == Just siglnk) || (isNothing currentlink && (fmap (unEmail . useremail . userinfo) muser) == (Just $ signatoryemail $ signatorydetails siglnk)) 
+   isCurrentSignatorAuthor = (unEmail . useremail . userinfo $ author) == (signatoryemail signatorydetails) 
+   current = (currentlink == Just siglnk) || (isNothing currentlink && (fmap (unEmail . useremail . userinfo) muser) == (Just $ signatoryemail signatorydetails)) 
    wasSigned =  isJust maybesigninfo && (not $ isCurrentSignatorAuthor && (documentstatus document == AwaitingAuthor))
    wasSeen = isJust maybeseeninfo
    isTimedout = documentstatus document == Timedout
    isCanceled = documentstatus document == Canceled
    isRejected = documentstatus document == Rejected
    isClosed = documentstatus document == Closed
+   signatoryActivated = documentcurrentsignorder document >= signatorysignorder signatorydetails
    dontShowAnyReminder = isTimedout || isCanceled || isRejected
    datamismatch = case documentcancelationreason document of
                     Just (ELegDataMismatch _ sid _ _ _) -> sid == signatorylinkid
@@ -746,16 +749,17 @@ signatoryLinkFields
     in do
       field "current" $ current  
       field "status" $ show status
-      field "fstname" $ packToMString $ signatoryfstname $ signatorydetails siglnk
-      field "sndname" $ packToMString $ signatorysndname $ signatorydetails siglnk
-      field "company" $ packToMString $ signatorycompany $ signatorydetails siglnk
-      field "personalnumber" $ packToMString $ signatorypersonalnumber $ signatorydetails siglnk
-      field "companynumber"  $ packToMString $ signatorycompanynumber $ signatorydetails siglnk
-      field "email" $ packToMString $ signatoryemail $ signatorydetails siglnk
-      field "fields" $ for (signatoryotherfields $ signatorydetails siglnk) $ \sof -> do
+      field "fstname" $ packToMString $ signatoryfstname $ signatorydetails
+      field "sndname" $ packToMString $ signatorysndname $ signatorydetails
+      field "company" $ packToMString $ signatorycompany $ signatorydetails
+      field "personalnumber" $ packToMString $ signatorypersonalnumber $ signatorydetails
+      field "companynumber"  $ packToMString $ signatorycompanynumber $ signatorydetails
+      field "email" $ packToMString $ signatoryemail $ signatorydetails
+      field "fields" $ for (signatoryotherfields signatorydetails) $ \sof -> do
         field "fieldlabel" $ fieldlabel sof
         field "fieldvalue" $ fieldvalue sof
-      field "allowRemindForm" $ isCurrentUserAuthor && (not isCurrentSignatorAuthor) && (not dontShowAnyReminder) && (invitationdeliverystatus /= Undelivered) && (isClosed || not wasSigned)             
+      field "signorder" $ unSignOrder $ signatorysignorder signatorydetails
+      field "allowRemindForm" $ signatoryActivated && isCurrentUserAuthor && (not isCurrentSignatorAuthor) && (not dontShowAnyReminder) && (invitationdeliverystatus /= Undelivered) && (isClosed || not wasSigned)             
       field "linkremind" $ show (LinkRemind document siglnk)
       field "linkchangeemail" $  show $ LinkChangeSignatoryEmail (documentid document) signatorylinkid
       field "undeliveredEmail" $ (invitationdeliverystatus == Undelivered)
@@ -970,6 +974,7 @@ buildSigJS' (SignatoryDetails {
   , signatorypersonalnumber
   , signatorycompanynumber
   , signatoryemail
+  , signatorysignorder
   , signatoryfstnameplacements
   , signatorysndnameplacements
   , signatorycompanyplacements
@@ -982,6 +987,7 @@ buildSigJS' (SignatoryDetails {
   ++ ", sndname: " ++ jsStringFromBS  signatorysndname
   ++ ", company: " ++ jsStringFromBS  signatorycompany
   ++ ", email: " ++ jsStringFromBS signatoryemail
+  ++ ", signorder: " ++ show signatorysignorder
   ++ ", personalnumber: " ++ jsStringFromBS signatorypersonalnumber
   ++ ", companynumber: " ++ jsStringFromBS signatorycompanynumber
   ++ ", fstnameplacements: " ++ (jsArray (map buildPlacementJS signatoryfstnameplacements))
