@@ -236,11 +236,12 @@ sendDocumentErrorEmail1 ctx document signatorylink = do
  -}
 sendInvitationEmails :: Context -> Document -> User -> IO ()
 sendInvitationEmails ctx document author = do
-  let signlinks = filter activatedSigsAndNotAuthor $ documentsignatorylinks document
+  let signlinks = filter currentSigs $ documentsignatorylinks document
   forM_ signlinks (sendInvitationEmail1 ctx document author)
   where
-      activatedSigsAndNotAuthor =
-          (&&) <$> activatedSignatories (documentcurrentsignorder document) 
+      signorder = signatorysignorder . signatorydetails
+      currentSigs =
+          (&&) <$> (==) (documentcurrentsignorder document) . signorder
                <*> isNotLinkForUserID (userid author)
 
 {- |
