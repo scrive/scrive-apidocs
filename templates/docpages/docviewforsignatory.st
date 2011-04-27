@@ -1,153 +1,153 @@
 ######
 pageDocumentForSignContent=
-  <script type="text/javascript" src="/js/bankid.js"></script>
-  <div class="localdialogs">
-    $loadingdialog()$
-    <div style="display: none">
-        <script type="text/javascript"> var documentid = "$documentid$", siglinkid = "$siglinkid$", sigmagichash = "$sigmagichash$"; </script>
-        <script type="text/javascript">
-            $localscripts:noescape()$
-        </script>
-    </div>
-    <form method="post" name="form" action="$action$" id="dialog-confirm-sign" class="overlay">     
+<script type="text/javascript" src="/js/bankid.js"></script>
+<div class="localdialogs">
+  $loadingdialog()$
+  <div style="display: none">
+    <script type="text/javascript"> var documentid = "$documentid$", siglinkid = "$siglinkid$", sigmagichash = "$sigmagichash$"; </script>
+    <script type="text/javascript">
+      $localscripts:noescape()$
+    </script>
+  </div>
+  <form method="post" name="form" action="$action$" id="dialog-confirm-sign" class="overlay">     
     <div class="modal-container">
-        <div class="modal-header">
-            <span class="modal-icon message"></span>
-            <span class="modal-title">
-              $if(contract)$ 
-                <h2>Är du säker att du vill underteckna?</h2>  
-              $elseif(offer)$
-                <h2>Är du säker att du vill acceptera offerten?</h2>  
-              $endif$
-            </span>
-            <a class="modal-close close"> </a>
-        </div>
-        <div class="modal-body">
-            <div class="modal-content">
-              $if(contract)$
-                 <p>När $partyUnsigned:noescape()$ undertecknat blir 
-                    avtalet <strong>juridiskt bindande</strong> och
-                    det färdigställda avtalet skickas till din
-                    e-post.</p>
-                 $if(requireseleg)$
-                 <span>
-                   <h3>Välj typ av e-legitimation</h3>
-                   <p>Har du ingen e-legitimation? Du kan ladda ned en
-                     e-legitimation från din internetbank eller från
-                     Telia. <a href="http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86"
-                               target="_new">Klicka här</a> för att läsa mer.</p>
-                 </span>
-                 $endif$
-              $elseif(offer)$
-                 <p> Genom att klicka på "acceptera offert" kommer du att acceptera offerten <strong>$documenttitle$</strong>. När du accepterat offerten skickas en bekräftelse till din och avsändarens inkorg.</p>
-              $endif$
-            </div>
-        </div>
-        <div class="modal-footer">
-          <input type="hidden" name="sign" value="automatic" id="signauto" />
-          <a  class="close cancel float-left">Avbryt</a>
+      <div class="modal-header">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
+          $if(contract)$ 
+          <h2>Är du säker att du vill underteckna?</h2>  
+          $elseif(offer)$
+          <h2>Är du säker att du vill acceptera offerten?</h2>  
+          $endif$
+        </span>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">
           $if(contract)$
+          <p>När $partyUnsigned:noescape()$ undertecknat blir 
+            avtalet <strong>juridiskt bindande</strong> och
+            det färdigställda avtalet skickas till din
+            e-post.</p>
           $if(requireseleg)$
-          <span id="elegbuttons">
-            <input type="hidden" name="changetoeleg" id="elegprovider" value=""
-                   /> 
-            <input type="hidden" name="signature" value="" id="signatureinput" />
-            <input type="hidden" name="transactionid" value="" id="transactionidinput" />
-
-            <a href="#" class="btn-small green float-right signatory bankid">
-              <img src="/img/bankid.png" alt="BankID" />
-            </a>
-
-            <a href="#" class="btn-small green float-right signatory telia">
-              <img src="/img/telia.png" alt="Telia Eleg" />
-            </a>
-
-            <a href="#" class="btn-small green float-right signatory nordea">
-              <img src="/img/nordea.png" alt="Nordea Eleg" />
-            </a>
+          <span>
+            <h3>Välj typ av e-legitimation</h3>
+            <p>Har du ingen e-legitimation? Du kan ladda ned en
+              e-legitimation från din internetbank eller från
+              Telia. <a href="http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86"
+                        target="_new">Klicka här</a> för att läsa mer.</p>
           </span>
-          $else$
-          
-          <a href="#" class="btn-small blue float-right submiter">
-            <div class="left"></div>
-            <div class="label">
-              <p>SkrivaPå</p>
-              <span class="btn-symbol cross"></span>
-            </div>
-            <div class="right"></div>
-          </a>
           $endif$
           $elseif(offer)$
-          <a href="#" class="btn-small blue float-right submiter">
-            <div class="left"></div>
-            <div class="label">
-              <p>Acceptera offert</p>
-              <span class="btn-symbol cross"></span>
-            </div>
-            <div class="right"></div>
+          <p> Genom att klicka på "acceptera offert" kommer du att acceptera offerten <strong>$documenttitle$</strong>. När du accepterat offerten skickas en bekräftelse till din och avsändarens inkorg.</p>
+          $endif$
+        </div>
+      </div>
+      <div class="modal-footer">
+        <input type="hidden" name="sign" value="automatic" id="signauto" />
+        <a  class="close cancel float-left">Avbryt</a>
+        $if(contract)$
+        $if(requireseleg)$
+        <span id="elegbuttons">
+          <input type="hidden" name="changetoeleg" id="elegprovider" value=""
+                 /> 
+          <input type="hidden" name="signature" value="" id="signatureinput" />
+          <input type="hidden" name="transactionid" value="" id="transactionidinput" />
+
+          <a href="#" class="btn-small green float-right signatory bankid">
+            <img src="/img/bankid.png" alt="BankID" />
           </a>
-         $endif$
-        </div>
-     </div>
 
-    </form>
+          <a href="#" class="btn-small green float-right signatory telia">
+            <img src="/img/telia.png" alt="Telia Eleg" />
+          </a>
 
-    <form method="post" name="form" action="$action$" id="dialog-confirm-cancel" class="overlay">   
+          <a href="#" class="btn-small green float-right signatory nordea">
+            <img src="/img/nordea.png" alt="Nordea Eleg" />
+          </a>
+        </span>
+        $else$
+        
+        <a href="#" class="btn-small blue float-right submiter">
+          <div class="left"></div>
+          <div class="label">
+            <p>SkrivaPå</p>
+            <span class="btn-symbol cross"></span>
+          </div>
+          <div class="right"></div>
+        </a>
+        $endif$
+        $elseif(offer)$
+        <a href="#" class="btn-small blue float-right submiter">
+          <div class="left"></div>
+          <div class="label">
+            <p>Acceptera offert</p>
+            <span class="btn-symbol cross"></span>
+          </div>
+          <div class="right"></div>
+        </a>
+        $endif$
+      </div>
+    </div>
+
+  </form>
+
+  <form method="post" name="form" action="$action$" id="dialog-confirm-cancel" class="overlay">   
     <div class="modal-container">
-        <div class="modal-header">
-            <span class="modal-icon message"></span>
-            <span class="modal-title">
-               <h2>  $if(contract)$ Avvisa $elseif(offer)$ Är du säker på att du vill avvisa?$endif$</h2>   
-                $if(contract)$
-                <p>När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela <strong>$authorfstname$ $authorsndname$</strong>.</p>
-                $elseif(offer)$
-                <p> När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela <strong>$authorfstname$ $authorsndname$</strong>. 
-                    Du kan granska meddelandet nedan och justera innehållet genom att klicka på "skriv eget meddelande".
-                </p>
-                $endif$
-            </span>
-            <a class="modal-close close"> </a>
+      <div class="modal-header">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
+          <h2>  $if(contract)$ Avvisa $elseif(offer)$ Är du säker på att du vill avvisa?$endif$</h2>   
+          $if(contract)$
+          <p>När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela <strong>$authorfstname$ $authorsndname$</strong>.</p>
+          $elseif(offer)$
+          <p> När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela <strong>$authorfstname$ $authorsndname$</strong>. 
+            Du kan granska meddelandet nedan och justera innehållet genom att klicka på "skriv eget meddelande".
+          </p>
+          $endif$
+        </span>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">
+          $rejectMessage:noescape()$
         </div>
-        <div class="modal-body">
-            <div class="modal-content">
-               $rejectMessage:noescape()$
-            </div>
+      </div>
+      <div class="modal-footer">
+        <input type="hidden" name="cancel" value="automatic" />
+        <div class="float-left">
+          <a  class="close cancel">Avbryt</a>
+          <a  class="editer message">Skriv eget meddelande</a>
         </div>
-        <div class="modal-footer">
-                <input type="hidden" name="cancel" value="automatic" />
-                <div class="float-left">
-                  <a  class="close cancel">Avbryt</a>
-                  <a  class="editer message">Skriv eget meddelande</a>
-                </div>
-                <a href="#" class="btn-small red float-right submiter">
-                    <div class="left"></div>
-                    <div class="label">
-                        <p>Avvisa </p>
-                    <div class="btn-symbol red arrow-left"></div></div>
-                    <div class="right"></div>
-                </a>
-        </div>
-     </div>
-    </form> 
+        <a href="#" class="btn-small red float-right submiter">
+          <div class="left"></div>
+          <div class="label">
+            <p>Avvisa </p>
+            <div class="btn-symbol red arrow-left"></div></div>
+          <div class="right"></div>
+        </a>
+      </div>
+    </div>
+  </form> 
 
-  </div>
+</div>
 <div id="signStepsContainer"> 
   <div id="signStepsTitleRow">
     <span id="signStepsTitleRowTextContainer"> 
       <span class="title">
         $if(contract)$ 
-            DOKUMENT #$documentid$:
+        DOKUMENT #$documentid$:
         $elseif(offer)$
-            OFFERT #$documentid$:
+        OFFERT #$documentid$:
         $endif$
-     </span>
+      </span>
       <span class="name">$documenttitle$</span>
     </span>
-     <span class="download">
-        <a href="$linkissuedocpdf$" target="_blank">
-         Ladda ned PDF
-       </a>
-     </span>
+    <span class="download">
+      <a href="$linkissuedocpdf$" target="_blank">
+        Ladda ned PDF
+      </a>
+    </span>
   </div>
   <div id="signStepsBody" class="ericfix"> 
     <div id="signViewBodyLeft" > 
@@ -155,66 +155,71 @@ pageDocumentForSignContent=
         $documentinfotext:noescape()$
       </span> 
     </div>
-      $signatoriesBox()$
+    $signatoriesBox()$
   </div>
 </div>
 
 <div id="documentBox">
   <div class="waiting4page"></div>
 </div>
-$if(notsignedbyme)$$if(pending)$
+$if(notsignedbyme)$
+$if(pending)$
 <div id="signViewBottomBox"> 
   $if(contract)$
   <div id="signViewBottomBoxContainerLeft">
-   <a class="float-right btn-small red cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel">
-    <div class="left"></div>
-    <div class="label">Avvisa dokument</div>
-    <div class="right"></div>
-   </a>
+    <a class="float-right btn-small red cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel">
+      <div class="left"></div>
+      <div class="label">Avvisa dokument</div>
+      <div class="right"></div>
+    </a>
   </div>
   <div id="signViewBottomBoxContainerMiddle">
-   <div id="signGuardField">
-    <div class="float-left"><input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off"/></div>
-     <div class="float-left" id="signGuardLabel"><label for="signGuardCBox">Jag intygar att:
-      <br>1. Samtliga undertecknande parter är korrekta.
-      <br>2. Att jag granskat och förstått dokumentet.
-      <br>3. Att jag har befogenhet att skriva på dokumentet.
-    </ul></label></div>
-   </div>
+    <div id="signGuardField">
+      <div class="float-left"><input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off"/></div>
+      <div class="float-left" id="signGuardLabel">
+        <label for="signGuardCBox">Jag intygar att:
+          <br>1. Samtliga undertecknande parter är korrekta.
+          <br>2. Att jag granskat och förstått dokumentet.
+          <br>3. Att jag har befogenhet att skriva på dokumentet.
+        </label>
+      </div>
+    </div>
   </div>
   <div id="signViewBottomBoxContainerRight"> 
-  <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign" name="sign">
-    <div class="left"></div>
-    <div class="label" style="width:120px">
-      <span>SkrivaPå</span>
-      <span class="icon cross"></span>
-    </div>
-    <div class="right"></div>
-  </a>
- $elseif(offer)$
+    <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign" name="sign">
+      <div class="left"></div>
+      <div class="label" style="width:120px">
+        <span>SkrivaPå</span>
+        <span class="icon cross"></span>
+      </div>
+      <div class="right"></div>
+    </a>
+  </div>
+  $elseif(offer)$
   <div id="signViewBottomBoxContainerLeft">
-   <a class="float-right btn-small red cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel">
-    <div class="left"></div>
-    <div class="label">Avvisa</div>
-    <div class="right"></div>
-   </a>
+    <a class="float-right btn-small red cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel">
+      <div class="left"></div>
+      <div class="label">Avvisa</div>
+      <div class="right"></div>
+    </a>
   </div>
   <div id="signViewBottomBoxContainerMiddle"> 
     <input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off" style="display:none" checked="checked" />
   </div>
   <div id="signViewBottomBoxContainerRight"> 
-  <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign" name="sign">
-    <div class="left"></div>
-    <div class="label" style="padding-left:20px;padding-right:20px;">
-      <span>Acceptera offert</span>
-      <span class="icon cross"></span>
-    </div>
-    <div class="right"></div>
-  </a>
+    <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign" name="sign">
+      <div class="left"></div>
+      <div class="label" style="padding-left:20px;padding-right:20px;">
+        <span>Acceptera offert</span>
+        <span class="icon cross"></span>
+      </div>
+      <div class="right"></div>
+    </a>
   </div>
- $endif$  
+  $endif$  
 </div>
-$endif$$endif$ 
+$endif$
+$endif$ 
 $signatoryScriptIfRequired()$
 ###
 ####
