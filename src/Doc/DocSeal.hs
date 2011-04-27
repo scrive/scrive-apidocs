@@ -281,6 +281,7 @@ sealDocumentFile ctx@Context{ctxdocstore, ctxs3action, ctxtwconf, ctxhostpart, c
   content <- getFileContents ctx file
   BS.writeFile tmpin content
   config <- sealSpecFromDocument ctxtemplates ctxhostpart document author tmpin tmpout
+  Log.debug $ show config
   (code,stdout,stderr) <- readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
 
   case code of
