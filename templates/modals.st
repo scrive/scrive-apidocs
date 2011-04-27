@@ -279,7 +279,7 @@ modalSignedViewClosedHasAccountNotLoggedIn=
     </div>
     <div class="modal-footer">
       <div class="float-left">
-        <a class="close cancel">Avbryt</a>
+        <a class="close cancel">Stäng</a>
         <a href="#" class="txt-link message">Glömt lösenord</a>
       </div>
       <a href="#" class="btn-small blue float-right submit notForIE7">
@@ -365,7 +365,7 @@ $else$
 $modalSignedViewClosedNoAccount()$
 $endif$
 #####
-modalSignedViewNotClosed=
+modalSignedViewNotClosedHasAccountLoggedIn=
 <div class="modal-container">
   <div class="modal-header">
     <span class="modal-icon message"></span>
@@ -381,22 +381,12 @@ modalSignedViewNotClosed=
         undertecknat. När alla undertecknat blir dokumentet bindande
         och en kopia skickas till din e-post.
       </p>
-      $willCreateAccountForYou()$
+      <p>
+        Dokumentet har sparats till ditt konto.
+      </p>
     </div>
   </div>
   <div class="modal-footer">
-    $if(hasaccount)$
-    <a class="float-left close text-link message">
-      Stäng
-    </a>
-    <a href="#" class="btn-small blue float-right login-button notForIE7">
-      <div class="left"></div>
-      <div class="label">
-        <p>Logga in</p>
-      </div>
-      <div class="right"></div>
-    </a>
-    $else$
     <a class="btn-small green float-right close">
       <div class="left"></div>
       <div class="label">
@@ -405,9 +395,90 @@ modalSignedViewNotClosed=
       </div>
       <div class="right"></div>
     </a>
-    $endif$
   </div>
 </div>
+#####
+#####
+modalSignedViewNotClosedHasAccountNotLoggedIn=
+<div class="modal-container">
+  <form method="post" action="$linklogin$">
+    <div class="modal-header">
+      <span class="modal-icon message"></span>
+      <span class="modal-title">
+        <h3>Du har undertecknat dokumentet $documenttitle$</h3>
+      </span>
+      <a class="modal-close close"> </a>
+    </div>
+    <div class="modal-body">
+      <div class="modal-content">
+        <p>
+          $partyUnsignedListString:noescape()$ har ännu inte
+          undertecknat. När alla undertecknat blir dokumentet bindande
+          och en kopia skickas till din e-post.
+        </p>
+        <p>
+          Dokumentet har sparats till ditt konto.
+        </p>
+        $loginModalPart()$
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="float-left">
+        <a class="close cancel">Stäng</a>
+        <a href="#" class="txt-link message">Glömt lösenord</a>
+      </div>
+      <a href="#" class="btn-small blue float-right submit notForIE7">
+        <div class="left"></div>
+        <div class="label">
+          <p>Logga in</p>
+        </div>
+        <div class="right"></div>
+      </a>
+    </div>
+  </form>
+</div>
+#####
+#####
+modalSignedViewNotClosedNoAccount=
+<div class="modal-container">
+  <div class="modal-header">
+    <span class="modal-icon message"></span>
+    <span class="modal-title">
+      <h3>Du har undertecknat dokumentet $documenttitle$</h3>
+    </span>
+    <a class="modal-close close"> </a>
+  </div>
+  <div class="modal-body">
+    <div class="modal-content">
+      <p>
+        $partyUnsignedListString:noescape()$ har ännu inte
+        undertecknat. När alla undertecknat blir dokumentet bindande
+        och en kopia skickas till din e-post.
+      </p>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <a class="btn-small green float-right close">
+      <div class="left"></div>
+      <div class="label">
+        <p>Stäng</p>
+        <div class="btn-symbol green arrow-left"></div>
+      </div>
+      <div class="right"></div>
+    </a>
+  </div>
+</div>
+#####
+modalSignedViewNotClosed=
+$if(hasaccount)$
+$if(isloggedin)$
+$modalSignedViewNotClosedHasAccountLoggedIn()$
+$else$
+$modalSignedViewNotClosedHasAccountNotLoggedIn()$
+$endif$
+$else$
+$modalSignedViewNotClosedNoAccount()$
+$endif$
 #####
 willCreateAccountForYou=
 $if(hasaccount)$
