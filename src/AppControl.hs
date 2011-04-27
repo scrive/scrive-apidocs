@@ -233,9 +233,9 @@ handleRoutes = msum [
      , dir "amnesia"     $ hget2  $ UserControl.handlePasswordReminderGet
      , dir "amnesia"     $ hpost2NoXToken $ UserControl.handlePasswordReminderPost
      , dir "accountsetup"  $ hget2  $ UserControl.handleAccountSetupGet
-     , dir "accountsetup"  $ hpost2  $ UserControl.handleAccountSetupPost
+     , dir "accountsetup"  $ hpost2NoXToken  $ UserControl.handleAccountSetupPost
      , dir "accountremoval" $ hget2  $ UserControl.handleAccountRemovalGet
-     , dir "accountremoval" $ hpost2  $ UserControl.handleAccountRemovalPost
+     , dir "accountremoval" $ hpost2NoXToken  $ UserControl.handleAccountRemovalPost
 
      , dir "requestaccount" $ hpost0_allowHttp $ UserControl.handleRequestAccount
      -- viral invite
