@@ -343,6 +343,8 @@ docSortFunc "time" = viewComparing documentmtime
 docSortFunc "timeREV" = viewComparingRev documentmtime
 docSortFunc "partner" = comparePartners 
 docSortFunc "partnerREV" = revComparePartners
+docSortFunc "type" = viewComparing documenttype
+docSortFunc "typeREV" = viewComparingRev documenttype
 docSortFunc _ = const $ const EQ
 
 revCompareStatus :: Document -> Document -> Ordering
