@@ -89,7 +89,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 <div id="wrap">
                 <div id="top-container">
                         <div class="content">
-                                <div class="logo no-txt">SkrivaPå</div>
+                                <h1 class="logo no-txt">SkrivaPå</h1>
                                 <div class="leftMain">
                                         <div class="intro-container">
                                                 <h2>Varför krångla?</h2>

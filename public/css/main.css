@@ -1198,6 +1198,11 @@ a.new-btn-small.black p {
 	-webkit-border-radius: 5px;
 }
 
+.box.opaque.smaller h1 {
+	color: #000;
+	font: 18px/22px "Copse";
+}
+
 .box.opaque h3 {
 	color: #000;
 	font: 18px/22px "Copse";
@@ -1293,13 +1298,13 @@ a.new-btn-small.black p {
 	margin-bottom: 50px;
 }
 
-.box .partner-list li h5 {
+.box .partner-list li h2 {
 	color: #000;
 	font: 18px "Copse";
 	margin-bottom: 6px;
 }
 
-.box .partner-list li h4 {
+.box .partner-list li h3 {
 	color: #000;
 	font: italic 14px "Lucida Grande";
 }
@@ -1716,19 +1721,25 @@ a.new-btn-small.black p {
 	text-decoration: underline;
 }
 
-.nicetext h2 {
+.nicetext h1 {
 	color: #000;
 	font: 14px "Copse";
 }
 
-.nicetext h3 {
+.nicetext h2 {
 	color: #000;
 	font: 13px "Copse";
 }
 
-.nicetext h4 {
+.nicetext h3 {
 	color: #000;
 	font: 12px "Copse";
+}
+
+.nicetext h4 {
+	color: #000;
+	display: inline;
+	text-decoration: underline;
 }
 
 .nicetext h5 {
