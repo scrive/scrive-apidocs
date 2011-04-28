@@ -11,7 +11,7 @@ pageAcceptTOS =
         </div>
         <div class="modal-body">
             <div class="modal-content">     
-                $tostext:noescape()$
+                $termsPageContents()$
             </div>
         </div>
         <div class="modal-footer">
