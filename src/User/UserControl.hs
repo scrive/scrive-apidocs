@@ -134,10 +134,10 @@ friendsSortSearchPage  =
 
 handleGetSubaccount :: Kontra Response
 handleGetSubaccount = withUserGet $ do
-    ctx@Context{ctxmaybeuser = Just User{userid}} <- get
+    ctx@Context{ctxmaybeuser = Just user@User{userid}} <- get
     subaccounts <- query $ GetUserSubaccounts userid
     params <- getListParams
-    content <- viewSubaccounts (subaccountsSortSearchPage params $ Set.toList subaccounts)
+    content <- viewSubaccounts user (subaccountsSortSearchPage params $ Set.toList subaccounts)
     renderFromBody ctx TopAccount kontrakcja $ cdata content
 
 -- Searching, sorting and paging
