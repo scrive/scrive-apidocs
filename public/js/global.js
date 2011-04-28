@@ -1253,7 +1253,7 @@ function noMultiParts(elems) {
 
 function isMultiPartElem(elem) {
   var div = elem.closest(".persondetails");
-  return elem.hasClass("multipart");
+  return div.hasClass("multipart");
 }
 
 /*
