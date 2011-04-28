@@ -945,12 +945,20 @@ function nonZeroSignatories() {
   sigs += $("#personpane .persondetails input:hidden[name='signatoryrole'][value='signatory']").length;
   // don't add author if a signatory; this requires at least 1
   // non-author signatory
-
+  
+  var authorsig = 0;
+  if($("#authorsignatoryradio").attr("checked")) {
+    authorsig++;
+  }
 
   var error = (sigs === 0);
 
   if(error) {
-    addFlashMessage('Du måste ha minst en undertecknande part.',"red");
+    if(!authorsig) {
+      addFlashMessage('Du måste ha minst en undertecknande part.', "red");
+    } else {
+      addFlashMessage('Du kan inte underteckna med endast dig själv.', "red");
+    }
     $("li.plus").addClass("redborder");
     return false;
   }
