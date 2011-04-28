@@ -20,6 +20,7 @@ module User.UserView (
     resetPasswordMail,
     
     mailInviteUserAsSubaccount,
+    mailSubaccountAccepted,
 
     -- modals
     modalWelcomeToSkrivaPa,
@@ -254,6 +255,17 @@ mailInviteUserAsSubaccount ctx invited supervisor = do
     content <- (liftIO $ renderTemplate templates "mailInviteUserAsSubaccountContent" $ do
                    field "hostpart" (ctxhostpart ctx)
                    field "supervisor" $ userFields supervisor
+                   field "invited" $ userFields invited
+        ) >>= (liftIO . wrapHTML templates)
+    return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
+
+mailSubaccountAccepted :: (TemplatesMonad m) => Context -> User -> User -> m Mail
+mailSubaccountAccepted ctx invited supervisor = do
+    templates <- getTemplates
+    title <- renderTemplateM "mailSubaccountAcceptedTitle" ()
+    content <- (liftIO $ renderTemplate templates "mailSubaccountAcceptedContent" $ do
+                   field "hostpart" (ctxhostpart ctx)
+                   field "user" $ userFields supervisor
                    field "invited" $ userFields invited
         ) >>= (liftIO . wrapHTML templates)
     return $ emptyMail { title = BS.fromString title, content = BS.fromString content }

@@ -499,7 +499,6 @@ mailInviteUserAsSubaccountContent=
  <p>Vänligen iaktta försiktighet innan du accepterar. Särskilt om du
   har privata dokument på ditt konto.</p>
 
-
  <p>Så här går du vidare</p>
  <ul>
  <li>Kontrollera att du inte har några privata dokument i kontoarkiven</li>
@@ -511,3 +510,13 @@ mailInviteUserAsSubaccountContent=
 
  <p><a href="$hostpart$/account/bsa/$supervisor.id$">Detta är länken nedan</a></p>
   $poweredBySkrivaPaPara()$
+####
+####
+mailSubaccountAcceptedTitle=Kontoförfrågan
+###
+mailSubaccountAcceptedContent=
+  <p>Hej $user.fullnameOrEmail$,</p>
+  <p>User $invited.fullnameOrEmail$ accepted to be subaccount of your account.</p>
+  $poweredBySkrivaPaPara()$
+####
+
