@@ -124,25 +124,25 @@ Våra kunder och våra kunders kunder älskar enkelheten.</p>
                                 <div class="col left">
                                         <strong>TJÄNSTEN</strong>
                                         <ul>
-                                                <!--<li><a href="/features.html?columns">Funktioner</a></li> -->
-                                                <!--<li><a href="/benefits.html?columns">Fördelar</a></li> -->
+                                                <!--<li><a href="/features.html">Funktioner</a></li> -->
+                                                <!--<li><a href="/benefits.html">Fördelar</a></li> -->
                                                 <li><a href="/prisplan.html">Prisplan</a></li>
                                         </ul>
                                         <br />
                                         <strong>TRYGGHET OCH VILLKOR</strong>
                                         <ul>
-                                                <li><a href="/sakerhet.html?columns">Säkerhet</a></li>
-                                                <li><a href="/juridik.html?columns">Juridik</a></li>
-                                                <li><a href="/sekretesspolicy.html?columns">Sekretesspolicy</a></li>
-                                                <li><a href="/allmana-villkor.html?columns">SkrivaPå Allmäna Villkor</a></li>
+                                                <li><a href="/sakerhet.html">Säkerhet</a></li>
+                                                <li><a href="/juridik.html">Juridik</a></li>
+                                                <li><a href="/sekretesspolicy.html">Sekretesspolicy</a></li>
+                                                <li><a href="/allmana-villkor.html">SkrivaPå Allmäna Villkor</a></li>
                                         </ul>
                                         <br />
                                         <strong>SKRIVAPÅ</strong>
                                         <ul>
-                                                <li><a href="/om-skrivapa.html?columns">Om SkrivaPå</a></li>
-                                                <li><a href="/partners.html?columns">Partners</a></li>
-                                                <li><a href="/kunder.html?columns">Kunder</a></li>
-                                                <!--<li><a href="/board.html?columns">Board of Advisors</a></li>-->
+                                                <li><a href="/om-skrivapa.html">Om SkrivaPå</a></li>
+                                                <li><a href="/partners.html">Partners</a></li>
+                                                <li><a href="/kunder.html">Kunder</a></li>
+                                                <!--<li><a href="/board.html">Board of Advisors</a></li>-->
                                         </ul>
                                 </div>
                                 <div class="col centre">

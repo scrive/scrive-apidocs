@@ -610,21 +610,27 @@ handleLogout = do
     sendRedirect LinkMain
   
 {- |
-   Serves out the static files.
+   Serves out the static files. This'll server out files ending in .html, such as in //partners.html.  It'll
+   also attempt to serve out files to you when you leave the ".html" bit off, like in //partners.  Apparently
+   this is good for SEO.  I've also tried to get rid of use of the column url param by having this store a list
+   list of files that don't need a query column, and decide whether to render with a column or not accordingly.
 -}
 serveHTMLFiles:: Kontra Response  
 serveHTMLFiles =  do
     ctx <- get
     rq <- askRq
     let fileName = last (rqPaths rq)
-    if ((length (rqPaths rq) > 0) && isSuffixOf ".html" fileName)
+    if (length (rqPaths rq) > 0)
         then do
-            ms <- liftIO $ catch (fmap Just ( BS.readFile $ "html/"++fileName)) 
+            let htmlFileName = if isSuffixOf ".html" fileName then fileName else (fileName ++ ".html")
+            ms <- liftIO $ catch (fmap Just ( BS.readFile $ "html/"++htmlFileName)) 
                             (const $ return Nothing)
-            case ms of 
-                Just s -> renderFromBody ctx V.TopNone V.kontrakcja (cdata $ BS.toString s)
+            case (ms, htmlFileName `elem` withoutQueryColumn) of 
+                (Just s, True) -> renderFromBody ctx V.TopNone V.kontrakcja (cdata $ BS.toString s)
+                (Just s, False) -> renderFromBodyWithQueryColumn ctx V.TopNone V.kontrakcja (cdata $ BS.toString s)
                 _      -> mzero
         else mzero
+    where withoutQueryColumn = ["prisplan.html"] 
 
 {- |
    Ensures logged in as a super user
