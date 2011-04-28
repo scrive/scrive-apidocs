@@ -766,18 +766,18 @@ setUserSupervisor :: UserID -> UserID -> Update Users (Either String User)
 setUserSupervisor userid supervisorid = do
     msupervisor <- (getOne . (@= supervisorid)) <$> ask
     let supervisor = fromJust msupervisor
-    modifyUser userid $ \user ->  -- Either String monad 
+    modifyUser userid $ \user -> do -- Either String monad 
       let luseremail = BS.toString $ unEmail $ useremail $ userinfo user
           suseremail = BS.toString $ unEmail $ useremail $ userinfo supervisor
-      in if userid == supervisorid 
-         then Left "cannot be supervisor of yourself"
-         else if isJust $ usersupervisor user 
-              then Left "user already has a supervisor"
-              else if isNothing $ msupervisor 
-                      then Left "supervisor id does not exist"
-                      else if dropWhile (/= '@') luseremail /= dropWhile (/= '@') luseremail
-                              then Left $ "users domain names differ " -- ++ luseremail ++ " vs " ++ suseremail
-                              else Right $ user { usersupervisor = Just $ SupervisorID $ unUserID supervisorid}
+      when (userid == supervisorid) $ 
+         failure "cannot be supervisor of yourself"
+      when (isJust $ usersupervisor user) $
+         failure "user already has a supervisor"
+      when (isNothing $ msupervisor) $
+         failure "supervisor id does not exist"
+      when (dropWhile (/= '@') luseremail /= dropWhile (/= '@') suseremail) $
+         failure $ "users domain names differ " ++ luseremail ++ " vs " ++ suseremail
+      return $ user { usersupervisor = Just $ SupervisorID $ unUserID supervisorid}
   
 getUserStats :: Query Users UserStats
 getUserStats = do
