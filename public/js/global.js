@@ -1195,8 +1195,14 @@ $(document).ready(function() {
                    personpane.closest("form").find("input[type='hidden'][name='csvpersonindex']").removeAttr("value");
                 }
                 
-                var li = $("#peopleList li:eq(" + idx + ")");
+                var li = $("#peopleList li:eq(" + idx + ")"),
+                    signorderlisttext = li.find(".signorderlist").text();
                 li.remove();
+                
+                if (signorderlisttext !== "-") // non-signatory
+                    removeLastSigningOrderPosition();
+                if (signingorder)
+                    updatePeopleListSignOrder();
 
 		var newidx = idx;
 		if(newidx >= $('#personpane').children().size() ) {
@@ -1209,8 +1215,11 @@ $(document).ready(function() {
           resizeDesignBar();
             });
         $("input[name='signatoryfstname'], input[name='signatorysndname']", "#personpane").live('change keyup', function() {
-                var fstname = $("input[name='signatoryfstname']",$(this).parent().parent());
-                var sndname = $("input[name='signatorysndname']",$(this).parent().parent());
+                var person = $(this).parents(".persondetails"),
+                    fstname = $("input[name='signatoryfstname']", person),
+                    sndname = $("input[name='signatorysndname']", person),
+                    signorder = $(".signorder", person),
+                    role = $("input[name='signatoryrole']", person);
                 if (fstname.hasClass("grayed"))
                   fstname = ""
                 else fstname = fstname.val();
@@ -1229,7 +1238,12 @@ $(document).ready(function() {
                 if (isMultiPartElem($(this))) {
                     val = "Massutskick";
                 }
-                $('#peopleList li:eq(' + idx + ') a').text(val);
+                var signorderlist = $("<span class='signorderlist'></span>").text(
+                    role.val() == "signatory" ? signorder.val() : "-"
+                );
+                if (!signingorder)
+                    signorderlist.hide();
+                $('#peopleList li:eq(' + idx + ') a').text(val).append(signorderlist);
             });
         $('form.requestAccount').submit(function(){
             if (!emailFieldsValidation($("input[type='email']",$(this)))) return false;
@@ -1274,7 +1288,8 @@ safeReady(function() {
     checkPersonPaneMode();
           
     renumberParts();
-
+    addSigningOrderPosition();
+    
     enableInfoTextOnce(newone);
     liplus.removeClass("redborder");
     authorman.removeClass("redborder");

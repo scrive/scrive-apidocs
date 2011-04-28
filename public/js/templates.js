@@ -556,11 +556,137 @@ function authorToHTML(sig) {
   } else {
     sigentry.find(".partyrole input:radio").last().attr("checked", "true");
   }
-
-  $("#peopleList ol").append("<li><a href='#'>"
-                             + escapeHTML(sig.fstname + " " + sig.sndname)
-                             + " (Avsändare)</a></li>");
+  
+  var signorderlist = $("<span class='signorderlist'></span>");
+  if (!signingorder)
+      signorderlist.hide();
+  
+  $("#peopleList ol").append(
+      $("<li>").append(
+          $("<a href='#'></a>").text(sig.fstname + " " + sig.sndname + " (Avsändare)").append(
+              signorderlist.text("-")
+          )
+      )
+  );
 }
+
+// BEGIN signing order related functions
+function updatePeopleListSignOrder() {
+    var signorderlist = $("#peopleList .signorderlist");
+    $(".signorder").each(function(ix) {
+        $(signorderlist.get(ix+1)).text($(this).find("option:selected").text());
+    });
+}
+
+function hideSigningOrderRelatedElements() {
+    $(".signorder").hide();
+    $(".signorderlist").hide();
+    $("#signorderlisttitle").hide();
+}
+
+function showSigningOrderRelatedElements() {
+    $(".signorder").each(function() {
+        var that = $(this);
+        if (that.find("option:selected").text() != "-")
+            that.show();
+    });
+    $(".signorderlist").show();
+    $("#signorderlisttitle").show();
+}
+
+function removeSignOrderValues(signorder) {
+    signorder.each(function() {
+        $(this).attr("value", 1);
+    });
+}
+
+function restoreSignOrderValues(signorder) {
+    signorder.each(function(ix) {
+        $(this).attr("value", ix+1);
+    });
+}
+
+function removeLastSigningOrderPosition() {
+    if ($(".signorder:first option").length > 1) {
+        $(".signorder").each(function() {
+            var that = $(this),
+                lo = that.find('option:last').remove(),
+                losel = lo.attr("selected") != "";
+            lo.remove();
+            if (losel)
+                that.val(that.find('option:last').val());
+        });
+    } else
+        allNonSignatories = true;
+}
+
+function addSigningOrderPosition() {
+    if (allNonSignatories)
+        allNonSignatories = false;
+    else {
+        var signorder = $(".signorder"),
+            signr = parseInt(signorder.first().find("option:last").val());
+        if (signr != signr) // NaN
+            signr = 1;
+        else
+            ++signr;
+        $(".signorder").append(
+            option = $("<option>").attr("value", signr).text(signr)
+        );
+    }
+}
+
+safeReady(function() {
+    // add all signatories to initial signorder template
+    var signorder = $(".signorder"), siglen = docstate.signatories.length;
+    console.log(siglen);
+    if (siglen == 1)
+        ++siglen; // empty doc has one sig (author)
+    for (var i = 1; i < siglen; ++i)
+        signorder.append($("<option>").attr("value", i).text(i));
+    
+    if (signingorder)
+        showSigningOrderRelatedElements();
+    else
+        hideSigningOrderRelatedElements();
+    
+    $("#personpane .signorder").live("change", updatePeopleListSignOrder);
+    
+    $("#personpane input[value=nonsignatory]").live("change", function() {
+        var signorder = $(this).parents(".persondetails").find(".signorder");
+        signorder.find("option:first").text("-");
+        signorder.val("-");
+        signorder.hide();
+        removeLastSigningOrderPosition();
+        updatePeopleListSignOrder();
+    });
+    
+    $("#personpane input[value=signatory]").live("change", function() {
+        var signorder = $(this).parents(".persondetails").find(".signorder");
+        signorder.find("option:first").text(1);
+        signorder.val(1);
+        signorder.show();
+        addSigningOrderPosition();
+        updatePeopleListSignOrder();
+    });
+    
+    $("#personpane .signingOrder").live("click", function() {
+        if (signingorder) {
+            hideSigningOrderRelatedElements();
+            $("#personpane .signorder").each(function() {
+                removeSignOrderValues($(this));
+            });
+        } else {
+            showSigningOrderRelatedElements();
+            updatePeopleListSignOrder();
+            $("#personpane .signorder").each(function() {
+                restoreSignOrderValues($(this));
+            });
+        }
+        signingorder = !signingorder;
+    });
+});
+// END signing order related functions
 
 /*
  * Activate minus buttons within personpane.
@@ -818,9 +944,6 @@ function signatoryToHTML(isMultiple, sig) {
   var apersnumb = sigentry.find(".sigpersnum");
   var acompnumb = sigentry.find(".sigcompnum");
   var aemai = sigentry.find(".sigemail");
-  var asignord = sigentry.find(".sigsignord");
-  
-
 
   setSigID(afstname, sigid);
   setSigID(asndname, sigid);
@@ -828,7 +951,6 @@ function signatoryToHTML(isMultiple, sig) {
   setSigID(apersnumb, sigid);
   setSigID(acompnumb, sigid);
   setSigID(aemai, sigid);
-  setSigID(asignord, sigid);
 
   setValue(afstname, sig.fstname);
   setValue(asndname, sig.sndname);
@@ -836,7 +958,6 @@ function signatoryToHTML(isMultiple, sig) {
   setValue(apersnumb, sig.personalnumber);
   setValue(acompnumb, sig.companynumber);
   setValue(aemai, sig.email);
-  setValue(asignord, sig.signorder);
   // other fields
   
   $(sig.otherfields).each(function (){
@@ -871,9 +992,30 @@ function signatoryToHTML(isMultiple, sig) {
     n = sig.fstname + " " + sig.sndname;
   }
   
-  $("#peopleList ol").append($("<li>").append($("<a href='#'></a>").text(n)));
+  if (sig.signorder > 1) {
+      signingorder = true;
+      showSigningOrderRelatedElements();
+  }
+  
+  var sigs = $("#peopleList ol"), signorderlist = $("<span class='signorderlist'></span>");
+  if (!signingorder)
+      signorderlist.hide();
+  
+  $("#peopleList ol").append(
+      $("<li>").append(
+          $("<a href='#'></a>").text(n).append(
+              signorderlist.text(sig.signorder)
+          )
+      )
+  );
   sl.append(sigentry);
-
+  
+  // set sign order
+  var signorder = $("#personpane .signorder:eq(" + (sigs.find("li").length-2) + ")");
+  signorder.val(sig.signorder);
+  if (!signingorder)
+      removeSignOrderValues(signorder);
+  
   sigentry.find(".csv.single").overlay({
     mask: standardDialogMask,
     onBeforeLoad: function() {
@@ -905,7 +1047,6 @@ function placePlacementsOfSignatories(signatories) {
     placePlacements(sig.personalnumberplacements, "Persnr", sig.personalnumber, sig.id, "personalnumber");
     placePlacements(sig.companynumberplacements, "Orgnr", sig.companynumber, sig.id, "companynumber");
     placePlacements(sig.emailplacements, "Personens e-mail", sig.email, sig.id, "email");
-    placePlacements([], "Sign order", sig.signorder, sig.id, "signorder");
     $(sig.otherfields).each(function(){
       var fd = this;
       placePlacements(fd.placements, fd.label, fd.value, sig.id, fd.id);
