@@ -220,6 +220,7 @@ contextInfoFields ctx = do
     field "protocol" $ if (ctxproduction ctx) then "https:" else "http:"
     field "prefix" ""
     field "production" (ctxproduction ctx)
+    field "publicsafe" (isNothing $ ctxmaybeuser ctx)
 
 
 flashMessageFields fm = do

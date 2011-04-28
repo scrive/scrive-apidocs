@@ -49,8 +49,10 @@ standardHeaderContents=
                 type="text/javascript"></script>
         <script src="$prefix$/js/global.js"
                 type="text/javascript"></script>
-       <script src="/js/jquery.tweet.js" 
+       $if(publicsafe)$
+        <script src="/js/jquery.tweet.js" 
                 type="text/javascript"></script>
+       $endif$
        <script src="/js/main.js" 
                 type="text/javascript"></script>
 ####
@@ -127,7 +129,28 @@ bodyend=
          </div>
        </div>
                 
-   <div id="footer-container" class="newdesign">
+       $pageFooter()$
+   
+        $if(production)$
+        <script type="text/javascript">
+          var _gaq = _gaq || [];
+          _gaq.push(['_setAccount', 'UA-6387711-9']);
+          _gaq.push(['_trackPageview']);
+
+          (function() {
+          var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+          ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+          var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+          })();
+
+        </script>
+         $if(publicsafe)$
+          <script type="text/javascript" src="https://eu1.snoobi.com/snoop.php?tili=skrivapa_se"></script>
+         $endif$
+        $endif$
+####
+pageFooter=
+<div id="footer-container" class="newdesign">
                         <div class="top-border"></div>
                         <div class="spacer"></div>
                         <div class="content">
@@ -152,15 +175,18 @@ bodyend=
                                                 <li><a href="/om-skrivapa.html">Om SkrivaPå</a></li>
                                                 <li><a href="/partners.html">Partners</a></li>
                                                 <li><a href="/kunder.html">Kunder</a></li>
+                                                <li><a href="/">Start</a></li>
                                                 <!--<li><a href="/board.html">Board of Advisors</a></li>-->
                                         </ul>
                                 </div>
-                                <div class="col centre">
+                                $if(publicsafe)$
+                                <div class="col centre">        
                                         <strong>SKRIVAPÅ PÅ TWITTER</strong>
                                         <div class="tweet">
                                         
                                         </div>
                                 </div>
+                                $endif$
                                 <div class="col right">
                                         <strong>Kontakta oss för feedback, frågor &amp; förfrågningar</strong>
                                         <ul>
@@ -186,22 +212,6 @@ bodyend=
                                 </div>
                         </div>
         </div>
-   
-        $if(production)$
-        <script type="text/javascript">
-          var _gaq = _gaq || [];
-          _gaq.push(['_setAccount', 'UA-6387711-9']);
-          _gaq.push(['_trackPageview']);
-
-          (function() {
-          var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-          ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-          var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-          })();
-
-        </script>
-        <script type="text/javascript" src="https://eu1.snoobi.com/snoop.php?tili=skrivapa_se"></script>
-        $endif$
 ####
 loginBox=
     <div id="login">

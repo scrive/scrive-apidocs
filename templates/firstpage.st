@@ -371,66 +371,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                         </div>
                         <div class="spacer40"></div>
                 </div>
-                <div id="footer-container">
-                        <div class="top-border"></div>
-                        <div class="spacer"></div>
-                        <div class="content">
-                                <div class="col left">
-                                        <strong>TJÄNSTEN</strong>
-                                        <ul>
-                                                <!--<li><a href="features.html">Funktioner</a></li>-->
-                                                <!-- <li><a href="benefits.html">Fördelar</a></li> -->
-                                                <li><a href="prisplan.html">Prisplan</a></li>
-                                        </ul>
-                                        <br />
-                                        <strong>TRYGGHET OCH VILLKOR</strong>
-                                        <ul>
-                                                <li><a href="sakerhet.html">Säkerhet</a></li>
-                                                <li><a href="juridik.html">Juridik</a></li>
-                                                <li><a href="sekretesspolicy.html">Sekretesspolicy</a></li>
-                                                <li><a href="allmana-villkor.html">SkrivaPå Allmäna Villkor</a></li>
-                                        </ul>
-                                        <br />
-                                        <strong>SKRIVAPÅ</strong>
-                                        <ul>
-                                                <li><a href="om-skrivapa.html">Om SkrivaPå</a></li>
-                                                <li><a href="partners.html">Partners</a></li>
-                                                <li><a href="kunder.html">Kunder</a></li>
-                                                <!--<li><a href="board.html">Board of Advisors</a></li>-->
-                                        </ul>
-                                </div>
-                                <div class="col centre">
-                                        <strong>SKRIVAPÅ PÅ TWITTER</strong>
-                                        <div class="tweet">
-                                        
-                                        </div>
-                                </div>
-                                <div class="col right">
-                                        <strong>Kontakta oss för feedback, frågor &amp; förfrågningar</strong>
-                                        <ul>
-                                                <li>
-                                                        <strong>Telefon</strong>
-                                                        010-195 99 15
-                                                </li>
-                                                <li>
-                                                        <strong>Kontorstider</strong>
-                                                        måndag-fredag 09-17
-                                                </li>
-                                                <li>
-                                                        <strong>Maila SkrivaPå</strong>
-                                                        <a href="mailto:info@skrivapa.se">info@skrivapa.se</a>
-                                                </li>
-                                                <li>
-                                                        <strong>Adress</strong>
-                                                        SkrivaPå CM AB<br />
-                                                        Saltmätargatan 19<br />
-                                                        113 59 Stockholm
-                                                </li>
-                                        </ul>
-                                </div>
-                        </div>
-                </div>
-                </div>
+                $pageFooter()$
             <div class="modal-container campaign-play-video" style="display:none;width:653px;height: 475px">
                                             <div class="modal-header">
                                                 <span class="modal-icon message"></span>
