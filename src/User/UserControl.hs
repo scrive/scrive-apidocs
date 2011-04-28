@@ -452,7 +452,7 @@ handlePostBecomeSubaccountOf supervisorid = withUserPost $ do
           result <- update $ SetUserSupervisor (userid user) supervisorid
           case result of
             Left errmsg -> do
-              let msg = "Cannot become subaccount of " ++ show supervisorid ++ ": " ++ msg
+              let msg = "Cannot become subaccount of " ++ show supervisorid ++ ": " ++ errmsg
               Log.debug $ msg
               addFlashMsg $ toFlashMsg OperationFailed msg
             Right _ -> do
