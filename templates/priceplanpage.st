@@ -17,32 +17,32 @@ priceplanPage=
     </html>
 ###
 priceplanPageContents=
-                <div class="spacer40"></div>
                 <div class="big-price-plan">
-                    <h1>Skriva på dokument snabbt, smidigt och säkert!</h1>
-                    <h2>Registrera dig på under minuten. Säg upp när som helst.</h2>
+                    <h1>Priser</h1>
+                    <p class="stronger">Skriva på dokument snabbt, smidigt och säkert!</p>
+                    <p class="stronger">Registrera dig på under minuten. Säg upp när som helst.</p>
                 </div>
                 <div class="big-pp-container">
                     <table>
                         <thead>
                             <tr>
                                 <th>
-                                    <h3>Kontoplan</h3>
+                                    <h2>Prisplan</h2>
                                 </th>
                                 <th>
-                                    <h4>Free</h4>
+                                    <h3>Free</h3>
                                     <p>0 kr/mån</p>
                                 </th>
                                 <th>
-                                    <h4>Small</h4>
+                                    <h3>Small</h3>
                                     <p>299 kr/mån</p>
                                 </th>
                                 <th>
-                                    <h4>Business</h4>
+                                    <h3>Business</h3>
                                     <p>499 kr/mån</p>
                                 </th>
                                 <th>
-                                    <h4>Enterprise</h4>
+                                    <h3>Enterprise</h3>
                                     <p>Offert</p>
                                 </th>
                             </tr>
@@ -293,7 +293,7 @@ priceplanPageContents=
                         <div class="ribbon"></div>
                         <ul class="highlight-rows">
                             <li class="top">
-                                <h4>Business</h4>
+                                <h3>Business</h3>
                                 <p>499kr/mån</p>
                             </li>
                             <li>9</li>
@@ -338,11 +338,11 @@ priceplanPageContents=
                 <br />
                 <br />
                 <div class="big-price-plan">
-                    <h3>Kan jag byta prisplan när som helst?</h3>
+                    <h2>Kan jag byta prisplan när som helst?</h2>
                     <p>SkrivaPå är baserad på månadsprenumeration. Ingen bindningstid, inga konstigheter. Du kan uppgradera, nedgradera eller avsluta ditt konto när du vill. Kontakta oss gärna om du behöver hjälp med att välja det paket som passar dina behov. Du kan nå oss på e-post <a href="mailto:info@skrivapa.se">info@skrivapa.se</a> eller telefon 010-195 99 15. </p>
                 </div>
                 <div class="big-price-plan">
-                                    <h3>15% rabatt och större flexibilitet!</h3>
+                                    <h2>15% rabatt och större flexibilitet!</h2>
                                     <p> För Small och Business kan du istället betala för 1 år och få 15% rabatt på priset. 
                                         Dessutom kan du då fördela de fria signaturerna över hela året. </p>
                 </div>

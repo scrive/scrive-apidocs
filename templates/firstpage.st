@@ -93,13 +93,10 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                 <div class="leftMain">
                                         <div class="intro-container">
                                                 <h2>Varför krångla?</h2>
-                                                <h3>SkrivaPå är en tjänst för att skriva på och arkivera avtal elektroniskt. <BR/> Våra kunder och våra kunders kunder älskar enkelheten.
-                                                <br />
-                                                <br />
-                                                <br />
-                                                </h3>
+                                                <p class="introtext">SkrivaPå är en tjänst för att skriva på och arkivera avtal elektroniskt. <BR/> Våra kunder och våra kunders kunder älskar enkelheten.
+                                                </p>
                                                 <h2>Skapa konto nu!</h2>
-                                                <h3>1 månad full funktionalitet utan kostnad. Inga förpliktelser.</h3>
+                                                <p class="introtext">1 månad full funktionalitet utan kostnad. Inga förpliktelser.</p>
                                                 <form method="post" action="/signup" class="requestAccount">
                                                         <input class="shiny" type="email" name="email" infotext="Fyll i din e-postadress" /> <a href="#" class="submit new-btn-small green2 center"><p>Skapa konto!</p></a>
                                                         <input type="submit" class="hidden" />
@@ -123,19 +120,19 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                         <div class="content">
                                 <div class="col left campaign-play" rel=".campaign-play-video">
                                         <div class="icon one"></div>
-                                        <a href="#"><h4>Skicka</h4>
+                                        <a href="#"><h3>Skicka</h3>
                                         <p>Ladda upp dokument,<br />välj mottagare, skicka!</p></a>
                                 </div>
                                 <div class="divider-hor"></div>
                                 <div class="col centre campaign-play" rel=".campaign-play-video">
                                         <div class="icon two"></div>
-                                        <a href="#"><h4>Skriva på</h4>
+                                        <a href="#"><h3>Skriva på</h3>
                                         <p>Alla parter skriver på<br />elektroniskt.</p></a>
                                 </div>
                                 <div class="divider-hor"></div>
                                 <div class="col right campaign-play" rel=".campaign-play-video">
                                         <div class="icon three"></div>
-                                        <a href="#"><h4>Spara och arkivera</h4>
+                                        <a href="#"><h3>Spara och arkivera</h3>
                                         <p>Vi sparar dina dokument<br />tryggt och säkert.</p></a>
                                 </div>
                         </div>
@@ -149,63 +146,63 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <div class="icon-container">
                                                         <div class="icon money"></div>
                                                 </div>
-                                                <h5>Minska kostnaderna</h5>
+                                                <h2>Minska kostnaderna</h2>
                                                 <p>Dokumenthantering är tidskrävande. Tid är pengar. SkrivaPå är ett skräddarsytt redskap som optimerar dina processer. Spara 50-250kr/dokument. </p>
                                         </div>
                                         <div class="col">
                                                 <div class="icon-container">
                                                         <div class="icon watch"></div>
                                                 </div>
-                                                <h5>Snabbare avslut</h5>
+                                                <h2>Snabbare avslut</h2>
                                                 <p>Snabbare avslut leder till fler avslut. Vi hjälper dig att öka din omsättning.</p>
                                         </div>
                                         <div class="col">
                                                 <div class="icon-container">
                                                         <div class="icon globe"></div>
                                                 </div>
-                                                <h5>Överallt. Alltid.</h5>
+                                                <h2>Överallt. Alltid.</h2>
                                                 <p>Arbeta när du vill och var du vill. Glöm problemen med att buda dokument jorden runt.</p>
                                         </div>
                                         <div class="col no-margin">
                                                 <div class="icon-container">
                                                         <div class="icon seal"></div>
                                                 </div>
-                                                <h5>Starkare bevis</h5>
+                                                <h2>Starkare bevis</h2>
                                                 <p>SkrivaPå verifierar transaktionen och stärker din bevisposition vid konflikt.</p>
                                         </div>
                                         <div class="col">
                                                 <div class="icon-container">
                                                         <div class="icon safe"></div>
                                                 </div>
-                                                <h5>100% kontroll</h5>
+                                                <h2>100% kontroll</h2>
                                                 <p>Vår säkra lagring garanterar dokumentens integritet. Äntligen full kontroll. </p>
                                         </div>
                                         <div class="col">
                                                 <div class="icon-container">
                                                         <div class="icon face"></div>
                                                 </div>
-                                                <h5>Minska frustrationen</h5>
+                                                <h2>Minska frustrationen</h2>
                                                 <p>Det är sällan roligt att vända papper, leta efter förlorade dokument och jaga signaturer. SkrivaPå lättar din och dina kunders administrativa börda.</p>
                                         </div>
                                         <div class="col">
                                                 <div class="icon-container">
                                                         <div class="icon paper"></div>
                                                 </div>
-                                                <h5>Spara på miljön</h5>
+                                                <h2>Spara på miljön</h2>
                                                 <p>Visa att ni tar ansvar. Skippa pappersavtalandet och minska din miljöpåverkan.</p>
                                         </div>
                                         <div class="col no-margin">
                                                 <div class="icon-container">
                                                         <div class="icon ipad"></div>
                                                 </div>
-                                                <h5>Image branding</h5>
+                                                <h2>Image branding</h2>
                                                 <p>Visa era kunder att ni är i framkant och gillar att tänka i nya banor.</p>
                                         </div>
                                 </div>
                                 <div class="clearfix"></div>
                                 <div class="slide">
                                         <div class="slide-container">
-                                                <h3>Kunder berättar</h3>
+                                                <h2>Kunder berättar</h2>
                                                 <div class="slide-content active">
 									<div class="portrait-image">
 										<img src="/img/portrait-lukas-d.png" style="display:none;" />
@@ -248,7 +245,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 </ul>
                                         </div>
                                         <div class="bubble">
-                                                <h3>Partners</h3>
+                                                <h2>Partners</h2>
                                                 <ul>
                                                         <li><a href="partners.html"><img src="/img/partner-trustweaver.png"  /></a></li>
                                                         <li><a href="partners.html"><img src="/img/partner-logica.png" /></a></li>
@@ -263,19 +260,19 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                         <table class="price-plan">
                                                 <tr>
                                                         <th>
-                                                                <h4>Free</h4>
+                                                                <h3>Free</h3>
                                                                 <p>För sällananvändare</p>
                                                         </th>
                                                         <th>
-                                                                <h4>Small</h4>
+                                                                <h3>Small</h3>
                                                                 <p>Låg volym och enkla behov</p>
                                                         </th>
                                                         <th>
-                                                                <h4>Business</h4>
+                                                                <h3>Business</h3>
                                                                 <p>Medel volym och många användningsområden</p>
                                                         </th>
                                                         <th>
-                                                                <h4>Enterprise</h4>
+                                                                <h3>Enterprise</h3>
                                                                 <p>Stora volymer och/eller <BR/>komplexa behov</p>
                                                         </th>
                                                 </tr>
@@ -332,7 +329,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <div class="ribbon"></div>
                                                 <ul class="highlight-rows">
                                                         <li class="top">
-                                                                <h4>Business</h4>
+                                                                <h3>Business</h3>
                                                                 <p>Medel volym och många användningsområden</p>
                                                         </li>
                                                         <li class="odd">9 användare</li>
