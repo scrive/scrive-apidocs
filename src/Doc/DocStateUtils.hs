@@ -339,6 +339,7 @@ documentcurrentsignorder doc =
         signorder = signatorysignorder . signatorydetails
         sigs = documentsignatorylinks doc
         notSigned siglnk = isNothing (maybesigninfo siglnk)
+            && SignatoryPartner `elem` signatoryroles siglnk -- we exclude non-signatories
             && signorder siglnk > SignOrder 0 -- we omit author
 
 {- |
