@@ -159,7 +159,7 @@ pageFooter=
                                         <ul>
                                                 <!--<li><a href="/features.html">Funktioner</a></li> -->
                                                 <!--<li><a href="/benefits.html">Fördelar</a></li> -->
-                                                <li><a href="/prisplan.html">Prisplan</a></li>
+                                                <li><a href="/prisplan.html">Priser</a></li>
                                         </ul>
                                         <br />
                                         <strong>TRYGGHET OCH VILLKOR</strong>
@@ -167,7 +167,7 @@ pageFooter=
                                                 <li><a href="/sakerhet.html">Säkerhet</a></li>
                                                 <li><a href="/juridik.html">Juridik</a></li>
                                                 <li><a href="/sekretesspolicy.html">Sekretesspolicy</a></li>
-                                                <li><a href="/allmana-villkor.html">SkrivaPå Allmäna Villkor</a></li>
+                                                <li><a href="/allmana-villkor.html">Allmäna Villkor</a></li>
                                         </ul>
                                         <br />
                                         <strong>SKRIVAPÅ</strong>
