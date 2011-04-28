@@ -903,7 +903,7 @@ a.button {
 .pagediv
 {
     position: relative;
-    font-size: 15px; /* currently A4 is 612pt wide and for us that is 944px on screen. So to have 10pt font is to have 944px*10pt/612pt = 15px */
+    font-size: 15.93px; /* A4 is 595x842pt, for us it is 948x1337px. So 10pt font in PDF is 948px*10pt/595pt = 15.93px */
     margin: 6px;
 }
 
@@ -926,7 +926,7 @@ a.button {
 .placedfield, .placedfieldhelper {
     position: absolute;
     font-family: Helvetica;
-    font-size: 15px;
+    font-size: 15.93px; /* keep in sync with .pagediv font-size propery */
 }
 
 .placedfieldhelper {
