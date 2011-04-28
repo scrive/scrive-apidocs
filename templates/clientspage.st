@@ -34,7 +34,7 @@ clientsPageContents=
 									<img src="/img/goenterprise-logo.png" />
 								</div>
 								<h2>Go Enterprise</h2>
-								<h3>”Processerna blir betydligt smidigare. Man sparar tid helt enkelt.”</h3>
+								<blockquote>”Processerna blir betydligt smidigare. Man sparar tid helt enkelt.”</blockquote>
 								<em>- Lisa Renander och Julia Hamrin, VD och Säljchef</em>
 								<p>Go Enterprise är ett ungt managementbolag där vi brinner för tillväxt, entreprenörskap och samhällsutveckling. Genom våra RIKA-koncept inspirerar vi till handlingskraft och problemlösning.
 RIKA står för research, idé, koncept och action – de fyra stegen i en problemlösningsprocess.</p>
@@ -45,7 +45,7 @@ RIKA står för research, idé, koncept och action – de fyra stegen i en prob
 									<img src="/img/accountfactory-logo.png" style="left:3px;top:3px;"/>
 								</div>
 								<h2>Account Factory</h2>
-								<h3>”Skönt. Snabbare vändor med kund och man slipper arkivera papper.”</h3>
+								<blockquote>”Skönt. Snabbare vändor med kund och man slipper arkivera papper.”</blockquote>
 								<em>- Mikael Green, VD</em>
 								<p>Account Factory sköter bokföringen för småföretag. Bara fasta priser och allt på webben.</p>
 								<a href="http://www.accountfactory.se">www.accountfactory.se</a>
@@ -55,7 +55,7 @@ RIKA står för research, idé, koncept och action – de fyra stegen i en prob
 									<img src="/img/greenhatpeople-logo.png" />
 								</div>
 								<h2>Green Hat People</h2>
-								<h3>”Man har mycket bättre koll på de avtal som ingåtts. Det är grejen tycker jag.”</h3>
+								<blockquote>”Man har mycket bättre koll på de avtal som ingåtts. Det är grejen tycker jag.”</blockquote>
 								<em>- Alexis Barnekow, Försäljningschef</em>
 								<p>Green hat People genomför oslagbara teambuildingaktiviteter i form av mobilstyrda spel där omgivningen utgör spelplanen. De finns representerade i hela Sverige och genomför teambuilding över hela Europa.</p>
 								<a href="http://www.greenhatpeople.se">www.greenhatpeople.se</a>
@@ -65,7 +65,7 @@ RIKA står för research, idé, koncept och action – de fyra stegen i en prob
 									<img src="/img/eventbook-logo.png" />
 								</div>
 								<h2>EventBook</h2>
-								<h3>"Smart lösning."</h3>
+								<blockquote>"Smart lösning."</blockquote>
 								<em>- Christoffer Lindquist, VD</em>
 								<p>Din partner för konferens, kick-off och företagsresor.</p>
 								<a href="http://www.eventbook.se">www.eventbook.se</a>
@@ -76,7 +76,7 @@ RIKA står för research, idé, koncept och action – de fyra stegen i en prob
 								</div>
 								<h2>Accenture Management Consulting</h2>
 								<h3>"Tjänsten är väldigt smidig och det visar verkligen hur mycket man kan effektivisera avtalsprocessen."</h3>
-								<em>- Ola Brundin</em>
+								<em>- Ola Brundin, Accenture Management Consulting</em>
 								<a href="http://www.eventbook.se">www.eventbook.se</a>
 							</li>
 						</ul>

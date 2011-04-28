@@ -286,16 +286,17 @@ a.new-btn-small.black p {
 /* Intro text */
 
 #top-container .intro-container {
-	margin-top: 140px;
+	margin-top: 108px;
 	width: 480px;
 }
 
 #top-container .intro-container h2 {
 	color: #FFFFFF;
 	font: 36px "Copse";
+        padding-top: 32px;
 }
 
-#top-container .intro-container h3 {
+#top-container .intro-container p.introtext {
 	color: #DDDDDD;
 	font: 13px "Lucida Grande";
 }
@@ -521,12 +522,12 @@ a.new-btn-small.black p {
 	padding: 0 10px;
 }
 
-#nav-container h4 {
+#nav-container h3 {
 	color: #666;
 	font: normal 18px/24px "Copse";
 }
 
-#nav-container .col:hover h4 {
+#nav-container .col:hover h3 {
 	color: #137DAD;
 }
 
@@ -683,7 +684,7 @@ a.new-btn-small.black p {
 	position: relative;
 }
 
-#body-container .grid .col h5 {
+#body-container .grid .col h2 {
 	color: #000;
 	font: 14px/21px "Copse";
 }
@@ -697,7 +698,7 @@ a.new-btn-small.black p {
 	font: 11px/18px "Lucida Grande";
 }
 
-#body-container .grid .col:hover h5 {
+#body-container .grid .col:hover h2 {
 	color: #137DAD;
 }
 
@@ -750,12 +751,12 @@ a.new-btn-small.black p {
 	display: block;
 }
 
-#body-container .slide h3 {
+#body-container .slide h2 {
 	color: #999;
 	font: 18px "Copse";
 }
 
-#body-container .slide-container h3 {
+#body-container .slide-container h2 {
 	left: 162px;
 	position: absolute;
 	top: 30px;
@@ -787,7 +788,7 @@ a.new-btn-small.black p {
 	width: 410px;
 }
 
-#body-container .slide .bubble h3 {
+#body-container .slide .bubble h2 {
 	color: #999;
 	font: 18px "Copse";
 	margin-bottom: 20px;
@@ -884,7 +885,7 @@ a.new-btn-small.black p {
 	padding: 10px 0;
 }
 
-#body-container .price-plan th h4 {
+#body-container .price-plan th h3 {
 	color: #666;
 	font: 18px "Copse";
 }
@@ -1007,7 +1008,7 @@ a.new-btn-small.black p {
 	padding-top: 25px;
 }
 
-#body-container .highlight-container .highlight-rows li.top h4 {
+#body-container .highlight-container .highlight-rows li.top h3 {
 	color: #137DAD;
 	font: 24px "Copse";
 	line-height: 20px;
@@ -1104,7 +1105,7 @@ a.new-btn-small.black p {
 	width: 390px;
 }
 
-#body-container .try-skrivapa .left h2 {
+#body-container .try-skrivapa .left h3 {
 	color: #000;
 	font: 24px/24px "Copse";
 }
@@ -1209,6 +1210,11 @@ a.new-btn-small.black p {
 	font: 18px/22px "Copse";
 }
 
+.box.opaque blockquote {
+	color: #000;
+	font: 18px/22px "Copse";
+}
+
 .box.opaque p {
 	color: #666;
 	font: 12px/18px "Lucida Grande";
@@ -1301,11 +1307,11 @@ a.new-btn-small.black p {
 
 .box .partner-list li h2 {
 	color: #000;
-	font: 18px "Copse";
+	font: 16px "Copse";
 	margin-bottom: 6px;
 }
 
-.box .partner-list li h3 {
+.box .partner-list li blockquote {
 	color: #000;
 	font: italic 14px "Lucida Grande";
 }
@@ -1398,16 +1404,17 @@ a.new-btn-small.black p {
 }
 
 #body-container .big-price-plan h1 {
-	color: #000;
+	color: #666;
 	font: normal 24px "Copse";
+        padding-bottom: 15px;
+}
+
+#body-container .big-price-plan p.stronger {
+	color: #000;
+	font: normal 20px "Copse";
 }
 
 #body-container .big-price-plan h2 {
-	color: #666;
-	font: normal 24px "Copse";
-}
-
-#body-container .big-price-plan h3 {
 	color: #000;
 	font: normal 18px "Copse";
 }
@@ -1440,16 +1447,16 @@ a.new-btn-small.black p {
 	height: 84px;
 }
 
-#body-container .big-pp-container th h4 {
-	color: #fff;
-	font: 18px "Copse";
-}
-
-#body-container .big-pp-container th h3 {
+#body-container .big-pp-container th h2 {
 	color: #fff;
 	font: 22px "Copse";
         text-align: left;
         padding-left: 50px;
+}
+
+#body-container .big-pp-container th h3 {
+	color: #fff;
+	font: 18px "Copse";
 }
 
 #body-container .big-pp-container th p {
@@ -1568,7 +1575,7 @@ a.new-btn-small.black p {
 	padding-top: 17px;
 }
 
-#body-container .big-pp-container .highlight-container li.top h4 {
+#body-container .big-pp-container .highlight-container li.top h3 {
 	color: #666;
 	font: 20px "Copse";
         padding-top: 10px;
