@@ -130,6 +130,11 @@ pageDocumentDesign=
                   $if(!basiccontract)$
                     $if(contract)$
                       <a href="#man2" class="man"></a>
+                      <a href="#" class="signingOrder"></a>
+                      <select id="authorsignorder" class="float-right">
+                       <option value="1">1</option>
+                       <option value=""></option>
+                      </select>
                     $endif$
                     <a class="plus" href="#"></a>
                   $endif$
@@ -383,10 +388,11 @@ pageDocumentDesign=
            <div> 
             $validationdropdown()$
             <div style="padding-bottom:8px; padding-top: 2px;">
-            <input id="lastcheck" style="position:relative;top:2px" type="checkbox" class="switchercheckbox sendcheckbox" on=".sendbutton" off=".signbutton" autocomplete="off" value="off" > 
+            <!-- we dont need below code anymore because of signing order, but maybe it's needed for something else, so I"ll just leave it here -->
+            <!--<input id="lastcheck" style="position:relative;top:2px" type="checkbox" class="switchercheckbox sendcheckbox" on=".sendbutton" off=".signbutton" autocomplete="off" value="off" > 
             <label for="lastcheck" class="usual" style="margin-left:3px;">Underteckna sist </label>
             <label class="secretary" style="margin-left:3px;display:none;">Ej undertecknande part</label>
-            </input>               
+            </input>-->
             </div>
             <div class="sendbutton" style="display:none">
             <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"  class="btn-big green center">
@@ -511,9 +517,9 @@ pageDocumentDesign=
       <div class="partyrole">
         <a href="#" class="popup-close closelink"></a>
         <input type="hidden" name="signatoryrole" value="signatory"> </input>
-        <input type="radio" value="signatory" checked="true"><label class="radiolabel">Undertecknande part</label></input>
+        <input type="radio" class="sigrole_signatory" value="signatory" checked="true"><label class="radiolabel">Undertecknande part</label></input>
         <br/>
-        <input type="radio" value="nonsignatory"><label class="radiolabel">Ej undertecknande part</label></input>
+        <input type="radio" class="sigrole_nonsignatory" value="nonsignatory"><label class="radiolabel">Ej undertecknande part</label></input>
       </div>
     </div>
   </span>
