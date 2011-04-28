@@ -564,7 +564,7 @@ function authorToHTML(sig) {
   $("#peopleList ol").append(
       $("<li>").append(
           $("<a href='#'></a>").text(sig.fstname + " " + sig.sndname + " (Avsändare)").append(
-              signorderlist.text("-")
+              signorderlist.text(1)
           )
       )
   );
@@ -576,15 +576,46 @@ function updatePeopleListSignOrder() {
     $(".signorder").each(function(ix) {
         $(signorderlist.get(ix+1)).text($(this).find("option:selected").text());
     });
+    updateAuthorSignOrder();
+}
+
+function updateAuthorSignOrder() {
+    $("#peopleList .signorderlist:eq(0)").text(
+        $("#authorsignorder").find("option:selected").text()
+    );
+}
+
+function updateSignSendButton(authorsignorder) {
+    if (authorsignorder.val() != 1) {
+        $(".sendbutton").show();
+        $(".signbutton").hide();
+    } else {
+        $(".sendbutton").hide();
+        $(".signbutton").show();
+    }
 }
 
 function hideSigningOrderRelatedElements() {
+    var authorsignorder = $("#authorsignorder");
+    // we want it to switch to the first option if author is signatory
+    if (authorsignorder.val() != "-") {
+        authorsignorder.find("option:first").text(0);
+        authorsignorder.val(0);
+    }
+    authorsignorder.hide();
     $(".signorder").hide();
     $(".signorderlist").hide();
     $("#signorderlisttitle").hide();
+    updateSignSendButton(authorsignorder);
 }
 
 function showSigningOrderRelatedElements() {
+    var authorsignorder = $("#authorsignorder");
+    // restore previous value
+    authorsignorder.find("option:first").text(1);
+    // author is signatory and we has at least one signatory beside the author
+    if (authorsignorder.val() != "-" && $("#peopleList ol").find("li").length > 1)
+        authorsignorder.show();
     $(".signorder").each(function() {
         var that = $(this);
         if (that.find("option:selected").text() != "-")
@@ -592,6 +623,7 @@ function showSigningOrderRelatedElements() {
     });
     $(".signorderlist").show();
     $("#signorderlisttitle").show();
+    updateSignSendButton(authorsignorder);
 }
 
 function removeSignOrderValues(signorder) {
@@ -607,6 +639,21 @@ function restoreSignOrderValues(signorder) {
 }
 
 function removeLastSigningOrderPosition() {
+    var authorsignorder = $("#authorsignorder"),
+        authorsignorderlast = authorsignorder.find("option:last"),
+        asolval = parseInt(authorsignorderlast.val());
+    if (asolval == asolval) {
+        --asolval;
+        authorsignorderlast.text(asolval);
+        authorsignorderlast.val(asolval);
+        updateAuthorSignOrder();
+    } else { // NaN
+        // bah, we still need to keep track of this value
+        authorsignorderlast.attr("oldvalue",
+            parseInt(authorsignorderlast.attr("oldvalue"))-1
+        );
+    }
+    
     if ($(".signorder:first option").length > 1) {
         $(".signorder").each(function() {
             var that = $(this),
@@ -616,14 +663,33 @@ function removeLastSigningOrderPosition() {
             if (losel)
                 that.val(that.find('option:last').val());
         });
-    } else
+    } else {
+        authorsignorder.hide();
         allNonSignatories = true;
+    }
 }
 
 function addSigningOrderPosition() {
-    if (allNonSignatories)
+    var authorsignorder = $("#authorsignorder"),
+        authorsignorderlast = authorsignorder.find("option:last"),
+        asolval = parseInt(authorsignorderlast.val());
+    if (asolval == asolval) {
+        ++asolval;
+        authorsignorderlast.text(asolval);
+        authorsignorderlast.val(asolval);
+        updateAuthorSignOrder();
+    } else { // NaN
+        // bah, we still need to keep track of this value
+        authorsignorderlast.attr("oldvalue",
+            parseInt(authorsignorderlast.attr("oldvalue"))+1
+        );
+    }
+    
+    if (allNonSignatories) {
+        if (signingorder && authorsignorder.val() != "-")
+            authorsignorder.show();
         allNonSignatories = false;
-    else {
+    } else {
         var signorder = $(".signorder"),
             signr = parseInt(signorder.first().find("option:last").val());
         if (signr != signr) // NaN
@@ -644,15 +710,46 @@ safeReady(function() {
         ++siglen; // empty doc has one sig (author)
     for (var i = 1; i < siglen; ++i)
         signorder.append($("<option>").attr("value", i).text(i));
+    $("#authorsignorder option:last").val(siglen).text(siglen);
     
     if (signingorder)
         showSigningOrderRelatedElements();
     else
         hideSigningOrderRelatedElements();
     
+    $("#personpane #authorsignorder").change(function() {
+        updateSignSendButton($(this));
+        updatePeopleListSignOrder();
+    });
+    
+    $("#personpane #authorsignatoryradio").change(function() {
+        var authorsignorder = $("#authorsignorder"),
+            option = authorsignorder.find("option:last");
+        option.val(option.attr("oldvalue"));
+        option.text(option.val());
+        authorsignorder.val(1);
+        if (signingorder && $("#peopleList ol").find("li").length > 1)
+            authorsignorder.show();
+        updateAuthorSignOrder();
+        updateSignSendButton(authorsignorder);
+    });
+    
+    $("#personpane #authorsecretaryradio").change(function() {
+        var authorsignorder = $("#authorsignorder"),
+            option = authorsignorder.find("option:last");
+        if (signingorder)
+            authorsignorder.hide();
+        option.attr("oldvalue", option.val());
+        option.val("-");
+        option.text("-");
+        authorsignorder.val("-");
+        updateAuthorSignOrder();
+        updateSignSendButton(authorsignorder);
+    });
+    
     $("#personpane .signorder").live("change", updatePeopleListSignOrder);
     
-    $("#personpane input[value=nonsignatory]").live("change", function() {
+    $("#personpane .sigrole_nonsignatory").live("change", function() {
         var signorder = $(this).parents(".persondetails").find(".signorder");
         signorder.find("option:first").text("-");
         signorder.val("-");
@@ -661,7 +758,7 @@ safeReady(function() {
         updatePeopleListSignOrder();
     });
     
-    $("#personpane input[value=signatory]").live("change", function() {
+    $("#personpane .sigrole_signatory").live("change", function() {
         var signorder = $(this).parents(".persondetails").find(".signorder");
         signorder.find("option:first").text(1);
         signorder.val(1);

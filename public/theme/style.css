@@ -2251,7 +2251,7 @@ form {
     display: block;
 }
 
-.signorder {
+#signStepsBody .signorder, #authorsignorder {
     margin-top: -2px;
     background: #fff;
     font-size: 11px;
