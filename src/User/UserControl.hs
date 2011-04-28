@@ -457,6 +457,8 @@ handlePostBecomeSubaccountOf supervisorid = withUserPost $ do
             Right _ -> do
               Just supervisor <- query $ GetUserByUserID supervisorid
               addFlashMsg =<< (liftIO $ flashMessageUserHasBecomeSubaccount (ctxtemplates ctx) supervisor)
+              mail <- mailSubaccountAccepted ctx user supervisor
+              scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [(userfullname supervisor, unEmail $ useremail $ userinfo supervisor)] }
           return LinkAccount
      else do     
           return LinkAccount
