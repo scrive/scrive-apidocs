@@ -16,6 +16,7 @@ partnersPage=
            <div class="mainContainer">
              $partnersPageContents()$
            </div>
+         </div>
          $bodyend()$ 
       </body>
     </html>
