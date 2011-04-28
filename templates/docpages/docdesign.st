@@ -453,11 +453,11 @@ pageDocumentDesign=
         <a href="#" class="csv multi" rel="#dialog-csvupload-2" style="display:none;"></a>
         <a href="#" class="signingOrder"></a>
         <a href="#" class="plus"></a>
-        <select class="signorder float-right" name="signatorysignorder"></select>
         $elseif(offer)$
         <input type="hidden" name="signatoryrole" value="signatory">
         <a href="#" class="plus"></a>
         $endif$
+        <select class="signorder float-right" name="signatorysignorder"></select>
       $endif$
     </div>
     
