@@ -1,3 +1,27 @@
+###
+legalPage=
+    $doctype()$
+    <html>
+      <head>
+        <title>$pagetitle()$ | Juridik</title>
+        <meta name="description" content="Signera och arkivera dina avtal elektroniskt. Välj mellan olika verifikationsmetoder – behåll högsta möjliga juridiska säkerhet och användarvänlighet." />
+        $standardHeaderContents()$
+      </head>
+      <body>
+         $bodystart()$
+         <div class="left-column">
+           $queryColumn()$
+         </div>
+         <div class="right-column">
+           <div class="mainContainer">
+             $legalPageContents()$
+           </div>
+         </div>
+         $bodyend()$ 
+      </body>
+    </html>
+###
+legalPageContents=
 					<div class="nicetext">
 <h1>JURIDIK</h1>
 <br />
@@ -217,4 +241,4 @@
 	<li>
 		<p><h4>Amazon:</h4> Denna typ av lagring sker hos den världsledande molnbaserade lagringslösningen Amazon S3. Precis som TrustWeaver är Amazon S3 säkerhetscertifierad enligt SAS 70 II och följer en strikt policy kring datasäkerhet. Trots detta saknar den TrustWeavers rigorösa användarkontroller och garantier av dataintegritet.</p>
 </div>
-		
+###

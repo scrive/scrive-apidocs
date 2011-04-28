@@ -124,6 +124,25 @@ handleRoutes = msum [
        hget0_allowHttp $ handleHomepage
      , hpost0 $ handleMainReaload
 
+     -- static pages
+     , dir "prisplan" $ hget0_allowHttp $ handlePriceplanPage
+     , dir "prisplan.html" $ hget0_allowHttp $ handlePriceplanPage
+     , dir "sakerhet" $ hget0_allowHttp $ handleSecurityPage
+     , dir "sakerhet.html" $ hget0_allowHttp $ handleSecurityPage
+     , dir "juridik" $ hget0_allowHttp $ handleLegalPage
+     , dir "juridik.html" $ hget0_allowHttp $ handleLegalPage
+     , dir "sekretesspolicy" $ hget0_allowHttp $ handlePrivacyPolicyPage
+     , dir "sekretesspolicy.html" $ hget0_allowHttp $ handlePrivacyPolicyPage
+     , dir "allmana-villkor" $ hget0_allowHttp $ handleTermsPage
+     , dir "allmana-villkor.html" $ hget0_allowHttp $ handleTermsPage
+     , dir "om-skrivapa" $ hget0_allowHttp $ handleAboutPage
+     , dir "om-skrivapa.html" $ hget0_allowHttp $ handleAboutPage
+     , dir "partners" $ hget0_allowHttp $ handlePartnersPage
+     , dir "partners.html" $ hget0_allowHttp $ handlePartnersPage
+     , dir "kunder" $ hget0_allowHttp $ handleClientsPage
+     , dir "kunder.html" $ hget0_allowHttp $ handleClientsPage
+     
+
      -- e-legitimation stuff
      -- I put this stuff up here because someone changed things out from under me
      -- I will rearrange this later
@@ -268,6 +287,38 @@ handleHomepage = do
                         resp <- V.simpleResponse =<< (liftIO $ firstPage ctx loginOn referer email)
                         clearFlashMsgs
                         return resp
+
+handlePriceplanPage :: Kontra Response
+handlePriceplanPage = handleWholePage priceplanPage
+
+handleSecurityPage :: Kontra Response
+handleSecurityPage = handleWholePage securityPage
+
+handleLegalPage :: Kontra Response
+handleLegalPage = handleWholePage legalPage
+
+handlePrivacyPolicyPage :: Kontra Response
+handlePrivacyPolicyPage = handleWholePage privacyPolicyPage
+
+handleTermsPage :: Kontra Response
+handleTermsPage = handleWholePage termsPage
+
+handleAboutPage :: Kontra Response
+handleAboutPage = handleWholePage aboutPage
+
+handlePartnersPage :: Kontra Response
+handlePartnersPage = handleWholePage partnersPage
+
+handleClientsPage :: Kontra Response
+handleClientsPage = handleWholePage clientsPage
+
+handleWholePage :: (Context -> Kontra String) -> Kontra Response
+handleWholePage f = do
+    ctx <- get
+    content <- f ctx
+    resp <- V.simpleResponse content
+    clearFlashMsgs
+    return resp
 
 {- |
     Handles an error by displaying the home page with a modal error dialog.
@@ -610,27 +661,21 @@ handleLogout = do
     sendRedirect LinkMain
   
 {- |
-   Serves out the static files. This'll server out files ending in .html, such as in //partners.html.  It'll
-   also attempt to serve out files to you when you leave the ".html" bit off, like in //partners.  Apparently
-   this is good for SEO.  I've also tried to get rid of use of the column url param by having this store a list
-   list of files that don't need a query column, and decide whether to render with a column or not accordingly.
+   Serves out the static html files.
 -}
 serveHTMLFiles:: Kontra Response  
 serveHTMLFiles =  do
     ctx <- get
     rq <- askRq
     let fileName = last (rqPaths rq)
-    if (length (rqPaths rq) > 0)
+    if ((length (rqPaths rq) > 0) && (isSuffixOf ".html" fileName))
         then do
-            let htmlFileName = if isSuffixOf ".html" fileName then fileName else (fileName ++ ".html")
-            ms <- liftIO $ catch (fmap Just ( BS.readFile $ "html/"++htmlFileName)) 
+            ms <- liftIO $ catch (fmap Just ( BS.readFile $ "html/"++fileName)) 
                             (const $ return Nothing)
-            case (ms, htmlFileName `elem` withoutQueryColumn) of 
-                (Just s, True) -> renderFromBody ctx V.TopNone V.kontrakcja (cdata $ BS.toString s)
-                (Just s, False) -> renderFromBodyWithQueryColumn ctx V.TopNone V.kontrakcja (cdata $ BS.toString s)
+            case ms of 
+                (Just s) -> renderFromBody ctx V.TopNone V.kontrakcja (cdata $ BS.toString s)
                 _      -> mzero
         else mzero
-    where withoutQueryColumn = ["prisplan.html"] 
 
 {- |
    Ensures logged in as a super user

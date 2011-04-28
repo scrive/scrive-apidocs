@@ -2,9 +2,10 @@
 firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html>
         <head>
-                <title>SkrivaPå</title>
+                <title>SkrivaPå | Signera och arkivera avtal elektroniskt</title>
                 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-                <meta http-equiv="content-language" content="sv">
+                <meta http-equiv="content-language" content="sv" />
+                <meta name="description" content="Signera och arkivera dina avtal elektroniskt. Spara tid, pengar och frustration – både åt dig och dina kunder." />
                 <link href='$protocol$//fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css">
                 <link href="/css/main.css" rel="stylesheet" type="text/css" />
                 <link href="/theme/flash.css" rel="stylesheet" type="text/css" />
