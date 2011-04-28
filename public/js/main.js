@@ -32,9 +32,11 @@ $(document).ready( function() {
             $(this).click( function(e) {
                 e.preventDefault();
                 var name = $(this).attr('rel');
-                var form = $(this).parents('form');
+                var form = null; 
                 if ($(this).attr('form') != undefined)
                     form = $($(this).attr('form')); 
+		else
+		    form = $(this).parents('form');
                 form.append('<input type="hidden" name="' + name + '" value="1" />').submit();
             });
         });
