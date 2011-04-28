@@ -230,10 +230,19 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                         <blockquote>”Smart lösning.”</blockquote>
                                                         <em>Christoffer Lindquist, VD, Eventbook, Eventpartner</em>
                                                 </div>
+                                                <div class="slide-content">
+									<div class="portrait-image">
+										<img src="/img/portrait-lukas-d.png" />
+									</div>
+
+                                                        <blockquote>”Tjänsten är väldigt smidig och det visar verkligen hur mycket man kan effektivisera avtalsprocessen.”</blockquote>
+                                                        <em>Ola Brundin, Accenture Management Consulting</em>
+                                                </div>
                                         </div>
                                         <div class="slide-nav">
                                                 <ul>
                                                         <li class="active"></li>
+                                                        <li></li>
                                                         <li></li>
                                                         <li></li>
                                                 </ul>
