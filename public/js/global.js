@@ -1201,7 +1201,7 @@ $(document).ready(function() {
                 
                 if (signorderlisttext !== "-") // non-signatory
                     removeLastSigningOrderPosition();
-                if (signingorder)
+                if (signingOrderEnabled)
                     updatePeopleListSignOrder();
 
 		var newidx = idx;
@@ -1238,12 +1238,11 @@ $(document).ready(function() {
                 if (isMultiPartElem($(this))) {
                     val = "Massutskick";
                 }
-                var signorderlist = $("<span class='signorderlist'></span>").text(
-                    role.val() == "signatory" ? signorder.val() : "-"
+                $('#peopleList li:eq(' + idx + ') a').text(val).append(
+                    newSignOrderListElement(
+                        role.val() == "signatory" ? signorder.val() : "-"
+                    )
                 );
-                if (!signingorder)
-                    signorderlist.hide();
-                $('#peopleList li:eq(' + idx + ') a').text(val).append(signorderlist);
             });
         $('form.requestAccount').submit(function(){
             if (!emailFieldsValidation($("input[type='email']",$(this)))) return false;

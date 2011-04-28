@@ -429,7 +429,7 @@ pageDocumentDesign=
 </div>  
 <div id="documentBox">
   <script type="text/javascript">
-    var signingorder = false;
+    var signingOrderEnabled = false;
     var allNonSignatories = false;
     var docstate = $docstate:noescape()$;
     var csvrowcount = $csvrowcount$;
