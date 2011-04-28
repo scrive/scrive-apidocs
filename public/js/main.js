@@ -169,8 +169,17 @@ $(document).ready( function() {
 		'</tr>');
         $("tr",container).toggleClass('odd');
         container.prepend(newrow);
-        $(".add",newrow).click(function(){
-            $(this).parents("form").append("<input type='hidden' name='add' value='YES'>").submit();
+        $(".add",newrow).click(function() {
+	    var form = $(this).parents("form");
+	    var emailfield = form.find("input[name='email']");
+	    var email = emailfield.val();
+	    
+	    if( email.replace(/.*@/,"") != useremail.replace(/.*@/, "") ) {
+		addFlashMessage("Du kan inte bjuda in underkonton vars e-post inte har samma URL som du har i din e-post.", "red");
+	    }
+	    else {
+		form.append("<input type='hidden' name='add' value='YES'>").submit();
+	    }
         })
         $(".remove",newrow).click(function(){
             $('.newSubaccount',container).remove();
