@@ -5,6 +5,7 @@
 module AppView( TopMenu(..)
               , kontrakcja
               , renderFromBody
+              , renderFromBodyWithQueryColumn
               , signupPageView
               , signupVipPageView
               , pageLogin
@@ -53,9 +54,30 @@ renderFromBody :: (EmbedAsChild (HSPT' IO) xml)
                -> String 
                -> xml 
                -> Kontra Response
-renderFromBody ctx topmenu title xml = do
+renderFromBody = renderFromBody' False
+
+{- |
+    Renders some page body xml into a complete response
+    alongside a question form in the left hand columns.
+-}
+renderFromBodyWithQueryColumn :: (EmbedAsChild (HSPT' IO) xml) 
+               => Context 
+               -> TopMenu 
+               -> String 
+               -> xml 
+               -> Kontra Response
+renderFromBodyWithQueryColumn = renderFromBody' True
+
+
+renderFromBody' :: (EmbedAsChild (HSPT' IO) xml) 
+               => Bool 
+               -> Context 
+               -> TopMenu 
+               -> String
+               -> xml 
+               -> Kontra Response
+renderFromBody' columns ctx topmenu title xml = do
     htmlPage <- fmap ((isSuffixOf ".html") . concat . rqPaths)  askRq
-    columns <- isFieldSet "columns"
     loginOn <- isFieldSet "logging"
     curr <- rqUri <$> askRq
     referer <- getField "referer"
