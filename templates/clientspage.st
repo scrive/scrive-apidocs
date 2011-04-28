@@ -1,3 +1,27 @@
+###
+clientsPage=
+    $doctype()$
+    <html>
+      <head>
+        <title>$pagetitle()$ | Kunder</title>
+        <meta name="description" content="Signera och arkivera dina avtal elektroniskt. Våra kunder och våra kunders kunder älskar enkelheten." />
+        $standardHeaderContents()$
+      </head>
+      <body>
+         $bodystart()$
+         <div class="left-column">
+           $queryColumn()$
+         </div>
+         <div class="right-column">
+           <div class="mainContainer">
+             $clientsPageContents()$
+           </div>
+         </div>
+         $bodyend()$ 
+      </body>
+    </html>
+###
+clientsPageContents=
 					<div class="opaque wide box smaller">
 						<h1>Kundutlåtanden om SkrivaPå</h1>
 						<p>SkrivaPå är en tjänst för att underteckna och arkivera avtal elektroniskt. Vi hjälper våra kunder att minska sina kostnader, öka sin omsättning och spara frustration. </p>
@@ -57,4 +81,4 @@ RIKA står för research, idé, koncept och action – de fyra stegen i en prob
 							</li>
 						</ul>
 					</div>
-		
+###

@@ -5,13 +5,20 @@
 module AppView( TopMenu(..)
               , kontrakcja
               , renderFromBody
-              , renderFromBodyWithQueryColumn
               , signupPageView
               , signupVipPageView
               , pageLogin
               , simpleResponse 
               , ajaxError
               , firstPage
+              , priceplanPage
+              , securityPage
+              , legalPage
+              , privacyPolicyPage
+              , termsPage
+              , aboutPage
+              , partnersPage
+              , clientsPage
               , modalError
               ) where 
 
@@ -54,39 +61,12 @@ renderFromBody :: (EmbedAsChild (HSPT' IO) xml)
                -> String 
                -> xml 
                -> Kontra Response
-renderFromBody = renderFromBody' False
-
-{- |
-    Renders some page body xml into a complete response
-    alongside a question form in the left hand columns.
--}
-renderFromBodyWithQueryColumn :: (EmbedAsChild (HSPT' IO) xml) 
-               => Context 
-               -> TopMenu 
-               -> String 
-               -> xml 
-               -> Kontra Response
-renderFromBodyWithQueryColumn = renderFromBody' True
-
-
-renderFromBody' :: (EmbedAsChild (HSPT' IO) xml) 
-               => Bool 
-               -> Context 
-               -> TopMenu 
-               -> String
-               -> xml 
-               -> Kontra Response
-renderFromBody' columns ctx topmenu title xml = do
+renderFromBody ctx topmenu title xml = do
     htmlPage <- fmap ((isSuffixOf ".html") . concat . rqPaths)  askRq
-    loginOn <- isFieldSet "logging"
-    curr <- rqUri <$> askRq
-    referer <- getField "referer"
-    qs <- querystring
-    liftIO $ print curr
-    liftIO $ print referer
-    let loginreferer = Just $ fromMaybe (curr ++ qs) referer
-    let showCreateAccount = (not columns) && htmlPage && (isNothing $ ctxmaybeuser ctx) 
-    res <- webHSP $ pageFromBody ctx columns loginOn loginreferer Nothing showCreateAccount title xml
+    loginOn <- getLoginOn
+    loginreferer <- getLoginReferer
+    let showCreateAccount = htmlPage && (isNothing $ ctxmaybeuser ctx) 
+    res <- webHSP $ pageFromBody ctx loginOn loginreferer Nothing showCreateAccount title xml
     clearFlashMsgs
     return res
     
@@ -95,8 +75,7 @@ renderFromBody' columns ctx topmenu title xml = do
    Renders some page body xml into a complete page of xml
 -}
 pageFromBody :: (EmbedAsChild (HSPT' IO) xml) 
-             =>  Context 
-             -> Bool
+             =>  Context
              -> Bool
              -> Maybe String
              -> Maybe String
@@ -108,7 +87,6 @@ pageFromBody :: (EmbedAsChild (HSPT' IO) xml)
 pageFromBody ctx@Context{ ctxmaybeuser
                         , ctxtemplates
                         }
-             columns 
              loginOn
              referer
              email
@@ -118,13 +96,65 @@ pageFromBody ctx@Context{ ctxmaybeuser
     content <- liftIO $ renderHSPToString <div class="mainContainer"><% body %></div>
     wholePage <- liftIO $ renderTemplate ctxtemplates "wholePage" $ do
         field "content" content
-        field "title" title
-        field "columns" columns
-        field "showCreateAccount" showCreateAccount
-        mainLinksFields 
-        contextInfoFields ctx
-        loginModal loginOn referer email
+        standardPageFields ctx title showCreateAccount loginOn referer email
     return $ cdata wholePage
+
+priceplanPage :: Context -> Kontra String
+priceplanPage ctx = renderTemplateAsPage ctx "priceplanPage" True
+
+securityPage :: Context -> Kontra String
+securityPage ctx = renderTemplateAsPage ctx "securityPage" True
+
+legalPage :: Context -> Kontra String
+legalPage ctx = renderTemplateAsPage ctx "legalPage" True
+
+privacyPolicyPage :: Context -> Kontra String
+privacyPolicyPage ctx = renderTemplateAsPage ctx "privacyPolicyPage" True
+
+termsPage :: Context -> Kontra String
+termsPage ctx = renderTemplateAsPage ctx "termsPage" True
+
+aboutPage :: Context -> Kontra String
+aboutPage ctx = renderTemplateAsPage ctx "aboutPage" True
+
+partnersPage :: Context -> Kontra String
+partnersPage ctx = renderTemplateAsPage ctx "partnersPage" True
+
+clientsPage :: Context -> Kontra String
+clientsPage ctx = renderTemplateAsPage ctx "clientsPage" True
+
+{- |
+    Render a template as an entire page.
+-}
+renderTemplateAsPage :: Context -> String -> Bool -> Kontra String
+renderTemplateAsPage ctx@Context{ctxtemplates} templateName showCreateAccount = do
+    loginOn <- getLoginOn
+    loginreferer <- getLoginReferer
+    let showCreateAccount2 = showCreateAccount && (isNothing $ ctxmaybeuser ctx)
+    wholePage <- liftIO $ renderTemplate ctxtemplates templateName $ do
+        standardPageFields ctx kontrakcja showCreateAccount2 loginOn loginreferer Nothing
+    return wholePage
+
+getLoginOn :: Kontra Bool
+getLoginOn = do
+    loginOn <- isFieldSet "logging"
+    return loginOn   
+
+getLoginReferer :: Kontra (Maybe String)
+getLoginReferer = do
+    curr <- rqUri <$> askRq
+    referer <- getField "referer"
+    qs <- querystring
+    let loginreferer = Just $ fromMaybe (curr ++ qs) referer
+    return loginreferer
+
+standardPageFields :: Context -> String -> Bool -> Bool -> Maybe String -> Maybe String -> Fields
+standardPageFields ctx title showCreateAccount loginOn referer email = do
+    field "title" title
+    field "showCreateAccount" showCreateAccount
+    mainLinksFields 
+    contextInfoFields ctx
+    loginModal loginOn referer email
 
 {- |
    The contents of the signup page.  This is read from a template.

@@ -63,6 +63,14 @@ templateFiles = ["templates/landpages.st",
                  "templates/contacts/contacts.st",
                  "templates/apppages.st",
                  "templates/firstpage.st",
+                 "templates/priceplanpage.st",
+                 "templates/securitypage.st",
+                 "templates/legalpage.st",
+                 "templates/privacypolicypage.st",
+                 "templates/termspage.st",
+                 "templates/aboutpage.st",
+                 "templates/partnerspage.st",
+                 "templates/clientspage.st",
                  "templates/eleg.st" ]
 
 

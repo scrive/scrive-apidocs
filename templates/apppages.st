@@ -7,12 +7,27 @@ pageLogin=
 
 ###
 wholePage=
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+    $doctype()$
     <html>
       <head>
-        <title>$title$$if(production)$$else$ (devel) $endif$</title>
+        <title>$pagetitle()$</title>
+        $standardHeaderContents()$
+      </head>
+      <body>
+        $bodystart()$
+        $content:noescape()$
+        $bodyend()$ 
+      </body>
+    </html>
+
+####
+pagetitle=$title$$if(production)$$else$ (devel) $endif$
+####
+doctype=<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+####
+standardHeaderContents=
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-        <meta http-equiv="content-language" content="sv">
+        <meta http-equiv="content-language" content="sv" />
         <link href='$protocol$//fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css">
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/newdesign.css" media="screen">
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/style.css" media="screen">
@@ -38,17 +53,15 @@ wholePage=
                 type="text/javascript"></script>
        <script src="/js/main.js" 
                 type="text/javascript"></script>
-      </head>
-      <body>
+####
+bodystart=
         $header()$
         <div class="mainContainer960" >
           $flashmessages()$
           $loginModal()$
         <div id="body-container">
-         $if(!columns)$
-          $content:noescape()$
-         $else$
-         <div class="left-column">
+####
+queryColumn=
 <div class="white thin box">
                                                 <h4>Avtala redan idag!</h4>
 <br />
@@ -88,12 +101,9 @@ Våra kunder och våra kunders kunder älskar enkelheten.</p>
                                                 </form>
 
                                         </div>
-                                </div>
-                                <div class="right-column">
-                                           $content:noescape()$
-                                </div>
-         $endif$ 
-          <div class="clearfix"></div>
+####
+bodyend=
+<div class="clearfix"></div>
           <div class="spacer40"></div>
                 $if(showCreateAccount)$    
                  <div class="try-skrivapa">
@@ -192,9 +202,6 @@ Våra kunder och våra kunders kunder älskar enkelheten.</p>
         </script>
         <script type="text/javascript" src="https://eu1.snoobi.com/snoop.php?tili=skrivapa_se"></script>
         $endif$
-      </body>
-    </html>
-
 ####
 loginBox=
     <div id="login">

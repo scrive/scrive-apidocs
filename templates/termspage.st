@@ -1,3 +1,27 @@
+###
+termsPage=
+    $doctype()$
+    <html>
+      <head>
+        <title>$pagetitle()$ | Allmänna villkor</title>
+        <meta name="description" content="Signera och arkivera dina avtal elektroniskt. All information ni delger SkrivaPå eller dess tjänster hanteras med största möjliga försiktighet." />
+        $standardHeaderContents()$
+      </head>
+      <body>
+         $bodystart()$
+         <div class="left-column">
+           $queryColumn()$
+         </div>
+         <div class="right-column">
+           <div class="mainContainer">
+             $termsPageContents()$
+           </div>
+         </div>
+         $bodyend()$ 
+      </body>
+    </html>
+###
+termsPageContents=
 
 					<div class="nicetext">
 <h1>SKRIVAPÅ ALLMÄNNA VILLKOR (2011:02)</h1>
@@ -66,4 +90,4 @@ SkrivaPå Arkiv är ett säkert och smidigt dokumenthanterings- och arkiveringss
 <br />
 <p>Dokument som undertecknas genom Tjänsten ska – såvida inte annat anges i avtalet – regleras av och tolkas i enlighet med svensk materiell rätt. Dessa Villkor och alla frågeställningar kring dem och alla frågeställningar som rör Tjänsten regleras av och tolkas i enlighet med svensk materiell rätt och prövning skall ske av svensk domstol med Stockholms tingsrätt som första instans. Oavsett ovan nämnda förfarande för att lösa meningsskiljaktigheter har vi rätt att väcka talan angående förfallna fordringar i domstolar som har jurisdiktion över Användaren eller någon av Användarens tillgångar.</p>
 </div>
-			
+###
