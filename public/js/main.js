@@ -157,7 +157,7 @@ $(document).ready( function() {
 		'<td><input type="text" name="sndname" infotext="Efternamn" value="Efternamn" class="infotext grayed" /></td>' + 
 		'<td><input type="text" name="companyposition" infotext="Befattning" value="Befattning" class="infotext grayed" /></td>' + 
 		'<td><input type="text" name="phone" infotext="Telefonnummer" value="Telefonnummer" class="infotext grayed" /></td>' + 
-		'<td><input type="text" name="email" infotext="Email" value="Email" class="infotext grayed" /></td>' + 
+		'<td><input type="email" name="email" infotext="Email" value="Email" class="infotext grayed" /></td>' + 
         '<td style="text-align:center">' + 
             '<a href="javascript:;" class="icon small ok add"></a>' + 
             '<a href="javascript:;" class="icon small minus remove"></a>' + 
