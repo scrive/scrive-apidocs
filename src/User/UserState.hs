@@ -60,6 +60,7 @@ module User.UserState
 ) where
 import Happstack.Data
 import Happstack.State
+import Control.Monad
 import Control.Monad.Reader (ask)
 import Control.Monad.State (modify,MonadState(..))
 import qualified Data.ByteString.UTF8 as BS
@@ -758,14 +759,25 @@ addUser (fstname, sndname) email passwd maybesupervisor = do
         modify (updateIx (Email email) user)
         return $ Just user
 
+failure :: String -> Either String a
+failure = Left
+
 setUserSupervisor :: UserID -> UserID -> Update Users (Either String User)
 setUserSupervisor userid supervisorid = do
-    modifyUser userid $ \user -> 
-      if userid == supervisorid
+    msupervisor <- (getOne . (@= supervisorid)) <$> ask
+    let supervisor = fromJust msupervisor
+    modifyUser userid $ \user ->  -- Either String monad 
+      let luseremail = BS.toString $ unEmail $ useremail $ userinfo user
+          suseremail = BS.toString $ unEmail $ useremail $ userinfo supervisor
+      in if userid == supervisorid 
          then Left "cannot be supervisor of yourself"
-         else case usersupervisor user of
-                 Just x -> Left "user already has supervisor"
-                 Nothing -> Right $ user { usersupervisor = Just $ SupervisorID $ unUserID supervisorid}
+         else if isJust $ usersupervisor user 
+              then Left "user already has a supervisor"
+              else if isNothing $ msupervisor 
+                      then Left "supervisor id does not exist"
+                      else if dropWhile (/= '@') luseremail /= dropWhile (/= '@') luseremail
+                              then Left $ "users domain names differ " -- ++ luseremail ++ " vs " ++ suseremail
+                              else Right $ user { usersupervisor = Just $ SupervisorID $ unUserID supervisorid}
   
 getUserStats :: Query Users UserStats
 getUserStats = do
