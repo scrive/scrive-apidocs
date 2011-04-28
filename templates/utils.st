@@ -65,11 +65,6 @@ th=<th style="width:60px;text-align:center">$it:noescape()$</th>
 ###
 spanNoEscape=<span>$it:noescape()$</span>
 ####
-facebooklogo=
-<link rel="image_src" href="https://skrivapa.se/img/facebooklogo.jpg" />
-<meta name="title" content="SkrivaPå" />
-<meta name="description" content="SkrivaPå är en tjänst för att skriva på och arkivera avtal elektroniskt. Varför avtala med papper, fax eller scanner när man kan göra det så mycket enklare och effektivare?" />
-####
 #### Puts an invisible box with flash messages. jScripts do all show magic.
 ####
 flashmessages = 
