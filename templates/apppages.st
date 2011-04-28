@@ -13,7 +13,6 @@ wholePage=
         <title>$title$$if(production)$$else$ (devel) $endif$</title>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <meta http-equiv="content-language" content="sv">
-        $facebooklogo()$
         <link href='$protocol$//fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css">
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/newdesign.css" media="screen">
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/style.css" media="screen">
