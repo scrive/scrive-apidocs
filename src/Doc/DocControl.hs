@@ -557,7 +557,6 @@ handleIssueShowGet docid = withUserGet $ checkUserTOSGet $ do
                 then TopDocument
                 else TopNone
   -- authors get a view with buttons
-  liftIO $ print $ documentcurrentsignorder document
   if isAuthor document user
    then do
         let mMismatchMessage = getDataMismatchMessage $ documentcancelationreason document
