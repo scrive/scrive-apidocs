@@ -96,7 +96,11 @@ $(document).ready( function() {
 });
 
 $(document).ready( function() {
-        $(".login-container input[type=email]").focus();
+  var emailform = $(".login-container input[type=email]");
+  emailform.focus();
+  if(emailform.length > 0 && emailform.val().length > 0) {
+    $(".login-container[input[type=password]").focus();
+  }
 
 	$('.tooltip').tooltip();
 	
