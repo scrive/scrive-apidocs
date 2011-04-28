@@ -42,7 +42,10 @@ import System.IO
                          
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
 personFromSignatoryDetails details =
-    Seal.Person { Seal.fullname = BS.toString $ signatoryname details 
+    Seal.Person { Seal.fullname = (BS.toString $ signatoryname details) ++ 
+                                  if not (BS.null $ signatorypersonalnumber details)
+                                     then " (" ++ (BS.toString $ signatorypersonalnumber details) ++ ")"
+                                     else ""
                 , Seal.company = BS.toString $ signatorycompany details
                 , Seal.email = BS.toString $ signatoryemail details
                 -- | FIXME: this should be split to company/personal number
