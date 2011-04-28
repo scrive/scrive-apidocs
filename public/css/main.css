@@ -592,6 +592,7 @@ a.new-btn-small.black p {
 
 #footer-container .right {
 	width: 380px;
+        float: right;
 }
 
 #footer-container .col.left ul li {

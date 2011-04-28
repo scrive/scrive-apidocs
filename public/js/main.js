@@ -117,11 +117,14 @@ $(document).ready( function() {
         $("#exposeMask").css("display","block");
         $('.recovery-container').data("overlay").load();
 	    })	
-	setTimeout(function(){$('.tweet').tweet({
-		username: 'skrivapa',
-		count: 3,
-		loading_text: 'Laddar tweets..'
-	});},1000)
+        var tweetelems = $(".tweet");
+        if (tweetelems.length>0) {
+	  setTimeout(function(){tweetelems.tweet({
+	        username: 'skrivapa',
+	        count: 3,
+	        loading_text: 'Laddar tweets..'
+	  });},1000);
+        }
 	
 	// Options dropdown on archive, sub accounts etc.
 	$('.tab-dd').click( function() {
