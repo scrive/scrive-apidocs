@@ -104,7 +104,7 @@ pageDocumentDesign=
             <div id="signStepsBodyLeft">
               <div id="people">
                 <div class="signStepsBodyTitle">
-                  <span>PERSONER</span>
+                  <span>PERSONER</span><span id="signorderlisttitle" class="float-right">SIGNERINGSORDNING</span>
                 </div>
                 
                 <div id="peopleList" class="signStepsBodyForms">
@@ -423,6 +423,8 @@ pageDocumentDesign=
 </div>  
 <div id="documentBox">
   <script type="text/javascript">
+    var signingorder = false;
+    var allNonSignatories = false;
     var docstate = $docstate:noescape()$;
     var csvrowcount = $csvrowcount$;
     var initialperson = $initialperson$;
@@ -449,7 +451,9 @@ pageDocumentDesign=
         <a href="#" class="man"></a>
         <a href="#" class="csv single" rel="#dialog-csvupload-1"></a>
         <a href="#" class="csv multi" rel="#dialog-csvupload-2" style="display:none;"></a>
+        <a href="#" class="signingOrder"></a>
         <a href="#" class="plus"></a>
+        <select class="signorder float-right" name="signatorysignorder"></select>
         $elseif(offer)$
         <input type="hidden" name="signatoryrole" value="signatory">
         <a href="#" class="plus"></a>
@@ -501,20 +505,15 @@ pageDocumentDesign=
           <input type="text" infotext="Org. nr" name="signatorycompanynumber" autocomplete="off" />
           $dragndropIcon()$
         </span>
-        <span class='dragfield sigsignord'>
-          <span style="display:none;" class="fieldid">signorder</span>
-          <span style="display:none;" class="type">sig</span>
-          <input type="text" infotext="Signing order" name="signatorysignorder" autocomplete="off" style="width: 86px;" />
-        </span>
       </span>
       <div class="otherfields">
       </div>
       <div class="partyrole">
         <a href="#" class="popup-close closelink"></a>
         <input type="hidden" name="signatoryrole" value="signatory"> </input>
-        <input type="radio" value="signatory" checked="true"><span class="radiolabel">Undertecknande part</span></input>
+        <input type="radio" value="signatory" checked="true"><label class="radiolabel">Undertecknande part</label></input>
         <br/>
-        <input type="radio" value="nonsignatory"><span class="radiolabel">Ej undertecknande part</span></input>
+        <input type="radio" value="nonsignatory"><label class="radiolabel">Ej undertecknande part</label></input>
       </div>
     </div>
   </span>

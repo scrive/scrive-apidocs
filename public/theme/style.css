@@ -1648,6 +1648,11 @@ input.multiFileInput {
     background-image: url(images/iconCsv.png);
 }
 
+.signStepsBodyIcons .signingOrder
+{
+    background-image: url(images/iconSigningOrder.png);
+}
+
 .signStepsBodyIcons a.hand
 {
     background-image: url(images/iconHand.png);
@@ -1991,6 +1996,17 @@ form {
     font-size: 11px;
 }
 
+#signStepsBodyLeft #people .signStepsBodyForms a:hover
+{
+    background: #f5f5f5;
+}
+
+/* 013 new */
+#signStepsBodyLeft #people .signStepsBodyForms .signorderlist
+{
+    float: right;
+}
+
 /* 013 new */
 #signStepsBodyLeft #people .signStepsBodyAddField.partCount
 {
@@ -2235,6 +2251,12 @@ form {
     display: block;
 }
 
+.signorder {
+    margin-top: -2px;
+    background: #fff;
+    font-size: 11px;
+}
+
 .partyrole {
     display: none;
     width: 314px;
@@ -2366,6 +2388,10 @@ form {
 
 .redborder input {
     border-color: red;
+}
+
+.signStepsBodyIcons {
+    width: 333px;
 }
 
 .signStepsBodyIcons .partnumber 
