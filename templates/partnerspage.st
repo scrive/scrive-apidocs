@@ -1,3 +1,26 @@
+###
+partnersPage=
+    $doctype()$
+    <html>
+      <head>
+        <title>$pagetitle()$ | Partners</title>
+        <meta name="description" content="Signera och arkivera dina avtal elektroniskt. Vi har nära samarbete med ett flertal framstående aktörer inom datasäkerhet och signeringsteknik." />
+        $standardHeaderContents()$
+      </head>
+      <body>
+         $bodystart()$
+         <div class="left-column">
+           $queryColumn()$
+         </div>
+         <div class="right-column">
+           <div class="mainContainer">
+             $partnersPageContents()$
+           </div>
+         $bodyend()$ 
+      </body>
+    </html>
+###
+partnersPageContents=
 					<div class="opaque wide box smaller">
 						<h1>SkrivaPå´s Partners</h1>
 						<p>SkrivaPå är en tjänst för att underteckna och arkivera dokument elektroniskt. Vi har ett nära samarbete med ett flertal framstående aktörer inom datasäkerhet och signeringsteknik.</p>
@@ -34,3 +57,4 @@
 							</li>
 						</ul>
 					</div>
+###

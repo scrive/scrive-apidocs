@@ -1,3 +1,27 @@
+###
+aboutPage=
+    $doctype()$
+    <html>
+      <head>
+        <title>$pagetitle()$ | Om SkrivaPå</title>
+        <meta name="description" content="Signera och arkivera dina avtal elektroniskt. SkrivaPå är skapat av ett ambitiöst, internationellt team med bas i Stockholm." />
+        $standardHeaderContents()$
+      </head>
+      <body>
+         $bodystart()$
+         <div class="left-column">
+           $queryColumn()$
+         </div>
+         <div class="right-column">
+           <div class="mainContainer">
+             $aboutPageContents()$
+           </div>
+         </div>
+         $bodyend()$ 
+      </body>
+    </html>
+###
+aboutPageContents=
 					<div class="opaque wide box" style="height:453px;">
                                               <div class="group-portrait-image">
                                                 <a class="group"></a>
@@ -103,5 +127,4 @@
 							</ul>
 						</div>
 					</div>
-
-		
+###

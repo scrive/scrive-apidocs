@@ -1,3 +1,27 @@
+###
+privacyPolicyPage=
+    $doctype()$
+    <html>
+      <head>
+        <title>$pagetitle()$ | Sekretesspolicy</title>
+        <meta name="description" content="Signera och arkivera dina avtal elektroniskt. All information ni delger SkrivaPå eller dess tjänster hanteras med största möjliga försiktighet." />
+        $standardHeaderContents()$
+      </head>
+      <body>
+         $bodystart()$
+         <div class="left-column">
+           $queryColumn()$
+         </div>
+         <div class="right-column">
+           <div class="mainContainer">
+             $privacyPolicyPageContents()$
+           </div>
+         </div>
+         $bodyend()$ 
+      </body>
+    </html>
+###
+privacyPolicyPageContents=
 <div class="nicetext">
 <h1>SEKRETESSPOLICY (2011:02)</h1>
 <br />
@@ -18,4 +42,4 @@
 <br />
 <p>SkrivaPå använder cookies för att förenkla Användarens login och kontohantering. Dessa cookies kommer inte att säljas, hyras eller lånas ut eller på annat sätt visas till tredje part.</p>
 </div>
-
+###

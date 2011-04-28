@@ -1,3 +1,27 @@
+###
+securityPage=
+    $doctype()$
+    <html>
+      <head>
+        <title>$pagetitle()$ | Säkerhet</title>
+        <meta name="description" content="Signera och arkivera dina avtal elektroniskt. SkrivaPå bevarar din säkerhet och integritet så att du kan koncentrera dig på ditt arbete." />
+        $standardHeaderContents()$
+      </head>
+      <body>
+         $bodystart()$
+         <div class="left-column">
+           $queryColumn()$
+         </div>
+         <div class="right-column">
+           <div class="mainContainer">
+             $securityPageContents()$
+           </div>
+         </div>
+         $bodyend()$ 
+      </body>
+    </html>
+###
+securityPageContents=
 <div class="nicetext">
 <h1>SÄKERHET</h1>
 <br />
@@ -50,4 +74,4 @@
 <br />
 <p>Tillsammans med Google, Intel och Klarna har vi blivit utvalda av Chalmers datasäkerhetsgrupp för att vara del av deras webbsäkerhetsforskningsprogram. De arbetar för närvarande på att utveckla andra generationens säkra dataflödesprogram. Den nya generationen är den första där det är möjligt att matematiskt bevisa, och på så sätt garantera, att vissa saker omöjligen kan hända. Vi utvecklar även vårt system i nära samarbete med ovan nämnda forskningsteam.</p>
 </div>
-	
+###

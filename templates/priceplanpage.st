@@ -1,3 +1,22 @@
+###
+priceplanPage=
+    $doctype()$
+    <html>
+      <head>
+        <title>$pagetitle()$ | Prisplan</title>
+        <meta name="description" content="Signera och arkivera dina avtal elektroniskt. Välj prisplan efter dina behov – Free, Small, Business eller Enterprise." />
+        $standardHeaderContents()$
+      </head>
+      <body>
+         $bodystart()$
+         <div class="mainContainer">
+           $priceplanPageContents()$
+         </div>
+         $bodyend()$ 
+      </body>
+    </html>
+###
+priceplanPageContents=
                 <div class="spacer40"></div>
                 <div class="big-price-plan">
                     <h1>Skriva på dokument snabbt, smidigt och säkert!</h1>
@@ -327,3 +346,4 @@
                                     <p> För Small och Business kan du istället betala för 1 år och få 15% rabatt på priset. 
                                         Dessutom kan du då fördela de fria signaturerna över hela året. </p>
                 </div>
+###
