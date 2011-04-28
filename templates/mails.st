@@ -261,9 +261,11 @@ inviteSubaccountMailTitle=Inbjudan från $supervisorname$ till underkonto
 inviteSubaccountMailContent=
     <p>Hej <strong>$personname$</strong>,</p>
 
-    <p><strong>$supervisorname$</strong> har bjudit in dig till ett underkonto på SkrivaPå genom vilket du kan 
-    skriva avtal för <strong>$companyname$</strong>.
-    Observera att detta konto inte är avsett för privat bruk.</p>
+    <p><strong>$supervisorname$</strong> har bjudit in dig till ett
+    underkonto på SkrivaPå genom vilket du kan skriva avtal
+    för <strong>$companyname$</strong>. Observera att detta konto inte
+    är avsett för privat bruk eftersom samtliga dokument i kontot
+    tillhör organisationen <strong>$companyname$</strong>.
 
     <p>Användarnamn:<br/>
     $email$</p>
