@@ -121,9 +121,9 @@ showUserSecurity templates user = renderTemplate templates "showUserSecurity" $ 
     field "userimagelink" False
     menuFields user
     
-pageAcceptTOS :: KontrakcjaTemplates ->  BS.ByteString -> IO String
-pageAcceptTOS templates tostext = 
-  renderTemplate templates "pageAcceptTOS" $ field "tostext" (BS.toString tostext)
+pageAcceptTOS :: KontrakcjaTemplates -> IO String
+pageAcceptTOS templates = 
+  renderTemplate templates "pageAcceptTOS" ()
 
 viewFriends :: KontrakcjaTemplates -> PagedList User -> User -> IO String
 viewFriends templates friends user =  
@@ -144,10 +144,9 @@ viewSubaccounts subusers =
     field "currentlink" $ show $ LinkSubaccount $ params subusers
     pagedListFields subusers
 
-activatePageView::KontrakcjaTemplates -> String -> Maybe User -> IO String
-activatePageView templates tostext muser = 
+activatePageView::KontrakcjaTemplates -> Maybe User -> IO String
+activatePageView templates muser = 
     renderTemplate templates "activatePageView" $ do
-        field "tostext" tostext
         when (isJust muser) $ userFields $ fromJust muser
 
 

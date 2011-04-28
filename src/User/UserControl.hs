@@ -382,8 +382,7 @@ checkUserTOSGet action = withUserGet $ do
 handleAcceptTOSGet :: Kontra Response
 handleAcceptTOSGet = withUserGet $ do
     ctx@Context{ctxtemplates} <- get
-    tostext <- liftIO $ BS.readFile $ "html/terms.html"
-    content <- liftIO $ pageAcceptTOS ctxtemplates tostext
+    content <- liftIO $ pageAcceptTOS ctxtemplates
     renderFromBody ctx TopNone kontrakcja $ cdata content
 
 handleAcceptTOSPost :: Kontra KontraLink
@@ -509,8 +508,7 @@ handleAccountSetupGet aid hash = do
         activationPage muser = do
             extendActionEvalTimeToOneDayMinimum aid
             ctx <- get
-            tostext <- liftIO $ BS.readFile "html/terms.html"
-            content <- liftIO $ activatePageView (ctxtemplates ctx) (BS.toString tostext) muser
+            content <- liftIO $ activatePageView (ctxtemplates ctx) muser
             renderFromBody ctx TopNone kontrakcja $ cdata content
 
 handleAccountSetupPost :: ActionID -> MagicHash -> Kontra KontraLink

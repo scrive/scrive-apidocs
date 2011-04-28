@@ -35,7 +35,7 @@ activatePageView=
     <form action="" method="post" style="border:1px solid;border-color:#D0D0D0 #BDBDBD #C0C0C0;padding:7px;background:#ffffff">
       <h2>Vänligen acceptera användarvillkoren</h2>
       <div style="height:480px;overflow-y:scroll;border:1px solid #EEEEEE;padding:4px">
-        $tostext:noescape()$
+        $termsPageContents()$
         <br/>
       </div>
       <br/>
