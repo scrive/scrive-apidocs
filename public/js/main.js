@@ -21,9 +21,17 @@ $(document).ready( function() {
             opacity: 0.90
             }
          });   
-    } 
+    }
+    
+    // needed for IE8 (awesomeness of this browser is unbelivable)
+    if ($.browser.msie) {
+        var loginForm = $("#loginForm");
+        loginForm.keypress(function(event) {
+            if (event.keyCode == 13)
+                loginForm.submit();
+        });
+    }
 });
-
 
 // Alternative submit button
 (function($) {
