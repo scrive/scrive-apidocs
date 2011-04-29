@@ -118,11 +118,11 @@ postDocumentChangeAction document@Document  { documentstatus
           Just user <- query $ GetUserByUserID (unAuthor (documentauthor))
           enewdoc <- sealDocument ctx user document
           case enewdoc of
-               Right newdoc -> return ()
+               Right newdoc -> sendClosedEmailsToSignatories ctx newdoc
                Left errmsg -> do
                  update $ ErrorDocument documentid errmsg
                  Log.forkIOLogWhenError ("error in sending seal error emails for document " ++ show documentid) $ do
-                       sendDocumentErrorEmail ctx document
+                       sendDocumentErrorEmailToAuthor ctx document
                  return ()
         return ()
     -- Pending -> AwaitingAuthor
@@ -230,6 +230,13 @@ sendDocumentErrorEmail ctx document = do
   let signlinks = documentsignatorylinks document
   forM_ signlinks (sendDocumentErrorEmail1 ctx document)
 
+sendDocumentErrorEmailToAuthor :: Context -> Document -> IO ()
+sendDocumentErrorEmailToAuthor ctx document = do
+  author <- queryOrFail $ GetUserByUserID $ unAuthor $ documentauthor document
+  mail <- mailDocumentError (ctxtemplates ctx) ctx document
+  scheduleEmailSendout (ctxesenforcer ctx) $
+      mail { fullnameemails = [(userfullname author, useremail author)] }
+
 {- |
    Helper function to send emails to invited parties
    ??: Should this be in DocControl or in an email-specific file?
@@ -297,11 +304,17 @@ activatedSignatories signorder siglink =
  -}
 sendClosedEmails :: Context -> Document -> IO ()
 sendClosedEmails ctx document = do
+  sendClosedEmailsToSignatories ctx document
+  sendClosedAuthorEmail ctx document
+
+{- | Send email only to non-author
+-}
+sendClosedEmailsToSignatories :: Context -> Document -> IO ()
+sendClosedEmailsToSignatories ctx document = do
   let signlinks = documentsignatorylinks document
   forM_ signlinks $ \sl -> do 
                             when (not $ isAuthor document sl) $
                               sendClosedEmail1 ctx document sl
-  sendClosedAuthorEmail ctx document
 
 {- |
    Helper for sendClosedEmails
