@@ -353,7 +353,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                 <div class="spacer70"></div>
                                 <div class="try-skrivapa">
                                         <div class="left">
-                                                <h2>Skapa konto nu!</h2>
+                                                <h3>Skapa konto nu!</h3>
                                                 <p>1 månad full funktionalitet utan kostnad. Inga förpliktelser.</p>
                                         </div>
                                         <div class="right">
