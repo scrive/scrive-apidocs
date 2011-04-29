@@ -329,7 +329,7 @@ safeReady(function() {
 });
 
 safeReady(function() {
-  setTimeout(flashFlashMessages, 10); // wait two seconds to load img
+  flashFlashMessages();
   flashSpecialFlashMessages();
   showModal();
   enableInfoTextOnce();
@@ -967,19 +967,22 @@ function flashSpecialFlashMessages(){
 
 function flashFlashMessages() {
   // try to preload image before showing flash
-  (new Image()).src = "/img/spr-flash-bg.png";
+  var preload = new Image();
+  preload.onload = function() { 
     var flashmsgbox = $(".flashmsgbox");
     if ($(".flash-container", flashmsgbox).size() > 0) {
-        // delay() and click() doesn't work correctly in document
-        // creator since clearQueue() doesn't call clearTimeout(),
-        // so we need to use setTimeout() and unregister set events
-        // with clearTimeout() if user closed flash message by himself
-        var event = setTimeout(hideFlashMessages, 10000);
-        flashmsgbox.slideDown(800);
-        flashmsgbox.click(function() {
-            hideFlashMessages(event);
-        });
+      // delay() and click() doesn't work correctly in document
+      // creator since clearQueue() doesn't call clearTimeout(),
+      // so we need to use setTimeout() and unregister set events
+      // with clearTimeout() if user closed flash message by himself
+      var event = setTimeout(hideFlashMessages, 10000);
+      flashmsgbox.slideDown(800);
+      flashmsgbox.click(function() {
+        hideFlashMessages(event);
+      });
     }
+  };
+  preload.src = "/img/spr-flash-bg.png";
 }
 
 function showModal(){
