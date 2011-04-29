@@ -487,7 +487,7 @@ $if(loginModal)$
 <div class="modalcontainer">
   <div class="modalbox overlay login-container">
     <div class="modal-container">
-      <form method="post" action="$linklogin$">
+      <form id="loginForm" method="post" action="$linklogin$">
         <div class="modal-header">
           <span class="modal-icon message"></span>
           <span class="modal-title">
