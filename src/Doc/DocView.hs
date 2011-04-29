@@ -8,6 +8,7 @@ module Doc.DocView (
   , pageDocumentForViewer
   , pageDocumentForSignatory
   , docSortSearchPage
+  , docAndAuthorSortSearchPage
   , pageContractsList
   , pageTemplatesList
   , pageOffersList
@@ -403,12 +404,42 @@ pageTemplatesList templates ctime user documents =
     pagedListFields documents
     field "currentlink" $ show $ LinkTemplates $ params documents
     
-pageOffersList :: KontrakcjaTemplates -> MinutesTime -> User -> PagedList Document -> IO String
+pageOffersList :: KontrakcjaTemplates -> MinutesTime -> User -> PagedList (Document, User) -> IO String
 pageOffersList templates ctime user documents =
   renderTemplate templates "pageOffersList" $ do
-    field "documents" $ markParity $ map (documentBasicViewFields ctime user) $ list documents
+    field "documents" $ markParity $ map (docAndAuthorBasicViewFields ctime user) $ list documents
     pagedListFields documents
     field "currentlink" $ show $ LinkOffers $ params documents
+  where
+    docAndAuthorBasicViewFields :: MinutesTime -> User -> (Document, User) -> Fields
+    docAndAuthorBasicViewFields crtime user (doc, author) = do
+      documentBasicViewFields crtime user doc
+      field "authorname" $ authorname author
+
+authorname :: User -> BS.ByteString        
+authorname author = 
+  if (BS.null authorfstname && BS.null authorsndname)
+    then authoremail
+    else BS.concat [authorfstname, BS.fromString " ", authorsndname]
+  where
+    authorfstname = userfstname $ userinfo author
+    authorsndname = usersndname $ userinfo author
+    authoremail = unEmail . useremail $ userinfo author
+
+-- Searching, sorting and paging for document author pairs
+docAndAuthorSortSearchPage :: ListParams -> [(Document, User)] -> PagedList (Document, User)
+docAndAuthorSortSearchPage  = listSortSearchPage docAndAuthorSortFunc docAndAuthorSearchFunc docsPageSize
+
+docAndAuthorSearchFunc::SearchingFunction (Document, User)
+docAndAuthorSearchFunc s (doc, author) =  docSearchFunc s doc || nameMatch author
+  where
+    match m = isInfixOf (map toUpper s) (map toUpper m)
+    nameMatch = match . BS.toString . authorname
+   
+docAndAuthorSortFunc:: SortingFunction (Document, User)
+docAndAuthorSortFunc "author" (_,author1) (_,author2) = viewComparing authorname author1 author2
+docAndAuthorSortFunc "authorRev" (_,author1) (_,author2) = viewComparingRev authorname author1 author2
+docAndAuthorSortFunc x (doc1,_) (doc2,_) = docSortFunc x doc1 doc2
 
 showFileImages :: KontrakcjaTemplates -> DocumentID -> Maybe (SignatoryLinkID, MagicHash) -> File -> JpegPages -> IO String
 showFileImages templates _ _ _ JpegPagesPending =

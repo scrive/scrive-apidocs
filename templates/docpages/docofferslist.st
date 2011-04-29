@@ -75,6 +75,15 @@ $loadingdialog()$
                                 <a href="$currentlink$&sorting=partnercomp">Företag </a>
                                $endif$
                             </th>
+							<th style="width: 130px;">
+                               $if(params.sorting.authorREV)$
+                                <a href="$currentlink$&sorting=author">Avsändare <em> ▲</em></a>
+                               $elseif(params.sorting.partnercomp)$
+                                <a href="$currentlink$&sorting=authorREV">Avsändare  <em style="text-color:red"> ▼</em></a>
+                               $else$
+                                <a href="$currentlink$&sorting=author">Avsändare </a>
+                               $endif$
+                            </th>
 							<th style="width: 240px;">
                                $if(params.sorting.titleREV)$
                                 <a href="$currentlink$&sorting=title">Dokument <em> ▲</em></a>
@@ -107,7 +116,8 @@ $loadingdialog()$
 						          $endif$
 							</td>
 							<td><a href="$document.doclink$">$document.signatories:{sig | $sig.name$}; separator=", "$</a></td>
-                                                        <td><a href="$document.doclink$">$document.signatories:{sig | $sig.company$}; separator=", "$</a></td> 
+                                                        <td><a href="$document.doclink$">$document.signatories:{sig | $sig.company$}; separator=", "$</a></td>
+                                                        <td><a href="$document.doclink$">$document.authorname$</a></td> 
 							<td>
 								<a href="$document.doclink$" class="listname">$document.documenttitle$</a>
 								$if(document.davelink)$ 

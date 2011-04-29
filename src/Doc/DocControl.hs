@@ -1334,10 +1334,14 @@ showOfferList= withUserGet $ checkUserTOSGet $ do
     let sorteddocuments = sortBy (\d1 d2 -> compare (documentmtime d2) (documentmtime d1)) documents
     let notdeleted = filter (not . documentdeleted) sorteddocuments
     let contracts  = filter ((==) Offer . documenttype) notdeleted
-    params <- getListParams
-    liftIO $ putStrLn $ show params
-    content <- liftIO $ pageOffersList ctxtemplates ctxtime user (docSortSearchPage params contracts)
-    renderFromBody ctx TopDocument kontrakcja $ cdata content
+    mauthors <- mapM (query . GetUserByUserID . unAuthor . documentauthor) contracts
+    case sequence mauthors of
+      Nothing -> mzero
+      (Just authors) -> do
+        params <- getListParams
+        liftIO $ putStrLn $ show params
+        content <- liftIO $ pageOffersList ctxtemplates ctxtime user (docAndAuthorSortSearchPage params (zip contracts authors))
+        renderFromBody ctx TopDocument kontrakcja $ cdata content
 
 handleDocumentUpload :: DocumentID -> BS.ByteString -> BS.ByteString -> Kontra ()
 handleDocumentUpload docid content1 filename = do
