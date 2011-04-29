@@ -1,5 +1,5 @@
 .flash-container {
-    background: url(../img/spr-flash-bg.png) 0 -50px repeat-x;
+    background: url(/img/spr-flash-bg.png) 0 -50px repeat-x;
     cursor: pointer;
     -display: none;
     left: 0px;

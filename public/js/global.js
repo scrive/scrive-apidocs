@@ -979,7 +979,7 @@ function flashFlashMessages() {
             hideFlashMessages(event);
         });
     }
-  }, 500); // wait half a second to load img
+  }, 5000); // wait half a second to load img
 }
 
 function showModal(){
