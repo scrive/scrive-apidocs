@@ -122,7 +122,7 @@ $loadingdialog()$
 			<!--
 			   <div class="icon status reviewed float-left"></div><div class="float-left">Granskat&nbsp;</div>
 			   -->
-			<div class="icon status opened float-left"></div><div class="float-left">Öppnat&nbsp;</div>
+			<div class="icon status opened float-left"></div><div class="float-left">Granskat online&nbsp;</div>
 			<div class="icon status signed float-left"></div><div class="float-left">Signerat&nbsp;</div>
 		  </div>
           $pagingFooter()$
@@ -142,10 +142,10 @@ $loadingdialog()$
       <div class="icon status sent"></div><p>Status: Skickat</p>
     </div>
     <div id="tooltip-reviewed" class="hidden">
-      <div class="icon status reviewed"></div><p>Status: Granskat</p>
+      <div class="icon status reviewed"></div><p>Status: Granskat online</p>
     </div>
     <div id="tooltip-opened" class="hidden">
-      <div class="icon status opened"></div><p>Status: Öppnat</p>
+      <div class="icon status opened"></div><p>Status: Granskat online</p>
     </div>
     <div id="tooltip-signed" class="hidden">
       <div class="icon status signed"></div><p>Status: Signerat</p>
