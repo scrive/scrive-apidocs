@@ -109,6 +109,22 @@ postDocumentChangeAction document@Document  { documentstatus
         Log.forkIOLogWhenError ("error in sending invitation emails for document " ++ show documentid) $ do
           sendInvitationEmails ctx document author
         return ()
+    -- Preparation -> Closed (only author signs)
+    -- main action: sealDocument and sendClosedEmails
+    | oldstatus == Preparation && documentstatus == Closed = do
+        liftIO $ print "Prep -> Closed"
+        ctx@Context{ctxnormalizeddocuments,ctxhostpart,ctxtime} <- get
+        Log.forkIOLogWhenError ("error sealing document " ++ show documentid)$ do
+          Just user <- query $ GetUserByUserID (unAuthor (documentauthor))
+          enewdoc <- sealDocument ctx user document
+          case enewdoc of
+               Right newdoc -> sendClosedEmails ctx newdoc
+               Left errmsg -> do
+                 update $ ErrorDocument documentid errmsg
+                 Log.forkIOLogWhenError ("error in sending seal error emails for document " ++ show documentid) $ do
+                       sendDocumentErrorEmail ctx document
+                 return ()
+        return ()
     -- Pending -> AwaitingAuthor
     -- main action: sendAwaitingEmail
     | oldstatus == Pending && documentstatus == AwaitingAuthor = do

@@ -916,17 +916,16 @@ function nonZeroSignatories() {
   
   var authorsig = 0;
   if($("#authorsignatoryradio").attr("checked")) {
-    authorsig++;
+    sigs++;
+    authorsig = 1;
   }
 
   var error = (sigs === 0);
 
   if(error) {
-    if(!authorsig) {
-      addFlashMessage('Du måste ha minst en undertecknande part.', "red");
-    } else {
-      addFlashMessage('Du kan inte underteckna med endast dig själv.', "red");
-    }
+    addFlashMessage('Du måste ha minst en undertecknande part.', "red");
+    //saving this for later
+    //addFlashMessage('Du kan inte underteckna med endast dig själv.', "red");
     $("li.plus").addClass("redborder");
     return false;
   }
