@@ -443,7 +443,7 @@ signDocument documentid
  -}
 rejectDocument :: DocumentID 
                -> SignatoryLinkID 
-               -> MagicHash -- ^ The MagicHash that is in the URL (NOTE: This is ignored!)
+               -> MagicHash
                -> Kontra KontraLink
 rejectDocument documentid 
                signatorylinkid1 
@@ -453,8 +453,8 @@ rejectDocument documentid
   olddocument@Document{ documentsignatorylinks } <- queryOrFail $ GetDocumentByDocumentID documentid
 
   checkLinkIDAndMagicHash olddocument signatorylinkid1 magichash
-
-  mdocument <- update $ RejectDocument documentid signatorylinkid1 ctxtime ctxipnumber
+  customtext <- getCustomTextField "customtext"
+  mdocument <- update $ RejectDocument documentid signatorylinkid1 ctxtime ctxipnumber customtext
   case (mdocument) of
     Left message -> 
         do
