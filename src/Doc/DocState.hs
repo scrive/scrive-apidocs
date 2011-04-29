@@ -186,6 +186,7 @@ newDocument user title documenttype ctime = do
           , documentcancelationreason = Nothing
           , documentinvitetime = Nothing
           , documentsharing = Private
+          , documentrejectioninfo = Nothing
           } `appendHistory` [DocumentHistoryCreated ctime]
 
   insertNewDocument doc

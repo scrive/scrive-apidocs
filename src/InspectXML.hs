@@ -40,6 +40,10 @@ instance InspectXML a => InspectXML (Maybe a) where
     inspectXML Nothing = asChild "Nothing"
     inspectXML (Just x) = inspectXML x
 
+instance (InspectXML a, InspectXML b, InspectXML c) => InspectXML (a, b, c) where
+    inspectXML (a, b, c) = asChild $ genElement (Nothing, "triple") []
+                            [inspectXML a, inspectXML b, inspectXML c]
+
 -- m :: (XMLGenerator m) => [(String, GenChildList m)] -> GenChildList m
 m g = map y g
       where y ("",cont) = asChild $ genElement (Nothing,"li") [] [cont]
