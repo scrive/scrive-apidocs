@@ -224,6 +224,7 @@ preloadImages=
 @media print { div.imgCache { display: none; } }
 </style>
 <div class="imgCache">
+  <img src="/theme/../img/spr-flash-bg.png" />
   <img src="/img/spr-flash-bg.png" />
 </div>
 ####
