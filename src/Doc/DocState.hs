@@ -34,6 +34,8 @@ module Doc.DocState
     , NewDocument(..)
     , SaveDocumentForSignedUser(..)
     , SetDocumentTimeoutTime(..)
+    , SetDocumentTags(..)
+    , GetDocumentsByTags(..)
     , SetDocumentTrustWeaverReference(..)
     , ShareDocuments(..)
     , SignDocument(..)
@@ -187,6 +189,7 @@ newDocument user title documenttype ctime = do
           , documentinvitetime = Nothing
           , documentsharing = Private
           , documentrejectioninfo = Nothing
+          , documenttags = []
           } `appendHistory` [DocumentHistoryCreated ctime]
 
   insertNewDocument doc
@@ -584,6 +587,18 @@ setDocumentTimeoutTime documentid timeouttime = do
   modifySignable documentid $ \doc ->
       Right $ doc{ documenttimeouttime = Just timeouttime }
 
+setDocumentTags :: DocumentID -> [DocumentTag] -> Update Documents (Either String Document)
+setDocumentTags docid doctags =
+  modifySignableOrTemplate docid $ \doc -> Right $
+    doc {
+      documenttags = doctags
+    }
+
+getDocumentsByTags :: [DocumentTag] -> Query Documents (Either String [Document])
+getDocumentsByTags doctags = do
+  documents <- ask
+  return . Right . toList $ (documents @* doctags)
+
 deleteForUserID user document = 
     document { documentsignatorylinks = map deleteForUserID' (documentsignatorylinks document) }
         where deleteForUserID' link
@@ -922,6 +937,8 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'getDocumentsByUser
                         , 'getNumberOfDocumentsOfUser
                         , 'setDocumentTimeoutTime
+                        , 'setDocumentTags
+                        , 'getDocumentsByTags
                         , 'setDocumentTrustWeaverReference
                         , 'archiveDocuments
                         , 'shareDocuments

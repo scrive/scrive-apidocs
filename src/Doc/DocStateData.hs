@@ -11,6 +11,7 @@ module Doc.DocStateData
     , DocumentType(..)
     , DocumentFunctionality(..)
     , DocumentSharing(..)
+    , DocumentTag(..)
     , Documents
     , CSVUpload(..)
     , FieldDefinition(..)
@@ -387,6 +388,11 @@ data DocumentSharing = Private
                        | Shared -- means that the document is shared with subaccounts, and those with same parent accounts
     deriving (Eq, Ord, Typeable)
 
+data DocumentTag = DocumentTag {
+        tagname :: BS.ByteString
+     ,  tagvalue :: BS.ByteString
+     } deriving (Eq, Ord, Typeable)
+
 data DocumentHistoryEntry0 = DocumentHistoryCreated0 { dochisttime0 :: MinutesTime }
                           | DocumentHistoryInvitationSent0 { dochisttime0 :: MinutesTime
                                                           , ipnumber0 :: Word32
@@ -729,6 +735,40 @@ data Document18 = Document18
     } deriving Typeable
                 
 
+data Document19 = Document19
+    { documentid19                     :: DocumentID
+    , documenttitle19                  :: BS.ByteString
+    , documentauthor19                 :: Author                  -- to be moved to siglinks
+    , documentsignatorylinks19         :: [SignatoryLink]
+    , documentfiles19                  :: [File]
+    , documentsealedfiles19            :: [File]
+    , documentstatus19                 :: DocumentStatus
+    , documenttype19                   :: DocumentType
+    , documentfunctionality19          :: DocumentFunctionality
+    , documentctime19                  :: MinutesTime
+    , documentmtime19                  :: MinutesTime
+    , documentdaystosign19             :: Maybe Int    
+    , documenttimeouttime19            :: Maybe TimeoutTime
+    , documentinvitetime19             :: Maybe SignInfo
+    , documentdeleted19                :: Bool                    -- to be moved to links
+    , documentlog19                    :: [DocumentLogEntry]      -- to be made into plain text
+    , documentinvitetext19             :: BS.ByteString
+    , documenttrustweaverreference19   :: Maybe BS.ByteString
+    , documentallowedidtypes19         :: [IdentificationType]
+    , documentcsvupload19              :: Maybe CSVUpload
+    , authorfstnameplacements19        :: [FieldPlacement]        -- the below to be moved to siglinks
+    , authorsndnameplacements19        :: [FieldPlacement]
+    , authorcompanyplacements19        :: [FieldPlacement]
+    , authoremailplacements19          :: [FieldPlacement]
+    , authorpersonalnumberplacements19 :: [FieldPlacement]
+    , authorcompanynumberplacements19  :: [FieldPlacement]
+    , authorotherfields19              :: [FieldDefinition]
+    , documentcancelationreason19      :: Maybe CancelationReason -- When a document is cancelled, there are two (for the moment) possible explanations. Manually cancelled by the author and automatically cancelled by the eleg service because the wrong person was signing.
+    , documentsharing19                :: DocumentSharing
+    , documentrejectioninfo19          :: Maybe (MinutesTime, SignatoryLinkID, BS.ByteString)
+    } deriving Typeable
+
+
 data Document = Document
     { documentid                     :: DocumentID
     , documenttitle                  :: BS.ByteString
@@ -760,8 +800,8 @@ data Document = Document
     , documentcancelationreason      :: Maybe CancelationReason -- When a document is cancelled, there are two (for the moment) possible explanations. Manually cancelled by the author and automatically cancelled by the eleg service because the wrong person was signing.
     , documentsharing                :: DocumentSharing
     , documentrejectioninfo          :: Maybe (MinutesTime, SignatoryLinkID, BS.ByteString)
+    , documenttags                   :: [DocumentTag]
     }
-
 
 data CancelationReason =  ManualCancel
                         -- The data returned by ELeg server
@@ -863,6 +903,7 @@ deriving instance Show DocumentFunctionality
 deriving instance Show CSVUpload
 deriving instance Show ChargeMode
 deriving instance Show DocumentSharing
+deriving instance Show DocumentTag
 deriving instance Show Author
 
 deriving instance Show DocStats
@@ -1391,9 +1432,13 @@ $(deriveSerialize ''Document18)
 instance Version Document18 where
     mode = extension 18 (Proxy :: Proxy Document17)
 
+$(deriveSerialize ''Document19)
+instance Version Document19 where
+    mode = extension 19 (Proxy :: Proxy Document18)
+
 $(deriveSerialize ''Document)
 instance Version Document where
-    mode = extension 19 (Proxy :: Proxy Document18)
+    mode = extension 20 (Proxy :: Proxy Document19)
 
 instance Migrate DocumentHistoryEntry0 DocumentHistoryEntry where
         migrate (DocumentHistoryCreated0 { dochisttime0 }) = 
@@ -1811,7 +1856,7 @@ instance Migrate Document17 Document18 where
                 , documentsharing18                = Private
                 }
 
-instance Migrate Document18 Document where
+instance Migrate Document18 Document19 where
     migrate (Document18
              { documentid18
              , documenttitle18
@@ -1842,37 +1887,103 @@ instance Migrate Document18 Document where
              , authorotherfields18
              , documentcancelationreason18
              , documentsharing18
+             }) = Document19
+                { documentid19                     = documentid18
+                , documenttitle19                  = documenttitle18
+                , documentauthor19                 = documentauthor18
+                , documentsignatorylinks19         = documentsignatorylinks18
+                , documentfiles19                  = documentfiles18
+                , documentsealedfiles19            = documentsealedfiles18
+                , documentstatus19                 = documentstatus18
+                , documenttype19                   = documenttype18
+                , documentfunctionality19          = documentfunctionality18
+                , documentctime19                  = documentctime18
+                , documentmtime19                  = documentmtime18
+                , documentdaystosign19             = documentdaystosign18
+                , documenttimeouttime19            = documenttimeouttime18
+                , documentinvitetime19             = documentinvitetime18
+                , documentdeleted19                = documentdeleted18
+                , documentlog19                    = documentlog18
+                , documentinvitetext19             = documentinvitetext18
+                , documenttrustweaverreference19   = documenttrustweaverreference18
+                , documentallowedidtypes19         = documentallowedidtypes18
+                , documentcsvupload19              = documentcsvupload18
+                , authorfstnameplacements19        = authorfstnameplacements18
+                , authorsndnameplacements19        = authorsndnameplacements18
+                , authorcompanyplacements19        = authorcompanyplacements18
+                , authoremailplacements19          = authoremailplacements18
+                , authorpersonalnumberplacements19 = authorpersonalnumberplacements18
+                , authorcompanynumberplacements19  = authorcompanynumberplacements18
+                , authorotherfields19              = authorotherfields18
+                , documentcancelationreason19      = documentcancelationreason18
+                , documentsharing19                = documentsharing18
+                , documentrejectioninfo19          = Nothing
+                }             
+
+instance Migrate Document19 Document where
+    migrate (Document19
+             { documentid19
+             , documenttitle19
+             , documentauthor19
+             , documentsignatorylinks19
+             , documentfiles19
+             , documentsealedfiles19
+             , documentstatus19
+             , documenttype19
+             , documentfunctionality19
+             , documentctime19
+             , documentmtime19
+             , documentdaystosign19
+             , documenttimeouttime19
+             , documentinvitetime19
+             , documentdeleted19
+             , documentlog19
+             , documentinvitetext19
+             , documenttrustweaverreference19
+             , documentallowedidtypes19
+             , documentcsvupload19
+             , authorfstnameplacements19
+             , authorsndnameplacements19
+             , authorcompanyplacements19
+             , authoremailplacements19
+             , authorpersonalnumberplacements19
+             , authorcompanynumberplacements19
+             , authorotherfields19
+             , documentcancelationreason19
+             , documentsharing19
+             , documentrejectioninfo19
              }) = Document
-                { documentid                     = documentid18
-                , documenttitle                  = documenttitle18
-                , documentauthor                 = documentauthor18
-                , documentsignatorylinks         = documentsignatorylinks18
-                , documentfiles                  = documentfiles18
-                , documentsealedfiles            = documentsealedfiles18
-                , documentstatus                 = documentstatus18
-                , documenttype                   = documenttype18
-                , documentfunctionality          = documentfunctionality18
-                , documentctime                  = documentctime18
-                , documentmtime                  = documentmtime18
-                , documentdaystosign             = documentdaystosign18
-                , documenttimeouttime            = documenttimeouttime18
-                , documentinvitetime             = documentinvitetime18
-                , documentdeleted                = documentdeleted18
-                , documentlog                    = documentlog18
-                , documentinvitetext             = documentinvitetext18
-                , documenttrustweaverreference   = documenttrustweaverreference18
-                , documentallowedidtypes         = documentallowedidtypes18
-                , documentcsvupload              = documentcsvupload18
-                , authorfstnameplacements        = authorfstnameplacements18
-                , authorsndnameplacements        = authorsndnameplacements18
-                , authorcompanyplacements        = authorcompanyplacements18
-                , authoremailplacements          = authoremailplacements18
-                , authorpersonalnumberplacements = authorpersonalnumberplacements18
-                , authorcompanynumberplacements  = authorcompanynumberplacements18
-                , authorotherfields              = authorotherfields18
-                , documentcancelationreason      = documentcancelationreason18
-                , documentsharing                = documentsharing18
-                , documentrejectioninfo          = Nothing
+                { documentid                     = documentid19
+                , documenttitle                  = documenttitle19
+                , documentauthor                 = documentauthor19
+                , documentsignatorylinks         = documentsignatorylinks19
+                , documentfiles                  = documentfiles19
+                , documentsealedfiles            = documentsealedfiles19
+                , documentstatus                 = documentstatus19
+                , documenttype                   = documenttype19
+                , documentfunctionality          = documentfunctionality19
+                , documentctime                  = documentctime19
+                , documentmtime                  = documentmtime19
+                , documentdaystosign             = documentdaystosign19
+                , documenttimeouttime            = documenttimeouttime19
+                , documentinvitetime             = documentinvitetime19
+                , documentdeleted                = documentdeleted19
+                , documentlog                    = documentlog19
+                , documentinvitetext             = documentinvitetext19
+                , documenttrustweaverreference   = documenttrustweaverreference19
+                , documentallowedidtypes         = documentallowedidtypes19
+                , documentcsvupload              = documentcsvupload19
+                , authorfstnameplacements        = authorfstnameplacements19
+                , authorsndnameplacements        = authorsndnameplacements19
+                , authorcompanyplacements        = authorcompanyplacements19
+                , authoremailplacements          = authoremailplacements19
+                , authorpersonalnumberplacements = authorpersonalnumberplacements19
+                , authorcompanynumberplacements  = authorcompanynumberplacements19
+                , authorotherfields              = authorotherfields19
+                , documentcancelationreason      = documentcancelationreason19
+                , documentsharing                = documentsharing19
+                , documentrejectioninfo          = documentrejectioninfo19
+                , documenttags                   = []
                 }             
 
 
@@ -1890,6 +2001,9 @@ instance Version ChargeMode where
 
 $(deriveSerialize ''DocumentSharing)
 instance Version DocumentSharing where
+
+$(deriveSerialize ''DocumentTag)
+instance Version DocumentTag where
 
 $(deriveSerialize ''DocStats)
 instance Version DocStats where
@@ -1977,6 +2091,7 @@ instance Indexable Document where
                                          Just time -> [time]
                                          Nothing -> []) :: [TimeoutTime])
                       , ixFun (\x -> [documenttype x] :: [DocumentType])
+                      , ixFun (\x -> documenttags x :: [DocumentTag])
                       ]
                                                     
 instance Component Documents where
