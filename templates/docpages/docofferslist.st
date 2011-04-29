@@ -48,7 +48,7 @@ $loadingdialog()$
                                 <a href="$currentlink$&sorting=status">Status </a>
                                $endif$
                              </th>
-							<th style="width: 140px;">
+							<th style="width: 130px;">
                                $if(params.sorting.timeREV)$
                                 <a href="$currentlink$&sorting=time">Senaste händelse  <em> ▲</em></a>
                                $elseif(params.sorting.time)$
@@ -57,16 +57,25 @@ $loadingdialog()$
                                 <a href="$currentlink$&sorting=time">Senaste händelse </a>
                                $endif$
                             </th>
-							<th style="width: 300px;">
+							<th style="width: 130px;">
                                $if(params.sorting.partnerREV)$
-                                <a href="$currentlink$&sorting=partner">Parter <em> ▲</em></a>
+                                <a href="$currentlink$&sorting=partner">Mottagare <em> ▲</em></a>
                                $elseif(params.sorting.partner)$
-                                <a href="$currentlink$&sorting=partnerREV">Parter  <em style="text-color:red"> ▼</em></a>
+                                <a href="$currentlink$&sorting=partnerREV">Mottagare  <em style="text-color:red"> ▼</em></a>
                                $else$
-                                <a href="$currentlink$&sorting=partner">Parter </a>
+                                <a href="$currentlink$&sorting=partner">Mottagare </a>
                                $endif$
                             </th>
-							<th style="width: 300px;">
+							<th style="width: 130px;">
+                               $if(params.sorting.partnercompREV)$
+                                <a href="$currentlink$&sorting=partnercomp">Företag <em> ▲</em></a>
+                               $elseif(params.sorting.partnercomp)$
+                                <a href="$currentlink$&sorting=partnercompREV">Företag  <em style="text-color:red"> ▼</em></a>
+                               $else$
+                                <a href="$currentlink$&sorting=partnercomp">Företag </a>
+                               $endif$
+                            </th>
+							<th style="width: 240px;">
                                $if(params.sorting.titleREV)$
                                 <a href="$currentlink$&sorting=title">Dokument <em> ▲</em></a>
                                $elseif(params.sorting.title)$
@@ -98,6 +107,7 @@ $loadingdialog()$
 						          $endif$
 							</td>
 							<td><a href="$document.doclink$">$document.signatories:{sig | $sig.name$}; separator=", "$</a></td>
+                                                        <td><a href="$document.doclink$">$document.signatories:{sig | $sig.company$}; separator=", "$</a></td> 
 							<td>
 								<a href="$document.doclink$" class="listname">$document.documenttitle$</a>
 								$if(document.davelink)$ 
