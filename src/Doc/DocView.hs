@@ -245,7 +245,7 @@ singlnkFields sl = do
   field "id" $ show $ signatorylinkid sl
   field "name" $ BS.toString $ personname sl
   field "email" $  ""
-  field "company" $ ""
+  field "company" $ BS.toString . signatorycompany $ signatorydetails sl
 
 {- |
     We want the documents to be ordered like the icons in the bottom
@@ -342,9 +342,14 @@ docSortFunc "time" = viewComparing documentmtime
 docSortFunc "timeREV" = viewComparingRev documentmtime
 docSortFunc "partner" = comparePartners 
 docSortFunc "partnerREV" = revComparePartners
+docSortFunc "partnercomp" = viewComparing partnerComps
+docSortFunc "partnercompREV" = viewComparingRev partnerComps
 docSortFunc "type" = viewComparing documenttype
 docSortFunc "typeREV" = viewComparingRev documenttype
 docSortFunc _ = const $ const EQ
+
+partnerComps :: Document -> BS.ByteString
+partnerComps doc = BS.concat . map (signatorycompany . signatorydetails) . documentsignatorylinks $ doc
 
 revCompareStatus :: Document -> Document -> Ordering
 revCompareStatus doc1 doc2 = compareStatus doc2 doc1
