@@ -75,12 +75,12 @@ $elseif(datamismatch)$
 $elseif(signatory.rejecteddate)$
     Avvisat $signatory.rejecteddate$
 $elseif(signatory.seendate)$        
-    Granskat $signatory.seendate$
+    Granskat online $signatory.seendate$
 $else$
     $if(contract)$  
-        Har ej granskat
+        Har ej granskat online
     $elseif(offer)$
-        Har ej granskat
+        Har ej granskat online
     $endif$
 $endif$
 ###       
