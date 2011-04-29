@@ -598,8 +598,12 @@ function updateSignSendButton(authorsignorder) {
     // it can be 1, N (number of signatories + 1) or '-'.
     // '-' means author is not signatory, 1 that author
     // signs first and N that author signs last
-    var switcher = $("#switchercheckbox");
-    if (authorsignorder.val() != 1)
+    var switcher = $("#switchercheckbox"),
+        asoval = authorsignorder.val();
+    // in safari after page loads it's null, in other browsers it's 1
+    // (yet another browser awesomeness), so we need to check if it's
+    // not null so we won't get 'sign last' option enabled by default.
+    if (asoval && asoval != 1)
         switcher.attr("checked", "checked");
     else
         switcher.removeAttr("checked");
