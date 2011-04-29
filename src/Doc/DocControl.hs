@@ -1473,7 +1473,7 @@ handleIssueBulkRemind = do
         failIfNotAuthor doc user
         case (documentstatus doc) of
           Pending -> do
-            let isElegible siglink = (isNothing $ maybesigninfo siglink) && (not $ isAuthor doc siglink)
+            let isElegible = isEligibleForReminder (Just user) doc
                 unsignedsiglinks = filter isElegible $ documentsignatorylinks doc
             sequence . map (sigRemind ctx user doc) $ unsignedsiglinks
           _ -> return []
