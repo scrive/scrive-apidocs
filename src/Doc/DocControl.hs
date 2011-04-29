@@ -118,7 +118,7 @@ postDocumentChangeAction document@Document  { documentstatus
           Just user <- query $ GetUserByUserID (unAuthor (documentauthor))
           enewdoc <- sealDocument ctx user document
           case enewdoc of
-               Right newdoc -> sendClosedEmails ctx newdoc
+               Right newdoc -> return ()
                Left errmsg -> do
                  update $ ErrorDocument documentid errmsg
                  Log.forkIOLogWhenError ("error in sending seal error emails for document " ++ show documentid) $ do
