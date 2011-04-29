@@ -329,7 +329,7 @@ safeReady(function() {
 });
 
 safeReady(function() {
-  setTimeout(flashFlashMessages, 2000); // wait two seconds to load img
+  setTimeout(flashFlashMessages, 10); // wait two seconds to load img
   flashSpecialFlashMessages();
   showModal();
   enableInfoTextOnce();
@@ -966,6 +966,8 @@ function flashSpecialFlashMessages(){
 }
 
 function flashFlashMessages() {
+  // try to preload image before showing flash
+  (new Image()).src = "/img/spr-flash-bg.png";
     var flashmsgbox = $(".flashmsgbox");
     if ($(".flash-container", flashmsgbox).size() > 0) {
         // delay() and click() doesn't work correctly in document
