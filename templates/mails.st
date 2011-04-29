@@ -516,7 +516,7 @@ mailSubaccountAcceptedTitle=Kontoförfrågan
 ###
 mailSubaccountAcceptedContent=
   <p>Hej $user.fullnameOrEmail$,</p>
-  <p>User $invited.fullnameOrEmail$ accepted to be subaccount of your account.</p>
+  <p>$invited.fullnameOrEmail$ har accepterat att bli ett underkonto.</p>
   $poweredBySkrivaPaPara()$
 ####
 
