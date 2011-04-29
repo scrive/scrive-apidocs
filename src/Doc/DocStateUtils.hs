@@ -33,6 +33,7 @@ module Doc.DocStateUtils (
     , isContract
     , isOffer
     , matchingType
+    , isEligibleForReminder
     -- Getters - digging some info from about document
     , signatoryname
     , undeliveredSignatoryLinks
@@ -383,6 +384,33 @@ isViewer doc user = any f $ documentsignatorylinks doc
     where f link = (Just (userid user)  == maybesignatory link 
                     || (unEmail $ useremail $ userinfo user) == (signatoryemail $ signatorydetails link))
                    && signatoryroles link == []
+
+{- |
+    Checks whether a signatory link is eligible for sending a reminder.
+    The user must be the author, and the signatory musn't be the author.
+    Also the signatory must be next in the signorder, and also not be a viewer.
+    In addition the document must be in the correct state.  There's quite a lot to check!
+-}
+isEligibleForReminder :: Maybe User -> Document -> SignatoryLink -> Bool
+isEligibleForReminder muser document siglink = 
+  signatoryActivated 
+    && isUserAuthor 
+    && (not isUserSignator) 
+    && (not dontShowAnyReminder) 
+    && ((invitationdeliverystatus siglink) /= Undelivered) 
+    && (isClosed || not wasSigned)
+    && isSignatoryPartner
+  where
+    isUserAuthor = maybe False (isAuthor document) muser
+    isUserSignator = maybe False (\user -> (unEmail . useremail . userinfo $ user) == (signatoryemail $ signatorydetails siglink)) muser 
+    wasSigned =  (isJust $ maybesigninfo siglink) && (not $ isUserSignator && (documentstatus document == AwaitingAuthor))
+    isTimedout = documentstatus document == Timedout
+    isCanceled = documentstatus document == Canceled
+    isRejected = documentstatus document == Rejected
+    isClosed = documentstatus document == Closed
+    signatoryActivated = documentcurrentsignorder document >= (signatorysignorder $ signatorydetails siglink)
+    dontShowAnyReminder = isTimedout || isCanceled || isRejected
+    isSignatoryPartner = SignatoryPartner `elem` (signatoryroles siglink)
 
 {- |
     Removes the field placements and the custom fields.

@@ -742,8 +742,7 @@ signatoryLinkFields
    isCanceled = documentstatus document == Canceled
    isRejected = documentstatus document == Rejected
    isClosed = documentstatus document == Closed
-   signatoryActivated = documentcurrentsignorder document >= signatorysignorder signatorydetails
-   dontShowAnyReminder = isTimedout || isCanceled || isRejected
+   isActiveDoc = isTimedout || isCanceled || isRejected
    datamismatch = case documentcancelationreason document of
                     Just (ELegDataMismatch _ sid _ _ _) -> sid == signatorylinkid
                     _                                   -> False
@@ -768,11 +767,11 @@ signatoryLinkFields
         field "fieldlabel" $ fieldlabel sof
         field "fieldvalue" $ fieldvalue sof
       field "signorder" $ unSignOrder $ signatorysignorder signatorydetails
-      field "allowRemindForm" $ signatoryActivated && isCurrentUserAuthor && (not isCurrentSignatorAuthor) && (not dontShowAnyReminder) && (invitationdeliverystatus /= Undelivered) && (isClosed || not wasSigned)             
+      field "allowRemindForm" $ isEligibleForReminder muser document siglnk            
       field "linkremind" $ show (LinkRemind document siglnk)
       field "linkchangeemail" $  show $ LinkChangeSignatoryEmail (documentid document) signatorylinkid
       field "undeliveredEmail" $ (invitationdeliverystatus == Undelivered)
-      field "allowEmailChange" $ (isCurrentUserAuthor && (invitationdeliverystatus == Undelivered) && (not dontShowAnyReminder))
+      field "allowEmailChange" $ (isCurrentUserAuthor && (invitationdeliverystatus == Undelivered) && (not isActiveDoc))
       field "signdate" $ showDateOnly <$> signtime <$> maybesigninfo
       field "datamismatch" datamismatch
       field "seendate" $ showDateOnly <$> signtime <$> maybeseeninfo
