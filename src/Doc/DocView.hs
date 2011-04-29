@@ -90,8 +90,7 @@ modalSignInviteView document = do
   partylist <- lift $ renderListTemplate templates . map (BS.toString . personname') $ partyListButAuthor document
   lift $ renderTemplate templates "modalSignInviteView" $ do
     field "partyListButAuthor" partylist
-    field "documenttitle" . BS.toString $ documenttitle document
-
+    documentInfoFields document
 
 modalSendInviteView ::  Document -> KontraModal
 modalSendInviteView document = do
