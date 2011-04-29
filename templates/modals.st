@@ -10,9 +10,16 @@ modalSignInviteView=
   </div>
   <div class="modal-body">
     <div class="modal-content">
-      <p>En inbjudan att underteckna har nu skickats 
-        till $partyListButAuthor:noescape()$.
+      $if(signed)$
+      <p>
+        Du har nu undertecknat och dokumentet är bindande.
       </p>
+      $else$
+      <p>
+        En inbjudan att underteckna har nu skickats till
+        $partyListButAuthor:noescape()$.
+      </p>
+      $endif$
     </div>
   </div>
   <div class="modal-footer">
