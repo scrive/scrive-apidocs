@@ -329,7 +329,7 @@ safeReady(function() {
 });
 
 safeReady(function() {
-  flashFlashMessages();
+  setTimeout(flashFlashMessages, 2000); // wait two seconds to load img
   flashSpecialFlashMessages();
   showModal();
   enableInfoTextOnce();
@@ -967,7 +967,6 @@ function flashSpecialFlashMessages(){
 
 function flashFlashMessages() {
     var flashmsgbox = $(".flashmsgbox");
-  setTimeout(function() {
     if ($(".flash-container", flashmsgbox).size() > 0) {
         // delay() and click() doesn't work correctly in document
         // creator since clearQueue() doesn't call clearTimeout(),
@@ -979,7 +978,6 @@ function flashFlashMessages() {
             hideFlashMessages(event);
         });
     }
-  }, 5000); // wait half a second to load img
 }
 
 function showModal(){
