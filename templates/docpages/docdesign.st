@@ -388,11 +388,10 @@ pageDocumentDesign=
            <div> 
             $validationdropdown()$
             <div style="padding-bottom:8px; padding-top: 2px;">
-            <!-- we dont need below code anymore because of signing order, but maybe it's needed for something else, so I"ll just leave it here -->
-            <!--<input id="lastcheck" style="position:relative;top:2px" type="checkbox" class="switchercheckbox sendcheckbox" on=".sendbutton" off=".signbutton" autocomplete="off" value="off" > 
-            <label for="lastcheck" class="usual" style="margin-left:3px;">Underteckna sist </label>
+            <input id="switchercheckbox" style="position:relative;top:2px" type="checkbox" class="sendcheckbox" on=".sendbutton" off=".signbutton" autocomplete="off" value="off" > 
+            <label for="switchercheckbox" class="usual" style="margin-left:3px;">Underteckna sist </label>
             <label class="secretary" style="margin-left:3px;display:none;">Ej undertecknande part</label>
-            </input>-->
+            </input>
             </div>
             <div class="sendbutton" style="display:none">
             <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"  class="btn-big green center">
