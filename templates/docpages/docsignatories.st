@@ -72,6 +72,8 @@ $elseif(cancel)$
      $endif$
 $elseif(datamismatch)$
 
+$elseif(signatory.rejecteddate)$
+    Avvisat $signatory.rejecteddate$
 $elseif(signatory.seendate)$        
     Granskat $signatory.seendate$
 $else$

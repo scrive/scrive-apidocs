@@ -477,13 +477,16 @@ rejectDocument :: DocumentID
                -> SignatoryLinkID 
                -> MinutesTime 
                -> Word32 
+               -> Maybe BS.ByteString
                -> Update Documents (Either String Document)
-rejectDocument documentid signatorylinkid1 time ipnumber = do
+rejectDocument documentid signatorylinkid1 time ipnumber customtext = do
   modifySignable documentid $ \document ->
       let
           signlinks = documentsignatorylinks document
           Just sl = find ((== signatorylinkid1) . signatorylinkid) signlinks
-          newdocument = document { documentstatus = Rejected } `appendHistory` 
+          newdocument = document { documentstatus = Rejected 
+                                 , documentrejectioninfo = Just (time, signatorylinkid1, maybe (BS.fromString "") id customtext)
+                                 } `appendHistory` 
                         [DocumentHistoryRejected time ipnumber (signatorydetails sl)]
       in case documentstatus document of
            Pending ->  Right newdocument

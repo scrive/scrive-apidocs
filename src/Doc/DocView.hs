@@ -752,7 +752,12 @@ signatoryLinkFields
         , (isTimedout, SCTimedout)
         , (wasSigned,  SCSigned)
         , (wasSeen,    SCOpened)
-        ] SCSent       
+        ] SCSent 
+   -- the date this document was rejected if rejected by this signatory
+   rejectedDate = case documentrejectioninfo document of
+                    Just (rt, slid, _) 
+                        | slid == signatorylinkid -> Just $ showDateOnly rt
+                    _                             -> Nothing
     in do
       field "current" $ current  
       field "status" $ show status
@@ -780,6 +785,7 @@ signatoryLinkFields
                      else "viewer"
       field "secretary"  $ (isAuthor document siglnk) &&  not (isSignatory siglnk)              
       field "author" $ (isAuthor document siglnk)
+      field "rejecteddate" rejectedDate
 
 packToMString :: BS.ByteString -> Maybe String
 packToMString x =
