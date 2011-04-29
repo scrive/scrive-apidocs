@@ -581,17 +581,29 @@ function updateAuthorSignOrder() {
     );
 }
 
+function updateSwitcherCheckBox(switcher) {
+    var on = $(switcher.attr("on")),
+        off = $(switcher.attr("off")),
+        checked = switcher.attr("checked");
+    if (checked) {
+        off.hide();
+        on.show();
+    } else {
+        on.hide();
+        off.show();
+    }
+}
+
 function updateSignSendButton(authorsignorder) {
     // it can be 1, N (number of signatories + 1) or '-'.
     // '-' means author is not signatory, 1 that author
     // signs first and N that author signs last
-    if (authorsignorder.val() != 1) {
-        $(".sendbutton").show();
-        $(".signbutton").hide();
-    } else {
-        $(".sendbutton").hide();
-        $(".signbutton").show();
-    }
+    var switcher = $("#switchercheckbox");
+    if (authorsignorder.val() != 1)
+        switcher.attr("checked", "checked");
+    else
+        switcher.removeAttr("checked");
+    updateSwitcherCheckBox(switcher);
 }
 
 function personIsSignatory(signorder) {
@@ -742,6 +754,10 @@ safeReady(function() {
         authorsignorder.val("-");
         updateAuthorSignOrder();
         updateSignSendButton(authorsignorder);
+    });
+    
+    $("#switchercheckbox").change(function() {
+        updateSwitcherCheckBox($(this));
     });
     
     $("#personpane .signorder").live("change", updatePeopleListSignOrder);

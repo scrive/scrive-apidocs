@@ -698,38 +698,6 @@ safeReady(function() {
   });    
 });
 
-safeReady(function() {
-  $(".switchercheckbox").change(function(){
-    var on = $($(this).attr("on"));
-    var off = $($(this).attr("off"));
-
-    var checked = $(this).attr("checked");
-
-    if(checked) {
-      off.hide();
-      on.show();
-    } else {
-      on.hide();
-      off.show();
-    }
-/*
-    if($(this).val() == "off") {  
-      off.hide();
-      on.show();
-      $(this).val("on"); 
-      this.checked = true;
-    
-    } 
-    else {
-        on.hide();
-        off.show();
-        $(this).val("off");
-        this.checked = false;
-    }    
-    return false;*/
-  });
-});
-
 safeReady(function() {    
   $(".datetodaystip").each(function() {
     var curr = $(this);
