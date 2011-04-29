@@ -967,6 +967,7 @@ function flashSpecialFlashMessages(){
 
 function flashFlashMessages() {
     var flashmsgbox = $(".flashmsgbox");
+  setTimeout(function() {
     if ($(".flash-container", flashmsgbox).size() > 0) {
         // delay() and click() doesn't work correctly in document
         // creator since clearQueue() doesn't call clearTimeout(),
@@ -978,6 +979,7 @@ function flashFlashMessages() {
             hideFlashMessages(event);
         });
     }
+  }, 500); // wait half a second to load img
 }
 
 function showModal(){
