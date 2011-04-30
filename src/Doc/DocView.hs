@@ -1054,11 +1054,9 @@ buildJS authordetails signatorydetails =
   ++ ", author: " ++ buildSigJS authordetails
   ++ " }"
   where
-    sigs =
-      if (length signatorydetails) > 0
-         then jsArray (map buildSigLinkJS signatorydetails)
-         else jsArray [(buildSigJS emptyDetails)]
-
+    -- no need to insert empty signatory here since it's done
+    -- with javascript in doc design.
+    sigs = jsArray (map buildSigLinkJS signatorydetails)
 
 defaultInviteMessage :: BS.ByteString
 defaultInviteMessage = BS.empty     
