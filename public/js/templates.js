@@ -13,6 +13,7 @@ function newsignatory() {
           personalnumber: "", 
           companynumber: "", 
           email: "",
+          role: "signatory",
           signorder: 1,
 	      nameplacements: [],
 	      companyplacements: [],
@@ -315,11 +316,13 @@ function docstateToHTML(){
   var sl = $("#personpane");
   
 
-  authorToHTML(docstate.author);
-
   if(signatories.length === 0){
     signatories[0] = newsignatory();
   }
+  
+  initSigningOrder();
+  
+  authorToHTML(docstate.author);
   
   csvpersonindex = sl.closest("form").find("input[type='hidden'][name='csvpersonindex']").attr("value");
 
@@ -555,12 +558,15 @@ function authorToHTML(sig) {
     sigentry.find(".partyrole input:radio").first().attr("checked", "true");
   } else {
     sigentry.find(".partyrole input:radio").last().attr("checked", "true");
+    var authorsignorder = $("#authorsignorder");
+    authorsignorder.hide();
+    makeNonSignatory(authorsignorder);
   }
   
   $("#peopleList ol").append(
       $("<li>").append(
           $("<a href='#'></a>").text(sig.fstname + " " + sig.sndname + " (Avsändare)").append(
-              newSignOrderListElement(1)
+              newSignOrderListElement(sig.signatory ? 1 : "-")
           )
       )
   );
@@ -577,7 +583,7 @@ function updatePeopleListSignOrder() {
 
 function updateAuthorSignOrder() {
     $("#peopleList .signorderlist:first").text(
-        $("#authorsignorder").find("option:selected").text()
+        $("#authorsignorder").val()
     );
 }
 
@@ -614,6 +620,22 @@ function personIsSignatory(signorder) {
     return signorder.val() != "-";
 }
 
+function makeSignatory(signorder) {
+    var option = signorder.find("option:first");
+    // restore first option's value
+    option.text(1);
+    option.val(1);
+    signorder.val(1);
+}
+
+function makeNonSignatory(signorder) {
+    var option = signorder.find("option:first");
+    // change first option to "-" and set it as active
+    option.text("-");
+    option.val("-");
+    signorder.val("-");
+}
+
 function hideSigningOrderRelatedElements() {
     var authorsignorder = $("#authorsignorder");
     // we want it to switch to the first option if author is signatory,
@@ -628,6 +650,7 @@ function hideSigningOrderRelatedElements() {
     $(".signorder").hide();
     $(".signorderlist").hide();
     $("#signorderlisttitle").hide();
+    activateSignInvite();
     updateSignSendButton(authorsignorder);
 }
 
@@ -645,6 +668,7 @@ function showSigningOrderRelatedElements() {
     });
     $(".signorderlist").show();
     $("#signorderlisttitle").show();
+    deactivateSignInvite();
     updateSignSendButton(authorsignorder);
 }
 
@@ -701,7 +725,7 @@ function addSigningOrderPosition() {
             signr = parseInt(signorder.last().find("option:last").val());
         ++signr;
         signorder.append(
-            option = $("<option>").attr("value", signr).text(signr)
+            $("<option>").attr("value", signr).text(signr)
         );
     }
 }
@@ -713,21 +737,37 @@ function newSignOrderListElement(value) {
     return signorderlist;
 }
 
-safeReady(function() {
+function initSigningOrder() {
     // add all signatories to initial signorder template
-    var signorder = $(".signorder"), siglen = docstate.signatories.length;
+    var signorder = $("#templates .signorder"), siglen = docstate.signatories.length;
     console.log(siglen);
-    if (siglen == 1)
-        ++siglen; // empty doc has one sig (author)
-    for (var i = 1; i < siglen; ++i)
-        signorder.append($("<option>").attr("value", i).text(i));
-    $("#authorsignorder option:last").val(siglen).text(siglen);
+    var authorSignatory = docstate.signatories[0] == docstate.author;
+    for (var i = authorSignatory ? 1 : 0, j = 1; i < siglen; ++i) {
+        console.log(docstate.signatories[i].role);
+        if (docstate.signatories[i].role == "signatory") {
+            signorder.append($("<option>").attr("value", j).text(j));
+            ++j;
+        }
+    }
+    // only author, in such case another signatory is added "for free",
+    // so we get two of them and neither is non-signatory
+    if (authorSignatory && siglen == 1) {
+        signorder.append($("<option>").attr("value", 1).text(1));
+        ++j;
+    }
+    if (j == 1) {
+        allNonSignatories = true;
+        signorder.append($("<option>").attr("value", 1).text(1));
+    }
+    $("#authorsignorder option:last").val(j).text(j);
     
     if (signingOrderEnabled)
         showSigningOrderRelatedElements();
     else
         hideSigningOrderRelatedElements();
-    
+}
+
+safeReady(function() {
     $("#personpane #authorsignorder").change(function() {
         updateSignSendButton($(this));
         updatePeopleListSignOrder();
@@ -735,11 +775,13 @@ safeReady(function() {
     
     $("#personpane #authorsignatoryradio").change(function() {
         var authorsignorder = $("#authorsignorder"),
-            option = authorsignorder.find("option:first");
-        // restore firrs option's value
-        option.text(1);
-        option.val(1);
-        authorsignorder.val(1);
+            option = authorsignorder.find("option:last");
+        // if second option has value 1, we switch in makeSignatory
+        // to second one, but we don't want that, so just replace that
+        // with -1 for a while
+        option.val(-1);
+        makeSignatory(authorsignorder);
+        option.val(option.text());
         // signing order is enabled and we have another person that is signatory
         if (signingOrderEnabled && !allNonSignatories)
             authorsignorder.show();
@@ -748,14 +790,9 @@ safeReady(function() {
     });
     
     $("#personpane #authorsecretaryradio").change(function() {
-        var authorsignorder = $("#authorsignorder"),
-            option = authorsignorder.find("option:first");
-        if (signingOrderEnabled)
-            authorsignorder.hide();
-        // change first option to "-" and set it as active
-        option.text("-");
-        option.val("-");
-        authorsignorder.val("-");
+        var authorsignorder = $("#authorsignorder");
+        authorsignorder.hide();
+        makeNonSignatory(authorsignorder);
         updateAuthorSignOrder();
         updateSignSendButton(authorsignorder);
     });
@@ -767,25 +804,18 @@ safeReady(function() {
     $("#personpane .signorder").live("change", updatePeopleListSignOrder);
     
     $("#personpane .sigrole_nonsignatory").live("change", function() {
-        var signorder = $(this).parents(".persondetails").find(".signorder"),
-            option = signorder.find("option:first");
-        // change first option to "-" and set it as active
-        option.text("-");
-        option.val("-");
-        signorder.val("-");
+        var signorder = $(this).parents(".persondetails").find(".signorder");
         signorder.hide();
+        makeNonSignatory(signorder);
         removeLastSigningOrderPosition();
         updatePeopleListSignOrder();
     });
     
     $("#personpane .sigrole_signatory").live("change", function() {
-        var signorder = $(this).parents(".persondetails").find(".signorder"),
-            option = signorder.find("option:first");
-        // restore first option's value
-        option.text(1);
-        option.val(1);
-        signorder.val(1);
-        signorder.show();
+        var signorder = $(this).parents(".persondetails").find(".signorder");
+        makeSignatory(signorder);
+        if (signingOrderEnabled)
+            signorder.show();
         addSigningOrderPosition();
         updatePeopleListSignOrder();
     });
@@ -1038,10 +1068,11 @@ function signatoryToHTML(isMultiple, sig) {
     return false;
   });
 
-  var radiobuttons = sigentry.find(".partyrole input:radio");
+  var partyrole = sigentry.find(".partyrole"),
+      radiobuttons = partyrole.find("input:radio");
   radiobuttons.change(function() {
     if( $(this).attr("checked")) {
-      sigentry.find(".partyrole input:hidden").val($(this).attr("value"));
+      partyrole.find("input:hidden").val($(this).attr("value"));
       var that = this;
       radiobuttons.each( function() {
         if( that!=this ) {
@@ -1051,7 +1082,20 @@ function signatoryToHTML(isMultiple, sig) {
     }
   });
 
-
+  var signorder = sigentry.find(".signorder");
+  if (sig.role == "signatory") {
+      partyrole.find(".sigrole_signatory").attr("checked", true);
+      partyrole.find("input[name=signatoryrole]").val("signatory");
+      signorder.val(sig.signorder);
+      if (signingOrderEnabled)
+        signorder.show();
+  } else {
+      partyrole.find(".sigrole_nonsignatory").attr("checked", true);
+      partyrole.find("input[name=signatoryrole]").val("nonsignatory");
+      signorder.hide();
+      makeNonSignatory(signorder);
+  }
+  
   var d = sigentry.find(".fields");
   var of = sigentry.find(".otherfields");
   
@@ -1114,19 +1158,14 @@ function signatoryToHTML(isMultiple, sig) {
       showSigningOrderRelatedElements();
   }
   
-  var sigs = $("#peopleList ol");
-  sigs.append(
+  $("#peopleList ol").append(
       $("<li>").append(
           $("<a href='#'></a>").text(n).append(
-              newSignOrderListElement(sig.signorder)
+              newSignOrderListElement(sig.role == "signatory" ? sig.signorder : "-")
           )
       )
   );
   sl.append(sigentry);
-  
-  // set sign order
-  var signorder = $("#personpane .signorder:eq(" + (sigs.find("li").length-2) + ")");
-  signorder.val(sig.signorder);
   
   sigentry.find(".csv.single").overlay({
     mask: standardDialogMask,

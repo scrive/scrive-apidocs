@@ -764,28 +764,29 @@ safeReady(function() {
   $(window).resize();
 });
 
-function deactivateSigninvite(){
-  var checkBox = $(".sendcheckbox");
+function deactivateSignInvite(){
+  var checkBox = $("#switchercheckbox");
   checkBox.attr("DISABLED","");
 }
 
 function activateSignInvite(){
-  var checkBox = $(".sendcheckbox");
+  var checkBox = $("#switchercheckbox");
   checkBox.removeAttr("DISABLED");
 }
 function showProperSignButtons() {
-  var checkBox = $(".sendcheckbox");
+  var checkBox = $("#switchercheckbox");
   var numsigs = $("#personpane .persondetails").length;
   if(numsigs > 1) {
     if($("#authorsignatoryradio").attr("checked")) {
-      activateSignInvite();
+      if (!signingOrderEnabled)
+        activateSignInvite();
       checkBox.parent().find(".usual").show();
       checkBox.parent().find(".secretary").hide();
     } else {
       if(!checkBox.attr("checked")) { 
         checkBox.attr("checked", true).change();
-      }   
-      deactivateSigninvite();
+      }
+      deactivateSignInvite();
       checkBox.parent().find(".usual").hide();
       checkBox.parent().find(".secretary").show();
     }
@@ -795,7 +796,7 @@ function showProperSignButtons() {
     }   
     checkBox.parent().find(".usual").show();
     checkBox.parent().find(".secretary").hide();
-    deactivateSigninvite();
+    deactivateSignInvite();
   }
 
   if($("#authorsecretaryradio").attr("checked")) {
