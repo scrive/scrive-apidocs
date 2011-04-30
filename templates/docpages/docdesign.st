@@ -516,7 +516,7 @@ pageDocumentDesign=
       <div class="partyrole">
         <a href="#" class="popup-close closelink"></a>
         <input type="hidden" name="signatoryrole" value="signatory"> </input>
-        <input type="radio" class="sigrole_signatory" value="signatory" checked="true"><label class="radiolabel">Undertecknande part</label></input>
+        <input type="radio" class="sigrole_signatory" value="signatory"><label class="radiolabel">Undertecknande part</label></input>
         <br/>
         <input type="radio" class="sigrole_nonsignatory" value="nonsignatory"><label class="radiolabel">Ej undertecknande part</label></input>
       </div>
