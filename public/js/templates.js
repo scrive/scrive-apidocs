@@ -732,7 +732,7 @@ function addSigningOrderPosition() {
 
 function newSignOrderListElement(value) {
     var signorderlist = $("<span class='signorderlist'>").text(value);
-    if (!signingOrderEnabled)
+    if (!signingOrderEnabled && signorderlist.length>0)
         signorderlist.hide();
     return signorderlist;
 }

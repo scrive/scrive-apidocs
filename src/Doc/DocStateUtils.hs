@@ -43,6 +43,7 @@ module Doc.DocStateUtils (
     , signatoryDetailsFromUser
     , isMatchingSignatoryLink
     , removeFieldsAndPlacements
+    , replaceSignOrder
     
 
     -- History management
@@ -156,6 +157,7 @@ data Feature = CSVUse
                | AuthorPlacementUse
                | SigCustomFieldUse
                | SigPlacementUse
+               | SignOrderUse
 
 {- |
     This bit ensures that all the features used by a document
@@ -232,6 +234,12 @@ checkFeatureSupport doc =
                                , signatoryemailplacements
                                , signatorypersonalnumberplacements
                                , signatorycompanynumberplacements ]
+    isRequired SignOrderUse doc@Document{documentsignatorylinks} =
+      any isSpecialSignOrder documentsignatorylinks
+        where isSpecialSignOrder :: SignatoryLink -> Bool
+              isSpecialSignOrder sl@SignatoryLink{signatorydetails}
+                | isAuthor doc sl = (signatorysignorder signatorydetails) /= (SignOrder 0)
+                | otherwise = (signatorysignorder signatorydetails) /= (SignOrder 1)
 
     {-|
        Defines which Feature is supported by each type of DocumentFunctionality.
@@ -425,3 +433,11 @@ removeFieldsAndPlacements sd = sd {
     , signatorycompanynumberplacements = []
     , signatoryotherfields = []
   }
+
+{- |
+    Sets the sign order on some signatory details.
+-}
+replaceSignOrder :: SignOrder -> SignatoryDetails -> SignatoryDetails
+replaceSignOrder signorder sd = sd {
+    signatorysignorder = signorder
+}
