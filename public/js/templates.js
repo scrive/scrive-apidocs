@@ -1013,8 +1013,7 @@ safeReady(function() {
 
 function setUpCSVUpload(sigentry) {
   var form = sigentry.closest("form");
-  var div = sigentry.closest("#personpane").find(".currentPerson");
-  var idx = div.parent().children().index(div);
+  var idx = sigentry.parent().children().index(sigentry);
   form.find("input[type='hidden'][name='csvpersonindex']").removeAttr("value");
   form.find("input[type='hidden'][name='csvpersonindex']").attr("value", idx);
 }
@@ -1170,7 +1169,7 @@ function signatoryToHTML(isMultiple, sig) {
   sigentry.find(".csv.single").overlay({
     mask: standardDialogMask,
     onBeforeLoad: function() {
-      csvpersonindex = $("form").find("input[type='hidden'][name='csvpersonindex']").attr("value");
+      csvpersonindex = $("form.stepForm input[type='hidden'][name='csvpersonindex']").attr("value");
       if (!(csvpersonindex && csvpersonindex.length>0)) {
         setUpCSVUpload(sigentry);
         return true;
