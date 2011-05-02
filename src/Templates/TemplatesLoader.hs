@@ -71,7 +71,8 @@ templateFiles = ["templates/landpages.st",
                  "templates/aboutpage.st",
                  "templates/partnerspage.st",
                  "templates/clientspage.st",
-                 "templates/eleg.st" ]
+                 "templates/eleg.st",
+                 "templates/api/embedded.st"]
 
 
 type KontrakcjaTemplates = STGroup String

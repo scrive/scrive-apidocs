@@ -6,6 +6,7 @@ module Session
     , Session 
     , SessionId
     , getUserFromSession
+    , getServiceFromSession
     , handleSession
     , updateSessionWithContextData
     , getELegTransactions
@@ -21,6 +22,8 @@ module Session
     , getSessionUserID
     , dropSession
     , dropExpiredSessions
+    , createServiceSession
+    , loadServiceSession
     )
     where
 
@@ -35,12 +38,13 @@ import Happstack.Server.Types (addHeader)
 import Happstack.State
 import User.UserState (UserID,FlashMessage,GetUserByUserID(GetUserByUserID), User)
 import MinutesTime
-import Happstack.Server (RqData, ServerMonad, FilterMonad, Response, mkCookie, readCookieValue, withDataFn, ServerPartT, HasRqData, CookieLife(MaxAge))
+import Happstack.Server (RqData, ServerMonad, FilterMonad, Response, mkCookie, readCookieValue, withDataFn, ServerPartT, HasRqData, CookieLife(MaxAge), FromReqURI(..))
 import System.Random
 import Happstack.Util.Common ( readM)
 import Misc (MagicHash(MagicHash), mkTypeOf, isSecure, isHTTPS)
 import ELegitimation.ELeg
 import Data.Typeable
+import API.Service.ServiceState
 
 -- | Session ID is a wrapped 'Integer' really
 newtype SessionId = SessionId Integer
@@ -53,7 +57,10 @@ instance Show SessionId where
 instance Read SessionId where
     readsPrec prec string = 
         [(SessionId k,v) | (k,v) <- readsPrec prec string]
-
+        
+instance FromReqURI SessionId where
+    fromReqURI = readM
+    
 $(deriveSerialize ''SessionId)
 instance Version SessionId   
   
@@ -102,6 +109,14 @@ data SessionData4 = SessionData4
     , xtoken4           :: MagicHash         -- ^ Random string to prevent CSRF
     } deriving (Ord,Eq,Show,Typeable)
 
+data SessionData5 = SessionData5 
+    { userID5           :: Maybe UserID      -- ^ Just 'UserID' if a person is logged in
+    , expires5          :: MinutesTime       -- ^ when does this session expire
+    , hash5             :: MagicHash         -- ^ session security token
+    , elegtransactions5 :: [ELegTransaction] -- ^ ELeg transaction stuff
+    , xtoken5           :: MagicHash         -- ^ Random string to prevent CSRF
+    } deriving (Ord,Eq,Show,Typeable)
+    
 -- | SessionData is everything we want to know about a person clicking
 -- on the other side of the wire.
 data SessionData = SessionData 
@@ -110,6 +125,7 @@ data SessionData = SessionData
     , hash             :: MagicHash         -- ^ session security token
     , elegtransactions :: [ELegTransaction] -- ^ ELeg transaction stuff
     , xtoken           :: MagicHash         -- ^ Random string to prevent CSRF
+    , service          :: Maybe ServiceID   -- ^ Id of the service that we are now working with
     } deriving (Ord,Eq,Show,Typeable)
 
 $(deriveSerialize ''SessionData3) 
@@ -120,10 +136,14 @@ $(deriveSerialize ''SessionData4)
 instance Version (SessionData4) where
     mode = extension 4 (Proxy :: Proxy SessionData3)
 
-$(deriveSerialize ''SessionData) 
-instance Version (SessionData) where
+$(deriveSerialize ''SessionData5) 
+instance Version (SessionData5) where
     mode = extension 5 (Proxy :: Proxy SessionData4)
 
+$(deriveSerialize ''SessionData) 
+instance Version (SessionData) where
+    mode = extension 6 (Proxy :: Proxy SessionData5)
+    
 instance Migrate SessionData0 SessionData1 where
     migrate (SessionData0 { userID0 = _
                           , flashMessages0 = _
@@ -170,13 +190,23 @@ instance Migrate SessionData3 SessionData4 where
                     , xtoken4           = MagicHash 0
                     }
 
-instance Migrate SessionData4 SessionData where
+instance Migrate SessionData4 SessionData5 where
     migrate SessionData4{} =
+        SessionData5 { userID5           = Nothing
+                    , expires5          = MinutesTime 0 0
+                    , hash5             = MagicHash 0
+                    , elegtransactions5 = []
+                    , xtoken5           = MagicHash 0
+                    }
+
+instance Migrate SessionData5 SessionData where
+    migrate SessionData5{} =
         SessionData { userID           = Nothing
                     , expires          = MinutesTime 0 0
                     , hash             = MagicHash 0
                     , elegtransactions = []
                     , xtoken           = MagicHash 0
+                    , service          = Nothing
                     }
 
 -- | 'Session' data as we keep it in our database
@@ -370,6 +400,7 @@ emptySessionData = do
                          , hash = magicHash
                          , elegtransactions = []
                          , xtoken = xhash
+                         , service = Nothing
                          }  
 
 -- | Check if session data is empty
@@ -392,6 +423,13 @@ getUserFromSession s =
     case (userID $ sessionData s) of
         Just i -> query $ GetUserByUserID i
         _ -> return Nothing    
+
+getServiceFromSession :: Session -> ServerPartT IO (Maybe Service)               
+getServiceFromSession s = 
+    case (service $ sessionData s) of
+        Just i -> query $ GetService i
+        _ -> return Nothing    
+
 
 -- | Handles session timeout. Starts new session when old session timed out.
 handleSession :: ServerPartT IO Session                  
@@ -491,3 +529,24 @@ getELegTransactions = elegtransactions . sessionData
 -- | Get the xtoken from the session data
 getSessionXToken :: Session -> MagicHash
 getSessionXToken = xtoken . sessionData
+
+--- | Creates a session for user and session
+createServiceSession:: (MonadIO m) => ServiceID -> UserID -> m SessionId
+createServiceSession sid uid= do
+    sd <- liftIO emptySessionData
+    session <-  update $ NewSession $  sd {
+              userID = Just uid
+            , service = Just sid
+             }
+    return $ sessionId  session       
+    
+-- This is used to login user to skrivapa when he was logged in by some service 
+loadServiceSession::(MonadIO m,Functor m) => ServiceID -> UserID -> SessionId -> ServerPartT m Bool
+loadServiceSession  sid uid ssid  = do
+    msession <- query $ GetSession ssid
+    case msession of
+        Nothing -> return False
+        Just session@(Session{sessionData}) -> 
+            if (userID sessionData == Just uid && service sessionData == Just sid)
+              then startSessionCookie session >> return True
+              else return False

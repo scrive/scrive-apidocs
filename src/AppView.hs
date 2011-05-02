@@ -5,6 +5,7 @@
 module AppView( TopMenu(..)
               , kontrakcja
               , renderFromBody
+              , embeddedPage
               , signupPageView
               , signupVipPageView
               , pageLogin
@@ -98,6 +99,14 @@ pageFromBody ctx@Context{ ctxmaybeuser
         field "content" content
         standardPageFields ctx title showCreateAccount loginOn referer email
     return $ cdata wholePage
+
+
+embeddedPage::Context -> String -> Kontra Response
+embeddedPage ctx pb = do
+    bdy <- renderTemplateM "embeddedPage" $ do 
+            field "content" pb
+            standardPageFields ctx "" False False Nothing Nothing
+    simpleResponse bdy 
 
 priceplanPage :: Context -> Kontra String
 priceplanPage ctx = renderTemplateAsPage ctx "priceplanPage" True

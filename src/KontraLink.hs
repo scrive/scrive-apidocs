@@ -11,6 +11,9 @@ import qualified Codec.Binary.UTF8.String as UTF
 import qualified Data.ByteString.UTF8 as BS
 import PayEx.PayExState
 import ListUtil
+import Session
+import API.Service.ServiceState
+
 {- |
    Defines the reason why we are redirected to login page
 -}
@@ -26,6 +29,13 @@ data DesignStep = DesignStep1
                 | DesignStep2 DocumentID (Maybe Person) (Maybe DesignStep2Flag) 
                 | DesignStep3 DocumentID   
 
+instance Show DesignStep where
+    show DesignStep1 =  ""
+    show (DesignStep2 documentid Nothing _) = "d/" ++ show documentid ++ "?step2"
+    show (DesignStep2 documentid (Just person) Nothing) = "d/" ++ show documentid ++ "?step2&person=" ++ show person
+    show (DesignStep2 documentid (Just person) (Just AfterCSVUpload)) =  "d/" ++ show documentid ++ "?step2&person=" ++ show person ++ "&aftercsvupload"
+    show (DesignStep3 documentid) ="d/" ++ show documentid ++ "?step3"
+
 {- |
    All the links available for responses
 -}
@@ -39,7 +49,7 @@ data KontraLink
     | LinkTemplates ListParams
     | LinkOffers ListParams
     | LinkMain 
-    | LinkNew (Maybe DocumentType) ListParams
+    | LinkNew (Maybe DocumentType) ListParams Bool
     | LinkAjaxTemplates DocumentType ListParams
     | LinkAccount
     | LinkSecurity
@@ -59,6 +69,7 @@ data KontraLink
     | LinkStats
     | LinkPaymentsAdmin
     | LinkUserAdmin (Maybe UserID)
+    | LinkAdminServices
     | LinkPasswordReminder ActionID MagicHash
     | LinkViralInvitationSent ActionID MagicHash
     | LinkAccountCreated ActionID MagicHash String -- email
@@ -75,6 +86,8 @@ data KontraLink
     | LinkInvite
     | LinkPayExView (Maybe PaymentId)
     | LinkSignCanceledDataMismatch DocumentID SignatoryLinkID
+    | LinkConnectUserSession ServiceID UserID SessionId
+
 
 {- |
    Shows each link as a relative url
@@ -91,7 +104,7 @@ instance Show KontraLink where
     showsPrec _ (LinkTemplates params) = (++) $ "/t" ++ "?" ++ show params
     showsPrec _ (LinkOffers params) = (++) $ "/o" ++ "?" ++ show params
     showsPrec _ LinkMain = (++) "/"
-    showsPrec _ (LinkNew mdoctype params) = (++) $ "/" ++ "?showTemplates=Yes&" ++ "doctype="++ (maybe "" show mdoctype) ++"&"++ show params
+    showsPrec _ (LinkNew mdoctype params templates) = (++) $ "/?" ++ (if (templates) then "showTemplates=Yes&" else "") ++ "doctype="++ (maybe "" show mdoctype) ++"&"++ show params
     showsPrec _ (LinkAjaxTemplates doctype params) = (++) $ "/templates?" ++ "doctype="++ show doctype ++"&"++ show params
     showsPrec _ LinkAcceptTOS = (++) "/accepttos"
     showsPrec _ LinkAccount = (++) "/account"
@@ -102,11 +115,7 @@ instance Show KontraLink where
         (++) $ "/landpage/signedsave/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink)
     showsPrec _ (LinkIssueDoc documentid) = 
         (++) $ "/d/" ++ show documentid
-    showsPrec _ (LinkDesignDoc DesignStep1) =  (++) $ "/"
-    showsPrec _ (LinkDesignDoc (DesignStep2 documentid Nothing _)) = (++) $ "/d/" ++ show documentid ++ "?step2"
-    showsPrec _ (LinkDesignDoc (DesignStep2 documentid (Just person) Nothing)) = (++) $ "/d/" ++ show documentid ++ "?step2&person=" ++ show person
-    showsPrec _ (LinkDesignDoc (DesignStep2 documentid (Just person) (Just AfterCSVUpload))) = (++) $ "/d/" ++ show documentid ++ "?step2&person=" ++ show person ++ "&aftercsvupload"
-    showsPrec _ (LinkDesignDoc (DesignStep3 documentid)) = (++) $ "/d/" ++ show documentid ++ "?step3"
+    showsPrec _ (LinkDesignDoc designstep) =  (++) $ "/" ++ show designstep
     showsPrec _ (LinkIssueDocPDF Nothing document) = 
         (++) $ "/d/" ++ show (documentid document) ++ "/" ++ BS.toString (documenttitle document) ++ ".pdf"
     showsPrec _ (LinkIssueDocPDF (Just SignatoryLink{signatorylinkid, signatorymagichash}) document) = 
@@ -125,6 +134,7 @@ instance Show KontraLink where
     showsPrec _ (LinkPaymentsAdmin ) = (++) $ "/adminonly/advpayments"
     showsPrec _ (LinkUserAdmin Nothing) = (++) $ "/adminonly/useradmin"
     showsPrec _ (LinkUserAdmin (Just userId)) = (++) $ "/adminonly/useradmin/"++show userId
+    showsPrec _ (LinkAdminServices) = (++) $ "/adminonly/services"
     showsPrec _ (LinkPasswordReminder aid hash) = (++) $ "/amnesia/" ++ show aid ++ "/" ++ show hash
     showsPrec _ (LinkViralInvitationSent aid hash) = (++) $ "/accountsetup/" ++ show aid ++ "/" ++ show hash
     showsPrec _ (LinkAccountCreated aid hash email) = (++) $ "/accountsetup/" ++ show aid ++ "/" ++ show hash ++ "?email=" ++ email
@@ -141,7 +151,8 @@ instance Show KontraLink where
     showsPrec _ (LinkPayExView Nothing) = (++) $ "/payex"
     showsPrec _ (LinkPayExView (Just pid)) = (++) $ "/payex/" ++ show pid
     showsPrec _ (LinkSignCanceledDataMismatch docid sigid) = (++) $ "/landpage/signcanceleddatamismatch/" ++ show docid ++ "/" ++ show sigid
-    
+    showsPrec _ (LinkConnectUserSession sid uid ssid) = (++) $ "/integration/connect/" ++ encodeForURL sid ++ "/" ++ show uid  ++ "/" ++ show ssid
+
     
 -- type class instances used for xml'ing the KontraLinks
 

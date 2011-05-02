@@ -948,8 +948,8 @@ designViewFields step = do
         _ -> False
 
 
-uploadPage :: KontrakcjaTemplates -> ListParams -> (Maybe DocumentType) -> Bool -> IO String
-uploadPage templates params mdoctype showTemplates = renderTemplate templates "uploadPage" $ do
+uploadPage :: Context -> ListParams -> (Maybe DocumentType) -> Bool -> IO String
+uploadPage ctx params mdoctype showTemplates = renderTemplate (ctxtemplates ctx) "uploadPage" $ do
     field "typeselected" $ isJust mdoctype
     field "contract" $ mdoctype == Just Contract
     field "offer" $ mdoctype == Just Offer
