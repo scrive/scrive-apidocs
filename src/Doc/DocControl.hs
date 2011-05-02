@@ -67,7 +67,7 @@ import Redirect
 import Data.CSV
 import Text.ParserCombinators.Parsec
 import Codec.Text.IConv
-
+import Routing
 
 {-
   Document state transitions are described in DocState.
@@ -384,8 +384,8 @@ sendRejectEmails customMessage ctx document signalink = do
    Method: Get
    ??: Is this what it does?
  -}
-handleSTable :: Kontra Response
-handleSTable = withUserGet $ checkUserTOSGet $ do
+handleSTable :: Kontra (Either KontraLink Response)
+handleSTable = checkUserTOSGet $ do
       ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxtemplates}) <- get
       let user = fromJust ctxmaybeuser
       documents <- query $ GetDocumentsBySignatory user
@@ -572,8 +572,8 @@ isFriendWithSignatoryLink uid sl = do
    URL: /d/{documentid}
    Method: GET
  -}
-handleIssueShowGet :: DocumentID -> Kontra Response
-handleIssueShowGet docid = withUserGet $ checkUserTOSGet $ do
+handleIssueShowGet :: DocumentID -> Kontra RedirectOrContent 
+handleIssueShowGet docid = checkUserTOSGet $ do
   document@Document{ documentauthor } <- queryOrFail $ GetDocumentByDocumentID $ docid
   ctx@Context {
         ctxmaybeuser = Just (user@User{userid})
@@ -593,16 +593,13 @@ handleIssueShowGet docid = withUserGet $ checkUserTOSGet $ do
         ctx2 <- get   -- need to get new context because we may have added flash msg
         step <- getDesignStep (documentid document)
         case (documentstatus document) of
-           Preparation -> renderFromBody ctx2 toptab kontrakcja 
-                            (cdata <$> pageDocumentDesign ctx2 document author step)
-           _ ->  renderFromBody ctx2 toptab kontrakcja 
-                            (cdata <$> pageDocumentForAuthor ctx2 document author)                
+           Preparation -> liftIO $ pageDocumentDesign ctx2 document author step
+           _ ->  liftIO $ pageDocumentForAuthor ctx2 document author                
    -- friends can just look (but not touch)
    else do
         friendWithSignatory <- liftIO $ isFriendWithSignatory userid document 
         if (isFriendOf userid author || friendWithSignatory )
-         then renderFromBody ctx toptab kontrakcja
-                  (cdata <$> pageDocumentForViewer ctx document author Nothing)
+         then liftIO $ pageDocumentForViewer ctx document author Nothing
          -- not allowed
          else mzero
 
@@ -735,7 +732,7 @@ handleIssueSaveAsTemplate document author = do
 
 handleIssueChangeToContract document author = do
     ctx <- get
-    mcontract <- update $ SignableFromDocument $ documentid document 
+    mcontract <- update $ SignableFromDocumentID $ documentid document 
     case mcontract of 
         Right contract -> do   
             mncontract <- updateDocument ctx author contract
@@ -930,7 +927,7 @@ handleIssueSignByAuthor document author = do
    URL: /d/{documentid}/{title}
    Method: GET
  -}
-handleIssueShowTitleGet :: DocumentID -> String -> Kontra Response
+handleIssueShowTitleGet :: DocumentID -> String -> Kontra (Either KontraLink Response)
 handleIssueShowTitleGet docid = withAuthorOrFriend docid
     . checkUserTOSGet . handleIssueShowTitleGet' docid
 
@@ -956,8 +953,8 @@ handleIssueShowTitleGet' docid _title = do
     return res2
 
 -- | Check if current user is author or friend so he can view the document
-withAuthorOrFriend :: DocumentID -> Kontra Response -> Kontra Response
-withAuthorOrFriend docid action = withUserGet $ do
+withAuthorOrFriend :: DocumentID -> Kontra (Either KontraLink a) -> Kontra (Either KontraLink a)
+withAuthorOrFriend docid action = (fmap join) $ withUserGet $ do
     doc@Document{documentauthor} <- queryOrFail $ GetDocumentByDocumentID $ docid
     ctx@Context {
           ctxmaybeuser = Just user@User{userid}
@@ -975,7 +972,7 @@ withAuthorOrFriend docid action = withUserGet $ do
    URL: /d/{documentid}/{title}
    Method: GET
  -}
-handleFileGet :: FileID -> String -> Kontra Response
+handleFileGet :: FileID -> String -> Kontra (Either KontraLink Response)
 handleFileGet fileid' _title = do
   withUserGet $ onlySuperUser $ do
    ctx <- get
@@ -1272,8 +1269,8 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
    is a friend of the author.
    Duplicates are removed.
  -}
-showContractsList:: Kontra Response
-showContractsList= withUserGet $ checkUserTOSGet $ do
+showContractsList:: Kontra (Either KontraLink Response)
+showContractsList= checkUserTOSGet $ do
   -- Just user is safe here because we guard for logged in user
   ctx@(Context {ctxmaybeuser = Just user, ctxhostpart, ctxtime, ctxtemplates}) <- get
   mydocuments <- query $ GetDocumentsByUser user 
@@ -1289,8 +1286,8 @@ showContractsList= withUserGet $ checkUserTOSGet $ do
   content <- liftIO $ pageContractsList ctxtemplates ctxtime user (docSortSearchPage params contracts)
   renderFromBody ctx TopDocument kontrakcja $ cdata content
 
-showTemplatesList:: Kontra Response
-showTemplatesList = withUserGet $ checkUserTOSGet $ do
+showTemplatesList:: Kontra (Either KontraLink Response)
+showTemplatesList = checkUserTOSGet $ do
   -- Just user is safe here because we guard for logged in user
   ctx@(Context {ctxmaybeuser = Just user, ctxhostpart, ctxtime, ctxtemplates}) <- get
   mydocuments <- query $ GetDocumentsByUser user 
@@ -1302,7 +1299,7 @@ showTemplatesList = withUserGet $ checkUserTOSGet $ do
   content <- liftIO $ pageTemplatesList ctxtemplates ctxtime user (docSortSearchPage params templates)
   renderFromBody ctx TopDocument kontrakcja $ cdata content
 
-handlePageOfDocument :: DocumentID -> Kontra Response
+handlePageOfDocument :: DocumentID -> Kontra (Either KontraLink Response)
 handlePageOfDocument docid = withAuthorOrFriend docid
     . checkUserTOSGet $ handlePageOfDocument' docid Nothing
 
@@ -1336,8 +1333,8 @@ handlePageOfDocument' documentid mtokens = do
                     pages <- liftIO $ Doc.DocView.showFilesImages2 (ctxtemplates ctx) documentid mtokens $ zip f b
                     webHSP $ return $ cdata pages
 
-showOfferList:: Kontra Response
-showOfferList= withUserGet $ checkUserTOSGet $ do
+showOfferList:: Kontra (Either KontraLink Response)
+showOfferList= checkUserTOSGet $ do
     -- Just user is safe here because we guard for logged in user
     ctx@(Context {ctxmaybeuser = Just user, ctxhostpart, ctxtime, ctxtemplates}) <- get
     mydocuments <- query $ GetDocumentsByUser user 
@@ -1534,7 +1531,7 @@ handleOffersReload = fmap LinkOffers getListParamsForSearch
    Method: GET
    FIXME: Should probably check for permissions to view
  -}
-showPage :: DocumentID -> FileID -> Int -> Kontra Response
+showPage :: DocumentID -> FileID -> Int -> Kontra (Either KontraLink Response)
 showPage docid fileid = withAuthorOrFriend docid
     . checkUserTOSGet . showPage' fileid
 
@@ -1668,15 +1665,14 @@ checkLinkIDAndMagicHash document linkid magichash1 = do
                                                     then return ()
                                                     else mzero
       Nothing -> mzero
-
-showMainPage::User -> Kontra Response
-showMainPage user =  do
+        
+mainPage:: Kontra String
+mainPage =  do
                       ctx <- get
                       params <- getListParams
                       showTemplates <- isFieldSet "showTemplates"
-                      mdoctype <- getDocType
-                      content <- liftIO $ uploadPage (ctxtemplates ctx) params mdoctype showTemplates
-                      renderFromBody ctx TopDocument kontrakcja $ cdata content 
+                      mdoctype <- getDocType            
+                      liftIO $ uploadPage ctx params mdoctype showTemplates
 
 getDocType::Kontra (Maybe DocumentType)
 getDocType = readField "doctype"
@@ -1715,8 +1711,8 @@ handleCreateFromTemplate = withUserPost $ do
              document@Document{ documentauthor } <- queryOrFail $ GetDocumentByDocumentID $ did
              isShared <- isShared user document
              newdoc <- case (isAuthor document user, isShared) of
-                         (True, _) -> update $ SignableFromDocument did
-                         (_, True) -> update $ SignableFromSharedDocument user did
+                         (True, _) -> update $ SignableFromDocumentID did
+                         (_, True) -> update $ SignableFromSharedDocumentID user did
                          _ -> mzero
              case newdoc of
                  Right newdoc -> return $ LinkIssueDoc $ documentid newdoc

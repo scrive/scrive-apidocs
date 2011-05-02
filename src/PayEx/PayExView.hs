@@ -64,13 +64,13 @@ viewPayment::KontrakcjaTemplates -> Payment -> IO String
 viewPayment templates payment = do
                                  pm <- toPaymentView templates payment
                                  renderTemplate templates "paymentView" $ do
-                                     field "payment" pm
+                                     field "payment" True--pm
 
 viewPayments::KontrakcjaTemplates -> [Payment] -> IO String
 viewPayments templates payments = do
                                    pms <- sequence $ map (toPaymentView templates) payments
                                    renderTemplate templates "paymentsView" $ do
-                                       field "payments" pms
+                                       field "payments" True--pms
 
 
 mailNewPayment::Context -> User -> Payment -> IO Mail
@@ -78,7 +78,7 @@ mailNewPayment ctx user payment = do
                                         pm <- toPaymentView (ctxtemplates ctx) payment 
                                         title <- renderTemplate (ctxtemplates ctx) "mailNewPaymentTitle" () 
                                         content <- renderTemplate (ctxtemplates ctx) "mailNewPaymentContent" $ do
-                                                       field "payment" pm
+                                                       field "payment" True--pm
                                                        field "ctxhostpart" $ ctxhostpart ctx
                                         return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
 

@@ -116,6 +116,7 @@ Executable kontrakcja-server
  Build-Depends: regex-tdfa
  Build-Depends: parsec
  Build-Depends: iconv
+ Build-Depends: json==0.4.4
 
  Main-Is: Main.hs
 
@@ -184,6 +185,7 @@ Executable kontrakcja-test
  Build-Depends: regex-tdfa
  Build-Depends: parsec
  Build-Depends: iconv
+ Build-Depends: json==0.4.4
 
  Main-is: TestMain.hs
 

@@ -67,8 +67,11 @@ import System.Directory
 import ListUtil
 import Data.Word
 import System.Time
+import API.WebshopAPI
 import Happstack.Server.Internal.Cookie
-
+import API.IntegrationAPI
+import Templates.Templates
+import Routing
 {- | 
   Defines the application's configuration.  This includes amongst other things
   the http port number, amazon, trust weaver and email configuraton,
@@ -121,151 +124,157 @@ data AppGlobals
 -}
 handleRoutes :: Kontra Response
 handleRoutes = msum [
-       hget0_allowHttp $ handleHomepage
-     , hpost0 $ handleMainReaload
+       hGetAllowHttp $ handleHomepage
+     , hPost $ handleMainReaload
 
      -- static pages
-     , dir "prisplan" $ hget0_allowHttp $ handlePriceplanPage
-     , dir "prisplan.html" $ hget0_allowHttp $ handlePriceplanPage
-     , dir "sakerhet" $ hget0_allowHttp $ handleSecurityPage
-     , dir "sakerhet.html" $ hget0_allowHttp $ handleSecurityPage
-     , dir "juridik" $ hget0_allowHttp $ handleLegalPage
-     , dir "juridik.html" $ hget0_allowHttp $ handleLegalPage
-     , dir "sekretesspolicy" $ hget0_allowHttp $ handlePrivacyPolicyPage
-     , dir "sekretesspolicy.html" $ hget0_allowHttp $ handlePrivacyPolicyPage
-     , dir "allmana-villkor" $ hget0_allowHttp $ handleTermsPage
-     , dir "allmana-villkor.html" $ hget0_allowHttp $ handleTermsPage
-     , dir "om-skrivapa" $ hget0_allowHttp $ handleAboutPage
-     , dir "om-skrivapa.html" $ hget0_allowHttp $ handleAboutPage
-     , dir "partners" $ hget0_allowHttp $ handlePartnersPage
-     , dir "partners.html" $ hget0_allowHttp $ handlePartnersPage
-     , dir "kunder" $ hget0_allowHttp $ handleClientsPage
-     , dir "kunder.html" $ hget0_allowHttp $ handleClientsPage
+     , dir "prisplan" $ hGetAllowHttp $ handlePriceplanPage
+     , dir "prisplan.html" $ hGetAllowHttp $ handlePriceplanPage
+     , dir "sakerhet" $ hGetAllowHttp $ handleSecurityPage
+     , dir "sakerhet.html" $ hGetAllowHttp $ handleSecurityPage
+     , dir "juridik" $ hGetAllowHttp $ handleLegalPage
+     , dir "juridik.html" $ hGetAllowHttp $ handleLegalPage
+     , dir "sekretesspolicy" $ hGetAllowHttp $ handlePrivacyPolicyPage
+     , dir "sekretesspolicy.html" $ hGetAllowHttp $ handlePrivacyPolicyPage
+     , dir "allmana-villkor" $ hGetAllowHttp $ handleTermsPage
+     , dir "allmana-villkor.html" $ hGetAllowHttp $ handleTermsPage
+     , dir "om-skrivapa" $ hGetAllowHttp $ handleAboutPage
+     , dir "om-skrivapa.html" $ hGetAllowHttp $ handleAboutPage
+     , dir "partners" $ hGetAllowHttp $ handlePartnersPage
+     , dir "partners.html" $ hGetAllowHttp $ handlePartnersPage
+     , dir "kunder" $ hGetAllowHttp $ handleClientsPage
+     , dir "kunder.html" $ hGetAllowHttp $ handleClientsPage
      
 
      -- e-legitimation stuff
      -- I put this stuff up here because someone changed things out from under me
      -- I will rearrange this later
-     , dir "s" $ hget4  $ BankID.handleSignBankID
-     , dir "s" $ param "eleg" $ hpost3NoXToken $ BankID.handleSignPostBankID
-     , dir "d" $ hget2  $ BankID.handleIssueBankID
-     , dir "d" $ param "eleg" $ hpost1 $ BankID.handleIssuePostBankID
+     , dir "s" $ hGet  $ BankID.handleSignBankID
+     , dir "s" $ param "eleg" $ hPostNoXToken $ BankID.handleSignPostBankID
+     , dir "d" $ hGet  $ BankID.handleIssueBankID
+     , dir "d" $ param "eleg" $ hPost $ BankID.handleIssuePostBankID
 
-     , dir "s" $ hget0  $ DocControl.handleSTable
-     , dir "s" $ hget3  $ DocControl.handleSignShow
-     , dir "s" $ param "sign" $ hpost3NoXToken $ DocControl.signDocument
-     , dir "s" $ param "cancel" $ hpost3NoXToken $ DocControl.rejectDocument
+     , dir "s" $ hGet  $ DocControl.handleSTable
+     , dir "s" $ hGet  $ DocControl.handleSignShow
+     , dir "s" $ param "sign" $ hPostNoXToken $ DocControl.signDocument
+     , dir "s" $ param "cancel" $ hPostNoXToken $ DocControl.rejectDocument
      
      --Q: This all needs to be done by author. Why we dont check it
      --here? MR
 
      --A: Because this table only contains routing logic. The logic of
      --what it does/access control is left to the handler. EN
-     , dir "t" $ hget0  $ DocControl.showTemplatesList
-     , dir "t" $ param "archive" $ hpost0 $ DocControl.handleTemplateArchive
-     , dir "t" $ param "share" $ hpost0 $ DocControl.handleTemplateShare
-     , dir "t" $ param "template" $ hpost0  $ DocControl.handleCreateFromTemplate
-     , dir "t" $ hpost0  $ DocControl.handleCreateNewTemplate
+     , dir "t" $ hGet  $ DocControl.showTemplatesList
+     , dir "t" $ param "archive" $ hPost $ DocControl.handleTemplateArchive
+     , dir "t" $ param "share" $ hPost $ DocControl.handleTemplateShare
+     , dir "t" $ param "template" $ hPost  $ DocControl.handleCreateFromTemplate
+     , dir "t" $ hPost  $ DocControl.handleCreateNewTemplate
      
-     , dir "o" $ hget0  $ DocControl.showOfferList
-     , dir "o" $ param "archive" $ hpost0  $ DocControl.handleOffersArchive
-     , dir "o" $ param "remind" $ hpost0 $ DocControl.handleBulkOfferRemind
-     , dir "o" $ hpost0 $ DocControl.handleOffersReload
+     , dir "o" $ hGet  $ DocControl.showOfferList
+     , dir "o" $ param "archive" $ hPost  $ DocControl.handleOffersArchive
+     , dir "o" $ param "remind" $ hPost $ DocControl.handleBulkOfferRemind
+     , dir "o" $ hPost $ DocControl.handleOffersReload
      
-     , dir "d" $ hget0  $ DocControl.showContractsList
-     , dir "d" $ hget1  $ DocControl.handleIssueShowGet
-     , dir "d" $ hget2  $ DocControl.handleIssueShowTitleGet
-     , dir "d" $ hget4  $ DocControl.handleIssueShowTitleGetForSignatory
-     , dir "d" $ {- param "doc" $ -} hpost0 $ DocControl.handleIssueNewDocument
-     , dir "d" $ param "archive" $ hpost0 $ DocControl.handleContractArchive
-     , dir "d" $ param "remind" $ hpost0 $ DocControl.handleBulkContractRemind
-     , dir "d" $ hpost0 $ DocControl.handleContractsReload
-     , dir "d" $ hpost1 $ DocControl.handleIssueShowPost
-     , dir "df" $ hget2 $ DocControl.handleFileGet
+     , dir "d" $ hGet  $ DocControl.showContractsList
+     , dir "d" $ hGet  $ DocControl.handleIssueShowGet
+     , dir "d" $ hGet  $ DocControl.handleIssueShowTitleGet
+     , dir "d" $ hGet  $ DocControl.handleIssueShowTitleGetForSignatory
+     , dir "d" $ {- param "doc" $ -} hPost $ DocControl.handleIssueNewDocument
+     , dir "d" $ param "archive" $ hPost $ DocControl.handleContractArchive
+     , dir "d" $ param "remind" $ hPost $ DocControl.handleBulkContractRemind
+     , dir "d" $ hPost $ DocControl.handleContractsReload
+     , dir "d" $ hPost $ DocControl.handleIssueShowPost
+     , dir "df" $ hGet $ DocControl.handleFileGet
 
      --This are actions on documents. We may integrate it with all the stuff above, but I don't like it. MR
-     , dir "resend"  $ hpost2 $ DocControl.handleResend
-     , dir "changeemail" $ hpost2 $ DocControl.handleChangeSignatoryEmail
-     -- , dir "withdrawn" $ hpost1 $ DocControl.handleWithdrawn
-     , dir "restart" $ hpost1 $ DocControl.handleRestart
-     , dir "cancel"  $ hpost1 $ DocControl.handleCancel
+     , dir "resend"  $ hPost $ DocControl.handleResend
+     , dir "changeemail" $ hPost $ DocControl.handleChangeSignatoryEmail
+     -- , dir "withdrawn" $ hPost $ DocControl.handleWithdrawn
+     , dir "restart" $ hPost $ DocControl.handleRestart
+     , dir "cancel"  $ hPost $ DocControl.handleCancel
      
-     , dir "pages"  $ hget3 $ ajax $ DocControl.showPage
-     , dir "pages"  $ hget5 $ ajax $ DocControl.showPageForSignatory 
-     , dir "templates"  $ hget0 $ ajax $ DocControl.getTemplatesForAjax
-     , dir "template"  $ hpost0 $ DocControl.handleCreateFromTemplate
+     , dir "pages"  $ hGetAjax $ DocControl.showPage
+     , dir "pages"  $ hGetAjax $ DocControl.showPageForSignatory 
+     , dir "templates"  $ hGetAjax $ DocControl.getTemplatesForAjax
+     , dir "template"  $ hPost $ DocControl.handleCreateFromTemplate
            
-     , dir "pagesofdoc" $ hget1 $ ajax $ DocControl.handlePageOfDocument
-     , dir "pagesofdoc" $ hget3 $ ajax $ DocControl.handlePageOfDocumentForSignatory
+     , dir "pagesofdoc" $ hGetAjax $ DocControl.handlePageOfDocument
+     , dir "pagesofdoc" $ hGetAjax $ DocControl.handlePageOfDocumentForSignatory
 
      -- UserControl
-     , dir "account"                    $ hget0  $ UserControl.handleUserGet
-     , dir "account"                    $ hpost0 $ UserControl.handleUserPost
-     , dir "account" $ dir "subaccount" $ hget0  $ UserControl.handleGetSubaccount
-     , dir "account" $ dir "subaccount" $ hpost0 $ UserControl.handlePostSubaccount
-     , dir "account" $ dir "sharing" $ hget0 $ UserControl.handleGetSharing
-     , dir "account" $ dir "sharing" $ hpost0 $ UserControl.handlePostSharing
-     , dir "account" $ dir "security" $ hget0 $ UserControl.handleGetUserSecurity
-     , dir "account" $ dir "security" $ hpost0 $ UserControl.handlePostUserSecurity
-     , dir "account" $ dir "bsa" $ hget1 $ UserControl.handleGetBecomeSubaccountOf
-     , dir "account" $ dir "bsa" $ hpost1 $ UserControl.handlePostBecomeSubaccountOf
-     , dir "contacts"  $ hget0  $ Contacts.showContacts
-     , dir "contacts"  $ hpost0 $ Contacts.handleContactsChange
-     , dir "accepttos" $ hget0  $ UserControl.handleAcceptTOSGet
-     , dir "accepttos" $ hpost0 $ UserControl.handleAcceptTOSPost
+     , dir "account"                    $ hGet  $ UserControl.handleUserGet
+     , dir "account"                    $ hPost $ UserControl.handleUserPost
+     , dir "account" $ dir "subaccount" $ hGet  $ UserControl.handleGetSubaccount
+     , dir "account" $ dir "subaccount" $ hPost $ UserControl.handlePostSubaccount
+     , dir "account" $ dir "sharing" $ hGet $ UserControl.handleGetSharing
+     , dir "account" $ dir "sharing" $ hPost $ UserControl.handlePostSharing
+     , dir "account" $ dir "security" $ hGet $ UserControl.handleGetUserSecurity
+     , dir "account" $ dir "security" $ hPost $ UserControl.handlePostUserSecurity
+     , dir "account" $ dir "bsa" $ hGet $ UserControl.handleGetBecomeSubaccountOf
+     , dir "account" $ dir "bsa" $ hPost $ UserControl.handlePostBecomeSubaccountOf
+     , dir "contacts"  $ hGet  $ Contacts.showContacts
+     , dir "contacts"  $ hPost $ Contacts.handleContactsChange
+     , dir "accepttos" $ hGet  $ UserControl.handleAcceptTOSGet
+     , dir "accepttos" $ hPost $ UserControl.handleAcceptTOSPost
 
      -- super user only
-     , dir "stats"      $ hget0  $ Administration.showStats
-     , dir "createuser" $ hpost0 $ Administration.handleCreateUser
-     , dir "sendgrid" $ dir "events" $ hpost0NoXToken handleSendgridEvent
-     , dir "adminonly" $ hget0 $ Administration.showAdminMainPage
-     , dir "adminonly" $ dir "advuseradmin" $ hget0 Administration.showAdminUserAdvanced
-     , dir "adminonly" $ dir "useradmin" $ hget1m Administration.showAdminUsers
-     , dir "adminonly" $ dir "useradmin" $ hpost1 Administration.handleUserChange
-     , dir "adminonly" $ dir "useradmin" $ hpost1 Administration.handleUserEnableTrustWeaverStorage
-     , dir "adminonly" $ dir "db" $ hget0 $ Administration.indexDB
+     , dir "stats"      $ hGet  $ Administration.showStats
+     , dir "createuser" $ hPost $ Administration.handleCreateUser
+     , dir "sendgrid" $ dir "events" $ hPostNoXToken handleSendgridEvent
+     , dir "adminonly" $ hGet $ Administration.showAdminMainPage
+     , dir "adminonly" $ dir "advuseradmin" $ hGet Administration.showAdminUserAdvanced
+     , dir "adminonly" $ dir "useradmin" $ hGet $ Administration.showAdminUsers . Just 
+     , dir "adminonly" $ dir "useradmin" $ hGet $ Administration.showAdminUsers Nothing
+     , dir "adminonly" $ dir "useradmin" $ hPost Administration.handleUserChange
+     , dir "adminonly" $ dir "useradmin" $ hPost Administration.handleUserEnableTrustWeaverStorage
+     , dir "adminonly" $ dir "db" $ hGet $ Administration.indexDB
      , dir "adminonly" $ dir "db" $ onlySuperUser $ fileServe [] "_local/kontrakcja_state"
 
-     , dir "adminonly" $ dir "cleanup"           $ hpost0 $ Administration.handleDatabaseCleanup
-     , dir "adminonly" $ dir "alluserstable"     $ hget0  $ Administration.showAllUsersTable
-     , dir "adminonly" $ dir "skrivapausers.csv" $ hget0  $ Administration.getUsersDetailsToCSV
-     , dir "adminonly" $ dir "payments"          $ hget0  $ Payments.handlePaymentsModelForViewView
-     , dir "adminonly" $ dir "advpayments"       $ hget0  $ Payments.handlePaymentsModelForEditView
-     , dir "adminonly" $ dir "advpayments"       $ hpost0 $ Payments.handleAccountModelsChange
+     , dir "adminonly" $ dir "cleanup"           $ hPost $ Administration.handleDatabaseCleanup
+     , dir "adminonly" $ dir "alluserstable"     $ hGet  $ Administration.showAllUsersTable
+     , dir "adminonly" $ dir "skrivapausers.csv" $ hGet  $ Administration.getUsersDetailsToCSV
+     , dir "adminonly" $ dir "payments"          $ hGet  $ Payments.handlePaymentsModelForViewView
+     , dir "adminonly" $ dir "advpayments"       $ hGet  $ Payments.handlePaymentsModelForEditView
+     , dir "adminonly" $ dir "advpayments"       $ hPost $ Payments.handleAccountModelsChange
 
+     , dir "adminonly" $ dir "services" $ hGet $ Administration.showServicesPage
+     , dir "adminonly" $ dir "services" $ param "create" $ hPost $ Administration.handleCreateService
+     , dir "adminonly" $ dir "services" $ param "add" $ hPost $ Administration.handleAddUserToService
+     
      -- a temporary service to help migration
 
-     , dir "adminonly" $ dir "migrate0" $ hget0 $ Administration.handleMigrate0
+     , dir "adminonly" $ dir "migrate0" $ hGet $ Administration.handleMigrate0
 
-     , dir "dave" $ dir "document" $ hget1 $ daveDocument
-     , dir "dave" $ dir "user"     $ hget1 $ daveUser
+     , dir "dave" $ dir "document" $ hGet $ daveDocument
+     , dir "dave" $ dir "user"     $ hGet $ daveUser
            
      -- account stuff
-     , dir "logout"      $ hget0  $ handleLogout
-     , dir "login"       $ hget0  $ handleLoginGet
-     , dir "login"       $ hpost0NoXToken $ handleLoginPost
-     --, dir "signup"      $ hget0  $ signupPageGet
-     , dir "signup"      $ hpost0NoXToken $ signupPagePost
-     --, dir "vip"         $ hget0  $ signupVipPageGet
-     --, dir "vip"         $ hpost0NoXToken $ signupVipPagePost
-     , dir "amnesia"     $ hpost0NoXToken $ forgotPasswordPagePost
-     , dir "amnesia"     $ hget2  $ UserControl.handlePasswordReminderGet
-     , dir "amnesia"     $ hpost2NoXToken $ UserControl.handlePasswordReminderPost
-     , dir "accountsetup"  $ hget2  $ UserControl.handleAccountSetupGet
-     , dir "accountsetup"  $ hpost2NoXToken  $ UserControl.handleAccountSetupPost
-     , dir "accountremoval" $ hget2  $ UserControl.handleAccountRemovalGet
-     , dir "accountremoval" $ hpost2NoXToken  $ UserControl.handleAccountRemovalPost
+     , dir "logout"      $ hGet  $ handleLogout
+     , dir "login"       $ hGet  $ handleLoginGet
+     , dir "login"       $ hPostNoXToken $ handleLoginPost
+     --, dir "signup"      $ hGet  $ signupPageGet
+     , dir "signup"      $ hPostNoXToken $ signupPagePost
+     --, dir "vip"         $ hGet  $ signupVipPageGet
+     --, dir "vip"         $ hPostNoXToken $ signupVipPagePost
+     , dir "amnesia"     $ hPostNoXToken $ forgotPasswordPagePost
+     , dir "amnesia"     $ hGet  $ UserControl.handlePasswordReminderGet
+     , dir "amnesia"     $ hPostNoXToken $ UserControl.handlePasswordReminderPost
+     , dir "accountsetup"  $ hGet  $ UserControl.handleAccountSetupGet
+     , dir "accountsetup"  $ hPostNoXToken  $ UserControl.handleAccountSetupPost
+     , dir "accountremoval" $ hGet  $ UserControl.handleAccountRemovalGet
+     , dir "accountremoval" $ hPostNoXToken  $ UserControl.handleAccountRemovalPost
 
-     , dir "requestaccount" $ hpost0_allowHttp $ UserControl.handleRequestAccount
+     , dir "requestaccount" $ hPostAllowHttp $ UserControl.handleRequestAccount
      -- viral invite
-     , dir "invite"      $ hpost0NoXToken $ UserControl.handleViralInvite
-     , dir "question"    $ hpost0_allowHttp $ UserControl.handleQuestion
+     , dir "invite"      $ hPostNoXToken $ UserControl.handleViralInvite
+     , dir "question"    $ hPostAllowHttp $ UserControl.handleQuestion
      -- e-legitimation stuff
-     , dir "s" $ hget4  $ BankID.handleSignBankID
-     , dir "s" $ param "eleg" $ hpost3 $ BankID.handleSignPostBankID
-     , dir "d" $ hget2  $ BankID.handleIssueBankID
-     , dir "d" $ param "eleg" $ hpost1 $ BankID.handleIssuePostBankID
-
+     , dir "s" $ hGet  $ BankID.handleSignBankID
+     , dir "s" $ param "eleg" $ hPost $ BankID.handleSignPostBankID
+     , dir "d" $ hGet  $ BankID.handleIssueBankID
+     , dir "d" $ param "eleg" $ hPost $ BankID.handleIssuePostBankID
+     , webshopAPI
+     , integrationAPI
      -- static files
      , allowHttp $ serveHTMLFiles
      , allowHttp $ fileServe [] "public"
@@ -275,18 +284,18 @@ handleRoutes = msum [
    Goes to the front page, or to the main document upload page,
    depending on whether there is a logged in user.
 -}
-handleHomepage :: Kontra Response
+handleHomepage :: Kontra (Either Response (Either KontraLink String))
 handleHomepage = do
     ctx@Context{ ctxmaybeuser } <- get
     loginOn <- isFieldSet "logging"
     referer <- getField "referer"
     email   <- getField "email"
     case ctxmaybeuser of
-        Just user -> UserControl.checkUserTOSGet $ DocControl.showMainPage user 
+        Just user -> Right <$> (UserControl.checkUserTOSGet DocControl.mainPage)
         Nothing   -> do
                         resp <- V.simpleResponse =<< (liftIO $ firstPage ctx loginOn referer email)
                         clearFlashMsgs
-                        return resp
+                        return $ Left resp
 
 handlePriceplanPage :: Kontra Response
 handlePriceplanPage = handleWholePage priceplanPage
@@ -331,7 +340,7 @@ handleError = do
 
 handleMainReaload :: Kontra KontraLink
 handleMainReaload = do
-    liftM2 LinkNew DocControl.getDocType getListParamsForSearch
+    liftM3 LinkNew DocControl.getDocType getListParamsForSearch (isFieldSet "showTemplates")
 
 {- |
    Creates a default amazon configuration based on the
@@ -440,6 +449,7 @@ appHandler appConf appGlobals = do
 
       minutestime <- liftIO $ getMinutesTime
       muser <- getUserFromSession session
+      mservice <- getServiceFromSession session
       flashmessages <- withDataFn F.flashDataFromCookie $ maybe (return []) $ \fval ->
           case F.fromCookieValue (aesConfig appConf) fval of
                Just flashes -> return flashes
@@ -475,6 +485,7 @@ appHandler appConf appGlobals = do
                 , ctxelegtransactions = elegtrans
                 , ctxfilecache = filecache appGlobals
                 , ctxxtoken = getSessionXToken session
+                , ctxservice = mservice
                 }
       return ctx
 
@@ -704,169 +715,3 @@ daveUser userid = onlySuperUserGet $ do
     ctx <- get
     user <- queryOrFail $ GetUserByUserID userid
     V.renderFromBody ctx V.TopNone V.kontrakcja $ inspectXML user
-
-hpost0NoXToken :: Kontra KontraLink -> Kontra Response
-hpost0NoXToken action = methodM POST >> (https $ do
-    (link :: KontraLink) <- action
-    sendRedirect link)
-
-hpost0 :: Kontra KontraLink -> Kontra Response
-hpost0 action = methodM POST >> (https $ do
-    UserControl.guardXToken
-    (link :: KontraLink) <- action
-    sendRedirect link)
-
-hpost1 :: (FromReqURI a) =>  (a -> Kontra KontraLink) -> Kontra Response
-hpost1 action = path $ \a1 -> methodM POST >>  (https $ do
-    UserControl.guardXToken
-    (link :: KontraLink) <- action a1
-    sendRedirect link)
-
-hpost2 :: (FromReqURI a, FromReqURI a1) =>   (a -> a1 -> Kontra KontraLink) -> Kontra Response
-hpost2 action = path $ \a1 -> path $ \a2 -> methodM POST >>  (https $ do
-    UserControl.guardXToken
-    (link :: KontraLink) <- action a1 a2
-    sendRedirect link)
-    
-hpost2NoXToken :: (FromReqURI a, FromReqURI a1) =>   (a -> a1 -> Kontra KontraLink) -> Kontra Response
-hpost2NoXToken action = path $ \a1 -> path $ \a2 -> methodM POST >>  (https $ do
-    (link :: KontraLink) <- action a1 a2
-    sendRedirect link)    
-
-hpost3 :: (FromReqURI a, FromReqURI a1, FromReqURI a2) =>  
-          (a -> a1 -> a2 -> Kontra KontraLink) 
-          -> Kontra Response
-hpost3 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> methodM POST >> (https $ do
-    UserControl.guardXToken
-    (link :: KontraLink) <- action a1 a2 a3
-    sendRedirect link)
-
-
-hpost3NoXToken  :: (FromReqURI a, FromReqURI a1, FromReqURI a2) =>  
-          (a -> a1 -> a2 -> Kontra KontraLink) 
-          -> Kontra Response
-hpost3NoXToken  action = path $ \a1 -> path $ \a2 -> path $ \a3 -> methodM POST >> (https $ do
-    (link :: KontraLink) <- action a1 a2 a3
-    sendRedirect link)
-
-
-hpost4 :: (FromReqURI a, FromReqURI a1, FromReqURI a2, FromReqURI a3) =>  
-          (a -> a1 -> a2 -> a3 -> Kontra KontraLink)
-           -> Kontra Response
-hpost4 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> path $ \a4 -> methodM POST >>  (https $ do
-    UserControl.guardXToken
-    (link :: KontraLink) <- action a1 a2 a3 a4
-    sendRedirect link)
-
-hget0 :: Kontra Response -> Kontra Response
-hget0 action = methodM GET >> (https $ action)
-
-
-hget1 :: (FromReqURI a) => (a -> Kontra Response) -> Kontra Response
-hget1 action = path $ \a1 -> methodM GET >> (https $ action a1)
-
-hget2 :: (FromReqURI a, FromReqURI a1) =>
-     (a -> a1 -> Kontra Response) -> Kontra Response
-hget2 action = path $ \a1 -> path $ \a2 -> methodM GET >> (https $ action a1 a2)
-
-hget3 :: (FromReqURI a,
-            FromReqURI a1,
-            FromReqURI a2) =>
-            (a -> a1 -> a2 -> Kontra Response) -> Kontra Response
-hget3 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> methodM GET >> (https $ action a1 a2 a3)
-
-hget4 :: (FromReqURI a,
-            FromReqURI a1,
-            FromReqURI a2,
-            FromReqURI a3) =>
-            (a -> a1 -> a2 -> a3 -> Kontra Response) -> Kontra Response
-hget4 action = path $ \a1 -> path $ \a2 -> path $ \a3 -> path $ \a4 -> methodM GET >> (https $ action a1 a2 a3 a4)
-
-hget5 :: (FromReqURI a,
-          FromReqURI a1,
-          FromReqURI a2,
-          FromReqURI a3,
-          FromReqURI a4) =>
-          (a -> a1 -> a2 -> a3 -> a4 -> Kontra Response)
-          -> Kontra Response
-hget5 action = path $ do \a1 -> path $ \a2 -> path $ \a3 -> path $ \a4 -> path $ \a5 -> methodM GET >> (https $ action a1 a2 a3 a4 a5)
-
-{-|
-  Version supporting optional path param
-  Usually when we want to have similar path when looking at list and when looking at element
-
- -} 
-hget1m :: (Maybe String -> Kontra Response) -> Kontra Response 
-hget1m action = (path $ \a1 -> methodM GET >> (action $ Just a1)) 
-    `mplus` (methodM GET >> action Nothing)
-
-{- |
-   Guard on the existence of a parameter.
- -}
-param :: String -> Kontra Response -> Kontra Response
-param p action = (getDataFnM $ look p) >> action -- will mzero if parameter is not found
-
-hget0_allowHttp :: Kontra Response -> Kontra Response
-hget0_allowHttp action = methodM GET >> (allowHttp $ action)
-
-hpost0_allowHttp :: Kontra KontraLink -> Kontra Response
-hpost0_allowHttp action = methodM POST >> (allowHttp $ do
-                  (link :: KontraLink) <- action
-                  sendRedirect link)
-                  
-
-https:: Kontra Response -> Kontra Response
-https action = do
-    secure <- isSecure
-    if secure 
-       then action
-       else sendSecureLoopBack
-              
-
-allowHttp:: Kontra Response -> Kontra Response
-allowHttp action = do
-    secure <- isSecure
-    loging <- isFieldSet "logging"
-    logged <- isJust <$> ctxmaybeuser <$> get
-    if (secure || (not $ loging || logged))
-       then action
-       else sendSecureLoopBack
-
-
-{- Use this to mark that request will try to get data from our service and embed it on our website
-   It returns a script that if embeded on site will force redirect to main page
-   Ajax request should not contain redirect
--}
-wrapAjax :: Kontra Response -> Kontra Response
-wrapAjax action = noRedirect action `mplus` ajaxError -- Soft redirects should be supported here, ask MR
-
-noRedirect::Kontra Response -> Kontra Response
-noRedirect action = do 
-                  response <- action
-                  if (rsCode response /= 303)
-                   then return response
-                   else mzero
-                  
-
-class Ajaxable a where
-    ajax :: a -> a
-    
-instance Ajaxable (Kontra Response) where
-    ajax f = wrapAjax f
-    
-instance Ajaxable (a -> Kontra Response) where
-    ajax f a = wrapAjax (f a) 
-    
-instance Ajaxable (a-> b -> Kontra Response) where
-    ajax f a b = wrapAjax (f a b)
-    
-instance Ajaxable (a-> b-> c-> Kontra Response) where
-    ajax f a b c = wrapAjax (f a b c) 
-    
-instance Ajaxable (a-> b-> c-> d ->Kontra Response) where
-    ajax f a b c d= wrapAjax (f a b c d )
-
-instance Ajaxable (a-> b-> c-> d -> e -> Kontra Response) where
-    ajax f a b c d e= wrapAjax (f a b c d e) 
-
-
