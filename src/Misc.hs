@@ -534,14 +534,27 @@ getHostpart = do
     return $ scheme ++ "://" ++ host     
      
 getSecureLink::(ServerMonad m,Functor m) => m String
-getSecureLink = do
+getSecureLink = (++) "https://" <$>  currentLinkBody
+
+
+currentLink::(ServerMonad m,Functor m) => m String -- We use this since we can switch to HTTPS whenever we wan't
+currentLink = do
+    secure <- isHTTPS
+    body <- currentLinkBody
+    if (secure)                  
+       then return $  "https://" ++ body
+       else return $  "http://" ++ body
+
+currentLinkBody::(ServerMonad m,Functor m) => m String
+currentLinkBody = do
     rq <- askRq
     let host = maybe "skrivapa.se" BS.toString $ getHeader "host" rq
     let fix a1 a2 = if ("/" `isSuffixOf` a1 && "/" `isPrefixOf` a2)
                   then drop 1 a2
                   else a2
-    return $ "https://" ++ host ++ fix host (rqUri rq) ++ fix (rqUri rq) (rqURL rq)
-    
+    return $ host ++ fix host (rqUri rq) ++ fix (rqUri rq) (rqURL rq)
+
+       
 para :: String -> String
 para s = "<p>" ++ s ++ "</p>"
 
@@ -564,3 +577,21 @@ querystring = do
 
 pureString::String -> String
 pureString s = unwords $ words $ filter (not . isControl) s
+
+pairMaybe::Maybe a -> Maybe b -> Maybe (a,b)
+pairMaybe (Just a) (Just b) = Just (a,b)
+pairMaybe _ _ = Nothing
+
+maybeReadM::(Monad m,Read a,Functor m) =>  m (Maybe String) -> m (Maybe a)
+maybeReadM c = join <$> fmap maybeRead <$> c
+            
+maybeRead::(Read a) => String -> Maybe a            
+maybeRead s = case reads s of
+            [(v,"")] -> Just v
+            _        -> Nothing
+
+class URLAble a where
+   encodeForURL::a -> String            
+
+--encodeStringforURL
+--decodeStringforURL::String -> String

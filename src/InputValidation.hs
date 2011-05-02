@@ -6,6 +6,7 @@
 module InputValidation
     ( ValidationMessage
     , Result(..)
+    , isGood
     , getOptionalField
     , getOptionalFieldList
     , getDefaultedField
@@ -89,6 +90,10 @@ instance Monad Result where
   Good x >>= f = f x
   Bad msg >>= _ = Bad msg
   Empty >>= _ = Empty
+
+isGood:: Result a -> Bool
+isGood (Good _) = True
+isGood _ = False
 
 {- |
     Use this to get and validate most of the usual fields.  If the field

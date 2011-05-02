@@ -5,6 +5,7 @@ module Kontra
     , Context(..)
     , isSuperUser
     , Kontra
+    , Kontra'
     , KontraModal
     , admins
     , initialUsers
@@ -21,6 +22,7 @@ module Kontra
     , scheduleEmailSendout
     , queryOrFail
     , returnJustOrMZero
+    , param
     )
     where
 
@@ -51,6 +53,7 @@ import qualified TrustWeaver as TW
 import ELegitimation.ELeg
 import Mails.SendMail
 import qualified MemCache
+import API.Service.ServiceState
 
 
 #if MIN_VERSION_happstack_server(0,5,1)
@@ -79,9 +82,11 @@ data Context = Context
     , ctxelegtransactions    :: [ELegTransaction]
     , ctxfilecache           :: MemCache.MemCache FileID BS.ByteString
     , ctxxtoken              :: MagicHash
+    , ctxservice             :: Maybe Service
     }
 
 type Kontra a = ServerPartT (StateT Context IO) a
+type Kontra' = ServerPartT (StateT Context IO)  -- Type synonym to be ussed with transformers
 type KontraModal = ReaderT KontrakcjaTemplates IO String
 
 instance TemplatesMonad (ServerPartT (StateT Context IO)) where
@@ -214,11 +219,15 @@ scheduleEmailSendout enforcer mail = do
 {- |
    Perform a query (like with query) but if it returns Nothing, mzero; otherwise, return fromJust
  -}
-queryOrFail :: (QueryEvent ev (Maybe res)) => ev -> Kontra res
+queryOrFail :: (MonadPlus m,Monad m, MonadIO m) => (QueryEvent ev (Maybe res)) => ev -> m res
 queryOrFail q = do
   mres <- query q
   returnJustOrMZero mres
 
 -- | if it's not a just, mzero. Otherwise, return the value
-returnJustOrMZero :: Maybe a -> Kontra a
+returnJustOrMZero :: (MonadPlus m,Monad m) => Maybe a -> m a     
 returnJustOrMZero = maybe mzero return
+
+-- | Checks if request contains a param , else mzero
+param :: String -> Kontra Response -> Kontra Response
+param p action = (getDataFnM $ look p) >> action

@@ -17,6 +17,7 @@ module Administration.AdministrationView(
           , allUsersTable
           , databaseContent
           , statsPage
+          , servicesAdminPage
           , AdminUsersPageParams(..)
           , StatsView(..)) where
 
@@ -37,6 +38,7 @@ import MinutesTime
 import User.UserView
 import User.UserState
 import Doc.DocState
+import API.Service.ServiceState
 {-| Main admin page - can go from here to other pages -}
 adminMainPage::KontrakcjaTemplates ->  IO String
 adminMainPage templates =  renderTemplate templates "adminsmain" ()
@@ -93,6 +95,14 @@ statsPage templates stats sysinfo =
         field "sysinfo" $ sysinfo
         field "adminlink" $ show $ LinkAdminOnly
 
+servicesAdminPage::KontrakcjaTemplates -> [Service] -> IO String
+servicesAdminPage templates services= 
+    renderTemplate templates "servicesAdmin" $ do
+        field "adminlink" $ show $ LinkAdminOnly
+        field "services" $ for services $ \ service -> do
+            field "name"  $ show $ serviceid service
+            field "users" $ map show (serviceusers service)
+        
 mkUserInfoView :: (User, DocStats, UserStats) -> UserInfoView
 mkUserInfoView (userdetails', docstats', userstats') = UserInfoView {
                                               userdetails = userSmallView userdetails'

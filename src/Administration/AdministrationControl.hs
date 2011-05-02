@@ -17,6 +17,7 @@ module Administration.AdministrationControl(
           , showAdminUsers
           , showAllUsersTable
           , showStats
+          , showServicesPage
           , indexDB
           , getUsersDetailsToCSV
           , handleUserChange
@@ -24,6 +25,8 @@ module Administration.AdministrationControl(
           , handleCreateUser
           , handleUserEnableTrustWeaverStorage
           , handleMigrate0
+          , handleCreateService
+          , handleAddUserToService 
           ) where
 import Control.Monad.State
 import AppView
@@ -53,6 +56,8 @@ import System.IO (hClose)
 import qualified TrustWeaver as TW
 import Data.Char
 import Happstack.Util.Common
+import API.Service.ServiceState
+import Data.Monoid
 
 eitherFlash :: ServerPartT (StateT Context IO) (Either String b)
             -> ServerPartT (StateT Context IO) b
@@ -427,4 +432,37 @@ getAdminUsersPageParams = do
                           return $ AdminUsersPageParams {search = search, startletter=startletter, page = maybe 0 id mpage'}
                                                                           
 
+{- Create service-}
+handleCreateService::Kontra KontraLink
+handleCreateService = onlySuperUser $ do
+    mname<- getFieldUTF "name"
+    case mname of
+         Just name -> do 
+            pwdBS <- getFieldUTFWithDefault mempty "password"
+            pwd <- liftIO $ createPassword pwdBS
+            update $ CreateService (ServiceID name) pwd
+            return LoopBack
+         Nothing -> return LinkMain
+          
+{- Add user -}          
+handleAddUserToService::Kontra KontraLink
+handleAddUserToService = onlySuperUser $ do
+    sname <- getFieldUTFWithDefault mempty "service"
+    email <- getFieldUTFWithDefault mempty "email"
+    muser <- query $ GetUserByEmail (Email email)
+    mservice <- query $ GetService (ServiceID sname)
+    case (muser,mservice) of
+         (Just user, Just service) -> do
+             update $ AddUserToService (serviceid service) (userid user)
+             return LoopBack
+         _ -> return LinkMain    
 
+{- Services page-}
+showServicesPage ::Kontra Response
+showServicesPage = onlySuperUser $
+                     do
+                      ctx@Context {ctxtemplates} <- lift get
+                      services <- query GetServices
+                      content <- liftIO $ servicesAdminPage ctxtemplates services
+                      renderFromBody ctx TopEmpty kontrakcja $ cdata content 
+    

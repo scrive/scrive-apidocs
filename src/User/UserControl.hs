@@ -118,7 +118,7 @@ handlePostUserSecurity = do
       return LinkSecurity
     Nothing -> return $ LinkLogin NotLogged
 
-handleGetSharing :: Kontra Response
+handleGetSharing :: Kontra (Either KontraLink Response)
 handleGetSharing = withUserGet $ do
     ctx@Context{ctxmaybeuser = Just user@User{userid}} <- get
     friends <- query $ GetUserFriends userid
@@ -132,7 +132,7 @@ friendsSortSearchPage  =
     listSortSearchPage subaccountsSortFunc subaccountsSearchFunc subaccountsPageSize
 
 
-handleGetSubaccount :: Kontra Response
+handleGetSubaccount :: Kontra (Either KontraLink Response)
 handleGetSubaccount = withUserGet $ do
     ctx@Context{ctxmaybeuser = Just user@User{userid}} <- get
     subaccounts <- query $ GetUserSubaccounts userid
@@ -350,12 +350,12 @@ withUserPost action = do
    Guard against a GET with no logged in user.
    If they are not logged in, redirect to login page.
 -}
-withUserGet :: Kontra Response -> Kontra Response
+withUserGet ::  Kontra a -> Kontra (Either KontraLink a)
 withUserGet action = do
   ctx <- get
   case ctxmaybeuser ctx of
-    Just _  -> action
-    Nothing -> sendRedirect $ LinkLogin NotLogged
+    Just _  -> Right <$> action
+    Nothing -> return $ Left $ LinkLogin NotLogged
 
 {- | 
      Takes a document and a action
@@ -372,14 +372,16 @@ withDocumentAuthor document action = do
    Guard against a GET with logged in users who have not signed the TOS agreement.
    If they have not, redirect to their account page.
 -}
-checkUserTOSGet :: Kontra Response -> Kontra Response
-checkUserTOSGet action = withUserGet $ do
-    Context{ctxmaybeuser = (Just (User{userhasacceptedtermsofservice}))} <- get
-    case userhasacceptedtermsofservice of
-         Nothing -> sendRedirect LinkAcceptTOS
-         Just _  -> action
+checkUserTOSGet :: Kontra a -> Kontra (Either KontraLink a)
+checkUserTOSGet action = do
+    ctx <- get
+    case ctxmaybeuser ctx of
+        Just (User{userhasacceptedtermsofservice = Just _}) -> Right <$> action
+        Just _ -> return $ Left $ LinkAcceptTOS
+        Nothing -> return $ Left $ LinkLogin NotLogged
 
-handleAcceptTOSGet :: Kontra Response
+
+handleAcceptTOSGet :: Kontra (Either KontraLink Response)
 handleAcceptTOSGet = withUserGet $ do
     ctx@Context{ctxtemplates} <- get
     content <- liftIO $ pageAcceptTOS ctxtemplates
@@ -436,7 +438,7 @@ handleQuestion = do
              addFlashMsg =<< (liftIO $ flashMessageThanksForTheQuestion $ ctxtemplates ctx)
              return LoopBack
 
-handleGetBecomeSubaccountOf :: UserID -> Kontra Response
+handleGetBecomeSubaccountOf :: UserID -> Kontra (Either KontraLink Response)
 handleGetBecomeSubaccountOf supervisorid = withUserGet $ do
   addModal $ modalDoYouWantToBeSubaccount 
   ctx@Context{ctxmaybeuser = Just user} <- get

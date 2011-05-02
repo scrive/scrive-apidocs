@@ -27,6 +27,9 @@ adminsmain=
           <td style="height:50px;width:200px"><a href="/adminonly/advuseradmin"><button style="width:150px"> Adv. User Admin </button> </a> </td>
           <td style="height:50px;width:200px"> <a href="/adminonly/advpayments"><button style="width:150px"> App Admin </button> </a></td>
         </tr>
+        <tr>
+          <td style="height:50px;width:200px"><a href="/adminonly/services"><button style="width:150px"> Services </button> </a> </td>
+        </tr>
     </tbody></table>
 ###
 adminsmanageall =
@@ -471,3 +474,51 @@ backtoadminmainlink=
     <a href="$adminlink$">Go back to main admin page</a>
     <br/><br/>
 ####
+servicesAdmin=
+$backtoadminmainlink()$
+<div>
+Services table <BR/>
+<table style="text-align:left">
+<thead>
+  <tr>
+      <th style="width: 100px;">Name</th>
+      <th style="width: 300px;"> Users </th>
+  </tr>
+</thead>
+<tbody>
+$services:{service |<tr> 
+    <td>$service.name$ </td>
+    <td>$service.users: { user | $user$ }$ </td>
+
+</tr>}$
+</tbody>
+</table>
+</div>
+<BR/>
+<BR/>
+<div>
+<form method="POST">
+Create service <BR/>
+Name: <input type="text" name="name">
+<BR/>
+Password: <input type="password" name="password">
+<BR/>
+<input type="submit" name="create" value="Create">
+</form>
+</div>
+<BR/>
+<BR/>
+<div>
+<form method="POST">
+Add user to the service <BR/>
+
+Create service
+Service: <input type="text" name="service">
+<BR/>
+User: <input type="password" name="email">
+<BR/>
+
+<input type="submit" name="add" value="Add">
+</form>
+</div>
+###

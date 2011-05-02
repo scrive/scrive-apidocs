@@ -246,7 +246,7 @@ handleSignPostBankID docid signid magic = do
     the document absolutely must exist. If the docid is not found, 404
     the tbs text must exist
 -}
-handleIssueBankID :: String -> DocumentID -> Kontra Response
+handleIssueBankID :: String -> DocumentID -> Kontra (Either KontraLink Response)
 handleIssueBankID provider docid = withUserGet $ do
     ctx@Context { ctxtime = MinutesTime time seconds
                 , ctxmaybeuser = Just author

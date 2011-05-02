@@ -56,7 +56,8 @@ module Doc.DocState
     , GetSharedTemplates(..)
     , TemplateFromDocument(..)
     , SignableFromDocument(..)
-    , SignableFromSharedDocument(..)
+    , SignableFromDocumentID(..)
+    , SignableFromSharedDocumentID(..)
     , ContractFromSignatoryData(..)
     , IdentificationType(..)
     , SignatureInfo(..)
@@ -821,30 +822,17 @@ getSharedTemplates userids = do
     return . filter ((== Shared) . documentsharing) . toList $ justTemplates userdocs
 
 justTemplates docs = (docs @= OfferTemplate) ||| (docs @= ContractTemplate)
-    
-signableFromDocument :: DocumentID -> Update Documents (Either String Document)
-signableFromDocument = newFromDocument $ \doc -> 
-    doc {
-          documentstatus = Preparation
-        , documenttype =  if (documenttype doc == OfferTemplate) 
-                             then Offer
-                             else if (documenttype doc == ContractTemplate)
-                                    then Contract
-                                    else documenttype doc
-        , documentsharing = Private
-    }
 
-signableFromSharedDocument :: User -> DocumentID -> Update Documents (Either String Document)
-signableFromSharedDocument user = newFromDocument $ \doc -> 
-    doc {
-          documentstatus = Preparation
-        , documenttype =  if (documenttype doc == OfferTemplate) 
-                             then Offer
-                             else if (documenttype doc == ContractTemplate)
-                                    then Contract
-                                    else documenttype doc
-        , documentsharing = Private
-        , documentauthor = Author $ userid user
+signableFromDocument :: Document -> Update Documents Document
+signableFromDocument doc = insertNewDocument $ templateToDocument doc
+
+signableFromDocumentID :: DocumentID -> Update Documents (Either String Document)
+signableFromDocumentID = newFromDocument $ templateToDocument
+
+signableFromSharedDocumentID :: User -> DocumentID -> Update Documents (Either String Document)
+signableFromSharedDocumentID user = newFromDocument $ \doc -> 
+    (templateToDocument doc) {
+          documentauthor = Author $ userid user
         , documentsignatorylinks = map (replaceAuthorSigLink user doc) (documentsignatorylinks doc)
         , authorotherfields =  map (\fd -> fd { fieldvalue = BS.empty, fieldfilledbyauthor = False }) (authorotherfields doc) 
     }
@@ -853,6 +841,18 @@ signableFromSharedDocument user = newFromDocument $ \doc ->
             | isAuthor doc sl = replaceSignatoryUser sl user
             | otherwise = sl
 
+
+
+templateToDocument :: Document -> Document
+templateToDocument doc =   doc {
+          documentstatus = Preparation
+        , documenttype =  if (documenttype doc == OfferTemplate) 
+                             then Offer
+                             else if (documenttype doc == ContractTemplate)
+                                    then Contract
+                                    else documenttype doc
+        , documentsharing = Private
+    }
 {- |
     Replaces signatory data with given user's data.
 -}
@@ -912,7 +912,6 @@ templateFromDocument docid = modifySignable docid $ \doc ->
                                     else documenttype doc
                                  
     }
-  
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocuments
                         , 'getDocumentsByAuthor
@@ -962,7 +961,8 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'getUserTemplates
                         , 'getSharedTemplates
                         , 'signableFromDocument
-                        , 'signableFromSharedDocument
+                        , 'signableFromDocumentID
+                        , 'signableFromSharedDocumentID
                         , 'contractFromSignatoryData
                         , 'templateFromDocument
                         ])
