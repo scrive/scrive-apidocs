@@ -1226,7 +1226,7 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
   let signatories = makeSignatories placements fielddefs 
                         sigids
                         signatoriesemails
-                        signatoriessignorders
+                        (signatoriessignorders ++ repeat (SignOrder 1))
                         signatoriescompanies
                         signatoriespersonalnumbers
                         signatoriescompanynumbers
@@ -1256,7 +1256,9 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
     then do
      --if they are switching to basic we want to lose information
      let basicauthordetails = removeFieldsAndPlacements authordetails
-         basicsignatories = zip (basicauthordetails : take 1 (map removeFieldsAndPlacements signatories)) (repeat [SignatoryPartner])
+         basicsignatories = zip 
+                             (basicauthordetails : 
+                              take 1 (map (replaceSignOrder (SignOrder 1) . removeFieldsAndPlacements) signatories)) (repeat [SignatoryPartner])
      update $ UpdateDocument ctxtime documentid 
                 basicsignatories Nothing invitetext author basicauthordetails docallowedidtypes Nothing docfunctionality
     else do
