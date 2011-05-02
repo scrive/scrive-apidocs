@@ -101,7 +101,7 @@ resizeImageAndReturnOriginalSize filepath = do
         ExitFailure _ -> return ()
         ExitSuccess -> return ()
     fcontent <- BS.readFile filepath
-    return (fcontent,w,h)
+    return (fcontent,943,1335)
   where
    readSize::[Char] -> (Int,Int) --Ugly and unsafe but I can't get info about output format so writing nicer parser is useless
    readSize ('J':'P':'E':'G':' ':rest) = let
