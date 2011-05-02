@@ -122,7 +122,7 @@ postDocumentChangeAction document@Document  { documentstatus
                Left errmsg -> do
                  update $ ErrorDocument documentid errmsg
                  Log.forkIOLogWhenError ("error in sending seal error emails for document " ++ show documentid) $ do
-                       sendDocumentErrorEmailToAuthor ctx document
+                       sendDocumentErrorEmailToAuthor ctx user document
                  return ()
         return ()
     -- Pending -> AwaitingAuthor
@@ -230,12 +230,11 @@ sendDocumentErrorEmail ctx document = do
   let signlinks = documentsignatorylinks document
   forM_ signlinks (sendDocumentErrorEmail1 ctx document)
 
-sendDocumentErrorEmailToAuthor :: Context -> Document -> IO ()
-sendDocumentErrorEmailToAuthor ctx document = do
-  author <- queryOrFail $ GetUserByUserID $ unAuthor $ documentauthor document
+sendDocumentErrorEmailToAuthor :: Context -> User -> Document -> IO ()
+sendDocumentErrorEmailToAuthor ctx author document = do
   mail <- mailDocumentError (ctxtemplates ctx) ctx document
   scheduleEmailSendout (ctxesenforcer ctx) $
-      mail { fullnameemails = [(userfullname author, useremail author)] }
+      mail { fullnameemails = [(userfullname author, unEmail $ useremail $ userinfo author)] }
 
 {- |
    Helper function to send emails to invited parties
