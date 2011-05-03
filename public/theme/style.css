@@ -2657,7 +2657,7 @@ width: 340px;
     margin: 1px 0px 3px 0;
     overflow: hidden;
     padding: 0;
-    width: 212px;
+    width: 210px;
     height: 20px;
     line-height: 20px;
     -moz-border-radius: 2px 2px 2px 2px;
@@ -2671,7 +2671,7 @@ width: 340px;
 .signViewBodyForms input
 {
     padding-left: 20px;
-    width: 196px;
+    width: 194px;
     height: 18px;
     line-height: 18px;
     font-size: 11px;
