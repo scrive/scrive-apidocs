@@ -129,21 +129,13 @@ handleRoutes = msum [
 
      -- static pages
      , dir "prisplan" $ hGetAllowHttp $ handlePriceplanPage
-     , dir "prisplan.html" $ hGetAllowHttp $ handlePriceplanPage
      , dir "sakerhet" $ hGetAllowHttp $ handleSecurityPage
-     , dir "sakerhet.html" $ hGetAllowHttp $ handleSecurityPage
      , dir "juridik" $ hGetAllowHttp $ handleLegalPage
-     , dir "juridik.html" $ hGetAllowHttp $ handleLegalPage
      , dir "sekretesspolicy" $ hGetAllowHttp $ handlePrivacyPolicyPage
-     , dir "sekretesspolicy.html" $ hGetAllowHttp $ handlePrivacyPolicyPage
      , dir "allmana-villkor" $ hGetAllowHttp $ handleTermsPage
-     , dir "allmana-villkor.html" $ hGetAllowHttp $ handleTermsPage
      , dir "om-skrivapa" $ hGetAllowHttp $ handleAboutPage
-     , dir "om-skrivapa.html" $ hGetAllowHttp $ handleAboutPage
      , dir "partners" $ hGetAllowHttp $ handlePartnersPage
-     , dir "partners.html" $ hGetAllowHttp $ handlePartnersPage
      , dir "kunder" $ hGetAllowHttp $ handleClientsPage
-     , dir "kunder.html" $ hGetAllowHttp $ handleClientsPage
      
 
      -- e-legitimation stuff

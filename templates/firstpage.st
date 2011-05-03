@@ -247,9 +247,9 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                         <div class="bubble">
                                                 <h2>Partners</h2>
                                                 <ul>
-                                                        <li><a href="partners.html"><img src="/img/partner-trustweaver.png"  /></a></li>
-                                                        <li><a href="partners.html"><img src="/img/partner-logica.png" /></a></li>
-                                                        <li><a href="partners.html"><img src="/img/partner-chalmers.png" /></a></li>
+                                                        <li><a href="/partners"><img src="/img/partner-trustweaver.png"  /></a></li>
+                                                        <li><a href="/partners"><img src="/img/partner-logica.png" /></a></li>
+                                                        <li><a href="/partners"><img src="/img/partner-chalmers.png" /></a></li>
                                                 </ul>
                                         </div>
                                 </div>
@@ -309,19 +309,19 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <tr class="big-row">
                                                         <td>
                                                                 <h4>Vi bjuder</h4>
-                                                                <a href="prisplan.html">Prisplan</a>
+                                                                <a href="/prisplan">Prisplan</a>
                                                         </td>
                                                         <td>
                                                                 <h4>299kr/mån</h4>
-                                                                <a href="prisplan.html">Prisplan</a>
+                                                                <a href="/prisplan">Prisplan</a>
                                                         </td>
                                                         <td>
                                                                 <h4>499kr/mån</h4>
-                                                                <a href="prisplan.html">Prisplan<a>                                                   
+                                                                <a href="/prisplan">Prisplan<a>                                                   
                                                         </td>
                                                         <td>
                                                                 <h4>Offert</h4>
-                                                                <a href="prisplan.html">Prisplan</a>
+                                                                <a href="/prisplan">Prisplan</a>
                                                         </td>
                                                 </tr>
                                         </table>
@@ -341,7 +341,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                         <li class="odd">Avancerade funktioner</li>
                                                         <li class="bottom">
                                                                 <h4>499kr/mån</h4>
-                                                                <a href="prisplan.html">Prisplan</a>   
+                                                                <a href="/prisplan">Prisplan</a>   
                                                         </li>
                                                 </ul>
                                         </div>
