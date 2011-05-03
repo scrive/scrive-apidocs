@@ -77,17 +77,26 @@ class Post a where
 class Get a where 
     hGetWrap :: (Kontra Response -> Kontra Response) -> a -> Kontra Response
 
+class ToResp a where
+    toResp:: a -> Kontra Response
+    
+instance ToResp Response where
+    toResp = return
+    
+instance ToResp KontraLink where
+    toResp = sendRedirect
+
+instance ToResp String where
+    toResp = page . return
+
+instance (ToResp a , ToResp b) => ToResp (Either a b) where
+    toResp = either toResp toResp
+       
 instance Post (Kontra KontraLink) where
-    hPostWrap f a = methodM POST >> f (a >>= sendRedirect)
+    hPostWrap f a = methodM POST >> f (a >>= toResp)
 
-instance Get (Kontra String) where
-    hGetWrap f a = methodM GET >> f (a >>= page . return) 
-               
-instance Get (Kontra KontraLink) where
-    hGetWrap f a =  methodM GET >> f (a >>= sendRedirect)
-
-instance Get (Kontra Response) where
-    hGetWrap f a= methodM GET >> f a 
+instance (ToResp a ) => Get (Kontra a) where
+    hGetWrap f a = methodM GET >> f (a >>= toResp) 
     
 instance (Post r,FromReqURI a) => Post (a -> r) where
     hPostWrap f a =  path $ \s -> hPostWrap f (a s)
@@ -95,8 +104,9 @@ instance (Post r,FromReqURI a) => Post (a -> r) where
 instance (Get r,FromReqURI a) => Get (a -> r) where
     hGetWrap f a =  path $ \s -> hGetWrap f (a s)
 
-instance (Get (Kontra a), Get (Kontra b)) => Get (Kontra (Either a b)) where
-    hGetWrap f action = f (action >>= either (hGetWrap id . (return::a -> Kontra a)) (hGetWrap id . (return::b -> Kontra b)))
+    
+    
+    
              
              
 
@@ -122,14 +132,14 @@ hGetAjax ::(Get a) =>  a -> Kontra Response
 hGetAjax = hGetWrap wrapAjax
 
 wrapAjax :: Kontra Response -> Kontra Response
-wrapAjax action = noRedirect action `mplus` ajaxError -- Soft redirects should be supported here, ask MR
+wrapAjax action = (noRedirect action) `mplus` ajaxError -- Soft redirects should be supported here, ask MR
 
 noRedirect::Kontra Response -> Kontra Response
-noRedirect action = do 
-                  response <- action
-                  if (rsCode response /= 303)
-                   then return response
-                   else mzero
+noRedirect action = do
+    response <- action
+    if (rsCode response /= 303)
+       then return response
+       else mzero
                    
 {- Http and Https checking-}      
 hPost :: (Post a) =>  a -> Kontra Response
