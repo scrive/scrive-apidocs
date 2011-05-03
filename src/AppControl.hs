@@ -223,7 +223,7 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "db" $ onlySuperUser $ fileServe [] "_local/kontrakcja_state"
 
      , dir "adminonly" $ dir "cleanup"           $ hPost $ Administration.handleDatabaseCleanup
-     , dir "adminonly" $ dir "alluserstable"     $ hGet  $ Administration.showAllUsersTable
+     , dir "adminonly" $ dir "statistics"        $ hGet  $ Administration.handleStatistics
      , dir "adminonly" $ dir "skrivapausers.csv" $ hGet  $ Administration.getUsersDetailsToCSV
      , dir "adminonly" $ dir "payments"          $ hGet  $ Payments.handlePaymentsModelForViewView
      , dir "adminonly" $ dir "advpayments"       $ hGet  $ Payments.handlePaymentsModelForEditView
