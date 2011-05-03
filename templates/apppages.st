@@ -159,22 +159,22 @@ pageFooter=
       <ul>
         <!--<li><a href="/features.html">Funktioner</a></li> -->
         <!--<li><a href="/benefits.html">Fördelar</a></li> -->
-        <li><a href="/prisplan.html">Priser</a></li>
+        <li><a href="/prisplan">Priser</a></li>
       </ul>
       <br />
       <strong>TRYGGHET OCH VILLKOR</strong>
       <ul>
-        <li><a href="/sakerhet.html">Säkerhet</a></li>
-        <li><a href="/juridik.html">Juridik</a></li>
-        <li><a href="/sekretesspolicy.html">Sekretesspolicy</a></li>
-        <li><a href="/allmana-villkor.html">Allmäna Villkor</a></li>
+        <li><a href="/sakerhet">Säkerhet</a></li>
+        <li><a href="/juridik">Juridik</a></li>
+        <li><a href="/sekretesspolicy">Sekretesspolicy</a></li>
+        <li><a href="/allmana-villkor">Allmäna Villkor</a></li>
       </ul>
       <br />
       <strong>SKRIVAPÅ</strong>
       <ul>
-        <li><a href="/om-skrivapa.html">Om SkrivaPå</a></li>
-        <li><a href="/partners.html">Partners</a></li>
-        <li><a href="/kunder.html">Kunder</a></li>
+        <li><a href="/om-skrivapa">Om SkrivaPå</a></li>
+        <li><a href="/partners">Partners</a></li>
+        <li><a href="/kunder">Kunder</a></li>
         <li><a href="/">Start</a></li>
         <!--<li><a href="/board.html">Board of Advisors</a></li>-->
       </ul>
