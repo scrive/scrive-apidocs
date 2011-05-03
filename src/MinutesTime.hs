@@ -94,6 +94,10 @@ parseMinutesTimeMDY s = do
 showDateMDY (MinutesTime mins _) =  let clocktime = TOD (fromIntegral mins*60) 0
                                         calendartime = unsafePerformIO $ toCalendarTime clocktime
                                     in formatCalendarTime defaultTimeLocale "%d-%m-%y" calendartime  
+
+showDateYMD (MinutesTime mins _) =  let clocktime = TOD (fromIntegral mins*60) 0
+                                        calendartime = unsafePerformIO $ toCalendarTime clocktime
+                                    in formatCalendarTime defaultTimeLocale "%Y-%m-%d" calendartime  
                 
 minutesAfter::Int -> MinutesTime -> MinutesTime 
 minutesAfter i (MinutesTime i' s) = MinutesTime (i + i') s
@@ -111,3 +115,7 @@ dateDiffInDays::MinutesTime->MinutesTime -> Int
 dateDiffInDays (MinutesTime ctime _) (MinutesTime mtime _)
                        | ctime>mtime = 0
                        | otherwise = (mtime - ctime) `div` (60*24)
+                                     
+asInt m = ctYear*10000 + fromEnum ctMonth*100 + ctDay 
+  where
+    CalendarTime {ctYear,ctMonth,ctDay} = toUTCTime m
