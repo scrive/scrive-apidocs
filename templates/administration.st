@@ -4,7 +4,7 @@ adminsmain=
     <table><tbody>
         <tr>
           <td style="height:50px;width:200px">
-            <a href="/adminonly/alluserstable">
+            <a href="/adminonly/statistics">
               <button style="width:150px"> Statistics</button>
             </a>
           </td>
@@ -45,8 +45,7 @@ adminsmanageall =
         <input type="submit" value="Cleanup" /><br/>
       </form>
       <h3>Users</h3>
-      You can see <a href="/adminonly/alluserstable">big table of all users</a>.<br/>
-      Here is a CSV version of this table: <a href="/adminonly/skrivapausers.csv">skrivapausers.csv</a>.
+     Here is a CSV version of this table: <a href="/adminonly/skrivapausers.csv">skrivapausers.csv</a>.
       <div>
         $usersfilter(link="/adminonly/advuseradmin")$
       </div>
@@ -374,21 +373,35 @@ adminuser=
       </span>
     </div>
 ###
-allUsersTable=
+statisticsPage=
     $backtoadminmainlink()$
     <div>
-      <h1>Alla SkrivaPå anwender</h1>
+      <h1>Stats by date</h1>
       <table>
         <thead>
-          <td style="width:200px">Username</td>
-          <td style="width:200px">Email</td>
-          <td>Docs</td>
-        </thead>
-        $users:{user|<tr>
-          <td> $user.userdetails.usvFullname$  </td>
-          <td> $user.userdetails.usvEmail$ </td>
-          <td> $user.docstats.doccount$ </td>
-        </tr>}$
+          <td style="width:200px">Date</td>
+          <td style="width:200px">All documents</td>
+          <td style="width:200px">Preparation</td>
+          <td style="width:200px">Pending</td>
+          <td style="width:200px">Closed</td>
+          <td style="width:200px">AwaitingAuthor</td>
+          <td style="width:200px">Rejected</td>
+          <td style="width:200px">Canceled</td>
+          <td style="width:200px">Timeout</td>
+          <td style="width:200px">Error</td>
+       </thead>
+        $stats:{stat|<tr>
+          <td>$stat.date$</td>
+          <td>$stat.documents.all$ </td>
+          <td>$stat.documents.preparation$</td>
+          <td>$stat.documents.pending$ </td>
+          <td>$stat.documents.closed$ </td>
+          <td>$stat.documents.awaitingauthor$ </td>
+          <td>$stat.documents.rejected$ </td>
+          <td>$stat.documents.canceled$ </td>
+          <td>$stat.documents.timeout$ </td>
+          <td>$stat.documents.error$ </td>
+       </tr>}$
       </table>
     </div>
 ###

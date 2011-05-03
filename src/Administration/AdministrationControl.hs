@@ -27,6 +27,7 @@ module Administration.AdministrationControl(
           , handleMigrate0
           , handleCreateService
           , handleAddUserToService 
+          , handleStatistics
           ) where
 import Control.Monad.State
 import AppView
@@ -46,7 +47,7 @@ import KontraLink
 import Payments.PaymentsControl(readMoneyField,getPaymentChangeChange)
 import MinutesTime
 import System.Directory
-import Data.List (isPrefixOf,sort)
+import Data.List (isPrefixOf,sort, foldl')
 import User.UserControl
 import User.UserView
 import Data.Maybe
@@ -58,6 +59,8 @@ import Data.Char
 import Happstack.Util.Common
 import API.Service.ServiceState
 import Data.Monoid
+import qualified Data.IntMap as IntMap
+import Templates.Templates
 
 eitherFlash :: ServerPartT (StateT Context IO) (Either String b)
             -> ServerPartT (StateT Context IO) b
@@ -466,3 +469,61 @@ showServicesPage = onlySuperUser $
                       content <- liftIO $ servicesAdminPage ctxtemplates services
                       renderFromBody ctx TopEmpty kontrakcja $ cdata content 
     
+data DocStatsL = DocStatsL                     
+                { dsAllDocuments           :: !Int
+                , dsPreparationDocuments   :: !Int
+                , dsPendingDocuments       :: !Int
+                , dsCanceledDocuments      :: !Int
+                , dsTimedOutDocuments      :: !Int
+                , dsClosedDocuments        :: !Int  
+                , dsRejectedDocuments      :: !Int
+                , dsAwitingAuthorDocuments :: !Int
+                , dsErrorDocuments         :: !Int
+                }
+docStatsZero = DocStatsL 0 0 0 0 0 0 0 0 0
+                     
+-- calculateStats :: [Documents] -> ??
+calculateStats documents = 
+  foldl' ins IntMap.empty documents
+  where
+    ins map doc = foldl' (\m (k,v) -> IntMap.insertWith add k v m) map (stuff doc)
+    stuff doc = [ (asInt $ documentctime doc, docStatsZero { dsAllDocuments = 1 })
+                , (asInt $ documentmtime doc, case documentstatus doc of
+                      Preparation -> docStatsZero { dsPreparationDocuments = 1}
+                      Pending     -> docStatsZero { dsPendingDocuments = 1}
+                      Rejected    -> docStatsZero { dsRejectedDocuments = 1}
+                      Canceled    -> docStatsZero { dsCanceledDocuments = 1}
+                      DocumentError {}    -> docStatsZero { dsErrorDocuments = 1}
+                      Closed      -> docStatsZero { dsClosedDocuments = 1}
+                      Timedout    -> docStatsZero { dsTimedOutDocuments = 1}
+                      )
+                ]
+    add (DocStatsL a1 a2 a3 a4 a5 a6 a7 a8 a9) (DocStatsL b1 b2 b3 b4 b5 b6 b7 b8 b9) = 
+      DocStatsL (a1+b1) (a2+b2) (a3+b3) (a4+b4) (a5+b5) (a6+b6) (a7+b7) (a8+b8) (a9+b9)
+                    
+                    
+handleStatistics :: Kontra Response
+handleStatistics = 
+  onlySuperUser $ do
+    ctx@Context{ctxtemplates} <- get
+    documents <- query $ GetDocuments
+    let stats = calculateStats documents
+        showAsDate int = show (int `div` 10000) ++ "-" ++ show (int `div` 100 `mod` 100) ++ "-" ++ show (int `mod` 100)
+    let fieldify (date,stat) = do 
+          field "date" $ showAsDate date
+          field "documents" $ do
+            field "all" $ dsAllDocuments stat
+            field "preparation" $ dsPreparationDocuments stat
+            field "pending" $ dsPendingDocuments stat
+            field "error" $ dsErrorDocuments stat
+            field "timeout" $ dsTimedOutDocuments stat
+            field "awaitingauthor" $ dsAwitingAuthorDocuments stat
+            field "closed" $ dsClosedDocuments stat
+            field "rejected" $ dsRejectedDocuments stat
+            field "canceled" $ dsCanceledDocuments stat
+          
+    content <- renderTemplateM "statisticsPage" $ do
+      field "stats" $ map fieldify (IntMap.toList stats) 
+    renderFromBody ctx TopEmpty kontrakcja $ cdata content
+    
+  
