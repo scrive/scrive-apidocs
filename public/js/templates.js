@@ -675,7 +675,12 @@ function showSigningOrderRelatedElements() {
 function resetSignOrderValues(signorder) {
    // no signing order = everyone has signing order equal
    // to 1 so we just set every select value for that.
-   signorder.val(1);
+   // unless they're not a signatory
+   signorder.each(function(ix) {
+        if (personIsSignatory($(this))) {
+          $(this).val(1);
+        }
+    });
 }
 
 function removeLastSigningOrderPosition() {
