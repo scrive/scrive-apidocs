@@ -9,10 +9,12 @@ import User.UserState
 import qualified Codec.Binary.Url as URL
 import qualified Codec.Binary.UTF8.String as UTF
 import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString as BS
 import PayEx.PayExState
 import ListUtil
 import Session
 import API.Service.ServiceState
+import Data.Maybe
 
 {- |
    Defines the reason why we are redirected to login page
@@ -86,7 +88,7 @@ data KontraLink
     | LinkInvite
     | LinkPayExView (Maybe PaymentId)
     | LinkSignCanceledDataMismatch DocumentID SignatoryLinkID
-    | LinkConnectUserSession ServiceID UserID SessionId
+    | LinkConnectUserSession ServiceID UserID SessionId KontraLink
 
 
 {- |
@@ -151,7 +153,10 @@ instance Show KontraLink where
     showsPrec _ (LinkPayExView Nothing) = (++) $ "/payex"
     showsPrec _ (LinkPayExView (Just pid)) = (++) $ "/payex/" ++ show pid
     showsPrec _ (LinkSignCanceledDataMismatch docid sigid) = (++) $ "/landpage/signcanceleddatamismatch/" ++ show docid ++ "/" ++ show sigid
-    showsPrec _ (LinkConnectUserSession sid uid ssid) = (++) $ "/integration/connect/" ++ encodeForURL sid ++ "/" ++ show uid  ++ "/" ++ show ssid
+    showsPrec _ (LinkConnectUserSession sid uid ssid referer) = (++) $ "/integration/connect/" ++ encodeForURL sid ++ "/" ++ show uid  ++ "/" ++ show ssid 
+                                                                        ++ "?referer=" ++ (URL.encode $ UTF.encode  $ show referer)
+    
+   
 
     
 -- type class instances used for xml'ing the KontraLinks

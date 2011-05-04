@@ -278,16 +278,17 @@ handleRoutes = msum [
 -}
 handleHomepage :: Kontra (Either Response (Either KontraLink String))
 handleHomepage = do
-    ctx@Context{ ctxmaybeuser } <- get
+    ctx@Context{ ctxmaybeuser,ctxservice } <- get
     loginOn <- isFieldSet "logging"
     referer <- getField "referer"
     email   <- getField "email"
-    case ctxmaybeuser of
-        Just user -> Right <$> (UserControl.checkUserTOSGet DocControl.mainPage)
-        Nothing   -> do
+    case (ctxmaybeuser,ctxservice) of
+        (Just user,_) -> Right <$> (UserControl.checkUserTOSGet DocControl.mainPage)
+        (Nothing,Nothing)   -> do
                         resp <- V.simpleResponse =<< (liftIO $ firstPage ctx loginOn referer email)
                         clearFlashMsgs
                         return $ Left resp
+        _ -> Left <$> embeddedErrorPage ctx             
 
 handlePriceplanPage :: Kontra Response
 handlePriceplanPage = handleWholePage priceplanPage
@@ -327,8 +328,11 @@ handleWholePage f = do
 handleError :: Kontra Response
 handleError = do
     ctx <- get
-    addModal $ V.modalError (ctxtemplates ctx)
-    sendRedirect LinkMain
+    case (ctxservice ctx) of 
+         Nothing -> do
+            addModal $ V.modalError (ctxtemplates ctx)
+            sendRedirect LinkMain
+         Just _ -> embeddedErrorPage ctx   
 
 handleMainReaload :: Kontra KontraLink
 handleMainReaload = do
