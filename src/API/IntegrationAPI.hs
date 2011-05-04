@@ -116,27 +116,58 @@ integrationService = do
 integrationAPI :: Kontra Response
 integrationAPI =  dir "integration" $ msum [
                       apiCall "login" loginUser
+                    , apiCall "documents" userDocuments  
                     , apiUnknownCall
                     , dir "connect" $ hGet $ connectSession
                   ]
 --- Real api requests
-loginUser :: IntegrationAPIFunction APIResponse
-loginUser = do
+getRequestUser:: IntegrationAPIFunction User
+getRequestUser = do
     memail <- apiAskBS "email"
     when (isNothing memail) $ throwApiError "No user email provided"
     muser <- query $ GetUserByEmail $ Email $ fromJust memail
     when (isNothing muser) $ throwApiError "No user"
-    let uid = userid $ fromJust muser
+    let user = fromJust muser
     srv <-  service <$> ask
-    when (not $ elem uid $ serviceusers srv) $ throwApiError "User has not accepted this service"
-    sid <- createServiceSession (serviceid srv) uid
-    return $ toJSObject [("link",JSString $ toJSString $ show $ LinkConnectUserSession (serviceid srv) uid sid)]
+    when (not $ elem (userid $ user) $ serviceusers srv) $ throwApiError "User has not accepted this service"
+    return user
+
+
+loginUser :: IntegrationAPIFunction APIResponse
+loginUser = do
+    user <- getRequestUser 
+    srv <-  service <$> ask
+    location <- fromMaybe "" <$> apiAskString "location"
+    sid <- createServiceSession (serviceid srv) (userid $ user) location
+    ctx <- lift $ get
+    mdocumentID <- maybeReadM $ apiAskString "document_id"
+    list <-  apiAskString "list"
+    let rlink = case (mdocumentID,list) of
+                   (Just did,_) -> LinkIssueDoc did
+                   (_,Just _) -> LinkContracts emptyListParams
+                   _ -> LinkMain
+    return $ toJSObject [("link",JSString $ toJSString $ (ctxhostpart ctx) ++ show (LinkConnectUserSession (serviceid srv) (userid user) sid rlink))]
+    
+
+userDocuments :: IntegrationAPIFunction APIResponse
+userDocuments = do
+    user <- getRequestUser 
+    documents <- query $ GetDocumentsByUser user
+    let contracts  = filter (not . isTemplate) $  filter isContract documents
+    return $ toJSObject [("documents",JSArray $ map (JSObject .documentAPIObject) contracts )]
+
+documentAPIObject :: Document -> JSObject JSValue
+documentAPIObject doc = 
+    toJSObject [
+        ("document_id", JSString $ toJSString $ show $ documentid doc),
+        ("title", JSString $ toJSString $ BS.toString $ documenttitle doc)
+        ]
     
 connectSession :: ServiceID -> UserID -> SessionId -> Kontra  KontraLink
 connectSession sid uid ssid = do
     loaded <- loadServiceSession sid uid ssid
     if (loaded) 
-     then liftIO (putStrLn "logged") >> (return $ LinkNew Nothing emptyListParams False)
+     then liftIO (putStrLn "logged") >> (return $ BackToReferer)
      else liftIO (putStrLn "NOT logged") >> return LinkAbout
 
 

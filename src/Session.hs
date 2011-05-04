@@ -29,6 +29,7 @@ module Session
 
 import Control.Monad.Reader (ask)
 import Control.Monad.State hiding (State)
+import Data.Functor
 import Data.Maybe (isNothing,isJust, fromJust)
 import Happstack.Data.IxSet
 import qualified Happstack.Data.IxSet as IxSet
@@ -119,13 +120,22 @@ data SessionData5 = SessionData5
     
 -- | SessionData is everything we want to know about a person clicking
 -- on the other side of the wire.
+data SessionData6 = SessionData6
+    { userID6           :: Maybe UserID      -- ^ Just 'UserID' if a person is logged in
+    , expires6          :: MinutesTime       -- ^ when does this session expire
+    , hash6             :: MagicHash         -- ^ session security token
+    , elegtransactions6 :: [ELegTransaction] -- ^ ELeg transaction stuff
+    , xtoken6           :: MagicHash         -- ^ Random string to prevent CSRF
+    , service6          :: Maybe ServiceID   -- ^ Id of the service that we are now working with
+    } deriving (Ord,Eq,Show,Typeable)
+
 data SessionData = SessionData 
     { userID           :: Maybe UserID      -- ^ Just 'UserID' if a person is logged in
     , expires          :: MinutesTime       -- ^ when does this session expire
     , hash             :: MagicHash         -- ^ session security token
     , elegtransactions :: [ELegTransaction] -- ^ ELeg transaction stuff
     , xtoken           :: MagicHash         -- ^ Random string to prevent CSRF
-    , service          :: Maybe ServiceID   -- ^ Id of the service that we are now working with
+    , service          :: Maybe (ServiceID,String)   -- ^ Id of the service that we are now working with. Also lint to page that embeds it (hash location hack)
     } deriving (Ord,Eq,Show,Typeable)
 
 $(deriveSerialize ''SessionData3) 
@@ -140,10 +150,14 @@ $(deriveSerialize ''SessionData5)
 instance Version (SessionData5) where
     mode = extension 5 (Proxy :: Proxy SessionData4)
 
+$(deriveSerialize ''SessionData6) 
+instance Version (SessionData6) where
+    mode = extension 6 (Proxy :: Proxy SessionData5)
+
 $(deriveSerialize ''SessionData) 
 instance Version (SessionData) where
-    mode = extension 6 (Proxy :: Proxy SessionData5)
-    
+    mode = extension 7 (Proxy :: Proxy SessionData6)
+
 instance Migrate SessionData0 SessionData1 where
     migrate (SessionData0 { userID0 = _
                           , flashMessages0 = _
@@ -199,8 +213,18 @@ instance Migrate SessionData4 SessionData5 where
                     , xtoken5           = MagicHash 0
                     }
 
-instance Migrate SessionData5 SessionData where
+instance Migrate SessionData5 SessionData6 where
     migrate SessionData5{} =
+        SessionData6 { userID6           = Nothing
+                    , expires6          = MinutesTime 0 0
+                    , hash6             = MagicHash 0
+                    , elegtransactions6 = []
+                    , xtoken6           = MagicHash 0
+                    , service6          = Nothing
+                    }
+                    
+instance Migrate SessionData6 SessionData where
+    migrate SessionData6{} =
         SessionData { userID           = Nothing
                     , expires          = MinutesTime 0 0
                     , hash             = MagicHash 0
@@ -208,7 +232,6 @@ instance Migrate SessionData5 SessionData where
                     , xtoken           = MagicHash 0
                     , service          = Nothing
                     }
-
 -- | 'Session' data as we keep it in our database
 data Session = Session { sessionId::SessionId
                        , sessionData::SessionData
@@ -405,9 +428,9 @@ emptySessionData = do
 
 -- | Check if session data is empty
 isSessionDataEmpty :: SessionData -> Bool
-isSessionDataEmpty SessionData{userID, elegtransactions} =
+isSessionDataEmpty SessionData{userID, elegtransactions, service} =
        userID == Nothing
-    && Prelude.null elegtransactions
+    && Prelude.null elegtransactions && service == Nothing
 
 -- | Return ID for temporary session (not written to db)
 tempSessionID :: SessionId
@@ -424,10 +447,10 @@ getUserFromSession s =
         Just i -> query $ GetUserByUserID i
         _ -> return Nothing    
 
-getServiceFromSession :: Session -> ServerPartT IO (Maybe Service)               
+getServiceFromSession :: Session -> ServerPartT IO (Maybe (Service,String))               
 getServiceFromSession s = 
     case (service $ sessionData s) of
-        Just i -> query $ GetService i
+        Just (i,location) -> (fmap (\srv -> (srv,location))) <$> (query $ GetService i)
         _ -> return Nothing    
 
 
@@ -530,23 +553,23 @@ getELegTransactions = elegtransactions . sessionData
 getSessionXToken :: Session -> MagicHash
 getSessionXToken = xtoken . sessionData
 
---- | Creates a session for user and session
-createServiceSession:: (MonadIO m) => ServiceID -> UserID -> m SessionId
-createServiceSession sid uid= do
+--- | Creates a session for user and service
+createServiceSession:: (MonadIO m) => ServiceID -> UserID -> String ->  m SessionId
+createServiceSession sid uid location= do
     sd <- liftIO emptySessionData
     session <-  update $ NewSession $  sd {
               userID = Just uid
-            , service = Just sid
+            , service = Just (sid,location)
              }
     return $ sessionId  session       
     
--- This is used to login user to skrivapa when he was logged in by some service 
+-- This is used to connect user to session when it was created by some service
 loadServiceSession::(MonadIO m,Functor m) => ServiceID -> UserID -> SessionId -> ServerPartT m Bool
 loadServiceSession  sid uid ssid  = do
     msession <- query $ GetSession ssid
     case msession of
         Nothing -> return False
         Just session@(Session{sessionData}) -> 
-            if (userID sessionData == Just uid && service sessionData == Just sid)
+            if (userID sessionData == Just uid && (fst <$> service sessionData) == Just sid)
               then startSessionCookie session >> return True
               else return False
