@@ -82,7 +82,7 @@ data Context = Context
     , ctxelegtransactions    :: [ELegTransaction]
     , ctxfilecache           :: MemCache.MemCache FileID BS.ByteString
     , ctxxtoken              :: MagicHash
-    , ctxservice             :: Maybe Service
+    , ctxservice             :: Maybe (Service,String)
     }
 
 type Kontra a = ServerPartT (StateT Context IO) a

@@ -21,6 +21,7 @@ module AppView( TopMenu(..)
               , partnersPage
               , clientsPage
               , modalError
+              , embeddedErrorPage
               ) where 
 
 import Control.Arrow (first)
@@ -37,6 +38,7 @@ import Control.Monad.Trans
 import Data.List
 import ListUtil
 import Data.Functor
+import API.Service.ServiceState
 
 {- |
    Defines the different sorts of things we can have at the top of the page
@@ -105,8 +107,21 @@ embeddedPage::Context -> String -> Kontra Response
 embeddedPage ctx pb = do
     bdy <- renderTemplateM "embeddedPage" $ do 
             field "content" pb
+            serviceFields (ctxservice ctx)
             standardPageFields ctx "" False False Nothing Nothing
-    simpleResponse bdy 
+    res <- simpleResponse bdy 
+    clearFlashMsgs
+    return res
+    
+embeddedErrorPage::Context -> Kontra Response
+embeddedErrorPage ctx = do
+    content <- renderTemplateM "embeddedErrorPage" $ do
+        serviceFields (ctxservice ctx)
+    simpleResponse content
+
+serviceFields:: Maybe (Service,String) -> Fields
+serviceFields (Just (_, location)) = field "location" location
+serviceFields Nothing = field "location" "" -- should never happend 
 
 priceplanPage :: Context -> Kontra String
 priceplanPage ctx = renderTemplateAsPage ctx "priceplanPage" True

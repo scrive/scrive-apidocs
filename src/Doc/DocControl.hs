@@ -1269,7 +1269,7 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
    is a friend of the author.
    Duplicates are removed.
  -}
-showContractsList:: Kontra (Either KontraLink Response)
+showContractsList:: Kontra (Either KontraLink String)
 showContractsList= checkUserTOSGet $ do
   -- Just user is safe here because we guard for logged in user
   ctx@(Context {ctxmaybeuser = Just user, ctxhostpart, ctxtime, ctxtemplates}) <- get
@@ -1282,11 +1282,10 @@ showContractsList= checkUserTOSGet $ do
   let notdeleted = filter (not . documentdeleted) sorteddocuments
   let contracts  = filter ((==) Contract . documenttype) notdeleted
   params <- getListParams
-  liftIO $ putStrLn $ show params
-  content <- liftIO $ pageContractsList ctxtemplates ctxtime user (docSortSearchPage params contracts)
-  renderFromBody ctx TopDocument kontrakcja $ cdata content
+  liftIO $ pageContractsList ctxtemplates ctxtime user (docSortSearchPage params contracts)
 
-showTemplatesList:: Kontra (Either KontraLink Response)
+
+showTemplatesList:: Kontra (Either KontraLink String)
 showTemplatesList = checkUserTOSGet $ do
   -- Just user is safe here because we guard for logged in user
   ctx@(Context {ctxmaybeuser = Just user, ctxhostpart, ctxtime, ctxtemplates}) <- get
@@ -1296,8 +1295,8 @@ showTemplatesList = checkUserTOSGet $ do
   let notdeleted = filter (not . documentdeleted) sorteddocuments
   let templates = filter isTemplate notdeleted
   params <- getListParams
-  content <- liftIO $ pageTemplatesList ctxtemplates ctxtime user (docSortSearchPage params templates)
-  renderFromBody ctx TopDocument kontrakcja $ cdata content
+  liftIO $ pageTemplatesList ctxtemplates ctxtime user (docSortSearchPage params templates)
+
 
 handlePageOfDocument :: DocumentID -> Kontra (Either KontraLink Response)
 handlePageOfDocument docid = withAuthorOrFriend docid
@@ -1333,7 +1332,7 @@ handlePageOfDocument' documentid mtokens = do
                     pages <- liftIO $ Doc.DocView.showFilesImages2 (ctxtemplates ctx) documentid mtokens $ zip f b
                     webHSP $ return $ cdata pages
 
-showOfferList:: Kontra (Either KontraLink Response)
+showOfferList:: Kontra (Either KontraLink String)
 showOfferList= checkUserTOSGet $ do
     -- Just user is safe here because we guard for logged in user
     ctx@(Context {ctxmaybeuser = Just user, ctxhostpart, ctxtime, ctxtemplates}) <- get
@@ -1350,9 +1349,8 @@ showOfferList= checkUserTOSGet $ do
       Nothing -> mzero
       (Just authors) -> do
         params <- getListParams
-        liftIO $ putStrLn $ show params
-        content <- liftIO $ pageOffersList ctxtemplates ctxtime user (docAndAuthorSortSearchPage params (zip contracts authors))
-        renderFromBody ctx TopDocument kontrakcja $ cdata content
+        liftIO $ pageOffersList ctxtemplates ctxtime user (docAndAuthorSortSearchPage params (zip contracts authors))
+
 
 handleDocumentUpload :: DocumentID -> BS.ByteString -> BS.ByteString -> Kontra ()
 handleDocumentUpload docid content1 filename = do
