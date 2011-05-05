@@ -733,6 +733,7 @@ handleIssueSign document author = do
         mndoc <- update $ AuthorSignDocument (documentid doc) ctxtime ctxipnumber author Nothing
         case mndoc of
           Right newdocument -> do
+            markDocumentAuthorSeen newdocument author ctxtime ctxipnumber
             postDocumentChangeAction newdocument udoc Nothing
             return ()
           Left _ -> return ()
@@ -764,11 +765,18 @@ handleIssueSend document author = do
         mndoc <- update $ AuthorSendDocument (documentid doc) ctxtime ctxipnumber author Nothing
         case mndoc of
           Right newdocument -> do
+            markDocumentAuthorSeen newdocument author ctxtime ctxipnumber
             postDocumentChangeAction newdocument udoc Nothing
             return ()
           Left _ -> return ()
         return mndoc
-    
+
+markDocumentAuthorSeen :: Document -> User -> MinutesTime -> Word32 -> Kontra ()
+markDocumentAuthorSeen doc@Document{documentid, documentsignatorylinks} author time ipnumber =
+  mapM_ mark $ filter (isAuthor doc) documentsignatorylinks
+  where
+    mark SignatoryLink{signatorylinkid} = update $ MarkDocumentSeen documentid signatorylinkid time ipnumber
+
 handleIssueSaveAsTemplate document author = do
     ctx <- get
     mudoc <- updateDocument ctx author document
