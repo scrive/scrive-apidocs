@@ -14,9 +14,8 @@ module User.UserView (
     inviteSubaccountMail,
     viralInviteMail,
     mailNewAccountCreatedByAdmin,
-    mailAccountCreatedBySigning,
-    mailAccountCreatedBySigningReminder,
-    mailAccountCreatedBySigningLastReminder,
+    mailAccountCreatedBySigningContractReminder,
+    mailAccountCreatedBySigningOfferReminder,
     resetPasswordMail,
     
     mailInviteUserAsSubaccount,
@@ -221,30 +220,24 @@ mailNewAccountCreatedByAdmin templates ctx personname email setpasslink customme
     ) >>= wrapHTML templates
   return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
 
-mailAccountCreatedBySigning :: KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> KontraLink -> IO Mail
-mailAccountCreatedBySigning =
-    mailAccountCreatedBySigning' "mailAccountBySigningTitle"
-                                 "mailAccountBySigningContent"
+mailAccountCreatedBySigningContractReminder :: KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> IO Mail
+mailAccountCreatedBySigningContractReminder =
+    mailAccountCreatedBySigning' "mailAccountBySigningContractReminderTitle"
+                                 "mailAccountBySigningContractReminderContent"
 
-mailAccountCreatedBySigningReminder :: KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> KontraLink -> IO Mail
-mailAccountCreatedBySigningReminder =
-    mailAccountCreatedBySigning' "mailAccountBySigningReminderTitle"
-                                 "mailAccountBySigningReminderContent"
+mailAccountCreatedBySigningOfferReminder :: KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> IO Mail
+mailAccountCreatedBySigningOfferReminder =
+    mailAccountCreatedBySigning' "mailAccountBySigningOfferReminderTitle"
+                                 "mailAccountBySigningOfferReminderContent"
 
-mailAccountCreatedBySigningLastReminder :: KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> KontraLink -> IO Mail
-mailAccountCreatedBySigningLastReminder =
-    mailAccountCreatedBySigning' "mailAccountBySigningLastReminderTitle"
-                                 "mailAccountBySigningLastReminderContent"
-
-mailAccountCreatedBySigning' :: String -> String -> KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> KontraLink -> IO Mail
-mailAccountCreatedBySigning' title_template content_template templates hostpart doctitle personname activationlink removallink = do
+mailAccountCreatedBySigning' :: String -> String -> KontrakcjaTemplates -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> IO Mail
+mailAccountCreatedBySigning' title_template content_template templates hostpart doctitle personname activationlink = do
     title <- renderTemplate templates title_template ()
     content <- (renderTemplate templates content_template $ do
         field "personname"     $ BS.toString personname
         field "ctxhostpart"    $ hostpart
         field "documenttitle"  $ BS.toString doctitle
         field "activationlink" $ show activationlink
-        field "removallink"    $ show removallink
         ) >>= wrapHTML templates
     return $ emptyMail { title = BS.fromString title, content = BS.fromString content }
 

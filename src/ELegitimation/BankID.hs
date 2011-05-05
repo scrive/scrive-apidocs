@@ -232,10 +232,7 @@ handleSignPostBankID docid signid magic = do
                             return LinkMain -- where should we go?
                         Right document2 -> do
                             postDocumentChangeAction document2 document (Just signid)
-                            signatorylink <- signatoryLinkFromDocumentByID document signid
-                            maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
-                            addModal $  modalSignedView document2 signatorylink (isJust maybeuser) (isJust ctxmaybeuser)
-                            return $ LinkSignDoc document2 signatorylink
+                            handleAfterSigning document2 signid
 
 {- |
     Handle the ajax request for an eleg signature for the author.

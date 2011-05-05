@@ -57,6 +57,7 @@ data KontraLink
     | LinkSecurity
     | LinkLandpageSaved Document SignatoryLink
     | LinkSignDoc Document SignatoryLink
+    | LinkAccountFromSign Document SignatoryLink ActionID MagicHash
     | LinkIssueDoc DocumentID
     | LinkDesignDoc DesignStep
     | LinkIssueDocPDF (Maybe SignatoryLink) Document {- Which file? -}
@@ -127,6 +128,11 @@ instance Show KontraLink where
     showsPrec _ (LinkSignDoc document signatorylink) = 
         (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++ 
                  "/" ++ show (signatorymagichash signatorylink)
+    showsPrec _ (LinkAccountFromSign document signatorylink actionid magichash) =
+        (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++ 
+                 "/" ++ show (signatorymagichash signatorylink) ++
+                 "/" ++ show actionid ++
+                 "/" ++ show magichash
     showsPrec _ (LinkRemind document signlink) = (++) $ "/resend/"++(show $ documentid document)++"/"++(show $ signatorylinkid signlink)   
     showsPrec _ (LinkCancel document) = (++) $ "/cancel/"++(show $ documentid document)
     showsPrec _ (LinkRestart documentid) = (++) $ "/restart/"++(show  documentid)

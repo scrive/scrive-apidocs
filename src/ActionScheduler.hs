@@ -80,31 +80,31 @@ evaluateAction Action{actionID, actionType = AccountCreated{}} =
     deleteAction actionID
 
 evaluateAction action@Action{actionID, actionType = AccountCreatedBySigning state uid (docid, _) token} = do
-    now <- liftIO getMinutesTime
     case state of
-         JustCreated ->
-             sendReminder mailAccountCreatedBySigningReminder FirstReminderSent ((3*24*60) `minutesAfter` now)
-         FirstReminderSent ->
-             sendReminder mailAccountCreatedBySigningReminder SecondReminderSent ((3*24*60) `minutesAfter` now)
-         SecondReminderSent ->
-             sendReminder mailAccountCreatedBySigningLastReminder ThirdReminderSent ((24*60) `minutesAfter` now)
-         ThirdReminderSent ->
+         NothingSent ->
+             sendReminder 
+         ReminderSent ->
              deleteAction actionID
     where
-        sendReminder reminder new_state new_evaltime = do
+        sendReminder = do
+            now <- liftIO getMinutesTime
             sd <- ask
-            doctitle <- (query $ GetDocumentByDocumentID docid) >>= maybe (return BS.empty) (return . documenttitle)
+            mdoc <- query $ GetDocumentByDocumentID docid
+            let doctitle = maybe BS.empty documenttitle mdoc
             (query $ GetUserByUserID uid) >>= maybe (return ()) (\user -> do
                 let uinfo = userinfo user
                     email = useremail uinfo
                     fullname = userfullname user
                 (_,templates) <- liftIO $ readMVar (sdTemplates sd)
-                mail <- liftIO $ reminder templates (hostpart $ sdAppConf sd) doctitle fullname (LinkAccountCreatedBySigning actionID token) (LinkAccountRemoval actionID token)
+                let mailfunc = case mdoc of
+                      (Just doc) | isOffer doc -> mailAccountCreatedBySigningOfferReminder
+                      _ -> mailAccountCreatedBySigningContractReminder
+                mail <- liftIO $ mailfunc templates (hostpart $ sdAppConf sd) doctitle fullname (LinkAccountCreatedBySigning actionID token)
                 liftIO $ sendMail (sdMailer sd) $ mail { fullnameemails = [(fullname, unEmail email)] }
                 return ())
-            let new_atype = (actionType action) { acbsState = new_state }
+            let new_atype = (actionType action) { acbsState = ReminderSent }
             update $ UpdateActionType actionID new_atype
-            update $ UpdateActionEvalTime actionID new_evaltime
+            update $ UpdateActionEvalTime actionID ((72 * 60) `minutesAfter` now)
             return ()
 
 evaluateAction Action{actionID, actionType = EmailSendout mail} = do
