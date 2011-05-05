@@ -201,12 +201,12 @@ newAccountCreatedLink user = do
                                 (acToken $ actionType action)
                                 (BS.toString . unEmail . useremail $ userinfo user)
 
-newAccountCreatedBySigningLink :: MonadIO m => User -> (DocumentID, SignatoryLinkID) -> m (KontraLink, KontraLink)
+newAccountCreatedBySigningLink :: MonadIO m => User -> (DocumentID, SignatoryLinkID) -> m (ActionID, MagicHash)
 newAccountCreatedBySigningLink user doclinkdata = do
     action <- liftIO $ newAccountCreatedBySigning user doclinkdata
     let aid = actionID action
         token = acbsToken $ actionType action
-    return $ (LinkAccountCreatedBySigning aid token, LinkAccountRemoval aid token)
+    return $ (aid, token)
 
 -- | Schedule mail for send out and awake scheduler
 scheduleEmailSendout :: MonadIO m => MVar () -> Mail -> m ()

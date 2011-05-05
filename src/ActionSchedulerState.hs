@@ -96,11 +96,21 @@ data ActionType = TrustWeaverUpload {
                 }
                   deriving (Eq, Ord, Show, Typeable)
 
-data InactiveAccountState = JustCreated
+data InactiveAccountState0 = JustCreated
                           | FirstReminderSent
                           | SecondReminderSent
                           | ThirdReminderSent
                             deriving (Eq, Ord, Show, Typeable)
+
+data InactiveAccountState = NothingSent
+                          | ReminderSent
+                            deriving (Eq, Ord, Show, Typeable)
+
+instance Migrate InactiveAccountState0 InactiveAccountState where
+    migrate JustCreated = NothingSent
+    migrate FirstReminderSent = ReminderSent
+    migrate SecondReminderSent = ReminderSent
+    migrate ThirdReminderSent = ReminderSent
 
 -- | Used for comparing action types since we can't compare type constructors
 data ActionTypeID = TrustWeaverUploadID
@@ -152,8 +162,12 @@ instance Version ActionID
 $(deriveSerialize ''ActionType)
 instance Version ActionType
 
+$(deriveSerialize ''InactiveAccountState0)
+instance Version InactiveAccountState0
+
 $(deriveSerialize ''InactiveAccountState)
-instance Version InactiveAccountState
+instance Version InactiveAccountState where
+    mode = extension 1 (Proxy :: Proxy InactiveAccountState0)
 
 $(deriveSerialize ''ActionImportance)
 instance Version ActionImportance
@@ -316,12 +330,12 @@ newAccountCreatedBySigning user doclinkdata = do
     hash <- randomIO
     now <- getMinutesTime
     let action = AccountCreatedBySigning {
-          acbsState         = JustCreated
+          acbsState         = NothingSent
         , acbsUserID        = userid user
         , acbsDocLinkDataID = doclinkdata
         , acbsToken         = hash
     }
-    update $ NewAction action $ (24*60) `minutesAfter` now
+    update $ NewAction action $ (24 * 60) `minutesAfter` now
 
 -- | Create new 'email sendout' action
 newEmailSendoutAction :: Mail -> IO ()

@@ -9,6 +9,7 @@ pageDocumentForSignContent=
       $localscripts:noescape()$
     </script>
   </div>
+  $if(notsignedbyme)$
   <form method="post" name="form" action="$action$" id="dialog-confirm-sign" class="overlay">     
     <div class="modal-container">
       <div class="modal-header">
@@ -91,7 +92,9 @@ pageDocumentForSignContent=
     </div>
 
   </form>
+  $endif$
 
+  $if(notsignedbyme)$
   <form method="post" name="form" action="$action$" id="dialog-confirm-cancel" class="overlay">   
     <div class="modal-container">
       <div class="modal-header">
@@ -128,7 +131,8 @@ pageDocumentForSignContent=
         </a>
       </div>
     </div>
-  </form> 
+  </form>
+  $endif$
 
 </div>
 <div id="signStepsContainer"> 

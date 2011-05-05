@@ -60,8 +60,8 @@ modalOfferCreated=
     </a>
   </div>
 </div>
-######
-modalOfferSigned=
+####
+modalOfferSignedHasAccount=
 <div class="modal-container">
   <div class="modal-header">
     <span class="modal-icon message"></span>
@@ -86,6 +86,34 @@ modalOfferSigned=
       <div class="right"></div>
     </a>
   </div>
+</div>
+####
+modalOfferSignedNoAccount=
+<div class="modal-container">
+  <form id="accountFromSignForm" method="post" action="$linkaccountfromsign$">
+  <div class="modal-header">
+    <span class="modal-icon message"></span>
+    <span class="modal-title">
+      <h3>Du har accepterat offerten!</h3>
+    </span>
+    <a class="modal-close close"> </a>
+  </div>
+  <div class="modal-body">
+    <div class="modal-content">
+      <p>
+        Offerten är nu bindande. SkrivaPå har verifierat accepten och utfärdat ett verifikat. Ett original av den färdiga accepten har skickats till din inkorg.
+      </p>
+      <h4>Vill du säkra ditt original?</h4>
+      <p>
+        SkrivaPå kan även arkivera ditt original. Det kostar ingenting.
+      </p>
+      $accountFromSignInputs()$
+    </div>
+  </div>
+  <div class="modal-footer">
+    $accountFromSignFooter()$
+  </div>
+  </form>
 </div>
 ######
 modalWelcomeToSkrivaPa=
@@ -262,6 +290,13 @@ modalRejectedView=
 </div>
 #####
 ####
+modalSignedViewClosedHasAccount=
+$if(isloggedin)$
+$modalSignedViewClosedHasAccountLoggedIn()$
+$else$
+$modalSignedViewClosedHasAccountNotLoggedIn()$
+$endif$
+####
 modalSignedViewClosedHasAccountNotLoggedIn=
 <div class="modal-container">
   <form method="post" action="$linklogin$">
@@ -334,42 +369,32 @@ modalSignedViewClosedHasAccountLoggedIn=
 ####
 modalSignedViewClosedNoAccount=
 <div class="modal-container">
+  <form id="accountFromSignForm" method="post" action="$linkaccountfromsign$">
   <div class="modal-header">
     <span class="modal-icon message"></span>
     <span class="modal-title">
-      <h3>Du har undertecknat dokumentet $documenttitle$</h3>
+      <h3>Du har undertecknat!</h3>
     </span>
     <a class="modal-close close"> </a>
   </div>
   <div class="modal-body">
     <div class="modal-content">
       <p>
-        $partyListString:noescape()$ har nu undertecknat och
-        dokumentet är bindande.
+        Dokumentet är nu bindande. SkrivaPå har verifierat denna transaktion och utfärdat ett verifikat. Vi har skickat ett original av dokumentet till din inkorg. 
       </p>
+      $accountFromSignInputs()$
     </div>
   </div>
   <div class="modal-footer">
-    <a class="btn-small green float-right close">
-      <div class="left"></div>
-      <div class="label">
-        <p>Stäng</p>
-        <div class="btn-symbol green arrow-left"></div>
-      </div>
-      <div class="right"></div>
-    </a>
+      $accountFromSignFooter()$
   </div>
 </div>
 ####
-modalSignedViewClosed=
-$if(hasaccount)$
+modalSignedViewNotClosedHasAccount=
 $if(isloggedin)$
-$modalSignedViewClosedHasAccountLoggedIn()$
+$modalSignedViewNotClosedHasAccountLoggedIn()$
 $else$
-$modalSignedViewClosedHasAccountNotLoggedIn()$
-$endif$
-$else$
-$modalSignedViewClosedNoAccount()$
+$modalSignedViewNotClosedHasAccountNotLoggedIn()$
 $endif$
 #####
 modalSignedViewNotClosedHasAccountLoggedIn=
@@ -448,44 +473,77 @@ modalSignedViewNotClosedHasAccountNotLoggedIn=
 #####
 modalSignedViewNotClosedNoAccount=
 <div class="modal-container">
+  <form id="accountFromSignForm" method="post" action="$linkaccountfromsign$">
   <div class="modal-header">
     <span class="modal-icon message"></span>
     <span class="modal-title">
-      <h3>Du har undertecknat dokumentet $documenttitle$</h3>
+      <h3>Du har undertecknat!</h3>
     </span>
     <a class="modal-close close"> </a>
   </div>
   <div class="modal-body">
     <div class="modal-content">
       <p>
-        $partyUnsignedListString:noescape()$ har ännu inte
-        undertecknat. När alla undertecknat blir dokumentet bindande
-        och en kopia skickas till din e-post.
+        $partyUnsignedListString:noescape()$ har ännu inte undertecknat. När alla undertecknat utfärdar SkrivaPå ett verifikat,
+        dokumentet blir bindande och en kopia skickas till din e-post.
       </p>
+      <h4>Vill du säkra ditt original?</h4>
+      <p>
+        SkrivaPå kan även arkivera ett original för din säkerhet. Det kostar ingenting.
+      </p>
+      $accountFromSignInputs()$
     </div>
   </div>
   <div class="modal-footer">
-    <a class="btn-small green float-right close">
-      <div class="left"></div>
-      <div class="label">
-        <p>Stäng</p>
-        <div class="btn-symbol green arrow-left"></div>
-      </div>
-      <div class="right"></div>
-    </a>
+    $accountFromSignFooter()$
   </div>
 </div>
 #####
-modalSignedViewNotClosed=
-$if(hasaccount)$
-$if(isloggedin)$
-$modalSignedViewNotClosedHasAccountLoggedIn()$
-$else$
-$modalSignedViewNotClosedHasAccountNotLoggedIn()$
-$endif$
-$else$
-$modalSignedViewNotClosedNoAccount()$
-$endif$
+accountFromSignInputs=
+<div class="account-from-sign-container">
+  <div class="login-container">
+    <div class="body">
+      <div class="wrapper">
+        <p style="font-weight:bold;">Vill du säkra ditt original?</p>
+        <p>
+          SkrivaPå kan även arkivera ett original för din säkerhet. Det kostar ingenting.
+        </p>
+        <input type="hidden" name="acceptaccount" value="true" />
+        <div>
+          <input type="checkbox" name="tos" id="tos" />
+          <label for="tos">Jag har läst och accepterat <a href="/allmana-villkor">SkrivaPå Allmänna Villkor</a></label>
+        </div>
+        <div style="padding-top:10px">
+          <table>
+            <tr>
+              <td style="width:120px;">Lösenord</td>
+              <td><input type="password" name="password" /></td>
+            </tr>
+            <tr>
+              <td>Bekräfta lösenord</td>
+              <td><input type="password" name="password2" /></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+#####
+accountFromSignFooter=
+    <div class="accountFromSignFooter">
+      <div class="float-left">
+        <a class="declineAccountFromSign cancel" style="width:60px;">Nej tack</a>
+      </div>
+      <a class="btn-small green float-right submit notForIE7">
+        <div class="left"></div>
+        <div class="label">
+          <p>Ja, arkivera</p>
+          <div class="btn-symbol green arrow-left"></div>
+        </div>
+        <div class="right"></div>
+      </a>
+    </div>
 #####
 #####
 loginModal=

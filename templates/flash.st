@@ -212,3 +212,7 @@ flashMessageUserHasBecomeSubaccount=Du är nu underkonto under
 huvudkontot $supervisor.fullnamePlusEmail$ och rättigheterna till dina
 dokument har överförts till huvudkontot.
 ###
+flashMessageAccountActivatedFromSign=Ditt original har arkiverats hos SkrivaPå.
+###
+flashMessageAccountRemovedFromSign=Ditt original är borttaget från SkrivaPå.
+###

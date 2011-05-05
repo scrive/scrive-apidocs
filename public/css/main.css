@@ -369,6 +369,11 @@ a.new-btn-small.black p {
     text-align: center;
 }
 
+.account-from-sign-container .login-container .body .wrapper {
+    width: 300px;
+    text-align: left;
+}
+
 .recovery-container .body .wrapper {
     background: #f3f3f3;
     border-color: #3f3f3f;
@@ -1154,6 +1159,10 @@ a.new-btn-small.black p {
 
 .user-container {
 	height: 150px;
+}
+
+.account-from-sign-container {
+        height: 200px;
 }
 
 /* Content boxes */
