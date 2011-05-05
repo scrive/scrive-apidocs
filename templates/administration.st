@@ -380,6 +380,8 @@ statisticsPage=
       <table>
         <thead>
           <td style="width:200px">Date</td>
+          <td style="width:200px">All signatures</td>
+          <td style="width:200px">Signs in closed</td>
           <td style="width:200px">All documents</td>
           <td style="width:200px">Preparation</td>
           <td style="width:200px">Pending</td>
@@ -392,6 +394,8 @@ statisticsPage=
        </thead>
         $stats:{stat|<tr>
           <td>$stat.date$</td>
+          <td>$stat.documents.signatures$ </td>
+          <td>$stat.documents.signaturesInClosed$ </td>
           <td>$stat.documents.all$ </td>
           <td>$stat.documents.preparation$</td>
           <td>$stat.documents.pending$ </td>

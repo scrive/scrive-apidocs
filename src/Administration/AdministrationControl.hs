@@ -479,15 +479,24 @@ data DocStatsL = DocStatsL
                 , dsRejectedDocuments      :: !Int
                 , dsAwitingAuthorDocuments :: !Int
                 , dsErrorDocuments         :: !Int
+                , dsAllSignatures          :: !Int
+                , dsSignaturesInClosed     :: !Int
                 }
-docStatsZero = DocStatsL 0 0 0 0 0 0 0 0 0
+docStatsZero = DocStatsL 0 0 0 0 0 0 0 0 0 0 0
                      
+countSignatures = length . filter (isJust . maybesigninfo) . documentsignatorylinks 
+
 -- calculateStats :: [Documents] -> ??
 calculateStats documents = 
   foldl' ins IntMap.empty documents
   where
     ins map doc = foldl' (\m (k,v) -> IntMap.insertWith add k v m) map (stuff doc)
-    stuff doc = [ (asInt $ documentctime doc, docStatsZero { dsAllDocuments = 1 })
+    stuff doc = [ (asInt $ documentctime doc, docStatsZero { dsAllDocuments = 1 
+                                                           , dsAllSignatures = countSignatures doc
+                                                           , dsSignaturesInClosed = if documentstatus doc == Closed
+                                                                                    then countSignatures doc
+                                                                                    else 0
+                                                           })
                 , (asInt $ documentmtime doc, case documentstatus doc of
                       Preparation -> docStatsZero { dsPreparationDocuments = 1}
                       Pending     -> docStatsZero { dsPendingDocuments = 1}
@@ -498,8 +507,8 @@ calculateStats documents =
                       Timedout    -> docStatsZero { dsTimedOutDocuments = 1}
                       )
                 ]
-    add (DocStatsL a1 a2 a3 a4 a5 a6 a7 a8 a9) (DocStatsL b1 b2 b3 b4 b5 b6 b7 b8 b9) = 
-      DocStatsL (a1+b1) (a2+b2) (a3+b3) (a4+b4) (a5+b5) (a6+b6) (a7+b7) (a8+b8) (a9+b9)
+    add (DocStatsL a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11) (DocStatsL b1 b2 b3 b4 b5 b6 b7 b8 b9 b10 b11) = 
+      DocStatsL (a1+b1) (a2+b2) (a3+b3) (a4+b4) (a5+b5) (a6+b6) (a7+b7) (a8+b8) (a9+b9) (a10+b10) (a11+b11)
                     
                     
 handleStatistics :: Kontra Response
@@ -521,6 +530,8 @@ handleStatistics =
             field "closed" $ dsClosedDocuments stat
             field "rejected" $ dsRejectedDocuments stat
             field "canceled" $ dsCanceledDocuments stat
+            field "signatures" $ dsAllSignatures stat
+            field "signaturesInClosed" $ dsSignaturesInClosed stat
           
     content <- renderTemplateM "statisticsPage" $ do
       field "stats" $ map fieldify (IntMap.toList stats) 
