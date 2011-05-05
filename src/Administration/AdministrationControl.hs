@@ -481,16 +481,23 @@ data DocStatsL = DocStatsL
                 , dsErrorDocuments         :: !Int
                 , dsAllSignatures          :: !Int
                 , dsSignaturesInClosed     :: !Int
+                  
+                , dsAllUsers               :: !Int
+                , dsViralInvites           :: !Int  
+                , dsAdminInvites           :: !Int
                 }
-docStatsZero = DocStatsL 0 0 0 0 0 0 0 0 0 0 0
+docStatsZero = DocStatsL 0 0 0 0 0 0 0 0 0 0 0 0 0 0
                      
+addStats (DocStatsL a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14) (DocStatsL b1 b2 b3 b4 b5 b6 b7 b8 b9 b10 b11 b12 b13 b14) = 
+      DocStatsL (a1+b1) (a2+b2) (a3+b3) (a4+b4) (a5+b5) (a6+b6) (a7+b7) (a8+b8) (a9+b9) (a10+b10) (a11+b11) (a12+b12) (a13+b13) (a14+b14)
+
 countSignatures = length . filter (isJust . maybesigninfo) . documentsignatorylinks 
 
 -- calculateStats :: [Documents] -> ??
-calculateStats documents = 
+calculateStatsFromDocuments documents = 
   foldl' ins IntMap.empty documents
   where
-    ins map doc = foldl' (\m (k,v) -> IntMap.insertWith add k v m) map (stuff doc)
+    ins map doc = foldl' (\m (k,v) -> IntMap.insertWith addStats k v m) map (stuff doc)
     stuff doc = [ (asInt $ documentctime doc, docStatsZero { dsAllDocuments = 1 
                                                            , dsAllSignatures = countSignatures doc
                                                            , dsSignaturesInClosed = if documentstatus doc == Closed
@@ -507,17 +514,35 @@ calculateStats documents =
                       Timedout    -> docStatsZero { dsTimedOutDocuments = 1}
                       )
                 ]
-    add (DocStatsL a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11) (DocStatsL b1 b2 b3 b4 b5 b6 b7 b8 b9 b10 b11) = 
-      DocStatsL (a1+b1) (a2+b2) (a3+b3) (a4+b4) (a5+b5) (a6+b6) (a7+b7) (a8+b8) (a9+b9) (a10+b10) (a11+b11)
-                    
+                
+calculateStatsFromUsers users =                     
+  foldl' ins IntMap.empty users
+  where
+    ins map user = foldl' (\m (k,v) -> IntMap.insertWith addStats k v m) map (stuff user)
+    stuff user = catMaybes [ do -- Maybe monad
+                                time <- userhasacceptedtermsofservice user
+                                return (asInt time, docStatsZero { dsAllUsers = 1})
+                           , do
+                                info <- userinviteinfo user
+                                time <- invitetime info
+                                typex <- invitetype info
+                                return (asInt time, case typex of
+                                                         Viral -> docStatsZero { dsViralInvites = 1 } 
+                                                         Admin -> docStatsZero { dsAdminInvites = 1 })
+                           ]
+                
+                
                     
 handleStatistics :: Kontra Response
 handleStatistics = 
   onlySuperUser $ do
     ctx@Context{ctxtemplates} <- get
     documents <- query $ GetDocuments
-    let stats = calculateStats documents
+    users <- query $ GetAllUsers
+    let userStats = calculateStatsFromUsers users
+        documentStats = calculateStatsFromDocuments documents
         showAsDate int = show (int `div` 10000) ++ "-" ++ show (int `div` 100 `mod` 100) ++ "-" ++ show (int `mod` 100)
+        stats = IntMap.unionWith addStats userStats documentStats
     let fieldify (date,stat) = do 
           field "date" $ showAsDate date
           field "documents" $ do
@@ -532,6 +557,10 @@ handleStatistics =
             field "canceled" $ dsCanceledDocuments stat
             field "signatures" $ dsAllSignatures stat
             field "signaturesInClosed" $ dsSignaturesInClosed stat
+          field "users" $ do
+            field "all" $ dsAllUsers stat
+            field "viralInvites" $ dsViralInvites stat
+            field "adminInvites" $ dsAdminInvites stat
           
     content <- renderTemplateM "statisticsPage" $ do
       field "stats" $ map fieldify (IntMap.toList stats) 
