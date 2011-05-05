@@ -128,6 +128,7 @@ handleRoutes = msum [
      , hPost $ handleMainReaload
 
      -- static pages
+     , dir "webbkarta" $ hGetAllowHttp $ handleSitemapPage
      , dir "prisplan" $ hGetAllowHttp $ handlePriceplanPage
      , dir "sakerhet" $ hGetAllowHttp $ handleSecurityPage
      , dir "juridik" $ hGetAllowHttp $ handleLegalPage
@@ -288,7 +289,10 @@ handleHomepage = do
                         resp <- V.simpleResponse =<< (liftIO $ firstPage ctx loginOn referer email)
                         clearFlashMsgs
                         return $ Left resp
-        _ -> Left <$> embeddedErrorPage ctx             
+        _ -> Left <$> embeddedErrorPage ctx      
+
+handleSitemapPage :: Kontra Response
+handleSitemapPage = handleWholePage sitemapPage       
 
 handlePriceplanPage :: Kontra Response
 handlePriceplanPage = handleWholePage priceplanPage

@@ -12,6 +12,7 @@ module AppView( TopMenu(..)
               , simpleResponse 
               , ajaxError
               , firstPage
+              , sitemapPage
               , priceplanPage
               , securityPage
               , legalPage
@@ -122,6 +123,13 @@ embeddedErrorPage ctx = do
 serviceFields:: Maybe (Service,String) -> Fields
 serviceFields (Just (_, location)) = field "location" location
 serviceFields Nothing = field "location" "" -- should never happend 
+
+sitemapPage :: Context -> Kontra String
+sitemapPage ctx@Context{ctxtemplates} =
+  liftIO $ renderTemplate ctxtemplates "sitemapPage" $ do
+             field "hostpart" $ case ctxhostpart ctx of
+                                  ('h':'t':'t':'p':'s':xs) -> "http" ++ xs
+                                  xs -> xs
 
 priceplanPage :: Context -> Kontra String
 priceplanPage ctx = renderTemplateAsPage ctx "priceplanPage" True
