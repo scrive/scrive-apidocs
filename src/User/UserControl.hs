@@ -301,17 +301,15 @@ createUser ctx hostpart names email maybesupervisor vip = do
              return muser
          Nothing -> return muser
 
-createUserBySigning :: Context -> BS.ByteString -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> BS.ByteString -> (DocumentID, SignatoryLinkID) -> IO (Maybe User)
+createUserBySigning :: Context -> BS.ByteString -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> BS.ByteString -> (DocumentID, SignatoryLinkID) -> IO (Maybe (User, ActionID, MagicHash))
 createUserBySigning Context{ctxesenforcer, ctxtemplates, ctxhostpart} doctitle names email companyname doclinkdata =
     createInvitedUser names email >>= maybe (return Nothing) (\user -> do
         update $ SetUserInfo (userid user) $ (userinfo user) {
             usercompanyname = companyname
         }
         let fullname = composeFullName names
-        (al, rl) <- newAccountCreatedBySigningLink user doclinkdata
-        mail <- mailAccountCreatedBySigning ctxtemplates ctxhostpart doctitle fullname al rl
-        scheduleEmailSendout ctxesenforcer $ mail { fullnameemails = [(fullname, email)] }
-        return $ Just user
+        (actionid, magichash) <- newAccountCreatedBySigningLink user doclinkdata
+        return $ Just (user, actionid, magichash)
     )
 
 createNewUserByAdmin :: Context -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe MinutesTime -> Maybe String -> IO (Maybe User)
@@ -472,7 +470,7 @@ handleAccountSetupGet aid hash = do
         (query $ GetAction aid) >>= maybe (return Nothing) (\action -> do
             -- action may be in state when it has expired, but hasn't yet been
             -- transformed into next form. below code checks for that.
-            if (actionTypeID $ actionType action) == AccountCreatedBySigningID && (acbsState $ actionType action) /= ThirdReminderSent
+            if (actionTypeID $ actionType action) == AccountCreatedBySigningID && (acbsState $ actionType action) /= ReminderSent
                then return $ Just action
                else return $ checkValidity now $ Just action)
     case maction of
@@ -514,6 +512,30 @@ handleAccountSetupGet aid hash = do
             ctx <- get
             content <- liftIO $ activatePageView (ctxtemplates ctx) muser
             renderFromBody ctx TopNone kontrakcja $ cdata content
+
+handleAccountSetupFromSign :: ActionID -> MagicHash -> Kontra (Maybe User)
+handleAccountSetupFromSign aid hash = do
+  muserid <- getUserIDFromAction
+  case muserid of
+    (Just userid) -> do
+      user <- queryOrFail $ GetUserByUserID userid     
+      handleActivate' user aid id
+    Nothing -> return Nothing
+  where
+    getUserIDFromAction :: Kontra (Maybe UserID)            
+    getUserIDFromAction = do
+      now <- liftIO $ getMinutesTime
+      maction <- checkValidity now <$> (query $ GetAction aid)
+      case maction of
+        Just action -> 
+          case actionType action of
+            AccountCreatedBySigning _ uid _ token ->
+              if token == hash
+                then do
+                  return $ Just uid
+                else return Nothing
+            _ -> return Nothing
+        _-> return Nothing
 
 handleAccountSetupPost :: ActionID -> MagicHash -> Kontra KontraLink
 handleAccountSetupPost aid hash = do
@@ -565,46 +587,29 @@ handleAccountSetupPost aid hash = do
                      )
                  )
     where
-        handleActivate user = do
+        handleActivate userid = do
             ctx <- get
             let getUserField = getDefaultedField BS.empty
-            mtos <- getDefaultedField False asValidCheckBox "tos"
             mfname <- getUserField asValidName "fname"
             mlname <- getUserField asValidName "lname"
             mcompanyname <- getUserField asValidName "companyname"
             mcompanyposition <- getUserField asValidName "companyposition"
             mphone <- getUserField asValidPhone "phone"
-            mpassword <- getRequiredField asValidPassword "password"
-            mpassword2 <- getRequiredField asValidPassword "password2"
-            case (mtos, mfname, mlname, mcompanyname, mcompanyposition, mphone, mpassword, mpassword2) of
-                 (Just tos, Just fname, Just lname, Just companyname, Just companytitle, Just phone ,Just password, Just password2) -> do
-                     case checkPasswordsMatch password password2 of
-                          Right () ->
-                              if tos
-                                 then do
-                                     passwordhash <- liftIO $ createPassword password
-                                     update $ SetUserPassword user passwordhash
-                                     update $ AcceptTermsOfService (userid user) (ctxtime ctx)
-                                     update $ SetUserInfo (userid user) $ (userinfo user) {
-                                           userfstname = fname
-                                         , usersndname = lname
-                                         , usercompanyname  = companyname
-                                         , usercompanyposition = companytitle
-                                         , userphone = phone
-                                     }
-                                     now <- liftIO getMinutesTime
-                                     update $ AddFreePaymentsForInviter now user
-                                     dropExistingAction aid
-                                     addFlashMsg =<< (liftIO $ flashMessageUserActivated $ ctxtemplates ctx)
-                                     logUserToContext $ Just user
-                                     return LinkMain
-                                 else do
-                                     addFlashMsg =<< (liftIO $ flashMessageMustAcceptTOS $ ctxtemplates ctx)
-                                     return LoopBack
-                          Left flash -> do
-                              addFlashMsg =<< (liftIO $ flash (ctxtemplates ctx))
-                              return LoopBack
-                 _ -> return LoopBack
+            case (mfname, mlname, mcompanyname, mcompanyposition, mphone) of
+              (Just fname, Just lname, Just companyname, Just companytitle, Just phone) -> do
+                let infoupdatefunc info = info {
+                             userfstname = fname
+                           , usersndname = lname
+                           , usercompanyname  = companyname
+                           , usercompanyposition = companytitle
+                           , userphone = phone
+                         }
+                muser <- handleActivate' userid aid infoupdatefunc
+                case muser of
+                  Nothing -> do
+                    addFlashMsg =<< (liftIO $ flashMessageUserActivated $ ctxtemplates ctx)
+                    return LoopBack
+                  (Just _) -> return LinkMain
 
         getUserForViralInvite now invitedemail invitationtime inviterid = do
             muser <- liftIO $ createInvitedUser (BS.empty, BS.empty) $ unEmail invitedemail
@@ -616,6 +621,41 @@ handleAccountSetupPost aid hash = do
                      return muser
                  Nothing -> do -- user already exists, get her
                      query $ GetUserByEmail invitedemail
+
+{- |
+    Helper method for handling account activation.  This'll check
+    the tos, and the passwords and add error flash messages as you'd
+    expect.
+-}
+handleActivate' :: User -> ActionID -> (UserInfo -> UserInfo) -> Kontra (Maybe User)
+handleActivate' user actionid infoupdatefunc = do
+  ctx <- get
+  mtos <- getDefaultedField False asValidCheckBox "tos"
+  mpassword <- getRequiredField asValidPassword "password"
+  mpassword2 <- getRequiredField asValidPassword "password2"
+  case (mtos, mpassword, mpassword2) of
+    (Just tos, Just password, Just password2) -> do
+      case checkPasswordsMatch password password2 of
+        Right () ->
+          if tos
+            then do
+              passwordhash <- liftIO $ createPassword password
+              update $ SetUserPassword user passwordhash
+              update $ AcceptTermsOfService (userid user) (ctxtime ctx)
+              update $ SetUserInfo (userid user) $ infoupdatefunc (userinfo user)
+              now <- liftIO getMinutesTime
+              update $ AddFreePaymentsForInviter now user
+              dropExistingAction actionid
+              logUserToContext $ Just user
+              return $ Just user
+             else do
+               addFlashMsg =<< (liftIO $ flashMessageMustAcceptTOS $ ctxtemplates ctx)
+               return Nothing
+        Left flash -> do
+          addFlashMsg =<< (liftIO $ flash (ctxtemplates ctx))
+          return Nothing
+    _ -> return Nothing
+
 
 {- |
     This is where we get to when the user clicks the link in their password reminder
@@ -685,8 +725,24 @@ handleAccountRemovalGet aid hash = do
            else mzero
         )
 
+handleAccountRemovalFromSign :: ActionID -> MagicHash -> Kontra () 
+handleAccountRemovalFromSign aid hash = do
+  doc <- handleAccountRemoval' aid hash
+  return ()
+
 handleAccountRemovalPost :: ActionID -> MagicHash -> Kontra KontraLink
 handleAccountRemovalPost aid hash = do
+  doc <- handleAccountRemoval' aid hash
+  templates <- ctxtemplates <$> get
+  addModal $ modalAccountRemoved templates (documenttitle doc)
+  return LinkMain
+
+{- |
+    Helper function for performing account removal (these are accounts setup
+    by signing), this'll return the document that was removed.
+-}
+handleAccountRemoval' :: ActionID -> MagicHash -> Kontra Document
+handleAccountRemoval' aid hash = do
     getAccountCreatedBySigningIDAction aid >>= maybe mzero (\action -> do
         let AccountCreatedBySigning _ _ (docid, _) token = actionType action
         if hash == token
@@ -696,9 +752,7 @@ handleAccountRemovalPost aid hash = do
                -- this action to prevent user from account activation and
                -- receiving further reminders
                dropExistingAction aid
-               templates <- ctxtemplates <$> get
-               addModal $ modalAccountRemoved templates (documenttitle doc)
-               return LinkMain)
+               return doc)
            else mzero
         )
 
@@ -708,7 +762,7 @@ getAccountCreatedBySigningIDAction aid =
         -- allow for account created by signing links only
         if (actionTypeID $ actionType action) /= AccountCreatedBySigningID
            then return Nothing
-           else if (acbsState $ actionType action) /= ThirdReminderSent
+           else if (acbsState $ actionType action) /= ReminderSent
                    then return $ Just action
                    else do
                        now <- liftIO $ getMinutesTime

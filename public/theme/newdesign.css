@@ -770,6 +770,12 @@
 	z-index: 1001;
 }
 
+.overlay .modal-container .modal-content h4 {
+    font: 13px "Lucida Grande";
+    padding-left: 0px;
+    font-weight: bold;
+}
+
 .modal-container .modal-content h5 {
 	color: #666;
 	font: 11px "Lucida Grande";

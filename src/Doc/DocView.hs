@@ -14,10 +14,12 @@ module Doc.DocView (
   , pageOffersList
   , modalSignInviteView
   , modalSendInviteView
-  , modalSignedView
+  , modalContractSignedHasAccount
+  , modalContractSignedNoAccount
   , modalLoginForSaveView
   , modalOfferCreated
-  , modalOfferSigned
+  , modalOfferSignedHasAccount
+  , modalOfferSignedNoAccount
   , modalSignAwaitingAuthorLast
   , modalRejectedView
   , flashRemindMailSent
@@ -39,6 +41,8 @@ module Doc.DocView (
   , flashMessageCSVSent
   , flashMessageSingleTemplateShareDone
   , flashMessageMultipleTemplateShareDone
+  , flashMessageAccountActivatedFromSign
+  , flashMessageAccountRemovedFromSign
   , defaultInviteMessage
   , mailDocumentRemind
   , mailDocumentRejected
@@ -114,29 +118,46 @@ modalLoginForSaveView = do
   templates <- ask
   lift $ renderTemplate templates "modalLoginForSaveView" ()
 
-modalSignedView ::  Document -> SignatoryLink -> Bool -> Bool -> KontraModal
-modalSignedView document@Document{documenttitle, documentstatus} signatorylink hasaccount isloggedin = do
+modalContractSignedHasAccount ::  Document -> SignatoryLink -> Bool -> KontraModal
+modalContractSignedHasAccount document signatorylink isloggedin = do
+  modalContractSigned' "modalSignedViewClosedHasAccount" 
+                       "modalSignedViewNotClosedHasAccount" 
+                       document
+                       (loginFields document signatorylink isloggedin)
+
+modalContractSignedNoAccount ::  Document -> SignatoryLink -> ActionID -> MagicHash -> KontraModal
+modalContractSignedNoAccount document signatorylink actionid magichash =
+  modalContractSigned' "modalSignedViewClosedNoAccount" 
+                       "modalSignedViewNotClosedNoAccount" 
+                       document
+                       (accountFromSignFields document signatorylink actionid magichash)
+         
+modalContractSigned' ::  String -> String -> Document -> Fields -> KontraModal
+modalContractSigned' closedtemplate notclosedtemplate document@Document{documentstatus} extrafields = do
   templates <- ask   
   if documentstatus == Closed
      then
-       lift $ renderTemplate templates "modalSignedViewClosed" $ do
+       lift $ renderTemplate templates closedtemplate $ do
          field "partyListString" . renderListTemplate templates . map (BS.toString . personname') $ partyList document
-         field "documenttitle" $ BS.toString $ documenttitle
-         field "hasaccount" hasaccount
-         field "isloggedin" isloggedin
-         field "referer" $ show (LinkSignDoc document signatorylink)
-         field "email" . signatoryemail $ signatorydetails signatorylink
-         field "linklogin" $ show (LinkLogin LoginTry)         
+         basicContractSignedFields document
+         extrafields
      else
-       lift $ renderTemplate templates "modalSignedViewNotClosed" $ do
+       lift $ renderTemplate templates notclosedtemplate $ do
          field "partyUnsignedListString" . renderListTemplate templates . map (BS.toString . personname') $ partyUnsignedList document
-         field "documenttitle" . BS.toString $ documenttitle
-         field "hasaccount" hasaccount
-         field "isloggedin" isloggedin
-         field "referer" $ show (LinkSignDoc document signatorylink)         
-         field "email" . signatoryemail $ signatorydetails signatorylink
-         field "linklogin" $ show (LinkLogin LoginTry)         
-         
+         basicContractSignedFields document
+         extrafields
+
+basicContractSignedFields :: Document -> Fields
+basicContractSignedFields document@Document{documenttitle} = do
+    field "documenttitle" $ BS.toString $ documenttitle
+
+loginFields :: Document -> SignatoryLink -> Bool -> Fields
+loginFields document signatorylink isloggedin = do
+    field "isloggedin" isloggedin
+    field "referer" $ show (LinkSignDoc document signatorylink)
+    field "email" . signatoryemail $ signatorydetails signatorylink
+    field "linklogin" $ show (LinkLogin LoginTry)
+
 modalOfferCreated::  Document -> KontraModal
 modalOfferCreated document = do
     templates <- ask   
@@ -144,13 +165,27 @@ modalOfferCreated document = do
         field "documenttitle" . BS.toString $ documenttitle document      
         field "signatory" . listToMaybe $ map (BS.toString . personname') $ partyList document
         
-modalOfferSigned::  Document -> KontraModal
-modalOfferSigned document = do
+modalOfferSignedHasAccount ::  Document -> KontraModal
+modalOfferSignedHasAccount document = do
     templates <- ask   
-    lift $ renderTemplate templates "modalOfferSigned" $ do
-        field "documenttitle" . BS.toString $ documenttitle document      
-        field "signatory" . listToMaybe $ map (BS.toString . signatoryemail ) $ partyList document        
+    lift $ renderTemplate templates "modalOfferSignedHasAccount" $ do
+        offerSignedFields document
         
+modalOfferSignedNoAccount ::  Document -> SignatoryLink -> ActionID -> MagicHash -> KontraModal
+modalOfferSignedNoAccount document siglink actionid magichash = do
+    templates <- ask   
+    lift $ renderTemplate templates "modalOfferSignedNoAccount" $ do
+        offerSignedFields document
+        accountFromSignFields document siglink actionid magichash     
+
+offerSignedFields :: Document -> Fields
+offerSignedFields document = do
+    field "documenttitle" . BS.toString $ documenttitle document      
+    field "signatory" . listToMaybe $ map (BS.toString . signatoryemail ) $ partyList document
+
+accountFromSignFields :: Document -> SignatoryLink -> ActionID -> MagicHash -> Fields
+accountFromSignFields document signatorylink actionid magichash = do
+    field "linkaccountfromsign" $ show (LinkAccountFromSign document signatorylink actionid magichash)
 
 flashDocumentDraftSaved :: KontrakcjaTemplates -> IO FlashMessage
 flashDocumentDraftSaved templates =
@@ -238,6 +273,14 @@ flashMessageSingleTemplateShareDone docname templates =
 flashMessageMultipleTemplateShareDone :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageMultipleTemplateShareDone templates =
   toFlashMsg OperationDone <$> renderTemplate templates "flashMessageMultipleTemplateShareDone" ()
+
+flashMessageAccountActivatedFromSign :: KontrakcjaTemplates -> IO FlashMessage
+flashMessageAccountActivatedFromSign templates =
+  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageAccountActivatedFromSign" ()
+
+flashMessageAccountRemovedFromSign :: KontrakcjaTemplates -> IO FlashMessage
+flashMessageAccountRemovedFromSign templates =
+  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageAccountRemovedFromSign" ()
 
 
 -- All doc view

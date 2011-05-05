@@ -151,6 +151,8 @@ handleRoutes = msum [
      , dir "s" $ hGet  $ DocControl.handleSignShow
      , dir "s" $ param "sign" $ hPostNoXToken $ DocControl.signDocument
      , dir "s" $ param "cancel" $ hPostNoXToken $ DocControl.rejectDocument
+     , dir "s" $ param "acceptaccount" $ hPostNoXToken $ DocControl.handleAcceptAccountFromSign
+     , dir "s" $ param "declineaccount" $ hPostNoXToken $ DocControl.handleDeclineAccountFromSign
      
      --Q: This all needs to be done by author. Why we dont check it
      --here? MR

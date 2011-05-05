@@ -275,62 +275,35 @@ inviteSubaccountMailContent=
 
     $poweredBySkrivaPaPara()$
 ####
-mailAccountBySigningRemovalFooter=
-<p>Detta e-postmeddelande innehåller konfidentiell information och får inte vidarebefordras. Avslöjande, kopiering, distribution eller annan handling som rör informationen i meddelandet är förbjuden och kan vara olagligt. Om du felaktigt mottagit detta meddelande ber vi dig omedelbart informera avsändaren samt att därefter radera meddelandet.</p>
-
-<p>Om du är säker på att du inte vill spara ditt dokument och att vi raderar ditt konto <a href="$ctxhostpart$$removallink:noescape()$">klicka här</a></p>
+mailAccountBySigningContractReminderTitle=Du har inte säkrat ditt original
 ###
-mailAccountBySigningTitle=För din säkerhet
-###
-mailAccountBySigningContent=
+mailAccountBySigningContractReminderContent=
 <p>Hej <strong>$personname$</strong>,</p>
 
-<p>Av erfarenhet från många kundsamtal vet vi att även de viktigaste dokument kan komma bort. Viktiga papper bör inte få komma bort. Därför, för din juridiska säkerhet har vi skapat ett konto åt dig på SkrivaPå där vi sparat dokumentet "$documenttitle$". Givetvis är detta helt gratis. Definiera ditt lösenord för att säkra din åtkomst till dokumentet.</p>
+<p>Du har inte bekräftat att du vill säkra ditt dokument "$documenttitle$" genom att arkivera det hos SkrivaPå. SkrivaPås system kommer att radera dokumentet automatiskt inom 72h. Är du säker att du inte vill arkivera ett original hos SkrivaPå? Detta kostar givetvis ingenting.</p>
 
-<p>Gör så här:<br>
+<p>Gör så här för att spara<br>
 1. Klicka på länken<br>
-2. Välj lösenord och acceptera villkoren (inga kostnader, inga förpliktelser)<br>
+<a href="$ctxhostpart$$activationlink$">$ctxhostpart$$activationlink$</a><br>
+2. Definiera lösenord och acceptera villkoren<br>
 3. Färdig</p>
 
-<p>Av säkerhetsskäl inaktiveras länken inom 24h: <br>
-<a href="$ctxhostpart$$activationlink$">$ctxhostpart$$activationlink$</a></p>
-
 $poweredBySkrivaPaPara()$
-
-$mailAccountBySigningRemovalFooter()$
+####
+mailAccountBySigningOfferReminderTitle=Du har inte sparat ditt original
 ###
-mailAccountBySigningReminderTitle=Påminnelse: för din säkerhet
-###
-mailAccountBySigningReminderContent=
+mailAccountBySigningOfferReminderContent=
 <p>Hej <strong>$personname$</strong>,</p>
 
-<p>Vi ursäktar om vi stör. Orsaken är att vi ser att du ännu inte säkrat din åtkomst till dokumentet "$documenttitle$" genom att definiera ditt lösenord. Vi rekommenderar att du gör detta för din egen juridiska säkerhet för att säkra dig mot om dokumentet skulle komma bort. Givetvis är detta helt gratis.</p>
+<p>Du har inte bekräftat att du vill spara din offert "$documenttitle$" genom att arkivera den hos SkrivaPå. SkrivaPås system kommer att radera offerten automatiskt inom 72h. Är du säker att du inte vill arkivera ett original hos SkrivaPå? Detta kostar givetvis ingenting.</p>
 
-<p>Gör så här:<br>
+<p>Gör så här för att spara<br>
 1. Klicka på länken<br>
-2. Välj lösenord och acceptera villkoren (inga kostnader, inga förpliktelser)<br>
+<a href="$ctxhostpart$$activationlink$">$ctxhostpart$$activationlink$</a><br>
+2. Definiera lösenord och acceptera villkoren<br>
 3. Färdig</p>
 
-<p>Av säkerhetsskäl inaktiveras länken inom 72h: <br>
-<a href="$ctxhostpart$$activationlink$">$ctxhostpart$$activationlink$</a></p>
-
 $poweredBySkrivaPaPara()$
-
-$mailAccountBySigningRemovalFooter()$
-###
-mailAccountBySigningLastReminderTitle=Vi raderar ditt konto
-###
-mailAccountBySigningLastReminderContent=
-<p>Hej <strong>$personname$</strong>,</p>
-
-<p>Vi vill inte vara till besvär. Eftersom du inte definierat ditt lösenord trots upprepade påminnelser drar vi slutsatsen att du inte vill spara dokumentet "$documenttitle$" på SkrivaPå. Därför raderar vi dokumentet och det skapade gratiskontot från tjänsten inom 24h och kommer inte att besvära dig mer.</p>
-
-<p>Om du missat tidigare meddelanden och vill spara dokumentet kan du fortfarande göra detta genom att klicka på länken nedan inom 24h:<br>
-<a href="$ctxhostpart$$activationlink$">$ctxhostpart$$activationlink$</a></p>
-
-$poweredBySkrivaPaPara()$
-
-$mailAccountBySigningRemovalFooter()$
 ###
 mailViralInviteTitle=Inbjudan från $invitername$
 ###

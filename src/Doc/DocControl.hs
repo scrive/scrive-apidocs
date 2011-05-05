@@ -396,6 +396,41 @@ handleSTable = checkUserTOSGet $ do
       renderFromBody ctx TopNone kontrakcja $ cdata content
 
 {- |
+    Handles an account setup from within the sign view.
+-}
+handleAcceptAccountFromSign :: DocumentID -> SignatoryLinkID -> MagicHash -> ActionID -> MagicHash -> Kontra KontraLink
+handleAcceptAccountFromSign documentid
+                      signatorylinkid
+                      signmagichash
+                      actionid
+                      magichash = do
+  ctx@Context{ctxtemplates} <- get
+  muser <- handleAccountSetupFromSign actionid magichash
+  document <- queryOrFail $ GetDocumentByDocumentID documentid
+  signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
+  case (muser, isContract document) of
+    (Nothing, True) -> addModal $ modalContractSignedNoAccount document signatorylink actionid magichash
+    (Nothing, False) -> addModal $ modalOfferSignedNoAccount document signatorylink actionid magichash
+    (Just _, _) -> addFlashMsg =<< (liftIO $ flashMessageAccountActivatedFromSign ctxtemplates)
+  return $ LinkSignDoc document signatorylink
+
+{- |
+    Handles an account removal from within the sign view.
+-}
+handleDeclineAccountFromSign :: DocumentID -> SignatoryLinkID -> MagicHash -> ActionID -> MagicHash -> Kontra KontraLink
+handleDeclineAccountFromSign documentid
+                             signatorylinkid
+                             signmagichash
+                             actionid
+                             magichash = do
+  ctx@Context{ctxtemplates} <- get
+  document <- queryOrFail $ GetDocumentByDocumentID documentid
+  signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
+  handleAccountRemovalFromSign actionid magichash
+  addFlashMsg =<< (liftIO $ flashMessageAccountRemovedFromSign ctxtemplates)
+  return $ LinkSignDoc document signatorylink
+
+{- |
    Control the signing of a document
    URL: /s/{docid}/{signatorylinkid1}/{magichash1}
    Method: POST
@@ -433,21 +468,38 @@ signDocument documentid
     Right document -> 
         do 
           postDocumentChangeAction document olddocument (Just signatorylinkid1)
-          signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid1
-          maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
-          when_ (isNothing maybeuser) $ do
-              ctx <- get
-              let details = signatorydetails signatorylink
-                  fullname = (signatoryfstname details, signatorysndname details)
-                  email = signatoryemail details
-                  company = signatorycompany details
-              muser <- liftIO $ createUserBySigning ctx (documenttitle document) fullname email company (documentid, signatorylinkid1)
-              when_ (isJust muser) $
-                  update $ SaveDocumentForSignedUser documentid (userid $ fromJust muser) signatorylinkid1
+          handleAfterSigning document signatorylinkid1
+
+{- |
+    Call after signing in order to save the document for any new user,
+    put up the appropriate modal, and register the necessary nagging email actions.
+    This is factored into it's own function because that way it can be used by eleg too.
+-}
+handleAfterSigning :: Document -> SignatoryLinkID -> Kontra KontraLink
+handleAfterSigning document@Document{documentid,documenttitle} signatorylinkid = do
+  ctx <- get
+  signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
+  maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
+  case maybeuser of
+    Nothing -> do
+      let details = signatorydetails signatorylink
+          fullname = (signatoryfstname details, signatorysndname details)
+          email = signatoryemail details
+          company = signatorycompany details
+      muser <- liftIO $ createUserBySigning ctx documenttitle fullname email company (documentid, signatorylinkid)
+      case muser of
+        (Just (user, actionid, magichash)) -> do
+          update $ SaveDocumentForSignedUser documentid (userid user) signatorylinkid
           if (isContract document)
-            then addModal $ modalSignedView document signatorylink (isJust maybeuser) (isJust ctxmaybeuser)
-            else addModal $ modalOfferSigned document
-          return $ LinkSignDoc document signatorylink
+            then addModal $ modalContractSignedNoAccount document signatorylink actionid magichash
+            else addModal $ modalOfferSignedNoAccount document signatorylink actionid magichash
+          return ()
+        _ -> return ()
+    (Just user) | (isContract document) ->
+      addModal $ modalContractSignedHasAccount document signatorylink (isJust $ ctxmaybeuser ctx)
+    (Just user) -> 
+      addModal $ modalOfferSignedHasAccount document
+  return $ LinkSignDoc document signatorylink
 
 {- |
    Control rejecting the document
