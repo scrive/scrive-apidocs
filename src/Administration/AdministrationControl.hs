@@ -15,6 +15,7 @@ module Administration.AdministrationControl(
             showAdminMainPage
           , showAdminUserAdvanced
           , showAdminUsers
+          , showAdminUserUsageStats
           , showAllUsersTable
           , showStats
           , showServicesPage
@@ -75,48 +76,39 @@ eitherFlash action = do
 
 {- | Main page. Redirects users to other admin panels -} 
 showAdminMainPage :: Kontra Response
-showAdminMainPage = onlySuperUser $
-                     do
-                      ctx@Context {ctxtemplates} <- lift get
-                      content <- liftIO $ adminMainPage ctxtemplates 
-                      renderFromBody ctx TopEmpty kontrakcja $ cdata content 
+showAdminMainPage = onlySuperUser $ do
+  ctx@Context {ctxtemplates} <- lift get
+  content <- liftIO $ adminMainPage ctxtemplates 
+  renderFromBody ctx TopEmpty kontrakcja $ cdata content 
 
 {- | Process view for advanced user administration -}                    
 showAdminUserAdvanced :: Kontra Response
-showAdminUserAdvanced = onlySuperUser $
-                          do
-                           ctx@Context {ctxtemplates} <- lift get
-                           users <- query $ GetAllUsers
-                           params <- getAdminUsersPageParams
-                           content <- liftIO $ adminUsersAdvancedPage ctxtemplates users params
-                           renderFromBody ctx TopEmpty kontrakcja $ cdata content 
+showAdminUserAdvanced = onlySuperUser $ do
+  ctx@Context {ctxtemplates} <- lift get
+  users <- query $ GetAllUsers
+  params <- getAdminUsersPageParams
+  content <- liftIO $ adminUsersAdvancedPage ctxtemplates users params
+  renderFromBody ctx TopEmpty kontrakcja $ cdata content 
 
 {- | Process view for finding a user in basic administration. If provided with userId string as param 
 it allows to edit user details -}     
-showAdminUsers :: Maybe String -> Kontra Response 
-showAdminUsers Nothing= onlySuperUser $
-                          do
-                           ctx@Context {ctxtemplates} <- lift get
-                           users <- getUsersAndStats
-                           params <- getAdminUsersPageParams
-                           content <- liftIO $ adminUsersPage ctxtemplates users params
-                           renderFromBody ctx TopEmpty kontrakcja $ cdata content 
+showAdminUsers :: Maybe UserID -> Kontra Response 
+showAdminUsers Nothing = onlySuperUser $ do
+  ctx@Context {ctxtemplates} <- lift get
+  users <- getUsersAndStats
+  params <- getAdminUsersPageParams
+  content <- liftIO $ adminUsersPage ctxtemplates users params
+  renderFromBody ctx TopEmpty kontrakcja $ cdata content 
 
-showAdminUsers (Just a)= onlySuperUser $
-                         do 
-                         ctx@Context {ctxtemplates} <- lift get
-                         let muserId = readM a
-                         case muserId of 
-                           Nothing -> mzero   
-                           Just userId ->    
-                            do 
-                             muser <- query $ GetUserByUserID userId
-                             case muser of 
-                              Nothing -> mzero     
-                              Just user -> do   
-                                     paymentmodel <- update $ GetPaymentModel $ paymentaccounttype $ userpaymentpolicy user
-                                     content <- liftIO $ adminUserPage ctxtemplates user paymentmodel
-                                     renderFromBody ctx TopEmpty kontrakcja $ cdata content 
+showAdminUsers (Just userId) = onlySuperUser $ do 
+  ctx@Context {ctxtemplates} <- lift get
+  muser <- query $ GetUserByUserID userId
+  case muser of 
+    Nothing -> mzero     
+    Just user -> do   
+      paymentmodel <- update $ GetPaymentModel $ paymentaccounttype $ userpaymentpolicy user
+      content <- liftIO $ adminUserPage ctxtemplates user paymentmodel
+      renderFromBody ctx TopEmpty kontrakcja $ cdata content 
 
 getUsersAndStats :: Kontra [(User,DocStats,UserStats)]
 getUsersAndStats = do
@@ -128,6 +120,16 @@ getUsersAndStats = do
     users2 <- mapM queryStats users
     return users2
 
+showAdminUserUsageStats :: UserID -> Kontra Response
+showAdminUserUsageStats userid = onlySuperUser $ do
+  ctx@Context {ctxtemplates} <- get
+  documents <- query $ GetDocumentsByAuthor userid
+  Just user <- query $ GetUserByUserID userid
+  content <- liftIO $ adminUserUsageStatsPage ctxtemplates user $ do
+    fieldsFromStats [user] documents
+  renderFromBody ctx TopEmpty kontrakcja $ cdata content 
+  
+  
 {- Shows table of all users-}
 showAllUsersTable :: Kontra Response
 showAllUsersTable = onlySuperUser $ do
@@ -428,11 +430,11 @@ getUserPaymentPolicyChange =  do
 {- | Reads params and returns structured params for user managment pages. -}                                        
 getAdminUsersPageParams :: Kontra AdminUsersPageParams
 getAdminUsersPageParams = do
-                          search <- getDataFn' (look "search")         
-                          startletter <-  getDataFn' (look "startletter")         
-                          mpage <-  getDataFn' (look "page")         
-                          let mpage' = join $ fmap readM mpage
-                          return $ AdminUsersPageParams {search = search, startletter=startletter, page = maybe 0 id mpage'}
+  search <- getDataFn' (look "search")         
+  startletter <-  getDataFn' (look "startletter")         
+  mpage <-  getDataFn' (look "page")         
+  let mpage' = join $ fmap readM mpage
+  return $ AdminUsersPageParams {search = search, startletter=startletter, page = maybe 0 id mpage'}
                                                                           
 
 {- Create service-}
@@ -462,29 +464,108 @@ handleAddUserToService = onlySuperUser $ do
 
 {- Services page-}
 showServicesPage :: Kontra Response
-showServicesPage = onlySuperUser $
-                     do
-                      ctx@Context {ctxtemplates} <- lift get
-                      services <- query GetServices
-                      content <- liftIO $ servicesAdminPage ctxtemplates services
-                      renderFromBody ctx TopEmpty kontrakcja $ cdata content 
+showServicesPage = onlySuperUser $ do
+  ctx@Context {ctxtemplates} <- lift get
+  services <- query GetServices
+  content <- liftIO $ servicesAdminPage ctxtemplates services
+  renderFromBody ctx TopEmpty kontrakcja $ cdata content 
     
+                     
+{-                     
+Sales leads stats:
+
+User name	
+User email	
+Total finalized docs (total signatures)	
+Sales rep (editable, free text)	
+Status (1-5) (editable, free text)	
+Subaccounts	
+User company	
+User title	
+User phone	
+Date TOS accepted	
+Subacc (y/n)/Superaccount
+-}
+
+{-
+Billing stats:
+
+Superuser Company name	
+Superuser email	
+Payment plan	
+Next billing date	
+Last billing date	
+Last billing total fee	
+Current plan price	
+Current per signature price	
+Current TW storage price
+-}
+
+{-
+
+Nr of Users	
+Total nr of signatures	*
+Total nr of signatures of finished docs (these are the ones we charge for)	*
+Nr of docs with cross status	*
+Nr of docs with blue status	*
+Nr of docs with green status	*
+Nr of docs yellow status	*
+Nr of docs with orange status	*
+Nr of docs with red status	*
+Nr of docs with red exclamation mark status	*
+Nr of friend invites	*
+Nr of SkrivaPå staff invites *
+Nr of Signups after finalized offer	TODO
+Nr of Signups after finalized contract  TODO
+-}
+
+{-
+Total nr of signatures	
+Total nr of signatures of finished docs (these are the ones we charge for)	
+Nr of docs with cross status	
+Nr of docs with blue status	
+Nr of docs with green status	
+Nr of docs with yellow status	
+Nr of docs with orange status	
+Nr of docs with red status	
+Nr of docs with red exclamation mark status	
+Nr of friend invites
+-}
+
+
+{-
+User list:
+
+Email	
+Name	
+Title	
+Company	
+Phone	
+Sales rep	
+Used signatures total	
+Used signatures last 1 month	
+Used signatures last 2 months
+Used signatures last 3 months
+Used signatures last 6 months
+Used signatures last 12 months
+-}
+
 data DocStatsL = DocStatsL                     
-                { dsAllDocuments           :: !Int
-                , dsPreparationDocuments   :: !Int
-                , dsPendingDocuments       :: !Int
-                , dsCanceledDocuments      :: !Int
-                , dsTimedOutDocuments      :: !Int
-                , dsClosedDocuments        :: !Int  
-                , dsRejectedDocuments      :: !Int
+                { dsAllDocuments :: !Int
+                , dsPreparationDocuments :: !Int
+                , dsPendingDocuments :: !Int
+                , dsCanceledDocuments :: !Int
+                , dsTimedOutDocuments :: !Int
+                , dsClosedDocuments :: !Int  
+                , dsRejectedDocuments :: !Int
                 , dsAwitingAuthorDocuments :: !Int
-                , dsErrorDocuments         :: !Int
-                , dsAllSignatures          :: !Int
-                , dsSignaturesInClosed     :: !Int
+                , dsErrorDocuments :: !Int
+                , dsAllSignatures :: !Int
+                , dsSignaturesInClosed :: !Int
                   
-                , dsAllUsers               :: !Int
-                , dsViralInvites           :: !Int  
-                , dsAdminInvites           :: !Int
+                , dsAllUsers :: !Int
+                , dsViralInvites :: !Int  
+                , dsAdminInvites :: !Int
                 }
 docStatsZero = DocStatsL 0 0 0 0 0 0 0 0 0 0 0 0 0 0
                      
@@ -532,13 +613,7 @@ calculateStatsFromUsers users =
                            ]
                 
                 
-                    
-handleStatistics :: Kontra Response
-handleStatistics = 
-  onlySuperUser $ do
-    ctx@Context{ctxtemplates} <- get
-    documents <- query $ GetDocuments
-    users <- query $ GetAllUsers
+fieldsFromStats users documents = do
     let userStats = calculateStatsFromUsers users
         documentStats = calculateStatsFromDocuments documents
         showAsDate int = show (int `div` 10000) ++ "-" ++ show (int `div` 100 `mod` 100) ++ "-" ++ show (int `mod` 100)
@@ -562,8 +637,16 @@ handleStatistics =
             field "viralInvites" $ dsViralInvites stat
             field "adminInvites" $ dsAdminInvites stat
           
+    field "stats" $ map fieldify (IntMap.toList stats) 
+                    
+handleStatistics :: Kontra Response
+handleStatistics = 
+  onlySuperUser $ do
+    ctx@Context{ctxtemplates} <- get
+    documents <- query $ GetDocuments
+    users <- query $ GetAllUsers
     content <- renderTemplateM "statisticsPage" $ do
-      field "stats" $ map fieldify (IntMap.toList stats) 
+      fieldsFromStats users documents
     renderFromBody ctx TopEmpty kontrakcja $ cdata content
     
   
