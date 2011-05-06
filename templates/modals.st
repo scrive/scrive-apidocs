@@ -95,18 +95,14 @@ modalOfferSignedNoAccount=
     <span class="modal-icon message"></span>
     <span class="modal-title">
       <h3>Du har accepterat offerten!</h3>
+      <p>
+        Offerten är nu bindande. SkrivaPå har verifierat accepten och utfärdat ett verifikat. Ett original av den färdiga accepten har skickats till din inkorg.
+      </p>
     </span>
     <a class="modal-close close"> </a>
   </div>
   <div class="modal-body">
     <div class="modal-content">
-      <p>
-        Offerten är nu bindande. SkrivaPå har verifierat accepten och utfärdat ett verifikat. Ett original av den färdiga accepten har skickats till din inkorg.
-      </p>
-      <h4>Vill du säkra ditt original?</h4>
-      <p>
-        SkrivaPå kan även arkivera ditt original. Det kostar ingenting.
-      </p>
       $accountFromSignInputs()$
     </div>
   </div>
@@ -374,14 +370,14 @@ modalSignedViewClosedNoAccount=
     <span class="modal-icon message"></span>
     <span class="modal-title">
       <h3>Du har undertecknat!</h3>
+      <p>
+        Dokumentet är nu bindande. SkrivaPå har verifierat denna transaktion och utfärdat ett verifikat. Vi har skickat ett original av dokumentet till din inkorg.
+      </p>
     </span>
     <a class="modal-close close"> </a>
   </div>
   <div class="modal-body">
     <div class="modal-content">
-      <p>
-        Dokumentet är nu bindande. SkrivaPå har verifierat denna transaktion och utfärdat ett verifikat. Vi har skickat ett original av dokumentet till din inkorg. 
-      </p>
       $accountFromSignInputs()$
     </div>
   </div>
@@ -478,19 +474,15 @@ modalSignedViewNotClosedNoAccount=
     <span class="modal-icon message"></span>
     <span class="modal-title">
       <h3>Du har undertecknat!</h3>
+      <p>
+        $partyUnsignedListString:noescape()$ har ännu inte undertecknat. När alla undertecknat utfärdar SkrivaPå ett verifikat,
+        dokumentet blir bindande och en kopia skickas till din e-post.
+      </p>
     </span>
     <a class="modal-close close"> </a>
   </div>
   <div class="modal-body">
     <div class="modal-content">
-      <p>
-        $partyUnsignedListString:noescape()$ har ännu inte undertecknat. När alla undertecknat utfärdar SkrivaPå ett verifikat,
-        dokumentet blir bindande och en kopia skickas till din e-post.
-      </p>
-      <h4>Vill du säkra ditt original?</h4>
-      <p>
-        SkrivaPå kan även arkivera ett original för din säkerhet. Det kostar ingenting.
-      </p>
       $accountFromSignInputs()$
     </div>
   </div>
@@ -510,10 +502,12 @@ accountFromSignInputs=
         </p>
         <input type="hidden" name="acceptaccount" value="true" />
         <div>
-          <input type="checkbox" name="tos" id="tos" />
-          <label for="tos">Jag har läst och accepterat <a href="/allmana-villkor">SkrivaPå Allmänna Villkor</a></label>
+          <input type="checkbox" name="tos" id="tos" class="float-left" style="width:20px;margin:0px;"/>
+          <div class="float-left" style="width:280px;">
+            <label for="tos" class="float-left" style="padding-left:5px;">Jag har läst och accepterat <a href="/allmana-villkor">SkrivaPå Allmänna Villkor</a></label>
+          </div>
         </div>
-        <div style="padding-top:10px">
+        <div style="padding-top:20px">
           <table>
             <tr>
               <td style="width:120px;">Lösenord</td>
