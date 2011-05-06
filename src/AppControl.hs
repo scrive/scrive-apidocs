@@ -220,6 +220,7 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "advuseradmin" $ hGet Administration.showAdminUserAdvanced
      , dir "adminonly" $ dir "useradmin" $ hGet $ Administration.showAdminUsers . Just 
      , dir "adminonly" $ dir "useradmin" $ hGet $ Administration.showAdminUsers Nothing
+     , dir "adminonly" $ dir "useradmin" $ dir "usagestats" $ hGet $ Administration.showAdminUserUsageStats
      , dir "adminonly" $ dir "useradmin" $ hPost Administration.handleUserChange
      , dir "adminonly" $ dir "useradmin" $ hPost Administration.handleUserEnableTrustWeaverStorage
      , dir "adminonly" $ dir "db" $ hGet $ Administration.indexDB
