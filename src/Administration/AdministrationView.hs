@@ -18,6 +18,7 @@ module Administration.AdministrationView(
           , databaseContent
           , statsPage
           , servicesAdminPage
+          , adminUserUsageStatsPage
           , AdminUsersPageParams(..)
           , StatsView(..)) where
 
@@ -75,6 +76,15 @@ adminUserPage templates user paymentModel =
         field "user" $ userAdminView user
         field "paymentmodel" $ getModelView paymentModel
         field "adminlink" $ show $ LinkAdminOnly
+
+{-| Manage user page - can change user info and settings here -}
+-- adminUserUsageStatsPage :: KontrakcjaTemplates -> User -> DocStatsL -> IO String
+adminUserUsageStatsPage templates user morefields =
+    renderTemplate templates "userusagestats" $ do
+        field "adminuserslink" $ show $ LinkUserAdmin Nothing
+        field "user" $ userAdminView user
+        field "adminlink" $ show $ LinkAdminOnly
+        morefields
 
 allUsersTable::KontrakcjaTemplates -> [(User,DocStats,UserStats)] -> IO String
 allUsersTable templates users =
@@ -194,7 +204,8 @@ data UserAdminView = UserAdminView {
                    , uavtmppaymentchangeenddate ::Maybe String
                    , uavcustompaymentchange::PaymentChangeView
                    , uavtemppaymentchange:: Maybe PaymentChangeView
-                    } deriving (Data, Typeable)
+                   , uavuserid::String
+                   } deriving (Data, Typeable)
                     
 {-| Conversion from 'User' to 'UserAdminView'  -}   
 userAdminView ::User -> UserAdminView
@@ -231,7 +242,7 @@ userAdminView u =  UserAdminView {
                    , uavtmppaymentchangeenddate = fmap (showDateOnly .  fst) $ temppaymentchange $ userpaymentpolicy  u
                    , uavtemppaymentchange = fmap (getChangeView .  snd) $ temppaymentchange $ userpaymentpolicy  u
                    , uavcustompaymentchange = getChangeView $ custompaymentchange $ userpaymentpolicy  u
-                                                                             
+                   , uavuserid = show (userid u)                                        
                    }           
                                      
 letters::[String]
