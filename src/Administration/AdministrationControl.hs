@@ -74,7 +74,7 @@ eitherFlash action = do
 
 
 {- | Main page. Redirects users to other admin panels -} 
-showAdminMainPage ::Kontra Response
+showAdminMainPage :: Kontra Response
 showAdminMainPage = onlySuperUser $
                      do
                       ctx@Context {ctxtemplates} <- lift get
@@ -93,7 +93,7 @@ showAdminUserAdvanced = onlySuperUser $
 
 {- | Process view for finding a user in basic administration. If provided with userId string as param 
 it allows to edit user details -}     
-showAdminUsers:: Maybe String -> Kontra Response 
+showAdminUsers :: Maybe String -> Kontra Response 
 showAdminUsers Nothing= onlySuperUser $
                           do
                            ctx@Context {ctxtemplates} <- lift get
@@ -286,7 +286,7 @@ handleCreateUser = onlySuperUser $ do
     return LinkStats
           
 {- | Reads params and returns function for conversion of user info. With no param leaves fields unchanged -}  
-getUserInfoChange::Kontra (UserInfo -> UserInfo)
+getUserInfoChange :: Kontra (UserInfo -> UserInfo)
 getUserInfoChange = do      
                      muserfstname        <- getFieldUTF "userfstname" 
                      musersndname        <- getFieldUTF "usersndname" 
@@ -332,7 +332,7 @@ getUserInfoChange = do
                                         })
                                         
 {- | Reads params and returns function for conversion of user settings. With no param leaves fields unchanged -}
-getUserSettingsChange::Kontra (UserSettings -> UserSettings)
+getUserSettingsChange :: Kontra (UserSettings -> UserSettings)
 getUserSettingsChange =  do 
                           maccounttype          <- readField "accounttype" 
                           maccountplan          <- readField "accountplan" 
@@ -353,7 +353,7 @@ getUserSettingsChange =  do
                                           })
                                           
 {- | Reads params and returns function for conversion of user payment account. With no param leaves fields unchanged -}
-getUserPaymentAccountChange::Kontra (UserPaymentAccount -> UserPaymentAccount)
+getUserPaymentAccountChange :: Kontra (UserPaymentAccount -> UserPaymentAccount)
 getUserPaymentAccountChange =  do 
                           mpaymentaccountfreesignatures        <- readField "paymentaccountfreesignatures" 
                           return (\UserPaymentAccount {
@@ -403,7 +403,7 @@ handleMigrate0 = onlySuperUser $ do
  sendRedirect LinkAdminOnly
 
 {- | Reads params and returns function for conversion of user payment policy. With no param clears custom and temporary fields !!!!-}
-getUserPaymentPolicyChange::Kontra (UserPaymentPolicy -> UserPaymentPolicy)
+getUserPaymentPolicyChange :: Kontra (UserPaymentPolicy -> UserPaymentPolicy)
 getUserPaymentPolicyChange =  do 
                           mtmppaymentchangeenddate   <- fmap (join . (fmap parseMinutesTimeMDY)) $ getField "tmppaymentchangeenddate" 
                           mpaymentaccounttype        <- readField "paymentaccounttype" 
@@ -426,7 +426,7 @@ getUserPaymentPolicyChange =  do
                                         })      
                                         
 {- | Reads params and returns structured params for user managment pages. -}                                        
-getAdminUsersPageParams::Kontra AdminUsersPageParams
+getAdminUsersPageParams :: Kontra AdminUsersPageParams
 getAdminUsersPageParams = do
                           search <- getDataFn' (look "search")         
                           startletter <-  getDataFn' (look "startletter")         
@@ -436,7 +436,7 @@ getAdminUsersPageParams = do
                                                                           
 
 {- Create service-}
-handleCreateService::Kontra KontraLink
+handleCreateService :: Kontra KontraLink
 handleCreateService = onlySuperUser $ do
     mname<- getFieldUTF "name"
     case mname of
@@ -448,7 +448,7 @@ handleCreateService = onlySuperUser $ do
          Nothing -> return LinkMain
           
 {- Add user -}          
-handleAddUserToService::Kontra KontraLink
+handleAddUserToService :: Kontra KontraLink
 handleAddUserToService = onlySuperUser $ do
     sname <- getFieldUTFWithDefault mempty "service"
     email <- getFieldUTFWithDefault mempty "email"
@@ -461,7 +461,7 @@ handleAddUserToService = onlySuperUser $ do
          _ -> return LinkMain    
 
 {- Services page-}
-showServicesPage ::Kontra Response
+showServicesPage :: Kontra Response
 showServicesPage = onlySuperUser $
                      do
                       ctx@Context {ctxtemplates} <- lift get
