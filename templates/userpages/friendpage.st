@@ -25,19 +25,18 @@ viewFriends =
 						</ul>
 					</div>
 				</div>
-                                <div class="col float-left">
-                                  <input type="email" name="email" class="tab-input float-left" infotext="Skriv e-post för att lägga till fler" />
-                                  <a class="btn-tiny blue float-right submit" href="#">
-                                    <div class="left"></div>
-                                    <div class="label">
-                                      <span>Ok</span>
-                                    </div>
-                                    <div class="right"></div>
-                                  </a>
+                                <div class="col float-right">
+                                  <div class="float-right">
+                                    <input type="email" name="email" class="tab-input float-left" infotext="Skriv e-post för att lägga till fler" />
+                                    <a class="btn-tiny blue submit float-right" href="#">
+                                      <div class="left"></div>
+                                      <div class="label">
+                                        <span>Ok</span>
+                                      </div>
+                                      <div class="right"></div>
+                                    </a>
+                                  </div>
                                 </div>
-				<div class="col float-right">
-				  $searchBox(infotext='Sök vänner')$
-				</div>
 				<div class="clearfix"></div>
 			</div>
 			<div class="tab-table">
