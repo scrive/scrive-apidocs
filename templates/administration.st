@@ -120,11 +120,11 @@ adminusers=
           <td> $user.userdetails.usvPhone$ </td>
           <td> $user.docstats.doccount$ </td>
           <td> $user.docstats.signaturecount$ </td>
-          <td> $user.docstats.signaturecount1$ </td>
-          <td> $user.docstats.signaturecount2$ </td>
-          <td> $user.docstats.signaturecount3$ </td>
-          <td> $user.docstats.signaturecount6$ </td>
-          <td> $user.docstats.signaturecount12$ </td>
+          <td> $user.docstats.signaturecount1m$ </td>
+          <td> $user.docstats.signaturecount2m$ </td>
+          <td> $user.docstats.signaturecount3m$ </td>
+          <td> $user.docstats.signaturecount6m$ </td>
+          <td> $user.docstats.signaturecount12m$ </td>
           <td> $user.userstats.viralinvitecount$ </td>
           <td> $user.userstats.admininvitecount$ </td>
         </tr>}$
