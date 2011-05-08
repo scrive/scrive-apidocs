@@ -112,9 +112,10 @@ showAdminUsers (Just userId) = onlySuperUser $ do
 
 getUsersAndStats :: Kontra [(User,DocStats,UserStats)]
 getUsersAndStats = do
+    Context{ctxtime} <- get
     users <- query $ GetAllUsers
     let queryStats user = do
-          docstats <- query $ GetDocumentStatsByUser user
+          docstats <- query $ GetDocumentStatsByUser user ctxtime
           userstats <- query $ GetUserStatsByUser user
           return (user, docstats, userstats)
     users2 <- mapM queryStats users
