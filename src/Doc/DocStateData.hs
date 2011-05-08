@@ -485,10 +485,15 @@ documentHistoryToDocumentLog DocumentHistoryRestarted
       , ipnumber
       } = DocumentLogEntry dochisttime $ BS.fromString $ "Document restarted" ++ formatIP ipnumber
 
-data DocStats = DocStats {
-                 doccount :: Int
-               , signaturecount :: Int
-             }
+data DocStats = DocStats 
+                { doccount          :: !Int
+                , signaturecount    :: !Int
+                , signaturecount1m  :: !Int
+                , signaturecount2m  :: !Int
+                , signaturecount3m  :: !Int
+                , signaturecount6m  :: !Int
+                , signaturecount12m :: !Int
+                }
     deriving (Eq, Ord, Typeable, Data) -- Data instance used for View modules (quite incorrectly there, please remove ASAP)
 
     

@@ -114,25 +114,25 @@ servicesAdminPage templates services=
             field "users" $ map show (serviceusers service)
         
 mkUserInfoView :: (User, DocStats, UserStats) -> UserInfoView
-mkUserInfoView (userdetails', docstats', userstats') = UserInfoView {
-                                              userdetails = userSmallView userdetails'
-                                            , docstats = docstats'
-                                            , userstats = userstats'
-                                           }
+mkUserInfoView (userdetails', docstats', userstats') = 
+  UserInfoView { userdetails = userSmallView userdetails'
+               , docstats = docstats'
+               , userstats = userstats'
+               }
  
-data UserInfoView = UserInfoView {
-                          userdetails :: UserSmallView,
-                          docstats :: DocStats,
-                          userstats :: UserStats
-                        } deriving (Data, Typeable)
-
-data StatsView = StatsView {
-                    svDoccount :: Int
-                  , svSignaturecount :: Int
-                  , svUsercount :: Int
-                  , svViralinvitecount :: Int
-                  , svAdmininvitecount :: Int
-                } deriving (Data, Typeable)
+data UserInfoView = UserInfoView 
+                    { userdetails :: UserSmallView
+                    , docstats :: DocStats
+                    , userstats :: UserStats
+                    } deriving (Data, Typeable)
+                                   
+data StatsView = StatsView 
+                 { svDoccount          :: Int
+                 , svSignaturecount    :: Int
+                 , svUsercount         :: Int
+                 , svViralinvitecount  :: Int
+                 , svAdmininvitecount  :: Int
+                 } deriving (Data, Typeable)
 
 {-| Paging list as options [1..21] -> [1-5,6-10,11-15,16-20,21-21]  -}                                                      
 intervals::[a] ->  [Option]                                                      

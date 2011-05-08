@@ -539,10 +539,15 @@ getDocumentStats = do
   documents <- ask
   let signatureCountForDoc :: Document -> Int
       signatureCountForDoc doc = length $ filter (isJust . maybesigninfo) (documentsignatorylinks doc)
-  return DocStats {
-                      doccount = (size documents)
-                    , signaturecount = sum $ map signatureCountForDoc (toList documents)
-                   }
+  return DocStats 
+                  { doccount = (size documents)
+                  , signaturecount = sum $ map signatureCountForDoc (toList documents)
+                  , signaturecount1m = 0
+                  , signaturecount2m = 0
+                  , signaturecount3m = 0
+                  , signaturecount6m = 0
+                  , signaturecount12m = 0
+                  }
 
 fileModTime :: FileID -> Query Documents MinutesTime
 fileModTime fileid = do
@@ -570,17 +575,31 @@ getNumberOfDocumentsOfUser user = do
   let numdoc = size (documents @= Author (userid user))
   return numdoc
 
-getDocumentStatsByUser :: User -> Query Documents DocStats
-getDocumentStatsByUser user = do
+getDocumentStatsByUser :: User -> MinutesTime -> Query Documents DocStats
+getDocumentStatsByUser user time = do
   doccount' <- getNumberOfDocumentsOfUser user
   sigdocs <- getDocumentsBySignatory user
-  let signaturecount' = length $ filter (isSigned . relevantSigLink) sigdocs
-      relevantSigLink :: Document -> SignatoryLink
-      relevantSigLink doc = head $ filter (isMatchingSignatoryLink user) (documentsignatorylinks doc)
-      isSigned :: SignatoryLink -> Bool
-      isSigned = isJust . maybesigninfo
-  return DocStats { doccount = doccount', 
-                    signaturecount = signaturecount' }
+  let signaturecount' = length $ allsigns
+      signaturecount1m' = length $ filter (isSignedNotLaterThanMonthsAgo 1) $ allsigns
+      signaturecount2m' = length $ filter (isSignedNotLaterThanMonthsAgo 2) $ allsigns
+      signaturecount3m' = length $ filter (isSignedNotLaterThanMonthsAgo 3) $ allsigns
+      signaturecount6m' = length $ filter (isSignedNotLaterThanMonthsAgo 6) $ allsigns
+      signaturecount12m' = length $ filter (isSignedNotLaterThanMonthsAgo 12) $ allsigns
+      timeMonthsAgo m = (-m * 30 * 24 * 60) `minutesAfter` time
+      isSignedNotLaterThanMonthsAgo m = (timeMonthsAgo m <) . documentmtime
+      allsigns = filter (isSigned . relevantSigLink) sigdocs
+      relevantSigLink :: Document -> Maybe SignatoryLink
+      relevantSigLink doc = listToMaybe $ filter (isMatchingSignatoryLink user) (documentsignatorylinks doc)
+      isSigned :: Maybe SignatoryLink -> Bool
+      isSigned = maybe False (isJust . maybesigninfo)
+  return DocStats { doccount          = doccount'
+                  , signaturecount    = signaturecount' 
+                  , signaturecount1m  = signaturecount1m'
+                  , signaturecount2m  = signaturecount2m'
+                  , signaturecount3m  = signaturecount3m'
+                  , signaturecount6m  = signaturecount6m'
+                  , signaturecount12m = signaturecount12m'
+                  }
 
 setDocumentTimeoutTime :: DocumentID -> TimeoutTime -> Update Documents (Either String Document)
 setDocumentTimeoutTime documentid timeouttime = do
