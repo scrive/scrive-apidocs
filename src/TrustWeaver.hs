@@ -63,7 +63,6 @@ instance XmlContent (SignRequest) where
                          , mkElemC "SenderTag" (toText senderTag)
                          , mkElemC "ReceiverTag" (toText receiverTag)
                          , mkElemC "Document" (toText base64data)
-                         , mkElemC "AgreementIdentifier" (toText "Prelaunch")
                          ]) ()]
     parseContents = error "Please do not parse SignRequest"
 
@@ -104,7 +103,6 @@ instance XmlContent (ValidateRequest) where
                          , mkElemC "ReceiverTag" (toText "SE")
                          , mkElemC "SignedDocument" (toText base64data)
                          , mkElemC "ExcludeOriginalDocument" (toText "false")
-                         , mkElemC "AgreementIdentifier" (toText "Prelaunch")
                          ]) ()]
     parseContents = error "Please do not parse ValidateRequest"
 
