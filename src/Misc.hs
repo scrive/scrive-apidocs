@@ -419,6 +419,12 @@ for = flip map
 sequenceMM :: (Applicative m) => Maybe (m (Maybe a)) -> m (Maybe a)
 sequenceMM = (fmap join) . sequenceA 
 
+liftMM ::(Monad m) => (a -> m (Maybe b)) -> m (Maybe a) -> m (Maybe b)
+liftMM f v = do
+    mv <- v
+    case mv of 
+         Just a -> f a
+         _ -> return Nothing
 
 when_::(Monad m) => Bool -> m a -> m ()
 when_ b c =  when b $ c >> return () 

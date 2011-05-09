@@ -235,7 +235,6 @@ handleRoutes = msum [
 
      , dir "adminonly" $ dir "services" $ hGet $ Administration.showServicesPage
      , dir "adminonly" $ dir "services" $ param "create" $ hPost $ Administration.handleCreateService
-     , dir "adminonly" $ dir "services" $ param "add" $ hPost $ Administration.handleAddUserToService
      
      -- a temporary service to help migration
 

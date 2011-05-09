@@ -596,7 +596,7 @@ Services table <BR/>
 <tbody>
 $services:{service |<tr> 
     <td>$service.name$ </td>
-    <td>$service.users: { user | $user$ }$ </td>
+    <td>$service.admin$ </td>
 
 </tr>}$
 </tbody>
@@ -611,22 +611,11 @@ Name: <input type="text" name="name">
 <BR/>
 Password: <input type="password" name="password">
 <BR/>
+Admin: <input type="text" name="admin">
+<BR/>
 <input type="submit" name="create" value="Create">
 </form>
 </div>
 <BR/>
 <BR/>
-<div>
-<form method="POST">
-Add user to the service <BR/>
-
-Create service
-Service: <input type="text" name="service">
-<BR/>
-User: <input type="password" name="email">
-<BR/>
-
-<input type="submit" name="add" value="Add">
-</form>
-</div>
 ###

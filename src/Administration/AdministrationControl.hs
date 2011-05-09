@@ -27,10 +27,10 @@ module Administration.AdministrationControl(
           , handleUserEnableTrustWeaverStorage
           , handleMigrate0
           , handleCreateService
-          , handleAddUserToService 
           , handleStatistics
           ) where
 import Control.Monad.State
+import Data.Functor
 import AppView
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.State (update,query)
@@ -442,27 +442,15 @@ getAdminUsersPageParams = do
 handleCreateService :: Kontra KontraLink
 handleCreateService = onlySuperUser $ do
     mname<- getFieldUTF "name"
-    case mname of
-         Just name -> do 
+    madmin <- liftMM  (query . GetUserByEmail . Email) (getFieldUTF "admin")
+    case (mname,madmin) of
+         (Just name,Just admin) -> do 
             pwdBS <- getFieldUTFWithDefault mempty "password"
             pwd <- liftIO $ createPassword pwdBS
-            update $ CreateService (ServiceID name) pwd
+            update $ CreateService (ServiceID name) pwd (ServiceAdmin $ unUserID $ userid admin)
             return LoopBack
-         Nothing -> return LinkMain
+         _ -> return LinkMain
           
-{- Add user -}          
-handleAddUserToService :: Kontra KontraLink
-handleAddUserToService = onlySuperUser $ do
-    sname <- getFieldUTFWithDefault mempty "service"
-    email <- getFieldUTFWithDefault mempty "email"
-    muser <- query $ GetUserByEmail (Email email)
-    mservice <- query $ GetService (ServiceID sname)
-    case (muser,mservice) of
-         (Just user, Just service) -> do
-             update $ AddUserToService (serviceid service) (userid user)
-             return LoopBack
-         _ -> return LinkMain    
-
 {- Services page-}
 showServicesPage :: Kontra Response
 showServicesPage = onlySuperUser $ do
