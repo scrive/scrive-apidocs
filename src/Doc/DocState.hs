@@ -260,6 +260,7 @@ attachSealedFile documentid filename1 content = do
 
 updateDocument :: MinutesTime
                -> DocumentID
+               -> BS.ByteString
                -> [(SignatoryDetails,[SignatoryRole])]
                -> Maybe Int
                -> BS.ByteString
@@ -269,7 +270,7 @@ updateDocument :: MinutesTime
                -> Maybe Int
                -> DocumentFunctionality
                -> Update Documents (Either String Document)
-updateDocument time documentid signatories daystosign invitetext author authordetails idtypes mcsvsigindex docfunctionality =
+updateDocument time documentid docname signatories daystosign invitetext author authordetails idtypes mcsvsigindex docfunctionality =
     modifySignableOrTemplateWithAction documentid $ \document ->  
         if documentstatus document == Preparation
          then do
@@ -284,6 +285,7 @@ updateDocument time documentid signatories daystosign invitetext author authorde
                     { documentsignatorylinks = signatorylinks
                       , documentdaystosign = daystosign 
                       , documentmtime = time
+                      , documenttitle = docname
                       , documentinvitetext = invitetext
                       , documentallowedidtypes = idtypes
                       , documentcsvupload = csvupload

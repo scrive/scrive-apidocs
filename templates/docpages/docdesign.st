@@ -14,14 +14,12 @@ pageDocumentDesign=
       <span id="signStepsTitleRowTextContainer">
        $if(template)$
            <span class="title">MALL:</span>
-           <span class="name"> $documenttitle$</span> 
        $elseif(offer)$
            <span class="title">OFFERT #$documentid$:</span>
-           <span class="name"> $documenttitle$</span> 
        $elseif(contract)$
            <span class="title">DOKUMENT #$documentid$:</span>
-           <span class="name"> $documenttitle$</span> 
        $endif$
+       $docname()$
       </span>
    </div>
     
@@ -97,6 +95,7 @@ pageDocumentDesign=
                value="Email" />
         <input type="hidden" name="csvpersonindex" value="$csvpersonindex$"/>
         <input type="hidden" name="docfunctionality" value="$docfunctionality$"/>
+        <input type="hidden" name="docname" value="$documenttitle$" />
 
         <div id="signStep2Content" $if(!step2)$ style="display: none" $endif$>
           <div id="signStepsBody">
@@ -524,6 +523,19 @@ pageDocumentDesign=
   </span>
 </div>
 ####
+docname=
+       <span class="docname">
+         <span class="docname-display">
+           <span class="text"> $documenttitle$</span>
+           $if(!basiccontract)$
+           <a href="#" class="icon edit"></a>
+           $endif$
+         </span>
+         <span class="docname-edit" style="display:none;">
+           <input type="text" name="docname-edit" value="$documenttitle$" />
+           <a href="#" class="icon small ok"></a>
+         </span>
+       </span>
 ####
 dragndropIcon=$if(!basiccontract)$<img src="/theme/images/iconHand.png" class="draghandle" alt="drag" />$endif$
 #####

@@ -1243,6 +1243,8 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
   
   mcsvpersonindex <- getOptionalField asValidNumber "csvpersonindex"
 
+  docname <- getCriticalField (return . BS.fromString) "docname"
+
   -- each custom field must have this
   fieldnames  <- getAndConcat "fieldname"
   fieldids    <- getAndConcat "fieldid"
@@ -1316,10 +1318,10 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
          basicsignatories = zip 
                              (basicauthordetails : 
                               take 1 (map (replaceSignOrder (SignOrder 1) . removeFieldsAndPlacements) signatories)) (repeat [SignatoryPartner])
-     update $ UpdateDocument ctxtime documentid 
+     update $ UpdateDocument ctxtime documentid docname
                 basicsignatories Nothing invitetext author basicauthordetails docallowedidtypes Nothing docfunctionality
     else do
-     update $ UpdateDocument ctxtime documentid
+     update $ UpdateDocument ctxtime documentid docname
            signatories2  daystosign invitetext author authordetails docallowedidtypes mcsvsigindex docfunctionality
 
               
