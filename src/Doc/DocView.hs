@@ -300,6 +300,7 @@ data StatusClass = SCDraft
                   | SCCancelled
                   | SCTimedout
                   | SCSent
+                  | SCRead
                   | SCOpened
                   | SCSigned
                   deriving (Eq, Ord)
@@ -309,6 +310,7 @@ instance Show StatusClass where
   show SCCancelled = "cancelled"
   show SCTimedout = "expired"
   show SCSent = "sent"
+  show SCRead = "read"
   show SCOpened = "opened"
   show SCSigned = "signed"
 
@@ -321,19 +323,19 @@ documentStatusClass doc =
          Canceled       -> SCCancelled
          Timedout       -> SCTimedout
          Rejected       -> SCCancelled
-         Pending        -> if anyInvitationUndelivered doc
-                               then SCCancelled
-                               else
-                                if all (isJust . maybeseeninfo) $ documentsignatorylinks doc
-                                 then SCOpened
-                                 else SCSent
-         AwaitingAuthor -> if anyInvitationUndelivered doc
-                                then SCCancelled
-                                else
-                                  if all (isJust . maybeseeninfo) $ documentsignatorylinks doc
-                                    then SCOpened
-                                    else SCSent
+         Pending        -> statusWhenPending
+         AwaitingAuthor -> statusWhenPending
          _              -> SCCancelled
+    where
+      statusWhenPending =
+        let allReadInvite = all (isJust . maybereadinvite) $ documentsignatorylinks doc
+            allSeen = all (isJust . maybeseeninfo) $ documentsignatorylinks doc in
+        case (anyInvitationUndelivered doc, allReadInvite, allSeen) of
+          (True, _, _) -> SCCancelled
+          (_, _, True) -> SCOpened
+          (_, True, _) -> SCRead
+          _ -> SCSent
+      
 
 documentBasicViewFields :: MinutesTime -> User -> Document -> Fields
 documentBasicViewFields crtime user doc = do
@@ -816,6 +818,7 @@ signatoryLinkFields
    current = (currentlink == Just siglnk) || (isNothing currentlink && (fmap (unEmail . useremail . userinfo) muser) == (Just $ signatoryemail signatorydetails)) 
    wasSigned =  isJust maybesigninfo && (not $ isCurrentSignatorAuthor && (documentstatus document == AwaitingAuthor))
    wasSeen = isJust maybeseeninfo
+   wasRead = isJust $ maybereadinvite siglnk
    isTimedout = documentstatus document == Timedout
    isCanceled = documentstatus document == Canceled
    isRejected = documentstatus document == Rejected
@@ -831,6 +834,7 @@ signatoryLinkFields
         , (isTimedout, SCTimedout)
         , (wasSigned,  SCSigned)
         , (wasSeen,    SCOpened)
+        , (wasRead,    SCRead)
         ] SCSent 
    -- the date this document was rejected if rejected by this signatory
    rejectedDate = case documentrejectioninfo document of
@@ -858,6 +862,7 @@ signatoryLinkFields
       field "signdate" $ showDateOnly <$> signtime <$> maybesigninfo
       field "datamismatch" datamismatch
       field "seendate" $ showDateOnly <$> signtime <$> maybeseeninfo
+      field "readdate" $ showDateOnly <$> maybereadinvite siglnk
       field "reminderMessage" $ mailDocumentRemindContent ctxtemplates Nothing ctx document siglnk author 
       field "role" $ if isSignatory siglnk
                      then "signatory"

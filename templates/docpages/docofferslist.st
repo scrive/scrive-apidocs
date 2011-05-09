@@ -142,6 +142,7 @@ $loadingdialog()$
 					<!--
 					<div class="icon status reviewed float-left"></div><div class="float-left">Granskat&nbsp;</div>
 					-->
+                                        <div class="icon status read float-left"></div><div class="float-left">Läst e-post&nbsp;</div>
 					<div class="icon status opened float-left"></div><div class="float-left">Granskat online&nbsp;</div>
 					<div class="icon status signed float-left"></div><div class="float-left">Bekräftat&nbsp;</div>
 				</div>

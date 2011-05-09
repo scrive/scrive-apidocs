@@ -26,8 +26,9 @@ import Control.Monad.State
 import qualified Data.ByteString.UTF8 as BS (fromString,toString)
 import Data.List (find)
 import qualified AppLogger as Log
+import MinutesTime
 
-data SendGridEventType = Delivered | Undelivered | Other String deriving Show
+data SendGridEventType = Delivered | Undelivered | Opened | Other String deriving Show
 data SendgridEvent = SendgridEvent
                      { mailId :: Integer
                      , event :: SendGridEventType
@@ -54,7 +55,7 @@ readEventType = do
   me <- getField "event"
   Log.debug $ show me
   case me of
-    Just e -> return $ fromMaybe (Other e) (lookup e [("delivered", Delivered),("bounce", Undelivered), ("dropped", Undelivered)])
+    Just e -> return $ fromMaybe (Other e) (lookup e [("delivered", Delivered), ("open", Opened), ("bounce", Undelivered), ("dropped", Undelivered)])
     Nothing -> return (Other "")
 
 readMailInfo :: Kontra MailInfo
@@ -70,13 +71,19 @@ routeToHandler :: SendgridEvent -> Kontra ()
 routeToHandler (SendgridEvent {event = Other _}) = return ()
 routeToHandler (SendgridEvent {info = None}) = return ()
 routeToHandler (SendgridEvent {info = Invitation docid signlinkid, event = Delivered}) = handleDeliveredInvitation docid signlinkid
+routeToHandler (SendgridEvent {info = Invitation docid signlinkid, event = Opened}) = handleOpenedInvitation docid signlinkid
 routeToHandler (SendgridEvent {info = Invitation docid signlinkid, event = Undelivered}) = handleUndeliveredInvitation docid signlinkid
-
 
 -- | Actions perform that are performed then
 handleDeliveredInvitation :: DocumentID -> SignatoryLinkID -> Kontra ()
 handleDeliveredInvitation docid signlinkid = do
     _ <- update $ SetInvitationDeliveryStatus docid signlinkid Mail.Delivered
+    return ()
+
+handleOpenedInvitation :: DocumentID -> SignatoryLinkID -> Kontra ()
+handleOpenedInvitation docid signlinkid = do
+    now <- liftIO $ getMinutesTime
+    _ <- update $ MarkInvitationRead docid signlinkid now
     return ()
 
 handleUndeliveredInvitation :: DocumentID -> SignatoryLinkID -> Kontra ()

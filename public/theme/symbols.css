@@ -76,8 +76,13 @@
         margin-right: 7px;
 }
 
+.icon.read {
+       background-position: -269px 0;
+       margin-right: 7px;
+}
+
 .icon.opened {
-	background-position: -269px 0;
+	background-position: -280px 0;
         margin-right: 7px;
 }
 

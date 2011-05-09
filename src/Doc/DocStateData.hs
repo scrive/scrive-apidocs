@@ -289,6 +289,20 @@ data SignatoryLink6 = SignatoryLink6
     }    
     deriving (Eq, Ord, Typeable)
 
+data SignatoryLink7 = SignatoryLink7 
+    { signatorylinkid7          :: SignatoryLinkID     -- ^ a random number id, unique in th escope of a document only
+    , signatorydetails7         :: SignatoryDetails    -- ^ details of this person as filled in invitation
+    , signatorymagichash7       :: MagicHash           -- ^ authentication code
+    , maybesignatory7           :: Maybe UserID        -- ^ if this document has been saved to an account, that is the user id
+    , maybesigninfo7            :: Maybe SignInfo      -- ^ when a person has signed this document
+    , maybeseeninfo7            :: Maybe SignInfo      -- ^ when a person has first seen this document
+    , invitationdeliverystatus7 :: MailsDeliveryStatus -- ^ status of email delivery
+    , signatorysignatureinfo7   :: Maybe SignatureInfo -- ^ info about what fields have been filled for this person
+    , signatoryroles7           :: [SignatoryRole]
+    , signatorylinkdeleted7     :: Bool
+    }    
+    deriving (Eq, Ord, Typeable)
+
 data SignatoryLink = SignatoryLink 
     { signatorylinkid          :: SignatoryLinkID     -- ^ a random number id, unique in th escope of a document only
     , signatorydetails         :: SignatoryDetails    -- ^ details of this person as filled in invitation
@@ -296,6 +310,7 @@ data SignatoryLink = SignatoryLink
     , maybesignatory           :: Maybe UserID        -- ^ if this document has been saved to an account, that is the user id
     , maybesigninfo            :: Maybe SignInfo      -- ^ when a person has signed this document
     , maybeseeninfo            :: Maybe SignInfo      -- ^ when a person has first seen this document
+    , maybereadinvite          :: Maybe MinutesTime   -- ^ when we receive confirmation that a user has read 
     , invitationdeliverystatus :: MailsDeliveryStatus -- ^ status of email delivery
     , signatorysignatureinfo   :: Maybe SignatureInfo -- ^ info about what fields have been filled for this person
     , signatoryroles           :: [SignatoryRole]
@@ -1091,10 +1106,14 @@ $(deriveSerialize ''SignatoryLink6)
 instance Version SignatoryLink6 where
     mode = extension 6 (Proxy :: Proxy SignatoryLink5)
 
+$(deriveSerialize ''SignatoryLink7)
+instance Version SignatoryLink7 where
+    mode = extension 7 (Proxy :: Proxy SignatoryLink6)
+
 $(deriveSerialize ''SignatoryLink)
 instance Version SignatoryLink where
-    mode = extension 7 (Proxy :: Proxy SignatoryLink6)
-    
+    mode = extension 8 (Proxy :: Proxy SignatoryLink7)
+
 instance Migrate SignatoryDetails0 SignatoryDetails1 where
     migrate (SignatoryDetails0
              { signatoryname00 
@@ -1354,7 +1373,7 @@ instance Migrate SignatoryLink5 SignatoryLink6 where
              , signatorysignatureinfo6 = signatorysignatureinfo5
              }
 
-instance Migrate SignatoryLink6 SignatoryLink where
+instance Migrate SignatoryLink6 SignatoryLink7 where
     migrate (SignatoryLink6 
              { signatorylinkid6
              , signatorydetails6
@@ -1364,19 +1383,44 @@ instance Migrate SignatoryLink6 SignatoryLink where
              , maybeseeninfo6
              , invitationdeliverystatus6
              , signatorysignatureinfo6
-             }) = SignatoryLink
-                { signatorylinkid           = signatorylinkid6
-                , signatorydetails          = signatorydetails6
-                , signatorymagichash        = signatorymagichash6
-                , maybesignatory            = maybesignatory6
-                , maybesigninfo             = maybesigninfo6
-                , maybeseeninfo             = maybeseeninfo6
-                , invitationdeliverystatus  = invitationdeliverystatus6
-                , signatorysignatureinfo    = signatorysignatureinfo6
-                , signatorylinkdeleted      = False
-                , signatoryroles            = [SignatoryPartner]
+             }) = SignatoryLink7
+                { signatorylinkid7           = signatorylinkid6
+                , signatorydetails7          = signatorydetails6
+                , signatorymagichash7        = signatorymagichash6
+                , maybesignatory7            = maybesignatory6
+                , maybesigninfo7             = maybesigninfo6
+                , maybeseeninfo7             = maybeseeninfo6
+                , invitationdeliverystatus7  = invitationdeliverystatus6
+                , signatorysignatureinfo7    = signatorysignatureinfo6
+                , signatorylinkdeleted7      = False
+                , signatoryroles7            = [SignatoryPartner]
                 }
 
+instance Migrate SignatoryLink7 SignatoryLink where
+    migrate (SignatoryLink7 
+             { signatorylinkid7
+             , signatorydetails7
+             , signatorymagichash7
+             , maybesignatory7
+             , maybesigninfo7
+             , maybeseeninfo7
+             , invitationdeliverystatus7
+             , signatorysignatureinfo7
+             , signatorylinkdeleted7
+             , signatoryroles7
+             }) = SignatoryLink
+                { signatorylinkid           = signatorylinkid7
+                , signatorydetails          = signatorydetails7
+                , signatorymagichash        = signatorymagichash7
+                , maybesignatory            = maybesignatory7
+                , maybesigninfo             = maybesigninfo7
+                , maybeseeninfo             = maybeseeninfo7
+                , maybereadinvite           = Nothing
+                , invitationdeliverystatus  = invitationdeliverystatus7
+                , signatorysignatureinfo    = signatorysignatureinfo7
+                , signatorylinkdeleted      = signatorylinkdeleted7
+                , signatoryroles            = signatoryroles7
+                }
 
 $(deriveSerialize ''SignatoryLinkID)
 instance Version SignatoryLinkID
