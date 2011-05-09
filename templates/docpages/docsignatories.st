@@ -76,6 +76,8 @@ $elseif(signatory.rejecteddate)$
     Avvisat $signatory.rejecteddate$
 $elseif(signatory.seendate)$        
     Granskat online $signatory.seendate$
+$elseif(signatory.readdate)$
+    Läst e-post $signatory.readdate$
 $else$
     $if(contract)$  
         Har ej granskat online
