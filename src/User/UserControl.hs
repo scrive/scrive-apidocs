@@ -10,7 +10,7 @@ import Happstack.Server hiding (simpleHTTP)
 import Happstack.State (update, query)
 import Happstack.Util.Common (readM)
 import HSP.XML
-import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Set as Set
 
@@ -24,6 +24,7 @@ import ListUtil
 import Mails.SendMail
 import MinutesTime
 import Misc
+import Payments.PaymentsState
 import Redirect
 import Templates.Templates (KontrakcjaTemplates)
 import User.UserView
@@ -318,7 +319,6 @@ createNewUserByAdmin ctx names email freetill custommessage = do
     case muser of
          Just user -> do
              let fullname = composeFullName names
-             when (isJust freetill) $ update $ FreeUserFromPayments user (fromJust freetill)
              now <- liftIO $ getMinutesTime
              update $ SetInviteInfo (ctxmaybeuser ctx) now Admin (userid user)
              chpwdlink <- newAccountCreatedLink user
@@ -517,9 +517,16 @@ handleAccountSetupFromSign :: ActionID -> MagicHash -> Kontra (Maybe User)
 handleAccountSetupFromSign aid hash = do
   muserid <- getUserIDFromAction
   case muserid of
-    (Just userid) -> do
-      user <- queryOrFail $ GetUserByUserID userid     
-      handleActivate' user aid id
+    Just userid -> do
+      user <- queryOrFail $ GetUserByUserID userid
+      acctype <- getOptionalField asValidName "accounttype"
+      case BS.unpack <$> acctype of
+           Just "private" -> handleActivate' user PrivateAccount aid id
+           Just "company" -> handleActivate' user CompanyAccount aid id
+           _              -> do
+               templates <- ctxtemplates <$> get
+               addFlashMsg =<< (liftIO $ flashMessageNoAccountType templates)
+               return Nothing
     Nothing -> return Nothing
   where
     getUserIDFromAction :: Kontra (Maybe UserID)            
@@ -587,36 +594,45 @@ handleAccountSetupPost aid hash = do
                      )
                  )
     where
-        handleActivate userid = do
+        handleActivate user = do
             ctx <- get
-            let getUserField = getDefaultedField BS.empty
-            mfname <- getUserField asValidName "fname"
-            mlname <- getUserField asValidName "lname"
-            mcompanyname <- getUserField asValidName "companyname"
-            mcompanyposition <- getUserField asValidName "companyposition"
-            mphone <- getUserField asValidPhone "phone"
-            case (mfname, mlname, mcompanyname, mcompanyposition, mphone) of
-              (Just fname, Just lname, Just companyname, Just companytitle, Just phone) -> do
-                let infoupdatefunc info = info {
-                             userfstname = fname
-                           , usersndname = lname
-                           , usercompanyname  = companyname
-                           , usercompanyposition = companytitle
-                           , userphone = phone
-                         }
-                muser <- handleActivate' userid aid infoupdatefunc
-                case muser of
-                  Nothing -> do
-                    addFlashMsg =<< (liftIO $ flashMessageUserActivated $ ctxtemplates ctx)
-                    return LoopBack
-                  (Just _) -> return LinkMain
+            acctype <- getOptionalField asValidName "accounttype"
+            case BS.unpack <$> acctype of
+                 Just "private" -> finalizeActivation user PrivateAccount id
+                 Just "company" -> do
+                     mfname <- getRequiredField asValidName "fname"
+                     mlname <- getRequiredField asValidName "lname"
+                     mcompanyname <- getRequiredField asValidName "companyname"
+                     mcompanyposition <- getRequiredField asValidName "companyposition"
+                     mphone <- getRequiredField asValidPhone "phone"
+                     case (mfname, mlname, mcompanyname, mcompanyposition, mphone) of
+                          (Just fname, Just lname, Just companyname, Just companytitle, Just phone) -> do
+                              finalizeActivation user CompanyAccount $ \info -> info {
+                                    userfstname = fname
+                                  , usersndname = lname
+                                  , usercompanyname  = companyname
+                                  , usercompanyposition = companytitle
+                                  , userphone = phone
+                              }
+                          _ -> return LoopBack
+                 _ -> do
+                     addFlashMsg =<< (liftIO $ flashMessageNoAccountType $ ctxtemplates ctx)
+                     return LoopBack
+
+        finalizeActivation user acctype infoupdatefunc = do
+            muser <- handleActivate' user acctype aid infoupdatefunc
+            case muser of
+                 Just _ -> do
+                     templates <- ctxtemplates <$> get
+                     addFlashMsg =<< (liftIO $ flashMessageUserActivated templates)
+                     return LinkMain
+                 Nothing -> return LoopBack
 
         getUserForViralInvite now invitedemail invitationtime inviterid = do
             muser <- liftIO $ createInvitedUser (BS.empty, BS.empty) $ unEmail invitedemail
             case muser of
                  Just user -> do -- user created, we need to fill in some info
                      minviter <- query $ GetUserByUserID inviterid
-                     update $ FreeUserFromPayments user $ (60*24*60) `minutesAfter` now
                      update $ SetInviteInfo minviter invitationtime Viral (userid user)
                      return muser
                  Nothing -> do -- user already exists, get her
@@ -627,12 +643,15 @@ handleAccountSetupPost aid hash = do
     the tos, and the passwords and add error flash messages as you'd
     expect.
 -}
-handleActivate' :: User -> ActionID -> (UserInfo -> UserInfo) -> Kontra (Maybe User)
-handleActivate' user actionid infoupdatefunc = do
+handleActivate' :: User -> UserAccountType -> ActionID -> (UserInfo -> UserInfo) -> Kontra (Maybe User)
+handleActivate' user acctype actionid infoupdatefunc = do
   ctx <- get
   mtos <- getDefaultedField False asValidCheckBox "tos"
   mpassword <- getRequiredField asValidPassword "password"
   mpassword2 <- getRequiredField asValidPassword "password2"
+  -- update user info he typed on signup page, so he won't
+  -- have to type in again if password validation fails.
+  update $ SetUserInfo (userid user) $ infoupdatefunc (userinfo user)
   case (mtos, mpassword, mpassword2) of
     (Just tos, Just password, Just password2) -> do
       case checkPasswordsMatch password password2 of
@@ -642,9 +661,18 @@ handleActivate' user actionid infoupdatefunc = do
               passwordhash <- liftIO $ createPassword password
               update $ SetUserPassword user passwordhash
               update $ AcceptTermsOfService (userid user) (ctxtime ctx)
-              update $ SetUserInfo (userid user) $ infoupdatefunc (userinfo user)
+              update $ SetUserSettings (userid user) $ (usersettings user) {
+                  accounttype = acctype
+              }
+              update $ SetUserPaymentAccount (userid user) $ (userpaymentaccount user) {
+                  paymentaccountfreesignatures =
+                      case usersupervisor user of
+                           Just _  -> 0
+                           Nothing -> 100 -- later we should set here either
+                           -- 10 or 20, depending on user's account type. for
+                           -- now we don't modify that number anyway.
+              }
               now <- liftIO getMinutesTime
-              update $ AddFreePaymentsForInviter now user
               dropExistingAction actionid
               logUserToContext $ Just user
               return $ Just user

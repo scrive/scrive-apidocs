@@ -203,6 +203,7 @@ data UserAdminView = UserAdminView {
                    , uavsigneddocstorage::String
                    , uavuserpaymentmethod::[Option]
                    , uavpaymentaccounttype ::[Option]
+                   , uavfreetrialexpirationdate :: String
                    , uavpaymentaccountfreesignatures ::String
                    , uavtmppaymentchangeenddate ::Maybe String
                    , uavcustompaymentchange::PaymentChangeView
@@ -236,11 +237,11 @@ userAdminView u =  UserAdminView {
                    , uavuserpaymentmethod = for (allValues::[PaymentMethod ]) (\x -> if (x == (userpaymentmethod $ usersettings u))
                                                                                  then soption show show x
                                                                                  else option show show x)        
-                                                                                 
                    , uavpaymentaccounttype = for (allValues::[PaymentAccountType]) 
                                                                          (\x -> if (x == (paymentaccounttype $ userpaymentpolicy  u))
                                                                                  then soption show show x
                                                                                  else option show show x)      
+                   , uavfreetrialexpirationdate = show $ userfreetrialexpirationdate u
                    , uavpaymentaccountfreesignatures = show $ paymentaccountfreesignatures $ userpaymentaccount u
                    , uavtmppaymentchangeenddate = fmap (showDateOnly .  fst) $ temppaymentchange $ userpaymentpolicy  u
                    , uavtemppaymentchange = fmap (getChangeView .  snd) $ temppaymentchange $ userpaymentpolicy  u
