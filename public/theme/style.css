@@ -1089,6 +1089,7 @@ input[type=submit].hidden
 {
     display: inline-block;
     float: left;
+    height: 19px;
 }
 
 #signStepsTitleRow .title
@@ -1119,11 +1120,38 @@ input[type=submit].hidden
   color: #FFFFFF;  
 }
 
-#signStepsTitleRow .name
+#signStepsTitleRow .docname
 {
     font-weight: bold;
     font-size: 16px;
     margin-right: 2px;
+}
+
+#signStepsTitleRow .docname .icon {
+    width: 14px;
+    height: 14px;
+    display: inline-block;
+}
+
+#signStepsTitleRow .docname .docname-display .icon.edit {
+    background-image: url(images/iconPen.png);
+}
+
+#signStepsTitleRow .docname .docname-display text {
+    display: inline-block;
+}
+
+#signStepsTitleRow .docname .docname-edit input {
+    -moz-border-radius:0px;
+    background:transparent;
+    border:0 none;
+    margin:0;
+    outline:0 none;
+    padding:0;
+    font-size:16px;
+    font-weight:bold;
+    color:#FFFFFF;
+    font-family:'Segoe UI',arial,verdana,'lucida sans unicode',tahoma,sans-serif;
 }
 
 #signStepsTitleRow .changeName a

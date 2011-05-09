@@ -984,6 +984,46 @@ safeReady(function() {
   });
 });
 
+/**
+ * All the stuff for docname editing
+ */
+safeReady(function() {
+  var docname = $("#signStepsTitleRow .docname");
+  var display = docname.find(".docname-display");
+  var edit = docname.find(".docname-edit");
+  var editfield = edit.find("input");
+  var hiddenfield = $(".stepForm").find("input[type='hidden'][name='docname']");
+
+  var startEditing = function() {
+    display.hide();
+    edit.show();
+    editfield.focus();
+  };
+
+  var stopEditing = function() {
+    if (editfield.val() && editfield.val().length>0) {
+      display.find(".text").text(editfield.val());
+      hiddenfield.val(editfield.val());
+      edit.hide();
+      display.show();
+    }
+  };
+
+  display.find(".icon.edit").click(function() {
+    startEditing();
+  });
+  
+  edit.find(".icon.ok").click(function() {
+    stopEditing();
+  });
+  
+  editfield.keypress(function(e) {
+    if (e.keyCode==13) {
+      stopEditing();
+    }
+  });
+});
+
 safeReady(function() {
   $('.nextproblem').live('click', function() {
     var div = $(this).closest(".csvproblemcontainer");
