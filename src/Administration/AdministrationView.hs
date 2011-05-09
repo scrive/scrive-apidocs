@@ -40,6 +40,9 @@ import User.UserView
 import User.UserState
 import Doc.DocState
 import API.Service.ServiceState
+import Happstack.State (query)
+import Control.Monad
+
 {-| Main admin page - can go from here to other pages -}
 adminMainPage::KontrakcjaTemplates ->  IO String
 adminMainPage templates =  renderTemplate templates "adminsmain" ()
@@ -111,7 +114,7 @@ servicesAdminPage templates services=
         field "adminlink" $ show $ LinkAdminOnly
         field "services" $ for services $ \ service -> do
             field "name"  $ show $ serviceid service
-            field "users" $ map show (serviceusers service)
+            fieldIO "admin"  $ liftM (fmap userfullname) $ query $ GetUserByUserID $ UserID $ unServiceAdmin $ serviceadmin service
         
 mkUserInfoView :: (User, DocStats, UserStats) -> UserInfoView
 mkUserInfoView (userdetails', docstats', userstats') = 
