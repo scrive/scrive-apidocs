@@ -3,16 +3,22 @@ modalSignInviteView=
 <div class="modal-container">
   <div class="modal-header">
     <span class="modal-icon message"></span>
+    $if(signed)$
     <span class="modal-title">
       <h3>Du har undertecknat dokumentet <strong>$documenttitle$</strong>!</h3>
     </span>
+    $else$
+    <span class="modal-title">
+      <h3>Du har undertecknat!</h3>
+    </span>
+    $endif$
     <a class="modal-close close"> </a>
   </div>
   <div class="modal-body">
     <div class="modal-content">
       $if(signed)$
       <p>
-        Du har nu undertecknat och dokumentet är bindande.
+        Du har undertecknat dokumentet $documenttitle$ och dokumentet har färdigställts.
       </p>
       $else$
       <p>
