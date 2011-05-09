@@ -117,6 +117,13 @@ safeReady(function () {
   }
 });
 
+function countSentOrOpenRows(selectedrows) {
+   var notviewers = selectedrows.not(".viewer");
+   return (notviewers.find(".sent").length
+               + notviewers.find(".read").length
+               + notviewers.find(".opened").length);
+}
+
 /*
  * For delete confirmation on lists.
  */
@@ -128,9 +135,7 @@ safeReady(function() {
       if (selectedrows.length==0) {
         return false;
       } else {
-        var sentoropencount = selectedrows.not(".viewer").find(".sent").length 
-          + selectedrows.not(".viewer").find(".opened").length;
-        if (sentoropencount>0) {
+        if (countSentOrOpenRows(selectedrows)>0) {
           var listtype = jQuery.trim($(".listForm").find(".listtype").text().toLowerCase());
           if (listtype=="dokument") {
             addFlashMessage("Det går inte att radera dokument som är skickade eller öppna, var vänliga återkalla dokumentet först.", "red");
@@ -161,8 +166,7 @@ safeReady(function() {
       if (selectedrows.length==0) {
         return false;
       } else {
-        var sentoropencount = selectedrows.find(".sent").length + selectedrows.find(".opened").length;
-        if (sentoropencount!=selectedrows.length) {
+        if (countSentOrOpenRows(selectedrows)!=selectedrows.length) {
           var listtype = jQuery.trim($(".listForm").find(".listtype").text().toLowerCase());
           addFlashMessage("Det går inte att skicka påminnelser för " + listtype + " som inte är skickade eller öppna.", "red");
           return false;

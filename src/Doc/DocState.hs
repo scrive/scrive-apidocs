@@ -30,6 +30,7 @@ module Doc.DocState
     , GetNumberOfDocumentsOfUser(..)
     , GetTimeoutedButPendingDocuments(..)
     , MarkDocumentSeen(..)
+    , MarkInvitationRead(..)
     , SetInvitationDeliveryStatus(..)
     , NewDocument(..)
     , SaveDocumentForSignedUser(..)
@@ -500,6 +501,20 @@ rejectDocument documentid signatorylinkid1 time ipnumber customtext = do
            _ ->        Left "Bad document status"
   
 
+markInvitationRead :: DocumentID
+                   -> SignatoryLinkID
+                   -> MinutesTime
+                   -> Update Documents ()
+markInvitationRead documentid linkid time = do
+    modifySignable documentid $ \document -> 
+        if (any shouldMark (documentsignatorylinks document))
+            then Right $ document { documentsignatorylinks = mapIf shouldMark mark (documentsignatorylinks document)}
+            else Left "" 
+    return ()        
+       where
+        shouldMark l = (signatorylinkid l) == linkid && (isNothing $ maybeseeninfo l)
+        mark l =  l { maybereadinvite = Just time }
+
 -- | 'markDocumentSeen' should set the time when the document was seen
 -- first time by the user. It should change the first seen time later
 -- on.
@@ -794,6 +809,7 @@ signLinkFromDetails emails details roles = do
                      , maybesignatory = msig
                      , maybesigninfo  = Nothing
                      , maybeseeninfo  = Nothing
+                     , maybereadinvite = Nothing
                      , invitationdeliverystatus = Unknown
                      , signatorysignatureinfo = Nothing
                      , signatoryroles = roles
@@ -949,6 +965,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'attachFile
                         , 'attachSealedFile
                         , 'markDocumentSeen
+                        , 'markInvitationRead
                         , 'setInvitationDeliveryStatus
                         , 'getDocumentStats
                         , 'getDocumentStatsByUser
