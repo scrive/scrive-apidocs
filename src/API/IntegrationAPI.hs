@@ -115,8 +115,14 @@ integrationService = do
          
 integrationAPI :: Kontra Response
 integrationAPI =  dir "integration" $ msum [
-                      apiCall "login" loginUser
+                      apiCall "embed_document_frame" loginUser
+                    , apiCall "update_user"  loginUser
+                    , apiCall "get_user"  loginUser
+                    , apiCall "new_document" loginUser
                     , apiCall "documents" userDocuments  
+                    , apiCall "document" loginUser
+                    , apiCall "set_tag"  loginUser
+                    , apiCall "archive" loginUser
                     , apiUnknownCall
                     , dir "connect" $ hGet $ connectSession
                   ]
@@ -128,8 +134,8 @@ getRequestUser = do
     muser <- query $ GetUserByEmail $ Email $ fromJust memail
     when (isNothing muser) $ throwApiError "No user"
     let user = fromJust muser
-    srv <-  service <$> ask
-    when (not $ elem (userid $ user) $ serviceusers srv) $ throwApiError "User has not accepted this service"
+    --srv <-  service <$> ask
+    --when (not $ elem (userid $ user) $ serviceusers srv) $ throwApiError "User has not accepted this service"
     return user
 
 

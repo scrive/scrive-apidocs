@@ -1,12 +1,12 @@
 {-# OPTIONS_GHC -Wall #-}
 module API.Service.ServiceState
     ( ServiceID(..)
+    , ServiceAdmin(..)
     , Service(..)
     , Services(..)
     , GetService(..)
     , GetServices(..)
     , CreateService(..)
-    , AddUserToService(..)
 ) where
 import Happstack.Data
 import Happstack.State
@@ -36,7 +36,7 @@ import Codec.Binary.Base16 as Base16
 
 newtype ServiceID = ServiceID { unServiceID :: BS.ByteString }
     deriving (Eq, Ord, Typeable)
-
+      
 deriving instance Data ServiceID
 instance Version ServiceID
 
@@ -53,16 +53,44 @@ instance URLAble ServiceID where
 instance FromReqURI ServiceID  where
    fromReqURI = (fmap (ServiceID . BS.pack)) . Base16.decode 
 
+newtype ServiceAdmin = ServiceAdmin { unServiceAdmin :: Int }
+    deriving (Eq, Ord, Typeable, Read, Show)
+    
+deriving instance Data ServiceAdmin
+instance Version ServiceAdmin
 
+data Service1 = Service1
+          { serviceid1             :: ServiceID
+          , servicepassword1       :: Password
+          , serviceusers1          :: [UserID]
+          }
+            deriving (Eq, Ord, Typeable)
+            
 data Service = Service
           { serviceid             :: ServiceID
           , servicepassword       :: Password
-          , serviceusers          :: [UserID]
+          , serviceadmin  :: ServiceAdmin
           }
-            deriving (Eq, Ord)
+            deriving (Eq, Ord)            
 
+
+instance Migrate Service1 Service where
+    migrate (Service1
+               {  serviceid1                  
+                , servicepassword1        
+               }) =  Service
+                { serviceid = serviceid1
+                , servicepassword = servicepassword1
+                , serviceadmin = ServiceAdmin 0 -- this should never happend in real database
+                }
+                
 instance Typeable Service where typeOf _ = mkTypeOf "Service"
-instance Version Service 
+
+   
+instance Version Service1 where
+instance Version Service  where
+    mode = extension 1 (Proxy :: Proxy Service1)     
+
 
 instance Indexable Service where
         empty = ixSet [ ixFun (\x -> [serviceid x] :: [ServiceID]) ]
@@ -97,16 +125,8 @@ getServices = do
   services <- ask
   return $ toList services
 
-addUserToService :: ServiceID -> UserID -> Update Services ()
-addUserToService sid uid = do
-    modifyService sid $ \service -> 
-        Right $ service {
-          serviceusers = uid:(serviceusers service)
-        }
-    return ()    
-    
-createService :: ServiceID -> Password -> Update Services (Maybe Service)
-createService sid passwd = do
+createService :: ServiceID -> Password -> ServiceAdmin -> Update Services (Maybe Service)
+createService sid passwd admin = do
      services <- ask
      if (isJust $ getOne (services @= sid)) 
       then return Nothing
@@ -114,7 +134,7 @@ createService sid passwd = do
         let srv = Service { 
                       serviceid = sid
                     , servicepassword = passwd
-                    , serviceusers = []
+                    , serviceadmin = admin
                     }
         modify (updateIx sid srv)
         return $ Just srv
@@ -125,12 +145,13 @@ $(mkMethods ''Services [
                 'getService
               , 'getServices
               , 'createService
-              , 'addUserToService
               ])
                     
 $(deriveSerializeFor [ 
-                ''Service
+                ''Service1 
+              , ''Service
               , ''ServiceID
+              , ''ServiceAdmin
               ])
 
 instance Component Services where

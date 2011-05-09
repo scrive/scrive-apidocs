@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall -XOverlappingInstances -XTypeSynonymInstances#-} 
+{-# OPTIONS_GHC -Wall -XOverlappingInstances -XTypeSynonymInstances -XIncoherentInstances#-} 
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Templates.Templates
@@ -84,6 +84,7 @@ module Templates.Templates
     , Fields
     , Field
     , field
+    , fieldIO
     , getTemplatesModTime
     ) where
 
@@ -147,7 +148,6 @@ instance (ToSElem a) => Field (IO a) where
         s <- get 
         put ((a,fmap toSElem b):s)
 
-
 instance (ToSElem a) => Field a where 
   field a b = do
         s <- get 
@@ -178,8 +178,11 @@ packIO :: (a, IO b) -> IO (a,b)
 packIO (name,comp)= do 
     res <- comp
     return (name,res)
-                     
-                     
+
+
+--IO type forcer, to deal with universal monads
+fieldIO::(Field (IO a)) => String -> IO a -> Fields
+fieldIO = field
                      
 
 -- | Importan Util. We overide default serialisation to support serialisation of bytestrings .
