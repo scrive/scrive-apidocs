@@ -1,57 +1,59 @@
 {-# OPTIONS_GHC -Wall #-}
 module Doc.DocStateData
     ( Author(..)
+    , CSVUpload(..)
     , CancelationReason(..)
     , ChargeMode(..)
+    , DocStats(..)
     , Document(..)
-    , DocumentHistoryEntry(..)
-    , DocumentLogEntry(..)
-    , DocumentID(..)
-    , DocumentStatus(..)
-    , DocumentType(..)
     , DocumentFunctionality(..)
+    , DocumentHistoryEntry(..)
+    , DocumentID(..)
+    , DocumentLogEntry(..)
     , DocumentSharing(..)
+    , DocumentStatus(..)
     , DocumentTag(..)
+    , DocumentType(..)
     , Documents
-    , CSVUpload(..)
     , FieldDefinition(..)
     , FieldPlacement(..)
     , File(..)
     , FileID(..)
     , FileStorage(..)
+    , IdentificationType(..)
     , JpegPages(..)
     , SignInfo(..)
+    , SignOrder(..)
     , Signatory(..)
     , SignatoryDetails(..)
     , SignatoryLink(..)
     , SignatoryLinkID(..)
-    , TimeoutTime(..)
-    , DocStats(..)
-    , SignatureInfo(..)
-    , SignOrder(..)
-    , IdentificationType(..)
-    , SignatureProvider(..)
     , SignatoryRole(..)
+    , SignatureInfo(..)
+    , SignatureProvider(..)
+    , TimeoutTime(..)
 
     , documentHistoryToDocumentLog
     ) where
-import Happstack.Data
-import Happstack.State
-import User.UserState
-import Happstack.Data.IxSet as IxSet
-import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString as BS
-import Happstack.Server.SimpleHTTP
-import Happstack.Util.Common
-import Misc
-import MinutesTime
-import Data.Word
-import Data.Int
-import Data.Maybe
+
 import Mails.MailsUtil
-import Data.Data (Data)
+import MinutesTime
+import Misc
+import User.UserState
+
 import Control.Monad
 import Data.Bits
+import Data.Data (Data)
+import Data.Int
+import Data.Maybe
+import Data.Word
+import Happstack.Data
+import Happstack.Data.IxSet as IxSet
+import Happstack.Server.SimpleHTTP
+import Happstack.State
+import Happstack.Util.Common
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.UTF8 as BS
 
 newtype Author = Author { unAuthor :: UserID }
     deriving (Eq, Ord, Typeable)
@@ -830,7 +832,7 @@ data CancelationReason =  ManualCancel
     deriving (Eq, Ord, Typeable)
 
 
-{-| Watch out. This instance is a bit special. It has to be
+{- | Watch out. This instance is a bit special. It has to be
    "Document" - as this is what database uses as table name.  Simple
    deriving clause will create a "MyApp.MyModule.Document"!  -}
 
@@ -2148,3 +2150,5 @@ instance Component Documents where
   initialValue = empty
 
 $(deriveSerialize ''SignatoryRole)
+
+
