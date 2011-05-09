@@ -31,6 +31,7 @@ module User.UserView (
     -- flash messages
     flashMessageLoginRedirectReason,
     flashMessageUserDetailsSaved,
+    flashMessageNoAccountType,
     flashMessageMustAcceptTOS,
     flashMessageBadOldPassword,
     flashMessagePasswordsDontMatch,
@@ -307,6 +308,11 @@ flashMessageLoginRedirectReason templates reason =
 flashMessageUserDetailsSaved :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageUserDetailsSaved templates =
   toFlashMsg OperationDone <$> renderTemplate templates "flashMessageUserDetailsSaved" () 
+
+
+flashMessageNoAccountType :: KontrakcjaTemplates -> IO FlashMessage
+flashMessageNoAccountType templates =
+    toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageNoAccountType" () 
 
 
 flashMessageMustAcceptTOS :: KontrakcjaTemplates -> IO FlashMessage

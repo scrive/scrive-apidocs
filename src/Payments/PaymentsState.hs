@@ -31,6 +31,7 @@ module Payments.PaymentsState  (
        , UserPaymentAccount(..)
         -- Utils
        , emptyChange
+       , initialPaymentPolicy
        , basicPaymentPolicy
        , emptyPaymentAccount
        , free
@@ -84,9 +85,8 @@ data PaymentChange = PaymentChange {
       }
     deriving (Eq, Ord, Show, Read, Typeable)
 
-
 -- | Types of accounts
-data PaymentAccountType = Private | Minimal | Medium | Maximal | Corp
+data PaymentAccountType = FreeTrial | Private | Minimal | Medium | Maximal | Corp
     deriving (Eq, Ord, Show, Read, Typeable)
 
 -- | Money values wrapper
@@ -160,7 +160,7 @@ $(deriveSerialize ''PaymentChange)
 instance Version (PaymentChange)
 
 $(deriveSerialize ''PaymentAccountType)
-instance Version (PaymentAccountType )
+instance Version (PaymentAccountType)
 
 $(deriveSerialize ''Money )
 instance Version (Money )
@@ -298,6 +298,15 @@ freeChange =  PaymentChange {
                                                                                   forDraft=Just free
                                                                           }
                         }
+
+-- | Initial payment policy, used as a free trial for newly created accounts
+initialPaymentPolicy :: UserPaymentPolicy
+initialPaymentPolicy = UserPaymentPolicy {
+      paymentaccounttype = FreeTrial
+    , custompaymentchange = emptyChange
+    , temppaymentchange = Nothing
+}
+
 -- | Basic payments policy, Private account with no changes custom or temporary changes
 basicPaymentPolicy :: UserPaymentPolicy
 basicPaymentPolicy =  UserPaymentPolicy {

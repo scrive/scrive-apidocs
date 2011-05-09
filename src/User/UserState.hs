@@ -48,8 +48,8 @@ module User.UserState
     , SetUserSupervisor(..)
     , GetUsersByFriendUserID(..)
     , AddViewerByEmail(..)
-    , FreeUserFromPayments(..)
-    , AddFreePaymentsForInviter(..)
+    --, FreeUserFromPayments(..)
+    --, AddFreePaymentsForInviter(..)
     , RecordFailedLogin(..)
     , RecordSuccessfulLogin(..)
     , getUserPaymentSchema
@@ -75,10 +75,10 @@ import Data.List
 import Data.Maybe (isNothing)
 import qualified Data.Set as Set
 import Control.Applicative
-import MinutesTime
-import qualified Payments.PaymentsState as Payments
+import System.Time as ST
+import MinutesTime as MT
+import Payments.PaymentsState as Payments
 import Data.Data
-import User.Password
 
 newtype UserID = UserID { unUserID :: Int }
     deriving (Eq, Ord, Typeable)
@@ -132,8 +132,13 @@ data TrustWeaverStorage = TrustWeaverStorage
           , storagetwsectionpath   :: BS.ByteString
           }
     deriving (Eq, Ord, Typeable)
-data UserAccountType = MainAccount | SubAccount
+
+data UserAccountType0 = MainAccount | SubAccount
     deriving (Eq, Ord, Typeable)
+
+data UserAccountType = PrivateAccount | CompanyAccount
+    deriving (Eq, Ord, Typeable)
+
 data PaymentMethod = CreditCard | Invoice | Undefined
     deriving (Eq, Ord, Typeable)
 
@@ -200,6 +205,7 @@ data User = User
           , usersupervisor                :: Maybe SupervisorID
           , useraccountsuspended          :: Bool
           , userhasacceptedtermsofservice :: Maybe MinutesTime
+          , userfreetrialexpirationdate   :: Maybe MinutesTime
           , userinfo                      :: UserInfo
           , usersettings                  :: UserSettings
           , userpaymentpolicy             :: Payments.UserPaymentPolicy
@@ -211,6 +217,22 @@ data User = User
             deriving (Eq, Ord)
 
 instance Typeable User where typeOf _ = mkTypeOf "User"
+
+data User12 = User12
+          { userid12                        :: UserID
+          , userpassword12                  :: Password
+          , usersupervisor12                :: Maybe SupervisorID
+          , useraccountsuspended12          :: Bool
+          , userhasacceptedtermsofservice12 :: Maybe MinutesTime
+          , userinfo12                      :: UserInfo
+          , usersettings12                  :: UserSettings
+          , userpaymentpolicy12             :: Payments.UserPaymentPolicy
+          , userpaymentaccount12            :: Payments.UserPaymentAccount
+          , userfriends12                   :: [Friend]
+          , userinviteinfo12                :: Maybe InviteInfo
+          , userlogininfo12                 :: LoginInfo
+          }
+            deriving (Eq, Ord, Typeable)
 
 data User11 = User11
           { userid11                        :: UserID
@@ -327,7 +349,9 @@ instance Migrate FlashMessage0 FlashMessage where
     migrate (FlashMessage0 msg) =
         toFlashMsg SigningRelated $ BS.toString msg
 
-      
+instance Migrate UserAccountType0 UserAccountType where
+    migrate _ = PrivateAccount
+
 instance Migrate () User8 where
     migrate () = error "Cannot migrate to User8"
 
@@ -429,7 +453,7 @@ instance Migrate User10 User11 where
                                                     }
                 }
 
-instance Migrate User11 User where
+instance Migrate User11 User12 where
     migrate (User11
                { userid11                     
                 , userpassword11                
@@ -444,21 +468,62 @@ instance Migrate User11 User where
                 , userfriends11                  
                 , userinviteinfo11
                 , userlogininfo11       
-                }) = User 
-                { userid                         = userid11
-                , userpassword                   = userpassword11
-                , usersupervisor                 = usersupervisor11
-                , useraccountsuspended           = useraccountsuspended11
-                , userhasacceptedtermsofservice  = userhasacceptedtermsofservice11
-                , userinfo                       = userinfo11
-                , usersettings                   = usersettings11
-                , userpaymentpolicy              = userpaymentpolicy11
-                , userpaymentaccount             = userpaymentaccount11
-                , userfriends                    = userfriends11
-                , userinviteinfo                 = userinviteinfo11
-                , userlogininfo                  = userlogininfo11
+                }) = User12 
+                { userid12                         = userid11
+                , userpassword12                   = userpassword11
+                , usersupervisor12                 = usersupervisor11
+                , useraccountsuspended12           = useraccountsuspended11
+                , userhasacceptedtermsofservice12  = userhasacceptedtermsofservice11
+                , userinfo12                       = userinfo11
+                , usersettings12                   = usersettings11
+                , userpaymentpolicy12              = userpaymentpolicy11
+                , userpaymentaccount12             = userpaymentaccount11
+                , userfriends12                    = userfriends11
+                , userinviteinfo12                 = userinviteinfo11
+                , userlogininfo12                  = userlogininfo11
                 }
 
+-- | This is kinda special. We reset payment changes (since the only changes there
+-- are is the system are used to indicate whether a user has free trial or not) since
+-- we want to treat free trial specially after it ends, so we need to distinguish
+-- between "normal" payment change and free trial.
+instance Migrate User12 User where
+    migrate (User12
+               { userid12                     
+                , userpassword12                
+                , usersupervisor12               
+                , useraccountsuspended12          
+                , userhasacceptedtermsofservice12  
+                , userinfo12                     
+                , usersettings12                
+                , userpaymentpolicy12 = Payments.UserPaymentPolicy {temppaymentchange}
+                , userpaymentaccount12           
+                , userfriends12                  
+                , userinviteinfo12
+                , userlogininfo12       
+                }) = User 
+                { userid                         = userid12
+                , userpassword                   = userpassword12
+                , usersupervisor                 = usersupervisor12
+                , useraccountsuspended           = useraccountsuspended12
+                , userhasacceptedtermsofservice  = userhasacceptedtermsofservice12
+                , userfreetrialexpirationdate    = Just freetrialexpirationdate
+                , userinfo                       = userinfo12
+                , usersettings                   = usersettings12
+                , userpaymentpolicy              = Payments.initialPaymentPolicy
+                , userpaymentaccount             = Payments.emptyPaymentAccount {
+                    paymentaccountfreesignatures = 100 -- for now we give them
+                    -- a lot of free signatures because we don't handle the case
+                    -- when they run out of them
+                }
+                , userfriends                    = userfriends12
+                , userinviteinfo                 = userinviteinfo12
+                , userlogininfo                  = userlogininfo12
+                }
+                where
+                    freetrialexpirationdate =
+                        fromMaybe firstjuly (max firstjuly . fst <$> temppaymentchange)
+                    firstjuly = fromJust $ parseMinutesTimeMDY "01-06-2011"
 
 toFlashMsg :: FlashType -> String -> FlashMessage
 toFlashMsg type_ msg = FlashMessage (type_, msg)
@@ -541,12 +606,18 @@ instance Version User10 where
 instance Version User11 where
     mode = extension 11 (Proxy :: Proxy User10)
 
-instance Version User where
+instance Version User12 where
     mode = extension 12 (Proxy :: Proxy User11)
+
+instance Version User where
+    mode = extension 13 (Proxy :: Proxy User12)
 
 instance Version TrustWeaverStorage
 
-instance Version UserAccountType 
+instance Version UserAccountType0
+
+instance Version UserAccountType where
+    mode = extension 2 (Proxy :: Proxy UserAccountType0)
 
 instance Version PaymentMethod
 
@@ -700,6 +771,7 @@ addUser (fstname, sndname) email passwd maybesupervisor = do
                  , usersupervisor          =  fmap (SupervisorID . unUserID) maybesupervisor 
                  , useraccountsuspended    =  False  
                  , userhasacceptedtermsofservice = Nothing
+                 , userfreetrialexpirationdate = Nothing
                  , userinfo = UserInfo {
                                     userfstname = fstname
                                   , usersndname = sndname
@@ -716,14 +788,14 @@ addUser (fstname, sndname) email passwd maybesupervisor = do
                                   , useremail =  Email email 
                                    }
                 , usersettings  = UserSettings {
-                                    accounttype = MainAccount 
+                                    accounttype = PrivateAccount
                                   , accountplan = Basic
                                   , signeddocstorage = Nothing
                                   , userpaymentmethod = Undefined
                                   , preferreddesignmode = Nothing
                                   }                   
-                , userpaymentpolicy =  Payments.basicPaymentPolicy
-                , userpaymentaccount = Payments.emptyPaymentAccount 
+                , userpaymentpolicy = Payments.initialPaymentPolicy
+                , userpaymentaccount = Payments.emptyPaymentAccount
               , userfriends = []
               , userinviteinfo = Nothing
               , userlogininfo = LoginInfo
@@ -881,7 +953,10 @@ addViewerByEmail uid vieweremail = do
 acceptTermsOfService :: UserID -> MinutesTime -> Update Users (Either String User)
 acceptTermsOfService userid minutestime = 
     modifyUser userid $ \user -> 
-        Right $ user { userhasacceptedtermsofservice = Just minutestime }
+        Right $ user {
+              userhasacceptedtermsofservice = Just minutestime
+            , userfreetrialexpirationdate  = Just $ (60*24*30) `minutesAfter` minutestime
+        }
 
 addFreePaymentsForInviter ::MinutesTime -> User -> Update Users ()
 addFreePaymentsForInviter now u = do
@@ -939,9 +1014,9 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'setUserInfo
                     , 'setUserSettings
                     , 'setPreferredDesignMode
-                    , 'setUserPaymentAccount 
+                    , 'setUserPaymentAccount
                     , 'setUserPaymentPolicyChange
-                    , 'freeUserFromPayments
+                    --, 'freeUserFromPayments
                     , 'recordFailedLogin
                     , 'recordSuccessfulLogin
                     , 'getUserSubaccounts
@@ -952,11 +1027,12 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'exportUsersDetailsToCSV
                     , 'addViewerByEmail
                       -- the below should be only used carefully and by admins
-                    , 'addFreePaymentsForInviter
+                    --, 'addFreePaymentsForInviter
                     , 'setUserSupervisor
                     ])
 
 $(deriveSerializeFor [ ''User
+                     , ''User12
                      , ''User11
                      , ''User10
                      , ''User9
@@ -964,6 +1040,7 @@ $(deriveSerializeFor [ ''User
 
                      , ''TrustWeaverStorage
                      , ''UserAccountType
+                     , ''UserAccountType0
                      , ''PaymentMethod
                      , ''UserInfo0
                      , ''FlashMessage0

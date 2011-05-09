@@ -585,8 +585,6 @@ signup vip freetill =  do
                       case maccount of
                            Just account ->  do
                                addFlashMsg =<< (liftIO $ flashMessageUserSignupDone ctxtemplates)
-                               when (isJust freetill) $
-                                   update $ FreeUserFromPayments account (fromJust freetill)
                                return LoopBack
                            Nothing -> do
                                addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
