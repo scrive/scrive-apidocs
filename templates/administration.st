@@ -246,6 +246,11 @@ adminuser=
 		<tr> <td style="padding-top:10px" ><strong>Special deals</strong></td>
 		  <td> </td>
 		</tr>
+		<tr> <td>Free trial expiration date:</td>
+                  <td>
+                     $user.uavfreetrialexpirationdate$
+                  </td>
+                </tr>
 		<tr> <td>Free signatures left:</td>
 		  <td>
 		    <input type="text" style="width:40px;margin:0" value="$user.uavpaymentaccountfreesignatures$" name="paymentaccountfreesignatures" />

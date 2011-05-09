@@ -22,6 +22,9 @@ flashMessageCanceled=
      Du har nu återkallat offerten och ett meddlande om återkallelsen har skickats till samtliga parter
     $endif$
 #####
+flashMessageNoAccountType=
+    You need to choose account type.
+#####
 flashMessageMustAcceptTOS=
     För att kunna använda tjänsten måste du acceptera SkrivaPå Allmänna Villkor.
 

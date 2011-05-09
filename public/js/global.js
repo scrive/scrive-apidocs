@@ -691,30 +691,6 @@ safeReady(function() {
   });
 });
 
-safeReady(function() {
-  $(".addremovecheckbox").change(function(){
-    var what = $($(this).attr("rel"));
-    var location = $($(this).attr("location"));
-    var oldlocation = $($(this).attr("oldlocation"));
-    if($(this).val() == "off") {  
-      location.append(what);      
-      $(this).val("on"); 
-      $(this).attr("checked", "checked");
-    } 
-    else {
-      oldlocation.append(what);
-      $(this).val("off");
-      $(this).removeAttr("checked");
-    }    
-    return true;
-  }).each(function(){
-    if($(this).val() == "on") {
-      $($(this).attr("location")).append($($(this).attr("rel")));      
-      $(this).attr("checked","checked");
-    } 
-  });    
-});
-
 safeReady(function() {    
   $(".datetodaystip").each(function() {
     var curr = $(this);
