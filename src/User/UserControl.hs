@@ -522,8 +522,8 @@ handleAccountSetupFromSign aid hash = do
       user <- queryOrFail $ GetUserByUserID userid
       acctype <- getOptionalField asValidName "accounttype"
       case BS.unpack <$> acctype of
-           Just "private" -> handleActivate' user PrivateAccount aid id
-           Just "company" -> handleActivate' user CompanyAccount aid id
+           Just "private" -> handleActivate' BySigning user PrivateAccount aid id
+           Just "company" -> handleActivate' BySigning user CompanyAccount aid id
            _              -> do
                templates <- ctxtemplates <$> get
                addFlashMsg =<< (liftIO $ flashMessageNoAccountType templates)
@@ -555,13 +555,13 @@ handleAccountSetupPost aid hash = do
                   ViralInvitationSent email invtime inviterid _ token ->
                       if token == hash
                          then getUserForViralInvite now email invtime inviterid
-                              >>= maybe mzero handleActivate
+                              >>= maybe mzero (handleActivate ViralInvitation)
                          else mzero
                   AccountCreatedBySigning _ uid _ token ->
                       if token == hash
                          then do
                              link <- (query $ GetUserByUserID uid)
-                                     >>= maybe mzero handleActivate
+                                     >>= maybe mzero (handleActivate BySigning)
                              case link of
                                   LinkMain -> do
                                       templates <- ctxtemplates <$> get
@@ -573,7 +573,7 @@ handleAccountSetupPost aid hash = do
                       if token == hash
                          then (query $ GetUserByUserID uid) >>= maybe mzero (\user ->
                              if isNothing $ userhasacceptedtermsofservice user
-                                then handleActivate user
+                                then handleActivate AccountRequest user
                                 else do
                                     templates <- ctxtemplates <$> get
                                     addFlashMsg =<< (liftIO $ flashMessageUserAlreadyActivated templates)
@@ -595,11 +595,11 @@ handleAccountSetupPost aid hash = do
                      )
                  )
     where
-        handleActivate user = do
+        handleActivate signupmethod user = do
             ctx <- get
             acctype <- getOptionalField asValidName "accounttype"
             case BS.unpack <$> acctype of
-                 Just "private" -> finalizeActivation user PrivateAccount id
+                 Just "private" -> finalizeActivation signupmethod user PrivateAccount id
                  Just "company" -> do
                      mfname <- getRequiredField asValidName "fname"
                      mlname <- getRequiredField asValidName "lname"
@@ -608,7 +608,7 @@ handleAccountSetupPost aid hash = do
                      mphone <- getRequiredField asValidPhone "phone"
                      case (mfname, mlname, mcompanyname, mcompanyposition, mphone) of
                           (Just fname, Just lname, Just companyname, Just companytitle, Just phone) -> do
-                              finalizeActivation user CompanyAccount $ \info -> info {
+                              finalizeActivation signupmethod user CompanyAccount $ \info -> info {
                                     userfstname = fname
                                   , usersndname = lname
                                   , usercompanyname  = companyname
@@ -620,8 +620,8 @@ handleAccountSetupPost aid hash = do
                      addFlashMsg =<< (liftIO $ flashMessageNoAccountType $ ctxtemplates ctx)
                      return LoopBack
 
-        finalizeActivation user acctype infoupdatefunc = do
-            muser <- handleActivate' user acctype aid infoupdatefunc
+        finalizeActivation signupmethod user acctype infoupdatefunc = do
+            muser <- handleActivate' signupmethod user acctype aid infoupdatefunc
             case muser of
                  Just _ -> do
                      templates <- ctxtemplates <$> get
@@ -644,8 +644,8 @@ handleAccountSetupPost aid hash = do
     the tos, and the passwords and add error flash messages as you'd
     expect.
 -}
-handleActivate' :: User -> UserAccountType -> ActionID -> (UserInfo -> UserInfo) -> Kontra (Maybe User)
-handleActivate' user acctype actionid infoupdatefunc = do
+handleActivate' :: SignupMethod -> User -> UserAccountType -> ActionID -> (UserInfo -> UserInfo) -> Kontra (Maybe User)
+handleActivate' signupmethod user acctype actionid infoupdatefunc = do
   ctx <- get
   mtos <- getDefaultedField False asValidCheckBox "tos"
   mpassword <- getRequiredField asValidPassword "password"
@@ -662,6 +662,7 @@ handleActivate' user acctype actionid infoupdatefunc = do
               passwordhash <- liftIO $ createPassword password
               update $ SetUserPassword user passwordhash
               update $ AcceptTermsOfService (userid user) (ctxtime ctx)
+              update $ SetSignupMethod (userid user) signupmethod
               update $ SetUserSettings (userid user) $ (usersettings user) {
                   accounttype = acctype
               }

@@ -109,7 +109,10 @@ instance InspectXML FlashMessage where
     inspectXML = asChild . show
 instance InspectXML Email where
     inspectXML = asChild . show
-    
+
+instance InspectXML SignupMethod where
+    inspectXML = asChild . show
+
 instance InspectXML MailsDeliveryStatus where
     inspectXML = asChild . show
     
