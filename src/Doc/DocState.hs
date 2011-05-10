@@ -84,7 +84,6 @@ import Happstack.Util.Common
 import Debug.Trace
 import Misc
 import Control.Monad
-import Data.List (find)
 import MinutesTime
 import Data.List (zipWith4,partition, find)
 import System.Random
@@ -1014,8 +1013,61 @@ templateFromDocument docid = modifySignable docid $ \doc ->
                              else if (documenttype doc == Contract)
                                     then ContractTemplate
                                     else documenttype doc
+        }
+    
+authorSigLink :: Document -> SignatoryLink
+authorSigLink = find (elem SignatoryAuthor) . documentsignatorylinks
+
+isAuthor2 :: Document -> User -> Bool
+isAuthor2 document author = maybe False 
+                           (\sl -> Just $ userid author == maybesignatory sl) 
+                           (authorSigLink document)
+
+-- | Migrate author to the documentsignlinks so that he is not special anymore
+migrateToSigLinks :: DocumentID -> User -> Update Documents ()
+migrateToSigLinks docid author = do 
+  sg <- ask
+  linkid <- getUnique sg SignatoryLinkID
+  magichash <- getRandom
+  modifySignable docid $ 
+      \doc ->
+          case find 
+                   (\sl -> Just $ userid author == maybesignatory sl) 
+                   (documentsignatorylinks docid) of
+            Just authorsiglink -> Right doc
+            Nothing ->
+                doc { documentsignatorylinks = newAuthorSigLink : documentsignatorylinks doc }
+                    where newAuthorSigLink = SignatoryLink 
+                                             { signatorylinkid = linkid
+                                             , signatorydetails = authordetails
+                                             , signatorymagichash = magichash
+                                             , maybesignatory = Just $ userid author
+                                             , maybesigninfo = Nothing
+                                             , maybeseeninfo = documentinvitetime doc
+                                             , invitationdeliverystatus = Unknown
+                                             , signatorysignatureinfo = Nothing
+                                             , signatoryroles = [SignatoryAuthor]
+                                             , signatorylinkdeleted = documentdeleted doc
+                                             }
+                          authordetails = (signatoryDetailsFromUser author)
+                                          { signatoryfstnameplacements = 
+                                                authorfstnameplacements doc
+                                          , signatorysndnameplacements =
+                                                authorsndnameplacements doc
+                                          , signatorycompanyplacements =
+                                                authorcompanyplacements doc
+                                          , signatoryemailplacements = 
+                                                authoremailplacements doc
+                                          , signatorypersonalnumberplacements =
+                                                authorpersonalnumberplacements doc
+                                          , signatorycompanynumberplacements = 
+                                                authorcompanynumberplacements
+                                          , signatoryotherfields =
+                                                authorotherfields doc
+                                          }
+  return ()
                                  
-    }
+
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocuments
                         , 'getDocumentsByAuthor
