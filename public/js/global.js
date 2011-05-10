@@ -125,6 +125,19 @@ function countSentOrOpenRows(selectedrows) {
 }
 
 /*
+ * for the user expand signatory stuff in doc list
+ */
+safeReady(function() {
+  $(".listSignatoryExpand").click(function() {
+    var nextone = $(this).closest("tr").next();
+    while (nextone.length>0 && nextone.hasClass("signatorydetail")) {
+      nextone.toggle();
+      nextone = nextone.next();
+    }
+  });
+});
+
+/*
  * For delete confirmation on lists.
  */
 safeReady(function() {

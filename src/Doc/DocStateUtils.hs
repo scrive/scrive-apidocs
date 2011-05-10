@@ -400,7 +400,7 @@ isViewer doc user = any f $ documentsignatorylinks doc
     In addition the document must be in the correct state.  There's quite a lot to check!
 -}
 isEligibleForReminder :: Maybe User -> Document -> SignatoryLink -> Bool
-isEligibleForReminder muser document siglink = 
+isEligibleForReminder muser document@Document{documentstatus} siglink = 
   signatoryActivated 
     && isUserAuthor 
     && (not isUserSignator) 
@@ -411,13 +411,10 @@ isEligibleForReminder muser document siglink =
   where
     isUserAuthor = maybe False (isAuthor document) muser
     isUserSignator = maybe False (\user -> (unEmail . useremail . userinfo $ user) == (signatoryemail $ signatorydetails siglink)) muser 
-    wasSigned =  (isJust $ maybesigninfo siglink) && (not $ isUserSignator && (documentstatus document == AwaitingAuthor))
-    isTimedout = documentstatus document == Timedout
-    isCanceled = documentstatus document == Canceled
-    isRejected = documentstatus document == Rejected
-    isClosed = documentstatus document == Closed
+    wasSigned =  (isJust $ maybesigninfo siglink) && (not $ isUserSignator && (documentstatus == AwaitingAuthor))
+    isClosed = documentstatus == Closed
     signatoryActivated = documentcurrentsignorder document >= (signatorysignorder $ signatorydetails siglink)
-    dontShowAnyReminder = isTimedout || isCanceled || isRejected
+    dontShowAnyReminder = documentstatus `elem` [Timedout, Canceled, Rejected]
     isSignatoryPartner = SignatoryPartner `elem` (signatoryroles siglink)
 
 {- |
