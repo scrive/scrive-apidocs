@@ -502,18 +502,18 @@ accountFromSignInputs=
   <div class="login-container">
     <div class="body">
       <div class="wrapper">
-        <p style="font-weight:bold;">Vill du säkra ditt original?</p>
         <p>
-          SkrivaPå kan även arkivera ett original för din säkerhet. Det kostar ingenting.
+          Vill du säkra ditt original? SkrivaPå kan även arkivera ett original för din säkerhet. Det kostar ingenting.
         </p>
         <input type="hidden" name="acceptaccount" value="true" />
-        <div>
+        <div style="padding:10px 50px;">
+         <div>
           <input type="checkbox" name="tos" id="tos" class="float-left" style="width:20px;margin:0px;"/>
-          <div class="float-left" style="width:280px;">
+          <div class="float-left" style="width:290px;">
             <label for="tos" class="float-left" style="padding-left:5px;">Jag har läst och accepterat <a href="/allmana-villkor">SkrivaPå Allmänna Villkor</a></label>
           </div>
-        </div>
-        <div style="padding-top:20px">
+         </div>
+         <div style="padding-top:20px">
           <table>
             <tr>
               <td style="width:120px;">Lösenord</td>
@@ -524,6 +524,7 @@ accountFromSignInputs=
               <td><input type="password" name="password2" /></td>
             </tr>
           </table>
+         </div>
         </div>
       </div>
     </div>
