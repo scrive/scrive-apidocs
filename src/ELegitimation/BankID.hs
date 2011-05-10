@@ -443,7 +443,7 @@ handleSignCanceledDataMismatch docid signatorylinkid = do
             | sid == signatorylinkid -> do
                 maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
                 content1 <- liftIO $ signCanceledDataMismatch (ctxtemplates ctx) document signatorylink (isJust maybeuser) msg
-                renderFromBody ctx TopEmpty kontrakcja $ cdata content1
+                renderFromBody TopEmpty kontrakcja $ cdata content1
         _ -> sendRedirect $ LinkSignDoc document signatorylink
   
 signCanceledDataMismatch :: KontrakcjaTemplates 

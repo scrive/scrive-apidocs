@@ -291,7 +291,7 @@ handleHomepage = do
                         resp <- V.simpleResponse =<< (liftIO $ firstPage ctx loginOn referer email)
                         clearFlashMsgs
                         return $ Left resp
-        _ -> Left <$> embeddedErrorPage ctx      
+        _ -> Left <$> embeddedErrorPage
 
 handleSitemapPage :: Kontra Response
 handleSitemapPage = handleWholePage sitemapPage       
@@ -320,10 +320,9 @@ handlePartnersPage = handleWholePage partnersPage
 handleClientsPage :: Kontra Response
 handleClientsPage = handleWholePage clientsPage
 
-handleWholePage :: (Context -> Kontra String) -> Kontra Response
+handleWholePage :: Kontra String -> Kontra Response
 handleWholePage f = do
-    ctx <- get
-    content <- f ctx
+    content <- f
     resp <- V.simpleResponse content
     clearFlashMsgs
     return resp
@@ -338,7 +337,7 @@ handleError = do
          Nothing -> do
             addModal $ V.modalError (ctxtemplates ctx)
             sendRedirect LinkMain
-         Just _ -> embeddedErrorPage ctx   
+         Just _ -> embeddedErrorPage
 
 handleMainReaload :: Kontra KontraLink
 handleMainReaload = do
@@ -533,7 +532,7 @@ signupPageGet :: Kontra Response
 signupPageGet = do
     ctx <- lift get
     content <- liftIO (signupPageView $ ctxtemplates ctx)
-    V.renderFromBody ctx V.TopNone V.kontrakcja $ cdata content 
+    V.renderFromBody V.TopNone V.kontrakcja $ cdata content 
 
 {- |
    Handles submission of the signup form.
@@ -547,7 +546,7 @@ signupVipPageGet :: Kontra Response
 signupVipPageGet = do
     ctx <- lift get
     content <- liftIO (signupVipPageView $ ctxtemplates ctx)
-    V.renderFromBody ctx V.TopNone V.kontrakcja $ cdata content 
+    V.renderFromBody V.TopNone V.kontrakcja $ cdata content 
 
 signupPagePost :: Kontra KontraLink
 signupPagePost = do
@@ -612,7 +611,7 @@ handleLoginGet = do
          referer <- getField "referer"
          email   <- getField "email"
          content <- liftIO $ V.pageLogin ctx referer email
-         V.renderFromBody ctx V.TopNone V.kontrakcja . cdata $ content
+         V.renderFromBody V.TopNone V.kontrakcja . cdata $ content
 
 {- |
    Handles submission of a login form.  On failure will redirect back to referer, if there is one.
@@ -684,7 +683,7 @@ serveHTMLFiles =  do
             ms <- liftIO $ catch (fmap Just ( BS.readFile $ "html/"++fileName)) 
                             (const $ return Nothing)
             case ms of 
-                (Just s) -> renderFromBody ctx V.TopNone V.kontrakcja (cdata $ BS.toString s)
+                (Just s) -> renderFromBody V.TopNone V.kontrakcja (cdata $ BS.toString s)
                 _      -> mzero
         else mzero
 
@@ -705,7 +704,7 @@ daveDocument :: DocumentID -> Kontra Response
 daveDocument documentid = onlySuperUserGet $ do
     ctx <- get
     document <- queryOrFail $ GetDocumentByDocumentID documentid
-    V.renderFromBody ctx V.TopNone V.kontrakcja $ inspectXML document
+    V.renderFromBody V.TopNone V.kontrakcja $ inspectXML document
 
 {- |
    Used by super users to inspect a particular user.
@@ -714,4 +713,4 @@ daveUser :: UserID -> Kontra Response
 daveUser userid = onlySuperUserGet $ do 
     ctx <- get
     user <- queryOrFail $ GetUserByUserID userid
-    V.renderFromBody ctx V.TopNone V.kontrakcja $ inspectXML user
+    V.renderFromBody V.TopNone V.kontrakcja $ inspectXML user

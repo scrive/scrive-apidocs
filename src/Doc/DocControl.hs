@@ -394,7 +394,7 @@ handleSTable = checkUserTOSGet $ do
       let contracts = filter ((==) Contract . documenttype) notdeleted
       params <- getListParams
       content <- liftIO $ pageContractsList ctxtemplates ctxtime user (docSortSearchPage params contracts)
-      renderFromBody ctx TopNone kontrakcja $ cdata content
+      renderFromBody TopNone kontrakcja $ cdata content
 
 {- |
     Handles an account setup from within the sign view.
@@ -586,10 +586,10 @@ handleSignShow documentid
   ctx <- get
 
   if isSignatory
-     then renderFromBody ctx TopNone kontrakcja 
+     then renderFromBody TopNone kontrakcja 
               (cdata <$> pageDocumentForSignatory (LinkSignDoc document invitedlink) 
                     document ctx invitedlink author)
-     else renderFromBody ctx TopNone kontrakcja 
+     else renderFromBody TopNone kontrakcja 
               (cdata <$> pageDocumentForViewer ctx document author (Just invitedlink))
 
 

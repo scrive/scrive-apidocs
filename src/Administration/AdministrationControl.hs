@@ -80,7 +80,7 @@ showAdminMainPage :: Kontra Response
 showAdminMainPage = onlySuperUser $ do
   ctx@Context {ctxtemplates} <- lift get
   content <- liftIO $ adminMainPage ctxtemplates 
-  renderFromBody ctx TopEmpty kontrakcja $ cdata content 
+  renderFromBody TopEmpty kontrakcja $ cdata content 
 
 {- | Process view for advanced user administration -}                    
 showAdminUserAdvanced :: Kontra Response
@@ -89,7 +89,7 @@ showAdminUserAdvanced = onlySuperUser $ do
   users <- query $ GetAllUsers
   params <- getAdminUsersPageParams
   content <- liftIO $ adminUsersAdvancedPage ctxtemplates users params
-  renderFromBody ctx TopEmpty kontrakcja $ cdata content 
+  renderFromBody TopEmpty kontrakcja $ cdata content 
 
 {- | Process view for finding a user in basic administration. If provided with userId string as param 
 it allows to edit user details -}     
@@ -99,7 +99,7 @@ showAdminUsers Nothing = onlySuperUser $ do
   users <- getUsersAndStats
   params <- getAdminUsersPageParams
   content <- liftIO $ adminUsersPage ctxtemplates users params
-  renderFromBody ctx TopEmpty kontrakcja $ cdata content 
+  renderFromBody TopEmpty kontrakcja $ cdata content 
 
 showAdminUsers (Just userId) = onlySuperUser $ do 
   ctx@Context {ctxtemplates} <- lift get
@@ -109,7 +109,7 @@ showAdminUsers (Just userId) = onlySuperUser $ do
     Just user -> do   
       paymentmodel <- update $ GetPaymentModel $ paymentaccounttype $ userpaymentpolicy user
       content <- liftIO $ adminUserPage ctxtemplates user paymentmodel
-      renderFromBody ctx TopEmpty kontrakcja $ cdata content 
+      renderFromBody TopEmpty kontrakcja $ cdata content 
 
 getUsersAndStats :: Kontra [(User,DocStats,UserStats)]
 getUsersAndStats = do
@@ -129,7 +129,7 @@ showAdminUserUsageStats userid = onlySuperUser $ do
   Just user <- query $ GetUserByUserID userid
   content <- liftIO $ adminUserUsageStatsPage ctxtemplates user $ do
     fieldsFromStats [user] documents
-  renderFromBody ctx TopEmpty kontrakcja $ cdata content 
+  renderFromBody TopEmpty kontrakcja $ cdata content 
   
   
 {- Shows table of all users-}
@@ -138,7 +138,7 @@ showAllUsersTable = onlySuperUser $ do
     ctx@Context {ctxtemplates} <- lift get
     users <- getUsersAndStats
     content <- liftIO $ allUsersTable ctxtemplates users
-    renderFromBody ctx TopEmpty kontrakcja $ cdata  content
+    renderFromBody TopEmpty kontrakcja $ cdata  content
 
 
 
@@ -170,14 +170,14 @@ showStats = onlySuperUser $ do
                             svViralinvitecount = viralinvitecount userstats,
                             svAdmininvitecount = admininvitecount userstats }
     content <- liftIO $ statsPage ctxtemplates stats (toString df)
-    renderFromBody ctx TopEmpty kontrakcja $ cdata content
+    renderFromBody TopEmpty kontrakcja $ cdata content
 
 indexDB :: Kontra Response
 indexDB = onlySuperUser $ do
     ctx@Context {ctxtemplates} <- lift get
     files <- liftIO $ getDirectoryContents "_local/kontrakcja_state"
     content <- liftIO $ databaseContent ctxtemplates (sort files) 
-    renderFromBody ctx TopEmpty kontrakcja $ cdata  content
+    renderFromBody TopEmpty kontrakcja $ cdata  content
     
 getUsersDetailsToCSV :: Kontra Response
 getUsersDetailsToCSV = onlySuperUser $ do
@@ -460,7 +460,7 @@ showServicesPage = onlySuperUser $ do
   ctx@Context {ctxtemplates} <- lift get
   services <- query GetServices
   content <- liftIO $ servicesAdminPage ctxtemplates services
-  renderFromBody ctx TopEmpty kontrakcja $ cdata content 
+  renderFromBody TopEmpty kontrakcja $ cdata content 
     
                      
 {-                     
@@ -639,6 +639,6 @@ handleStatistics =
     users <- query $ GetAllUsers
     content <- renderTemplateM "statisticsPage" $ do
       fieldsFromStats users documents
-    renderFromBody ctx TopEmpty kontrakcja $ cdata content
+    renderFromBody TopEmpty kontrakcja $ cdata content
     
   

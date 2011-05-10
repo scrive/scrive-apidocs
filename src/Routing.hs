@@ -116,8 +116,8 @@ page pageBody = do
     pb <- pageBody
     ctx <- get 
     if (isNothing $ ctxservice ctx)
-     then renderFromBody ctx TopDocument kontrakcja $ cdata pb
-     else embeddedPage ctx pb 
+     then renderFromBody TopDocument kontrakcja $ cdata pb
+     else embeddedPage pb 
      
 
 

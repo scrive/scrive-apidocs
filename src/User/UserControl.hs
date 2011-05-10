@@ -43,7 +43,7 @@ handleUserGet = do
     case (ctxmaybeuser ctx) of
          Just user -> do
              content <- liftIO $ showUser (ctxtemplates ctx) user
-             renderFromBody ctx TopAccount kontrakcja $ cdata content
+             renderFromBody TopAccount kontrakcja $ cdata content
          Nothing -> sendRedirect $ LinkLogin NotLogged    
 
 handleUserPost :: Kontra KontraLink
@@ -93,7 +93,7 @@ handleGetUserSecurity = do
     case (ctxmaybeuser ctx) of
          Just user -> do
              content <- liftIO $ showUserSecurity (ctxtemplates ctx) user
-             renderFromBody ctx TopAccount kontrakcja $ cdata content
+             renderFromBody TopAccount kontrakcja $ cdata content
          Nothing -> sendRedirect $ LinkLogin NotLogged    
 
 handlePostUserSecurity :: Kontra KontraLink
@@ -126,7 +126,7 @@ handleGetSharing = withUserGet $ do
     friends <- query $ GetUserFriends userid
     params <- getListParams
     content <- liftIO $ viewFriends (ctxtemplates ctx) (friendsSortSearchPage params friends) user
-    renderFromBody ctx TopAccount kontrakcja $ cdata content
+    renderFromBody TopAccount kontrakcja $ cdata content
 
 -- Searching, sorting and paging
 friendsSortSearchPage :: ListParams -> [User] -> PagedList User
@@ -140,7 +140,7 @@ handleGetSubaccount = withUserGet $ do
     subaccounts <- query $ GetUserSubaccounts userid
     params <- getListParams
     content <- viewSubaccounts user (subaccountsSortSearchPage params $ Set.toList subaccounts)
-    renderFromBody ctx TopAccount kontrakcja $ cdata content
+    renderFromBody TopAccount kontrakcja $ cdata content
 
 -- Searching, sorting and paging
 subaccountsSortSearchPage :: ListParams -> [User] -> PagedList User
@@ -384,7 +384,7 @@ handleAcceptTOSGet :: Kontra (Either KontraLink Response)
 handleAcceptTOSGet = withUserGet $ do
     ctx@Context{ctxtemplates} <- get
     content <- liftIO $ pageAcceptTOS ctxtemplates
-    renderFromBody ctx TopNone kontrakcja $ cdata content
+    renderFromBody TopNone kontrakcja $ cdata content
 
 handleAcceptTOSPost :: Kontra KontraLink
 handleAcceptTOSPost = withUserPost $ do
@@ -442,7 +442,7 @@ handleGetBecomeSubaccountOf supervisorid = withUserGet $ do
   addModal $ modalDoYouWantToBeSubaccount 
   ctx@Context{ctxmaybeuser = Just user} <- get
   content <- liftIO $ showUser (ctxtemplates ctx) user
-  renderFromBody ctx TopAccount kontrakcja $ cdata content
+  renderFromBody TopAccount kontrakcja $ cdata content
     
 handlePostBecomeSubaccountOf :: UserID -> Kontra KontraLink
 handlePostBecomeSubaccountOf supervisorid = withUserPost $ do
@@ -503,7 +503,7 @@ handleAccountSetupGet aid hash = do
                         then do
                             ctx <- get
                             content <- liftIO $ activatePageViewNotValidLink (ctxtemplates ctx) $ BS.toString email
-                            renderFromBody ctx TopNone kontrakcja $ cdata content
+                            renderFromBody TopNone kontrakcja $ cdata content
                         else mzero
                      )
                  )
@@ -512,7 +512,7 @@ handleAccountSetupGet aid hash = do
             extendActionEvalTimeToOneDayMinimum aid
             ctx <- get
             content <- liftIO $ activatePageView (ctxtemplates ctx) muser
-            renderFromBody ctx TopNone kontrakcja $ cdata content
+            renderFromBody TopNone kontrakcja $ cdata content
 
 handleAccountSetupFromSign :: ActionID -> MagicHash -> Kontra (Maybe User)
 handleAccountSetupFromSign aid hash = do
