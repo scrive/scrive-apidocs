@@ -46,7 +46,7 @@ payexTest Nothing = do
                                          liftIO $ query $ GetUserPayments $ userid user
                           Nothing -> return []
              content <- liftIO $ viewPayments  (ctxtemplates ctx)  payments             
-             renderFromBody ctx TopNone kontrakcja $ HSP.cdata $ content
+             renderFromBody TopNone kontrakcja $ HSP.cdata $ content
              
 payexTest (Just pid) =
                    do
@@ -76,7 +76,7 @@ payexTest (Just pid) =
                                              _ ->  return payment
                                        else return payment
                                       content <- liftIO $ viewPayment (ctxtemplates ctx) payment
-                                      renderFromBody ctx TopNone kontrakcja $ HSP.cdata $ content
+                                      renderFromBody TopNone kontrakcja $ HSP.cdata $ content
                      Nothing -> sendRedirect $ LinkPayExView Nothing
 
 {-| Ajax info about how much we will chage a user for this document |-}
