@@ -8,8 +8,6 @@ module User.UserState
     , LoginInfo(..)
     , DefaultMainSignatory(..)
     , ExternalUserID(..)
-    , FlashType(..)
-    , FlashMessage(..)
     , Password(..)
     , TrustWeaverStorage(..)
     , UserAccountType(..)
@@ -28,6 +26,7 @@ module User.UserState
     , isAbleToHaveSubaccounts
 
     , AcceptTermsOfService(..)
+    , SetFreeTrialExpirationDate(..)
     , AddUser(..)
     , ExportUsersDetailsToCSV(..)
     , GetAllUsers(..)
@@ -79,6 +78,9 @@ import System.Time as ST
 import MinutesTime as MT
 import Payments.PaymentsState as Payments
 import Data.Data
+import Data.Maybe
+import User.Password
+import API.Service.ServiceState (ServiceID)
 
 newtype UserID = UserID { unUserID :: Int }
     deriving (Eq, Ord, Typeable)
@@ -203,6 +205,8 @@ data User = User
           , userfriends                   :: [Friend]
           , userinviteinfo                :: Maybe InviteInfo
           , userlogininfo                 :: LoginInfo
+          , userservice                   :: Maybe ServiceID
+          , userterminated                :: Bool
           }
             deriving (Eq, Ord)
 
@@ -309,8 +313,6 @@ deriving instance Show UserSettings
 deriving instance Show DesignMode
 deriving instance Show User
 deriving instance Show Email
-deriving instance Show FlashMessage
-deriving instance Show Password
 deriving instance Show Friend
 deriving instance Show Inviter
 deriving instance Show InviteInfo
@@ -503,6 +505,8 @@ instance Migrate User12 User where
                 , userfriends                    = userfriends12
                 , userinviteinfo                 = userinviteinfo12
                 , userlogininfo                  = userlogininfo12
+                , userservice                    = Nothing
+                , userterminated                 = False
                 }
                 where
                     freetrialexpirationdate =
@@ -739,7 +743,7 @@ addUser (fstname, sndname) email passwd maybesupervisor = do
    then return Nothing  -- "user with same email address exists"
    else do         
         userid <- getUnique users UserID
-        let user = (User {  
+        let user = User {  
                    userid                  =  userid
                  , userpassword            =  passwd
                  , usersupervisor          =  fmap (SupervisorID . unUserID) maybesupervisor 
@@ -777,7 +781,9 @@ addUser (fstname, sndname) email passwd maybesupervisor = do
                                 , lastfailtime = Nothing
                                 , consecutivefails = 0
                                 }
-                 })             
+              , userservice = Nothing
+              , userterminated = False
+                 }
         modify (updateIx (Email email) user)
         return $ Just user
 
@@ -932,6 +938,11 @@ acceptTermsOfService userid minutestime =
             , userfreetrialexpirationdate  = Just $ (60*24*30) `minutesAfter` minutestime
         }
 
+setFreeTrialExpirationDate :: UserID -> Maybe MinutesTime -> Update Users (Either String User)
+setFreeTrialExpirationDate userid date = 
+    modifyUser userid $ \user -> 
+        Right $ user { userfreetrialexpirationdate = date }
+
 addFreePaymentsForInviter ::MinutesTime -> User -> Update Users ()
 addFreePaymentsForInviter now u = do
                            case (fmap userinviter $ userinviteinfo u) of
@@ -998,6 +1009,7 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'getUsersByFriendUserID
                     , 'getUserFriends
                     , 'acceptTermsOfService
+                    , 'setFreeTrialExpirationDate
                     , 'exportUsersDetailsToCSV
                     , 'addViewerByEmail
                       -- the below should be only used carefully and by admins
