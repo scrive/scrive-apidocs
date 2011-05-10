@@ -27,6 +27,7 @@ module AppView( TopMenu(..)
 
 import Control.Arrow (first)
 import Control.Monad.Reader (ask)
+import Control.Monad.State (get)
 import HSP hiding (Request)
 import Happstack.Server.HSP.HTML (webHSP)
 import Happstack.Server.SimpleHTTP
@@ -61,15 +62,15 @@ kontrakcja = "SkrivaPå"
    Renders some page body xml into a complete reponse
 -}
 renderFromBody :: (EmbedAsChild (HSPT' IO) xml) 
-               => Context 
-               -> TopMenu 
+               => TopMenu 
                -> String 
                -> xml 
                -> Kontra Response
-renderFromBody ctx topmenu title xml = do
+renderFromBody topmenu title xml = do
     htmlPage <- fmap ((isSuffixOf ".html") . concat . rqPaths)  askRq
     loginOn <- getLoginOn
     loginreferer <- getLoginReferer
+    ctx <- get
     let showCreateAccount = htmlPage && (isNothing $ ctxmaybeuser ctx) 
     res <- webHSP $ pageFromBody ctx loginOn loginreferer Nothing showCreateAccount title xml
     clearFlashMsgs
@@ -80,7 +81,7 @@ renderFromBody ctx topmenu title xml = do
    Renders some page body xml into a complete page of xml
 -}
 pageFromBody :: (EmbedAsChild (HSPT' IO) xml) 
-             =>  Context
+             => Context
              -> Bool
              -> Maybe String
              -> Maybe String
@@ -105,8 +106,9 @@ pageFromBody ctx@Context{ ctxmaybeuser
     return $ cdata wholePage
 
 
-embeddedPage::Context -> String -> Kontra Response
-embeddedPage ctx pb = do
+embeddedPage :: String -> Kontra Response
+embeddedPage pb = do
+    ctx <- get
     bdy <- renderTemplateM "embeddedPage" $ do 
             field "content" pb
             serviceFields (ctxservice ctx)
@@ -115,46 +117,48 @@ embeddedPage ctx pb = do
     clearFlashMsgs
     return res
     
-embeddedErrorPage::Context -> Kontra Response
-embeddedErrorPage ctx = do
+embeddedErrorPage :: Kontra Response
+embeddedErrorPage = do
+    service <- ctxservice <$> get
     content <- renderTemplateM "embeddedErrorPage" $ do
-        serviceFields (ctxservice ctx)
+        serviceFields service
     simpleResponse content
 
 serviceFields:: Maybe (Service,String) -> Fields
 serviceFields (Just (_, location)) = field "location" location
 serviceFields Nothing = field "location" "" -- should never happend 
 
-sitemapPage :: Context -> Kontra String
-sitemapPage ctx@Context{ctxtemplates} =
-  liftIO $ renderTemplate ctxtemplates "sitemapPage" $ do
-             field "hostpart" $ case ctxhostpart ctx of
-                                  ('h':'t':'t':'p':'s':xs) -> "http" ++ xs
-                                  xs -> xs
+sitemapPage :: Kontra String
+sitemapPage = do
+    ctx <- get
+    liftIO $ renderTemplate (ctxtemplates ctx) "sitemapPage" $ do
+        field "hostpart" $ case ctxhostpart ctx of
+                                ('h':'t':'t':'p':'s':xs) -> "http" ++ xs
+                                xs -> xs
 
-priceplanPage :: Context -> Kontra String
-priceplanPage ctx = renderTemplateAsPage ctx "priceplanPage" True
+priceplanPage :: Kontra String
+priceplanPage = get >>= \ctx -> renderTemplateAsPage ctx "priceplanPage" True
 
-securityPage :: Context -> Kontra String
-securityPage ctx = renderTemplateAsPage ctx "securityPage" True
+securityPage :: Kontra String
+securityPage = get >>= \ctx -> renderTemplateAsPage ctx "securityPage" True
 
-legalPage :: Context -> Kontra String
-legalPage ctx = renderTemplateAsPage ctx "legalPage" True
+legalPage :: Kontra String
+legalPage = get >>= \ctx -> renderTemplateAsPage ctx "legalPage" True
 
-privacyPolicyPage :: Context -> Kontra String
-privacyPolicyPage ctx = renderTemplateAsPage ctx "privacyPolicyPage" True
+privacyPolicyPage :: Kontra String
+privacyPolicyPage = get >>= \ctx -> renderTemplateAsPage ctx "privacyPolicyPage" True
 
-termsPage :: Context -> Kontra String
-termsPage ctx = renderTemplateAsPage ctx "termsPage" True
+termsPage :: Kontra String
+termsPage = get >>= \ctx -> renderTemplateAsPage ctx "termsPage" True
 
-aboutPage :: Context -> Kontra String
-aboutPage ctx = renderTemplateAsPage ctx "aboutPage" True
+aboutPage :: Kontra String
+aboutPage = get >>= \ctx -> renderTemplateAsPage ctx "aboutPage" True
 
-partnersPage :: Context -> Kontra String
-partnersPage ctx = renderTemplateAsPage ctx "partnersPage" True
+partnersPage :: Kontra String
+partnersPage = get >>= \ctx -> renderTemplateAsPage ctx "partnersPage" True
 
-clientsPage :: Context -> Kontra String
-clientsPage ctx = renderTemplateAsPage ctx "clientsPage" True
+clientsPage :: Kontra String
+clientsPage = get >>= \ctx -> renderTemplateAsPage ctx "clientsPage" True
 
 {- |
     Render a template as an entire page.

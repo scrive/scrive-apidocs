@@ -26,7 +26,7 @@ showContacts ::Kontra Response
 showContacts =  do
   ctx <- lift get
   content <- liftIO $ contactsView (ctxtemplates ctx)
-  renderFromBody ctx TopEmpty kontrakcja $ cdata content 
+  renderFromBody TopEmpty kontrakcja $ cdata content 
 
 {- | Process view for advanced user administration -}                    
 handleContactsChange :: Kontra KontraLink

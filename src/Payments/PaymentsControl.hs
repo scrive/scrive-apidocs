@@ -29,7 +29,7 @@ handlePaymentsModelForViewView = onlySuperUser $
                                   ctx<- get
                                   models <- update $ GetPaymentModels
                                   content <- liftIO $ adminView (ctxtemplates ctx) models 
-                                  renderFromBody ctx TopEmpty kontrakcja $ cdata content
+                                  renderFromBody TopEmpty kontrakcja $ cdata content
                                   
 {- | View of payment models (editable) -}
 handlePaymentsModelForEditView ::Kontra Response
@@ -38,7 +38,7 @@ handlePaymentsModelForEditView =  onlySuperUser $
                                    ctx<- get
                                    models <- update $ GetPaymentModels
                                    content <- liftIO $ adminViewForSuperuser (ctxtemplates ctx) models
-                                   renderFromBody ctx TopEmpty kontrakcja $ cdata content                                  
+                                   renderFromBody TopEmpty kontrakcja $ cdata content                                  
 {- | Handle change of models values request.
      Supports full and partial upgrade.
      Fields names like in PaymentModelView (see PaymentsView) with PaymentAccountType suffix.
