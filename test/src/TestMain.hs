@@ -12,6 +12,6 @@ main = do
   defaultMain tests
 
 tests = [testGroup "UserState" userStateTests,
-         testGroup "TrustWeaver" trustWeaverTests,
+         -- testGroup "TrustWeaver" trustWeaverTests,
          testGroup "InputValidation" inputValidationTests
         ]
