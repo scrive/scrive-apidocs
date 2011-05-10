@@ -61,11 +61,11 @@ viewSubaccounts =
                   </th>
 		  <th style="width: 115px;">
                     $if(params.sorting.phoneREV)$
-                    <a href="$currentlink$&sorting=phone">Personnummer  <em> ▲</em></a>
+                    <a href="$currentlink$&sorting=phone">Telefonnummer  <em> ▲</em></a>
                     $elseif(params.sorting.phone)$
-                    <a href="$currentlink$&sorting=phoneREV">Personnummer  <em> ▼</em></a>
+                    <a href="$currentlink$&sorting=phoneREV">Telefonnummer  <em> ▼</em></a>
                     $else$
-                    <a href="$currentlink$&sorting=phone">Personnummer </a>
+                    <a href="$currentlink$&sorting=phone">Telefonnummer </a>
                     $endif$ 
                   </th>
 		  <th style="width: 110px;">
