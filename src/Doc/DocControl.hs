@@ -1870,3 +1870,12 @@ handleCreateFromTemplate = withUserPost $ do
          relatedaccounts <- query $ GetUserRelatedAccounts (userid user)
          return $ ((documentsharing document) == Shared)
                   && ((unAuthor $ documentauthor document) `elem` (map userid relatedaccounts))
+
+migrateDocSigLinks :: Kontra KontraLink
+migrateDocSigLinks = withSuperUser $ do
+  docs <- query $ GetDocuments
+  forM_ docs (\doc -> do
+                author <- queryOrFail $ GetUserByUserID $ unAuthor $ documentauthor doc
+                _ <- update $ MigrateToSigLinks documentid author
+                return ())
+  return LinkMain
