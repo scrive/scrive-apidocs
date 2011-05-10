@@ -284,12 +284,13 @@ flashMessageAccountRemovedFromSign templates =
 
 
 -- All doc view
-singlnkFields :: SignatoryLink -> Fields
-singlnkFields sl = do
+singlnkFields :: Document -> (MinutesTime -> String) -> SignatoryLink -> Fields
+singlnkFields document dateformatter sl = do
   field "id" $ show $ signatorylinkid sl
   field "name" $ BS.toString $ personname sl
   field "email" $  ""
   field "company" $ BS.toString . signatorycompany $ signatorydetails sl
+  signatoryStatusFields document sl dateformatter
 
 {- |
     We want the documents to be ordered like the icons in the bottom
@@ -341,7 +342,7 @@ documentBasicViewFields :: MinutesTime -> User -> Document -> Fields
 documentBasicViewFields crtime user doc = do
     documentInfoFields doc
     field "status" $ show (documentStatusClass doc)
-    field "signatories" $ map singlnkFields $ filter isSignatory $ documentsignatorylinks doc
+    field "signatories" $ map (singlnkFields doc (showDateAbbrev crtime)) $ filter isSignatory $ documentsignatorylinks doc
     field "anyinvitationundelivered" $ anyInvitationUndelivered doc
     field "doclink"  $ if (unAuthor $ documentauthor doc) == userid user || null signatorylinklist
                         then show . LinkIssueDoc $ documentid doc
@@ -807,23 +808,57 @@ signatoryLinkFields
   siglnk@SignatoryLink {
     signatorylinkid
     , signatorydetails
-    , maybesigninfo
-    , maybeseeninfo
-    , invitationdeliverystatus
     , signatoryroles
+    , invitationdeliverystatus
   } =
   let
    isCurrentUserAuthor = maybe False (isAuthor document) muser
-   isCurrentSignatorAuthor = (unEmail . useremail . userinfo $ author) == (signatoryemail signatorydetails) 
    current = (currentlink == Just siglnk) || (isNothing currentlink && (fmap (unEmail . useremail . userinfo) muser) == (Just $ signatoryemail signatorydetails)) 
-   wasSigned =  isJust maybesigninfo && (not $ isCurrentSignatorAuthor && (documentstatus document == AwaitingAuthor))
+   isActiveDoc = not $ (documentstatus document) `elem` [Timedout, Canceled, Rejected]
+    in do
+      field "current" $ current
+      field "fstname" $ packToMString $ signatoryfstname $ signatorydetails
+      field "sndname" $ packToMString $ signatorysndname $ signatorydetails
+      field "company" $ packToMString $ signatorycompany $ signatorydetails
+      field "personalnumber" $ packToMString $ signatorypersonalnumber $ signatorydetails
+      field "companynumber"  $ packToMString $ signatorycompanynumber $ signatorydetails
+      field "email" $ packToMString $ signatoryemail $ signatorydetails
+      field "fields" $ for (signatoryotherfields signatorydetails) $ \sof -> do
+        field "fieldlabel" $ fieldlabel sof
+        field "fieldvalue" $ fieldvalue sof
+      field "signorder" $ unSignOrder $ signatorysignorder signatorydetails
+      field "allowRemindForm" $ isEligibleForReminder muser document siglnk            
+      field "linkremind" $ show (LinkRemind document siglnk)
+      field "linkchangeemail" $  show $ LinkChangeSignatoryEmail (documentid document) signatorylinkid
+      field "allowEmailChange" $ (isCurrentUserAuthor && (invitationdeliverystatus == Undelivered) && isActiveDoc)
+      field "reminderMessage" $ mailDocumentRemindContent ctxtemplates Nothing ctx document siglnk author 
+      field "role" $ if isSignatory siglnk
+                     then "signatory"
+                     else "viewer"
+      field "secretary"  $ (isAuthor document siglnk) &&  not (isSignatory siglnk)              
+      field "author" $ (isAuthor document siglnk)
+      signatoryStatusFields document siglnk showDateOnly
+
+signatoryStatusFields :: Document -> SignatoryLink -> (MinutesTime -> String) -> Fields
+signatoryStatusFields
+  document
+  siglnk@SignatoryLink {
+    signatorylinkid
+    , signatorydetails
+    , maybesigninfo
+    , maybeseeninfo
+    , maybereadinvite
+    , invitationdeliverystatus
+  } 
+  dateformatter = 
+  let
+   wasSigned =  isJust maybesigninfo
    wasSeen = isJust maybeseeninfo
-   wasRead = isJust $ maybereadinvite siglnk
+   wasRead = isJust maybereadinvite
    isTimedout = documentstatus document == Timedout
    isCanceled = documentstatus document == Canceled
    isRejected = documentstatus document == Rejected
    isClosed = documentstatus document == Closed
-   isActiveDoc = isTimedout || isCanceled || isRejected
    datamismatch = case documentcancelationreason document of
                     Just (ELegDataMismatch _ sid _ _ _) -> sid == signatorylinkid
                     _                                   -> False
@@ -839,36 +874,15 @@ signatoryLinkFields
    -- the date this document was rejected if rejected by this signatory
    rejectedDate = case documentrejectioninfo document of
                     Just (rt, slid, _) 
-                        | slid == signatorylinkid -> Just $ showDateOnly rt
+                        | slid == signatorylinkid -> Just $ dateformatter rt
                     _                             -> Nothing
-    in do
-      field "current" $ current  
+    in do  
       field "status" $ show status
-      field "fstname" $ packToMString $ signatoryfstname $ signatorydetails
-      field "sndname" $ packToMString $ signatorysndname $ signatorydetails
-      field "company" $ packToMString $ signatorycompany $ signatorydetails
-      field "personalnumber" $ packToMString $ signatorypersonalnumber $ signatorydetails
-      field "companynumber"  $ packToMString $ signatorycompanynumber $ signatorydetails
-      field "email" $ packToMString $ signatoryemail $ signatorydetails
-      field "fields" $ for (signatoryotherfields signatorydetails) $ \sof -> do
-        field "fieldlabel" $ fieldlabel sof
-        field "fieldvalue" $ fieldvalue sof
-      field "signorder" $ unSignOrder $ signatorysignorder signatorydetails
-      field "allowRemindForm" $ isEligibleForReminder muser document siglnk            
-      field "linkremind" $ show (LinkRemind document siglnk)
-      field "linkchangeemail" $  show $ LinkChangeSignatoryEmail (documentid document) signatorylinkid
       field "undeliveredEmail" $ (invitationdeliverystatus == Undelivered)
-      field "allowEmailChange" $ (isCurrentUserAuthor && (invitationdeliverystatus == Undelivered) && (not isActiveDoc))
-      field "signdate" $ showDateOnly <$> signtime <$> maybesigninfo
+      field "signdate" $ dateformatter <$> signtime <$> maybesigninfo
       field "datamismatch" datamismatch
-      field "seendate" $ showDateOnly <$> signtime <$> maybeseeninfo
-      field "readdate" $ showDateOnly <$> maybereadinvite siglnk
-      field "reminderMessage" $ mailDocumentRemindContent ctxtemplates Nothing ctx document siglnk author 
-      field "role" $ if isSignatory siglnk
-                     then "signatory"
-                     else "viewer"
-      field "secretary"  $ (isAuthor document siglnk) &&  not (isSignatory siglnk)              
-      field "author" $ (isAuthor document siglnk)
+      field "seendate" $ dateformatter <$> signtime <$> maybeseeninfo
+      field "readdate" $ dateformatter <$> maybereadinvite
       field "rejecteddate" rejectedDate
 
 packToMString :: BS.ByteString -> Maybe String
@@ -905,6 +919,7 @@ secretarySignatoryLink author doc =
             , maybesignatory = Just $ userid author
             , maybesigninfo = Nothing
             , maybeseeninfo = Nothing
+            , maybereadinvite = Nothing
             , invitationdeliverystatus = Unknown
             , signatorysignatureinfo  = Nothing
             , signatoryroles  = []
