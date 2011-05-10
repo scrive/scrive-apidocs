@@ -7,6 +7,7 @@ module User.UserState
     , InviteInfo(..)
     , LoginInfo(..)
     , DefaultMainSignatory(..)
+    , SignupMethod(..)
     , ExternalUserID(..)
     , Password(..)
     , TrustWeaverStorage(..)
@@ -27,6 +28,7 @@ module User.UserState
 
     , AcceptTermsOfService(..)
     , SetFreeTrialExpirationDate(..)
+    , SetSignupMethod(..)
     , AddUser(..)
     , ExportUsersDetailsToCSV(..)
     , GetAllUsers(..)
@@ -86,6 +88,9 @@ newtype UserID = UserID { unUserID :: Int }
     deriving (Eq, Ord, Typeable)
 
 deriving instance Data UserID
+
+data SignupMethod = AccountRequest | ViralInvitation | BySigning
+    deriving (Eq, Ord, Show, Typeable)
 
 newtype ExternalUserID = ExternalUserID { unExternalUserID :: BS.ByteString }
     deriving (Eq, Ord, Typeable)
@@ -190,7 +195,7 @@ data UserSettings  = UserSettings {
 
 data DesignMode = BasicMode | AdvancedMode
     deriving (Eq, Ord, Typeable)
-      
+
 data User = User
           { userid                        :: UserID
           , userpassword                  :: Password
@@ -198,6 +203,7 @@ data User = User
           , useraccountsuspended          :: Bool
           , userhasacceptedtermsofservice :: Maybe MinutesTime
           , userfreetrialexpirationdate   :: Maybe MinutesTime
+          , usersignupmethod              :: SignupMethod
           , userinfo                      :: UserInfo
           , usersettings                  :: UserSettings
           , userpaymentpolicy             :: Payments.UserPaymentPolicy
@@ -494,6 +500,7 @@ instance Migrate User12 User where
                 , useraccountsuspended           = useraccountsuspended12
                 , userhasacceptedtermsofservice  = userhasacceptedtermsofservice12
                 , userfreetrialexpirationdate    = Just freetrialexpirationdate
+                , usersignupmethod               = AccountRequest
                 , userinfo                       = userinfo12
                 , usersettings                   = usersettings12
                 , userpaymentpolicy              = Payments.initialPaymentPolicy
@@ -596,6 +603,8 @@ instance Version User12 where
 
 instance Version User where
     mode = extension 13 (Proxy :: Proxy User12)
+
+instance Version SignupMethod
 
 instance Version TrustWeaverStorage
 
@@ -750,6 +759,7 @@ addUser (fstname, sndname) email passwd maybesupervisor = do
                  , useraccountsuspended    =  False  
                  , userhasacceptedtermsofservice = Nothing
                  , userfreetrialexpirationdate = Nothing
+                 , usersignupmethod = AccountRequest
                  , userinfo = UserInfo {
                                     userfstname = fstname
                                   , usersndname = sndname
@@ -943,6 +953,11 @@ setFreeTrialExpirationDate userid date =
     modifyUser userid $ \user -> 
         Right $ user { userfreetrialexpirationdate = date }
 
+setSignupMethod :: UserID -> SignupMethod -> Update Users (Either String User)
+setSignupMethod userid signupmethod = 
+    modifyUser userid $ \user -> 
+        Right $ user { usersignupmethod = signupmethod }
+
 addFreePaymentsForInviter ::MinutesTime -> User -> Update Users ()
 addFreePaymentsForInviter now u = do
                            case (fmap userinviter $ userinviteinfo u) of
@@ -1010,6 +1025,7 @@ $(mkMethods ''Users [ 'getUserByUserID
                     , 'getUserFriends
                     , 'acceptTermsOfService
                     , 'setFreeTrialExpirationDate
+                    , 'setSignupMethod
                     , 'exportUsersDetailsToCSV
                     , 'addViewerByEmail
                       -- the below should be only used carefully and by admins
@@ -1024,6 +1040,7 @@ $(deriveSerializeFor [ ''User
                      , ''User9
                      , ''User8
 
+                     , ''SignupMethod
                      , ''TrustWeaverStorage
                      , ''UserAccountType
                      , ''UserAccountType0
