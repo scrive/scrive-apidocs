@@ -22,6 +22,7 @@ import Doc.DocState
 import Doc.DocStateUtils
 import Doc.DocView
 import ELegitimation.ELeg
+import FlashMessage
 import Happstack.Server
 import Happstack.State
 import Kontra

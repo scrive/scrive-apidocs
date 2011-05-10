@@ -10,6 +10,7 @@ module User.UserState
     , ExternalUserID(..)
     , FlashType(..)
     , FlashMessage(..)
+    , Password(..)
     , TrustWeaverStorage(..)
     , UserAccountType(..)
     , PaymentMethod(..)
@@ -22,7 +23,6 @@ module User.UserState
     , UserID(..)
     , Users
     , UserStats(..)
-    , toFlashMsg
     , composeFullName
     , userfullname
     , isAbleToHaveSubaccounts
@@ -110,19 +110,9 @@ data LoginInfo = LoginInfo
     deriving (Eq, Ord, Typeable)
 newtype DefaultMainSignatory = DefaultMainSignatory { unDMS :: Int }
     deriving (Eq, Ord, Typeable)
-newtype FlashMessage0 = FlashMessage0 BS.ByteString
-    deriving (Eq, Ord, Typeable)
-newtype FlashMessage = FlashMessage { unFlashMessage :: (FlashType, String) }
-    deriving (Eq, Ord, Typeable)
 newtype Email = Email { unEmail :: BS.ByteString }
     deriving (Eq, Ord, Typeable)
 newtype SupervisorID = SupervisorID { unSupervisorID :: Int }
-    deriving (Eq, Ord, Typeable)
-data FlashType
-        = SigningRelated
-        | OperationDone
-        | OperationFailed
-        | Modal
     deriving (Eq, Ord, Typeable)
 data TrustWeaverStorage = TrustWeaverStorage
           { storagetwenabled       :: Bool
@@ -310,7 +300,6 @@ data UserStats = UserStats
 
 deriving instance Data UserStats
 
-deriving instance Show FlashType
 deriving instance Show TrustWeaverStorage
 deriving instance Show UserAccountType 
 deriving instance Show PaymentMethod
@@ -321,6 +310,7 @@ deriving instance Show DesignMode
 deriving instance Show User
 deriving instance Show Email
 deriving instance Show FlashMessage
+deriving instance Show Password
 deriving instance Show Friend
 deriving instance Show Inviter
 deriving instance Show InviteInfo
@@ -329,8 +319,6 @@ deriving instance Show LoginInfo
 deriving instance Show DefaultMainSignatory
 deriving instance Show UserStats
 
-deriving instance Read FlashType
-deriving instance Read FlashMessage
 deriving instance Read TrustWeaverStorage
 
 deriving instance Bounded UserAccountType
@@ -344,10 +332,6 @@ deriving instance Read PaymentMethod
 deriving instance Bounded UserAccountPlan
 deriving instance Enum UserAccountPlan
 deriving instance Read UserAccountPlan
-
-instance Migrate FlashMessage0 FlashMessage where
-    migrate (FlashMessage0 msg) =
-        toFlashMsg SigningRelated $ BS.toString msg
 
 instance Migrate UserAccountType0 UserAccountType where
     migrate _ = PrivateAccount
@@ -525,9 +509,6 @@ instance Migrate User12 User where
                         fromMaybe firstjuly (max firstjuly . fst <$> temppaymentchange)
                     firstjuly = fromJust $ parseMinutesTimeMDY "01-06-2011"
 
-toFlashMsg :: FlashType -> String -> FlashMessage
-toFlashMsg type_ msg = FlashMessage (type_, msg)
-
 composeFullName :: (BS.ByteString, BS.ByteString) -> BS.ByteString
 composeFullName (fstname, sndname) =
     if BS.null sndname
@@ -634,13 +615,6 @@ instance Version UserSettings where
     mode = extension 1 (Proxy :: Proxy UserSettings0)
 
 instance Version DesignMode
-
-instance Version FlashType
-
-instance Version FlashMessage0
-
-instance Version FlashMessage where
-    mode = extension 1 (Proxy :: Proxy FlashMessage0)
 
 instance Version Email
 
@@ -1043,7 +1017,6 @@ $(deriveSerializeFor [ ''User
                      , ''UserAccountType0
                      , ''PaymentMethod
                      , ''UserInfo0
-                     , ''FlashMessage0
                      , ''UserStats
                      , ''Email
                      , ''InviteType
@@ -1059,8 +1032,6 @@ $(deriveSerializeFor [ ''User
                      , ''Inviter
                      , ''DefaultMainSignatory
                      , ''UserAccountPlan
-                     , ''FlashMessage
-                     , ''FlashType
                      ])
 
 instance Component Users where
