@@ -123,7 +123,7 @@ initDatabaseEntries = do
       maybeuser <- query $ Kontra.GetUserByEmail email
       case maybeuser of
           Nothing -> do
-              update $ Kontra.AddUser (BS.empty, BS.empty) (Kontra.unEmail email) passwdhash Nothing
+              update $ Kontra.AddUser (BS.empty, BS.empty) (Kontra.unEmail email) passwdhash Nothing Nothing
               return ()
           Just _ -> return () -- user exist, do not add it
   

@@ -192,6 +192,7 @@ newDocument user title documenttype ctime = do
           , documentsharing = Private
           , documentrejectioninfo = Nothing
           , documenttags = []
+          , documentservice = userservice user
           } `appendHistory` [DocumentHistoryCreated ctime]
 
   insertNewDocument doc
