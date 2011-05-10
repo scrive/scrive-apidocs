@@ -248,7 +248,11 @@ adminuser=
 		</tr>
 		<tr> <td>Free trial expiration date:</td>
                   <td>
-                     $user.uavfreetrialexpirationdate$
+                     <span>
+                      <input type="checkbox" value="$if(user.uavfreetrialexpirationdate)$on$else$off$endif$" autocomplete="off" oldlocation="#hiddenttimestuffbox" location="#freetrialexpirationdatecontainer" rel="#freetrialexpirationdatebox" class="addremovecheckbox" />
+                      <span id="freetrialexpirationdatecontainer">
+                      </span>
+                    </span>
                   </td>
                 </tr>
 		<tr> <td>Free signatures left:</td>
@@ -403,6 +407,10 @@ adminuser=
       <span id="daystosignbox">
         <a class="datetodate date" rel="[name='tmppaymentchangeenddate']"> </a>
         <input type="hidden" autocomplete="off" name="tmppaymentchangeenddate" value="$user.uavtmppaymentchangeenddate$" />
+      </span>
+      <span id="freetrialexpirationdatebox">
+        <a class="datetodate date" rel="[name='freetrialexpirationdate']"> </a>
+        <input type="hidden" autocomplete="off" name="freetrialexpirationdate" value="$user.uavfreetrialexpirationdate$" />
       </span>
     </div>
 ####
