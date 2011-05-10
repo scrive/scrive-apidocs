@@ -62,6 +62,8 @@ import Data.Data
 import qualified GHC.Conc
 import qualified Codec.Binary.Url as URL
 
+foreign import ccall unsafe "htonl" htonl :: Word32 -> Word32
+
 selectFormAction :: (HasRqData m, MonadIO m,MonadPlus m,ServerMonad m) => [(String,m a)] -> m a
 selectFormAction [] = mzero
 selectFormAction ((button,action):rest) = do

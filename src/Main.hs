@@ -49,6 +49,7 @@ import Mails.MailsConfig
 import Mails.SendMail
 import Templates.Templates (readTemplates, getTemplatesModTime)
 import Kontra
+import Misc
 import qualified TrustWeaver as TW
 import qualified MemCache
 
@@ -192,7 +193,7 @@ main = Log.withLogger $ do
                   Exception.bracket 
                            (do
                               let (iface,port) = httpBindAddress appConf
-                              socket <- listenOn iface (fromIntegral port)
+                              socket <- listenOn (htonl iface) (fromIntegral port)
                               t1 <- forkIO $ simpleHTTPWithSocket socket (nullConf { port = fromIntegral port }) 
                                     (appHandler appConf appGlobals)
                               let scheddata = SchedulerData appConf mailer' templates
@@ -222,7 +223,7 @@ storage url "https://twa-test-db.trustweaver.com/ta_hubservices/Storage/StorageS
 -}
 defaultConf :: String -> AppConf
 defaultConf progName
-    = AppConf { httpBindAddress    = (0x0100007f, 8000)
+    = AppConf { httpBindAddress    = (0x7f000001, 8000)
               , hostpart           = "http://localhost:8000"
               , store              = "_local/" ++ progName ++ "_state"
               , docstore           = "_local/documents"
