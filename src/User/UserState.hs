@@ -10,7 +10,6 @@ module User.UserState
     , ExternalUserID(..)
     , FlashType(..)
     , FlashMessage(..)
-    , Password(..)
     , TrustWeaverStorage(..)
     , UserAccountType(..)
     , PaymentMethod(..)
@@ -26,8 +25,6 @@ module User.UserState
     , toFlashMsg
     , composeFullName
     , userfullname
-    , createPassword
-    , verifyPassword
     , isAbleToHaveSubaccounts
 
     , AcceptTermsOfService(..)
@@ -81,6 +78,7 @@ import Control.Applicative
 import MinutesTime
 import qualified Payments.PaymentsState as Payments
 import Data.Data
+import User.Password
 
 newtype UserID = UserID { unUserID :: Int }
     deriving (Eq, Ord, Typeable)
@@ -117,8 +115,6 @@ newtype FlashMessage0 = FlashMessage0 BS.ByteString
 newtype FlashMessage = FlashMessage { unFlashMessage :: (FlashType, String) }
     deriving (Eq, Ord, Typeable)
 newtype Email = Email { unEmail :: BS.ByteString }
-    deriving (Eq, Ord, Typeable)
-data Password = Password [Octet] [Octet] | NoPassword
     deriving (Eq, Ord, Typeable)
 newtype SupervisorID = SupervisorID { unSupervisorID :: Int }
     deriving (Eq, Ord, Typeable)
@@ -303,7 +299,6 @@ deriving instance Show DesignMode
 deriving instance Show User
 deriving instance Show Email
 deriving instance Show FlashMessage
-deriving instance Show Password
 deriving instance Show Friend
 deriving instance Show Inviter
 deriving instance Show InviteInfo
@@ -524,23 +519,6 @@ instance Migrate UserSettings0 UserSettings where
 isAbleToHaveSubaccounts :: User -> Bool
 isAbleToHaveSubaccounts user = isNothing $ usersupervisor user
 
-createPassword :: BS.ByteString -> IO Password
-createPassword password = do
-  salt <- makeSalt
-  return $ Password salt (hashPassword password salt)
-  
-randomOctets :: Int -> IO [Octet]
-randomOctets n = do
-  randomGen <- newStdGen
-  return $ take n $ map fromIntegral (randoms randomGen :: [Int])
-
-makeSalt :: IO [Octet]
-makeSalt = randomOctets 10
-
-hashPassword :: BS.ByteString -> [Octet] -> [Octet]
-hashPassword password salt =
-  hash (salt ++ (BS.unpack password))
-
 type Users = IxSet User
 
 instance Indexable User where
@@ -594,8 +572,6 @@ instance Version FlashMessage where
     mode = extension 1 (Proxy :: Proxy FlashMessage0)
 
 instance Version Email
-
-instance Version Password
 
 instance Version UserID
 
@@ -818,12 +794,7 @@ getAllUsers = do
 setUserPassword :: User -> Password -> Update Users ()
 setUserPassword user@User{userid} newpassword = do
   modify (updateIx userid (user { userpassword = newpassword })) 
-  return ()
-  
-verifyPassword :: Password -> BS.ByteString -> Bool
-verifyPassword (Password salt hash1) password = hash1 == (hashPassword password salt)
-verifyPassword _ _ = False        
-                               
+  return ()                             
 
 setInviteInfo :: Maybe User -> MinutesTime -> InviteType -> UserID -> Update Users ()
 setInviteInfo minviter invitetime' invitetype' uid = do
@@ -1007,7 +978,6 @@ $(deriveSerializeFor [ ''User
                      , ''DesignMode
                      , ''UserInfo
                      , ''SupervisorID
-                     , ''Password
                      , ''UserID
                      , ''Inviter
                      , ''DefaultMainSignatory

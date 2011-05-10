@@ -80,6 +80,7 @@ import API.API
 import Routing
 import API.Service.ServiceState
 import Doc.DocView
+
 {- | 
   Definition of integration API
 -}
@@ -95,8 +96,8 @@ instance APIContext IntegrationAPIContext where
         mbody <- apiBody 
         case (mservice, mbody)  of
              (Just service, Right body) -> return $ Right $ IntegrationAPIContext {ibody=body,service=service}
-             (Nothing,_) -> return $ Left $ "Bad service/password"
-             (_,Left s) -> return $ Left $ "Parsing error: " ++ s 
+             (Nothing,_) -> return $ Left $ (API_ERROR_LOGIN ,"Bad service/password")
+             (_,Left s) -> return $ Left $ (API_ERROR_PARSING,"Parsing error: " ++ s) 
     
 
 
@@ -115,14 +116,14 @@ integrationService = do
          
 integrationAPI :: Kontra Response
 integrationAPI =  dir "integration" $ msum [
-                      apiCall "embed_document_frame" loginUser
-                    , apiCall "update_user"  loginUser
-                    , apiCall "get_user"  loginUser
-                    , apiCall "new_document" loginUser
-                    , apiCall "documents" userDocuments  
-                    , apiCall "document" loginUser
-                    , apiCall "set_tag"  loginUser
-                    , apiCall "archive" loginUser
+                      apiCall "embed_document_frame" embeddDocumentFrame
+                    , apiCall "update_user"  updateUser
+                    , apiCall "get_user"  getUser
+                    , apiCall "new_document" createDocument
+                    , apiCall "documents" getDocuments  
+                    , apiCall "document" getDocument
+                    , apiCall "set_tag"  setDocumentTag
+                    , apiCall "archive" archiveDocument
                     , apiUnknownCall
                     , dir "connect" $ hGet $ connectSession
                   ]
@@ -130,17 +131,17 @@ integrationAPI =  dir "integration" $ msum [
 getRequestUser:: IntegrationAPIFunction User
 getRequestUser = do
     memail <- apiAskBS "email"
-    when (isNothing memail) $ throwApiError "No user email provided"
+    when (isNothing memail) $ throwApiError API_ERROR_MISSING_VALUE "No user email provided"
     muser <- query $ GetUserByEmail $ Email $ fromJust memail
-    when (isNothing muser) $ throwApiError "No user"
+    when (isNothing muser) $ throwApiError API_ERROR_NO_USER "No user"
     let user = fromJust muser
     --srv <-  service <$> ask
     --when (not $ elem (userid $ user) $ serviceusers srv) $ throwApiError "User has not accepted this service"
     return user
 
 
-loginUser :: IntegrationAPIFunction APIResponse
-loginUser = do
+embeddDocumentFrame :: IntegrationAPIFunction APIResponse
+embeddDocumentFrame = do
     user <- getRequestUser 
     srv <-  service <$> ask
     location <- fromMaybe "" <$> apiAskString "location"
@@ -155,12 +156,29 @@ loginUser = do
     return $ toJSObject [("link",JSString $ toJSString $ (ctxhostpart ctx) ++ show (LinkConnectUserSession (serviceid srv) (userid user) sid rlink))]
     
 
-userDocuments :: IntegrationAPIFunction APIResponse
-userDocuments = do
+
+
+updateUser  :: IntegrationAPIFunction APIResponse
+updateUser = undefined
+
+getUser  :: IntegrationAPIFunction APIResponse
+getUser = undefined
+
+createDocument  :: IntegrationAPIFunction APIResponse
+createDocument = undefined
+
+
+getDocuments :: IntegrationAPIFunction APIResponse
+getDocuments = do
     user <- getRequestUser 
     documents <- query $ GetDocumentsByUser user
     let contracts  = filter (not . isTemplate) $  filter isContract documents
     return $ toJSObject [("documents",JSArray $ map (JSObject .documentAPIObject) contracts )]
+
+
+getDocument  :: IntegrationAPIFunction APIResponse
+getDocument = undefined
+
 
 documentAPIObject :: Document -> JSObject JSValue
 documentAPIObject doc = 
@@ -169,12 +187,23 @@ documentAPIObject doc =
         ("title", JSString $ toJSString $ BS.toString $ documenttitle doc)
         ]
     
-connectSession :: ServiceID -> UserID -> SessionId -> Kontra  KontraLink
+
+
+setDocumentTag  :: IntegrationAPIFunction APIResponse
+setDocumentTag = undefined
+
+archiveDocument  :: IntegrationAPIFunction APIResponse
+archiveDocument = undefined
+
+{- | Call connect user to session (all passed as URL params)
+     and redirect user to referer
+-}     
+connectSession :: ServiceID -> UserID -> SessionId -> Kontra KontraLink
 connectSession sid uid ssid = do
     loaded <- loadServiceSession sid uid ssid
     if (loaded) 
-     then liftIO (putStrLn "logged") >> (return $ BackToReferer)
-     else liftIO (putStrLn "NOT logged") >> return LinkAbout
-
+     then return $ BackToReferer
+     else mzero
+    
 
                       

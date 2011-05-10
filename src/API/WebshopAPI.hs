@@ -83,6 +83,7 @@ import Control.Monad.Error
 import API.API
 import Routing
 import Doc.DocView
+
 {- | 
   Defining API schema
 -}
@@ -98,8 +99,8 @@ instance APIContext WebshopAPIContext where
         mbody <- apiBody 
         case (muser, mbody)  of
              (Just user, Right body) -> return $ Right $ WebshopAPIContext {wsbody=body,user=user}
-             (Nothing,_) -> return $ Left $ "Not logged in"
-             (_,Left s) -> return $ Left $ "Parsing error: " ++ s 
+             (Nothing,_) -> return $ Left $ (API_ERROR_LOGIN ,"Not logged in")
+             (_,Left s) -> return $ Left $ (API_ERROR_PARSING, "Parsing error: " ++ s)
     
 
 
@@ -145,7 +146,7 @@ newFromTemplate = do
     msenddoc <- update $ AuthorSendDocument (documentid signable) (ctxtime ctx) (ctxipnumber ctx) author Nothing
     case msenddoc of
          Right senddoc -> return $ toJSObject [("links", JSArray $ map (JSString . toJSString) $ documentLinks senddoc)]
-         Left s -> throwApiError $ "Webshop can't send a document: " ++  s
+         Left s -> throwApiError API_ERROR_OTHER $ "Webshop can't send a document: " ++  s
 
 documentLinks::Document -> [String]
 documentLinks doc = 
@@ -159,7 +160,7 @@ fillTemplate doc (authorTMP:sigsTMP) = do
     author' <- sequence $ fmap (fillSignatory authorTMP) author 
     sigs' <- sequence $ zipWith fillSignatory sigsTMP  sigs 
     return $ docWithAuthor {documentsignatorylinks = author' ++ sigs'}
-fillTemplate doc [] = throwError "No signatory provided"
+fillTemplate doc [] = throwApiError API_ERROR_OTHER "No signatory provided"
     
 fillAuthor::SignatoryTMP  -> Document-> WebshopAPIFunction Document
 fillAuthor aTMP doc= 
@@ -184,13 +185,13 @@ fillFields [] _ = []
 getTemplate::WebshopAPIFunction Document
 getTemplate = do
     mtemplateid <- maybeReadM $ apiAskString "id"
-    when (isNothing mtemplateid) $ throwApiError "No valid document ID provided"
+    when (isNothing mtemplateid) $ throwApiError API_ERROR_MISSING_VALUE "No valid document ID provided"
     mdoc <- query $ GetDocumentByDocumentID(fromJust mtemplateid)
-    when (isNothing mdoc) $ throwApiError "No document exist with this ID"
+    when (isNothing mdoc) $ throwApiError API_ERROR_NO_DOCUMENT "No document exist with this ID"
     let doc = fromJust mdoc
-    when (not $ isTemplate doc) $ throwApiError "This document is not a template"
+    when (not $ isTemplate doc) $ throwApiError API_ERROR_OTHER "This document is not a template"
     user <- user <$> ask
-    when (not $ isAuthor doc user) $ throwApiError "Current user is not an author of a document" 
+    when (not $ isAuthor doc user) $ throwApiError API_ERROR_PERMISSION_ACTION "Current user is not an author of a document" 
     return doc
     
 getSignatories::WebshopAPIFunction [SignatoryTMP]
@@ -220,11 +221,11 @@ checkIfReadyToSend doc = do
     let siglinks = documentsignatorylinks doc
     liftIO $ putStrLn $ show siglinks
     let nosignatories = null $ filter (not . isAuthor doc) siglinks
-    when nosignatories $ throwApiError "At least one nonauthor signatory must be set"
+    when nosignatories $ throwApiError  API_ERROR_OTHER "At least one nonauthor signatory must be set"
     let bademail = any (not . isGood . asValidEmail . BS.toString . signatoryemail . signatorydetails ) siglinks
-    when bademail $ throwApiError "One of signatories has a bad email"
+    when bademail $ throwApiError  API_ERROR_OTHER "One of signatories has a bad email"
     let nofstname = any (BS.null . signatoryfstname . signatorydetails ) siglinks
-    when nofstname $ throwApiError "One of signatories has empty first name"
+    when nofstname $ throwApiError  API_ERROR_OTHER "One of signatories has empty first name"
     let nosndname = any (BS.null . signatorysndname . signatorydetails ) siglinks
-    when nosndname $ throwApiError "One of signatories has empty last name"
+    when nosndname $ throwApiError  API_ERROR_OTHER "One of signatories has empty last name"
     
