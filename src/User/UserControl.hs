@@ -288,7 +288,7 @@ randomPassword =
 createUser :: Context -> String -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe User -> Bool -> IO (Maybe User)
 createUser ctx hostpart names email maybesupervisor vip = do
     passwdhash <- createPassword =<< randomPassword
-    muser <- update $ AddUser names email passwdhash (userid <$> maybesupervisor)
+    muser <- update $ AddUser names email passwdhash (userid <$> maybesupervisor) Nothing
     case muser of
          Just user -> do
              let fullname = composeFullName names
@@ -332,7 +332,7 @@ createInvitedUser :: (BS.ByteString, BS.ByteString) -> BS.ByteString -> IO (Mayb
 createInvitedUser names email = do
     password <- randomPassword
     passwdhash <- createPassword password
-    update $ AddUser names email passwdhash Nothing
+    update $ AddUser names email passwdhash Nothing Nothing
 
 {- |
    Guard against a POST with no logged in user.

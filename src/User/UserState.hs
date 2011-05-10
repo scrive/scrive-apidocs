@@ -745,8 +745,9 @@ addUser :: (BS.ByteString, BS.ByteString)
         -> BS.ByteString 
         -> Password
         -> Maybe UserID
+        -> Maybe ServiceID
         -> Update Users (Maybe User)
-addUser (fstname, sndname) email passwd maybesupervisor = do
+addUser (fstname, sndname) email passwd maybesupervisor mservice = do
   users <- get
   if (IxSet.size (users @= Email email) /= 0)
    then return Nothing  -- "user with same email address exists"
@@ -791,7 +792,7 @@ addUser (fstname, sndname) email passwd maybesupervisor = do
                                 , lastfailtime = Nothing
                                 , consecutivefails = 0
                                 }
-              , userservice = Nothing
+              , userservice = mservice
               , userterminated = False
                  }
         modify (updateIx (Email email) user)
