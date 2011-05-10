@@ -97,7 +97,7 @@ $loadingdialog()$
 				  </span> 
 				  $endif$
 				</td>
-				<td><a href="$document.doclink$">$document.signatories:{sig | $sig.name$}; separator=", "$</a></td>
+				<td><a href="#" class="listSignatoryExpand">$document.signatories:{sig | $sig.name$}; separator=", "$</a></td>
 				<td>
 				  <a href="$document.doclink$" class="listname">$document.documenttitle$</a>
 				  $if(document.davelink)$ 
@@ -108,6 +108,30 @@ $loadingdialog()$
 				  <!-- <em>▼</em> -->
 				</td>
 			  </tr>
+                          $document.signatories:{signatory | $if(!signatory.secretary)$
+                          <tr class="$if(document.odd)$odd$endif$ $if(document.isviewer)$viewer$endif$ signatorydetail" style="display:none;">
+                            <td></td>
+                            <td>
+                              <div src="/" class="icon status $signatory.status$ tooltip" rel="#tooltip-$signatory.status$" style="margin-left:5px;"></div>
+                            </td>
+                            <td>
+                              <div style="margin-left:10px;">
+                              $if(signatory.signdate)$
+                                $signatory.signdate$
+                              $elseif(signatory.rejecteddate)$
+                                $signatory.rejecteddate$
+                              $elseif(signatory.seendate)$        
+                                $signatory.seendate$
+                              $elseif(signatory.readdate)$
+                                $signatory.readdate$
+                              $endif$
+                              </div>
+                            </td>
+                            <td><div style="margin-left:10px;">$signatory.name$</div></td>
+                            <td></td>
+                            <td></td>
+                          </tr>
+                          $endif$ }$
 			  }$
 			</tbody>
   		  </table>
@@ -144,6 +168,9 @@ $loadingdialog()$
     </div>
     <div id="tooltip-reviewed" class="hidden">
       <div class="icon status reviewed"></div><p>Status: Granskat online</p>
+    </div>
+    <div id="tooltip-read" class="hidden">
+      <div class="icon status read"></div><p>Status: Läst e-post</p>
     </div>
     <div id="tooltip-opened" class="hidden">
       <div class="icon status opened"></div><p>Status: Granskat online</p>
