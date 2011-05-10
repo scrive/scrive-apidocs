@@ -28,7 +28,7 @@ import Happstack.Data
 import Happstack.Data.IxSet
 import qualified Happstack.Data.IxSet as IxSet
 import Happstack.State 
-import User.UserState (UserID(..),FlashMessage,GetUserByUserID(GetUserByUserID), User, PaymentMethod(..))
+import User.UserState (UserID(..),GetUserByUserID(GetUserByUserID), User, PaymentMethod(..))
 import Doc.DocState
 import MinutesTime
 import Happstack.Server

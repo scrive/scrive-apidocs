@@ -47,6 +47,7 @@ import qualified Data.ByteString.Lazy  as L
 import KontraLink
 import Payments.PaymentsControl(readMoneyField,getPaymentChangeChange)
 import MinutesTime
+import FlashMessage
 import System.Directory
 import Data.List (isPrefixOf,sort, foldl')
 import User.UserControl

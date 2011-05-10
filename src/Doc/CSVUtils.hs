@@ -19,9 +19,10 @@ import Data.List
 
 import Doc.DocStateData
 import Doc.DocStateUtils
+import FlashMessage
 import InputValidation
 import Kontra
-import Templates.Templates 
+import Templates.Templates
 
 
 data CSVProblem = CSVProblem 

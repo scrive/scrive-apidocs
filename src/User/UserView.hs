@@ -77,6 +77,7 @@ import Text.StringTemplate.GenericStandard()
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import ListUtil
+import FlashMessage
 
 showUser :: KontrakcjaTemplates -> User -> IO String 
 showUser templates user = renderTemplate templates "showUser" $ do

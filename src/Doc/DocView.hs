@@ -84,6 +84,7 @@ import Templates.TemplatesUtils
 import User.UserView (prettyName)
 import ListUtil
 import Control.Monad.Reader
+import FlashMessage
 
 modalSignAwaitingAuthorLast :: KontraModal
 modalSignAwaitingAuthorLast = do

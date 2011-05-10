@@ -19,6 +19,7 @@ import User.UserState
 import Payments.PaymentsState
 import Mails.MailsUtil
 import KontraLink
+import FlashMessage
 import qualified Data.ByteString.UTF8 as BS
 
 --Complex types, usualy big that should be derived automatically

@@ -19,6 +19,7 @@ import Kontra
 import HSP (cdata)
 import Contacts.ContactsView
 import KontraLink
+import FlashMessage
 
 
 showContacts ::Kontra Response

@@ -12,8 +12,6 @@ module Session
     , getELegTransactions
     , getSessionXToken
     
-    -- | Cookies related stuff
-    , addHttpOnlyCookie
     -- | Functions usefull when we do remember passwords emails
     --, createLongTermSession
     , findSession
@@ -33,11 +31,8 @@ import Data.Functor
 import Data.Maybe (isNothing,isJust, fromJust)
 import Happstack.Data.IxSet
 import qualified Happstack.Data.IxSet as IxSet
-import qualified Happstack.Server.Internal.Cookie as HSI
-import qualified Happstack.Server.Internal.Monads as HSI
-import Happstack.Server.Types (addHeader)
 import Happstack.State
-import User.UserState (UserID,FlashMessage,GetUserByUserID(GetUserByUserID), User)
+import User.UserState (UserID,GetUserByUserID(GetUserByUserID), User)
 import MinutesTime
 import Happstack.Server (RqData, ServerMonad, FilterMonad, Response, mkCookie, readCookieValue, withDataFn, ServerPartT, HasRqData, CookieLife(MaxAge), FromReqURI(..))
 import System.Random
@@ -46,6 +41,8 @@ import Misc (MagicHash(MagicHash), mkTypeOf, isSecure, isHTTPS)
 import ELegitimation.ELeg
 import Data.Typeable
 import API.Service.ServiceState
+import Cookies
+import FlashMessage
 
 -- | Session ID is a wrapped 'Integer' really
 newtype SessionId = SessionId Integer
@@ -351,28 +348,6 @@ instance Read (SessionCookieInfo) where
         sid' <- readM sid  --if need to understand that just read about list monad
         sh' <- readM (drop 1 sh)  
         return $ (SessionCookieInfo {cookieSessionId = sid', cookieSessionHash=sh'},"")
-
--- | Add a non-http only cookie
-addCookie :: (MonadIO m, HSI.FilterMonad Response m) => Bool -> HSI.CookieLife -> HSI.Cookie -> m ()
-addCookie issecure life cookie = do
-    l <- liftIO $ HSI.calcLife life
-    let secure = if issecure
-                    then ";Secure"
-                    else ""
-    addHeaderM "Set-Cookie" $ HSI.mkCookieHeader l cookie ++ secure
-    where
-        addHeaderM a v = HSI.composeFilter $ \res -> addHeader a v res
-
--- | Ripped from Happstack-Server and modified to support HttpOnly cookies
-addHttpOnlyCookie :: (MonadIO m, HSI.FilterMonad Response m) => Bool -> HSI.CookieLife -> HSI.Cookie -> m ()
-addHttpOnlyCookie issecure life cookie = do
-    l <- liftIO $ HSI.calcLife life
-    let secure = if issecure
-                    then ";Secure"
-                    else ""
-    (addHeaderM "Set-Cookie") $ HSI.mkCookieHeader l cookie ++ ";HttpOnly" ++ secure
-    where
-        addHeaderM a v = HSI.composeFilter $ \res-> addHeader a v res
 
 -- | Extract cookie from session.
 cookieInfoFromSession :: Session -> SessionCookieInfo
