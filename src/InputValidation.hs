@@ -64,6 +64,7 @@ import Kontra
 import AppLogger as Log (security)
 import Misc hiding (getFields)
 import Templates.Templates
+import FlashMessage
 
 {- |
     If there's a problem this will create the appropriate FlashMessage.

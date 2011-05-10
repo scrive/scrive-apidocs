@@ -56,6 +56,7 @@ import ELegitimation.ELeg
 import Mails.SendMail
 import qualified MemCache
 import API.Service.ServiceState
+import FlashMessage
 
 
 #if MIN_VERSION_happstack_server(0,5,1)

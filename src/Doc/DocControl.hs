@@ -61,6 +61,7 @@ import System.IO.Temp
 import qualified MemCache
 import Data.Char
 import Data.Map ((!))
+import FlashMessage
 import InputValidation
 import ListUtil
 import Redirect

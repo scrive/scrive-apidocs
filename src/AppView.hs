@@ -40,6 +40,7 @@ import Data.List
 import ListUtil
 import Data.Functor
 import API.Service.ServiceState
+import FlashMessage
 
 {- |
    Defines the different sorts of things we can have at the top of the page
