@@ -26,6 +26,7 @@ import KontraLink
 import Templates.Templates 
 import Templates.TemplatesUtils 
 import Text.StringTemplate.GenericStandard()
+import Control.Applicative
 import Data.ByteString.UTF8 (toString)
 import Data.List (isPrefixOf, isInfixOf)
 import Data.Char
@@ -203,7 +204,7 @@ data UserAdminView = UserAdminView {
                    , uavsigneddocstorage::String
                    , uavuserpaymentmethod::[Option]
                    , uavpaymentaccounttype ::[Option]
-                   , uavfreetrialexpirationdate :: String
+                   , uavfreetrialexpirationdate :: Maybe String
                    , uavpaymentaccountfreesignatures ::String
                    , uavtmppaymentchangeenddate ::Maybe String
                    , uavcustompaymentchange::PaymentChangeView
@@ -241,7 +242,7 @@ userAdminView u =  UserAdminView {
                                                                          (\x -> if (x == (paymentaccounttype $ userpaymentpolicy  u))
                                                                                  then soption show show x
                                                                                  else option show show x)      
-                   , uavfreetrialexpirationdate = show $ userfreetrialexpirationdate u
+                   , uavfreetrialexpirationdate = showDateOnly <$> userfreetrialexpirationdate u
                    , uavpaymentaccountfreesignatures = show $ paymentaccountfreesignatures $ userpaymentaccount u
                    , uavtmppaymentchangeenddate = fmap (showDateOnly .  fst) $ temppaymentchange $ userpaymentpolicy  u
                    , uavtemppaymentchange = fmap (getChangeView .  snd) $ temppaymentchange $ userpaymentpolicy  u

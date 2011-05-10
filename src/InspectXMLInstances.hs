@@ -9,6 +9,7 @@
 -----------------------------------------------------------------------------
 
 module InspectXMLInstances() where
+import API.Service.ServiceState (ServiceID(..))
 import Doc.DocState
 import HSP
 import Kontra
@@ -51,6 +52,8 @@ instance InspectXML Friend where
     inspectXML (Friend x) = inspectXML x
 instance InspectXML Inviter where
     inspectXML (Inviter x) = inspectXML x
+instance InspectXML ServiceID where
+    inspectXML (ServiceID x) = inspectXML x
  
  -- old; should be removed
 instance InspectXML DefaultMainSignatory where
