@@ -83,7 +83,7 @@ import Control.Monad.Error
 type APIResponse = JSObject JSValue
 type APIRequestBody = JSValue
 
-type APIFunction c a = ReaderT c (ErrorT String Kontra') a
+type APIFunction c a = ReaderT c (ErrorT (API_ERROR,String) Kontra') a
 
 apiResponse ::  Kontra APIResponse ->  Kontra Response   
 apiResponse action = action >>= simpleResponse . encode                         
@@ -101,17 +101,17 @@ instance (APIContext c) => APICall (APIFunction c APIResponse) where
     apiCall s action = apiCall s $ do
         mcontext <- apiContext
         case mcontext  of
-             Right apicontext -> fmap (either apiError id) $ runErrorT $ runReaderT action apicontext
-             Left emsg -> return $ apiError emsg
+             Right apicontext -> fmap (either (uncurry apiError) id) $ runErrorT $ runReaderT action apicontext
+             Left emsg -> return $ uncurry apiError emsg
 
 
 class APIContext a where
-    apiContext::Kontra (Either String a)       
+    apiContext::Kontra (Either (API_ERROR,String) a)       
     body:: a -> APIRequestBody
     newBody:: APIRequestBody -> a -> a
         
 apiUnknownCall ::  Kontra Response        
-apiUnknownCall = dir "api" $ apiResponse $  return $ apiError "Bad request"
+apiUnknownCall = dir "api" $ apiResponse $  return $ apiError API_ERROR_UNNOWN_CALL "Bad request"
    
 -- Digging into request params   
 apiAskBS::(APIContext c) => String -> APIFunction c (Maybe BS.ByteString)
@@ -188,10 +188,41 @@ apiBody = do
 --- ERROR Response
 
 -- This is how we represent errors to the user
-apiError::String -> APIResponse
-apiError s = toJSObject [("error", JSString $ toJSString s)]
+apiError::API_ERROR -> String ->  APIResponse
+apiError code message= toJSObject [
+      ("error" , showJSON $ fromEnum code)
+    , ("error_message", showJSON message)
+    ]
 
+instance Error (API_ERROR,String) where
+    strMsg s = (API_ERROR_OTHER,s)
+    
 --This will break the execution and send error message to he user
-throwApiError:: (APIContext c) => String -> APIFunction c a
-throwApiError = throwError 
+throwApiError:: (APIContext c) => API_ERROR -> String -> APIFunction c a
+throwApiError = curry throwError 
 
+
+
+data API_ERROR =   API_ERROR_LOGIN 
+                 | API_ERROR_UNNOWN_CALL 
+                 | API_ERROR_PARSING
+                 | API_ERROR_NO_USER
+                 | API_ERROR_NO_DOCUMENT
+                 | API_ERROR_PERMISSION_ACCESS
+                 | API_ERROR_PERMISSION_ACTION
+                 | API_ERROR_ILLEGAL_VALUE
+                 | API_ERROR_MISSING_VALUE
+                 | API_ERROR_OTHER
+                 
+                 
+instance  Enum API_ERROR where
+    fromEnum API_ERROR_LOGIN = 101
+    fromEnum API_ERROR_UNNOWN_CALL = 102    
+    fromEnum API_ERROR_PARSING = 103
+    fromEnum API_ERROR_NO_USER = 104
+    fromEnum API_ERROR_NO_DOCUMENT = 105
+    fromEnum API_ERROR_PERMISSION_ACCESS = 106
+    fromEnum API_ERROR_PERMISSION_ACTION = 107
+    fromEnum API_ERROR_ILLEGAL_VALUE = 107
+    fromEnum API_ERROR_MISSING_VALUE = 109
+    fromEnum API_ERROR_OTHER = 500

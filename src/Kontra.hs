@@ -2,6 +2,7 @@
 
 module Kontra
     ( module User.UserState
+    ,  module User.Password
     , Context(..)
     , isSuperUser
     , Kontra
@@ -38,6 +39,7 @@ import Misc
 import Session
 import Happstack.State (query,QueryEvent)
 import User.UserState
+import User.Password
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS

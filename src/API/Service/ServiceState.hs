@@ -29,10 +29,9 @@ import Data.Maybe (isNothing)
 import qualified Data.Set as Set
 import Control.Applicative
 import MinutesTime
-import qualified Payments.PaymentsState as Payments
 import Data.Data
-import User.UserState
 import Codec.Binary.Base16 as Base16
+import User.Password
 
 newtype ServiceID = ServiceID { unServiceID :: BS.ByteString }
     deriving (Eq, Ord, Typeable)
@@ -59,13 +58,7 @@ newtype ServiceAdmin = ServiceAdmin { unServiceAdmin :: Int }
 deriving instance Data ServiceAdmin
 instance Version ServiceAdmin
 
-data Service1 = Service1
-          { serviceid1             :: ServiceID
-          , servicepassword1       :: Password
-          , serviceusers1          :: [UserID]
-          }
-            deriving (Eq, Ord, Typeable)
-            
+
 data Service = Service
           { serviceid             :: ServiceID
           , servicepassword       :: Password
@@ -74,22 +67,14 @@ data Service = Service
             deriving (Eq, Ord)            
 
 
-instance Migrate Service1 Service where
-    migrate (Service1
-               {  serviceid1                  
-                , servicepassword1        
-               }) =  Service
-                { serviceid = serviceid1
-                , servicepassword = servicepassword1
-                , serviceadmin = ServiceAdmin 0 -- this should never happend in real database
-                }
-                
+instance Migrate () Service where
+    migrate _ =  error "No migration avaible"
+    
 instance Typeable Service where typeOf _ = mkTypeOf "Service"
 
    
-instance Version Service1 where
 instance Version Service  where
-    mode = extension 1 (Proxy :: Proxy Service1)     
+    mode = extension 1 (Proxy :: Proxy ())     
 
 
 instance Indexable Service where
@@ -148,8 +133,7 @@ $(mkMethods ''Services [
               ])
                     
 $(deriveSerializeFor [ 
-                ''Service1 
-              , ''Service
+                ''Service
               , ''ServiceID
               , ''ServiceAdmin
               ])
