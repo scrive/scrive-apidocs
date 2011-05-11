@@ -1593,6 +1593,17 @@ input.multiFileInput {
     
 }
 
+.signStepsBodyAttachments a
+{
+    display: inline-block;
+    background-position: 2px 2px;
+    background-image: url(images/attachment.gif);
+    background-repeat: no-repeat;
+    padding-left: 23px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
 .signStepsBodyDaysLeftInput
 {
     font-size:11px;

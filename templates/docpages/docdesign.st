@@ -342,16 +342,23 @@ pageDocumentDesign=
                        <option value="2">Trustweaver</option>
                        
                        <option value="3">Option 3</option>
-                     </select>
-                   </p>
+                     </select> 
+                  </p>
                    -->
               </div>
               <div class="signStepsBodyInvation">
                 <small><a rel="#edit-invite-text-dialog" id="editinvitetextlink" href="#" style="padding-top:3px">JUSTERA HÄLSNINGSMEDDELANDE</a></small>
                 <input type="hidden" id="invitetext" name="invitetext" value="$documentinvitetext$" />
               </div>
-        </div>
-        
+              <div class="signStepsBodyAttachments">
+                   <small>
+                     <a rel="#add-attachment-dialog" href="#"
+                        style="padding-top:3px" id="addattachmentlink">BIFOGA BILAGA</a>
+                   </small>
+            </div>
+            
+          </div>
+          
         <div class="border"></div>   
         <div id="signStepsBodyRight" class="step3">      
           <!-- 015 new -->
@@ -913,6 +920,72 @@ pageDocumentForAuthorHelpersLocalDialogs=
       </div>
     </div>
   </form>  
+
+  <div class="modal-container overlay" id="add-attachment-dialog">
+    <div class="modal-header">
+      <span class="modal-icon message"></span>
+      <span class="modal-title">
+        <h2>Välj bilagor</h2>
+      </span>
+      <a class="modal-close close"> </a>
+    </div>
+    <div class="modal-body">
+      <div class="modal-content">     
+        <div class="top">
+          <p>Välj de bilagor du vill bifoga</p>
+        </div>
+        <div class="buttons" style="height: 100px">
+          <div class="left-button" style="text-align:center; width: 120px">
+            <div class="inside-center">
+              <p>
+                <strong>Välj fil från dator</strong>
+              </p>
+              <p>OBS! Endast PDF</p>
+              <a class="btn-small green">
+                <div class="left"></div>
+                <div class="label" style="width: 80px">
+                  <p>
+                    Bifoga
+                  </p>
+                </div>
+                <div class="right"></div>
+                <div id="MultiFile1_wrap" class="MultiFile-wrap">
+                  <input type="file" rel="#tobeattached"
+                         accept="application/pdf" name="attachment"
+                         maxlength="1" style="top:-40px;right:0px"
+                         class="multiFileInput MultiFile-applied">
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div id="tobeattached">
+        </div>
+
+        <div id="alreadyattached">
+
+        </div>
+        
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="float-left">
+        <a class="close cancel">Avbryt</a>
+      </div>
+      <a class="btn-small green float-right">
+        <div class="left"></div>
+        <div class="label">
+          <p>
+            Bifoga
+          </p>
+          <div class="btn-symbol green arrow-left"></div>
+        </div>
+        <div class="right"></div>
+      </a>
+    </div>
+  </div>
+
 
   <div class="hidden" id="hiddenttimestuffbox">
     <div id="daystosignbox">

@@ -208,47 +208,8 @@ $endif$
 
       </div>
     </div>
-  </form>
-  <div class="modal-container overlay" id="add-attachment-dialog">
-    <div class="modal-header">
-      <span class="modal-icon message"></span>
-      <span class="modal-title">
-        <h2> $if(contract)$ Återkalla inbjudan $elseif(offer)$ Är du säker att du vill återkalla offerten? $endif$</h2>
-        $if(contract)$ 
-        <p>Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?
-          <br/> När du återkallat inbjudan kommer nedanstående meddelande att skickas till dina motparter.
-          $elseif(offer)$
-        <p> När du återkallat offerten kommer nedanstående meddelande att skickas till din motpart.
-        </p>
-        $endif$ 
-      </span>
-      <a class="modal-close close"> </a>
-    </div>
-    <div class="modal-body">
-      <div class="modal-content">     
-        $cancelMailContent:noescape()$
-      </div>
-    </div>
-    <div class="modal-footer">
-      <div class="float-left">
-        <a class="close cancel">Avbryt</a>
-        <a class="editer message">Skriv eget meddelande</a>
-      </div>
-      <a class="btn-small red float-right submiter">
-        <div class="left"></div>
-        <div class="label">
-          <p> $if(contract)$
-            Återkalla inbjudan
-            $elseif(offer)$
-            Återkalla offert
-            $endif$ 
-          </p>
-          <div class="btn-symbol red arrow-left"></div>
-        </div>
-        <div class="right"></div>
-      </a>
-    </div>
-  </div>
+  </form
+
 </div>
 $signatoryScriptIfRequired()$
 ####
