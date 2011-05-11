@@ -159,7 +159,7 @@ pageFooter=
       <ul>
         <!--<li><a href="/features.html">Funktioner</a></li> -->
         <!--<li><a href="/benefits.html">Fördelar</a></li> -->
-        <li><a href="/prisplan">Priser</a></li>
+        <li><a href="/priser">Priser</a></li>
       </ul>
       <br />
       <strong>TRYGGHET OCH VILLKOR</strong>

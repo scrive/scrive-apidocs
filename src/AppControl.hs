@@ -130,7 +130,7 @@ handleRoutes = msum [
 
      -- static pages
      , dir "webbkarta" $ hGetAllowHttp $ handleSitemapPage
-     , dir "prisplan" $ hGetAllowHttp $ handlePriceplanPage
+     , dir "priser" $ hGetAllowHttp $ handlePriceplanPage
      , dir "sakerhet" $ hGetAllowHttp $ handleSecurityPage
      , dir "juridik" $ hGetAllowHttp $ handleLegalPage
      , dir "sekretesspolicy" $ hGetAllowHttp $ handlePrivacyPolicyPage
