@@ -94,9 +94,6 @@ data SignupMethod = AccountRequest | ViralInvitation | BySigning
 
 newtype ExternalUserID = ExternalUserID { unExternalUserID :: BS.ByteString }
     deriving (Eq, Ord, Typeable)
-      -- Leaving FlashMessage declaration here is necessity
-      -- Have to be used because of users versioning
-      -- Can't be moved to Session where it belong (cycle references)
 newtype Friend = Friend { unFriend :: Int }
     deriving (Eq, Ord, Typeable)
 newtype Inviter = Inviter { unInviter :: Int }

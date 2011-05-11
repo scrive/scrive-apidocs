@@ -31,7 +31,5 @@ showContacts =  do
 {- | Process view for advanced user administration -}                    
 handleContactsChange :: Kontra KontraLink
 handleContactsChange =  do
-  addFlashMsg $ FlashMessage (OperationDone,"POST")
+  addFlashMsg $ toFlashMsg OperationDone "POST"
   return LoopBack
-
-
