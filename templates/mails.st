@@ -280,9 +280,9 @@ mailAccountBySigningContractReminderTitle=Du har inte säkrat ditt original
 mailAccountBySigningContractReminderContent=
 <p>Hej <strong>$personname$</strong>,</p>
 
-<p>Du har inte bekräftat att du vill säkra ditt dokument "$documenttitle$" genom att arkivera det hos SkrivaPå. SkrivaPås system kommer att radera dokumentet automatiskt inom 72h. Är du säker att du inte vill arkivera ett original hos SkrivaPå? Detta kostar givetvis ingenting.</p>
+<p>Du har inte bekräftat att du vill spara ditt dokument "$documenttitle$" hos SkrivaPå. SkrivaPås system kommer att radera dokumentet automatiskt inom 72h. Det kostar ingenting att spara dokumentet.</p>
 
-<p>Gör så här för att spara<br>
+<p>Gör så här:<br>
 1. Klicka på länken<br>
 <a href="$ctxhostpart$$activationlink$">$ctxhostpart$$activationlink$</a><br>
 2. Definiera lösenord och acceptera villkoren<br>
@@ -295,9 +295,9 @@ mailAccountBySigningOfferReminderTitle=Du har inte sparat ditt original
 mailAccountBySigningOfferReminderContent=
 <p>Hej <strong>$personname$</strong>,</p>
 
-<p>Du har inte bekräftat att du vill spara din offert "$documenttitle$" genom att arkivera den hos SkrivaPå. SkrivaPås system kommer att radera offerten automatiskt inom 72h. Är du säker att du inte vill arkivera ett original hos SkrivaPå? Detta kostar givetvis ingenting.</p>
+<p>Du har inte bekräftat att du vill spara din offert "$documenttitle$" hos SkrivaPå. SkrivaPås system kommer att radera offerten automatiskt inom 72h. Det kostar ingenting att spara offerten.</p>
 
-<p>Gör så här för att spara<br>
+<p>Gör så här:<br>
 1. Klicka på länken<br>
 <a href="$ctxhostpart$$activationlink$">$ctxhostpart$$activationlink$</a><br>
 2. Definiera lösenord och acceptera villkoren<br>
