@@ -31,56 +31,6 @@ signupVipPageView =
 </div>
 </div>
 ####
-activatePageView=
-    <script src="/js/signup.js" type="text/javascript"></script>
-    <form action="" method="post" style="border:1px solid;border-color:#D0D0D0 #BDBDBD #C0C0C0;padding:7px;background:#ffffff">
-      <h2>Vänligen acceptera användarvillkoren</h2>
-      <div style="height:480px;overflow-y:scroll;border:1px solid #EEEEEE;padding:4px">
-        $termsPageContents()$
-        <br/>
-      </div>
-      <br/>
-      <input type="checkbox" id="tosCBox" name="tos" class="notForIE7" />
-      <label for="tosCBox">Jag har läst och accepterar SkrivaPå Allmänna Villkor</label><br/>
-      <table id="accountTypeChoice" style="width: 250px; margin-bottom: 5px"><tbody><tr>
-        <td><input id="accountTypePrivate" type="radio" name="accounttype" value="private" /> <label for="accountTypePrivate">Privatperson</label></td>
-        <td><input id="accountTypeCompany" type="radio" name="accounttype" value="company" /> <label for="accountTypeCompany">Företag</label></td>
-      </tr></tbody></table>
-      <table id="companyInfo"><tbody>
-        <tr>
-            <td style="width: 110px">Förnamn:</td>
-            <td><input type="text" name="fname" autocomplete="off" value="$if(fstname)$$fstname$$endif$"></td>
-          </tr>
-          <tr>
-            <td>Efternamn:</td>
-            <td><input type="text" name="lname" autocomplete="off" value="$if(sndname)$$sndname$$endif$"></td>
-          </tr>
-          <tr>
-            <td>Företag:</td>
-            <td><input type="text" name="companyname" autocomplete="off" value="$if(companyname)$$companyname$$endif$"></td>
-          </tr>
-          <tr>
-            <td>Position:</td>
-            <td><input type="text" name="companyposition" autocomplete="off" value="$if(companyposition)$$companyposition$$endif$"></td>
-          </tr>
-          <tr>
-            <td>Telefonnummer:</td>
-            <td><input type="text" name="phone" autocomplete="off" value="$if(phone)$$phone$$endif$"></td>
-          </tr>
-      </tbody></table>
-      <table id="passwordInfo"><tbody>
-          <tr>
-            <td style="width: 110px">Välj lösenord:</td>
-            <td><input type="password" name="password" autocomplete="off"></td>
-          </tr>
-          <tr>
-            <td>Upprepa lösenord:</td>
-            <td><input type="password" name="password2" autocomplete="off"></td>
-          </tr>
-      </tbody></table>
-      <input class="button" type="submit" value="Gå vidare"/>
-    </form>
-###
 activatePageViewNotValidLink=
     <div class="centerdivnarrow">
       <p> Begklagar, din aktiveringslänk är äldre än 12 timmar. Vänligen fyll i
