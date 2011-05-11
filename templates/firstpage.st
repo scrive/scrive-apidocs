@@ -89,7 +89,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 <div id="wrap">
                 <div id="top-container">
                         <div class="content">
-                                <h1 class="logo no-txt">SkrivaPå</h1>
+                                <img src="/img/logo.png" alt="SkrivaPå" class="logo" />
                                 <div class="leftMain">
                                         <div class="intro-container">
                                                 <h1>Varför krångla? - Signera med SkrivaPå!</h1>

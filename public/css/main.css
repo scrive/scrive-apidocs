@@ -261,12 +261,9 @@ a.new-btn-small.black p {
 }
 
 #top-container .logo {
-	background: url(../img/logo.png) no-repeat;
-	height: 40px;
 	position: absolute;
 	top: 20px;
-	width: 175px;
-    left:0px;
+        left:0px;
 }
 
 #top-container .leftMain {
