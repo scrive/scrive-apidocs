@@ -39,7 +39,7 @@ $loadingdialog()$
 					<thead>
 						<tr>
 							<th style="width: 30px;"><input type="checkbox" name="" id="all" /></th>
-							<th style="width: 50px;">
+							<th style="width: 60px;">
                                $if(params.sorting.statusREV)$
                                 <a href="$currentlink$&sorting=status">Status  <em> ▲</em></a>
                                $elseif(params.sorting.status)$
