@@ -309,19 +309,19 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <tr class="big-row">
                                                         <td>
                                                                 <h4>Vi bjuder</h4>
-                                                                <a href="/prisplan">Prisplan</a>
+                                                                <a href="/priser">Prisplan</a>
                                                         </td>
                                                         <td>
                                                                 <h4>299kr/mån</h4>
-                                                                <a href="/prisplan">Prisplan</a>
+                                                                <a href="/priser">Prisplan</a>
                                                         </td>
                                                         <td>
                                                                 <h4>499kr/mån</h4>
-                                                                <a href="/prisplan">Prisplan<a>                                                   
+                                                                <a href="/priser">Prisplan<a>                                                   
                                                         </td>
                                                         <td>
                                                                 <h4>Offert</h4>
-                                                                <a href="/prisplan">Prisplan</a>
+                                                                <a href="/priser">Prisplan</a>
                                                         </td>
                                                 </tr>
                                         </table>
@@ -341,7 +341,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                         <li class="odd">Avancerade funktioner</li>
                                                         <li class="bottom">
                                                                 <h4>499kr/mån</h4>
-                                                                <a href="/prisplan">Prisplan</a>   
+                                                                <a href="/priser">Prisplan</a>   
                                                         </li>
                                                 </ul>
                                         </div>

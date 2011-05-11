@@ -19,7 +19,7 @@ sitemapPage=
   <priority>0.80</priority>
 </url>
 <url>
-  <loc>$hostpart$/prisplan</loc>
+  <loc>$hostpart$/priser</loc>
   <changefreq>daily</changefreq>
   <priority>0.80</priority>
 </url>
