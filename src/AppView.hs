@@ -253,23 +253,27 @@ mainLinksFields = do
 contextInfoFields::Context -> Fields
 contextInfoFields ctx = do
     field "logged" $ isJust (ctxmaybeuser ctx)
-    field "flashmessages" $ for (ctxflashmessages ctx) flashMessageFields
+    field "flashmessages" $ map (flashMessageFields $ ctxtemplates ctx) (ctxflashmessages ctx)
     field "protocol" $ if (ctxproduction ctx) then "https:" else "http:"
     field "prefix" ""
     field "production" (ctxproduction ctx)
     field "publicsafe" (isNothing $ ctxmaybeuser ctx)
 
+flashMessageFields :: KontrakcjaTemplates -> FlashMessage -> Fields
+flashMessageFields templates flash = do
+    field "type" $ (\t ->
+        case t of
+             SigningRelated  -> "blue"
+             OperationDone   -> "green"
+             OperationFailed -> "red" 
+             _               -> "") <$> ftype
+    field "message" msg
+    field "isModal" $ (== Modal) <$> ftype
+    where
+        fm = fromJust . unFlashMessage <$> instantiate templates flash
+        ftype = fst <$> fm
+        msg = snd <$> fm
 
-flashMessageFields fm = do
-    field "type" $ 
-        case fst (unFlashMessage fm) of
-            SigningRelated  -> "blue"
-            OperationDone   -> "green"
-            OperationFailed -> "red" 
-            _               -> ""
-    field "message" $ snd (unFlashMessage fm)   
-    field "isModal" $ fst (unFlashMessage fm) == Modal
-    
 loginModal::Bool -> Maybe String -> Maybe String -> Fields
 loginModal on referer email = do
     field "loginModal" $ on
