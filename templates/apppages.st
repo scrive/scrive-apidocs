@@ -172,10 +172,10 @@ pageFooter=
       <br />
       <strong>SKRIVAPÅ</strong>
       <ul>
+        <li><a href="/">Hom</a></li>
         <li><a href="/om-skrivapa">Om SkrivaPå</a></li>
         <li><a href="/partners">Partners</a></li>
         <li><a href="/kunder">Kunder</a></li>
-        <li><a href="/">Start</a></li>
         <!--<li><a href="/board.html">Board of Advisors</a></li>-->
       </ul>
     </div>
