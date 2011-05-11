@@ -290,6 +290,12 @@ a.new-btn-small.black p {
 	width: 480px;
 }
 
+#top-container .intro-container h1 {
+        color: #FFFFFF;
+        font: 32px "Copse";
+        padding-top: 32px;
+}
+
 #top-container .intro-container h2 {
 	color: #FFFFFF;
 	font: 36px "Copse";
