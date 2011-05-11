@@ -27,6 +27,7 @@ module Session
 
 import Control.Monad.Reader (ask)
 import Control.Monad.State hiding (State)
+import qualified Data.ByteString.UTF8 as BS
 import Data.Functor
 import Data.Maybe (isNothing,isJust, fromJust)
 import Happstack.Data.IxSet
@@ -42,7 +43,6 @@ import ELegitimation.ELeg
 import Data.Typeable
 import API.Service.ServiceState
 import Cookies
-import FlashMessage
 
 -- | Session ID is a wrapped 'Integer' really
 newtype SessionId = SessionId Integer
@@ -61,8 +61,37 @@ instance FromReqURI SessionId where
     
 $(deriveSerialize ''SessionId)
 instance Version SessionId   
-  
-  
+
+{------------------------------------------------------------------------------}
+-- THIS IS OLD FLASH MESSAGE STRUCTURE, IT'S FOR COMPATIBILITY PURPOSES ONLY.
+-- ACTUAL VERSION IS IN FLASHMESSAGE MODULE. DO NOT EXPOSE ANY OF BELOW FUNCTIONS.
+-- Below code should be removed as soon as we get rid of old Session instances
+-- in Session (we do not serialize flash messages to database anymore).
+newtype FlashMessage = FlashMessage (FlashType, String)
+  deriving (Eq, Ord, Show, Typeable)
+
+data FlashType
+    = SigningRelated
+    | OperationDone
+    | OperationFailed
+    | Modal
+      deriving (Eq, Ord, Show, Typeable)
+
+newtype FlashMessage0 = FlashMessage0 BS.ByteString
+  deriving Typeable
+
+instance Migrate FlashMessage0 FlashMessage where
+    migrate (FlashMessage0 msg) =
+        FlashMessage (SigningRelated, BS.toString msg)
+
+instance Version FlashType
+instance Version FlashMessage0
+instance Version FlashMessage where
+    mode = extension 1 (Proxy :: Proxy FlashMessage0)
+
+$(deriveSerializeFor [''FlashMessage0, ''FlashMessage, ''FlashType])
+{------------------------------------------------------------------------------}
+
 data SessionData0 = SessionData0 { userID0 :: Maybe UserID,
                                    flashMessages0 :: [FlashMessage]
                                  } deriving (Ord,Eq,Show,Typeable)

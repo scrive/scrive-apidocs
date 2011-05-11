@@ -14,6 +14,7 @@ module Kontra
     , addELegTransaction
     , addFlashMsg
     , addModal
+    , addModalT
     , logUserToContext
     , onlySuperUser
     , newPasswordReminderLink
@@ -175,8 +176,13 @@ addModal :: KontraModal ->  Kontra ()
 addModal flash = do
   ctx <- get  
   fm <- liftIO $ runReaderT flash (ctxtemplates ctx)  
-  put $  ctx { ctxflashmessages = (FlashMessage (Modal,fm)):(ctxflashmessages ctx) }
+  put $  ctx { ctxflashmessages = (toFlashMsg Modal fm):(ctxflashmessages ctx) }
 
+{- |
+   Adds modal as flash template, used for semantics sake
+-}
+addModalT :: FlashMessage -> Kontra ()
+addModalT = addFlashMsg
 
 {- |
    Sticks the logged in user onto the context

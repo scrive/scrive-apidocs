@@ -234,7 +234,7 @@ logIfBad x@(input, Bad flashmsg) = do
       logtext = "ip " ++ (show ctxipnumber) ++
                " user " ++ username ++
                " invalid input: " ++
-               " flash [" ++ (snd $ unFlashMessage flash) ++ "]" ++
+               " flash [" ++ show (snd <$> unFlashMessage flash) ++ "]" ++
                " raw value info [" ++ (formatRawValueInfo input) ++ "]"
   _ <- liftIO $ Log.security logtext
   return x

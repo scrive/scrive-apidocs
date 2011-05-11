@@ -647,7 +647,7 @@ csvFieldFields problems rowindex colindex val = do
 csvProblemFields :: KontrakcjaTemplates -> Int -> Int -> CSVProblem -> IO Fields
 csvProblemFields templates probcount number csvproblem = do
     flashMsg <- (problemdescription csvproblem) templates
-    let desc = snd $ unFlashMessage flashMsg
+    let desc = snd $ fromJust $ unFlashMessage flashMsg
     return $ do
       field "problemnumber" $ number
       field "problemrow" $ fmap (+1) $ problemrowindex csvproblem
