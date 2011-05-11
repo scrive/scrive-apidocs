@@ -318,26 +318,10 @@ instance Show StatusClass where
 
 
 documentStatusClass ::Document -> StatusClass
-documentStatusClass doc = 
-    case documentstatus doc of
-         Preparation    -> SCDraft
-         Closed         -> SCSigned
-         Canceled       -> SCCancelled
-         Timedout       -> SCTimedout
-         Rejected       -> SCCancelled
-         Pending        -> statusWhenPending
-         AwaitingAuthor -> statusWhenPending
-         _              -> SCCancelled
-    where
-      statusWhenPending =
-        let allReadInvite = all (isJust . maybereadinvite) $ documentsignatorylinks doc
-            allSeen = all (isJust . maybeseeninfo) $ documentsignatorylinks doc in
-        case (anyInvitationUndelivered doc, allReadInvite, allSeen) of
-          (True, _, _) -> SCCancelled
-          (_, _, True) -> SCOpened
-          (_, True, _) -> SCRead
-          _ -> SCSent
-      
+documentStatusClass doc =
+  case (map (signatoryStatusClass doc) $ filter isSignatory $ documentsignatorylinks doc) of
+    [] -> SCDraft
+    xs -> minimum xs      
 
 documentBasicViewFields :: MinutesTime -> User -> Document -> Fields
 documentBasicViewFields crtime user doc = do
@@ -840,12 +824,33 @@ signatoryLinkFields
       field "author" $ (isAuthor document siglnk)
       signatoryStatusFields document siglnk showDateOnly
 
+signatoryStatusClass :: Document -> SignatoryLink -> StatusClass
+signatoryStatusClass 
+  Document {
+    documentstatus
+  } 
+  SignatoryLink {
+    maybesigninfo
+  , maybeseeninfo
+  , maybereadinvite
+  , invitationdeliverystatus
+  } =
+  caseOf [
+      (invitationdeliverystatus==Undelivered,  SCCancelled)
+    , (documentstatus==Preparation, SCDraft)
+    , (documentstatus==Canceled, SCCancelled)
+    , (documentstatus==Rejected, SCCancelled)
+    , (documentstatus==Timedout, SCTimedout)
+    , (isJust maybesigninfo, SCSigned)
+    , (isJust maybeseeninfo, SCOpened)
+    , (isJust maybereadinvite, SCRead)
+    ] SCSent
+
 signatoryStatusFields :: Document -> SignatoryLink -> (MinutesTime -> String) -> Fields
 signatoryStatusFields
   document
   siglnk@SignatoryLink {
     signatorylinkid
-    , signatorydetails
     , maybesigninfo
     , maybeseeninfo
     , maybereadinvite
@@ -853,25 +858,10 @@ signatoryStatusFields
   } 
   dateformatter = 
   let
-   wasSigned =  isJust maybesigninfo
-   wasSeen = isJust maybeseeninfo
-   wasRead = isJust maybereadinvite
-   isTimedout = documentstatus document == Timedout
-   isCanceled = documentstatus document == Canceled
-   isRejected = documentstatus document == Rejected
-   isClosed = documentstatus document == Closed
    datamismatch = case documentcancelationreason document of
                     Just (ELegDataMismatch _ sid _ _ _) -> sid == signatorylinkid
                     _                                   -> False
-   status = caseOf [
-          (invitationdeliverystatus == Undelivered,  SCCancelled)
-        , (isCanceled, SCCancelled)
-        , (isRejected, SCCancelled)
-        , (isTimedout, SCTimedout)
-        , (wasSigned,  SCSigned)
-        , (wasSeen,    SCOpened)
-        , (wasRead,    SCRead)
-        ] SCSent 
+   status = signatoryStatusClass document siglnk
    -- the date this document was rejected if rejected by this signatory
    rejectedDate = case documentrejectioninfo document of
                     Just (rt, slid, _) 
