@@ -508,12 +508,14 @@ accountFromSignInputs=
         <input type="hidden" name="acceptaccount" value="true" />
         <div style="padding:10px 50px;">
          <div>
-          <input type="checkbox" name="tos" id="tos" class="float-left" style="width:20px;margin:0px;"/>
-          <div class="float-left" style="width:290px;">
-            <label for="tos" class="float-left" style="padding-left:5px;">Jag har läst och accepterat <a target="_blank" href="/allmana-villkor">SkrivaPå Allmänna Villkor</a></label>
-          </div>
+          <input type="checkbox" name="tos" id="tos" style="width:20px;margin:0px;"/>
+          <label for="tos" style="padding-left:5px;">Jag har läst och accepterat <a target="_blank" href="/allmana-villkor">SkrivaPå Allmänna Villkor</a></label>
          </div>
-         <div style="padding-top:20px">
+         <table style="width: 250px; margin-top: 5px"><tbody><tr>
+           <td><input id="accountTypePrivate" type="radio" name="accounttype" value="private" /> <label for="accountTypePrivate">Privatperson</label></td>
+           <td><input id="accountTypeCompany" type="radio" name="accounttype" value="company" /> <label for="accountTypeCompany">Företag</label></td>
+         </tr></tbody></table>
+         <div style="padding-top:10px">
           <table>
             <tr>
               <td style="width:120px;">Lösenord</td>
