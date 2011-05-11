@@ -203,6 +203,13 @@ documentInfoText=
                         </span>
                      $endif$
 
+                  $elseif(preparation)$
+                        <span class="header">
+                             Preparation
+                        </span><br>
+                        <span class="text">
+                              Document is in preparation state.
+                        </span>
                   $else$ 
                         <span class="header">
                              Problem

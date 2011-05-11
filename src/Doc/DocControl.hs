@@ -598,7 +598,7 @@ handleSignShow documentid
    Should be moved to User and imported
  -}
 isFriendOf :: UserID -> User -> Bool
-isFriendOf uid user = (unUserID uid `elem` map unFriend (userfriends user))
+isFriendOf uid user = (unUserID uid `elem` map unFriend (userfriends user) || Just (SupervisorID $ unUserID uid) == usersupervisor user)
 
 isFriendOf' :: UserID -> Maybe User -> Bool
 isFriendOf' uid muser = fromMaybe False $ fmap (isFriendOf uid) muser
@@ -1334,15 +1334,19 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
    is a friend of the author.
    Duplicates are removed.
  -}
-showContractsList:: Kontra (Either KontraLink String)
-showContractsList= checkUserTOSGet $ do
+showContractsList :: Kontra (Either KontraLink String)
+showContractsList = checkUserTOSGet $ do
   -- Just user is safe here because we guard for logged in user
   ctx@(Context {ctxmaybeuser = Just user, ctxhostpart, ctxtime, ctxtemplates}) <- get
   mydocuments <- query $ GetDocumentsByUser user 
   usersICanView <- query $ GetUsersByFriendUserID $ userid user
+  usersISupervise <- fmap Set.toList $ query $ GetUserSubaccounts $ userid user
   friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
+  supervised'Documents <- mapM (query . GetDocumentsByUser) usersISupervise
   -- get rid of duplicates
-  let documents = nub $ mydocuments ++ concat friends'Documents
+  -- FIXME: nub is very slow
+  -- FIXME: rearranging filtering and merging would speed things up here a lot
+  let documents = nub $ mydocuments ++ concat friends'Documents ++ concat supervised'Documents
   let sorteddocuments = sortBy (\d1 d2 -> compare (documentmtime d2) (documentmtime d1)) documents
   let notdeleted = filter (not . documentdeleted) sorteddocuments
   let contracts  = filter ((==) Contract . documenttype) notdeleted
