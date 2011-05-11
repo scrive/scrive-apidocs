@@ -1,29 +1,29 @@
 ####
 pageDocumentForAuthor=
-  <div class="localdialogs">
-    <div style="display: none">
-      <script type="text/javascript"> 
-        var documentid = "$documentid$";
-      </script>
-    </div>
+<div class="localdialogs">
+  <div style="display: none">
+    <script type="text/javascript"> 
+      var documentid = "$documentid$";
+    </script>
   </div>
+</div>
 <div id="signStepsContainer"> 
   <div id="signStepsTitleRow"> 
-     <span id="signStepsTitleRowTextContainer"> 
+    <span id="signStepsTitleRowTextContainer"> 
       <span class="title">
         $if(contract)$ 
-            DOKUMENT #$documentid$:
+        DOKUMENT #$documentid$:
         $elseif(offer)$
-            OFFERT #$documentid$:
+        OFFERT #$documentid$:
         $endif$
       </span>
       <span class="name">$documenttitle$</span>
-     </span>
-     <span class="download">
-        <a href="$linkissuedocpdf$" target="_blank">
-         Ladda ned PDF
-       </a>
-     </span>
+    </span>
+    <span class="download">
+      <a href="$linkissuedocpdf$" target="_blank">
+        Ladda ned PDF
+      </a>
+    </span>
   </div>
   <div id="signStepsBody" class="ericfix forauthor"> 
     <div id="signViewBodyLeft" > 
@@ -35,36 +35,36 @@ pageDocumentForAuthor=
           <a class="btn-small red submit">
             <div class="left"></div>
             <div class="label">
-                $if(contract)$
-                    Starta om dokument
-                $elseif(offer)$
-                    Starta om offert
-                $endif$
+              $if(contract)$
+              Starta om dokument
+              $elseif(offer)$
+              Starta om offert
+              $endif$
             </div> 
             <div class="right"></div>
-        </a> 
+          </a> 
         </form>
         $endif$
         $if(pending)$
         $if(!awaitingauthor)$
         $if(!timetosignset)$
         <a class="btn-small red" id="cancel"  name="cancel" rel="#cancel-by-author-dialog">
-            <div class="left"></div>
-            <div class="label">
-                $if(contract)$
-                    Återkalla inbjudan
-                $elseif(offer)$
-                    Återkalla offert
-                $endif$ 
-            </div> 
-            <div class="right"></div>
+          <div class="left"></div>
+          <div class="label">
+            $if(contract)$
+            Återkalla inbjudan
+            $elseif(offer)$
+            Återkalla offert
+            $endif$ 
+          </div> 
+          <div class="right"></div>
         </a>
         $endif$
         $endif$
         $endif$
       </span> 
     </div>
-     $signatoriesBox()$
+    $signatoriesBox()$
   </div>
 </div>
 
@@ -79,40 +79,41 @@ pageDocumentForAuthor=
 $if(awaitingauthor)$
 <script type="text/javascript" src="/js/bankid.js"> </script>
 <div style="display:none;">
-$validationdropdown()$
+  $validationdropdown()$
 </div>
 <div id="signViewBottomBox"> 
-    <div id="signViewBottomBoxContainerLeft">
-   <a class="float-right btn-small red cancel" name="cancel" rel="#cancel-by-author-dialog" id="cancel">
-    <div class="left"></div>
-    <div class="label">Avvisa dokument</div>
-    <div class="right"></div>
-   </a>
+  <div id="signViewBottomBoxContainerLeft">
+    <a class="float-right btn-small red cancel" name="cancel" rel="#cancel-by-author-dialog" id="cancel">
+      <div class="left"></div>
+      <div class="label">Avvisa dokument</div>
+      <div class="right"></div>
+    </a>
   </div>
   <div id="signViewBottomBoxContainerMiddle">
-   <div id="signGuardField">
-    <div class="float-left"><input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off"/></div>
-     <div class="float-left" id="signGuardLabel"><label for="signGuardCBox">Jag intygar att:
-      <br>1. Samtliga undertecknande parter är korrekta.
-      <br>2. Att jag granskat och förstått dokumentet.
-      <br>3. Att jag har befogenhet att skriva på dokumentet.
-    </ul></label></div>
-   </div>
+    <div id="signGuardField">
+      <div class="float-left"><input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off"/></div>
+      <div class="float-left" id="signGuardLabel"><label for="signGuardCBox">Jag intygar att:</label>
+        <br>1. Samtliga undertecknande parter är korrekta.
+        <br>2. Att jag granskat och förstått dokumentet.
+        <br>3. Att jag har befogenhet att skriva på dokumentet.
+      </div>
+    </div>
   </div>
   <div id="signViewBottomBoxContainerRight"> 
-  <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign-by-author" name="sign">
-    <div class="left"></div>
-    <div class="label" style="width:120px">
-      <span>SkrivaPå</span>
-      <span class="icon cross"></span>
-    </div>
-    <div class="right"></div>
-  </a>
+    <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign-by-author" name="sign">
+      <div class="left"></div>
+      <div class="label" style="width:120px">
+        <span>SkrivaPå</span>
+        <span class="icon cross"></span>
+      </div>
+      <div class="right"></div>
+    </a>
+  </div>
 </div>
 $endif$   
 <div class="localdialogs">
-$loadingdialog()$
- <form method="post" action="$linkcancel$" class="overlay" id="cancel-by-author-dialog">
+  $loadingdialog()$
+  <form method="post" action="$linkcancel$" class="overlay" id="cancel-by-author-dialog">
     <div class="modal-container">
       <div class="modal-header">
         <span class="modal-icon message"></span>
@@ -120,8 +121,8 @@ $loadingdialog()$
           <h2> $if(contract)$ Återkalla inbjudan $elseif(offer)$ Är du säker att du vill återkalla offerten? $endif$</h2>
           $if(contract)$ 
           <p>Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?
-          <br/> När du återkallat inbjudan kommer nedanstående meddelande att skickas till dina motparter.
-          $elseif(offer)$
+            <br/> När du återkallat inbjudan kommer nedanstående meddelande att skickas till dina motparter.
+            $elseif(offer)$
           <p> När du återkallat offerten kommer nedanstående meddelande att skickas till din motpart.
           </p>
           $endif$ 
@@ -142,10 +143,10 @@ $loadingdialog()$
           <div class="left"></div>
           <div class="label">
             <p> $if(contract)$
-                    Återkalla inbjudan
-                $elseif(offer)$
-                    Återkalla offert
-                $endif$ 
+              Återkalla inbjudan
+              $elseif(offer)$
+              Återkalla offert
+              $endif$ 
             </p>
             <div class="btn-symbol red arrow-left"></div>
           </div>
@@ -153,7 +154,6 @@ $loadingdialog()$
         </a>
       </div>
     </div>
-    
   </form>
   <form method="post" name="form" action="$action$" id="dialog-confirm-sign-by-author" class="overlay">     
     <div class="modal-container">
@@ -183,12 +183,12 @@ $loadingdialog()$
         <a class="close cancel float-left">Avbryt</a>
 
         <a href="#" class="btn-small blue float-right submiter signhidden" id="editing-invite-text-finished">
-            <div class="left"></div>
-            <div class="label">
-              <p>SkrivaPå</p>
-              <span class="btn-symbol cross"></span>
-            </div>
-            <div class="right"></div>
+          <div class="left"></div>
+          <div class="label">
+            <p>SkrivaPå</p>
+            <span class="btn-symbol cross"></span>
+          </div>
+          <div class="right"></div>
         </a>
 
         <span class="eleghidden" style="display: none;">
@@ -196,19 +196,59 @@ $loadingdialog()$
           <input type="hidden" name="signature" value="" id="signatureinput" />
           <input type="hidden" name="transactionid" value="" id="transactionidinput" />
           <a href="#" class="btn-small green float-right author2 bankid">
-              <img src="/img/bankid.png" alt="BankID" />
+            <img src="/img/bankid.png" alt="BankID" />
           </a>
           <a href="#" class="btn-small green float-right author2 telia">
-              <img src="/img/telia.png" alt="Telia Eleg" />
+            <img src="/img/telia.png" alt="Telia Eleg" />
           </a>
           <a href="#" class="btn-small green float-right author2 nordea">
-              <img src="/img/nordea.png" alt="Nordea Eleg" />
+            <img src="/img/nordea.png" alt="Nordea Eleg" />
           </a>
         </span>
 
       </div>
     </div>
   </form>
+  <div class="modal-container overlay" id="add-attachment-dialog">
+    <div class="modal-header">
+      <span class="modal-icon message"></span>
+      <span class="modal-title">
+        <h2> $if(contract)$ Återkalla inbjudan $elseif(offer)$ Är du säker att du vill återkalla offerten? $endif$</h2>
+        $if(contract)$ 
+        <p>Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?
+          <br/> När du återkallat inbjudan kommer nedanstående meddelande att skickas till dina motparter.
+          $elseif(offer)$
+        <p> När du återkallat offerten kommer nedanstående meddelande att skickas till din motpart.
+        </p>
+        $endif$ 
+      </span>
+      <a class="modal-close close"> </a>
+    </div>
+    <div class="modal-body">
+      <div class="modal-content">     
+        $cancelMailContent:noescape()$
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="float-left">
+        <a class="close cancel">Avbryt</a>
+        <a class="editer message">Skriv eget meddelande</a>
+      </div>
+      <a class="btn-small red float-right submiter">
+        <div class="left"></div>
+        <div class="label">
+          <p> $if(contract)$
+            Återkalla inbjudan
+            $elseif(offer)$
+            Återkalla offert
+            $endif$ 
+          </p>
+          <div class="btn-symbol red arrow-left"></div>
+        </div>
+        <div class="right"></div>
+      </a>
+    </div>
+  </div>
 </div>
 $signatoryScriptIfRequired()$
 ####
