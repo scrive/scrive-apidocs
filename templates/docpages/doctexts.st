@@ -205,10 +205,10 @@ documentInfoText=
 
                   $elseif(preparation)$
                         <span class="header">
-                             Preparation
+                              Förberedelse
                         </span><br>
                         <span class="text">
-                              Document is in preparation state.
+                              Dokumentet är i förberedelsefasen.
                         </span>
                   $else$ 
                         <span class="header">
