@@ -542,6 +542,12 @@ safeReady(function() {
 });
 
 safeReady(function() {
+  $("#addattachmentlink").overlay({
+    mask: standardDialogMask
+  });
+});
+
+safeReady(function() {
   $("#editinvitetextlink").overlay({        
     mask: standardDialogMask,    
     onBeforeLoad: function () { 
