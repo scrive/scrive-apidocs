@@ -118,6 +118,77 @@ modalOfferSignedNoAccount=
   </form>
 </div>
 ######
+modalAccountSetup=
+<div class="modal-container">
+  <script src="/js/signup.js" type="text/javascript"></script>
+  <form action="$signuplink$" method="post">
+  <div class="modal-header">
+    <span class="modal-icon message"></span>
+    <span class="modal-title">
+      <h3>Vänligen acceptera användarvillkoren</h3>
+    </span>
+    <a class="modal-close close"> </a>
+  </div>
+  <div class="modal-body" style="padding: 10px">
+    <div class="modal-content">
+      <div style="max-height: 300px; overflow: auto">
+        $termsPageContents()$
+      </div>
+      <div style="padding: 0 19px">
+        <input type="checkbox" id="tosCBox" name="tos" class="notForIE7" />
+        <label for="tosCBox">Jag har läst och accepterar SkrivaPå Allmänna Villkor</label><br/>
+        <table id="accountTypeChoice" style="width: 250px; margin-bottom: 5px"><tbody><tr>
+            <td><input id="accountTypePrivate" type="radio" name="accounttype" value="private" /> <label for="accountTypePrivate">Privatperson</label></td>
+            <td><input id="accountTypeCompany" type="radio" name="accounttype" value="company" /> <label for="accountTypeCompany">Företag</label></td>
+        </tr></tbody></table>
+        <table id="companyInfo"><tbody>
+            <tr>
+                <td style="width: 120px">Förnamn:</td>
+                <td><input type="text" name="fname" autocomplete="off" value="$if(fstname)$$fstname$$endif$"></td>
+            </tr>
+            <tr>
+                <td>Efternamn:</td>
+                <td><input type="text" name="lname" autocomplete="off" value="$if(sndname)$$sndname$$endif$"></td>
+            </tr>
+            <tr>
+                <td>Företag:</td>
+                <td><input type="text" name="companyname" autocomplete="off" value="$if(companyname)$$companyname$$endif$"></td>
+            </tr>
+            <tr>
+                <td>Position:</td>
+                <td><input type="text" name="companyposition" autocomplete="off" value="$if(companyposition)$$companyposition$$endif$"></td>
+            </tr>
+            <tr>
+                <td>Telefonnummer:</td>
+                <td><input type="text" name="phone" autocomplete="off" value="$if(phone)$$phone$$endif$"></td>
+            </tr>
+        </tbody></table>
+        <table id="passwordInfo"><tbody>
+            <tr>
+                <td style="width: 120px">Välj lösenord:</td>
+                <td><input type="password" name="password" autocomplete="off"></td>
+            </tr>
+            <tr>
+                <td>Upprepa lösenord:</td>
+                <td><input type="password" name="password2" autocomplete="off"></td>
+            </tr>
+        </tbody></table>
+        <input type="submit" class="hidden" />
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <a href="#" class="btn-small green float-right submit notForIE7">
+      <div class="left"></div>
+      <div class="label">
+        <p>Skapa konto!</p>
+        <div class="btn-symbol green arrow-left"></div>
+      </div>
+      <div class="right"></div>
+    </a>
+  </div>
+</div>
+######
 modalWelcomeToSkrivaPa=
 <div class="modal-container">
   <div class="modal-header">

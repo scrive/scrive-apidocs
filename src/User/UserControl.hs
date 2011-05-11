@@ -510,9 +510,8 @@ handleAccountSetupGet aid hash = do
     where
         activationPage muser = do
             extendActionEvalTimeToOneDayMinimum aid
-            ctx <- get
-            content <- liftIO $ activatePageView (ctxtemplates ctx) muser
-            renderFromBody TopNone kontrakcja $ cdata content
+            addModalT $ modalAccountSetup muser $ LinkAccountCreated aid hash $ maybe "" (BS.toString . unEmail . useremail . userinfo) muser
+            sendRedirect LinkMain
 
 handleAccountSetupFromSign :: ActionID -> MagicHash -> Kontra (Maybe User)
 handleAccountSetupFromSign aid hash = do
@@ -595,6 +594,10 @@ handleAccountSetupPost aid hash = do
                      )
                  )
     where
+        returnToAccountSetup user = do
+            addModalT $ modalAccountSetup (Just user) $ LinkAccountCreated aid hash $ BS.toString . unEmail . useremail $ userinfo user
+            return LinkMain
+
         handleActivate signupmethod user = do
             ctx <- get
             acctype <- getOptionalField asValidName "accounttype"
@@ -615,10 +618,10 @@ handleAccountSetupPost aid hash = do
                                   , usercompanyposition = companytitle
                                   , userphone = phone
                               }
-                          _ -> return LoopBack
+                          _ -> returnToAccountSetup user
                  _ -> do
                      addFlashMsg =<< (liftIO $ flashMessageNoAccountType $ ctxtemplates ctx)
-                     return LoopBack
+                     returnToAccountSetup user
 
         finalizeActivation signupmethod user acctype infoupdatefunc = do
             muser <- handleActivate' signupmethod user acctype aid infoupdatefunc
@@ -627,7 +630,11 @@ handleAccountSetupPost aid hash = do
                      templates <- ctxtemplates <$> get
                      addFlashMsg =<< (liftIO $ flashMessageUserActivated templates)
                      return LinkMain
-                 Nothing -> return LoopBack
+                 Nothing -> do
+                     -- handleActivate' might have updated user info, so we
+                     -- need to query database for the newest user version
+                     newuser <- fromMaybe user <$> (query $ GetUserByUserID $ userid user)
+                     returnToAccountSetup newuser
 
         getUserForViralInvite now invitedemail invitationtime inviterid = do
             muser <- liftIO $ createInvitedUser (BS.empty, BS.empty) $ unEmail invitedemail

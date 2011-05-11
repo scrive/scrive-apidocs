@@ -6,7 +6,6 @@ module User.UserView (
     showUser,
     showUserSecurity,
     pageAcceptTOS,
-    activatePageView,
     activatePageViewNotValidLink,
     
     -- mails  
@@ -23,6 +22,7 @@ module User.UserView (
 
     -- modals
     modalWelcomeToSkrivaPa,
+    modalAccountSetup,
     modalAccountRemoval,
     modalAccountRemoved,
     modalInviteUserAsSubaccount,
@@ -148,12 +148,6 @@ viewSubaccounts user subusers =
     field "user" $ userFields user
     pagedListFields subusers
 
-activatePageView::KontrakcjaTemplates -> Maybe User -> IO String
-activatePageView templates muser = 
-    renderTemplate templates "activatePageView" $ do
-        when (isJust muser) $ userFields $ fromJust muser
-
-
 activatePageViewNotValidLink :: KontrakcjaTemplates -> String -> IO String
 activatePageViewNotValidLink templates email =
   renderTemplate templates "activatePageViewNotValidLink" $ field "email" email
@@ -278,6 +272,18 @@ modalInviteUserAsSubaccount fstname sndname email =
 modalWelcomeToSkrivaPa :: KontrakcjaTemplates -> KontraModal
 modalWelcomeToSkrivaPa templates =
     lift $ renderTemplate templates "modalWelcomeToSkrivaPa" ()
+
+modalAccountSetup :: Maybe User -> KontraLink -> FlashMessage
+modalAccountSetup muser signuplink =
+    toFlashTemplate Modal "modalAccountSetup" [
+          ("fstname", showUserField userfstname)
+        , ("sndname", showUserField usersndname)
+        , ("companyname", showUserField usercompanyname)
+        , ("companyposition", showUserField usercompanyposition)
+        , ("phone", showUserField userphone)
+        , ("signuplink", show signuplink)
+    ]
+    where showUserField f = maybe "" (BS.toString . f . userinfo) muser
 
 modalAccountRemoval :: KontrakcjaTemplates -> BS.ByteString -> KontraLink -> KontraLink -> KontraModal
 modalAccountRemoval templates doctitle activationlink removallink = do
