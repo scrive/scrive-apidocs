@@ -526,7 +526,7 @@ pageDocumentDesign=
 docname=
        <span class="docname">
          <span class="docname-display">
-           <span class="text"> $documenttitle$</span>
+           <span class="visible-docname"> $documenttitle$</span>
            $if(!basiccontract)$
            <a href="#" class="icon edit"></a>
            $endif$
@@ -788,7 +788,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
       </div>
       <div class="modal-body">
         <div class="modal-content">
-          <p>Är du säker att du vill underteckna dokumentet <strong>$documenttitle$</strong>?</p>
+          <p>Är du säker att du vill underteckna dokumentet <strong class="visible-docname">$documenttitle$</strong>?</p>
           <p>När du undertecknat kommer en automatisk inbjudan att skickas till 
             <span class="Xinvited">Invited</span> med e-post.</p>
           <span class="eleghidden" style="display:none;">
@@ -849,12 +849,12 @@ pageDocumentForAuthorHelpersLocalDialogs=
         <div class="modal-content">
          $if(contract)$ 
           <div id="dialog-confirm-text-send">
-            <p>Du har valt en sekreterarroll och kommer själv inte att underteckna. Är du säker på att du vill skicka en inbjudan att underteckna dokumentet <strong>$documenttitle$</strong> till <span class="Xinvited">Invited</span>?</p>
+            <p>Du har valt en sekreterarroll och kommer själv inte att underteckna. Är du säker på att du vill skicka en inbjudan att underteckna dokumentet <strong class="visible-docname">$documenttitle$</strong> till <span class="Xinvited">Invited</span>?</p>
           </div>
           <div id="dialog-confirm-text-send-fields">
             <p>Du har skapat fält för parterna att fylla i innan de undertecknar. Efter att alla har undertecknat kommer du att 
               få ett mail med en länk till en sida på SkrivaPå där du kan granska parternas uppgifter och underteckna dokumentet. </p>
-            <p> Vill du skicka inbjudan att fylla i och underteckna dokumentet <strong>$documenttitle$</strong> till 
+            <p> Vill du skicka inbjudan att fylla i och underteckna dokumentet <strong class="visible-docname">$documenttitle$</strong> till 
               <span class="Xinvited">Invited</span>?  </p>
           </div>
 
@@ -864,7 +864,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
           </div>
           $elseif(offer)$
             <div id="dialog-confirm-text-send">
-              <p>Är du säker på att du vill skicka offerten <strong>$documenttitle$</strong> till <span class="Xinvited">Invited</span>?</p>
+              <p>Är du säker på att du vill skicka offerten <strong class="visible-docname">$documenttitle$</strong> till <span class="Xinvited">Invited</span>?</p>
             </div>
           $endif$
         </div>

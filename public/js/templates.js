@@ -1002,8 +1002,11 @@ safeReady(function() {
 
   var stopEditing = function() {
     if (editfield.val() && editfield.val().length>0) {
-      display.find(".text").text(editfield.val());
-      hiddenfield.val(editfield.val());
+      var newdocname = editfield.val();
+
+      $(".visible-docname").text(newdocname);
+      hiddenfield.val(newdocname);
+      
       edit.hide();
       display.show();
     }
