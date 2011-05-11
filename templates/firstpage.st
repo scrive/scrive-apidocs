@@ -96,7 +96,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <p class="introtext">Signera avtal och andra dokument elektroniskt med SkrivaPå. <br />
                                                 Våra kunder och våra kunders kunder älskar enkelheten.
                                                 </p>
-                                                <h2>Skapa konto nu!</h2>
+                                                <h3>Skapa konto nu!</h3>
                                                 <p class="introtext">1 månad full funktionalitet utan kostnad. Inga förpliktelser.</p>
                                                 <form method="post" action="/signup" class="requestAccount">
                                                         <input class="shiny" type="email" name="email" infotext="Fyll i din e-postadress" /> <a href="#" class="submit new-btn-small green2 center"><p>Skapa konto!</p></a>

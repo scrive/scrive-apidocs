@@ -296,7 +296,7 @@ a.new-btn-small.black p {
         padding-top: 32px;
 }
 
-#top-container .intro-container h2 {
+#top-container .intro-container h2, #top-container .intro-container h3 {
 	color: #FFFFFF;
 	font: 36px "Copse";
         padding-top: 32px;
