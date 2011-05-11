@@ -510,7 +510,7 @@ accountFromSignInputs=
          <div>
           <input type="checkbox" name="tos" id="tos" class="float-left" style="width:20px;margin:0px;"/>
           <div class="float-left" style="width:290px;">
-            <label for="tos" class="float-left" style="padding-left:5px;">Jag har läst och accepterat <a href="/allmana-villkor">SkrivaPå Allmänna Villkor</a></label>
+            <label for="tos" class="float-left" style="padding-left:5px;">Jag har läst och accepterat <a target="_blank" href="/allmana-villkor">SkrivaPå Allmänna Villkor</a></label>
           </div>
          </div>
          <div style="padding-top:20px">
