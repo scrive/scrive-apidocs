@@ -111,6 +111,7 @@ userFields user = do
     field "fullname" $ fullname
     field "fullnameOrEmail" $ fullnameOrEmail
     field "fullnamePlusEmail" $ fullnamePlusEmail
+    field "hassupervisor" $ isJust $ usersupervisor user
     
     --field "invoiceaddress" $ BS.toString $ useraddress $ userinfo user
     menuFields user
