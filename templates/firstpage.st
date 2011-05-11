@@ -92,8 +92,9 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                 <h1 class="logo no-txt">SkrivaPå</h1>
                                 <div class="leftMain">
                                         <div class="intro-container">
-                                                <h2>Varför krångla?</h2>
-                                                <p class="introtext">SkrivaPå är en tjänst för att skriva på och arkivera avtal elektroniskt. <BR/> Våra kunder och våra kunders kunder älskar enkelheten.
+                                                <h1>Varför krångla? - Signera med SkrivaPå!</h1>
+                                                <p class="introtext">Signera avtal och andra dokument elektroniskt med SkrivaPå. <br />
+                                                Våra kunder och våra kunders kunder älskar enkelheten.
                                                 </p>
                                                 <h2>Skapa konto nu!</h2>
                                                 <p class="introtext">1 månad full funktionalitet utan kostnad. Inga förpliktelser.</p>
