@@ -145,21 +145,15 @@ formatProvider NordeaProvider = "Nordea e-legitimation"
 formatProvider TeliaProvider  = "Telia e-legitimation"
 formatProvider _ = "e-legitimation"
 
-sealSpecFromDocument :: KontrakcjaTemplates -> String -> Document -> User ->  String -> String -> IO Seal.SealSpec
-sealSpecFromDocument templates hostpart document author inputpath outputpath =
+sealSpecFromDocument :: KontrakcjaTemplates -> String -> Document -> String -> String -> IO Seal.SealSpec
+sealSpecFromDocument templates hostpart document inputpath outputpath =
   let docid = unDocumentID (documentid document)
-      authorHasSigned = (any ((maybe False (== (userid author))) . maybesignatory) (documentsignatorylinks document))
+      Just authorsiglink = getAuthorSigLink document
+      authorHasSigned = SignatoryPartner `elem` (signatoryroles authorsiglink) && isJust $ maybesigninfo authorsiglink
       isSignatory x = SignatoryPartner `elem` signatoryroles x
-      signatoriesdetails = map signatorydetails $ filter isSignatory $ documentsignatorylinks document
-      authordetails = (signatoryDetailsFromUser author) 
-                      { signatoryfstnameplacements = authorfstnameplacements document
-                      , signatorysndnameplacements = authorsndnameplacements document
-                      , signatorypersonalnumberplacements = authorpersonalnumberplacements document
-                      , signatorycompanynumberplacements = authorcompanynumberplacements document
-                      , signatoryemailplacements = authoremailplacements document
-                      , signatorycompanyplacements = authorcompanyplacements document
-                      , signatoryotherfields = authorotherfields document
-                      }
+      signatoriesdetails = [signatorydetails sl | sl < documentsignatorylinks document
+                                                , SignatoryPartner `elem` signatoryroles sl]
+      authordetails = signatorydetails authorsiglink
       signatories = personsFromDocument document
       secretaries = if authorHasSigned then [] else [personFromSignatoryDetails authordetails]
 
@@ -241,17 +235,15 @@ sealSpecFromDocument templates hostpart document author inputpath outputpath =
             }
 
 sealDocument :: Context 
-             -> User
              -> Document
              -> IO (Either String Document)
-sealDocument ctx@Context{ctxdocstore, ctxs3action, ctxtwconf,ctxhostpart}
-             author
+sealDocument ctx@Context{ctxdocstore, ctxs3action, ctxtwconf, ctxhostpart}
              document = do
-                 let files = documentfiles document
-                 mapM_ (sealDocumentFile ctx author document) files
-                 Just newdocument <- query $ GetDocumentByDocumentID (documentid document)
-                 _ <- liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxdocstore ctxs3action) (documentsealedfiles newdocument)
-                 return $ Right newdocument
+  let files = documentfiles document
+  mapM_ (sealDocumentFile ctx document) files
+  Just newdocument <- query $ GetDocumentByDocumentID (documentid document)
+  _ <- liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxdocstore ctxs3action) (documentsealedfiles newdocument)
+  return $ Right newdocument
 
                  
 
@@ -270,12 +262,10 @@ sealDocument ctx@Context{ctxdocstore, ctxs3action, ctxtwconf,ctxhostpart}
 
 
 sealDocumentFile :: Context 
-                 -> User
                  -> Document
                  -> File
                  -> IO (Either String Document)
 sealDocumentFile ctx@Context{ctxdocstore, ctxs3action, ctxtwconf, ctxhostpart, ctxtemplates}
-                 author
                  document@Document{documentid,documenttitle}
                  file@File {fileid,filename} =
   withSystemTempDirectory ("seal-" ++ show documentid ++ "-" ++ show fileid ++ "-") $ \tmppath -> do
@@ -283,7 +273,7 @@ sealDocumentFile ctx@Context{ctxdocstore, ctxs3action, ctxtwconf, ctxhostpart, c
   let tmpout = tmppath ++ "/output.pdf"
   content <- getFileContents ctx file
   BS.writeFile tmpin content
-  config <- sealSpecFromDocument ctxtemplates ctxhostpart document author tmpin tmpout
+  config <- sealSpecFromDocument ctxtemplates ctxhostpart document tmpin tmpout
   Log.debug $ show config
   (code,stdout,stderr) <- readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
 
