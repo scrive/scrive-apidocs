@@ -97,7 +97,7 @@ $loadingdialog()$
 				  </span> 
 				  $endif$
 				</td>
-				<td><a href="#" class="listSignatoryExpand">$document.signatories:{sig | $sig.name$}; separator=", "$</a></td>
+				<td><a href="#" onclick="return false;" class="listSignatoryExpand">$document.signatories:{sig | $sig.name$}; separator=", "$</a></td>
 				<td>
 				  <a href="$document.doclink$" class="listname">$document.documenttitle$</a>
 				  $if(document.davelink)$ 
