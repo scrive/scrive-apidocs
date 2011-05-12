@@ -221,7 +221,7 @@ handlePostSubaccount = do
 handleTakeOverSubaccount :: BS.ByteString -> Kontra ()
 handleTakeOverSubaccount email = do
   ctx@Context{ctxmaybeuser = Just supervisor} <- get
-  Just invited <- liftIO $ query $ GetUserByEmail (Email email)
+  Just invited <- liftIO $ query $ GetUserByEmail Nothing (Email email)
   mail <- mailInviteUserAsSubaccount ctx invited supervisor
   scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [(userfullname invited, email)] }
   addFlashMsg =<< (liftIO $ flashMessageUserInvitedAsSubaccount (ctxtemplates ctx))
@@ -251,7 +251,7 @@ handleViralInvite :: Kontra KontraLink
 handleViralInvite = withUserPost $ do
     getOptionalField asValidEmail "invitedemail" >>= maybe (return ()) (\invitedemail -> do
         ctx@Context{ctxmaybeuser = Just user} <- get
-        muser <- query $ GetUserByEmail $ Email invitedemail
+        muser <- query $ GetUserByEmail Nothing $ Email invitedemail
         if isJust muser
            then do
                addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists $ ctxtemplates ctx)
@@ -481,17 +481,20 @@ handleAccountSetupGet aid hash = do
                                     sendRedirect LinkMain)
                          else mzero
                   _  -> mzero
-         Nothing -> -- action has expired, but we may be able to generate it again
-             getOptionalField asValidEmail "email" >>= maybe mzero (\email ->
-                 (query $ GetUserByEmail $ Email email) >>= maybe mzero (\user ->
-                     if isNothing $ userhasacceptedtermsofservice user
-                        then do
-                            ctx <- get
-                            content <- liftIO $ activatePageViewNotValidLink (ctxtemplates ctx) $ BS.toString email
-                            renderFromBody TopNone kontrakcja $ cdata content
-                        else mzero
-                     )
-                 )
+         Nothing -> do--
+             muser <- liftMM (query . GetUserByEmail Nothing . Email) (getOptionalField asValidEmail "email")
+             case muser of
+                  Just user -> 
+                    if isNothing  $ join $ userhasacceptedtermsofservice <$> muser
+                     then do
+                        ctx <- get
+                        let email = unEmail $ useremail $ userinfo $ user
+                        content <- liftIO $ activatePageViewNotValidLink (ctxtemplates ctx) $ BS.toString email 
+                        renderFromBody TopNone kontrakcja $ cdata content
+                    else mzero
+                  Nothing -> mzero  
+                    
+             
     where
         activationPage muser = do
             extendActionEvalTimeToOneDayMinimum aid
@@ -566,7 +569,7 @@ handleAccountSetupPost aid hash = do
                   _ -> mzero
          Nothing -> do -- try to generate another activation link
              getOptionalField asValidEmail "email" >>= maybe mzero (\email ->
-                 (query $ GetUserByEmail $ Email email) >>= maybe mzero (\user ->
+                 (query $ GetUserByEmail Nothing $ Email email) >>= maybe mzero (\user ->
                      if isNothing $ userhasacceptedtermsofservice user
                         then do
                             ctx <- get
@@ -629,7 +632,7 @@ handleAccountSetupPost aid hash = do
                      update $ SetInviteInfo minviter invitationtime Viral (userid user)
                      return muser
                  Nothing -> do -- user already exists, get her
-                     query $ GetUserByEmail invitedemail
+                     query $ GetUserByEmail Nothing invitedemail
 
 {- |
     Helper method for handling account activation.  This'll check
