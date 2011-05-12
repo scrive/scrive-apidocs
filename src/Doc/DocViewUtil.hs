@@ -19,27 +19,27 @@ import Data.Maybe
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 
-partyList :: Document -> [SignatoryDetails]
-partyList document = map signatorydetails $ filter isSignatory (documentsignatorylinks document)
-    where
-        isSignatory person = SignatoryPartner `elem` signatoryroles person
+isSignatory :: SignatoryLink -> Bool
+isSignatory sl = SignatoryPartner `elem` signatoryroles sl
 
+hasSigned :: SignatoryLink -> Bool
+hasSigned sl = isJust $ maybesigninfo sl
+
+partyList :: Document -> [SignatoryDetails]
+partyList document = [signatorydetails sl | sl <- documentsignatorylink document
+                                          , isSignatory sl]
+  
 partyUnsignedList :: Document -> [SignatoryDetails]
-partyUnsignedList document =
-    let signalinks = filter isSignatory $ documentsignatorylinks document
-        unsignalinks = filter (isNothing . maybesigninfo) signalinks
-        signas = map signatorydetails unsignalinks
-        isSignatory person = SignatoryPartner `elem` signatoryroles person
-    in signas
+partyUnsignedList document = [signatorydetails sl | sl <- documentsignatorylink document
+                                                  , isSignatory sl
+                                                  , not $ hasSigned sl]
 
 partySignedList :: Document -> [SignatoryDetails]
-partySignedList document =
-    let signalinks = filter isSignatory $ documentsignatorylinks document
-        unsignalinks = filter (isJust . maybesigninfo) signalinks
-        signas = map signatorydetails unsignalinks
-        isSignatory person = SignatoryPartner `elem` signatoryroles person
-    in signas
+partySignedList document = [signatorydetails sl | sl <- documentsignatorylink document
+                                                  , isSignatory sl
+                                                  ,  hasSigned sl]
 
+-- ?? What is this? -EN
 partyUnsignedMeAndList :: MagicHash -> Document -> [SignatoryDetails]
 partyUnsignedMeAndList magichash document =
     let signalinks = filter isSignatory $ documentsignatorylinks document
@@ -66,23 +66,21 @@ partyUnsignedMeAndList magichash document =
     in me : signas
 
 partyListButAuthor :: Document -> [SignatoryDetails]
-partyListButAuthor document@Document{ documentauthor=Author authorid } =
-    map signatorydetails $ filter (isNotAuthor) $ filter isSignatory $ documentsignatorylinks document
-    where
-        isSignatory person = SignatoryPartner `elem` signatoryroles person
-        isNotAuthor = maybe True (/= authorid) . maybesignatory
+partyListButAuthor document = [signatorydetails sl | sl <- documentsignatorylinks document
+                                                   , isSignatory sl
+                                                   , not $ siglinkIsAuthor sl]
   
-joinWith::[a]->[[a]]->[a]
+joinWith :: [a] -> [[a]] -> [a]
 joinWith _ [] = []
 joinWith _ [x] = x
 joinWith s (x:xs) = x ++ s ++ (joinWith s xs)  
 
 {- Either a signatory name or email address. We dont want to show empty strings -}
-personname::SignatoryLink -> BS.ByteString 
+personname :: SignatoryLink -> BS.ByteString 
 personname = personname' . signatorydetails 
 
-{- Same but unwrapped. We need this cause author detais are in this format  -}
-personname'::SignatoryDetails -> BS.ByteString 
+{- Same but unwrapped. We need this cause author details are in this format  -}
+personname' :: SignatoryDetails -> BS.ByteString 
 personname' signdetails = if (BS.null $ signatoryname $ signdetails)
                            then  signatoryemail $ signdetails
                            else  signatoryname $ signdetails
@@ -90,7 +88,6 @@ personname' signdetails = if (BS.null $ signatoryname $ signdetails)
 {- Function for changing SignatoryLink into our inner email address so u dont have to unwrap every time-}
 emailFromSignLink::SignatoryLink->(BS.ByteString,BS.ByteString)
 emailFromSignLink sl = (signatoryname $ signatorydetails sl,signatoryemail $ signatorydetails sl) 
-
 
 renderListTemplate:: KontrakcjaTemplates -> [String] -> IO String
 renderListTemplate templates list = if (length list > 1)
