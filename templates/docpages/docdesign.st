@@ -500,8 +500,7 @@ pageDocumentDesign=
           <input type="email" infotext="E-post" name="signatoryemail" autocomplete="off" />
           $dragndropIcon()$
         </span>
-        <br/>
-        <span class='dragfield sigcomp inputWrapper'>
+       <span class='dragfield sigcomp inputWrapper'>
           <span style="display:none;" class="fieldid">company</span>
           <span style="display:none;" class="type">sig</span>
           <input type="text" infotext="Företag" name="signatorycompany" autocomplete="off" />
