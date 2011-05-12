@@ -244,7 +244,7 @@ mainLinksFields = do
     field "linklogout"           $ show LinkLogout
     field "linkmain"             $ show LinkMain
     field "linkquestion"         $ show LinkAskQuestion
-    field "linkrequestaccount"   $ show LinkRequestAccount
+    field "linksignup"           $ show LinkSignup
 
 {- |
    Defines some standard context information as fields handy for substitution
