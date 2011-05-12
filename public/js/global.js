@@ -223,106 +223,78 @@ safeReady(function() {
  * For the arkiv view fancy selection
  */
 safeReady(function () {
-  var selectables = $("#selectable");
-  var checks = $(".check");
-  // remember the last row of the table that was clicked
-  var focused;
-  // two alternative ways to track clicks off of a .check
-  //$("*").not(".check").click(function(){if(this == document.activeElement) { focused = null; }});
-  // this way is cleaner since it only installs a handler on the toplevel document instead of nearly
-  // every element
-
-  // when you click outside of the table, lose focus
-  $(document).click(function(event){ 
-    if($(event.target).parents("#selectable").size() === 0){ 
-      focused = null; 
-    }
-  });
-
-  // override click when shift key is held
-  // cannot be live or it doesn't override properly
-  $("tr", selectables).mousedown(function(event){
-    // we have a previous focus
-    // shift key is pressed
-    // check is not clicked
-    if(focused && event.shiftKey && $(event.target).filter(".check").size() === 0){
-      var startIndex = focused?checks.index(focused):null;
-      var endIndex = checks.index($(this).find(".check"));
-      var s = Math.min(startIndex, endIndex);
-      var e = Math.max(startIndex, endIndex);
-      
-      checks.slice(s, e + 1).attr("checked", true);
-
-      checks.not(":checked").parents("tr").removeClass("ui-selected");
-      checks.filter(":checked").parents("tr").addClass("ui-selected");
-      
-      focused = $(checks.get(endIndex));
-      checks.get(endIndex).focus();
-      
-      // cancel all further click processing
-      // we are overriding the Selectable behavior for shift-clicks
-      return false;
-    }                     
-  });
-
-
-  // the jQuery Selectable feature 
-  selectables.selectable({
-    // links and input fields do not have click overridden
-    cancel: 'a,input',
+    var rows = $("#selectable tr"),
+        rowsLinks = rows.find("a"),
+        rowsChecks = rows.find(".check");
     
-    unselected: function(event, ui) {
-      $(ui.unselected).find(".check").attr("checked", false);
-    },
-
-    selected: function(event, ui) {
-      focused = $(ui.selected).find(".check")
-        .attr("checked", true)
-        .focus();
-    }});
-
-  $(".check:checked").parents("tr").addClass("ui-selected");
-  $(".ui-selected").find(".check").attr("checked", true);
-        
-  $(".check", selectables).live("click", function(event) {
-    // shift
-    // have a saved focus
-    // focused is a check
-    // focused is checked
-    if(event.shiftKey && focused && focused.filter(".check").size() > 0 && focused.attr("checked")){
-      var startIndex = checks.index(focused);
-      var endIndex = checks.index(this);
-      
-      var s = Math.min(startIndex, endIndex);
-      var e = Math.max(startIndex, endIndex);
-      
-      var checksslice = checks.slice(s, e+1);
-      checksslice.attr("checked", true);
-      checksslice.parents("tr").addClass("ui-selected");
-    } else {
-      if($(this).attr("checked")) {
-        $(this).parents("tr").addClass("ui-selected");
-      } else {
-        $(this).parents("tr").removeClass("ui-selected");
-      }
+    function highlightRow(row) {
+        if (row.attr("selected"))
+            row.removeClass("ui-selected");
+        row.addClass("ui-selecting");
     }
-
-    focused = $(this);
-  });
-
-  $('#all').live("click", function() {
-    var acc = checks.filter(function() {
-      return $(this).attr("checked");
-    }).size() > 0;
-
-    checks.attr("checked", !acc);
     
-    if(!acc) {    
-      checks.parents("tr").addClass("ui-selected");
-    } else {
-      checks.parents("tr").removeClass("ui-selected");
+    function unhighlightRow(row) {
+        row.removeClass("ui-selecting");
+        if (row.attr("selected"))
+            row.addClass("ui-selected");
     }
-  }); 
+    
+    function selectRow(row, toggleCheckbox, check) {
+        unhighlightRow(row);
+        if (!check)
+            check = row.find(".check");
+        if (check.length > 0) {
+            row.toggleClass("ui-selected");
+            if (toggleCheckbox) {
+                if (check.attr("checked")) {
+                    row.removeAttr("selected");
+                    check.removeAttr("checked");
+                } else {
+                    row.attr("selected", true);
+                    check.attr("checked", true);
+                }
+            }
+        }
+    }
+    
+    // select checked rows is page was refreshed
+    rowsChecks.each(function() {
+        var that = $(this);
+        if (that.attr("checked")) {
+            var row = that.parents("tr");
+            selectRow(row, false, that);
+            row.attr("selected", true);
+        }
+    });
+    
+    rowsChecks.live("change", function() {
+        var that = $(this), row = that.parents("tr");
+        if (!that.attr("checked"))
+            row.removeAttr("selected");
+        selectRow(row, false, that);
+    });
+    
+    rows.live("click", function(event) {
+        // we want it respond to primary mouse button
+        // and not if we clicked checkbox/input text
+        if (event.which == 1 && !event.target.type)
+            selectRow($(this), true);
+    });
+    rows.live("mousedown", function(event) {
+        if (event.which == 1 && !event.target.type)
+            highlightRow($(this));
+    });
+    rows.live("mouseout", function() { unhighlightRow($(this)); });
+    
+    // prevent rows from being selected while we click on links
+    rowsLinks.live("click", function(event) { event.stopPropagation(); });
+    rowsLinks.live("mousedown", function(event) { event.stopPropagation(); });
+    
+    $("#all").change(function() {
+        rows.each(function() {
+            selectRow($(this), true);
+        });
+    });
 });
 
 function initFileInputs(){
