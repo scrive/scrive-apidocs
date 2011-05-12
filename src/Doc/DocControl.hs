@@ -479,7 +479,7 @@ handleAfterSigning :: Document -> SignatoryLinkID -> Kontra KontraLink
 handleAfterSigning document@Document{documentid,documenttitle} signatorylinkid = do
   ctx <- get
   signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
-  maybeuser <- query $ GetUserByEmail (Email $ signatoryemail (signatorydetails signatorylink))
+  maybeuser <- query $ GetUserByEmail (currentService ctx) (Email $ signatoryemail (signatorydetails signatorylink))
   case maybeuser of
     Nothing -> do
       let details = signatorydetails signatorylink
@@ -602,14 +602,15 @@ isFriendOf uid user = (unUserID uid `elem` map unFriend (userfriends user) || Ju
 isFriendOf' :: UserID -> Maybe User -> Bool
 isFriendOf' uid muser = fromMaybe False $ fmap (isFriendOf uid) muser
 
-isFriendWithSignatory :: UserID -> Document -> IO Bool
+isFriendWithSignatory :: UserID -> Document -> Kontra Bool
 isFriendWithSignatory uid document = do
                                    areFriends <- sequence $ map (isFriendWithSignatoryLink uid) $ documentsignatorylinks document
                                    return $ or areFriends
                                    
-isFriendWithSignatoryLink :: UserID -> SignatoryLink -> IO Bool
+isFriendWithSignatoryLink :: UserID -> SignatoryLink -> Kontra Bool
 isFriendWithSignatoryLink uid sl = do
-                                     muser1 <- query $ GetUserByEmail $ Email $ signatoryemail $ signatorydetails $  sl
+                                     ctx <- get
+                                     muser1 <- query $ GetUserByEmail (currentService ctx) $ Email $ signatoryemail $ signatorydetails $  sl
                                      muser2 <- sequenceMM $ fmap (query . GetUserByUserID) $ maybesignatory sl
                                      return $ (isFriendOf' uid muser1) || (isFriendOf' uid muser2)
 {- |
@@ -649,7 +650,7 @@ handleIssueShowGet docid = checkUserTOSGet $ do
            _ ->  liftIO $ pageDocumentForAuthor ctx2 document author                
    -- friends can just look (but not touch)
    else do
-        friendWithSignatory <- liftIO $ isFriendWithSignatory userid document 
+        friendWithSignatory <- isFriendWithSignatory userid document 
         if (isFriendOf userid author || friendWithSignatory )
          then liftIO $ pageDocumentForViewer ctx document author Nothing
          -- not allowed
@@ -1024,7 +1025,7 @@ withAuthorOrFriend docid action = (fmap join) $ withUserGet $ do
         , ctxhostpart
     } <- get
     author <- queryOrFail $ GetUserByUserID $ unAuthor documentauthor
-    friendWithSignatory <- liftIO $ isFriendWithSignatory userid doc
+    friendWithSignatory <- isFriendWithSignatory userid doc
     if isAuthor doc user || userid `isFriendOf` author || friendWithSignatory
        then action
        else mzero

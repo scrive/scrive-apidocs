@@ -130,9 +130,10 @@ integrationAPI =  dir "integration" $ msum [
 --- Real api requests
 getRequestUser:: IntegrationAPIFunction User
 getRequestUser = do
+    srvs <- service <$> ask
     memail <- apiAskBS "email"
     when (isNothing memail) $ throwApiError API_ERROR_MISSING_VALUE "No user email provided"
-    muser <- query $ GetUserByEmail $ Email $ fromJust memail
+    muser <- query $ GetUserByEmail (Just srvs) $ Email $ fromJust memail
     when (isNothing muser) $ throwApiError API_ERROR_NO_USER "No user"
     let user = fromJust muser
     --srv <-  service <$> ask

@@ -72,7 +72,7 @@ import Happstack.Server.Internal.Cookie
 import API.IntegrationAPI
 import Templates.Templates
 import Routing
-
+import API.Service.ServiceState
 {- | 
   Defines the application's configuration.  This includes amongst other things
   the http port number, amazon, trust weaver and email configuraton,
@@ -424,8 +424,9 @@ appHandler appConf appGlobals = do
       let newsessionuser = fmap userid $ ctxmaybeuser ctx'  
       let newflashmessages = ctxflashmessages ctx'
       let newelegtrans = ctxelegtransactions ctx'
+      let newservice =  fmap (\(srv,l) -> (serviceid srv,l))  $ ctxservice ctx'
       F.updateFlashCookie (aesConfig appConf) (ctxflashmessages ctx) newflashmessages
-      updateSessionWithContextData session newsessionuser newelegtrans
+      updateSessionWithContextData session newsessionuser newservice newelegtrans
       return res
 
     createContext :: Request -> Session -> ServerPartT IO Context
@@ -499,7 +500,7 @@ forgotPasswordPagePost = do
     memail <- getOptionalField asValidEmail "email"
     case memail of 
         Just email -> do
-            muser <- query $ GetUserByEmail $ Email email
+            muser <- query $ GetUserByEmail Nothing $ Email email
             case muser of 
                 Nothing -> do
                     Log.security $ "ip " ++ (show $ ctxipnumber ctx) ++ " made a failed password reset request for non-existant account " ++ (BS.toString email)
@@ -566,7 +567,7 @@ signup vip freetill =  do
     case memail of
          Nothing -> return LoopBack
          Just email -> do
-             muser <- query $ GetUserByEmail $ Email $ email
+             muser <- query $ GetUserByEmail Nothing $ Email $ email
              case  muser of
                   Just user ->
                       if isNothing $ userhasacceptedtermsofservice user
@@ -624,7 +625,7 @@ handleLoginPost = do
     case (memail, mpasswd) of
         (Just email, Just passwd) -> do
             -- check the user things here
-            maybeuser <- query $ GetUserByEmail (Email email)
+            maybeuser <- query $ GetUserByEmail Nothing (Email email)
             case maybeuser of
                 Just User{ userid, userpassword } 
                     | verifyPassword userpassword passwd -> do

@@ -82,7 +82,7 @@ import Payments.PaymentsState as Payments
 import Data.Data
 import Data.Maybe
 import User.Password
-import API.Service.ServiceState (ServiceID)
+import API.Service.ServiceState 
 
 newtype UserID = UserID { unUserID :: Int }
     deriving (Eq, Ord, Typeable)
@@ -580,6 +580,7 @@ instance Indexable User where
                       , ixFun (\x -> [useremail $ userinfo x] :: [Email])
                       , ixFun (\x -> maybe [] return (usersupervisor x) :: [SupervisorID])
                       , ixFun userfriends
+                      , ixFun (\x -> [userservice x] :: [Maybe ServiceID])
                       ]
 
 
@@ -692,10 +693,10 @@ modifyUser uid action = do
                 modify (updateIx uid newuser)
                 return $ Right newuser
 
-getUserByEmail :: Email -> Query Users (Maybe User)
-getUserByEmail email = do
+getUserByEmail :: Maybe Service  -> Email ->  Query Users (Maybe User)
+getUserByEmail service email = do
   users <- ask
-  return $ getOne (users @= email)
+  return $  getOne (users @= email @= fmap serviceid service)
     
 getUserByUserID :: UserID -> Query Users (Maybe User)
 getUserByUserID userid = do

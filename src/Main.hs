@@ -121,7 +121,7 @@ initDatabaseEntries = do
   -- create initial database entries
   passwdhash <- Kontra.createPassword (BS.pack "admin")
   flip mapM_ Kontra.initialUsers $ \email -> do
-      maybeuser <- query $ Kontra.GetUserByEmail email
+      maybeuser <- query $ Kontra.GetUserByEmail Nothing email
       case maybeuser of
           Nothing -> do
               update $ Kontra.AddUser (BS.empty, BS.empty) (Kontra.unEmail email) passwdhash Nothing Nothing
