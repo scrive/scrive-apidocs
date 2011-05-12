@@ -115,7 +115,7 @@ $loadingdialog()$
                               <div src="/" class="icon status $signatory.status$ tooltip" rel="#tooltip-$signatory.status$" style="margin-left:5px;"></div>
                             </td>
                             <td>
-                              <div style="margin-left:10px;">
+                              <span style="margin-left:10px;">
                               $if(signatory.signdate)$
                                 $signatory.signdate$
                               $elseif(signatory.rejecteddate)$
@@ -125,9 +125,9 @@ $loadingdialog()$
                               $elseif(signatory.readdate)$
                                 $signatory.readdate$
                               $endif$
-                              </div>
+                              </span>
                             </td>
-                            <td><div style="margin-left:10px;">$signatory.name$</div></td>
+                            <td><span style="margin-left:10px;">$signatory.name$</span></td>
                             <td></td>
                             <td></td>
                           </tr>
