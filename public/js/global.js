@@ -277,10 +277,14 @@ safeReady(function () {
     rows.live("click", function(event) {
         // we want it respond to primary mouse button
         // and not if we clicked checkbox/input text
-        if (event.which == 1 && !event.target.type)
+        // note: <= is for IE, event.which returns 0 there,
+        // primary button has value 1 so we're all good.
+        if (event.which <= 1 && !event.target.type)
             selectRow($(this), true);
     });
     rows.live("mousedown", function(event) {
+        // it seems event.which works fine in IE
+        // if it comes to mousedown event.
         if (event.which == 1 && !event.target.type)
             highlightRow($(this));
     });
