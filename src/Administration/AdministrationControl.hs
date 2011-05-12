@@ -396,6 +396,8 @@ migrate0SignatoryLinks links = do
 {- |
    A temporary service to fix the migration; 0 MagicHash and 0 SignatoryLinkID is replaced with new
    random one.
+
+  I'm removing this! -EN
  -}
 handleMigrate0 :: Kontra Response
 handleMigrate0 = onlySuperUser $ do
@@ -408,7 +410,7 @@ handleMigrate0 = onlySuperUser $ do
  liftIO $ print d2 -- force the value
  sendRedirect LinkAdminOnly
 
-{- | Reads params and returns function for conversion of user payment policy. With no param clears custom and temporary fields !!!!-}
+{- | Reads params and returns function for conversion of user payment policy. With no param clears custom and temporary fields !!!! -}
 getUserPaymentPolicyChange :: Kontra (UserPaymentPolicy -> UserPaymentPolicy)
 getUserPaymentPolicyChange =  do 
                           mtmppaymentchangeenddate   <- fmap (join . (fmap parseMinutesTimeMDY)) $ getField "tmppaymentchangeenddate"
