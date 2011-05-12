@@ -276,12 +276,8 @@ instance (MaybeUser u) => MaybeUser (Maybe u) where
 
 
 {- |  And this is a function for comparison -}
-sameUser::(MaybeUser u1, MaybeUser u2) =>  u1 ->  u2 -> Bool  
+sameUser:: (MaybeUser u1, MaybeUser u2) =>  u1 ->  u2 -> Bool  
 sameUser u1 u2 = getUserID u1 == getUserID u2
-
-{- |   And checking for being an author of a document -}
-isAuthor::(MaybeUser u) => Document -> u -> Bool
-isAuthor d u = getUserID u ==  getUserID (documentauthor d) 
 
 
 {- |
@@ -313,13 +309,12 @@ instance CategorisedByType Document where
 matchingType::(CategorisedByType a, CategorisedByType b) => a -> b -> Bool
 matchingType a b = (isContract a && isContract b) || (isOffer a && isOffer b) || (isAttachment a && isAttachment b)
 
-
 checkCSVSigIndex :: UserID -> [SignatoryLink] -> Int -> Either String Int
 checkCSVSigIndex authorid sls n
   | n<0 || n>=slcount = Left $ "signatory with index " ++ (show n) ++ " doesn't exist."
   | n==0 && slcount>0 && sameUser authorid (head sls) = Left "author can't be set from csv"
   | otherwise = Right n
-  where slcount = length $ sls
+  where slcount = length sls
 
 -- GETTERS
 
@@ -438,3 +433,51 @@ replaceSignOrder :: SignOrder -> SignatoryDetails -> SignatoryDetails
 replaceSignOrder signorder sd = sd {
     signatorysignorder = signorder
 }
+
+{- |
+   Get the Just SignatoryLink from doc that has sid. Nothing when not found.
+ -}
+signlinkFromDocById :: Document -> SignatoryLinkID -> Maybe SignatoryLink
+signlinkFromDocById doc sid = find ((== sid) . signatorylinkid) (documentsignatorylinks  doc)
+
+{- |
+   Get the author's signatory link.
+ -}
+getAuthorSigLink :: Document -> Maybe SignatoryLink
+getAuthorSigLink = find (elem SignatoryAuthor . signatoryroles) . documentsignatorylinks
+
+{- |
+   Does the siglink belong to a user with userid and email?
+ -}
+isSigLinkForUserInfo :: UserID -> BS.ByteString -> SignatoryLink -> Bool
+isSigLinkForUserInfo userid email siglink = 
+    Just userid == maybesignatory siglink
+       || email == signatoryemail $ signatorydetails siglink
+
+isSigLinkForUser user = isSigLinkForUserInfo (userid user) (useremail $ userinfo user)
+
+{- |
+   Can the user view thid document directly? (not counting friends)
+ -}
+canUserInfoViewDirectly userid email doc = 
+    isJust $ find (isSigLinkForUser userid email) $ documentsignatorylinks doc
+
+canUserViewDirectly user = canUserInfoViewDirectly (userid user) (useremail $ userinfo user)
+
+isSigLinkIDForSigLink siglinkid siglink = siglinkid == signatorylinkid siglink
+
+getSigLinkBySigLinkID siglinkid = 
+    find (isSigLinkIDForSigLink siglinkid) . documentsignatorylinks
+
+{- |
+   Has the signatory's sign order come up?
+ -}
+isActivatedSignatory :: SignOrder -> SignatoryLink -> Bool
+isActivatedSignatory signorder siglink = 
+    signorder >= signatorysignorder $ signatorydetails siglink
+
+isCurrentSignatory :: SignOrder -> SignatoryLink -> Bool
+isCurrentSignatory signorder siglink =
+  signorder == signatorysignorder $ signatorydetails siglink
+
+siglinkIsAuthor siglink = SignatoryAuthor `elem` signatoryrole siglink
