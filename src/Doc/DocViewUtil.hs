@@ -1,16 +1,16 @@
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -Werror #-}
 
-module Doc.DocViewUtil (   personname,
-                       personname',
-                       partyList,
-                       partyListButAuthor,
-                       partySignedList,
-                       partyUnsignedMeAndList,
-                       partyUnsignedList,  
-                       joinWith,
-                       emailFromSignLink,
-                       renderListTemplate,  
-           ) where
+module Doc.DocViewUtil ( personname,
+                         personname',
+                         partyList,
+                         partyListButAuthor,
+                         partySignedList,
+                         partyUnsignedMeAndList,
+                         partyUnsignedList,  
+                         joinWith,
+                         emailFromSignLink,
+                         renderListTemplate,  
+                       ) where
 import Doc.DocState
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
