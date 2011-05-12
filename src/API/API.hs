@@ -3,91 +3,75 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  API.API
--- Maintainer  :  all
+-- Maintainer  :  mariusz@skrivapa.se
 -- Stability   :  development
 -- Portability :  portable
 --
--- Schema for all api calls
+-- Schema for all api calls. API calls are working as reader some APIContext. 
+-- API context contains (at least) JSON Object. Look at IntegrationAPI or WebShopAPI 
+-- for some examples.
 -----------------------------------------------------------------------------
-module API.API where
+module API.API(
+     -- Main stuff to build new API instance  
+       APIFunction
+     , APIRequestBody  
+     , APIResponse  
+     , APIContext(..)
+     , APICall(..)
+     , apiUnknownCall
+     -- Diggers for JSON embedded params 
+     , apiAskBS
+     , apiAskString
+     , apiAskStringMap
+     , apiAskMap
+     , apiMapLocal
+     , apiLocal
+     -- Asking about Kontra context
+     , askKontraContext
+     -- Standard way of getting JSON request body
+     , apiBody
+     -- Errors 
+     , throwApiError
+     , API_ERROR(..)
+      ) where
 
---import ELegitimation.BankID as BankID
-import ActionSchedulerState
-import Control.Monad (msum, mzero)
+
 import Control.Monad.State
-import Control.Monad.Trans (liftIO,lift)
-import Control.Concurrent
 import Data.Functor
 import AppView as V
-import Control.Concurrent
-import Crypto
-import Data.List
-import Data.Maybe
-import Doc.DocState
-import HSP.XML (cdata)
 import Happstack.Server hiding (simpleHTTP,host,body)
-import Happstack.State (query)
-import InspectXML
-import InspectXMLInstances
-import KontraLink
-import MinutesTime
 import Misc
-import Network.Socket
-import Session
-import System.IO.Unsafe
 import Kontra
-import qualified User.UserControl as UserControl
-import User.UserView as UserView
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy  as L
 import qualified Data.ByteString.UTF8 as BS
-import qualified Doc.DocControl as DocControl
-import qualified HSP as HSP
-import qualified Data.Map as Map
-import qualified Network.AWS.Authentication as AWS
-import qualified Network.HTTP as HTTP
-import qualified Network.AWS.AWSConnection as AWS
-import qualified TrustWeaver as TW
-import qualified Payments.PaymentsControl as Payments
-import qualified Contacts.ContactsControl as Contacts
-import qualified ELegitimation.BankID as BankID
-import Templates.Templates (readTemplates, renderTemplate, KontrakcjaTemplates, getTemplatesModTime)
-import qualified Administration.AdministrationControl as Administration
-import Control.Concurrent.MVar
-import Mails.MailsConfig
-import Mails.SendGridEvents
-import Mails.SendMail
-import System.Log.Logger (Priority(..), logM)
-import qualified FlashMessage as F
-import qualified AppLogger as Log (error, security, debug)
-import qualified MemCache
-import Happstack.State (update)
-import Redirect
-import PayEx.PayExInterface -- Import so at least we check if it compiles
-import InputValidation
-import System.Directory
-import ListUtil
-import Data.Word
-import System.Time
 import Text.JSON
 import Text.JSON.String
 import Control.Monad.Reader
 import Control.Monad.Error
-{- | 
-  Defines the application's configuration.  This includes amongst other things
-  the http port number, amazon, trust weaver and email configuraton,
-  as well as a handy boolean indicating whether this is a production or
-  development instance.
--}
 
+{- | API calls user JSPO object as a response and work within json value as a context-}
 type APIResponse = JSObject JSValue
 type APIRequestBody = JSValue
 
+{- | API functions are build over Kontra with a ability to exit, and with some context -}
 type APIFunction c a = ReaderT c (ErrorT (API_ERROR,String) Kontra') a
 
+{- |  Used to convert json object to HTTP response-} 
 apiResponse ::  Kontra APIResponse ->  Kontra Response   
 apiResponse action = action >>= simpleResponse . encode                         
 
+{- | Used to build api routing tables
+     Routing table could look like
+          dir "myapi" msum [
+                apiCall "apicall1" action1
+              , apiCall "apicall2" action2
+              , apiCall "apicall3" action3
+              , apiUnknownCall
+          ]
+    APICall can be build from Kontra or from APIFunction over some APIContext,
+    as long as they hold response JSON inside.
+    
+-}
 class APICall a where
     apiCall :: String -> a -> Kontra Response
     
@@ -95,8 +79,8 @@ instance APICall (Kontra APIResponse) where
     apiCall s action = dir "api" $ dir s $ do
                     methodM POST 
                     apiResponse action
-                    
-    
+
+
 instance (APIContext c) => APICall (APIFunction c APIResponse) where
     apiCall s action = apiCall s $ do
         mcontext <- apiContext
@@ -104,16 +88,27 @@ instance (APIContext c) => APICall (APIFunction c APIResponse) where
              Right apicontext -> fmap (either (uncurry apiError) id) $ runErrorT $ runReaderT action apicontext
              Left emsg -> return $ uncurry apiError emsg
 
+{- | Also for routing tables, to mark that api calls did not match and not to fall to mzero-}
+apiUnknownCall ::  Kontra Response        
+apiUnknownCall = dir "api" $ apiResponse $  return $ apiError API_ERROR_UNNOWN_CALL "Bad request"
+
+
+
+
+{- Each API can have its own context. For example WebShop has a context containing user, 
+   while integration API has a context containing service. 
+   But each context has to be able get read from HTTP params and should have JSON object inside.
+-}
 
 class APIContext a where
     apiContext::Kontra (Either (API_ERROR,String) a)       
     body:: a -> APIRequestBody
     newBody:: APIRequestBody -> a -> a
         
-apiUnknownCall ::  Kontra Response        
-apiUnknownCall = dir "api" $ apiResponse $  return $ apiError API_ERROR_UNNOWN_CALL "Bad request"
-   
--- Digging into request params   
+  
+-- When building API calls you wan't to dig into JSON object with params
+-- Here are some helper functions for that. Some can be localized (like in ReaderMonad) to subcontext.
+
 apiAskBS::(APIContext c) => String -> APIFunction c (Maybe BS.ByteString)
 apiAskBS =  fmap (fmap BS.fromString) . apiAskString
 
@@ -179,15 +174,13 @@ askKontraContext :: (APIContext c) => APIFunction c Context
 askKontraContext = lift $ lift $ get
 
 
---- AUTORIZE AND BUILDING CONTEXT
+--- This will read JSON object from some HTTP request body parameter
 apiBody ::  Kontra (Either String JSValue)
-apiBody = do
-      body <- getFieldWithDefault "" "body"
-      return $ runGetJSON readJSObject body
+apiBody = runGetJSON readJSObject <$> getFieldWithDefault "" "body"
              
 --- ERROR Response
 
--- This is how we represent errors to the user
+-- Building pure api error.
 apiError::API_ERROR -> String ->  APIResponse
 apiError code message= toJSObject [
       ("error" , showJSON $ fromEnum code)
@@ -197,7 +190,7 @@ apiError code message= toJSObject [
 instance Error (API_ERROR,String) where
     strMsg s = (API_ERROR_OTHER,s)
     
---This will break the execution and send error message to he user
+--This will break the execution and send error message to the user
 throwApiError:: (APIContext c) => API_ERROR -> String -> APIFunction c a
 throwApiError = curry throwError 
 
@@ -226,3 +219,4 @@ instance  Enum API_ERROR where
     fromEnum API_ERROR_ILLEGAL_VALUE = 107
     fromEnum API_ERROR_MISSING_VALUE = 109
     fromEnum API_ERROR_OTHER = 500
+    toEnum _ = API_ERROR_OTHER
