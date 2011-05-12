@@ -5,6 +5,34 @@ module Doc.DocControl where
 
 import ActionSchedulerState
 import AppView
+import Doc.CSVUtils
+import Doc.DocSeal
+import Doc.DocState
+import Doc.DocStateInterface
+import Doc.DocStateUtils
+import Doc.DocStorage
+import Doc.DocView
+import Doc.DocViewMail
+import FlashMessage
+import InputValidation
+import Kontra
+import KontraLink
+import ListUtil
+import Mails.SendMail
+import MinutesTime
+import Misc
+import Redirect
+import Routing
+import User.UserControl
+import User.UserState
+import User.UserView (prettyName, modalAccountRemoval)
+import qualified Amazon as AWS
+import qualified AppLogger as Log
+import qualified SealSpec as Seal
+import qualified TrustWeaver as TW
+
+
+import Codec.Text.IConv
 import Control.Applicative
 import Control.Concurrent
 import Control.Monad
@@ -12,39 +40,28 @@ import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Trans
 import Data.Bits
+import Data.CSV
+import Data.Char
+import Data.Either
+import Data.Functor
 import Data.List
+import Data.Map ((!))
 import Data.Maybe
 import Data.Word
-import Data.Functor
 import Debug.Trace
-import Doc.CSVUtils
-import Doc.DocState
-import Doc.DocStateUtils
-import Doc.DocView
-import Doc.DocViewMail
-import Doc.DocSeal
-import Doc.DocStorage
-import Data.Either
 import HSP hiding (catch)
 import Happstack.Data.IxSet 
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.Server.HSP.HTML (webHSP)
-import Happstack.State (update,query)
+import Happstack.State (update, query)
 import Happstack.Util.Common
-import KontraLink
-import Mails.SendMail
-import MinutesTime
-import Misc
 import System.Cmd
 import System.Directory
 import System.Exit
 import System.IO
+import System.IO.Temp
 import System.Process
-import Kontra
-import User.UserControl
-import User.UserState
-import User.UserView (prettyName, modalAccountRemoval)
-import qualified Amazon as AWS
+import Text.ParserCombinators.Parsec
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as BSL
@@ -52,20 +69,13 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 import qualified Data.Set as Set
-import qualified Network.HTTP as HTTP
-import qualified SealSpec as Seal
-import qualified TrustWeaver as TW
-import qualified AppLogger as Log
-import System.IO.Temp
 import qualified MemCache
 import Data.Char
 import Data.Map ((!))
-import Data.Maybe (catMaybes)
 import FlashMessage
 import InputValidation
 import ListUtil
 import Redirect
-import Templates.TemplatesLoader
 import Data.CSV
 import Text.ParserCombinators.Parsec
 import Codec.Text.IConv
