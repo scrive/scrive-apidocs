@@ -208,23 +208,24 @@ mailInvitationToSignOrViewContent :: KontrakcjaTemplates
                                   -> Bool 
                                   -> Context
                                   -> Document
-                                  -> User
                                   -> Maybe SignatoryLink
                                   -> IO String        
-mailInvitationToSignOrViewContent templates forMail (Context {ctxhostpart}) 
-                  document@Document{documenttimeouttime, documentinvitetext,documenttitle} 
-                  author
-                  signaturelink = 
-    let link = case (signaturelink) of
-                Just signaturelink' -> ctxhostpart ++ show (LinkSignDoc document signaturelink')
+mailInvitationToSignOrViewContent templates 
+                                  forMail 
+                                  Context {ctxhostpart}
+                                  document@Document { documenttimeouttime, documentinvitetext, documenttitle }
+                                  msiglink = do
+  let link = case msiglink of
+                Just siglink -> ctxhostpart ++ show (LinkSignDoc document siglink)
                 Nothing -> ctxhostpart ++ "/s/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
-        issignatory = maybe True ((SignatoryPartner `elem`) . signatoryroles) signaturelink
-        personname1 = maybe "" (BS.toString . signatoryname . signatorydetails) signaturelink
-        creatorname = BS.toString $ prettyName author
-        partnersinfo = if (forMail) 
-                        then  renderListTemplate templates $  map (BS.toString . personname') $ partyList document
-                        else  renderTemplate templates "updateinglistwithauthor" [("creatorname",creatorname )]
-        whohadsignedinfo =  if (forMail) 
+      Just authorsiglink = getAuthorSigLink document
+      creatorname = signatoryname  $ signatorydetails authorsiglink
+      issignatory = maybe False (elem SignatoryPartner . signatoryroles) signaturelink
+      personname1 = maybe "" (BS.toString . signatoryname . signatorydetails) signaturelink
+      partnersinfo = if forMail
+                     then renderListTemplate templates $ map (BS.toString . personname') $ partyList document
+                     else renderTemplate templates "updateinglistwithauthor" [("creatorname", creatorname )]
+      whohadsignedinfo =  if (forMail) 
                              then do
                                     signedlist <- if (not $ null $ partySignedList document)
                                                        then fmap Just $ renderListTemplate templates $  map (BS.toString . personname') $ partySignedList document
@@ -232,11 +233,11 @@ mailInvitationToSignOrViewContent templates forMail (Context {ctxhostpart})
                                     renderTemplate templates "whohadsignedinfoformail" $ do
                                         field "signedlist" signedlist
                              else  renderTemplate templates "whohadsignedinfoforpreview" [("asdf","asdf")]
-        timetosigninfo = case documenttimeouttime of 
+      timetosigninfo = case documenttimeouttime of 
                           Just time -> renderTemplate templates "timetosigninfo" [("time",show time )]
                           Nothing -> return ""
                           
-        footer =    if (forMail) 
+      footer =    if (forMail) 
                     then if (BS.null documentinvitetext)
                            then renderTemplate templates "poweredBySkrivaPaPara" [("ctxhostpart",ctxhostpart)] 
                            else renderTemplate templates "customFooter" [("creatorname", creatorname)] 
@@ -244,7 +245,7 @@ mailInvitationToSignOrViewContent templates forMail (Context {ctxhostpart})
                           this <- renderTemplate templates "poweredBySkrivaPaPara" [("ctxhostpart",ctxhostpart)] 
                           with <- renderTemplate templates "customFooter" [("creatorname",creatorname)] 
                           replaceOnEdit' templates this with            
-        header   =  if (BS.null documentinvitetext) 
+      header   =  if (BS.null documentinvitetext) 
                      then if issignatory || not forMail 
                           then renderTemplate templates "mailInvitationToSignDefaultHeader" $ do
                                    field "creatorname" $ creatorname
@@ -260,55 +261,54 @@ mailInvitationToSignOrViewContent templates forMail (Context {ctxhostpart})
                                    ]  
                      else return $ BS.toString documentinvitetext      
            
-   in  do
-            header' <- header
-            editableHeader <- makeEditable' templates "customtext" header'
-            footer' <- footer
-            partnersinfo' <- partnersinfo
-            whohadsignedinfo' <- whohadsignedinfo
-            timetosigninfo' <- timetosigninfo
-            renderTemplate templates "mailInvitationToSignContent" $ do
-                field "header" editableHeader
-                field "footer" footer'
-                field "timetosigninfo" timetosigninfo'
-                field "partnersinfo" partnersinfo'
-                field "whohadsignedinfo" whohadsignedinfo'
-                field "documenttitle" $ BS.toString documenttitle
-                field "offer" $ isOffer document
-                field "contract" $ isContract document
-                field "link" link    
-                field "issignatory" issignatory
-                field "creatorname" creatorname
+      header' <- header
+      editableHeader <- makeEditable' templates "customtext" header'
+      footer' <- footer
+      partnersinfo' <- partnersinfo
+      whohadsignedinfo' <- whohadsignedinfo
+      timetosigninfo' <- timetosigninfo
+      renderTemplate templates "mailInvitationToSignContent" $ do
+        field "header" editableHeader
+        field "footer" footer'
+        field "timetosigninfo" timetosigninfo'
+        field "partnersinfo" partnersinfo'
+        field "whohadsignedinfo" whohadsignedinfo'
+        field "documenttitle" $ BS.toString documenttitle
+        field "offer" $ isOffer document
+        field "contract" $ isContract document
+        field "link" link    
+        field "issignatory" issignatory
+        field "creatorname" creatorname
                                                                 
-mailInvitationToSign::  KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> User -> IO Mail
-mailInvitationToSign templates ctx document@Document{documenttitle} signaturelink author = 
-                 do  
-                   title <- renderTemplate templates "mailInvitationToSignTitle" [("documenttitle",BS.toString  documenttitle ),
-                                                                        ("creatorname",BS.toString $ prettyName author)] 
-                   content <- wrapHTML templates =<< mailInvitationToSignOrViewContent templates True ctx document author (Just signaturelink)
-                   return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
+mailInvitationToSign :: KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> IO Mail
+mailInvitationToSign templates ctx document@Document { documenttitle } siglink = do
+  let Just authorsiglink = getAuthorSigLink document
+      authorname = signatoryname  $ signatorydetails authorsiglink
+  title <- renderTemplate templates "mailInvitationToSignTitle" [ ("documenttitle", BS.toString documenttitle)
+                                                                , ("creatorname",   BS.toString authorname)
+                                                                ] 
+  content <- wrapHTML templates =<< mailInvitationToSignOrViewContent templates True ctx document (Just siglink)
+  return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
 
+mailInvitationToSend :: KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> IO Mail
+mailInvitationToSend templates ctx document@Document{documenttitle} signaturelink = do
+  let Just authorsiglink = getAuthorSigLink document
+      authorname = signatoryname  $ signatorydetails authorsiglink
+  title <- renderTemplate templates "mailInvitationToSignTitle" [("documenttitle", BS.toString documenttitle),
+                                                                 ("creatorname",   BS.toString authorname)]
+  content <- wrapHTML templates =<< mailInvitationToSignOrViewContent templates True ctx document (Just signaturelink)
+  return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
 
-mailInvitationToSend::  KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> User -> IO Mail
-mailInvitationToSend templates ctx document@Document{documenttitle} signaturelink author = 
-                 do  
-                   title <- renderTemplate templates "mailInvitationToSignTitle" [("documenttitle",BS.toString  documenttitle ),
-                                                                        ("creatorname",BS.toString $ prettyName author)] 
-                   content <- wrapHTML templates =<< mailInvitationToSignOrViewContent templates True ctx document author (Just signaturelink)
-                   return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
-
-mailInvitationToView ::  KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> User -> IO Mail
-mailInvitationToView templates ctx document@Document{documenttitle} signaturelink author = 
-    do  
-        title <- renderTemplate templates "mailInvitationToViewTitle" 
-                 [("documenttitle",BS.toString  documenttitle ),
-                  ("creatorname",BS.toString $ prettyName author)] 
-        content <- wrapHTML templates =<< mailInvitationToSignOrViewContent templates True ctx document author (Just signaturelink)
-        return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
-
-  
+mailInvitationToView :: KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> IO Mail
+mailInvitationToView templates ctx document@Document{documenttitle} signaturelink = do
+  let Just authorsiglink = getAuthorSigLink document
+      authorname = signatoryname  $ signatorydetails authorsiglink
+  title <- renderTemplate templates "mailInvitationToViewTitle" [("documenttitle", BS.toString documenttitle),
+                                                                 ("creatorname",   BS.toString authorname)]
+  content <- wrapHTML templates =<< mailInvitationToSignOrViewContent templates True ctx document (Just signaturelink)
+  return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
     
-mailDocumentClosedForSignatories ::  KontrakcjaTemplates -> Context -> Document -> SignatoryLink  -> IO Mail
+mailDocumentClosedForSignatories :: KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> IO Mail
 mailDocumentClosedForSignatories templates (Context {ctxhostpart}) document@Document{documenttitle} signaturelink = 
    do
      title <- renderTemplate templates "mailDocumentClosedForSignatoriesTitle" [("documenttitle",BS.toString  documenttitle )] 
