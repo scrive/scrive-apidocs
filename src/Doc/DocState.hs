@@ -116,7 +116,7 @@ getDocumentsByAuthor userid = do
 
 getDocumentsByUser :: User -> Query Documents [Document]
 getDocumentsByUser user = do
-    authoredDocs <- getDocumentsByAuthor $ userid user
+    authoredDocs  <- getDocumentsByAuthor    $ userid user
     signatoryDocs <- getDocumentsBySignatory $ user
     return $ authoredDocs ++ signatoryDocs
     
@@ -422,52 +422,50 @@ signDocument :: DocumentID
              -> Update Documents (Either String Document)
 signDocument documentid signatorylinkid1 time ipnumber msiginfo fields = do
   modifySignable documentid $ \document ->
-      let
-          signeddocument = document {
-                documentsignatorylinks = newsignatorylinks
-          } `appendHistory` [DocumentHistorySigned time ipnumber (signatorydetails signatoryLink)]
-          Just signatoryLink = find (\x -> signatorylinkid x == signatorylinkid1) (documentsignatorylinks document)
-          newsignatorylinks = map maybesign (documentsignatorylinks document)
-          maybesign link@(SignatoryLink {signatorylinkid, signatorydetails} ) 
-              | signatorylinkid == signatorylinkid1 = 
-                  link { maybesigninfo = Just (SignInfo time ipnumber)
-                       , signatorydetails = updateWithFields fields signatorydetails
-                       , signatorysignatureinfo = msiginfo
-                    }
-          maybesign link = link
-
-          authorid = unAuthor $ documentauthor signeddocument
-          allbutauthor = filter ((maybe True (/= authorid)) . maybesignatory) newsignatorylinks
-          signatoryHasSigned x = not (SignatoryPartner `elem` signatoryroles x) || isJust (maybesigninfo x)
-          allsignedbutauthor = all signatoryHasSigned allbutauthor
-          isallsigned = all signatoryHasSigned newsignatorylinks
+    let signeddocument = document { documentsignatorylinks = newsignatorylinks
+                                  } `appendHistory` [DocumentHistorySigned time ipnumber (signatorydetails signatoryLink)]
+        Just signatoryLink = find (\x -> signatorylinkid x == signatorylinkid1) (documentsignatorylinks document)
+        newsignatorylinks = map maybesign (documentsignatorylinks document)
+        maybesign link@(SignatoryLink {signatorylinkid, signatorydetails} ) 
+          | signatorylinkid == signatorylinkid1 = 
+            link { maybesigninfo = Just (SignInfo time ipnumber)
+                 , signatorydetails = updateWithFields fields signatorydetails
+                 , signatorysignatureinfo = msiginfo
+                 }
+        maybesign link = link
+        allbutauthor = [sl | sl <- newsignatorylinks
+                           , not $ siglinkIsAuthor sl]
+        signatoryHasSigned x = not (SignatoryPartner `elem` signatoryroles x) || isJust (maybesigninfo x)
+        allsignedbutauthor = all signatoryHasSigned allbutauthor
+        isallsigned = all signatoryHasSigned newsignatorylinks
           
-          -- Check if there are custom fields in any signatory (that is, not author)
-          hasfields = any ((any (not . fieldfilledbyauthor)) . (signatoryotherfields . signatorydetails)) (documentsignatorylinks document)
+        -- Check if there are custom fields in any signatory (that is, not author)
+        -- ??: We don't use this anymore? -EN
+        -- hasfields = any ((any (not . fieldfilledbyauthor)) . (signatoryotherfields . signatorydetails)) (documentsignatorylinks document)
 
-          updateWithFields [] sd = sd
-          updateWithFields ((name, value):fs) sd 
-              | name == BS.fromString "sigco" = updateWithFields fs sd { signatorycompany = value }
-              | name == BS.fromString "sigpersnr" = updateWithFields fs sd { signatorypersonalnumber = value }
-              | name == BS.fromString "sigcompnr" = updateWithFields fs sd { signatorycompanynumber = value }
-              | otherwise = updateWithFields fs sd { signatoryotherfields = updateOtherFields name value (signatoryotherfields sd) }
+        updateWithFields [] sd = sd
+        updateWithFields ((name, value):fs) sd 
+          | name == BS.fromString "sigco"     = updateWithFields fs sd { signatorycompany        = value }
+          | name == BS.fromString "sigpersnr" = updateWithFields fs sd { signatorypersonalnumber = value }
+          | name == BS.fromString "sigcompnr" = updateWithFields fs sd { signatorycompanynumber  = value }
+          | otherwise = updateWithFields fs sd { signatoryotherfields = updateOtherFields name value (signatoryotherfields sd) }
+        
+        updateOtherFields _    _     []      = []
+        updateOtherFields name value (f@FieldDefinition { fieldlabel }:fs)  
+          | name == fieldlabel = f { fieldvalue = value} : fs
+          | otherwise          = f : updateOtherFields name value fs
 
-          updateOtherFields _    _     []      = []
-          updateOtherFields name value (f@FieldDefinition { fieldlabel }:fs)  
-              | name == fieldlabel = f { fieldvalue = value} : fs
-              | otherwise          = f : updateOtherFields name value fs
-
-          signeddocument2 = 
+        signeddocument2 = 
               if isallsigned
               then signeddocument { documentstatus = Closed } `appendHistory` [DocumentHistoryClosed time ipnumber]
               else if allsignedbutauthor 
                    then signeddocument { documentstatus = AwaitingAuthor }
                    else signeddocument
 
-      in case documentstatus document of
-           Pending ->  Right signeddocument2
-           Timedout -> Left "FÃ¶rfallodatum har passerat"
-           _ ->        Left ("Bad document status: " ++ show (documentstatus document))
+    in case documentstatus document of
+      Pending ->  Right signeddocument2
+      Timedout -> Left "FÃ¶rfallodatum har passerat"
+      _ ->        Left ("Bad document status: " ++ show (documentstatus document))
 
 signWithUserID [] _ _ _ = []
 signWithUserID (s:ss) id sinfo msiginfo
@@ -578,18 +576,19 @@ markInvitationRead documentid linkid time = do
 -- on.
 markDocumentSeen :: DocumentID 
                  -> SignatoryLinkID 
+                 -> MagicHash
                  -> MinutesTime 
                  -> Word32
-                 -> Update Documents ()
-markDocumentSeen documentid signatorylinkid1 time ipnumber = do
+                 -> Update Documents (Either DBError Document)
+markDocumentSeen documentid signatorylinkid1 mh time ipnumber = do
     modifySignable documentid $ \document -> 
         if (any shouldMark (documentsignatorylinks document))
-            then Right $ document { documentsignatorylinks = mapIf shouldMark mark (documentsignatorylinks document)}
-            else Left "" 
-    return ()        
-       where
-        shouldMark l = (signatorylinkid l) == signatorylinkid1 && (isNothing $ maybeseeninfo l)
-        mark l =  l { maybeseeninfo = Just (SignInfo time ipnumber) }
+          then Right $ document { documentsignatorylinks = mapIf shouldMark mark (documentsignatorylinks document) }
+          else Left "" 
+    return ()
+        where
+          shouldMark l = (signatorylinkid l) == signatorylinkid1 && (signatorymagichash == mh) && (isNothing $ maybeseeninfo l)
+          mark l = l { maybeseeninfo = Just (SignInfo time ipnumber) }
                  
              
         
@@ -935,13 +934,12 @@ signableFromDocumentID = newFromDocument $ templateToDocument
 signableFromSharedDocumentID :: User -> DocumentID -> Update Documents (Either String Document)
 signableFromSharedDocumentID user = newFromDocument $ \doc -> 
     (templateToDocument doc) {
-          documentauthor = Author $ userid user
-        , documentsignatorylinks = map (replaceAuthorSigLink user doc) (documentsignatorylinks doc)
+          documentsignatorylinks = map (replaceAuthorSigLink user doc) (documentsignatorylinks doc)
         , authorotherfields =  map (\fd -> fd { fieldvalue = BS.empty, fieldfilledbyauthor = False }) (authorotherfields doc) 
     }
     where replaceAuthorSigLink :: User -> Document -> SignatoryLink -> SignatoryLink
           replaceAuthorSigLink user doc sl 
-            | isAuthor doc sl = replaceSignatoryUser sl user
+            | siglinkIsAuthor sl = replaceSignatoryUser sl user
             | otherwise = sl
 
 
@@ -965,12 +963,12 @@ replaceSignatoryUser :: SignatoryLink
 replaceSignatoryUser siglink user =
   let newsl = replaceSignatoryData 
                        siglink
-                       (userfstname $ userinfo user)
-                       (usersndname $ userinfo user)
+                       (userfstname         $ userinfo user)
+                       (usersndname         $ userinfo user)
                        (unEmail $ useremail $ userinfo user)
-                       (usercompanyname $ userinfo user)
-                       (userpersonalnumber $ userinfo user)
-                       (usercompanynumber $ userinfo user)
+                       (usercompanyname     $ userinfo user)
+                       (userpersonalnumber  $ userinfo user)
+                       (usercompanynumber   $ userinfo user)
                        [] in
   newsl { maybesignatory = fmap (const $ userid user) (maybesignatory newsl) }
 
