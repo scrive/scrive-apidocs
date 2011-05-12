@@ -223,8 +223,8 @@ safeReady(function() {
  * For the arkiv view fancy selection
  */
 safeReady(function () {
-    var rows = $("#selectable tr"),
-        rowsLinks = rows.find("a"),
+    var selectable = $("#selectable"),
+        rows = selectable.find("tr"),
         rowsChecks = rows.find(".check");
     
     function highlightRow(row) {
@@ -267,32 +267,34 @@ safeReady(function () {
         }
     });
     
-    rowsChecks.live("change", function() {
-        var that = $(this), row = that.parents("tr");
-        if (!that.attr("checked"))
-            row.removeAttr("selected");
-        selectRow(row, false, that);
+    selectable.click(function(event) {
+        var target = $(event.target);
+        if (target.is("td")) {
+            // we want it respond to primary mouse button
+            // note: <= is for IE, event.which returns 0 there,
+            // primary button has value 1 so we're all good.
+            if (event.which <= 1)
+                selectRow(target.parents("tr"), true);
+        }
+        else if (target.hasClass("check")) {
+            var row = target.parents("tr");
+            if (!target.attr("checked"))
+                row.removeAttr("selected");
+            selectRow(row, false, target);
+        }
     });
     
-    rows.live("click", function(event) {
-        // we want it respond to primary mouse button
-        // and not if we clicked checkbox/input text
-        // note: <= is for IE, event.which returns 0 there,
-        // primary button has value 1 so we're all good.
-        if (event.which <= 1 && !event.target.type)
-            selectRow($(this), true);
+    selectable.mousedown(function(event) {
+        var target = $(event.target);
+        if (target.is("td")) {
+            // it seems event.which works fine in IE
+            // if it comes to mousedown event.
+            if (event.which == 1)
+                highlightRow(target.parents("tr"));
+        }
     });
-    rows.live("mousedown", function(event) {
-        // it seems event.which works fine in IE
-        // if it comes to mousedown event.
-        if (event.which == 1 && !event.target.type)
-            highlightRow($(this));
-    });
+    
     rows.live("mouseout", function() { unhighlightRow($(this)); });
-    
-    // prevent rows from being selected while we click on links
-    rowsLinks.live("click", function(event) { event.stopPropagation(); });
-    rowsLinks.live("mousedown", function(event) { event.stopPropagation(); });
     
     $("#all").change(function() {
         rows.each(function() {
