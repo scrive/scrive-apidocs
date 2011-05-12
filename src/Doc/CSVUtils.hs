@@ -66,11 +66,11 @@ isAuthorSignatory doc =
     Looks up all the custom fields for the csv upload and returns their labels.
 -}
 getCSVCustomFields :: Document -> Either String [BS.ByteString]
-getCSVCustomFields doc@Document{documentauthor,documentsignatorylinks} =
-  case (fmap csvsignatoryindex $ documentcsvupload doc) of
+getCSVCustomFields doc@Document{ documentsignatorylinks } =
+  case fmap csvsignatoryindex $ documentcsvupload doc of
     Nothing -> Right []
-    (Just csvsignatoryindex) ->
-      case (checkCSVSigIndex (unAuthor documentauthor) documentsignatorylinks csvsignatoryindex) of
+    Just csvsignatoryindex ->
+      case checkCSVSigIndex (unAuthor documentauthor) documentsignatorylinks csvsignatoryindex of
         Left msg -> Left msg
         Right _ ->
           Right $ map fieldlabel . signatoryotherfields . signatorydetails $ documentsignatorylinks !! csvsignatoryindex
