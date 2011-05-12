@@ -41,7 +41,7 @@ $if(!typeselected)$
    <div class="signStepsBodyUploadBox" style="border:0px;text-align:left;width: 250px;font-weight:bold"> 
     <p class="text" style="padding-top:40px">
        Vilken typ av dokument vill du skicka? Klicka på dokumentsymbolen för att gå vidare.
-    <p/>
+    </p>
    </div>
  </td>
   <td>
@@ -65,11 +65,11 @@ $elseif(!showTemplates)$
     $if(contract)$
     <p class="text" style="padding-top:30px">
         Välj det dokument som du vill skicka till din motpart för påskrift.
-    <p/>
+    </p>
     $elseif(offer)$
     <p class="text" style="padding-top:30px">
         Välj den offert som du vill skicka till din motpart.
-    <p/>
+    </p>
     $endif$
     <a class="backicon float-left" href="/"></a>
  </div>
