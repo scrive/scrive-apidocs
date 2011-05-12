@@ -73,7 +73,7 @@ Våra kunder och våra kunders kunder älskar enkelheten.</p>
 <p>Vi bjuder på 1 månad full funktionalitet utan kostnad. Inga förpliktelser.</p>
                                                 <br />
                                                 <form method="post"
-                                                action="/signup" class="requestAccount">
+                                                action="$linksignup$" class="requestAccount">
                                                         <input type="email"
                                                         name="email"
                                                         infotext="E-post"
@@ -114,7 +114,7 @@ bodyend=
                         <p>1 månad full funktionalitet utan kostnad. Inga förpliktelser.</p>
                         </div>
                          <div class="right">
-                            <form method="post" action="/signup" class="requestAccount">
+                            <form method="post" action="$linksignup$" class="requestAccount">
                                    <input class="shiny float-left"
                                    name="email" type="email"
                                    infotext="Fyll i din e-postadress"
