@@ -12,11 +12,12 @@ module Doc.DocViewUtil ( personname,
                          renderListTemplate,  
                        ) where
 import Doc.DocState
-import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString as BS
 import Misc
 import Templates.Templates 
+
 import Data.Maybe
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.UTF8 as BS
 
 partyList :: Document -> [SignatoryDetails]
 partyList document = map signatorydetails $ filter isSignatory (documentsignatorylinks document)
