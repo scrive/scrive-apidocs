@@ -392,18 +392,19 @@ safeReady(function() {
 function escapeHTML(s) {
     var result = '';
     for (var i = 0; i < s.length; ++i) {
-        if (s[i] == '&')
+	var c = s.charAt(i);
+        if (c == '&')
             result += '&amp';
-        else if (s[i] == '\'')
+        else if (c == '\'')
             result += '&#39;';
-        else if (s[i] == '"')
+        else if (c == '"')
             result += '&quot;';
-        else if (s[i] == '<')
+        else if (c == '<')
             result += '&lt;';
-        else if (s[i] == '>')
+        else if (c == '>')
             result += '&gt;';
         else
-            result += s[i];
+            result += c;
     }
     return result;
 }
