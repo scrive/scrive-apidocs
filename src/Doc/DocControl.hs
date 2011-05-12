@@ -87,11 +87,6 @@ import Routing
   Here are all actions associated with transitions.
 -}
 
-{- |
-   Get the Just SignatoryLink from doc that has sid. Nothing when not found.
- -}
-signlinkFromDocById :: Document -> SignatoryLinkID -> Maybe SignatoryLink
-signlinkFromDocById doc sid = find ((== sid) . signatorylinkid) (documentsignatorylinks  doc)
 
 {- |
    Perform the appropriate action when transitioning between documentstatuses.
