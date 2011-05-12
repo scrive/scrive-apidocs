@@ -1939,8 +1939,7 @@ form {
 {
     width: 216px;
     position: relative;
-    float: right;
-
+    float: left;
 }
 
 /* 015 new */
@@ -2272,7 +2271,8 @@ form {
 
 #personpane 
 {
-    display:inline-block;
+    display: block;
+    float: left;
 }
 
 #signStepsBody.personPaneLargeNumberMode #signStepsBodyLeft
