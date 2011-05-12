@@ -445,7 +445,7 @@ getAdminUsersPageParams = do
 handleCreateService :: Kontra KontraLink
 handleCreateService = onlySuperUser $ do
     mname<- getFieldUTF "name"
-    madmin <- liftMM  (query . GetUserByEmail . Email) (getFieldUTF "admin")
+    madmin <- liftMM  (query . GetUserByEmail Nothing . Email) (getFieldUTF "admin")
     case (mname,madmin) of
          (Just name,Just admin) -> do 
             pwdBS <- getFieldUTFWithDefault mempty "password"

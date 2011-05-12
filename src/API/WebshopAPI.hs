@@ -107,7 +107,7 @@ instance APIContext WebshopAPIContext where
 webshopUser ::  Kontra (Maybe User)
 webshopUser = do
     email <- getFieldUTFWithDefault BS.empty "email"
-    muser <- query $ GetUserByEmail (Email email)
+    muser <- query $ GetUserByEmail Nothing (Email email)
     case muser of
         Nothing -> return Nothing       
         Just user -> do

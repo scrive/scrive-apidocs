@@ -476,13 +476,14 @@ handleSession = do
 -- session data is non-empty, register session in the system
 -- and add a cookie. Is user loggs in, check whether there is
 -- an old session with his userid and throw it away.
-updateSessionWithContextData :: Session -> Maybe UserID -> [ELegTransaction] -> ServerPartT IO ()
-updateSessionWithContextData (Session i sd) u trans = do
+updateSessionWithContextData :: Session -> Maybe UserID -> Maybe (ServiceID,String) -> [ELegTransaction] -> ServerPartT IO ()
+updateSessionWithContextData (Session i sd) u srvs trans = do
     now <- liftIO getMinutesTime
     let newsd = sd {
         userID = u
         , expires = 60 `minutesAfter` now
         , elegtransactions = trans
+        , service = srvs
     }
     if i == tempSessionID && not (isSessionDataEmpty newsd)
        then do

@@ -25,6 +25,7 @@ module Kontra
     , queryOrFail
     , returnJustOrMZero
     , param
+    , currentService
     )
     where
 
@@ -32,6 +33,7 @@ import Control.Monad.Reader
 import Control.Monad.State
 import Control.Concurrent.MVar
 import Data.Word
+import Data.Functor
 import Doc.DocState
 import HSP hiding (Request)
 import Happstack.Server
@@ -241,3 +243,8 @@ returnJustOrMZero = maybe mzero return
 -- | Checks if request contains a param , else mzero
 param :: String -> Kontra Response -> Kontra Response
 param p action = (getDataFnM $ look p) >> action
+
+-- | Current service id
+
+currentService :: Context -> (Maybe Service)
+currentService  ctx = fst <$> ctxservice ctx
