@@ -378,9 +378,11 @@ withUserGet action = do
 withDocumentAuthor :: Document -> Kontra a -> Kontra a
 withDocumentAuthor document action = do
     ctx <- get
-    case isAuthor document <$> ctxmaybeuser ctx of
-         Just True -> action
-         _         -> mzero
+    case ctxmaybeuser ctx of
+      Nothing -> mzero
+      Just user -> case getAuthorSigLink document of
+        Just sl | Just (userid user) == maybesignatory sl -> action
+        _ -> mzero
 
 {- |
    Guard against a GET with logged in users who have not signed the TOS agreement.
