@@ -48,7 +48,6 @@ module User.UserView (
     flashMessageNoRemainedPasswordReminderEmails,
     flashMessageNewActivationLinkSend,
     flashMessageUserSignupDone,
-    flashMessageAccountRequestSend,
     flashMessageThanksForTheQuestion,
     flashMessageUserInvitedAsSubaccount,
     flashMessageUserHasBecomeSubaccount,    
@@ -404,11 +403,6 @@ flashMessageUserSignupDone templates =
 flashMessageUserInvitedAsSubaccount :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageUserInvitedAsSubaccount templates =
   toFlashMsg OperationDone <$> renderTemplate templates "flashMessageUserInvitedAsSubaccount" ()
-
-
-flashMessageAccountRequestSend :: KontrakcjaTemplates -> IO FlashMessage
-flashMessageAccountRequestSend templates =
-  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageAccountRequestSend" ()
 
 modalNewPasswordView :: ActionID -> MagicHash -> KontraModal
 modalNewPasswordView aid hash = do
