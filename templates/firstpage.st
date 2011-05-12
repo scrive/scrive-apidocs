@@ -98,7 +98,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 </p>
                                                 <h3>Skapa konto nu!</h3>
                                                 <p class="introtext">1 månad full funktionalitet utan kostnad. Inga förpliktelser.</p>
-                                                <form method="post" action="/signup" class="requestAccount">
+                                                <form method="post" action="$linksignup$" class="requestAccount">
                                                         <input class="shiny" type="email" name="email" infotext="Fyll i din e-postadress" /> <a href="#" class="submit new-btn-small green2 center"><p>Skapa konto!</p></a>
                                                         <input type="submit" class="hidden" />
                                                 </form>
@@ -358,7 +358,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <p>1 månad full funktionalitet utan kostnad. Inga förpliktelser.</p>
                                         </div>
                                         <div class="right">
-                                                <form method="post" action="/signup" class="requestAccount">
+                                                <form method="post" action="$linksignup$" class="requestAccount">
                                                         <a href="#" class="submit new-btn-small green2 center float-right"><p>Skapa konto!</p></a>
                                                         <input class="shiny float-left" name="email" type="email" infotext="Fyll i din e-postadress" />
                                                         <input type="submit" class="hidden" />
