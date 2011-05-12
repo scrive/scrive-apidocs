@@ -93,8 +93,7 @@ handleUndeliveredInvitation docid signlinkid = do
       Right doc -> do
         ctx <- get
         title <- liftIO $ renderTemplate (ctxtemplates ctx) "invitationMailUndeliveredTitle" ()
-        Just author <- query $ GetUserByUserID $ unAuthor $ documentauthor doc
-        let documentauthordetails = signatoryDetailsFromUser author
+        let documentauthordetails = signatorydetails $ fromJust $ getAuthorSigLink doc
         let fullnameemails = [(signatoryname $ documentauthordetails, signatoryemail $ documentauthordetails)]
         let msld = fmap signatorydetails $ find ((==) signlinkid . signatorylinkid ) $ documentsignatorylinks doc
         case msld of
