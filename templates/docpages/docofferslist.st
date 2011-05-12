@@ -39,7 +39,7 @@ $loadingdialog()$
 					<thead>
 						<tr>
 							<th style="width: 30px;"><input type="checkbox" name="" id="all" /></th>
-							<th style="width: 60px;">
+							<th style="width: 65px;">
                                $if(params.sorting.statusREV)$
                                 <a href="$currentlink$&sorting=status">Status  <em> ▲</em></a>
                                $elseif(params.sorting.status)$
@@ -84,7 +84,7 @@ $loadingdialog()$
                                 <a href="$currentlink$&sorting=author">Avsändare </a>
                                $endif$
                             </th>
-							<th style="width: 240px;">
+							<th style="width: 227px;">
                                $if(params.sorting.titleREV)$
                                 <a href="$currentlink$&sorting=title">Dokument <em> ▲</em></a>
                                $elseif(params.sorting.title)$
