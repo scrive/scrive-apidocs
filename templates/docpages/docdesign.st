@@ -402,8 +402,11 @@ pageDocumentDesign=
             <div class="sendbutton" style="display:none">
             <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"  class="btn-big green center">
                <div class="left"></div>
-               <div class="label" style="width:120px"><p style="width:66px;display:inline-block;text-align:left;">Skicka </p>
-                <span class="btn-symbol green arrow-left" style="position:relative;top:3px;right:0px"></span></div> 
+               <div class="label" style="width:120px">
+		 <span>Skicka </span>
+                 <span class="btn-symbol green arrow-left"
+                 style="position:relative;top:3px;right:0px"></span>
+	       </div> 
                <div class="right"></div>
             </a>
             </div>
