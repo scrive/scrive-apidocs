@@ -260,7 +260,6 @@ handleRoutes = msum [
      , dir "accountremoval" $ hGet  $ UserControl.handleAccountRemovalGet
      , dir "accountremoval" $ hPostNoXToken  $ UserControl.handleAccountRemovalPost
 
-     , dir "requestaccount" $ hPostAllowHttp $ UserControl.handleRequestAccount
      -- viral invite
      , dir "invite"      $ hPostNoXToken $ UserControl.handleViralInvite
      , dir "question"    $ hPostAllowHttp $ UserControl.handleQuestion

@@ -400,21 +400,6 @@ handleAcceptTOSPost = withUserPost $ do
              return LinkAcceptTOS
          Nothing -> return LinkAcceptTOS
 
-handleRequestAccount :: Kontra KontraLink
-handleRequestAccount = do
-    ctx <- get
-    memail <- getRequiredField asValidEmail "email"
-    case memail of
-         Nothing -> return LinkMain
-         Just email -> do
-             scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail {
-                 fullnameemails = [(BS.fromString "prelaunch@skrivapa.se", BS.fromString "prelaunch@skrivapa.se")]
-                 , title = BS.fromString $ "New account request"
-                 , content = BS.fromString $ "Request from address " ++ (BS.toString email)
-             }
-             addFlashMsg =<< (liftIO $ flashMessageAccountRequestSend $ ctxtemplates ctx)
-             return LinkMain -- Something should happend here
-
 handleQuestion :: Kontra KontraLink
 handleQuestion = do
     ctx <- get
