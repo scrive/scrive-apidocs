@@ -852,10 +852,10 @@ getAllUsers = do
       compareuserfullname a b = compare (userfullname a) (userfullname b)
   return usersSorted
 
-setUserPassword :: User -> Password -> Update Users ()
-setUserPassword user@User{userid} newpassword = do
-  modify (updateIx userid (user { userpassword = newpassword })) 
-  return ()                             
+setUserPassword :: UserID -> Password -> Update Users (Either String User)
+setUserPassword userid newpassword = do
+    modifyUser userid $ \user ->
+        Right $ user { userpassword = newpassword }
 
 setInviteInfo :: Maybe User -> MinutesTime -> InviteType -> UserID -> Update Users ()
 setInviteInfo minviter invitetime' invitetype' uid = do
@@ -895,9 +895,9 @@ setUserPaymentPolicyChange userid userpaymentpolicy =
     modifyUser userid $ \user -> 
             Right $ user {userpaymentpolicy = userpaymentpolicy}   
             
-freeUserFromPayments :: User -> MinutesTime -> Update Users ()
-freeUserFromPayments u freetill =  do
-                                    _ <- modifyUser (userid u) $ \user -> 
+freeUserFromPayments :: UserID -> MinutesTime -> Update Users ()
+freeUserFromPayments uid freetill =  do
+                                    _ <- modifyUser uid $ \user -> 
                                       Right $ user {userpaymentpolicy = Payments.freeTill freetill (userpaymentpolicy user) }   
                                     return ()
 
