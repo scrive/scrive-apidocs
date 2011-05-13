@@ -1,6 +1,5 @@
 module Doc.DocState 
     ( module Doc.DocStateData
-    , isAuthor -- from Utils
     , isTemplate -- fromUtils
     , isContract -- fromUtils
     , isOffer -- fromUtils
@@ -97,6 +96,7 @@ import Mails.MailsUtil
 import Data.Data (Data)
 import qualified Data.Generics.SYB.WithClass.Derive as SYB
 import Doc.DocStateData
+import Doc.DocUtils
 import Doc.DocStateUtils
 
 getDocuments:: Query Documents [Document]
@@ -283,7 +283,7 @@ updateDocument time documentid docname signatories daystosign invitetext author 
              let authoremail = unEmail $ useremail $ userinfo author
              signatorylinks <- sequence $ map (uncurry $ signLinkFromDetails [(authoremail, author)]) signatories
              let csvupload = case (documentcsvupload document, 
-                                   fmap (checkCSVSigIndex (userid author) signatorylinks) mcsvsigindex) of
+                                   fmap (checkCSVSigIndex signatorylinks) mcsvsigindex) of
                                (Just cu, Just (Right newsigindex)) 
                                  -> Just cu{csvsignatoryindex=newsigindex}
                                _ -> Nothing
@@ -314,7 +314,7 @@ attachCSVUpload :: DocumentID
                    -> Update Documents (Either String Document)
 attachCSVUpload documentid csvupload =
     modifySignableOrTemplateWithAction documentid $ \document ->
-        let msigindex = checkCSVSigIndex (unAuthor $ documentauthor document) 
+        let msigindex = checkCSVSigIndex
                                          (documentsignatorylinks document)
                                          (csvsignatoryindex csvupload) in
         case (msigindex, documentstatus document) of
@@ -579,15 +579,14 @@ markDocumentSeen :: DocumentID
                  -> MagicHash
                  -> MinutesTime 
                  -> Word32
-                 -> Update Documents (Either DBError Document)
+                 -> Update Documents (Either String Document)
 markDocumentSeen documentid signatorylinkid1 mh time ipnumber = do
     modifySignable documentid $ \document -> 
         if (any shouldMark (documentsignatorylinks document))
           then Right $ document { documentsignatorylinks = mapIf shouldMark mark (documentsignatorylinks document) }
           else Left "" 
-    return ()
         where
-          shouldMark l = (signatorylinkid l) == signatorylinkid1 && (signatorymagichash == mh) && (isNothing $ maybeseeninfo l)
+          shouldMark l = (signatorylinkid l) == signatorylinkid1 && (signatorymagichash l == mh) && (isNothing $ maybeseeninfo l)
           mark l = l { maybeseeninfo = Just (SignInfo time ipnumber) }
                  
              
@@ -706,7 +705,7 @@ archiveDocuments user docidlist = do
   -- FIXME: can use a fold here
   forM_ docidlist $ \docid -> 
      modifySignableOrTemplate docid $ \doc -> 
-          if (isAuthor doc user)
+          if isUserAuthor doc user
             then Right $ doc { documentdeleted = True }
             else if isViewer doc user
                  then Right $ deleteForUserID user doc
@@ -721,7 +720,7 @@ shareDocuments :: User -> [DocumentID] -> Update Documents (Either String [Docum
 shareDocuments user docidlist = do
   mdocs <- forM docidlist $ \docid ->
     modifySignableOrTemplate docid $ \doc ->
-        if (isAuthor doc user)
+        if isUserAuthor doc user
           then Right $ doc { documentsharing = Shared }
           else Left $ "Can't share document unless you are the author"
   return $ sequence mdocs
@@ -824,14 +823,14 @@ restartDocument docid user time ipnumber =
  -}
 tryToGetRestarted :: Document -> User -> MinutesTime -> Word32 -> Update Documents (Either String Document)
 tryToGetRestarted doc user time ipnumber = 
-    if (documentstatus doc `notElem` [Canceled, Timedout, Rejected])
-    then return $ Left $ "Can't restart document with " ++ (show $ documentstatus doc) ++ " status"
-    else if (not $ isAuthor doc user)
-         then return $ Left $ "Can't restart document if you are not it's author"
-         else do 
-           doc' <- clearSignInfofromDoc doc user
-           let doc'' = doc' `appendHistory` [DocumentHistoryRestarted time ipnumber]
-           return $ Right doc''
+  if (documentstatus doc `notElem` [Canceled, Timedout, Rejected])
+  then return $ Left $ "Can't restart document with " ++ (show $ documentstatus doc) ++ " status"
+  else if (not $ isUserAuthor doc user)
+       then return $ Left $ "Can't restart document if you are not it's author"
+       else do 
+         doc' <- clearSignInfofromDoc doc user
+         let doc'' = doc' `appendHistory` [DocumentHistoryRestarted time ipnumber]
+         return $ Right doc''
 
 
 clearSignInfofromDoc doc author = do
@@ -1013,14 +1012,6 @@ templateFromDocument docid = modifySignable docid $ \doc ->
                                     else documenttype doc
         }
     
-authorSigLink :: Document -> SignatoryLink
-authorSigLink = find (elem SignatoryAuthor) . documentsignatorylinks
-
-isAuthor2 :: Document -> User -> Bool
-isAuthor2 document author = maybe False 
-                           (\sl -> Just $ userid author == maybesignatory sl) 
-                           (authorSigLink document)
-
 -- | Migrate author to the documentsignlinks so that he is not special anymore
 migrateToSigLinks :: DocumentID -> User -> Update Documents ()
 migrateToSigLinks docid author = do 
@@ -1029,12 +1020,10 @@ migrateToSigLinks docid author = do
   magichash <- getRandom
   modifySignable docid $ 
       \doc ->
-          case find 
-                   (\sl -> Just $ userid author == maybesignatory sl) 
-                   (documentsignatorylinks docid) of
+          case getAuthorSigLink doc of
             Just authorsiglink -> Right doc
             Nothing ->
-                doc { documentsignatorylinks = newAuthorSigLink : documentsignatorylinks doc }
+                Right doc { documentsignatorylinks = newAuthorSigLink : documentsignatorylinks doc }
                     where newAuthorSigLink = SignatoryLink 
                                              { signatorylinkid = linkid
                                              , signatorydetails = authordetails
@@ -1059,7 +1048,7 @@ migrateToSigLinks docid author = do
                                           , signatorypersonalnumberplacements =
                                                 authorpersonalnumberplacements doc
                                           , signatorycompanynumberplacements = 
-                                                authorcompanynumberplacements
+                                                authorcompanynumberplacements doc
                                           , signatoryotherfields =
                                                 authorotherfields doc
                                           }
