@@ -57,8 +57,8 @@ personFromSignatoryDetails details =
                 , Seal.emailverified = True
                 }
 
-personFields::(Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider) -> Fields
-personFields  (person, signinfo,seeninfo, _ , mprovider) = do 
+personFields::(Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider,String) -> Fields
+personFields  (person, signinfo,seeninfo, _ , mprovider, _initials) = do 
    field "personname" $ Seal.fullname person
    field "signip" $  formatIP (signipnumber signinfo)
    field "seenip" $  formatIP (signipnumber signinfo)
@@ -68,7 +68,7 @@ personFields  (person, signinfo,seeninfo, _ , mprovider) = do
    field "telia"  $ mprovider == Just TeliaProvider
 
 
-personsFromDocument :: Document -> [(Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider)]
+personsFromDocument :: Document -> [(Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider, String)]
 personsFromDocument document = 
     let
         isSignatory person = SignatoryPartner `elem` signatoryroles person
@@ -89,7 +89,9 @@ personsFromDocument document =
               , maybe signinfo id maybeseeninfo
               , signinfo
               , maybe False ((==) authorid) maybesignatory
-              , maybe Nothing (Just . signatureinfoprovider) signatorysignatureinfo)
+              , maybe Nothing (Just . signatureinfoprovider) signatorysignatureinfo
+              , map head $ words $ BS.toString $ signatoryname signatorydetails
+              )
                   where fullnameverified = maybe False (\x -> signaturefstnameverified x
                                                         && signaturelstnameverified x)
                                                 signatorysignatureinfo
@@ -161,12 +163,13 @@ sealSpecFromDocument templates hostpart document author inputpath outputpath =
       signatories = personsFromDocument document
       secretaries = if authorHasSigned then [] else [personFromSignatoryDetails authordetails]
 
-      persons = map (\(a,_,_,_,_) -> a) signatories
+      persons = map (\(a,_,_,_,_,_) -> a) signatories
+      initialsx = map (\(_,_,_,_,_,a) -> a) signatories
       paddeddocid = pad0 20 (show docid)
 
-      initials = concatComma (map initialsOfPerson persons)
+      initials = concatComma initialsx
       initialsOfPerson (Seal.Person {Seal.fullname}) = map head (words fullname)
-      makeHistoryEntryFromSignatory personInfo@(_ ,seen, signed, isAuthor, _)  = do
+      makeHistoryEntryFromSignatory personInfo@(_ ,seen, signed, isAuthor, _, _)  = do
           seenDesc <- renderTemplate templates "seenHistEntry" $ do
                         personFields personInfo
                         documentInfoFields document
@@ -196,7 +199,7 @@ sealSpecFromDocument templates hostpart document author inputpath outputpath =
                                       , Seal.histcomment = pureString desc 
                                       }]
 
-      maxsigntime = maximum (map (signtime . (\(_,_,c,_,_) -> c)) signatories)
+      maxsigntime = maximum (map (signtime . (\(_,_,c,_,_,_) -> c)) signatories)
       concatComma = concat . intersperse ", "
       
       lastHistEntry = do
