@@ -27,6 +27,7 @@ import qualified Data.ByteString.UTF8 as BS (fromString,toString)
 import Data.List (find)
 import qualified AppLogger as Log
 import MinutesTime
+import Doc.DocUtils
 
 data SendGridEventType = Delivered | Undelivered | Opened | Other String deriving Show
 data SendgridEvent = SendgridEvent
