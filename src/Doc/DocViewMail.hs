@@ -1,35 +1,37 @@
 {-# OPTIONS_GHC -F -pgmFtrhsx -Wall #-}
 
-module Doc.DocViewMail ( mailDocumentRemind,
-                     mailDocumentRemindContent,
-                     mailDocumentRejected,
-                     mailRejectMailContent,
-                     mailDocumentClosedForAuthor, 
-                     mailDocumentClosedForSignatories,
-                     mailInvitationToSign,
-                     mailInvitationToSignOrViewContent,
-                     mailInvitationToSend,
-                     mailInvitationToView,
-                     mailDocumentAwaitingForAuthor,
-                     mailCancelDocumentByAuthorContent,
-                     mailDocumentError,
-                     mailCancelDocumentByAuthor,
-                     mailMismatchSignatory,
-                     mailMismatchAuthor
-           ) where
+module Doc.DocViewMail ( mailDocumentRemind
+                       , mailDocumentRemindContent
+                       , mailDocumentRejected
+                       , mailRejectMailContent
+                       , mailDocumentClosedForAuthor
+                       , mailDocumentClosedForSignatories
+                       , mailInvitationToSign
+                       , mailInvitationToSignOrViewContent
+                       , mailInvitationToSend
+                       , mailInvitationToView
+                       , mailDocumentAwaitingForAuthor
+                       , mailCancelDocumentByAuthorContent
+                       , mailDocumentError
+                       , mailCancelDocumentByAuthor
+                       , mailMismatchSignatory
+                       , mailMismatchAuthor
+                       ) where
+
+import Amazon
 import Doc.DocState
-import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString as BS
+import Doc.DocUtils
 import Kontra
 import KontraLink
-import Data.Maybe
-import Mails.SendMail(Mail,emptyMail,content,title,fullnameemails,attachments)
-import Doc.DocViewUtil
-import Amazon
+import Mails.SendMail (Mail, emptyMail, content, title, fullnameemails, attachments)
+import Misc
 import Templates.Templates 
 import Templates.TemplatesUtils
 import User.UserView (prettyName)
-import Misc
+
+import Data.Maybe
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.UTF8 as BS
 
 mailDocumentRemind :: KontrakcjaTemplates 
                    -> Maybe (BS.ByteString) 
@@ -38,9 +40,9 @@ mailDocumentRemind :: KontrakcjaTemplates
                    -> SignatoryLink 
                    -> IO Mail
 mailDocumentRemind templates cm c d s = 
-    case s of 
-      SignatoryLink {maybesigninfo = Nothing} -> remindMailNotSigned templates cm c d s
-      _                                       -> remindMailSigned    templates cm c d s
+  case s of
+    SignatoryLink {maybesigninfo = Nothing} -> remindMailNotSigned templates cm c d s
+    _                                       -> remindMailSigned    templates cm c d s
                        
 mailDocumentRemindContent :: KontrakcjaTemplates 
                           -> Maybe (BS.ByteString) 
@@ -49,9 +51,9 @@ mailDocumentRemindContent :: KontrakcjaTemplates
                           -> SignatoryLink 
                           -> IO String
 mailDocumentRemindContent templates cm c d s = 
-    case s of 
-      SignatoryLink {maybesigninfo = Nothing} -> remindMailNotSignedContent templates False cm c d s
-      _                                       -> remindMailSignedContent    templates cm c d s
+  case s of 
+    SignatoryLink {maybesigninfo = Nothing} -> remindMailNotSignedContent templates False cm c d s
+    _                                       -> remindMailSignedContent    templates cm c d s
                        
 remindMailNotSigned :: KontrakcjaTemplates 
                     -> Maybe (BS.ByteString) 
@@ -75,8 +77,8 @@ remindMailSigned templates customMessage ctx document@Document{documenttitle}  s
   return $ emptyMail {title = BS.fromString title, content = BS.fromString content, attachments = [(documenttitle,attachmentcontent)]}
 
 remindMailNotSignedContent :: KontrakcjaTemplates 
-                           ->  Bool 
-                           ->  (Maybe BS.ByteString) 
+                           -> Bool 
+                           -> Maybe BS.ByteString
                            -> Context 
                            -> Document 
                            -> SignatoryLink 
@@ -86,7 +88,7 @@ remindMailNotSignedContent templates forMail customMessage ctx document signlink
                 then (ctxhostpart ctx) ++ show (LinkSignDoc document signlink)
                 else (ctxhostpart ctx) ++ "/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
         mauthorsiglink = getAuthorSigLink document
-        creatorname = maybe (BS.fromString "") personname mauthorsiglink
+        creatorname = maybe "" (BS.toString . personname) mauthorsiglink
         timetosigninfo = case (documenttimeouttime document) of 
                            Just time -> renderTemplate templates "timetosigninfo" [("time",show time )]
                            Nothing   -> return ""
@@ -104,7 +106,7 @@ remindMailNotSignedContent templates forMail customMessage ctx document signlink
                            else renderTemplate templates "customFooter" [("creatorname", creatorname)] 
                      else do
                        this <- renderTemplate templates "poweredBySkrivaPaPara" [("ctxhostpart",ctxhostpart ctx)] 
-                       with <- renderTemplate templates "customFooter" [("creatorname",creatorname)] 
+                       with <- renderTemplate templates "customFooter" [("creatorname", creatorname)] 
                        replaceOnEdit' templates this with                 
         header   = if (isNothing customMessage) 
                     then remindMailNotSignedStandardHeader templates document signlink
@@ -217,9 +219,9 @@ mailInvitationToSignOrViewContent templates
                 Just siglink -> ctxhostpart ++ show (LinkSignDoc document siglink)
                 Nothing -> ctxhostpart ++ "/s/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
       Just authorsiglink = getAuthorSigLink document
-      creatorname = signatoryname  $ signatorydetails authorsiglink
-      issignatory = maybe False (elem SignatoryPartner . signatoryroles) signaturelink
-      personname1 = maybe "" (BS.toString . signatoryname . signatorydetails) signaturelink
+      creatorname = BS.toString $ signatoryname $ signatorydetails authorsiglink
+      issignatory = maybe False (elem SignatoryPartner . signatoryroles) msiglink
+      personname1 = maybe "" (BS.toString . signatoryname . signatorydetails) msiglink
       partnersinfo = if forMail
                      then renderListTemplate templates $ map (BS.toString . personname') $ partyList document
                      else renderTemplate templates "updateinglistwithauthor" [("creatorname", creatorname )]
@@ -241,7 +243,7 @@ mailInvitationToSignOrViewContent templates
                            else renderTemplate templates "customFooter" [("creatorname", creatorname)] 
                     else do
                           this <- renderTemplate templates "poweredBySkrivaPaPara" [("ctxhostpart",ctxhostpart)] 
-                          with <- renderTemplate templates "customFooter" [("creatorname",creatorname)] 
+                          with <- renderTemplate templates "customFooter" [("creatorname", creatorname)] 
                           replaceOnEdit' templates this with            
       header   =  if (BS.null documentinvitetext) 
                      then if issignatory || not forMail 
@@ -253,19 +255,19 @@ mailInvitationToSignOrViewContent templates
                                    field "contract" $ isContract document
                                      
                           else renderTemplate templates "mailInvitationToViewDefaultHeader" 
-                                   [("creatorname",creatorname)
-                                   ,("personname",personname1)
-                                   ,("documenttitle",BS.toString documenttitle) 
+                                   [("creatorname",   creatorname)
+                                   ,("personname",    personname1)
+                                   ,("documenttitle", BS.toString documenttitle) 
                                    ]  
                      else return $ BS.toString documentinvitetext      
            
-      header' <- header
-      editableHeader <- makeEditable' templates "customtext" header'
-      footer' <- footer
-      partnersinfo' <- partnersinfo
-      whohadsignedinfo' <- whohadsignedinfo
-      timetosigninfo' <- timetosigninfo
-      renderTemplate templates "mailInvitationToSignContent" $ do
+  header' <- header
+  editableHeader <- makeEditable' templates "customtext" header'
+  footer' <- footer
+  partnersinfo' <- partnersinfo
+  whohadsignedinfo' <- whohadsignedinfo
+  timetosigninfo' <- timetosigninfo
+  renderTemplate templates "mailInvitationToSignContent" $ do
         field "header" editableHeader
         field "footer" footer'
         field "timetosigninfo" timetosigninfo'
