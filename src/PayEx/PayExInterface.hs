@@ -20,6 +20,7 @@ import Happstack.Server
 import AppView
 import qualified HSP.XML as HSP
 import Doc.DocState
+import Doc.DocUtils
 import User.UserState
 import Payments.PaymentsState
 import Happstack.State (update,query)
@@ -88,7 +89,7 @@ paymentInfo documentid = do
                   let allowedIdentification  =  (if "Email" `isInfixOf` allowedidtypes  then [EmailIdentification]  else []) ++  (if "ELeg" `isInfixOf` allowedidtypes   then [ELegitimationIdentification]   else [])
                   mdocument <- liftIO $ query $ GetDocumentByDocumentID $ documentid    
                   case (mdocument,ctxmaybeuser ctx) of
-                    (Just document,Just user) -> if (isAuthor document user)
+                    (Just document,Just user) -> if (isUserAuthor document user)
                                                   then do 
                                                         getCostOfSigning user document signatoriesCount allowedIdentification
                                                         simpleResponse ""
