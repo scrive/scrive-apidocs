@@ -19,6 +19,7 @@ import Data.List
 
 import Doc.DocStateData
 import Doc.DocStateUtils
+import Doc.DocUtils
 import FlashMessage
 import InputValidation
 import Kontra
@@ -44,7 +45,7 @@ data CleanCSVData = CleanCSVData
 -}
 csvPersonIndex :: Document -> Maybe Int
 csvPersonIndex doc = 
-  let sigindexf = if (isAuthorSignatory doc)
+  let sigindexf = if isAuthorSignatory doc
                     then csvsignatoryindex
                     else ((+1) . csvsignatoryindex) in
   fmap sigindexf $ documentcsvupload doc
@@ -56,11 +57,6 @@ personToSigIndex :: Bool -> Int -> Int
 personToSigIndex isAuthor personIndex =
   if isAuthor then personIndex else (personIndex - 1)
 
-isAuthorSignatory :: Document -> Bool
-isAuthorSignatory doc =
-  case (documentsignatorylinks doc) of
-    (sl:_) | isAuthor doc sl -> True
-    _ -> False
 
 {- |
     Looks up all the custom fields for the csv upload and returns their labels.
@@ -70,7 +66,7 @@ getCSVCustomFields doc@Document{ documentsignatorylinks } =
   case fmap csvsignatoryindex $ documentcsvupload doc of
     Nothing -> Right []
     Just csvsignatoryindex ->
-      case checkCSVSigIndex (unAuthor documentauthor) documentsignatorylinks csvsignatoryindex of
+      case checkCSVSigIndex documentsignatorylinks csvsignatoryindex of
         Left msg -> Left msg
         Right _ ->
           Right $ map fieldlabel . signatoryotherfields . signatorydetails $ documentsignatorylinks !! csvsignatoryindex
