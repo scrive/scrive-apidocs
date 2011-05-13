@@ -48,7 +48,7 @@ import Text.JSON
 import Text.JSON.String
 import Control.Monad.Reader
 import Control.Monad.Error
-
+import Doc.DocState
 {- | API calls user JSPO object as a response and work within json value as a context-}
 type APIResponse = JSObject JSValue
 type APIRequestBody = JSValue
@@ -219,4 +219,6 @@ instance  Enum API_ERROR where
     fromEnum API_ERROR_ILLEGAL_VALUE = 107
     fromEnum API_ERROR_MISSING_VALUE = 109
     fromEnum API_ERROR_OTHER = 500
-    toEnum _ = API_ERROR_OTHER
+    toEnum _ = error "Enum instance for API_ERROR is one way only"
+
+-- Other constants used for api calls
