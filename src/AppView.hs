@@ -42,6 +42,9 @@ import ListUtil
 import Data.Functor
 import API.Service.ServiceState
 import FlashMessage
+import qualified Data.ByteString.UTF8 as BS (fromString)
+import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
+
 
 {- |
    Defines the different sorts of things we can have at the top of the page
@@ -215,7 +218,7 @@ pageLogin ctx referer email =
    Changing our pages into reponses, and clearing flash messages.
 -}
 simpleResponse::String -> Kontra Response
-simpleResponse s = ok $ toResponse $ cdata s 
+simpleResponse s = ok $ toResponseBS   (BS.fromString "text/html;charset=utf-8") (BSL.fromString s) 
     -- change this to HtmlString from helpers package 
     -- (didn't want to connect it one day before prelaunch)
 
