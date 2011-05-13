@@ -212,7 +212,7 @@ sendDataMismatchEmailSignatory ctx document badid badname msg signatorylink = do
                 badname
                 msg
                 isbad
-    scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [(signatoryname signatorydetails, signatoryemail signatorydetails)] }
+        scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [(signatoryname signatorydetails, signatoryemail signatorydetails)] }
           
 sendDataMismatchEmailAuthor :: Context -> Document -> String -> String -> IO ()
 sendDataMismatchEmailAuthor ctx document badname bademail = do
@@ -326,7 +326,7 @@ sendClosedEmail1 ctx document signatorylink = do
  -}
 sendAwaitingEmail :: Context -> Document -> IO ()
 sendAwaitingEmail ctx document = do
-  let Just authorsiglink <- getAuthorSigLink document
+  let Just authorsiglink = getAuthorSigLink document
       authoremail = signatoryemail $ signatorydetails authorsiglink
       authorname  = signatoryname  $ signatorydetails authorsiglink
   mail <- mailDocumentAwaitingForAuthor (ctxtemplates ctx) ctx authorname document
@@ -337,7 +337,7 @@ sendAwaitingEmail ctx document = do
  -}
 sendClosedAuthorEmail :: Context -> Document -> IO ()
 sendClosedAuthorEmail ctx document = do
-  let Just authorsiglink <- getAuthorSigLink document
+  let Just authorsiglink = getAuthorSigLink document
       authoremail = signatoryemail $ signatorydetails authorsiglink
       authorname  = signatoryname  $ signatorydetails authorsiglink
   mail <- mailDocumentClosedForAuthor (ctxtemplates ctx) ctx authorname document
