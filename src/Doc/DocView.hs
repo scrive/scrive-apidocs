@@ -83,7 +83,7 @@ import Data.Char (toUpper)
 import Doc.CSVUtils
 import Doc.DocState
 import Doc.DocViewMail
-import Doc.DocViewUtil
+import Doc.DocUtils
 import Doc.DocStateUtils
 import Kontra
 import KontraLink
@@ -367,7 +367,7 @@ documentBasicViewFields crtime user doc = do
     field "status" $ show (documentStatusClass doc)
     field "signatories" $ map (singlnkFields doc (showDateAbbrev crtime)) $ filter isSignatory $ documentsignatorylinks doc
     field "anyinvitationundelivered" $ anyInvitationUndelivered doc
-    field "doclink"  $ if (unAuthor $ documentauthor doc) == userid user || null signatorylinklist
+    field "doclink"  $ if isUserAuthor doc user || null signatorylinklist
                         then show . LinkIssueDoc $ documentid doc
                         else show $ LinkSignDoc doc (head signatorylinklist)
     field "davelink" $ if isSuperUser (Just user)
@@ -376,7 +376,7 @@ documentBasicViewFields crtime user doc = do
     field "timeoutdate" $ fromTimeout show
     field "timeoutdaysleft" $ fromTimeout $ show . (dateDiffInDays crtime)
     field "mtime" $ showDateAbbrev crtime (documentmtime doc)
-    field "isauthor" $ isAuthor doc user
+    field "isauthor" $ isUserAuthor doc user
     field "isviewer" $ isViewer doc user
     field "isshared" $ (documentsharing doc)==Shared
     field "isoffer" $ isOffer doc
@@ -669,18 +669,19 @@ pageDocumentDesign ctx
              field "otherFieldID"    $ "field" ++ show i
              field "otherFieldOwner" "author")
              $ zip fields ([1..]::[Int])
+       authorsiglink = fromJust $ getAuthorSigLink document
    in do
      csvfields <- documentCsvFields templates document
      renderTemplate (ctxtemplates ctx) "pageDocumentDesign" $ do
-       field "authorOtherFields" $ doc_author_otherfields $ signatoryotherfields $ documentauthordetails author document
+       field "authorOtherFields" $ doc_author_otherfields $ signatoryotherfields $ signatorydetails authorsiglink
        field "linkissuedoc" $ show $ LinkIssueDoc documentid
        field "documentinvitetext" $ documentinvitetext
-       field "invitationMailContent" $  mailInvitationToSignOrViewContent templates False ctx document author Nothing
+       field "invitationMailContent" $  mailInvitationToSignOrViewContent templates False ctx document Nothing
        field "documentdaystosignboxvalue" $ documentdaystosignboxvalue              
-       field "docstate" (buildJS (documentauthordetails author document) documentsignatorylinks)
-       documentAuthorInfo author
+       field "docstate" (buildJS (signatorydetails authorsiglink) documentsignatorylinks)
+       documentAuthorInfo document
        csvfields
-       documentFunctionalityFields author document
+       documentFunctionalityFields document
        documentInfoFields document
        documentViewFields document
        designViewFields step
@@ -696,8 +697,8 @@ documentAttachmentDesignFields atts = do
       field "attachmentid" $ show documentid
       field "attachmentname" $ BS.toString documenttitle
 
-documentFunctionalityFields :: User -> Document -> Fields
-documentFunctionalityFields User{usersettings} Document{documenttype, documentfunctionality} = do
+documentFunctionalityFields :: Document -> Fields
+documentFunctionalityFields Document{documenttype, documentfunctionality} = do
   field "docfunctionality" $ show documentfunctionality
   field "basiccontract" $ documenttype==Contract && documentfunctionality==BasicFunctionality
 
@@ -782,6 +783,7 @@ pageDocumentForAuthor ctx
    let
        templates = ctxtemplates ctx
        isSignatory person = SignatoryPartner `elem` signatoryroles person
+       authorsiglink = fromJust $ getAuthorSigLink document
    in do
      renderTemplate (ctxtemplates ctx) "pageDocumentForAuthor" $ do
        field "linkissuedoc" $ show $ LinkIssueDoc documentid
@@ -789,10 +791,10 @@ pageDocumentForAuthor ctx
        field "canberestarted" $ documentstatus `elem` [Canceled, Timedout, Rejected]
        field "cancelMailContent" $ mailCancelDocumentByAuthorContent templates False Nothing ctx document
        field "linkcancel" $ show $ LinkCancel document
-       field "docstate" (buildJS (documentauthordetails document) documentsignatorylinks)
+       field "docstate" (buildJS (signatorydetails authorsiglink) documentsignatorylinks)
        field "linkissuedocpdf" $ show (LinkIssueDocPDF Nothing document)
-       field "documentinfotext" $ documentInfoText ctx document (find (isMatchingSignatoryLink author) documentsignatorylinks) author
-       documentAuthorInfo author
+       field "documentinfotext" $ documentInfoText ctx document (find (siglinkIsAuthor) documentsignatorylinks)
+       documentAuthorInfo document
        documentInfoFields document
        documentViewFields document
        documentAttachmentViewFields attachments
@@ -819,10 +821,11 @@ pageDocumentForViewer ctx
         authorhaslink = not $ null $ filter (not . isNotLinkForUserID authorid) documentsignatorylinks
         documentdaystosignboxvalue = maybe 7 id documentdaystosign
         isSignatory person = SignatoryPartner `elem` signatoryroles person
+        authorsiglink = fromJust $ getAuthorSigLink document
    in do
      invitationMailContent <- mailInvitationToSignOrViewContent (ctxtemplates ctx) False ctx document Nothing
-     cancelMailContent <- mailCancelDocumentByAuthorContent (ctxtemplates ctx) False Nothing ctx document author
-     documentinfotext <- documentInfoText ctx document Nothing author
+     cancelMailContent <- mailCancelDocumentByAuthorContent (ctxtemplates ctx) False Nothing ctx document
+     documentinfotext <- documentInfoText ctx document Nothing
      renderTemplate (ctxtemplates ctx) "pageDocumentForViewerContent" $  do
        field "linkissuedoc" $ show $ LinkIssueDoc documentid
        field "documentinvitetext" $ documentinvitetext
@@ -830,14 +833,14 @@ pageDocumentForViewer ctx
        field "documentdaystosignboxvalue" $ documentdaystosignboxvalue
        field "anyinvitationundelivered" $ anyInvitationUndelivered document
        field "undelivered" $ map (signatoryemail . signatorydetails) $ undeliveredSignatoryLinks document
-       field "signatories" $ map (signatoryLinkFields ctx document author Nothing) $ signatoriesWithSecretary author document
+       field "signatories" $ map (signatoryLinkFields ctx document Nothing) $ signatoriesWithSecretary document
        field "canberestarted" $ documentstatus `elem` [Canceled, Timedout, Rejected]
        field "cancelMailContent" $ cancelMailContent
        field "linkcancel" $ show $ LinkCancel document
        field "emailelegitimation" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)
        field "emailonly" $ (isJust $ find (== EmailIdentification) documentallowedidtypes) && (isNothing $ find (== ELegitimationIdentification) documentallowedidtypes)
        field "elegitimationonly" $ (isNothing $ find (== EmailIdentification) documentallowedidtypes) && (isJust $ find (== ELegitimationIdentification) documentallowedidtypes)
-       field "docstate" (buildJS (documentauthordetails author document) documentsignatorylinks)
+       field "docstate" (buildJS (signatorydetails authorsiglink) documentsignatorylinks)
        case msignlink of
            Nothing -> return ()
            Just siglink -> do
@@ -848,7 +851,6 @@ pageDocumentForViewer ctx
        documentInfoFields document 
        documentViewFields document
        documentAuthorInfo author
-       documentAttachmentViewFields attachments
 
 documentAttachmentViewFields :: [Document] -> Fields
 documentAttachmentViewFields atts = do
@@ -864,13 +866,12 @@ pageDocumentForSignatory :: KontraLink
                     -> [Document] 
                     -> Context
                     -> SignatoryLink
-                    -> User
                     -> IO String 
-pageDocumentForSignatory action document attachments ctx invitedlink author =
+pageDocumentForSignatory action document ctx invitedlink author =
   let
       localscripts =
            "var docstate = "
-        ++ (buildJS (documentauthordetails author document) $ documentsignatorylinks document)
+        ++ (buildJS (signatorydetails authorsiglink) $ documentsignatorylinks document)
         ++ "; docstate['useremail'] = '"
         ++ (BS.toString $ signatoryemail $ signatorydetails invitedlink)
         ++ "'; offer = " ++ if (isOffer document) then "true" else"false"
@@ -882,17 +883,17 @@ pageDocumentForSignatory action document attachments ctx invitedlink author =
   in do
     renderTemplate (ctxtemplates ctx) "pageDocumentForSignContent" $ do
       field "localscripts" localscripts
-      field "signatories" $ map (signatoryLinkFields ctx document author (Just invitedlink)) $ signatoriesWithSecretary author document
-      field "rejectMessage" $  mailRejectMailContent (ctxtemplates ctx) Nothing ctx (prettyName author) document invitedlink
+      field "signatories" $ map (signatoryLinkFields ctx document (Just invitedlink)) $ signatoriesWithSecretary document
+      field "rejectMessage" $  mailRejectMailContent (ctxtemplates ctx) Nothing ctx (personname authorsiglink) document invitedlink
       field "partyUnsigned" $ renderListTemplate (ctxtemplates ctx) $  map (BS.toString . personname') $ partyUnsignedMeAndList magichash document
       field "action" $ show action
       field "linkissuedocpdf" $ show (LinkIssueDocPDF (Just invitedlink) document)
-      field "documentinfotext" $  documentInfoText ctx document (Just invitedlink) author
+      field "documentinfotext" $  documentInfoText ctx document (Just invitedlink)
       field "requireseleg" requiresEleg
       field "siglinkid" $ show $ signatorylinkid invitedlink
       field "sigmagichash" $ show $ signatorymagichash invitedlink
       documentInfoFields document
-      documentAuthorInfo author
+      documentAuthorInfo document
       documentViewFields document
       signedByMeFields document (Just invitedlink)
       documentAttachmentSignatoryFields attachments invitedlink
@@ -923,13 +924,9 @@ signatoryLinkFields
     , signatoryroles
     , invitationdeliverystatus
   } =
-  let isCurrentUserAuthor = case muser of
-        Nothing -> False
-        Just user -> case getAuthorSigLink document of
-          Just sl | Just (userid user) == maybesignatory sl -> action
-          _ -> False
+  let isCurrentUserAuthor = maybe False (isUserAuthor document) muser
       current = (currentlink == Just siglnk) || (isNothing currentlink && (fmap (unEmail . useremail . userinfo) muser) == (Just $ signatoryemail signatorydetails)) 
-   isActiveDoc = not $ (documentstatus document) `elem` [Timedout, Canceled, Rejected]
+      isActiveDoc = not $ (documentstatus document) `elem` [Timedout, Canceled, Rejected]
     in do
       field "current" $ current
       field "fstname" $ packToMString $ signatoryfstname $ signatorydetails
@@ -1012,13 +1009,10 @@ packToMString x =
      then Nothing
      else Just $ BS.toString x
 
-isSignatory:: SignatoryLink -> Bool
-isSignatory = (SignatoryPartner `elem`) . signatoryroles
-    
 signatoriesWithSecretary :: Document -> [SignatoryLink] 
 signatoriesWithSecretary doc =
   (filter isSignatory $ documentsignatorylinks doc) ++ 
-  case getAuthorSigLink of
+  case getAuthorSigLink doc of
     Just sl | not $ isSignatory sl -> [sl]
     _ -> []
     
@@ -1052,12 +1046,12 @@ documentAuthorInfo document =
   case getAuthorSigLink document of
     Nothing -> return ()
     Just siglink -> do
-      field "authorfstname"       $ nothingIfEmpty $ signatoryfstname        $ signatorydetails author
-      field "authorsndname"       $ nothingIfEmpty $ signatorysndname        $ signatorydetails author
-      field "authorcompany"       $ nothingIfEmpty $ signatorycompanyname    $ signatorydetails author
-      field "authoremail"         $ nothingIfEmpty $ signatoryemail          $ signatorydetails author
-      field "authorpersonnumber"  $ nothingIfEmpty $ signatorypersonalnumber $ signatorydetails author
-      field "authorcompanynumber" $ nothingIfEmpty $ signatorycompanynumber  $ signatorydetails author
+      field "authorfstname"       $ nothingIfEmpty $ signatoryfstname        $ signatorydetails siglink
+      field "authorsndname"       $ nothingIfEmpty $ signatorysndname        $ signatorydetails siglink
+      field "authorcompany"       $ nothingIfEmpty $ signatorycompany        $ signatorydetails siglink
+      field "authoremail"         $ nothingIfEmpty $ signatoryemail          $ signatorydetails siglink
+      field "authorpersonnumber"  $ nothingIfEmpty $ signatorypersonalnumber $ signatorydetails siglink
+      field "authorcompanynumber" $ nothingIfEmpty $ signatorycompanynumber  $ signatorydetails siglink
   
 -- | Fields indication what is a document status 
 documentStatusFields :: Document -> Fields    
@@ -1080,7 +1074,7 @@ signedByMeFields :: Document -> Maybe SignatoryLink -> Fields
 signedByMeFields document siglnk = do
   field "notsignedbyme" $ (isJust siglnk) && (isNothing $ maybesigninfo $ fromJust siglnk)
   field "signedbyme" $ (isJust siglnk) && (isJust $ maybesigninfo $ fromJust siglnk)
-  field "iamauthor" $ isAuthor document siglnk
+  field "iamauthor" $ maybe False siglinkIsAuthor siglnk
 
 
 documentViewFields:: Document -> Fields
