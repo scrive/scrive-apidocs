@@ -114,7 +114,7 @@ handlePostUserSecurity = do
               addFlashMsg =<< (liftIO $ f (ctxtemplates ctx))
             _ ->  do
               passwordhash <- liftIO $ createPassword password
-              update $ SetUserPassword user passwordhash
+              update $ SetUserPassword (userid user) passwordhash
               addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
         _ -> return ()
       return LinkSecurity
@@ -655,7 +655,7 @@ handleActivate' signupmethod user acctype actionid infoupdatefunc = do
           if tos
             then do
               passwordhash <- liftIO $ createPassword password
-              update $ SetUserPassword user passwordhash
+              update $ SetUserPassword (userid user) passwordhash
               update $ AcceptTermsOfService (userid user) (ctxtime ctx)
               update $ SetSignupMethod (userid user) signupmethod
               update $ SetUserSettings (userid user) $ (usersettings user) {
@@ -720,7 +720,7 @@ handlePasswordReminderPost aid hash = do
                           Right () -> do
                               dropExistingAction aid
                               passwordhash <- liftIO $ createPassword password
-                              update $ SetUserPassword user passwordhash
+                              update $ SetUserPassword (userid user) passwordhash
                               addFlashMsg =<< (liftIO $ flashMessageUserPasswordChanged templates)
                               logUserToContext $ Just user
                               return LinkMain
