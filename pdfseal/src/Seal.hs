@@ -177,7 +177,7 @@ placeSealOnPageRefID sealrefid sealmarkerformrefid (pagerefid,sealtext) document
 fieldstext :: Int -> Int -> [Field] -> String
 fieldstext pagew pageh fields = concatMap fieldtext fields
   where
-    fontBaseline = 7
+    fontBaseline = 8
     fieldtext Field{ SealSpec.value = val
                    , x
                    , y
