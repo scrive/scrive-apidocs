@@ -535,14 +535,14 @@ pageDocumentDesign=
 docname=
        <span class="docname">
          <span class="docname-display">
-           <span class="visible-docname"> $documenttitle$</span>
            $if(!basiccontract)$
-           <a href="#" class="icon edit"></a>
+           <a href="#" class="icon edit" style="margin-right: 2px"></a>
            $endif$
+           <span class="visible-docname">$documenttitle$</span>
          </span>
          <span class="docname-edit" style="display:none;">
+           <a href="#" class="icon small ok" style="margin-right: 2px; float: none"></a>
            <input type="text" name="docname-edit" value="$documenttitle$" />
-           <a href="#" class="icon small ok"></a>
          </span>
        </span>
 ####

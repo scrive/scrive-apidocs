@@ -1080,16 +1080,13 @@ input[type=submit].hidden
 {
     color: #ffffff;
     background-image: url(../img/bg-header.jpg);
-    height: 20px;
     padding: 4px 3px 3px 20px;
     position: relative;
 }
 
 #signStepsTitleRowTextContainer
 {
-    display: inline-block;
-    float: left;
-    height: 19px;
+    min-height: 19px;
 }
 
 #signStepsTitleRow .title
@@ -1151,6 +1148,7 @@ input[type=submit].hidden
     font-size:16px;
     font-weight:bold;
     color:#FFFFFF;
+    width: 710px;
     font-family:'Segoe UI',arial,verdana,'lucida sans unicode',tahoma,sans-serif;
 }
 
