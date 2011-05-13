@@ -22,6 +22,7 @@ import Debug.Trace
 import Doc.DocState
 import Doc.DocStorage
 import Doc.DocView
+import Doc.DocUtils
 import Happstack.State (update, query)
 import MinutesTime
 import Misc
@@ -71,7 +72,6 @@ personFields  (person, signinfo,seeninfo, _ , mprovider, _initials) = do
 personsFromDocument :: Document -> [(Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider, String)]
 personsFromDocument document = 
     let
-        isSignatory person = SignatoryPartner `elem` signatoryroles person
         links = filter isSignatory $ documentsignatorylinks document
         authorid = unAuthor $ documentauthor document
         x (SignatoryLink{ signatorydetails
@@ -149,9 +149,8 @@ sealSpecFromDocument :: KontrakcjaTemplates -> String -> Document -> String -> S
 sealSpecFromDocument templates hostpart document inputpath outputpath =
   let docid = unDocumentID (documentid document)
       Just authorsiglink = getAuthorSigLink document
-      authorHasSigned = SignatoryPartner `elem` (signatoryroles authorsiglink) && isJust $ maybesigninfo authorsiglink
-      isSignatory x = SignatoryPartner `elem` signatoryroles x
-      signatoriesdetails = [signatorydetails sl | sl < documentsignatorylinks document
+      authorHasSigned = isSignatory authorsiglink && isJust (maybesigninfo authorsiglink)
+      signatoriesdetails = [signatorydetails sl | sl <- documentsignatorylinks document
                                                 , SignatoryPartner `elem` signatoryroles sl]
       authordetails = signatorydetails authorsiglink
       signatories = personsFromDocument document
@@ -184,7 +183,7 @@ sealSpecFromDocument templates hostpart document inputpath outputpath =
                                 Just (SignInfo time ipnumber) -> do
                                    desc <-  renderTemplate templates "invitationSentEntry" $ do
                                        documentInfoFields document
-                                       documentAuthorInfo author
+                                       documentAuthorInfo document
                                        field "oneSignatory"  (length signatories>1)
                                        field "personname" $  listToMaybe $ map  (BS.toString . signatoryname)  signatoriesdetails
                                        field "ip" $ formatIP ipnumber
