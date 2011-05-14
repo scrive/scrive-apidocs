@@ -23,7 +23,9 @@ module Kontra
     , newAccountCreatedBySigningLink
     , scheduleEmailSendout
     , queryOrFail
+    , queryOrFailIfLeft
     , returnJustOrMZero
+    , returnRightOrMZero
     , param
     , currentService
     )
@@ -236,9 +238,18 @@ queryOrFail q = do
   mres <- query q
   returnJustOrMZero mres
 
+queryOrFailIfLeft :: (MonadPlus m,Monad m, MonadIO m) => (QueryEvent ev (Either a res)) => ev -> m res
+queryOrFailIfLeft q = do
+  mres <- query q
+  returnRightOrMZero mres
+
 -- | if it's not a just, mzero. Otherwise, return the value
 returnJustOrMZero :: (MonadPlus m,Monad m) => Maybe a -> m a     
 returnJustOrMZero = maybe mzero return
+
+returnRightOrMZero :: (MonadPlus m, Monad m) => Either a b -> m b
+returnRightOrMZero (Left _) = mzero
+returnRightOrMZero (Right res) = return res
 
 -- | Checks if request contains a param , else mzero
 param :: String -> Kontra Response -> Kontra Response

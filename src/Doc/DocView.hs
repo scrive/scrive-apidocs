@@ -7,11 +7,15 @@ module Doc.DocView (
   , pageDocumentForAuthor
   , pageDocumentForViewer
   , pageDocumentForSignatory
+  , pageAttachmentView
+  , pageAttachmentDesign
+  , pageAttachmentForSignatory
   , docSortSearchPage
   , docAndAuthorSortSearchPage
   , pageContractsList
   , pageTemplatesList
   , pageOffersList
+  , pageAttachmentList
   , modalSignInviteView
   , modalSendInviteView
   , modalContractSignedHasAccount
@@ -37,12 +41,19 @@ module Doc.DocView (
   , flashMessageContractArchiveDone
   , flashMessageOfferArchiveDone
   , flashMessageTemplateArchiveDone
+  , flashMessageAttachmentArchiveDone
   , flashMessageInvalidCSV
   , flashMessageCSVSent
   , flashMessageSingleTemplateShareDone
   , flashMessageMultipleTemplateShareDone
+  , flashMessageSingleAttachmentShareDone
+  , flashMessageMultipleAttachmentShareDone
   , flashMessageAccountActivatedFromSign
   , flashMessageAccountRemovedFromSign
+  , flashMessageOnlyHaveRightsToViewDoc
+  , flashMessagePleaseSignWithEleg
+  , flashMessagePleaseSignContract
+  , flashMessagePleaseSignOffer
   , defaultInviteMessage
   , mailDocumentRemind
   , mailDocumentRejected
@@ -259,6 +270,10 @@ flashMessageTemplateArchiveDone :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageTemplateArchiveDone templates =
   toFlashMsg OperationDone <$> renderTemplate templates "flashMessageTemplateArchiveDone" ()
 
+flashMessageAttachmentArchiveDone :: KontrakcjaTemplates -> IO FlashMessage
+flashMessageAttachmentArchiveDone templates =
+  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageAttachmentArchiveDone" ()
+
 flashMessageInvalidCSV :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageInvalidCSV templates =
   toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageInvalidCSV" ()
@@ -275,6 +290,14 @@ flashMessageMultipleTemplateShareDone :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageMultipleTemplateShareDone templates =
   toFlashMsg OperationDone <$> renderTemplate templates "flashMessageMultipleTemplateShareDone" ()
 
+flashMessageSingleAttachmentShareDone :: BS.ByteString -> KontrakcjaTemplates -> IO FlashMessage
+flashMessageSingleAttachmentShareDone docname templates =
+  toFlashMsg OperationDone <$> (renderTemplate templates "flashMessageSingleAttachmentShareDone" $ field "docname" docname)
+
+flashMessageMultipleAttachmentShareDone :: KontrakcjaTemplates -> IO FlashMessage
+flashMessageMultipleAttachmentShareDone templates =
+  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageMultipleAttachmentShareDone" ()
+
 flashMessageAccountActivatedFromSign :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageAccountActivatedFromSign templates =
   toFlashMsg OperationDone <$> renderTemplate templates "flashMessageAccountActivatedFromSign" ()
@@ -283,6 +306,21 @@ flashMessageAccountRemovedFromSign :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageAccountRemovedFromSign templates =
   toFlashMsg OperationDone <$> renderTemplate templates "flashMessageAccountRemovedFromSign" ()
 
+flashMessageOnlyHaveRightsToViewDoc :: KontrakcjaTemplates -> IO FlashMessage
+flashMessageOnlyHaveRightsToViewDoc templates =
+  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageOnlyHaveRightsToViewDoc" ()
+
+flashMessagePleaseSignWithEleg :: KontrakcjaTemplates -> IO FlashMessage
+flashMessagePleaseSignWithEleg templates =
+  toFlashMsg OperationDone <$> renderTemplate templates "flashMessagePleaseSignWithEleg" ()
+
+flashMessagePleaseSignContract :: KontrakcjaTemplates -> IO FlashMessage
+flashMessagePleaseSignContract templates =
+  toFlashMsg OperationDone <$> renderTemplate templates "flashMessagePleaseSignContract" ()
+
+flashMessagePleaseSignOffer :: KontrakcjaTemplates -> IO FlashMessage
+flashMessagePleaseSignOffer templates =
+  toFlashMsg OperationDone <$> renderTemplate templates "flashMessagePleaseSignOffer" ()
 
 -- All doc view
 singlnkFields :: Document -> (MinutesTime -> String) -> SignatoryLink -> Fields
@@ -421,31 +459,60 @@ docsPageSize = 100
 --
 
 pageContractsList :: KontrakcjaTemplates -> MinutesTime -> User -> PagedList Document -> IO String
-pageContractsList templates ctime user documents =
-  renderTemplate templates "pageContractsList" $ do
-    field "documents" $ markParity $ map (documentBasicViewFields ctime user) $ list documents
-    pagedListFields documents
-    field "currentlink" $ show $ LinkContracts $ params documents
-        
+pageContractsList = pageList' "pageContractsList" LinkContracts documentBasicViewFields
 
 pageTemplatesList :: KontrakcjaTemplates -> MinutesTime -> User -> PagedList Document -> IO String
-pageTemplatesList templates ctime user documents =
- renderTemplate templates "pageTemplatesList" $ do
-    field "documents" $ markParity $ map (documentBasicViewFields ctime user) $ list documents
-    pagedListFields documents
-    field "currentlink" $ show $ LinkTemplates $ params documents
-    
+pageTemplatesList = pageList' "pageTemplatesList" LinkTemplates documentBasicViewFields
+
+pageAttachmentList :: KontrakcjaTemplates -> MinutesTime -> User -> PagedList Document -> IO String
+pageAttachmentList = pageList' "pageAttachmentList" LinkAttachments documentBasicViewFields
+
 pageOffersList :: KontrakcjaTemplates -> MinutesTime -> User -> PagedList (Document, User) -> IO String
-pageOffersList templates ctime user documents =
-  renderTemplate templates "pageOffersList" $ do
-    field "documents" $ markParity $ map (docAndAuthorBasicViewFields ctime user) $ list documents
-    pagedListFields documents
-    field "currentlink" $ show $ LinkOffers $ params documents
+pageOffersList = pageList' "pageOffersList" LinkOffers docAndAuthorBasicViewFields
   where
     docAndAuthorBasicViewFields :: MinutesTime -> User -> (Document, User) -> Fields
     docAndAuthorBasicViewFields crtime user (doc, author) = do
       documentBasicViewFields crtime user doc
       field "authorname" $ authorname author
+
+{- |
+    Helper function for list pages
+-}
+pageList' :: String
+             -> (ListParams -> KontraLink) 
+             -> (MinutesTime -> User -> a -> Fields)
+             -> KontrakcjaTemplates
+             -> MinutesTime
+             -> User 
+             -> PagedList a 
+             -> IO String
+pageList' templatename makeCurrentLink createBasicViewFields templates ctime user documents =
+  renderTemplate templates templatename $ do
+    field "documents" $ markParity $ map (createBasicViewFields ctime user) $ list documents
+    pagedListFields documents
+    field "currentlink" $ show $ currentlink
+    field "linkdoclist" $ show $ LinkContracts emptyListParams
+    field "documentactive" $ documentactive
+    field "linkofferlist" $ show $ LinkOffers emptyListParams
+    field "offeractive" $ offeractive
+    field "linktemplatelist" $ show $ LinkTemplates emptyListParams
+    field "templateactive" $ templateactive
+    field "linkattachmentlist" $ show $ LinkAttachments emptyListParams
+    field "attachmentactive" $ attachmentactive
+  where
+    currentlink = makeCurrentLink $ params documents
+    documentactive = case currentlink of
+                       (LinkContracts _) -> True
+                       _ -> False
+    offeractive = case currentlink of
+                       (LinkOffers _) -> True
+                       _ -> False
+    templateactive = case currentlink of
+                       (LinkTemplates _) -> True
+                       _ -> False
+    attachmentactive = case currentlink of
+                       (LinkAttachments _) -> True
+                       _ -> False
 
 authorname :: User -> BS.ByteString        
 authorname author = 
@@ -541,8 +608,44 @@ isNotLinkForUserID uid link =
               notSameUserID = uid /= linkuid
               linkuid = fromJust $ maybesignatory link
 
+pageAttachmentForSignatory :: Context
+                              -> Document
+                              -> SignatoryLink
+                              -> IO String
+pageAttachmentForSignatory ctx doc siglink = pageAttachment' False (Just siglink) ctx doc
+
+pageAttachmentView :: Context
+                      -> Document
+                      -> IO String
+pageAttachmentView = pageAttachment' False Nothing
+
+pageAttachmentDesign :: Context
+                      -> Document
+                      -> IO String
+pageAttachmentDesign = pageAttachment' True Nothing 
+
+pageAttachment' :: Bool
+                 -> Maybe SignatoryLink
+                 -> Context
+                 -> Document
+                 -> IO String
+pageAttachment'
+  iseditable
+  msiglink
+  ctx
+  doc@Document { documentid, documenttitle } =
+    renderTemplate (ctxtemplates ctx) "pageAttachment" $ do
+      field "documentid" $ show documentid
+      field "documenttitle" $ BS.toString documenttitle
+      field "editable" $ iseditable
+      field "renamelink" $ show $ LinkRenameAttachment documentid
+      field "siglinkid" $ fmap (show . signatorylinkid) msiglink
+      field "sigmagichash" $ fmap (show . signatorymagichash) msiglink
+      field "linkissuedocpdf" $ show (LinkIssueDocPDF msiglink doc)
+
 pageDocumentDesign :: Context 
              -> Document 
+             -> [Document]
              -> User
              -> (Maybe DesignStep)
              -> IO String
@@ -555,6 +658,7 @@ pageDocumentDesign ctx
     , documentallowedidtypes
     , documentfunctionality
   }
+  attachments
   author step =
    let
        templates = ctxtemplates ctx
@@ -585,6 +689,16 @@ pageDocumentDesign ctx
        documentInfoFields document
        documentViewFields document
        designViewFields step
+       documentAttachmentDesignFields attachments
+
+documentAttachmentDesignFields :: [Document] -> Fields
+documentAttachmentDesignFields atts = do
+  field "isattachments" $ not $ null atts
+  field "attachments" $ map attachmentFields atts
+  where
+    attachmentFields Document{documentid, documenttitle} = do
+      field "attachmentid" $ show documentid
+      field "attachmentname" $ BS.toString documenttitle
 
 documentFunctionalityFields :: User -> Document -> Fields
 documentFunctionalityFields User{usersettings} Document{documenttype, documentfunctionality} = do
@@ -659,7 +773,8 @@ csvProblemFields templates probcount number csvproblem = do
 {- | Showing document to author after we are done with design -}
 
 pageDocumentForAuthor :: Context 
-             -> Document 
+             -> Document
+             -> [Document]
              -> User
              -> IO String
 pageDocumentForAuthor ctx
@@ -668,6 +783,7 @@ pageDocumentForAuthor ctx
     , documentid
     , documentstatus
   }
+  attachments
   author =
    let
        templates = ctxtemplates ctx
@@ -688,13 +804,14 @@ pageDocumentForAuthor ctx
        documentAuthorInfo author
        documentInfoFields document
        documentViewFields document
+       documentAttachmentViewFields attachments
 
 {- |
    Show the document for Viewers (friends of author or signatory).
    Show no buttons or other controls
  -}                                                                                                          
 
-pageDocumentForViewer :: Context -> Document -> User -> Maybe SignatoryLink -> IO String
+pageDocumentForViewer :: Context -> Document -> [Document] -> User -> Maybe SignatoryLink -> IO String
 pageDocumentForViewer ctx
   document@Document {
       documentsignatorylinks
@@ -704,7 +821,7 @@ pageDocumentForViewer ctx
     , documentinvitetext
     , documentallowedidtypes
   }
-  author msignlink =
+  attachments author msignlink =
     let
         authorid = userid author
         -- the author gets his own space when he's editing
@@ -741,15 +858,25 @@ pageDocumentForViewer ctx
        documentInfoFields document 
        documentViewFields document
        documentAuthorInfo author
+       documentAttachmentViewFields attachments
 
+documentAttachmentViewFields :: [Document] -> Fields
+documentAttachmentViewFields atts = do
+  field "isattachments" $ not $ null atts
+  field "attachments" $ map attachmentFields atts
+  where
+    attachmentFields Document{documentid, documenttitle} = do
+      field "attachmentname" $ BS.toString documenttitle
+      field "linkattachment" $ show (LinkIssueDoc documentid)
 
 pageDocumentForSignatory :: KontraLink 
-                    -> Document 
+                    -> Document
+                    -> [Document] 
                     -> Context
                     -> SignatoryLink
                     -> User
                     -> IO String 
-pageDocumentForSignatory action document ctx invitedlink author =
+pageDocumentForSignatory action document attachments ctx invitedlink author =
   let
       localscripts =
            "var docstate = "
@@ -778,6 +905,17 @@ pageDocumentForSignatory action document ctx invitedlink author =
       documentAuthorInfo author
       documentViewFields document
       signedByMeFields document (Just invitedlink)
+      documentAttachmentSignatoryFields attachments invitedlink
+
+
+documentAttachmentSignatoryFields :: [Document] -> SignatoryLink -> Fields
+documentAttachmentSignatoryFields atts siglink = do
+  field "isattachments" $ not $ null atts
+  field "attachments" $ map attachmentFields atts
+  where
+    attachmentFields doc@Document{documenttitle} = do
+      field "attachmentname" $ BS.toString documenttitle
+      field "linkattachment" $ show (LinkSignDoc doc siglink)
 
 
 --- Display of signatory                                                             

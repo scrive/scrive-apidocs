@@ -39,10 +39,14 @@ module Doc.DocState
     , GetDocumentsByTags(..)
     , SetDocumentTrustWeaverReference(..)
     , ShareDocuments(..)
+    , SetDocumentTitle(..)
     , SignDocument(..)
     , TimeoutDocument(..)
     , UpdateDocument(..)
     , AttachCSVUpload(..)
+    , GetDocumentsByDocumentID(..)
+    , UpdateDocumentAttachments(..)
+    , FinaliseAttachments(..)
     , CloseDocument(..)
     , CancelDocument(..)
     , RestartDocument(..)
@@ -193,6 +197,7 @@ newDocument user title documenttype ctime = do
           , documentrejectioninfo = Nothing
           , documenttags = []
           , documentservice = userservice user
+          , documentattachments = []
           } `appendHistory` [DocumentHistoryCreated ctime]
 
   insertNewDocument doc
@@ -317,6 +322,59 @@ attachCSVUpload documentid csvupload =
           (Left s, _) -> return $ Left s
           (Right n, Preparation) -> return . Right $ document { documentcsvupload = Just csvupload }
           _ -> return $ Left "Document not in preparation"
+
+
+getDocumentsByDocumentID :: [DocumentID] -> Query Documents (Either String [Document])
+getDocumentsByDocumentID docids = do
+  documents <- ask
+  let relevantdocs = documents @+ docids
+  if (length docids == size relevantdocs)
+    then return . Right . toList $ relevantdocs
+    else return $ Left "documents don't exist for all the given ids"
+
+updateDocumentAttachments :: User
+                          -> DocumentID
+                          -> [DocumentID]
+                          -> [DocumentID]
+                          -> Update Documents (Either String Document)
+updateDocumentAttachments user docid idstoadd idstoremove = do
+  documents <- ask
+  let allattachments = documents @+ attachmentids
+      foundattachments = length attachmentids == size allattachments
+  case (foundattachments, sequence . map checkDoc $ toList allattachments) of
+    (False, _) -> return $ Left "documents don't exist for all the given ids"
+    (_, Left msg) -> return $ Left msg
+    (True, Right _) -> do
+      archiveDocuments user idstoremove
+      modifySignableOrTemplate docid $ \doc@Document{documentstatus} ->
+        case (checkDoc doc) of
+          Left msg -> Left msg
+          Right doc -> Right $ doc { documentattachments = updateAttachments $ documentattachments doc }
+  where
+    attachmentids :: [DocumentID]
+    attachmentids = idstoadd ++ idstoremove
+    updateAttachments :: [DocumentID] -> [DocumentID]
+    updateAttachments atts = filter (\aid -> not $ aid `elem` attachmentids) atts ++ idstoadd
+    checkDoc :: Document -> Either String Document
+    checkDoc doc@Document{documentstatus} =
+      case (isAuthor doc user, documentstatus==Preparation) of
+        (False, _) -> Left $ "Can't make attachments unless you are the author"
+        (_, False) -> Left $ "Can't make attachments unless the status is in preparation"
+        _ -> Right $ doc
+
+{- |
+    When a doc comes out of preparation mode the attachments should be finalised, meaning
+    the signatory links setup and status changed to closed.
+-}
+finaliseAttachments :: [DocumentID] -> User -> [SignatoryLink] -> Update Documents (Either String [Document])
+finaliseAttachments attachmentids author links = do
+  mdocs <- forM attachmentids $ \attid ->
+    modifySignableOrTemplate attid $ \doc@Document{documenttype} ->
+        case (isAuthor doc author, documenttype==Attachment) of
+          (False, _) -> Left $ "Can't finalise an attachment unless you are the author"
+          (False, False) -> Left $ "Needs to be an attachment"
+          _ -> Right $ doc { documentstatus = Pending, documentsignatorylinks = links }
+  return $ sequence mdocs
 
 {- |
     Creates a new contract by pumping some values into a particular signatory.
@@ -670,6 +728,14 @@ shareDocuments user docidlist = do
           else Left $ "Can't share document unless you are the author"
   return $ sequence mdocs
 
+setDocumentTitle :: User -> DocumentID -> BS.ByteString -> Update Documents (Either String Document)
+setDocumentTitle user docid doctitle =
+  modifySignableOrTemplate docid $ \doc@Document{documentstatus} ->
+    case (isAuthor doc user, documentstatus==Preparation) of
+      (False, _) -> Left $ "Can't update title unless you are the author"
+      (_, False) -> Left $ "Can't update title unless the status is in preparation"
+      (True, True) -> Right $ doc { documenttitle = doctitle }
+
 fragileTakeOverDocuments :: User -> User -> Update Documents ()
 fragileTakeOverDocuments destuser srcuser = do
   documents <- ask
@@ -959,6 +1025,9 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'getTimeoutedButPendingDocuments
                         , 'updateDocument
                         , 'attachCSVUpload
+                        , 'getDocumentsByDocumentID
+                        , 'updateDocumentAttachments
+                        , 'finaliseAttachments
                         , 'signDocument
                         , 'authorSignDocument
                         , 'authorSendDocument
@@ -980,6 +1049,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'setDocumentTrustWeaverReference
                         , 'archiveDocuments
                         , 'shareDocuments
+                        , 'setDocumentTitle
                         , 'timeoutDocument
                         , 'closeDocument
                         , 'cancelDocument

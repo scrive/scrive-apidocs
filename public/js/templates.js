@@ -1009,6 +1009,10 @@ safeReady(function() {
       
       edit.hide();
       display.show();
+
+      if (edit.find(".icon.ok.submitafterdone").length>0) {
+        edit.closest("form").submit();
+      }
     }
   };
 
@@ -1235,6 +1239,25 @@ function signatoryToHTML(isMultiple, sig) {
     mask: standardDialogMask
   });
 }
+
+/*
+ * Sets up the stuff needed for the attachments dialog.
+ */
+safeReady(function() {
+  var attachmentdialog = $("#update-attachments-dialog");
+  attachmentdialog.find(".submitAttachments").click(function() {
+    if ($("#tobeattached").children().length>0) {
+      displayLoadingOverlay("Laddar upp . . .");  
+    }
+    $(this).parents("form").submit();
+  });
+
+  attachmentdialog.find("#alreadyattached .remove").click(function() {
+    var itemdiv = $(this).closest(".alreadyattacheditem");
+    itemdiv.find("input[name='removeattachment']").val("true");
+    itemdiv.find(".display").hide(); 
+  });
+});
 
 function placePlacementsOfSignatories(signatories) {
   $(signatories).each(function(){
