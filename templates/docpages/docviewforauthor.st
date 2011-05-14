@@ -45,6 +45,14 @@ pageDocumentForAuthor=
           </a> 
         </form>
         $endif$
+        $if(isattachments)$
+        <div class="attachmentListContainer">  
+          <div class="subheader">Bilaga:</div>
+          $attachments:{attachment |
+            <div><a href="$attachment.linkattachment$">$attachment.attachmentname$</a></div>
+          }$
+        </div>
+        $endif$
         $if(pending)$
         $if(!awaitingauthor)$
         $if(!timetosignset)$

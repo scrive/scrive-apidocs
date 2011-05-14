@@ -1457,11 +1457,15 @@ input.multiFileInput {
     color: black; /* 008 new */
 }
 
-#signViewBodyLeft .header
+#signViewBodyLeft .subheader
 {
     font-weight: bold;
-    font-size: 16px;
     color: black; /* 008 new */
+}
+
+#signViewBodyLeft .attachmentListContainer
+{
+    padding: 10px 0px;
 }
 
 .signViewBodyRight .header
@@ -2131,6 +2135,28 @@ form {
 {
     color: #7895BA;
     text-decoration: none;
+}
+
+#signViewAttachmentBox
+{
+    /* 002 float: left;*/
+    margin-top: 30px;
+    
+    background: none repeat scroll 0 0 white;
+    -moz-border-radius: 4px;
+    -moz-box-sizing: border-box;
+    border-color: #999999;
+    border-style: solid;
+    border-width: 1px;
+    width: 958px;
+    padding: 30px;
+}
+
+#signViewAttachmentBoxList {
+
+    position:relative;
+    top:-20px;
+    margin-left:250px;
 }
 
 #signViewBottomBox

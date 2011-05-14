@@ -32,6 +32,7 @@ module Doc.DocStateUtils (
     , isTemplate
     , isContract
     , isOffer
+    , isAttachment
     , matchingType
     , isEligibleForReminder
     -- Getters - digging some info from about document
@@ -158,6 +159,7 @@ data Feature = CSVUse
                | SigCustomFieldUse
                | SigPlacementUse
                | SignOrderUse
+               | AttachmentUse
 
 {- |
     This bit ensures that all the features used by a document
@@ -171,7 +173,7 @@ checkFeatureSupport doc =
     True -> Right ()
   where
     features = [CSVUse, DaysToSignUse, MultiplePartiesUse, SecretaryUse, SpecialRoleUse,
-                AuthorCustomFieldUse, AuthorPlacementUse, SigCustomFieldUse]
+                AuthorCustomFieldUse, AuthorPlacementUse, SigCustomFieldUse, AttachmentUse]
     {-|
        Checks that any features in use are supported.
     -}
@@ -240,6 +242,7 @@ checkFeatureSupport doc =
               isSpecialSignOrder sl@SignatoryLink{signatorydetails}
                 | isAuthor doc sl = (signatorysignorder signatorydetails) /= (SignOrder 0)
                 | otherwise = (signatorysignorder signatorydetails) /= (SignOrder 1)
+    isRequired AttachmentUse Document{documentattachments} = not $ Data.List.null documentattachments
 
     {-|
        Defines which Feature is supported by each type of DocumentFunctionality.
@@ -288,30 +291,27 @@ isAuthor d u = getUserID u ==  getUserID (documentauthor d)
 anyInvitationUndelivered :: Document -> Bool
 anyInvitationUndelivered =  not . Prelude.null . undeliveredSignatoryLinks
 
-class MaybeTemplate a where
+class CategorisedByType a where
    isTemplate :: a -> Bool
+   isAttachment :: a -> Bool
    isSignable :: a -> Bool 
-   isSignable = not . isTemplate
-
-class MaybeContractOrOffer a where
-   isContract :: a -> Bool 
+   isSignable x = not $ isTemplate x || isAttachment x
+   isContract :: a -> Bool
    isOffer :: a -> Bool 
-   isOffer = not . isContract
-   
-instance  MaybeTemplate DocumentType where
-   isTemplate t = (t == ContractTemplate) || (t == OfferTemplate) 
-   
-instance  MaybeContractOrOffer DocumentType where
-   isContract t =  (t == ContractTemplate) || (t == Contract)
+   isOffer x = not $ isContract x || isAttachment x
 
-instance  MaybeTemplate Document where
-   isTemplate =  isTemplate . documenttype
-   
-instance  MaybeContractOrOffer Document where
-   isContract =  isContract . documenttype
+instance CategorisedByType DocumentType where
+   isTemplate t = (t == ContractTemplate) || (t == OfferTemplate) 
+   isContract t = (t == ContractTemplate) || (t == Contract)
+   isAttachment t = (t == AttachmentTemplate) || (t == Attachment) 
+
+instance CategorisedByType Document where
+   isTemplate = isTemplate . documenttype
+   isContract = isContract . documenttype
+   isAttachment = isAttachment . documenttype
  
-matchingType::(MaybeContractOrOffer a, MaybeContractOrOffer b) => a -> b -> Bool
-matchingType a b = (isContract a && isContract b) || (isOffer a && isOffer b)
+matchingType::(CategorisedByType a, CategorisedByType b) => a -> b -> Bool
+matchingType a b = (isContract a && isContract b) || (isOffer a && isOffer b) || (isAttachment a && isAttachment b)
 
 
 checkCSVSigIndex :: UserID -> [SignatoryLink] -> Int -> Either String Int

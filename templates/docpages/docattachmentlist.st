@@ -1,5 +1,5 @@
 ####		
-pageTemplatesList=
+pageAttachmentList=
 $loadingdialog()$
 <div> 
 <form method="post" action="$currentlink$" enctype="multipart/form-data" class="listForm">
@@ -23,7 +23,7 @@ $loadingdialog()$
 
                     <a class="btn-tiny green float-left" style="overflow:hidden;height:26px;width:92px;margin-left: 20px;" >  
                         <div class="left"> </div>
-                        <div class="label"> Skapa ny mall </div> 
+                        <div class="label">Ny Bilagor</div> 
                         <div class="right"> </div>
                         <input class="multiFileInput submitOnUpload" style="top:-40px;right:0px" maxlength="1" type="file" name="doc" accept="application/pdf" rel=".filelist" />
                     </a>
@@ -50,26 +50,6 @@ $loadingdialog()$
                                 <a href="$currentlink$&sorting=time">Senaste händelse </a>
                                $endif$
                             </th>
-                            <!--
-                            <th style="width: 200px;">
-                               $if(params.sorting.partnerREV)$
-                                <a href="$currentlink$&sorting=partner">Parter <em> ▲</em></a>
-                               $elseif(params.sorting.partner)$
-                                <a href="$currentlink$&sorting=partnerREV">Parter  <em style="text-color:red"> ▼</em></a>
-                               $else$
-                                <a href="$currentlink$&sorting=partner">Parter </a>
-                               $endif$
-                            </th>
-                            -->
-                            <th style="width: 100px;">
-                              $if(params.sorting.typeREV)$
-                                <a href="$currentlink$&sorting=type">Typ <em> ▲</em></a>
-                               $elseif(params.sorting.type)$
-                                <a href="$currentlink$&sorting=typeREV">Typ <em style="text-color:red"> ▼</em></a>
-                               $else$
-                                <a href="$currentlink$&sorting=type">Typ </a>
-                               $endif$
-                            </th>
                             <th style="width: 400px;">
                                $if(params.sorting.titleREV)$
                                 <a href="$currentlink$&sorting=title">Mall <em> ▲</em></a>
@@ -91,12 +71,6 @@ $loadingdialog()$
                             <td>
                                 <span title="$document.mtime$">$document.mtime$</span>
                             </td>
-                            <!--
-                            <td><a href="$document.doclink$">$document.signatories:{sig | $sig.name$}; separator=", "$</a></td>
-                            -->
-                            <td>
-                                <span>$if(document.isoffer)$Offert$else$Avtal$endif$</span>
-                            </td>  
                             <td>
                                 <a href="$document.doclink$" class="listname">$document.documenttitle$</a>
                                 $if(document.davelink)$ 

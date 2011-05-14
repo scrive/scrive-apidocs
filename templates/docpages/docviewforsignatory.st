@@ -166,6 +166,18 @@ pageDocumentForSignContent=
 <div id="documentBox">
   <div class="waiting4page"></div>
 </div>
+
+$if(isattachments)$
+<div id="signViewAttachmentBox">  
+  <h2>Bilaga</h2>
+  <div id="signViewAttachmentBoxList">
+    $attachments:{attachment |
+      <div><a href="$attachment.linkattachment$">$attachment.attachmentname$</a></div>
+    }$
+  </div>
+</div>
+$endif$
+
 $if(notsignedbyme)$
 $if(pending)$
 <div id="signViewBottomBox"> 

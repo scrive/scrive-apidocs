@@ -160,6 +160,12 @@ handleRoutes = msum [
 
      --A: Because this table only contains routing logic. The logic of
      --what it does/access control is left to the handler. EN
+     , dir "a" $ hGet $ DocControl.showAttachmentList
+     , dir "a" $ param "archive" $ hPost $ DocControl.handleAttachmentArchive
+     , dir "a" $ param "share" $ hPost $ DocControl.handleAttachmentShare
+     , dir "a" $ dir "rename" $ hPost $ DocControl.handleAttachmentRename
+     , dir "a" $ hPost $ DocControl.handleCreateNewAttachment
+
      , dir "t" $ hGet  $ DocControl.showTemplatesList
      , dir "t" $ param "archive" $ hPost $ DocControl.handleTemplateArchive
      , dir "t" $ param "share" $ hPost $ DocControl.handleTemplateShare
