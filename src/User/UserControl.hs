@@ -12,6 +12,7 @@ import Happstack.Util.Common (readM)
 import HSP.XML
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS
+import qualified Data.Foldable as F
 import qualified Data.Set as Set
 
 import ActionSchedulerState
@@ -53,6 +54,20 @@ handleUserPost = do
          Just user -> do
              infoUpdate <- getUserInfoUpdate
              update $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
+             -- propagate company info to all subaccounts since it might have changed
+             query (GetUserByUserID $ userid user) >>= maybe (return ()) (\newuser -> do
+                 subs <- query $ GetUserSubaccounts $ userid newuser
+                 let infoupdatef = \info -> info {
+                       usercompanyname = usercompanyname $ userinfo newuser
+                     , usercompanynumber = usercompanynumber $ userinfo newuser
+                     , useraddress = useraddress $ userinfo newuser
+                     , userzip = userzip $ userinfo newuser
+                     , usercity = usercity $ userinfo newuser
+                     , usercountry = usercountry $ userinfo newuser
+                 }
+                 F.forM_ subs $ \sub -> do
+                     update $ SetUserInfo (userid sub) (infoupdatef $ userinfo sub)
+                 )
              addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved $ ctxtemplates ctx)
              return LinkAccount
          Nothing -> return $ LinkLogin NotLogged
@@ -481,7 +496,7 @@ handleAccountSetupGet aid hash = do
                                     sendRedirect LinkMain)
                          else mzero
                   _  -> mzero
-         Nothing -> do--
+         Nothing -> do
              muser <- liftMM (query . GetUserByEmail Nothing . Email) (getOptionalField asValidEmail "email")
              case muser of
                   Just user -> 
@@ -492,13 +507,11 @@ handleAccountSetupGet aid hash = do
                         content <- liftIO $ activatePageViewNotValidLink (ctxtemplates ctx) $ BS.toString email 
                         renderFromBody TopNone kontrakcja $ cdata content
                     else mzero
-                  Nothing -> mzero  
-                    
-             
+                  Nothing -> mzero
     where
         activationPage muser = do
             extendActionEvalTimeToOneDayMinimum aid
-            addModalT $ modalAccountSetup muser $ LinkAccountCreated aid hash $ maybe "" (BS.toString . unEmail . useremail . userinfo) muser
+            addModalT =<< (modalAccountSetup muser $ LinkAccountCreated aid hash $ maybe "" (BS.toString . unEmail . useremail . userinfo) muser)
             sendRedirect LinkMain
 
 handleAccountSetupFromSign :: ActionID -> MagicHash -> Kontra (Maybe User)
@@ -508,9 +521,9 @@ handleAccountSetupFromSign aid hash = do
     Just userid -> do
       user <- queryOrFail $ GetUserByUserID userid
       acctype <- getOptionalField asValidName "accounttype"
-      case BS.unpack <$> acctype of
-           Just "private" -> handleActivate' BySigning user PrivateAccount aid id
-           Just "company" -> handleActivate' BySigning user CompanyAccount aid id
+      case join (readM . BS.unpack <$> acctype) of
+           Just PrivateAccount -> handleActivate' BySigning user PrivateAccount aid id
+           Just CompanyAccount -> handleActivate' BySigning user CompanyAccount aid id
            _              -> do
                templates <- ctxtemplates <$> get
                addFlashMsg =<< (liftIO $ flashMessageNoAccountType templates)
@@ -583,33 +596,67 @@ handleAccountSetupPost aid hash = do
                  )
     where
         returnToAccountSetup user = do
-            addModalT $ modalAccountSetup (Just user) $ LinkAccountCreated aid hash $ BS.toString . unEmail . useremail $ userinfo user
+            addModalT =<< (modalAccountSetup (Just user) $ LinkAccountCreated aid hash $ BS.toString . unEmail . useremail $ userinfo user)
             return LinkMain
 
         handleActivate signupmethod user = do
-            ctx <- get
-            acctype <- getOptionalField asValidName "accounttype"
-            case BS.unpack <$> acctype of
-                 Just "private" -> finalizeActivation signupmethod user PrivateAccount id
-                 Just "company" -> do
+            acctype <- join . fmap (readM . BS.unpack) <$> getOptionalField asValidName "accounttype"
+            msupervisor <- maybe (return Nothing) (query . GetUserByUserID . UserID . unSupervisorID) $ usersupervisor user
+            case acctype of
+                 Just PrivateAccount -> do
+                     ifAccountTypeIsValid msupervisor PrivateAccount $
+                         finalizeActivation signupmethod user PrivateAccount id
+                 Just CompanyAccount -> do
                      mfname <- getRequiredField asValidName "fname"
                      mlname <- getRequiredField asValidName "lname"
-                     mcompanyname <- getRequiredField asValidName "companyname"
+                     mcompanyname <- maybe (getRequiredField asValidName "companyname")
+                                         (\_ -> return $ Just BS.empty) msupervisor
                      mcompanyposition <- getRequiredField asValidName "companyposition"
                      mphone <- getRequiredField asValidPhone "phone"
                      case (mfname, mlname, mcompanyname, mcompanyposition, mphone) of
                           (Just fname, Just lname, Just companyname, Just companytitle, Just phone) -> do
-                              finalizeActivation signupmethod user CompanyAccount $ \info -> info {
-                                    userfstname = fname
-                                  , usersndname = lname
-                                  , usercompanyname  = companyname
-                                  , usercompanyposition = companytitle
-                                  , userphone = phone
-                              }
+                              -- inherit company info from supervisor
+                              let infoupdatef = case msupervisor of
+                                   Just sv -> \info -> info {
+                                         userfstname = fname
+                                       , usersndname = lname
+                                       , usercompanyposition = companytitle
+                                       , userphone = phone
+                                       , usercompanyname = usercompanyname $ userinfo sv
+                                       , usercompanynumber = usercompanynumber $ userinfo sv
+                                       , useraddress = useraddress $ userinfo sv
+                                       , userzip = userzip $ userinfo sv
+                                       , usercity = usercity $ userinfo sv
+                                       , usercountry = usercountry $ userinfo sv
+                                   }
+                                   Nothing -> \info -> info {
+                                       userfstname = fname
+                                     , usersndname = lname
+                                     , usercompanyname = companyname
+                                     , usercompanyposition = companytitle
+                                     , userphone = phone
+                                   }
+                              ifAccountTypeIsValid msupervisor CompanyAccount $
+                                finalizeActivation signupmethod user CompanyAccount infoupdatef
                           _ -> returnToAccountSetup user
                  _ -> do
-                     addFlashMsg =<< (liftIO $ flashMessageNoAccountType $ ctxtemplates ctx)
+                     templates <- ctxtemplates <$> get
+                     addFlashMsg =<< (liftIO $ flashMessageNoAccountType templates)
                      returnToAccountSetup user
+            where
+                -- we protect from choosing account type that doesn't match
+                -- supervisor in browser, but someone may just send invalid
+                -- data directly to the server
+                ifAccountTypeIsValid msupervisor acctype action = do
+                    case msupervisor of
+                         Just sv -> do
+                             if (accounttype $ usersettings sv) == acctype
+                                then action
+                                else do
+                                    templates <- ctxtemplates <$> get
+                                    addFlashMsg =<< (liftIO $ flashMessageNoAccountType templates)
+                                    returnToAccountSetup user
+                         Nothing -> action
 
         finalizeActivation signupmethod user acctype infoupdatefunc = do
             muser <- handleActivate' signupmethod user acctype aid infoupdatefunc
