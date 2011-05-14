@@ -60,10 +60,12 @@ import System.IO.Temp
 import qualified MemCache
 import Data.Char
 import Data.Map ((!))
+import Data.Maybe (catMaybes)
 import FlashMessage
 import InputValidation
 import ListUtil
 import Redirect
+import Templates.TemplatesLoader
 import Data.CSV
 import Text.ParserCombinators.Parsec
 import Codec.Text.IConv
@@ -561,35 +563,45 @@ handleSignShow documentid
   update $ MarkDocumentSeen documentid signatorylinkid1 ctxtime ctxipnumber
   -- Structure of this needs to be changed. MR
   document <- queryOrFail $ GetDocumentByDocumentID documentid
+  attachments <- queryOrFailIfLeft $ GetDocumentsByDocumentID $ documentattachments document
   invitedlink <- signatoryLinkFromDocumentByID document signatorylinkid1
   let authoruserid = unAuthor $ documentauthor document
   author <- queryOrFail $ GetUserByUserID authoruserid
   let authorname = prettyName author
-  let invitedname = signatoryname $ signatorydetails $ invitedlink 
-  let isSignatory = SignatoryPartner `elem` signatoryroles invitedlink
+      invitedname = signatoryname $ signatorydetails $ invitedlink 
+      isSignatory = SignatoryPartner `elem` signatoryroles invitedlink
+      isFlashNeeded = Data.List.null ctxflashmessages
+                       && (not (isJust $ maybesigninfo invitedlink))
+      -- heavens this is a confusing case statement, there must be a better way!
+      flashMsg =
+        case (isFlashNeeded, 
+              isSignatory, 
+              isContract document, 
+              document `allowsIdentification` ELegitimationIdentification,
+              isOffer document) of
+          (False, _, _, _, _) -> Nothing
+          (_, False, _, True, _) -> Just flashMessageOnlyHaveRightsToViewDoc
+          (_, False, _, _, True) -> Just flashMessageOnlyHaveRightsToViewDoc
+          (_, _, True, True, _) -> Just flashMessagePleaseSignWithEleg
+          (_, _, True, _, _) -> Just flashMessagePleaseSignContract
+          (_, _, _, _, True) -> Just flashMessagePleaseSignOffer
+          _ -> Nothing
 
-  when (Data.List.null ctxflashmessages
-        && (not (isJust $ maybesigninfo invitedlink))) $ do
+  ctx@Context{ctxtemplates} <- get
 
-    let message = if isSignatory
-                  then if (isContract document ) -- Move all to flash messages in docView !!!!!!!!
-                       then 
-                           if document `allowsIdentification` ELegitimationIdentification
-                           then "Du undertecknar dokumentet längst ned. Det krävs e-legitimation för att underteckna."
-                           else "Underteckna dokumentet längst ned på sidan."
-                       else  "Du kan acceptera offerten längst ned på sidan."
-                  else "Du har endast rättigheter att se detta dokument"
+  when (isJust flashMsg) $
+    addFlashMsg =<< (liftIO $ (fromJust flashMsg) ctxtemplates)
 
-    addFlashMsg $ toFlashMsg OperationDone message
-  
-  ctx <- get
-
-  if isSignatory
-     then renderFromBody TopNone kontrakcja 
+  case (isAttachment document, isSignatory) of
+    (True, _) -> 
+         renderFromBody TopNone kontrakcja (cdata <$> pageAttachmentForSignatory ctx document invitedlink)
+    (_, True) ->
+         renderFromBody TopNone kontrakcja 
               (cdata <$> pageDocumentForSignatory (LinkSignDoc document invitedlink) 
-                    document ctx invitedlink author)
-     else renderFromBody TopNone kontrakcja 
-              (cdata <$> pageDocumentForViewer ctx document author (Just invitedlink))
+                    document attachments ctx invitedlink author)
+    _ ->
+         renderFromBody TopNone kontrakcja 
+              (cdata <$> pageDocumentForViewer ctx document attachments author (Just invitedlink))
 
 
 {- |
@@ -627,32 +639,32 @@ isFriendWithSignatoryLink uid sl = do
  -}
 handleIssueShowGet :: DocumentID -> Kontra RedirectOrContent 
 handleIssueShowGet docid = checkUserTOSGet $ do
-  document@Document{ documentauthor } <- queryOrFail $ GetDocumentByDocumentID $ docid
+  document@Document{ documentauthor, documentattachments } <- queryOrFail $ GetDocumentByDocumentID $ docid
+  attachments <- queryOrFailIfLeft $ GetDocumentsByDocumentID $ documentattachments
   ctx@Context {
         ctxmaybeuser = Just (user@User{userid})
       , ctxipnumber
       , ctxhostpart
   } <- get
   author <- queryOrFail $ GetUserByUserID $ unAuthor documentauthor
-  let toptab = if documentstatus document == Closed
-                then TopDocument
-                else TopNone
   -- authors get a view with buttons
-  if isAuthor document user
-   then do
+  case (isAuthor document user, isAttachment document, documentstatus document) of
+   (True, True, Preparation) -> liftIO $ pageAttachmentDesign ctx document
+   (_, True, _) -> liftIO $ pageAttachmentView ctx document 
+   (True, _, _) -> do
         let mMismatchMessage = getDataMismatchMessage $ documentcancelationreason document
         when ((documentstatus document == Canceled) && (isJust mMismatchMessage)) 
            (addFlashMsg $ toFlashMsg OperationFailed (fromJust mMismatchMessage))
         ctx2 <- get   -- need to get new context because we may have added flash msg
         step <- getDesignStep (documentid document)
         case (documentstatus document) of
-           Preparation -> liftIO $ pageDocumentDesign ctx2 document author step
-           _ ->  liftIO $ pageDocumentForAuthor ctx2 document author                
+           Preparation -> liftIO $ pageDocumentDesign ctx2 document attachments author step
+           _ ->  liftIO $ pageDocumentForAuthor ctx2 document attachments author                
    -- friends can just look (but not touch)
-   else do
+   (False, _, _) -> do
         friendWithSignatory <- isFriendWithSignatory userid document 
         if (isFriendOf userid author || friendWithSignatory )
-         then liftIO $ pageDocumentForViewer ctx document author Nothing
+         then liftIO $ pageDocumentForViewer ctx document attachments author Nothing
          -- not allowed
          else mzero
 
@@ -692,21 +704,23 @@ handleIssueShowPost docid = withUserPost $ do
   template <- isFieldSet "template"
   contract <- isFieldSet "contract"
   csvupload <- isFieldSet "csvupload"
+  updateattachments <- isFieldSet "updateattachments"
   switchtoadvanced <- isFieldSet "changefunctionality"
   -- is this routing logic or business logic? I say business, but
   -- here it looks mixed.
   -- I'm especially asking about AwaitingAuthor case, because I though
   -- it was covered by SignDocument
   --   Eric
-  case (documentstatus document,sign,send,template,contract,csvupload,switchtoadvanced) of 
-      (Preparation, True, _,_, _, _ , _) -> handleIssueSign document author
-      (Preparation, _ ,  True,_, _, _, _) -> handleIssueSend document author
-      (Preparation, _ , _ ,True, _, _, _) -> handleIssueSaveAsTemplate document author             
-      (Preparation, _ , _ ,_ , True, _, _) -> handleIssueChangeToContract document author
-      (Preparation, _ , _ ,_ , _, True, _) -> handleIssueCSVUpload document author
-      (Preparation, _ , _ ,_ , _, _, True) -> handleIssueChangeFunctionality document author                    
-      (Preparation, _ , _ ,_, _, _, _) -> handleIssueSave document author
-      (AwaitingAuthor, True , _ ,_, _, _, _) -> handleIssueSignByAuthor document author
+  case (documentstatus document,sign,send,template,contract,csvupload,updateattachments,switchtoadvanced) of 
+      (Preparation, True, _,_, _, _ , _, _) -> handleIssueSign document author
+      (Preparation, _ ,  True,_, _, _, _, _) -> handleIssueSend document author
+      (Preparation, _ , _ ,True, _, _, _, _) -> handleIssueSaveAsTemplate document author             
+      (Preparation, _ , _ ,_ , True, _, _, _) -> handleIssueChangeToContract document author
+      (Preparation, _ , _ ,_ , _, True, _, _) -> handleIssueCSVUpload document author
+      (Preparation, _ , _ ,_ , _, _, True, _) -> handleIssueUpdateAttachments document author
+      (Preparation, _ , _ ,_ , _, _, _, True) -> handleIssueChangeFunctionality document author                    
+      (Preparation, _ , _ ,_, _, _, _, _) -> handleIssueSave document author
+      (AwaitingAuthor, True , _ ,_, _, _, _, _) -> handleIssueSignByAuthor document author
       _  -> return $ LinkContracts emptyListParams
 
 handleIssueSign document author = do
@@ -735,6 +749,7 @@ handleIssueSign document author = do
         case mndoc of
           Right newdocument -> do
             markDocumentAuthorReadAndSeen newdocument author ctxtime ctxipnumber
+            finaliseAttachments newdocument author
             postDocumentChangeAction newdocument udoc Nothing
             return ()
           Left _ -> return ()
@@ -767,6 +782,7 @@ handleIssueSend document author = do
         case mndoc of
           Right newdocument -> do
             markDocumentAuthorReadAndSeen newdocument author ctxtime ctxipnumber
+            finaliseAttachments newdocument author
             postDocumentChangeAction newdocument udoc Nothing
             return ()
           Left _ -> return ()
@@ -779,6 +795,11 @@ markDocumentAuthorReadAndSeen doc@Document{documentid, documentsignatorylinks} a
     mark SignatoryLink{signatorylinkid} = do
       update $ MarkInvitationRead documentid signatorylinkid time
       update $ MarkDocumentSeen documentid signatorylinkid time ipnumber
+
+finaliseAttachments :: Document -> User -> Kontra ()
+finaliseAttachments Document{documentattachments,documentsignatorylinks} author = do
+  _ <- update $ FinaliseAttachments documentattachments author documentsignatorylinks
+  return () 
 
 handleIssueSaveAsTemplate document author = do
     ctx <- get
@@ -868,10 +889,30 @@ handleIssueCSVUpload document author = do
             Left _ -> mzero
             Right ndoc -> return $ LinkDesignDoc $ DesignStep2 (documentid ndoc) (Just $ personindex + 1) (Just AfterCSVUpload)
 
+handleIssueUpdateAttachments :: Document -> User -> Kontra KontraLink
+handleIssueUpdateAttachments doc author = withUserPost $ do
+    ctx <- get
+    mudoc <- updateDocument ctx author doc
+    udoc <- returnRightOrMZero mudoc
+    
+    attidsnums <- getCriticalFieldList asValidDocID "attachmentid"
+    removeatt <- getCriticalFieldList asValidBool "removeattachment"
+    let idsforremoval = map (DocumentID . fst) . filter snd $ zip attidsnums removeatt
+        
+    fileinputs <- getDataFnM $ lookInputs "attachment"
+    mattachments <- sequence $ map (makeDocumentFromFile Attachment) fileinputs
+    let idsforadd = map documentid $ catMaybes mattachments
+
+    mndoc <- update $ UpdateDocumentAttachments author (documentid udoc) idsforadd idsforremoval
+    case mndoc of
+        Left msg -> mzero
+        Right ndoc -> return . LinkDesignDoc . DesignStep3 $ documentid ndoc
+
+
 {- |
     Deals with a switch to the document's functionality.
-    This'll also update the user preferences that they set up
-    in the switch confirmation dialog.
+    This'll also update the user preferences that they would like
+    to continue with this functionality by default in the future.
 -}
 handleIssueChangeFunctionality :: Document -> User -> Kontra KontraLink
 handleIssueChangeFunctionality document author = do
@@ -1335,37 +1376,69 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} author document@Document{documen
    Duplicates are removed.
  -}
 showContractsList :: Kontra (Either KontraLink String)
-showContractsList = checkUserTOSGet $ do
-  -- Just user is safe here because we guard for logged in user
-  ctx@(Context {ctxmaybeuser = Just user, ctxhostpart, ctxtime, ctxtemplates}) <- get
-  mydocuments <- query $ GetDocumentsByUser user 
-  usersICanView <- query $ GetUsersByFriendUserID $ userid user
-  usersISupervise <- fmap Set.toList $ query $ GetUserSubaccounts $ userid user
-  friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
-  supervised'Documents <- mapM (query . GetDocumentsByUser) usersISupervise
-  -- get rid of duplicates
-  -- FIXME: nub is very slow
-  -- FIXME: rearranging filtering and merging would speed things up here a lot
-  let documents = nub $ mydocuments ++ concat friends'Documents ++ concat supervised'Documents
-  let sorteddocuments = sortBy (\d1 d2 -> compare (documentmtime d2) (documentmtime d1)) documents
-  let notdeleted = filter (not . documentdeleted) sorteddocuments
-  let contracts  = filter ((==) Contract . documenttype) notdeleted
-  params <- getListParams
-  liftIO $ pageContractsList ctxtemplates ctxtime user (docSortSearchPage params contracts)
-
+showContractsList =
+  let getContracts user = do
+        mydocuments <- query $ GetDocumentsByUser user 
+        usersICanView <- query $ GetUsersByFriendUserID $ userid user
+        usersISupervise <- fmap Set.toList $ query $ GetUserSubaccounts $ userid user
+        friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
+        supervised'Documents <- mapM (query . GetDocumentsByUser) usersISupervise
+        return . filter ((==) Contract . documenttype) $ 
+          mydocuments ++ concat friends'Documents ++ concat supervised'Documents in
+  showItemList' pageContractsList getContracts docSortSearchPage
 
 showTemplatesList:: Kontra (Either KontraLink String)
-showTemplatesList = checkUserTOSGet $ do
-  -- Just user is safe here because we guard for logged in user
-  ctx@(Context {ctxmaybeuser = Just user, ctxhostpart, ctxtime, ctxtemplates}) <- get
-  mydocuments <- query $ GetDocumentsByUser user 
-  let documents = nub $ mydocuments
-  let sorteddocuments = sortBy (\d1 d2 -> compare (documentmtime d2) (documentmtime d1)) documents
-  let notdeleted = filter (not . documentdeleted) sorteddocuments
-  let templates = filter isTemplate notdeleted
-  params <- getListParams
-  liftIO $ pageTemplatesList ctxtemplates ctxtime user (docSortSearchPage params templates)
+showTemplatesList = 
+  let getTemplates user = do
+        mydocuments <- query $ GetDocumentsByUser user
+        return $ filter isTemplate mydocuments in
+  showItemList' pageTemplatesList getTemplates docSortSearchPage
 
+
+showOfferList:: Kontra (Either KontraLink String)
+showOfferList= checkUserTOSGet $ do
+    -- Just user is safe here because we guard for logged in user
+    ctx@(Context {ctxmaybeuser = Just user, ctxhostpart, ctxtime, ctxtemplates}) <- get
+    mydocuments <- query $ GetDocumentsByUser user 
+    usersICanView <- query $ GetUsersByFriendUserID $ userid user
+    friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
+    let contracts = prepareDocsForList . filter ((==) Offer . documenttype) $ 
+                      mydocuments ++ concat friends'Documents
+    mauthors <- mapM (query . GetUserByUserID . unAuthor . documentauthor) contracts
+    case sequence mauthors of
+      Nothing -> mzero
+      (Just authors) -> do
+        params <- getListParams
+        liftIO $ pageOffersList ctxtemplates ctxtime user (docAndAuthorSortSearchPage params (zip contracts authors))
+
+showAttachmentList :: Kontra (Either KontraLink String)
+showAttachmentList = 
+  let getAttachments user = do
+        mydocuments <- query $ GetDocumentsByUser user
+        return $ filter ((==) AttachmentTemplate . documenttype) mydocuments in
+  showItemList' pageAttachmentList getAttachments docSortSearchPage
+
+{- |
+    Helper function for showing lists of documents.
+-}
+showItemList' :: (KontrakcjaTemplates -> MinutesTime -> User -> PagedList Document -> IO String)
+                 -> (User -> Kontra [Document])
+                 -> (ListParams -> [Document] -> PagedList Document)
+                 -> Kontra (Either KontraLink String)
+showItemList' viewPage getDocs sortSearchPage = checkUserTOSGet $ do
+  ctx@(Context {ctxmaybeuser = Just user, ctxhostpart, ctxtime, ctxtemplates}) <- get
+  docs <- getDocs user
+  params <- getListParams
+  liftIO $ viewPage ctxtemplates ctxtime user (sortSearchPage params $ prepareDocsForList docs)
+
+-- get rid of duplicates
+  -- FIXME: nub is very slow
+prepareDocsForList :: [Document] -> [Document]
+prepareDocsForList = 
+  let makeunique = nub
+      sort = sortBy (\d1 d2 -> compare (documentmtime d2) (documentmtime d1))
+      removedeleted = filter (not . documentdeleted) in
+  sort . makeunique . removedeleted
 
 handlePageOfDocument :: DocumentID -> Kontra (Either KontraLink Response)
 handlePageOfDocument docid = withAuthorOrFriend docid
@@ -1401,26 +1474,6 @@ handlePageOfDocument' documentid mtokens = do
                     pages <- liftIO $ Doc.DocView.showFilesImages2 (ctxtemplates ctx) documentid mtokens $ zip f b
                     webHSP $ return $ cdata pages
 
-showOfferList:: Kontra (Either KontraLink String)
-showOfferList= checkUserTOSGet $ do
-    -- Just user is safe here because we guard for logged in user
-    ctx@(Context {ctxmaybeuser = Just user, ctxhostpart, ctxtime, ctxtemplates}) <- get
-    mydocuments <- query $ GetDocumentsByUser user 
-    usersICanView <- query $ GetUsersByFriendUserID $ userid user
-    friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
-    -- get rid of duplicates
-    let documents = nub $ mydocuments ++ concat friends'Documents
-    let sorteddocuments = sortBy (\d1 d2 -> compare (documentmtime d2) (documentmtime d1)) documents
-    let notdeleted = filter (not . documentdeleted) sorteddocuments
-    let contracts  = filter ((==) Offer . documenttype) notdeleted
-    mauthors <- mapM (query . GetUserByUserID . unAuthor . documentauthor) contracts
-    case sequence mauthors of
-      Nothing -> mzero
-      (Just authors) -> do
-        params <- getListParams
-        liftIO $ pageOffersList ctxtemplates ctxtime user (docAndAuthorSortSearchPage params (zip contracts authors))
-
-
 handleDocumentUpload :: DocumentID -> BS.ByteString -> BS.ByteString -> Kontra ()
 handleDocumentUpload docid content1 filename = do
   ctx@Context{ctxdocstore, ctxs3action} <- get
@@ -1445,43 +1498,41 @@ basename filename =
 handleIssueNewDocument :: Kontra KontraLink
 handleIssueNewDocument = withUserPost $ do
     ctx@(Context { ctxmaybeuser = Just user, ctxhostpart, ctxtime }) <- get
-    input@(Input contentspec (Just filename) _contentType) <- getDataFnM (lookInput "doc")
-    content <- case contentspec of
-        Left filepath -> liftIO $ BSL.readFile filepath
-        Right content -> return content
-
-    -- see if we have empty input, then there was no file selected
-    if BSL.null content
-       then do
-         return LinkMain
-        else do
-          -- FIXME: here we have encoding issue
-          -- Happstack gives use String done by BS.unpack, so BS.pack it here
-          -- in our case it should be utf-8 as this is what we use everywhere
-          offer <- isFieldSet "offer"               
-          let title = BS.fromString (basename filename) 
-          let doctype = if (offer) then Offer else Contract
-          doc <- update $ NewDocument user title doctype ctxtime
-          handleDocumentUpload (documentid doc) (concatChunks content) title
-          return $ LinkIssueDoc $ documentid doc
+    input <- getDataFnM (lookInput "doc")
+    offer <- isFieldSet "offer"
+    let doctype = if (offer) then Offer else Contract
+    mdoc <- makeDocumentFromFile doctype input
+    case mdoc of
+      Nothing -> return LinkMain
+      (Just doc) -> return $ LinkIssueDoc $ documentid doc
 
 handleCreateNewTemplate:: Kontra KontraLink
 handleCreateNewTemplate = withUserPost $ do
-    ctx@(Context { ctxmaybeuser = Just user, ctxhostpart, ctxtime }) <- get
-    input@(Input contentspec (Just filename) _contentType) <- getDataFnM (lookInput "doc")
+  input <- getDataFnM (lookInput "doc")
+  mdoc <- makeDocumentFromFile ContractTemplate input
+  case mdoc of
+    Nothing -> handleTemplateReload
+    (Just doc) -> return $ LinkIssueDoc $ documentid doc
+
+handleCreateNewAttachment:: Kontra KontraLink
+handleCreateNewAttachment = withUserPost $ do
+  input <- getDataFnM (lookInput "doc")
+  _ <- makeDocumentFromFile AttachmentTemplate input
+  handleAttachmentReload
+
+makeDocumentFromFile :: DocumentType -> Input -> Kontra (Maybe Document)
+makeDocumentFromFile doctype input@(Input contentspec (Just filename) _contentType) = do
+    ctx@(Context { ctxmaybeuser = Just user, ctxtime }) <- get
     content <- case contentspec of
         Left filepath -> liftIO $ BSL.readFile filepath
         Right content -> return content
     if BSL.null content
-       then do
-         handleTemplateReload
+        then return Nothing
         else do
-          let title = BS.fromString (basename filename) 
-          let doctype = ContractTemplate
+          let title = BS.fromString (basename filename)
           doc <- update $ NewDocument user title doctype ctxtime
           handleDocumentUpload (documentid doc) (concatChunks content) title
-          return $ LinkIssueDoc $ documentid doc
-
+          return $ Just doc
 
 handleContractArchive :: Kontra KontraLink
 handleContractArchive = do
@@ -1503,6 +1554,13 @@ handleTemplateArchive = do
     handleIssueArchive
     addFlashMsg =<< (liftIO $ flashMessageTemplateArchiveDone ctxtemplates)
     return $ LinkTemplates emptyListParams
+
+handleAttachmentArchive :: Kontra KontraLink
+handleAttachmentArchive = do
+    ctx@(Context { ctxtemplates }) <- get
+    handleIssueArchive
+    addFlashMsg =<< (liftIO $ flashMessageAttachmentArchiveDone ctxtemplates)
+    return $ LinkAttachments emptyListParams
     
 handleIssueArchive :: Kontra ()
 handleIssueArchive = do
@@ -1523,6 +1581,15 @@ handleTemplateShare = withUserPost $ do
       _ -> addFlashMsg =<< (liftIO $ flashMessageMultipleTemplateShareDone ctxtemplates) 
     return $ LinkTemplates emptyListParams
 
+handleAttachmentShare :: Kontra KontraLink
+handleAttachmentShare = withUserPost $ do
+    ctx@(Context { ctxtemplates }) <- get
+    docs <- handleIssueShare
+    case docs of
+      (d:[]) -> addFlashMsg =<< (liftIO $ flashMessageSingleAttachmentShareDone (documenttitle d) ctxtemplates)
+      _ -> addFlashMsg =<< (liftIO $ flashMessageMultipleAttachmentShareDone ctxtemplates) 
+    return $ LinkAttachments emptyListParams
+
 handleIssueShare :: Kontra [Document]
 handleIssueShare = do
     ctx@(Context { ctxmaybeuser = Just user }) <- get
@@ -1532,6 +1599,15 @@ handleIssueShare = do
     case mdocs of
       Left msg -> mzero
       Right docs -> return docs
+
+handleAttachmentRename :: DocumentID -> Kontra KontraLink
+handleAttachmentRename docid = withUserPost $ do
+  ctx@(Context { ctxmaybeuser = Just user }) <- get
+  newname <- getCriticalField (return . BS.fromString) "docname"
+  mdoc <- update $ SetDocumentTitle user docid newname
+  case mdoc of
+    Left msg -> mzero
+    Right doc -> return $ LinkIssueDoc $ documentid doc
     
 handleBulkContractRemind :: Kontra KontraLink
 handleBulkContractRemind = withUserPost $ do
@@ -1588,6 +1664,9 @@ handleContractsReload  = fmap LinkContracts getListParamsForSearch
     
 handleTemplateReload :: Kontra KontraLink
 handleTemplateReload = fmap LinkTemplates getListParamsForSearch
+
+handleAttachmentReload :: Kontra KontraLink
+handleAttachmentReload = fmap LinkAttachments getListParamsForSearch
 
 handleOffersReload :: Kontra KontraLink
 handleOffersReload = fmap LinkOffers getListParamsForSearch

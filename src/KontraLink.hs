@@ -50,6 +50,7 @@ data KontraLink
     | LinkContracts ListParams
     | LinkTemplates ListParams
     | LinkOffers ListParams
+    | LinkAttachments ListParams
     | LinkMain 
     | LinkNew (Maybe DocumentType) ListParams Bool
     | LinkAjaxTemplates DocumentType ListParams
@@ -60,6 +61,7 @@ data KontraLink
     | LinkAccountFromSign Document SignatoryLink ActionID MagicHash
     | LinkIssueDoc DocumentID
     | LinkDesignDoc DesignStep
+    | LinkRenameAttachment DocumentID
     | LinkIssueDocPDF (Maybe SignatoryLink) Document {- Which file? -}
     | LinkSubaccount ListParams
     | LinkSharing ListParams
@@ -105,6 +107,7 @@ instance Show KontraLink where
     showsPrec _ (LinkContracts params) = (++) $ "/d" ++ "?" ++ show params
     showsPrec _ (LinkTemplates params) = (++) $ "/t" ++ "?" ++ show params
     showsPrec _ (LinkOffers params) = (++) $ "/o" ++ "?" ++ show params
+    showsPrec _ (LinkAttachments params) = (++) $ "/a" ++ "?" ++ show params
     showsPrec _ LinkMain = (++) "/"
     showsPrec _ (LinkNew mdoctype params templates) = (++) $ "/?" ++ (if (templates) then "showTemplates=Yes&" else "") ++ "doctype="++ (maybe "" show mdoctype) ++"&"++ show params
     showsPrec _ (LinkAjaxTemplates doctype params) = (++) $ "/templates?" ++ "doctype="++ show doctype ++"&"++ show params
@@ -118,6 +121,7 @@ instance Show KontraLink where
     showsPrec _ (LinkIssueDoc documentid) = 
         (++) $ "/d/" ++ show documentid
     showsPrec _ (LinkDesignDoc designstep) =  (++) $ "/" ++ show designstep
+    showsPrec _ (LinkRenameAttachment documentid) = (++) $ "/a/rename/" ++ show documentid
     showsPrec _ (LinkIssueDocPDF Nothing document) = 
         (++) $ "/d/" ++ show (documentid document) ++ "/" ++ BS.toString (documenttitle document) ++ ".pdf"
     showsPrec _ (LinkIssueDocPDF (Just SignatoryLink{signatorylinkid, signatorymagichash}) document) = 

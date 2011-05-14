@@ -200,6 +200,8 @@ flashMessageOfferArchiveDone=Valda offerter har blivit raderade.
 ###
 flashMessageTemplateArchiveDone=Valda mallar har blivit raderade.
 ###
+flashMessageAttachmentArchiveDone=Valda bilagor har blivit raderade.
+###
 flashMessageThanksForTheQuestion=Ditt meddelande har skickats! Vi återkommer inom 24h.
 ###
 flashMessageInvalidCSV=Det uppstod ett problem med datan i din .csv. Var vänling och kontrollera och ladda upp igen.
@@ -210,6 +212,10 @@ flashMessageSingleTemplateShareDone=$docname$ har blivit delad inom din organisa
 ###
 flashMessageMultipleTemplateShareDone=Valda mallar har blivit delade inom din organisation.
 ###
+flashMessageSingleAttachmentShareDone=$docname$ har blivit delad inom din organisation.
+###
+flashMessageMultipleAttachmentShareDone=Valda bilagor har blivit delade inom din organisation.
+###
 flashMessageUserInvitedAsSubaccount=Din förfrågan har skickats!
 ###
 flashMessageUserHasBecomeSubaccount=Du är nu underkonto under
@@ -219,4 +225,12 @@ dokument har överförts till huvudkontot.
 flashMessageAccountActivatedFromSign=Ditt original har arkiverats hos SkrivaPå.
 ###
 flashMessageAccountRemovedFromSign=Ditt original är borttaget från SkrivaPå.
+###
+flashMessageOnlyHaveRightsToViewDoc=Du har endast rättigheter att se detta dokument.
+###
+flashMessagePleaseSignWithEleg=Du undertecknar dokumentet längst ned. Det krävs e-legitimation för att underteckna.
+###
+flashMessagePleaseSignContract=Underteckna dokumentet längst ned på sidan.
+###
+flashMessagePleaseSignOffer=Du kan acceptera offerten längst ned på sidan.
 ###

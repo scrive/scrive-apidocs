@@ -309,9 +309,9 @@ function initFileInputs(){
     var form = $(this).parents("form");
     upload.MultiFile({
       list: upload.attr("rel"),
-      onFileAppend: function() { 
-        displayLoadingOverlay("Laddar upp . . .");
+      onFileAppend: function() {
         if (upload.hasClass("submitOnUpload")) {
+          displayLoadingOverlay("Laddar upp . . .");
           form.submit();
         }
       }

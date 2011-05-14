@@ -352,7 +352,7 @@ pageDocumentDesign=
               </div>
               <div class="signStepsBodyAttachments">
                    <small>
-                     <a rel="#add-attachment-dialog" href="#"
+                     <a rel="#update-attachments-dialog" href="#"
                         style="padding-top:3px" id="addattachmentlink">BIFOGA BILAGA</a>
                    </small>
             </div>
@@ -565,6 +565,73 @@ pageDocumentForAuthorHelpersLocalDialogs=
 <div class="localdialogs">
   $loadingdialog()$
   
+  <form method="post" name="form" action="" class="overlay redirectsubmitform" id="update-attachments-dialog" rel=".stepForm">
+    <input type="hidden" name="updateattachments" value="true" />
+    <div class="modal-container">
+      <div class="modal-header">
+        <span class="modal-icon message"></span>
+        <span class="modal-title">
+          <h2>Välj bilagor</h2>
+        </span>
+        <a class="modal-close close"> </a>
+      </div>
+      <div class="modal-body">
+        <div class="modal-content">
+          <div>     
+            Välj de bilagor du vill bifoga
+          </div>
+          <div class="signStepsBodyUploadBox">
+            <div>
+              <span id="signStepsBodyUploadTextContainer"> 
+                <span class="header">Välj fil från dator</span><br/>
+                <span class="text">OBS! Endast PDF</span> 
+              </span>
+            </div>
+            <br/>
+            <div class="signStepsButtonContainer">
+              <a class="btn-small green">  
+                <div class="left"> </div>
+                <div class="label" style="width:80px">Bifoga</div> 
+                <div class="right"> </div>
+                <input class="multiFileInput" style="top:-40px;right:0px" maxlength="20" type="file" name="attachment" accept="application/pdf" rel="#tobeattached" />
+              </a>
+            </div>
+          </div>
+          <div id="alreadyattached">
+            $attachments:{attachment |
+              <div class="alreadyattacheditem">
+                <div class="display">
+                  <a href="#" class="remove">x</a><span style="padding-left:5px;">$attachment.attachmentname$</span>
+                </div>
+                <div class="data">
+                  <input type="hidden" name="attachmentid" value="$attachment.attachmentid$" />
+                  <input type="hidden" name="removeattachment" value="false" />
+                </div>
+              </div>
+            }$
+          </div>
+          <div id="tobeattached">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="float-left">
+          <a class="close cancel">Avbryt</a>
+        </div>
+        <a class="btn-small green float-right submitAttachments">
+          <div class="left"></div>
+          <div class="label">
+            <p>
+              Bifoga
+            </p>
+            <div class="btn-symbol green arrow-left"></div>
+          </div>
+          <div class="right"></div>
+        </a>
+      </div>
+    </div>
+  </form>
+
   <form method="post" name="form" action="" class="overlay redirectsubmitform" id="dialog-csvupload-1" rel=".stepForm">
     <input type="hidden" name="csvupload" value="true" />
     <div class="modal-container">
@@ -922,72 +989,6 @@ pageDocumentForAuthorHelpersLocalDialogs=
       </div>
     </div>
   </form>  
-
-  <div class="modal-container overlay" id="add-attachment-dialog">
-    <div class="modal-header">
-      <span class="modal-icon message"></span>
-      <span class="modal-title">
-        <h2>Välj bilagor</h2>
-      </span>
-      <a class="modal-close close"> </a>
-    </div>
-    <div class="modal-body">
-      <div class="modal-content">     
-        <div class="top">
-          <p>Välj de bilagor du vill bifoga</p>
-        </div>
-        <div class="buttons" style="height: 100px">
-          <div class="left-button" style="text-align:center; width: 120px">
-            <div class="inside-center">
-              <p>
-                <strong>Välj fil från dator</strong>
-              </p>
-              <p>OBS! Endast PDF</p>
-              <a class="btn-small green">
-                <div class="left"></div>
-                <div class="label" style="width: 80px">
-                  <p>
-                    Bifoga
-                  </p>
-                </div>
-                <div class="right"></div>
-                <div id="MultiFile1_wrap" class="MultiFile-wrap">
-                  <input type="file" rel="#tobeattached"
-                         accept="application/pdf" name="attachment"
-                         maxlength="1" style="top:-40px;right:0px"
-                         class="multiFileInput MultiFile-applied">
-                </div>
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <div id="tobeattached">
-        </div>
-
-        <div id="alreadyattached">
-
-        </div>
-        
-      </div>
-    </div>
-    <div class="modal-footer">
-      <div class="float-left">
-        <a class="close cancel">Avbryt</a>
-      </div>
-      <a class="btn-small green float-right">
-        <div class="left"></div>
-        <div class="label">
-          <p>
-            Bifoga
-          </p>
-          <div class="btn-symbol green arrow-left"></div>
-        </div>
-        <div class="right"></div>
-      </a>
-    </div>
-  </div>
-
 
   <div class="hidden" id="hiddenttimestuffbox">
     <div id="daystosignbox">

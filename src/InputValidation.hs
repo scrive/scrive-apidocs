@@ -41,6 +41,7 @@ module InputValidation
     , asValidID
     , asValidNumber
     , asValidDocID
+    , asValidBool
     , asValidFieldName
     , asValidFieldValue
     , asValidPlace
@@ -511,6 +512,17 @@ asValidNumber input =
     checkIfEmpty input
     >>= parseAsInt fieldtemplate
     where fieldtemplate = "idFieldName"
+
+{- |
+    Parses as a bool.
+-}
+asValidBool :: String -> Result Bool
+asValidBool input =
+    checkIfEmpty input
+    >>= parseAsBool
+  where 
+    parseAsBool :: String -> Result Bool
+    parseAsBool xs = return $ "TRUE" == map toUpper xs
 
 {-|
    Creates a cleaned up place.  Which is just a positive int.
