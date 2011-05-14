@@ -84,7 +84,7 @@ Executable kontrakcja-server
  Build-depends: base64-bytestring
  Build-depends: tagsoup
  Build-depends: zlib
- Build-depends: cryptocipher==0.2.8
+ Build-depends: cryptocipher==0.2.*
  Build-depends: happstack==6.*
  Build-depends: happstack-server==6.*
  Build-depends: happstack-state==6.*
@@ -92,8 +92,8 @@ Executable kontrakcja-server
  Build-depends: happstack-data==6.*
  Build-depends: happstack-util==6.*
  Build-depends: happstack-hsp==6.*
- Build-depends: hslogger==1.1.0
- Build-depends: time, time-extras
+ Build-depends: hslogger==1.1.*
+ Build-depends: time
  Build-depends: hsx, hsp
  Build-depends: utf8-string, random
  Build-depends: extensible-exceptions, containers
@@ -117,7 +117,7 @@ Executable kontrakcja-server
  Build-Depends: regex-tdfa
  Build-Depends: parsec
  Build-Depends: iconv
- Build-Depends: json==0.4.4
+ Build-Depends: json==0.4.*
 
  Main-Is: Main.hs
 
@@ -156,7 +156,7 @@ Executable kontrakcja-test
  Build-depends: filepath
  Build-depends: base64-bytestring
  Build-depends: tagsoup
- Build-depends: cryptocipher==0.2.8
+ Build-depends: cryptocipher==0.2.*
  Build-depends: happstack==6.*
  Build-depends: happstack-server==6.*
  Build-depends: happstack-state==6.*
@@ -164,8 +164,8 @@ Executable kontrakcja-test
  Build-depends: happstack-data==6.*
  Build-depends: happstack-util==6.*
  Build-depends: happstack-hsp==6.*
- Build-depends: hslogger==1.1.0
- Build-depends: time, time-extras
+ Build-depends: hslogger==1.1.*
+ Build-depends: time
  Build-depends: hsx, hsp
  Build-depends: utf8-string, random
  Build-depends: extensible-exceptions, containers
@@ -189,7 +189,7 @@ Executable kontrakcja-test
  Build-Depends: regex-tdfa
  Build-Depends: parsec
  Build-Depends: iconv
- Build-Depends: json==0.4.4
+ Build-Depends: json==0.4.*
 
  Main-is: TestMain.hs
 
