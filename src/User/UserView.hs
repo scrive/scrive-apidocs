@@ -32,6 +32,7 @@ module User.UserView (
     flashMessageLoginRedirectReason,
     flashMessageUserDetailsSaved,
     flashMessageNoAccountType,
+    flashMessageInvalidAccountType,
     flashMessageMustAcceptTOS,
     flashMessageBadOldPassword,
     flashMessagePasswordsDontMatch,
@@ -66,6 +67,7 @@ import Control.Monad.Trans (lift)
 import Data.Data
 import Data.Maybe
 import ActionSchedulerState
+import Happstack.State (query)
 import Kontra
 import KontraLink
 import Mails.SendMail(Mail, emptyMail, title, content)
@@ -272,17 +274,32 @@ modalWelcomeToSkrivaPa :: KontrakcjaTemplates -> KontraModal
 modalWelcomeToSkrivaPa templates =
     lift $ renderTemplate templates "modalWelcomeToSkrivaPa" ()
 
-modalAccountSetup :: Maybe User -> KontraLink -> FlashMessage
-modalAccountSetup muser signuplink =
-    toFlashTemplate Modal "modalAccountSetup" [
-          ("fstname", showUserField userfstname)
-        , ("sndname", showUserField usersndname)
-        , ("companyname", showUserField usercompanyname)
-        , ("companyposition", showUserField usercompanyposition)
-        , ("phone", showUserField userphone)
-        , ("signuplink", show signuplink)
-    ]
-    where showUserField f = maybe "" (BS.toString . f . userinfo) muser
+modalAccountSetup :: MonadIO m => Maybe User -> KontraLink -> m FlashMessage
+modalAccountSetup muser signuplink = do
+    msupervisor <- case msupervisorid of
+        Just sid -> query $ GetUserByUserID $ UserID $ unSupervisorID sid
+        Nothing  -> return Nothing
+    return $ toFlashTemplate Modal "modalAccountSetup" $
+        supervisorfields msupervisor ++ [
+              ("fstname", showUserField userfstname)
+            , ("sndname", showUserField usersndname)
+            , ("companyname", showUserField usercompanyname)
+            , ("companyposition", showUserField usercompanyposition)
+            , ("phone", showUserField userphone)
+            , ("signuplink", show signuplink)
+            ]
+    where
+        showUserField f = maybe "" (BS.toString . f . userinfo) muser
+        msupervisorid = join (usersupervisor <$> muser)
+        supervisorfields Nothing = []
+        supervisorfields (Just svis) = [
+              ("hassupervisor", "true")
+            , ("supervisorcompany", BS.toString . usercompanyname . userinfo $ svis) 
+            , ("supervisoraccounttype", supervisoraccounttype)
+            , (supervisoraccounttype, "true")
+            ]
+            where
+                supervisoraccounttype = show $ accounttype $ usersettings svis
 
 modalAccountRemoval :: KontrakcjaTemplates -> BS.ByteString -> KontraLink -> KontraLink -> KontraModal
 modalAccountRemoval templates doctitle activationlink removallink = do
@@ -321,6 +338,9 @@ flashMessageNoAccountType :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageNoAccountType templates =
     toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageNoAccountType" () 
 
+flashMessageInvalidAccountType :: KontrakcjaTemplates -> IO FlashMessage
+flashMessageInvalidAccountType templates =
+    toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageInvalidAccountType" () 
 
 flashMessageMustAcceptTOS :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageMustAcceptTOS templates =
