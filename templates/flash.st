@@ -25,6 +25,9 @@ flashMessageCanceled=
 flashMessageNoAccountType=
     You need to choose account type.
 #####
+flashMessageInvalidAccountType=
+    Account type you chose differs from account type of your supervisor!
+#####
 flashMessageMustAcceptTOS=
     För att kunna använda tjänsten måste du acceptera SkrivaPå Allmänna Villkor.
 

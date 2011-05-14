@@ -138,8 +138,11 @@ modalAccountSetup=
         <input type="checkbox" id="tosCBox" name="tos" class="notForIE7" />
         <label for="tosCBox">Jag har läst och accepterar SkrivaPå Allmänna Villkor</label><br/>
         <table id="accountTypeChoice" style="width: 250px; margin-bottom: 5px"><tbody><tr>
-            <td><input id="accountTypePrivate" type="radio" name="accounttype" value="private" /> <label for="accountTypePrivate">Privatperson</label></td>
-            <td><input id="accountTypeCompany" type="radio" name="accounttype" value="company" /> <label for="accountTypeCompany">Företag</label></td>
+            <td><input id="accountTypePrivate" type="radio" value="PrivateAccount" $if(hassupervisor)$disabled="true"$else$name="accounttype"$endif$ $if(PrivateAccount)$checked="true"$endif$ /> <label for="accountTypePrivate">Privatperson</label></td>
+            <td><input id="accountTypeCompany" type="radio" value="CompanyAccount" $if(hassupervisor)$disabled="true"$else$name="accounttype"$endif$ $if(CompanyAccount)$checked="true"$endif$ /> <label for="accountTypeCompany">Företag</label></td>
+            $if(hassupervisor)$
+            <td><input type="hidden" name="accounttype" value="$supervisoraccounttype$" /></td>
+            $endif$
         </tr></tbody></table>
         <table id="companyInfo"><tbody>
             <tr>
@@ -152,7 +155,13 @@ modalAccountSetup=
             </tr>
             <tr>
                 <td>Företag:</td>
-                <td><input type="text" name="companyname" autocomplete="off" value="$if(companyname)$$companyname$$endif$"></td>
+                <td><input type="text" name="companyname" autocomplete="off"
+                    $if(hassupervisor)$
+                    disabled="true" value="$supervisorcompany$"
+                    $else$
+                    value="$if(companyname)$$companyname$$endif$"
+                    $endif$
+                ></td>
             </tr>
             <tr>
                 <td>Position:</td>
