@@ -477,9 +477,6 @@ function checkSignatoriesHaveUniqueEmail() {
   var isAuthorUsedAsSignatory = false;
   var authoremail = $(".stepForm .authoremail .fieldvalue").text();
   var emailsmatchingauthor = emails.filter(function() {
-    console.log($(this).val());
-    console.log("=");
-    console.log(authoremail);
     return $(this).val()==authoremail;
   });
   if (emailsmatchingauthor.length>0) {
@@ -1174,9 +1171,9 @@ $(document).ready(function() {
 		detachFieldsForSigID(sigid);
                 child.remove();
 
-                var csvpersonindex = personpane.closest("form").find("input[type='hidden'][name='csvpersonindex']"); 
-                if (idx == csvpersonindex.attr("value")) {
-                   personpane.closest("form").find("input[type='hidden'][name='csvpersonindex']").removeAttr("value");
+                var csvsigindex = personpane.closest("form").find("input[type='hidden'][name='csvsigindex']"); 
+                if (idx == csvsigindex.attr("value")) {
+                   personpane.closest("form").find("input[type='hidden'][name='csvsigindex']").removeAttr("value");
                 }
                 
                 var li = $("#peopleList li:eq(" + idx + ")"),
@@ -1283,7 +1280,7 @@ safeReady(function() {
 });
 
 function renumberParts() {
-  updateCsvPersonIndex();
+  updateCsvSigIndex();
 
   console.log("renumber parts");
   var persondetails = $("#personpane .persondetails");
@@ -1311,14 +1308,13 @@ function renumberParts() {
       });
 }
 
-function updateCsvPersonIndex() {
-  var input = $("form").find("input[type='hidden'][name='csvpersonindex']");
+function updateCsvSigIndex() {
+  var input = $("form").find("input[type='hidden'][name='csvsigindex']");
   var multipart = $("#personpane .multipart");
   if (multipart.length<1) {
     input.removeAttr("value");
   } else {
     var idx = multipart.parent().children().index(multipart);
-    console.log("multipart is now " + idx);
     input.attr("value", idx);
   }
 }

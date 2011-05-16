@@ -324,10 +324,10 @@ function docstateToHTML(){
   
   authorToHTML(docstate.author);
   
-  csvpersonindex = sl.closest("form").find("input[type='hidden'][name='csvpersonindex']").attr("value");
+  csvsigindex = sl.closest("form").find("input[type='hidden'][name='csvsigindex']").attr("value");
 
   $(signatories).each(function (idx) {
-    isMultiple = ("" + (idx+1)) === csvpersonindex 
+    isMultiple = ("" + (idx+1)) === csvsigindex 
     signatoryToHTML(isMultiple, this);
   });
 
@@ -1066,13 +1066,13 @@ safeReady(function() {
 function setUpCSVUpload(sigentry) {
   var form = sigentry.closest("form");
   var idx = sigentry.parent().children().index(sigentry);
-  form.find("input[type='hidden'][name='csvpersonindex']").removeAttr("value");
-  form.find("input[type='hidden'][name='csvpersonindex']").attr("value", idx);
+  form.find("input[type='hidden'][name='csvsigindex']").removeAttr("value");
+  form.find("input[type='hidden'][name='csvsigindex']").attr("value", idx);
 }
 
 function tearDownCSVUpload(sigentry) {
   var form = sigentry.closest("form");
-  form.find("input[type='hidden'][name='csvpersonindex']").attr("value", "");
+  form.find("input[type='hidden'][name='csvsigindex']").attr("value", "");
 }
 
 function setupAsMultiplePart(sigentry) {
@@ -1221,8 +1221,8 @@ function signatoryToHTML(isMultiple, sig) {
   sigentry.find(".csv.single").overlay({
     mask: standardDialogMask,
     onBeforeLoad: function() {
-      csvpersonindex = $("form.stepForm input[type='hidden'][name='csvpersonindex']").attr("value");
-      if (!(csvpersonindex && csvpersonindex.length>0)) {
+      csvsigindex = $("form.stepForm input[type='hidden'][name='csvsigindex']").attr("value");
+      if (!(csvsigindex && csvsigindex.length>0)) {
         setUpCSVUpload(sigentry);
         return true;
       } else {
