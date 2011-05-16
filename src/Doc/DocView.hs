@@ -694,6 +694,7 @@ pageDocumentDesign ctx
 documentAttachmentDesignFields :: [Document] -> Fields
 documentAttachmentDesignFields atts = do
   field "isattachments" $ not $ null atts
+  field "attachmentcount" $ length atts
   field "attachments" $ map attachmentFields atts
   where
     attachmentFields Document{documentid, documenttitle} = do
