@@ -23,10 +23,10 @@ flashMessageCanceled=
     $endif$
 #####
 flashMessageNoAccountType=
-    You need to choose account type.
+     Du måste välja kontotyp.
 #####
 flashMessageInvalidAccountType=
-    Account type you chose differs from account type of your supervisor!
+    Den kontotyp du försöker att välja är inte tillåten.
 #####
 flashMessageMustAcceptTOS=
     För att kunna använda tjänsten måste du acceptera SkrivaPå Allmänna Villkor.
