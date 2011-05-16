@@ -83,6 +83,7 @@ import Control.Monad.Error
 import API.API
 import Routing
 import Doc.DocView
+import Doc.DocUtils
 
 {- | 
   Defining API schema
@@ -143,7 +144,7 @@ newFromTemplate = do
     signable <- update $ SignableFromDocument document 
     author <- user <$> ask
     ctx <- askKontraContext
-    msenddoc <- update $ AuthorSendDocument (documentid signable) (ctxtime ctx) (ctxipnumber ctx) author Nothing
+    msenddoc <- update $ AuthorSendDocument (documentid signable) (ctxtime ctx) (ctxipnumber ctx) Nothing
     case msenddoc of
          Right senddoc -> return $ toJSObject [("links", JSArray $ map (JSString . toJSString) $ documentLinks senddoc)]
          Left s -> throwApiError API_ERROR_OTHER $ "Webshop can't send a document: " ++  s
@@ -155,7 +156,7 @@ documentLinks doc =
 
 fillTemplate::Document -> [SignatoryTMP] -> WebshopAPIFunction Document
 fillTemplate doc (authorTMP:sigsTMP) = do
-    let (author,sigs) = span (isAuthor doc) (documentsignatorylinks doc)
+    let (author,sigs) = span siglinkIsAuthor (documentsignatorylinks doc)
     docWithAuthor <- fillAuthor authorTMP doc
     author' <- sequence $ fmap (fillSignatory authorTMP) author 
     sigs' <- sequence $ zipWith fillSignatory sigsTMP  sigs 
@@ -191,7 +192,7 @@ getTemplate = do
     let doc = fromJust mdoc
     when (not $ isTemplate doc) $ throwApiError API_ERROR_OTHER "This document is not a template"
     user <- user <$> ask
-    when (not $ isAuthor doc user) $ throwApiError API_ERROR_PERMISSION_ACTION "Current user is not an author of a document" 
+    when (not $ isUserAuthor doc user) $ throwApiError API_ERROR_PERMISSION_ACTION "Current user is not an author of a document" 
     return doc
     
 getSignatories::WebshopAPIFunction [SignatoryTMP]
@@ -220,7 +221,7 @@ checkIfReadyToSend::Document -> WebshopAPIFunction ()
 checkIfReadyToSend doc = do
     let siglinks = documentsignatorylinks doc
     liftIO $ putStrLn $ show siglinks
-    let nosignatories = null $ filter (not . isAuthor doc) siglinks
+    let nosignatories = null $ filter (not . siglinkIsAuthor) siglinks
     when nosignatories $ throwApiError  API_ERROR_OTHER "At least one nonauthor signatory must be set"
     let bademail = any (not . isGood . asValidEmail . BS.toString . signatoryemail . signatorydetails ) siglinks
     when bademail $ throwApiError  API_ERROR_OTHER "One of signatories has a bad email"

@@ -20,6 +20,7 @@ import Data.Maybe
 import Doc.DocControl
 import Doc.DocState
 import Doc.DocStateUtils
+import Doc.DocUtils
 import Doc.DocView
 import ELegitimation.ELeg
 import FlashMessage
@@ -338,7 +339,7 @@ handleIssuePostBankID docid = withUserPost $ do
     -- end validation
     Log.debug $ "document status on post: " ++ show (documentstatus document)
     eudoc <- case documentstatus document of 
-                Preparation -> updateDocument ctx author document
+                Preparation -> updateDocument ctx document
                 AwaitingAuthor -> return $ Right document
                 s -> return $ Left $ "Wrong status: " ++ show s
     case eudoc of 
@@ -402,9 +403,9 @@ handleIssuePostBankID docid = withUserPost $ do
                                                             }
                                 signInd d = do
                                     mndoc <- case documentstatus document of
-                                                Preparation -> update $ AuthorSignDocument (documentid d) ctxtime ctxipnumber author $ Just signinfo
+                                                Preparation -> update $ AuthorSignDocument (documentid d) ctxtime ctxipnumber $ Just signinfo
                                                 AwaitingAuthor -> do
-                                                    ed <- update $ CloseDocument (documentid d) ctxtime ctxipnumber author $ Just signinfo
+                                                    ed <- update $ CloseDocument (documentid d) ctxtime ctxipnumber $ Just signinfo
                                                     case ed of
                                                         Nothing -> return $ Left "could not close document"
                                                         Just d -> return $ Right d
@@ -471,12 +472,12 @@ toJSON kvs = "{ " ++ intercalate ", " (map kvJson kvs) ++ " }"
 -- SOAP
 
 endpoint :: String
-endpoint = "https://eid.funktionstjanster.se:8890/osif" -- production
---endpoint = "https://eidt.funktionstjanster.se:18898/osif" -- test
+--endpoint = "https://eid.funktionstjanster.se:8890/osif" -- production
+endpoint = "https://eidt.funktionstjanster.se:18898/osif" -- test
 
 serviceid :: String
-serviceid = "skrivapa9421" -- production
---serviceid = "logtest004" -- test
+--serviceid = "skrivapa9421" -- production
+serviceid = "logtest004" -- test
 
 data ImplStatus = ImplStatus Int String Int String
 
