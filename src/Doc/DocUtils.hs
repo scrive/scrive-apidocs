@@ -339,3 +339,6 @@ isAuthorSignatory document =
 
 isUserAuthor :: Document -> User -> Bool
 isUserAuthor doc user = maybe False siglinkIsAuthor $ getSigLinkForUser doc user
+
+isAttachment :: Document -> Bool
+isAttachment doc = Attachment == documenttype doc
