@@ -719,7 +719,7 @@ documentCsvFields templates document@Document{documentallowedidtypes, documentcs
     field "csvrowcount" $ length csvdata
     field "csvcustomfields" $ csvcustomfields
     field "isvalidcsv" $ null csvproblems
-    field "csvpersonindex" $ csvPersonIndex document
+    field "csvsigindex" $ fmap csvsignatoryindex documentcsvupload
  
 csvPageFields :: [CSVProblem] -> Int -> Int -> [[BS.ByteString]] -> Fields
 csvPageFields problems totalrowcount firstrowindex xs = do

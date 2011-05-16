@@ -93,7 +93,7 @@ pageDocumentDesign=
       <form action="" method="post" enctype="multipart/form-data" class="stepForm">
         <input type="hidden" name="allowedsignaturetypes"
                value="Email" />
-        <input type="hidden" name="csvpersonindex" value="$csvpersonindex$"/>
+        <input type="hidden" name="csvsigindex" value="$csvsigindex$"/>
         <input type="hidden" name="docfunctionality" value="$docfunctionality$"/>
         <input type="hidden" name="docname" value="$documenttitle$" />
 

@@ -4,9 +4,6 @@ module Doc.CSVUtils (
     , CleanCSVData(..)
     , cleanCSVContents
     , getCSVCustomFields
-    , csvPersonIndex
-    , personToSigIndex
-    , personToSigIndexForDoc
     )
 where
 
@@ -37,26 +34,6 @@ data CleanCSVData = CleanCSVData
                     { csvheader :: Maybe [BS.ByteString]
                     , csvbody :: [[BS.ByteString]]
                     }
-
-{- |
-    This is a tiny bit messy, but it does the job of converting between the person index
-    on the client and the signatory index under the covers for the sake of the csv stuff.
-    The two could be different if the author isn't a signatory.
--}
-csvPersonIndex :: Document -> Maybe Int
-csvPersonIndex doc = 
-  let sigindexf = if isAuthorSignatory doc
-                    then csvsignatoryindex
-                    else ((+1) . csvsignatoryindex) in
-  fmap sigindexf $ documentcsvupload doc
-
-personToSigIndexForDoc :: Document -> Int -> Int
-personToSigIndexForDoc doc personindex = personToSigIndex (isAuthorSignatory doc) personindex
-
-personToSigIndex :: Bool -> Int -> Int
-personToSigIndex isAuthor personIndex =
-  if isAuthor then personIndex else (personIndex - 1)
-
 
 {- |
     Looks up all the custom fields for the csv upload and returns their labels.
