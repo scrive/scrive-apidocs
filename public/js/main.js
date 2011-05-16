@@ -1,6 +1,7 @@
 //Checking 
 $(document).ready( function() {
-    if ($.browser.msie && $.browser.version < "7.0")
+
+    if ($.browser.msie && $.browser.version < "7.0" && false)
     {
        var alertModal = $("<div class='modal-container' style='height:80px'>"+
                         "<div class='modal-body' style='padding:20px;font-size:13pt'>"+
