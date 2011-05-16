@@ -62,7 +62,7 @@ $(document).ready( function() {
 				.appendTo('body')
 				.addClass('tooltip-container')
 				.css({
-					left: $(this).offset().left+30,
+					left: $(this).offset().left+$(this).width()+19,
 					top: $(this).offset().top-20
 				})
 				.html('<div class="tooltip-arrow"></div><div class="tooltip-body">' + $($(this).attr('rel')).html() + '</div>');

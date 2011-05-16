@@ -354,6 +354,14 @@ pageDocumentDesign=
                    <small>
                      <a rel="#update-attachments-dialog" href="#"
                         style="padding-top:3px" id="addattachmentlink">BIFOGA BILAGA</a>
+                     $if(isattachments)$
+                       <span class="tooltip" rel="#tooltip-attachmentlist">($attachmentcount$ dokument)</span>
+                       <div id="tooltip-attachmentlist" class="hidden">
+                         $attachments:{attachment |
+                           <div>$attachment.attachmentname$</div>
+                         }$
+                       </div>
+                     $endif$
                    </small>
             </div>
             
