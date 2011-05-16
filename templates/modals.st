@@ -135,7 +135,7 @@ modalAccountSetup=
         $termsPageContents()$
       </div>
       <div style="padding: 0 19px">
-        <input type="checkbox" id="tosCBox" name="tos" class="notForIE7" />
+        <input type="checkbox" id="tosCBox" name="tos" />
         <label for="tosCBox">Jag har läst och accepterar SkrivaPå Allmänna Villkor</label><br/>
         <table id="accountTypeChoice" style="width: 250px; margin-bottom: 5px"><tbody><tr>
             <td><input id="accountTypePrivate" type="radio" value="PrivateAccount" $if(hassupervisor)$disabled="true"$else$name="accounttype"$endif$ $if(PrivateAccount)$checked="true"$endif$ /> <label for="accountTypePrivate">Privatperson</label></td>
@@ -187,7 +187,7 @@ modalAccountSetup=
     </div>
   </div>
   <div class="modal-footer">
-    <a href="#" class="btn-small green float-right submit notForIE7">
+    <a href="#" class="btn-small green float-right submit">
       <div class="left"></div>
       <div class="label">
         <p>Skapa konto!</p>
@@ -406,7 +406,7 @@ modalSignedViewClosedHasAccountNotLoggedIn=
         <a class="close cancel">Stäng</a>
         <a href="#" class="txt-link message">Glömt lösenord</a>
       </div>
-      <a href="#" class="btn-small blue float-right submit notForIE7">
+      <a href="#" class="btn-small blue float-right submit">
         <div class="left"></div>
         <div class="label">
           <p>Logga in</p>
@@ -541,7 +541,7 @@ modalSignedViewNotClosedHasAccountNotLoggedIn=
         <a class="close cancel">Stäng</a>
         <a href="#" class="txt-link message">Glömt lösenord</a>
       </div>
-      <a href="#" class="btn-small blue float-right submit notForIE7">
+      <a href="#" class="btn-small blue float-right submit">
         <div class="left"></div>
         <div class="label">
           <p>Logga in</p>
@@ -618,7 +618,7 @@ accountFromSignFooter=
       <div class="float-left">
         <a class="declineAccountFromSign cancel" style="width:60px;">Nej tack</a>
       </div>
-      <a class="btn-small green float-right submit notForIE7">
+      <a class="btn-small green float-right submit">
         <div class="left"></div>
         <div class="label">
           <p>Ja, arkivera</p>
@@ -660,7 +660,7 @@ $if(loginModal)$
             <a class="close cancel">Avbryt</a>
             <a href="#" class="txt-link message">Glömt lösenord</a>
           </div>
-          <a href="#" class="btn-small blue float-right submit notForIE7">
+          <a href="#" class="btn-small blue float-right submit">
             <div class="left"></div>
             <div class="label">
               <p>Logga in</p>
