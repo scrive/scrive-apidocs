@@ -822,7 +822,7 @@ splitUpDocument doc =
         ((prob:_), _) -> do
           Context{ctxtemplates} <- get
           addFlashMsg =<< (liftIO $ flashMessageInvalidCSV ctxtemplates)
-          return $ Left $ LinkDesignDoc $ DesignStep2 (documentid doc) (fmap (+1) (csvPersonIndex doc)) (Just AfterCSVUpload)
+          return $ Left $ LinkDesignDoc $ DesignStep2 (documentid doc) (Just (1 + csvsignatoryindex csvupload)) (Just AfterCSVUpload)
         ([], CleanCSVData{csvbody}) -> do
           mudoc <- if (isTemplate doc)
                     then return $ Right doc
@@ -850,24 +850,24 @@ handleIssueCSVUpload document = do
   case mudoc of
     Left _ -> mzero
     Right udoc -> do
-      mcsvpersonindex <- getOptionalField asValidNumber "csvpersonindex"
+      mcsvsigindex <- getOptionalField asValidNumber "csvsigindex"
       mcsvfile <- getCSVFile "csv"
-      case (mcsvpersonindex, mcsvfile) of
+      case (mcsvsigindex, mcsvfile) of
         (Nothing, Nothing) -> return $ LinkDesignDoc $ DesignStep2 (documentid udoc) Nothing Nothing
         (Nothing, Just _) ->  do
           Log.error "something weird happened, got csv file but there's no relevant person index"
           mzero
-        (Just personindex, Nothing) -> return $ LinkDesignDoc $ DesignStep2 (documentid udoc) (Just $ personindex + 1) Nothing 
-        (Just personindex, Just (title, contents)) ->  do
+        (Just csvsigindex, Nothing) -> return $ LinkDesignDoc $ DesignStep2 (documentid udoc) (Just $ csvsigindex + 1) Nothing 
+        (Just csvsigindex, Just (title, contents)) ->  do
           let csvupload = CSVUpload 
                           { csvtitle = title
                           , csvcontents = contents
-                          , csvsignatoryindex = personToSigIndexForDoc udoc personindex
+                          , csvsignatoryindex = csvsigindex
                           }
           mndoc <- update $ AttachCSVUpload (documentid udoc) csvupload
           case mndoc of
             Left _ -> mzero
-            Right ndoc -> return $ LinkDesignDoc $ DesignStep2 (documentid ndoc) (Just $ personindex + 1) (Just AfterCSVUpload)
+            Right ndoc -> return $ LinkDesignDoc $ DesignStep2 (documentid ndoc) (Just $ csvsigindex + 1) (Just AfterCSVUpload)
 
 handleIssueUpdateAttachments :: Document -> Kontra KontraLink
 handleIssueUpdateAttachments doc = withUserPost $ do
@@ -1256,7 +1256,7 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid,doc
   
   invitetext <- fmap (fromMaybe defaultInviteMessage) $ getCustomTextField "invitetext"
   
-  mcsvpersonindex <- getOptionalField asValidNumber "csvpersonindex"
+  mcsvsigindex <- getOptionalField asValidNumber "csvsigindex"
 
   docname <- getCriticalField (return . BS.fromString) "docname"
 
@@ -1322,7 +1322,6 @@ updateDocument ctx@Context{ctxtime,ctxipnumber} document@Document{documentid,doc
       roles2 = map guessRoles signatoriesroles
       guessRoles x | x == BS.fromString "signatory" = [SignatoryPartner]
                    | otherwise = []
-      mcsvsigindex = fmap (personToSigIndex isauthorsig) mcsvpersonindex
   -- FIXME: tell the user what happened!
   -- when (daystosign<1 || daystosign>99) mzero
 
