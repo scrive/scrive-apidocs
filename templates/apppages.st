@@ -242,7 +242,7 @@ loginBox=
             <td><input type="password" name="password" autocomplete="off" /></td> 
           </tr>
 	  <tr> 
-            <td><input class="button notForIE7" id="loginbtn" type="submit" name="login" value="Logga in" /></td>
+            <td><input class="button" id="loginbtn" type="submit" name="login" value="Logga in" /></td>
             <td><a href="/amnesia"> Glömt lösenord</a></td>
 	  </tr>
         </table>

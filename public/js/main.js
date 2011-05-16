@@ -1,7 +1,7 @@
 //Checking 
 $(document).ready( function() {
 
-    if ($.browser.msie && $.browser.version < "7.0" && false)
+    if ($.browser.msie && $.browser.version < "7.0")
     {
        var alertModal = $("<div class='modal-container' style='height:80px'>"+
                         "<div class='modal-body' style='padding:20px;font-size:13pt'>"+
@@ -72,29 +72,6 @@ $(document).ready( function() {
 		});	
 	}
 })(jQuery);
-
-function flashIfIE7() {
-  if ($.browser.msie && $.browser.version < "8.0") {
-    addFlashMessage("We're sorry, we only support Internet Explorer 7 for the basic functionality that does not require an account.  Please upgrade your browser to proceed.", "red");
-    return true;
-  } else {
-    return false;
-  }
-}
-
-$(document).ready( function() {
-  var restricted = $(".notForIE7");
-  if (restricted.length>0) {
-    if (flashIfIE7()) {
-      restricted.removeClass("submit");
-      restricted.removeClass("submitter");
-      restricted.click(function () {
-        flashIfIE7();
-        return false;
-      });
-    }
-  }
-});
 
 /*
  * For the decline button on the account activation after signing dialog 
