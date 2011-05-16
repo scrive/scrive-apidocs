@@ -550,7 +550,7 @@ data DocStatsL = DocStatsL
                 , dsTimedOutDocuments :: !Int
                 , dsClosedDocuments :: !Int  
                 , dsRejectedDocuments :: !Int
-                , dsAwitingAuthorDocuments :: !Int
+                , dsAwaitingAuthorDocuments :: !Int
                 , dsErrorDocuments :: !Int
                 , dsAllSignatures :: !Int
                 , dsSignaturesInClosed :: !Int
@@ -585,6 +585,8 @@ calculateStatsFromDocuments documents =
                       DocumentError {}    -> docStatsZero { dsErrorDocuments = 1}
                       Closed      -> docStatsZero { dsClosedDocuments = 1}
                       Timedout    -> docStatsZero { dsTimedOutDocuments = 1}
+                      AwaitingAuthor -> docStatsZero {dsAwaitingAuthorDocuments = 1}
+                      _ -> docStatsZero  -- catch all to make it run in case somebody adds new status
                       )
                 ]
                 
@@ -618,7 +620,7 @@ fieldsFromStats users documents = do
             field "pending" $ dsPendingDocuments stat
             field "error" $ dsErrorDocuments stat
             field "timeout" $ dsTimedOutDocuments stat
-            field "awaitingauthor" $ dsAwitingAuthorDocuments stat
+            field "awaitingauthor" $ dsAwaitingAuthorDocuments stat
             field "closed" $ dsClosedDocuments stat
             field "rejected" $ dsRejectedDocuments stat
             field "canceled" $ dsCanceledDocuments stat
