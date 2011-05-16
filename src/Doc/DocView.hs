@@ -645,7 +645,7 @@ pageAttachment'
 
 pageDocumentDesign :: Context 
              -> Document 
-             -> User
+             -> [Document]
              -> (Maybe DesignStep)
              -> IO String
 pageDocumentDesign ctx
@@ -657,7 +657,8 @@ pageDocumentDesign ctx
     , documentallowedidtypes
     , documentfunctionality
   }
-  author step =
+  attachments
+  step =
    let
        templates = ctxtemplates ctx
        documentdaystosignboxvalue = maybe 7 id documentdaystosign
@@ -770,8 +771,8 @@ csvProblemFields templates probcount number csvproblem = do
 {- | Showing document to author after we are done with design -}
 
 pageDocumentForAuthor :: Context 
-             -> Document 
-             -> User
+             -> Document
+             -> [Document]
              -> IO String
 pageDocumentForAuthor ctx
   document@Document {
@@ -779,7 +780,7 @@ pageDocumentForAuthor ctx
     , documentid
     , documentstatus
   }
-  author =
+  attachments =
    let
        templates = ctxtemplates ctx
        isSignatory person = SignatoryPartner `elem` signatoryroles person
@@ -804,7 +805,7 @@ pageDocumentForAuthor ctx
    Show no buttons or other controls
  -}                                                                                                          
 
-pageDocumentForViewer :: Context -> Document -> User -> Maybe SignatoryLink -> IO String
+pageDocumentForViewer :: Context -> Document -> [Document] -> Maybe SignatoryLink -> IO String
 pageDocumentForViewer ctx
   document@Document {
       documentsignatorylinks
@@ -814,12 +815,8 @@ pageDocumentForViewer ctx
     , documentinvitetext
     , documentallowedidtypes
   }
-  author msignlink =
-    let
-        authorid = userid author
-        -- the author gets his own space when he's editing
-        authorhaslink = not $ null $ filter (not . isNotLinkForUserID authorid) documentsignatorylinks
-        documentdaystosignboxvalue = maybe 7 id documentdaystosign
+  attachments msignlink =
+    let documentdaystosignboxvalue = maybe 7 id documentdaystosign
         isSignatory person = SignatoryPartner `elem` signatoryroles person
         authorsiglink = fromJust $ getAuthorSigLink document
    in do
@@ -850,7 +847,8 @@ pageDocumentForViewer ctx
        field "documentinfotext" $ documentinfotext
        documentInfoFields document 
        documentViewFields document
-       documentAuthorInfo author
+       documentAttachmentViewFields attachments
+       documentAuthorInfo document
 
 documentAttachmentViewFields :: [Document] -> Fields
 documentAttachmentViewFields atts = do
@@ -867,10 +865,10 @@ pageDocumentForSignatory :: KontraLink
                     -> Context
                     -> SignatoryLink
                     -> IO String 
-pageDocumentForSignatory action document ctx invitedlink author =
-  let
+pageDocumentForSignatory action document attachments ctx invitedlink  =
+  let authorsiglink = fromJust $ getAuthorSigLink document
       localscripts =
-           "var docstate = "
+        "var docstate = "
         ++ (buildJS (signatorydetails authorsiglink) $ documentsignatorylinks document)
         ++ "; docstate['useremail'] = '"
         ++ (BS.toString $ signatoryemail $ signatorydetails invitedlink)
