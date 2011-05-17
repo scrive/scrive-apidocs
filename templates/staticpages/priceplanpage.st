@@ -30,16 +30,16 @@ priceplanPageContents=
                                     <h2>Prisplan</h2>
                                 </th>
                                 <th>
-                                    <h3>Free</h3>
-                                    <p>0 kr/mån</p>
+                                    <h3>Small</h3>
+                                    <p>249 kr/mån</p>
                                 </th>
                                 <th>
-                                    <h3>Small</h3>
-                                    <p>299 kr/mån</p>
+                                    <h3>Medium</h3>
+                                    <p>499 kr/mån</p>
                                 </th>
                                 <th>
                                     <h3>Business</h3>
-                                    <p>499 kr/mån</p>
+                                    <p>999 kr/mån</p>
                                 </th>
                                 <th>
                                     <h3>Enterprise</h3>
@@ -57,18 +57,18 @@ priceplanPageContents=
                             </tr>
                             <tr>
                                 <td>Antal användare</td>
-                                <td>1</td>
-                                <td>3</td>
-                                <td>9</td>
+                                <td>1 användare</td>
+                                <td>5 användare</td>
+                                <td>15 användare</td>
                                 <td>Obegränsat</td>
                             </tr>
                             
                             <tr class="odd-row">
                                 <td>Fria signaturer per månad</td>
-                                <td>3 st</td>
-                                <td>15 st</td>
-                                <td>25 st</td>
-                                <td>Min 1000 signaturer/år</td>
+                                <td>10 fria signaturer/mån</td>
+                                <td>20 fria signaturer/mån</td>
+                                <td>50 fria signaturer/mån</td>
+                                <td>Min 2.000 signaturer/år</td>
                             </tr>
                             <tr>
                                 <td>Standardlagring</td>
@@ -87,15 +87,15 @@ priceplanPageContents=
                             <tr >
                                 <td>Extra signaturer per styck</td>
                                 <td>Uppgradera</td>
+                                <td>35 kr</td>
                                 <td>25 kr</td>
-                                <td>20 kr</td>
                                 <td>Offert</td>
                             </tr>
                             <tr  class="odd-row">
                                 <td>Trustweaver premiumlagring</td>
                                 <td>Uppgradera</td>
-                                <td>25 kr</td>
-                                <td>20 kr</td>
+                                <td>Offert</td>
+                                <td>Offert</td>
                                 <td>Offert</td>
                             </tr>
                             <tr>
@@ -141,147 +141,161 @@ priceplanPageContents=
                                 <td>✓</td>
                             </tr>
                             <tr>
+                                <td>Offertbekräftelser</td>
+                                <td>✓</td>
+                                <td>✓</td>
+                                <td>✓</td>
+                                <td>✓</td>
+                            </tr>
+                            <tr class="odd-row">
                                 <td>Skydd mot adressfel</td>
                                 <td>✓</td>
                                 <td>✓</td>
                                 <td>✓</td>
                                 <td>✓</td>
                             </tr>
-                            <tr class="odd-row">
+                            <tr>
                                 <td>E-arkiv</td>
                                 <td>✓</td>
                                 <td>✓</td>
                                 <td>✓</td>
                                 <td>✓</td>
                             </tr>
-                            <tr>
+                            <tr class="odd-row">
                                 <td>Autoarkivering</td>
                                 <td>✓</td>
                                 <td>✓</td>
                                 <td>✓</td>
                                 <td>✓</td>
                             </tr>
-                            <tr class="odd-row">
+                            <tr>
                                 <td>Sökfunktionalitet</td>
                                 <td>✓</td>
                                 <td>✓</td>
                                 <td>✓</td>
                                 <td>✓</td>
                             </tr>
-                            <tr>
+                            <tr class="odd-row">
                                 <td>Processbevakning</td>
                                 <td>✓</td>
                                 <td>✓</td>
                                 <td>✓</td>
                                 <td>✓</td>
                             </tr>
-                            <tr class="odd-row">
+                            <tr>
                                 <td>Påminnelser</td>
                                 <td>✓</td>
                                 <td>✓</td>
                                 <td>✓</td>
                                 <td>✓</td>
                             </tr>
-                            <tr>
+                            <tr class="odd-row">
                                 <td>Hälsningsmeddelande</td>
                                 <td>✓</td>
                                 <td>✓</td>
                                 <td>✓</td>
                                 <td>✓</td>
                             </tr>
-                            <tr class="odd-row">
+                            <tr>
                                 <td >Välj förfallodatum</td>
                                 <td>✓</td>
                                 <td>✓</td>
                                 <td>✓</td>
                                 <td>✓</td>
                             </tr>
+                            <tr class="odd-row">
+                                <td >Justera dokumentnamn</td>
+                                <td></td>
+                                <td>✓</td>
+                                <td>✓</td>
+                                <td>✓</td>
+                            </tr>
                             <tr>
-                                <td>Multipla signaturer</td>
+                                <td >Mallar</td>
                                 <td></td>
-                                <td></td>
+                                <td>✓</td>
                                 <td>✓</td>
                                 <td>✓</td>
                             </tr>
                             <tr class="odd-row">
-                                <td>Sekreterarfunktionalitet</td>
+                                <td >Bilagor</td>
                                 <td></td>
-                                <td></td>
+                                <td>✓</td>
                                 <td>✓</td>
                                 <td>✓</td>
                             </tr>
                             <tr>
-                                <td>Drag and drop</td>
+                                <td >Flerpartsavtal</td>
                                 <td></td>
-                                <td></td>
+                                <td>✓</td>
                                 <td>✓</td>
                                 <td>✓</td>
                             </tr>
                             <tr class="odd-row">
-                                <td>Signeringsordning</td>
+                                <td >Sekreterarfunktionalitet</td>
                                 <td></td>
-                                <td></td>
+                                <td>✓</td>
                                 <td>✓</td>
                                 <td>✓</td>
                             </tr>
                             <tr>
-                                <td>Dela dokumentarkiv</td>
+                                <td >Drag and drop</td>
                                 <td></td>
-                                <td></td>
+                                <td>✓</td>
                                 <td>✓</td>
                                 <td>✓</td>
                             </tr>
                             <tr class="odd-row">
-                                <td>Mallar</td>
-                                <td></td>
+                                <td >Signeringsordning</td>
                                 <td></td>
                                 <td>✓</td>
                                 <td>✓</td>
-                            </tr>  
+                                <td>✓</td>
+                            </tr>
                             <tr>
-                                <td>Automatiska påminnelser</td>
+                                <td >Dela dokumentarkiv</td>
                                 <td></td>
-                                <td></td>
-                                <td></td>
+                                <td>✓</td>
+                                <td>✓</td>
                                 <td>✓</td>
                             </tr>
                             <tr class="odd-row">
-                                <td>Automatisk radering</td>
+                                <td >Enkel Integration</td>
                                 <td></td>
-                                <td></td>
-                                <td></td>
+                                <td>✓</td>
+                                <td>✓</td>
                                 <td>✓</td>
                             </tr>
                             <tr>
-                                <td>Webintegration</td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td>✓</td>
-                            </tr>
-                            <tr class="odd-row">
-                                <td>Brandad signeringssida</td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td>✓</td>
-                            </tr>
-                            <tr>
-                                <td>Massignering</td>
+                                <td >Brandad signeringssida</td>
                                 <td></td>
                                 <td></td>
                                 <td></td>
                                 <td>✓</td>
                             </tr>
                             <tr class="odd-row">
-                                <td>Massifyllning</td>
+                                <td >Massutskick</td>
                                 <td></td>
                                 <td></td>
                                 <td></td>
                                 <td>✓</td>
                             </tr>
                             <tr>
-                                <td>Masspåminnelser</td>
+                                <td >Massifyllning</td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td>✓</td>
+                            </tr>
+                            <tr class="odd-row">
+                                <td >Masspåminnelser</td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td>✓</td>
+                            </tr>
+                            <tr>
+                                <td >Fullt API</td>
                                 <td></td>
                                 <td></td>
                                 <td></td>
@@ -294,14 +308,14 @@ priceplanPageContents=
                         <ul class="highlight-rows">
                             <li class="top">
                                 <h3>Business</h3>
-                                <p>499kr/mån</p>
+                                <p>999kr/mån</p>
                             </li>
-                            <li>9</li>
-                            <li class="odd">25 st</li>
+                            <li>15 användare</li>
+                            <li class="odd">50  fria signaturer/mån</li>
                             <li>Obegränsad</li>
                             <li class="odd">Telefon</li>
-                            <li>20 kr</li>
-                            <li class="odd">20 kr</li>
+                            <li>25 kr</li>
+                            <li class="odd">Offert</li>
                             <li>✓</li>
                             <li class="odd">✓</li>
                             <li>✓</li>
@@ -322,8 +336,10 @@ priceplanPageContents=
                             <li class="odd">✓</li>
                             <li>✓</li>
                             <li class="odd">✓</li>
-                            <li></li>
-                            <li class="odd"></li>
+                            <li>✓</li>
+                            <li class="odd">✓</li>
+                            <li>✓</li>
+                            <li class="odd">✓</li>
                             <li></li>
                             <li class="odd"></li>
                             <li></li>
