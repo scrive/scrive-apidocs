@@ -261,11 +261,11 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                         <table class="price-plan">
                                                 <tr>
                                                         <th>
-                                                                <h3>Free</h3>
+                                                                <h3>Small</h3>
                                                                 <p>För sällananvändare</p>
                                                         </th>
                                                         <th>
-                                                                <h3>Small</h3>
+                                                                <h3>Medium</h3>
                                                                 <p>Låg volym och enkla behov</p>
                                                         </th>
                                                         <th>
@@ -279,15 +279,15 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 </tr>
                                                 <tr class="odd-row">
                                                         <td>1 användare</td>
-                                                        <td>3 användare</td>
-                                                        <td>9 användare</td>
+                                                        <td>5 användare</td>
+                                                        <td>15 användare</td>
                                                         <td>Obegränsat antal användare</td>
                                                 </tr>
                                                 <tr>
-                                                        <td>3 fria signaturer/mån</td>
-                                                        <td>15 fria signaturer/mån</td>
-                                                        <td>25 fria signaturer/mån</td>
-                                                        <td>Min 1000 signaturer/år</td>
+                                                        <td>10 fria signaturer/mån</td>
+                                                        <td>20 fria signaturer/mån</td>
+                                                        <td>50 fria signaturer/mån</td>
+                                                        <td>Min 2.000 signaturer/år</td>
                                                 </tr>
                                                 <tr class="odd-row">
                                                         <td>50 dok lagring</td>
@@ -297,27 +297,27 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 </tr>
                                                 <tr>
                                                         <td>Individuellt arkiv</td>
-                                                        <td>Individuellt arkiv</td>
+                                                        <td>Dela arkiv</td>
                                                         <td>Dela arkiv</td>
                                                         <td>Dela arkiv</td>
                                                 </tr>
                                                 <tr class="odd-row">
                                                         <td>Basfunktioner</td>
-                                                        <td>Basfunktioner +</td>
-                                                        <td>Avancerade funktioner</td>
-                                                        <td>Avancerade funktioner +</td>
+                                                        <td>Advancerade funktioner</td>
+                                                        <td>Advancerade funktioner</td>
+                                                        <td>Advancerade funktioner +</td>
                                                 </tr>
                                                 <tr class="big-row">
                                                         <td>
-                                                                <h4>Vi bjuder</h4>
-                                                                <a href="/priser">Detaljerad prisplan</a>
-                                                        </td>
-                                                        <td>
-                                                                <h4>299kr/mån</h4>
+                                                                <h4>249kr/mån</h4>
                                                                 <a href="/priser">Detaljerad prisplan</a>
                                                         </td>
                                                         <td>
                                                                 <h4>499kr/mån</h4>
+                                                                <a href="/priser">Detaljerad prisplan</a>
+                                                        </td>
+                                                        <td>
+                                                                <h4>999kr/mån</h4>
                                                                 <a href="/priser">Detaljerad prisplan<a>                                                   
                                                         </td>
                                                         <td>
@@ -333,15 +333,15 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                                 <h3>Business</h3>
                                                                 <p>Medel volym och många användningsområden</p>
                                                         </li>
-                                                        <li class="odd">9 användare</li>
+                                                        <li class="odd">15 användare</li>
                                                         <li>
-                                                                <p>25 fria signaturer/mån</p>
+                                                                <p>50 fria signaturer/mån</p>
                                                         </li>
                                                         <li class="odd">Obegränsad lagring</li>
                                                         <li>Dela arkiv</li>
                                                         <li class="odd">Avancerade funktioner</li>
                                                         <li class="bottom">
-                                                                <h4>499kr/mån</h4>
+                                                                <h4>999kr/mån</h4>
                                                                 <a href="/priser">Detaljerad prisplan</a>   
                                                         </li>
                                                 </ul>
@@ -350,7 +350,8 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                 <div class="drop-shadow-container">
                                         <div class="drop-shadow"></div>
                                 </div>
-                                <div class="price-plan-annotation">* Alla priser är exkl moms</div>
+                                <div class="price-plan-annotation">* Alla priser är exkl moms<br/></div>
+                                <div class="price-plan-annotation">Vi erbjuder också ett frikonto med 3 signaturer per månad och 10 dokument i lagring</div>
                                 <div class="spacer70"></div>
                                 <div class="try-skrivapa">
                                         <div class="left">
