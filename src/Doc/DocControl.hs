@@ -1874,6 +1874,6 @@ migrateDocSigLinks = onlySuperUser $ do
                 author <- queryOrFail $ GetUserByUserID $ unAuthor $ documentauthor doc
                 _ <- update $ MigrateToSigLinks (documentid doc) author
                 return ())
-  addFlashMsg OperationDone "All documents migrated!"
-  return $ sendRedirect LinkMain
+  addFlashMsg $ toFlashMsg OperationDone "All documents migrated!"
+  sendRedirect LinkMain
 

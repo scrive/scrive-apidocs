@@ -990,7 +990,7 @@ migrateToSigLinks docid author = do
           case getAuthorSigLink doc of
             Just authorsiglink -> Right doc
             Nothing ->
-                Right doc { documentsignatorylinks = newAuthorSigLink : filter (\sl -> Just (userid author) /= maybesignatory sl) $ documentsignatorylinks doc }
+                Right doc { documentsignatorylinks = newAuthorSigLink : (filter (\sl -> Just (userid author) /= maybesignatory sl) $ documentsignatorylinks doc) }
                     where newAuthorSigLink = SignatoryLink 
                                              { signatorylinkid = linkid
                                              , signatorydetails = authordetails
