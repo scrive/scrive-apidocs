@@ -401,7 +401,8 @@ migrate0SignatoryLinks links = do
  -}
 handleMigrate0 :: Kontra Response
 handleMigrate0 = onlySuperUser $ do
- documents <- query $ GetDocuments
+ ctx <- get   
+ documents <- query $ GetDocuments $ currentServiceID ctx
  d2 <- sequence $ map (\d -> do
                                links <- migrate0SignatoryLinks $ documentsignatorylinks d
                                d2 <- update $ SetSignatoryLinks (documentid d) links
@@ -639,7 +640,7 @@ handleStatistics :: Kontra Response
 handleStatistics = 
   onlySuperUser $ do
     ctx@Context{ctxtemplates} <- get
-    documents <- query $ GetDocuments
+    documents <- query $ GetDocuments $ currentServiceID ctx
     users <- query $ GetAllUsers
     content <- renderTemplateM "statisticsPage" $ do
       fieldsFromStats users documents

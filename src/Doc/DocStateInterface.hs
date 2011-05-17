@@ -11,10 +11,11 @@ import Doc.DocStateData
 import Doc.DocUtils
 import Kontra
 import Misc
-
+import API.Service.ServiceState
 import Control.Monad.State (get)
 import Happstack.State     (query, update)
 import Control.Monad       (mzero)
+import Data.Functor
 
 {- |
    Securely find a document by documentid for the author or his friends.
@@ -24,7 +25,7 @@ import Control.Monad       (mzero)
  -}
 getDocByDocID :: DocumentID -> Kontra (Either DBError Document)
 getDocByDocID docid = do
-  Context { ctxmaybeuser } <- get
+  Context { ctxmaybeuser} <- get
   case ctxmaybeuser of
     Nothing   -> return $ Left DBNotLoggedIn
     Just user -> do
@@ -47,11 +48,11 @@ getDocByDocID docid = do
  -}
 getDocsByLoggedInUser :: Kontra (Either DBError [Document])
 getDocsByLoggedInUser = do
-  Context { ctxmaybeuser } <- get
-  case ctxmaybeuser of
+  ctx <- get
+  case ctxmaybeuser ctx of
     Nothing   -> return $ Left DBNotLoggedIn
     Just user -> do
-      docs <- query $ GetDocuments
+      docs <- query $ (GetDocuments $ currentServiceID ctx)
       usersImFriendsWith <- query $ GetUsersByFriendUserID (userid user)
       return $ Right $ [ doc | doc <- docs
                              , any (\u -> canUserViewDirectly u doc) (user : usersImFriendsWith) ]

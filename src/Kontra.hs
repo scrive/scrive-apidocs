@@ -28,6 +28,7 @@ module Kontra
     , returnRightOrMZero
     , param
     , currentService
+    , currentServiceID
     )
     where
 
@@ -259,3 +260,7 @@ param p action = (getDataFnM $ look p) >> action
 
 currentService :: Context -> (Maybe Service)
 currentService  ctx = fst <$> ctxservice ctx
+
+currentServiceID :: Context -> Maybe ServiceID
+currentServiceID  ctx = serviceid <$> currentService ctx
+
