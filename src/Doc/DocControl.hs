@@ -1370,6 +1370,15 @@ showTemplatesList =
   showItemList' pageTemplatesList getTemplates docSortSearchPage
 
 
+getAuthorName :: Document -> BS.ByteString
+getAuthorName doc = 
+  let Just authorsiglink = getAuthorSigLink doc
+      authorfstname = signatoryfstname $ signatorydetails authorsiglink
+      authorsndname = signatorysndname $ signatorydetails authorsiglink
+      authoremail = signatoryemail $ signatorydetails authorsiglink
+      authorname = BS.concat [authorfstname, BS.fromString " ", authorsndname]
+  in if BS.null authorname then authoremail else authorname
+
 showOfferList:: Kontra (Either KontraLink String)
 showOfferList= checkUserTOSGet $ do
     -- Just user is safe here because we guard for logged in user
@@ -1379,12 +1388,9 @@ showOfferList= checkUserTOSGet $ do
     friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
     let contracts = prepareDocsForList . filter ((==) Offer . documenttype) $ 
                       mydocuments ++ concat friends'Documents
-    mauthors <- mapM (query . GetUserByUserID . unAuthor . documentauthor) contracts
-    case sequence mauthors of
-      Nothing -> mzero
-      (Just authors) -> do
-        params <- getListParams
-        liftIO $ pageOffersList ctxtemplates ctxtime user (docAndAuthorSortSearchPage params (zip contracts authors))
+        authornames = map getAuthorName contracts
+    params <- getListParams
+    liftIO $ pageOffersList ctxtemplates ctxtime user (docAndAuthorSortSearchPage params (zip contracts authornames))
 
 showAttachmentList :: Kontra (Either KontraLink String)
 showAttachmentList = 
@@ -1412,8 +1418,7 @@ prepareDocsForList :: [Document] -> [Document]
 prepareDocsForList = 
   let makeunique = nub
       sort = sortBy (\d1 d2 -> compare (documentmtime d2) (documentmtime d1))
-      removedeleted = filter (not . documentdeleted) in
-  sort . makeunique . removedeleted
+  in  sort . makeunique
 
 handlePageOfDocument :: DocumentID -> Kontra (Either KontraLink Response)
 handlePageOfDocument docid = checkUserTOSGet $ handlePageOfDocument' docid Nothing
@@ -1827,7 +1832,7 @@ getTemplatesForAjax = do
                 relatedUsers <- liftIO $ query $ GetUserRelatedAccounts (userid user)
                 sharedTemplates <- liftIO $ query $ GetSharedTemplates (map userid relatedUsers)
                 let allTemplates = userTemplates ++ sharedTemplates
-                let templates = filter (not . documentdeleted) allTemplates
+                let templates = allTemplates
                 let templatesOfGoodType =  filter (matchingType doctype) templates
                 content <- liftIO $ templatesForAjax (ctxtemplates ctx) (ctxtime ctx) user doctype $ docSortSearchPage params templatesOfGoodType
                 simpleResponse content
@@ -1841,7 +1846,7 @@ handleCreateFromTemplate = withUserPost $ do
      case docid of 
          Just did -> do
              let user = fromJust ctxmaybeuser
-             document@Document{ documentauthor } <- queryOrFail $ GetDocumentByDocumentID $ did
+             document <- queryOrFail $ GetDocumentByDocumentID $ did
              isShared <- isShared user document
              newdoc <- case (isUserAuthor document user, isShared) of
                          (True, _) -> update $ SignableFromDocumentID did
@@ -1854,9 +1859,11 @@ handleCreateFromTemplate = withUserPost $ do
      where
        isShared :: User -> Document -> Kontra Bool
        isShared user document = do
+         let Just authorsiglink = getAuthorSigLink document
+             Just authorid = maybesignatory authorsiglink
          relatedaccounts <- query $ GetUserRelatedAccounts (userid user)
-         return $ ((documentsharing document) == Shared)
-                  && ((unAuthor $ documentauthor document) `elem` (map userid relatedaccounts))
+         return $ (documentsharing document == Shared)
+                  && (authorid `elem` (map userid relatedaccounts))
 
 -- | temporary for migrating data into the document structure
 -- Make sure to only allow superuser

@@ -73,13 +73,12 @@ personsFromDocument :: Document -> [(Seal.Person, SignInfo, SignInfo, Bool, Mayb
 personsFromDocument document = 
     let
         links = filter isSignatory $ documentsignatorylinks document
-        authorid = unAuthor $ documentauthor document
-        x (SignatoryLink{ signatorydetails
-                        , maybesigninfo = Just signinfo
-                        , maybeseeninfo
-                        , maybesignatory
-                        , signatorysignatureinfo
-                        })
+        x (sl@SignatoryLink { signatorydetails
+                            , maybesigninfo = Just signinfo
+                            , maybeseeninfo
+                            , maybesignatory
+                            , signatorysignatureinfo
+                            })
              -- FIXME: this one should really have seentime always...
              = ((personFromSignatoryDetails signatorydetails)
                 { Seal.emailverified = True
@@ -88,7 +87,7 @@ personsFromDocument document =
                 , Seal.numberverified = numberverified}
               , maybe signinfo id maybeseeninfo
               , signinfo
-              , maybe False ((==) authorid) maybesignatory
+              , siglinkIsAuthor sl
               , maybe Nothing (Just . signatureinfoprovider) signatorysignatureinfo
               , map head $ words $ BS.toString $ signatoryname signatorydetails
               )
