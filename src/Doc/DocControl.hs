@@ -1867,11 +1867,13 @@ handleCreateFromTemplate = withUserPost $ do
 
 -- | temporary for migrating data into the document structure
 -- Make sure to only allow superuser
-migrateDocSigLinks :: Kontra KontraLink
+migrateDocSigLinks :: Kontra Response
 migrateDocSigLinks = onlySuperUser $ do
   docs <- query $ GetDocuments
   forM_ docs (\doc -> do
                 author <- queryOrFail $ GetUserByUserID $ unAuthor $ documentauthor doc
                 _ <- update $ MigrateToSigLinks (documentid doc) author
                 return ())
-  return LinkMain
+  addFlashMsg OperationDone "All documents migrated!"
+  return $ sendRedirect LinkMain
+
