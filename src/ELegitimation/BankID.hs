@@ -194,9 +194,9 @@ handleSignPostBankID docid signid magic = do
             case mfinal of
                 -- either number or name do not match
                 Left (msg, sfn, sln, spn) -> do
-                    author <- queryOrFail $ GetUserByUserID $ unAuthor $ documentauthor document
-                    let authorname = prettyName author
-                        authoremail = unEmail $ useremail $ userinfo author
+                    let Just authorsiglink = getAuthorSigLink document
+                        authorname = personname authorsiglink
+                        authoremail = signatoryemail $ signatorydetails authorsiglink
                     liftIO $ print msg
                     Log.debug msg
                     txt <- liftIO $ renderTemplate ctxtemplates "signCanceledDataMismatchModal" $ do
