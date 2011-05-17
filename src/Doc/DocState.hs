@@ -85,7 +85,7 @@ import Debug.Trace
 import Misc
 import Control.Monad
 import MinutesTime
-import Data.List (zipWith4,partition, find)
+import Data.List (zipWith4,partition, find, nub)
 import System.Random
 import Data.Word
 import Data.Int
@@ -120,8 +120,9 @@ getDocumentsByAuthor userid = do
 
 getDocumentsByUser :: User -> Query Documents [Document]
 getDocumentsByUser user = do
-    signatoryDocs <- getDocumentsBySignatory $ user
-    return $ signatoryDocs
+  authorDocs <- getDocumentsByAuthor $ userid user
+  signatoryDocs <- getDocumentsBySignatory $ user
+  return $ nub (authorDocs ++ signatoryDocs)
     
 filterSignatoryLinksByUser doc user = 
     [sl | sl <- documentsignatorylinks doc
