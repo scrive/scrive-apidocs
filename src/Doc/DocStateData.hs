@@ -860,10 +860,45 @@ data Document21 = Document21
     , documentservice21                :: Maybe ServiceID
     } deriving Typeable
 
+data Document22 = Document22
+    { documentid22                     :: DocumentID
+    , documenttitle22                  :: BS.ByteString
+    , documentauthor22                 :: Author                  -- to be moved to siglinks
+    , documentsignatorylinks22         :: [SignatoryLink]
+    , documentfiles22                  :: [File]
+    , documentsealedfiles22            :: [File]
+    , documentstatus22                 :: DocumentStatus
+    , documenttype22                   :: DocumentType
+    , documentfunctionality22          :: DocumentFunctionality
+    , documentctime22                  :: MinutesTime
+    , documentmtime22                  :: MinutesTime
+    , documentdaystosign22             :: Maybe Int    
+    , documenttimeouttime22            :: Maybe TimeoutTime
+    , documentinvitetime22             :: Maybe SignInfo
+    , documentdeleted22                :: Bool                    -- to be moved to links
+    , documentlog22                    :: [DocumentLogEntry]      -- to be made into plain text
+    , documentinvitetext22             :: BS.ByteString
+    , documenttrustweaverreference22   :: Maybe BS.ByteString
+    , documentallowedidtypes22         :: [IdentificationType]
+    , documentcsvupload22              :: Maybe CSVUpload
+    , authorfstnameplacements22        :: [FieldPlacement]        -- the below to be moved to siglinks
+    , authorsndnameplacements22        :: [FieldPlacement]
+    , authorcompanyplacements22        :: [FieldPlacement]
+    , authoremailplacements22          :: [FieldPlacement]
+    , authorpersonalnumberplacements22 :: [FieldPlacement]
+    , authorcompanynumberplacements22  :: [FieldPlacement]
+    , authorotherfields22              :: [FieldDefinition]
+    , documentcancelationreason22      :: Maybe CancelationReason -- When a document is cancelled, there are two (for the moment) possible explanations. Manually cancelled by the author and automatically cancelled by the eleg service because the wrong person was signing.
+    , documentsharing22                :: DocumentSharing
+    , documentrejectioninfo22          :: Maybe (MinutesTime, SignatoryLinkID, BS.ByteString)
+    , documenttags22                   :: [DocumentTag]
+    , documentservice22                :: Maybe ServiceID
+    , documentattachments22            :: [DocumentID]
+    }
+
 data Document = Document
     { documentid                     :: DocumentID
     , documenttitle                  :: BS.ByteString
-    , documentauthor                 :: Author                  -- to be moved to siglinks
     , documentsignatorylinks         :: [SignatoryLink]
     , documentfiles                  :: [File]
     , documentsealedfiles            :: [File]
@@ -875,19 +910,11 @@ data Document = Document
     , documentdaystosign             :: Maybe Int    
     , documenttimeouttime            :: Maybe TimeoutTime
     , documentinvitetime             :: Maybe SignInfo
-    , documentdeleted                :: Bool                    -- to be moved to links
     , documentlog                    :: [DocumentLogEntry]      -- to be made into plain text
     , documentinvitetext             :: BS.ByteString
     , documenttrustweaverreference   :: Maybe BS.ByteString
     , documentallowedidtypes         :: [IdentificationType]
     , documentcsvupload              :: Maybe CSVUpload
-    , authorfstnameplacements        :: [FieldPlacement]        -- the below to be moved to siglinks
-    , authorsndnameplacements        :: [FieldPlacement]
-    , authorcompanyplacements        :: [FieldPlacement]
-    , authoremailplacements          :: [FieldPlacement]
-    , authorpersonalnumberplacements :: [FieldPlacement]
-    , authorcompanynumberplacements  :: [FieldPlacement]
-    , authorotherfields              :: [FieldDefinition]
     , documentcancelationreason      :: Maybe CancelationReason -- When a document is cancelled, there are two (for the moment) possible explanations. Manually cancelled by the author and automatically cancelled by the eleg service because the wrong person was signing.
     , documentsharing                :: DocumentSharing
     , documentrejectioninfo          :: Maybe (MinutesTime, SignatoryLinkID, BS.ByteString)
@@ -1566,9 +1593,14 @@ $(deriveSerialize ''Document21)
 instance Version Document21 where
     mode = extension 21 (Proxy :: Proxy Document20)
 
+$(deriveSerialize ''Document22)
+instance Version Document22 where
+    mode = extension 22 (Proxy :: Proxy Document21)
+
 $(deriveSerialize ''Document)
 instance Version Document where
-    mode = extension 22 (Proxy :: Proxy Document21)
+    mode = extension 23 (Proxy :: Proxy Document22)
+
 
 instance Migrate DocumentHistoryEntry0 DocumentHistoryEntry where
         migrate (DocumentHistoryCreated0 { dochisttime0 }) = 
@@ -2186,7 +2218,7 @@ instance Migrate Document20 Document21 where
                 }        
 
 
-instance Migrate Document21 Document where
+instance Migrate Document21 Document22 where
     migrate (Document21
              { documentid21
              , documenttitle21
@@ -2220,41 +2252,104 @@ instance Migrate Document21 Document where
              , documentrejectioninfo21
              , documenttags21
              , documentservice21
-             }) = Document
-                { documentid                     = documentid21
-                , documenttitle                  = documenttitle21
-                , documentauthor                 = documentauthor21
-                , documentsignatorylinks         = documentsignatorylinks21
-                , documentfiles                  = documentfiles21
-                , documentsealedfiles            = documentsealedfiles21
-                , documentstatus                 = documentstatus21
-                , documenttype                   = documenttype21
-                , documentfunctionality          = documentfunctionality21
-                , documentctime                  = documentctime21
-                , documentmtime                  = documentmtime21
-                , documentdaystosign             = documentdaystosign21
-                , documenttimeouttime            = documenttimeouttime21
-                , documentinvitetime             = documentinvitetime21
-                , documentdeleted                = documentdeleted21
-                , documentlog                    = documentlog21
-                , documentinvitetext             = documentinvitetext21
-                , documenttrustweaverreference   = documenttrustweaverreference21
-                , documentallowedidtypes         = documentallowedidtypes21
-                , documentcsvupload              = documentcsvupload21
-                , authorfstnameplacements        = authorfstnameplacements21
-                , authorsndnameplacements        = authorsndnameplacements21
-                , authorcompanyplacements        = authorcompanyplacements21
-                , authoremailplacements          = authoremailplacements21
-                , authorpersonalnumberplacements = authorpersonalnumberplacements21
-                , authorcompanynumberplacements  = authorcompanynumberplacements21
-                , authorotherfields              = authorotherfields21
-                , documentcancelationreason      = documentcancelationreason21
-                , documentsharing                = documentsharing21
-                , documentrejectioninfo          = documentrejectioninfo21
-                , documenttags                   = documenttags21   
-                , documentservice                = documentservice21
-                , documentattachments            = []
+             }) = Document22
+                { documentid22                     = documentid21
+                , documenttitle22                  = documenttitle21
+                , documentauthor22                 = documentauthor21
+                , documentsignatorylinks22         = documentsignatorylinks21
+                , documentfiles22                  = documentfiles21
+                , documentsealedfiles22            = documentsealedfiles21
+                , documentstatus22                 = documentstatus21
+                , documenttype22                   = documenttype21
+                , documentfunctionality22          = documentfunctionality21
+                , documentctime22                  = documentctime21
+                , documentmtime22                  = documentmtime21
+                , documentdaystosign22             = documentdaystosign21
+                , documenttimeouttime22            = documenttimeouttime21
+                , documentinvitetime22             = documentinvitetime21
+                , documentdeleted22                = documentdeleted21
+                , documentlog22                    = documentlog21
+                , documentinvitetext22             = documentinvitetext21
+                , documenttrustweaverreference22   = documenttrustweaverreference21
+                , documentallowedidtypes22         = documentallowedidtypes21
+                , documentcsvupload22              = documentcsvupload21
+                , authorfstnameplacements22        = authorfstnameplacements21
+                , authorsndnameplacements22        = authorsndnameplacements21
+                , authorcompanyplacements22        = authorcompanyplacements21
+                , authoremailplacements22          = authoremailplacements21
+                , authorpersonalnumberplacements22 = authorpersonalnumberplacements21
+                , authorcompanynumberplacements22  = authorcompanynumberplacements21
+                , authorotherfields22              = authorotherfields21
+                , documentcancelationreason22      = documentcancelationreason21
+                , documentsharing22                = documentsharing21
+                , documentrejectioninfo22          = documentrejectioninfo21
+                , documenttags22                   = documenttags21   
+                , documentservice22                = documentservice21
+                , documentattachments22            = []
                 }
+
+instance Migrate Document22 Document where
+    migrate (Document22
+             { documentid22
+             , documenttitle22
+             , documentauthor22
+             , documentsignatorylinks22
+             , documentfiles22
+             , documentsealedfiles22
+             , documentstatus22
+             , documenttype22
+             , documentfunctionality22
+             , documentctime22
+             , documentmtime22
+             , documentdaystosign22
+             , documenttimeouttime22
+             , documentinvitetime22
+             , documentdeleted22
+             , documentlog22
+             , documentinvitetext22
+             , documenttrustweaverreference22
+             , documentallowedidtypes22
+             , documentcsvupload22
+             , authorfstnameplacements22
+             , authorsndnameplacements22
+             , authorcompanyplacements22
+             , authoremailplacements22
+             , authorpersonalnumberplacements22
+             , authorcompanynumberplacements22
+             , authorotherfields22
+             , documentcancelationreason22
+             , documentsharing22
+             , documentrejectioninfo22
+             , documenttags22
+             , documentservice22
+             , documentattachments22
+             }) = Document
+                { documentid                     = documentid22
+                , documenttitle                  = documenttitle22
+                , documentsignatorylinks         = documentsignatorylinks22
+                , documentfiles                  = documentfiles22
+                , documentsealedfiles            = documentsealedfiles22
+                , documentstatus                 = documentstatus22
+                , documenttype                   = documenttype22
+                , documentfunctionality          = documentfunctionality22
+                , documentctime                  = documentctime22
+                , documentmtime                  = documentmtime22
+                , documentdaystosign             = documentdaystosign22
+                , documenttimeouttime            = documenttimeouttime22
+                , documentinvitetime             = documentinvitetime22
+                , documentlog                    = documentlog22
+                , documentinvitetext             = documentinvitetext22
+                , documenttrustweaverreference   = documenttrustweaverreference22
+                , documentallowedidtypes         = documentallowedidtypes22
+                , documentcsvupload              = documentcsvupload22
+                , documentcancelationreason      = documentcancelationreason22
+                , documentsharing                = documentsharing22
+                , documentrejectioninfo          = documentrejectioninfo22
+                , documenttags                   = documenttags22   
+                , documentservice                = documentservice22
+                , documentattachments            = documentattachments22
+                }
+
 
 $(deriveSerialize ''DocumentStatus)
 instance Version DocumentStatus where
