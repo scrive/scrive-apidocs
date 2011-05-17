@@ -156,10 +156,10 @@ remindMailSignedStandardHeader=
       <p>Hej <strong>$personname$</strong></p>
       $if(contract)$
       <p><strong>$author$</strong> har begärt att vi ska skicka dokumentet <strong>$documenttitle$</strong>
-        till dig som du har undertecknat via tjänsten SkrivaPå. Dokumentet bifogas med detta mail.</p>
+        till dig. Dokumentet har undertecknats av dig via tjänsten SkrivaPå. Dokumentet bifogas med detta mail.</p>
       $elseif(offer)$
       <p><strong>$author$</strong> har  har begärt att vi ska skicka offerten  <strong>$documenttitle$</strong>
-        dig som du har accepterat via tjänsten SkrivaPå. Offerten bifogas med detta mail.</p>
+        till dig. Offerten har accepterats av dig via tjänsten SkrivaPå. Den accepterade offerten bifogas med detta mail.</p>
       $endif$
     </span>
 ####
@@ -263,9 +263,9 @@ inviteSubaccountMailContent=
 
     <p><strong>$supervisorname$</strong> har bjudit in dig till ett
     underkonto på SkrivaPå genom vilket du kan skriva avtal
-    för <strong>$companyname$</strong>. Observera att detta konto inte
-    är avsett för privat bruk eftersom samtliga dokument i kontot
-    tillhör organisationen <strong>$companyname$</strong>.
+    för organisationen <strong>$companyname$</strong>. Observera att detta konto inte
+    är avsett för privat bruk då samtliga dokument i kontot
+    tillhör organisationen
 
     <p>Användarnamn:<br/>
     $email$</p>
@@ -360,7 +360,7 @@ invitationMailUndeliveredContent=
       <p>Hej $authorname$,</p>
       <p>Adressen $email$ existerar inte och därför kunde vi inte leverera din inbjudan att underteckna via e-post.
 	Processen har därmed avbrutits. Gör så här om du vill börja om:</p>
-      <p>1. Kontrollera vilken som är mottagarens korrekta adress<br/>
+      <p>1. Kontrollera mottagarens adress<br/>
 	2. Klicka på dokumentet i ditt arkiv eller på följande länk<br/>
 	<a href="$ctxhostpart$$unsigneddoclink$">$ctxhostpart$$unsigneddoclink$</a><br/>
         <br/>
@@ -416,7 +416,7 @@ whohadsignedinfoforpreview=
 legalparagraph=
 <p style="width:90%;font-size:8pt;font-style:italic;"> 
    Detta e-postmeddelande innehåller konfidentiell information och får inte vidarebefordras.
-   Avslöjande, kopiering, distribution eller annan handling som rör informationen i 
+   Avslöjande, kopiering, distribution eller annan behandling av informationen i 
    meddelandet är förbjuden och kan vara olagligt. Om du felaktigt mottagit detta meddelande 
    ber vi dig omedelbart informera avsändaren samt att därefter radera meddelandet. 
 </p>
@@ -450,8 +450,8 @@ mailMismatchAuthorContent=
 
 <p>Vi beklagar, de uppgifter du angivet i <a href="$doclink$">$documenttitle$</a> matchar inte personuppgifterna hos <a href="mailto:$bademail$">$badname$</a>s e-legitimation.</p>
 
-<p>Avtalsprocessen för <a href="$doclink$">$documenttitle$</a> har därför avbrutits. Du kan välja att starta om avtalsprocessen och skicka en ny inbjudan till dina motparter, ett e-post meddelande har även skickats ut till dina motparter som meddelat dem om att avtalsprocessen har avbrutits.</p>
-
+<p>Avtalsprocessen för <a href="$doclink$">$documenttitle$</a> har därför avbrutits. Du kan välja att starta om avtalsprocessen och skicka en ny inbjudan till dina motparter, ett e-post meddelande har även skickats ut till dina motparter med information om att avtalsprocessen har avbrutits.</p>
+ 
 <p><strong>Felrapport:</strong></p>
 
 $messages:noescape()$
@@ -465,12 +465,11 @@ mailInviteUserAsSubaccountContent=
   <p>Hej $invited.fullnameOrEmail$,</p>
   <p>Användaren $supervisor.fullnamePlusEmail$ har
  begärt att få bli huvudkonto till ditt konto. Om du accepterar blir
- du underkonto. Du kommer fortfarande att kunna se och administrera
- dina avtal som vanligt, dock tar huvudkontot över ägarskapet över
+ ditt konto ett underkonto till avsändaren. Du kommer fortfarande att kunna se och administrera dina avtal, dock tar huvudkontot över ägarskapet över
  samtliga dokument i ditt konto. </p>
 
  <p>Vänligen iaktta försiktighet innan du accepterar. Särskilt om du
-  har privata dokument på ditt konto.</p>
+  har privata dokument i kontot.</p>
 
  <p>Så här går du vidare</p>
  <ul>
