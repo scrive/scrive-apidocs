@@ -105,7 +105,7 @@ pageFromBody ctx@Context{ ctxmaybeuser
     content <- liftIO $ renderHSPToString <div class="mainContainer"><% body %></div>
     wholePage <- liftIO $ renderTemplate ctxtemplates "wholePage" $ do
         field "content" content
-        standardPageFields ctx title showCreateAccount loginOn referer email
+        standardPageFields ctx title False showCreateAccount loginOn referer email
     return $ cdata wholePage
 
 
@@ -115,7 +115,7 @@ embeddedPage pb = do
     bdy <- renderTemplateM "embeddedPage" $ do 
             field "content" pb
             serviceFields (ctxservice ctx)
-            standardPageFields ctx "" False False Nothing Nothing
+            standardPageFields ctx "" False False False Nothing Nothing
     res <- simpleResponse bdy 
     clearFlashMsgs
     return res
@@ -140,39 +140,39 @@ sitemapPage = do
                                 xs -> xs
 
 priceplanPage :: Kontra String
-priceplanPage = get >>= \ctx -> renderTemplateAsPage ctx "priceplanPage" True
+priceplanPage = get >>= \ctx -> renderTemplateAsPage ctx "priceplanPage" True True
 
 securityPage :: Kontra String
-securityPage = get >>= \ctx -> renderTemplateAsPage ctx "securityPage" True
+securityPage = get >>= \ctx -> renderTemplateAsPage ctx "securityPage" True True
 
 legalPage :: Kontra String
-legalPage = get >>= \ctx -> renderTemplateAsPage ctx "legalPage" True
+legalPage = get >>= \ctx -> renderTemplateAsPage ctx "legalPage" True True
 
 privacyPolicyPage :: Kontra String
-privacyPolicyPage = get >>= \ctx -> renderTemplateAsPage ctx "privacyPolicyPage" True
+privacyPolicyPage = get >>= \ctx -> renderTemplateAsPage ctx "privacyPolicyPage" True True
 
 termsPage :: Kontra String
-termsPage = get >>= \ctx -> renderTemplateAsPage ctx "termsPage" True
+termsPage = get >>= \ctx -> renderTemplateAsPage ctx "termsPage" True True
 
 aboutPage :: Kontra String
-aboutPage = get >>= \ctx -> renderTemplateAsPage ctx "aboutPage" True
+aboutPage = get >>= \ctx -> renderTemplateAsPage ctx "aboutPage" True True
 
 partnersPage :: Kontra String
-partnersPage = get >>= \ctx -> renderTemplateAsPage ctx "partnersPage" True
+partnersPage = get >>= \ctx -> renderTemplateAsPage ctx "partnersPage" True True
 
 clientsPage :: Kontra String
-clientsPage = get >>= \ctx -> renderTemplateAsPage ctx "clientsPage" True
+clientsPage = get >>= \ctx -> renderTemplateAsPage ctx "clientsPage" True True
 
 {- |
     Render a template as an entire page.
 -}
-renderTemplateAsPage :: Context -> String -> Bool -> Kontra String
-renderTemplateAsPage ctx@Context{ctxtemplates} templateName showCreateAccount = do
+renderTemplateAsPage :: Context -> String -> Bool -> Bool -> Kontra String
+renderTemplateAsPage ctx@Context{ctxtemplates} templateName publicpage showCreateAccount = do
     loginOn <- getLoginOn
     loginreferer <- getLoginReferer
     let showCreateAccount2 = showCreateAccount && (isNothing $ ctxmaybeuser ctx)
     wholePage <- liftIO $ renderTemplate ctxtemplates templateName $ do
-        standardPageFields ctx kontrakcja showCreateAccount2 loginOn loginreferer Nothing
+        standardPageFields ctx kontrakcja publicpage showCreateAccount2 loginOn loginreferer Nothing
     return wholePage
 
 getLoginOn :: Kontra Bool
@@ -188,12 +188,13 @@ getLoginReferer = do
     let loginreferer = Just $ fromMaybe (curr ++ qs) referer
     return loginreferer
 
-standardPageFields :: Context -> String -> Bool -> Bool -> Maybe String -> Maybe String -> Fields
-standardPageFields ctx title showCreateAccount loginOn referer email = do
+standardPageFields :: Context -> String -> Bool -> Bool -> Bool -> Maybe String -> Maybe String -> Fields
+standardPageFields ctx title publicpage showCreateAccount loginOn referer email = do
     field "title" title
     field "showCreateAccount" showCreateAccount
     mainLinksFields 
     contextInfoFields ctx
+    publicSafeFlagField ctx loginOn publicpage
     loginModal loginOn referer email
 
 {- |
@@ -231,6 +232,7 @@ firstPage :: Context -> Bool -> Maybe String -> Maybe String ->  IO String
 firstPage ctx loginOn referer email = 
     renderTemplate (ctxtemplates ctx) "firstPage"  $ do 
         contextInfoFields ctx
+        publicSafeFlagField ctx loginOn True
         mainLinksFields
         loginModal loginOn referer email
 
@@ -260,7 +262,16 @@ contextInfoFields ctx = do
     field "protocol" $ if (ctxproduction ctx) then "https:" else "http:"
     field "prefix" ""
     field "production" (ctxproduction ctx)
-    field "publicsafe" (isNothing $ ctxmaybeuser ctx)
+{- |
+    Only public safe is explicitely set as a public page,
+    and nobody is trying to login, and a user isn't logged in.
+    The flag means that things like snoobi won't be contacted.
+-}
+publicSafeFlagField :: Context -> Bool -> Bool -> Fields
+publicSafeFlagField ctx loginOn publicpage = do
+    field "publicsafe" $ publicpage 
+                           && (not loginOn) 
+                           && (isNothing $ ctxmaybeuser ctx)
 
 flashMessageFields :: KontrakcjaTemplates -> FlashMessage -> Fields
 flashMessageFields templates flash = do
