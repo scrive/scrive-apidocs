@@ -67,7 +67,7 @@ module Doc.DocState
     , SignatureInfo(..)
     , SignatureProvider(..)
     , CancelationReason(..)
-    , MigrateToSigLinks(..)
+--    , MigrateToSigLinks(..)
     )
 where
 import Happstack.Data
@@ -978,7 +978,7 @@ templateFromDocument docid = modifySignable docid $ \doc ->
                                     then ContractTemplate
                                     else documenttype doc
         }
-
+{-
 -- | Migrate author to the documentsignlinks so that he is not special anymore
 migrateToSigLinks :: DocumentID -> User -> Update Documents ()
 migrateToSigLinks docid author = do 
@@ -1020,7 +1020,7 @@ migrateToSigLinks docid author = do
                                                 authorotherfields doc
                                           }
   return ()
-                                 
+-}                                 
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocuments
                         , 'getDocumentsByAuthor
@@ -1079,5 +1079,5 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'signableFromSharedDocumentID
                         , 'contractFromSignatoryData
                         , 'templateFromDocument
-                        , 'migrateToSigLinks
+--                        , 'migrateToSigLinks
                         ])
