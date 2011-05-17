@@ -897,6 +897,33 @@ data Document22 = Document22
     , documentattachments22            :: [DocumentID]
     } deriving Typeable
 
+data Document23 = Document23
+    { documentid23                     :: DocumentID
+    , documenttitle23                  :: BS.ByteString
+    , documentsignatorylinks23         :: [SignatoryLink]
+    , documentfiles23                  :: [File]
+    , documentsealedfiles23            :: [File]
+    , documentstatus23                 :: DocumentStatus
+    , documenttype23                   :: DocumentType
+    , documentfunctionality23          :: DocumentFunctionality
+    , documentctime23                  :: MinutesTime
+    , documentmtime23                  :: MinutesTime
+    , documentdaystosign23             :: Maybe Int    
+    , documenttimeouttime23            :: Maybe TimeoutTime
+    , documentinvitetime23             :: Maybe SignInfo
+    , documentlog23                    :: [DocumentLogEntry]      -- to be made into plain text
+    , documentinvitetext23             :: BS.ByteString
+    , documenttrustweaverreference23   :: Maybe BS.ByteString
+    , documentallowedidtypes23         :: [IdentificationType]
+    , documentcsvupload23              :: Maybe CSVUpload
+    , documentcancelationreason23      :: Maybe CancelationReason -- When a document is cancelled, there are two (for the moment) possible explanations. Manually cancelled by the author and automatically cancelled by the eleg service because the wrong person was signing.
+    , documentsharing23                :: DocumentSharing
+    , documentrejectioninfo23          :: Maybe (MinutesTime, SignatoryLinkID, BS.ByteString)
+    , documenttags23                   :: [DocumentTag]
+    , documentservice23                :: Maybe ServiceID
+    , documentattachments23            :: [DocumentID]
+    } deriving Typeable
+
 data Document = Document
     { documentid                     :: DocumentID
     , documenttitle                  :: BS.ByteString
@@ -922,6 +949,7 @@ data Document = Document
     , documenttags                   :: [DocumentTag]
     , documentservice                :: Maybe ServiceID
     , documentattachments            :: [DocumentID]
+    , documentoriginalcompany        :: Maybe CompanyID
     }
 
 data CancelationReason =  ManualCancel
@@ -1598,11 +1626,14 @@ $(deriveSerialize ''Document22)
 instance Version Document22 where
     mode = extension 22 (Proxy :: Proxy Document21)
 
-$(deriveSerialize ''Document)
-instance Version Document where
+$(deriveSerialize ''Document23)
+instance Version Document23 where
     mode = extension 23 (Proxy :: Proxy Document22)
 
-
+$(deriveSerialize ''Document)
+instance Version Document where
+    mode = extension 24 (Proxy :: Proxy Document23)
+    
 instance Migrate DocumentHistoryEntry0 DocumentHistoryEntry where
         migrate (DocumentHistoryCreated0 { dochisttime0 }) = 
             DocumentHistoryCreated dochisttime0
@@ -2289,7 +2320,7 @@ instance Migrate Document21 Document22 where
                 , documentattachments22            = []
                 }
 
-instance Migrate Document22 Document where
+instance Migrate Document22 Document23 where
     migrate (Document22
              { documentid22
              , documenttitle22
@@ -2324,31 +2355,86 @@ instance Migrate Document22 Document where
              , documenttags22
              , documentservice22
              , documentattachments22
+             }) = Document23
+                { documentid23                     = documentid22
+                , documenttitle23                  = documenttitle22
+                , documentsignatorylinks23         = documentsignatorylinks22
+                , documentfiles23                  = documentfiles22
+                , documentsealedfiles23            = documentsealedfiles22
+                , documentstatus23                 = documentstatus22
+                , documenttype23                   = documenttype22
+                , documentfunctionality23          = documentfunctionality22
+                , documentctime23                  = documentctime22
+                , documentmtime23                  = documentmtime22
+                , documentdaystosign23             = documentdaystosign22
+                , documenttimeouttime23            = documenttimeouttime22
+                , documentinvitetime23             = documentinvitetime22
+                , documentlog23                    = documentlog22
+                , documentinvitetext23             = documentinvitetext22
+                , documenttrustweaverreference23   = documenttrustweaverreference22
+                , documentallowedidtypes23         = documentallowedidtypes22
+                , documentcsvupload23              = documentcsvupload22
+                , documentcancelationreason23      = documentcancelationreason22
+                , documentsharing23                = documentsharing22
+                , documentrejectioninfo23          = documentrejectioninfo22
+                , documenttags23                   = documenttags22   
+                , documentservice23                = documentservice22
+                , documentattachments23            = documentattachments22
+                }
+
+
+instance Migrate Document23 Document where
+    migrate (Document23
+             { documentid23
+             , documenttitle23
+             , documentsignatorylinks23
+             , documentfiles23
+             , documentsealedfiles23
+             , documentstatus23
+             , documenttype23
+             , documentfunctionality23
+             , documentctime23
+             , documentmtime23
+             , documentdaystosign23
+             , documenttimeouttime23
+             , documentinvitetime23
+             , documentlog23
+             , documentinvitetext23
+             , documenttrustweaverreference23
+             , documentallowedidtypes23
+             , documentcsvupload23
+             , documentcancelationreason23
+             , documentsharing23
+             , documentrejectioninfo23
+             , documenttags23
+             , documentservice23
+             , documentattachments23
              }) = Document
-                { documentid                     = documentid22
-                , documenttitle                  = documenttitle22
-                , documentsignatorylinks         = documentsignatorylinks22
-                , documentfiles                  = documentfiles22
-                , documentsealedfiles            = documentsealedfiles22
-                , documentstatus                 = documentstatus22
-                , documenttype                   = documenttype22
-                , documentfunctionality          = documentfunctionality22
-                , documentctime                  = documentctime22
-                , documentmtime                  = documentmtime22
-                , documentdaystosign             = documentdaystosign22
-                , documenttimeouttime            = documenttimeouttime22
-                , documentinvitetime             = documentinvitetime22
-                , documentlog                    = documentlog22
-                , documentinvitetext             = documentinvitetext22
-                , documenttrustweaverreference   = documenttrustweaverreference22
-                , documentallowedidtypes         = documentallowedidtypes22
-                , documentcsvupload              = documentcsvupload22
-                , documentcancelationreason      = documentcancelationreason22
-                , documentsharing                = documentsharing22
-                , documentrejectioninfo          = documentrejectioninfo22
-                , documenttags                   = documenttags22   
-                , documentservice                = documentservice22
-                , documentattachments            = documentattachments22
+                { documentid                     = documentid23
+                , documenttitle                  = documenttitle23
+                , documentsignatorylinks         = documentsignatorylinks23
+                , documentfiles                  = documentfiles23
+                , documentsealedfiles            = documentsealedfiles23
+                , documentstatus                 = documentstatus23
+                , documenttype                   = documenttype23
+                , documentfunctionality          = documentfunctionality23
+                , documentctime                  = documentctime23
+                , documentmtime                  = documentmtime23
+                , documentdaystosign             = documentdaystosign23
+                , documenttimeouttime            = documenttimeouttime23
+                , documentinvitetime             = documentinvitetime23
+                , documentlog                    = documentlog23
+                , documentinvitetext             = documentinvitetext23
+                , documenttrustweaverreference   = documenttrustweaverreference23
+                , documentallowedidtypes         = documentallowedidtypes23
+                , documentcsvupload              = documentcsvupload23
+                , documentcancelationreason      = documentcancelationreason23
+                , documentsharing                = documentsharing23
+                , documentrejectioninfo          = documentrejectioninfo23
+                , documenttags                   = documenttags23  
+                , documentservice                = documentservice23
+                , documentattachments            = documentattachments23
+                , documentoriginalcompany        = Nothing
                 }
 
 
@@ -2456,6 +2542,8 @@ instance Indexable Document where
                                          Nothing -> []) :: [TimeoutTime])
                       , ixFun (\x -> [documenttype x] :: [DocumentType])
                       , ixFun (\x -> documenttags x :: [DocumentTag])
+                      , ixFun (\x -> [documentservice x] :: [Maybe ServiceID])
+                      , ixFun (\x -> [documentoriginalcompany x] :: [Maybe CompanyID])
                       ]
                                                     
 instance Component Documents where

@@ -100,11 +100,14 @@ import qualified Data.Generics.SYB.WithClass.Derive as SYB
 import Doc.DocStateData
 import Doc.DocUtils
 import Doc.DocStateUtils
+import Company.CompanyState
+import API.Service.ServiceState
 
-getDocuments:: Query Documents [Document]
-getDocuments = do
+
+getDocuments:: (Maybe ServiceID) -> Query Documents [Document]
+getDocuments mservice = do
     documents <- ask
-    return $ toList documents  
+    return $ toList (documents @= mservice)
 
 getDocumentByDocumentID :: DocumentID -> Query Documents (Maybe Document)
 getDocumentByDocumentID documentid = do
@@ -163,7 +166,15 @@ newDocument :: User
             -> DocumentType
             -> MinutesTime 
             -> Update Documents Document
-newDocument user title documenttype ctime = do
+newDocument = newDocument' Nothing
+
+newDocument' :: (Maybe CompanyID) 
+            -> User
+            -> BS.ByteString
+            -> DocumentType
+            -> MinutesTime 
+            -> Update Documents Document
+newDocument' mcompany user title documenttype ctime = do
   authorlink0 <- (signLinkFromDetails
                  (signatoryDetailsFromUser user) 
                  [SignatoryPartner, SignatoryAuthor]) 
@@ -194,6 +205,7 @@ newDocument user title documenttype ctime = do
           , documenttags = []
           , documentservice = userservice user
           , documentattachments = []
+          , documentoriginalcompany  = mcompany `mplus` usercompany user
           } `appendHistory` [DocumentHistoryCreated ctime]
 
   insertNewDocument doc
@@ -678,10 +690,10 @@ setDocumentTags docid doctags =
       documenttags = doctags
     }
 
-getDocumentsByTags :: [DocumentTag] -> Query Documents (Either String [Document])
-getDocumentsByTags doctags = do
+getDocumentsByTags :: (Maybe ServiceID) ->  [DocumentTag] -> Query Documents (Either String [Document])
+getDocumentsByTags mservice doctags = do
   documents <- ask
-  return . Right . toList $ (documents @* doctags)
+  return . Right . toList $ (documents @= mservice  @* doctags)
   
 mapWhen p f ls = map (\i -> if p i then f i else i) ls
 

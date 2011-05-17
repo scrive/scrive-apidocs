@@ -640,6 +640,7 @@ instance Indexable User where
                       , ixFun (\x -> maybe [] return (usersupervisor x) :: [SupervisorID])
                       , ixFun userfriends
                       , ixFun (\x -> [userservice x] :: [Maybe ServiceID])
+                      , ixFun (\x -> [usercompany x] :: [Maybe CompanyID])
                       ]
 
 
@@ -755,10 +756,10 @@ modifyUser uid action = do
                 modify (updateIx uid newuser)
                 return $ Right newuser
 
-getUserByEmail :: Maybe Service  -> Email ->  Query Users (Maybe User)
+getUserByEmail :: Maybe ServiceID  -> Email ->  Query Users (Maybe User)
 getUserByEmail service email = do
   users <- ask
-  return $  getOne (users @= email @= fmap serviceid service)
+  return $  getOne (users @= email @= service)
     
 getUserByUserID :: UserID -> Query Users (Maybe User)
 getUserByUserID userid = do

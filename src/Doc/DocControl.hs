@@ -458,7 +458,7 @@ handleAfterSigning :: Document -> SignatoryLinkID -> Kontra KontraLink
 handleAfterSigning document@Document{documentid,documenttitle} signatorylinkid = do
   ctx <- get
   signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
-  maybeuser <- query $ GetUserByEmail (currentService ctx) (Email $ signatoryemail (signatorydetails signatorylink))
+  maybeuser <- query $ GetUserByEmail (currentServiceID ctx) (Email $ signatoryemail (signatorydetails signatorylink))
   case maybeuser of
     Nothing -> do
       let details = signatorydetails signatorylink
@@ -601,7 +601,7 @@ isFriendWithSignatory uid document = do
 isFriendWithSignatoryLink :: UserID -> SignatoryLink -> Kontra Bool
 isFriendWithSignatoryLink uid sl = do
                                      ctx <- get
-                                     muser1 <- query $ GetUserByEmail (currentService ctx) $ Email $ signatoryemail $ signatorydetails $  sl
+                                     muser1 <- query $ GetUserByEmail (currentServiceID ctx) $ Email $ signatoryemail $ signatorydetails $  sl
                                      muser2 <- sequenceMM $ fmap (query . GetUserByUserID) $ maybesignatory sl
                                      return $ (isFriendOf' uid muser1) || (isFriendOf' uid muser2)
 

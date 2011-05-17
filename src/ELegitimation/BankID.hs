@@ -442,7 +442,7 @@ handleSignCanceledDataMismatch docid signatorylinkid = do
     case mcancelationreason of
         Just (ELegDataMismatch msg sid _ _ _) 
             | sid == signatorylinkid -> do
-                maybeuser <- query $ GetUserByEmail (currentService ctx) (Email $ signatoryemail (signatorydetails signatorylink))
+                maybeuser <- query $ GetUserByEmail (currentServiceID ctx) (Email $ signatoryemail (signatorydetails signatorylink))
                 content1 <- liftIO $ signCanceledDataMismatch (ctxtemplates ctx) document signatorylink (isJust maybeuser) msg
                 renderFromBody TopEmpty kontrakcja $ cdata content1
         _ -> sendRedirect $ LinkSignDoc document signatorylink
