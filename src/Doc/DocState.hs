@@ -113,13 +113,15 @@ getDocumentByDocumentID documentid = do
 getDocumentsByAuthor :: UserID -> Query Documents [Document]
 getDocumentsByAuthor userid = do
     documents <- ask
-    return $ filter (\d -> isUserIDAuthor d userid) $ toList documents
+    return $ [doc | doc <- toList documents
+                  , isUserIDAuthor doc userid
+                  , not $ isDeletedForUserID doc userid
+                  ]
 
 getDocumentsByUser :: User -> Query Documents [Document]
 getDocumentsByUser user = do
-    authoredDocs  <- getDocumentsByAuthor    $ userid user
     signatoryDocs <- getDocumentsBySignatory $ user
-    return $ authoredDocs ++ signatoryDocs
+    return $ signatoryDocs
     
 filterSignatoryLinksByUser doc user = 
     [sl | sl <- documentsignatorylinks doc
