@@ -1865,6 +1865,7 @@ handleCreateFromTemplate = withUserPost $ do
          return $ (documentsharing document == Shared)
                   && (authorid `elem` (map userid relatedaccounts))
 
+{-
 -- | temporary for migrating data into the document structure
 -- Make sure to only allow superuser
 migrateDocSigLinks :: Kontra Response
@@ -1877,3 +1878,4 @@ migrateDocSigLinks = onlySuperUser $ do
   addFlashMsg $ toFlashMsg OperationDone "All documents migrated!"
   sendRedirect LinkMain
 
+-}
