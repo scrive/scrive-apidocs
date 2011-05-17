@@ -14,10 +14,8 @@ module API.IntegrationAPI
     ( integrationAPI) 
     where
 
---import ELegitimation.BankID as BankID
 import Control.Monad.State
 import Data.Functor
-import Data.List
 import Data.Maybe
 import Doc.DocState
 import Happstack.Server hiding (simpleHTTP,host,body)
@@ -49,7 +47,7 @@ import API.API
 import Routing
 import API.Service.ServiceState
 import API.IntegrationAPIUtils
-
+import Doc.DocUtils
 {- | 
   Definition of integration API
 -}
@@ -86,13 +84,11 @@ integrationService = do
 integrationAPI :: Kontra Response
 integrationAPI =  dir "integration" $ msum [
                       apiCall "embed_document_frame" embeddDocumentFrame
-                    , apiCall "update_user"  updateUser
-                    , apiCall "get_user"  getUser
                     , apiCall "new_document" createDocument
-                    , apiCall "documents" getDocuments  
-                    , apiCall "document" getDocument
-                    , apiCall "set_tag"  setDocumentTag
-                    , apiCall "archive" archiveDocument
+                    , apiCall "documents" $  getDocuments
+                    , apiCall "document"  getDocument
+                    , apiCall "set_document_tag"  setDocumentTag
+                    , apiCall "remove_document" removeDocument
                     , apiUnknownCall
                     , dir "connect" $ hGet $ connectSession
                   ]
@@ -123,47 +119,72 @@ embeddDocumentFrame = do
                    (Just did,_) -> LinkIssueDoc did
                    (_,Just _) -> LinkContracts emptyListParams
                    _ -> LinkMain
-    return $ toJSObject [("link",JSString $ toJSString $ (ctxhostpart ctx) ++ show (LinkConnectUserSession (serviceid srv) (userid user) sid rlink))]
+    return $ toJSObject [
+        ("link",JSString $ toJSString $ (ctxhostpart ctx) ++ show 
+            (LinkConnectUserSession (serviceid srv) (userid user) sid rlink)
+        )]
     
 
-
-
-updateUser  :: IntegrationAPIFunction APIResponse
-updateUser = undefined
-
-getUser  :: IntegrationAPIFunction APIResponse
-getUser = undefined
-
 createDocument  :: IntegrationAPIFunction APIResponse
-createDocument = undefined
+createDocument = do
+   company_id <- apiAskBS "company_id"
+   title <- apiAskBS "title"
+   files <- fmap (fromMaybe []) $ apiLocal "files" $ apiMapLocal $ do
+                n <- apiAskBS "name"
+                c <- apiAskBase64 "content"
+                when (isNothing n || isNothing c) $ throwApiError API_ERROR_MISSING_VALUE "Problems with files upload"
+                return $ Just (fromJust n, fromJust c)
+   mtype <- liftMM (return . toSafeEnum) (apiAskInteger "type")
+   when (isNothing mtype) $ throwApiError API_ERROR_MISSING_VALUE "BAD DOCUMENT TYPE"
+   let doctype::DOCUMENT_TYPE = fromJust mtype
+   mtemplate <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "template_id"
+   invloved <- fmap (fromMaybe []) $ apiLocal "involved" $ apiMapLocal $ getSignatoryTMP
+   tags <- fmap (fromMaybe []) $ apiLocal "tags" $ apiMapLocal $ do
+                    n <- apiAskBS "name"
+                    v <- apiAskBS "value"
+                    when (isNothing n || isNothing v) $ throwApiError API_ERROR_MISSING_VALUE "MIssing tag name or value"
+                    return $ Just $ DocumentTag (fromJust n) (fromJust v)
+   throwApiError API_ERROR_OTHER "Not implemented yet"
 
 
 getDocuments :: IntegrationAPIFunction APIResponse
 getDocuments = do
-    user <- getRequestUser 
-    documents <- query $ GetDocumentsByUser user
-    let contracts  = filter (not . isTemplate) $  filter isContract documents
-    return $ toJSObject [("documents",JSArray $ map (JSObject .documentAPIObject) contracts )]
+    --mcompany <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
+    documents <- query $ GetDocuments
+    api_docs <- sequence $  map (api_document True)  documents
+    return $ toJSObject [("documents",JSArray $ api_docs)] 
 
 
 getDocument  :: IntegrationAPIFunction APIResponse
-getDocument = undefined
-
-
-documentAPIObject :: Document -> JSObject JSValue
-documentAPIObject doc = 
-    toJSObject [
-        ("document_id", JSString $ toJSString $ show $ documentid doc),
-        ("title", JSString $ toJSString $ BS.toString $ documenttitle doc)
-        ]
-    
-
+getDocument = do
+    mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
+    when (isNothing mdocument) $ throwApiError API_ERROR_NO_DOCUMENT "No document"
+    api_doc <- api_document True (fromJust mdocument)
+    return $ toJSObject [("document",api_doc)]
 
 setDocumentTag  :: IntegrationAPIFunction APIResponse
-setDocumentTag = undefined
+setDocumentTag =  do
+    mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
+    when (isNothing mdocument) $ throwApiError API_ERROR_NO_DOCUMENT "No document"
+    let doc = fromJust mdocument
+    mtag <- apiLocal "tag" $ do
+             liftM2 pairMaybe (apiAskBS "name") (apiAskBS "value")
+    when (isNothing mtag) $ throwApiError API_ERROR_MISSING_VALUE "Conld not read tag values"         
+    let tags = addTag (documenttags doc) (fromJust mtag)
+    res <- update $ SetDocumentTags (documentid doc) tags
+    when (isLeft res) $ throwApiError API_ERROR_NO_USER $ "Changing tag problem:" ++ fromLeft res 
+    return $ toJSObject []
 
-archiveDocument  :: IntegrationAPIFunction APIResponse
-archiveDocument = undefined
+
+--TODO this will not work since we don't have real document removal
+removeDocument  :: IntegrationAPIFunction APIResponse
+removeDocument = do
+    mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
+    when (isNothing mdocument) $ throwApiError API_ERROR_NO_DOCUMENT "No document to remove can be found"
+    let doc = fromJust mdocument
+    res <- update $ ArchiveDocumentForAll $ documentid doc
+    when (isLeft res) $ throwApiError API_ERROR_NO_DOCUMENT $ "Error while removing a document: " ++ fromLeft res
+    return $ toJSObject []
 
 {- | Call connect user to session (all passed as URL params)
      and redirect user to referer

@@ -22,6 +22,8 @@ module API.API(
      -- Diggers for JSON embedded params 
      , apiAskBS
      , apiAskString
+     , apiAskInteger
+     , apiAskBase64
      , apiAskStringMap
      , apiAskMap
      , apiMapLocal
@@ -49,6 +51,9 @@ import Text.JSON.String
 import Control.Monad.Reader
 import Control.Monad.Error
 import Doc.DocState
+import Data.Ratio
+import qualified  Codec.Binary.Base64 as BASE64
+
 {- | API calls user JSPO object as a response and work within json value as a context-}
 type APIResponse = JSObject JSValue
 type APIRequestBody = JSValue
@@ -118,6 +123,16 @@ apiAskString s = apiLocal s (fromString <$> askBody)
         fromString (JSString string) = Just $ fromJSString string
         fromString _ = Nothing 
 
+apiAskInteger::(APIContext c) => String -> APIFunction c (Maybe Integer)
+apiAskInteger s = apiLocal s (fromNumerator <$> askBody)
+    where
+        fromNumerator (JSRational _ r) = Just $ numerator r
+        fromNumerator _ = Nothing 
+        
+apiAskBase64::(APIContext c) => String -> APIFunction c (Maybe BS.ByteString)        
+apiAskBase64 s =  (fmap BS.pack) <$> join <$> (fmap $ BASE64.decode)  <$> apiAskString s
+
+
 apiAskStringMap::(APIContext c) => APIFunction c (Maybe [(String,String)])
 apiAskStringMap = join <$> fmap (foldl getStr (Just [])) <$> apiAskMap
     where
@@ -183,7 +198,7 @@ apiBody = runGetJSON readJSObject <$> getFieldWithDefault "" "body"
 -- Building pure api error.
 apiError::API_ERROR -> String ->  APIResponse
 apiError code message= toJSObject [
-      ("error" , showJSON $ fromEnum code)
+      ("error" , showJSON $ fromSafeEnum code)
     , ("error_message", showJSON message)
     ]
 
@@ -208,17 +223,17 @@ data API_ERROR =   API_ERROR_LOGIN
                  | API_ERROR_OTHER
                  
                  
-instance  Enum API_ERROR where
-    fromEnum API_ERROR_LOGIN = 101
-    fromEnum API_ERROR_UNNOWN_CALL = 102    
-    fromEnum API_ERROR_PARSING = 103
-    fromEnum API_ERROR_NO_USER = 104
-    fromEnum API_ERROR_NO_DOCUMENT = 105
-    fromEnum API_ERROR_PERMISSION_ACCESS = 106
-    fromEnum API_ERROR_PERMISSION_ACTION = 107
-    fromEnum API_ERROR_ILLEGAL_VALUE = 107
-    fromEnum API_ERROR_MISSING_VALUE = 109
-    fromEnum API_ERROR_OTHER = 500
-    toEnum _ = error "Enum instance for API_ERROR is one way only"
+instance SafeEnum API_ERROR where
+    fromSafeEnum API_ERROR_LOGIN = 101
+    fromSafeEnum API_ERROR_UNNOWN_CALL = 102    
+    fromSafeEnum API_ERROR_PARSING = 103
+    fromSafeEnum API_ERROR_NO_USER = 104
+    fromSafeEnum API_ERROR_NO_DOCUMENT = 105
+    fromSafeEnum API_ERROR_PERMISSION_ACCESS = 106
+    fromSafeEnum API_ERROR_PERMISSION_ACTION = 107
+    fromSafeEnum API_ERROR_ILLEGAL_VALUE = 107
+    fromSafeEnum API_ERROR_MISSING_VALUE = 109
+    fromSafeEnum API_ERROR_OTHER = 500
+    toSafeEnum _ = Nothing
 
 -- Other constants used for api calls

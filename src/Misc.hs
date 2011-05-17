@@ -410,6 +410,12 @@ caseOf [] d = d
 allValues::(Bounded a, Enum a) => [a]
 allValues = enumFrom minBound
 
+
+-- | Extra classes for one way enums
+class SafeEnum a where
+    fromSafeEnum::a -> Integer
+    toSafeEnum::Integer -> Maybe a
+
 -- | Just @flip map@.
 for :: [a] -> (a -> b) -> [b]
 for = flip map
@@ -601,5 +607,10 @@ maybeRead s = case reads s of
 class URLAble a where
    encodeForURL::a -> String            
 
---encodeStringforURL
---decodeStringforURL::String -> String
+isLeft :: Either a b -> Bool
+isLeft (Left _) = True
+isLeft _ = False
+
+fromLeft :: Either a b -> a
+fromLeft (Left a) = a
+fromLeft _ = error "Reading Left for Right"
