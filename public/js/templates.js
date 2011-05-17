@@ -1029,6 +1029,10 @@ safeReady(function() {
       stopEditing();
     }
   });
+
+  editfield.blur(function() {
+    stopEditing();
+  });
 });
 
 safeReady(function() {
