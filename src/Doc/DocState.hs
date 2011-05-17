@@ -9,6 +9,7 @@ module Doc.DocState
     , anyInvitationUndelivered
     , undeliveredSignatoryLinks
     , ArchiveDocuments(..)
+    , ArchiveDocumentForAll(..)
     , AttachFile(..)
     , AttachSealedFile(..)
     , AuthorSignDocument(..)
@@ -694,6 +695,14 @@ archiveDocuments userid useremail docidlist = do
   forM_ docidlist $ \docid -> 
      modifySignableOrTemplate docid $ \doc -> Right $ deleteForUserID userid useremail doc
 
+archiveDocumentForAll :: DocumentID -> Update Documents (Either String Document)
+archiveDocumentForAll docid = do
+  -- FIXME: can use a fold here
+    modifySignableOrTemplate docid $ \doc -> Right $
+        doc {documentsignatorylinks = for (documentsignatorylinks doc) (\l -> l { signatorylinkdeleted = True })}
+
+
+
 shareDocuments :: User -> [DocumentID] -> Update Documents (Either String [Document])
 shareDocuments user docidlist = do
   mdocs <- forM docidlist $ \docid ->
@@ -1056,6 +1065,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'getDocumentsByTags
                         , 'setDocumentTrustWeaverReference
                         , 'archiveDocuments
+                        , 'archiveDocumentForAll
                         , 'shareDocuments
                         , 'setDocumentTitle
                         , 'timeoutDocument

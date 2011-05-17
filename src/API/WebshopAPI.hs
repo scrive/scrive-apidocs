@@ -83,6 +83,7 @@ import Control.Monad.Error
 import API.API
 import Routing
 import Doc.DocView
+import API.IntegrationAPIUtils
 import Doc.DocUtils
 
 {- | 
@@ -124,16 +125,6 @@ webshopAPI =  dir "webshop" $ msum [
              ]
 
 --- API calls starts here
-
-data SignatoryTMP = SignatoryTMP {
-                fstname::Maybe BS.ByteString,
-                sndname::Maybe BS.ByteString,
-                company::Maybe BS.ByteString,
-                personalnumber::Maybe BS.ByteString,
-                companynumber::Maybe BS.ByteString,
-                email::Maybe BS.ByteString,
-                fields :: [(BS.ByteString,BS.ByteString)]    
-            } deriving Show      
             
 newFromTemplate :: WebshopAPIFunction APIResponse
 newFromTemplate = do
@@ -157,26 +148,11 @@ documentLinks doc =
 fillTemplate::Document -> [SignatoryTMP] -> WebshopAPIFunction Document
 fillTemplate doc (authorTMP:sigsTMP) = do
     let (author,sigs) = span siglinkIsAuthor (documentsignatorylinks doc)
+    docWithAuthor <- fillAuthor authorTMP doc
     author' <- sequence $ fmap (fillSignatory authorTMP) author 
     sigs' <- sequence $ zipWith fillSignatory sigsTMP  sigs 
     return $ doc {documentsignatorylinks = author' ++ sigs'}
 fillTemplate doc [] = throwApiError API_ERROR_OTHER "No signatory provided"
-
-fillSignatory::SignatoryTMP  -> SignatoryLink-> WebshopAPIFunction SignatoryLink
-fillSignatory sTMP sl@(SignatoryLink{signatorydetails=sd})  =  do              
-  return $ sl { signatorydetails =  sd {
-      signatoryfstname = fromMaybe (signatoryfstname sd) (fstname sTMP)
-    , signatorysndname = fromMaybe (signatorysndname sd) (sndname sTMP)
-    , signatorycompany = fromMaybe (signatorycompany sd) (company sTMP)
-    , signatorycompanynumber = fromMaybe (signatorycompanynumber sd) (companynumber sTMP)
-    , signatorypersonalnumber = fromMaybe (signatorypersonalnumber sd) (personalnumber sTMP) 
-    , signatoryemail = fromMaybe (signatoryemail  sd) (email sTMP)
-    , signatoryotherfields = fillFields (signatoryotherfields sd) (fields sTMP)
-  }}
-
-fillFields:: [FieldDefinition] -> [(BS.ByteString,BS.ByteString)] ->  [FieldDefinition]
-fillFields (f:fs) nv = (f {fieldvalue = fromMaybe (fieldvalue f) $ lookup (fieldlabel f) nv}) : fillFields fs nv
-fillFields [] _ = []
 
 getTemplate::WebshopAPIFunction Document
 getTemplate = do
@@ -191,26 +167,7 @@ getTemplate = do
     return doc
     
 getSignatories::WebshopAPIFunction [SignatoryTMP]
-getSignatories = fmap (fromMaybe []) $ apiLocal "signatories" $ apiMapLocal $ do 
-    fstname <- apiAskBS "fstname"
-    sndname <- apiAskBS "sndname"
-    company <- apiAskBS "company"
-    personalnumber <- apiAskBS "personalnumber"
-    companynumber <- apiAskBS "companynumber"
-    email <- apiAskBS "email"
-    fields <- apiLocal "fields" $ apiMapLocal $ do
-                                        name <- apiAskBS "name"
-                                        value <- apiAskBS "value"
-                                        return $ pairMaybe name value
-    return $ Just $ SignatoryTMP
-                { fstname = fstname
-                , sndname = sndname
-                , company = company
-                , personalnumber = personalnumber
-                , companynumber = companynumber
-                , email = email 
-                , fields = concat $ maybeToList fields
-                }
+getSignatories = fmap (fromMaybe []) $ apiLocal "signatories" $ apiMapLocal $ getSignatoryTMP
                 
 checkIfReadyToSend::Document -> WebshopAPIFunction ()
 checkIfReadyToSend doc = do
