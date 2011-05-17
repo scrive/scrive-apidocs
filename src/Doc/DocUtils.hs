@@ -283,6 +283,9 @@ signlinkFromDocById doc sid = find ((== sid) . signatorylinkid) (documentsignato
 getAuthorSigLink :: Document -> Maybe SignatoryLink
 getAuthorSigLink = find (elem SignatoryAuthor . signatoryroles) . documentsignatorylinks
 
+isSigLinkForUserID :: UserID -> SignatoryLink -> Bool
+isSigLinkForUserID userid siglink = Just userid == maybesignatory siglink
+
 {- |
    Does the siglink belong to a user with userid and email?
  -}
@@ -339,6 +342,9 @@ isAuthorSignatory document =
 
 isUserAuthor :: Document -> User -> Bool
 isUserAuthor doc user = maybe False siglinkIsAuthor $ getSigLinkForUser doc user
+
+isUserIDAuthor :: Document -> UserID -> Bool
+isUserIDAuthor doc userid = maybe False (isSigLinkForUserID userid) $ getAuthorSigLink doc
 
 isAttachment :: Document -> Bool
 isAttachment doc = Attachment == documenttype doc
