@@ -11,6 +11,7 @@
 module InspectXMLInstances() where
 import API.Service.ServiceState (ServiceID(..))
 import Doc.DocState
+import Company.CompanyState
 import HSP
 import Kontra
 import Misc
@@ -145,4 +146,10 @@ instance InspectXML InviteInfo where
 
 instance InspectXML LoginInfo where
     inspectXML = asChild . show
-
+    
+instance InspectXML Company where
+    inspectXML = asChild . show
+    
+instance InspectXML CompanyID where
+    inspectXML = asChild . show
+        
