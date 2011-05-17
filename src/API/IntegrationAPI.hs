@@ -95,10 +95,10 @@ integrationAPI =  dir "integration" $ msum [
 --- Real api requests
 getRequestUser:: IntegrationAPIFunction User
 getRequestUser = do
-    srvs <- service <$> ask
+    sid <- serviceid <$> service <$> ask
     memail <- apiAskBS "email"
     when (isNothing memail) $ throwApiError API_ERROR_MISSING_VALUE "No user email provided"
-    muser <- query $ GetUserByEmail (Just srvs) $ Email $ fromJust memail
+    muser <- query $ GetUserByEmail (Just sid) $ Email $ fromJust memail
     when (isNothing muser) $ throwApiError API_ERROR_NO_USER "No user"
     let user = fromJust muser
     --srv <-  service <$> ask
@@ -150,7 +150,8 @@ createDocument = do
 getDocuments :: IntegrationAPIFunction APIResponse
 getDocuments = do
     --mcompany <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
-    documents <- query $ GetDocuments
+    sid <- serviceid <$> service <$> ask
+    documents <- query $ GetDocuments (Just sid)
     api_docs <- sequence $  map (api_document True)  documents
     return $ toJSObject [("documents",JSArray $ api_docs)] 
 
