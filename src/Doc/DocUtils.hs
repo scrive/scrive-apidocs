@@ -354,3 +354,11 @@ isDeletedForUserID doc userid = maybe False signatorylinkdeleted $ getSigLinkFor
 
 isAttachment :: Document -> Bool
 isAttachment doc = Attachment == documenttype doc
+
+
+{- | Add a tag to tag list -}
+addTag:: [DocumentTag] -> (BS.ByteString,BS.ByteString) -> [DocumentTag]
+addTag ((DocumentTag n v):ts) (n',v') = if n == n'
+                           then (DocumentTag n v') : ts 
+                           else (DocumentTag n v)  : (addTag ts (n',v'))
+addTag _ (n,v) = [DocumentTag n v]        

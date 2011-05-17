@@ -7,28 +7,45 @@
 -- Stability   :  development
 -- Portability :  portable
 --
--- Constans and data structures used by integration API
+-- Constans and data structures used by integration API.
+-- Some low level helpers.
 -----------------------------------------------------------------------------
 module API.IntegrationAPIUtils (
-          api_document
+            api_document
+          , SignatoryTMP(..)
+          , getSignatoryTMP
+          , mergeSignatoryWithTMP
+          , fillFields
+          , DOCUMENT_TYPE
         ) where
 
 
 import Doc.DocState
 import Text.JSON
 import MinutesTime
+import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
+import qualified  Codec.Binary.Base64 as BASE64
+import API.API
+import Doc.DocStorage
+import Control.Monad.Trans
+import Misc
+import Data.Maybe
 
+{- -}
 
 data DOCUMENT_AUTHORISATION = 
       DOCUMENT_AUTHORISATION_BASIC_EMAIL 
     | DOCUMENT_AUTHORISATION_BASIC_ELEG
+     deriving (Bounded,Ord,Eq)
     
     
-instance Enum DOCUMENT_AUTHORISATION where
-    fromEnum DOCUMENT_AUTHORISATION_BASIC_EMAIL = 1 
-    fromEnum DOCUMENT_AUTHORISATION_BASIC_ELEG = 10
-    toEnum _ = error "Enum instance for DOCUMENT_AUTHORISATION is one way only"
+instance SafeEnum DOCUMENT_AUTHORISATION where
+    fromSafeEnum DOCUMENT_AUTHORISATION_BASIC_EMAIL = 1 
+    fromSafeEnum DOCUMENT_AUTHORISATION_BASIC_ELEG = 10
+    toSafeEnum 1 =  Just DOCUMENT_AUTHORISATION_BASIC_EMAIL
+    toSafeEnum 10 = Just DOCUMENT_AUTHORISATION_BASIC_ELEG
+    toSafeEnum _ = Nothing
     
     
 data DOCUMENT_RELATION = 
@@ -38,13 +55,13 @@ data DOCUMENT_RELATION =
     | DOCUMENT_RELATION_VIEWER
     | DOCUMENT_RELATION_OTHER
       
-instance Enum DOCUMENT_RELATION where
-    fromEnum DOCUMENT_RELATION_AUTHOR_SECRETARY = 1
-    fromEnum DOCUMENT_RELATION_AUTHOR_SIGNATORY = 2
-    fromEnum DOCUMENT_RELATION_SIGNATORY = 5
-    fromEnum DOCUMENT_RELATION_VIEWER = 10
-    fromEnum DOCUMENT_RELATION_OTHER = 20
-    toEnum _ = error "Enum instance for DOCUMENT_RELATION is one way only"
+instance SafeEnum DOCUMENT_RELATION where
+    fromSafeEnum DOCUMENT_RELATION_AUTHOR_SECRETARY = 1
+    fromSafeEnum DOCUMENT_RELATION_AUTHOR_SIGNATORY = 2
+    fromSafeEnum DOCUMENT_RELATION_SIGNATORY = 5
+    fromSafeEnum DOCUMENT_RELATION_VIEWER = 10
+    fromSafeEnum DOCUMENT_RELATION_OTHER = 20
+    toSafeEnum _ = Nothing
     
 data DOCUMENT_STATUS = 
       DOCUMENT_STATUS_PREPARATION
@@ -53,27 +70,33 @@ data DOCUMENT_STATUS =
     | DOCUMENT_STATUS_CLOSED
     | DOCUMENT_STATUS_ERROR
     
-instance Enum DOCUMENT_STATUS where
-    fromEnum DOCUMENT_STATUS_PREPARATION = 0
-    fromEnum DOCUMENT_STATUS_PENDING = 10
-    fromEnum DOCUMENT_STATUS_STOPED = 20
-    fromEnum DOCUMENT_STATUS_CLOSED = 30
-    fromEnum DOCUMENT_STATUS_ERROR = 40
-    toEnum _ = error "Enum instance for DOCUMENT_STATUS is one way only"
+instance SafeEnum DOCUMENT_STATUS where
+    fromSafeEnum DOCUMENT_STATUS_PREPARATION = 0
+    fromSafeEnum DOCUMENT_STATUS_PENDING = 10
+    fromSafeEnum DOCUMENT_STATUS_STOPED = 20
+    fromSafeEnum DOCUMENT_STATUS_CLOSED = 30
+    fromSafeEnum DOCUMENT_STATUS_ERROR = 40
+    toSafeEnum _ = Nothing
 
 data DOCUMENT_TYPE = 
       DOCUMENT_TYPE_CONTRACT
     | DOCUMENT_TYPE_OFFER
     | DOCUMENT_TYPE_CONTRACT_TEMPLATE
     | DOCUMENT_TYPE_OFFER_TEMPLATE
+    deriving (Bounded,Ord,Eq)
 
-instance Enum DOCUMENT_TYPE where
-    fromEnum DOCUMENT_TYPE_CONTRACT = 1
-    fromEnum DOCUMENT_TYPE_OFFER = 2
-    fromEnum DOCUMENT_TYPE_CONTRACT_TEMPLATE = 3
-    fromEnum DOCUMENT_TYPE_OFFER_TEMPLATE = 4
-    toEnum _ = error "Enum instance for DOCUMENT_TYPE is one way only"
-    
+instance SafeEnum DOCUMENT_TYPE where
+    fromSafeEnum DOCUMENT_TYPE_CONTRACT = 1
+    fromSafeEnum DOCUMENT_TYPE_OFFER = 2
+    fromSafeEnum DOCUMENT_TYPE_CONTRACT_TEMPLATE = 3
+    fromSafeEnum DOCUMENT_TYPE_OFFER_TEMPLATE = 4
+    toSafeEnum 1 = Just DOCUMENT_TYPE_CONTRACT
+    toSafeEnum 2 = Just DOCUMENT_TYPE_OFFER
+    toSafeEnum 3 = Just DOCUMENT_TYPE_CONTRACT_TEMPLATE
+    toSafeEnum 4 = Just DOCUMENT_TYPE_OFFER_TEMPLATE
+    toSafeEnum _ = Nothing
+
+{- Building JSON structure representing object in any API response -} 
 api_document_type::Document ->  DOCUMENT_TYPE
 api_document_type doc   
     | isTemplate doc && isContract doc = DOCUMENT_TYPE_CONTRACT_TEMPLATE
@@ -124,29 +147,94 @@ api_signatory sl = JSObject $ toJSObject $  [
      Just signinfo ->  [("seen", api_date $ signtime signinfo)]
      Nothing -> []
     ++ 
-    [("sign",showJSON $ fromEnum $ api_document_relation sl)]                     
+    [("sign",showJSON $ fromSafeEnum $ api_document_relation sl)]                     
     
 api_document_tag::DocumentTag -> JSValue
 api_document_tag tag = JSObject $ toJSObject $ [
       ("name", showJSON $ BS.toString $ tagname tag)
     , ("value", showJSON $ BS.toString $ tagvalue tag)]
 
-
-api_document::Bool -> Document -> JSValue
-api_document files doc = JSObject $ toJSObject $  [ 
-      ("document_id", showJSON  $ show $ unDocumentID $ documentid doc)
-    , ("title", showJSON  $ BS.toString $ documenttitle doc)
-    , ("type", showJSON  $ fromEnum $ api_document_type doc)
-    , ("state", showJSON  $ fromEnum $ api_document_status doc)
-    , ("involved", JSArray $ map api_signatory $ documentsignatorylinks doc)
-    , ("tags", JSArray $ map api_document_tag $ documenttags doc)
-    , ("authorization", showJSON  $ fromEnum $ api_document_authorisation doc)
-    , ("mdate", api_date $ documentmtime doc)
-    ]    
-    ++ 
-    if files
-     then [("files",JSArray [])] 
-     else []
+api_document_file::(APIContext c) => File -> APIFunction c JSValue
+api_document_file file = do
+    ctx <- askKontraContext 
+    content <- liftIO $ getFileContents ctx file
+    let base64data = BASE64.encode (BS.unpack content) 
+    return $ JSObject $ toJSObject $ [
+          ("name", showJSON $ BS.toString $ filename file)
+        , ("content", showJSON $ base64data)]
+    
+    
+api_document::(APIContext c) => Bool -> Document -> APIFunction c JSValue
+api_document addFiles doc = do
+    files <- if addFiles
+              then do           
+              files <- sequence $ map api_document_file $ 
+                case (documentstatus doc) of 
+                    Closed -> documentsealedfiles doc
+                    _ -> documentfiles doc
+              return $ [("files",JSArray files)] 
+              else return [] 
+    return $ JSObject $ toJSObject $  [ 
+       ("document_id", showJSON  $ show $ unDocumentID $ documentid doc)
+     , ("title", showJSON  $ BS.toString $ documenttitle doc)
+     , ("type", showJSON  $ fromSafeEnum $ api_document_type doc)
+     , ("state", showJSON  $ fromSafeEnum $ api_document_status doc)
+     , ("involved", JSArray $ map api_signatory $ documentsignatorylinks doc)
+     , ("tags", JSArray $ map api_document_tag $ documenttags doc)
+     , ("authorization", showJSON  $ fromSafeEnum $ api_document_authorisation doc)
+     , ("mdate", api_date $ documentmtime doc)
+     ]    
+     ++ files
+    
        
 api_date :: MinutesTime -> JSValue 
 api_date = showJSON  . show
+
+
+data SignatoryTMP = SignatoryTMP {
+                fstname::Maybe BS.ByteString,
+                sndname::Maybe BS.ByteString,
+                company::Maybe BS.ByteString,
+                personalnumber::Maybe BS.ByteString,
+                companynumber::Maybe BS.ByteString,
+                email::Maybe BS.ByteString,
+                fields :: [(BS.ByteString,BS.ByteString)]    
+            } deriving Show      
+
+getSignatoryTMP::(APIContext c) => APIFunction c (Maybe SignatoryTMP)
+getSignatoryTMP = do 
+    fstname <- apiAskBS "fstname"
+    sndname <- apiAskBS "sndname"
+    company <- apiAskBS "company"
+    personalnumber <- apiAskBS "personalnumber"
+    companynumber <- apiAskBS "companynumber"
+    email <- apiAskBS "email"
+    fields <- apiLocal "fields" $ apiMapLocal $ do
+                                        name <- apiAskBS "name"
+                                        value <- apiAskBS "value"
+                                        return $ pairMaybe name value
+    return $ Just $ SignatoryTMP
+                { fstname = fstname
+                , sndname = sndname
+                , company = company
+                , personalnumber = personalnumber
+                , companynumber = companynumber
+                , email = email 
+                , fields = concat $ maybeToList fields
+                }
+                
+mergeSignatoryWithTMP::(APIContext c) => SignatoryTMP  -> SignatoryLink-> APIFunction c SignatoryLink
+mergeSignatoryWithTMP sTMP sl@(SignatoryLink{signatorydetails=sd})  =  do              
+  return $ sl { signatorydetails =  sd {
+      signatoryfstname = fromMaybe (signatoryfstname sd) (fstname sTMP)
+    , signatorysndname = fromMaybe (signatorysndname sd) (sndname sTMP)
+    , signatorycompany = fromMaybe (signatorycompany sd) (company sTMP)
+    , signatorycompanynumber = fromMaybe (signatorycompanynumber sd) (companynumber sTMP)
+    , signatorypersonalnumber = fromMaybe (signatorypersonalnumber sd) (personalnumber sTMP) 
+    , signatoryemail = fromMaybe (signatoryemail  sd) (email sTMP)
+    , signatoryotherfields = fillFields (signatoryotherfields sd) (fields sTMP)
+  }}
+
+fillFields:: [FieldDefinition] -> [(BS.ByteString,BS.ByteString)] ->  [FieldDefinition]
+fillFields (f:fs) nv = (f {fieldvalue = fromMaybe (fieldvalue f) $ lookup (fieldlabel f) nv}) : fillFields fs nv
+fillFields [] _ = []                
