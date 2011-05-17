@@ -54,6 +54,7 @@ import Happstack.State
 import Happstack.Util.Common
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
+import Company.CompanyState
 
 newtype Author = Author { unAuthor :: UserID }
     deriving (Eq, Ord, Typeable)
