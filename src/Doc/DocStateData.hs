@@ -2444,7 +2444,6 @@ type Documents = IxSet Document
 
 instance Indexable Document where
         empty = ixSet [ ixFun (\x -> [documentid x] :: [DocumentID])
-                      , ixFun (\x -> [documentauthor x] :: [Author])
                       , ixFun (\x -> (map Signatory (catMaybes (map maybesignatory (documentsignatorylinks x)))) :: [Signatory])
                               
                       -- wait, wait, wait: the following is wrong, signatory link ids are valid only in 

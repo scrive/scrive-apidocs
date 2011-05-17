@@ -168,7 +168,6 @@ newDocument user title documenttype ctime = do
   let doc = Document
           { documentid = DocumentID 0
           , documenttitle = title
-          , documentauthor = Author $ userid user
           , documentsignatorylinks = if (isContract documenttype) then [authorlink] else []
           , documentfiles = []
           , documentstatus = Preparation
@@ -178,7 +177,6 @@ newDocument user title documenttype ctime = do
           , documentmtime = ctime
           , documentdaystosign = Nothing
           , documenttimeouttime = Nothing
-          , documentdeleted = False
           , documentlog = []
           , documentinvitetext = BS.empty
           , documentsealedfiles = []
@@ -713,23 +711,19 @@ setDocumentTitle docid doctitle =
 fragileTakeOverDocuments :: User -> User -> Update Documents ()
 fragileTakeOverDocuments destuser srcuser = do
   documents <- ask
-  let hisdocuments = documents @= Author (userid srcuser)
-      sigdocuments = filter ((any (isMatchingSignatoryLink srcuser)) . documentsignatorylinks) (toList documents)
-  mapM_ (updateDoc takeoverAsAuthor) (IxSet.toList hisdocuments)
+  let sigdocuments = filter ((any (isSigLinkForUser srcuser)) . documentsignatorylinks) (toList documents)
   mapM_ (updateDoc takeoverAsSignatory) sigdocuments
   return ()
     where 
         updateDoc takeover document = modifySignableOrTemplate (documentid document) (\doc -> Right $ takeover doc)
-        takeoverAsAuthor document = document { documentauthor = Author (userid destuser) }
         takeoverAsSignatory document = document { documentsignatorylinks = takeoverSigLinks (documentsignatorylinks document) }
-        takeoverSigLinks siglinks = (map takeoverSigLink matching) ++ others
-                                    where (matching, others) = partition (isMatchingSignatoryLink srcuser) siglinks 
-        takeoverSigLink siglink = siglink {maybesignatory = Just (userid destuser),
-                                           signatorydetails = takeoverSigDetails (signatorydetails siglink) }
-        takeoverSigDetails sigdetails = sigdetails {signatoryfstname = userfstname info,
-                                                    signatorysndname = usersndname info,
-                                                    signatorycompany = usercompanyname info,
-                                                    signatoryemail = unEmail $ useremail info }
+        takeoverSigLinks siglinks = mapWhen (isSigLinkForUser srcuser) takeoverSigLink siglinks
+        takeoverSigLink siglink = siglink { maybesignatory = Just (userid destuser),
+                                            signatorydetails = takeoverSigDetails (signatorydetails siglink) }
+        takeoverSigDetails sigdetails = sigdetails { signatoryfstname = userfstname info,
+                                                     signatorysndname = usersndname info,
+                                                     signatorycompany = usercompanyname info,
+                                                     signatoryemail   = unEmail $ useremail info }
                                         where info = userinfo destuser
 
 --This is only for Eric functionality with awayting author
@@ -907,7 +901,7 @@ signableFromSharedDocumentID :: User -> DocumentID -> Update Documents (Either S
 signableFromSharedDocumentID user = newFromDocument $ \doc -> 
     (templateToDocument doc) {
           documentsignatorylinks = map (replaceAuthorSigLink user doc) (documentsignatorylinks doc)
-        , authorotherfields =  map (\fd -> fd { fieldvalue = BS.empty, fieldfilledbyauthor = False }) (authorotherfields doc) 
+                                   -- FIXME: Need to remove authorfields?
     }
     where replaceAuthorSigLink :: User -> Document -> SignatoryLink -> SignatoryLink
           replaceAuthorSigLink user doc sl 

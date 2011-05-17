@@ -131,6 +131,9 @@ data Feature = CSVUse
                | SignOrderUse
                | AttachmentUse
 
+wmap :: [(a -> b)] -> a -> [b]
+wmap fs v = map (\f -> f v) fs
+
 {- |
     This bit ensures that all the features used by a document
     are valid for it's documentfunctionality. It's hoped 
@@ -172,21 +175,15 @@ checkFeatureSupport doc =
           case signatoryroles of
             [SignatoryPartner] -> False
             _ -> True
-    isRequired AuthorCustomFieldUse doc@Document{authorotherfields} = not $ Data.List.null authorotherfields
-    isRequired AuthorPlacementUse doc@Document{
-                                      authorfstnameplacements
-                                    , authorsndnameplacements
-                                    , authorcompanyplacements
-                                    , authoremailplacements
-                                    , authorpersonalnumberplacements
-                                    , authorcompanynumberplacements} =
-      any (not . Data.List.null) 
-                       [ authorfstnameplacements
-                       , authorsndnameplacements
-                       , authorcompanyplacements
-                       , authoremailplacements
-                       , authorpersonalnumberplacements
-                       , authorcompanynumberplacements]
+    isRequired AuthorCustomFieldUse doc = maybe False (not . Data.List.null . signatoryotherfields . signatorydetails) $ getAuthorSigLink doc
+    isRequired AuthorPlacementUse doc = maybe False 
+      (any (not . Data.List.null) . wmap
+       [ signatoryfstnameplacements
+       , signatorysndnameplacements
+       , signatorycompanyplacements
+       , signatoryemailplacements
+       , signatorypersonalnumberplacements
+       , signatorycompanynumberplacements] . signatorydetails) $ getAuthorSigLink doc
     isRequired SigCustomFieldUse doc@Document{documentsignatorylinks} =
       any (not . Data.List.null . signatoryotherfields . signatorydetails) documentsignatorylinks
     isRequired SigPlacementUse doc@Document{documentsignatorylinks} =

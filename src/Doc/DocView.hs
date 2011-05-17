@@ -467,13 +467,13 @@ pageTemplatesList = pageList' "pageTemplatesList" LinkTemplates documentBasicVie
 pageAttachmentList :: KontrakcjaTemplates -> MinutesTime -> User -> PagedList Document -> IO String
 pageAttachmentList = pageList' "pageAttachmentList" LinkAttachments documentBasicViewFields
 
-pageOffersList :: KontrakcjaTemplates -> MinutesTime -> User -> PagedList (Document, User) -> IO String
+pageOffersList :: KontrakcjaTemplates -> MinutesTime -> User -> PagedList (Document, BS.ByteString) -> IO String
 pageOffersList = pageList' "pageOffersList" LinkOffers docAndAuthorBasicViewFields
   where
-    docAndAuthorBasicViewFields :: MinutesTime -> User -> (Document, User) -> Fields
-    docAndAuthorBasicViewFields crtime user (doc, author) = do
+    docAndAuthorBasicViewFields :: MinutesTime -> User -> (Document, BS.ByteString) -> Fields
+    docAndAuthorBasicViewFields crtime user (doc, authorname) = do
       documentBasicViewFields crtime user doc
-      field "authorname" $ authorname author
+      field "authorname" authorname
 
 {- |
     Helper function for list pages
@@ -525,18 +525,18 @@ authorname author =
     authoremail = unEmail . useremail $ userinfo author
 
 -- Searching, sorting and paging for document author pairs
-docAndAuthorSortSearchPage :: ListParams -> [(Document, User)] -> PagedList (Document, User)
+docAndAuthorSortSearchPage :: ListParams -> [(Document, BS.ByteString)] -> PagedList (Document, BS.ByteString)
 docAndAuthorSortSearchPage  = listSortSearchPage docAndAuthorSortFunc docAndAuthorSearchFunc docsPageSize
 
-docAndAuthorSearchFunc::SearchingFunction (Document, User)
+docAndAuthorSearchFunc::SearchingFunction (Document, BS.ByteString)
 docAndAuthorSearchFunc s (doc, author) =  docSearchFunc s doc || nameMatch author
   where
     match m = isInfixOf (map toUpper s) (map toUpper m)
-    nameMatch = match . BS.toString . authorname
+    nameMatch = match . BS.toString
    
-docAndAuthorSortFunc:: SortingFunction (Document, User)
-docAndAuthorSortFunc "author" (_,author1) (_,author2) = viewComparing authorname author1 author2
-docAndAuthorSortFunc "authorRev" (_,author1) (_,author2) = viewComparingRev authorname author1 author2
+docAndAuthorSortFunc:: SortingFunction (Document, BS.ByteString)
+docAndAuthorSortFunc "author" (_,author1) (_,author2) = viewComparing id author1 author2
+docAndAuthorSortFunc "authorRev" (_,author1) (_,author2) = viewComparingRev id author1 author2
 docAndAuthorSortFunc x (doc1,_) (doc2,_) = docSortFunc x doc1 doc2
 
 showFileImages :: KontrakcjaTemplates -> DocumentID -> Maybe (SignatoryLinkID, MagicHash) -> File -> JpegPages -> IO String
@@ -877,7 +877,6 @@ pageDocumentForSignatory action document attachments ctx invitedlink  =
       magichash = signatorymagichash invitedlink
       allowedtypes = documentallowedidtypes document
       requiresEleg = isJust $ find (== ELegitimationIdentification) allowedtypes
-      isSignatory person = SignatoryPartner `elem` signatoryroles person
   in do
     renderTemplate (ctxtemplates ctx) "pageDocumentForSignContent" $ do
       field "localscripts" localscripts
