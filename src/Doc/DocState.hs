@@ -185,13 +185,6 @@ newDocument user title documenttype ctime = do
           , documenttrustweaverreference = Nothing
           , documentallowedidtypes = [EmailIdentification]
           , documentcsvupload = Nothing
-          , authorfstnameplacements = []
-          , authorsndnameplacements = []
-          , authoremailplacements = []
-          , authorcompanyplacements = []
-          , authorpersonalnumberplacements = []
-          , authorcompanynumberplacements = []
-          , authorotherfields = []
           , documentcancelationreason = Nothing
           , documentinvitetime = Nothing
           , documentsharing = Private
@@ -299,13 +292,6 @@ updateDocument time documentid docname signatories daystosign invitetext (author
                     , documentallowedidtypes         = idtypes
                     , documentcsvupload              = csvupload
                     , documentfunctionality          = docfunctionality
-                    , authorfstnameplacements        = signatoryfstnameplacements        authordetails
-                    , authorsndnameplacements        = signatorysndnameplacements        authordetails
-                    , authoremailplacements          = signatoryemailplacements          authordetails
-                    , authorcompanyplacements        = signatorycompanyplacements        authordetails
-                    , authorpersonalnumberplacements = signatorypersonalnumberplacements authordetails
-                    , authorcompanynumberplacements  = signatorycompanynumberplacements  authordetails
-                    , authorotherfields              = signatoryotherfields              authordetails
                     }
          else return $ Left "Document not in preparation"
 

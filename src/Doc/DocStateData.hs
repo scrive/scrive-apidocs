@@ -894,7 +894,7 @@ data Document22 = Document22
     , documenttags22                   :: [DocumentTag]
     , documentservice22                :: Maybe ServiceID
     , documentattachments22            :: [DocumentID]
-    }
+    } deriving Typeable
 
 data Document = Document
     { documentid                     :: DocumentID
