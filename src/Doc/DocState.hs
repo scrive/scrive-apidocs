@@ -978,7 +978,7 @@ templateFromDocument docid = modifySignable docid $ \doc ->
                                     then ContractTemplate
                                     else documenttype doc
         }
-    
+
 -- | Migrate author to the documentsignlinks so that he is not special anymore
 migrateToSigLinks :: DocumentID -> User -> Update Documents ()
 migrateToSigLinks docid author = do 
@@ -1021,7 +1021,6 @@ migrateToSigLinks docid author = do
                                           }
   return ()
                                  
-
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocuments
                         , 'getDocumentsByAuthor
