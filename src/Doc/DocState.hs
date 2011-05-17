@@ -113,7 +113,7 @@ getDocumentByDocumentID documentid = do
 getDocumentsByAuthor :: UserID -> Query Documents [Document]
 getDocumentsByAuthor userid = do
     documents <- ask
-    return $ toList (documents @= Author userid)
+    return $ filter (\d -> isUserIDAuthor d userid) $ toList documents
 
 getDocumentsByUser :: User -> Query Documents [Document]
 getDocumentsByUser user = do
