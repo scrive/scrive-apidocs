@@ -148,9 +148,8 @@ documentLinks doc =
 fillTemplate::Document -> [SignatoryTMP] -> WebshopAPIFunction Document
 fillTemplate doc (authorTMP:sigsTMP) = do
     let (author,sigs) = span siglinkIsAuthor (documentsignatorylinks doc)
-    docWithAuthor <- fillAuthor authorTMP doc
-    author' <- sequence $ fmap (fillSignatory authorTMP) author 
-    sigs' <- sequence $ zipWith fillSignatory sigsTMP  sigs 
+    author' <- sequence $ fmap (mergeSignatoryWithTMP authorTMP) author 
+    sigs' <- sequence $ zipWith mergeSignatoryWithTMP sigsTMP  sigs 
     return $ doc {documentsignatorylinks = author' ++ sigs'}
 fillTemplate doc [] = throwApiError API_ERROR_OTHER "No signatory provided"
 

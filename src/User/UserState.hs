@@ -83,6 +83,7 @@ import Data.Data
 import Data.Maybe
 import User.Password
 import API.Service.ServiceState 
+import Company.CompanyState
 
 newtype UserID = UserID { unUserID :: Int }
     deriving (Eq, Ord, Typeable)
@@ -209,11 +210,32 @@ data User = User
           , userinviteinfo                :: Maybe InviteInfo
           , userlogininfo                 :: LoginInfo
           , userservice                   :: Maybe ServiceID
-          , userterminated                :: Bool
+          , usercompany                   :: Maybe CompanyID
           }
             deriving (Eq, Ord)
 
 instance Typeable User where typeOf _ = mkTypeOf "User"
+
+
+data User13 = User13
+          { userid13                        :: UserID
+          , userpassword13                  :: Password
+          , usersupervisor13                :: Maybe SupervisorID
+          , useraccountsuspended13          :: Bool
+          , userhasacceptedtermsofservice13 :: Maybe MinutesTime
+          , userfreetrialexpirationdate13   :: Maybe MinutesTime
+          , usersignupmethod13              :: SignupMethod
+          , userinfo13                      :: UserInfo
+          , usersettings13                  :: UserSettings
+          , userpaymentpolicy13             :: Payments.UserPaymentPolicy
+          , userpaymentaccount13            :: Payments.UserPaymentAccount
+          , userfriends13                   :: [Friend]
+          , userinviteinfo13                :: Maybe InviteInfo
+          , userlogininfo13                 :: LoginInfo
+          , userservice13                   :: Maybe ServiceID
+          , userterminated13                :: Bool
+          }
+            deriving (Eq, Ord, Typeable)
 
 data User12 = User12
           { userid12                        :: UserID
@@ -476,7 +498,7 @@ instance Migrate User11 User12 where
 -- are is the system are used to indicate whether a user has free trial or not) since
 -- we want to treat free trial specially after it ends, so we need to distinguish
 -- between "normal" payment change and free trial.
-instance Migrate User12 User where
+instance Migrate User12 User13 where
     migrate (User12
                { userid12                     
                 , userpassword12                
@@ -490,32 +512,69 @@ instance Migrate User12 User where
                 , userfriends12                  
                 , userinviteinfo12
                 , userlogininfo12       
-                }) = User 
-                { userid                         = userid12
-                , userpassword                   = userpassword12
-                , usersupervisor                 = usersupervisor12
-                , useraccountsuspended           = useraccountsuspended12
-                , userhasacceptedtermsofservice  = userhasacceptedtermsofservice12
-                , userfreetrialexpirationdate    = Just freetrialexpirationdate
-                , usersignupmethod               = AccountRequest
-                , userinfo                       = userinfo12
-                , usersettings                   = usersettings12
-                , userpaymentpolicy              = Payments.initialPaymentPolicy
-                , userpaymentaccount             = Payments.emptyPaymentAccount {
+                }) = User13 
+                { userid13                         = userid12
+                , userpassword13                   = userpassword12
+                , usersupervisor13                 = usersupervisor12
+                , useraccountsuspended13           = useraccountsuspended12
+                , userhasacceptedtermsofservice13  = userhasacceptedtermsofservice12
+                , userfreetrialexpirationdate13    = Just freetrialexpirationdate
+                , usersignupmethod13               = AccountRequest
+                , userinfo13                       = userinfo12
+                , usersettings13                   = usersettings12
+                , userpaymentpolicy13              = Payments.initialPaymentPolicy
+                , userpaymentaccount13             = Payments.emptyPaymentAccount {
                     paymentaccountfreesignatures = 100 -- for now we give them
                     -- a lot of free signatures because we don't handle the case
                     -- when they run out of them
                 }
-                , userfriends                    = userfriends12
-                , userinviteinfo                 = userinviteinfo12
-                , userlogininfo                  = userlogininfo12
-                , userservice                    = Nothing
-                , userterminated                 = False
+                , userfriends13                    = userfriends12
+                , userinviteinfo13                 = userinviteinfo12
+                , userlogininfo13                  = userlogininfo12
+                , userservice13                    = Nothing
+                , userterminated13                 = False
                 }
                 where
                     freetrialexpirationdate =
                         fromMaybe firstjuly (max firstjuly . fst <$> temppaymentchange)
                     firstjuly = fromJust $ parseMinutesTimeMDY "01-06-2011"
+
+instance Migrate User13 User where
+    migrate (User13
+               {  userid13                   
+                , userpassword13                
+                , usersupervisor13               
+                , useraccountsuspended13        
+                , userhasacceptedtermsofservice13 
+                , userfreetrialexpirationdate13   
+                , usersignupmethod13         
+                , userinfo13              
+                , usersettings13       
+                , userpaymentpolicy13      
+                , userpaymentaccount13 
+                , userfriends13       
+                , userinviteinfo13     
+                , userlogininfo13       
+                , userservice13    
+                , userterminated13    
+                }) = User 
+                { userid                         = userid13
+                , userpassword                   = userpassword13
+                , usersupervisor                 = usersupervisor13
+                , useraccountsuspended           = useraccountsuspended13
+                , userhasacceptedtermsofservice  = userhasacceptedtermsofservice13
+                , userfreetrialexpirationdate    = userfreetrialexpirationdate13
+                , usersignupmethod               = usersignupmethod13
+                , userinfo                       = userinfo13
+                , usersettings                   = usersettings13
+                , userpaymentpolicy              = userpaymentpolicy13
+                , userpaymentaccount             = userpaymentaccount13
+                , userfriends                    = userfriends13
+                , userinviteinfo                 = userinviteinfo13
+                , userlogininfo                  = userlogininfo13
+                , userservice                    = userservice13
+                , usercompany                    = Nothing
+                }
 
 composeFullName :: (BS.ByteString, BS.ByteString) -> BS.ByteString
 composeFullName (fstname, sndname) =
@@ -599,9 +658,12 @@ instance Version User11 where
 instance Version User12 where
     mode = extension 12 (Proxy :: Proxy User11)
 
-instance Version User where
+instance Version User13 where
     mode = extension 13 (Proxy :: Proxy User12)
 
+instance Version User where
+    mode = extension 14 (Proxy :: Proxy User13)
+    
 instance Version SignupMethod
 
 instance Version TrustWeaverStorage
@@ -744,8 +806,9 @@ addUser :: (BS.ByteString, BS.ByteString)
         -> Password
         -> Maybe UserID
         -> Maybe ServiceID
+        -> Maybe CompanyID
         -> Update Users (Maybe User)
-addUser (fstname, sndname) email passwd maybesupervisor mservice = do
+addUser (fstname, sndname) email passwd maybesupervisor mservice mcompany = do
   users <- get
   if (IxSet.size (users @= Email email) /= 0)
    then return Nothing  -- "user with same email address exists"
@@ -791,7 +854,7 @@ addUser (fstname, sndname) email passwd maybesupervisor mservice = do
                                 , consecutivefails = 0
                                 }
               , userservice = mservice
-              , userterminated = False
+              , usercompany = mcompany
                  }
         modify (updateIx (Email email) user)
         return $ Just user
@@ -1033,6 +1096,7 @@ $(mkMethods ''Users [ 'getUserByUserID
                     ])
 
 $(deriveSerializeFor [ ''User
+                     , ''User13
                      , ''User12
                      , ''User11
                      , ''User10
