@@ -380,12 +380,15 @@ sendRejectEmails customMessage ctx document signalink = do
 handleSTable :: Kontra (Either KontraLink Response)
 handleSTable = checkUserTOSGet $ do
   ctx@Context { ctxmaybeuser = Just user, ctxhostpart, ctxtime, ctxtemplates } <- get
-  documents <- query $ GetDocumentsBySignatory user
-  let contracts  = [doc | doc <- documents
-                        , Contract == documenttype doc]
-  params <- getListParams
-  content <- liftIO $ pageContractsList ctxtemplates ctxtime user (docSortSearchPage params contracts)
-  renderFromBody TopNone kontrakcja $ cdata content
+  -- documents <- query $ GetDocumentsBySignatory user
+  case getDocsByLoggedInUser of
+    Left _ -> mzero
+    Right documents -> do
+      let contracts  = [doc | doc <- documents
+                            , Contract == documenttype doc]
+      params <- getListParams
+      content <- liftIO $ pageContractsList ctxtemplates ctxtime user (docSortSearchPage params contracts)
+      renderFromBody TopNone kontrakcja $ cdata content
 
 {- |
     Handles an account setup from within the sign view.
