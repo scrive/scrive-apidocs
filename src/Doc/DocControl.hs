@@ -1344,16 +1344,6 @@ showTemplatesList =
         return $ filter isTemplate mydocuments in
   showItemList' pageTemplatesList getTemplates docSortSearchPage
 
-
-getAuthorName :: Document -> BS.ByteString
-getAuthorName doc = 
-  let Just authorsiglink = getAuthorSigLink doc
-      authorfstname = signatoryfstname $ signatorydetails authorsiglink
-      authorsndname = signatorysndname $ signatorydetails authorsiglink
-      authoremail = signatoryemail $ signatorydetails authorsiglink
-      authorname = BS.concat [authorfstname, BS.fromString " ", authorsndname]
-  in if BS.null authorname then authoremail else authorname
-
 showOfferList:: Kontra (Either KontraLink String)
 showOfferList= checkUserTOSGet $ do
     -- Just user is safe here because we guard for logged in user
