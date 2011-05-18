@@ -470,6 +470,7 @@ modalSignedViewClosedNoAccount=
   <div class="modal-footer">
       $accountFromSignFooter()$
   </div>
+  </form>
 </div>
 ####
 modalSignedViewNotClosedHasAccount=
@@ -575,6 +576,7 @@ modalSignedViewNotClosedNoAccount=
   <div class="modal-footer">
     $accountFromSignFooter()$
   </div>
+  </form>
 </div>
 #####
 accountFromSignInputs=
