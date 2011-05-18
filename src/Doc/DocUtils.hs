@@ -1,4 +1,14 @@
 {-# OPTIONS_GHC -Wall -Werror #-}
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  Doc.DocUtils
+-- Author      :  Eric Normand
+-- Stability   :  development
+-- Portability :  portable
+--
+-- Utility functions for accessing the innards of Documents and other
+-- datatypes in Doc.DocStateData
+-----------------------------------------------------------------------------
 
 module Doc.DocUtils where
 
@@ -14,21 +24,37 @@ import Data.Maybe
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 
+{- |
+   Is the given SignatoryLink marked as a signatory (someone who can must sign)?
+ -}
 isSignatory :: SignatoryLink -> Bool
 isSignatory sl = SignatoryPartner `elem` signatoryroles sl
 
+{- |
+   Does the given SignatoryLink have SignInfo (meaning the signatory has signed)?
+ -}
 hasSigned :: SignatoryLink -> Bool
 hasSigned sl = isJust $ maybesigninfo sl
 
+{- |
+   Given a Document, return all of the signatory details for all signatories (exclude viewers but include author if he must sign).
+   See also: partyListButAuthor to exclude the author.
+ -}
 partyList :: Document -> [SignatoryDetails]
 partyList document = [signatorydetails sl | sl <- documentsignatorylinks document
                                           , isSignatory sl]
   
+{- |
+   Given a Document, return all of the signatory details for all signatories who have not yet signed.
+ -}
 partyUnsignedList :: Document -> [SignatoryDetails]
 partyUnsignedList document = [signatorydetails sl | sl <- documentsignatorylinks document
                                                   , isSignatory sl
                                                   , not $ hasSigned sl]
 
+{- |
+   Given a Document, return all of the signatory details for all signatories who have signed.
+ -}
 partySignedList :: Document -> [SignatoryDetails]
 partySignedList document = [signatorydetails sl | sl <- documentsignatorylinks document
                                                 , isSignatory sl
@@ -59,11 +85,18 @@ partyUnsignedMeAndList magichash document =
         signas = map signatorydetails unsignalinks
     in me : signas
 
+{- |
+   Given a Document, return all signatories except the author.
+   See also: partyList to include the author.
+ -}
 partyListButAuthor :: Document -> [SignatoryDetails]
 partyListButAuthor document = [signatorydetails sl | sl <- documentsignatorylinks document
                                                    , isSignatory sl
                                                    , not $ siglinkIsAuthor sl]
-  
+
+{- |
+   Insert the first list between each list of the second list.
+ -}
 joinWith :: [a] -> [[a]] -> [a]
 joinWith _ [] = []
 joinWith _ [x] = x
@@ -79,9 +112,14 @@ personname' signdetails = if BS.null $ signatoryname signdetails
                           then  signatoryemail signdetails
                           else  signatoryname  signdetails
 
-{- Function for changing SignatoryLink into our inner email address so u dont have to unwrap every time-}
-emailFromSignLink::SignatoryLink->(BS.ByteString,BS.ByteString)
-emailFromSignLink sl = (signatoryname $ signatorydetails sl,signatoryemail $ signatorydetails sl) 
+{- |
+   Given a SignatoryLink, returns a tuple containing the name and the email address.
+   
+   Useful for sending emails.
+ -}
+emailFromSignLink :: SignatoryLink -> (BS.ByteString, BS.ByteString)
+emailFromSignLink sl = (signatoryname $ signatorydetails sl, signatoryemail $ signatorydetails sl) 
+
 
 renderListTemplate:: KontrakcjaTemplates -> [String] -> IO String
 renderListTemplate templates list = 
@@ -158,9 +196,12 @@ checkCSVSigIndex sls n
   where slcount = length sls
 
 -- GETTERS
+        
+isUndelivered :: SignatoryLink -> Bool
+isUndelivered sl = invitationdeliverystatus sl == Undelivered
 
 undeliveredSignatoryLinks :: Document -> [SignatoryLink]
-undeliveredSignatoryLinks doc =  filter ((== Undelivered) . invitationdeliverystatus) $ documentsignatorylinks doc
+undeliveredSignatoryLinks doc = filter isUndelivered $ documentsignatorylinks doc
 
 signatoryname :: SignatoryDetails -> BS.ByteString
 signatoryname s = 
@@ -208,9 +249,9 @@ signatoryDetailsFromUser user =
                      , signatoryotherfields              = []
                      }
                      
+
 isMatchingSignatoryLink :: User -> SignatoryLink -> Bool
 isMatchingSignatoryLink user sigLink = isSigLinkForUser user sigLink
-  
 
 appendHistory :: Document -> [DocumentHistoryEntry] -> Document
 appendHistory document history = 
@@ -227,6 +268,7 @@ allowsIdentification document idtype =
 isViewer :: Document -> User -> Bool
 isViewer doc user = any (isSigLinkForUser user) $ documentsignatorylinks doc
 
+-- this should actually not take Maybe User but User instead
 {- |
     Checks whether a signatory link is eligible for sending a reminder.
     The user must be the author, and the signatory musn't be the author.
@@ -383,12 +425,13 @@ isFriendOf uid user = (unUserID uid `elem` map unFriend (userfriends user) || Ju
 isFriendOf' :: UserID -> Maybe User -> Bool
 isFriendOf' uid muser = fromMaybe False $ fmap (isFriendOf uid) muser
 
+{- |
+   Given a Document, return the best guess at the author's name:
+     * First Name + Last Name
+     * email address if no name info
+-}
 getAuthorName :: Document -> BS.ByteString
 getAuthorName doc = 
   let Just authorsiglink = getAuthorSigLink doc
-      authorfstname = signatoryfstname $ signatorydetails authorsiglink
-      authorsndname = signatorysndname $ signatorydetails authorsiglink
-      authoremail   = signatoryemail   $ signatorydetails authorsiglink
-      authorname    = BS.concat [authorfstname, BS.fromString " ", authorsndname]
-  in if BS.null authorname then authoremail else authorname
+  in personname authorsiglink
 
