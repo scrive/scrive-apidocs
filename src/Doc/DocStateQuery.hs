@@ -13,10 +13,12 @@
 --  * Filtering
 --
 -- This module only provides queries.
+--
 -- This module should control access centrally (instead of inside each Controller)
 -- This module should aggregate results from multiple queries (such as a join)
 -- This module should filter results from queries (such as removing the "deleted" documents)
 -----------------------------------------------------------------------------
+
 module Doc.DocStateQuery
     ( getDocByDocID
     , getDocsByLoggedInUser
@@ -91,3 +93,4 @@ getDocByDocIDSigLinkIDAndMagicHash docid sigid mh = do
       case getSigLinkBySigLinkID sigid doc of
         Just siglink | signatorymagichash siglink == mh -> return $ Right doc
         _ -> return $ Left DBResourceNotAvailable
+
