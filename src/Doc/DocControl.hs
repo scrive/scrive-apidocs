@@ -8,7 +8,8 @@ import AppView
 import Doc.CSVUtils
 import Doc.DocSeal
 import Doc.DocState
-import Doc.DocStateInterface
+import Doc.DocStateQuery
+import Doc.DocStateUpdate
 import Doc.DocStateUtils
 import Doc.DocStorage
 import Doc.DocUtils
@@ -1722,9 +1723,12 @@ handleRestart docid = withUserPost $ do
   case edoc of
     Left _ -> mzero
     Right doc -> do
-      doc2 <- restartDocument doc
-      addFlashMsg =<< (liftIO $ flashDocumentRestarted ctxtemplates doc2)
-      return $ LinkIssueDoc docid
+      edoc2 <- restartDocument doc
+      case edoc2 of
+        Left _ -> mzero
+        Right doc2 -> do
+          addFlashMsg =<< (liftIO $ flashDocumentRestarted ctxtemplates doc2)
+          return $ LinkIssueDoc docid
                     
 handleResend:: DocumentID -> SignatoryLinkID -> Kontra KontraLink
 handleResend docid signlinkid  = withUserPost $ do

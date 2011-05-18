@@ -298,6 +298,9 @@ isSigLinkForUserInfo userid email siglink =
     Just userid == maybesignatory siglink
        || email == signatoryemail (signatorydetails siglink)
        
+getSigLinkForUserInfo :: UserID -> BS.ByteString -> Document -> Maybe SignatoryLink
+getSigLinkForUserInfo userid email document = find (isSigLinkForUserInfo userid email) $ documentsignatorylinks document
+
 isSigLinkForUser :: User -> SignatoryLink -> Bool
 isSigLinkForUser user = isSigLinkForUserInfo (userid user) (unEmail $ useremail $ userinfo user)
 
@@ -312,7 +315,13 @@ getSigLinkForUser doc user = find (isSigLinkForUser user) $ documentsignatorylin
  -}
 canUserInfoViewDirectly :: UserID -> BS.ByteString -> Document -> Bool
 canUserInfoViewDirectly userid email doc = 
-  isJust $ find (isSigLinkForUserInfo userid email) $ documentsignatorylinks doc
+  case getSigLinkForUserInfo userid email doc of
+    Nothing                                                                    -> False
+    Just siglink | signatorylinkdeleted siglink                                -> False
+    Just siglink | siglinkIsAuthor siglink                                     -> True
+    Just _       | Preparation == documentstatus doc                           -> False
+    Just siglink | isActivatedSignatory (documentcurrentsignorder doc) siglink -> True
+    _                                                                          -> False
 
 canUserViewDirectly :: User -> Document -> Bool
 canUserViewDirectly user = canUserInfoViewDirectly (userid user) (unEmail $ useremail $ userinfo user)
