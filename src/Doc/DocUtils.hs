@@ -394,3 +394,12 @@ isFriendWithSignatoryLink uid sl = do
                                      muser1 <- query $ GetUserByEmail (currentServiceID ctx) $ Email $ signatoryemail $ signatorydetails $  sl
                                      muser2 <- sequenceMM $ fmap (query . GetUserByUserID) $ maybesignatory sl
                                      return $ (isFriendOf' uid muser1) || (isFriendOf' uid muser2)
+getAuthorName :: Document -> BS.ByteString
+getAuthorName doc = 
+  let Just authorsiglink = getAuthorSigLink doc
+      authorfstname = signatoryfstname $ signatorydetails authorsiglink
+      authorsndname = signatorysndname $ signatorydetails authorsiglink
+      authoremail   = signatoryemail   $ signatorydetails authorsiglink
+      authorname    = BS.concat [authorfstname, BS.fromString " ", authorsndname]
+  in if BS.null authorname then authoremail else authorname
+
