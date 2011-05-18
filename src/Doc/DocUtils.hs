@@ -383,17 +383,6 @@ isFriendOf uid user = (unUserID uid `elem` map unFriend (userfriends user) || Ju
 isFriendOf' :: UserID -> Maybe User -> Bool
 isFriendOf' uid muser = fromMaybe False $ fmap (isFriendOf uid) muser
 
-isFriendWithSignatory :: UserID -> Document -> Kontra Bool
-isFriendWithSignatory uid document = do
-                                   areFriends <- sequence $ map (isFriendWithSignatoryLink uid) $ documentsignatorylinks document
-                                   return $ or areFriends
-                                   
-isFriendWithSignatoryLink :: UserID -> SignatoryLink -> Kontra Bool
-isFriendWithSignatoryLink uid sl = do
-                                     ctx <- get
-                                     muser1 <- query $ GetUserByEmail (currentServiceID ctx) $ Email $ signatoryemail $ signatorydetails $  sl
-                                     muser2 <- sequenceMM $ fmap (query . GetUserByUserID) $ maybesignatory sl
-                                     return $ (isFriendOf' uid muser1) || (isFriendOf' uid muser2)
 getAuthorName :: Document -> BS.ByteString
 getAuthorName doc = 
   let Just authorsiglink = getAuthorSigLink doc
