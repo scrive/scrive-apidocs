@@ -380,8 +380,8 @@ sendRejectEmails customMessage ctx document signalink = do
 handleSTable :: Kontra (Either KontraLink Response)
 handleSTable = checkUserTOSGet $ do
   ctx@Context { ctxmaybeuser = Just user, ctxhostpart, ctxtime, ctxtemplates } <- get
-  -- documents <- query $ GetDocumentsBySignatory user
-  case getDocsByLoggedInUser of
+  edocs <- getDocsByLoggedInUser
+  case edocs of
     Left _ -> mzero
     Right documents -> do
       let contracts  = [doc | doc <- documents
@@ -399,15 +399,19 @@ handleAcceptAccountFromSign documentid
                             signmagichash
                             actionid
                             magichash = do
-  ctx@Context { ctxtemplates } <- get
+  Context { ctxtemplates } <- get
   muser <- handleAccountSetupFromSign actionid magichash
-  document <- queryOrFail $ GetDocumentByDocumentID documentid
-  signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
-  case (muser, isContract document) of
-    (Nothing, True) -> addModal $ modalContractSignedNoAccount document signatorylink actionid magichash
-    (Nothing, False) -> addModal $ modalOfferSignedNoAccount document signatorylink actionid magichash
-    (Just _, _) -> addFlashMsg =<< (liftIO $ flashMessageAccountActivatedFromSign ctxtemplates)
-  return $ LinkSignDoc document signatorylink
+  edoc <- getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid signmagichash
+  case edoc of
+    Left _ -> mzero
+    Right document -> case getSigLinkBySigLinkID signatorylinkid document of
+      Nothing -> mzero
+      Just signatorylink -> do
+        case (muser, isContract document) of
+          (Nothing, True)  -> addModal $ modalContractSignedNoAccount document signatorylink actionid magichash
+          (Nothing, False) -> addModal $ modalOfferSignedNoAccount    document signatorylink actionid magichash
+          (Just _, _)      -> addFlashMsg =<< (liftIO $ flashMessageAccountActivatedFromSign ctxtemplates)
+        return $ LinkSignDoc document signatorylink
 
 {- |
     Handles an account removal from within the sign view.
@@ -418,50 +422,49 @@ handleDeclineAccountFromSign documentid
                              signmagichash
                              actionid
                              magichash = do
-  ctx@Context{ctxtemplates} <- get
-  document <- queryOrFail $ GetDocumentByDocumentID documentid
-  signatorylink <- signatoryLinkFromDocumentByID document signatorylinkid
-  handleAccountRemovalFromSign actionid magichash
-  addFlashMsg =<< (liftIO $ flashMessageAccountRemovedFromSign ctxtemplates)
-  return $ LinkSignDoc document signatorylink
+  ctx@Context{ ctxtemplates } <- get
+  edoc <- getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid signmagichash
+  case edoc of
+    Left _ -> mzero
+    Right document -> case getSigLinkBySigLinkID signatorylinkid document of
+      Nothing -> mzero
+      Just signatorylink -> do
+        handleAccountRemovalFromSign actionid magichash
+        addFlashMsg =<< (liftIO $ flashMessageAccountRemovedFromSign ctxtemplates)
+        return $ LinkSignDoc document signatorylink
 
 {- |
    Control the signing of a document
    URL: /s/{docid}/{signatorylinkid1}/{magichash1}
    Method: POST
-   NOTE: magichash1 is currently ignored! (though it must exist)
  -}
 signDocument :: DocumentID -- ^ The DocumentID of the document to sign 
              -> SignatoryLinkID -- ^ The SignatoryLinkID that is in the URL 
-             -> MagicHash -- ^ The MagicHash that is in the URL (NOTE: This is ignored!)
+             -> MagicHash -- ^ The MagicHash that is in the URL
              -> Kontra KontraLink
 signDocument documentid
              signatorylinkid1
-             magichash1
-                 = do            
-  Context { ctxtime, ctxipnumber, ctxtemplates, ctxmaybeuser } <- get
-  olddocument@Document{ documentsignatorylinks } <- queryOrFail $ GetDocumentByDocumentID documentid
+             magichash1 = do            
+  Context { ctxtime, ctxipnumber } <- get
+  edoc <- getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid1 magichash1
+  case edoc of
+    Left _ -> mzero
+    Right olddocument -> do
+      fieldnames <- getAndConcat "fieldname"
+      fieldvalues <- getAndConcat "fieldvalue"
+      let fields = zip fieldnames fieldvalues
 
-  checkLinkIDAndMagicHash olddocument signatorylinkid1 magichash1
+      let allowedidtypes = documentallowedidtypes olddocument
+          allowsEmail = EmailIdentification `elem` allowedidtypes
 
-  fieldnames <- getAndConcat "fieldname"
-  fieldvalues <- getAndConcat "fieldvalue"
-  let fields = zip fieldnames fieldvalues
+      guard allowsEmail
 
-  let allowedidtypes = documentallowedidtypes olddocument
-      allowsEmail = isJust $ find (== EmailIdentification) allowedidtypes
-
-  when (not allowsEmail) mzero
-
-
-  newdocument <- update $ SignDocument documentid signatorylinkid1 ctxtime ctxipnumber Nothing fields
-  case newdocument of
-    Left message -> 
-        do
+      newdocument <- update $ SignDocument documentid signatorylinkid1 ctxtime ctxipnumber Nothing fields
+      case newdocument of
+        Left message -> do
           addFlashMsg $ toFlashMsg OperationFailed message
           return $ LinkMain
-    Right document -> 
-        do 
+        Right document -> do 
           postDocumentChangeAction document olddocument (Just signatorylinkid1)
           handleAfterSigning document signatorylinkid1
 
@@ -506,21 +509,19 @@ rejectDocument :: DocumentID
                -> Kontra KontraLink
 rejectDocument documentid 
                signatorylinkid1 
-               magichash
-                   = do
+               magichash = do
   ctx@(Context {ctxmaybeuser, ctxhostpart, ctxtime, ctxipnumber}) <- get
-  olddocument@Document{ documentsignatorylinks } <- queryOrFail $ GetDocumentByDocumentID documentid
-
-  checkLinkIDAndMagicHash olddocument signatorylinkid1 magichash
-  customtext <- getCustomTextField "customtext"
-  mdocument <- update $ RejectDocument documentid signatorylinkid1 ctxtime ctxipnumber customtext
-  case (mdocument) of
-    Left message -> 
-        do
+  edoc <- getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid1 magichash
+  case edoc of
+    Left _ -> mzero
+    Right olddocument -> do
+      customtext <- getCustomTextField "customtext"
+      mdocument <- update $ RejectDocument documentid signatorylinkid1 ctxtime ctxipnumber customtext
+      case (mdocument) of
+        Left message -> do
           addFlashMsg $ toFlashMsg OperationFailed message
           return $ LinkMain
-    Right document -> 
-        do  
+        Right document -> do  
           postDocumentChangeAction document olddocument (Just signatorylinkid1)
           addModal $ modalRejectedView document
           return $ LoopBack
@@ -544,7 +545,6 @@ handleSignShow :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra Response
 handleSignShow documentid 
                signatorylinkid1
                magichash1 = do
-  doc1 <- queryOrFail $ GetDocumentByDocumentID documentid
   Context { ctxtemplates
           , ctxmaybeuser
           , ctxhostpart
