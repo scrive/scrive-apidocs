@@ -1,4 +1,22 @@
 {-# OPTIONS_GHC -Wall -Werror #-}
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  Doc.DocStateQuery
+-- Author      :  Eric Normand
+-- Stability   :  development
+-- Portability :  portable
+--
+-- Each exported function is a middle-man between the Controller and the Model.
+-- They provide these extra features over the Model:
+--  * Access control
+--  * Aggregation
+--  * Filtering
+--
+-- This module only provides queries.
+-- This module should control access centrally (instead of inside each Controller)
+-- This module should aggregate results from multiple queries (such as a join)
+-- This module should filter results from queries (such as removing the "deleted" documents)
+-----------------------------------------------------------------------------
 module Doc.DocStateQuery
     ( getDocByDocID
     , getDocsByLoggedInUser
@@ -10,6 +28,7 @@ import Doc.DocState
 import Doc.DocUtils
 import Kontra
 import Misc
+
 import Control.Monad.State (get)
 import Happstack.State     (query)
 
