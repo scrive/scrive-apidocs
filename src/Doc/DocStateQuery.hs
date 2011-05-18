@@ -76,7 +76,7 @@ getDocsByLoggedInUser = do
 
 {- |
    Get a document using docid, siglink, and magichash.
-   ALWAYS FAILS THE SAME WAY FOR SECURITY PURPOSES.
+   ALWAYS FAILS THE SAME WAY FOR SECURITY PURPOSES (Left DBResourceNotAvailable).
    Document must exist.
    SignatoryLinkID must correspond to a siglink in document.
    MagicHash must match.
