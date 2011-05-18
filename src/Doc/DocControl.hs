@@ -584,27 +584,6 @@ handleSignShow documentid
 
 --end
 
-{- |
-   The user with id uid is a friend of user.
-   Should be moved to User and imported
- -}
-isFriendOf :: UserID -> User -> Bool
-isFriendOf uid user = (unUserID uid `elem` map unFriend (userfriends user) || Just (SupervisorID $ unUserID uid) == usersupervisor user)
-
-isFriendOf' :: UserID -> Maybe User -> Bool
-isFriendOf' uid muser = fromMaybe False $ fmap (isFriendOf uid) muser
-
-isFriendWithSignatory :: UserID -> Document -> Kontra Bool
-isFriendWithSignatory uid document = do
-                                   areFriends <- sequence $ map (isFriendWithSignatoryLink uid) $ documentsignatorylinks document
-                                   return $ or areFriends
-                                   
-isFriendWithSignatoryLink :: UserID -> SignatoryLink -> Kontra Bool
-isFriendWithSignatoryLink uid sl = do
-                                     ctx <- get
-                                     muser1 <- query $ GetUserByEmail (currentServiceID ctx) $ Email $ signatoryemail $ signatorydetails $  sl
-                                     muser2 <- sequenceMM $ fmap (query . GetUserByUserID) $ maybesignatory sl
-                                     return $ (isFriendOf' uid muser1) || (isFriendOf' uid muser2)
 
 maybeAddDocumentCancelationMessage document = do
   let mMismatchMessage = getDataMismatchMessage $ documentcancelationreason document
@@ -1080,10 +1059,6 @@ getAndConcat field = do
   values <- getDataFnM $ lookInputList field
   return $ map concatChunks values
 
-mapJust :: (a -> Maybe b) -> [a] -> [b]
---mapJust = map fromJust . filter isJust . map
-mapJust f ls = [l | Just l <- map f ls]
-
 makePlacements :: [BS.ByteString]
                -> [BS.ByteString]
                -> [BS.ByteString]
@@ -1092,7 +1067,6 @@ makePlacements :: [BS.ByteString]
                -> [BS.ByteString]
                -> [BS.ByteString]
                -> Kontra [(BS.ByteString, BS.ByteString, FieldPlacement)]
-                  
 makePlacements placedsigids
                     placedfieldids
                     placedxs

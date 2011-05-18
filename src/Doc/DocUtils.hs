@@ -372,3 +372,25 @@ addTag ((DocumentTag n v):ts) (n',v') = if n == n'
                            then (DocumentTag n v') : ts 
                            else (DocumentTag n v)  : (addTag ts (n',v'))
 addTag _ (n,v) = [DocumentTag n v]        
+
+{- |
+   The user with id uid is a friend of user.
+   Should be moved to User and imported
+ -}
+isFriendOf :: UserID -> User -> Bool
+isFriendOf uid user = (unUserID uid `elem` map unFriend (userfriends user) || Just (SupervisorID $ unUserID uid) == usersupervisor user)
+
+isFriendOf' :: UserID -> Maybe User -> Bool
+isFriendOf' uid muser = fromMaybe False $ fmap (isFriendOf uid) muser
+
+isFriendWithSignatory :: UserID -> Document -> Kontra Bool
+isFriendWithSignatory uid document = do
+                                   areFriends <- sequence $ map (isFriendWithSignatoryLink uid) $ documentsignatorylinks document
+                                   return $ or areFriends
+                                   
+isFriendWithSignatoryLink :: UserID -> SignatoryLink -> Kontra Bool
+isFriendWithSignatoryLink uid sl = do
+                                     ctx <- get
+                                     muser1 <- query $ GetUserByEmail (currentServiceID ctx) $ Email $ signatoryemail $ signatorydetails $  sl
+                                     muser2 <- sequenceMM $ fmap (query . GetUserByUserID) $ maybesignatory sl
+                                     return $ (isFriendOf' uid muser1) || (isFriendOf' uid muser2)
