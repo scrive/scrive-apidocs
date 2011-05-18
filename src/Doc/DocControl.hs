@@ -1068,12 +1068,12 @@ makePlacements :: [BS.ByteString]
                -> [BS.ByteString]
                -> Kontra [(BS.ByteString, BS.ByteString, FieldPlacement)]
 makePlacements placedsigids
-                    placedfieldids
-                    placedxs
-                    placedys
-                    placedpages
-                    placedwidths
-                    placedheights = do
+               placedfieldids
+               placedxs
+               placedys
+               placedpages
+               placedwidths
+               placedheights = do
     -- safely read to Ints
     placedxsf      <- mapM (readM . BS.toString) placedxs
     placedysf      <- mapM (readM . BS.toString) placedys
@@ -1177,12 +1177,12 @@ makeSignatories placements fielddefs
 
 makeAuthorDetails pls fielddefs authorsigdetails = 
   authorsigdetails
-    { signatoryemailplacements = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "email")
-    , signatoryfstnameplacements = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "fstname")
-    , signatorysndnameplacements = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "sndname")
-    , signatorycompanyplacements = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "company")
+    { signatoryemailplacements          = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "email")
+    , signatoryfstnameplacements        = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "fstname")
+    , signatorysndnameplacements        = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "sndname")
+    , signatorycompanyplacements        = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "company")
     , signatorypersonalnumberplacements = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "personalnumber")
-    , signatorycompanynumberplacements = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "companynumber")
+    , signatorycompanynumberplacements  = filterPlacementsByID pls (BS.fromString "author") (BS.fromString "companynumber")
     , signatoryotherfields = filterFieldDefsByID fielddefs (BS.fromString "author")
     }
 
@@ -1207,7 +1207,7 @@ asValidDocumentFunctionality user oldfunc input =
 
 
 {- |
-   Save a document.
+   Save a document from data in the post params.
    
  -}
 updateDocument :: Context -> Document -> Kontra (Either String Document)
