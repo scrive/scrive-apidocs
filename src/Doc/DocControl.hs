@@ -1776,13 +1776,6 @@ sendCancelMailsForDocument customMessage ctx document = do
   let activated_signatories = filter (isActivatedSignatory $ documentcurrentsignorder document) $ documentsignatorylinks document
   liftIO $ forM_ activated_signatories (scheduleEmailSendout (ctxesenforcer ctx) <=< (mailCancelDocumentByAuthor (ctxtemplates ctx) customMessage ctx document))
 
-failIfNoDocument :: DocumentID -> Kontra ()
-failIfNoDocument docid = do
-  mdoc <- query $ GetDocumentByDocumentID docid
-  case mdoc of
-    Just doc -> return ()
-    Nothing  -> mzero
-
 failIfNotAuthor :: Document -> User -> Kontra ()
 failIfNotAuthor document user = guard (isUserAuthor document user)
 
