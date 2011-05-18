@@ -58,16 +58,8 @@ handleUserPost = do
              -- propagate company info to all subaccounts since it might have changed
              query (GetUserByUserID $ userid user) >>= maybe (return ()) (\newuser -> do
                  subs <- query $ GetUserSubaccounts $ userid newuser
-                 let infoupdatef = \info -> info {
-                       usercompanyname = usercompanyname $ userinfo newuser
-                     , usercompanynumber = usercompanynumber $ userinfo newuser
-                     , useraddress = useraddress $ userinfo newuser
-                     , userzip = userzip $ userinfo newuser
-                     , usercity = usercity $ userinfo newuser
-                     , usercountry = usercountry $ userinfo newuser
-                 }
                  F.forM_ subs $ \sub -> do
-                     update $ SetUserInfo (userid sub) (infoupdatef $ userinfo sub)
+                     update $ SetUserInfo (userid sub) (copyCompanyInfo newuser $ userinfo sub)
                  )
              addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved $ ctxtemplates ctx)
              return LinkAccount
@@ -102,6 +94,17 @@ getUserInfoUpdate  = do
           , usercountry  = fromMaybe (usercountry  ui) mcountry 
           , userphone  = fromMaybe (userphone ui) mphone
         }
+
+copyCompanyInfo :: User -> UserInfo -> UserInfo
+copyCompanyInfo fromuser info = 
+  info 
+  { usercompanyname = usercompanyname $ userinfo fromuser
+  , usercompanynumber = usercompanynumber $ userinfo fromuser
+  , useraddress = useraddress $ userinfo fromuser
+  , userzip = userzip $ userinfo fromuser
+  , usercity = usercity $ userinfo fromuser
+  , usercountry = usercountry $ userinfo fromuser
+  }
 
 handleGetUserSecurity :: Kontra Response
 handleGetUserSecurity = do
@@ -256,7 +259,7 @@ handleCreateSubaccount user = when (isAbleToHaveSubaccounts user) $ do
         case muser of
           Just newuser -> do
             infoUpdate <- getUserInfoUpdate
-            update $ SetUserInfo (userid newuser) (infoUpdate $ userinfo newuser)
+            update $ SetUserInfo (userid newuser) ((copyCompanyInfo user) . infoUpdate $ userinfo newuser)
             return ()
           Nothing -> do
             addModal $ modalInviteUserAsSubaccount fstname sndname (BS.toString email)
