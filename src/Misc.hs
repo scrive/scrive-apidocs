@@ -614,3 +614,7 @@ isLeft _ = False
 fromLeft :: Either a b -> a
 fromLeft (Left a) = a
 fromLeft _ = error "Reading Left for Right"
+
+mapJust :: (a -> Maybe b) -> [a] -> [b]
+--mapJust = map fromJust . filter isJust . map
+mapJust f ls = [l | Just l <- map f ls]
