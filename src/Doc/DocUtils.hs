@@ -240,6 +240,7 @@ isEligibleForReminder muser document@Document{documentstatus} siglink =
     && not isUserSignator
     && not dontShowAnyReminder
     && invitationdeliverystatus siglink /= Undelivered
+    && invitationdeliverystatus siglink /= Deferred
     && (isClosed || not wasSigned)
     && isSignatoryPartner
   where

@@ -155,10 +155,9 @@ createLocalOpenMailer ourInfoEmail ourInfoEmailNiceName = Mailer{sendMail = send
             tmp <- getTemporaryDirectory
             mailId <- createMailId
             boundaries <- createBoundaries
-            uid <- randomRIO (1, 100000) :: IO Int
             let wholeContent = createWholeContent boundaries ourInfoEmail ourInfoEmailNiceName mailId mail
                 mailtos = createMailTos mail
-                filename = tmp ++ "/Email-" ++ BS.toString (snd $ head fullnameemails) ++ "-" ++ show uid ++ ".eml"
+                filename = tmp ++ "/Email-" ++ BS.toString (snd $ head fullnameemails) ++ "-" ++ show mailId ++ ".eml"
             Log.mail $ show mailId ++ " " ++ concat (intersperse ", " mailtos) ++ "  [staging: saved to file " ++ filename ++ "]"
             BSL.writeFile filename wholeContent
             openDocument filename
@@ -170,7 +169,7 @@ createMailTos (Mail {fullnameemails}) =
   where fmt (fullname,email) = mailEncode fullname ++ " <" ++ BS.toString email ++ ">"
 
 createMailId :: IO Integer
-createMailId = randomIO 
+createMailId = randomRIO (1, 100000)
 
 createBoundaries :: IO (String, String)
 createBoundaries = (,) <$> f <*> f

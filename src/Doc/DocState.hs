@@ -846,7 +846,7 @@ changeSignatoryEmailWhenUndelivered did slid email = modifySignable did $ change
   where changeEmail doc = let signlinks = documentsignatorylinks doc
                               mnsignlink = do
                                            sl <- find ((== slid) . signatorylinkid) signlinks
-                                           when (invitationdeliverystatus sl /= Undelivered ) Nothing
+                                           when (invitationdeliverystatus sl /= Undelivered && invitationdeliverystatus sl /= Deferred) Nothing
                                            return $ sl {invitationdeliverystatus = Unknown, signatorydetails = (signatorydetails sl) {signatoryemail = email}}
                                            
                           in case mnsignlink  of
