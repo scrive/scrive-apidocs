@@ -6,6 +6,7 @@ module AppControl
     , AppConf(..)
     , AppGlobals(..)
     , defaultAWSAction
+    , parseEmailMessage
     ) where
 
 --import ELegitimation.BankID as BankID
@@ -36,7 +37,9 @@ import Kontra
 import qualified User.UserControl as UserControl
 import User.UserView as UserView
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as L
+import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Doc.DocControl as DocControl
@@ -72,7 +75,6 @@ import Happstack.Server.Internal.Cookie
 import API.IntegrationAPI
 import Templates.Templates
 import Routing
-import API.Service.ServiceState
 {- | 
   Defines the application's configuration.  This includes amongst other things
   the http port number, amazon, trust weaver and email configuraton,
@@ -138,7 +140,9 @@ handleRoutes = msum [
      , dir "om-skrivapa" $ hGetAllowHttp $ handleAboutPage
      , dir "partners" $ hGetAllowHttp $ handlePartnersPage
      , dir "kunder" $ hGetAllowHttp $ handleClientsPage
-     
+       
+     -- this is SMTP to HTTP gateway  
+     , dir "mailapi" $ handleMailAPI
 
      -- e-legitimation stuff
      -- I put this stuff up here because someone changed things out from under me
@@ -406,6 +410,7 @@ showRequest rq maybeInputsBody =
 appHandler :: AppConf -> AppGlobals -> ServerPartT IO Response
 appHandler appConf appGlobals = do
   let quota = 10000000
+      
   temp <- liftIO $ getTemporaryDirectory
   decodeBody (defaultBodyPolicy temp quota quota quota)
 
@@ -722,3 +727,119 @@ daveUser userid = onlySuperUserGet $ do
     ctx <- get
     user <- queryOrFail $ GetUserByUserID userid
     V.renderFromBody V.TopNone V.kontrakcja $ inspectXML user
+
+
+
+{- 
+
+{ "title": "Title of the document",
+  "persons": [ 
+           { "firstName": "Gracjan",
+             "lastName": "Polak",
+             "personNumber": "1412341234"
+             "email": "gracjan@skrivapa.se"
+           }]
+}
+
+-}
+parseEmailMessage :: (Monad m) => BS.ByteString -> m (Either String (JSValue,BS.ByteString))
+parseEmailMessage content = runErrorT $ do
+  let mime = MIME.parseMIMEMessage (BSC.unpack content)
+  let parts mime =  case MIME.mime_val_content mime of 
+                       MIME.Single value -> [(MIME.mimeType $ MIME.mime_val_type mime, value)]
+                       MIME.Multi more -> concatMap parts more
+      allParts = parts mime
+      isPDF (tp,_) = tp == MIME.Application "pdf"
+      isPlain (tp,_) = tp == MIME.Text "plain"
+      typesOfParts = map fst allParts
+  let pdfs = filter isPDF allParts
+  let plains = filter isPlain allParts
+  pdf <- case pdfs of
+              [pdf] -> return pdf
+              [] -> fail $ "Exactly one of attachments should be application/pdf, you have " ++ show typesOfParts
+  plain <- case plains of
+              [plain] -> return plain
+              [] -> fail $ "Exactly one of attachments should be text/plain, you have " ++ show typesOfParts
+  let pdfBinary = BSC.empty -- BSC.pack (snd pdf)
+  json <- (ErrorT . return) $ runGetJSON readJSObject (snd plain)
+  return (json,pdfBinary)
+  
+
+handleMailCommand :: JSValue -> BS.ByteString -> Kontra (Either String ())
+handleMailCommand (JSObject json) content = runErrorT $ do
+  -- here we should extract data for new document, but I do not care enough about this for now
+  -- lets make it simple as hell
+  ctx@(Context {ctxhostpart, ctxtime, ctxipnumber}) <- lift get
+  maybeUser <- lift $ query $ GetUserByEmail $ Email $ BS.fromString "gracjanpolak@gmail.com"
+  user <- maybe (fail "user not found") return maybeUser
+  
+  let offer = False
+  let title = case get_field json "title" of
+                   Just (JSString x) -> BS.fromString (fromJSString x)
+                   Nothing -> BS.fromString "Untitled document received by email"
+      persons :: [SignatoryDetails]
+      persons = maybe [] id $ do -- maybe monad
+        JSArray p <- get_field json "persons"
+        mapM extractPerson p
+      extractPerson (JSObject x) = do
+        JSString email <- get_field x "email" 
+        JSString firstName <- get_field x "firstName" 
+        JSString lastName <- get_field x "lastName" 
+        return $ SignatoryDetails 
+                               { signatoryfstname = BS.fromString (fromJSString firstName)
+                               , signatorysndname = BS.fromString (fromJSString lastName)
+                               , signatorycompany = BS.empty
+                               , signatorypersonalnumber = BS.empty
+                               , signatorycompanynumber = BS.empty
+                               , signatoryemail = BS.fromString (fromJSString email)
+                               , signatoryfstnameplacements = []
+                               , signatorysndnameplacements = []
+                               , signatorycompanyplacements = []
+                               , signatoryemailplacements = []
+                               , signatorypersonalnumberplacements = []
+                               , signatorycompanynumberplacements = []
+                               , signatoryotherfields = []
+                               , signatorysignorder = SignOrder 1
+                               }
+      extractPerson _ = fail "not a dict?"
+      signatories = [(userDetails,[SignatoryPartner, SignatoryAuthor])] ++ map (\p -> (p,[SignatoryPartner])) persons
+      userDetails = signatoryDetailsFromUser user
+        
+  Log.debug $ show persons
+  let doctype = if (offer) then Offer else Contract
+  doc <- lift $ update $ NewDocument user title doctype ctxtime
+  lift $ DocControl.handleDocumentUpload (documentid doc) content title
+  ErrorT $ update $ UpdateDocument ctxtime (documentid doc) title 
+    signatories Nothing BS.empty user userDetails [EmailIdentification] Nothing AdvancedFunctionality
+  
+  newdocument <- ErrorT $ update $ AuthorSendDocument (documentid doc) ctxtime ctxipnumber user Nothing
+  lift $ DocControl.markDocumentAuthorReadAndSeen newdocument user ctxtime ctxipnumber
+  lift $ DocControl.postDocumentChangeAction newdocument doc Nothing
+  return ()
+      
+  
+handleMailAPI :: Kontra Response
+handleMailAPI = do
+    input@(Input contentspec (Just filename) _contentType) <- getDataFnM (lookInput "mail")
+    content <- case contentspec of
+        Left filepath -> liftIO $ BSL.readFile filepath
+        Right content -> return content
+    
+    -- content at this point is basically full MIME email as it was received by SMTP server
+    -- can be tested using curl -X POST @mail.eml http://url.com/mailapi/
+    result <- parseEmailMessage (concatChunks content)
+    case result of
+      Left msg -> do
+        Log.debug $ "handleMailAPI: " ++ msg
+        return $ toResponse msg
+      Right (json, pdf) -> do
+        result' <- handleMailCommand json pdf
+        case result' of
+          Right _ -> return $ toResponse ""
+          Left msg -> do
+            Log.debug $ msg
+            return $ toResponse msg
+            
+            
+        
+       
