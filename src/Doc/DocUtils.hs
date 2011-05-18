@@ -201,6 +201,12 @@ isUndelivered :: SignatoryLink -> Bool
 isUndelivered sl = invitationdeliverystatus sl == Undelivered
 
 {- |
+   Is this SignatoryLink Deferred?
+ -}
+isDeferred :: SignatoryLink -> Bool
+isDeferred sl = invitationdeliverystatus sl == Deferred
+
+{- |
    Given a Document, return all of the undelivered signatorylinks.
  -}
 undeliveredSignatoryLinks :: Document -> [SignatoryLink]
@@ -292,6 +298,16 @@ allowsIdentification document idtype = idtype `elem` documentallowedidtypes docu
 isViewer :: Document -> User -> Bool
 isViewer doc user = any (isSigLinkForUser user) $ documentsignatorylinks doc
 
+-- Not ready to refactor this quite yet.
+isEligibleForReminder :: Maybe User -> Document -> SignatoryLink -> Bool
+isEligibleForReminder muser doc siglink = isEligibleForReminder'' muser doc siglink
+
+{- |
+   Is this Document closed?
+ -}
+isClosed :: Document -> Bool
+isClosed doc = documentstatus doc == Closed
+
 -- this should actually not take Maybe User but User instead
 {- |
     Checks whether a signatory link is eligible for sending a reminder.
@@ -299,25 +315,43 @@ isViewer doc user = any (isSigLinkForUser user) $ documentsignatorylinks doc
     Also the signatory must be next in the signorder, and also not be a viewer.
     In addition the document must be in the correct state.  There's quite a lot to check!
 -}
-isEligibleForReminder :: Maybe User -> Document -> SignatoryLink -> Bool
-isEligibleForReminder muser document@Document{documentstatus} siglink = 
+isEligibleForReminder' :: User -> Document -> SignatoryLink -> Bool
+isEligibleForReminder' user document siglink = 
+  isActivatedSignatory (documentcurrentsignorder document) siglink
+  && isUserAuthor document user
+  && not (isSigLinkForUser user siglink)
+  && isDocumentEligibleForReminder document
+  && not (isUndelivered siglink)
+  && not (isDeferred siglink)
+  && isClosed document
+  && isSignatory siglink
+  
+isEligibleForReminder'' :: Maybe User -> Document -> SignatoryLink -> Bool  
+isEligibleForReminder'' muser document@Document{documentstatus} siglink =
   signatoryActivated 
     && userIsAuthor 
     && not isUserSignator
     && not dontShowAnyReminder
     && invitationdeliverystatus siglink /= Undelivered
     && invitationdeliverystatus siglink /= Deferred
-    && (isClosed || not wasSigned)
+    && (isClosed' || not wasSigned)
     && isSignatoryPartner
   where
     userIsAuthor = maybe False (isUserAuthor document) muser
     isUserSignator = maybe False (flip isSigLinkForUser siglink) muser
     wasSigned = isJust (maybesigninfo siglink) && not (isUserSignator && (documentstatus == AwaitingAuthor))
-    isClosed = documentstatus == Closed
+    isClosed' = documentstatus == Closed
     signatoryActivated = documentcurrentsignorder document >= signatorysignorder (signatorydetails siglink)
     dontShowAnyReminder = documentstatus `elem` [Timedout, Canceled, Rejected]
     isSignatoryPartner = SignatoryPartner `elem` signatoryroles siglink
-
+    
+-- Please define this better. Maybe in the positive?    
+{- |
+   Is this document eligible for a reminder (depends on documentstatus)?
+ -}
+isDocumentEligibleForReminder :: Document -> Bool
+isDocumentEligibleForReminder doc = not $ documentstatus doc `elem` [Timedout, Canceled, Rejected]
+    
 {- |
     Removes the field placements and the custom fields.
 -}
