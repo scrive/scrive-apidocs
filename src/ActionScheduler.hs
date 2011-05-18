@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall -fno-warn-unused-do-bind #-}
+{-# OPTIONS_GHC -Wall -Werror -fno-warn-unused-do-bind #-}
 
 module ActionScheduler (
       ActionScheduler
@@ -8,13 +8,12 @@ module ActionScheduler (
     , oldScheduler
     ) where
 
-import Control.Applicative ((<$>))
-import Control.Concurrent (threadDelay)
-import Control.Concurrent.MVar
+import Control.Applicative
+import Control.Concurrent
 import Control.Monad.Reader
-import Data.Maybe (isJust)
-import Happstack.State (query, update)
-import System.Log.Logger (debugM)
+import Data.Maybe
+import Happstack.State
+import System.Log.Logger
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
 
@@ -29,7 +28,6 @@ import Session
 import Templates.Templates (KontrakcjaTemplates)
 import User.UserView
 import qualified AppLogger as Log
-import Control.Concurrent.MVar
 import System.Time
 
 type SchedulerData' = SchedulerData AppConf Mailer (MVar (ClockTime, KontrakcjaTemplates))
