@@ -103,10 +103,16 @@ joinWith _ [x] = x
 joinWith s (x:xs) = x ++ s ++ joinWith s xs
 
 {- Either a signatory name or email address. We dont want to show empty strings -}
+{- |
+   Given a SignatoryLink, return a "smart" name: either the name or the email.
+ -}
 personname :: SignatoryLink -> BS.ByteString 
 personname = personname' . signatorydetails 
 
 {- Same but unwrapped. We need this cause author details are in this format  -}
+{- |
+   Given a SignatoryDetails, return a "smart" name: either the name or the email.
+ -}
 personname' :: SignatoryDetails -> BS.ByteString 
 personname' signdetails = if BS.null $ signatoryname signdetails
                           then  signatoryemail signdetails
@@ -120,7 +126,7 @@ personname' signdetails = if BS.null $ signatoryname signdetails
 emailFromSignLink :: SignatoryLink -> (BS.ByteString, BS.ByteString)
 emailFromSignLink sl = (signatoryname $ signatorydetails sl, signatoryemail $ signatorydetails sl) 
 
-
+-- where does this go? -EN
 renderListTemplate:: KontrakcjaTemplates -> [String] -> IO String
 renderListTemplate templates list = 
   if length list > 1
@@ -155,14 +161,6 @@ instance (MaybeUser u) => MaybeUser (Maybe u) where
 sameUser:: (MaybeUser u1, MaybeUser u2) =>  u1 ->  u2 -> Bool  
 sameUser u1 u2 = getUserID u1 == getUserID u2
 
-
-{- |
-  Some info utils about state of document
--}
-
-anyInvitationUndelivered :: Document -> Bool
-anyInvitationUndelivered =  not . Prelude.null . undeliveredSignatoryLinks
-
 class MaybeTemplate a where
    isTemplate :: a -> Bool
    isSignable :: a -> Bool 
@@ -188,6 +186,7 @@ instance  MaybeContractOrOffer Document where
 matchingType::(MaybeContractOrOffer a, MaybeContractOrOffer b) => a -> b -> Bool
 matchingType a b = (isContract a && isContract b) || (isOffer a && isOffer b)
 
+-- does this need to change now? -EN
 checkCSVSigIndex :: [SignatoryLink] -> Int -> Either String Int
 checkCSVSigIndex sls n
   | n<0 || n>=slcount = Left $ "signatory with index " ++ show n ++ " doesn't exist."
@@ -195,20 +194,32 @@ checkCSVSigIndex sls n
   | otherwise = Right n
   where slcount = length sls
 
--- GETTERS
-        
+{- |
+   Is this SignatoryLink undelivered?
+ -}
 isUndelivered :: SignatoryLink -> Bool
 isUndelivered sl = invitationdeliverystatus sl == Undelivered
 
+{- |
+   Given a Document, return all of the undelivered signatorylinks.
+ -}
 undeliveredSignatoryLinks :: Document -> [SignatoryLink]
 undeliveredSignatoryLinks doc = filter isUndelivered $ documentsignatorylinks doc
 
+{- |
+   Are there any undelivered signatory links?
+ -}
+anyInvitationUndelivered :: Document -> Bool
+anyInvitationUndelivered doc =  any isUndelivered $ documentsignatorylinks doc
+
+{- |
+   Get the full name of a SignatoryDetails.
+ -}
 signatoryname :: SignatoryDetails -> BS.ByteString
 signatoryname s = 
   if BS.null $ signatorysndname s
   then signatoryfstname s 
   else signatoryfstname s `BS.append` BS.fromString " " `BS.append` signatorysndname s
-
 
 -- OTHER UTILS
 
@@ -249,22 +260,35 @@ signatoryDetailsFromUser user =
                      , signatoryotherfields              = []
                      }
                      
-
+{- |
+   
+ -}
 isMatchingSignatoryLink :: User -> SignatoryLink -> Bool
 isMatchingSignatoryLink user sigLink = isSigLinkForUser user sigLink
 
+{- |
+   Add some history to a document.
+ -}
 appendHistory :: Document -> [DocumentHistoryEntry] -> Document
 appendHistory document history = 
     document { documentlog = documentlog document ++ map documentHistoryToDocumentLog history }
 
+{- |
+   Is a CancelationReason due to ELegDataMismatch?
+ -}
 isELegDataMismatch :: CancelationReason -> Bool
 isELegDataMismatch (ELegDataMismatch _ _ _ _ _) = True
 isELegDataMismatch _                            = False
 
+{- |
+   Does document allow idtype?
+ -}
 allowsIdentification :: Document -> IdentificationType -> Bool
-allowsIdentification document idtype = 
-  idtype `elem` documentallowedidtypes document
+allowsIdentification document idtype = idtype `elem` documentallowedidtypes document
 
+{- |
+   Is the user able to view the doc?
+ -}
 isViewer :: Document -> User -> Bool
 isViewer doc user = any (isSigLinkForUser user) $ documentsignatorylinks doc
 
@@ -326,9 +350,15 @@ signlinkFromDocById doc sid = find ((== sid) . signatorylinkid) (documentsignato
 getAuthorSigLink :: Document -> Maybe SignatoryLink
 getAuthorSigLink = find (elem SignatoryAuthor . signatoryroles) . documentsignatorylinks
 
+{- |
+   Does this SignatoryLink belong to the User with userid?
+ -}
 isSigLinkForUserID :: UserID -> SignatoryLink -> Bool
 isSigLinkForUserID userid siglink = Just userid == maybesignatory siglink
 
+{- |
+   Get the SignatoryLink for a given UserID from a Document.
+ -}
 getSigLinkForUserID :: Document -> UserID -> Maybe SignatoryLink
 getSigLinkForUserID doc uid = find (isSigLinkForUserID uid) $ documentsignatorylinks doc
 
@@ -340,9 +370,15 @@ isSigLinkForUserInfo userid email siglink =
     Just userid == maybesignatory siglink
        || email == signatoryemail (signatorydetails siglink)
        
+{- |
+   Given a document, a userid, and an email, return the SignatoryLink that belongs to the User with the email or userid.
+ -}
 getSigLinkForUserInfo :: UserID -> BS.ByteString -> Document -> Maybe SignatoryLink
 getSigLinkForUserInfo userid email document = find (isSigLinkForUserInfo userid email) $ documentsignatorylinks document
 
+{- |
+   Does the SignatoryLink belong to User?
+ -}
 isSigLinkForUser :: User -> SignatoryLink -> Bool
 isSigLinkForUser user = isSigLinkForUserInfo (userid user) (unEmail $ useremail $ userinfo user)
 
@@ -365,12 +401,21 @@ canUserInfoViewDirectly userid email doc =
     Just siglink | isActivatedSignatory (documentcurrentsignorder doc) siglink -> True
     _                                                                          -> False
 
+{- |
+   Can a user view this document?
+ -}
 canUserViewDirectly :: User -> Document -> Bool
 canUserViewDirectly user = canUserInfoViewDirectly (userid user) (unEmail $ useremail $ userinfo user)
 
+{- |
+   Is this SignatoryLinkID for this SignatoryLink?
+ -}
 isSigLinkIDForSigLink :: SignatoryLinkID -> SignatoryLink -> Bool
 isSigLinkIDForSigLink siglinkid siglink = siglinkid == signatorylinkid siglink
 
+{- |
+   Get the SignatoryLink from Document with SignatoryLinkID.
+ -}
 getSigLinkBySigLinkID :: SignatoryLinkID -> Document -> Maybe SignatoryLink
 getSigLinkBySigLinkID siglinkid = 
   find (isSigLinkIDForSigLink siglinkid) . documentsignatorylinks
@@ -382,28 +427,50 @@ isActivatedSignatory :: SignOrder -> SignatoryLink -> Bool
 isActivatedSignatory signorder siglink = 
   signorder >= signatorysignorder (signatorydetails siglink)
 
+{- |
+   Given a SignOrder and a SignatoryLink, determine whether the
+   SignatoryLink is the next one up.
+ -}
 isCurrentSignatory :: SignOrder -> SignatoryLink -> Bool
 isCurrentSignatory signorder siglink =
   signorder == signatorysignorder (signatorydetails siglink)
 
+{- |
+   Is this SignatoryLink an author?
+ -}
 siglinkIsAuthor :: SignatoryLink -> Bool
 siglinkIsAuthor siglink = SignatoryAuthor `elem` signatoryroles siglink
 
+{- |
+   Is the Author of this Document a signatory (not a Secretary)?
+ -}
 isAuthorSignatory :: Document -> Bool
 isAuthorSignatory document =
   case getAuthorSigLink document of
     Just siglink -> isSignatory siglink
     _ -> False
 
+{- |
+   Is this user the author of doc?
+ -}
 isUserAuthor :: Document -> User -> Bool
 isUserAuthor doc user = maybe False siglinkIsAuthor $ getSigLinkForUser doc user
 
+{- |
+   Does the author of this doc have this userid?
+ -}
 isUserIDAuthor :: Document -> UserID -> Bool
 isUserIDAuthor doc userid = maybe False (isSigLinkForUserID userid) $ getAuthorSigLink doc
 
+{- |
+   Is the document deleted for this userid?
+ -}
 isDeletedForUserID :: Document -> UserID -> Bool
 isDeletedForUserID doc userid = maybe False signatorylinkdeleted $ getSigLinkForUserID doc userid
 
+{- |
+   Is this Document an Attachment?
+ -}
 isAttachment :: Document -> Bool
 isAttachment doc = Attachment == documenttype doc
 
