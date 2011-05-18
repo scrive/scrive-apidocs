@@ -338,8 +338,8 @@ singlnkFields document dateformatter sl = do
 -}
 data StatusClass = SCDraft
                   | SCCancelled
-                  | SCTimedout
                   | SCSent
+                  | SCDelivered
                   | SCRead
                   | SCOpened
                   | SCSigned
@@ -348,8 +348,8 @@ data StatusClass = SCDraft
 instance Show StatusClass where
   show SCDraft = "draft"
   show SCCancelled = "cancelled"
-  show SCTimedout = "expired"
   show SCSent = "sent"
+  show SCDelivered = "delivered"
   show SCRead = "read"
   show SCOpened = "opened"
   show SCSigned = "signed"
@@ -939,7 +939,7 @@ signatoryLinkFields
       field "allowRemindForm" $ isEligibleForReminder muser document siglnk            
       field "linkremind" $ show (LinkRemind document siglnk)
       field "linkchangeemail" $  show $ LinkChangeSignatoryEmail (documentid document) signatorylinkid
-      field "allowEmailChange" $ (isCurrentUserAuthor && (invitationdeliverystatus == Undelivered) && isActiveDoc)
+      field "allowEmailChange" $ (isCurrentUserAuthor && (invitationdeliverystatus == Undelivered || invitationdeliverystatus == Deferred) && isActiveDoc)
       field "reminderMessage" $ mailDocumentRemindContent ctxtemplates Nothing ctx document siglnk 
       field "role" $ if isSignatory siglnk
                      then "signatory"
@@ -961,10 +961,11 @@ signatoryStatusClass
   } =
   caseOf [
       (invitationdeliverystatus==Undelivered,  SCCancelled)
+    , (invitationdeliverystatus==Delivered, SCDelivered)
     , (documentstatus==Preparation, SCDraft)
     , (documentstatus==Canceled, SCCancelled)
     , (documentstatus==Rejected, SCCancelled)
-    , (documentstatus==Timedout, SCTimedout)
+    , (documentstatus==Timedout, SCCancelled)
     , (isJust maybesigninfo, SCSigned)
     , (isJust maybeseeninfo, SCOpened)
     , (isJust maybereadinvite, SCRead)

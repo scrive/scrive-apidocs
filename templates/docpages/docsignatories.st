@@ -155,7 +155,7 @@ reminderForm =
 #### For change signatory email
 ####
 changeEmailForm =  
-<div>
+<div style="margin-top: 10px">
 <a class="btn-tiny blue replacebynextonclick">
                 <div class="left"></div>
                 <div class="label">

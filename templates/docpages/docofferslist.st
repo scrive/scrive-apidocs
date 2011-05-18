@@ -132,8 +132,8 @@ $loadingdialog()$
                     -->
 					<div class="icon status draft float-left"></div><div class="float-left">Utkast&nbsp;</div>
 					<div class="icon status cancelled float-left"></div><div class="float-left">Avbrutet&nbsp;</div>
-					<div class="icon status expired float-left"></div><div class="float-left">Förfallet&nbsp;</div>
 					<div class="icon status sent float-left"></div><div class="float-left">Skickat&nbsp;</div>
+					<div class="icon status delivered float-left"></div><div class="float-left">Levererat&nbsp;</div>
 					<!--
 					<div class="icon status reviewed float-left"></div><div class="float-left">Granskat&nbsp;</div>
 					-->
@@ -151,11 +151,11 @@ $loadingdialog()$
     <div id="tooltip-cancelled" class="hidden">
         <div class="icon status cancelled"></div><p>Status: Avbrutet</p>
     </div>
-    <div id="tooltip-expired" class="hidden">
-        <div class="icon status expired"></div><p>Status: Förfallet</p>
-    </div>
     <div id="tooltip-sent" class="hidden">
-        <div class="icon status sent"></div><p>Status: Skickat</p>
+      <div class="icon status sent"></div><p>Status: Skickat</p>
+    </div>
+    <div id="tooltip-delivered" class="hidden">
+      <div class="icon status delivered"></div><p>Status: Levererat</p>
     </div>
     <div id="tooltip-reviewed" class="hidden">
         <div class="icon status reviewed"></div><p>Status: Granskat online</p>

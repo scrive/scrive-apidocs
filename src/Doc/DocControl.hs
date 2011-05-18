@@ -1772,14 +1772,14 @@ handleChangeSignatoryEmail did slid = withUserPost $ do
            Right doc -> do
              guard $ isUserAuthor doc user
              mdoc <- update $ ChangeSignatoryEmailWhenUndelivered docid slid email
-             let msl = getSigLinkBySigLinkID slid doc
-             case (mdoc,msl,ctxmaybeuser ctx) of 
-               (Right doc,Just sl,Just user) -> do
-                    liftIO $ sendInvitationEmail1 ctx doc sl
-                    return $ LinkIssueDoc $ docid                                           
-               _ -> return LinkMain                                                               
-     _ -> return LinkMain  
-                                     
+             case (mdoc, ctxmaybeuser ctx) of 
+               (Right doc, Just user) -> do
+                   -- get (updated) siglink from updated document
+                   sl <- signatoryLinkFromDocumentByID doc slid
+                   liftIO $ sendInvitationEmail1 ctx doc sl
+                   return $ LinkIssueDoc $ docid
+               _ -> return LinkMain
+     _ -> return LinkMain
 
 sendCancelMailsForDocument:: (Maybe BS.ByteString) -> Context -> Document -> Kontra ()
 sendCancelMailsForDocument customMessage ctx document = do
