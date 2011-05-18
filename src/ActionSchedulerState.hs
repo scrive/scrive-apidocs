@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -Werror #-}
 
 module ActionSchedulerState (
       SchedulerData(..)
@@ -28,17 +28,16 @@ module ActionSchedulerState (
     , newEmailSendoutAction
     ) where
 
-import Control.Applicative ((<$>))
-import Control.Monad.State (modify)
-import Control.Monad.Reader (ask)
+import Control.Applicative
+import Control.Monad.State
+import Control.Monad.Reader
 import Data.Typeable
-import Data.Word
-import Happstack.Data.IxSet (Indexable, IxSet, getOne, ixFun, ixSet, (@=), (@<=), (@>))
+import Happstack.Data.IxSet
 import Happstack.State
-import System.Random (randomIO)
+import System.Random
 import qualified Happstack.Data.IxSet as IxSet
-import Happstack.Server.SimpleHTTP (FromReqURI(..))
-import Happstack.Util.Common (readM)
+import Happstack.Server.SimpleHTTP
+import Happstack.Util.Common
 
 import Doc.DocState
 import Misc
