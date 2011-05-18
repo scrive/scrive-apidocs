@@ -75,6 +75,16 @@ import Happstack.Server.Internal.Cookie
 import API.IntegrationAPI
 import Templates.Templates
 import Routing
+import qualified Codec.MIME.Type as MIME
+import qualified Codec.MIME.Parse as MIME
+import Text.JSON
+import Text.JSON.Types
+import Text.JSON.String
+import Control.Monad.Error
+import API.Service.ServiceState
+
+
+
 {- | 
   Defines the application's configuration.  This includes amongst other things
   the http port number, amazon, trust weaver and email configuraton,
@@ -769,8 +779,8 @@ handleMailCommand :: JSValue -> BS.ByteString -> Kontra (Either String ())
 handleMailCommand (JSObject json) content = runErrorT $ do
   -- here we should extract data for new document, but I do not care enough about this for now
   -- lets make it simple as hell
-  ctx@(Context {ctxhostpart, ctxtime, ctxipnumber}) <- lift get
-  maybeUser <- lift $ query $ GetUserByEmail $ Email $ BS.fromString "gracjanpolak@gmail.com"
+  ctx@(Context {ctxhostpart, ctxtime, ctxipnumber}) <- lift (lift get)
+  maybeUser <- lift $ query $ GetUserByEmail Nothing $ Email $ BS.fromString "gracjanpolak@gmail.com"
   user <- maybe (fail "user not found") return maybeUser
   
   let offer = False
@@ -802,7 +812,7 @@ handleMailCommand (JSObject json) content = runErrorT $ do
                                , signatorysignorder = SignOrder 1
                                }
       extractPerson _ = fail "not a dict?"
-      signatories = [(userDetails,[SignatoryPartner, SignatoryAuthor])] ++ map (\p -> (p,[SignatoryPartner])) persons
+      signatories = {- [(userDetails,[SignatoryPartner, SignatoryAuthor])] ++ -} map (\p -> (p,[SignatoryPartner])) persons
       userDetails = signatoryDetailsFromUser user
         
   Log.debug $ show persons
@@ -810,10 +820,10 @@ handleMailCommand (JSObject json) content = runErrorT $ do
   doc <- lift $ update $ NewDocument user title doctype ctxtime
   lift $ DocControl.handleDocumentUpload (documentid doc) content title
   ErrorT $ update $ UpdateDocument ctxtime (documentid doc) title 
-    signatories Nothing BS.empty user userDetails [EmailIdentification] Nothing AdvancedFunctionality
+    signatories Nothing BS.empty (userDetails,[SignatoryPartner, SignatoryAuthor],userid user) [EmailIdentification] Nothing AdvancedFunctionality
   
-  newdocument <- ErrorT $ update $ AuthorSendDocument (documentid doc) ctxtime ctxipnumber user Nothing
-  lift $ DocControl.markDocumentAuthorReadAndSeen newdocument user ctxtime ctxipnumber
+  newdocument <- ErrorT $ update $ AuthorSendDocument (documentid doc) ctxtime ctxipnumber Nothing
+  lift $ DocControl.markDocumentAuthorReadAndSeen newdocument ctxtime ctxipnumber
   lift $ DocControl.postDocumentChangeAction newdocument doc Nothing
   return ()
       
