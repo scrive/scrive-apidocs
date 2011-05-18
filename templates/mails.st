@@ -353,19 +353,39 @@ mailNewAccountCreatedByAdminContent=
 
     $poweredBySkrivaPaPara()$
 ####
+invitationMailDeferredTitle=Problem med leverans
+###
+invitationMailDeferredContent=
+    <span>
+      <p>Hej $authorname$,</p>
+      <p>Vi skickar detta meddelande för att meddela att vårt system har identifierat ett problem med mottagarens e-postserver. Antingen finns inte e-postadressen eller så ligger mottagarens e-postserver nere för tillfället. Vänligen kontrollera att mottagarens e-post är korrekt.</p>
+      <p>Vi fortsätter försöka att nå mottagarens server och meddelar inom kort hur det gått. Klicka på länken nedan om du vill stoppa våra försök eller om du vill ändra e-post adressen.<br />
+      <a href="$ctxhostpart$$unsigneddoclink$">$ctxhostpart$$unsigneddoclink$</a></p>
+      $poweredBySkrivaPaPara()$
+    </span>
+###
+invitationMailDeliveredAfterDeferredTitle=Lyckosam leverans
+###
+invitationMailDeliveredAfterDeferredContent=
+    <span>
+      <p>Hej $authorname$,</p>
+      <p>Vi meddelade dig tidigare om att vi hade problem att nå mottagarens server. Efter upprepade försök har vår server lyckats leverera inbjudan till dokumentet <strong>$documenttitle$</strong> till $email$.</p>
+      $poweredBySkrivaPaPara()$
+    </span>
+###
 invitationMailUndeliveredTitle=Felaktig e-post
 ###
 invitationMailUndeliveredContent=
     <span>
       <p>Hej $authorname$,</p>
-      <p>Adressen $email$ existerar inte och därför kunde vi inte leverera din inbjudan att underteckna via e-post.
-	Processen har därmed avbrutits. Gör så här om du vill börja om:</p>
-      <p>1. Kontrollera mottagarens adress<br/>
-	2. Klicka på dokumentet i ditt arkiv eller på följande länk<br/>
-	<a href="$ctxhostpart$$unsigneddoclink$">$ctxhostpart$$unsigneddoclink$</a><br/>
-        <br/>
-        3. Klicka "Starta om"<br/>
-	4. Skriv in rätt e-postadress och skicka igen
+       <p>Vi har inte kunnat leverera din inbjudan att underteckna dokumentet <strong>$documenttitle</strong>. Det beror antingen på problem med mottagarens e-post server eller mer troligt på att adressen $email$ inte existerar.
+       Processen har därmed avbrutits. Gör så här om du vill börja om:</p>
+       <p>1. Kontrollera vilken som är mottagarens korrekta adress<br/>
+       2. Klicka på dokumentet i ditt arkiv eller på följande länk<br/>
+       <a href="$ctxhostpart$$unsigneddoclink$">$ctxhostpart$$unsigneddoclink$</a><br/>
+       <br/>
+       3. Klicka "Starta om"<br/>
+       4. Skriv in rätt e-postadress och skicka igen
       </p>
       $poweredBySkrivaPaPara()$
     </span>

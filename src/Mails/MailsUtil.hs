@@ -15,7 +15,7 @@ import Data.Data
 import Happstack.Data
 
 
-data MailsDeliveryStatus = Delivered | Undelivered | Unknown
+data MailsDeliveryStatus = Delivered | Undelivered | Unknown | Deferred
                            deriving (Eq, Ord, Typeable, Show, Read, Data)
 
    

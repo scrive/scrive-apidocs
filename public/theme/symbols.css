@@ -67,12 +67,12 @@
         margin-right: 7px;
 }
 
-.icon.expired {
+.icon.sent {
 	background-position: -247px 0;
         margin-right: 7px;
 }
 
-.icon.sent {
+.icon.delivered {
 	background-position: -258px 0;
         margin-right: 7px;
 }
