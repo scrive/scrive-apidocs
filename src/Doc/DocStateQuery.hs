@@ -1,21 +1,17 @@
-module Doc.DocStateInterface 
+{-# OPTIONS_GHC -Wall -Werror #-}
+module Doc.DocStateQuery
     ( getDocByDocID
+    , getDocsByLoggedInUser
     , getDocByDocIDSigLinkIDAndMagicHash
-    , restartDocument
-    , markDocumentSeen
     ) where
     
 import DBError
 import Doc.DocState
-import Doc.DocStateData
 import Doc.DocUtils
 import Kontra
 import Misc
-import API.Service.ServiceState
 import Control.Monad.State (get)
-import Happstack.State     (query, update)
-import Control.Monad       (mzero)
-import Data.Functor
+import Happstack.State     (query)
 
 {- |
    Securely find a document by documentid for the author or his friends.
@@ -25,7 +21,7 @@ import Data.Functor
  -}
 getDocByDocID :: DocumentID -> Kontra (Either DBError Document)
 getDocByDocID docid = do
-  Context { ctxmaybeuser} <- get
+  Context { ctxmaybeuser } <- get
   case ctxmaybeuser of
     Nothing   -> return $ Left DBNotLoggedIn
     Just user -> do
@@ -52,10 +48,10 @@ getDocsByLoggedInUser = do
   case ctxmaybeuser ctx of
     Nothing   -> return $ Left DBNotLoggedIn
     Just user -> do
-      docs <- query $ (GetDocuments $ currentServiceID ctx)
+      docs <- query $ GetDocuments $ currentServiceID ctx
       usersImFriendsWith <- query $ GetUsersByFriendUserID (userid user)
-      return $ Right $ [ doc | doc <- docs
-                             , any (\u -> canUserViewDirectly u doc) (user : usersImFriendsWith) ]
+      return $ Right [ doc | doc <- docs
+                           , any (\u -> canUserViewDirectly u doc) (user : usersImFriendsWith) ]
 
 {- |
    Get a document using docid, siglink, and magichash.
@@ -76,30 +72,3 @@ getDocByDocIDSigLinkIDAndMagicHash docid sigid mh = do
       case getSigLinkBySigLinkID sigid doc of
         Just siglink | signatorymagichash siglink == mh -> return $ Right doc
         _ -> return $ Left DBResourceNotAvailable
-
-
--- move this to an update file
-
-{- |
-   Mark document seen securely.
- -}
-markDocumentSeen docid sigid mh time ipnum =
-  update $ MarkDocumentSeen docid sigid mh time ipnum
-
-{- |
-   Securely 
- -}
-restartDocument :: Document -> Kontra Document
-restartDocument doc@Document { documentid } = do
-  Context { ctxtime
-          , ctxipnumber
-          , ctxmaybeuser
-          } <- get
-  user <- returnJustOrMZero ctxmaybeuser
-  case getAuthorSigLink doc of
-    Just authorsiglink | isSigLinkForUser user authorsiglink -> do
-      edoc <- update $ RestartDocument documentid user ctxtime ctxipnumber 
-      case edoc of
-        Right doc -> return doc
-        _         -> mzero
-    _ -> mzero
