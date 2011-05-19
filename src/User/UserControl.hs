@@ -242,7 +242,7 @@ handleTakeOverSubaccount email = do
   ctx@Context{ctxmaybeuser = Just supervisor} <- get
   Just invited <- liftIO $ query $ GetUserByEmail Nothing (Email email)
   mail <- mailInviteUserAsSubaccount ctx invited supervisor
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [(userfullname invited, email)] }
+  scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullname = userfullname invited, email = email }
   addFlashMsg =<< (liftIO $ flashMessageUserInvitedAsSubaccount (ctxtemplates ctx))
   
   
@@ -298,7 +298,7 @@ handleViralInvite = withUserPost $ do
         sendInvitation ctx link invitedemail = do
             addFlashMsg =<< (liftIO $ flashMessageViralInviteSent $ ctxtemplates ctx)
             mail <- liftIO $ viralInviteMail (ctxtemplates ctx) ctx invitedemail link
-            scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [(BS.empty, invitedemail)] }
+            scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullname = BS.empty, email = invitedemail }
 
 randomPassword :: IO BS.ByteString
 randomPassword =
@@ -318,7 +318,7 @@ createUser ctx hostpart names email maybesupervisor vip = do
                           Just supervisor -> do
                               al <- newAccountCreatedLink user
                               inviteSubaccountMail (ctxtemplates ctx) hostpart (prettyName  supervisor) (usercompanyname $ userinfo supervisor) email fullname al
-             scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [(fullname, email)] }
+             scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullname = fullname, email = email }
              return muser
          Nothing -> return muser
 
@@ -343,7 +343,7 @@ createNewUserByAdmin ctx names email freetill custommessage = do
              update $ SetInviteInfo (ctxmaybeuser ctx) now Admin (userid user)
              chpwdlink <- newAccountCreatedLink user
              mail <- mailNewAccountCreatedByAdmin (ctxtemplates ctx) ctx fullname email chpwdlink custommessage
-             scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [(fullname, email)]}
+             scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullname = fullname, email = email }
              return muser
          Nothing -> return muser
 
@@ -436,7 +436,7 @@ handleQuestion = do
                         ++ "phone "    ++ fromMaybe "" phone ++ "<BR/>"
                         ++ "message: " ++ fromMaybe "" message
              scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail {
-                   fullnameemails = [(BS.fromString "info@skrivapa.se",BS.fromString "info@skrivapa.se")]
+                   fullname = BS.fromString "info@skrivapa.se", email = BS.fromString "info@skrivapa.se"
                  , title = BS.fromString $ "Question"
                  , content = BS.fromString $ content
              }
@@ -465,7 +465,7 @@ handlePostBecomeSubaccountOf supervisorid = withUserPost $ do
               Just supervisor <- query $ GetUserByUserID supervisorid
               addFlashMsg =<< (liftIO $ flashMessageUserHasBecomeSubaccount (ctxtemplates ctx) supervisor)
               mail <- mailSubaccountAccepted ctx user supervisor
-              scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [(userfullname supervisor, unEmail $ useremail $ userinfo supervisor)] }
+              scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullname = userfullname supervisor, email = unEmail $ useremail $ userinfo supervisor }
           return LinkAccount
      else do     
           return LinkAccount
@@ -594,7 +594,7 @@ handleAccountSetupPost aid hash = do
                             ctx <- get
                             al <- newAccountCreatedLink user
                             mail <- liftIO $ newUserMail (ctxtemplates ctx) (ctxhostpart ctx) email email al False
-                            scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [(email, email)] }
+                            scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullname = email, email = email }
                             addFlashMsg =<< (liftIO $ flashMessageNewActivationLinkSend  (ctxtemplates ctx))
                             return LinkMain
                         else mzero

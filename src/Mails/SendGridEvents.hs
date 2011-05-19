@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall -Werror #-}
+{-# OPTIONS_GHC -Wall -Werror -fno-warn-unused-do-bind #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Mails.SendGridEvents
@@ -7,7 +7,6 @@
 -- Portability :  portable
 --
 -- Sendgrid events interface. 'handleSendgridEvent' is used when sendgrid contacts us.
--- We do not, and probably will never use full interface, just simplified version.
 -- mailinfo param is set when we are sending mails.
 -----------------------------------------------------------------------------
 module Mails.SendGridEvents (
@@ -22,8 +21,10 @@ import Misc
 import Data.Maybe
 import qualified Mails.MailsUtil as Mail
 import Doc.DocState
+import ActionSchedulerState
 import Happstack.State
 import Mails.SendMail
+import Mails.MailsData
 import Templates.Templates
 import Templates.TemplatesUtils
 import Control.Monad.State
@@ -32,16 +33,6 @@ import Data.List
 import qualified AppLogger as Log
 import MinutesTime
 import Doc.DocUtils
-
-data SendGridEventType =
-      Processed
-    | Opened
-    | Dropped String              -- ^ drop reason
-    | Deferred String Int         -- ^ response, delivery attempt
-    | Delivered String            -- ^ response from mta
-    | Bounce String String String -- ^ status, reason, type
-    | Other String                -- ^ type
-      deriving Show
 
 data SendgridEvent =
     SendgridEvent {
@@ -55,7 +46,8 @@ data SendgridEvent =
 handleSendgridEvent :: Kontra KontraLink
 handleSendgridEvent = do
     mid <- readNum "id"
-    maddr <- readString "email"
+    -- email can be either 'email' or '<email>', so we want to get rid of brackets
+    maddr <- filter (not . (`elem` "<>")) <$> readString "email"
     et <- readString "event" >>= readEventType
     mi <- fromMaybe None <$> readField "mailinfo"
     let ev = SendgridEvent {
@@ -65,7 +57,30 @@ handleSendgridEvent = do
         , info = mi
     }
     Log.mail $ "Sendgrid event received: " ++ (show ev)
-    liftIO $ print ev
+    Log.debug $ show ev
+    now <- liftIO getMinutesTime
+    maction <- checkValidity now <$> query (GetAction $ ActionID mid)
+    Log.debug $ show maction
+    case maction of
+         -- we update SentEmailInfo of given email. if email is reported
+         -- delivered, dropped or bounced we remove it from the system.
+         -- that way we can keep track of emails that were "lost".
+         Just Action{actionID, actionType = atype@SentEmailInfo{seiEmail}} -> do
+             when (seiEmail == (Email $ BS.fromString maddr)) $ do
+                 Log.debug "Updating SentEmailInfo..."
+                 update $ UpdateActionType actionID $ atype {
+                       seiEventType = et
+                     , seiLastModification = now
+                 }
+                 let removeAction = case et of
+                      Delivered _  -> True
+                      Dropped _    -> True
+                      Bounce _ _ _ -> True
+                      _            -> False
+                 when_ removeAction $ do
+                     Log.debug "Removing SentEmailInfo..."
+                     update $ UpdateActionEvalTime actionID now
+         _ -> return ()
     routeToHandler ev
     return $ LinkMain
 
@@ -100,22 +115,20 @@ routeToHandler :: SendgridEvent -> Kontra ()
 routeToHandler (SendgridEvent {mailAddress, info = Invitation docid signlinkid, event}) = do
     doc <- queryOrFail $ GetDocumentByDocumentID docid
     let signemail = fromMaybe "" (BS.toString . signatoryemail . signatorydetails <$> getSignatoryLinkFromDocumentByID doc signlinkid)
-    -- email can be either 'email' or '<email>', so we want to get rid of brackets
-    let eventmail = filter (not . (`elem` "<>")) mailAddress
-    liftIO $ putStrLn $ signemail ++ " == " ++ eventmail
+    liftIO $ putStrLn $ signemail ++ " == " ++ mailAddress
     -- since when email is reported deferred author has a possibility to change
     -- email address, we don't want to send him emails reporting success/failure
     -- for old signatory address, so we need to compare addresses here.
     case event of
          Opened       -> handleOpenedInvitation docid signlinkid
-         Dropped _    -> if signemail == eventmail
+         Dropped _    -> if signemail == mailAddress
                             then handleUndeliveredInvitation docid signlinkid
                             else return ()
          Delivered _  -> handleDeliveredInvitation docid signlinkid
          -- we send notification that email is reported deferred after fifth
          -- attempt has failed - this happens after ~10 minutes from sendout
          Deferred _ 5 -> handleDeferredInvitation docid signlinkid
-         Bounce _ _ _ -> if signemail == eventmail
+         Bounce _ _ _ -> if signemail == mailAddress
                             then handleUndeliveredInvitation docid signlinkid
                             else return ()
          _            -> return ()
@@ -132,12 +145,11 @@ handleDeliveredInvitation docid signlinkid = do
                  ctx <- get
                  title <- liftIO $ renderTemplate (ctxtemplates ctx) "invitationMailDeliveredAfterDeferredTitle" ()
                  let documentauthordetails = signatorydetails $ fromJust $ getAuthorSigLink doc
-                 let fullnameemails = [(signatoryname $ documentauthordetails, signatoryemail $ documentauthordetails)]
                  content <- liftIO $ wrapHTML (ctxtemplates ctx) =<< (renderTemplate (ctxtemplates ctx) "invitationMailDeliveredAfterDeferredContent" $ do
                      field "authorname" $ BS.toString $ signatoryname $ documentauthordetails
                      field "email" $ BS.toString $ signatoryemail $ signatorydetails $ signlink
                      field "documenttitle" $ BS.toString $ documenttitle doc)
-                 scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail {title=BS.fromString title,content=BS.fromString content,fullnameemails = fullnameemails}
+                 scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail { title = BS.fromString title, content = BS.fromString content, fullname = signatoryname $ documentauthordetails, email = signatoryemail $ documentauthordetails }
          Nothing -> return ()
     _ <- update $ SetInvitationDeliveryStatus docid signlinkid Mail.Delivered
     return ()
@@ -156,12 +168,11 @@ handleDeferredInvitation docid signlinkid = do
              ctx <- get
              title <- liftIO $ renderTemplate (ctxtemplates ctx) "invitationMailDeferredTitle" ()
              let documentauthordetails = signatorydetails $ fromJust $ getAuthorSigLink doc
-             let fullnameemails = [(signatoryname $ documentauthordetails, signatoryemail $ documentauthordetails)]
              content <- liftIO $ wrapHTML (ctxtemplates ctx) =<< (renderTemplate (ctxtemplates ctx) "invitationMailDeferredContent" $ do
                 field "authorname" $ BS.toString $ signatoryname $ documentauthordetails
                 field "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
                 field "ctxhostpart" $ ctxhostpart ctx)
-             scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail {title=BS.fromString title,content=BS.fromString content,fullnameemails = fullnameemails}
+             scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail { title = BS.fromString title, content = BS.fromString content, fullname = signatoryname $ documentauthordetails, email = signatoryemail $ documentauthordetails }
          Left _ -> return ()
 
 handleUndeliveredInvitation :: DocumentID -> SignatoryLinkID -> Kontra ()
@@ -170,7 +181,6 @@ handleUndeliveredInvitation docid signlinkid = do
     ctx <- get
     title <- liftIO $ renderTemplate (ctxtemplates ctx) "invitationMailUndeliveredTitle" ()
     let documentauthordetails = signatorydetails $ fromJust $ getAuthorSigLink doc
-    let fullnameemails = [(signatoryname $ documentauthordetails, signatoryemail $ documentauthordetails)]
     case getSignatoryLinkFromDocumentByID doc signlinkid of
          Just signlink -> do
              _ <- update $ SetInvitationDeliveryStatus docid signlinkid Mail.Undelivered
@@ -180,7 +190,7 @@ handleUndeliveredInvitation docid signlinkid = do
                  field "email" $ BS.toString $ signatoryemail $ signatorydetails $ signlink
                  field "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
                  field "ctxhostpart" $ ctxhostpart ctx)
-             scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail {title=BS.fromString title,content=BS.fromString content,fullnameemails = fullnameemails}
+             scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail { title = BS.fromString title, content = BS.fromString content, fullname = signatoryname $ documentauthordetails, email = signatoryemail $ documentauthordetails }
          Nothing -> return ()
 
 getSignatoryLinkFromDocumentByID :: Document -> SignatoryLinkID -> Maybe SignatoryLink
