@@ -32,12 +32,11 @@ import System.Time
 
 type SchedulerData' = SchedulerData AppConf Mailer (MVar (ClockTime, KontrakcjaTemplates))
 
-newtype ActionScheduler a = AS { unActionScheduler :: ReaderT SchedulerData' IO a }
-    deriving (Monad, Functor, MonadIO, MonadReader SchedulerData')
+type ActionScheduler a = ReaderT SchedulerData' IO a 
 
 runScheduler :: ActionScheduler () -> SchedulerData' -> IO ()
 runScheduler sched sd =
-    runReaderT (unActionScheduler sched) sd `E.catch` catchEverything
+    runReaderT sched sd `E.catch` catchEverything
     where
         catchEverything :: E.SomeException -> IO ()
         catchEverything e =
