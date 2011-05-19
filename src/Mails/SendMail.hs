@@ -28,18 +28,15 @@ import qualified Data.ByteString.Lazy.Char8 as BSLC
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import System.Exit
 import System.Directory
-import System.Random
 import qualified Data.ByteString.Base64 as Base64
 import qualified Codec.Binary.QuotedPrintable as QuotedPrintable
 import Control.Applicative
 import Control.Arrow (first)
 import Data.Char (isSpace, toLower)
-import Data.List
-import Data.Typeable
+import ActionSchedulerState (ActionID)
 import User.UserState 
-import Doc.DocState
-import Happstack.State
 import Mails.MailsConfig
+import Mails.MailsData
 import Text.HTML.TagSoup
 import Misc
 import qualified AppLogger as Log
@@ -67,30 +64,10 @@ mailEncode source = unwords (map encodeWord w)
 mailEncode1 :: String -> String
 mailEncode1 source = mailEncode (BS.fromString source)
 
--- | Structure for holding mails. If from is not set mail will be send
--- as SkrivaPa admin (fromMails Config).
-data Mail = Mail {
-      fullnameemails :: [(BS.ByteString, BS.ByteString)] -- Fullname, Email
-    , title          :: BS.ByteString
-    , content        :: BS.ByteString
-    , attachments    :: [(BS.ByteString, BS.ByteString)] -- list of attachments (name,content)
-    , from           :: Maybe User
-    , mailInfo       :: MailInfo 
-    } deriving (Eq, Ord, Show, Typeable)
-
-data MailInfo = Invitation DocumentID SignatoryLinkID
-              | None
-                deriving (Eq, Ord, Show, Read, Typeable)
-
-$(deriveSerialize ''Mail)
-instance Version Mail
-
-$(deriveSerialize ''MailInfo)
-instance Version MailInfo
-
 emptyMail :: Mail
 emptyMail = Mail {
-      fullnameemails = []
+      fullname       = BS.empty
+    , email          = BS.empty
     , title          = BS.empty
     , content        = BS.empty
     , attachments    = []
@@ -98,25 +75,25 @@ emptyMail = Mail {
     , mailInfo       = None
 }
 -- 
-newtype Mailer = Mailer { sendMail :: Mail -> IO Bool }
+newtype Mailer = Mailer { sendMail :: ActionID -> Mail -> IO Bool }
 
 createSendgridMailer :: MailsConfig -> Mailer
 createSendgridMailer config = Mailer{sendMail = reallySend}
     where
-        reallySend mail@(Mail {fullnameemails, title, attachments}) = do
-            mailId <- createMailId
+        reallySend aid mail@Mail{email, title, attachments} = do
             boundaries <- createBoundaries
             let mailtos = createMailTos mail
-                wholeContent = createWholeContent boundaries (ourInfoEmail config) (ourInfoEmailNiceName config) mailId mail
-                rcpt = concatMap (\(_,x) -> ["--mail-rcpt", "<" ++ BS.toString x ++ ">"]) fullnameemails
+                wholeContent = createWholeContent boundaries (ourInfoEmail config) (ourInfoEmailNiceName config) aid mail
                 curlargs =
                     [ "--user"
                     , (sendgridUser config) ++ ":" ++ (sendgridPassword config)
                     , (sendgridSMTP config)
                     , "-k", "--ssl", "--mail-from"
                     , "<" ++ (ourInfoEmail config) ++ ">"
-                    ] ++ rcpt
-            Log.mail $ "sending mail '" ++ BS.toString title ++ "' to " ++ show mailId ++ " " ++ concat (intersperse ", " mailtos)
+                    , "--mail-rcpt",
+                    "<" ++ BS.toString email ++ ">"
+                    ]
+            Log.mail $ "sending mail '" ++ BS.toString title ++ "' to " ++ show aid ++ " " ++ mailtos
             (code, _, bsstderr) <- readProcessWithExitCode' "./curl" curlargs wholeContent
             case code of
                  ExitFailure retcode -> do
@@ -129,16 +106,15 @@ createSendgridMailer config = Mailer{sendMail = reallySend}
 createSendmailMailer :: MailsConfig -> Mailer
 createSendmailMailer config = Mailer{sendMail = reallySend}
     where
-        reallySend mail@(Mail {title,attachments}) = do
-            mailId <- createMailId
+        reallySend aid mail@Mail{title, attachments} = do
             boundaries <- createBoundaries
             let mailtos = createMailTos mail
-                wholeContent = createWholeContent boundaries (ourInfoEmail config) (ourInfoEmailNiceName config) mailId mail
+                wholeContent = createWholeContent boundaries (ourInfoEmail config) (ourInfoEmailNiceName config) aid mail
                 sendmailargs =
                     [ "-t" -- get the addresses from the content
                     , "-i" -- ignore single dots in input
                     ]
-            Log.mail $ "sending mail '" ++ BS.toString title ++ "' to " ++ show mailId ++ " " ++ concat (intersperse ", " mailtos)
+            Log.mail $ "sending mail '" ++ BS.toString title ++ "' to " ++ show aid ++ " " ++ mailtos
             (code, _, bsstderr) <- readProcessWithExitCode' "sendmail" sendmailargs wholeContent
             case code of
                  ExitFailure retcode -> do
@@ -151,32 +127,27 @@ createSendmailMailer config = Mailer{sendMail = reallySend}
 createLocalOpenMailer :: String -> String -> Mailer
 createLocalOpenMailer ourInfoEmail ourInfoEmailNiceName = Mailer{sendMail = sendToTempFile}
     where
-        sendToTempFile mail@(Mail {fullnameemails}) = do
+        sendToTempFile aid mail@Mail{email} = do
             tmp <- getTemporaryDirectory
-            mailId <- createMailId
             boundaries <- createBoundaries
-            let wholeContent = createWholeContent boundaries ourInfoEmail ourInfoEmailNiceName mailId mail
+            let wholeContent = createWholeContent boundaries ourInfoEmail ourInfoEmailNiceName aid mail
                 mailtos = createMailTos mail
-                filename = tmp ++ "/Email-" ++ BS.toString (snd $ head fullnameemails) ++ "-" ++ show mailId ++ ".eml"
-            Log.mail $ show mailId ++ " " ++ concat (intersperse ", " mailtos) ++ "  [staging: saved to file " ++ filename ++ "]"
+                filename = tmp ++ "/Email-" ++ BS.toString email ++ "-" ++ show aid ++ ".eml"
+            Log.mail $ show aid ++ " " ++ mailtos ++ "  [staging: saved to file " ++ filename ++ "]"
             BSL.writeFile filename wholeContent
             openDocument filename
             return True
 
-createMailTos :: Mail -> [String]
-createMailTos (Mail {fullnameemails}) =
-  map fmt fullnameemails 
-  where fmt (fullname,email) = mailEncode fullname ++ " <" ++ BS.toString email ++ ">"
-
-createMailId :: IO Integer
-createMailId = randomRIO (1, 100000)
+createMailTos :: Mail -> String
+createMailTos (Mail {fullname, email}) =
+    mailEncode fullname ++ " <" ++ BS.toString email ++ ">"
 
 createBoundaries :: IO (String, String)
 createBoundaries = (,) <$> f <*> f
     where
         f = randomString 32 $ ['0'..'9'] ++ ['a'..'z']
 
-createWholeContent :: (String, String) -> String -> String -> Integer -> Mail -> BSLC.ByteString
+createWholeContent :: (String, String) -> String -> String -> ActionID -> Mail -> BSLC.ByteString
 createWholeContent (boundaryMixed, boundaryAlternative) ourInfoEmail ourInfoEmailNiceName mailId mail@(Mail {title,content,attachments,from,mailInfo}) =
   let mailtos = createMailTos mail 
       -- FIXME: add =?UTF8?B= everywhere it is needed here
@@ -186,7 +157,7 @@ createWholeContent (boundaryMixed, boundaryAlternative) ourInfoEmail ourInfoEmai
       headerEmail = 
           -- FIXME: encoded word should not be longer than 75 bytes including everything
           "Subject: " ++ mailEncode title ++ "\r\n" ++
-          "To: " ++ concat (intersperse ", " mailtos) ++ "\r\n" ++
+          "To: " ++ mailtos ++ "\r\n" ++
           fromHeader ++
           "X-SMTPAPI:  {\"unique_args\": " ++ 
                        "{\"mailinfo\": \""++(show mailInfo)++"\", "++

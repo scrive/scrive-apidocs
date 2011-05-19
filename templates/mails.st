@@ -378,7 +378,7 @@ invitationMailUndeliveredTitle=Felaktig e-post
 invitationMailUndeliveredContent=
     <span>
       <p>Hej $authorname$,</p>
-       <p>Vi har inte kunnat leverera din inbjudan att underteckna dokumentet <strong>$documenttitle</strong>. Det beror antingen på problem med mottagarens e-post server eller mer troligt på att adressen $email$ inte existerar.
+       <p>Vi har inte kunnat leverera din inbjudan att underteckna dokumentet <strong>$documenttitle$</strong>. Det beror antingen på problem med mottagarens e-post server eller mer troligt på att adressen $email$ inte existerar.
        Processen har därmed avbrutits. Gör så här om du vill börja om:</p>
        <p>1. Kontrollera vilken som är mottagarens korrekta adress<br/>
        2. Klicka på dokumentet i ditt arkiv eller på följande länk<br/>

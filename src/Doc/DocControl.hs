@@ -206,14 +206,14 @@ sendDataMismatchEmailSignatory ctx document badid badname msg signatorylink = do
                 badname
                 msg
                 isbad
-        scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [(signatoryname sigdets, signatoryemail sigdets)] }
+        scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullname = signatoryname sigdets, email = signatoryemail sigdets }
           
 sendDataMismatchEmailAuthor :: Context -> Document -> String -> String -> IO ()
 sendDataMismatchEmailAuthor ctx document badname bademail = do
     let authorname = signatoryname $ signatorydetails $ fromJust $ getAuthorSigLink document
         authoremail = signatoryemail $ signatorydetails $ fromJust $ getAuthorSigLink document
     mail <- mailMismatchAuthor ctx document (BS.toString authorname) badname bademail
-    scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [( authorname, authoremail)] }
+    scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullname = authorname, email = authoremail }
     
 {- |
    Send emails to all of the invited parties saying that we fucked up the process.
@@ -229,8 +229,10 @@ sendDocumentErrorEmailToAuthor :: Context -> Document -> IO ()
 sendDocumentErrorEmailToAuthor ctx document = do
   let authordetails = signatorydetails $ fromJust $ getAuthorSigLink document
   mail <- mailDocumentError (ctxtemplates ctx) ctx document
-  scheduleEmailSendout (ctxesenforcer ctx) $
-      mail { fullnameemails = [(signatoryname authordetails, signatoryemail authordetails)] }
+  scheduleEmailSendout (ctxesenforcer ctx) $ mail {
+        fullname = signatoryname authordetails
+      , email = signatoryemail authordetails
+  }
 
 {- |
    Helper function to send emails to invited parties
@@ -243,10 +245,11 @@ sendDocumentErrorEmail1 ctx document signatorylink = do
                     , signatorymagichash } = signatorylink
       Document {documenttitle, documentid} = document
   mail <- mailDocumentError (ctxtemplates ctx) ctx document
-  scheduleEmailSendout (ctxesenforcer ctx) $ 
-           mail { fullnameemails = [(signatoryname signatorydetails,signatoryemail signatorydetails)]
-                , mailInfo = Invitation documentid  signatorylinkid
-                }
+  scheduleEmailSendout (ctxesenforcer ctx) $ mail {
+        fullname = signatoryname signatorydetails
+      , email = signatoryemail signatorydetails
+      , mailInfo = Invitation documentid  signatorylinkid
+  }
 
 {- |
    Send emails to all of the invited parties.
@@ -280,10 +283,11 @@ sendInvitationEmail1 ctx document signatorylink = do
           else mailInvitationToView (ctxtemplates ctx) ctx document signatorylink
 
   attachmentcontent <- getFileContents ctx $ head $ documentfiles document
-  scheduleEmailSendout (ctxesenforcer ctx) $ 
-           mail { fullnameemails = [(signatoryname signatorydetails, signatoryemail signatorydetails)]
-                , mailInfo = Invitation documentid signatorylinkid
-                }
+  scheduleEmailSendout (ctxesenforcer ctx) $ mail {
+        fullname = signatoryname signatorydetails
+      , email = signatoryemail signatorydetails
+      , mailInfo = Invitation documentid signatorylinkid
+  }
 
 {- |
    Send emails to all parties when a document is closed.
@@ -312,7 +316,11 @@ sendClosedEmail1 ctx document signatorylink = do
       Document {documenttitle, documentid} = document
   mail <- mailDocumentClosedForSignatories (ctxtemplates ctx) ctx document signatorylink
   attachmentcontent <- getFileContents ctx $ head $ documentsealedfiles document
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails =  [(signatoryname signatorydetails, signatoryemail signatorydetails)], attachments = [(documenttitle, attachmentcontent)]}
+  scheduleEmailSendout (ctxesenforcer ctx) $ mail {
+        fullname = signatoryname signatorydetails
+      , email = signatoryemail signatorydetails
+      , attachments = [(documenttitle, attachmentcontent)]
+  }
 
 {- |
    Send an email to the author when the document is awaiting approval
@@ -323,7 +331,7 @@ sendAwaitingEmail ctx document = do
       authoremail = signatoryemail $ signatorydetails authorsiglink
       authorname  = signatoryname  $ signatorydetails authorsiglink
   mail <- mailDocumentAwaitingForAuthor (ctxtemplates ctx) ctx authorname document
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [(authorname, authoremail)] }
+  scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullname = authorname, email = authoremail }
 
 {- |
    Send the email to the Author when the document is closed
@@ -335,7 +343,11 @@ sendClosedAuthorEmail ctx document = do
       authorname  = signatoryname  $ signatorydetails authorsiglink
   mail <- mailDocumentClosedForAuthor (ctxtemplates ctx) ctx authorname document
   attachmentcontent <- getFileContents ctx $ head $ documentsealedfiles document
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [(authorname, authoremail)], attachments = [(documenttitle document, attachmentcontent)]}
+  scheduleEmailSendout (ctxesenforcer ctx) $ mail {
+        fullname = authorname
+      , email = authoremail
+      , attachments = [(documenttitle document, attachmentcontent)]
+  }
 
 {- |
    Send an email to the author and to all signatories who were sent an invitation  when the document is rejected
@@ -348,14 +360,14 @@ sendRejectEmails customMessage ctx document signalink = do
     let semail = signatoryemail $ signatorydetails  sl
         sname = signatoryname $ signatorydetails  sl
     mail <- mailDocumentRejected (ctxtemplates ctx) customMessage ctx sname document signalink
-    scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [(sname, semail)]}
+    scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullname = sname, email = semail }
   case getAuthorSigLink document of
     Nothing -> return ()
     Just authorsiglink -> do
       let authoremail = signatoryemail $ signatorydetails authorsiglink
           authorname  = signatoryname  $ signatorydetails authorsiglink
       mail <- mailDocumentRejected (ctxtemplates ctx) customMessage ctx authorname document signalink
-      scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullnameemails = [(authorname, authoremail)]}
+      scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullname = authorname, email = authoremail }
 
 -- END EMAILS
 
@@ -1605,9 +1617,11 @@ handleIssueBulkRemind = do
       sigRemind :: Context -> Document -> SignatoryLink -> Kontra SignatoryLink
       sigRemind ctx doc signlink = do
         mail <- liftIO $ mailDocumentRemind (ctxtemplates ctx) Nothing ctx doc signlink
-        scheduleEmailSendout (ctxesenforcer ctx) 
-                         (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )],
-                          mailInfo = Invitation  (documentid doc) (signatorylinkid signlink) })
+        scheduleEmailSendout (ctxesenforcer ctx) $ mail {
+              fullname = signatoryname $ signatorydetails signlink
+            , email = signatoryemail $ signatorydetails signlink
+            , mailInfo = Invitation (documentid doc) (signatorylinkid signlink)
+        }
         return signlink
 
 handleContractsReload :: Kontra KontraLink
@@ -1707,8 +1721,11 @@ handleResend docid signlinkid  = withUserPost $ do
         Just signlink -> do
           customMessage <- getCustomTextField "customtext"  
           mail <- liftIO $  mailDocumentRemind (ctxtemplates ctx) customMessage ctx doc signlink
-          scheduleEmailSendout (ctxesenforcer ctx) (mail {fullnameemails = [(signatoryname $ signatorydetails signlink,signatoryemail $ signatorydetails signlink )],
-                                                mailInfo = Invitation  (documentid doc) (signatorylinkid signlink) })
+          scheduleEmailSendout (ctxesenforcer ctx) $ mail {
+                fullname = signatoryname $ signatorydetails signlink
+              , email = signatoryemail $ signatorydetails signlink
+              , mailInfo = Invitation  (documentid doc) (signatorylinkid signlink)
+          }
           addFlashMsg =<< (liftIO $ flashRemindMailSent (ctxtemplates ctx) signlink)
           return (LinkIssueDoc docid)
 

@@ -2,7 +2,7 @@
 
 module ActionSchedulerState (
       SchedulerData(..)
-    , ActionID
+    , ActionID(..)
     , ActionType(..)
     , ActionTypeID(..)
     , InactiveAccountState(..)
@@ -29,6 +29,7 @@ module ActionSchedulerState (
     ) where
 
 import Control.Applicative
+import Control.Concurrent.MVar
 import Control.Monad.State
 import Control.Monad.Reader
 import Data.Typeable
@@ -42,13 +43,14 @@ import Happstack.Util.Common
 import Doc.DocState
 import Misc
 import MinutesTime
-import Mails.SendMail
+import Mails.MailsData
 import User.UserState
 
 data SchedulerData a b c = SchedulerData {
-      sdAppConf   :: a
-    , sdMailer    :: b
-    , sdTemplates :: c
+      sdAppConf      :: a
+    , sdMailer       :: b
+    , sdTemplates    :: c
+    , sdMailEnforcer :: MVar ()
 }
 
 newtype ActionID = ActionID Integer
@@ -93,23 +95,17 @@ data ActionType = TrustWeaverUpload {
                 | EmailSendout {
                       esMail :: Mail
                 }
+                | SentEmailInfo {
+                      seiEmail            :: Email
+                    , seiMailInfo         :: MailInfo
+                    , seiEventType        :: SendGridEventType
+                    , seiLastModification :: MinutesTime
+                }
                   deriving (Eq, Ord, Show, Typeable)
-
-data InactiveAccountState0 = JustCreated
-                          | FirstReminderSent
-                          | SecondReminderSent
-                          | ThirdReminderSent
-                            deriving (Eq, Ord, Show, Typeable)
 
 data InactiveAccountState = NothingSent
                           | ReminderSent
                             deriving (Eq, Ord, Show, Typeable)
-
-instance Migrate InactiveAccountState0 InactiveAccountState where
-    migrate JustCreated = NothingSent
-    migrate FirstReminderSent = ReminderSent
-    migrate SecondReminderSent = ReminderSent
-    migrate ThirdReminderSent = ReminderSent
 
 -- | Used for comparing action types since we can't compare type constructors
 data ActionTypeID = TrustWeaverUploadID
@@ -119,6 +115,7 @@ data ActionTypeID = TrustWeaverUploadID
                   | AccountCreatedID
                   | AccountCreatedBySigningID
                   | EmailSendoutID
+                  | SentEmailInfoID
                     deriving (Eq, Ord, Show, Typeable)
 
 -- | Convert ActionType to its type identifier
@@ -130,6 +127,7 @@ actionTypeID (ViralInvitationSent _ _ _ _ _) = ViralInvitationSentID
 actionTypeID (AccountCreated _ _) = AccountCreatedID
 actionTypeID (AccountCreatedBySigning _ _ _ _) = AccountCreatedBySigningID
 actionTypeID (EmailSendout _) = EmailSendoutID
+actionTypeID (SentEmailInfo _ _ _ _) = SentEmailInfoID
 
 -- | Determines how often we should check if there's an action to evaluate
 data ActionImportance = UrgentAction
@@ -145,6 +143,7 @@ actionImportance (ViralInvitationSent _ _ _ _ _) = LeisureAction
 actionImportance (AccountCreated _ _) = LeisureAction
 actionImportance (AccountCreatedBySigning _ _ _ _) = LeisureAction
 actionImportance (EmailSendout _) = EmailSendoutAction
+actionImportance (SentEmailInfo _ _ _ _) = LeisureAction
 
 data Action = Action {
       actionID       :: ActionID
@@ -160,13 +159,6 @@ instance Version ActionID
 
 $(deriveSerialize ''ActionType)
 instance Version ActionType
-
-$(deriveSerialize ''InactiveAccountState0)
-instance Version InactiveAccountState0
-
-$(deriveSerialize ''InactiveAccountState)
-instance Version InactiveAccountState where
-    mode = extension 1 (Proxy :: Proxy InactiveAccountState0)
 
 $(deriveSerialize ''ActionImportance)
 instance Version ActionImportance
@@ -184,6 +176,7 @@ instance Indexable Action where
         , ixFun (\a -> [actionTypeID $ actionType a])
         , ixFun (\a -> case actionType a of
                             ViralInvitationSent email _ _ _ _ -> [email]
+                            SentEmailInfo email _ _ _         -> [email]
                             _                                 -> [])
         , ixFun (\a -> case actionType a of
                             PasswordReminder uid _ _          -> [uid]
@@ -345,3 +338,24 @@ newEmailSendoutAction mail = do
     }
     _ <- update $ NewAction action $ now
     return ()
+
+-- Migrations and old stuff --
+
+data InactiveAccountState0 = JustCreated
+                          | FirstReminderSent
+                          | SecondReminderSent
+                          | ThirdReminderSent
+                            deriving (Eq, Ord, Show, Typeable)
+
+$(deriveSerialize ''InactiveAccountState0)
+instance Version InactiveAccountState0
+
+$(deriveSerialize ''InactiveAccountState)
+instance Version InactiveAccountState where
+    mode = extension 1 (Proxy :: Proxy InactiveAccountState0)
+
+instance Migrate InactiveAccountState0 InactiveAccountState where
+    migrate JustCreated = NothingSent
+    migrate FirstReminderSent = ReminderSent
+    migrate SecondReminderSent = ReminderSent
+    migrate ThirdReminderSent = ReminderSent

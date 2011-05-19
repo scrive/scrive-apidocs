@@ -23,6 +23,7 @@ import Doc.DocState
 import Kontra
 import KontraLink
 import MinutesTime
+import Mails.MailsData
 import Mails.SendMail
 import Session
 import Templates.Templates (KontrakcjaTemplates)
@@ -97,22 +98,34 @@ evaluateAction action@Action{actionID, actionType = AccountCreatedBySigning stat
                       (Just doc) | isOffer doc -> mailAccountCreatedBySigningOfferReminder
                       _ -> mailAccountCreatedBySigningContractReminder
                 mail <- liftIO $ mailfunc templates (hostpart $ sdAppConf sd) doctitle fullname (LinkAccountCreatedBySigning actionID token)
-                liftIO $ sendMail (sdMailer sd) $ mail { fullnameemails = [(fullname, unEmail email)] }
-                return ())
+                scheduleEmailSendout (sdMailEnforcer sd) $ mail { fullname = fullname, email = unEmail email })
             let new_atype = (actionType action) { acbsState = ReminderSent }
             update $ UpdateActionType actionID new_atype
             update $ UpdateActionEvalTime actionID ((72 * 60) `minutesAfter` now)
             return ()
 
-evaluateAction Action{actionID, actionType = EmailSendout mail} = do
+evaluateAction Action{actionID, actionType = EmailSendout mail@Mail{email, mailInfo}} = do
     mailer <- sdMailer <$> ask
-    success <- liftIO $ sendMail mailer mail
+    success <- liftIO $ sendMail mailer actionID mail
     if success
-       then deleteAction actionID
+       then do
+           -- morph action type into SentEmailInfo
+           now <- liftIO getMinutesTime
+           update $ UpdateActionType actionID $ SentEmailInfo {
+                 seiEmail            = Email email
+               , seiMailInfo         = mailInfo
+               , seiEventType        = Other "passed to sendgrid"
+               , seiLastModification = now
+           }
+           update $ UpdateActionEvalTime actionID $ (60*24*30) `minutesAfter` now
+           return ()
        else do
            now <- liftIO $ getMinutesTime
            update $ UpdateActionEvalTime actionID $ 5 `minutesAfter` now
            return ()
+
+evaluateAction Action{actionID, actionType = SentEmailInfo{}} = do
+    deleteAction actionID
 
 deleteAction :: ActionID -> ActionScheduler ()
 deleteAction aid = do

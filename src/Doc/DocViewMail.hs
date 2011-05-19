@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -F -pgmFtrhsx -Wall #-}
+{-# OPTIONS_GHC -Wall #-}
 
 module Doc.DocViewMail ( mailDocumentRemind
                        , mailDocumentRemindContent
@@ -23,7 +23,7 @@ import Doc.DocState
 import Doc.DocUtils
 import Kontra
 import KontraLink
-import Mails.SendMail (Mail, emptyMail, content, title, fullnameemails, attachments)
+import Mails.SendMail
 import Misc
 import Templates.Templates 
 import Templates.TemplatesUtils
@@ -397,7 +397,7 @@ mailCancelDocumentByAuthor templates customMessage ctx document@Document{documen
        do
         title <- renderTemplate templates "mailCancelDocumentByAuthorTitle" [("documenttitle", BS.toString documenttitle)] 
         content <- wrapHTML templates =<< mailCancelDocumentByAuthorContent templates True customMessage ctx document
-        return $ emptyMail {title = BS.fromString title, fullnameemails = [emailFromSignLink signlink], content = BS.fromString content}
+        return $ emptyMail {title = BS.fromString title, fullname = signatoryname $ signatorydetails signlink, email = signatoryemail $ signatorydetails $ signlink, content = BS.fromString content}
 
 mailMismatchSignatory :: Context 
                         -> Document 
