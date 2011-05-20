@@ -618,7 +618,9 @@ handleIssueShowGet :: DocumentID -> Kontra RedirectOrContent
 handleIssueShowGet docid = checkUserTOSGet $ do
   edoc <- getDocByDocID docid
   case edoc of
-    Left _ -> mzero
+    Left e -> do 
+      liftIO $ print ("error getting doc: " ++ show e)
+      mzero
     Right document -> do
         ctx@Context { ctxmaybeuser = Just (user@User{userid})
                     , ctxipnumber
@@ -1471,6 +1473,7 @@ handleIssueNewDocument = withUserPost $ do
     offer <- isFieldSet "offer"
     let doctype = if (offer) then Offer else Contract
     mdoc <- makeDocumentFromFile doctype input
+    liftIO $ print mdoc
     case mdoc of
       Nothing -> return LinkMain
       (Just doc) -> return $ LinkIssueDoc $ documentid doc
@@ -1496,8 +1499,11 @@ makeDocumentFromFile doctype input@(Input contentspec (Just filename) _contentTy
         Left filepath -> liftIO $ BSL.readFile filepath
         Right content -> return content
     if BSL.null content
-        then return Nothing
-        else do
+      then do
+        liftIO $ print "No content"
+        return Nothing
+      else do
+          liftIO $ print "Got the content, creating document"
           let title = BS.fromString (basename filename)
           doc <- update $ NewDocument user title doctype ctxtime
           handleDocumentUpload (documentid doc) (concatChunks content) title
