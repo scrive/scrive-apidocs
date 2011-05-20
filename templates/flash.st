@@ -15,6 +15,10 @@ flashRemindMailSentSigned=
     Dokumentet har skickats till $personname$
 
 ######
+flashMessageCannotCancel=
+    Motparten har redan undertecknat dokumentet. Du kan inte återkalla inbjudan.
+
+######
 flashMessageCanceled=
     $if(contract)$
      Du har nu återkallat inbjudan att underteckna dokumentet och ett meddelande om återkallelsen har skickats till samtliga parter.
