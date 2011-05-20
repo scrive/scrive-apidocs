@@ -32,6 +32,7 @@ import Kontra
 import Misc
 
 import Control.Monad.State (get)
+import Control.Monad.Trans (liftIO)
 import Happstack.State     (query)
 
 {- |
@@ -48,11 +49,16 @@ getDocByDocID docid = do
     Just user -> do
       mdoc <- query $ GetDocumentByDocumentID docid
       case mdoc of
-        Nothing  -> return $ Left DBResourceNotAvailable
+        Nothing  -> do
+          liftIO $ print "does not exist"
+          return $ Left DBResourceNotAvailable
         Just doc ->
           case isUserAuthor doc user of
-            True  -> return $ Right doc
+            True  -> do
+              liftIO $ print "Is the author"
+              return $ Right doc
             False -> do
+              liftIO $ print "is not author"
               usersImFriendsWith <- query $ GetUsersByFriendUserID (userid user)
               case any (isUserAuthor doc) usersImFriendsWith of
                 True  -> return $ Right doc
