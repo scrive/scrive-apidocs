@@ -78,12 +78,10 @@ $elseif(signatory.seendate)$
     Granskat online $signatory.seendate$
 $elseif(signatory.readdate)$
     Läst e-post $signatory.readdate$
+$elseif(signatory.deliveredEmail)$
+    Har ej granskat online
 $else$
-    $if(contract)$  
-        Har ej granskat online
-    $elseif(offer)$
-        Har ej granskat online
-    $endif$
+    Har ej levererats
 $endif$
 ###       
 secretaryMessage = 

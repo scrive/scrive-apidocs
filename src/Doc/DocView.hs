@@ -995,6 +995,7 @@ signatoryStatusFields
     in do  
       field "status" $ show status
       field "undeliveredEmail" $ (invitationdeliverystatus == Undelivered)
+      field "deliveredEmail" $ (invitationdeliverystatus == Delivered)
       field "signdate" $ dateformatter <$> signtime <$> maybesigninfo
       field "datamismatch" datamismatch
       field "seendate" $ dateformatter <$> signtime <$> maybeseeninfo
