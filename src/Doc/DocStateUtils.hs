@@ -40,16 +40,16 @@ import Data.List hiding (insert)
 import Data.Maybe
 import MinutesTime
 import Doc.DocUtils
+import Control.Monad.Trans (liftIO)
 
 -- DB UPDATE UTILS
 insertNewDocument :: Document ->  Update Documents Document
-insertNewDocument doc = 
-   do 
-    documents <- ask
-    docid <- getUnique64 documents DocumentID
-    let docWithId = doc {documentid = docid}
-    modify $ insert docWithId
-    return docWithId
+insertNewDocument doc = do 
+  documents <- ask
+  docid <- getUnique64 documents DocumentID
+  let docWithId = doc {documentid = docid}
+  modify $ insert docWithId
+  return docWithId
 
 
 -- Create new document based on existing one

@@ -155,11 +155,11 @@ getTimeoutedButPendingDocuments now = do
     
 newDocumentFunctionality :: DocumentType -> User -> DocumentFunctionality
 newDocumentFunctionality documenttype user = 
-  case (documenttype==Contract, preferreddesignmode $ usersettings user) of
-    (False, _) -> AdvancedFunctionality
-    (True, Nothing) -> AdvancedFunctionality
-    (True, Just AdvancedMode) -> AdvancedFunctionality
-    (True, Just BasicMode) -> BasicFunctionality
+  case (documenttype, preferreddesignmode $ usersettings user) of
+    (Contract, Nothing)           -> AdvancedFunctionality
+    (Contract, Just AdvancedMode) -> AdvancedFunctionality
+    (Contract, Just BasicMode)    -> BasicFunctionality
+    (_, _)                        -> AdvancedFunctionality
 
 newDocument :: User
             -> BS.ByteString
@@ -175,37 +175,41 @@ newDocument' :: (Maybe CompanyID)
             -> MinutesTime 
             -> Update Documents Document
 newDocument' mcompany user title documenttype ctime = do
+  let authorRoles = if (isContract documenttype)
+                    then [SignatoryPartner, SignatoryAuthor]
+                    else [SignatoryAuthor]
   authorlink0 <- (signLinkFromDetails
-                 (signatoryDetailsFromUser user) 
-                 [SignatoryPartner, SignatoryAuthor]) 
+                  (signatoryDetailsFromUser user) 
+                  authorRoles)
+  
   let authorlink = authorlink0 { maybesignatory = Just (userid user) }
 
   let doc = Document
-          { documentid = DocumentID 0
-          , documenttitle = title
-          , documentsignatorylinks = if (isContract documenttype) then [authorlink] else []
-          , documentfiles = []
-          , documentstatus = Preparation
-          , documenttype = documenttype
-          , documentfunctionality = newDocumentFunctionality documenttype user
-          , documentctime = ctime
-          , documentmtime = ctime
-          , documentdaystosign = Nothing
-          , documenttimeouttime = Nothing
-          , documentlog = []
-          , documentinvitetext = BS.empty
-          , documentsealedfiles = []
+          { documentid                   = DocumentID 0
+          , documenttitle                = title
+          , documentsignatorylinks       = [authorlink]
+          , documentfiles                = []
+          , documentstatus               = Preparation
+          , documenttype                 = documenttype
+          , documentfunctionality        = newDocumentFunctionality documenttype user
+          , documentctime                = ctime
+          , documentmtime                = ctime
+          , documentdaystosign           = Nothing
+          , documenttimeouttime          = Nothing
+          , documentlog                  = []
+          , documentinvitetext           = BS.empty
+          , documentsealedfiles          = []
           , documenttrustweaverreference = Nothing
-          , documentallowedidtypes = [EmailIdentification]
-          , documentcsvupload = Nothing
-          , documentcancelationreason = Nothing
-          , documentinvitetime = Nothing
-          , documentsharing = Private
-          , documentrejectioninfo = Nothing
-          , documenttags = []
-          , documentservice = userservice user
-          , documentattachments = []
-          , documentoriginalcompany  = mcompany `mplus` usercompany user
+          , documentallowedidtypes       = [EmailIdentification]
+          , documentcsvupload            = Nothing
+          , documentcancelationreason    = Nothing
+          , documentinvitetime           = Nothing
+          , documentsharing              = Private
+          , documentrejectioninfo        = Nothing
+          , documenttags                 = []
+          , documentservice              = userservice user
+          , documentattachments          = []
+          , documentoriginalcompany      = mcompany `mplus` usercompany user
           } `appendHistory` [DocumentHistoryCreated ctime]
 
   insertNewDocument doc
