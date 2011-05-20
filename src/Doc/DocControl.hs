@@ -1821,7 +1821,7 @@ getTemplatesForAjax = do
                 let templatesOfGoodType =  filter (matchingType doctype) templates
                 content <- liftIO $ templatesForAjax (ctxtemplates ctx) (ctxtime ctx) user doctype $ docSortSearchPage params templatesOfGoodType
                 simpleResponse content
-            (Nothing,_) ->  sendRedirect $ LinkLogin NotLogged
+            (Nothing, _) -> sendRedirect $ LinkLogin NotLogged
             _ -> mzero
     
 handleCreateFromTemplate::Kontra KontraLink

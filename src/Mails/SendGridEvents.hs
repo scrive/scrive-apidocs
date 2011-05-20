@@ -32,7 +32,6 @@ import qualified Data.ByteString.UTF8 as BS
 import Data.List
 import qualified AppLogger as Log
 import MinutesTime
-import Doc.DocUtils
 
 data SendgridEvent =
     SendgridEvent {
