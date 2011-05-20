@@ -32,6 +32,7 @@ module Doc.DocView (
   , flashDocumentDraftSaved
   , flashDocumentTemplateSaved
   , flashAuthorSigned
+  , flashMessageCannotCancel
   , flashMessageFailedToParseCSV
   , flashMessageCSVHasTooManyRows
   , flashMessageBulkContractRemindsSent
@@ -223,6 +224,10 @@ flashRemindMailSent templates signlink@SignatoryLink{maybesigninfo} =
       maybe "flashRemindMailSentNotSigned"
       (const "flashRemindMailSentSigned")
 
+flashMessageCannotCancel :: KontrakcjaTemplates -> IO FlashMessage
+flashMessageCannotCancel templates =
+  fmap (toFlashMsg OperationFailed) $ 
+    renderTemplate templates "flashMessageCannotCancel" ()
 
 flashMessageCanceled :: KontrakcjaTemplates -> Document -> IO FlashMessage
 flashMessageCanceled templates document =

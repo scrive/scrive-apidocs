@@ -1688,13 +1688,16 @@ handleCancel docid = withUserPost $ do
   case edoc of
     Left _ -> mzero
     Right doc -> do
-      customMessage <- getCustomTextField "customtext"  
-      mdoc' <- update $ CancelDocument (documentid doc) ManualCancel ctxtime ctxipnumber
-      case mdoc' of 
-        Right doc' -> do
-          sendCancelMailsForDocument customMessage ctx doc
-          addFlashMsg =<< (liftIO $ flashMessageCanceled (ctxtemplates ctx) doc')
-        Left errmsg -> addFlashMsg $ toFlashMsg OperationFailed errmsg
+      case documentstatus doc `elem` [Pending, AwaitingAuthor] of
+        False -> addFlashMsg =<< (liftIO $ flashMessageCannotCancel (ctxtemplates ctx))
+        True -> do
+          customMessage <- getCustomTextField "customtext"  
+          mdoc' <- update $ CancelDocument (documentid doc) ManualCancel ctxtime ctxipnumber
+          case mdoc' of 
+            Right doc' -> do
+              sendCancelMailsForDocument customMessage ctx doc
+              addFlashMsg =<< (liftIO $ flashMessageCanceled (ctxtemplates ctx) doc')
+            Left errmsg -> addFlashMsg $ toFlashMsg OperationFailed errmsg
       return (LinkIssueDoc $ documentid doc)
 
 {-
