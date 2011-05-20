@@ -379,12 +379,6 @@ signlinkFromDocById :: Document -> SignatoryLinkID -> Maybe SignatoryLink
 signlinkFromDocById doc sid = find ((== sid) . signatorylinkid) (documentsignatorylinks  doc)
 
 {- |
-   Get the author's signatory link.
- -}
-getAuthorSigLink :: Document -> Maybe SignatoryLink
-getAuthorSigLink = find (elem SignatoryAuthor . signatoryroles) . documentsignatorylinks
-
-{- |
    Does this SignatoryLink belong to the User with userid?
  -}
 isSigLinkForUserID :: UserID -> SignatoryLink -> Bool
