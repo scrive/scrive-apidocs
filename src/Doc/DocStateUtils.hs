@@ -130,6 +130,7 @@ data Feature = CSVUse
                | SigPlacementUse
                | SignOrderUse
                | AttachmentUse
+               deriving (Show, Eq)
 
 wmap :: [(a -> b)] -> a -> [b]
 wmap fs v = map (\f -> f v) fs
@@ -141,9 +142,9 @@ wmap fs v = map (\f -> f v) fs
 -}
 checkFeatureSupport :: Document -> Either String ()
 checkFeatureSupport doc =
-  case (all (checkSupport doc) features) of
-    False -> Left "features are not supported"
-    True -> Right ()
+  case (filter (checkSupport doc) features, filter (not . checkSupport doc) features) of
+    (_, []) -> Right ()
+    (_, notSupported) -> Left ("features required but not supported: " ++ show notSupported)
   where
     features = [CSVUse, DaysToSignUse, MultiplePartiesUse, SecretaryUse, SpecialRoleUse,
                 AuthorCustomFieldUse, AuthorPlacementUse, SigCustomFieldUse, AttachmentUse]
@@ -173,8 +174,10 @@ checkFeatureSupport doc =
         isSpecialRole :: SignatoryLink -> Bool
         isSpecialRole SignatoryLink{signatoryroles} =
           case signatoryroles of
-            [SignatoryPartner] -> False
-            _ -> True
+            [SignatoryPartner]                  -> False
+            [SignatoryPartner, SignatoryAuthor] -> False
+            [SignatoryAuthor, SignatoryPartner] -> False
+            _                                   -> True
     isRequired AuthorCustomFieldUse doc = maybe False (not . Data.List.null . signatoryotherfields . signatorydetails) $ getAuthorSigLink doc
     isRequired AuthorPlacementUse doc = maybe False 
       (any (not . Data.List.null) . wmap
