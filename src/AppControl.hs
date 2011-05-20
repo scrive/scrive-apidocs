@@ -753,7 +753,7 @@ daveUser userid = onlySuperUserGet $ do
 
 -}
 
-parseEmailMessage :: (Monad m) => BS.ByteString -> m (Either String (JSValue,BS.ByteString))
+parseEmailMessage :: (Monad m) => BS.ByteString -> m (Either String (JSValue,BS.ByteString,BS.ByteString,BS.ByteString))
 parseEmailMessage content = runErrorT $ do
   let mime = MIME.parseMIMEMessage (BSC.unpack content)
   let parts mime =  case MIME.mime_val_content mime of 
@@ -771,9 +771,11 @@ parseEmailMessage content = runErrorT $ do
   plain <- case plains of
               [plain] -> return plain
               [] -> fail $ "Exactly one of attachments should be text/plain, you have " ++ show typesOfParts
-  let pdfBinary = BSC.empty -- BSC.pack (snd pdf)
+  let pdfBinary = BSC.pack (snd pdf)
+  let from = maybe BS.empty BS.fromString $ lookup "From" (MIME.mime_val_headers mime)
+  let to = maybe BS.empty BS.fromString $ lookup "To" (MIME.mime_val_headers mime)
   json <- (ErrorT . return) $ runGetJSON readJSObject (snd plain)
-  return (json,pdfBinary)
+  return (json,pdfBinary,from,to)
   
 
 maybeFail msg = maybe (fail msg) return 
@@ -858,7 +860,7 @@ handleMailAPI = do
       Left msg -> do
         Log.debug $ "handleMailAPI: " ++ msg
         return $ toResponse msg
-      Right (json, pdf) -> do
+      Right (json, pdf, from, to) -> do
         result' <- handleMailCommand json pdf
         case result' of
           Right _ -> return $ toResponse ""
