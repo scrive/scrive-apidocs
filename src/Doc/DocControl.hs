@@ -1411,12 +1411,14 @@ handlePageOfDocumentForSignatory docid siglinkid sigmagichash = do
 
 handlePageOfDocument' :: DocumentID -> Maybe (SignatoryLinkID, MagicHash) -> Kontra Response
 handlePageOfDocument' documentid mtokens = do
-    
+  liftIO $ print "Request for docs"
   edoc <- case mtokens of
     Nothing         -> getDocByDocID documentid
     Just (slid, mh) -> getDocByDocIDSigLinkIDAndMagicHash documentid slid mh
   case edoc of
-    Left _ -> mzero
+    Left l -> do
+      liftIO $ print ("Could not get Document" ++ show l)
+      mzero
     Right document@Document { documentfiles
                             , documentsealedfiles
                             , documentstatus
@@ -1440,6 +1442,7 @@ handlePageOfDocument' documentid mtokens = do
 
 handleDocumentUpload :: DocumentID -> BS.ByteString -> BS.ByteString -> Kontra ()
 handleDocumentUpload docid content1 filename = do
+  liftIO $ print "Uploading doc"
   ctx@Context{ctxdocstore, ctxs3action} <- get
   -- we need to downgrade the PDF to 1.4 that has uncompressed structure
   -- we use gs to do that of course
@@ -1447,7 +1450,9 @@ handleDocumentUpload docid content1 filename = do
 
   result <- update $ AttachFile docid filename content
   case result of
-    Left err -> return ()
+    Left err -> do
+      liftIO $ print ("Got an error: " ++ show err)
+      return ()
     Right document -> do
         liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxdocstore ctxs3action) (documentfiles document)
         return ()
