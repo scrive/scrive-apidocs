@@ -961,7 +961,6 @@ signatoryStatusClass
   } =
   caseOf [
       (invitationdeliverystatus==Undelivered,  SCCancelled)
-    , (invitationdeliverystatus==Delivered, SCDelivered)
     , (documentstatus==Preparation, SCDraft)
     , (documentstatus==Canceled, SCCancelled)
     , (documentstatus==Rejected, SCCancelled)
@@ -969,6 +968,7 @@ signatoryStatusClass
     , (isJust maybesigninfo, SCSigned)
     , (isJust maybeseeninfo, SCOpened)
     , (isJust maybereadinvite, SCRead)
+    , (invitationdeliverystatus==Delivered, SCDelivered)
     ] SCSent
 
 signatoryStatusFields :: Document -> SignatoryLink -> (MinutesTime -> String) -> Fields
