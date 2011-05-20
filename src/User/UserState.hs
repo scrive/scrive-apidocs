@@ -195,26 +195,47 @@ data DesignMode = BasicMode | AdvancedMode
     deriving (Eq, Ord, Typeable)
 
 data User = User
-          { userid                        :: UserID
-          , userpassword                  :: Password
-          , usersupervisor                :: Maybe SupervisorID
-          , useraccountsuspended          :: Bool
-          , userhasacceptedtermsofservice :: Maybe MinutesTime
-          , userfreetrialexpirationdate   :: Maybe MinutesTime
-          , usersignupmethod              :: SignupMethod
-          , userinfo                      :: UserInfo
-          , usersettings                  :: UserSettings
-          , userpaymentpolicy             :: Payments.UserPaymentPolicy
-          , userpaymentaccount            :: Payments.UserPaymentAccount
-          , userfriends                   :: [Friend]
-          , userinviteinfo                :: Maybe InviteInfo
-          , userlogininfo                 :: LoginInfo
-          , userservice                   :: Maybe ServiceID
-          , usercompany                   :: Maybe CompanyID
+          { userid                        :: !UserID
+          , userpassword                  :: !Password
+          , usersupervisor                :: !(Maybe SupervisorID)
+          , useraccountsuspended          :: !Bool
+          , userhasacceptedtermsofservice :: !(Maybe MinutesTime)
+          , userfreetrialexpirationdate   :: !(Maybe MinutesTime)
+          , usersignupmethod              :: !SignupMethod
+          , userinfo                      :: !UserInfo
+          , usersettings                  :: !UserSettings
+          , userpaymentpolicy             :: !Payments.UserPaymentPolicy
+          , userpaymentaccount            :: !Payments.UserPaymentAccount
+          , userfriends                   :: ![Friend]
+          , userinviteinfo                :: !(Maybe InviteInfo)
+          , userlogininfo                 :: !LoginInfo
+          , userservice                   :: !(Maybe ServiceID)
+          , usercompany                   :: !(Maybe CompanyID)
+          , userapikey                    :: !(Maybe MagicHash)
           }
             deriving (Eq, Ord)
 
 instance Typeable User where typeOf _ = mkTypeOf "User"
+
+data User14 = User14
+          { userid14                        :: UserID
+          , userpassword14                  :: Password
+          , usersupervisor14                :: Maybe SupervisorID
+          , useraccountsuspended14          :: Bool
+          , userhasacceptedtermsofservice14 :: Maybe MinutesTime
+          , userfreetrialexpirationdate14   :: Maybe MinutesTime
+          , usersignupmethod14              :: SignupMethod
+          , userinfo14                      :: UserInfo
+          , usersettings14                  :: UserSettings
+          , userpaymentpolicy14             :: Payments.UserPaymentPolicy
+          , userpaymentaccount14            :: Payments.UserPaymentAccount
+          , userfriends14                   :: [Friend]
+          , userinviteinfo14                :: Maybe InviteInfo
+          , userlogininfo14                 :: LoginInfo
+          , userservice14                   :: Maybe ServiceID
+          , usercompany14                   :: Maybe CompanyID
+          }
+            deriving (Eq, Ord, Typeable)
 
 
 data User13 = User13
@@ -539,7 +560,7 @@ instance Migrate User12 User13 where
                         fromMaybe firstjuly (max firstjuly . fst <$> temppaymentchange)
                     firstjuly = fromJust $ parseMinutesTimeMDY "01-06-2011"
 
-instance Migrate User13 User where
+instance Migrate User13 User14 where
     migrate (User13
                {  userid13                   
                 , userpassword13                
@@ -557,23 +578,61 @@ instance Migrate User13 User where
                 , userlogininfo13       
                 , userservice13    
                 , userterminated13    
+                }) = User14 
+                { userid14                         = userid13
+                , userpassword14                   = userpassword13
+                , usersupervisor14                 = usersupervisor13
+                , useraccountsuspended14           = useraccountsuspended13
+                , userhasacceptedtermsofservice14  = userhasacceptedtermsofservice13
+                , userfreetrialexpirationdate14    = userfreetrialexpirationdate13
+                , usersignupmethod14               = usersignupmethod13
+                , userinfo14                       = userinfo13
+                , usersettings14                   = usersettings13
+                , userpaymentpolicy14              = userpaymentpolicy13
+                , userpaymentaccount14             = userpaymentaccount13
+                , userfriends14                    = userfriends13
+                , userinviteinfo14                 = userinviteinfo13
+                , userlogininfo14                  = userlogininfo13
+                , userservice14                    = userservice13
+                , usercompany14                    = Nothing
+                }
+
+instance Migrate User14 User where
+  migrate (User14 
+                { userid14
+                , userpassword14
+                , usersupervisor14
+                , useraccountsuspended14
+                , userhasacceptedtermsofservice14
+                , userfreetrialexpirationdate14
+                , usersignupmethod14
+                , userinfo14
+                , usersettings14
+                , userpaymentpolicy14
+                , userpaymentaccount14
+                , userfriends14
+                , userinviteinfo14
+                , userlogininfo14
+                , userservice14
+                , usercompany14
                 }) = User 
-                { userid                         = userid13
-                , userpassword                   = userpassword13
-                , usersupervisor                 = usersupervisor13
-                , useraccountsuspended           = useraccountsuspended13
-                , userhasacceptedtermsofservice  = userhasacceptedtermsofservice13
-                , userfreetrialexpirationdate    = userfreetrialexpirationdate13
-                , usersignupmethod               = usersignupmethod13
-                , userinfo                       = userinfo13
-                , usersettings                   = usersettings13
-                , userpaymentpolicy              = userpaymentpolicy13
-                , userpaymentaccount             = userpaymentaccount13
-                , userfriends                    = userfriends13
-                , userinviteinfo                 = userinviteinfo13
-                , userlogininfo                  = userlogininfo13
-                , userservice                    = userservice13
-                , usercompany                    = Nothing
+                { userid                         = userid14
+                , userpassword                   = userpassword14
+                , usersupervisor                 = usersupervisor14
+                , useraccountsuspended           = useraccountsuspended14
+                , userhasacceptedtermsofservice  = userhasacceptedtermsofservice14
+                , userfreetrialexpirationdate    = userfreetrialexpirationdate14
+                , usersignupmethod               = usersignupmethod14
+                , userinfo                       = userinfo14
+                , usersettings                   = usersettings14
+                , userpaymentpolicy              = userpaymentpolicy14
+                , userpaymentaccount             = userpaymentaccount14
+                , userfriends                    = userfriends14
+                , userinviteinfo                 = userinviteinfo14
+                , userlogininfo                  = userlogininfo14
+                , userservice                    = userservice14
+                , usercompany                    = usercompany14
+                , userapikey                     = Nothing
                 }
 
 composeFullName :: (BS.ByteString, BS.ByteString) -> BS.ByteString
@@ -662,8 +721,11 @@ instance Version User12 where
 instance Version User13 where
     mode = extension 13 (Proxy :: Proxy User12)
 
-instance Version User where
+instance Version User14 where
     mode = extension 14 (Proxy :: Proxy User13)
+
+instance Version User where
+    mode = extension 15 (Proxy :: Proxy User14)
     
 instance Version SignupMethod
 
@@ -856,6 +918,7 @@ addUser (fstname, sndname) email passwd maybesupervisor mservice mcompany = do
                                 }
               , userservice = mservice
               , usercompany = mcompany
+              , userapikey = Nothing
                  }
         modify (updateIx (Email email) user)
         return $ Just user
@@ -1097,6 +1160,7 @@ $(mkMethods ''Users [ 'getUserByUserID
                     ])
 
 $(deriveSerializeFor [ ''User
+                     , ''User14
                      , ''User13
                      , ''User12
                      , ''User11
