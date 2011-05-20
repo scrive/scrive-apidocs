@@ -752,6 +752,7 @@ daveUser userid = onlySuperUserGet $ do
 }
 
 -}
+
 parseEmailMessage :: (Monad m) => BS.ByteString -> m (Either String (JSValue,BS.ByteString))
 parseEmailMessage content = runErrorT $ do
   let mime = MIME.parseMIMEMessage (BSC.unpack content)
@@ -775,32 +776,42 @@ parseEmailMessage content = runErrorT $ do
   return (json,pdfBinary)
   
 
+maybeFail msg = maybe (fail msg) return 
+
 handleMailCommand :: JSValue -> BS.ByteString -> Kontra (Either String ())
 handleMailCommand (JSObject json) content = runErrorT $ do
   -- here we should extract data for new document, but I do not care enough about this for now
   -- lets make it simple as hell
-  ctx@(Context {ctxhostpart, ctxtime, ctxipnumber}) <- lift (lift get)
-  maybeUser <- lift $ query $ GetUserByEmail Nothing $ Email $ BS.fromString "gracjanpolak@gmail.com"
-  user <- maybe (fail "user not found") return maybeUser
+  username <- lift $ getDataFnM (lookBS "username")
+      
+  ctx@(Context {ctxhostpart, ctxtime, ctxipnumber}) <- get
+  maybeUser <- lift $ query $ GetUserByEmail Nothing (Email $ concatChunks username)
+  (user :: User) <- maybeFail "user not found" maybeUser
   
   let offer = False
   let title = case get_field json "title" of
                    Just (JSString x) -> BS.fromString (fromJSString x)
                    Nothing -> BS.fromString "Untitled document received by email"
-      persons :: [SignatoryDetails]
-      persons = maybe [] id $ do -- maybe monad
-        JSArray p <- get_field json "persons"
-        mapM extractPerson p
+      extractPerson :: (Monad m) => JSValue -> m SignatoryDetails
       extractPerson (JSObject x) = do
-        JSString email <- get_field x "email" 
-        JSString firstName <- get_field x "firstName" 
-        JSString lastName <- get_field x "lastName" 
+        (JSString email :: JSValue) <- maybeFail "'email' is required string field" $ get_field x "email" 
+        JSString firstName <- maybeFail "'firstName' is required string field" $ get_field x "firstName" 
+        JSString lastName <- maybeFail "'lastName' is required string field" $ get_field x "lastName" 
+        company <- case get_field x "company" of
+          Just (JSString v) -> return $ fromJSString v
+          _ -> return ""
+        personalNumber <- case get_field x "personalNumber" of
+          Just (JSString v) -> return $ fromJSString v
+          _ -> return ""
+        companyNumber <- case get_field x "companyNumber" of
+          Just (JSString v) -> return $ fromJSString v
+          _ -> return ""
         return $ SignatoryDetails 
                                { signatoryfstname = BS.fromString (fromJSString firstName)
                                , signatorysndname = BS.fromString (fromJSString lastName)
-                               , signatorycompany = BS.empty
-                               , signatorypersonalnumber = BS.empty
-                               , signatorycompanynumber = BS.empty
+                               , signatorycompany = BS.fromString company
+                               , signatorypersonalnumber = BS.fromString personalNumber
+                               , signatorycompanynumber = BS.fromString companyNumber
                                , signatoryemail = BS.fromString (fromJSString email)
                                , signatoryfstnameplacements = []
                                , signatorysndnameplacements = []
@@ -811,12 +822,17 @@ handleMailCommand (JSObject json) content = runErrorT $ do
                                , signatoryotherfields = []
                                , signatorysignorder = SignOrder 1
                                }
-      extractPerson _ = fail "not a dict?"
-      signatories = {- [(userDetails,[SignatoryPartner, SignatoryAuthor])] ++ -} map (\p -> (p,[SignatoryPartner])) persons
+      extractPerson _ = fail "'persons' is not a JavaScript object"
+      
+  JSArray personsField <- maybeFail "need to specify 'persons'" $ get_field json "persons"
+  
+  (persons :: [SignatoryDetails]) <- mapM extractPerson personsField
+  let
+      signatories = map (\p -> (p,[SignatoryPartner])) persons
       userDetails = signatoryDetailsFromUser user
         
   Log.debug $ show persons
-  let doctype = if (offer) then Offer else Contract
+  let doctype = if offer then Offer else Contract
   doc <- lift $ update $ NewDocument user title doctype ctxtime
   lift $ DocControl.handleDocumentUpload (documentid doc) content title
   ErrorT $ update $ UpdateDocument ctxtime (documentid doc) title 
@@ -836,7 +852,7 @@ handleMailAPI = do
         Right content -> return content
     
     -- content at this point is basically full MIME email as it was received by SMTP server
-    -- can be tested using curl -X POST @mail.eml http://url.com/mailapi/
+    -- can be tested using curl -X POST -F mail=@mail.eml http://url.com/mailapi/
     result <- parseEmailMessage (concatChunks content)
     case result of
       Left msg -> do
