@@ -34,6 +34,7 @@ module Doc.DocStateData
     , TimeoutTime(..)
 
     , documentHistoryToDocumentLog
+    , getAuthorSigLink
     ) where
 
 import Mails.MailsUtil
@@ -45,6 +46,7 @@ import Control.Monad
 import Data.Bits
 import Data.Data (Data)
 import Data.Int
+import Data.List
 import Data.Maybe
 import Data.Word
 import Happstack.Data
@@ -2529,6 +2531,12 @@ instance Version FileID where
 
 type Documents = IxSet Document
 
+{- |
+   Get the author's signatory link.
+ -}
+getAuthorSigLink :: Document -> Maybe SignatoryLink
+getAuthorSigLink = find (elem SignatoryAuthor . signatoryroles) . documentsignatorylinks
+
 instance Indexable Document where
         empty = ixSet [ ixFun (\x -> [documentid x] :: [DocumentID])
                       , ixFun (\x -> (map Signatory (catMaybes (map maybesignatory (documentsignatorylinks x)))) :: [Signatory])
@@ -2544,6 +2552,13 @@ instance Indexable Document where
                       , ixFun (\x -> documenttags x :: [DocumentTag])
                       , ixFun (\x -> [documentservice x] :: [Maybe ServiceID])
                       , ixFun (\x -> [documentoriginalcompany x] :: [Maybe CompanyID])
+                      , ixFun (\x ->
+                          case getAuthorSigLink x of
+                               Just asl ->
+                                   case maybesignatory asl of
+                                        Just uid -> [Author uid]
+                                        Nothing -> error "Author who is not registered? Something is seriously wrong here."
+                               Nothing -> [])
                       ]
                                                     
 instance Component Documents where
