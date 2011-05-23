@@ -169,7 +169,7 @@ $if(isattachments)$
   <h2>Bilaga</h2>
   <div id="signViewAttachmentBoxList">
     $attachments:{attachment |
-      <div><a href="$attachment.linkattachment$">$attachment.attachmentname$</a></div>
+      <div><a target="_blank" href="$attachment.linkattachment$">$attachment.attachmentname$</a></div>
     }$
   </div>
 </div>

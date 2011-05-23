@@ -49,7 +49,7 @@ pageDocumentForAuthor=
         <div class="attachmentListContainer">  
           <div class="subheader">Bilaga:</div>
           $attachments:{attachment |
-            <div><a href="$attachment.linkattachment$">$attachment.attachmentname$</a></div>
+            <div><a target="_blank" href="$attachment.linkattachment$">$attachment.attachmentname$</a></div>
           }$
         </div>
         $endif$
