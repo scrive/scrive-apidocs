@@ -1007,6 +1007,7 @@ function showModal(){
    modalbox.overlay({
         mask: {
         color: standardDialogMask,
+        top : standardDialogTop,
         loadSpeed: 0,
         opacity: 0.9
         },
