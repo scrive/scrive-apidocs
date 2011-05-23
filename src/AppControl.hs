@@ -537,6 +537,8 @@ forgotPasswordPagePost = do
               case prRemainedEmails of
                 0 -> addFlashMsg =<< (liftIO $ flashMessageNoRemainedPasswordReminderEmails $ ctxtemplates ctx)
                 n -> do
+                  -- I had to make it PasswordReminder because it was complaining about not giving cases
+                  -- for the constructors of ActionType
                   _ <- update $ UpdateActionType actionID (PasswordReminder { prToken          = prToken 
                                                                             , prRemainedEmails = n - 1
                                                                             , prUserID         = prUserID})
