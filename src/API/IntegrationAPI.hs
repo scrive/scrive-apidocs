@@ -150,7 +150,7 @@ createDocument = do
    files <- fmap (fromMaybe []) $ apiLocal "files" $ apiMapLocal $ do
                 n <- apiAskBS "name"
                 c <- apiAskBase64 "content"
-                cc <- apiAskString "content"
+                when (isNothing n || isNothing c) $ throwApiError API_ERROR_MISSING_VALUE "Problem with uploaded file"
                 return $ Just (fromJust n, fromJust c)
    mtype <- liftMM (return . toSafeEnum) (apiAskInteger "type")
    when (isNothing mtype) $ throwApiError API_ERROR_MISSING_VALUE "BAD DOCUMENT TYPE"
@@ -227,12 +227,10 @@ getDocuments = do
                     n <- apiAskBS "name"
                     v <- apiAskBS "value"
                     when (isNothing n || isNothing v) $ throwApiError API_ERROR_MISSING_VALUE "Missing tag name or value"
-                    return $ Just $ DocumentTag (fromJust n) (fromJust v)
-    liftIO $ putStrLn $ show $ (Just sid) 
-    liftIO $ putStrLn $ show $ (companyid company) 
-    liftIO $ putStrLn $ show $ tags                
+                    return $ Just $ DocumentTag (fromJust n) (fromJust v)    
     documents <- query $ GetDocumentsByCompanyAndTags (Just sid) (companyid company) tags
-    api_docs <- sequence $  map (api_document False)  documents
+    let not_deleted doc =  any (not . signatorylinkdeleted) $ documentsignatorylinks doc
+    api_docs <- sequence $  map (api_document False) $ filter not_deleted documents
     return $ toJSObject [("documents",JSArray $ api_docs)] 
 
 
@@ -249,8 +247,8 @@ setDocumentTag =  do
     when (isNothing mdocument) $ throwApiError API_ERROR_NO_DOCUMENT "No document"
     let doc = fromJust mdocument
     mtag <- apiLocal "tag" $ do
-             liftM2 pairMaybe (apiAskBS "name") (apiAskBS "value")
-    when (isNothing mtag) $ throwApiError API_ERROR_MISSING_VALUE "Conld not read tag values"         
+              liftM2 pairMaybe (apiAskBS "name") (apiAskBS "value")
+    when (isNothing mtag) $ throwApiError API_ERROR_MISSING_VALUE "Could not read tag name or value"         
     let tags = addTag (documenttags doc) (fromJust mtag)
     res <- update $ SetDocumentTags (documentid doc) tags
     when (isLeft res) $ throwApiError API_ERROR_NO_USER $ "Changing tag problem:" ++ fromLeft res 

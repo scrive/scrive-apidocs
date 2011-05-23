@@ -52,7 +52,7 @@ import Control.Monad.Reader
 import Control.Monad.Error
 import Doc.DocState
 import Data.Ratio
-import qualified  Codec.Binary.Base64 as BASE64
+import qualified Data.ByteString.Base64 as BASE64
 
 {- | API calls user JSPO object as a response and work within json value as a context-}
 type APIResponse = JSObject JSValue
@@ -130,7 +130,11 @@ apiAskInteger s = apiLocal s (fromNumerator <$> askBody)
         fromNumerator _ = Nothing 
         
 apiAskBase64::(APIContext c) => String -> APIFunction c (Maybe BS.ByteString)        
-apiAskBase64 s =  (fmap BS.pack) <$> join <$> (fmap $ BASE64.decode)  <$> apiAskString s
+apiAskBase64 s =  do
+    coded <- (fmap $ BASE64.decode)  <$> apiAskBS s 
+    case coded of 
+         Just (Right r) -> return $ Just r
+         _ -> return Nothing 
 
 
 apiAskStringMap::(APIContext c) => APIFunction c (Maybe [(String,String)])
