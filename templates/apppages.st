@@ -144,9 +144,6 @@ bodyend=
           })();
 
         </script>
-         $if(publicsafe)$
-          <script type="text/javascript" src="https://eu1.snoobi.com/snoop.php?tili=skrivapa_se"></script>
-         $endif$
         $endif$
 ####
 pageFooter=
