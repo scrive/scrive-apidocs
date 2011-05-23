@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
+
 {- |
    Initialises contexts and sessions, and farms requests out to the appropriate handlers.
  -}
@@ -9,81 +11,73 @@ module AppControl
     , parseEmailMessage
     ) where
 
---import ELegitimation.BankID as BankID
+import API.IntegrationAPI
+import API.Service.ServiceState
+import API.WebshopAPI
 import ActionSchedulerState
-import Control.Monad (msum, mzero)
-import Control.Monad.State
-import Control.Monad.Trans (liftIO,lift)
-import Control.Concurrent
-import Data.Functor
 import AppView as V
-import Control.Concurrent
 import Crypto
-import Data.List
-import Data.Maybe
 import Doc.DocState
-import HSP.XML (cdata)
-import Happstack.Server hiding (simpleHTTP,host)
-import Happstack.State (query)
+import InputValidation
 import InspectXML
-import InspectXMLInstances
-import KontraLink
-import MinutesTime
-import Misc
-import Network.Socket
-import Session
-import System.IO.Unsafe
 import Kontra
-import qualified User.UserControl as UserControl
-import User.UserView as UserView
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Char8 as BSC
-import qualified Data.ByteString.Lazy as L
-import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.Lazy.UTF8 as BSL
-import qualified Data.ByteString.UTF8 as BS
-import qualified Doc.DocControl as DocControl
-import qualified HSP as HSP
-import qualified Data.Map as Map
-import qualified Network.AWS.Authentication as AWS
-import qualified Network.HTTP as HTTP
-import qualified Network.AWS.AWSConnection as AWS
-import qualified TrustWeaver as TW
-import qualified Payments.PaymentsControl as Payments
-import qualified Contacts.ContactsControl as Contacts
-import qualified ELegitimation.BankID as BankID
-import Templates.Templates (readTemplates, renderTemplate, KontrakcjaTemplates, getTemplatesModTime)
-import qualified Administration.AdministrationControl as Administration
-import Control.Concurrent.MVar
+import KontraLink
 import Mails.MailsConfig
 import Mails.SendGridEvents
 import Mails.SendMail
-import System.Log.Logger (Priority(..), logM)
-import qualified FlashMessage as F
-import qualified AppLogger as Log (error, security, debug)
-import qualified MemCache
-import Happstack.State (update)
+import MinutesTime
+import Misc
+import PayEx.PayExInterface ()-- Import so at least we check if it compiles
 import Redirect
-import PayEx.PayExInterface -- Import so at least we check if it compiles
-import InputValidation
-import System.Directory
-import ListUtil
-import Data.Word
-import System.Time
-import API.WebshopAPI
-import Happstack.Server.Internal.Cookie
-import API.IntegrationAPI
-import Templates.Templates
 import Routing
-import qualified Codec.MIME.Type as MIME
-import qualified Codec.MIME.Parse as MIME
-import Text.JSON
-import Text.JSON.Types
-import Text.JSON.String
+import Session
+import Templates.Templates (readTemplates, KontrakcjaTemplates, getTemplatesModTime)
+import User.UserView as UserView
+import qualified Administration.AdministrationControl as Administration
+import qualified AppLogger as Log (error, security, debug)
+import qualified Contacts.ContactsControl as Contacts
+import qualified Doc.DocControl as DocControl
+import qualified ELegitimation.BankID as BankID
+import qualified FlashMessage as F
+import qualified MemCache
+import qualified Payments.PaymentsControl as Payments
+import qualified TrustWeaver as TW
+import qualified User.UserControl as UserControl
+
+import Control.Concurrent
 import Control.Monad.Error
-import API.Service.ServiceState
-
-
+import Control.Monad.State
+import Data.Functor
+import Data.List
+import Data.Maybe
+import Data.Word
+import GHC.Int (Int64(..))
+import HSP.XML (cdata)
+import Happstack.Server hiding (simpleHTTP, host)
+import Happstack.Server.Internal.Cookie
+import Happstack.State (query)
+import Happstack.State (update)
+import ListUtil
+import Network.Socket
+import System.Directory
+import System.Time
+import Text.JSON
+import Text.JSON.String
+import Text.JSON.Types
+import Text.StringTemplate.Base (StringTemplate(..))
+import Text.StringTemplate.Classes (StFirst(..))
+import qualified Codec.MIME.Parse as MIME
+import qualified Codec.MIME.Type as MIME
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BSC
+import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.Lazy as L
+import qualified Data.ByteString.Lazy.UTF8 as BSL
+import qualified Data.ByteString.UTF8 as BS
+import qualified Data.Map as Map
+import qualified Network.AWS.AWSConnection as AWS
+import qualified Network.AWS.Authentication as AWS
+import qualified Network.HTTP as HTTP
 
 {- | 
   Defines the application's configuration.  This includes amongst other things
@@ -245,7 +239,7 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "useradmin" $ hPost Administration.handleUserChange
      , dir "adminonly" $ dir "useradmin" $ hPost Administration.handleUserEnableTrustWeaverStorage
      , dir "adminonly" $ dir "db" $ hGet $ Administration.indexDB
-     , dir "adminonly" $ dir "db" $ onlySuperUser $ fileServe [] "_local/kontrakcja_state"
+     , dir "adminonly" $ dir "db" $ onlySuperUser $ serveDirectory DisableBrowsing [] "_local/kontrakcja_state"
 
      , dir "adminonly" $ dir "cleanup"           $ hPost $ Administration.handleDatabaseCleanup
      , dir "adminonly" $ dir "statistics"        $ hGet  $ Administration.handleStatistics
@@ -293,7 +287,7 @@ handleRoutes = msum [
      , integrationAPI
      -- static files
      , allowHttp $ serveHTMLFiles
-     , allowHttp $ fileServe [] "public"
+     , allowHttp $ serveDirectory DisableBrowsing [] "public"
                ]
 
 {- |
@@ -302,17 +296,17 @@ handleRoutes = msum [
 -}
 handleHomepage :: Kontra (Either Response (Either KontraLink String))
 handleHomepage = do
-    ctx@Context{ ctxmaybeuser,ctxservice } <- get
-    loginOn <- isFieldSet "logging"
-    referer <- getField "referer"
-    email   <- getField "email"
-    case (ctxmaybeuser,ctxservice) of
-        (Just user,_) -> Right <$> (UserControl.checkUserTOSGet DocControl.mainPage)
-        (Nothing,Nothing)   -> do
-                        resp <- V.simpleResponse =<< (liftIO $ firstPage ctx loginOn referer email)
-                        clearFlashMsgs
-                        return $ Left resp
-        _ -> Left <$> embeddedErrorPage
+  ctx@Context{ ctxmaybeuser,ctxservice } <- get
+  loginOn <- isFieldSet "logging"
+  referer <- getField "referer"
+  email   <- getField "email"
+  case (ctxmaybeuser, ctxservice) of
+    (Just _, _) -> Right <$> (UserControl.checkUserTOSGet DocControl.mainPage)
+    (Nothing, Nothing) -> do
+      response <- V.simpleResponse =<< (liftIO $ firstPage ctx loginOn referer email)
+      clearFlashMsgs
+      return $ Left response
+    _ -> Left <$> embeddedErrorPage
 
 handleSitemapPage :: Kontra Response
 handleSitemapPage = handleWholePage sitemapPage       
@@ -343,10 +337,10 @@ handleClientsPage = handleWholePage clientsPage
 
 handleWholePage :: Kontra String -> Kontra Response
 handleWholePage f = do
-    content <- f
-    resp <- V.simpleResponse content
-    clearFlashMsgs
-    return resp
+  content <- f
+  response <- V.simpleResponse content
+  clearFlashMsgs
+  return response
 
 {- |
     Handles an error by displaying the home page with a modal error dialog.
@@ -383,8 +377,12 @@ defaultAWSAction appConf =
            }
 
 
-                      
-maybeReadTemplates mvar = modifyMVar mvar $ \(modtime,templates) -> do
+maybeReadTemplates :: MVar (ClockTime, 
+                             String -> Text.StringTemplate.Classes.StFirst
+                             (Text.StringTemplate.Base.StringTemplate
+                              String))
+                       -> IO KontrakcjaTemplates                      
+maybeReadTemplates mvar = modifyMVar mvar $ \(modtime, templates) -> do
         modtime' <- getTemplatesModTime
         if modtime /= modtime'
             then do 
@@ -393,18 +391,21 @@ maybeReadTemplates mvar = modifyMVar mvar $ \(modtime,templates) -> do
                 return ((modtime', templates'), templates')
             else return ((modtime, templates), templates)
  
+showNamedHeader :: forall t . (t, HeaderPair) -> [Char]
 showNamedHeader (_nm,hd) = BS.toString (hName hd) ++ ": [" ++ 
                       concat (intersperse ", " (map (show . BS.toString) (hValue hd))) ++ "]" 
 
+showNamedCookie :: ([Char], Cookie) -> [Char]
 showNamedCookie (name,cookie) = name ++ ": " ++ mkCookieHeader Nothing cookie 
 
+showNamedInput :: ([Char], Input) -> [Char]
 showNamedInput (name,input) = name ++ ": " ++ case inputFilename input of
                                                   Just filename -> filename
                                                   _ -> case inputValue input of
-                                                           Left tmpfilename -> "<<content in /tmp>>"
+                                                           Left _tmpfilename -> "<<content in /tmp>>"
                                                            Right value -> show (BSL.toString value) 
                               
-
+showRequest :: Request -> Maybe [([Char], Input)] -> [Char]
 showRequest rq maybeInputsBody = 
     show (rqMethod rq) ++ " " ++ rqUri rq ++ rqQuery rq ++ "\n" ++
     "post variables:\n" ++
@@ -419,7 +420,7 @@ showRequest rq maybeInputsBody =
 -}
 appHandler :: AppConf -> AppGlobals -> ServerPartT IO Response
 appHandler appConf appGlobals = do
-  let quota = 10000000
+  let quota :: GHC.Int.Int64 = 10000000
       
   temp <- liftIO $ getTemporaryDirectory
   decodeBody (defaultBodyPolicy temp quota quota quota)
@@ -518,45 +519,54 @@ appHandler appConf appGlobals = do
 -}    
 forgotPasswordPagePost :: Kontra KontraLink
 forgotPasswordPagePost = do
-    ctx <- get
-    memail <- getOptionalField asValidEmail "email"
-    case memail of 
-        Just email -> do
-            muser <- query $ GetUserByEmail Nothing $ Email email
-            case muser of 
-                Nothing -> do
-                    Log.security $ "ip " ++ (show $ ctxipnumber ctx) ++ " made a failed password reset request for non-existant account " ++ (BS.toString email)
-                Just user -> do
-                    now <- liftIO getMinutesTime
-                    minv <- checkValidity now <$> (query $ GetPasswordReminder $ userid user)
-                    case minv of
-                         Just Action{actionID, actionType} -> do
-                             case prRemainedEmails actionType of
-                                  0 -> do
-                                      addFlashMsg =<< (liftIO $ flashMessageNoRemainedPasswordReminderEmails $ ctxtemplates ctx)
-                                  n -> do
-                                      update $ UpdateActionType actionID $ actionType { prRemainedEmails = n-1 }
-                                      sendResetPasswordMail ctx (LinkPasswordReminder actionID $ prToken actionType) user
-                         Nothing -> do
-                             link <- newPasswordReminderLink user
-                             sendResetPasswordMail ctx link user
-            addFlashMsg =<< (liftIO $ flashMessageChangePasswordEmailSend $ ctxtemplates ctx)
-            return LinkMain
-        Nothing -> return LoopBack
-    where
-        sendResetPasswordMail ctx link user = do
-            mail <- liftIO $ UserView.resetPasswordMail (ctxtemplates ctx) (ctxhostpart ctx) user link
-            scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullname = userfullname user, email = unEmail $ useremail $ userinfo user }
+  ctx <- get
+  memail <- getOptionalField asValidEmail "email"
+  case memail of 
+    Nothing -> return LoopBack
+    Just email -> do
+      muser <- query $ GetUserByEmail Nothing $ Email email
+      case muser of 
+        Nothing -> do
+          Log.security $ "ip " ++ (show $ ctxipnumber ctx) ++ " made a failed password reset request for non-existant account " ++ (BS.toString email)
+          return LoopBack
+        Just user -> do
+          now <- liftIO getMinutesTime
+          minv <- checkValidity now <$> (query $ GetPasswordReminder $ userid user)
+          case minv of
+            Just Action{ actionID, actionType = PasswordReminder { prToken, prRemainedEmails, prUserID } } -> 
+              case prRemainedEmails of
+                0 -> addFlashMsg =<< (liftIO $ flashMessageNoRemainedPasswordReminderEmails $ ctxtemplates ctx)
+                n -> do
+                  _ <- update $ UpdateActionType actionID (PasswordReminder { prToken          = prToken 
+                                                                            , prRemainedEmails = n - 1
+                                                                            , prUserID         = prUserID})
+                  sendResetPasswordMail ctx (LinkPasswordReminder actionID prToken) user
+            _ -> do -- Nothing or other ActionTypes (which should not happen)
+              link <- newPasswordReminderLink user
+              sendResetPasswordMail ctx link user
+          addFlashMsg =<< (liftIO $ flashMessageChangePasswordEmailSend $ ctxtemplates ctx)
+          return LinkMain
+
+sendResetPasswordMail :: Context -> KontraLink -> User -> Kontra ()
+sendResetPasswordMail ctx link user = do
+  mail <- liftIO $ UserView.resetPasswordMail (ctxtemplates ctx) (ctxhostpart ctx) user link
+  scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullname = userfullname user, email = unEmail $ useremail $ userinfo user }
 
 {- |
    Handles viewing of the signup page
 -}
-signupPageGet :: Kontra Response
-signupPageGet = do
+_signupPageGet :: Kontra Response
+_signupPageGet = do
     ctx <- lift get
     content <- liftIO (signupPageView $ ctxtemplates ctx)
     V.renderFromBody V.TopNone V.kontrakcja $ cdata content 
 
+    
+_signupVipPageGet :: Kontra Response
+_signupVipPageGet = do
+    ctx <- lift get
+    content <- liftIO (signupVipPageView $ ctxtemplates ctx)
+    V.renderFromBody V.TopNone V.kontrakcja $ cdata content 
 {- |
    Handles submission of the signup form.
    Normally this would create the user, (in the process mailing them an activation link),
@@ -564,59 +574,52 @@ signupPageGet = do
    then we send them a new activation link because probably the old one expired or was lost.
    If they have then we stop the signup.
 -}  
-    
-signupVipPageGet :: Kontra Response
-signupVipPageGet = do
-    ctx <- lift get
-    content <- liftIO (signupVipPageView $ ctxtemplates ctx)
-    V.renderFromBody V.TopNone V.kontrakcja $ cdata content 
-
 signupPagePost :: Kontra KontraLink
 signupPagePost = do
     Context { ctxtime = MinutesTime time seconds } <- get
     signup False $ Just (MinutesTime (time + 60 * 24 * 31) seconds)
 
-signupVipPagePost :: Kontra KontraLink
-signupVipPagePost = signup True $ parseMinutesTimeMDY "31-12-2011"
+_signupVipPagePost :: Kontra KontraLink
+_signupVipPagePost = signup True $ parseMinutesTimeMDY "31-12-2011"
 
 {- 
     A comment next to LoopBack says never to use it. Is this function broken?
 -}                   
 signup :: Bool -> (Maybe MinutesTime) -> Kontra KontraLink
-signup vip freetill =  do
-    ctx@Context{ctxtemplates,ctxhostpart} <- lift get
-    memail <- getOptionalField asValidEmail "email"
-    case memail of
-         Nothing -> return LoopBack
-         Just email -> do
-             muser <- query $ GetUserByEmail Nothing $ Email $ email
-             case  muser of
-                  Just user ->
-                      if isNothing $ userhasacceptedtermsofservice user
-                         then do
-                             al <- newAccountCreatedLink user
-                             mail <- liftIO $ newUserMail (ctxtemplates) (ctxhostpart) email email al vip
-                             scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullname = email, email = email }
-                             addFlashMsg =<< (liftIO $ flashMessageNewActivationLinkSend  (ctxtemplates))
-                             return LoopBack
-                         else do
-                             addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
-                             return LoopBack
-                  Nothing -> do
-                      maccount <- liftIO $ UserControl.createUser ctx ctxhostpart (BS.empty, BS.empty) email Nothing vip
-                      case maccount of
-                           Just account ->  do
-                               addFlashMsg =<< (liftIO $ flashMessageUserSignupDone ctxtemplates)
-                               return LoopBack
-                           Nothing -> do
-                               addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
-                               return LoopBack
+signup vip _freetill =  do
+  ctx@Context{ctxtemplates,ctxhostpart} <- lift get
+  memail <- getOptionalField asValidEmail "email"
+  case memail of
+    Nothing -> return LoopBack
+    Just email -> do
+      muser <- query $ GetUserByEmail Nothing $ Email $ email
+      case  muser of
+        Just user ->
+          if isNothing $ userhasacceptedtermsofservice user
+          then do
+            al <- newAccountCreatedLink user
+            mail <- liftIO $ newUserMail (ctxtemplates) (ctxhostpart) email email al vip
+            scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullname = email, email = email }
+            addFlashMsg =<< (liftIO $ flashMessageNewActivationLinkSend  (ctxtemplates))
+            return LoopBack
+          else do
+            addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
+            return LoopBack
+        Nothing -> do
+          maccount <- liftIO $ UserControl.createUser ctx ctxhostpart (BS.empty, BS.empty) email Nothing vip
+          case maccount of
+            Just _account ->  do
+              addFlashMsg =<< (liftIO $ flashMessageUserSignupDone ctxtemplates)
+              return LoopBack
+            Nothing -> do
+              addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists ctxtemplates)
+              return LoopBack
 
 {- |
    Sends a new activation link mail, which is really just a new user mail.
 -}
-sendNewActivationLinkMail:: Context -> User -> Kontra ()
-sendNewActivationLinkMail Context{ctxtemplates,ctxhostpart,ctxesenforcer} user = do
+_sendNewActivationLinkMail:: Context -> User -> Kontra ()
+_sendNewActivationLinkMail Context{ctxtemplates,ctxhostpart,ctxesenforcer} user = do
     let email = unEmail $ useremail $ userinfo user
     al <- newAccountCreatedLink user
     mail <- liftIO $ newUserMail ctxtemplates ctxhostpart email email al False
@@ -674,14 +677,14 @@ handleLoginPost = do
 getFailedLoginSlug :: LoginInfo -> IO Int
 getFailedLoginSlug LoginInfo{ lastfailtime, consecutivefails } = do
     now <- getMinutesTime
-    let spacing = case consecutivefails of
-                    n | (n <  5) ->  0
-                    n | (n < 10) -> 20
-                    _            -> 40
+    let spacing :: Int = case consecutivefails of
+          n | (n <  5) ->  0
+          n | (n < 10) -> 20
+          _            -> 40
     case lastfailtime of
-        Just lastfail -> return $ max 0 (spacing - (secs now - secs lastfail))
-        Nothing       -> return 0
-    where secs (MinutesTime m s) = m * 60 + s
+      Just lastfail -> return $ max 0 (spacing - (secs now - secs lastfail))
+      Nothing       -> return 0
+    where secs (MinutesTime minutes seconds) = minutes * 60 + seconds
 
 -- last fail ---------- time
  
@@ -698,7 +701,6 @@ handleLogout = do
 -}
 serveHTMLFiles:: Kontra Response  
 serveHTMLFiles =  do
-    ctx <- get
     rq <- askRq
     let fileName = last (rqPaths rq)
     if ((length (rqPaths rq) > 0) && (isSuffixOf ".html" fileName))
@@ -725,7 +727,6 @@ onlySuperUserGet action = do
 -}
 daveDocument :: DocumentID -> Kontra Response
 daveDocument documentid = onlySuperUserGet $ do
-    ctx <- get
     document <- queryOrFail $ GetDocumentByDocumentID documentid
     V.renderFromBody V.TopNone V.kontrakcja $ inspectXML document
 
@@ -734,7 +735,6 @@ daveDocument documentid = onlySuperUserGet $ do
 -}
 daveUser :: UserID -> Kontra Response
 daveUser userid = onlySuperUserGet $ do 
-    ctx <- get
     user <- queryOrFail $ GetUserByUserID userid
     V.renderFromBody V.TopNone V.kontrakcja $ inspectXML user
 
@@ -756,9 +756,9 @@ daveUser userid = onlySuperUserGet $ do
 parseEmailMessage :: (Monad m) => BS.ByteString -> m (Either String (JSValue,BS.ByteString,BS.ByteString,BS.ByteString))
 parseEmailMessage content = runErrorT $ do
   let mime = MIME.parseMIMEMessage (BSC.unpack content)
-  let parts mime =  case MIME.mime_val_content mime of 
-                       MIME.Single value -> [(MIME.mimeType $ MIME.mime_val_type mime, value)]
-                       MIME.Multi more -> concatMap parts more
+  let parts mimevalue = case MIME.mime_val_content mimevalue of 
+        MIME.Single value -> [(MIME.mimeType $ MIME.mime_val_type mimevalue, value)]
+        MIME.Multi more -> concatMap parts more
       allParts = parts mime
       isPDF (tp,_) = tp == MIME.Application "pdf"
       isPlain (tp,_) = tp == MIME.Text "plain"
@@ -766,18 +766,18 @@ parseEmailMessage content = runErrorT $ do
   let pdfs = filter isPDF allParts
   let plains = filter isPlain allParts
   pdf <- case pdfs of
-              [pdf] -> return pdf
-              [] -> fail $ "Exactly one of attachments should be application/pdf, you have " ++ show typesOfParts
+    [pdf] -> return pdf
+    _ -> fail $ "Exactly one of attachments should be application/pdf, you have " ++ show typesOfParts
   plain <- case plains of
-              [plain] -> return plain
-              [] -> fail $ "Exactly one of attachments should be text/plain, you have " ++ show typesOfParts
+    [plain] -> return plain
+    _ -> fail $ "Exactly one of attachments should be text/plain, you have " ++ show typesOfParts
   let pdfBinary = BSC.pack (snd pdf)
   let from = maybe BS.empty BS.fromString $ lookup "From" (MIME.mime_val_headers mime)
   let to = maybe BS.empty BS.fromString $ lookup "To" (MIME.mime_val_headers mime)
   json <- (ErrorT . return) $ runGetJSON readJSObject (snd plain)
   return (json,pdfBinary,from,to)
   
-
+maybeFail :: (Monad m) => String -> Maybe a -> m a
 maybeFail msg = maybe (fail msg) return 
 
 handleMailCommand :: JSValue -> BS.ByteString -> Kontra (Either String ())
@@ -786,14 +786,14 @@ handleMailCommand (JSObject json) content = runErrorT $ do
   -- lets make it simple as hell
   username <- lift $ getDataFnM (lookBS "username")
       
-  ctx@(Context {ctxhostpart, ctxtime, ctxipnumber}) <- get
+  Context { ctxtime, ctxipnumber } <- get
   maybeUser <- lift $ query $ GetUserByEmail Nothing (Email $ concatChunks username)
   (user :: User) <- maybeFail "user not found" maybeUser
   
   let offer = False
   let title = case get_field json "title" of
-                   Just (JSString x) -> BS.fromString (fromJSString x)
-                   Nothing -> BS.fromString "Untitled document received by email"
+        Just (JSString x) -> BS.fromString (fromJSString x)
+        _ -> BS.fromString "Untitled document received by email"
       extractPerson :: (Monad m) => JSValue -> m SignatoryDetails
       extractPerson (JSObject x) = do
         (JSString email :: JSValue) <- maybeFail "'email' is required string field" $ get_field x "email" 
@@ -837,30 +837,30 @@ handleMailCommand (JSObject json) content = runErrorT $ do
   let doctype = if offer then Offer else Contract
   doc <- lift $ update $ NewDocument user title doctype ctxtime
   lift $ DocControl.handleDocumentUpload (documentid doc) content title
-  ErrorT $ update $ UpdateDocument ctxtime (documentid doc) title 
-    signatories Nothing BS.empty (userDetails,[SignatoryPartner, SignatoryAuthor],userid user) [EmailIdentification] Nothing AdvancedFunctionality
+  _ <- ErrorT $ update $ UpdateDocument ctxtime (documentid doc) title 
+    signatories Nothing BS.empty (userDetails, [SignatoryPartner, SignatoryAuthor], userid user) [EmailIdentification] Nothing AdvancedFunctionality
   
   newdocument <- ErrorT $ update $ AuthorSendDocument (documentid doc) ctxtime ctxipnumber Nothing
   lift $ DocControl.markDocumentAuthorReadAndSeen newdocument ctxtime ctxipnumber
   lift $ DocControl.postDocumentChangeAction newdocument doc Nothing
   return ()
-      
+handleMailCommand _ _ = mzero -- necessary to compile
   
 handleMailAPI :: Kontra Response
 handleMailAPI = do
-    input@(Input contentspec (Just filename) _contentType) <- getDataFnM (lookInput "mail")
+    Input contentspec (Just _filename) _contentType <- getDataFnM (lookInput "mail")
     content <- case contentspec of
         Left filepath -> liftIO $ BSL.readFile filepath
         Right content -> return content
     
     -- content at this point is basically full MIME email as it was received by SMTP server
     -- can be tested using curl -X POST -F mail=@mail.eml http://url.com/mailapi/
-    result <- parseEmailMessage (concatChunks content)
-    case result of
+    eresult <- parseEmailMessage (concatChunks content)
+    case eresult of
       Left msg -> do
         Log.debug $ "handleMailAPI: " ++ msg
         return $ toResponse msg
-      Right (json, pdf, from, to) -> do
+      Right (json, pdf, _from, _to) -> do
         result' <- handleMailCommand json pdf
         case result' of
           Right _ -> return $ toResponse ""
