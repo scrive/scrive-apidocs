@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 module Doc.CSVUtils (
       CSVProblem(..)
     , CleanCSVData(..)
@@ -15,11 +15,9 @@ import Data.Maybe
 import Data.List
 
 import Doc.DocStateData
-import Doc.DocStateUtils
 import Doc.DocUtils
 import FlashMessage
 import InputValidation
-import Kontra
 import Templates.Templates
 
 
@@ -54,14 +52,14 @@ getCSVCustomFields doc@Document{ documentsignatorylinks } =
 -}
 cleanCSVContents :: [IdentificationType] -> Int -> [[BS.ByteString]] -> ([CSVProblem], CleanCSVData)
 cleanCSVContents allowedidtypes customfieldcount contents = 
-  let mincols = if isEleg then 5 else 3
+  let mincols = (if isEleg then 5 else 3) :: Int
       maxcols = 5 + customfieldcount
       cleanData = zipWith (cleanRow mincols maxcols) [0..]
       mheader = lookForHeader . cleanData $ take 1 contents
-      bodyrows = if (isJust mheader) then drop 1 contents else contents
+      bodyrows = if isJust mheader then drop 1 contents else contents
       rowresults = cleanData bodyrows
-      rowproblems = concat . map fst $ rowresults
-      body = map snd $ rowresults
+      rowproblems = concatMap fst rowresults
+      body = map snd rowresults
       problems = case (mheader, rowresults) of
         (Nothing, []) -> mkProblemForAll flashMessageNoDataInCSV : rowproblems
         (Just _, []) -> mkProblemForAll flashMessageNoDataInCSVApartFromHeader : rowproblems
@@ -73,7 +71,7 @@ cleanCSVContents allowedidtypes customfieldcount contents =
         is that if the first line is invalid use it as a header!
     -}
     lookForHeader :: [([CSVProblem], [BS.ByteString])] -> Maybe [BS.ByteString]
-    lookForHeader (((p:_), vals):_) = Just vals
+    lookForHeader ((_:_, vals):_) = Just vals
     lookForHeader _ = Nothing 
     {- |
         This cleans a single row of data.  It checks both the size of the row
@@ -92,9 +90,9 @@ cleanCSVContents allowedidtypes customfieldcount contents =
     -}
     validateRowSize :: Int -> Int -> Int -> [BS.ByteString] -> [CSVProblem]
     validateRowSize row mincols maxcols xs =
-      case (length xs) of
-        l | (l<mincols) -> [mkProblemForRow row $ flashMessageRowLessThanMinColCount mincols]
-          | (l>maxcols) -> [mkProblemForRow row $ flashMessageRowGreaterThanMaxColCount maxcols]
+      case length xs of
+        l | l<mincols -> [mkProblemForRow row $ flashMessageRowLessThanMinColCount mincols]
+          | l>maxcols -> [mkProblemForRow row $ flashMessageRowGreaterThanMaxColCount maxcols]
         _ -> []
     {- |
         This cleans up a single field.  It is given the validator to use (which are mostly things from the
@@ -104,7 +102,7 @@ cleanCSVContents allowedidtypes customfieldcount contents =
     cleanField row col f x =
       let raw = BS.toString x
           failedval = BS.fromString $ minimalScrub raw in
-      case (f raw) of
+      case f raw of
         Empty -> (Nothing, BS.empty)
         Good clean -> (Nothing, clean)
         Bad msg -> (Just $ mkProblemForField row col msg failedval, failedval)
@@ -168,12 +166,12 @@ flashMessageNoDataInCSVApartFromHeader templates =
 flashMessageRowLessThanMinColCount :: Int -> KontrakcjaTemplates -> IO FlashMessage
 flashMessageRowLessThanMinColCount mincols templates = 
   toFlashMsg OperationFailed <$> 
-    (renderTemplate templates "flashMessageRowLessThanMinColCount" $ field "mincols" mincols)
+    renderTemplate templates "flashMessageRowLessThanMinColCount" (field "mincols" mincols)
 
 flashMessageRowGreaterThanMaxColCount :: Int -> KontrakcjaTemplates -> IO FlashMessage
 flashMessageRowGreaterThanMaxColCount maxcols templates = 
   toFlashMsg OperationFailed <$> 
-    (renderTemplate templates "flashMessageRowGreaterThanMaxColCount" $ field "maxcols" maxcols)
+    renderTemplate templates "flashMessageRowGreaterThanMaxColCount" (field "maxcols" maxcols)
 
 flashMessageFirstNameIsRequired :: KontrakcjaTemplates -> IO FlashMessage
 flashMessageFirstNameIsRequired templates = 
