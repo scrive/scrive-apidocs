@@ -658,35 +658,12 @@ handleLoginPost = do
                         time <- liftIO getMinutesTime
                         _ <- update $ RecordSuccessfulLogin userid time
                         return BackToReferer
-                Just User{ userlogininfo, userid } -> do
-                        slug <- liftIO $ getFailedLoginSlug userlogininfo
-                        when (slug > 0) $ liftIO . threadDelay $ slug * 1000000
+                Just User{userid } -> do
                         time <- liftIO getMinutesTime
                         _ <- update $ RecordFailedLogin userid time
                         return $ LinkLogin $ InvalidLoginInfo linkemail
                 Nothing -> return $ LinkLogin $ InvalidLoginInfo linkemail
         _ -> return $ LinkLogin $ InvalidLoginInfo linkemail
-
-{- |
-    Works out how many seconds we should wait before
-    finishing a failed login.  This will hopefully help
-    prevent brute force attacks on user passwords.
-    Here the slug is 20s after 5 consecutive fails, and 40s after
-    10 consecutive fails.
--}
-getFailedLoginSlug :: LoginInfo -> IO Int
-getFailedLoginSlug LoginInfo{ lastfailtime, consecutivefails } = do
-    now <- getMinutesTime
-    let spacing :: Int = case consecutivefails of
-          n | (n <  5) ->  0
-          n | (n < 10) -> 20
-          _            -> 40
-    case lastfailtime of
-      Just lastfail -> return $ max 0 (spacing - (secs now - secs lastfail))
-      Nothing       -> return 0
-    where secs (MinutesTime minutes seconds) = minutes * 60 + seconds
-
--- last fail ---------- time
  
 {- |
    Handles the logout, and sends user back to main page.
