@@ -285,7 +285,6 @@ sendClosedEmailsToSignatories ctx document = do
 sendClosedEmail1 :: Context -> Document -> SignatoryLink -> IO ()
 sendClosedEmail1 ctx document signatorylink = do
   let SignatoryLink { signatorydetails } = signatorylink
-      Document { documenttitle } = document
   mail <- mailDocumentClosedForSignatories (ctxtemplates ctx) ctx document signatorylink
   mailattachments <- makeMailAttachments ctx document
   scheduleEmailSendout (ctxesenforcer ctx) $ mail {
@@ -328,9 +327,9 @@ makeMailAttachments ctx document = do
   sequence $ map (makeMailAttachment ctx) (document : attachmentdocs)
   where
     makeMailAttachment :: Context -> Document -> IO (BS.ByteString, BS.ByteString)
-    makeMailAttachment ctx Document{documenttitle,documentsealedfiles,documentfiles} = do
+    makeMailAttachment ctx' Document{documenttitle,documentsealedfiles,documentfiles} = do
       let files = if Data.List.null documentsealedfiles then documentfiles else documentsealedfiles
-      attachmentcontent <- getFileContents ctx $ head $ files
+      attachmentcontent <- getFileContents ctx' $ head $ files
       return (documenttitle, attachmentcontent)
 
 {- |
