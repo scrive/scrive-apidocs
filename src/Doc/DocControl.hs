@@ -1354,6 +1354,16 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
            signatories2 daystosign invitetext authordetails2 docallowedidtypes mcsvsigindex docfunctionality
 
               
+getDocumentsForUserByType :: User -> (Document -> Bool) -> Kontra ([Document])
+getDocumentsForUserByType user docfilter = do
+  mydocuments <- query $ GetDocumentsByUser user 
+  usersICanView <- query $ GetUsersByFriendUserID $ userid user
+  usersISupervise <- fmap Set.toList $ query $ GetUserSubaccounts $ userid user
+  friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
+  supervised'Documents <- mapM (query . GetDocumentsByUser) usersISupervise
+  return . filter docfilter $ 
+          mydocuments ++ concat friends'Documents ++ concat supervised'Documents
+
 {- |
    Constructs a list of documents (Arkiv) to show to the user.
    The list contains all documents the user is an author on or
@@ -1361,33 +1371,21 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
    Duplicates are removed.
  -}
 showContractsList :: Kontra (Either KontraLink String)
-showContractsList =
-  let getContracts user = do
-        mydocuments <- query $ GetDocumentsByUser user 
-        usersICanView <- query $ GetUsersByFriendUserID $ userid user
-        usersISupervise <- fmap Set.toList $ query $ GetUserSubaccounts $ userid user
-        friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
-        supervised'Documents <- mapM (query . GetDocumentsByUser) usersISupervise
-        return . filter ((==) Contract . documenttype) $ 
-          mydocuments ++ concat friends'Documents ++ concat supervised'Documents in
+showContractsList = do
+  let getContracts user = getDocumentsForUserByType user ((==) Contract . documenttype)
   showItemList' pageContractsList getContracts docSortSearchPage
 
 showTemplatesList :: Kontra (Either KontraLink String)
-showTemplatesList = 
-  let getTemplates user = do
-        mydocuments <- query $ GetDocumentsByUser user
-        return $ filter isTemplate mydocuments in
+showTemplatesList = do
+  let getTemplates user = getDocumentsForUserByType user ((`elem` [ContractTemplate, OfferTemplate]) . documenttype)
   showItemList' pageTemplatesList getTemplates docSortSearchPage
 
 showOfferList :: Kontra (Either KontraLink String)
 showOfferList = checkUserTOSGet $ do
     -- Just user is safe here because we guard for logged in user
     Context {ctxmaybeuser = Just user, ctxtime, ctxtemplates} <- get
-    mydocuments <- query $ GetDocumentsByUser user 
-    usersICanView <- query $ GetUsersByFriendUserID $ userid user
-    friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
-    let contracts = prepareDocsForList . filter ((==) Offer . documenttype) $ 
-                      mydocuments ++ concat friends'Documents
+    rawContracts <- getDocumentsForUserByType user ((==) Contract . documenttype)
+    let contracts = prepareDocsForList rawContracts
         authornames = map getAuthorName contracts
     params <- getListParams
     liftIO $ pageOffersList ctxtemplates ctxtime user (docAndAuthorSortSearchPage params (zip contracts authornames))
