@@ -33,16 +33,18 @@ module Doc.DocState
     , MarkInvitationRead(..)
     , SetInvitationDeliveryStatus(..)
     , NewDocument(..)
+    , NewDocumentWithMCompany(..)
     , SaveDocumentForSignedUser(..)
     , SetDocumentTimeoutTime(..)
     , SetDocumentTags(..)
-    , GetDocumentsByTags(..)
+    , GetDocumentsByCompanyAndTags(..)
     , SetDocumentTrustWeaverReference(..)
     , ShareDocuments(..)
     , SetDocumentTitle(..)
     , SignDocument(..)
     , TimeoutDocument(..)
     , UpdateDocument(..)
+    , UpdateDocumentSimple(..)
     , AttachCSVUpload(..)
     , GetDocumentsByDocumentID(..)
     , UpdateDocumentAttachments(..)
@@ -143,7 +145,7 @@ signatoryCanView user doc =
 getDocumentsBySignatory :: User -> Query Documents [Document]
 getDocumentsBySignatory user = do
     documents <- ask
-    return $ filter (signatoryCanView user) (toList documents)
+    return $ filter (signatoryCanView user) (toList $ documents @= userservice user) 
        
 
 getTimeoutedButPendingDocuments :: MinutesTime -> Query Documents [Document]
@@ -166,15 +168,15 @@ newDocument :: User
             -> DocumentType
             -> MinutesTime 
             -> Update Documents Document
-newDocument = newDocument' Nothing
+newDocument = newDocumentWithMCompany Nothing
 
-newDocument' :: (Maybe CompanyID) 
+newDocumentWithMCompany :: (Maybe CompanyID) 
             -> User
             -> BS.ByteString
             -> DocumentType
             -> MinutesTime 
             -> Update Documents Document
-newDocument' mcompany user title documenttype ctime = do
+newDocumentWithMCompany mcompany user title documenttype ctime = do
   let authorRoles = if (isContract documenttype)
                     then [SignatoryPartner, SignatoryAuthor]
                     else [SignatoryAuthor]
@@ -310,6 +312,24 @@ updateDocument time documentid docname signatories daystosign invitetext (author
                     , documentallowedidtypes         = idtypes
                     , documentcsvupload              = csvupload
                     , documentfunctionality          = docfunctionality
+                    }
+         else return $ Left "Document not in preparation"
+
+
+updateDocumentSimple::DocumentID -> (SignatoryDetails, UserID) -> [SignatoryDetails] -> Update Documents (Either String Document)
+updateDocumentSimple did (authordetails,authorid) signatories = do
+   now <- getMinuteTimeDB
+   modifySignableOrTemplateWithAction did $ \document ->  
+        if documentstatus document == Preparation
+         then do
+             authorlink0 <- signLinkFromDetails authordetails [SignatoryPartner,SignatoryAuthor]
+             let authorlink = authorlink0 { maybesignatory = Just authorid }
+             signatorylinks <- sequence $ map (flip signLinkFromDetails [SignatoryPartner]) signatories
+             let alllinks = authorlink : signatorylinks
+             return $ Right $ document 
+                    { documentsignatorylinks         = alllinks
+                    , documentmtime                  = now         
+                    , documentallowedidtypes         = [EmailIdentification]
                     }
          else return $ Left "Document not in preparation"
 
@@ -694,10 +714,10 @@ setDocumentTags docid doctags =
       documenttags = doctags
     }
 
-getDocumentsByTags :: (Maybe ServiceID) ->  [DocumentTag] -> Query Documents (Either String [Document])
-getDocumentsByTags mservice doctags = do
+getDocumentsByCompanyAndTags :: (Maybe ServiceID) -> CompanyID ->  [DocumentTag] -> Query Documents ([Document])
+getDocumentsByCompanyAndTags  mservice company doctags = do
   documents <- ask
-  return . Right . toList $ (documents @= mservice  @* doctags)
+  return . toList $ (documents @= (Just company)  @= mservice @* doctags)
   
 mapWhen p f ls = map (\i -> if p i then f i else i) ls
 
@@ -1054,9 +1074,11 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'getDocumentsByAuthor
                         , 'getDocumentsBySignatory
                         , 'newDocument
+                        , 'newDocumentWithMCompany 
                         , 'getDocumentByDocumentID
                         , 'getTimeoutedButPendingDocuments
                         , 'updateDocument
+                        , 'updateDocumentSimple
                         , 'attachCSVUpload
                         , 'getDocumentsByDocumentID
                         , 'updateDocumentAttachments
@@ -1078,7 +1100,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'getNumberOfDocumentsOfUser
                         , 'setDocumentTimeoutTime
                         , 'setDocumentTags
-                        , 'getDocumentsByTags
+                        , 'getDocumentsByCompanyAndTags 
                         , 'setDocumentTrustWeaverReference
                         , 'archiveDocuments
                         , 'archiveDocumentForAll

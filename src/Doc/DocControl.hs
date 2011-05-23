@@ -327,9 +327,9 @@ makeMailAttachments ctx document = do
   sequence $ map (makeMailAttachment ctx) (document : attachmentdocs)
   where
     makeMailAttachment :: Context -> Document -> IO (BS.ByteString, BS.ByteString)
-    makeMailAttachment ctx' Document{documenttitle,documentsealedfiles,documentfiles} = do
+    makeMailAttachment _ Document{documenttitle,documentsealedfiles,documentfiles} = do
       let files = if Data.List.null documentsealedfiles then documentfiles else documentsealedfiles
-      attachmentcontent <- getFileContents ctx' $ head $ files
+      attachmentcontent <- getFileContents ctx $ head $ files
       return (documenttitle, attachmentcontent)
 
 {- |
@@ -436,7 +436,6 @@ signDocument documentid
       fieldnames <- getAndConcat "fieldname"
       fieldvalues <- getAndConcat "fieldvalue"
       let fields = zip fieldnames fieldvalues
-
       let allowedidtypes = documentallowedidtypes olddocument
           allowsEmail = EmailIdentification `elem` allowedidtypes
 
@@ -524,10 +523,12 @@ signatoryLinkFromDocumentByID Document{ documentsignatorylinks } linkid = do
 {- |
    Show the document to be signed
  -}
-handleSignShow :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra Response
+handleSignShow :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra String
 handleSignShow documentid 
                signatorylinkid1
                magichash1 = do
+  doc1 <- queryOrFail $ GetDocumentByDocumentID documentid
+  setCurrentService doc1
   Context { ctxtime
           , ctxipnumber 
           , ctxflashmessages } <- get
@@ -562,15 +563,10 @@ handleSignShow documentid
           addFlashMsg =<< (liftIO $ (fromJust flashMsg) ctxtemplates)
 
         case (isAttachment document, isSignatory invitedlink) of
-          (True, _) -> 
-            renderFromBody TopNone kontrakcja (cdata <$> pageAttachmentForSignatory ctx document invitedlink)
-          (_, True) ->
-            renderFromBody TopNone kontrakcja 
-            (cdata <$> pageDocumentForSignatory (LinkSignDoc document invitedlink) 
-             document attachments ctx invitedlink)
-          _ ->
-            renderFromBody TopNone kontrakcja 
-            (cdata <$> pageDocumentForViewer ctx document attachments (Just invitedlink))
+            (True, _) -> liftIO $ pageAttachmentForSignatory ctx document invitedlink
+            (_, True) -> liftIO $ pageDocumentForSignatory (LinkSignDoc document invitedlink) document attachments ctx invitedlink
+            _ -> liftIO $ pageDocumentForViewer ctx document attachments (Just invitedlink)
+
 
 --end
 
@@ -590,17 +586,22 @@ maybeAddDocumentCancelationMessage document = do
    Method: GET
  -}
 handleIssueShowGet :: DocumentID -> Kontra RedirectOrContent
-handleIssueShowGet docid = checkUserTOSGet $ do
+handleIssueShowGet docid = do
+ liftIO $ putStrLn $ "Accessiong document"   
+ checkUserTOSGet $ do
+  liftIO $ putStrLn $ "Getting document"      
   edoc <- getDocByDocID docid
   case edoc of
     Left e -> do 
       liftIO $ print ("error getting doc: " ++ show e)
       mzero
     Right document -> do
-        ctx@Context { ctxmaybeuser = Just user } <- get
+        ctx@Context { ctxmaybeuser 
+                    } <- get
+
         attachments <- queryOrFailIfLeft $ GetDocumentsByDocumentID $ documentattachments document
         -- authors get a view with buttons
-        case (isUserAuthor document user, isAttachment document, documentstatus document) of
+        case (joinB $ isUserAuthor document <$> ctxmaybeuser, isAttachment document, documentstatus document) of
           (True, True, Preparation) -> liftIO $ pageAttachmentDesign ctx document
           (_, True, _) -> liftIO $ pageAttachmentView ctx document 
           (True, _, _) -> do
@@ -1354,16 +1355,6 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
            signatories2 daystosign invitetext authordetails2 docallowedidtypes mcsvsigindex docfunctionality
 
               
-getDocumentsForUserByType :: User -> (Document -> Bool) -> Kontra ([Document])
-getDocumentsForUserByType user docfilter = do
-  mydocuments <- query $ GetDocumentsByUser user 
-  usersICanView <- query $ GetUsersByFriendUserID $ userid user
-  usersISupervise <- fmap Set.toList $ query $ GetUserSubaccounts $ userid user
-  friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
-  supervised'Documents <- mapM (query . GetDocumentsByUser) usersISupervise
-  return . filter docfilter $ 
-          mydocuments ++ concat friends'Documents ++ concat supervised'Documents
-
 {- |
    Constructs a list of documents (Arkiv) to show to the user.
    The list contains all documents the user is an author on or
@@ -1371,21 +1362,33 @@ getDocumentsForUserByType user docfilter = do
    Duplicates are removed.
  -}
 showContractsList :: Kontra (Either KontraLink String)
-showContractsList = do
-  let getContracts user = getDocumentsForUserByType user ((==) Contract . documenttype)
+showContractsList =
+  let getContracts user = do
+        mydocuments <- query $ GetDocumentsByUser user 
+        usersICanView <- query $ GetUsersByFriendUserID $ userid user
+        usersISupervise <- fmap Set.toList $ query $ GetUserSubaccounts $ userid user
+        friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
+        supervised'Documents <- mapM (query . GetDocumentsByUser) usersISupervise
+        return . filter ((==) Contract . documenttype) $ 
+          mydocuments ++ concat friends'Documents ++ concat supervised'Documents in
   showItemList' pageContractsList getContracts docSortSearchPage
 
 showTemplatesList :: Kontra (Either KontraLink String)
-showTemplatesList = do
-  let getTemplates user = getDocumentsForUserByType user ((`elem` [ContractTemplate, OfferTemplate]) . documenttype)
+showTemplatesList = 
+  let getTemplates user = do
+        mydocuments <- query $ GetDocumentsByUser user
+        return $ filter isTemplate mydocuments in
   showItemList' pageTemplatesList getTemplates docSortSearchPage
 
 showOfferList :: Kontra (Either KontraLink String)
 showOfferList = checkUserTOSGet $ do
     -- Just user is safe here because we guard for logged in user
     Context {ctxmaybeuser = Just user, ctxtime, ctxtemplates} <- get
-    rawContracts <- getDocumentsForUserByType user ((==) Contract . documenttype)
-    let contracts = prepareDocsForList rawContracts
+    mydocuments <- query $ GetDocumentsByUser user 
+    usersICanView <- query $ GetUsersByFriendUserID $ userid user
+    friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
+    let contracts = prepareDocsForList . filter ((==) Offer . documenttype) $ 
+                      mydocuments ++ concat friends'Documents
         authornames = map getAuthorName contracts
     params <- getListParams
     liftIO $ pageOffersList ctxtemplates ctxtime user (docAndAuthorSortSearchPage params (zip contracts authornames))

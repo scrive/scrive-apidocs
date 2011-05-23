@@ -48,6 +48,11 @@ import Routing
 import API.Service.ServiceState
 import API.IntegrationAPIUtils
 import Doc.DocUtils
+import Company.CompanyState
+import Data.Foldable (fold)
+import User.UserState
+import System.Random (randomIO)
+import User.Password
 {- | 
   Definition of integration API
 -}
@@ -90,7 +95,8 @@ integrationAPI =  dir "integration" $ msum [
                     , apiCall "set_document_tag"  setDocumentTag
                     , apiCall "remove_document" removeDocument
                     , apiUnknownCall
-                    , dir "connect" $ hGet $ connectSession
+                    , dir "connectuser" $ hGet $ connectUserToSession
+                    , dir "connectcompany" $ hGet $ connectCompanyToSession
                   ]
 --- Real api requests
 getRequestUser:: IntegrationAPIFunction User
@@ -108,51 +114,125 @@ getRequestUser = do
 
 embeddDocumentFrame :: IntegrationAPIFunction APIResponse
 embeddDocumentFrame = do
-    user <- getRequestUser 
-    srv <-  service <$> ask
-    location <- fromMaybe "" <$> apiAskString "location"
-    sid <- createServiceSession (serviceid srv) (userid $ user) location
     ctx <- lift $ get
-    mdocumentID <- maybeReadM $ apiAskString "document_id"
-    list <-  apiAskString "list"
-    let rlink = case (mdocumentID,list) of
-                   (Just did,_) -> LinkIssueDoc did
-                   (_,Just _) -> LinkContracts emptyListParams
-                   _ -> LinkMain
-    return $ toJSObject [
-        ("link",JSString $ toJSString $ (ctxhostpart ctx) ++ show 
-            (LinkConnectUserSession (serviceid srv) (userid user) sid rlink)
-        )]
-    
+    let returnLink l =  return $ toJSObject [ ("link",JSString $ toJSString $ (ctxhostpart ctx) ++ show l)]
+    sid <-  serviceid <$> service <$> ask
+    location <- fold <$> apiAskString "location"
+    mdocument <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
+    when (isNothing mdocument) $ throwApiError API_ERROR_NO_DOCUMENT "No such document"
+    let doc = fromJust mdocument
+    mcompany <- lift_M (update . GetOrCreateCompanyWithExternalID  (Just sid) ) $ maybeReadM $ apiAskString "company_id"
+    msiglink <- liftMM (return . sigLinkForEmail doc) (apiAskBS "email")
+    case (mcompany,msiglink) of
+         (Just company,Nothing) -> do
+             ssid <- createServiceSession sid (Left $ companyid $ company) location
+             returnLink $ LinkConnectCompanySession sid  (companyid company) ssid $ LinkIssueDoc (documentid doc)
+         (Nothing, Just siglink) ->  do
+             returnLink $ LinkSignDoc doc siglink
+         (Just company, Just siglink) -> do
+             if (siglinkIsAuthor siglink && (isJust $ maybesignatory siglink)) 
+                then do
+                     ssid <- createServiceSession sid  (Right $ fromJust $ maybesignatory siglink) location
+                     returnLink $ LinkConnectUserSession sid  (fromJust $ maybesignatory siglink) ssid $ LinkIssueDoc (documentid doc)
+                else returnLink $ LinkSignDoc doc siglink     
+         _ -> throwApiError API_ERROR_MISSING_VALUE "Company or email connected to document must be provided"             
+        
 
 createDocument  :: IntegrationAPIFunction APIResponse
 createDocument = do
-   company_id <- apiAskBS "company_id"
-   title <- apiAskBS "title"
+   sid <- serviceid <$> service <$> ask
+   mcompany_id <- maybeReadM $ apiAskString "company_id"
+   when (isNothing mcompany_id) $ throwApiError API_ERROR_MISSING_VALUE "No company id provided"
+   company <- update $ GetOrCreateCompanyWithExternalID  (Just sid) (fromJust mcompany_id)  
+   mtitle <- apiAskBS "title"
+   when (isNothing mtitle) $ throwApiError API_ERROR_MISSING_VALUE "No title provided"
+   let title = fromJust mtitle
    files <- fmap (fromMaybe []) $ apiLocal "files" $ apiMapLocal $ do
                 n <- apiAskBS "name"
                 c <- apiAskBase64 "content"
-                when (isNothing n || isNothing c) $ throwApiError API_ERROR_MISSING_VALUE "Problems with files upload"
+                cc <- apiAskString "content"
                 return $ Just (fromJust n, fromJust c)
    mtype <- liftMM (return . toSafeEnum) (apiAskInteger "type")
    when (isNothing mtype) $ throwApiError API_ERROR_MISSING_VALUE "BAD DOCUMENT TYPE"
-   let doctype::DOCUMENT_TYPE = fromJust mtype
+   let doctype = toDocumentType $ fromJust mtype
    mtemplate <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "template_id"
-   invloved <- fmap (fromMaybe []) $ apiLocal "involved" $ apiMapLocal $ getSignatoryTMP
+   involved  <- fmap (fromMaybe []) $ apiLocal "involved" $ apiMapLocal $ getSignatoryTMP
    tags <- fmap (fromMaybe []) $ apiLocal "tags" $ apiMapLocal $ do
                     n <- apiAskBS "name"
                     v <- apiAskBS "value"
                     when (isNothing n || isNothing v) $ throwApiError API_ERROR_MISSING_VALUE "MIssing tag name or value"
                     return $ Just $ DocumentTag (fromJust n) (fromJust v)
-   throwApiError API_ERROR_OTHER "Not implemented yet"
+   doc <- case mtemplate of
+            Just template -> throwApiError API_ERROR_OTHER "Template support is not implemented yet"
+            Nothing -> createAPIDocument company doctype title files involved tags
+   liftIO $ putStrLn $ show $ doc         
+   return $ toJSObject [ ("document_id",JSString $ toJSString $ show $ documentid doc)]         
+            
+        
+createAPIDocument:: Company -> 
+                    DocumentType -> 
+                    BS.ByteString -> 
+                    [(BS.ByteString,BS.ByteString)] -> 
+                    [SignatoryTMP] -> 
+                    [DocumentTag] -> 
+                    IntegrationAPIFunction Document
+createAPIDocument _ _ _ _ [] _  = 
+    throwApiError API_ERROR_OTHER "One involved person must be provided"                    
+createAPIDocument company doctype title files (authorTMP:signTMPS) tags = do
+    now <- liftIO $ getMinutesTime
+    author <- userFromTMP authorTMP
+    doc <- update $ NewDocumentWithMCompany (Just $ companyid company) author title doctype now
+    sequence_  $ map (update . uncurry (AttachFile $ documentid doc)) files
+    _ <- update $ SetDocumentTags (documentid doc) tags
+    doc' <- update $ UpdateDocumentSimple (documentid doc) (toSignatoryDetails authorTMP, userid author) (map toSignatoryDetails signTMPS)
+    when (isLeft doc') $ throwApiError API_ERROR_OTHER "Problem creating a document (SIGUPDATE) | This should never happend"  
+    return $ fromRight doc'
 
 
+
+userFromTMP::SignatoryTMP ->  IntegrationAPIFunction User
+userFromTMP uTMP = do
+    sid <- serviceid <$> service <$> ask
+    let remail = fold $ asValidEmail . BS.toString <$> email uTMP
+    when (not $ isGood $ remail) $ throwApiError API_ERROR_OTHER "NOT valid email for first involved person"                    
+    muser <- query $ GetUserByEmail (Just sid) $ Email $ fromGood remail
+    user <- case muser of
+              Just u -> return u
+              Nothing -> do  
+                password <- liftIO $ createPassword . BS.fromString =<< (sequence $ replicate 12 randomIO)
+                u <- update $ AddUser (fold $ fstname uTMP,fold $ sndname uTMP) (fromGood remail) password Nothing (Just sid) Nothing
+                when (isNothing u) $ throwApiError API_ERROR_OTHER "Problem creating a user (BASE) | This should never happend"  
+                u' <- update $ AcceptTermsOfService (userid $ fromJust u) (MinutesTime 0 0)
+                when (isLeft u') $ throwApiError API_ERROR_OTHER "Problem creating a user (TOS) | This should never happend"  
+                return $ fromRight u'
+    user' <- update $ SetUserInfo (userid user) $ (userinfo user) 
+            {
+              userfstname = fromMaybe (userfstname $ userinfo user) $ fstname uTMP
+            , usersndname = fromMaybe (usersndname $ userinfo user) $ sndname uTMP                  
+            , userpersonalnumber = fromMaybe (userpersonalnumber $ userinfo user) $ personalnumber uTMP           
+            , usercompanyname  = fromMaybe (usercompanyname $ userinfo user) $ company  uTMP            
+            , usercompanynumber  = fromMaybe (usercompanynumber $ userinfo user) $ companynumber uTMP      
+            }           
+    when (isLeft user') $ throwApiError API_ERROR_OTHER "Problem creating a user (INFO) | This should never happend"  
+    return $ fromRight user'  
+    
+    
 getDocuments :: IntegrationAPIFunction APIResponse
 getDocuments = do
-    --mcompany <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ apiAskString "document_id"
     sid <- serviceid <$> service <$> ask
-    documents <- query $ GetDocuments (Just sid)
-    api_docs <- sequence $  map (api_document True)  documents
+    mcompany_id <- maybeReadM $ apiAskString "company_id"
+    when (isNothing mcompany_id) $ throwApiError API_ERROR_MISSING_VALUE "No company id provided"
+    company <- update $ GetOrCreateCompanyWithExternalID  (Just sid) (fromJust mcompany_id)  
+    tags <- fmap (fromMaybe []) $ apiLocal "tags" $ apiMapLocal $ do
+                    n <- apiAskBS "name"
+                    v <- apiAskBS "value"
+                    when (isNothing n || isNothing v) $ throwApiError API_ERROR_MISSING_VALUE "Missing tag name or value"
+                    return $ Just $ DocumentTag (fromJust n) (fromJust v)
+    liftIO $ putStrLn $ show $ (Just sid) 
+    liftIO $ putStrLn $ show $ (companyid company) 
+    liftIO $ putStrLn $ show $ tags                
+    documents <- query $ GetDocumentsByCompanyAndTags (Just sid) (companyid company) tags
+    api_docs <- sequence $  map (api_document False)  documents
     return $ toJSObject [("documents",JSArray $ api_docs)] 
 
 
@@ -190,9 +270,16 @@ removeDocument = do
 {- | Call connect user to session (all passed as URL params)
      and redirect user to referer
 -}     
-connectSession :: ServiceID -> UserID -> SessionId -> Kontra KontraLink
-connectSession sid uid ssid = do
-    loaded <- loadServiceSession sid uid ssid
+connectUserToSession :: ServiceID -> UserID -> SessionId -> Kontra KontraLink
+connectUserToSession sid uid ssid = do
+    loaded <- loadServiceSession sid (Right uid) ssid
+    if (loaded) 
+     then return $ BackToReferer
+     else mzero
+
+connectCompanyToSession :: ServiceID -> CompanyID -> SessionId -> Kontra KontraLink
+connectCompanyToSession sid cid ssid = do
+    loaded <- loadServiceSession sid (Left cid) ssid
     if (loaded) 
      then return $ BackToReferer
      else mzero

@@ -28,9 +28,9 @@ module Doc.DocStateQuery
 import DBError
 import Doc.DocState
 import Doc.DocUtils
+import Company.CompanyState
 import Kontra
 import Misc
-
 import Control.Monad.State (get)
 import Control.Monad.Trans (liftIO)
 import Happstack.State     (query)
@@ -43,10 +43,9 @@ import Happstack.State     (query)
  -}
 getDocByDocID :: DocumentID -> Kontra (Either DBError Document)
 getDocByDocID docid = do
-  Context { ctxmaybeuser } <- get
-  case ctxmaybeuser of
-    Nothing   -> return $ Left DBNotLoggedIn
-    Just user -> do
+  Context { ctxmaybeuser, ctxcompany } <- get
+  case (ctxmaybeuser,ctxcompany) of
+    (Just user,_) -> do
       mdoc <- query $ GetDocumentByDocumentID docid
       case mdoc of
         Nothing  -> do
@@ -63,6 +62,15 @@ getDocByDocID docid = do
               case any (isUserAuthor doc) usersImFriendsWith of
                 True  -> return $ Right doc
                 False -> return $ Left DBResourceNotAvailable
+    (_,Just company) -> do
+      liftIO $ putStrLn $ "logged as company"  
+      mdoc <- query $ GetDocumentByDocumentID docid
+      case mdoc of
+        Nothing  -> return $ Left DBResourceNotAvailable
+        Just doc -> if (documentoriginalcompany doc == (Just $ companyid company)) 
+                     then return $ Right doc 
+                     else return $ Left DBResourceNotAvailable
+    (Nothing,Nothing) -> return $ Left DBNotLoggedIn            
 
 {- |
    Get all of the documents a user can view.

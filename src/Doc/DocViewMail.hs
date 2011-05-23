@@ -28,10 +28,14 @@ import Misc
 import Templates.Templates 
 import Templates.TemplatesUtils
 import User.UserView (prettyName)
-
+import Kontra
 import Data.Maybe
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
+import API.Service.ServiceState
+import Happstack.State (query) 
+import Control.Monad.Trans
+import Templates.TemplatesLoader
 
 mailDocumentRemind :: KontrakcjaTemplates 
                    -> Maybe (BS.ByteString) 
@@ -279,9 +283,44 @@ mailInvitationToSignOrViewContent templates
         field "link" link    
         field "issignatory" issignatory
         field "creatorname" creatorname
-                                                                
-mailInvitationToSign :: KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> IO Mail
-mailInvitationToSign templates ctx document@Document { documenttitle } siglink = do
+                                 
+           
+mailInvitationFromService :: Context -> Service -> Document -> SignatoryLink -> IO Mail                                             
+mailInvitationFromService ctx service doc sl = do
+    templates <- toKontrakcjaTemplates [("invitationmail",BS.toString $ servicedocumentinvitationmail service)]
+    content <- renderTemplate templates "invitationmail" $ do
+        field "documenttitle" $ BS.toString  $ documenttitle doc
+        field "documentid" $ show $ documentid doc 
+        field "documentlink" $ (ctxhostpart ctx)++ show (LinkSignDoc doc sl)       
+        field "email" $ signatoryemail $ signatorydetails $ sl
+    htmlContent <- wrapHTML (ctxtemplates ctx) $ content++"\n"
+    return $ emptyMail {title = BS.fromString "Invitation", content = BS.fromString htmlContent}
+           
+mailInvitationToSign :: KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> IO Mail                                 
+mailInvitationToSign templates ctx doc sl = do
+    mservice <- liftMM (query . GetService) (return $ getService doc)
+    case (mservice) of
+      Nothing -> mailInvitationToSign' templates ctx doc sl
+      Just service -> mailInvitationFromService ctx service doc sl
+      
+      
+mailInvitationToSend :: KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> IO Mail
+mailInvitationToSend templates ctx doc sl = do
+    mservice <- liftMM (query . GetService) (return $ getService doc)
+    case (mservice) of
+      Nothing -> mailInvitationToSend' templates ctx doc sl
+      Just service -> mailInvitationFromService ctx service doc sl
+
+
+mailInvitationToView :: KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> IO Mail    
+mailInvitationToView templates ctx doc sl  = do
+    mservice <- liftMM (query . GetService) (return $ getService doc)
+    case (mservice) of
+      Nothing -> mailInvitationToView' templates ctx doc sl
+      Just service -> mailInvitationFromService ctx service doc sl
+
+mailInvitationToSign' :: KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> IO Mail
+mailInvitationToSign' templates ctx document@Document { documenttitle } siglink = do
   let Just authorsiglink = getAuthorSigLink document
       authorname = signatoryname  $ signatorydetails authorsiglink
   title <- renderTemplate templates "mailInvitationToSignTitle" [ ("documenttitle", BS.toString documenttitle)
@@ -290,8 +329,8 @@ mailInvitationToSign templates ctx document@Document { documenttitle } siglink =
   content <- wrapHTML templates =<< mailInvitationToSignOrViewContent templates True ctx document (Just siglink)
   return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
 
-mailInvitationToSend :: KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> IO Mail
-mailInvitationToSend templates ctx document@Document{documenttitle} signaturelink = do
+mailInvitationToSend' :: KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> IO Mail
+mailInvitationToSend' templates ctx document@Document{documenttitle} signaturelink = do
   let Just authorsiglink = getAuthorSigLink document
       authorname = signatoryname  $ signatorydetails authorsiglink
   title <- renderTemplate templates "mailInvitationToSignTitle" [("documenttitle", BS.toString documenttitle),
@@ -299,8 +338,8 @@ mailInvitationToSend templates ctx document@Document{documenttitle} signaturelin
   content <- wrapHTML templates =<< mailInvitationToSignOrViewContent templates True ctx document (Just signaturelink)
   return $ emptyMail {title = BS.fromString title, content = BS.fromString content}
 
-mailInvitationToView :: KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> IO Mail
-mailInvitationToView templates ctx document@Document{documenttitle} signaturelink = do
+mailInvitationToView' :: KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> IO Mail
+mailInvitationToView' templates ctx document@Document{documenttitle} signaturelink = do
   let Just authorsiglink = getAuthorSigLink document
       authorname = signatoryname  $ signatorydetails authorsiglink
   title <- renderTemplate templates "mailInvitationToViewTitle" [("documenttitle", BS.toString documenttitle),

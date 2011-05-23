@@ -7,6 +7,8 @@ $standardHeaderContents()$
 <script type="text/javascript" src="/js/postmessage.js"></script>
 <script>
 standardDialogMask = "#FFFFFF";
+standardDialogTop = 100;
+whitelabel = true;    
 var bodyHeight = 0;
 function propagateHeight() {
 var h = jQuery("body").height();
@@ -30,7 +32,7 @@ jQuery(function(){propagateHeight();})
 <body style="background:none">
 <div class="mainContainer" style="margin-top:0;">
 <div class="mainContainer960">
- $flashmessages()$
+ $flashmessages(whitelabel="true")$
  $loginModal()$
   <div id="body-container">
  $content:noescape()$

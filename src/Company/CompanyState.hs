@@ -14,7 +14,9 @@ module Company.CompanyState
     , CompanyID(..)
     , CompanyUser(..)
     , Companies(..)
-    
+    , GetCompany(..)
+    , GetCompanyByExternalID(..)
+    , GetOrCreateCompanyWithExternalID(..)
 ) where
 import Happstack.Data
 import Happstack.State
@@ -49,6 +51,12 @@ newtype CompanyID = CompanyID { unCompanyID :: Int }
 
 deriving instance Data CompanyID 
 
+newtype ExternalCompanyID = ExternalCompanyID { unExternalCompanyID :: BS.ByteString }
+    deriving (Eq, Ord, Typeable)
+
+deriving instance Data ExternalCompanyID
+
+
 newtype CompanyUser = CompanyUser { unCompanyUser :: Int }
     deriving (Eq, Ord, Typeable)
 
@@ -56,7 +64,9 @@ deriving instance Data CompanyUser
 
 data Company = Company
           {   companyid :: CompanyID
+            , companyexternalid :: ExternalCompanyID
             , companyservice :: Maybe ServiceID
+           
           }
     deriving (Eq, Ord)
      
@@ -68,6 +78,7 @@ deriving instance Show Company
 instance Version Company 
 instance Version CompanyUser
 instance Version CompanyID 
+instance Version ExternalCompanyID 
 
 instance Show CompanyID where
     showsPrec prec (CompanyID val) = showsPrec prec val
@@ -75,6 +86,15 @@ instance Show CompanyID where
 instance Read CompanyID where
     readsPrec prec = let make (i,v) = (CompanyID i,v) 
                      in map make . readsPrec prec 
+                     
+instance FromReqURI CompanyID where
+    fromReqURI = readM                     
+
+instance Show ExternalCompanyID where
+    show (ExternalCompanyID val) = BS.toString val
+    
+instance Read ExternalCompanyID where
+    readsPrec prec s =  [(ExternalCompanyID  $ BS.fromString  s,"")] 
 
 instance Show CompanyUser where
     showsPrec prec (CompanyUser val) = showsPrec prec val
@@ -86,14 +106,16 @@ instance Read CompanyUser where
 type Companies = IxSet Company
 
 instance Indexable Company where
-        empty = ixSet [ ixFun (\x -> [companyid x] :: [CompanyID]) ]
+        empty = ixSet [ ixFun (\x -> [companyid x] :: [CompanyID])
+                      , ixFun (\x -> [companyexternalid x] :: [ExternalCompanyID]) 
+                      , ixFun (\x -> [companyservice x] :: [Maybe ServiceID])]
 
-modifyCompany :: CompanyID 
+modifyCompany :: (Maybe ServiceID) -> CompanyID 
            -> (Company -> Either String Company) 
            -> Update Companies (Either String Company)
-modifyCompany cid action = do
+modifyCompany sid cid action = do
   companies <- ask
-  case getOne (companies @= cid) of
+  case getOne (companies @= sid @= cid ) of
     Nothing -> return $ Left "no such company"
     Just company -> 
         case action company of
@@ -105,37 +127,49 @@ modifyCompany cid action = do
                 modify (updateIx cid newcompany)
                 return $ Right newcompany
 
-getCompany :: CompanyID -> Query Companies (Maybe Company)
-getCompany cid = do
+getCompany :: (Maybe ServiceID) -> CompanyID -> Query Companies (Maybe Company)
+getCompany sid cid = do
   companies <- ask
-  return $ getOne (companies @= cid)
+  return $ getOne (companies @= sid @= cid)
 
-getCompanies :: Query Companies [Company]
-getCompanies = do
+getCompanyByExternalID :: (Maybe ServiceID) -> ExternalCompanyID -> Query Companies (Maybe Company)
+getCompanyByExternalID sid ecid = do
   companies <- ask
-  return $ toList companies
-
-createCompany :: (Maybe ServiceID) -> Update Companies Company
-createCompany msid = do
+  return $ getOne (companies @= sid @= ecid)
+  
+getOrCreateCompanyWithExternalID :: (Maybe ServiceID) -> ExternalCompanyID -> Update Companies Company
+getOrCreateCompanyWithExternalID sid ecid = do
     companies <- ask
-    cid <- getUnique companies CompanyID
-    let company = Company {
-                    companyid = cid,
-                    companyservice = msid
+    let mcompany = getOne (companies @= ecid)
+    if (isJust $ mcompany)
+     then return $ fromJust $ mcompany
+     else do
+        cid <- getUnique companies CompanyID
+        let company = Company {
+                      companyid = cid
+                    , companyservice = sid
+                    , companyexternalid = ecid
                     }
-    modify $ insert company
-    return company
-    
+        modify $ insert company
+        return $ company
+
+getCompanies :: (Maybe ServiceID) -> Query Companies [Company]
+getCompanies sid = do
+  companies <- ask
+  return $ toList (companies @= sid)
+
 
 $(mkMethods ''Companies [ 
                        'getCompany
+                     , 'getCompanyByExternalID  
                      , 'getCompanies   
-                     , 'createCompany
+                     , 'getOrCreateCompanyWithExternalID
                         ])
 
 $(deriveSerializeFor [ ''CompanyID
                      , ''CompanyUser
                      , ''Company
+                     , ''ExternalCompanyID
                      ])
 
 instance Component Companies where

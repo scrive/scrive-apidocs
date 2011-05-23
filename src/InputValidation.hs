@@ -7,6 +7,7 @@ module InputValidation
     ( ValidationMessage
     , Result(..)
     , isGood
+    , fromGood
     , getOptionalField
     , getOptionalFieldList
     , getDefaultedField
@@ -66,6 +67,7 @@ import AppLogger as Log (security)
 import Misc hiding (getFields)
 import Templates.Templates
 import FlashMessage
+import Data.Monoid
 
 {- |
     If there's a problem this will create the appropriate FlashMessage.
@@ -86,6 +88,14 @@ data Result a = Good a
                 | Bad ValidationMessage
                 | Empty
 
+instance (Monoid a) => Monoid (Result a) where 
+    mappend (Good a1) (Good a2) = Good $ mappend a1 a2
+    mappend Empty a = a
+    mappend a Empty = a
+    mappend (Bad vm) _ = (Bad vm)
+    mappend _ (Bad vm) = (Bad vm)
+    mempty = Empty
+
 instance Monad Result where
   return = Good
   
@@ -96,6 +106,11 @@ instance Monad Result where
 isGood:: Result a -> Bool
 isGood (Good _) = True
 isGood _ = False
+
+fromGood:: Result a -> a
+fromGood (Good a) = a
+fromGood _ = error "Trying to get good from bad" 
+
 
 {- |
     Use this to get and validate most of the usual fields.  If the field

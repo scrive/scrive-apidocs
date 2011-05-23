@@ -15,6 +15,7 @@ import ListUtil
 import Session
 import API.Service.ServiceState
 import Data.Maybe
+import Company.CompanyState
 
 {- |
    Defines the reason why we are redirected to login page
@@ -91,6 +92,7 @@ data KontraLink
     | LinkPayExView (Maybe PaymentId)
     | LinkSignCanceledDataMismatch DocumentID SignatoryLinkID
     | LinkConnectUserSession ServiceID UserID SessionId KontraLink
+    | LinkConnectCompanySession ServiceID CompanyID SessionId KontraLink
 
 
 {- |
@@ -161,7 +163,9 @@ instance Show KontraLink where
     showsPrec _ (LinkPayExView Nothing) = (++) $ "/payex"
     showsPrec _ (LinkPayExView (Just pid)) = (++) $ "/payex/" ++ show pid
     showsPrec _ (LinkSignCanceledDataMismatch docid sigid) = (++) $ "/landpage/signcanceleddatamismatch/" ++ show docid ++ "/" ++ show sigid
-    showsPrec _ (LinkConnectUserSession sid uid ssid referer) = (++) $ "/integration/connect/" ++ encodeForURL sid ++ "/" ++ show uid  ++ "/" ++ show ssid 
+    showsPrec _ (LinkConnectUserSession sid uid ssid referer) = (++) $ "/integration/connectuser/" ++ encodeForURL sid ++ "/" ++ show uid  ++ "/" ++ show ssid 
+                                                                        ++ "?referer=" ++ (URL.encode $ UTF.encode  $ show referer)
+    showsPrec _ (LinkConnectCompanySession sid cid ssid referer) = (++) $ "/integration/connectcompany/" ++ encodeForURL sid ++ "/" ++ show cid  ++ "/" ++ show ssid 
                                                                         ++ "?referer=" ++ (URL.encode $ UTF.encode  $ show referer)
     
    

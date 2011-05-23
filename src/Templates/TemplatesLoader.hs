@@ -16,6 +16,7 @@ module Templates.TemplatesLoader
     , templateList
     , readTemplates
     , getTemplatesModTime
+    , toKontrakcjaTemplates
     ) where
 
 import Text.StringTemplate 
@@ -76,7 +77,8 @@ templateFiles = ["templates/landpages.st",
                  "templates/staticpages/partnerspage.st",
                  "templates/staticpages/clientspage.st",
                  "templates/eleg.st",
-                 "templates/api/embedded.st"]
+                 "templates/api/embedded.st",
+                 "templates/api/services.st"]
 
 
 type KontrakcjaTemplates = STGroup String
@@ -179,3 +181,7 @@ instance (Stringable a) => ToSElem (SElem a) where
 
 convert :: (Stringable a, Stringable b) => a -> b
 convert = stFromString . stToString
+
+
+toKontrakcjaTemplates::[(String,String)] ->  IO KontrakcjaTemplates
+toKontrakcjaTemplates ts = return $ groupStringTemplates $ map (\(n,l) -> (n, newSTMP l)) ts

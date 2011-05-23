@@ -873,7 +873,7 @@ addUser :: (BS.ByteString, BS.ByteString)
         -> Update Users (Maybe User)
 addUser (fstname, sndname) email passwd maybesupervisor mservice mcompany = do
   users <- get
-  if (IxSet.size (users @= Email email) /= 0)
+  if (IxSet.size (users @= mservice @= Email email) /= 0)
    then return Nothing  -- "user with same email address exists"
    else do         
         userid <- getUnique users UserID
@@ -920,7 +920,7 @@ addUser (fstname, sndname) email passwd maybesupervisor mservice mcompany = do
               , usercompany = mcompany
               , userapikey = Nothing
                  }
-        modify (updateIx (Email email) user)
+        modify (updateIx userid user)
         return $ Just user
 
 failure :: String -> Either String a

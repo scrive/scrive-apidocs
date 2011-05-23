@@ -143,6 +143,7 @@ safeReady(function() {
 safeReady(function() {
   $(".listDelete").overlay({
     mask: standardDialogMask,
+    top : standardDialogTop,
     onBeforeLoad: function() {
       var selectedrows = $(".listForm tbody tr.ui-selected");
       if (selectedrows.length==0) {
@@ -174,6 +175,7 @@ safeReady(function() {
 safeReady(function() {
   $(".listRemind").overlay({
     mask: standardDialogMask,
+    top : standardDialogTop,
     onBeforeLoad: function() {
       var selectedrows = $(".listForm tbody tr.ui-selected");
       if (selectedrows.length==0) {
@@ -208,6 +210,7 @@ safeReady(function() {
 safeReady(function() {
   $(".listShare").overlay({
     mask: standardDialogMask,
+    top : standardDialogTop,
     onBeforeLoad: function() {
       var selectedrows = $(".listForm tbody tr.ui-selected");
       if (selectedrows.length==0) {
@@ -410,6 +413,7 @@ function allparties()
 safeReady(function() {
   $("#sendinvite").overlay({
     mask: standardDialogMask,
+    top : standardDialogTop,
     onBeforeLoad: function(){
       if (isInvalidCSV()) return false;
       if (!emailFieldsValidation(noMultiParts($(".stepForm input[type='email']")))) return false;
@@ -425,6 +429,7 @@ safeReady(function() {
 
   $("#signinvite").overlay({  
     mask: standardDialogMask,    
+    top : standardDialogTop,
     onBeforeLoad: function () { 
       if (!checkSignPossibility()) return false;
       if (isInvalidCSV()) return false;
@@ -442,11 +447,13 @@ safeReady(function() {
 
 safeReady(function() {
   $("#tobasic").overlay({
-    mask: standardDialogMask
+    mask: standardDialogMask,
+    top : standardDialogTop
   });
 
   $("#toadvanced").overlay({
-    mask: standardDialogMask
+    mask: standardDialogMask,
+    top : standardDialogTop
   });
 
   $("#dialog-confirm-basic .tobasic").click(function() {
@@ -519,13 +526,15 @@ safeReady(function() {
 
 safeReady(function() {
   $("#addattachmentlink").overlay({
-    mask: standardDialogMask
+    mask: standardDialogMask,
+    top : standardDialogTop
   });
 });
 
 safeReady(function() {
   $("#editinvitetextlink").overlay({        
-    mask: standardDialogMask,    
+    mask: standardDialogMask,   
+    top : standardDialogTop,
     onBeforeLoad: function () { 
       var signedList =  jQuery(".authornamewhennotsecretary");
       var authorSignes = jQuery("#authorsignatoryradio:checked").size() > 0;
@@ -585,6 +594,7 @@ safeReady(function() {
 
 safeReady(function() {                      
   $("#sign").overlay({ mask: standardDialogMask,
+                       top : standardDialogTop,
                        onBeforeLoad: function () {
                          if (!sigFieldsValidation()) return false;
                          var guardChecked = $(".signGuard:checked").size()>0;
@@ -602,16 +612,21 @@ safeReady(function() {
 });
 
 safeReady(function() {
-  $("#signbankid").overlay({ mask: standardDialogMask });
+  $("#signbankid").overlay({ mask: standardDialogMask,
+                             top : standardDialogTop
+                            });
 });
    
 safeReady(function() { 
-  $("#cancel, .cancel").overlay({	mask: standardDialogMask    });
+  $("#cancel, .cancel").overlay({	mask: standardDialogMask,
+                                    top : standardDialogTop,
+                                });
 });
 
 safeReady(function() {
   $("#signByAuthor").overlay({	
     mask: standardDialogMask,
+    top : standardDialogTop,
     onBeforeLoad: function () {
       if (!sigFieldsValidation()) return false;
       var guardChecked = $(".signGuard:checked").size()>0;
@@ -941,7 +956,8 @@ function isExceptionalField(field) {
 safeReady(function(){
     $(".prepareToSendReminderMail").each(function(){
         $(this).overlay({
-          mask: standardDialogMask 
+          mask: standardDialogMask,
+          top : standardDialogTop
         });
     });              
 });
@@ -1011,10 +1027,12 @@ function hideFlashMessages(event) {
 function addFlashMessage(msg, type){
     var flashmsgbox = $('.flashmsgbox');    
     flashmsgbox.children().remove();
+    var logo = "" 
+    if (!whitelabel) logo = "<div class='skrivapa-logo float-left'></div>"                        
     flashmsgbox.append(
 	  "<div class='flash-container " + type + "'>"
         + "<div class='flash-content'>"
-		+ "<div class='skrivapa-logo float-left'></div>"
+		+ logo
         + "<div class='flash-icon " + type + "'></div>"
         + "<div class='flash-body'>" + msg + "</div>"
 		+ "<div class='flash-close modal-close'></div></div></div>"
@@ -1037,7 +1055,9 @@ function prepareEditor(textarea) {
 }
  
 standardDialogMask = "#333333"
-    
+standardDialogTop  = "10%"    
+whitelabel = false;                     
+                     
 $.tools.validator.addEffect("failWithFlashOnEmail", function(errors, event) {
   var invalidEmailErrMsg = "Du har inte skrivit in en e-post eller e-posten är felaktig. Vänligen försök igen.";
   var emptyEmailErrMsg = "Du måste ange e-post till motpart.";
@@ -1364,6 +1384,7 @@ function resizeDesignBar() {
 safeReady(function() {
   $("#loadingdialog").overlay({
     mask: standardDialogMask,
+    top : standardDialogTop,
     resizable: false,
 //    onClose: function(e){ return false; },
     closeOnClick: false,

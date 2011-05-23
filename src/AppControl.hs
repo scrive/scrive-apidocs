@@ -63,6 +63,8 @@ import System.Directory
 import System.Time
 import Text.JSON
 import Text.JSON.String
+import API.Service.ServiceControl
+
 import Text.JSON.Types
 import Text.StringTemplate.Base (StringTemplate(..))
 import Text.StringTemplate.Classes (StFirst(..))
@@ -78,6 +80,7 @@ import qualified Data.Map as Map
 import qualified Network.AWS.AWSConnection as AWS
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
+
 
 {- | 
   Defines the application's configuration.  This includes amongst other things
@@ -255,7 +258,10 @@ handleRoutes = msum [
 
      , dir "adminonly" $ dir "migrate0" $ hGet $ Administration.handleMigrate0
 --     , dir "adminonly" $ dir "migrateauthor" $ hGet $ DocControl.migrateDocSigLinks
-
+     , dir "services" $ hGet $ handleShowServiceList
+     , dir "services" $ hGet $ handleShowService
+     , dir "services" $ hPost $ handleChangeService
+     
      , dir "dave" $ dir "document" $ hGet $ daveDocument
      , dir "dave" $ dir "user"     $ hGet $ daveUser
            
@@ -447,7 +453,7 @@ appHandler appConf appGlobals = do
       let newsessionuser = fmap userid $ ctxmaybeuser ctx'  
       let newflashmessages = ctxflashmessages ctx'
       let newelegtrans = ctxelegtransactions ctx'
-      let newservice =  fmap (\(srv,l) -> (serviceid srv,l))  $ ctxservice ctx'
+      let newservice =  fmap (\srv -> (serviceid srv,ctxlocation ctx'))  $ ctxservice ctx'
       F.updateFlashCookie (aesConfig appConf) (ctxflashmessages ctx) newflashmessages
       updateSessionWithContextData session newsessionuser newservice newelegtrans
       return res
@@ -474,6 +480,7 @@ appHandler appConf appGlobals = do
 
       minutestime <- liftIO $ getMinutesTime
       muser <- getUserFromSession session
+      mcompany <- getCompanyFromSession session
       mservice <- getServiceFromSession session
       flashmessages <- withDataFn F.flashDataFromCookie $ maybe (return []) $ \fval ->
           case F.fromCookieValue (aesConfig appConf) fval of
@@ -510,7 +517,9 @@ appHandler appConf appGlobals = do
                 , ctxelegtransactions = elegtrans
                 , ctxfilecache = filecache appGlobals
                 , ctxxtoken = getSessionXToken session
-                , ctxservice = mservice
+                , ctxcompany = mcompany
+                , ctxservice = fst <$> mservice
+                , ctxlocation = fromMaybe "" $ snd <$> mservice
                 }
       return ctx
 

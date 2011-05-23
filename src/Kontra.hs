@@ -29,6 +29,8 @@ module Kontra
     , param
     , currentService
     , currentServiceID
+    , setCurrentService
+    , HasService(..)
     )
     where
 
@@ -63,7 +65,7 @@ import Mails.SendMail
 import qualified MemCache
 import API.Service.ServiceState
 import FlashMessage
-
+import Company.CompanyState
 
 #if MIN_VERSION_happstack_server(0,5,1)
 rqInputs2 rq = do
@@ -91,7 +93,9 @@ data Context = Context
     , ctxelegtransactions    :: [ELegTransaction]
     , ctxfilecache           :: MemCache.MemCache FileID BS.ByteString
     , ctxxtoken              :: MagicHash
-    , ctxservice             :: Maybe (Service,String)
+    , ctxcompany             :: Maybe Company
+    , ctxservice             :: Maybe Service
+    , ctxlocation            :: String
     }
 
 type Kontra a = ServerPartT (StateT Context IO) a
@@ -260,8 +264,20 @@ param p action = (getDataFnM $ look p) >> action
 -- | Current service id
 
 currentService :: Context -> (Maybe Service)
-currentService  ctx = fst <$> ctxservice ctx
+currentService  ctx = ctxservice ctx
 
 currentServiceID :: Context -> Maybe ServiceID
 currentServiceID  ctx = serviceid <$> currentService ctx
 
+
+class HasService a where
+    getService:: a -> Maybe ServiceID 
+    
+instance HasService Document where
+    getService = documentservice
+    
+setCurrentService :: (HasService a) => a -> Kontra ()
+setCurrentService a = do
+   ctx <- get 
+   srv <- liftMM (query . GetService) (return $ getService a)
+   put ctx {ctxservice = srv}
