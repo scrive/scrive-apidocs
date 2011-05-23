@@ -73,7 +73,9 @@ flashmessages =
               $if(!flash.isModal)$
                 <div class='flash-container $flash.type$'>
                     <div class='flash-content'>
+                    $if(!whitelabel)$
                     <div class='skrivapa-logo float-left'></div>
+                    $endif$ 
                     <div class='flash-icon $flash.type$'></div>
                     <div class='flash-body'>$flash.message:noescape()$</div>
                     <div class='flash-close modal-close'></div>

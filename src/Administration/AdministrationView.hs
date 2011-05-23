@@ -115,7 +115,7 @@ servicesAdminPage templates services=
         field "adminlink" $ show $ LinkAdminOnly
         field "services" $ for services $ \ service -> do
             field "name"  $ show $ serviceid service
-            fieldIO "admin"  $ liftM (fmap userfullname) $ query $ GetUserByUserID $ UserID $ unServiceAdmin $ serviceadmin service
+            fieldIO "admin"  $ liftM (fmap $ show . useremail . userinfo) $ query $ GetUserByUserID $ UserID $ unServiceAdmin $ serviceadmin service
         
 mkUserInfoView :: (User, DocStats, UserStats) -> UserInfoView
 mkUserInfoView (userdetails', docstats', userstats') = 

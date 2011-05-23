@@ -13,6 +13,7 @@
 module Doc.DocUtils where
 
 import Doc.DocStateData
+import API.Service.ServiceState
 import Mails.MailsUtil
 import Misc
 import Templates.Templates 
@@ -156,6 +157,8 @@ instance MaybeUser UserID where
 instance (MaybeUser u) => MaybeUser (Maybe u) where
   getUserID  = join . fmap getUserID
 
+instance MaybeUser ServiceAdmin where
+  getUserID = Just . UserID . unServiceAdmin 
 
 {- |  And this is a function for comparison -}
 sameUser:: (MaybeUser u1, MaybeUser u2) =>  u1 ->  u2 -> Bool  
@@ -415,8 +418,15 @@ getSigLinkForUserID doc uid = find (isSigLinkForUserID uid) $ documentsignatoryl
 isSigLinkForUserInfo :: UserID -> BS.ByteString -> SignatoryLink -> Bool
 isSigLinkForUserInfo userid email siglink = 
     Just userid == maybesignatory siglink
-       || email == signatoryemail (signatorydetails siglink)
+       || isSigLinkForEmail email siglink
        
+       
+isSigLinkForEmail :: BS.ByteString -> SignatoryLink -> Bool
+isSigLinkForEmail email siglink = email == signatoryemail (signatorydetails siglink)
+
+sigLinkForEmail :: Document -> BS.ByteString -> Maybe SignatoryLink
+sigLinkForEmail doc email = find (isSigLinkForEmail email) (documentsignatorylinks doc)
+
 {- |
    Given a document, a userid, and an email, return the SignatoryLink that belongs to the User with the email or userid.
  -}

@@ -398,7 +398,10 @@ checkUserTOSGet action = do
     case ctxmaybeuser ctx of
         Just (User{userhasacceptedtermsofservice = Just _}) -> Right <$> action
         Just _ -> return $ Left $ LinkAcceptTOS
-        Nothing -> return $ Left $ LinkLogin NotLogged
+        Nothing -> case (ctxcompany ctx) of
+             Just company -> Right <$> action
+             Nothing -> return $ Left $ LinkLogin NotLogged
+
 
 
 handleAcceptTOSGet :: Kontra (Either KontraLink Response)

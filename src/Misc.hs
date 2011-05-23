@@ -434,6 +434,14 @@ liftMM f v = do
          Just a -> f a
          _ -> return Nothing
 
+
+lift_M ::(Monad m) => (a -> m b) -> m (Maybe a) -> m (Maybe b)
+lift_M f v = do
+    mv <- v
+    case mv of 
+         Just a -> liftM Just (f a)
+         _ -> return Nothing
+
 when_::(Monad m) => Bool -> m a -> m ()
 when_ b c =  when b $ c >> return () 
 
@@ -611,9 +619,23 @@ isLeft :: Either a b -> Bool
 isLeft (Left _) = True
 isLeft _ = False
 
+isRight :: Either a b -> Bool
+isRight (Right _) = True
+isRight _ = False
+
 fromLeft :: Either a b -> a
 fromLeft (Left a) = a
 fromLeft _ = error "Reading Left for Right"
+
+
+fromRight :: Either a b -> b
+fromRight (Right b) = b
+fromRight _ = error "Reading Right for Left"
+
+
+joinB:: Maybe Bool -> Bool 
+joinB (Just b) = b
+joinB _ = False
 
 mapJust :: (a -> Maybe b) -> [a] -> [b]
 --mapJust = map fromJust . filter isJust . map

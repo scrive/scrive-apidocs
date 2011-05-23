@@ -1226,6 +1226,7 @@ function signatoryToHTML(isMultiple, sig) {
   
   sigentry.find(".csv.single").overlay({
     mask: standardDialogMask,
+    top : standardDialogTop,
     onBeforeLoad: function() {
       csvsigindex = $("form.stepForm input[type='hidden'][name='csvsigindex']").attr("value");
       if (!(csvsigindex && csvsigindex.length>0)) {
@@ -1242,7 +1243,8 @@ function signatoryToHTML(isMultiple, sig) {
   });
 
   sigentry.find(".csv.multi").overlay({
-    mask: standardDialogMask
+    mask: standardDialogMask,
+    top : standardDialogTop
   });
 }
 

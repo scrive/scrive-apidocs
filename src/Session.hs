@@ -6,6 +6,7 @@ module Session
     , Session 
     , SessionId
     , getUserFromSession
+    , getCompanyFromSession
     , getServiceFromSession
     , handleSession
     , updateSessionWithContextData
@@ -43,6 +44,7 @@ import ELegitimation.ELeg
 import Data.Typeable
 import API.Service.ServiceState
 import Cookies
+import Company.CompanyState
 
 -- | Session ID is a wrapped 'Integer' really
 newtype SessionId = SessionId Integer
@@ -155,6 +157,15 @@ data SessionData6 = SessionData6
     , service6          :: Maybe ServiceID   -- ^ Id of the service that we are now working with
     } deriving (Ord,Eq,Show,Typeable)
 
+data SessionData7 = SessionData7 
+    { userID7           :: Maybe UserID      -- ^ Just 'UserID' if a person is logged in
+    , expires7          :: MinutesTime       -- ^ when does this session expire
+    , hash7             :: MagicHash         -- ^ session security token
+    , elegtransactions7 :: [ELegTransaction] -- ^ ELeg transaction stuff
+    , xtoken7           :: MagicHash         -- ^ Random string to prevent CSRF
+    , service7          :: Maybe (ServiceID,String)   -- ^ Id of the service that we are now working with. Also lint to page that embeds it (hash location hack)
+    } deriving (Ord,Eq,Show,Typeable)
+
 data SessionData = SessionData 
     { userID           :: Maybe UserID      -- ^ Just 'UserID' if a person is logged in
     , expires          :: MinutesTime       -- ^ when does this session expire
@@ -162,6 +173,7 @@ data SessionData = SessionData
     , elegtransactions :: [ELegTransaction] -- ^ ELeg transaction stuff
     , xtoken           :: MagicHash         -- ^ Random string to prevent CSRF
     , service          :: Maybe (ServiceID,String)   -- ^ Id of the service that we are now working with. Also lint to page that embeds it (hash location hack)
+    , company        :: Maybe CompanyID
     } deriving (Ord,Eq,Show,Typeable)
 
 $(deriveSerialize ''SessionData3) 
@@ -180,9 +192,14 @@ $(deriveSerialize ''SessionData6)
 instance Version (SessionData6) where
     mode = extension 6 (Proxy :: Proxy SessionData5)
 
+$(deriveSerialize ''SessionData7) 
+instance Version (SessionData7) where
+    mode = extension 7 (Proxy :: Proxy SessionData6)
+
 $(deriveSerialize ''SessionData) 
 instance Version (SessionData) where
-    mode = extension 7 (Proxy :: Proxy SessionData6)
+    mode = extension 8 (Proxy :: Proxy SessionData7)
+
 
 instance Migrate SessionData0 SessionData1 where
     migrate (SessionData0 { userID0 = _
@@ -248,15 +265,26 @@ instance Migrate SessionData5 SessionData6 where
                     , xtoken6           = MagicHash 0
                     , service6          = Nothing
                     }
-                    
-instance Migrate SessionData6 SessionData where
+
+instance Migrate SessionData6 SessionData7 where
     migrate SessionData6{} =
+        SessionData7 { userID7           = Nothing
+                    , expires7          = MinutesTime 0 0
+                    , hash7             = MagicHash 0
+                    , elegtransactions7 = []
+                    , xtoken7           = MagicHash 0
+                    , service7          = Nothing
+                    }
+                    
+instance Migrate SessionData7 SessionData where
+    migrate SessionData7{} =
         SessionData { userID           = Nothing
                     , expires          = MinutesTime 0 0
                     , hash             = MagicHash 0
                     , elegtransactions = []
                     , xtoken           = MagicHash 0
                     , service          = Nothing
+                    , company          = Nothing
                     }
 -- | 'Session' data as we keep it in our database
 data Session = Session { sessionId::SessionId
@@ -428,13 +456,14 @@ emptySessionData = do
                          , elegtransactions = []
                          , xtoken = xhash
                          , service = Nothing
+                         , company = Nothing
                          }  
 
 -- | Check if session data is empty
 isSessionDataEmpty :: SessionData -> Bool
-isSessionDataEmpty SessionData{userID, elegtransactions, service} =
+isSessionDataEmpty SessionData{userID, elegtransactions, service, company} =
        userID == Nothing
-    && Prelude.null elegtransactions && service == Nothing
+    && Prelude.null elegtransactions && service == Nothing && company == Nothing
 
 -- | Return ID for temporary session (not written to db)
 tempSessionID :: SessionId
@@ -450,6 +479,11 @@ getUserFromSession s =
     case (userID $ sessionData s) of
         Just i -> query $ GetUserByUserID i
         _ -> return Nothing    
+
+getCompanyFromSession :: Session -> ServerPartT IO (Maybe Company)
+getCompanyFromSession s = case (company $ sessionData s) of
+        Just i -> query $ GetCompany (fst <$> (service $ sessionData s)) i
+        _ -> return Nothing 
 
 getServiceFromSession :: Session -> ServerPartT IO (Maybe (Service,String))               
 getServiceFromSession s = 
@@ -559,22 +593,29 @@ getSessionXToken :: Session -> MagicHash
 getSessionXToken = xtoken . sessionData
 
 --- | Creates a session for user and service
-createServiceSession:: (MonadIO m) => ServiceID -> UserID -> String ->  m SessionId
-createServiceSession sid uid location= do
+createServiceSession:: (MonadIO m) => ServiceID -> Either CompanyID UserID -> String ->  m SessionId
+createServiceSession sid userorcompany location= do
     sd <- liftIO emptySessionData
     session <-  update $ NewSession $  sd {
-              userID = Just uid
+              userID = either (const Nothing) Just userorcompany
+            , company = either Just (const Nothing) userorcompany
             , service = Just (sid,location)
              }
     return $ sessionId  session       
     
--- This is used to connect user to session when it was created by some service
-loadServiceSession::(MonadIO m,Functor m) => ServiceID -> UserID -> SessionId -> ServerPartT m Bool
-loadServiceSession  sid uid ssid  = do
+-- This is used to connect user or company to session when it was created by same service
+loadServiceSession::(MonadIO m,Functor m) => ServiceID -> Either CompanyID UserID -> SessionId -> ServerPartT m Bool
+loadServiceSession  sid userorcompany ssid  = do
     msession <- query $ GetSession ssid
     case msession of
         Nothing -> return False
         Just session@(Session{sessionData}) -> 
-            if (userID sessionData == Just uid && (fst <$> service sessionData) == Just sid)
-              then startSessionCookie session >> return True
-              else return False
+            case (Just sid == (fst <$> service sessionData) , userorcompany) of
+              (True, Left cid) -> if (company sessionData == Just cid) 
+                                     then startSessionCookie session >> return True
+                                     else return False
+              (True, Right uid) -> if (userID sessionData == Just uid) 
+                                     then startSessionCookie session >> return True
+                                     else return False
+              _ -> return False                   
+                                     

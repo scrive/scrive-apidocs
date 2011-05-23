@@ -169,10 +169,10 @@ createWholeContent (boundaryMixed, boundaryAlternative) ourInfoEmail ourInfoEmai
           "\r\n"
       headerContent = "--" ++ boundaryMixed ++ "\r\n" ++
           "Content-Type: multipart/alternative; boundary=" ++ boundaryAlternative ++ "\r\n" ++ "\r\n"
-      headerContentText = "--" ++ boundaryAlternative ++ "\r\n" ++
+      headerContentText = "\r\n--" ++ boundaryAlternative ++ "\r\n" ++
           "Content-type: text/plain; charset=utf-8\r\n" ++
           "\r\n"
-      headerContentHtml = "--" ++ boundaryAlternative ++ "\r\n" ++
+      headerContentHtml = "\r\n--" ++ boundaryAlternative ++ "\r\n" ++
           "Content-type: text/html; charset=utf-8\r\n" ++
           "\r\n"
       footerContent = "\r\n--" ++ boundaryAlternative ++ "--\r\n"

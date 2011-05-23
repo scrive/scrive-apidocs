@@ -15,8 +15,9 @@ module API.IntegrationAPIUtils (
           , SignatoryTMP(..)
           , getSignatoryTMP
           , mergeSignatoryWithTMP
+          , toSignatoryDetails
           , fillFields
-          , DOCUMENT_TYPE
+          , toDocumentType
         ) where
 
 
@@ -28,9 +29,12 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified  Codec.Binary.Base64 as BASE64
 import API.API
 import Doc.DocStorage
+import Doc.DocControl
 import Control.Monad.Trans
 import Misc
 import Data.Maybe
+import Data.Foldable (fold)
+
 
 {- -}
 
@@ -95,8 +99,16 @@ instance SafeEnum DOCUMENT_TYPE where
     toSafeEnum 3 = Just DOCUMENT_TYPE_CONTRACT_TEMPLATE
     toSafeEnum 4 = Just DOCUMENT_TYPE_OFFER_TEMPLATE
     toSafeEnum _ = Nothing
+    
+toDocumentType::DOCUMENT_TYPE -> DocumentType    
+toDocumentType DOCUMENT_TYPE_CONTRACT = Contract 
+toDocumentType DOCUMENT_TYPE_OFFER = Offer
+toDocumentType DOCUMENT_TYPE_CONTRACT_TEMPLATE = ContractTemplate
+toDocumentType DOCUMENT_TYPE_OFFER_TEMPLATE = OfferTemplate
 
-{- Building JSON structure representing object in any API response -} 
+{- Building JSON structure representing object in any API response 
+   TODO: Something is WRONG FOR ATTACHMENTS HERE
+-} 
 api_document_type::Document ->  DOCUMENT_TYPE
 api_document_type doc   
     | isTemplate doc && isContract doc = DOCUMENT_TYPE_CONTRACT_TEMPLATE
@@ -222,7 +234,17 @@ getSignatoryTMP = do
                 , email = email 
                 , fields = concat $ maybeToList fields
                 }
-                
+
+toSignatoryDetails::SignatoryTMP -> SignatoryDetails
+toSignatoryDetails sTMP = makeSignatoryNoPlacements 
+                                (fold $ fstname sTMP)  
+                                (fold $ sndname sTMP)
+                                (fold $ email sTMP)
+                                (SignOrder 1)
+                                (fold $ company sTMP)
+                                (fold $ personalnumber sTMP)
+                                (fold $ companynumber sTMP)
+
 mergeSignatoryWithTMP::(APIContext c) => SignatoryTMP  -> SignatoryLink-> APIFunction c SignatoryLink
 mergeSignatoryWithTMP sTMP sl@(SignatoryLink{signatorydetails=sd})  =  do              
   return $ sl { signatorydetails =  sd {

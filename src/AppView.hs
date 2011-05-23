@@ -114,7 +114,7 @@ embeddedPage pb = do
     ctx <- get
     bdy <- renderTemplateM "embeddedPage" $ do 
             field "content" pb
-            serviceFields (ctxservice ctx)
+            serviceFields (ctxservice ctx) (ctxlocation ctx)
             standardPageFields ctx "" False False False Nothing Nothing
     res <- simpleResponse bdy 
     clearFlashMsgs
@@ -122,14 +122,14 @@ embeddedPage pb = do
     
 embeddedErrorPage :: Kontra Response
 embeddedErrorPage = do
-    service <- ctxservice <$> get
+    ctx <- get
     content <- renderTemplateM "embeddedErrorPage" $ do
-        serviceFields service
+        serviceFields (ctxservice ctx) (ctxlocation ctx)
     simpleResponse content
 
-serviceFields:: Maybe (Service,String) -> Fields
-serviceFields (Just (_, location)) = field "location" location
-serviceFields Nothing = field "location" "" -- should never happend 
+serviceFields:: Maybe Service -> String -> Fields
+serviceFields _ location = field "location" location
+
 
 sitemapPage :: Kontra String
 sitemapPage = do
