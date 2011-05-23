@@ -315,12 +315,13 @@ sendClosedEmail1 ctx document signatorylink = do
                     , signatorydetails } = signatorylink
       Document {documenttitle, documentid} = document
   mail <- mailDocumentClosedForSignatories (ctxtemplates ctx) ctx document signatorylink
-  attachmentcontent <- getFileContents ctx $ head $ documentsealedfiles document
+  mailattachments <- makeMailAttachments ctx document
   scheduleEmailSendout (ctxesenforcer ctx) $ mail {
         fullname = signatoryname signatorydetails
       , email = signatoryemail signatorydetails
-      , attachments = [(documenttitle, attachmentcontent)]
+      , attachments = mailattachments
   }
+
 
 {- |
    Send an email to the author when the document is awaiting approval
@@ -342,12 +343,23 @@ sendClosedAuthorEmail ctx document = do
       authoremail = signatoryemail $ signatorydetails authorsiglink
       authorname  = signatoryname  $ signatorydetails authorsiglink
   mail <- mailDocumentClosedForAuthor (ctxtemplates ctx) ctx authorname document
-  attachmentcontent <- getFileContents ctx $ head $ documentsealedfiles document
+  mailattachments <- makeMailAttachments ctx document
   scheduleEmailSendout (ctxesenforcer ctx) $ mail {
         fullname = authorname
       , email = authoremail
-      , attachments = [(documenttitle document, attachmentcontent)]
+      , attachments = mailattachments
   }
+
+makeMailAttachments :: Context -> Document -> IO [(BS.ByteString,BS.ByteString)]
+makeMailAttachments ctx document = do
+  attachmentdocs <- queryOrFailIfLeft $ GetDocumentsByDocumentID $ documentattachments document
+  sequence $ map (makeMailAttachment ctx) (document : attachmentdocs)
+  where
+    makeMailAttachment :: Context -> Document -> IO (BS.ByteString, BS.ByteString)
+    makeMailAttachment ctx Document{documenttitle,documentsealedfiles,documentfiles} = do
+      let files = if Data.List.null documentsealedfiles then documentfiles else documentsealedfiles
+      attachmentcontent <- getFileContents ctx $ head $ files
+      return (documenttitle, attachmentcontent)
 
 {- |
    Send an email to the author and to all signatories who were sent an invitation  when the document is rejected
