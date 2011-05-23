@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 
 module ELegitimation.BankID 
     ( handleSignBankID
@@ -19,7 +19,6 @@ import Data.List
 import Data.Maybe
 import Doc.DocControl
 import Doc.DocState
-import Doc.DocStateUtils
 import Doc.DocUtils
 import Doc.DocView
 import ELegitimation.ELeg
@@ -38,8 +37,7 @@ import User.UserControl
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS hiding (length, drop, break)
 import GHC.Word
-import GHC.Unicode ( toLower )
-import User.UserView
+import GHC.Unicode (toLower)
 import Data.Either (lefts, rights)
 
 {- |
@@ -122,7 +120,6 @@ handleSignPostBankID docid signid magic = do
     Context { ctxelegtransactions
             , ctxtime
             , ctxipnumber
-            , ctxmaybeuser 
             , ctxtemplates } <- get
     liftIO $ print "eleg sign post!"
     -- POST values
@@ -408,7 +405,7 @@ handleIssuePostBankID docid = withUserPost $ do
                                                     ed <- update $ CloseDocument (documentid d) ctxtime ctxipnumber $ Just signinfo
                                                     case ed of
                                                         Nothing -> return $ Left "could not close document"
-                                                        Just d -> return $ Right d
+                                                        Just d2 -> return $ Right d2
                                                 _ -> do {Log.debug "should not have other status" ; mzero}
                                     case mndoc of
                                         Left msg -> do
@@ -428,8 +425,9 @@ handleIssuePostBankID docid = withUserPost $ do
                                             case documentstatus d of
                                                 Pending -> addModal $ modalSignInviteView d
                                                 Closed  -> addModal modalSignAwaitingAuthorLast
+                                                _ -> mzero -- should not be possible but necessary for compiling
                                             return $ LinkIssueDoc (documentid d)
-                                        ([], ds) -> return $ LinkContracts emptyListParams
+                                        ([], _) -> return $ LinkContracts emptyListParams
                                         _ -> mzero
                                 Left link -> return link
 
@@ -776,6 +774,7 @@ providerStringToType provider
     | provider == "telia"  = return TeliaProvider
     | otherwise            = mzero
 
+compareFirstNames :: BS.ByteString -> BS.ByteString -> MergeResult
 compareFirstNames fnContract fnEleg 
     | BS.null fnContract = MergeFail "Du har inte fyllt i förnamn, vänligen försök igen."
     | BS.null fnEleg = MergeKeep
@@ -790,13 +789,16 @@ compareFirstNames fnContract fnEleg
 bsdigits :: BS.ByteString    
 bsdigits = BS.fromString "0123456789"
 
+isBSDigit :: Word8 -> Bool
 isBSDigit x = x `BS.elem` bsdigits
 
+normalizeNumber :: BS.ByteString -> BS.ByteString
 normalizeNumber n | BS.null n = n
 normalizeNumber n
     | isBSDigit (BS.head n) = BS.cons (BS.head n) $ normalizeNumber (BS.tail n)
     | otherwise = normalizeNumber (BS.tail n)
     
+compareNumbers :: BS.ByteString -> BS.ByteString -> MergeResult
 compareNumbers nContract nEleg 
     | BS.null nContract = MergeFail "Du har inte fyllt i personnnummer, vänligen försök igen."
     | BS.null nEleg     = MergeKeep
@@ -808,6 +810,7 @@ compareNumbers nContract nEleg
             then MergeMatch
             else MergeFail $ "Personnnummer matchar inte: \"" ++ BS.toString nContract ++ "\" och \"" ++ BS.toString nEleg ++ "\"."
 
+compareLastNames :: BS.ByteString -> BS.ByteString -> MergeResult
 compareLastNames lnContract lnEleg 
     | BS.null lnContract = MergeFail "Du har inte fyllt i efternamn, vänligen försök igen."
     | BS.null lnEleg = MergeKeep
@@ -818,6 +821,9 @@ compareLastNames lnContract lnEleg
 -- import GHC.Unicode ( toLower )
 --import qualified Data.ByteString.Lazy.Char8 as B
 
+{- | 
+    Calculate the Levenshtein distance (edit distance) between two strings
+ -}
 levenshtein :: String -> String -> Int
 levenshtein s1 s2 = levenshtein' (' ':s1) (' ':s2) (length s1) (length s2)
 
