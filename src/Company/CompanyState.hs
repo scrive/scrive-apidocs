@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -fno-warn-orphans -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror -fno-warn-unused-binds #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Company.CompanyState
@@ -6,45 +6,31 @@
 -- Stability   :  development
 -- Portability :  portable
 --
--- Company in our system. Some users will be maked as members of company. Documents that they will create
--- will be maked as company documents.
+-- Company in our system. Some users will be marked as members of company. Documents that they will create
+-- will be marked as company documents.
 -----------------------------------------------------------------------------
 module Company.CompanyState
     ( Company(..)
     , CompanyID(..)
     , CompanyUser(..)
-    , Companies(..)
+    , Companies
     , GetCompany(..)
     , GetCompanyByExternalID(..)
     , GetOrCreateCompanyWithExternalID(..)
 ) where
-import Happstack.Data
-import Happstack.State
-import Control.Monad
-import Control.Monad.Reader (ask)
-import Control.Monad.State (modify,MonadState(..))
-import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Char8 as BS (unlines) 
-import Happstack.Data.IxSet as IxSet
-import Data.Maybe(isJust,fromJust,maybe)
-import Misc
-import Happstack.Server.SimpleHTTP
-import Happstack.Util.Common
-import Codec.Utils (Octet)
-import Data.Digest.SHA256 (hash)
-import System.Random
-import Data.Maybe (isNothing)
-import qualified Data.Set as Set
-import Control.Applicative
-import System.Time as ST
-import MinutesTime as MT
-import Payments.PaymentsState as Payments
-import Data.Data
-import Data.Maybe
-import User.Password
 import API.Service.ServiceState 
-
+import Control.Monad.Reader (ask)
+import Control.Monad.State (modify)
+import Data.Data
+import Data.Maybe (isJust, fromJust)
+import Happstack.Data
+import Happstack.Data.IxSet as IxSet
+import Happstack.Server.SimpleHTTP
+import Happstack.State
+import Happstack.Util.Common
+import Misc
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.UTF8 as BS
 
 newtype CompanyID = CompanyID { unCompanyID :: Int }
     deriving (Eq, Ord, Typeable)
@@ -63,12 +49,11 @@ newtype CompanyUser = CompanyUser { unCompanyUser :: Int }
 deriving instance Data CompanyUser
 
 data Company = Company
-          {   companyid :: CompanyID
-            , companyexternalid :: ExternalCompanyID
-            , companyservice :: Maybe ServiceID
-           
-          }
-    deriving (Eq, Ord)
+               { companyid :: CompanyID
+               , companyexternalid :: ExternalCompanyID
+               , companyservice :: Maybe ServiceID
+               }
+             deriving (Eq, Ord)
      
 instance Typeable Company where typeOf _ = mkTypeOf "Company"
  
@@ -94,7 +79,7 @@ instance Show ExternalCompanyID where
     show (ExternalCompanyID val) = BS.toString val
     
 instance Read ExternalCompanyID where
-    readsPrec prec s =  [(ExternalCompanyID  $ BS.fromString  s,"")] 
+    readsPrec _prec s =  [(ExternalCompanyID  $ BS.fromString  s,"")] 
 
 instance Show CompanyUser where
     showsPrec prec (CompanyUser val) = showsPrec prec val
