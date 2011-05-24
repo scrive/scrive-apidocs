@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
-
+{-# OPTIONS_GHC -Wall -fno-warn-orphans -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 {-| Dump bin for things that do not fit anywhere else
 
 I do not mind people sticking stuff in here. From time to time just
@@ -10,57 +10,41 @@ modules.
 Keep this one as unorganized dump.
 -}
 module Misc where
-import Control.Monad(msum,liftM,mzero,guard,MonadPlus(..))
-import Control.Monad.Reader (ask,asks)
-import Control.Monad.Trans(liftIO, MonadIO,lift)
-import Happstack.Server hiding (simpleHTTP)
-import Happstack.Server.HSP.HTML (webHSP)
-import Happstack.State (update,query,getRandomR)
-import Network.HTTP (getRequest, getResponseBody, simpleHTTP)
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
-import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.UTF8 as BS
-import Data.Maybe
-import Data.Either
-import Happstack.Data.IxSet as IxSet
-import Foreign.C.Types
-import Foreign.Ptr
-import Foreign.C.String
-import HSX.XMLGenerator
-import HSP (evalHSP, XMLMetaData(..), renderAsHTML, IsAttrValue, toAttrValue)
-import qualified HSP.XML
-import qualified HSP
-import Control.Monad.State
-import Control.Monad.Error
-import Data.Monoid
-import Data.List
-import Data.Char
-import Data.Word
-import System.Random
-import Data.Typeable
-import Numeric -- use new module
-import Happstack.State
-import Happstack.Server.SimpleHTTP
-import Happstack.Util.Common
-import Data.Data
-import Happstack.Data
-import Data.Int
-import qualified Control.Exception as C
-import System.Cmd
-import Control.Concurrent
-import System.Process
-import System.IO
-import System.Exit
-import System.Log.Logger (errorM)
-import Data.Traversable (sequenceA)
 import Control.Applicative
-import System.Directory
-import System.IO.Temp
-import Data.Typeable
+import Control.Concurrent
+import Control.Monad.Reader (asks)
+import Control.Monad.State
+import Data.Char
 import Data.Data
-import qualified GHC.Conc
+import Data.Int
+import Data.List
+import Data.Maybe
+import Data.Monoid
+import Data.Traversable (sequenceA)
+import Data.Word
+import HSP (evalHSP, XMLMetaData(..), renderAsHTML, IsAttrValue, toAttrValue)
+import HSX.XMLGenerator
+import Happstack.Data.IxSet as IxSet
+import Happstack.Server hiding (simpleHTTP)
+import Happstack.Server.SimpleHTTP
+import Happstack.State
+import Happstack.Util.Common
+import Numeric -- use new module
+import System.Exit
+import System.IO
+import System.IO.Temp
+import System.Log.Logger (errorM)
+import System.Process
+import System.Random
 import qualified Codec.Binary.Url as URL
+import qualified Control.Exception as C
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
+import qualified Data.ByteString.UTF8 as BS
+import qualified GHC.Conc
+import qualified HSP
+import qualified HSP.XML
 
 foreign import ccall unsafe "htonl" htonl :: Word32 -> Word32
 
@@ -158,7 +142,7 @@ openDocumentWindows :: String -> IO ()
 openDocumentWindows filename = do
     let cmd = "cmd"
     let args = ["/c", filename]
-    (_, _, _, pid) <-
+    (_, _, _, _pid) <-
         createProcess (proc cmd args){ std_in  = Inherit,
                                        std_out = Inherit,
                                        std_err = Inherit
@@ -171,7 +155,7 @@ openDocumentGnome :: String -> IO ()
 openDocumentGnome filename = do
     let cmd = "gnome-open"
     let args = [filename]
-    (_, _, _, pid) <-
+    (_, _, _, _pid) <-
         createProcess (proc cmd args){ std_in  = Inherit,
                                        std_out = Inherit,
                                        std_err = Inherit
@@ -184,7 +168,7 @@ openDocumentMac :: String -> IO ()
 openDocumentMac filename = do
     let cmd = "open"
     let args = [filename]
-    (_, _, _, pid) <-
+    (_, _, _, _pid) <-
         createProcess (proc cmd args){ std_in  = Inherit,
                                        std_out = Inherit,
                                        std_err = Inherit
@@ -193,15 +177,18 @@ openDocumentMac filename = do
 
 openDocument :: String -> IO ()
 openDocument filename = 
-  openDocumentMac filename `catch` (\e -> 
-  openDocumentWindows filename `catch` (\e -> 
-  openDocumentGnome filename `catch` (\e -> 
-  return ())))
+  openDocumentMac filename `catch` 
+  (\_e -> 
+    openDocumentWindows filename `catch` 
+    (\_e -> 
+      openDocumentGnome filename `catch` 
+      (\_e -> 
+        return ())))
 
 toIO :: forall s m a . (Monad m) => s -> ServerPartT (StateT s m) a -> ServerPartT m a
-toIO state = mapServerPartT f
-    where
-      f m = evalStateT m state
+toIO astate = mapServerPartT f
+  where
+    f m = evalStateT m astate
 
 
 -- | Oh boy, invent something better.
@@ -243,11 +230,11 @@ pathdb
       MonadIO m,
       QueryEvent a1 (Maybe t)) =>
      (a -> a1) -> (t -> m b) -> m b
-pathdb get action = path $ \id -> do
-    m <- query $ get id
-    case m of
-        Nothing -> mzero
-        Just obj -> action obj
+pathdb getfn action = path $ \idd -> do
+  m <- query $ getfn idd
+  case m of
+    Nothing -> mzero
+    Just obj -> action obj
 
 -- | Get param as strict ByteString instead of a lazy one.
 getAsStrictBS :: (HasRqData f, MonadIO f, ServerMonad f, MonadPlus f, Functor f) =>
@@ -260,7 +247,7 @@ lookInputList :: String -> RqData [BSL.ByteString]
 lookInputList name
     = do 
 #if MIN_VERSION_happstack_server(0,5,1)
-         inputs <- asks (\(a,b,c) -> a ++ b)
+         inputs <- asks (\(a, b, _c) -> a ++ b)
 #else
          inputs <- asks fst 
 #endif
@@ -305,12 +292,12 @@ deriving instance Serialize MagicHash
 instance Version MagicHash
 
 instance Show MagicHash where
-    showsPrec prec (MagicHash x) = (++) (pad0 16 (showHex x ""))
+  showsPrec _prec (MagicHash x) = (++) (pad0 16 (showHex x ""))
     
 
 instance Read MagicHash where
-    readsPrec prec = let make (i,v) = (MagicHash i,v) 
-                     in map make . readHex
+  readsPrec _prec = let make (i,v) = (MagicHash i,v) 
+                    in map make . readHex
 
 
 instance FromReqURI MagicHash where
@@ -329,7 +316,7 @@ readProcessWithExitCode'
     -> BSL.ByteString                              -- ^ standard input
     -> IO (ExitCode,BSL.ByteString,BSL.ByteString) -- ^ exitcode, stdout, stderr
 readProcessWithExitCode' cmd args input = 
-  withSystemTempFile "process" $ \inputname inputhandle -> do
+  withSystemTempFile "process" $ \_inputname inputhandle -> do
     BSL.hPutStr inputhandle input
     hFlush inputhandle
     hSeek inputhandle AbsoluteSeek 0
@@ -344,24 +331,24 @@ readProcessWithExitCode' cmd args input =
     errM <- newEmptyMVar
 
     -- fork off a thread to start consuming stdout
-    forkIO $ do
-        out <- BSL.hGetContents outh
-        C.evaluate (BSL.length out)
-        putMVar outM out
-        putMVar outMVar ()
+    _ <- forkIO $ do
+      out <- BSL.hGetContents outh
+      _ <- C.evaluate (BSL.length out)
+      putMVar outM out
+      putMVar outMVar ()
 
     -- fork off a thread to start consuming stderr
-    forkIO $ do
-        err  <- BSL.hGetContents errh
-        C.evaluate (BSL.length err)
-        putMVar errM err
-        putMVar outMVar ()
+    _ <- forkIO $ do
+      err  <- BSL.hGetContents errh
+      _ <- C.evaluate (BSL.length err)
+      putMVar errM err
+      putMVar outMVar ()
 
     -- wait on the output
     takeMVar outMVar
     takeMVar outMVar
-    C.handle ((\e -> return ()) :: (C.IOException -> IO ())) $ hClose outh
-    C.handle ((\e -> return ()) :: (C.IOException -> IO ())) $ hClose errh
+    C.handle ((\_e -> return ()) :: (C.IOException -> IO ())) $ hClose outh
+    C.handle ((\_e -> return ()) :: (C.IOException -> IO ())) $ hClose errh
 
     -- wait on the process
     ex <- waitForProcess pid
@@ -371,6 +358,7 @@ readProcessWithExitCode' cmd args input =
 
     return (ex, out, err)
 
+curl_exe :: String
 #ifdef WINDOWS
 curl_exe = "curl.exe"
 #else
@@ -523,17 +511,23 @@ pad0 len str = take missing (repeat '0') ++ str
         missing = max 0 diff
 
 -- | Logging left to error log
+eitherLog :: IO (Either String b) -> IO b
 eitherLog action = do
   value <- action
   case value of
     Left errmsg -> do
-               putStrLn errmsg
-               error errmsg
-    Right value -> return value        
+      putStrLn errmsg
+      error errmsg
+    Right val -> return val
 
 -- | Triples
+fst3 :: (t1, t2, t3) -> t1
 fst3 (a,_,_) = a
+
+snd3 :: (t1, t2, t3) -> t2
 snd3 (_,b,_) = b
+
+thd3 :: (t1, t2, t3) -> t3
 thd3 (_,_,c) = c
 
 -- HTTPS utils
@@ -548,33 +542,33 @@ isHTTPS = do
     let mscheme = getHeader "scheme" rq
     return $ mscheme == Just (BS.fromString "https")
 
-getHostpart::(ServerMonad m,Functor m) => m String
+getHostpart :: (ServerMonad m, Functor m) => m String
 getHostpart = do
-    rq <- askRq
-    let host = maybe "skrivapa.se" BS.toString $ getHeader "host" rq
-    let scheme = maybe "http" BS.toString $ getHeader "scheme" rq
-    return $ scheme ++ "://" ++ host     
+  rq <- askRq
+  let hostpart = maybe "skrivapa.se" BS.toString $ getHeader "host" rq
+  let scheme = maybe "http" BS.toString $ getHeader "scheme" rq
+  return $ scheme ++ "://" ++ hostpart
      
-getSecureLink::(ServerMonad m,Functor m) => m String
+getSecureLink :: (ServerMonad m, Functor m) => m String
 getSecureLink = (++) "https://" <$>  currentLinkBody
 
 
-currentLink::(ServerMonad m,Functor m) => m String -- We use this since we can switch to HTTPS whenever we wan't
+currentLink :: (ServerMonad m, Functor m) => m String -- We use this since we can switch to HTTPS whenever we wan't
 currentLink = do
-    secure <- isHTTPS
-    body <- currentLinkBody
-    if (secure)                  
-       then return $  "https://" ++ body
-       else return $  "http://" ++ body
+  secure <- isHTTPS
+  urlbody   <- currentLinkBody
+  if secure
+    then return $ "https://" ++ urlbody
+    else return $ "http://"  ++ urlbody
 
-currentLinkBody::(ServerMonad m,Functor m) => m String
+currentLinkBody :: (ServerMonad m, Functor m) => m String
 currentLinkBody = do
-    rq <- askRq
-    let host = maybe "skrivapa.se" BS.toString $ getHeader "host" rq
-    let fix a1 a2 = if ("/" `isSuffixOf` a1 && "/" `isPrefixOf` a2)
-                  then drop 1 a2
-                  else a2
-    return $ host ++ fix host (rqUri rq) ++ fix (rqUri rq) (rqURL rq)
+  rq <- askRq
+  let hostpart = maybe "skrivapa.se" BS.toString $ getHeader "host" rq
+  let fixurl a1 a2 = if ("/" `isSuffixOf` a1 && "/" `isPrefixOf` a2)
+                     then drop 1 a2
+                     else a2
+  return $ hostpart ++ fixurl hostpart (rqUri rq) ++ fixurl (rqUri rq) (rqURL rq)
 
        
 para :: String -> String
