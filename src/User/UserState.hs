@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 module User.UserState 
     ( Email(..)
     , Friend(..)
@@ -25,7 +25,6 @@ module User.UserState
     , composeFullName
     , userfullname
     , isAbleToHaveSubaccounts
-
     , AcceptTermsOfService(..)
     , SetFreeTrialExpirationDate(..)
     , SetSignupMethod(..)
@@ -56,34 +55,28 @@ module User.UserState
     , getUserPaymentSchema
     , takeImmediatelyPayment
 ) where
-import Happstack.Data
-import Happstack.State
-import Control.Monad
-import Control.Monad.Reader (ask)
-import Control.Monad.State (modify,MonadState(..))
-import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Char8 as BS (unlines) 
-import Happstack.Data.IxSet as IxSet
-import Data.Maybe(isJust,fromJust,maybe)
-import Misc
-import Happstack.Server.SimpleHTTP
-import Happstack.Util.Common
-import Codec.Utils (Octet)
-import Data.Digest.SHA256 (hash)
-import System.Random
-import Data.List
-import Data.Maybe (isNothing)
-import qualified Data.Set as Set
-import Control.Applicative
-import System.Time as ST
-import MinutesTime as MT
-import Payments.PaymentsState as Payments
-import Data.Data
-import Data.Maybe
-import User.Password
 import API.Service.ServiceState 
 import Company.CompanyState
+import Control.Applicative
+import Control.Monad
+import Control.Monad.Reader (ask)
+import Control.Monad.State (modify, MonadState(..))
+import Data.Data
+import Data.List
+import Data.Maybe (isJust, fromJust, isNothing, fromMaybe)
+import Happstack.Data
+import Happstack.Data.IxSet as IxSet
+import Happstack.Server.SimpleHTTP
+import Happstack.State
+import Happstack.Util.Common
+import MinutesTime as MT
+import Misc
+import Payments.PaymentsState as Payments
+import User.Password
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BS (unlines) 
+import qualified Data.ByteString.UTF8 as BS
+import qualified Data.Set as Set
 
 newtype UserID = UserID { unUserID :: Int }
     deriving (Eq, Ord, Typeable)
@@ -490,7 +483,6 @@ instance Migrate User11 User12 where
                { userid11                     
                 , userpassword11                
                 , usersupervisor11               
-                , usercanhavesubaccounts11        
                 , useraccountsuspended11          
                 , userhasacceptedtermsofservice11  
                 , userinfo11                     
@@ -529,7 +521,6 @@ instance Migrate User12 User13 where
                 , userinfo12                     
                 , usersettings12                
                 , userpaymentpolicy12 = Payments.UserPaymentPolicy {temppaymentchange}
-                , userpaymentaccount12           
                 , userfriends12                  
                 , userinviteinfo12
                 , userlogininfo12       
@@ -577,7 +568,6 @@ instance Migrate User13 User14 where
                 , userinviteinfo13     
                 , userlogininfo13       
                 , userservice13    
-                , userterminated13    
                 }) = User14 
                 { userid14                         = userid13
                 , userpassword14                   = userpassword13
@@ -856,7 +846,7 @@ getUserRelatedAccounts userid = do
   muser <- getUserByUserID userid
   case muser of
     Nothing -> return []
-    Just (user@User{usersupervisor}) -> do
+    Just User{usersupervisor} -> do
       users <- ask
       let subaccounts = users @= SupervisorID (unUserID userid)
           superaccounts = maybe IxSet.empty (\SupervisorID{unSupervisorID} -> users @= UserID unSupervisorID) usersupervisor
@@ -1022,8 +1012,8 @@ setUserPaymentPolicyChange userid userpaymentpolicy =
     modifyUser userid $ \user -> 
             Right $ user {userpaymentpolicy = userpaymentpolicy}   
             
-freeUserFromPayments :: UserID -> MinutesTime -> Update Users ()
-freeUserFromPayments uid freetill =  do
+_freeUserFromPayments :: UserID -> MinutesTime -> Update Users ()
+_freeUserFromPayments uid freetill =  do
                                     _ <- modifyUser uid $ \user -> 
                                       Right $ user {userpaymentpolicy = Payments.freeTill freetill (userpaymentpolicy user) }   
                                     return ()
@@ -1084,8 +1074,8 @@ setSignupMethod userid signupmethod =
     modifyUser userid $ \user -> 
         Right $ user { usersignupmethod = signupmethod }
 
-addFreePaymentsForInviter ::MinutesTime -> User -> Update Users ()
-addFreePaymentsForInviter now u = do
+_addFreePaymentsForInviter ::MinutesTime -> User -> Update Users ()
+_addFreePaymentsForInviter now u = do
                            case (fmap userinviter $ userinviteinfo u) of
                             Nothing -> return ()   
                             Just (Inviter iid) -> do
