@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror -fno-warn-incomplete-patterns #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  InspectXML
@@ -6,18 +7,11 @@
 -- Contains a derivator. But it forces big types to be moved to InspectXMLUtil.
 -- Otherwise we would like to have them here.
 -----------------------------------------------------------------------------
-
-
 module InspectXML where
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
-import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.UTF8 as BS
-import Data.Maybe
-import Data.Either
+
 import HSX.XMLGenerator
-import qualified Control.Exception as C
-import System.Log.Logger (errorM)
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.UTF8 as BS
 import qualified Language.Haskell.TH as TH
 
 class InspectXML a where
@@ -45,6 +39,7 @@ instance (InspectXML a, InspectXML b, InspectXML c) => InspectXML (a, b, c) wher
                             [inspectXML a, inspectXML b, inspectXML c]
 
 -- m :: (XMLGenerator m) => [(String, GenChildList m)] -> GenChildList m
+m :: (XMLGen m) => [(String, XMLGenT m [Child m])] -> [GenChildList m]
 m g = map y g
       where y ("",cont) = asChild $ genElement (Nothing,"li") [] [cont]
             y (z,cont) = asChild $ genElement (Nothing,"li") [] [asChild z, asChild ": ", cont]
@@ -52,13 +47,13 @@ m g = map y g
 deriveInspectXML :: TH.Name -> TH.Q [TH.Dec]
 deriveInspectXML name = do
   info <- TH.reify name
-  let namesOfNormal fields = map (\x -> "") fields
-  let namesOfRec fields = map (\(x,_,_) -> TH.nameBase x) fields
+  let namesOfNormal fields = map (\_x -> "") fields
+  let namesOfRec fields = map (\(x, _, _) -> TH.nameBase x) fields
   let u :: TH.Name -> [String] -> TH.MatchQ
-      u name fields = do
+      u fname fields = do
         n <- mapM (\f -> TH.newName f) fields
-        let s = TH.nameBase name
-        TH.match (TH.conP name (map TH.varP n)) 
+        let s = TH.nameBase fname
+        TH.match (TH.conP fname (map TH.varP n)) 
                    (TH.normalB [| 
                                   asChild [ asChild s
                                   , asChild ":"
@@ -67,19 +62,19 @@ deriveInspectXML name = do
                                   ]
                                |]) []
 
-  let pcon (TH.NormalC name fields) = do
+  let pcon (TH.NormalC fname fields) = do
                           let k = namesOfNormal fields
-                          u name k
-      pcon (TH.RecC name fields) = do
+                          u fname k
+      pcon (TH.RecC fname fields) = do
                           let k = namesOfRec fields
-                          u name k
-      d name cons = 
-        [d| instance InspectXML $(TH.conT name) where
+                          u fname k
+      d fname cons = 
+        [d| instance InspectXML $(TH.conT fname) where
               inspectXML x = $( TH.caseE (TH.varE 'x) 
                               (map pcon cons) ) |]
 
   case info of
-    TH.TyConI (TH.DataD _ _ _ cons fields) -> d name cons
-    TH.TyConI (TH.NewtypeD _ _ _ con fields) -> d name [con]
+    TH.TyConI (TH.DataD _ _ _ cons _fields) -> d name cons
+    TH.TyConI (TH.NewtypeD _ _ _ con _fields) -> d name [con]
     _ -> error ("deriveInspectXML cannot handle: " ++ show info)
 
