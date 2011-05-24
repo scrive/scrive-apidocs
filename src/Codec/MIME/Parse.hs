@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 --------------------------------------------------------------------
 -- |
 -- Module    : Codec.MIME.Pare
@@ -35,12 +36,10 @@ parseMIMEBody headers_in body =
   case mimeType mty of
     Multipart{} -> fst (parseMultipart mty body)
     Message{}   -> fst (parseMultipart mty body)
-    _           -> nullMIMEValue 
-                    { mime_val_type    = mty
-	            , mime_val_disp    = parseContentDisp headers
-	            , mime_val_content = Single (processBody headers body)
- 	            }
-
+    _           -> nullMIMEValue { mime_val_type    = mty
+                                 , mime_val_disp    = parseContentDisp headers
+                                 , mime_val_content = Single (processBody headers body)
+                                 }
  where headers = [ (map toLower k,v) | (k,v) <- headers_in ]
        mty = fromMaybe defaultType
                        (parseContentType =<< lookupField "content-type" headers)
@@ -115,12 +114,12 @@ parseMultipart mty body =
       ", has no required boundary parameter. Defaulting to text/plain") $
       (nullMIMEValue{ mime_val_type = defaultType
                     , mime_val_disp = Nothing
-		    , mime_val_content = Single body
-		    }, "")
+                    , mime_val_content = Single body
+                    }, "")
     Just bnd -> (nullMIMEValue { mime_val_type = mty
                                , mime_val_disp = Nothing
-			       , mime_val_content = Multi vals
-			       }, rs)
+                               , mime_val_content = Multi vals
+                               }, rs)
       where (vals,rs) = splitMulti bnd body
 
 splitMulti :: String -> String -> ([MIMEValue], String)
@@ -253,7 +252,7 @@ takeUntilCRLF str = go "" str
   go acc (x:xs) = go (x:acc) xs
 
 -- case in-sensitive lookup of field names or attributes\/parameters.
-lookupField :: String -> [(String,a)] -> Maybe a
+lookupField :: String -> [(String, a)] -> Maybe a
 lookupField n ns = 
    -- assume that inputs have been mostly normalized already 
    -- (i.e., lower-cased), but should the lookup fail fall back
@@ -264,5 +263,5 @@ lookupField n ns =
       let nl = map toLower n in
       case find (\ (y,_) -> nl == map toLower y) ns of
         Nothing -> Nothing
-	Just (_,x)  -> Just x
+        Just (_, x) -> Just x
       
