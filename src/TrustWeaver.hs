@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  TrustWeaver
@@ -21,24 +22,15 @@ module TrustWeaver
     , enableSection
     )
     where
+
 import Codec.Binary.Base64
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.UTF8 as BS hiding (length, drop, break)
-import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length, drop)
-import qualified Data.ByteString.Lazy as BSL
-import Misc
-import System.Cmd
-import System.Directory
-import System.Exit
-import System.IO
-import System.Process
-import Control.Monad
-import Text.XML.HaXml.XmlContent.Parser 
-import Text.XML.HaXml.XmlContent
-import SOAP.SOAP
 import Control.Concurrent
-import qualified AppLogger as Log
 import Data.List
+import SOAP.SOAP
+import Text.XML.HaXml.XmlContent
+import Text.XML.HaXml.XmlContent.Parser 
+import qualified AppLogger as Log
+import qualified Data.ByteString as BS
 
 data TrustWeaverConf = TrustWeaverConf
     { signConf    :: Maybe (String,String,String)
@@ -52,7 +44,7 @@ data SignRequest = SignRequest BS.ByteString String String
             deriving (Eq,Ord,Show,Read)
 
 instance HTypeable (SignRequest) where
-    toHType x = Defined "SignRequest" [] []
+    toHType _ = Defined "SignRequest" [] []
 instance XmlContent (SignRequest) where
     toContents (SignRequest pdfdata senderTag receiverTag) =
         let base64data = encode (BS.unpack pdfdata) in
@@ -70,15 +62,15 @@ data SignResult = SignResult BS.ByteString
             deriving (Eq,Ord,Show,Read)
 
 instance HTypeable (SignResult) where
-    toHType x = Defined "SignResult" [] []
+    toHType _ = Defined "SignResult" [] []
 instance XmlContent (SignResult) where
-    toContents (SignResult pdfdata) = error "Please do not serialize SignResult"
+    toContents (SignResult _pdfdata) = error "Please do not serialize SignResult"
     parseContents =  do
         { e <- elementNS "SignResult"
         ; base64 <- interior e $ do
-            { result <- elementNS "Result"
+            { _result <- elementNS "Result"
             ; signedDocument <- elementNS "SignedDocument"
-            ; details <- optional $ elementNS "Details"
+            ; _details <- optional $ elementNS "Details"
             ; interior signedDocument $ text
             }
         ; case decode base64 of
@@ -91,7 +83,7 @@ data ValidateRequest = ValidateRequest BS.ByteString
             deriving (Eq,Ord,Show,Read)
 
 instance HTypeable (ValidateRequest) where
-    toHType x = Defined "ValidateRequest" [] []
+    toHType _ = Defined "ValidateRequest" [] []
 instance XmlContent (ValidateRequest) where
     toContents (ValidateRequest pdfdata) =
         let base64data = encode (BS.unpack pdfdata) in
@@ -110,7 +102,7 @@ data ValidateResult = ValidateResult String String
             deriving (Eq,Ord,Show,Read)
 
 instance HTypeable (ValidateResult) where
-    toHType x = Defined "ValidateResult" [] []
+    toHType _ = Defined "ValidateResult" [] []
 instance XmlContent (ValidateResult) where
     toContents _ = error "Please do not serialize ValidateResult"
     parseContents =  do
@@ -120,10 +112,10 @@ instance XmlContent (ValidateResult) where
                           code <- inElementNS "Code" text
                           desc <- inElementNS "Desc" text
                           return (code ++ ": " ++ desc)
-            ; document <- optional $ elementNS "Document"
+            ; _document <- optional $ elementNS "Document"
             -- ; validationResult <- optional $ inElementNS "ValidationResult" text
-            ; archive <- optional $ elementNS "Archive"
-            ; details <- optional $ elementNS "Details"
+            ; _archive <- optional $ elementNS "Archive"
+            ; _details <- optional $ elementNS "Details"
             ; return (ValidateResult (maybe "" id result) "")
             }
         } `adjustErr` ("in <ValidateResult>, "++)
@@ -131,7 +123,7 @@ instance XmlContent (ValidateResult) where
 data RegisterSectionRequest = RegisterSectionRequest String
 
 instance HTypeable (RegisterSectionRequest) where
-    toHType x = Defined "RegisterSectionRequest" [] []
+    toHType _ = Defined "RegisterSectionRequest" [] []
 instance XmlContent (RegisterSectionRequest) where
     toContents (RegisterSectionRequest name) =
         [CElem (Elem "RegisterSection" [mkAttr "xmlns" "http://www.trustweaver.com/trustarchive/admin/v1"] 
@@ -149,12 +141,12 @@ instance XmlContent (RegisterSectionRequest) where
 data RegisterSectionResponse = RegisterSectionResponse
 
 instance HTypeable (RegisterSectionResponse) where
-    toHType x = Defined "RegisterSectionResponse" [] []
+    toHType _ = Defined "RegisterSectionResponse" [] []
 instance XmlContent (RegisterSectionResponse) where
     toContents (RegisterSectionResponse) = error "Please do not serialize RegisterSectionResponse"
     parseContents =  do
       --  this element just has to be there, contains nothing
-        { e <- elementNS "RegisterSectionResponse"
+        { _e <- elementNS "RegisterSectionResponse"
         ; return RegisterSectionResponse
         } `adjustErr` ("in <RegisterSectionRequest>, "++)
 
@@ -162,7 +154,7 @@ instance XmlContent (RegisterSectionResponse) where
 data EnableSectionRequest = EnableSectionRequest String
 
 instance HTypeable (EnableSectionRequest) where
-    toHType x = Defined "RegisterSectionRequest" [] []
+    toHType _ = Defined "RegisterSectionRequest" [] []
 instance XmlContent (EnableSectionRequest) where
     toContents (EnableSectionRequest name) =
         [CElem (Elem "EnableSection" [mkAttr "xmlns" "http://www.trustweaver.com/trustarchive/admin/v1"] 
@@ -174,7 +166,7 @@ instance XmlContent (EnableSectionRequest) where
 data EnableSectionResponse = EnableSectionResponse String String String
 
 instance HTypeable (EnableSectionResponse) where
-    toHType x = Defined "EnableSectionResponse" [] []
+    toHType _ = Defined "EnableSectionResponse" [] []
 instance XmlContent (EnableSectionResponse) where
     toContents _ = error "Do not serialize EnableSectionResponse"
     parseContents =  do
@@ -193,7 +185,7 @@ instance XmlContent (EnableSectionResponse) where
 data StoreInvoiceRequest = StoreInvoiceRequest String String String BS.ByteString 
 
 instance HTypeable (StoreInvoiceRequest) where
-    toHType x = Defined "StoreInvoiceRequest" [] []
+    toHType _ = Defined "StoreInvoiceRequest" [] []
 instance XmlContent (StoreInvoiceRequest) where
     toContents (StoreInvoiceRequest documentid documentdate ownertwname pdfdata) =
         let base64data = encode (BS.unpack pdfdata) in
@@ -223,9 +215,9 @@ instance XmlContent (StoreInvoiceRequest) where
 data StoreInvoiceResponse = StoreInvoiceResponse String
 
 instance HTypeable (StoreInvoiceResponse) where
-    toHType x = Defined "StoreInvoiceResponse" [] []
+    toHType _ = Defined "StoreInvoiceResponse" [] []
 instance XmlContent (StoreInvoiceResponse) where
-    toContents (StoreInvoiceResponse name) = error "Do not serialize StoreInvoiceResponse"
+    toContents (StoreInvoiceResponse _name) = error "Do not serialize StoreInvoiceResponse"
     parseContents =  do
         { e <- elementNS "StoreInvoiceResponse"
         ; interior e $ do
@@ -242,7 +234,7 @@ instance XmlContent (StoreInvoiceResponse) where
 data GetInvoiceRequest = GetInvoiceRequest String
 
 instance HTypeable (GetInvoiceRequest) where
-    toHType x = Defined "GetInvoiceRequest" [] []
+    toHType _ = Defined "GetInvoiceRequest" [] []
 instance XmlContent (GetInvoiceRequest) where
     toContents (GetInvoiceRequest supplierReference) =
         [CElem (Elem "GetInvoice" [mkAttr "xmlns" "http://www.trustweaver.com/trustarchive/storage/v1"] 
@@ -255,19 +247,19 @@ instance XmlContent (GetInvoiceRequest) where
 data GetInvoiceResponse = GetInvoiceResponse BS.ByteString
 
 instance HTypeable (GetInvoiceResponse) where
-    toHType x = Defined "GetInvoiceResponse" [] []
+    toHType _ = Defined "GetInvoiceResponse" [] []
 instance XmlContent (GetInvoiceResponse) where
-    toContents (GetInvoiceResponse pdfdata) = error "Do not serialize GetInvoiceResponse"
+    toContents (GetInvoiceResponse _pdfdata) = error "Do not serialize GetInvoiceResponse"
     parseContents =  do
         { e <- elementNS "GetInvoiceResponse"
         ; interior e $ do
             { r  <- elementNS "Result"
             ; interior r $ do
-                { document <- elementNS "Document"
-                ; invoiceInfo <- elementNS "InvoiceInfo"
-                ; supplierInfo <- elementNS "SupplierInfo"
-                ; buyerInfo <- optional $ elementNS "BuyerInfo"
-                ; attachments <- optional $ elementNS "Attachments"
+                { _document <- elementNS "Document"
+                ; _invoiceInfo <- elementNS "InvoiceInfo"
+                ; _supplierInfo <- elementNS "SupplierInfo"
+                ; _buyerInfo <- optional $ elementNS "BuyerInfo"
+                ; _attachments <- optional $ elementNS "Attachments"
                 -- to get that document data we would need to parse multiparts
                 -- and the make use of xop and something
                 -- ugly, lets skip this!
@@ -285,6 +277,7 @@ instance XmlContent (GetInvoiceResponse) where
             }
         } `adjustErr` ("in <GetInvoiceResponse>, "++)
 
+retry :: TrustWeaverConf -> IO (Either String t) -> IO (Either String t)
 retry TrustWeaverConf{timeout,retries} action = worker retries
     where
       worker n = do
@@ -312,6 +305,7 @@ signDocument' TrustWeaverConf{signConf = Just (url, cert, certpwd)} pdfdata send
            (SignRequest pdfdata senderTag receiverTag)
   let extract (SignResult pdfdata') = pdfdata'
   return (fmap extract result)
+signDocument' _ _ _ _ = return $ Left "Not possible: signDocument' without signConf"
 
 signDocument :: TrustWeaverConf
              -> BS.ByteString
@@ -329,13 +323,13 @@ validateDocument' :: TrustWeaverConf
                   -> BS.ByteString
                   -> IO (Either String (String,String))
 validateDocument' TrustWeaverConf{signConf = Just (url, cert, certpwd)} pdfdata = do
-
   result <- makeSoapCall url
             "http://www.trustweaver.com/tsswitch#Validate"
             cert certpwd
-           (ValidateRequest pdfdata)
-  let extract (ValidateResult result validateResult) = (result,validateResult)
+            (ValidateRequest pdfdata)
+  let extract (ValidateResult vresult validateResult) = (vresult, validateResult)
   return (fmap extract result)
+validateDocument' _ _ = return $ Left "Not possible: validateDocument' without signConf"
 
 validateDocument :: TrustWeaverConf
                  -> BS.ByteString
@@ -350,7 +344,6 @@ registerAndEnableSection' TrustWeaverConf{adminConf = Just (url, cert, certpwd)}
             "http://www.trustweaver.com/trustarchive/admin/v1/AdminServicePort/RegisterSection"
             cert certpwd
             (RegisterSectionRequest name)
-
   case result of
     Left errmsg -> return $ Left errmsg
     Right RegisterSectionResponse -> do
@@ -362,13 +355,12 @@ registerAndEnableSection' TrustWeaverConf{adminConf = Just (url, cert, certpwd)}
                 let extract (EnableSectionResponse superAdminUsername superAdminPwd sectionPath) =
                         (superAdminUsername, superAdminPwd, sectionPath)
                 return (fmap extract result2)
+registerAndEnableSection' _ _ = return $ Left "Not possible: registerAndEnableSection' without adminConf"
 
 registerAndEnableSection :: TrustWeaverConf
                           -> String
                           -> IO (Either String (String,String,String))
 registerAndEnableSection twconf = retry twconf . registerAndEnableSection' twconf
-
-
 
 registerSection' :: TrustWeaverConf
                  -> String
@@ -378,15 +370,14 @@ registerSection' TrustWeaverConf{adminConf = Just (url, cert, certpwd)} name = d
             "http://www.trustweaver.com/trustarchive/admin/v1/AdminServicePort/RegisterSection"
             cert certpwd
             (RegisterSectionRequest name)
-
   let extract (RegisterSectionResponse) = ()
   return (fmap extract result)
+registerSection' _ _ = return $ Left "Not possible: registerSection' without adminConf"
 
 registerSection :: TrustWeaverConf
                 -> String
                 -> IO (Either String ())
 registerSection twconf = retry twconf . registerSection' twconf
-
 
 enableSection' :: TrustWeaverConf
                -> String
@@ -396,17 +387,15 @@ enableSection' TrustWeaverConf{adminConf = Just (url, cert, certpwd)} name = do
             "http://www.trustweaver.com/trustarchive/admin/v1/AdminServicePort/EnableSection"
             cert certpwd
             (EnableSectionRequest name)
-
   let extract (EnableSectionResponse superAdminUsername superAdminPwd sectionPath) =
           (superAdminUsername, superAdminPwd, sectionPath)
   return (fmap extract result)
+enableSection' _ _ = return $ Left "Not possible: enableSection' without adminConf"
 
 enableSection :: TrustWeaverConf
               -> String
               -> IO (Either String (String,String,String))
 enableSection twconf = retry twconf . enableSection' twconf
-
-
 
 storeInvoice' :: TrustWeaverConf 
              -> String 
@@ -421,6 +410,7 @@ storeInvoice' TrustWeaverConf{storageConf = Just (url, cert, certpwd)} documenti
            (StoreInvoiceRequest documentid documentdate ownertwname pdfdata)
   let extract (StoreInvoiceResponse referece) = referece
   return (fmap extract result)
+storeInvoice' _ _ _ _ _ = return $ Left "Not possible: storeInvoice' without storageConf"
 
 storeInvoice :: TrustWeaverConf 
              -> String 
@@ -440,6 +430,7 @@ getInvoice' TrustWeaverConf{storageConf = Just (url, cert, certpwd)} reference =
            (GetInvoiceRequest reference)
   let extract (GetInvoiceResponse pdfdata) = pdfdata
   return (fmap extract result)
+getInvoice' _ _ = return $ Left "Not possible: getInvoice' without storageConf"
 
 getInvoice :: TrustWeaverConf 
            -> String 
