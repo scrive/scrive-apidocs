@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -F -pgmFtrhsx -Wall#-}
+{-# OPTIONS_GHC -F -pgmFtrhsx -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 {- |
    Defines the App level views.
 -}
@@ -25,8 +25,6 @@ module AppView( TopMenu(..)
               , embeddedErrorPage
               ) where 
 
-import Control.Arrow (first)
-import Control.Monad.Reader (ask)
 import Control.Monad.State (get)
 import HSP hiding (Request)
 import Happstack.Server.HSP.HTML (webHSP)
@@ -69,7 +67,7 @@ renderFromBody :: (EmbedAsChild (HSPT' IO) xml)
                -> String 
                -> xml 
                -> Kontra Response
-renderFromBody topmenu title xml = do
+renderFromBody _topmenu title xml = do
     htmlPage <- fmap ((isSuffixOf ".html") . concat . rqPaths)  askRq
     loginOn <- getLoginOn
     loginreferer <- getLoginReferer
@@ -93,16 +91,14 @@ pageFromBody :: (EmbedAsChild (HSPT' IO) xml)
              -> xml
              -> HSP XML
  
-pageFromBody ctx@Context{ ctxmaybeuser
-                        , ctxtemplates
-                        }
+pageFromBody ctx@Context{ ctxtemplates }
              loginOn
              referer
              email
              showCreateAccount 
              title 
-             body = do
-    content <- liftIO $ renderHSPToString <div class="mainContainer"><% body %></div>
+             bodytext = do
+    content <- liftIO $ renderHSPToString <div class="mainContainer"><% bodytext %></div>
     wholePage <- liftIO $ renderTemplate ctxtemplates "wholePage" $ do
         field "content" content
         standardPageFields ctx title False showCreateAccount loginOn referer email
@@ -184,8 +180,8 @@ getLoginReferer :: Kontra (Maybe String)
 getLoginReferer = do
     curr <- rqUri <$> askRq
     referer <- getField "referer"
-    qs <- querystring
-    let loginreferer = Just $ fromMaybe (curr ++ qs) referer
+    qstr <- querystring
+    let loginreferer = Just $ fromMaybe (curr ++ qstr) referer
     return loginreferer
 
 standardPageFields :: Context -> String -> Bool -> Bool -> Bool -> Maybe String -> Maybe String -> Fields
