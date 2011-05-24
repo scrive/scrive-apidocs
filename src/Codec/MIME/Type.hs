@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 --------------------------------------------------------------------
 -- |
 -- Module    : Codec.MIME.Type
@@ -14,7 +15,7 @@
 --------------------------------------------------------------------
 module Codec.MIME.Type where
 
-import Data.List ( concatMap, isSuffixOf )
+import Data.List ( isSuffixOf )
 
 data Type
  = Type
