@@ -1,10 +1,10 @@
-
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 module MemCache (MemCache, new, put, get) 
 where
 
-import qualified Data.Map as Map
 import Control.Concurrent.MVar
 import System.Random
+import qualified Data.Map as Map
 
 data MemCache' k v = MemCache' (v -> Int) Int Int (Map.Map k v)
 
@@ -25,13 +25,13 @@ put k v (MemCache mc) = do
   modifyMVar mc $ \(MemCache' sizefun sizelimit size mmap) -> 
       do
         let newsize = size + sizefun v
-        mmap' <- if not (Map.null mmap) && newsize > sizelimit
+        _mmap' <- if not (Map.null mmap) && newsize > sizelimit
                  then do
                    -- now we need to kill one random thing in the cache
                    r <- randomRIO (0,Map.size mmap - 1)
                    return $ Map.deleteAt r mmap
                  else return mmap
-        let mmap'' = Map.insert k v mmap
+        let mmap'' = Map.insert k v mmap -- ?? should this be mmap or mmap'
         let mc' = MemCache' sizefun sizelimit newsize mmap''
         
         return (mc', ())
@@ -41,6 +41,6 @@ put k v (MemCache mc) = do
  -}
 get :: (Ord k) => k -> MemCache k v -> IO (Maybe v)
 get k (MemCache mc) = do
-  withMVar mc $ \mc@(MemCache' sizefun sizelimit size mmap) -> do
-             return $ Map.lookup k mmap
+  withMVar mc $ \_mc@(MemCache' _sizefun _sizelimit _size mmap) -> do
+    return $ Map.lookup k mmap
 
