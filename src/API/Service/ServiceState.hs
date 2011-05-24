@@ -1,39 +1,28 @@
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -fno-warn-orphans -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 module API.Service.ServiceState
     ( ServiceID(..)
     , ServiceAdmin(..)
     , Service(..)
-    , Services(..)
+    , Services
     , GetService(..)
     , GetServicesForAdmin(..)
     , GetServices(..)
     , CreateService(..)
     , UpdateService(..)
 ) where
-import Happstack.Data
-import Happstack.State
-import Control.Monad
-import Control.Monad.Reader (ask)
-import Control.Monad.State (modify,MonadState(..))
-import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Char8 as BS (unlines) 
-import Happstack.Data.IxSet as IxSet
-import Data.Maybe(isJust,fromJust,maybe)
-import Misc
-import Happstack.Server.SimpleHTTP
-import Happstack.Util.Common
-import Codec.Utils (Octet)
-import Data.Digest.SHA256 (hash)
-import System.Random
-import Data.List
-import Data.Maybe (isNothing)
-import qualified Data.Set as Set
-import Control.Applicative
-import MinutesTime
-import Data.Data
 import Codec.Binary.Base16 as Base16
+import Control.Monad.Reader (ask)
+import Control.Monad.State (modify)
+import Data.Data
+import Data.Maybe (isJust)
+import Happstack.Data
+import Happstack.Data.IxSet as IxSet
+import Happstack.Server.SimpleHTTP
+import Happstack.State
+import Misc
 import User.Password
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.UTF8 as BS
 
 newtype ServiceID = ServiceID { unServiceID :: BS.ByteString }
     deriving (Eq, Ord, Typeable)
@@ -42,7 +31,7 @@ deriving instance Data ServiceID
 instance Version ServiceID
 
 instance Show ServiceID where
-    showsPrec prec (ServiceID val) = (++) (BS.toString val)
+    showsPrec _prec (ServiceID val) = (++) (BS.toString val)
 
 instance Read ServiceID where
     readsPrec prec = let make (i,v) = (ServiceID i,v) 
@@ -161,12 +150,11 @@ createService sid passwd admin = do
         
 updateService:: ServiceID -> BS.ByteString -> BS.ByteString -> Update Services ()
 updateService sid nicename invitationmain = do
-    modifyService sid $ \s ->
-                Right s {
-                      servicename = nicename 
-                    , servicedocumentinvitationmail = invitationmain
-                        }        
-    return ()                    
+  _ <- modifyService sid $ \s ->
+    Right s { servicename = nicename 
+            , servicedocumentinvitationmail = invitationmain
+            }        
+  return ()                    
                         
 $(mkMethods ''Services [ 
                 'getService
