@@ -400,7 +400,7 @@ checkUserTOSGet action = do
         Just (User{userhasacceptedtermsofservice = Just _}) -> Right <$> action
         Just _ -> return $ Left $ LinkAcceptTOS
         Nothing -> case (ctxcompany ctx) of
-             Just company -> Right <$> action
+             Just _company -> Right <$> action
              Nothing -> return $ Left $ LinkLogin NotLogged
 
 
