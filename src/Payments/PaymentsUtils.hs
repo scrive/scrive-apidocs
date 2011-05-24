@@ -13,7 +13,6 @@ module Payments.PaymentsUtils(showMoney,readMoney) where
 
 import Payments.PaymentsState
 import Control.Monad
-import Misc
 import Happstack.Util.Common
 
 {-| Money printer. Since show instance is derived by storage module, we provided nicer version -}
