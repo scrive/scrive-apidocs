@@ -1,33 +1,16 @@
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -fno-warn-orphans -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 module User.Password
     ( Password(..)
     , createPassword
     , verifyPassword
 
 ) where
-import Happstack.Data
-import Happstack.State
-import Control.Monad
-import Control.Monad.Reader (ask)
-import Control.Monad.State (modify,MonadState(..))
-import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Char8 as BS (unlines) 
-import Happstack.Data.IxSet as IxSet
-import Data.Maybe(isJust,fromJust,maybe)
-import Misc
-import Happstack.Server.SimpleHTTP
-import Happstack.Util.Common
 import Codec.Utils (Octet)
-import Data.Digest.SHA256 (hash)
-import System.Random
-import Data.List
-import Data.Maybe (isNothing)
-import qualified Data.Set as Set
-import Control.Applicative
-import MinutesTime
-import qualified Payments.PaymentsState as Payments
 import Data.Data
+import Data.Digest.SHA256 (hash)
+import Happstack.Data
+import System.Random
+import qualified Data.ByteString as BS
 
 data Password = Password [Octet] [Octet] | NoPassword
     deriving (Eq, Ord, Typeable)
