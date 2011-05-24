@@ -24,24 +24,24 @@ module AppView( TopMenu(..)
               , modalError
               , embeddedErrorPage
               ) where 
+import API.Service.ServiceState
+import FlashMessage
+import Kontra
+import KontraLink
+import ListUtil
+import Misc
 
 import Control.Monad.State (get)
+import Control.Monad.Trans
+import Data.Functor
+import Data.List
+import Data.Maybe
 import HSP hiding (Request)
 import Happstack.Server.HSP.HTML (webHSP)
 import Happstack.Server.SimpleHTTP
-import Kontra
-import Misc
-import KontraLink
-import Data.Maybe
 import Templates.Templates
-import Control.Monad.Trans
-import Data.List
-import ListUtil
-import Data.Functor
-import API.Service.ServiceState
-import FlashMessage
-import qualified Data.ByteString.UTF8 as BS (fromString)
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
+import qualified Data.ByteString.UTF8 as BS (fromString)
 
 
 {- |
