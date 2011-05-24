@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror -fno-warn-orphans #-}
 module Doc.DocState 
     ( module Doc.DocStateData
     , isTemplate -- fromUtils
@@ -66,45 +67,29 @@ module Doc.DocState
     , SignableFromDocumentID(..)
     , SignableFromSharedDocumentID(..)
     , ContractFromSignatoryData(..)
-    , IdentificationType(..)
-    , SignatureInfo(..)
-    , SignatureProvider(..)
-    , CancelationReason(..)
 --    , MigrateToSigLinks(..)
     )
 where
-import Happstack.Data
-import Happstack.State
-import Control.Monad.Reader (ask)
-import Control.Monad.Trans
-import User.UserState
-import Happstack.Data.IxSet as IxSet
-import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString as BS
-import Control.Applicative ((<$>))
-import Happstack.Server.SimpleHTTP
-import Happstack.Util.Common
-import Debug.Trace
-import Misc
-import Control.Monad
-import MinutesTime
-import Data.List (zipWith4,partition, find, nub)
-import System.Random
-import Data.Word
-import Data.Int
-import System.Log.Logger (errorM)
-import qualified Data.Map as Map
-import qualified Data.Set as Set
-import Data.Maybe
-import Mails.MailsUtil
-import Data.Data (Data)
-import qualified Data.Generics.SYB.WithClass.Derive as SYB
-import Doc.DocStateData
-import Doc.DocUtils
-import Doc.DocStateUtils
-import Company.CompanyState
-import API.Service.ServiceState
 
+import API.Service.ServiceState
+import Company.CompanyState
+import Control.Monad
+import Control.Monad.Reader (ask)
+import Data.List (find, nub)
+import Data.Maybe
+import Data.Word
+import Doc.DocStateData
+import Doc.DocStateUtils
+import Doc.DocUtils
+import Happstack.Data
+import Happstack.Data.IxSet as IxSet
+import Happstack.State
+import Mails.MailsUtil
+import MinutesTime
+import Misc
+import User.UserState
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.UTF8 as BS
 
 getDocuments:: (Maybe ServiceID) -> Query Documents [Document]
 getDocuments mservice = do
@@ -130,11 +115,13 @@ getDocumentsByUser user = do
   signatoryDocs <- getDocumentsBySignatory $ user
   return $ nub (authorDocs ++ signatoryDocs)
     
+filterSignatoryLinksByUser :: Document -> User -> [SignatoryLink]
 filterSignatoryLinksByUser doc user = 
     [sl | sl <- documentsignatorylinks doc
         , isMatchingSignatoryLink user sl     -- user must match
         , not $ signatorylinkdeleted sl    ]  -- filter out deleted links
     
+signatoryCanView :: User -> Document -> Bool
 signatoryCanView user doc = 
     let usersiglinks = filterSignatoryLinksByUser doc user
         isnotpreparation = Preparation /= documentstatus doc
@@ -346,7 +333,7 @@ attachCSVUpload documentid csvupload =
                                          (csvsignatoryindex csvupload) in
         case (msigindex, documentstatus document) of
           (Left s, _) -> return $ Left s
-          (Right n, Preparation) -> return . Right $ document { documentcsvupload = Just csvupload }
+          (Right _, Preparation) -> return . Right $ document { documentcsvupload = Just csvupload }
           _ -> return $ Left "Document not in preparation"
 
 
@@ -373,10 +360,10 @@ updateDocumentAttachments userid useremail docid idstoadd idstoremove = do
     (_, Left msg) -> return $ Left msg
     (True, Right _) -> do
       archiveDocuments userid useremail idstoremove
-      modifySignableOrTemplate docid $ \doc@Document{documentstatus} ->
-        case (checkDoc doc) of
+      modifySignableOrTemplate docid $ \doc ->
+        case checkDoc doc of
           Left msg -> Left msg
-          Right doc -> Right $ doc { documentattachments = updateAttachments $ documentattachments doc }
+          Right ddoc -> Right $ ddoc { documentattachments = updateAttachments $ documentattachments ddoc }
   where
     attachmentids :: [DocumentID]
     attachmentids = idstoadd ++ idstoremove
@@ -493,17 +480,22 @@ signDocument documentid signatorylinkid1 time ipnumber msiginfo fields = do
       Timedout -> Left "FÃ¶rfallodatum har passerat"
       _ ->        Left ("Bad document status: " ++ show (documentstatus document))
 
+signWithUserID :: [SignatoryLink]
+                  -> UserID
+                  -> Maybe SignInfo
+                  -> Maybe SignatureInfo
+                  -> [SignatoryLink]
 signWithUserID [] _ _ _ = []
-signWithUserID (s:ss) id sinfo msiginfo
-    | maybe False (((==) id)) (maybesignatory s) = s {maybesigninfo = sinfo, maybeseeninfo = maybe sinfo Just (maybeseeninfo s) , signatorysignatureinfo = msiginfo} : ss
-    | otherwise = s : signWithUserID ss id sinfo msiginfo
+signWithUserID (s:ss) uid sinfo msiginfo
+    | maybe False (((==) uid)) (maybesignatory s) = s {maybesigninfo = sinfo, maybeseeninfo = maybe sinfo Just (maybeseeninfo s) , signatorysignatureinfo = msiginfo} : ss
+    | otherwise = s : signWithUserID ss uid sinfo msiginfo
 
 authorSendDocument :: DocumentID
                    -> MinutesTime
                    -> Word32
                    -> Maybe SignatureInfo
                    -> Update Documents (Either String Document)
-authorSendDocument documentid time ipnumber msiginfo =
+authorSendDocument documentid time ipnumber _msiginfo =
     modifySignable documentid $ \document ->
         case documentstatus document of
           Preparation -> 
@@ -589,7 +581,7 @@ markInvitationRead :: DocumentID
                    -> MinutesTime
                    -> Update Documents ()
 markInvitationRead documentid linkid time = do
-    modifySignable documentid $ \document -> 
+    _ <- modifySignable documentid $ \document -> 
         if (any shouldMark (documentsignatorylinks document))
             then Right $ document { documentsignatorylinks = mapIf shouldMark mark (documentsignatorylinks document)}
             else Left "" 
@@ -719,11 +711,13 @@ getDocumentsByCompanyAndTags  mservice company doctags = do
   documents <- ask
   return . toList $ (documents @= (Just company)  @= mservice @* doctags)
   
+mapWhen :: (a -> Bool) -> (a -> a) -> [a] -> [a]
 mapWhen p f ls = map (\i -> if p i then f i else i) ls
 
+deleteForUserID :: UserID -> BS.ByteString -> Document -> Document
 deleteForUserID userid useremail document = 
-    document { documentsignatorylinks = mapWhen (isSigLinkForUserInfo userid useremail) deleteForUserID' (documentsignatorylinks document) }
-        where deleteForUserID' link = link { signatorylinkdeleted = True }
+  document { documentsignatorylinks = mapWhen (isSigLinkForUserInfo userid useremail) deleteForUserID' (documentsignatorylinks document) }
+    where deleteForUserID' link = link { signatorylinkdeleted = True }
 
 archiveDocuments :: UserID -> BS.ByteString -> [DocumentID] -> Update Documents ()
 archiveDocuments userid useremail docidlist = do
@@ -851,7 +845,7 @@ tryToGetRestarted doc user time ipnumber =
          let doc'' = doc' `appendHistory` [DocumentHistoryRestarted time ipnumber]
          return $ Right doc''
 
-
+clearSignInfofromDoc :: Document -> Update Documents Document
 clearSignInfofromDoc doc = do
   let signatoriesDetails = map (\x -> (signatorydetails x, signatoryroles x)) $ documentsignatorylinks doc
       Just asl = getAuthorSigLink doc
@@ -882,7 +876,7 @@ changeSignatoryEmailWhenUndelivered did slid email = modifySignable did $ change
                            Nothing -> Left "We could not find signatory"            
                      
 --UTILS - have to be put before creating action constructors
-
+signLinkFromDetails :: SignatoryDetails -> [SignatoryRole] -> Update Documents SignatoryLink
 signLinkFromDetails details roles = do
           sg <- ask
           linkid <- getUnique sg SignatoryLinkID
@@ -937,6 +931,7 @@ getSharedTemplates userids = do
     let userdocs = documents @+ (map Author userids)
     return . filter ((== Shared) . documentsharing) . toList $ justTemplates userdocs
 
+justTemplates :: (Indexable a, Typeable a, Ord a) => IxSet a -> IxSet a
 justTemplates docs = (docs @= OfferTemplate) ||| (docs @= ContractTemplate)
 
 signableFromDocument :: Document -> Update Documents Document
@@ -952,8 +947,8 @@ signableFromSharedDocumentID user = newFromDocument $ \doc ->
                                    -- FIXME: Need to remove authorfields?
     }
     where replaceAuthorSigLink :: User -> Document -> SignatoryLink -> SignatoryLink
-          replaceAuthorSigLink user doc sl 
-            | siglinkIsAuthor sl = replaceSignatoryUser sl user
+          replaceAuthorSigLink usr _ sl 
+            | siglinkIsAuthor sl = replaceSignatoryUser sl usr
             | otherwise = sl
 
 
