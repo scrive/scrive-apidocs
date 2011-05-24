@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 module Doc.DocStateData
     ( Author(..)
     , CSVUpload(..)
@@ -37,11 +37,8 @@ module Doc.DocStateData
     , getAuthorSigLink
     ) where
 
-import Mails.MailsUtil
-import MinutesTime
-import Misc
-import User.UserState
 import API.Service.ServiceState
+import Company.CompanyState
 import Control.Monad
 import Data.Bits
 import Data.Data (Data)
@@ -54,9 +51,12 @@ import Happstack.Data.IxSet as IxSet
 import Happstack.Server.SimpleHTTP
 import Happstack.State
 import Happstack.Util.Common
+import Mails.MailsUtil
+import MinutesTime
+import Misc
+import User.UserState
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
-import Company.CompanyState
 
 newtype Author = Author { unAuthor :: UserID }
     deriving (Eq, Ord, Typeable)
@@ -471,13 +471,13 @@ formatIP x = " (IP: " ++ show ((x `shiftR` 0) .&. 255) ++
                    "." ++ show ((x `shiftR` 16) .&. 255) ++
                    "." ++ show ((x `shiftR` 24) .&. 255) ++ ")"
 
+documentHistoryToDocumentLog :: DocumentHistoryEntry -> DocumentLogEntry
 documentHistoryToDocumentLog DocumentHistoryCreated 
       { dochisttime
       } = DocumentLogEntry dochisttime $ BS.fromString "Document created"
 documentHistoryToDocumentLog DocumentHistoryInvitationSent 
       { dochisttime
       , ipnumber
-      , dochistsignatories
       } = DocumentLogEntry dochisttime $ BS.fromString $ "Invitations sent to signatories" ++ formatIP ipnumber
 documentHistoryToDocumentLog DocumentHistoryTimedOut
       { dochisttime
@@ -485,12 +485,10 @@ documentHistoryToDocumentLog DocumentHistoryTimedOut
 documentHistoryToDocumentLog DocumentHistorySigned
       { dochisttime
       , ipnumber
-      , dochistsignatorydetails
       } = DocumentLogEntry dochisttime $ BS.fromString $ "Document signed by a signatory" ++ formatIP ipnumber
 documentHistoryToDocumentLog DocumentHistoryRejected
       { dochisttime
       , ipnumber
-      , dochistsignatorydetails
       } = DocumentLogEntry dochisttime $ BS.fromString $ "Document rejected by a signatory" ++ formatIP ipnumber
 documentHistoryToDocumentLog DocumentHistoryClosed
       { dochisttime
@@ -1402,6 +1400,7 @@ instance Migrate SignatoryLink0 SignatoryLink1 where
                                , signatorypersonalnumberplacements = []
                                , signatorycompanynumberplacements = []
                                , signatoryotherfields = []
+                               , signatorysignorder = SignOrder 1
                                }
           , maybesignatory1 = maybesignatory0
           , maybesigninfo1 = maybesigninfo0
@@ -2326,7 +2325,6 @@ instance Migrate Document22 Document23 where
     migrate (Document22
              { documentid22
              , documenttitle22
-             , documentauthor22
              , documentsignatorylinks22
              , documentfiles22
              , documentsealedfiles22
@@ -2338,19 +2336,11 @@ instance Migrate Document22 Document23 where
              , documentdaystosign22
              , documenttimeouttime22
              , documentinvitetime22
-             , documentdeleted22
              , documentlog22
              , documentinvitetext22
              , documenttrustweaverreference22
              , documentallowedidtypes22
              , documentcsvupload22
-             , authorfstnameplacements22
-             , authorsndnameplacements22
-             , authorcompanyplacements22
-             , authoremailplacements22
-             , authorpersonalnumberplacements22
-             , authorcompanynumberplacements22
-             , authorotherfields22
              , documentcancelationreason22
              , documentsharing22
              , documentrejectioninfo22
