@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall -XOverlappingInstances -XTypeSynonymInstances -XIncoherentInstances#-} 
+{-# OPTIONS_GHC -Wall -XOverlappingInstances -XTypeSynonymInstances -XIncoherentInstances  -fwarn-tabs -fwarn-incomplete-record-updates -fno-warn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Templates.Templates
@@ -88,20 +88,14 @@ module Templates.Templates
     , getTemplatesModTime
     ) where
 
-import System.IO
-import Control.Monad
 import Control.Monad.State.Strict
-import Data.Maybe
-import Data.List
-import Data.Char
 import Templates.TemplatesLoader (readTemplates,renderTemplateMain,templateList,KontrakcjaTemplate,KontrakcjaTemplates,getTemplatesModTime)
 import Text.StringTemplate.Base hiding (ToSElem,toSElem)
 import Text.StringTemplate.Classes hiding (ToSElem,toSElem)
-import qualified Text.StringTemplate.Classes as HST
-import qualified Text.StringTemplate (setAttribute)
-import qualified Data.Map as Map
-import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.UTF8 as BS
+import qualified Data.Map as Map
+import qualified Text.StringTemplate.Classes as HST
 
 class (MonadIO a) => TemplatesMonad a where
         getTemplates :: a KontrakcjaTemplates
@@ -158,7 +152,7 @@ instance Field (Fields) where
   field a b =  do
         s <- get 
         let val = fmap (toSElem . Map.fromList) $ sequence $ map packIO $ execState b [] 
-        put ((a,val):s)
+        put ((a, val):s)
 
 instance Field [Fields] where 
   field a fs =  do
