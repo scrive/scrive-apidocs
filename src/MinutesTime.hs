@@ -1,16 +1,14 @@
-
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 module MinutesTime where
 
-import System.Time hiding (toClockTime,toUTCTime)
-import qualified System.Time as System.Time (toClockTime,toUTCTime)
-import Happstack.Data
 import Data.Data
-import System.Locale
+import Data.Time
+import Happstack.Data
+import Happstack.State
 import System.IO.Unsafe
 import System.Locale
-import Data.Time
-import Happstack.State.Transaction
-import Happstack.State
+import System.Time hiding (toClockTime,toUTCTime)
+import qualified System.Time as System.Time (toUTCTime)
 
 -- | Time in minutes from 1970-01-01 00:00 in UTC coordinates
 newtype MinutesTime0 = MinutesTime0 Int
@@ -33,13 +31,14 @@ instance Migrate MinutesTime0 MinutesTime where
     
 
 instance Show MinutesTime where
-    showsPrec prec (MinutesTime mins secs) = 
+    showsPrec _prec (MinutesTime mins secs) = 
         let clocktime = TOD (fromIntegral $ mins*60 + secs) 0
             -- FIXME: use TimeZone of user
             calendartime = unsafePerformIO $ toCalendarTime clocktime
         in (++) $ formatCalendarTime defaultTimeLocale 
                "%Y-%m-%d, %H:%M:%S" calendartime
                
+showDateOnly :: MinutesTime -> String
 showDateOnly (MinutesTime 0 _) = ""
 showDateOnly (MinutesTime mins _) = 
         let clocktime = TOD (fromIntegral mins*60) 0
@@ -48,6 +47,7 @@ showDateOnly (MinutesTime mins _) =
         in formatCalendarTime defaultTimeLocale 
                "%Y-%m-%d" calendartime
 
+swedishTimeLocale :: TimeLocale
 swedishTimeLocale = defaultTimeLocale { months = 
                                             [ ("jan","jan")
                                             , ("feb", "feb")
@@ -62,7 +62,7 @@ swedishTimeLocale = defaultTimeLocale { months =
                                             , ("nov", "nov")
                                             , ("dec", "dec")
                                             ] }
-
+showDateAbbrev :: MinutesTime -> MinutesTime -> String
 showDateAbbrev (MinutesTime current _ ) (MinutesTime mins _) 
                | ctYear ct1 == ctYear ct && ctMonth ct1 == ctMonth ct && ctDay ct1 == ctDay ct =
                    formatCalendarTime swedishTimeLocale "%H:%M" ct
@@ -74,14 +74,19 @@ showDateAbbrev (MinutesTime current _ ) (MinutesTime mins _)
                  ct1 = unsafePerformIO $ toCalendarTime $ TOD (fromIntegral current*60) 0
                  ct = unsafePerformIO $ toCalendarTime $ TOD (fromIntegral mins*60) 0
 
+getMinutesTime :: IO MinutesTime
 getMinutesTime = (return . fromClockTime) =<< getClockTime
 
 getMinuteTimeDB :: AnyEv MinutesTime
 getMinuteTimeDB = (return . fromClockTime) =<< getEventClockTime
 
-fromClockTime (TOD secs picos) =  MinutesTime (fromIntegral $ (secs `div` 60)) (fromIntegral $ (secs `mod` 60))
+fromClockTime :: ClockTime -> MinutesTime
+fromClockTime (TOD secs _picos) =  MinutesTime (fromIntegral $ (secs `div` 60)) (fromIntegral $ (secs `mod` 60))
+
+toClockTime :: MinutesTime -> ClockTime
 toClockTime (MinutesTime time secs) = (TOD (fromIntegral $ time * 60 + secs) 0)   
 
+toUTCTime :: MinutesTime -> CalendarTime
 toUTCTime = System.Time.toUTCTime . toClockTime
 
 parseMinutesTimeMDY::String -> Maybe MinutesTime
@@ -91,10 +96,12 @@ parseMinutesTimeMDY s = do
                       let val = diffDays t startOfTime  
                       return (MinutesTime (fromIntegral $ (val *24*60)) 0)
 
+showDateMDY :: MinutesTime -> String
 showDateMDY (MinutesTime mins _) =  let clocktime = TOD (fromIntegral mins*60) 0
                                         calendartime = unsafePerformIO $ toCalendarTime clocktime
                                     in formatCalendarTime defaultTimeLocale "%d-%m-%y" calendartime  
 
+showDateYMD :: MinutesTime -> String
 showDateYMD (MinutesTime mins _) =  let clocktime = TOD (fromIntegral mins*60) 0
                                         calendartime = unsafePerformIO $ toCalendarTime clocktime
                                     in formatCalendarTime defaultTimeLocale "%Y-%m-%d" calendartime  
@@ -116,6 +123,7 @@ dateDiffInDays (MinutesTime ctime _) (MinutesTime mtime _)
                        | ctime>mtime = 0
                        | otherwise = (mtime - ctime) `div` (60*24)
                                      
+asInt :: MinutesTime -> Int
 asInt m = ctYear*10000 + fromEnum ctMonth*100 + ctDay 
   where
     CalendarTime {ctYear,ctMonth,ctDay} = toUTCTime m
