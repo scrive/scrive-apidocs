@@ -1,6 +1,4 @@
-{-# OPTIONS_GHC -Wall #-}
-{-# IncoherentInstances #-}
-
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Doc.DocStateUtils
@@ -25,22 +23,17 @@ module Doc.DocStateUtils (
     )
 
 where
-import Happstack.State
+import Control.Monad
 import Control.Monad.Reader (ask)
 import Control.Monad.State (modify)
-import User.UserState
-import Happstack.Data.IxSet as IxSet
-import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString as BS
-import Misc
-import Control.Monad
-import Mails.MailsUtil
-import Doc.DocStateData
 import Data.List hiding (insert)
 import Data.Maybe
-import MinutesTime
+import Doc.DocStateData
 import Doc.DocUtils
-import Control.Monad.Trans (liftIO)
+import Happstack.Data.IxSet as IxSet
+import Happstack.State
+import MinutesTime
+import Misc
 
 -- DB UPDATE UTILS
 insertNewDocument :: Document ->  Update Documents Document
@@ -152,8 +145,8 @@ checkFeatureSupport doc =
        Checks that any features in use are supported.
     -}
     checkSupport :: Document -> Feature -> Bool
-    checkSupport doc@Document{documentfunctionality} feature =
-        case (isRequired feature doc, isSupported feature documentfunctionality) of
+    checkSupport ddoc@Document{documentfunctionality} feature =
+        case (isRequired feature ddoc, isSupported feature documentfunctionality) of
           (True, False) -> False
           _ -> True
     {-|
@@ -166,9 +159,9 @@ checkFeatureSupport doc =
       isJust documentdaystosign
     isRequired MultiplePartiesUse Document{documentsignatorylinks} = 
       (length documentsignatorylinks) > 2
-    isRequired SecretaryUse doc@Document{documentsignatorylinks} = 
+    isRequired SecretaryUse Document{documentsignatorylinks} = 
       and . map (\sl -> not $ siglinkIsAuthor sl) $ documentsignatorylinks
-    isRequired SpecialRoleUse doc@Document{documentsignatorylinks} =
+    isRequired SpecialRoleUse Document{documentsignatorylinks} =
       and . map isSpecialRole $ documentsignatorylinks
       where 
         isSpecialRole :: SignatoryLink -> Bool
@@ -178,18 +171,18 @@ checkFeatureSupport doc =
             [SignatoryPartner, SignatoryAuthor] -> False
             [SignatoryAuthor, SignatoryPartner] -> False
             _                                   -> True
-    isRequired AuthorCustomFieldUse doc = maybe False (not . Data.List.null . signatoryotherfields . signatorydetails) $ getAuthorSigLink doc
-    isRequired AuthorPlacementUse doc = maybe False 
+    isRequired AuthorCustomFieldUse ddoc = maybe False (not . Data.List.null . signatoryotherfields . signatorydetails) $ getAuthorSigLink ddoc
+    isRequired AuthorPlacementUse ddoc = maybe False 
       (any (not . Data.List.null) . wmap
        [ signatoryfstnameplacements
        , signatorysndnameplacements
        , signatorycompanyplacements
        , signatoryemailplacements
        , signatorypersonalnumberplacements
-       , signatorycompanynumberplacements] . signatorydetails) $ getAuthorSigLink doc
-    isRequired SigCustomFieldUse doc@Document{documentsignatorylinks} =
+       , signatorycompanynumberplacements] . signatorydetails) $ getAuthorSigLink ddoc
+    isRequired SigCustomFieldUse Document{documentsignatorylinks} =
       any (not . Data.List.null . signatoryotherfields . signatorydetails) documentsignatorylinks
-    isRequired SigPlacementUse doc@Document{documentsignatorylinks} =
+    isRequired SigPlacementUse Document{documentsignatorylinks} =
       any (isPlacement . signatorydetails) documentsignatorylinks
       where isPlacement :: SignatoryDetails -> Bool
             isPlacement SignatoryDetails{ 
@@ -206,7 +199,7 @@ checkFeatureSupport doc =
                                , signatoryemailplacements
                                , signatorypersonalnumberplacements
                                , signatorycompanynumberplacements ]
-    isRequired SignOrderUse doc@Document{documentsignatorylinks} =
+    isRequired SignOrderUse Document{documentsignatorylinks} =
       any isSpecialSignOrder documentsignatorylinks
         where isSpecialSignOrder :: SignatoryLink -> Bool
               isSpecialSignOrder sl@SignatoryLink{signatorydetails}
