@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall -fno-warn-unused-do-bind #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 module User.UserControl where
 
 import Control.Monad.State
@@ -18,7 +18,6 @@ import qualified Data.Set as Set
 import ActionSchedulerState
 import AppView
 import Doc.DocState
-import Doc.DocUtils
 import FlashMessage
 import InputValidation
 import Kontra
@@ -54,7 +53,7 @@ handleUserPost = do
     case (ctxmaybeuser ctx) of
          Just user -> do
              infoUpdate <- getUserInfoUpdate
-             update $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
+             _ <- update $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
              -- propagate company info to all subaccounts since it might have changed
              query (GetUserByUserID $ userid user) >>= maybe (return ()) (\newuser -> do
                  subs <- query $ GetUserSubaccounts $ userid newuser
@@ -133,7 +132,7 @@ handlePostUserSecurity = do
               addFlashMsg =<< (liftIO $ f (ctxtemplates ctx))
             _ ->  do
               passwordhash <- liftIO $ createPassword password
-              update $ SetUserPassword (userid user) passwordhash
+              _ <- update $ SetUserPassword (userid user) passwordhash
               addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
         _ -> return ()
       return LinkSecurity
@@ -155,11 +154,11 @@ friendsSortSearchPage  =
 
 handleGetSubaccount :: Kontra (Either KontraLink Response)
 handleGetSubaccount = withUserGet $ do
-    ctx@Context{ctxmaybeuser = Just user@User{userid}} <- get
-    subaccounts <- query $ GetUserSubaccounts userid
-    params <- getListParams
-    content <- viewSubaccounts user (subaccountsSortSearchPage params $ Set.toList subaccounts)
-    renderFromBody TopAccount kontrakcja $ cdata content
+  Context{ ctxmaybeuser = Just user@User{userid} } <- get
+  subaccounts <- query $ GetUserSubaccounts userid
+  params <- getListParams
+  content <- viewSubaccounts user (subaccountsSortSearchPage params $ Set.toList subaccounts)
+  renderFromBody TopAccount kontrakcja $ cdata content
 
 -- Searching, sorting and paging
 subaccountsSortSearchPage :: ListParams -> [User] -> PagedList User
@@ -259,7 +258,7 @@ handleCreateSubaccount user = when (isAbleToHaveSubaccounts user) $ do
         case muser of
           Just newuser -> do
             infoUpdate <- getUserInfoUpdate
-            update $ SetUserInfo (userid newuser) ((copyCompanyInfo user) . infoUpdate $ userinfo newuser)
+            _ <- update $ SetUserInfo (userid newuser) ((copyCompanyInfo user) . infoUpdate $ userinfo newuser)
             return ()
           Nothing -> do
             addModal $ modalInviteUserAsSubaccount fstname sndname (BS.toString email)
@@ -268,37 +267,42 @@ handleCreateSubaccount user = when (isAbleToHaveSubaccounts user) $ do
 
 handleViralInvite :: Kontra KontraLink
 handleViralInvite = withUserPost $ do
-    getOptionalField asValidEmail "invitedemail" >>= maybe (return ()) (\invitedemail -> do
+  getOptionalField asValidEmail "invitedemail" >>= maybe (return ()) 
+    (\invitedemail -> do
         ctx@Context{ctxmaybeuser = Just user} <- get
         muser <- query $ GetUserByEmail Nothing $ Email invitedemail
         if isJust muser
-           then do
-               addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists $ ctxtemplates ctx)
-           else do
-               now <- liftIO getMinutesTime
-               minv <- checkValidity now <$> (query $ GetViralInvitationByEmail $ Email invitedemail)
-               case minv of
-                    Just Action{actionID, actionType} -> do
-                        if visInviterID actionType == userid user
-                           then do
-                               case visRemainedEmails actionType of
-                                    0 -> do
-                                        addFlashMsg =<< (liftIO $ flashMessageNoRemainedInvitationEmails $ ctxtemplates ctx)
-                                    n -> do
-                                        update $ UpdateActionType actionID $ actionType { visRemainedEmails = n-1 }
-                                        sendInvitation ctx (LinkViralInvitationSent actionID $ visToken actionType) invitedemail
-                           else do
-                               addFlashMsg =<< (liftIO $ flashMessageOtherUserSentInvitation $ ctxtemplates ctx)
-                    Nothing -> do
-                        link <- newViralInvitationSentLink (Email invitedemail) (userid . fromJust $ ctxmaybeuser ctx)
-                        sendInvitation ctx link invitedemail
+          then addFlashMsg =<< (liftIO $ flashMessageUserWithSameEmailExists $ ctxtemplates ctx)
+          else do
+            now <- liftIO getMinutesTime
+            minv <- checkValidity now <$> (query $ GetViralInvitationByEmail $ Email invitedemail)
+            case minv of
+              Just Action{ actionID, actionType = ViralInvitationSent{ visEmail
+                                                                     , visTime
+                                                                     , visInviterID
+                                                                     , visRemainedEmails
+                                                                     , visToken } } -> do
+                if visInviterID == userid user
+                  then case visRemainedEmails of
+                    0 -> addFlashMsg =<< (liftIO $ flashMessageNoRemainedInvitationEmails $ ctxtemplates ctx)
+                    n -> do
+                      _ <- update $ UpdateActionType actionID $ ViralInvitationSent { visEmail = visEmail
+                                                                                    , visTime = visTime
+                                                                                    , visInviterID = visInviterID
+                                                                                    , visRemainedEmails = n -1
+                                                                                    , visToken = visToken }
+                      sendInvitation ctx (LinkViralInvitationSent actionID $ visToken) invitedemail
+                  else addFlashMsg =<< (liftIO $ flashMessageOtherUserSentInvitation $ ctxtemplates ctx)
+              _ -> do
+                link <- newViralInvitationSentLink (Email invitedemail) (userid . fromJust $ ctxmaybeuser ctx)
+                sendInvitation ctx link invitedemail
         )
-    return LoopBack
+  return LoopBack
     where
-        sendInvitation ctx link invitedemail = do
-            addFlashMsg =<< (liftIO $ flashMessageViralInviteSent $ ctxtemplates ctx)
-            mail <- liftIO $ viralInviteMail (ctxtemplates ctx) ctx invitedemail link
-            scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullname = BS.empty, email = invitedemail }
+      sendInvitation ctx link invitedemail = do
+        addFlashMsg =<< (liftIO $ flashMessageViralInviteSent $ ctxtemplates ctx)
+        mail <- liftIO $ viralInviteMail (ctxtemplates ctx) ctx invitedemail link
+        scheduleEmailSendout (ctxesenforcer ctx) $ mail { fullname = BS.empty, email = invitedemail }
 
 randomPassword :: IO BS.ByteString
 randomPassword =
@@ -323,18 +327,15 @@ createUser ctx hostpart names email maybesupervisor vip = do
          Nothing -> return muser
 
 createUserBySigning :: Context -> BS.ByteString -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> BS.ByteString -> (DocumentID, SignatoryLinkID) -> IO (Maybe (User, ActionID, MagicHash))
-createUserBySigning Context{ctxesenforcer, ctxtemplates, ctxhostpart} doctitle names email companyname doclinkdata =
+createUserBySigning _ctx _doctitle names email companyname doclinkdata =
     createInvitedUser names email >>= maybe (return Nothing) (\user -> do
-        update $ SetUserInfo (userid user) $ (userinfo user) {
-            usercompanyname = companyname
-        }
-        let fullname = composeFullName names
+        _ <- update $ SetUserInfo (userid user) $ (userinfo user) { usercompanyname = companyname }
         (actionid, magichash) <- newAccountCreatedBySigningLink user doclinkdata
         return $ Just (user, actionid, magichash)
     )
 
 createNewUserByAdmin :: Context -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe MinutesTime -> Maybe String -> IO (Maybe User)
-createNewUserByAdmin ctx names email freetill custommessage = do
+createNewUserByAdmin ctx names email _freetill custommessage = do
     muser <- createInvitedUser names email
     case muser of
          Just user -> do
@@ -406,23 +407,23 @@ checkUserTOSGet action = do
 
 handleAcceptTOSGet :: Kontra (Either KontraLink Response)
 handleAcceptTOSGet = withUserGet $ do
-    ctx@Context{ctxtemplates} <- get
+    Context{ ctxtemplates } <- get
     content <- liftIO $ pageAcceptTOS ctxtemplates
     renderFromBody TopNone kontrakcja $ cdata content
 
 handleAcceptTOSPost :: Kontra KontraLink
 handleAcceptTOSPost = withUserPost $ do
-    ctx@Context{ctxmaybeuser = Just User{userid}, ctxtime} <- get
-    tos <- getDefaultedField False asValidCheckBox "tos"
-    case tos of
-         Just True -> do
-             update $ AcceptTermsOfService userid ctxtime
-             addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
-             return LinkMain
-         Just False -> do
-             addFlashMsg =<< (liftIO $ flashMessageMustAcceptTOS (ctxtemplates ctx))
-             return LinkAcceptTOS
-         Nothing -> return LinkAcceptTOS
+  ctx@Context{ctxmaybeuser = Just User{userid}, ctxtime} <- get
+  tos <- getDefaultedField False asValidCheckBox "tos"
+  case tos of
+    Just True -> do
+      _ <- update $ AcceptTermsOfService userid ctxtime
+      addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved (ctxtemplates ctx))
+      return LinkMain
+    Just False -> do
+      addFlashMsg =<< (liftIO $ flashMessageMustAcceptTOS (ctxtemplates ctx))
+      return LinkAcceptTOS
+    Nothing -> return LinkAcceptTOS
 
 handleQuestion :: Kontra KontraLink
 handleQuestion = do
@@ -447,7 +448,7 @@ handleQuestion = do
              return LoopBack
 
 handleGetBecomeSubaccountOf :: UserID -> Kontra (Either KontraLink Response)
-handleGetBecomeSubaccountOf supervisorid = withUserGet $ do
+handleGetBecomeSubaccountOf _supervisorid = withUserGet $ do
   addModal $ modalDoYouWantToBeSubaccount 
   ctx@Context{ctxmaybeuser = Just user} <- get
   content <- liftIO $ showUser (ctxtemplates ctx) user
@@ -458,8 +459,8 @@ handlePostBecomeSubaccountOf supervisorid = withUserPost $ do
   ctx@Context{ctxmaybeuser = Just user} <- get
   if userid user /= supervisorid
      then do
-          result <- update $ SetUserSupervisor (userid user) supervisorid
-          case result of
+          setsupervisorresult <- update $ SetUserSupervisor (userid user) supervisorid
+          case setsupervisorresult of
             Left errmsg -> do
               let msg = "Cannot become subaccount of " ++ show supervisorid ++ ": " ++ errmsg
               Log.debug $ msg
@@ -680,7 +681,7 @@ handleAccountSetupPost aid hash = do
                      newuser <- fromMaybe user <$> (query $ GetUserByUserID $ userid user)
                      returnToAccountSetup newuser
 
-        getUserForViralInvite now invitedemail invitationtime inviterid = do
+        getUserForViralInvite _now invitedemail invitationtime inviterid = do
             muser <- liftIO $ createInvitedUser (BS.empty, BS.empty) $ unEmail invitedemail
             case muser of
                  Just user -> do -- user created, we need to fill in some info
@@ -703,7 +704,7 @@ handleActivate' signupmethod user acctype actionid infoupdatefunc = do
   mpassword2 <- getRequiredField asValidPassword "password2"
   -- update user info he typed on signup page, so he won't
   -- have to type in again if password validation fails.
-  update $ SetUserInfo (userid user) $ infoupdatefunc (userinfo user)
+  _ <- update $ SetUserInfo (userid user) $ infoupdatefunc (userinfo user)
   case (mtos, mpassword, mpassword2) of
     (Just tos, Just password, Just password2) -> do
       case checkPasswordsMatch password password2 of
@@ -711,13 +712,13 @@ handleActivate' signupmethod user acctype actionid infoupdatefunc = do
           if tos
             then do
               passwordhash <- liftIO $ createPassword password
-              update $ SetUserPassword (userid user) passwordhash
-              update $ AcceptTermsOfService (userid user) (ctxtime ctx)
-              update $ SetSignupMethod (userid user) signupmethod
-              update $ SetUserSettings (userid user) $ (usersettings user) {
-                  accounttype = acctype
+              _ <- update $ SetUserPassword (userid user) passwordhash
+              _ <- update $ AcceptTermsOfService (userid user) (ctxtime ctx)
+              _ <- update $ SetSignupMethod (userid user) signupmethod
+              _ <- update $ SetUserSettings (userid user) $ (usersettings user) {
+                accounttype = acctype
               }
-              update $ SetUserPaymentAccount (userid user) $ (userpaymentaccount user) {
+              _ <- update $ SetUserPaymentAccount (userid user) $ (userpaymentaccount user) {
                   paymentaccountfreesignatures =
                       case usersupervisor user of
                            Just _  -> 0
@@ -725,7 +726,6 @@ handleActivate' signupmethod user acctype actionid infoupdatefunc = do
                            -- 10 or 20, depending on user's account type. for
                            -- now we don't modify that number anyway.
               }
-              now <- liftIO getMinutesTime
               dropExistingAction actionid
               logUserToContext $ Just user
               return $ Just user
@@ -776,7 +776,7 @@ handlePasswordReminderPost aid hash = do
                           Right () -> do
                               dropExistingAction aid
                               passwordhash <- liftIO $ createPassword password
-                              update $ SetUserPassword (userid user) passwordhash
+                              _ <- update $ SetUserPassword (userid user) passwordhash
                               addFlashMsg =<< (liftIO $ flashMessageUserPasswordChanged templates)
                               logUserToContext $ Just user
                               return LinkMain
@@ -808,7 +808,7 @@ handleAccountRemovalGet aid hash = do
 
 handleAccountRemovalFromSign :: ActionID -> MagicHash -> Kontra () 
 handleAccountRemovalFromSign aid hash = do
-  doc <- handleAccountRemoval' aid hash
+  _doc <- handleAccountRemoval' aid hash
   return ()
 
 handleAccountRemovalPost :: ActionID -> MagicHash -> Kontra KontraLink
@@ -883,8 +883,8 @@ extendActionEvalTimeToOneDayMinimum aid = do
 
 dropExistingAction :: ActionID -> Kontra ()
 dropExistingAction aid = do
-    update $ DeleteAction aid
-    return ()
+  _ <- update $ DeleteAction aid
+  return ()
 
 guardXToken :: Kontra ()
 guardXToken = do
