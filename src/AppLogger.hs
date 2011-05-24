@@ -1,41 +1,33 @@
-module AppLogger ( setupLogger
-                 , withLogger
-                 , teardownLogger
-                   
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
+module AppLogger ( amazon    
                  , debug
-                 , mail
                  , error
-                 , amazon    
-                 , trustWeaver
+                 , forkIOLogWhenError
+                 , mail
                  , security 
                  , server
-                   , forkIOLogWhenError
+                 , teardownLogger
+                 , trustWeaver
+                 , withLogger
+                 , setupLogger
                  ) where
 
-import System.Log.Logger
-  ( Priority(..)
-    , rootLoggerName
-    , setLevel
-    , setHandlers
-    , updateGlobalLogger
-                        , noticeM
-    )
 import Control.Exception.Extensible (bracket)
-import System.Log.Handler (close, setFormatter)
-import System.Log.Handler.Simple (fileHandler, streamHandler, GenericHandler(..))
-import System.Log.Formatter
-import System.IO (stdout,Handle,hSetEncoding,utf8,hClose)
-import System.Directory
 import Control.Monad.Trans
 import Prelude hiding (error)
-import Control.Monad.Trans
-import qualified Control.Exception as C
+import System.Directory
+import System.IO (stdout, Handle, hSetEncoding, utf8)
+import System.Log.Formatter
+import System.Log.Handler (close, setFormatter)
+import System.Log.Handler.Simple (fileHandler, streamHandler, GenericHandler(..))
+import System.Log.Logger (Priority(..), rootLoggerName, setLevel, setHandlers, updateGlobalLogger, noticeM)
 import qualified Control.Concurrent as C
+import qualified Control.Exception as C
 
 -- | Opaque type covering all information needed to teardown the logger.
 data LoggerHandle = LoggerHandle [GenericHandler Handle]
 
-
+setupLogger :: IO LoggerHandle
 setupLogger = do
     -- under Windows createDirectoryIfMissing throws an exception if
     -- the directory already exists, pretty ugly bug, lets just catch
@@ -65,7 +57,7 @@ setupLogger = do
                      , securityLog
                      ]
 
-    mapM_ (\log -> hSetEncoding (privData log) utf8) allLoggers
+    mapM_ (\lg -> hSetEncoding (privData lg) utf8) allLoggers
     
     hSetEncoding (privData accessLog) utf8
     hSetEncoding (privData mailLog) utf8
@@ -157,7 +149,7 @@ server msg = liftIO $ noticeM "Happstack.Server" msg
 forkIOLogWhenError :: (MonadIO m) => String -> IO () -> m ()
 forkIOLogWhenError errmsg action = 
   liftIO $ do
-    C.forkIO (action `C.catch` \(e :: C.SomeException) -> error $ errmsg ++ " " ++ show e)
+    _ <- C.forkIO (action `C.catch` \(e :: C.SomeException) -> error $ errmsg ++ " " ++ show e)
     return ()
   
   
