@@ -1,102 +1,102 @@
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Werror #-}
 
 module Doc.DocView (
-    emptyDetails
-  , showFilesImages2
-  , pageDocumentDesign
-  , pageDocumentForAuthor
-  , pageDocumentForViewer
-  , pageDocumentForSignatory
-  , pageAttachmentView
-  , pageAttachmentDesign
-  , pageAttachmentForSignatory
-  , docSortSearchPage
+    defaultInviteMessage
   , docAndAuthorSortSearchPage
-  , pageContractsList
-  , pageTemplatesList
-  , pageOffersList
-  , pageAttachmentList
-  , modalSignInviteView
-  , modalSendInviteView
+  , docSortSearchPage
+  , documentAuthorInfo
+  , documentInfoFields
+  , emptyDetails
+  , flashAuthorSigned
+  , flashDocumentDraftSaved
+  , flashDocumentRestarted
+  , flashDocumentTemplateSaved
+  , flashMessageAccountActivatedFromSign
+  , flashMessageAccountRemovedFromSign
+  , flashMessageAttachmentArchiveDone
+  , flashMessageBulkContractRemindsSent
+  , flashMessageBulkOfferRemindsSent
+  , flashMessageCSVHasTooManyRows
+  , flashMessageCSVSent
+  , flashMessageCanceled
+  , flashMessageCannotCancel
+  , flashMessageContractArchiveDone
+  , flashMessageFailedToParseCSV
+  , flashMessageInvalidCSV
+  , flashMessageMultipleAttachmentShareDone
+  , flashMessageMultipleTemplateShareDone
+  , flashMessageNoBulkContractRemindsSent
+  , flashMessageNoBulkOfferRemindsSent
+  , flashMessageOfferArchiveDone
+  , flashMessageOnlyHaveRightsToViewDoc
+  , flashMessagePleaseSignContract
+  , flashMessagePleaseSignOffer
+  , flashMessagePleaseSignWithEleg
+  , flashMessageSingleAttachmentShareDone
+  , flashMessageSingleTemplateShareDone
+  , flashMessageTemplateArchiveDone
+  , flashRemindMailSent
+  , getDataMismatchMessage
+  , isNotLinkForUserID
+  , mailCancelDocumentByAuthor
+  , mailCancelDocumentByAuthorContent
+  , mailDocumentAwaitingForAuthor
+  , mailDocumentClosedForAuthor
+  , mailDocumentClosedForSignatories
+  , mailDocumentRejected
+  , mailDocumentRemind
+  , mailInvitationToSend
+  , mailInvitationToSign
   , modalContractSignedHasAccount
   , modalContractSignedNoAccount
   , modalLoginForSaveView
   , modalOfferCreated
   , modalOfferSignedHasAccount
   , modalOfferSignedNoAccount
-  , modalSignAwaitingAuthorLast
   , modalRejectedView
-  , flashRemindMailSent
-  , flashMessageCanceled
-  , flashDocumentRestarted
-  , flashDocumentDraftSaved
-  , flashDocumentTemplateSaved
-  , flashAuthorSigned
-  , flashMessageCannotCancel
-  , flashMessageFailedToParseCSV
-  , flashMessageCSVHasTooManyRows
-  , flashMessageBulkContractRemindsSent
-  , flashMessageNoBulkContractRemindsSent
-  , flashMessageBulkOfferRemindsSent
-  , flashMessageNoBulkOfferRemindsSent
-  , flashMessageContractArchiveDone
-  , flashMessageOfferArchiveDone
-  , flashMessageTemplateArchiveDone
-  , flashMessageAttachmentArchiveDone
-  , flashMessageInvalidCSV
-  , flashMessageCSVSent
-  , flashMessageSingleTemplateShareDone
-  , flashMessageMultipleTemplateShareDone
-  , flashMessageSingleAttachmentShareDone
-  , flashMessageMultipleAttachmentShareDone
-  , flashMessageAccountActivatedFromSign
-  , flashMessageAccountRemovedFromSign
-  , flashMessageOnlyHaveRightsToViewDoc
-  , flashMessagePleaseSignWithEleg
-  , flashMessagePleaseSignContract
-  , flashMessagePleaseSignOffer
-  , defaultInviteMessage
-  , mailDocumentRemind
-  , mailDocumentRejected
-  , mailDocumentAwaitingForAuthor
-  , mailCancelDocumentByAuthorContent
-  , mailCancelDocumentByAuthor
-  , mailInvitationToSign
-  , mailInvitationToSend
-  , mailDocumentClosedForSignatories
-  , mailDocumentClosedForAuthor
-  , isNotLinkForUserID
+  , modalSendInviteView
+  , modalSignAwaitingAuthorLast
+  , modalSignInviteView
+  , pageAttachmentDesign
+  , pageAttachmentForSignatory
+  , pageAttachmentList
+  , pageAttachmentView
+  , pageContractsList
+  , pageDocumentDesign
+  , pageDocumentForAuthor
+  , pageDocumentForSignatory
+  , pageDocumentForViewer
+  , pageOffersList
+  , pageTemplatesList
+  , showFilesImages2
   , signatoryDetailsFromUser
-  , uploadPage
   , templatesForAjax
-  , getDataMismatchMessage
-  , documentInfoFields
-  , documentAuthorInfo
+  , uploadPage
   ) where
 
 import ActionSchedulerState (ActionID)
-import Control.Applicative ((<$>))
-import Data.List (find, isInfixOf)
-import Data.Maybe
-import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString as BS
-import Data.Char (toUpper)
 import Doc.CSVUtils
 import Doc.DocState
-import Doc.DocViewMail
 import Doc.DocUtils
-import Doc.DocStateUtils
+import Doc.DocViewMail
+import FlashMessage
 import Kontra
 import KontraLink
+import ListUtil
 import Mails.MailsUtil
 import MinutesTime
 import Misc
 import Templates.Templates
 import Templates.TemplatesUtils
-import User.UserView (prettyName)
-import ListUtil
+
+import Control.Applicative ((<$>))
 import Control.Monad.Reader
-import FlashMessage
+import Data.Char (toUpper)
+import Data.List (find, isInfixOf)
+import Data.Maybe
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.UTF8 as BS
+
 
 modalSignAwaitingAuthorLast :: KontraModal
 modalSignAwaitingAuthorLast = do
@@ -161,8 +161,8 @@ modalContractSigned' closedtemplate notclosedtemplate document@Document{document
          extrafields
 
 basicContractSignedFields :: Document -> Fields
-basicContractSignedFields document@Document{documenttitle} = do
-    field "documenttitle" $ BS.toString $ documenttitle
+basicContractSignedFields Document{ documenttitle } = do
+    field "documenttitle" $ BS.toString documenttitle
 
 loginFields :: Document -> SignatoryLink -> Bool -> Fields
 loginFields document signatorylink isloggedin = do
@@ -476,9 +476,9 @@ pageOffersList :: KontrakcjaTemplates -> MinutesTime -> User -> PagedList (Docum
 pageOffersList = pageList' "pageOffersList" LinkOffers docAndAuthorBasicViewFields
   where
     docAndAuthorBasicViewFields :: MinutesTime -> User -> (Document, BS.ByteString) -> Fields
-    docAndAuthorBasicViewFields crtime user (doc, authorname) = do
+    docAndAuthorBasicViewFields crtime user (doc, authorname') = do
       documentBasicViewFields crtime user doc
-      field "authorname" authorname
+      field "authorname" authorname'
 
 {- |
     Helper function for list pages
@@ -518,16 +518,6 @@ pageList' templatename makeCurrentLink createBasicViewFields templates ctime use
     attachmentactive = case currentlink of
                        (LinkAttachments _) -> True
                        _ -> False
-
-authorname :: User -> BS.ByteString        
-authorname author = 
-  if (BS.null authorfstname && BS.null authorsndname)
-    then authoremail
-    else BS.concat [authorfstname, BS.fromString " ", authorsndname]
-  where
-    authorfstname = userfstname $ userinfo author
-    authorsndname = usersndname $ userinfo author
-    authoremail = unEmail . useremail $ userinfo author
 
 -- Searching, sorting and paging for document author pairs
 docAndAuthorSortSearchPage :: ListParams -> [(Document, BS.ByteString)] -> PagedList (Document, BS.ByteString)
@@ -659,8 +649,6 @@ pageDocumentDesign ctx
     , documentid
     , documentdaystosign
     , documentinvitetext
-    , documentallowedidtypes
-    , documentfunctionality
   }
   attachments
   step =
@@ -714,7 +702,7 @@ documentCsvFields templates document@Document{documentallowedidtypes, documentcs
       mcleancsv = fmap (cleanCSVContents documentallowedidtypes (length csvcustomfields) . csvcontents) $ documentcsvupload
       csvproblems = maybe [] fst mcleancsv
       csvdata = maybe [] (csvbody . snd) mcleancsv
-      csvPageSize = 10
+      csvPageSize :: Int = 10
       csvpages = splitCSVDataIntoPages csvPageSize csvdata
   csvproblemfields <- sequence $ zipWith (csvProblemFields templates (length csvproblems)) [1..] csvproblems   
   return $ do
@@ -788,7 +776,6 @@ pageDocumentForAuthor ctx
   attachments =
    let
        templates = ctxtemplates ctx
-       isSignatory person = SignatoryPartner `elem` signatoryroles person
        authorsiglink = fromJust $ getAuthorSigLink document
    in do
      renderTemplate (ctxtemplates ctx) "pageDocumentForAuthor" $ do
@@ -822,7 +809,6 @@ pageDocumentForViewer ctx
   }
   attachments msignlink =
     let documentdaystosignboxvalue = maybe 7 id documentdaystosign
-        isSignatory person = SignatoryPartner `elem` signatoryroles person
         authorsiglink = fromJust $ getAuthorSigLink document
    in do
      invitationMailContent <- mailInvitationToSignOrViewContent (ctxtemplates ctx) False ctx document Nothing
@@ -923,7 +909,6 @@ signatoryLinkFields
   siglnk@SignatoryLink {
     signatorylinkid
     , signatorydetails
-    , signatoryroles
     , invitationdeliverystatus
   } =
   let isCurrentUserAuthor = maybe False (isUserAuthor document) muser
@@ -1075,7 +1060,7 @@ documentStatusFields document = do
   
 -- | Info about what is my position on a document
 signedByMeFields :: Document -> Maybe SignatoryLink -> Fields
-signedByMeFields document siglnk = do
+signedByMeFields _document siglnk = do
   field "notsignedbyme" $ (isJust siglnk) && (isNothing $ maybesigninfo $ fromJust siglnk)
   field "signedbyme" $ (isJust siglnk) && (isJust $ maybesigninfo $ fromJust siglnk)
   field "iamauthor" $ maybe False siglinkIsAuthor siglnk
