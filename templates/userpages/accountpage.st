@@ -45,7 +45,7 @@ showUser =
                            <td><input type="text" name="phone" value="$phone$" autocomplete="off" /></td>
                        </tr>
                        <tr>
-                           <td>Befattning</td>
+                           <td>Befattning:</td>
                            <td><input type="text" name="companyposition" value="$companyposition$" autocomplete="off" /></td>
                        </tr>
                    </table>
