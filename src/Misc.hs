@@ -26,7 +26,6 @@ import HSP (evalHSP, XMLMetaData(..), renderAsHTML, IsAttrValue, toAttrValue)
 import HSX.XMLGenerator
 import Happstack.Data.IxSet as IxSet
 import Happstack.Server hiding (simpleHTTP)
-import Happstack.Server.SimpleHTTP
 import Happstack.State
 import Happstack.Util.Common
 import Numeric -- use new module
