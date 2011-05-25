@@ -28,7 +28,6 @@ import Control.Concurrent
 import Data.List
 import SOAP.SOAP
 import Text.XML.HaXml.XmlContent
-import Text.XML.HaXml.XmlContent.Parser 
 import qualified AppLogger as Log
 import qualified Data.ByteString as BS
 
