@@ -31,8 +31,9 @@ import Data.List
 import Debug.Trace ( trace )
 
 parseMIMEBody :: [(String,String)] -> String -> MIMEValue
-parseMIMEBody headers_in body =
-  case mimeType mty of
+parseMIMEBody headers_in body = result { mime_val_headers = headers }
+  where
+  result = case mimeType mty of
     Multipart{} -> fst (parseMultipart mty body)
     Message{}   -> fst (parseMultipart mty body)
     _           -> nullMIMEValue 
@@ -41,8 +42,8 @@ parseMIMEBody headers_in body =
 	            , mime_val_content = Single (processBody headers body)
  	            }
 
- where headers = [ (map toLower k,v) | (k,v) <- headers_in ]
-       mty = fromMaybe defaultType
+  headers = [ (map toLower k,v) | (k,v) <- headers_in ]
+  mty = fromMaybe defaultType
                        (parseContentType =<< lookupField "content-type" headers)
 defaultType :: Type
 defaultType = Type { mimeType   = Text "plain"
