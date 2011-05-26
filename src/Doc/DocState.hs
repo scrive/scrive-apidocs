@@ -19,7 +19,6 @@ module Doc.DocState
     , FileModTime(..)
     , FileMovedToAWS(..)
     , FileMovedToDisk(..)
-    , FragileTakeOverDocuments(..)
     , GetDocumentByDocumentID(..)
     , GetDocumentStats(..)
     , GetDocumentStatsByUser(..)
@@ -749,25 +748,6 @@ setDocumentTitle docid doctitle =
     then Right $ doc { documenttitle = doctitle }
     else Left $ "Can't update title unless the status is in preparation"
 
-
-fragileTakeOverDocuments :: User -> User -> Update Documents ()
-fragileTakeOverDocuments destuser srcuser = do
-  documents <- ask
-  let sigdocuments = filter ((any (isSigLinkForUser srcuser)) . documentsignatorylinks) (toList documents)
-  mapM_ (updateDoc takeoverAsSignatory) sigdocuments
-  return ()
-    where 
-        updateDoc takeover document = modifySignableOrTemplate (documentid document) (\doc -> Right $ takeover doc)
-        takeoverAsSignatory document = document { documentsignatorylinks = takeoverSigLinks (documentsignatorylinks document) }
-        takeoverSigLinks siglinks = mapWhen (isSigLinkForUser srcuser) takeoverSigLink siglinks
-        takeoverSigLink siglink = siglink { maybesignatory = Just (userid destuser),
-                                            signatorydetails = takeoverSigDetails (signatorydetails siglink) }
-        takeoverSigDetails sigdetails = sigdetails { signatoryfstname = userfstname info,
-                                                     signatorysndname = usersndname info,
-                                                     signatorycompany = usercompanyname info,
-                                                     signatoryemail   = unEmail $ useremail info }
-                                        where info = userinfo destuser
-
 --This is only for Eric functionality with awayting author
 --We should add current state checkers here (not co cancel closed documents etc.)
 closeDocument :: DocumentID 
@@ -1108,7 +1088,6 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'fileMovedToDisk
 
                           -- admin only area follows
-                        , 'fragileTakeOverDocuments
                         , 'getFilesThatShouldBeMovedToAmazon
                         , 'restartDocument
                         , 'changeSignatoryEmailWhenUndelivered
