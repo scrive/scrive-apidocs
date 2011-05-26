@@ -9,6 +9,7 @@ module AppControl
     , AppGlobals(..)
     , defaultAWSAction
     , parseEmailMessage
+    , parseEmailMessageToParts
     ) where
 
 import API.IntegrationAPI
@@ -753,13 +754,17 @@ daveUser userid = onlySuperUserGet $ do
 
 -}
 
+parseEmailMessageToParts :: BS.ByteString -> (MIME.MIMEValue, [(MIME.MIMEType, BS.ByteString)])
+parseEmailMessageToParts content = (mime, parts mime)
+  where
+    mime = MIME.parseMIMEMessage (BSC.unpack content)
+    parts mimevalue = case MIME.mime_val_content mimevalue of 
+        MIME.Single value -> [(MIME.mimeType $ MIME.mime_val_type mimevalue, BSC.pack value)]
+        MIME.Multi more -> concatMap parts more
+  
 parseEmailMessage :: (Monad m) => BS.ByteString -> m (Either String (JSValue,BS.ByteString,BS.ByteString,BS.ByteString))
 parseEmailMessage content = runErrorT $ do
-  let mime = MIME.parseMIMEMessage (BSC.unpack content)
-  let parts mimevalue = case MIME.mime_val_content mimevalue of 
-        MIME.Single value -> [(MIME.mimeType $ MIME.mime_val_type mimevalue, value)]
-        MIME.Multi more -> concatMap parts more
-      allParts = parts mime
+  let (mime, allParts) = parseEmailMessageToParts content 
       isPDF (tp,_) = tp == MIME.Application "pdf"
       isPlain (tp,_) = tp == MIME.Text "plain"
       typesOfParts = map fst allParts
@@ -771,23 +776,21 @@ parseEmailMessage content = runErrorT $ do
   plain <- case plains of
     [plain] -> return plain
     _ -> fail $ "Exactly one of attachments should be text/plain, you have " ++ show typesOfParts
-  let pdfBinary = BSC.pack (snd pdf)
+  let pdfBinary = snd pdf
   let from = maybe BS.empty BS.fromString $ lookup "From" (MIME.mime_val_headers mime)
   let to = maybe BS.empty BS.fromString $ lookup "To" (MIME.mime_val_headers mime)
-  json <- (ErrorT . return) $ runGetJSON readJSObject (snd plain)
+  json <- (ErrorT . return) $ runGetJSON readJSObject (BS.toString $ snd plain)
   return (json,pdfBinary,from,to)
   
 maybeFail :: (Monad m) => String -> Maybe a -> m a
 maybeFail msg = maybe (fail msg) return 
 
-handleMailCommand :: JSValue -> BS.ByteString -> Kontra (Either String ())
-handleMailCommand (JSObject json) content = runErrorT $ do
-  -- here we should extract data for new document, but I do not care enough about this for now
-  -- lets make it simple as hell
-  username <- lift $ getDataFnM (lookBS "username")
+handleMailCommand :: JSValue -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Kontra (Either String ())
+handleMailCommand (JSObject json) content from _to = runErrorT $ do
+  let username = takeWhile (/= '>') $ tail $ dropWhile (/= '<') $ BS.toString from
       
-  Context { ctxtime, ctxipnumber } <- get
-  maybeUser <- lift $ query $ GetUserByEmail Nothing (Email $ concatChunks username)
+  Context { ctxtime, ctxipnumber } <- lift get
+  maybeUser <- lift $ query $ GetUserByEmail Nothing (Email $ BS.fromString username)
   (user :: User) <- maybeFail "user not found" maybeUser
   
   let offer = False
@@ -844,7 +847,7 @@ handleMailCommand (JSObject json) content = runErrorT $ do
   lift $ DocControl.markDocumentAuthorReadAndSeen newdocument ctxtime ctxipnumber
   lift $ DocControl.postDocumentChangeAction newdocument doc Nothing
   return ()
-handleMailCommand _ _ = mzero -- necessary to compile
+handleMailCommand _ _ _ _ = mzero -- necessary to compile
   
 handleMailAPI :: Kontra Response
 handleMailAPI = do
@@ -860,8 +863,8 @@ handleMailAPI = do
       Left msg -> do
         Log.debug $ "handleMailAPI: " ++ msg
         return $ toResponse msg
-      Right (json, pdf, _from, _to) -> do
-        result' <- handleMailCommand json pdf
+      Right (json, pdf, from, to) -> do
+        result' <- handleMailCommand json pdf from to
         case result' of
           Right _ -> return $ toResponse ""
           Left msg -> do
