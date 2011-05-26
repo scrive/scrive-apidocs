@@ -4,7 +4,7 @@ viewFriends =
   <form method="post" action="$currentlink$" class="listForm">
 	<div id="tab-viewer">
 		<div class="tab-header">
-
+ $_goback()$ $_gobackXXX()$
 		</div>
 		<ul class="tabs">
 		   <li><a href="/account">Användaruppgifter</a></li>

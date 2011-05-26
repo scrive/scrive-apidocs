@@ -28,9 +28,6 @@ module Administration.AdministrationControl(
           , handleMigrate0
           , handleCreateService
           , handleStatistics
-          , handleShowQuarantine
-          , handleQuarantinePost
-          , handleMigrateForDeletion
           ) where
 import Control.Monad.State
 import Data.Functor
@@ -66,7 +63,6 @@ import API.Service.ServiceState
 import Data.Monoid
 import qualified Data.IntMap as IntMap
 import Templates.Templates
-import InputValidation
 
 eitherFlash :: ServerPartT (StateT Context IO) (Either String b)
             -> ServerPartT (StateT Context IO) b
