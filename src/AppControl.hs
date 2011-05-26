@@ -753,7 +753,7 @@ parseEmailMessageToParts content = (mime, parts mime)
         MIME.Single value -> [(MIME.mimeType $ MIME.mime_val_type mimevalue, BSC.pack value)]
         MIME.Multi more -> concatMap parts more
   
-parseEmailMessage :: (Monad m) => BS.ByteString -> m (Either String (JSValue,BS.ByteString,BS.ByteString,BS.ByteString))
+parseEmailMessage :: (Monad m, MonadIO m) => BS.ByteString -> m (Either String (JSValue,BS.ByteString,BS.ByteString,BS.ByteString))
 parseEmailMessage content = runErrorT $ do
   let (mime, allParts) = parseEmailMessageToParts content 
       isPDF (tp,_) = tp == MIME.Application "pdf"
@@ -768,21 +768,22 @@ parseEmailMessage content = runErrorT $ do
     [plain] -> return plain
     _ -> fail $ "Exactly one of attachments should be text/plain, you have " ++ show typesOfParts
   let pdfBinary = snd pdf
-  let from = maybe BS.empty BS.fromString $ lookup "From" (MIME.mime_val_headers mime)
-  let to = maybe BS.empty BS.fromString $ lookup "To" (MIME.mime_val_headers mime)
+  let from = maybe BS.empty BS.fromString $ lookup "from" (MIME.mime_val_headers mime)
+  let to = maybe BS.empty BS.fromString $ lookup "to" (MIME.mime_val_headers mime)
+  lift $ Log.debug $ "MIME: " ++ show (mime { MIME.mime_val_content = MIME.Single "" })
   json <- (ErrorT . return) $ runGetJSON readJSObject (BS.toString $ snd plain)
   return (json,pdfBinary,from,to)
   
 maybeFail :: (Monad m) => String -> Maybe a -> m a
 maybeFail msg = maybe (fail msg) return 
 
-handleMailCommand :: JSValue -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Kontra (Either String ())
+handleMailCommand :: JSValue -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Kontra (Either String DocumentID)
 handleMailCommand (JSObject json) content from _to = runErrorT $ do
-  let username = takeWhile (/= '>') $ tail $ dropWhile (/= '<') $ BS.toString from
+  let username = takeWhile (/= '>') $ dropWhile (== '<') $ dropWhile (/= '<') $ BS.toString from
       
   Context { ctxtime, ctxipnumber } <- lift get
   maybeUser <- lift $ query $ GetUserByEmail Nothing (Email $ BS.fromString username)
-  (user :: User) <- maybeFail "user not found" maybeUser
+  (user :: User) <- maybeFail ("user '" ++ username ++ "' not found") maybeUser
   
   let offer = False
   let title = case get_field json "title" of
@@ -837,8 +838,8 @@ handleMailCommand (JSObject json) content from _to = runErrorT $ do
   newdocument <- ErrorT $ update $ AuthorSendDocument (documentid doc) ctxtime ctxipnumber Nothing
   lift $ DocControl.markDocumentAuthorReadAndSeen newdocument ctxtime ctxipnumber
   lift $ DocControl.postDocumentChangeAction newdocument doc Nothing
-  return ()
-handleMailCommand _ _ _ _ = mzero -- necessary to compile
+  return (documentid doc)
+handleMailCommand _ _ _ _ = return (Left ("needs JSON object as top level value"))
   
 handleMailAPI :: Kontra Response
 handleMailAPI = do
@@ -857,7 +858,7 @@ handleMailAPI = do
       Right (json, pdf, from, to) -> do
         result' <- handleMailCommand json pdf from to
         case result' of
-          Right _ -> return $ toResponse ""
+          Right docid -> return $ toResponse $ "Document #" ++ show docid ++ " created"
           Left msg -> do
             Log.debug $ msg
             return $ toResponse msg
