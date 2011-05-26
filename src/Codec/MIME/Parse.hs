@@ -87,9 +87,16 @@ processBody headers body =
     Nothing -> body
     Just v  -> decodeBody v body
 
+normalizeCRLF :: String -> String
+normalizeCRLF ('\r':'\n':xs) = '\r':'\n':normalizeCRLF xs
+normalizeCRLF ('\r':xs) = '\r':'\n':normalizeCRLF xs
+normalizeCRLF ('\n':xs) = '\r':'\n':normalizeCRLF xs
+normalizeCRLF (x:xs) = x:normalizeCRLF xs
+normalizeCRLF [] = []
+  
 parseMIMEMessage :: String -> MIMEValue
 parseMIMEMessage entity =
-  case parseHeaders entity of
+  case parseHeaders (normalizeCRLF entity) of
    (as,bs) -> parseMIMEBody as bs
 
 parseHeaders :: String -> ([(String,String)], String)
