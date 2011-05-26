@@ -17,6 +17,9 @@ module Templates.TemplatesLoader
     , readTemplates
     , getTemplatesModTime
     , toKontrakcjaTemplates
+    , templateFiles
+    , templateFilePath
+    , getTemplates
     ) where
 
 import Text.StringTemplate 
@@ -31,54 +34,60 @@ import AppLogger as Log
 import Text.Html (stringToHtmlString)
 import System.Directory
 import System.Time
-
 {-Names of template files -}
+
+templatesFilesPath :: [String]
+templatesFilesPath = map templateFilePath templateFiles
+
+templateFilePath :: String -> String
+templateFilePath fn =  "templates/" ++ fn
+
 templateFiles :: [String]
-templateFiles = ["templates/landpages.st",
-                 "templates/modals.st",
-                 "templates/flash.st",
-                 "templates/mails.st",
-                 "templates/utils.st",
-                 "templates/listutils/listutils.st",
-                 "templates/pages.st",
-                 "templates/payments.st",
-                 "templates/administration.st",
-                 "templates/userpages/accountpage.st",
-                 "templates/userpages/subaccountslist.st",
-                 "templates/userpages/friendpage.st",
-                 "templates/userpages/securitypage.st",
-                 "templates/userpages/userotherpages.st",                     
-                 "templates/docpages/doclist.st",
-                 "templates/docpages/doctemplatelist.st",
-                 "templates/docpages/docofferslist.st",
-                 "templates/docpages/docattachmentlist.st",
-                 "templates/docpages/doclistutils.st",
-                 "templates/docpages/doctexts.st",
-                 "templates/docpages/docviewutils.st",
-                 "templates/docpages/docviewforauthor.st",
-                 "templates/docpages/docviewforsignatory.st",
-                 "templates/docpages/docviewforviewer.st",
-                 "templates/docpages/docdesign.st",
-                 "templates/docpages/docupload.st",
-                 "templates/docpages/doctemplates.st",
-                 "templates/docpages/docsignatories.st",
-                 "templates/docpages/docseal.st",
-                 "templates/docpages/attachmentpage.st",
-                 "templates/contacts/contacts.st",
-                 "templates/apppages.st",
-                 "templates/firstpage.st",
-                 "templates/staticpages/sitemap.st",
-                 "templates/staticpages/priceplanpage.st",
-                 "templates/staticpages/securitypage.st",
-                 "templates/staticpages/legalpage.st",
-                 "templates/staticpages/privacypolicypage.st",
-                 "templates/staticpages/termspage.st",
-                 "templates/staticpages/aboutpage.st",
-                 "templates/staticpages/partnerspage.st",
-                 "templates/staticpages/clientspage.st",
-                 "templates/eleg.st",
-                 "templates/api/embedded.st",
-                 "templates/api/services.st"]
+templateFiles = ["landpages.st",
+                 "modals.st",
+                 "flash.st",
+                 "mails.st",
+                 "utils.st",
+                 "listutils/listutils.st",
+                 "pages.st",
+                 "payments.st",
+                 "administration.st",
+                 "userpages/accountpage.st",
+                 "userpages/subaccountslist.st",
+                 "userpages/friendpage.st",
+                 "userpages/securitypage.st",
+                 "userpages/userotherpages.st",                     
+                 "docpages/doclist.st",
+                 "docpages/doctemplatelist.st",
+                 "docpages/docofferslist.st",
+                 "docpages/docattachmentlist.st",
+                 "docpages/doclistutils.st",
+                 "docpages/doctexts.st",
+                 "docpages/docviewutils.st",
+                 "docpages/docviewforauthor.st",
+                 "docpages/docviewforsignatory.st",
+                 "docpages/docviewforviewer.st",
+                 "docpages/docdesign.st",
+                 "docpages/docupload.st",
+                 "docpages/doctemplates.st",
+                 "docpages/docsignatories.st",
+                 "docpages/docseal.st",
+                 "docpages/attachmentpage.st",
+                 "contacts/contacts.st",
+                 "apppages.st",
+                 "firstpage.st",
+                 "staticpages/sitemap.st",
+                 "staticpages/priceplanpage.st",
+                 "staticpages/securitypage.st",
+                 "staticpages/legalpage.st",
+                 "staticpages/privacypolicypage.st",
+                 "staticpages/termspage.st",
+                 "staticpages/aboutpage.st",
+                 "staticpages/partnerspage.st",
+                 "staticpages/clientspage.st",
+                 "eleg.st",
+                 "api/embedded.st",
+                 "api/services.st"]
 
 
 type KontrakcjaTemplates = STGroup String
@@ -104,29 +113,32 @@ renderTemplateMain ts name params f = do
 
 getTemplatesModTime :: IO ClockTime
 getTemplatesModTime = do
-    mtimes <- mapM getModificationTime templateFiles
+    mtimes <- mapM getModificationTime templatesFilesPath
     return (maximum mtimes)
 
 readTemplates :: IO KontrakcjaTemplates 
 readTemplates = do
-    ts <- mapM getTemplates templateFiles
-    return $ groupStringTemplates (concat ts)
+    ts <- mapM getTemplates templatesFilesPath
+    return $ groupStringTemplates $ fmap (\(n,v) -> (n,newSTMP v)) (concat ts)
 
-getTemplates :: String -> IO [(String, StringTemplate String)]            
+getTemplates :: String -> IO [(String, String)]            
 getTemplates fp = 
     withFile fp ReadMode $ \handle -> do
         hSetEncoding handle utf8
-        ts <- parseTemplates handle
-        return $ catMaybes ts
+        parseTemplates handle
 
-parseTemplates :: Handle -> IO [Maybe (String,StringTemplate String)]
+
+parseTemplates :: Handle -> IO [(String,String)]
 parseTemplates handle = do
     e <- hIsEOF handle
     if (e) 
         then return []
-        else liftM2 (:) (parseTemplate handle) (parseTemplates handle)
+        else do
+               t  <- parseTemplate handle
+               ts <- parseTemplates handle
+               return $ (maybeToList t) ++ ts 
 
-parseTemplate :: Handle -> IO (Maybe (String,StringTemplate String))                              
+parseTemplate :: Handle -> IO (Maybe (String, String))                              
 parseTemplate handle = do
     ls <- parseLines handle
     let (name,t) = break (==  '=') $ head ls 
@@ -134,7 +146,7 @@ parseTemplate handle = do
         then return Nothing   
         else do
             let template = intercalate "\r\n" ((tail t): (tail ls)) 
-            return $ Just (filter isAlphaNum name,newSTMP template)
+            return $ Just (filter isAlphaNum name,template)
 
 parseLines :: Handle -> IO [String]                                    
 parseLines handle = do
@@ -149,9 +161,9 @@ parseLines handle = do
 {- Template checker, printing info about params-}
 templateList :: IO ()
 templateList = do 
-    ts <- fmap concat $ sequence (map getTemplates templateFiles)         
+    ts <- fmap concat $ sequence (map getTemplates templatesFilesPath)         
     let tsnames = map fst ts
-    let tsgroup = groupStringTemplates ts
+    let tsgroup =  groupStringTemplates $ fmap (\(n,v) -> (n,newSTMP v)) ts
     sequence_ $ map (printTemplateData tsgroup) tsnames
                 
 printTemplateData :: STGroup String -> String -> IO ()

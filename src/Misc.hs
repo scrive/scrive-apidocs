@@ -640,3 +640,18 @@ joinB _ = False
 mapJust :: (a -> Maybe b) -> [a] -> [b]
 --mapJust = map fromJust . filter isJust . map
 mapJust f ls = [l | Just l <- map f ls]
+
+onFst ::  (a -> c) -> (a,b) -> (c,b)
+onFst f (a,b) = (f a,b)
+
+onSnd :: (b -> c) -> (a,b) -> (a,c)
+onSnd f (a,b) = (a, f b)
+
+mapFst::(a -> c) -> [(a,b)] -> [(c,b)]
+mapFst f = map (onFst f)
+
+mapSnd::(b -> c)  -> [(a,b)] -> [(a,c)]
+mapSnd f = map (onSnd f)
+
+propagateFst :: (a,[b]) -> [(a,b)]
+propagateFst (a,bs) = for bs (\b -> (a,b))

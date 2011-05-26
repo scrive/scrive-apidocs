@@ -28,7 +28,7 @@ import Routing
 import User.UserControl
 import qualified Amazon as AWS
 import qualified AppLogger as Log
-import Templates.TemplatesLoader
+import Templates.Templates
 
 import Codec.Text.IConv
 import Control.Applicative
@@ -1052,8 +1052,8 @@ handleFileGet fileid' _title = do
    Get multiple post/get params and return them in an array
  -}
 getAndConcat :: String -> Kontra [BS.ByteString]
-getAndConcat field = do
-  values <- getDataFnM $ lookInputList field
+getAndConcat fname = do
+  values <- getDataFnM $ lookInputList fname
   return $ map concatChunks values
 
 makePlacements :: [BS.ByteString]
@@ -1388,10 +1388,10 @@ showContractsList =
 
 showTemplatesList :: Kontra (Either KontraLink String)
 showTemplatesList = 
-  let getTemplates user = do
+  let userTemplates user = do
         mydocuments <- query $ GetDocumentsByUser user
         return $ filter isTemplate mydocuments in
-  showItemList' pageTemplatesList getTemplates docSortSearchPage
+  showItemList' pageTemplatesList userTemplates docSortSearchPage
 
 showOfferList :: Kontra (Either KontraLink String)
 showOfferList = checkUserTOSGet $ do

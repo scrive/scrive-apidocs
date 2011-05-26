@@ -592,7 +592,7 @@ pageStats=
     </div>
 ####
 backtoadminmainlink=
-    <a href="$adminlink$">Go back to main admin page</a>
+    <a href="$adminlink$">$_goback()$Go back to main admin page</a>
     <br/><br/>
 ####
 servicesAdmin=

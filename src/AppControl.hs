@@ -256,8 +256,6 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "services" $ hGet $ Administration.showServicesPage
      , dir "adminonly" $ dir "services" $ param "create" $ hPost $ Administration.handleCreateService
      
-     , dir "adminonly" $ dir "fix" $  hGet  $ DocControl.showDocumentsToFix 
-     , dir "adminonly" $ dir "fix" $  hPost $ DocControl.handleFixDocument
      -- a temporary service to help migration
 
      , dir "adminonly" $ dir "migrate0" $ hGet $ Administration.handleMigrate0

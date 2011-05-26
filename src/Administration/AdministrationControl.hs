@@ -28,6 +28,7 @@ module Administration.AdministrationControl(
           , handleMigrate0
           , handleCreateService
           , handleStatistics
+          , handleGeneratePOTFiles
           ) where
 import Control.Monad.State
 import Data.Functor
@@ -63,6 +64,7 @@ import API.Service.ServiceState
 import Data.Monoid
 import qualified Data.IntMap as IntMap
 import Templates.Templates
+import Templates.TextTemplates
 
 eitherFlash :: ServerPartT (StateT Context IO) (Either String b)
             -> ServerPartT (StateT Context IO) b
@@ -646,4 +648,7 @@ handleStatistics =
       fieldsFromStats users documents
     renderFromBody TopEmpty kontrakcja $ cdata content
     
-  
+handleGeneratePOTFiles :: Kontra KontraLink
+handleGeneratePOTFiles = do
+    liftIO $ generatePOTFiles
+    return LinkMain
