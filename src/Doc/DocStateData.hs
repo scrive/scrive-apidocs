@@ -308,11 +308,27 @@ data SignatoryLink7 = SignatoryLink7
     }    
     deriving (Eq, Ord, Typeable)
 
+data SignatoryLink8 = SignatoryLink8 
+    { signatorylinkid8          :: SignatoryLinkID     -- ^ a random number id, unique in th escope of a document only
+    , signatorydetails8         :: SignatoryDetails    -- ^ details of this person as filled in invitation
+    , signatorymagichash8       :: MagicHash           -- ^ authentication code
+    , maybesignatory8           :: Maybe UserID        -- ^ if this document has been saved to an account, that is the user id
+    , maybesigninfo8            :: Maybe SignInfo      -- ^ when a person has signed this document
+    , maybeseeninfo8            :: Maybe SignInfo      -- ^ when a person has first seen this document
+    , maybereadinvite8          :: Maybe MinutesTime   -- ^ when we receive confirmation that a user has read 
+    , invitationdeliverystatus8 :: MailsDeliveryStatus -- ^ status of email delivery
+    , signatorysignatureinfo8   :: Maybe SignatureInfo -- ^ info about what fields have been filled for this person
+    , signatoryroles8           :: [SignatoryRole]
+    , signatorylinkdeleted8     :: Bool
+    }    
+    deriving (Eq, Ord, Typeable)
+
 data SignatoryLink = SignatoryLink 
     { signatorylinkid          :: SignatoryLinkID     -- ^ a random number id, unique in th escope of a document only
     , signatorydetails         :: SignatoryDetails    -- ^ details of this person as filled in invitation
     , signatorymagichash       :: MagicHash           -- ^ authentication code
     , maybesignatory           :: Maybe UserID        -- ^ if this document has been saved to an account, that is the user id
+    , maybesupervisor          :: Maybe UserID        -- ^ if this document has been saved to an account with a supervisor, this is the userid
     , maybesigninfo            :: Maybe SignInfo      -- ^ when a person has signed this document
     , maybeseeninfo            :: Maybe SignInfo      -- ^ when a person has first seen this document
     , maybereadinvite          :: Maybe MinutesTime   -- ^ when we receive confirmation that a user has read 
@@ -1239,9 +1255,13 @@ $(deriveSerialize ''SignatoryLink7)
 instance Version SignatoryLink7 where
     mode = extension 7 (Proxy :: Proxy SignatoryLink6)
 
+$(deriveSerialize ''SignatoryLink8)
+instance Version SignatoryLink8 where
+    mode = extension 8 (Proxy :: Proxy SignatoryLink7)
+
 $(deriveSerialize ''SignatoryLink)
 instance Version SignatoryLink where
-    mode = extension 8 (Proxy :: Proxy SignatoryLink7)
+    mode = extension 9 (Proxy :: Proxy SignatoryLink8)
 
 instance Migrate SignatoryDetails0 SignatoryDetails1 where
     migrate (SignatoryDetails0
@@ -1526,7 +1546,7 @@ instance Migrate SignatoryLink6 SignatoryLink7 where
                 , signatoryroles7            = [SignatoryPartner]
                 }
 
-instance Migrate SignatoryLink7 SignatoryLink where
+instance Migrate SignatoryLink7 SignatoryLink8 where
     migrate (SignatoryLink7 
              { signatorylinkid7
              , signatorydetails7
@@ -1538,18 +1558,46 @@ instance Migrate SignatoryLink7 SignatoryLink where
              , signatorysignatureinfo7
              , signatorylinkdeleted7
              , signatoryroles7
+             }) = SignatoryLink8
+                { signatorylinkid8           = signatorylinkid7
+                , signatorydetails8          = signatorydetails7
+                , signatorymagichash8        = signatorymagichash7
+                , maybesignatory8            = maybesignatory7
+                , maybesigninfo8             = maybesigninfo7
+                , maybeseeninfo8             = maybeseeninfo7
+                , maybereadinvite8           = Nothing
+                , invitationdeliverystatus8  = invitationdeliverystatus7
+                , signatorysignatureinfo8    = signatorysignatureinfo7
+                , signatorylinkdeleted8      = signatorylinkdeleted7
+                , signatoryroles8            = signatoryroles7
+                }
+
+instance Migrate SignatoryLink8 SignatoryLink where
+    migrate (SignatoryLink8
+             { signatorylinkid8
+             , signatorydetails8
+             , signatorymagichash8
+             , maybesignatory8
+             , maybesigninfo8
+             , maybeseeninfo8
+             , maybereadinvite8
+             , invitationdeliverystatus8
+             , signatorysignatureinfo8
+             , signatorylinkdeleted8
+             , signatoryroles8
              }) = SignatoryLink
-                { signatorylinkid           = signatorylinkid7
-                , signatorydetails          = signatorydetails7
-                , signatorymagichash        = signatorymagichash7
-                , maybesignatory            = maybesignatory7
-                , maybesigninfo             = maybesigninfo7
-                , maybeseeninfo             = maybeseeninfo7
-                , maybereadinvite           = Nothing
-                , invitationdeliverystatus  = invitationdeliverystatus7
-                , signatorysignatureinfo    = signatorysignatureinfo7
-                , signatorylinkdeleted      = signatorylinkdeleted7
-                , signatoryroles            = signatoryroles7
+                { signatorylinkid           = signatorylinkid8
+                , signatorydetails          = signatorydetails8
+                , signatorymagichash        = signatorymagichash8
+                , maybesignatory            = maybesignatory8
+                , maybesupervisor           = Nothing
+                , maybesigninfo             = maybesigninfo8
+                , maybeseeninfo             = maybeseeninfo8
+                , maybereadinvite           = maybereadinvite8
+                , invitationdeliverystatus  = invitationdeliverystatus8
+                , signatorysignatureinfo    = signatorysignatureinfo8
+                , signatorylinkdeleted      = signatorylinkdeleted8
+                , signatoryroles            = signatoryroles8
                 }
 
 $(deriveSerialize ''SignatoryLinkID)

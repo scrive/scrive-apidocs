@@ -469,7 +469,7 @@ handleAfterSigning document@Document{documentid,documenttitle} signatorylinkid =
       muser <- liftIO $ createUserBySigning ctx documenttitle fullname email company (documentid, signatorylinkid)
       case muser of
         (Just (user, actionid, magichash)) -> do
-          _ <- update $ SaveDocumentForSignedUser documentid (userid user) signatorylinkid
+          _ <- update $ SaveDocumentForSignedUser documentid (getSignatoryAccount user) signatorylinkid
           if (isContract document)
             then addModal $ modalContractSignedNoAccount document signatorylink actionid magichash
             else addModal $ modalOfferSignedNoAccount document signatorylink actionid magichash
@@ -1321,7 +1321,7 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
                         
                         -- authornote: we need to store the author info somehow!
   let Just authorsiglink = getAuthorSigLink document
-      Just authorid = maybesignatory authorsiglink
+      authoraccount = getSignatoryAccount authorsiglink
   let authordetails = (makeAuthorDetails placements fielddefs $ signatorydetails authorsiglink) { signatorysignorder = SignOrder 0 } -- author has sign order set to 0 since he is 'the host' of the document
                         
   let isauthorsig = authorrole == "signatory"
@@ -1329,7 +1329,7 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
       authordetails2 = (authordetails, if isauthorsig
                                        then [SignatoryPartner, SignatoryAuthor]
                                        else [SignatoryAuthor],
-                                       authorid)
+                                       authoraccount)
       roles2 = map guessRoles signatoriesroles
       guessRoles x | x == BS.fromString "signatory" = [SignatoryPartner]
                    | otherwise = []
@@ -1345,7 +1345,7 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
   if docfunctionality == BasicFunctionality
     then do
      --if they are switching to basic we want to lose information
-     let basicauthordetails = ((removeFieldsAndPlacements authordetails), [SignatoryPartner, SignatoryAuthor], authorid)
+     let basicauthordetails = ((removeFieldsAndPlacements authordetails), [SignatoryPartner, SignatoryAuthor], authoraccount)
          basicsignatories = zip 
                              (take 1 (map (replaceSignOrder (SignOrder 1) . removeFieldsAndPlacements) signatories)) (repeat [SignatoryPartner])
      update $ UpdateDocument ctxtime documentid docname

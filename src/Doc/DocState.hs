@@ -6,6 +6,8 @@ module Doc.DocState
     , isOffer -- fromUtils
     , matchingType -- fromUtils
     , signatoryname -- fromUtils
+    , SignatoryAccount -- fromUtils
+    , getSignatoryAccount -- fromUtils
     , isMatchingSignatoryLink
     , anyInvitationUndelivered
     , undeliveredSignatoryLinks
@@ -170,7 +172,7 @@ newDocumentWithMCompany mcompany user title documenttype ctime = do
                   (signatoryDetailsFromUser user) 
                   authorRoles)
   
-  let authorlink = authorlink0 { maybesignatory = Just (userid user) }
+  let authorlink = copySignatoryAccount user authorlink0
 
   let doc = Document
           { documentid                   = DocumentID 0
@@ -271,17 +273,17 @@ updateDocument :: MinutesTime
                -> [(SignatoryDetails,[SignatoryRole])]
                -> Maybe Int
                -> BS.ByteString
-               -> (SignatoryDetails, [SignatoryRole], UserID)
+               -> (SignatoryDetails, [SignatoryRole], SignatoryAccount)
                -> [IdentificationType]
                -> Maybe Int
                -> DocumentFunctionality
                -> Update Documents (Either String Document)
-updateDocument time documentid docname signatories daystosign invitetext (authordetails, authorroles, authorid) idtypes mcsvsigindex docfunctionality =
+updateDocument time documentid docname signatories daystosign invitetext (authordetails, authorroles, authoraccount) idtypes mcsvsigindex docfunctionality =
     modifySignableOrTemplateWithAction documentid $ \document ->  
         if documentstatus document == Preparation
          then do
              authorlink0 <- signLinkFromDetails authordetails authorroles 
-             let authorlink = authorlink0 { maybesignatory = Just authorid }
+             let authorlink = copySignatoryAccount authoraccount authorlink0
              signatorylinks <- sequence $ map (uncurry $ signLinkFromDetails) signatories
              let alllinks = authorlink : signatorylinks
                  csvupload = case (documentcsvupload document, 
@@ -302,14 +304,14 @@ updateDocument time documentid docname signatories daystosign invitetext (author
          else return $ Left "Document not in preparation"
 
 
-updateDocumentSimple::DocumentID -> (SignatoryDetails, UserID) -> [SignatoryDetails] -> Update Documents (Either String Document)
-updateDocumentSimple did (authordetails,authorid) signatories = do
+updateDocumentSimple::DocumentID -> (SignatoryDetails, SignatoryAccount) -> [SignatoryDetails] -> Update Documents (Either String Document)
+updateDocumentSimple did (authordetails,authoraccount) signatories = do
    now <- getMinuteTimeDB
    modifySignableOrTemplateWithAction did $ \document ->  
         if documentstatus document == Preparation
          then do
              authorlink0 <- signLinkFromDetails authordetails [SignatoryPartner,SignatoryAuthor]
-             let authorlink = authorlink0 { maybesignatory = Just authorid }
+             let authorlink = copySignatoryAccount authoraccount authorlink0
              signatorylinks <- sequence $ map (flip signLinkFromDetails [SignatoryPartner]) signatories
              let alllinks = authorlink : signatorylinks
              return $ Right $ document 
@@ -646,16 +648,15 @@ fileModTime fileid = do
   return $ maximum $ (MinutesTime 0 0) : (map documentmtime $ toList (documents @= fileid))
   
 
-saveDocumentForSignedUser :: DocumentID -> UserID -> SignatoryLinkID 
+saveDocumentForSignedUser :: DocumentID -> SignatoryAccount -> SignatoryLinkID 
                           -> Update Documents (Either String Document)
-saveDocumentForSignedUser documentid userid signatorylinkid1 = do
+saveDocumentForSignedUser documentid useraccount signatorylinkid1 = do
   modifySignable documentid $ \document ->
       let signeddocument = document { documentsignatorylinks = newsignatorylinks }
           newsignatorylinks = map maybesign (documentsignatorylinks document)
           maybesign x@(SignatoryLink {signatorylinkid} ) 
             | signatorylinkid == signatorylinkid1 = 
-              x { maybesignatory = Just (userid)
-                }
+              copySignatoryAccount useraccount x
           maybesign x = x
       in Right signeddocument
      
@@ -829,11 +830,10 @@ clearSignInfofromDoc :: Document -> Update Documents Document
 clearSignInfofromDoc doc = do
   let signatoriesDetails = map (\x -> (signatorydetails x, signatoryroles x)) $ documentsignatorylinks doc
       Just asl = getAuthorSigLink doc
-      Just authorid = maybesignatory asl
   newSignLinks <- sequence $ map (uncurry $ signLinkFromDetails) signatoriesDetails
   let Just authorsiglink = find siglinkIsAuthor newSignLinks
       othersiglinks = filter (not . siglinkIsAuthor) newSignLinks
-      newsiglinks = authorsiglink { maybesignatory = Just authorid } : othersiglinks
+      newsiglinks = copySignatoryAccount asl authorsiglink : othersiglinks
   return doc {documentstatus = Preparation,
               documenttimeouttime = Nothing,
               documentsignatorylinks = newsiglinks
@@ -866,6 +866,7 @@ signLinkFromDetails details roles = do
                      , signatorydetails = details
                      , signatorymagichash = magichash
                      , maybesignatory = Nothing
+                     , maybesupervisor = Nothing
                      , maybesigninfo  = Nothing
                      , maybeseeninfo  = Nothing
                      , maybereadinvite = Nothing
@@ -959,7 +960,7 @@ replaceSignatoryUser siglink user =
                        (userpersonalnumber  $ userinfo user)
                        (usercompanynumber   $ userinfo user)
                        [] in
-  newsl { maybesignatory = fmap (const $ userid user) (maybesignatory newsl) }
+  copySignatoryAccount user newsl
 
 {- |
     Pumps data into a signatory link
