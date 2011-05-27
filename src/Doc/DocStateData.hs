@@ -14,6 +14,7 @@ module Doc.DocStateData
     , DocumentStatus(..)
     , DocumentTag(..)
     , DocumentType(..)
+    , DocumentRecordStatus(..)
     , Documents
     , FieldDefinition(..)
     , FieldPlacement(..)
@@ -411,6 +412,9 @@ data DocumentStatus = Preparation
                     
 data DocumentType = Contract | ContractTemplate | Offer | OfferTemplate | Attachment | AttachmentTemplate
     deriving (Eq, Ord, Typeable)
+
+data DocumentRecordStatus = LiveDocument | QuarantinedDocument | DeletedDocument
+    deriving (Eq, Ord, Typeable, Show)
 
 data DocumentFunctionality = BasicFunctionality | AdvancedFunctionality
     deriving (Eq, Ord, Typeable)
@@ -940,6 +944,35 @@ data Document23 = Document23
     , documentattachments23            :: [DocumentID]
     } deriving Typeable
 
+
+data Document24 = Document24
+    { documentid24                     :: DocumentID
+    , documenttitle24                  :: BS.ByteString
+    , documentsignatorylinks24         :: [SignatoryLink]
+    , documentfiles24                  :: [File]
+    , documentsealedfiles24            :: [File]
+    , documentstatus24                 :: DocumentStatus
+    , documenttype24                   :: DocumentType
+    , documentfunctionality24          :: DocumentFunctionality
+    , documentctime24                  :: MinutesTime
+    , documentmtime24                  :: MinutesTime
+    , documentdaystosign24             :: Maybe Int    
+    , documenttimeouttime24            :: Maybe TimeoutTime
+    , documentinvitetime24             :: Maybe SignInfo
+    , documentlog24                    :: [DocumentLogEntry]      -- to be made into plain text
+    , documentinvitetext24             :: BS.ByteString
+    , documenttrustweaverreference24   :: Maybe BS.ByteString
+    , documentallowedidtypes24         :: [IdentificationType]
+    , documentcsvupload24              :: Maybe CSVUpload
+    , documentcancelationreason24      :: Maybe CancelationReason -- When a document is cancelled, there are two (for the moment) possible explanations. Manually cancelled by the author and automatically cancelled by the eleg service because the wrong person was signing.
+    , documentsharing24                :: DocumentSharing
+    , documentrejectioninfo24          :: Maybe (MinutesTime, SignatoryLinkID, BS.ByteString)
+    , documenttags24                   :: [DocumentTag]
+    , documentservice24                :: Maybe ServiceID
+    , documentattachments24            :: [DocumentID]
+    , documentoriginalcompany24        :: Maybe CompanyID
+    } deriving Typeable
+
 data Document = Document
     { documentid                     :: DocumentID
     , documenttitle                  :: BS.ByteString
@@ -966,6 +999,8 @@ data Document = Document
     , documentservice                :: Maybe ServiceID
     , documentattachments            :: [DocumentID]
     , documentoriginalcompany        :: Maybe CompanyID
+    , documentrecordstatus           :: DocumentRecordStatus
+    , documentquarantineexpiry       :: Maybe MinutesTime  -- the time when any quarantine will end (included as a separate field to record status for easy indexing)
     }
 
 data CancelationReason =  ManualCancel
@@ -1679,9 +1714,13 @@ $(deriveSerialize ''Document23)
 instance Version Document23 where
     mode = extension 23 (Proxy :: Proxy Document22)
 
+$(deriveSerialize ''Document24)
+instance Version Document24 where
+    mode = extension 24 (Proxy :: Proxy Document23)
+
 $(deriveSerialize ''Document)
 instance Version Document where
-    mode = extension 24 (Proxy :: Proxy Document23)
+    mode = extension 25 (Proxy :: Proxy Document24)
     
 instance Migrate DocumentHistoryEntry0 DocumentHistoryEntry where
         migrate (DocumentHistoryCreated0 { dochisttime0 }) = 
@@ -2423,7 +2462,7 @@ instance Migrate Document22 Document23 where
                 }
 
 
-instance Migrate Document23 Document where
+instance Migrate Document23 Document24 where
     migrate (Document23
              { documentid23
              , documenttitle23
@@ -2449,32 +2488,89 @@ instance Migrate Document23 Document where
              , documenttags23
              , documentservice23
              , documentattachments23
+             }) = Document24
+                { documentid24                     = documentid23
+                , documenttitle24                  = documenttitle23
+                , documentsignatorylinks24         = documentsignatorylinks23
+                , documentfiles24                  = documentfiles23
+                , documentsealedfiles24            = documentsealedfiles23
+                , documentstatus24                 = documentstatus23
+                , documenttype24                   = documenttype23
+                , documentfunctionality24          = documentfunctionality23
+                , documentctime24                  = documentctime23
+                , documentmtime24                  = documentmtime23
+                , documentdaystosign24             = documentdaystosign23
+                , documenttimeouttime24            = documenttimeouttime23
+                , documentinvitetime24             = documentinvitetime23
+                , documentlog24                    = documentlog23
+                , documentinvitetext24             = documentinvitetext23
+                , documenttrustweaverreference24   = documenttrustweaverreference23
+                , documentallowedidtypes24         = documentallowedidtypes23
+                , documentcsvupload24              = documentcsvupload23
+                , documentcancelationreason24      = documentcancelationreason23
+                , documentsharing24                = documentsharing23
+                , documentrejectioninfo24          = documentrejectioninfo23
+                , documenttags24                   = documenttags23  
+                , documentservice24                = documentservice23
+                , documentattachments24            = documentattachments23
+                , documentoriginalcompany24        = Nothing
+                }
+
+instance Migrate Document24 Document where
+    migrate (Document24
+             { documentid24
+             , documenttitle24
+             , documentsignatorylinks24
+             , documentfiles24
+             , documentsealedfiles24
+             , documentstatus24
+             , documenttype24
+             , documentfunctionality24
+             , documentctime24
+             , documentmtime24
+             , documentdaystosign24
+             , documenttimeouttime24
+             , documentinvitetime24
+             , documentlog24
+             , documentinvitetext24
+             , documenttrustweaverreference24
+             , documentallowedidtypes24
+             , documentcsvupload24
+             , documentcancelationreason24
+             , documentsharing24
+             , documentrejectioninfo24
+             , documenttags24
+             , documentservice24
+             , documentattachments24
+             , documentoriginalcompany24
              }) = Document
-                { documentid                     = documentid23
-                , documenttitle                  = documenttitle23
-                , documentsignatorylinks         = documentsignatorylinks23
-                , documentfiles                  = documentfiles23
-                , documentsealedfiles            = documentsealedfiles23
-                , documentstatus                 = documentstatus23
-                , documenttype                   = documenttype23
-                , documentfunctionality          = documentfunctionality23
-                , documentctime                  = documentctime23
-                , documentmtime                  = documentmtime23
-                , documentdaystosign             = documentdaystosign23
-                , documenttimeouttime            = documenttimeouttime23
-                , documentinvitetime             = documentinvitetime23
-                , documentlog                    = documentlog23
-                , documentinvitetext             = documentinvitetext23
-                , documenttrustweaverreference   = documenttrustweaverreference23
-                , documentallowedidtypes         = documentallowedidtypes23
-                , documentcsvupload              = documentcsvupload23
-                , documentcancelationreason      = documentcancelationreason23
-                , documentsharing                = documentsharing23
-                , documentrejectioninfo          = documentrejectioninfo23
-                , documenttags                   = documenttags23  
-                , documentservice                = documentservice23
-                , documentattachments            = documentattachments23
-                , documentoriginalcompany        = Nothing
+                { documentid                     = documentid24
+                , documenttitle                  = documenttitle24
+                , documentsignatorylinks         = documentsignatorylinks24
+                , documentfiles                  = documentfiles24
+                , documentsealedfiles            = documentsealedfiles24
+                , documentstatus                 = documentstatus24
+                , documenttype                   = documenttype24
+                , documentfunctionality          = documentfunctionality24
+                , documentctime                  = documentctime24
+                , documentmtime                  = documentmtime24
+                , documentdaystosign             = documentdaystosign24
+                , documenttimeouttime            = documenttimeouttime24
+                , documentinvitetime             = documentinvitetime24
+                , documentlog                    = documentlog24
+                , documentinvitetext             = documentinvitetext24
+                , documenttrustweaverreference   = documenttrustweaverreference24
+                , documentallowedidtypes         = documentallowedidtypes24
+                , documentcsvupload              = documentcsvupload24
+                , documentcancelationreason      = documentcancelationreason24
+                , documentsharing                = documentsharing24
+                , documentrejectioninfo          = documentrejectioninfo24
+                , documenttags                   = documenttags24
+                , documentservice                = documentservice24
+                , documentattachments            = documentattachments24
+                , documentoriginalcompany        = documentoriginalcompany24
+                , documentrecordstatus           = LiveDocument
+                , documentquarantineexpiry       = Nothing
                 }
 
 
@@ -2483,6 +2579,9 @@ instance Version DocumentStatus where
 
 $(deriveSerialize ''DocumentType)
 instance Version DocumentType where
+
+$(deriveSerialize ''DocumentRecordStatus)
+instance Version DocumentRecordStatus where
 
 $(deriveSerialize ''DocumentFunctionality)
 instance Version DocumentFunctionality where
@@ -2587,6 +2686,7 @@ instance Indexable Document where
                                          Just time -> [time]
                                          Nothing -> []) :: [TimeoutTime])
                       , ixFun (\x -> [documenttype x] :: [DocumentType])
+                      , ixFun (\x -> [documentrecordstatus x] :: [DocumentRecordStatus])
                       , ixFun (\x -> documenttags x :: [DocumentTag])
                       , ixFun (\x -> [documentservice x] :: [Maybe ServiceID])
                       , ixFun (\x -> [documentoriginalcompany x] :: [Maybe CompanyID])
