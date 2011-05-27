@@ -829,7 +829,7 @@ handleMailCommand (JSObject json) content from _to = runErrorT $ do
   doc <- lift $ update $ NewDocument user title doctype ctxtime
   lift $ DocControl.handleDocumentUpload (documentid doc) content title
   _ <- ErrorT $ update $ UpdateDocument ctxtime (documentid doc) title 
-    signatories Nothing BS.empty (userDetails, [SignatoryPartner, SignatoryAuthor], userid user) [EmailIdentification] Nothing AdvancedFunctionality
+    signatories Nothing BS.empty (userDetails, [SignatoryPartner, SignatoryAuthor], getSignatoryAccount user) [EmailIdentification] Nothing AdvancedFunctionality
   
   newdocument <- ErrorT $ update $ AuthorSendDocument (documentid doc) ctxtime ctxipnumber Nothing
   lift $ DocControl.markDocumentAuthorReadAndSeen newdocument ctxtime ctxipnumber
