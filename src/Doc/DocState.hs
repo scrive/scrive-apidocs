@@ -704,24 +704,42 @@ getDocumentsByCompanyAndTags  mservice company doctags = queryDocs $ \documents 
 mapWhen :: (a -> Bool) -> (a -> a) -> [a] -> [a]
 mapWhen p f ls = map (\i -> if p i then f i else i) ls
 
-deleteForUserID :: UserID -> BS.ByteString -> Document -> Document
-deleteForUserID userid useremail document = 
-  document { documentsignatorylinks = mapWhen (isSigLinkForUserInfo userid useremail) deleteForUserID' (documentsignatorylinks document) }
-    where deleteForUserID' link = link { signatorylinkdeleted = True }
-
 archiveDocuments :: UserID -> BS.ByteString -> [DocumentID] -> Update Documents ()
 archiveDocuments userid useremail docidlist = do
   -- FIXME: can use a fold here
-  forM_ docidlist $ \docid -> 
-     modifySignableOrTemplate docid $ \doc -> Right $ deleteForUserID userid useremail doc
+  forM_ docidlist $ \docid -> deleteDocumentSignatoryLinks docid isSignatoryOrSupervisor
+  where isSignatoryOrSupervisor :: SignatoryLink -> Bool
+        isSignatoryOrSupervisor sl = isSigLinkForUserInfo userid useremail sl || (Just userid == maybesupervisor sl)
 
 archiveDocumentForAll :: DocumentID -> Update Documents (Either String Document)
-archiveDocumentForAll docid = do
-  -- FIXME: can use a fold here
-    modifySignableOrTemplate docid $ \doc -> Right $
-        doc {documentsignatorylinks = for (documentsignatorylinks doc) (\l -> l { signatorylinkdeleted = True })}
+archiveDocumentForAll docid = deleteDocumentSignatoryLinks docid (const True)
 
-
+deleteDocumentSignatoryLinks :: DocumentID -> (SignatoryLink -> Bool) -> Update Documents (Either String Document)
+deleteDocumentSignatoryLinks docid p = do
+  now <- getMinuteTimeDB
+  modifySignableOrTemplate docid $ \doc ->
+    if (documentstatus doc) `elem` [Pending, AwaitingAuthor]
+      then Left "Unable to delete siglinks of live docs"
+      else Right . deleteDocumentIfRequired now $ deleteSigLinks doc
+  where
+    deleteSigLinks doc@Document{documentsignatorylinks} =
+      let deleteSigLink sl = sl { signatorylinkdeleted = True }
+          newsiglinks = mapWhen p deleteSigLink $ documentsignatorylinks in
+      doc { documentsignatorylinks = newsiglinks }
+    
+    deleteDocumentIfRequired now doc@Document{documentstatus, documentsignatorylinks} =
+      case (isForDelete, isInvisible) of
+        (True, _) -> doc { documentrecordstatus = DeletedDocument }
+        (False, True) -> doc { documentrecordstatus = QuarantinedDocument, documentquarantineexpiry = Just quarantineExpiry }
+        _ -> doc
+      where
+        quarantineExpiry = addMonths 3 now
+        isForDelete = documentstatus==Preparation && isInvisible || isOrphaned
+        isInvisible = all isInvisibleSigLink documentsignatorylinks
+        isOrphaned = all isOrphanedSigLink documentsignatorylinks
+        isInvisibleSigLink sl = isDeletedSigLink sl || isOrphanedSigLink sl
+        isDeletedSigLink SignatoryLink{signatorylinkdeleted} = signatorylinkdeleted
+        isOrphanedSigLink SignatoryLink{maybesignatory,maybesupervisor} = isNothing maybesignatory && isNothing maybesupervisor
 
 shareDocuments :: User -> [DocumentID] -> Update Documents (Either String [Document])
 shareDocuments user docidlist = do
