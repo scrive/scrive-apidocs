@@ -654,6 +654,16 @@ handleQuarantineExtend = onlySuperUser $ do
   _ <- update $ ExtendDocumentQuarantine (DocumentID docid)
   return LinkAdminQuarantine
 
+{- |
+    Another temporary migration thing! Em
+-}
+handleMigrateForDeletion :: Kontra Response
+handleMigrateForDeletion = onlySuperUser $ do
+  users <- query $ GetAllUsers
+  _ <- update $ MigrateForDeletion users
+  handleShowQuarantine
+  
+
 fieldsFromStats users documents = do
     let userStats = calculateStatsFromUsers users
         documentStats = calculateStatsFromDocuments documents

@@ -261,6 +261,7 @@ handleRoutes = msum [
      -- a temporary service to help migration
 
      , dir "adminonly" $ dir "migrate0" $ hGet $ Administration.handleMigrate0
+     , dir "adminonly" $ dir "deletemigrate" $ hGet $ Administration.handleMigrateForDeletion
 --     , dir "adminonly" $ dir "migrateauthor" $ hGet $ DocControl.migrateDocSigLinks
      , dir "services" $ hGet $ handleShowServiceList
      , dir "services" $ hGet $ handleShowService

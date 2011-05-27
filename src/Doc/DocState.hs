@@ -72,6 +72,7 @@ module Doc.DocState
 --    , MigrateToSigLinks(..)
     , ExtendDocumentQuarantine(..)
     , ReviveQuarantinedDocument(..)
+    , MigrateForDeletion(..)
     )
 where
 
@@ -733,20 +734,21 @@ deleteDocumentSignatoryLinks docid p = do
       let deleteSigLink sl = sl { signatorylinkdeleted = True }
           newsiglinks = mapWhen p deleteSigLink $ documentsignatorylinks in
       doc { documentsignatorylinks = newsiglinks }
-    
-    deleteDocumentIfRequired now doc@Document{documentstatus, documentsignatorylinks} =
-      case (isForDelete, isInvisible) of
-        (True, _) -> doc { documentrecordstatus = DeletedDocument }
-        (False, True) -> doc { documentrecordstatus = QuarantinedDocument, documentquarantineexpiry = Just quarantineExpiry }
-        _ -> doc
-      where
-        quarantineExpiry = addMonths 3 now
-        isForDelete = documentstatus==Preparation && isInvisible || isOrphaned
-        isInvisible = all isInvisibleSigLink documentsignatorylinks
-        isOrphaned = all isOrphanedSigLink documentsignatorylinks
-        isInvisibleSigLink sl = isDeletedSigLink sl || isOrphanedSigLink sl
-        isDeletedSigLink SignatoryLink{signatorylinkdeleted} = signatorylinkdeleted
-        isOrphanedSigLink SignatoryLink{maybesignatory,maybesupervisor} = isNothing maybesignatory && isNothing maybesupervisor
+
+deleteDocumentIfRequired :: MinutesTime -> Document -> Document    
+deleteDocumentIfRequired now doc@Document{documentstatus, documentsignatorylinks} =
+  case (isForDelete, isInvisible) of
+    (True, _) -> doc { documentrecordstatus = DeletedDocument }
+    (False, True) -> doc { documentrecordstatus = QuarantinedDocument, documentquarantineexpiry = Just quarantineExpiry }
+    _ -> doc
+  where
+    quarantineExpiry = addMonths 3 now
+    isForDelete = documentstatus==Preparation && isInvisible || isOrphaned
+    isInvisible = all isInvisibleSigLink documentsignatorylinks
+    isOrphaned = all isOrphanedSigLink documentsignatorylinks
+    isInvisibleSigLink sl = isDeletedSigLink sl || isOrphanedSigLink sl
+    isDeletedSigLink SignatoryLink{signatorylinkdeleted} = signatorylinkdeleted
+    isOrphanedSigLink SignatoryLink{maybesignatory,maybesupervisor} = isNothing maybesignatory && isNothing maybesupervisor
 
 extendDocumentQuarantine :: DocumentID -> Update Documents (Either String Document)
 extendDocumentQuarantine docid = do
@@ -1029,6 +1031,37 @@ templateFromDocument docid = modifySignable docid $ \doc ->
                                     then ContractTemplate
                                     else documenttype doc
         }
+
+migrateForDeletion :: [User] -> Update Documents ()
+migrateForDeletion users = do
+  mapM_ populateSupervisorOnUserSigLinks users
+  deleteInvisibleDocs
+  where
+    {- |
+        This populates the maybesupervisor on each of the signatory links for
+        the given user.
+    -}
+    populateSupervisorOnUserSigLinks :: User -> Update Documents ()
+    populateSupervisorOnUserSigLinks user@User{userid} = do
+      docs <- ask
+      mapM_ (\doc -> modifySignableOrTemplate (documentid doc) (Right . populate)) $ toList docs
+      where
+        populate :: Document -> Document
+        populate doc@Document{ documentsignatorylinks } =
+          let newsiglinks = mapWhen (\sl -> maybesignatory sl == Just userid)
+                                    (copySignatoryAccount user)
+                                    documentsignatorylinks in
+          doc { documentsignatorylinks = newsiglinks }
+    {- |
+        This quarantines or deletes all of the docs that are current invisible.
+        This means we won't have documents hanging around.
+    -}
+    deleteInvisibleDocs :: Update Documents ()
+    deleteInvisibleDocs = do
+      docs <- ask
+      now <- getMinuteTimeDB
+      mapM_ (\doc -> modifySignableOrTemplate (documentid doc) (Right . deleteDocumentIfRequired now)) $ toList docs
+
 {-
 -- | Migrate author to the documentsignlinks so that he is not special anymore
 migrateToSigLinks :: DocumentID -> User -> Update Documents ()
@@ -1135,4 +1168,5 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'contractFromSignatoryData
                         , 'templateFromDocument
 --                        , 'migrateToSigLinks
+                        , 'migrateForDeletion
                         ])
