@@ -17,6 +17,7 @@ module Doc.DocStateUtils (
       insertNewDocument
     , newFromDocument  
     , queryDocs
+    , queryQuarantinedDocs
     , modifySignable
     , modifySignableWithAction 
     , modifySignableOrTemplate
@@ -44,6 +45,12 @@ queryDocs queryFunc = do
   docs <- ask
   let livedocs = docs @= LiveDocument
   return $ queryFunc livedocs
+
+queryQuarantinedDocs :: (Documents -> a) -> Query Documents a
+queryQuarantinedDocs queryFunc = do
+  docs <- ask
+  let quarantineddocs = docs @= QuarantinedDocument
+  return $ queryFunc quarantineddocs
 
 -- DB UPDATE UTILS
 insertNewDocument :: Document ->  Update Documents Document
@@ -95,7 +102,7 @@ modifyDocumentWithAction :: (Document -> Bool) -> DocumentID
                
 modifyDocumentWithAction condition docid action = do
   documents <- ask
-  case getOne (documents @= LiveDocument @= docid) of
+  case getOne (documents @+ [LiveDocument, QuarantinedDocument] @= docid) of
     Nothing -> return $ Left "no such document"
     Just document -> 
       if (condition document)
