@@ -30,6 +30,7 @@ module Administration.AdministrationControl(
           , handleStatistics
           , handleShowQuarantine
           , handleQuarantinePost
+          , handleMigrateForDeletion
           ) where
 import Control.Monad.State
 import Data.Functor
@@ -656,6 +657,16 @@ handleQuarantineExtend = onlySuperUser $ do
   docid <- getCriticalField asValidDocID "docid"
   _ <- update $ ExtendDocumentQuarantine (DocumentID docid)
   return LinkAdminQuarantine
+
+{- |
+    Another temporary migration thing! Em
+-}
+handleMigrateForDeletion :: Kontra Response
+handleMigrateForDeletion = onlySuperUser $ do
+  users <- query $ GetAllUsers
+  _ <- update $ MigrateForDeletion users
+  handleShowQuarantine
+  
 
 fieldsFromStats users documents = do
     let userStats = calculateStatsFromUsers users
