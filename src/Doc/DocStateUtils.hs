@@ -16,6 +16,7 @@ module Doc.DocStateUtils (
     -- DB updates
       insertNewDocument
     , newFromDocument  
+    , queryDocs
     , modifySignable
     , modifySignableWithAction 
     , modifySignableOrTemplate
@@ -34,6 +35,15 @@ import Happstack.Data.IxSet as IxSet
 import Happstack.State
 import MinutesTime
 import Misc
+
+{- |
+    Cleans out all the deleted and quarantined documents
+-}
+queryDocs :: (Documents -> a) -> Query Documents a
+queryDocs queryFunc = do
+  docs <- ask
+  let livedocs = docs @= LiveDocument
+  return $ queryFunc livedocs
 
 -- DB UPDATE UTILS
 insertNewDocument :: Document ->  Update Documents Document
@@ -85,7 +95,7 @@ modifyDocumentWithAction :: (Document -> Bool) -> DocumentID
                
 modifyDocumentWithAction condition docid action = do
   documents <- ask
-  case getOne (documents @= docid) of
+  case getOne (documents @= LiveDocument @= docid) of
     Nothing -> return $ Left "no such document"
     Just document -> 
       if (condition document)

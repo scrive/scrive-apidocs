@@ -93,22 +93,19 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 
 getDocuments:: (Maybe ServiceID) -> Query Documents [Document]
-getDocuments mservice = do
-    documents <- ask
-    return $ toList (documents @= mservice)
+getDocuments mservice = queryDocs $ \documents ->
+    toList $ documents @= mservice
 
 getDocumentByDocumentID :: DocumentID -> Query Documents (Maybe Document)
-getDocumentByDocumentID documentid = do
-  documents <- ask
-  return $ getOne (documents @= documentid)
+getDocumentByDocumentID documentid = queryDocs $ \documents ->
+    getOne $ documents @= documentid
 
 getDocumentsByAuthor :: UserID -> Query Documents [Document]
-getDocumentsByAuthor userid = do
-    documents <- ask
-    return $ [doc | doc <- toList documents
-                  , isUserIDAuthor doc userid
-                  , not $ isDeletedForUserID doc userid
-                  ]
+getDocumentsByAuthor userid = queryDocs $ \documents ->
+    [doc | doc <- toList documents
+         , isUserIDAuthor doc userid
+         , not $ isDeletedForUserID doc userid
+         ]
 
 getDocumentsByUser :: User -> Query Documents [Document]
 getDocumentsByUser user = do
@@ -131,17 +128,15 @@ signatoryCanView user doc =
     in isnotpreparation && hasLink && signatoryActivated
 
 getDocumentsBySignatory :: User -> Query Documents [Document]
-getDocumentsBySignatory user = do
-    documents <- ask
-    return $ filter (signatoryCanView user) (toList $ documents @= userservice user) 
+getDocumentsBySignatory user = queryDocs $ \documents ->
+    filter (signatoryCanView user) (toList $ documents @= userservice user) 
        
 
 getTimeoutedButPendingDocuments :: MinutesTime -> Query Documents [Document]
-getTimeoutedButPendingDocuments now = do
-  docs <-  ask
-  return $ (flip filter) (toList docs) $ \doc -> case (documenttimeouttime doc) of
-                                                  Just timeout -> (documentstatus doc) == Pending &&(unTimeoutTime timeout) < now
-                                                  _ -> False           
+getTimeoutedButPendingDocuments now = queryDocs $ \docs ->
+  (flip filter) (toList docs) $ \doc -> case (documenttimeouttime doc) of
+                                            Just timeout -> (documentstatus doc) == Pending &&(unTimeoutTime timeout) < now
+                                            _ -> False           
     
 newDocumentFunctionality :: DocumentType -> User -> DocumentFunctionality
 newDocumentFunctionality documenttype user = 
@@ -200,6 +195,8 @@ newDocumentWithMCompany mcompany user title documenttype ctime = do
           , documentservice              = userservice user
           , documentattachments          = []
           , documentoriginalcompany      = mcompany `mplus` usercompany user
+          , documentrecordstatus         = LiveDocument
+          , documentquarantineexpiry     = Nothing
           } `appendHistory` [DocumentHistoryCreated ctime]
 
   insertNewDocument doc
@@ -233,11 +230,10 @@ fileMovedTo fid fstorage = do
 
 getDocumentByFileID :: FileID 
                        -> Query Documents (Either String Document)
-getDocumentByFileID fileid' = do
-  documents <- ask
+getDocumentByFileID fileid' = queryDocs $ \documents ->
   case getOne (documents @= fileid') of
-    Nothing -> return $ Left "no such file id"
-    Just document -> return $ Right document
+    Nothing -> Left "no such file id"
+    Just document -> Right document
 
 attachFile :: DocumentID 
            -> BS.ByteString 
@@ -339,12 +335,11 @@ attachCSVUpload documentid csvupload =
 
 
 getDocumentsByDocumentID :: [DocumentID] -> Query Documents (Either String [Document])
-getDocumentsByDocumentID docids = do
-  documents <- ask
-  let relevantdocs = documents @+ docids
+getDocumentsByDocumentID docids = queryDocs $ \documents ->
+  let relevantdocs = documents @+ docids in
   if (length docids == size relevantdocs)
-    then return . Right . toList $ relevantdocs
-    else return $ Left "documents don't exist for all the given ids"
+    then Right . toList $ relevantdocs
+    else Left "documents don't exist for all the given ids"
 
 updateDocumentAttachments :: UserID
                           -> BS.ByteString
@@ -628,24 +623,22 @@ setInvitationDeliveryStatus docid siglnkid status = do
 
 
 getDocumentStats :: Query Documents DocStats
-getDocumentStats = do
-  documents <- ask
+getDocumentStats = queryDocs $ \documents ->
   let signatureCountForDoc :: Document -> Int
-      signatureCountForDoc doc = length $ filter (isJust . maybesigninfo) (documentsignatorylinks doc)
-  return DocStats 
-                  { doccount = (size documents)
-                  , signaturecount = sum $ map signatureCountForDoc (toList documents)
-                  , signaturecount1m = 0
-                  , signaturecount2m = 0
-                  , signaturecount3m = 0
-                  , signaturecount6m = 0
-                  , signaturecount12m = 0
-                  }
+      signatureCountForDoc doc = length $ filter (isJust . maybesigninfo) (documentsignatorylinks doc) in
+  DocStats 
+      { doccount = (size documents)
+      , signaturecount = sum $ map signatureCountForDoc (toList documents)
+      , signaturecount1m = 0
+      , signaturecount2m = 0
+      , signaturecount3m = 0
+      , signaturecount6m = 0
+      , signaturecount12m = 0
+      }
 
 fileModTime :: FileID -> Query Documents MinutesTime
-fileModTime fileid = do
-  documents <- ask
-  return $ maximum $ (MinutesTime 0 0) : (map documentmtime $ toList (documents @= fileid))
+fileModTime fileid = queryDocs $ \documents ->
+  maximum $ (MinutesTime 0 0) : (map documentmtime $ toList (documents @= fileid))
   
 
 saveDocumentForSignedUser :: DocumentID -> SignatoryAccount -> SignatoryLinkID 
@@ -662,10 +655,8 @@ saveDocumentForSignedUser documentid useraccount signatorylinkid1 = do
      
 
 getNumberOfDocumentsOfUser :: User -> Query Documents Int
-getNumberOfDocumentsOfUser user = do
-  documents <- ask
-  let numdoc = size (documents @= Author (userid user))
-  return numdoc
+getNumberOfDocumentsOfUser user = queryDocs $ \documents ->
+  size $ documents @= Author (userid user)
 
 getDocumentStatsByUser :: User -> MinutesTime -> Query Documents DocStats
 getDocumentStatsByUser user time = do
@@ -707,9 +698,8 @@ setDocumentTags docid doctags =
     }
 
 getDocumentsByCompanyAndTags :: (Maybe ServiceID) -> CompanyID ->  [DocumentTag] -> Query Documents ([Document])
-getDocumentsByCompanyAndTags  mservice company doctags = do
-  documents <- ask
-  return . toList $ (documents @= (Just company)  @= mservice @* doctags)
+getDocumentsByCompanyAndTags  mservice company doctags = queryDocs $ \documents ->
+  toList $ (documents @= (Just company)  @= mservice @* doctags)
   
 mapWhen :: (a -> Bool) -> (a -> a) -> [a] -> [a]
 mapWhen p f ls = map (\i -> if p i then f i else i) ls
@@ -787,14 +777,13 @@ cancelDocument docid cr time ipnumber = modifySignable docid $ \document -> do
   
 
 getFilesThatShouldBeMovedToAmazon :: Query Documents [File]
-getFilesThatShouldBeMovedToAmazon = do
-  documents <- ask
+getFilesThatShouldBeMovedToAmazon = queryDocs $ \documents ->
   let doclist = IxSet.toList documents
-  let getFiles Document{documentfiles,documentsealedfiles} = documentfiles ++ documentsealedfiles
-  let allFiles = concatMap getFiles doclist
-  let getID file@File{ filestorage = FileStorageMemory _ } = [file]
-      getID _ = []
-  return (concatMap getID allFiles)
+      getFiles Document{documentfiles,documentsealedfiles} = documentfiles ++ documentsealedfiles
+      allFiles = concatMap getFiles doclist
+      getID file@File{ filestorage = FileStorageMemory _ } = [file]
+      getID _ = [] in
+  concatMap getID allFiles
 
 
 {- |
@@ -898,19 +887,17 @@ errorDocument documentid errormsg =
 
 
 getUserTemplates:: UserID -> Query Documents [Document]
-getUserTemplates userid = do 
-    documents <- ask
-    let mydocuments = (documents @= Author userid )
-    return $ toList $ justTemplates mydocuments
+getUserTemplates userid = queryDocs $ \documents ->
+    let mydocuments = (documents @= Author userid ) in
+    toList $ justTemplates mydocuments
 
 {- |
     The shared templates for the given users.
 -}
 getSharedTemplates :: [UserID] -> Query Documents [Document]
-getSharedTemplates userids = do
-    documents <- ask
-    let userdocs = documents @+ (map Author userids)
-    return . filter ((== Shared) . documentsharing) . toList $ justTemplates userdocs
+getSharedTemplates userids = queryDocs $ \documents ->
+    let userdocs = documents @+ (map Author userids) in
+    filter ((== Shared) . documentsharing) . toList $ justTemplates userdocs
 
 justTemplates :: (Indexable a, Typeable a, Ord a) => IxSet a -> IxSet a
 justTemplates docs = (docs @= OfferTemplate) ||| (docs @= ContractTemplate)
