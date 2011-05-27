@@ -29,6 +29,7 @@ adminsmain=
         </tr>
         <tr>
           <td style="height:50px;width:200px"><a href="/adminonly/services"><button style="width:150px"> Services </button> </a> </td>
+          <td style="height:50px;width:200px"><a href="/adminonly/quarantine"><button style="width:150px"> Quarantine </button></a></td>
         </tr>
     </tbody></table>
 ###
@@ -510,6 +511,53 @@ statisticsPage=
           <td>$stat.users.viralInvites$ </td>
           <td>$stat.users.adminInvites$ </td>
        </tr>}$
+      </table>
+    </div>
+###
+###
+quarantinePage=
+    $backtoadminmainlink()$
+    <div>
+      <h1>Document Quarantine</h1>
+      <table>
+        <thead>
+          <td style="width:200px">Doc Name</td>
+          <td style="width:200px">Quarantine Expiry</td>
+          <td style="width:200px">Signatories</td>
+          <td style="width:200px"></td>
+          <td style="width:200px"></td>
+       </thead>
+        $documents:{doc|
+          <tr>
+            <td>$doc.name$</td>
+            <td>$doc.expiry$</td>
+            <td></td>
+            <td></td>
+            <td>
+              <form action="$linkquarantine$" method="post">
+                <input type="hidden" name="extend" value="true"/>
+                <input type="hidden" name="docid" value="$doc.docid$"/>
+                <input type="submit" value="Extend Quarantine"/>
+              </form>
+            </td>
+          </tr>
+          $doc.signatories:{sig|
+          <tr>
+            <td></td>
+            <td></td>
+            <td>$sig.email$</td>
+            <td>
+              <form action="$linkquarantine$" method="post">
+                <input type="hidden" name="revive" value="true"/>
+                <input type="hidden" name="docid" value="$doc.docid$"/>
+                <input type="hidden" name="siglinkid" value="$sig.siglinkid$"/>
+                <input type="submit" value="Revive for user"/>
+              </form>
+            </td>
+            <td></td>
+          </tr>
+          }$
+        }$
       </table>
     </div>
 ###

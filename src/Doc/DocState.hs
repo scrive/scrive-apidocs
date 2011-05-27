@@ -25,6 +25,7 @@ module Doc.DocState
     , GetDocumentStats(..)
     , GetDocumentStatsByUser(..)
     , GetDocuments(..)
+    , GetQuarantinedDocuments(..)
     , GetDocumentsByAuthor(..)
     , GetDocumentsBySignatory(..)
     , GetDocumentsByUser(..)
@@ -69,6 +70,8 @@ module Doc.DocState
     , SignableFromSharedDocumentID(..)
     , ContractFromSignatoryData(..)
 --    , MigrateToSigLinks(..)
+    , ExtendDocumentQuarantine(..)
+    , ReviveQuarantinedDocument(..)
     )
 where
 
@@ -94,6 +97,10 @@ import qualified Data.ByteString.UTF8 as BS
 
 getDocuments:: (Maybe ServiceID) -> Query Documents [Document]
 getDocuments mservice = queryDocs $ \documents ->
+    toList $ documents @= mservice
+
+getQuarantinedDocuments :: (Maybe ServiceID) -> Query Documents [Document]
+getQuarantinedDocuments mservice = queryQuarantinedDocs $ \documents ->
     toList $ documents @= mservice
 
 getDocumentByDocumentID :: DocumentID -> Query Documents (Maybe Document)
@@ -741,6 +748,21 @@ deleteDocumentSignatoryLinks docid p = do
         isDeletedSigLink SignatoryLink{signatorylinkdeleted} = signatorylinkdeleted
         isOrphanedSigLink SignatoryLink{maybesignatory,maybesupervisor} = isNothing maybesignatory && isNothing maybesupervisor
 
+extendDocumentQuarantine :: DocumentID -> Update Documents (Either String Document)
+extendDocumentQuarantine docid = do
+  modifySignableOrTemplate docid $ \doc ->
+    return $ doc { documentquarantineexpiry = fmap (addMonths 1) (documentquarantineexpiry doc) }
+
+reviveQuarantinedDocument :: DocumentID -> SignatoryLinkID -> Update Documents (Either String Document)
+reviveQuarantinedDocument docid siglinkid = do
+  modifySignableOrTemplate docid $ \doc ->
+    let newsiglinks = mapWhen (\sl -> siglinkid == signatorylinkid sl)
+                              (\sl -> sl { signatorylinkdeleted = False })
+                              (documentsignatorylinks doc) in
+    return $ doc { documentsignatorylinks = newsiglinks,
+                   documentrecordstatus = LiveDocument,
+                   documentquarantineexpiry = Nothing }
+
 shareDocuments :: User -> [DocumentID] -> Update Documents (Either String [Document])
 shareDocuments user docidlist = do
   mdocs <- forM docidlist $ \docid ->
@@ -1052,6 +1074,7 @@ migrateToSigLinks docid author = do
 -}                                 
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocuments
+                        , 'getQuarantinedDocuments
                         , 'getDocumentsByAuthor
                         , 'getDocumentsBySignatory
                         , 'newDocument
@@ -1092,8 +1115,9 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'cancelDocument
                         , 'fileMovedToAWS
                         , 'fileMovedToDisk
-
                           -- admin only area follows
+                        , 'extendDocumentQuarantine
+                        , 'reviveQuarantinedDocument
                         , 'getFilesThatShouldBeMovedToAmazon
                         , 'restartDocument
                         , 'changeSignatoryEmailWhenUndelivered

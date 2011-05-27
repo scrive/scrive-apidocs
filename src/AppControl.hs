@@ -243,6 +243,8 @@ handleRoutes = msum [
      , dir "adminonly" $ dir "useradmin" $ hPost Administration.handleUserEnableTrustWeaverStorage
      , dir "adminonly" $ dir "db" $ hGet $ Administration.indexDB
      , dir "adminonly" $ dir "db" $ onlySuperUser $ serveDirectory DisableBrowsing [] "_local/kontrakcja_state"
+     , dir "adminonly" $ dir "quarantine" $ hGet  $ Administration.handleShowQuarantine
+     , dir "adminonly" $ dir "quarantine" $ hPost $ Administration.handleQuarantinePost
 
      , dir "adminonly" $ dir "cleanup"           $ hPost $ Administration.handleDatabaseCleanup
      , dir "adminonly" $ dir "statistics"        $ hGet  $ Administration.handleStatistics

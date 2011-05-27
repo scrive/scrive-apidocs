@@ -28,6 +28,8 @@ module Administration.AdministrationControl(
           , handleMigrate0
           , handleCreateService
           , handleStatistics
+          , handleShowQuarantine
+          , handleQuarantinePost
           ) where
 import Control.Monad.State
 import Data.Functor
@@ -63,6 +65,7 @@ import API.Service.ServiceState
 import Data.Monoid
 import qualified Data.IntMap as IntMap
 import Templates.Templates
+import InputValidation
 
 eitherFlash :: ServerPartT (StateT Context IO) (Either String b)
             -> ServerPartT (StateT Context IO) b
@@ -609,7 +612,51 @@ calculateStatsFromUsers users =
                                                          Admin -> docStatsZero { dsAdminInvites = 1 })
                            ]
                 
-                
+fieldsForQuarantine documents = do
+  field "linkquarantine" $ show LinkAdminQuarantine
+  field "documents" $ map fieldsForDoc documents
+  where
+    fieldsForDoc Document{documentid, documenttitle, documentquarantineexpiry, documentsignatorylinks} = do
+      field "docid" $ show documentid
+      field "name" $ documenttitle
+      field "expiry" $ fmap showDateYMD documentquarantineexpiry
+      field "signatories" $ map fieldsForSignatory documentsignatorylinks
+    fieldsForSignatory SignatoryLink{signatorylinkid, signatorydetails} = do
+      field "siglinkid" $ show signatorylinkid
+      field "email" $ signatoryemail signatorydetails
+
+handleShowQuarantine :: Kontra Response
+handleShowQuarantine =
+  onlySuperUser $ do
+    ctx@Context{ctxtemplates} <- get
+    documents <- query $ GetQuarantinedDocuments $ currentServiceID ctx
+    content <- renderTemplateM "quarantinePage" $ do
+      fieldsForQuarantine documents
+    renderFromBody TopEmpty kontrakcja $ cdata content
+
+handleQuarantinePost :: Kontra KontraLink
+handleQuarantinePost = onlySuperUser $ do
+  revive <- isFieldSet "revive"
+  extend <- isFieldSet "extend"
+  case (revive, extend) of
+    (True, _) -> handleQuarantineRevive
+    (_, True) -> handleQuarantineExtend
+    _ -> mzero
+  return LinkAdminQuarantine
+
+handleQuarantineRevive :: Kontra KontraLink
+handleQuarantineRevive = onlySuperUser $ do
+  docid <- getCriticalField asValidDocID "docid"
+  sigid <- getCriticalField asValidNumber "siglinkid"
+  _ <- update $ ReviveQuarantinedDocument (DocumentID docid) (SignatoryLinkID sigid)  
+  return LinkAdminQuarantine
+
+handleQuarantineExtend :: Kontra KontraLink
+handleQuarantineExtend = onlySuperUser $ do
+  docid <- getCriticalField asValidDocID "docid"
+  _ <- update $ ExtendDocumentQuarantine (DocumentID docid)
+  return LinkAdminQuarantine
+
 fieldsFromStats users documents = do
     let userStats = calculateStatsFromUsers users
         documentStats = calculateStatsFromDocuments documents
@@ -634,8 +681,8 @@ fieldsFromStats users documents = do
             field "viralInvites" $ dsViralInvites stat
             field "adminInvites" $ dsAdminInvites stat
           
-    field "stats" $ map fieldify (IntMap.toList stats) 
-                    
+    field "stats" $ map fieldify (IntMap.toList stats)
+
 handleStatistics :: Kontra Response
 handleStatistics = 
   onlySuperUser $ do

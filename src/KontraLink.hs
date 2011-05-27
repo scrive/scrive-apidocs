@@ -76,6 +76,7 @@ data KontraLink
     | LinkPaymentsAdmin
     | LinkUserAdmin (Maybe UserID)
     | LinkAdminServices
+    | LinkAdminQuarantine
     | LinkPasswordReminder ActionID MagicHash
     | LinkViralInvitationSent ActionID MagicHash
     | LinkAccountCreated ActionID MagicHash String -- email
@@ -148,6 +149,7 @@ instance Show KontraLink where
     showsPrec _ (LinkUserAdmin Nothing) = (++) $ "/adminonly/useradmin"
     showsPrec _ (LinkUserAdmin (Just userId)) = (++) $ "/adminonly/useradmin/"++show userId
     showsPrec _ (LinkAdminServices) = (++) $ "/adminonly/services"
+    showsPrec _ (LinkAdminQuarantine) = (++) $ "/adminonly/quarantine"
     showsPrec _ (LinkPasswordReminder aid hash) = (++) $ "/amnesia/" ++ show aid ++ "/" ++ show hash
     showsPrec _ (LinkViralInvitationSent aid hash) = (++) $ "/accountsetup/" ++ show aid ++ "/" ++ show hash
     showsPrec _ (LinkAccountCreated aid hash email) = (++) $ "/accountsetup/" ++ show aid ++ "/" ++ show hash ++ "?email=" ++ email
