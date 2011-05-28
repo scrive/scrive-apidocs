@@ -170,6 +170,7 @@ checkFeatureSupport doc =
        Determines whether a feature is in use for a document.
     -}
     isRequired :: Feature -> Document -> Bool
+    isRequired _ Document{documentrecordstatus} | documentrecordstatus==DeletedDocument = False
     isRequired CSVUse Document{documentcsvupload} = 
       isJust documentcsvupload
     isRequired DaysToSignUse Document{documentdaystosign} = 

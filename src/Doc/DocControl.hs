@@ -1560,7 +1560,9 @@ handleIssueArchive = do
         uemail = unEmail $ useremail $ userinfo user
     res <- update $ ArchiveDocuments uid uemail idsAndUsers
     case res of
-      Left _ -> mzero
+      Left msg -> do
+        Log.debug $ "Failed to delete docs " ++ (show ids) ++ " : " ++ msg
+        mzero
       Right _ -> return ()
 
 handleTemplateShare :: Kontra KontraLink
