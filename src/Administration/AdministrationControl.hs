@@ -618,9 +618,10 @@ fieldsForQuarantine documents = do
       field "name" $ documenttitle
       field "expiry" $ fmap showDateYMD documentquarantineexpiry
       field "signatories" $ map fieldsForSignatory documentsignatorylinks
-    fieldsForSignatory SignatoryLink{signatorylinkid, signatorydetails} = do
+    fieldsForSignatory SignatoryLink{signatorylinkid, signatorydetails, signatorylinkdeleted} = do
       field "siglinkid" $ show signatorylinkid
       field "email" $ signatoryemail signatorydetails
+      field "isrevivable" $ signatorylinkdeleted 
 
 handleShowQuarantine :: Kontra Response
 handleShowQuarantine =
