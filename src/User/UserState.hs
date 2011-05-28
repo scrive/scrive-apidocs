@@ -30,6 +30,7 @@ module User.UserState
     , SetFreeTrialExpirationDate(..)
     , SetSignupMethod(..)
     , AddUser(..)
+    , DeleteUser(..)
     , ExportUsersDetailsToCSV(..)
     , GetAllUsers(..)
     , GetUserByEmail(..)
@@ -937,6 +938,17 @@ getUserRelatedAccounts userid = do
           siblingaccounts = maybe IxSet.empty (\supervisor -> users @= supervisor) usersupervisor in
       toList $ subaccounts ||| superaccounts ||| siblingaccounts
 
+deleteUser :: UserID -> Update Users ()
+deleteUser uid = do
+  users <- askLive
+  let muser = getOne (users @= uid)
+  case muser of
+    Nothing -> return ()
+    Just _ -> do
+      let deleteduser = blankUser { userid = uid,
+                                    userrecordstatus = DeletedUser }
+      modify (updateIx uid deleteduser)
+      return ()
 
 addUser :: (BS.ByteString, BS.ByteString)
         -> BS.ByteString 
@@ -952,14 +964,10 @@ addUser (fstname, sndname) email passwd maybesupervisor mservice mcompany = do
    then return Nothing  -- "user with same email address exists"
    else do         
         userid <- getUnique allusers UserID --want userid to be unique even against deleted users
-        let user = User {  
+        let user = blankUser {  
                    userid                  =  userid
                  , userpassword            =  passwd
-                 , usersupervisor          =  fmap (SupervisorID . unUserID) maybesupervisor 
-                 , useraccountsuspended    =  False  
-                 , userhasacceptedtermsofservice = Nothing
-                 , userfreetrialexpirationdate = Nothing
-                 , usersignupmethod = AccountRequest
+                 , usersupervisor          =  fmap (SupervisorID . unUserID) maybesupervisor
                  , userinfo = UserInfo {
                                     userfstname = fstname
                                   , usersndname = sndname
@@ -974,6 +982,36 @@ addUser (fstname, sndname) email passwd maybesupervisor mservice mcompany = do
                                   , userphone = BS.empty
                                   , usermobile = BS.empty
                                   , useremail =  Email email 
+                                   }
+              , userservice = mservice
+              , usercompany = mcompany
+              }
+        modify (updateIx userid user)
+        return $ Just user
+
+blankUser :: User
+blankUser = User {  
+                   userid                  =  UserID 0
+                 , userpassword            =  NoPassword
+                 , usersupervisor          =  Nothing 
+                 , useraccountsuspended    =  False  
+                 , userhasacceptedtermsofservice = Nothing
+                 , userfreetrialexpirationdate = Nothing
+                 , usersignupmethod = AccountRequest
+                 , userinfo = UserInfo {
+                                    userfstname = BS.empty
+                                  , usersndname = BS.empty
+                                  , userpersonalnumber = BS.empty
+                                  , usercompanyname =  BS.empty
+                                  , usercompanyposition =  BS.empty
+                                  , usercompanynumber  =  BS.empty
+                                  , useraddress =  BS.empty
+                                  , userzip = BS.empty
+                                  , usercity  = BS.empty
+                                  , usercountry = BS.empty
+                                  , userphone = BS.empty
+                                  , usermobile = BS.empty
+                                  , useremail =  Email BS.empty 
                                    }
                 , usersettings  = UserSettings {
                                     accounttype = PrivateAccount
@@ -991,13 +1029,12 @@ addUser (fstname, sndname) email passwd maybesupervisor mservice mcompany = do
                                 , lastfailtime = Nothing
                                 , consecutivefails = 0
                                 }
-              , userservice = mservice
-              , usercompany = mcompany
+              , userservice = Nothing
+              , usercompany = Nothing
               , userapikey = Nothing
               , userrecordstatus = LiveUser
-                 }
-        modify (updateIx userid user)
-        return $ Just user
+              }
+
 
 failure :: String -> Either String a
 failure = Left
@@ -1204,6 +1241,7 @@ Template Haskell derivations should be kept at the end of the file
 $(mkMethods ''Users [ 'getUserByUserID
                     , 'getUserByEmail
                     , 'addUser
+                    , 'deleteUser
                     , 'getUserStats
                     , 'getUserStatsByUser
                     , 'getAllUsers
