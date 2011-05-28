@@ -3,6 +3,7 @@ module User.UserControl where
 
 import Control.Monad.State
 import Data.Char
+import Data.Either (lefts, rights)
 import Data.Functor
 import Data.List
 import Data.Maybe
@@ -225,9 +226,9 @@ handlePostSubaccount = do
              takeover <- isFieldSet "takeover"
              case (add,remove,takeover) of
                   (True, _, _) -> do
-                      handleCreateSubaccount user
-                      return $ LinkSubaccount emptyListParams
-                  (_, True, _) -> return $ LinkSubaccount emptyListParams
+                    handleCreateSubaccount user
+                    return $ LinkSubaccount emptyListParams
+                  (_, True, _) -> handleDeleteSubaccounts user
                   (_, _, True) -> do
                       memail <- getOptionalField asValidEmail "email"
                       handleTakeOverSubaccount (fromJust memail)
@@ -235,6 +236,80 @@ handlePostSubaccount = do
                   _ -> LinkSubaccount <$> getListParamsForSearch
          Nothing -> return $ LinkLogin NotLogged
 
+handleDeleteSubaccounts :: User -> Kontra KontraLink
+handleDeleteSubaccounts user = do
+  subaccountids <- getCriticalFieldList asValidNumber "subaccountid"
+  handleUserDelete user (map UserID subaccountids)
+  return $ LinkSubaccount emptyListParams
+
+{- | I've commented this out for now, because I haven't got anywhere
+     that'll call this.  Em 
+handleSelfDelete :: User -> Kontra KontraLink
+handleSelfDelete user = do
+  subaccounts <- query $ GetUserSubaccounts (userid user)
+  handleUserDelete user (map userid $ (toList subaccounts) ++ [user])
+  -- log them out!
+  return $ LinkMain
+-}
+
+{- |
+    Deletes a list of users one at a time.  It first checks the permissions
+    for all users, and if it's okay for all it deletes them all.  Otherwise
+    it deletes no-one.
+-}
+handleUserDelete :: User -> [UserID] -> Kontra ()
+handleUserDelete deleter deleteeids = do
+  Context{ctxtemplates} <- get
+  msubaccounts <- mapM (getUserDeletionDetails (userid deleter)) deleteeids
+  case lefts msubaccounts of
+    (NoDeletionRights:_) -> mzero
+    (UserHasLiveDocs:_) -> do
+      addFlashMsg =<< (liftIO $ flashMessageUserHasLiveDocs ctxtemplates)
+      return ()
+    [] -> do
+      mapM_ performUserDeletion (rights msubaccounts)
+      addFlashMsg =<< (liftIO $ flashMessageAccountsDeleted ctxtemplates)
+      return ()   
+
+type UserDeletionDetails = (User, [Document])
+
+data UserDeletionProblem = NoDeletionRights | UserHasLiveDocs
+
+getUserDeletionDetails :: UserID -> UserID -> Kontra (Either UserDeletionProblem UserDeletionDetails)
+getUserDeletionDetails deleterid deleteeid = do
+  deletee <- queryOrFail $ GetUserByUserID deleteeid
+  let isSelfDelete = deleterid == deleteeid
+      isSuperDelete = maybe False (\sid -> deleterid == (UserID $ unSupervisorID sid)) (usersupervisor deletee)
+      isPermissioned = isSelfDelete || isSuperDelete
+  userdocs <- query $ GetDocumentsByUser deletee
+  let isAllDeletable = all isDeletableDocument userdocs
+  case (isPermissioned, isAllDeletable) of
+    (False, _) -> return $ Left NoDeletionRights
+    (_, False) -> return $ Left UserHasLiveDocs
+    _ -> return $ Right (deletee, userdocs)
+
+performUserDeletion :: UserDeletionDetails -> Kontra ()
+performUserDeletion (user, docs) = do
+  _ <- update $ DeleteUser (userid user)
+  idsAndUsers <- mapM (lookupUsersRelevantToDoc . documentid) docs
+  mapM_ (\iu -> update $ UpdateDocumentRecordStatus  (fst iu) (snd iu)) idsAndUsers
+
+{- |
+    This looks up all the users relevant for the given docid.
+    This is the dodgy link between documents and users and is required
+    when deleting a user or deleting a doc.  Bleurgh.
+-}
+lookupUsersRelevantToDoc :: DocumentID -> Kontra (DocumentID, [User])
+lookupUsersRelevantToDoc docid = do
+  doc <- queryOrFail $ GetDocumentByDocumentID docid
+  musers <- mapM (query . GetUserByUserID) (linkedUserIDs doc)
+  return $ (docid, catMaybes musers)
+  where
+  linkedUserIDs = concatMap usersFromSigLink . documentsignatorylinks
+  usersFromSigLink SignatoryLink{maybesignatory, maybesupervisor} = 
+    mkList maybesignatory ++ mkList maybesupervisor
+  mkList Nothing = []
+  mkList (Just x) = [x] 
   
 handleTakeOverSubaccount :: BS.ByteString -> Kontra ()
 handleTakeOverSubaccount email = do

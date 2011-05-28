@@ -238,3 +238,7 @@ flashMessagePleaseSignContract=Underteckna dokumentet längst ned på sidan.
 ###
 flashMessagePleaseSignOffer=Du kan acceptera offerten längst ned på sidan.
 ###
+flashMessageUserHasLiveDocs=Unable to remove account(s) as there are some remaining documents that need to be finalised (spec/translate me please).
+###
+flashMessageAccountsDeleted=Account(s) successfully deleted (spec/translate me please).
+###

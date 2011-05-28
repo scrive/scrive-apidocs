@@ -1558,21 +1558,10 @@ handleIssueArchive = do
     idnumbers <- getCriticalFieldList asValidDocID "doccheck"
     liftIO $ putStrLn $ show idnumbers
     let ids = map DocumentID idnumbers
-    idsAndUsers <- mapM lookupRelevantUsers ids
+    idsAndUsers <- mapM lookupUsersRelevantToDoc ids
     let uid = userid user
         uemail = unEmail $ useremail $ userinfo user
     update $ ArchiveDocuments uid uemail idsAndUsers
-    where
-      lookupRelevantUsers :: DocumentID -> Kontra (DocumentID, [User])
-      lookupRelevantUsers docid = do
-        doc <- queryOrFail $ GetDocumentByDocumentID docid
-        musers <- mapM (query . GetUserByUserID) (linkedUserIDs doc)
-        return $ (docid, catMaybes musers)
-      linkedUserIDs = concatMap usersFromSigLink . documentsignatorylinks
-      usersFromSigLink SignatoryLink{maybesignatory, maybesupervisor} = 
-        mkList maybesignatory ++ mkList maybesupervisor
-      mkList Nothing = []
-      mkList (Just x) = [x] 
 
 handleTemplateShare :: Kontra KontraLink
 handleTemplateShare = withUserPost $ do

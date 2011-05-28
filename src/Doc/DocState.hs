@@ -8,6 +8,7 @@ module Doc.DocState
     , signatoryname -- fromUtils
     , SignatoryAccount -- fromUtils
     , getSignatoryAccount -- fromUtils
+    , isDeletableDocument -- fromUtils
     , isMatchingSignatoryLink
     , anyInvitationUndelivered
     , undeliveredSignatoryLinks
@@ -75,6 +76,7 @@ module Doc.DocState
     , GetExpiredQuarantinedDocuments(..)
     , EndQuarantineForDocument(..)
     , MigrateForDeletion(..)
+    , UpdateDocumentRecordStatus(..)
     )
 where
 
@@ -813,6 +815,17 @@ setupForDeletion doc = blankDocument {
     , signatoryotherfields = []
     }
 
+{- |
+    Call this to go through a record and update it's status by deleting or quarantining if needed.
+-}
+updateDocumentRecordStatus :: DocumentID -> [User] -> Update Documents (Either String Document)
+updateDocumentRecordStatus docid users = do
+  now <- getMinuteTimeDB
+  modifySignableOrTemplate docid $ \doc ->
+    if isDeletableDocument doc
+      then Right doc
+      else Right $ deleteDocumentIfRequired now users doc
+
 deleteDocumentIfRequired :: MinutesTime -> [User] -> Document -> Document    
 deleteDocumentIfRequired now users doc@Document{documentstatus, documentsignatorylinks, documentrecordstatus} =
   case (isNotDeleted, isLive, isInvisible, isInPreparation) of
@@ -1237,6 +1250,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'setDocumentTrustWeaverReference
                         , 'archiveDocuments
                         , 'archiveDocumentForAll
+                        , 'updateDocumentRecordStatus
                         , 'shareDocuments
                         , 'setDocumentTitle
                         , 'timeoutDocument

@@ -51,7 +51,9 @@ module User.UserView (
     flashMessageUserSignupDone,
     flashMessageThanksForTheQuestion,
     flashMessageUserInvitedAsSubaccount,
-    flashMessageUserHasBecomeSubaccount,    
+    flashMessageUserHasBecomeSubaccount,
+    flashMessageUserHasLiveDocs,
+    flashMessageAccountsDeleted,
     
     --modals
     modalNewPasswordView,
@@ -366,6 +368,13 @@ flashMessageUserHasBecomeSubaccount templates supervisor =
   toFlashMsg OperationDone <$> (renderTemplate templates "flashMessageUserHasBecomeSubaccount" $ do
     field "supervisor" $ userFields supervisor)
 
+flashMessageUserHasLiveDocs :: KontrakcjaTemplates -> IO FlashMessage
+flashMessageUserHasLiveDocs templates =
+  toFlashMsg OperationFailed <$> renderTemplate templates "flashMessageUserHasLiveDocs" ()
+
+flashMessageAccountsDeleted :: KontrakcjaTemplates -> IO FlashMessage
+flashMessageAccountsDeleted templates =
+  toFlashMsg OperationDone <$> renderTemplate templates "flashMessageAccountsDeleted" ()
 
 flashMessagePasswordChangeLinkNotValid :: KontrakcjaTemplates -> IO FlashMessage
 flashMessagePasswordChangeLinkNotValid templates =
