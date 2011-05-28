@@ -72,6 +72,8 @@ module Doc.DocState
 --    , MigrateToSigLinks(..)
     , ExtendDocumentQuarantine(..)
     , ReviveQuarantinedDocument(..)
+    , GetExpiredQuarantinedDocuments(..)
+    , EndQuarantineForDocument(..)
     , MigrateForDeletion(..)
     )
 where
@@ -144,7 +146,7 @@ getTimeoutedButPendingDocuments :: MinutesTime -> Query Documents [Document]
 getTimeoutedButPendingDocuments now = queryDocs $ \docs ->
   (flip filter) (toList docs) $ \doc -> case (documenttimeouttime doc) of
                                             Just timeout -> (documentstatus doc) == Pending &&(unTimeoutTime timeout) < now
-                                            _ -> False           
+                                            _ -> False
     
 newDocumentFunctionality :: DocumentType -> User -> DocumentFunctionality
 newDocumentFunctionality documenttype user = 
@@ -768,6 +770,19 @@ deleteDocumentIfRequired now users doc@Document{documentstatus, documentsignator
     isNoUser Nothing = True
     isNoUser (Just uid) = not $ uid `elem` (map userid users)
 
+getExpiredQuarantinedDocuments :: MinutesTime -> Query Documents [Document]
+getExpiredQuarantinedDocuments now = queryQuarantinedDocs $ \docs ->
+  (flip filter) (toList docs) $ \doc -> case (documentquarantineexpiry doc) of
+                                          Just expiry -> expiry < now
+                                          _ -> False
+
+endQuarantineForDocument :: DocumentID -> Update Documents (Either String Document)
+endQuarantineForDocument documentid = do
+  modifySignableOrTemplate documentid $ \document ->
+    case documentrecordstatus document of
+      QuarantinedDocument -> return $ document { documentrecordstatus = DeletedDocument }
+      _ -> Left "Document isn't in quarantine"
+
 extendDocumentQuarantine :: DocumentID -> Update Documents (Either String Document)
 extendDocumentQuarantine docid = do
   modifySignableOrTemplate docid $ \doc ->
@@ -1169,6 +1184,8 @@ $(mkMethods ''Documents [ 'getDocuments
                           -- admin only area follows
                         , 'extendDocumentQuarantine
                         , 'reviveQuarantinedDocument
+                        , 'getExpiredQuarantinedDocuments
+                        , 'endQuarantineForDocument
                         , 'getFilesThatShouldBeMovedToAmazon
                         , 'restartDocument
                         , 'changeSignatoryEmailWhenUndelivered
