@@ -759,6 +759,7 @@ instance Indexable User where
                       , ixFun userfriends
                       , ixFun (\x -> [userservice x] :: [Maybe ServiceID])
                       , ixFun (\x -> [usercompany x] :: [Maybe CompanyID])
+                      , ixFun (\x -> [userrecordstatus x] :: [UserRecordStatus])
                       ]
 
 

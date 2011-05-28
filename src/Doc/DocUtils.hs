@@ -416,6 +416,10 @@ signlinkFromDocById doc sid = find ((== sid) . signatorylinkid) (documentsignato
 isSigLinkForUserID :: UserID -> SignatoryLink -> Bool
 isSigLinkForUserID userid siglink = Just userid == maybesignatory siglink
 
+isSigLinkForSupervisor :: UserID -> SignatoryLink -> Bool
+isSigLinkForSupervisor userid siglink = Just userid == maybesupervisor siglink
+
+
 {- |
    Get the SignatoryLink for a given UserID from a Document.
  -}
