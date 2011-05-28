@@ -19,6 +19,7 @@ module User.UserState
     , UserInfo(..)
     , UserSettings(..)
     , DesignMode(..)
+    , UserRecordStatus(..)
     , UserID(..)
     , Users
     , UserStats(..)
@@ -187,6 +188,9 @@ data UserSettings  = UserSettings {
 data DesignMode = BasicMode | AdvancedMode
     deriving (Eq, Ord, Typeable)
 
+data UserRecordStatus = LiveUser | DeletedUser
+    deriving (Eq, Ord, Typeable)
+
 data User = User
           { userid                        :: !UserID
           , userpassword                  :: !Password
@@ -205,10 +209,33 @@ data User = User
           , userservice                   :: !(Maybe ServiceID)
           , usercompany                   :: !(Maybe CompanyID)
           , userapikey                    :: !(Maybe MagicHash)
+          , userrecordstatus              :: !UserRecordStatus
           }
             deriving (Eq, Ord)
 
 instance Typeable User where typeOf _ = mkTypeOf "User"
+
+
+data User15 = User15
+          { userid15                        :: !UserID
+          , userpassword15                  :: !Password
+          , usersupervisor15                :: !(Maybe SupervisorID)
+          , useraccountsuspended15          :: !Bool
+          , userhasacceptedtermsofservice15 :: !(Maybe MinutesTime)
+          , userfreetrialexpirationdate15   :: !(Maybe MinutesTime)
+          , usersignupmethod15              :: !SignupMethod
+          , userinfo15                      :: !UserInfo
+          , usersettings15                  :: !UserSettings
+          , userpaymentpolicy15             :: !Payments.UserPaymentPolicy
+          , userpaymentaccount15            :: !Payments.UserPaymentAccount
+          , userfriends15                   :: ![Friend]
+          , userinviteinfo15                :: !(Maybe InviteInfo)
+          , userlogininfo15                 :: !LoginInfo
+          , userservice15                   :: !(Maybe ServiceID)
+          , usercompany15                   :: !(Maybe CompanyID)
+          , userapikey15                    :: !(Maybe MagicHash)
+          }
+            deriving (Eq, Ord, Typeable)
 
 data User14 = User14
           { userid14                        :: UserID
@@ -350,6 +377,7 @@ deriving instance Show UserAccountPlan
 deriving instance Show UserInfo
 deriving instance Show UserSettings
 deriving instance Show DesignMode
+deriving instance Show UserRecordStatus
 deriving instance Show User
 deriving instance Show Email
 deriving instance Show Friend
@@ -587,7 +615,7 @@ instance Migrate User13 User14 where
                 , usercompany14                    = Nothing
                 }
 
-instance Migrate User14 User where
+instance Migrate User14 User15 where
   migrate (User14 
                 { userid14
                 , userpassword14
@@ -605,24 +633,64 @@ instance Migrate User14 User where
                 , userlogininfo14
                 , userservice14
                 , usercompany14
-                }) = User 
-                { userid                         = userid14
-                , userpassword                   = userpassword14
-                , usersupervisor                 = usersupervisor14
-                , useraccountsuspended           = useraccountsuspended14
-                , userhasacceptedtermsofservice  = userhasacceptedtermsofservice14
-                , userfreetrialexpirationdate    = userfreetrialexpirationdate14
-                , usersignupmethod               = usersignupmethod14
-                , userinfo                       = userinfo14
-                , usersettings                   = usersettings14
-                , userpaymentpolicy              = userpaymentpolicy14
-                , userpaymentaccount             = userpaymentaccount14
-                , userfriends                    = userfriends14
-                , userinviteinfo                 = userinviteinfo14
-                , userlogininfo                  = userlogininfo14
-                , userservice                    = userservice14
-                , usercompany                    = usercompany14
-                , userapikey                     = Nothing
+                }) = User15
+                { userid15                         = userid14
+                , userpassword15                   = userpassword14
+                , usersupervisor15                 = usersupervisor14
+                , useraccountsuspended15           = useraccountsuspended14
+                , userhasacceptedtermsofservice15  = userhasacceptedtermsofservice14
+                , userfreetrialexpirationdate15    = userfreetrialexpirationdate14
+                , usersignupmethod15               = usersignupmethod14
+                , userinfo15                       = userinfo14
+                , usersettings15                   = usersettings14
+                , userpaymentpolicy15              = userpaymentpolicy14
+                , userpaymentaccount15             = userpaymentaccount14
+                , userfriends15                    = userfriends14
+                , userinviteinfo15                 = userinviteinfo14
+                , userlogininfo15                  = userlogininfo14
+                , userservice15                    = userservice14
+                , usercompany15                    = usercompany14
+                , userapikey15                     = Nothing
+                }
+
+instance Migrate User15 User where
+  migrate (User15
+                { userid15
+                , userpassword15
+                , usersupervisor15
+                , useraccountsuspended15
+                , userhasacceptedtermsofservice15
+                , userfreetrialexpirationdate15
+                , usersignupmethod15
+                , userinfo15
+                , usersettings15
+                , userpaymentpolicy15
+                , userpaymentaccount15
+                , userfriends15
+                , userinviteinfo15
+                , userlogininfo15
+                , userservice15
+                , usercompany15
+                , userapikey15
+                }) = User
+                { userid                         = userid15
+                , userpassword                   = userpassword15
+                , usersupervisor                 = usersupervisor15
+                , useraccountsuspended           = useraccountsuspended15
+                , userhasacceptedtermsofservice  = userhasacceptedtermsofservice15
+                , userfreetrialexpirationdate    = userfreetrialexpirationdate15
+                , usersignupmethod               = usersignupmethod15
+                , userinfo                       = userinfo15
+                , usersettings                   = usersettings15
+                , userpaymentpolicy              = userpaymentpolicy15
+                , userpaymentaccount             = userpaymentaccount15
+                , userfriends                    = userfriends15
+                , userinviteinfo                 = userinviteinfo15
+                , userlogininfo                  = userlogininfo15
+                , userservice                    = userservice15
+                , usercompany                    = usercompany15
+                , userapikey                     = userapikey15
+                , userrecordstatus               = LiveUser
                 }
 
 composeFullName :: (BS.ByteString, BS.ByteString) -> BS.ByteString
@@ -714,8 +782,11 @@ instance Version User13 where
 instance Version User14 where
     mode = extension 14 (Proxy :: Proxy User13)
 
-instance Version User where
+instance Version User15 where
     mode = extension 15 (Proxy :: Proxy User14)
+
+instance Version User where
+    mode = extension 16 (Proxy :: Proxy User15)
     
 instance Version SignupMethod
 
@@ -741,6 +812,8 @@ instance Version UserSettings where
     mode = extension 1 (Proxy :: Proxy UserSettings0)
 
 instance Version DesignMode
+
+instance Version UserRecordStatus
 
 instance Version Email
 
@@ -795,7 +868,7 @@ modifyUser :: UserID
            -> (User -> Either String User) 
            -> Update Users (Either String User)
 modifyUser uid action = do
-  users <- ask
+  users <- askLive
   case getOne (users @= uid) of
     Nothing -> return $ Left "no such user"
     Just user -> 
@@ -808,19 +881,31 @@ modifyUser uid action = do
                 modify (updateIx uid newuser)
                 return $ Right newuser
 
-getUserByEmail :: Maybe ServiceID  -> Email ->  Query Users (Maybe User)
-getUserByEmail service email = do
+{- |
+    Cleans out all the deleted users
+-}
+queryUsers :: (Users -> a) -> Query Users a
+queryUsers queryFunc = do
   users <- ask
-  return $  getOne (users @= email @= service)
+  let liveusers = users @= LiveUser
+  return $ queryFunc liveusers
+
+askLive :: Update Users Users
+askLive = do
+  users <- ask
+  return $ users @= LiveUser
+
+getUserByEmail :: Maybe ServiceID  -> Email ->  Query Users (Maybe User)
+getUserByEmail service email = queryUsers $ \users ->
+  getOne (users @= email @= service)
     
 getUserByUserID :: UserID -> Query Users (Maybe User)
-getUserByUserID userid = do
-  users <- ask
-  return $ getOne (users @= userid)
+getUserByUserID userid = queryUsers $ \users ->
+  getOne (users @= userid)
 
 getUsersByFriendUserID :: UserID -> Query Users [User]
-getUsersByFriendUserID uid =
-  return . toList . (@= (Friend $ unUserID uid)) =<< ask
+getUsersByFriendUserID uid = queryUsers $ \users ->
+  toList $ users @= (Friend $ unUserID uid)
 
 getUserFriends :: UserID -> Query Users [User]
 getUserFriends uid = do
@@ -834,7 +919,7 @@ getUserFriends uid = do
 getUserSubaccounts :: UserID -> Query Users [User]
 getUserSubaccounts userid = do
   users <- ask
-  return $ toList (users @= SupervisorID (unUserID userid))
+  return $ toSet (users @= SupervisorID (unUserID userid))
 
 {- |
     Gets all the users that are related to the indicated user.
@@ -846,12 +931,11 @@ getUserRelatedAccounts userid = do
   muser <- getUserByUserID userid
   case muser of
     Nothing -> return []
-    Just User{usersupervisor} -> do
-      users <- ask
+    Just User{usersupervisor} -> queryUsers $ \users ->
       let subaccounts = users @= SupervisorID (unUserID userid)
           superaccounts = maybe IxSet.empty (\SupervisorID{unSupervisorID} -> users @= UserID unSupervisorID) usersupervisor
-          siblingaccounts = maybe IxSet.empty (\supervisor -> users @= supervisor) usersupervisor
-      return . toList $ subaccounts ||| superaccounts ||| siblingaccounts
+          siblingaccounts = maybe IxSet.empty (\supervisor -> users @= supervisor) usersupervisor in
+      toList $ subaccounts ||| superaccounts ||| siblingaccounts
 
 
 addUser :: (BS.ByteString, BS.ByteString)
@@ -862,11 +946,12 @@ addUser :: (BS.ByteString, BS.ByteString)
         -> Maybe CompanyID
         -> Update Users (Maybe User)
 addUser (fstname, sndname) email passwd maybesupervisor mservice mcompany = do
-  users <- get
-  if (IxSet.size (users @= mservice @= Email email) /= 0)
+  allusers <- get
+  liveusers <- askLive
+  if (IxSet.size (liveusers @= mservice @= Email email) /= 0) -- a deleted user can re-register as a new user
    then return Nothing  -- "user with same email address exists"
    else do         
-        userid <- getUnique users UserID
+        userid <- getUnique allusers UserID --want userid to be unique even against deleted users
         let user = User {  
                    userid                  =  userid
                  , userpassword            =  passwd
@@ -909,6 +994,7 @@ addUser (fstname, sndname) email passwd maybesupervisor mservice mcompany = do
               , userservice = mservice
               , usercompany = mcompany
               , userapikey = Nothing
+              , userrecordstatus = LiveUser
                  }
         modify (updateIx userid user)
         return $ Just user
@@ -918,7 +1004,7 @@ failure = Left
 
 setUserSupervisor :: UserID -> UserID -> Update Users (Either String User)
 setUserSupervisor userid supervisorid = do
-    msupervisor <- (getOne . (@= supervisorid)) <$> ask
+    msupervisor <- (getOne . (@= supervisorid)) <$> askLive
     let supervisor = fromJust msupervisor
     modifyUser userid $ \user -> do -- Either String monad 
       let luseremail = BS.toString $ unEmail $ useremail $ userinfo user
@@ -934,22 +1020,20 @@ setUserSupervisor userid supervisorid = do
       return $ user { usersupervisor = Just $ SupervisorID $ unUserID supervisorid}
   
 getUserStats :: Query Users UserStats
-getUserStats = do
-  users <- ask
-  return UserStats 
+getUserStats = queryUsers $ \users ->
+  UserStats 
          { usercount = (size users)
          , viralinvitecount = length $ filterByInvite (isInviteType Viral) (toList users)
          , admininvitecount = length $ filterByInvite (isInviteType Admin) (toList users)
          }
 
 getUserStatsByUser :: User -> Query Users UserStats
-getUserStatsByUser user = do
-  users <- ask
+getUserStatsByUser user = queryUsers $ \users ->
   let invitedusers = filterByInvite isInvitedByUser (toList users)
       isInvitedByUser :: InviteInfo -> Bool
       isInvitedByUser InviteInfo{userinviter} | (unInviter userinviter) == (unUserID . userid $ user) = True
-      isInvitedByUser _ = False
-  return UserStats 
+      isInvitedByUser _ = False in
+  UserStats 
          { usercount = 1 --sort of silly, but true
          , viralinvitecount = length $ filterByInvite (isInviteType Viral) invitedusers
          , admininvitecount = length $ filterByInvite (isInviteType Admin) invitedusers
@@ -963,11 +1047,10 @@ isInviteType desiredtype InviteInfo{invitetype} | (isJust invitetype) && ((fromJ
 isInviteType _ _ = False
 
 getAllUsers :: Query Users [User]
-getAllUsers = do
-  users <- ask
+getAllUsers = queryUsers $ \users ->
   let usersSorted = sortBy compareuserfullname (toList users)
-      compareuserfullname a b = compare (userfullname a) (userfullname b)
-  return usersSorted
+      compareuserfullname a b = compare (userfullname a) (userfullname b) in
+  usersSorted
 
 setUserPassword :: UserID -> Password -> Update Users (Either String User)
 setUserPassword userid newpassword = do
@@ -1049,7 +1132,7 @@ recordSuccessfulLogin userid time = do
  -}
 addViewerByEmail :: UserID -> Email -> Update Users (Either String User)
 addViewerByEmail uid vieweremail = do
-  mms <- do users <- ask
+  mms <- do users <- askLive
             return $ getOne (users @= vieweremail)
   case mms of
     Just ms -> modifyUser uid $ \user ->
@@ -1079,7 +1162,7 @@ _addFreePaymentsForInviter now u = do
                            case (fmap userinviter $ userinviteinfo u) of
                             Nothing -> return ()   
                             Just (Inviter iid) -> do
-                              users <- ask
+                              users <- askLive
                               let minviter = getOne (users @= (UserID iid))    
                               case minviter of
                                 Nothing -> return ()   
@@ -1089,11 +1172,10 @@ _addFreePaymentsForInviter now u = do
                                                  return ()
                            
 exportUsersDetailsToCSV :: Query Users BS.ByteString
-exportUsersDetailsToCSV = do
-  users <- ask
+exportUsersDetailsToCSV = queryUsers $ \users ->
   let fields user = [userfullname user, unEmail $ useremail $ userinfo user]
-      content = BS.intercalate (BS.fromString ",") <$> fields
-  return $ BS.unlines $ content <$> (toList users)
+      content = BS.intercalate (BS.fromString ",") <$> fields in
+  BS.unlines $ content <$> (toList users)
 
   
 getUserPaymentSchema::User -> IO (Payments.PaymentScheme)
@@ -1150,6 +1232,7 @@ $(mkMethods ''Users [ 'getUserByUserID
                     ])
 
 $(deriveSerializeFor [ ''User
+                     , ''User15
                      , ''User14
                      , ''User13
                      , ''User12
@@ -1173,6 +1256,7 @@ $(deriveSerializeFor [ ''User
                      , ''UserSettings
                      , ''UserSettings0
                      , ''DesignMode
+                     , ''UserRecordStatus
                      , ''UserInfo
                      , ''SupervisorID
                      , ''UserID
