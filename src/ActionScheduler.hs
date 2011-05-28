@@ -138,6 +138,7 @@ oldScheduler = do
     now <- liftIO getMinutesTime
     timeoutDocuments now
     dropExpiredSessions now
+    deleteQuarantinedDocuments now
     liftIO $ debugM "Happstack.Server" $ "Scheduler is running ..."
 
 timeoutDocuments :: MinutesTime -> ActionScheduler ()
@@ -146,4 +147,11 @@ timeoutDocuments now = do
     forM_ docs $ \doc -> do 
         update $ TimeoutDocument (documentid doc) now 
         liftIO $ debugM "Happstack.Server" $ "Document timedout " ++ (show $ documenttitle doc)
+
+deleteQuarantinedDocuments :: MinutesTime -> ActionScheduler ()
+deleteQuarantinedDocuments now = do
+    docs <- query $ GetExpiredQuarantinedDocuments now
+    forM_ docs $ \doc -> do
+        update $ EndQuarantineForDocument (documentid doc)
+        liftIO $ debugM "Happstack.Server" $ "Document quarantine expired " ++ (show $ documenttitle doc)
 
