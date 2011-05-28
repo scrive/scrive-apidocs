@@ -757,10 +757,11 @@ getDocumentsByCompanyAndTags  mservice company doctags = queryDocs $ \documents 
 mapWhen :: (a -> Bool) -> (a -> a) -> [a] -> [a]
 mapWhen p f ls = map (\i -> if p i then f i else i) ls
 
-archiveDocuments :: UserID -> BS.ByteString -> [(DocumentID, [User])] -> Update Documents ()
+archiveDocuments :: UserID -> BS.ByteString -> [(DocumentID, [User])] -> Update Documents (Either String [Document])
 archiveDocuments userid useremail docs = do
   -- FIXME: can use a fold here
-  forM_ docs $ \d -> deleteDocumentSignatoryLinks (fst d) (snd d) isSignatoryOrSupervisor
+  mdocs <- mapM (\d -> deleteDocumentSignatoryLinks (fst d) (snd d) isSignatoryOrSupervisor) docs
+  return $ sequence mdocs
   where isSignatoryOrSupervisor :: SignatoryLink -> Bool
         isSignatoryOrSupervisor sl = isSigLinkForUserInfo userid useremail sl || isSigLinkForSupervisor userid sl
 
@@ -782,8 +783,8 @@ deleteDocumentSignatoryLinks docid users p = do
   now <- getMinuteTimeDB
   modifySignableOrTemplate docid $ \doc ->
     if isDeletableDocument doc
-      then Left "Unable to delete siglinks for this doc"
-      else Right . deleteDocumentIfRequired now users $ deleteSigLinks doc
+      then Right . deleteDocumentIfRequired now users $ deleteSigLinks doc
+      else Left "Unable to delete siglinks for this doc"
   where
     deleteSigLinks doc@Document{documentsignatorylinks} =
       let deleteSigLink sl = sl { signatorylinkdeleted = True }
