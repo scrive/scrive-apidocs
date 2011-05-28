@@ -547,12 +547,14 @@ quarantinePage=
             <td></td>
             <td>$sig.email$</td>
             <td>
+              $if(sig.isrevivable)$
               <form action="$linkquarantine$" method="post">
                 <input type="hidden" name="revive" value="true"/>
                 <input type="hidden" name="docid" value="$doc.docid$"/>
                 <input type="hidden" name="siglinkid" value="$sig.siglinkid$"/>
-                <input type="submit" value="Revive for user"/>
+                <input type="submit" value="Undo Delete"/>
               </form>
+              $endif$
             </td>
             <td></td>
           </tr>
