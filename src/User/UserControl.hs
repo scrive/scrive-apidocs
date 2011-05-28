@@ -238,7 +238,7 @@ handlePostSubaccount = do
 
 handleDeleteSubaccounts :: User -> Kontra KontraLink
 handleDeleteSubaccounts user = do
-  subaccountids <- getCriticalFieldList asValidNumber "subaccountid"
+  subaccountids <- getCriticalFieldList asValidNumber "subcheck"
   handleUserDelete user (map UserID subaccountids)
   return $ LinkSubaccount emptyListParams
 

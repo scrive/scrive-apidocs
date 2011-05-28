@@ -53,7 +53,6 @@ import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
-import qualified Data.Set as Set
 
 {-
   Document state transitions are described in DocState.
@@ -1376,13 +1375,12 @@ getDocumentsForUserByType user docfilter = do
 showContractsList :: Kontra (Either KontraLink String)
 showContractsList =
   let getContracts user = do
-        mydocuments <- query $ GetDocumentsByUser user 
+        mydocuments <- query $ GetDocumentsByUser user
         usersICanView <- query $ GetUsersByFriendUserID $ userid user
-        usersISupervise <- fmap Set.toList $ query $ GetUserSubaccounts $ userid user
         friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
-        supervised'Documents <- mapM (query . GetDocumentsByUser) usersISupervise
+        supervised'Documents <- query $ GetDocumentsBySupervisor user
         return . filter ((==) Contract . documenttype) $ 
-          mydocuments ++ concat friends'Documents ++ concat supervised'Documents in
+          mydocuments ++ concat friends'Documents ++ supervised'Documents in
   showItemList' pageContractsList getContracts docSortSearchPage
 
 showTemplatesList :: Kontra (Either KontraLink String)

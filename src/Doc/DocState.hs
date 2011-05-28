@@ -29,6 +29,7 @@ module Doc.DocState
     , GetQuarantinedDocuments(..)
     , GetDocumentsByAuthor(..)
     , GetDocumentsBySignatory(..)
+    , GetDocumentsBySupervisor(..)
     , GetDocumentsByUser(..)
     , GetFilesThatShouldBeMovedToAmazon(..)
     , GetNumberOfDocumentsOfUser(..)
@@ -134,15 +135,40 @@ filterSignatoryLinksByUser doc user =
 signatoryCanView :: User -> Document -> Bool
 signatoryCanView user doc = 
     let usersiglinks = filterSignatoryLinksByUser doc user
-        isnotpreparation = Preparation /= documentstatus doc
-        hasLink = not $ Prelude.null usersiglinks
-        signatoryActivated = all ((>=) (documentcurrentsignorder doc) . signatorysignorder . signatorydetails) usersiglinks
+    in signatoryCanView' usersiglinks (documentstatus doc) (documentcurrentsignorder doc)
+
+{- |
+    Purpose of this is to share the filtering of documents for signatories
+    between getDocumentsBySignatory and getDocumentsBySupervisor.
+-}
+signatoryCanView' :: [SignatoryLink] -> DocumentStatus -> SignOrder -> Bool
+signatoryCanView' siglinks docstatus docsignorder = 
+    let isnotpreparation = Preparation /= docstatus
+        hasLink = not $ Prelude.null siglinks
+        signatoryActivated = all ((>=) docsignorder . signatorysignorder . signatorydetails) siglinks
     in isnotpreparation && hasLink && signatoryActivated
+
 
 getDocumentsBySignatory :: User -> Query Documents [Document]
 getDocumentsBySignatory user = queryDocs $ \documents ->
     filter (signatoryCanView user) (toList $ documents @= userservice user) 
-       
+
+filterSignatoryLinksBySupervisor :: Document -> User -> [SignatoryLink]
+filterSignatoryLinksBySupervisor doc user =
+    [sl | sl <- documentsignatorylinks doc
+        , isSigLinkForSupervisor (userid user) sl
+        , not $ signatorylinkdeleted sl]
+
+supervisorCanView :: User -> Document -> Bool
+supervisorCanView user doc =
+    let supersiglinks = filterSignatoryLinksBySupervisor doc user
+        isSupervisedSignatory = signatoryCanView' supersiglinks (documentstatus doc) (documentcurrentsignorder doc)
+        isSupervisedAuthor = any siglinkIsAuthor supersiglinks
+    in isSupervisedAuthor || isSupervisedSignatory
+
+getDocumentsBySupervisor :: User -> Query Documents [Document]
+getDocumentsBySupervisor user = queryDocs $ \documents ->
+   filter (supervisorCanView user) (toList $ documents @= userservice user)
 
 getTimeoutedButPendingDocuments :: MinutesTime -> Query Documents [Document]
 getTimeoutedButPendingDocuments now = queryDocs $ \docs ->
@@ -736,7 +762,7 @@ archiveDocuments userid useremail docs = do
   -- FIXME: can use a fold here
   forM_ docs $ \d -> deleteDocumentSignatoryLinks (fst d) (snd d) isSignatoryOrSupervisor
   where isSignatoryOrSupervisor :: SignatoryLink -> Bool
-        isSignatoryOrSupervisor sl = isSigLinkForUserInfo userid useremail sl || (Just userid == maybesupervisor sl)
+        isSignatoryOrSupervisor sl = isSigLinkForUserInfo userid useremail sl || isSigLinkForSupervisor userid sl
 
 archiveDocumentForAll :: DocumentID -> Update Documents (Either String Document)
 archiveDocumentForAll docid = deleteDocumentSignatoryLinks docid [] (const True)
@@ -1219,6 +1245,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'getQuarantinedDocuments
                         , 'getDocumentsByAuthor
                         , 'getDocumentsBySignatory
+                        , 'getDocumentsBySupervisor
                         , 'newDocument
                         , 'newDocumentWithMCompany 
                         , 'getDocumentByDocumentID
