@@ -179,38 +179,51 @@ newDocumentWithMCompany mcompany user title documenttype ctime = do
   
   let authorlink = copySignatoryAccount user authorlink0
 
-  let doc = Document
+  let doc = blankDocument {
+              documenttitle                = title
+            , documentsignatorylinks       = [authorlink]
+            , documenttype                 = documenttype
+            , documentfunctionality        = newDocumentFunctionality documenttype user
+            , documentctime                = ctime
+            , documentmtime                = ctime
+            , documentservice              = userservice user
+            , documentattachments          = []
+            , documentoriginalcompany      = mcompany `mplus` usercompany user
+            } `appendHistory` [DocumentHistoryCreated ctime]
+
+  insertNewDocument doc
+  
+blankDocument :: Document 
+blankDocument =
+          Document
           { documentid                   = DocumentID 0
-          , documenttitle                = title
-          , documentsignatorylinks       = [authorlink]
+          , documenttitle                = BS.empty
+          , documentsignatorylinks       = []
           , documentfiles                = []
           , documentstatus               = Preparation
-          , documenttype                 = documenttype
-          , documentfunctionality        = newDocumentFunctionality documenttype user
-          , documentctime                = ctime
-          , documentmtime                = ctime
+          , documenttype                 = Contract
+          , documentfunctionality        = BasicFunctionality
+          , documentctime                = MinutesTime 0 0
+          , documentmtime                = MinutesTime 0 0
           , documentdaystosign           = Nothing
           , documenttimeouttime          = Nothing
           , documentlog                  = []
           , documentinvitetext           = BS.empty
           , documentsealedfiles          = []
           , documenttrustweaverreference = Nothing
-          , documentallowedidtypes       = [EmailIdentification]
+          , documentallowedidtypes       = []
           , documentcsvupload            = Nothing
           , documentcancelationreason    = Nothing
           , documentinvitetime           = Nothing
           , documentsharing              = Private
           , documentrejectioninfo        = Nothing
           , documenttags                 = []
-          , documentservice              = userservice user
+          , documentservice              = Nothing
           , documentattachments          = []
-          , documentoriginalcompany      = mcompany `mplus` usercompany user
+          , documentoriginalcompany      = Nothing
           , documentrecordstatus         = LiveDocument
           , documentquarantineexpiry     = Nothing
-          } `appendHistory` [DocumentHistoryCreated ctime]
-
-  insertNewDocument doc
-  
+          }
 
 fileMovedToAWS :: FileID 
                -> BS.ByteString
@@ -749,11 +762,61 @@ deleteDocumentSignatoryLinks docid users p = do
           newsiglinks = mapWhen p deleteSigLink $ documentsignatorylinks in
       doc { documentsignatorylinks = newsiglinks }
 
+{- |
+    This is a very boring function that creates a new zombie document record
+    to replace the existing one.  For legal reasons we have to take all the data off,
+    but on the other hand I've left the File and SignatoryLinkIDs in tact so that
+    we don't reuse in the future.
+-}
+setupForDeletion :: Document -> Document
+setupForDeletion doc = blankDocument { 
+                         documentid = documentid doc,
+                         documentrecordstatus = DeletedDocument,
+                         documentfiles = map (blankFile . fileid) (documentfiles doc),
+                         documentsealedfiles = map (blankFile . fileid) (documentsealedfiles doc),
+                         documentsignatorylinks = map (blankSigLink . signatorylinkid) (documentsignatorylinks doc) }
+  where
+  blankFile :: FileID -> File
+  blankFile fid = File { fileid = fid,
+                         filename = BS.empty,
+                         filestorage = FileStorageMemory BS.empty }
+  blankSigLink :: SignatoryLinkID -> SignatoryLink
+  blankSigLink siglinkid = SignatoryLink {
+                             signatorylinkid = siglinkid
+                           , signatorydetails = blankSigDetails
+                           , signatorymagichash = MagicHash { unMagicHash = 0 }
+                           , maybesignatory = Nothing
+                           , maybesupervisor = Nothing
+                           , maybesigninfo  = Nothing
+                           , maybeseeninfo  = Nothing
+                           , maybereadinvite = Nothing
+                           , invitationdeliverystatus = Unknown
+                           , signatorysignatureinfo = Nothing
+                           , signatoryroles = []
+                           , signatorylinkdeleted = False
+                           }
+  blankSigDetails :: SignatoryDetails
+  blankSigDetails = SignatoryDetails { 
+      signatoryfstname = BS.empty 
+    , signatorysndname = BS.empty 
+    , signatorycompany = BS.empty
+    , signatorypersonalnumber = BS.empty
+    , signatorycompanynumber = BS.empty
+    , signatoryemail = BS.empty
+    , signatorysignorder = SignOrder 0
+    , signatoryfstnameplacements = []
+    , signatorysndnameplacements = []
+    , signatorycompanyplacements = []
+    , signatoryemailplacements = []
+    , signatorypersonalnumberplacements = []
+    , signatorycompanynumberplacements = []
+    , signatoryotherfields = []
+    }
+
 deleteDocumentIfRequired :: MinutesTime -> [User] -> Document -> Document    
 deleteDocumentIfRequired now users doc@Document{documentstatus, documentsignatorylinks, documentrecordstatus} =
   case (isNotDeleted, isLive, isInvisible, isInPreparation) of
-    (True, _, True, True) -> 
-      doc { documentrecordstatus = DeletedDocument }
+    (True, _, True, True) -> setupForDeletion doc
     (_, True, True, False) -> 
       doc { documentrecordstatus = QuarantinedDocument, documentquarantineexpiry = Just quarantineExpiry }
     _ -> doc
@@ -780,7 +843,7 @@ endQuarantineForDocument :: DocumentID -> Update Documents (Either String Docume
 endQuarantineForDocument documentid = do
   modifySignableOrTemplate documentid $ \document ->
     case documentrecordstatus document of
-      QuarantinedDocument -> return $ document { documentrecordstatus = DeletedDocument }
+      QuarantinedDocument -> return $ setupForDeletion document
       _ -> Left "Document isn't in quarantine"
 
 extendDocumentQuarantine :: DocumentID -> Update Documents (Either String Document)
