@@ -854,12 +854,11 @@ handleIssueUpdateAttachments doc = withUserPost $ do
     attidsnums <- getCriticalFieldList asValidDocID "attachmentid"
     removeatt <- getCriticalFieldList asValidBool "removeattachment"
     let idsforremoval = map (DocumentID . fst) . filter snd $ zip attidsnums removeatt
-        Just user = ctxmaybeuser ctx
     fileinputs <- getDataFnM $ lookInputs "attachment"
     mattachments <- sequence $ map (makeDocumentFromFile Attachment) fileinputs
     let idsforadd = map documentid $ catMaybes mattachments
 
-    mndoc <- update $ UpdateDocumentAttachments (userid user) (unEmail $ useremail $ userinfo user) (documentid udoc) idsforadd idsforremoval
+    mndoc <- update $ UpdateDocumentAttachments (documentid udoc) idsforadd idsforremoval
     case mndoc of
         Left _msg -> mzero
         Right ndoc -> return . LinkDesignDoc . DesignStep3 $ documentid ndoc
@@ -1569,11 +1568,21 @@ handleIssueArchive = do
     idnumbers <- getCriticalFieldList asValidDocID "doccheck"
     liftIO $ putStrLn $ show idnumbers
     let ids = map DocumentID idnumbers
-    docs <- mapM (query . GetDocumentByDocumentID) ids
-    liftIO $ print docs
+    idsAndUsers <- mapM lookupRelevantUsers ids
     let uid = userid user
         uemail = unEmail $ useremail $ userinfo user
-    update $ ArchiveDocuments uid uemail ids
+    update $ ArchiveDocuments uid uemail idsAndUsers
+    where
+      lookupRelevantUsers :: DocumentID -> Kontra (DocumentID, [User])
+      lookupRelevantUsers docid = do
+        doc <- queryOrFail $ GetDocumentByDocumentID docid
+        musers <- mapM (query . GetUserByUserID) (linkedUserIDs doc)
+        return $ (docid, catMaybes musers)
+      linkedUserIDs = concatMap usersFromSigLink . documentsignatorylinks
+      usersFromSigLink SignatoryLink{maybesignatory, maybesupervisor} = 
+        mkList maybesignatory ++ mkList maybesupervisor
+      mkList Nothing = []
+      mkList (Just x) = [x] 
 
 handleTemplateShare :: Kontra KontraLink
 handleTemplateShare = withUserPost $ do

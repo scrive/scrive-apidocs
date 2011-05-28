@@ -349,13 +349,11 @@ getDocumentsByDocumentID docids = queryDocs $ \documents ->
     then Right . toList $ relevantdocs
     else Left "documents don't exist for all the given ids"
 
-updateDocumentAttachments :: UserID
-                          -> BS.ByteString
-                          -> DocumentID
+updateDocumentAttachments :: DocumentID
                           -> [DocumentID]
                           -> [DocumentID]
                           -> Update Documents (Either String Document)
-updateDocumentAttachments userid useremail docid idstoadd idstoremove = do
+updateDocumentAttachments docid idstoadd idstoremove = do
   documents <- ask
   let allattachments = documents @+ attachmentids
       foundattachments = length attachmentids == size allattachments
@@ -363,11 +361,15 @@ updateDocumentAttachments userid useremail docid idstoadd idstoremove = do
     (False, _) -> return $ Left "documents don't exist for all the given ids"
     (_, Left msg) -> return $ Left msg
     (True, Right _) -> do
-      archiveDocuments userid useremail idstoremove
-      modifySignableOrTemplate docid $ \doc ->
-        case checkDoc doc of
-          Left msg -> Left msg
-          Right ddoc -> Right $ ddoc { documentattachments = updateAttachments $ documentattachments ddoc }
+      mremoved <- mapM archiveDocumentForAll idstoremove
+      case sequence mremoved of
+        Left msg -> return $ Left msg
+        Right _ ->
+          modifySignableOrTemplate docid $ \doc ->
+            case checkDoc doc of
+              Left msg -> Left msg
+              Right ddoc -> 
+                return $ ddoc { documentattachments = updateAttachments $ documentattachments ddoc }
   where
     attachmentids :: [DocumentID]
     attachmentids = idstoadd ++ idstoremove
@@ -712,43 +714,59 @@ getDocumentsByCompanyAndTags  mservice company doctags = queryDocs $ \documents 
 mapWhen :: (a -> Bool) -> (a -> a) -> [a] -> [a]
 mapWhen p f ls = map (\i -> if p i then f i else i) ls
 
-archiveDocuments :: UserID -> BS.ByteString -> [DocumentID] -> Update Documents ()
-archiveDocuments userid useremail docidlist = do
+archiveDocuments :: UserID -> BS.ByteString -> [(DocumentID, [User])] -> Update Documents ()
+archiveDocuments userid useremail docs = do
   -- FIXME: can use a fold here
-  forM_ docidlist $ \docid -> deleteDocumentSignatoryLinks docid isSignatoryOrSupervisor
+  forM_ docs $ \d -> deleteDocumentSignatoryLinks (fst d) (snd d) isSignatoryOrSupervisor
   where isSignatoryOrSupervisor :: SignatoryLink -> Bool
         isSignatoryOrSupervisor sl = isSigLinkForUserInfo userid useremail sl || (Just userid == maybesupervisor sl)
 
 archiveDocumentForAll :: DocumentID -> Update Documents (Either String Document)
-archiveDocumentForAll docid = deleteDocumentSignatoryLinks docid (const True)
+archiveDocumentForAll docid = deleteDocumentSignatoryLinks docid [] (const True)
 
-deleteDocumentSignatoryLinks :: DocumentID -> (SignatoryLink -> Bool) -> Update Documents (Either String Document)
-deleteDocumentSignatoryLinks docid p = do
+{- |
+    This function deletes any signatory link that passes the predicate you gave it.
+    This will then assess whether the document needs to be deleted, and delete as required.
+
+    This is pretty icky but I couldn't get it nicer :(
+
+    You need to pass this function a list of live users (probably just the live
+    users relevant to the document in question, but you could pass all the users
+    if you really wanted).  It'll use this list to lookup whether a user exists or not.
+-}  
+deleteDocumentSignatoryLinks :: DocumentID -> [User] -> (SignatoryLink -> Bool) -> Update Documents (Either String Document)
+deleteDocumentSignatoryLinks docid users p = do
   now <- getMinuteTimeDB
   modifySignableOrTemplate docid $ \doc ->
-    if (documentstatus doc) `elem` [Pending, AwaitingAuthor]
-      then Left "Unable to delete siglinks of live docs"
-      else Right . deleteDocumentIfRequired now $ deleteSigLinks doc
+    if isDeletableDocument doc
+      then Left "Unable to delete siglinks for this doc"
+      else Right . deleteDocumentIfRequired now users $ deleteSigLinks doc
   where
     deleteSigLinks doc@Document{documentsignatorylinks} =
       let deleteSigLink sl = sl { signatorylinkdeleted = True }
           newsiglinks = mapWhen p deleteSigLink $ documentsignatorylinks in
       doc { documentsignatorylinks = newsiglinks }
 
-deleteDocumentIfRequired :: MinutesTime -> Document -> Document    
-deleteDocumentIfRequired now doc@Document{documentstatus, documentsignatorylinks} =
-  case (isForDelete, isInvisible) of
-    (True, _) -> doc { documentrecordstatus = DeletedDocument }
-    (False, True) -> doc { documentrecordstatus = QuarantinedDocument, documentquarantineexpiry = Just quarantineExpiry }
+deleteDocumentIfRequired :: MinutesTime -> [User] -> Document -> Document    
+deleteDocumentIfRequired now users doc@Document{documentstatus, documentsignatorylinks, documentrecordstatus} =
+  case (isNotDeleted, isLive, isInvisible, isInPreparation) of
+    (True, _, True, True) -> 
+      doc { documentrecordstatus = DeletedDocument }
+    (_, True, True, False) -> 
+      doc { documentrecordstatus = QuarantinedDocument, documentquarantineexpiry = Just quarantineExpiry }
     _ -> doc
   where
     quarantineExpiry = addMonths 3 now
-    isForDelete = documentstatus==Preparation && isInvisible || isOrphaned
+    isInPreparation = documentstatus==Preparation
+    isLive = documentrecordstatus == LiveDocument
+    isQuarantined = documentrecordstatus == QuarantinedDocument
+    isNotDeleted = isLive || isQuarantined
     isInvisible = all isInvisibleSigLink documentsignatorylinks
-    isOrphaned = all isOrphanedSigLink documentsignatorylinks
     isInvisibleSigLink sl = isDeletedSigLink sl || isOrphanedSigLink sl
     isDeletedSigLink SignatoryLink{signatorylinkdeleted} = signatorylinkdeleted
-    isOrphanedSigLink SignatoryLink{maybesignatory,maybesupervisor} = isNothing maybesignatory && isNothing maybesupervisor
+    isOrphanedSigLink SignatoryLink{maybesignatory,maybesupervisor} = isNoUser maybesignatory && isNoUser maybesupervisor
+    isNoUser Nothing = True
+    isNoUser (Just uid) = not $ uid `elem` (map userid users)
 
 extendDocumentQuarantine :: DocumentID -> Update Documents (Either String Document)
 extendDocumentQuarantine docid = do
@@ -1060,7 +1078,7 @@ migrateForDeletion users = do
     deleteInvisibleDocs = do
       docs <- ask
       now <- getMinuteTimeDB
-      mapM_ (\doc -> modifySignableOrTemplate (documentid doc) (Right . deleteDocumentIfRequired now)) $ toList docs
+      mapM_ (\doc -> modifySignableOrTemplate (documentid doc) (Right . deleteDocumentIfRequired now users)) $ toList docs
 
 {-
 -- | Migrate author to the documentsignlinks so that he is not special anymore

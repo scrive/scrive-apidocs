@@ -48,6 +48,11 @@ copySignatoryAccount acc siglink =
   let (userid, msuperid) = getSignatoryAccount acc in
   siglink { maybesignatory = Just userid, maybesupervisor = msuperid }
 
+{- |
+    Checks whether the document is deletable, this is not the case for live documents.
+-}
+isDeletableDocument :: Document -> Bool
+isDeletableDocument doc = (documentstatus doc) `elem` [Pending, AwaitingAuthor]
 
 {- |
    Is the given SignatoryLink marked as a signatory (someone who can must sign)?
