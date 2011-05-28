@@ -1554,12 +1554,14 @@ handleIssueArchive :: Kontra ()
 handleIssueArchive = do
     Context { ctxmaybeuser = Just user } <- get
     idnumbers <- getCriticalFieldList asValidDocID "doccheck"
-    liftIO $ putStrLn $ show idnumbers
     let ids = map DocumentID idnumbers
     idsAndUsers <- mapM lookupUsersRelevantToDoc ids
     let uid = userid user
         uemail = unEmail $ useremail $ userinfo user
-    update $ ArchiveDocuments uid uemail idsAndUsers
+    res <- update $ ArchiveDocuments uid uemail idsAndUsers
+    case res of
+      Left _ -> mzero
+      Right _ -> return ()
 
 handleTemplateShare :: Kontra KontraLink
 handleTemplateShare = withUserPost $ do
