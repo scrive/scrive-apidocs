@@ -1059,7 +1059,7 @@ data File = File
 data AuthorAttachment = AuthorAttachment { authorattachmentfile :: File }
                       deriving (Eq, Ord, Typeable)
                                
-data SignatoryAttachment = SignatoryAttachment { signatoryattachmentfile            :: File
+data SignatoryAttachment = SignatoryAttachment { signatoryattachmentfile            :: Maybe File
                                                , signatoryattachmentsignatorylinkid :: SignatoryLinkID
                                                , signatoryattachmentname            :: BS.ByteString
                                                , signatoryattachmentdescription     :: BS.ByteString

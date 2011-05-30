@@ -213,7 +213,8 @@ newDocumentWithMCompany mcompany user title documenttype ctime = do
             , documentctime                = ctime
             , documentmtime                = ctime
             , documentservice              = userservice user
-            , documentattachments          = []
+            , documentauthorattachments    = []
+            , documentsignatoryattachments = []
             , documentoriginalcompany      = mcompany `mplus` usercompany user
             } `appendHistory` [DocumentHistoryCreated ctime]
 
@@ -250,10 +251,7 @@ blankDocument =
           , documentrecordstatus         = LiveDocument
           , documentquarantineexpiry     = Nothing
           , documentsignatoryattachments = []
-          } `appendHistory` [DocumentHistoryCreated ctime]
-
-  insertNewDocument doc
-  
+          }
 
 fileMovedToAWS :: FileID 
                -> BS.ByteString
@@ -392,43 +390,42 @@ getDocumentsByDocumentID docids = queryDocs $ \documents ->
     then Right . toList $ relevantdocs
     else Left "documents don't exist for all the given ids"
 
-
 copyFile :: File -> Update Documents File
 copyFile file = do
+  documents <- ask
   newfileid <- getUnique documents FileID
   return File { fileid = newfileid
               , filename = filename file
               , filestorage = filestorage file
               }
 
+deleteFile :: FileID -> Update Documents ()
+deleteFile _ = return ()
+
+{- |
+   Add and remove attachments to a document in Preparation
+ -}
 updateDocumentAttachments :: DocumentID
                           -> [DocumentID]
                           -> [FileID]
                           -> Update Documents (Either String Document)
 updateDocumentAttachments docid idstoadd idstoremove = do
   documents <- ask
-  let allattachments = toList $ documents @+ idstoadd
-      foundattachments = length idstoadd == length allattachments
-  case (foundattachments, sequence . map checkDoc allattachments) of
-    (False, _) -> return $ Left "documents don't exist for all the given ids"
-    (_, Left msg) -> return $ Left msg
-    (True, Right _) -> do
-      mremoved <- mapM archiveDocumentForAll idstoremove
-      case sequence mremoved of
-        Left msg -> return $ Left msg
-        Right _ ->
-          modifySignableOrTemplate docid $ \doc ->
-            case checkDoc doc of
-              Left msg -> Left msg
-              Right ddoc -> 
-                return $ ddoc { documentattachments = updateAttachments $ documentattachments ddoc }
-  where
-    newAttachments docs = 
-    updateAttachments atts = filter (\aid -> not $ aid `elem` attachmentids) atts ++ idstoadd
-    newDocumentAttachment doc = AuthorAttachment { File { 
-    checkDoc :: Document -> Either String Document
-    checkDoc doc@Document{ documentstatus == Preparation } = Right doc
-    checkDoc _ = Left "Can't make attachments unless the status is in preparation"
+  let addattachments   = toList $ documents @+ idstoadd
+      foundattachments = length idstoadd == length addattachments
+  addattachmentfiles <- sequence [copyFile (head $ documentfiles ad) |  ad <- addattachments]
+  _ <- sequence $ map deleteFile idstoremove
+  case foundattachments of
+    False -> return $ Left "documents don't exist for all the given ids"
+    True -> modifySignableOrTemplate docid $ \doc ->
+      case documentstatus doc of
+        Preparation -> Right doc { documentauthorattachments =
+                                      [da | da <- documentauthorattachments doc,
+                                       not ((fileid $ authorattachmentfile da) `elem` idstoremove)]
+                                      ++
+                                      map AuthorAttachment addattachmentfiles
+                                 }
+        _ -> Left "Can only attach to document in Preparation"
 
 {- |
     When a doc comes out of preparation mode the attachments should be finalised, meaning

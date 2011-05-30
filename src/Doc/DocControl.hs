@@ -289,14 +289,14 @@ sendAwaitingEmail ctx document = do
 
 makeMailAttachments :: Context -> Document -> IO [(BS.ByteString,BS.ByteString)]
 makeMailAttachments ctx document = do
-  attachmentdocs <- queryOrFailIfLeft $ GetDocumentsByDocumentID $ documentattachments document
-  sequence $ map (makeMailAttachment ctx) (document : attachmentdocs)
-  where
-    makeMailAttachment :: Context -> Document -> IO (BS.ByteString, BS.ByteString)
-    makeMailAttachment _ Document{documenttitle,documentsealedfiles,documentfiles} = do
-      let files = if Data.List.null documentsealedfiles then documentfiles else documentsealedfiles
-      attachmentcontent <- getFileContents ctx $ head $ files
-      return (documenttitle, attachmentcontent)
+  let mainfile = head $ case documentsealedfiles document of
+        [] -> documentfiles document
+        fs -> fs
+      attachments = map authorattachmentfile $ documentauthorattachments document
+      allfiles = mainfile : attachments
+      filenames = map filename allfiles
+  filecontents <- sequence $ map (getFileContents ctx) allfiles
+  return $ zip filenames filecontents
 
 {- |
    Send an email to the author and to all signatories who were sent an invitation  when the document is rejected
@@ -497,25 +497,30 @@ handleSignShow documentid
   case edocument of
     Left _ -> mzero -- not allowed to view
     Right document -> case getSigLinkBySigLinkID signatorylinkid1 document of
-      Nothing -> mzero -- signatory link does not exist
-      Just invitedlink -> do
-        attachments <- queryOrFailIfLeft $ GetDocumentsByDocumentID $ documentattachments document
-        let isFlashNeeded = Data.List.null ctxflashmessages
-                            && (not $ isJust $ maybesigninfo invitedlink)  && (not $ isAttachment document )
-            -- heavens this is a confusing case statement, there must be a better way!
-            flashMsg =
-              case (isFlashNeeded, 
-                    isSignatory invitedlink, 
-                    isContract document, 
-                    document `allowsIdentification` ELegitimationIdentification,
-                    isOffer document) of
-                (False, _, _, _, _) -> Nothing
-                (_, False, _, True, _) -> Just flashMessageOnlyHaveRightsToViewDoc
-                (_, False, _, _, True) -> Just flashMessageOnlyHaveRightsToViewDoc
-                (_, _, True, True, _) -> Just flashMessagePleaseSignWithEleg
-                (_, _, True, _, _) -> Just flashMessagePleaseSignContract
-                (_, _, _, _, True) -> Just flashMessagePleaseSignOffer
-                _ -> Nothing
+      Nothing -> mzero
+      Just invitedlink -> case getAuthorSigLink document of
+        Nothing -> mzero -- this means there is no author!
+        Just authorsiglink -> do
+          attachments <- queryOrFailIfLeft $ GetDocumentsByDocumentID $ documentattachments document
+          let authorname = personname authorsiglink
+              invitedname = signatoryname $ signatorydetails $ invitedlink 
+              isSignatory = SignatoryPartner `elem` signatoryroles invitedlink
+              isFlashNeeded = Data.List.null ctxflashmessages
+                       && (not (isJust $ maybesigninfo invitedlink))
+              -- heavens this is a confusing case statement, there must be a better way!
+              flashMsg =
+                case (isFlashNeeded, 
+                      isSignatory, 
+                      isContract document, 
+                      document `allowsIdentification` ELegitimationIdentification,
+                      isOffer document) of
+                  (False, _, _, _, _) -> Nothing
+                  (_, False, _, True, _) -> Just flashMessageOnlyHaveRightsToViewDoc
+                  (_, False, _, _, True) -> Just flashMessageOnlyHaveRightsToViewDoc
+                  (_, _, True, True, _) -> Just flashMessagePleaseSignWithEleg
+                  (_, _, True, _, _) -> Just flashMessagePleaseSignContract
+                  (_, _, _, _, True) -> Just flashMessagePleaseSignOffer
+                  _ -> Nothing
 
         ctx@Context{ctxtemplates} <- get
 
@@ -524,8 +529,8 @@ handleSignShow documentid
 
         case (isAttachment document, isSignatory invitedlink) of
             (True, _) -> liftIO $ pageAttachmentForSignatory ctx document invitedlink
-            (_, True) -> liftIO $ pageDocumentForSignatory (LinkSignDoc document invitedlink) document attachments ctx invitedlink
-            _ -> liftIO $ pageDocumentForViewer ctx document attachments (Just invitedlink)
+            (_, True) -> liftIO $ pageDocumentForSignatory (LinkSignDoc document invitedlink) document [] ctx invitedlink
+            _ -> liftIO $ pageDocumentForViewer ctx document [] (Just invitedlink)
 
 
 --end
@@ -554,26 +559,23 @@ handleIssueShowGet docid = do
     Right document -> do
         ctx@Context { ctxmaybeuser 
                     } <- get
-        mdstep <- getDesignStep docid
-        case (mdstep, documentfunctionality document) of
-          (Just (DesignStep3 _), BasicFunctionality) -> return $ Left $ LinkIssueDoc docid
-          _ -> do
-            attachments <- queryOrFailIfLeft $ GetDocumentsByDocumentID $ documentattachments document
-            -- authors get a view with buttons
-            case (joinB $ isUserAuthor document <$> ctxmaybeuser, isAttachment document, documentstatus document) of
-              (True, True, Preparation) -> liftIO $ Right <$> pageAttachmentDesign ctx document
-              (_, True, _) -> liftIO $ Right <$> pageAttachmentView ctx document 
-              (True, _, _) -> do
-                let mMismatchMessage = getDataMismatchMessage $ documentcancelationreason document
-                when ((documentstatus document == Canceled) && (isJust mMismatchMessage)) 
-                  (addFlashMsg $ toFlashMsg OperationFailed (fromJust mMismatchMessage))
-                ctx2 <- get   -- need to get new context because we may have added flash msg
-                step <- getDesignStep (documentid document)
-                case (documentstatus document) of
-                  Preparation -> liftIO $ Right <$> pageDocumentDesign ctx2 document attachments step
-                  _ -> liftIO $ Right <$> pageDocumentForAuthor ctx2 document attachments               
-                -- friends can just look (but not touch)
-              (False, _, _) -> liftIO $ Right <$> pageDocumentForViewer ctx document attachments Nothing
+
+        attachments <- queryOrFailIfLeft $ GetDocumentsByDocumentID $ documentattachments document
+        -- authors get a view with buttons
+        case (isUserAuthor document user, isAttachment document, documentstatus document) of
+          (True, True, Preparation) -> liftIO $ pageAttachmentDesign ctx document
+          (_, True, _) -> liftIO $ pageAttachmentView ctx document 
+          (True, _, _) -> do
+            let mMismatchMessage = getDataMismatchMessage $ documentcancelationreason document
+            when ((documentstatus document == Canceled) && (isJust mMismatchMessage)) 
+              (addFlashMsg $ toFlashMsg OperationFailed (fromJust mMismatchMessage))
+            ctx2 <- get   -- need to get new context because we may have added flash msg
+            step <- getDesignStep (documentid document)
+            case (documentstatus document) of
+              Preparation -> liftIO $ pageDocumentDesign ctx2 document attachments step
+              _ ->  liftIO $ pageDocumentForAuthor ctx2 document attachments               
+          -- friends can just look (but not touch)
+          (False, _, _) -> liftIO $ pageDocumentForViewer ctx document attachments Nothing
 
 getDesignStep::DocumentID -> Kontra (Maybe DesignStep)
 getDesignStep docid = do
@@ -706,9 +708,10 @@ markDocumentAuthorReadAndSeen Document{documentid, documentsignatorylinks} time 
       update $ MarkInvitationRead documentid signatorylinkid time
       update $ MarkDocumentSeen documentid signatorylinkid signatorymagichash time ipnumber
 
+--ATTACH
 finaliseAttachments :: Document -> Kontra ()
-finaliseAttachments Document{documentattachments,documentsignatorylinks} = do
-  _ <- update $ FinaliseAttachments documentattachments documentsignatorylinks
+finaliseAttachments Document{documentsignatorylinks} = do
+  _ <- update $ FinaliseAttachments [] documentsignatorylinks
   return () 
 
 handleIssueSaveAsTemplate :: Document -> Kontra KontraLink
@@ -807,9 +810,10 @@ handleIssueUpdateAttachments doc = withUserPost $ do
     mudoc <- updateDocument ctx doc
     udoc <- returnRightOrMZero mudoc
     
-    attidsnums <- getCriticalFieldList asValidDocID "attachmentid"
+    attidsnums <- getCriticalFieldList asValidNumber "attachmentid"
     removeatt <- getCriticalFieldList asValidBool "removeattachment"
-    let idsforremoval = map (DocumentID . fst) . filter snd $ zip attidsnums removeatt
+    let idsforremoval = [FileID f | (f, r) <- zip attidsnums removeatt
+                                  , r]
     fileinputs <- getDataFnM $ lookInputs "attachment"
     mattachments <- sequence $ map (makeDocumentFromFile Attachment) fileinputs
     let idsforadd = map documentid $ catMaybes mattachments
