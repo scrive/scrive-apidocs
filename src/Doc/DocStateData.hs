@@ -33,7 +33,8 @@ module Doc.DocStateData
     , SignatureInfo(..)
     , SignatureProvider(..)
     , TimeoutTime(..)
-
+    , AuthorAttachment(..)
+    , SignatoryAttachment(..)
     , documentHistoryToDocumentLog
     , getAuthorSigLink
     ) where
@@ -101,7 +102,7 @@ data SignatureInfo = SignatureInfo { signatureinfotext        :: String
                                    , signaturepersnumverified :: Bool
                                    }
     deriving (Eq, Ord, Typeable)
-
+             
 -- added by Eric Normand for template system
 -- Defines a new field to be placed in a contract
 data FieldDefinition0 = FieldDefinition0
@@ -944,7 +945,6 @@ data Document23 = Document23
     , documentattachments23            :: [DocumentID]
     } deriving Typeable
 
-
 data Document24 = Document24
     { documentid24                     :: DocumentID
     , documenttitle24                  :: BS.ByteString
@@ -973,6 +973,7 @@ data Document24 = Document24
     , documentoriginalcompany24        :: Maybe CompanyID
     } deriving Typeable
 
+-- migration for author attachments
 data Document = Document
     { documentid                     :: DocumentID
     , documenttitle                  :: BS.ByteString
@@ -997,10 +998,11 @@ data Document = Document
     , documentrejectioninfo          :: Maybe (MinutesTime, SignatoryLinkID, BS.ByteString)
     , documenttags                   :: [DocumentTag]
     , documentservice                :: Maybe ServiceID
-    , documentattachments            :: [DocumentID]
+    , documentauthorattachments      :: [AuthorAttachment]
     , documentoriginalcompany        :: Maybe CompanyID
     , documentrecordstatus           :: DocumentRecordStatus
     , documentquarantineexpiry       :: Maybe MinutesTime  -- the time when any quarantine will end (included as a separate field to record status for easy indexing)
+    , documentsignatoryattachments   :: [SignatoryAttachment]
     }
 
 data CancelationReason =  ManualCancel
@@ -1052,6 +1054,19 @@ data File = File
     , filestorage     :: FileStorage
     }
     deriving (Typeable)
+             
+-- for Author Attachment and Signatory Attachments, obviously -EN
+data AuthorAttachment = AuthorAttachment { authorattachmentfile :: File }
+                      deriving (Eq, Ord, Typeable)
+                               
+data SignatoryAttachment = SignatoryAttachment { signatoryattachmentfile            :: File
+                                               , signatoryattachmentsignatorylinkid :: SignatoryLinkID
+                                               , signatoryattachmentname            :: BS.ByteString
+                                               , signatoryattachmentdescription     :: BS.ByteString
+                                               }
+                         deriving (Eq, Ord, Typeable)
+
+             
 
 data JpegPages0 = JpegPagesPending0
                | JpegPages0 [BS.ByteString]   
@@ -1111,6 +1126,8 @@ deriving instance Show DocStats
 deriving instance Show FieldDefinition
 deriving instance Show FieldPlacement
 
+deriving instance Show AuthorAttachment
+deriving instance Show SignatoryAttachment
 
 instance Show TimeoutTime where
     showsPrec prec = showsPrec prec . unTimeoutTime
@@ -1163,6 +1180,12 @@ instance FromReqURI SignatoryLinkID where
 
 instance FromReqURI FileID where
     fromReqURI = readM
+    
+$(deriveSerialize ''AuthorAttachment)
+instance Version AuthorAttachment
+
+$(deriveSerialize ''SignatoryAttachment)
+instance Version SignatoryAttachment
 
 $(deriveSerialize ''FieldDefinition0)
 instance Version FieldDefinition0
@@ -1721,7 +1744,7 @@ instance Version Document24 where
 $(deriveSerialize ''Document)
 instance Version Document where
     mode = extension 25 (Proxy :: Proxy Document24)
-    
+
 instance Migrate DocumentHistoryEntry0 DocumentHistoryEntry where
         migrate (DocumentHistoryCreated0 { dochisttime0 }) = 
             DocumentHistoryCreated dochisttime0
@@ -2541,7 +2564,6 @@ instance Migrate Document24 Document where
              , documentrejectioninfo24
              , documenttags24
              , documentservice24
-             , documentattachments24
              , documentoriginalcompany24
              }) = Document
                 { documentid                     = documentid24
@@ -2567,10 +2589,11 @@ instance Migrate Document24 Document where
                 , documentrejectioninfo          = documentrejectioninfo24
                 , documenttags                   = documenttags24
                 , documentservice                = documentservice24
-                , documentattachments            = documentattachments24
+                , documentauthorattachments      = []
                 , documentoriginalcompany        = documentoriginalcompany24
                 , documentrecordstatus           = LiveDocument
                 , documentquarantineexpiry       = Nothing
+                , documentsignatoryattachments   = []
                 }
 
 

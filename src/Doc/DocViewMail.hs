@@ -215,8 +215,8 @@ mailInvitationToSignOrViewContent :: KontrakcjaTemplates
                                   -> IO String        
 mailInvitationToSignOrViewContent templates 
                                   forMail 
-                                  Context {ctxhostpart}
-                                  document@Document { documenttimeouttime, documentinvitetext, documenttitle }
+                                  Context{ctxhostpart}
+                                  document@Document{ documenttimeouttime, documentinvitetext, documenttitle }
                                   msiglink = do
   let link = case msiglink of
                 Just siglink -> ctxhostpart ++ show (LinkSignDoc document siglink)
@@ -284,32 +284,30 @@ mailInvitationToSignOrViewContent templates
         field "creatorname" creatorname
                                  
            
-mailInvitationFromService :: Context -> Service -> Document -> SignatoryLink -> IO Mail                                             
+mailInvitationFromService :: Context -> Service -> Document -> SignatoryLink -> IO Mail
 mailInvitationFromService ctx service doc sl = do
-    templates <- toKontrakcjaTemplates [("invitationmail",BS.toString $ servicedocumentinvitationmail service)]
-    content <- renderTemplate templates "invitationmail" $ do
-        field "documenttitle" $ BS.toString  $ documenttitle doc
-        field "documentid" $ show $ documentid doc 
-        field "documentlink" $ (ctxhostpart ctx)++ show (LinkSignDoc doc sl)       
-        field "email" $ signatoryemail $ signatorydetails $ sl
-    htmlContent <- wrapHTML (ctxtemplates ctx) $ content++"\n"
-    return $ emptyMail {title = BS.fromString "Invitation", content = BS.fromString htmlContent}
-           
-mailInvitationToSign :: KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> IO Mail                                 
+  templates <- toKontrakcjaTemplates [("invitationmail",BS.toString $ servicedocumentinvitationmail service)]
+  content <- renderTemplate templates "invitationmail" $ do
+    field "documenttitle" $ BS.toString  $ documenttitle doc
+    field "documentid" $ show $ documentid doc 
+    field "documentlink" $ (ctxhostpart ctx)++ show (LinkSignDoc doc sl)       
+    field "email" $ signatoryemail $ signatorydetails $ sl
+  htmlContent <- wrapHTML (ctxtemplates ctx) $ content++"\n"
+  return $ emptyMail {title = BS.fromString "Invitation", content = BS.fromString htmlContent}
+
+mailInvitationToSign :: KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> IO Mail
 mailInvitationToSign templates ctx doc sl = do
-    mservice <- liftMM (query . GetService) (return $ getService doc)
-    case (mservice) of
-      Nothing -> mailInvitationToSign' templates ctx doc sl
-      Just service -> mailInvitationFromService ctx service doc sl
-      
+  mservice <- liftMM (query . GetService) (return $ getService doc)
+  case (mservice) of
+    Nothing -> mailInvitationToSign' templates ctx doc sl
+    Just service -> mailInvitationFromService ctx service doc sl
       
 mailInvitationToSend :: KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> IO Mail
 mailInvitationToSend templates ctx doc sl = do
-    mservice <- liftMM (query . GetService) (return $ getService doc)
-    case (mservice) of
-      Nothing -> mailInvitationToSend' templates ctx doc sl
-      Just service -> mailInvitationFromService ctx service doc sl
-
+  mservice <- liftMM (query . GetService) (return $ getService doc)
+  case (mservice) of
+    Nothing -> mailInvitationToSend' templates ctx doc sl
+    Just service -> mailInvitationFromService ctx service doc sl
 
 mailInvitationToView :: KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> IO Mail    
 mailInvitationToView templates ctx doc sl  = do

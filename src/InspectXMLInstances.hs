@@ -27,6 +27,10 @@ import qualified Data.ByteString.UTF8 as BS
 --Complex types, usualy big that should be derived automatically
 $(deriveInspectXML ''Document)
 
+$(deriveInspectXML ''AuthorAttachment)
+
+$(deriveInspectXML ''SignatoryAttachment)
+
 $(deriveInspectXML ''FieldDefinition)
 
 $(deriveInspectXML ''FieldPlacement)

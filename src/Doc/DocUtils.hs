@@ -25,7 +25,7 @@ import Data.Maybe
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 
-
+-- some docs please? -EN
 type SignatoryAccount = (UserID, Maybe UserID)
 
 class HasSignatoryAccount a where

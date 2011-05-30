@@ -245,11 +245,15 @@ blankDocument =
           , documentrejectioninfo        = Nothing
           , documenttags                 = []
           , documentservice              = Nothing
-          , documentattachments          = []
+          , documentauthorattachments    = []
           , documentoriginalcompany      = Nothing
           , documentrecordstatus         = LiveDocument
           , documentquarantineexpiry     = Nothing
-          }
+          , documentsignatoryattachments = []
+          } `appendHistory` [DocumentHistoryCreated ctime]
+
+  insertNewDocument doc
+  
 
 fileMovedToAWS :: FileID 
                -> BS.ByteString
@@ -277,8 +281,7 @@ fileMovedTo fid fstorage = do
                       | otherwise = file
     moved1 file = file
 
-getDocumentByFileID :: FileID 
-                       -> Query Documents (Either String Document)
+getDocumentByFileID :: FileID -> Query Documents (Either String Document)
 getDocumentByFileID fileid' = queryDocs $ \documents ->
   case getOne (documents @= fileid') of
     Nothing -> Left $ "cannot find document for file #" ++ show fileid'
@@ -348,7 +351,6 @@ updateDocument time documentid docname signatories daystosign invitetext (author
                     }
          else return $ Left $ "Document #" ++ show documentid ++ " is in " ++ show (documentstatus document) ++ " state, must be in Preparation to use updateDocument"
 
-
 updateDocumentSimple::DocumentID -> (SignatoryDetails, SignatoryAccount) -> [SignatoryDetails] -> Update Documents (Either String Document)
 updateDocumentSimple did (authordetails,authoraccount) signatories = do
    now <- getMinuteTimeDB
@@ -390,15 +392,24 @@ getDocumentsByDocumentID docids = queryDocs $ \documents ->
     then Right . toList $ relevantdocs
     else Left "documents don't exist for all the given ids"
 
+
+copyFile :: File -> Update Documents File
+copyFile file = do
+  newfileid <- getUnique documents FileID
+  return File { fileid = newfileid
+              , filename = filename file
+              , filestorage = filestorage file
+              }
+
 updateDocumentAttachments :: DocumentID
                           -> [DocumentID]
-                          -> [DocumentID]
+                          -> [FileID]
                           -> Update Documents (Either String Document)
 updateDocumentAttachments docid idstoadd idstoremove = do
   documents <- ask
-  let allattachments = documents @+ attachmentids
-      foundattachments = length attachmentids == size allattachments
-  case (foundattachments, sequence . map checkDoc $ toList allattachments) of
+  let allattachments = toList $ documents @+ idstoadd
+      foundattachments = length idstoadd == length allattachments
+  case (foundattachments, sequence . map checkDoc allattachments) of
     (False, _) -> return $ Left "documents don't exist for all the given ids"
     (_, Left msg) -> return $ Left msg
     (True, Right _) -> do
@@ -412,15 +423,12 @@ updateDocumentAttachments docid idstoadd idstoremove = do
               Right ddoc -> 
                 return $ ddoc { documentattachments = updateAttachments $ documentattachments ddoc }
   where
-    attachmentids :: [DocumentID]
-    attachmentids = idstoadd ++ idstoremove
-    updateAttachments :: [DocumentID] -> [DocumentID]
+    newAttachments docs = 
     updateAttachments atts = filter (\aid -> not $ aid `elem` attachmentids) atts ++ idstoadd
+    newDocumentAttachment doc = AuthorAttachment { File { 
     checkDoc :: Document -> Either String Document
-    checkDoc doc@Document{documentstatus} =
-      if documentstatus == Preparation
-      then Right doc
-      else Left $ "Can't make attachments unless the status is in preparation"
+    checkDoc doc@Document{ documentstatus == Preparation } = Right doc
+    checkDoc _ = Left "Can't make attachments unless the status is in preparation"
 
 {- |
     When a doc comes out of preparation mode the attachments should be finalised, meaning

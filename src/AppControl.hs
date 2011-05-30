@@ -141,15 +141,15 @@ handleRoutes = msum [
      , hPost $ handleMainReaload
 
      -- static pages
-     , dir "webbkarta" $ hGetAllowHttp $ handleSitemapPage
-     , dir "priser" $ hGetAllowHttp $ handlePriceplanPage
-     , dir "sakerhet" $ hGetAllowHttp $ handleSecurityPage
-     , dir "juridik" $ hGetAllowHttp $ handleLegalPage
-     , dir "sekretesspolicy" $ hGetAllowHttp $ handlePrivacyPolicyPage
-     , dir "allmana-villkor" $ hGetAllowHttp $ handleTermsPage
-     , dir "om-skrivapa" $ hGetAllowHttp $ handleAboutPage
-     , dir "partners" $ hGetAllowHttp $ handlePartnersPage
-     , dir "kunder" $ hGetAllowHttp $ handleClientsPage
+     , dir "webbkarta"       $ hGetAllowHttp $ handleSitemapPage             
+     , dir "priser"          $ hGetAllowHttp $ handlePriceplanPage              
+     , dir "sakerhet"        $ hGetAllowHttp $ handleSecurityPage             
+     , dir "juridik"         $ hGetAllowHttp $ handleLegalPage                 
+     , dir "sekretesspolicy" $ hGetAllowHttp $ handlePrivacyPolicyPage 
+     , dir "allmana-villkor" $ hGetAllowHttp $ handleTermsPage         
+     , dir "om-skrivapa"     $ hGetAllowHttp $ handleAboutPage             
+     , dir "partners"        $ hGetAllowHttp $ handlePartnersPage             
+     , dir "kunder"          $ hGetAllowHttp $ handleClientsPage                
        
      -- this is SMTP to HTTP gateway  
      , dir "mailapi" $ handleMailAPI
@@ -157,10 +157,10 @@ handleRoutes = msum [
      -- e-legitimation stuff
      -- I put this stuff up here because someone changed things out from under me
      -- I will rearrange this later
-     , dir "s" $ hGet  $ BankID.handleSignBankID
+     , dir "s" $ hGet                         $ BankID.handleSignBankID
      , dir "s" $ param "eleg" $ hPostNoXToken $ BankID.handleSignPostBankID
-     , dir "d" $ hGet  $ BankID.handleIssueBankID
-     , dir "d" $ param "eleg" $ hPost $ BankID.handleIssuePostBankID
+     , dir "d" $ hGet                         $ BankID.handleIssueBankID
+     , dir "d" $ param "eleg" $ hPost         $ BankID.handleIssuePostBankID
 
      , dir "s" $ hGet  $ DocControl.handleSTable
      , dir "s" $ hGet  $ DocControl.handleSignShow
@@ -211,7 +211,7 @@ handleRoutes = msum [
      
      , dir "pages"  $ hGetAjax $ DocControl.showPage
      , dir "pages"  $ hGetAjax $ DocControl.showPageForSignatory 
-     , dir "templates"  $ hGetAjax $ DocControl.getTemplatesForAjax
+     , dir "templates" $ hGetAjax $ DocControl.getTemplatesForAjax
      , dir "template"  $ hPost $ DocControl.handleCreateFromTemplate
            
      , dir "pagesofdoc" $ hGetAjax $ DocControl.handlePageOfDocument
