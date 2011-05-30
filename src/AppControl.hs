@@ -770,12 +770,13 @@ parseEmailMessage content = runErrorT $ do
   let pdfBinary = snd pdf
   let from = maybe BS.empty BS.fromString $ lookup "from" (MIME.mime_val_headers mime)
   let to = maybe BS.empty BS.fromString $ lookup "to" (MIME.mime_val_headers mime)
-  lift $ Log.debug $ "MIME: " ++ show (mime { MIME.mime_val_content = MIME.Single "" })
   
   let charset mimetype = maybe "us-ascii" id $ lookup "charset" (MIME.mimeParams mimetype)
-  let recode mimetype content' = BS.concat (BSL.toChunks (IConv.convert (charset mimetype) "UTF-8" (BSL.fromChunks [content'])))
-  
-  let recodedPlain = recode (fst plain) (snd plain)   
+  let recode mimetype content' = 
+        case IConv.convertStrictly (charset mimetype) "UTF-8" (BSL.fromChunks [content']) of
+          Left result' -> return $ BS.concat (BSL.toChunks (result'))
+          Right errmsg -> fail (show $ IConv.reportConversionError errmsg) 
+  recodedPlain <- recode (fst plain) (snd plain)   
     
   json <- (ErrorT . return) $ runGetJSON readJSObject (BS.toString recodedPlain)
   return (json,pdfBinary,from,to)
