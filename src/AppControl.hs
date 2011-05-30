@@ -865,11 +865,15 @@ handleMailAPI = do
       Right (json, pdf, from, to) -> do
         result' <- handleMailCommand json pdf from to
         case result' of
-          Right docid -> return $ toResponse $ "Document #" ++ show docid ++ " created"
+          Right docid -> do
+            let rjson = makeObj [ ("status", JSString (toJSString "success"))
+                                , ("message", JSString (toJSString ("Document #" ++ show docid ++ " created")))
+                                , ("documentid", JSString (toJSString (show docid)))
+                                ]
+            return $ toResponse $ showJSValue rjson []
           Left msg -> do
             Log.debug $ msg
-            return $ toResponse msg
-            
-            
-        
-       
+            let rjson = makeObj [ ("status", JSString (toJSString "error"))
+                                , ("message", JSString (toJSString msg))
+                                ]
+            return $ toResponse $ showJSValue rjson []
