@@ -81,7 +81,7 @@ import qualified Data.Map as Map
 import qualified Network.AWS.AWSConnection as AWS
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
-
+import qualified Codec.Text.IConv as IConv
 
 {- | 
   Defines the application's configuration.  This includes amongst other things
@@ -746,19 +746,19 @@ daveUser userid = onlySuperUserGet $ do
 
 -}
 
-parseEmailMessageToParts :: BS.ByteString -> (MIME.MIMEValue, [(MIME.MIMEType, BS.ByteString)])
+parseEmailMessageToParts :: BS.ByteString -> (MIME.MIMEValue, [(MIME.Type, BS.ByteString)])
 parseEmailMessageToParts content = (mime, parts mime)
   where
     mime = MIME.parseMIMEMessage (BSC.unpack content)
     parts mimevalue = case MIME.mime_val_content mimevalue of 
-        MIME.Single value -> [(MIME.mimeType $ MIME.mime_val_type mimevalue, BSC.pack value)]
+        MIME.Single value -> [(MIME.mime_val_type mimevalue, BSC.pack value)]
         MIME.Multi more -> concatMap parts more
   
 parseEmailMessage :: (Monad m, MonadIO m) => BS.ByteString -> m (Either String (JSValue,BS.ByteString,BS.ByteString,BS.ByteString))
 parseEmailMessage content = runErrorT $ do
   let (mime, allParts) = parseEmailMessageToParts content 
-      isPDF (tp,_) = tp == MIME.Application "pdf"
-      isPlain (tp,_) = tp == MIME.Text "plain"
+      isPDF (tp,_) = MIME.mimeType tp == MIME.Application "pdf"
+      isPlain (tp,_) = MIME.mimeType tp == MIME.Text "plain"
       typesOfParts = map fst allParts
   let pdfs = filter isPDF allParts
   let plains = filter isPlain allParts
@@ -772,7 +772,13 @@ parseEmailMessage content = runErrorT $ do
   let from = maybe BS.empty BS.fromString $ lookup "from" (MIME.mime_val_headers mime)
   let to = maybe BS.empty BS.fromString $ lookup "to" (MIME.mime_val_headers mime)
   lift $ Log.debug $ "MIME: " ++ show (mime { MIME.mime_val_content = MIME.Single "" })
-  json <- (ErrorT . return) $ runGetJSON readJSObject (BS.toString $ snd plain)
+  
+  let charset mimetype = maybe "us-ascii" id $ lookup "charset" (MIME.mimeParams mimetype)
+  let recode mimetype content' = BS.concat (BSL.toChunks (IConv.convert (charset mimetype) "UTF-8" (BSL.fromChunks [content'])))
+  
+  let recodedPlain = recode (fst plain) (snd plain)   
+    
+  json <- (ErrorT . return) $ runGetJSON readJSObject (BS.toString recodedPlain)
   return (json,pdfBinary,from,to)
   
 maybeFail :: (Monad m) => String -> Maybe a -> m a
