@@ -1311,7 +1311,6 @@ function renumberParts() {
               if (offer) text = "AVSÄNDARE";
               $(this).find(".partnumber").text(text);
           }
-      idx = idx + 1;
       });
 }
 
