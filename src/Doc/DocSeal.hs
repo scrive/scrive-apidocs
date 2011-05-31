@@ -283,12 +283,18 @@ sealDocumentFile ctx@Context{ctxdocstore, ctxs3action, ctxtwconf, ctxhostpart, c
   case code of
       ExitSuccess -> 
           do
+              Log.debug $ "Reading file"
               newfilepdf1 <- BS.readFile tmpout
+              Log.debug $ "Ok, file reader"
               newfilepdf <- 
                   case TW.signConf ctxtwconf of
-                      Nothing -> return newfilepdf1
+                      Nothing -> do
+                          Log.debug $ "No TW, returning content"
+                          return newfilepdf1
                       Just x -> do
+                          Log.debug $ "Some TW, using it"
                           x <- TW.signDocument ctxtwconf newfilepdf1
+                          Log.debug $ "Done with" ++ show x
                           case x of
                               Left errmsg -> 
                                   do
