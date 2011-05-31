@@ -50,12 +50,12 @@ userStateTests = [testGroup "getUserByEmail"
                  ]
 
 test_getUserByEmail_returnsNothing = withTestState $ do
-    queriedUser <- query $ GetUserByEmail (Email (BS.fromString "emily@green.com"))
+    queriedUser <- query $ GetUserByEmail Nothing (Email (BS.fromString "emily@green.com"))
     assert (isNothing queriedUser)
 
 test_getUserByEmail_returnsTheRightUser = withTestState $ do
     Just user <- addNewUser "Emily" "Green" "emily@green.com"
-    queriedUser <- query $ GetUserByEmail (Email (BS.fromString "emily@green.com"))
+    queriedUser <- query $ GetUserByEmail Nothing (Email (BS.fromString "emily@green.com"))
     assert (isJust queriedUser) 
     assertEqual "For GetUserByEmail result" user (fromJust queriedUser)
 
@@ -94,8 +94,8 @@ test_getAllUsers_returnsAllUsers = withTestState $ do
 test_setUserPassword_changesPassword = withTestState $ do
     Just user <- addNewUser "Emily" "Green" "emily@green.com"
     passwordhash <- (createPassword (BS.fromString "Secret Password!"))
-    update $ SetUserPassword user passwordhash
-    queriedUser <- query $ GetUserByEmail (Email (BS.fromString "emily@green.com"))
+    update $ SetUserPassword (userid user) passwordhash
+    queriedUser <- query $ GetUserByEmail Nothing (Email (BS.fromString "emily@green.com"))
     assert $ verifyPassword (userpassword (fromJust queriedUser)) (BS.fromString "Secret Password!")
 
 test_addUser_repeatedEmailReturnsNothing = withTestState $ do
@@ -111,5 +111,5 @@ addNewUser = addNewUser' Nothing
 
 addNewUser' :: Maybe Int -> String -> String -> String -> IO (Maybe User)
 addNewUser' msuperid firstname secondname email = do
-  muser <- update $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) NoPassword (fmap UserID msuperid) Nothing
+  muser <- update $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) NoPassword (fmap UserID msuperid) Nothing Nothing
   return muser
