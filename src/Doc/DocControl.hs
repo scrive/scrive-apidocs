@@ -529,8 +529,8 @@ handleSignShow documentid
 
         case (isAttachment document, isSignatory invitedlink) of
             (True, _) -> liftIO $ pageAttachmentForSignatory ctx document invitedlink
-            (_, True) -> liftIO $ pageDocumentForSignatory (LinkSignDoc document invitedlink) document [] ctx invitedlink
-            _ -> liftIO $ pageDocumentForViewer ctx document [] (Just invitedlink)
+            (_, True) -> liftIO $ pageDocumentForSignatory (LinkSignDoc document invitedlink) document ctx invitedlink
+            _ -> liftIO $ pageDocumentForViewer ctx document (Just invitedlink)
 
 
 --end
@@ -660,7 +660,6 @@ handleIssueSign document = do
         case mndoc of
           Right newdocument -> do
             markDocumentAuthorReadAndSeen newdocument ctxtime ctxipnumber
-            finaliseAttachments newdocument
             postDocumentChangeAction newdocument udoc Nothing
             return ()
           Left _ -> return ()
@@ -694,7 +693,6 @@ handleIssueSend document = do
         case mndoc of
           Right newdocument -> do
             markDocumentAuthorReadAndSeen newdocument ctxtime ctxipnumber
-            finaliseAttachments newdocument
             postDocumentChangeAction newdocument udoc Nothing
             return ()
           Left _ -> return ()
@@ -707,12 +705,6 @@ markDocumentAuthorReadAndSeen Document{documentid, documentsignatorylinks} time 
     mark SignatoryLink{signatorylinkid, signatorymagichash} = do
       update $ MarkInvitationRead documentid signatorylinkid time
       update $ MarkDocumentSeen documentid signatorylinkid signatorymagichash time ipnumber
-
---ATTACH
-finaliseAttachments :: Document -> Kontra ()
-finaliseAttachments Document{documentsignatorylinks} = do
-  _ <- update $ FinaliseAttachments [] documentsignatorylinks
-  return () 
 
 handleIssueSaveAsTemplate :: Document -> Kontra KontraLink
 handleIssueSaveAsTemplate document = do
@@ -1363,8 +1355,8 @@ showOfferList = checkUserTOSGet $ do
 showAttachmentList :: Kontra (Either KontraLink String)
 showAttachmentList = 
   let getAttachments user = do
-        mydocuments <- query $ GetDocumentsByUser user
-        return $ filter ((==) AttachmentTemplate . documenttype) mydocuments in
+        mydocuments <- query $ GetDocumentsByAuthor (userid user)
+        return $ filter ((==) Attachment . documenttype) mydocuments in
   showItemList' pageAttachmentList getAttachments docSortSearchPage
 
 {- |
@@ -1379,6 +1371,47 @@ showItemList' viewPage getDocs sortSearchPage = checkUserTOSGet $ do
   docs <- getDocs user
   params <- getListParams
   liftIO $ viewPage ctxtemplates ctxtime user (sortSearchPage params $ prepareDocsForList docs)
+  
+handleAttachmentViewForViewer :: DocumentID -> SignatoryLinkID -> MagicHash -> Kontra Response
+handleAttachmentViewForViewer docid siglinkid mh = do
+  edoc <- getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
+  case edoc of 
+    Left _ -> mzero
+    Right doc -> do
+      ctx <- get
+      let pending JpegPagesPending = True
+          pending _                = False
+          files                    = map authorattachmentfile (documentauthorattachments doc)
+      case files of
+        [] -> return $ toResponse ""
+        f  -> do
+          b <- mapM (\file -> liftIO $ maybeScheduleRendering ctx file (documentid doc)) f
+          if any pending b
+             then notFound (toResponse "temporary unavailable (document has files pending for process)")
+            else do
+            pages <- liftIO $ Doc.DocView.showFilesImages2 (ctxtemplates ctx) (documentid doc) Nothing $ zip f b
+            webHSP $ return $ cdata pages
+
+handleAttachmentViewForAuthor :: DocumentID -> Kontra Response
+handleAttachmentViewForAuthor docid = do
+  edoc <- getDocByDocID docid
+  case edoc of 
+    Left _ -> mzero
+    Right doc -> do
+      ctx <- get
+      let pending JpegPagesPending = True
+          pending _                = False
+          files                    = map authorattachmentfile (documentauthorattachments doc)
+      case files of
+        [] -> return $ toResponse ""
+        f  -> do
+          b <- mapM (\file -> liftIO $ maybeScheduleRendering ctx file (documentid doc)) f
+          if any pending b
+             then notFound (toResponse "temporary unavailable (document has files pending for process)")
+            else do
+            pages <- liftIO $ Doc.DocView.showFilesImages2 (ctxtemplates ctx) (documentid doc) Nothing $ zip f b
+            webHSP $ return $ cdata pages
+
 
 -- get rid of duplicates
 -- FIXME: nub is very slow
@@ -1471,7 +1504,7 @@ handleCreateNewTemplate = withUserPost $ do
 handleCreateNewAttachment:: Kontra KontraLink
 handleCreateNewAttachment = withUserPost $ do
   input <- getDataFnM (lookInput "doc")
-  _ <- makeDocumentFromFile AttachmentTemplate input
+  _ <- makeDocumentFromFile Attachment input
   handleAttachmentReload
 
 makeDocumentFromFile :: DocumentType -> Input -> Kontra (Maybe Document)
@@ -1838,6 +1871,48 @@ handleCreateFromTemplate = withUserPost $ do
       relatedaccounts <- query $ GetUserRelatedAccounts (userid user)
       return $ (documentsharing document == Shared)
         && (authorid `elem` (map userid relatedaccounts))
+        
+{- |
+   The FileID matches the AuthorAttachment.
+ -}
+authorAttachmentHasFileID :: FileID -> AuthorAttachment -> Bool
+authorAttachmentHasFileID fid attachment =
+  fid == fileid (authorattachmentfile attachment)
+
+{- |
+   Download the attachment with the given fileid
+ -}
+handleAttachmentDownloadForAuthor :: DocumentID -> FileID -> Kontra Response
+handleAttachmentDownloadForAuthor did fid = do
+  edoc <- getDocByDocID did
+  case edoc of
+    Left _ -> mzero
+    Right doc -> case find (authorAttachmentHasFileID fid) (documentauthorattachments doc) of
+      Nothing -> mzero -- attachment with this file ID does not exist
+      Just AuthorAttachment{ authorattachmentfile } -> do
+        ctx <- get
+        contents <- liftIO $ getFileContents ctx authorattachmentfile
+        let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
+            res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
+        return res2
+
+{- |
+   Stream the pdf document for the given FileID.
+ -}
+handleAttachmentDownloadForViewer :: DocumentID -> SignatoryLinkID -> MagicHash -> FileID -> Kontra Response
+handleAttachmentDownloadForViewer did sid mh fid = do
+  edoc <- getDocByDocIDSigLinkIDAndMagicHash did sid mh
+  case edoc of
+    Left _ -> mzero
+    Right doc -> case find (authorAttachmentHasFileID fid) (documentauthorattachments doc) of
+      Nothing -> mzero -- attachment with this file ID does not exist
+      Just AuthorAttachment{ authorattachmentfile } -> do
+        ctx <- get
+        contents <- liftIO $ getFileContents ctx authorattachmentfile
+        let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
+            res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
+        return res2
+
 
 {-
 -- | temporary for migrating data into the document structure

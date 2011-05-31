@@ -1,23 +1,18 @@
 ####		
 docListTabs=
-        <ul class="tabs">
-          $docListTabItem(active=documentactive;link=linkdoclist;name="Dokument")$
-          $docListTabItem(active=offeractive;link=linkofferlist;name="Offerter")$
-          $docListTabItem(active=templateactive;link=linktemplatelist;name="Mallar")$
-          <!-- comment out until functionality for using an existing attachment is added
-                $docListTabItem(active=attachmentactive;link=linkattachmentlist;name="Bilagor")$ 
-               just make it visible for those who knows to go to /a, so that we can still test the page-->
-          $if(attachmentactive)$
-            <li class="active"><a href="$link$" class="listtype">Bilagor</a></li>
-          $endif$
-        </ul>
+<ul class="tabs">
+  $docListTabItem(active=documentactive;link=linkdoclist;name="Dokument")$
+  $docListTabItem(active=offeractive;link=linkofferlist;name="Offerter")$
+  $docListTabItem(active=templateactive;link=linktemplatelist;name="Mallar")$
+  $docListTabItem(active=attachmentactive;link=linkattachmentlist;name="Bilagor")$ 
+</ul>
 ####
 docListTabItem=
-          $if(active)$
-            <li class="active"><a href="$link$" class="listtype">$name$</a></li>
-          $else$
-            <li><a href="$link$">$name$</a></li>
-          $endif$
+$if(active)$
+<li class="active"><a href="$link$" class="listtype">$name$</a></li>
+$else$
+<li><a href="$link$">$name$</a></li>
+$endif$
 ####
 listShareDialog=
   <form method="post" name="form" action="$currentlink$" class="overlay redirectsubmitform" id="dialog-list-share-confirm" rel=".listForm" style="display:none;">

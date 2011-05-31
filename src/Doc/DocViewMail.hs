@@ -282,7 +282,8 @@ mailInvitationToSignOrViewContent templates
         field "link" link    
         field "issignatory" $ issignatory || not forMail 
         field "creatorname" creatorname
-                                 
+        field "isattachments" $ length (documentauthorattachments document) > 0
+        field "attachments" $ map (filename . authorattachmentfile) (documentauthorattachments document)
            
 mailInvitationFromService :: Context -> Service -> Document -> SignatoryLink -> IO Mail
 mailInvitationFromService ctx service doc sl = do

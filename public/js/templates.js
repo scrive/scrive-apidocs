@@ -297,7 +297,11 @@ function setInfotext(field, infotext) {
 }
 
 
-function docstateToHTML(){
+function docstateToHTML() {
+  if(typeof(docstate) == "undefined" || !docstate) {
+    docstate = {};
+    return false;
+  }
   var signatories = docstate.signatories;
   var authoridx = -1;
   docstate.author.signatory = false;

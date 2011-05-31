@@ -94,6 +94,8 @@ data KontraLink
     | LinkSignCanceledDataMismatch DocumentID SignatoryLinkID
     | LinkConnectUserSession ServiceID UserID SessionId KontraLink
     | LinkConnectCompanySession ServiceID CompanyID SessionId KontraLink
+    | LinkAttachmentForAuthor DocumentID FileID
+    | LinkAttachmentForViewer DocumentID SignatoryLinkID MagicHash FileID
 
 
 {- |
@@ -169,9 +171,8 @@ instance Show KontraLink where
                                                                         ++ "?referer=" ++ (URL.encode $ UTF.encode  $ show referer)
     showsPrec _ (LinkConnectCompanySession sid cid ssid referer) = (++) $ "/integration/connectcompany/" ++ encodeForURL sid ++ "/" ++ show cid  ++ "/" ++ show ssid 
                                                                         ++ "?referer=" ++ (URL.encode $ UTF.encode  $ show referer)
-    
-   
-
+    showsPrec _ (LinkAttachmentForAuthor did fid) = (++) $ "/d/" ++ show did ++ "/" ++ show fid
+    showsPrec _ (LinkAttachmentForViewer did sid mh fid) = (++) $ "/s/" ++ show did ++ "/" ++ show sid ++ "/" ++ show mh ++ "/" ++ show fid
     
 -- type class instances used for xml'ing the KontraLinks
 

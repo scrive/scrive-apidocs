@@ -643,7 +643,6 @@ pageAttachment'
 
 pageDocumentDesign :: Context 
              -> Document 
-             -> [Document]
              -> (Maybe DesignStep)
              -> IO String
 pageDocumentDesign ctx
@@ -653,7 +652,6 @@ pageDocumentDesign ctx
     , documentdaystosign
     , documentinvitetext
   }
-  attachments
   step =
    let
        templates = ctxtemplates ctx
@@ -682,17 +680,17 @@ pageDocumentDesign ctx
        documentInfoFields document
        documentViewFields document
        designViewFields step
-       documentAttachmentDesignFields attachments
+       documentAttachmentDesignFields (documentauthorattachments document)
 
-documentAttachmentDesignFields :: [Document] -> Fields
+documentAttachmentDesignFields :: [AuthorAttachment] -> Fields
 documentAttachmentDesignFields atts = do
   field "isattachments" $ not $ null atts
   field "attachmentcount" $ length atts
   field "attachments" $ map attachmentFields atts
   where
-    attachmentFields Document{documentid, documenttitle} = do
-      field "attachmentid" $ show documentid
-      field "attachmentname" $ BS.toString documenttitle
+    attachmentFields AuthorAttachment{ authorattachmentfile = File { fileid, filename } } = do
+      field "attachmentid" $ show fileid
+      field "attachmentname" $ filename
 
 documentFunctionalityFields :: Document -> Fields
 documentFunctionalityFields Document{documenttype, documentfunctionality} = do
@@ -768,7 +766,6 @@ csvProblemFields templates probcount number csvproblem = do
 
 pageDocumentForAuthor :: Context 
              -> Document
-             -> [Document]
              -> IO String
 pageDocumentForAuthor ctx
   document@Document {
@@ -776,7 +773,7 @@ pageDocumentForAuthor ctx
     , documentid
     , documentstatus
   }
-  attachments =
+  =
    let
        templates = ctxtemplates ctx
        authorsiglink = fromJust $ getAuthorSigLink document
@@ -793,14 +790,14 @@ pageDocumentForAuthor ctx
        documentAuthorInfo document
        documentInfoFields document
        documentViewFields document
-       documentAttachmentViewFields attachments
+       documentAttachmentViewFields documentid Nothing (documentauthorattachments document)
 
 {- |
    Show the document for Viewers (friends of author or signatory).
    Show no buttons or other controls
  -}                                                                                                          
 
-pageDocumentForViewer :: Context -> Document -> [Document] -> Maybe SignatoryLink -> IO String
+pageDocumentForViewer :: Context -> Document -> Maybe SignatoryLink -> IO String
 pageDocumentForViewer ctx
   document@Document {
       documentsignatorylinks
@@ -810,7 +807,7 @@ pageDocumentForViewer ctx
     , documentinvitetext
     , documentallowedidtypes
   }
-  attachments msignlink =
+  msignlink =
     let documentdaystosignboxvalue = maybe 7 id documentdaystosign
         authorsiglink = fromJust $ getAuthorSigLink document
    in do
@@ -841,25 +838,26 @@ pageDocumentForViewer ctx
        field "documentinfotext" $ documentinfotext
        documentInfoFields document 
        documentViewFields document
-       documentAttachmentViewFields attachments
+       documentAttachmentViewFields documentid msignlink (documentauthorattachments document)
        documentAuthorInfo document
 
-documentAttachmentViewFields :: [Document] -> Fields
-documentAttachmentViewFields atts = do
+documentAttachmentViewFields :: DocumentID -> Maybe SignatoryLink -> [AuthorAttachment] -> Fields
+documentAttachmentViewFields docid msignlink atts = do
   field "isattachments" $ not $ null atts
   field "attachments" $ map attachmentFields atts
   where
-    attachmentFields Document{documentid, documenttitle} = do
-      field "attachmentname" $ BS.toString documenttitle
-      field "linkattachment" $ show (LinkIssueDoc documentid)
+    attachmentFields AuthorAttachment{ authorattachmentfile = File{ filename, fileid } } = do
+      field "attachmentname" filename
+      field "linkattachment" $ case msignlink of
+        Just signlink -> show (LinkAttachmentForViewer docid (signatorylinkid signlink) (signatorymagichash signlink) fileid)
+        Nothing -> show (LinkAttachmentForAuthor docid fileid)
 
 pageDocumentForSignatory :: KontraLink 
                     -> Document
-                    -> [Document] 
                     -> Context
                     -> SignatoryLink
                     -> IO String 
-pageDocumentForSignatory action document attachments ctx invitedlink  =
+pageDocumentForSignatory action document ctx invitedlink  =
   let authorsiglink = fromJust $ getAuthorSigLink document
       localscripts =
         "var docstate = "
@@ -887,17 +885,22 @@ pageDocumentForSignatory action document attachments ctx invitedlink  =
       documentAuthorInfo document
       documentViewFields document
       signedByMeFields document (Just invitedlink)
-      documentAttachmentSignatoryFields attachments invitedlink
+      documentAttachmentSignatoryFields (documentid document) (documentauthorattachments document) invitedlink
 
 
-documentAttachmentSignatoryFields :: [Document] -> SignatoryLink -> Fields
-documentAttachmentSignatoryFields atts siglink = do
+documentAttachmentSignatoryFields :: DocumentID -> [AuthorAttachment] -> SignatoryLink -> Fields
+documentAttachmentSignatoryFields docid atts siglink = do
   field "isattachments" $ not $ null atts
   field "attachments" $ map attachmentFields atts
   where
-    attachmentFields doc@Document{documenttitle} = do
-      field "attachmentname" $ BS.toString documenttitle
-      field "linkattachment" $ show (LinkSignDoc doc siglink)
+    attachmentFields attachment = do
+      field "attachmentname" $ filename (authorattachmentfile attachment)
+      field "linkattachment" $ 
+        show (LinkAttachmentForViewer 
+              docid 
+              (signatorylinkid siglink) 
+              (signatorymagichash siglink) 
+              (fileid $ authorattachmentfile attachment))
 
 
 --- Display of signatory                                                             

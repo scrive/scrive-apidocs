@@ -1446,3 +1446,60 @@ safeReady(function() {
     }
   });
 });
+
+// add attachment images
+safeReady(function() {
+  if(typeof(window.documentid) != "undefined") {
+    var myurl;
+    if (typeof(window.siglinkid) != "undefined"
+    &&  typeof(window.sigmagichash) != "undefined")
+        myurl = "/sv/" + documentid + "/" + siglinkid + "/" + sigmagichash;
+    else
+        myurl = "/dv/" + documentid;
+    $.ajax({ url: myurl,
+             success: function(data) {
+               var content = $(data);
+               var errormsg = content.find(".errormsg")
+               if (errormsg.length > 0) {
+                   var errdialog = $("<div title='Problem med PDF'>"
+                                   + errormsg.text()
+                                   + "</div>");
+                   errdialog.dialog({
+                       open: function(event, ui) { $(".ui-dialog-titlebar-close").hide(); },
+                       modal: true,
+                       closeOnEscape: false,
+                       resizable: false,
+                       minWidth: 400,
+                       buttons: {
+                           Back : function() {
+                               window.location.href='/d';
+                           }
+                       }
+                   });
+               } else {
+                   $('#attachmentbox').html(content);
+               }
+             },
+             error: repeatForeverWithDelay(1000)
+           });
+  }
+});
+
+safeReady(function() {
+  var doctab = $("#documenttabview");
+  var doctabli = $("#doctab");
+  var atttab = $("#attachmenttabview");
+  var atttabli = $("#atttab");
+  $("#doctablink").click(function() {
+    atttab.hide();
+    doctab.show();
+    doctabli.addClass("active");
+    atttabli.removeClass("active");
+  });
+  $("#attachtablink").click(function() {
+    doctab.hide();
+    atttab.show();
+    doctabli.removeClass("active");
+    atttabli.addClass("active");
+  });
+});

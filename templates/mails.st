@@ -87,6 +87,7 @@ mailInvitationToSignContent=
        $whohadsignedinfo:noescape()$<br/>
        Avsändare: <strong>$creatorname$</strong><br/>
        $timetosigninfo:noescape()$
+       $appendixList()$
       </p>
     $endif$
     $if(issignatory)$
@@ -168,6 +169,7 @@ remindMailNotSignedContent=
         Parter: $partnersinfo:noescape()$<br/>
         $whohadsignedinfo:noescape()$<br/> 
         $timetosigninfo:noescape()$
+        $appendixList()$
       </p>
       $endif$
       <p>
@@ -493,4 +495,5 @@ mailSubaccountAcceptedContent=
   <p>$invited.fullnameOrEmail$ har accepterat att bli ett underkonto.</p>
   $poweredBySkrivaPaPara()$
 ####
-
+appendixList=$if(isattachments)$Bilagor: $attachments:{a | $a$ };separator=", "$ <br />$endif$
+###

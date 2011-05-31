@@ -164,21 +164,24 @@ handleRoutes = msum [
 
      , dir "s" $ hGet  $ DocControl.handleSTable
      , dir "s" $ hGet  $ DocControl.handleSignShow
+     , dir "s" $ hGet  $ DocControl.handleAttachmentDownloadForViewer
      , dir "s" $ param "sign" $ hPostNoXToken $ DocControl.signDocument
      , dir "s" $ param "cancel" $ hPostNoXToken $ DocControl.rejectDocument
      , dir "s" $ param "acceptaccount" $ hPostNoXToken $ DocControl.handleAcceptAccountFromSign
      , dir "s" $ param "declineaccount" $ hPostNoXToken $ DocControl.handleDeclineAccountFromSign
+       
+     , dir "sv" $ hGet $ DocControl.handleAttachmentViewForViewer
      
      --Q: This all needs to be done by author. Why we dont check it
      --here? MR
 
      --A: Because this table only contains routing logic. The logic of
      --what it does/access control is left to the handler. EN
-     , dir "a" $ hGet $ DocControl.showAttachmentList
+     , dir "a"                   $ hGet  $ DocControl.showAttachmentList
      , dir "a" $ param "archive" $ hPost $ DocControl.handleAttachmentArchive
-     , dir "a" $ param "share" $ hPost $ DocControl.handleAttachmentShare
-     , dir "a" $ dir "rename" $ hPost $ DocControl.handleAttachmentRename
-     , dir "a" $ hPost $ DocControl.handleCreateNewAttachment
+     , dir "a" $ param "share"   $ hPost $ DocControl.handleAttachmentShare
+     , dir "a" $ dir "rename"    $ hPost $ DocControl.handleAttachmentRename
+     , dir "a"                   $ hPost $ DocControl.handleCreateNewAttachment
 
      , dir "t" $ hGet  $ DocControl.showTemplatesList
      , dir "t" $ param "archive" $ hPost $ DocControl.handleTemplateArchive
@@ -191,16 +194,19 @@ handleRoutes = msum [
      , dir "o" $ param "remind" $ hPost $ DocControl.handleBulkOfferRemind
      , dir "o" $ hPost $ DocControl.handleOffersReload
      
-     , dir "d" $ hGet  $ DocControl.showContractsList
-     , dir "d" $ hGet  $ DocControl.handleIssueShowGet
-     , dir "d" $ hGet  $ DocControl.handleIssueShowTitleGet
-     , dir "d" $ hGet  $ DocControl.handleIssueShowTitleGetForSignatory
+     , dir "d"                     $ hGet  $ DocControl.showContractsList
+     , dir "d"                     $ hGet  $ DocControl.handleIssueShowGet
+     , dir "d"                     $ hGet  $ DocControl.handleIssueShowTitleGet
+     , dir "d"                     $ hGet  $ DocControl.handleIssueShowTitleGetForSignatory
      , dir "d" $ {- param "doc" $ -} hPost $ DocControl.handleIssueNewDocument
-     , dir "d" $ param "archive" $ hPost $ DocControl.handleContractArchive
-     , dir "d" $ param "remind" $ hPost $ DocControl.handleBulkContractRemind
-     , dir "d" $ hPost $ DocControl.handleContractsReload
-     , dir "d" $ hPost $ DocControl.handleIssueShowPost
-     , dir "df" $ hGet $ DocControl.handleFileGet
+     , dir "d" $ param "archive"   $ hPost $ DocControl.handleContractArchive
+     , dir "d" $ param "remind"    $ hPost $ DocControl.handleBulkContractRemind
+     , dir "d"                     $ hPost $ DocControl.handleContractsReload
+     , dir "d"                     $ hPost $ DocControl.handleIssueShowPost
+     , dir "d"                     $ hGet  $ DocControl.handleAttachmentDownloadForAuthor
+     
+     , dir "df"                    $ hGet  $ DocControl.handleFileGet
+     , dir "dv"                    $ hGet  $ DocControl.handleAttachmentViewForAuthor
 
      --This are actions on documents. We may integrate it with all the stuff above, but I don't like it. MR
      , dir "resend"  $ hPost $ DocControl.handleResend

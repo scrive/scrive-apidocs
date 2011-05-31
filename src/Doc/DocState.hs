@@ -53,7 +53,6 @@ module Doc.DocState
     , AttachCSVUpload(..)
     , GetDocumentsByDocumentID(..)
     , UpdateDocumentAttachments(..)
-    , FinaliseAttachments(..)
     , CloseDocument(..)
     , CancelDocument(..)
     , RestartDocument(..)
@@ -390,18 +389,6 @@ getDocumentsByDocumentID docids = queryDocs $ \documents ->
     then Right . toList $ relevantdocs
     else Left "documents don't exist for all the given ids"
 
-copyFile :: File -> Update Documents File
-copyFile file = do
-  documents <- ask
-  newfileid <- getUnique documents FileID
-  return File { fileid = newfileid
-              , filename = filename file
-              , filestorage = filestorage file
-              }
-
-deleteFile :: FileID -> Update Documents ()
-deleteFile _ = return ()
-
 {- |
    Add and remove attachments to a document in Preparation
  -}
@@ -413,8 +400,10 @@ updateDocumentAttachments docid idstoadd idstoremove = do
   documents <- ask
   let addattachments   = toList $ documents @+ idstoadd
       foundattachments = length idstoadd == length addattachments
-  addattachmentfiles <- sequence [copyFile (head $ documentfiles ad) |  ad <- addattachments]
-  _ <- sequence $ map deleteFile idstoremove
+      newattachment Document{ documenttitle, documentfiles = (file:_) } 
+        = Just AuthorAttachment{ authorattachmentfile = file { filename = documenttitle } }
+      newattachment _ = Nothing
+      addfiles = catMaybes $ map newattachment addattachments
   case foundattachments of
     False -> return $ Left "documents don't exist for all the given ids"
     True -> modifySignableOrTemplate docid $ \doc ->
@@ -423,7 +412,7 @@ updateDocumentAttachments docid idstoadd idstoremove = do
                                       [da | da <- documentauthorattachments doc,
                                        not ((fileid $ authorattachmentfile da) `elem` idstoremove)]
                                       ++
-                                      map AuthorAttachment addattachmentfiles
+                                      addfiles
                                  }
         _ -> Left "Can only attach to document in Preparation"
 
@@ -437,7 +426,7 @@ finaliseAttachments attachmentids links = do
     modifySignableOrTemplate attid $ \doc@Document{documenttype} ->
       if documenttype == Attachment
       then Right $ doc { documentstatus = Pending, documentsignatorylinks = links }
-      else Left $ "Document #" ++ show attid ++ " expected to be Attachment, found to be " ++ show documenttype ++ " in finaliseAttachments"
+      else Left $ "Needs to be an attachment"
   return $ sequence mdocs
 
 {- |
@@ -1252,7 +1241,6 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'attachCSVUpload
                         , 'getDocumentsByDocumentID
                         , 'updateDocumentAttachments
-                        , 'finaliseAttachments
                         , 'signDocument
                         , 'authorSignDocument
                         , 'authorSendDocument
