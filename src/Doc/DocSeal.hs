@@ -238,9 +238,14 @@ sealDocument :: Context
 sealDocument ctx@Context{ctxdocstore, ctxs3action, ctxtwconf, ctxhostpart}
              document = do
   let files = documentfiles document
+  Log.debug $ "Sealing document"
   mapM_ (sealDocumentFile ctx document) files
+  Log.debug $ "Sealing should be done now"
   Just newdocument <- query $ GetDocumentByDocumentID (documentid document)
+  Log.debug $ "Reselecting document after update - time for upload to amazon"
   _ <- liftIO $ forkIO $ mapM_ (AWS.uploadFile ctxdocstore ctxs3action) (documentsealedfiles newdocument)
+  Log.debug $ "Upload to amazon is done"
+  Log.debug $ show newdocument
   return $ Right newdocument
 
                  
@@ -274,7 +279,7 @@ sealDocumentFile ctx@Context{ctxdocstore, ctxs3action, ctxtwconf, ctxhostpart, c
   config <- sealSpecFromDocument ctxtemplates ctxhostpart document tmpin tmpout
   Log.debug $ show config
   (code,stdout,stderr) <- readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
-
+  Log.debug $ "Sealing compleated with "++ show code
   case code of
       ExitSuccess -> 
           do
@@ -296,8 +301,10 @@ sealDocumentFile ctx@Context{ctxdocstore, ctxs3action, ctxtwconf, ctxhostpart, c
                                       let msg = "TrustWeaver signed doc #" ++ show documentid ++ " file #" ++ show fileid ++ ": " ++ BS.toString documenttitle
                                       Log.trustWeaver msg
                                       return result
-
-              update $ AttachSealedFile documentid filename newfilepdf
+              Log.debug $ "Done some trustweather magic "
+              res <- update $ AttachSealedFile documentid filename newfilepdf
+              Log.debug $ "And now document should be updated"
+              return res
       ExitFailure _ -> 
           do
               -- error handling
