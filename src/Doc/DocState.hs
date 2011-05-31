@@ -1170,24 +1170,27 @@ templateFromDocument docid = modifySignable docid $ \doc ->
 
 migrateForDeletion :: [User] -> Update Documents ()
 migrateForDeletion users = do
-  mapM_ populateSupervisorOnUserSigLinks users
+  mapM_ populateUserSigLinks users
   deleteInvisibleDocs
   where
     {- |
-        This populates the maybesupervisor on each of the signatory links for
+        This populates the maybesignatory & maybesupervisor on each of the signatory links for
         the given user.
     -}
-    populateSupervisorOnUserSigLinks :: User -> Update Documents ()
-    populateSupervisorOnUserSigLinks user@User{userid} = do
+    populateUserSigLinks :: User -> Update Documents ()
+    populateUserSigLinks user@User{userid, userinfo} = do
       docs <- ask
       mapM_ (\doc -> modifySignableOrTemplate (documentid doc) (Right . populate)) $ toList docs
       where
         populate :: Document -> Document
         populate doc@Document{ documentsignatorylinks } =
-          let newsiglinks = mapWhen (\sl -> maybesignatory sl == Just userid)
+          let newsiglinks = mapWhen isSignatoryForUser
                                     (copySignatoryAccount user)
                                     documentsignatorylinks in
           doc { documentsignatorylinks = newsiglinks }
+        isSignatoryForUser sl = isSavedforUser sl || isSignedByUser sl
+        isSavedforUser sl = maybesignatory sl == Just userid
+        isSignedByUser sl = signatoryemail (signatorydetails sl) == (unEmail $ useremail userinfo) && isJust (maybesigninfo sl)
     {- |
         This quarantines or deletes all of the docs that are current invisible.
         This means we won't have documents hanging around.
