@@ -132,107 +132,140 @@ pageDocumentForSignContent=
   </form>
 
 </div>
-<div id="signStepsContainer"> 
-  <div id="signStepsTitleRow">
-    <span id="signStepsTitleRowTextContainer"> 
-      <span class="title">
-        $if(contract)$ 
-        DOKUMENT #$documentid$:
-        $elseif(offer)$
-        OFFERT #$documentid$:
-        $endif$
+
+<div id="tab-viewer">
+  <div id="signStepsContainer"> 
+    <div id="signStepsTitleRow">
+      <span id="signStepsTitleRowTextContainer"> 
+        <span class="title">
+          $if(contract)$ 
+          DOKUMENT #$documentid$:
+          $elseif(offer)$
+          OFFERT #$documentid$:
+          $endif$
+        </span>
+        <span class="name">$documenttitle$</span>
       </span>
-      <span class="name">$documenttitle$</span>
-    </span>
-    <span class="download">
-      <a href="$linkissuedocpdf$" target="_blank">
-        Ladda ned PDF
-      </a>
-    </span>
-  </div>
-  <div id="signStepsBody" class="ericfix"> 
-    <div id="signViewBodyLeft" > 
-      <span id="signViewBodyLeftTextContainer"> 
-        $documentinfotext:noescape()$
-      </span> 
+      <span class="download">
+        <a href="$linkissuedocpdf$" target="_blank">
+          Ladda ned PDF
+        </a>
+      </span>
     </div>
-    $signatoriesBox()$
+    $if(isattachments)$
+    <ul class="tabs">
+      <li id="doctab" class="active"><a href="#" id="doctablink">Dokument</a></li>
+      <li id="atttab" ><a href="#" id="attachtablink">Bilagor</a></li>
+    </ul>
+    $endif$
+    
   </div>
-</div>
-
-<div id="documentBox">
-  <div class="waiting4page"></div>
-</div>
-
-$if(isattachments)$
-<div id="signViewAttachmentBox">  
-  <h2>Bilaga</h2>
-  <div id="signViewAttachmentBoxList">
-    $attachments:{attachment |
-      <div><a target="_blank" href="$attachment.linkattachment$">$attachment.attachmentname$</a></div>
-    }$
-  </div>
-</div>
-$endif$
-
-$if(notsignedbyme)$
-$if(pending)$
-<div id="signViewBottomBox"> 
-  $if(contract)$
-  <div id="signViewBottomBoxContainerLeft">
-    <a class="float-right btn-small red cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel">
-      <div class="left"></div>
-      <div class="label">Avvisa dokument</div>
-      <div class="right"></div>
-    </a>
-  </div>
-  <div id="signViewBottomBoxContainerMiddle">
-    <div id="signGuardField">
-      <div class="float-left"><input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off"/></div>
-      <div class="float-left" id="signGuardLabel">
-        <label for="signGuardCBox">Jag intygar att:
-          <br>1. Samtliga undertecknande parter är korrekta.
-          <br>2. Att jag granskat och förstått dokumentet.
-          <br>3. Att jag har befogenhet att skriva på dokumentet.
-        </label>
+  $if(isattachments)$
+  <span id="attachmenttabview" style="display:none">
+    <div id="signStepsBody" class="ericfix forauthor"> 
+      <div id="signViewBodyLeft" >
+        <span id="signViewBodyLeftTextContainer"> 
+          <div class="attachmentListContainer">  
+            <div class="subheader">Bilaga:</div>
+            $attachments:{attachment |
+            <div><a target="_blank" href="$attachment.linkattachment$">$attachment.attachmentname$</a></div>
+            }$
+          </div>
+        </span>
       </div>
     </div>
-  </div>
-  <div id="signViewBottomBoxContainerRight"> 
-    <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign" name="sign">
-      <div class="left"></div>
-      <div class="label" style="width:120px">
-        <span>SkrivaPå</span>
-        <span class="icon cross"></span>
+    <div id="attachmentbox"><div class="waiting4page"></div></div>
+  </span>
+  $endif$
+  <span id="documenttabview">
+
+    <div id="signStepsBody" class="ericfix"> 
+      <div id="signViewBodyLeft" > 
+        <span id="signViewBodyLeftTextContainer"> 
+          $documentinfotext:noescape()$
+        </span> 
       </div>
-      <div class="right"></div>
-    </a>
-  </div>
-  $elseif(offer)$
-  <div id="signViewBottomBoxContainerLeft">
-    <a class="float-right btn-small red cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel">
-      <div class="left"></div>
-      <div class="label">Avvisa</div>
-      <div class="right"></div>
-    </a>
-  </div>
-  <div id="signViewBottomBoxContainerMiddle"> 
-    <input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off" style="display:none" checked="checked" />
-  </div>
-  <div id="signViewBottomBoxContainerRight"> 
-    <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign" name="sign">
-      <div class="left"></div>
-      <div class="label" style="padding-left:20px;padding-right:20px;">
-        <span>Acceptera offert</span>
-        <span class="icon cross"></span>
+      $signatoriesBox()$
+    </div>
+
+
+    <div id="documentBox">
+      <div class="waiting4page"></div>
+    </div>
+
+
+    $if(notsignedbyme)$
+
+    $if(isattachments)$
+    <div id="signViewAttachmentBox">  
+      <h2>Bilaga</h2>
+      <div id="signViewAttachmentBoxList">
+        $attachments:{attachment |
+        <div><a target="_blank" href="$attachment.linkattachment$">$attachment.attachmentname$</a></div>
+        }$
       </div>
-      <div class="right"></div>
-    </a>
-  </div>
-  $endif$  
+    </div>
+    $endif$
+
+    $if(pending)$
+    <div id="signViewBottomBox"> 
+      $if(contract)$
+      <div id="signViewBottomBoxContainerLeft">
+        <a class="float-right btn-small red cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel">
+          <div class="left"></div>
+          <div class="label">Avvisa dokument</div>
+          <div class="right"></div>
+        </a>
+      </div>
+      <div id="signViewBottomBoxContainerMiddle">
+        <div id="signGuardField">
+          <div class="float-left"><input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off"/></div>
+          <div class="float-left" id="signGuardLabel">
+            <label for="signGuardCBox">Jag intygar att:
+              <br>1. Samtliga undertecknande parter är korrekta.
+              <br>2. Att jag granskat och förstått dokumentet.
+              <br>3. Att jag har befogenhet att skriva på dokumentet.
+            </label>
+          </div>
+        </div>
+      </div>
+      <div id="signViewBottomBoxContainerRight"> 
+        <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign" name="sign">
+          <div class="left"></div>
+          <div class="label" style="width:120px">
+            <span>SkrivaPå</span>
+            <span class="icon cross"></span>
+          </div>
+          <div class="right"></div>
+        </a>
+      </div>
+      $elseif(offer)$
+      <div id="signViewBottomBoxContainerLeft">
+        <a class="float-right btn-small red cancel" name="cancel" rel="#dialog-confirm-cancel" id="cancel">
+          <div class="left"></div>
+          <div class="label">Avvisa</div>
+          <div class="right"></div>
+        </a>
+      </div>
+      <div id="signViewBottomBoxContainerMiddle"> 
+        <input type="checkbox" id="signGuardCBox" class="signGuard" autocomplete="off" style="display:none" checked="checked" />
+      </div>
+      <div id="signViewBottomBoxContainerRight"> 
+        <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign" name="sign">
+          <div class="left"></div>
+          <div class="label" style="padding-left:20px;padding-right:20px;">
+            <span>Acceptera offert</span>
+            <span class="icon cross"></span>
+          </div>
+          <div class="right"></div>
+        </a>
+      </div>
+      $endif$  
+    </div>
+    $endif$
+    $endif$ 
+  </span>
 </div>
-$endif$
-$endif$ 
 $signatoryScriptIfRequired()$
 ###
 ####
