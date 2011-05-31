@@ -21,8 +21,9 @@ module TrustWeaver
     , enableSection
     )
     where
-import Codec.Binary.Base64
+import qualified Data.ByteString.Base64 as Base64
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS hiding (length, drop, break)
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length, drop)
 import qualified Data.ByteString.Lazy as BSL
@@ -55,7 +56,7 @@ instance HTypeable (SignRequest) where
     toHType x = Defined "SignRequest" [] []
 instance XmlContent (SignRequest) where
     toContents (SignRequest pdfdata senderTag receiverTag) =
-        let base64data = encode (BS.unpack pdfdata) in
+        let base64data = BSC.unpack (Base64.encode pdfdata) in
         [CElem (Elem "SignRequest" [mkAttr "xmlns" "http://www.trustweaver.com/tsswitch"] 
                          [ mkElemC "InputType" (toText "PDF")
                          , mkElemC "JobType" (toText "CADESA")
@@ -81,9 +82,9 @@ instance XmlContent (SignResult) where
             ; details <- optional $ elementNS "Details"
             ; interior signedDocument $ text
             }
-        ; case decode base64 of
-            Nothing -> fail "Cannot parse base64 encoded PDF signed document"
-            Just value -> return (SignResult (BS.pack value))
+        ; case Base64.decode (BSC.pack base64) of
+            Left errmsg -> fail errmsg
+            Right value -> return (SignResult value)
         } `adjustErr` ("in <SignResult>, "++)
 
 
@@ -94,7 +95,7 @@ instance HTypeable (ValidateRequest) where
     toHType x = Defined "ValidateRequest" [] []
 instance XmlContent (ValidateRequest) where
     toContents (ValidateRequest pdfdata) =
-        let base64data = encode (BS.unpack pdfdata) in
+        let base64data = BSC.unpack (Base64.encode pdfdata) in
         [CElem (Elem "ValidateRequest" [mkAttr "xmlns" "http://www.trustweaver.com/tsswitch"] 
                          [ mkElemC "InputType" (toText "PDF")
                          , mkElemC "JobType" (toText "CADESA")
@@ -196,7 +197,7 @@ instance HTypeable (StoreInvoiceRequest) where
     toHType x = Defined "StoreInvoiceRequest" [] []
 instance XmlContent (StoreInvoiceRequest) where
     toContents (StoreInvoiceRequest documentid documentdate ownertwname pdfdata) =
-        let base64data = encode (BS.unpack pdfdata) in
+        let base64data = BSC.unpack (Base64.encode pdfdata) in
         [CElem (Elem "StoreInvoice" [mkAttr "xmlns" "http://www.trustweaver.com/trustarchive/storage/v1"] 
                          [mkElemC "Request" 
                                       [ mkElemC "Document" 
