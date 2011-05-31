@@ -14,12 +14,10 @@ module Templates.TemplatesLoader
     , KontrakcjaTemplate
     , renderTemplateMain
     , templateList
-    , readTemplates
     , getTemplatesModTime
     , toKontrakcjaTemplates
-    , templateFiles
-    , templateFilePath
     , getTemplates
+    , readTemplates 
     ) where
 
 import Text.StringTemplate 
@@ -34,64 +32,20 @@ import AppLogger as Log
 import Text.Html (stringToHtmlString)
 import System.Directory
 import System.Time
+import Templates.TemplatesFiles
+import Templates.TextTemplates
 {-Names of template files -}
-
-templatesFilesPath :: [String]
-templatesFilesPath = map templateFilePath templateFiles
-
-templateFilePath :: String -> String
-templateFilePath fn =  "templates/" ++ fn
-
-templateFiles :: [String]
-templateFiles = ["landpages.st",
-                 "modals.st",
-                 "flash.st",
-                 "mails.st",
-                 "utils.st",
-                 "listutils/listutils.st",
-                 "pages.st",
-                 "payments.st",
-                 "administration.st",
-                 "userpages/accountpage.st",
-                 "userpages/subaccountslist.st",
-                 "userpages/friendpage.st",
-                 "userpages/securitypage.st",
-                 "userpages/userotherpages.st",                     
-                 "docpages/doclist.st",
-                 "docpages/doctemplatelist.st",
-                 "docpages/docofferslist.st",
-                 "docpages/docattachmentlist.st",
-                 "docpages/doclistutils.st",
-                 "docpages/doctexts.st",
-                 "docpages/docviewutils.st",
-                 "docpages/docviewforauthor.st",
-                 "docpages/docviewforsignatory.st",
-                 "docpages/docviewforviewer.st",
-                 "docpages/docdesign.st",
-                 "docpages/docupload.st",
-                 "docpages/doctemplates.st",
-                 "docpages/docsignatories.st",
-                 "docpages/docseal.st",
-                 "docpages/attachmentpage.st",
-                 "contacts/contacts.st",
-                 "apppages.st",
-                 "firstpage.st",
-                 "staticpages/sitemap.st",
-                 "staticpages/priceplanpage.st",
-                 "staticpages/securitypage.st",
-                 "staticpages/legalpage.st",
-                 "staticpages/privacypolicypage.st",
-                 "staticpages/termspage.st",
-                 "staticpages/aboutpage.st",
-                 "staticpages/partnerspage.st",
-                 "staticpages/clientspage.st",
-                 "eleg.st",
-                 "api/embedded.st",
-                 "api/services.st"]
 
 
 type KontrakcjaTemplates = STGroup String
 type KontrakcjaTemplate = StringTemplate String
+
+
+readTemplates :: IO KontrakcjaTemplates 
+readTemplates = do
+    ts <- mapM getTemplates templatesFilesPath
+    texts <- getTextTemplates
+    return $ groupStringTemplates $ fmap (\(n,v) -> (n,newSTMP v)) (concat ts)
 
 --This is avaible only for special cases
 renderTemplateMain :: (ToSElem a) => KontrakcjaTemplates -> String -> [(String, a)]
@@ -152,11 +106,9 @@ parseLines :: Handle -> IO [String]
 parseLines handle = do
     l <- hGetLine handle
     e <- hIsEOF handle
-    if (isPrefixOf ("#") l) 
+    if (e || isPrefixOf ("#") l) 
         then return []
-        else if e
-            then return [l]
-            else fmap ((:) l) (parseLines handle)
+        else fmap ((:) l) (parseLines handle)
 
 {- Template checker, printing info about params-}
 templateList :: IO ()
@@ -165,7 +117,8 @@ templateList = do
     let tsnames = map fst ts
     let tsgroup =  groupStringTemplates $ fmap (\(n,v) -> (n,newSTMP v)) ts
     sequence_ $ map (printTemplateData tsgroup) tsnames
-                
+    
+    
 printTemplateData :: STGroup String -> String -> IO ()
 printTemplateData tsgroup name = do 
     let Just t = getStringTemplate name tsgroup
