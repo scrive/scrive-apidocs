@@ -38,8 +38,7 @@ instance (InspectXML a, InspectXML b, InspectXML c) => InspectXML (a, b, c) wher
     inspectXML (a, b, c) = asChild $ genElement (Nothing, "triple") []
                             [inspectXML a, inspectXML b, inspectXML c]
 
--- m :: (XMLGenerator m) => [(String, GenChildList m)] -> GenChildList m
-m :: (XMLGen m) => [(String, XMLGenT m [Child m])] -> [GenChildList m]
+m :: forall (m :: * -> *). EmbedAsChild m (XML m) => [([Char], XMLGenT m [Child m])] -> [GenChildList m]
 m g = map y g
       where y ("",cont) = asChild $ genElement (Nothing,"li") [] [cont]
             y (z,cont) = asChild $ genElement (Nothing,"li") [] [asChild z, asChild ": ", cont]
