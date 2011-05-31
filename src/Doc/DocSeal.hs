@@ -279,22 +279,19 @@ sealDocumentFile ctx@Context{ctxdocstore, ctxs3action, ctxtwconf, ctxhostpart, c
   config <- sealSpecFromDocument ctxtemplates ctxhostpart document tmpin tmpout
   Log.debug $ show config
   (code,stdout,stderr) <- readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
-  Log.debug $ "Sealing compleated with "++ show code
+  Log.debug $ "Sealing completed with " ++ show code
   case code of
       ExitSuccess -> 
           do
-              Log.debug $ "Reading file"
               newfilepdf1 <- BS.readFile tmpout
-              Log.debug $ "Ok, file reader"
               newfilepdf <- 
                   case TW.signConf ctxtwconf of
                       Nothing -> do
-                          Log.debug $ "No TW, returning content"
+                          Log.debug $ "TrustWeaver configuration empty, not doing TrustWeaver signing"
                           return newfilepdf1
                       Just x -> do
-                          Log.debug $ "Some TW, using it"
+                          Log.debug $ "About to TrustWeaver sign doc #" ++ show documentid ++ " file #" ++ show fileid
                           x <- TW.signDocument ctxtwconf newfilepdf1
-                          Log.debug $ "Done with" ++ show x
                           case x of
                               Left errmsg -> 
                                   do
@@ -307,16 +304,14 @@ sealDocumentFile ctx@Context{ctxdocstore, ctxs3action, ctxtwconf, ctxhostpart, c
                                       let msg = "TrustWeaver signed doc #" ++ show documentid ++ " file #" ++ show fileid ++ ": " ++ BS.toString documenttitle
                                       Log.trustWeaver msg
                                       return result
-              Log.debug $ "Done some trustweather magic "
               res <- update $ AttachSealedFile documentid filename newfilepdf
-              Log.debug $ "And now document should be updated"
               return res
       ExitFailure _ -> 
           do
               -- error handling
               systmp <- getTemporaryDirectory
               (path,handle) <- openTempFile systmp ("seal-failed-" ++ show documentid ++ "-" ++ show fileid ++ "-.pdf")
-              let msg = "Cannot seal document #" ++ show documentid ++ " bacause of file #" ++ show fileid
+              let msg = "Cannot seal document #" ++ show documentid ++ " because of file #" ++ show fileid
               Log.error $ msg ++ ": " ++ path
               Log.error $ BSL.toString stderr
               Log.error $ "Sealing configuration: " ++ show config
