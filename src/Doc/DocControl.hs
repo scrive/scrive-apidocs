@@ -1394,8 +1394,11 @@ showOfferList :: Kontra (Either KontraLink String)
 showOfferList = checkUserTOSGet $ do
     -- Just user is safe here because we guard for logged in user
     Context {ctxmaybeuser = Just user, ctxtime, ctxtemplates} <- get
-    rawContracts <- getDocumentsForUserByType user ((==) Contract . documenttype)
-    let contracts = prepareDocsForList rawContracts
+    mydocuments <- query $ GetDocumentsByUser user 
+    usersICanView <- query $ GetUsersByFriendUserID $ userid user
+    friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
+    let contracts = prepareDocsForList . filter ((==) Offer . documenttype) $ 
+                      mydocuments ++ concat friends'Documents
         authornames = map getAuthorName contracts
     params <- getListParams
     liftIO $ pageOffersList ctxtemplates ctxtime user (docAndAuthorSortSearchPage params (zip contracts authornames))
