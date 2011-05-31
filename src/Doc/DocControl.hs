@@ -1366,7 +1366,7 @@ showOfferList:: Kontra (Either KontraLink String)
 showOfferList= checkUserTOSGet $ do
     -- Just user is safe here because we guard for logged in user
     ctx@(Context {ctxmaybeuser = Just user, ctxhostpart, ctxtime, ctxtemplates}) <- get
-    rawContracts <- getDocumentsForUserByType user ((==) Contract . documenttype)
+    rawContracts <- getDocumentsForUserByType user ((==) Offer . documenttype)
     let contracts = prepareDocsForList rawContracts
         authornames = map getAuthorName contracts
     params <- getListParams
