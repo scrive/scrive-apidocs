@@ -90,7 +90,6 @@ module Templates.Templates
 
 import Control.Monad.State.Strict
 import Templates.TemplatesLoader (readTemplates,renderTemplateMain,templateList,KontrakcjaTemplate,KontrakcjaTemplates,getTemplatesModTime)
-import Templates.TextTemplates 
 import Text.StringTemplate.Base hiding (ToSElem,toSElem)
 import Text.StringTemplate.Classes hiding (ToSElem,toSElem)
 import qualified Data.ByteString as BS

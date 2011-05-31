@@ -118,6 +118,7 @@ Executable kontrakcja-server
  Build-Depends: parsec
  Build-Depends: iconv
  Build-Depends: json==0.4.*
+ Build-Depends: i18n==0.3
 
  Main-Is: Main.hs
 
@@ -190,6 +191,7 @@ Executable kontrakcja-test
  Build-Depends: parsec
  Build-Depends: iconv
  Build-Depends: json==0.4.*
+ Build-Depends: i18n==0.3
 
  Main-is: TestMain.hs
 
