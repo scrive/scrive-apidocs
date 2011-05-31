@@ -46,7 +46,6 @@ import HSP hiding (catch)
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.Server.HSP.HTML (webHSP)
 import Happstack.State (update, query)
-import Happstack.Util.Common
 import Text.ParserCombinators.Parsec
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
@@ -1057,11 +1056,11 @@ getAndConcat fname = do
 
 makePlacements :: [BS.ByteString]
                -> [BS.ByteString]
-               -> [BS.ByteString]
-               -> [BS.ByteString]
-               -> [BS.ByteString]
-               -> [BS.ByteString]
-               -> [BS.ByteString]
+               -> [Int]
+               -> [Int]
+               -> [Int]
+               -> [Int]
+               -> [Int]
                -> Kontra [(BS.ByteString, BS.ByteString, FieldPlacement)]
 makePlacements placedsigids
                placedfieldids
@@ -1070,19 +1069,12 @@ makePlacements placedsigids
                placedpages
                placedwidths
                placedheights = do
-    -- safely read to Ints
-    placedxsf      <- mapM (readM . BS.toString) placedxs
-    placedysf      <- mapM (readM . BS.toString) placedys
-    placedpagesf   <- mapM (readM . BS.toString) placedpages
-    placedwidthsf  <- mapM (readM . BS.toString) placedwidths
-    placedheightsf <- mapM (readM . BS.toString) placedheights
-    
     let placements = zipWith5 FieldPlacement 
-                        placedxsf
-                        placedysf
-                        placedpagesf
-                        placedwidthsf
-                        placedheightsf
+                        placedxs
+                        placedys
+                        placedpages
+                        placedwidths
+                        placedheights
                    
     return $ zip3 placedsigids placedfieldids placements
 
@@ -1280,11 +1272,11 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
   fieldvalues <- getAndConcat "fieldvalue"
 
   -- each placed field must have these values
-  placedxs       <- getAndConcat "placedx"
-  placedys       <- getAndConcat "placedy"
-  placedpages    <- getAndConcat "placedpage"
-  placedwidths   <- getAndConcat "placedwidth"
-  placedheights  <- getAndConcat "placedheight"
+  placedxs       <- getCriticalFieldList asValidNumber "placedx"
+  placedys       <- getCriticalFieldList asValidNumber "placedy"
+  placedpages    <- getCriticalFieldList asValidNumber "placedpage"
+  placedwidths   <- getCriticalFieldList asValidNumber "placedwidth"
+  placedheights  <- getCriticalFieldList asValidNumber "placedheight"
   placedsigids   <- getAndConcat "placedsigid"
   placedfieldids <- getAndConcat "placedfieldid"
 
