@@ -474,10 +474,11 @@ handleAfterSigning document@Document{documentid,documenttitle} signatorylinkid =
             else addModal $ modalOfferSignedNoAccount document signatorylink actionid magichash
           return ()
         _ -> return ()
-    Just _user | isContract document ->
-      addModal $ modalContractSignedHasAccount document signatorylink (isJust $ ctxmaybeuser ctx)
-    Just _user -> 
-      addModal $ modalOfferSignedHasAccount document
+    Just user -> do
+     _ <- update $ SaveDocumentForSignedUser documentid (getSignatoryAccount user) signatorylinkid
+     if isContract document
+       then addModal $ modalContractSignedHasAccount document signatorylink (isJust $ ctxmaybeuser ctx)
+       else addModal $ modalOfferSignedHasAccount document
   return $ LinkSignDoc document signatorylink
 
 {- |
