@@ -23,7 +23,8 @@ import Text.XML.HaXml.XmlContent.Parser
 import Text.XML.HaXml.XmlContent
 import Text.XML.HaXml.Posn
 import Control.Monad.Trans
-
+import qualified Control.Exception as E
+import qualified AppLogger as Log
 
 data SOAP a = SOAP a
             | SOAPFault String String String
@@ -67,6 +68,13 @@ inElementNS name action = do
   e <- elementNS name
   interior e action
 
+tryAndJoinEither :: IO (Either String a) -> IO (Either String a)
+tryAndJoinEither action = do
+  result <- E.try action
+  case result of
+    Right value -> return value
+    Left (excpt :: E.SomeException) -> return (Left (show excpt))
+    
 makeSoapCall :: (XmlContent request, XmlContent result) 
                 => String
              -> String
@@ -74,7 +82,7 @@ makeSoapCall :: (XmlContent request, XmlContent result)
              -> String
              -> request
              -> IO (Either String result)
-makeSoapCall url action cert certpwd request = do
+makeSoapCall url action cert certpwd request = tryAndJoinEither $ do
   let input = fpsShowXml False (SOAP request)
   -- BSL.appendFile "soap.xml" input
 
@@ -115,17 +123,20 @@ makeSoapCall url action cert certpwd request = do
       (_,rest2) = BS.breakSubstring (BS.fromString "\r\n\r\n") rest
       (xml1,_) = BS.breakSubstring boundary rest2
   
-  xml <- if BSL.fromString "\r\n--" `BSL.isPrefixOf` stdout
-            then do
-              return (BSL.fromChunks [xml1])
-            else return stdout
+  let xml = if BSL.fromString "\r\n--" `BSL.isPrefixOf` stdout
+            then BSL.fromChunks [xml1]
+            else stdout
 
-  if (code /= ExitSuccess)
-       then return (Left $ "Cannot execute ./curl for TrustWeaver: " ++ show args ++ BSL.toString stderr)
-     else case readXml (BSL.toString xml) of
-            Right (SOAP result) -> return (Right result)
-            Right (SOAPFault soapcode string actor) -> return (Left (soapcode ++":" ++ string ++":" ++ actor))
-            Left errmsg -> return (Left (errmsg ++ ": " ++ BSL.toString stdout))
+  case code of 
+    ExitFailure _ -> do
+       return (Left $ "Cannot execute 'curl' for TrustWeaver: " ++ show args ++ BSL.toString stderr)
+    ExitSuccess -> do 
+      Log.debug "Writing /tmp/soap.xml"
+      BSL.writeFile "/tmp/soap.xml" xml
+      case readXml (BSL.toString xml) of
+        Right (SOAP result) -> return (Right result)
+        Right (SOAPFault soapcode string actor) -> return (Left (soapcode ++":" ++ string ++":" ++ actor))
+        Left errmsg -> return (Left (errmsg ++ ": " ++ BSL.toString stdout))
 
 makeSoapCallCA :: (XmlContent request, XmlContent response) =>
                         String -> String -> String -> request -> IO (Either String response)
