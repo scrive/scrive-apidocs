@@ -583,10 +583,6 @@ isEmptyInput xs = isWhitespace xs || null xs
 isLowerCase :: String -> Bool
 isLowerCase xs = map toLower xs == xs
 
-fromGood :: Result a -> a
-fromGood (Good x) = x
-fromGood _ = error "not good!"
-
 isBad :: Result a -> Bool
 isBad (Bad _) = True
 isBad _ = False
