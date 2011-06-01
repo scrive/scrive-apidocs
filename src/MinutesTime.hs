@@ -124,6 +124,7 @@ dateDiffInDays (MinutesTime ctime _) (MinutesTime mtime _)
                        | otherwise = (mtime - ctime) `div` (60*24)
                                      
 asInt :: MinutesTime -> Int
-asInt m = ctYear*10000 + fromEnum ctMonth*100 + ctDay 
+asInt m = ctYear*10000 + (fromEnum ctMonth+1)*100 + ctDay 
   where
+    -- January counts as 0, so we need to add 1
     CalendarTime {ctYear,ctMonth,ctDay} = toUTCTime m
