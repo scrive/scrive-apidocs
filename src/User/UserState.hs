@@ -1058,11 +1058,12 @@ setUserSupervisor userid supervisorid = do
       return $ user { usersupervisor = Just $ SupervisorID $ unUserID supervisorid}
   
 getUserStats :: Query Users UserStats
-getUserStats = queryUsers $ \users ->
+getUserStats = queryUsers $ \users -> 
+  let userList = toList users in
   UserStats 
-         { usercount = (size users)
-         , viralinvitecount = length $ filterByInvite (isInviteType Viral) (toList users)
-         , admininvitecount = length $ filterByInvite (isInviteType Admin) (toList users)
+         { usercount = length userList
+         , viralinvitecount = length $ filterByInvite (isInviteType Viral) userList
+         , admininvitecount = length $ filterByInvite (isInviteType Admin) userList
          }
 
 getUserStatsByUser :: User -> Query Users UserStats
