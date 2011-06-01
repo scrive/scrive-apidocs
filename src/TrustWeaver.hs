@@ -22,21 +22,11 @@ module TrustWeaver
     , enableSection
     )
     where
-import Codec.Binary.Base64
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.UTF8 as BS hiding (length, drop, break)
-import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length, drop)
-import qualified Data.ByteString.Lazy as BSL
-import Misc
-import System.Cmd
-import System.Directory
-import System.Exit
-import System.IO
-import System.Process
-import Control.Monad
+import qualified Data.ByteString.Base64 as Base64
+import qualified Data.ByteString.Char8 as BSC
 import Text.XML.HaXml.XmlContent.Parser 
-import Text.XML.HaXml.XmlContent
-import SOAP.SOAP
+import SOAP.SOAP ()
+
 import Control.Concurrent
 import Data.List
 import SOAP.SOAP
