@@ -69,6 +69,7 @@ import qualified Data.IntMap as IntMap
 import Templates.Templates
 import InputValidation
 import Templates.TextTemplates
+import Text.Printf
 
 eitherFlash :: ServerPartT (StateT Context IO) (Either String b)
             -> ServerPartT (StateT Context IO) b
@@ -674,10 +675,15 @@ handleMigrateForDeletion = onlySuperUser $ do
 fieldsFromStats users documents = do
     let userStats = calculateStatsFromUsers users
         documentStats = calculateStatsFromDocuments documents
-        showAsDate int = show (int `div` 10000) ++ "-" ++ show (int `div` 100 `mod` 100) ++ "-" ++ show (int `mod` 100)
-        stats = IntMap.unionWith addStats userStats documentStats
-    let fieldify (date,stat) = do 
-          field "date" $ showAsDate date
+        showAsDate :: Int -> String
+        showAsDate int = printf "%04d-%02d-%02d" (int `div` 10000) (int `div` 100 `mod` 100) (int `mod` 100)
+        showAsMonth :: Int -> String
+        showAsMonth int = printf "%04d-%02d" (int `div` 10000) (int `div` 100 `mod` 100)
+        stats' = IntMap.toList (IntMap.unionWith addStats userStats documentStats)
+        lastMonthStats = take 30 (reverse stats')
+        allMonthsStats = reverse $ IntMap.toList $ IntMap.fromListWith addStats (map ( \(k,v) -> (k `div` 100 * 100, v)) stats')
+    let fieldify showDate (date,stat) = do 
+          field "date" $ showDate date
           field "documents" $ do
             field "all" $ dsAllDocuments stat
             field "preparation" $ dsPreparationDocuments stat
@@ -695,7 +701,8 @@ fieldsFromStats users documents = do
             field "viralInvites" $ dsViralInvites stat
             field "adminInvites" $ dsAdminInvites stat
           
-    field "stats" $ map fieldify (IntMap.toList stats)
+    field "lastMonthStats" $ map (fieldify showAsDate) lastMonthStats
+    field "allMonthsStats" $ map (fieldify showAsMonth) allMonthsStats
 
 handleStatistics :: Kontra Response
 handleStatistics = 

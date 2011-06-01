@@ -475,7 +475,7 @@ userusagestats=
 statisticsPage=
     $backtoadminmainlink()$
     <div>
-      <h1>Stats by date</h1>
+      <h1>Stats last month by date</h1>
       <table>
         <thead>
           <td style="width:200px">Date</td>
@@ -494,7 +494,44 @@ statisticsPage=
           <td style="width:200px">Viral invites</td>
           <td style="width:200px">Admin invites</td>
        </thead>
-        $stats:{stat|<tr>
+        $lastMonthStats:{stat|<tr>
+          <td>$stat.date$</td>
+          <td>$stat.documents.signatures$ </td>
+          <td>$stat.documents.signaturesInClosed$ </td>
+          <td>$stat.users.all$ </td>
+          <td>$stat.documents.all$ </td>
+          <td>$stat.documents.preparation$</td>
+          <td>$stat.documents.pending$ </td>
+          <td>$stat.documents.closed$ </td>
+          <td>$stat.documents.awaitingauthor$ </td>
+          <td>$stat.documents.rejected$ </td>
+          <td>$stat.documents.canceled$ </td>
+          <td>$stat.documents.timeout$ </td>
+          <td>$stat.documents.error$ </td>
+          <td>$stat.users.viralInvites$ </td>
+          <td>$stat.users.adminInvites$ </td>
+       </tr>}$
+      </table>
+      <h1>Stats by month</h1>
+      <table>
+        <thead>
+          <td style="width:200px">Date</td>
+          <td style="width:200px">All signatures</td>
+          <td style="width:200px">Signs in closed</td>
+          <td style="width:200px">All users</td>
+          <td style="width:200px">All documents</td>
+          <td style="width:200px">Preparation</td>
+          <td style="width:200px">Pending</td>
+          <td style="width:200px">Closed</td>
+          <td style="width:200px">AwaitingAuthor</td>
+          <td style="width:200px">Rejected</td>
+          <td style="width:200px">Canceled</td>
+          <td style="width:200px">Timeout</td>
+          <td style="width:200px">Error</td>
+          <td style="width:200px">Viral invites</td>
+          <td style="width:200px">Admin invites</td>
+       </thead>
+        $allMonthsStats:{stat|<tr>
           <td>$stat.date$</td>
           <td>$stat.documents.signatures$ </td>
           <td>$stat.documents.signaturesInClosed$ </td>
