@@ -148,12 +148,14 @@ mkUserInfoView (userdetails', docstats', userstats') =
   UserInfoView { userdetails = userSmallView userdetails'
                , docstats = docstats'
                , userstats = userstats'
+               , adminview = userAdminView userdetails'
                }
  
 data UserInfoView = UserInfoView 
-                    { userdetails :: UserSmallView
-                    , docstats :: DocStats
-                    , userstats :: UserStats
+                    { userdetails   :: UserSmallView
+                    , docstats      :: DocStats
+                    , userstats     :: UserStats
+                    , adminview     :: UserAdminView
                     } deriving (Data, Typeable)
                                    
 data StatsView = StatsView 
