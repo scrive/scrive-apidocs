@@ -239,6 +239,7 @@ handleRoutes = msum [
      , dir "adminonly" $ hGet $ Administration.showAdminMainPage
      , dir "adminonly" $ dir "advuseradmin" $ hGet Administration.showAdminUserAdvanced
      , dir "adminonly" $ dir "useradminforsales" $ hGet $ Administration.showAdminUsersForSales
+     , dir "adminonly" $ dir "useradminforpayments" $ hGet $ Administration.showAdminUsersForPayments
      , dir "adminonly" $ dir "useradmin" $ hGet $ Administration.showAdminUsers . Just 
      , dir "adminonly" $ dir "useradmin" $ hGet $ Administration.showAdminUsers Nothing
      , dir "adminonly" $ dir "useradmin" $ dir "usagestats" $ hGet $ Administration.showAdminUserUsageStats
