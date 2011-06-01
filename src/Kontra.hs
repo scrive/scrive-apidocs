@@ -121,7 +121,6 @@ admins = map (Email . BS.fromString)
          , "oskar@skrivapa.se"
          , "viktor@skrivapa.se"
          , "andrzej@skrivapa.se"
-         , "heidi@skrivapa.se"
          ]
 
 {- |
