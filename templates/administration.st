@@ -103,7 +103,6 @@ adminusers=
           <td style="width:200px">Email</td>
           <td style="width:200px">Company</td>
           <td style="width:200px">Phone</td>
-          <td style="width:200px">Sales rep</td>
           <td style="width:50px">Uploaded Docs</td>
           <td style="width:50px">Signed (tot)</td>
           <td style="width:50px">Signed (1m)</td>
