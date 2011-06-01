@@ -202,14 +202,14 @@ adminUsersForPayments=
           <td><a href="$adminuserlink$/$user.userdetails.usvId$">$user.userdetails.usvEmail$</a> </td>
           <td> $user.userdetails.usvCompany$
           $user.userdetails.usvTitle$</td>
-	  <td></td>
-	  <td></td>
-	  <td></td>
-	  <td></td>
-	  <td></td>
-	  <td></td>
-	  <td></td>
-	  <td></td>
+	  <td>-</td>
+	  <td><select autocomplete="off">$user.adminview.uavpaymentaccounttype:options()$</select></td>
+	  <td>?</td>
+	  <td>?</td>
+	  <td>?</td>
+	  <td>0</td>
+	  <td>0</td>
+	  <td>0</td>
       </tr>}$
       </table>
 
