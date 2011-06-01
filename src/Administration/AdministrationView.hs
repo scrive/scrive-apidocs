@@ -13,6 +13,7 @@ module Administration.AdministrationView(
             adminMainPage
           , adminUsersAdvancedPage
           , adminUsersPage
+          , adminUsersPageForSales
           , adminUserPage
           , allUsersTable
           , databaseContent
@@ -64,6 +65,18 @@ adminUsersAdvancedPage templates users params =
 adminUsersPage::KontrakcjaTemplates ->[(User,DocStats,UserStats)] -> AdminUsersPageParams -> IO String
 adminUsersPage templates users params =
     renderTemplate templates "adminusers" $ do
+        field "adminlink" $ show $ LinkAdminOnly
+        field "users" $ map mkUserInfoView $ visibleUsers params users
+        field "letters" $ letters
+        field "adminuserlink" $ show $ LinkUserAdmin Nothing
+        field "intervals" $ intervals $ avaibleUsers params users
+        field "search" $ search params
+        field "startletter" $ startletter params
+
+{-| Manage users page - can find user here -}
+adminUsersPageForSales :: KontrakcjaTemplates -> [(User,DocStats,UserStats)] -> AdminUsersPageParams -> IO String
+adminUsersPageForSales templates users params =
+    renderTemplate templates "adminUsersForSales" $ do
         field "adminlink" $ show $ LinkAdminOnly
         field "users" $ map mkUserInfoView $ visibleUsers params users
         field "letters" $ letters

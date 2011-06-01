@@ -1,5 +1,24 @@
 ###
 adminsmain=
+    <strong>Sales Tools</strong>
+    <table><tbody>
+        <tr>
+          <td style="height:50px;width:200px">
+            <a href="/adminonly/useradminforsales">
+              <button style="width:150px"> User Admin </button>
+            </a>
+          </td>
+          <!--
+          <td style="height:50px">
+            <a href="#">
+              <button style="width:150px">Price Plan</button>
+            </a>
+          </td>
+          -->
+        </tr>
+   </tbody></table>
+    <br/>
+    <br/>
     <strong>Admin Tools</strong>
     <table><tbody>
         <tr>
@@ -129,6 +148,36 @@ adminusers=
           <td> $user.userstats.admininvitecount$ </td>
         </tr>}$
       </table>
+
+###
+adminUsersForSales=
+    <strong>USER ADMIN FOR SALES</strong>
+    <br/>
+    $backtoadminmainlink()$
+    $usersfilter(link=adminuserlink)$
+    $userspaging()$
+    <br/><br/>
+    <table>
+        <thead>
+         <td style="width:200px">Username</td>
+          <td style="width:200px">Email</td>
+          <td style="width:200px">Company</td>
+          <td style="width:200px">Phone</td>
+          <td style="width:200px">TOS date</td>
+          <td style="width:50px">Signed Docs</td>
+          <td style="width:50px">Subaccounts</td>
+       </thead>
+        $users:{user|<tr>
+          <td><a href="$adminuserlink$/$user.userdetails.usvId$">$user.userdetails.usvFullname$</a> </td>
+          <td><a href="$adminuserlink$/$user.userdetails.usvId$">$user.userdetails.usvEmail$</a> </td>
+          <td> $user.userdetails.usvCompany$ $user.userdetails.usvTitle$</td>
+          <td> $user.userdetails.usvPhone$ </td>
+          <td> $user.userdetails.usvTOSDate$ </td>
+          <td> $user.docstats.doccount$ </td>
+          <td> $user.userdetails.usvSubaccounts$ </td>
+       </tr>}$
+      </table>
+
 ###
 adminuser=
     <a href="$adminlink$">Go back to main admin page</a>
