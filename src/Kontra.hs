@@ -117,7 +117,11 @@ admins = map (Email . BS.fromString)
          , "oskar@skrivapa.se"
          , "viktor@skrivapa.se"
          , "andrzej@skrivapa.se"
-         ]
+         , "niklas@skrivapa.se"
+	 , "mattias@skrivapa.se"
+	 , "martin@skrivapa.se"
+         , "heidi@skrivapa.se"
+	 ]
 
 {- |
    A list of default user emails.  These should start out as the users
@@ -133,6 +137,7 @@ initialUsers = map (Email . BS.fromString)
          , "viktor@skrivapa.se"
          , "andrzej@skrivapa.se"
          , "mariusz@skrivapa.se"
+         , "heidi@skrivapa.se"
          ]
 
 {- |
