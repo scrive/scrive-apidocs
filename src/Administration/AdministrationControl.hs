@@ -16,6 +16,7 @@ module Administration.AdministrationControl(
           , showAdminUserAdvanced
           , showAdminUsers
           , showAdminUsersForSales
+          , showAdminUsersForPayments
           , showAdminUserUsageStats
           , showAllUsersTable
           , showStats
@@ -124,6 +125,13 @@ showAdminUsersForSales = onlySuperUser $ do
   users <- getUsersAndStats
   params <- getAdminUsersPageParams
   content <- liftIO $ adminUsersPageForSales ctxtemplates users params
+  renderFromBody TopEmpty kontrakcja $ cdata content 
+
+showAdminUsersForPayments = onlySuperUser $ do 
+  ctx@Context {ctxtemplates} <- lift get
+  users <- getUsersAndStats
+  params <- getAdminUsersPageParams
+  content <- liftIO $ adminUsersPageForPayments ctxtemplates users params
   renderFromBody TopEmpty kontrakcja $ cdata content 
 
 getUsersAndStats :: Kontra [(User,DocStats,UserStats)]
