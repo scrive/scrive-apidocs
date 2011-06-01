@@ -71,7 +71,9 @@ module Doc.DocView (
   , showFilesImages2
   , signatoryDetailsFromUser
   , templatesForAjax
-  , uploadPage
+  , getDataMismatchMessage
+  , documentInfoFields
+  , documentAuthorInfo
   ) where
 
 import ActionSchedulerState (ActionID)
@@ -1215,3 +1217,14 @@ jsStringFromBS bs =
 getDataMismatchMessage :: Maybe CancelationReason -> Maybe String
 getDataMismatchMessage (Just (ELegDataMismatch msg _ _ _ _)) = Just msg
 getDataMismatchMessage _ = Nothing
+
+
+-- This is temporary method used to see list of broken documents
+documentsToFixView :: KontrakcjaTemplates -> [Document] -> IO String
+documentsToFixView templates docs = do
+    renderTemplate templates "documentsToFixView" $ do
+        field "documents" $ for docs $ \doc -> do
+            field "title" $ documenttitle doc
+            field "id" $ show $ documentid doc 
+            field "involved" $ map (signatoryemail . signatorydetails)  $ documentsignatorylinks doc
+            field "cdate" $  show $ documentctime doc
