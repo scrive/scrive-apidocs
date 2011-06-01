@@ -81,7 +81,6 @@ pageDocumentForAuthor=
       </span> 
     </div>
     
-
     <div id="documentBox">
       <script type="text/javascript">
         var docstate = $docstate:noescape()$;

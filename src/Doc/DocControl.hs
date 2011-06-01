@@ -808,7 +808,7 @@ handleIssueUpdateAttachments doc = withUserPost $ do
                                   , r]
     fileinputs <- getDataFnM $ lookInputs "attachment"
     mattachments <- sequence $ map (makeDocumentFromFile Attachment) fileinputs
-    let idsforadd = map documentid $ catMaybes mattachments
+    let idsforadd = map FileID attidsnums ++ map documentid $ catMaybes mattachments
 
     mndoc <- update $ UpdateDocumentAttachments (documentid udoc) idsforadd idsforremoval
     case mndoc of

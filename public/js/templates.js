@@ -57,7 +57,7 @@ function placementToHTML(label, value) {
     v = label;
   }
   var d = $("<div class='placedfield' style='cursor:pointer'><span class='value'></span></div>");
-  $(".value",d).text(v);
+  $(".value", d).text(v);
   return d;
 }
 
@@ -1264,10 +1264,15 @@ safeReady(function() {
     $(this).parents("form").submit();
   });
 
-  attachmentdialog.find("#alreadyattached .remove").click(function() {
+  $("#alreadyattached .remove", attachmentdialog).live("click", function() {
     var itemdiv = $(this).closest(".alreadyattacheditem");
     itemdiv.find("input[name='removeattachment']").val("true");
     itemdiv.find(".display").hide(); 
+  });
+
+  $("#tobeattached .remove", attachmentdialog).live("click", function() {
+    var itemdiv = $(this).closest(".alreadyattacheditem");
+    itemdiv.detach();
   });
 });
 
@@ -1508,4 +1513,27 @@ safeReady(function() {
         moveCoordinateAxes(ui.helper);
       }
     });
+});
+
+safeReady(function() {
+  $(".addattachment", $(".existingattachments")).live("click", function() {
+    var name = $(this).text();
+    var id = $(this).attr("rel");
+
+    var item = $('<div class="alreadyattacheditem" />').append(
+      $('<div class="display" />').append($('<a href="#" class="remove">x</a>')).append(
+        $('<span style="padding-left:5px;" />').text(name)))
+      .append($('<div class="data" />').append(
+        $('<input type="hidden" name="attachmentid" />').attr("value", id)).append(
+          $('<input type="hidden" name="removeattachment" value="false" />')));
+    $("#tobeattached").append(item);
+    return false;
+  });
+});
+
+safeReady(function() {
+  $("#showexistingattachments").click(function() {
+    $("#attachmentselectlist").show();
+    $("#attachmentbuttons").hide();
+  });
 });

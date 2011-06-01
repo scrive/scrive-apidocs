@@ -1277,16 +1277,16 @@ input[type=submit].hidden
 /* step 1 */
 .signStepsBodyUploadBox
 {
-    width: 240px;
+    width: 180px;
     height: 92px;
-    margin: 15px auto 15px auto;
+    margin: 15px;
     border-top: 1px solid #E0E0E0;
     border-right: 1px solid #E0E0E0;
     border-bottom: 1px solid #E8E5E5;
     border-left: 1px solid #E8E5E5;
     padding: 10px;
     text-align: center;
-
+    float: left;
 }
 
 
@@ -1337,7 +1337,7 @@ input[type=submit].hidden
     position: relative; /* 008 new */
     margin-top: 15px;
     margin-bottom: 5px;
-    margin-left: 65px;
+    margin-left: 35px;
 }
 /* HOW TO MAKE FILE INPUT LOOKING LIKE A BUTTON !!!! */
 input.multiFileInput { 
@@ -2819,3 +2819,20 @@ width: 340px;
 a#cancel {
     width: 140px;
 }
+
+div.existingattachments {
+    overflow: auto;
+    height: 128px;
+    width: 474px;
+    clear: left;
+}
+
+#update-attachments-dialog .modal-content {
+    height: 225px;
+}
+
+div#alreadyattached, div#tobeattached {
+    width: 474px;
+}
+
+

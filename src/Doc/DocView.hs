@@ -644,6 +644,7 @@ pageAttachment'
 pageDocumentDesign :: Context 
              -> Document 
              -> (Maybe DesignStep)
+             -> [Document]
              -> IO String
 pageDocumentDesign ctx
   document@Document {
@@ -652,7 +653,8 @@ pageDocumentDesign ctx
     , documentdaystosign
     , documentinvitetext
   }
-  step =
+  step 
+  attachments =
    let
        templates = ctxtemplates ctx
        documentdaystosignboxvalue = maybe 7 id documentdaystosign
@@ -681,6 +683,7 @@ pageDocumentDesign ctx
        documentViewFields document
        designViewFields step
        documentAttachmentDesignFields (documentauthorattachments document)
+       documentAuthorAttachments attachments
 
 documentAttachmentDesignFields :: [AuthorAttachment] -> Fields
 documentAttachmentDesignFields atts = do
@@ -1222,14 +1225,3 @@ jsStringFromBS bs =
 getDataMismatchMessage :: Maybe CancelationReason -> Maybe String
 getDataMismatchMessage (Just (ELegDataMismatch msg _ _ _ _)) = Just msg
 getDataMismatchMessage _ = Nothing
-
-
--- This is temporary method used to see list of broken documents
-documentsToFixView :: KontrakcjaTemplates -> [Document] -> IO String
-documentsToFixView templates docs = do
-    renderTemplate templates "documentsToFixView" $ do
-        field "documents" $ for docs $ \doc -> do
-            field "title" $ documenttitle doc
-            field "id" $ show $ documentid doc 
-            field "involved" $ map (signatoryemail . signatorydetails)  $ documentsignatorylinks doc
-            field "cdate" $  show $ documentctime doc
