@@ -1219,7 +1219,7 @@ exportUsersDetailsToCSV = queryUsers $ \users ->
 getUserPaymentSchema::User -> IO (Payments.PaymentScheme)
 getUserPaymentSchema User{userpaymentpolicy } = do
                                now <- getMinutesTime
-                               model <- update $ Payments.GetPaymentModel (Payments.paymentaccounttype userpaymentpolicy ) 
+                               model <- query $ Payments.GetPaymentModel (Payments.paymentaccounttype userpaymentpolicy ) 
                                let paymentChange = case Payments.temppaymentchange userpaymentpolicy  of 
                                                      Nothing -> Payments.custompaymentchange  userpaymentpolicy 
                                                      Just (expires,tchange) -> 

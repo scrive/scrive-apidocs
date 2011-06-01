@@ -116,7 +116,7 @@ showAdminUsers (Just userId) = onlySuperUser $ do
   case muser of 
     Nothing -> mzero     
     Just user -> do   
-      paymentmodel <- update $ GetPaymentModel $ paymentaccounttype $ userpaymentpolicy user
+      paymentmodel <- query $ GetPaymentModel $ paymentaccounttype $ userpaymentpolicy user
       content <- liftIO $ adminUserPage ctxtemplates user paymentmodel
       renderFromBody TopEmpty kontrakcja $ cdata content 
 

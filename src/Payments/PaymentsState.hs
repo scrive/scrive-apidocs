@@ -212,18 +212,15 @@ instance Component (PaymentAccountModels) where
   type Dependencies (PaymentAccountModels) = End
   initialValue = IxSet.empty
 
-getPaymentModel :: PaymentAccountType -> Update PaymentAccountModels PaymentAccountModel
+getPaymentModel :: PaymentAccountType -> Query PaymentAccountModels PaymentAccountModel
 getPaymentModel accountType =
   do
    models <- ask
    case getOne (models @= accountType) of
     Just model -> return model
-    Nothing -> do
-                let nmodel = basicModel accountType
-                modify $ insert $ nmodel
-                return nmodel
+    Nothing -> return (basicModel accountType)
 
-getPaymentModels :: Update PaymentAccountModels [PaymentAccountModel]
+getPaymentModels :: Query PaymentAccountModels [PaymentAccountModel]
 getPaymentModels = mapM getPaymentModel (allValues :: [PaymentAccountType])
 
 updateAccountModel :: PaymentAccountType -> PaymentAccountModel -> Update PaymentAccountModels ()

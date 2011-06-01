@@ -13,7 +13,7 @@ module Payments.PaymentsControl(handlePaymentsModelForViewView, handlePaymentsMo
 import Control.Monad.State
 import AppView
 import Happstack.Server hiding (simpleHTTP)
-import Happstack.State (update)
+import Happstack.State (update, query)
 import KontraLink
 import Misc
 import Kontra
@@ -27,7 +27,7 @@ handlePaymentsModelForViewView::Kontra Response
 handlePaymentsModelForViewView = onlySuperUser $
                                  do
                                   ctx<- get
-                                  models <- update $ GetPaymentModels
+                                  models <- query $ GetPaymentModels
                                   content <- liftIO $ adminView (ctxtemplates ctx) models 
                                   renderFromBody TopEmpty kontrakcja $ cdata content
                                   
@@ -36,7 +36,7 @@ handlePaymentsModelForEditView ::Kontra Response
 handlePaymentsModelForEditView =  onlySuperUser $
                                   do
                                    ctx<- get
-                                   models <- update $ GetPaymentModels
+                                   models <- query $ GetPaymentModels
                                    content <- liftIO $ adminViewForSuperuser (ctxtemplates ctx) models
                                    renderFromBody TopEmpty kontrakcja $ cdata content                                  
 {- | Handle change of models values request.
@@ -56,7 +56,7 @@ handleAccountModelsChange= do
 getAndApplyAccountModelChange :: PaymentAccountType -> Kontra ()
 getAndApplyAccountModelChange accountType = do
                                     f <- getAccountModelChange  accountType
-                                    model <- update $ GetPaymentModel accountType
+                                    model <- query $ GetPaymentModel accountType
                                     update $ UpdateAccountModel accountType (f model)
                                     
 -- | For selected account type we read request params and retur a function for updating a structure
