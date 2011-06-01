@@ -1872,3 +1872,27 @@ migrateDocSigLinks = onlySuperUser $ do
   sendRedirect LinkMain
 
 -}
+
+-- Fix for broken production | To be removed after fixing is done
+isBroken::Document -> Bool
+isBroken doc = documentstatus doc == Closed && (not $ Data.List.null $ documentfiles doc)  && (Data.List.null $ documentsealedfiles doc)
+
+handleFixDocument::DocumentID -> Kontra KontraLink
+handleFixDocument docid = onlySuperUser $ do
+    ctx <- get
+    mdoc <- query $ GetDocumentByDocumentID docid
+    case (mdoc) of 
+       Nothing -> return LoopBack
+       Just doc -> if (isBroken doc)
+                    then do
+                        liftIO $ sealDocument ctx doc
+                        return LoopBack
+                    else return LoopBack
+
+
+showDocumentsToFix::Kontra  String
+showDocumentsToFix = onlySuperUser $ do
+    ctx <- get
+    docs <- query $ GetDocuments Nothing 
+    liftIO $ documentsToFixView (ctxtemplates ctx) $ filter isBroken docs
+    
