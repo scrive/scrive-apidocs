@@ -456,20 +456,21 @@ prettyName u =
 {- View Utills  -}
 
 {-| Users simple view (for templates) -}
-data UserSmallView =
-  UserSmallView {
-      usvId       :: String
-    , usvFullname :: String
-    , usvEmail    :: String
-    , usvCompany  :: String
-    } deriving (Data, Typeable)
+data UserSmallView = UserSmallView 
+                     { usvId       :: String
+                     , usvFullname :: String
+                     , usvEmail    :: String
+                     , usvCompany  :: String
+                     , usvPhone    :: String
+                     , usvTOSDate  :: String
+                     } deriving (Data, Typeable)
 
 {-| Conversion from 'User' to 'Option', for select box UserSmallView  -}      
 userSmallView :: User -> UserSmallView 
-userSmallView u =
-  UserSmallView {
-      usvId       = show $ userid u
-    , usvFullname = BS.toString $ userfullname u
-    , usvEmail    = BS.toString . unEmail . useremail $ userinfo u
-    , usvCompany  = BS.toString . usercompanyname $ userinfo u
-    }
+userSmallView u = UserSmallView { usvId       = show $ userid u
+                                , usvFullname = BS.toString $ userfullname u
+                                , usvEmail    = BS.toString . unEmail . useremail $ userinfo u
+                                , usvCompany  = BS.toString . usercompanyname $ userinfo u
+                                , usvPhone    = BS.toString . userphone $ userinfo u
+                                , usvTOSDate  = maybe "-" show (userhasacceptedtermsofservice u)
+                                }
