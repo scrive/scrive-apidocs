@@ -92,7 +92,10 @@ data Context = Context
     , ctxelegtransactions    :: [ELegTransaction]
     , ctxfilecache           :: MemCache.MemCache FileID BS.ByteString
     , ctxxtoken              :: MagicHash
-    , ctxservice             :: Maybe (Service,String)
+    , ctxcompany             :: Maybe Company
+    , ctxservice             :: Maybe Service
+    , ctxlocation            :: String
+    , ctxadminaccounts       :: [Email]
     }
 
 type Kontra a = ServerPartT (StateT Context IO) a
@@ -107,18 +110,6 @@ instance TemplatesMonad (ServerPartT (StateT Context IO)) where
 instance TemplatesMonad (ReaderT KontrakcjaTemplates IO) where
         getTemplates = ask
 
-
-{- |
-   A list of admin emails.
--}
-admins :: [Email]
-admins = map (Email . BS.fromString)
-         [ "gracjanpolak@gmail.com"
-         , "lukas@skrivapa.se"
-         , "oskar@skrivapa.se"
-         , "viktor@skrivapa.se"
-         , "andrzej@skrivapa.se"
-         ]
 
 {- |
    A list of default user emails.  These should start out as the users
