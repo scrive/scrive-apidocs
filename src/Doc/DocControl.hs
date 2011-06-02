@@ -565,7 +565,7 @@ handleSignShow documentid
               invitedname = signatoryname $ signatorydetails $ invitedlink 
               isSignatory = SignatoryPartner `elem` signatoryroles invitedlink
               isFlashNeeded = Data.List.null ctxflashmessages
-                       && (not (isJust $ maybesigninfo invitedlink))
+                       && (not $ isJust $ maybesigninfo invitedlink) && (not $ isAttachment document )
               -- heavens this is a confusing case statement, there must be a better way!
               flashMsg =
                 case (isFlashNeeded, 
