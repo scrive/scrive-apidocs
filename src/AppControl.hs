@@ -102,6 +102,7 @@ data AppConf
               , trustWeaverStorage :: Maybe (String,String,String) -- ^ TrustWeaver storage service (URL,pem file path,pem private key password)
               , mailsConfig     :: MailsConfig                  -- ^ mail sendout configuration
               , aesConfig       :: AESConf                     -- ^ aes key/iv for encryption
+              , admins          :: [String]                    -- ^ email addresses of people regarded as admins
               }              
       deriving (Show,Read,Eq,Ord)
 
@@ -514,6 +515,7 @@ appHandler appConf appGlobals = do
                 , ctxfilecache = filecache appGlobals
                 , ctxxtoken = getSessionXToken session
                 , ctxservice = mservice
+                , ctxadminaccounts = map (Email . BS.fromString) (admins appConf)
                 }
       return ctx
 
@@ -720,8 +722,8 @@ serveHTMLFiles =  do
 -}
 onlySuperUserGet :: Kontra Response -> Kontra Response  
 onlySuperUserGet action = do
-    Context{ ctxmaybeuser } <- get 
-    if isSuperUser ctxmaybeuser 
+    Context{ ctxadminaccounts, ctxmaybeuser } <- get 
+    if isSuperUser ctxadminaccounts ctxmaybeuser 
         then action
         else sendRedirect $ LinkLogin NotLoggedAsSuperUser
 
