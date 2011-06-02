@@ -128,7 +128,6 @@ getTextTemplates = do
 getTextTemplatesMTime :: IO ClockTime
 getTextTemplatesMTime =  do
     mtime <- maximum <$> (sequence $ map getRecursiveMTime translationDirs)
-    putStrLn $ show mtime
     return mtime
 
 getRecursiveMTime "."  = return $ TOD 0 0
@@ -148,9 +147,7 @@ getTextTemplatesFromDir:: String -> IO [(String,String)]
 getTextTemplatesFromDir "."  = return []
 getTextTemplatesFromDir ".." = return []
 getTextTemplatesFromDir dir = do
-    putStrLn $ "Reading text templates " ++ dir
     l10 <- fst <$> getL10n dir
-    putStrLn $ show l10
     let msgmap = concatMap Map.toList $ concatMap Map.elems (Map.elems l10)
     return $ for msgmap $ \v -> case v of 
                                   (Msgid s,a:_) -> (s,a)  
