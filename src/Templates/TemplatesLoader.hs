@@ -45,7 +45,7 @@ readTemplates :: IO KontrakcjaTemplates
 readTemplates = do
     ts <- mapM getTemplates templatesFilesPath
     texts <- getTextTemplates
-    return $ groupStringTemplates $ fmap (\(n,v) -> (n,newSTMP v)) (concat ts)
+    return $ groupStringTemplates $ fmap (\(n,v) -> (n,newSTMP v)) $ (concat ts) ++ texts
 
 --This is avaible only for special cases
 renderTemplateMain :: (ToSElem a) => KontrakcjaTemplates -> String -> [(String, a)]
