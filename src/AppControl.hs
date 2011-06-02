@@ -258,7 +258,9 @@ handleRoutes = msum [
 
      , dir "adminonly" $ dir "services" $ hGet $ Administration.showServicesPage
      , dir "adminonly" $ dir "services" $ param "create" $ hPost $ Administration.handleCreateService
-     
+
+     , dir "adminonly" $ dir "generatepotfiles" $ hGet $ Administration.handleGeneratePOTFiles
+
      -- a temporary service to help migration
 
      , dir "adminonly" $ dir "migrate0" $ hGet $ Administration.handleMigrate0

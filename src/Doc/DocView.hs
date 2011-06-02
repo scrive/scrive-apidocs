@@ -71,9 +71,8 @@ module Doc.DocView (
   , showFilesImages2
   , signatoryDetailsFromUser
   , templatesForAjax
-  , getDataMismatchMessage
-  , documentInfoFields
-  , documentAuthorInfo
+  , documentsToFixView 
+  , uploadPage
   ) where
 
 import ActionSchedulerState (ActionID)

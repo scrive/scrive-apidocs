@@ -74,6 +74,7 @@ writePOTFile s ttls = do
     h <- openFile ("pot/" ++ s) WriteMode
     putStrLn $ "Writing content ... "
     forM_ ttls $ \ttl -> do 
+        forM (location ttl) $ \(l,t)->  hPutStr h $ "#: " ++ l ++ ":" ++ t ++ "\n"
         hPutStr h $ "msgid \""++ name ttl ++"\"\n"
         hPutStr h $ "msgstr \"\"\n\n"
     hClose h
@@ -119,19 +120,23 @@ finalLocation ttl =  if (2 > (length $ nub $ map fst $ location ttl))
 
 
 getTextTemplates:: IO [(String,String)]
-getTextTemplates = join <$> (sequence $ map getTextTemplatesFromDir translationDirs)
+getTextTemplates = do
+    templates <- join <$> (sequence $ map getTextTemplatesFromDir translationDirs)
+    putStrLn $ show $ templates
+    return templates
 
 getTextTemplatesMTime :: IO ClockTime
-getTextTemplatesMTime =  maximum <$> (sequence $ map getRecursiveMTime translationDirs)
+getTextTemplatesMTime =  do
+    mtime <- maximum <$> (sequence $ map getRecursiveMTime translationDirs)
+    putStrLn $ show mtime
+    return mtime
 
 getRecursiveMTime "."  = return $ TOD 0 0
 getRecursiveMTime ".." = return $ TOD 0 0
 getRecursiveMTime dir = do
-     putStrLn $ "Reding dir content " ++ dir ++" to check time" 
      isDir <- doesDirectoryExist dir
-     putStrLn $ "Is this a dir" ++ show isDir 
      if not isDir 
-      then getModificationTime dir
+      then getRecursiveMTime dir
       else do
           files <- getDirectoryContents dir
           mts <- forM files $ \fn -> getModificationTime $ dir ++ "/" ++fn 

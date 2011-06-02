@@ -1892,7 +1892,7 @@ handleFixDocument docid = onlySuperUser $ do
        Nothing -> return LoopBack
        Just doc -> if (isBroken doc)
                     then do
-                        liftIO $ sealDocument ctx doc
+                        _ <- liftIO $ sealDocument ctx doc
                         return LoopBack
                     else return LoopBack
 
