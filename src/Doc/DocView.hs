@@ -376,9 +376,11 @@ documentBasicViewFields crtime user doc = do
     field "doclink"  $ if isUserAuthor doc user || null signatorylinklist
                         then show . LinkIssueDoc $ documentid doc
                         else show $ LinkSignDoc doc (head signatorylinklist)
-    field "davelink" $ if isSuperUser (Just user)
+    {- FIXME: to know if a user is superuser we need to consult Context... we do not have it here
+    field "davelink" $ if issuperuser
                         then Just $ "/dave/document/" ++ (show $ documentid doc)
                         else Nothing
+    -}
     field "timeoutdate" $ fromTimeout show
     field "timeoutdaysleft" $ fromTimeout $ show . (dateDiffInDays crtime)
     field "mtime" $ showDateAbbrev crtime (documentmtime doc)

@@ -2,13 +2,12 @@
 
 module Kontra
     ( module User.UserState
-    ,  module User.Password
+    , module User.Password
     , Context(..)
     , isSuperUser
     , Kontra
     , Kontra'
     , KontraModal
-    , admins
     , initialUsers
     , clearFlashMsgs
     , addELegTransaction
@@ -92,6 +91,7 @@ data Context = Context
     , ctxfilecache           :: MemCache.MemCache FileID BS.ByteString
     , ctxxtoken              :: MagicHash
     , ctxservice             :: Maybe (Service,String)
+    , ctxadminaccounts       :: [Email]
     }
 
 type Kontra a = ServerPartT (StateT Context IO) a
@@ -105,23 +105,6 @@ instance TemplatesMonad (ServerPartT (StateT Context IO)) where
 
 instance TemplatesMonad (ReaderT KontrakcjaTemplates IO) where
         getTemplates = ask
-
-
-{- |
-   A list of admin emails.
--}
-admins :: [Email]
-admins = map (Email . BS.fromString)
-         [ "gracjanpolak@gmail.com"
-         , "lukas@skrivapa.se"
-         , "oskar@skrivapa.se"
-         , "viktor@skrivapa.se"
-         , "andrzej@skrivapa.se"
-         , "niklas@skrivapa.se"
-	 , "mattias@skrivapa.se"
-	 , "martin@skrivapa.se"
-         , "heidi@skrivapa.se"
-	 ]
 
 {- |
    A list of default user emails.  These should start out as the users
@@ -143,9 +126,9 @@ initialUsers = map (Email . BS.fromString)
 {- |
    Whether the user is an administrator.
 -}
-isSuperUser :: Maybe User -> Bool
-isSuperUser (Just user) = (useremail $ userinfo user) `elem` admins 
-isSuperUser _ = False
+isSuperUser :: [Email] -> Maybe User -> Bool
+isSuperUser admins (Just user) = (useremail $ userinfo user) `elem` admins 
+isSuperUser _ _ = False
 
 {- |
    Will mzero if not logged in as a super user.
@@ -153,7 +136,7 @@ isSuperUser _ = False
 onlySuperUser :: Kontra a -> Kontra a
 onlySuperUser a = do
     ctx <- get
-    if (isSuperUser $ ctxmaybeuser ctx)
+    if isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)
         then a
         else mzero
           
