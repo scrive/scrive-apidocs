@@ -2,13 +2,12 @@
 
 module Kontra
     ( module User.UserState
-    ,  module User.Password
+    , module User.Password
     , Context(..)
     , isSuperUser
     , Kontra
     , Kontra'
     , KontraModal
-    , admins
     , initialUsers
     , clearFlashMsgs
     , addELegTransaction
@@ -93,9 +92,7 @@ data Context = Context
     , ctxelegtransactions    :: [ELegTransaction]
     , ctxfilecache           :: MemCache.MemCache FileID BS.ByteString
     , ctxxtoken              :: MagicHash
-    , ctxcompany             :: Maybe Company
-    , ctxservice             :: Maybe Service
-    , ctxlocation            :: String
+    , ctxservice             :: Maybe (Service,String)
     }
 
 type Kontra a = ServerPartT (StateT Context IO) a
@@ -121,10 +118,6 @@ admins = map (Email . BS.fromString)
          , "oskar@skrivapa.se"
          , "viktor@skrivapa.se"
          , "andrzej@skrivapa.se"
-         , "niklas@skrivapa.se"
-         , "mattias@skrivapa.se"
-         , "martin@skrivapa.se"
-         , "heidi@skrivapa.se"
          ]
 
 {- |
@@ -147,9 +140,9 @@ initialUsers = map (Email . BS.fromString)
 {- |
    Whether the user is an administrator.
 -}
-isSuperUser :: Maybe User -> Bool
-isSuperUser (Just user) = (useremail $ userinfo user) `elem` admins 
-isSuperUser _ = False
+isSuperUser :: [Email] -> Maybe User -> Bool
+isSuperUser admins (Just user) = (useremail $ userinfo user) `elem` admins 
+isSuperUser _ _ = False
 
 {- |
    Will mzero if not logged in as a super user.
@@ -157,7 +150,7 @@ isSuperUser _ = False
 onlySuperUser :: Kontra a -> Kontra a
 onlySuperUser a = do
     ctx <- get
-    if (isSuperUser $ ctxmaybeuser ctx)
+    if isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)
         then a
         else mzero
           

@@ -46,7 +46,7 @@ handlePaymentsModelForEditView =  onlySuperUser $
 handleAccountModelsChange::Kontra KontraLink
 handleAccountModelsChange= do
                             ctx<- get
-                            if (isSuperUser $ ctxmaybeuser ctx)
+                            if isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)
                              then do   
                                   mapM_ getAndApplyAccountModelChange (allValues::[PaymentAccountType])
                                   return $ LinkPaymentsAdmin 
