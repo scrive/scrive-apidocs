@@ -198,25 +198,44 @@ class MaybeTemplate a where
    isSignable :: a -> Bool 
    isSignable = not . isTemplate
 
-class MaybeContractOrOffer a where
+class MaybeContract a where
    isContract :: a -> Bool 
+   
+class MaybeOffer a where
    isOffer :: a -> Bool 
-   isOffer = not . isContract
+   
+class MaybeAttachment a where   
+   isAttachment :: a -> Bool 
+    
+  
    
 instance  MaybeTemplate DocumentType where
-   isTemplate t = (t == ContractTemplate) || (t == OfferTemplate) 
+   isTemplate t = (t == ContractTemplate) || (t == OfferTemplate) || (t == AttachmentTemplate) 
    
-instance  MaybeContractOrOffer DocumentType where
+instance  MaybeContract DocumentType where
    isContract t =  (t == ContractTemplate) || (t == Contract)
+
+instance  MaybeOffer DocumentType where
+   isOffer t =  (t == OfferTemplate) || (t == Offer)
+   
+instance  MaybeAttachment DocumentType where
+   isAttachment t =  (t == AttachmentTemplate) || (t == Attachment)
 
 instance  MaybeTemplate Document where
    isTemplate =  isTemplate . documenttype
-   
-instance  MaybeContractOrOffer Document where
+
+instance  MaybeContract Document where
    isContract =  isContract . documenttype
- 
-matchingType::(MaybeContractOrOffer a, MaybeContractOrOffer b) => a -> b -> Bool
-matchingType a b = (isContract a && isContract b) || (isOffer a && isOffer b)
+   
+instance  MaybeOffer Document where
+   isOffer =  isOffer . documenttype
+  
+instance  MaybeAttachment Document where
+   isAttachment =  isAttachment . documenttype
+  
+   
+matchingType::(MaybeContract a, MaybeContract b,MaybeOffer a, MaybeOffer b,MaybeAttachment a, MaybeAttachment b) => a -> b -> Bool
+matchingType a b = (isContract a && isContract b) || (isOffer a && isOffer b) || (isAttachment a && isAttachment b)
 
 -- does this need to change now? -EN
 checkCSVSigIndex :: [SignatoryLink] -> Int -> Either String Int
@@ -538,12 +557,6 @@ isUserIDAuthor doc userid = maybe False (isSigLinkForUserID userid) $ getAuthorS
  -}
 isDeletedForUserID :: Document -> UserID -> Bool
 isDeletedForUserID doc userid = maybe False signatorylinkdeleted $ getSigLinkForUserID doc userid
-
-{- |
-   Is this Document an Attachment?
- -}
-isAttachment :: Document -> Bool
-isAttachment doc = Attachment == documenttype doc
 
 
 {- | Add a tag to tag list -}
