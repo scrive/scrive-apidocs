@@ -1833,13 +1833,9 @@ getTemplatesForAjax = do
     mdoctype <- getDocType
     case (ctxmaybeuser ctx,mdoctype) of
             (Just user, Just doctype) -> do
-                userTemplates <- liftIO $ query $ GetUserTemplates (userid user)
-                relatedUsers <- liftIO $ query $ GetUserRelatedAccounts (userid user)
-                sharedTemplates <- liftIO $ query $ GetSharedTemplates (map userid relatedUsers)
-                let allTemplates = userTemplates ++ sharedTemplates
-                let templates = allTemplates
-                let templatesOfGoodType =  filter (matchingType doctype) templates
-                content <- liftIO $ templatesForAjax (ctxtemplates ctx) (ctxtime ctx) user doctype $ docSortSearchPage params templatesOfGoodType
+                let tfilter doc = isTemplate doc && (matchingType doctype $ documenttype doc)
+                templates <- getDocumentsForUserByType user tfilter
+                content <- liftIO $ templatesForAjax (ctxtemplates ctx) (ctxtime ctx) user doctype $ docSortSearchPage params templates
                 simpleResponse content
             (Nothing, _) -> sendRedirect $ LinkLogin NotLogged
             _ -> mzero
