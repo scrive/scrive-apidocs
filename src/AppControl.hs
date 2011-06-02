@@ -526,7 +526,10 @@ appHandler appConf appGlobals = do
                 , ctxelegtransactions = elegtrans
                 , ctxfilecache = filecache appGlobals
                 , ctxxtoken = getSessionXToken session
-                , ctxservice = mservice
+                , ctxcompany = mcompany
+                , ctxservice = fst <$> mservice
+                , ctxlocation = fromMaybe "" $ snd <$> mservice
+                , ctxadminaccounts = map (Email . BS.fromString) (admins appConf)
                 }
       return ctx
 
