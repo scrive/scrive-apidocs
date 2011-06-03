@@ -82,6 +82,7 @@ import qualified Network.AWS.AWSConnection as AWS
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 import qualified Codec.Text.IConv as IConv
+import InspectXMLInstances ()
 
 {- | 
   Defines the application's configuration.  This includes amongst other things
