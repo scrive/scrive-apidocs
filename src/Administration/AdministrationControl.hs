@@ -21,6 +21,7 @@ module Administration.AdministrationControl(
           , showAllUsersTable
           , showStats
           , showServicesPage
+          , showAdminTranslations
           , indexDB
           , getUsersDetailsToCSV
           , handleUserChange
@@ -735,3 +736,9 @@ handleGeneratePOTFiles :: Kontra KontraLink
 handleGeneratePOTFiles = do
     liftIO $ generatePOTFiles
     return LinkMain
+
+
+showAdminTranslations :: Kontra String
+showAdminTranslations = do
+     ctx <- get
+     liftIO $ adminTranslationsPage $ ctxtemplates ctx

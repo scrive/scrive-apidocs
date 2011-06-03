@@ -48,6 +48,9 @@ adminsmain=
           <td style="height:50px;width:200px"><a href="/adminonly/services"><button style="width:150px"> Services </button> </a> </td>
           <td style="height:50px;width:200px"><a href="/adminonly/quarantine"><button style="width:150px"> Quarantine </button></a></td>
         </tr>
+        <tr>
+          <td style="height:50px;width:200px"><a href="/adminonly/translations"><button style="width:150px"> Translations </button> </a> </td>
+        </tr>
     </tbody></table>
 ###
 adminsmanageall =
@@ -802,3 +805,11 @@ Admin: <input type="text" name="admin">
 <BR/>
 <BR/>
 ###
+adminTranslations = 
+
+<form action="/adminonly/generatepotfiles" method="POST">
+
+<input type="submit" value="Generate POT files">
+</form>
+
+####

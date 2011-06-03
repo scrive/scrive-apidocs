@@ -68,47 +68,8 @@ renderTemplateMain ts name params f = do
 getTemplatesModTime :: IO ClockTime
 getTemplatesModTime = do
     mtimes <- mapM getModificationTime templatesFilesPath
-    return (maximum mtimes)
-
-readTemplates :: IO KontrakcjaTemplates 
-readTemplates = do
-    ts <- mapM getTemplates templatesFilesPath
-    return $ groupStringTemplates $ fmap (\(n,v) -> (n,newSTMP v)) (concat ts)
-
-getTemplates :: String -> IO [(String, String)]            
-getTemplates fp = 
-    withFile fp ReadMode $ \handle -> do
-        hSetEncoding handle utf8
-        parseTemplates handle
-
-
-parseTemplates :: Handle -> IO [(String,String)]
-parseTemplates handle = do
-    e <- hIsEOF handle
-    if (e) 
-        then return []
-        else do
-               t  <- parseTemplate handle
-               ts <- parseTemplates handle
-               return $ (maybeToList t) ++ ts 
-
-parseTemplate :: Handle -> IO (Maybe (String, String))                              
-parseTemplate handle = do
-    ls <- parseLines handle
-    let (name,t) = break (==  '=') $ head ls 
-    if (null ls || null (name) || null t)
-        then return Nothing   
-        else do
-            let template = intercalate "\r\n" ((tail t): (tail ls)) 
-            return $ Just (filter isAlphaNum name,template)
-
-parseLines :: Handle -> IO [String]                                    
-parseLines handle = do
-    l <- hGetLine handle
-    e <- hIsEOF handle
-    if (e || isPrefixOf ("#") l) 
-        then return []
-        else fmap ((:) l) (parseLines handle)
+    mt <- getTextTemplatesMTime
+    return (maximum $ mt:mtimes)
 
 {- Template checker, printing info about params-}
 templateList :: IO ()
