@@ -24,7 +24,6 @@ import Mails.SendMail
 import MinutesTime
 import Misc
 import Redirect
-import Routing
 import User.UserControl
 import qualified Amazon as AWS
 import qualified AppLogger as Log
@@ -82,6 +81,7 @@ postDocumentChangeAction document@Document  { documentstatus
     -- main action: sendInvitationEmails
     | oldstatus == Preparation && documentstatus == Pending = do
         ctx <- get
+        liftIO $ print document
         Log.forkIOLogWhenError ("error in sending invitation emails for document " ++ show documentid) $ do
           sendInvitationEmails ctx document
         return ()
@@ -586,9 +586,7 @@ maybeAddDocumentCancelationMessage document = do
  -}
 handleIssueShowGet :: DocumentID -> Kontra (Either KontraLink (Either KontraLink String))
 handleIssueShowGet docid = do
- liftIO $ putStrLn $ "Accessiong document"   
  checkUserTOSGet $ do
-  liftIO $ putStrLn $ "Getting document"      
   edoc <- getDocByDocID docid
   case edoc of
     Left _ -> mzero
