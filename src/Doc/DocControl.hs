@@ -593,26 +593,23 @@ handleIssueShowGet docid = do
     Right document -> do
         ctx@Context { ctxmaybeuser 
                     } <- get
-        mdstep <- getDesignStep docid
-        case (mdstep, documentfunctionality document) of
-          (Just (DesignStep3 _), BasicFunctionality) -> return $ Left $ LinkIssueDoc docid
-          _ -> do
-            attachments <- queryOrFailIfLeft $ GetDocumentsByDocumentID $ documentattachments document
-            -- authors get a view with buttons
-            case (joinB $ isUserAuthor document <$> ctxmaybeuser, isAttachment document, documentstatus document) of
-              (True, True, Preparation) -> liftIO $ Right <$> pageAttachmentDesign ctx document
-              (_, True, _) -> liftIO $ Right <$> pageAttachmentView ctx document 
-              (True, _, _) -> do
-                let mMismatchMessage = getDataMismatchMessage $ documentcancelationreason document
-                when ((documentstatus document == Canceled) && (isJust mMismatchMessage)) 
-                  (addFlashMsg $ toFlashMsg OperationFailed (fromJust mMismatchMessage))
-                ctx2 <- get   -- need to get new context because we may have added flash msg
-                step <- getDesignStep (documentid document)
-                case (documentstatus document) of
-                  Preparation -> liftIO $ Right <$> pageDocumentDesign ctx2 document attachments step
-                  _ -> liftIO $ Right <$> pageDocumentForAuthor ctx2 document attachments               
-                -- friends can just look (but not touch)
-              (False, _, _) -> liftIO $ Right <$> pageDocumentForViewer ctx document attachments Nothing
+
+        attachments <- queryOrFailIfLeft $ GetDocumentsByDocumentID $ documentattachments document
+        -- authors get a view with buttons
+        case (isUserAuthor document user, isAttachment document, documentstatus document) of
+          (True, True, Preparation) -> liftIO $ pageAttachmentDesign ctx document
+          (_, True, _) -> liftIO $ pageAttachmentView ctx document 
+          (True, _, _) -> do
+            let mMismatchMessage = getDataMismatchMessage $ documentcancelationreason document
+            when ((documentstatus document == Canceled) && (isJust mMismatchMessage)) 
+              (addFlashMsg $ toFlashMsg OperationFailed (fromJust mMismatchMessage))
+            ctx2 <- get   -- need to get new context because we may have added flash msg
+            step <- getDesignStep (documentid document)
+            case (documentstatus document) of
+              Preparation -> liftIO $ pageDocumentDesign ctx2 document attachments step
+              _ ->  liftIO $ pageDocumentForAuthor ctx2 document attachments               
+          -- friends can just look (but not touch)
+          (False, _, _) -> liftIO $ pageDocumentForViewer ctx document attachments Nothing
 
 getDesignStep::DocumentID -> Kontra (Maybe DesignStep)
 getDesignStep docid = do
