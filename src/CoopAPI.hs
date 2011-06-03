@@ -151,11 +151,11 @@ getDocumentStatusAndSignatories = do
   
 sigToJSON siglink = JSObject $ toJSObject [("signed", JSBool $ isJust $ maybesigninfo siglink)
                                ,("email", JSString $ toJSString $ BS.toString $ signatoryemail $ signatorydetails siglink)
-                               ,("fstname", JSString $ toJSString $ BS.toString $  signatoryemail $ signatorydetails siglink)
-                               ,("sndname", JSString $ toJSString $ BS.toString $  signatoryemail $ signatorydetails siglink)
-                               ,("company", JSString $ toJSString $ BS.toString $  signatoryemail $ signatorydetails siglink)
-                               ,("companynr", JSString $ toJSString $ BS.toString $  signatoryemail $ signatorydetails siglink)
-                               ,("personalnr", JSString $ toJSString $  BS.toString $ signatoryemail $ signatorydetails siglink)
+                               ,("fstname", JSString $ toJSString $ BS.toString $  signatoryfstname $ signatorydetails siglink)
+                               ,("sndname", JSString $ toJSString $ BS.toString $  signatorysndname $ signatorydetails siglink)
+                               ,("company", JSString $ toJSString $ BS.toString $  signatorycompany $ signatorydetails siglink)
+                               ,("companynr", JSString $ toJSString $ BS.toString $  signatorycompanynumber $ signatorydetails siglink)
+                               ,("personalnr", JSString $ toJSString $  BS.toString $ signatorypersonalnumber $ signatorydetails siglink)
                                ,("customfields", JSArray $ map fieldDefinitionToJSObject $ signatoryotherfields $ signatorydetails siglink)]
                                                                                   
 --fieldDefinitionToJSObject :: FieldDefinition -> JSObject JSValue
