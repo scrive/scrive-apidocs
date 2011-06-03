@@ -78,7 +78,6 @@ import User.Password
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BS (unlines) 
 import qualified Data.ByteString.UTF8 as BS
-import qualified Data.Set as Set
 
 newtype UserID = UserID { unUserID :: Int }
     deriving (Eq, Ord, Typeable)
@@ -921,7 +920,8 @@ getUserFriends uid = do
 getUserSubaccounts :: UserID -> Query Users [User]
 getUserSubaccounts userid = do
   users <- ask
-  return $ toSet (users @= SupervisorID (unUserID userid))
+  return $ toList (users @= SupervisorID (unUserID userid))
+
 
 {- |
     Gets all the users that are related to the indicated user.

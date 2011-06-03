@@ -29,7 +29,6 @@ import Control.Monad
 import Control.Monad.Reader (ask)
 import Control.Monad.State (modify)
 import Data.List hiding (insert)
-import Data.Maybe
 import Doc.DocStateData
 import Doc.DocUtils
 import Happstack.Data.IxSet as IxSet
@@ -143,79 +142,38 @@ data Feature = CSVUse
 {- |
     Drops unsupported fetures, so if for example attachents are not supported they are dropped
 -}
-checkFeatureSupport :: Document -> Either String ()
-checkFeatureSupport doc =
-  case (filter (checkSupport doc) features, filter (not . checkSupport doc) features) of
-    (_, []) -> Right ()
-    (_, notSupported) -> Left ("features required but not supported: " ++ show notSupported)
-  where
-    features = [CSVUse, DaysToSignUse, MultiplePartiesUse, SecretaryUse, SpecialRoleUse,
-                AuthorCustomFieldUse, AuthorPlacementUse, SigCustomFieldUse, AttachmentUse]
-    {-|
-       Checks that any features in use are supported.
-    -}
-    checkSupport :: Document -> Feature -> Bool
-    checkSupport doc@Document{documentfunctionality} feature =
-        case (isRequired feature doc, isSupported feature documentfunctionality) of
-          (True, False) -> False
-          _ -> True
-    {-|
-       Determines whether a feature is in use for a document.
-    -}
-    isRequired :: Feature -> Document -> Bool
-    isRequired CSVUse Document{documentcsvupload} = 
-      isJust documentcsvupload
-    isRequired DaysToSignUse Document{documentdaystosign} = 
-      isJust documentdaystosign
-    isRequired MultiplePartiesUse Document{documentsignatorylinks} = 
-      (length documentsignatorylinks) > 2
-    isRequired SecretaryUse doc@Document{documentsignatorylinks} = 
-      and . map (\sl -> not $ siglinkIsAuthor sl) $ documentsignatorylinks
-    isRequired SpecialRoleUse doc@Document{documentsignatorylinks} =
-      and . map isSpecialRole $ documentsignatorylinks
-      where 
-        isSpecialRole :: SignatoryLink -> Bool
-        isSpecialRole SignatoryLink{signatoryroles} =
-          case signatoryroles of
-            [SignatoryPartner]                  -> False
-            [SignatoryPartner, SignatoryAuthor] -> False
-            [SignatoryAuthor, SignatoryPartner] -> False
-            _                                   -> True
-    isRequired AuthorCustomFieldUse doc = maybe False (not . Data.List.null . signatoryotherfields . signatorydetails) $ getAuthorSigLink doc
-    isRequired AuthorPlacementUse doc = maybe False 
-      (any (not . Data.List.null) . wmap
-       [ signatoryfstnameplacements
-       , signatorysndnameplacements
-       , signatorycompanyplacements
-       , signatoryemailplacements
-       , signatorypersonalnumberplacements
-       , signatorycompanynumberplacements] . signatorydetails) $ getAuthorSigLink doc
-    isRequired SigCustomFieldUse doc@Document{documentsignatorylinks} =
-      any (not . Data.List.null . signatoryotherfields . signatorydetails) documentsignatorylinks
-    isRequired SigPlacementUse doc@Document{documentsignatorylinks} =
-      any (isPlacement . signatorydetails) documentsignatorylinks
-      where isPlacement :: SignatoryDetails -> Bool
-            isPlacement SignatoryDetails{ 
-                             signatoryfstnameplacements
-                           , signatorysndnameplacements
-                           , signatorycompanyplacements
-                           , signatoryemailplacements
-                           , signatorypersonalnumberplacements
-                           , signatorycompanynumberplacements } =
-              any (not . Data.List.null) 
-                               [ signatoryfstnameplacements
-                               , signatorysndnameplacements
-                               , signatorycompanyplacements
-                               , signatoryemailplacements
-                               , signatorypersonalnumberplacements
-                               , signatorycompanynumberplacements ]
-    isRequired SignOrderUse doc@Document{documentsignatorylinks} =
-      any isSpecialSignOrder documentsignatorylinks
-        where isSpecialSignOrder :: SignatoryLink -> Bool
-              isSpecialSignOrder sl@SignatoryLink{signatorydetails}
-                | siglinkIsAuthor sl = (signatorysignorder signatorydetails) /= (SignOrder 0)
-                | otherwise = (signatorysignorder signatorydetails) /= (SignOrder 1)
-    isRequired AttachmentUse Document{documentattachments} = not $ Data.List.null documentattachments
+dropUnsupportedFeatures :: Document -> Document
+dropUnsupportedFeatures doc =
+  let unsupported =  filter (not . isSupported (documentfunctionality doc)) allValues
+      dropper = foldl (.) id $ map dropFeature unsupported
+  in if (documentstatus doc == Preparation) 
+        then dropper doc
+        else doc
+    
+dropFeature:: Feature -> Document -> Document
+dropFeature CSVUse doc = doc {documentcsvupload = Nothing}
+dropFeature DaysToSignUse doc = doc {documentdaystosign = Nothing} 
+dropFeature MultiplePartiesUse doc = doc {documentsignatorylinks = take 2 $ documentsignatorylinks doc}
+dropFeature SecretaryUse doc = doc {documentsignatorylinks = map makeAuthorSignatory $ documentsignatorylinks doc} 
+    where makeAuthorSignatory sl = 
+            if (siglinkIsAuthor sl && not (isSignatory sl))
+              then sl {signatoryroles = SignatoryPartner : (signatoryroles sl) }
+              else sl
+dropFeature SpecialRoleUse doc = doc {documentsignatorylinks = map standarizeRoles $ documentsignatorylinks doc} 
+   where 
+        standarizeRoles :: SignatoryLink -> SignatoryLink
+        standarizeRoles sl = 
+          let standardRoles = [SignatoryPartner, SignatoryAuthor]
+              limitedRoles =  filter  (`elem` standardRoles) $ signatoryroles sl
+          in if (Data.List.null limitedRoles) 
+              then sl {signatoryroles  = [SignatoryPartner]}
+              else sl {signatoryroles = limitedRoles}
+             
+dropFeature AuthorCustomFieldUse doc = doc {documentsignatorylinks = map dropAuthorCustomFields $ documentsignatorylinks doc}  
+   where
+        dropAuthorCustomFields sl =  if (siglinkIsAuthor sl)
+                                        then sl {signatorydetails  = (signatorydetails sl) {signatoryotherfields = []} }
+                                        else sl
 
 dropFeature AuthorPlacementUse doc =  doc {documentsignatorylinks = map dropAuthorPlacementFields $ documentsignatorylinks doc}  
     where

@@ -586,30 +586,33 @@ maybeAddDocumentCancelationMessage document = do
  -}
 handleIssueShowGet :: DocumentID -> Kontra (Either KontraLink (Either KontraLink String))
 handleIssueShowGet docid = do
- checkUserTOSGet $ do
+ checkUserTOSGet $ do 
   edoc <- getDocByDocID docid
   case edoc of
     Left _ -> mzero
     Right document -> do
         ctx@Context { ctxmaybeuser 
                     } <- get
-
-        attachments <- queryOrFailIfLeft $ GetDocumentsByDocumentID $ documentattachments document
-        -- authors get a view with buttons
-        case (isUserAuthor document user, isAttachment document, documentstatus document) of
-          (True, True, Preparation) -> liftIO $ pageAttachmentDesign ctx document
-          (_, True, _) -> liftIO $ pageAttachmentView ctx document 
-          (True, _, _) -> do
-            let mMismatchMessage = getDataMismatchMessage $ documentcancelationreason document
-            when ((documentstatus document == Canceled) && (isJust mMismatchMessage)) 
-              (addFlashMsg $ toFlashMsg OperationFailed (fromJust mMismatchMessage))
-            ctx2 <- get   -- need to get new context because we may have added flash msg
-            step <- getDesignStep (documentid document)
-            case (documentstatus document) of
-              Preparation -> liftIO $ pageDocumentDesign ctx2 document attachments step
-              _ ->  liftIO $ pageDocumentForAuthor ctx2 document attachments               
-          -- friends can just look (but not touch)
-          (False, _, _) -> liftIO $ pageDocumentForViewer ctx document attachments Nothing
+        mdstep <- getDesignStep docid
+        case (mdstep, documentfunctionality document) of
+          (Just (DesignStep3 _), BasicFunctionality) -> return $ Left $ LinkIssueDoc docid
+          _ -> do
+            attachments <- queryOrFailIfLeft $ GetDocumentsByDocumentID $ documentattachments document
+            -- authors get a view with buttons
+            case (joinB $ isUserAuthor document <$> ctxmaybeuser, isAttachment document, documentstatus document) of
+              (True, True, Preparation) -> liftIO $ Right <$> pageAttachmentDesign ctx document
+              (_, True, _) -> liftIO $ Right <$> pageAttachmentView ctx document 
+              (True, _, _) -> do
+                let mMismatchMessage = getDataMismatchMessage $ documentcancelationreason document
+                when ((documentstatus document == Canceled) && (isJust mMismatchMessage)) 
+                  (addFlashMsg $ toFlashMsg OperationFailed (fromJust mMismatchMessage))
+                ctx2 <- get   -- need to get new context because we may have added flash msg
+                step <- getDesignStep (documentid document)
+                case (documentstatus document) of
+                  Preparation -> liftIO $ Right <$> pageDocumentDesign ctx2 document attachments step
+                  _ -> liftIO $ Right <$> pageDocumentForAuthor ctx2 document attachments               
+                -- friends can just look (but not touch)
+              (False, _, _) -> liftIO $ Right <$> pageDocumentForViewer ctx document attachments Nothing
 
 getDesignStep::DocumentID -> Kontra (Maybe DesignStep)
 getDesignStep docid = do
@@ -1342,16 +1345,6 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
            signatories2 daystosign invitetext authordetails2 docallowedidtypes mcsvsigindex docfunctionality
 
               
-getDocumentsForUserByType :: User -> (Document -> Bool) -> Kontra ([Document])
-getDocumentsForUserByType user docfilter = do
-  mydocuments <- query $ GetDocumentsByUser user 
-  usersICanView <- query $ GetUsersByFriendUserID $ userid user
-  usersISupervise <- fmap Set.toList $ query $ GetUserSubaccounts $ userid user
-  friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
-  supervised'Documents <- mapM (query . GetDocumentsByUser) usersISupervise
-  return . filter docfilter $ 
-          mydocuments ++ concat friends'Documents ++ concat supervised'Documents
-
 {- |
    Constructs a list of documents (Arkiv) to show to the user.
    The list contains all documents the user is an author on or

@@ -1316,7 +1316,14 @@ function renumberParts() {
              $(this).find(".partnumber").text("MASSUTSKICK");
           } else if( isSignatory ) {
               if (offer)
-                  $(this).find(".partnumber").text("MOTTAGARE");
+                 {
+                     if( idx==1 ) {
+                      $(this).find(".partnumber").text("AVSÄNDARE");
+                      }
+                       else {
+                      $(this).find(".partnumber").text("MOTTAGARE");
+                      }
+                 }
               else    
                   $(this).find(".partnumber").text("PART " + idx);
               idx = idx + 1;
