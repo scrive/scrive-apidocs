@@ -6,6 +6,9 @@ partnersPage=
         <title>$pagetitle()$ | Partners</title>
         <meta name="description" content="Signera och arkivera dina avtal elektroniskt. Vi har nära samarbete med ett flertal framstående aktörer inom datasäkerhet och signeringsteknik." />
         $standardHeaderContents()$
+        $if(production)$
+        <script src="$prefix$/js/analytics.js" type="text/javascript"></script>
+        $endif$
       </head>
       <body>
          $bodystart()$

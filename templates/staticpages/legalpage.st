@@ -6,6 +6,9 @@ legalPage=
         <title>$pagetitle()$ | Juridik</title>
         <meta name="description" content="Signera och arkivera dina avtal elektroniskt. Välj mellan olika verifikationsmetoder – behåll högsta möjliga juridiska säkerhet och användarvänlighet." />
         $standardHeaderContents()$
+        $if(production)$
+        <script src="$prefix$/js/analytics.js" type="text/javascript"></script>
+        $endif$
       </head>
       <body>
          $bodystart()$

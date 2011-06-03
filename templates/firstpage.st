@@ -82,6 +82,9 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                         });
                 // ]]>
                 </script>
+                $if(production)$
+                <script src="$prefix$/js/analytics.js" type="text/javascript"></script>
+                $endif$
         </head>
         <body>
                 $flashmessages()$
