@@ -24,7 +24,6 @@ import Mails.SendMail
 import MinutesTime
 import Misc
 import Redirect
-import Routing
 import User.UserControl
 import qualified Amazon as AWS
 import qualified AppLogger as Log
@@ -82,6 +81,7 @@ postDocumentChangeAction document@Document  { documentstatus
     -- main action: sendInvitationEmails
     | oldstatus == Preparation && documentstatus == Pending = do
         ctx <- get
+        liftIO $ print document
         Log.forkIOLogWhenError ("error in sending invitation emails for document " ++ show documentid) $ do
           sendInvitationEmails ctx document
         return ()
@@ -584,36 +584,35 @@ maybeAddDocumentCancelationMessage document = do
    URL: /d/{documentid}
    Method: GET
  -}
-handleIssueShowGet :: DocumentID -> Kontra RedirectOrContent
+handleIssueShowGet :: DocumentID -> Kontra (Either KontraLink (Either KontraLink String))
 handleIssueShowGet docid = do
- liftIO $ putStrLn $ "Accessiong document"   
  checkUserTOSGet $ do
-  liftIO $ putStrLn $ "Getting document"      
   edoc <- getDocByDocID docid
   case edoc of
-    Left e -> do 
-      liftIO $ print ("error getting doc: " ++ show e)
-      mzero
+    Left _ -> mzero
     Right document -> do
         ctx@Context { ctxmaybeuser 
                     } <- get
-
-        attachments <- queryOrFailIfLeft $ GetDocumentsByDocumentID $ documentattachments document
-        -- authors get a view with buttons
-        case (joinB $ isUserAuthor document <$> ctxmaybeuser, isAttachment document, documentstatus document) of
-          (True, True, Preparation) -> liftIO $ pageAttachmentDesign ctx document
-          (_, True, _) -> liftIO $ pageAttachmentView ctx document 
-          (True, _, _) -> do
-            let mMismatchMessage = getDataMismatchMessage $ documentcancelationreason document
-            when ((documentstatus document == Canceled) && (isJust mMismatchMessage)) 
-              (addFlashMsg $ toFlashMsg OperationFailed (fromJust mMismatchMessage))
-            ctx2 <- get   -- need to get new context because we may have added flash msg
-            step <- getDesignStep (documentid document)
-            case (documentstatus document) of
-              Preparation -> liftIO $ pageDocumentDesign ctx2 document attachments step
-              _ ->  liftIO $ pageDocumentForAuthor ctx2 document attachments               
-          -- friends can just look (but not touch)
-          (False, _, _) -> liftIO $ pageDocumentForViewer ctx document attachments Nothing
+        mdstep <- getDesignStep docid
+        case (mdstep, documentfunctionality document) of
+          (Just (DesignStep3 _), BasicFunctionality) -> return $ Left $ LinkIssueDoc docid
+          _ -> do
+            attachments <- queryOrFailIfLeft $ GetDocumentsByDocumentID $ documentattachments document
+            -- authors get a view with buttons
+            case (joinB $ isUserAuthor document <$> ctxmaybeuser, isAttachment document, documentstatus document) of
+              (True, True, Preparation) -> liftIO $ Right <$> pageAttachmentDesign ctx document
+              (_, True, _) -> liftIO $ Right <$> pageAttachmentView ctx document 
+              (True, _, _) -> do
+                let mMismatchMessage = getDataMismatchMessage $ documentcancelationreason document
+                when ((documentstatus document == Canceled) && (isJust mMismatchMessage)) 
+                  (addFlashMsg $ toFlashMsg OperationFailed (fromJust mMismatchMessage))
+                ctx2 <- get   -- need to get new context because we may have added flash msg
+                step <- getDesignStep (documentid document)
+                case (documentstatus document) of
+                  Preparation -> liftIO $ Right <$> pageDocumentDesign ctx2 document attachments step
+                  _ -> liftIO $ Right <$> pageDocumentForAuthor ctx2 document attachments               
+                -- friends can just look (but not touch)
+              (False, _, _) -> liftIO $ Right <$> pageDocumentForViewer ctx document attachments Nothing
 
 getDesignStep::DocumentID -> Kontra (Maybe DesignStep)
 getDesignStep docid = do
