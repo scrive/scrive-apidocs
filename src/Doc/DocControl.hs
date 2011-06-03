@@ -1342,6 +1342,16 @@ updateDocument ctx@Context{ ctxtime } document@Document{ documentid, documentfun
            signatories2 daystosign invitetext authordetails2 docallowedidtypes mcsvsigindex docfunctionality
 
               
+getDocumentsForUserByType :: User -> (Document -> Bool) -> Kontra ([Document])
+getDocumentsForUserByType user docfilter = do
+  mydocuments <- query $ GetDocumentsByUser user 
+  usersICanView <- query $ GetUsersByFriendUserID $ userid user
+  usersISupervise <- fmap Set.toList $ query $ GetUserSubaccounts $ userid user
+  friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
+  supervised'Documents <- mapM (query . GetDocumentsByUser) usersISupervise
+  return . filter docfilter $ 
+          mydocuments ++ concat friends'Documents ++ concat supervised'Documents
+
 {- |
    Constructs a list of documents (Arkiv) to show to the user.
    The list contains all documents the user is an author on or

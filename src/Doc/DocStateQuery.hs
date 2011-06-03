@@ -59,7 +59,8 @@ getDocByDocID docid = do
             False -> do
               liftIO $ print "is not author"
               usersImFriendsWith <- query $ GetUsersByFriendUserID (userid user)
-              case any (isUserAuthor doc) usersImFriendsWith of
+              usersImSupervising <- query $ GetUserSubaccounts  (userid user)
+              case (any (isUserAuthor doc) $ usersImSupervising ++ usersImFriendsWith) of
                 True  -> return $ Right doc
                 False -> return $ Left DBResourceNotAvailable
     (_,Just company) -> do
