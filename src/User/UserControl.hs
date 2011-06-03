@@ -13,8 +13,6 @@ import Happstack.Util.Common (readM)
 import HSP.XML
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS
-import qualified Data.Foldable as F
-import qualified Data.Set as Set
 
 import ActionSchedulerState
 import AppView
@@ -155,10 +153,10 @@ friendsSortSearchPage  =
 
 handleGetSubaccount :: Kontra (Either KontraLink Response)
 handleGetSubaccount = withUserGet $ do
-    ctx@Context{ctxmaybeuser = Just user@User{userid}} <- get
+    Context{ctxmaybeuser = Just user@User{userid}} <- get
     subaccounts <- query $ GetUserSubaccounts userid
     params <- getListParams
-    content <- viewSubaccounts user (subaccountsSortSearchPage params $ Set.toList subaccounts)
+    content <- viewSubaccounts user (subaccountsSortSearchPage params $ subaccounts)
     renderFromBody TopAccount kontrakcja $ cdata content
 
 -- Searching, sorting and paging
