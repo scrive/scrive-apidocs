@@ -20,6 +20,7 @@ module Administration.AdministrationView(
           , databaseContent
           , statsPage
           , servicesAdminPage
+          , adminTranslationsPage
           , adminUserUsageStatsPage
           , AdminUsersPageParams(..)
           , StatsView(..)) where
@@ -143,6 +144,10 @@ servicesAdminPage templates services=
             field "name"  $ show $ serviceid service
             fieldIO "admin"  $ liftM (fmap $ show . useremail . userinfo) $ query $ GetUserByUserID $ UserID $ unServiceAdmin $ serviceadmin service
         
+        
+adminTranslationsPage::KontrakcjaTemplates -> IO String
+adminTranslationsPage templates =  renderTemplate templates "adminTranslations" ()
+
 mkUserInfoView :: (User, DocStats, UserStats) -> UserInfoView
 mkUserInfoView (userdetails', docstats', userstats') = 
   UserInfoView { userdetails = userSmallView userdetails'

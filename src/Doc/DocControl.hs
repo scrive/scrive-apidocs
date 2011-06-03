@@ -536,30 +536,25 @@ handleSignShow documentid
   case edocument of
     Left _ -> mzero -- not allowed to view
     Right document -> case getSigLinkBySigLinkID signatorylinkid1 document of
-      Nothing -> mzero
-      Just invitedlink -> case getAuthorSigLink document of
-        Nothing -> mzero -- this means there is no author!
-        Just authorsiglink -> do
-          attachments <- queryOrFailIfLeft $ GetDocumentsByDocumentID $ documentattachments document
-          let authorname = personname authorsiglink
-              invitedname = signatoryname $ signatorydetails $ invitedlink 
-              isSignatory = SignatoryPartner `elem` signatoryroles invitedlink
-              isFlashNeeded = Data.List.null ctxflashmessages
-                       && (not (isJust $ maybesigninfo invitedlink))
-              -- heavens this is a confusing case statement, there must be a better way!
-              flashMsg =
-                case (isFlashNeeded, 
-                      isSignatory, 
-                      isContract document, 
-                      document `allowsIdentification` ELegitimationIdentification,
-                      isOffer document) of
-                  (False, _, _, _, _) -> Nothing
-                  (_, False, _, True, _) -> Just flashMessageOnlyHaveRightsToViewDoc
-                  (_, False, _, _, True) -> Just flashMessageOnlyHaveRightsToViewDoc
-                  (_, _, True, True, _) -> Just flashMessagePleaseSignWithEleg
-                  (_, _, True, _, _) -> Just flashMessagePleaseSignContract
-                  (_, _, _, _, True) -> Just flashMessagePleaseSignOffer
-                  _ -> Nothing
+      Nothing -> mzero -- signatory link does not exist
+      Just invitedlink -> do
+        attachments <- queryOrFailIfLeft $ GetDocumentsByDocumentID $ documentattachments document
+        let isFlashNeeded = Data.List.null ctxflashmessages
+                            && (not $ isJust $ maybesigninfo invitedlink)  && (not $ isAttachment document )
+            -- heavens this is a confusing case statement, there must be a better way!
+            flashMsg =
+              case (isFlashNeeded, 
+                    isSignatory invitedlink, 
+                    isContract document, 
+                    document `allowsIdentification` ELegitimationIdentification,
+                    isOffer document) of
+                (False, _, _, _, _) -> Nothing
+                (_, False, _, True, _) -> Just flashMessageOnlyHaveRightsToViewDoc
+                (_, False, _, _, True) -> Just flashMessageOnlyHaveRightsToViewDoc
+                (_, _, True, True, _) -> Just flashMessagePleaseSignWithEleg
+                (_, _, True, _, _) -> Just flashMessagePleaseSignContract
+                (_, _, _, _, True) -> Just flashMessagePleaseSignOffer
+                _ -> Nothing
 
         ctx@Context{ctxtemplates} <- get
 
@@ -1834,7 +1829,8 @@ getTemplatesForAjax = do
     case (ctxmaybeuser ctx,mdoctype) of
             (Just user, Just doctype) -> do
                 let tfilter doc = isTemplate doc && (matchingType doctype $ documenttype doc)
-                templates <- getDocumentsForUserByType user tfilter
+                documents <- liftIO $ query $ GetDocumentsByUser user
+                let templates = filter tfilter documents
                 content <- liftIO $ templatesForAjax (ctxtemplates ctx) (ctxtime ctx) user doctype $ docSortSearchPage params templates
                 simpleResponse content
             (Nothing, _) -> sendRedirect $ LinkLogin NotLogged

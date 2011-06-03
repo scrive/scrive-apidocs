@@ -114,7 +114,10 @@ parseLines :: Handle -> IO [String]
 parseLines handle = do
     l <- hGetLine handle
     e <- hIsEOF handle
-    if (e || isPrefixOf ("#") l) 
+    if (isPrefixOf ("#") l) 
         then return []
-        else fmap ((:) l) (parseLines handle)
+        else if e
+            then return [l]
+            else fmap ((:) l) (parseLines handle)
+
     
