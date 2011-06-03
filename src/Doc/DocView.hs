@@ -1104,7 +1104,7 @@ templatesForAjax::KontrakcjaTemplates ->  MinutesTime -> User -> DocumentType ->
 templatesForAjax templates ctime user doctype doctemplates = 
     renderTemplate templates "templatesForAjax" $ do
         field "documents" $ markParity $ map (documentBasicViewFields ctime user) (list doctemplates)
-        field "currentlink" $ show $ LinkNew (Just doctype) (params doctemplates)  
+        field "currentlink" $ show $ LinkNew (Just doctype) (params doctemplates)  True
         field "contract" $ doctype == Contract
         field "offer" $ doctype == Offer
         pagedListFields doctemplates
