@@ -843,8 +843,15 @@ pageDocumentForAuthorHelpersLocalDialogs=
       </div>
       <div class="modal-body">
         <div class="modal-content">
-          <p>Du kan byta till förenklad process för att göra processen ännu smidigare. Vid betalplan Business eller Enterprise kan du givetvis byta tillbaks när du vill, även vid fri testperiod.</p>
-        </div>
+         <p>
+            Du kan byta till förenklad process för att göra processen ännu smidigare.
+            Vid betalplan Business eller Enterprise kan du givetvis byta tillbaks när du vill, även vid fri testperiod. 
+          </p>
+          <p> 
+            När du byter kommer alla ändringar du gjort förutom de för part 1 och part 2 att försvinna. 
+            Är du säker att du vill byta process
+          </p>    
+     </div>
       </div>
       <div class="modal-footer">
         <a  class="close cancel float-left">Avbryt</a>
