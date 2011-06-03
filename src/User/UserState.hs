@@ -841,10 +841,10 @@ getUserFriends uid = do
       mfriends <- sequence . map (getUserByUserID . UserID . unFriend) $ userfriends user
       return . map fromJust . filter isJust $ mfriends
 
-getUserSubaccounts :: UserID -> Query Users (Set.Set User)
+getUserSubaccounts :: UserID -> Query Users [User]
 getUserSubaccounts userid = do
   users <- ask
-  return $ toSet (users @= SupervisorID (unUserID userid))
+  return $ toList (users @= SupervisorID (unUserID userid))
 
 {- |
     Gets all the users that are related to the indicated user.

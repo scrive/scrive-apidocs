@@ -58,7 +58,7 @@ handleUserPost = do
              -- propagate company info to all subaccounts since it might have changed
              query (GetUserByUserID $ userid user) >>= maybe (return ()) (\newuser -> do
                  subs <- query $ GetUserSubaccounts $ userid newuser
-                 F.forM_ subs $ \sub -> do
+                 forM_ subs $ \sub -> do
                      update $ SetUserInfo (userid sub) (copyCompanyInfo newuser $ userinfo sub)
                  )
              addFlashMsg =<< (liftIO $ flashMessageUserDetailsSaved $ ctxtemplates ctx)
@@ -158,7 +158,7 @@ handleGetSubaccount = withUserGet $ do
     ctx@Context{ctxmaybeuser = Just user@User{userid}} <- get
     subaccounts <- query $ GetUserSubaccounts userid
     params <- getListParams
-    content <- viewSubaccounts user (subaccountsSortSearchPage params $ Set.toList subaccounts)
+    content <- viewSubaccounts user (subaccountsSortSearchPage params $ subaccounts)
     renderFromBody TopAccount kontrakcja $ cdata content
 
 -- Searching, sorting and paging
