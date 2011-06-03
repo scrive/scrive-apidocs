@@ -111,12 +111,10 @@ modifyDocumentWithAction condition docid action = do
              case actionresult of
                 Left message -> return $ Left message
                 Right newdocument -> do
-                    case (checkFeatureSupport newdocument) of
-                      (Left msg) -> return $ Left msg
-                      (Right _) -> do
+                        let newdocumentNoUnsupportedFutures = dropUnsupportedFeatures newdocument
                         now <- getMinuteTimeDB
                         when (documentid newdocument /= docid) $ error "new document must have same id as old one"
-                        modify (updateIx docid $ newdocument {documentmtime=now})
+                        modify (updateIx docid $ newdocumentNoUnsupportedFutures {documentmtime=now})
                         return $ Right newdocument
        else return $ Left "Document didn't matche condition required for this action"
 
@@ -140,15 +138,10 @@ data Feature = CSVUse
                | SigPlacementUse
                | SignOrderUse
                | AttachmentUse
-               deriving (Show, Eq)
-
-wmap :: [(a -> b)] -> a -> [b]
-wmap fs v = map (\f -> f v) fs
+               deriving (Show, Eq, Bounded, Enum)
 
 {- |
-    This bit ensures that all the features used by a document
-    are valid for it's documentfunctionality. It's hoped 
-    that without bugs or hacks this should never fail.
+    Drops unsupported fetures, so if for example attachents are not supported they are dropped
 -}
 checkFeatureSupport :: Document -> Either String ()
 checkFeatureSupport doc =
@@ -162,24 +155,23 @@ checkFeatureSupport doc =
        Checks that any features in use are supported.
     -}
     checkSupport :: Document -> Feature -> Bool
-    checkSupport ddoc@Document{documentfunctionality} feature =
-        case (isRequired feature ddoc, isSupported feature documentfunctionality) of
+    checkSupport doc@Document{documentfunctionality} feature =
+        case (isRequired feature doc, isSupported feature documentfunctionality) of
           (True, False) -> False
           _ -> True
     {-|
        Determines whether a feature is in use for a document.
     -}
     isRequired :: Feature -> Document -> Bool
-    isRequired _ Document{documentrecordstatus} | documentrecordstatus==DeletedDocument = False
     isRequired CSVUse Document{documentcsvupload} = 
       isJust documentcsvupload
     isRequired DaysToSignUse Document{documentdaystosign} = 
       isJust documentdaystosign
     isRequired MultiplePartiesUse Document{documentsignatorylinks} = 
       (length documentsignatorylinks) > 2
-    isRequired SecretaryUse Document{documentsignatorylinks} = 
+    isRequired SecretaryUse doc@Document{documentsignatorylinks} = 
       and . map (\sl -> not $ siglinkIsAuthor sl) $ documentsignatorylinks
-    isRequired SpecialRoleUse Document{documentsignatorylinks} =
+    isRequired SpecialRoleUse doc@Document{documentsignatorylinks} =
       and . map isSpecialRole $ documentsignatorylinks
       where 
         isSpecialRole :: SignatoryLink -> Bool
@@ -189,18 +181,18 @@ checkFeatureSupport doc =
             [SignatoryPartner, SignatoryAuthor] -> False
             [SignatoryAuthor, SignatoryPartner] -> False
             _                                   -> True
-    isRequired AuthorCustomFieldUse ddoc = maybe False (not . Data.List.null . signatoryotherfields . signatorydetails) $ getAuthorSigLink ddoc
-    isRequired AuthorPlacementUse ddoc = maybe False 
+    isRequired AuthorCustomFieldUse doc = maybe False (not . Data.List.null . signatoryotherfields . signatorydetails) $ getAuthorSigLink doc
+    isRequired AuthorPlacementUse doc = maybe False 
       (any (not . Data.List.null) . wmap
        [ signatoryfstnameplacements
        , signatorysndnameplacements
        , signatorycompanyplacements
        , signatoryemailplacements
        , signatorypersonalnumberplacements
-       , signatorycompanynumberplacements] . signatorydetails) $ getAuthorSigLink ddoc
-    isRequired SigCustomFieldUse Document{documentsignatorylinks} =
+       , signatorycompanynumberplacements] . signatorydetails) $ getAuthorSigLink doc
+    isRequired SigCustomFieldUse doc@Document{documentsignatorylinks} =
       any (not . Data.List.null . signatoryotherfields . signatorydetails) documentsignatorylinks
-    isRequired SigPlacementUse Document{documentsignatorylinks} =
+    isRequired SigPlacementUse doc@Document{documentsignatorylinks} =
       any (isPlacement . signatorydetails) documentsignatorylinks
       where isPlacement :: SignatoryDetails -> Bool
             isPlacement SignatoryDetails{ 
@@ -217,7 +209,7 @@ checkFeatureSupport doc =
                                , signatoryemailplacements
                                , signatorypersonalnumberplacements
                                , signatorycompanynumberplacements ]
-    isRequired SignOrderUse Document{documentsignatorylinks} =
+    isRequired SignOrderUse doc@Document{documentsignatorylinks} =
       any isSpecialSignOrder documentsignatorylinks
         where isSpecialSignOrder :: SignatoryLink -> Bool
               isSpecialSignOrder sl@SignatoryLink{signatorydetails}
@@ -225,10 +217,42 @@ checkFeatureSupport doc =
                 | otherwise = (signatorysignorder signatorydetails) /= (SignOrder 1)
     isRequired AttachmentUse Document{documentattachments} = not $ Data.List.null documentattachments
 
-    {-|
-       Defines which Feature is supported by each type of DocumentFunctionality.
-    -}
-    isSupported :: Feature -> DocumentFunctionality -> Bool
-    isSupported _ AdvancedFunctionality = True
-    isSupported _ BasicFunctionality = False
+dropFeature AuthorPlacementUse doc =  doc {documentsignatorylinks = map dropAuthorPlacementFields $ documentsignatorylinks doc}  
+    where
+       dropAuthorPlacementFields sl =  if (siglinkIsAuthor sl)
+                                        then sl {signatorydetails  = (signatorydetails sl) {
+                                              signatoryfstnameplacements = []
+                                            , signatorysndnameplacements = []
+                                            , signatorycompanyplacements = []
+                                            , signatoryemailplacements = []
+                                            , signatorypersonalnumberplacements = []
+                                            , signatorycompanynumberplacements = []} }
+                                        else sl
+dropFeature SigCustomFieldUse doc = doc {documentsignatorylinks = map dropCustomFields $ documentsignatorylinks doc}  
+   where
+      dropCustomFields sl =   sl {signatorydetails  = (signatorydetails sl) {signatoryotherfields = []} }
 
+dropFeature SigPlacementUse doc =  doc {documentsignatorylinks = map dropPlacementFields $ documentsignatorylinks doc}  
+    where
+       dropPlacementFields sl =  sl {signatorydetails  = (signatorydetails sl) {
+                                              signatoryfstnameplacements = []
+                                            , signatorysndnameplacements = []
+                                            , signatorycompanyplacements = []
+                                            , signatoryemailplacements = []
+                                            , signatorypersonalnumberplacements = []
+                                            , signatorycompanynumberplacements = []} }
+                                            
+dropFeature SignOrderUse doc = doc {documentsignatorylinks = map dropOrder $ documentsignatorylinks doc}  
+    where dropOrder sl = sl {signatorydetails = (signatorydetails sl)
+                {signatorysignorder = SignOrder $ if (siglinkIsAuthor sl) then 0 else 1}}
+          
+dropFeature AttachmentUse doc = doc {documentattachments = []}
+
+
+
+{-|
+       Defines which Feature is supported by each type of DocumentFunctionality.
+-}
+isSupported ::  DocumentFunctionality -> Feature -> Bool
+isSupported AdvancedFunctionality _ = True
+isSupported BasicFunctionality _  = False
