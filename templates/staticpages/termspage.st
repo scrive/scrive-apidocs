@@ -6,6 +6,9 @@ termsPage=
         <title>$pagetitle()$ | Allmänna villkor</title>
         <meta name="description" content="Signera och arkivera dina avtal elektroniskt. All information ni delger SkrivaPå eller dess tjänster hanteras med största möjliga försiktighet." />
         $standardHeaderContents()$
+        $if(production)$
+        <script src="$prefix$/js/analytics.js" type="text/javascript"></script>
+        $endif$
       </head>
       <body>
          $bodystart()$

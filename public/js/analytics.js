@@ -15,9 +15,7 @@ _gaq.push(['_trackPageview']);
 _gaq.push(['ei._setAccount', 'UA-6387711-9']); 
 _gaq.push(['ei._trackPageview']); 
 
-</script>
 
-<script type="text/javascript">
 document.onclick = function(event) {
    event = event || window.event;
    var target = event.target || event.srcElement,
@@ -47,8 +45,7 @@ document.onclick = function(event) {
        }
    }
 };
-</script>
-<script type="text/javascript">
+
 (function() {
 var ga = document.createElement('script'); ga.type =
 'text/javascript'; ga.async = true;

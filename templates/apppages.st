@@ -131,9 +131,7 @@ bodyend=
                 
        $pageFooter()$
    
-        $if(production)$
-        <script src="$prefix$/js/analytics.js" type="text/javascript"></script>
-        $endif$
+
 ####
 pageFooter=
 <div id="footer-container" class="newdesign">
