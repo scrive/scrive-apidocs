@@ -735,7 +735,7 @@ handleStatistics =
 handleGeneratePOTFiles :: Kontra KontraLink
 handleGeneratePOTFiles = do
     liftIO $ generatePOTFiles
-    return LinkMain
+    return LoopBack
 
 
 showAdminTranslations :: Kontra String
