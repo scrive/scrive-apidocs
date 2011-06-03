@@ -65,6 +65,7 @@ import System.Time
 import Text.JSON
 import Text.JSON.String
 import API.Service.ServiceControl
+import CoopAPI
 
 import Text.JSON.Types
 import Text.StringTemplate.Base (StringTemplate(..))
@@ -299,6 +300,7 @@ handleRoutes = msum [
      , dir "s" $ param "eleg" $ hPost $ BankID.handleSignPostBankID
      , dir "d" $ hGet  $ BankID.handleIssueBankID
      , dir "d" $ param "eleg" $ hPost $ BankID.handleIssuePostBankID
+     , coopAPI
      , webshopAPI
      , integrationAPI
      -- static files
