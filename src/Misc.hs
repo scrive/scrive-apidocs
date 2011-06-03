@@ -32,7 +32,6 @@ import Numeric -- use new module
 import System.Exit
 import System.IO
 import System.IO.Temp
-import System.Log.Logger (errorM)
 import System.Process
 import System.Random
 import qualified Codec.Binary.Url as URL
@@ -44,6 +43,7 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified GHC.Conc
 import qualified HSP
 import qualified HSP.XML
+import qualified AppLogger as Log
 
 foreign import ccall unsafe "htonl" htonl :: Word32 -> Word32
 
@@ -382,7 +382,7 @@ logErrorWithDefault c d f = do
     case c' of
         Right c'' ->  f c''
         Left err  ->  do 
-                errorM "Happstack.Server" err
+                Log.error err
                 return d
 
 -- | Select first alternative from a list of options.

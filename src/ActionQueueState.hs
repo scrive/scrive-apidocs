@@ -22,7 +22,6 @@ import Data.List (zipWith4,partition)
 import System.Random
 import Data.Word
 import Data.Int
-import System.Log.Logger (errorM)
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import Data.Maybe
