@@ -1343,7 +1343,7 @@ getDocumentsForUserByType :: User -> (Document -> Bool) -> Kontra ([Document])
 getDocumentsForUserByType user docfilter = do
   mydocuments <- query $ GetDocumentsByUser user 
   usersICanView <- query $ GetUsersByFriendUserID $ userid user
-  usersISupervise <- fmap Set.toList $ query $ GetUserSubaccounts $ userid user
+  usersISupervise <- query $ GetUserSubaccounts $ userid user
   friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
   supervised'Documents <- mapM (query . GetDocumentsByUser) usersISupervise
   return . filter docfilter $ 
