@@ -304,7 +304,9 @@ function docstateToHTML(){
   for(i = 0; i < signatories.length; i++){
     if(signatories[i].email === docstate.author.email){
       authoridx = i;
-      signatories[i].signatory = true;
+      if (signatories[i].role == "signatory") {
+        signatories[i].signatory = true;
+      }
       break;
     }
   }
