@@ -6,6 +6,9 @@ aboutPage=
         <title>$pagetitle()$ | Om SkrivaPå</title>
         <meta name="description" content="Signera och arkivera dina avtal elektroniskt. SkrivaPå är skapat av ett ambitiöst, internationellt team med bas i Stockholm." />
         $standardHeaderContents()$
+        $if(production)$
+        <script src="$prefix$/js/analytics.js" type="text/javascript"></script>
+        $endif$
       </head>
       <body>
          $bodystart()$

@@ -6,6 +6,9 @@ priceplanPage=
         <title>$pagetitle()$ | Prisplan</title>
         <meta name="description" content="Signera och arkivera dina avtal elektroniskt. Välj prisplan efter dina behov – Free, Small, Business eller Enterprise." />
         $standardHeaderContents()$
+        $if(production)$
+        <script src="$prefix$/js/analytics.js" type="text/javascript"></script>
+        $endif$
       </head>
       <body>
          $bodystart()$
