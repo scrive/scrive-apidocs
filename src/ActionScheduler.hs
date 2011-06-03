@@ -13,7 +13,6 @@ import Control.Concurrent
 import Control.Monad.Reader
 import Data.Maybe
 import Happstack.State
-import System.Log.Logger
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
 
@@ -139,19 +138,19 @@ oldScheduler = do
     timeoutDocuments now
     dropExpiredSessions now
     deleteQuarantinedDocuments now
-    liftIO $ debugM "Happstack.Server" $ "Scheduler is running ..."
+    Log.debug $ "Scheduler is running ..."
 
 timeoutDocuments :: MinutesTime -> ActionScheduler ()
 timeoutDocuments now = do
     docs <- query $ GetTimeoutedButPendingDocuments now
     forM_ docs $ \doc -> do 
         update $ TimeoutDocument (documentid doc) now 
-        liftIO $ debugM "Happstack.Server" $ "Document timedout " ++ (show $ documenttitle doc)
+        Log.debug $ "Document timedout " ++ (show $ documenttitle doc)
 
 deleteQuarantinedDocuments :: MinutesTime -> ActionScheduler ()
 deleteQuarantinedDocuments now = do
     docs <- query $ GetExpiredQuarantinedDocuments now
     forM_ docs $ \doc -> do
         update $ EndQuarantineForDocument (documentid doc)
-        liftIO $ debugM "Happstack.Server" $ "Document quarantine expired " ++ (show $ documenttitle doc)
+        Log.debug $ "Document quarantine expired " ++ (show $ documenttitle doc)
 
