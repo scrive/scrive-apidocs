@@ -1344,10 +1344,12 @@ getDocumentsForUserByType user docfilter = do
   mydocuments <- query $ GetDocumentsByUser user 
   usersICanView <- query $ GetUsersByFriendUserID $ userid user
   usersISupervise <- query $ GetUserSubaccounts $ userid user
+  relatedUsers <- query $ GetUserRelatedAccounts $ userid user
   friends'Documents <- mapM (query . GetDocumentsByUser) usersICanView
   supervised'Documents <- mapM (query . GetDocumentsByUser) usersISupervise
-  return . filter docfilter $ 
-          mydocuments ++ concat friends'Documents ++ concat supervised'Documents
+  relatedUsersSharedDocuments <- filter ((==) Shared . documentsharing) <$> concat <$> mapM (query . GetDocumentsByAuthor . userid) relatedUsers
+  return . filter docfilter $ nub $
+          mydocuments ++ concat friends'Documents ++ concat supervised'Documents ++ relatedUsersSharedDocuments
 
 {- |
    Constructs a list of documents (Arkiv) to show to the user.
