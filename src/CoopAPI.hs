@@ -148,7 +148,7 @@ sendReminder = do
   doc <- getDocument
   let siglinkstoremind = [sl | sl <- documentsignatorylinks doc
                              , isSignatory sl
-                             , hasSigned sl]
+                             , not $ hasSigned sl]
   forM siglinkstoremind $ (\signlink -> do
                               mail <- liftIO $  mailDocumentRemind (ctxtemplates ctx) Nothing ctx doc signlink
                               scheduleEmailSendout (ctxesenforcer ctx) $ mail {
