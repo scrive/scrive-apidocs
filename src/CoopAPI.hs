@@ -84,6 +84,8 @@ import Doc.DocStateData
 import Doc.DocUtils
 import Kontra
 import Misc
+import Doc.DocViewMail
+import Mails.MailsData
 
 import Happstack.State
 import Happstack.Server
@@ -131,6 +133,7 @@ coopAPI :: Kontra Response
 coopAPI =  dir "coopdemo" $ msum [ apiCall "sendnewdocument" sendNewDocument
                                  , apiCall "sendFromTemplate" sendFromTemplate
                                  , apiCall "getDocumentStatusAndSignatories" getDocumentStatusAndSignatories
+                                 , apiCall "sendReminder" sendReminder
                                  , apiUnknownCall
                                  ]
            
@@ -138,6 +141,23 @@ getDocumentType :: Integer -> DocumentType
 getDocumentType 1 = Contract
 getDocumentType 3 = Offer
 getDocumentType _ = error "Cannot create other types."
+
+sendReminder :: CoopAPIFunction APIResponse
+sendReminder = do
+  ctx <- askKontraContext  
+  doc <- getDocument
+  let siglinkstoremind = [sl | sl <- documentsignatorylinks doc
+                             , isSignatory sl
+                             , hasSigned sl]
+  forM siglinkstoremind $ (\signlink -> do
+                              mail <- liftIO $  mailDocumentRemind (ctxtemplates ctx) Nothing ctx doc signlink
+                              scheduleEmailSendout (ctxesenforcer ctx) $ mail {
+                                fullname = signatoryname $ signatorydetails signlink
+                                , email = signatoryemail $ signatorydetails signlink
+                                , mailInfo = Invitation  (documentid doc) (signatorylinkid signlink)
+                                })
+  return $ toJSObject [("documentid", JSString $ toJSString $ show (documentid doc))]  
+                                
 
 getDocumentStatusAndSignatories :: CoopAPIFunction APIResponse
 getDocumentStatusAndSignatories = do
