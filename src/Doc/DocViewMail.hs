@@ -277,7 +277,7 @@ mailInvitationToSignOrViewContent templates
         field "offer" $ isOffer document
         field "contract" $ isContract document
         field "link" link    
-        field "issignatory" issignatory
+        field "issignatory" $ issignatory || not forMail 
         field "creatorname" creatorname
                                                                 
 mailInvitationToSign :: KontrakcjaTemplates -> Context -> Document -> SignatoryLink -> IO Mail
