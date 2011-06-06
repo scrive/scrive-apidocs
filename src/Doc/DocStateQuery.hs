@@ -60,7 +60,10 @@ getDocByDocID docid = do
               liftIO $ print "is not author"
               usersImFriendsWith <- query $ GetUsersByFriendUserID (userid user)
               usersImSupervising <- query $ GetUserSubaccounts  (userid user)
-              case (any (isUserAuthor doc) $ usersImSupervising ++ usersImFriendsWith) of
+              related <- query $ GetUserRelatedAccounts  (userid user)
+              let canAcces =    (any (isUserAuthor doc) $ usersImSupervising ++ usersImFriendsWith)
+                             || ((any (isUserAuthor doc) related) && (Shared == documentsharing doc))
+              case (canAcces) of
                 True  -> return $ Right doc
                 False -> return $ Left DBResourceNotAvailable
     (_,Just company) -> do
