@@ -791,9 +791,13 @@ maybeFail :: (Monad m) => String -> Maybe a -> m a
 maybeFail msg = maybe (fail msg) return 
 
 handleMailCommand :: JSValue -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Kontra (Either String DocumentID)
-handleMailCommand (JSObject json) content from _to = runErrorT $ do
+handleMailCommand (JSObject json) content from to = runErrorT $ do
   let username = takeWhile (/= '>') $ dropWhile (== '<') $ dropWhile (/= '<') $ BS.toString from
-      
+  -- 'extension' is a piece of data that is after + sign in email
+  -- addres. example: api+1234@api.skrivapa.se here '1234' is
+  -- extension and can be used as for example password
+  let extension = takeWhile (/= '@') $ dropWhile (== '+') $ dropWhile (/= '+') $ BS.toString to
+    
   Context { ctxtime, ctxipnumber } <- lift get
   maybeUser <- lift $ query $ GetUserByEmail Nothing (Email $ BS.fromString username)
   (user :: User) <- maybeFail ("user '" ++ username ++ "' not found") maybeUser
@@ -801,6 +805,9 @@ handleMailCommand (JSObject json) content from _to = runErrorT $ do
   let title = case get_field json "title" of
         Just (JSString x) -> BS.fromString (fromJSString x)
         _ -> BS.fromString "Untitled document received by email"
+  let apikey = case get_field json "apikey" of
+        Just (JSString x) -> fromJSString x
+        _ -> extension
       extractPerson :: (Monad m) => JSValue -> m SignatoryDetails
       extractPerson (JSObject x) = do
         (JSString email :: JSValue) <- maybeFail "'email' is required string field" $ get_field x "email" 
@@ -833,6 +840,11 @@ handleMailCommand (JSObject json) content from _to = runErrorT $ do
                                }
       extractPerson _ = fail "'persons' is not a JavaScript object"
       
+  case apikey of
+    "" -> fail $ "Need to specify 'apikey' in JSON or after + sign in email address"
+    "998877665544332211" -> return ()
+    z -> fail $ "Apikey '" ++ z ++ "' invalid for account '" ++ username ++ "'"
+
   doctype <- case get_field json "doctype" of
         Just (JSString x) -> case fromJSString x of
           "contract" -> return Contract
@@ -864,7 +876,7 @@ handleMailAPI = do
     content <- case contentspec of
         Left filepath -> liftIO $ BSL.readFile filepath
         Right content -> return content
-    
+            
     -- content at this point is basically full MIME email as it was received by SMTP server
     -- can be tested using curl -X POST -F mail=@mail.eml http://url.com/mailapi/
     eresult <- parseEmailMessage (concatChunks content)
@@ -883,7 +895,8 @@ handleMailAPI = do
             return $ toResponse $ showJSValue rjson []
           Left msg -> do
             Log.debug $ msg
-            let rjson = makeObj [ ("status", JSString (toJSString "error"))
-                                , ("message", JSString (toJSString msg))
-                                ]
-            return $ toResponse $ showJSValue rjson []
+            return $ toResponse msg
+            
+            
+        
+       
