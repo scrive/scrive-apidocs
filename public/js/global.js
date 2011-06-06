@@ -1315,15 +1315,14 @@ function renumberParts() {
           if (isMultiPart) {
              $(this).find(".partnumber").text("MASSUTSKICK");
           } else if( isSignatory ) {
-              if (offer)
-                 {
-                     if( idx==1 ) {
+              if (offer) {
+		  if( idx==1 ) {
                       $(this).find(".partnumber").text("AVSÄNDARE");
-                      }
-                       else {
+		  }
+		  else {
                       $(this).find(".partnumber").text("MOTTAGARE");
-                      }
-                 }
+		  }
+	      }
               else    
                   $(this).find(".partnumber").text("PART " + idx);
               idx = idx + 1;
