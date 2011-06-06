@@ -648,3 +648,4 @@ mapSnd f = map (onSnd f)
 
 propagateFst :: (a,[b]) -> [(a,b)]
 propagateFst (a,bs) = for bs (\b -> (a,b))
+
