@@ -335,6 +335,7 @@ singlnkFields document dateformatter sl = do
   field "name" $ BS.toString $ personname sl
   field "email" $  ""
   field "company" $ BS.toString . signatorycompany $ signatorydetails sl
+  field "author" $ SignatoryAuthor `elem` (signatoryroles sl)
   signatoryStatusFields document sl dateformatter
 
 {- |
