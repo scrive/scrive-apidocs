@@ -24,7 +24,6 @@ import Doc.DocStorage
 import Doc.DocView
 import Doc.DocUtils
 import Happstack.State (update, query)
-import MinutesTime
 import Misc
 import System.Directory
 import System.Exit
@@ -34,7 +33,6 @@ import qualified Amazon as AWS
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS hiding (length)
-import qualified Data.Map as Map
 import qualified SealSpec as Seal
 import qualified TrustWeaver as TW
 import qualified AppLogger as Log
