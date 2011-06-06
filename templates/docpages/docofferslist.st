@@ -110,9 +110,9 @@ $loadingdialog()$
 						          </span> 
 						          $endif$
 							</td>
-							<td><a href="$document.doclink$">$document.signatories:{sig | $sig.name$}; separator=", "$</a></td>
-                                                        <td><a href="$document.doclink$">$document.signatories:{sig | $sig.company$}; separator=", "$</a></td>
-                                                        <td><a href="$document.doclink$">$document.authorname$</a></td> 
+							<td><a href="$document.doclink$">$document.signatories:{sig | $if(!sig.author)$ $sig.name$ $endif$}$</a></td>
+                            <td><a href="$document.doclink$">$document.signatories:{sig | $if(!sig.author)$ $sig.company$ $endif$}$</a></td>
+                            <td><a href="$document.doclink$">$document.authorname$</a></td> 
 							<td>
 								<a href="$document.doclink$" class="listname">$document.documenttitle$</a>
 								$if(document.davelink)$ 
