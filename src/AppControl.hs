@@ -898,8 +898,7 @@ handleMailAPI = do
             return $ toResponse $ showJSValue rjson []
           Left msg -> do
             Log.debug $ msg
-            return $ toResponse msg
-            
-            
-        
-       
+            let rjson = makeObj [ ("status", JSString (toJSString "error"))
+                                , ("message", JSString (toJSString msg))
+                                ]
+            return $ toResponse $ showJSValue rjson []
