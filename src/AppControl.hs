@@ -801,7 +801,6 @@ handleMailCommand (JSObject json) content from _to = runErrorT $ do
   maybeUser <- lift $ query $ GetUserByEmail Nothing (Email $ BS.fromString username)
   (user :: User) <- maybeFail ("user '" ++ username ++ "' not found") maybeUser
   
-  let offer = False
   let title = case get_field json "title" of
         Just (JSString x) -> BS.fromString (fromJSString x)
         _ -> BS.fromString "Untitled document received by email"
@@ -837,6 +836,13 @@ handleMailCommand (JSObject json) content from _to = runErrorT $ do
                                }
       extractPerson _ = fail "'persons' is not a JavaScript object"
       
+  doctype <- case get_field json "doctype" of
+        Just (JSString x) -> case fromJSString x of
+          "contract" -> return Contract
+          "offer" -> return Offer
+          z -> fail $ "Unsupported document type '" ++ z ++ "', should be one of 'contract' or 'offer'"
+        _ -> return Contract
+      
   JSArray personsField <- maybeFail "need to specify 'persons'" $ get_field json "persons"
   
   (persons :: [SignatoryDetails]) <- mapM extractPerson personsField
@@ -844,8 +850,6 @@ handleMailCommand (JSObject json) content from _to = runErrorT $ do
       signatories = map (\p -> (p,[SignatoryPartner])) persons
       userDetails = signatoryDetailsFromUser user
         
-  Log.debug $ show persons
-  let doctype = if offer then Offer else Contract
   doc <- lift $ update $ NewDocument user title doctype ctxtime
   lift $ DocControl.handleDocumentUpload (documentid doc) content title
   _ <- ErrorT $ update $ UpdateDocument ctxtime (documentid doc) title 
