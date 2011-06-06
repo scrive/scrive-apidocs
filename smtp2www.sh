@@ -1,12 +1,19 @@
 #!/bin/bash
 
+#URI="http://preprod.skrivapa.se/mailapi/"
 URI="$1"
-LONGRANDOMID="$2"
+MAGIC="$2"
+
+LOG="/tmp/mailapi-$USER.log"
+REQUEST="/tmp/mailapi-${USER}-request.eml"
+RESPONSE="/tmp/mailapi-${USER}-response.log"
+
+echo ${URI} >> ${LOG}
+chmod 600 ${LOG}
 
 #Step one, send the request
-curl -v --fail -X POST -F "action=SENDEMAIL" -F "ID=${LONGRANDOMID-_}" -F "magic=${EXTENSION-}" -F "mail=@-" "${URI}"
+tee ${REQUEST} | curl -v -k --fail -X POST -F "magic=${MAGIC-}" -F "extension=${EXTENSION-}" -F "mail=@-" "${URI}" 2>> ${LOG} | tee -a ${RESPONSE} | /usr/sbin/sendmail -t ${SENDER} 
 
-#  
 rv="$?"
 
 if [ "$rv" -eq 22 ]; then
@@ -24,6 +31,6 @@ exit 69
 elif [ "$rv" -eq 0 ]; then
 exit 0
 else
-touch "/tmp/smtperrors$USER" && chmod 600 "/tmp/smtperrors$USER" && echo "ODD I got $rv" >> "/tmp/smtperrors$USER"
+echo "Mail API error $rv" >> ${LOG}
 exit 70
 fi
