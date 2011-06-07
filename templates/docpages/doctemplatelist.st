@@ -16,8 +16,8 @@ $loadingdialog()$
                           <a href="javascript:;"><p>Alternativ</p></a>
                         </div>
                         <ul class="tab-dd-opts">
-                            <li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">Radera</a></li>
                             <li><a href="javascript:;" rel="#dialog-list-share-confirm" class="listShare">Dela</a></li>
+                            <li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">Radera</a></li>
                         </ul>
                     </div>
 
