@@ -2690,12 +2690,18 @@ instance Indexable Document where
                       , ixFun (\x -> documenttags x :: [DocumentTag])
                       , ixFun (\x -> [documentservice x] :: [Maybe ServiceID])
                       , ixFun (\x -> [documentoriginalcompany x] :: [Maybe CompanyID])
+                      , ixFun (\x -> [userid | siglink <- documentsignatorylinks x
+                                             , not (signatorylinkdeleted siglink)
+                                             , Just userid <- [maybesignatory siglink]
+                                             ] :: [UserID])
                       , ixFun (\x ->
                           case getAuthorSigLink x of
                                Just asl ->
                                    case maybesignatory asl of
-                                        Just uid -> [Author uid]
-                                        Nothing -> error "Author who is not registered? Something is seriously wrong here."
+                                        Just uid -> if not (signatorylinkdeleted asl) 
+                                                    then [Author uid]
+                                                    else []
+                                        Nothing -> []
                                Nothing -> [])
                       ]
                                                     

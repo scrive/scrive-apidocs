@@ -85,7 +85,7 @@ import API.Service.ServiceState
 import Company.CompanyState
 import Control.Monad
 import Control.Monad.Reader (ask)
-import Data.List (find, nub)
+import Data.List (find)
 import Data.Maybe
 import Data.Word
 import Doc.DocStateData
@@ -115,16 +115,12 @@ getDocumentByDocumentID documentid = queryDocs $ \documents ->
 
 getDocumentsByAuthor :: UserID -> Query Documents [Document]
 getDocumentsByAuthor userid = queryDocs $ \documents ->
-    [doc | doc <- toList documents
-         , isUserIDAuthor doc userid
-         , not $ isDeletedForUserID doc userid
-         ]
+    IxSet.toList (documents @= Author (userid))
 
 getDocumentsByUser :: User -> Query Documents [Document]
 getDocumentsByUser user = do
-  authorDocs <- getDocumentsByAuthor $ userid user
-  signatoryDocs <- getDocumentsBySignatory $ user
-  return $ nub (authorDocs ++ signatoryDocs)
+  documents <- ask
+  return $ IxSet.toList (documents @= userid user)
     
 filterSignatoryLinksByUser :: Document -> User -> [SignatoryLink]
 filterSignatoryLinksByUser doc user = 
@@ -151,7 +147,7 @@ signatoryCanView' siglinks docstatus docsignorder =
 
 getDocumentsBySignatory :: User -> Query Documents [Document]
 getDocumentsBySignatory user = queryDocs $ \documents ->
-    filter (signatoryCanView user) (toList $ documents @= userservice user) 
+    filter (signatoryCanView user) (toList $ documents @= userid user @= userservice user) 
 
 filterSignatoryLinksBySupervisor :: Document -> User -> [SignatoryLink]
 filterSignatoryLinksBySupervisor doc user =
