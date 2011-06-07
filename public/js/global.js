@@ -532,6 +532,14 @@ safeReady(function() {
 });
 
 safeReady(function() {
+  $("#addsigattachmentlink").overlay({
+    mask: standardDialogMask,
+    top : standardDialogTop
+  });
+});
+
+
+safeReady(function() {
   $("#editinvitetextlink").overlay({        
     mask: standardDialogMask,   
     top : standardDialogTop,

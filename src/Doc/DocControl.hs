@@ -795,6 +795,25 @@ handleIssueCSVUpload document = do
           case mndoc of
             Left _ -> mzero
             Right ndoc -> return $ LinkDesignDoc $ DesignStep2 (documentid ndoc) (Just $ csvsigindex + 1) (Just AfterCSVUpload)
+            
+makeSigAttachment :: Document -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Maybe SignatoryAttachment
+makeSigAttachment doc name desc email =
+  let msiglink = sigLinkForEmail doc email
+  in case msiglink of
+    Nothing -> Nothing
+    Just siglink -> Just SignatoryAttachment { signatoryattachmentfile = Nothing
+                                             , signatoryattachmentsignatorylinkid = signatorylinkid siglink
+                                             , signatoryattachmentname = name
+                                             , signatoryattachmentdescription = desc}
+            
+updateAttachments :: Document -> Kontra [SignatoryAttachment]
+updateAttachments _doc = do 
+  _sigattachmentnames <- getAndConcat "sigattachname"
+  _sigattachmentdescs <- getAndConcat "sigattachdesc"
+  _sigattachmentemails <- getAndConcat "sigattachemails"
+  
+  return $ catMaybes []
+  
 
 handleIssueUpdateAttachments :: Document -> Kontra KontraLink
 handleIssueUpdateAttachments doc = withUserPost $ do

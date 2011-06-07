@@ -1537,3 +1537,17 @@ safeReady(function() {
     $("#attachmentbuttons").hide();
   });
 });
+
+safeReady(function() {
+  $("#update-sigattachments-dialog a.plus").click(function() {
+    $("#update-sigattachments-dialog table").append(
+      $("<tr />")
+        .append($("<td />").append($('<a href="#" class="minus">  </a>')))
+        .append($("<td />").append($('<input type="text" name="sigattachname" >')))
+        .append($("<td />").append($('<textarea name="sigattachdesc" >')))
+        .append($("<td />").append($('<select id="signatoryselector"><option selected>Mottagare</option></select>')))
+        .append($("<td />").append($('<ul class="selectedsigs" />'))
+                .append($('<input type="hidden" name="sigattachemails" />'))));
+            
+  });
+});

@@ -1595,7 +1595,7 @@ input.multiFileInput {
     
 }
 
-.signStepsBodyAttachments a
+.signStepsBodyAttachments a, .signStepsBodySigAttachments a
 {
     display: inline-block;
     background-position: 2px 2px;
@@ -2827,7 +2827,7 @@ div.existingattachments {
     clear: left;
 }
 
-#update-attachments-dialog .modal-content {
+#update-attachments-dialog .modal-content, #update-sigattachments-dialog .modal-content {
     height: 225px;
 }
 
@@ -2835,4 +2835,10 @@ div#alreadyattached, div#tobeattached {
     width: 474px;
 }
 
-
+#update-sigattachments-dialog .plus {
+    background-image: url(images/iconPlus.png);
+    width: 16px;
+    height: 16px;
+    display: block;
+    float:left;
+}

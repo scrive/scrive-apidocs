@@ -684,6 +684,7 @@ pageDocumentDesign ctx
        designViewFields step
        documentAttachmentDesignFields (documentauthorattachments document)
        documentAuthorAttachments attachments
+       documentSignatoryAttachments document (documentsignatoryattachments document)
 
 documentAttachmentDesignFields :: [AuthorAttachment] -> Fields
 documentAttachmentDesignFields atts = do
@@ -1225,3 +1226,47 @@ jsStringFromBS bs =
 getDataMismatchMessage :: Maybe CancelationReason -> Maybe String
 getDataMismatchMessage (Just (ELegDataMismatch msg _ _ _ _)) = Just msg
 getDataMismatchMessage _ = Nothing
+
+-- This is temporary method used to see list of broken documents
+documentsToFixView :: KontrakcjaTemplates -> [Document] -> IO String
+documentsToFixView templates docs = do
+    renderTemplate templates "documentsToFixView" $ do
+        field "documents" $ for docs $ \doc -> do
+            field "title" $ documenttitle doc
+            field "id" $ show $ documentid doc 
+            field "involved" $ map (signatoryemail . signatorydetails)  $ documentsignatorylinks doc
+            field "cdate" $  show $ documentctime doc
+
+documentAuthorAttachments :: [Document] -> Fields
+documentAuthorAttachments attachments =
+  field "existingattachments" $
+  for attachments (\doc -> do
+                      field "attachmentid" $ show (documentid doc)
+                      field "attachmentname" $ documenttitle doc)
+  
+samenameanddescription :: BS.ByteString -> BS.ByteString -> (BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)]) -> Bool
+samenameanddescription n d (nn, dd, _) = n == nn && d == dd
+  
+buildattach :: Document -> [SignatoryAttachment] 
+               -> [(BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)])] 
+               -> [(BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)])]
+buildattach _ [] a = a
+buildattach d (f:fs) a =
+  case signlinkFromDocById d (signatoryattachmentsignatorylinkid f) of
+    Nothing -> buildattach d fs a
+    Just sl -> case find (samenameanddescription (signatoryattachmentname f) (signatoryattachmentdescription f)) a of
+      Nothing -> buildattach d fs (((signatoryattachmentname f), (signatoryattachmentdescription f), []):a)
+      Just (nx, dx, sigs) -> buildattach d fs ((nx, dx, (signatoryname (signatorydetails sl), signatoryemail (signatorydetails sl)):sigs):(delete (nx, dx, sigs) a))
+
+documentSignatoryAttachments :: Document -> [SignatoryAttachment] -> Fields
+documentSignatoryAttachments doc attachments =
+  let ats = buildattach doc attachments []
+  in field "sigattachments" $
+     for ats (\(n, d, sigs) -> do
+                 field "attachmentname" n
+                 field "attachmentdescription" d
+                 field "signatories" $
+                   for sigs (\(name, email) -> do
+                                field "signame" name
+                                field "sigemail" email))
+
