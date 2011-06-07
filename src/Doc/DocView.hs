@@ -919,6 +919,7 @@ signatoryLinkFields
       current = (currentlink == Just siglnk) || (isNothing currentlink && (fmap (unEmail . useremail . userinfo) muser) == (Just $ signatoryemail signatorydetails)) 
       isActiveDoc = not $ (documentstatus document) `elem` [Timedout, Canceled, Rejected]
     in do
+      field "id" $ show signatorylinkid
       field "current" $ current
       field "fstname" $ packToMString $ signatoryfstname $ signatorydetails
       field "sndname" $ packToMString $ signatorysndname $ signatorydetails
