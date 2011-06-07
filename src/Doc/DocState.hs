@@ -283,7 +283,7 @@ getDocumentByFileID :: FileID
                        -> Query Documents (Either String Document)
 getDocumentByFileID fileid' = queryDocs $ \documents ->
   case getOne (documents @= fileid') of
-    Nothing -> Left "no such file id"
+    Nothing -> Left $ "cannot find document for file #" ++ show fileid'
     Just document -> Right document
 
 attachFile :: DocumentID 
@@ -348,7 +348,7 @@ updateDocument time documentid docname signatories daystosign invitetext (author
                     , documentcsvupload              = csvupload
                     , documentfunctionality          = docfunctionality
                     }
-         else return $ Left "Document not in preparation"
+         else return $ Left $ "Document #" ++ show documentid ++ " is in " ++ show (documentstatus document) ++ " state, must be in Preparation to use updateDocument"
 
 
 updateDocumentSimple::DocumentID -> (SignatoryDetails, SignatoryAccount) -> [SignatoryDetails] -> Update Documents (Either String Document)
@@ -382,7 +382,7 @@ attachCSVUpload documentid csvupload =
         case (msigindex, documentstatus document) of
           (Left s, _) -> return $ Left s
           (Right _, Preparation) -> return . Right $ document { documentcsvupload = Just csvupload }
-          _ -> return $ Left "Document not in preparation"
+          _ -> return $ Left $ "Document #" ++ show documentid ++ " is in " ++ show (documentstatus document) ++ " state, must be in Preparation to use attachCSVUpload"
 
 
 getDocumentsByDocumentID :: [DocumentID] -> Query Documents (Either String [Document])
@@ -434,7 +434,7 @@ finaliseAttachments attachmentids links = do
     modifySignableOrTemplate attid $ \doc@Document{documenttype} ->
       if documenttype == Attachment
       then Right $ doc { documentstatus = Pending, documentsignatorylinks = links }
-      else Left $ "Needs to be an attachment"
+      else Left $ "Document #" ++ show attid ++ " expected to be Attachment, found to be " ++ show documenttype ++ " in finaliseAttachments"
   return $ sequence mdocs
 
 {- |
