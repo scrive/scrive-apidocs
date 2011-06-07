@@ -4,8 +4,6 @@ signatoriesBox=
   $if(signatory.current)$ $signatoryBox()$ $endif$ }$ </div>
 <div class="float-right signViewBodyBox">$signatories:{signatory|
   $if(!signatory.current)$ $signatoryBox()$ $endif$ }$ </div>
-
-
 ####
 signatoryBox =
 <div class="signViewBodyRight  $if(signatory.author)$author$endif$">

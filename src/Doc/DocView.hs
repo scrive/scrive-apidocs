@@ -92,7 +92,7 @@ import Templates.TemplatesUtils
 import Control.Applicative ((<$>))
 import Control.Monad.Reader
 import Data.Char (toUpper)
-import Data.List (find, isInfixOf)
+import Data.List (find, isInfixOf, delete)
 import Data.Maybe
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
