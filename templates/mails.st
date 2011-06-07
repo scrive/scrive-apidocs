@@ -101,8 +101,6 @@ mailInvitationToSignContent=
        <i>Översiktlig information</i><br/>
        Parter: $partnersinfo:noescape()$<br/>
        $whohadsignedinfo:noescape()$<br/>
-       $timetosigninfo:noescape()$
-    
        Avsändare: <strong>$creatorname$</strong><br/>
        $timetosigninfo:noescape()$
       </p>
