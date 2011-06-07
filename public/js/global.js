@@ -1329,25 +1329,25 @@ function renumberParts() {
 
   var idx = 1;
   persondetails.each(function () {
-          var authorrole = $(this).find("input:radio[value='signatory']:checked");
-          var signatoryrole = $(this).find("input:radio[value='signatory']:checked");
-          var isSignatory = (authorrole.length + signatoryrole.length)>0;
-          var isMultiPart = isMultiPartElem($(this));
-          if (isMultiPart) {
-             $(this).find(".partnumber").text("MASSUTSKICK");
-          } else if( isSignatory ) {
-              if (offer) 
-		         $(this).find(".partnumber").text("MOTTAGARE");
-		      else    
-                  $(this).find(".partnumber").text("PART " + idx);
-              idx = idx + 1;
-          }
-          else {
-              var text = "EJ UNDERTECKNANDE PART";
-              if (offer) text = "AVSÄNDARE";
-              $(this).find(".partnumber").text(text);
-          }
-      });
+    var authorrole = $(this).find("input:radio[value='signatory']:checked");
+    var signatoryrole = $(this).find("input:radio[value='signatory']:checked");
+    var isSignatory = (authorrole.length + signatoryrole.length)>0;
+    var isMultiPart = isMultiPartElem($(this));
+    if (isMultiPart) {
+      $(this).find(".partnumber").text("MASSUTSKICK");
+    } else if( isSignatory ) {
+      if (offer) {
+		$(this).find(".partnumber").text("MOTTAGARE");
+      } else {
+        $(this).find(".partnumber").text("PART " + idx);
+      }
+      idx = idx + 1;
+    } else {
+      var text = "EJ UNDERTECKNANDE PART";
+      if (offer) text = "AVSÄNDARE";
+      $(this).find(".partnumber").text(text);
+    }
+  });
 }
 
 function updateCsvSigIndex() {
