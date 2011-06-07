@@ -1539,15 +1539,48 @@ safeReady(function() {
 });
 
 safeReady(function() {
+  var personpane = $("#personpane");
   $("#update-sigattachments-dialog a.plus").click(function() {
+    var persondetails = personpane.find(".persondetails");
+    var sigdetails = persondetails.not(".authordetails").has("input:radio[value='signatory']:checked");
+    var sigoptions = $();
+    sigdetails.each(function(i, e) {
+      var sig = $(e);
+      var fn = sig.find("input[name='signatoryfstname']").val();
+      var sn = sig.find("input[name='signatorysndname']").val();
+      var em = sig.find("input[name='signatoryemail']").val();
+      sigoptions = sigoptions.add($("<option />").val(em).text(fn + " " + sn));
+    });
+
+    console.log(sigoptions);
     $("#update-sigattachments-dialog table").append(
       $("<tr />")
         .append($("<td />").append($('<a href="#" class="minus">  </a>')))
         .append($("<td />").append($('<input type="text" name="sigattachname" >')))
         .append($("<td />").append($('<textarea name="sigattachdesc" >')))
-        .append($("<td />").append($('<select id="signatoryselector"><option selected>Mottagare</option></select>')))
+        .append($("<td />").append($('<select class="signatoryselector"><option selected>Mottagare</option></select>')
+                                   .append(sigoptions)))
         .append($("<td />").append($('<ul class="selectedsigs" />'))
                 .append($('<input type="hidden" name="sigattachemails" />'))));
             
+    return false;
+  });
+  $("select.signatoryselector").live('change', function() {
+    var sel = $(this);
+    var opt = sel.find("option:selected");
+    if(opt.text() !== "Mottagare") {
+      //console.log(opt);
+      var inp = sel.parents("tr").find("input[name='sigattachemails']");
+      var newemail = opt.val();
+      var oldemails = inp.val();
+      console.log(newemail);
+      console.log(oldemails);
+      console.log(oldemails.indexOf(newemail));
+      if(oldemails.indexOf(newemail) === -1) {
+        sel.parents("tr").find(".selectedsigs").append($("<li />").append(opt.text()));
+        inp.val(oldemails + "," + newemail);
+      }
+    }
+    return false;
   });
 });
